@@ -1,0 +1,655 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
+{ *                        the development of this library                          * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ECTests;
+
+interface
+
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
+uses
+  Classes,
+  SysUtils,
+{$IFDEF FPC}
+  fpcunit,
+  testregistry,
+{$ELSE}
+  TestFramework,
+{$ENDIF FPC}
+  ClpFixedSecureRandom,
+  ClpSecureRandom,
+  ClpISecureRandom,
+  ClpECDsaSigner,
+  ClpIECDsaSigner,
+  ClpParametersWithRandom,
+  ClpIParametersWithRandom,
+  ClpECPublicKeyParameters,
+  ClpIECPublicKeyParameters,
+  ClpECPrivateKeyParameters,
+  ClpIECPrivateKeyParameters,
+  ClpECDomainParameters,
+  ClpIECDomainParameters,
+  ClpIECKeyPairGenerator,
+  ClpECKeyPairGenerator,
+  ClpIECKeyGenerationParameters,
+  ClpECKeyGenerationParameters,
+  ClpIAsymmetricCipherKeyPair,
+  ClpECCurve,
+  ClpIECInterface,
+  ClpHex,
+  ClpCryptoLibTypes,
+  ClpBigInteger,
+  ClpBigIntegers,
+  ClpArrayUtils;
+
+type
+
+  TCryptoLibTestCase = class abstract(TTestCase)
+
+  end;
+
+type
+
+  /// <summary>
+  /// ECDSA tests are taken from X9.62.
+  /// </summary>
+  TTestEC = class(TCryptoLibTestCase)
+  private
+
+  var
+
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+
+    /// <summary>
+    /// X9.62 - 1998, <br />J.3.1, Page 152, ECDSA over the field Fp <br />an
+    /// example with 192 bit prime
+    /// </summary>
+    procedure TestECDsa192bitPrime;
+    procedure TestDecode();
+
+    /// <summary>
+    /// X9.62 - 1998, J.3.2, Page 155, ECDSA over the field Fp <br />an
+    /// example with 239 bit prime
+    /// </summary>
+    procedure TestECDsa239bitPrime();
+
+    /// <summary>
+    /// X9.62 - 1998, <br />J.2.1, Page 100, ECDSA over the field F2m <br />
+    /// an example with 191 bit binary field
+    /// </summary>
+    procedure TestECDsa191bitBinary();
+
+    /// <summary>
+    /// X9.62 - 1998, <br />J.2.1, Page 100, ECDSA over the field F2m <br />
+    /// an example with 191 bit binary field
+    /// </summary>
+    procedure TestECDsa239bitBinary();
+
+    /// <summary>
+    /// General test for long digest.
+    /// </summary>
+    procedure TestECDsa239bitBinaryAndLargeDigest();
+
+    /// <summary>
+    /// key generation test
+    /// </summary>
+    procedure TestECDsaKeyGenTest();
+
+  end;
+
+implementation
+
+{ TTestEC }
+
+procedure TTestEC.SetUp;
+begin
+  inherited;
+
+end;
+
+procedure TTestEC.TearDown;
+begin
+  inherited;
+
+end;
+
+procedure TTestEC.TestDecode;
+var
+  curve: IFpCurve;
+  p: IECPoint;
+  encoding: TCryptoLibByteArray;
+begin
+  curve := TFpCurve.Create
+    (TBigInteger.Create
+    ('6277101735386680763835789423207666416083908700390324961279'), // q
+    TBigInteger.Create('fffffffffffffffffffffffffffffffefffffffffffffffc', 16),
+    // a
+    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16));
+  // b
+
+  p := curve.DecodePoint
+    (THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))
+    .Normalize();
+
+  if (not p.AffineXCoord.ToBigInteger()
+    .Equals(TBigInteger.Create
+    ('188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012', 16))) then
+  begin
+    Fail('x uncompressed incorrectly');
+  end;
+
+  if (not p.AffineYCoord.ToBigInteger()
+    .Equals(TBigInteger.Create
+    ('7192b95ffc8da78631011ed6b24cdd573f977a11e794811', 16))) then
+  begin
+    Fail('y uncompressed incorrectly');
+  end;
+
+  encoding := p.GetEncoded();
+
+  if (not TArrayUtils.AreEqual(encoding,
+    THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))) then
+  begin
+    Fail('point compressed incorrectly');
+  end;
+end;
+
+procedure TTestEC.TestECDsa191bitBinary;
+var
+  r, s: TBigInteger;
+  kData, &message: TCryptoLibByteArray;
+  k: ISecureRandom;
+  curve: IF2mCurve;
+  parameters: IECDomainParameters;
+  priKey: IECPrivateKeyParameters;
+  pubKey: IECPublicKeyParameters;
+  ecdsa: IECDsaSigner;
+  param: IParametersWithRandom;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+begin
+  r := TBigInteger.Create
+    ('87194383164871543355722284926904419997237591535066528048');
+  s := TBigInteger.Create
+    ('308992691965804947361541664549085895292153777025772063598');
+
+  kData := TBigIntegers.AsUnsignedByteArray
+    (TBigInteger.Create
+    ('1542725565216523985789236956265265265235675811949404040041'));
+
+  k := TFixedSecureRandom.From(TCryptoLibMatrixByteArray.Create(kData));
+
+  curve := TF2mCurve.Create(191, // m
+    9, // k
+    TBigInteger.Create('2866537B676752636A68F56554E12640276B649EF7526267', 16),
+    // a
+    TBigInteger.Create('2E45EF571F00786F67B0081B9495A3D95462F5DE0AA185EC', 16));
+  // b
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('0436B3DAF8A23206F9C4F299D7B21A9C369137F2C84AE1AA0D765BE73433B3F95E332932E70EA245CA2418EA0EF98018FB')
+    ), // G
+    TBigInteger.Create
+    ('1569275433846670190958947355803350458831205595451630533029'), // n
+    TBigInteger.Two); // h
+
+  priKey := TECPrivateKeyParameters.Create('ECDSA',
+    TBigInteger.Create
+    ('1275552191113212300012030439187146164646146646466749494799'), // d
+    parameters);
+
+  ecdsa := TECDsaSigner.Create();
+  param := TParametersWithRandom.Create(priKey, k);
+
+  ecdsa.Init(true, param);
+
+  &message := TBigInteger.Create
+    ('968236873715988614170569073515315707566766479517').ToByteArray();
+  sig := ecdsa.GenerateSignature(&message);
+
+  if (not r.Equals(sig[0])) then
+  begin
+    Fail('r component wrong.' + sLineBreak + ' expecting: ' + r.ToString +
+      sLineBreak + ' got      : ' + sig[0].ToString);
+  end;
+
+  if (not s.Equals(sig[1])) then
+  begin
+    Fail('s component wrong.' + sLineBreak + ' expecting: ' + s.ToString +
+      sLineBreak + ' got      : ' + sig[1].ToString);
+  end;
+
+  // Verify the signature
+  pubKey := TECPublicKeyParameters.Create('ECDSA',
+    curve.DecodePoint(THex.Decode
+    ('045DE37E756BD55D72E3768CB396FFEB962614DEA4CE28A2E755C0E0E02F5FB132CAF416EF85B229BBB8E1352003125BA1')
+    ), // Q
+    parameters);
+
+  ecdsa.Init(false, pubKey);
+  if (not ecdsa.VerifySignature(&message, sig[0], sig[1])) then
+  begin
+    Fail('signature fails');
+  end;
+end;
+
+procedure TTestEC.TestECDsa192bitPrime;
+var
+  r, s, n: TBigInteger;
+  kData, &message: TCryptoLibByteArray;
+  k: ISecureRandom;
+  curve: IFpCurve;
+  parameters: IECDomainParameters;
+  priKey: IECPrivateKeyParameters;
+  pubKey: IECPublicKeyParameters;
+  param: IParametersWithRandom;
+  ecdsa: IECDsaSigner;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+
+begin
+  r := TBigInteger.Create
+    ('3342403536405981729393488334694600415596881826869351677613');
+  s := TBigInteger.Create
+    ('5735822328888155254683894997897571951568553642892029982342');
+
+  kData := TBigIntegers.AsUnsignedByteArray
+    (TBigInteger.Create
+    ('6140507067065001063065065565667405560006161556565665656654'));
+
+  k := TFixedSecureRandom.From(TCryptoLibMatrixByteArray.Create(kData));
+
+  n := TBigInteger.Create
+    ('6277101735386680763835789423176059013767194773182842284081');
+
+  curve := TFpCurve.Create
+    (TBigInteger.Create
+    ('6277101735386680763835789423207666416083908700390324961279'), // q
+    TBigInteger.Create('fffffffffffffffffffffffffffffffefffffffffffffffc', 16),
+    // a
+    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16),
+    // b
+    n, TBigInteger.One);
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
+    n);
+
+  priKey := TECPrivateKeyParameters.Create('ECDSA',
+    TBigInteger.Create
+    ('651056770906015076056810763456358567190100156695615665659'), // d
+    parameters);
+
+  param := TParametersWithRandom.Create(priKey, k);
+
+  ecdsa := TECDsaSigner.Create();
+
+  ecdsa.Init(true, param);
+
+  &message := TBigInteger.Create
+    ('968236873715988614170569073515315707566766479517').ToByteArray();
+  sig := ecdsa.GenerateSignature(&message);
+
+  if (not r.Equals(sig[0])) then
+  begin
+    Fail('r component wrong.' + sLineBreak + ' expecting: ' + r.ToString +
+      sLineBreak + ' got      : ' + sig[0].ToString);
+  end;
+
+  if (not s.Equals(sig[1])) then
+  begin
+    Fail('s component wrong.' + sLineBreak + ' expecting: ' + s.ToString +
+      sLineBreak + ' got      : ' + sig[1].ToString);
+  end;
+
+  // Verify the signature
+  pubKey := TECPublicKeyParameters.Create('ECDSA',
+    curve.DecodePoint(THex.Decode
+    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
+    parameters);
+
+  ecdsa.Init(false, pubKey);
+  if (not ecdsa.VerifySignature(&message, sig[0], sig[1])) then
+  begin
+    Fail('verification fails');
+  end;
+end;
+
+procedure TTestEC.TestECDsa239bitBinary;
+var
+  sig: TCryptoLibGenericArray<TBigInteger>;
+  k: ISecureRandom;
+  r, s: TBigInteger;
+  kData: TCryptoLibByteArray;
+  curve: IF2mCurve;
+  parameters: IECDomainParameters;
+  priKey: IECPrivateKeyParameters;
+  pubKey: IECPublicKeyParameters;
+  ecdsa: IECDsaSigner;
+  param: IParametersWithRandom;
+  &message: TCryptoLibByteArray;
+begin
+  r := TBigInteger.Create
+    ('21596333210419611985018340039034612628818151486841789642455876922391552');
+  s := TBigInteger.Create
+    ('197030374000731686738334997654997227052849804072198819102649413465737174');
+
+  kData := TBigIntegers.AsUnsignedByteArray
+    (TBigInteger.Create
+    ('171278725565216523967285789236956265265265235675811949404040041670216363')
+    );
+
+  k := TFixedSecureRandom.From(TCryptoLibMatrixByteArray.Create(kData));
+
+  curve := TF2mCurve.Create(239, // m
+    36, // k
+    TBigInteger.Create
+    ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
+    TBigInteger.Create
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16)); // b
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
+    ), // G
+    TBigInteger.Create
+    ('220855883097298041197912187592864814557886993776713230936715041207411783'),
+    // n
+    TBigInteger.ValueOf(4)); // h
+
+  priKey := TECPrivateKeyParameters.Create('ECDSA',
+    TBigInteger.Create
+    ('145642755521911534651321230007534120304391871461646461466464667494947990'),
+    // d
+    parameters);
+
+  ecdsa := TECDsaSigner.Create();
+  param := TParametersWithRandom.Create(priKey, k);
+
+  ecdsa.Init(true, param);
+
+  &message := TBigInteger.Create
+    ('968236873715988614170569073515315707566766479517').ToByteArray();
+  sig := ecdsa.GenerateSignature(&message);
+
+  if (not r.Equals(sig[0])) then
+  begin
+    Fail('r component wrong.' + sLineBreak + ' expecting: ' + r.ToString +
+      sLineBreak + ' got      : ' + sig[0].ToString);
+  end;
+
+  if (not s.Equals(sig[1])) then
+  begin
+    Fail('s component wrong.' + sLineBreak + ' expecting: ' + s.ToString +
+      sLineBreak + ' got      : ' + sig[1].ToString);
+  end;
+
+  // Verify the signature
+  pubKey := TECPublicKeyParameters.Create('ECDSA',
+    curve.DecodePoint(THex.Decode
+    ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
+    ), // Q
+    parameters);
+
+  ecdsa.Init(false, pubKey);
+  if (not ecdsa.VerifySignature(&message, sig[0], sig[1])) then
+  begin
+    Fail('signature fails');
+  end;
+end;
+
+procedure TTestEC.TestECDsa239bitBinaryAndLargeDigest;
+var
+  r, s: TBigInteger;
+  kData, &message: TCryptoLibByteArray;
+  k: ISecureRandom;
+  curve: IF2mCurve;
+  parameters: IECDomainParameters;
+  priKey: IECPrivateKeyParameters;
+  ecdsa: IECDsaSigner;
+  param: IParametersWithRandom;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+  pubKey: IECPublicKeyParameters;
+begin
+  r := TBigInteger.Create
+    ('21596333210419611985018340039034612628818151486841789642455876922391552');
+  s := TBigInteger.Create
+    ('144940322424411242416373536877786566515839911620497068645600824084578597');
+
+  kData := TBigIntegers.AsUnsignedByteArray
+    (TBigInteger.Create
+    ('171278725565216523967285789236956265265265235675811949404040041670216363')
+    );
+
+  k := TFixedSecureRandom.From(TCryptoLibMatrixByteArray.Create(kData));
+
+  curve := TF2mCurve.Create(239, // m
+    36, // k
+    TBigInteger.Create
+    ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
+    TBigInteger.Create
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16)); // b
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
+    ), // G
+    TBigInteger.Create
+    ('220855883097298041197912187592864814557886993776713230936715041207411783'),
+    // n
+    TBigInteger.ValueOf(4)); // h
+
+  priKey := TECPrivateKeyParameters.Create('ECDSA',
+    TBigInteger.Create
+    ('145642755521911534651321230007534120304391871461646461466464667494947990'),
+    // d
+    parameters);
+
+  ecdsa := TECDsaSigner.Create();
+  param := TParametersWithRandom.Create(priKey, k);
+
+  ecdsa.Init(true, param);
+
+  &message := TBigInteger.Create
+    ('968236873715988614170569073515315707566766479517968236873715988614170569073515315707566766479517968236873715988614170569073515315707566766479517')
+    .ToByteArray();
+  sig := ecdsa.GenerateSignature(&message);
+
+  if (not r.Equals(sig[0])) then
+  begin
+    Fail('r component wrong.' + sLineBreak + ' expecting: ' + r.ToString +
+      sLineBreak + ' got      : ' + sig[0].ToString);
+  end;
+
+  if (not s.Equals(sig[1])) then
+  begin
+    Fail('s component wrong.' + sLineBreak + ' expecting: ' + s.ToString +
+      sLineBreak + ' got      : ' + sig[1].ToString);
+  end;
+
+  // Verify the signature
+  pubKey := TECPublicKeyParameters.Create('ECDSA',
+    curve.DecodePoint(THex.Decode
+    ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
+    ), // Q
+    parameters);
+
+  ecdsa.Init(false, pubKey);
+  if (not ecdsa.VerifySignature(&message, sig[0], sig[1])) then
+  begin
+    Fail('signature fails');
+  end;
+end;
+
+procedure TTestEC.TestECDsa239bitPrime;
+var
+  &message, kData: TCryptoLibByteArray;
+  r, s, n: TBigInteger;
+  k: ISecureRandom;
+  curve: IFpCurve;
+  parameters: IECDomainParameters;
+  priKey: IECPrivateKeyParameters;
+  pubKey: IECPublicKeyParameters;
+  ecdsa: IECDsaSigner;
+  param: IParametersWithRandom;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+begin
+  r := TBigInteger.Create
+    ('308636143175167811492622547300668018854959378758531778147462058306432176');
+  s := TBigInteger.Create
+    ('323813553209797357708078776831250505931891051755007842781978505179448783');
+
+  kData := TBigIntegers.AsUnsignedByteArray
+    (TBigInteger.Create
+    ('700000017569056646655505781757157107570501575775705779575555657156756655')
+    );
+
+  k := TFixedSecureRandom.From(TCryptoLibMatrixByteArray.Create(kData));
+
+  n := TBigInteger.Create
+    ('883423532389192164791648750360308884807550341691627752275345424702807307');
+
+  curve := TFpCurve.Create
+    (TBigInteger.Create
+    ('883423532389192164791648750360308885314476597252960362792450860609699839'),
+    // q
+    TBigInteger.Create
+    ('7fffffffffffffffffffffff7fffffffffff8000000000007ffffffffffc', 16), // a
+    TBigInteger.Create
+    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16), // b
+    n, TBigInteger.One);
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
+    n);
+
+  priKey := TECPrivateKeyParameters.Create('ECDSA',
+    TBigInteger.Create
+    ('876300101507107567501066130761671078357010671067781776716671676178726717'),
+    // d
+    parameters);
+
+  ecdsa := TECDsaSigner.Create();
+  param := TParametersWithRandom.Create(priKey, k);
+
+  ecdsa.Init(true, param);
+
+  &message := TBigInteger.Create
+    ('968236873715988614170569073515315707566766479517').ToByteArray();
+  sig := ecdsa.GenerateSignature(&message);
+
+  if (not r.Equals(sig[0])) then
+  begin
+    Fail('r component wrong.' + sLineBreak + ' expecting: ' + r.ToString +
+      sLineBreak + ' got      : ' + sig[0].ToString);
+  end;
+
+  if (not s.Equals(sig[1])) then
+  begin
+    Fail('s component wrong.' + sLineBreak + ' expecting: ' + s.ToString +
+      sLineBreak + ' got      : ' + sig[1].ToString);
+  end;
+
+  // Verify the signature
+  pubKey := TECPublicKeyParameters.Create('ECDSA',
+    curve.DecodePoint(THex.Decode
+    ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
+    parameters);
+
+  ecdsa.Init(false, pubKey);
+  if (not ecdsa.VerifySignature(&message, sig[0], sig[1])) then
+  begin
+    Fail('signature fails');
+  end;
+end;
+
+procedure TTestEC.TestECDsaKeyGenTest;
+var
+  random: ISecureRandom;
+  n: TBigInteger;
+  curve: IFpCurve;
+  parameters: IECDomainParameters;
+  pGen: IECKeyPairGenerator;
+  genParam: IECKeyGenerationParameters;
+  pair: IAsymmetricCipherKeyPair;
+  param: IParametersWithRandom;
+  ecdsa: IECDsaSigner;
+  &message: TCryptoLibByteArray;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+begin
+  random := TSecureRandom.Create();
+
+  n := TBigInteger.Create
+    ('883423532389192164791648750360308884807550341691627752275345424702807307');
+
+  curve := TFpCurve.Create
+    (TBigInteger.Create
+    ('883423532389192164791648750360308885314476597252960362792450860609699839'),
+    // q
+    TBigInteger.Create
+    ('7fffffffffffffffffffffff7fffffffffff8000000000007ffffffffffc', 16), // a
+    TBigInteger.Create
+    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16), // b
+    n, TBigInteger.One);
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
+    n);
+
+  pGen := TECKeyPairGenerator.Create();
+  genParam := TECKeyGenerationParameters.Create(parameters, random);
+
+  pGen.Init(genParam);
+
+  pair := pGen.GenerateKeyPair();
+
+  param := TParametersWithRandom.Create(pair.Private, random);
+
+  ecdsa := TECDsaSigner.Create();
+
+  ecdsa.Init(true, param);
+
+  &message := TBigInteger.Create
+    ('968236873715988614170569073515315707566766479517').ToByteArray();
+  sig := ecdsa.GenerateSignature(&message);
+
+  ecdsa.Init(false, pair.Public);
+
+  if (not ecdsa.VerifySignature(&message, sig[0], sig[1])) then
+  begin
+    Fail('signature fails');
+  end;
+end;
+
+initialization
+
+// Register any test cases with the test runner
+
+{$IFDEF FPC}
+  RegisterTest(TTestEC);
+{$ELSE}
+  RegisterTest(TTestEC.Suite);
+{$ENDIF FPC}
+
+end.

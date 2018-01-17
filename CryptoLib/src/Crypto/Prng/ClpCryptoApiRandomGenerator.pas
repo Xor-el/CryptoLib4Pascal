@@ -1,0 +1,131 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
+{ *                        the development of this library                          * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpCryptoApiRandomGenerator;
+
+{$I ..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  ClpCryptoLibTypes,
+  ClpIRandomNumberGenerator,
+  ClpRandomNumberGenerator,
+  ClpICryptoApiRandomGenerator,
+  ClpIRandomGenerator;
+
+resourcestring
+  SNegativeOffset = 'Start Offset Cannot be Negative, "Start"';
+  SArrayTooSmall = 'Byte Array Too Small For Requested Offset and Length';
+
+type
+  /// <summary>
+  /// Uses TRandomNumberGenerator.Create() to Get randomness generator
+  /// </summary>
+  TCryptoApiRandomGenerator = class(TInterfacedObject,
+    ICryptoApiRandomGenerator, IRandomGenerator)
+
+  strict private
+    FrndProv: IRandomNumberGenerator;
+
+  public
+    /// <summary>
+    /// Uses TRandomNumberGenerator.CreateRNG() to Get randomness generator
+    /// </summary>
+    constructor Create(); overload;
+    constructor Create(rng: IRandomNumberGenerator); overload;
+
+    /// <summary>Add more seed material to the generator.</summary>
+    /// <param name="seed">A byte array to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(seed: TCryptoLibByteArray); overload; virtual;
+
+    /// <summary>Add more seed material to the generator.</summary>
+    /// <param name="seed">A long value to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(seed: Int64); overload; virtual;
+
+    /// <summary>Fill byte array with random values.</summary>
+    /// <param name="bytes">Array to be filled.</param>
+    procedure NextBytes(bytes: TCryptoLibByteArray); overload; virtual;
+
+    /// <summary>Fill byte array with random values.</summary>
+    /// <param name="bytes">Array to receive bytes.</param>
+    /// <param name="start">Index to start filling at.</param>
+    /// <param name="len">Length of segment to fill.</param>
+    procedure NextBytes(bytes: TCryptoLibByteArray; start, len: Int32);
+      overload; virtual;
+
+  end;
+
+implementation
+
+{ TCryptoApiRandomGenerator }
+
+procedure TCryptoApiRandomGenerator.AddSeedMaterial(seed: Int64);
+begin
+  // We don't care about the seed
+end;
+
+procedure TCryptoApiRandomGenerator.AddSeedMaterial(seed: TCryptoLibByteArray);
+begin
+  // We don't care about the seed
+end;
+
+constructor TCryptoApiRandomGenerator.Create(rng: IRandomNumberGenerator);
+begin
+  FrndProv := rng;
+end;
+
+constructor TCryptoApiRandomGenerator.Create;
+begin
+  Create(TRandomNumberGenerator.CreateRNG());
+end;
+
+procedure TCryptoApiRandomGenerator.NextBytes(bytes: TCryptoLibByteArray);
+begin
+  FrndProv.GetBytes(bytes);
+end;
+
+procedure TCryptoApiRandomGenerator.NextBytes(bytes: TCryptoLibByteArray;
+  start, len: Int32);
+var
+  tmpBuf: TCryptoLibByteArray;
+begin
+  if (start < 0) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SNegativeOffset);
+  end;
+  if (System.Length(bytes) < (start + len)) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SArrayTooSmall);
+
+  end;
+
+  if ((System.Length(bytes) = len) and (start = 0)) then
+  begin
+    NextBytes(bytes);
+  end
+  else
+  begin
+    System.SetLength(tmpBuf, len);
+    NextBytes(tmpBuf);
+
+    System.Move(tmpBuf[0], bytes[start], len * System.SizeOf(Byte));
+
+  end;
+end;
+
+end.
