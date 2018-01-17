@@ -3388,7 +3388,6 @@ begin
 
   // let n = 1 + d . 2^s
   n := Self;
-  // n := TBigInteger.Create('18129193193421409391');
   shiftval := Int32(-1) shl 1; // -2
   s := n.GetLowestSetBitMaskFirst(shiftval);
 {$IFDEF DEBUG}
@@ -3407,10 +3406,6 @@ begin
 
     until (not((a.Fsign = 0) or (a.CompareTo(n) >= 0) or
       (a.IsEqualMagnitude(montRadix)) or (a.IsEqualMagnitude(minusMontRadix))));
-
-    // a := TBigInteger.Create('2241721637801439371');
-    // r := TBigInteger.Create('3566581514692115955');
-    // n := TBigInteger.Create('14266326058768463821');
 
     y := ModPowMonty(a, r, n, false);
 
