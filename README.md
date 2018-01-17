@@ -8,7 +8,6 @@ CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that
     SHA-256withECDSA, SHA-384withECDSA, SHA-512withECDSA and RIPEMD160withECDSA
     
    **Dependencies:**
-
     [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) >= v2.3
     For FreePascal v3.0.x [Generics.Collections](https://github.com/maciej-izak/generics.collections)
 
