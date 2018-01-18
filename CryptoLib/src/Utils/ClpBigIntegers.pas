@@ -151,6 +151,7 @@ begin
   begin
     Result := CreateRandomInRange(TBigInteger.Zero, max.Subtract(min),
       random).Add(min);
+    Exit;
   end;
 
   I := 0;
