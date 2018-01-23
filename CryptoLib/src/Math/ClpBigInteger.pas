@@ -2676,8 +2676,6 @@ begin
     begin
       j := System.length(y) - 1;
       while j >= 0 do
-
-      // for (int j = y.Length - 1; j >= 0; j--) do
       begin
         val := val + (a * (y[j] and IMASK) + (x[xBase + j] and IMASK));
 
