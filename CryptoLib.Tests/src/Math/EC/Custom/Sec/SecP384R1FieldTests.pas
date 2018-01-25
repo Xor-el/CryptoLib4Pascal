@@ -58,8 +58,8 @@ type
     FDP: IX9ECParameters;
     FQ: TBigInteger;
 
-    procedure AssertAreBigIntegersEqual(a, b: TBigInteger);
-    function FE(x: TBigInteger): IECFieldElement;
+    procedure AssertAreBigIntegersEqual(const a, b: TBigInteger);
+    function FE(const x: TBigInteger): IECFieldElement;
     function GenerateMultiplyInput_Random(): IECFieldElement;
     function GenerateSquareInput_CarryBug(): IECFieldElement;
     function Nat_Create(len: Int32): TCryptoLibUInt32Array;
@@ -88,12 +88,13 @@ implementation
 
 { TTestSecP384R1Field }
 
-procedure TTestSecP384R1Field.AssertAreBigIntegersEqual(a, b: TBigInteger);
+procedure TTestSecP384R1Field.AssertAreBigIntegersEqual(const a,
+  b: TBigInteger);
 begin
   CheckEquals(True, a.Equals(b));
 end;
 
-function TTestSecP384R1Field.FE(x: TBigInteger): IECFieldElement;
+function TTestSecP384R1Field.FE(const x: TBigInteger): IECFieldElement;
 begin
   result := FDP.Curve.FromBigInteger(x);
 end;

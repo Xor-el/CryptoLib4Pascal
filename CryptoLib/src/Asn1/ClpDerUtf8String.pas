@@ -51,7 +51,7 @@ type
     property Str: String read GetStr;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     /// <summary>
@@ -68,7 +68,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return an UTF8 string from the passed in object.
@@ -97,8 +97,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerUtf8String; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerUtf8String; overload; static; inline;
 
   end;
 
@@ -115,7 +115,7 @@ begin
 {$ENDIF FPC}
 end;
 
-function TDerUtf8String.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerUtf8String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerUtf8String;
 begin
@@ -149,7 +149,7 @@ begin
   FStr := Str;
 end;
 
-procedure TDerUtf8String.Encode(derOut: IDerOutputStream);
+procedure TDerUtf8String.Encode(const derOut: IDerOutputStream);
 begin
 {$IFDEF FPC}
   derOut.WriteEncoded(TAsn1Tags.Utf8String,
@@ -159,7 +159,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TDerUtf8String.GetInstance(obj: IAsn1TaggedObject;
+class function TDerUtf8String.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerUtf8String;
 var
   o: IAsn1Object;

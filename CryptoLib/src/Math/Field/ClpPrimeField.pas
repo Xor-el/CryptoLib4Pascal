@@ -38,10 +38,10 @@ type
     Fcharacteristic: TBigInteger;
 
   public
-    constructor Create(characteristic: TBigInteger);
+    constructor Create(const characteristic: TBigInteger);
 
     function Equals(other: TObject): Boolean; overload; override;
-    function Equals(other: IPrimeField): Boolean; reintroduce; overload;
+    function Equals(const other: IPrimeField): Boolean; reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -54,12 +54,12 @@ implementation
 
 { TPrimeField }
 
-constructor TPrimeField.Create(characteristic: TBigInteger);
+constructor TPrimeField.Create(const characteristic: TBigInteger);
 begin
   Fcharacteristic := characteristic;
 end;
 
-function TPrimeField.Equals(other: IPrimeField): Boolean;
+function TPrimeField.Equals(const other: IPrimeField): Boolean;
 begin
   if ((Self as IPrimeField) = other) then
   begin

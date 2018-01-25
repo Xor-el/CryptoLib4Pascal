@@ -39,7 +39,8 @@ type
 
   strict protected
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; virtual; abstract;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+      virtual; abstract;
 
     function Asn1GetHashCode(): Int32; virtual; abstract;
 
@@ -61,9 +62,9 @@ type
 
     function ToAsn1Object(): IAsn1Object; override;
 
-    procedure Encode(derOut: IDerOutputStream); virtual; abstract;
+    procedure Encode(const derOut: IDerOutputStream); virtual; abstract;
 
-    function CallAsn1Equals(obj: IAsn1Object): Boolean;
+    function CallAsn1Equals(const obj: IAsn1Object): Boolean;
 
     function CallAsn1GetHashCode(): Int32;
 
@@ -77,7 +78,7 @@ uses
 
 { TAsn1Object }
 
-function TAsn1Object.CallAsn1Equals(obj: IAsn1Object): Boolean;
+function TAsn1Object.CallAsn1Equals(const obj: IAsn1Object): Boolean;
 begin
   result := Asn1Equals(obj);
 end;

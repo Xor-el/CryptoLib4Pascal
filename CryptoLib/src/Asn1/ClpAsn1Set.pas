@@ -73,7 +73,7 @@ type
       Fmax, Findex: Int32;
 
     public
-      constructor Create(outer: IAsn1Set);
+      constructor Create(const outer: IAsn1Set);
       function ReadObject(): IAsn1Convertible;
       function ToAsn1Object(): IAsn1Object;
 
@@ -81,8 +81,8 @@ type
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
-    procedure AddObject(obj: IAsn1Encodable); inline;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
+    procedure AddObject(const obj: IAsn1Encodable); inline;
     procedure Sort();
 
     constructor Create(capacity: Int32);
@@ -145,8 +145,8 @@ type
     // * @exception ArgumentException if the tagged object cannot
     // *          be converted.
     // */
-    class function GetInstance(obj: IAsn1TaggedObject; explicitly: Boolean)
-      : IAsn1Set; overload; static;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      explicitly: Boolean): IAsn1Set; overload; static;
 
     property Parser: IAsn1SetParser read GetParser;
     property Count: Int32 read GetCount;
@@ -162,7 +162,7 @@ uses
 
 { TAsn1Set }
 
-procedure TAsn1Set.AddObject(obj: IAsn1Encodable);
+procedure TAsn1Set.AddObject(const obj: IAsn1Encodable);
 begin
   F_set.Add(obj);
 end;
@@ -183,7 +183,7 @@ begin
   result := encObj;
 end;
 
-function TAsn1Set.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TAsn1Set.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IAsn1Set;
   s1, s2: TEnumerator<IAsn1Encodable>;
@@ -205,19 +205,24 @@ begin
   s1 := GetEnumerator;
   s2 := other.GetEnumerator;
 
-  while (s1.MoveNext() and s2.MoveNext()) do
-  begin
-    o1 := GetCurrent(s1).ToAsn1Object();
-    o2 := GetCurrent(s2).ToAsn1Object();
-
-    if (not(o1.Equals(o2))) then
+  try
+    while (s1.MoveNext() and s2.MoveNext()) do
     begin
-      result := false;
-      Exit;
-    end;
-  end;
+      o1 := GetCurrent(s1).ToAsn1Object();
+      o2 := GetCurrent(s2).ToAsn1Object();
 
-  result := true;
+      if (not(o1.Equals(o2))) then
+      begin
+        result := false;
+        Exit;
+      end;
+    end;
+
+    result := true;
+  finally
+    s1.Free;
+    s2.Free;
+  end;
 end;
 
 function TAsn1Set.Asn1GetHashCode: Int32;
@@ -280,8 +285,8 @@ begin
   end;
 end;
 
-class function TAsn1Set.GetInstance(obj: IAsn1TaggedObject; explicitly: Boolean)
-  : IAsn1Set;
+class function TAsn1Set.GetInstance(const obj: IAsn1TaggedObject;
+  explicitly: Boolean): IAsn1Set;
 var
   inner: IAsn1Object;
   asn1Set: IAsn1Set;
@@ -481,7 +486,7 @@ end;
 
 { TAsn1Set.TAsn1SetParserImpl }
 
-constructor TAsn1Set.TAsn1SetParserImpl.Create(outer: IAsn1Set);
+constructor TAsn1Set.TAsn1SetParserImpl.Create(const outer: IAsn1Set);
 begin
   Inherited Create();
   Fouter := outer;

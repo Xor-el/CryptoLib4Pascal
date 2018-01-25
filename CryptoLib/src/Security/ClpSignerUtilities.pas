@@ -32,6 +32,7 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
   ClpECDsaSigner,
+  ClpIECDsaSigner,
   ClpISigner,
   ClpIDerObjectIdentifier;
 
@@ -71,10 +72,10 @@ type
     class function GetObjectIdentifier(mechanism: String): IDerObjectIdentifier;
       static; inline;
 
-    class function GetEncodingName(oid: IDerObjectIdentifier): String;
+    class function GetEncodingName(const oid: IDerObjectIdentifier): String;
       static; inline;
 
-    class function GetSigner(id: IDerObjectIdentifier): ISigner; overload;
+    class function GetSigner(const id: IDerObjectIdentifier): ISigner; overload;
       static; inline;
 
     class function GetSigner(algorithm: String): ISigner; overload; static;
@@ -186,7 +187,7 @@ begin
 end;
 
 class function TSignerUtilities.GetEncodingName
-  (oid: IDerObjectIdentifier): String;
+  (const oid: IDerObjectIdentifier): String;
 begin
   Falgorithms.TryGetValue(oid.id, Result);
 end;
@@ -210,7 +211,8 @@ begin
   Foids.TryGetValue(mechanism, Result);
 end;
 
-class function TSignerUtilities.GetSigner(id: IDerObjectIdentifier): ISigner;
+class function TSignerUtilities.GetSigner
+  (const id: IDerObjectIdentifier): ISigner;
 begin
   Result := GetSigner(id.id);
 end;
@@ -236,42 +238,48 @@ begin
   begin
     HashInstance := THashFactory.TNullDigestFactory.CreateNullDigest();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
   if (mechanism = 'SHA-1withECDSA') then
   begin
     HashInstance := THashFactory.TCrypto.CreateSHA1();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
   if (mechanism = 'SHA-224withECDSA') then
   begin
     HashInstance := THashFactory.TCrypto.CreateSHA2_224();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
   if (mechanism = 'SHA-256withECDSA') then
   begin
     HashInstance := THashFactory.TCrypto.CreateSHA2_256();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
   if (mechanism = 'SHA-384withECDSA') then
   begin
     HashInstance := THashFactory.TCrypto.CreateSHA2_384();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
   if (mechanism = 'SHA-512withECDSA') then
   begin
     HashInstance := THashFactory.TCrypto.CreateSHA2_512();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
 
@@ -279,7 +287,8 @@ begin
   begin
     HashInstance := THashFactory.TCrypto.CreateRIPEMD160();
     HashInstance.Initialize;
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create(), HashInstance));
+    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      HashInstance));
     Exit;
   end;
 

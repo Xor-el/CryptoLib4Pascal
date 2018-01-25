@@ -53,8 +53,8 @@ type
     /// a byte array without a leading zero byte if present in the signed
     /// encoding.
     /// </returns>
-    class function AsUnsignedByteArray(n: TBigInteger): TCryptoLibByteArray;
-      overload; static; inline;
+    class function AsUnsignedByteArray(const n: TBigInteger)
+      : TCryptoLibByteArray; overload; static; inline;
 
     /// <summary>
     /// the passed in value as an unsigned byte array of specified length,
@@ -70,7 +70,7 @@ type
     /// a byte array of specified length, with leading zeroes as necessary
     /// given the size of n.
     /// </returns>
-    class function AsUnsignedByteArray(length: Int32; n: TBigInteger)
+    class function AsUnsignedByteArray(length: Int32; const n: TBigInteger)
       : TCryptoLibByteArray; overload; static; inline;
 
     /// <summary>
@@ -89,9 +89,9 @@ type
     /// <returns>
     /// a random BigInteger value in the range [min,max]
     /// </returns>
-    class function CreateRandomInRange(min, max: TBigInteger;
+    class function CreateRandomInRange(const min, max: TBigInteger;
       // TODO Should have been just Random class
-      random: ISecureRandom): TBigInteger; static;
+      const random: ISecureRandom): TBigInteger; static;
 
   end;
 
@@ -99,14 +99,14 @@ implementation
 
 { TBigIntegers }
 
-class function TBigIntegers.AsUnsignedByteArray(n: TBigInteger)
+class function TBigIntegers.AsUnsignedByteArray(const n: TBigInteger)
   : TCryptoLibByteArray;
 begin
   Result := n.ToByteArrayUnsigned();
 end;
 
-class function TBigIntegers.AsUnsignedByteArray(length: Int32; n: TBigInteger)
-  : TCryptoLibByteArray;
+class function TBigIntegers.AsUnsignedByteArray(length: Int32;
+  const n: TBigInteger): TCryptoLibByteArray;
 var
   bytes: TCryptoLibByteArray;
 begin
@@ -129,8 +129,9 @@ begin
 
 end;
 
-class function TBigIntegers.CreateRandomInRange(min, max: TBigInteger;
-  random: ISecureRandom): TBigInteger;
+class function TBigIntegers.CreateRandomInRange(const min, max: TBigInteger;
+  // TODO Should have been just Random class
+  const random: ISecureRandom): TBigInteger;
 var
   cmp, I: Int32;
   x: TBigInteger;

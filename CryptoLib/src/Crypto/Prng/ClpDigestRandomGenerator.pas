@@ -64,7 +64,7 @@ type
 
   public
 
-    constructor Create(digest: IHash);
+    constructor Create(const digest: IHash);
     procedure AddSeedMaterial(inSeed: TCryptoLibByteArray); overload; inline;
     procedure AddSeedMaterial(rSeed: Int64); overload; inline;
     procedure NextBytes(bytes: TCryptoLibByteArray); overload; inline;
@@ -124,7 +124,7 @@ begin
   end;
 end;
 
-constructor TDigestRandomGenerator.Create(digest: IHash);
+constructor TDigestRandomGenerator.Create(const digest: IHash);
 begin
   Inherited Create();
   Fdigest := digest;

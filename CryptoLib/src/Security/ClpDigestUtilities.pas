@@ -66,19 +66,19 @@ type
     /// <returns>A DerObjectIdentifier, null if the Oid is not available.</returns>
     class function GetObjectIdentifier(mechanism: String)
       : IDerObjectIdentifier; static;
-    class function GetDigest(id: IDerObjectIdentifier): IHash; overload;
+    class function GetDigest(const id: IDerObjectIdentifier): IHash; overload;
       static; inline;
     class function GetDigest(const algorithm: String): IHash; overload; static;
 
-    class function GetAlgorithmName(oid: IDerObjectIdentifier): String;
+    class function GetAlgorithmName(const oid: IDerObjectIdentifier): String;
       static; inline;
 
     class function CalculateDigest(const algorithm: String;
       input: TCryptoLibByteArray): TCryptoLibByteArray; static; inline;
 
-    class function DoFinal(digest: IHash): TCryptoLibByteArray; overload;
+    class function DoFinal(const digest: IHash): TCryptoLibByteArray; overload;
       static; inline;
-    class function DoFinal(digest: IHash; input: TCryptoLibByteArray)
+    class function DoFinal(const digest: IHash; input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload; static; inline;
 
     class procedure Boot(); static;
@@ -88,7 +88,8 @@ implementation
 
 { TDigestUtilities }
 
-class function TDigestUtilities.GetDigest(id: IDerObjectIdentifier): IHash;
+class function TDigestUtilities.GetDigest
+  (const id: IDerObjectIdentifier): IHash;
 begin
   result := GetDigest(id.id);
 end;
@@ -255,7 +256,8 @@ begin
 
 end;
 
-class function TDigestUtilities.DoFinal(digest: IHash): TCryptoLibByteArray;
+class function TDigestUtilities.DoFinal(const digest: IHash)
+  : TCryptoLibByteArray;
 begin
   result := digest.TransformFinal().GetBytes();
 end;
@@ -353,7 +355,7 @@ begin
   Foids.Free;
 end;
 
-class function TDigestUtilities.DoFinal(digest: IHash;
+class function TDigestUtilities.DoFinal(const digest: IHash;
   input: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
   digest.TransformBytes(input, 0, System.Length(input));
@@ -361,7 +363,7 @@ begin
 end;
 
 class function TDigestUtilities.GetAlgorithmName
-  (oid: IDerObjectIdentifier): String;
+  (const oid: IDerObjectIdentifier): String;
 begin
   Falgorithms.TryGetValue(oid.id, result);
 end;

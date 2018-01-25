@@ -46,7 +46,8 @@ type
 
   public
 
-    class function FromVector(v: IAsn1EncodableVector): IDerSequence; static;
+    class function FromVector(const v: IAsn1EncodableVector)
+      : IDerSequence; static;
 
     /// <summary>
     /// create an empty sequence
@@ -56,14 +57,14 @@ type
     /// <summary>
     /// create a sequence containing one object
     /// </summary>
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     constructor Create(v: array of IAsn1Encodable); overload;
 
     /// <summary>
     /// create a sequence containing a vector of objects.
     /// </summary>
-    constructor Create(v: IAsn1EncodableVector); overload;
+    constructor Create(const v: IAsn1EncodableVector); overload;
 
     destructor Destroy(); override;
 
@@ -74,7 +75,7 @@ type
     /// just outputing Sequence, <br />we also have to specify Constructed,
     /// and the objects length. <br />
     /// </summary>
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     class property Empty: IDerSequence read GetEmpty;
 
@@ -84,7 +85,7 @@ implementation
 
 { TDerSequence }
 
-constructor TDerSequence.Create(obj: IAsn1Encodable);
+constructor TDerSequence.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(1);
   AddObject(obj);
@@ -95,7 +96,7 @@ begin
   Inherited Create(0);
 end;
 
-constructor TDerSequence.Create(v: IAsn1EncodableVector);
+constructor TDerSequence.Create(const v: IAsn1EncodableVector);
 var
   ae: IAsn1Encodable;
 begin
@@ -128,7 +129,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TDerSequence.Encode(derOut: IDerOutputStream);
+procedure TDerSequence.Encode(const derOut: IDerOutputStream);
 var
   bOut: TMemoryStream;
   dOut: TDerOutputStream;
@@ -156,7 +157,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.Sequence or TAsn1Tags.Constructed, bytes);
 end;
 
-class function TDerSequence.FromVector(v: IAsn1EncodableVector): IDerSequence;
+class function TDerSequence.FromVector(const v: IAsn1EncodableVector)
+  : IDerSequence;
 begin
   if v.Count < 1 then
   begin

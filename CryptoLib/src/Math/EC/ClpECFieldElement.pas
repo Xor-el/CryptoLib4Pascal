@@ -60,32 +60,36 @@ type
     function GetFieldName: String; virtual; abstract;
     function GetFieldSize: Int32; virtual; abstract;
     function ToBigInteger(): TBigInteger; virtual; abstract;
-    function Add(b: IECFieldElement): IECFieldElement; virtual; abstract;
+    function Add(const b: IECFieldElement): IECFieldElement; virtual; abstract;
     function AddOne(): IECFieldElement; virtual; abstract;
-    function Subtract(b: IECFieldElement): IECFieldElement; virtual; abstract;
-    function Multiply(b: IECFieldElement): IECFieldElement; virtual; abstract;
-    function Divide(b: IECFieldElement): IECFieldElement; virtual; abstract;
+    function Subtract(const b: IECFieldElement): IECFieldElement;
+      virtual; abstract;
+    function Multiply(const b: IECFieldElement): IECFieldElement;
+      virtual; abstract;
+    function Divide(const b: IECFieldElement): IECFieldElement;
+      virtual; abstract;
     function Negate(): IECFieldElement; virtual; abstract;
     function Square(): IECFieldElement; virtual; abstract;
     function Invert(): IECFieldElement; virtual; abstract;
     function Sqrt(): IECFieldElement; virtual; abstract;
 
-    function MultiplyMinusProduct(b, x, y: IECFieldElement)
+    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
       : IECFieldElement; virtual;
 
-    function MultiplyPlusProduct(b, x, y: IECFieldElement)
+    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
       : IECFieldElement; virtual;
 
-    function SquareMinusProduct(x, y: IECFieldElement)
+    function SquareMinusProduct(const x, y: IECFieldElement)
       : IECFieldElement; virtual;
 
-    function SquarePlusProduct(x, y: IECFieldElement): IECFieldElement; virtual;
+    function SquarePlusProduct(const x, y: IECFieldElement)
+      : IECFieldElement; virtual;
 
     function SquarePow(pow: Int32): IECFieldElement; virtual;
 
     function TestBitZero(): Boolean; virtual;
 
-    function Equals(other: IECFieldElement): Boolean; reintroduce;
+    function Equals(const other: IECFieldElement): Boolean; reintroduce;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -110,25 +114,25 @@ type
 
     function GetQ: TBigInteger; inline;
 
-    function CheckSqrt(z: IECFieldElement): IECFieldElement; inline;
-    function LucasSequence(P, Q, K: TBigInteger)
+    function CheckSqrt(const z: IECFieldElement): IECFieldElement; inline;
+    function LucasSequence(const P, Q, K: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>;
 
   strict protected
-    function ModAdd(x1, x2: TBigInteger): TBigInteger; virtual;
-    function ModDouble(x: TBigInteger): TBigInteger; virtual;
+    function ModAdd(const x1, x2: TBigInteger): TBigInteger; virtual;
+    function ModDouble(const x: TBigInteger): TBigInteger; virtual;
     function ModHalf(x: TBigInteger): TBigInteger; virtual;
     function ModHalfAbs(x: TBigInteger): TBigInteger; virtual;
-    function ModInverse(x: TBigInteger): TBigInteger; virtual;
-    function ModMult(x1, x2: TBigInteger): TBigInteger; virtual;
+    function ModInverse(const x: TBigInteger): TBigInteger; virtual;
+    function ModMult(const x1, x2: TBigInteger): TBigInteger; virtual;
     function ModReduce(x: TBigInteger): TBigInteger; virtual;
-    function ModSubtract(x1, x2: TBigInteger): TBigInteger; virtual;
+    function ModSubtract(const x1, x2: TBigInteger): TBigInteger; virtual;
 
   public
-    constructor Create(Q, x: TBigInteger); overload;
+    constructor Create(const Q, x: TBigInteger); overload;
       deprecated 'Use ECCurve.FromBigInteger to construct field elements';
 
-    constructor Create(Q, r, x: TBigInteger); overload;
+    constructor Create(const Q, r, x: TBigInteger); overload;
 
     destructor Destroy; override;
 
@@ -143,12 +147,12 @@ type
 
     function ToBigInteger(): TBigInteger; override;
 
-    function Add(b: IECFieldElement): IECFieldElement; override;
+    function Add(const b: IECFieldElement): IECFieldElement; override;
     function AddOne(): IECFieldElement; override;
-    function Subtract(b: IECFieldElement): IECFieldElement; override;
+    function Subtract(const b: IECFieldElement): IECFieldElement; override;
 
-    function Multiply(b: IECFieldElement): IECFieldElement; override;
-    function Divide(b: IECFieldElement): IECFieldElement; override;
+    function Multiply(const b: IECFieldElement): IECFieldElement; override;
+    function Divide(const b: IECFieldElement): IECFieldElement; override;
     function Negate(): IECFieldElement; override;
     function Square(): IECFieldElement; override;
 
@@ -162,28 +166,28 @@ type
     /// </returns>
     function Sqrt(): IECFieldElement; override;
 
-    function MultiplyMinusProduct(b, x, y: IECFieldElement)
+    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
       : IECFieldElement; override;
-    function MultiplyPlusProduct(b, x, y: IECFieldElement)
-      : IECFieldElement; override;
-
-    function SquareMinusProduct(x, y: IECFieldElement)
+    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
       : IECFieldElement; override;
 
-    function SquarePlusProduct(x, y: IECFieldElement): IECFieldElement;
-      override;
+    function SquareMinusProduct(const x, y: IECFieldElement)
+      : IECFieldElement; override;
+
+    function SquarePlusProduct(const x, y: IECFieldElement)
+      : IECFieldElement; override;
 
     property FieldName: string read GetFieldName;
     property FieldSize: Int32 read GetFieldSize;
 
     property Q: TBigInteger read GetQ;
 
-    function Equals(other: IFpFieldElement): Boolean; reintroduce;
+    function Equals(const other: IFpFieldElement): Boolean; reintroduce;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
-    class function CalculateResidue(P: TBigInteger): TBigInteger; static;
+    class function CalculateResidue(const P: TBigInteger): TBigInteger; static;
 
   end;
 
@@ -219,7 +223,7 @@ type
     function GetK3: Int32; inline;
 
     constructor Create(m: Int32; ks: TCryptoLibInt32Array;
-      x: TLongArray); overload;
+      const x: TLongArray); overload;
 
   public
 
@@ -258,7 +262,7 @@ type
     // * represents the reduction polynomial <code>f(z)</code>.
     // * @param x The BigInteger representing the value of the field element.
     // */
-    constructor Create(m, k1, k2, k3: Int32; x: TBigInteger); overload;
+    constructor Create(m, k1, k2, k3: Int32; const x: TBigInteger); overload;
     // /**
     // * Constructor for Tpb.
     // * @param m  The exponent <code>m</code> of
@@ -268,7 +272,7 @@ type
     // * polynomial <code>f(z)</code>.
     // * @param x The BigInteger representing the value of the field element.
     // */
-    constructor Create(m, K: Int32; x: TBigInteger); overload;
+    constructor Create(m, K: Int32; const x: TBigInteger); overload;
 
     destructor Destroy; override;
 
@@ -282,12 +286,12 @@ type
     function TestBitZero(): Boolean; override;
     function ToBigInteger(): TBigInteger; override;
 
-    function Add(b: IECFieldElement): IECFieldElement; override;
+    function Add(const b: IECFieldElement): IECFieldElement; override;
     function AddOne(): IECFieldElement; override;
-    function Subtract(b: IECFieldElement): IECFieldElement; override;
+    function Subtract(const b: IECFieldElement): IECFieldElement; override;
 
-    function Multiply(b: IECFieldElement): IECFieldElement; override;
-    function Divide(b: IECFieldElement): IECFieldElement; override;
+    function Multiply(const b: IECFieldElement): IECFieldElement; override;
+    function Divide(const b: IECFieldElement): IECFieldElement; override;
     function Negate(): IECFieldElement; override;
     function Square(): IECFieldElement; override;
 
@@ -301,20 +305,20 @@ type
     /// </returns>
     function Sqrt(): IECFieldElement; override;
 
-    function MultiplyMinusProduct(b, x, y: IECFieldElement)
+    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
       : IECFieldElement; override;
-    function MultiplyPlusProduct(b, x, y: IECFieldElement)
-      : IECFieldElement; override;
-
-    function SquareMinusProduct(x, y: IECFieldElement)
+    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
       : IECFieldElement; override;
 
-    function SquarePlusProduct(x, y: IECFieldElement): IECFieldElement;
-      override;
+    function SquareMinusProduct(const x, y: IECFieldElement)
+      : IECFieldElement; override;
+
+    function SquarePlusProduct(const x, y: IECFieldElement)
+      : IECFieldElement; override;
 
     function SquarePow(pow: Int32): IECFieldElement; override;
 
-    function Equals(other: IF2mFieldElement): Boolean; reintroduce;
+    function Equals(const other: IF2mFieldElement): Boolean; reintroduce;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -330,7 +334,7 @@ type
     // * <code>F<sub>2<sup>m</sup></sub></code> (having the same
     // * representation).
     // */
-    class procedure CheckFieldElements(a, b: IECFieldElement); static;
+    class procedure CheckFieldElements(const a, b: IECFieldElement); static;
 
     // /**
     // * @return the representation of the field
@@ -390,7 +394,7 @@ implementation
 
 { TF2mFieldElement }
 
-function TF2mFieldElement.Add(b: IECFieldElement): IECFieldElement;
+function TF2mFieldElement.Add(const b: IECFieldElement): IECFieldElement;
 var
   iarrClone: TLongArray;
   bF2m: IF2mFieldElement;
@@ -409,7 +413,8 @@ begin
   result := TF2mFieldElement.Create(Fm, FKs, Fx.AddOne());
 end;
 
-class procedure TF2mFieldElement.CheckFieldElements(a, b: IECFieldElement);
+class procedure TF2mFieldElement.CheckFieldElements(const a,
+  b: IECFieldElement);
 var
   aF2m, bF2m: IF2mFieldElement;
 begin
@@ -431,12 +436,12 @@ begin
   end;
 end;
 
-constructor TF2mFieldElement.Create(m, K: Int32; x: TBigInteger);
+constructor TF2mFieldElement.Create(m, K: Int32; const x: TBigInteger);
 begin
   Create(m, K, 0, 0, x);
 end;
 
-constructor TF2mFieldElement.Create(m, k1, k2, k3: Int32; x: TBigInteger);
+constructor TF2mFieldElement.Create(m, k1, k2, k3: Int32; const x: TBigInteger);
 begin
   Inherited Create();
   if (not(x.IsInitialized) or (x.SignValue < 0) or (x.BitLength > m)) then
@@ -469,7 +474,7 @@ begin
 end;
 
 constructor TF2mFieldElement.Create(m: Int32; ks: TCryptoLibInt32Array;
-  x: TLongArray);
+  const x: TLongArray);
 begin
   Inherited Create();
   Fm := m;
@@ -487,11 +492,10 @@ end;
 
 destructor TF2mFieldElement.Destroy;
 begin
-
   inherited Destroy;
 end;
 
-function TF2mFieldElement.Divide(b: IECFieldElement): IECFieldElement;
+function TF2mFieldElement.Divide(const b: IECFieldElement): IECFieldElement;
 var
   bInv: IECFieldElement;
 begin
@@ -500,7 +504,7 @@ begin
   result := Multiply(bInv);
 end;
 
-function TF2mFieldElement.Equals(other: IF2mFieldElement): Boolean;
+function TF2mFieldElement.Equals(const other: IF2mFieldElement): Boolean;
 begin
   if (other = Self as IF2mFieldElement) then
   begin
@@ -601,7 +605,7 @@ begin
   result := TF2mFieldElement.Create(Fm, FKs, Fx.ModInverse(Fm, FKs));
 end;
 
-function TF2mFieldElement.Multiply(b: IECFieldElement): IECFieldElement;
+function TF2mFieldElement.Multiply(const b: IECFieldElement): IECFieldElement;
 begin
   // Right-to-left comb multiplication in the LongArray
   // Input: Binary polynomials a(z) and b(z) of degree at most m-1
@@ -614,13 +618,13 @@ begin
     Fx.ModMultiply((b as IF2mFieldElement).x, Fm, FKs));
 end;
 
-function TF2mFieldElement.MultiplyMinusProduct(b, x, y: IECFieldElement)
+function TF2mFieldElement.MultiplyMinusProduct(const b, x, y: IECFieldElement)
   : IECFieldElement;
 begin
   result := MultiplyPlusProduct(b, x, y);
 end;
 
-function TF2mFieldElement.MultiplyPlusProduct(b, x, y: IECFieldElement)
+function TF2mFieldElement.MultiplyPlusProduct(const b, x, y: IECFieldElement)
   : IECFieldElement;
 var
   ax, bx, xx, yx, ab, xy: TLongArray;
@@ -667,13 +671,13 @@ begin
   result := TF2mFieldElement.Create(Fm, FKs, Fx.ModSquare(Fm, FKs));
 end;
 
-function TF2mFieldElement.SquareMinusProduct(x, y: IECFieldElement)
+function TF2mFieldElement.SquareMinusProduct(const x, y: IECFieldElement)
   : IECFieldElement;
 begin
   result := SquarePlusProduct(x, y);
 end;
 
-function TF2mFieldElement.SquarePlusProduct(x, y: IECFieldElement)
+function TF2mFieldElement.SquarePlusProduct(const x, y: IECFieldElement)
   : IECFieldElement;
 var
   ax, xx, yx, aa, xy: TLongArray;
@@ -708,7 +712,7 @@ begin
   end;
 end;
 
-function TF2mFieldElement.Subtract(b: IECFieldElement): IECFieldElement;
+function TF2mFieldElement.Subtract(const b: IECFieldElement): IECFieldElement;
 begin
   // Addition and subtraction are the same in F2m
   result := Add(b);
@@ -733,11 +737,10 @@ end;
 
 destructor TECFieldElement.Destroy;
 begin
-
   inherited Destroy;
 end;
 
-function TECFieldElement.Equals(other: IECFieldElement): Boolean;
+function TECFieldElement.Equals(const other: IECFieldElement): Boolean;
 begin
   if (other = Self as IECFieldElement) then
   begin
@@ -779,25 +782,25 @@ begin
   result := 0 = ToBigInteger().SignValue;
 end;
 
-function TECFieldElement.MultiplyMinusProduct(b, x, y: IECFieldElement)
+function TECFieldElement.MultiplyMinusProduct(const b, x, y: IECFieldElement)
   : IECFieldElement;
 begin
   result := Multiply(b).Subtract(x.Multiply(y));
 end;
 
-function TECFieldElement.MultiplyPlusProduct(b, x, y: IECFieldElement)
+function TECFieldElement.MultiplyPlusProduct(const b, x, y: IECFieldElement)
   : IECFieldElement;
 begin
   result := Multiply(b).Add(x.Multiply(y));
 end;
 
-function TECFieldElement.SquareMinusProduct(x, y: IECFieldElement)
+function TECFieldElement.SquareMinusProduct(const x, y: IECFieldElement)
   : IECFieldElement;
 begin
   result := Square().Subtract(x.Multiply(y));
 end;
 
-function TECFieldElement.SquarePlusProduct(x, y: IECFieldElement)
+function TECFieldElement.SquarePlusProduct(const x, y: IECFieldElement)
   : IECFieldElement;
 begin
   result := Square().Add(x.Multiply(y));
@@ -831,7 +834,7 @@ end;
 
 { TFpFieldElement }
 
-function TFpFieldElement.Add(b: IECFieldElement): IECFieldElement;
+function TFpFieldElement.Add(const b: IECFieldElement): IECFieldElement;
 begin
   result := TFpFieldElement.Create(Fq, Fr, ModAdd(Fx, b.ToBigInteger()));
 end;
@@ -848,7 +851,8 @@ begin
   result := TFpFieldElement.Create(Fq, Fr, x2);
 end;
 
-class function TFpFieldElement.CalculateResidue(P: TBigInteger): TBigInteger;
+class function TFpFieldElement.CalculateResidue(const P: TBigInteger)
+  : TBigInteger;
 var
   BitLength: Int32;
   firstWord: TBigInteger;
@@ -871,7 +875,7 @@ begin
   result := Default (TBigInteger);
 end;
 
-function TFpFieldElement.CheckSqrt(z: IECFieldElement): IECFieldElement;
+function TFpFieldElement.CheckSqrt(const z: IECFieldElement): IECFieldElement;
 begin
   if (z.Square().Equals(Self as IECFieldElement)) then
   begin
@@ -883,12 +887,12 @@ begin
   end;
 end;
 
-constructor TFpFieldElement.Create(Q, x: TBigInteger);
+constructor TFpFieldElement.Create(const Q, x: TBigInteger);
 begin
   Create(Q, CalculateResidue(Q), x);
 end;
 
-constructor TFpFieldElement.Create(Q, r, x: TBigInteger);
+constructor TFpFieldElement.Create(const Q, r, x: TBigInteger);
 begin
   Inherited Create();
   if (not(x.IsInitialized) or (x.SignValue < 0) or (x.CompareTo(Q) >= 0)) then
@@ -903,17 +907,16 @@ end;
 
 destructor TFpFieldElement.Destroy;
 begin
-
   inherited Destroy;
 end;
 
-function TFpFieldElement.Divide(b: IECFieldElement): IECFieldElement;
+function TFpFieldElement.Divide(const b: IECFieldElement): IECFieldElement;
 begin
   result := TFpFieldElement.Create(Fq, Fr,
     ModMult(Fx, ModInverse(b.ToBigInteger())));
 end;
 
-function TFpFieldElement.Equals(other: IFpFieldElement): Boolean;
+function TFpFieldElement.Equals(const other: IFpFieldElement): Boolean;
 begin
   if (other = Self as IFpFieldElement) then
   begin
@@ -957,7 +960,7 @@ begin
   result := TFpFieldElement.Create(Fq, Fr, ModInverse(Fx));
 end;
 
-function TFpFieldElement.LucasSequence(P, Q, K: TBigInteger)
+function TFpFieldElement.LucasSequence(const P, Q, K: TBigInteger)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   n, s, j: Int32;
@@ -1018,7 +1021,7 @@ begin
   result := TCryptoLibGenericArray<TBigInteger>.Create(Uh, Vl);
 end;
 
-function TFpFieldElement.ModAdd(x1, x2: TBigInteger): TBigInteger;
+function TFpFieldElement.ModAdd(const x1, x2: TBigInteger): TBigInteger;
 var
   x3: TBigInteger;
 begin
@@ -1030,7 +1033,7 @@ begin
   result := x3;
 end;
 
-function TFpFieldElement.ModDouble(x: TBigInteger): TBigInteger;
+function TFpFieldElement.ModDouble(const x: TBigInteger): TBigInteger;
 var
   _2x: TBigInteger;
 begin
@@ -1060,7 +1063,7 @@ begin
   result := x.ShiftRight(1);
 end;
 
-function TFpFieldElement.ModInverse(x: TBigInteger): TBigInteger;
+function TFpFieldElement.ModInverse(const x: TBigInteger): TBigInteger;
 var
   bits, len: Int32;
   P, n, z: TCryptoLibUInt32Array;
@@ -1074,7 +1077,7 @@ begin
   result := TNat.ToBigInteger(len, z);
 end;
 
-function TFpFieldElement.ModMult(x1, x2: TBigInteger): TBigInteger;
+function TFpFieldElement.ModMult(const x1, x2: TBigInteger): TBigInteger;
 begin
   result := ModReduce(x1.Multiply(x2));
 end;
@@ -1140,7 +1143,7 @@ begin
   result := x;
 end;
 
-function TFpFieldElement.ModSubtract(x1, x2: TBigInteger): TBigInteger;
+function TFpFieldElement.ModSubtract(const x1, x2: TBigInteger): TBigInteger;
 var
   x3: TBigInteger;
 begin
@@ -1152,12 +1155,12 @@ begin
   result := x3;
 end;
 
-function TFpFieldElement.Multiply(b: IECFieldElement): IECFieldElement;
+function TFpFieldElement.Multiply(const b: IECFieldElement): IECFieldElement;
 begin
   result := TFpFieldElement.Create(Fq, Fr, ModMult(Fx, b.ToBigInteger()));
 end;
 
-function TFpFieldElement.MultiplyMinusProduct(b, x, y: IECFieldElement)
+function TFpFieldElement.MultiplyMinusProduct(const b, x, y: IECFieldElement)
   : IECFieldElement;
 var
   ax, bx, xx, yx, ab, xy: TBigInteger;
@@ -1171,7 +1174,7 @@ begin
   result := TFpFieldElement.Create(Fq, Fr, ModReduce(ab.Subtract(xy)));
 end;
 
-function TFpFieldElement.MultiplyPlusProduct(b, x, y: IECFieldElement)
+function TFpFieldElement.MultiplyPlusProduct(const b, x, y: IECFieldElement)
   : IECFieldElement;
 var
   ax, bx, xx, yx, ab, xy, sum: TBigInteger;
@@ -1290,7 +1293,7 @@ begin
   result := TFpFieldElement.Create(Fq, Fr, ModMult(Fx, Fx));
 end;
 
-function TFpFieldElement.SquareMinusProduct(x, y: IECFieldElement)
+function TFpFieldElement.SquareMinusProduct(const x, y: IECFieldElement)
   : IECFieldElement;
 var
   ax, xx, yx, aa, xy: TBigInteger;
@@ -1303,7 +1306,7 @@ begin
   result := TFpFieldElement.Create(Fq, Fr, ModReduce(aa.Subtract(xy)));
 end;
 
-function TFpFieldElement.SquarePlusProduct(x, y: IECFieldElement)
+function TFpFieldElement.SquarePlusProduct(const x, y: IECFieldElement)
   : IECFieldElement;
 var
   ax, xx, yx, aa, xy, sum: TBigInteger;
@@ -1322,7 +1325,7 @@ begin
   result := TFpFieldElement.Create(Fq, Fr, ModReduce(sum));
 end;
 
-function TFpFieldElement.Subtract(b: IECFieldElement): IECFieldElement;
+function TFpFieldElement.Subtract(const b: IECFieldElement): IECFieldElement;
 begin
   result := TFpFieldElement.Create(Fq, Fr, ModSubtract(Fx, b.ToBigInteger()));
 end;

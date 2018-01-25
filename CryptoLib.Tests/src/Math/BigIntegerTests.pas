@@ -64,7 +64,8 @@ type
 
     function val(n: Int64): TBigInteger;
     function mersenne(e: Int32): TBigInteger;
-    procedure CheckEqualsBigInteger(a, b: TBigInteger; const msg: String = '');
+    procedure CheckEqualsBigInteger(const a, b: TBigInteger;
+      const msg: String = '');
 
   protected
     procedure SetUp; override;
@@ -122,8 +123,8 @@ begin
   result := TBigInteger.ValueOf(n);
 end;
 
-procedure TTestBigInteger.CheckEqualsBigInteger(a, b: TBigInteger;
-  const msg: String);
+procedure TTestBigInteger.CheckEqualsBigInteger(const a, b: TBigInteger;
+  const msg: String = '');
 begin
   CheckEquals(True, a.Equals(b), msg);
 end;

@@ -34,13 +34,14 @@ type
   public
     /// <param name="str">The octets making up the octet string.</param>
     constructor Create(str: TCryptoLibByteArray); overload;
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     destructor Destroy(); override;
 
-    procedure Encode(derOut: IDerOutputStream); overload; override;
-    class procedure Encode(derOut: IDerOutputStream; bytes: TCryptoLibByteArray;
-      offset, length: Int32); reintroduce; overload; static; inline;
+    procedure Encode(const derOut: IDerOutputStream); overload; override;
+    class procedure Encode(const derOut: IDerOutputStream;
+      bytes: TCryptoLibByteArray; offset, length: Int32); reintroduce; overload;
+      static; inline;
 
   end;
 
@@ -53,7 +54,7 @@ begin
   Inherited Create(str);
 end;
 
-constructor TDerOctetString.Create(obj: IAsn1Encodable);
+constructor TDerOctetString.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(obj);
 end;
@@ -63,12 +64,12 @@ begin
   inherited Destroy;
 end;
 
-procedure TDerOctetString.Encode(derOut: IDerOutputStream);
+procedure TDerOctetString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.OctetString, str);
 end;
 
-class procedure TDerOctetString.Encode(derOut: IDerOutputStream;
+class procedure TDerOctetString.Encode(const derOut: IDerOutputStream;
   bytes: TCryptoLibByteArray; offset, length: Int32);
 begin
   derOut.WriteEncoded(TAsn1Tags.OctetString, bytes, offset, length);

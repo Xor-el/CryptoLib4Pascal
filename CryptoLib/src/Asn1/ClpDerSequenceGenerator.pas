@@ -42,7 +42,7 @@ type
     constructor Create(outStream: TStream; tagNo: Int32;
       isExplicit: Boolean); overload;
     destructor Destroy(); override;
-    procedure AddObject(obj: IAsn1Encodable); override;
+    procedure AddObject(const obj: IAsn1Encodable); override;
     function GetRawOutputStream(): TStream; override;
     procedure Close(); override;
   end;
@@ -51,7 +51,7 @@ implementation
 
 { TDerSequenceGenerator }
 
-procedure TDerSequenceGenerator.AddObject(obj: IAsn1Encodable);
+procedure TDerSequenceGenerator.AddObject(const obj: IAsn1Encodable);
 var
   temp: TDerOutputStream;
 begin

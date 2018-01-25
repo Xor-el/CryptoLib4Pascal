@@ -70,7 +70,7 @@ type
     property mPadBits: Int32 read GetmPadBits;
 
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     constructor Create(data: TCryptoLibByteArray; padBits: Int32); overload;
@@ -79,7 +79,7 @@ type
 
     constructor Create(namedBits: Int32); overload;
 
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     function GetString(): String; override;
 
@@ -87,7 +87,7 @@ type
 
     function GetBytes(): TCryptoLibByteArray; virtual;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     function GetInt32Value: Int32; virtual;
     property Int32Value: Int32 read GetInt32Value;
@@ -122,8 +122,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerBitString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerBitString; overload; static; inline;
 
     class function FromAsn1Octets(octets: TCryptoLibByteArray)
       : IDerBitString; static;
@@ -162,7 +162,7 @@ begin
   result := System.Copy(mData);
 end;
 
-function TDerBitString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerBitString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerBitString;
 begin
@@ -251,7 +251,7 @@ begin
   FmPadBits := padBits;
 end;
 
-procedure TDerBitString.Encode(derOut: IDerOutputStream);
+procedure TDerBitString.Encode(const derOut: IDerOutputStream);
 var
   last, mask, unusedBits: Int32;
   contents: TCryptoLibByteArray;
@@ -321,7 +321,7 @@ begin
 
 end;
 
-class function TDerBitString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerBitString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerBitString;
 var
   o: IAsn1Object;
@@ -409,7 +409,7 @@ begin
   result := mPadBits xor TArrayUtils.GetArrayHashCode(mData);
 end;
 
-constructor TDerBitString.Create(obj: IAsn1Encodable);
+constructor TDerBitString.Create(const obj: IAsn1Encodable);
 begin
   Create(obj.GetDerEncoded());
 end;

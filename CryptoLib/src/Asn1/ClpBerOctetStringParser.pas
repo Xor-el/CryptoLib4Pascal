@@ -45,7 +45,7 @@ type
 
   public
 
-    constructor Create(parser: IAsn1StreamParser);
+    constructor Create(const parser: IAsn1StreamParser);
     function GetOctetStream(): TStream; inline;
     function ToAsn1Object(): IAsn1Object;
 
@@ -55,8 +55,9 @@ implementation
 
 { TBerOctetStringParser }
 
-constructor TBerOctetStringParser.Create(parser: IAsn1StreamParser);
+constructor TBerOctetStringParser.Create(const parser: IAsn1StreamParser);
 begin
+  Inherited Create();
   F_parser := parser;
 end;
 

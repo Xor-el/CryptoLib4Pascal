@@ -47,10 +47,11 @@ type
 
   public
 
-    constructor Create(p: IECPoint); overload;
-    constructor Create(p: IECPoint; compressed: Boolean); overload;
-    constructor Create(c: IECCurve; encoding: TCryptoLibByteArray); overload;
-    constructor Create(c: IECCurve; s: IAsn1OctetString); overload;
+    constructor Create(const p: IECPoint); overload;
+    constructor Create(const p: IECPoint; compressed: Boolean); overload;
+    constructor Create(const c: IECCurve;
+      encoding: TCryptoLibByteArray); overload;
+    constructor Create(const c: IECCurve; const s: IAsn1OctetString); overload;
 
     property Point: IECPoint read GetPoint;
     property IsPointCompressed: Boolean read GetIsPointCompressed;
@@ -73,26 +74,26 @@ implementation
 
 { TX9ECPoint }
 
-constructor TX9ECPoint.Create(c: IECCurve; encoding: TCryptoLibByteArray);
+constructor TX9ECPoint.Create(const c: IECCurve; encoding: TCryptoLibByteArray);
 begin
   inherited Create();
   Fc := c;
   Fencoding := TDerOctetString.Create(System.Copy(encoding));
 end;
 
-constructor TX9ECPoint.Create(p: IECPoint; compressed: Boolean);
+constructor TX9ECPoint.Create(const p: IECPoint; compressed: Boolean);
 begin
   inherited Create();
   Fp := p.Normalize();
   Fencoding := TDerOctetString.Create(p.GetEncoded(compressed));
 end;
 
-constructor TX9ECPoint.Create(p: IECPoint);
+constructor TX9ECPoint.Create(const p: IECPoint);
 begin
   Create(p, false);
 end;
 
-constructor TX9ECPoint.Create(c: IECCurve; s: IAsn1OctetString);
+constructor TX9ECPoint.Create(const c: IECCurve; const s: IAsn1OctetString);
 begin
   Create(c, s.GetOctets());
 end;

@@ -58,14 +58,14 @@ type
     class constructor DerBoolean();
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
 
   public
 
     constructor Create(val: TCryptoLibByteArray); overload;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     function ToString(): String; override;
 
@@ -103,8 +103,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerBoolean; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerBoolean; overload; static; inline;
 
     class function FromOctetString(value: TCryptoLibByteArray)
       : IDerBoolean; static;
@@ -115,7 +115,7 @@ implementation
 
 { TDerBoolean }
 
-function TDerBoolean.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerBoolean.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerBoolean;
 begin
@@ -165,7 +165,7 @@ begin
   FTrue := TDerBoolean.Create(System.True);
 end;
 
-procedure TDerBoolean.Encode(derOut: IDerOutputStream);
+procedure TDerBoolean.Encode(const derOut: IDerOutputStream);
 begin
   // TODO Should we make sure the byte value is one of '0' or '0xff' here?
   derOut.WriteEncoded(TAsn1Tags.Boolean, TCryptoLibByteArray.Create(Fvalue));
@@ -227,7 +227,7 @@ begin
   result := FFalse;
 end;
 
-class function TDerBoolean.GetInstance(obj: IAsn1TaggedObject;
+class function TDerBoolean.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerBoolean;
 var
   o: IAsn1Object;

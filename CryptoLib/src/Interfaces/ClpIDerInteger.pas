@@ -36,14 +36,14 @@ type
     function GetValue: TBigInteger;
 
     function Asn1GetHashCode(): Int32;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
     function ToString(): String;
 
     property value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
     property bytes: TCryptoLibByteArray read GetBytes;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

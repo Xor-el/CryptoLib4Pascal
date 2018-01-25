@@ -32,7 +32,7 @@ type
     function Getexplicitly: Boolean;
     function Getobj: IAsn1Encodable;
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
     function Asn1GetHashCode(): Int32;
 

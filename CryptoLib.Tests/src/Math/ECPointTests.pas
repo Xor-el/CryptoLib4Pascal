@@ -112,13 +112,13 @@ type
     FpInstance: TFp;
     F2mInstance: TF2m;
 
-    procedure AssertPointsEqual(const msg: String; a, b: IECPoint);
+    procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
     // procedure AssertBigIntegersEqual(a, b: TBigInteger);
     // procedure AssertIFiniteFieldsEqual(a, b: IFiniteField);
     // procedure AssertOptionalValuesAgree(a, b: TBigInteger); overload;
     // procedure AssertOptionalValuesAgree(a, b: TCryptoLibByteArray); overload;
 
-    procedure AssertECFieldElementsEqual(a, b: IECFieldElement);
+    procedure AssertECFieldElementsEqual(const a, b: IECFieldElement);
 
     // /**
     // * Tests <code>ECPoint.add()</code> against literature values.
@@ -129,7 +129,7 @@ type
     // *            The point at infinity on the respective curve.
     // */
     procedure ImplTestAdd(p: TCryptoLibGenericArray<IECPoint>;
-      infinity: IECPoint);
+      const infinity: IECPoint);
 
     // /**
     // * Tests <code>ECPoint.twice()</code> against literature values.
@@ -152,7 +152,7 @@ type
     // * @param infinity
     // *            The point at infinity on the elliptic curve.
     // */
-    procedure ImplTestAllPoints(p, infinity: IECPoint);
+    procedure ImplTestAllPoints(const p, infinity: IECPoint);
     // /**
     // * Checks, if the point multiplication algorithm of the given point yields
     // * the same result as point multiplication done by the reference
@@ -165,7 +165,7 @@ type
     // *            The bitlength of the random number by which <code>p</code>
     // *            is multiplied.
     // */
-    procedure ImplTestMultiply(p: IECPoint; numBits: Int32);
+    procedure ImplTestMultiply(const p: IECPoint; numBits: Int32);
     // /**
     // * Checks, if the point multiplication algorithm of the given point yields
     // * the same result as point multiplication done by the reference
@@ -178,7 +178,7 @@ type
     // * @param numBits
     // *            Try every multiplier up to this bitlength
     // */
-    procedure ImplTestMultiplyAll(p: IECPoint; numBits: Int32);
+    procedure ImplTestMultiplyAll(const p: IECPoint; numBits: Int32);
     // /**
     // * Tests <code>ECPoint.add()</code> and <code>ECPoint.subtract()</code>
     // * for the given point and the given point at infinity.
@@ -188,22 +188,22 @@ type
     // * @param infinity
     // *            The point at infinity on the same curve as <code>p</code>.
     // */
-    procedure ImplTestAddSubtract(p, infinity: IECPoint);
+    procedure ImplTestAddSubtract(const p, infinity: IECPoint);
     // /**
     // * Test encoding with and without point compression.
     // *
     // * @param p
     // *            The point to be encoded and decoded.
     // */
-    procedure ImplTestEncoding(p: IECPoint);
+    procedure ImplTestEncoding(const p: IECPoint);
 
-    procedure ImplAddSubtractMultiplyTwiceEncodingTest(curve: IECCurve;
-      q: IECPoint; n: TBigInteger);
+    procedure ImplAddSubtractMultiplyTwiceEncodingTest(const curve: IECCurve;
+      const q: IECPoint; const n: TBigInteger);
 
-    procedure ImplSqrtTest(c: IECCurve);
+    procedure ImplSqrtTest(const c: IECCurve);
 
     procedure ImplAddSubtractMultiplyTwiceEncodingTestAllCoords
-      (x9ECParameters: IX9ECParameters);
+      (const x9ECParameters: IX9ECParameters);
 
   protected
     procedure SetUp; override;
@@ -256,7 +256,7 @@ implementation
 
 { TTestECPoint }
 
-procedure TTestECPoint.AssertECFieldElementsEqual(a, b: IECFieldElement);
+procedure TTestECPoint.AssertECFieldElementsEqual(const a, b: IECFieldElement);
 begin
   CheckEquals(True, a.Equals(b));
 end;
@@ -287,14 +287,15 @@ end;
 // end;
 // end;
 
-procedure TTestECPoint.AssertPointsEqual(const msg: String; a, b: IECPoint);
+procedure TTestECPoint.AssertPointsEqual(const msg: String;
+  const a, b: IECPoint);
 begin
   CheckEquals(True, a.Equals(b), msg);
   CheckEquals(True, b.Equals(a), msg);
 end;
 
-procedure TTestECPoint.ImplAddSubtractMultiplyTwiceEncodingTest(curve: IECCurve;
-  q: IECPoint; n: TBigInteger);
+procedure TTestECPoint.ImplAddSubtractMultiplyTwiceEncodingTest
+  (const curve: IECCurve; const q: IECPoint; const n: TBigInteger);
 var
   infinity, p: IECPoint;
   i: Int32;
@@ -317,7 +318,7 @@ begin
 end;
 
 procedure TTestECPoint.ImplAddSubtractMultiplyTwiceEncodingTestAllCoords
-  (x9ECParameters: IX9ECParameters);
+  (const x9ECParameters: IX9ECParameters);
 var
   n, b: TBigInteger;
   G, sg, q: IECPoint;
@@ -358,7 +359,7 @@ begin
   end;
 end;
 
-procedure TTestECPoint.ImplSqrtTest(c: IECCurve);
+procedure TTestECPoint.ImplSqrtTest(const c: IECCurve);
 var
   p, pMinusOne, legendreExponent, nonSquare, x: TBigInteger;
   m, count, i: Int32;
@@ -402,7 +403,7 @@ begin
 end;
 
 procedure TTestECPoint.ImplTestAdd(p: TCryptoLibGenericArray<IECPoint>;
-  infinity: IECPoint);
+  const infinity: IECPoint);
 var
   i: Int32;
 begin
@@ -415,7 +416,7 @@ begin
   end;
 end;
 
-procedure TTestECPoint.ImplTestAddSubtract(p, infinity: IECPoint);
+procedure TTestECPoint.ImplTestAddSubtract(const p, infinity: IECPoint);
 begin
   AssertPointsEqual('Twice and Add inconsistent', p.Twice(), p.Add(p));
   AssertPointsEqual('Twice p - p is not p', p, p.Twice().Subtract(p));
@@ -429,7 +430,7 @@ begin
     infinity.Twice());
 end;
 
-procedure TTestECPoint.ImplTestAllPoints(p, infinity: IECPoint);
+procedure TTestECPoint.ImplTestAllPoints(const p, infinity: IECPoint);
 var
   adder, multiplier: IECPoint;
   i: TBigInteger;
@@ -449,7 +450,7 @@ begin
 
 end;
 
-procedure TTestECPoint.ImplTestEncoding(p: IECPoint);
+procedure TTestECPoint.ImplTestEncoding(const p: IECPoint);
 var
   unCompBarr, compBarr: TCryptoLibByteArray;
   decUnComp, decComp: IECPoint;
@@ -465,7 +466,7 @@ begin
   AssertPointsEqual('Error decoding compressed point', p, decComp);
 end;
 
-procedure TTestECPoint.ImplTestMultiply(p: IECPoint; numBits: Int32);
+procedure TTestECPoint.ImplTestMultiply(const p: IECPoint; numBits: Int32);
 var
   k: TBigInteger;
   reff, q: IECPoint;
@@ -476,7 +477,7 @@ begin
   AssertPointsEqual('ECPoint.Multiply is incorrect', reff, q);
 end;
 
-procedure TTestECPoint.ImplTestMultiplyAll(p: IECPoint; numBits: Int32);
+procedure TTestECPoint.ImplTestMultiplyAll(const p: IECPoint; numBits: Int32);
 var
   bound, k: TBigInteger;
   reff, q: IECPoint;

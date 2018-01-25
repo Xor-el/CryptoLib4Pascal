@@ -55,16 +55,16 @@ type
       wnafs: TCryptoLibMatrixByteArray): IECPoint; overload; static;
 
   public
-    class function IsF2mCurve(c: IECCurve): Boolean; static;
-    class function IsF2mField(field: IFiniteField): Boolean; static;
-    class function IsFpCurve(c: IECCurve): Boolean; static;
-    class function IsFpField(field: IFiniteField): Boolean; static;
+    class function IsF2mCurve(const c: IECCurve): Boolean; static;
+    class function IsF2mField(const field: IFiniteField): Boolean; static;
+    class function IsFpCurve(const c: IECCurve): Boolean; static;
+    class function IsFpField(const field: IFiniteField): Boolean; static;
 
     class function SumOfMultiplies(ps: TCryptoLibGenericArray<IECPoint>;
       ks: TCryptoLibGenericArray<TBigInteger>): IECPoint; static;
 
-    class function SumOfTwoMultiplies(P: IECPoint; a: TBigInteger; Q: IECPoint;
-      b: TBigInteger): IECPoint; static;
+    class function SumOfTwoMultiplies(const P: IECPoint; const a: TBigInteger;
+      Q: IECPoint; const b: TBigInteger): IECPoint; static;
 
     // /*
     // * "Shamir's Trick", originally due to E. G. Straus
@@ -84,17 +84,17 @@ type
     // * 8: end for
     // * 9: return R
     // */
-    class function ShamirsTrick(P: IECPoint; k: TBigInteger; Q: IECPoint;
-      l: TBigInteger): IECPoint; static;
+    class function ShamirsTrick(const P: IECPoint; const k: TBigInteger;
+      Q: IECPoint; const l: TBigInteger): IECPoint; static;
 
-    class function ImportPoint(c: IECCurve; P: IECPoint): IECPoint;
+    class function ImportPoint(const c: IECCurve; const P: IECPoint): IECPoint;
       static; inline;
 
     class procedure MontgomeryTrick(zs: TCryptoLibGenericArray<IECFieldElement>;
       off, len: Int32); overload; static; inline;
 
     class procedure MontgomeryTrick(zs: TCryptoLibGenericArray<IECFieldElement>;
-      off, len: Int32; scale: IECFieldElement); overload; static;
+      off, len: Int32; const scale: IECFieldElement); overload; static;
 
     // /**
     // * Simple shift-and-add multiplication. Serves as reference implementation
@@ -106,30 +106,30 @@ type
     // *            The multiplier.
     // * @return The result of the point multiplication <code>kP</code>.
     // */
-    class function ReferenceMultiply(P: IECPoint; k: TBigInteger)
+    class function ReferenceMultiply(P: IECPoint; const k: TBigInteger)
       : IECPoint; static;
 
-    class function ValidatePoint(P: IECPoint): IECPoint; static;
+    class function ValidatePoint(const P: IECPoint): IECPoint; static;
 
-    class function ImplShamirsTrickJsf(P: IECPoint; k: TBigInteger; Q: IECPoint;
-      l: TBigInteger): IECPoint; static;
+    class function ImplShamirsTrickJsf(const P: IECPoint; const k: TBigInteger;
+      const Q: IECPoint; const l: TBigInteger): IECPoint; static;
 
-    class function ImplShamirsTrickWNaf(P: IECPoint; k: TBigInteger;
-      Q: IECPoint; l: TBigInteger): IECPoint; overload; static;
+    class function ImplShamirsTrickWNaf(const P: IECPoint; k: TBigInteger;
+      const Q: IECPoint; l: TBigInteger): IECPoint; overload; static;
 
-    class function ImplShamirsTrickWNaf(P: IECPoint; k: TBigInteger;
-      pointMapQ: IECPointMap; l: TBigInteger): IECPoint; overload; static;
+    class function ImplShamirsTrickWNaf(const P: IECPoint; k: TBigInteger;
+      const pointMapQ: IECPointMap; l: TBigInteger): IECPoint; overload; static;
 
     class function ImplSumOfMultiplies(ps: TCryptoLibGenericArray<IECPoint>;
       ks: TCryptoLibGenericArray<TBigInteger>): IECPoint; overload; static;
 
     class function ImplSumOfMultipliesGlv(ps: TCryptoLibGenericArray<IECPoint>;
       ks: TCryptoLibGenericArray<TBigInteger>;
-      glvEndomorphism: IGlvEndomorphism): IECPoint; static;
+      const glvEndomorphism: IGlvEndomorphism): IECPoint; static;
 
     class function ImplSumOfMultiplies(ps: TCryptoLibGenericArray<IECPoint>;
-      pointMap: IECPointMap; ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
-      overload; static;
+      const pointMap: IECPointMap; ks: TCryptoLibGenericArray<TBigInteger>)
+      : IECPoint; overload; static;
 
   end;
 
@@ -137,7 +137,7 @@ implementation
 
 { TECAlgorithms }
 
-class function TECAlgorithms.ValidatePoint(P: IECPoint): IECPoint;
+class function TECAlgorithms.ValidatePoint(const P: IECPoint): IECPoint;
 begin
   if (not P.IsValid()) then
   begin
@@ -147,8 +147,8 @@ begin
   result := P;
 end;
 
-class function TECAlgorithms.ImplShamirsTrickJsf(P: IECPoint; k: TBigInteger;
-  Q: IECPoint; l: TBigInteger): IECPoint;
+class function TECAlgorithms.ImplShamirsTrickJsf(const P: IECPoint;
+  const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
 var
   curve: IECCurve;
   infinity, R: IECPoint;
@@ -193,8 +193,8 @@ begin
   result := R;
 end;
 
-class function TECAlgorithms.ImplShamirsTrickWNaf(P: IECPoint; k: TBigInteger;
-  pointMapQ: IECPointMap; l: TBigInteger): IECPoint;
+class function TECAlgorithms.ImplShamirsTrickWNaf(const P: IECPoint;
+  k: TBigInteger; const pointMapQ: IECPointMap; l: TBigInteger): IECPoint;
 var
   negK, negL: Boolean;
   width: Int32;
@@ -261,8 +261,8 @@ begin
 
 end;
 
-class function TECAlgorithms.ImplShamirsTrickWNaf(P: IECPoint; k: TBigInteger;
-  Q: IECPoint; l: TBigInteger): IECPoint;
+class function TECAlgorithms.ImplShamirsTrickWNaf(const P: IECPoint;
+  k: TBigInteger; const Q: IECPoint; l: TBigInteger): IECPoint;
 var
   negK, negL: Boolean;
   widthP, widthQ: Int32;
@@ -424,7 +424,7 @@ begin
 end;
 
 class function TECAlgorithms.ImplSumOfMultiplies
-  (ps: TCryptoLibGenericArray<IECPoint>; pointMap: IECPointMap;
+  (ps: TCryptoLibGenericArray<IECPoint>; const pointMap: IECPointMap;
   ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
   halfCount, fullCount: Int32;
@@ -587,8 +587,8 @@ end;
 
 class function TECAlgorithms.ImplSumOfMultipliesGlv
   (ps: TCryptoLibGenericArray<IECPoint>;
-  ks: TCryptoLibGenericArray<TBigInteger>; glvEndomorphism: IGlvEndomorphism)
-  : IECPoint;
+  ks: TCryptoLibGenericArray<TBigInteger>;
+  const glvEndomorphism: IGlvEndomorphism): IECPoint;
 var
   n: TBigInteger;
   len, i, J: Int32;
@@ -644,7 +644,8 @@ begin
   result := TECAlgorithms.ImplSumOfMultiplies(pqs, Abs);
 end;
 
-class function TECAlgorithms.ImportPoint(c: IECCurve; P: IECPoint): IECPoint;
+class function TECAlgorithms.ImportPoint(const c: IECCurve; const P: IECPoint)
+  : IECPoint;
 var
   cp: IECCurve;
 begin
@@ -657,31 +658,31 @@ begin
   result := c.ImportPoint(P);
 end;
 
-class function TECAlgorithms.IsF2mField(field: IFiniteField): Boolean;
+class function TECAlgorithms.IsF2mField(const field: IFiniteField): Boolean;
 begin
   result := (field.Dimension > 1) and
     (field.Characteristic.Equals(TBigInteger.Two)) and
     (Supports(field, IPolynomialExtensionField));
 end;
 
-class function TECAlgorithms.IsF2mCurve(c: IECCurve): Boolean;
+class function TECAlgorithms.IsF2mCurve(const c: IECCurve): Boolean;
 begin
   result := IsF2mField(c.field);
 end;
 
-class function TECAlgorithms.IsFpField(field: IFiniteField): Boolean;
+class function TECAlgorithms.IsFpField(const field: IFiniteField): Boolean;
 begin
   result := field.Dimension = 1;
 end;
 
-class function TECAlgorithms.IsFpCurve(c: IECCurve): Boolean;
+class function TECAlgorithms.IsFpCurve(const c: IECCurve): Boolean;
 begin
   result := IsFpField(c.field);
 end;
 
 class procedure TECAlgorithms.MontgomeryTrick
   (zs: TCryptoLibGenericArray<IECFieldElement>; off, len: Int32;
-  scale: IECFieldElement);
+  const scale: IECFieldElement);
 var
   c: TCryptoLibGenericArray<IECFieldElement>;
   i, J: Int32;
@@ -732,8 +733,8 @@ begin
   MontgomeryTrick(zs, off, len, Nil);
 end;
 
-class function TECAlgorithms.ReferenceMultiply(P: IECPoint; k: TBigInteger)
-  : IECPoint;
+class function TECAlgorithms.ReferenceMultiply(P: IECPoint;
+  const k: TBigInteger): IECPoint;
 var
   x: TBigInteger;
   Q: IECPoint;
@@ -772,8 +773,8 @@ begin
 
 end;
 
-class function TECAlgorithms.ShamirsTrick(P: IECPoint; k: TBigInteger;
-  Q: IECPoint; l: TBigInteger): IECPoint;
+class function TECAlgorithms.ShamirsTrick(const P: IECPoint;
+  const k: TBigInteger; Q: IECPoint; const l: TBigInteger): IECPoint;
 var
   cp: IECCurve;
 begin
@@ -838,8 +839,8 @@ begin
 
 end;
 
-class function TECAlgorithms.SumOfTwoMultiplies(P: IECPoint; a: TBigInteger;
-  Q: IECPoint; b: TBigInteger): IECPoint;
+class function TECAlgorithms.SumOfTwoMultiplies(const P: IECPoint;
+  const a: TBigInteger; Q: IECPoint; const b: TBigInteger): IECPoint;
 var
   cp: IECCurve;
   f2mCurve: IAbstractF2mCurve;

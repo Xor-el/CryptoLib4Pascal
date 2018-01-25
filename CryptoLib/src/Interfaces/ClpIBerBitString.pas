@@ -30,7 +30,7 @@ type
 
     ['{6AB7DC7E-CD61-4D34-AE15-99E036688C77}']
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

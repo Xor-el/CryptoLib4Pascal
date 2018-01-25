@@ -59,8 +59,9 @@ type
     // * <code>[&#964;]</code>-adic NAF.
     // * @return <code>p</code> multiplied by <code>&#955;</code>.
     // */
-    function MultiplyWTnaf(p: IAbstractF2mPoint; lambda: IZTauElement;
-      preCompInfo: IPreCompInfo; a, mu: ShortInt): IAbstractF2mPoint; inline;
+    function MultiplyWTnaf(const p: IAbstractF2mPoint;
+      const lambda: IZTauElement; const preCompInfo: IPreCompInfo;
+      a, mu: ShortInt): IAbstractF2mPoint; inline;
 
     // /**
     // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
@@ -71,8 +72,8 @@ type
     // * @param u The the WTNAF of <code>&#955;</code>..
     // * @return <code>&#955; * p</code>
     // */
-    class function MultiplyFromWTnaf(p: IAbstractF2mPoint;
-      u: TCryptoLibShortIntArray; preCompInfo: IPreCompInfo)
+    class function MultiplyFromWTnaf(const p: IAbstractF2mPoint;
+      u: TCryptoLibShortIntArray; const preCompInfo: IPreCompInfo)
       : IAbstractF2mPoint; static;
 
   strict protected
@@ -84,7 +85,7 @@ type
     // * @param k The integer by which to multiply <code>k</code>.
     // * @return <code>p</code> multiplied by <code>k</code>.
     // */
-    function MultiplyPositive(point: IECPoint; k: TBigInteger)
+    function MultiplyPositive(const point: IECPoint; const k: TBigInteger)
       : IECPoint; override;
 
   end;
@@ -93,8 +94,9 @@ implementation
 
 { TWTauNafMultiplier }
 
-class function TWTauNafMultiplier.MultiplyFromWTnaf(p: IAbstractF2mPoint;
-  u: TCryptoLibShortIntArray; preCompInfo: IPreCompInfo): IAbstractF2mPoint;
+class function TWTauNafMultiplier.MultiplyFromWTnaf(const p: IAbstractF2mPoint;
+  u: TCryptoLibShortIntArray; const preCompInfo: IPreCompInfo)
+  : IAbstractF2mPoint;
 var
   curve: IAbstractF2mCurve;
   a: ShortInt;
@@ -162,8 +164,8 @@ begin
   result := q;
 end;
 
-function TWTauNafMultiplier.MultiplyWTnaf(p: IAbstractF2mPoint;
-  lambda: IZTauElement; preCompInfo: IPreCompInfo; a, mu: ShortInt)
+function TWTauNafMultiplier.MultiplyWTnaf(const p: IAbstractF2mPoint;
+  const lambda: IZTauElement; const preCompInfo: IPreCompInfo; a, mu: ShortInt)
   : IAbstractF2mPoint;
 var
   alpha: TCryptoLibGenericArray<IZTauElement>;
@@ -187,8 +189,8 @@ begin
   result := MultiplyFromWTnaf(p, u, preCompInfo);
 end;
 
-function TWTauNafMultiplier.MultiplyPositive(point: IECPoint; k: TBigInteger)
-  : IECPoint;
+function TWTauNafMultiplier.MultiplyPositive(const point: IECPoint;
+  const k: TBigInteger): IECPoint;
 var
   p: IAbstractF2mPoint;
   curve: IAbstractF2mCurve;

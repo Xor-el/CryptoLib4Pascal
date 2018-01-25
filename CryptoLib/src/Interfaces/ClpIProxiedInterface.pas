@@ -43,7 +43,7 @@ type
 
     function GetDerEncoded(): TCryptoLibByteArray;
 
-    function Equals(obj: IAsn1Convertible): Boolean;
+    function Equals(const obj: IAsn1Convertible): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
   end;
@@ -54,15 +54,15 @@ type
 
     ['{83A52A0F-570B-43BB-9B98-8E5351FDA996}']
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
     function Asn1GetHashCode(): Int32;
 
     function ToAsn1Object(): IAsn1Object;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
-    function CallAsn1Equals(obj: IAsn1Object): Boolean;
+    function CallAsn1Equals(const obj: IAsn1Object): Boolean;
 
     function CallAsn1GetHashCode(): Int32;
 
@@ -81,8 +81,8 @@ type
       bytes: TCryptoLibByteArray); overload;
     procedure WriteTag(flags, tagNo: Int32);
 
-    procedure WriteObject(obj: IAsn1Encodable); overload;
-    procedure WriteObject(obj: IAsn1Object); overload;
+    procedure WriteObject(const obj: IAsn1Encodable); overload;
+    procedure WriteObject(const obj: IAsn1Object); overload;
 
   end;
 

@@ -40,7 +40,7 @@ type
 
   public
 
-    constructor Create(tag: Int32; parser: IAsn1StreamParser);
+    constructor Create(tag: Int32; const parser: IAsn1StreamParser);
     function ReadObject(): IAsn1Convertible; inline;
     function ToAsn1Object(): IAsn1Object; inline;
 
@@ -51,7 +51,7 @@ implementation
 { TBerApplicationSpecificParser }
 
 constructor TBerApplicationSpecificParser.Create(tag: Int32;
-  parser: IAsn1StreamParser);
+  const parser: IAsn1StreamParser);
 begin
   F_tag := tag;
   F_parser := parser;

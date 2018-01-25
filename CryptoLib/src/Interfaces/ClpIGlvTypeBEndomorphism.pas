@@ -34,9 +34,9 @@ type
     function GetHasEfficientPointMap: Boolean;
     function GetPointMap: IECPointMap;
 
-    function CalculateB(k, g: TBigInteger; t: Int32): TBigInteger;
+    function CalculateB(const k, g: TBigInteger; t: Int32): TBigInteger;
 
-    function DecomposeScalar(k: TBigInteger)
+    function DecomposeScalar(const k: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>;
 
     property PointMap: IECPointMap read GetPointMap;

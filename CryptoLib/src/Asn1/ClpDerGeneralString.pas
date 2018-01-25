@@ -49,7 +49,7 @@ type
     property Str: String read GetStr;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     constructor Create(Str: TCryptoLibByteArray); overload;
@@ -60,13 +60,13 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     class function GetInstance(obj: TObject): IDerGeneralString; overload;
       static; inline;
 
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerGeneralString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerGeneralString; overload; static; inline;
 
   end;
 
@@ -83,7 +83,7 @@ begin
 {$ENDIF FPC}
 end;
 
-function TDerGeneralString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerGeneralString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerGeneralString;
 begin
@@ -117,12 +117,12 @@ begin
   FStr := Str;
 end;
 
-procedure TDerGeneralString.Encode(derOut: IDerOutputStream);
+procedure TDerGeneralString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.GeneralString, GetOctets());
 end;
 
-class function TDerGeneralString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerGeneralString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerGeneralString;
 var
   o: IAsn1Object;

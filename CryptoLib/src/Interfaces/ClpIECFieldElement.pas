@@ -37,29 +37,31 @@ type
     function GetIsZero: Boolean;
 
     function ToBigInteger(): TBigInteger;
-    function Add(b: IECFieldElement): IECFieldElement;
+    function Add(const b: IECFieldElement): IECFieldElement;
     function AddOne(): IECFieldElement;
-    function Subtract(b: IECFieldElement): IECFieldElement;
-    function Multiply(b: IECFieldElement): IECFieldElement;
-    function Divide(b: IECFieldElement): IECFieldElement;
+    function Subtract(const b: IECFieldElement): IECFieldElement;
+    function Multiply(const b: IECFieldElement): IECFieldElement;
+    function Divide(const b: IECFieldElement): IECFieldElement;
     function Negate(): IECFieldElement;
     function Square(): IECFieldElement;
     function Invert(): IECFieldElement;
     function Sqrt(): IECFieldElement;
 
-    function MultiplyMinusProduct(b, x, y: IECFieldElement): IECFieldElement;
+    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
+      : IECFieldElement;
 
-    function MultiplyPlusProduct(b, x, y: IECFieldElement): IECFieldElement;
+    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
+      : IECFieldElement;
 
-    function SquareMinusProduct(x, y: IECFieldElement): IECFieldElement;
+    function SquareMinusProduct(const x, y: IECFieldElement): IECFieldElement;
 
-    function SquarePlusProduct(x, y: IECFieldElement): IECFieldElement;
+    function SquarePlusProduct(const x, y: IECFieldElement): IECFieldElement;
 
     function SquarePow(pow: Int32): IECFieldElement;
 
     function TestBitZero(): Boolean;
 
-    function Equals(other: IECFieldElement): Boolean;
+    function Equals(const other: IECFieldElement): Boolean;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
@@ -90,18 +92,18 @@ type
     function GetFieldSize: Int32;
     function GetQ: TBigInteger;
 
-    function CheckSqrt(z: IECFieldElement): IECFieldElement;
-    function LucasSequence(P, Q, K: TBigInteger)
+    function CheckSqrt(const z: IECFieldElement): IECFieldElement;
+    function LucasSequence(const P, Q, K: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>;
 
-    function ModAdd(x1, x2: TBigInteger): TBigInteger;
-    function ModDouble(x: TBigInteger): TBigInteger;
+    function ModAdd(const x1, x2: TBigInteger): TBigInteger;
+    function ModDouble(const x: TBigInteger): TBigInteger;
     function ModHalf(x: TBigInteger): TBigInteger;
     function ModHalfAbs(x: TBigInteger): TBigInteger;
-    function ModInverse(x: TBigInteger): TBigInteger;
-    function ModMult(x1, x2: TBigInteger): TBigInteger;
+    function ModInverse(const x: TBigInteger): TBigInteger;
+    function ModMult(const x1, x2: TBigInteger): TBigInteger;
     function ModReduce(x: TBigInteger): TBigInteger;
-    function ModSubtract(x1, x2: TBigInteger): TBigInteger;
+    function ModSubtract(const x1, x2: TBigInteger): TBigInteger;
 
     function ToBigInteger(): TBigInteger;
 
@@ -110,12 +112,12 @@ type
 
     property Q: TBigInteger read GetQ;
 
-    function Add(b: IECFieldElement): IECFieldElement;
+    function Add(const b: IECFieldElement): IECFieldElement;
     function AddOne(): IECFieldElement;
-    function Subtract(b: IECFieldElement): IECFieldElement;
+    function Subtract(const b: IECFieldElement): IECFieldElement;
 
-    function Multiply(b: IECFieldElement): IECFieldElement;
-    function Divide(b: IECFieldElement): IECFieldElement;
+    function Multiply(const b: IECFieldElement): IECFieldElement;
+    function Divide(const b: IECFieldElement): IECFieldElement;
     function Negate(): IECFieldElement;
     function Square(): IECFieldElement;
 
@@ -129,14 +131,16 @@ type
     /// </returns>
     function Sqrt(): IECFieldElement;
 
-    function MultiplyMinusProduct(b, x, y: IECFieldElement): IECFieldElement;
-    function MultiplyPlusProduct(b, x, y: IECFieldElement): IECFieldElement;
+    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
+      : IECFieldElement;
+    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
+      : IECFieldElement;
 
-    function SquareMinusProduct(x, y: IECFieldElement): IECFieldElement;
+    function SquareMinusProduct(const x, y: IECFieldElement): IECFieldElement;
 
-    function SquarePlusProduct(x, y: IECFieldElement): IECFieldElement;
+    function SquarePlusProduct(const x, y: IECFieldElement): IECFieldElement;
 
-    function Equals(other: IFpFieldElement): Boolean;
+    function Equals(const other: IFpFieldElement): Boolean;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
@@ -171,12 +175,12 @@ type
     function TestBitZero(): Boolean;
     function ToBigInteger(): TBigInteger;
 
-    function Add(b: IECFieldElement): IECFieldElement;
+    function Add(const b: IECFieldElement): IECFieldElement;
     function AddOne(): IECFieldElement;
-    function Subtract(b: IECFieldElement): IECFieldElement;
+    function Subtract(const b: IECFieldElement): IECFieldElement;
 
-    function Multiply(b: IECFieldElement): IECFieldElement;
-    function Divide(b: IECFieldElement): IECFieldElement;
+    function Multiply(const b: IECFieldElement): IECFieldElement;
+    function Divide(const b: IECFieldElement): IECFieldElement;
     function Negate(): IECFieldElement;
     function Square(): IECFieldElement;
 
@@ -190,16 +194,18 @@ type
     /// </returns>
     function Sqrt(): IECFieldElement;
 
-    function MultiplyMinusProduct(b, x, y: IECFieldElement): IECFieldElement;
-    function MultiplyPlusProduct(b, x, y: IECFieldElement): IECFieldElement;
+    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
+      : IECFieldElement;
+    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
+      : IECFieldElement;
 
-    function SquareMinusProduct(x, y: IECFieldElement): IECFieldElement;
+    function SquareMinusProduct(const x, y: IECFieldElement): IECFieldElement;
 
-    function SquarePlusProduct(x, y: IECFieldElement): IECFieldElement;
+    function SquarePlusProduct(const x, y: IECFieldElement): IECFieldElement;
 
     function SquarePow(pow: Int32): IECFieldElement;
 
-    function Equals(other: IF2mFieldElement): Boolean;
+    function Equals(const other: IF2mFieldElement): Boolean;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}

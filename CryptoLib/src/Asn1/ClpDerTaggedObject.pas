@@ -49,7 +49,7 @@ type
     /// <param name="obj">
     /// the tagged object.
     /// </param>
-    constructor Create(tagNo: Int32; obj: IAsn1Encodable); overload;
+    constructor Create(tagNo: Int32; const obj: IAsn1Encodable); overload;
     /// <param name="explicitly">
     /// true if an explicitly tagged object.
     /// </param>
@@ -60,7 +60,7 @@ type
     /// the tagged object.
     /// </param>
     constructor Create(explicitly: Boolean; tagNo: Int32;
-      obj: IAsn1Encodable); overload;
+      const obj: IAsn1Encodable); overload;
 
     /// <summary>
     /// create an implicitly tagged object that contains a zero length
@@ -71,7 +71,7 @@ type
     /// </param>
     constructor Create(tagNo: Int32); overload;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
   end;
 
@@ -79,13 +79,13 @@ implementation
 
 { TDerTaggedObject }
 
-constructor TDerTaggedObject.Create(tagNo: Int32; obj: IAsn1Encodable);
+constructor TDerTaggedObject.Create(tagNo: Int32; const obj: IAsn1Encodable);
 begin
   Inherited Create(tagNo, obj);
 end;
 
 constructor TDerTaggedObject.Create(explicitly: Boolean; tagNo: Int32;
-  obj: IAsn1Encodable);
+  const obj: IAsn1Encodable);
 begin
   Inherited Create(explicitly, tagNo, obj)
 end;
@@ -95,7 +95,7 @@ begin
   Inherited Create(false, tagNo, TDerSequence.Empty)
 end;
 
-procedure TDerTaggedObject.Encode(derOut: IDerOutputStream);
+procedure TDerTaggedObject.Encode(const derOut: IDerOutputStream);
 var
   bytes: TCryptoLibByteArray;
   flags: Int32;

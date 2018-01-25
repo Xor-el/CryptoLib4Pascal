@@ -66,13 +66,15 @@ type
     const
     PRECOMP_NAME = 'bc_wnaf';
 
-    class function GenerateCompactNaf(k: TBigInteger)
+    class function GenerateCompactNaf(const k: TBigInteger)
       : TCryptoLibInt32Array; static;
     class function GenerateCompactWindowNaf(width: Int32; k: TBigInteger)
       : TCryptoLibInt32Array; static;
 
-    class function GenerateJsf(g, h: TBigInteger): TCryptoLibByteArray; static;
-    class function GenerateNaf(k: TBigInteger): TCryptoLibByteArray; static;
+    class function GenerateJsf(const g, h: TBigInteger)
+      : TCryptoLibByteArray; static;
+    class function GenerateNaf(const k: TBigInteger)
+      : TCryptoLibByteArray; static;
     // /**
     // * Computes the Window NAF (non-adjacent Form) of an integer.
     // * @param width The width <code>w</code> of the Window NAF. The width is
@@ -88,12 +90,12 @@ type
     class function GenerateWindowNaf(width: Int32; k: TBigInteger)
       : TCryptoLibByteArray; static;
 
-    class function GetNafWeight(k: TBigInteger): Int32; static; inline;
+    class function GetNafWeight(const k: TBigInteger): Int32; static; inline;
 
-    class function GetWNafPreCompInfo(p: IECPoint): IWNafPreCompInfo; overload;
-      static; inline;
+    class function GetWNafPreCompInfo(const p: IECPoint): IWNafPreCompInfo;
+      overload; static; inline;
 
-    class function GetWNafPreCompInfo(preCompInfo: IPreCompInfo)
+    class function GetWNafPreCompInfo(const preCompInfo: IPreCompInfo)
       : IWNafPreCompInfo; overload; static; inline;
 
     /// <summary>
@@ -125,10 +127,10 @@ type
     class function GetWindowSize(bits: Int32;
       windowSizeCutoffs: TCryptoLibInt32Array): Int32; overload; static; inline;
 
-    class function MapPointWithPrecomp(p: IECPoint; width: Int32;
-      includeNegated: Boolean; pointMap: IECPointMap): IECPoint; static;
+    class function MapPointWithPrecomp(const p: IECPoint; width: Int32;
+      includeNegated: Boolean; const pointMap: IECPointMap): IECPoint; static;
 
-    class function Precompute(p: IECPoint; width: Int32;
+    class function Precompute(const p: IECPoint; width: Int32;
       includeNegated: Boolean): IWNafPreCompInfo; static;
 
   end;
@@ -164,7 +166,7 @@ begin
   Result := System.Copy(a, 0, length);
 end;
 
-class function TWNafUtilities.GenerateCompactNaf(k: TBigInteger)
+class function TWNafUtilities.GenerateCompactNaf(const k: TBigInteger)
   : TCryptoLibInt32Array;
 var
   _3k, diff: TBigInteger;
@@ -314,7 +316,7 @@ begin
   Result := wnaf;
 end;
 
-class function TWNafUtilities.GenerateJsf(g, h: TBigInteger)
+class function TWNafUtilities.GenerateJsf(const g, h: TBigInteger)
   : TCryptoLibByteArray;
 var
   digits, j, d0, d1, offset, n0, n1, u0, u1: Int32;
@@ -389,7 +391,8 @@ begin
   Result := jsf;
 end;
 
-class function TWNafUtilities.GenerateNaf(k: TBigInteger): TCryptoLibByteArray;
+class function TWNafUtilities.GenerateNaf(const k: TBigInteger)
+  : TCryptoLibByteArray;
 var
   _3k, diff: TBigInteger;
   digits, I: Int32;
@@ -512,7 +515,7 @@ begin
   Result := wnaf;
 end;
 
-class function TWNafUtilities.GetNafWeight(k: TBigInteger): Int32;
+class function TWNafUtilities.GetNafWeight(const k: TBigInteger): Int32;
 var
   _3k, diff: TBigInteger;
 begin
@@ -551,13 +554,14 @@ begin
   Result := GetWindowSize(bits, FDEFAULT_WINDOW_SIZE_CUTOFFS);
 end;
 
-class function TWNafUtilities.GetWNafPreCompInfo(p: IECPoint): IWNafPreCompInfo;
+class function TWNafUtilities.GetWNafPreCompInfo(const p: IECPoint)
+  : IWNafPreCompInfo;
 begin
   Result := GetWNafPreCompInfo(p.Curve.GetPreCompInfo(p, PRECOMP_NAME));
 end;
 
-class function TWNafUtilities.GetWNafPreCompInfo(preCompInfo: IPreCompInfo)
-  : IWNafPreCompInfo;
+class function TWNafUtilities.GetWNafPreCompInfo(const preCompInfo
+  : IPreCompInfo): IWNafPreCompInfo;
 begin
   if (Supports(preCompInfo, IWNafPreCompInfo, Result)) then
   begin
@@ -567,8 +571,8 @@ begin
   Result := TWNafPreCompInfo.Create();
 end;
 
-class function TWNafUtilities.MapPointWithPrecomp(p: IECPoint; width: Int32;
-  includeNegated: Boolean; pointMap: IECPointMap): IECPoint;
+class function TWNafUtilities.MapPointWithPrecomp(const p: IECPoint;
+  width: Int32; includeNegated: Boolean; const pointMap: IECPointMap): IECPoint;
 var
   c: IECCurve;
   wnafPreCompP, wnafPreCompQ: IWNafPreCompInfo;
@@ -617,7 +621,7 @@ begin
 
 end;
 
-class function TWNafUtilities.Precompute(p: IECPoint; width: Int32;
+class function TWNafUtilities.Precompute(const p: IECPoint; width: Int32;
   includeNegated: Boolean): IWNafPreCompInfo;
 var
   c: IECCurve;

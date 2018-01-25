@@ -36,7 +36,7 @@ type
     procedure WriteBerBody(contentStream: TStream);
     procedure WriteBerEnd();
 
-    procedure AddObject(obj: IAsn1Encodable);
+    procedure AddObject(const obj: IAsn1Encodable);
     function GetRawOutputStream(): TStream;
     procedure Close();
 

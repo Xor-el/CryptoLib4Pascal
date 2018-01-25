@@ -33,10 +33,10 @@ type
     function GetValue: TBigInteger;
     function GetBytes: TCryptoLibByteArray;
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
     function Asn1GetHashCode(): Int32;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
     property Value: TBigInteger read GetValue;
     property bytes: TCryptoLibByteArray read GetBytes;

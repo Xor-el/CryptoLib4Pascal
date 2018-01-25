@@ -22,6 +22,7 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpIX9FieldID,
+  ClpIDerInteger,
   ClpAsn1Sequence,
   ClpIAsn1Sequence,
   ClpAsn1EncodableVector,
@@ -54,7 +55,7 @@ type
     function GetIdentifier: IDerObjectIdentifier; inline;
     function GetParameters: IAsn1Object; inline;
 
-    constructor Create(seq: IAsn1Sequence); overload;
+    constructor Create(const seq: IAsn1Sequence); overload;
 
   public
     // /**
@@ -62,7 +63,7 @@ type
     // * <code>F<sub>2</sub></code>.
     // * @param primeP The prime <code>p</code> defining the prime field.
     // */
-    constructor Create(primeP: TBigInteger); overload;
+    constructor Create(const primeP: TBigInteger); overload;
     // /**
     // * Constructor for elliptic curves over binary fields
     // * <code>F<sub>2<sup>m</sup></sub></code>.
@@ -122,14 +123,14 @@ begin
   Create(m, k1, 0, 0);
 end;
 
-constructor TX9FieldID.Create(primeP: TBigInteger);
+constructor TX9FieldID.Create(const primeP: TBigInteger);
 begin
   Inherited Create();
   Fid := TX9ObjectIdentifiers.PrimeField;
   Fparameters := TDerInteger.Create(primeP);
 end;
 
-constructor TX9FieldID.Create(seq: IAsn1Sequence);
+constructor TX9FieldID.Create(const seq: IAsn1Sequence);
 begin
   Inherited Create();
   Fid := TDerObjectIdentifier.GetInstance(seq[0] as TAsn1Sequence);
@@ -143,7 +144,8 @@ begin
   inherited Create();
   Fid := TX9ObjectIdentifiers.CharacteristicTwoField;
 
-  fieldIdParams := TAsn1EncodableVector.Create([TDerInteger.Create(m)]);
+  fieldIdParams := TAsn1EncodableVector.Create
+    ([TDerInteger.Create(m) as IDerInteger]);
 
   if (k2 = 0) then
   begin
@@ -152,7 +154,8 @@ begin
       raise EArgumentCryptoLibException.CreateRes(@SInconsistentKValues);
     end;
 
-    fieldIdParams.Add([TX9ObjectIdentifiers.TPBasis, TDerInteger.Create(k1)]);
+    fieldIdParams.Add([TX9ObjectIdentifiers.TPBasis, TDerInteger.Create(k1)
+      as IDerInteger]);
   end
   else
   begin
@@ -163,8 +166,9 @@ begin
     end;
 
     fieldIdParams.Add([TX9ObjectIdentifiers.PPBasis,
-      TDerSequence.Create([TDerInteger.Create(k1), TDerInteger.Create(k2),
-      TDerInteger.Create(k3)])]);
+      TDerSequence.Create([TDerInteger.Create(k1) as IDerInteger,
+      TDerInteger.Create(k2) as IDerInteger, TDerInteger.Create(k3)
+      as IDerInteger])]);
   end;
 
   Fparameters := TDerSequence.Create(fieldIdParams);

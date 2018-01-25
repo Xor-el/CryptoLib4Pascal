@@ -51,19 +51,19 @@ type
     function GetValue: TBigInteger; inline;
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
 
     constructor Create(value: Int32); overload;
-    constructor Create(value: TBigInteger); overload;
+    constructor Create(const value: TBigInteger); overload;
     constructor Create(bytes: TCryptoLibByteArray); overload;
 
     property value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
     property bytes: TCryptoLibByteArray read GetBytes;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     function ToString(): String; override;
 
@@ -85,8 +85,8 @@ type
     // * @exception ArgumentException if the tagged object cannot
     // *               be converted.
     // */
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerInteger; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerInteger; overload; static; inline;
 
   end;
 
@@ -107,7 +107,7 @@ begin
 
 end;
 
-function TDerInteger.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerInteger.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerInteger;
 begin
@@ -126,7 +126,7 @@ begin
   Result := TArrayUtils.GetArrayHashCode(Fbytes);
 end;
 
-constructor TDerInteger.Create(value: TBigInteger);
+constructor TDerInteger.Create(const value: TBigInteger);
 begin
   inherited Create();
   if (not value.IsInitialized) then
@@ -160,7 +160,7 @@ begin
   Fbytes := System.Copy(bytes);
 end;
 
-procedure TDerInteger.Encode(derOut: IDerOutputStream);
+procedure TDerInteger.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.Integer, Fbytes);
 end;
@@ -170,7 +170,7 @@ begin
   Result := Fbytes;
 end;
 
-class function TDerInteger.GetInstance(obj: IAsn1TaggedObject;
+class function TDerInteger.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerInteger;
 var
   o: IAsn1Object;

@@ -30,9 +30,10 @@ type
   IAbstractECMultiplier = interface(IECMultiplier)
     ['{DD63984C-7D4D-46DE-9004-20FD909C2EFB}']
 
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint;
 
-    function Multiply(p: IECPoint; k: TBigInteger): IECPoint;
+    function Multiply(const p: IECPoint; const k: TBigInteger): IECPoint;
 
   end;
 

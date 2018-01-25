@@ -53,12 +53,14 @@ type
     Fcurves: TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>;
 
     class function GetNames: TCryptoLibStringArray; static; inline;
-    class procedure DefineCurve(const name: String; oid: IDerObjectIdentifier;
-      holder: IX9ECParametersHolder); static; inline;
+    class procedure DefineCurve(const name: String;
+      const oid: IDerObjectIdentifier; const holder: IX9ECParametersHolder);
+      static; inline;
 
-    class function ConfigureCurve(curve: IECCurve): IECCurve; static; inline;
-    class function ConfigureCurveGlv(c: IECCurve; p: IGlvTypeBParameters)
-      : IECCurve; static; inline;
+    class function ConfigureCurve(const curve: IECCurve): IECCurve;
+      static; inline;
+    class function ConfigureCurveGlv(const c: IECCurve;
+      const p: IGlvTypeBParameters): IECCurve; static; inline;
     class function FromHex(const Hex: String): TBigInteger; static; inline;
 
   public
@@ -69,7 +71,8 @@ type
     // *
     // * @param oid an object identifier representing a named curve, if present.
     // */
-    class function GetByOid(oid: IDerObjectIdentifier): IX9ECParameters; static;
+    class function GetByOid(const oid: IDerObjectIdentifier)
+      : IX9ECParameters; static;
     // /**
     // * return the object identifier signified by the passed in name. Null
     // * if there is no object identifier associated with name.
@@ -80,7 +83,8 @@ type
     // /**
     // * return the named curve name represented by the given object identifier.
     // */
-    class function GetName(oid: IDerObjectIdentifier): String; static; inline;
+    class function GetName(const oid: IDerObjectIdentifier): String;
+      static; inline;
     // /**
     // * returns an enumeration containing the name strings for curves
     // * contained in this structure.
@@ -168,24 +172,24 @@ implementation
 { TSecNamedCurves }
 
 class procedure TSecNamedCurves.DefineCurve(const name: String;
-  oid: IDerObjectIdentifier; holder: IX9ECParametersHolder);
+  const oid: IDerObjectIdentifier; const holder: IX9ECParametersHolder);
 begin
   FobjIds.Add(UpperCase(name), oid);
   Fnames.Add(oid, name);
   Fcurves.Add(oid, holder);
 end;
 
-class function TSecNamedCurves.ConfigureCurve(curve: IECCurve): IECCurve;
+class function TSecNamedCurves.ConfigureCurve(const curve: IECCurve): IECCurve;
 begin
   result := curve;
 end;
 
-class function TSecNamedCurves.ConfigureCurveGlv(c: IECCurve;
-  p: IGlvTypeBParameters): IECCurve;
+class function TSecNamedCurves.ConfigureCurveGlv(const c: IECCurve;
+  const p: IGlvTypeBParameters): IECCurve;
 var
   glv: IGlvTypeBEndomorphism;
 begin
-  glv := TGlvTypeBEndomorphism.Create(c, p) as IGlvTypeBEndomorphism;
+  glv := TGlvTypeBEndomorphism.Create(c, p);
   result := c.Configure().SetEndomorphism(glv).CreateCurve();
 end;
 
@@ -218,7 +222,7 @@ begin
   result := TBigInteger.Create(1, THex.Decode(Hex));
 end;
 
-class function TSecNamedCurves.GetByOid(oid: IDerObjectIdentifier)
+class function TSecNamedCurves.GetByOid(const oid: IDerObjectIdentifier)
   : IX9ECParameters;
 var
   holder: IX9ECParametersHolder;
@@ -257,7 +261,7 @@ begin
 
 end;
 
-class function TSecNamedCurves.GetName(oid: IDerObjectIdentifier): String;
+class function TSecNamedCurves.GetName(const oid: IDerObjectIdentifier): String;
 begin
   if not(Fnames.TryGetValue(oid, result)) then
   begin
@@ -303,7 +307,7 @@ begin
     TBigInteger.Create('3086d221a7d46bcde86c90e49284eb153dab', 16),
     TBigInteger.Create('e4437ed6010e88286f547fa90abfe4c42212', 16), 272);
 
-  curve := ConfigureCurveGlv(TFpCurve.Create(p, a, b, n, h), glv);
+  curve := ConfigureCurveGlv(TFpCurve.Create(p, a, b, n, h) as IFpCurve, glv);
   G := TX9ECPoint.Create(curve,
     THex.Decode('04' +
     '79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798' +
@@ -338,7 +342,7 @@ begin
     ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973');
   h := TBigInteger.One;
 
-  curve := ConfigureCurve(TFpCurve.Create(p, a, b, n, h));
+  curve := ConfigureCurve(TFpCurve.Create(p, a, b, n, h) as IFpCurve);
   G := TX9ECPoint.Create(curve,
     THex.Decode('04' +
     'AA87CA22BE8B05378EB1C71EF320AD746E1D3B628BA79B9859F741E082542A385502F25DBF55296C3A545E3872760AB7'
@@ -402,7 +406,7 @@ begin
     ('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409');
   h := TBigInteger.One;
 
-  curve := ConfigureCurve(TFpCurve.Create(p, a, b, n, h));
+  curve := ConfigureCurve(TFpCurve.Create(p, a, b, n, h) as IFpCurve);
   G := TX9ECPoint.Create(curve,
     THex.Decode('04' +
     '00C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66'

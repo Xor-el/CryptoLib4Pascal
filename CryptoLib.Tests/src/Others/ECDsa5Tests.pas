@@ -361,7 +361,8 @@ begin
     // n
     TBigInteger.One); // 1); // h
 
-  g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create()));
+  g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create()
+    as ISecureRandom));
 
   p := g.GenerateKeyPair();
 

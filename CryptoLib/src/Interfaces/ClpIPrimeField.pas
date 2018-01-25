@@ -33,7 +33,7 @@ type
     function GetDimension: Int32;
 
     function Equals(other: TObject): Boolean; overload;
-    function Equals(other: IPrimeField): Boolean; overload;
+    function Equals(const other: IPrimeField): Boolean; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
     property characteristic: TBigInteger read GetCharacteristic;

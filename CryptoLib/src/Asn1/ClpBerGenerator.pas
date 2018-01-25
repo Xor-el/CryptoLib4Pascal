@@ -52,7 +52,7 @@ type
     procedure WriteBerEnd();
 
   public
-    procedure AddObject(obj: IAsn1Encodable); override;
+    procedure AddObject(const obj: IAsn1Encodable); override;
     function GetRawOutputStream(): TStream; override;
     procedure Close(); override;
 
@@ -67,7 +67,7 @@ begin
   Inherited Create(outStream);
 end;
 
-procedure TBerGenerator.AddObject(obj: IAsn1Encodable);
+procedure TBerGenerator.AddObject(const obj: IAsn1Encodable);
 var
   temp: TBerOutputStream;
 begin

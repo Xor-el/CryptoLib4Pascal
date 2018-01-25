@@ -57,9 +57,9 @@ type
     function GetInt64Value: Int64; inline;
     function GetScale: Int32; inline;
 
-    constructor Create(limBigDec: TSimpleBigDecimal); overload;
+    constructor Create(const limBigDec: TSimpleBigDecimal); overload;
 
-    procedure CheckScale(b: TSimpleBigDecimal); inline;
+    procedure CheckScale(const b: TSimpleBigDecimal); inline;
 
   public
     // /**
@@ -69,33 +69,33 @@ type
     // * @param bigInt The <code>bigInt</code> value parameter.
     // * @param scale The scale of the constructed <code>SimpleBigDecimal</code>.
     // */
-    constructor Create(bigInt: TBigInteger; scale: Int32); overload;
+    constructor Create(const bigInt: TBigInteger; scale: Int32); overload;
 
     function AdjustScale(newScale: Int32): TSimpleBigDecimal;
 
-    function Add(b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
+    function Add(const b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
 
-    function Add(b: TBigInteger): TSimpleBigDecimal; overload;
+    function Add(const b: TBigInteger): TSimpleBigDecimal; overload;
 
     function Negate(): TSimpleBigDecimal;
 
-    function Subtract(b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
+    function Subtract(const b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
 
-    function Subtract(b: TBigInteger): TSimpleBigDecimal; overload;
+    function Subtract(const b: TBigInteger): TSimpleBigDecimal; overload;
 
-    function Multiply(b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
+    function Multiply(const b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
 
-    function Multiply(b: TBigInteger): TSimpleBigDecimal; overload;
+    function Multiply(const b: TBigInteger): TSimpleBigDecimal; overload;
 
-    function Divide(b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
+    function Divide(const b: TSimpleBigDecimal): TSimpleBigDecimal; overload;
 
-    function Divide(b: TBigInteger): TSimpleBigDecimal; overload;
+    function Divide(const b: TBigInteger): TSimpleBigDecimal; overload;
 
     function ShiftLeft(n: Int32): TSimpleBigDecimal;
 
-    function CompareTo(val: TSimpleBigDecimal): Int32; overload;
+    function CompareTo(const val: TSimpleBigDecimal): Int32; overload;
 
-    function CompareTo(val: TBigInteger): Int32; overload;
+    function CompareTo(const val: TBigInteger): Int32; overload;
 
     function Floor(): TBigInteger;
 
@@ -103,7 +103,7 @@ type
 
     function ToString(): String; inline;
 
-    function Equals(other: TSimpleBigDecimal): Boolean; inline;
+    function Equals(const other: TSimpleBigDecimal): Boolean; inline;
 
     function GetHashCode(): Int32; inline;
 
@@ -122,7 +122,7 @@ type
     // * created.
     // * @return The such created <code>SimpleBigDecimal</code>.
     // */
-    class function GetInstance(val: TBigInteger; scale: Int32)
+    class function GetInstance(const val: TBigInteger; scale: Int32)
       : TSimpleBigDecimal; static; inline;
 
   end;
@@ -131,7 +131,7 @@ implementation
 
 { TSimpleBigDecimal }
 
-procedure TSimpleBigDecimal.CheckScale(b: TSimpleBigDecimal);
+procedure TSimpleBigDecimal.CheckScale(const b: TSimpleBigDecimal);
 begin
   if (Fscale <> b.Fscale) then
   begin
@@ -139,13 +139,13 @@ begin
   end;
 end;
 
-function TSimpleBigDecimal.Add(b: TSimpleBigDecimal): TSimpleBigDecimal;
+function TSimpleBigDecimal.Add(const b: TSimpleBigDecimal): TSimpleBigDecimal;
 begin
   CheckScale(b);
   Result := TSimpleBigDecimal.Create(FbigInt.Add(b.FbigInt), Fscale);
 end;
 
-function TSimpleBigDecimal.Add(b: TBigInteger): TSimpleBigDecimal;
+function TSimpleBigDecimal.Add(const b: TBigInteger): TSimpleBigDecimal;
 begin
   Result := TSimpleBigDecimal.Create(FbigInt.Add(b.ShiftLeft(Fscale)), Fscale);
 end;
@@ -167,24 +167,24 @@ begin
     newScale);
 end;
 
-function TSimpleBigDecimal.CompareTo(val: TBigInteger): Int32;
+function TSimpleBigDecimal.CompareTo(const val: TBigInteger): Int32;
 begin
   Result := FbigInt.CompareTo(val.ShiftLeft(Fscale));
 end;
 
-function TSimpleBigDecimal.CompareTo(val: TSimpleBigDecimal): Int32;
+function TSimpleBigDecimal.CompareTo(const val: TSimpleBigDecimal): Int32;
 begin
   CheckScale(val);
   Result := FbigInt.CompareTo(val.FbigInt);
 end;
 
-constructor TSimpleBigDecimal.Create(limBigDec: TSimpleBigDecimal);
+constructor TSimpleBigDecimal.Create(const limBigDec: TSimpleBigDecimal);
 begin
   FbigInt := limBigDec.FbigInt;
   Fscale := limBigDec.Fscale;
 end;
 
-constructor TSimpleBigDecimal.Create(bigInt: TBigInteger; scale: Int32);
+constructor TSimpleBigDecimal.Create(const bigInt: TBigInteger; scale: Int32);
 begin
   if (scale < 0) then
   begin
@@ -195,7 +195,8 @@ begin
   Fscale := scale;
 end;
 
-function TSimpleBigDecimal.Divide(b: TSimpleBigDecimal): TSimpleBigDecimal;
+function TSimpleBigDecimal.Divide(const b: TSimpleBigDecimal)
+  : TSimpleBigDecimal;
 var
   dividend: TBigInteger;
 begin
@@ -204,12 +205,12 @@ begin
   Result := TSimpleBigDecimal.Create(dividend.Divide(b.FbigInt), Fscale);
 end;
 
-function TSimpleBigDecimal.Divide(b: TBigInteger): TSimpleBigDecimal;
+function TSimpleBigDecimal.Divide(const b: TBigInteger): TSimpleBigDecimal;
 begin
   Result := TSimpleBigDecimal.Create(FbigInt.Divide(b), Fscale);
 end;
 
-function TSimpleBigDecimal.Equals(other: TSimpleBigDecimal): Boolean;
+function TSimpleBigDecimal.Equals(const other: TSimpleBigDecimal): Boolean;
 begin
   Result := ((FbigInt.Equals(other.FbigInt)) and (Fscale = other.Fscale));
 end;
@@ -224,8 +225,8 @@ begin
   Result := FbigInt.GetHashCode() xor Fscale;
 end;
 
-class function TSimpleBigDecimal.GetInstance(val: TBigInteger; scale: Int32)
-  : TSimpleBigDecimal;
+class function TSimpleBigDecimal.GetInstance(const val: TBigInteger;
+  scale: Int32): TSimpleBigDecimal;
 begin
   Result := TSimpleBigDecimal.Create(val.ShiftLeft(scale), scale);
 end;
@@ -247,7 +248,8 @@ end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-function TSimpleBigDecimal.Multiply(b: TSimpleBigDecimal): TSimpleBigDecimal;
+function TSimpleBigDecimal.Multiply(const b: TSimpleBigDecimal)
+  : TSimpleBigDecimal;
 begin
   CheckScale(b);
   Result := TSimpleBigDecimal.Create(FbigInt.Multiply(b.FbigInt),
@@ -255,7 +257,7 @@ begin
 end;
 {$ENDIF}
 
-function TSimpleBigDecimal.Multiply(b: TBigInteger): TSimpleBigDecimal;
+function TSimpleBigDecimal.Multiply(const b: TBigInteger): TSimpleBigDecimal;
 begin
   Result := TSimpleBigDecimal.Create(FbigInt.Multiply(b), Fscale);
 end;
@@ -278,12 +280,13 @@ begin
   Result := TSimpleBigDecimal.Create(FbigInt.ShiftLeft(n), Fscale);
 end;
 
-function TSimpleBigDecimal.Subtract(b: TSimpleBigDecimal): TSimpleBigDecimal;
+function TSimpleBigDecimal.Subtract(const b: TSimpleBigDecimal)
+  : TSimpleBigDecimal;
 begin
   Result := Add(b.Negate());
 end;
 
-function TSimpleBigDecimal.Subtract(b: TBigInteger): TSimpleBigDecimal;
+function TSimpleBigDecimal.Subtract(const b: TBigInteger): TSimpleBigDecimal;
 begin
   Result := TSimpleBigDecimal.Create(FbigInt.Subtract(b.ShiftLeft(Fscale)
     ), Fscale);

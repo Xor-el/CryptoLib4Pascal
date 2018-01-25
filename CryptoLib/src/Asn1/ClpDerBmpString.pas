@@ -46,7 +46,7 @@ type
     function GetStr: String; inline;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
     property Str: String read GetStr;
@@ -63,7 +63,7 @@ type
 
     function GetString(): String; override;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a BMP string from the given object.
@@ -89,8 +89,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerBmpString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerBmpString; overload; static; inline;
 
   end;
 
@@ -98,7 +98,7 @@ implementation
 
 { TDerBmpString }
 
-function TDerBmpString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerBmpString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerBmpString;
 begin
@@ -147,7 +147,7 @@ begin
   FStr := astr;
 end;
 
-procedure TDerBmpString.Encode(derOut: IDerOutputStream);
+procedure TDerBmpString.Encode(const derOut: IDerOutputStream);
 var
   c: TCryptoLibCharArray;
   b: TCryptoLibByteArray;
@@ -181,7 +181,7 @@ begin
     [obj.ClassName]);
 end;
 
-class function TDerBmpString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerBmpString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerBmpString;
 var
   o: IAsn1Object;

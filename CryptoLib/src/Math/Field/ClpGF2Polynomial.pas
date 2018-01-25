@@ -42,7 +42,7 @@ type
 
     function GetExponentsPresent(): TCryptoLibInt32Array; virtual;
 
-    function Equals(other: IGF2Polynomial): Boolean; reintroduce;
+    function Equals(const other: IGF2Polynomial): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -61,7 +61,7 @@ begin
   Fexponents := System.Copy(exponents);
 end;
 
-function TGF2Polynomial.Equals(other: IGF2Polynomial): Boolean;
+function TGF2Polynomial.Equals(const other: IGF2Polynomial): Boolean;
 begin
 
   if ((Self as IGF2Polynomial) = other) then

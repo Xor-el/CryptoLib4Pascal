@@ -66,21 +66,21 @@ type
   strict protected
 
     constructor Create(const algorithm: String; isPrivate: Boolean;
-      parameters: IECDomainParameters); overload;
+      const parameters: IECDomainParameters); overload;
 
     constructor Create(const algorithm: String; isPrivate: Boolean;
-      publicKeyParamSet: IDerObjectIdentifier); overload;
+      const publicKeyParamSet: IDerObjectIdentifier); overload;
 
-    function CreateKeyGenerationParameters(random: ISecureRandom)
+    function CreateKeyGenerationParameters(const random: ISecureRandom)
       : IECKeyGenerationParameters; inline;
 
-    function Equals(other: IECKeyParameters): Boolean; reintroduce;
+    function Equals(const other: IECKeyParameters): Boolean; reintroduce;
 
   public
     class function VerifyAlgorithmName(const algorithm: String): String;
       static; inline;
-    class function LookupParameters(publicKeyParamSet: IDerObjectIdentifier)
-      : IECDomainParameters; static;
+    class function LookupParameters(const publicKeyParamSet
+      : IDerObjectIdentifier): IECDomainParameters; static;
     property AlgorithmName: String read GetAlgorithmName;
     property parameters: IECDomainParameters read GetParameters;
     property publicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
@@ -96,7 +96,7 @@ uses
 
 { TECKeyParameters }
 
-class function TECKeyParameters.LookupParameters(publicKeyParamSet
+class function TECKeyParameters.LookupParameters(const publicKeyParamSet
   : IDerObjectIdentifier): IECDomainParameters;
 var
   p: IECDomainParameters;
@@ -155,7 +155,7 @@ begin
 end;
 
 constructor TECKeyParameters.Create(const algorithm: String; isPrivate: Boolean;
-  parameters: IECDomainParameters);
+  const parameters: IECDomainParameters);
 begin
   Inherited Create(isPrivate);
   if (algorithm = '') then
@@ -169,7 +169,7 @@ begin
 end;
 
 constructor TECKeyParameters.Create(const algorithm: String; isPrivate: Boolean;
-  publicKeyParamSet: IDerObjectIdentifier);
+  const publicKeyParamSet: IDerObjectIdentifier);
 begin
   Inherited Create(isPrivate);
 
@@ -184,8 +184,8 @@ begin
   FpublicKeyParamSet := publicKeyParamSet;
 end;
 
-function TECKeyParameters.CreateKeyGenerationParameters(random: ISecureRandom)
-  : IECKeyGenerationParameters;
+function TECKeyParameters.CreateKeyGenerationParameters
+  (const random: ISecureRandom): IECKeyGenerationParameters;
 begin
   if (publicKeyParamSet <> Nil) then
   begin
@@ -195,7 +195,7 @@ begin
   result := TECKeyGenerationParameters.Create(parameters, random);
 end;
 
-function TECKeyParameters.Equals(other: IECKeyParameters): Boolean;
+function TECKeyParameters.Equals(const other: IECKeyParameters): Boolean;
 begin
   if (other = Self as IECKeyParameters) then
   begin

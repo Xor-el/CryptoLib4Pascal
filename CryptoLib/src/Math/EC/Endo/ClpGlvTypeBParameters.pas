@@ -44,8 +44,8 @@ type
     Fm_bits: Int32;
 
   public
-    constructor Create(beta, lambda: TBigInteger;
-      v1, v2: TCryptoLibGenericArray<TBigInteger>; g1, g2: TBigInteger;
+    constructor Create(const beta, lambda: TBigInteger;
+      v1, v2: TCryptoLibGenericArray<TBigInteger>; const g1, g2: TBigInteger;
       bits: Int32);
 
     property beta: TBigInteger read GetBeta;
@@ -62,8 +62,8 @@ implementation
 
 { TGlvTypeBParameters }
 
-constructor TGlvTypeBParameters.Create(beta, lambda: TBigInteger;
-  v1, v2: TCryptoLibGenericArray<TBigInteger>; g1, g2: TBigInteger;
+constructor TGlvTypeBParameters.Create(const beta, lambda: TBigInteger;
+  v1, v2: TCryptoLibGenericArray<TBigInteger>; const g1, g2: TBigInteger;
   bits: Int32);
 begin
   Fm_beta := beta;

@@ -44,20 +44,21 @@ type
     Fq: IECPoint;
 
     function GetQ: IECPoint; inline;
-    class function Validate(q: IECPoint): IECPoint; static; inline;
+    class function Validate(const q: IECPoint): IECPoint; static; inline;
 
   public
-    constructor Create(q: IECPoint; parameters: IECDomainParameters); overload;
+    constructor Create(const q: IECPoint;
+      const parameters: IECDomainParameters); overload;
 
-    constructor Create(const algorithm: String; q: IECPoint;
-      parameters: IECDomainParameters); overload;
+    constructor Create(const algorithm: String; const q: IECPoint;
+      const parameters: IECDomainParameters); overload;
 
-    constructor Create(const algorithm: String; q: IECPoint;
-      publicKeyParamSet: IDerObjectIdentifier); overload;
+    constructor Create(const algorithm: String; const q: IECPoint;
+      const publicKeyParamSet: IDerObjectIdentifier); overload;
 
     property q: IECPoint read GetQ;
 
-    function Equals(other: IECPublicKeyParameters): Boolean; reintroduce;
+    function Equals(const other: IECPublicKeyParameters): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -67,7 +68,7 @@ implementation
 
 { TECPublicKeyParameters }
 
-class function TECPublicKeyParameters.Validate(q: IECPoint): IECPoint;
+class function TECPublicKeyParameters.Validate(const q: IECPoint): IECPoint;
 begin
   if (q = Nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
@@ -75,16 +76,15 @@ begin
   if (q.IsInfinity) then
     raise EArgumentCryptoLibException.CreateRes(@SQInfinity);
 
-  q := q.Normalize();
+  result := q.Normalize();
 
-  if (not(q.IsValid())) then
+  if (not(result.IsValid())) then
     raise EArgumentCryptoLibException.CreateRes(@SQPointNotOnCurve);
 
-  result := q;
 end;
 
-constructor TECPublicKeyParameters.Create(const algorithm: String; q: IECPoint;
-  parameters: IECDomainParameters);
+constructor TECPublicKeyParameters.Create(const algorithm: String;
+  const q: IECPoint; const parameters: IECDomainParameters);
 begin
   Inherited Create(algorithm, false, parameters);
   if (q = Nil) then
@@ -93,14 +93,14 @@ begin
   Fq := Validate(q);
 end;
 
-constructor TECPublicKeyParameters.Create(q: IECPoint;
-  parameters: IECDomainParameters);
+constructor TECPublicKeyParameters.Create(const q: IECPoint;
+  const parameters: IECDomainParameters);
 begin
   Create('EC', q, parameters);
 end;
 
-constructor TECPublicKeyParameters.Create(const algorithm: String; q: IECPoint;
-  publicKeyParamSet: IDerObjectIdentifier);
+constructor TECPublicKeyParameters.Create(const algorithm: String;
+  const q: IECPoint; const publicKeyParamSet: IDerObjectIdentifier);
 begin
   Inherited Create(algorithm, false, publicKeyParamSet);
   if (q = Nil) then
@@ -109,7 +109,8 @@ begin
   Fq := Validate(q);
 end;
 
-function TECPublicKeyParameters.Equals(other: IECPublicKeyParameters): Boolean;
+function TECPublicKeyParameters.Equals(const other
+  : IECPublicKeyParameters): Boolean;
 begin
   if (other = Self as IECPublicKeyParameters) then
   begin

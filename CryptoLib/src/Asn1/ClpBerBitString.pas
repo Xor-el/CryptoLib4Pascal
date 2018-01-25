@@ -38,9 +38,9 @@ type
     constructor Create(data: TCryptoLibByteArray; padBits: Int32); overload;
     constructor Create(data: TCryptoLibByteArray); overload;
     constructor Create(namedBits: Int32); overload;
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
   end;
 
@@ -58,7 +58,7 @@ begin
   Inherited Create(data, padBits);
 end;
 
-constructor TBerBitString.Create(obj: IAsn1Encodable);
+constructor TBerBitString.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(obj);
 end;
@@ -68,7 +68,7 @@ begin
   Inherited Create(namedBits);
 end;
 
-procedure TBerBitString.Encode(derOut: IDerOutputStream);
+procedure TBerBitString.Encode(const derOut: IDerOutputStream);
 begin
   if ((Supports(derOut, IAsn1OutputStream)) or
     (Supports(derOut, IBerOutputStream))) then

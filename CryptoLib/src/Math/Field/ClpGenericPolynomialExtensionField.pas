@@ -51,10 +51,11 @@ type
     property MinimalPolynomial: IPolynomial read GetMinimalPolynomial;
 
   public
-    constructor Create(subfield: IFiniteField; polynomial: IPolynomial);
+    constructor Create(const subfield: IFiniteField;
+      const polynomial: IPolynomial);
 
     function Equals(other: TObject): Boolean; overload; override;
-    function Equals(other: IGenericPolynomialExtensionField): Boolean;
+    function Equals(const other: IGenericPolynomialExtensionField): Boolean;
       reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -65,15 +66,15 @@ implementation
 
 { TGenericPolynomialExtensionField }
 
-constructor TGenericPolynomialExtensionField.Create(subfield: IFiniteField;
-  polynomial: IPolynomial);
+constructor TGenericPolynomialExtensionField.Create(const subfield
+  : IFiniteField; const polynomial: IPolynomial);
 begin
   Fsubfield := subfield;
   FminimalPolynomial := polynomial;
 end;
 
-function TGenericPolynomialExtensionField.Equals
-  (other: IGenericPolynomialExtensionField): Boolean;
+function TGenericPolynomialExtensionField.Equals(const other
+  : IGenericPolynomialExtensionField): Boolean;
 begin
   if ((Self as IGenericPolynomialExtensionField) = other) then
   begin

@@ -73,7 +73,7 @@ type
     /// <param name="Strength">
     /// the size, in bits, of the keys we want to produce.
     /// </param>
-    constructor Create(Random: ISecureRandom; Strength: Int32);
+    constructor Create(const Random: ISecureRandom; Strength: Int32);
 
   end;
 
@@ -81,7 +81,7 @@ implementation
 
 { TKeyGenerationParameters }
 
-constructor TKeyGenerationParameters.Create(Random: ISecureRandom;
+constructor TKeyGenerationParameters.Create(const Random: ISecureRandom;
   Strength: Int32);
 begin
   if (Random = Nil) then

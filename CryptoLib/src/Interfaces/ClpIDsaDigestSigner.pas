@@ -32,7 +32,7 @@ type
   IDsaDigestSigner = interface(ISigner)
     ['{6BED77E2-6D92-4DB7-8F3F-588EC528A2D7}']
 
-    function DerEncode(r, s: TBigInteger): TCryptoLibByteArray;
+    function DerEncode(const r, s: TBigInteger): TCryptoLibByteArray;
 
     function DerDecode(encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
@@ -40,7 +40,7 @@ type
     function GetAlgorithmName: String;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean; parameters: ICipherParameters);
+    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
 
     /// <summary>
     /// update the internal digest with the byte b

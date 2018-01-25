@@ -47,10 +47,10 @@ type
 
   public
 
-    class function FromVector(v: IAsn1EncodableVector): IDerSet;
+    class function FromVector(const v: IAsn1EncodableVector): IDerSet;
       overload; static;
-    class function FromVector(v: IAsn1EncodableVector; needsSorting: Boolean)
-      : IDerSet; overload; static;
+    class function FromVector(const v: IAsn1EncodableVector;
+      needsSorting: Boolean): IDerSet; overload; static;
 
     /// <summary>
     /// create an empty set
@@ -60,17 +60,17 @@ type
     /// <param name="obj">
     /// a single object that makes up the set.
     /// </param>
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     constructor Create(v: array of IAsn1Encodable); overload;
 
     /// <param name="v">
     /// a vector of objects making up the set.
     /// </param>
-    constructor Create(v: IAsn1EncodableVector); overload;
+    constructor Create(const v: IAsn1EncodableVector); overload;
 
-    constructor Create(v: IAsn1EncodableVector; needsSorting: Boolean);
-      overload;
+    constructor Create(const v: IAsn1EncodableVector;
+      needsSorting: Boolean); overload;
 
     destructor Destroy(); override;
 
@@ -81,7 +81,7 @@ type
     /// just outputing Set, <br />we also have to specify Constructed, and
     /// the objects length. <br />
     /// </summary>
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     class property Empty: IDerSet read GetEmpty;
 
@@ -109,7 +109,8 @@ begin
   Inherited Create(0);
 end;
 
-constructor TDerSet.Create(v: IAsn1EncodableVector; needsSorting: Boolean);
+constructor TDerSet.Create(const v: IAsn1EncodableVector;
+  needsSorting: Boolean);
 var
   o: IAsn1Encodable;
 begin
@@ -125,13 +126,13 @@ begin
   end;
 end;
 
-constructor TDerSet.Create(obj: IAsn1Encodable);
+constructor TDerSet.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(1);
   AddObject(obj);
 end;
 
-constructor TDerSet.Create(v: IAsn1EncodableVector);
+constructor TDerSet.Create(const v: IAsn1EncodableVector);
 begin
   Create(v, true);
 end;
@@ -147,7 +148,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TDerSet.Encode(derOut: IDerOutputStream);
+procedure TDerSet.Encode(const derOut: IDerOutputStream);
 var
   bOut: TMemoryStream;
   dOut: TDerOutputStream;
@@ -175,7 +176,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.&Set or TAsn1Tags.Constructed, bytes);
 end;
 
-class function TDerSet.FromVector(v: IAsn1EncodableVector;
+class function TDerSet.FromVector(const v: IAsn1EncodableVector;
   needsSorting: Boolean): IDerSet;
 begin
   if v.Count < 1 then
@@ -193,7 +194,7 @@ begin
   result := FEmpty;
 end;
 
-class function TDerSet.FromVector(v: IAsn1EncodableVector): IDerSet;
+class function TDerSet.FromVector(const v: IAsn1EncodableVector): IDerSet;
 begin
   if v.Count < 1 then
   begin

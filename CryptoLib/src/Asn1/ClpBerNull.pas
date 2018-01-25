@@ -51,7 +51,7 @@ type
 
   public
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
     class property Instance: IBerNull read GetInstance;
 
   end;
@@ -70,7 +70,7 @@ begin
   FInstance := TBerNull.Create(0);
 end;
 
-procedure TBerNull.Encode(derOut: IDerOutputStream);
+procedure TBerNull.Encode(const derOut: IDerOutputStream);
 begin
 
   if (Supports(derOut, IAsn1OutputStream) or Supports(derOut, IBerOutputStream))

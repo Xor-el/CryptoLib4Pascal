@@ -77,16 +77,17 @@ type
 
   public
 
-    constructor Create(seq: IAsn1Sequence); overload;
-    constructor Create(curve: IECCurve; g: IECPoint; n: TBigInteger); overload;
-    constructor Create(curve: IECCurve; g: IX9ECPoint;
-      n, h: TBigInteger); overload;
-    constructor Create(curve: IECCurve; g: IECPoint;
-      n, h: TBigInteger); overload;
-    constructor Create(curve: IECCurve; g: IECPoint; n, h: TBigInteger;
-      seed: TCryptoLibByteArray); overload;
-    constructor Create(curve: IECCurve; g: IX9ECPoint; n, h: TBigInteger;
-      seed: TCryptoLibByteArray); overload;
+    constructor Create(const seq: IAsn1Sequence); overload;
+    constructor Create(const curve: IECCurve; const g: IECPoint;
+      const n: TBigInteger); overload;
+    constructor Create(const curve: IECCurve; const g: IX9ECPoint;
+      const n, h: TBigInteger); overload;
+    constructor Create(const curve: IECCurve; const g: IECPoint;
+      const n, h: TBigInteger); overload;
+    constructor Create(const curve: IECCurve; const g: IECPoint;
+      const n, h: TBigInteger; seed: TCryptoLibByteArray); overload;
+    constructor Create(const curve: IECCurve; const g: IX9ECPoint;
+      const n, h: TBigInteger; seed: TCryptoLibByteArray); overload;
 
     property curve: IECCurve read GetCurve;
     property g: IECPoint read GetG;
@@ -108,19 +109,19 @@ implementation
 
 { TX9ECParameters }
 
-constructor TX9ECParameters.Create(curve: IECCurve; g: IX9ECPoint;
-  n, h: TBigInteger);
+constructor TX9ECParameters.Create(const curve: IECCurve; const g: IX9ECPoint;
+  const n, h: TBigInteger);
 begin
   Create(curve, g, n, h, Nil);
 end;
 
-constructor TX9ECParameters.Create(curve: IECCurve; g: IECPoint;
-  n: TBigInteger);
+constructor TX9ECParameters.Create(const curve: IECCurve; const g: IECPoint;
+  const n: TBigInteger);
 begin
   Create(curve, g, n, Default (TBigInteger), Nil);
 end;
 
-constructor TX9ECParameters.Create(seq: IAsn1Sequence);
+constructor TX9ECParameters.Create(const seq: IAsn1Sequence);
 var
   x9c: IX9Curve;
   p: TObject;
@@ -159,8 +160,8 @@ begin
   end;
 end;
 
-constructor TX9ECParameters.Create(curve: IECCurve; g: IX9ECPoint;
-  n, h: TBigInteger; seed: TCryptoLibByteArray);
+constructor TX9ECParameters.Create(const curve: IECCurve; const g: IX9ECPoint;
+  const n, h: TBigInteger; seed: TCryptoLibByteArray);
 var
   exponents: TCryptoLibInt32Array;
   Field: IPolynomialExtensionField;
@@ -202,14 +203,14 @@ begin
   end;
 end;
 
-constructor TX9ECParameters.Create(curve: IECCurve; g: IECPoint;
-  n, h: TBigInteger; seed: TCryptoLibByteArray);
+constructor TX9ECParameters.Create(const curve: IECCurve; const g: IECPoint;
+  const n, h: TBigInteger; seed: TCryptoLibByteArray);
 begin
-  Create(curve, TX9ECPoint.Create(g), n, h, seed)
+  Create(curve, TX9ECPoint.Create(g) as IX9ECPoint, n, h, seed)
 end;
 
-constructor TX9ECParameters.Create(curve: IECCurve; g: IECPoint;
-  n, h: TBigInteger);
+constructor TX9ECParameters.Create(const curve: IECCurve; const g: IECPoint;
+  const n, h: TBigInteger);
 begin
   Create(curve, g, n, h, Nil);
 end;
@@ -293,12 +294,14 @@ var
   v: IAsn1EncodableVector;
 begin
 
-  v := TAsn1EncodableVector.Create([TDerInteger.Create(TBigInteger.One),
-    FfieldID, TX9Curve.Create(Fcurve, Fseed), Fg, TDerInteger.Create(Fn)]);
+  v := TAsn1EncodableVector.Create
+    ([TDerInteger.Create(TBigInteger.One) as IDerInteger, FfieldID,
+    TX9Curve.Create(Fcurve, Fseed) as IX9Curve, Fg, TDerInteger.Create(Fn)
+    as IDerInteger]);
 
   if (Fh.IsInitialized) then
   begin
-    v.Add([TDerInteger.Create(Fh)]);
+    v.Add([TDerInteger.Create(Fh) as IDerInteger]);
   end;
 
   Result := TDerSequence.Create(v);

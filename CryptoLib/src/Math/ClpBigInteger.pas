@@ -130,7 +130,7 @@ type
     function Divide(x, y: TCryptoLibInt32Array): TCryptoLibInt32Array; overload;
     function IsEqualMagnitude(const x: TBigInteger): Boolean;
 
-    function CheckProbablePrime(certainty: Int32; random: IRandom;
+    function CheckProbablePrime(certainty: Int32; const random: IRandom;
       randomlySelected: Boolean): Boolean;
 
     function ModInversePow2(const m: TBigInteger): TBigInteger;
@@ -345,8 +345,9 @@ type
     constructor Create(sign: Int32; bytes: TCryptoLibByteArray); overload;
     constructor Create(sign: Int32; bytes: TCryptoLibByteArray;
       offset, length: Int32); overload;
-    constructor Create(sizeInBits: Int32; random: IRandom); overload;
-    constructor Create(BitLength, certainty: Int32; random: IRandom); overload;
+    constructor Create(sizeInBits: Int32; const random: IRandom); overload;
+    constructor Create(BitLength, certainty: Int32;
+      const random: IRandom); overload;
 
     function Abs(): TBigInteger;
     function Add(const value: TBigInteger): TBigInteger;
@@ -364,10 +365,10 @@ type
     function Gcd(const value: TBigInteger): TBigInteger;
     function Inc(): TBigInteger;
 
-    function RabinMillerTest(certainty: Int32; random: IRandom)
+    function RabinMillerTest(certainty: Int32; const random: IRandom)
       : Boolean; overload;
 
-    function RabinMillerTest(certainty: Int32; random: IRandom;
+    function RabinMillerTest(certainty: Int32; const random: IRandom;
       randomlySelected: Boolean): Boolean; overload;
 
     /// <summary>
@@ -421,7 +422,7 @@ type
     /// BitLen(value) is the number of bits in value.
     /// </summary>
     class function BitLen(w: Int32): Int32; static;
-    class function ProbablePrime(BitLength: Int32; random: IRandom)
+    class function ProbablePrime(BitLength: Int32; const random: IRandom)
       : TBigInteger; static;
 
     class function ValueOf(value: Int64): TBigInteger; static;
@@ -1223,7 +1224,7 @@ begin
       else
       begin
         Result := TBigInteger.Create(Fsign,
-          TCryptoLibInt32Array.Create(rem), false);;
+          TCryptoLibInt32Array.Create(rem), false);
         Exit;
       end;
 
@@ -1497,7 +1498,8 @@ begin
   ParseBytesWithSign(sign, bytes, offset, length);
 end;
 
-constructor TBigInteger.Create(BitLength, certainty: Int32; random: IRandom);
+constructor TBigInteger.Create(BitLength, certainty: Int32;
+  const random: IRandom);
 var
   nBytes, xBits, j: Int32;
   mask, lead: Byte;
@@ -1580,7 +1582,7 @@ begin
 
 end;
 
-constructor TBigInteger.Create(sizeInBits: Int32; random: IRandom);
+constructor TBigInteger.Create(sizeInBits: Int32; const random: IRandom);
 var
   nBytes, xBits: Int32;
   b: TCryptoLibByteArray;
@@ -3334,13 +3336,13 @@ begin
   Result := y;
 end;
 
-class function TBigInteger.ProbablePrime(BitLength: Int32; random: IRandom)
-  : TBigInteger;
+class function TBigInteger.ProbablePrime(BitLength: Int32;
+  const random: IRandom): TBigInteger;
 begin
   Result := TBigInteger.Create(BitLength, 100, random);
 end;
 
-function TBigInteger.RabinMillerTest(certainty: Int32; random: IRandom;
+function TBigInteger.RabinMillerTest(certainty: Int32; const random: IRandom;
   randomlySelected: Boolean): Boolean;
 var
   bits, iterations, itersFor100Cert, s, j, shiftval: Int32;
@@ -3435,8 +3437,8 @@ begin
   Result := True;
 end;
 
-function TBigInteger.RabinMillerTest(certainty: Int32; random: IRandom)
-  : Boolean;
+function TBigInteger.RabinMillerTest(certainty: Int32;
+  const random: IRandom): Boolean;
 begin
   Result := RabinMillerTest(certainty, random, false);
 end;
@@ -4479,7 +4481,7 @@ begin
   Result := BitLength;
 end;
 
-function TBigInteger.CheckProbablePrime(certainty: Int32; random: IRandom;
+function TBigInteger.CheckProbablePrime(certainty: Int32; const random: IRandom;
   randomlySelected: Boolean): Boolean;
 var
   numLists, i, j, prime, qRem, test: Int32;

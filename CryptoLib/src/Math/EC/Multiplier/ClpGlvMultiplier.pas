@@ -41,18 +41,20 @@ type
     Fcurve: IECCurve;
     FglvEndomorphism: IGlvEndomorphism;
 
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint; override;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint; override;
 
   public
-    constructor Create(curve: IECCurve; glvEndomorphism: IGlvEndomorphism);
+    constructor Create(const curve: IECCurve;
+      const glvEndomorphism: IGlvEndomorphism);
   end;
 
 implementation
 
 { TGlvMultiplier }
 
-constructor TGlvMultiplier.Create(curve: IECCurve;
-  glvEndomorphism: IGlvEndomorphism);
+constructor TGlvMultiplier.Create(const curve: IECCurve;
+  const glvEndomorphism: IGlvEndomorphism);
 begin
   inherited Create();
   if ((curve = Nil) or (not(curve.Order.IsInitialized))) then
@@ -64,7 +66,8 @@ begin
   FglvEndomorphism := glvEndomorphism;
 end;
 
-function TGlvMultiplier.MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
+function TGlvMultiplier.MultiplyPositive(const p: IECPoint;
+  const k: TBigInteger): IECPoint;
 var
   n, a, b: TBigInteger;
   ab: TCryptoLibGenericArray<TBigInteger>;

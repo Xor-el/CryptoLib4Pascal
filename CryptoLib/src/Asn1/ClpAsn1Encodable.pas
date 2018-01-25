@@ -51,7 +51,7 @@ type
     /// </returns>
     function GetDerEncoded(): TCryptoLibByteArray;
 
-    function Equals(other: IAsn1Convertible): Boolean; reintroduce;
+    function Equals(const other: IAsn1Convertible): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -63,7 +63,7 @@ implementation
 
 { TAsn1Encodable }
 
-function TAsn1Encodable.Equals(other: IAsn1Convertible): Boolean;
+function TAsn1Encodable.Equals(const other: IAsn1Convertible): Boolean;
 var
   o1, o2: IAsn1Object;
 begin

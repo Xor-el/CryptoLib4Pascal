@@ -29,7 +29,7 @@ type
   IBerSet = interface(IDerSet)
     ['{FD8838BB-8905-409A-AB93-136EEC6A05E4}']
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

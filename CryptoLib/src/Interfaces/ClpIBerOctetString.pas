@@ -42,7 +42,7 @@ type
 
     function GetEnumerator: TEnumerator<IDerOctetString>;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

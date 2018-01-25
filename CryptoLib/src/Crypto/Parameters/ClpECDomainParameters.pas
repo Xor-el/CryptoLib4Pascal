@@ -51,18 +51,19 @@ type
 
   public
 
-    constructor Create(curve: IECCurve; g: IECPoint; n: TBigInteger); overload;
-    constructor Create(curve: IECCurve; g: IECPoint;
-      n, h: TBigInteger); overload;
-    constructor Create(curve: IECCurve; g: IECPoint; n, h: TBigInteger;
-      seed: TCryptoLibByteArray); overload;
+    constructor Create(const curve: IECCurve; const g: IECPoint;
+      const n: TBigInteger); overload;
+    constructor Create(const curve: IECCurve; const g: IECPoint;
+      const n, h: TBigInteger); overload;
+    constructor Create(const curve: IECCurve; const g: IECPoint;
+      const n, h: TBigInteger; seed: TCryptoLibByteArray); overload;
 
     property curve: IECCurve read GetCurve;
     property g: IECPoint read GetG;
     property n: TBigInteger read GetN;
     property h: TBigInteger read GetH;
     property seed: TCryptoLibByteArray read GetSeed;
-    function Equals(other: IECDomainParameters): Boolean; reintroduce;
+    function Equals(const other: IECDomainParameters): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -72,20 +73,20 @@ implementation
 
 { TECDomainParameters }
 
-constructor TECDomainParameters.Create(curve: IECCurve; g: IECPoint;
-  n: TBigInteger);
+constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
+  const n: TBigInteger);
 begin
   Create(curve, g, n, TBigInteger.One)
 end;
 
-constructor TECDomainParameters.Create(curve: IECCurve; g: IECPoint;
-  n, h: TBigInteger);
+constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
+  const n, h: TBigInteger);
 begin
   Create(curve, g, n, h, Nil);
 end;
 
-constructor TECDomainParameters.Create(curve: IECCurve; g: IECPoint;
-  n, h: TBigInteger; seed: TCryptoLibByteArray);
+constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
+  const n, h: TBigInteger; seed: TCryptoLibByteArray);
 begin
   if (curve = Nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SCurveNil);
@@ -109,7 +110,7 @@ begin
 
 end;
 
-function TECDomainParameters.Equals(other: IECDomainParameters): Boolean;
+function TECDomainParameters.Equals(const other: IECDomainParameters): Boolean;
 begin
 
   if (other = Self as IECDomainParameters) then

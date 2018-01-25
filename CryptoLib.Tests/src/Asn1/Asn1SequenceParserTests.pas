@@ -216,9 +216,10 @@ begin
   try
     seqGen := TBerSequenceGenerator.Create(bOut, 1, true);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen.Close();
 
@@ -281,9 +282,10 @@ begin
   try
     seqGen := TBerSequenceGenerator.Create(bOut);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen.Close();
     bOut.Position := 0;
@@ -306,9 +308,10 @@ begin
   try
     seqGen := TDerSequenceGenerator.Create(bOut, 1, true);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen.Close();
 
@@ -333,9 +336,10 @@ begin
   try
     seqGen := TDerSequenceGenerator.Create(bOut, 1, false);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen.Close();
 
@@ -398,9 +402,10 @@ begin
   try
     seqGen := TDerSequenceGenerator.Create(bOut);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen.Close();
     bOut.Position := 0;
@@ -429,13 +434,15 @@ begin
   try
     seqGen1 := TBerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1)));
+    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
+      as IDerInteger);
 
     seqGen2.Close();
 
@@ -466,9 +473,10 @@ begin
   try
     seqGen1 := TBerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen2 := TBerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
 
@@ -503,13 +511,14 @@ begin
   try
     seqGen1 := TDerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.One));
+    seqGen2.AddObject(TDerInteger.Create(TBigInteger.One) as IDerInteger);
 
     seqGen2.Close();
 
@@ -535,14 +544,16 @@ begin
   try
     seqGen1 := TDerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen2 := TDerSequenceGenerator.Create
       (seqGen1.GetRawOutputStream(), 1, true);
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1)));
+    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
+      as IDerInteger);
 
     seqGen2.Close();
 
@@ -568,14 +579,16 @@ begin
   try
     seqGen1 := TDerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero));
+    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1'));
+    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+      as IDerObjectIdentifier);
 
     seqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream(),
       1, false);
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1)));
+    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
+      as IDerInteger);
 
     seqGen2.Close();
 

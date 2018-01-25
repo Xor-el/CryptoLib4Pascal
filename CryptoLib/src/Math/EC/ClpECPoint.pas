@@ -85,7 +85,7 @@ type
 
     function GetCompressionYTilde: Boolean; virtual; abstract;
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
     function SatisfiesCofactor(): Boolean; inline;
@@ -98,7 +98,8 @@ type
 
     function RawZCoords: TCryptoLibGenericArray<IECFieldElement>; inline;
 
-    function CreateScaledPoint(sx, sy: IECFieldElement): IECPoint; virtual;
+    function CreateScaledPoint(const sx, sy: IECFieldElement)
+      : IECPoint; virtual;
 
     procedure CheckNormalized(); virtual;
 
@@ -106,7 +107,7 @@ type
 
     property CompressionYTilde: Boolean read GetCompressionYTilde;
 
-    class function GetInitialZCoords(curve: IECCurve)
+    class function GetInitialZCoords(const curve: IECCurve)
       : TCryptoLibGenericArray<IECFieldElement>; static;
 
   public
@@ -115,7 +116,7 @@ type
     Fm_preCompTable: TDictionary<String, IPreCompInfo>;
 
     function GetYCoord: IECFieldElement; virtual;
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
     destructor Destroy; override;
@@ -137,30 +138,31 @@ type
     /// </returns>
     function Normalize(): IECPoint; overload; virtual;
 
-    function Normalize(zInv: IECFieldElement): IECPoint; overload; virtual;
+    function Normalize(const zInv: IECFieldElement): IECPoint;
+      overload; virtual;
 
     function IsValid(): Boolean; inline;
 
-    function ScaleX(scale: IECFieldElement): IECPoint; virtual;
-    function ScaleY(scale: IECFieldElement): IECPoint; virtual;
+    function ScaleX(const scale: IECFieldElement): IECPoint; virtual;
+    function ScaleY(const scale: IECFieldElement): IECPoint; virtual;
 
     function GetEncoded(): TCryptoLibByteArray; overload; virtual;
     function GetEncoded(compressed: Boolean): TCryptoLibByteArray; overload;
       virtual; abstract;
 
-    function Add(b: IECPoint): IECPoint; virtual; abstract;
-    function Subtract(b: IECPoint): IECPoint; virtual; abstract;
+    function Add(const b: IECPoint): IECPoint; virtual; abstract;
+    function Subtract(const b: IECPoint): IECPoint; virtual; abstract;
     function Negate(): IECPoint; virtual; abstract;
     function TimesPow2(e: Int32): IECPoint; virtual;
 
     function Twice(): IECPoint; virtual; abstract;
     function Multiply(b: TBigInteger): IECPoint; virtual; abstract;
 
-    function TwicePlus(b: IECPoint): IECPoint; virtual;
+    function TwicePlus(const b: IECPoint): IECPoint; virtual;
 
     function ThreeTimes(): IECPoint; virtual;
 
-    function Equals(other: IECPoint): Boolean; reintroduce;
+    function Equals(const other: IECPoint): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -249,10 +251,10 @@ type
 
   strict protected
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
@@ -283,10 +285,10 @@ type
 
   strict protected
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
@@ -299,7 +301,7 @@ type
   public
 
     destructor Destroy; override;
-    function Subtract(b: IECPoint): IECPoint; override;
+    function Subtract(const b: IECPoint): IECPoint; override;
 
   end;
 
@@ -314,15 +316,15 @@ type
 
     function Detach(): IECPoint; override;
 
-    function Two(x: IECFieldElement): IECFieldElement; virtual;
-    function Three(x: IECFieldElement): IECFieldElement; virtual;
-    function Four(x: IECFieldElement): IECFieldElement; virtual;
-    function Eight(x: IECFieldElement): IECFieldElement; virtual;
-    function DoubleProductFromSquares(a, b, aSquared, bSquared: IECFieldElement)
-      : IECFieldElement; virtual;
+    function Two(const x: IECFieldElement): IECFieldElement; virtual;
+    function Three(const x: IECFieldElement): IECFieldElement; virtual;
+    function Four(const x: IECFieldElement): IECFieldElement; virtual;
+    function Eight(const x: IECFieldElement): IECFieldElement; virtual;
+    function DoubleProductFromSquares(const a, b, aSquared,
+      bSquared: IECFieldElement): IECFieldElement; virtual;
 
-    function CalculateJacobianModifiedW(Z, ZSquared: IECFieldElement)
-      : IECFieldElement; virtual;
+    function CalculateJacobianModifiedW(const Z: IECFieldElement;
+      ZSquared: IECFieldElement): IECFieldElement; virtual;
 
     function GetJacobianModifiedW(): IECFieldElement; virtual;
 
@@ -342,7 +344,8 @@ type
     /// <param name="y">
     /// affine y co-ordinate
     /// </param>
-    constructor Create(curve: IECCurve; x, y: IECFieldElement); overload;
+    constructor Create(const curve: IECCurve;
+      const x, y: IECFieldElement); overload;
 
     /// <summary>
     /// Create a point which encodes without point compression.
@@ -359,10 +362,10 @@ type
     /// <param name="withCompression">
     /// if true encode with point compression
     /// </param>
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
@@ -370,12 +373,12 @@ type
 
     function GetZCoord(index: Int32): IECFieldElement; override;
     // B.3 pg 62
-    function Add(b: IECPoint): IECPoint; override;
+    function Add(const b: IECPoint): IECPoint; override;
 
     // B.3 pg 62
     function Twice(): IECPoint; override;
 
-    function TwicePlus(b: IECPoint): IECPoint; override;
+    function TwicePlus(const b: IECPoint): IECPoint; override;
 
     function ThreeTimes(): IECPoint; override;
 
@@ -389,10 +392,10 @@ type
   TAbstractF2mPoint = class abstract(TECPointBase, IAbstractF2mPoint)
 
   strict protected
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
@@ -400,10 +403,10 @@ type
 
   public
     destructor Destroy; override;
-    function ScaleX(scale: IECFieldElement): IECPoint; override;
-    function ScaleY(scale: IECFieldElement): IECPoint; override;
+    function ScaleX(const scale: IECFieldElement): IECPoint; override;
+    function ScaleY(const scale: IECFieldElement): IECPoint; override;
 
-    function Subtract(b: IECPoint): IECPoint; override;
+    function Subtract(const b: IECPoint): IECPoint; override;
 
     function Tau(): IAbstractF2mPoint; virtual;
 
@@ -434,7 +437,8 @@ type
     /// <param name="y">
     /// y point
     /// </param>
-    constructor Create(curve: IECCurve; x, y: IECFieldElement); overload;
+    constructor Create(const curve: IECCurve;
+      const x, y: IECFieldElement); overload;
 
     /// <param name="curve">
     /// base curve
@@ -448,20 +452,20 @@ type
     /// <param name="withCompression">
     /// true if encode with point compression.
     /// </param>
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
-    constructor Create(curve: IECCurve; x, y: IECFieldElement;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
     destructor Destroy; override;
 
-    function Add(b: IECPoint): IECPoint; override;
+    function Add(const b: IECPoint): IECPoint; override;
 
     function Twice(): IECPoint; override;
 
-    function TwicePlus(b: IECPoint): IECPoint; override;
+    function TwicePlus(const b: IECPoint): IECPoint; override;
 
     function Negate(): IECPoint; override;
 
@@ -515,7 +519,7 @@ begin
     (not TECAlgorithms.ReferenceMultiply(Self, h).IsInfinity);
 end;
 
-function TECPoint.ScaleX(scale: IECFieldElement): IECPoint;
+function TECPoint.ScaleX(const scale: IECFieldElement): IECPoint;
 begin
   if IsInfinity then
   begin
@@ -528,7 +532,7 @@ begin
   end;
 end;
 
-function TECPoint.ScaleY(scale: IECFieldElement): IECPoint;
+function TECPoint.ScaleY(const scale: IECFieldElement): IECPoint;
 begin
   if IsInfinity then
   begin
@@ -601,12 +605,12 @@ begin
   end;
 end;
 
-function TECPoint.TwicePlus(b: IECPoint): IECPoint;
+function TECPoint.TwicePlus(const b: IECPoint): IECPoint;
 begin
   result := Twice().Add(b);
 end;
 
-constructor TECPoint.Create(curve: IECCurve; x, y: IECFieldElement;
+constructor TECPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   withCompression: Boolean);
 begin
   Create(curve, x, y, GetInitialZCoords(curve), withCompression);
@@ -620,7 +624,7 @@ begin
   end;
 end;
 
-constructor TECPoint.Create(curve: IECCurve; x, y: IECFieldElement;
+constructor TECPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   // Fm_curve := curve;
@@ -631,7 +635,7 @@ begin
   Fm_withCompression := withCompression;
 end;
 
-function TECPoint.CreateScaledPoint(sx, sy: IECFieldElement): IECPoint;
+function TECPoint.CreateScaledPoint(const sx, sy: IECFieldElement): IECPoint;
 begin
   result := curve.CreateRawPoint(RawXCoord.Multiply(sx), RawYCoord.Multiply(sy),
     IsCompressed);
@@ -650,7 +654,7 @@ begin
   System.SetLength(FEMPTY_ZS, 0);
 end;
 
-function TECPoint.Equals(other: IECPoint): Boolean;
+function TECPoint.Equals(const other: IECPoint): Boolean;
 var
   c1, c2: IECCurve;
   n1, n2, i1, i2: Boolean;
@@ -752,7 +756,7 @@ begin
   result := hc;
 end;
 
-class function TECPoint.GetInitialZCoords(curve: IECCurve)
+class function TECPoint.GetInitialZCoords(const curve: IECCurve)
   : TCryptoLibGenericArray<IECFieldElement>;
 var
   coord: Int32;
@@ -911,7 +915,7 @@ begin
   result := true;
 end;
 
-function TECPoint.Normalize(zInv: IECFieldElement): IECPoint;
+function TECPoint.Normalize(const zInv: IECFieldElement): IECPoint;
 var
   zInv2, zInv3: IECFieldElement;
 begin
@@ -991,12 +995,13 @@ end;
 
 { TF2mPoint }
 
-constructor TF2mPoint.Create(curve: IECCurve; x, y: IECFieldElement);
+constructor TF2mPoint.Create(const curve: IECCurve;
+  const x, y: IECFieldElement);
 begin
   Create(curve, x, y, false);
 end;
 
-constructor TF2mPoint.Create(curve: IECCurve; x, y: IECFieldElement;
+constructor TF2mPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, withCompression);
@@ -1018,7 +1023,7 @@ begin
   end;
 end;
 
-function TF2mPoint.Add(b: IECPoint): IECPoint;
+function TF2mPoint.Add(const b: IECPoint): IECPoint;
 var
   ecCurve: IECCurve;
   coord: Int32;
@@ -1268,7 +1273,7 @@ begin
 
 end;
 
-constructor TF2mPoint.Create(curve: IECCurve; x, y: IECFieldElement;
+constructor TF2mPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
@@ -1601,7 +1606,7 @@ begin
   end;
 end;
 
-function TF2mPoint.TwicePlus(b: IECPoint): IECPoint;
+function TF2mPoint.TwicePlus(const b: IECPoint): IECPoint;
 var
   ecCurve: IECCurve;
   X1, X2, Z2, L1, L2, Z1, X1Sq, L1Sq, Z1Sq, L1Z1, T, L2plus1, a, X2Z1Sq, bigB,
@@ -1698,14 +1703,15 @@ end;
 
 { TECPointBase }
 
-constructor TECPointBase.Create(curve: IECCurve; x, y: IECFieldElement;
-  withCompression: Boolean);
+constructor TECPointBase.Create(const curve: IECCurve;
+  const x, y: IECFieldElement; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, withCompression);
 end;
 
-constructor TECPointBase.Create(curve: IECCurve; x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
+constructor TECPointBase.Create(const curve: IECCurve;
+  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
+  withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -1774,14 +1780,15 @@ begin
   result := AffineYCoord.TestBitZero();
 end;
 
-constructor TAbstractFpPoint.Create(curve: IECCurve; x, y: IECFieldElement;
-  withCompression: Boolean);
+constructor TAbstractFpPoint.Create(const curve: IECCurve;
+  const x, y: IECFieldElement; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, withCompression);
 end;
 
-constructor TAbstractFpPoint.Create(curve: IECCurve; x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
+constructor TAbstractFpPoint.Create(const curve: IECCurve;
+  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
+  withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -1845,7 +1852,7 @@ begin
   result := lhs.Equals(rhs);
 end;
 
-function TAbstractFpPoint.Subtract(b: IECPoint): IECPoint;
+function TAbstractFpPoint.Subtract(const b: IECPoint): IECPoint;
 begin
   if (b.IsInfinity) then
   begin
@@ -1859,7 +1866,7 @@ end;
 
 { TFpPoint }
 
-function TFpPoint.Add(b: IECPoint): IECPoint;
+function TFpPoint.Add(const b: IECPoint): IECPoint;
 var
   ecCurve: IECCurve;
   coord: Int32;
@@ -2166,8 +2173,8 @@ begin
 
 end;
 
-function TFpPoint.CalculateJacobianModifiedW(Z, ZSquared: IECFieldElement)
-  : IECFieldElement;
+function TFpPoint.CalculateJacobianModifiedW(const Z: IECFieldElement;
+  ZSquared: IECFieldElement): IECFieldElement;
 var
   a4, W, a4Neg: IECFieldElement;
 begin
@@ -2196,13 +2203,13 @@ begin
   result := W;
 end;
 
-constructor TFpPoint.Create(curve: IECCurve; x, y: IECFieldElement;
+constructor TFpPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
 
-constructor TFpPoint.Create(curve: IECCurve; x, y: IECFieldElement;
+constructor TFpPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, withCompression);
@@ -2212,7 +2219,7 @@ begin
   end;
 end;
 
-constructor TFpPoint.Create(curve: IECCurve; x, y: IECFieldElement);
+constructor TFpPoint.Create(const curve: IECCurve; const x, y: IECFieldElement);
 begin
   Create(curve, x, y, false);
 end;
@@ -2227,7 +2234,7 @@ begin
   result := TFpPoint.Create(Nil, AffineXCoord, AffineYCoord);
 end;
 
-function TFpPoint.DoubleProductFromSquares(a, b, aSquared,
+function TFpPoint.DoubleProductFromSquares(const a, b, aSquared,
   bSquared: IECFieldElement): IECFieldElement;
 begin
   // /*
@@ -2237,12 +2244,12 @@ begin
   result := a.Add(b).Square().Subtract(aSquared).Subtract(bSquared);
 end;
 
-function TFpPoint.Eight(x: IECFieldElement): IECFieldElement;
+function TFpPoint.Eight(const x: IECFieldElement): IECFieldElement;
 begin
   result := Four(Two(x));
 end;
 
-function TFpPoint.Four(x: IECFieldElement): IECFieldElement;
+function TFpPoint.Four(const x: IECFieldElement): IECFieldElement;
 begin
   result := Two(Two(x));
 end;
@@ -2300,7 +2307,7 @@ begin
     IsCompressed);
 end;
 
-function TFpPoint.Three(x: IECFieldElement): IECFieldElement;
+function TFpPoint.Three(const x: IECFieldElement): IECFieldElement;
 begin
   result := Two(x).Add(x);
 end;
@@ -2747,7 +2754,7 @@ begin
     TCryptoLibGenericArray<IECFieldElement>.Create(Z3, W3), IsCompressed);
 end;
 
-function TFpPoint.TwicePlus(b: IECPoint): IECPoint;
+function TFpPoint.TwicePlus(const b: IECPoint): IECPoint;
 var
   Y1, X1, X2, Y2, dx, dy, lx, ly, d, i, L1, L2, X4, Y4, bigD: IECFieldElement;
   ecCurve: IECCurve;
@@ -2842,21 +2849,22 @@ begin
 
 end;
 
-function TFpPoint.Two(x: IECFieldElement): IECFieldElement;
+function TFpPoint.Two(const x: IECFieldElement): IECFieldElement;
 begin
   result := x.Add(x);
 end;
 
 { TAbstractF2mPoint }
 
-constructor TAbstractF2mPoint.Create(curve: IECCurve; x, y: IECFieldElement;
-  withCompression: Boolean);
+constructor TAbstractF2mPoint.Create(const curve: IECCurve;
+  const x, y: IECFieldElement; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, withCompression);
 end;
 
-constructor TAbstractF2mPoint.Create(curve: IECCurve; x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
+constructor TAbstractF2mPoint.Create(const curve: IECCurve;
+  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
+  withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -2953,7 +2961,7 @@ begin
   result := lhs.Equals(rhs);
 end;
 
-function TAbstractF2mPoint.ScaleX(scale: IECFieldElement): IECPoint;
+function TAbstractF2mPoint.ScaleX(const scale: IECFieldElement): IECPoint;
 var
   lx, L, X2, L2, Z, Z2: IECFieldElement;
 begin
@@ -3002,7 +3010,7 @@ begin
 
 end;
 
-function TAbstractF2mPoint.ScaleY(scale: IECFieldElement): IECPoint;
+function TAbstractF2mPoint.ScaleY(const scale: IECFieldElement): IECPoint;
 var
   lx, L, L2: IECFieldElement;
 begin
@@ -3032,7 +3040,7 @@ begin
 
 end;
 
-function TAbstractF2mPoint.Subtract(b: IECPoint): IECPoint;
+function TAbstractF2mPoint.Subtract(const b: IECPoint): IECPoint;
 begin
   if (b.IsInfinity) then
   begin

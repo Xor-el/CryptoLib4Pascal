@@ -53,7 +53,7 @@ type
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
     property Str: TCryptoLibByteArray read GetStr;
@@ -72,8 +72,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IAsn1OctetString; overload; static;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IAsn1OctetString; overload; static;
     /// <summary>
     /// return an Octet string from the given object.
     /// </summary>
@@ -91,7 +91,7 @@ type
     /// </param>
     constructor Create(Str: TCryptoLibByteArray); overload;
 
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     function GetOctetStream(): TStream;
 
@@ -119,7 +119,7 @@ begin
   FStr := Str;
 end;
 
-function TAsn1OctetString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TAsn1OctetString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerOctetString;
 begin
@@ -138,7 +138,7 @@ begin
   result := TArrayUtils.GetArrayHashCode(GetOctets());
 end;
 
-constructor TAsn1OctetString.Create(obj: IAsn1Encodable);
+constructor TAsn1OctetString.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create();
   try
@@ -152,7 +152,7 @@ begin
   end;
 end;
 
-class function TAsn1OctetString.GetInstance(obj: IAsn1TaggedObject;
+class function TAsn1OctetString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IAsn1OctetString;
 var
   o: IAsn1Object;

@@ -59,17 +59,17 @@ type
       : TCryptoLibByteArray; static;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
 
   public
     constructor Create(isConstructed: Boolean; tag: Int32;
       octets: TCryptoLibByteArray); overload;
     constructor Create(tag: Int32; octets: TCryptoLibByteArray); overload;
-    constructor Create(tag: Int32; obj: IAsn1Encodable); overload;
+    constructor Create(tag: Int32; const obj: IAsn1Encodable); overload;
     constructor Create(isExplicit: Boolean; tag: Int32;
-      obj: IAsn1Encodable); overload;
-    constructor Create(tagNo: Int32; vec: IAsn1EncodableVector); overload;
+      const obj: IAsn1Encodable); overload;
+    constructor Create(tagNo: Int32; const vec: IAsn1EncodableVector); overload;
 
     function isConstructed(): Boolean; inline;
     function GetContents(): TCryptoLibByteArray; inline;
@@ -99,7 +99,7 @@ type
     /// </exception>
     function GetObject(derTagNo: Int32): IAsn1Object; overload; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     property ApplicationTag: Int32 read GetApplicationTag;
   end;
@@ -139,7 +139,8 @@ begin
   result := 2;
 end;
 
-constructor TDerApplicationSpecific.Create(tag: Int32; obj: IAsn1Encodable);
+constructor TDerApplicationSpecific.Create(tag: Int32;
+  const obj: IAsn1Encodable);
 begin
   Create(true, tag, obj);
 end;
@@ -159,7 +160,8 @@ begin
   Foctets := octets;
 end;
 
-function TDerApplicationSpecific.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerApplicationSpecific.Asn1Equals(const asn1Object
+  : IAsn1Object): Boolean;
 var
   other: IDerApplicationSpecific;
 begin
@@ -191,7 +193,7 @@ begin
 end;
 
 constructor TDerApplicationSpecific.Create(tagNo: Int32;
-  vec: IAsn1EncodableVector);
+  const vec: IAsn1EncodableVector);
 var
   bOut: TMemoryStream;
   bs: TCryptoLibByteArray;
@@ -232,7 +234,7 @@ begin
 
 end;
 
-procedure TDerApplicationSpecific.Encode(derOut: IDerOutputStream);
+procedure TDerApplicationSpecific.Encode(const derOut: IDerOutputStream);
 var
   classBits: Int32;
 begin
@@ -246,7 +248,7 @@ begin
 end;
 
 constructor TDerApplicationSpecific.Create(isExplicit: Boolean; tag: Int32;
-  obj: IAsn1Encodable);
+  const obj: IAsn1Encodable);
 var
   asn1Obj: IAsn1Object;
   data, tmp: TCryptoLibByteArray;

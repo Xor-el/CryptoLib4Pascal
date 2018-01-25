@@ -57,8 +57,8 @@ type
     // *
     // * @param oid an object identifier representing a named parameters, if present.
     // */
-    class function GetByOid(oid: IDerObjectIdentifier): IECDomainParameters;
-      static; inline;
+    class function GetByOid(const oid: IDerObjectIdentifier)
+      : IECDomainParameters; static; inline;
     // /**
     // * return the ECDomainParameters object for the given OID, null if it
     // * isn't present.
@@ -70,7 +70,8 @@ type
     // /**
     // * return the named curve name represented by the given object identifier.
     // */
-    class function GetName(oid: IDerObjectIdentifier): String; static; inline;
+    class function GetName(const oid: IDerObjectIdentifier): String;
+      static; inline;
 
     class function GetOid(const name: String): IDerObjectIdentifier;
       static; inline;
@@ -381,14 +382,14 @@ begin
   Result := Nil;
 end;
 
-class function TECGost3410NamedCurves.GetByOid(oid: IDerObjectIdentifier)
+class function TECGost3410NamedCurves.GetByOid(const oid: IDerObjectIdentifier)
   : IECDomainParameters;
 begin
   Fparameters.TryGetValue(oid, Result);
 end;
 
 class function TECGost3410NamedCurves.GetName
-  (oid: IDerObjectIdentifier): String;
+  (const oid: IDerObjectIdentifier): String;
 begin
   Fnames.TryGetValue(oid, Result);
 end;

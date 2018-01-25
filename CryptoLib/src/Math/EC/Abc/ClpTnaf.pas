@@ -62,7 +62,8 @@ type
     class function GetAlpha1: TCryptoLibGenericArray<IZTauElement>;
       static; inline;
 
-    class function GetShiftsForCofactor(h: TBigInteger): Int32; static; inline;
+    class function GetShiftsForCofactor(const h: TBigInteger): Int32;
+      static; inline;
 
     class constructor Tnaf();
 
@@ -93,7 +94,7 @@ type
     // * <code><b>Z</b>[&#964;]</code>.
     // * @return The norm of <code>&#955;</code>.
     // */
-    class function Norm(mu: ShortInt; lambda: IZTauElement): TBigInteger;
+    class function Norm(mu: ShortInt; const lambda: IZTauElement): TBigInteger;
       overload; static; inline;
     // /**
     // * Computes the norm of an element <code>&#955;</code> of
@@ -107,7 +108,7 @@ type
     // * <code>&#955;</code> of <code><b>R</b>[&#964;]</code>.
     // * @return The norm of <code>&#955;</code>.
     // */
-    class function Norm(mu: ShortInt; u, v: TSimpleBigDecimal)
+    class function Norm(mu: ShortInt; const u, v: TSimpleBigDecimal)
       : TSimpleBigDecimal; overload; static; inline;
     // /**
     // * Rounds an element <code>&#955;</code> of <code><b>R</b>[&#964;]</code>
@@ -122,8 +123,8 @@ type
     // * @throws ArgumentException if <code>lambda0</code> and
     // * <code>lambda1</code> do not have same scale.
     // */
-    class function Round(lambda0, lambda1: TSimpleBigDecimal; mu: ShortInt)
-      : IZTauElement; static;
+    class function Round(const lambda0, lambda1: TSimpleBigDecimal;
+      mu: ShortInt): IZTauElement; static;
     // /**
     // * Approximate division by <code>n</code>. For an integer
     // * <code>k</code>, the value <code>&#955; = s k / n</code> is
@@ -140,8 +141,8 @@ type
     // * @return The value <code>&#955; = s k / n</code> computed to
     // * <code>c</code> bits of accuracy.
     // */
-    class function ApproximateDivisionByN(k, s, vm: TBigInteger; a: ShortInt;
-      m, c: Int32): TSimpleBigDecimal; static; inline;
+    class function ApproximateDivisionByN(const k, s, vm: TBigInteger;
+      a: ShortInt; m, c: Int32): TSimpleBigDecimal; static; inline;
     // /**
     // * Computes the <code>&#964;</code>-adic NAF (non-adjacent form) of an
     // * element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>.
@@ -150,7 +151,7 @@ type
     // * <code><b>Z</b>[&#964;]</code>.
     // * @return The <code>&#964;</code>-adic NAF of <code>&#955;</code>.
     // */
-    class function TauAdicNaf(mu: ShortInt; lambda: IZTauElement)
+    class function TauAdicNaf(mu: ShortInt; const lambda: IZTauElement)
       : TCryptoLibShortIntArray; static;
     // /**
     // * Applies the operation <code>&#964;()</code> to an
@@ -158,7 +159,8 @@ type
     // * @param p The AbstractF2mPoint to which <code>&#964;()</code> is applied.
     // * @return <code>&#964;(p)</code>
     // */
-    class function Tau(p: IAbstractF2mPoint): IAbstractF2mPoint; static; inline;
+    class function Tau(const p: IAbstractF2mPoint): IAbstractF2mPoint;
+      static; inline;
     // /**
     // * Returns the parameter <code>&#956;</code> of the elliptic curve.
     // * @param curve The elliptic curve from which to obtain <code>&#956;</code>.
@@ -169,10 +171,10 @@ type
     // * @throws ArgumentException if the given ECCurve is not a Koblitz
     // * curve.
     // */
-    class function GetMu(curve: IAbstractF2mCurve): ShortInt; overload;
+    class function GetMu(const curve: IAbstractF2mCurve): ShortInt; overload;
       static; inline;
 
-    class function GetMu(curveA: IECFieldElement): ShortInt; overload;
+    class function GetMu(const curveA: IECFieldElement): ShortInt; overload;
       static; inline;
 
     class function GetMu(curveA: Int32): ShortInt; overload; static; inline;
@@ -209,10 +211,10 @@ type
     // * @throws ArgumentException if <code>curve</code> is not a
     // * Koblitz curve (Anomalous Binary Curve, ABC).
     // */
-    class function GetSi(curve: IAbstractF2mCurve)
+    class function GetSi(const curve: IAbstractF2mCurve)
       : TCryptoLibGenericArray<TBigInteger>; overload; static;
 
-    class function GetSi(fieldSize, curveA: Int32; cofactor: TBigInteger)
+    class function GetSi(fieldSize, curveA: Int32; const cofactor: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>; overload; static;
 
     // /**
@@ -228,7 +230,7 @@ type
     // * modular reduction.
     // * @return <code>&#961; := k partmod (&#964;<sup>m</sup> - 1)/(&#964; - 1)</code>
     // */
-    class function PartModReduction(k: TBigInteger; m: Int32; a: ShortInt;
+    class function PartModReduction(const k: TBigInteger; m: Int32; a: ShortInt;
       s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt)
       : IZTauElement; static;
 
@@ -241,8 +243,8 @@ type
     // * <code><b>Z</b>[&#964;]</code>.
     // * @return <code>&#955; * p</code>
     // */
-    class function MultiplyTnaf(p: IAbstractF2mPoint; lambda: IZTauElement)
-      : IAbstractF2mPoint; static; inline;
+    class function MultiplyTnaf(const p: IAbstractF2mPoint;
+      const lambda: IZTauElement): IAbstractF2mPoint; static; inline;
 
     // /**
     // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
@@ -253,7 +255,7 @@ type
     // * @param u The the TNAF of <code>&#955;</code>..
     // * @return <code>&#955; * p</code>
     // */
-    class function MultiplyFromTnaf(p: IAbstractF2mPoint;
+    class function MultiplyFromTnaf(const p: IAbstractF2mPoint;
       u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
 
     // /**
@@ -270,8 +272,8 @@ type
     // * @return The <code>[&#964;]</code>-adic window NAF of
     // * <code>&#955;</code>.
     // */
-    class function TauAdicWNaf(mu: ShortInt; lambda: IZTauElement;
-      Width: ShortInt; pow2w, tw: TBigInteger;
+    class function TauAdicWNaf(mu: ShortInt; const lambda: IZTauElement;
+      Width: ShortInt; const pow2w, tw: TBigInteger;
       alpha: TCryptoLibGenericArray<IZTauElement>)
       : TCryptoLibShortIntArray; static;
 
@@ -281,7 +283,7 @@ type
     // * @param a The parameter <code>a</code> of the elliptic curve.
     // * @return The precomputation array for <code>p</code>.
     // */
-    class function GetPreComp(p: IAbstractF2mPoint; a: ShortInt)
+    class function GetPreComp(const p: IAbstractF2mPoint; a: ShortInt)
       : TCryptoLibGenericArray<IAbstractF2mPoint>; static;
 
     // /**
@@ -292,8 +294,8 @@ type
     // * @param k The <code>BigInteger</code> by which to Multiply <code>p</code>.
     // * @return <code>k * p</code>
     // */
-    class function MultiplyRTnaf(p: IAbstractF2mPoint; k: TBigInteger)
-      : IAbstractF2mPoint; static; inline;
+    class function MultiplyRTnaf(const p: IAbstractF2mPoint;
+      const k: TBigInteger): IAbstractF2mPoint; static; inline;
 
     // /**
     // * The <code>&#945;<sub>u</sub></code>'s for <code>a=0</code> as an array
@@ -323,8 +325,8 @@ implementation
 
 { TTnaf }
 
-class function TTnaf.ApproximateDivisionByN(k, s, vm: TBigInteger; a: ShortInt;
-  m, c: Int32): TSimpleBigDecimal;
+class function TTnaf.ApproximateDivisionByN(const k, s, vm: TBigInteger;
+  a: ShortInt; m, c: Int32): TSimpleBigDecimal;
 var
   _k: Int32;
   ns, gs, hs, js, gsPlusJs, ls: TBigInteger;
@@ -434,7 +436,7 @@ begin
   end;
 end;
 
-class function TTnaf.GetMu(curve: IAbstractF2mCurve): ShortInt;
+class function TTnaf.GetMu(const curve: IAbstractF2mCurve): ShortInt;
 var
   a: TBigInteger;
   mu: ShortInt;
@@ -456,7 +458,7 @@ begin
   Result := mu;
 end;
 
-class function TTnaf.GetMu(curveA: IECFieldElement): ShortInt;
+class function TTnaf.GetMu(const curveA: IECFieldElement): ShortInt;
 begin
   if curveA.IsZero then
   begin
@@ -468,7 +470,7 @@ begin
   end;
 end;
 
-class function TTnaf.GetPreComp(p: IAbstractF2mPoint; a: ShortInt)
+class function TTnaf.GetPreComp(const p: IAbstractF2mPoint; a: ShortInt)
   : TCryptoLibGenericArray<IAbstractF2mPoint>;
 var
   alphaTnaf: TCryptoLibMatrixShortIntArray;
@@ -518,7 +520,7 @@ begin
   Result := pu;
 end;
 
-class function TTnaf.GetShiftsForCofactor(h: TBigInteger): Int32;
+class function TTnaf.GetShiftsForCofactor(const h: TBigInteger): Int32;
 var
   hi: Int32;
 begin
@@ -540,8 +542,8 @@ begin
   raise EArgumentCryptoLibException.CreateRes(@SInvalidCoFactor);
 end;
 
-class function TTnaf.GetSi(fieldSize, curveA: Int32; cofactor: TBigInteger)
-  : TCryptoLibGenericArray<TBigInteger>;
+class function TTnaf.GetSi(fieldSize, curveA: Int32;
+  const cofactor: TBigInteger): TCryptoLibGenericArray<TBigInteger>;
 var
   mu: ShortInt;
   shifts, index: Int32;
@@ -566,7 +568,7 @@ begin
   Result := TCryptoLibGenericArray<TBigInteger>.Create(dividend0, dividend1);
 end;
 
-class function TTnaf.GetSi(curve: IAbstractF2mCurve)
+class function TTnaf.GetSi(const curve: IAbstractF2mCurve)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   m, a, shifts, index: Int32;
@@ -627,7 +629,7 @@ begin
   // System.out.println("tw = " + tw);
 end;
 
-class function TTnaf.MultiplyFromTnaf(p: IAbstractF2mPoint;
+class function TTnaf.MultiplyFromTnaf(const p: IAbstractF2mPoint;
   u: TCryptoLibShortIntArray): IAbstractF2mPoint;
 var
   curve: IECCurve;
@@ -672,8 +674,8 @@ begin
   Result := q;
 end;
 
-class function TTnaf.MultiplyTnaf(p: IAbstractF2mPoint; lambda: IZTauElement)
-  : IAbstractF2mPoint;
+class function TTnaf.MultiplyTnaf(const p: IAbstractF2mPoint;
+  const lambda: IZTauElement): IAbstractF2mPoint;
 var
   curve: IAbstractF2mCurve;
   mu: ShortInt;
@@ -689,8 +691,8 @@ begin
   Result := q;
 end;
 
-class function TTnaf.MultiplyRTnaf(p: IAbstractF2mPoint; k: TBigInteger)
-  : IAbstractF2mPoint;
+class function TTnaf.MultiplyRTnaf(const p: IAbstractF2mPoint;
+  const k: TBigInteger): IAbstractF2mPoint;
 var
   curve: IAbstractF2mCurve;
   m, a: Int32;
@@ -708,7 +710,8 @@ begin
   Result := MultiplyTnaf(p, rho);
 end;
 
-class function TTnaf.Norm(mu: ShortInt; lambda: IZTauElement): TBigInteger;
+class function TTnaf.Norm(mu: ShortInt; const lambda: IZTauElement)
+  : TBigInteger;
 var
   LNorm, s1, s2, s3: TBigInteger;
 begin
@@ -737,7 +740,7 @@ begin
   Result := LNorm;
 end;
 
-class function TTnaf.Norm(mu: ShortInt; u, v: TSimpleBigDecimal)
+class function TTnaf.Norm(mu: ShortInt; const u, v: TSimpleBigDecimal)
   : TSimpleBigDecimal;
 var
   LNorm, s1, s2, s3: TSimpleBigDecimal;
@@ -767,8 +770,9 @@ begin
   Result := LNorm;
 end;
 
-class function TTnaf.PartModReduction(k: TBigInteger; m: Int32; a: ShortInt;
-  s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt): IZTauElement;
+class function TTnaf.PartModReduction(const k: TBigInteger; m: Int32;
+  a: ShortInt; s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt)
+  : IZTauElement;
 var
   d0, vm, r0, r1: TBigInteger;
   v: TCryptoLibGenericArray<TBigInteger>;
@@ -805,8 +809,8 @@ begin
   Result := TZTauElement.Create(r0, r1);
 end;
 
-class function TTnaf.Round(lambda0, lambda1: TSimpleBigDecimal; mu: ShortInt)
-  : IZTauElement;
+class function TTnaf.Round(const lambda0, lambda1: TSimpleBigDecimal;
+  mu: ShortInt): IZTauElement;
 var
   threeEta1, fourEta1, check1, check2, eta0, eta1, eta: TSimpleBigDecimal;
   f0, f1, q0, q1: TBigInteger;
@@ -909,12 +913,12 @@ begin
   Result := TZTauElement.Create(q0, q1);
 end;
 
-class function TTnaf.Tau(p: IAbstractF2mPoint): IAbstractF2mPoint;
+class function TTnaf.Tau(const p: IAbstractF2mPoint): IAbstractF2mPoint;
 begin
   Result := p.Tau();
 end;
 
-class function TTnaf.TauAdicNaf(mu: ShortInt; lambda: IZTauElement)
+class function TTnaf.TauAdicNaf(mu: ShortInt; const lambda: IZTauElement)
   : TCryptoLibShortIntArray;
 var
   LNorm, r0, r1, t, s: TBigInteger;
@@ -1004,8 +1008,8 @@ begin
   Result := LTnaf;
 end;
 
-class function TTnaf.TauAdicWNaf(mu: ShortInt; lambda: IZTauElement;
-  Width: ShortInt; pow2w, tw: TBigInteger;
+class function TTnaf.TauAdicWNaf(mu: ShortInt; const lambda: IZTauElement;
+  Width: ShortInt; const pow2w, tw: TBigInteger;
   alpha: TCryptoLibGenericArray<IZTauElement>): TCryptoLibShortIntArray;
 var
   LNorm, pow2wMin1, r0, r1, t, uUnMod: TBigInteger;

@@ -55,7 +55,7 @@ type
     /// <param name="privateParameter">
     /// privateParam the corresponding private key parameters.
     /// </param>
-    constructor Create(publicParameter, privateParameter
+    constructor Create(const publicParameter, privateParameter
       : IAsymmetricKeyParameter);
 
     /// <summary>
@@ -74,8 +74,8 @@ implementation
 
 { TAsymmetricCipherKeyPair }
 
-constructor TAsymmetricCipherKeyPair.Create(publicParameter, privateParameter
-  : IAsymmetricKeyParameter);
+constructor TAsymmetricCipherKeyPair.Create(const publicParameter,
+  privateParameter: IAsymmetricKeyParameter);
 begin
   if (publicParameter.IsPrivate) then
   begin

@@ -47,7 +47,7 @@ type
     /// Uses TRandomNumberGenerator.CreateRNG() to Get randomness generator
     /// </summary>
     constructor Create(); overload;
-    constructor Create(rng: IRandomNumberGenerator); overload;
+    constructor Create(const rng: IRandomNumberGenerator); overload;
 
     /// <summary>Add more seed material to the generator.</summary>
     /// <param name="seed">A byte array to be mixed into the generator's state.</param>
@@ -84,8 +84,9 @@ begin
   // We don't care about the seed
 end;
 
-constructor TCryptoApiRandomGenerator.Create(rng: IRandomNumberGenerator);
+constructor TCryptoApiRandomGenerator.Create(const rng: IRandomNumberGenerator);
 begin
+  Inherited Create();
   FrndProv := rng;
 end;
 

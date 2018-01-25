@@ -49,7 +49,8 @@ type
     // * @return A new <code>ECPoint</code> which equals <code>this</code>
     // * multiplied by <code>k</code>.
     // */
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint; override;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint; override;
 
     /// <summary>
     /// Determine window width to use for a scalar multiplication of the
@@ -74,8 +75,8 @@ begin
   Result := TWNafUtilities.GetWindowSize(bits);
 end;
 
-function TWNafL2RMultiplier.MultiplyPositive(p: IECPoint; k: TBigInteger)
-  : IECPoint;
+function TWNafL2RMultiplier.MultiplyPositive(const p: IECPoint;
+  const k: TBigInteger): IECPoint;
 var
   width, i, wi, digit, zeroes, n, highest, scale, lowBits, i1, i2: Int32;
   wnafPreCompInfo: IWNafPreCompInfo;

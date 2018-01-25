@@ -87,7 +87,7 @@ begin
 
   while (TStreamSorter.Read(inStr, bs, 0, System.Length(bs)) > 0) do
   begin
-   // do nothing
+    // do nothing
   end;
 end;
 

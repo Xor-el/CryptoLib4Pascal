@@ -35,7 +35,7 @@ type
     function GetIsDeterministic: Boolean;
 
     property IsDeterministic: Boolean read GetIsDeterministic;
-    procedure Init(n: TBigInteger; random: ISecureRandom); overload;
+    procedure Init(const n: TBigInteger; const random: ISecureRandom); overload;
     procedure Init(n, d: TBigInteger; &message: TCryptoLibByteArray); overload;
     function NextK(): TBigInteger;
 

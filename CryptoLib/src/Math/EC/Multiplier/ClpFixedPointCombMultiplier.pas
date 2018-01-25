@@ -39,7 +39,8 @@ type
     IFixedPointCombMultiplier)
 
   strict protected
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint; override;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint; override;
     function GetWidthForCombSize(combSize: Int32): Int32; virtual;
 
   end;
@@ -60,8 +61,8 @@ begin
   end;
 end;
 
-function TFixedPointCombMultiplier.MultiplyPositive(p: IECPoint; k: TBigInteger)
-  : IECPoint;
+function TFixedPointCombMultiplier.MultiplyPositive(const p: IECPoint;
+  const k: TBigInteger): IECPoint;
 var
   c: IECCurve;
   R: IECPoint;

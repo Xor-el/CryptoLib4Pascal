@@ -35,7 +35,7 @@ type
     function GetParser: IAsn1OctetStringParser;
 
     function Asn1GetHashCode(): Int32;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
     property Str: TCryptoLibByteArray read GetStr;
     property Parser: IAsn1OctetStringParser read GetParser;

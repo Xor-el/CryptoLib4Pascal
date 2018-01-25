@@ -34,7 +34,7 @@ type
 
     function GetExponentsPresent(): TCryptoLibInt32Array;
 
-    function Equals(other: IGF2Polynomial): Boolean;
+    function Equals(const other: IGF2Polynomial): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
     property Degree: Int32 read GetDegree;

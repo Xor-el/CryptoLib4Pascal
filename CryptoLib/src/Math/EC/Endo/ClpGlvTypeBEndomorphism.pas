@@ -44,11 +44,13 @@ type
     Fm_pointMap: IECPointMap;
     Fm_curve: IECCurve;
 
-    function CalculateB(k, g: TBigInteger; t: Int32): TBigInteger; virtual;
+    function CalculateB(const k, g: TBigInteger; t: Int32)
+      : TBigInteger; virtual;
 
   public
-    constructor Create(curve: IECCurve; parameters: IGlvTypeBParameters);
-    function DecomposeScalar(k: TBigInteger)
+    constructor Create(const curve: IECCurve;
+      const parameters: IGlvTypeBParameters);
+    function DecomposeScalar(const k: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     property PointMap: IECPointMap read GetPointMap;
@@ -59,7 +61,7 @@ implementation
 
 { TGlvTypeBEndomorphism }
 
-function TGlvTypeBEndomorphism.CalculateB(k, g: TBigInteger; t: Int32)
+function TGlvTypeBEndomorphism.CalculateB(const k, g: TBigInteger; t: Int32)
   : TBigInteger;
 var
   negative, extra: Boolean;
@@ -83,15 +85,15 @@ begin
   end;
 end;
 
-constructor TGlvTypeBEndomorphism.Create(curve: IECCurve;
-  parameters: IGlvTypeBParameters);
+constructor TGlvTypeBEndomorphism.Create(const curve: IECCurve;
+  const parameters: IGlvTypeBParameters);
 begin
   Fm_curve := curve;
   Fm_parameters := parameters;
   Fm_pointMap := TScaleXPointMap.Create(curve.FromBigInteger(parameters.Beta));
 end;
 
-function TGlvTypeBEndomorphism.DecomposeScalar(k: TBigInteger)
+function TGlvTypeBEndomorphism.DecomposeScalar(const k: TBigInteger)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   bits: Int32;

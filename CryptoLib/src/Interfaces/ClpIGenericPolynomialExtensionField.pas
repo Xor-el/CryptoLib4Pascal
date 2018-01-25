@@ -38,7 +38,8 @@ type
     function GetSubField: IFiniteField;
 
     function Equals(other: TObject): Boolean; overload;
-    function Equals(other: IGenericPolynomialExtensionField): Boolean; overload;
+    function Equals(const other: IGenericPolynomialExtensionField)
+      : Boolean; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
     property Characteristic: TBigInteger read GetCharacteristic;

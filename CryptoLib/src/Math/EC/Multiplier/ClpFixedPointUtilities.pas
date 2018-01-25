@@ -37,10 +37,10 @@ type
     PRECOMP_NAME = 'bc_fixed_point';
 
   public
-    class function GetCombSize(c: IECCurve): Int32; static; inline;
-    class function GetFixedPointPreCompInfo(preCompInfo: IPreCompInfo)
+    class function GetCombSize(const c: IECCurve): Int32; static; inline;
+    class function GetFixedPointPreCompInfo(const preCompInfo: IPreCompInfo)
       : IFixedPointPreCompInfo; static; inline;
-    class function Precompute(p: IECPoint; minWidth: Int32)
+    class function Precompute(const p: IECPoint; minWidth: Int32)
       : IFixedPointPreCompInfo; static;
   end;
 
@@ -48,7 +48,7 @@ implementation
 
 { TFixedPointUtilities }
 
-class function TFixedPointUtilities.GetCombSize(c: IECCurve): Int32;
+class function TFixedPointUtilities.GetCombSize(const c: IECCurve): Int32;
 var
   order: TBigInteger;
 begin
@@ -63,8 +63,8 @@ begin
   end;
 end;
 
-class function TFixedPointUtilities.GetFixedPointPreCompInfo
-  (preCompInfo: IPreCompInfo): IFixedPointPreCompInfo;
+class function TFixedPointUtilities.GetFixedPointPreCompInfo(const preCompInfo
+  : IPreCompInfo): IFixedPointPreCompInfo;
 begin
   if (Supports(preCompInfo, IFixedPointPreCompInfo, Result)) then
   begin
@@ -74,8 +74,8 @@ begin
   Result := TFixedPointPreCompInfo.Create();
 end;
 
-class function TFixedPointUtilities.Precompute(p: IECPoint; minWidth: Int32)
-  : IFixedPointPreCompInfo;
+class function TFixedPointUtilities.Precompute(const p: IECPoint;
+  minWidth: Int32): IFixedPointPreCompInfo;
 var
   c: IECCurve;
   n, bit, bits, d, i, step: Int32;

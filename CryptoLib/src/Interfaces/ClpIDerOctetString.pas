@@ -31,7 +31,7 @@ type
 
     ['{0FFF8858-026C-49B5-A600-7F746FE6BCF7}']
 
-    procedure Encode(derOut: IDerOutputStream); overload;
+    procedure Encode(const derOut: IDerOutputStream); overload;
 
   end;
 
