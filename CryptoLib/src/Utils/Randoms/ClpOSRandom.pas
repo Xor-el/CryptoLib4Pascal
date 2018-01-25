@@ -66,11 +66,11 @@ type
     class function NoZeroes(data: TCryptoLibByteArray): Boolean; static; inline;
 
   type
-    WCCryptAcquireContextA = function(phProv: Pointer; pszContainer: LPCSTR;
+    TWCCryptAcquireContextA = function(phProv: Pointer; pszContainer: LPCSTR;
       pszProvider: LPCSTR; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
-    WCCryptReleaseContext = function(hProv: Pointer; dwFlags: DWORD)
+    TWCCryptReleaseContext = function(hProv: Pointer; dwFlags: DWORD)
       : BOOL; stdcall;
-    WCCryptGenRandom = function(hProv: ULONG; dwLen: DWORD; pbBuffer: PBYTE)
+    TWCCryptGenRandom = function(hProv: ULONG; dwLen: DWORD; pbBuffer: PBYTE)
       : BOOL; stdcall;
 
   class var
@@ -78,9 +78,9 @@ type
     FwinCryptOk: Int32; // Windows Random function available
     FhProvider: ULONG; // Windows HCryptProvider Handle
     FWinCryptHndl: THandle;
-    FWCCryptAcquireContextA: WCCryptAcquireContextA;
-    FWCCryptReleaseContext: WCCryptReleaseContext;
-    FWCCryptGenRandom: WCCryptGenRandom;
+    FWCCryptAcquireContextA: TWCCryptAcquireContextA;
+    FWCCryptReleaseContext: TWCCryptReleaseContext;
+    FWCCryptGenRandom: TWCCryptGenRandom;
 {$ELSE}
     FunixCryptOk: Int32; // Unix Random /dev/urandom or /dev/random available
     FStream: TFileStream;
