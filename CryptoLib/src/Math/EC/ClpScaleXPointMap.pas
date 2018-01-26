@@ -33,6 +33,7 @@ type
 
   public
     constructor Create(const scale: IECFieldElement);
+    destructor Destroy(); override;
     function Map(const p: IECPoint): IECPoint; virtual;
   end;
 
@@ -43,6 +44,11 @@ implementation
 constructor TScaleXPointMap.Create(const scale: IECFieldElement);
 begin
   Fscale := scale;
+end;
+
+destructor TScaleXPointMap.Destroy;
+begin
+  inherited Destroy;
 end;
 
 function TScaleXPointMap.Map(const p: IECPoint): IECPoint;

@@ -37,6 +37,8 @@ type
 
   public
 
+    constructor Create();
+    destructor Destroy; override;
     function Multiply(const p: IECPoint; const k: TBigInteger)
       : IECPoint; virtual;
 
@@ -45,6 +47,16 @@ type
 implementation
 
 { TAbstractECMultiplier }
+
+constructor TAbstractECMultiplier.Create;
+begin
+  Inherited Create();
+end;
+
+destructor TAbstractECMultiplier.Destroy;
+begin
+  inherited Destroy;
+end;
 
 function TAbstractECMultiplier.Multiply(const p: IECPoint; const k: TBigInteger)
   : IECPoint;

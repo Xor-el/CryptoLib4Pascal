@@ -64,11 +64,26 @@ type
     /// </returns>
     function GetWindowSize(bits: Int32): Int32; virtual;
 
+  public
+
+    constructor Create();
+    destructor Destroy; override;
+
   end;
 
 implementation
 
 { TWNafL2RMultiplier }
+
+constructor TWNafL2RMultiplier.Create;
+begin
+  Inherited Create();
+end;
+
+destructor TWNafL2RMultiplier.Destroy;
+begin
+  inherited Destroy;
+end;
 
 function TWNafL2RMultiplier.GetWindowSize(bits: Int32): Int32;
 begin
@@ -167,6 +182,7 @@ begin
   end;
 
   Result := R;
+
 end;
 
 end.
