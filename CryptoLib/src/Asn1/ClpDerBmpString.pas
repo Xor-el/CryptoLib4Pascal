@@ -154,7 +154,12 @@ var
   i: Int32;
 begin
   System.SetLength(c, System.Length(Str));
-  StrPLCopy(PChar(@c[0]), Str, System.Length(c));
+
+  // had to use this loop because somehow, StrPLCopy causes memory leak in FPC v3.0.5
+  For i := System.Low(Str) to System.High(Str) do
+  begin
+    c[i - 1] := Str[i];
+  end;
   System.SetLength(b, System.Length(c) * 2);
 
   i := 0;
@@ -167,6 +172,7 @@ begin
   end;
 
   derOut.WriteEncoded(TAsn1Tags.BmpString, b);
+
 end;
 
 class function TDerBmpString.GetInstance(obj: TObject): IDerBmpString;
