@@ -45,7 +45,7 @@ type
     function GetTwice: IECPoint; virtual;
     procedure SetTwice(const Value: IECPoint); virtual;
   strict protected
-
+  var
     /// <summary>
     /// Array holding the precomputed <c>ECPoint</c>s used for a Window NAF
     /// multiplication.
@@ -66,6 +66,8 @@ type
 
   public
 
+    constructor Create();
+    destructor Destroy; override;
     property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp
       write SetPreComp;
     property PreCompNeg: TCryptoLibGenericArray<IECPoint> read GetPreCompNeg
@@ -77,6 +79,16 @@ type
 implementation
 
 { TWNafPreCompInfo }
+
+constructor TWNafPreCompInfo.Create;
+begin
+  inherited Create();
+end;
+
+destructor TWNafPreCompInfo.Destroy;
+begin
+  inherited Destroy;
+end;
 
 function TWNafPreCompInfo.GetPreComp: TCryptoLibGenericArray<IECPoint>;
 begin

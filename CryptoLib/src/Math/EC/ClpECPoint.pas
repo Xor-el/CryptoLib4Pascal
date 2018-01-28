@@ -78,7 +78,6 @@ type
   var
     Fm_zs: TCryptoLibGenericArray<IECFieldElement>;
     Fm_withCompression: Boolean;
-
     Fm_curve: IECCurve;
 
     Fm_x, Fm_y: IECFieldElement;
@@ -516,7 +515,7 @@ var
 begin
   h := curve.Cofactor;
   result := (not h.IsInitialized) or h.Equals(TBigInteger.One) or
-    (not TECAlgorithms.ReferenceMultiply(Self, h).IsInfinity);
+    (not TECAlgorithms.ReferenceMultiply(Self as IECPoint, h).IsInfinity);
 end;
 
 function TECPoint.ScaleX(const scale: IECFieldElement): IECPoint;
@@ -627,6 +626,7 @@ end;
 constructor TECPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
+  Inherited Create();
   // Fm_curve := curve;
   TSetWeakRef.SetWeakReference(@Fm_curve, curve);
   Fm_x := x;
@@ -644,7 +644,6 @@ end;
 destructor TECPoint.Destroy;
 begin
   TSetWeakRef.SetWeakReference(@Fm_curve, Nil);
-
   Fm_preCompTable.Free;
   inherited Destroy;
 end;

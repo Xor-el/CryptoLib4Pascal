@@ -447,7 +447,6 @@ begin
       i.ToString, adder, multiplier);
     i := i.Add(TBigInteger.One);
   until ((adder.Equals(infinity)));
-
 end;
 
 procedure TTestECPoint.ImplTestEncoding(const p: IECPoint);
