@@ -22,6 +22,7 @@ unit ClpGlvMultiplier;
 interface
 
 uses
+  ClpSetWeakRef,
   ClpAbstractECMultiplier,
   ClpIECInterface,
   ClpIGlvEndomorphism,
@@ -47,6 +48,8 @@ type
   public
     constructor Create(const curve: IECCurve;
       const glvEndomorphism: IGlvEndomorphism);
+    destructor Destroy; override;
+
   end;
 
 implementation
@@ -62,8 +65,14 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SCurveUnknownGroupOrder);
   end;
 
-  Fcurve := curve;
+  // Fcurve := curve;
+  TSetWeakRef.SetWeakReference(@Fcurve, curve);
   FglvEndomorphism := glvEndomorphism;
+end;
+
+destructor TGlvMultiplier.Destroy;
+begin
+  inherited Destroy;
 end;
 
 function TGlvMultiplier.MultiplyPositive(const p: IECPoint;
