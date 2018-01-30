@@ -297,7 +297,7 @@ begin
     sLineBreak);
 
   PublicKeyByteArray := pubParams.Q.GetEncoded;
-  // using ToByteArray here because bytes is unsigned in Pascal
+  // using ToByteArray here because bytes are unsigned in Pascal
   PrivateKeyByteArray := privParams.D.ToByteArray;
 
   RegeneratedPublicKey := TECPublicKeyParameters.Create('ECDSA',

@@ -48,6 +48,8 @@ type
       v1, v2: TCryptoLibGenericArray<TBigInteger>; const g1, g2: TBigInteger;
       bits: Int32);
 
+    destructor Destroy; override;
+
     property beta: TBigInteger read GetBeta;
     property lambda: TBigInteger read GetLambda;
     property v1: TCryptoLibGenericArray<TBigInteger> read GetV1;
@@ -73,6 +75,11 @@ begin
   Fm_g1 := g1;
   Fm_g2 := g2;
   Fm_bits := bits;
+end;
+
+destructor TGlvTypeBParameters.Destroy;
+begin
+  inherited Destroy;
 end;
 
 function TGlvTypeBParameters.GetBeta: TBigInteger;

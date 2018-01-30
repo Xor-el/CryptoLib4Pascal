@@ -259,6 +259,11 @@ begin
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
 
+  infoP.PreComp := Nil;
+  infoP.PreCompNeg := Nil;
+  infoQ.PreComp := Nil;
+  infoQ.PreCompNeg := Nil;
+
 end;
 
 class function TECAlgorithms.ImplShamirsTrickWNaf(const P: IECPoint;
@@ -324,6 +329,10 @@ begin
 
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
+  infoP.PreComp := Nil;
+  infoP.PreCompNeg := Nil;
+  infoQ.PreComp := Nil;
+  infoQ.PreCompNeg := Nil;
 end;
 
 class function TECAlgorithms.ImplShamirsTrickWNaf(preCompP,
@@ -465,6 +474,7 @@ begin
   end;
 
   result := ImplSumOfMultiplies(negs, infos, wnafs);
+
 end;
 
 class function TECAlgorithms.ImplSumOfMultiplies

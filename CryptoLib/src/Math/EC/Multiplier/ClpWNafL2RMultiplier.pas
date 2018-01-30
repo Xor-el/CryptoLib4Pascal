@@ -183,6 +183,9 @@ begin
 
   Result := R;
 
+  wnafPreCompInfo.preComp := Nil;
+  wnafPreCompInfo.PreCompNeg := Nil;
+
 end;
 
 end.

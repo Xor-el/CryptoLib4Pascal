@@ -274,7 +274,8 @@ begin
   spec := TECDomainParameters.Create(curve,
 
     curve.DecodePoint(THex.Decode
-    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
+    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf'))
+    as IECPoint, // G
     TBigInteger.Create
     ('883423532389192164791648750360308884807550341691627752275345424702807307'),
     // n
@@ -289,7 +290,8 @@ begin
   vKey := TECPublicKeyParameters.Create('ECDSA',
 
     curve.DecodePoint(THex.Decode
-    ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
+    ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70'))
+    as IECPoint, // Q
     spec);
 
   sgr := TSignerUtilities.GetSigner('ECDSA');
@@ -355,7 +357,8 @@ begin
 
   ecSpec := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
-    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
+    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf'))
+    as IECPoint, // G
     TBigInteger.Create
     ('883423532389192164791648750360308884807550341691627752275345424702807307'),
     // n

@@ -43,11 +43,25 @@ type
       : IECPoint; override;
     function GetWidthForCombSize(combSize: Int32): Int32; virtual;
 
+  public
+    constructor Create();
+    destructor Destroy; override;
+
   end;
 
 implementation
 
 { TFixedPointCombMultiplier }
+
+constructor TFixedPointCombMultiplier.Create;
+begin
+  Inherited Create();
+end;
+
+destructor TFixedPointCombMultiplier.Destroy;
+begin
+  inherited Destroy;
+end;
 
 function TFixedPointCombMultiplier.GetWidthForCombSize(combSize: Int32): Int32;
 begin
@@ -119,6 +133,7 @@ begin
   end;
 
   Result := R.Add(info.Offset);
+  info.PreComp := Nil;
 
 end;
 

@@ -43,6 +43,7 @@ implementation
 
 constructor TScaleXPointMap.Create(const scale: IECFieldElement);
 begin
+  Inherited Create();
   Fscale := scale;
 end;
 

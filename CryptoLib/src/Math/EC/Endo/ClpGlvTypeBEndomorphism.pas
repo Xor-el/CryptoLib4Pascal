@@ -50,6 +50,7 @@ type
   public
     constructor Create(const curve: IECCurve;
       const parameters: IGlvTypeBParameters);
+    destructor Destroy; override;
     function DecomposeScalar(const k: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
@@ -88,6 +89,7 @@ end;
 constructor TGlvTypeBEndomorphism.Create(const curve: IECCurve;
   const parameters: IGlvTypeBParameters);
 begin
+  Inherited Create();
   Fm_curve := curve;
   Fm_parameters := parameters;
   Fm_pointMap := TScaleXPointMap.Create(curve.FromBigInteger(parameters.Beta));
@@ -110,6 +112,11 @@ begin
   b := (b1.Multiply(v1[1])).Add(b2.Multiply(v2[1])).Negate();
 
   Result := TCryptoLibGenericArray<TBigInteger>.Create(a, b);
+end;
+
+destructor TGlvTypeBEndomorphism.Destroy;
+begin
+  inherited Destroy;
 end;
 
 function TGlvTypeBEndomorphism.GetHasEfficientPointMap: Boolean;

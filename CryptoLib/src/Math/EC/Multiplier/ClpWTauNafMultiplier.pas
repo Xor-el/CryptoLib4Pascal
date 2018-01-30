@@ -88,11 +88,25 @@ type
     function MultiplyPositive(const point: IECPoint; const k: TBigInteger)
       : IECPoint; override;
 
+  public
+    constructor Create();
+    destructor Destroy; override;
+
   end;
 
 implementation
 
 { TWTauNafMultiplier }
+
+constructor TWTauNafMultiplier.Create;
+begin
+  Inherited Create();
+end;
+
+destructor TWTauNafMultiplier.Destroy;
+begin
+  inherited Destroy;
+end;
 
 class function TWTauNafMultiplier.MultiplyFromWTnaf(const p: IAbstractF2mPoint;
   u: TCryptoLibShortIntArray; const preCompInfo: IPreCompInfo)
@@ -162,6 +176,7 @@ begin
     q := q.TauPow(tauCount);
   end;
   result := q;
+
 end;
 
 function TWTauNafMultiplier.MultiplyWTnaf(const p: IAbstractF2mPoint;

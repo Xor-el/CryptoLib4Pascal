@@ -130,7 +130,7 @@ begin
 
   FecDomain := TECDomainParameters.Create(Fcurve,
     TFpPoint.Create(Fcurve, Fcurve.FromBigInteger(FECParraGX),
-    Fcurve.FromBigInteger(FECParraGY)), FECParraN);
+    Fcurve.FromBigInteger(FECParraGY)) as IFpPoint, FECParraN);
 
   FecPub := TECPublicKeyParameters.Create(TFpPoint.Create(Fcurve,
     Fcurve.FromBigInteger(FECPubQX), Fcurve.FromBigInteger(FECPubQY))
