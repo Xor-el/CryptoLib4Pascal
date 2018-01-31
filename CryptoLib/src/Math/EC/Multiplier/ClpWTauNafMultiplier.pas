@@ -49,6 +49,9 @@ type
     // TODO Create WTauNafUtilities class and move various functionality into it
   const
     PRECOMP_NAME = 'bc_wtnaf';
+
+  var
+    Fpre: IWTauNafPreCompInfo;
     // /**
     // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
     // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code> using
@@ -123,19 +126,19 @@ begin
   curve := p.curve as IAbstractF2mCurve;
   a := ShortInt(curve.a.ToBigInteger().Int32Value);
 
-  if ((preCompInfo = Nil) or (not(Supports(preCompInfo, IWTauNafPreCompInfo))))
-  then
-  begin
-    pu := TTnaf.GetPreComp(p, a);
+  // if ((preCompInfo = Nil) or (not(Supports(preCompInfo, IWTauNafPreCompInfo))))
+  // then
+  // begin
+  pu := TTnaf.GetPreComp(p, a);
 
-    pre := TWTauNafPreCompInfo.Create();
-    pre.PreComp := pu;
-    curve.SetPreCompInfo(p, PRECOMP_NAME, pre);
-  end
-  else
-  begin
-    pu := (preCompInfo as IWTauNafPreCompInfo).PreComp;
-  end;
+  pre := TWTauNafPreCompInfo.Create();
+  pre.PreComp := pu;
+  curve.SetPreCompInfo(p, PRECOMP_NAME, pre);
+  // end
+  // else
+  // begin
+  // pu := (preCompInfo as IWTauNafPreCompInfo).PreComp;
+  // end;
 
   // TODO Include negations in precomp (optionally) and use from here
   System.SetLength(puNeg, System.Length(pu));
@@ -176,7 +179,7 @@ begin
     q := q.TauPow(tauCount);
   end;
   result := q;
-
+  pre.PreComp := Nil;
 end;
 
 function TWTauNafMultiplier.MultiplyWTnaf(const p: IAbstractF2mPoint;
@@ -229,6 +232,7 @@ begin
   rho := TTnaf.PartModReduction(k, m, a, s, mu, ShortInt(10));
 
   result := MultiplyWTnaf(p, rho, curve.GetPreCompInfo(p, PRECOMP_NAME), a, mu);
+
 end;
 
 end.

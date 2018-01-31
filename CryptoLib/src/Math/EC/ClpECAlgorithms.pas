@@ -475,6 +475,12 @@ begin
 
   result := ImplSumOfMultiplies(negs, infos, wnafs);
 
+  for i := System.Low(infos) to System.High(infos) do
+  begin
+    infos[i].PreComp := Nil;
+    infos[i].PreCompNeg := Nil;
+  end;
+
 end;
 
 class function TECAlgorithms.ImplSumOfMultiplies
@@ -846,7 +852,6 @@ begin
   end;
 
   result := ValidatePoint(ImplSumOfMultiplies(imported, ks));
-
 end;
 
 class function TECAlgorithms.SumOfTwoMultiplies(const P: IECPoint;
