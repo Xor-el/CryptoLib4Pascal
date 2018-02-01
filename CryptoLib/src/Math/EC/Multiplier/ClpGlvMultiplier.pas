@@ -72,6 +72,7 @@ end;
 
 destructor TGlvMultiplier.Destroy;
 begin
+  TSetWeakRef.SetWeakReference(@Fcurve, Nil);
   inherited Destroy;
 end;
 

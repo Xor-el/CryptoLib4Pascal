@@ -101,12 +101,11 @@ type
       FLock: TCriticalSection;
 
   var
-
     Fm_field: IFiniteField;
     Fm_order, Fm_cofactor: TBigInteger;
 
     Fm_coord: Int32;
-    // [Weak]
+
     Fm_endomorphism: IECEndomorphism;
     Fm_multiplier: IECMultiplier;
     Fm_a, Fm_b: IECFieldElement;
@@ -330,6 +329,7 @@ type
   strict protected
   var
     Fm_q, Fm_r: TBigInteger;
+
     Fm_infinity: IFpPoint;
 
     constructor Create(const q, r: TBigInteger;
@@ -654,6 +654,7 @@ end;
 
 constructor TECCurve.Create(const field: IFiniteField);
 begin
+  inherited Create();
   Fm_field := field;
 end;
 
@@ -984,7 +985,6 @@ end;
 procedure TECCurve.SetEndomorphism(const Value: IECEndomorphism);
 begin
   Fm_endomorphism := Value;
-  // TSetWeakRef.SetWeakReference(@Fm_endomorphism, Value);
 end;
 
 procedure TECCurve.SetMultiplier(const Value: IECMultiplier);
@@ -1050,6 +1050,7 @@ end;
 constructor TECCurve.TConfig.Create(const outer: IECCurve; coord: Int32;
   const endomorphism: IECEndomorphism; const multiplier: IECMultiplier);
 begin
+  Inherited Create();
   Fouter := outer;
   Fcoord := coord;
   Fendomorphism := endomorphism;
@@ -1216,7 +1217,6 @@ end;
 function TFpCurve.FromBigInteger(x: TBigInteger): IECFieldElement;
 begin
   Result := TFpFieldElement.Create(Fm_q, Fm_r, x);
-  // TSetWeakRef.SetWeakReference(@Result, TFpFieldElement.Create(Fm_q, Fm_r, x));
 end;
 
 function TFpCurve.GetFieldSize: Int32;
