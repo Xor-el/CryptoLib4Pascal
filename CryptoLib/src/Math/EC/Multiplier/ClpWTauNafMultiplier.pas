@@ -50,8 +50,6 @@ type
   const
     PRECOMP_NAME = 'bc_wtnaf';
 
-  var
-    Fpre: IWTauNafPreCompInfo;
     // /**
     // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
     // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code> using

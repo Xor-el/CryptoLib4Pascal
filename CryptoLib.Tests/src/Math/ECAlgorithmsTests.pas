@@ -99,6 +99,8 @@ procedure TTestECAlgorithms.AddTestCurves(x9s: TList<IX9ECParameters>;
   const x9: IX9ECParameters);
 var
   curve, c: IECCurve;
+  point: IECPoint;
+  params: IX9ECParameters;
   coord, i: Int32;
   coords: TCryptoLibInt32Array;
 begin
@@ -116,8 +118,9 @@ begin
     else if (curve.SupportsCoordinateSystem(coord)) then
     begin
       c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
-      x9s.Add(TX9ECParameters.Create(c, c.ImportPoint(x9.G), x9.N, x9.H)
-        as IX9ECParameters);
+      point := c.ImportPoint(x9.G);
+      params := TX9ECParameters.Create(c, point, x9.N, x9.H);
+      // x9s.Add(params);
     end;
   end;
 end;
@@ -226,7 +229,6 @@ function TTestECAlgorithms.GetTestCurves
   : TCryptoLibGenericArray<IX9ECParameters>;
 var
   name: string;
-var
   x9s: TList<IX9ECParameters>;
   tempList: TList<String>;
   tempDict: TDictionary<String, String>;
@@ -307,7 +309,6 @@ begin
   begin
     DoTestSumOfMultiplies(x9);
   end;
-
 end;
 
 procedure TTestECAlgorithms.TestSumOfTwoMultiplies;
