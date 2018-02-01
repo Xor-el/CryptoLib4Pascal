@@ -60,7 +60,7 @@ type
     // * @param v The &quot;<code>&#964;</code>-adic&quot; part of
     // * <code>&#955;</code>.
     // */
-    constructor Create(U, V: TBigInteger);
+    constructor Create(const U, V: TBigInteger);
 
   end;
 
@@ -68,7 +68,7 @@ implementation
 
 { TZTauElement }
 
-constructor TZTauElement.Create(U, V: TBigInteger);
+constructor TZTauElement.Create(const U, V: TBigInteger);
 begin
   inherited Create();
   Fu := U;

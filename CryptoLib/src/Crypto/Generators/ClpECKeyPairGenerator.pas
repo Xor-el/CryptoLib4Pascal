@@ -35,6 +35,7 @@ uses
   ClpECDomainParameters,
   ClpIECDomainParameters,
   ClpIECInterface,
+  ClpIFixedPointCombMultiplier,
   ClpSecObjectIdentifiers,
   // ClpCustomNamedCurves,
   ClpECNamedCurveTable,
@@ -74,18 +75,18 @@ type
     constructor Create(); overload;
     constructor Create(const algorithm: String); overload;
 
-    procedure Init(parameters: IKeyGenerationParameters);
+    procedure Init(const parameters: IKeyGenerationParameters);
     // /**
     // * Given the domain parameters this routine generates an EC key
     // * pair in accordance with X9.62 section 5.2.1 pages 26, 27.
     // */
     function GenerateKeyPair(): IAsymmetricCipherKeyPair;
 
-    class function FindECCurveByOid(oid: IDerObjectIdentifier)
+    class function FindECCurveByOid(const oid: IDerObjectIdentifier)
       : IX9ECParameters; static;
 
-    class function GetCorrespondingPublicKey(privKey: IECPrivateKeyParameters)
-      : IECPublicKeyParameters; static;
+    class function GetCorrespondingPublicKey(const privKey
+      : IECPrivateKeyParameters): IECPublicKeyParameters; static;
 
   end;
 
@@ -111,8 +112,8 @@ begin
   result := TFixedPointCombMultiplier.Create();
 end;
 
-class function TECKeyPairGenerator.FindECCurveByOid(oid: IDerObjectIdentifier)
-  : IX9ECParameters;
+class function TECKeyPairGenerator.FindECCurveByOid
+  (const oid: IDerObjectIdentifier): IX9ECParameters;
 var
   ecP: IX9ECParameters;
 begin
@@ -156,24 +157,27 @@ begin
   if (FpublicKeyParamSet <> Nil) then
   begin
     result := TAsymmetricCipherKeyPair.Create
-      (TECPublicKeyParameters.Create(Falgorithm, q, FpublicKeyParamSet),
-      TECPrivateKeyParameters.Create(Falgorithm, d, FpublicKeyParamSet));
+      (TECPublicKeyParameters.Create(Falgorithm, q, FpublicKeyParamSet)
+      as IECPublicKeyParameters, TECPrivateKeyParameters.Create(Falgorithm, d,
+      FpublicKeyParamSet) as IECPrivateKeyParameters);
     Exit;
   end;
 
   result := TAsymmetricCipherKeyPair.Create
-    (TECPublicKeyParameters.Create(Falgorithm, q, Fparameters),
-    TECPrivateKeyParameters.Create(Falgorithm, d, Fparameters));
+    (TECPublicKeyParameters.Create(Falgorithm, q, Fparameters)
+    as IECPublicKeyParameters, TECPrivateKeyParameters.Create(Falgorithm, d,
+    Fparameters) as IECPrivateKeyParameters);
 end;
 
 class function TECKeyPairGenerator.GetCorrespondingPublicKey
-  (privKey: IECPrivateKeyParameters): IECPublicKeyParameters;
+  (const privKey: IECPrivateKeyParameters): IECPublicKeyParameters;
 var
   ec: IECDomainParameters;
   q: IECPoint;
 begin
   ec := privKey.parameters;
-  q := TFixedPointCombMultiplier.Create().Multiply(ec.G, privKey.d);
+  q := (TFixedPointCombMultiplier.Create() as IFixedPointCombMultiplier)
+    .Multiply(ec.G, privKey.d);
 
   if (privKey.publicKeyParamSet <> Nil) then
   begin
@@ -185,7 +189,7 @@ begin
   result := TECPublicKeyParameters.Create(privKey.AlgorithmName, q, ec);
 end;
 
-procedure TECKeyPairGenerator.Init(parameters: IKeyGenerationParameters);
+procedure TECKeyPairGenerator.Init(const parameters: IKeyGenerationParameters);
 var
   ecP: IECKeyGenerationParameters;
   ecps: IX9ECParameters;

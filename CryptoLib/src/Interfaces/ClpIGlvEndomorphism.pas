@@ -31,7 +31,7 @@ type
 
     ['{FC8EE19A-A707-438F-81CF-C6C6C7D7C36C}']
 
-    function DecomposeScalar(k: TBigInteger)
+    function DecomposeScalar(const k: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>;
 
   end;

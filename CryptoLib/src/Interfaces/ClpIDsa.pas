@@ -65,8 +65,8 @@ type
     // * @param r the r signature value.
     // * @param s the s signature value.
     // */
-    function VerifySignature(&message: TCryptoLibByteArray;
-      r, s: TBigInteger): Boolean;
+    function VerifySignature(&message: TCryptoLibByteArray; r: TBigInteger;
+      const s: TBigInteger): Boolean;
 
   end;
 

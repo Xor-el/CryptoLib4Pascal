@@ -42,7 +42,7 @@ type
     property N: TBigInteger read GetN;
     property H: TBigInteger read GetH;
     property Seed: TCryptoLibByteArray read GetSeed;
-    function Equals(other: IECDomainParameters): Boolean;
+    function Equals(const other: IECDomainParameters): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
   end;

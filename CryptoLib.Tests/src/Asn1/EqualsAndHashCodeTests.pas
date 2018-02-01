@@ -66,6 +66,7 @@ uses
   ClpAsn1OutputStream,
   ClpAsn1InputStream,
   ClpIAsn1InputStream,
+  ClpIDerPrintableString,
   ClpAsn1Object;
 
 type
@@ -122,14 +123,20 @@ begin
     TDerGraphicString.Create(THex.Decode('deadbeef')),
     TDerVideotexString.Create(TEncoding.ASCII.GetBytes('Hello World')),
 
-    TBerTaggedObject.Create(0, TDerPrintableString.Create('hello world')),
+    TBerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
+    as IDerPrintableString),
 
-    TDerTaggedObject.Create(0, TDerPrintableString.Create('hello world')),
+    TDerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
+    as IDerPrintableString),
     //
-    TBerSequence.Create(TDerPrintableString.Create('hello world')),
-    TBerSet.Create(TDerPrintableString.Create('hello world')),
-    TDerSequence.Create(TDerPrintableString.Create('hello world')),
-    TDerSet.Create(TDerPrintableString.Create('hello world'))
+    TBerSequence.Create(TDerPrintableString.Create('hello world')
+    as IDerPrintableString),
+    TBerSet.Create(TDerPrintableString.Create('hello world')
+    as IDerPrintableString),
+    TDerSequence.Create(TDerPrintableString.Create('hello world')
+    as IDerPrintableString),
+    TDerSet.Create(TDerPrintableString.Create('hello world')
+    as IDerPrintableString)
 
     );
 

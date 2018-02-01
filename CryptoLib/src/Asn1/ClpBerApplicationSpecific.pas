@@ -31,7 +31,7 @@ type
     IBerApplicationSpecific)
 
   public
-    constructor Create(tagNo: Int32; vec: IAsn1EncodableVector);
+    constructor Create(tagNo: Int32; const vec: IAsn1EncodableVector);
 
   end;
 
@@ -40,7 +40,7 @@ implementation
 { TBerApplicationSpecific }
 
 constructor TBerApplicationSpecific.Create(tagNo: Int32;
-  vec: IAsn1EncodableVector);
+  const vec: IAsn1EncodableVector);
 begin
   inherited Create(tagNo, vec);
 end;

@@ -51,7 +51,7 @@ type
     property Str: String read GetStr;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     /// <summary>
@@ -68,7 +68,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a T61 string from the passed in object.
@@ -97,8 +97,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerT61String; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerT61String; overload; static; inline;
 
   end;
 
@@ -115,7 +115,7 @@ begin
 {$ENDIF FPC}
 end;
 
-function TDerT61String.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerT61String;
 begin
@@ -149,12 +149,12 @@ begin
   FStr := Str;
 end;
 
-procedure TDerT61String.Encode(derOut: IDerOutputStream);
+procedure TDerT61String.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.T61String, GetOctets());
 end;
 
-class function TDerT61String.GetInstance(obj: IAsn1TaggedObject;
+class function TDerT61String.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerT61String;
 var
   o: IAsn1Object;

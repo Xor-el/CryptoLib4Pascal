@@ -36,6 +36,7 @@ uses
   ClpRandom,
   ClpDigestUtilities,
   ClpCryptoApiRandomGenerator,
+  ClpICryptoApiRandomGenerator,
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
   ClpISecureRandom;
@@ -78,7 +79,7 @@ type
     /// implementation.
     /// </remarks>
     /// <param name="generator">The source to generate all random bytes from.</param>
-    constructor Create(generator: IRandomGenerator); overload;
+    constructor Create(const generator: IRandomGenerator); overload;
     constructor Create(); overload;
 
     function GenerateSeed(length: Int32): TCryptoLibByteArray; virtual;
@@ -97,8 +98,8 @@ type
     function Next(maxValue: Int32): Int32; overload; override;
     function Next(minValue, maxValue: Int32): Int32; overload; override;
 
-    class function GetNextBytes(SecureRandom: ISecureRandom; length: Int32)
-      : TCryptoLibByteArray; static;
+    class function GetNextBytes(const SecureRandom: ISecureRandom;
+      length: Int32): TCryptoLibByteArray; static;
 
     /// <summary>
     /// Create and auto-seed an instance based on the given algorithm.
@@ -123,7 +124,7 @@ implementation
 
 { TSecureRandom }
 
-constructor TSecureRandom.Create(generator: IRandomGenerator);
+constructor TSecureRandom.Create(const generator: IRandomGenerator);
 begin
   Inherited Create(0);
   Fgenerator := generator;
@@ -134,7 +135,7 @@ begin
   Result := Fmaster;
 end;
 
-class function TSecureRandom.GetNextBytes(SecureRandom: ISecureRandom;
+class function TSecureRandom.GetNextBytes(const SecureRandom: ISecureRandom;
   length: Int32): TCryptoLibByteArray;
 begin
   System.SetLength(Result, length);
@@ -307,7 +308,8 @@ end;
 class procedure TSecureRandom.Boot;
 begin
   FCounter := TTimes.NanoTime();
-  Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create());
+  Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
+    as ICryptoApiRandomGenerator);
   FDoubleScale := Power(2.0, 64.0);
 end;
 

@@ -68,9 +68,11 @@ type
     function GetCurve: IECCurve; inline;
 
   public
-    constructor Create(curve: IECCurve); overload;
-    constructor Create(curve: IECCurve; seed: TCryptoLibByteArray); overload;
-    constructor Create(fieldID: IX9FieldID; seq: IAsn1Sequence); overload;
+    constructor Create(const curve: IECCurve); overload;
+    constructor Create(const curve: IECCurve;
+      seed: TCryptoLibByteArray); overload;
+    constructor Create(const fieldID: IX9FieldID;
+      const seq: IAsn1Sequence); overload;
 
     function GetSeed(): TCryptoLibByteArray; inline;
 
@@ -97,7 +99,7 @@ implementation
 
 { TX9Curve }
 
-constructor TX9Curve.Create(curve: IECCurve; seed: TCryptoLibByteArray);
+constructor TX9Curve.Create(const curve: IECCurve; seed: TCryptoLibByteArray);
 begin
   Inherited Create();
   if (curve = Nil) then
@@ -122,12 +124,13 @@ begin
   end;
 end;
 
-constructor TX9Curve.Create(curve: IECCurve);
+constructor TX9Curve.Create(const curve: IECCurve);
 begin
   Create(curve, Nil);
 end;
 
-constructor TX9Curve.Create(fieldID: IX9FieldID; seq: IAsn1Sequence);
+constructor TX9Curve.Create(const fieldID: IX9FieldID;
+  const seq: IAsn1Sequence);
 var
   q: TBigInteger;
   x9A, x9B: IX9FieldElement;
@@ -215,13 +218,15 @@ begin
   if (FfieldIdentifier.Equals(TX9ObjectIdentifiers.PrimeField) or
     FfieldIdentifier.Equals(TX9ObjectIdentifiers.CharacteristicTwoField)) then
   begin
-    v.Add([TX9FieldElement.Create(Fcurve.A).ToAsn1Object()]);
-    v.Add([TX9FieldElement.Create(Fcurve.B).ToAsn1Object()]);
+    v.Add([(TX9FieldElement.Create(Fcurve.A) as IX9FieldElement)
+      .ToAsn1Object()]);
+    v.Add([(TX9FieldElement.Create(Fcurve.B) as IX9FieldElement)
+      .ToAsn1Object()]);
   end;
 
   if (FSeed <> Nil) then
   begin
-    v.Add([TDerBitString.Create(FSeed)]);
+    v.Add([TDerBitString.Create(FSeed) as IDerBitString]);
   end;
 
   result := TDerSequence.Create(v);

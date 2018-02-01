@@ -38,7 +38,7 @@ type
 
   public
 
-    constructor Create(parser: IAsn1StreamParser);
+    constructor Create(const parser: IAsn1StreamParser);
     function ReadObject(): IAsn1Convertible; inline;
     function ToAsn1Object(): IAsn1Object; inline;
 
@@ -48,7 +48,7 @@ implementation
 
 { TDerSetParser }
 
-constructor TDerSetParser.Create(parser: IAsn1StreamParser);
+constructor TDerSetParser.Create(const parser: IAsn1StreamParser);
 begin
   F_parser := parser;
 end;

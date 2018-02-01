@@ -63,24 +63,24 @@ type
     // * @param tagNo the tag number for this object.
     // * @param obj the tagged object.
     // */
-    constructor Create(tagNo: Int32; obj: IAsn1Encodable); overload;
+    constructor Create(tagNo: Int32; const obj: IAsn1Encodable); overload;
     // /**
     // * @param explicitly true if the object is explicitly tagged.
     // * @param tagNo the tag number for this object.
     // * @param obj the tagged object.
     // */
     constructor Create(explicitly: Boolean; tagNo: Int32;
-      obj: IAsn1Encodable); overload;
+      const obj: IAsn1Encodable); overload;
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
     function Asn1GetHashCode(): Int32; override;
 
   public
-    class function IsConstructed(isExplicit: Boolean; obj: IAsn1Object)
+    class function IsConstructed(isExplicit: Boolean; const obj: IAsn1Object)
       : Boolean; static;
-    class function GetInstance(obj: IAsn1TaggedObject; explicitly: Boolean)
-      : IAsn1TaggedObject; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      explicitly: Boolean): IAsn1TaggedObject; overload; static; inline;
     class function GetInstance(obj: TObject): IAsn1TaggedObject; overload;
       static; inline;
 
@@ -140,7 +140,7 @@ begin
   result := Nil;
 end;
 
-function TAsn1TaggedObject.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TAsn1TaggedObject.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IAsn1TaggedObject;
 begin
@@ -178,7 +178,7 @@ begin
   result := code;
 end;
 
-constructor TAsn1TaggedObject.Create(tagNo: Int32; obj: IAsn1Encodable);
+constructor TAsn1TaggedObject.Create(tagNo: Int32; const obj: IAsn1Encodable);
 begin
   Inherited Create();
   Fexplicitly := true;
@@ -187,7 +187,7 @@ begin
 end;
 
 constructor TAsn1TaggedObject.Create(explicitly: Boolean; tagNo: Int32;
-  obj: IAsn1Encodable);
+  const obj: IAsn1Encodable);
 begin
   Inherited Create();
   // IAsn1Choice marker interface 'insists' on explicit tagging
@@ -218,7 +218,7 @@ begin
   result := Fobj;
 end;
 
-class function TAsn1TaggedObject.GetInstance(obj: IAsn1TaggedObject;
+class function TAsn1TaggedObject.GetInstance(const obj: IAsn1TaggedObject;
   explicitly: Boolean): IAsn1TaggedObject;
 begin
   if (explicitly) then
@@ -271,7 +271,7 @@ begin
 end;
 
 class function TAsn1TaggedObject.IsConstructed(isExplicit: Boolean;
-  obj: IAsn1Object): Boolean;
+  const obj: IAsn1Object): Boolean;
 var
   tagged: IAsn1TaggedObject;
 begin

@@ -56,16 +56,16 @@ type
 
   strict protected
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
 
   public
 
     constructor Create(val: Int32); overload;
-    constructor Create(val: TBigInteger); overload;
+    constructor Create(const val: TBigInteger); overload;
     constructor Create(bytes: TCryptoLibByteArray); overload;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     property Value: TBigInteger read GetValue;
     property bytes: TCryptoLibByteArray read GetBytes;
@@ -92,8 +92,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerEnumerated; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerEnumerated; overload; static; inline;
 
     class function FromOctetString(enc: TCryptoLibByteArray)
       : IDerEnumerated; static;
@@ -104,7 +104,7 @@ implementation
 
 { TDerEnumerated }
 
-function TDerEnumerated.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerEnumerated.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerEnumerated;
 begin
@@ -129,7 +129,7 @@ begin
   Fbytes := TBigInteger.ValueOf(val).ToByteArray();
 end;
 
-constructor TDerEnumerated.Create(val: TBigInteger);
+constructor TDerEnumerated.Create(const val: TBigInteger);
 begin
   Inherited Create();
   Fbytes := val.ToByteArray();
@@ -157,7 +157,7 @@ begin
   System.SetLength(Fcache, 12);
 end;
 
-procedure TDerEnumerated.Encode(derOut: IDerOutputStream);
+procedure TDerEnumerated.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.Enumerated, Fbytes);
 end;
@@ -210,7 +210,7 @@ begin
     [obj.ClassName]);
 end;
 
-class function TDerEnumerated.GetInstance(obj: IAsn1TaggedObject;
+class function TDerEnumerated.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerEnumerated;
 var
   o: IAsn1Object;

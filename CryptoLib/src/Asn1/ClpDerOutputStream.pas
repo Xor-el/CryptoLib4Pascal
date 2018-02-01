@@ -49,8 +49,8 @@ type
       bytes: TCryptoLibByteArray); overload;
     procedure WriteTag(flags, tagNo: Int32);
 
-    procedure WriteObject(obj: IAsn1Encodable); overload; virtual;
-    procedure WriteObject(obj: IAsn1Object); overload; virtual;
+    procedure WriteObject(const obj: IAsn1Encodable); overload; virtual;
+    procedure WriteObject(const obj: IAsn1Object); overload; virtual;
 
   end;
 
@@ -134,7 +134,7 @@ begin
   WriteByte($00);
 end;
 
-procedure TDerOutputStream.WriteObject(obj: IAsn1Encodable);
+procedure TDerOutputStream.WriteObject(const obj: IAsn1Encodable);
 var
   asn1: IAsn1Object;
 begin
@@ -149,7 +149,7 @@ begin
   end;
 end;
 
-procedure TDerOutputStream.WriteObject(obj: IAsn1Object);
+procedure TDerOutputStream.WriteObject(const obj: IAsn1Object);
 begin
   if (obj = Nil) then
   begin

@@ -30,7 +30,8 @@ type
   IGlvMultiplier = interface(IAbstractECMultiplier)
     ['{F54D54F5-F544-421B-89FC-1D8058FB8F33}']
 
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint;
   end;
 
 implementation

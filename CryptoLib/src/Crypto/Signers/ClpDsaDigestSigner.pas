@@ -39,18 +39,19 @@ type
     FdsaSigner: IDsa;
     FforSigning: Boolean;
 
-    function DerEncode(r, s: TBigInteger): TCryptoLibByteArray; inline;
+    function DerEncode(const r, s: TBigInteger): TCryptoLibByteArray; inline;
 
     function DerDecode(encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; inline;
 
   public
-    constructor Create(signer: IDsa; digest: IHash);
+    constructor Create(const signer: IDsa; const digest: IHash);
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean; parameters: ICipherParameters); virtual;
+    procedure Init(forSigning: Boolean;
+      const parameters: ICipherParameters); virtual;
 
     /// <summary>
     /// update the internal digest with the byte b
@@ -92,7 +93,7 @@ begin
   Fdigest.TransformBytes(input, inOff, length);
 end;
 
-constructor TDsaDigestSigner.Create(signer: IDsa; digest: IHash);
+constructor TDsaDigestSigner.Create(const signer: IDsa; const digest: IHash);
 begin
   FdsaSigner := signer;
   Fdigest := digest;
@@ -108,10 +109,11 @@ begin
     ((s[0] as IDerInteger).Value, (s[1] as IDerInteger).Value);
 end;
 
-function TDsaDigestSigner.DerEncode(r, s: TBigInteger): TCryptoLibByteArray;
+function TDsaDigestSigner.DerEncode(const r, s: TBigInteger)
+  : TCryptoLibByteArray;
 begin
-  Result := TDerSequence.Create([TDerInteger.Create(r), TDerInteger.Create(s)])
-    .GetDerEncoded();
+  Result := TDerSequence.Create([TDerInteger.Create(r) as IDerInteger,
+    TDerInteger.Create(s) as IDerInteger]).GetDerEncoded();
 end;
 
 function TDsaDigestSigner.GenerateSignature: TCryptoLibByteArray;
@@ -140,7 +142,7 @@ begin
 end;
 
 procedure TDsaDigestSigner.Init(forSigning: Boolean;
-  parameters: ICipherParameters);
+  const parameters: ICipherParameters);
 var
   k: IAsymmetricKeyParameter;
   withRandom: IParametersWithRandom;

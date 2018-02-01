@@ -35,15 +35,15 @@ type
 
     ['{72930065-5893-46CA-B49F-51254C2E73FF}']
 
-    function CalculateE(n: TBigInteger; &message: TCryptoLibByteArray)
+    function CalculateE(const n: TBigInteger; &message: TCryptoLibByteArray)
       : TBigInteger;
 
     function CreateBasePointMultiplier(): IECMultiplier;
 
-    function GetDenominator(coordinateSystem: Int32; p: IECPoint)
+    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
       : IECFieldElement;
 
-    function InitSecureRandom(needed: Boolean; provided: ISecureRandom)
+    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
       : ISecureRandom;
 
     function GetAlgorithmName: String;
@@ -67,8 +67,8 @@ type
     // * the passed in message (for standard DSA the message should be
     // * a SHA-1 hash of the real message to be verified).
     // */
-    function VerifySignature(&message: TCryptoLibByteArray;
-      r, s: TBigInteger): Boolean;
+    function VerifySignature(&message: TCryptoLibByteArray; r: TBigInteger;
+      const s: TBigInteger): Boolean;
 
   end;
 

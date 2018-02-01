@@ -133,13 +133,14 @@ type
 
     function BuildEncodableVector(): IAsn1EncodableVector;
 
-    function BuildDerEncodableVector(dIn: IDefiniteLengthInputStream)
+    function BuildDerEncodableVector(const dIn: IDefiniteLengthInputStream)
       : IAsn1EncodableVector; virtual;
 
-    function CreateDerSequence(dIn: IDefiniteLengthInputStream)
+    function CreateDerSequence(const dIn: IDefiniteLengthInputStream)
       : IDerSequence; virtual;
 
-    function CreateDerSet(dIn: IDefiniteLengthInputStream): IDerSet; virtual;
+    function CreateDerSet(const dIn: IDefiniteLengthInputStream)
+      : IDerSet; virtual;
 
     class function FindLimit(input: TStream): Int32; static;
 
@@ -147,12 +148,12 @@ type
 
     class function ReadLength(s: TStream; limit: Int32): Int32; static;
 
-    class function GetBuffer(defIn: IDefiniteLengthInputStream;
+    class function GetBuffer(const defIn: IDefiniteLengthInputStream;
       tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): TCryptoLibByteArray;
       static; inline;
 
     class function CreatePrimitiveDerObject(tagNo: Int32;
-      defIn: IDefiniteLengthInputStream;
+      const defIn: IDefiniteLengthInputStream;
       tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): IAsn1Object; static;
   end;
 
@@ -197,8 +198,9 @@ begin
   result := System.High(Int32);
 end;
 
-class function TAsn1InputStream.GetBuffer(defIn: IDefiniteLengthInputStream;
-  tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): TCryptoLibByteArray;
+class function TAsn1InputStream.GetBuffer(const defIn
+  : IDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixGenericArray<Byte>)
+  : TCryptoLibByteArray;
 var
   len: Int32;
   buf, temp: TCryptoLibByteArray;
@@ -224,7 +226,7 @@ begin
 end;
 
 class function TAsn1InputStream.CreatePrimitiveDerObject(tagNo: Int32;
-  defIn: IDefiniteLengthInputStream;
+  const defIn: IDefiniteLengthInputStream;
   tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): IAsn1Object;
 var
   bytes: TCryptoLibByteArray;
@@ -539,7 +541,7 @@ begin
 end;
 
 function TAsn1InputStream.BuildDerEncodableVector
-  (dIn: IDefiniteLengthInputStream): IAsn1EncodableVector;
+  (const dIn: IDefiniteLengthInputStream): IAsn1EncodableVector;
 var
   res: TAsn1InputStream;
 begin
@@ -670,14 +672,14 @@ begin
 
 end;
 
-function TAsn1InputStream.CreateDerSequence(dIn: IDefiniteLengthInputStream)
-  : IDerSequence;
+function TAsn1InputStream.CreateDerSequence
+  (const dIn: IDefiniteLengthInputStream): IDerSequence;
 begin
   result := TDerSequence.FromVector(BuildDerEncodableVector(dIn));
 end;
 
-function TAsn1InputStream.CreateDerSet(dIn: IDefiniteLengthInputStream)
-  : IDerSet;
+function TAsn1InputStream.CreateDerSet(const dIn
+  : IDefiniteLengthInputStream): IDerSet;
 begin
   result := TDerSet.FromVector(BuildDerEncodableVector(dIn), false);
 end;

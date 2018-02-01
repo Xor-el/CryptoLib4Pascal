@@ -22,6 +22,7 @@ unit ClpGlvMultiplier;
 interface
 
 uses
+  ClpSetWeakRef,
   ClpAbstractECMultiplier,
   ClpIECInterface,
   ClpIGlvEndomorphism,
@@ -41,18 +42,22 @@ type
     Fcurve: IECCurve;
     FglvEndomorphism: IGlvEndomorphism;
 
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint; override;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint; override;
 
   public
-    constructor Create(curve: IECCurve; glvEndomorphism: IGlvEndomorphism);
+    constructor Create(const curve: IECCurve;
+      const glvEndomorphism: IGlvEndomorphism);
+    destructor Destroy; override;
+
   end;
 
 implementation
 
 { TGlvMultiplier }
 
-constructor TGlvMultiplier.Create(curve: IECCurve;
-  glvEndomorphism: IGlvEndomorphism);
+constructor TGlvMultiplier.Create(const curve: IECCurve;
+  const glvEndomorphism: IGlvEndomorphism);
 begin
   inherited Create();
   if ((curve = Nil) or (not(curve.Order.IsInitialized))) then
@@ -60,11 +65,18 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SCurveUnknownGroupOrder);
   end;
 
-  Fcurve := curve;
+  // Fcurve := curve;
+  TSetWeakRef.SetWeakReference(@Fcurve, curve);
   FglvEndomorphism := glvEndomorphism;
 end;
 
-function TGlvMultiplier.MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
+destructor TGlvMultiplier.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TGlvMultiplier.MultiplyPositive(const p: IECPoint;
+  const k: TBigInteger): IECPoint;
 var
   n, a, b: TBigInteger;
   ab: TCryptoLibGenericArray<TBigInteger>;

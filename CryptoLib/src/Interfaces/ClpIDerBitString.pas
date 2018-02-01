@@ -38,7 +38,7 @@ type
     property mPadBits: Int32 read GetmPadBits;
 
     function Asn1GetHashCode(): Int32;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
     function GetString(): String;
 
@@ -46,7 +46,7 @@ type
 
     function GetBytes(): TCryptoLibByteArray;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
     function GetInt32Value: Int32;
     property Int32Value: Int32 read GetInt32Value;

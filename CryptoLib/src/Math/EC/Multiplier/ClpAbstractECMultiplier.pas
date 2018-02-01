@@ -32,12 +32,15 @@ type
     IAbstractECMultiplier, IECMultiplier)
 
   strict protected
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
-      virtual; abstract;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint; virtual; abstract;
 
   public
 
-    function Multiply(p: IECPoint; k: TBigInteger): IECPoint; virtual;
+    constructor Create();
+    destructor Destroy; override;
+    function Multiply(const p: IECPoint; const k: TBigInteger)
+      : IECPoint; virtual;
 
   end;
 
@@ -45,7 +48,18 @@ implementation
 
 { TAbstractECMultiplier }
 
-function TAbstractECMultiplier.Multiply(p: IECPoint; k: TBigInteger): IECPoint;
+constructor TAbstractECMultiplier.Create;
+begin
+  Inherited Create();
+end;
+
+destructor TAbstractECMultiplier.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TAbstractECMultiplier.Multiply(const p: IECPoint; const k: TBigInteger)
+  : IECPoint;
 var
   positive: IECPoint;
   sign: Int32;

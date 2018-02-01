@@ -41,7 +41,7 @@ type
   strict private
 
     class function GetNames: TCryptoLibStringArray; static;
-    class function FromDomainParameters(dp: IECDomainParameters)
+    class function FromDomainParameters(const dp: IECDomainParameters)
       : IX9ECParameters; static; inline;
 
   public
@@ -54,7 +54,7 @@ type
     // */
     class function GetByName(const name: String): IX9ECParameters; static;
 
-    class function GetName(oid: IDerObjectIdentifier): String; static;
+    class function GetName(const oid: IDerObjectIdentifier): String; static;
     // /**
     // * return the object identifier signified by the passed in name. Null
     // * if there is no object identifier associated with name.
@@ -71,7 +71,8 @@ type
     // * @return an X9ECParameters object or null if the curve is not available.
     // */
 
-    class function GetByOid(oid: IDerObjectIdentifier): IX9ECParameters; static;
+    class function GetByOid(const oid: IDerObjectIdentifier)
+      : IX9ECParameters; static;
 
     // /**
     // * return an enumeration of the names of the available curves.
@@ -86,8 +87,8 @@ implementation
 
 { TECNamedCurveTable }
 
-class function TECNamedCurveTable.FromDomainParameters(dp: IECDomainParameters)
-  : IX9ECParameters;
+class function TECNamedCurveTable.FromDomainParameters
+  (const dp: IECDomainParameters): IX9ECParameters;
 begin
   if dp = Nil then
   begin
@@ -114,7 +115,7 @@ begin
   result := ecP;
 end;
 
-class function TECNamedCurveTable.GetByOid(oid: IDerObjectIdentifier)
+class function TECNamedCurveTable.GetByOid(const oid: IDerObjectIdentifier)
   : IX9ECParameters;
 var
   ecP: IX9ECParameters;
@@ -127,7 +128,8 @@ begin
   result := ecP;
 end;
 
-class function TECNamedCurveTable.GetName(oid: IDerObjectIdentifier): String;
+class function TECNamedCurveTable.GetName
+  (const oid: IDerObjectIdentifier): String;
 var
   name: String;
 begin

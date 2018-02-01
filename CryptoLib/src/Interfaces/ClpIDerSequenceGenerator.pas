@@ -29,7 +29,7 @@ uses
 type
   IDerSequenceGenerator = interface(IDerGenerator)
     ['{1E0E4FD7-84CA-4D02-AB9E-5AF8461270DE}']
-    procedure AddObject(obj: IAsn1Encodable);
+    procedure AddObject(const obj: IAsn1Encodable);
     function GetRawOutputStream(): TStream;
     procedure Close();
   end;

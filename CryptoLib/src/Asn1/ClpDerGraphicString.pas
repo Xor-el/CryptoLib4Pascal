@@ -48,7 +48,7 @@ type
 
   protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
     property mString: TCryptoLibByteArray read GetmString;
@@ -65,7 +65,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a Graphic String from the passed in object
@@ -97,8 +97,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerGraphicString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerGraphicString; overload; static; inline;
 
   end;
 
@@ -106,7 +106,7 @@ implementation
 
 { TDerGraphicString }
 
-function TDerGraphicString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerGraphicString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerGraphicString;
 begin
@@ -131,7 +131,7 @@ begin
   FmString := System.Copy(encoding);
 end;
 
-procedure TDerGraphicString.Encode(derOut: IDerOutputStream);
+procedure TDerGraphicString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.GraphicString, mString);
 end;
@@ -148,7 +148,7 @@ begin
     [obj.ClassName]);
 end;
 
-class function TDerGraphicString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerGraphicString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerGraphicString;
 var
   o: IAsn1Object;

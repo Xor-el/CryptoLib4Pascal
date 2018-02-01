@@ -57,7 +57,7 @@ type
     property Str: TCryptoLibByteArray read GetStr;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     /// <summary>
@@ -69,7 +69,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a Universal String from the passed in object.
@@ -98,8 +98,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerUniversalString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerUniversalString; overload; static; inline;
 
   end;
 
@@ -112,7 +112,7 @@ begin
   result := System.Copy(Str);
 end;
 
-function TDerUniversalString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerUniversalString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerUniversalString;
 begin
@@ -137,12 +137,12 @@ begin
   FStr := Str;
 end;
 
-procedure TDerUniversalString.Encode(derOut: IDerOutputStream);
+procedure TDerUniversalString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.UniversalString, Str);
 end;
 
-class function TDerUniversalString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerUniversalString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerUniversalString;
 var
   o: IAsn1Object;

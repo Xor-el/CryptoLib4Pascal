@@ -40,7 +40,7 @@ type
     F_currentStream: TStream;
 
   public
-    constructor Create(parser: IAsn1StreamParser);
+    constructor Create(const parser: IAsn1StreamParser);
     function Read(buffer: TCryptoLibByteArray; offset, count: Int32)
       : Int32; override;
     function ReadByte(): Int32; override;
@@ -53,7 +53,7 @@ uses
 
 { TConstructedOctetStream }
 
-constructor TConstructedOctetStream.Create(parser: IAsn1StreamParser);
+constructor TConstructedOctetStream.Create(const parser: IAsn1StreamParser);
 begin
   Inherited Create();
   F_parser := parser;

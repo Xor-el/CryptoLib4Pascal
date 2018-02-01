@@ -67,7 +67,7 @@ type
     class constructor CreateDerObjectIdentifier();
     class destructor DestroyDerObjectIdentifier();
 
-    constructor Create(oid: IDerObjectIdentifier;
+    constructor Create(const oid: IDerObjectIdentifier;
       const branchID: String); overload;
     constructor Create(bytes: TCryptoLibByteArray); overload;
 
@@ -86,7 +86,7 @@ type
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
     // /**
@@ -112,8 +112,8 @@ type
     // * @exception ArgumentException if the tagged object cannot
     // *               be converted.
     // */
-    class function GetInstance(obj: IAsn1TaggedObject; explicitly: Boolean)
-      : IDerObjectIdentifier; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      explicitly: Boolean): IDerObjectIdentifier; overload; static; inline;
 
     class function FromOctetString(enc: TCryptoLibByteArray)
       : IDerObjectIdentifier; static;
@@ -130,9 +130,9 @@ type
     // * @return  true if the branch is on the passed in stem, false otherwise.
     // */
 
-    function &On(stem: IDerObjectIdentifier): Boolean; virtual;
+    function &On(const stem: IDerObjectIdentifier): Boolean; virtual;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     function ToString(): String; override;
 
@@ -142,7 +142,8 @@ implementation
 
 { TDerObjectIdentifier }
 
-function TDerObjectIdentifier.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerObjectIdentifier.Asn1Equals(const asn1Object: IAsn1Object)
+  : Boolean;
 var
   other: IDerObjectIdentifier;
 begin
@@ -166,7 +167,7 @@ begin
   result := TDerObjectIdentifier.Create(Self as IDerObjectIdentifier, branchID);
 end;
 
-constructor TDerObjectIdentifier.Create(oid: IDerObjectIdentifier;
+constructor TDerObjectIdentifier.Create(const oid: IDerObjectIdentifier;
   const branchID: String);
 begin
   Inherited Create();
@@ -195,7 +196,7 @@ begin
   Fbody := System.Copy(bytes);
 end;
 
-function TDerObjectIdentifier.&On(stem: IDerObjectIdentifier): Boolean;
+function TDerObjectIdentifier.&On(const stem: IDerObjectIdentifier): Boolean;
 var
   LocalId, stemId: String;
 begin
@@ -251,7 +252,7 @@ begin
   end;
 end;
 
-procedure TDerObjectIdentifier.Encode(derOut: IDerOutputStream);
+procedure TDerObjectIdentifier.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.ObjectIdentifier, GetBody());
 end;
@@ -315,7 +316,7 @@ begin
   result := Fidentifier;
 end;
 
-class function TDerObjectIdentifier.GetInstance(obj: IAsn1TaggedObject;
+class function TDerObjectIdentifier.GetInstance(const obj: IAsn1TaggedObject;
   explicitly: Boolean): IDerObjectIdentifier;
 var
   o: IAsn1Object;
@@ -535,7 +536,6 @@ begin
   byteCount := (fieldValue.BitLength + 6) div 7;
   if (byteCount = 0) then
   begin
-    // outputStream.Write(TCryptoLibByteArray.Create(0)[0], 1);
     outputStream.WriteByte(0);
   end
   else

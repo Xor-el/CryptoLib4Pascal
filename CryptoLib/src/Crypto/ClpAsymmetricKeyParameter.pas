@@ -42,7 +42,7 @@ type
   public
     property IsPrivate: Boolean read GetIsPrivate;
     property privateKey: Boolean read GetPrivateKey;
-    function Equals(other: IAsymmetricKeyParameter): Boolean; reintroduce;
+    function Equals(const other: IAsymmetricKeyParameter): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -57,8 +57,8 @@ begin
   FprivateKey := privateKey;
 end;
 
-function TAsymmetricKeyParameter.Equals(other: IAsymmetricKeyParameter)
-  : Boolean;
+function TAsymmetricKeyParameter.Equals(const other
+  : IAsymmetricKeyParameter): Boolean;
 begin
   if (other = Nil) then
   begin

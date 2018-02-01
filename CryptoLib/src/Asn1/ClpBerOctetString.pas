@@ -57,8 +57,8 @@ type
     /// <param name="str">The octets making up the octet string.</param>
     constructor Create(str: TCryptoLibByteArray); overload;
     constructor Create(octets: TEnumerable<IDerOctetString>); overload;
-    constructor Create(obj: IAsn1Object); overload;
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Object); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     destructor Destroy(); override;
 
@@ -69,9 +69,10 @@ type
     /// </summary>
     function GetEnumerator: TEnumerator<IDerOctetString>;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
-    class function FromSequence(seq: IAsn1Sequence): IBerOctetString; static;
+    class function FromSequence(const seq: IAsn1Sequence)
+      : IBerOctetString; static;
 
   end;
 
@@ -90,7 +91,7 @@ begin
   Inherited Create(str);
 end;
 
-constructor TBerOctetString.Create(obj: IAsn1Encodable);
+constructor TBerOctetString.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(obj.ToAsn1Object());
 end;
@@ -101,12 +102,12 @@ begin
   inherited Destroy;
 end;
 
-constructor TBerOctetString.Create(obj: IAsn1Object);
+constructor TBerOctetString.Create(const obj: IAsn1Object);
 begin
   Inherited Create(obj);
 end;
 
-procedure TBerOctetString.Encode(derOut: IDerOutputStream);
+procedure TBerOctetString.Encode(const derOut: IDerOutputStream);
 var
   oct: IDerOctetString;
 begin
@@ -134,7 +135,7 @@ begin
   end;
 end;
 
-class function TBerOctetString.FromSequence(seq: IAsn1Sequence)
+class function TBerOctetString.FromSequence(const seq: IAsn1Sequence)
   : IBerOctetString;
 var
   v: TList<IDerOctetString>;
@@ -166,7 +167,7 @@ begin
     System.SetLength(nStr, endPoint - i);
 
     System.Move(str[i], nStr[0], System.Length(nStr) * System.SizeOf(Byte));
-    result.Add(TDerOctetString.Create(nStr));
+    result.Add(TDerOctetString.Create(nStr) as IDerOctetString);
     System.Inc(i, MaxLength);
   end;
   Focts := result; // review removal

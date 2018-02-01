@@ -111,20 +111,20 @@ type
     Fm_multiplier: IECMultiplier;
     Fm_a, Fm_b: IECFieldElement;
 
-    constructor Create(field: IFiniteField);
+    constructor Create(const field: IFiniteField);
 
     function CloneCurve(): IECCurve; virtual; abstract;
 
-    function CreateRawPoint(x, y: IECFieldElement; withCompression: Boolean)
-      : IECPoint; overload; virtual; abstract;
+    function CreateRawPoint(const x, y: IECFieldElement;
+      withCompression: Boolean): IECPoint; overload; virtual; abstract;
 
-    function CreateRawPoint(x, y: IECFieldElement;
+    function CreateRawPoint(const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
       : IECPoint; overload; virtual; abstract;
 
     function CreateDefaultMultiplier(): IECMultiplier; virtual;
 
-    procedure CheckPoint(point: IECPoint); virtual;
+    procedure CheckPoint(const point: IECPoint); virtual;
 
     procedure CheckPoints(points: TCryptoLibGenericArray<IECPoint>);
       overload; virtual;
@@ -159,14 +159,16 @@ type
       Fmultiplier: IECMultiplier;
 
     public
-      constructor Create(outer: IECCurve; coord: Int32;
-        endomorphism: IECEndomorphism; multiplier: IECMultiplier); overload;
+      constructor Create(const outer: IECCurve; coord: Int32;
+        const endomorphism: IECEndomorphism;
+        const multiplier: IECMultiplier); overload;
 
       destructor Destroy(); override;
 
       function SetCoordinateSystem(coord: Int32): IConfig; inline;
-      function SetEndomorphism(endomorphism: IECEndomorphism): IConfig; inline;
-      function SetMultiplier(multiplier: IECMultiplier): IConfig; inline;
+      function SetEndomorphism(const endomorphism: IECEndomorphism)
+        : IConfig; inline;
+      function SetMultiplier(const multiplier: IECMultiplier): IConfig; inline;
       function CreateCurve(): IECCurve;
 
     end;
@@ -178,21 +180,21 @@ type
   function IsValidFieldElement(x: TBigInteger): Boolean; virtual; abstract;
 
   function Configure(): IConfig; virtual;
-  function ValidatePoint(x, y: TBigInteger): IECPoint; overload; virtual;
+  function ValidatePoint(const x, y: TBigInteger): IECPoint; overload; virtual;
 
-  function ValidatePoint(x, y: TBigInteger; withCompression: Boolean): IECPoint;
-    overload; virtual;
+  function ValidatePoint(const x, y: TBigInteger; withCompression: Boolean)
+    : IECPoint; overload; virtual;
     deprecated 'Per-point compression property will be removed';
 
-  function CreatePoint(x, y: TBigInteger): IECPoint; overload; virtual;
+  function CreatePoint(const x, y: TBigInteger): IECPoint; overload; virtual;
 
-  function CreatePoint(x, y: TBigInteger; withCompression: Boolean): IECPoint;
-    overload; virtual;
+  function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
+    : IECPoint; overload; virtual;
     deprecated 'Per-point compression property will be removed';
 
   function SupportsCoordinateSystem(coord: Int32): Boolean; virtual;
 
-  function GetPreCompInfo(point: IECPoint; const name: String)
+  function GetPreCompInfo(const point: IECPoint; const name: String)
     : IPreCompInfo; virtual;
 
   /// <summary>
@@ -209,10 +211,10 @@ type
   /// <param name="preCompInfo">
   /// The values precomputed by the <c>ECMultiplier.</c>
   /// </param>
-  procedure SetPreCompInfo(point: IECPoint; const name: String;
-    preCompInfo: IPreCompInfo); virtual;
+  procedure SetPreCompInfo(const point: IECPoint; const name: String;
+    const preCompInfo: IPreCompInfo); virtual;
 
-  function ImportPoint(p: IECPoint): IECPoint; virtual;
+  function ImportPoint(const p: IECPoint): IECPoint; virtual;
 
   /// <summary>
   /// Normalization ensures that any projective coordinate is 1, and
@@ -251,7 +253,7 @@ type
   /// The (optional) z-scaling factor - can be null
   /// </param>
   procedure NormalizeAll(points: TCryptoLibGenericArray<IECPoint>;
-    off, len: Int32; iso: IECFieldElement); overload; virtual;
+    off, len: Int32; const iso: IECFieldElement); overload; virtual;
 
   function GetEndomorphism(): IECEndomorphism; virtual;
 
@@ -290,7 +292,7 @@ type
 
   property CoordinateSystem: Int32 read GetCoordinateSystem;
 
-  function Equals(other: IECCurve): Boolean; reintroduce;
+  function Equals(const other: IECCurve): Boolean; reintroduce;
   function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -306,7 +308,7 @@ type
 
   strict protected
 
-    constructor Create(q: TBigInteger);
+    constructor Create(const q: TBigInteger);
     function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
       override;
 
@@ -330,21 +332,22 @@ type
     Fm_q, Fm_r: TBigInteger;
     Fm_infinity: IFpPoint;
 
-    constructor Create(q, r: TBigInteger; A, B: IECFieldElement); overload;
-    constructor Create(q, r: TBigInteger; A, B: IECFieldElement;
-      Order, Cofactor: TBigInteger); overload;
+    constructor Create(const q, r: TBigInteger;
+      const A, B: IECFieldElement); overload;
+    constructor Create(const q, r: TBigInteger; const A, B: IECFieldElement;
+      const Order, Cofactor: TBigInteger); overload;
 
     function CloneCurve(): IECCurve; override;
-    function CreateRawPoint(x, y: IECFieldElement; withCompression: Boolean)
-      : IECPoint; overload; override;
+    function CreateRawPoint(const x, y: IECFieldElement;
+      withCompression: Boolean): IECPoint; overload; override;
 
-    function CreateRawPoint(x, y: IECFieldElement;
+    function CreateRawPoint(const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
       : IECPoint; overload; override;
 
   public
-    constructor Create(q, A, B: TBigInteger); overload;
-    constructor Create(q, A, B, Order, Cofactor: TBigInteger); overload;
+    constructor Create(const q, A, B: TBigInteger); overload;
+    constructor Create(const q, A, B, Order, Cofactor: TBigInteger); overload;
 
     destructor Destroy; override;
 
@@ -352,7 +355,7 @@ type
     function GetFieldSize: Int32; override;
 
     function FromBigInteger(x: TBigInteger): IECFieldElement; override;
-    function ImportPoint(p: IECPoint): IECPoint; override;
+    function ImportPoint(const p: IECPoint): IECPoint; override;
 
     function SupportsCoordinateSystem(coord: Int32): Boolean; override;
 
@@ -392,7 +395,8 @@ type
     // * @return the solution for <code>z<sup>2</sup> + z = beta</code> or
     // *         <code>null</code> if no solution exists.
     // */
-    function SolveQuadradicEquation(beta: IECFieldElement): IECFieldElement;
+    function SolveQuadradicEquation(const beta: IECFieldElement)
+      : IECFieldElement;
 
   strict protected
     constructor Create(m, k1, k2, k3: Int32);
@@ -405,8 +409,9 @@ type
 
     function IsValidFieldElement(x: TBigInteger): Boolean; override;
 
-    function CreatePoint(x, y: TBigInteger; withCompression: Boolean): IECPoint;
-      override; deprecated 'Per-point compression property will be removed';
+    function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
+      : IECPoint; override;
+      deprecated 'Per-point compression property will be removed';
 
     // /**
     // * @return the auxiliary values <code>s<sub>0</sub></code> and
@@ -417,8 +422,8 @@ type
 
     property IsKoblitz: Boolean read GetIsKoblitz;
 
-    class function Inverse(m: Int32; ks: TCryptoLibInt32Array; x: TBigInteger)
-      : TBigInteger; static; inline;
+    class function Inverse(m: Int32; ks: TCryptoLibInt32Array;
+      const x: TBigInteger): TBigInteger; static; inline;
 
   end;
 
@@ -470,8 +475,8 @@ type
     /// </summary>
     Fm_infinity: IF2mPoint;
 
-    constructor Create(m, k1, k2, k3: Int32; A, B: IECFieldElement;
-      Order, Cofactor: TBigInteger); overload;
+    constructor Create(m, k1, k2, k3: Int32; const A, B: IECFieldElement;
+      const Order, Cofactor: TBigInteger); overload;
 
     function GetM: Int32; inline;
     function GetK1: Int32; inline;
@@ -482,10 +487,10 @@ type
     function CloneCurve(): IECCurve; override;
     function CreateDefaultMultiplier(): IECMultiplier; override;
 
-    function CreateRawPoint(x, y: IECFieldElement; withCompression: Boolean)
-      : IECPoint; overload; override;
+    function CreateRawPoint(const x, y: IECFieldElement;
+      withCompression: Boolean): IECPoint; overload; override;
 
-    function CreateRawPoint(x, y: IECFieldElement;
+    function CreateRawPoint(const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
       : IECPoint; overload; override;
 
@@ -504,7 +509,7 @@ type
     // * for non-supersingular elliptic curves over
     // * <code>F<sub>2<sup>m</sup></sub></code>.
     // */
-    constructor Create(m, k: Int32; A, B: TBigInteger); overload;
+    constructor Create(m, k: Int32; const A, B: TBigInteger); overload;
     // /**
     // * Constructor for Trinomial Polynomial Basis (TPB).
     // * @param m  The exponent <code>m</code> of
@@ -523,7 +528,7 @@ type
     // * <code>#E<sub>a</sub>(F<sub>2<sup>m</sup></sub>) = h * n</code>.
     // */
     constructor Create(m, k: Int32;
-      A, B, Order, Cofactor: TBigInteger); overload;
+      const A, B, Order, Cofactor: TBigInteger); overload;
 
     // /**
     // * Constructor for Pentanomial Polynomial Basis (PPB).
@@ -546,7 +551,7 @@ type
     // * <code>F<sub>2<sup>m</sup></sub></code>.
     // */
 
-    constructor Create(m, k1, k2, k3: Int32; A, B: TBigInteger); overload;
+    constructor Create(m, k1, k2, k3: Int32; const A, B: TBigInteger); overload;
     // /**
     // * Constructor for Pentanomial Polynomial Basis (PPB).
     // * @param m  The exponent <code>m</code> of
@@ -571,7 +576,7 @@ type
     // * <code>#E<sub>a</sub>(F<sub>2<sup>m</sup></sub>) = h * n</code>.
     // */
     constructor Create(m, k1, k2, k3: Int32;
-      A, B, Order, Cofactor: TBigInteger); overload;
+      const A, B, Order, Cofactor: TBigInteger); overload;
 
     destructor Destroy; override;
 
@@ -602,7 +607,7 @@ implementation
 
 { TECCurve }
 
-procedure TECCurve.CheckPoint(point: IECPoint);
+procedure TECCurve.CheckPoint(const point: IECPoint);
 begin
   if ((point = Nil) or ((Self as IECCurve) <> point.Curve)) then
   begin
@@ -647,7 +652,7 @@ begin
     Self.Fm_endomorphism, Self.Fm_multiplier);
 end;
 
-constructor TECCurve.Create(field: IFiniteField);
+constructor TECCurve.Create(const field: IFiniteField);
 begin
   Fm_field := field;
 end;
@@ -670,12 +675,12 @@ begin
   FLock := TCriticalSection.Create;
 end;
 
-function TECCurve.CreatePoint(x, y: TBigInteger): IECPoint;
+function TECCurve.CreatePoint(const x, y: TBigInteger): IECPoint;
 begin
   Result := CreatePoint(x, y, false);
 end;
 
-function TECCurve.CreatePoint(x, y: TBigInteger; withCompression: Boolean)
+function TECCurve.CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
   : IECPoint;
 begin
   Result := CreateRawPoint(FromBigInteger(x), FromBigInteger(y),
@@ -784,7 +789,7 @@ begin
   FLock.Free;
 end;
 
-function TECCurve.Equals(other: IECCurve): Boolean;
+function TECCurve.Equals(const other: IECCurve): Boolean;
 begin
   if ((Self as IECCurve) = other) then
   begin
@@ -866,7 +871,7 @@ begin
   Result := Fm_order;
 end;
 
-function TECCurve.GetPreCompInfo(point: IECPoint; const name: String)
+function TECCurve.GetPreCompInfo(const point: IECPoint; const name: String)
   : IPreCompInfo;
 var
   table: TDictionary<String, IPreCompInfo>;
@@ -888,7 +893,9 @@ begin
   end;
 end;
 
-function TECCurve.ImportPoint(p: IECPoint): IECPoint;
+function TECCurve.ImportPoint(const p: IECPoint): IECPoint;
+var
+  Lp: IECPoint;
 begin
   if ((Self as IECCurve) = p.Curve) then
   begin
@@ -902,14 +909,14 @@ begin
   end;
 
   // TODO Default behaviour could be improved if the two curves have the same coordinate system by copying any Z coordinates.
-  p := p.Normalize();
+  Lp := p.Normalize();
 
-  Result := ValidatePoint(p.XCoord.ToBigInteger(), p.YCoord.ToBigInteger(),
-    p.IsCompressed);
+  Result := ValidatePoint(Lp.XCoord.ToBigInteger(), Lp.YCoord.ToBigInteger(),
+    Lp.IsCompressed);
 end;
 
 procedure TECCurve.NormalizeAll(points: TCryptoLibGenericArray<IECPoint>;
-  off, len: Int32; iso: IECFieldElement);
+  off, len: Int32; const iso: IECFieldElement);
 var
   zs: TCryptoLibGenericArray<IECFieldElement>;
   indices: TCryptoLibInt32Array;
@@ -985,8 +992,8 @@ begin
   Fm_multiplier := Value;
 end;
 
-procedure TECCurve.SetPreCompInfo(point: IECPoint; const name: String;
-  preCompInfo: IPreCompInfo);
+procedure TECCurve.SetPreCompInfo(const point: IECPoint; const name: String;
+  const preCompInfo: IPreCompInfo);
 var
   table: TDictionary<String, IPreCompInfo>;
 begin
@@ -1013,8 +1020,8 @@ begin
   Result := coord = COORD_AFFINE;
 end;
 
-function TECCurve.ValidatePoint(x, y: TBigInteger; withCompression: Boolean)
-  : IECPoint;
+function TECCurve.ValidatePoint(const x, y: TBigInteger;
+  withCompression: Boolean): IECPoint;
 var
   p: IECPoint;
 begin
@@ -1026,7 +1033,7 @@ begin
   Result := p;
 end;
 
-function TECCurve.ValidatePoint(x, y: TBigInteger): IECPoint;
+function TECCurve.ValidatePoint(const x, y: TBigInteger): IECPoint;
 var
   p: IECPoint;
 begin
@@ -1040,8 +1047,8 @@ end;
 
 { TECCurve.TConfig }
 
-constructor TECCurve.TConfig.Create(outer: IECCurve; coord: Int32;
-  endomorphism: IECEndomorphism; multiplier: IECMultiplier);
+constructor TECCurve.TConfig.Create(const outer: IECCurve; coord: Int32;
+  const endomorphism: IECEndomorphism; const multiplier: IECMultiplier);
 begin
   Fouter := outer;
   Fcoord := coord;
@@ -1083,14 +1090,15 @@ begin
   Result := Self as IConfig;
 end;
 
-function TECCurve.TConfig.SetEndomorphism(endomorphism
+function TECCurve.TConfig.SetEndomorphism(const endomorphism
   : IECEndomorphism): IConfig;
 begin
   Fendomorphism := endomorphism;
   Result := Self as IConfig;
 end;
 
-function TECCurve.TConfig.SetMultiplier(multiplier: IECMultiplier): IConfig;
+function TECCurve.TConfig.SetMultiplier(const multiplier
+  : IECMultiplier): IConfig;
 begin
   Fmultiplier := multiplier;
   Result := Self as IConfig;
@@ -1098,7 +1106,7 @@ end;
 
 { TAbstractFpCurve }
 
-constructor TAbstractFpCurve.Create(q: TBigInteger);
+constructor TAbstractFpCurve.Create(const q: TBigInteger);
 begin
   Inherited Create(TFiniteFields.GetPrimeField(q));
 end;
@@ -1147,8 +1155,8 @@ begin
   Result := TFpCurve.Create(Fm_q, Fm_r, Fm_a, Fm_b, Fm_order, Fm_cofactor);
 end;
 
-constructor TFpCurve.Create(q, r: TBigInteger; A, B: IECFieldElement;
-  Order, Cofactor: TBigInteger);
+constructor TFpCurve.Create(const q, r: TBigInteger;
+  const A, B: IECFieldElement; const Order, Cofactor: TBigInteger);
 begin
   Inherited Create(q);
   Fm_q := q;
@@ -1162,12 +1170,13 @@ begin
   Fm_coord := FP_DEFAULT_COORDS;
 end;
 
-constructor TFpCurve.Create(q, r: TBigInteger; A, B: IECFieldElement);
+constructor TFpCurve.Create(const q, r: TBigInteger;
+  const A, B: IECFieldElement);
 begin
   Create(q, r, A, B, Default (TBigInteger), Default (TBigInteger));
 end;
 
-constructor TFpCurve.Create(q, A, B, Order, Cofactor: TBigInteger);
+constructor TFpCurve.Create(const q, A, B, Order, Cofactor: TBigInteger);
 begin
   Inherited Create(q);
   Fm_q := q;
@@ -1181,12 +1190,12 @@ begin
   Fm_coord := FP_DEFAULT_COORDS;
 end;
 
-constructor TFpCurve.Create(q, A, B: TBigInteger);
+constructor TFpCurve.Create(const q, A, B: TBigInteger);
 begin
   Create(q, A, B, Default (TBigInteger), Default (TBigInteger));
 end;
 
-function TFpCurve.CreateRawPoint(x, y: IECFieldElement;
+function TFpCurve.CreateRawPoint(const x, y: IECFieldElement;
   zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
   : IECPoint;
 begin
@@ -1198,7 +1207,7 @@ begin
   inherited Destroy;
 end;
 
-function TFpCurve.CreateRawPoint(x, y: IECFieldElement;
+function TFpCurve.CreateRawPoint(const x, y: IECFieldElement;
   withCompression: Boolean): IECPoint;
 begin
   Result := TFpPoint.Create(Self as IECCurve, x, y, withCompression);
@@ -1225,7 +1234,7 @@ begin
   Result := Fm_q;
 end;
 
-function TFpCurve.ImportPoint(p: IECPoint): IECPoint;
+function TFpCurve.ImportPoint(const p: IECPoint): IECPoint;
 begin
   if ((Self as IECCurve <> p.Curve) and (CoordinateSystem = COORD_JACOBIAN) and
     (not p.IsInfinity)) then
@@ -1300,7 +1309,7 @@ begin
   Inherited Create(BuildField(m, k1, k2, k3));
 end;
 
-function TAbstractF2mCurve.CreatePoint(x, y: TBigInteger;
+function TAbstractF2mCurve.CreatePoint(const x, y: TBigInteger;
   withCompression: Boolean): IECPoint;
 var
   LX, LY: IECFieldElement;
@@ -1404,7 +1413,7 @@ begin
 end;
 
 class function TAbstractF2mCurve.Inverse(m: Int32; ks: TCryptoLibInt32Array;
-  x: TBigInteger): TBigInteger;
+  const x: TBigInteger): TBigInteger;
 begin
   Result := TLongArray.Create(x).ModInverse(m, ks).ToBigInteger();
 end;
@@ -1415,7 +1424,7 @@ begin
     (x.BitLength <= FieldSize);
 end;
 
-function TAbstractF2mCurve.SolveQuadradicEquation(beta: IECFieldElement)
+function TAbstractF2mCurve.SolveQuadradicEquation(const beta: IECFieldElement)
   : IECFieldElement;
 var
   gamma, z, zeroElement, t, w, w2: IECFieldElement;
@@ -1462,13 +1471,13 @@ begin
   Result := TF2mCurve.Create(m, k1, k2, k3, Fm_a, Fm_b, Fm_order, Fm_cofactor);
 end;
 
-constructor TF2mCurve.Create(m, k: Int32; A, B: TBigInteger);
+constructor TF2mCurve.Create(m, k: Int32; const A, B: TBigInteger);
 begin
   Create(m, k, 0, 0, A, B, Default (TBigInteger), Default (TBigInteger));
 end;
 
-constructor TF2mCurve.Create(m, k1, k2, k3: Int32; A, B: IECFieldElement;
-  Order, Cofactor: TBigInteger);
+constructor TF2mCurve.Create(m, k1, k2, k3: Int32; const A, B: IECFieldElement;
+  const Order, Cofactor: TBigInteger);
 begin
   Inherited Create(m, k1, k2, k3);
   Fm := m;
@@ -1484,13 +1493,14 @@ begin
   Fm_coord := F2M_DEFAULT_COORDS;
 end;
 
-constructor TF2mCurve.Create(m, k: Int32; A, B, Order, Cofactor: TBigInteger);
+constructor TF2mCurve.Create(m, k: Int32;
+  const A, B, Order, Cofactor: TBigInteger);
 begin
   Create(m, k, 0, 0, A, B, Order, Cofactor);
 end;
 
 constructor TF2mCurve.Create(m, k1, k2, k3: Int32;
-  A, B, Order, Cofactor: TBigInteger);
+  const A, B, Order, Cofactor: TBigInteger);
 begin
   Inherited Create(m, k1, k2, k3);
   Fm := m;
@@ -1532,7 +1542,7 @@ begin
 
 end;
 
-constructor TF2mCurve.Create(m, k1, k2, k3: Int32; A, B: TBigInteger);
+constructor TF2mCurve.Create(m, k1, k2, k3: Int32; const A, B: TBigInteger);
 begin
   Create(m, k1, k2, k3, A, B, Default (TBigInteger), Default (TBigInteger));
 end;
@@ -1548,13 +1558,13 @@ begin
   Result := (Inherited CreateDefaultMultiplier());
 end;
 
-function TF2mCurve.CreateRawPoint(x, y: IECFieldElement;
+function TF2mCurve.CreateRawPoint(const x, y: IECFieldElement;
   withCompression: Boolean): IECPoint;
 begin
   Result := TF2mPoint.Create(Self as IECCurve, x, y, withCompression);
 end;
 
-function TF2mCurve.CreateRawPoint(x, y: IECFieldElement;
+function TF2mCurve.CreateRawPoint(const x, y: IECFieldElement;
   zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
   : IECPoint;
 begin

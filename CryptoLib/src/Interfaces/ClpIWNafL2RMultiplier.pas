@@ -38,7 +38,8 @@ type
     // * @return A new <code>ECPoint</code> which equals <code>this</code>
     // * multiplied by <code>k</code>.
     // */
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint;
 
     /// <summary>
     /// Determine window width to use for a scalar multiplication of the

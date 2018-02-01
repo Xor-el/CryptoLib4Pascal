@@ -88,9 +88,9 @@ end;
 
 procedure TTestOID.constructorMethod;
 var
-temp: IDerObjectIdentifier;
+  temp: IDerObjectIdentifier;
 begin
- temp := TDerObjectIdentifier.Create(Foid);
+  temp := TDerObjectIdentifier.Create(Foid);
 end;
 
 procedure TTestOID.invalidOidCheck;

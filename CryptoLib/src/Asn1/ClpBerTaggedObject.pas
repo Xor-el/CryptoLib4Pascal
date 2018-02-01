@@ -60,7 +60,7 @@ type
     /// <param name="obj">
     /// the tagged object.
     /// </param>
-    constructor Create(tagNo: Int32; obj: IAsn1Encodable); overload;
+    constructor Create(tagNo: Int32; const obj: IAsn1Encodable); overload;
     /// <param name="explicitly">
     /// true if an explicitly tagged object.
     /// </param>
@@ -71,7 +71,7 @@ type
     /// the tagged object.
     /// </param>
     constructor Create(explicitly: Boolean; tagNo: Int32;
-      obj: IAsn1Encodable); overload;
+      const obj: IAsn1Encodable); overload;
 
     /// <summary>
     /// create an implicitly tagged object that contains a zero length
@@ -82,7 +82,7 @@ type
     /// </param>
     constructor Create(tagNo: Int32); overload;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
   end;
 
@@ -90,13 +90,13 @@ implementation
 
 { TBerTaggedObject }
 
-constructor TBerTaggedObject.Create(tagNo: Int32; obj: IAsn1Encodable);
+constructor TBerTaggedObject.Create(tagNo: Int32; const obj: IAsn1Encodable);
 begin
   Inherited Create(tagNo, obj);
 end;
 
 constructor TBerTaggedObject.Create(explicitly: Boolean; tagNo: Int32;
-  obj: IAsn1Encodable);
+  const obj: IAsn1Encodable);
 begin
   Inherited Create(explicitly, tagNo, obj)
 end;
@@ -106,7 +106,7 @@ begin
   Inherited Create(false, tagNo, TBerSequence.Empty)
 end;
 
-procedure TBerTaggedObject.Encode(derOut: IDerOutputStream);
+procedure TBerTaggedObject.Encode(const derOut: IDerOutputStream);
 var
   eObj: TList<IAsn1Encodable>;
   enumeratorIBerOctetString: TEnumerator<IDerOctetString>;
@@ -129,17 +129,18 @@ begin
       begin
         if (not explicitly) then
         begin
-
-          // asn1OctetString := obj as IAsn1OctetString;
           if (Supports(obj, IAsn1OctetString, asn1OctetString)) then
           begin
-            // berOctetString := asn1OctetString as IBerOctetString;
             if (Supports(asn1OctetString, IBerOctetString, berOctetString)) then
             begin
               enumeratorIBerOctetString := berOctetString.GetEnumerator;
-              while enumeratorIBerOctetString.MoveNext do
-              begin
-                eObj.Add(enumeratorIBerOctetString.Current as IAsn1Encodable);
+              try
+                while enumeratorIBerOctetString.MoveNext do
+                begin
+                  eObj.Add(enumeratorIBerOctetString.Current as IAsn1Encodable);
+                end;
+              finally
+                enumeratorIBerOctetString.Free;
               end;
             end
             else
@@ -147,30 +148,38 @@ begin
               enumeratorIBerOctetString :=
                 TBerOctetString.Create(asn1OctetString.GetOctets())
                 .GetEnumerator;
-              while enumeratorIBerOctetString.MoveNext do
-              begin
-                eObj.Add(enumeratorIBerOctetString.Current as IAsn1Encodable);
+              try
+                while enumeratorIBerOctetString.MoveNext do
+                begin
+                  eObj.Add(enumeratorIBerOctetString.Current as IAsn1Encodable);
+                end;
+              finally
+                enumeratorIBerOctetString.Free;
               end;
             end
           end
           else if Supports(obj, IAsn1Sequence, asn1Sequence) then
           begin
-            // eObj := obj as IAsn1Sequence;
-            // asn1Sequence := obj as IAsn1Sequence;
             enumeratorIAsn1Sequence := asn1Sequence.GetEnumerator;
-            while enumeratorIAsn1Sequence.MoveNext do
-            begin
-              eObj.Add(enumeratorIAsn1Sequence.Current);
+            try
+              while enumeratorIAsn1Sequence.MoveNext do
+              begin
+                eObj.Add(enumeratorIAsn1Sequence.Current);
+              end;
+            finally
+              enumeratorIAsn1Sequence.Free;
             end;
           end
           else if Supports(obj, IAsn1Set, asn1Set) then
           begin
-            // eObj := obj as IAsn1Set;
-            // asn1Set := obj as IAsn1Set;
             enumeratorIAsn1Set := asn1Set.GetEnumerator;
-            while enumeratorIAsn1Set.MoveNext do
-            begin
-              eObj.Add(enumeratorIAsn1Set.Current);
+            try
+              while enumeratorIAsn1Set.MoveNext do
+              begin
+                eObj.Add(enumeratorIAsn1Set.Current);
+              end;
+            finally
+              enumeratorIAsn1Set.Free;
             end;
           end
           else

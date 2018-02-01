@@ -42,8 +42,9 @@ type
     // * <code>[&#964;]</code>-adic NAF.
     // * @return <code>p</code> multiplied by <code>&#955;</code>.
     // */
-    function MultiplyWTnaf(p: IAbstractF2mPoint; lambda: IZTauElement;
-      preCompInfo: IPreCompInfo; a, mu: ShortInt): IAbstractF2mPoint;
+    function MultiplyWTnaf(const p: IAbstractF2mPoint;
+      const lambda: IZTauElement; const preCompInfo: IPreCompInfo;
+      a, mu: ShortInt): IAbstractF2mPoint;
 
     // /**
     // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
@@ -53,7 +54,8 @@ type
     // * @param k The integer by which to multiply <code>k</code>.
     // * @return <code>p</code> multiplied by <code>k</code>.
     // */
-    function MultiplyPositive(point: IECPoint; k: TBigInteger): IECPoint;
+    function MultiplyPositive(const point: IECPoint; const k: TBigInteger)
+      : IECPoint;
 
   end;
 

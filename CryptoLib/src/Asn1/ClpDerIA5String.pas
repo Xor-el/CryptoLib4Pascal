@@ -54,7 +54,7 @@ type
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     /// <summary>
@@ -86,7 +86,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a DerIA5String from the passed in object
@@ -115,8 +115,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerIA5String; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerIA5String; overload; static; inline;
 
     /// <summary>
     /// return true if the passed in String can be represented without loss
@@ -158,7 +158,7 @@ begin
   result := true;
 end;
 
-function TDerIA5String.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerIA5String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerIA5String;
 begin
@@ -206,12 +206,12 @@ begin
   FStr := Str;
 end;
 
-procedure TDerIA5String.Encode(derOut: IDerOutputStream);
+procedure TDerIA5String.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.IA5String, GetOctets());
 end;
 
-class function TDerIA5String.GetInstance(obj: IAsn1TaggedObject;
+class function TDerIA5String.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerIA5String;
 var
   o: IAsn1Object;

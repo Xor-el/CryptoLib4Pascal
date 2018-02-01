@@ -26,6 +26,7 @@ uses
   ClpCryptoLibTypes,
   ClpPrimeField,
   ClpGF2Polynomial,
+  ClpIGF2Polynomial,
   ClpGenericPolynomialExtensionField,
   ClpIPolynomialExtensionField,
   ClpIFiniteField;
@@ -51,7 +52,7 @@ type
     class function GetBinaryExtensionField(exponents: TCryptoLibInt32Array)
       : IPolynomialExtensionField; static;
 
-    class function GetPrimeField(characteristic: TBigInteger)
+    class function GetPrimeField(const characteristic: TBigInteger)
       : IFiniteField; static;
   end;
 
@@ -86,10 +87,10 @@ begin
   end;
 
   Result := TGenericPolynomialExtensionField.Create(FGF_2,
-    TGF2Polynomial.Create(exponents));
+    TGF2Polynomial.Create(exponents) as IGF2Polynomial);
 end;
 
-class function TFiniteFields.GetPrimeField(characteristic: TBigInteger)
+class function TFiniteFields.GetPrimeField(const characteristic: TBigInteger)
   : IFiniteField;
 var
   bitLength: Int32;

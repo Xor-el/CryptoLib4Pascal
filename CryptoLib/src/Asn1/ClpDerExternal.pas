@@ -82,17 +82,17 @@ type
     procedure SetExternalContent(const Value: IAsn1Object);
     procedure SetIndirectReference(const Value: IDerInteger);
 
-    class function GetObjFromVector(v: IAsn1EncodableVector; index: Int32)
+    class function GetObjFromVector(const v: IAsn1EncodableVector; index: Int32)
       : IAsn1Object; static; inline;
-    class procedure WriteEncodable(ms: TMemoryStream; e: IAsn1Encodable);
+    class procedure WriteEncodable(ms: TMemoryStream; const e: IAsn1Encodable);
       static; inline;
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
-    constructor Create(vector: IAsn1EncodableVector); overload;
+    constructor Create(const vector: IAsn1EncodableVector); overload;
 
     /// <summary>
     /// Creates a new instance of DerExternal <br />See X.690 for more
@@ -111,15 +111,17 @@ type
     /// <param name="externalData">
     /// The external data in its encoded form.
     /// </param>
-    constructor Create(directReference: IDerObjectIdentifier;
-      indirectReference: IDerInteger; dataValueDescriptor: IAsn1Object;
-      externalData: IDerTaggedObject); overload;
+    constructor Create(const directReference: IDerObjectIdentifier;
+      const indirectReference: IDerInteger;
+      const dataValueDescriptor: IAsn1Object;
+      const externalData: IDerTaggedObject); overload;
 
-    constructor Create(directReference: IDerObjectIdentifier;
-      indirectReference: IDerInteger; dataValueDescriptor: IAsn1Object;
-      encoding: Int32; externalData: IAsn1Object); overload;
+    constructor Create(const directReference: IDerObjectIdentifier;
+      const indirectReference: IDerInteger;
+      const dataValueDescriptor: IAsn1Object; encoding: Int32;
+      const externalData: IAsn1Object); overload;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     property dataValueDescriptor: IAsn1Object read GetDataValueDescriptor
       write SetDataValueDescriptor;
@@ -141,7 +143,7 @@ implementation
 
 { TDerExternal }
 
-class function TDerExternal.GetObjFromVector(v: IAsn1EncodableVector;
+class function TDerExternal.GetObjFromVector(const v: IAsn1EncodableVector;
   index: Int32): IAsn1Object;
 var
   val: IAsn1Encodable;
@@ -156,7 +158,7 @@ begin
 end;
 
 class procedure TDerExternal.WriteEncodable(ms: TMemoryStream;
-  e: IAsn1Encodable);
+  const e: IAsn1Encodable);
 var
   bs: TCryptoLibByteArray;
 begin
@@ -167,7 +169,7 @@ begin
   end;
 end;
 
-function TDerExternal.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerExternal.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerExternal;
 begin
@@ -209,9 +211,9 @@ begin
   result := ret;
 end;
 
-constructor TDerExternal.Create(directReference: IDerObjectIdentifier;
-  indirectReference: IDerInteger; dataValueDescriptor: IAsn1Object;
-  encoding: Int32; externalData: IAsn1Object);
+constructor TDerExternal.Create(const directReference: IDerObjectIdentifier;
+  const indirectReference: IDerInteger; const dataValueDescriptor: IAsn1Object;
+  encoding: Int32; const externalData: IAsn1Object);
 begin
   Inherited Create();
   FdirectReference := directReference;
@@ -221,7 +223,7 @@ begin
   FexternalContent := externalData.ToAsn1Object();
 end;
 
-constructor TDerExternal.Create(vector: IAsn1EncodableVector);
+constructor TDerExternal.Create(const vector: IAsn1EncodableVector);
 var
   offset: Int32;
   enc: IAsn1Object;
@@ -274,15 +276,15 @@ begin
   FexternalContent := obj.GetObject();
 end;
 
-constructor TDerExternal.Create(directReference: IDerObjectIdentifier;
-  indirectReference: IDerInteger; dataValueDescriptor: IAsn1Object;
-  externalData: IDerTaggedObject);
+constructor TDerExternal.Create(const directReference: IDerObjectIdentifier;
+  const indirectReference: IDerInteger; const dataValueDescriptor: IAsn1Object;
+  const externalData: IDerTaggedObject);
 begin
   Create(directReference, indirectReference, dataValueDescriptor,
     externalData.TagNo, externalData.ToAsn1Object());
 end;
 
-procedure TDerExternal.Encode(derOut: IDerOutputStream);
+procedure TDerExternal.Encode(const derOut: IDerOutputStream);
 var
   ms: TMemoryStream;
   Buffer: TCryptoLibByteArray;

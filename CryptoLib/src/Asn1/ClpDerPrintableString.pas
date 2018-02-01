@@ -52,7 +52,7 @@ type
     function GetStr: String; inline;
 
   strict protected
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     /// <summary>
@@ -84,7 +84,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     property Str: String read GetStr;
 
@@ -115,8 +115,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerPrintableString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerPrintableString; overload; static; inline;
 
     /// <summary>
     /// return true if the passed in String can be represented without loss
@@ -181,7 +181,7 @@ begin
   result := true;
 end;
 
-function TDerPrintableString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerPrintableString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerPrintableString;
 begin
@@ -224,12 +224,12 @@ begin
   FStr := Str;
 end;
 
-procedure TDerPrintableString.Encode(derOut: IDerOutputStream);
+procedure TDerPrintableString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.PrintableString, GetOctets());
 end;
 
-class function TDerPrintableString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerPrintableString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerPrintableString;
 var
   o: IAsn1Object;

@@ -29,7 +29,8 @@ type
 
   public
     property IsDeterministic: Boolean read GetIsDeterministic;
-    procedure Init(n: TBigInteger; random: ISecureRandom); overload; virtual;
+    procedure Init(const n: TBigInteger; const random: ISecureRandom);
+      overload; virtual;
     procedure Init(n, d: TBigInteger; &message: TCryptoLibByteArray);
       overload; virtual;
     function NextK(): TBigInteger; virtual;
@@ -44,7 +45,8 @@ begin
   Result := False;
 end;
 
-procedure TRandomDsaKCalculator.Init(n: TBigInteger; random: ISecureRandom);
+procedure TRandomDsaKCalculator.Init(const n: TBigInteger;
+  const random: ISecureRandom);
 begin
   Fq := n;
   Frandom := random;

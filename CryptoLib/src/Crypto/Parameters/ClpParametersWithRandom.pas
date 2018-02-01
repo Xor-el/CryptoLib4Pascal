@@ -45,10 +45,10 @@ type
 
   public
 
-    constructor Create(parameters: ICipherParameters); overload;
+    constructor Create(const parameters: ICipherParameters); overload;
 
-    constructor Create(parameters: ICipherParameters;
-      random: ISecureRandom); overload;
+    constructor Create(const parameters: ICipherParameters;
+      const random: ISecureRandom); overload;
 
     property random: ISecureRandom read GetRandom;
 
@@ -60,13 +60,13 @@ implementation
 
 { TParametersWithRandom }
 
-constructor TParametersWithRandom.Create(parameters: ICipherParameters);
+constructor TParametersWithRandom.Create(const parameters: ICipherParameters);
 begin
-  Create(parameters, TSecureRandom.Create());
+  Create(parameters, TSecureRandom.Create() as ISecureRandom);
 end;
 
-constructor TParametersWithRandom.Create(parameters: ICipherParameters;
-  random: ISecureRandom);
+constructor TParametersWithRandom.Create(const parameters: ICipherParameters;
+  const random: ISecureRandom);
 begin
   inherited Create();
   if (parameters = Nil) then

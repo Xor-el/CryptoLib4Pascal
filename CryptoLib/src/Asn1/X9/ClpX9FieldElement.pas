@@ -47,9 +47,11 @@ type
     function GetValue: IECFieldElement; inline;
 
   public
-    constructor Create(f: IECFieldElement); overload;
-    constructor Create(p: TBigInteger; s: IAsn1OctetString); overload;
-    constructor Create(m, k1, k2, k3: Int32; s: IAsn1OctetString); overload;
+    constructor Create(const f: IECFieldElement); overload;
+    constructor Create(const p: TBigInteger;
+      const s: IAsn1OctetString); overload;
+    constructor Create(m, k1, k2, k3: Int32;
+      const s: IAsn1OctetString); overload;
 
     // /**
     // * Produce an object suitable for an Asn1OutputStream.
@@ -78,21 +80,23 @@ implementation
 
 { TX9FieldElement }
 
-constructor TX9FieldElement.Create(p: TBigInteger; s: IAsn1OctetString);
+constructor TX9FieldElement.Create(const p: TBigInteger;
+  const s: IAsn1OctetString);
 begin
   Create(TFpFieldElement.Create(p, TBigInteger.Create(1, s.GetOctets())))
 end;
 
-constructor TX9FieldElement.Create(f: IECFieldElement);
+constructor TX9FieldElement.Create(const f: IECFieldElement);
 begin
   Inherited Create();
   Ff := f;
 end;
 
-constructor TX9FieldElement.Create(m, k1, k2, k3: Int32; s: IAsn1OctetString);
+constructor TX9FieldElement.Create(m, k1, k2, k3: Int32;
+  const s: IAsn1OctetString);
 begin
   Create(TF2mFieldElement.Create(m, k1, k2, k3, TBigInteger.Create(1,
-    s.GetOctets())))
+    s.GetOctets())) as IF2mFieldElement)
 end;
 
 function TX9FieldElement.GetValue: IECFieldElement;

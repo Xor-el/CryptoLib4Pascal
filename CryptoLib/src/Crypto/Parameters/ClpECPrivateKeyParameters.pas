@@ -43,18 +43,18 @@ type
     function GetD: TBigInteger; inline;
 
   public
-    constructor Create(d: TBigInteger;
-      parameters: IECDomainParameters); overload;
+    constructor Create(const d: TBigInteger;
+      const parameters: IECDomainParameters); overload;
 
-    constructor Create(const algorithm: String; d: TBigInteger;
-      parameters: IECDomainParameters); overload;
+    constructor Create(const algorithm: String; const d: TBigInteger;
+      const parameters: IECDomainParameters); overload;
 
-    constructor Create(const algorithm: String; d: TBigInteger;
-      publicKeyParamSet: IDerObjectIdentifier); overload;
+    constructor Create(const algorithm: String; const d: TBigInteger;
+      const publicKeyParamSet: IDerObjectIdentifier); overload;
 
     property d: TBigInteger read GetD;
 
-    function Equals(other: IECPrivateKeyParameters): Boolean; reintroduce;
+    function Equals(const other: IECPrivateKeyParameters): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -64,14 +64,14 @@ implementation
 
 { TECPrivateKeyParameters }
 
-constructor TECPrivateKeyParameters.Create(d: TBigInteger;
-  parameters: IECDomainParameters);
+constructor TECPrivateKeyParameters.Create(const d: TBigInteger;
+  const parameters: IECDomainParameters);
 begin
   Create('EC', d, parameters);
 end;
 
 constructor TECPrivateKeyParameters.Create(const algorithm: String;
-  d: TBigInteger; parameters: IECDomainParameters);
+  const d: TBigInteger; const parameters: IECDomainParameters);
 begin
   Inherited Create(algorithm, true, parameters);
   if (not(d.IsInitialized)) then
@@ -81,7 +81,7 @@ begin
 end;
 
 constructor TECPrivateKeyParameters.Create(const algorithm: String;
-  d: TBigInteger; publicKeyParamSet: IDerObjectIdentifier);
+  const d: TBigInteger; const publicKeyParamSet: IDerObjectIdentifier);
 begin
   Inherited Create(algorithm, true, publicKeyParamSet);
   if (not(d.IsInitialized)) then
@@ -90,8 +90,8 @@ begin
   Fd := d;
 end;
 
-function TECPrivateKeyParameters.Equals(other: IECPrivateKeyParameters)
-  : Boolean;
+function TECPrivateKeyParameters.Equals(const other
+  : IECPrivateKeyParameters): Boolean;
 begin
   if (other = Self as IECPrivateKeyParameters) then
   begin

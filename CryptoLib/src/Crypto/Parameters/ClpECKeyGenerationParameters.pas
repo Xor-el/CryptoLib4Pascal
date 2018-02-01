@@ -42,10 +42,10 @@ type
     function GetPublicKeyParamSet: IDerObjectIdentifier;
 
   public
-    constructor Create(domainParameters: IECDomainParameters;
-      random: ISecureRandom); overload;
-    constructor Create(publicKeyParamSet: IDerObjectIdentifier;
-      random: ISecureRandom); overload;
+    constructor Create(const domainParameters: IECDomainParameters;
+      const random: ISecureRandom); overload;
+    constructor Create(const publicKeyParamSet: IDerObjectIdentifier;
+      const random: ISecureRandom); overload;
     property domainParameters: IECDomainParameters read GetDomainParameters;
     property publicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
 
@@ -58,15 +58,15 @@ uses
 
 { TECKeyGenerationParameters }
 
-constructor TECKeyGenerationParameters.Create(domainParameters
-  : IECDomainParameters; random: ISecureRandom);
+constructor TECKeyGenerationParameters.Create(const domainParameters
+  : IECDomainParameters; const random: ISecureRandom);
 begin
   Inherited Create(random, domainParameters.N.BitLength);
   FdomainParams := domainParameters;
 end;
 
-constructor TECKeyGenerationParameters.Create(publicKeyParamSet
-  : IDerObjectIdentifier; random: ISecureRandom);
+constructor TECKeyGenerationParameters.Create(const publicKeyParamSet
+  : IDerObjectIdentifier; const random: ISecureRandom);
 begin
   Create(TECKeyParameters.LookupParameters(publicKeyParamSet), random);
   FpublicKeyParamSet := publicKeyParamSet;

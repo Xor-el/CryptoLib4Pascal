@@ -37,7 +37,7 @@ type
 
   public
 
-    constructor Create(parser: IAsn1StreamParser);
+    constructor Create(const parser: IAsn1StreamParser);
     function ReadObject(): IAsn1Convertible; inline;
     function ToAsn1Object(): IAsn1Object; override;
 
@@ -47,7 +47,7 @@ implementation
 
 { TDerExternalParser }
 
-constructor TDerExternalParser.Create(parser: IAsn1StreamParser);
+constructor TDerExternalParser.Create(const parser: IAsn1StreamParser);
 begin
   Inherited Create();
   F_parser := parser;

@@ -48,7 +48,7 @@ type
     // * @param n the order of the DSA group.
     // * @param random a source of randomness.
     // */
-    procedure Init(n: TBigInteger; random: ISecureRandom); overload;
+    procedure Init(const n: TBigInteger; const random: ISecureRandom); overload;
 
     // /**
     // * Deterministic initialiser.

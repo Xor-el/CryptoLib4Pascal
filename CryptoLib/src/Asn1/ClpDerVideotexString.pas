@@ -48,7 +48,7 @@ type
 
   protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
     property mString: TCryptoLibByteArray read GetmString;
@@ -65,7 +65,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a Videotex String from the passed in object
@@ -97,8 +97,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerVideotexString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerVideotexString; overload; static; inline;
 
   end;
 
@@ -106,7 +106,7 @@ implementation
 
 { TDerVideotexString }
 
-function TDerVideotexString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerVideotexString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerVideotexString;
 begin
@@ -131,7 +131,7 @@ begin
   FmString := System.Copy(encoding);
 end;
 
-procedure TDerVideotexString.Encode(derOut: IDerOutputStream);
+procedure TDerVideotexString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.VideotexString, mString);
 end;
@@ -148,7 +148,7 @@ begin
     [obj.ClassName]);
 end;
 
-class function TDerVideotexString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerVideotexString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerVideotexString;
 var
   o: IAsn1Object;

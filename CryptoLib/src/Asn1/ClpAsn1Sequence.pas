@@ -67,7 +67,7 @@ type
       Fmax, Findex: Int32;
 
     public
-      constructor Create(outer: IAsn1Sequence);
+      constructor Create(const outer: IAsn1Sequence);
       function ReadObject(): IAsn1Convertible;
       function ToAsn1Object(): IAsn1Object;
 
@@ -75,8 +75,8 @@ type
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
-    procedure AddObject(obj: IAsn1Encodable); inline;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
+    procedure AddObject(const obj: IAsn1Encodable); inline;
 
     constructor Create(capacity: Int32);
 
@@ -135,8 +135,8 @@ type
     // * @exception ArgumentException if the tagged object cannot
     // *          be converted.
     // */
-    class function GetInstance(obj: IAsn1TaggedObject; explicitly: Boolean)
-      : IAsn1Sequence; overload; static;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      explicitly: Boolean): IAsn1Sequence; overload; static;
 
     property Parser: IAsn1SequenceParser read GetParser;
     property Count: Int32 read GetCount;
@@ -169,12 +169,12 @@ begin
   result := encObj;
 end;
 
-procedure TAsn1Sequence.AddObject(obj: IAsn1Encodable);
+procedure TAsn1Sequence.AddObject(const obj: IAsn1Encodable);
 begin
   FSeq.Add(obj);
 end;
 
-function TAsn1Sequence.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TAsn1Sequence.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IAsn1Sequence;
   s1, s2: TEnumerator<IAsn1Encodable>;
@@ -197,19 +197,25 @@ begin
   s1 := GetEnumerator;
   s2 := other.GetEnumerator;
 
-  while (s1.MoveNext() and s2.MoveNext()) do
-  begin
-    o1 := GetCurrent(s1).ToAsn1Object();
-    o2 := GetCurrent(s2).ToAsn1Object();
-
-    if (not(o1.Equals(o2))) then
+  try
+    while (s1.MoveNext() and s2.MoveNext()) do
     begin
-      result := false;
-      Exit;
+      o1 := GetCurrent(s1).ToAsn1Object();
+      o2 := GetCurrent(s2).ToAsn1Object();
+
+      if (not(o1.Equals(o2))) then
+      begin
+        result := false;
+        Exit;
+      end;
     end;
+
+    result := true;
+  finally
+    s1.Free;
+    s2.Free;
   end;
 
-  result := true;
 end;
 
 function TAsn1Sequence.Asn1GetHashCode: Int32;
@@ -309,7 +315,7 @@ begin
   end;
 end;
 
-class function TAsn1Sequence.GetInstance(obj: IAsn1TaggedObject;
+class function TAsn1Sequence.GetInstance(const obj: IAsn1TaggedObject;
   explicitly: Boolean): IAsn1Sequence;
 var
   inner: IAsn1Object;
@@ -370,7 +376,8 @@ end;
 
 { TAsn1Sequence.TAsn1SequenceParserImpl }
 
-constructor TAsn1Sequence.TAsn1SequenceParserImpl.Create(outer: IAsn1Sequence);
+constructor TAsn1Sequence.TAsn1SequenceParserImpl.Create
+  (const outer: IAsn1Sequence);
 begin
   inherited Create();
   Fouter := outer;

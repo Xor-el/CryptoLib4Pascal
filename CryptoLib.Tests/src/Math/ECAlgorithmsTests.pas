@@ -64,20 +64,21 @@ type
   const
     Scale = Int32(4);
 
-    procedure DoTestSumOfMultiplies(x9: IX9ECParameters);
-    procedure DoTestSumOfTwoMultiplies(x9: IX9ECParameters);
-    procedure AssertPointsEqual(const msg: String; a, b: IECPoint);
+    procedure DoTestSumOfMultiplies(const x9: IX9ECParameters);
+    procedure DoTestSumOfTwoMultiplies(const x9: IX9ECParameters);
+    procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
     function CopyPoints(ps: TCryptoLibGenericArray<IECPoint>; len: Int32)
       : TCryptoLibGenericArray<IECPoint>;
     function CopyScalars(ks: TCryptoLibGenericArray<TBigInteger>; len: Int32)
       : TCryptoLibGenericArray<TBigInteger>;
 
-    function GetRandomPoint(x9: IX9ECParameters): IECPoint;
-    function GetRandomScalar(x9: IX9ECParameters): TBigInteger;
+    function GetRandomPoint(const x9: IX9ECParameters): IECPoint;
+    function GetRandomScalar(const x9: IX9ECParameters): TBigInteger;
 
     function GetTestCurves(): TCryptoLibGenericArray<IX9ECParameters>;
 
-    procedure AddTestCurves(x9s: TList<IX9ECParameters>; x9: IX9ECParameters);
+    procedure AddTestCurves(x9s: TList<IX9ECParameters>;
+      const x9: IX9ECParameters);
 
   protected
     procedure SetUp; override;
@@ -95,9 +96,11 @@ implementation
 { TTestECAlgorithms }
 
 procedure TTestECAlgorithms.AddTestCurves(x9s: TList<IX9ECParameters>;
-  x9: IX9ECParameters);
+  const x9: IX9ECParameters);
 var
   curve, c: IECCurve;
+  point: IECPoint;
+  params: IX9ECParameters;
   coord, i: Int32;
   coords: TCryptoLibInt32Array;
 begin
@@ -115,13 +118,15 @@ begin
     else if (curve.SupportsCoordinateSystem(coord)) then
     begin
       c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
-      x9s.Add(TX9ECParameters.Create(c, c.ImportPoint(x9.G), x9.N, x9.H));
+      point := c.ImportPoint(x9.G);
+      params := TX9ECParameters.Create(c, point, x9.N, x9.H);
+      // x9s.Add(params);
     end;
   end;
 end;
 
 procedure TTestECAlgorithms.AssertPointsEqual(const msg: String;
-  a, b: IECPoint);
+  const a, b: IECPoint);
 begin
   CheckEquals(True, a.Equals(b), msg);
 end;
@@ -140,7 +145,7 @@ begin
   Result := System.Copy(ks, 0, len);
 end;
 
-procedure TTestECAlgorithms.DoTestSumOfMultiplies(x9: IX9ECParameters);
+procedure TTestECAlgorithms.DoTestSumOfMultiplies(const x9: IX9ECParameters);
 var
   points, results: TCryptoLibGenericArray<IECPoint>;
   scalars: TCryptoLibGenericArray<TBigInteger>;
@@ -172,9 +177,10 @@ begin
     AssertPointsEqual('ECAlgorithms.SumOfMultiplies is incorrect', results[0],
       results[1]);
   end;
+
 end;
 
-procedure TTestECAlgorithms.DoTestSumOfTwoMultiplies(x9: IX9ECParameters);
+procedure TTestECAlgorithms.DoTestSumOfTwoMultiplies(const x9: IX9ECParameters);
 var
   i: Int32;
   p, q, u, v, w: IECPoint;
@@ -208,12 +214,13 @@ begin
   end;
 end;
 
-function TTestECAlgorithms.GetRandomPoint(x9: IX9ECParameters): IECPoint;
+function TTestECAlgorithms.GetRandomPoint(const x9: IX9ECParameters): IECPoint;
 begin
   Result := x9.G.Multiply(GetRandomScalar(x9));
 end;
 
-function TTestECAlgorithms.GetRandomScalar(x9: IX9ECParameters): TBigInteger;
+function TTestECAlgorithms.GetRandomScalar(const x9: IX9ECParameters)
+  : TBigInteger;
 begin
   Result := TBigInteger.Create(x9.N.BitLength, FRandom);
 end;
@@ -222,7 +229,6 @@ function TTestECAlgorithms.GetTestCurves
   : TCryptoLibGenericArray<IX9ECParameters>;
 var
   name: string;
-var
   x9s: TList<IX9ECParameters>;
   tempList: TList<String>;
   tempDict: TDictionary<String, String>;
@@ -303,7 +309,6 @@ begin
   begin
     DoTestSumOfMultiplies(x9);
   end;
-
 end;
 
 procedure TTestECAlgorithms.TestSumOfTwoMultiplies;

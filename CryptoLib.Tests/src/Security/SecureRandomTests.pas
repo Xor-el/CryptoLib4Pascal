@@ -54,9 +54,10 @@ type
   TTestSecureRandom = class(TCryptoLibTestCase)
   private
 
-    procedure CheckSecureRandom(random: ISecureRandom);
-    function RunChiSquaredTests(random: ISecureRandom): Boolean;
-    function MeasureChiSquared(random: ISecureRandom; rounds: Int32): Double;
+    procedure CheckSecureRandom(const random: ISecureRandom);
+    function RunChiSquaredTests(const random: ISecureRandom): Boolean;
+    function MeasureChiSquared(const random: ISecureRandom;
+      rounds: Int32): Double;
 
   protected
     procedure SetUp; override;
@@ -73,7 +74,7 @@ implementation
 
 { TTestSecureRandom }
 
-procedure TTestSecureRandom.CheckSecureRandom(random: ISecureRandom);
+procedure TTestSecureRandom.CheckSecureRandom(const random: ISecureRandom);
 begin
   // Note: This will periodically (< 1e-6 probability) give a false alarm.
   // That's randomness for you!
@@ -81,7 +82,7 @@ begin
     'Chi2 test detected possible non-randomness');
 end;
 
-function TTestSecureRandom.MeasureChiSquared(random: ISecureRandom;
+function TTestSecureRandom.MeasureChiSquared(const random: ISecureRandom;
   rounds: Int32): Double;
 var
   opts, bs: TCryptoLibByteArray;
@@ -161,7 +162,8 @@ begin
   result := chi2;
 end;
 
-function TTestSecureRandom.RunChiSquaredTests(random: ISecureRandom): Boolean;
+function TTestSecureRandom.RunChiSquaredTests(const random
+  : ISecureRandom): Boolean;
 var
   passes, tries: Int32;
   chi2: Double;

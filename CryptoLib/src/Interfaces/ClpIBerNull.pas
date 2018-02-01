@@ -29,7 +29,7 @@ type
   IBerNull = interface(IDerNull)
     ['{16AF74E8-26E1-466D-BE93-38A06853DA98}']
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
   end;
 
 implementation

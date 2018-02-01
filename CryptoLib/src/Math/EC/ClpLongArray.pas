@@ -447,7 +447,8 @@ type
 
     function DegreeFrom(limit: Int32): Int32;
     function ResizedInts(newLen: Int32): TCryptoLibInt64Array; inline;
-    procedure AddShiftedByBitsSafe(other: TLongArray; otherDegree, bits: Int32);
+    procedure AddShiftedByBitsSafe(const other: TLongArray;
+      otherDegree, bits: Int32);
 
     class function ShiftUp(x: TCryptoLibInt64Array; xOff, count, shift: Int32)
       : Int64; overload; static;
@@ -567,7 +568,7 @@ type
     constructor Create(intLen: Int32); overload;
     constructor Create(ints: TCryptoLibInt64Array); overload;
     constructor Create(ints: TCryptoLibInt64Array; off, len: Int32); overload;
-    constructor Create(bigInt: TBigInteger); overload;
+    constructor Create(const bigInt: TBigInteger); overload;
 
     function IsOne(): Boolean; inline;
     function IsZero(): Boolean; inline;
@@ -576,23 +577,23 @@ type
     function Degree(): Int32; inline;
     function ToBigInteger(): TBigInteger;
     function AddOne(): TLongArray; inline;
-    procedure AddShiftedByWords(other: TLongArray; words: Int32); inline;
+    procedure AddShiftedByWords(const other: TLongArray; words: Int32); inline;
 
     function TestBitZero(): Boolean;
 
-    function ModMultiplyLD(other: TLongArray; m: Int32;
+    function ModMultiplyLD(const other: TLongArray; m: Int32;
       ks: TCryptoLibInt32Array): TLongArray;
 
-    function ModMultiply(other: TLongArray; m: Int32; ks: TCryptoLibInt32Array)
-      : TLongArray;
+    function ModMultiply(const other: TLongArray; m: Int32;
+      ks: TCryptoLibInt32Array): TLongArray;
 
-    function ModMultiplyAlt(other: TLongArray; m: Int32;
+    function ModMultiplyAlt(const other: TLongArray; m: Int32;
       ks: TCryptoLibInt32Array): TLongArray;
 
     function ModReduce(m: Int32; ks: TCryptoLibInt32Array): TLongArray; inline;
 
-    function Multiply(other: TLongArray; m: Int32; ks: TCryptoLibInt32Array)
-      : TLongArray;
+    function Multiply(const other: TLongArray; m: Int32;
+      ks: TCryptoLibInt32Array): TLongArray;
 
     procedure Reduce(m: Int32; ks: TCryptoLibInt32Array); inline;
 
@@ -607,7 +608,7 @@ type
 
     function Copy(): TLongArray; inline;
 
-    function Equals(other: TLongArray): Boolean; inline;
+    function Equals(const other: TLongArray): Boolean; inline;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
     inline;
 {$ENDIF DELPHI}
@@ -937,7 +938,7 @@ begin
   Result := prev;
 end;
 
-procedure TLongArray.AddShiftedByBitsSafe(other: TLongArray;
+procedure TLongArray.AddShiftedByBitsSafe(const other: TLongArray;
   otherDegree, bits: Int32);
 var
   otherLen, words, shift: Int32;
@@ -961,7 +962,7 @@ begin
   end;
 end;
 
-procedure TLongArray.AddShiftedByWords(other: TLongArray; words: Int32);
+procedure TLongArray.AddShiftedByWords(const other: TLongArray; words: Int32);
 var
   otherUsedLen, minLen: Int32;
 begin
@@ -1076,7 +1077,7 @@ begin
   System.SetLength(Fm_ints, intLen);
 end;
 
-constructor TLongArray.Create(bigInt: TBigInteger);
+constructor TLongArray.Create(const bigInt: TBigInteger);
 var
   barr: TCryptoLibByteArray;
   barrLen, barrStart, intLen, iarrJ, rem, barrI, I: Int32;
@@ -1196,7 +1197,7 @@ begin
   end;
 end;
 
-function TLongArray.Equals(other: TLongArray): Boolean;
+function TLongArray.Equals(const other: TLongArray): Boolean;
 var
   usedLen, I: Int32;
 begin
@@ -1628,7 +1629,7 @@ begin
   Result := TLongArray.Create(buf, off, rLen);
 end;
 
-function TLongArray.ModMultiply(other: TLongArray; m: Int32;
+function TLongArray.ModMultiply(const other: TLongArray; m: Int32;
   ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, bMax, tOff, I, MASK, aPos, cOff,
@@ -1783,7 +1784,7 @@ begin
   Result := ReduceResult(c, 0, cLen, m, ks);
 end;
 
-function TLongArray.ModMultiplyAlt(other: TLongArray; m: Int32;
+function TLongArray.ModMultiplyAlt(const other: TLongArray; m: Int32;
   ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, width, positions, top, banks, shifts, bMax,
@@ -2037,7 +2038,7 @@ begin
   Result := ReduceResult(c, ci[1], cLen, m, ks);
 end;
 
-function TLongArray.ModMultiplyLD(other: TLongArray; m: Int32;
+function TLongArray.ModMultiplyLD(const other: TLongArray; m: Int32;
   ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, bMax, tOff, I, MASK, k, aVal, u,
@@ -2268,7 +2269,7 @@ begin
   Result := TLongArray.Create(r, 0, len);
 end;
 
-function TLongArray.Multiply(other: TLongArray; m: Int32;
+function TLongArray.Multiply(const other: TLongArray; m: Int32;
   ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, bMax, tOff, I, MASK, aPos, cOff,

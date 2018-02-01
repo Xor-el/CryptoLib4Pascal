@@ -53,7 +53,7 @@ type
 
   strict protected
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
     /// <summary>
@@ -70,7 +70,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     /// <summary>
     /// return a DerVisibleString from the passed in object
@@ -99,8 +99,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the tagged object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: IAsn1TaggedObject; isExplicit: Boolean)
-      : IDerVisibleString; overload; static; inline;
+    class function GetInstance(const obj: IAsn1TaggedObject;
+      isExplicit: Boolean): IDerVisibleString; overload; static; inline;
 
   end;
 
@@ -117,7 +117,7 @@ begin
 {$ENDIF FPC}
 end;
 
-function TDerVisibleString.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerVisibleString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerVisibleString;
 begin
@@ -156,14 +156,14 @@ begin
   FStr := Str;
 end;
 
-procedure TDerVisibleString.Encode(derOut: IDerOutputStream);
+procedure TDerVisibleString.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.VisibleString, GetOctets());
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-class function TDerVisibleString.GetInstance(obj: IAsn1TaggedObject;
+class function TDerVisibleString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerVisibleString;
 begin
   result := GetInstance(obj.GetObject() as TAsn1Object);

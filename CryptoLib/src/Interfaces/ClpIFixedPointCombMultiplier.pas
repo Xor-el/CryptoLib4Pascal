@@ -30,7 +30,8 @@ type
   IFixedPointCombMultiplier = interface(IAbstractECMultiplier)
     ['{A3345E31-4D5C-4442-9C3D-ACC7F6DA4A14}']
 
-    function MultiplyPositive(p: IECPoint; k: TBigInteger): IECPoint;
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint;
     function GetWidthForCombSize(combSize: Int32): Int32;
   end;
 

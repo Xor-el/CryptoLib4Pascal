@@ -44,7 +44,7 @@ type
     // * @param forSigning true if for signing, false otherwise
     // * @param param necessary parameters.
     // */
-    procedure Init(forSigning: Boolean; parameters: ICipherParameters);
+    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
 
     // /**
     // * update the internal digest with the byte b

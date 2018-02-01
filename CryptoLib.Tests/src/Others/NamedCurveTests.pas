@@ -31,6 +31,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpSecureRandom,
+  ClpISecureRandom,
   ClpISigner,
   ClpSecNamedCurves,
   ClpIX9ECParameters,
@@ -44,6 +45,7 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
+  ClpIECKeyGenerationParameters,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -87,7 +89,8 @@ begin
 
   g := TECKeyPairGenerator.Create('ECDSA');
 
-  g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create()));
+  g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create()
+    as ISecureRandom) as IECKeyGenerationParameters);
 
   sgr := TSignerUtilities.GetSigner('ECDSA');
   pair := g.GenerateKeyPair();
@@ -139,7 +142,7 @@ end;
 //
 // g := TECKeyPairGenerator.Create(keyAlgorithm);
 //
-// g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create()));
+// g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create() as ISecureRandom));
 //
 // pair := g.GenerateKeyPair();
 // sKey := pair.Private;

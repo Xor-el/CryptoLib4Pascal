@@ -37,8 +37,8 @@ type
     function GetCurrent(e: TEnumerator<IAsn1Encodable>): IAsn1Encodable;
 
     function Asn1GetHashCode(): Int32;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
-    procedure AddObject(obj: IAsn1Encodable);
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+    procedure AddObject(const obj: IAsn1Encodable);
 
     function ToString(): String;
 

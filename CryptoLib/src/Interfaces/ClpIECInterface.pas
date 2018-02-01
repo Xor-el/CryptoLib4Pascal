@@ -61,7 +61,7 @@ type
 
     function RawZCoords: TCryptoLibGenericArray<IECFieldElement>;
 
-    function CreateScaledPoint(sx, sy: IECFieldElement): IECPoint;
+    function CreateScaledPoint(const sx, sy: IECFieldElement): IECPoint;
 
     procedure CheckNormalized();
 
@@ -86,29 +86,29 @@ type
     /// </returns>
     function Normalize(): IECPoint; overload;
 
-    function Normalize(zInv: IECFieldElement): IECPoint; overload;
+    function Normalize(const zInv: IECFieldElement): IECPoint; overload;
 
     function IsValid(): Boolean;
 
-    function ScaleX(scale: IECFieldElement): IECPoint;
-    function ScaleY(scale: IECFieldElement): IECPoint;
+    function ScaleX(const scale: IECFieldElement): IECPoint;
+    function ScaleY(const scale: IECFieldElement): IECPoint;
 
     function GetEncoded(): TCryptoLibByteArray; overload;
     function GetEncoded(compressed: Boolean): TCryptoLibByteArray; overload;
 
-    function Add(b: IECPoint): IECPoint;
-    function Subtract(b: IECPoint): IECPoint;
+    function Add(const b: IECPoint): IECPoint;
+    function Subtract(const b: IECPoint): IECPoint;
     function Negate(): IECPoint;
     function TimesPow2(e: Int32): IECPoint;
 
     function Twice(): IECPoint;
     function Multiply(b: TBigInteger): IECPoint;
 
-    function TwicePlus(b: IECPoint): IECPoint;
+    function TwicePlus(const b: IECPoint): IECPoint;
 
     function ThreeTimes(): IECPoint;
 
-    function Equals(other: IECPoint): Boolean;
+    function Equals(const other: IECPoint): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
     function ToString(): String;
 
@@ -219,7 +219,7 @@ type
 
     property CompressionYTilde: Boolean read GetCompressionYTilde;
 
-    function Subtract(b: IECPoint): IECPoint;
+    function Subtract(const b: IECPoint): IECPoint;
 
   end;
 
@@ -228,15 +228,15 @@ type
 
     function Detach(): IECPoint;
 
-    function Two(x: IECFieldElement): IECFieldElement;
-    function Three(x: IECFieldElement): IECFieldElement;
-    function Four(x: IECFieldElement): IECFieldElement;
-    function Eight(x: IECFieldElement): IECFieldElement;
-    function DoubleProductFromSquares(a, b, aSquared, bSquared: IECFieldElement)
-      : IECFieldElement;
+    function Two(const x: IECFieldElement): IECFieldElement;
+    function Three(const x: IECFieldElement): IECFieldElement;
+    function Four(const x: IECFieldElement): IECFieldElement;
+    function Eight(const x: IECFieldElement): IECFieldElement;
+    function DoubleProductFromSquares(const a, b, aSquared,
+      bSquared: IECFieldElement): IECFieldElement;
 
-    function CalculateJacobianModifiedW(Z, ZSquared: IECFieldElement)
-      : IECFieldElement;
+    function CalculateJacobianModifiedW(const Z: IECFieldElement;
+      ZSquared: IECFieldElement): IECFieldElement;
 
     function GetJacobianModifiedW(): IECFieldElement;
 
@@ -244,12 +244,12 @@ type
 
     function GetZCoord(index: Int32): IECFieldElement;
     // B.3 pg 62
-    function Add(b: IECPoint): IECPoint;
+    function Add(const b: IECPoint): IECPoint;
 
     // B.3 pg 62
     function Twice(): IECPoint;
 
-    function TwicePlus(b: IECPoint): IECPoint;
+    function TwicePlus(const b: IECPoint): IECPoint;
 
     function ThreeTimes(): IECPoint;
 
@@ -264,10 +264,10 @@ type
 
     function SatisfiesCurveEquation(): Boolean;
 
-    function ScaleX(scale: IECFieldElement): IECPoint;
-    function ScaleY(scale: IECFieldElement): IECPoint;
+    function ScaleX(const scale: IECFieldElement): IECPoint;
+    function ScaleY(const scale: IECFieldElement): IECPoint;
 
-    function Subtract(b: IECPoint): IECPoint;
+    function Subtract(const b: IECPoint): IECPoint;
 
     function Tau(): IAbstractF2mPoint;
 
@@ -284,11 +284,11 @@ type
     function Detach(): IECPoint;
     property CompressionYTilde: Boolean read GetCompressionYTilde;
 
-    function Add(b: IECPoint): IECPoint;
+    function Add(const b: IECPoint): IECPoint;
 
     function Twice(): IECPoint;
 
-    function TwicePlus(b: IECPoint): IECPoint;
+    function TwicePlus(const b: IECPoint): IECPoint;
 
     function Negate(): IECPoint;
 
@@ -312,7 +312,7 @@ type
     // * @return <code>p</code> multiplied by <code>k</code>.
     // */
 
-    function Multiply(p: IECPoint; k: TBigInteger): IECPoint;
+    function Multiply(const p: IECPoint; const k: TBigInteger): IECPoint;
 
   end;
 
@@ -320,7 +320,7 @@ type
   IECPointMap = interface(IInterface)
     ['{73C2B23F-C05D-4916-8E30-14275F1051B6}']
 
-    function Map(p: IECPoint): IECPoint;
+    function Map(const p: IECPoint): IECPoint;
 
   end;
 
@@ -358,16 +358,16 @@ type
 
     function CloneCurve(): IECCurve;
 
-    function CreateRawPoint(x, y: IECFieldElement; withCompression: Boolean)
-      : IECPoint; overload;
+    function CreateRawPoint(const x, y: IECFieldElement;
+      withCompression: Boolean): IECPoint; overload;
 
-    function CreateRawPoint(x, y: IECFieldElement;
+    function CreateRawPoint(const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
       : IECPoint; overload;
 
     function CreateDefaultMultiplier(): IECMultiplier;
 
-    procedure CheckPoint(point: IECPoint);
+    procedure CheckPoint(const point: IECPoint);
 
     procedure CheckPoints(points: TCryptoLibGenericArray<IECPoint>); overload;
 
@@ -381,20 +381,22 @@ type
     function IsValidFieldElement(x: TBigInteger): Boolean;
 
     function Configure(): IConfig;
-    function ValidatePoint(x, y: TBigInteger): IECPoint; overload;
+    function ValidatePoint(const x, y: TBigInteger): IECPoint; overload;
 
-    function ValidatePoint(x, y: TBigInteger; withCompression: Boolean)
+    function ValidatePoint(const x, y: TBigInteger; withCompression: Boolean)
       : IECPoint; overload;
       deprecated 'Per-point compression property will be removed';
 
-    function CreatePoint(x, y: TBigInteger): IECPoint; overload;
+    function CreatePoint(const x, y: TBigInteger): IECPoint; overload;
 
-    function CreatePoint(x, y: TBigInteger; withCompression: Boolean): IECPoint;
-      overload; deprecated 'Per-point compression property will be removed';
+    function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
+      : IECPoint; overload;
+      deprecated 'Per-point compression property will be removed';
 
     function SupportsCoordinateSystem(coord: Int32): Boolean;
 
-    function GetPreCompInfo(point: IECPoint; const name: String): IPreCompInfo;
+    function GetPreCompInfo(const point: IECPoint; const name: String)
+      : IPreCompInfo;
 
     /// <summary>
     /// Adds <c>PreCompInfo</c> for a point on this curve, under a given name.
@@ -410,10 +412,10 @@ type
     /// <param name="preCompInfo">
     /// The values precomputed by the <c>ECMultiplier.</c>
     /// </param>
-    procedure SetPreCompInfo(point: IECPoint; const name: String;
-      preCompInfo: IPreCompInfo);
+    procedure SetPreCompInfo(const point: IECPoint; const name: String;
+      const preCompInfo: IPreCompInfo);
 
-    function ImportPoint(p: IECPoint): IECPoint;
+    function ImportPoint(const p: IECPoint): IECPoint;
 
     /// <summary>
     /// Normalization ensures that any projective coordinate is 1, and
@@ -451,7 +453,7 @@ type
     /// The (optional) z-scaling factor - can be null
     /// </param>
     procedure NormalizeAll(points: TCryptoLibGenericArray<IECPoint>;
-      off, len: Int32; iso: IECFieldElement); overload;
+      off, len: Int32; const iso: IECFieldElement); overload;
 
     function GetEndomorphism(): IECEndomorphism;
 
@@ -488,7 +490,7 @@ type
 
     property CoordinateSystem: Int32 read GetCoordinateSystem;
 
-    function Equals(other: IECCurve): Boolean;
+    function Equals(const other: IECCurve): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
   end;
@@ -498,8 +500,8 @@ type
     ['{F4BD2FCC-FC9B-4FBB-8A3B-CC9031739D9F}']
 
     function SetCoordinateSystem(coord: Int32): IConfig;
-    function SetEndomorphism(Endomorphism: IECEndomorphism): IConfig;
-    function SetMultiplier(Multiplier: IECMultiplier): IConfig;
+    function SetEndomorphism(const Endomorphism: IECEndomorphism): IConfig;
+    function SetMultiplier(const Multiplier: IECMultiplier): IConfig;
     function CreateCurve(): IECCurve;
 
   end;
@@ -522,10 +524,10 @@ type
     function GetFieldSize: Int32;
 
     function CloneCurve(): IECCurve;
-    function CreateRawPoint(x, y: IECFieldElement; withCompression: Boolean)
-      : IECPoint; overload;
+    function CreateRawPoint(const x, y: IECFieldElement;
+      withCompression: Boolean): IECPoint; overload;
 
-    function CreateRawPoint(x, y: IECFieldElement;
+    function CreateRawPoint(const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
       : IECPoint; overload;
 
@@ -536,7 +538,7 @@ type
     property FieldSize: Int32 read GetFieldSize;
 
     function FromBigInteger(x: TBigInteger): IECFieldElement;
-    function ImportPoint(p: IECPoint): IECPoint;
+    function ImportPoint(const p: IECPoint): IECPoint;
 
   end;
 
@@ -561,14 +563,15 @@ type
     // * @return the solution for <code>z<sup>2</sup> + z = beta</code> or
     // *         <code>null</code> if no solution exists.
     // */
-    function SolveQuadradicEquation(beta: IECFieldElement): IECFieldElement;
+    function SolveQuadradicEquation(const beta: IECFieldElement)
+      : IECFieldElement;
 
     function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
 
     function IsValidFieldElement(x: TBigInteger): Boolean;
 
-    function CreatePoint(x, y: TBigInteger; withCompression: Boolean): IECPoint;
-      deprecated 'Per-point compression property will be removed';
+    function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
+      : IECPoint; deprecated 'Per-point compression property will be removed';
 
     // /**
     // * @return the auxiliary values <code>s<sub>0</sub></code> and
@@ -595,10 +598,10 @@ type
     function CloneCurve(): IECCurve;
     function CreateDefaultMultiplier(): IECMultiplier;
 
-    function CreateRawPoint(x, y: IECFieldElement; withCompression: Boolean)
-      : IECPoint; overload;
+    function CreateRawPoint(const x, y: IECFieldElement;
+      withCompression: Boolean): IECPoint; overload;
 
-    function CreateRawPoint(x, y: IECFieldElement;
+    function CreateRawPoint(const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
       : IECPoint; overload;
 

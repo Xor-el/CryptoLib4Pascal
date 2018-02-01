@@ -44,9 +44,9 @@ type
     procedure setIndirectReference(const Value: IDerInteger);
 
     function Asn1GetHashCode(): Int32;
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
     property dataValueDescriptor: IAsn1Object read GetDataValueDescriptor
       write setDataValueDescriptor;

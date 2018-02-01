@@ -30,11 +30,12 @@ type
 
   public
 
-    class function GetByteLength(fe: IECFieldElement): Int32; overload;
+    class function GetByteLength(const fe: IECFieldElement): Int32; overload;
       static; inline;
-    class function GetByteLength(c: IECCurve): Int32; overload; static; inline;
+    class function GetByteLength(const c: IECCurve): Int32; overload;
+      static; inline;
 
-    class function IntegerToBytes(s: TBigInteger; qLength: Int32)
+    class function IntegerToBytes(const s: TBigInteger; qLength: Int32)
       : TCryptoLibByteArray; static;
 
   end;
@@ -43,17 +44,18 @@ implementation
 
 { TX9IntegerConverter }
 
-class function TX9IntegerConverter.GetByteLength(fe: IECFieldElement): Int32;
+class function TX9IntegerConverter.GetByteLength
+  (const fe: IECFieldElement): Int32;
 begin
   result := (fe.FieldSize + 7) div 8;
 end;
 
-class function TX9IntegerConverter.GetByteLength(c: IECCurve): Int32;
+class function TX9IntegerConverter.GetByteLength(const c: IECCurve): Int32;
 begin
   result := (c.FieldSize + 7) div 8;
 end;
 
-class function TX9IntegerConverter.IntegerToBytes(s: TBigInteger;
+class function TX9IntegerConverter.IntegerToBytes(const s: TBigInteger;
   qLength: Int32): TCryptoLibByteArray;
 var
   bytes, tmp: TCryptoLibByteArray;

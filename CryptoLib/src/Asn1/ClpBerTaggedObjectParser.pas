@@ -47,7 +47,7 @@ type
 
   public
     constructor Create(constructed: Boolean; tagNumber: Int32;
-      parser: IAsn1StreamParser);
+      const parser: IAsn1StreamParser);
 
     function GetObjectParser(tag: Int32; isExplicit: Boolean)
       : IAsn1Convertible; inline;
@@ -64,7 +64,7 @@ implementation
 { TBerTaggedObjectParser }
 
 constructor TBerTaggedObjectParser.Create(constructed: Boolean;
-  tagNumber: Int32; parser: IAsn1StreamParser);
+  tagNumber: Int32; const parser: IAsn1StreamParser);
 begin
   F_constructed := constructed;
   F_tagNumber := tagNumber;

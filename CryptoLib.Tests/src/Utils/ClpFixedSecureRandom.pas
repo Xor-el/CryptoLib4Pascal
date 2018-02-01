@@ -343,8 +343,8 @@ begin
   FANDROID := TBigInteger.Create('1111111105060708ffffffff01020304', 16);
   FCLASSPATH := TBigInteger.Create('3020104ffffffff05060708111111', 16);
 
-  Fcheck1 := TBigInteger.Create(128, TRandomChecker.Create());
-  Fcheck2 := TBigInteger.Create(120, TRandomChecker.Create());
+  Fcheck1 := TBigInteger.Create(128, TRandomChecker.Create() as ISecureRandom);
+  Fcheck2 := TBigInteger.Create(120, TRandomChecker.Create() as ISecureRandom);
 
   FisAndroidStyle := Fcheck1.Equals(FANDROID);
   FisRegularStyle := Fcheck1.Equals(FREGULAR);

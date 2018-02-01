@@ -40,7 +40,7 @@ type
     property &Out: TStream read GetOut;
 
   public
-    procedure AddObject(obj: IAsn1Encodable); virtual; abstract;
+    procedure AddObject(const obj: IAsn1Encodable); virtual; abstract;
 
     function GetRawOutputStream(): TStream; virtual; abstract;
 

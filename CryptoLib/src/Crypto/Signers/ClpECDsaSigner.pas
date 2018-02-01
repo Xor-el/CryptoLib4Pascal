@@ -1,3 +1,20 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
+{ *                        the development of this library                          * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
 unit ClpECDsaSigner;
 
 {$I ..\..\Include\CryptoLib.inc}
@@ -53,15 +70,15 @@ type
     Fkey: IECKeyParameters;
     Frandom: ISecureRandom;
 
-    function CalculateE(n: TBigInteger; &message: TCryptoLibByteArray)
+    function CalculateE(const n: TBigInteger; &message: TCryptoLibByteArray)
       : TBigInteger; virtual;
 
     function CreateBasePointMultiplier(): IECMultiplier; virtual;
 
-    function GetDenominator(coordinateSystem: Int32; p: IECPoint)
+    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
       : IECFieldElement; virtual;
 
-    function InitSecureRandom(needed: Boolean; provided: ISecureRandom)
+    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
       : ISecureRandom; virtual;
 
   public
@@ -78,7 +95,7 @@ type
     /// <param name="kCalculator">
     /// kCalculator a K value calculator.
     /// </param>
-    constructor Create(kCalculator: IDsaKCalculator); overload;
+    constructor Create(const kCalculator: IDsaKCalculator); overload;
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
@@ -101,8 +118,8 @@ type
     // * the passed in message (for standard DSA the message should be
     // * a SHA-1 hash of the real message to be verified).
     // */
-    function VerifySignature(&message: TCryptoLibByteArray;
-      r, s: TBigInteger): Boolean;
+    function VerifySignature(&message: TCryptoLibByteArray; r: TBigInteger;
+      const s: TBigInteger): Boolean;
 
   end;
 
@@ -115,8 +132,8 @@ begin
   FkCalculator := TRandomDsaKCalculator.Create();
 end;
 
-function TECDsaSigner.CalculateE(n: TBigInteger; &message: TCryptoLibByteArray)
-  : TBigInteger;
+function TECDsaSigner.CalculateE(const n: TBigInteger;
+  &message: TCryptoLibByteArray): TBigInteger;
 var
   messageBitLength: Int32;
   trunc: TBigInteger;
@@ -132,7 +149,7 @@ begin
   Result := trunc;
 end;
 
-constructor TECDsaSigner.Create(kCalculator: IDsaKCalculator);
+constructor TECDsaSigner.Create(const kCalculator: IDsaKCalculator);
 begin
   inherited Create();
   FkCalculator := kCalculator;
@@ -197,7 +214,7 @@ begin
   Result := 'ECDSA';
 end;
 
-function TECDsaSigner.GetDenominator(coordinateSystem: Int32; p: IECPoint)
+function TECDsaSigner.GetDenominator(coordinateSystem: Int32; const p: IECPoint)
   : IECFieldElement;
 begin
   case (coordinateSystem) of
@@ -261,8 +278,8 @@ begin
     (not FkCalculator.IsDeterministic), providedRandom);
 end;
 
-function TECDsaSigner.InitSecureRandom(needed: Boolean; provided: ISecureRandom)
-  : ISecureRandom;
+function TECDsaSigner.InitSecureRandom(needed: Boolean;
+  const provided: ISecureRandom): ISecureRandom;
 begin
   if (not needed) then
   begin
@@ -282,7 +299,7 @@ begin
 end;
 
 function TECDsaSigner.VerifySignature(&message: TCryptoLibByteArray;
-  r, s: TBigInteger): Boolean;
+  r: TBigInteger; const s: TBigInteger): Boolean;
 var
   n, e, c, u1, u2, cofactor, v: TBigInteger;
   G, Q, point: IECPoint;

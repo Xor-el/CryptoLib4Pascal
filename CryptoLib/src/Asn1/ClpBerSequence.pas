@@ -46,7 +46,8 @@ type
 
   public
 
-    class function FromVector(v: IAsn1EncodableVector): IBerSequence; static;
+    class function FromVector(const v: IAsn1EncodableVector)
+      : IBerSequence; static;
 
     /// <summary>
     /// create an empty sequence
@@ -56,14 +57,14 @@ type
     /// <summary>
     /// create a sequence containing one object
     /// </summary>
-    constructor Create(obj: IAsn1Encodable); overload;
+    constructor Create(const obj: IAsn1Encodable); overload;
 
     constructor Create(v: array of IAsn1Encodable); overload;
 
     /// <summary>
     /// create a sequence containing a vector of objects.
     /// </summary>
-    constructor Create(v: IAsn1EncodableVector); overload;
+    constructor Create(const v: IAsn1EncodableVector); overload;
 
     destructor Destroy(); override;
 
@@ -74,7 +75,7 @@ type
     /// just outputing Sequence, <br />we also have to specify Constructed,
     /// and the objects length. <br />
     /// </summary>
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
 
     class property Empty: IBerSequence read GetEmpty;
 
@@ -84,7 +85,7 @@ implementation
 
 { TBerSequence }
 
-constructor TBerSequence.Create(obj: IAsn1Encodable);
+constructor TBerSequence.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(obj);
 end;
@@ -94,7 +95,7 @@ begin
   Inherited Create();
 end;
 
-constructor TBerSequence.Create(v: IAsn1EncodableVector);
+constructor TBerSequence.Create(const v: IAsn1EncodableVector);
 begin
   Inherited Create(v);
 end;
@@ -115,7 +116,7 @@ begin
   FEmpty := TBerSequence.Create();
 end;
 
-procedure TBerSequence.Encode(derOut: IDerOutputStream);
+procedure TBerSequence.Encode(const derOut: IDerOutputStream);
 var
   o: IAsn1Encodable;
 begin
@@ -141,7 +142,8 @@ begin
 
 end;
 
-class function TBerSequence.FromVector(v: IAsn1EncodableVector): IBerSequence;
+class function TBerSequence.FromVector(const v: IAsn1EncodableVector)
+  : IBerSequence;
 begin
   if v.Count < 1 then
   begin

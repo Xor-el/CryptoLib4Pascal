@@ -49,12 +49,12 @@ type
 
   strict protected
     constructor Create(dummy: Int32);
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
 
   public
 
-    procedure Encode(derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: IDerOutputStream); override;
     class property Instance: IDerNull read GetInstance;
 
   end;
@@ -63,7 +63,7 @@ implementation
 
 { TDerNull }
 
-function TDerNull.Asn1Equals(asn1Object: IAsn1Object): Boolean;
+function TDerNull.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 begin
   result := Supports(asn1Object, IDerNull);
 end;
@@ -87,7 +87,7 @@ begin
   System.SetLength(FZeroBytes, 0);
 end;
 
-procedure TDerNull.Encode(derOut: IDerOutputStream);
+procedure TDerNull.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.Null, FZeroBytes);
 end;

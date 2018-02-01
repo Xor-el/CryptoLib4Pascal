@@ -33,7 +33,7 @@ type
 
     function GetStr: TCryptoLibByteArray;
 
-    function Asn1Equals(asn1Object: IAsn1Object): Boolean;
+    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
     property Str: TCryptoLibByteArray read GetStr;
 
@@ -41,7 +41,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray;
 
-    procedure Encode(derOut: IDerOutputStream);
+    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

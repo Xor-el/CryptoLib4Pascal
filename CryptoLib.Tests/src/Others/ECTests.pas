@@ -207,7 +207,7 @@ begin
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
     ('0436B3DAF8A23206F9C4F299D7B21A9C369137F2C84AE1AA0D765BE73433B3F95E332932E70EA245CA2418EA0EF98018FB')
-    ), // G
+    ) as IECPoint, // G
     TBigInteger.Create
     ('1569275433846670190958947355803350458831205595451630533029'), // n
     TBigInteger.Two); // h
@@ -242,7 +242,7 @@ begin
   pubKey := TECPublicKeyParameters.Create('ECDSA',
     curve.DecodePoint(THex.Decode
     ('045DE37E756BD55D72E3768CB396FFEB962614DEA4CE28A2E755C0E0E02F5FB132CAF416EF85B229BBB8E1352003125BA1')
-    ), // Q
+    ) as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);
@@ -291,7 +291,7 @@ begin
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
-    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
+    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')) as IECPoint, // G
     n);
 
   priKey := TECPrivateKeyParameters.Create('ECDSA',
@@ -324,7 +324,7 @@ begin
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
     curve.DecodePoint(THex.Decode
-    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
+    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')) as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);
@@ -370,7 +370,7 @@ begin
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
     ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
-    ), // G
+    ) as IECPoint, // G
     TBigInteger.Create
     ('220855883097298041197912187592864814557886993776713230936715041207411783'),
     // n
@@ -407,7 +407,7 @@ begin
   pubKey := TECPublicKeyParameters.Create('ECDSA',
     curve.DecodePoint(THex.Decode
     ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
-    ), // Q
+    ) as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);
@@ -452,7 +452,7 @@ begin
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
     ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
-    ), // G
+    ) as IECPoint, // G
     TBigInteger.Create
     ('220855883097298041197912187592864814557886993776713230936715041207411783'),
     // n
@@ -490,7 +490,7 @@ begin
   pubKey := TECPublicKeyParameters.Create('ECDSA',
     curve.DecodePoint(THex.Decode
     ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
-    ), // Q
+    ) as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);
@@ -540,7 +540,8 @@ begin
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
-    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
+    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf'))
+    as IECPoint, // G
     n);
 
   priKey := TECPrivateKeyParameters.Create('ECDSA',
@@ -573,7 +574,8 @@ begin
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
     curve.DecodePoint(THex.Decode
-    ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
+    ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70'))
+    as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);

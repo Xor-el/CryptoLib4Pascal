@@ -327,7 +327,7 @@ begin
   if ((tag and TAsn1Tags.Tagged) <> 0) then
   begin
     result := TBerTaggedObjectParser.Create(isConstructed, tagNo,
-      TAsn1StreamParser.Create(defIn));
+      TAsn1StreamParser.Create(defIn) as IAsn1StreamParser);
     Exit;
 
   end;
@@ -343,22 +343,24 @@ begin
           // yes, people actually do this...
           //
 
-          result := TBerOctetStringParser.Create
-            (TAsn1StreamParser.Create(defIn));
+          result := TBerOctetStringParser.Create(TAsn1StreamParser.Create(defIn)
+            as IAsn1StreamParser);
           Exit;
 
         end;
       TAsn1Tags.Sequence:
         begin
 
-          result := TDerSequenceParser.Create(TAsn1StreamParser.Create(defIn));
+          result := TDerSequenceParser.Create(TAsn1StreamParser.Create(defIn)
+            as IAsn1StreamParser);
           Exit;
 
         end;
       TAsn1Tags.&Set:
         begin
 
-          result := TDerSetParser.Create(TAsn1StreamParser.Create(defIn));
+          result := TDerSetParser.Create(TAsn1StreamParser.Create(defIn)
+            as IAsn1StreamParser);
           Exit;
 
         end;
@@ -366,7 +368,8 @@ begin
       TAsn1Tags.External:
         begin
 
-          result := TDerExternalParser.Create(TAsn1StreamParser.Create(defIn));
+          result := TDerExternalParser.Create(TAsn1StreamParser.Create(defIn)
+            as IAsn1StreamParser);
           Exit;
 
         end;

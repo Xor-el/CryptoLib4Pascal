@@ -32,20 +32,27 @@ type
     Fscale: IECFieldElement;
 
   public
-    constructor Create(scale: IECFieldElement);
-    function Map(p: IECPoint): IECPoint; virtual;
+    constructor Create(const scale: IECFieldElement);
+    destructor Destroy(); override;
+    function Map(const p: IECPoint): IECPoint; virtual;
   end;
 
 implementation
 
 { TScaleXPointMap }
 
-constructor TScaleXPointMap.Create(scale: IECFieldElement);
+constructor TScaleXPointMap.Create(const scale: IECFieldElement);
 begin
+  Inherited Create();
   Fscale := scale;
 end;
 
-function TScaleXPointMap.Map(p: IECPoint): IECPoint;
+destructor TScaleXPointMap.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TScaleXPointMap.Map(const p: IECPoint): IECPoint;
 begin
   Result := p.ScaleX(Fscale);
 end;
