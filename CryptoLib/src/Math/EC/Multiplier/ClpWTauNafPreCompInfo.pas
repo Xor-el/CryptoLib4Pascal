@@ -44,8 +44,8 @@ type
     // /**
     // * Array holding the precomputed <code>AbstractF2mPoint</code>s used for the
     // * WTNAF multiplication in <code>
-    // * {@link org.bouncycastle.math.ec.multiplier.WTauNafMultiplier.multiply()
-    // * WTauNafMultiplier.multiply()}</code>.
+    // * math.ec.multiplier.WTauNafMultiplier.multiply()
+    // * WTauNafMultiplier.multiply()</code>.
     // */
     Fm_preComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
 

@@ -33,7 +33,7 @@ type
     ['{B71E75E5-FB6D-4A54-BE8A-820FC9A1E509}']
 
     // /**
-    // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
+    // * Multiplies an AbstractF2mPoint
     // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code> using
     // * the <code>&#964;</code>-adic NAF (TNAF) method.
     // * @param p The AbstractF2mPoint to multiply.
@@ -47,7 +47,7 @@ type
       a, mu: ShortInt): IAbstractF2mPoint;
 
     // /**
-    // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
+    // * Multiplies an AbstractF2mPoint
     // * by <code>k</code> using the reduced <code>&#964;</code>-adic NAF (RTNAF)
     // * method.
     // * @param p The AbstractF2mPoint to multiply.

@@ -235,7 +235,7 @@ type
       : IZTauElement; static;
 
     // /**
-    // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
+    // * Multiplies an AbstractF2mPoint
     // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
     // * using the <code>&#964;</code>-adic NAF (TNAF) method.
     // * @param p The AbstractF2mPoint to Multiply.
@@ -247,7 +247,7 @@ type
       const lambda: IZTauElement): IAbstractF2mPoint; static; inline;
 
     // /**
-    // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
+    // * Multiplies an AbstractF2mPoint
     // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
     // * using the <code>&#964;</code>-adic NAF (TNAF) method, given the TNAF
     // * of <code>&#955;</code>.
@@ -287,7 +287,7 @@ type
       : TCryptoLibGenericArray<IAbstractF2mPoint>; static;
 
     // /**
-    // * Multiplies a {@link org.bouncycastle.math.ec.AbstractF2mPoint AbstractF2mPoint}
+    // * Multiplies an AbstractF2mPoint
     // * by a <code>BigInteger</code> using the reduced <code>&#964;</code>-adic
     // * NAF (RTNAF) method.
     // * @param p The AbstractF2mPoint to Multiply.
@@ -397,8 +397,6 @@ begin
   i := 1;
 
   while i < k do
-
-  // for (int i = 1; i < k; i++)
   begin
     // u2 = mu*u1 - 2*u0;
     s := Default (TBigInteger);
