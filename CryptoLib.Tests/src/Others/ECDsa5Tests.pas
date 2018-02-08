@@ -49,6 +49,7 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpParametersWithRandom,
+  ClpIParametersWithRandom,
   ClpIECInterface,
   ClpSignerUtilities,
   ClpECDomainParameters,
@@ -207,7 +208,8 @@ begin
 
   sgr := TSignerUtilities.GetSigner('ECDSA');
 
-  sgr.Init(true, TParametersWithRandom.Create(sKey, k));
+  sgr.Init(true, TParametersWithRandom.Create(sKey, k)
+    as IParametersWithRandom);
 
   &message := TEncoding.UTF8.GetBytes('abc');
 
@@ -296,7 +298,8 @@ begin
 
   sgr := TSignerUtilities.GetSigner('ECDSA');
 
-  sgr.Init(true, TParametersWithRandom.Create(sKey, k));
+  sgr.Init(true, TParametersWithRandom.Create(sKey, k)
+    as IParametersWithRandom);
 
   &message := TEncoding.UTF8.GetBytes('abc');
 
