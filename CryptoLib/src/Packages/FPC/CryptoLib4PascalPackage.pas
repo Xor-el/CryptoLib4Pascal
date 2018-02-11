@@ -93,7 +93,8 @@ uses
   ClpBase64, ClpHex, ClpStreamHelper, ClpStringHelper, ClpBaseInputStream, 
   ClpFilterStream, ClpStreams, ClpOSRandom, ClpPcgRandomMinimal, 
   ClpOSRandomNumberGenerator, ClpPCGRandomNumberGenerator, 
-  ClpRandomNumberGenerator, ClpSetWeakRef, ClpDefiniteLengthInputStream;
+  ClpRandomNumberGenerator, ClpSetWeakRef, ClpDefiniteLengthInputStream, 
+  ClpECSchnorrSigner, ClpIECSchnorrSigner;
 
 implementation
 

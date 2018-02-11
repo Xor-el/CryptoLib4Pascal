@@ -17,6 +17,7 @@ uses
   ECDsa5Tests,
   ECTests,
   NamedCurveTests,
+  ECSchnorrTests,
   SignerUtilitiesTests,
   SecureRandomTests,
   ClpFixedSecureRandom,

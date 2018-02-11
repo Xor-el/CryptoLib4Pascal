@@ -7,7 +7,7 @@ program UsageSamples;
 
 uses
   SysUtils,
-   ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
+  ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
   ClpECGost3410NamedCurves in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpECGost3410NamedCurves.pas',
   ClpNistObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Nist\ClpNistObjectIdentifiers.pas',
   ClpOiwObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Oiw\ClpOiwObjectIdentifiers.pas',
@@ -284,19 +284,25 @@ uses
   ClpIBerSequenceGenerator in '..\..\CryptoLib\src\Interfaces\ClpIBerSequenceGenerator.pas',
   ClpBerSequenceGenerator in '..\..\CryptoLib\src\Asn1\ClpBerSequenceGenerator.pas',
   ClpSetWeakRef in '..\..\CryptoLib\src\Utils\ClpSetWeakRef.pas',
-  UsageExamples in '..\src\UsageExamples.pas';
+  UsageExamples in '..\src\UsageExamples.pas',
+  ClpIECSchnorrSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrSigner.pas',
+  ClpECSchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSigner.pas';
 
 begin
   try
     { TODO -oUser -cConsole Main : Insert code here }
-    TUsageExamples.GenerateKeyPairAndSign;
+    TUsageExamples.GenerateKeyPairAndSignECDSA;
+    TUsageExamples.GenerateKeyPairAndSignECSchnorr;
     TUsageExamples.GetPublicKeyFromPrivateKey;
     TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray;
     TUsageExamples.RecreatePublicKeyFromXAndYCoordByteArray;
     Readln;
   except
     on E: Exception do
+    begin
       Writeln(E.ClassName, ': ', E.Message);
+       Readln;
+    end;
   end;
 
 end.

@@ -28,7 +28,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  // ClpBase64,
+  //ClpBase64,
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpISigner,
@@ -170,7 +170,7 @@ begin
 
     signer := TSignerUtilities.GetSigner(algorithm);
 
-    upper := AnsiUpperCase(algorithm);
+    upper := UpperCase(algorithm);
     withPos := System.Pos('WITH', upper);
 
     if withPos = 0 then

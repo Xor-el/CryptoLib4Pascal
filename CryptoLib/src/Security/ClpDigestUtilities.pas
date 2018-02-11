@@ -104,7 +104,7 @@ begin
   begin
     TDigestUtilities.Boot;
   end;
-  upper := AnsiUpperCase(algorithm);
+  upper := UpperCase(algorithm);
   Falgorithms.TryGetValue(upper, mechanism);
 
   if (mechanism = '') then
@@ -376,7 +376,7 @@ begin
   if (mechanism = '') then
     raise EArgumentNilCryptoLibException.CreateRes(@SMechanismNil);
 
-  mechanism := AnsiUpperCase(mechanism);
+  mechanism := UpperCase(mechanism);
   if Falgorithms.TryGetValue(mechanism, aliased) then
   begin
     mechanism := aliased;

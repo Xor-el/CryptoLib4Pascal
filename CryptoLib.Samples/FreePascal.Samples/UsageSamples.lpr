@@ -10,7 +10,8 @@ uses {$IFDEF UNIX} {$IFDEF UseCThreads}
 begin
   try
     { TODO -oUser -cConsole Main : Insert code here }
-    TUsageExamples.GenerateKeyPairAndSign;
+    TUsageExamples.GenerateKeyPairAndSignECDSA;
+    TUsageExamples.GenerateKeyPairAndSignECSchnorr;
     TUsageExamples.GetPublicKeyFromPrivateKey;
     TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray;
     TUsageExamples.RecreatePublicKeyFromXAndYCoordByteArray;

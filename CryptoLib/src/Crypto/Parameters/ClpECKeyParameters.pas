@@ -51,8 +51,8 @@ type
 
   const
 
-    Falgorithms: array [0 .. 5] of String = ('EC', 'ECDSA', 'ECDH', 'ECDHC',
-      'ECGOST3410', 'ECMQV');
+    Falgorithms: array [0 .. 6] of String = ('EC', 'ECDSA', 'ECDH', 'ECDHC',
+      'ECGOST3410', 'ECMQV', 'ECSCHNORR');
 
   var
     Falgorithm: String;
@@ -135,7 +135,7 @@ var
   i: Int32;
   found: Boolean;
 begin
-  upper := AnsiUpperCase(algorithm);
+  upper := UpperCase(algorithm);
   found := false;
   for i := System.Low(Falgorithms) to System.High(Falgorithms) do
   begin

@@ -1,11 +1,28 @@
 # CryptoLib4Pascal
-CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying ECDSA Signatures using various curves and hashes.
+CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying ECDSA and ECShnorr Signatures using various curves and hashes.
 
 **Supported Algorithms:**
 
-    Supported Curves at the moment are secp256k1, sect283k1, secp384r1 and secp521r1.
-    Supported signing algorithms are NONEwithECDSA, SHA-1withECDSA, SHA-224withECDSA, 
+    Supported Elliptic Curves at the moment are secp256k1, sect283k1, secp384r1 and secp521r1.
+    
+    Supported signing algorithms 
+    ECDSA
+    NONEwithECDSA, SHA-1withECDSA, SHA-224withECDSA, 
     SHA-256withECDSA, SHA-384withECDSA, SHA-512withECDSA and RIPEMD160withECDSA
+    
+    ECSchnorr
+    SHA-1withECSCHNORRBSI, SHA-224withECSCHNORRBSI, SHA-256withECSCHNORRBSI, SHA-384withECSCHNORRBSI,
+    SHA-512withECSCHNORRBSI, RIPEMD160withECSCHNORRBSI
+    
+    SHA-1withECSCHNORRISO, SHA-224withECSCHNORRISO, SHA-256withECSCHNORRISO, SHA-384withECSCHNORRISO, 
+    SHA-512withECSCHNORRISO, RIPEMD160withECSCHNORRISO
+    
+    SHA-1withECSCHNORRISOx, SHA-224withECSCHNORRISOx, SHA-256withECSCHNORRISOx, SHA-384withECSCHNORRISOx,
+    SHA-512withECSCHNORRISOx, RIPEMD160withECSCHNORRISOx 
+    
+    SHA-1withECSCHNORRLIBSECP, SHA-224withECSCHNORRLIBSECP, SHA-256withECSCHNORRLIBSECP, SHA-384withECSCHNORRLIBSECP,
+    SHA-512withECSCHNORRLIBSECP, RIPEMD160withECSCHNORRLIBSECP 
+    
     
    **Dependencies:**
    

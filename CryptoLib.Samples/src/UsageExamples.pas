@@ -40,6 +40,7 @@ uses
   ClpIECPublicKeyParameters,
   ClpECPublicKeyParameters,
   ClpECPrivateKeyParameters,
+  ClpECSchnorrSigner,
   ClpIECInterface,
   ClpECPoint,
   ClpISigner,
@@ -63,7 +64,8 @@ type
     /// SHA-224withECDSA, SHA-256withECDSA, SHA-384withECDSA,
     /// SHA-512withECDSA and RIPEMD160withECDSA
     /// </summary>
-    SigningAlgorithm = 'SHA-1withECDSA';
+    SigningAlgorithmECDSA = 'SHA-1withECDSA';
+    SigningAlgorithmECSCHNORR = 'SHA-256withECSCHNORRLIBSECP';
 
   class var
     FRandom: ISecureRandom;
@@ -72,7 +74,8 @@ type
     class constructor UsageExamples();
 
   public
-    class procedure GenerateKeyPairAndSign(); static;
+    class procedure GenerateKeyPairAndSignECDSA(); static;
+    class procedure GenerateKeyPairAndSignECSchnorr(); static;
     class procedure GetPublicKeyFromPrivateKey(); static;
     class procedure RecreatePublicAndPrivateKeyPairsFromByteArray(); static;
     class procedure RecreatePublicKeyFromXAndYCoordByteArray(); static;
@@ -101,7 +104,7 @@ begin
   Result := '[' + Result + ']';
 end;
 
-class procedure TUsageExamples.GenerateKeyPairAndSign;
+class procedure TUsageExamples.GenerateKeyPairAndSignECDSA;
 var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
@@ -112,7 +115,7 @@ var
   signer: ISigner;
   &message, sigBytes: TBytes;
 const
-  MethodName = 'GenerateKeyPairAndSign';
+  MethodName = 'GenerateKeyPairAndSignECDSA';
 begin
 
   Writeln('MethodName is: ' + MethodName + sLineBreak);
@@ -137,7 +140,7 @@ begin
   Writeln('Private Key D Parameter is: ' + privParams.D.ToString(16) +
     sLineBreak);
 
-  signer := TSignerUtilities.GetSigner(SigningAlgorithm);
+  signer := TSignerUtilities.GetSigner(SigningAlgorithmECDSA);
 
   Writeln('Signer Name is: ' + signer.AlgorithmName + sLineBreak);
 
@@ -146,6 +149,75 @@ begin
   signer.Init(true, privParams);
 
   &message := TEncoding.UTF8.GetBytes('PascalECDSA');
+
+  signer.BlockUpdate(&message, 0, System.Length(&message));
+
+  sigBytes := signer.GenerateSignature();
+
+  Writeln('Generated Signature is: ' + BytesToHexString(sigBytes) + sLineBreak);
+
+  // verify
+
+  signer.Init(false, pubParams);
+
+  signer.BlockUpdate(&message, 0, System.Length(&message));
+
+  if (not signer.VerifySignature(sigBytes)) then
+  begin
+    Writeln(pubParams.AlgorithmName + ' verification failed' + sLineBreak);
+  end
+  else
+  begin
+    Writeln(pubParams.AlgorithmName + ' verification passed' + sLineBreak);
+  end;
+
+end;
+
+class procedure TUsageExamples.GenerateKeyPairAndSignECSchnorr;
+var
+  domain: IECDomainParameters;
+  generator: IECKeyPairGenerator;
+  keygenParams: IECKeyGenerationParameters;
+  keypair: IAsymmetricCipherKeyPair;
+  privParams: IECPrivateKeyParameters;
+  pubParams: IECPublicKeyParameters;
+  signer: ISigner;
+  &message, sigBytes: TBytes;
+const
+  MethodName = 'GenerateKeyPairAndSignECSchnorr';
+begin
+
+  Writeln('MethodName is: ' + MethodName + sLineBreak);
+
+  domain := TECDomainParameters.Create(FCurve.Curve, FCurve.G, FCurve.N,
+    FCurve.H, FCurve.GetSeed);
+  generator := TECKeyPairGenerator.Create('ECSCHNORR');
+  keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
+  generator.Init(keygenParams);
+
+  keypair := generator.GenerateKeyPair();
+  privParams := keypair.Private as IECPrivateKeyParameters; // for signing
+  pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
+
+  Writeln('Algorithm Name is: ' + pubParams.AlgorithmName + sLineBreak);
+
+  Writeln('Public Key Normalized XCoord is: ' +
+    pubParams.Q.Normalize.AffineXCoord.ToBigInteger.ToString(16) + sLineBreak);
+  Writeln('Public Key Normalized YCoord is: ' +
+    pubParams.Q.Normalize.AffineYCoord.ToBigInteger.ToString(16) + sLineBreak);
+
+  Writeln('Private Key D Parameter is: ' + privParams.D.ToString(16) +
+    sLineBreak);
+
+  signer := TSignerUtilities.GetSigner(SigningAlgorithmECSCHNORR);
+
+  Writeln('Signer Name is: ' + signer.AlgorithmName + sLineBreak);
+
+  // sign
+
+  signer.Init(true, privParams);
+
+  &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
 
   signer.BlockUpdate(&message, 0, System.Length(&message));
 

@@ -1977,22 +1977,22 @@ begin
 
         V := V1.Subtract(V2);
 
-        // Check if b :=:= this or b :=:= -this
+        // Check if b = this or b = -this
         if (V.IsZero) then
         begin
           if (U.IsZero) then
           begin
-            // this :=:= b, i.e. this must be doubled
+            // this = b, i.e. this must be doubled
             result := Twice();
             Exit;
           end;
 
-          // this :=:= -b, i.e. the result is the point at infinity
+          // this = -b, i.e. the result is the point at infinity
           result := ecCurve.Infinity;
           Exit;
         end;
 
-        // TODO Optimize for when w :=:= 1
+        // TODO Optimize for when w = 1
         if Z1IsOne then
         begin
           W := Z2;

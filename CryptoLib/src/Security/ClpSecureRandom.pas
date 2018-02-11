@@ -335,7 +335,8 @@ var
   upper, digestName: String;
   prng: IDigestRandomGenerator;
 begin
-  upper := AnsiUpperCase(algorithm);
+  upper := UpperCase(algorithm);
+  // should use "EndsStr" here but it seems that is missing in Lazarus/FPC RTL
   if AnsiEndsStr('PRNG', upper) then
   begin
     digestName := System.Copy(upper, 1, System.length(upper) -

@@ -19,13 +19,13 @@
         </Optimizations>
       </CodeGeneration>
     </CompilerOptions>
-    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying ECDSA Signatures using various curves and hashes."/>
+    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying ECDSA and ECShnorr Signatures using various curves and hashes."/>
     <License Value="MIT License                          
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring the development of this library "/>
-    <Version Major="1" Minor="1"/>
-    <Files Count="279">
+    <Version Major="1" Minor="2"/>
+    <Files Count="281">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1142,6 +1142,14 @@ Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring the developmen
         <Filename Value="..\..\Asn1\ClpDefiniteLengthInputStream.pas"/>
         <UnitName Value="ClpDefiniteLengthInputStream"/>
       </Item279>
+      <Item280>
+        <Filename Value="..\..\Crypto\Signers\ClpECSchnorrSigner.pas"/>
+        <UnitName Value="ClpECSchnorrSigner"/>
+      </Item280>
+      <Item281>
+        <Filename Value="..\..\Interfaces\ClpIECSchnorrSigner.pas"/>
+        <UnitName Value="ClpIECSchnorrSigner"/>
+      </Item281>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

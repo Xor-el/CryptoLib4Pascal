@@ -389,7 +389,7 @@ var
   ar: TCryptoLibStringArray;
 begin
 
-  hex := AnsiUpperCase(TBitConverter.ToString(a_in));
+  hex := UpperCase(TBitConverter.ToString(a_in));
 
   if System.length(a_in) = 1 then
   begin
@@ -408,7 +408,7 @@ begin
 {$IFDEF DEBUG}
     Check(a_in, 1, 4);
 {$ENDIF DEBUG}
-    workstring := AnsiUpperCase(TBitConverter.ToString(a_in));
+    workstring := UpperCase(TBitConverter.ToString(a_in));
 
     ar := TConverters.SplitString(workstring, '-');
     hex := '';
