@@ -2651,7 +2651,7 @@ begin
       sl.Add(S);
       System.Dec(I);
     end;
-    Result := sl.ToString();
+    Result := sl.Text;
   finally
     sl.Free;
   end;
