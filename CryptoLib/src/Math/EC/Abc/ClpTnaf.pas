@@ -331,7 +331,7 @@ var
   _k: Int32;
   ns, gs, hs, js, gsPlusJs, ls: TBigInteger;
 begin
-  _k := ((m + 5) div 2) + c;
+  _k := ((m + 5) shr 1) + c;
   ns := k.ShiftRight(m - _k - 2 + a);
 
   gs := s.Multiply(ns);

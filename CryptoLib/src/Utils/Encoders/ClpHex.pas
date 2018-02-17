@@ -22,8 +22,7 @@ unit ClpHex;
 interface
 
 uses
-  Classes,
-  ClpConverters,
+  SbpBase16,
   ClpCryptoLibTypes;
 
 type
@@ -40,13 +39,12 @@ implementation
 
 class function THex.Decode(const Hex: String): TCryptoLibByteArray;
 begin
-  System.SetLength(result, System.length(Hex) shr 1);
-  HexToBin(PChar(Hex), @result[0], System.length(result));
+  result := TBase16.Decode(Hex);
 end;
 
 class function THex.Encode(Input: TCryptoLibByteArray): String;
 begin
-  result := TConverters.ConvertBytesToHexString(Input, False);
+  result := TBase16.EncodeUpper(Input);
 end;
 
 end.

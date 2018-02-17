@@ -148,7 +148,7 @@ begin
     Exit;
   end;
 
-  if (min.BitLength > (max.BitLength div 2)) then
+  if (min.BitLength > (max.BitLength shr 1)) then
   begin
     Result := CreateRandomInRange(TBigInteger.Zero, max.Subtract(min),
       random).Add(min);

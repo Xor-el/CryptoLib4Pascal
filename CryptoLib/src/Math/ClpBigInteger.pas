@@ -3355,7 +3355,7 @@ begin
   System.Assert(bits > 2);
   System.Assert(TestBit(0));
 {$ENDIF DEBUG}
-  iterations := ((certainty - 1) div 2) + 1;
+  iterations := ((certainty - 1) shr 1) + 1;
   if (randomlySelected) then
   begin
     if bits >= 1024 then

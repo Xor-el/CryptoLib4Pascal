@@ -123,7 +123,7 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@SEmptyInput);
   end;
 
-  System.SetLength(cs, System.Length(astr) div 2);
+  System.SetLength(cs, System.Length(astr) shr 1);
 
   i := 0;
 
