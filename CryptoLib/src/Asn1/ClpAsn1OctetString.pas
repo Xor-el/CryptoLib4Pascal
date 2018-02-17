@@ -32,7 +32,7 @@ uses
   ClpIAsn1TaggedObject,
   ClpAsn1Encodable,
   ClpAsn1Sequence,
-  ClpConverters,
+  ClpHex,
   ClpIDerOctetString,
   ClpIAsn1OctetStringParser;
 
@@ -213,7 +213,7 @@ end;
 
 function TAsn1OctetString.ToString: String;
 begin
-  result := '#' + TConverters.ConvertBytesToHexString(Str, false);
+  result := '#' + THex.Encode(Str);
 end;
 
 end.
