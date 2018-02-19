@@ -120,7 +120,7 @@ begin
       c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
       point := c.ImportPoint(x9.G);
       params := TX9ECParameters.Create(c, point, x9.N, x9.H);
-      // x9s.Add(params);
+      x9s.Add(params);
     end;
   end;
 end;
