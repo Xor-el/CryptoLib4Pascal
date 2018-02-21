@@ -62,11 +62,11 @@ end;
 class function TRandomNumberGenerator.CreateRNG(const rngName: String)
   : IRandomNumberGenerator;
 begin
-  if AnsiCompareText(rngName, 'OSRandomNumberGenerator') = 0 then
+  if CompareText(rngName, 'OSRandomNumberGenerator') = 0 then
   begin
     result := TOSRandomNumberGenerator.Create();
   end
-  else if AnsiCompareText(rngName, 'PCGRandomNumberGenerator') = 0 then
+  else if CompareText(rngName, 'PCGRandomNumberGenerator') = 0 then
   begin
     result := TPCGRandomNumberGenerator.Create();
   end

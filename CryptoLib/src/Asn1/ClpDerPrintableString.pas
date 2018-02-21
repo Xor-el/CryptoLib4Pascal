@@ -166,7 +166,7 @@ begin
       continue;
     end;
 
-    case AnsiIndexStr(ch, [''' ''', '\', '(', ')', '+', '-', '.', ':', '=', '?',
+    case IndexStr(ch, [''' ''', '\', '(', ')', '+', '-', '.', ':', '=', '?',
       '/', ',']) of
       0 .. 11:
         begin

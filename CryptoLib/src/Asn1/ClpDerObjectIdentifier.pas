@@ -204,6 +204,7 @@ begin
   stemId := stem.ID;
   result := (System.Length(LocalId) > System.Length(stemId)) and
     (LocalId[System.Length(stemId) + 1] = '.') and
+  // should use "StartsStr" here but it seems that is missing in Lazarus/FPC RTL
     (AnsiStartsStr(stemId, LocalId));
 end;
 

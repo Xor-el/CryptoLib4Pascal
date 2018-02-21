@@ -4315,7 +4315,7 @@ begin
 
     end;
 
-    Result := AnsiLowerCase(sl.Text);
+    Result := LowerCase(sl.Text);
 
   finally
     sl.Free;
