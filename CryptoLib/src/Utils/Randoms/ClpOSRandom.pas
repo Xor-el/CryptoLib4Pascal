@@ -40,7 +40,7 @@ resourcestring
   SUnixRandomUnavailable =
     '/dev/urandom or /dev/random is not available on this OS.';
   SUnixRandomReadError =
-    '/dev/urandom or /dev/random found but an error occured while reading it.';
+    '/dev/urandom or /dev/random found but an error occured while reading it (probably due to insufficient block of data to be read).';
 {$ENDIF MSWINDOWS}
 
 type
@@ -192,7 +192,7 @@ begin
   if FunixCryptOk = 1 then
   begin
     try
-      FStream.Read(data[0], count);
+      FStream.ReadBuffer(data[0], count);
     except
       raise EAccessCryptoLibException.CreateRes(@SUnixRandomReadError);
     end;
