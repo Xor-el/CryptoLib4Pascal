@@ -42,9 +42,12 @@ type
     function GetSize: Int64; override;
 
     function QueryInterface({$IFDEF FPC}constref {$ELSE}const
-{$ENDIF FPC} IID: TGUID; out Obj): HResult; stdcall;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
+{$ENDIF FPC} IID: TGUID; out Obj): HResult; {$IFDEF MSWINDOWS} stdcall
+    {$ELSE} cdecl {$ENDIF MSWINDOWS};
+    function _AddRef: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
+    {$ENDIF MSWINDOWS};
+    function _Release: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
+    {$ENDIF MSWINDOWS};
 
   public
     constructor Create(s: TStream);

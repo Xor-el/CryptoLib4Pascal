@@ -65,6 +65,8 @@ type
 
     class function NoZeroes(data: TCryptoLibByteArray): Boolean; static; inline;
 
+{$IFDEF MSWINDOWS}
+
   type
     TWCCryptAcquireContextA = function(phProv: Pointer; pszContainer: LPCSTR;
       pszProvider: LPCSTR; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
@@ -72,6 +74,7 @@ type
       : BOOL; stdcall;
     TWCCryptGenRandom = function(hProv: ULONG; dwLen: DWORD; pbBuffer: PBYTE)
       : BOOL; stdcall;
+{$ENDIF MSWINDOWS}
 
   class var
 {$IFDEF MSWINDOWS}
@@ -139,9 +142,9 @@ begin
   end;
 {$ELSE}
   RandGen := '/dev/urandom';
-  if not FileExists(RandGen, True) then
+  if not FileExists(RandGen) then
   begin
-    if not FileExists('/dev/random', True) then
+    if not FileExists('/dev/random') then
     begin
       FunixCryptOk := -1;
       Exit;
