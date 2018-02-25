@@ -749,7 +749,7 @@ function TBigInteger.QuickPow2Check: Boolean;
 begin
 
   // Result := (Fsign > 0) and (FnBits = 1);
-  Result := (Fsign > 0) and (BitCount = 1);
+  Result := (Fsign > 0) and (BitCount = 1); // review
 end;
 
 function TBigInteger.Negate: TBigInteger;
@@ -1785,41 +1785,41 @@ function TBigInteger.GetBitCount: Int32;
 var
   sum, i: Int32;
 begin
-  // if (FnBits = -1) then
-  // begin
-  if (Fsign < 0) then
+  if (FnBits = -1) then
   begin
-    // TODO Optimise this case
-    FnBits := &Not().BitCount;
-  end
-  else
-  begin
-    sum := 0;
-    for i := 0 to System.Pred(System.length(Fmagnitude)) do
+    if (Fsign < 0) then
     begin
-      sum := sum + BitCnt(Fmagnitude[i]);
+      // TODO Optimise this case
+      FnBits := &Not().BitCount;
+    end
+    else
+    begin
+      sum := 0;
+      for i := 0 to System.Pred(System.length(Fmagnitude)) do
+      begin
+        sum := sum + BitCnt(Fmagnitude[i]);
+      end;
+      FnBits := sum;
     end;
-    FnBits := sum;
   end;
-  // end;
 
   Result := FnBits;
 end;
 
 function TBigInteger.GetBitLength: Int32;
 begin
-  // if (FnBitLength = -1) then
-  // begin
-  if Fsign = 0 then
+  if (FnBitLength = -1) then
   begin
-    FnBitLength := 0;
-  end
-  else
-  begin
-    FnBitLength := CalcBitLength(Fsign, 0, Fmagnitude);
-  end;
+    if Fsign = 0 then
+    begin
+      FnBitLength := 0;
+    end
+    else
+    begin
+      FnBitLength := CalcBitLength(Fsign, 0, Fmagnitude);
+    end;
 
-  // end;
+  end;
   Result := FnBitLength;
 end;
 
@@ -1984,11 +1984,11 @@ function TBigInteger.GetMQuote: Int32;
 var
   d: Int32;
 begin
-  // if (FmQuote <> 0) then
-  // begin
-  // Result := FmQuote; // already calculated
-  // Exit;
-  // end;
+  if (FmQuote <> 0) then
+  begin
+    Result := FmQuote; // already calculated
+    Exit;
+  end;
 
 {$IFDEF DEBUG}
   System.Assert(Fsign > 0);
