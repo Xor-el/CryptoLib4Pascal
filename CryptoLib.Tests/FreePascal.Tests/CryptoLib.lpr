@@ -20,6 +20,7 @@ uses
   ECSchnorrTests,
   SignerUtilitiesTests,
   SecureRandomTests,
+  DigestRandomNumberTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

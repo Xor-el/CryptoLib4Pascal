@@ -314,7 +314,8 @@ uses
   ClpSetWeakRef in '..\..\CryptoLib\src\Utils\ClpSetWeakRef.pas',
   ClpECSchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSigner.pas',
   ClpIECSchnorrSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrSigner.pas',
-  ECSchnorrTests in '..\src\Others\ECSchnorrTests.pas';
+  ECSchnorrTests in '..\src\Others\ECSchnorrTests.pas',
+  DigestRandomNumberTests in '..\src\Crypto\DigestRandomNumberTests.pas';
 
 begin
 
