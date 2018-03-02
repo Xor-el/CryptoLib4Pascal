@@ -334,13 +334,21 @@ class function TSecureRandom.GetInstance(const algorithm: String;
 var
   upper, digestName: String;
   prng: IDigestRandomGenerator;
+  LowPoint, HighPoint: Int32;
 begin
   upper := UpperCase(algorithm);
+{$IFDEF DELPHIXE3_UP}
+  LowPoint := System.Low(upper);
+  HighPoint := System.High(upper);
+{$ELSE}
+  LowPoint := 1;
+  HighPoint := System.length(upper);
+{$ENDIF DELPHIXE3_UP}
   // should use "EndsStr" here but it seems that is missing in Lazarus/FPC RTL
   if AnsiEndsStr('PRNG', upper) then
   begin
-    digestName := System.Copy(upper, 1, System.length(upper) -
-      System.length('PRNG'));
+    digestName := System.Copy(upper, LowPoint,
+      HighPoint - System.length('PRNG'));
 
     prng := CreatePrng(digestName, autoSeed);
     if (prng <> Nil) then
