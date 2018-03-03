@@ -29,7 +29,6 @@ uses
   ClpAsn1Tags,
   ClpAsn1Generator,
   ClpBerOutputStream,
-  ClpIBerOutputStream,
   ClpIBerGenerator;
 
 type

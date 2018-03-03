@@ -25,7 +25,6 @@ uses
   SyncObjs,
   SysUtils,
   Generics.Collections,
-  ClpSetWeakRef,
   ClpECPoint,
   ClpCryptoLibTypes,
   ClpBigInteger,

@@ -30,17 +30,14 @@ type
 
   public
     class function Encode(Input: TCryptoLibByteArray): String; static;
-    class function Decode(const Input:
-{$IFDEF FPC}UnicodeString{$ELSE}String{$ENDIF FPC})
-      : TCryptoLibByteArray; static;
+    class function Decode(const Input: String): TCryptoLibByteArray; static;
   end;
 
 implementation
 
 { TBase64 }
 
-class function TBase64.Decode(const Input:
-{$IFDEF FPC}UnicodeString{$ELSE}String{$ENDIF FPC}): TCryptoLibByteArray;
+class function TBase64.Decode(const Input: String): TCryptoLibByteArray;
 begin
   result := SbpBase64.TBase64.Default.Decode(Input);
 end;

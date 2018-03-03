@@ -23,7 +23,6 @@ interface
 
 uses
   SysUtils,
-  Math,
   Generics.Collections,
   HlpIHash,
   ClpISigner,
@@ -31,10 +30,8 @@ uses
   ClpISecureRandom,
   ClpICipherParameters,
   ClpIECSchnorrSigner,
-  ClpIAsymmetricKeyParameter,
   ClpIParametersWithRandom,
   ClpDerSequence,
-  ClpIDerSequence,
   ClpDerInteger,
   ClpIDerInteger,
   ClpAsn1Object,
@@ -300,7 +297,6 @@ function TECSchnorrSigner.Do_Sign(const pv_key: IECPrivateKeyParameters;
 var
   curve: IECCurve;
   n, r, s, h, tempK: TBigInteger;
-  size: Int32;
   G, q: IECPoint;
   xQ, yQ, rQ, tempR, tempH: TCryptoLibByteArray;
 begin
@@ -312,7 +308,6 @@ begin
   curve := pv_key.parameters.curve;
   n := curve.order;
   G := pv_key.parameters.G;
-  size := TBits.Asr32(curve.FieldSize, 3);
 
   q := G.Multiply(k);
 

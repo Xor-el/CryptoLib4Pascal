@@ -25,7 +25,7 @@ uses
   Generics.Collections,
   ClpCryptoLibTypes,
   // ClpX962NamedCurves,
-  ClpECGost3410NamedCurves,
+  // ClpECGost3410NamedCurves,
   ClpX9ECParameters,
   ClpSecNamedCurves,
   ClpIECDomainParameters,

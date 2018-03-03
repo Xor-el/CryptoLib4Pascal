@@ -616,7 +616,6 @@ var
   i: UInt32;
   primeList: TCryptoLibInt32Array;
   product, j: Int32;
-  b: TBigInteger;
 begin
 
   System.SetLength(FZeroEncoding, 0);
@@ -2010,18 +2009,18 @@ end;
 
 function TBigInteger.IsEqualMagnitude(const x: TBigInteger): Boolean;
 var
-  xMag: TCryptoLibInt32Array;
   i: Integer;
+  xMag: TCryptoLibInt32Array;
 begin
   xMag := x.Fmagnitude;
-  if (System.length(Fmagnitude) <> System.length(x.Fmagnitude)) then
+  if (System.length(Fmagnitude) <> System.length(xMag)) then
   begin
     Result := false;
     Exit;
   end;
   for i := 0 to System.Pred(System.length(Fmagnitude)) do
   begin
-    if (Fmagnitude[i] <> x.Fmagnitude[i]) then
+    if (Fmagnitude[i] <> xMag[i]) then
     begin
       Result := false;
       Exit;

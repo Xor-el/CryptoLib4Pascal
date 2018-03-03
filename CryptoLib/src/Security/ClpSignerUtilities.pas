@@ -29,7 +29,6 @@ uses
   HlpIHash,
   ClpDsaDigestSigner,
   ClpECSchnorrSigner,
-  ClpIECSchnorrSigner,
   ClpX9ObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
