@@ -25,6 +25,9 @@ uses
   Classes,
   Generics.Collections,
   ClpCryptoLibTypes,
+{$IFDEF DELPHI}
+  ClpIDerNull,
+{$ENDIF DELPHI}
   ClpAsn1Tags,
   ClpDefiniteLengthInputStream,
   ClpDerOctetString,

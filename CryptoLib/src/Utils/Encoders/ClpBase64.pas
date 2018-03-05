@@ -23,6 +23,9 @@ interface
 
 uses
   SbpBase64,
+{$IFDEF DELPHI}
+  SbpIBase64,
+{$ENDIF DELPHI}
   ClpCryptoLibTypes;
 
 type

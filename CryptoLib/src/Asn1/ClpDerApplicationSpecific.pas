@@ -329,7 +329,7 @@ begin
   //
   if (tagNo = $1F) then
   begin
-    tagNo := 0;
+    // tagNo := 0;
 
     b := input[index] and $FF;
     System.Inc(index);
@@ -343,13 +343,13 @@ begin
 
     while ((b >= 0) and ((b and $80) <> 0)) do
     begin
-      tagNo := tagNo or ((b and $7F));
-      tagNo := tagNo shl 7;
+      // tagNo := tagNo or ((b and $7F));
+      // tagNo := tagNo shl 7;
       b := input[index] and $FF;
       System.Inc(index);
     end;
 
-    tagNo := tagNo or (b and $7F);
+    // tagNo := tagNo or (b and $7F);
   end;
 
   System.SetLength(tmp, System.Length(input) - index + 1);

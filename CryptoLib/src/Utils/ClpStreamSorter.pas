@@ -33,8 +33,8 @@ type
   public
 
     class function Read(input: TStream; var buffer: TCryptoLibByteArray;
-      offset, count: Int32): Int32; static; inline;
-    class function ReadByte(input: TStream): Int32; static; inline;
+      offset, count: Int32): Int32; static;
+    class function ReadByte(input: TStream): Int32; static;
   end;
 
 implementation

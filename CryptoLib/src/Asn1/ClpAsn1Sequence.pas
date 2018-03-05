@@ -27,6 +27,9 @@ uses
   ClpCryptoLibTypes,
   ClpCollectionUtilities,
   ClpDerNull,
+{$IFDEF DELPHI}
+  ClpIDerNull,
+{$ENDIF DELPHI}
   ClpIBerTaggedObject,
   ClpAsn1TaggedObject,
   ClpIAsn1TaggedObject,

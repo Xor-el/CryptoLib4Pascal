@@ -25,6 +25,10 @@ uses
   SysUtils,
   Generics.Collections,
   ClpCryptoLibTypes,
+{$IFDEF DELPHI}
+  ClpAsn1TaggedObject,
+  ClpIBerSequence,
+{$ENDIF DELPHI}
   ClpAsn1Tags,
   ClpBerSequence,
   ClpIAsn1OctetString,

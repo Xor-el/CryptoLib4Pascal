@@ -41,8 +41,8 @@ type
   strict private
 
     class function GetNames: TCryptoLibStringArray; static;
-    class function FromDomainParameters(const dp: IECDomainParameters)
-      : IX9ECParameters; static; inline;
+    // class function FromDomainParameters(const dp: IECDomainParameters)
+    // : IX9ECParameters; static; inline;
 
   public
     // /**
@@ -87,19 +87,19 @@ implementation
 
 { TECNamedCurveTable }
 
-class function TECNamedCurveTable.FromDomainParameters
-  (const dp: IECDomainParameters): IX9ECParameters;
-begin
-  if dp = Nil then
-  begin
-    result := Nil;
-  end
-  else
-  begin
-    result := TX9ECParameters.Create(dp.Curve, dp.G, dp.N, dp.H, dp.GetSeed())
-  end;
-
-end;
+// class function TECNamedCurveTable.FromDomainParameters
+// (const dp: IECDomainParameters): IX9ECParameters;
+// begin
+// if dp = Nil then
+// begin
+// result := Nil;
+// end
+// else
+// begin
+// result := TX9ECParameters.Create(dp.Curve, dp.G, dp.N, dp.H, dp.GetSeed())
+// end;
+//
+// end;
 
 class function TECNamedCurveTable.GetByName(const name: String)
   : IX9ECParameters;

@@ -23,6 +23,9 @@ interface
 
 uses
   ClpCryptoLibTypes,
+{$IFDEF DELPHI}
+  ClpBitConverter,
+{$ENDIF DELPHI}
   ClpNat,
   ClpConverters,
   ClpSecureRandom,

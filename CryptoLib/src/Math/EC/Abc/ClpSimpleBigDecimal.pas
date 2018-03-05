@@ -57,7 +57,7 @@ type
     function GetInt64Value: Int64; inline;
     function GetScale: Int32; inline;
 
-    constructor Create(const limBigDec: TSimpleBigDecimal); overload;
+    // constructor Create(const limBigDec: TSimpleBigDecimal); overload;
 
     procedure CheckScale(const b: TSimpleBigDecimal); inline;
 
@@ -178,11 +178,11 @@ begin
   Result := FbigInt.CompareTo(val.FbigInt);
 end;
 
-constructor TSimpleBigDecimal.Create(const limBigDec: TSimpleBigDecimal);
-begin
-  FbigInt := limBigDec.FbigInt;
-  Fscale := limBigDec.Fscale;
-end;
+// constructor TSimpleBigDecimal.Create(const limBigDec: TSimpleBigDecimal);
+// begin
+// FbigInt := limBigDec.FbigInt;
+// Fscale := limBigDec.Fscale;
+// end;
 
 constructor TSimpleBigDecimal.Create(const bigInt: TBigInteger; scale: Int32);
 begin

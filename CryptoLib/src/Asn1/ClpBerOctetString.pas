@@ -156,7 +156,6 @@ function TBerOctetString.GenerateOcts: TList<IDerOctetString>;
 var
   i, endPoint: Int32;
   nStr: TCryptoLibByteArray;
-  temp: IDerOctetString;
 begin
   result := TList<IDerOctetString>.Create();
   i := 0;

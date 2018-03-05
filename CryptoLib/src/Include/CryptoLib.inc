@@ -65,9 +65,6 @@
 // It does not affect the binary size or generated code
 {$DEFINITIONINFO ON}
 
-// Disable Hints.
-{$HINTS OFF}
-
 // Disable Overflow and RangeChecks.
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}

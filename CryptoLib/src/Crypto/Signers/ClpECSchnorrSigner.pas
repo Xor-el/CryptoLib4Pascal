@@ -423,7 +423,7 @@ var
   xQ, yQ, tempV, tempH, rb: TCryptoLibByteArray;
   R_and_S: TCryptoLibGenericArray<TBigInteger>;
 begin
-  Result := False;
+
   if (pu_key.parameters.curve = Nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SCurveNil)
