@@ -37,21 +37,6 @@ type
 
     property Parameters: IAsn1Object read GetParameters;
 
-    /// <summary>
-    /// <para>
-    /// Produce a Der encoding of the following structure. <br />
-    /// &lt;pre&gt;
-    /// </para>
-    /// <para>
-    /// FieldID ::= Sequence { fieldType FIELD-ID.&amp;amp;id({IOSet}),
-    /// parameters FIELD-ID.&amp;amp;Type({IOSet}{&amp;#64;fieldType})} <br />
-    /// </para>
-    /// <para>
-    /// &lt;/pre&gt; <br />
-    /// </para>
-    /// </summary>
-    function ToAsn1Object(): IAsn1Object;
-
   end;
 
 implementation

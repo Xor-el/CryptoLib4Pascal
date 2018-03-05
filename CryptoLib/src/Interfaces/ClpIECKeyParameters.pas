@@ -39,9 +39,6 @@ type
     property PublicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
     property Parameters: IECDomainParameters read GetParameters;
 
-    function Equals(const other: IECKeyParameters): Boolean;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
   end;
 
 implementation

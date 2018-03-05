@@ -30,11 +30,6 @@ type
 
     function GetIsTrue: Boolean;
 
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-    function Asn1GetHashCode(): Int32;
-
-    procedure Encode(const derOut: IDerOutputStream);
-
     function ToString(): String;
 
     property IsTrue: Boolean read GetIsTrue;

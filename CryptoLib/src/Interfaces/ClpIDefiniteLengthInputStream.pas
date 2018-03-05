@@ -30,17 +30,11 @@ type
 
     ['{3828572B-FB58-47A3-826B-6A6AEEBF59E4}']
 
-    function GetRemaining: Int32;
-
     function ReadByte(): Int32;
-
-    function Read(buf: TCryptoLibByteArray; off, len: Int32): Int32;
 
     procedure ReadAllIntoByteArray(buf: TCryptoLibByteArray);
 
     function ToArray: TCryptoLibByteArray;
-
-    property Remaining: Int32 read GetRemaining;
 
   end;
 

@@ -37,7 +37,6 @@ uses
   ClpIAsn1Sequence,
   ClpIDerInteger,
   ClpX9ECPoint,
-  ClpIAsn1OctetString,
   ClpECAlgorithms,
   ClpX9Curve,
   ClpIX9Curve,

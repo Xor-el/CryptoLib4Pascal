@@ -22,7 +22,6 @@ unit ClpIGlvMultiplier;
 interface
 
 uses
-  ClpIECInterface,
   ClpBigInteger,
   ClpIAbstractECMultiplier;
 
@@ -30,8 +29,6 @@ type
   IGlvMultiplier = interface(IAbstractECMultiplier)
     ['{F54D54F5-F544-421B-89FC-1D8058FB8F33}']
 
-    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
-      : IECPoint;
   end;
 
 implementation

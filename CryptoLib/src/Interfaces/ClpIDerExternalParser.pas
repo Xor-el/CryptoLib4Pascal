@@ -28,7 +28,6 @@ type
   IDerExternalParser = interface(IAsn1Encodable)
     ['{6BF2AB32-0307-4E49-BC4C-844ADCD884E0}']
     function ReadObject(): IAsn1Convertible;
-    function ToAsn1Object(): IAsn1Object;
   end;
 
 implementation

@@ -32,10 +32,6 @@ type
 
     function GetD: TBigInteger;
     property D: TBigInteger read GetD;
-
-    function Equals(const other: IECPrivateKeyParameters): Boolean;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
   end;
 
 implementation

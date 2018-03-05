@@ -37,30 +37,25 @@ type
     function GetEncoding: Int32;
     function GetExternalContent: IAsn1Object;
     function GetIndirectReference: IDerInteger;
-    procedure setDataValueDescriptor(const Value: IAsn1Object);
-    procedure setDirectReference(const Value: IDerObjectIdentifier);
-    procedure setEncoding(const Value: Int32);
-    procedure setExternalContent(const Value: IAsn1Object);
-    procedure setIndirectReference(const Value: IDerInteger);
-
-    function Asn1GetHashCode(): Int32;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-
-    procedure Encode(const derOut: IDerOutputStream);
+    procedure SetDataValueDescriptor(const Value: IAsn1Object);
+    procedure SetDirectReference(const Value: IDerObjectIdentifier);
+    procedure SetEncoding(const Value: Int32);
+    procedure SetExternalContent(const Value: IAsn1Object);
+    procedure SetIndirectReference(const Value: IDerInteger);
 
     property dataValueDescriptor: IAsn1Object read GetDataValueDescriptor
-      write setDataValueDescriptor;
+      write SetDataValueDescriptor;
 
     property directReference: IDerObjectIdentifier read GetDirectReference
-      write setDirectReference;
+      write SetDirectReference;
 
-    property encoding: Int32 read GetEncoding write setEncoding;
+    property encoding: Int32 read GetEncoding write SetEncoding;
 
     property ExternalContent: IAsn1Object read GetExternalContent
-      write setExternalContent;
+      write SetExternalContent;
 
     property indirectReference: IDerInteger read GetIndirectReference
-      write setIndirectReference;
+      write SetIndirectReference;
 
   end;
 

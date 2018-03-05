@@ -23,21 +23,12 @@ interface
 
 uses
   ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpISecureRandom,
   ClpIDsaKCalculator;
 
 type
   IRandomDsaKCalculator = interface(IDsaKCalculator)
 
     ['{79C48638-0015-4D65-901B-638D9F4154E4}']
-
-    function GetIsDeterministic: Boolean;
-
-    property IsDeterministic: Boolean read GetIsDeterministic;
-    procedure Init(const n: TBigInteger; const random: ISecureRandom); overload;
-    procedure Init(n, d: TBigInteger; &message: TCryptoLibByteArray); overload;
-    function NextK(): TBigInteger;
 
   end;
 

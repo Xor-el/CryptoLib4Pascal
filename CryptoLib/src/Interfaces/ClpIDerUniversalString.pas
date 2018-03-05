@@ -22,7 +22,6 @@ unit ClpIDerUniversalString;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIDerStringBase;
 
@@ -33,15 +32,9 @@ type
 
     function GetStr: TCryptoLibByteArray;
 
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-
     property Str: TCryptoLibByteArray read GetStr;
 
-    function GetString(): String;
-
     function GetOctets(): TCryptoLibByteArray;
-
-    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

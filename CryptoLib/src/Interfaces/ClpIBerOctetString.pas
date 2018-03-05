@@ -23,8 +23,6 @@ interface
 
 uses
   Generics.Collections,
-  ClpCryptoLibTypes,
-  ClpIProxiedInterface,
   ClpIDerOctetString;
 
 type
@@ -34,15 +32,11 @@ type
 
     function GenerateOcts(): TList<IDerOctetString>;
 
-    function GetOctets(): TCryptoLibByteArray;
-
     /// <summary>
     /// return the DER octets that make up this string.
     /// </summary>
 
     function GetEnumerator: TEnumerator<IDerOctetString>;
-
-    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

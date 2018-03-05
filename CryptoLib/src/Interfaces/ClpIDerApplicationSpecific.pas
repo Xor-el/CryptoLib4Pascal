@@ -32,17 +32,12 @@ type
     function GetApplicationTag: Int32;
     function GetLengthOfHeader(data: TCryptoLibByteArray): Int32;
 
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-    function Asn1GetHashCode(): Int32;
-
     function isConstructed(): Boolean;
     function GetContents(): TCryptoLibByteArray;
 
     function GetObject(): IAsn1Object; overload;
 
     function GetObject(derTagNo: Int32): IAsn1Object; overload;
-
-    procedure Encode(const derOut: IDerOutputStream);
 
     property ApplicationTag: Int32 read GetApplicationTag;
 

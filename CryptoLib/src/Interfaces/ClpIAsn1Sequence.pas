@@ -36,8 +36,6 @@ type
     function GetSelf(Index: Integer): IAsn1Encodable;
     function GetCurrent(e: TEnumerator<IAsn1Encodable>): IAsn1Encodable;
 
-    function Asn1GetHashCode(): Int32;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
     procedure AddObject(const obj: IAsn1Encodable);
 
     function ToString(): String;
@@ -55,9 +53,6 @@ type
   IAsn1SequenceParserImpl = interface(IAsn1SequenceParser)
 
     ['{B986EDD8-A7F3-4E9C-9D5B-2FF9120D9A91}']
-
-    function ReadObject(): IAsn1Convertible;
-    function ToAsn1Object(): IAsn1Object;
 
   end;
 

@@ -54,9 +54,6 @@ type
 
     ['{23EAFC37-244E-42D7-89A8-1740B12656C1}']
 
-    function ReadObject(): IAsn1Convertible;
-    function ToAsn1Object(): IAsn1Object;
-
   end;
 
 implementation

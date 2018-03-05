@@ -23,23 +23,12 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECInterface,
   ClpIAbstractECMultiplier;
 
 type
   IWNafL2RMultiplier = interface(IAbstractECMultiplier)
 
     ['{E2A5E4EF-C092-4F83-ACCF-0FC8731FB274}']
-
-    // /**
-    // * Multiplies <code>this</code> by an integer <code>k</code> using the
-    // * Window NAF method.
-    // * @param k The integer by which <code>this</code> is multiplied.
-    // * @return A new <code>ECPoint</code> which equals <code>this</code>
-    // * multiplied by <code>k</code>.
-    // */
-    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
-      : IECPoint;
 
     /// <summary>
     /// Determine window width to use for a scalar multiplication of the

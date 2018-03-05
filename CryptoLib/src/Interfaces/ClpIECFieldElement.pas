@@ -82,14 +82,6 @@ type
 
     ['{F5106EAC-DA8F-4815-8403-3D9C5438BF6F}']
 
-    /// <summary>
-    /// return the field name for this field.
-    /// </summary>
-    /// <returns>
-    /// return the string "Fp".
-    /// </returns>
-    function GetFieldName: String;
-    function GetFieldSize: Int32;
     function GetQ: TBigInteger;
 
     function CheckSqrt(const z: IECFieldElement): IECFieldElement;
@@ -105,45 +97,8 @@ type
     function ModReduce(x: TBigInteger): TBigInteger;
     function ModSubtract(const x1, x2: TBigInteger): TBigInteger;
 
-    function ToBigInteger(): TBigInteger;
-
-    property FieldName: string read GetFieldName;
-    property FieldSize: Int32 read GetFieldSize;
-
     property Q: TBigInteger read GetQ;
 
-    function Add(const b: IECFieldElement): IECFieldElement;
-    function AddOne(): IECFieldElement;
-    function Subtract(const b: IECFieldElement): IECFieldElement;
-
-    function Multiply(const b: IECFieldElement): IECFieldElement;
-    function Divide(const b: IECFieldElement): IECFieldElement;
-    function Negate(): IECFieldElement;
-    function Square(): IECFieldElement;
-
-    function Invert(): IECFieldElement;
-
-    /// <summary>
-    /// return a sqrt root - the routine verifies that the calculation
-    /// </summary>
-    /// <returns>
-    /// returns the right value - if none exists it returns null.
-    /// </returns>
-    function Sqrt(): IECFieldElement;
-
-    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
-      : IECFieldElement;
-    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
-      : IECFieldElement;
-
-    function SquareMinusProduct(const x, y: IECFieldElement): IECFieldElement;
-
-    function SquarePlusProduct(const x, y: IECFieldElement): IECFieldElement;
-
-    function Equals(const other: IFpFieldElement): Boolean;
-
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
   end;
 
 type
@@ -166,49 +121,6 @@ type
     function GetK2: Int32;
     function GetK3: Int32;
 
-    function GetFieldName: String;
-    function GetFieldSize: Int32;
-    function GetBitLength: Int32;
-    function GetIsOne: Boolean;
-    function GetIsZero: Boolean;
-
-    function TestBitZero(): Boolean;
-    function ToBigInteger(): TBigInteger;
-
-    function Add(const b: IECFieldElement): IECFieldElement;
-    function AddOne(): IECFieldElement;
-    function Subtract(const b: IECFieldElement): IECFieldElement;
-
-    function Multiply(const b: IECFieldElement): IECFieldElement;
-    function Divide(const b: IECFieldElement): IECFieldElement;
-    function Negate(): IECFieldElement;
-    function Square(): IECFieldElement;
-
-    function Invert(): IECFieldElement;
-
-    /// <summary>
-    /// return a sqrt root - the routine verifies that the calculation
-    /// </summary>
-    /// <returns>
-    /// returns the right value - if none exists it returns null.
-    /// </returns>
-    function Sqrt(): IECFieldElement;
-
-    function MultiplyMinusProduct(const b, x, y: IECFieldElement)
-      : IECFieldElement;
-    function MultiplyPlusProduct(const b, x, y: IECFieldElement)
-      : IECFieldElement;
-
-    function SquareMinusProduct(const x, y: IECFieldElement): IECFieldElement;
-
-    function SquarePlusProduct(const x, y: IECFieldElement): IECFieldElement;
-
-    function SquarePow(pow: Int32): IECFieldElement;
-
-    function Equals(const other: IF2mFieldElement): Boolean;
-
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
     // /**
     // * @return the representation of the field
     // * <code>F<sub>2<sup>m</sup></sub></code>, either of
@@ -254,12 +166,6 @@ type
     /// The <c>LongArray</c> holding the bits.
     /// </summary>
     property x: TLongArray read GetX;
-
-    property FieldName: string read GetFieldName;
-    property FieldSize: Int32 read GetFieldSize;
-    property BitLength: Int32 read GetBitLength;
-    property IsOne: Boolean read GetIsOne;
-    property IsZero: Boolean read GetIsZero;
 
   end;
 

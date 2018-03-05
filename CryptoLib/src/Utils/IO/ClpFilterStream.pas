@@ -30,24 +30,22 @@ uses
 type
   TFilterStream = class(TStream, IFilterStream)
 
-  strict private
-
-    function GetPosition: Int64;
-    procedure SetPosition(const Value: Int64);
-
-  strict protected
+  protected
   var
     Fs: TStream;
 
+    function GetPosition: Int64; {$IFDEF FPC} override; {$ENDIF FPC}
+    procedure SetPosition(const Value: Int64); {$IFDEF FPC} override;
+{$ENDIF FPC}
     function GetSize: Int64; override;
 
     function QueryInterface({$IFDEF FPC}constref {$ELSE}const
 {$ENDIF FPC} IID: TGUID; out Obj): HResult; {$IFDEF MSWINDOWS} stdcall
-    {$ELSE} cdecl {$ENDIF MSWINDOWS};
+{$ELSE} cdecl {$ENDIF MSWINDOWS};
     function _AddRef: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
-    {$ENDIF MSWINDOWS};
+{$ENDIF MSWINDOWS};
     function _Release: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
-    {$ENDIF MSWINDOWS};
+{$ENDIF MSWINDOWS};
 
   public
     constructor Create(s: TStream);

@@ -33,10 +33,6 @@ type
     function GetQ: IECPoint;
 
     property Q: IECPoint read GetQ;
-
-    function Equals(const other: IECPublicKeyParameters): Boolean;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
   end;
 
 implementation

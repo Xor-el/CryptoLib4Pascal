@@ -22,7 +22,6 @@ unit ClpIDerVisibleString;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIDerStringBase;
 
@@ -33,16 +32,9 @@ type
 
     function GetStr: String;
 
-    function Asn1GetHashCode(): Int32;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-
     property Str: String read GetStr;
 
-    function GetString(): String;
-
     function GetOctets(): TCryptoLibByteArray;
-
-    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

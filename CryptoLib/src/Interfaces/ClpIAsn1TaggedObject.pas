@@ -32,10 +32,6 @@ type
     function Getexplicitly: Boolean;
     function Getobj: IAsn1Encodable;
 
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-
-    function Asn1GetHashCode(): Int32;
-
     property tagNo: Int32 read GetTagNo;
     property explicitly: Boolean read Getexplicitly;
     property obj: IAsn1Encodable read Getobj;

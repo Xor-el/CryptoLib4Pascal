@@ -24,7 +24,6 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpICipherParameters,
   ClpISigner;
 
 type
@@ -37,37 +36,6 @@ type
     function DerDecode(encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
-    function GetAlgorithmName: String;
-    property AlgorithmName: String read GetAlgorithmName;
-
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
-
-    /// <summary>
-    /// update the internal digest with the byte b
-    /// </summary>
-    procedure Update(input: Byte);
-
-    /// <summary>
-    /// update the internal digest with the byte array in
-    /// </summary>
-    procedure BlockUpdate(input: TCryptoLibByteArray; inOff, length: Int32);
-
-    /// <summary>
-    /// Generate a signature for the message we've been loaded with using the
-    /// key we were initialised with.
-    /// </summary>
-    function GenerateSignature(): TCryptoLibByteArray;
-
-    /// <returns>
-    /// true if the internal state represents the signature described in the
-    /// passed in array.
-    /// </returns>
-    function VerifySignature(signature: TCryptoLibByteArray): Boolean;
-
-    /// <summary>
-    /// Reset the internal state
-    /// </summary>
-    procedure Reset();
   end;
 
 implementation

@@ -22,7 +22,6 @@ unit ClpIDerSet;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIAsn1Set;
 
 type
@@ -30,8 +29,6 @@ type
   IDerSet = interface(IAsn1Set)
 
     ['{592C8E57-5B00-4927-AD34-EA4481D436BE}']
-
-    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 
