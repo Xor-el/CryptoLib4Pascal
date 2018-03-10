@@ -289,6 +289,7 @@ begin
     ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F');
   a := TBigInteger.Zero;
   b := TBigInteger.ValueOf(7);
+  S := Nil;
   n := FromHex
     ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141');
   h := TBigInteger.One;
@@ -368,6 +369,7 @@ var
 begin
   a := TBigInteger.Zero;
   b := TBigInteger.One;
+  S := Nil;
   n := FromHex
     ('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE9AE2ED07577265DFF7F94451E061E163C61');
   h := TBigInteger.ValueOf(4);

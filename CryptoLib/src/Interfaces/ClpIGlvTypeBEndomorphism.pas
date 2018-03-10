@@ -23,24 +23,13 @@ interface
 
 uses
   ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpIECInterface,
   ClpIGlvEndomorphism;
 
 type
   IGlvTypeBEndomorphism = interface(IGlvEndomorphism)
     ['{4F285F6A-F627-4873-9F4C-FBC7A7B83A9C}']
 
-    function GetHasEfficientPointMap: Boolean;
-    function GetPointMap: IECPointMap;
-
     function CalculateB(const k, g: TBigInteger; t: Int32): TBigInteger;
-
-    function DecomposeScalar(const k: TBigInteger)
-      : TCryptoLibGenericArray<TBigInteger>;
-
-    property PointMap: IECPointMap read GetPointMap;
-    property HasEfficientPointMap: Boolean read GetHasEfficientPointMap;
 
   end;
 

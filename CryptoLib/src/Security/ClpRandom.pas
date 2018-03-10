@@ -36,9 +36,7 @@ type
 
   strict private
   const
-    FMBIG = Int32(2147483647);
     FMSEED = Int32(161803398);
-    FMZ = Int32(0);
 
     class var
 
@@ -148,7 +146,6 @@ begin
 
   Finext := 0;
   Finextp := 21;
-  // Seed := 1;
 end;
 
 function TRandom.InternalSample: Int32;

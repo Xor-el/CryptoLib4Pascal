@@ -23,30 +23,17 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIPolynomial,
-  ClpIFiniteField,
   ClpIPolynomialExtensionField;
 
 type
   IGenericPolynomialExtensionField = interface(IPolynomialExtensionField)
     ['{BB3A963B-38E1-4DF0-A0C6-86DF5CE830FA}']
 
-    function GetCharacteristic: TBigInteger;
-    function GetDegree: Int32;
-    function GetDimension: Int32;
-    function GetMinimalPolynomial: IPolynomial;
-    function GetSubField: IFiniteField;
-
     function Equals(other: TObject): Boolean; overload;
     function Equals(const other: IGenericPolynomialExtensionField)
       : Boolean; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
-    property Characteristic: TBigInteger read GetCharacteristic;
-    property Dimension: Int32 read GetDimension;
-    property subfield: IFiniteField read GetSubField;
-    property Degree: Int32 read GetDegree;
-    property MinimalPolynomial: IPolynomial read GetMinimalPolynomial;
 
   end;
 

@@ -22,7 +22,6 @@ unit ClpIConstructedOctetStream;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpIBaseInputStream;
 
 type
@@ -30,7 +29,6 @@ type
 
     ['{45BD4A14-887D-4B4C-946B-E5DBFA0A6331}']
 
-    function Read(buffer: TCryptoLibByteArray; offset, count: Int32): Int32;
     function ReadByte(): Int32;
 
   end;

@@ -22,16 +22,12 @@ unit ClpIDerSequenceParser;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIAsn1SequenceParser;
 
 type
   IDerSequenceParser = interface(IAsn1SequenceParser)
 
     ['{C6B7A49D-C2CC-43A1-9820-7B36AD4FD3B6}']
-
-    function ReadObject(): IAsn1Convertible;
-    function ToAsn1Object(): IAsn1Object;
 
   end;
 

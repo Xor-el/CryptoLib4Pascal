@@ -30,7 +30,7 @@ type
 
     function GetSize: Int64;
     function GetPosition: Int64;
-    procedure setPosition(const Value: Int64);
+    procedure SetPosition(const Value: Int64);
 
     property Size: Int64 read GetSize;
     property Position: Int64 read GetPosition write setPosition;

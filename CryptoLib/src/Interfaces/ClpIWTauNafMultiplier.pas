@@ -46,17 +46,6 @@ type
       const lambda: IZTauElement; const preCompInfo: IPreCompInfo;
       a, mu: ShortInt): IAbstractF2mPoint;
 
-    // /**
-    // * Multiplies an AbstractF2mPoint
-    // * by <code>k</code> using the reduced <code>&#964;</code>-adic NAF (RTNAF)
-    // * method.
-    // * @param p The AbstractF2mPoint to multiply.
-    // * @param k The integer by which to multiply <code>k</code>.
-    // * @return <code>p</code> multiplied by <code>k</code>.
-    // */
-    function MultiplyPositive(const point: IECPoint; const k: TBigInteger)
-      : IECPoint;
-
   end;
 
 implementation

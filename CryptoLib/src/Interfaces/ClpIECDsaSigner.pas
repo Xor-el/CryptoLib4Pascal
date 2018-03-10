@@ -27,8 +27,7 @@ uses
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpIECInterface,
-  ClpIECFieldElement,
-  ClpICipherParameters;
+  ClpIECFieldElement;
 
 type
   IECDsaSigner = interface(IDsa)
@@ -45,30 +44,6 @@ type
 
     function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
       : ISecureRandom;
-
-    function GetAlgorithmName: String;
-    property AlgorithmName: String read GetAlgorithmName;
-
-    procedure Init(forSigning: Boolean; parameters: ICipherParameters);
-
-    // // 5.3 pg 28
-    // /**
-    // * Generate a signature for the given message using the key we were
-    // * initialised with. For conventional DSA the message should be a SHA-1
-    // * hash of the message of interest.
-    // *
-    // * @param message the message that will be verified later.
-    function GenerateSignature(&message: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>;
-
-    // // 5.4 pg 29
-    // /**
-    // * return true if the value r and s represent a DSA signature for
-    // * the passed in message (for standard DSA the message should be
-    // * a SHA-1 hash of the real message to be verified).
-    // */
-    function VerifySignature(&message: TCryptoLibByteArray; r: TBigInteger;
-      const s: TBigInteger): Boolean;
 
   end;
 

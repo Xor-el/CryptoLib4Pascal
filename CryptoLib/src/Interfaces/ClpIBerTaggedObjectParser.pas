@@ -22,7 +22,6 @@ unit ClpIBerTaggedObjectParser;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIAsn1TaggedObjectParser;
 
 type
@@ -31,14 +30,8 @@ type
     ['{F1E974C6-6C98-448D-945B-077E63ACB66F}']
 
     function GetIsConstructed: Boolean;
-    function GetTagNo: Int32;
-
-    function GetObjectParser(tag: Int32; isExplicit: Boolean): IAsn1Convertible;
-
-    function ToAsn1Object(): IAsn1Object;
 
     property IsConstructed: Boolean read GetIsConstructed;
-    property TagNo: Int32 read GetTagNo;
 
   end;
 

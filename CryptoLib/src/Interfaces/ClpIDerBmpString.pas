@@ -22,7 +22,6 @@ unit ClpIDerBmpString;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIDerStringBase;
 
 type
@@ -32,13 +31,7 @@ type
 
     function GetStr: String;
 
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-
     property Str: String read GetStr;
-
-    function GetString(): String;
-
-    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

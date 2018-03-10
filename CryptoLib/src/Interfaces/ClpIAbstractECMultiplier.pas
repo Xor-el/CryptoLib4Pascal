@@ -33,8 +33,6 @@ type
     function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
       : IECPoint;
 
-    function Multiply(const p: IECPoint; const k: TBigInteger): IECPoint;
-
   end;
 
 implementation

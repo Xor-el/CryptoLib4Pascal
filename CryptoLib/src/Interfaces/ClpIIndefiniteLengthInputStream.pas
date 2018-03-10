@@ -22,8 +22,6 @@ unit ClpIIndefiniteLengthInputStream;
 interface
 
 uses
-  Classes,
-  ClpCryptoLibTypes,
   ClpILimitedInputStream;
 
 type
@@ -35,8 +33,6 @@ type
     function RequireByte(): Int32;
 
     procedure SetEofOn00(eofOn00: Boolean);
-
-    function Read(buffer: TCryptoLibByteArray; offset, count: Int32): Int32;
 
     function ReadByte(): Int32;
 

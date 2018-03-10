@@ -23,7 +23,6 @@ interface
 
 uses
   ClpCryptoLibTypes,
-  ClpIProxiedInterface,
   ClpIDerStringBase;
 
 type
@@ -32,16 +31,9 @@ type
 
     function GetmString: TCryptoLibByteArray;
 
-    function Asn1GetHashCode(): Int32;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-
     property mString: TCryptoLibByteArray read GetmString;
 
-    function GetString(): String;
-
     function GetOctets(): TCryptoLibByteArray;
-
-    procedure Encode(const derOut: IDerOutputStream);
 
   end;
 

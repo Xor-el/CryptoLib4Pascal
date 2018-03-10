@@ -36,21 +36,6 @@ type
 
     property curve: IECCurve read GetCurve;
 
-    /// <summary>
-    /// <para>
-    /// Produce an object suitable for an Asn1OutputStream. <br />
-    /// &lt;pre&gt;
-    /// </para>
-    /// <para>
-    /// Curve ::= Sequence { a FieldElement, b FieldElement, seed BIT
-    /// STRING OPTIONAL }
-    /// </para>
-    /// <para>
-    /// <br />&lt;/pre&gt;
-    /// </para>
-    /// </summary>
-    function ToAsn1Object(): IAsn1Object;
-
   end;
 
 implementation

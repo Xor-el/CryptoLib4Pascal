@@ -40,10 +40,6 @@ type
       fieldValue: TBigInteger); overload;
     procedure DoOutput(bOut: TMemoryStream); overload;
     function GetBody(): TCryptoLibByteArray;
-    procedure Encode(const derOut: IDerOutputStream);
-
-    function Asn1GetHashCode(): Int32;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 
     function Branch(const branchID: String): IDerObjectIdentifier;
 

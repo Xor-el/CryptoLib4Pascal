@@ -22,7 +22,6 @@ unit ClpIBerApplicationSpecificParser;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIAsn1ApplicationSpecificParser;
 
 type
@@ -30,8 +29,6 @@ type
 
     ['{60363C2D-CE20-467C-BC1D-38DFCFDFDFFA}']
 
-    function ReadObject(): IAsn1Convertible;
-    function ToAsn1Object(): IAsn1Object;
   end;
 
 implementation

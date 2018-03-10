@@ -192,41 +192,15 @@ type
   IECPointBase = interface(IECPoint)
     ['{66AF58F3-2A82-41AA-B01F-AA4A67CA5E80}']
 
-    /// <summary>
-    /// return the field element encoded with point compression. (S 4.3.6)
-    /// </summary>
-    function GetEncoded(compressed: Boolean): TCryptoLibByteArray;
-
-    /// <summary>
-    /// Multiplies this <c>ECPoint</c> by the given number.
-    /// </summary>
-    /// <param name="k">
-    /// The multiplicator.
-    /// </param>
-    /// <returns>
-    /// <c>k * this</c>
-    /// </returns>
-    function Multiply(k: TBigInteger): IECPoint;
-
   end;
 
   IAbstractFpPoint = interface(IECPointBase)
     ['{57991B0C-7994-4130-93DC-02FEB42E131B}']
 
-    function GetCompressionYTilde(): Boolean;
-
-    function SatisfiesCurveEquation(): Boolean;
-
-    property CompressionYTilde: Boolean read GetCompressionYTilde;
-
-    function Subtract(const b: IECPoint): IECPoint;
-
   end;
 
   IFpPoint = interface(IAbstractFpPoint)
     ['{4113EEFE-A0F1-439B-97FD-921CA1E0A814}']
-
-    function Detach(): IECPoint;
 
     function Two(const x: IECFieldElement): IECFieldElement;
     function Three(const x: IECFieldElement): IECFieldElement;
@@ -242,32 +216,10 @@ type
 
     function TwiceJacobianModified(calculateW: Boolean): IFpPoint;
 
-    function GetZCoord(index: Int32): IECFieldElement;
-    // B.3 pg 62
-    function Add(const b: IECPoint): IECPoint;
-
-    // B.3 pg 62
-    function Twice(): IECPoint;
-
-    function TwicePlus(const b: IECPoint): IECPoint;
-
-    function ThreeTimes(): IECPoint;
-
-    function TimesPow2(e: Int32): IECPoint;
-
-    function Negate(): IECPoint;
-
   end;
 
   IAbstractF2mPoint = interface(IECPointBase)
     ['{D5231494-74E4-4400-A2FE-8E512411515C}']
-
-    function SatisfiesCurveEquation(): Boolean;
-
-    function ScaleX(const scale: IECFieldElement): IECPoint;
-    function ScaleY(const scale: IECFieldElement): IECPoint;
-
-    function Subtract(const b: IECPoint): IECPoint;
 
     function Tau(): IAbstractF2mPoint;
 
@@ -277,22 +229,6 @@ type
 
   IF2mPoint = interface(IAbstractF2mPoint)
     ['{ADFE17E0-6A08-430A-970F-353DE2B9426C}']
-
-    function GetYCoord: IECFieldElement;
-    function GetCompressionYTilde: Boolean;
-
-    function Detach(): IECPoint;
-    property CompressionYTilde: Boolean read GetCompressionYTilde;
-
-    function Add(const b: IECPoint): IECPoint;
-
-    function Twice(): IECPoint;
-
-    function TwicePlus(const b: IECPoint): IECPoint;
-
-    function Negate(): IECPoint;
-
-    property YCoord: IECFieldElement read GetYCoord;
 
   end;
 
@@ -510,9 +446,6 @@ type
   IAbstractFpCurve = interface(IECCurve)
     ['{D37FE528-66B3-4449-A95C-8658A9A89B85}']
 
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
-    function IsValidFieldElement(x: TBigInteger): Boolean;
-
   end;
 
 type
@@ -520,25 +453,8 @@ type
     ['{73E49F8B-C63F-4F91-8F40-A4C3B15F47FF}']
 
     function GetQ: TBigInteger;
-    function GetInfinity: IECPoint;
-    function GetFieldSize: Int32;
-
-    function CloneCurve(): IECCurve;
-    function CreateRawPoint(const x, y: IECFieldElement;
-      withCompression: Boolean): IECPoint; overload;
-
-    function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload;
-
-    function SupportsCoordinateSystem(coord: Int32): Boolean;
 
     property q: TBigInteger read GetQ;
-    property Infinity: IECPoint read GetInfinity;
-    property FieldSize: Int32 read GetFieldSize;
-
-    function FromBigInteger(x: TBigInteger): IECFieldElement;
-    function ImportPoint(const p: IECPoint): IECPoint;
 
   end;
 
@@ -566,13 +482,6 @@ type
     function SolveQuadradicEquation(const beta: IECFieldElement)
       : IECFieldElement;
 
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
-
-    function IsValidFieldElement(x: TBigInteger): Boolean;
-
-    function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
-      : IECPoint; deprecated 'Per-point compression property will be removed';
-
     // /**
     // * @return the auxiliary values <code>s<sub>0</sub></code> and
     // * <code>s<sub>1</sub></code> used for partial modular reduction for
@@ -588,25 +497,10 @@ type
   IF2mCurve = interface(IAbstractF2mCurve)
     ['{B1C98330-51ED-4C0C-91B1-319223483147}']
 
-    function GetFieldSize: Int32;
-    function GetInfinity: IECPoint;
     function GetM: Int32;
     function GetK1: Int32;
     function GetK2: Int32;
     function GetK3: Int32;
-
-    function CloneCurve(): IECCurve;
-    function CreateDefaultMultiplier(): IECMultiplier;
-
-    function CreateRawPoint(const x, y: IECFieldElement;
-      withCompression: Boolean): IECPoint; overload;
-
-    function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload;
-
-    function SupportsCoordinateSystem(coord: Int32): Boolean;
-    function FromBigInteger(x: TBigInteger): IECFieldElement;
 
     /// <summary>
     /// Return true if curve uses a Trinomial basis.
@@ -616,16 +510,12 @@ type
     /// </returns>
     function IsTrinomial(): Boolean;
 
-    property FieldSize: Int32 read GetFieldSize;
-    property Infinity: IECPoint read GetInfinity;
     property m: Int32 read GetM;
     property k1: Int32 read GetK1;
     property k2: Int32 read GetK2;
     property k3: Int32 read GetK3;
 
   end;
-
-  //
 
 implementation
 

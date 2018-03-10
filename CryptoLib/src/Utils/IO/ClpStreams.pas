@@ -48,7 +48,7 @@ type
     class procedure PipeAll(inStr, outStr: TStream); static;
     /// <summary>
     /// Pipe all bytes from <c>inStr</c> to <c>outStr</c>, throwing <c>
-    /// ECryptoLibStreamFlowException</c> if greater than <c>limit</c> bytes in <c>
+    /// EStreamOverflowCryptoLibException</c> if greater than <c>limit</c> bytes in <c>
     /// inStr</c>.
     /// </summary>
     /// <param name="inStr">
@@ -64,7 +64,7 @@ type
     /// The number of bytes actually transferred, if not greater than <c>
     /// limit</c>
     /// </returns>
-    /// <exception cref="EIOCryptoLibException" />
+    /// <exception cref="EStreamOverflowCryptoLibException" />
     class function PipeAllLimited(inStr: TStream; limit: Int64;
       outStr: TStream): Int64;
 

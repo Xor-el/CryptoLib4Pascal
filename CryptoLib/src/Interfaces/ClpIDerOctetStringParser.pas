@@ -22,16 +22,12 @@ unit ClpIDerOctetStringParser;
 interface
 
 uses
-  Classes,
-  ClpIAsn1OctetStringParser,
-  ClpIProxiedInterface;
+  ClpIAsn1OctetStringParser;
 
 type
   IDerOctetStringParser = interface(IAsn1OctetStringParser)
     ['{49664C03-CD81-423F-A93D-025D3116B066}']
 
-    function GetOctetStream(): TStream;
-    function ToAsn1Object(): IAsn1Object;
   end;
 
 implementation

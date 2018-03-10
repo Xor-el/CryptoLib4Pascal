@@ -29,7 +29,6 @@ type
     ['{710E6D65-28DE-4BFE-9C62-3CFC0E909DD9}']
 
     function GetString(): String;
-    function Asn1GetHashCode(): Int32;
     function ToString(): String;
   end;
 

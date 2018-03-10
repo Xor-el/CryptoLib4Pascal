@@ -58,8 +58,6 @@ type
 
     function Asn1GetHashCode(): Int32;
 
-    function ToAsn1Object(): IAsn1Object;
-
     procedure Encode(const derOut: IDerOutputStream);
 
     function CallAsn1Equals(const obj: IAsn1Object): Boolean;

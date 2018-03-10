@@ -22,19 +22,12 @@ unit ClpIDigestRandomGenerator;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpIRandomGenerator;
 
 type
 
   IDigestRandomGenerator = interface(IRandomGenerator)
     ['{1D9AA8E6-1709-4121-8835-61A7F543FB54}']
-
-    procedure AddSeedMaterial(inSeed: TCryptoLibByteArray); overload;
-    procedure AddSeedMaterial(rSeed: Int64); overload;
-    procedure NextBytes(bytes: TCryptoLibByteArray); overload;
-    procedure NextBytes(bytes: TCryptoLibByteArray; start, len: Int32);
-      overload;
 
   end;
 

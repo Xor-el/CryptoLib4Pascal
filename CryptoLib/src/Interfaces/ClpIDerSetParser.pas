@@ -22,16 +22,12 @@ unit ClpIDerSetParser;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIAsn1SetParser;
 
 type
   IDerSetParser = interface(IAsn1SetParser)
 
     ['{C9F565EE-4324-4F67-8DC9-E2A305AAD715}']
-
-    function ReadObject(): IAsn1Convertible;
-    function ToAsn1Object(): IAsn1Object;
 
   end;
 

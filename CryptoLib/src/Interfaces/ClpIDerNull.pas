@@ -22,7 +22,6 @@ unit ClpIDerNull;
 interface
 
 uses
-  ClpIProxiedInterface,
   ClpIAsn1Null;
 
 type
@@ -30,10 +29,6 @@ type
 
     ['{0B4ABCBF-DF52-4934-8A43-218D948E1841}']
 
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-    function Asn1GetHashCode(): Int32;
-
-    procedure Encode(const derOut: IDerOutputStream);
   end;
 
 implementation

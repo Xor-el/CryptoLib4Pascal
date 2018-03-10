@@ -28,7 +28,6 @@ type
   IScaleXPointMap = interface(IECPointMap)
 
     ['{3449A622-7472-4B51-A9EF-01B5E586813C}']
-    function Map(const p: IECPoint): IECPoint;
 
   end;
 
