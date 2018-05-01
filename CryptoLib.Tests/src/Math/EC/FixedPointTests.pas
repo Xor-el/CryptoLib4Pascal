@@ -1,0 +1,181 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
+{ *                        the development of this library                          * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit FixedPointTests;
+
+interface
+
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$WARNINGS OFF}
+{$ENDIF FPC}
+
+uses
+{$IFDEF FPC}
+  fpcunit,
+  testregistry,
+{$ELSE}
+  TestFramework,
+{$ENDIF FPC}
+  Generics.Collections,
+  ClpSecureRandom,
+  ClpISecureRandom,
+  ClpIECInterface,
+  ClpBigInteger,
+  ClpECNamedCurveTable,
+  ClpFixedPointCombMultiplier,
+  ClpIFixedPointCombMultiplier,
+  ClpECAlgorithms,
+  ClpX9ECParameters,
+  ClpIX9ECParameters,
+  ClpCryptoLibTypes;
+
+type
+
+  TCryptoLibTestCase = class abstract(TTestCase)
+
+  end;
+
+type
+
+  TTestFixedPoint = class(TCryptoLibTestCase)
+  private
+
+    class var
+
+      FRandom: ISecureRandom;
+
+  const
+    TestsPerCurve = Int32(5);
+
+    procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
+
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure TestFixedPointMultiplier;
+
+  end;
+
+implementation
+
+{ TTestFixedPoint }
+
+procedure TTestFixedPoint.AssertPointsEqual(const msg: String;
+  const a, b: IECPoint);
+begin
+  // NOTE: We intentionally test points for equality in both directions
+  CheckEquals(True, a.Equals(b), msg);
+  CheckEquals(True, b.Equals(a), msg);
+end;
+
+procedure TTestFixedPoint.TestFixedPointMultiplier;
+var
+  name, s: string;
+  i: Int32;
+  tempList: TList<String>;
+  tempDict: TDictionary<String, String>;
+  names: TCryptoLibStringArray;
+  x9, X9A: IX9ECParameters;
+  M: IFixedPointCombMultiplier;
+  k: TBigInteger;
+  pRef, pA: IECPoint;
+
+begin
+  M := TFixedPointCombMultiplier.Create();
+
+  tempList := TList<String>.Create();
+  try
+    tempList.AddRange(TECNamedCurveTable.names); // get all collections
+    // tempList.AddRange(TCustomNamedCurves.Names);
+    tempDict := TDictionary<String, String>.Create();
+    try
+      for s in tempList do
+      begin
+        if not tempDict.ContainsKey(s) then // make sure they are unique
+        begin
+          tempDict.Add(s, s);
+        end;
+      end;
+      names := tempDict.Values.ToArray; // save unique instances to array
+    finally
+      tempDict.Free;
+    end;
+  finally
+    tempList.Free;
+  end;
+
+  for name in names do
+  begin
+    X9A := TECNamedCurveTable.GetByName(name);
+    // x9B := CustomNamedCurves.GetByName(name);
+    // if (x9B <> Nil) then
+    // begin
+    // x9 := x9B
+    // end
+    // else
+    // begin
+    x9 := X9A;
+    // end;
+
+    i := 0;
+    while i < TestsPerCurve do
+    begin
+      k := TBigInteger.Create(x9.N.BitLength, FRandom);
+      pRef := TECAlgorithms.ReferenceMultiply(x9.G, k);
+
+      if (X9A <> Nil) then
+      begin
+        pA := M.Multiply(X9A.G, k);
+        AssertPointsEqual('Standard curve fixed-point failure', pRef, pA);
+      end;
+
+      // if (x9B <> Nil) then
+      // begin
+      // pB := M.Multiply(x9B.G, k);
+      // AssertPointsEqual('Custom curve fixed-point failure', pRef, pB);
+      // end;
+      System.Inc(i);
+    end;
+
+  end;
+
+end;
+
+procedure TTestFixedPoint.SetUp;
+begin
+  FRandom := TSecureRandom.Create();
+end;
+
+procedure TTestFixedPoint.TearDown;
+begin
+  inherited;
+
+end;
+
+initialization
+
+// Register any test cases with the test runner
+
+{$IFDEF FPC}
+  RegisterTest(TTestFixedPoint);
+{$ELSE}
+  RegisterTest(TTestFixedPoint.Suite);
+{$ENDIF FPC}
+
+end.

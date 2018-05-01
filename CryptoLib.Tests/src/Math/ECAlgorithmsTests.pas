@@ -60,7 +60,6 @@ type
 
       FRandom: ISecureRandom;
 
-  var
   const
     Scale = Int32(4);
 

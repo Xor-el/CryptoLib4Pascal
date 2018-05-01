@@ -36,7 +36,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="18">
+    <Units Count="19">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -110,6 +110,10 @@
         <Filename Value="..\src\Crypto\DigestRandomNumberTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit17>
+      <Unit18>
+        <Filename Value="..\src\Math\EC\FixedPointTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit18>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -120,7 +124,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Asn1;..\src\Math;..\src\Math\EC\Custom\Sec;..\src\Others;..\src\Security;..\src\Utils;..\src\Crypto"/>
+      <OtherUnitFiles Value="..\src\Asn1;..\src\Math;..\src\Math\EC\Custom\Sec;..\src\Others;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>

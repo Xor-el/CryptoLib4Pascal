@@ -23,6 +23,7 @@ interface
 
 uses
   ClpBigInteger,
+  ClpNat,
   ClpCryptoLibTypes,
   ClpIECInterface,
   ClpFixedPointUtilities,
@@ -42,6 +43,7 @@ type
     function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
       : IECPoint; override;
     function GetWidthForCombSize(combSize: Int32): Int32; virtual;
+      deprecated 'Is no longer used; remove any overrides in subclasses.';
 
   public
     constructor Create();
@@ -79,10 +81,11 @@ function TFixedPointCombMultiplier.MultiplyPositive(const p: IECPoint;
   const k: TBigInteger): IECPoint;
 var
   c: IECCurve;
-  R: IECPoint;
-  size, minWidth, width, d, top, i, j, index: Int32;
+  R, add: IECPoint;
+  size, width, d, top, i, j, secretIndex, fullComb: Int32;
   info: IFixedPointPreCompInfo;
-  lookupTable: TCryptoLibGenericArray<IECPoint>;
+  lookupTable: IECLookupTable;
+  LK: TCryptoLibUInt32Array;
 begin
   c := p.Curve;
   size := TFixedPointUtilities.GetCombSize(c);
@@ -97,42 +100,41 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidComputation);
   end;
 
-  minWidth := GetWidthForCombSize(size);
-
-  info := TFixedPointUtilities.Precompute(p, minWidth);
-  lookupTable := info.PreComp;
+  info := TFixedPointUtilities.Precompute(p);
+  lookupTable := info.lookupTable;
   width := info.width;
 
   d := (size + width - 1) div width;
 
   R := c.Infinity;
+  fullComb := d * width;
+  LK := TNat.FromBigInteger(fullComb, k);
 
-  top := d * width - 1;
+  top := fullComb - 1;
 
   for i := 0 to System.Pred(d) do
   begin
 
-    index := 0;
+    secretIndex := 0;
 
     j := (top - i);
 
     while j >= 0 do
     begin
 
-      index := index shl 1;
-      if (k.TestBit(j)) then
-      begin
-        index := index or 1;
-      end;
+      secretIndex := secretIndex shl 1;
+
+      secretIndex := secretIndex or Int32(TNat.GetBit(LK, j));
 
       System.Dec(j, d);
     end;
 
-    R := R.TwicePlus(lookupTable[index]);
+    add := lookupTable.Lookup(secretIndex);
+    R := R.TwicePlus(add);
 
   end;
 
-  Result := R.Add(info.Offset);
+  Result := R.add(info.Offset);
   info.PreComp := Nil;
 
 end;

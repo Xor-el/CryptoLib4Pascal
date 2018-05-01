@@ -315,7 +315,8 @@ uses
   ClpECSchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSigner.pas',
   ClpIECSchnorrSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrSigner.pas',
   ECSchnorrTests in '..\src\Others\ECSchnorrTests.pas',
-  DigestRandomNumberTests in '..\src\Crypto\DigestRandomNumberTests.pas';
+  DigestRandomNumberTests in '..\src\Crypto\DigestRandomNumberTests.pas',
+  FixedPointTests in '..\src\Math\EC\FixedPointTests.pas';
 
 begin
 

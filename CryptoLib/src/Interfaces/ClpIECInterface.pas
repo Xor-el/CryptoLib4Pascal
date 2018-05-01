@@ -276,6 +276,7 @@ type
 
   // type
   IConfig = interface;
+  IECLookupTable = interface;
 
   IECCurve = interface(IInterface)
     ['{F340C8A1-034D-4845-BDE7-A5F55FFDE71B}']
@@ -322,6 +323,10 @@ type
     function ValidatePoint(const x, y: TBigInteger; withCompression: Boolean)
       : IECPoint; overload;
       deprecated 'Per-point compression property will be removed';
+
+    function CreateCacheSafeLookupTable
+      (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32)
+      : IECLookupTable;
 
     function CreatePoint(const x, y: TBigInteger): IECPoint; overload;
 
@@ -442,9 +447,29 @@ type
 
   end;
 
+  IECLookupTable = interface(IInterface)
+
+    ['{A1839961-4FBF-42EF-BF8B-6084064A05C1}']
+    function GetSize: Int32;
+    function Lookup(index: Int32): IECPoint;
+    property Size: Int32 read GetSize;
+  end;
+
+type
+  IDefaultLookupTable = interface(IECLookupTable)
+    ['{094881EB-24A6-41A3-BAD6-D6DAB13DD17D}']
+
+  end;
+
 type
   IAbstractFpCurve = interface(IECCurve)
     ['{D37FE528-66B3-4449-A95C-8658A9A89B85}']
+
+  end;
+
+type
+  IDefaultF2mLookupTable = interface(IECLookupTable)
+    ['{0C019049-9839-4322-BAF5-8E5D39BC426D}']
 
   end;
 

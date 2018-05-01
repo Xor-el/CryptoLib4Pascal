@@ -39,7 +39,13 @@ type
     function GetWidth: Int32;
     procedure SetWidth(const Value: Int32);
     function GetPreComp: TCryptoLibGenericArray<IECPoint>;
+      deprecated 'Will be removed';
     procedure SetPreComp(const Value: TCryptoLibGenericArray<IECPoint>);
+      deprecated 'Will be removed';
+
+    function GetLookupTable: IECLookupTable;
+    procedure SetLookupTable(const Value: IECLookupTable);
+
     function GetOffset: IECPoint;
     procedure SetOffset(const Value: IECPoint);
 
@@ -54,6 +60,12 @@ type
     Fm_preComp: TCryptoLibGenericArray<IECPoint>;
 
     /// <summary>
+    /// Array holding the precomputed <c>ECPoint</c>s used for a fixed point
+    /// multiplication.
+    /// </summary>
+    Fm_lookupTable: IECLookupTable;
+
+    /// <summary>
     /// The width used for the precomputation. If a larger width
     /// precomputation is already available this may be larger than was
     /// requested, so calling code should refer to the actual width.
@@ -64,7 +76,9 @@ type
     constructor Create();
     property Offset: IECPoint read GetOffset write SetOffset;
     property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp
-      write SetPreComp;
+      write SetPreComp; {$IFDEF FPC }deprecated 'Use "LookupTable" property instead.'; {$ENDIF FPC }
+    property LookupTable: IECLookupTable read GetLookupTable
+      write SetLookupTable;
     property Width: Int32 read GetWidth write SetWidth;
 
   end;
@@ -76,6 +90,12 @@ implementation
 constructor TFixedPointPreCompInfo.Create;
 begin
   inherited Create();
+  Fm_width := -1;
+end;
+
+function TFixedPointPreCompInfo.GetLookupTable: IECLookupTable;
+begin
+  Result := Fm_lookupTable;
 end;
 
 function TFixedPointPreCompInfo.GetOffset: IECPoint;
@@ -91,6 +111,11 @@ end;
 function TFixedPointPreCompInfo.GetWidth: Int32;
 begin
   Result := Fm_width;
+end;
+
+procedure TFixedPointPreCompInfo.SetLookupTable(const Value: IECLookupTable);
+begin
+  Fm_lookupTable := Value;
 end;
 
 procedure TFixedPointPreCompInfo.SetOffset(const Value: IECPoint);

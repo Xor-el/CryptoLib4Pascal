@@ -184,6 +184,14 @@ type
     : IECPoint; overload; virtual;
     deprecated 'Per-point compression property will be removed';
 
+  /// <summary>
+  /// Create a cache-safe lookup table for the specified sequence of points.
+  /// All the points MUST <br />belong to this <c>ECCurve</c> instance, and
+  /// MUST already be normalized.
+  /// </summary>
+  function CreateCacheSafeLookupTable(points: TCryptoLibGenericArray<IECPoint>;
+    off, len: Int32): IECLookupTable; virtual;
+
   function CreatePoint(const x, y: TBigInteger): IECPoint; overload; virtual;
 
   function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
@@ -302,6 +310,24 @@ type
   end;
 
 type
+  TDefaultLookupTable = class(TInterfacedObject, IDefaultLookupTable,
+    IECLookupTable)
+  strict private
+  var
+    Fm_outer: IECCurve;
+    Fm_table: TCryptoLibByteArray;
+    Fm_size: Int32;
+
+  public
+    constructor Create(const outer: IECCurve; table: TCryptoLibByteArray;
+      size: Int32);
+    function GetSize: Int32; virtual;
+    function Lookup(index: Int32): IECPoint; virtual;
+    property size: Int32 read GetSize;
+
+  end;
+
+type
   TAbstractFpCurve = class(TECCurve, IAbstractFpCurve)
 
   strict protected
@@ -313,6 +339,24 @@ type
   public
     destructor Destroy; override;
     function IsValidFieldElement(x: TBigInteger): Boolean; override;
+
+  end;
+
+type
+  TDefaultF2mLookupTable = class(TInterfacedObject, IDefaultF2mLookupTable,
+    IECLookupTable)
+  strict private
+  var
+    Fm_outer: IF2mCurve;
+    Fm_table: TCryptoLibInt64Array;
+    Fm_size: Int32;
+
+  public
+    constructor Create(const outer: IF2mCurve; table: TCryptoLibInt64Array;
+      size: Int32);
+    function GetSize: Int32; virtual;
+    function Lookup(index: Int32): IECPoint; virtual;
+    property size: Int32 read GetSize;
 
   end;
 
@@ -593,6 +637,10 @@ type
     /// </returns>
     function IsTrinomial(): Boolean; inline;
 
+    function CreateCacheSafeLookupTable
+      (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32)
+      : IECLookupTable; override;
+
     property FieldSize: Int32 read GetFieldSize;
     property Infinity: IECPoint read GetInfinity;
     property m: Int32 read GetM;
@@ -655,6 +703,56 @@ constructor TECCurve.Create(const field: IFiniteField);
 begin
   inherited Create();
   Fm_field := field;
+end;
+
+function TECCurve.CreateCacheSafeLookupTable
+  (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
+var
+  FE_BYTES, position, i, pxStart, pyStart, pxLen, pyLen: Int32;
+  table, px, py: TCryptoLibByteArray;
+  p: IECPoint;
+begin
+  FE_BYTES := (FieldSize + 7) div 8;
+  System.SetLength(table, len * FE_BYTES * 2);
+  position := 0;
+
+  for i := 0 to System.Pred(len) do
+  begin
+    p := points[off + i];
+    px := p.RawXCoord.ToBigInteger().ToByteArray();
+    py := p.RawYCoord.ToBigInteger().ToByteArray();
+
+    if System.Length(px) > FE_BYTES then
+    begin
+      pxStart := 1
+    end
+    else
+    begin
+      pxStart := 0
+    end;
+
+    pxLen := System.Length(px) - pxStart;
+
+    if System.Length(py) > FE_BYTES then
+    begin
+      pyStart := 1
+    end
+    else
+    begin
+      pyStart := 0
+    end;
+
+    pyLen := System.Length(py) - pyStart;
+
+    System.Move(px[pxStart], table[position + FE_BYTES - pxLen],
+      pxLen * System.SizeOf(Byte));
+    position := position + FE_BYTES;
+
+    System.Move(py[pyStart], table[position + FE_BYTES - pyLen],
+      pyLen * System.SizeOf(Byte));
+    position := position + FE_BYTES;
+  end;
+  Result := TDefaultLookupTable.Create(Self as IECCurve, table, len);
 end;
 
 function TECCurve.CreateDefaultMultiplier: IECMultiplier;
@@ -1541,6 +1639,30 @@ begin
 
 end;
 
+function TF2mCurve.CreateCacheSafeLookupTable
+  (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
+var
+  FE_LONGS, position, i: Int32;
+  table: TCryptoLibInt64Array;
+  p: IECPoint;
+begin
+  FE_LONGS := (m + 63) div 64;
+  System.SetLength(table, len * FE_LONGS * 2);
+
+  position := 0;
+
+  for i := 0 to System.Pred(len) do
+  begin
+    p := points[off + i];
+    (p.RawXCoord as IF2mFieldElement).x.CopyTo(table, position);
+    position := position + FE_LONGS;
+    (p.RawYCoord as IF2mFieldElement).x.CopyTo(table, position);
+    position := position + FE_LONGS;
+  end;
+
+  Result := TDefaultF2mLookupTable.Create(Self as IF2mCurve, table, len);
+end;
+
 constructor TF2mCurve.Create(m, k1, k2, k3: Int32; const A, B: TBigInteger);
 begin
   Create(m, k1, k2, k3, A, B, Default (TBigInteger), Default (TBigInteger));
@@ -1627,6 +1749,113 @@ begin
       Result := false;
     end;
   end;
+end;
+
+{ TDefaultLookupTable }
+
+constructor TDefaultLookupTable.Create(const outer: IECCurve;
+  table: TCryptoLibByteArray; size: Int32);
+begin
+  Inherited Create();
+  Fm_outer := outer;
+  Fm_table := table;
+  Fm_size := size;
+end;
+
+function TDefaultLookupTable.GetSize: Int32;
+begin
+  Result := Fm_size;
+end;
+
+function TDefaultLookupTable.Lookup(index: Int32): IECPoint;
+var
+  FE_BYTES, position, i, j: Int32;
+  x, y: TCryptoLibByteArray;
+  MASK: Byte;
+  XFieldElement, YFieldElement: IECFieldElement;
+begin
+  FE_BYTES := (Fm_outer.FieldSize + 7) div 8;
+  System.SetLength(x, FE_BYTES);
+  System.SetLength(y, FE_BYTES);
+
+  position := 0;
+
+  for i := 0 to System.Pred(Fm_size) do
+  begin
+
+    MASK := Byte(TBits.Asr32((i xor index) - 1, 31));
+
+    for j := 0 to System.Pred(FE_BYTES) do
+    begin
+
+      x[j] := x[j] xor Byte(Fm_table[position + j] and MASK);
+      y[j] := y[j] xor Byte(Fm_table[position + FE_BYTES + j] and MASK);
+    end;
+    position := position + (FE_BYTES * 2);
+  end;
+
+  XFieldElement := Fm_outer.FromBigInteger(TBigInteger.Create(1, x));
+  YFieldElement := Fm_outer.FromBigInteger(TBigInteger.Create(1, y));
+  Result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
+end;
+
+{ TDefaultF2mLookupTable }
+
+constructor TDefaultF2mLookupTable.Create(const outer: IF2mCurve;
+  table: TCryptoLibInt64Array; size: Int32);
+begin
+  Inherited Create();
+  Fm_outer := outer;
+  Fm_table := table;
+  Fm_size := size;
+end;
+
+function TDefaultF2mLookupTable.GetSize: Int32;
+begin
+  Result := Fm_size;
+end;
+
+function TDefaultF2mLookupTable.Lookup(index: Int32): IECPoint;
+var
+  FE_LONGS, position, m, i, j: Int32;
+  ks: TCryptoLibInt32Array;
+  x, y: TCryptoLibInt64Array;
+  MASK: Int64;
+  XFieldElement, YFieldElement: IECFieldElement;
+begin
+  m := Fm_outer.m;
+  if Fm_outer.IsTrinomial() then
+  begin
+    ks := TCryptoLibInt32Array.Create(Fm_outer.k1);
+  end
+  else
+  begin
+    ks := TCryptoLibInt32Array.Create(Fm_outer.k1, Fm_outer.k2, Fm_outer.k3);
+  end;
+
+  FE_LONGS := (Fm_outer.m + 63) div 64;
+  System.SetLength(x, FE_LONGS);
+  System.SetLength(y, FE_LONGS);
+
+  position := 0;
+
+  for i := 0 to System.Pred(Fm_size) do
+  begin
+
+    MASK := TBits.Asr32((i xor index) - 1, 31);
+
+    for j := 0 to System.Pred(FE_LONGS) do
+    begin
+
+      x[j] := x[j] xor (Fm_table[position + j] and MASK);
+      y[j] := y[j] xor (Fm_table[position + FE_LONGS + j] and MASK);
+    end;
+    position := position + (FE_LONGS * 2);
+  end;
+
+  XFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(x));
+  YFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(y));
+  Result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
 end;
 
 end.

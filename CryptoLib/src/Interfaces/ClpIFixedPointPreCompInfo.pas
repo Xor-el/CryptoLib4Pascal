@@ -33,13 +33,19 @@ type
     function GetWidth: Int32;
     procedure SetWidth(const Value: Int32);
     function GetPreComp: TCryptoLibGenericArray<IECPoint>;
+      deprecated 'Will be removed';
     procedure SetPreComp(const Value: TCryptoLibGenericArray<IECPoint>);
+      deprecated 'Will be removed';
+    function GetLookupTable: IECLookupTable;
+    procedure SetLookupTable(const Value: IECLookupTable);
     function GetOffset: IECPoint;
     procedure SetOffset(const Value: IECPoint);
 
     property Offset: IECPoint read GetOffset write SetOffset;
     property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp
-      write SetPreComp;
+      write SetPreComp; {$IFDEF FPC }deprecated 'Use "LookupTable" property instead.'; {$ENDIF FPC }
+    property LookupTable: IECLookupTable read GetLookupTable
+      write SetLookupTable;
     property Width: Int32 read GetWidth write SetWidth;
 
   end;

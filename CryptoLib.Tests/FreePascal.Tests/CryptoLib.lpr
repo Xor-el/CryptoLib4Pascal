@@ -21,6 +21,7 @@ uses
   SignerUtilitiesTests,
   SecureRandomTests,
   DigestRandomNumberTests,
+  FixedPointTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

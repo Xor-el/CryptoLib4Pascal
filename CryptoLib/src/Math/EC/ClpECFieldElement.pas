@@ -222,9 +222,6 @@ type
     function GetK2: Int32; inline;
     function GetK3: Int32; inline;
 
-    constructor Create(m: Int32; ks: TCryptoLibInt32Array;
-      const x: TLongArray); overload;
-
   public
 
     const
@@ -273,6 +270,9 @@ type
     // * @param x The BigInteger representing the value of the field element.
     // */
     constructor Create(m, K: Int32; const x: TBigInteger); overload;
+
+    constructor Create(m: Int32; ks: TCryptoLibInt32Array;
+      const x: TLongArray); overload;
 
     destructor Destroy; override;
 

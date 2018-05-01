@@ -570,6 +570,8 @@ type
     constructor Create(ints: TCryptoLibInt64Array; off, len: Int32); overload;
     constructor Create(const bigInt: TBigInteger); overload;
 
+    procedure CopyTo(z: TCryptoLibInt64Array; zOff: Int32);
+
     function IsOne(): Boolean; inline;
     function IsZero(): Boolean; inline;
     function GetUsedLength(): Int32; inline;
@@ -1458,6 +1460,12 @@ begin
 
   Result := ReverseString(Result);
 
+end;
+
+procedure TLongArray.CopyTo(z: TCryptoLibInt64Array; zOff: Int32);
+begin
+  System.Move(Fm_ints[0], z[zOff], System.Length(Fm_ints) *
+    System.SizeOf(Int64));
 end;
 
 function TLongArray.IsOne: Boolean;

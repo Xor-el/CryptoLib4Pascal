@@ -94,6 +94,9 @@ type
     class function Copy(len: Int32; x: TCryptoLibUInt32Array)
       : TCryptoLibUInt32Array; overload; static; inline;
 
+    class procedure Copy(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
+      z: TCryptoLibUInt32Array; zOff: Int32); overload; static;
+
     class function Create(len: Int32): TCryptoLibUInt32Array; static; inline;
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
@@ -114,7 +117,7 @@ type
       static; inline;
 
     class function FromBigInteger(bits: Int32; x: TBigInteger)
-      : TCryptoLibUInt32Array; static; inline;
+      : TCryptoLibUInt32Array; static;
 
     class function GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32;
       static; inline;
@@ -861,6 +864,12 @@ end;
 class procedure TNat.Copy(len: Int32; x, z: TCryptoLibUInt32Array);
 begin
   System.Move(x[0], z[0], len * System.SizeOf(UInt32));
+end;
+
+class procedure TNat.Copy(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
+  z: TCryptoLibUInt32Array; zOff: Int32);
+begin
+  System.Move(x[xOff], z[zOff], len * System.SizeOf(UInt32));
 end;
 
 class function TNat.Create(len: Int32): TCryptoLibUInt32Array;

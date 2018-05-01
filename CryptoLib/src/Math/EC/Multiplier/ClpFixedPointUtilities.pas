@@ -40,8 +40,12 @@ type
     class function GetCombSize(const c: IECCurve): Int32; static; inline;
     class function GetFixedPointPreCompInfo(const preCompInfo: IPreCompInfo)
       : IFixedPointPreCompInfo; static; inline;
+    class function Precompute(const p: IECPoint): IFixedPointPreCompInfo;
+      overload; static;
     class function Precompute(const p: IECPoint; minWidth: Int32)
-      : IFixedPointPreCompInfo; static;
+      : IFixedPointPreCompInfo; overload; static;
+      deprecated
+      'Use "Precompute(ECPoint)" instead, as minWidth parameter is now ignored';
   end;
 
 implementation
@@ -74,16 +78,25 @@ begin
   Result := TFixedPointPreCompInfo.Create();
 end;
 
-class function TFixedPointUtilities.Precompute(const p: IECPoint;
-  minWidth: Int32): IFixedPointPreCompInfo;
+class function TFixedPointUtilities.Precompute(const p: IECPoint)
+  : IFixedPointPreCompInfo;
 var
   c: IECCurve;
-  n, bit, bits, d, i, step: Int32;
+  n, bit, bits, d, i, step, minWidth: Int32;
   info: IFixedPointPreCompInfo;
   pow2: IECPoint;
   lookupTable, pow2Table: TCryptoLibGenericArray<IECPoint>;
 begin
   c := p.Curve;
+
+  if GetCombSize(c) > 257 then
+  begin
+    minWidth := 6
+  end
+  else
+  begin
+    minWidth := 5
+  end;
 
   n := 1 shl minWidth;
   info := GetFixedPointPreCompInfo(c.GetPreCompInfo(p, PRECOMP_NAME));
@@ -133,6 +146,8 @@ begin
 
     c.NormalizeAll(lookupTable);
 
+    info.lookupTable := c.CreateCacheSafeLookupTable(lookupTable, 0,
+      System.Length(lookupTable));
     info.Offset := pow2Table[minWidth];
     info.PreComp := lookupTable;
     info.Width := minWidth;
@@ -140,6 +155,12 @@ begin
     c.SetPreCompInfo(p, PRECOMP_NAME, info);
   end;
   Result := info;
+end;
+
+class function TFixedPointUtilities.Precompute(const p: IECPoint;
+  minWidth: Int32): IFixedPointPreCompInfo;
+begin
+  Result := Precompute(p);
 end;
 
 end.
