@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -49,8 +49,11 @@ type
   EAsn1CryptoLibException = class(ECryptoLibException);
   EAsn1ParsingCryptoLibException = class(ECryptoLibException);
   EInvalidKeyCryptoLibException = class(ECryptoLibException);
+  EInvalidCipherTextCryptoLibException = class(ECryptoLibException);
   ESecurityUtilityCryptoLibException = class(ECryptoLibException);
   EAccessCryptoLibException = class(ECryptoLibException);
+  EDataLengthCryptoLibException = class(ECryptoLibException);
+  EOutputLengthCryptoLibException = class(ECryptoLibException);
 
   /// <summary>
   /// Represents a dynamic array of Byte.

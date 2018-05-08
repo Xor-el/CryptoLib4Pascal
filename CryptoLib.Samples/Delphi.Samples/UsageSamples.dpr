@@ -286,7 +286,30 @@ uses
   ClpSetWeakRef in '..\..\CryptoLib\src\Utils\ClpSetWeakRef.pas',
   UsageExamples in '..\src\UsageExamples.pas',
   ClpIECSchnorrSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrSigner.pas',
-  ClpECSchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSigner.pas';
+  ClpECSchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSigner.pas',
+  ClpCipherUtilities in '..\..\CryptoLib\src\Security\ClpCipherUtilities.pas',
+  ClpIBufferedCipher in '..\..\CryptoLib\src\Interfaces\ClpIBufferedCipher.pas',
+  ClpIBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpIBlockCipher.pas',
+  ClpIBlockCipherPadding in '..\..\CryptoLib\src\Interfaces\ClpIBlockCipherPadding.pas',
+  ClpPkcs7Padding in '..\..\CryptoLib\src\Crypto\Paddings\ClpPkcs7Padding.pas',
+  ClpIPkcs7Padding in '..\..\CryptoLib\src\Interfaces\ClpIPkcs7Padding.pas',
+  ClpCbcBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCbcBlockCipher.pas',
+  ClpICbcBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpICbcBlockCipher.pas',
+  ClpParametersWithIV in '..\..\CryptoLib\src\Crypto\Parameters\ClpParametersWithIV.pas',
+  ClpIParametersWithIV in '..\..\CryptoLib\src\Interfaces\ClpIParametersWithIV.pas',
+  ClpKeyParameter in '..\..\CryptoLib\src\Crypto\Parameters\ClpKeyParameter.pas',
+  ClpIKeyParameter in '..\..\CryptoLib\src\Interfaces\ClpIKeyParameter.pas',
+  ClpBufferedCipherBase in '..\..\CryptoLib\src\Crypto\ClpBufferedCipherBase.pas',
+  ClpIBufferedCipherBase in '..\..\CryptoLib\src\Interfaces\ClpIBufferedCipherBase.pas',
+  ClpBufferedBlockCipher in '..\..\CryptoLib\src\Crypto\ClpBufferedBlockCipher.pas',
+  ClpIBufferedBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpIBufferedBlockCipher.pas',
+  ClpCheck in '..\..\CryptoLib\src\Utils\ClpCheck.pas',
+  ClpPaddedBufferedBlockCipher in '..\..\CryptoLib\src\Crypto\Paddings\ClpPaddedBufferedBlockCipher.pas',
+  ClpIPaddedBufferedBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpIPaddedBufferedBlockCipher.pas',
+  ClpGeneratorUtilities in '..\..\CryptoLib\src\Security\ClpGeneratorUtilities.pas',
+  ClpParameterUtilities in '..\..\CryptoLib\src\Security\ClpParameterUtilities.pas',
+  ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
+  ClpIAesEngine in '..\..\CryptoLib\src\Interfaces\ClpIAesEngine.pas';
 
 begin
   try
@@ -296,6 +319,7 @@ begin
     TUsageExamples.GetPublicKeyFromPrivateKey;
     TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray;
     TUsageExamples.RecreatePublicKeyFromXAndYCoordByteArray;
+    TUsageExamples.BinaryCompatiblePascalCoinAES256EncryptDecryptDemo('Pascal Rules', 'Pascal');
     Readln;
   except
     on E: Exception do

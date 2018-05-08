@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -87,16 +87,22 @@ type
       static; inline;
 
     class function ReadUInt32AsBytesLE(a_in: UInt32): TCryptoLibByteArray;
-      static; inline;
+      overload; static; inline;
 
     class function ReadUInt32AsBytesBE(a_in: UInt32): TCryptoLibByteArray;
-      static; inline;
-
-    class function ReadUInt64AsBytesLE(a_in: UInt64): TCryptoLibByteArray;
       overload; static; inline;
 
     class function ReadUInt64AsBytesBE(a_in: UInt64): TCryptoLibByteArray;
       overload; static; inline;
+
+    class function ReadUInt64AsBytesLE(a_in: UInt64): TCryptoLibByteArray;
+      overload; static; inline;
+
+    class procedure ReadUInt32AsBytesLE(a_in: UInt32;
+      a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
+
+    class procedure ReadUInt32AsBytesBE(a_in: UInt32;
+      a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
 
     class procedure ReadUInt64AsBytesLE(a_in: UInt64;
       a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
@@ -353,6 +359,24 @@ begin
   result := TCryptoLibByteArray.Create(Byte(a_in shr 56), Byte(a_in shr 48),
     Byte(a_in shr 40), Byte(a_in shr 32), Byte(a_in shr 24), Byte(a_in shr 16),
     Byte(a_in shr 8), Byte(a_in));
+end;
+
+class procedure TConverters.ReadUInt32AsBytesBE(a_in: UInt32;
+  a_out: TCryptoLibByteArray; a_index: Int32);
+begin
+  a_out[a_index] := Byte(a_in shr 24);
+  a_out[a_index + 1] := Byte(a_in shr 16);
+  a_out[a_index + 2] := Byte(a_in shr 8);
+  a_out[a_index + 3] := Byte(a_in);
+end;
+
+class procedure TConverters.ReadUInt32AsBytesLE(a_in: UInt32;
+  a_out: TCryptoLibByteArray; a_index: Int32);
+begin
+  a_out[a_index] := Byte(a_in);
+  a_out[a_index + 1] := Byte(a_in shr 8);
+  a_out[a_index + 2] := Byte(a_in shr 16);
+  a_out[a_index + 3] := Byte(a_in shr 24);
 end;
 
 class procedure TConverters.ReadUInt64AsBytesLE(a_in: UInt64;

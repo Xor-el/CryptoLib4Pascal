@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -32,11 +32,14 @@ type
 
     class var
 
-      FNistAlgorithm, FHashAlgs, FIdSha256, FIdSha384, FIdSha512, FIdSha224,
-      FIdSha512_224, FIdSha512_256, FIdSha3_224, FIdSha3_256, FIdSha3_384,
-      FIdSha3_512: IDerObjectIdentifier;
+      FNistAlgorithm, FHashAlgs, FAES, FIdSha256, FIdSha384, FIdSha512,
+      FIdSha224, FIdSha512_224, FIdSha512_256, FIdSha3_224, FIdSha3_256,
+      FIdSha3_384, FIdSha3_512, FIdAes128Cbc, FIdAes192Cbc,
+      FIdAes256Cbc: IDerObjectIdentifier;
 
+    class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgs: IDerObjectIdentifier; static; inline;
+    class function GetAES: IDerObjectIdentifier; static; inline;
     class function GetIdSha224: IDerObjectIdentifier; static; inline;
     class function GetIdSha256: IDerObjectIdentifier; static; inline;
     class function GetIdSha3_224: IDerObjectIdentifier; static; inline;
@@ -47,7 +50,9 @@ type
     class function GetIdSha512: IDerObjectIdentifier; static; inline;
     class function GetIdSha512_224: IDerObjectIdentifier; static; inline;
     class function GetIdSha512_256: IDerObjectIdentifier; static; inline;
-    class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
+    class function GetIdAes128Cbc: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192Cbc: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256Cbc: IDerObjectIdentifier; static; inline;
 
     class constructor NistObjectIdentifiers();
 
@@ -62,6 +67,7 @@ type
     //
     class property NistAlgorithm: IDerObjectIdentifier read GetNistAlgorithm;
     class property HashAlgs: IDerObjectIdentifier read GetHashAlgs;
+    class property AES: IDerObjectIdentifier read GetAES;
     class property IdSha256: IDerObjectIdentifier read GetIdSha256;
     class property IdSha384: IDerObjectIdentifier read GetIdSha384;
     class property IdSha512: IDerObjectIdentifier read GetIdSha512;
@@ -72,6 +78,9 @@ type
     class property IdSha3_256: IDerObjectIdentifier read GetIdSha3_256;
     class property IdSha3_384: IDerObjectIdentifier read GetIdSha3_384;
     class property IdSha3_512: IDerObjectIdentifier read GetIdSha3_512;
+    class property IdAes128Cbc: IDerObjectIdentifier read GetIdAes128Cbc;
+    class property IdAes192Cbc: IDerObjectIdentifier read GetIdAes192Cbc;
+    class property IdAes256Cbc: IDerObjectIdentifier read GetIdAes256Cbc;
 
     class procedure Boot(); static;
 
@@ -85,6 +94,7 @@ class procedure TNistObjectIdentifiers.Boot;
 begin
   FNistAlgorithm := TDerObjectIdentifier.Create('2.16.840.1.101.3.4');
   FHashAlgs := NistAlgorithm.Branch('2');
+  FAES := TDerObjectIdentifier.Create(NistAlgorithm.id + '.1');
 
   FIdSha256 := HashAlgs.Branch('1');
   FIdSha384 := HashAlgs.Branch('2');
@@ -96,11 +106,34 @@ begin
   FIdSha3_256 := HashAlgs.Branch('8');
   FIdSha3_384 := HashAlgs.Branch('9');
   FIdSha3_512 := HashAlgs.Branch('10');
+  FIdAes128Cbc := TDerObjectIdentifier.Create(AES.id + '.2');
+  FIdAes192Cbc := TDerObjectIdentifier.Create(AES.id + '.22');
+  FIdAes256Cbc := TDerObjectIdentifier.Create(AES.id + '.42');
+end;
+
+class function TNistObjectIdentifiers.GetAES: IDerObjectIdentifier;
+begin
+  result := FAES;
 end;
 
 class function TNistObjectIdentifiers.GetHashAlgs: IDerObjectIdentifier;
 begin
   result := FHashAlgs;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes128Cbc: IDerObjectIdentifier;
+begin
+  result := FIdAes128Cbc;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes192Cbc: IDerObjectIdentifier;
+begin
+  result := FIdAes192Cbc;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256Cbc: IDerObjectIdentifier;
+begin
+  result := FIdAes256Cbc;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha224: IDerObjectIdentifier;

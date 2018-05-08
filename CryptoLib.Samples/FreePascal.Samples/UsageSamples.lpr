@@ -15,6 +15,7 @@ begin
     TUsageExamples.GetPublicKeyFromPrivateKey;
     TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray;
     TUsageExamples.RecreatePublicKeyFromXAndYCoordByteArray;
+    TUsageExamples.BinaryCompatiblePascalCoinAES256EncryptDecryptDemo('Pascal Rules', 'Pascal');
     Readln;
   except
     on E: Exception do

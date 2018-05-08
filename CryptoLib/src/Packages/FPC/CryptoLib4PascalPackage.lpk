@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -23,9 +23,9 @@
     <License Value="MIT License                          
 
  Acknowledgements: 
-Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring the development of this library "/>
-    <Version Major="1" Minor="6"/>
-    <Files Count="281">
+Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
+    <Version Major="1" Minor="7"/>
+    <Files Count="304">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1150,6 +1150,98 @@ Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring the developmen
         <Filename Value="..\..\Interfaces\ClpIECSchnorrSigner.pas"/>
         <UnitName Value="ClpIECSchnorrSigner"/>
       </Item281>
+      <Item282>
+        <Filename Value="..\..\Security\ClpParameterUtilities.pas"/>
+        <UnitName Value="ClpParameterUtilities"/>
+      </Item282>
+      <Item283>
+        <Filename Value="..\..\Security\ClpGeneratorUtilities.pas"/>
+        <UnitName Value="ClpGeneratorUtilities"/>
+      </Item283>
+      <Item284>
+        <Filename Value="..\..\Security\ClpCipherUtilities.pas"/>
+        <UnitName Value="ClpCipherUtilities"/>
+      </Item284>
+      <Item285>
+        <Filename Value="..\..\Interfaces\ClpIAesEngine.pas"/>
+        <UnitName Value="ClpIAesEngine"/>
+      </Item285>
+      <Item286>
+        <Filename Value="..\..\Interfaces\ClpIPkcs7Padding.pas"/>
+        <UnitName Value="ClpIPkcs7Padding"/>
+      </Item286>
+      <Item287>
+        <Filename Value="..\..\Interfaces\ClpIParametersWithIV.pas"/>
+        <UnitName Value="ClpIParametersWithIV"/>
+      </Item287>
+      <Item288>
+        <Filename Value="..\..\Interfaces\ClpIPaddedBufferedBlockCipher.pas"/>
+        <UnitName Value="ClpIPaddedBufferedBlockCipher"/>
+      </Item288>
+      <Item289>
+        <Filename Value="..\..\Interfaces\ClpIKeyParameter.pas"/>
+        <UnitName Value="ClpIKeyParameter"/>
+      </Item289>
+      <Item290>
+        <Filename Value="..\..\Interfaces\ClpICbcBlockCipher.pas"/>
+        <UnitName Value="ClpICbcBlockCipher"/>
+      </Item290>
+      <Item291>
+        <Filename Value="..\..\Interfaces\ClpIBufferedCipherBase.pas"/>
+        <UnitName Value="ClpIBufferedCipherBase"/>
+      </Item291>
+      <Item292>
+        <Filename Value="..\..\Interfaces\ClpIBufferedCipher.pas"/>
+        <UnitName Value="ClpIBufferedCipher"/>
+      </Item292>
+      <Item293>
+        <Filename Value="..\..\Interfaces\ClpIBufferedBlockCipher.pas"/>
+        <UnitName Value="ClpIBufferedBlockCipher"/>
+      </Item293>
+      <Item294>
+        <Filename Value="..\..\Interfaces\ClpIBlockCipherPadding.pas"/>
+        <UnitName Value="ClpIBlockCipherPadding"/>
+      </Item294>
+      <Item295>
+        <Filename Value="..\..\Interfaces\ClpIBlockCipher.pas"/>
+        <UnitName Value="ClpIBlockCipher"/>
+      </Item295>
+      <Item296>
+        <Filename Value="..\..\Crypto\Modes\ClpCbcBlockCipher.pas"/>
+        <UnitName Value="ClpCbcBlockCipher"/>
+      </Item296>
+      <Item297>
+        <Filename Value="..\..\Crypto\Paddings\ClpPaddedBufferedBlockCipher.pas"/>
+        <UnitName Value="ClpPaddedBufferedBlockCipher"/>
+      </Item297>
+      <Item298>
+        <Filename Value="..\..\Crypto\Paddings\ClpPkcs7Padding.pas"/>
+        <UnitName Value="ClpPkcs7Padding"/>
+      </Item298>
+      <Item299>
+        <Filename Value="..\..\Crypto\Parameters\ClpParametersWithIV.pas"/>
+        <UnitName Value="ClpParametersWithIV"/>
+      </Item299>
+      <Item300>
+        <Filename Value="..\..\Crypto\Parameters\ClpKeyParameter.pas"/>
+        <UnitName Value="ClpKeyParameter"/>
+      </Item300>
+      <Item301>
+        <Filename Value="..\..\Crypto\ClpBufferedBlockCipher.pas"/>
+        <UnitName Value="ClpBufferedBlockCipher"/>
+      </Item301>
+      <Item302>
+        <Filename Value="..\..\Crypto\ClpBufferedCipherBase.pas"/>
+        <UnitName Value="ClpBufferedCipherBase"/>
+      </Item302>
+      <Item303>
+        <Filename Value="..\..\Utils\ClpCheck.pas"/>
+        <UnitName Value="ClpCheck"/>
+      </Item303>
+      <Item304>
+        <Filename Value="..\..\Crypto\Engines\ClpAesEngine.pas"/>
+        <UnitName Value="ClpAesEngine"/>
+      </Item304>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

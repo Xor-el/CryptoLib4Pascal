@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -37,7 +37,7 @@ uses
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
-  SDigestNotFound = '"Digest " %s not recognised.';
+  SUnRecognizedDigest = '"Digest " %s not recognised.';
 
 type
   TDigestUtilities = class sealed(TObject)
@@ -248,8 +248,8 @@ begin
 
   else
     begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SDigestNotFound,
-        [mechanism]);
+      raise ESecurityUtilityCryptoLibException.CreateResFmt
+        (@SUnRecognizedDigest, [mechanism]);
     end;
 
   end;
@@ -380,11 +380,9 @@ begin
   if Falgorithms.TryGetValue(mechanism, aliased) then
   begin
     mechanism := aliased;
-    Foids.TryGetValue(mechanism, result);
-    Exit;
   end;
 
-  result := Nil;
+  Foids.TryGetValue(mechanism, result);
 
 end;
 

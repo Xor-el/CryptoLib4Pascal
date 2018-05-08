@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -25,6 +25,8 @@ interface
 
 uses
   SysUtils,
+  HlpIHash,
+  HlpHashFactory,
   ClpBigInteger,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -45,6 +47,15 @@ uses
   ClpECPoint,
   ClpISigner,
   ClpSignerUtilities,
+  ClpKeyParameter,
+  ClpIKeyParameter,
+  ClpParametersWithIV,
+  ClpIParametersWithIV,
+  ClpIBufferedCipher,
+  ClpParameterUtilities,
+  ClpCipherUtilities,
+  ClpHex,
+  ClpArrayUtils,
   ClpSecNamedCurves;
 
 type
@@ -67,23 +78,204 @@ type
     SigningAlgorithmECDSA = 'SHA-1withECDSA';
     SigningAlgorithmECSCHNORR = 'SHA-256withECSCHNORRLIBSECP';
 
+    PKCS5_SALT_LEN = Int32(8);
+    SALT_MAGIC_LEN = Int32(8);
+    SALT_SIZE = Int32(8);
+    SALT_MAGIC: String = 'Salted__';
+
   class var
     FRandom: ISecureRandom;
     FCurve: IX9ECParameters;
     class function BytesToHexString(input: TBytes): String; static;
     class constructor UsageExamples();
+  private
+    class function EVP_GetSalt(): TBytes; static; inline;
+    class function EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
+      out KeyBytes, IVBytes: TBytes): Boolean; static;
+    class function AES256CBCPascalCoinEncrypt(PlainText, PasswordBytes: TBytes)
+      : TBytes; static;
+
+    class function AES256CBCPascalCoinDecrypt(CipherText, PasswordBytes: TBytes;
+      out PlainText: TBytes): Boolean; static;
 
   public
     class procedure GenerateKeyPairAndSignECDSA(); static;
     class procedure GenerateKeyPairAndSignECSchnorr(); static;
     class procedure GetPublicKeyFromPrivateKey(); static;
     class procedure RecreatePublicAndPrivateKeyPairsFromByteArray(); static;
-    class procedure RecreatePublicKeyFromXAndYCoordByteArray(); static;
+    class procedure RecreatePublicKeyFromXAndYCoordByteArray; static;
+    class procedure BinaryCompatiblePascalCoinAES256EncryptDecryptDemo
+      (const inputmessage, password: string); static;
   end;
 
 implementation
 
 { TUsageExamples }
+
+class function TUsageExamples.EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
+  out KeyBytes, IVBytes: TBytes): Boolean;
+var
+  LKey, LIV: integer;
+  LHash: IHash;
+begin
+  LKey := 32; // AES256 CBC Key Length
+  LIV := 16; // AES256 CBC IV Length
+  System.SetLength(KeyBytes, LKey);
+  System.SetLength(IVBytes, LKey);
+  // Max size to start then reduce it at the end
+  LHash := THashFactory.TCrypto.CreateSHA2_256; // SHA2_256
+  LHash.Initialize();
+  System.Assert(LHash.HashSize >= LKey);
+  System.Assert(LHash.HashSize >= LIV);
+  // Derive Key First
+  LHash.TransformBytes(PasswordBytes);
+  if SaltBytes <> Nil then
+  begin
+    LHash.TransformBytes(SaltBytes);
+  end;
+  KeyBytes := System.Copy(LHash.TransformFinal.GetBytes);
+  // Derive IV Next
+  LHash.Initialize();
+  LHash.TransformBytes(KeyBytes);
+  LHash.TransformBytes(PasswordBytes);
+  if SaltBytes <> Nil then
+  begin
+    LHash.TransformBytes(SaltBytes);
+  end;
+  IVBytes := System.Copy(LHash.TransformFinal.GetBytes);
+
+  System.SetLength(IVBytes, LIV);
+  Result := True;
+end;
+
+class function TUsageExamples.EVP_GetSalt: TBytes;
+begin
+  System.SetLength(Result, PKCS5_SALT_LEN);
+  FRandom.NextBytes(Result);
+end;
+
+class function TUsageExamples.AES256CBCPascalCoinDecrypt(CipherText,
+  PasswordBytes: TBytes; out PlainText: TBytes): Boolean;
+var
+  SaltBytes, KeyBytes, IVBytes, Buf, Chopped: TBytes;
+  KeyParametersWithIV: IParametersWithIV;
+  cipher: IBufferedCipher;
+  LBufStart, LSrcStart, Count: Int32;
+begin
+  Result := false;
+
+  System.SetLength(SaltBytes, SALT_SIZE);
+  // First read the magic text and the salt - if any
+  Chopped := System.Copy(CipherText, 0, SALT_MAGIC_LEN);
+  if (System.Length(CipherText) >= SALT_MAGIC_LEN) and
+    (TArrayUtils.AreEqual(Chopped, TEncoding.UTF8.GetBytes(SALT_MAGIC))) then
+  begin
+    System.Move(CipherText[SALT_MAGIC_LEN], SaltBytes[0], SALT_SIZE);
+    If not EVP_GetKeyIV(PasswordBytes, SaltBytes, KeyBytes, IVBytes) then
+    begin
+      Exit;
+    end;
+    LSrcStart := SALT_MAGIC_LEN + SALT_SIZE;
+  end
+  else
+  begin
+    If Not EVP_GetKeyIV(PasswordBytes, Nil, KeyBytes, IVBytes) then
+    begin
+      Exit;
+    end;
+    LSrcStart := 0;
+  end;
+
+  cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING');
+  KeyParametersWithIV := TParametersWithIV.Create
+    (TParameterUtilities.CreateKeyParameter('AES', KeyBytes), IVBytes);
+
+  cipher.Init(false, KeyParametersWithIV); // init decryption cipher
+
+  System.SetLength(Buf, System.Length(CipherText));
+
+  LBufStart := 0;
+
+  Count := cipher.ProcessBytes(CipherText, LSrcStart, System.Length(CipherText)
+    - LSrcStart, Buf, LBufStart);
+  System.Inc(LBufStart, Count);
+  Count := cipher.DoFinal(Buf, LBufStart);
+  System.Inc(LBufStart, Count);
+
+  System.SetLength(Buf, LBufStart);
+
+  PlainText := System.Copy(Buf);
+  Result := True;
+
+end;
+
+class function TUsageExamples.AES256CBCPascalCoinEncrypt(PlainText,
+  PasswordBytes: TBytes): TBytes;
+var
+  SaltBytes, KeyBytes, IVBytes, Buf: TBytes;
+  KeyParametersWithIV: IParametersWithIV;
+  cipher: IBufferedCipher;
+  LBlockSize, LBufStart, Count: Int32;
+begin
+  SaltBytes := EVP_GetSalt;
+  EVP_GetKeyIV(PasswordBytes, SaltBytes, KeyBytes, IVBytes);
+  cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING');
+  KeyParametersWithIV := TParametersWithIV.Create
+    (TParameterUtilities.CreateKeyParameter('AES', KeyBytes), IVBytes);
+
+  cipher.Init(True, KeyParametersWithIV); // init encryption cipher
+  LBlockSize := cipher.GetBlockSize;
+
+  System.SetLength(Buf, System.Length(PlainText) + LBlockSize + SALT_MAGIC_LEN +
+    PKCS5_SALT_LEN);
+
+  LBufStart := 0;
+
+  System.Move(TEncoding.UTF8.GetBytes(SALT_MAGIC)[0], Buf[LBufStart],
+    SALT_MAGIC_LEN * System.SizeOf(Byte));
+  System.Inc(LBufStart, SALT_MAGIC_LEN);
+  System.Move(SaltBytes[0], Buf[LBufStart],
+    PKCS5_SALT_LEN * System.SizeOf(Byte));
+  System.Inc(LBufStart, PKCS5_SALT_LEN);
+
+  Count := cipher.ProcessBytes(PlainText, 0, System.Length(PlainText), Buf,
+    LBufStart);
+  System.Inc(LBufStart, Count);
+  Count := cipher.DoFinal(Buf, LBufStart);
+  System.Inc(LBufStart, Count);
+
+  System.SetLength(Buf, LBufStart);
+  Result := Buf;
+end;
+
+class procedure TUsageExamples.
+  BinaryCompatiblePascalCoinAES256EncryptDecryptDemo(const inputmessage,
+  password: string);
+var
+  PlainText, PasswordBytes, CipherText, DecryptedCipherText: TBytes;
+begin
+
+  PlainText := TEncoding.UTF8.GetBytes(inputmessage);
+  PasswordBytes := TEncoding.UTF8.GetBytes(password);
+  CipherText := TUsageExamples.AES256CBCPascalCoinEncrypt(PlainText,
+    PasswordBytes);
+
+  if TUsageExamples.AES256CBCPascalCoinDecrypt(CipherText, PasswordBytes,
+    DecryptedCipherText) then
+  begin
+    if TArrayUtils.AreEqual(PlainText, DecryptedCipherText) then
+    begin
+      Writeln('AES_256_CBC PascalCoin Compatability Encrypt, Decrypt Was Successful '
+        + sLineBreak);
+      Exit;
+    end;
+
+  end;
+
+  Writeln('AES_256_CBC PascalCoin Compatability Encrypt, Decrypt Failed ' +
+    sLineBreak);
+
+end;
 
 class function TUsageExamples.BytesToHexString(input: TBytes): String;
 var
@@ -146,7 +338,7 @@ begin
 
   // sign
 
-  signer.Init(true, privParams);
+  signer.Init(True, privParams);
 
   &message := TEncoding.UTF8.GetBytes('PascalECDSA');
 
@@ -215,7 +407,7 @@ begin
 
   // sign
 
-  signer.Init(true, privParams);
+  signer.Init(True, privParams);
 
   &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
 

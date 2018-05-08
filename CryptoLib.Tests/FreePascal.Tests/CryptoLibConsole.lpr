@@ -20,6 +20,9 @@ uses
   SecureRandomTests,
   DigestRandomNumberTests,
   FixedPointTests,
+  AESTests,
+  BlockCipherVectorTests,
+  AESTestVectors,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

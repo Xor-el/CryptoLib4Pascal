@@ -94,7 +94,14 @@ uses
   ClpFilterStream, ClpStreams, ClpOSRandom, ClpPcgRandomMinimal, 
   ClpOSRandomNumberGenerator, ClpPCGRandomNumberGenerator, 
   ClpRandomNumberGenerator, ClpSetWeakRef, ClpDefiniteLengthInputStream, 
-  ClpECSchnorrSigner, ClpIECSchnorrSigner;
+  ClpECSchnorrSigner, ClpIECSchnorrSigner, ClpParameterUtilities, 
+  ClpGeneratorUtilities, ClpCipherUtilities, ClpIAesEngine, ClpIPkcs7Padding, 
+  ClpIParametersWithIV, ClpIPaddedBufferedBlockCipher, ClpIKeyParameter, 
+  ClpICbcBlockCipher, ClpIBufferedCipherBase, ClpIBufferedCipher, 
+  ClpIBufferedBlockCipher, ClpIBlockCipherPadding, ClpIBlockCipher, 
+  ClpCbcBlockCipher, ClpPaddedBufferedBlockCipher, ClpPkcs7Padding, 
+  ClpParametersWithIV, ClpKeyParameter, ClpBufferedBlockCipher, 
+  ClpBufferedCipherBase, ClpCheck, ClpAesEngine;
 
 implementation
 

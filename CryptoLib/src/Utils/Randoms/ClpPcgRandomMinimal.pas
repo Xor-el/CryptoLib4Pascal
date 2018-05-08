@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -70,7 +70,7 @@ type
       /// <summary>
       /// Internal variable used for Casting.
       /// </summary>
-      I64: Int64;
+      FI64: Int64;
     end;
 
     /// <summary>
@@ -232,7 +232,7 @@ class function TPcg.GetInitState(out initSeq: UInt64): UInt64;
 
 begin
   result := UInt64
-    (CompConverter(TimeStampToMsecs(DateTimeToTimeStamp(Now))).I64);
+    (CompConverter(TimeStampToMsecs(DateTimeToTimeStamp(Now))).FI64);
   initSeq := GetInitSeq(result) * UInt64(Int64(1000000));
 
 end;

@@ -1,6 +1,6 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                    Copyright (c) 2018 Ugochukwu Mmaduekwe                       * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -8,8 +8,8 @@
 
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
-{ *        Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring        * }
-{ *                        the development of this library                          * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
 
 { * ******************************************************************************* * }
 
@@ -38,8 +38,8 @@ uses
   ClpIDerObjectIdentifier;
 
 resourcestring
-  SMechanismNil = 'Mechanism';
-  SAlgorithmNil = 'Algorithm';
+  SMechanismNil = 'Mechanism Cannot be Nil';
+  SAlgorithmNil = 'Algorithm Cannot be Nil';
   SUnRecognizedAlgorithm = 'Signer " %s " not recognised.';
 
 type
