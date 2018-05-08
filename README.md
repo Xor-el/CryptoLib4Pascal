@@ -99,7 +99,7 @@ To Run Unit Tests,
         
   **Acknowledgements**
  
-Thanks to Sphere 10 Software (http://sphere10.com) for sponsoring the development of this library.
+Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library.
 
 **License**
 
