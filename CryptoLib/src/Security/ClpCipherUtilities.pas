@@ -61,7 +61,7 @@ type
 {$SCOPEDENUMS ON}
     TCipherAlgorithm = (AES);
     TCipherMode = (NONE, CBC);
-    TCipherPadding = (PKCS5, PKCS5PADDING, PKCS7, PKCS7PADDING);
+    TCipherPadding = (NOPADDING, PKCS5, PKCS5PADDING, PKCS7, PKCS7PADDING);
 {$SCOPEDENUMS OFF}
 
   class var
@@ -221,6 +221,10 @@ begin
       (GetEnumValue(TypeInfo(TCipherPadding), temp));
 
     case cipherPadding of
+      TCipherPadding.NOPADDING:
+        begin
+          padded := false;
+        end;
       TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7,
         TCipherPadding.PKCS7PADDING:
         begin
