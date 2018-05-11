@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  Generics.Collections,
+  Classes,
   HlpIHash,
   ClpISigner,
   ClpSecureRandom,
@@ -65,7 +65,7 @@ type
     FVariant: String;
     FforSigning: Boolean;
     Fkey: IECKeyParameters;
-    Fm_list: TList<TCryptoLibByteArray>;
+    FBuffer: TMemoryStream;
 
     function Aggregate: TCryptoLibByteArray;
 
@@ -248,33 +248,16 @@ begin
 end;
 
 function TECSchnorrSigner.Aggregate: TCryptoLibByteArray;
-var
-  sum, index: Int32;
-  arr: TCryptoLibByteArray;
 begin
-  sum := 0;
-  for arr in Fm_list do
-  begin
-    sum := sum + System.length(arr);
-  end;
-
-  System.SetLength(Result, sum);
-  index := 0;
-
-  for arr in Fm_list do
-
-  begin
-    System.Move(arr[0], Result[index], System.length(arr) *
-      System.SizeOf(Byte));
-    index := index + System.length(arr);
-  end;
-
+  FBuffer.Position := 0;
+  System.SetLength(Result, FBuffer.Size);
+  FBuffer.Read(Result[0], FBuffer.Size);
 end;
 
 procedure TECSchnorrSigner.BlockUpdate(input: TCryptoLibByteArray;
   inOff, length: Int32);
 begin
-  Fm_list.Add(System.Copy(input, inOff, length));
+  FBuffer.Write(input[inOff], length);
 end;
 
 constructor TECSchnorrSigner.Create(const digest: IHash;
@@ -283,12 +266,12 @@ begin
   inherited Create();
   FDigest := digest;
   FVariant := schnorr_variant;
-  Fm_list := TList<TCryptoLibByteArray>.Create();
+  FBuffer := TMemoryStream.Create();
 end;
 
 destructor TECSchnorrSigner.Destroy;
 begin
-  Fm_list.Free;
+  FBuffer.Free;
   inherited Destroy;
 end;
 
@@ -418,7 +401,7 @@ function TECSchnorrSigner.Do_Verify(const pu_key: IECPublicKeyParameters;
 var
   curve: IECCurve;
   n, r, s, h, v: TBigInteger;
-  size: Int32;
+  Size: Int32;
   G, q, sG, rW, hW, LR: IECPoint;
   xQ, yQ, tempV, tempH, rb: TCryptoLibByteArray;
   R_and_S: TCryptoLibGenericArray<TBigInteger>;
@@ -431,14 +414,14 @@ begin
   curve := pu_key.parameters.curve;
   n := curve.order;
   G := pu_key.parameters.G;
-  size := TBits.Asr32(curve.FieldSize, 3);
+  Size := TBits.Asr32(curve.FieldSize, 3);
 
   R_and_S := Decode_Sig(sig);
 
   r := R_and_S[0];
   s := R_and_S[1];
 
-  if (not(r.IsInitialized) or (r.CompareTo(TBigInteger.Two.Pow(size * 8)
+  if (not(r.IsInitialized) or (r.CompareTo(TBigInteger.Two.Pow(Size * 8)
     .Subtract(TBigInteger.One)) = 1) or (s.CompareTo(TBigInteger.Zero) = 0) or
     (s.CompareTo(n.Subtract(TBigInteger.One)) = 1)) then
   begin
@@ -591,7 +574,8 @@ end;
 procedure TECSchnorrSigner.Reset;
 begin
   FDigest.Initialize;
-  Fm_list.Clear;
+  FBuffer.Clear;
+  FBuffer.SetSize(0);
 end;
 
 function TECSchnorrSigner.Sign_K(const pv_key: IECPrivateKeyParameters;
@@ -602,7 +586,7 @@ end;
 
 procedure TECSchnorrSigner.Update(input: Byte);
 begin
-  Fm_list.Add(TCryptoLibByteArray.Create(input));
+  FBuffer.Write(TCryptoLibByteArray.Create(input)[0], 1);
 end;
 
 function TECSchnorrSigner.VerifySignature
