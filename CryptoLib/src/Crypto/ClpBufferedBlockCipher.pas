@@ -282,7 +282,7 @@ var
 begin
   if (input = Nil) then
   begin
-    raise EArgumentNilCryptoLibException.Create(SInputNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   end;
 
   &length := GetOutputSize(inLen);
@@ -403,7 +403,7 @@ begin
   begin
     if ((outOff + System.length(Fbuf)) > System.length(output)) then
     begin
-      raise EDataLengthCryptoLibException.Create(SOutputBufferTooSmall);
+      raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
     end;
 
     FbufOff := 0;
@@ -452,7 +452,7 @@ begin
   begin
     if (length < 0) then
     begin
-      raise EArgumentCryptoLibException.Create(SInvalidLength);
+      raise EArgumentCryptoLibException.CreateRes(@SInvalidLength);
     end;
     result := 0;
     Exit;
@@ -502,7 +502,7 @@ var
 begin
   if (input = Nil) then
   begin
-    raise EArgumentNilCryptoLibException.Create(SInputNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   end;
   if (length < 1) then
   begin
