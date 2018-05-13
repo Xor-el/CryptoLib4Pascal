@@ -58,6 +58,9 @@ type
     class function CopyOfRange(data: TCryptoLibByteArray; from, &to: Int32)
       : TCryptoLibByteArray; static;
 
+    class function ConstantTimeAreEqual(a_ar1, a_ar2: TCryptoLibByteArray)
+      : Boolean; static;
+
   end;
 
 implementation
@@ -116,6 +119,30 @@ begin
 
   Result := CompareMem(A, B, System.Length(A) * System.SizeOf(Int32));
 end;
+
+{$B+}
+
+class function TArrayUtils.ConstantTimeAreEqual(a_ar1,
+  a_ar2: TCryptoLibByteArray): Boolean;
+var
+  i: Int32;
+  diff: UInt32;
+
+begin
+  diff := UInt32(System.Length(a_ar1)) xor UInt32(System.Length(a_ar2));
+
+  i := 0;
+
+  while (i <= System.High(a_ar1)) and (i <= System.High(a_ar2)) do
+  begin
+    diff := diff or (UInt32(a_ar1[i] xor a_ar2[i]));
+    System.Inc(i);
+  end;
+
+  Result := diff = 0;
+end;
+
+{$B-}
 
 class function TArrayUtils.CopyOfRange(data: TCryptoLibByteArray;
   from, &to: Int32): TCryptoLibByteArray;
