@@ -55,10 +55,10 @@ type
     class function Prepend(const A: TCryptoLibByteArray; B: Byte)
       : TCryptoLibByteArray; static;
 
-    class function CopyOfRange(data: TCryptoLibByteArray; from, &to: Int32)
-      : TCryptoLibByteArray; static;
+    class function CopyOfRange(const data: TCryptoLibByteArray;
+      from, &to: Int32): TCryptoLibByteArray; static;
 
-    class function ConstantTimeAreEqual(a_ar1, a_ar2: TCryptoLibByteArray)
+    class function ConstantTimeAreEqual(const a_ar1, a_ar2: TCryptoLibByteArray)
       : Boolean; static;
 
   end;
@@ -122,7 +122,7 @@ end;
 
 {$B+}
 
-class function TArrayUtils.ConstantTimeAreEqual(a_ar1,
+class function TArrayUtils.ConstantTimeAreEqual(const a_ar1,
   a_ar2: TCryptoLibByteArray): Boolean;
 var
   i: Int32;
@@ -144,7 +144,7 @@ end;
 
 {$B-}
 
-class function TArrayUtils.CopyOfRange(data: TCryptoLibByteArray;
+class function TArrayUtils.CopyOfRange(const data: TCryptoLibByteArray;
   from, &to: Int32): TCryptoLibByteArray;
 var
   newLength: Int32;
