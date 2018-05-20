@@ -114,8 +114,7 @@ uses
   ClpIEphemeralKeyPair, ClpIKeyParser, ClpIKdf2BytesGenerator, 
   ClpIBaseKdfBytesGenerator, ClpIIso18033KdfParameters, ClpIKdfParameters, 
   ClpIDerivationFunction, ClpIDerivationParameters, ClpIECDHBasicAgreement, 
-  ClpIBasicAgreement, Generics.Collections, Generics.Defaults, 
-  Generics.Hashes, Generics.Helpers, Generics.MemoryExpanders, Generics.Strings;
+  ClpIBasicAgreement;
 
 implementation
 
