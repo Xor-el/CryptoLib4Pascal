@@ -47,7 +47,6 @@ var
   LResult: UInt32;
 begin
   temp := Self;
-  temp := AnsiUpperCase(temp);
 
   LResult := 0;
 {$IFDEF DELPHIXE3_UP}

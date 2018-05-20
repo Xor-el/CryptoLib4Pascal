@@ -145,7 +145,7 @@ begin
   LowPoint := 1;
   HighPoint := System.Length(s);
 {$ENDIF DELPHIXE3_UP}
-  For i := LowPoint to System.Pred(HighPoint) do
+  For i := LowPoint to HighPoint do
   begin
     if (CharInSet(s[i], ['0' .. '9'])) then
     begin
