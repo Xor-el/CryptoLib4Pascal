@@ -56,7 +56,7 @@ type
       keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static; inline;
 
     class function CreateKeyParameter(const algorithm: String;
-      keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static; inline;
+      keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
 
     class function CreateKeyParameter(const algOid: IDerObjectIdentifier;
       keyBytes: TCryptoLibByteArray; offset, length: Int32): IKeyParameter;

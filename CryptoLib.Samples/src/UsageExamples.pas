@@ -19,6 +19,8 @@ unit UsageExamples;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
+{$HINTS OFF}
+{$WARNINGS OFF}
 {$ENDIF FPC}
 
 interface
@@ -26,6 +28,7 @@ interface
 uses
   SysUtils,
   HlpIHash,
+  HlpIHashInfo,
   HlpHashFactory,
   ClpBigInteger,
   ClpSecureRandom,
@@ -38,23 +41,44 @@ uses
   ClpIECKeyGenerationParameters,
   ClpECKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
+  ClpAsymmetricCipherKeyPair,
   ClpIECPrivateKeyParameters,
   ClpIECPublicKeyParameters,
   ClpECPublicKeyParameters,
   ClpECPrivateKeyParameters,
+  ClpIAsymmetricKeyParameter,
   ClpECSchnorrSigner,
   ClpIECInterface,
   ClpECPoint,
   ClpISigner,
   ClpSignerUtilities,
-  ClpKeyParameter,
-  ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpIBufferedCipher,
+  ClpIBufferedBlockCipher,
+  // ClpIIESEngine,
+  // ClpIESEngine,
+  ClpPascalCoinIESEngine,
+  ClpIPascalCoinIESEngine,
+  ClpIIESWithCipherParameters,
+  ClpIESWithCipherParameters,
+  ClpIAesEngine,
+  ClpAesEngine,
+  ClpICbcBlockCipher,
+  ClpCbcBlockCipher,
+  ClpIZeroBytePadding,
+  ClpZeroBytePadding,
+  ClpIIESCipher,
+  ClpIESCipher,
+  ClpIECDHBasicAgreement,
+  ClpECDHBasicAgreement,
+  ClpIPascalCoinECIESKdfBytesGenerator,
+  ClpPascalCoinECIESKdfBytesGenerator,
+  ClpPaddedBufferedBlockCipher,
   ClpParameterUtilities,
   ClpCipherUtilities,
-  ClpHex,
+  ClpGeneratorUtilities,
+  ClpIAsymmetricCipherKeyPairGenerator,
   ClpArrayUtils,
   ClpSecNamedCurves;
 
@@ -89,6 +113,11 @@ type
     class function BytesToHexString(input: TBytes): String; static;
     class constructor UsageExamples();
   private
+    class procedure DoSigningAndVerifying(const PublicKey
+      : IECPublicKeyParameters; const PrivateKey: IECPrivateKeyParameters;
+      const CallerMethod, TextToSign: String;
+      const SigningAlgo: String = SigningAlgorithmECDSA); static;
+
     class function EVP_GetSalt(): TBytes; static; inline;
     class function EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
       out KeyBytes, IVBytes: TBytes): Boolean; static;
@@ -98,6 +127,17 @@ type
     class function AES256CBCPascalCoinDecrypt(CipherText, PasswordBytes: TBytes;
       out PlainText: TBytes): Boolean; static;
 
+    class function GetECIESPascalCoinCompatibilityEngine
+      : IPascalCoinIESEngine; static;
+    class function GetECKeyPair: IAsymmetricCipherKeyPair; static;
+    class function GetIESCipherParameters: IIESWithCipherParameters; static;
+
+    class function ECIESPascalCoinEncrypt(const PublicKey
+      : IAsymmetricKeyParameter; PlainText: TBytes): TBytes; static;
+    class function ECIESPascalCoinDecrypt(const PrivateKey
+      : IAsymmetricKeyParameter; CipherText: TBytes; out PlainText: TBytes)
+      : Boolean; static;
+
   public
     class procedure GenerateKeyPairAndSignECDSA(); static;
     class procedure GenerateKeyPairAndSignECSchnorr(); static;
@@ -106,11 +146,37 @@ type
     class procedure RecreatePublicKeyFromXAndYCoordByteArray; static;
     class procedure BinaryCompatiblePascalCoinAES256EncryptDecryptDemo
       (const inputmessage, password: string); static;
+    class procedure BinaryCompatiblePascalCoinECIESEncryptDecryptDemo
+      (const input: string); static;
   end;
 
 implementation
 
 { TUsageExamples }
+
+class function TUsageExamples.ECIESPascalCoinDecrypt(const PrivateKey
+  : IAsymmetricKeyParameter; CipherText: TBytes; out PlainText: TBytes)
+  : Boolean;
+var
+  CipherDecrypt: IIESCipher;
+begin
+  // Decryption
+  CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
+  CipherDecrypt.Init(False, PrivateKey, GetIESCipherParameters, FRandom);
+  PlainText := CipherDecrypt.DoFinal(CipherText);
+  Result := True;
+end;
+
+class function TUsageExamples.ECIESPascalCoinEncrypt(const PublicKey
+  : IAsymmetricKeyParameter; PlainText: TBytes): TBytes;
+var
+  CipherEncrypt: IIESCipher;
+begin
+  // Encryption
+  CipherEncrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
+  CipherEncrypt.Init(True, PublicKey, GetIESCipherParameters, FRandom);
+  Result := CipherEncrypt.DoFinal(PlainText);
+end;
 
 class function TUsageExamples.EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
   out KeyBytes, IVBytes: TBytes): Boolean;
@@ -162,7 +228,7 @@ var
   cipher: IBufferedCipher;
   LBufStart, LSrcStart, Count: Int32;
 begin
-  Result := false;
+  Result := False;
 
   System.SetLength(SaltBytes, SALT_SIZE);
   // First read the magic text and the salt - if any
@@ -190,7 +256,7 @@ begin
   KeyParametersWithIV := TParametersWithIV.Create
     (TParameterUtilities.CreateKeyParameter('AES', KeyBytes), IVBytes);
 
-  cipher.Init(false, KeyParametersWithIV); // init decryption cipher
+  cipher.Init(False, KeyParametersWithIV); // init decryption cipher
 
   System.SetLength(Buf, System.Length(CipherText));
 
@@ -277,6 +343,33 @@ begin
 
 end;
 
+class procedure TUsageExamples.BinaryCompatiblePascalCoinECIESEncryptDecryptDemo
+  (const input: string);
+var
+  PlainText, CipherText, DecryptedCipherText: TBytes;
+  KeyPair: IAsymmetricCipherKeyPair;
+begin
+  KeyPair := GetECKeyPair;
+  PlainText := TEncoding.UTF8.GetBytes(input);
+  CipherText := TUsageExamples.ECIESPascalCoinEncrypt(KeyPair.Public,
+    PlainText);
+
+  if TUsageExamples.ECIESPascalCoinDecrypt(KeyPair.Private, CipherText,
+    DecryptedCipherText) then
+  begin
+    if TArrayUtils.AreEqual(PlainText, DecryptedCipherText) then
+    begin
+      Writeln('ECIES PascalCoin Compatability Encrypt, Decrypt Was Successful '
+        + sLineBreak);
+      Exit;
+    end;
+
+  end;
+
+  Writeln('ECIES PascalCoin Compatability Encrypt, Decrypt Failed ' +
+    sLineBreak);
+end;
+
 class function TUsageExamples.BytesToHexString(input: TBytes): String;
 var
   index: Int32;
@@ -296,16 +389,56 @@ begin
   Result := '[' + Result + ']';
 end;
 
+class procedure TUsageExamples.DoSigningAndVerifying(const PublicKey
+  : IECPublicKeyParameters; const PrivateKey: IECPrivateKeyParameters;
+  const CallerMethod, TextToSign: String;
+  const SigningAlgo: String = SigningAlgorithmECDSA);
+var
+  Signer: ISigner;
+  &message, sigBytes: TBytes;
+begin
+
+  Writeln('Caller Method Is ' + CallerMethod + sLineBreak);
+
+  Signer := TSignerUtilities.GetSigner(SigningAlgo);
+
+  Writeln('Signer Name is: ' + Signer.AlgorithmName + sLineBreak);
+
+  &message := TEncoding.UTF8.GetBytes(TextToSign);
+
+  // Sign
+  Signer.Init(True, PrivateKey);
+
+  Signer.BlockUpdate(&message, 0, System.Length(&message));
+
+  sigBytes := Signer.GenerateSignature();
+
+  Writeln('Generated Signature is: ' + BytesToHexString(sigBytes) + sLineBreak);
+
+  // Verify
+
+  Signer.Init(False, PublicKey);
+
+  Signer.BlockUpdate(&message, 0, System.Length(&message));
+
+  if (not Signer.VerifySignature(sigBytes)) then
+  begin
+    Writeln(PublicKey.AlgorithmName + ' verification failed' + sLineBreak);
+  end
+  else
+  begin
+    Writeln(PublicKey.AlgorithmName + ' verification passed' + sLineBreak);
+  end;
+end;
+
 class procedure TUsageExamples.GenerateKeyPairAndSignECDSA;
 var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
   keygenParams: IECKeyGenerationParameters;
-  keypair: IAsymmetricCipherKeyPair;
+  KeyPair: IAsymmetricCipherKeyPair;
   privParams: IECPrivateKeyParameters;
   pubParams: IECPublicKeyParameters;
-  signer: ISigner;
-  &message, sigBytes: TBytes;
 const
   MethodName = 'GenerateKeyPairAndSignECDSA';
 begin
@@ -318,9 +451,9 @@ begin
   keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
   generator.Init(keygenParams);
 
-  keypair := generator.GenerateKeyPair();
-  privParams := keypair.Private as IECPrivateKeyParameters; // for signing
-  pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
+  KeyPair := generator.GenerateKeyPair();
+  privParams := KeyPair.Private as IECPrivateKeyParameters; // for signing
+  pubParams := KeyPair.Public as IECPublicKeyParameters; // for verifying
 
   Writeln('Algorithm Name is: ' + pubParams.AlgorithmName + sLineBreak);
 
@@ -332,36 +465,7 @@ begin
   Writeln('Private Key D Parameter is: ' + privParams.D.ToString(16) +
     sLineBreak);
 
-  signer := TSignerUtilities.GetSigner(SigningAlgorithmECDSA);
-
-  Writeln('Signer Name is: ' + signer.AlgorithmName + sLineBreak);
-
-  // sign
-
-  signer.Init(True, privParams);
-
-  &message := TEncoding.UTF8.GetBytes('PascalECDSA');
-
-  signer.BlockUpdate(&message, 0, System.Length(&message));
-
-  sigBytes := signer.GenerateSignature();
-
-  Writeln('Generated Signature is: ' + BytesToHexString(sigBytes) + sLineBreak);
-
-  // verify
-
-  signer.Init(false, pubParams);
-
-  signer.BlockUpdate(&message, 0, System.Length(&message));
-
-  if (not signer.VerifySignature(sigBytes)) then
-  begin
-    Writeln(pubParams.AlgorithmName + ' verification failed' + sLineBreak);
-  end
-  else
-  begin
-    Writeln(pubParams.AlgorithmName + ' verification passed' + sLineBreak);
-  end;
+  DoSigningAndVerifying(pubParams, privParams, MethodName, 'PascalECDSA');
 
 end;
 
@@ -370,11 +474,9 @@ var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
   keygenParams: IECKeyGenerationParameters;
-  keypair: IAsymmetricCipherKeyPair;
+  KeyPair: IAsymmetricCipherKeyPair;
   privParams: IECPrivateKeyParameters;
   pubParams: IECPublicKeyParameters;
-  signer: ISigner;
-  &message, sigBytes: TBytes;
 const
   MethodName = 'GenerateKeyPairAndSignECSchnorr';
 begin
@@ -387,9 +489,9 @@ begin
   keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
   generator.Init(keygenParams);
 
-  keypair := generator.GenerateKeyPair();
-  privParams := keypair.Private as IECPrivateKeyParameters; // for signing
-  pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
+  KeyPair := generator.GenerateKeyPair();
+  privParams := KeyPair.Private as IECPrivateKeyParameters; // for signing
+  pubParams := KeyPair.Public as IECPublicKeyParameters; // for verifying
 
   Writeln('Algorithm Name is: ' + pubParams.AlgorithmName + sLineBreak);
 
@@ -401,37 +503,132 @@ begin
   Writeln('Private Key D Parameter is: ' + privParams.D.ToString(16) +
     sLineBreak);
 
-  signer := TSignerUtilities.GetSigner(SigningAlgorithmECSCHNORR);
+  DoSigningAndVerifying(pubParams, privParams, MethodName, 'PascalECSCHNORR',
+    SigningAlgorithmECSCHNORR);
 
-  Writeln('Signer Name is: ' + signer.AlgorithmName + sLineBreak);
+end;
 
-  // sign
+class function TUsageExamples.GetECIESPascalCoinCompatibilityEngine
+  : IPascalCoinIESEngine;
+var
+  cipher: IBufferedBlockCipher;
+  AesEngine: IAesEngine;
+  blockCipher: ICbcBlockCipher;
+  ECDHBasicAgreementInstance: IECDHBasicAgreement;
+  KDFInstance: IPascalCoinECIESKdfBytesGenerator;
+  HMACInstance: IHMAC;
 
-  signer.Init(True, privParams);
+begin
+  // Set up IES Cipher Engine For Compatibility With PascalCoin
 
-  &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
+  ECDHBasicAgreementInstance := TECDHBasicAgreement.Create();
 
-  signer.BlockUpdate(&message, 0, System.Length(&message));
+  KDFInstance := TPascalCoinECIESKdfBytesGenerator.Create
+    (THashFactory.TCrypto.CreateSHA2_512 as IHash);
 
-  sigBytes := signer.GenerateSignature();
+  HMACInstance := THashFactory.THMAC.CreateHMAC
+    (THashFactory.TCrypto.CreateMD5 as IHash);
 
-  Writeln('Generated Signature is: ' + BytesToHexString(sigBytes) + sLineBreak);
+  // Set Up Block Cipher
+  AesEngine := TAesEngine.Create(); // AES Engine
 
-  // verify
+  blockCipher := TCbcBlockCipher.Create(AesEngine); // CBC
 
-  signer.Init(false, pubParams);
+  cipher := TPaddedBufferedBlockCipher.Create(blockCipher,
+    TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
 
-  signer.BlockUpdate(&message, 0, System.Length(&message));
+  Result := TPascalCoinIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
+    HMACInstance, cipher);
+end;
 
-  if (not signer.VerifySignature(sigBytes)) then
-  begin
-    Writeln(pubParams.AlgorithmName + ' verification failed' + sLineBreak);
-  end
-  else
-  begin
-    Writeln(pubParams.AlgorithmName + ' verification passed' + sLineBreak);
-  end;
+class function TUsageExamples.GetECKeyPair: IAsymmetricCipherKeyPair;
+const
+  AccountPrivateKeyHex =
+    'Enter Your Decrypted Private Key Here in Hexadecimal!!!';
+  CurveName = 'secp256k1';
+var
+  Lcurve: IX9ECParameters;
+  domain: IECDomainParameters;
+  // PrivateKeyBytes: TBytes;
+  // RegeneratedPublicKey: IECPublicKeyParameters;
+  // RegeneratedPrivateKey: IECPrivateKeyParameters;
+  // PrivD: TBigInteger;
+  KeyPairGeneratorInstance: IAsymmetricCipherKeyPairGenerator;
+const
+  MethodName = 'GetECKeyPair';
+begin
+  // Create From Existing Parameter Method
+  // System.Assert(AccountPrivateKeyHex <> '', 'Private Key Cannot be Empty');
+  // System.Assert(CurveName <> '', 'CurveName Cannot be Empty');
+  //
+  // PrivateKeyBytes := THex.Decode(AccountPrivateKeyHex);
+  // Lcurve := TSecNamedCurves.GetByName(CurveName);
+  // System.Assert(Lcurve <> Nil, 'Curve Cannot be Nil');
+  //
+  // // Set Up Asymmetric Key Pair from known private key ByteArray
+  //
+  // domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
+  // Lcurve.H, Lcurve.GetSeed);
+  //
+  // PrivD := TBigInteger.Create(1, PrivateKeyBytes);
+  // RegeneratedPrivateKey := TECPrivateKeyParameters.Create('ECDSA',
+  // PrivD, domain);
+  //
+  // RegeneratedPublicKey := TECKeyPairGenerator.GetCorrespondingPublicKey
+  // (RegeneratedPrivateKey);
+  //
+  // Result := TAsymmetricCipherKeyPair.Create
+  // (RegeneratedPublicKey as IAsymmetricKeyParameter,
+  // RegeneratedPrivateKey as IAsymmetricKeyParameter);
+  //
+  // // Do Signing and Verifying to Assert Proper Recreation Of Public and Private Key
+  // DoSigningAndVerifying(RegeneratedPublicKey, RegeneratedPrivateKey, MethodName,
+  // 'PascalECDSA');
 
+  // Full Generation Method
+
+  Lcurve := TSecNamedCurves.GetByName(CurveName);
+  KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
+  domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
+    Lcurve.H, Lcurve.GetSeed);
+  KeyPairGeneratorInstance.Init(TECKeyGenerationParameters.Create(domain,
+    FRandom));
+  Result := KeyPairGeneratorInstance.GenerateKeyPair();
+
+  DoSigningAndVerifying(Result.Public as IECPublicKeyParameters,
+    Result.Private as IECPrivateKeyParameters, MethodName, 'PascalECDSA');
+
+end;
+
+class function TUsageExamples.GetIESCipherParameters: IIESWithCipherParameters;
+var
+  Derivation, Encoding, IVBytes: TBytes;
+  MacKeySizeInBits, CipherKeySizeInBits: Int32;
+  UsePointCompression: Boolean;
+begin
+  // Set up  IES Cipher Parameters For Compatibility With PascalCoin Current Implementation
+
+  // The derivation and encoding vectors are used when initialising the KDF and MAC.
+  // They're optional but if used then they need to be known by the other user so that
+  // they can decrypt the ciphertext and verify the MAC correctly. The security is based
+  // on the shared secret coming from the (static-ephemeral) ECDH key agreement.
+  Derivation := Nil;
+
+  Encoding := Nil;
+
+  System.SetLength(IVBytes, 16); // using Zero Initialized IV for compatibility
+
+  MacKeySizeInBits := 32 * 8;
+
+  // Since we are using AES256_CBC for compatibility
+  CipherKeySizeInBits := 32 * 8;
+
+  // whether to use point compression when deriving the octets string
+  // from a point or not in the EphemeralKeyPairGenerator
+  UsePointCompression := True; // for compatibility
+
+  Result := TIESWithCipherParameters.Create(Derivation, Encoding, IVBytes,
+    MacKeySizeInBits, CipherKeySizeInBits, UsePointCompression);
 end;
 
 class procedure TUsageExamples.GetPublicKeyFromPrivateKey;
@@ -439,7 +636,7 @@ var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
   keygenParams: IECKeyGenerationParameters;
-  keypair: IAsymmetricCipherKeyPair;
+  KeyPair: IAsymmetricCipherKeyPair;
   privParams: IECPrivateKeyParameters;
   pubParams, recreatedPubKeyParameters: IECPublicKeyParameters;
   EncodedPublicKey, RecreatedEncodedPublicKey: TBytes;
@@ -456,9 +653,9 @@ begin
   keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
   generator.Init(keygenParams);
 
-  keypair := generator.GenerateKeyPair();
-  privParams := keypair.Private as IECPrivateKeyParameters; // for signing
-  pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
+  KeyPair := generator.GenerateKeyPair();
+  privParams := KeyPair.Private as IECPrivateKeyParameters; // for signing
+  pubParams := KeyPair.Public as IECPublicKeyParameters; // for verifying
 
   Writeln('Algorithm Name is: ' + pubParams.AlgorithmName + sLineBreak);
 
@@ -507,11 +704,16 @@ begin
       sLineBreak);
   end;
 
+  // Do Signing and Verifying to Assert Proper Recreation Of Public Key
+  DoSigningAndVerifying(recreatedPubKeyParameters, privParams, MethodName,
+    'PascalECDSA');
+
   // or the easier method
   // Method Two (** Preferred **)
 
-  if pubParams.Equals(TECKeyPairGenerator.GetCorrespondingPublicKey(privParams))
-  then
+  recreatedPubKeyParameters := TECKeyPairGenerator.GetCorrespondingPublicKey
+    (privParams);
+  if pubParams.Equals(recreatedPubKeyParameters) then
   begin
     Writeln('Public Key Recreation Match With Original Public Key' +
       sLineBreak);
@@ -522,6 +724,11 @@ begin
       sLineBreak);
   end;
 
+  // Do Signing and Verifying to Assert Proper Recreation Of Public Key
+
+  DoSigningAndVerifying(recreatedPubKeyParameters, privParams, MethodName,
+    'PascalECDSA');
+
 end;
 
 class procedure TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray;
@@ -529,7 +736,7 @@ var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
   keygenParams: IECKeyGenerationParameters;
-  keypair: IAsymmetricCipherKeyPair;
+  KeyPair: IAsymmetricCipherKeyPair;
   privParams, RegeneratedPrivateKey: IECPrivateKeyParameters;
   pubParams, RegeneratedPublicKey: IECPublicKeyParameters;
   PublicKeyByteArray, PrivateKeyByteArray: TBytes;
@@ -537,7 +744,6 @@ var
 const
   MethodName = 'RecreatePublicAndPrivateKeyPairsFromByteArray';
 begin
-
   Writeln('MethodName is: ' + MethodName + sLineBreak);
 
   domain := TECDomainParameters.Create(FCurve.Curve, FCurve.G, FCurve.N,
@@ -546,9 +752,9 @@ begin
   keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
   generator.Init(keygenParams);
 
-  keypair := generator.GenerateKeyPair();
-  privParams := keypair.Private as IECPrivateKeyParameters; // for signing
-  pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
+  KeyPair := generator.GenerateKeyPair();
+  privParams := KeyPair.Private as IECPrivateKeyParameters; // for signing
+  pubParams := KeyPair.Public as IECPublicKeyParameters; // for verifying
 
   Writeln('Algorithm Name is: ' + pubParams.AlgorithmName + sLineBreak);
 
@@ -593,6 +799,16 @@ begin
       sLineBreak);
   end;
 
+  // Do Signing and Verifying to Assert Proper Recreation Of Public Key
+
+  DoSigningAndVerifying(RegeneratedPublicKey, privParams, MethodName,
+    'PascalECDSA');
+
+  // Do Signing and Verifying to Assert Proper Recreation Of Private Key
+
+  DoSigningAndVerifying(pubParams, RegeneratedPrivateKey, MethodName,
+    'PascalECDSA');
+
 end;
 
 class procedure TUsageExamples.RecreatePublicKeyFromXAndYCoordByteArray;
@@ -600,8 +816,9 @@ var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
   keygenParams: IECKeyGenerationParameters;
-  keypair: IAsymmetricCipherKeyPair;
+  KeyPair: IAsymmetricCipherKeyPair;
   pubParams, RegeneratedPublicKey: IECPublicKeyParameters;
+  privParams: IECPrivateKeyParameters;
   XCoordByteArray, YCoordByteArray: TBytes;
   BigXCoord, BigYCoord, BigXCoordRecreated, BigYCoordRecreated: TBigInteger;
   point: IECPoint;
@@ -617,8 +834,9 @@ begin
   keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
   generator.Init(keygenParams);
 
-  keypair := generator.GenerateKeyPair();
-  pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
+  KeyPair := generator.GenerateKeyPair();
+  privParams := KeyPair.Private as IECPrivateKeyParameters; // for signing
+  pubParams := KeyPair.Public as IECPublicKeyParameters; // for verifying
 
   Writeln('Algorithm Name is: ' + pubParams.AlgorithmName + sLineBreak);
 
@@ -650,6 +868,12 @@ begin
     Writeln('Public Key Recreation DOES NOT Match With Original Public Key' +
       sLineBreak);
   end;
+
+
+  // Do Signing and Verifying to Assert Proper Recreation Of Public Key
+
+  DoSigningAndVerifying(RegeneratedPublicKey, privParams, MethodName,
+    'PascalECDSA');
 
 end;
 

@@ -24,7 +24,6 @@ interface
 uses
   Classes,
   Generics.Collections,
-  ClpCryptoLibTypes,
 {$IFDEF DELPHI}
   ClpIDerNull,
 {$ENDIF DELPHI}
@@ -67,7 +66,8 @@ uses
   ClpIDefiniteLengthInputStream,
   ClpIAsn1EncodableVector,
   ClpIAsn1InputStream,
-  ClpFilterStream;
+  ClpFilterStream,
+  ClpCryptoLibTypes;
 
 resourcestring
   SCorruptedStream = 'Corrupted Stream - Invalid High Tag Number Found';

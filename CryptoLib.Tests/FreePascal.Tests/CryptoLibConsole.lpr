@@ -23,6 +23,7 @@ uses
   AESTests,
   BlockCipherVectorTests,
   AESTestVectors,
+  IESCipherTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

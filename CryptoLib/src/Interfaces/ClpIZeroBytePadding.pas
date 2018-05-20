@@ -15,55 +15,22 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIZeroBytePadding;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
-  ClpCryptoLibTypes;
+  ClpIBlockCipherPadding;
 
 type
-  TStreamHelper = class helper for TStream
+  IZeroBytePadding = interface(IBlockCipherPadding)
 
-  public
+    ['{7B154AD1-F4DD-48A4-81B6-63A1DA8BB5A3}']
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

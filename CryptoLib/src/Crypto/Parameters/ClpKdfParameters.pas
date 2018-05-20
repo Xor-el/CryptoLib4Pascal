@@ -15,55 +15,54 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpKdfParameters;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  ClpIKdfParameters,
+  ClpIDerivationParameters,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
+
+  /// <summary>
+  /// parameters for Key derivation functions for IEEE P1363a
+  /// </summary>
+  TKdfParameters = class(TInterfacedObject, IKdfParameters,
+    IDerivationParameters)
+
+  strict private
+    Fiv, Fshared: TCryptoLibByteArray;
 
   public
+    function GetSharedSecret(): TCryptoLibByteArray; inline;
+    function GetIV(): TCryptoLibByteArray; inline;
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    constructor Create(shared, iv: TCryptoLibByteArray);
   end;
 
 implementation
 
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
+{ TKdfParameters }
 
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
+constructor TKdfParameters.Create(shared, iv: TCryptoLibByteArray);
 begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
+  Inherited Create();
+  Fshared := shared;
+  Fiv := iv;
 end;
 
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
+function TKdfParameters.GetIV: TCryptoLibByteArray;
 begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
+  result := Fiv;
+end;
+
+function TKdfParameters.GetSharedSecret: TCryptoLibByteArray;
+begin
+  result := Fshared;
 end;
 
 end.

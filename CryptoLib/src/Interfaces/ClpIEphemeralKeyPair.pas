@@ -15,55 +15,26 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIEphemeralKeyPair;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  ClpIAsymmetricCipherKeyPair,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
+  IEphemeralKeyPair = interface(IInterface)
+    ['{E3CEA842-F26D-445C-8DDE-BAB041018DA0}']
 
-  public
+    function getKeyPair(): IAsymmetricCipherKeyPair;
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    function getEncodedPublicKey(): TCryptoLibByteArray;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

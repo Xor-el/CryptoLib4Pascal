@@ -54,7 +54,7 @@ type
     /// encoding.
     /// </returns>
     class function AsUnsignedByteArray(const n: TBigInteger)
-      : TCryptoLibByteArray; overload; static; inline;
+      : TCryptoLibByteArray; overload; static;
 
     /// <summary>
     /// the passed in value as an unsigned byte array of specified length,
@@ -71,7 +71,7 @@ type
     /// given the size of n.
     /// </returns>
     class function AsUnsignedByteArray(length: Int32; const n: TBigInteger)
-      : TCryptoLibByteArray; overload; static; inline;
+      : TCryptoLibByteArray; overload; static;
 
     /// <summary>
     /// Return a random BigInteger not less than 'min' and not greater than

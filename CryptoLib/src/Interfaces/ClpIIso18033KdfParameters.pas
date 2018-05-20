@@ -15,55 +15,25 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIIso18033KdfParameters;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  ClpIDerivationParameters,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  IIso18033KdfParameters = interface(IDerivationParameters)
+    ['{FFECB534-B0D3-47C1-83EE-B91B5760F07D}']
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    function GetSeed(): TCryptoLibByteArray;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

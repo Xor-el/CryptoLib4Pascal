@@ -15,55 +15,35 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIECDHBasicAgreement;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
-  ClpCryptoLibTypes;
+  ClpIBasicAgreement;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  /// <summary>
+  /// P1363 7.2.1 ECSVDP-DH <br />ECSVDP-DH is Elliptic Curve Secret Value
+  /// Derivation Primitive, <br />Diffie-Hellman version. It is based on the
+  /// work of [DH76], [Mil86], <br />and [Kob87]. This primitive derives a
+  /// shared secret value from one <br />party's private key and another
+  /// party's public key, where both have <br />the same set of EC domain
+  /// parameters. If two parties correctly <br />execute this primitive, they
+  /// will produce the same output. This <br />primitive can be invoked by a
+  /// scheme to derive a shared secret key; <br />specifically, it may be
+  /// used with the schemes ECKAS-DH1 and <br />DL/ECKAS-DH2. It assumes that
+  /// the input keys are valid (see also <br />Section 7.2.2). <br />
+  /// </summary>
+  IECDHBasicAgreement = interface(IBasicAgreement)
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    ['{99566C8A-DF5D-4F60-859A-583DE6260A28}']
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

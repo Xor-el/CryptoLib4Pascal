@@ -38,7 +38,10 @@ type
   public
 
     class function AddStringArray(const A, B: TCryptoLibStringArray)
-      : TCryptoLibStringArray;
+      : TCryptoLibStringArray; static;
+
+    class function AddByteArray(const A, B: TCryptoLibByteArray)
+      : TCryptoLibByteArray; static; inline;
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean;
       overload; static;
@@ -78,6 +81,17 @@ begin
       [from, &to]);
   end;
   Result := newLength;
+end;
+
+class function TArrayUtils.AddByteArray(const A, B: TCryptoLibByteArray)
+  : TCryptoLibByteArray;
+var
+  l: Int32;
+begin
+  l := System.Length(A);
+  System.SetLength(Result, l + System.Length(B));
+  System.Move(A[0], Result[0], l * System.SizeOf(Byte));
+  System.Move(B[0], Result[l], System.Length(B) * System.SizeOf(Byte));
 end;
 
 class function TArrayUtils.AddStringArray(const A, B: TCryptoLibStringArray)

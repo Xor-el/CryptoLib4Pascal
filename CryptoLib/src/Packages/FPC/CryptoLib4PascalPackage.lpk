@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -24,8 +24,8 @@
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="1" Minor="7"/>
-    <Files Count="304">
+    <Version Major="1" Minor="8"/>
+    <Files Count="339">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1242,6 +1242,146 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\Engines\ClpAesEngine.pas"/>
         <UnitName Value="ClpAesEngine"/>
       </Item304>
+      <Item305>
+        <Filename Value="..\..\Crypto\Generators\ClpPascalCoinECIESKdfBytesGenerator.pas"/>
+        <UnitName Value="ClpPascalCoinECIESKdfBytesGenerator"/>
+      </Item305>
+      <Item306>
+        <Filename Value="..\..\Crypto\Engines\ClpPascalCoinIESEngine.pas"/>
+        <UnitName Value="ClpPascalCoinIESEngine"/>
+      </Item306>
+      <Item307>
+        <Filename Value="..\..\Crypto\Generators\ClpBaseKdfBytesGenerator.pas"/>
+        <UnitName Value="ClpBaseKdfBytesGenerator"/>
+      </Item307>
+      <Item308>
+        <Filename Value="..\..\Crypto\Engines\ClpIESEngine.pas"/>
+        <UnitName Value="ClpIESEngine"/>
+      </Item308>
+      <Item309>
+        <Filename Value="..\..\Crypto\Parsers\ClpECIESPublicKeyParser.pas"/>
+        <UnitName Value="ClpECIESPublicKeyParser"/>
+      </Item309>
+      <Item310>
+        <Filename Value="..\..\Crypto\ClpIESCipher.pas"/>
+        <UnitName Value="ClpIESCipher"/>
+      </Item310>
+      <Item311>
+        <Filename Value="..\..\Crypto\Agreement\ClpECDHBasicAgreement.pas"/>
+        <UnitName Value="ClpECDHBasicAgreement"/>
+      </Item311>
+      <Item312>
+        <Filename Value="..\..\Crypto\ClpEphemeralKeyPair.pas"/>
+        <UnitName Value="ClpEphemeralKeyPair"/>
+      </Item312>
+      <Item313>
+        <Filename Value="..\..\Crypto\ClpKeyEncoder.pas"/>
+        <UnitName Value="ClpKeyEncoder"/>
+      </Item313>
+      <Item314>
+        <Filename Value="..\..\Crypto\Paddings\ClpZeroBytePadding.pas"/>
+        <UnitName Value="ClpZeroBytePadding"/>
+      </Item314>
+      <Item315>
+        <Filename Value="..\..\Crypto\Parameters\ClpIesWithCipherParameters.pas"/>
+        <UnitName Value="ClpIESWithCipherParameters"/>
+      </Item315>
+      <Item316>
+        <Filename Value="..\..\Crypto\Parameters\ClpIesParameters.pas"/>
+        <UnitName Value="ClpIESParameters"/>
+      </Item316>
+      <Item317>
+        <Filename Value="..\..\Crypto\Generators\ClpEphemeralKeyPairGenerator.pas"/>
+        <UnitName Value="ClpEphemeralKeyPairGenerator"/>
+      </Item317>
+      <Item318>
+        <Filename Value="..\..\Crypto\Generators\ClpKdf2BytesGenerator.pas"/>
+        <UnitName Value="ClpKdf2BytesGenerator"/>
+      </Item318>
+      <Item319>
+        <Filename Value="..\..\Crypto\Parameters\ClpIso18033KdfParameters.pas"/>
+        <UnitName Value="ClpIso18033KdfParameters"/>
+      </Item319>
+      <Item320>
+        <Filename Value="..\..\Crypto\Parameters\ClpKdfParameters.pas"/>
+        <UnitName Value="ClpKdfParameters"/>
+      </Item320>
+      <Item321>
+        <Filename Value="..\..\Interfaces\ClpIIesWithCipherParameters.pas"/>
+        <UnitName Value="ClpIIESWithCipherParameters"/>
+      </Item321>
+      <Item322>
+        <Filename Value="..\..\Interfaces\ClpIIesParameters.pas"/>
+        <UnitName Value="ClpIIESParameters"/>
+      </Item322>
+      <Item323>
+        <Filename Value="..\..\Interfaces\ClpIPascalCoinECIESKdfBytesGenerator.pas"/>
+        <UnitName Value="ClpIPascalCoinECIESKdfBytesGenerator"/>
+      </Item323>
+      <Item324>
+        <Filename Value="..\..\Interfaces\ClpIPascalCoinIESEngine.pas"/>
+        <UnitName Value="ClpIPascalCoinIESEngine"/>
+      </Item324>
+      <Item325>
+        <Filename Value="..\..\Interfaces\ClpIIESEngine.pas"/>
+        <UnitName Value="ClpIIESEngine"/>
+      </Item325>
+      <Item326>
+        <Filename Value="..\..\Interfaces\ClpIIESCipher.pas"/>
+        <UnitName Value="ClpIIESCipher"/>
+      </Item326>
+      <Item327>
+        <Filename Value="..\..\Interfaces\ClpIZeroBytePadding.pas"/>
+        <UnitName Value="ClpIZeroBytePadding"/>
+      </Item327>
+      <Item328>
+        <Filename Value="..\..\Interfaces\ClpIECIESPublicKeyParser.pas"/>
+        <UnitName Value="ClpIECIESPublicKeyParser"/>
+      </Item328>
+      <Item329>
+        <Filename Value="..\..\Interfaces\ClpIEphemeralKeyPairGenerator.pas"/>
+        <UnitName Value="ClpIEphemeralKeyPairGenerator"/>
+      </Item329>
+      <Item330>
+        <Filename Value="..\..\Interfaces\ClpIEphemeralKeyPair.pas"/>
+        <UnitName Value="ClpIEphemeralKeyPair"/>
+      </Item330>
+      <Item331>
+        <Filename Value="..\..\Interfaces\ClpIKeyParser.pas"/>
+        <UnitName Value="ClpIKeyParser"/>
+      </Item331>
+      <Item332>
+        <Filename Value="..\..\Interfaces\ClpIKdf2BytesGenerator.pas"/>
+        <UnitName Value="ClpIKdf2BytesGenerator"/>
+      </Item332>
+      <Item333>
+        <Filename Value="..\..\Interfaces\ClpIBaseKdfBytesGenerator.pas"/>
+        <UnitName Value="ClpIBaseKdfBytesGenerator"/>
+      </Item333>
+      <Item334>
+        <Filename Value="..\..\Interfaces\ClpIIso18033KdfParameters.pas"/>
+        <UnitName Value="ClpIIso18033KdfParameters"/>
+      </Item334>
+      <Item335>
+        <Filename Value="..\..\Interfaces\ClpIKdfParameters.pas"/>
+        <UnitName Value="ClpIKdfParameters"/>
+      </Item335>
+      <Item336>
+        <Filename Value="..\..\Interfaces\ClpIDerivationFunction.pas"/>
+        <UnitName Value="ClpIDerivationFunction"/>
+      </Item336>
+      <Item337>
+        <Filename Value="..\..\Interfaces\ClpIDerivationParameters.pas"/>
+        <UnitName Value="ClpIDerivationParameters"/>
+      </Item337>
+      <Item338>
+        <Filename Value="..\..\Interfaces\ClpIECDHBasicAgreement.pas"/>
+        <UnitName Value="ClpIECDHBasicAgreement"/>
+      </Item338>
+      <Item339>
+        <Filename Value="..\..\Interfaces\ClpIBasicAgreement.pas"/>
+        <UnitName Value="ClpIBasicAgreement"/>
+      </Item339>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

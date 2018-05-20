@@ -46,9 +46,10 @@ uses
   // ClpICbcBlockCipher,
   // ClpPaddedBufferedBlockCipher,
   // ClpIPaddedBufferedBlockCipher,
+  // ClpZeroBytePadding,
+  // ClpIZeroBytePadding,
   ClpHex,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpArrayUtils;
 
 type
 
@@ -86,7 +87,7 @@ begin
   LInput := THex.Decode(input);
   LOutput := THex.Decode(output);
 
-  cipher.Init(true, param);
+  cipher.Init(True, param);
 
   // Encryption
   // Single Pass
@@ -118,12 +119,9 @@ begin
     len2 := len2 + cipher.DoFinal(DecryptionResult, len2);
 
     // remove padding important!!!
-    if (len2 < System.Length(DecryptionResult)) then
-    begin
-    System.Move(DecryptionResult[len2], DecryptionResult[0],
+    System.Move(DecryptionResult[0], DecryptionResult[0],
     len2 * System.SizeOf(Byte));
     System.SetLength(DecryptionResult, len2);
-    end;
     * }
 
   if (not TArrayUtils.AreEqual(LInput, DecryptionResult)) then
@@ -146,7 +144,7 @@ end;
 
 procedure TTestAES.TestAES256_CBC_PKCS7PADDING;
 var
-  KeyParameter: IKeyParameter;
+  keyParameter: IKeyParameter;
   KeyParametersWithIV: IParametersWithIV;
   keyBytes, IVBytes: TBytes;
   cipher: IBufferedCipher;
@@ -159,9 +157,9 @@ begin
   // // Set up
   // engine := TAesEngine.Create();
   // blockCipher := TCbcBlockCipher.Create(engine); // CBC
-  // cipher := TPaddedBufferedBlockCipher.Create(blockCipher);
+  // cipher := TPaddedBufferedBlockCipher.Create(blockCipher, TPkcs7Padding.Create() as IPkcs7Padding); or
+  // cipher := TPaddedBufferedBlockCipher.Create(blockCipher, TZeroBytePadding.Create() as IZeroBytePadding);
   // // Default scheme is PKCS5/PKCS7
-
   cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING');
 
   for I := System.Low(TAESTestVectors.FOfficialVectorKeys__AES256_CBC)

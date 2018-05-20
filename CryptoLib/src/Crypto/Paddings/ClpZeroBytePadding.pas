@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpPkcs7Padding;
+unit ClpZeroBytePadding;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -23,15 +23,12 @@ interface
 
 uses
   ClpIBlockCipherPadding,
-  ClpIPkcs7Padding,
+  ClpIZeroBytePadding,
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
-resourcestring
-  SCorruptedPadBlock = 'Pad Block Corrupted';
-
 type
-  TPkcs7Padding = class sealed(TInterfacedObject, IPkcs7Padding,
+  TZeroBytePadding = class sealed(TInterfacedObject, IZeroBytePadding,
     IBlockCipherPadding)
 
   strict private
@@ -79,89 +76,59 @@ type
     /// <returns>
     /// the number of pad bytes present in the block.
     /// </returns>
-    /// <exception cref="EInvalidCipherTextCryptoLibException">
-    /// if the padding is badly formed or invalid.
-    /// </exception>
     function PadCount(input: TCryptoLibByteArray): Int32;
 
   end;
 
 implementation
 
-{ TPkcs7Padding }
+{ TZeroBytePadding }
 
-function TPkcs7Padding.AddPadding(input: TCryptoLibByteArray;
+function TZeroBytePadding.AddPadding(input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
-  code: Byte;
+  added: Int32;
 begin
-  code := Byte(System.Length(input) - inOff);
+  added := System.Length(input) - inOff;
 
   while (inOff < System.Length(input)) do
   begin
-    input[inOff] := code;
+    input[inOff] := Byte(0);
     System.Inc(inOff);
   end;
 
-  result := code;
+  result := added;
 end;
 
-function TPkcs7Padding.GetPaddingName: String;
+function TZeroBytePadding.GetPaddingName: String;
 begin
-  result := 'PKCS7';
+  result := 'ZeroBytePadding';
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-procedure TPkcs7Padding.Init(const random: ISecureRandom);
+procedure TZeroBytePadding.Init(const random: ISecureRandom);
 begin
   // nothing to do.
 end;
 {$ENDIF}
 
-function TPkcs7Padding.PadCount(input: TCryptoLibByteArray): Int32;
+function TZeroBytePadding.PadCount(input: TCryptoLibByteArray): Int32;
 var
-  countAsByte: Byte;
-  count, i: Int32;
-  failed: Boolean;
+  count: Int32;
 begin
-  // countAsByte := input[System.Length(input) - 1];
-  // count := countAsByte;
-  //
-  // if ((count < 1) or (count > System.Length(input))) then
-  // begin
-  // raise EInvalidCipherTextCryptoLibException.CreateRes(@SCorruptedPadBlock);
-  // end;
-  //
-  // for i := 2 to count do
-  // begin
-  // if (input[System.Length(input) - i] <> countAsByte) then
-  // begin
-  // raise EInvalidCipherTextCryptoLibException.CreateRes(@SCorruptedPadBlock);
-  // end;
-  // end;
-  //
-  // result := count;
-
-  count := input[System.Length(input) - 1];
-  countAsByte := Byte(count);
-
-  // constant time version
-  failed := ((count > System.Length(input)) or (count = 0));
-
-  for i := 0 to System.Pred(System.Length(input)) do
+  count := System.Length(input);
+  while (count > 0) do
   begin
-    failed := failed or ((System.Length(input) - i <= count) and
-      (input[i] <> countAsByte));
+    if (input[count - 1] <> 0) then
+    begin
+      break;
+    end;
+
+    System.Dec(count);
   end;
 
-  if (failed) then
-  begin
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SCorruptedPadBlock);
-  end;
-
-  result := count;
-
+  result := System.Length(input) - count;
 end;
 
 end.

@@ -15,55 +15,44 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIBasicAgreement;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
-  ClpCryptoLibTypes;
+  ClpBigInteger,
+  ClpICipherParameters;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  /// <summary>
+  /// The basic interface that basic Diffie-Hellman implementations conforms
+  /// to.
+  /// </summary>
+  IBasicAgreement = interface(IInterface)
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    ['{4A36A62D-3E1F-49B4-A4CD-58348E5A837F}']
+
+    /// <summary>
+    /// initialise the agreement engine.
+    /// </summary>
+    procedure Init(const parameters: ICipherParameters);
+
+    /// <summary>
+    /// return the field size for the agreement algorithm in bytes.
+    /// </summary>
+    function GetFieldSize(): Int32;
+
+    /// <summary>
+    /// given a public key from a given party calculate the next message
+    /// in the agreement sequence.
+    /// </summary>
+    function CalculateAgreement(const pubKey: ICipherParameters): TBigInteger;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

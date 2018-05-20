@@ -15,55 +15,30 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIIESWithCipherParameters;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  ClpIIESParameters,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  IIESWithCipherParameters = interface(IIESParameters)
+    ['{77F38EA8-08F2-4D0D-A8E9-F3796DCCCA54}']
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    function GetCipherKeySize(): Int32;
+    property CipherKeySize: Int32 read GetCipherKeySize;
+    function GetPointCompression(): Boolean;
+    property PointCompression: Boolean read GetPointCompression;
+    function GetNonce(): TCryptoLibByteArray;
+    property Nonce: TCryptoLibByteArray read GetNonce;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

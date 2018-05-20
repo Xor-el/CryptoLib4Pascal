@@ -101,7 +101,21 @@ uses
   ClpIBufferedBlockCipher, ClpIBlockCipherPadding, ClpIBlockCipher, 
   ClpCbcBlockCipher, ClpPaddedBufferedBlockCipher, ClpPkcs7Padding, 
   ClpParametersWithIV, ClpKeyParameter, ClpBufferedBlockCipher, 
-  ClpBufferedCipherBase, ClpCheck, ClpAesEngine;
+  ClpBufferedCipherBase, ClpCheck, ClpAesEngine, 
+  ClpPascalCoinECIESKdfBytesGenerator, ClpPascalCoinIESEngine, 
+  ClpBaseKdfBytesGenerator, ClpIESEngine, ClpECIESPublicKeyParser, 
+  ClpIESCipher, ClpECDHBasicAgreement, ClpEphemeralKeyPair, ClpKeyEncoder, 
+  ClpZeroBytePadding, ClpIesWithCipherParameters, ClpIesParameters, 
+  ClpEphemeralKeyPairGenerator, ClpKdf2BytesGenerator, 
+  ClpIso18033KdfParameters, ClpKdfParameters, ClpIIesWithCipherParameters, 
+  ClpIIesParameters, ClpIPascalCoinECIESKdfBytesGenerator, 
+  ClpIPascalCoinIESEngine, ClpIIESEngine, ClpIIESCipher, ClpIZeroBytePadding, 
+  ClpIECIESPublicKeyParser, ClpIEphemeralKeyPairGenerator, 
+  ClpIEphemeralKeyPair, ClpIKeyParser, ClpIKdf2BytesGenerator, 
+  ClpIBaseKdfBytesGenerator, ClpIIso18033KdfParameters, ClpIKdfParameters, 
+  ClpIDerivationFunction, ClpIDerivationParameters, ClpIECDHBasicAgreement, 
+  ClpIBasicAgreement, Generics.Collections, Generics.Defaults, 
+  Generics.Hashes, Generics.Helpers, Generics.MemoryExpanders, Generics.Strings;
 
 implementation
 

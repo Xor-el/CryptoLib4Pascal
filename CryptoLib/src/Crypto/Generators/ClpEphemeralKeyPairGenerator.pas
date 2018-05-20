@@ -15,55 +15,56 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpEphemeralKeyPairGenerator;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
-  ClpCryptoLibTypes;
+  ClpEphemeralKeyPair,
+  ClpIEphemeralKeyPair,
+  ClpIEphemeralKeyPairGenerator,
+  ClpIAsymmetricCipherKeyPair,
+  ClpIAsymmetricCipherKeyPairGenerator,
+  ClpKeyEncoder;
 
 type
-  TStreamHelper = class helper for TStream
+  TEphemeralKeyPairGenerator = class sealed(TInterfacedObject,
+    IEphemeralKeyPairGenerator)
+
+  strict private
+    Fgen: IAsymmetricCipherKeyPairGenerator;
+    FUsePointCompression: Boolean;
+    FkeyEncoder: TKeyEncoder;
 
   public
-
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    function Generate(): IEphemeralKeyPair; inline;
+    constructor Create(const gen: IAsymmetricCipherKeyPairGenerator;
+      UsePointCompression: Boolean; const keyEncoder: TKeyEncoder);
   end;
 
 implementation
 
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
+{ TEphemeralKeyPairGenerator }
 
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
+constructor TEphemeralKeyPairGenerator.Create
+  (const gen: IAsymmetricCipherKeyPairGenerator; UsePointCompression: Boolean;
+  const keyEncoder: TKeyEncoder);
 begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
+  Inherited Create();
+  Fgen := gen;
+  FUsePointCompression := UsePointCompression;
+  FkeyEncoder := keyEncoder;
 end;
 
-procedure TStreamHelper.WriteByte(b: Byte);
+function TEphemeralKeyPairGenerator.Generate: IEphemeralKeyPair;
 var
-  oneByteArray: TCryptoLibByteArray;
+  eph: IAsymmetricCipherKeyPair;
 begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
+  eph := Fgen.generateKeyPair();
+  // Encode the ephemeral public key
+  result := TEphemeralKeyPair.Create(eph, FUsePointCompression, FkeyEncoder);
 end;
 
 end.

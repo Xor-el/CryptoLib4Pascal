@@ -15,55 +15,28 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIIESParameters;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  ClpICipherParameters,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  IIESParameters = interface(ICipherParameters)
+    ['{F95232BB-594C-492E-AF63-C5A6822C96FD}']
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    function GetDerivationV(): TCryptoLibByteArray;
+    function GetEncodingV(): TCryptoLibByteArray;
+    function GetMacKeySize(): Int32;
+    property MacKeySize: Int32 read GetMacKeySize;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

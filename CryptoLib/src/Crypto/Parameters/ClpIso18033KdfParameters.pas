@@ -15,55 +15,47 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIso18033KdfParameters;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  ClpIIso18033KdfParameters,
+  ClpIDerivationParameters,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
+
+  /// <summary>
+  /// parameters for Key derivation functions for ISO-18033
+  /// </summary>
+  TIso18033KdfParameters = class(TInterfacedObject, IIso18033KdfParameters,
+    IDerivationParameters)
+
+  strict private
+    Fseed: TCryptoLibByteArray;
 
   public
+    function GetSeed(): TCryptoLibByteArray; inline;
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    constructor Create(seed: TCryptoLibByteArray);
   end;
 
 implementation
 
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
+{ TIso18033KdfParameters }
 
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
+constructor TIso18033KdfParameters.Create(seed: TCryptoLibByteArray);
 begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
+  Inherited Create();
+  Fseed := seed;
 end;
 
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
+function TIso18033KdfParameters.GetSeed: TCryptoLibByteArray;
 begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
+  result := Fseed;
 end;
 
 end.

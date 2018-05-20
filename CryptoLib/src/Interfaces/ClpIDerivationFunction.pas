@@ -15,55 +15,41 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIDerivationFunction;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  HlpIHash,
+  ClpIDerivationParameters,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  /// <summary>
+  /// base interface for general purpose byte derivation functions.
+  /// </summary>
+  IDerivationFunction = interface(IInterface)
+    ['{A9DA624C-A58E-4588-9EA0-81BA5B13E47E}']
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    procedure Init(const parameters: IDerivationParameters);
+
+    function GetDigest(): IHash;
+
+    /// <value>
+    /// return the message digest used as the basis for the function
+    /// </value>
+    property Digest: IHash read GetDigest;
+
+    /// <exception cref="EDataLengthCryptoLibException" />
+    /// <exception cref="EArgumentCryptoLibException" />
+    function GenerateBytes(output: TCryptoLibByteArray;
+      outOff, length: Int32): Int32;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.

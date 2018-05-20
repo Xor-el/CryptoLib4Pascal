@@ -54,6 +54,7 @@ type
   EAccessCryptoLibException = class(ECryptoLibException);
   EDataLengthCryptoLibException = class(ECryptoLibException);
   EOutputLengthCryptoLibException = class(ECryptoLibException);
+  EBadBlockCryptoLibException = class(ECryptoLibException);
 
   /// <summary>
   /// Represents a dynamic array of Byte.

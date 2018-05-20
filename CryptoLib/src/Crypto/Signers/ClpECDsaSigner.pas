@@ -129,6 +129,7 @@ implementation
 
 constructor TECDsaSigner.Create;
 begin
+  inherited Create();
   FkCalculator := TRandomDsaKCalculator.Create();
 end;
 

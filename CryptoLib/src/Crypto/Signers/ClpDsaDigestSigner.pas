@@ -112,6 +112,7 @@ end;
 
 constructor TDsaDigestSigner.Create(const signer: IDsa; const digest: IHash);
 begin
+  Inherited Create();
   FdsaSigner := signer;
   Fdigest := digest;
 end;

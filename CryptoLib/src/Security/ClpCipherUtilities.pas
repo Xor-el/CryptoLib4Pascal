@@ -29,6 +29,8 @@ uses
   ClpStringHelper,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
+  ClpZeroBytePadding,
+  ClpIZeroBytePadding,
   ClpCbcBlockCipher,
   ClpICbcBlockCipher,
   ClpBufferedBlockCipher,
@@ -61,7 +63,8 @@ type
 {$SCOPEDENUMS ON}
     TCipherAlgorithm = (AES);
     TCipherMode = (NONE, CBC);
-    TCipherPadding = (NOPADDING, PKCS5, PKCS5PADDING, PKCS7, PKCS7PADDING);
+    TCipherPadding = (NOPADDING, PKCS5, PKCS5PADDING, PKCS7, PKCS7PADDING,
+      ZEROBYTEPADDING);
 {$SCOPEDENUMS OFF}
 
   class var
@@ -229,7 +232,11 @@ begin
         TCipherPadding.PKCS7PADDING:
         begin
           padding := TPkcs7Padding.Create() as IPkcs7Padding;
-        end
+        end;
+      TCipherPadding.ZEROBYTEPADDING:
+        begin
+          padding := TZeroBytePadding.Create() as IZeroBytePadding;
+        end;
     else
       begin
         raise ESecurityUtilityCryptoLibException.CreateResFmt

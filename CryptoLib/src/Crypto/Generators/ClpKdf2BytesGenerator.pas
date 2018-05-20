@@ -15,55 +15,50 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpKdf2BytesGenerator;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
-  ClpCryptoLibTypes;
+  HlpIHash,
+  ClpBaseKdfBytesGenerator,
+  ClpIKdf2BytesGenerator;
 
 type
-  TStreamHelper = class helper for TStream
+
+  /// <summary>
+  /// <para>
+  /// KDF2 generator for derived keys and ivs as defined by IEEE
+  /// P1363a/ISO 18033
+  /// </para>
+  /// <para>
+  /// This implementation is based on IEEE P1363/ISO 18033.
+  /// </para>
+  /// </summary>
+  TKdf2BytesGenerator = class(TBaseKdfBytesGenerator, IKdf2BytesGenerator)
 
   public
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    /// <summary>
+    /// Construct a KDF2 bytes generator. Generates key material according to
+    /// IEEE P1363 or ISO 18033 depending on the initialisation.
+    /// </summary>
+    /// <param name="digest">
+    /// the digest to be used as the source of derived keys.
+    /// </param>
+    constructor Create(const digest: IHash);
+
   end;
 
 implementation
 
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
+{ TKdf2BytesGenerator }
 
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
+constructor TKdf2BytesGenerator.Create(const digest: IHash);
 begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
+  Inherited Create(1, digest);
 end;
 
 end.

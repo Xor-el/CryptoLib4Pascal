@@ -67,7 +67,7 @@ type
     Fkey: IECKeyParameters;
     FBuffer: TMemoryStream;
 
-    function Aggregate: TCryptoLibByteArray;
+    function Aggregate: TCryptoLibByteArray; inline;
 
     /// <summary>
     /// <para>

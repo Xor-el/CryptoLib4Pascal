@@ -15,55 +15,47 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStreamHelper;
+unit ClpIPascalCoinECIESKdfBytesGenerator;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
+  HlpIHash,
+  ClpIDerivationParameters,
+  ClpIBaseKdfBytesGenerator,
   ClpCryptoLibTypes;
 
 type
-  TStreamHelper = class helper for TStream
 
-  public
+  IPascalCoinECIESKdfBytesGenerator = interface(IBaseKdfBytesGenerator)
+    ['{F6C7D34B-BA6A-45DB-B2A2-088F36557396}']
 
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
+    function GetDigest(): IHash;
+
+    procedure Init(const parameters: IDerivationParameters);
+
+    /// <summary>
+    /// return the underlying digest.
+    /// </summary>
+    property digest: IHash read GetDigest;
+
+    /// <summary>
+    /// fill len bytes of the output buffer with bytes generated from the
+    /// derivation function.
+    /// </summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// if the size of the request will cause an overflow.
+    /// </exception>
+    /// <exception cref="EDataLengthCryptoLibException">
+    /// if the out buffer is too small.
+    /// </exception>
+    function GenerateBytes(output: TCryptoLibByteArray;
+      outOff, length: Int32): Int32;
+
   end;
 
 implementation
-
-uses
-  ClpStreamSorter; // included here to avoid circular dependency :)
-
-{ TStreamHelper }
-
-function TStreamHelper.ReadByte: Int32;
-var
-  Buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Buffer, 1);
-  if (TStreamSorter.Read(Self, Buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(Buffer[0]);
-  end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
 
 end.
