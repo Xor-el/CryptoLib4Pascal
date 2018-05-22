@@ -415,7 +415,7 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Type Value="Include"/>
       </Item97>
       <Item98>
-        <Filename Value="..\..\Include\Helper.inc"/>
+        <Filename Value="..\..\Include\CryptoLibHelper.inc"/>
         <Type Value="Include"/>
       </Item98>
       <Item99>
