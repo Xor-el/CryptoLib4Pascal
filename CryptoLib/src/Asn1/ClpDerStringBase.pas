@@ -24,7 +24,7 @@ interface
 uses
   ClpIAsn1String,
   ClpAsn1Object,
-  ClpStringHelper,
+  ClpStringUtils,
   ClpIDerStringBase;
 
 type
@@ -44,7 +44,7 @@ implementation
 
 function TDerStringBase.Asn1GetHashCode: Int32;
 begin
-  Result := GetString().GetHashCode;
+  Result := TStringUtils.GetStringHashCode(GetString());
 end;
 
 constructor TDerStringBase.Create;

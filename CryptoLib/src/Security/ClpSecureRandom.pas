@@ -26,12 +26,12 @@ uses
 {$IFDEF DELPHI}
   SyncObjs,
 {$ENDIF DELPHI}
-  HlpIHash,
   SysUtils,
   StrUtils,
   ClpBits,
   ClpCryptoLibTypes,
   ClpTimes,
+  ClpIDigest,
   ClpIRandomGenerator,
   ClpRandom,
   ClpDigestUtilities,
@@ -286,7 +286,7 @@ end;
 class function TSecureRandom.CreatePrng(const digestName: String;
   autoSeed: Boolean): IDigestRandomGenerator;
 var
-  digest: IHash;
+  digest: IDigest;
   prng: IDigestRandomGenerator;
 begin
   digest := TDigestUtilities.GetDigest(digestName);
@@ -295,7 +295,7 @@ begin
     Result := Nil;
     Exit;
   end;
-  digest.Initialize(); // initialize digest state
+
   prng := TDigestRandomGenerator.Create(digest);
   if (autoSeed) then
   begin

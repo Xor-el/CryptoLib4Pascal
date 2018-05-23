@@ -15,38 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDerivationFunction;
+unit ClpIX923Padding;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDigest,
-  ClpIDerivationParameters,
-  ClpCryptoLibTypes;
+  ClpIBlockCipherPadding;
 
 type
+  IX923Padding = interface(IBlockCipherPadding)
 
-  /// <summary>
-  /// base interface for general purpose byte derivation functions.
-  /// </summary>
-  IDerivationFunction = interface(IInterface)
-    ['{A9DA624C-A58E-4588-9EA0-81BA5B13E47E}']
-
-    procedure Init(const parameters: IDerivationParameters);
-
-    function GetDigest(): IDigest;
-
-    /// <value>
-    /// return the message digest used as the basis for the function
-    /// </value>
-    property Digest: IDigest read GetDigest;
-
-    /// <exception cref="EDataLengthCryptoLibException" />
-    /// <exception cref="EArgumentCryptoLibException" />
-    function GenerateBytes(output: TCryptoLibByteArray;
-      outOff, length: Int32): Int32;
+    ['{8815D63C-936C-497F-9B00-29F6F9E178A7}']
 
   end;
 

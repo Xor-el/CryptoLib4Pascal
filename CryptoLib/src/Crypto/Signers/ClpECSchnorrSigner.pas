@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   Classes,
-  HlpIHash,
+  ClpIDigest,
   ClpISigner,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -61,7 +61,7 @@ type
       FRandom: ISecureRandom;
 
   var
-    FDigest: IHash;
+    FDigest: IDigest;
     FVariant: String;
     FforSigning: Boolean;
     Fkey: IECKeyParameters;
@@ -180,12 +180,12 @@ type
     // 4. Signature is valid if the serialization of R's x coordinate equals r.
 
     /// <param name="digest">
-    /// initialized "IHash" instance.
+    /// initialized "IDigest" instance.
     /// </param>
     /// <param name="schnorr_variant">
     /// one of "BSI","ISO","ISOx","LIBSECP"
     /// </param>
-    constructor Create(const digest: IHash; const schnorr_variant: String);
+    constructor Create(const digest: IDigest; const schnorr_variant: String);
     destructor Destroy(); override;
 
     function GetAlgorithmName: String;
@@ -260,7 +260,7 @@ begin
   FBuffer.Write(input[inOff], length);
 end;
 
-constructor TECSchnorrSigner.Create(const digest: IHash;
+constructor TECSchnorrSigner.Create(const digest: IDigest;
   const schnorr_variant: String);
 begin
   inherited Create();

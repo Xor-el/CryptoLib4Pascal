@@ -22,8 +22,8 @@ unit ClpDigestRandomGenerator;
 interface
 
 uses
-  HlpIHash,
   SyncObjs,
+  ClpIDigest,
   ClpConverters,
   ClpCryptoLibTypes,
   ClpIDigestRandomGenerator,
@@ -46,7 +46,7 @@ type
 
   var
     FstateCounter, FseedCounter: Int64;
-    Fdigest: IHash;
+    Fdigest: IDigest;
     Fstate, Fseed: TCryptoLibByteArray;
 
     procedure CycleSeed(); inline;
@@ -64,7 +64,7 @@ type
 
   public
 
-    constructor Create(const digest: IHash);
+    constructor Create(const digest: IDigest);
     procedure AddSeedMaterial(inSeed: TCryptoLibByteArray); overload; inline;
     procedure AddSeedMaterial(rSeed: Int64); overload; inline;
     procedure NextBytes(bytes: TCryptoLibByteArray); overload; inline;
@@ -97,7 +97,7 @@ var
 begin
   digest := Fdigest.TransformFinal().GetBytes;
   System.Move(digest[0], value[0], System.Length(digest) * System.SizeOf(Byte));
-  // value := Fdigest.TransformFinal().GetBytes;
+  // value := Fdigest.TransformFinal().GetBytes; // Review
 end;
 
 procedure TDigestRandomGenerator.AddSeedMaterial(rSeed: Int64);
@@ -124,7 +124,7 @@ begin
   end;
 end;
 
-constructor TDigestRandomGenerator.Create(const digest: IHash);
+constructor TDigestRandomGenerator.Create(const digest: IDigest);
 begin
   Inherited Create();
   Fdigest := digest;

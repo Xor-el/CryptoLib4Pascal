@@ -34,8 +34,10 @@ type
 
       FNistAlgorithm, FHashAlgs, FAES, FIdSha256, FIdSha384, FIdSha512,
       FIdSha224, FIdSha512_224, FIdSha512_256, FIdSha3_224, FIdSha3_256,
-      FIdSha3_384, FIdSha3_512, FIdAes128Cbc, FIdAes192Cbc,
-      FIdAes256Cbc: IDerObjectIdentifier;
+      FIdSha3_384, FIdSha3_512, FIdAES128Ecb, FIdAes128Cbc, FIdAes128Ofb,
+      FIdAes128Cfb, FidAes192Ecb, FIdAes192Cbc, FIdAes192Ofb, FIdAes192Cfb,
+      FIdAes256Ecb, FIdAes256Cbc, FIdAes256Ofb, FIdAes256Cfb
+      : IDerObjectIdentifier;
 
     class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgs: IDerObjectIdentifier; static; inline;
@@ -50,9 +52,18 @@ type
     class function GetIdSha512: IDerObjectIdentifier; static; inline;
     class function GetIdSha512_224: IDerObjectIdentifier; static; inline;
     class function GetIdSha512_256: IDerObjectIdentifier; static; inline;
+    class function GetIdAes128Ecb: IDerObjectIdentifier; static; inline;
     class function GetIdAes128Cbc: IDerObjectIdentifier; static; inline;
+    class function GetIdAes128Ofb: IDerObjectIdentifier; static; inline;
+    class function GetIdAes128Cfb: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192Ecb: IDerObjectIdentifier; static; inline;
     class function GetIdAes192Cbc: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192Ofb: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192Cfb: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256Ecb: IDerObjectIdentifier; static; inline;
     class function GetIdAes256Cbc: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256Ofb: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256Cfb: IDerObjectIdentifier; static; inline;
 
     class constructor NistObjectIdentifiers();
 
@@ -78,9 +89,18 @@ type
     class property IdSha3_256: IDerObjectIdentifier read GetIdSha3_256;
     class property IdSha3_384: IDerObjectIdentifier read GetIdSha3_384;
     class property IdSha3_512: IDerObjectIdentifier read GetIdSha3_512;
+    class property IdAes128Ecb: IDerObjectIdentifier read GetIdAes128Ecb;
     class property IdAes128Cbc: IDerObjectIdentifier read GetIdAes128Cbc;
+    class property IdAes128Ofb: IDerObjectIdentifier read GetIdAes128Ofb;
+    class property IdAes128Cfb: IDerObjectIdentifier read GetIdAes128Cfb;
+    class property IdAes192Ecb: IDerObjectIdentifier read GetIdAes192Ecb;
     class property IdAes192Cbc: IDerObjectIdentifier read GetIdAes192Cbc;
+    class property IdAes192Ofb: IDerObjectIdentifier read GetIdAes192Ofb;
+    class property IdAes192Cfb: IDerObjectIdentifier read GetIdAes192Cfb;
+    class property IdAes256Ecb: IDerObjectIdentifier read GetIdAes256Ecb;
     class property IdAes256Cbc: IDerObjectIdentifier read GetIdAes256Cbc;
+    class property IdAes256Ofb: IDerObjectIdentifier read GetIdAes256Ofb;
+    class property IdAes256Cfb: IDerObjectIdentifier read GetIdAes256Cfb;
 
     class procedure Boot(); static;
 
@@ -106,9 +126,18 @@ begin
   FIdSha3_256 := HashAlgs.Branch('8');
   FIdSha3_384 := HashAlgs.Branch('9');
   FIdSha3_512 := HashAlgs.Branch('10');
+  FIdAES128Ecb := TDerObjectIdentifier.Create(AES.id + '.1');
   FIdAes128Cbc := TDerObjectIdentifier.Create(AES.id + '.2');
+  FIdAes128Ofb := TDerObjectIdentifier.Create(AES.id + '.3');
+  FIdAes128Cfb := TDerObjectIdentifier.Create(AES.id + '.4');
+  FidAes192Ecb := TDerObjectIdentifier.Create(AES.id + '.21');
   FIdAes192Cbc := TDerObjectIdentifier.Create(AES.id + '.22');
+  FIdAes192Ofb := TDerObjectIdentifier.Create(AES.id + '.23');
+  FIdAes192Cfb := TDerObjectIdentifier.Create(AES.id + '.24');
+  FIdAes256Ecb := TDerObjectIdentifier.Create(AES.id + '.41');
   FIdAes256Cbc := TDerObjectIdentifier.Create(AES.id + '.42');
+  FIdAes256Ofb := TDerObjectIdentifier.Create(AES.id + '.43');
+  FIdAes256Cfb := TDerObjectIdentifier.Create(AES.id + '.44');
 end;
 
 class function TNistObjectIdentifiers.GetAES: IDerObjectIdentifier;
@@ -126,14 +155,59 @@ begin
   result := FIdAes128Cbc;
 end;
 
+class function TNistObjectIdentifiers.GetIdAes128Cfb: IDerObjectIdentifier;
+begin
+  result := FIdAes128Cfb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes128Ecb: IDerObjectIdentifier;
+begin
+  result := FIdAES128Ecb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes128Ofb: IDerObjectIdentifier;
+begin
+  result := FIdAes128Ofb;
+end;
+
 class function TNistObjectIdentifiers.GetIdAes192Cbc: IDerObjectIdentifier;
 begin
   result := FIdAes192Cbc;
 end;
 
+class function TNistObjectIdentifiers.GetIdAes192Cfb: IDerObjectIdentifier;
+begin
+  result := FIdAes192Cfb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes192Ecb: IDerObjectIdentifier;
+begin
+  result := FidAes192Ecb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes192Ofb: IDerObjectIdentifier;
+begin
+  result := FIdAes192Ofb;
+end;
+
 class function TNistObjectIdentifiers.GetIdAes256Cbc: IDerObjectIdentifier;
 begin
   result := FIdAes256Cbc;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256Cfb: IDerObjectIdentifier;
+begin
+  result := FIdAes256Cfb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256Ecb: IDerObjectIdentifier;
+begin
+  result := FIdAes256Ecb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256Ofb: IDerObjectIdentifier;
+begin
+  result := FIdAes256Ofb;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha224: IDerObjectIdentifier;

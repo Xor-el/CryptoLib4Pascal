@@ -25,8 +25,8 @@ uses
   SysUtils,
   Generics.Collections,
   ClpCryptoLibTypes,
-  HlpHashFactory,
-  HlpIHash,
+  ClpIDigest,
+  ClpDigestUtilities,
   ClpDsaDigestSigner,
   ClpECSchnorrSigner,
   ClpX9ObjectIdentifiers,
@@ -389,7 +389,7 @@ end;
 class function TSignerUtilities.GetSigner(algorithm: String): ISigner;
 var
   mechanism: string;
-  HashInstance: IHash;
+  DigestInstance: IDigest;
 begin
   if (algorithm = '') then
   begin
@@ -405,59 +405,59 @@ begin
 
   if (mechanism = 'NONEwithECDSA') then
   begin
-    HashInstance := THashFactory.TNullDigestFactory.CreateNullDigest();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('NULL');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
   if (mechanism = 'SHA-1withECDSA') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA1();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
   if (mechanism = 'SHA-224withECDSA') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_224();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
   if (mechanism = 'SHA-256withECDSA') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_256();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
   if (mechanism = 'SHA-384withECDSA') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_384();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
   if (mechanism = 'SHA-512withECDSA') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_512();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
 
   if (mechanism = 'RIPEMD160withECDSA') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateRIPEMD160();
-    HashInstance.Initialize;
+    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
+
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      HashInstance));
+      DigestInstance));
     Exit;
   end;
 
@@ -466,45 +466,45 @@ begin
 
   if (mechanism = 'SHA-1withECSCHNORRBSI') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA1();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'BSI');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'BSI');
     Exit;
   end;
   if (mechanism = 'SHA-224withECSCHNORRBSI') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_224();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'BSI');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'BSI');
     Exit;
   end;
   if (mechanism = 'SHA-256withECSCHNORRBSI') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_256();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'BSI');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'BSI');
     Exit;
   end;
   if (mechanism = 'SHA-384withECSCHNORRBSI') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_384();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'BSI');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'BSI');
     Exit;
   end;
   if (mechanism = 'SHA-512withECSCHNORRBSI') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_512();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'BSI');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'BSI');
     Exit;
   end;
 
   if (mechanism = 'RIPEMD160withECSCHNORRBSI') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateRIPEMD160();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'BSI');
+    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'BSI');
     Exit;
   end;
 
@@ -512,45 +512,45 @@ begin
 
   if (mechanism = 'SHA-1withECSCHNORRISO') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA1();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISO');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISO');
     Exit;
   end;
   if (mechanism = 'SHA-224withECSCHNORRISO') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_224();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISO');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISO');
     Exit;
   end;
   if (mechanism = 'SHA-256withECSCHNORRISO') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_256();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISO');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISO');
     Exit;
   end;
   if (mechanism = 'SHA-384withECSCHNORRISO') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_384();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISO');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISO');
     Exit;
   end;
   if (mechanism = 'SHA-512withECSCHNORRISO') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_512();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISO');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISO');
     Exit;
   end;
 
   if (mechanism = 'RIPEMD160withECSCHNORRISO') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateRIPEMD160();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISO');
+    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISO');
     Exit;
   end;
 
@@ -558,45 +558,45 @@ begin
 
   if (CompareText(mechanism, 'SHA-1withECSCHNORRISOx') = 0) then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA1();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISOx');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISOx');
     Exit;
   end;
   if (CompareText(mechanism, 'SHA-224withECSCHNORRISOx') = 0) then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_224();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISOx');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISOx');
     Exit;
   end;
   if (CompareText(mechanism, 'SHA-256withECSCHNORRISOx') = 0) then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_256();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISOx');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISOx');
     Exit;
   end;
   if (CompareText(mechanism, 'SHA-384withECSCHNORRISOx') = 0) then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_384();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISOx');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISOx');
     Exit;
   end;
   if (CompareText(mechanism, 'SHA-512withECSCHNORRISOx') = 0) then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_512();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISOx');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISOx');
     Exit;
   end;
 
   if (CompareText(mechanism, 'RIPEMD160withECSCHNORRISOx') = 0) then
   begin
-    HashInstance := THashFactory.TCrypto.CreateRIPEMD160();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'ISOx');
+    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'ISOx');
     Exit;
   end;
 
@@ -604,45 +604,45 @@ begin
 
   if (mechanism = 'SHA-1withECSCHNORRLIBSECP') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA1();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'LIBSECP');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'LIBSECP');
     Exit;
   end;
   if (mechanism = 'SHA-224withECSCHNORRLIBSECP') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_224();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'LIBSECP');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'LIBSECP');
     Exit;
   end;
   if (mechanism = 'SHA-256withECSCHNORRLIBSECP') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_256();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'LIBSECP');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'LIBSECP');
     Exit;
   end;
   if (mechanism = 'SHA-384withECSCHNORRLIBSECP') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_384();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'LIBSECP');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'LIBSECP');
     Exit;
   end;
   if (mechanism = 'SHA-512withECSCHNORRLIBSECP') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateSHA2_512();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'LIBSECP');
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'LIBSECP');
     Exit;
   end;
 
   if (mechanism = 'RIPEMD160withECSCHNORRLIBSECP') then
   begin
-    HashInstance := THashFactory.TCrypto.CreateRIPEMD160();
-    HashInstance.Initialize;
-    Result := TECSchnorrSigner.Create(HashInstance, 'LIBSECP');
+    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
+
+    Result := TECSchnorrSigner.Create(DigestInstance, 'LIBSECP');
     Exit;
   end;
 

@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   Classes,
-  HlpIHashInfo,
+  ClpIDigestMAC,
   ClpIPascalCoinIESEngine,
   ClpIBufferedBlockCipher,
   ClpICipherParameters,

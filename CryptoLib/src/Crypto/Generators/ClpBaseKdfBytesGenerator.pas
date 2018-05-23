@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  HlpIHash,
+  ClpIDigest,
   ClpIKdfParameters,
   ClpIIso18033KdfParameters,
   ClpIDerivationFunction,
@@ -53,10 +53,10 @@ type
 
   strict protected
   var
-    Fdigest: IHash;
+    Fdigest: IDigest;
     FcounterStart: Int32;
     Fshared, Fiv: TCryptoLibByteArray;
-    function GetDigest(): IHash; virtual;
+    function GetDigest(): IDigest; virtual;
 
   public
 
@@ -69,14 +69,14 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(counterStart: Int32; const digest: IHash);
+    constructor Create(counterStart: Int32; const digest: IDigest);
 
     procedure Init(const parameters: IDerivationParameters); virtual;
 
     /// <summary>
     /// return the underlying digest.
     /// </summary>
-    property digest: IHash read GetDigest;
+    property digest: IDigest read GetDigest;
 
     /// <summary>
     /// fill len bytes of the output buffer with bytes generated from the
@@ -98,7 +98,7 @@ implementation
 { TBaseKdfBytesGenerator }
 
 constructor TBaseKdfBytesGenerator.Create(counterStart: Int32;
-  const digest: IHash);
+  const digest: IDigest);
 begin
   Inherited Create();
   FcounterStart := counterStart;
@@ -184,7 +184,7 @@ begin
   result := Int32(oBytes);
 end;
 
-function TBaseKdfBytesGenerator.GetDigest: IHash;
+function TBaseKdfBytesGenerator.GetDigest: IDigest;
 begin
   result := Fdigest;
 end;
@@ -212,7 +212,6 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SKDFParameterNotFound);
   end;
 
-  Fdigest.Initialize();
 end;
 
 end.

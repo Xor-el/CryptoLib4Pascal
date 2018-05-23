@@ -24,9 +24,9 @@ interface
 uses
 
   SysUtils,
-  HlpIHash,
   ClpIDsa,
   ClpIAsn1Sequence,
+  ClpIDigest,
   ClpIDerInteger,
   ClpDerSequence,
   ClpDerInteger,
@@ -52,7 +52,7 @@ type
 
   strict private
   var
-    Fdigest: IHash;
+    Fdigest: IDigest;
     FdsaSigner: IDsa;
     FforSigning: Boolean;
 
@@ -62,7 +62,7 @@ type
       : TCryptoLibGenericArray<TBigInteger>; inline;
 
   public
-    constructor Create(const signer: IDsa; const digest: IHash);
+    constructor Create(const signer: IDsa; const digest: IDigest);
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
@@ -110,7 +110,7 @@ begin
   Fdigest.TransformBytes(input, inOff, length);
 end;
 
-constructor TDsaDigestSigner.Create(const signer: IDsa; const digest: IHash);
+constructor TDsaDigestSigner.Create(const signer: IDsa; const digest: IDigest);
 begin
   Inherited Create();
   FdsaSigner := signer;

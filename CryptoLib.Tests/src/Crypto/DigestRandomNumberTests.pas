@@ -33,12 +33,12 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  HlpIHash,
-  HlpHashFactory,
-  ClpHex,
-  ClpArrayUtils,
+  ClpIDigest,
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
+  ClpDigestUtilities,
+  ClpHex,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 type
@@ -57,12 +57,12 @@ type
       FnoCycle0SHA256, Fexpected100SHA1, Fexpected100SHA256, FexpectedTestSHA1,
       FexpectedTestSHA256, Fsha1Xors, Fsha256Xors: TBytes;
 
-    procedure doExpectedTest(digest: IHash; seed: Int32;
+    procedure doExpectedTest(digest: IDigest; seed: Int32;
       expected: TBytes); overload;
-    procedure doExpectedTest(digest: IHash; seed, expected: TBytes); overload;
-    procedure doExpectedTest(digest: IHash; seed: Int32;
+    procedure doExpectedTest(digest: IDigest; seed, expected: TBytes); overload;
+    procedure doExpectedTest(digest: IDigest; seed: Int32;
       expected, noCycle: TBytes); overload;
-    procedure doCountTest(digest: IHash; seed, expectedXors: TBytes);
+    procedure doCountTest(digest: IDigest; seed, expectedXors: TBytes);
 
   protected
     procedure SetUp; override;
@@ -76,7 +76,7 @@ implementation
 
 { TTestDigestRandomNumber }
 
-procedure TTestDigestRandomNumber.doCountTest(digest: IHash;
+procedure TTestDigestRandomNumber.doCountTest(digest: IDigest;
   seed, expectedXors: TBytes);
 var
   rGen: IDigestRandomGenerator;
@@ -84,7 +84,6 @@ var
   averages: TCryptoLibInt32Array;
   i, j: Int32;
 begin
-  digest.Initialize;
   rGen := TDigestRandomGenerator.Create(digest);
   System.SetLength(output, digest.HashSize);
   System.SetLength(averages, digest.HashSize);
@@ -135,20 +134,19 @@ begin
 
 end;
 
-procedure TTestDigestRandomNumber.doExpectedTest(digest: IHash; seed: Int32;
+procedure TTestDigestRandomNumber.doExpectedTest(digest: IDigest; seed: Int32;
   expected: TBytes);
 begin
   doExpectedTest(digest, seed, expected, Nil);
 end;
 
-procedure TTestDigestRandomNumber.doExpectedTest(digest: IHash; seed: Int32;
+procedure TTestDigestRandomNumber.doExpectedTest(digest: IDigest; seed: Int32;
   expected, noCycle: TBytes);
 var
   rGen: IDigestRandomGenerator;
   output: TBytes;
   i: Int32;
 begin
-  digest.Initialize;
   rGen := TDigestRandomGenerator.Create(digest);
   System.SetLength(output, digest.HashSize);
 
@@ -176,14 +174,13 @@ begin
   end;
 end;
 
-procedure TTestDigestRandomNumber.doExpectedTest(digest: IHash;
+procedure TTestDigestRandomNumber.doExpectedTest(digest: IDigest;
   seed, expected: TBytes);
 var
   rGen: IDigestRandomGenerator;
   output: TBytes;
   i: Int32;
 begin
-  digest.Initialize;
   rGen := TDigestRandomGenerator.Create(digest);
   System.SetLength(output, digest.HashSize);
 
@@ -238,26 +235,27 @@ end;
 
 procedure TTestDigestRandomNumber.TestDigestRandomNumber;
 begin
-  doExpectedTest(THashFactory.TCrypto.CreateSHA1(), 0, Fexpected0SHA1,
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-1'), 0, Fexpected0SHA1,
     FnoCycle0SHA1);
-  doExpectedTest(THashFactory.TCrypto.CreateSHA2_256(), 0, Fexpected0SHA256,
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-256'), 0, Fexpected0SHA256,
     FnoCycle0SHA256);
 
-  doExpectedTest(THashFactory.TCrypto.CreateSHA1(), 100, Fexpected100SHA1);
-  doExpectedTest(THashFactory.TCrypto.CreateSHA2_256(), 100,
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-1'), 100, Fexpected100SHA1);
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-256'), 100,
     Fexpected100SHA256);
 
-  doExpectedTest(THashFactory.TCrypto.CreateSHA1(), FZERO_SEED, Fexpected0SHA1);
-  doExpectedTest(THashFactory.TCrypto.CreateSHA2_256(), FZERO_SEED,
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-1'), FZERO_SEED,
+    Fexpected0SHA1);
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-256'), FZERO_SEED,
     Fexpected0SHA256);
 
-  doExpectedTest(THashFactory.TCrypto.CreateSHA1(), FTEST_SEED,
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-1'), FTEST_SEED,
     FexpectedTestSHA1);
-  doExpectedTest(THashFactory.TCrypto.CreateSHA2_256(), FTEST_SEED,
+  doExpectedTest(TDigestUtilities.GetDigest('SHA-256'), FTEST_SEED,
     FexpectedTestSHA256);
 
-  doCountTest(THashFactory.TCrypto.CreateSHA1(), FTEST_SEED, Fsha1Xors);
-  doCountTest(THashFactory.TCrypto.CreateSHA2_256(), FTEST_SEED, Fsha256Xors);
+  doCountTest(TDigestUtilities.GetDigest('SHA-1'), FTEST_SEED, Fsha1Xors);
+  doCountTest(TDigestUtilities.GetDigest('SHA-256'), FTEST_SEED, Fsha256Xors);
 end;
 
 initialization

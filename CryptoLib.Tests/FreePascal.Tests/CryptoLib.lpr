@@ -26,6 +26,7 @@ uses
   BlockCipherVectorTests,
   AESTestVectors,
   IESCipherTests,
+  AESSICTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

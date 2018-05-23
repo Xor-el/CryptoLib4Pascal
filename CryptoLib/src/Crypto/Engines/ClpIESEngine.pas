@@ -24,7 +24,7 @@ interface
 uses
   Classes,
   SysUtils,
-  HlpIHashInfo,
+  ClpIDigestMAC,
   ClpIIESEngine,
   ClpIBasicAgreement,
   ClpIDerivationFunction,
@@ -76,7 +76,7 @@ type
   var
     Fagree: IBasicAgreement;
     Fkdf: IDerivationFunction;
-    Fmac: IHMAC;
+    Fmac: IDigestMAC;
     Fcipher: IBufferedBlockCipher;
     FmacBuf, FV, FIV: TCryptoLibByteArray;
     FforEncryption: Boolean;
@@ -86,7 +86,7 @@ type
     FkeyParser: IKeyParser;
 
     function GetCipher: IBufferedBlockCipher; inline;
-    function GetMac: IHMAC; inline;
+    function GetMac: IDigestMAC; inline;
     function EncryptBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; virtual;
 
@@ -109,7 +109,7 @@ type
     /// the message authentication code generator for the message
     /// </param>
     constructor Create(const agree: IBasicAgreement;
-      const kdf: IDerivationFunction; const mac: IHMAC); overload;
+      const kdf: IDerivationFunction; const mac: IDigestMAC); overload;
 
     /// <summary>
     /// Set up for use in conjunction with a block cipher to handle the <br />
@@ -129,7 +129,7 @@ type
     /// the cipher to used for encrypting the message
     /// </param>
     constructor Create(const agree: IBasicAgreement;
-      const kdf: IDerivationFunction; const mac: IHMAC;
+      const kdf: IDerivationFunction; const mac: IDigestMAC;
       const cipher: IBufferedBlockCipher); overload;
 
     /// <summary>
@@ -189,7 +189,7 @@ type
       : TCryptoLibByteArray; virtual;
 
     property cipher: IBufferedBlockCipher read GetCipher;
-    property mac: IHMAC read GetMac;
+    property mac: IDigestMAC read GetMac;
 
   end;
 
@@ -207,7 +207,7 @@ begin
 end;
 
 constructor TIESEngine.Create(const agree: IBasicAgreement;
-  const kdf: IDerivationFunction; const mac: IHMAC);
+  const kdf: IDerivationFunction; const mac: IDigestMAC);
 begin
   Inherited Create();
   Fagree := agree;
@@ -218,7 +218,7 @@ begin
 end;
 
 constructor TIESEngine.Create(const agree: IBasicAgreement;
-  const kdf: IDerivationFunction; const mac: IHMAC;
+  const kdf: IDerivationFunction; const mac: IDigestMAC;
   const cipher: IBufferedBlockCipher);
 begin
   Inherited Create();
@@ -486,7 +486,7 @@ begin
   Result := Fcipher;
 end;
 
-function TIESEngine.GetMac: IHMAC;
+function TIESEngine.GetMac: IDigestMAC;
 begin
   Result := Fmac;
 end;

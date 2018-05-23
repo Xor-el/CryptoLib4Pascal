@@ -22,7 +22,7 @@ unit ClpIPascalCoinECIESKdfBytesGenerator;
 interface
 
 uses
-  HlpIHash,
+  ClpIDigest,
   ClpIDerivationParameters,
   ClpIBaseKdfBytesGenerator,
   ClpCryptoLibTypes;
@@ -32,14 +32,14 @@ type
   IPascalCoinECIESKdfBytesGenerator = interface(IBaseKdfBytesGenerator)
     ['{F6C7D34B-BA6A-45DB-B2A2-088F36557396}']
 
-    function GetDigest(): IHash;
+    function GetDigest(): IDigest;
 
     procedure Init(const parameters: IDerivationParameters);
 
     /// <summary>
     /// return the underlying digest.
     /// </summary>
-    property digest: IHash read GetDigest;
+    property digest: IDigest read GetDigest;
 
     /// <summary>
     /// fill len bytes of the output buffer with bytes generated from the

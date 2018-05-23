@@ -27,9 +27,9 @@ interface
 
 uses
   SysUtils,
-  HlpIHash,
-  HlpIHashInfo,
-  HlpHashFactory,
+  ClpIDigest,
+  ClpIDigestMAC,
+  ClpDigestUtilities,
   ClpBigInteger,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -80,6 +80,7 @@ uses
   ClpGeneratorUtilities,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpArrayUtils,
+  ClpHex,
   ClpSecNamedCurves;
 
 type
@@ -148,6 +149,10 @@ type
       (const inputmessage, password: string); static;
     class procedure BinaryCompatiblePascalCoinECIESEncryptDecryptDemo
       (const input: string); static;
+
+    class procedure BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo
+      (const PrivateKeyInHex, EncryptedMessageInHex,
+      ACurveName: string); static;
   end;
 
 implementation
@@ -182,33 +187,32 @@ class function TUsageExamples.EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
   out KeyBytes, IVBytes: TBytes): Boolean;
 var
   LKey, LIV: integer;
-  LHash: IHash;
+  LDigest: IDigest;
 begin
   LKey := 32; // AES256 CBC Key Length
   LIV := 16; // AES256 CBC IV Length
   System.SetLength(KeyBytes, LKey);
   System.SetLength(IVBytes, LKey);
   // Max size to start then reduce it at the end
-  LHash := THashFactory.TCrypto.CreateSHA2_256; // SHA2_256
-  LHash.Initialize();
-  System.Assert(LHash.HashSize >= LKey);
-  System.Assert(LHash.HashSize >= LIV);
+  LDigest := TDigestUtilities.GetDigest('SHA-256'); // SHA2_256
+  System.Assert(LDigest.HashSize >= LKey);
+  System.Assert(LDigest.HashSize >= LIV);
   // Derive Key First
-  LHash.TransformBytes(PasswordBytes);
+  LDigest.TransformBytes(PasswordBytes);
   if SaltBytes <> Nil then
   begin
-    LHash.TransformBytes(SaltBytes);
+    LDigest.TransformBytes(SaltBytes);
   end;
-  KeyBytes := System.Copy(LHash.TransformFinal.GetBytes);
+  KeyBytes := System.Copy(LDigest.TransformFinal.GetBytes);
   // Derive IV Next
-  LHash.Initialize();
-  LHash.TransformBytes(KeyBytes);
-  LHash.TransformBytes(PasswordBytes);
+  LDigest.Initialize();
+  LDigest.TransformBytes(KeyBytes);
+  LDigest.TransformBytes(PasswordBytes);
   if SaltBytes <> Nil then
   begin
-    LHash.TransformBytes(SaltBytes);
+    LDigest.TransformBytes(SaltBytes);
   end;
-  IVBytes := System.Copy(LHash.TransformFinal.GetBytes);
+  IVBytes := System.Copy(LDigest.TransformFinal.GetBytes);
 
   System.SetLength(IVBytes, LIV);
   Result := True;
@@ -339,6 +343,77 @@ begin
   end;
 
   Writeln('AES_256_CBC PascalCoin Compatability Encrypt, Decrypt Failed ' +
+    sLineBreak);
+
+end;
+
+class procedure TUsageExamples.
+  BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo
+  (const PrivateKeyInHex, EncryptedMessageInHex, ACurveName: string);
+
+const
+  MethodName = 'BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo';
+var
+  PrivateKeyBytes, PayloadToDecodeBytes, DecryptedCipherText: TBytes;
+  Lcurve: IX9ECParameters;
+  domain: IECDomainParameters;
+  RegeneratedPublicKey: IECPublicKeyParameters;
+  RegeneratedPrivateKey: IECPrivateKeyParameters;
+  KeyPair: IAsymmetricCipherKeyPair;
+  PrivD: TBigInteger;
+begin
+
+  // Create From Existing Parameter Method
+  System.Assert(PrivateKeyInHex <> '', 'PrivateKeyInHex Cannot be Empty');
+  System.Assert(EncryptedMessageInHex <> '',
+    'EncryptedMessageInHex Cannot be Empty');
+  System.Assert(ACurveName <> '', 'ACurveName Cannot be Empty');
+
+  PrivateKeyBytes := THex.Decode(PrivateKeyInHex);
+  System.Assert(PrivateKeyBytes <> Nil, 'PrivateKeyBytes Cannot be Nil');
+
+  PayloadToDecodeBytes := THex.Decode(EncryptedMessageInHex);
+  System.Assert(PayloadToDecodeBytes <> Nil,
+    'PayloadToDecodeBytes Cannot be Nil');
+
+  Lcurve := TSecNamedCurves.GetByName(ACurveName);
+  System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
+
+  // Set Up Asymmetric Key Pair from known private key ByteArray
+
+  domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
+    Lcurve.H, Lcurve.GetSeed);
+
+  PrivD := TBigInteger.Create(1, PrivateKeyBytes);
+  RegeneratedPrivateKey := TECPrivateKeyParameters.Create('ECDSA',
+    PrivD, domain);
+
+  RegeneratedPublicKey := TECKeyPairGenerator.GetCorrespondingPublicKey
+    (RegeneratedPrivateKey);
+
+  KeyPair := TAsymmetricCipherKeyPair.Create(RegeneratedPublicKey,
+    RegeneratedPrivateKey);
+
+  // Do Signing and Verifying to Assert Proper Recreation Of Public and Private Key
+  DoSigningAndVerifying(KeyPair.Public as IECPublicKeyParameters,
+    KeyPair.Private as IECPrivateKeyParameters, MethodName, 'PascalECDSA');
+
+  // Do Decryption Of Payload
+
+  if TUsageExamples.ECIESPascalCoinDecrypt(RegeneratedPrivateKey,
+    PayloadToDecodeBytes, DecryptedCipherText) then
+  begin
+
+    Writeln('ECIES PascalCoin Existing Payload Compatability Decrypt Was Successful '
+      + sLineBreak);
+
+    Writeln('Payload Message Is "' + TEncoding.UTF8.GetString
+      (DecryptedCipherText) + '"');
+    Exit;
+
+  end;
+
+  Writeln('ECIES PascalCoin Existing Payload Compatability Decrypt Failed ' +
     sLineBreak);
 
 end;
@@ -516,7 +591,7 @@ var
   blockCipher: ICbcBlockCipher;
   ECDHBasicAgreementInstance: IECDHBasicAgreement;
   KDFInstance: IPascalCoinECIESKdfBytesGenerator;
-  HMACInstance: IHMAC;
+  DigestMACInstance: IDigestMAC;
 
 begin
   // Set up IES Cipher Engine For Compatibility With PascalCoin
@@ -524,10 +599,10 @@ begin
   ECDHBasicAgreementInstance := TECDHBasicAgreement.Create();
 
   KDFInstance := TPascalCoinECIESKdfBytesGenerator.Create
-    (THashFactory.TCrypto.CreateSHA2_512 as IHash);
+    (TDigestUtilities.GetDigest('SHA-512'));
 
-  HMACInstance := THashFactory.THMAC.CreateHMAC
-    (THashFactory.TCrypto.CreateMD5 as IHash);
+  DigestMACInstance := TDigestUtilities.GetDigestMAC
+    (TDigestUtilities.GetDigest('MD5'));
 
   // Set Up Block Cipher
   AesEngine := TAesEngine.Create(); // AES Engine
@@ -538,53 +613,17 @@ begin
     TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
 
   Result := TPascalCoinIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
-    HMACInstance, cipher);
+    DigestMACInstance, cipher);
 end;
 
 class function TUsageExamples.GetECKeyPair: IAsymmetricCipherKeyPair;
-const
-  AccountPrivateKeyHex =
-    'Enter Your Decrypted Private Key Here in Hexadecimal!!!';
-  CurveName = 'secp256k1';
 var
   Lcurve: IX9ECParameters;
   domain: IECDomainParameters;
-  // PrivateKeyBytes: TBytes;
-  // RegeneratedPublicKey: IECPublicKeyParameters;
-  // RegeneratedPrivateKey: IECPrivateKeyParameters;
-  // PrivD: TBigInteger;
   KeyPairGeneratorInstance: IAsymmetricCipherKeyPairGenerator;
 const
   MethodName = 'GetECKeyPair';
 begin
-  // Create From Existing Parameter Method
-  // System.Assert(AccountPrivateKeyHex <> '', 'Private Key Cannot be Empty');
-  // System.Assert(CurveName <> '', 'CurveName Cannot be Empty');
-  //
-  // PrivateKeyBytes := THex.Decode(AccountPrivateKeyHex);
-  // Lcurve := TSecNamedCurves.GetByName(CurveName);
-  // System.Assert(Lcurve <> Nil, 'Curve Cannot be Nil');
-  //
-  // // Set Up Asymmetric Key Pair from known private key ByteArray
-  //
-  // domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
-  // Lcurve.H, Lcurve.GetSeed);
-  //
-  // PrivD := TBigInteger.Create(1, PrivateKeyBytes);
-  // RegeneratedPrivateKey := TECPrivateKeyParameters.Create('ECDSA',
-  // PrivD, domain);
-  //
-  // RegeneratedPublicKey := TECKeyPairGenerator.GetCorrespondingPublicKey
-  // (RegeneratedPrivateKey);
-  //
-  // Result := TAsymmetricCipherKeyPair.Create
-  // (RegeneratedPublicKey as IAsymmetricKeyParameter,
-  // RegeneratedPrivateKey as IAsymmetricKeyParameter);
-  //
-  // // Do Signing and Verifying to Assert Proper Recreation Of Public and Private Key
-  // DoSigningAndVerifying(RegeneratedPublicKey, RegeneratedPrivateKey, MethodName,
-  // 'PascalECDSA');
-
   // Full Generation Method
 
   Lcurve := TSecNamedCurves.GetByName(CurveName);

@@ -143,7 +143,7 @@ begin
   //
   // result := count;
 
-  count := input[System.Length(input) - 1];
+  count := input[System.Length(input) - 1] and $FF;
   countAsByte := Byte(count);
 
   // constant time version

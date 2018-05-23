@@ -32,9 +32,8 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  HlpIHash,
-  HlpIHashInfo,
-  HlpHashFactory,
+  ClpIDigest,
+  ClpIDigestMAC,
   ClpAesEngine,
   ClpIAesEngine,
   ClpIAsymmetricCipherKeyPairGenerator,
@@ -75,6 +74,7 @@ uses
   ClpIIESCipher,
   ClpIESCipher,
   ClpHex,
+  ClpDigestUtilities,
   ClpArrayUtils;
 
 type
@@ -145,7 +145,7 @@ var
   blockCipher: ICbcBlockCipher;
   ECDHBasicAgreementInstance: IECDHBasicAgreement;
   KDFInstance: IKdf2BytesGenerator;
-  HMACInstance: IHMAC;
+  DigestMACInstance: IDigestMAC;
 
 begin
   // // Set up IES Cipher Engine
@@ -153,10 +153,10 @@ begin
   ECDHBasicAgreementInstance := TECDHBasicAgreement.Create();
 
   KDFInstance := TKdf2BytesGenerator.Create
-    (THashFactory.TCrypto.CreateSHA2_256 as IHash);
+    (TDigestUtilities.GetDigest('SHA-256'));
 
-  HMACInstance := THashFactory.THMAC.CreateHMAC
-    (THashFactory.TCrypto.CreateSHA2_256 as IHash);
+  DigestMACInstance := TDigestUtilities.GetDigestMAC
+    (TDigestUtilities.GetDigest('SHA-256'));
 
   // Method 1: Set Up Block Cipher
   // Cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING') as IBufferedBlockCipher;
@@ -173,7 +173,7 @@ begin
   // TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
 
   result := TIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
-    HMACInstance, Cipher);
+    DigestMACInstance, Cipher);
 end;
 
 function TTestIESCipher.GetECKeyPair: IAsymmetricCipherKeyPair;

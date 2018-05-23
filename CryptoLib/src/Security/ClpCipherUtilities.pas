@@ -26,13 +26,27 @@ uses
   TypInfo,
   Generics.Collections,
   ClpCryptoLibTypes,
-  ClpStringHelper,
+  ClpStringUtils,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
+  ClpISO10126d2Padding,
+  ClpIISO10126d2Padding,
+  ClpISO7816d4Padding,
+  ClpIISO7816d4Padding,
+  ClpX923Padding,
+  ClpIX923Padding,
   ClpZeroBytePadding,
   ClpIZeroBytePadding,
+  ClpTTBCPadding,
+  ClpITBCPadding,
   ClpCbcBlockCipher,
   ClpICbcBlockCipher,
+  ClpCfbBlockCipher,
+  ClpICfbBlockCipher,
+  ClpOfbBlockCipher,
+  ClpIOfbBlockCipher,
+  ClpSicBlockCipher,
+  ClpISicBlockCipher,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
   ClpPaddedBufferedBlockCipher,
@@ -49,6 +63,8 @@ resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
   SAlgorithmNil = 'Algorithm Cannot be Nil';
   SUnRecognizedCipher = '"Cipher " %s Not Recognised.';
+  SSICModeWarning =
+    'Warning: SIC-Mode Can Become a TwoTime-Pad if the Blocksize of the Cipher is Too Small. Use a Cipher With a Block Size of at Least 128 bits (e.g. AES)';
 
 type
 
@@ -62,8 +78,10 @@ type
   type
 {$SCOPEDENUMS ON}
     TCipherAlgorithm = (AES);
-    TCipherMode = (NONE, CBC);
-    TCipherPadding = (NOPADDING, PKCS5, PKCS5PADDING, PKCS7, PKCS7PADDING,
+    TCipherMode = (NONE, CBC, CFB, CTR, ECB, OFB, SIC);
+    TCipherPadding = (NOPADDING, ISO10126PADDING, ISO10126D2PADDING,
+      ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, PKCS5,
+      PKCS5PADDING, PKCS7, PKCS7PADDING, TBCPADDING, X923PADDING,
       ZEROBYTEPADDING);
 {$SCOPEDENUMS OFF}
 
@@ -109,12 +127,31 @@ begin
 
   // TODO Flesh out the list of aliases
 
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Ecb.Id,
+    'AES/ECB/PKCS7PADDING');
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Ecb.Id,
+    'AES/ECB/PKCS7PADDING');
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Ecb.Id,
+    'AES/ECB/PKCS7PADDING');
+  Falgorithms.Add('AES//PKCS7', 'AES/ECB/PKCS7PADDING');
+  Falgorithms.Add('AES//PKCS7PADDING', 'AES/ECB/PKCS7PADDING');
+  Falgorithms.Add('AES//PKCS5', 'AES/ECB/PKCS7PADDING');
+  Falgorithms.Add('AES//PKCS5PADDING', 'AES/ECB/PKCS7PADDING');
+
   Falgorithms.Add(TNistObjectIdentifiers.IdAes128Cbc.Id,
     'AES/CBC/PKCS7PADDING');
   Falgorithms.Add(TNistObjectIdentifiers.IdAes192Cbc.Id,
     'AES/CBC/PKCS7PADDING');
   Falgorithms.Add(TNistObjectIdentifiers.IdAes256Cbc.Id,
     'AES/CBC/PKCS7PADDING');
+
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Ofb.Id, 'AES/OFB/NOPADDING');
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Ofb.Id, 'AES/OFB/NOPADDING');
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Ofb.Id, 'AES/OFB/NOPADDING');
+
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Cfb.Id, 'AES/CFB/NOPADDING');
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Cfb.Id, 'AES/CFB/NOPADDING');
+  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Cfb.Id, 'AES/CFB/NOPADDING');
 
 end;
 
@@ -159,7 +196,7 @@ end;
 class function TCipherUtilities.GetCipher(algorithm: String): IBufferedCipher;
 var
   aliased, algorithmName, temp, paddingName, mode, modeName: string;
-  di, LowPoint: Int32;
+  di, LowPoint, bits, HighPoint: Int32;
   padded: Boolean;
   parts: TCryptoLibStringArray;
   cipherAlgorithm: TCipherAlgorithm;
@@ -179,7 +216,7 @@ begin
     algorithm := aliased;
   end;
 
-  parts := algorithm.SplitString('/');
+  parts := TStringUtils.SplitString(algorithm, '/');
 
   blockCipher := Nil;
 
@@ -228,15 +265,39 @@ begin
         begin
           padded := false;
         end;
+
+      TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING,
+        TCipherPadding.ISO10126_2PADDING:
+        begin
+          padding := TISO10126d2Padding.Create() as IISO10126d2Padding;
+        end;
+
+      TCipherPadding.ISO7816_4PADDING, TCipherPadding.ISO9797_1PADDING:
+        begin
+          padding := TISO7816d4Padding.Create() as IISO7816d4Padding;
+        end;
+
       TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7,
         TCipherPadding.PKCS7PADDING:
         begin
           padding := TPkcs7Padding.Create() as IPkcs7Padding;
         end;
+
+      TCipherPadding.TBCPADDING:
+        begin
+          padding := TTBCPadding.Create() as ITBCPadding;
+        end;
+
+      TCipherPadding.X923PADDING:
+        begin
+          padding := TX923Padding.Create() as IX923Padding;
+        end;
+
       TCipherPadding.ZEROBYTEPADDING:
         begin
           padding := TZeroBytePadding.Create() as IZeroBytePadding;
-        end;
+        end
+
     else
       begin
         raise ESecurityUtilityCryptoLibException.CreateResFmt
@@ -280,14 +341,70 @@ begin
     end;
 
     case cipherMode of
-      TCipherMode.NONE:
+      TCipherMode.ECB, TCipherMode.NONE:
         begin
           // do nothing
         end;
+
       TCipherMode.CBC:
         begin
           blockCipher := TCbcBlockCipher.Create(blockCipher) as ICbcBlockCipher;
+        end;
+
+      TCipherMode.CFB:
+        begin
+          if (di < 0) then
+          begin
+            bits := 8 * blockCipher.GetBlockSize();
+          end
+          else
+          begin
+{$IFDEF DELPHIXE3_UP}
+            HighPoint := System.High(mode);
+{$ELSE}
+            HighPoint := System.Length(mode);
+{$ENDIF DELPHIXE3_UP}
+            bits := StrToInt(System.Copy(mode, di, HighPoint - di));
+          end;
+
+          blockCipher := TCfbBlockCipher.Create(blockCipher, bits)
+            as ICfbBlockCipher;
+        end;
+
+      TCipherMode.CTR:
+        begin
+          blockCipher := TSicBlockCipher.Create(blockCipher) as ISicBlockCipher;
+        end;
+
+      TCipherMode.OFB:
+        begin
+          if (di < 0) then
+          begin
+            bits := 8 * blockCipher.GetBlockSize();
+          end
+          else
+          begin
+{$IFDEF DELPHIXE3_UP}
+            HighPoint := System.High(mode);
+{$ELSE}
+            HighPoint := System.Length(mode);
+{$ENDIF DELPHIXE3_UP}
+            bits := StrToInt(System.Copy(mode, di, HighPoint - di));
+          end;
+
+          blockCipher := TOfbBlockCipher.Create(blockCipher, bits)
+            as IOfbBlockCipher;
+        end;
+
+      TCipherMode.SIC:
+        begin
+          if (blockCipher.GetBlockSize() < 16) then
+          begin
+            raise EArgumentCryptoLibException.CreateRes(@SSICModeWarning);
+          end;
+          blockCipher := TSicBlockCipher.Create(blockCipher) as ISicBlockCipher;
         end
+
     else
       begin
         raise ESecurityUtilityCryptoLibException.CreateResFmt

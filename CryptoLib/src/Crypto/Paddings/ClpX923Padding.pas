@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpZeroBytePadding;
+unit ClpX923Padding;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -23,19 +23,26 @@ interface
 
 uses
   ClpIBlockCipherPadding,
-  ClpIZeroBytePadding,
+  ClpIX923Padding,
   ClpISecureRandom,
   ClpCryptoLibTypes;
+
+resourcestring
+  SCorruptedPadBlock = 'Pad Block Corrupted';
 
 type
 
   /// <summary>
-  /// A padder that adds Null byte padding to a block.
+  /// A padder that adds X9.23 padding to a block - if a SecureRandom is
+  /// passed in random padding is assumed, otherwise padding with zeros is
+  /// used.
   /// </summary>
-  TZeroBytePadding = class sealed(TInterfacedObject, IZeroBytePadding,
+  TX923Padding = class sealed(TInterfacedObject, IX923Padding,
     IBlockCipherPadding)
 
   strict private
+  var
+    FRandom: ISecureRandom;
 
     /// <returns>
     /// return the name of the algorithm the cipher implements.
@@ -80,59 +87,64 @@ type
     /// <returns>
     /// the number of pad bytes present in the block.
     /// </returns>
+    /// <exception cref="EInvalidCipherTextCryptoLibException">
+    /// if the padding is badly formed or invalid.
+    /// </exception>
     function PadCount(input: TCryptoLibByteArray): Int32;
 
   end;
 
 implementation
 
-{ TZeroBytePadding }
+{ TX923Padding }
 
-function TZeroBytePadding.AddPadding(input: TCryptoLibByteArray;
+function TX923Padding.AddPadding(input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
-  added: Int32;
+  code: Byte;
 begin
-  added := System.Length(input) - inOff;
+  code := Byte(System.Length(input) - inOff);
 
-  while (inOff < System.Length(input)) do
+  while (inOff < (System.Length(input) - 1)) do
   begin
-    input[inOff] := Byte(0);
+    if (FRandom = Nil) then
+    begin
+      input[inOff] := 0;
+    end
+    else
+    begin
+      input[inOff] := Byte(FRandom.NextInt32);
+    end;
     System.Inc(inOff);
   end;
 
-  result := added;
+  result := code;
 end;
 
-function TZeroBytePadding.GetPaddingName: String;
+function TX923Padding.GetPaddingName: String;
 begin
-  result := 'ZeroBytePadding';
+  result := 'X9.23';
 end;
 
-{$IFNDEF _FIXINSIGHT_}
-
-procedure TZeroBytePadding.Init(const random: ISecureRandom);
+procedure TX923Padding.Init(const random: ISecureRandom);
 begin
-  // nothing to do.
+  FRandom := random;
 end;
-{$ENDIF}
 
-function TZeroBytePadding.PadCount(input: TCryptoLibByteArray): Int32;
+function TX923Padding.PadCount(input: TCryptoLibByteArray): Int32;
 var
   count: Int32;
 begin
-  count := System.Length(input);
-  while (count > 0) do
-  begin
-    if (input[count - 1] <> 0) then
-    begin
-      break;
-    end;
 
-    System.Dec(count);
+  count := input[System.Length(input) - 1] and $FF;
+
+  if (count > System.Length(input)) then
+  begin
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SCorruptedPadBlock);
   end;
 
-  result := System.Length(input) - count;
+  result := count;
+
 end;
 
 end.

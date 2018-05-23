@@ -15,38 +15,40 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDerivationFunction;
+unit ClpICipherKeyGenerator;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDigest,
-  ClpIDerivationParameters,
+  ClpIKeyGenerationParameters,
   ClpCryptoLibTypes;
 
 type
 
-  /// <summary>
-  /// base interface for general purpose byte derivation functions.
-  /// </summary>
-  IDerivationFunction = interface(IInterface)
-    ['{A9DA624C-A58E-4588-9EA0-81BA5B13E47E}']
+  ICipherKeyGenerator = interface(IInterface)
+    ['{084FE16F-7AEA-42C0-92BB-6CEC7923DE6F}']
 
-    procedure Init(const parameters: IDerivationParameters);
+    /// <summary>
+    /// initialise the key generator.
+    /// </summary>
+    /// <param name="parameters">
+    /// the parameters to be used for key generation
+    /// </param>
+    procedure Init(const parameters: IKeyGenerationParameters);
 
-    function GetDigest(): IDigest;
+    /// <summary>
+    /// Generate a secret key.
+    /// </summary>
+    /// <returns>
+    /// a byte array containing the key value.
+    /// </returns>
+    function GenerateKey: TCryptoLibByteArray;
 
-    /// <value>
-    /// return the message digest used as the basis for the function
-    /// </value>
-    property Digest: IDigest read GetDigest;
+    function GetdefaultStrength: Int32;
 
-    /// <exception cref="EDataLengthCryptoLibException" />
-    /// <exception cref="EArgumentCryptoLibException" />
-    function GenerateBytes(output: TCryptoLibByteArray;
-      outOff, length: Int32): Int32;
+    property defaultStrength: Int32 read GetdefaultStrength;
 
   end;
 

@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpZeroBytePadding;
+unit ClpTTBCPadding;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -23,20 +23,22 @@ interface
 
 uses
   ClpIBlockCipherPadding,
-  ClpIZeroBytePadding,
+  ClpITBCPadding,
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
 type
 
-  /// <summary>
-  /// A padder that adds Null byte padding to a block.
+  /// <summary> A padder that adds Trailing-Bit-Compliment padding to a block.
+  /// <p>
+  /// This padding pads the block out compliment of the last bit
+  /// of the plain text.
+  /// </p>
   /// </summary>
-  TZeroBytePadding = class sealed(TInterfacedObject, IZeroBytePadding,
+  TTBCPadding = class sealed(TInterfacedObject, ITBCPadding,
     IBlockCipherPadding)
 
   strict private
-
     /// <returns>
     /// return the name of the algorithm the cipher implements.
     /// </returns>
@@ -56,19 +58,15 @@ type
     /// </summary>
     property PaddingName: String read GetPaddingName;
 
-    /// <summary>
-    /// add the pad bytes to the passed in block, returning the number of
-    /// bytes added.
+    /// <summary> add the pad bytes to the passed in block, returning the
+    /// number of bytes added.
+    /// <p>
+    /// Note: this assumes that the last block of plain text is always
+    /// passed to it inside in. i.e. if inOff is zero, indicating the
+    /// entire block is to be overwritten with padding the value of in
+    /// should be the same as the last block of plain text.
+    /// </p>
     /// </summary>
-    /// <param name="input">
-    /// input block to pad
-    /// </param>
-    /// <param name="inOff">
-    /// offset to start the padding from in the block
-    /// </param>
-    /// <returns>
-    /// returns number of bytes added
-    /// </returns>
     function AddPadding(input: TCryptoLibByteArray; inOff: Int32): Int32;
 
     /// <summary>
@@ -86,53 +84,80 @@ type
 
 implementation
 
-{ TZeroBytePadding }
+{ TTBCPadding }
 
-function TZeroBytePadding.AddPadding(input: TCryptoLibByteArray;
+function TTBCPadding.AddPadding(input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
-  added: Int32;
+  count: Int32;
+  code: Byte;
 begin
-  added := System.Length(input) - inOff;
+  count := System.Length(input) - inOff;
+
+  if (inOff > 0) then
+  begin
+    if (input[inOff - 1] and $01) = 0 then
+    begin
+      code := Byte($FF)
+    end
+    else
+    begin
+      code := Byte($00)
+    end;
+
+  end
+  else
+  begin
+
+    if (input[System.Length(input) - 1] and $01) = 0 then
+    begin
+      code := Byte($FF)
+    end
+    else
+    begin
+      code := Byte($00)
+    end;
+
+  end;
 
   while (inOff < System.Length(input)) do
   begin
-    input[inOff] := Byte(0);
+    input[inOff] := code;
     System.Inc(inOff);
   end;
 
-  result := added;
+  result := count;
 end;
 
-function TZeroBytePadding.GetPaddingName: String;
+function TTBCPadding.GetPaddingName: String;
 begin
-  result := 'ZeroBytePadding';
+  result := 'TBC';
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-procedure TZeroBytePadding.Init(const random: ISecureRandom);
+procedure TTBCPadding.Init(const random: ISecureRandom);
 begin
   // nothing to do.
 end;
 {$ENDIF}
 
-function TZeroBytePadding.PadCount(input: TCryptoLibByteArray): Int32;
+function TTBCPadding.PadCount(input: TCryptoLibByteArray): Int32;
 var
-  count: Int32;
+  code: Byte;
+  index: Int32;
 begin
-  count := System.Length(input);
-  while (count > 0) do
-  begin
-    if (input[count - 1] <> 0) then
-    begin
-      break;
-    end;
 
-    System.Dec(count);
+  code := input[System.Length(input) - 1];
+
+  index := System.Length(input) - 1;
+  while ((index > 0) and (input[index - 1] = code)) do
+  begin
+    System.Dec(index);
   end;
 
-  result := System.Length(input) - count;
+  result := System.Length(input) - index;
+
 end;
 
 end.

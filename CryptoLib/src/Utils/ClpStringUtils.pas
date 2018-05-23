@@ -15,9 +15,9 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpStringHelper;
+unit ClpStringUtils;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
@@ -28,57 +28,62 @@ uses
   ClpCryptoLibTypes;
 
 type
-  TStringHelper = record helper for
-    String public
-    function GetHashCode: Int32;
-    function SplitString(Delimiter: Char): TCryptoLibStringArray;
-    function BeginsWith(const Value: string; IgnoreCase: Boolean): Boolean;
+  TStringUtils = class sealed(TObject)
+  public
+    class function GetStringHashCode(const Input: string): Int32; static;
+    class function SplitString(const Input: string; Delimiter: Char)
+      : TCryptoLibStringArray; static;
+    class function BeginsWith(const Input, SubString: string;
+      IgnoreCase: Boolean; Offset: Int32 = 1): Boolean; static;
 
   end;
 
 implementation
 
-{ TStringHelper }
+{ TStringUtils }
 
-function TStringHelper.GetHashCode: Int32;
+class function TStringUtils.GetStringHashCode(const Input: string): Int32;
 var
-  temp: string;
-  I, Top: UInt32;
+  LowPoint, HighPoint: Int32;
   LResult: UInt32;
 begin
-  temp := Self;
-
   LResult := 0;
 {$IFDEF DELPHIXE3_UP}
-  I := System.Low(temp);
-  Top := System.High(temp);
+  LowPoint := System.Low(Input);
+  HighPoint := System.High(Input);
 {$ELSE}
-  I := 1;
-  Top := System.Length(temp);
+  LowPoint := 1;
+  HighPoint := System.Length(Input);
 {$ENDIF DELPHIXE3_UP}
-  while I <= Top do
+  while LowPoint <= HighPoint do
   begin
     LResult := TBits.RotateLeft32(LResult, 5);
-    LResult := LResult xor UInt32(temp[I]);
-    System.Inc(I);
+    LResult := LResult xor UInt32(Input[LowPoint]);
+    System.Inc(LowPoint);
   end;
   Result := Int32(LResult);
 end;
 
-function TStringHelper.SplitString(Delimiter: Char): TCryptoLibStringArray;
+class function TStringUtils.SplitString(const Input: string; Delimiter: Char)
+  : TCryptoLibStringArray;
 var
-  PosStart, PosDel, SplitPoints, I, Len: Int32;
-  S: string;
+  PosStart, PosDel, SplitPoints, I, LowPoint, HighPoint, Len: Int32;
 begin
   Result := Nil;
-  S := Self;
-  if S <> '' then
+  if Input <> '' then
   begin
     { Determine the length of the resulting array }
+{$IFDEF DELPHIXE3_UP}
+    LowPoint := System.Low(Input);
+    HighPoint := System.High(Input);
+{$ELSE}
+    LowPoint := 1;
+    HighPoint := System.Length(Input);
+{$ENDIF DELPHIXE3_UP}
     SplitPoints := 0;
-    for I := 1 to System.Length(S) do
+    for I := LowPoint to HighPoint do
     begin
-      if (Delimiter = S[I]) then
+      if (Delimiter = Input[I]) then
         System.Inc(SplitPoints);
     end;
 
@@ -89,34 +94,38 @@ begin
     I := 0;
     Len := System.Length(Delimiter);
     PosStart := 1;
-    PosDel := System.Pos(Delimiter, S);
+    PosDel := System.Pos(Delimiter, Input);
     while PosDel > 0 do
     begin
-      Result[I] := System.Copy(S, PosStart, PosDel - PosStart);
+      Result[I] := System.Copy(Input, PosStart, PosDel - PosStart);
       PosStart := PosDel + Len;
-      PosDel := PosEx(Delimiter, S, PosStart);
+      PosDel := PosEx(Delimiter, Input, PosStart);
       System.Inc(I);
     end;
-    Result[I] := System.Copy(S, PosStart, System.Length(S));
+    Result[I] := System.Copy(Input, PosStart, System.Length(Input));
   end;
 end;
 
-function TStringHelper.BeginsWith(const Value: string;
-  IgnoreCase: Boolean): Boolean;
+class function TStringUtils.BeginsWith(const Input, SubString: string;
+  IgnoreCase: Boolean; Offset: Int32): Boolean;
 var
   L: Integer;
+  PtrInput, PtrSubString: PChar;
 begin
-  L := System.Length(Value);
+  L := System.Length(SubString);
   Result := L > 0;
+  PtrInput := PChar(Input);
+  System.Inc(PtrInput, Offset - 1);
+  PtrSubString := PChar(SubString);
   if Result then
   begin
     if IgnoreCase then
     begin
-      Result := StrLiComp(PChar(Value), PChar(Self), L) = 0
+      Result := StrLiComp(PtrSubString, PtrInput, L) = 0
     end
     else
     begin
-      Result := StrLComp(PChar(Value), PChar(Self), L) = 0
+      Result := StrLComp(PtrSubString, PtrInput, L) = 0
     end;
   end;
 end;

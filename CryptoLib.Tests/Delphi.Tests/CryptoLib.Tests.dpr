@@ -233,7 +233,6 @@ uses
   ClpBase64 in '..\..\CryptoLib\src\Utils\Encoders\ClpBase64.pas',
   ClpHex in '..\..\CryptoLib\src\Utils\Encoders\ClpHex.pas',
   ClpStreamHelper in '..\..\CryptoLib\src\Utils\Helpers\ClpStreamHelper.pas',
-  ClpStringHelper in '..\..\CryptoLib\src\Utils\Helpers\ClpStringHelper.pas',
   ClpBaseInputStream in '..\..\CryptoLib\src\Utils\IO\ClpBaseInputStream.pas',
   ClpFilterStream in '..\..\CryptoLib\src\Utils\IO\ClpFilterStream.pas',
   ClpStreams in '..\..\CryptoLib\src\Utils\IO\ClpStreams.pas',
@@ -378,7 +377,28 @@ uses
   ClpIPascalCoinIESEngine in '..\..\CryptoLib\src\Interfaces\ClpIPascalCoinIESEngine.pas',
   IESCipherTests in '..\src\Crypto\IESCipherTests.pas',
   ClpPascalCoinECIESKdfBytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPascalCoinECIESKdfBytesGenerator.pas',
-  ClpIPascalCoinECIESKdfBytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPascalCoinECIESKdfBytesGenerator.pas';
+  ClpIPascalCoinECIESKdfBytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPascalCoinECIESKdfBytesGenerator.pas',
+  ClpISO10126d2Padding in '..\..\CryptoLib\src\Crypto\Paddings\ClpISO10126d2Padding.pas',
+  ClpIISO10126d2Padding in '..\..\CryptoLib\src\Interfaces\ClpIISO10126d2Padding.pas',
+  ClpISO7816d4Padding in '..\..\CryptoLib\src\Crypto\Paddings\ClpISO7816d4Padding.pas',
+  ClpIISO7816d4Padding in '..\..\CryptoLib\src\Interfaces\ClpIISO7816d4Padding.pas',
+  ClpTTBCPadding in '..\..\CryptoLib\src\Crypto\Paddings\ClpTTBCPadding.pas',
+  ClpITBCPadding in '..\..\CryptoLib\src\Interfaces\ClpITBCPadding.pas',
+  ClpX923Padding in '..\..\CryptoLib\src\Crypto\Paddings\ClpX923Padding.pas',
+  ClpIX923Padding in '..\..\CryptoLib\src\Interfaces\ClpIX923Padding.pas',
+  ClpCfbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCfbBlockCipher.pas',
+  ClpICfbBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpICfbBlockCipher.pas',
+  ClpOfbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpOfbBlockCipher.pas',
+  ClpIOfbBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpIOfbBlockCipher.pas',
+  ClpSicBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpSicBlockCipher.pas',
+  ClpISicBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpISicBlockCipher.pas',
+  ClpIDigest in '..\..\CryptoLib\src\Interfaces\ClpIDigest.pas',
+  ClpIDigestMAC in '..\..\CryptoLib\src\Interfaces\ClpIDigestMAC.pas',
+  ClpIPBKDF2_DigestMAC in '..\..\CryptoLib\src\Interfaces\ClpIPBKDF2_DigestMAC.pas',
+  ClpStringUtils in '..\..\CryptoLib\src\Utils\ClpStringUtils.pas',
+  ClpCipherKeyGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpCipherKeyGenerator.pas',
+  ClpICipherKeyGenerator in '..\..\CryptoLib\src\Interfaces\ClpICipherKeyGenerator.pas',
+  AESSICTests in '..\src\Crypto\AESSICTests.pas';
 
 begin
 

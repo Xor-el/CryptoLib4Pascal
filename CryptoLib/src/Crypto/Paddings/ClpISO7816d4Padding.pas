@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpZeroBytePadding;
+unit ClpISO7816d4Padding;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -23,20 +23,23 @@ interface
 
 uses
   ClpIBlockCipherPadding,
-  ClpIZeroBytePadding,
+  ClpIISO7816d4Padding,
   ClpISecureRandom,
   ClpCryptoLibTypes;
+
+resourcestring
+  SCorruptedPadBlock = 'Pad Block Corrupted';
 
 type
 
   /// <summary>
-  /// A padder that adds Null byte padding to a block.
+  /// A padder that adds the padding according to the scheme referenced in
+  /// ISO 7814-4 - scheme 2 from ISO 9797-1. The first byte is $80, rest is $00
   /// </summary>
-  TZeroBytePadding = class sealed(TInterfacedObject, IZeroBytePadding,
+  TISO7816d4Padding = class sealed(TInterfacedObject, IISO7816d4Padding,
     IBlockCipherPadding)
 
   strict private
-
     /// <returns>
     /// return the name of the algorithm the cipher implements.
     /// </returns>
@@ -80,20 +83,26 @@ type
     /// <returns>
     /// the number of pad bytes present in the block.
     /// </returns>
+    /// <exception cref="EInvalidCipherTextCryptoLibException">
+    /// if the padding is badly formed or invalid.
+    /// </exception>
     function PadCount(input: TCryptoLibByteArray): Int32;
 
   end;
 
 implementation
 
-{ TZeroBytePadding }
+{ TISO7816d4Padding }
 
-function TZeroBytePadding.AddPadding(input: TCryptoLibByteArray;
+function TISO7816d4Padding.AddPadding(input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
   added: Int32;
 begin
-  added := System.Length(input) - inOff;
+  added := (System.Length(input) - inOff);
+
+  input[inOff] := Byte($80);
+  System.Inc(inOff);
 
   while (inOff < System.Length(input)) do
   begin
@@ -104,35 +113,38 @@ begin
   result := added;
 end;
 
-function TZeroBytePadding.GetPaddingName: String;
+function TISO7816d4Padding.GetPaddingName: String;
 begin
-  result := 'ZeroBytePadding';
+  result := 'ISO7816-4';
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-procedure TZeroBytePadding.Init(const random: ISecureRandom);
+procedure TISO7816d4Padding.Init(const random: ISecureRandom);
 begin
   // nothing to do.
 end;
 {$ENDIF}
 
-function TZeroBytePadding.PadCount(input: TCryptoLibByteArray): Int32;
+function TISO7816d4Padding.PadCount(input: TCryptoLibByteArray): Int32;
 var
   count: Int32;
 begin
-  count := System.Length(input);
-  while (count > 0) do
-  begin
-    if (input[count - 1] <> 0) then
-    begin
-      break;
-    end;
 
+  count := System.Length(input) - 1;
+
+  while ((count > 0) and (input[count] = 0)) do
+  begin
     System.Dec(count);
   end;
 
+  if (input[count] <> Byte($80)) then
+  begin
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SCorruptedPadBlock);
+  end;
+
   result := System.Length(input) - count;
+
 end;
 
 end.

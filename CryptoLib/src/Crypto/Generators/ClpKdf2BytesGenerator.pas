@@ -22,7 +22,7 @@ unit ClpKdf2BytesGenerator;
 interface
 
 uses
-  HlpIHash,
+  ClpIDigest,
   ClpBaseKdfBytesGenerator,
   ClpIKdf2BytesGenerator;
 
@@ -48,7 +48,7 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(const digest: IHash);
+    constructor Create(const digest: IDigest);
 
   end;
 
@@ -56,7 +56,7 @@ implementation
 
 { TKdf2BytesGenerator }
 
-constructor TKdf2BytesGenerator.Create(const digest: IHash);
+constructor TKdf2BytesGenerator.Create(const digest: IDigest);
 begin
   Inherited Create(1, digest);
 end;

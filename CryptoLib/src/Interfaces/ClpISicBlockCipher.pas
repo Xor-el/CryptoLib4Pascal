@@ -15,38 +15,27 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDerivationFunction;
+unit ClpISicBlockCipher;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDigest,
-  ClpIDerivationParameters,
-  ClpCryptoLibTypes;
+  ClpIBlockCipher;
 
 type
+  ISicBlockCipher = interface(IBlockCipher)
 
-  /// <summary>
-  /// base interface for general purpose byte derivation functions.
-  /// </summary>
-  IDerivationFunction = interface(IInterface)
-    ['{A9DA624C-A58E-4588-9EA0-81BA5B13E47E}']
+   ['{85CC4B84-8E49-40E1-B2F9-6C271C1FB5E7}']
 
-    procedure Init(const parameters: IDerivationParameters);
-
-    function GetDigest(): IDigest;
-
-    /// <value>
-    /// return the message digest used as the basis for the function
-    /// </value>
-    property Digest: IDigest read GetDigest;
-
-    /// <exception cref="EDataLengthCryptoLibException" />
-    /// <exception cref="EArgumentCryptoLibException" />
-    function GenerateBytes(output: TCryptoLibByteArray;
-      outOff, length: Int32): Int32;
+    /// <summary>
+    /// return the underlying block cipher that we are wrapping.
+    /// </summary>
+    /// <returns>
+    /// return the underlying block cipher that we are wrapping.
+    /// </returns>
+    function GetUnderlyingCipher(): IBlockCipher;
 
   end;
 

@@ -27,7 +27,7 @@ uses
   ClpAsn1Tags,
   ClpAsn1OctetString,
   ClpAsn1Object,
-  ClpStringHelper,
+  ClpStringUtils,
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
@@ -174,7 +174,7 @@ end;
 
 function TDerIA5String.Asn1GetHashCode: Int32;
 begin
-  result := Str.GetHashCode;
+  result := TStringUtils.GetStringHashCode(FStr);
 end;
 
 constructor TDerIA5String.Create(Str: TCryptoLibByteArray);

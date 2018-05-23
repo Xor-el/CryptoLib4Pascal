@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  HlpIHash,
+  ClpIDigest,
   ClpBaseKdfBytesGenerator,
   ClpIDerivationParameters,
   ClpIKdfParameters,
@@ -48,7 +48,7 @@ type
     IPascalCoinECIESKdfBytesGenerator)
 
   strict protected
-    function GetDigest(): IHash; override;
+    function GetDigest(): IDigest; override;
 
   public
 
@@ -58,14 +58,14 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(const digest: IHash);
+    constructor Create(const digest: IDigest);
 
     procedure Init(const parameters: IDerivationParameters); override;
 
     /// <summary>
     /// return the underlying digest.
     /// </summary>
-    property digest: IHash read GetDigest;
+    property digest: IDigest read GetDigest;
 
     /// <summary>
     /// fill len bytes of the output buffer with bytes generated from the
@@ -86,7 +86,7 @@ implementation
 
 { TPascalCoinECIESKdfBytesGenerator }
 
-constructor TPascalCoinECIESKdfBytesGenerator.Create(const digest: IHash);
+constructor TPascalCoinECIESKdfBytesGenerator.Create(const digest: IDigest);
 begin
   Inherited Create(0, digest);
 end;
@@ -124,7 +124,7 @@ begin
 
 end;
 
-function TPascalCoinECIESKdfBytesGenerator.GetDigest: IHash;
+function TPascalCoinECIESKdfBytesGenerator.GetDigest: IDigest;
 begin
   result := Fdigest;
 end;
@@ -146,8 +146,6 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SKDFParameterNotFound);
   end;
-
-  Fdigest.Initialize();
 end;
 
 end.

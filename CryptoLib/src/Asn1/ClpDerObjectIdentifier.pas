@@ -28,7 +28,7 @@ uses
   SyncObjs,
   ClpBits,
   ClpArrayUtils,
-  ClpStringHelper,
+  ClpStringUtils,
   ClpStreamHelper,
   ClpBigInteger,
   ClpCryptoLibTypes,
@@ -158,7 +158,7 @@ end;
 
 function TDerObjectIdentifier.Asn1GetHashCode: Int32;
 begin
-  result := Fidentifier.GetHashCode();
+  result := TStringUtils.GetStringHashCode(Fidentifier);
 end;
 
 function TDerObjectIdentifier.Branch(const branchID: String)
@@ -172,8 +172,10 @@ constructor TDerObjectIdentifier.Create(const oid: IDerObjectIdentifier;
 begin
   Inherited Create();
   if (not(IsValidBranchID(branchID, 1))) then
+  begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidBranchId,
       [branchID]);
+  end;
 
   Fidentifier := oid.ID + '.' + branchID;
 end;
@@ -182,9 +184,13 @@ constructor TDerObjectIdentifier.Create(const identifier: String);
 begin
   Inherited Create();
   if (identifier = '') then
+  begin
     raise EArgumentNilCryptoLibException.CreateRes(@SIdentifierNil);
+  end;
   if (not(IsValidIdentifier(identifier))) then
+  begin
     raise EFormatCryptoLibException.CreateResFmt(@SInvalidOID, [identifier]);
+  end;
 
   Fidentifier := identifier;
 end;
@@ -247,7 +253,6 @@ begin
     end
     else
     begin
-
       WriteField(bOut, TBigInteger.Create(token));
     end;
   end;
@@ -261,12 +266,12 @@ end;
 class function TDerObjectIdentifier.FromOctetString(enc: TCryptoLibByteArray)
   : IDerObjectIdentifier;
 var
-  hashCode, first: Int32;
+  HashCode, first: Int32;
   entry: IDerObjectIdentifier;
 begin
 
-  hashCode := TArrayUtils.GetArrayHashCode(enc);
-  first := hashCode and 1023;
+  HashCode := TArrayUtils.GetArrayHashCode(enc);
+  first := HashCode and 1023;
 
   FLock.Acquire;
   try
@@ -440,7 +445,6 @@ var
   i, b: Int32;
 begin
   value := 0;
-  // bigValue := null;
   bigValue := Default (TBigInteger);
   first := true;
   objId := TStringList.Create();

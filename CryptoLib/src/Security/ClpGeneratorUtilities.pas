@@ -26,10 +26,12 @@ uses
   Generics.Collections,
   ClpECKeyPairGenerator,
   ClpIECKeyPairGenerator,
+  ClpCipherKeyGenerator,
+  ClpICipherKeyGenerator,
   ClpIDerObjectIdentifier,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpNistObjectIdentifiers,
-  ClpStringHelper,
+  ClpStringUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -80,6 +82,9 @@ type
 
     class function GetKeyPairGenerator(const algorithm: String)
       : IAsymmetricCipherKeyPairGenerator; overload; static;
+
+    class function GetKeyGenerator(const algorithm: String)
+      : ICipherKeyGenerator; static;
 
     class function GetDefaultKeySize(const oid: IDerObjectIdentifier): Int32;
       overload; static; inline;
@@ -146,18 +151,28 @@ begin
   //
 
   AddKgAlgorithm('AES128', ['2.16.840.1.101.3.4.2',
-    TNistObjectIdentifiers.IdAes128Cbc.ID]);
+    TNistObjectIdentifiers.IdAes128Cbc.ID,
+    TNistObjectIdentifiers.IdAes128Cfb.ID,
+    TNistObjectIdentifiers.IdAes128Ecb.ID,
+    TNistObjectIdentifiers.IdAes128Ofb.ID]);
 
   AddKgAlgorithm('AES192', ['2.16.840.1.101.3.4.22',
-    TNistObjectIdentifiers.IdAes192Cbc.ID]);
+    TNistObjectIdentifiers.IdAes192Cbc.ID,
+    TNistObjectIdentifiers.IdAes192Cfb.ID,
+    TNistObjectIdentifiers.IdAes192Ecb.ID,
+    TNistObjectIdentifiers.IdAes192Ofb.ID]);
 
   AddKgAlgorithm('AES256', ['2.16.840.1.101.3.4.42',
-    TNistObjectIdentifiers.IdAes256Cbc.ID]);
+    TNistObjectIdentifiers.IdAes256Cbc.ID,
+    TNistObjectIdentifiers.IdAes256Cfb.ID,
+    TNistObjectIdentifiers.IdAes256Ecb.ID,
+    TNistObjectIdentifiers.IdAes256Ofb.ID]);
 
   //
   // key pair generators.
   //
 
+  AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDSA', []);
 
   AddDefaultKeySizeEntries(128, ['AES128']);
@@ -232,6 +247,30 @@ begin
   result := GetDefaultKeySize(oid.ID);
 end;
 
+class function TGeneratorUtilities.GetKeyGenerator(const algorithm: String)
+  : ICipherKeyGenerator;
+var
+  canonicalName: string;
+  defaultKeySize: Int32;
+begin
+
+  canonicalName := GetCanonicalKeyGeneratorAlgorithm(algorithm);
+  if (canonicalName = '') then
+  begin
+    raise ESecurityUtilityCryptoLibException.CreateResFmt
+      (@SKeyGeneratorAlgorithmNotRecognised, [algorithm]);
+  end;
+
+  defaultKeySize := FindDefaultKeySize(canonicalName);
+  if (defaultKeySize = -1) then
+  begin
+    raise ESecurityUtilityCryptoLibException.CreateResFmt
+      (@SKeyGeneratorAlgorithmNotSupported, [algorithm, canonicalName]);
+  end;
+
+  result := TCipherKeyGenerator.Create(defaultKeySize);
+end;
+
 class function TGeneratorUtilities.GetKeyPairGenerator(const algorithm: String)
   : IAsymmetricCipherKeyPairGenerator;
 var
@@ -246,7 +285,7 @@ begin
   end;
 
   // "EC", "ECDH", "ECDHC", "ECDSA", "ECGOST3410", "ECMQV"
-  if canonicalName.BeginsWith('EC', False) then
+  if TStringUtils.BeginsWith(canonicalName, 'EC', True) then
   begin
     result := TECKeyPairGenerator.Create(canonicalName) as IECKeyPairGenerator;
     Exit;

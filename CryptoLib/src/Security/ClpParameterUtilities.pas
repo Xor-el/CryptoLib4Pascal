@@ -39,12 +39,16 @@ type
   TParameterUtilities = class sealed(TObject)
 
   strict private
-    class var
+  class var
 
-      Falgorithms: TDictionary<String, String>;
+    Falgorithms: TDictionary<String, String>;
+    FbasicIVSizes: TDictionary<String, Int32>;
 
     class procedure AddAlgorithm(const canonicalName: String;
       aliases: array of String); static;
+
+    class procedure AddBasicIVSizeEntries(size: Int32;
+      algorithms: array of String); static;
 
     class constructor CreateParameterUtilities();
     class destructor DestroyParameterUtilities();
@@ -87,22 +91,42 @@ begin
 
 end;
 
+class procedure TParameterUtilities.AddBasicIVSizeEntries(size: Int32;
+  algorithms: array of String);
+var
+  algorithm: string;
+begin
+  for algorithm in algorithms do
+  begin
+    FbasicIVSizes.Add(algorithm, size);
+  end;
+end;
+
 class procedure TParameterUtilities.Boot;
 begin
   Falgorithms := TDictionary<String, String>.Create();
+  FbasicIVSizes := TDictionary<string, Integer>.Create();
 
   TNistObjectIdentifiers.Boot;
 
   AddAlgorithm('AES', []);
-
   AddAlgorithm('AES128', ['2.16.840.1.101.3.4.2',
-    TNistObjectIdentifiers.IdAes128Cbc.ID]);
-
+    TNistObjectIdentifiers.IdAes128Cbc.ID,
+    TNistObjectIdentifiers.IdAes128Cfb.ID,
+    TNistObjectIdentifiers.IdAes128Ecb.ID,
+    TNistObjectIdentifiers.IdAes128Ofb.ID]);
   AddAlgorithm('AES192', ['2.16.840.1.101.3.4.22',
-    TNistObjectIdentifiers.IdAes192Cbc.ID]);
-
+    TNistObjectIdentifiers.IdAes192Cbc.ID,
+    TNistObjectIdentifiers.IdAes192Cfb.ID,
+    TNistObjectIdentifiers.IdAes192Ecb.ID,
+    TNistObjectIdentifiers.IdAes192Ofb.ID]);
   AddAlgorithm('AES256', ['2.16.840.1.101.3.4.42',
-    TNistObjectIdentifiers.IdAes256Cbc.ID]);
+    TNistObjectIdentifiers.IdAes256Cbc.ID,
+    TNistObjectIdentifiers.IdAes256Cfb.ID,
+    TNistObjectIdentifiers.IdAes256Ecb.ID,
+    TNistObjectIdentifiers.IdAes256Ofb.ID]);
+
+  AddBasicIVSizeEntries(16, ['AES', 'AES128', 'AES192', 'AES256']);
 
 end;
 
@@ -161,6 +185,7 @@ end;
 class destructor TParameterUtilities.DestroyParameterUtilities;
 begin
   Falgorithms.Free;
+  FbasicIVSizes.Free;
 end;
 
 end.

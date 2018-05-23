@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpZeroBytePadding;
+unit ClpISO10126d2Padding;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -23,20 +23,26 @@ interface
 
 uses
   ClpIBlockCipherPadding,
-  ClpIZeroBytePadding,
+  ClpIISO10126d2Padding,
+  ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes;
+
+resourcestring
+  SCorruptedPadBlock = 'Pad Block Corrupted';
 
 type
 
   /// <summary>
-  /// A padder that adds Null byte padding to a block.
+  /// A padder that adds ISO10126-2 padding to a block.
   /// </summary>
-  TZeroBytePadding = class sealed(TInterfacedObject, IZeroBytePadding,
+  TISO10126d2Padding = class sealed(TInterfacedObject, IISO10126d2Padding,
     IBlockCipherPadding)
 
   strict private
 
+  var
+    FRandom: ISecureRandom;
     /// <returns>
     /// return the name of the algorithm the cipher implements.
     /// </returns>
@@ -80,59 +86,66 @@ type
     /// <returns>
     /// the number of pad bytes present in the block.
     /// </returns>
+    /// <exception cref="EInvalidCipherTextCryptoLibException">
+    /// if the padding is badly formed or invalid.
+    /// </exception>
     function PadCount(input: TCryptoLibByteArray): Int32;
 
   end;
 
 implementation
 
-{ TZeroBytePadding }
+{ TISO10126d2Padding }
 
-function TZeroBytePadding.AddPadding(input: TCryptoLibByteArray;
+function TISO10126d2Padding.AddPadding(input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
-  added: Int32;
+  code: Byte;
 begin
-  added := System.Length(input) - inOff;
+  code := Byte(System.Length(input) - inOff);
 
-  while (inOff < System.Length(input)) do
+  while (inOff < (System.Length(input) - 1)) do
   begin
-    input[inOff] := Byte(0);
+    input[inOff] := Byte(FRandom.NextInt32);
     System.Inc(inOff);
   end;
 
-  result := added;
+  input[inOff] := code;
+
+  result := code;
 end;
 
-function TZeroBytePadding.GetPaddingName: String;
+function TISO10126d2Padding.GetPaddingName: String;
 begin
-  result := 'ZeroBytePadding';
+  result := 'ISO10126-2';
 end;
 
-{$IFNDEF _FIXINSIGHT_}
-
-procedure TZeroBytePadding.Init(const random: ISecureRandom);
+procedure TISO10126d2Padding.Init(const random: ISecureRandom);
 begin
-  // nothing to do.
+  if random <> Nil then
+  begin
+    FRandom := random;
+  end
+  else
+  begin
+    FRandom := TSecureRandom.Create();
+  end;
 end;
-{$ENDIF}
 
-function TZeroBytePadding.PadCount(input: TCryptoLibByteArray): Int32;
+function TISO10126d2Padding.PadCount(input: TCryptoLibByteArray): Int32;
 var
   count: Int32;
 begin
-  count := System.Length(input);
-  while (count > 0) do
-  begin
-    if (input[count - 1] <> 0) then
-    begin
-      break;
-    end;
 
-    System.Dec(count);
+  count := input[System.Length(input) - 1] and $FF;
+
+  if (count > System.Length(input)) then
+  begin
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SCorruptedPadBlock);
   end;
 
-  result := System.Length(input) - count;
+  result := count;
+
 end;
 
 end.
