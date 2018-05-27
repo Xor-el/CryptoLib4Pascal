@@ -26,7 +26,7 @@ CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that
     
    **Dependencies:**
    
-   [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) >= v2.3
+   [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) >= v2.4
    
    [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal) >= v1.2
     
