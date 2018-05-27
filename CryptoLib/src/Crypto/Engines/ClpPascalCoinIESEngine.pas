@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   Classes,
-  ClpIDigestMAC,
+  ClpIMac,
   ClpIPascalCoinIESEngine,
   ClpIBufferedBlockCipher,
   ClpICipherParameters,
@@ -92,7 +92,7 @@ var
   cp: ICipherParameters;
 begin
   // Ensure that the length of the input is greater than the MAC in bytes
-  if (inLen < (System.Length(FV) + Fmac.HashSize)) then
+  if (inLen < (System.Length(FV) + Fmac.GetMacSize)) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes
       (@SInvalidCipherTextLength);
@@ -131,23 +131,22 @@ begin
   end;
 
   // Verify the MAC.
-  T1 := System.Copy(in_enc, System.Length(FV), Fmac.HashSize);
+  T1 := System.Copy(in_enc, System.Length(FV), Fmac.GetMacSize);
   System.SetLength(T2, System.Length(T1));
-  // set the mac key before calling initialize
-  Fmac.Key := K2;
-  Fmac.Initialize;
 
-  Fmac.TransformBytes(in_enc, inOff + System.Length(FV) + System.Length(T2),
+  Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
+
+  Fmac.BlockUpdate(in_enc, inOff + System.Length(FV) + System.Length(T2),
     inLen - System.Length(FV) - System.Length(T2));
 
-  T2 := Fmac.TransformFinal.GetBytes;
+  T2 := Fmac.DoFinal();
 
   if (not TArrayUtils.ConstantTimeAreEqual(T1, T2)) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidMAC);
   end;
 
-  Result := Fcipher.doFinal(in_enc, inOff + System.Length(FV) + Fmac.HashSize,
+  Result := Fcipher.DoFinal(in_enc, inOff + System.Length(FV) + Fmac.GetMacSize,
     inLen - System.Length(FV) - System.Length(T2));
   Exit;
 end;
@@ -188,17 +187,17 @@ begin
       Fcipher.Init(true, TKeyParameter.Create(K1) as IKeyParameter);
     end;
 
-    C := Fcipher.doFinal(&in, inOff, inLen);
+    C := Fcipher.DoFinal(&in, inOff, inLen);
   end;
 
   // Apply the MAC.
-  System.SetLength(T, Fmac.HashSize);
-  // set the mac key before calling initialize
-  Fmac.Key := K2;
-  Fmac.Initialize;
-  Fmac.TransformBytes(C, 0, System.Length(C));
+  System.SetLength(T, Fmac.GetMacSize);
 
-  T := Fmac.TransformFinal.GetBytes;
+  Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
+
+  Fmac.BlockUpdate(C, 0, System.Length(C));
+
+  T := Fmac.DoFinal();
 
   // Output the quadruple (SECURE_HEAD_SIZE,V,T,C).
   // SECURE_HEAD_SIZE := Dummy Random Data for interpolability

@@ -31,6 +31,9 @@ uses
   ClpIDerObjectIdentifier,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpNistObjectIdentifiers,
+  ClpIanaObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
+  ClpRosstandartObjectIdentifiers,
   ClpStringUtils,
   ClpCryptoLibTypes;
 
@@ -64,6 +67,9 @@ type
       aliases: array of String); static;
 
     class procedure AddKpgAlgorithm(const canonicalName: String;
+      aliases: array of String); static;
+
+    class procedure AddHMacKeyGenerator(const algorithm: String;
       aliases: array of String); static;
 
     class constructor CreateGeneratorUtilities();
@@ -138,6 +144,24 @@ begin
 
 end;
 
+class procedure TGeneratorUtilities.AddHMacKeyGenerator(const algorithm: String;
+  aliases: array of String);
+var
+  alias, mainName: string;
+begin
+  mainName := 'HMAC' + algorithm;
+
+  FkgAlgorithms.Add(mainName, mainName);
+  FkgAlgorithms.Add('HMAC-' + algorithm, mainName);
+  FkgAlgorithms.Add('HMAC/' + algorithm, mainName);
+
+  for alias in aliases do
+  begin
+    FkgAlgorithms.Add(alias, mainName);
+  end;
+
+end;
+
 class procedure TGeneratorUtilities.Boot;
 begin
   FkgAlgorithms := TDictionary<String, String>.Create();
@@ -169,15 +193,62 @@ begin
     TNistObjectIdentifiers.IdAes256Ofb.ID]);
 
   //
+  // HMac key generators
+  //
+  TIanaObjectIdentifiers.Boot;
+
+  AddHMacKeyGenerator('MD2', []);
+  AddHMacKeyGenerator('MD4', []);
+  AddHMacKeyGenerator('MD5', [TIanaObjectIdentifiers.HmacMD5.ID]);
+
+  TPkcsObjectIdentifiers.Boot;
+
+  AddHMacKeyGenerator('SHA1', [TPkcsObjectIdentifiers.IdHmacWithSha1.ID,
+    TIanaObjectIdentifiers.HmacSha1.ID]);
+  AddHMacKeyGenerator('SHA224', [TPkcsObjectIdentifiers.IdHmacWithSha224.ID]);
+  AddHMacKeyGenerator('SHA256', [TPkcsObjectIdentifiers.IdHmacWithSha256.ID]);
+  AddHMacKeyGenerator('SHA384', [TPkcsObjectIdentifiers.IdHmacWithSha384.ID]);
+  AddHMacKeyGenerator('SHA512', [TPkcsObjectIdentifiers.IdHmacWithSha512.ID]);
+  AddHMacKeyGenerator('SHA512/224', []);
+  AddHMacKeyGenerator('SHA512/256', []);
+
+  AddHMacKeyGenerator('SHA3-224',
+    [TNistObjectIdentifiers.IdHMacWithSha3_224.ID]);
+  AddHMacKeyGenerator('SHA3-256',
+    [TNistObjectIdentifiers.IdHMacWithSha3_256.ID]);
+  AddHMacKeyGenerator('SHA3-384',
+    [TNistObjectIdentifiers.IdHMacWithSha3_384.ID]);
+  AddHMacKeyGenerator('SHA3-512',
+    [TNistObjectIdentifiers.IdHMacWithSha3_512.ID]);
+  AddHMacKeyGenerator('RIPEMD128', []);
+  AddHMacKeyGenerator('RIPEMD160', [TIanaObjectIdentifiers.HmacRipeMD160.ID]);
+  AddHMacKeyGenerator('TIGER', [TIanaObjectIdentifiers.HmacTiger.ID]);
+
+  TRosstandartObjectIdentifiers.Boot;
+
+  AddHMacKeyGenerator('GOST3411-2012-256',
+    [TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.ID]);
+  AddHMacKeyGenerator('GOST3411-2012-512',
+    [TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.ID]);
+
+  //
   // key pair generators.
   //
 
   AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDSA', []);
 
-  AddDefaultKeySizeEntries(128, ['AES128']);
-  AddDefaultKeySizeEntries(192, ['AES', 'AES192']);
-  AddDefaultKeySizeEntries(256, ['AES256']);
+  AddDefaultKeySizeEntries(128, ['AES128', 'HMACMD2', 'HMACMD4', 'HMACMD5',
+    'HMACRIPEMD128']);
+  AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
+  AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER']);
+  AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACSHA224',
+    'HMACSHA512/224']);
+  AddDefaultKeySizeEntries(256, ['AES256', 'HMACGOST3411-2012-256',
+    'HMACSHA3-256', 'HMACSHA256', 'HMACSHA512/256']);
+  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACSHA384']);
+  AddDefaultKeySizeEntries(512, ['HMACGOST3411-2012-512', 'HMACSHA3-512',
+    'HMACSHA512']);
 end;
 
 class constructor TGeneratorUtilities.CreateGeneratorUtilities;

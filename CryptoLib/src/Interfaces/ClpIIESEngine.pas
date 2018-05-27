@@ -22,7 +22,7 @@ unit ClpIIESEngine;
 interface
 
 uses
-  ClpIDigestMAC,
+  ClpIMac,
   ClpIBufferedBlockCipher,
   ClpICipherParameters,
   ClpIAsymmetricKeyParameter,
@@ -36,7 +36,7 @@ type
     ['{9FA0E287-9988-467D-9E00-3BECEE4A78C6}']
 
     function GetCipher: IBufferedBlockCipher;
-    function GetMac: IDigestMAC;
+    function GetMac: IMac;
 
     /// <summary>
     /// Initialise the encryptor/decryptor.
@@ -95,7 +95,7 @@ type
       : TCryptoLibByteArray;
 
     property cipher: IBufferedBlockCipher read GetCipher;
-    property mac: IDigestMAC read GetMac;
+    property mac: IMac read GetMac;
   end;
 
 implementation

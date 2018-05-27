@@ -33,8 +33,8 @@ uses
   TestFramework,
 {$ENDIF FPC}
   AESTestVectors,
-  // ClpAesEngine,
-  // ClpIAesEngine,
+  ClpAesEngine,
+  ClpIAesEngine,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -46,8 +46,17 @@ uses
   ClpParameterUtilities,
   ClpCipherUtilities,
   ClpNistObjectIdentifiers,
-  // ClpCbcBlockCipher,
-  // ClpICbcBlockCipher,
+  ClpCbcBlockCipher,
+  ClpICbcBlockCipher,
+  ClpICfbBlockCipher,
+  ClpCfbBlockCipher,
+  ClpIOfbBlockCipher,
+  ClpOfbBlockCipher,
+  ClpISicBlockCipher,
+  ClpSicBlockCipher,
+  ClpIBlockCipher,
+  ClpBufferedBlockCipher,
+  ClpIBufferedBlockCipher,
   // ClpPaddedBufferedBlockCipher,
   // ClpIPaddedBufferedBlockCipher,
   // ClpZeroBytePadding,
@@ -69,8 +78,9 @@ type
 
     procedure dooidTest(oids, names: TCryptoLibStringArray; groupSize: Int32);
 
-    procedure doAESTestWithIV(const cipher: IBufferedCipher;
-      const param: IParametersWithIV; const input, output: String);
+    procedure doAESTest(const cipher: IBufferedCipher;
+      const param: ICipherParameters; const input, output: String;
+      withpadding: Boolean = False);
 
   protected
     procedure SetUp; override;
@@ -78,7 +88,12 @@ type
   published
 
     procedure TestOids;
-    procedure TestAES256_CBC_PKCS7PADDING;
+    procedure TestAES_CBC_PKCS7PADDING_WITH_IV;
+    procedure TestAES_CBC_NOPADDING_WITH_IV;
+    procedure TestAES_CFB_NOPADDING_WITH_IV;
+    procedure TestAES_OFB_NOPADDING_WITH_IV;
+    procedure TestAES_CTR_NOPADDING_WITH_IV;
+    procedure TestAES_ECB_NOPADDING_NO_IV;
 
   end;
 
@@ -86,8 +101,9 @@ implementation
 
 { TTestAES }
 
-procedure TTestAES.doAESTestWithIV(const cipher: IBufferedCipher;
-  const param: IParametersWithIV; const input, output: String);
+procedure TTestAES.doAESTest(const cipher: IBufferedCipher;
+  const param: ICipherParameters; const input, output: String;
+  withpadding: Boolean);
 var
   len1, len2: Int32;
   LInput, LOutput, EncryptionResult, DecryptionResult: TBytes;
@@ -100,6 +116,16 @@ begin
   // Encryption
   // Single Pass
   EncryptionResult := cipher.DoFinal(LInput);
+
+  if not withpadding then
+  begin
+    if (not TArrayUtils.AreEqual(LOutput, EncryptionResult)) then
+    begin
+      Fail(Format('Encryption Failed - Expected %s but got %s',
+        [THex.Encode(LOutput), THex.Encode(EncryptionResult)]));
+    end;
+  end;
+
   { *
     // Multi Pass
     System.SetLength(EncryptionResult,
@@ -111,7 +137,7 @@ begin
     len1 := cipher.DoFinal(EncryptionResult, len1);
     * }
 
-  cipher.Init(false, param);
+  cipher.Init(False, param);
 
   // Decryption
   // Single Pass
@@ -168,7 +194,7 @@ begin
     end;
 
     c1.Init(True, cp);
-    c2.Init(false, cp);
+    c2.Init(False, cp);
 
     result := c2.DoFinal(c1.DoFinal(data));
 
@@ -197,9 +223,41 @@ begin
 
 end;
 
-procedure TTestAES.TestAES256_CBC_PKCS7PADDING;
+procedure TTestAES.TestAES_CBC_NOPADDING_WITH_IV;
 var
-  keyParameter: IKeyParameter;
+  KeyParametersWithIV: IParametersWithIV;
+  keyBytes, IVBytes: TBytes;
+  cipher: IBufferedCipher;
+  input, output: string;
+  i: Int32;
+  engine: IAesEngine;
+  blockCipher: ICbcBlockCipher;
+begin
+
+  // // Set up
+  engine := TAesEngine.Create();
+  blockCipher := TCbcBlockCipher.Create(engine); // CBC
+  // no padding
+  cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
+
+  for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CBC)
+    to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CBC) do
+  begin
+    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CBC[i]);
+    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CBC[i]);
+    input := TAESTestVectors.FOfficialVectorInputs_AES_CBC[i];
+    output := TAESTestVectors.FOfficialVectorOutputs_AES_CBC[i];
+
+    KeyParametersWithIV := TParametersWithIV.Create
+      (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
+
+    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+  end;
+
+end;
+
+procedure TTestAES.TestAES_CBC_PKCS7PADDING_WITH_IV;
+var
   KeyParametersWithIV: IParametersWithIV;
   keyBytes, IVBytes: TBytes;
   cipher: IBufferedCipher;
@@ -217,18 +275,149 @@ begin
   // // Default scheme is PKCS5/PKCS7
   cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING');
 
-  for i := System.Low(TAESTestVectors.FOfficialVectorKeys__AES256_CBC)
-    to System.Low(TAESTestVectors.FOfficialVectorKeys__AES256_CBC) do
+  for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CBC)
+    to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CBC) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys__AES256_CBC[i]);
-    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES256_CBC[i]);
-    input := TAESTestVectors.FOfficialVectorInputs_AES256_CBC[i];
-    output := TAESTestVectors.FOfficialVectorOutputs_AES256_CBC[i];
+    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CBC[i]);
+    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CBC[i]);
+    input := TAESTestVectors.FOfficialVectorInputs_AES_CBC[i];
+    output := TAESTestVectors.FOfficialVectorOutputs_AES_CBC[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
 
-    doAESTestWithIV(cipher, KeyParametersWithIV, input, output);
+    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input,
+      output, True);
+  end;
+
+end;
+
+procedure TTestAES.TestAES_CFB_NOPADDING_WITH_IV;
+var
+  KeyParametersWithIV: IParametersWithIV;
+  keyBytes, IVBytes: TBytes;
+  cipher: IBufferedCipher;
+  input, output: string;
+  i: Int32;
+  engine: IAesEngine;
+  blockCipher: ICfbBlockCipher;
+begin
+
+  // // Set up
+  engine := TAesEngine.Create();
+  blockCipher := TCfbBlockCipher.Create(engine, engine.GetBlockSize * 8); // CFB
+  // no padding
+  cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
+
+  for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CFB)
+    to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CFB) do
+  begin
+    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CFB[i]);
+    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CFB[i]);
+    input := TAESTestVectors.FOfficialVectorInputs_AES_CFB[i];
+    output := TAESTestVectors.FOfficialVectorOutputs_AES_CFB[i];
+
+    KeyParametersWithIV := TParametersWithIV.Create
+      (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
+
+    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+  end;
+
+end;
+
+procedure TTestAES.TestAES_CTR_NOPADDING_WITH_IV;
+var
+  KeyParametersWithIV: IParametersWithIV;
+  keyBytes, IVBytes: TBytes;
+  cipher: IBufferedCipher;
+  input, output: string;
+  i: Int32;
+  engine: IAesEngine;
+  blockCipher: ISicBlockCipher;
+begin
+
+  // // Set up
+  engine := TAesEngine.Create();
+  blockCipher := TSicBlockCipher.Create(engine); // CTR
+  // no padding
+  cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
+
+  for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CTR)
+    to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CTR) do
+  begin
+    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CTR[i]);
+    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CTR[i]);
+    input := TAESTestVectors.FOfficialVectorInputs_AES_CTR[i];
+    output := TAESTestVectors.FOfficialVectorOutputs_AES_CTR[i];
+
+    KeyParametersWithIV := TParametersWithIV.Create
+      (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
+
+    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+  end;
+
+end;
+
+procedure TTestAES.TestAES_ECB_NOPADDING_NO_IV;
+var
+  keyParameter: IKeyParameter;
+  keyBytes: TBytes;
+  cipher: IBufferedCipher;
+  input, output: string;
+  i: Int32;
+  engine: IAesEngine;
+  blockCipher: IBlockCipher;
+begin
+
+  // // Set up
+  engine := TAesEngine.Create();
+  blockCipher := engine as IBlockCipher; // ECB
+  // no padding
+  cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
+
+  for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_ECB)
+    to System.High(TAESTestVectors.FOfficialVectorKeys_AES_ECB) do
+  begin
+    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_ECB[i]);
+    input := TAESTestVectors.FOfficialVectorInputs_AES_ECB[i];
+    output := TAESTestVectors.FOfficialVectorOutputs_AES_ECB[i];
+
+    keyParameter := TParameterUtilities.CreateKeyParameter('AES', keyBytes);
+
+    doAESTest(cipher, keyParameter as ICipherParameters, input, output);
+  end;
+
+end;
+
+procedure TTestAES.TestAES_OFB_NOPADDING_WITH_IV;
+var
+  KeyParametersWithIV: IParametersWithIV;
+  keyBytes, IVBytes: TBytes;
+  cipher: IBufferedCipher;
+  input, output: string;
+  i: Int32;
+  engine: IAesEngine;
+  blockCipher: IOfbBlockCipher;
+begin
+
+  // // Set up
+  engine := TAesEngine.Create();
+  blockCipher := TOfbBlockCipher.Create(engine, engine.GetBlockSize * 8); // OFB
+  // no padding
+  cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
+
+  for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_OFB)
+    to System.High(TAESTestVectors.FOfficialVectorKeys_AES_OFB) do
+  begin
+    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_OFB[i]);
+    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_OFB[i]);
+    input := TAESTestVectors.FOfficialVectorInputs_AES_OFB[i];
+    output := TAESTestVectors.FOfficialVectorOutputs_AES_OFB[i];
+
+    KeyParametersWithIV := TParametersWithIV.Create
+      (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
+
+    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
   end;
 
 end;

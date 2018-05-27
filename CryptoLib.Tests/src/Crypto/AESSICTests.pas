@@ -61,6 +61,10 @@ type
   TTestAESSIC = class(TCryptoLibTestCase)
   private
 
+  var
+    Fkeys, Fplain: TCryptoLibMatrixByteArray;
+    Fcipher: TCryptoLibGenericArray<TCryptoLibMatrixByteArray>;
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -77,36 +81,20 @@ implementation
 procedure TTestAESSIC.SetUp;
 begin
   inherited;
-end;
 
-procedure TTestAESSIC.TearDown;
-begin
-  inherited;
-
-end;
-
-procedure TTestAESSIC.TestAESSIC;
-var
-  keys, plain: TCryptoLibMatrixByteArray;
-  cipher: TCryptoLibGenericArray<TCryptoLibMatrixByteArray>;
-  c: IBufferedCipher;
-  i, j: Int32;
-  skey, sk: IKeyParameter;
-  enc, crypt: TBytes;
-begin
-  keys := TCryptoLibMatrixByteArray.Create
+  Fkeys := TCryptoLibMatrixByteArray.Create
     (THex.Decode('2b7e151628aed2a6abf7158809cf4f3c'),
     THex.Decode('8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b'),
     THex.Decode
     ('603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4'));
 
-  plain := TCryptoLibMatrixByteArray.Create
+  Fplain := TCryptoLibMatrixByteArray.Create
     (THex.Decode('6bc1bee22e409f96e93d7e117393172a'),
     THex.Decode('ae2d8a571e03ac9c9eb76fac45af8e51'),
     THex.Decode('30c81c46a35ce411e5fbc1191a0a52ef'),
     THex.Decode('f69f2445df4f9b17ad2b417be66c3710'));
 
-  cipher := TCryptoLibGenericArray<TCryptoLibMatrixByteArray>.Create
+  Fcipher := TCryptoLibGenericArray<TCryptoLibMatrixByteArray>.Create
     (TCryptoLibMatrixByteArray.Create
     (THex.Decode('874d6191b620e3261bef6864990db6ce'),
     THex.Decode('9806f66b7970fdff8617187bb9fffdff'),
@@ -122,6 +110,21 @@ begin
     THex.Decode('f443e3ca4d62b59aca84e990cacaf5c5'),
     THex.Decode('2b0930daa23de94ce87017ba2d84988d'),
     THex.Decode('dfc9c58db67aada613c2dd08457941a6')));
+end;
+
+procedure TTestAESSIC.TearDown;
+begin
+  inherited;
+
+end;
+
+procedure TTestAESSIC.TestAESSIC;
+var
+  c: IBufferedCipher;
+  i, j: Int32;
+  skey, sk: IKeyParameter;
+  enc, crypt: TBytes;
+begin
 
   c := TCipherUtilities.GetCipher('AES/SIC/NoPadding');
 
@@ -130,17 +133,17 @@ begin
   //
 
   i := 0;
-  while i <> System.Length(keys) do
+  while i <> System.Length(Fkeys) do
   begin
-    skey := TParameterUtilities.CreateKeyParameter('AES', keys[i]);
+    skey := TParameterUtilities.CreateKeyParameter('AES', Fkeys[i]);
     c.Init(true, TParametersWithIV.Create(skey,
       THex.Decode('F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF')) as IParametersWithIV);
 
     j := 0;
-    while j <> System.Length(plain) do
+    while j <> System.Length(Fplain) do
     begin
-      enc := c.ProcessBytes(plain[j]);
-      if (not TArrayUtils.AreEqual(enc, cipher[i, j])) then
+      enc := c.ProcessBytes(Fplain[j]);
+      if (not TArrayUtils.AreEqual(enc, Fcipher[i, j])) then
       begin
         Fail('AESSIC encrypt failed: key ' + IntToStr(i) + ' block ' +
           IntToStr(j));
@@ -152,10 +155,10 @@ begin
       THex.Decode('F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF')) as IParametersWithIV);
 
     j := 0;
-    while j <> System.Length(plain) do
+    while j <> System.Length(Fplain) do
     begin
-      enc := c.ProcessBytes(cipher[i, j]);
-      if (not TArrayUtils.AreEqual(enc, plain[j])) then
+      enc := c.ProcessBytes(Fcipher[i, j]);
+      if (not TArrayUtils.AreEqual(enc, Fplain[j])) then
       begin
         Fail('AESSIC decrypt failed: key ' + IntToStr(i) + ' block ' +
           IntToStr(j));

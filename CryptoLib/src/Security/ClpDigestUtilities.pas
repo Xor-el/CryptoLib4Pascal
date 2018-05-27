@@ -27,11 +27,11 @@ uses
   Generics.Collections,
   HlpHashFactory,
   ClpIDigest,
-  ClpIDigestMAC,
-  ClpIPBKDF2_DigestMAC,
   ClpPkcsObjectIdentifiers,
+  ClpRosstandartObjectIdentifiers,
   ClpOiwObjectIdentifiers,
   ClpNistObjectIdentifiers,
+  ClpMiscObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
   ClpCryptoLibTypes,
@@ -52,10 +52,12 @@ type
 
   type
 {$SCOPEDENUMS ON}
-    TDigestAlgorithm = (NULL, GOST3411, MD2, MD4, MD5, RIPEMD128, RIPEMD160,
-      RIPEMD256, RIPEMD320, SHA_1, SHA_224, SHA_256, SHA_384, SHA_512,
-      SHA_512_224, SHA_512_256, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
-      TIGER_5_192, WHIRLPOOL);
+    TDigestAlgorithm = (BLAKE2B_160, BLAKE2B_256, BLAKE2B_384, BLAKE2B_512,
+      BLAKE2S_128, BLAKE2S_160, BLAKE2S_224, BLAKE2S_256, GOST3411,
+      GOST3411_2012_256, GOST3411_2012_512, MD2, MD4, MD5, NULL, RIPEMD128,
+      RIPEMD160, RIPEMD256, RIPEMD320, SHA_1, SHA_224, SHA_256, SHA_384,
+      SHA_512, SHA_512_224, SHA_512_256, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
+      TIGER, WHIRLPOOL);
 {$SCOPEDENUMS OFF}
   class constructor CreateDigestUtilities();
   class destructor DestroyDigestUtilities();
@@ -72,12 +74,6 @@ type
       static; inline;
     class function GetDigest(const algorithm: String): IDigest;
       overload; static;
-
-    class function GetDigestMAC(const digest: IDigest): IDigestMAC; static;
-
-    class function GetPBKDF2_DigestMAC(const digest: IDigest;
-      a_password, a_salt: TCryptoLibByteArray; a_iterations: UInt32)
-      : IPBKDF2_DigestMAC; static;
 
     class function GetAlgorithmName(const oid: IDerObjectIdentifier): String;
       static; inline;
@@ -125,9 +121,58 @@ begin
 
   case digestAlgorithm of
 
-    TDigestAlgorithm.NULL:
+    TDigestAlgorithm.BLAKE2B_160:
       begin
-        result := IDigest(THashFactory.TNullDigestFactory.CreateNullDigest());
+        result := IDigest(THashFactory.TCrypto.CreateBlake2B_160);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2B_256:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2B_256);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2B_384:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2B_384);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2B_512:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2B_512);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2S_128:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2S_128);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2S_160:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2S_160);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2S_224:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2S_224);
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.BLAKE2S_256:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateBlake2S_256);
         result.Initialize;
         Exit;
       end;
@@ -135,6 +180,20 @@ begin
     TDigestAlgorithm.GOST3411:
       begin
         result := IDigest(THashFactory.TCrypto.CreateGost());
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.GOST3411_2012_256:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateGOST3411_2012_256());
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.GOST3411_2012_512:
+      begin
+        result := IDigest(THashFactory.TCrypto.CreateGOST3411_2012_512());
         result.Initialize;
         Exit;
       end;
@@ -156,6 +215,13 @@ begin
     TDigestAlgorithm.MD5:
       begin
         result := IDigest(THashFactory.TCrypto.CreateMD5());
+        result.Initialize;
+        Exit;
+      end;
+
+    TDigestAlgorithm.NULL:
+      begin
+        result := IDigest(THashFactory.TNullDigestFactory.CreateNullDigest());
         result.Initialize;
         Exit;
       end;
@@ -266,20 +332,19 @@ begin
         Exit;
       end;
 
-    TDigestAlgorithm.TIGER_5_192:
+    TDigestAlgorithm.TIGER:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateTiger_5_192());
+        result := IDigest(THashFactory.TCrypto.CreateTiger_3_192);
         result.Initialize;
         Exit;
       end;
 
     TDigestAlgorithm.WHIRLPOOL:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateWhirlPool());
+        result := IDigest(THashFactory.TCrypto.CreateWhirlPool);
         result.Initialize;
         Exit;
       end
-
   else
     begin
       raise ESecurityUtilityCryptoLibException.CreateResFmt
@@ -288,19 +353,6 @@ begin
 
   end;
 
-end;
-
-class function TDigestUtilities.GetDigestMAC(const digest: IDigest): IDigestMAC;
-begin
-  result := IDigestMAC(THashFactory.THMAC.CreateHMAC(digest));
-end;
-
-class function TDigestUtilities.GetPBKDF2_DigestMAC(const digest: IDigest;
-  a_password, a_salt: TCryptoLibByteArray; a_iterations: UInt32)
-  : IPBKDF2_DigestMAC;
-begin
-  result := IPBKDF2_DigestMAC(TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC(digest,
-    a_password, a_salt, a_iterations));
 end;
 
 class procedure TDigestUtilities.Boot;
@@ -356,6 +408,24 @@ begin
   Falgorithms.Add(TNistObjectIdentifiers.IdSha3_384.id, 'SHA3-384');
   Falgorithms.Add(TNistObjectIdentifiers.IdSha3_512.id, 'SHA3-512');
 
+  TMiscObjectIdentifiers.Boot;
+
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b160.id, 'BLAKE2B-160');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b256.id, 'BLAKE2B-256');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b384.id, 'BLAKE2B-384');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b512.id, 'BLAKE2B-512');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s128.id, 'BLAKE2S-128');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s160.id, 'BLAKE2S-160');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s224.id, 'BLAKE2S-224');
+  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s256.id, 'BLAKE2S-256');
+
+  TRosstandartObjectIdentifiers.Boot;
+
+  Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.
+    id, 'HMAC-GOST3411-2012-256');
+  Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.
+    id, 'HMAC-GOST3411-2012-512');
+
   Foids.Add('MD2', TPkcsObjectIdentifiers.MD2);
   Foids.Add('MD4', TPkcsObjectIdentifiers.MD4);
   Foids.Add('MD5', TPkcsObjectIdentifiers.MD5);
@@ -374,6 +444,18 @@ begin
   Foids.Add('RIPEMD160', TTeleTrusTObjectIdentifiers.RIPEMD160);
   Foids.Add('RIPEMD256', TTeleTrusTObjectIdentifiers.RIPEMD256);
   Foids.Add('GOST3411', TCryptoProObjectIdentifiers.GostR3411);
+  Foids.Add('BLAKE2B-160', TMiscObjectIdentifiers.id_blake2b160);
+  Foids.Add('BLAKE2B-256', TMiscObjectIdentifiers.id_blake2b256);
+  Foids.Add('BLAKE2B-384', TMiscObjectIdentifiers.id_blake2b384);
+  Foids.Add('BLAKE2B-512', TMiscObjectIdentifiers.id_blake2b512);
+  Foids.Add('BLAKE2S-128', TMiscObjectIdentifiers.id_blake2s128);
+  Foids.Add('BLAKE2S-160', TMiscObjectIdentifiers.id_blake2s160);
+  Foids.Add('BLAKE2S-224', TMiscObjectIdentifiers.id_blake2s224);
+  Foids.Add('BLAKE2S-256', TMiscObjectIdentifiers.id_blake2s256);
+  Foids.Add('GOST3411-2012-256',
+    TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_256);
+  Foids.Add('GOST3411-2012-512',
+    TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_512);
 end;
 
 class function TDigestUtilities.CalculateDigest(const algorithm: String;

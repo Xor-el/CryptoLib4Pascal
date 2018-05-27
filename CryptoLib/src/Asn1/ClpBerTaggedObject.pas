@@ -113,10 +113,10 @@ end;
 procedure TBerTaggedObject.Encode(const derOut: IDerOutputStream);
 var
   eObj: TList<IAsn1Encodable>;
-  enumeratorIBerOctetString: TEnumerator<IDerOctetString>;
   enumeratorIAsn1Sequence, enumeratorIAsn1Set: TEnumerator<IAsn1Encodable>;
   asn1OctetString: IAsn1OctetString;
   berOctetString: IBerOctetString;
+  derOctetString: IDerOctetString;
   asn1Sequence: IAsn1Sequence;
   asn1Set: IAsn1Set;
   o: IAsn1Encodable;
@@ -137,28 +137,18 @@ begin
           begin
             if (Supports(asn1OctetString, IBerOctetString, berOctetString)) then
             begin
-              enumeratorIBerOctetString := berOctetString.GetEnumerator;
-              try
-                while enumeratorIBerOctetString.MoveNext do
-                begin
-                  eObj.Add(enumeratorIBerOctetString.Current as IAsn1Encodable);
-                end;
-              finally
-                enumeratorIBerOctetString.Free;
+              for derOctetString in berOctetString.GetEnumerable do
+              begin
+                eObj.Add(derOctetString as IAsn1Encodable);
               end;
             end
             else
             begin
-              enumeratorIBerOctetString :=
-                TBerOctetString.Create(asn1OctetString.GetOctets())
-                .GetEnumerator;
-              try
-                while enumeratorIBerOctetString.MoveNext do
-                begin
-                  eObj.Add(enumeratorIBerOctetString.Current as IAsn1Encodable);
-                end;
-              finally
-                enumeratorIBerOctetString.Free;
+              berOctetString := TBerOctetString.Create
+                (asn1OctetString.GetOctets());
+              for derOctetString in berOctetString.GetEnumerable do
+              begin
+                eObj.Add(derOctetString as IAsn1Encodable);
               end;
             end
           end

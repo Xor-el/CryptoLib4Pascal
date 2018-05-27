@@ -67,7 +67,7 @@ type
     /// <summary>
     /// return the DER octets that make up this string.
     /// </summary>
-    function GetEnumerator: TEnumerator<IDerOctetString>;
+    function GetEnumerable: TCryptoLibGenericArray<IDerOctetString>;
 
     procedure Encode(const derOut: IDerOutputStream); override;
 
@@ -121,7 +121,7 @@ begin
     //
     // write out the octet array
     //
-    for oct in Self do
+    for oct in Self.GetEnumerable do
     begin
       derOut.WriteObject(oct);
     end;
@@ -169,18 +169,26 @@ begin
     result.Add(TDerOctetString.Create(nStr) as IDerOctetString);
     System.Inc(i, MaxLength);
   end;
-  Focts := result; // review removal
 end;
 
-function TBerOctetString.GetEnumerator: TEnumerator<IDerOctetString>;
+function TBerOctetString.GetEnumerable: TCryptoLibGenericArray<IDerOctetString>;
+var
+  LList: TList<IDerOctetString>;
 begin
+
   if (Focts = Nil) then
   begin
-    result := GenerateOcts().GetEnumerator();
-    Exit;
+    LList := GenerateOcts();
+    try
+      result := LList.ToArray;
+      Exit;
+    finally
+      LList.Free;
+    end;
   end;
 
-  result := Focts.GetEnumerator();
+  result := Focts.ToArray;
+
 end;
 
 function TBerOctetString.GetOctets: TCryptoLibByteArray;

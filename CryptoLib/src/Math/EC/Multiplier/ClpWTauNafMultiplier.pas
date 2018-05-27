@@ -123,25 +123,25 @@ var
 begin
   curve := p.curve as IAbstractF2mCurve;
   a := ShortInt(curve.a.ToBigInteger().Int32Value);
+  // review uncommenting
+//  if ((preCompInfo = Nil) or (not(Supports(preCompInfo, IWTauNafPreCompInfo))))
+//  then
+//  begin
+    pu := TTnaf.GetPreComp(p, a);
 
-  // if ((preCompInfo = Nil) or (not(Supports(preCompInfo, IWTauNafPreCompInfo))))
-  // then
-  // begin
-  pu := TTnaf.GetPreComp(p, a);
+    pre := TWTauNafPreCompInfo.Create();
+    pre.PreComp := pu;
 
-  pre := TWTauNafPreCompInfo.Create();
-  pre.PreComp := pu;
-  curve.SetPreCompInfo(p, PRECOMP_NAME, pre);
-  // end
-  // else
-  // begin
-  // pu := (preCompInfo as IWTauNafPreCompInfo).PreComp;
-  // end;
+    curve.SetPreCompInfo(p, PRECOMP_NAME, pre);
+    // end
+    // else
+    // begin
+    // pu := (preCompInfo as IWTauNafPreCompInfo).PreComp;
+    // end;
 
   // TODO Include negations in precomp (optionally) and use from here
   System.SetLength(puNeg, System.Length(pu));
   for i := 0 to System.Pred(System.Length(pu)) do
-
   begin
     puNeg[i] := pu[i].Negate() as IAbstractF2mPoint;
   end;
@@ -177,7 +177,9 @@ begin
     q := q.TauPow(tauCount);
   end;
   result := q;
+
   pre.PreComp := Nil;
+
 end;
 
 function TWTauNafMultiplier.MultiplyWTnaf(const p: IAbstractF2mPoint;

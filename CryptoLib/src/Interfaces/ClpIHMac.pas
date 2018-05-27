@@ -15,19 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIPBKDF2_DigestMAC;
+unit ClpIHMac;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  HlpIHashInfo;
+  ClpIMac;
 
 type
 
-  IPBKDF2_DigestMAC = interface(IPBKDF2_HMAC)
-  ['{808DBBC9-4F6E-40D9-AE7F-001798637CE4}']
+  IHMac = interface(IMac)
+ ['{B1182608-04D5-4985-91C8-571C51E07CB5}']
 
   end;
 

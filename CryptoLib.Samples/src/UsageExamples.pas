@@ -28,8 +28,9 @@ interface
 uses
   SysUtils,
   ClpIDigest,
-  ClpIDigestMAC,
+  ClpIMac,
   ClpDigestUtilities,
+  ClpMacUtilities,
   ClpBigInteger,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -591,7 +592,7 @@ var
   blockCipher: ICbcBlockCipher;
   ECDHBasicAgreementInstance: IECDHBasicAgreement;
   KDFInstance: IPascalCoinECIESKdfBytesGenerator;
-  DigestMACInstance: IDigestMAC;
+  DigestMACInstance: IMac;
 
 begin
   // Set up IES Cipher Engine For Compatibility With PascalCoin
@@ -601,8 +602,7 @@ begin
   KDFInstance := TPascalCoinECIESKdfBytesGenerator.Create
     (TDigestUtilities.GetDigest('SHA-512'));
 
-  DigestMACInstance := TDigestUtilities.GetDigestMAC
-    (TDigestUtilities.GetDigest('MD5'));
+  DigestMACInstance := TMacUtilities.GetMac('HMAC-MD5');
 
   // Set Up Block Cipher
   AesEngine := TAesEngine.Create(); // AES Engine

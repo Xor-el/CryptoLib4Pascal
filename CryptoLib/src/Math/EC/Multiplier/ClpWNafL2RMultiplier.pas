@@ -178,7 +178,7 @@ begin
     lr := table[TBits.Asr32(n, 1)];
 
     R := R.TwicePlus(lr);
-    R := R.TimesPow2(zeroes);
+   R := R.TimesPow2(zeroes);
   end;
 
   Result := R;

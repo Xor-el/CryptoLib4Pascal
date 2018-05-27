@@ -15,19 +15,27 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDigestMAC;
+unit ClpIPkcs5S2ParametersGenerator;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  HlpIHashInfo;
+  ClpIPbeParametersGenerator,
+  ClpIDigest;
 
 type
+  IPkcs5S2ParametersGenerator = interface(IPbeParametersGenerator)
 
-  IDigestMAC = interface(IHMAC)
-    ['{D6FC6D29-6624-4264-B527-BF13E3C6D452}']
+    ['{AD345DB8-2341-4C56-B401-23444C2A81BA}']
+
+    function GetDigest: IDigest;
+
+    /// <value>
+    /// the underlying digest.
+    /// </value>
+    property digest: IDigest read GetDigest;
 
   end;
 

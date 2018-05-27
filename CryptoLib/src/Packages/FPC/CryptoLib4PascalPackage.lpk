@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -24,8 +24,8 @@
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="1" Minor="9"/>
-    <Files Count="360">
+    <Version Major="2"/>
+    <Files Count="368">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1399,74 +1399,106 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpICipherKeyGenerator"/>
       </Item343>
       <Item344>
-        <Filename Value="..\..\Interfaces\ClpIPBKDF2_DigestMAC.pas"/>
-        <UnitName Value="ClpIPBKDF2_DigestMAC"/>
-      </Item344>
-      <Item345>
-        <Filename Value="..\..\Interfaces\ClpIDigestMAC.pas"/>
-        <UnitName Value="ClpIDigestMAC"/>
-      </Item345>
-      <Item346>
         <Filename Value="..\..\Interfaces\ClpIDigest.pas"/>
         <UnitName Value="ClpIDigest"/>
-      </Item346>
-      <Item347>
+      </Item344>
+      <Item345>
         <Filename Value="..\..\Interfaces\ClpISicBlockCipher.pas"/>
         <UnitName Value="ClpISicBlockCipher"/>
-      </Item347>
-      <Item348>
+      </Item345>
+      <Item346>
         <Filename Value="..\..\Interfaces\ClpIStreamCipher.pas"/>
         <UnitName Value="ClpIStreamCipher"/>
-      </Item348>
-      <Item349>
+      </Item346>
+      <Item347>
         <Filename Value="..\..\Crypto\Modes\ClpOfbBlockCipher.pas"/>
         <UnitName Value="ClpOfbBlockCipher"/>
-      </Item349>
-      <Item350>
+      </Item347>
+      <Item348>
         <Filename Value="..\..\Interfaces\ClpIOfbBlockCipher.pas"/>
         <UnitName Value="ClpIOfbBlockCipher"/>
-      </Item350>
-      <Item351>
+      </Item348>
+      <Item349>
         <Filename Value="..\..\Interfaces\ClpICfbBlockCipher.pas"/>
         <UnitName Value="ClpICfbBlockCipher"/>
-      </Item351>
-      <Item352>
+      </Item349>
+      <Item350>
         <Filename Value="..\..\Crypto\Paddings\ClpX923Padding.pas"/>
         <UnitName Value="ClpX923Padding"/>
-      </Item352>
-      <Item353>
+      </Item350>
+      <Item351>
         <Filename Value="..\..\Interfaces\ClpIX923Padding.pas"/>
         <UnitName Value="ClpIX923Padding"/>
-      </Item353>
-      <Item354>
+      </Item351>
+      <Item352>
         <Filename Value="..\..\Crypto\Paddings\ClpTTBCPadding.pas"/>
         <UnitName Value="ClpTTBCPadding"/>
-      </Item354>
-      <Item355>
+      </Item352>
+      <Item353>
         <Filename Value="..\..\Crypto\Paddings\ClpISO7816d4Padding.pas"/>
         <UnitName Value="ClpISO7816d4Padding"/>
-      </Item355>
-      <Item356>
+      </Item353>
+      <Item354>
         <Filename Value="..\..\Interfaces\ClpITBCPadding.pas"/>
         <UnitName Value="ClpITBCPadding"/>
-      </Item356>
-      <Item357>
+      </Item354>
+      <Item355>
         <Filename Value="..\..\Interfaces\ClpIISO7816d4Padding.pas"/>
         <UnitName Value="ClpIISO7816d4Padding"/>
-      </Item357>
-      <Item358>
+      </Item355>
+      <Item356>
         <Filename Value="..\..\Crypto\Paddings\ClpISO10126d2Padding.pas"/>
         <UnitName Value="ClpISO10126d2Padding"/>
-      </Item358>
-      <Item359>
+      </Item356>
+      <Item357>
         <Filename Value="..\..\Interfaces\ClpIISO10126d2Padding.pas"/>
         <UnitName Value="ClpIISO10126d2Padding"/>
-      </Item359>
-      <Item360>
+      </Item357>
+      <Item358>
         <Filename Value="CryptoLib4PascalPackage.pas"/>
         <AddToUsesPkgSection Value="False"/>
         <UnitName Value="CryptoLib4PascalPackage"/>
+      </Item358>
+      <Item359>
+        <Filename Value="..\..\Crypto\Generators\ClpPkcs5S2ParametersGenerator.pas"/>
+        <UnitName Value="ClpPkcs5S2ParametersGenerator"/>
+      </Item359>
+      <Item360>
+        <Filename Value="..\..\Interfaces\ClpIPkcs5S2ParametersGenerator.pas"/>
+        <UnitName Value="ClpIPkcs5S2ParametersGenerator"/>
       </Item360>
+      <Item361>
+        <Filename Value="..\..\Interfaces\ClpIPbeParametersGenerator.pas"/>
+        <UnitName Value="ClpIPbeParametersGenerator"/>
+      </Item361>
+      <Item362>
+        <Filename Value="..\..\Crypto\Generators\ClpPbeParametersGenerator.pas"/>
+        <UnitName Value="ClpPbeParametersGenerator"/>
+      </Item362>
+      <Item363>
+        <Filename Value="..\..\Crypto\Macs\ClpHMac.pas"/>
+        <UnitName Value="ClpHMac"/>
+      </Item363>
+      <Item364>
+        <Filename Value="..\..\Asn1\Misc\ClpMiscObjectIdentifiers.pas"/>
+        <UnitName Value="ClpMiscObjectIdentifiers"/>
+      </Item364>
+      <Item365>
+        <Filename Value="..\..\Asn1\Iana\ClpIanaObjectIdentifiers.pas"/>
+        <UnitName Value="ClpIanaObjectIdentifiers"/>
+      </Item365>
+      <Item366>
+        <Filename Value="..\..\Security\ClpMacUtilities.pas"/>
+        <UnitName Value="ClpMacUtilities"/>
+      </Item366>
+      <Item367>
+        <Filename Value="..\..\Interfaces\ClpIMac.pas"/>
+        <UnitName Value="ClpIMac"/>
+      </Item367>
+      <Item368>
+        <Filename Value="..\..\Interfaces\ClpIHMac.pas"/>
+        <UnitName Value="ClpIHMac"/>
+      </Item368>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
@@ -1475,7 +1507,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
       </Item1>
       <Item2>
         <PackageName Value="HashLib4PascalPackage"/>
-        <MinVersion Major="2" Minor="3" Valid="True"/>
+        <MaxVersion Major="2" Minor="3"/>
+        <MinVersion Major="2" Minor="4" Valid="True"/>
       </Item2>
       <Item3>
         <PackageName Value="FCL"/>

@@ -746,9 +746,7 @@ end;
 
 function TBigInteger.QuickPow2Check: Boolean;
 begin
-
-  // Result := (Fsign > 0) and (FnBits = 1);
-  Result := (Fsign > 0) and (BitCount = 1); // review
+  Result := (Fsign > 0) and (FnBits = 1);
 end;
 
 function TBigInteger.Negate: TBigInteger;

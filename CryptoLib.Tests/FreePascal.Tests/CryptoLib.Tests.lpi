@@ -35,7 +35,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="24">
+    <Units Count="27">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -133,6 +133,18 @@
         <Filename Value="..\src\Crypto\AESSICTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit23>
+      <Unit24>
+        <Filename Value="..\src\Crypto\HMacTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="..\src\Crypto\MD5HMacTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="..\src\Crypto\Pkcs5Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit26>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -147,8 +159,6 @@
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <TargetCPU Value="i386"/>
-      <TargetOS Value="win32"/>
       <Optimizations>
         <OptimizationLevel Value="4"/>
       </Optimizations>

@@ -23,7 +23,8 @@ interface
 
 uses
   Generics.Collections,
-  ClpIDerOctetString;
+  ClpIDerOctetString,
+  ClpCryptoLibTypes;
 
 type
   IBerOctetString = interface(IDerOctetString)
@@ -36,7 +37,7 @@ type
     /// return the DER octets that make up this string.
     /// </summary>
 
-    function GetEnumerator: TEnumerator<IDerOctetString>;
+    function GetEnumerable: TCryptoLibGenericArray<IDerOctetString>;
 
   end;
 

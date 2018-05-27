@@ -114,12 +114,14 @@ uses
   ClpIBaseKdfBytesGenerator, ClpIIso18033KdfParameters, ClpIKdfParameters, 
   ClpIDerivationFunction, ClpIDerivationParameters, ClpIECDHBasicAgreement, 
   ClpIBasicAgreement, ClpSicBlockCipher, ClpCfbBlockCipher, 
-  ClpCipherKeyGenerator, ClpStringUtils, ClpICipherKeyGenerator, 
-  ClpIPBKDF2_DigestMAC, ClpIDigestMAC, ClpIDigest, ClpISicBlockCipher, 
-  ClpIStreamCipher, ClpOfbBlockCipher, ClpIOfbBlockCipher, ClpICfbBlockCipher, 
-  ClpX923Padding, ClpIX923Padding, ClpTTBCPadding, ClpISO7816d4Padding, 
-  ClpITBCPadding, ClpIISO7816d4Padding, ClpISO10126d2Padding, 
-  ClpIISO10126d2Padding;
+  ClpCipherKeyGenerator, ClpStringUtils, ClpICipherKeyGenerator, ClpIDigest, 
+  ClpISicBlockCipher, ClpIStreamCipher, ClpOfbBlockCipher, ClpIOfbBlockCipher, 
+  ClpICfbBlockCipher, ClpX923Padding, ClpIX923Padding, ClpTTBCPadding, 
+  ClpISO7816d4Padding, ClpITBCPadding, ClpIISO7816d4Padding, 
+  ClpISO10126d2Padding, ClpIISO10126d2Padding, ClpPkcs5S2ParametersGenerator, 
+  ClpIPkcs5S2ParametersGenerator, ClpIPbeParametersGenerator, 
+  ClpPbeParametersGenerator, ClpHMac, ClpMiscObjectIdentifiers, 
+  ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac;
 
 implementation
 

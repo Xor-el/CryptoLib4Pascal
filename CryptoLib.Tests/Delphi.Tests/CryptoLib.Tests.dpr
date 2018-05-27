@@ -393,12 +393,23 @@ uses
   ClpSicBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpSicBlockCipher.pas',
   ClpISicBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpISicBlockCipher.pas',
   ClpIDigest in '..\..\CryptoLib\src\Interfaces\ClpIDigest.pas',
-  ClpIDigestMAC in '..\..\CryptoLib\src\Interfaces\ClpIDigestMAC.pas',
-  ClpIPBKDF2_DigestMAC in '..\..\CryptoLib\src\Interfaces\ClpIPBKDF2_DigestMAC.pas',
+  ClpIMac in '..\..\CryptoLib\src\Interfaces\ClpIMac.pas',
   ClpStringUtils in '..\..\CryptoLib\src\Utils\ClpStringUtils.pas',
   ClpCipherKeyGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpCipherKeyGenerator.pas',
   ClpICipherKeyGenerator in '..\..\CryptoLib\src\Interfaces\ClpICipherKeyGenerator.pas',
-  AESSICTests in '..\src\Crypto\AESSICTests.pas';
+  AESSICTests in '..\src\Crypto\AESSICTests.pas',
+  ClpHMac in '..\..\CryptoLib\src\Crypto\Macs\ClpHMac.pas',
+  ClpIHMac in '..\..\CryptoLib\src\Interfaces\ClpIHMac.pas',
+  ClpMacUtilities in '..\..\CryptoLib\src\Security\ClpMacUtilities.pas',
+  ClpIanaObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Iana\ClpIanaObjectIdentifiers.pas',
+  ClpMiscObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Misc\ClpMiscObjectIdentifiers.pas',
+  MD5HMacTests in '..\src\Crypto\MD5HMacTests.pas',
+  HMacTests in '..\src\Crypto\HMacTests.pas',
+  ClpPbeParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPbeParametersGenerator.pas',
+  ClpIPbeParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPbeParametersGenerator.pas',
+  ClpPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPkcs5S2ParametersGenerator.pas',
+  ClpIPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPkcs5S2ParametersGenerator.pas',
+  Pkcs5Tests in '..\src\Crypto\Pkcs5Tests.pas';
 
 begin
 
@@ -407,5 +418,6 @@ begin
     TextTestRunner.RunRegisteredTests
   else
     GUITestRunner.RunRegisteredTests;
+
 
 end.

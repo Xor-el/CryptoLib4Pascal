@@ -33,7 +33,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIDigest,
-  ClpIDigestMAC,
+  ClpIMac,
   ClpAesEngine,
   ClpIAesEngine,
   ClpIAsymmetricCipherKeyPairGenerator,
@@ -75,6 +75,7 @@ uses
   ClpIESCipher,
   ClpHex,
   ClpDigestUtilities,
+  ClpMacUtilities,
   ClpArrayUtils;
 
 type
@@ -145,7 +146,7 @@ var
   blockCipher: ICbcBlockCipher;
   ECDHBasicAgreementInstance: IECDHBasicAgreement;
   KDFInstance: IKdf2BytesGenerator;
-  DigestMACInstance: IDigestMAC;
+  DigestMACInstance: IMac;
 
 begin
   // // Set up IES Cipher Engine
@@ -155,8 +156,7 @@ begin
   KDFInstance := TKdf2BytesGenerator.Create
     (TDigestUtilities.GetDigest('SHA-256'));
 
-  DigestMACInstance := TDigestUtilities.GetDigestMAC
-    (TDigestUtilities.GetDigest('SHA-256'));
+  DigestMACInstance := TMacUtilities.GetMac('HMAC-SHA-256');
 
   // Method 1: Set Up Block Cipher
   // Cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING') as IBufferedBlockCipher;

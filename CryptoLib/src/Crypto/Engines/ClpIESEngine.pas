@@ -24,7 +24,7 @@ interface
 uses
   Classes,
   SysUtils,
-  ClpIDigestMAC,
+  ClpIMac,
   ClpIIESEngine,
   ClpIBasicAgreement,
   ClpIDerivationFunction,
@@ -76,7 +76,7 @@ type
   var
     Fagree: IBasicAgreement;
     Fkdf: IDerivationFunction;
-    Fmac: IDigestMAC;
+    Fmac: IMac;
     Fcipher: IBufferedBlockCipher;
     FmacBuf, FV, FIV: TCryptoLibByteArray;
     FforEncryption: Boolean;
@@ -86,7 +86,7 @@ type
     FkeyParser: IKeyParser;
 
     function GetCipher: IBufferedBlockCipher; inline;
-    function GetMac: IDigestMAC; inline;
+    function GetMac: IMac; inline;
     function EncryptBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; virtual;
 
@@ -109,7 +109,7 @@ type
     /// the message authentication code generator for the message
     /// </param>
     constructor Create(const agree: IBasicAgreement;
-      const kdf: IDerivationFunction; const mac: IDigestMAC); overload;
+      const kdf: IDerivationFunction; const mac: IMac); overload;
 
     /// <summary>
     /// Set up for use in conjunction with a block cipher to handle the <br />
@@ -129,7 +129,7 @@ type
     /// the cipher to used for encrypting the message
     /// </param>
     constructor Create(const agree: IBasicAgreement;
-      const kdf: IDerivationFunction; const mac: IDigestMAC;
+      const kdf: IDerivationFunction; const mac: IMac;
       const cipher: IBufferedBlockCipher); overload;
 
     /// <summary>
@@ -189,7 +189,7 @@ type
       : TCryptoLibByteArray; virtual;
 
     property cipher: IBufferedBlockCipher read GetCipher;
-    property mac: IDigestMAC read GetMac;
+    property mac: IMac read GetMac;
 
   end;
 
@@ -207,25 +207,25 @@ begin
 end;
 
 constructor TIESEngine.Create(const agree: IBasicAgreement;
-  const kdf: IDerivationFunction; const mac: IDigestMAC);
+  const kdf: IDerivationFunction; const mac: IMac);
 begin
   Inherited Create();
   Fagree := agree;
   Fkdf := kdf;
   Fmac := mac;
-  System.SetLength(FmacBuf, mac.HashSize);
+  System.SetLength(FmacBuf, mac.GetMacSize);
   Fcipher := Nil;
 end;
 
 constructor TIESEngine.Create(const agree: IBasicAgreement;
-  const kdf: IDerivationFunction; const mac: IDigestMAC;
+  const kdf: IDerivationFunction; const mac: IMac;
   const cipher: IBufferedBlockCipher);
 begin
   Inherited Create();
   Fagree := agree;
   Fkdf := kdf;
   Fmac := mac;
-  System.SetLength(FmacBuf, mac.HashSize);
+  System.SetLength(FmacBuf, mac.GetMacSize);
   Fcipher := cipher;
 end;
 
@@ -238,7 +238,7 @@ var
 begin
   len := 0;
   // Ensure that the length of the input is greater than the MAC in bytes
-  if (inLen < (System.Length(FV) + Fmac.HashSize)) then
+  if (inLen < (System.Length(FV) + Fmac.GetMacSize)) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes
       (@SInvalidCipherTextLength);
@@ -248,7 +248,7 @@ begin
   begin
 
     // Streaming mode.
-    System.SetLength(K1, inLen - System.Length(FV) - Fmac.HashSize);
+    System.SetLength(K1, inLen - System.Length(FV) - Fmac.GetMacSize);
     System.SetLength(K2, Fparam.MacKeySize div 8);
     System.SetLength(K, System.Length(K1) + System.Length(K2));
 
@@ -305,11 +305,11 @@ begin
     Fcipher.Init(False, cp);
 
     System.SetLength(M, Fcipher.GetOutputSize(inLen - System.Length(FV) -
-      Fmac.HashSize));
+      Fmac.GetMacSize));
 
     // do initial processing
     len := Fcipher.ProcessBytes(in_enc, inOff + System.Length(FV),
-      inLen - System.Length(FV) - Fmac.HashSize, M, 0);
+      inLen - System.Length(FV) - Fmac.GetMacSize, M, 0);
 
   end;
 
@@ -323,23 +323,22 @@ begin
 
   // Verify the MAC.
   endPoint := inOff + inLen;
-  T1 := TArrayUtils.CopyOfRange(in_enc, endPoint - Fmac.HashSize, endPoint);
+  T1 := TArrayUtils.CopyOfRange(in_enc, endPoint - Fmac.GetMacSize, endPoint);
   System.SetLength(T2, System.Length(T1));
-  // set the mac key before calling initialize
-  Fmac.Key := K2;
-  Fmac.Initialize;
 
-  Fmac.TransformBytes(in_enc, inOff + System.Length(FV),
-    inLen - System.Length(FV) - System.Length(T2));
+  Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
+
+  Fmac.BlockUpdate(in_enc, inOff + System.Length(FV), inLen - System.Length(FV)
+    - System.Length(T2));
   if (p2 <> Nil) then
   begin
-    Fmac.TransformBytes(p2, 0, System.Length(p2));
+    Fmac.BlockUpdate(p2, 0, System.Length(p2));
   end;
   if (System.Length(FV) <> 0) then
   begin
-    Fmac.TransformBytes(L2, 0, System.Length(L2));
+    Fmac.BlockUpdate(L2, 0, System.Length(L2));
   end;
-  T2 := Fmac.TransformFinal.GetBytes;
+  T2 := Fmac.DoFinal();
 
   if (not TArrayUtils.ConstantTimeAreEqual(T1, T2)) then
   begin
@@ -353,7 +352,7 @@ begin
   end
   else
   begin
-    len := len + Fcipher.doFinal(M, len);
+    len := len + Fcipher.DoFinal(M, len);
 
     Result := TArrayUtils.CopyOfRange(M, 0, len);
     Exit;
@@ -428,7 +427,7 @@ begin
     System.SetLength(C, Fcipher.GetOutputSize(inLen));
 
     len := Fcipher.ProcessBytes(&in, inOff, inLen, C, 0);
-    len := len + Fcipher.doFinal(C, len);
+    len := len + Fcipher.DoFinal(C, len);
   end;
 
   // Convert the length of the encoding vector into a byte array.
@@ -440,20 +439,19 @@ begin
   end;
 
   // Apply the MAC.
-  System.SetLength(T, Fmac.HashSize);
-  // set the mac key before calling initialize
-  Fmac.Key := K2;
-  Fmac.Initialize;
-  Fmac.TransformBytes(C, 0, System.Length(C));
+  System.SetLength(T, Fmac.GetMacSize);
+
+  Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
+  Fmac.BlockUpdate(C, 0, System.Length(C));
   if (p2 <> Nil) then
   begin
-    Fmac.TransformBytes(p2, 0, System.Length(p2));
+    Fmac.BlockUpdate(p2, 0, System.Length(p2));
   end;
   if (System.Length(FV) <> 0) then
   begin
-    Fmac.TransformBytes(L2, 0, System.Length(L2));
+    Fmac.BlockUpdate(L2, 0, System.Length(L2));
   end;
-  T := Fmac.TransformFinal.GetBytes;
+  T := Fmac.DoFinal;
 
   // Output the triple (V,C,T).
   // V := Ephermeral Public Key
@@ -486,7 +484,7 @@ begin
   Result := Fcipher;
 end;
 
-function TIESEngine.GetMac: IDigestMAC;
+function TIESEngine.GetMac: IMac;
 begin
   Result := Fmac;
 end;
