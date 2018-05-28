@@ -19,6 +19,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
+        <CommandLineParams Value="--format=plain --all --progress"/>
       </local>
     </RunParams>
     <RequiredPackages Count="2">
