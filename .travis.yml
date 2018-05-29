@@ -52,8 +52,8 @@ install:
   - ./.travis.install.py
 
 script:
-  - curl -o ./HashLib4Pascal.zip https://github.com/Xor-el/HashLib4Pascal/archive/master.zip
-  - curl -o ./SimpleBaseLib4Pascal.zip https://github.com/Xor-el/SimpleBaseLib4Pascal/archive/master.zip
+  - curl -Lok ./HashLib4Pascal.zip https://github.com/Xor-el/HashLib4Pascal/archive/master.zip
+  - curl -Lok ./SimpleBaseLib4Pascal.zip https://github.com/Xor-el/SimpleBaseLib4Pascal/archive/master.zip
   - unzip ./HashLib4Pascal.zip
   - unzip ./SimpleBaseLib4Pascal.zip
   - lazbuild --add-package-link ./HashLib4Pascal-master/HashLib/src/Packages/FPC/HashLib4PascalPackage.lpk  # Add HashLib4Pascal Package
