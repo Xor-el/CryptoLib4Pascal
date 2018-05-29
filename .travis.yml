@@ -60,10 +60,10 @@ script:
   - unzip generics.collections.zip
   - lazbuild --add-package-link ./HashLib4Pascal-master/HashLib/src/Packages/FPC/HashLib4PascalPackage.lpk  # Add HashLib4Pascal Package
   - lazbuild --add-package-link ./SimpleBaseLib4Pascal-master/SimpleBaseLib/src/Packages/FPC/SimpleBaseLib4PascalPackage.lpk  # Add SimpleBaseLib4Pascal Package
-  - lazbuild --add-package-link ./generics.collections-master/packages/generics.collections.lpk  # Add generics.collections Package
+  - lazbuild --add-package-link ./generics.collections-master/packages/generics_collections.lpk  # Add generics.collections Package
   - lazbuild $LAZ_OPT ./HashLib4Pascal-master/HashLib/src/Packages/FPC/HashLib4PascalPackage.lpk  # Build HashLib4Pascal Package
   - lazbuild $LAZ_OPT ./SimpleBaseLib4Pascal-master/SimpleBaseLib/src/Packages/FPC/SimpleBaseLib4PascalPackage.lpk  # Build SimpleBaseLib4Pascal Package
-  - lazbuild $LAZ_OPT ./generics.collections-master/packages/generics.collections.lpk  # Build generics.collections Package
+  - lazbuild $LAZ_OPT ./generics.collections-master/packages/generics_collections.lpk  # Build generics.collections Package
   - lazbuild $LAZ_OPT ./CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk  # Build CryptoLib4Pascal Package
   - lazbuild $LAZ_OPT ./CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.Tests.lpi  # Build CryptoLib4Pascal Test Project
   - travis_wait 120 $LAZ_ENV ./CryptoLib.Tests/FreePascal.Tests/bin/CryptoLib --all --format=plain  # Run CryptoLib4Pascal TestSuite with timeout of 120 mins
