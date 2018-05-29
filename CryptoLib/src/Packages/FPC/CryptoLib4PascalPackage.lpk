@@ -1500,19 +1500,22 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpIHMac"/>
       </Item368>
     </Files>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="4">
       <Item1>
-        <PackageName Value="SimpleBaseLib4PascalPackage"/>
-        <MinVersion Major="1" Minor="2" Valid="True"/>
+        <PackageName Value="generics_collections"/>
       </Item1>
       <Item2>
+        <PackageName Value="SimpleBaseLib4PascalPackage"/>
+        <MinVersion Major="1" Minor="2" Valid="True"/>
+      </Item2>
+      <Item3>
         <PackageName Value="HashLib4PascalPackage"/>
         <MaxVersion Major="2" Minor="3"/>
         <MinVersion Major="2" Minor="4" Valid="True"/>
-      </Item2>
-      <Item3>
-        <PackageName Value="FCL"/>
       </Item3>
+      <Item4>
+        <PackageName Value="FCL"/>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
