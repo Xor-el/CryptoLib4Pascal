@@ -36,8 +36,8 @@ type
   public
 
     const
-    Der = 'DER';
-    Ber = 'BER';
+    Der: String = 'DER';
+    Ber: String = 'BER';
 
     function GetEncoded(): TCryptoLibByteArray; overload;
     function GetEncoded(const encoding: String): TCryptoLibByteArray; overload;

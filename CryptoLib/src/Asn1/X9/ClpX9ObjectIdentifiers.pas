@@ -37,7 +37,7 @@ type
     //
   const
 
-    AnsiX962 = '1.2.840.10045';
+    AnsiX962: String = '1.2.840.10045';
 
     class var
 

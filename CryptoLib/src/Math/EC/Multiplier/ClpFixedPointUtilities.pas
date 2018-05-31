@@ -34,7 +34,7 @@ type
   TFixedPointUtilities = class sealed(TObject)
   strict private
   const
-    PRECOMP_NAME = 'bc_fixed_point';
+    PRECOMP_NAME: String = 'bc_fixed_point';
 
   public
     class function GetCombSize(const c: IECCurve): Int32; static; inline;

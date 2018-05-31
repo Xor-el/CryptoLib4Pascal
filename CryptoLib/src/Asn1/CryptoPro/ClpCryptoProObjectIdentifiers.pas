@@ -94,7 +94,7 @@ type
     const
     // GOST Algorithms OBJECT IDENTIFIERS :
     // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2)}
-    GostID = '1.2.643.2.2';
+    GostID: String = '1.2.643.2.2';
 
     class property GostR3411: IDerObjectIdentifier read GetGostR3411;
     class property GostR3411Hmac: IDerObjectIdentifier read GetGostR3411Hmac;

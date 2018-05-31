@@ -34,7 +34,7 @@ type
     //
     // object identifiers for digests
     //
-    DigestAlgorithm = '1.2.840.113549.2';
+    DigestAlgorithm: String = '1.2.840.113549.2';
 
     class var
 
