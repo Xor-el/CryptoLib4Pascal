@@ -35,6 +35,9 @@ uses
   ClpBits,
   ClpBitConverter;
 
+resourcestring
+  SEncodingInstanceNil = 'Encoding Instance Cannot Be Nil';
+
 type
   TConverters = class sealed(TObject)
 
@@ -110,10 +113,8 @@ type
     class procedure ReadUInt64AsBytesBE(a_in: UInt64;
       a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
 
-    class function ConvertStringToBytes(const a_in:
-{$IFDEF FPC}UnicodeString{$ELSE} String
-{$ENDIF FPC}; a_encoding: TEncoding): TCryptoLibByteArray; overload;
-      static; inline;
+    class function ConvertStringToBytes(const a_in: String;
+      a_encoding: TEncoding): TCryptoLibByteArray; overload; static; inline;
 
     class function ConvertHexStringToBytes(a_in: String): TCryptoLibByteArray;
       static; inline;
@@ -468,11 +469,20 @@ begin
 
 end;
 
-class function TConverters.ConvertStringToBytes(const a_in:
-{$IFDEF FPC}UnicodeString{$ELSE} String
-{$ENDIF FPC}; a_encoding: TEncoding): TCryptoLibByteArray;
+class function TConverters.ConvertStringToBytes(const a_in: String;
+  a_encoding: TEncoding): TCryptoLibByteArray;
 begin
+
+  if a_encoding = Nil then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncodingInstanceNil);
+  end;
+
+{$IFDEF FPC}
+  result := a_encoding.GetBytes(UnicodeString(a_in));
+{$ELSE}
   result := a_encoding.GetBytes(a_in);
+{$ENDIF FPC}
 end;
 
 class function TConverters.SplitString(const S: String; Delimiter: Char)

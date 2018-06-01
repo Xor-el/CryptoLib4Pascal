@@ -64,7 +64,7 @@ type
   public
 
     const
-    PRECOMP_NAME = 'bc_wnaf';
+    PRECOMP_NAME: String = 'bc_wnaf';
 
     class function GenerateCompactNaf(const k: TBigInteger)
       : TCryptoLibInt32Array; static;

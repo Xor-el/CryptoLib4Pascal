@@ -48,7 +48,7 @@ type
   strict private
     // TODO Create WTauNafUtilities class and move various functionality into it
   const
-    PRECOMP_NAME = 'bc_wtnaf';
+    PRECOMP_NAME: String = 'bc_wtnaf';
 
     // /**
     // * Multiplies an AbstractF2mPoint
