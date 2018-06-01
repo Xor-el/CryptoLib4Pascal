@@ -1279,11 +1279,11 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpZeroBytePadding"/>
       </Item313>
       <Item314>
-        <Filename Value="..\..\Crypto\Parameters\ClpIesWithCipherParameters.pas"/>
+        <Filename Value="..\..\Crypto\Parameters\ClpIESWithCipherParameters.pas"/>
         <UnitName Value="ClpIESWithCipherParameters"/>
       </Item314>
       <Item315>
-        <Filename Value="..\..\Crypto\Parameters\ClpIesParameters.pas"/>
+        <Filename Value="..\..\Crypto\Parameters\ClpIESParameters.pas"/>
         <UnitName Value="ClpIESParameters"/>
       </Item315>
       <Item316>
@@ -1303,11 +1303,11 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpKdfParameters"/>
       </Item319>
       <Item320>
-        <Filename Value="..\..\Interfaces\ClpIIesWithCipherParameters.pas"/>
+        <Filename Value="..\..\Interfaces\ClpIIESWithCipherParameters.pas"/>
         <UnitName Value="ClpIIESWithCipherParameters"/>
       </Item320>
       <Item321>
-        <Filename Value="..\..\Interfaces\ClpIIesParameters.pas"/>
+        <Filename Value="..\..\Interfaces\ClpIIESParameters.pas"/>
         <UnitName Value="ClpIIESParameters"/>
       </Item321>
       <Item322>
