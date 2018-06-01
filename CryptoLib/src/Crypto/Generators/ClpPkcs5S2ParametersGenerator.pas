@@ -31,7 +31,6 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
-  ClpIParametersWithIV,
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
   ClpCryptoLibTypes;

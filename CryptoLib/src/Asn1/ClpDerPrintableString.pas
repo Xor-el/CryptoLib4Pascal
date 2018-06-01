@@ -166,7 +166,7 @@ begin
       continue;
     end;
 
-    case IndexStr(ch, [''' ''', '\', '(', ')', '+', '-', '.', ':', '=', '?',
+    case IndexStr({$IFDEF FPC}UnicodeString{$ENDIF FPC}(ch), [''' ''', '\', '(', ')', '+', '-', '.', ':', '=', '?',
       '/', ',']) of
       0 .. 11:
         begin

@@ -28,7 +28,6 @@ uses
   ClpIDerivationParameters,
   ClpIKdfParameters,
   ClpIPascalCoinECIESKdfBytesGenerator,
-  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
