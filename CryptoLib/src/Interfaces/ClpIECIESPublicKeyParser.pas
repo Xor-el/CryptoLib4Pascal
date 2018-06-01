@@ -23,15 +23,12 @@ interface
 
 uses
   Classes,
-  ClpIKeyParser,
-  ClpIAsymmetricKeyParameter;
+  ClpIKeyParser;
 
 type
 
   IECIESPublicKeyParser = interface(IKeyParser)
     ['{7A948776-4DD9-4290-BCDF-EB96800AEAF6}']
-
-    function ReadKey(stream: TStream): IAsymmetricKeyParameter;
 
   end;
 
