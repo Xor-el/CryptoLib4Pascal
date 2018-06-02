@@ -2618,7 +2618,7 @@ begin
   begin
 
     x0 := UInt32(x[n - 1]);
-    t := UInt32(UInt64(x0) * mDash);
+    t := UInt32(x0 * mDash);
 
     carry := t * UInt32(m[n - 1]) + x0;
 
@@ -2807,7 +2807,7 @@ begin
 
   carry := xi * y0;
 
-  t := UInt32(UInt64(UInt32(carry)) * mDash);
+  t := UInt32(UInt32(carry) * mDash);
 
   prod2 := t * UInt32(m[n - 1]);
   carry := carry + UInt32(prod2);
@@ -2839,7 +2839,7 @@ begin
 
     prod1 := xi * y0;
     carry := (prod1 and UIMASK) + a0;
-    t := UInt32(UInt64(UInt32(carry)) * mDash);
+    t := UInt32(UInt32(carry) * mDash);
 
     prod2 := t * UInt32(m[n - 1]);
     carry := carry + UInt32(prod2);
@@ -3304,7 +3304,7 @@ begin
 
   if (QuickPow2Check()) then
   begin
-    powOf2 := Int64(exp) * (Int64(BitLength) - 1);
+    powOf2 := Int64(exp) * (BitLength - 1);
     if (powOf2 > System.High(Int32)) then
     begin
       raise EArithmeticCryptoLibException.CreateRes(@SResultTooLarge);
@@ -4011,7 +4011,7 @@ begin
 
   carry := x0 * x0;
 
-  t := UInt32(UInt64(UInt32(carry)) * mDash);
+  t := UInt32(UInt32(carry) * mDash);
 
   prod2 := t * UInt32(m[n - 1]);
   carry := carry + UInt32(prod2);
@@ -4040,7 +4040,7 @@ begin
   while i >= 0 do
   begin
     a0 := UInt32(a[n]);
-    t := UInt32(UInt64(a0) * mDash);
+    t := UInt32(a0 * mDash);
 
     carry := t * UInt32(m[n - 1]) + a0;
 
