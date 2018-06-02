@@ -45,7 +45,7 @@ type
     property PointCompression: Boolean read GetPointCompression;
     property Nonce: TCryptoLibByteArray read GetNonce;
 
-    /// <param name="derivation">
+    /// <param name="derivation"> 
     /// the derivation parameter for the KDF function.
     /// </param>
     /// <param name="encoding">
