@@ -15,7 +15,7 @@ env:
     - DISPLAY=:99.0
   matrix:
    # - LAZ_PKG=true  # Use the latest version from the default package manager
-    - LAZ_VER=1.6.4 # Use specific (binary) release
+   # - LAZ_VER=1.6.4 # Use specific (binary) release
     - LAZ_VER=1.8.0
    # FPC 3.0.4 Linker Fails in Old Linux OS, See 
    # https://forum.lazarus.freepascal.org/index.php?topic=40238.0 and https://bugs.freepascal.org/view.php?id=32251
@@ -43,7 +43,6 @@ matrix:
       env: LAZ_VER=1.8.4 LAZ_ENV=qemu-arm LAZ_OPT="--os=linux --cpu=arm"
 
 before_install:
-  - sudo apt-get -qq update
   # Start virtual display server
   - Xvfb $DISPLAY &
   - chmod +x .travis.install.py 
