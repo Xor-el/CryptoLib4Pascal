@@ -307,6 +307,10 @@ type
     class procedure AppendZeroExtendedString(var sl: TStringList;
       const s: String; minLength: Int32); static; inline;
 
+    class procedure ToString(sl: TStringList; radix: Int32;
+      moduli: TList<TBigInteger>; scale: Int32; const pos: TBigInteger);
+      overload; static;
+
     class function CreateUValueOf(value: UInt64): TBigInteger; static;
     class function CreateValueOf(value: Int64): TBigInteger; static;
 
@@ -1174,6 +1178,33 @@ begin
     System.Inc(len);
   end;
   sl.Add(s);
+end;
+
+class procedure TBigInteger.ToString(sl: TStringList; radix: Int32;
+  moduli: TList<TBigInteger>; scale: Int32; const pos: TBigInteger);
+var
+  s: String;
+  qr: TCryptoLibGenericArray<TBigInteger>;
+begin
+  if (pos.BitLength < 64) then
+  begin
+    s := IntToStr(pos.Int64Value);
+    if ((sl.Count > 1) or ((sl.Count = 1) and (sl[0] <> '-'))) then
+    begin
+      AppendZeroExtendedString(sl, s, 1 shl scale);
+    end
+    else if (pos.SignValue <> 0) then
+    begin
+      sl.Append(s);
+    end;
+    Exit;
+  end;
+
+  System.Dec(scale);
+  qr := pos.DivideAndRemainder(moduli[scale]);
+
+  ToString(sl, radix, moduli, scale, qr[0]);
+  ToString(sl, radix, moduli, scale, qr[1]);
 end;
 
 class function TBigInteger.Arbitrary(sizeInBits: Int32): TBigInteger;
@@ -4144,12 +4175,11 @@ end;
 
 function TBigInteger.ToString(radix: Int32): String;
 var
-  firstNonZero, pos, mask, bits, i, exponent: Int32;
-  limit, power: Int64;
+  firstNonZero, pos, mask, bits, i, scale: Int32;
   sl: TStringList;
   s: TList<String>;
-  u, q, bigPower: TBigInteger;
-  qr: TCryptoLibGenericArray<TBigInteger>;
+  moduli: TList<TBigInteger>;
+  u, q, r: TBigInteger;
 begin
   // TODO Make this method work for other radices (ideally 2 <= radix <= 36 as in Java)
   case (radix) of
@@ -4271,41 +4301,22 @@ begin
             Exit;
           end;
 
-          // Based on algorithm 1a from chapter 4.4 in Seminumerical Algorithms (Knuth)
-
-          // Work out the largest power of 'rdx' that is a positive 64-bit integer
-          // TODO possibly cache power/exponent against radix?
-          limit := System.High(Int64) div radix;
-          power := radix;
-          exponent := 1;
-          while (power <= limit) do
-          begin
-            power := power * radix;
-            System.Inc(exponent);
-          end;
-
-          bigPower := TBigInteger.ValueOf(power);
-
-          s := TList<string>.Create();
+          // TODO Could cache the moduli for each radix (soft reference?)
+          moduli := TList<TBigInteger>.Create();
           try
-            while (q.CompareTo(bigPower) >= 0) do
+            r := TBigInteger.ValueOf(radix);
+            while (r.CompareTo(q) <= 0) do
             begin
-              qr := q.DivideAndRemainder(bigPower);
-              s.Add(IntToStr(qr[1].Int64Value));
-              q := qr[0];
+              moduli.Add(r);
+              r := r.Square();
             end;
 
-            sl.Add(IntToStr(q.Int64Value));
+            scale := moduli.Count;
+            sl.Capacity := sl.Capacity + (1 shl scale);
 
-            i := s.Count - 1;
-            while i >= 0 do
-            begin
-              AppendZeroExtendedString(sl, s[i], exponent);
-              System.Dec(i);
-            end;
-
+            ToString(sl, radix, moduli, scale, q);
           finally
-            s.Free;
+            moduli.Free;
           end;
 
         end;
