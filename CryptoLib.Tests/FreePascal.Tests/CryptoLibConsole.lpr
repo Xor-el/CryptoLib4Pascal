@@ -25,8 +25,8 @@ uses
   AESTestVectors,
  // IESCipherTests,
  // AESSICTests,
-  MD5HMacTests,
-  HMacTests,
+ // MD5HMacTests,
+ // HMacTests,
  // Pkcs5Tests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
