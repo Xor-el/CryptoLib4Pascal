@@ -24,7 +24,7 @@ uses
   BlockCipherVectorTests,
   AESTestVectors,
  // IESCipherTests,
- // AESSICTests,
+  AESSICTests,
  // MD5HMacTests,
  // HMacTests,
  // Pkcs5Tests,
