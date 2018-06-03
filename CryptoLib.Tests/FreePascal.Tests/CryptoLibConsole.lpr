@@ -19,7 +19,7 @@ uses
   SignerUtilitiesTests,
   SecureRandomTests,
   DigestRandomNumberTests,
- // FixedPointTests,
+  FixedPointTests,
   AESTests,
   BlockCipherVectorTests,
   AESTestVectors,
