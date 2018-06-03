@@ -20,7 +20,7 @@ uses
  // SecureRandomTests,
  // DigestRandomNumberTests,
  // FixedPointTests,
-  AESTests,
+ // AESTests,
   BlockCipherVectorTests,
   AESTestVectors,
  // IESCipherTests,
