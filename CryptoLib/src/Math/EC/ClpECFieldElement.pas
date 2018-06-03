@@ -1013,9 +1013,8 @@ begin
   while j <= s do
   begin
     Uh := ModMult(Uh, Vl);
-    temp := Vl.Multiply(Vl);
-    Writeln(temp.ToString);
-    Vl := ModReduce(temp.Subtract(Ql.ShiftLeft(1)));
+    temp := Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1));
+    Vl := ModReduce(temp);
     Ql := ModMult(Ql, Ql);
     System.Inc(j);
   end;
