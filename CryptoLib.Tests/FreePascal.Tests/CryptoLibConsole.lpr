@@ -9,7 +9,7 @@ uses
   EqualsAndHashCodeTests,
   OIDTests,
   BigIntegerTests,
- // ECAlgorithmsTests,
+  ECAlgorithmsTests,
  // ECPointTests,
  // SecP384R1FieldTests,
  // ECDsa5Tests,
