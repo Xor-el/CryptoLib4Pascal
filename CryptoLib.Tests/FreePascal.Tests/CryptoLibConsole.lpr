@@ -4,10 +4,10 @@ program CryptoLibConsole;
 
 uses
   consoletestrunner,
-  Asn1SequenceParserTests,
-  DerApplicationSpecificTests,
-  EqualsAndHashCodeTests,
-  OIDTests,
+ // Asn1SequenceParserTests, // pass x64
+ // DerApplicationSpecificTests, // pass x64
+ // EqualsAndHashCodeTests, // pass x64
+ // OIDTests, // pass x64
  // BigIntegerTests,
  // ECAlgorithmsTests,
 //  ECPointTests,
@@ -20,14 +20,14 @@ uses
  // SecureRandomTests,
  // DigestRandomNumberTests,
  // FixedPointTests,
-  AESTests,
-  BlockCipherVectorTests,
+ // AESTests, // pass x64
+ // BlockCipherVectorTests, // pass x64
   AESTestVectors,
  // IESCipherTests,
-  AESSICTests,
+ // AESSICTests, // pass x64
   MD5HMacTests,
-  HMacTests,
-  Pkcs5Tests,
+ // HMacTests,
+ // Pkcs5Tests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
