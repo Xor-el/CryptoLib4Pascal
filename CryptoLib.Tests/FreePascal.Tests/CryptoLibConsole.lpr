@@ -12,7 +12,7 @@ uses
  // ECAlgorithmsTests,
  // ECPointTests,
   SecP384R1FieldTests,
- // ECDsa5Tests,
+  ECDsa5Tests,
  // ECTests,
  // NamedCurveTests,
   ECSchnorrTests,
