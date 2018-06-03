@@ -964,7 +964,7 @@ function TFpFieldElement.LucasSequence(const P, Q, K: TBigInteger)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   n, s, j: Int32;
-  Uh, Vl, Vh, Ql, Qh, temp: TBigInteger;
+  Uh, Vl, Vh, Ql, Qh: TBigInteger;
 begin
   // TODO Research and apply "common-multiplicand multiplication here"
 
@@ -1013,8 +1013,7 @@ begin
   while j <= s do
   begin
     Uh := ModMult(Uh, Vl);
-    temp := Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1));
-    Vl := ModReduce(temp);
+    Vl := ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
     Ql := ModMult(Ql, Ql);
     System.Inc(j);
   end;
