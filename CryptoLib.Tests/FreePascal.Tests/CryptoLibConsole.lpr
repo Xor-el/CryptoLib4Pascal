@@ -11,7 +11,7 @@ uses
   BigIntegerTests,
  // ECAlgorithmsTests,
  // ECPointTests,
- // SecP384R1FieldTests,
+  SecP384R1FieldTests,
  // ECDsa5Tests,
  // ECTests,
  // NamedCurveTests,
