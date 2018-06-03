@@ -13,7 +13,7 @@ env:
   global:
     - WINEPREFIX=~/.winelaz
     - DISPLAY=:99.0
-  matrix:
+ # matrix:
    # - LAZ_PKG=true  # Use the latest version from the default package manager
    # - LAZ_VER=1.6.4 # Use specific (binary) release
    # - LAZ_VER=1.8.0
