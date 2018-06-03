@@ -5,9 +5,9 @@ language: generic
 sudo: required
 dist: trusty
 
-os:
-  - linux
-  - osx
+#os:
+#  - linux
+#  - osx
 
 env:
   global:
