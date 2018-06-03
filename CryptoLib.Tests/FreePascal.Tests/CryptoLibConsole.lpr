@@ -8,7 +8,7 @@ uses
   DerApplicationSpecificTests,
   EqualsAndHashCodeTests,
   OIDTests,
- // BigIntegerTests,
+  BigIntegerTests,
  // ECAlgorithmsTests,
  // ECPointTests,
  // SecP384R1FieldTests,
