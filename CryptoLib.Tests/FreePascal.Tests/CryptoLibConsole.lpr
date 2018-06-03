@@ -10,7 +10,7 @@ uses
   OIDTests,
   BigIntegerTests,
  // ECAlgorithmsTests,
- ECPointTests,
+//  ECPointTests,
   SecP384R1FieldTests,
  // ECDsa5Tests,
  // ECTests,
