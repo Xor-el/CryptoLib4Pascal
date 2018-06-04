@@ -1250,6 +1250,7 @@ begin
     y := ModMult(t2, t4);
 
     result := CheckSqrt(TFpFieldElement.Create(Fq, Fr, y) as IFpFieldElement);
+    Exit;
   end;
 
   // q == 8m + 1
