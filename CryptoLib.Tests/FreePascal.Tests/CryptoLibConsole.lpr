@@ -23,11 +23,11 @@ uses
  // AESTests, // pass x64
  // BlockCipherVectorTests, // pass x64
   AESTestVectors,
-  IESCipherTests,
+ // IESCipherTests,
  // AESSICTests, // pass x64
  // MD5HMacTests, // pass x64
  // HMacTests,
- // Pkcs5Tests,
+  Pkcs5Tests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
