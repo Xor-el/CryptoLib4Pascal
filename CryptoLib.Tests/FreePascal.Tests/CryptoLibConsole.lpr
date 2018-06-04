@@ -9,17 +9,17 @@ uses
  // EqualsAndHashCodeTests, // pass x64
  // OIDTests, // pass x64
  // BigIntegerTests,
- // ECAlgorithmsTests,
-//  ECPointTests,
- // SecP384R1FieldTests,
- // ECDsa5Tests,
- // ECTests,
- // NamedCurveTests,
- // ECSchnorrTests,
-//  SignerUtilitiesTests,
-  SecureRandomTests,
- // DigestRandomNumberTests,
- // FixedPointTests,
+  ECAlgorithmsTests,
+  ECPointTests,
+  SecP384R1FieldTests,
+  ECDsa5Tests,
+  ECTests,
+  NamedCurveTests,
+  ECSchnorrTests,
+  SignerUtilitiesTests,
+ // SecureRandomTests,
+  DigestRandomNumberTests,
+  FixedPointTests,
  // AESTests, // pass x64
  // BlockCipherVectorTests, // pass x64
   AESTestVectors,
