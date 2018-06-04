@@ -9,8 +9,8 @@ uses
  // EqualsAndHashCodeTests, // pass x64, pass arm
  // OIDTests, // pass x64, pass arm
  // BigIntegerTests, // pass x64, pass arm
- // ECAlgorithmsTests,
-  ECPointTests,
+  ECAlgorithmsTests,
+ // ECPointTests,
  // SecP384R1FieldTests,
  // ECDsa5Tests,
  // ECTests,
