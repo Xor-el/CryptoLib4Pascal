@@ -4,18 +4,18 @@ program CryptoLibConsole;
 
 uses
   consoletestrunner,
- // Asn1SequenceParserTests, // pass x64
- // DerApplicationSpecificTests, // pass x64
- // EqualsAndHashCodeTests, // pass x64
- // OIDTests, // pass x64
- // BigIntegerTests,
+ // Asn1SequenceParserTests, // pass x64, pass arm
+ // DerApplicationSpecificTests, // pass x64, pass arm
+ // EqualsAndHashCodeTests, // pass x64, pass arm
+ // OIDTests, // pass x64, pass arm
+ // BigIntegerTests, // pass x64, pass arm
  // ECAlgorithmsTests,
  // ECPointTests,
  // SecP384R1FieldTests,
  // ECDsa5Tests,
  // ECTests,
  // NamedCurveTests,
- // ECSchnorrTests,
+  ECSchnorrTests,
  // SignerUtilitiesTests,
  // SecureRandomTests,
  // DigestRandomNumberTests,
@@ -23,11 +23,11 @@ uses
  // AESTests, // pass x64
  // BlockCipherVectorTests, // pass x64
   AESTestVectors,
-  IESCipherTests,
- // AESSICTests, // pass x64
- // MD5HMacTests, // pass x64
+ // IESCipherTests, // pass x64, pass arm, arm raises exception
+ // AESSICTests, // pass x64, pass arm
+ // MD5HMacTests, // pass x64, pass arm
  // HMacTests,
- // Pkcs5Tests,
+ // Pkcs5Tests, // pass x64, pass arm
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
