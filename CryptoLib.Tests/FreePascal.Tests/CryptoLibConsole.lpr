@@ -8,7 +8,7 @@ uses
  // DerApplicationSpecificTests, // pass x64
  // EqualsAndHashCodeTests, // pass x64
  // OIDTests, // pass x64
-  BigIntegerTests,
+ // BigIntegerTests,
  // ECAlgorithmsTests,
 //  ECPointTests,
  // SecP384R1FieldTests,
@@ -17,7 +17,7 @@ uses
  // NamedCurveTests,
  // ECSchnorrTests,
 //  SignerUtilitiesTests,
- // SecureRandomTests,
+  SecureRandomTests,
  // DigestRandomNumberTests,
  // FixedPointTests,
  // AESTests, // pass x64
