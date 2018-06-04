@@ -12,16 +12,16 @@ uses
  // ECAlgorithmsTests,
  // ECPointTests,
  // SecP384R1FieldTests,
- // ECDsa5Tests,
+  ECDsa5Tests,
  // ECTests,
  // NamedCurveTests,
 //  ECSchnorrTests, // pass x64, pass arm, arm raises exception
- // SignerUtilitiesTests, 
+ // SignerUtilitiesTests, // pass x64, pass arm, arm raises exception
  // SecureRandomTests, // pass x64, pass arm
- // DigestRandomNumberTests,
-  FixedPointTests,
+ // DigestRandomNumberTests, // pass x64, pass arm
+ // FixedPointTests, // pass x64, pass arm, arm raises exception
  // AESTests, // pass x64, pass arm
-// BlockCipherVectorTests, // pass x64
+// BlockCipherVectorTests, // pass x64, pass arm
   AESTestVectors,
  // IESCipherTests, // pass x64, pass arm, arm raises exception
  // AESSICTests, // pass x64, pass arm
