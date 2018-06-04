@@ -9,7 +9,7 @@ uses
  // EqualsAndHashCodeTests, // pass x64, pass arm
  // OIDTests, // pass x64, pass arm
  // BigIntegerTests, // pass x64, pass arm
-  ECAlgorithmsTests,
+ // ECAlgorithmsTests,
  // ECPointTests,
  // SecP384R1FieldTests,
  // ECDsa5Tests,
@@ -26,7 +26,7 @@ uses
  // IESCipherTests, // pass x64, pass arm, arm raises exception
  // AESSICTests, // pass x64, pass arm
  // MD5HMacTests, // pass x64, pass arm
- // HMacTests,
+  HMacTests,
  // Pkcs5Tests, // pass x64, pass arm
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
