@@ -13,8 +13,8 @@ uses
  // ECPointTests,
  // SecP384R1FieldTests,
  // ECDsa5Tests,
-  ECTests,
- // NamedCurveTests,
+ // ECTests,
+  NamedCurveTests,
 //  ECSchnorrTests, // pass x64, pass arm, arm raises exception
  // SignerUtilitiesTests, // pass x64, pass arm, arm raises exception
  // SecureRandomTests, // pass x64, pass arm
