@@ -11,10 +11,10 @@ uses
  // BigIntegerTests, // pass x64, pass arm
  // ECAlgorithmsTests,
  // ECPointTests,
- // SecP384R1FieldTests,
+  SecP384R1FieldTests,
  // ECDsa5Tests,
  // ECTests,
-  NamedCurveTests,
+ // NamedCurveTests,
 //  ECSchnorrTests, // pass x64, pass arm, arm raises exception
  // SignerUtilitiesTests, // pass x64, pass arm, arm raises exception
  // SecureRandomTests, // pass x64, pass arm
