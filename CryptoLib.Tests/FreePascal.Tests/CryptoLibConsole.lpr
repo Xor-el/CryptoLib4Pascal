@@ -9,21 +9,21 @@ uses
  // EqualsAndHashCodeTests, // pass x64
  // OIDTests, // pass x64
  // BigIntegerTests,
-  ECAlgorithmsTests,
-  ECPointTests,
-  SecP384R1FieldTests,
-  ECDsa5Tests,
-  ECTests,
-  NamedCurveTests,
-  ECSchnorrTests,
-  SignerUtilitiesTests,
+ // ECAlgorithmsTests,
+ // ECPointTests,
+ // SecP384R1FieldTests,
+ // ECDsa5Tests,
+ // ECTests,
+ // NamedCurveTests,
+ // ECSchnorrTests,
+ // SignerUtilitiesTests,
  // SecureRandomTests,
-  DigestRandomNumberTests,
-  FixedPointTests,
+ // DigestRandomNumberTests,
+ // FixedPointTests,
  // AESTests, // pass x64
  // BlockCipherVectorTests, // pass x64
   AESTestVectors,
- // IESCipherTests,
+  IESCipherTests,
  // AESSICTests, // pass x64
  // MD5HMacTests, // pass x64
  // HMacTests,
