@@ -8,7 +8,7 @@ uses
  // DerApplicationSpecificTests, // pass x64
  // EqualsAndHashCodeTests, // pass x64
  // OIDTests, // pass x64
- // BigIntegerTests,
+  BigIntegerTests,
  // ECAlgorithmsTests,
 //  ECPointTests,
  // SecP384R1FieldTests,
@@ -27,7 +27,7 @@ uses
  // AESSICTests, // pass x64
  // MD5HMacTests, // pass x64
  // HMacTests,
-  Pkcs5Tests,
+ // Pkcs5Tests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
