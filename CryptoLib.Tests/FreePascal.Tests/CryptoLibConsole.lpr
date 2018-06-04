@@ -16,12 +16,12 @@ uses
  // ECTests,
  // NamedCurveTests,
 //  ECSchnorrTests, // pass x64, pass arm, arm raises exception
-  SignerUtilitiesTests, 
+ // SignerUtilitiesTests, 
  // SecureRandomTests, // pass x64, pass arm
-  DigestRandomNumberTests,
- // FixedPointTests,
+ // DigestRandomNumberTests,
+  FixedPointTests,
  // AESTests, // pass x64, pass arm
-  BlockCipherVectorTests, // pass x64
+// BlockCipherVectorTests, // pass x64
   AESTestVectors,
  // IESCipherTests, // pass x64, pass arm, arm raises exception
  // AESSICTests, // pass x64, pass arm
