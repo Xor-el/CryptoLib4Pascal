@@ -12,8 +12,8 @@ uses
  // ECAlgorithmsTests,
  // ECPointTests,
  // SecP384R1FieldTests,
-  ECDsa5Tests,
- // ECTests,
+ // ECDsa5Tests,
+  ECTests,
  // NamedCurveTests,
 //  ECSchnorrTests, // pass x64, pass arm, arm raises exception
  // SignerUtilitiesTests, // pass x64, pass arm, arm raises exception
