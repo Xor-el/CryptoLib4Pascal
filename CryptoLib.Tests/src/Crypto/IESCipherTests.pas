@@ -189,8 +189,6 @@ begin
 
   CurveName := 'secp256k1';
   Lcurve := TSecNamedCurves.GetByName(CurveName);
-  if Lcurve = Nil then
-   raise Exception.Create('Curve Is Nil');
   KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
   ecSpec := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
     Lcurve.H, Lcurve.GetSeed);
