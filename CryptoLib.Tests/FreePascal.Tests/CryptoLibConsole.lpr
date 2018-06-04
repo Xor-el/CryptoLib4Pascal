@@ -15,13 +15,13 @@ uses
  // ECDsa5Tests,
  // ECTests,
  // NamedCurveTests,
-  ECSchnorrTests,
- // SignerUtilitiesTests,
- // SecureRandomTests,
- // DigestRandomNumberTests,
+//  ECSchnorrTests, // pass x64, pass arm, arm raises exception
+  SignerUtilitiesTests, 
+ // SecureRandomTests, // pass x64, pass arm
+  DigestRandomNumberTests,
  // FixedPointTests,
- // AESTests, // pass x64
- // BlockCipherVectorTests, // pass x64
+ // AESTests, // pass x64, pass arm
+  BlockCipherVectorTests, // pass x64
   AESTestVectors,
  // IESCipherTests, // pass x64, pass arm, arm raises exception
  // AESSICTests, // pass x64, pass arm
