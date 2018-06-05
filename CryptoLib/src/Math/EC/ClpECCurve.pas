@@ -1041,6 +1041,10 @@ begin
   System.SetLength(zs, len);
   System.SetLength(indices, len);
 
+  raise Exception.Create(points[0].ToString + ' DABA ' + points[1].ToString +
+    ' DABA ' + points[2].ToString + ' DABA ' + points[3].ToString + ' DABA ' +
+    points[4].ToString + ' DABA ' + points[5].ToString);
+
   count := 0;
   for i := 0 to System.Pred(len) do
 

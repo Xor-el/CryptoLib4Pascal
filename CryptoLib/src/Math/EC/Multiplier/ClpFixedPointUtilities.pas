@@ -121,11 +121,6 @@ begin
 
     c.NormalizeAll(pow2Table);
 
-    raise Exception.Create(pow2Table[0].ToString + ' DABA ' + pow2Table[1]
-      .ToString + ' DABA ' + pow2Table[2].ToString + ' DABA ' + pow2Table[3]
-      .ToString + ' DABA ' + pow2Table[4].ToString + ' DABA ' + pow2Table[5]
-      .ToString);
-
     System.SetLength(lookupTable, n);
 
     lookupTable[0] := pow2Table[0];
