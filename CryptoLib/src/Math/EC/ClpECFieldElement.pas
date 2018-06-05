@@ -1073,7 +1073,18 @@ begin
   P := TNat.FromBigInteger(bits, Q);
   n := TNat.FromBigInteger(bits, x);
   z := TNat.Create(len);
-  raise Exception.Create(bits.ToString + ' DADA ' + len.ToString + ' DADA ' +
+
+  TMod.Invert(P, n, z);
+
+    raise Exception.Create(bits.ToString + ' DADA ' + len.ToString + ' DADA ' +
+    p[0].ToString + ' DADA ' +
+    p[1].ToString + ' DADA ' +
+    p[2].ToString + ' DADA ' +
+    p[3].ToString + ' DADA ' +
+    p[4].ToString + ' DADA ' +
+    p[5].ToString + ' DADA ' +
+    p[6].ToString + ' DADA ' +
+    p[7].ToString + ' DADA ' +
     n[0].ToString + ' DADA ' +
     n[1].ToString + ' DADA ' +
     n[2].ToString + ' DADA ' +
@@ -1091,7 +1102,6 @@ begin
     z[6].ToString + ' DADA ' +
     z[7].ToString + ' DADA ');
 
-  TMod.Invert(P, n, z);
   result := TNat.ToBigInteger(len, z);
 end;
 
