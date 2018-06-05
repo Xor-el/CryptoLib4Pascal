@@ -201,8 +201,7 @@ begin
   CurveName := 'secp256k1';
   Lcurve := TSecNamedCurves.GetByName(CurveName);
   // KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
-  raise Exception.Create(Lcurve.G.ToString + ' DABA ' + Lcurve.N.ToString +
-    ' DABA ' + Lcurve.H.ToString);
+
   ecSpec := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
     Lcurve.H, Lcurve.GetSeed);
   // RandomInstance := TSecureRandom.Create();
