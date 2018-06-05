@@ -119,12 +119,12 @@ begin
     // This will be the 'offset' value
     pow2Table[minWidth] := pow2Table[0].Subtract(pow2Table[1]);
 
+    c.NormalizeAll(pow2Table);
+
     raise Exception.Create(pow2Table[0].ToString + ' DABA ' + pow2Table[1]
       .ToString + ' DABA ' + pow2Table[2].ToString + ' DABA ' + pow2Table[3]
       .ToString + ' DABA ' + pow2Table[4].ToString + ' DABA ' + pow2Table[5]
       .ToString);
-
-    c.NormalizeAll(pow2Table);
 
     System.SetLength(lookupTable, n);
 
