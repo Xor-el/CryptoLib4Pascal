@@ -86,7 +86,7 @@ begin
   // * Although the various multipliers ought not to produce invalid output under normal
   // * circumstances, a final check here is advised to guard against fault attacks.
   // */
-//  Result := TECAlgorithms.ValidatePoint(Result);
+  Result := TECAlgorithms.ValidatePoint(Result);
 
 end;
 
