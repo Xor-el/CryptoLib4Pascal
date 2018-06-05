@@ -736,10 +736,9 @@ begin
     c[i] := c[i].Multiply(scale);
   end;
 
-  raise Exception.Create(c[0].ToString + ' DABA ' + c[1].ToString + ' DABA ' +
-    c[2].ToString + ' DABA ' + c[3].ToString + ' DABA ' + c[4].ToString);
-
   u := c[i].Invert();
+
+  raise Exception.Create(u.ToString);
 
   while (i > 0) do
   begin
