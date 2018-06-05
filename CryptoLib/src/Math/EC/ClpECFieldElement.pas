@@ -957,7 +957,7 @@ end;
 function TFpFieldElement.Invert: IECFieldElement;
 begin
   // TODO Modular inversion can be faster for a (Generalized) Mersenne Prime.
-    raise Exception.Create(Fq.ToString + 'DABO' + Fr.ToString + 'DABO' + Fx.ToString);
+  raise Exception.Create(ModInverse(Fx).ToString);
   result := TFpFieldElement.Create(Fq, Fr, ModInverse(Fx));
 end;
 
