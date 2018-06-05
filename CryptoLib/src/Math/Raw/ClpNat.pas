@@ -1291,9 +1291,12 @@ begin
     next := z[I];
     if I = 5 then
     begin
+      // raise Exception.Create((next shr bits).ToString + ' DADA ' +
+      // (c shl (-bits)).ToString + ' DADA ' + ((next shr bits) or (c shl (-bits)
+      // )).ToString);
       raise Exception.Create((next shr bits).ToString + ' DADA ' +
-        (c shl (-bits)).ToString + ' DADA ' + ((next shr bits) or (c shl (-bits)
-        )).ToString);
+        (c shl UInt32(-bits)).ToString + ' DADA ' + ((next shr bits) or
+        (c shl UInt32(-bits))).ToString);
     end
     else
     begin
