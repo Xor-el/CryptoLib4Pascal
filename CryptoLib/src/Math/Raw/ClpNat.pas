@@ -1295,8 +1295,8 @@ begin
       // (c shl (-bits)).ToString + ' DADA ' + ((next shr bits) or (c shl (-bits)
       // )).ToString);
       raise Exception.Create((next shr bits).ToString + ' DADA ' +
-        (c shl UInt32(-bits)).ToString + ' DADA ' + ((next shr bits) or
-        (c shl UInt32(-bits))).ToString);
+        (c shl (32 - bits)).ToString + ' DADA ' + ((next shr bits) or
+        (c shl (32 - bits))).ToString);
     end
     else
     begin
