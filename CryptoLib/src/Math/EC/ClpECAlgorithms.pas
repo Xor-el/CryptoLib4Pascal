@@ -738,8 +738,6 @@ begin
 
   u := c[i].Invert();
 
-  raise Exception.Create(u.ToString);
-
   while (i > 0) do
   begin
     J := off + i;
