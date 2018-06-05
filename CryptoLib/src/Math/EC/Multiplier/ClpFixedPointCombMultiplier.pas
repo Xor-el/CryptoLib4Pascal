@@ -115,7 +115,7 @@ begin
 
   raise Exception.Create(IntToStr(size) + ' DABA ' + IntToStr(width) + ' DABA '
     + IntToStr(d) + ' DABA ' + R.ToString + ' DABA ' + IntToStr(fullComb) +
-    ' DABA ' + IntToStr(top));
+    ' DABA ' + IntToStr(top) + ' DABA ' + info.Offset.ToString);
 
   for i := 0 to System.Pred(d) do
   begin
