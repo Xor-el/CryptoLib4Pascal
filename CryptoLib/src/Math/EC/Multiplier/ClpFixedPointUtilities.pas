@@ -101,6 +101,8 @@ begin
   n := 1 shl minWidth;
   info := GetFixedPointPreCompInfo(c.GetPreCompInfo(p, PRECOMP_NAME));
 
+  raise Exception.Create(IntToStr(minWidth) + ' DABA ' + IntToStr(n));
+
   lookupTable := info.PreComp;
 
   if ((lookupTable = Nil) or (System.Length(lookupTable) < n)) then
