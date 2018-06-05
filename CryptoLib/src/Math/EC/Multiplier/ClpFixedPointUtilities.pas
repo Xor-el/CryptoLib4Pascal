@@ -101,14 +101,15 @@ begin
   n := 1 shl minWidth;
   info := GetFixedPointPreCompInfo(c.GetPreCompInfo(p, PRECOMP_NAME));
 
-  raise Exception.Create(IntToStr(minWidth) + ' DABA ' + IntToStr(n));
-
   lookupTable := info.PreComp;
 
   if ((lookupTable = Nil) or (System.Length(lookupTable) < n)) then
   begin
     bits := GetCombSize(c);
     d := (bits + minWidth - 1) div minWidth;
+
+    raise Exception.Create(IntToStr(c.order) + ' DABA ' + IntToStr(bits) +
+      ' DABA ' + IntToStr(d));
 
     System.SetLength(pow2Table, minWidth + 1);
 
