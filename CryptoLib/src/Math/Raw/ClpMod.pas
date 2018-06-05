@@ -180,6 +180,25 @@ begin
   end;
 
       raise Exception.Create(
+
+    p[0].ToString + ' DADA ' +
+    p[1].ToString + ' DADA ' +
+    p[2].ToString + ' DADA ' +
+    p[3].ToString + ' DADA ' +
+    p[4].ToString + ' DADA ' +
+    p[5].ToString + ' DADA ' +
+    p[6].ToString + ' DADA ' +
+    p[7].ToString + ' DADA ' +
+
+    u[0].ToString + ' DADA ' +
+    u[1].ToString + ' DADA ' +
+    u[2].ToString + ' DADA ' +
+    u[3].ToString + ' DADA ' +
+    u[4].ToString + ' DADA ' +
+    u[5].ToString + ' DADA ' +
+    u[6].ToString + ' DADA ' +
+    u[7].ToString + ' DADA ' +
+
     a[0].ToString + ' DADA ' +
     a[1].ToString + ' DADA ' +
     a[2].ToString + ' DADA ' +
@@ -187,7 +206,9 @@ begin
     a[4].ToString + ' DADA ' +
     a[5].ToString + ' DADA ' +
     a[6].ToString + ' DADA ' +
-    a[7].ToString + ' DADA ');
+    a[7].ToString + ' DADA ' +
+
+    ac.ToString + ' DADA ');
 
   if (TNat.IsOne(len, u)) then
   begin
