@@ -1061,10 +1061,9 @@ begin
 
   raise Exception.Create(zs[0].ToString + ' DABA ' + zs[1].ToString + ' DABA ' +
     zs[2].ToString + ' DABA ' + zs[3].ToString + ' DABA ' + zs[4].ToString +
-    ' DABA ' + zs[5].ToString + 'ZABA' + indices[0].ToString + ' DABA ' +
-    indices[1].ToString + ' DABA ' + indices[2].ToString + ' DABA ' +
-    indices[3].ToString + ' DABA ' + indices[4].ToString + ' DABA ' +
-    indices[5].ToString);
+    'ZABA' + indices[0].ToString + ' DABA ' + indices[1].ToString + ' DABA ' +
+    indices[2].ToString + ' DABA ' + indices[3].ToString + ' DABA ' +
+    indices[4].ToString + ' DABA ' + indices[5].ToString);
 
   TECAlgorithms.MontgomeryTrick(zs, 0, count, iso);
   for j := 0 to System.Pred(count) do
