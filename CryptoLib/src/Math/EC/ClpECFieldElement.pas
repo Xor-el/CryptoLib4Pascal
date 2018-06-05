@@ -957,7 +957,6 @@ end;
 function TFpFieldElement.Invert: IECFieldElement;
 begin
   // TODO Modular inversion can be faster for a (Generalized) Mersenne Prime.
-  raise Exception.Create(ModInverse(Fx).ToString);
   result := TFpFieldElement.Create(Fq, Fr, ModInverse(Fx));
 end;
 
@@ -1074,6 +1073,16 @@ begin
   P := TNat.FromBigInteger(bits, Q);
   n := TNat.FromBigInteger(bits, x);
   z := TNat.Create(len);
+  raise Exception.Create(bits.ToString + ' DADA ' + len.ToString + ' DADA ' +
+    P[0].ToString + ' DADA ' +
+    P[1].ToString + ' DADA ' +
+    P[2].ToString + ' DADA ' +
+    P[3].ToString + ' DADA ' +
+    P[4].ToString + ' DADA ' +
+    P[5].ToString + ' DADA ' +
+    P[6].ToString + ' DADA ' +
+    P[7].ToString + ' DADA ');
+
   TMod.Invert(P, n, z);
   result := TNat.ToBigInteger(len, z);
 end;
