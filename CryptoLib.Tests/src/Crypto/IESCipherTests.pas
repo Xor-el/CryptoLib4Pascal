@@ -76,11 +76,7 @@ uses
   ClpHex,
   ClpDigestUtilities,
   ClpMacUtilities,
-  ClpArrayUtils,
-  ClpBigInteger,
-  ClpAsymmetricCipherKeyPair,
-  ClpECPrivateKeyParameters,
-  ClpECKeyPairGenerator;
+  ClpArrayUtils;
 
 type
 
@@ -181,9 +177,6 @@ begin
 end;
 
 function TTestIESCipher.GetECKeyPair: IAsymmetricCipherKeyPair;
-const
-  PrivateKeyInHex =
-    '0c4f86613be9fdb1ac56d471b63a2b55871f356870a63f1a44732baa9847f395';
 var
   CurveName: string;
   KeyPairGeneratorInstance: IAsymmetricCipherKeyPairGenerator;
@@ -191,34 +184,18 @@ var
   Lcurve: IX9ECParameters;
   ecSpec: IECDomainParameters;
   KeyPair: IAsymmetricCipherKeyPair;
-  PrivateKeyBytes: TBytes;
-  PrivD: TBigInteger;
-  RegeneratedPublicKey: IECPublicKeyParameters;
-  RegeneratedPrivateKey: IECPrivateKeyParameters;
 begin
   // Set Up EC Key Pair
 
   CurveName := 'secp256k1';
   Lcurve := TSecNamedCurves.GetByName(CurveName);
-  // KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
-
+  KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
   ecSpec := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
     Lcurve.H, Lcurve.GetSeed);
-  // RandomInstance := TSecureRandom.Create();
-  // KeyPairGeneratorInstance.Init(TECKeyGenerationParameters.Create(ecSpec,
-  // RandomInstance));
-  // result := KeyPairGeneratorInstance.GenerateKeyPair();
-  PrivateKeyBytes := THex.Decode(PrivateKeyInHex);
-
-  PrivD := TBigInteger.Create(1, PrivateKeyBytes);
-  RegeneratedPrivateKey := TECPrivateKeyParameters.Create('ECDSA',
-    PrivD, ecSpec);
-
-  RegeneratedPublicKey := TECKeyPairGenerator.GetCorrespondingPublicKey
-    (RegeneratedPrivateKey);
-
-  result := TAsymmetricCipherKeyPair.Create(RegeneratedPublicKey,
-    RegeneratedPrivateKey);
+  RandomInstance := TSecureRandom.Create();
+  KeyPairGeneratorInstance.Init(TECKeyGenerationParameters.Create(ecSpec,
+    RandomInstance));
+  result := KeyPairGeneratorInstance.GenerateKeyPair();
 end;
 
 function TTestIESCipher.GetIESCipherParameters: IIESWithCipherParameters;
