@@ -22,7 +22,6 @@ unit ClpNat;
 interface
 
 uses
-  SysUtils,
   ClpConverters,
   ClpBits,
   ClpBigInteger,
@@ -1269,10 +1268,10 @@ begin
   while (I >= 0) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shr (bits)) or (c shl (-bits));
+    z[zOff + I] := (next shr (bits)) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
@@ -1289,24 +1288,11 @@ begin
   while (I >= 0) do
   begin
     next := z[I];
-    if I = 5 then
-    begin
-      // raise Exception.Create((next shr bits).ToString + ' DADA ' +
-      // (c shl (-bits)).ToString + ' DADA ' + ((next shr bits) or (c shl (-bits)
-      // )).ToString);
-      raise Exception.Create((next shr bits).ToString + ' DADA ' +
-        (c shl (32 - bits)).ToString + ' DADA ' + ((next shr bits) or
-        (c shl (32 - bits))).ToString);
-    end
-    else
-    begin
-      z[I] := (next shr bits) or (c shl (-bits));
-    end;
+    z[I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
@@ -1323,11 +1309,11 @@ begin
   while (I >= 0) do
   begin
     next := x[I];
-    z[I] := (next shr bits) or (c shl (-bits));
+    z[I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
@@ -1344,11 +1330,11 @@ begin
   while (I >= 0) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shr bits) or (c shl (-bits));
+    z[zOff + I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownWord(len: Int32; z: TCryptoLibUInt32Array;
