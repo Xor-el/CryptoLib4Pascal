@@ -127,18 +127,6 @@ begin
     count := count + zeroes;
   end;
 
-
-      raise Exception.Create(
-
-    u[0].ToString + ' DADA ' +
-    u[1].ToString + ' DADA ' +
-    u[2].ToString + ' DADA ' +
-    u[3].ToString + ' DADA ' +
-    u[4].ToString + ' DADA ' +
-    u[5].ToString + ' DADA ' +
-    u[6].ToString + ' DADA ' +
-    u[7].ToString + ' DADA ');
-
   i := 0;
   while i < count do
   begin

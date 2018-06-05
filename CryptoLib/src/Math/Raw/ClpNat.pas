@@ -22,6 +22,7 @@ unit ClpNat;
 interface
 
 uses
+  SysUtils,
   ClpConverters,
   ClpBits,
   ClpBigInteger,
@@ -1288,10 +1289,20 @@ begin
   while (I >= 0) do
   begin
     next := z[I];
-    z[I] := (next shr bits) or (c shl (-bits));
+    if I = 5 then
+    begin
+      raise Exception.Create((next shr bits).ToString + ' DADA ' +
+        (c shl (-bits)).ToString + ' DADA ' + ((next shr bits) or (c shl (-bits)
+        )).ToString);
+    end
+    else
+    begin
+      z[I] := (next shr bits) or (c shl (-bits));
+    end;
     c := next;
     System.Dec(I);
   end;
+
   Result := c shl (-bits);
 end;
 
