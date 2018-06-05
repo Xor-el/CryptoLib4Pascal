@@ -1041,10 +1041,6 @@ begin
   System.SetLength(zs, len);
   System.SetLength(indices, len);
 
-  raise Exception.Create(points[0].ToString + ' DABA ' + points[1].ToString +
-    ' DABA ' + points[2].ToString + ' DABA ' + points[3].ToString + ' DABA ' +
-    points[4].ToString + ' DABA ' + points[5].ToString);
-
   count := 0;
   for i := 0 to System.Pred(len) do
 
@@ -1062,6 +1058,13 @@ begin
   begin
     Exit;
   end;
+
+  raise Exception.Create(zs[0].ToString + ' DABA ' + zs[1].ToString + ' DABA ' +
+    zs[2].ToString + ' DABA ' + zs[3].ToString + ' DABA ' + zs[4].ToString +
+    ' DABA ' + zs[5].ToString + 'ZABA' + indices[0].ToString + ' DABA ' +
+    indices[1].ToString + ' DABA ' + indices[2].ToString + ' DABA ' +
+    indices[3].ToString + ' DABA ' + indices[4].ToString + ' DABA ' +
+    indices[5].ToString);
 
   TECAlgorithms.MontgomeryTrick(zs, 0, count, iso);
   for j := 0 to System.Pred(count) do
