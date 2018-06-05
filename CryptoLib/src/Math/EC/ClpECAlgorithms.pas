@@ -731,6 +731,9 @@ begin
   end;
   System.Dec(i);
 
+  raise Exception.Create(c[0].ToString + ' DABA ' + c[1].ToString + ' DABA ' +
+    c[2].ToString + ' DABA ' + c[3].ToString + ' DABA ' + c[4].ToString);
+
   if (scale <> Nil) then
   begin
     c[i] := c[i].Multiply(scale);

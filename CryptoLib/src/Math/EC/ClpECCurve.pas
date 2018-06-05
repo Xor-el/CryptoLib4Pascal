@@ -1061,9 +1061,6 @@ begin
 
   TECAlgorithms.MontgomeryTrick(zs, 0, count, iso);
 
-  raise Exception.Create(zs[0].ToString + ' DABA ' + zs[1].ToString + ' DABA ' +
-    zs[2].ToString + ' DABA ' + zs[3].ToString + ' DABA ' + zs[4].ToString);
-
   for j := 0 to System.Pred(count) do
 
   begin
