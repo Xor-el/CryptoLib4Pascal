@@ -108,7 +108,7 @@ begin
     bits := GetCombSize(c);
     d := (bits + minWidth - 1) div minWidth;
 
-    raise Exception.Create(IntToStr(c.order) + ' DABA ' + IntToStr(bits) +
+    raise Exception.Create(c.order.ToString + ' DABA ' + IntToStr(bits) +
       ' DABA ' + IntToStr(d));
 
     System.SetLength(pow2Table, minWidth + 1);
