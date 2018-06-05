@@ -29,7 +29,8 @@ uses
   ClpFixedPointUtilities,
   ClpIFixedPointPreCompInfo,
   ClpAbstractECMultiplier,
-  ClpIFixedPointCombMultiplier;
+  ClpIFixedPointCombMultiplier,
+  SySUtils;
 
 resourcestring
   SInvalidComputation =
@@ -111,6 +112,10 @@ begin
   LK := TNat.FromBigInteger(fullComb, k);
 
   top := fullComb - 1;
+
+  raise Exception.Create(IntToStr(size) + ' DABA ' + IntToStr(width) + ' DABA '
+    + IntToStr(d) + ' DABA ' + R.ToString + ' DABA ' + IntToStr(fullComb) +
+    ' DABA ' + IntToStr(top));
 
   for i := 0 to System.Pred(d) do
   begin

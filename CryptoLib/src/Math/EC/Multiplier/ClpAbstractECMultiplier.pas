@@ -25,8 +25,7 @@ uses
   ClpBigInteger,
   ClpIECInterface,
   ClpIAbstractECMultiplier,
-  ClpECAlgorithms,
-  SysUtils;
+  ClpECAlgorithms;
 
 type
   TAbstractECMultiplier = class abstract(TInterfacedObject,
@@ -74,9 +73,6 @@ begin
   end;
 
   positive := MultiplyPositive(p, k.Abs());
-
-  raise Exception.Create(p.ToString + ' DABA ' + k.Abs().ToString + ' DABA ' +
-    positive.ToString);
 
   if sign > 0 then
   begin
