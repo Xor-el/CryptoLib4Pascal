@@ -29,7 +29,8 @@ uses
   ClpNat,
   ClpConverters,
   ClpSecureRandom,
-  ClpISecureRandom;
+  ClpISecureRandom,
+  SysUtils;
 
 resourcestring
   SCannotBeZero = 'cannot be 0, "x"';
@@ -177,6 +178,17 @@ begin
   begin
     InversionStep(p, u, len, a, ac);
   end;
+
+      raise Exception.Create(
+    a[0].ToString + ' DADA ' +
+    a[1].ToString + ' DADA ' +
+    a[2].ToString + ' DADA ' +
+    a[3].ToString + ' DADA ' +
+    a[4].ToString + ' DADA ' +
+    a[5].ToString + ' DADA ' +
+    a[6].ToString + ' DADA ' +
+    a[7].ToString + ' DADA ');
+
   if (TNat.IsOne(len, u)) then
   begin
     InversionResult(p, ac, a, z);

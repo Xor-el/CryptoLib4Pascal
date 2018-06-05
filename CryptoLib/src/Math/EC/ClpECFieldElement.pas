@@ -1076,32 +1076,6 @@ begin
 
   TMod.Invert(P, n, z);
 
-    raise Exception.Create(bits.ToString + ' DADA ' + len.ToString + ' DADA ' +
-    p[0].ToString + ' DADA ' +
-    p[1].ToString + ' DADA ' +
-    p[2].ToString + ' DADA ' +
-    p[3].ToString + ' DADA ' +
-    p[4].ToString + ' DADA ' +
-    p[5].ToString + ' DADA ' +
-    p[6].ToString + ' DADA ' +
-    p[7].ToString + ' DADA ' +
-    n[0].ToString + ' DADA ' +
-    n[1].ToString + ' DADA ' +
-    n[2].ToString + ' DADA ' +
-    n[3].ToString + ' DADA ' +
-    n[4].ToString + ' DADA ' +
-    n[5].ToString + ' DADA ' +
-    n[6].ToString + ' DADA ' +
-    n[7].ToString + ' DADA ' +
-    z[0].ToString + ' DADA ' +
-    z[1].ToString + ' DADA ' +
-    z[2].ToString + ' DADA ' +
-    z[3].ToString + ' DADA ' +
-    z[4].ToString + ' DADA ' +
-    z[5].ToString + ' DADA ' +
-    z[6].ToString + ' DADA ' +
-    z[7].ToString + ' DADA ');
-
   result := TNat.ToBigInteger(len, z);
 end;
 
