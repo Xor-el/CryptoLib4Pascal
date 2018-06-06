@@ -34,7 +34,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   Generics.Collections,
-  ClpArrayUtils,
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
   ClpSecureRandom,
