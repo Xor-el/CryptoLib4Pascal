@@ -23,7 +23,8 @@ interface
 
 uses
   Generics.Collections,
-  ClpIProxiedInterface;
+  ClpIProxiedInterface,
+  ClpCryptoLibTypes;
 
 type
   IAsn1EncodableVector = interface(IInterface)
@@ -40,7 +41,7 @@ type
 
     property Count: Int32 read GetCount;
 
-    function GetEnumerator: TEnumerator<IAsn1Encodable>;
+    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
 
   end;
 

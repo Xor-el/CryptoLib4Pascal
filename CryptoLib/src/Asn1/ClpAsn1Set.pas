@@ -60,7 +60,7 @@ type
     function GetCount: Int32; virtual;
     function GetParser: IAsn1SetParser; inline;
     function GetSelf(Index: Integer): IAsn1Encodable; virtual;
-    function GetCurrent(e: TEnumerator<IAsn1Encodable>): IAsn1Encodable; inline;
+    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
 
     /// <summary>
     /// return true if a &lt;= b (arrays are assumed padded with zeros).
@@ -99,7 +99,7 @@ type
 
     function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
 
-    function GetEnumerator: TEnumerator<IAsn1Encodable>; virtual;
+    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
 
     // /**
     // * return the object at the sequence position indicated by index.
@@ -170,11 +170,11 @@ begin
   F_set.Add(obj);
 end;
 
-function TAsn1Set.GetCurrent(e: TEnumerator<IAsn1Encodable>): IAsn1Encodable;
+function TAsn1Set.GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
 var
   encObj: IAsn1Encodable;
 begin
-  encObj := e.Current;
+  encObj := e;
 
   // unfortunately null was allowed as a substitute for DER null
   if (encObj = Nil) then
@@ -189,8 +189,9 @@ end;
 function TAsn1Set.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IAsn1Set;
-  s1, s2: TEnumerator<IAsn1Encodable>;
+  l1, l2: TCryptoLibGenericArray<IAsn1Encodable>;
   o1, o2: IAsn1Object;
+  Idx: Int32;
 begin
 
   if (not Supports(asn1Object, IAsn1Set, other)) then
@@ -205,37 +206,34 @@ begin
     Exit;
   end;
 
-  s1 := GetEnumerator;
-  s2 := other.GetEnumerator;
+  l1 := GetEnumerable;
+  l2 := other.GetEnumerable;
 
-  try
-    while (s1.MoveNext() and s2.MoveNext()) do
+  for Idx := Low(l1) to High(l1) do
+  begin
+    o1 := GetCurrent(l1[Idx]).ToAsn1Object();
+    o2 := GetCurrent(l2[Idx]).ToAsn1Object();
+
+    if (not(o1.Equals(o2))) then
     begin
-      o1 := GetCurrent(s1).ToAsn1Object();
-      o2 := GetCurrent(s2).ToAsn1Object();
-
-      if (not(o1.Equals(o2))) then
-      begin
-        result := false;
-        Exit;
-      end;
+      result := false;
+      Exit;
     end;
-
-    result := true;
-  finally
-    s1.Free;
-    s2.Free;
   end;
+
+  result := true;
 end;
 
 function TAsn1Set.Asn1GetHashCode: Int32;
 var
   hc: Int32;
   o: IAsn1Encodable;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   hc := Count;
 
-  for o in Self do
+  LListAsn1Encodable := Self.GetEnumerable;
+  for o in LListAsn1Encodable do
   begin
     hc := hc * 17;
     if (o = Nil) then
@@ -270,9 +268,9 @@ begin
   result := F_set.Count;
 end;
 
-function TAsn1Set.GetEnumerator: TEnumerator<IAsn1Encodable>;
+function TAsn1Set.GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  result := F_set.GetEnumerator;
+  result := F_set.ToArray;
 end;
 
 class function TAsn1Set.GetInstance(obj: TCryptoLibByteArray): IAsn1Set;
@@ -296,6 +294,7 @@ var
   asn1Sequence: IAsn1Sequence;
   v: IAsn1EncodableVector;
   ae: IAsn1Encodable;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   inner := obj.GetObject();
 
@@ -334,7 +333,8 @@ begin
   begin
     v := TAsn1EncodableVector.Create();
 
-    for ae in asn1Sequence do
+    LListAsn1Encodable := asn1Sequence.GetEnumerable;
+    for ae in LListAsn1Encodable do
     begin
       v.Add(ae);
     end;

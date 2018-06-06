@@ -32,8 +32,7 @@ type
 
   public
 
-    class function ToStructuredString(c: TEnumerable<IAsn1Encodable>)
-      : String; static;
+    class function ToStructuredString(c: TList<IAsn1Encodable>): String; static;
 
   end;
 
@@ -42,25 +41,27 @@ implementation
 { TCollectionUtilities }
 
 class function TCollectionUtilities.ToStructuredString
-  (c: TEnumerable<IAsn1Encodable>): String;
+  (c: TList<IAsn1Encodable>): String;
 var
-  e: TEnumerator<IAsn1Encodable>;
   sl: TStringList;
+  idx: Int32;
 begin
 
   sl := TStringList.Create();
   sl.LineBreak := '';
   try
     sl.Add('[');
-    e := c.GetEnumerator;
-    if (e.MoveNext()) then
-    begin
-      sl.Add((e.Current as TAsn1Encodable).ClassName);
 
-      while (e.MoveNext()) do
+    if (c.Count <> 0) then
+    begin
+      sl.Add((c[0] as TAsn1Encodable).ClassName);
+      if c.Count > 1 then
       begin
-        sl.Add(', ');
-        sl.Add((e.Current as TAsn1Encodable).ClassName);
+        for idx := 1 to c.Count - 2 do
+        begin
+          sl.Add(', ');
+          sl.Add((c[idx] as TAsn1Encodable).ClassName);
+        end;
       end;
     end;
 

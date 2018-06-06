@@ -30,7 +30,8 @@ uses
   ClpIBerOutputStream,
   ClpIAsn1OutputStream,
   ClpIProxiedInterface,
-  ClpIAsn1EncodableVector;
+  ClpIAsn1EncodableVector,
+  ClpCryptoLibTypes;
 
 type
 
@@ -125,6 +126,7 @@ end;
 procedure TBerSet.Encode(const derOut: IDerOutputStream);
 var
   o: IAsn1Encodable;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   if ((Supports(derOut, IAsn1OutputStream)) or
     (Supports(derOut, IBerOutputStream))) then
@@ -133,7 +135,8 @@ begin
 
     derOut.WriteByte($80);
 
-    for o in Self do
+    LListAsn1Encodable := Self.GetEnumerable;
+    for o in LListAsn1Encodable do
     begin
       derOut.WriteObject(o);
     end;

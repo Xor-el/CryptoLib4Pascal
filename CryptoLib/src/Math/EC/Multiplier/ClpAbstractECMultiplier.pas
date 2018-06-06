@@ -73,6 +73,7 @@ begin
   end;
 
   positive := MultiplyPositive(p, k.Abs());
+
   if sign > 0 then
   begin
     Result := positive

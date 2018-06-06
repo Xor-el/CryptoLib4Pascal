@@ -34,13 +34,13 @@ type
     function GetCount: Int32;
     function GetParser: IAsn1SetParser;
     function GetSelf(Index: Integer): IAsn1Encodable;
-    function GetCurrent(e: TEnumerator<IAsn1Encodable>): IAsn1Encodable;
+    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
 
     function ToString(): String;
 
     function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
 
-    function GetEnumerator: TEnumerator<IAsn1Encodable>;
+    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
 
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 

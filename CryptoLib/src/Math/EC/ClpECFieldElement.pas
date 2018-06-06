@@ -1073,7 +1073,9 @@ begin
   P := TNat.FromBigInteger(bits, Q);
   n := TNat.FromBigInteger(bits, x);
   z := TNat.Create(len);
+
   TMod.Invert(P, n, z);
+
   result := TNat.ToBigInteger(len, z);
 end;
 

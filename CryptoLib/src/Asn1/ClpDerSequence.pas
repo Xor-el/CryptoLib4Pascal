@@ -99,9 +99,11 @@ end;
 constructor TDerSequence.Create(const v: IAsn1EncodableVector);
 var
   ae: IAsn1Encodable;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   Inherited Create(v.Count);
-  for ae in v do
+  LListAsn1Encodable := v.GetEnumerable;
+  for ae in LListAsn1Encodable do
   begin
     AddObject(ae);
   end;
@@ -135,13 +137,15 @@ var
   dOut: TDerOutputStream;
   obj: IAsn1Encodable;
   bytes: TCryptoLibByteArray;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   // TODO Intermediate buffer could be avoided if we could calculate expected length
   bOut := TMemoryStream.Create();
   dOut := TDerOutputStream.Create(bOut);
   try
 
-    for obj in Self do
+    LListAsn1Encodable := Self.GetEnumerable;
+    for obj in LListAsn1Encodable do
     begin
       dOut.WriteObject(obj);
     end;

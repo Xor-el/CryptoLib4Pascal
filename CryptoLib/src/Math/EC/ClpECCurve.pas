@@ -1060,6 +1060,7 @@ begin
   end;
 
   TECAlgorithms.MontgomeryTrick(zs, 0, count, iso);
+
   for j := 0 to System.Pred(count) do
 
   begin

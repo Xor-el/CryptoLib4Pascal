@@ -113,7 +113,8 @@ end;
 procedure TBerTaggedObject.Encode(const derOut: IDerOutputStream);
 var
   eObj: TList<IAsn1Encodable>;
-  enumeratorIAsn1Sequence, enumeratorIAsn1Set: TEnumerator<IAsn1Encodable>;
+  LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
+  LListIAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
   asn1OctetString: IAsn1OctetString;
   berOctetString: IBerOctetString;
   derOctetString: IDerOctetString;
@@ -137,7 +138,8 @@ begin
           begin
             if (Supports(asn1OctetString, IBerOctetString, berOctetString)) then
             begin
-              for derOctetString in berOctetString.GetEnumerable do
+              LListIDerOctetString := berOctetString.GetEnumerable;
+              for derOctetString in LListIDerOctetString do
               begin
                 eObj.Add(derOctetString as IAsn1Encodable);
               end;
@@ -146,7 +148,8 @@ begin
             begin
               berOctetString := TBerOctetString.Create
                 (asn1OctetString.GetOctets());
-              for derOctetString in berOctetString.GetEnumerable do
+              LListIDerOctetString := berOctetString.GetEnumerable;
+              for derOctetString in LListIDerOctetString do
               begin
                 eObj.Add(derOctetString as IAsn1Encodable);
               end;
@@ -154,26 +157,18 @@ begin
           end
           else if Supports(obj, IAsn1Sequence, asn1Sequence) then
           begin
-            enumeratorIAsn1Sequence := asn1Sequence.GetEnumerator;
-            try
-              while enumeratorIAsn1Sequence.MoveNext do
-              begin
-                eObj.Add(enumeratorIAsn1Sequence.Current);
-              end;
-            finally
-              enumeratorIAsn1Sequence.Free;
+            LListIAsn1Encodable := asn1Sequence.GetEnumerable;
+            for o in LListIAsn1Encodable do
+            begin
+              eObj.Add(o);
             end;
           end
           else if Supports(obj, IAsn1Set, asn1Set) then
           begin
-            enumeratorIAsn1Set := asn1Set.GetEnumerator;
-            try
-              while enumeratorIAsn1Set.MoveNext do
-              begin
-                eObj.Add(enumeratorIAsn1Set.Current);
-              end;
-            finally
-              enumeratorIAsn1Set.Free;
+            LListIAsn1Encodable := asn1Set.GetEnumerable;
+            for o in LListIAsn1Encodable do
+            begin
+              eObj.Add(o);
             end;
           end
           else
