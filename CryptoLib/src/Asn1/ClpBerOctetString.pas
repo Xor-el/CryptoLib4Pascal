@@ -44,11 +44,11 @@ type
     MaxLength = Int32(1000);
 
   var
-    Focts: TEnumerable<IDerOctetString>;
+    Focts: TList<IDerOctetString>;
 
     function GenerateOcts(): TList<IDerOctetString>;
 
-    class function ToBytes(octs: TEnumerable<IDerOctetString>)
+    class function ToBytes(octs: TList<IDerOctetString>)
       : TCryptoLibByteArray; static;
 
   public
@@ -56,7 +56,7 @@ type
     /// <inheritdoc />
     /// <param name="str">The octets making up the octet string.</param>
     constructor Create(str: TCryptoLibByteArray); overload;
-    constructor Create(octets: TEnumerable<IDerOctetString>); overload;
+    constructor Create(octets: TList<IDerOctetString>); overload;
     constructor Create(const obj: IAsn1Object); overload;
     constructor Create(const obj: IAsn1Encodable); overload;
 
@@ -67,7 +67,7 @@ type
     /// <summary>
     /// return the DER octets that make up this string.
     /// </summary>
-    function GetEnumerable: TCryptoLibGenericArray<IDerOctetString>;
+    function GetEnumerable: TCryptoLibGenericArray<IDerOctetString>; virtual;
 
     procedure Encode(const derOut: IDerOutputStream); override;
 
@@ -80,7 +80,7 @@ implementation
 
 { TBerOctetString }
 
-constructor TBerOctetString.Create(octets: TEnumerable<IDerOctetString>);
+constructor TBerOctetString.Create(octets: TList<IDerOctetString>);
 begin
   Inherited Create(ToBytes(octets));
   Focts := octets;
@@ -110,6 +110,7 @@ end;
 procedure TBerOctetString.Encode(const derOut: IDerOutputStream);
 var
   oct: IDerOctetString;
+  LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
 begin
   if ((Supports(derOut, IAsn1OutputStream)) or
     (Supports(derOut, IBerOutputStream))) then
@@ -121,7 +122,8 @@ begin
     //
     // write out the octet array
     //
-    for oct in Self.GetEnumerable do
+    LListIDerOctetString := Self.GetEnumerable;
+    for oct in LListIDerOctetString do
     begin
       derOut.WriteObject(oct);
     end;
@@ -140,10 +142,12 @@ class function TBerOctetString.FromSequence(const seq: IAsn1Sequence)
 var
   v: TList<IDerOctetString>;
   obj: IAsn1Encodable;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   v := TList<IDerOctetString>.Create();
 
-  for obj in seq do
+  LListAsn1Encodable := seq.GetEnumerable;
+  for obj in LListAsn1Encodable do
   begin
     v.Add(obj as IDerOctetString);
   end;
@@ -196,7 +200,7 @@ begin
   result := str;
 end;
 
-class function TBerOctetString.ToBytes(octs: TEnumerable<IDerOctetString>)
+class function TBerOctetString.ToBytes(octs: TList<IDerOctetString>)
   : TCryptoLibByteArray;
 var
   bOut: TMemoryStream;

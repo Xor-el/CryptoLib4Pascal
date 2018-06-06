@@ -30,7 +30,8 @@ uses
   ClpIAsn1OutputStream,
   ClpIBerOutputStream,
   ClpIAsn1EncodableVector,
-  ClpIBerSequence;
+  ClpIBerSequence,
+  ClpCryptoLibTypes;
 
 type
   TBerSequence = class(TDerSequence, IBerSequence)
@@ -119,6 +120,7 @@ end;
 procedure TBerSequence.Encode(const derOut: IDerOutputStream);
 var
   o: IAsn1Encodable;
+  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
 
   if ((Supports(derOut, IAsn1OutputStream)) or
@@ -127,7 +129,8 @@ begin
     derOut.WriteByte(TAsn1Tags.Sequence or TAsn1Tags.Constructed);
     derOut.WriteByte($80);
 
-    for o in Self do
+    LListAsn1Encodable := Self.GetEnumerable;
+    for o in LListAsn1Encodable do
     begin
       derOut.WriteObject(o);
     end;

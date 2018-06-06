@@ -39,7 +39,7 @@ type
     function GetSelf(Index: Int32): IAsn1Encodable;
 
   public
-    class function FromEnumerable(e: TEnumerable<IAsn1Encodable>)
+    class function FromEnumerable(e: TList<IAsn1Encodable>)
       : IAsn1EncodableVector; static;
 
     constructor Create(); overload;
@@ -55,7 +55,7 @@ type
 
     property Count: Int32 read GetCount;
 
-    function GetEnumerator: TEnumerator<IAsn1Encodable>;
+    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
 
   end;
 
@@ -108,8 +108,8 @@ begin
   inherited Destroy;
 end;
 
-class function TAsn1EncodableVector.FromEnumerable
-  (e: TEnumerable<IAsn1Encodable>): IAsn1EncodableVector;
+class function TAsn1EncodableVector.FromEnumerable(e: TList<IAsn1Encodable>)
+  : IAsn1EncodableVector;
 var
   v: IAsn1EncodableVector;
   obj: IAsn1Encodable;
@@ -127,9 +127,10 @@ begin
   result := Flist.Count;
 end;
 
-function TAsn1EncodableVector.GetEnumerator: TEnumerator<IAsn1Encodable>;
+function TAsn1EncodableVector.GetEnumerable
+  : TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  result := Flist.GetEnumerator();
+  result := Flist.ToArray;
 end;
 
 function TAsn1EncodableVector.GetSelf(Index: Int32): IAsn1Encodable;

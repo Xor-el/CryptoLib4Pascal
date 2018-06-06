@@ -24,7 +24,8 @@ interface
 uses
   Generics.Collections,
   ClpIProxiedInterface,
-  ClpIAsn1SequenceParser;
+  ClpIAsn1SequenceParser,
+  ClpCryptoLibTypes;
 
 type
   IAsn1Sequence = interface(IAsn1Object)
@@ -34,13 +35,13 @@ type
     function GetCount: Int32;
     function GetParser: IAsn1SequenceParser;
     function GetSelf(Index: Integer): IAsn1Encodable;
-    function GetCurrent(e: TEnumerator<IAsn1Encodable>): IAsn1Encodable;
+    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
 
     procedure AddObject(const obj: IAsn1Encodable);
 
     function ToString(): String;
 
-    function GetEnumerator: TEnumerator<IAsn1Encodable>;
+    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
 
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 
