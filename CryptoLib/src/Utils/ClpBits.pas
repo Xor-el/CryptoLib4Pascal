@@ -62,6 +62,27 @@ type
 
     class function Asr64(Value: int64; ShiftBits: Int32): int64; static; inline;
 
+    /// <summary>
+    /// Calculates Negative Left Shift. This was implemented to circumvent a
+    /// bug in FPC ARM when performing Shift Left on certain values with a
+    /// Negative Shift Bits. For example UInt32(1948415963) shl Int32(-2)
+    /// should give "3221225472" but in FPC ARM, It gives "0". In some C
+    /// Compilers, this is "Undefined"
+    /// </summary>
+    /// <param name="ShiftBits">
+    /// Integer, number of bits to shift value to. This Number <b>Must be
+    /// Negative</b>
+    /// </param>
+    /// <param name="value">
+    /// UInt32 value to compute 'NLS' on.
+    /// </param>
+    /// <returns>
+    /// Shifted value.
+    /// </returns>
+
+    class function NegativeLeftShift32(Value: UInt32; ShiftBits: Int32): UInt32;
+      static; inline;
+
     class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32; overload;
       static; inline;
     class function RotateLeft64(a_value: UInt64; a_n: Int32): UInt64; overload;
@@ -189,6 +210,12 @@ begin
   // Result := (Value shr ShiftBits) or
   // ((0 - ((Value shr 63) and 1)) shl (64 - ShiftBits));
 {$ENDIF FPC}
+end;
+
+class function TBits.NegativeLeftShift32(Value: UInt32;
+  ShiftBits: Int32): UInt32;
+begin
+  Result := Value shl (32 + ShiftBits);
 end;
 
 class function TBits.RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;

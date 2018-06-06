@@ -1268,10 +1268,10 @@ begin
   while (I >= 0) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shr (bits)) or (c shl (-bits));
+    z[zOff + I] := (next shr (bits)) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
@@ -1288,11 +1288,11 @@ begin
   while (I >= 0) do
   begin
     next := z[I];
-    z[I] := (next shr bits) or (c shl (-bits));
+    z[I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
@@ -1309,11 +1309,11 @@ begin
   while (I >= 0) do
   begin
     next := x[I];
-    z[I] := (next shr bits) or (c shl (-bits));
+    z[I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
@@ -1330,11 +1330,11 @@ begin
   while (I >= 0) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shr bits) or (c shl (-bits));
+    z[zOff + I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := c shl (-bits);
+  Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownWord(len: Int32; z: TCryptoLibUInt32Array;
