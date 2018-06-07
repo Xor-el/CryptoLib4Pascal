@@ -548,7 +548,7 @@ type
 
     class function Interleave2_32to64(x: Int32): Int64; static; inline;
 
-    class function IntToBin(input: Int64): string; static;
+    class function Int64ToBin(input: Int64): string; static;
 
   public
 {$REGION 'Consts'}
@@ -1411,53 +1411,31 @@ begin
     INTERLEAVE7_TABLE[Int32(UInt64(x) shr 54) and $1FF] shl 6;
 end;
 
-class function TLongArray.IntToBin(input: Int64): string;
+class function TLongArray.Int64ToBin(input: Int64): string;
 var
-  Quotient: Int64;
-  Size: Int32;
+  bits: TCryptoLibCharArray;
+  I: Int32;
 begin
 
   Result := '';
 
-  Quotient := input;
+  System.SetLength(bits, System.SizeOf(Int64) * 8);
 
-  if (input >= System.Low(ShortInt)) and (input <= System.High(ShortInt)) then
-  begin
-    Size := 8;
-  end
+  I := 0;
 
-  else if (input >= System.Low(SmallInt)) and (input <= System.High(SmallInt))
-  then
+  while (input <> 0) do
   begin
-    Size := 16;
-  end
-  else if (input >= System.Low(Int32)) and (input <= System.High(Int32)) then
-  begin
-    Size := 32;
-  end
-  else if (input >= System.Low(Int64)) and (input <= System.High(Int64)) then
-  begin
-    Size := 64;
-  end
-  else
-  begin
-    raise EArgumentOutOfRangeCryptoLibException.Create('');
+    if (input and 1) = 1 then
+      bits[I] := '1'
+    else
+    begin
+      bits[I] := '0';
+    end;
+    System.Inc(I);
+    input := input shr 1;
   end;
 
-  if Quotient < 0 then
-  begin
-    // sets the leading bit to 0, making Quotient positive
-    Quotient := (Quotient and (TBits.Asr64(System.High(Int64), 1)));
-    Quotient := (not Quotient) + 1; // flips all bits and increments by 1
-  end;
-
-  repeat
-
-    Result := Result + IntToStr(System.Abs(Quotient) mod 2);
-
-    Quotient := Quotient div 2;
-
-  until ((Quotient = 0) or (System.Length(Result) = Size));
+  System.SetString(Result, PChar(@bits[0]), I);
 
   Result := ReverseString(Result);
 
@@ -2640,14 +2618,14 @@ begin
   sl := TStringList.Create();
   sl.LineBreak := '';
   try
-    sl.Add(TLongArray.IntToBin(Fm_ints[I]));
+    sl.Add(TLongArray.Int64ToBin(Fm_ints[I]));
 
     System.Dec(I);
 
     while (I >= 0) do
     begin
 
-      S := TLongArray.IntToBin(Fm_ints[I]);
+      S := TLongArray.Int64ToBin(Fm_ints[I]);
 
       // Add leading zeroes, except for highest significant word
       len := System.Length(S);
