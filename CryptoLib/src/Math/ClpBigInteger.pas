@@ -314,9 +314,9 @@ type
     class function CreateUValueOf(value: UInt64): TBigInteger; static;
     class function CreateValueOf(value: Int64): TBigInteger; static;
 
-    class function IntToBin(input: Int64): string; static;
+    class function IntToBin(input: Int32): string; static;
 
-    class function IntToOctal(input: Int64): string; static;
+    class function IntToOctal(input: Int32): string; static;
 
     constructor Create(signum: Int32; mag: TCryptoLibInt32Array;
       checkMag: Boolean); overload;
@@ -792,105 +792,61 @@ begin
   Result := AddToMagnitude(One.Fmagnitude);
 end;
 
-class function TBigInteger.IntToBin(input: Int64): string;
+class function TBigInteger.IntToBin(input: Int32): string;
 var
-  Quotient: Int64;
-  Size: Int32;
+  bits: TCryptoLibCharArray;
+  i: Int32;
 begin
 
   Result := '';
 
-  Quotient := input;
+  System.SetLength(bits, System.SizeOf(Int32) * 8);
 
-  if (input >= System.Low(ShortInt)) and (input <= System.High(ShortInt)) then
-  begin
-    Size := 8;
-  end
+  i := 0;
 
-  else if (input >= System.Low(SmallInt)) and (input <= System.High(SmallInt))
-  then
+  while (input <> 0) do
   begin
-    Size := 16;
-  end
-  else if (input >= System.Low(Int32)) and (input <= System.High(Int32)) then
-  begin
-    Size := 32;
-  end
-  else if (input >= System.Low(Int64)) and (input <= System.High(Int64)) then
-  begin
-    Size := 64;
-  end
-  else
-  begin
-    raise EArgumentOutOfRangeCryptoLibException.Create('');
+    if (input and 1) = 1 then
+      bits[i] := '1'
+    else
+    begin
+      bits[i] := '0';
+    end;
+    System.Inc(i);
+    input := input shr 1;
   end;
 
-  if Quotient < 0 then
-  begin
-    // sets the leading bit to 0, making Quotient positive
-    Quotient := (Quotient and (TBits.Asr64(System.High(Int64), 1)));
-    Quotient := (not Quotient) + 1; // flips all bits and increments by 1
-  end;
-
-  repeat
-
-    Result := Result + IntToStr(System.Abs(Quotient) mod 2);
-
-    Quotient := Quotient div 2;
-
-  until ((Quotient = 0) or (System.length(Result) = Size));
+  System.SetString(Result, PChar(@bits[0]), i);
 
   Result := ReverseString(Result);
 
 end;
 
-class function TBigInteger.IntToOctal(input: Int64): string;
+class function TBigInteger.IntToOctal(input: Int32): string;
 var
-  Quotient: Int64;
-  Size: Int32;
+  bits: TCryptoLibCharArray;
+  i, LowPoint: Int32;
 begin
 
   Result := '';
 
-  Quotient := input;
+  System.SetLength(bits, System.SizeOf(Int32) * 8);
 
-  if (input >= System.Low(ShortInt)) and (input <= System.High(ShortInt)) then
-  begin
-    Size := 8;
-  end
+  i := 0;
 
-  else if (input >= System.Low(SmallInt)) and (input <= System.High(SmallInt))
-  then
+{$IFDEF DELPHIXE3_UP}
+  LowPoint := System.Low(String);
+{$ELSE}
+  LowPoint := 1;
+{$ENDIF DELPHIXE3_UP}
+  while (input <> 0) do
   begin
-    Size := 16;
-  end
-  else if (input >= System.Low(Int32)) and (input <= System.High(Int32)) then
-  begin
-    Size := 32;
-  end
-  else if (input >= System.Low(Int64)) and (input <= System.High(Int64)) then
-  begin
-    Size := 64;
-  end
-  else
-  begin
-    raise EArgumentOutOfRangeCryptoLibException.Create('');
+    bits[i] := IntToStr(input and 7)[LowPoint];
+    System.Inc(i);
+    input := input shr 3;
   end;
 
-  if Quotient < 0 then
-  begin
-    // sets the leading bit to 0, making Quotient positive
-    Quotient := (Quotient and (TBits.Asr64(System.High(Int64), 1)));
-    Quotient := (not Quotient) + 1; // flips all bits and increments by 1
-  end;
-
-  repeat
-
-    Result := Result + IntToStr(System.Abs(Quotient) mod 8);
-
-    Quotient := Quotient div 8;
-
-  until ((Quotient = 0) or (System.length(Result) = Size));
+  System.SetString(Result, PChar(@bits[0]), i);
 
   Result := ReverseString(Result);
 
@@ -4239,12 +4195,12 @@ begin
         begin
           pos := firstNonZero;
 
-          sl.Add(TBigInteger.IntToBin(Int64(Fmagnitude[pos])));
+          sl.Add(TBigInteger.IntToBin(Fmagnitude[pos]));
           System.Inc(pos);
           while (pos < System.length(Fmagnitude)) do
           begin
             AppendZeroExtendedString(sl,
-              TBigInteger.IntToBin(Int64(Fmagnitude[pos])), 32);
+              TBigInteger.IntToBin(Fmagnitude[pos]), 32);
 
             System.Inc(pos);
           end;
@@ -4260,11 +4216,11 @@ begin
           try
             while (bits > 30) do
             begin
-              s.Add(TBigInteger.IntToOctal(Int64(u.Int32Value and mask)));
+              s.Add(TBigInteger.IntToOctal(u.Int32Value and mask));
               u := u.ShiftRight(30);
               bits := bits - 30;
             end;
-            sl.Add(TBigInteger.IntToOctal(Int64(u.Int32Value)));
+            sl.Add(TBigInteger.IntToOctal(u.Int32Value));
             i := s.Count - 1;
             while i >= 0 do
             begin
