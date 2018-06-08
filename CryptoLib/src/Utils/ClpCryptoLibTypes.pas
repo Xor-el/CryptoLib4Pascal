@@ -44,6 +44,7 @@ type
   EIOCryptoLibException = class(ECryptoLibException);
   EFormatCryptoLibException = class(ECryptoLibException);
   ENotImplementedCryptoLibException = class(ECryptoLibException);
+  ENotSupportedCryptoLibException = class(ECryptoLibException);
   EEndOfStreamCryptoLibException = class(ECryptoLibException);
   EStreamOverflowCryptoLibException = class(ECryptoLibException);
   EAsn1CryptoLibException = class(ECryptoLibException);
