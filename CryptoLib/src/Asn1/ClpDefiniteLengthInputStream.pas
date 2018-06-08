@@ -34,7 +34,7 @@ resourcestring
   SInvalidBufferLength = 'Buffer Length Not Right For Data';
 
 type
-  TDefiniteLengthInputStream = class sealed(TLimitedInputStream,
+  TDefiniteLengthInputStream = class(TLimitedInputStream,
     IDefiniteLengthInputStream)
 
   strict private
