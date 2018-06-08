@@ -51,12 +51,16 @@ type
   public
     function ReadByte: Int32; virtual;
 
-    function Read(Buffer: TCryptoLibByteArray; Offset, Count: LongInt): Int32;
+    function Read(var Buffer; Count: LongInt): LongInt; overload; override;
+    function Write(const Buffer; Count: LongInt): LongInt; overload; override;
+
+    function Read(Buffer: TCryptoLibByteArray; Offset, Count: LongInt)
+      : Int32; overload;
 {$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
 {$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
 
-    function Write(const Buffer: TCryptoLibByteArray;
-      Offset, Count: LongInt): Int32;
+    function Write(const Buffer: TCryptoLibByteArray; Offset, Count: LongInt)
+      : Int32; overload;
 {$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
 {$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
 
@@ -96,6 +100,19 @@ begin
   else
     result := E_NOINTERFACE;
 end;
+
+{$IFNDEF _FIXINSIGHT_}
+
+function TBaseInputStream.Read(var Buffer; Count: LongInt): LongInt;
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+
+function TBaseInputStream.Write(const Buffer; Count: LongInt): LongInt;
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+{$ENDIF}
 
 function TBaseInputStream.ReadByte: Int32;
 var
