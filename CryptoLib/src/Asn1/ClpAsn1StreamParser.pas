@@ -65,7 +65,7 @@ type
   var
     F_in: TStream;
     F_limit: Int32;
-    FtmpBuffers: TCryptoLibMatrixGenericArray<Byte>;
+    FtmpBuffers: TCryptoLibMatrixByteArray;
 
     procedure Set00Check(enabled: Boolean); inline;
 

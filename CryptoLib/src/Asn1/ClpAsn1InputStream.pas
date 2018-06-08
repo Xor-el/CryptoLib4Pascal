@@ -97,7 +97,7 @@ type
 
   var
     Flimit: Int32;
-    FtmpBuffers: TCryptoLibMatrixGenericArray<Byte>;
+    FtmpBuffers: TCryptoLibMatrixByteArray;
     FStream: TStream;
 
     /// <summary>
@@ -152,12 +152,12 @@ type
     class function ReadLength(s: TStream; limit: Int32): Int32; static;
 
     class function GetBuffer(const defIn: IDefiniteLengthInputStream;
-      tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): TCryptoLibByteArray;
+      tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
       static; inline;
 
     class function CreatePrimitiveDerObject(tagNo: Int32;
       const defIn: IDefiniteLengthInputStream;
-      tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): IAsn1Object; static;
+      tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object; static;
   end;
 
 implementation
@@ -202,7 +202,7 @@ begin
 end;
 
 class function TAsn1InputStream.GetBuffer(const defIn
-  : IDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixGenericArray<Byte>)
+  : IDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixByteArray)
   : TCryptoLibByteArray;
 var
   len: Int32;
@@ -230,7 +230,7 @@ end;
 
 class function TAsn1InputStream.CreatePrimitiveDerObject(tagNo: Int32;
   const defIn: IDefiniteLengthInputStream;
-  tmpBuffers: TCryptoLibMatrixGenericArray<Byte>): IAsn1Object;
+  tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object;
 var
   bytes: TCryptoLibByteArray;
 begin

@@ -741,9 +741,8 @@ begin
   for i := 0 to System.Pred(System.Length(FpointSource) div 2) do
 
   begin
-    Fp[i] := Fcurve.CreatePoint
-      (TBigInteger.Create(FpointSource[2 * i].ToString()),
-      TBigInteger.Create(FpointSource[2 * i + 1].ToString()));
+    Fp[i] := Fcurve.CreatePoint(TBigInteger.Create(IntToStr(FpointSource[2 * i])
+      ), TBigInteger.Create(IntToStr(FpointSource[2 * i + 1])));
   end;
 end;
 

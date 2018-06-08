@@ -32,15 +32,16 @@ type
   strict protected
     function QueryInterface({$IFDEF FPC}constref {$ELSE}const
 {$ENDIF FPC} IID: TGUID; out Obj): HResult; {$IFDEF MSWINDOWS} stdcall
-    {$ELSE} cdecl {$ENDIF MSWINDOWS};
+{$ELSE} cdecl {$ENDIF MSWINDOWS};
     function _AddRef: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
-    {$ENDIF MSWINDOWS};
+{$ENDIF MSWINDOWS};
     function _Release: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
-    {$ENDIF MSWINDOWS};
+{$ENDIF MSWINDOWS};
   public
     function ReadByte: Int32; virtual;
     function Read(Buffer: TCryptoLibByteArray; Offset, Count: Longint): Int32;
-{$IFDEF DELPHI} override {$ELSE} virtual {$ENDIF DELPHI};
+{$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
+{$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
   end;
 
 implementation
