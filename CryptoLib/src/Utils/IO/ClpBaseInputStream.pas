@@ -29,7 +29,18 @@ uses
 type
   TBaseInputStream = class abstract(TStream, IBaseInputStream)
 
+  strict private
+
+    function GetPosition: Int64; inline;
+    procedure SetPosition(const Pos: Int64); inline;
+    procedure SetSize64(const NewSize: Int64); inline;
+
   strict protected
+
+    function GetSize: Int64; override;
+    procedure SetSize(NewSize: LongInt); overload; override;
+    procedure SetSize(const NewSize: Int64); overload; override;
+
     function QueryInterface({$IFDEF FPC}constref {$ELSE}const
 {$ENDIF FPC} IID: TGUID; out Obj): HResult; {$IFDEF MSWINDOWS} stdcall
 {$ELSE} cdecl {$ENDIF MSWINDOWS};
@@ -39,9 +50,24 @@ type
 {$ENDIF MSWINDOWS};
   public
     function ReadByte: Int32; virtual;
-    function Read(Buffer: TCryptoLibByteArray; Offset, Count: Longint): Int32;
+
+    function Read(Buffer: TCryptoLibByteArray; Offset, Count: LongInt): Int32;
 {$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
 {$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
+
+    function Write(const Buffer: TCryptoLibByteArray;
+      Offset, Count: LongInt): Int32;
+{$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
+{$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
+
+    function Seek(Offset: LongInt; Origin: Word): LongInt; overload; override;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+      overload; override;
+
+{$IFNDEF _FIXINSIGHT_}
+    property Size: Int64 read GetSize write SetSize64;
+{$ENDIF}
+    property Position: Int64 read GetPosition write SetPosition;
   end;
 
 implementation
@@ -51,6 +77,16 @@ uses
   ClpStreamSorter;
 
 { TBaseInputStream }
+
+function TBaseInputStream.GetPosition: Int64;
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+
+function TBaseInputStream.GetSize: Int64;
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
 
 function TBaseInputStream.QueryInterface({$IFDEF FPC}constref {$ELSE}const
 {$ENDIF FPC} IID: TGUID; out Obj): HResult;
@@ -78,36 +114,80 @@ begin
   end;
 end;
 
+function TBaseInputStream.Seek(Offset: LongInt; Origin: Word): LongInt;
+begin
+  result := Seek(Int64(Offset), TSeekOrigin(Origin));
+end;
+
+{$IFNDEF _FIXINSIGHT_}
+
+function TBaseInputStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+
+procedure TBaseInputStream.SetPosition(const Pos: Int64);
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+
+{$ENDIF}
+
+procedure TBaseInputStream.SetSize(const NewSize: Int64);
+begin
+  SetSize(LongInt(NewSize));
+end;
+
+procedure TBaseInputStream.SetSize(NewSize: LongInt);
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+
+procedure TBaseInputStream.SetSize64(const NewSize: Int64);
+begin
+  SetSize(NewSize);
+end;
+
 function TBaseInputStream.Read(Buffer: TCryptoLibByteArray;
-  Offset, Count: Longint): Int32;
+  Offset, Count: LongInt): Int32;
 var
   &pos, endPoint, b: Int32;
 
 begin
-  pos := Offset;
+  Pos := Offset;
   try
     endPoint := Offset + Count;
-    while (pos < endPoint) do
+    while (Pos < endPoint) do
     begin
       b := ReadByte();
       if (b = -1) then
       begin
         break;
       end;
-      Buffer[pos] := Byte(b);
-      System.Inc(pos);
+      Buffer[Pos] := Byte(b);
+      System.Inc(Pos);
     end;
   except
     on e: EIOCryptoLibException do
     begin
-      if (pos = Offset) then
+      if (Pos = Offset) then
         raise;
     end;
 
   end;
 
-  result := pos - Offset;
+  result := Pos - Offset;
 end;
+
+{$IFNDEF _FIXINSIGHT_}
+
+function TBaseInputStream.Write(const Buffer: TCryptoLibByteArray;
+  Offset, Count: LongInt): Int32;
+begin
+  raise ENotSupportedCryptoLibException.Create('');
+end;
+
+{$ENDIF}
 
 function TBaseInputStream._AddRef: Integer;
 begin

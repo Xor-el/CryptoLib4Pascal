@@ -23,9 +23,7 @@ interface
 
 uses
   Math,
-{$IFDEF DELPHI}
   SyncObjs,
-{$ENDIF DELPHI}
   SysUtils,
   StrUtils,
   ClpBits,
@@ -55,6 +53,7 @@ type
     FCounter: Int64;
     Fmaster: ISecureRandom;
     FDoubleScale: Double;
+    FLock: TCriticalSection;
 
     class function GetMaster: ISecureRandom; static; inline;
 
@@ -65,7 +64,8 @@ type
 
     class property Master: ISecureRandom read GetMaster;
 
-    class constructor SecureRandom();
+    class constructor CreateSecureRandom();
+    class destructor DestroySecureRandom();
 
   strict protected
     Fgenerator: IRandomGenerator;
@@ -226,18 +226,14 @@ begin
 end;
 
 class function TSecureRandom.NextCounterValue: Int64;
-{$IFDEF FPC}
-var
-  LCounter: UInt32;
-{$ENDIF FPC}
 begin
-{$IFDEF DELPHI}
-  Result := TInterlocked.Increment(FCounter);
-{$ELSE}
-  LCounter := UInt32(FCounter);
-  Result := InterLockedIncrement(LCounter);
-  FCounter := Int64(LCounter);
-{$ENDIF DELPHI}
+  FLock.Acquire;
+  try
+    System.Inc(FCounter);
+    Result := FCounter;
+  finally
+    FLock.Release;
+  end;
 end;
 
 function TSecureRandom.NextDouble: Double;
@@ -268,9 +264,15 @@ begin
   Result := (Int64(UInt32(NextInt32())) shl 32) or (Int64(UInt32(NextInt32())));
 end;
 
-class constructor TSecureRandom.SecureRandom;
+class constructor TSecureRandom.CreateSecureRandom;
 begin
   TSecureRandom.Boot;
+  FLock := TCriticalSection.Create;
+end;
+
+class destructor TSecureRandom.DestroySecureRandom;
+begin
+  FLock.Free;
 end;
 
 procedure TSecureRandom.SetSeed(seed: Int64);
