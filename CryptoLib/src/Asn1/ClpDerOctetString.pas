@@ -24,6 +24,7 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpAsn1Tags,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpAsn1OctetString,
   ClpIDerOctetString;
@@ -39,7 +40,7 @@ type
     destructor Destroy(); override;
 
     procedure Encode(const derOut: IDerOutputStream); overload; override;
-    class procedure Encode(const derOut: IDerOutputStream;
+    class procedure Encode(derOut: TDerOutputStream;
       bytes: TCryptoLibByteArray; offset, length: Int32); reintroduce; overload;
       static; inline;
 
@@ -69,7 +70,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.OctetString, str);
 end;
 
-class procedure TDerOctetString.Encode(const derOut: IDerOutputStream;
+class procedure TDerOctetString.Encode(derOut: TDerOutputStream;
   bytes: TCryptoLibByteArray; offset, length: Int32);
 begin
   derOut.WriteEncoded(TAsn1Tags.OctetString, bytes, offset, length);

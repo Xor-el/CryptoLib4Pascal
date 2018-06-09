@@ -23,12 +23,11 @@ interface
 
 uses
   Classes,
-  ClpDerOutputStream,
-  ClpIBerOutputStream;
+  ClpDerOutputStream;
 
 type
   // TODO Make Obsolete in favour of Asn1OutputStream?
-  TBerOutputStream = class sealed(TDerOutputStream, IBerOutputStream)
+  TBerOutputStream = class sealed(TDerOutputStream)
 
   public
 

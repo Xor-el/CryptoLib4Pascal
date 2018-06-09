@@ -28,6 +28,7 @@ uses
   ClpAsn1Object,
   ClpAsn1Tags,
   ClpAsn1OctetString,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerVideotexString,
   ClpIAsn1TaggedObject,

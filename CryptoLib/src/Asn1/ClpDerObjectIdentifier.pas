@@ -32,6 +32,7 @@ uses
   ClpStreamHelper,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpDerOutputStream,
   ClpAsn1Tags,
   ClpOidTokenizer,
   ClpIOidTokenizer,

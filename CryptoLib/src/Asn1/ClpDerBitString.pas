@@ -28,6 +28,7 @@ uses
   ClpBits,
   ClpArrayUtils,
   ClpDerStringBase,
+  ClpDerOutputStream,
   ClpAsn1Tags,
   ClpBigInteger,
   ClpAsn1Object,

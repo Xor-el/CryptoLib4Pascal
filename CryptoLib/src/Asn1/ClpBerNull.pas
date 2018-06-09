@@ -24,10 +24,11 @@ interface
 uses
   SysUtils,
   ClpAsn1Tags,
-  ClpIProxiedInterface,
-  ClpIBerOutputStream,
-  ClpIAsn1OutputStream,
+  ClpDerOutputStream,
+  ClpAsn1OutputStream,
+  ClpBerOutputStream,
   ClpDerNull,
+  ClpIProxiedInterface,
   ClpIBerNull;
 
 type
@@ -73,8 +74,7 @@ end;
 procedure TBerNull.Encode(const derOut: IDerOutputStream);
 begin
 
-  if (Supports(derOut, IAsn1OutputStream) or Supports(derOut, IBerOutputStream))
-  then
+  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
     derOut.WriteByte(TAsn1Tags.Null);
   end

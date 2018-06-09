@@ -27,8 +27,9 @@ uses
   ClpAsn1Tags,
   ClpDerSet,
   ClpIBerSet,
-  ClpIBerOutputStream,
-  ClpIAsn1OutputStream,
+  ClpDerOutputStream,
+  ClpAsn1OutputStream,
+  ClpBerOutputStream,
   ClpIProxiedInterface,
   ClpIAsn1EncodableVector,
   ClpCryptoLibTypes;
@@ -128,8 +129,7 @@ var
   o: IAsn1Encodable;
   LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  if ((Supports(derOut, IAsn1OutputStream)) or
-    (Supports(derOut, IBerOutputStream))) then
+  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
     derOut.WriteByte(TAsn1Tags.&Set or TAsn1Tags.Constructed);
 

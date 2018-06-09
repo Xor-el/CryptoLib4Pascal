@@ -26,6 +26,7 @@ uses
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpAsn1Object,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIAsn1TaggedObject,
   ClpAsn1OctetString,

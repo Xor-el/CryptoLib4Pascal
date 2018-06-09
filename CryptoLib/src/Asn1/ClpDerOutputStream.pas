@@ -26,11 +26,12 @@ uses
   ClpBits,
   ClpAsn1Tags,
   ClpCryptoLibTypes,
+  ClpIFilterStream,
   ClpIProxiedInterface,
   ClpFilterStream;
 
 type
-  TDerOutputStream = class(TFilterStream, IInterface, IDerOutputStream)
+  TDerOutputStream = class(TFilterStream, IFilterStream, IDerOutputStream)
 
   strict private
     procedure WriteLength(length: Int32);
@@ -145,7 +146,7 @@ begin
   else
   begin
     asn1 := obj.ToAsn1Object();
-    asn1.Encode(Self as IDerOutputStream);
+    asn1.Encode(Self);
   end;
 end;
 
@@ -157,7 +158,7 @@ begin
   end
   else
   begin
-    obj.Encode(Self as IDerOutputStream);
+    obj.Encode(Self);
   end;
 end;
 
