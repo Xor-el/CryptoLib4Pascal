@@ -24,8 +24,8 @@ interface
 uses
   Classes,
   ClpStreamHelper,
-  ClpDefiniteLengthInputStream,
-  ClpIFilterStream;
+  ClpIFilterStream,
+  ClpDefiniteLengthInputStream;
 
 type
   TFilterStream = class(TStream, IFilterStream)

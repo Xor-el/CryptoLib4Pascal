@@ -27,11 +27,10 @@ uses
   ClpCryptoLibTypes,
   ClpBaseInputStream,
   ClpIAsn1OctetStringParser,
-  ClpIAsn1StreamParser,
-  ClpIConstructedOctetStream;
+  ClpIAsn1StreamParser;
 
 type
-  TConstructedOctetStream = class(TBaseInputStream, IConstructedOctetStream)
+  TConstructedOctetStream = class(TBaseInputStream)
 
   strict private
   var

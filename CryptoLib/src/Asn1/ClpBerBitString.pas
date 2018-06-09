@@ -24,11 +24,12 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
+  ClpDerOutputStream,
+  ClpAsn1OutputStream,
+  ClpBerOutputStream,
   ClpIProxiedInterface,
   ClpDerBitString,
   ClpIBerBitString,
-  ClpIAsn1OutputStream,
-  ClpIBerOutputStream,
   ClpAsn1Tags;
 
 type
@@ -70,8 +71,7 @@ end;
 
 procedure TBerBitString.Encode(const derOut: IDerOutputStream);
 begin
-  if ((Supports(derOut, IAsn1OutputStream)) or
-    (Supports(derOut, IBerOutputStream))) then
+  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
     derOut.WriteEncoded(TAsn1Tags.BitString, Byte(mPadBits), mData);
   end

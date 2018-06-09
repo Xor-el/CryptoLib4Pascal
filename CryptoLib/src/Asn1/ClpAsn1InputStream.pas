@@ -63,9 +63,7 @@ uses
   ClpAsn1EncodableVector,
   ClpDerSequence,
   ClpDerSet,
-  ClpIDefiniteLengthInputStream,
   ClpIAsn1EncodableVector,
-  ClpIAsn1InputStream,
   ClpFilterStream,
   ClpCryptoLibTypes;
 
@@ -91,7 +89,7 @@ type
   /// the stream. If an ASN.1 Null is encountered a DerBER Null object is <br />
   /// returned. <br />
   /// </summary>
-  TAsn1InputStream = class(TFilterStream, IAsn1InputStream)
+  TAsn1InputStream = class(TFilterStream)
 
   strict private
 
@@ -136,14 +134,13 @@ type
 
     function BuildEncodableVector(): IAsn1EncodableVector;
 
-    function BuildDerEncodableVector(const dIn: IDefiniteLengthInputStream)
+    function BuildDerEncodableVector(dIn: TDefiniteLengthInputStream)
       : IAsn1EncodableVector; virtual;
 
-    function CreateDerSequence(const dIn: IDefiniteLengthInputStream)
+    function CreateDerSequence(dIn: TDefiniteLengthInputStream)
       : IDerSequence; virtual;
 
-    function CreateDerSet(const dIn: IDefiniteLengthInputStream)
-      : IDerSet; virtual;
+    function CreateDerSet(dIn: TDefiniteLengthInputStream): IDerSet; virtual;
 
     class function FindLimit(input: TStream): Int32; static;
 
@@ -151,13 +148,13 @@ type
 
     class function ReadLength(s: TStream; limit: Int32): Int32; static;
 
-    class function GetBuffer(const defIn: IDefiniteLengthInputStream;
+    class function GetBuffer(defIn: TDefiniteLengthInputStream;
       tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
       static; inline;
 
     class function CreatePrimitiveDerObject(tagNo: Int32;
-      const defIn: IDefiniteLengthInputStream;
-      tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object; static;
+      defIn: TDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixByteArray)
+      : IAsn1Object; static;
   end;
 
 implementation
@@ -201,9 +198,8 @@ begin
   result := System.High(Int32);
 end;
 
-class function TAsn1InputStream.GetBuffer(const defIn
-  : IDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixByteArray)
-  : TCryptoLibByteArray;
+class function TAsn1InputStream.GetBuffer(defIn: TDefiniteLengthInputStream;
+  tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
 var
   len: Int32;
   buf, temp: TCryptoLibByteArray;
@@ -229,8 +225,8 @@ begin
 end;
 
 class function TAsn1InputStream.CreatePrimitiveDerObject(tagNo: Int32;
-  const defIn: IDefiniteLengthInputStream;
-  tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object;
+  defIn: TDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixByteArray)
+  : IAsn1Object;
 var
   bytes: TCryptoLibByteArray;
 begin
@@ -544,11 +540,11 @@ begin
 end;
 
 function TAsn1InputStream.BuildDerEncodableVector
-  (const dIn: IDefiniteLengthInputStream): IAsn1EncodableVector;
+  (dIn: TDefiniteLengthInputStream): IAsn1EncodableVector;
 var
   res: TAsn1InputStream;
 begin
-  res := TAsn1InputStream.Create(dIn as TDefiniteLengthInputStream);
+  res := TAsn1InputStream.Create(dIn);
   try
     result := res.BuildEncodableVector();
   finally
@@ -675,14 +671,14 @@ begin
 
 end;
 
-function TAsn1InputStream.CreateDerSequence
-  (const dIn: IDefiniteLengthInputStream): IDerSequence;
+function TAsn1InputStream.CreateDerSequence(dIn: TDefiniteLengthInputStream)
+  : IDerSequence;
 begin
   result := TDerSequence.FromVector(BuildDerEncodableVector(dIn));
 end;
 
-function TAsn1InputStream.CreateDerSet(const dIn
-  : IDefiniteLengthInputStream): IDerSet;
+function TAsn1InputStream.CreateDerSet(dIn: TDefiniteLengthInputStream)
+  : IDerSet;
 begin
   result := TDerSet.FromVector(BuildDerEncodableVector(dIn), false);
 end;

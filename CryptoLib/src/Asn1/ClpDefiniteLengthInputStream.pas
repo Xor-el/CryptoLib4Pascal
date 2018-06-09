@@ -25,8 +25,7 @@ uses
   Classes,
   Math,
   ClpCryptoLibTypes,
-  ClpLimitedInputStream,
-  ClpIDefiniteLengthInputStream;
+  ClpLimitedInputStream;
 
 resourcestring
   SInvalidLength = 'Negative Lengths not Allowed", "Length"';
@@ -34,8 +33,7 @@ resourcestring
   SInvalidBufferLength = 'Buffer Length Not Right For Data';
 
 type
-  TDefiniteLengthInputStream = class(TLimitedInputStream,
-    IDefiniteLengthInputStream)
+  TDefiniteLengthInputStream = class(TLimitedInputStream)
 
   strict private
     class var

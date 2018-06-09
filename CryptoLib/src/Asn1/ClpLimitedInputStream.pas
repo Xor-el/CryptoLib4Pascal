@@ -23,11 +23,10 @@ interface
 
 uses
   Classes,
-  ClpBaseInputStream,
-  ClpILimitedInputStream;
+  ClpBaseInputStream;
 
 type
-  TLimitedInputStream = class abstract(TBaseInputStream, ILimitedInputStream)
+  TLimitedInputStream = class abstract(TBaseInputStream)
 
   strict private
   var

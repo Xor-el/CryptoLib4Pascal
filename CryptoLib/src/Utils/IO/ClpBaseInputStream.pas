@@ -23,11 +23,10 @@ interface
 
 uses
   Classes,
-  ClpCryptoLibTypes,
-  ClpIBaseInputStream;
+  ClpCryptoLibTypes;
 
 type
-  TBaseInputStream = class abstract(TStream, IBaseInputStream)
+  TBaseInputStream = class abstract(TStream)
 
   strict private
 

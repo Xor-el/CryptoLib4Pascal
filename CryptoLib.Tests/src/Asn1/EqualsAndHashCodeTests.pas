@@ -62,10 +62,8 @@ uses
   ClpDerVisibleString,
   ClpDerGraphicString,
   ClpDerVideotexString,
-  ClpIAsn1OutputStream,
   ClpAsn1OutputStream,
   ClpAsn1InputStream,
-  ClpIAsn1InputStream,
   ClpIDerPrintableString,
   ClpAsn1Object;
 

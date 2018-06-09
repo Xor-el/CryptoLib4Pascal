@@ -24,15 +24,13 @@ interface
 uses
   Classes,
   ClpCryptoLibTypes,
-  ClpLimitedInputStream,
-  ClpIIndefiniteLengthInputStream;
+  ClpLimitedInputStream;
 
 resourcestring
   SMalformedContent = 'Malformed End-of-Contents Marker';
 
 type
-  TIndefiniteLengthInputStream = class(TLimitedInputStream,
-    IIndefiniteLengthInputStream)
+  TIndefiniteLengthInputStream = class(TLimitedInputStream)
 
   strict private
   var

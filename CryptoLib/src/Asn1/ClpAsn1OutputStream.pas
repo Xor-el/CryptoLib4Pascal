@@ -23,11 +23,10 @@ interface
 
 uses
   Classes,
-  ClpIAsn1OutputStream,
   ClpDerOutputStream;
 
 type
-  TAsn1OutputStream = class sealed(TDerOutputStream, IAsn1OutputStream)
+  TAsn1OutputStream = class sealed(TDerOutputStream)
 
   public
     constructor Create(os: TStream);

@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   ClpAsn1Tags,
+  ClpDerOutputStream,
   ClpIAsn1OctetString,
   ClpIDerBoolean,
   ClpCryptoLibTypes,

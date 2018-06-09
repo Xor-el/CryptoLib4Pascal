@@ -31,6 +31,9 @@ uses
 {$ENDIF DELPHI}
   ClpAsn1Tags,
   ClpBerSequence,
+  ClpDerOutputStream,
+  ClpAsn1OutputStream,
+  ClpBerOutputStream,
   ClpIAsn1OctetString,
   ClpAsn1Encodable,
   ClpBerOctetString,
@@ -38,8 +41,6 @@ uses
   ClpIDerOctetString,
   ClpIAsn1Set,
   ClpIAsn1Sequence,
-  ClpIAsn1OutputStream,
-  ClpIBerOutputStream,
   ClpIProxiedInterface,
   ClpDerTaggedObject,
   ClpIBerTaggedObject;
@@ -124,8 +125,7 @@ var
 begin
   eObj := TList<IAsn1Encodable>.Create();
   try
-    if ((Supports(derOut, IAsn1OutputStream)) or
-      (Supports(derOut, IBerOutputStream))) then
+    if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
     begin
       derOut.WriteTag(Byte(TAsn1Tags.Constructed or TAsn1Tags.Tagged), tagNo);
       derOut.WriteByte($80);

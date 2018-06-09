@@ -27,6 +27,7 @@ uses
   ClpAsn1Object,
   ClpAsn1Tags,
   ClpAsn1OctetString,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerBmpString,
   ClpIAsn1TaggedObject,

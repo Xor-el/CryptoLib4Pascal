@@ -30,8 +30,9 @@ uses
   ClpIProxiedInterface,
   ClpIAsn1Sequence,
   ClpAsn1Tags,
-  ClpIAsn1OutputStream,
-  ClpIBerOutputStream,
+  ClpDerOutputStream,
+  ClpAsn1OutputStream,
+  ClpBerOutputStream,
   ClpIBerOctetString,
   ClpIDerOctetString,
   ClpDerOctetString;
@@ -112,8 +113,7 @@ var
   oct: IDerOctetString;
   LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
 begin
-  if ((Supports(derOut, IAsn1OutputStream)) or
-    (Supports(derOut, IBerOutputStream))) then
+  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
     derOut.WriteByte(TAsn1Tags.Constructed or TAsn1Tags.OctetString);
 
