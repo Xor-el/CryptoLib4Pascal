@@ -29,7 +29,6 @@ uses
   ClpIAsn1TaggedObject,
   ClpDerTaggedObject,
   ClpAsn1Tags,
-  ClpDerOutputStream,
   ClpIAsn1EncodableVector,
   ClpIDerTaggedObject,
   ClpIProxiedInterface,

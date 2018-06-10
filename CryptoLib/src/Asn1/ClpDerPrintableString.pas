@@ -27,7 +27,6 @@ uses
   ClpDerStringBase,
   ClpAsn1Tags,
   ClpAsn1OctetString,
-  ClpDerOutputStream,
   ClpAsn1Object,
   ClpIProxiedInterface,
   ClpCryptoLibTypes,

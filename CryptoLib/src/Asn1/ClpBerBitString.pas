@@ -24,7 +24,6 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
-  ClpDerOutputStream,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
   ClpIProxiedInterface,

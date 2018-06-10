@@ -27,7 +27,6 @@ uses
   ClpIProxiedInterface,
   ClpAsn1Tags,
   ClpDerSequence,
-  ClpDerOutputStream,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
   ClpIAsn1EncodableVector,

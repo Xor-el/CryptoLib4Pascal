@@ -30,7 +30,6 @@ uses
   ClpIProxiedInterface,
   ClpIAsn1Sequence,
   ClpAsn1Tags,
-  ClpDerOutputStream,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
   ClpIBerOctetString,
