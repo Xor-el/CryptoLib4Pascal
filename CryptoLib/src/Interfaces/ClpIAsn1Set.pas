@@ -22,7 +22,6 @@ unit ClpIAsn1Set;
 interface
 
 uses
-  Generics.Collections,
   ClpCryptoLibTypes,
   ClpIProxiedInterface,
   ClpIAsn1SetParser;

@@ -28,7 +28,6 @@ uses
   ClpAsn1Object,
   ClpIAsn1OctetString,
   ClpStringUtils,
-  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,

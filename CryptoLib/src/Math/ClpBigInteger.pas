@@ -27,7 +27,6 @@ uses
   SysUtils,
   StrUtils,
   Generics.Collections,
-  ClpBits,
   ClpNumberStyles,
   ClpISecureRandom,
   ClpIRandom,

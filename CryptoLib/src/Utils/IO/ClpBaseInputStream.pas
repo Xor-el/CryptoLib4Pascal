@@ -28,14 +28,20 @@ uses
 type
   TBaseInputStream = class abstract(TStream)
 
-  strict private
+{$IFDEF DELPHI}
+  private
 
     function GetPosition: Int64; inline;
     procedure SetPosition(const Pos: Int64); inline;
     procedure SetSize64(const NewSize: Int64); inline;
+{$ENDIF DELPHI}
+  protected
 
-  strict protected
-
+{$IFDEF FPC}
+    function GetPosition: Int64; override;
+    procedure SetPosition(const Pos: Int64); override;
+    procedure SetSize64(const NewSize: Int64); override;
+{$ENDIF FPC}
     function GetSize: Int64; override;
     procedure SetSize(NewSize: LongInt); overload; override;
     procedure SetSize(const NewSize: Int64); overload; override;

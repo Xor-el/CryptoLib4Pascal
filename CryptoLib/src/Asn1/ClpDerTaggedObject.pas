@@ -28,7 +28,6 @@ uses
 {$IFDEF DELPHI}
   ClpIDerSequence,
 {$ENDIF DELPHI}
-  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpAsn1TaggedObject,
   ClpIDerTaggedObject;

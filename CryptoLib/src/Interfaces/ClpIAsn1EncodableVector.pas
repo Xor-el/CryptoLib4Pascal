@@ -22,7 +22,6 @@ unit ClpIAsn1EncodableVector;
 interface
 
 uses
-  Generics.Collections,
   ClpIProxiedInterface,
   ClpCryptoLibTypes;
 

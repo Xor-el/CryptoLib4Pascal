@@ -31,7 +31,6 @@ uses
 {$ENDIF DELPHI}
   ClpAsn1Tags,
   ClpBerSequence,
-  ClpDerOutputStream,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
   ClpIAsn1OctetString,

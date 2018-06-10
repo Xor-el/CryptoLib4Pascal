@@ -27,7 +27,6 @@ uses
   ClpAsn1Tags,
   ClpDerSet,
   ClpIBerSet,
-  ClpDerOutputStream,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
   ClpIProxiedInterface,

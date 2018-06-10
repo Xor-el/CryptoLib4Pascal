@@ -24,7 +24,6 @@ interface
 uses
   SysUtils,
   ClpAsn1Tags,
-  ClpDerOutputStream,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
   ClpDerNull,

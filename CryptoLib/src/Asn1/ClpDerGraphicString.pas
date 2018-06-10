@@ -28,7 +28,6 @@ uses
   ClpAsn1Object,
   ClpAsn1Tags,
   ClpAsn1OctetString,
-  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerGraphicString,
   ClpIAsn1TaggedObject,
