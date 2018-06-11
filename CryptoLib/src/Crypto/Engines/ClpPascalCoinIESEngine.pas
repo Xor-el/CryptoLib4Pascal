@@ -39,6 +39,7 @@ uses
   ClpArrayUtils,
   ClpBigInteger,
   ClpBigIntegers,
+  ClpBitConverter,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -152,7 +153,8 @@ end;
 function TPascalCoinIESEngine.EncryptBlock(&in: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
-  C, K, K1, K2, T: TCryptoLibByteArray;
+  C, K, K1, K2, T, tempHolder: TCryptoLibByteArray;
+  MessageToEncryptPadSize, CipherBlockSize, MessageToEncryptSize: Int32;
 begin
   if (Fcipher = Nil) then
   begin
@@ -196,14 +198,47 @@ begin
   Fmac.BlockUpdate(C, 0, System.Length(C));
 
   T := Fmac.DoFinal();
+  CipherBlockSize := Fcipher.GetBlockSize;
+  MessageToEncryptSize := inLen - inOff;
 
-  // Output the quadruple (SECURE_HEAD_SIZE,V,T,C).
-  // SECURE_HEAD_SIZE := Dummy Random Data for interpolability
+  if (MessageToEncryptSize mod CipherBlockSize) = 0 then
+  begin
+    MessageToEncryptPadSize := 0
+  end
+  else
+  begin
+    MessageToEncryptPadSize := CipherBlockSize -
+      (MessageToEncryptSize mod CipherBlockSize);
+  end;
+  // Output the quadruple (SECURE_HEAD_DETAILS,V,T,C).
+  // SECURE_HEAD_DETAILS :=
+  // [0] := Convert Byte(Length(V)) to a ByteArray,
+  // [1] := Convert Byte(Length(T)) to a ByteArray,
+  // [2] and [3] := Convert UInt16(MessageToEncryptSize) to a ByteArray,
+  // [4] and [5] := Convert UInt16(MessageToEncryptSize + MessageToEncryptPadSize) to a ByteArray,
   // V := Ephermeral Public Key
   // T := Authentication Message (MAC)
   // C := Encrypted Payload
+
   System.SetLength(Result, SECURE_HEAD_SIZE + System.Length(FV) +
     System.Length(T) + System.Length(C));
+
+  tempHolder := TBitConverter.GetBytes(Byte(System.Length(FV)));
+
+  System.Move(tempHolder[0], Result[0], System.SizeOf(Byte));
+
+  tempHolder := TBitConverter.GetBytes(Byte(System.Length(T)));
+
+  System.Move(tempHolder[0], Result[1], System.SizeOf(Byte));
+
+  tempHolder := TBitConverter.GetBytes(UInt16(MessageToEncryptSize));
+
+  System.Move(tempHolder[0], Result[2], System.SizeOf(UInt16));
+
+  tempHolder := TBitConverter.GetBytes
+    (UInt16(MessageToEncryptSize + MessageToEncryptPadSize));
+
+  System.Move(tempHolder[0], Result[4], System.SizeOf(UInt16));
 
   System.Move(FV[0], Result[SECURE_HEAD_SIZE], System.Length(FV) *
     System.SizeOf(Byte));

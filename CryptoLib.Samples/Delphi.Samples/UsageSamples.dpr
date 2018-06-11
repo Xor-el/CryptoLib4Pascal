@@ -375,8 +375,9 @@ begin
     TUsageExamples.RecreatePublicKeyFromXAndYCoordByteArray;
     TUsageExamples.BinaryCompatiblePascalCoinAES256EncryptDecryptDemo('Pascal Rules', 'Pascal');
     TUsageExamples.BinaryCompatiblePascalCoinECIESEncryptDecryptDemo('Kowalski');
-   // TUsageExamples.BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo('', '', '');
-    Readln;
+//  TUsageExamples.BinaryCompatiblePascalCoinECIESEncryptExistingPayloadDemo('', '', '');
+//  TUsageExamples.BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo('', '', '');
+      Readln;
   except
     on E: Exception do
     begin
