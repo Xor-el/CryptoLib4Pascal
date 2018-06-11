@@ -806,7 +806,9 @@ begin
   while (input <> 0) do
   begin
     if (input and 1) = 1 then
+    begin
       bits[i] := '1'
+    end
     else
     begin
       bits[i] := '0';
@@ -814,7 +816,6 @@ begin
     System.Inc(i);
     input := input shr 1;
   end;
-
   System.SetString(Result, PChar(@bits[0]), i);
 
   Result := ReverseString(Result);
