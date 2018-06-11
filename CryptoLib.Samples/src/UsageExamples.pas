@@ -151,6 +151,9 @@ type
     class procedure BinaryCompatiblePascalCoinECIESEncryptDecryptDemo
       (const input: string); static;
 
+    class procedure BinaryCompatiblePascalCoinECIESEncryptExistingPayloadDemo
+      (const PublicKeyInHex, PureMessageInHex, ACurveName: string); static;
+
     class procedure BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo
       (const PrivateKeyInHex, EncryptedMessageInHex,
       ACurveName: string); static;
@@ -349,6 +352,63 @@ begin
 end;
 
 class procedure TUsageExamples.
+  BinaryCompatiblePascalCoinECIESEncryptExistingPayloadDemo
+  (const PublicKeyInHex, PureMessageInHex, ACurveName: string);
+
+const
+  MethodName = 'BinaryCompatiblePascalCoinECIESEncryptExistingPayloadDemo';
+var
+  PublicKeyBytes, PayloadToEncodeBytes, EncryptedCipherText: TBytes;
+  Lcurve: IX9ECParameters;
+  domain: IECDomainParameters;
+  RegeneratedPublicKey: IECPublicKeyParameters;
+begin
+
+  // Create From Existing Parameter Method
+  System.Assert(PublicKeyInHex <> '', 'PublicKeyInHex Cannot be Empty');
+  System.Assert(PureMessageInHex <> '', 'PureMessageInHex Cannot be Empty');
+  System.Assert(ACurveName <> '', 'ACurveName Cannot be Empty');
+
+  PublicKeyBytes := THex.Decode(PublicKeyInHex);
+  System.Assert(PublicKeyBytes <> Nil, 'PublicKeyBytes Cannot be Nil');
+
+  PayloadToEncodeBytes := THex.Decode(PureMessageInHex);
+  System.Assert(PayloadToEncodeBytes <> Nil,
+    'PayloadToDecodeBytes Cannot be Nil');
+
+  Lcurve := TSecNamedCurves.GetByName(ACurveName);
+  System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
+
+  // Set Up Asymmetric Key Pair from known private key ByteArray
+
+  domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
+    Lcurve.H, Lcurve.GetSeed);
+
+  RegeneratedPublicKey := TECPublicKeyParameters.Create('ECDSA',
+    Lcurve.Curve.DecodePoint(PublicKeyBytes), domain);
+
+  // Do Encryption Of Payload
+
+  EncryptedCipherText := TUsageExamples.ECIESPascalCoinEncrypt
+    (RegeneratedPublicKey, PayloadToEncodeBytes);
+  if EncryptedCipherText <> Nil then
+  begin
+
+    Writeln('ECIES PascalCoin Existing Payload Compatability Encrypt Was Successful '
+      + sLineBreak);
+
+    Writeln('Encrypted Payload Message Is "' +
+      THex.Encode(EncryptedCipherText) + '"');
+    Exit;
+
+  end;
+
+  Writeln('ECIES PascalCoin Existing Payload Compatability Encrypt Failed ' +
+    sLineBreak);
+
+end;
+
+class procedure TUsageExamples.
   BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo
   (const PrivateKeyInHex, EncryptedMessageInHex, ACurveName: string);
 
@@ -408,7 +468,7 @@ begin
     Writeln('ECIES PascalCoin Existing Payload Compatability Decrypt Was Successful '
       + sLineBreak);
 
-    Writeln('Payload Message Is "' + TEncoding.UTF8.GetString
+    Writeln('Decrypted Payload Message Is "' + TEncoding.UTF8.GetString
       (DecryptedCipherText) + '"');
     Exit;
 

@@ -829,7 +829,7 @@ begin
 
     $04: // uncompressed
       begin
-        if (System.Length(encoded) <> (2 * expectedLength + 1)) then
+        if (System.Length(encoded) <> ((2 * expectedLength) + 1)) then
         begin
           raise EArgumentCryptoLibException.CreateRes
             (@SIncorrectLengthUnCompressedEncoding);
@@ -844,7 +844,7 @@ begin
     $06, // hybrid
     $07: // hybrid
       begin
-        if (System.Length(encoded) <> (2 * expectedLength + 1)) then
+        if (System.Length(encoded) <> ((2 * expectedLength) + 1)) then
         begin
           raise EArgumentCryptoLibException.CreateRes
             (@SIncorrectLengthHybridEncoding);
