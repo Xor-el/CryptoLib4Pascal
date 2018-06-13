@@ -120,7 +120,10 @@ uses
   ClpPbeParametersGenerator, ClpHMac, ClpMiscObjectIdentifiers, 
   ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac, 
   Generics.Collections, Generics.Defaults, Generics.Hashes, Generics.Helpers, 
-  Generics.MemoryExpanders, Generics.Strings;
+  Generics.MemoryExpanders, Generics.Strings, ClpIECSchnorrLIBSECPSigner, 
+  ClpIECSchnorrISOXSigner, ClpIECSchnorrISOSigner, ClpIECSchnorrBSISigner, 
+  ClpISchnorr, ClpECSchnorrLIBSECPSigner, ClpECSchnorrISOXSigner, 
+  ClpECSchnorrISOSigner, ClpECSchnorrBSISigner;
 
 implementation
 
