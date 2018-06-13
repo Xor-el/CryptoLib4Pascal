@@ -15,47 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrSigner;
+unit ClpIECSchnorrISOSigner;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISigner,
-  ClpIECPublicKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpISchnorr;
 
 type
-  IECSchnorrSigner = interface(ISigner)
-    ['{A941F9C5-81BE-4F0D-9294-2488C21035E3}']
+  IECSchnorrISOSigner = interface(ISchnorr)
 
-    function Do_Sign(const pv_key: IECPrivateKeyParameters;
-      const k: TBigInteger): TCryptoLibByteArray;
-
-    function Do_Verify(const pu_key: IECPublicKeyParameters;
-      sig: TCryptoLibByteArray): Boolean;
-
-    /// <summary>
-    /// <para>
-    /// Warning...
-    /// </para>
-    /// <para>
-    /// do not use this method, it was exposed solely for testing
-    /// purposes.
-    /// </para>
-    /// </summary>
-    /// <param name="pv_key">
-    /// private key
-    /// </param>
-    /// <param name="k">
-    /// known random number
-    /// </param>
-    function Sign_K(const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
-      : TCryptoLibByteArray;
-
+    ['{B3E5638F-0D51-4D3F-9505-5B240D894229}']
   end;
 
 implementation

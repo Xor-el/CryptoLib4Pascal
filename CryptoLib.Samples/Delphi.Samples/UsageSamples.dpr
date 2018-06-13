@@ -363,7 +363,16 @@ uses
   ClpPbeParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPbeParametersGenerator.pas',
   ClpIPbeParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPbeParametersGenerator.pas',
   ClpPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPkcs5S2ParametersGenerator.pas',
-  ClpIPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPkcs5S2ParametersGenerator.pas';
+  ClpIPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPkcs5S2ParametersGenerator.pas',
+  ClpISchnorr in '..\..\CryptoLib\src\Interfaces\ClpISchnorr.pas',
+  ClpECSchnorrBSISigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrBSISigner.pas',
+  ClpIECSchnorrBSISigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrBSISigner.pas',
+  ClpIECSchnorrISOSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrISOSigner.pas',
+  ClpECSchnorrISOSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrISOSigner.pas',
+  ClpIECSchnorrISOXSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrISOXSigner.pas',
+  ClpECSchnorrISOXSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrISOXSigner.pas',
+  ClpIECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrLIBSECPSigner.pas',
+  ClpECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrLIBSECPSigner.pas';
 
 begin
   try

@@ -29,6 +29,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpICipherParameters,
+  ClpISchnorr,
   ClpIECSchnorrSigner,
   ClpIParametersWithRandom,
   ClpDerSequence,
@@ -41,18 +42,15 @@ uses
   ClpIECKeyParameters,
   ClpIECPublicKeyParameters,
   ClpIECPrivateKeyParameters,
-  ClpIECInterface,
-  ClpBits,
   ClpCryptoLibTypes;
 
 resourcestring
   SECPublicKeyNotFound = 'EC Public Key Required for Verification';
   SECPrivateKeyNotFound = 'EC Private Key Required for Signing';
   SCurveNil = 'Key has no Curve';
-  SUnSupportedVariant = 'Schnorr Variant not Supported %s';
 
 type
-  TECSchnorrSigner = class sealed(TInterfacedObject, ISigner, IECSchnorrSigner)
+  TECSchnorrSigner = class(TInterfacedObject, ISigner, IECSchnorrSigner)
 
   strict private
 
@@ -62,7 +60,7 @@ type
 
   var
     FDigest: IDigest;
-    FVariant: String;
+    FSigner: ISchnorr;
     FforSigning: Boolean;
     Fkey: IECKeyParameters;
     FBuffer: TMemoryStream;
@@ -87,21 +85,22 @@ type
     function Sign_K(const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
       : TCryptoLibByteArray;
 
+    class constructor ECSchnorrSigner();
+
+  public
+
     function Do_Sign(const pv_key: IECPrivateKeyParameters;
       const k: TBigInteger): TCryptoLibByteArray;
 
     function Do_Verify(const pu_key: IECPublicKeyParameters;
       sig: TCryptoLibByteArray): Boolean;
 
-    class function Encode_Sig(const r, s: TBigInteger): TCryptoLibByteArray;
-      static; inline;
+    class function Encode_Sig(const r, s: TBigInteger)
+      : TCryptoLibByteArray; static;
 
     class function Decode_Sig(sig: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>; static; inline;
+      : TCryptoLibGenericArray<TBigInteger>; static;
 
-    class constructor ECSchnorrSigner();
-
-  public
 
     // ECSchnorr signer implementation according to:
     //
@@ -110,8 +109,6 @@ type
     // - `bitcoin-core:libsecp256k1 <https://github.com/bitcoin-core/secp256k1/blob/master/src/modules/schnorr/schnorr_impl.h>`_
     //
     //
-    // In order to select the specification to be conform to, choose
-    // the corresponding string option: "BSI", "ISO", "ISOx", "LIBSECP"
     //
     // *Signature*:
     //
@@ -131,7 +128,7 @@ type
     // 4. s = (k + r.d) mod n
     // If s = 0 goto 1.
     // 5. Output (r, s)
-    // - "ISOx": compute r,s according to optimized ISO variant:
+    // - "ISOX": compute r,s according to optimized ISO variant:
     // 1. k = RNG(1:n-1)
     // 2. Q = [k]G
     // If r = 0 mod n, goto 1.
@@ -164,7 +161,7 @@ type
     // If Q = 0, output Error and terminate.
     // 3. v = H(Qx||Qy||M).
     // 4. Output True if v = r, and False otherwise.
-    // - "ISOx": verify r,s according to optimized ISO variant:
+    // - "ISOX": verify r,s according to optimized ISO variant:
     // 1. check...
     // 2. Q = [s]G - [r]W
     // If Q = 0, output Error and terminate.
@@ -179,13 +176,13 @@ type
     // Signature is invalid if R is infinity or R's y coordinate is odd.
     // 4. Signature is valid if the serialization of R's x coordinate equals r.
 
+    /// <param name="signer">
+    /// instance of one of "BSI","ISO","ISOX","LIBSECP"
+    /// </param>
     /// <param name="digest">
     /// initialized "IDigest" instance.
     /// </param>
-    /// <param name="schnorr_variant">
-    /// one of "BSI","ISO","ISOx","LIBSECP"
-    /// </param>
-    constructor Create(const digest: IDigest; const schnorr_variant: String);
+    constructor Create(const signer: ISchnorr; const digest: IDigest);
     destructor Destroy(); override;
 
     function GetAlgorithmName: String;
@@ -260,12 +257,12 @@ begin
   FBuffer.Write(input[inOff], length);
 end;
 
-constructor TECSchnorrSigner.Create(const digest: IDigest;
-  const schnorr_variant: String);
+constructor TECSchnorrSigner.Create(const signer: ISchnorr;
+  const digest: IDigest);
 begin
   inherited Create();
   FDigest := digest;
-  FVariant := schnorr_variant;
+  FSigner := signer;
   FBuffer := TMemoryStream.Create();
 end;
 
@@ -277,236 +274,26 @@ end;
 
 function TECSchnorrSigner.Do_Sign(const pv_key: IECPrivateKeyParameters;
   const k: TBigInteger): TCryptoLibByteArray;
-var
-  curve: IECCurve;
-  n, r, s, h, tempK: TBigInteger;
-  G, q: IECPoint;
-  xQ, yQ, rQ, tempR, tempH: TCryptoLibByteArray;
 begin
-  Result := Nil;
+
   if (pv_key.parameters.curve = Nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SCurveNil)
   end;
-  curve := pv_key.parameters.curve;
-  n := curve.order;
-  G := pv_key.parameters.G;
 
-  q := G.Multiply(k);
-
-  if FVariant = 'ISO' then
-  begin
-    xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
-    yQ := q.Normalize.YCoord.ToBigInteger.ToByteArray;
-
-    FDigest.TransformBytes(xQ);
-    FDigest.TransformBytes(yQ);
-    FDigest.TransformBytes(Aggregate);
-    tempR := FDigest.TransformFinal.GetBytes();
-
-    r := TBigInteger.Create(1, tempR);
-    s := (k.Add(r.Multiply(pv_key.D))).&Mod(n);
-    if (r.CompareTo(TBigInteger.Zero) = 0) or (s.CompareTo(TBigInteger.Zero) = 0)
-    then
-    begin
-      Result := Nil;
-      Exit;
-    end
-    else
-    begin
-      Result := Encode_Sig(r, s);
-      Exit;
-    end;
-
-  end
-  else if FVariant = 'ISOx' then
-  begin
-    xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
-
-    FDigest.TransformBytes(xQ);
-    FDigest.TransformBytes(Aggregate);
-    tempR := FDigest.TransformFinal.GetBytes();
-
-    r := TBigInteger.Create(1, tempR);
-    s := (k.Add(r.Multiply(pv_key.D))).&Mod(n);
-    if (r.CompareTo(TBigInteger.Zero) = 0) or (s.CompareTo(TBigInteger.Zero) = 0)
-    then
-    begin
-      Result := Nil;
-      Exit;
-    end
-    else
-    begin
-      Result := Encode_Sig(r, s);
-      Exit;
-    end;
-
-  end
-  else if FVariant = 'BSI' then
-  begin
-    xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
-
-    FDigest.TransformBytes(Aggregate);
-    FDigest.TransformBytes(xQ);
-    tempR := FDigest.TransformFinal.GetBytes();
-
-    r := TBigInteger.Create(1, tempR);
-    s := (k.Subtract(r.Multiply(pv_key.D))).&Mod(n);
-    if (r.CompareTo(TBigInteger.Zero) = 0) or (s.CompareTo(TBigInteger.Zero) = 0)
-    then
-    begin
-      Result := Nil;
-      Exit;
-    end
-    else
-    begin
-      Result := Encode_Sig(r, s);
-      Exit;
-    end;
-
-  end
-  else if FVariant = 'LIBSECP' then
-  begin
-    tempK := k;
-    if q.Normalize.YCoord.ToBigInteger.&And(TBigInteger.One)
-      .CompareTo(TBigInteger.One) = 0 then // if Q.y is Odd
-    begin
-      tempK := n.Subtract(tempK);
-      q := G.Multiply(tempK);
-    end;
-
-    rQ := q.Normalize.XCoord.ToBigInteger.&Mod(n).ToByteArray;
-    FDigest.TransformBytes(rQ);
-    FDigest.TransformBytes(Aggregate);
-    tempH := FDigest.TransformFinal.GetBytes();
-
-    h := TBigInteger.Create(1, tempH);
-    r := q.Normalize.XCoord.ToBigInteger.&Mod(n);
-    s := (tempK.Subtract(h.Multiply(pv_key.D))).&Mod(n);
-
-    Result := Encode_Sig(r, s);
-    Exit;
-
-  end
-  else
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SUnSupportedVariant,
-      [FVariant]);
-  end;
-
+  Result := FSigner.Do_Sign(Aggregate(), FDigest, pv_key, k);
 end;
 
 function TECSchnorrSigner.Do_Verify(const pu_key: IECPublicKeyParameters;
   sig: TCryptoLibByteArray): Boolean;
-var
-  curve: IECCurve;
-  n, r, s, h, v: TBigInteger;
-  Size: Int32;
-  G, q, sG, rW, hW, LR: IECPoint;
-  xQ, yQ, tempV, tempH, rb: TCryptoLibByteArray;
-  R_and_S: TCryptoLibGenericArray<TBigInteger>;
 begin
 
   if (pu_key.parameters.curve = Nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SCurveNil)
   end;
-  curve := pu_key.parameters.curve;
-  n := curve.order;
-  G := pu_key.parameters.G;
-  Size := TBits.Asr32(curve.FieldSize, 3);
 
-  R_and_S := Decode_Sig(sig);
-
-  r := R_and_S[0];
-  s := R_and_S[1];
-
-  if (not(r.IsInitialized) or (r.CompareTo(TBigInteger.Two.Pow(Size * 8)
-    .Subtract(TBigInteger.One)) = 1) or (s.CompareTo(TBigInteger.Zero) = 0) or
-    (s.CompareTo(n.Subtract(TBigInteger.One)) = 1)) then
-  begin
-    Result := False;
-    Exit;
-  end;
-
-  sG := G.Multiply(s);
-
-  if FVariant = 'ISO' then
-  begin
-    rW := pu_key.q.Multiply(r);
-    q := sG.Subtract(rW);
-    xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
-    yQ := q.Normalize.YCoord.ToBigInteger.ToByteArray;
-
-    FDigest.TransformBytes(xQ);
-    FDigest.TransformBytes(yQ);
-    FDigest.TransformBytes(Aggregate);
-    tempV := FDigest.TransformFinal.GetBytes();
-
-    v := TBigInteger.Create(1, tempV);
-    Result := v.Equals(r);
-    Exit;
-
-  end
-  else if FVariant = 'ISOx' then
-  begin
-    rW := pu_key.q.Multiply(r);
-    q := sG.Subtract(rW);
-    xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
-
-    FDigest.TransformBytes(xQ);
-    FDigest.TransformBytes(Aggregate);
-    tempV := FDigest.TransformFinal.GetBytes();
-
-    v := TBigInteger.Create(1, tempV);
-    Result := v.Equals(r);
-    Exit;
-
-  end
-  else if FVariant = 'BSI' then
-  begin
-    rW := pu_key.q.Multiply(r);
-    q := sG.Add(rW);
-    xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
-
-    FDigest.TransformBytes(Aggregate);
-    FDigest.TransformBytes(xQ);
-    tempV := FDigest.TransformFinal.GetBytes();
-
-    v := TBigInteger.Create(1, tempV);
-    Result := v.Equals(r);
-    Exit;
-
-  end
-  else if FVariant = 'LIBSECP' then
-  begin
-    rb := r.ToByteArray;
-
-    FDigest.TransformBytes(rb);
-    FDigest.TransformBytes(Aggregate);
-    tempH := FDigest.TransformFinal.GetBytes();
-
-    h := TBigInteger.Create(1, tempH);
-    if (h.CompareTo(TBigInteger.Zero) = 0) or (h.CompareTo(n) = 1) then
-    begin
-      Result := False;
-      Exit;
-    end;
-
-    hW := pu_key.q.Multiply(h);
-    LR := sG.Add(hW);
-    v := LR.Normalize.XCoord.ToBigInteger.&Mod(n);
-
-    Result := v.Equals(r);
-    Exit;
-
-  end
-  else
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SUnSupportedVariant,
-      [FVariant]);
-  end;
-
+  Result := FSigner.Do_Verify(Aggregate(), FDigest, pu_key, sig);
 end;
 
 function TECSchnorrSigner.GenerateSignature: TCryptoLibByteArray;
@@ -531,7 +318,7 @@ end;
 
 function TECSchnorrSigner.GetAlgorithmName: String;
 begin
-  Result := FDigest.Name + 'with' + 'ECSCHNORR' + FVariant;
+  Result := FDigest.Name + 'with' + 'ECSCHNORR' + FSigner.AlgorithmName;
 end;
 
 procedure TECSchnorrSigner.Init(forSigning: Boolean;
