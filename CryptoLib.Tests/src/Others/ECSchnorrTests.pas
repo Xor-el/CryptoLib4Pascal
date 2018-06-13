@@ -81,7 +81,7 @@ type
     procedure TestECSchnorrWithCustomK;
     procedure TestECSchnorrBSI;
     procedure TestECSchnorrISO;
-    procedure TestECSchnorrISOx;
+    procedure TestECSchnorrISOX;
     procedure TestECSchnorrLIBSECP;
 
   end;
@@ -198,7 +198,7 @@ begin
 
 end;
 
-procedure TTestECSchnorr.TestECSchnorrISOx;
+procedure TTestECSchnorr.TestECSchnorrISOX;
 var
   LCurve: IX9ECParameters;
   domain: IECDomainParameters;
@@ -224,7 +224,7 @@ begin
   privParams := keypair.Private as IECPrivateKeyParameters; // for signing
   pubParams := keypair.Public as IECPublicKeyParameters; // for verifying
 
-  signer := TSignerUtilities.GetSigner('SHA-256withECSCHNORRISOx');
+  signer := TSignerUtilities.GetSigner('SHA-256withECSCHNORRISOX');
 
   // sign
 

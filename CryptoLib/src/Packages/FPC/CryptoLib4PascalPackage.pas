@@ -118,7 +118,10 @@ uses
   ClpISO10126d2Padding, ClpIISO10126d2Padding, ClpPkcs5S2ParametersGenerator, 
   ClpIPkcs5S2ParametersGenerator, ClpIPbeParametersGenerator, 
   ClpPbeParametersGenerator, ClpHMac, ClpMiscObjectIdentifiers, 
-  ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac;
+  ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac, 
+  ClpIECSchnorrLIBSECPSigner, ClpIECSchnorrISOXSigner, ClpIECSchnorrISOSigner, 
+  ClpIECSchnorrBSISigner, ClpISchnorr, ClpECSchnorrLIBSECPSigner, 
+  ClpECSchnorrISOXSigner, ClpECSchnorrISOSigner, ClpECSchnorrBSISigner;
 
 implementation
 

@@ -15,46 +15,33 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrSigner;
+unit ClpISchnorr;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISigner,
-  ClpIECPublicKeyParameters,
   ClpIECPrivateKeyParameters,
+  ClpIECPublicKeyParameters,
+  ClpIDigest,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
-  IECSchnorrSigner = interface(ISigner)
-    ['{A941F9C5-81BE-4F0D-9294-2488C21035E3}']
+  ISchnorr = interface(IInterface)
+    ['{D3E88536-CE8D-4933-ADD8-235CAD65819F}']
 
-    function Do_Sign(const pv_key: IECPrivateKeyParameters;
-      const k: TBigInteger): TCryptoLibByteArray;
+    function GetAlgorithmName: String;
+    property AlgorithmName: String read GetAlgorithmName;
 
-    function Do_Verify(const pu_key: IECPublicKeyParameters;
-      sig: TCryptoLibByteArray): Boolean;
-
-    /// <summary>
-    /// <para>
-    /// Warning...
-    /// </para>
-    /// <para>
-    /// do not use this method, it was exposed solely for testing
-    /// purposes.
-    /// </para>
-    /// </summary>
-    /// <param name="pv_key">
-    /// private key
-    /// </param>
-    /// <param name="k">
-    /// known random number
-    /// </param>
-    function Sign_K(const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
+    function Do_Sign(const &message: TCryptoLibByteArray; const digest: IDigest;
+      const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
       : TCryptoLibByteArray;
+
+    function Do_Verify(const &message: TCryptoLibByteArray;
+      const digest: IDigest; const pu_key: IECPublicKeyParameters;
+      const sig: TCryptoLibByteArray): Boolean;
 
   end;
 
