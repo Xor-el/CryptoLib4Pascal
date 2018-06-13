@@ -54,12 +54,9 @@ type
 
   strict private
 
-    class var
-
-      FRandom: ISecureRandom;
-
   var
     FDigest: IDigest;
+    FRandom: ISecureRandom;
     FSigner: ISchnorr;
     FforSigning: Boolean;
     Fkey: IECKeyParameters;
@@ -84,8 +81,6 @@ type
     /// </param>
     function Sign_K(const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
       : TCryptoLibByteArray;
-
-    class constructor ECSchnorrSigner();
 
   public
 
@@ -222,11 +217,6 @@ implementation
 
 { TECSchnorrSigner }
 
-class constructor TECSchnorrSigner.ECSchnorrSigner;
-begin
-  FRandom := TSecureRandom.Create();
-end;
-
 class function TECSchnorrSigner.Encode_Sig(const r, s: TBigInteger)
   : TCryptoLibByteArray;
 begin
@@ -336,7 +326,12 @@ begin
 
     if (Supports(Lparameters, IParametersWithRandom, rParam)) then
     begin
+      FRandom := rParam.Random;
       Lparameters := rParam.parameters;
+    end
+    else
+    begin
+      FRandom := TSecureRandom.Create();
     end;
 
     if (not(Supports(Lparameters, IECPrivateKeyParameters))) then
