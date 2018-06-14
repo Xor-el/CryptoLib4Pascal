@@ -379,7 +379,7 @@ begin
   Lcurve := TSecNamedCurves.GetByName(ACurveName);
   System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
 
-  // Set Up Asymmetric Key Pair from known private key ByteArray
+  // Set Up Asymmetric Key Pair from known public key ByteArray
 
   domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
     Lcurve.H, Lcurve.GetSeed);
@@ -391,6 +391,7 @@ begin
 
   EncryptedCipherText := TUsageExamples.ECIESPascalCoinEncrypt
     (RegeneratedPublicKey, PayloadToEncodeBytes);
+
   if EncryptedCipherText <> Nil then
   begin
 
