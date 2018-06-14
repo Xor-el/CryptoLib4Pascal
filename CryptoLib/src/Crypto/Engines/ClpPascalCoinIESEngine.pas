@@ -247,7 +247,7 @@ begin
     System.Length(T) * System.SizeOf(Byte));
 
   System.Move(C[0], Result[SECURE_HEAD_SIZE + System.Length(FV) +
-    System.Length(C)], System.Length(C) * System.SizeOf(Byte));
+    System.Length(T)], System.Length(C) * System.SizeOf(Byte));
 
 end;
 
