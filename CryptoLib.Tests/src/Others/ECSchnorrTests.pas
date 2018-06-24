@@ -34,6 +34,8 @@ uses
 {$ENDIF FPC}
   ClpSecureRandom,
   ClpISecureRandom,
+  ClpFixedSecureRandom,
+  ClpIFixedSecureRandom,
   ClpECSchnorrSigner,
   ClpIECSchnorrSigner,
   ClpISigner,
@@ -46,6 +48,8 @@ uses
   ClpIECKeyPairGenerator,
   ClpECKeyPairGenerator,
   ClpIECKeyGenerationParameters,
+  ClpIParametersWithRandom,
+  ClpParametersWithRandom,
   ClpECKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
   ClpIX9ECParameters,
@@ -304,7 +308,8 @@ var
   point: IECPoint;
   LCurve: IX9ECParameters;
   signer: ISigner;
-  k: TBigInteger;
+  k: ISecureRandom;
+  param: IParametersWithRandom;
 begin
 
   LCurve := TSecNamedCurves.GetByName('secp256k1');
@@ -333,11 +338,18 @@ begin
   RegeneratedPrivateKey := TECPrivateKeyParameters.Create('ECSCHNORR',
     TBigInteger.Create(PrivateKeyByteArray), domain);
 
+  k := TFixedSecureRandom.From(TCryptoLibMatrixByteArray.Create
+    (TBigInteger.Create
+    ('4242424242424242424242424242424242424242424242424242424242424242',
+    16).ToByteArrayUnsigned()));
+
+  param := TParametersWithRandom.Create(RegeneratedPrivateKey, k);
+
   signer := TSignerUtilities.GetSigner('SHA-256withECSCHNORRLIBSECP');
 
   // sign
 
-  signer.Init(true, RegeneratedPrivateKey);
+  signer.Init(true, param);
 
   &message := TBigInteger.Create
     ('0101010101010101010101010101010101010101010101010101010101010101', 16)
@@ -345,12 +357,7 @@ begin
 
   signer.BlockUpdate(&message, 0, System.Length(&message));
 
-  k := TBigInteger.Create
-    ('4242424242424242424242424242424242424242424242424242424242424242', 16);
-
-  // cast ISigner instance to be able to access specific method for test purposees.
-  // do not do this.
-  sigBytes := (signer as IECSchnorrSigner).Sign_K(RegeneratedPrivateKey, k);
+  sigBytes := signer.GenerateSignature();
 
   // verify
 
