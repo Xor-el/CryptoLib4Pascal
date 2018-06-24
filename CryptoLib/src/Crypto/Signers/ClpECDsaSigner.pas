@@ -55,6 +55,7 @@ type
   TECDsaSigner = class(TInterfacedObject, IDsa, IECDsaSigner)
 
   strict private
+
     class var
 
       FEight: TBigInteger;
@@ -63,6 +64,8 @@ type
     class function GetEight: TBigInteger; static; inline;
 
     class property Eight: TBigInteger read GetEight;
+
+    function GetAlgorithmName: String; virtual;
 
   strict protected
   var
@@ -97,7 +100,6 @@ type
     /// </param>
     constructor Create(const kCalculator: IDsaKCalculator); overload;
 
-    function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
 
     procedure Init(forSigning: Boolean; parameters: ICipherParameters); virtual;

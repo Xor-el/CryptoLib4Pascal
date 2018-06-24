@@ -346,7 +346,7 @@ begin
   LowPoint := 1;
   HighPoint := System.length(upper);
 {$ENDIF DELPHIXE3_UP}
-  // should use "EndsStr" here but it seems that is missing in Lazarus/FPC RTL
+
   if AnsiEndsStr('PRNG', upper) then
   begin
     digestName := System.Copy(upper, LowPoint,
