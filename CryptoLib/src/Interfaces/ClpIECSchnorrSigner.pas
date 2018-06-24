@@ -38,24 +38,6 @@ type
     function Do_Verify(const pu_key: IECPublicKeyParameters;
       sig: TCryptoLibByteArray): Boolean;
 
-    /// <summary>
-    /// <para>
-    /// Warning...
-    /// </para>
-    /// <para>
-    /// do not use this method, it was exposed solely for testing
-    /// purposes.
-    /// </para>
-    /// </summary>
-    /// <param name="pv_key">
-    /// private key
-    /// </param>
-    /// <param name="k">
-    /// known random number
-    /// </param>
-    function Sign_K(const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
-      : TCryptoLibByteArray;
-
   end;
 
 implementation

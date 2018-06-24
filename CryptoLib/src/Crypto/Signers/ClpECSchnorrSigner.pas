@@ -64,24 +64,6 @@ type
 
     function Aggregate: TCryptoLibByteArray; inline;
 
-    /// <summary>
-    /// <para>
-    /// Warning...
-    /// </para>
-    /// <para>
-    /// do not use this method, it was exposed solely for testing
-    /// purposes.
-    /// </para>
-    /// </summary>
-    /// <param name="pv_key">
-    /// private key
-    /// </param>
-    /// <param name="k">
-    /// known random number
-    /// </param>
-    function Sign_K(const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
-      : TCryptoLibByteArray;
-
   public
 
     function Do_Sign(const pv_key: IECPrivateKeyParameters;
@@ -358,12 +340,6 @@ begin
   FDigest.Initialize;
   FBuffer.Clear;
   FBuffer.SetSize(0);
-end;
-
-function TECSchnorrSigner.Sign_K(const pv_key: IECPrivateKeyParameters;
-  const k: TBigInteger): TCryptoLibByteArray;
-begin
-  Result := Do_Sign(pv_key, k);
 end;
 
 procedure TECSchnorrSigner.Update(input: Byte);
