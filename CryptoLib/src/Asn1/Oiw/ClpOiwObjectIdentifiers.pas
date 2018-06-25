@@ -32,9 +32,10 @@ type
 
     class var
 
-      FIdSha1: IDerObjectIdentifier;
+      FIdSha1, FDsaWithSha1: IDerObjectIdentifier;
 
     class function GetIdSha1: IDerObjectIdentifier; static; inline;
+    class function GetDsaWithSha1: IDerObjectIdentifier; static; inline;
 
     class constructor OiwObjectIdentifiers();
 
@@ -43,6 +44,8 @@ type
     // id-SHA1 OBJECT IDENTIFIER ::=
     // {iso(1) identified-organization(3) oiw(14) secsig(3) algorithms(2) 26 }    //
     class property IdSha1: IDerObjectIdentifier read GetIdSha1;
+
+    class property DsaWithSha1: IDerObjectIdentifier read GetDsaWithSha1;
 
     class procedure Boot(); static;
 
@@ -55,6 +58,12 @@ implementation
 class procedure TOiwObjectIdentifiers.Boot;
 begin
   FIdSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.26');
+  FDsaWithSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.27');
+end;
+
+class function TOiwObjectIdentifiers.GetDsaWithSha1: IDerObjectIdentifier;
+begin
+  Result := FDsaWithSha1;
 end;
 
 class function TOiwObjectIdentifiers.GetIdSha1: IDerObjectIdentifier;
