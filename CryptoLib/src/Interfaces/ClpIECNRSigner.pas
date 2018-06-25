@@ -15,43 +15,36 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpHex;
+unit ClpIECNRSigner;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SbpBase16,
+  ClpIDsa,
+  ClpICipherParameters,
+  ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
-  THex = class sealed(TObject)
+  IECNRSigner = interface(IDsa)
+    ['{C136F005-404E-4022-886E-DE5EFCECFF9C}']
 
-  public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+    function GetAlgorithmName: String;
+
+    property AlgorithmName: String read GetAlgorithmName;
+
+    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
+
+    function GenerateSignature(&message: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
+
+    function VerifySignature(&message: TCryptoLibByteArray;
+      const r, s: TBigInteger): Boolean;
+
   end;
 
 implementation
-
-{ THex }
-
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
-begin
-  result := SbpBase16.TBase16.Decode(Hex);
-end;
-
-class function THex.Encode(Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
-begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
-  end;
-end;
 
 end.

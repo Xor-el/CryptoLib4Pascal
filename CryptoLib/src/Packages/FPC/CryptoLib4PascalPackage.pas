@@ -121,7 +121,14 @@ uses
   ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac, 
   ClpIECSchnorrLIBSECPSigner, ClpIECSchnorrISOXSigner, ClpIECSchnorrISOSigner, 
   ClpIECSchnorrBSISigner, ClpISchnorr, ClpECSchnorrLIBSECPSigner, 
-  ClpECSchnorrISOXSigner, ClpECSchnorrISOSigner, ClpECSchnorrBSISigner;
+  ClpECSchnorrISOXSigner, ClpECSchnorrISOSigner, ClpECSchnorrBSISigner, 
+  ClpDsaSigner, ClpDsaKeyPairGenerator, ClpECNRSigner, 
+  ClpDsaKeyGenerationParameters, ClpDsaPrivateKeyParameters, 
+  ClpDsaPublicKeyParameters, ClpDsaValidationParameters, ClpDsaParameters, 
+  ClpDsaKeyParameters, ClpIECNRSigner, ClpIDsaSigner, ClpIDsaKeyPairGenerator, 
+  ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
+  ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
+  ClpIDsaValidationParameters, ClpBase58;
 
 implementation
 

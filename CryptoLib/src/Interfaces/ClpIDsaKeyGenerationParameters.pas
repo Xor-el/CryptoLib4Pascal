@@ -15,43 +15,26 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpHex;
+unit ClpIDsaKeyGenerationParameters;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SbpBase16,
-  ClpCryptoLibTypes;
+  ClpIDsaParameters,
+  ClpIKeyGenerationParameters;
 
 type
-  THex = class sealed(TObject)
+  IDsaKeyGenerationParameters = interface(IKeyGenerationParameters)
+    ['{0EBFC33A-31D3-4F20-8836-35250F53EA73}']
 
-  public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+    function GetParameters: IDsaParameters;
+
+    property parameters: IDsaParameters read GetParameters;
+
   end;
 
 implementation
-
-{ THex }
-
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
-begin
-  result := SbpBase16.TBase16.Decode(Hex);
-end;
-
-class function THex.Encode(Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
-begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
-  end;
-end;
 
 end.
