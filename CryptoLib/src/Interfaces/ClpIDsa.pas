@@ -47,7 +47,7 @@ type
     // * otherwise.
     // * @param param key parameters for signature generation.
     // */
-    procedure Init(forSigning: Boolean; parameters: ICipherParameters);
+    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
 
     // /**
     // * sign the passed in message (usually the output of a hash function).
@@ -65,8 +65,8 @@ type
     // * @param r the r signature value.
     // * @param s the s signature value.
     // */
-    function VerifySignature(&message: TCryptoLibByteArray; r: TBigInteger;
-      const s: TBigInteger): Boolean;
+    function VerifySignature(&message: TCryptoLibByteArray;
+      const r, s: TBigInteger): Boolean;
 
   end;
 
