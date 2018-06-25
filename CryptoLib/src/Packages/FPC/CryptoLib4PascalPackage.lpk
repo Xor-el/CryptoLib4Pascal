@@ -9,8 +9,8 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <IncludeFiles Value="..\..\Include;..\..\..\..\3rdParty\generics.collections\src\inc"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\..\..\3rdParty\generics.collections\src"/>
+        <IncludeFiles Value="..\..\Include;..\..\..\..\3rdParty\generics.collections\src\inc;..\..\3rdParty\generics.collections\src\inc"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\..\..\3rdParty\generics.collections\src;..\..\3rdParty\generics.collections\src"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -1580,35 +1580,35 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpBase58"/>
       </Item388>
       <Item389>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\generics.collections.pas"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\generics.collections.pas"/>
         <UnitName Value="Generics.Collections"/>
       </Item389>
       <Item390>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\generics.defaults.pas"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\generics.defaults.pas"/>
         <UnitName Value="Generics.Defaults"/>
       </Item390>
       <Item391>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\generics.hashes.pas"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\generics.hashes.pas"/>
         <UnitName Value="Generics.Hashes"/>
       </Item391>
       <Item392>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\generics.helpers.pas"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\generics.helpers.pas"/>
         <UnitName Value="Generics.Helpers"/>
       </Item392>
       <Item393>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\generics.memoryexpanders.pas"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\generics.memoryexpanders.pas"/>
         <UnitName Value="Generics.MemoryExpanders"/>
       </Item393>
       <Item394>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\generics.strings.pas"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\generics.strings.pas"/>
         <UnitName Value="Generics.Strings"/>
       </Item394>
       <Item395>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\inc\generics.dictionaries.inc"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\inc\generics.dictionaries.inc"/>
         <Type Value="Include"/>
       </Item395>
       <Item396>
-        <Filename Value="..\..\..\..\3rdParty\generics.collections\src\inc\generics.dictionariesh.inc"/>
+        <Filename Value="..\..\3rdParty\generics.collections\src\inc\generics.dictionariesh.inc"/>
         <Type Value="Include"/>
       </Item396>
     </Files>
