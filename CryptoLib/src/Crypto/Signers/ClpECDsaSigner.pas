@@ -102,7 +102,8 @@ type
 
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean; parameters: ICipherParameters); virtual;
+    procedure Init(forSigning: Boolean;
+      const parameters: ICipherParameters); virtual;
 
     // // 5.3 pg 28
     // /**
@@ -120,8 +121,8 @@ type
     // * the passed in message (for standard DSA the message should be
     // * a SHA-1 hash of the real message to be verified).
     // */
-    function VerifySignature(&message: TCryptoLibByteArray; r: TBigInteger;
-      const s: TBigInteger): Boolean;
+    function VerifySignature(&message: TCryptoLibByteArray;
+      const r, s: TBigInteger): Boolean;
 
   end;
 
@@ -244,37 +245,40 @@ begin
   Result := FEight;
 end;
 
-procedure TECDsaSigner.Init(forSigning: Boolean; parameters: ICipherParameters);
+procedure TECDsaSigner.Init(forSigning: Boolean;
+  const parameters: ICipherParameters);
 var
   providedRandom: ISecureRandom;
   rParam: IParametersWithRandom;
+  Lparameters: ICipherParameters;
 begin
   providedRandom := Nil;
+  Lparameters := parameters;
 
   if (forSigning) then
   begin
 
-    if (Supports(parameters, IParametersWithRandom, rParam)) then
+    if (Supports(Lparameters, IParametersWithRandom, rParam)) then
     begin
       providedRandom := rParam.random;
-      parameters := rParam.parameters;
+      Lparameters := rParam.parameters;
     end;
 
-    if (not(Supports(parameters, IECPrivateKeyParameters))) then
+    if (not(Supports(Lparameters, IECPrivateKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPrivateKeyNotFound);
     end;
 
-    Fkey := parameters as IECPrivateKeyParameters;
+    Fkey := Lparameters as IECPrivateKeyParameters;
   end
   else
   begin
-    if (not(Supports(parameters, IECPublicKeyParameters))) then
+    if (not(Supports(Lparameters, IECPublicKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPublicKeyNotFound);
     end;
 
-    Fkey := parameters as IECPublicKeyParameters;
+    Fkey := Lparameters as IECPublicKeyParameters;
   end;
 
   Frandom := InitSecureRandom((forSigning) and
@@ -302,18 +306,19 @@ begin
 end;
 
 function TECDsaSigner.VerifySignature(&message: TCryptoLibByteArray;
-  r: TBigInteger; const s: TBigInteger): Boolean;
+  const r, s: TBigInteger): Boolean;
 var
-  n, e, c, u1, u2, cofactor, v: TBigInteger;
+  n, e, c, u1, u2, cofactor, v, Smallr: TBigInteger;
   G, Q, point: IECPoint;
   curve: IECCurve;
   d, X, RLocal: IECFieldElement;
 begin
   n := Fkey.parameters.n;
+  Smallr := r;
 
   // r and s should both in the range [1,n-1]
-  if ((r.SignValue < 1) or (s.SignValue < 1) or (r.CompareTo(n) >= 0) or
-    (s.CompareTo(n) >= 0)) then
+  if ((Smallr.SignValue < 1) or (s.SignValue < 1) or (Smallr.CompareTo(n) >= 0)
+    or (s.CompareTo(n) >= 0)) then
   begin
     Result := false;
     Exit;
@@ -323,7 +328,7 @@ begin
   c := s.ModInverse(n);
 
   u1 := e.Multiply(c).&Mod(n);
-  u2 := r.Multiply(c).&Mod(n);
+  u2 := Smallr.Multiply(c).&Mod(n);
 
   G := Fkey.parameters.G;
 
@@ -360,15 +365,15 @@ begin
       if ((d <> Nil) and (not d.IsZero)) then
       begin
         X := point.XCoord;
-        while (curve.IsValidFieldElement(r)) do
+        while (curve.IsValidFieldElement(Smallr)) do
         begin
-          RLocal := curve.FromBigInteger(r).Multiply(d);
+          RLocal := curve.FromBigInteger(Smallr).Multiply(d);
           if (RLocal.Equals(X)) then
           begin
             Result := true;
             Exit;
           end;
-          r := r.Add(n);
+          Smallr := Smallr.Add(n);
         end;
         Result := false;
         Exit;
@@ -377,7 +382,7 @@ begin
   end;
 
   v := point.Normalize().AffineXCoord.ToBigInteger().&Mod(n);
-  Result := v.Equals(r);
+  Result := v.Equals(Smallr);
 end;
 
 end.
