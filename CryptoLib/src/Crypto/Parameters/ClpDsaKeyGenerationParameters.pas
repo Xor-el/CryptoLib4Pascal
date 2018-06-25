@@ -15,43 +15,52 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpHex;
+unit ClpDsaKeyGenerationParameters;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SbpBase16,
-  ClpCryptoLibTypes;
+  ClpBigInteger,
+  ClpISecureRandom,
+  ClpIDsaParameters,
+  ClpIDsaKeyGenerationParameters,
+  ClpKeyGenerationParameters;
 
 type
-  THex = class sealed(TObject)
+  TDsaKeyGenerationParameters = class sealed(TKeyGenerationParameters,
+    IDsaKeyGenerationParameters)
+  strict private
+  var
+    Fparameters: IDsaParameters;
+
+    function GetParameters: IDsaParameters; inline;
 
   public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+    constructor Create(const random: ISecureRandom;
+      const parameters: IDsaParameters);
+
+    property parameters: IDsaParameters read GetParameters;
   end;
 
 implementation
 
-{ THex }
+{ TDsaKeyGenerationParameters }
 
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
+constructor TDsaKeyGenerationParameters.Create(const random: ISecureRandom;
+  const parameters: IDsaParameters);
+var
+  P: TBigInteger;
 begin
-  result := SbpBase16.TBase16.Decode(Hex);
+  P := parameters.P;
+  Inherited Create(random, P.BitLength - 1);
+  Fparameters := parameters;
 end;
 
-class function THex.Encode(Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
+function TDsaKeyGenerationParameters.GetParameters: IDsaParameters;
 begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
-  end;
+  result := Fparameters;
 end;
 
 end.

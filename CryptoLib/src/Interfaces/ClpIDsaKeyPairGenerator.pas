@@ -15,43 +15,24 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpHex;
+unit ClpIDsaKeyPairGenerator;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SbpBase16,
-  ClpCryptoLibTypes;
+  ClpIAsymmetricCipherKeyPair,
+  ClpIKeyGenerationParameters,
+  ClpIAsymmetricCipherKeyPairGenerator;
 
 type
-  THex = class sealed(TObject)
-
-  public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+  IDsaKeyPairGenerator = interface(IAsymmetricCipherKeyPairGenerator)
+    ['{37A4647D-2D9A-4EB1-A2AF-B3FBE72B66F3}']
+    procedure Init(const parameters: IKeyGenerationParameters);
+    function GenerateKeyPair(): IAsymmetricCipherKeyPair;
   end;
 
 implementation
-
-{ THex }
-
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
-begin
-  result := SbpBase16.TBase16.Decode(Hex);
-end;
-
-class function THex.Encode(Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
-begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
-  end;
-end;
 
 end.

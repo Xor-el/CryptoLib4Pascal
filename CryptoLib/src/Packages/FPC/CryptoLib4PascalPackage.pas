@@ -119,11 +119,18 @@ uses
   ClpIPkcs5S2ParametersGenerator, ClpIPbeParametersGenerator, 
   ClpPbeParametersGenerator, ClpHMac, ClpMiscObjectIdentifiers, 
   ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac, 
-  Generics.Collections, Generics.Defaults, Generics.Hashes, Generics.Helpers, 
-  Generics.MemoryExpanders, Generics.Strings, ClpIECSchnorrLIBSECPSigner, 
-  ClpIECSchnorrISOXSigner, ClpIECSchnorrISOSigner, ClpIECSchnorrBSISigner, 
-  ClpISchnorr, ClpECSchnorrLIBSECPSigner, ClpECSchnorrISOXSigner, 
-  ClpECSchnorrISOSigner, ClpECSchnorrBSISigner;
+  ClpIECSchnorrLIBSECPSigner, ClpIECSchnorrISOXSigner, ClpIECSchnorrISOSigner, 
+  ClpIECSchnorrBSISigner, ClpISchnorr, ClpECSchnorrLIBSECPSigner, 
+  ClpECSchnorrISOXSigner, ClpECSchnorrISOSigner, ClpECSchnorrBSISigner, 
+  ClpDsaSigner, ClpDsaKeyPairGenerator, ClpECNRSigner, 
+  ClpDsaKeyGenerationParameters, ClpDsaPrivateKeyParameters, 
+  ClpDsaPublicKeyParameters, ClpDsaValidationParameters, ClpDsaParameters, 
+  ClpDsaKeyParameters, ClpIECNRSigner, ClpIDsaSigner, ClpIDsaKeyPairGenerator, 
+  ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
+  ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
+  ClpIDsaValidationParameters, ClpBase58, Generics.Collections, 
+  Generics.Defaults, Generics.Hashes, Generics.Helpers, 
+  Generics.MemoryExpanders, Generics.Strings;
 
 implementation
 

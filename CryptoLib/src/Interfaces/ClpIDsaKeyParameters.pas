@@ -15,43 +15,29 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpHex;
+unit ClpIDsaKeyParameters;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SbpBase16,
-  ClpCryptoLibTypes;
+  ClpIDsaParameters,
+  ClpIAsymmetricKeyParameter;
 
 type
-  THex = class sealed(TObject)
+  IDsaKeyParameters = interface(IAsymmetricKeyParameter)
+    ['{1E3454DF-DC9F-4EA0-91DA-0768A77387C5}']
 
-  public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+    function GetParameters: IDsaParameters;
+
+    function Equals(const other: IDsaKeyParameters): Boolean;
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}
+    property parameters: IDsaParameters read GetParameters;
+
   end;
 
 implementation
-
-{ THex }
-
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
-begin
-  result := SbpBase16.TBase16.Decode(Hex);
-end;
-
-class function THex.Encode(Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
-begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
-  end;
-end;
 
 end.

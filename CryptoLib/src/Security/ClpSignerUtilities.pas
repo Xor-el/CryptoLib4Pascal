@@ -24,7 +24,8 @@ interface
 uses
   SysUtils,
   Generics.Collections,
-  ClpCryptoLibTypes,
+  ClpECNRSigner,
+  ClpIECNRSigner,
   ClpIDigest,
   ClpDigestUtilities,
   ClpDsaDigestSigner,
@@ -39,11 +40,16 @@ uses
   ClpIECSchnorrLIBSECPSigner,
   ClpX9ObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
+  ClpOiwObjectIdentifiers,
+  ClpNistObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
+  ClpDsaSigner,
+  ClpIDsaSigner,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpISigner,
-  ClpIDerObjectIdentifier;
+  ClpIDerObjectIdentifier,
+  ClpCryptoLibTypes;
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
@@ -103,8 +109,57 @@ begin
   Foids := TDictionary<String, IDerObjectIdentifier>.Create();
 
   TX9ObjectIdentifiers.Boot;
+  TOiwObjectIdentifiers.Boot;
+  TNistObjectIdentifiers.Boot;
   TTeleTrusTObjectIdentifiers.Boot;
   TCryptoProObjectIdentifiers.Boot;
+
+  Falgorithms.Add('NONEWITHDSA', 'NONEwithDSA');
+  Falgorithms.Add('DSAWITHNONE', 'NONEwithDSA');
+  Falgorithms.Add('RAWDSA', 'NONEwithDSA');
+
+  Falgorithms.Add('DSA', 'SHA-1withDSA');
+  Falgorithms.Add('DSAWITHSHA1', 'SHA-1withDSA');
+  Falgorithms.Add('DSAWITHSHA-1', 'SHA-1withDSA');
+  Falgorithms.Add('SHA/DSA', 'SHA-1withDSA');
+  Falgorithms.Add('SHA1/DSA', 'SHA-1withDSA');
+  Falgorithms.Add('SHA-1/DSA', 'SHA-1withDSA');
+  Falgorithms.Add('SHA1WITHDSA', 'SHA-1withDSA');
+  Falgorithms.Add('SHA-1WITHDSA', 'SHA-1withDSA');
+  Falgorithms.Add(TX9ObjectIdentifiers.IdDsaWithSha1.id, 'SHA-1withDSA');
+  Falgorithms.Add(TOiwObjectIdentifiers.DsaWithSha1.id, 'SHA-1withDSA');
+
+  Falgorithms.Add('DSAWITHSHA224', 'SHA-224withDSA');
+  Falgorithms.Add('DSAWITHSHA-224', 'SHA-224withDSA');
+  Falgorithms.Add('SHA224/DSA', 'SHA-224withDSA');
+  Falgorithms.Add('SHA-224/DSA', 'SHA-224withDSA');
+  Falgorithms.Add('SHA224WITHDSA', 'SHA-224withDSA');
+  Falgorithms.Add('SHA-224WITHDSA', 'SHA-224withDSA');
+  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha224.id, 'SHA-224withDSA');
+
+  Falgorithms.Add('DSAWITHSHA256', 'SHA-256withDSA');
+  Falgorithms.Add('DSAWITHSHA-256', 'SHA-256withDSA');
+  Falgorithms.Add('SHA256/DSA', 'SHA-256withDSA');
+  Falgorithms.Add('SHA-256/DSA', 'SHA-256withDSA');
+  Falgorithms.Add('SHA256WITHDSA', 'SHA-256withDSA');
+  Falgorithms.Add('SHA-256WITHDSA', 'SHA-256withDSA');
+  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha256.id, 'SHA-256withDSA');
+
+  Falgorithms.Add('DSAWITHSHA384', 'SHA-384withDSA');
+  Falgorithms.Add('DSAWITHSHA-384', 'SHA-384withDSA');
+  Falgorithms.Add('SHA384/DSA', 'SHA-384withDSA');
+  Falgorithms.Add('SHA-384/DSA', 'SHA-384withDSA');
+  Falgorithms.Add('SHA384WITHDSA', 'SHA-384withDSA');
+  Falgorithms.Add('SHA-384WITHDSA', 'SHA-384withDSA');
+  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha384.id, 'SHA-384withDSA');
+
+  Falgorithms.Add('DSAWITHSHA512', 'SHA-512withDSA');
+  Falgorithms.Add('DSAWITHSHA-512', 'SHA-512withDSA');
+  Falgorithms.Add('SHA512/DSA', 'SHA-512withDSA');
+  Falgorithms.Add('SHA-512/DSA', 'SHA-512withDSA');
+  Falgorithms.Add('SHA512WITHDSA', 'SHA-512withDSA');
+  Falgorithms.Add('SHA-512WITHDSA', 'SHA-512withDSA');
+  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha512.id, 'SHA-512withDSA');
 
   Falgorithms.Add('NONEWITHECDSA', 'NONEwithECDSA');
   Falgorithms.Add('ECDSAWITHNONE', 'NONEwithECDSA');
@@ -169,18 +224,6 @@ begin
   // Falgorithms.Add('GOST3411WITHECGOST3410', 'ECGOST3410');
   // Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001.id,
   // 'ECGOST3410');
-
-  Foids.Add('SHA-1withECDSA', TX9ObjectIdentifiers.ECDsaWithSha1);
-  Foids.Add('SHA-224withECDSA', TX9ObjectIdentifiers.ECDsaWithSha224);
-  Foids.Add('SHA-256withECDSA', TX9ObjectIdentifiers.ECDsaWithSha256);
-  Foids.Add('SHA-384withECDSA', TX9ObjectIdentifiers.ECDsaWithSha384);
-  Foids.Add('SHA-512withECDSA', TX9ObjectIdentifiers.ECDsaWithSha512);
-
-  // Foids.Add('GOST3410',
-  // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
-  //
-  // Foids.Add('ECGOST3410',
-  // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
 
   // ECSCHNORR BSI
 
@@ -350,6 +393,20 @@ begin
   Falgorithms.Add('RIPEMD160WITHECSCHNORRLIBSECP',
     'RIPEMD160withECSCHNORRLIBSECP');
 
+  Foids.Add('SHA-1withDSA', TX9ObjectIdentifiers.IdDsaWithSha1);
+
+  Foids.Add('SHA-1withECDSA', TX9ObjectIdentifiers.ECDsaWithSha1);
+  Foids.Add('SHA-224withECDSA', TX9ObjectIdentifiers.ECDsaWithSha224);
+  Foids.Add('SHA-256withECDSA', TX9ObjectIdentifiers.ECDsaWithSha256);
+  Foids.Add('SHA-384withECDSA', TX9ObjectIdentifiers.ECDsaWithSha384);
+  Foids.Add('SHA-512withECDSA', TX9ObjectIdentifiers.ECDsaWithSha512);
+
+  // Foids.Add('GOST3410',
+  // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
+  //
+  // Foids.Add('ECGOST3410',
+  // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+
 end;
 
 class destructor TSignerUtilities.DestroySignerUtilities;
@@ -411,6 +468,60 @@ begin
     mechanism := algorithm;
   end;
 
+  if (mechanism = 'NONEwithDSA') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('NULL');
+
+    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA-1withDSA') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
+    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA-224withDSA') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
+    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA-256withDSA') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
+    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA-384withDSA') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
+    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA-512withDSA') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
+    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
   if (mechanism = 'NONEwithECDSA') then
   begin
     DigestInstance := TDigestUtilities.GetDigest('NULL');
@@ -465,6 +576,51 @@ begin
     DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
 
     Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA1WITHECNR') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+
+    Result := (TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA224WITHECNR') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
+
+    Result := (TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA256WITHECNR') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
+
+    Result := (TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA384WITHECNR') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
+
+    Result := (TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner,
+      DigestInstance));
+    Exit;
+  end;
+
+  if (mechanism = 'SHA512WITHECNR') then
+  begin
+    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
+
+    Result := (TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner,
       DigestInstance));
     Exit;
   end;

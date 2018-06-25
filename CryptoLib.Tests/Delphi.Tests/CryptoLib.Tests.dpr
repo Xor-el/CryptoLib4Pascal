@@ -410,7 +410,26 @@ uses
   ClpIECSchnorrISOXSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrISOXSigner.pas',
   ClpECSchnorrISOXSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrISOXSigner.pas',
   ClpIECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrLIBSECPSigner.pas',
-  ClpECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrLIBSECPSigner.pas';
+  ClpECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrLIBSECPSigner.pas',
+  ClpECNRSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECNRSigner.pas',
+  ClpIECNRSigner in '..\..\CryptoLib\src\Interfaces\ClpIECNRSigner.pas',
+  ClpDsaValidationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaValidationParameters.pas',
+  ClpIDsaValidationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaValidationParameters.pas',
+  ClpDsaParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaParameters.pas',
+  ClpIDsaParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameters.pas',
+  ClpDsaPublicKeyParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaPublicKeyParameters.pas',
+  ClpIDsaPublicKeyParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaPublicKeyParameters.pas',
+  ClpDsaKeyParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaKeyParameters.pas',
+  ClpIDsaKeyParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaKeyParameters.pas',
+  ClpDsaKeyGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaKeyGenerationParameters.pas',
+  ClpIDsaKeyGenerationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaKeyGenerationParameters.pas',
+  ClpDsaPrivateKeyParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaPrivateKeyParameters.pas',
+  ClpIDsaPrivateKeyParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaPrivateKeyParameters.pas',
+  ClpDsaKeyPairGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpDsaKeyPairGenerator.pas',
+  ClpIDsaKeyPairGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaKeyPairGenerator.pas',
+  ClpDsaSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpDsaSigner.pas',
+  ClpBase58 in '..\..\CryptoLib\src\Utils\Encoders\ClpBase58.pas',
+  ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\ClpIDsaSigner.pas';
 
 begin
 

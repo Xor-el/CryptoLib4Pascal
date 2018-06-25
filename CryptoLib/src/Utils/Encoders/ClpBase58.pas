@@ -15,43 +15,39 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpHex;
+unit ClpBase58;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SbpBase16,
+  SbpBase58,
+{$IFDEF DELPHI}
+  SbpIBase58,
+{$ENDIF DELPHI}
   ClpCryptoLibTypes;
 
 type
-  THex = class sealed(TObject)
+  TBase58 = class sealed(TObject)
 
   public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+    class function Encode(Input: TCryptoLibByteArray): String; static;
+    class function Decode(const Input: String): TCryptoLibByteArray; static;
   end;
 
 implementation
 
-{ THex }
+{ TBase58 }
 
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
+class function TBase58.Decode(const Input: String): TCryptoLibByteArray;
 begin
-  result := SbpBase16.TBase16.Decode(Hex);
+  result := SbpBase58.TBase58.BitCoin.Decode(Input);
 end;
 
-class function THex.Encode(Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
+class function TBase58.Encode(Input: TCryptoLibByteArray): String;
 begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
-  end;
+  result := SbpBase58.TBase58.BitCoin.Encode(Input);
 end;
 
 end.

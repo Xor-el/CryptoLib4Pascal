@@ -22,6 +22,7 @@ interface
 uses
   Classes,
   SysUtils,
+  ClpHex,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -44,7 +45,13 @@ uses
   ClpECPrivateKeyParameters,
   ClpIECPublicKeyParameters,
   ClpIECPrivateKeyParameters,
-  ClpIECInterface;
+  ClpIECInterface,
+  ClpIDsaParameters,
+  ClpIDsaPrivateKeyParameters,
+  ClpIDsaPublicKeyParameters,
+  ClpDsaParameters,
+  ClpDsaPrivateKeyParameters,
+  ClpDsaPublicKeyParameters;
 
 type
 
@@ -58,16 +65,15 @@ type
   private
 
   var
-    //
-    // ECDSA parameters
-    //
-
-    FECParraGX, FECParraGY, FECParraH, FECParraN, FECPubQX, FECPubQY,
-      FECPrivD: TBigInteger;
+    FECParraGX, FECParraGY, FECParraH, FECParraN, FECPubQX, FECPubQY, FECPrivD,
+      FDSAParaG, FDSAParaP, FDSAParaQ, FDSAPublicY, FDsaPrivateX: TBigInteger;
     Fcurve: IECCurve;
     FecDomain: IECDomainParameters;
     FecPub: IECPublicKeyParameters;
     FecPriv: IECPrivateKeyParameters;
+    Fpara: IDsaParameters;
+    FdsaPriv: IDsaPrivateKeyParameters;
+    FdsaPub: IDsaPublicKeyParameters;
 
   protected
     procedure SetUp; override;
@@ -84,6 +90,11 @@ implementation
 procedure TTestSignerUtilities.SetUp;
 begin
   inherited;
+
+  //
+  // ECDSA parameters
+  //
+
   FECParraGX := TBigInteger.Create
     (TBase64.Decode('D/qWPNyogWzMM7hkK+35BcPTWFc9Pyf7vTs8uaqv'));
   FECParraGY := TBigInteger.Create
@@ -97,27 +108,6 @@ begin
     (TBase64.Decode('JrlJfxu3WGhqwtL/55BOs/wsUeiDFsvXcGhB8DGx'));
   FECPrivD := TBigInteger.Create
     (TBase64.Decode('GYQmd/NF1B+He1iMkWt3by2Az6Eu07t0ynJ4YCAo'));
-
-  // FECParraGX := TBigInteger.Create(TCryptoLibByteArray.Create(15, 250, 150, 60,
-  // 220, 168, 129, 108, 204, 51, 184, 100, 43, 237, 249, 5, 195, 211, 88, 87,
-  // 61, 63, 39, 251, 189, 59, 60, 185, 170, 175));
-  // FECParraGY := TBigInteger.Create(TCryptoLibByteArray.Create(2, 20, 23, 27, 22,
-  // 245, 162, 81, 145, 191, 171, 53, 44, 244, 95, 185, 171, 76, 23, 231, 49,
-  // 221, 148, 198, 131, 52, 132, 253, 14, 81));
-  //
-  // FECParraH := TBigInteger.Create(TCryptoLibByteArray.Create(1));
-  // FECParraN := TBigInteger.Create(TCryptoLibByteArray.Create(127, 255, 255, 255,
-  // 255, 255, 255, 255, 255, 255, 255, 255, 127, 255, 255, 158, 94, 154, 159,
-  // 93, 144, 113, 251, 209, 82, 38, 136, 144, 157, 11));
-  // FECPubQX := TBigInteger.Create(TCryptoLibByteArray.Create(29, 101, 162, 215,
-  // 182, 27, 248, 25, 183, 61, 138, 255, 12, 200, 203, 57, 131, 69, 135, 35,
-  // 176, 95, 84, 24, 237, 155, 234, 168, 207, 165));
-  // FECPubQY := TBigInteger.Create(TCryptoLibByteArray.Create(38, 185, 73, 127,
-  // 27, 183, 88, 104, 106, 194, 210, 255, 231, 144, 78, 179, 252, 44, 81, 232,
-  // 131, 22, 203, 215, 112, 104, 65, 240, 49, 177));
-  // FECPrivD := TBigInteger.Create(TCryptoLibByteArray.Create(25, 132, 38, 119,
-  // 243, 69, 212, 31, 135, 123, 88, 140, 145, 107, 119, 111, 45, 128, 207, 161,
-  // 46, 211, 187, 116, 202, 114, 120, 96, 32, 40));
 
   Fcurve := TFpCurve.Create
     (TBigInteger.Create
@@ -137,6 +127,31 @@ begin
     as IFpPoint, FecDomain);
 
   FecPriv := TECPrivateKeyParameters.Create(FECPrivD, FecDomain);
+
+  //
+  // DSA parameters
+  //
+
+  FDSAParaG := TBigInteger.Create
+    (TBase64.Decode
+    ('AL0fxOTq10OHFbCf8YldyGembqEu08EDVzxyLL29Zn/t4It661YNol1rnhPIs+cirw+yf9zeCe+KL1IbZ/qIMZM=')
+    );
+  FDSAParaP := TBigInteger.Create
+    (TBase64.Decode
+    ('AM2b/UeQA+ovv3dL05wlDHEKJ+qhnJBsRT5OB9WuyRC830G79y0R8wuq8jyIYWCYcTn1TeqVPWqiTv6oAoiEeOs=')
+    );
+  FDSAParaQ := TBigInteger.Create
+    (TBase64.Decode('AIlJT7mcKL6SUBMmvm24zX1EvjNx'));
+  FDSAPublicY := TBigInteger.Create
+    (TBase64.Decode
+    ('TtWy2GuT9yGBWOHi1/EpCDa/bWJCk2+yAdr56rAcqP0eHGkMnA9s9GJD2nGU8sFjNHm55swpn6JQb8q0agrCfw==')
+    );
+  FDsaPrivateX := TBigInteger.Create
+    (TBase64.Decode('MMpBAxNlv7eYfxLTZ2BItJeD31A='));
+
+  Fpara := TDsaParameters.Create(FDSAParaP, FDSAParaQ, FDSAParaG);
+  FdsaPriv := TDsaPrivateKeyParameters.Create(FDsaPrivateX, Fpara);
+  FdsaPub := TDsaPublicKeyParameters.Create(FDSAPublicY, Fpara);
 
 end;
 
@@ -188,6 +203,11 @@ begin
     begin
       signParams := FecPriv;
       verifyParams := FecPub;
+    end
+    else if (cipherName = 'DSA') then
+    begin
+      signParams := FdsaPriv;
+      verifyParams := FdsaPub;
     end
     else
     begin

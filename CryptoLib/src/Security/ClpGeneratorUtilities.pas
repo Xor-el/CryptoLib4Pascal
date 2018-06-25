@@ -29,6 +29,8 @@ uses
   ClpCipherKeyGenerator,
   ClpICipherKeyGenerator,
   ClpIDerObjectIdentifier,
+  ClpDsaKeyPairGenerator,
+  ClpIDsaKeyPairGenerator,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpNistObjectIdentifiers,
   ClpIanaObjectIdentifiers,
@@ -235,6 +237,7 @@ begin
   // key pair generators.
   //
 
+  AddKpgAlgorithm('DSA', []);
   AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDSA', []);
 
@@ -353,6 +356,12 @@ begin
   begin
     raise ESecurityUtilityCryptoLibException.CreateResFmt
       (@SKeyPairGeneratorAlgorithmNotRecognised, [algorithm]);
+  end;
+
+  if (canonicalName = 'DSA') then
+  begin
+    result := TDsaKeyPairGenerator.Create() as IDsaKeyPairGenerator;
+    Exit;
   end;
 
   // "EC", "ECDH", "ECDHC", "ECDSA", "ECGOST3410", "ECMQV"
