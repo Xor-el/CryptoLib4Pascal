@@ -99,7 +99,7 @@ begin
     (TBase64.Decode('D/qWPNyogWzMM7hkK+35BcPTWFc9Pyf7vTs8uaqv'));
   FECParraGY := TBigInteger.Create
     (TBase64.Decode('AhQXGxb1olGRv6s1LPRfuatMF+cx3ZTGgzSE/Q5R'));
-  FECParraH := TBigInteger.Create(TBase64.Decode('AQ:=:='));
+  FECParraH := TBigInteger.Create(TBase64.Decode('AQ=='));
   FECParraN := TBigInteger.Create
     (TBase64.Decode('f///////////////f///nl6an12QcfvRUiaIkJ0L'));
   FECPubQX := TBigInteger.Create
