@@ -58,12 +58,24 @@ type
   TPascalCoinIESEngine = class(TIESEngine, IPascalCoinIESEngine)
 
   strict private
-  const
+  type
     /// <summary>
-    /// <b>SizeOf</b> Structure for Compatibility with PascalCoin Original
+    /// Structure for Compatibility with PascalCoin Original
     /// Implementation.
     /// </summary>
-    SECURE_HEAD_SIZE = Int32(6);
+    TSecureHead = record
+      Key: Byte;
+      Mac: Byte;
+      Orig: UInt16;
+      Body: UInt16;
+    end;
+
+  const
+    /// <summary>
+    /// <b>SizeOf <paramref name="TSecureHead" /></b>. <br />
+    /// </summary>
+    // SECURE_HEAD_SIZE = Int32(6);
+    SECURE_HEAD_SIZE = System.SizeOf(TSecureHead);
 
   strict protected
 
