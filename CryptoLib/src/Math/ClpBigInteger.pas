@@ -825,7 +825,7 @@ end;
 class function TBigInteger.IntToOctal(input: Int32): string;
 var
   bits: TCryptoLibCharArray;
-  i, LowPoint: Int32;
+  i: Int32;
 begin
 
   Result := '';
@@ -834,14 +834,26 @@ begin
 
   i := 0;
 
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(String);
-{$ELSE}
-  LowPoint := 1;
-{$ENDIF DELPHIXE3_UP}
   while (input <> 0) do
   begin
-    bits[i] := IntToStr(input and 7)[LowPoint];
+    case (input and 7) of
+      0:
+        bits[i] := '0';
+      1:
+        bits[i] := '1';
+      2:
+        bits[i] := '2';
+      3:
+        bits[i] := '3';
+      4:
+        bits[i] := '4';
+      5:
+        bits[i] := '5';
+      6:
+        bits[i] := '6';
+      7:
+        bits[i] := '7';
+    end;
     System.Inc(i);
     input := input shr 3;
   end;
