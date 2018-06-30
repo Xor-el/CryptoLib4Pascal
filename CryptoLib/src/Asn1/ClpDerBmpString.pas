@@ -27,7 +27,6 @@ uses
   ClpAsn1Object,
   ClpAsn1Tags,
   ClpAsn1OctetString,
-  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerBmpString,
   ClpIAsn1TaggedObject,
@@ -98,6 +97,11 @@ type
 implementation
 
 { TDerBmpString }
+
+function TDerBmpString.GetStr: String;
+begin
+  result := FStr;
+end;
 
 function TDerBmpString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
@@ -210,11 +214,6 @@ begin
 
   result := TDerBmpString.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
     .GetOctets());
-end;
-
-function TDerBmpString.GetStr: String;
-begin
-  result := FStr;
 end;
 
 function TDerBmpString.GetString: String;

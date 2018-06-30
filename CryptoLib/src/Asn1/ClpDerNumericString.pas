@@ -135,6 +135,11 @@ implementation
 
 { TDerNumericString }
 
+function TDerNumericString.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerNumericString.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -210,6 +215,18 @@ begin
   derOut.WriteEncoded(TAsn1Tags.NumericString, GetOctets());
 end;
 
+class function TDerNumericString.GetInstance(obj: TObject): IDerNumericString;
+begin
+  if ((obj = Nil) or (obj is TDerNumericString)) then
+  begin
+    result := obj as TDerNumericString;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerNumericString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerNumericString;
 var
@@ -225,23 +242,6 @@ begin
 
   result := TDerNumericString.Create
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-class function TDerNumericString.GetInstance(obj: TObject): IDerNumericString;
-begin
-  if ((obj = Nil) or (obj is TDerNumericString)) then
-  begin
-    result := obj as TDerNumericString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TDerNumericString.GetStr: String;
-begin
-  result := FStr;
 end;
 
 function TDerNumericString.GetString: String;

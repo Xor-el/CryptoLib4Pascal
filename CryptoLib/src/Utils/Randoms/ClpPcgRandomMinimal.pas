@@ -89,7 +89,7 @@ type
   /// <param name="initState">Initial state.</param>
   /// <param name="initSeq">Initial sequence</param>
 
-  class procedure Seed(initState: UInt64; initSeq: UInt64); static; inline;
+  class procedure Seed(initState: UInt64; initSeq: UInt64); static;
 
   /// <summary>
   /// Generates a uniformly distributed number, r,
@@ -161,6 +161,20 @@ type
   end;
 
 implementation
+
+class function TPcg.NextUInt32(): UInt32;
+var
+  oldState, LValue: UInt64;
+  xorShifted: UInt32;
+  rot: Int32;
+begin
+  oldState := Fm_state;
+  LValue := UInt64(6364136223846793005);
+  Fm_state := oldState * LValue + Fm_inc;
+  xorShifted := UInt32(((oldState shr 18) xor oldState) shr 27);
+  rot := Int32(oldState shr 59);
+  result := (xorShifted shr rot) or (xorShifted shl ((-rot) and 31));
+end;
 
 class function TPcg.NextUInt32(minimum: UInt32; exclusiveBound: UInt32): UInt32;
 var
@@ -273,19 +287,6 @@ begin
   boundRange := UInt32(exclusiveBound - minimum);
   rangeResult := Range32(boundRange);
   result := Integer(rangeResult) + Integer(minimum);
-end;
-
-class function TPcg.NextUInt32(): UInt32;
-var
-  oldState: UInt64;
-  xorShifted: UInt32;
-  rot: Integer;
-begin
-  oldState := Fm_state;
-  Fm_state := oldState * UInt64(6364136223846793005) + Fm_inc;
-  xorShifted := UInt32(((oldState shr 18) xor oldState) shr 27);
-  rot := Integer(oldState shr 59);
-  result := (xorShifted shr rot) or (xorShifted shl ((-rot) and 31));
 end;
 
 end.

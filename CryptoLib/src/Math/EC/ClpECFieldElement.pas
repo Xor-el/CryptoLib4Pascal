@@ -394,6 +394,26 @@ implementation
 
 { TF2mFieldElement }
 
+function TF2mFieldElement.GetKs: TCryptoLibInt32Array;
+begin
+  result := FKs;
+end;
+
+function TF2mFieldElement.GetM: Int32;
+begin
+  result := Fm;
+end;
+
+function TF2mFieldElement.GetRepresentation: Int32;
+begin
+  result := Frepresentation;
+end;
+
+function TF2mFieldElement.GetX: TLongArray;
+begin
+  result := Fx;
+end;
+
 function TF2mFieldElement.Add(const b: IECFieldElement): IECFieldElement;
 var
   iarrClone: TLongArray;
@@ -578,26 +598,6 @@ begin
   begin
     result := 0;
   end;
-end;
-
-function TF2mFieldElement.GetKs: TCryptoLibInt32Array;
-begin
-  result := FKs;
-end;
-
-function TF2mFieldElement.GetM: Int32;
-begin
-  result := Fm;
-end;
-
-function TF2mFieldElement.GetRepresentation: Int32;
-begin
-  result := Frepresentation;
-end;
-
-function TF2mFieldElement.GetX: TLongArray;
-begin
-  result := Fx;
 end;
 
 function TF2mFieldElement.Invert: IECFieldElement;
@@ -834,6 +834,16 @@ end;
 
 { TFpFieldElement }
 
+function TFpFieldElement.GetQ: TBigInteger;
+begin
+  result := Fq;
+end;
+
+function TFpFieldElement.GetFieldSize: Int32;
+begin
+  result := Q.BitLength;
+end;
+
 function TFpFieldElement.Add(const b: IECFieldElement): IECFieldElement;
 begin
   result := TFpFieldElement.Create(Fq, Fr, ModAdd(Fx, b.ToBigInteger()));
@@ -938,20 +948,10 @@ begin
   result := 'Fp';
 end;
 
-function TFpFieldElement.GetFieldSize: Int32;
-begin
-  result := Q.BitLength;
-end;
-
 function TFpFieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
   result := Q.GetHashCode() xor (Inherited GetHashCode());
-end;
-
-function TFpFieldElement.GetQ: TBigInteger;
-begin
-  result := Fq;
 end;
 
 function TFpFieldElement.Invert: IECFieldElement;

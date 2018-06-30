@@ -443,6 +443,201 @@ uses
 
 { TBigInteger }
 
+class function TBigInteger.BitLen(w: Int32): Int32;
+var
+  v, t: UInt32;
+begin
+  v := UInt32(w);
+  t := v shr 24;
+  if (t <> 0) then
+  begin
+    Result := 24 + BitLengthTable[t];
+    Exit;
+  end;
+  t := v shr 16;
+  if (t <> 0) then
+  begin
+    Result := 16 + BitLengthTable[t];
+    Exit;
+  end;
+  t := v shr 8;
+  if (t <> 0) then
+  begin
+    Result := 8 + BitLengthTable[t];
+    Exit;
+  end;
+  Result := BitLengthTable[v];
+end;
+
+class function TBigInteger.CalcBitLength(sign, indx: Int32;
+  mag: TCryptoLibInt32Array): Int32;
+var
+  BitLength, firstMag: Int32;
+begin
+  while True do
+
+  begin
+    if (indx >= System.length(mag)) then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    if (mag[indx] <> 0) then
+    begin
+      break;
+    end;
+
+    System.Inc(indx);
+  end;
+
+  // bit length for everything after the first int
+  BitLength := 32 * ((System.length(mag) - indx) - 1);
+
+  // and determine bitlength of first int
+  firstMag := mag[indx];
+  BitLength := BitLength + BitLen(firstMag);
+
+  // Check for negative powers of two
+  if ((sign < 0) and ((firstMag and Int32(-firstMag)) = firstMag)) then
+  begin
+    repeat
+      System.Inc(indx);
+      if (indx >= System.length(mag)) then
+      begin
+        System.Dec(BitLength);
+        break;
+      end;
+    until (not(mag[indx] = 0));
+  end;
+
+  Result := BitLength;
+end;
+
+class function TBigInteger.GetZero: TBigInteger;
+begin
+  Result := FZero;
+end;
+
+class function TBigInteger.GetOne: TBigInteger;
+begin
+  Result := FOne;
+end;
+
+class function TBigInteger.GetTwo: TBigInteger;
+begin
+  Result := FTwo;
+end;
+
+class function TBigInteger.GetThree: TBigInteger;
+begin
+  Result := FThree;
+end;
+
+class function TBigInteger.GetTen: TBigInteger;
+begin
+  Result := FTen;
+end;
+
+class function TBigInteger.GetprimeLists: TCryptoLibMatrixInt32Array;
+begin
+  Result := FprimeLists;
+end;
+
+class function TBigInteger.GetprimeProducts: TCryptoLibInt32Array;
+begin
+  Result := FprimeProducts;
+end;
+
+class function TBigInteger.GetRandomSource: ISecureRandom;
+begin
+  Result := FRandomSource;
+end;
+
+function TBigInteger.GetSignValue: Int32;
+begin
+  Result := Fsign;
+end;
+
+function TBigInteger.GetBitLength: Int32;
+begin
+  if (FnBitLength = -1) then
+  begin
+    if Fsign = 0 then
+    begin
+      FnBitLength := 0;
+    end
+    else
+    begin
+      FnBitLength := CalcBitLength(Fsign, 0, Fmagnitude);
+    end;
+
+  end;
+  Result := FnBitLength;
+end;
+
+function TBigInteger.GetInt32Value: Int32;
+var
+  n, v: Int32;
+begin
+  if (Fsign = 0) then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  n := System.length(Fmagnitude);
+
+  v := Fmagnitude[n - 1];
+
+  if Fsign < 0 then
+  begin
+    Result := -v;
+  end
+  else
+  begin
+    Result := v;
+  end;
+end;
+
+function TBigInteger.GetInt64Value: Int64;
+var
+  n: Int32;
+  v: Int64;
+begin
+  if (Fsign = 0) then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  n := System.length(Fmagnitude);
+
+  v := Fmagnitude[n - 1] and IMASK;
+  if (n > 1) then
+  begin
+    v := v or ((Fmagnitude[n - 2] and IMASK) shl 32);
+  end;
+
+  if Fsign < 0 then
+
+  begin
+    Result := -v;
+    Exit;
+  end
+  else
+  begin
+    Result := v;
+    Exit;
+  end;
+
+end;
+
+function TBigInteger.GetIsInitialized: Boolean;
+begin
+  Result := FIsInitialized;
+end;
+
 class function TBigInteger.BitCnt(i: Int32): Int32;
 var
   u: UInt32;
@@ -546,32 +741,6 @@ begin
   end;
 
   Result := CreateUValueOf(UInt64(value));
-end;
-
-class function TBigInteger.BitLen(w: Int32): Int32;
-var
-  v, t: UInt32;
-begin
-  v := UInt32(w);
-  t := v shr 24;
-  if (t <> 0) then
-  begin
-    Result := 24 + BitLengthTable[t];
-    Exit;
-  end;
-  t := v shr 16;
-  if (t <> 0) then
-  begin
-    Result := 16 + BitLengthTable[t];
-    Exit;
-  end;
-  t := v shr 8;
-  if (t <> 0) then
-  begin
-    Result := 8 + BitLengthTable[t];
-    Exit;
-  end;
-  Result := BitLengthTable[v];
 end;
 
 class function TBigInteger.CreateUValueOf(value: UInt64): TBigInteger;
@@ -1178,6 +1347,24 @@ end;
 class function TBigInteger.Arbitrary(sizeInBits: Int32): TBigInteger;
 begin
   Result := TBigInteger.Create(sizeInBits, RandomSource);
+end;
+
+function TBigInteger.Remainder(m: Int32): Int32;
+var
+  acc, posVal: Int64;
+  &pos: Int32;
+begin
+{$IFDEF DEBUG}
+  System.Assert(m > 0);
+{$ENDIF DEBUG}
+  acc := 0;
+  for pos := 0 to System.Pred(System.length(Fmagnitude)) do
+  begin
+    posVal := UInt32(Fmagnitude[pos]);
+    acc := ((acc shl 32) or posVal) mod m;
+  end;
+
+  Result := Int32(acc);
 end;
 
 function TBigInteger.Remainder(const n: TBigInteger): TBigInteger;
@@ -1802,23 +1989,6 @@ begin
   Result := FnBits;
 end;
 
-function TBigInteger.GetBitLength: Int32;
-begin
-  if (FnBitLength = -1) then
-  begin
-    if Fsign = 0 then
-    begin
-      FnBitLength := 0;
-    end
-    else
-    begin
-      FnBitLength := CalcBitLength(Fsign, 0, Fmagnitude);
-    end;
-
-  end;
-  Result := FnBitLength;
-end;
-
 function TBigInteger.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 
@@ -1845,68 +2015,6 @@ begin
     Result := hc;
   end;
 
-end;
-
-function TBigInteger.GetInt32Value: Int32;
-var
-  n, v: Int32;
-begin
-  if (Fsign = 0) then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  n := System.length(Fmagnitude);
-
-  v := Fmagnitude[n - 1];
-
-  if Fsign < 0 then
-  begin
-    Result := -v;
-  end
-  else
-  begin
-    Result := v;
-  end;
-end;
-
-function TBigInteger.GetInt64Value: Int64;
-var
-  n: Int32;
-  v: Int64;
-begin
-  if (Fsign = 0) then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  n := System.length(Fmagnitude);
-
-  v := Fmagnitude[n - 1] and IMASK;
-  if (n > 1) then
-  begin
-    v := v or ((Fmagnitude[n - 2] and IMASK) shl 32);
-  end;
-
-  if Fsign < 0 then
-
-  begin
-    Result := -v;
-    Exit;
-  end
-  else
-  begin
-    Result := v;
-    Exit;
-  end;
-
-end;
-
-function TBigInteger.GetIsInitialized: Boolean;
-begin
-  Result := FIsInitialized;
 end;
 
 function TBigInteger.GetLowestSetBit: Int32;
@@ -1997,11 +2105,6 @@ begin
 {$ENDIF DEBUG}
   FmQuote := ModInverse32(d);
   Result := FmQuote;
-end;
-
-class function TBigInteger.GetZero: TBigInteger;
-begin
-  Result := FZero;
 end;
 
 function TBigInteger.IsEqualMagnitude(const x: TBigInteger): Boolean;
@@ -3332,6 +3435,46 @@ begin
   Result := y;
 end;
 
+function TBigInteger.DivideWords(w: Int32): TBigInteger;
+var
+  n: Int32;
+  mag: TCryptoLibInt32Array;
+begin
+{$IFDEF DEBUG}
+  System.Assert(w >= 0);
+{$ENDIF DEBUG}
+  n := System.length(Fmagnitude);
+  if (w >= n) then
+  begin
+    Result := Zero;
+    Exit;
+  end;
+
+  System.SetLength(mag, n - w);
+  System.Move(Fmagnitude[0], mag[0], (n - w) * System.SizeOf(Int32));
+  Result := TBigInteger.Create(Fsign, mag, false);
+end;
+
+function TBigInteger.RemainderWords(w: Int32): TBigInteger;
+var
+  n: Int32;
+  mag: TCryptoLibInt32Array;
+begin
+{$IFDEF DEBUG}
+  System.Assert(w >= 0);
+{$ENDIF DEBUG}
+  n := System.length(Fmagnitude);
+  if (w >= n) then
+  begin
+    Result := Self;
+    Exit;
+  end;
+
+  System.SetLength(mag, w);
+  System.Move(Fmagnitude[n - w], mag[0], w * System.SizeOf(Int32));
+  Result := TBigInteger.Create(Fsign, mag, false);
+end;
+
 class function TBigInteger.ProbablePrime(BitLength: Int32;
   const random: IRandom): TBigInteger;
 begin
@@ -3480,24 +3623,6 @@ begin
   Result := x;
 end;
 
-function TBigInteger.Remainder(m: Int32): Int32;
-var
-  acc, posVal: Int64;
-  &pos: Int32;
-begin
-{$IFDEF DEBUG}
-  System.Assert(m > 0);
-{$ENDIF DEBUG}
-  acc := 0;
-  for pos := 0 to System.Pred(System.length(Fmagnitude)) do
-  begin
-    posVal := UInt32(Fmagnitude[pos]);
-    acc := ((acc shl 32) or posVal) mod m;
-  end;
-
-  Result := Int32(acc);
-end;
-
 function TBigInteger.Remainder(x, y: TCryptoLibInt32Array)
   : TCryptoLibInt32Array;
 var
@@ -3626,26 +3751,6 @@ begin
   end;
 
   Result := x;
-end;
-
-function TBigInteger.RemainderWords(w: Int32): TBigInteger;
-var
-  n: Int32;
-  mag: TCryptoLibInt32Array;
-begin
-{$IFDEF DEBUG}
-  System.Assert(w >= 0);
-{$ENDIF DEBUG}
-  n := System.length(Fmagnitude);
-  if (w >= n) then
-  begin
-    Result := Self;
-    Exit;
-  end;
-
-  System.SetLength(mag, w);
-  System.Move(Fmagnitude[n - w], mag[0], w * System.SizeOf(Int32));
-  Result := TBigInteger.Create(Fsign, mag, false);
 end;
 
 function TBigInteger.SetBit(n: Int32): TBigInteger;
@@ -4304,36 +4409,6 @@ begin
   Result := ToString(10);
 end;
 
-class function TBigInteger.GetOne: TBigInteger;
-begin
-  Result := FOne;
-end;
-
-class function TBigInteger.GetprimeLists: TCryptoLibMatrixInt32Array;
-begin
-  Result := FprimeLists;
-end;
-
-class function TBigInteger.GetprimeProducts: TCryptoLibInt32Array;
-begin
-  Result := FprimeProducts;
-end;
-
-class function TBigInteger.GetRandomSource: ISecureRandom;
-begin
-  Result := FRandomSource;
-end;
-
-function TBigInteger.GetSignValue: Int32;
-begin
-  Result := Fsign;
-end;
-
-class function TBigInteger.GetTwo: TBigInteger;
-begin
-  Result := FTwo;
-end;
-
 class function TBigInteger.GetWindowList(mag: TCryptoLibInt32Array;
   extraBits: Int32): TCryptoLibInt32Array;
 var
@@ -4400,61 +4475,6 @@ begin
 
   Result[resultPos] := -1;
 
-end;
-
-class function TBigInteger.GetThree: TBigInteger;
-begin
-  Result := FThree;
-end;
-
-class function TBigInteger.GetTen: TBigInteger;
-begin
-  Result := FTen;
-end;
-
-class function TBigInteger.CalcBitLength(sign, indx: Int32;
-  mag: TCryptoLibInt32Array): Int32;
-var
-  BitLength, firstMag: Int32;
-begin
-  while True do
-
-  begin
-    if (indx >= System.length(mag)) then
-    begin
-      Result := 0;
-      Exit;
-    end;
-
-    if (mag[indx] <> 0) then
-    begin
-      break;
-    end;
-
-    System.Inc(indx);
-  end;
-
-  // bit length for everything after the first int
-  BitLength := 32 * ((System.length(mag) - indx) - 1);
-
-  // and determine bitlength of first int
-  firstMag := mag[indx];
-  BitLength := BitLength + BitLen(firstMag);
-
-  // Check for negative powers of two
-  if ((sign < 0) and ((firstMag and Int32(-firstMag)) = firstMag)) then
-  begin
-    repeat
-      System.Inc(indx);
-      if (indx >= System.length(mag)) then
-      begin
-        System.Dec(BitLength);
-        break;
-      end;
-    until (not(mag[indx] = 0));
-  end;
-
-  Result := BitLength;
 end;
 
 function TBigInteger.CheckProbablePrime(certainty: Int32; const random: IRandom;
@@ -4831,26 +4851,6 @@ begin
   end;
 
   Result := biggies;
-end;
-
-function TBigInteger.DivideWords(w: Int32): TBigInteger;
-var
-  n: Int32;
-  mag: TCryptoLibInt32Array;
-begin
-{$IFDEF DEBUG}
-  System.Assert(w >= 0);
-{$ENDIF DEBUG}
-  n := System.length(Fmagnitude);
-  if (w >= n) then
-  begin
-    Result := Zero;
-    Exit;
-  end;
-
-  System.SetLength(mag, n - w);
-  System.Move(Fmagnitude[0], mag[0], (n - w) * System.SizeOf(Int32));
-  Result := TBigInteger.Create(Fsign, mag, false);
 end;
 
 function TBigInteger.ToByteArray(unsigned: Boolean): TCryptoLibByteArray;

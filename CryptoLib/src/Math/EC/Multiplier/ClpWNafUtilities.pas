@@ -125,7 +125,7 @@ type
     /// the window size to use
     /// </returns>
     class function GetWindowSize(bits: Int32;
-      windowSizeCutoffs: TCryptoLibInt32Array): Int32; overload; static; inline;
+      windowSizeCutoffs: TCryptoLibInt32Array): Int32; overload; static;
 
     class function MapPointWithPrecomp(const p: IECPoint; width: Int32;
       includeNegated: Boolean; const pointMap: IECPointMap): IECPoint; static;

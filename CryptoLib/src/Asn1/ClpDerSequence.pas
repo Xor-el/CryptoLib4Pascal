@@ -85,6 +85,11 @@ implementation
 
 { TDerSequence }
 
+class function TDerSequence.GetEmpty: IDerSequence;
+begin
+  result := FEmpty;
+end;
+
 constructor TDerSequence.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(1);
@@ -173,11 +178,6 @@ begin
     result := TDerSequence.Create(v);
   end;
 
-end;
-
-class function TDerSequence.GetEmpty: IDerSequence;
-begin
-  result := FEmpty;
 end;
 
 end.

@@ -74,6 +74,11 @@ implementation
 
 { TDerGeneralString }
 
+function TDerGeneralString.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerGeneralString.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -122,6 +127,18 @@ begin
   derOut.WriteEncoded(TAsn1Tags.GeneralString, GetOctets());
 end;
 
+class function TDerGeneralString.GetInstance(obj: TObject): IDerGeneralString;
+begin
+  if ((obj = Nil) or (obj is TDerGeneralString)) then
+  begin
+    result := obj as TDerGeneralString;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerGeneralString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerGeneralString;
 var
@@ -137,23 +154,6 @@ begin
 
   result := TDerGeneralString.Create
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-class function TDerGeneralString.GetInstance(obj: TObject): IDerGeneralString;
-begin
-  if ((obj = Nil) or (obj is TDerGeneralString)) then
-  begin
-    result := obj as TDerGeneralString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TDerGeneralString.GetStr: String;
-begin
-  result := FStr;
 end;
 
 function TDerGeneralString.GetString: String;

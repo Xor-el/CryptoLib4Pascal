@@ -68,18 +68,6 @@ implementation
 
 { TIanaObjectIdentifiers }
 
-class procedure TIanaObjectIdentifiers.Boot;
-begin
-  FIsakmpOakley := TDerObjectIdentifier.Create('1.3.6.1.5.5.8.1');
-
-  FHmacMD5 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.1');
-  FHmacSha1 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.2');
-
-  FHmacTiger := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.3');
-
-  FHmacRipeMD160 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.4');
-end;
-
 class function TIanaObjectIdentifiers.GetHmacMD5: IDerObjectIdentifier;
 begin
   result := FHmacMD5;
@@ -103,6 +91,18 @@ end;
 class function TIanaObjectIdentifiers.GetIsakmpOakley: IDerObjectIdentifier;
 begin
   result := FIsakmpOakley;
+end;
+
+class procedure TIanaObjectIdentifiers.Boot;
+begin
+  FIsakmpOakley := TDerObjectIdentifier.Create('1.3.6.1.5.5.8.1');
+
+  FHmacMD5 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.1');
+  FHmacSha1 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.2');
+
+  FHmacTiger := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.3');
+
+  FHmacRipeMD160 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.4');
 end;
 
 class constructor TIanaObjectIdentifiers.IanaObjectIdentifiers;

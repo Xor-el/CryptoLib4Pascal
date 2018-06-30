@@ -106,6 +106,11 @@ implementation
 
 { TDerGraphicString }
 
+function TDerGraphicString.GetmString: TCryptoLibByteArray;
+begin
+  result := FmString;
+end;
+
 function TDerGraphicString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerGraphicString;
@@ -178,11 +183,6 @@ begin
     end;
 
   end;
-end;
-
-function TDerGraphicString.GetmString: TCryptoLibByteArray;
-begin
-  result := FmString;
 end;
 
 function TDerGraphicString.GetOctets: TCryptoLibByteArray;

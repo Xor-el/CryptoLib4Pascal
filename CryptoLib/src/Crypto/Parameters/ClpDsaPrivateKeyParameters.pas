@@ -56,6 +56,11 @@ implementation
 
 { TDsaPrivateKeyParameters }
 
+function TDsaPrivateKeyParameters.GetX: TBigInteger;
+begin
+  result := Fx;
+end;
+
 constructor TDsaPrivateKeyParameters.Create(const x: TBigInteger;
   const parameters: IDsaParameters);
 begin
@@ -88,11 +93,6 @@ function TDsaPrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrI
 {$ENDIF DELPHI}
 begin
   result := x.GetHashCode() xor (Inherited GetHashCode());
-end;
-
-function TDsaPrivateKeyParameters.GetX: TBigInteger;
-begin
-  result := Fx;
 end;
 
 end.

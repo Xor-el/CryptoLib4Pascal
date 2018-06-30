@@ -478,6 +478,31 @@ uses
 
 { TECPoint }
 
+function TECPoint.GetIsCompressed: Boolean;
+begin
+  result := Fm_withCompression;
+end;
+
+function TECPoint.GetIsInfinity: Boolean;
+begin
+  result := (Fm_x = Nil) and (Fm_y = Nil);
+end;
+
+function TECPoint.RawXCoord: IECFieldElement;
+begin
+  result := Fm_x;
+end;
+
+function TECPoint.RawYCoord: IECFieldElement;
+begin
+  result := Fm_y;
+end;
+
+function TECPoint.RawZCoords: TCryptoLibGenericArray<IECFieldElement>;
+begin
+  result := Fm_zs;
+end;
+
 function TECPoint.Normalize: IECPoint;
 var
   Z1: IECFieldElement;
@@ -811,16 +836,6 @@ begin
 
 end;
 
-function TECPoint.GetIsCompressed: Boolean;
-begin
-  result := Fm_withCompression;
-end;
-
-function TECPoint.GetIsInfinity: Boolean;
-begin
-  result := (Fm_x = Nil) and (Fm_y = Nil);
-end;
-
 function TECPoint.GetpreCompTable: TDictionary<String, IPreCompInfo>;
 begin
   result := Fm_preCompTable;
@@ -975,21 +990,6 @@ end;
 function TECPoint.GetDetachedPoint: IECPoint;
 begin
   result := Normalize().Detach();
-end;
-
-function TECPoint.RawXCoord: IECFieldElement;
-begin
-  result := Fm_x;
-end;
-
-function TECPoint.RawYCoord: IECFieldElement;
-begin
-  result := Fm_y;
-end;
-
-function TECPoint.RawZCoords: TCryptoLibGenericArray<IECFieldElement>;
-begin
-  result := Fm_zs;
 end;
 
 { TF2mPoint }

@@ -86,6 +86,11 @@ implementation
 
 { TBerSequence }
 
+class function TBerSequence.GetEmpty: IBerSequence;
+begin
+  result := FEmpty;
+end;
+
 constructor TBerSequence.Create(const obj: IAsn1Encodable);
 begin
   Inherited Create(obj);
@@ -156,11 +161,6 @@ begin
     result := TBerSequence.Create(v);
   end;
 
-end;
-
-class function TBerSequence.GetEmpty: IBerSequence;
-begin
-  result := FEmpty;
 end;
 
 end.

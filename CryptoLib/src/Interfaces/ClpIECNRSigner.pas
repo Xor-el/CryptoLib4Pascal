@@ -23,25 +23,12 @@ interface
 
 uses
   ClpIDsa,
-  ClpICipherParameters,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
   IECNRSigner = interface(IDsa)
     ['{C136F005-404E-4022-886E-DE5EFCECFF9C}']
-
-    function GetAlgorithmName: String;
-
-    property AlgorithmName: String read GetAlgorithmName;
-
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
-
-    function GenerateSignature(&message: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>;
-
-    function VerifySignature(&message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean;
 
   end;
 

@@ -108,6 +108,21 @@ implementation
 
 { TDerApplicationSpecific }
 
+function TDerApplicationSpecific.GetApplicationTag: Int32;
+begin
+  result := Ftag;
+end;
+
+function TDerApplicationSpecific.GetContents: TCryptoLibByteArray;
+begin
+  result := Foctets;
+end;
+
+function TDerApplicationSpecific.isConstructed: Boolean;
+begin
+  result := FisConstructed;
+end;
+
 function TDerApplicationSpecific.GetLengthOfHeader
   (data: TCryptoLibByteArray): Int32;
 var
@@ -181,13 +196,11 @@ function TDerApplicationSpecific.Asn1GetHashCode: Int32;
 var
   HashCode: Int32;
 begin
-  if isConstructed then
-  begin
-    HashCode := 1
-  end
-  else
-  begin
-    HashCode := 0;
+  case isConstructed of
+    true:
+      HashCode := 1;
+    false:
+      HashCode := 0;
   end;
   result := HashCode xor Ftag xor TArrayUtils.GetArrayHashCode(Foctets);
 end;
@@ -276,16 +289,6 @@ begin
   end;
 end;
 
-function TDerApplicationSpecific.GetApplicationTag: Int32;
-begin
-  result := Ftag;
-end;
-
-function TDerApplicationSpecific.GetContents: TCryptoLibByteArray;
-begin
-  result := Foctets;
-end;
-
 function TDerApplicationSpecific.GetObject: IAsn1Object;
 begin
   result := FromByteArray(GetContents());
@@ -309,11 +312,6 @@ begin
   end;
 
   result := FromByteArray(tmp);
-end;
-
-function TDerApplicationSpecific.isConstructed: Boolean;
-begin
-  result := FisConstructed;
 end;
 
 class function TDerApplicationSpecific.ReplaceTagNumber(newTag: Int32;

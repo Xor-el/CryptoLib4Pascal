@@ -78,7 +78,7 @@ type
 
   public
     class function VerifyAlgorithmName(const algorithm: String): String;
-      static; inline;
+      static;
     class function LookupParameters(const publicKeyParamSet
       : IDerObjectIdentifier): IECDomainParameters; static;
     property AlgorithmName: String read GetAlgorithmName;
@@ -95,6 +95,16 @@ uses
   ClpECKeyPairGenerator; // included here to avoid circular dependency :)
 
 { TECKeyParameters }
+
+function TECKeyParameters.GetPublicKeyParamSet: IDerObjectIdentifier;
+begin
+  result := FpublicKeyParamSet;
+end;
+
+function TECKeyParameters.GetParameters: IECDomainParameters;
+begin
+  result := Fparameters;
+end;
 
 class function TECKeyParameters.LookupParameters(const publicKeyParamSet
   : IDerObjectIdentifier): IECDomainParameters;
@@ -214,16 +224,6 @@ end;
 function TECKeyParameters.GetAlgorithmName: String;
 begin
   result := Falgorithm;
-end;
-
-function TECKeyParameters.GetPublicKeyParamSet: IDerObjectIdentifier;
-begin
-  result := FpublicKeyParamSet;
-end;
-
-function TECKeyParameters.GetParameters: IECDomainParameters;
-begin
-  result := Fparameters;
 end;
 
 function TECKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

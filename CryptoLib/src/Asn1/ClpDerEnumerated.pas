@@ -104,6 +104,11 @@ implementation
 
 { TDerEnumerated }
 
+function TDerEnumerated.GetBytes: TCryptoLibByteArray;
+begin
+  result := Fbytes;
+end;
+
 function TDerEnumerated.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerEnumerated;
@@ -191,11 +196,6 @@ begin
   end;
 
   result := TDerEnumerated.Create(System.Copy(enc));
-end;
-
-function TDerEnumerated.GetBytes: TCryptoLibByteArray;
-begin
-  result := Fbytes;
 end;
 
 class function TDerEnumerated.GetInstance(obj: TObject): IDerEnumerated;

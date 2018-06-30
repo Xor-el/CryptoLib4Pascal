@@ -144,53 +144,6 @@ implementation
 
 { TNistObjectIdentifiers }
 
-class procedure TNistObjectIdentifiers.Boot;
-begin
-  FNistAlgorithm := TDerObjectIdentifier.Create('2.16.840.1.101.3.4');
-  FHashAlgs := NistAlgorithm.Branch('2');
-
-  FIdSha256 := HashAlgs.Branch('1');
-  FIdSha384 := HashAlgs.Branch('2');
-  FIdSha512 := HashAlgs.Branch('3');
-  FIdSha224 := HashAlgs.Branch('4');
-  FIdSha512_224 := HashAlgs.Branch('5');
-  FIdSha512_256 := HashAlgs.Branch('6');
-  FIdSha3_224 := HashAlgs.Branch('7');
-  FIdSha3_256 := HashAlgs.Branch('8');
-  FIdSha3_384 := HashAlgs.Branch('9');
-  FIdSha3_512 := HashAlgs.Branch('10');
-
-  FIdHMacWithSha3_224 := HashAlgs.Branch('13');
-  FIdHMacWithSha3_256 := HashAlgs.Branch('14');
-  FIdHMacWithSha3_384 := HashAlgs.Branch('15');
-  FIdHMacWithSha3_512 := HashAlgs.Branch('16');
-
-  FAES := TDerObjectIdentifier.Create(NistAlgorithm.id + '.1');
-
-  FIdAES128Ecb := TDerObjectIdentifier.Create(AES.id + '.1');
-  FIdAes128Cbc := TDerObjectIdentifier.Create(AES.id + '.2');
-  FIdAes128Ofb := TDerObjectIdentifier.Create(AES.id + '.3');
-  FIdAes128Cfb := TDerObjectIdentifier.Create(AES.id + '.4');
-  FidAes192Ecb := TDerObjectIdentifier.Create(AES.id + '.21');
-  FIdAes192Cbc := TDerObjectIdentifier.Create(AES.id + '.22');
-  FIdAes192Ofb := TDerObjectIdentifier.Create(AES.id + '.23');
-  FIdAes192Cfb := TDerObjectIdentifier.Create(AES.id + '.24');
-  FIdAes256Ecb := TDerObjectIdentifier.Create(AES.id + '.41');
-  FIdAes256Cbc := TDerObjectIdentifier.Create(AES.id + '.42');
-  FIdAes256Ofb := TDerObjectIdentifier.Create(AES.id + '.43');
-  FIdAes256Cfb := TDerObjectIdentifier.Create(AES.id + '.44');
-
-  //
-  // signatures
-  //
-  FIdDsaWithSha2 := TDerObjectIdentifier.Create(NistAlgorithm.id + '.3');
-
-  FDsaWithSha224 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.1');
-  FDsaWithSha256 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.2');
-  FDsaWithSha384 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.3');
-  FDsaWithSha512 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.4');
-end;
-
 class function TNistObjectIdentifiers.GetAES: IDerObjectIdentifier;
 begin
   result := FAES;
@@ -368,6 +321,53 @@ end;
 class constructor TNistObjectIdentifiers.NistObjectIdentifiers;
 begin
   TNistObjectIdentifiers.Boot;
+end;
+
+class procedure TNistObjectIdentifiers.Boot;
+begin
+  FNistAlgorithm := TDerObjectIdentifier.Create('2.16.840.1.101.3.4');
+  FHashAlgs := NistAlgorithm.Branch('2');
+
+  FIdSha256 := HashAlgs.Branch('1');
+  FIdSha384 := HashAlgs.Branch('2');
+  FIdSha512 := HashAlgs.Branch('3');
+  FIdSha224 := HashAlgs.Branch('4');
+  FIdSha512_224 := HashAlgs.Branch('5');
+  FIdSha512_256 := HashAlgs.Branch('6');
+  FIdSha3_224 := HashAlgs.Branch('7');
+  FIdSha3_256 := HashAlgs.Branch('8');
+  FIdSha3_384 := HashAlgs.Branch('9');
+  FIdSha3_512 := HashAlgs.Branch('10');
+
+  FIdHMacWithSha3_224 := HashAlgs.Branch('13');
+  FIdHMacWithSha3_256 := HashAlgs.Branch('14');
+  FIdHMacWithSha3_384 := HashAlgs.Branch('15');
+  FIdHMacWithSha3_512 := HashAlgs.Branch('16');
+
+  FAES := TDerObjectIdentifier.Create(NistAlgorithm.id + '.1');
+
+  FIdAES128Ecb := TDerObjectIdentifier.Create(AES.id + '.1');
+  FIdAes128Cbc := TDerObjectIdentifier.Create(AES.id + '.2');
+  FIdAes128Ofb := TDerObjectIdentifier.Create(AES.id + '.3');
+  FIdAes128Cfb := TDerObjectIdentifier.Create(AES.id + '.4');
+  FidAes192Ecb := TDerObjectIdentifier.Create(AES.id + '.21');
+  FIdAes192Cbc := TDerObjectIdentifier.Create(AES.id + '.22');
+  FIdAes192Ofb := TDerObjectIdentifier.Create(AES.id + '.23');
+  FIdAes192Cfb := TDerObjectIdentifier.Create(AES.id + '.24');
+  FIdAes256Ecb := TDerObjectIdentifier.Create(AES.id + '.41');
+  FIdAes256Cbc := TDerObjectIdentifier.Create(AES.id + '.42');
+  FIdAes256Ofb := TDerObjectIdentifier.Create(AES.id + '.43');
+  FIdAes256Cfb := TDerObjectIdentifier.Create(AES.id + '.44');
+
+  //
+  // signatures
+  //
+  FIdDsaWithSha2 := TDerObjectIdentifier.Create(NistAlgorithm.id + '.3');
+
+  FDsaWithSha224 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.1');
+  FDsaWithSha256 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.2');
+  FDsaWithSha384 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.3');
+  FDsaWithSha512 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.4');
 end;
 
 end.

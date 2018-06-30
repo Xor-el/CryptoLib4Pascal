@@ -51,11 +51,6 @@ implementation
 
 { TTimes }
 
-class function TTimes.NanoTime: Int64;
-begin
-  Result := Ticks * NanosecondsPerTick;
-end;
-
 class function TTimes.Now: TDateTime;
 begin
   Result := SysUtils.Now;
@@ -70,6 +65,11 @@ begin
   value := UInt64(((MilliSecondsBetween(Now, dt) * 10000)));
 
   Result := Int64(value and TicksMask);
+end;
+
+class function TTimes.NanoTime: Int64;
+begin
+  Result := Ticks * NanosecondsPerTick;
 end;
 
 end.

@@ -142,6 +142,11 @@ implementation
 
 { TDerObjectIdentifier }
 
+function TDerObjectIdentifier.GetID: String;
+begin
+  result := Fidentifier;
+end;
+
 function TDerObjectIdentifier.Asn1Equals(const asn1Object: IAsn1Object)
   : Boolean;
 var
@@ -314,11 +319,6 @@ begin
   end;
 
   result := Fbody;
-end;
-
-function TDerObjectIdentifier.GetID: String;
-begin
-  result := Fidentifier;
 end;
 
 class function TDerObjectIdentifier.GetInstance(const obj: IAsn1TaggedObject;

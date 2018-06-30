@@ -106,6 +106,11 @@ implementation
 
 { TDerUtf8String }
 
+function TDerUtf8String.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerUtf8String.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -159,6 +164,18 @@ begin
 {$ENDIF FPC}
 end;
 
+class function TDerUtf8String.GetInstance(obj: TObject): IDerUtf8String;
+begin
+  if ((obj = Nil) or (obj is TDerUtf8String)) then
+  begin
+    result := obj as TDerUtf8String;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerUtf8String.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerUtf8String;
 var
@@ -174,23 +191,6 @@ begin
 
   result := TDerUtf8String.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
     .GetOctets());
-end;
-
-class function TDerUtf8String.GetInstance(obj: TObject): IDerUtf8String;
-begin
-  if ((obj = Nil) or (obj is TDerUtf8String)) then
-  begin
-    result := obj as TDerUtf8String;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TDerUtf8String.GetStr: String;
-begin
-  result := FStr;
 end;
 
 function TDerUtf8String.GetString: String;
