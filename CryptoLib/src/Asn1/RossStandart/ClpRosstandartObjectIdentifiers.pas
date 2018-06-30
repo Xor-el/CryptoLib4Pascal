@@ -142,53 +142,6 @@ begin
   result := Frosstandart;
 end;
 
-class procedure TRosstandartObjectIdentifiers.Boot;
-begin
-  Frosstandart := TDerObjectIdentifier.Create('1.2.643.7');
-
-  Fid_tc26 := rosstandart.Branch('1');
-
-  Fid_tc26_gost_3411_12_256 := id_tc26.Branch('1.2.2');
-
-  Fid_tc26_gost_3411_12_512 := id_tc26.Branch('1.2.3');
-
-  Fid_tc26_hmac_gost_3411_12_256 := id_tc26.Branch('1.4.1');
-
-  Fid_tc26_hmac_gost_3411_12_512 := id_tc26.Branch('1.4.2');
-
-  Fid_tc26_gost_3410_12_256 := id_tc26.Branch('1.1.1');
-
-  Fid_tc26_gost_3410_12_512 := id_tc26.Branch('1.1.2');
-
-  Fid_tc26_signwithdigest_gost_3410_12_256 := id_tc26.Branch('1.3.2');
-
-  Fid_tc26_signwithdigest_gost_3410_12_512 := id_tc26.Branch('1.3.3');
-
-  Fid_tc26_agreement := id_tc26.Branch('1.6');
-
-  Fid_tc26_agreement_gost_3410_12_256 := id_tc26_agreement.Branch('1');
-
-  Fid_tc26_agreement_gost_3410_12_512 := id_tc26_agreement.Branch('2');
-
-  Fid_tc26_gost_3410_12_256_paramSet := id_tc26.Branch('2.1.1');
-
-  Fid_tc26_gost_3410_12_256_paramSetA :=
-    id_tc26_gost_3410_12_256_paramSet.Branch('1');
-
-  Fid_tc26_gost_3410_12_512_paramSet := id_tc26.Branch('2.1.2');
-
-  Fid_tc26_gost_3410_12_512_paramSetA :=
-    id_tc26_gost_3410_12_512_paramSet.Branch('1');
-
-  Fid_tc26_gost_3410_12_512_paramSetB :=
-    id_tc26_gost_3410_12_512_paramSet.Branch('2');
-
-  Fid_tc26_gost_3410_12_512_paramSetC :=
-    id_tc26_gost_3410_12_512_paramSet.Branch('3');
-
-  Fid_tc26_gost_28147_param_Z := id_tc26.Branch('2.5.1.1');
-end;
-
 class function TRosstandartObjectIdentifiers.Getid_tc26: IDerObjectIdentifier;
 begin
   result := Fid_tc26;
@@ -300,6 +253,53 @@ class function TRosstandartObjectIdentifiers.
   Getid_tc26_signwithdigest_gost_3410_12_512: IDerObjectIdentifier;
 begin
   result := Fid_tc26_signwithdigest_gost_3410_12_512;
+end;
+
+class procedure TRosstandartObjectIdentifiers.Boot;
+begin
+  Frosstandart := TDerObjectIdentifier.Create('1.2.643.7');
+
+  Fid_tc26 := rosstandart.Branch('1');
+
+  Fid_tc26_gost_3411_12_256 := id_tc26.Branch('1.2.2');
+
+  Fid_tc26_gost_3411_12_512 := id_tc26.Branch('1.2.3');
+
+  Fid_tc26_hmac_gost_3411_12_256 := id_tc26.Branch('1.4.1');
+
+  Fid_tc26_hmac_gost_3411_12_512 := id_tc26.Branch('1.4.2');
+
+  Fid_tc26_gost_3410_12_256 := id_tc26.Branch('1.1.1');
+
+  Fid_tc26_gost_3410_12_512 := id_tc26.Branch('1.1.2');
+
+  Fid_tc26_signwithdigest_gost_3410_12_256 := id_tc26.Branch('1.3.2');
+
+  Fid_tc26_signwithdigest_gost_3410_12_512 := id_tc26.Branch('1.3.3');
+
+  Fid_tc26_agreement := id_tc26.Branch('1.6');
+
+  Fid_tc26_agreement_gost_3410_12_256 := id_tc26_agreement.Branch('1');
+
+  Fid_tc26_agreement_gost_3410_12_512 := id_tc26_agreement.Branch('2');
+
+  Fid_tc26_gost_3410_12_256_paramSet := id_tc26.Branch('2.1.1');
+
+  Fid_tc26_gost_3410_12_256_paramSetA :=
+    id_tc26_gost_3410_12_256_paramSet.Branch('1');
+
+  Fid_tc26_gost_3410_12_512_paramSet := id_tc26.Branch('2.1.2');
+
+  Fid_tc26_gost_3410_12_512_paramSetA :=
+    id_tc26_gost_3410_12_512_paramSet.Branch('1');
+
+  Fid_tc26_gost_3410_12_512_paramSetB :=
+    id_tc26_gost_3410_12_512_paramSet.Branch('2');
+
+  Fid_tc26_gost_3410_12_512_paramSetC :=
+    id_tc26_gost_3410_12_512_paramSet.Branch('3');
+
+  Fid_tc26_gost_28147_param_Z := id_tc26.Branch('2.5.1.1');
 end;
 
 end.

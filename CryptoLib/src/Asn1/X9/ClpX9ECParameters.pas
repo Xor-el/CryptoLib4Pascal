@@ -108,6 +108,31 @@ implementation
 
 { TX9ECParameters }
 
+function TX9ECParameters.GetBaseEntry: IX9ECPoint;
+begin
+  Result := Fg;
+end;
+
+function TX9ECParameters.GetFieldIDEntry: IX9FieldID;
+begin
+  Result := FfieldID;
+end;
+
+function TX9ECParameters.GetG: IECPoint;
+begin
+  Result := Fg.Point;
+end;
+
+function TX9ECParameters.GetH: TBigInteger;
+begin
+  Result := Fh;
+end;
+
+function TX9ECParameters.GetCurve: IECCurve;
+begin
+  Result := Fcurve;
+end;
+
 constructor TX9ECParameters.Create(const curve: IECCurve; const g: IX9ECPoint;
   const n, h: TBigInteger);
 begin
@@ -214,34 +239,9 @@ begin
   Create(curve, g, n, h, Nil);
 end;
 
-function TX9ECParameters.GetBaseEntry: IX9ECPoint;
-begin
-  Result := Fg;
-end;
-
-function TX9ECParameters.GetCurve: IECCurve;
-begin
-  Result := Fcurve;
-end;
-
 function TX9ECParameters.GetCurveEntry: IX9Curve;
 begin
   Result := TX9Curve.Create(Fcurve, Fseed);
-end;
-
-function TX9ECParameters.GetFieldIDEntry: IX9FieldID;
-begin
-  Result := FfieldID;
-end;
-
-function TX9ECParameters.GetG: IECPoint;
-begin
-  Result := Fg.Point;
-end;
-
-function TX9ECParameters.GetH: TBigInteger;
-begin
-  Result := Fh;
 end;
 
 class function TX9ECParameters.GetInstance(obj: TObject): IX9ECParameters;

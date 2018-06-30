@@ -73,6 +73,31 @@ implementation
 
 { TECDomainParameters }
 
+function TECDomainParameters.GetCurve: IECCurve;
+begin
+  Result := Fcurve;
+end;
+
+function TECDomainParameters.GetG: IECPoint;
+begin
+  Result := Fg;
+end;
+
+function TECDomainParameters.GetH: TBigInteger;
+begin
+  Result := Fh;
+end;
+
+function TECDomainParameters.GetN: TBigInteger;
+begin
+  Result := Fn;
+end;
+
+function TECDomainParameters.GetSeed: TCryptoLibByteArray;
+begin
+  Result := Fseed;
+end;
+
 constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
   const n: TBigInteger);
 begin
@@ -130,21 +155,6 @@ begin
 
 end;
 
-function TECDomainParameters.GetCurve: IECCurve;
-begin
-  Result := Fcurve;
-end;
-
-function TECDomainParameters.GetG: IECPoint;
-begin
-  Result := Fg;
-end;
-
-function TECDomainParameters.GetH: TBigInteger;
-begin
-  Result := Fh;
-end;
-
 function TECDomainParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
@@ -155,16 +165,6 @@ begin
   Result := Result xor n.GetHashCode();
   Result := Result * 37;
   Result := Result xor h.GetHashCode();
-end;
-
-function TECDomainParameters.GetN: TBigInteger;
-begin
-  Result := Fn;
-end;
-
-function TECDomainParameters.GetSeed: TCryptoLibByteArray;
-begin
-  Result := Fseed;
 end;
 
 end.

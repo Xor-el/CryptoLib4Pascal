@@ -320,17 +320,6 @@ begin
   Create(CreatePrng('SHA256', True));
 end;
 
-class function TSecureRandom.GetInstance(const algorithm: String)
-  : ISecureRandom;
-begin
-  Result := GetInstance(algorithm, True);
-end;
-
-function TSecureRandom.GenerateSeed(length: Int32): TCryptoLibByteArray;
-begin
-  Result := GetNextBytes(Master, length);
-end;
-
 class function TSecureRandom.GetInstance(const algorithm: String;
   autoSeed: Boolean): ISecureRandom;
 var
@@ -363,6 +352,17 @@ begin
   raise EArgumentCryptoLibException.CreateResFmt(@SUnrecognisedPRNGAlgorithm,
     [algorithm]);
 
+end;
+
+class function TSecureRandom.GetInstance(const algorithm: String)
+  : ISecureRandom;
+begin
+  Result := GetInstance(algorithm, True);
+end;
+
+function TSecureRandom.GenerateSeed(length: Int32): TCryptoLibByteArray;
+begin
+  Result := GetNextBytes(Master, length);
 end;
 
 end.

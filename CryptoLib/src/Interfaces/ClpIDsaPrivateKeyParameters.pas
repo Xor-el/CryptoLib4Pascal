@@ -29,8 +29,6 @@ type
     function GetX: TBigInteger;
 
     function Equals(const other: IDsaPrivateKeyParameters): Boolean;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
     property X: TBigInteger read GetX;
 
   end;

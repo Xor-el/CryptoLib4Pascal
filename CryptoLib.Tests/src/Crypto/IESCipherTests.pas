@@ -183,7 +183,6 @@ var
   RandomInstance: ISecureRandom;
   Lcurve: IX9ECParameters;
   ecSpec: IECDomainParameters;
-  KeyPair: IAsymmetricCipherKeyPair;
 begin
   // Set Up EC Key Pair
 

@@ -108,6 +108,16 @@ uses
 
 { TAsn1OctetString }
 
+function TAsn1OctetString.GetStr: TCryptoLibByteArray;
+begin
+  result := FStr;
+end;
+
+function TAsn1OctetString.GetParser: IAsn1OctetStringParser;
+begin
+  result := Self as IAsn1OctetStringParser;
+end;
+
 constructor TAsn1OctetString.Create(Str: TCryptoLibByteArray);
 begin
   Inherited Create();
@@ -199,16 +209,6 @@ function TAsn1OctetString.GetOctetStream: TStream;
 begin
   // used TBytesStream here for one pass creation and population with byte array :)
   result := TBytesStream.Create(Str);
-end;
-
-function TAsn1OctetString.GetParser: IAsn1OctetStringParser;
-begin
-  result := Self as IAsn1OctetStringParser;
-end;
-
-function TAsn1OctetString.GetStr: TCryptoLibByteArray;
-begin
-  result := FStr;
 end;
 
 function TAsn1OctetString.ToString: String;

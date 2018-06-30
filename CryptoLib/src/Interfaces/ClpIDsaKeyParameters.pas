@@ -32,8 +32,6 @@ type
     function GetParameters: IDsaParameters;
 
     function Equals(const other: IDsaKeyParameters): Boolean;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
     property parameters: IDsaParameters read GetParameters;
 
   end;

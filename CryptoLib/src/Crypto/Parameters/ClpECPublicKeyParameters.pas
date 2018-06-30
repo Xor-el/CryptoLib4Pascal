@@ -68,6 +68,11 @@ implementation
 
 { TECPublicKeyParameters }
 
+function TECPublicKeyParameters.GetQ: IECPoint;
+begin
+  result := Fq;
+end;
+
 class function TECPublicKeyParameters.Validate(const q: IECPoint): IECPoint;
 begin
   if (q = Nil) then
@@ -130,11 +135,6 @@ function TECPublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt
 {$ENDIF DELPHI}
 begin
   result := q.GetHashCode() xor (inherited GetHashCode());
-end;
-
-function TECPublicKeyParameters.GetQ: IECPoint;
-begin
-  result := Fq;
 end;
 
 end.

@@ -71,20 +71,6 @@ begin
   result := FTeleTrusTAlgorithm;
 end;
 
-class procedure TTeleTrusTObjectIdentifiers.Boot;
-begin
-  FTeleTrusTAlgorithm := TDerObjectIdentifier.Create('1.3.36.3');
-  FRipeMD160 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.1');
-  FRipeMD128 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.2');
-  FRipeMD256 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.3');
-
-  FECSign := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.3.2');
-
-  FECSignWithSha1 := TDerObjectIdentifier.Create(ECSign.ID + '.1');
-  FECSignWithRipeMD160 := TDerObjectIdentifier.Create(ECSign.ID + '.2');
-
-end;
-
 class function TTeleTrusTObjectIdentifiers.GetECSign: IDerObjectIdentifier;
 begin
   result := FECSign;
@@ -115,6 +101,20 @@ end;
 class function TTeleTrusTObjectIdentifiers.GetRipeMD256: IDerObjectIdentifier;
 begin
   result := FRipeMD256;
+end;
+
+class procedure TTeleTrusTObjectIdentifiers.Boot;
+begin
+  FTeleTrusTAlgorithm := TDerObjectIdentifier.Create('1.3.36.3');
+  FRipeMD160 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.1');
+  FRipeMD128 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.2');
+  FRipeMD256 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.3');
+
+  FECSign := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.3.2');
+
+  FECSignWithSha1 := TDerObjectIdentifier.Create(ECSign.ID + '.1');
+  FECSignWithRipeMD160 := TDerObjectIdentifier.Create(ECSign.ID + '.2');
+
 end;
 
 class constructor TTeleTrusTObjectIdentifiers.TeleTrusTObjectIdentifiers;

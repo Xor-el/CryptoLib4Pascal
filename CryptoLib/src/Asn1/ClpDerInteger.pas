@@ -94,6 +94,11 @@ implementation
 
 { TDerInteger }
 
+function TDerInteger.GetBytes: TCryptoLibByteArray;
+begin
+  Result := Fbytes;
+end;
+
 class function TDerInteger.GetInstance(obj: TObject): IDerInteger;
 begin
   if ((obj = Nil) or (obj is TDerInteger)) then
@@ -163,11 +168,6 @@ end;
 procedure TDerInteger.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.Integer, Fbytes);
-end;
-
-function TDerInteger.GetBytes: TCryptoLibByteArray;
-begin
-  Result := Fbytes;
 end;
 
 class function TDerInteger.GetInstance(const obj: IAsn1TaggedObject;

@@ -133,6 +133,11 @@ implementation
 
 { TDerIA5String }
 
+function TDerIA5String.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerIA5String.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -211,6 +216,18 @@ begin
   derOut.WriteEncoded(TAsn1Tags.IA5String, GetOctets());
 end;
 
+class function TDerIA5String.GetInstance(obj: TObject): IDerIA5String;
+begin
+  if ((obj = Nil) or (obj is TDerIA5String)) then
+  begin
+    result := obj as TDerIA5String;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerIA5String.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerIA5String;
 var
@@ -226,23 +243,6 @@ begin
 
   result := TDerIA5String.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
     .GetOctets());
-end;
-
-class function TDerIA5String.GetInstance(obj: TObject): IDerIA5String;
-begin
-  if ((obj = Nil) or (obj is TDerIA5String)) then
-  begin
-    result := obj as TDerIA5String;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TDerIA5String.GetStr: String;
-begin
-  result := FStr;
 end;
 
 function TDerIA5String.GetString: String;

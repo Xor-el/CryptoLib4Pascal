@@ -115,6 +115,11 @@ implementation
 
 { TDerBoolean }
 
+function TDerBoolean.GetIsTrue: Boolean;
+begin
+  result := Fvalue <> 0;
+end;
+
 function TDerBoolean.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerBoolean;
@@ -183,17 +188,15 @@ begin
 
   b := value[0];
 
-  if b = 0 then
-  begin
-    result := FFalse;
-  end
-  else if b = $FF then
-  begin
-    result := FTrue;
-  end
+  case b of
+    0:
+      result := FFalse;
+    $FF:
+      result := FTrue
   else
-  begin
-    result := TDerBoolean.Create(value);
+    begin
+      result := TDerBoolean.Create(value);
+    end;
   end;
 
 end;
@@ -241,11 +244,6 @@ begin
   end;
 
   result := FromOctetString((o as IAsn1OctetString).GetOctets());
-end;
-
-function TDerBoolean.GetIsTrue: Boolean;
-begin
-  result := Fvalue <> 0;
 end;
 
 class function TDerBoolean.GetTrue: IDerBoolean;

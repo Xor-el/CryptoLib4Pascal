@@ -137,6 +137,11 @@ implementation
 
 { TDerPrintableString }
 
+function TDerPrintableString.GetString: String;
+begin
+  result := Str;
+end;
+
 function TDerPrintableString.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -229,6 +234,19 @@ begin
   derOut.WriteEncoded(TAsn1Tags.PrintableString, GetOctets());
 end;
 
+class function TDerPrintableString.GetInstance(obj: TObject)
+  : IDerPrintableString;
+begin
+  if ((obj = Nil) or (obj is TDerPrintableString)) then
+  begin
+    result := obj as TDerPrintableString;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerPrintableString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerPrintableString;
 var
@@ -246,27 +264,9 @@ begin
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
 end;
 
-class function TDerPrintableString.GetInstance(obj: TObject)
-  : IDerPrintableString;
-begin
-  if ((obj = Nil) or (obj is TDerPrintableString)) then
-  begin
-    result := obj as TDerPrintableString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
 function TDerPrintableString.GetStr: String;
 begin
   result := FStr;
-end;
-
-function TDerPrintableString.GetString: String;
-begin
-  result := Str;
 end;
 
 end.

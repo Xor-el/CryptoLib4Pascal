@@ -492,7 +492,7 @@ type
       ks: TCryptoLibInt32Array): TLongArray; static; inline;
 
     class function ReduceInPlace(buf: TCryptoLibInt64Array; off, len, m: Int32;
-      ks: TCryptoLibInt32Array): Int32; static; inline;
+      ks: TCryptoLibInt32Array): Int32; static;
 
     class procedure ReduceBitWise(buf: TCryptoLibInt64Array;
       off, BitLength, m: Int32; ks: TCryptoLibInt32Array); static; inline;
@@ -795,17 +795,6 @@ begin
   end;
 end;
 
-class procedure TLongArray.Interleave3(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count: Int32);
-var
-  I: Int32;
-begin
-  for I := 0 to System.Pred(count) do
-  begin
-    z[zOff + I] := Interleave3(x[xOff + I]);
-  end;
-end;
-
 class function TLongArray.Interleave3_21to63(x: Int32): Int64;
 var
   r00, r21, r42: Int32;
@@ -817,6 +806,45 @@ begin
     shl 21 or (r00 and Int64($FFFFFFFF));
 end;
 
+class function TLongArray.Interleave3(x: Int64): Int64;
+var
+  z: Int64;
+begin
+  z := x and (Int64(1) shl 63);
+  Result := z or Interleave3_21to63(Int32(x) and $1FFFFF) or
+    Interleave3_21to63(Int32(UInt64(x) shr 21) and $1FFFFF) shl 1 or
+    Interleave3_21to63(Int32(UInt64(x) shr 42) and $1FFFFF) shl 2;
+end;
+
+class procedure TLongArray.Interleave3(x: TCryptoLibInt64Array; xOff: Int32;
+  z: TCryptoLibInt64Array; zOff, count: Int32);
+var
+  I: Int32;
+begin
+  for I := 0 to System.Pred(count) do
+  begin
+    z[zOff + I] := Interleave3(x[xOff + I]);
+  end;
+end;
+
+class function TLongArray.Interleave3_13to65(x: Int32): Int64;
+var
+  r00, r35: Int32;
+begin
+  r00 := INTERLEAVE5_TABLE[x and $7F];
+  r35 := INTERLEAVE5_TABLE[UInt32(x) shr 7];
+  Result := (r35 and Int64($FFFFFFFF)) shl 35 or (r00 and Int64($FFFFFFFF));
+end;
+
+class function TLongArray.Interleave5(x: Int64): Int64;
+begin
+  Result := Interleave3_13to65(Int32(x) and $1FFF) or
+    Interleave3_13to65(Int32(UInt64(x) shr 13) and $1FFF) shl 1 or
+    Interleave3_13to65(Int32(UInt64(x) shr 26) and $1FFF) shl 2 or
+    Interleave3_13to65(Int32(UInt64(x) shr 39) and $1FFF) shl 3 or
+    Interleave3_13to65(Int32(UInt64(x) shr 52) and $1FFF) shl 4;
+end;
+
 class procedure TLongArray.Interleave5(x: TCryptoLibInt64Array; xOff: Int32;
   z: TCryptoLibInt64Array; zOff, count: Int32);
 var
@@ -826,6 +854,20 @@ begin
   begin
     z[zOff + I] := Interleave5(x[xOff + I]);
   end;
+end;
+
+class function TLongArray.Interleave7(x: Int64): Int64;
+var
+  z: Int64;
+begin
+  z := x and (Int64(1) shl 63);
+  Result := z or INTERLEAVE7_TABLE[Int32(x) and $1FF] or
+    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 9) and $1FF] shl 1 or
+    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 18) and $1FF] shl 2 or
+    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 27) and $1FF] shl 3 or
+    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 36) and $1FF] shl 4 or
+    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 45) and $1FF] shl 5 or
+    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 54) and $1FF] shl 6;
 end;
 
 class procedure TLongArray.Interleave7(x: TCryptoLibInt64Array; xOff: Int32;
@@ -846,6 +888,24 @@ begin
   r00 := INTERLEAVE4_TABLE[x and $FF];
   r32 := INTERLEAVE4_TABLE[UInt32(x) shr 8];
   Result := (r32 and Int64($FFFFFFFF)) shl 32 or (r00 and Int64($FFFFFFFF));
+end;
+
+class function TLongArray.Interleave2_n(x: Int64; rounds: Int32): Int64;
+begin
+  while (rounds > 1) do
+  begin
+    rounds := rounds - 2;
+    x := Interleave4_16to64(Int32(x) and $FFFF) or
+      Interleave4_16to64(Int32(UInt64(x) shr 16) and $FFFF) shl 1 or
+      Interleave4_16to64(Int32(UInt64(x) shr 32) and $FFFF) shl 2 or
+      Interleave4_16to64(Int32(UInt64(x) shr 48) and $FFFF) shl 3;
+  end;
+  if (rounds > 0) then
+  begin
+    x := Interleave2_32to64(Int32(x)) or
+      Interleave2_32to64(Int32(UInt64(x) shr 32)) shl 1;
+  end;
+  Result := x;
 end;
 
 class procedure TLongArray.Interleave2_n(x: TCryptoLibInt64Array; xOff: Int32;
@@ -1349,66 +1409,6 @@ begin
 
   end;
 
-end;
-
-class function TLongArray.Interleave2_n(x: Int64; rounds: Int32): Int64;
-begin
-  while (rounds > 1) do
-  begin
-    rounds := rounds - 2;
-    x := Interleave4_16to64(Int32(x) and $FFFF) or
-      Interleave4_16to64(Int32(UInt64(x) shr 16) and $FFFF) shl 1 or
-      Interleave4_16to64(Int32(UInt64(x) shr 32) and $FFFF) shl 2 or
-      Interleave4_16to64(Int32(UInt64(x) shr 48) and $FFFF) shl 3;
-  end;
-  if (rounds > 0) then
-  begin
-    x := Interleave2_32to64(Int32(x)) or
-      Interleave2_32to64(Int32(UInt64(x) shr 32)) shl 1;
-  end;
-  Result := x;
-end;
-
-class function TLongArray.Interleave3(x: Int64): Int64;
-var
-  z: Int64;
-begin
-  z := x and (Int64(1) shl 63);
-  Result := z or Interleave3_21to63(Int32(x) and $1FFFFF) or
-    Interleave3_21to63(Int32(UInt64(x) shr 21) and $1FFFFF) shl 1 or
-    Interleave3_21to63(Int32(UInt64(x) shr 42) and $1FFFFF) shl 2;
-end;
-
-class function TLongArray.Interleave3_13to65(x: Int32): Int64;
-var
-  r00, r35: Int32;
-begin
-  r00 := INTERLEAVE5_TABLE[x and $7F];
-  r35 := INTERLEAVE5_TABLE[UInt32(x) shr 7];
-  Result := (r35 and Int64($FFFFFFFF)) shl 35 or (r00 and Int64($FFFFFFFF));
-end;
-
-class function TLongArray.Interleave5(x: Int64): Int64;
-begin
-  Result := Interleave3_13to65(Int32(x) and $1FFF) or
-    Interleave3_13to65(Int32(UInt64(x) shr 13) and $1FFF) shl 1 or
-    Interleave3_13to65(Int32(UInt64(x) shr 26) and $1FFF) shl 2 or
-    Interleave3_13to65(Int32(UInt64(x) shr 39) and $1FFF) shl 3 or
-    Interleave3_13to65(Int32(UInt64(x) shr 52) and $1FFF) shl 4;
-end;
-
-class function TLongArray.Interleave7(x: Int64): Int64;
-var
-  z: Int64;
-begin
-  z := x and (Int64(1) shl 63);
-  Result := z or INTERLEAVE7_TABLE[Int32(x) and $1FF] or
-    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 9) and $1FF] shl 1 or
-    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 18) and $1FF] shl 2 or
-    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 27) and $1FF] shl 3 or
-    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 36) and $1FF] shl 4 or
-    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 45) and $1FF] shl 5 or
-    INTERLEAVE7_TABLE[Int32(UInt64(x) shr 54) and $1FF] shl 6;
 end;
 
 class function TLongArray.Int64ToBin(input: Int64): string;

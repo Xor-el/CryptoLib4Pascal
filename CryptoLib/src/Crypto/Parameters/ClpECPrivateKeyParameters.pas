@@ -64,6 +64,11 @@ implementation
 
 { TECPrivateKeyParameters }
 
+function TECPrivateKeyParameters.GetD: TBigInteger;
+begin
+  result := Fd;
+end;
+
 constructor TECPrivateKeyParameters.Create(const d: TBigInteger;
   const parameters: IECDomainParameters);
 begin
@@ -105,11 +110,6 @@ begin
     Exit;
   end;
   result := d.Equals(other.d) and (inherited Equals(other));
-end;
-
-function TECPrivateKeyParameters.GetD: TBigInteger;
-begin
-  result := Fd;
 end;
 
 function TECPrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

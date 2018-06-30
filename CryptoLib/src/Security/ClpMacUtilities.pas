@@ -153,17 +153,17 @@ begin
     [mechanism]);
 end;
 
+class function TMacUtilities.DoFinal(const mac: IMac): TCryptoLibByteArray;
+begin
+  System.SetLength(result, mac.GetMacSize());
+  mac.DoFinal(result, 0);
+end;
+
 class function TMacUtilities.DoFinal(const mac: IMac;
   input: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
   mac.BlockUpdate(input, 0, System.Length(input));
   result := DoFinal(mac);
-end;
-
-class function TMacUtilities.DoFinal(const mac: IMac): TCryptoLibByteArray;
-begin
-  System.SetLength(result, mac.GetMacSize());
-  mac.DoFinal(result, 0);
 end;
 
 class function TMacUtilities.CalculateMac(const algorithm: String;

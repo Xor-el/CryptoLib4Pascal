@@ -106,6 +106,11 @@ implementation
 
 { TDerT61String }
 
+function TDerT61String.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerT61String.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -154,6 +159,18 @@ begin
   derOut.WriteEncoded(TAsn1Tags.T61String, GetOctets());
 end;
 
+class function TDerT61String.GetInstance(obj: TObject): IDerT61String;
+begin
+  if ((obj = Nil) or (obj is TDerT61String)) then
+  begin
+    result := obj as TDerT61String;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerT61String.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerT61String;
 var
@@ -169,23 +186,6 @@ begin
 
   result := TDerT61String.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
     .GetOctets());
-end;
-
-class function TDerT61String.GetInstance(obj: TObject): IDerT61String;
-begin
-  if ((obj = Nil) or (obj is TDerT61String)) then
-  begin
-    result := obj as TDerT61String;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TDerT61String.GetStr: String;
-begin
-  result := FStr;
 end;
 
 function TDerT61String.GetString: String;

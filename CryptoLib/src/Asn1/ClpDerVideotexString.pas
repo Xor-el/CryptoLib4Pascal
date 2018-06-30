@@ -106,6 +106,11 @@ implementation
 
 { TDerVideotexString }
 
+function TDerVideotexString.GetmString: TCryptoLibByteArray;
+begin
+  result := FmString;
+end;
+
 function TDerVideotexString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerVideotexString;
@@ -178,11 +183,6 @@ begin
     end;
 
   end;
-end;
-
-function TDerVideotexString.GetmString: TCryptoLibByteArray;
-begin
-  result := FmString;
 end;
 
 function TDerVideotexString.GetOctets: TCryptoLibByteArray;

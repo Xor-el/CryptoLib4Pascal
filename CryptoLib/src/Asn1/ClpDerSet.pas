@@ -91,6 +91,11 @@ implementation
 
 { TDerSet }
 
+class function TDerSet.GetEmpty: IDerSet;
+begin
+  result := FEmpty;
+end;
+
 constructor TDerSet.Create(v: array of IAsn1Encodable);
 var
   o: IAsn1Encodable;
@@ -191,11 +196,6 @@ begin
   begin
     result := TDerSet.Create(v, needsSorting);
   end;
-end;
-
-class function TDerSet.GetEmpty: IDerSet;
-begin
-  result := FEmpty;
 end;
 
 class function TDerSet.FromVector(const v: IAsn1EncodableVector): IDerSet;

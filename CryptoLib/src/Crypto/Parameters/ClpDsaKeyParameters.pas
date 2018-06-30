@@ -24,7 +24,6 @@ interface
 uses
   ClpIDsaParameters,
   ClpIDsaKeyParameters,
-  ClpIAsymmetricKeyParameter,
   ClpAsymmetricKeyParameter;
 
 type

@@ -107,6 +107,11 @@ implementation
 
 { TDerUniversalString }
 
+function TDerUniversalString.GetStr: TCryptoLibByteArray;
+begin
+  result := FStr;
+end;
+
 function TDerUniversalString.GetOctets: TCryptoLibByteArray;
 begin
   result := System.Copy(Str);
@@ -142,6 +147,19 @@ begin
   derOut.WriteEncoded(TAsn1Tags.UniversalString, Str);
 end;
 
+class function TDerUniversalString.GetInstance(obj: TObject)
+  : IDerUniversalString;
+begin
+  if ((obj = Nil) or (obj is TDerUniversalString)) then
+  begin
+    result := obj as TDerUniversalString;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerUniversalString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerUniversalString;
 var
@@ -157,24 +175,6 @@ begin
 
   result := TDerUniversalString.Create
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-class function TDerUniversalString.GetInstance(obj: TObject)
-  : IDerUniversalString;
-begin
-  if ((obj = Nil) or (obj is TDerUniversalString)) then
-  begin
-    result := obj as TDerUniversalString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TDerUniversalString.GetStr: TCryptoLibByteArray;
-begin
-  result := FStr;
 end;
 
 function TDerUniversalString.GetString: String;

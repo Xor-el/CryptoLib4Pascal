@@ -74,6 +74,11 @@ implementation
 
 { THMac }
 
+function THMac.GetMacSize: Int32;
+begin
+  result := FHMAC.HashSize;
+end;
+
 procedure THMac.BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
 begin
   FHMAC.TransformBytes(input, inOff, len);
@@ -112,11 +117,6 @@ end;
 function THMac.GetAlgorithmName: string;
 begin
   result := FDigest.Name + '/HMAC';
-end;
-
-function THMac.GetMacSize: Int32;
-begin
-  result := FHMAC.HashSize;
 end;
 
 function THMac.GetUnderlyingDigest: IDigest;

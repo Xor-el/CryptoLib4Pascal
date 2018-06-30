@@ -217,40 +217,32 @@ begin
   infoP := TWNafUtilities.GetWNafPreCompInfo(P);
   infoQ := TWNafUtilities.GetWNafPreCompInfo(Q);
 
-  if negK then
-  begin
-    preCompP := infoP.PreCompNeg
-  end
-  else
-  begin
-    preCompP := infoP.PreComp
+  case negK of
+    true:
+      preCompP := infoP.PreCompNeg;
+    False:
+      preCompP := infoP.PreComp;
   end;
 
-  if negL then
-  begin
-    preCompQ := infoQ.PreCompNeg
-  end
-  else
-  begin
-    preCompQ := infoQ.PreComp
+  case negL of
+    true:
+      preCompQ := infoQ.PreCompNeg;
+    False:
+      preCompQ := infoQ.PreComp
   end;
 
-  if negK then
-  begin
-    preCompNegP := infoP.PreComp
-  end
-  else
-  begin
-    preCompNegP := infoP.PreCompNeg
+  case negK of
+    true:
+      preCompNegP := infoP.PreComp;
+    False:
+      preCompNegP := infoP.PreCompNeg;
   end;
 
-  if negL then
-  begin
-    preCompNegQ := infoQ.PreComp
-  end
-  else
-  begin
-    preCompNegQ := infoQ.PreCompNeg
+  case negL of
+    true:
+      preCompNegQ := infoQ.PreComp;
+    False:
+      preCompNegQ := infoQ.PreCompNeg
   end;
 
   wnafP := TWNafUtilities.GenerateWindowNaf(width, k);

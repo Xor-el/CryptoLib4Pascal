@@ -63,14 +63,14 @@ type
     FmData: TCryptoLibByteArray;
     FmPadBits: Int32;
 
-    function GetmData: TCryptoLibByteArray; inline;
-    property mData: TCryptoLibByteArray read GetmData;
-
     function GetmPadBits: Int32; inline;
-    property mPadBits: Int32 read GetmPadBits;
+    function GetmData: TCryptoLibByteArray; inline;
 
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
+
+    property mPadBits: Int32 read GetmPadBits;
+    property mData: TCryptoLibByteArray read GetmData;
   public
 
     constructor Create(data: TCryptoLibByteArray; padBits: Int32); overload;
@@ -151,6 +151,16 @@ begin
     end;
 
   end;
+end;
+
+function TDerBitString.GetmData: TCryptoLibByteArray;
+begin
+  result := FmData;
+end;
+
+function TDerBitString.GetmPadBits: Int32;
+begin
+  result := FmPadBits;
 end;
 
 function TDerBitString.GetOctets: TCryptoLibByteArray;
@@ -321,6 +331,18 @@ begin
 
 end;
 
+class function TDerBitString.GetInstance(obj: TObject): IDerBitString;
+begin
+  if ((obj = Nil) or (obj is TDerBitString)) then
+  begin
+    result := obj as TDerBitString;
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
+    [obj.ClassName]);
+end;
+
 class function TDerBitString.GetInstance(const obj: IAsn1TaggedObject;
   isExplicit: Boolean): IDerBitString;
 var
@@ -354,28 +376,6 @@ begin
     value := value and (not(mask shl (8 * (Length - 1))));
   end;
   result := value;
-end;
-
-function TDerBitString.GetmData: TCryptoLibByteArray;
-begin
-  result := FmData;
-end;
-
-function TDerBitString.GetmPadBits: Int32;
-begin
-  result := FmPadBits;
-end;
-
-class function TDerBitString.GetInstance(obj: TObject): IDerBitString;
-begin
-  if ((obj = Nil) or (obj is TDerBitString)) then
-  begin
-    result := obj as TDerBitString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
 end;
 
 function TDerBitString.GetString: String;

@@ -67,6 +67,26 @@ implementation
 
 { TDsaParameters }
 
+function TDsaParameters.GetG: TBigInteger;
+begin
+  result := Fg;
+end;
+
+function TDsaParameters.GetP: TBigInteger;
+begin
+  result := Fp;
+end;
+
+function TDsaParameters.GetQ: TBigInteger;
+begin
+  result := Fq;
+end;
+
+function TDsaParameters.GetValidationParameters: IDsaValidationParameters;
+begin
+  result := Fvalidation;
+end;
+
 constructor TDsaParameters.Create(const p, q, g: TBigInteger);
 begin
   Create(p, q, g, Nil);
@@ -116,26 +136,6 @@ function TDsaParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
   result := p.GetHashCode() xor q.GetHashCode() xor g.GetHashCode();
-end;
-
-function TDsaParameters.GetG: TBigInteger;
-begin
-  result := Fg;
-end;
-
-function TDsaParameters.GetP: TBigInteger;
-begin
-  result := Fp;
-end;
-
-function TDsaParameters.GetQ: TBigInteger;
-begin
-  result := Fq;
-end;
-
-function TDsaParameters.GetValidationParameters: IDsaValidationParameters;
-begin
-  result := Fvalidation;
 end;
 
 end.

@@ -140,6 +140,16 @@ begin
   result := Nil;
 end;
 
+function TAsn1TaggedObject.GetTagNo: Int32;
+begin
+  result := FtagNo;
+end;
+
+function TAsn1TaggedObject.Getexplicitly: Boolean;
+begin
+  result := Fexplicitly;
+end;
+
 function TAsn1TaggedObject.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IAsn1TaggedObject;
@@ -194,11 +204,6 @@ begin
   Fexplicitly := explicitly or (Supports(obj, IAsn1Choice));
   FtagNo := tagNo;
   Fobj := obj;
-end;
-
-function TAsn1TaggedObject.Getexplicitly: Boolean;
-begin
-  result := Fexplicitly;
 end;
 
 class function TAsn1TaggedObject.GetInstance(obj: TObject): IAsn1TaggedObject;
@@ -263,11 +268,6 @@ begin
 
   raise ENotImplementedCryptoLibException.CreateResFmt(@SImplicitTag, [tag]);
 
-end;
-
-function TAsn1TaggedObject.GetTagNo: Int32;
-begin
-  result := FtagNo;
 end;
 
 class function TAsn1TaggedObject.IsConstructed(isExplicit: Boolean;

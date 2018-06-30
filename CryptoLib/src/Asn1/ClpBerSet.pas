@@ -91,6 +91,11 @@ implementation
 
 { TBerSet }
 
+class function TBerSet.GetEmpty: IBerSet;
+begin
+  result := FEmpty;
+end;
+
 constructor TBerSet.Create;
 begin
   Inherited Create();
@@ -160,11 +165,6 @@ begin
   begin
     result := TBerSet.Create(v, needsSorting);
   end;
-end;
-
-class function TBerSet.GetEmpty: IBerSet;
-begin
-  result := FEmpty;
 end;
 
 class function TBerSet.FromVector(const v: IAsn1EncodableVector): IBerSet;

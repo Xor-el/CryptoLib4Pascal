@@ -1564,6 +1564,41 @@ end;
 
 { TF2mCurve }
 
+function TF2mCurve.GetFieldSize: Int32;
+begin
+  Result := Fm;
+end;
+
+function TF2mCurve.GetInfinity: IECPoint;
+begin
+  Result := Fm_infinity;
+end;
+
+function TF2mCurve.GetK1: Int32;
+begin
+  Result := Fk1;
+end;
+
+function TF2mCurve.GetK2: Int32;
+begin
+  Result := Fk2;
+end;
+
+function TF2mCurve.GetK3: Int32;
+begin
+  Result := Fk3;
+end;
+
+function TF2mCurve.GetM: Int32;
+begin
+  Result := Fm;
+end;
+
+function TF2mCurve.IsTrinomial: Boolean;
+begin
+  Result := (k2 = 0) and (k3 = 0);
+end;
+
 function TF2mCurve.CloneCurve: IECCurve;
 begin
   Result := TF2mCurve.Create(m, k1, k2, k3, Fm_a, Fm_b, Fm_order, Fm_cofactor);
@@ -1701,41 +1736,6 @@ end;
 function TF2mCurve.FromBigInteger(x: TBigInteger): IECFieldElement;
 begin
   Result := TF2mFieldElement.Create(Fm, Fk1, Fk2, Fk3, x);
-end;
-
-function TF2mCurve.GetFieldSize: Int32;
-begin
-  Result := Fm;
-end;
-
-function TF2mCurve.GetInfinity: IECPoint;
-begin
-  Result := Fm_infinity;
-end;
-
-function TF2mCurve.GetK1: Int32;
-begin
-  Result := Fk1;
-end;
-
-function TF2mCurve.GetK2: Int32;
-begin
-  Result := Fk2;
-end;
-
-function TF2mCurve.GetK3: Int32;
-begin
-  Result := Fk3;
-end;
-
-function TF2mCurve.GetM: Int32;
-begin
-  Result := Fm;
-end;
-
-function TF2mCurve.IsTrinomial: Boolean;
-begin
-  Result := (k2 = 0) and (k3 = 0);
 end;
 
 function TF2mCurve.SupportsCoordinateSystem(coord: Int32): Boolean;

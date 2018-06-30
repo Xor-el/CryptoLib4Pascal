@@ -108,6 +108,11 @@ implementation
 
 { TDerVisibleString }
 
+function TDerVisibleString.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerVisibleString.GetOctets: TCryptoLibByteArray;
 begin
 {$IFDEF FPC}
@@ -161,15 +166,6 @@ begin
   derOut.WriteEncoded(TAsn1Tags.VisibleString, GetOctets());
 end;
 
-{$IFNDEF _FIXINSIGHT_}
-
-class function TDerVisibleString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerVisibleString;
-begin
-  result := GetInstance(obj.GetObject() as TAsn1Object);
-end;
-{$ENDIF}
-
 class function TDerVisibleString.GetInstance(obj: TObject): IDerVisibleString;
 var
   asn1OctetString: IAsn1OctetString;
@@ -197,10 +193,14 @@ begin
     [obj.ClassName]);
 end;
 
-function TDerVisibleString.GetStr: String;
+{$IFNDEF _FIXINSIGHT_}
+
+class function TDerVisibleString.GetInstance(const obj: IAsn1TaggedObject;
+  isExplicit: Boolean): IDerVisibleString;
 begin
-  result := FStr;
+  result := GetInstance(obj.GetObject() as TAsn1Object);
 end;
+{$ENDIF}
 
 function TDerVisibleString.GetString: String;
 begin

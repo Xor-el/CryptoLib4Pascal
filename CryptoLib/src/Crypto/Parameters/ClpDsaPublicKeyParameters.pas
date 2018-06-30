@@ -59,6 +59,11 @@ implementation
 
 { TDsaPublicKeyParameters }
 
+function TDsaPublicKeyParameters.GetY: TBigInteger;
+begin
+  result := Fy;
+end;
+
 class function TDsaPublicKeyParameters.Validate(const y: TBigInteger;
   const parameters: IDsaParameters): TBigInteger;
 begin
@@ -108,11 +113,6 @@ function TDsaPublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrIn
 {$ENDIF DELPHI}
 begin
   result := y.GetHashCode() xor (Inherited GetHashCode());
-end;
-
-function TDsaPublicKeyParameters.GetY: TBigInteger;
-begin
-  result := Fy;
 end;
 
 end.
