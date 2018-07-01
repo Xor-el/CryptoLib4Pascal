@@ -44,8 +44,9 @@ type
       const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
       : TCryptoLibByteArray;
 
-    function Do_Verify(const &message: TCryptoLibByteArray; const digest: IDigest;
-      const pu_key: IECPublicKeyParameters; const sig: TCryptoLibByteArray): Boolean;
+    function Do_Verify(const &message: TCryptoLibByteArray;
+      const digest: IDigest; const pu_key: IECPublicKeyParameters;
+      const sig: TCryptoLibByteArray): Boolean;
 
   end;
 
@@ -75,9 +76,10 @@ begin
 
   xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
 
-  digest.TransformBytes(&message);
-  digest.TransformBytes(xQ);
-  tempR := digest.TransformFinal.GetBytes();
+  System.SetLength(tempR, digest.GetDigestSize);
+  digest.BlockUpdate(&message, 0, System.Length(&message));
+  digest.BlockUpdate(xQ, 0, System.Length(xQ));
+  digest.DoFinal(tempR, 0);
 
   r := TBigInteger.Create(1, tempR);
   s := (k.Subtract(r.Multiply(pv_key.D))).&Mod(n);
@@ -130,9 +132,10 @@ begin
   q := sG.Add(rW);
   xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
 
-  digest.TransformBytes(&message);
-  digest.TransformBytes(xQ);
-  tempV := digest.TransformFinal.GetBytes();
+  System.SetLength(tempV, digest.GetDigestSize);
+  digest.BlockUpdate(&message, 0, System.Length(&message));
+  digest.BlockUpdate(xQ, 0, System.Length(xQ));
+  digest.DoFinal(tempV, 0);
 
   v := TBigInteger.Create(1, tempV);
   Result := v.Equals(r);

@@ -53,7 +53,7 @@ type
     procedure GenerateState(); inline;
     procedure DigestAddCounter(seedVal: Int64); inline;
     procedure DigestUpdate(inSeed: TCryptoLibByteArray); inline;
-    procedure DigestDoFinal(value: TCryptoLibByteArray); inline;
+    procedure DigestDoFinal(result: TCryptoLibByteArray); inline;
 
     class var
 
@@ -83,21 +83,17 @@ var
 begin
   System.SetLength(bytes, 8);
   bytes := TConverters.ReadUInt64AsBytesLE(UInt64(seedVal));
-  Fdigest.TransformBytes(bytes, 0, System.Length(bytes));
+  Fdigest.BlockUpdate(bytes, 0, System.Length(bytes));
 end;
 
 procedure TDigestRandomGenerator.DigestUpdate(inSeed: TCryptoLibByteArray);
 begin
-  Fdigest.TransformBytes(inSeed, 0, System.Length(inSeed));
+  Fdigest.BlockUpdate(inSeed, 0, System.Length(inSeed));
 end;
 
-procedure TDigestRandomGenerator.DigestDoFinal(value: TCryptoLibByteArray);
-var
-  digest: TCryptoLibByteArray;
+procedure TDigestRandomGenerator.DigestDoFinal(result: TCryptoLibByteArray);
 begin
-  digest := Fdigest.TransformFinal().GetBytes;
-  System.Move(digest[0], value[0], System.Length(digest) * System.SizeOf(Byte));
-  // value := Fdigest.TransformFinal().GetBytes; // Review
+  Fdigest.DoFinal(result, 0);
 end;
 
 procedure TDigestRandomGenerator.AddSeedMaterial(rSeed: Int64);
@@ -128,9 +124,9 @@ constructor TDigestRandomGenerator.Create(const digest: IDigest);
 begin
   Inherited Create();
   Fdigest := digest;
-  System.SetLength(Fseed, digest.HashSize);
+  System.SetLength(Fseed, digest.GetDigestSize);
   FseedCounter := 1;
-  System.SetLength(Fstate, digest.HashSize);
+  System.SetLength(Fstate, digest.GetDigestSize);
   FstateCounter := 1;
 end;
 

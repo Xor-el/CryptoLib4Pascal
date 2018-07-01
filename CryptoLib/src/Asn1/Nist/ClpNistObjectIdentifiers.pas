@@ -39,7 +39,8 @@ type
       FIdAes128Cbc, FIdAes128Ofb, FIdAes128Cfb, FidAes192Ecb, FIdAes192Cbc,
       FIdAes192Ofb, FIdAes192Cfb, FIdAes256Ecb, FIdAes256Cbc, FIdAes256Ofb,
       FIdAes256Cfb, FIdDsaWithSha2, FDsaWithSha224, FDsaWithSha256,
-      FDsaWithSha384, FDsaWithSha512: IDerObjectIdentifier;
+      FDsaWithSha384, FDsaWithSha512, FIdDsaWithSha3_224, FIdDsaWithSha3_256,
+      FIdDsaWithSha3_384, FIdDsaWithSha3_512: IDerObjectIdentifier;
 
     class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgs: IDerObjectIdentifier; static; inline;
@@ -80,6 +81,11 @@ type
     class function GetDsaWithSha256: IDerObjectIdentifier; static; inline;
     class function GetDsaWithSha384: IDerObjectIdentifier; static; inline;
     class function GetDsaWithSha512: IDerObjectIdentifier; static; inline;
+
+    class function GetIdDsaWithSha3_224: IDerObjectIdentifier; static; inline;
+    class function GetIdDsaWithSha3_256: IDerObjectIdentifier; static; inline;
+    class function GetIdDsaWithSha3_384: IDerObjectIdentifier; static; inline;
+    class function GetIdDsaWithSha3_512: IDerObjectIdentifier; static; inline;
 
     class constructor NistObjectIdentifiers();
 
@@ -135,6 +141,15 @@ type
     class property DsaWithSha256: IDerObjectIdentifier read GetDsaWithSha256;
     class property DsaWithSha384: IDerObjectIdentifier read GetDsaWithSha384;
     class property DsaWithSha512: IDerObjectIdentifier read GetDsaWithSha512;
+
+    class property IdDsaWithSha3_224: IDerObjectIdentifier
+      read GetIdDsaWithSha3_224;
+    class property IdDsaWithSha3_256: IDerObjectIdentifier
+      read GetIdDsaWithSha3_256;
+    class property IdDsaWithSha3_384: IDerObjectIdentifier
+      read GetIdDsaWithSha3_384;
+    class property IdDsaWithSha3_512: IDerObjectIdentifier
+      read GetIdDsaWithSha3_512;
 
     class procedure Boot(); static;
 
@@ -313,6 +328,30 @@ begin
   result := FIdSha512_256;
 end;
 
+class function TNistObjectIdentifiers.GetIdDsaWithSha3_224
+  : IDerObjectIdentifier;
+begin
+  result := FIdDsaWithSha3_224;
+end;
+
+class function TNistObjectIdentifiers.GetIdDsaWithSha3_256
+  : IDerObjectIdentifier;
+begin
+  result := FIdDsaWithSha3_256;
+end;
+
+class function TNistObjectIdentifiers.GetIdDsaWithSha3_384
+  : IDerObjectIdentifier;
+begin
+  result := FIdDsaWithSha3_384;
+end;
+
+class function TNistObjectIdentifiers.GetIdDsaWithSha3_512
+  : IDerObjectIdentifier;
+begin
+  result := FIdDsaWithSha3_512;
+end;
+
 class function TNistObjectIdentifiers.GetNistAlgorithm: IDerObjectIdentifier;
 begin
   result := FNistAlgorithm;
@@ -368,6 +407,12 @@ begin
   FDsaWithSha256 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.2');
   FDsaWithSha384 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.3');
   FDsaWithSha512 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.4');
+
+  FIdDsaWithSha3_224 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.5');
+  FIdDsaWithSha3_256 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.6');
+  FIdDsaWithSha3_384 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.7');
+  FIdDsaWithSha3_512 := TDerObjectIdentifier.Create(IdDsaWithSha2.id + '.8');
+
 end;
 
 end.

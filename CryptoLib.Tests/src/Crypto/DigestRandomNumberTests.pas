@@ -85,11 +85,11 @@ var
   i, j: Int32;
 begin
   rGen := TDigestRandomGenerator.Create(digest);
-  System.SetLength(output, digest.HashSize);
-  System.SetLength(averages, digest.HashSize);
-  System.SetLength(ands, digest.HashSize);
-  System.SetLength(xors, digest.HashSize);
-  System.SetLength(ors, digest.HashSize);
+  System.SetLength(output, digest.GetDigestSize);
+  System.SetLength(averages, digest.GetDigestSize);
+  System.SetLength(ands, digest.GetDigestSize);
+  System.SetLength(xors, digest.GetDigestSize);
+  System.SetLength(ors, digest.GetDigestSize);
 
   rGen.AddSeedMaterial(seed);
 
@@ -115,19 +115,19 @@ begin
   begin
     if ((averages[i] div 1000000) <> 127) then
     begin
-      Fail(Format('average test failed for %s', [digest.Name]));
+      Fail(Format('average test failed for %s', [digest.AlgorithmName]));
     end;
     if (ands[i] <> 0) then
     begin
-      Fail(Format('and test failed for %s', [digest.Name]));
+      Fail(Format('and test failed for %s', [digest.AlgorithmName]));
     end;
     if ((ors[i] and $FF) <> $FF) then
     begin
-      Fail(Format('or test failed for %s', [digest.Name]));
+      Fail(Format('or test failed for %s', [digest.AlgorithmName]));
     end;
     if (xors[i] <> expectedXors[i]) then
     begin
-      Fail(Format('xor test failed for %s', [digest.Name]));
+      Fail(Format('xor test failed for %s', [digest.AlgorithmName]));
     end;
     System.Inc(i);
   end;
@@ -148,7 +148,7 @@ var
   i: Int32;
 begin
   rGen := TDigestRandomGenerator.Create(digest);
-  System.SetLength(output, digest.HashSize);
+  System.SetLength(output, digest.GetDigestSize);
 
   rGen.AddSeedMaterial(seed);
 
@@ -182,7 +182,7 @@ var
   i: Int32;
 begin
   rGen := TDigestRandomGenerator.Create(digest);
-  System.SetLength(output, digest.HashSize);
+  System.SetLength(output, digest.GetDigestSize);
 
   rGen.AddSeedMaterial(seed);
 

@@ -76,9 +76,10 @@ begin
 
   xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
 
-  digest.TransformBytes(xQ);
-  digest.TransformBytes(&message);
-  tempR := digest.TransformFinal.GetBytes();
+  System.SetLength(tempR, digest.GetDigestSize);
+  digest.BlockUpdate(xQ, 0, System.Length(xQ));
+  digest.BlockUpdate(&message, 0, System.Length(&message));
+  digest.DoFinal(tempR, 0);
 
   r := TBigInteger.Create(1, tempR);
   s := (k.Add(r.Multiply(pv_key.D))).&Mod(n);
@@ -131,9 +132,10 @@ begin
   q := sG.Subtract(rW);
   xQ := q.Normalize.XCoord.ToBigInteger.ToByteArray;
 
-  digest.TransformBytes(xQ);
-  digest.TransformBytes(&message);
-  tempV := digest.TransformFinal.GetBytes();
+  System.SetLength(tempV, digest.GetDigestSize);
+  digest.BlockUpdate(xQ, 0, System.Length(xQ));
+  digest.BlockUpdate(&message, 0, System.Length(&message));
+  digest.DoFinal(tempV, 0);
 
   v := TBigInteger.Create(1, tempV);
   Result := v.Equals(r);

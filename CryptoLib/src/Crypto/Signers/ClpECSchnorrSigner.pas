@@ -290,7 +290,7 @@ end;
 
 function TECSchnorrSigner.GetAlgorithmName: String;
 begin
-  Result := FDigest.Name + 'with' + 'ECSCHNORR' + FSigner.AlgorithmName;
+  Result := FDigest.AlgorithmName + 'with' + 'ECSCHNORR' + FSigner.AlgorithmName;
 end;
 
 procedure TECSchnorrSigner.Init(forSigning: Boolean;
@@ -337,7 +337,7 @@ end;
 
 procedure TECSchnorrSigner.Reset;
 begin
-  FDigest.Initialize;
+  FDigest.Reset;
   FBuffer.Clear;
   FBuffer.SetSize(0);
 end;

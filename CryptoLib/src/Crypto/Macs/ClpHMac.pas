@@ -36,8 +36,14 @@ resourcestring
 type
 
   /// <summary>
-  /// HMAC implementation based on RFC2104 <br />H(K XOR opad, H(K XOR ipad,
-  /// text))
+  /// <para>
+  /// HMAC implementation based on RFC2104 <br />H(K XOR opad, H(K XOR
+  /// ipad, text))
+  /// </para>
+  /// <para>
+  /// Note: This is Just a Wrapper for <b>HMAC</b> Implementation in
+  /// HashLib4Pascal
+  /// </para>
   /// </summary>
   THMac = class sealed(TInterfacedObject, IHMac, IMac)
 
@@ -88,7 +94,7 @@ constructor THMac.Create(const digest: IDigest);
 begin
   Inherited Create();
   FDigest := digest;
-  FHMAC := THashFactory.THMac.CreateHMAC(FDigest);
+  FHMAC := THashFactory.THMac.CreateHMAC(FDigest.GetUnderlyingIHash);
 end;
 
 function THMac.DoFinal(output: TCryptoLibByteArray; outOff: Int32): Int32;
@@ -116,7 +122,7 @@ end;
 
 function THMac.GetAlgorithmName: string;
 begin
-  result := FDigest.Name + '/HMAC';
+  result := FDigest.AlgorithmName + '/HMAC';
 end;
 
 function THMac.GetUnderlyingDigest: IDigest;
@@ -137,7 +143,7 @@ end;
 
 procedure THMac.Update(input: Byte);
 begin
-  FHMAC.TransformBytes(TCryptoLibByteArray.Create(input));
+  FHMAC.TransformUntyped(input, System.SizeOf(Byte));
 end;
 
 end.

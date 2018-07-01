@@ -22,15 +22,11 @@ unit ClpIDsaKeyPairGenerator;
 interface
 
 uses
-  ClpIAsymmetricCipherKeyPair,
-  ClpIKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPairGenerator;
 
 type
   IDsaKeyPairGenerator = interface(IAsymmetricCipherKeyPairGenerator)
     ['{37A4647D-2D9A-4EB1-A2AF-B3FBE72B66F3}']
-    procedure Init(const parameters: IKeyGenerationParameters);
-    function GenerateKeyPair(): IAsymmetricCipherKeyPair;
   end;
 
 implementation

@@ -1,4 +1,3 @@
-{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -15,42 +14,52 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDigest;
+unit ClpDigest;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
   HlpIHash,
+  ClpIDigest,
   ClpCryptoLibTypes;
 
+resourcestring
+  SOutputBufferTooShort = 'Output Buffer Too Short';
+
 type
-  // interface that a message digest conforms to.
-  IDigest = interface(IInterface)
-    ['{4AF1A541-DABE-4F89-8E9E-26DB61097330}']
 
-    function GetAlgorithmName: string;
+  /// <summary>
+  /// Hash Wrapper For the Proper Implementation in HashLib4Pascal
+  /// </summary>
+  TDigest = class sealed(TInterfacedObject, IDigest)
 
-    /// <summary>
-    /// the algorithm name
-    /// </summary>
-    property AlgorithmName: String read GetAlgorithmName;
+  strict private
+  var
+    FHash: IHash;
+
+    function GetAlgorithmName: string; inline;
+
+    function DoFinal: TCryptoLibByteArray; overload;
+
+  public
+    constructor Create(const hash: IHash);
 
     /// <summary>
     /// Gets the Underlying <b>IHash</b> Instance
     /// </summary>
-    function GetUnderlyingIHash: IHash;
+    function GetUnderlyingIHash: IHash; inline;
 
     /// <summary>
     /// the size, in bytes, of the digest produced by this message digest.
     /// </summary>
-    function GetDigestSize(): Int32;
+    function GetDigestSize(): Int32; inline;
 
     /// <summary>
     /// the size, in bytes, of the internal buffer used by this digest.
     /// </summary>
-    function GetByteLength(): Int32;
+    function GetByteLength(): Int32; inline;
 
     /// <summary>
     /// update the message digest with a single byte.
@@ -83,15 +92,86 @@ type
     /// </param>
     function DoFinal(output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
 
     /// <summary>
     /// Resets the digest back to it's initial state.
     /// </summary>
     procedure Reset();
 
+    /// <summary>
+    /// the algorithm name
+    /// </summary>
+    property AlgorithmName: String read GetAlgorithmName;
+
   end;
 
 implementation
+
+{ TDigest }
+
+function TDigest.GetAlgorithmName: string;
+begin
+  result := FHash.Name;
+end;
+
+function TDigest.GetByteLength: Int32;
+begin
+  result := FHash.BlockSize;
+end;
+
+function TDigest.GetDigestSize: Int32;
+begin
+  result := FHash.HashSize;
+end;
+
+function TDigest.GetUnderlyingIHash: IHash;
+begin
+  result := FHash;
+end;
+
+procedure TDigest.Reset;
+begin
+  FHash.Initialize;
+end;
+
+procedure TDigest.BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
+begin
+  FHash.TransformBytes(input, inOff, len);
+end;
+
+constructor TDigest.Create(const hash: IHash);
+begin
+  Inherited Create();
+  FHash := hash;
+  FHash.Initialize;
+end;
+
+function TDigest.DoFinal(output: TCryptoLibByteArray; outOff: Int32): Int32;
+var
+  buf: TCryptoLibByteArray;
+begin
+
+  if (System.Length(output) - outOff) < GetDigestSize then
+  begin
+    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
+  end
+  else
+  begin
+    buf := DoFinal();
+    System.Move(buf[0], output[outOff], System.Length(buf) *
+      System.SizeOf(Byte));
+  end;
+  result := System.Length(buf);
+end;
+
+function TDigest.DoFinal: TCryptoLibByteArray;
+begin
+  result := FHash.TransformFinal.GetBytes();
+end;
+
+procedure TDigest.Update(input: Byte);
+begin
+  FHash.TransformUntyped(input, System.SizeOf(Byte));
+end;
 
 end.

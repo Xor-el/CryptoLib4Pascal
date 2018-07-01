@@ -391,7 +391,10 @@ uses
   ClpIDsaKeyPairGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaKeyPairGenerator.pas',
   ClpDsaSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpDsaSigner.pas',
   ClpBase58 in '..\..\CryptoLib\src\Utils\Encoders\ClpBase58.pas',
-  ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\ClpIDsaSigner.pas';
+  ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\ClpIDsaSigner.pas',
+  ClpDigest in '..\..\CryptoLib\src\Crypto\Digests\ClpDigest.pas',
+  ClpECDHCBasicAgreement in '..\..\CryptoLib\src\Crypto\Agreement\ClpECDHCBasicAgreement.pas',
+  ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\ClpIECDHCBasicAgreement.pas';
 
 begin
   try

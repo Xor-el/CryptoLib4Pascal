@@ -199,24 +199,24 @@ begin
   System.SetLength(IVBytes, LKey);
   // Max size to start then reduce it at the end
   LDigest := TDigestUtilities.GetDigest('SHA-256'); // SHA2_256
-  System.Assert(LDigest.HashSize >= LKey);
-  System.Assert(LDigest.HashSize >= LIV);
+  System.Assert(LDigest.GetDigestSize >= LKey);
+  System.Assert(LDigest.GetDigestSize >= LIV);
   // Derive Key First
-  LDigest.TransformBytes(PasswordBytes);
+  LDigest.BlockUpdate(PasswordBytes, 0, System.Length(PasswordBytes));
   if SaltBytes <> Nil then
   begin
-    LDigest.TransformBytes(SaltBytes);
+    LDigest.BlockUpdate(SaltBytes, 0, System.Length(SaltBytes));
   end;
-  KeyBytes := System.Copy(LDigest.TransformFinal.GetBytes);
+  LDigest.DoFinal(KeyBytes, 0);
   // Derive IV Next
-  LDigest.Initialize();
-  LDigest.TransformBytes(KeyBytes);
-  LDigest.TransformBytes(PasswordBytes);
+  LDigest.Reset();
+  LDigest.BlockUpdate(KeyBytes, 0, System.Length(KeyBytes));
+  LDigest.BlockUpdate(PasswordBytes, 0, System.Length(PasswordBytes));
   if SaltBytes <> Nil then
   begin
-    LDigest.TransformBytes(SaltBytes);
+    LDigest.BlockUpdate(SaltBytes, 0, System.Length(SaltBytes));
   end;
-  IVBytes := System.Copy(LDigest.TransformFinal.GetBytes);
+  LDigest.DoFinal(IVBytes, 0);
 
   System.SetLength(IVBytes, LIV);
   Result := True;
