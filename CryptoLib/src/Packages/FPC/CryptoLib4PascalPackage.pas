@@ -128,9 +128,9 @@ uses
   ClpDsaKeyParameters, ClpIECNRSigner, ClpIDsaSigner, ClpIDsaKeyPairGenerator, 
   ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
   ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
-  ClpIDsaValidationParameters, ClpBase58, Generics.Collections, 
-  Generics.Defaults, Generics.Hashes, Generics.Helpers, 
-  Generics.MemoryExpanders, Generics.Strings;
+  ClpIDsaValidationParameters, ClpBase58, ClpDigest, ClpECDHCBasicAgreement, 
+  ClpIECDHCBasicAgreement, Generics.Collections, Generics.Defaults, 
+  Generics.Hashes, Generics.Helpers, Generics.MemoryExpanders, Generics.Strings;
 
 implementation
 
