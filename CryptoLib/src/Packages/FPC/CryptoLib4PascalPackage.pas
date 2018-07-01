@@ -128,7 +128,8 @@ uses
   ClpDsaKeyParameters, ClpIECNRSigner, ClpIDsaSigner, ClpIDsaKeyPairGenerator, 
   ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
   ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
-  ClpIDsaValidationParameters, ClpBase58;
+  ClpIDsaValidationParameters, ClpBase58, ClpDigest, ClpECDHCBasicAgreement, 
+  ClpIECDHCBasicAgreement;
 
 implementation
 

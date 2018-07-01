@@ -47,7 +47,36 @@ type
     function GetValidationParameters: IDsaValidationParameters; inline;
 
   public
+
+    /// <summary>
+    /// Creates a new DSAParameter with the specified parameter values.
+    /// </summary>
+    /// <param name="p">
+    /// the prime.
+    /// </param>
+    /// <param name="q">
+    /// the sub-prime.
+    /// </param>
+    /// <param name="g">
+    /// the base.
+    /// </param>
     constructor Create(const p, q, g: TBigInteger); overload;
+    /// <summary>
+    /// Creates a new DSAParameter with the specified parameter values.
+    /// </summary>
+    /// <param name="p">
+    /// the prime.
+    /// </param>
+    /// <param name="q">
+    /// the sub-prime.
+    /// </param>
+    /// <param name="g">
+    /// the base.
+    /// </param>
+    /// <param name="parameters">
+    /// dsa validation parameters (this includes the seed, counter and usage
+    /// index)
+    /// </param>
     constructor Create(const p, q, g: TBigInteger;
       const parameters: IDsaValidationParameters); overload;
 

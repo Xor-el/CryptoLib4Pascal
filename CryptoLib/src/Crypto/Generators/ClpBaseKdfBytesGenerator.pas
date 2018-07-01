@@ -119,7 +119,7 @@ begin
   end;
 
   oBytes := length;
-  outLen := Fdigest.HashSize;
+  outLen := Fdigest.GetDigestSize;
 
   //
   // this is at odds with the standard implementation, the
@@ -136,7 +136,7 @@ begin
 
   cThreshold := Int32((oBytes + outLen - 1) div outLen);
 
-  System.SetLength(dig, Fdigest.HashSize);
+  System.SetLength(dig, Fdigest.GetDigestSize);
 
   System.SetLength(C, 4);
 
@@ -147,15 +147,15 @@ begin
   i := 0;
   while i < cThreshold do
   begin
-    Fdigest.TransformBytes(Fshared, 0, System.length(Fshared));
-    Fdigest.TransformBytes(C, 0, 4);
+    Fdigest.BlockUpdate(Fshared, 0, System.length(Fshared));
+    Fdigest.BlockUpdate(C, 0, 4);
 
     if (Fiv <> Nil) then
     begin
-      Fdigest.TransformBytes(Fiv, 0, System.length(Fiv));
+      Fdigest.BlockUpdate(Fiv, 0, System.length(Fiv));
     end;
 
-    dig := Fdigest.TransformFinal.GetBytes;
+    Fdigest.DoFinal(dig, 0);
 
     if (length > outLen) then
     begin
@@ -179,7 +179,7 @@ begin
     System.Inc(i);
   end;
 
-  Fdigest.Initialize();
+  Fdigest.Reset();
 
   result := Int32(oBytes);
 end;

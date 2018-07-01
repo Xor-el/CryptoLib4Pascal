@@ -37,6 +37,9 @@ uses
   ClpISecureRandom,
   ClpECDsaSigner,
   ClpIECDsaSigner,
+  ClpIBasicAgreement,
+  ClpECDHBasicAgreement,
+  ClpECDHCBasicAgreement,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
   ClpECPublicKeyParameters,
@@ -113,6 +116,11 @@ type
     /// key generation test
     /// </summary>
     procedure TestECDsaKeyGenTest();
+
+    /// <summary>
+    /// Basic Key Agreement Test
+    /// </summary>
+    procedure TestECBasicAgreementTest();
 
   end;
 
@@ -642,6 +650,81 @@ begin
   begin
     Fail('signature fails');
   end;
+end;
+
+procedure TTestEC.TestECBasicAgreementTest;
+var
+  random: ISecureRandom;
+  n, k1, k2: TBigInteger;
+  curve: IFpCurve;
+  parameters: IECDomainParameters;
+  pGen: IECKeyPairGenerator;
+  genParam: IECKeyGenerationParameters;
+  p1, p2: IAsymmetricCipherKeyPair;
+  e1, e2: IBasicAgreement;
+begin
+  random := TSecureRandom.Create();
+
+  n := TBigInteger.Create
+    ('883423532389192164791648750360308884807550341691627752275345424702807307');
+
+  curve := TFpCurve.Create
+    (TBigInteger.Create
+    ('883423532389192164791648750360308885314476597252960362792450860609699839'),
+    // q
+    TBigInteger.Create
+    ('7fffffffffffffffffffffff7fffffffffff8000000000007ffffffffffc', 16), // a
+    TBigInteger.Create
+    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16), // b
+    n, TBigInteger.One);
+
+  parameters := TECDomainParameters.Create(curve,
+    curve.DecodePoint(THex.Decode
+    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
+    n);
+
+  pGen := TECKeyPairGenerator.Create();
+  genParam := TECKeyGenerationParameters.Create(parameters, random);
+
+  pGen.Init(genParam);
+
+  p1 := pGen.GenerateKeyPair();
+  p2 := pGen.GenerateKeyPair();
+
+  //
+  // two way
+  //
+  e1 := TECDHBasicAgreement.Create();
+  e2 := TECDHBasicAgreement.Create();
+
+  e1.Init(p1.Private);
+  e2.Init(p2.Private);
+
+  k1 := e1.CalculateAgreement(p2.Public);
+  k2 := e2.CalculateAgreement(p1.Public);
+
+  if (not(k1.Equals(k2))) then
+  begin
+    Fail('calculated agreement test failed');
+  end;
+
+  //
+  // two way
+  //
+  e1 := TECDHCBasicAgreement.Create();
+  e2 := TECDHCBasicAgreement.Create();
+
+  e1.Init(p1.Private);
+  e2.Init(p2.Private);
+
+  k1 := e1.CalculateAgreement(p2.Public);
+  k2 := e2.CalculateAgreement(p1.Public);
+
+  if (not(k1.Equals(k2))) then
+  begin
+    Fail('calculated agreement test failed');
+  end;
+
 end;
 
 initialization

@@ -58,6 +58,9 @@ type
     class function Prepend(const A: TCryptoLibByteArray; B: Byte)
       : TCryptoLibByteArray; static;
 
+    class function CopyOf(const data: TCryptoLibByteArray; newLength: Int32)
+      : TCryptoLibByteArray; static;
+
     class function CopyOfRange(const data: TCryptoLibByteArray;
       from, &to: Int32): TCryptoLibByteArray; static;
 
@@ -157,6 +160,20 @@ begin
 end;
 
 {$B-}
+
+class function TArrayUtils.CopyOf(const data: TCryptoLibByteArray;
+  newLength: Int32): TCryptoLibByteArray;
+begin
+  System.SetLength(Result, newLength);
+  if (newLength < System.Length(data)) then
+  begin
+    System.Move(data[0], Result[0], newLength * System.SizeOf(Byte));
+  end
+  else
+  begin
+    System.Move(data[0], Result[0], System.Length(data) * System.SizeOf(Byte));
+  end;
+end;
 
 class function TArrayUtils.CopyOfRange(const data: TCryptoLibByteArray;
   from, &to: Int32): TCryptoLibByteArray;

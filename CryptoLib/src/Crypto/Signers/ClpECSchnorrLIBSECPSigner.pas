@@ -83,9 +83,11 @@ begin
   end;
 
   rQ := q.Normalize.XCoord.ToBigInteger.&Mod(n).ToByteArray;
-  digest.TransformBytes(rQ);
-  digest.TransformBytes(&message);
-  tempH := digest.TransformFinal.GetBytes();
+
+  System.SetLength(tempH, digest.GetDigestSize);
+  digest.BlockUpdate(rQ, 0, System.Length(rQ));
+  digest.BlockUpdate(&message, 0, System.Length(&message));
+  digest.DoFinal(tempH, 0);
 
   h := TBigInteger.Create(1, tempH);
   r := q.Normalize.XCoord.ToBigInteger.&Mod(n);
@@ -130,9 +132,10 @@ begin
 
   rb := r.ToByteArray;
 
-  digest.TransformBytes(rb);
-  digest.TransformBytes(&message);
-  tempH := digest.TransformFinal.GetBytes();
+  System.SetLength(tempH, digest.GetDigestSize);
+  digest.BlockUpdate(rb, 0, System.Length(rb));
+  digest.BlockUpdate(&message, 0, System.Length(&message));
+  digest.DoFinal(tempH, 0);
 
   h := TBigInteger.Create(1, tempH);
   if (h.CompareTo(TBigInteger.Zero) = 0) or (h.CompareTo(n) = 1) then

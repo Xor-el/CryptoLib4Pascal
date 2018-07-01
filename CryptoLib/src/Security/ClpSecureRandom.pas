@@ -302,7 +302,7 @@ begin
   if (autoSeed) then
   begin
     prng.AddSeedMaterial(NextCounterValue());
-    prng.AddSeedMaterial(GetNextBytes(Master, digest.HashSize));
+    prng.AddSeedMaterial(GetNextBytes(Master, digest.GetDigestSize));
   end;
   Result := prng;
 end;

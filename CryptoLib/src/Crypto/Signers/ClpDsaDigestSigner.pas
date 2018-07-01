@@ -107,7 +107,7 @@ implementation
 procedure TDsaDigestSigner.BlockUpdate(input: TCryptoLibByteArray;
   inOff, length: Int32);
 begin
-  Fdigest.TransformBytes(input, inOff, length);
+  Fdigest.BlockUpdate(input, inOff, length);
 end;
 
 constructor TDsaDigestSigner.Create(const signer: IDsa; const digest: IDigest);
@@ -145,9 +145,9 @@ begin
       (@SDSaDigestSignerNotInitializedForSignatureGeneration);
   end;
 
-  System.SetLength(hash, Fdigest.HashSize);
+  System.SetLength(hash, Fdigest.GetDigestSize);
 
-  hash := Fdigest.TransformFinal().GetBytes;
+  Fdigest.DoFinal(hash, 0);
 
   sig := FdsaSigner.GenerateSignature(hash);
 
@@ -156,7 +156,7 @@ end;
 
 function TDsaDigestSigner.GetAlgorithmName: String;
 begin
-  Result := Fdigest.Name + 'with' + FdsaSigner.AlgorithmName;
+  Result := Fdigest.AlgorithmName + 'with' + FdsaSigner.AlgorithmName;
 end;
 
 procedure TDsaDigestSigner.Init(forSigning: Boolean;
@@ -193,12 +193,12 @@ end;
 
 procedure TDsaDigestSigner.Reset;
 begin
-  Fdigest.Initialize;
+  Fdigest.Reset;
 end;
 
 procedure TDsaDigestSigner.Update(input: Byte);
 begin
-  Fdigest.TransformUntyped(input, System.SizeOf(Byte));
+  Fdigest.Update(input);
 end;
 
 function TDsaDigestSigner.VerifySignature
@@ -213,9 +213,9 @@ begin
       (@SDSaDigestSignerNotInitializedForVerification);
   end;
 
-  System.SetLength(hash, Fdigest.HashSize);
+  System.SetLength(hash, Fdigest.GetDigestSize);
 
-  hash := Fdigest.TransformFinal().GetBytes;
+  Fdigest.DoFinal(hash, 0);
 
   try
 

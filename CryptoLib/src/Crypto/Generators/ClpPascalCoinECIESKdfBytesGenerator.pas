@@ -103,7 +103,7 @@ begin
   end;
 
   oBytes := length;
-  outLen := Fdigest.HashSize;
+  outLen := Fdigest.GetDigestSize;
 
   if (oBytes > outLen) then
   begin
@@ -111,13 +111,13 @@ begin
       (@SHashCannotNotProduceSufficientData);
   end;
 
-  Fdigest.TransformBytes(Fshared, 0, System.length(Fshared));
-
-  temp := Fdigest.TransformFinal.GetBytes;
+  System.SetLength(temp, Fdigest.GetDigestSize);
+  Fdigest.BlockUpdate(Fshared, 0, System.length(Fshared));
+  Fdigest.DoFinal(temp, 0);
 
   System.Move(temp[0], output[outOff], length * System.SizeOf(Byte));
 
-  Fdigest.Initialize();
+  Fdigest.Reset();
 
   result := oBytes;
 

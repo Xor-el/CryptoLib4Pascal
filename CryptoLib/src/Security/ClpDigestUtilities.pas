@@ -27,6 +27,7 @@ uses
   Generics.Collections,
   HlpHashFactory,
   ClpIDigest,
+  ClpDigest,
   ClpPkcsObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
   ClpOiwObjectIdentifiers,
@@ -78,6 +79,11 @@ type
     class function GetAlgorithmName(const oid: IDerObjectIdentifier): String;
       static; inline;
 
+    class function DoFinal(const digest: IDigest): TCryptoLibByteArray;
+      overload; static; inline;
+    class function DoFinal(const digest: IDigest; input: TCryptoLibByteArray)
+      : TCryptoLibByteArray; overload; static; inline;
+
     class function CalculateDigest(const algorithm: String;
       input: TCryptoLibByteArray): TCryptoLibByteArray; static; inline;
 
@@ -123,226 +129,229 @@ begin
 
     TDigestAlgorithm.BLAKE2B_160:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2B_160);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2B_160);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2B_256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2B_256);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2B_256);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2B_384:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2B_384);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2B_384);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2B_512:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2B_512);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2B_512);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2S_128:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2S_128);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2S_128);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2S_160:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2S_160);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2S_160);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2S_224:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2S_224);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2S_224);
+
         Exit;
       end;
 
     TDigestAlgorithm.BLAKE2S_256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateBlake2S_256);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateBlake2S_256);
+
         Exit;
       end;
 
     TDigestAlgorithm.GOST3411:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateGost());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateGost());
+
         Exit;
       end;
 
     TDigestAlgorithm.GOST3411_2012_256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateGOST3411_2012_256());
-        result.Initialize;
+        result := TDigest.Create
+          (THashFactory.TCrypto.CreateGOST3411_2012_256());
+
         Exit;
       end;
 
     TDigestAlgorithm.GOST3411_2012_512:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateGOST3411_2012_512());
-        result.Initialize;
+        result := TDigest.Create
+          (THashFactory.TCrypto.CreateGOST3411_2012_512());
+
         Exit;
       end;
 
     TDigestAlgorithm.MD2:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateMD2());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateMD2());
+
         Exit;
       end;
 
     TDigestAlgorithm.MD4:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateMD4());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateMD4());
+
         Exit;
       end;
 
     TDigestAlgorithm.MD5:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateMD5());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateMD5());
+
         Exit;
       end;
 
     TDigestAlgorithm.NULL:
       begin
-        result := IDigest(THashFactory.TNullDigestFactory.CreateNullDigest());
-        result.Initialize;
+        result := TDigest.Create
+          (THashFactory.TNullDigestFactory.CreateNullDigest());
+
         Exit;
       end;
 
     TDigestAlgorithm.RIPEMD128:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateRIPEMD128());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateRIPEMD128());
+
         Exit;
       end;
 
     TDigestAlgorithm.RIPEMD160:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateRIPEMD160());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateRIPEMD160());
+
         Exit;
       end;
 
     TDigestAlgorithm.RIPEMD256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateRIPEMD256());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateRIPEMD256());
+
         Exit;
       end;
 
     TDigestAlgorithm.RIPEMD320:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateRIPEMD320());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateRIPEMD320());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_1:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA1());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA1());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_224:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA2_224());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA2_224());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA2_256());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA2_256());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_384:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA2_384());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA2_384());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_512:
       begin
 
-        result := IDigest(THashFactory.TCrypto.CreateSHA2_512());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA2_512());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_512_224:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA2_512_224());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA2_512_224());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA_512_256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA2_512_256());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA2_512_256());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA3_224:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA3_224());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA3_224());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA3_256:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA3_256());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA3_256());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA3_384:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA3_384());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA3_384());
+
         Exit;
       end;
 
     TDigestAlgorithm.SHA3_512:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateSHA3_512());
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateSHA3_512());
+
         Exit;
       end;
 
     TDigestAlgorithm.TIGER:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateTiger_3_192);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateTiger_3_192);
+
         Exit;
       end;
 
     TDigestAlgorithm.WHIRLPOOL:
       begin
-        result := IDigest(THashFactory.TCrypto.CreateWhirlPool);
-        result.Initialize;
+        result := TDigest.Create(THashFactory.TCrypto.CreateWhirlPool);
+
         Exit;
       end
   else
@@ -458,14 +467,28 @@ begin
     TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_512);
 end;
 
+class function TDigestUtilities.DoFinal(const digest: IDigest)
+  : TCryptoLibByteArray;
+begin
+  System.SetLength(result, digest.GetDigestSize());
+  digest.DoFinal(result, 0);
+end;
+
+class function TDigestUtilities.DoFinal(const digest: IDigest;
+  input: TCryptoLibByteArray): TCryptoLibByteArray;
+begin
+  digest.BlockUpdate(input, 0, System.Length(input));
+  result := DoFinal(digest);
+end;
+
 class function TDigestUtilities.CalculateDigest(const algorithm: String;
   input: TCryptoLibByteArray): TCryptoLibByteArray;
 var
   digest: IDigest;
 begin
   digest := GetDigest(algorithm);
-  digest.TransformBytes(input, 0, System.Length(input));
-  result := digest.TransformFinal().GetBytes();
+  digest.BlockUpdate(input, 0, System.Length(input));
+  result := DoFinal(digest);
 end;
 
 class constructor TDigestUtilities.CreateDigestUtilities;
