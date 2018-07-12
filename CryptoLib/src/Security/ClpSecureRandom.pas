@@ -114,7 +114,7 @@ type
     /// <param name="algorithm">e.g. "SHA256PRNG"</param>
     /// <param name="autoSeed">If true, the instance will be auto-seeded.</param>
     class function GetInstance(const algorithm: String; autoSeed: Boolean)
-      : ISecureRandom; overload; static; inline;
+      : ISecureRandom; overload; static;
 
     class procedure Boot(); static;
 
@@ -335,7 +335,6 @@ begin
   LowPoint := 1;
   HighPoint := System.length(upper);
 {$ENDIF DELPHIXE3_UP}
-
   if AnsiEndsStr('PRNG', upper) then
   begin
     digestName := System.Copy(upper, LowPoint,

@@ -501,7 +501,7 @@ begin
   end;
 
   // Since Generic Covariance and Contravariance are not supported in Delphi,
-  // We have to manually loop through the array and convert its content to our desired type using an "as or Supports" Cast.
+  // We have to manually loop through the array and convert its content to our desired type using an "as, Supports or Cast".
   System.SetLength(ecPoints, System.Length(pu));
   for j := System.Low(pu) to System.High(pu) do
   begin

@@ -22,7 +22,6 @@ interface
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
-{$HINTS OFF}
 
 uses
   SysUtils,
@@ -32,13 +31,10 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpIBufferedCipher,
-  ClpICipherKeyGenerator,
-  ClpICipherParameters,
   ClpGeneratorUtilities,
   ClpParameterUtilities,
   ClpCipherUtilities,

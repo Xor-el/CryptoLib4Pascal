@@ -21,11 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-// Disable Overflow and RangeChecks.
-{$OVERFLOWCHECKS OFF}
-{$RANGECHECKS OFF}
-{$HINTS OFF}
-{$NOTES OFF}
 {$ENDIF FPC}
 
 uses
@@ -179,7 +174,7 @@ begin
     for j := -10 to 10 do
     begin
 
-      CheckEqualsBigInteger(val(i + j), val(i).Add(val(j)),
+      CheckEqualsBigInteger(val(Int64(i) + Int64(j)), val(i).Add(val(j)),
         Format('Problem: %d.Add(%d) should be %d', [i, j, (i + j)]));
 
     end;
@@ -867,10 +862,9 @@ end;
 
 procedure TTestBigInteger.TestMonoBug81857;
 var
-  b, exp, &Mod, expected, manual: TBigInteger;
+  b, &Mod, expected, manual: TBigInteger;
 begin
   b := TBigInteger.Create('18446744073709551616');
-  exp := TBigInteger.Two;
   &Mod := TBigInteger.Create('48112959837082048697');
   expected := TBigInteger.Create('4970597831480284165');
 
@@ -1192,7 +1186,7 @@ begin
   begin
     for j := -10 to 10 do
     begin
-      CheckEqualsBigInteger(val(i - j), val(i).Subtract(val(j)),
+      CheckEqualsBigInteger(val(Int64(i) - Int64(j)), val(i).Subtract(val(j)),
         Format('Problem: %d.Subtract(%d) should be %d', [i, j, (i - j)]));
     end;
 

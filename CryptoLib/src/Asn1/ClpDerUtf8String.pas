@@ -113,11 +113,7 @@ end;
 
 function TDerUtf8String.GetOctets: TCryptoLibByteArray;
 begin
-{$IFDEF FPC}
   result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-{$ELSE}
-  result := TEncoding.ASCII.GetBytes(Str);
-{$ENDIF FPC}
 end;
 
 function TDerUtf8String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -136,11 +132,7 @@ end;
 
 constructor TDerUtf8String.Create(Str: TCryptoLibByteArray);
 begin
-{$IFDEF FPC}
   Create(String(TEncoding.UTF8.GetString(Str)));
-{$ELSE}
-  Create(TEncoding.UTF8.GetString(Str));
-{$ENDIF FPC}
 end;
 
 constructor TDerUtf8String.Create(const Str: String);
@@ -156,12 +148,8 @@ end;
 
 procedure TDerUtf8String.Encode(const derOut: IDerOutputStream);
 begin
-{$IFDEF FPC}
   derOut.WriteEncoded(TAsn1Tags.Utf8String,
     TEncoding.UTF8.GetBytes(UnicodeString(Str)));
-{$ELSE}
-  derOut.WriteEncoded(TAsn1Tags.Utf8String, TEncoding.UTF8.GetBytes(Str));
-{$ENDIF FPC}
 end;
 
 class function TDerUtf8String.GetInstance(obj: TObject): IDerUtf8String;

@@ -48,10 +48,10 @@ type
 
   public
     constructor Create(const f: IECFieldElement); overload;
-    constructor Create(const p: TBigInteger;
-      const s: IAsn1OctetString); overload;
-    constructor Create(m, k1, k2, k3: Int32;
-      const s: IAsn1OctetString); overload;
+    constructor Create(const p: TBigInteger; const s: IAsn1OctetString);
+      overload; deprecated 'Will be removed';
+    constructor Create(m, k1, k2, k3: Int32; const s: IAsn1OctetString);
+      overload; deprecated 'Will be removed';
 
     // /**
     // * Produce an object suitable for an Asn1OutputStream.
@@ -83,7 +83,8 @@ implementation
 constructor TX9FieldElement.Create(const p: TBigInteger;
   const s: IAsn1OctetString);
 begin
-  Create(TFpFieldElement.Create(p, TBigInteger.Create(1, s.GetOctets())))
+  Create(TFpFieldElement.Create(p, TBigInteger.Create(1, s.GetOctets()))
+    as IFpFieldElement)
 end;
 
 constructor TX9FieldElement.Create(const f: IECFieldElement);

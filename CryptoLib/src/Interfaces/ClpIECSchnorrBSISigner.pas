@@ -27,7 +27,7 @@ uses
 type
   IECSchnorrBSISigner = interface(ISchnorr)
 
-   ['{799FABB1-D1BB-4B58-9E49-CF1CD8142554}']
+    ['{799FABB1-D1BB-4B58-9E49-CF1CD8142554}']
   end;
 
 implementation

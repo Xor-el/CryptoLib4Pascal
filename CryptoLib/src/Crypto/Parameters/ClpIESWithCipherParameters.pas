@@ -34,66 +34,145 @@ type
 
   strict private
   var
-    FCipherKeySize: Int32;
-    FPointCompression: Boolean;
-    FNonce: TCryptoLibByteArray;
-    function GetCipherKeySize(): Int32; inline;
-    function GetPointCompression(): Boolean; inline;
-    function GetNonce(): TCryptoLibByteArray; inline;
-  public
-    property CipherKeySize: Int32 read GetCipherKeySize;
-    property PointCompression: Boolean read GetPointCompression;
-    property Nonce: TCryptoLibByteArray read GetNonce;
+    Fnonce: TCryptoLibByteArray;
+    FcipherKeySize: Int32;
+    FusePointCompression: Boolean;
 
-    /// <param name="derivation"> 
-    /// the derivation parameter for the KDF function.
+    function GetCipherKeySize: Int32; inline;
+    function GetNonce: TCryptoLibByteArray; inline;
+    function GetPointCompression: Boolean; inline;
+  public
+
+    /// <summary>
+    /// Set the IES engine parameters.
+    /// </summary>
+    /// <param name="derivation">
+    /// the optional derivation vector for the KDF.
     /// </param>
     /// <param name="encoding">
-    /// the encoding parameter for the KDF function.
+    /// the optional encoding vector for the KDF.
     /// </param>
-    /// <param name="nonce">
-    /// the iv used in the cipher engine.
-    /// </param>
-    /// <param name="MacKeySize">
-    /// the size of the MAC key (in bits).
+    /// <param name="macKeySize">
+    /// the key size (in bits) for the MAC.
     /// </param>
     /// <param name="CipherKeySize">
-    /// the size of the associated Cipher key (in bits).
+    /// the key size (in bits) for the block cipher.
     /// </param>
-    /// <param name="PointCompression">
-    /// whether to use point compression or not in EphemeralKeyPairGenerator.
+    constructor Create(derivation, encoding: TCryptoLibByteArray;
+      macKeySize, CipherKeySize: Int32); overload;
+
+    /// <summary>
+    /// Set the IES engine parameters.
+    /// </summary>
+    /// <param name="derivation">
+    /// the optional derivation vector for the KDF.
     /// </param>
-    constructor Create(derivation, encoding, Nonce: TCryptoLibByteArray;
-      MacKeySize, CipherKeySize: Int32; PointCompression: Boolean);
+    /// <param name="encoding">
+    /// the optional encoding vector for the KDF.
+    /// </param>
+    /// <param name="macKeySize">
+    /// the key size (in bits) for the MAC.
+    /// </param>
+    /// <param name="CipherKeySize">
+    /// the key size (in bits) for the block cipher.
+    /// </param>
+    /// <param name="nonce">
+    /// an IV to use initialising the block cipher.
+    /// </param>
+    constructor Create(derivation, encoding: TCryptoLibByteArray;
+      macKeySize, CipherKeySize: Int32; nonce: TCryptoLibByteArray); overload;
+
+    /// <summary>
+    /// Set the IES engine parameters.
+    /// </summary>
+    /// <param name="derivation">
+    /// the optional derivation vector for the KDF.
+    /// </param>
+    /// <param name="encoding">
+    /// the optional encoding vector for the KDF.
+    /// </param>
+    /// <param name="macKeySize">
+    /// the key size (in bits) for the MAC.
+    /// </param>
+    /// <param name="CipherKeySize">
+    /// the key size (in bits) for the block cipher.
+    /// </param>
+    /// <param name="nonce">
+    /// an IV to use initialising the block cipher.
+    /// </param>
+    /// <param name="UsePointCompression">
+    /// whether to use EC point compression or not (false by default)
+    /// </param>
+    constructor Create(derivation, encoding: TCryptoLibByteArray;
+      macKeySize, CipherKeySize: Int32; nonce: TCryptoLibByteArray;
+      UsePointCompression: Boolean); overload;
+
+    /// <summary>
+    /// Return the key size in bits for the block cipher used with the message
+    /// </summary>
+    /// <value>
+    /// the key size in bits for the block cipher used with the message
+    /// </value>
+    property CipherKeySize: Int32 read GetCipherKeySize;
+
+    /// <summary>
+    /// Return the nonce (IV) value to be associated with message.
+    /// </summary>
+    /// <value>
+    /// block cipher IV for message.
+    /// </value>
+    property nonce: TCryptoLibByteArray read GetNonce;
+
+    /// <summary>
+    /// Return the 'point compression' flag.
+    /// </summary>
+    /// <value>
+    /// the point compression flag
+    /// </value>
+    property PointCompression: Boolean read GetPointCompression;
   end;
 
 implementation
 
 { TIESWithCipherParameters }
 
-constructor TIESWithCipherParameters.Create(derivation, encoding,
-  Nonce: TCryptoLibByteArray; MacKeySize, CipherKeySize: Int32;
-  PointCompression: Boolean);
-begin
-  Inherited Create(derivation, encoding, MacKeySize);
-  FNonce := Nonce;
-  FCipherKeySize := CipherKeySize;
-  FPointCompression := PointCompression;
-end;
-
 function TIESWithCipherParameters.GetCipherKeySize: Int32;
 begin
-  result := FCipherKeySize;
+  Result := FcipherKeySize;
 end;
 
 function TIESWithCipherParameters.GetNonce: TCryptoLibByteArray;
 begin
-  result := FNonce;
+  Result := System.Copy(Fnonce);
 end;
 
 function TIESWithCipherParameters.GetPointCompression: Boolean;
 begin
-  result := FPointCompression;
+  Result := FusePointCompression;
+end;
+
+constructor TIESWithCipherParameters.Create(derivation,
+  encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32);
+begin
+  Create(derivation, encoding, macKeySize, CipherKeySize, Nil);
+end;
+
+constructor TIESWithCipherParameters.Create(derivation,
+  encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32;
+  nonce: TCryptoLibByteArray);
+begin
+  Create(derivation, encoding, macKeySize, CipherKeySize, nonce, false);
+end;
+
+constructor TIESWithCipherParameters.Create(derivation,
+  encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32;
+  nonce: TCryptoLibByteArray; UsePointCompression: Boolean);
+begin
+  Inherited Create(derivation, encoding, macKeySize);
+
+  FcipherKeySize := CipherKeySize;
+  Fnonce := System.Copy(nonce);
+  FusePointCompression := UsePointCompression;
 end;
 
 end.

@@ -33,14 +33,17 @@ type
 
     function GetCurve: IECCurve;
     function GetG: IECPoint;
-    function GetH: TBigInteger;
     function GetN: TBigInteger;
+    function GetH: TBigInteger;
+
+    function GetHInv: TBigInteger;
     function GetSeed: TCryptoLibByteArray;
 
     property Curve: IECCurve read GetCurve;
     property G: IECPoint read GetG;
     property N: TBigInteger read GetN;
     property H: TBigInteger read GetH;
+    property HInv: TBigInteger read GetHInv;
     property Seed: TCryptoLibByteArray read GetSeed;
     function Equals(const other: IECDomainParameters): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

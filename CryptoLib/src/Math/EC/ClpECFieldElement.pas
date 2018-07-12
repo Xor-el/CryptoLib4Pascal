@@ -45,6 +45,8 @@ resourcestring
   SIncorrectRepresentation =
     'One of the F2m field elements has incorrect representation';
   SEvenValue = 'Even Value of Q';
+  STraceInternalErrorCalculation = 'Internal Error in Trace Calculation';
+  SHalfTraceUndefinedForM = 'Half-Trace Only Defined For Odd M';
 
 type
   TECFieldElement = class abstract(TInterfacedObject, IECFieldElement)
@@ -107,7 +109,13 @@ type
   end;
 
 type
-  TFpFieldElement = class(TECFieldElement, IFpFieldElement)
+  TAbstractFpFieldElement = class abstract(TECFieldElement,
+    IAbstractFpFieldElement)
+
+  end;
+
+type
+  TFpFieldElement = class(TAbstractFpFieldElement, IFpFieldElement)
 
   strict private
     Fq, Fr, Fx: TBigInteger;
@@ -192,6 +200,16 @@ type
   end;
 
 type
+  TAbstract2mFieldElement = class abstract(TECFieldElement,
+    IAbstractF2mFieldElement)
+
+  public
+    function Trace(): Int32;
+    function HalfTrace(): IECFieldElement;
+
+  end;
+
+type
   /// **
   // * Class representing the Elements of the finite field
   // * <code>F<sub>2<sup>m</sup></sub></code> in polynomial basis (PB)
@@ -199,7 +217,7 @@ type
   // * basis representations are supported. Gaussian normal basis (GNB)
   // * representation is not supported.
   // */
-  TF2mFieldElement = class(TECFieldElement, IF2mFieldElement)
+  TF2mFieldElement = class(TAbstract2mFieldElement, IF2mFieldElement)
 
   strict private
 
@@ -260,6 +278,7 @@ type
     // * @param x The BigInteger representing the value of the field element.
     // */
     constructor Create(m, k1, k2, k3: Int32; const x: TBigInteger); overload;
+      deprecated 'Use ECCurve.FromBigInteger to construct field elements';
     // /**
     // * Constructor for Tpb.
     // * @param m  The exponent <code>m</code> of
@@ -270,6 +289,7 @@ type
     // * @param x The BigInteger representing the value of the field element.
     // */
     constructor Create(m, K: Int32; const x: TBigInteger); overload;
+      deprecated 'Use ECCurve.FromBigInteger to construct field elements';
 
     constructor Create(m: Int32; ks: TCryptoLibInt32Array;
       const x: TLongArray); overload;
@@ -1336,6 +1356,62 @@ end;
 function TFpFieldElement.ToBigInteger: TBigInteger;
 begin
   result := Fx;
+end;
+
+{ TAbstract2mFieldElement }
+
+function TAbstract2mFieldElement.HalfTrace: IECFieldElement;
+var
+  m, i: Int32;
+  fe, ht: IECFieldElement;
+begin
+  m := FieldSize;
+  if ((m and 1) = 0) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SHalfTraceUndefinedForM);
+  end;
+
+  fe := Self as IECFieldElement;
+  ht := fe;
+  i := 2;
+  while i < m do
+  begin
+    fe := fe.SquarePow(2);
+    ht := ht.Add(fe);
+    System.Inc(i, 2);
+  end;
+
+  result := ht;
+end;
+
+function TAbstract2mFieldElement.Trace: Int32;
+var
+  m, i: Int32;
+  fe, tr: IECFieldElement;
+begin
+  m := FieldSize;
+  fe := Self as IECFieldElement;
+  tr := fe;
+
+  i := 1;
+  while i < m do
+  begin
+    fe := fe.Square();
+    tr := tr.Add(fe);
+    System.Inc(i);
+  end;
+
+  if (tr.IsZero) then
+  begin
+    result := 0;
+    Exit;
+  end;
+  if (tr.IsOne) then
+  begin
+    result := 1;
+    Exit;
+  end;
+  raise EArgumentCryptoLibException.CreateRes(@STraceInternalErrorCalculation);
 end;
 
 end.

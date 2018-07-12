@@ -25,6 +25,7 @@ uses
   SyncObjs,
   SysUtils,
   Generics.Collections,
+  ClpIPreCompCallback,
   ClpECPoint,
   ClpCryptoLibTypes,
   ClpBigInteger,
@@ -204,8 +205,8 @@ type
     : IPreCompInfo; virtual;
 
   /// <summary>
-  /// Adds <c>PreCompInfo</c> for a point on this curve, under a given name.
-  /// Used by <c>ECMultiplier</c> to save the precomputation for this <c>
+  /// Compute a <c>PreCompInfo</c> for a point on this curve, under a given
+  /// name. Used by <c>ECMultiplier</c> to save the precomputation for this <c>
   /// ECPoint</c> for use by subsequent multiplication.
   /// </summary>
   /// <param name="point">
@@ -214,11 +215,11 @@ type
   /// <param name="name">
   /// A <c>String</c> used to index precomputations of different types.
   /// </param>
-  /// <param name="preCompInfo">
-  /// The values precomputed by the <c>ECMultiplier.</c>
+  /// <param name="callback">
+  /// Called to calculate the <c>PreCompInfo</c>
   /// </param>
-  procedure SetPreCompInfo(const point: IECPoint; const name: String;
-    const preCompInfo: IPreCompInfo); virtual;
+  function Precompute(const point: IECPoint; const name: String;
+    const callback: IPreCompCallback): IPreCompInfo; virtual;
 
   function ImportPoint(const p: IECPoint): IECPoint; virtual;
 
@@ -375,8 +376,8 @@ type
 
     Fm_infinity: IFpPoint;
 
-    constructor Create(const q, r: TBigInteger;
-      const A, B: IECFieldElement); overload;
+    constructor Create(const q, r: TBigInteger; const A, B: IECFieldElement);
+      overload; deprecated 'Use constructor taking order/cofactor';
     constructor Create(const q, r: TBigInteger; const A, B: IECFieldElement;
       const Order, Cofactor: TBigInteger); overload;
 
@@ -390,6 +391,7 @@ type
 
   public
     constructor Create(const q, A, B: TBigInteger); overload;
+      deprecated 'Use constructor taking order/cofactor';
     constructor Create(const q, A, B, Order, Cofactor: TBigInteger); overload;
 
     destructor Destroy; override;
@@ -429,6 +431,11 @@ type
 
     class function BuildField(m, k1, k2, k3: Int32): IFiniteField; static;
 
+  strict protected
+    constructor Create(m, k1, k2, k3: Int32);
+    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
+      override;
+
     // /**
     // * Solves a quadratic equation <code>z<sup>2</sup> + z = beta</code>(X9.62
     // * D.1.6) The other solution is <code>z + 1</code>.
@@ -438,13 +445,8 @@ type
     // * @return the solution for <code>z<sup>2</sup> + z = beta</code> or
     // *         <code>null</code> if no solution exists.
     // */
-    function SolveQuadradicEquation(const beta: IECFieldElement)
+    function SolveQuadraticEquation(const beta: IECFieldElement)
       : IECFieldElement;
-
-  strict protected
-    constructor Create(m, k1, k2, k3: Int32);
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
-      override;
 
   public
 
@@ -553,6 +555,7 @@ type
     // * <code>F<sub>2<sup>m</sup></sub></code>.
     // */
     constructor Create(m, k: Int32; const A, B: TBigInteger); overload;
+      deprecated 'Use constructor taking order/cofactor';
     // /**
     // * Constructor for Trinomial Polynomial Basis (TPB).
     // * @param m  The exponent <code>m</code> of
@@ -595,6 +598,7 @@ type
     // */
 
     constructor Create(m, k1, k2, k3: Int32; const A, B: TBigInteger); overload;
+      deprecated 'Use constructor taking order/cofactor';
     // /**
     // * Constructor for Pentanomial Polynomial Basis (PPB).
     // * @param m  The exponent <code>m</code> of
@@ -821,7 +825,8 @@ begin
         x := TBigInteger.Create(1, encoded, 1, expectedLength);
 
         p := DecompressPoint(yTilde, x);
-        if ((not p.SatisfiesCofactor())) then
+        // TODO Skip curve equation check?
+        if ((not p.ImplIsValid(true, true))) then
         begin
           raise EArgumentCryptoLibException.CreateRes(@SInvalidPoint);
         end;
@@ -1009,7 +1014,7 @@ begin
   // TODO Default behaviour could be improved if the two curves have the same coordinate system by copying any Z coordinates.
   Lp := p.Normalize();
 
-  Result := ValidatePoint(Lp.XCoord.ToBigInteger(), Lp.YCoord.ToBigInteger(),
+  Result := CreatePoint(Lp.XCoord.ToBigInteger(), Lp.YCoord.ToBigInteger(),
     Lp.IsCompressed);
 end;
 
@@ -1090,10 +1095,11 @@ begin
   Fm_multiplier := Value;
 end;
 
-procedure TECCurve.SetPreCompInfo(const point: IECPoint; const name: String;
-  const preCompInfo: IPreCompInfo);
+function TECCurve.Precompute(const point: IECPoint; const name: String;
+  const callback: IPreCompCallback): IPreCompInfo;
 var
   table: TDictionary<String, IPreCompInfo>;
+  existing: IPreCompInfo;
 begin
   CheckPoint(point);
   FLock.Acquire;
@@ -1104,10 +1110,16 @@ begin
       table := TDictionary<String, IPreCompInfo>.Create(4);
       point.preCompTable := table;
     end;
-    if not table.ContainsKey(name) then
+
+    table.TryGetValue(name, existing);
+
+    Result := callback.Precompute(existing);
+
+    if (Result <> existing) then
     begin
-      table.Add(name, preCompInfo);
+      table.AddOrSetValue(name, Result);
     end;
+
   finally
     FLock.Release;
   end;
@@ -1260,7 +1272,7 @@ begin
   Inherited Create(q);
   Fm_q := q;
   Fm_r := r;
-  Fm_infinity := TFpPoint.Create(Self as IECCurve, Nil, Nil);
+  Fm_infinity := TFpPoint.Create(Self as IECCurve, Nil, Nil, false);
 
   Fm_a := A;
   Fm_b := B;
@@ -1280,7 +1292,7 @@ begin
   Inherited Create(q);
   Fm_q := q;
   Fm_r := TFpFieldElement.CalculateResidue(q);
-  Fm_infinity := TFpPoint.Create(Self as IECCurve, Nil, Nil);
+  Fm_infinity := TFpPoint.Create(Self as IECCurve, Nil, Nil, false);
 
   Fm_a := FromBigInteger(A);
   Fm_b := FromBigInteger(B);
@@ -1450,7 +1462,7 @@ begin
   else
   begin
     beta := xp.Square().Invert().Multiply(B).Add(A).Add(xp);
-    z := SolveQuadradicEquation(beta);
+    z := SolveQuadraticEquation(beta);
 
     if (z <> Nil) then
     begin
@@ -1522,7 +1534,7 @@ begin
     (x.BitLength <= FieldSize);
 end;
 
-function TAbstractF2mCurve.SolveQuadradicEquation(const beta: IECFieldElement)
+function TAbstractF2mCurve.SolveQuadraticEquation(const beta: IECFieldElement)
   : IECFieldElement;
 var
   gamma, z, zeroElement, t, w, w2: IECFieldElement;
@@ -1620,7 +1632,7 @@ begin
   Fm_order := Order;
   Fm_cofactor := Cofactor;
 
-  Fm_infinity := TF2mPoint.Create(Self as IECCurve, Nil, Nil);
+  Fm_infinity := TF2mPoint.Create(Self as IECCurve, Nil, Nil, false);
   Fm_a := A;
   Fm_b := B;
   Fm_coord := F2M_DEFAULT_COORDS;
@@ -1642,7 +1654,7 @@ begin
   Fk3 := k3;
   Fm_order := Order;
   Fm_cofactor := Cofactor;
-  Fm_infinity := TF2mPoint.Create(Self as IECCurve, Nil, Nil);
+  Fm_infinity := TF2mPoint.Create(Self as IECCurve, Nil, Nil, false);
 
   if (k1 = 0) then
   begin

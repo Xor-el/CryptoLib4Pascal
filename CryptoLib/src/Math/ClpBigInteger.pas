@@ -103,7 +103,7 @@ type
 
   class var
 
-    FZero, FOne, FTwo, FThree, FTen: TBigInteger;
+    FZero, FOne, FTwo, FThree, FFour, FTen: TBigInteger;
     // Each list has a product < 2^31
     FprimeLists: TCryptoLibMatrixInt32Array;
     FprimeProducts, FZeroMagnitude: TCryptoLibInt32Array;
@@ -168,6 +168,7 @@ type
     class function GetOne: TBigInteger; static; inline;
     class function GetTwo: TBigInteger; static; inline;
     class function GetThree: TBigInteger; static; inline;
+    class function GetFour: TBigInteger; static; inline;
     class function GetTen: TBigInteger; static; inline;
     class function GetprimeLists: TCryptoLibMatrixInt32Array; static; inline;
     class function GetprimeProducts: TCryptoLibInt32Array; static; inline;
@@ -334,6 +335,7 @@ type
     class property One: TBigInteger read GetOne;
     class property Two: TBigInteger read GetTwo;
     class property Three: TBigInteger read GetThree;
+    class property Four: TBigInteger read GetFour;
     class property Ten: TBigInteger read GetTen;
     class property primeLists: TCryptoLibMatrixInt32Array read GetprimeLists;
     class property primeProducts: TCryptoLibInt32Array read GetprimeProducts;
@@ -532,6 +534,11 @@ end;
 class function TBigInteger.GetThree: TBigInteger;
 begin
   Result := FThree;
+end;
+
+class function TBigInteger.GetFour: TBigInteger;
+begin
+  Result := FFour;
 end;
 
 class function TBigInteger.GetTen: TBigInteger;
@@ -885,6 +892,7 @@ begin
   FOne := FSMALL_CONSTANTS[1];
   FTwo := FSMALL_CONSTANTS[2];
   FThree := FSMALL_CONSTANTS[3];
+  FFour := FSMALL_CONSTANTS[4];
   FTen := FSMALL_CONSTANTS[10];
 
   Fradix2 := ValueOf(2);
@@ -3125,7 +3133,7 @@ end;
 procedure TBigInteger.ParseString(const str: String; radix: Int32);
 var
   style: TNumberStyles;
-  chunk, index, Next: Int32;
+  chunk, index, Next, LowPoint, HighPoint: Int32;
   r, rE, b, bi: TBigInteger;
   dVal, s, temp: String;
   i: UInt64;
@@ -3186,22 +3194,29 @@ begin
 
   end;
 
-  index := 1;
+{$IFDEF DELPHIXE3_UP}
+  LowPoint := System.Low(str);
+  HighPoint := System.High(str);
+{$ELSE}
+  LowPoint := 1;
+  HighPoint := System.length(str);
+{$ENDIF DELPHIXE3_UP}
+  index := LowPoint;
   Fsign := 1;
 
-  if (str[1] = '-') then
+  if (str[LowPoint] = '-') then
   begin
-    if (System.length(str) = 1) then
+    if (HighPoint = 1) then
     begin
       raise EFormatCryptoLibException.CreateRes(@SZeroLengthBigInteger);
     end;
 
     Fsign := -1;
-    index := 2;
+    index := LowPoint + 1;
   end;
 
   // strip leading zeros from the string str
-  while (index < (System.length(str) + 1)) do
+  while (index < (HighPoint + 1)) do
   begin
 
     dVal := str[index];
@@ -3225,7 +3240,7 @@ begin
     end;
   end;
 
-  if (index >= System.length(str) + 1) then
+  if (index >= (HighPoint + 1)) then
   begin
     // zero value - we're done
     Fsign := 0;
@@ -3243,7 +3258,7 @@ begin
 
   Next := index + chunk;
 
-  while (Next <= System.length(str) + 1) do
+  while (Next <= (HighPoint + 1)) do
   begin
     s := System.Copy(str, index, chunk);
     if (style = TNumberStyles.AllowHexSpecifier) then
@@ -3366,17 +3381,6 @@ begin
       b := bi;
     end;
   end;
-
-  // Note: This is the previous (slower) algorithm
-  // while (index < value.Length)
-  // {
-  // char c = value[index];
-  // string s = c.ToString();
-  // int i = Int32.Parse(s, style);
-  //
-  // b = b.Multiply(r).Add(ValueOf(i));
-  // index++;
-  // }
 
   Fmagnitude := b.Fmagnitude;
 

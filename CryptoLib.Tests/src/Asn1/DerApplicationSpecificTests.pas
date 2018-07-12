@@ -19,6 +19,10 @@ unit DerApplicationSpecificTests;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
   Classes,
   SysUtils,

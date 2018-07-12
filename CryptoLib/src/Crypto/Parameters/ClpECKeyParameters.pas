@@ -77,8 +77,7 @@ type
     function Equals(const other: IECKeyParameters): Boolean; reintroduce;
 
   public
-    class function VerifyAlgorithmName(const algorithm: String): String;
-      static;
+    class function VerifyAlgorithmName(const algorithm: String): String; static;
     class function LookupParameters(const publicKeyParamSet
       : IDerObjectIdentifier): IECDomainParameters; static;
     property AlgorithmName: String read GetAlgorithmName;

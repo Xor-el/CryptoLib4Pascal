@@ -151,8 +151,11 @@ begin
     ('6277101735386680763835789423207666416083908700390324961279'), // q
     TBigInteger.Create('fffffffffffffffffffffffffffffffefffffffffffffffc', 16),
     // a
-    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16));
-  // b
+    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16),
+    // b
+    TBigInteger.Create
+    ('6277101735386680763835789423176059013767194773182842284081'),
+    TBigInteger.One);
 
   p := curve.DecodePoint
     (THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))
@@ -172,7 +175,7 @@ begin
     Fail('y uncompressed incorrectly');
   end;
 
-  encoding := p.GetEncoded();
+  encoding := p.GetEncoded(true);
 
   if (not TArrayUtils.AreEqual(encoding,
     THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))) then
@@ -209,8 +212,10 @@ begin
     9, // k
     TBigInteger.Create('2866537B676752636A68F56554E12640276B649EF7526267', 16),
     // a
-    TBigInteger.Create('2E45EF571F00786F67B0081B9495A3D95462F5DE0AA185EC', 16));
-  // b
+    TBigInteger.Create('2E45EF571F00786F67B0081B9495A3D95462F5DE0AA185EC', 16),
+    // b
+    TBigInteger.Create('40000000000000000000000004A20E90C39067C893BBB9A5', 16),
+    TBigInteger.Two);
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
@@ -373,7 +378,10 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16)); // b
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
+    TBigInteger.Create
+    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
+    TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
@@ -455,7 +463,10 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16)); // b
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
+    TBigInteger.Create
+    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
+    TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode

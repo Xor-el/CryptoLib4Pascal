@@ -27,7 +27,7 @@ uses
 type
   ISicBlockCipher = interface(IBlockCipher)
 
-   ['{85CC4B84-8E49-40E1-B2F9-6C271C1FB5E7}']
+    ['{85CC4B84-8E49-40E1-B2F9-6C271C1FB5E7}']
 
     /// <summary>
     /// return the underlying block cipher that we are wrapping.

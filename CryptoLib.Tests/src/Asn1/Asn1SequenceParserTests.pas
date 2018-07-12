@@ -19,6 +19,10 @@ unit Asn1SequenceParserTests;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
   Classes,
   SysUtils,

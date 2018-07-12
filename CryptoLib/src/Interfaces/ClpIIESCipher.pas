@@ -32,7 +32,7 @@ type
     ['{DD112FD3-844A-4EF0-B9B8-22AFAEFB0881}']
 
     procedure Init(ForEncryption: Boolean; const Key: ICipherParameters;
-      const params: IIESWithCipherParameters; const Random: ISecureRandom);
+      const engineSpec: IIESWithCipherParameters; const Random: ISecureRandom);
 
     procedure ProcessBytes(input: TCryptoLibByteArray); overload;
     procedure ProcessBytes(input: TCryptoLibByteArray;

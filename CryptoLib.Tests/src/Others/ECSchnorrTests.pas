@@ -35,9 +35,6 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpFixedSecureRandom,
-  ClpIFixedSecureRandom,
-  ClpECSchnorrSigner,
-  ClpIECSchnorrSigner,
   ClpISigner,
   ClpECPublicKeyParameters,
   ClpIECPublicKeyParameters,
@@ -57,8 +54,7 @@ uses
   ClpSecNamedCurves,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpSignerUtilities,
-  ClpBigIntegers;
+  ClpSignerUtilities;
 
 type
 

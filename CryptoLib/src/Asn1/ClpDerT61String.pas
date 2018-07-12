@@ -113,11 +113,7 @@ end;
 
 function TDerT61String.GetOctets: TCryptoLibByteArray;
 begin
-{$IFDEF FPC}
   result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-{$ELSE}
-  result := TEncoding.ASCII.GetBytes(Str);
-{$ENDIF FPC}
 end;
 
 function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -136,11 +132,7 @@ end;
 
 constructor TDerT61String.Create(Str: TCryptoLibByteArray);
 begin
-{$IFDEF FPC}
   Create(String(TEncoding.ASCII.GetString(Str)));
-{$ELSE}
-  Create(TEncoding.ASCII.GetString(Str));
-{$ENDIF FPC}
 end;
 
 constructor TDerT61String.Create(const Str: String);

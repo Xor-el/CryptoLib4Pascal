@@ -40,6 +40,7 @@ resourcestring
     'Point and Scalar Arrays Should be Non-Null, and of Equal, Non-Zero, Length';
   SInvalidPointLocation = 'Point Must be on the Same Curve';
   SInvalidPoint = 'Invalid Point, "P"';
+  SInvalidResult = 'Invalid Result';
 
 type
   TECAlgorithms = class sealed(TObject)
@@ -87,8 +88,8 @@ type
     class function ShamirsTrick(const P: IECPoint; const k: TBigInteger;
       Q: IECPoint; const l: TBigInteger): IECPoint; static;
 
-    class function ImportPoint(const c: IECCurve; const P: IECPoint): IECPoint;
-      static; inline;
+    class function ImportPoint(const c: IECCurve; const P: IECPoint)
+      : IECPoint; static;
 
     class procedure MontgomeryTrick(zs: TCryptoLibGenericArray<IECFieldElement>;
       off, len: Int32); overload; static; inline;
@@ -109,7 +110,12 @@ type
     class function ReferenceMultiply(P: IECPoint; const k: TBigInteger)
       : IECPoint; static;
 
+    class function ImplCheckResult(const P: IECPoint): IECPoint; static;
+
     class function ValidatePoint(const P: IECPoint): IECPoint; static;
+
+    class function CleanPoint(const c: IECCurve; const P: IECPoint)
+      : IECPoint; static;
 
     class function ImplShamirsTrickJsf(const P: IECPoint; const k: TBigInteger;
       const Q: IECPoint; const l: TBigInteger): IECPoint; static;
@@ -137,6 +143,30 @@ implementation
 
 { TECAlgorithms }
 
+class function TECAlgorithms.ImplCheckResult(const P: IECPoint): IECPoint;
+begin
+  if (not(P.IsValidPartial())) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidResult);
+  end;
+
+  result := P;
+end;
+
+class function TECAlgorithms.CleanPoint(const c: IECCurve; const P: IECPoint)
+  : IECPoint;
+var
+  cp: IECCurve;
+begin
+  cp := P.Curve;
+  if (not c.Equals(cp)) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPointLocation);
+  end;
+
+  result := c.DecodePoint(P.getEncoded(false));
+end;
+
 class function TECAlgorithms.ValidatePoint(const P: IECPoint): IECPoint;
 begin
   if (not P.IsValid()) then
@@ -150,22 +180,22 @@ end;
 class function TECAlgorithms.ImplShamirsTrickJsf(const P: IECPoint;
   const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
 var
-  curve: IECCurve;
+  Curve: IECCurve;
   infinity, R: IECPoint;
   PaddQ, PsubQ: IECPoint;
   points, table: TCryptoLibGenericArray<IECPoint>;
   jsf: TCryptoLibByteArray;
   i, jsfi, kDigit, lDigit, index: Int32;
 begin
-  curve := P.curve;
-  infinity := curve.infinity;
+  Curve := P.Curve;
+  infinity := Curve.infinity;
 
   // TODO conjugate co-Z addition (ZADDC) can return both of these
   PaddQ := P.Add(Q);
   PsubQ := P.Subtract(Q);
 
   points := TCryptoLibGenericArray<IECPoint>.Create(Q, PsubQ, P, PaddQ);
-  curve.NormalizeAll(points);
+  Curve.NormalizeAll(points);
 
   table := TCryptoLibGenericArray<IECPoint>.Create(points[3].Negate(),
     points[2].Negate(), points[1].Negate(), points[0].Negate(), infinity,
@@ -220,28 +250,28 @@ begin
   case negK of
     true:
       preCompP := infoP.PreCompNeg;
-    False:
+    false:
       preCompP := infoP.PreComp;
   end;
 
   case negL of
     true:
       preCompQ := infoQ.PreCompNeg;
-    False:
+    false:
       preCompQ := infoQ.PreComp
   end;
 
   case negK of
     true:
       preCompNegP := infoP.PreComp;
-    False:
+    false:
       preCompNegP := infoP.PreCompNeg;
   end;
 
   case negL of
     true:
       preCompNegQ := infoQ.PreComp;
-    False:
+    false:
       preCompNegQ := infoQ.PreCompNeg
   end;
 
@@ -333,14 +363,14 @@ class function TECAlgorithms.ImplShamirsTrickWNaf(preCompP,
   wnafQ: TCryptoLibByteArray): IECPoint;
 var
   len, zeroes, i, wiP, wiQ, nP, nQ: Int32;
-  curve: IECCurve;
+  Curve: IECCurve;
   infinity, R, point: IECPoint;
   tableP, tableQ: TCryptoLibGenericArray<IECPoint>;
 begin
   len := Math.Max(System.Length(wnafP), System.Length(wnafQ));
 
-  curve := preCompP[0].curve;
-  infinity := curve.infinity;
+  Curve := preCompP[0].Curve;
+  infinity := Curve.infinity;
 
   R := infinity;
   zeroes := 0;
@@ -519,7 +549,7 @@ class function TECAlgorithms.ImplSumOfMultiplies(negs: TCryptoLibBooleanArray;
 var
   len, count, zeroes: Int32;
   i, J, wi, n: Int32;
-  curve: IECCurve;
+  Curve: IECCurve;
   infinity, R, point: IECPoint;
   wnaf: TCryptoLibByteArray;
   info: IWNafPreCompInfo;
@@ -533,8 +563,8 @@ begin
     len := Max(len, System.Length(wnafs[i]));
   end;
 
-  curve := infos[0].PreComp[0].curve;
-  infinity := curve.infinity;
+  Curve := infos[0].PreComp[0].Curve;
+  infinity := Curve.infinity;
 
   R := infinity;
   zeroes := 0;
@@ -612,7 +642,7 @@ var
   pqs: TCryptoLibGenericArray<IECPoint>;
   P, Q: IECPoint;
 begin
-  n := ps[0].curve.Order;
+  n := ps[0].Curve.Order;
 
   len := System.Length(ps);
 
@@ -664,7 +694,7 @@ class function TECAlgorithms.ImportPoint(const c: IECCurve; const P: IECPoint)
 var
   cp: IECCurve;
 begin
-  cp := P.curve;
+  cp := P.Curve;
   if (not c.Equals(cp)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidPointLocation);
@@ -756,7 +786,7 @@ var
   t, i: Int32;
 begin
   x := k.Abs();
-  Q := P.curve.infinity;
+  Q := P.Curve.infinity;
   t := x.BitLength;
   if (t > 0) then
   begin
@@ -793,10 +823,10 @@ class function TECAlgorithms.ShamirsTrick(const P: IECPoint;
 var
   cp: IECCurve;
 begin
-  cp := P.curve;
+  cp := P.Curve;
   Q := ImportPoint(cp, Q);
 
-  result := ValidatePoint(ImplShamirsTrickJsf(P, k, Q, l));
+  result := ImplCheckResult(ImplShamirsTrickJsf(P, k, Q, l));
 end;
 
 class function TECAlgorithms.SumOfMultiplies
@@ -834,7 +864,7 @@ begin
   end;
 
   P := ps[0];
-  c := P.curve;
+  c := P.Curve;
   System.SetLength(imported, count);
   imported[0] := P;
 
@@ -845,12 +875,12 @@ begin
 
   if Supports(c.GetEndomorphism(), IGlvEndomorphism, glvEndomorphism) then
   begin
-    result := ValidatePoint(ImplSumOfMultipliesGlv(imported, ks,
+    result := ImplCheckResult(ImplSumOfMultipliesGlv(imported, ks,
       glvEndomorphism));
     Exit;
   end;
 
-  result := ValidatePoint(ImplSumOfMultiplies(imported, ks));
+  result := ImplCheckResult(ImplSumOfMultiplies(imported, ks));
 end;
 
 class function TECAlgorithms.SumOfTwoMultiplies(const P: IECPoint;
@@ -860,26 +890,26 @@ var
   f2mCurve: IAbstractF2mCurve;
   glvEndomorphism: IGlvEndomorphism;
 begin
-  cp := P.curve;
+  cp := P.Curve;
   Q := ImportPoint(cp, Q);
 
   // Point multiplication for Koblitz curves (using WTNAF) beats Shamir's trick
 
   if (Supports(cp, IAbstractF2mCurve, f2mCurve) and (f2mCurve.IsKoblitz)) then
   begin
-    result := ValidatePoint(P.Multiply(a).Add(Q.Multiply(b)));
+    result := ImplCheckResult(P.Multiply(a).Add(Q.Multiply(b)));
     Exit;
   end;
 
   if Supports(cp.GetEndomorphism(), IGlvEndomorphism, glvEndomorphism) then
   begin
-    result := ValidatePoint
+    result := ImplCheckResult
       (ImplSumOfMultipliesGlv(TCryptoLibGenericArray<IECPoint>.Create(P, Q),
       TCryptoLibGenericArray<TBigInteger>.Create(a, b), glvEndomorphism));
     Exit;
   end;
 
-  result := ValidatePoint(ImplShamirsTrickWNaf(P, a, Q, b));
+  result := ImplCheckResult(ImplShamirsTrickWNaf(P, a, Q, b));
 end;
 
 end.

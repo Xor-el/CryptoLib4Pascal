@@ -31,6 +31,7 @@ uses
   ClpIWTauNafPreCompInfo,
   ClpWTauNafPreCompInfo,
   ClpIECInterface,
+  ClpIPreCompCallBack,
   ClpIZTauElement,
   ClpIPreCompInfo,
   ClpIWTauNafMultiplier;
@@ -47,6 +48,29 @@ type
 
   strict private
     // TODO Create WTauNafUtilities class and move various functionality into it
+
+  type
+    IWTauNafCallback = interface(IPreCompCallback)
+      ['{4D6F7B4A-B925-42C9-8D60-B7F24632EDC1}']
+
+    end;
+
+  type
+    TWTauNafCallback = class(TInterfacedObject, IPreCompCallback,
+      IWTauNafCallback)
+
+    strict private
+    var
+      Fm_p: IAbstractF2mPoint;
+      Fm_a: ShortInt;
+
+    public
+      constructor Create(const p: IAbstractF2mPoint; a: ShortInt);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
   const
     PRECOMP_NAME: String = 'bc_wtnaf';
 
@@ -61,8 +85,7 @@ type
     // * @return <code>p</code> multiplied by <code>&#955;</code>.
     // */
     function MultiplyWTnaf(const p: IAbstractF2mPoint;
-      const lambda: IZTauElement; const preCompInfo: IPreCompInfo;
-      a, mu: ShortInt): IAbstractF2mPoint; inline;
+      const lambda: IZTauElement; a, mu: ShortInt): IAbstractF2mPoint; inline;
 
     // /**
     // * Multiplies an AbstractF2mPoint
@@ -74,8 +97,7 @@ type
     // * @return <code>&#955; * p</code>
     // */
     class function MultiplyFromWTnaf(const p: IAbstractF2mPoint;
-      u: TCryptoLibShortIntArray; const preCompInfo: IPreCompInfo)
-      : IAbstractF2mPoint; static;
+      u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
 
   strict protected
     // /**
@@ -110,8 +132,7 @@ begin
 end;
 
 class function TWTauNafMultiplier.MultiplyFromWTnaf(const p: IAbstractF2mPoint;
-  u: TCryptoLibShortIntArray; const preCompInfo: IPreCompInfo)
-  : IAbstractF2mPoint;
+  u: TCryptoLibShortIntArray): IAbstractF2mPoint;
 var
   curve: IAbstractF2mCurve;
   a: ShortInt;
@@ -120,25 +141,15 @@ var
   pre: IWTauNafPreCompInfo;
   q: IAbstractF2mPoint;
   x: IECPoint;
+  callback: IWTauNafCallback;
 begin
   curve := p.curve as IAbstractF2mCurve;
   a := ShortInt(curve.a.ToBigInteger().Int32Value);
-  // review uncommenting
-//  if ((preCompInfo = Nil) or (not(Supports(preCompInfo, IWTauNafPreCompInfo))))
-//  then
-//  begin
-    pu := TTnaf.GetPreComp(p, a);
 
-    pre := TWTauNafPreCompInfo.Create();
-    pre.PreComp := pu;
+  callback := TWTauNafCallback.Create(p, a);
+  pre := curve.Precompute(p, PRECOMP_NAME, callback) as IWTauNafPreCompInfo;
 
-    curve.SetPreCompInfo(p, PRECOMP_NAME, pre);
-    // end
-    // else
-    // begin
-    // pu := (preCompInfo as IWTauNafPreCompInfo).PreComp;
-    // end;
-
+  pu := pre.PreComp;
   // TODO Include negations in precomp (optionally) and use from here
   System.SetLength(puNeg, System.Length(pu));
   for i := 0 to System.Pred(System.Length(pu)) do
@@ -178,13 +189,12 @@ begin
   end;
   result := q;
 
-  pre.PreComp := Nil;
+  pre.PreComp := Nil; // Review
 
 end;
 
 function TWTauNafMultiplier.MultiplyWTnaf(const p: IAbstractF2mPoint;
-  const lambda: IZTauElement; const preCompInfo: IPreCompInfo; a, mu: ShortInt)
-  : IAbstractF2mPoint;
+  const lambda: IZTauElement; a, mu: ShortInt): IAbstractF2mPoint;
 var
   alpha: TCryptoLibGenericArray<IZTauElement>;
   tw: TBigInteger;
@@ -204,7 +214,7 @@ begin
   u := TTnaf.TauAdicWNaf(mu, lambda, TTnaf.Width,
     TBigInteger.ValueOf(TTnaf.Pow2Width), tw, alpha);
 
-  result := MultiplyFromWTnaf(p, u, preCompInfo);
+  result := MultiplyFromWTnaf(p, u);
 end;
 
 function TWTauNafMultiplier.MultiplyPositive(const point: IECPoint;
@@ -231,8 +241,36 @@ begin
 
   rho := TTnaf.PartModReduction(k, m, a, s, mu, ShortInt(10));
 
-  result := MultiplyWTnaf(p, rho, curve.GetPreCompInfo(p, PRECOMP_NAME), a, mu);
+  result := MultiplyWTnaf(p, rho, a, mu);
 
+end;
+
+{ TWTauNafMultiplier.TWTauNafCallback }
+
+constructor TWTauNafMultiplier.TWTauNafCallback.Create
+  (const p: IAbstractF2mPoint; a: ShortInt);
+begin
+  Inherited Create();
+  Fm_p := p;
+  Fm_a := a;
+end;
+
+function TWTauNafMultiplier.TWTauNafCallback.Precompute(const existing
+  : IPreCompInfo): IPreCompInfo;
+var
+  tempResult: IWTauNafPreCompInfo;
+begin
+
+  // Review uncomment
+  // if (Supports(existing, IWTauNafPreCompInfo)) then
+  // begin
+  // result := existing;
+  // Exit;
+  // end;
+
+  tempResult := TWTauNafPreCompInfo.Create();
+  tempResult.PreComp := TTnaf.GetPreComp(Fm_p, Fm_a);
+  result := tempResult;
 end;
 
 end.

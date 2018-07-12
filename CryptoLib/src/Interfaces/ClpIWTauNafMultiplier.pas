@@ -24,7 +24,6 @@ interface
 uses
   ClpBigInteger,
   ClpIECInterface,
-  ClpIPreCompInfo,
   ClpIZTauElement,
   ClpIAbstractECMultiplier;
 
@@ -43,8 +42,7 @@ type
     // * @return <code>p</code> multiplied by <code>&#955;</code>.
     // */
     function MultiplyWTnaf(const p: IAbstractF2mPoint;
-      const lambda: IZTauElement; const preCompInfo: IPreCompInfo;
-      a, mu: ShortInt): IAbstractF2mPoint;
+      const lambda: IZTauElement; a, mu: ShortInt): IAbstractF2mPoint;
 
   end;
 

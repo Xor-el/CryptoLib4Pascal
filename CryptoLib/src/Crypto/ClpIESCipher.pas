@@ -41,8 +41,9 @@ uses
   ClpEphemeralKeyPairGenerator,
   ClpIEphemeralKeyPairGenerator,
   ClpParametersWithIV,
-  ClpIECPublicKeyParameters,
   ClpIIESCipher,
+  ClpKeyEncoder,
+  ClpIKeyEncoder,
   ClpISecureRandom,
   ClpSecureRandom,
   ClpCryptoLibTypes;
@@ -52,29 +53,30 @@ resourcestring
     'Must be Passed Recipient''s Public EC Key for Encryption';
   SInvalidPrivateKey =
     'Must be Passed Recipient''s Private EC Key for Decryption';
-  SIESWithCipherParametersCannotBeNil = 'IESWithCipherParameters Cannot Be Nil';
+  SIESCipherParameterNil = 'IES Cipher Parameters Cannot Be Nil';
   SUnableToProcessBlock = 'Unable to Process Block. "%s"';
+  SIESCipherParameterError = 'IES Cipher Parameter Error';
+  SNonceInvalidLength = 'NONCE in IES Parameters Needs to be "%s" Bytes Long';
 
 type
   TIESCipher = class sealed(TInterfacedObject, IIESCipher)
 
   strict private
   var
+    FivLength: Int32;
     FEngine: IIESEngine;
     FForEncryption: Boolean;
     FBuffer: TMemoryStream;
-    FIESWithCipherParameters: IIESWithCipherParameters;
+    FIESCipherParameters: IIESWithCipherParameters;
     Fkey: IAsymmetricKeyParameter;
     FRandom: ISecureRandom;
 
     function Aggregate: TCryptoLibByteArray; inline;
 
-    function KeyEncoder(const keyParameter: IAsymmetricKeyParameter;
-      UsePointCompression: Boolean): TCryptoLibByteArray; inline;
-
   public
     procedure Init(ForEncryption: Boolean; const Key: ICipherParameters;
-      const params: IIESWithCipherParameters; const Random: ISecureRandom);
+      const IESCipherParameters: IIESWithCipherParameters;
+      const Random: ISecureRandom);
 
     procedure ProcessBytes(input: TCryptoLibByteArray); overload;
     procedure ProcessBytes(input: TCryptoLibByteArray;
@@ -88,7 +90,8 @@ type
     function DoFinal(input: TCryptoLibByteArray; inputOffset, inputLen: Int32;
       output: TCryptoLibByteArray; outputOffset: Int32): Int32; overload;
 
-    constructor Create(const Engine: IIESEngine);
+    constructor Create(const Engine: IIESEngine); overload;
+    constructor Create(const Engine: IIESEngine; ivLength: Int32); overload;
     destructor Destroy(); override;
 
   end;
@@ -96,13 +99,6 @@ type
 implementation
 
 { TIESCipher }
-
-function TIESCipher.KeyEncoder(const keyParameter: IAsymmetricKeyParameter;
-  UsePointCompression: Boolean): TCryptoLibByteArray;
-begin
-  Result := (keyParameter as IECPublicKeyParameters)
-    .Q.GetEncoded(UsePointCompression);
-end;
 
 function TIESCipher.Aggregate: TCryptoLibByteArray;
 begin
@@ -113,8 +109,14 @@ end;
 
 constructor TIESCipher.Create(const Engine: IIESEngine);
 begin
+  Create(Engine, 0);
+end;
+
+constructor TIESCipher.Create(const Engine: IIESEngine; ivLength: Int32);
+begin
   Inherited Create();
   FEngine := Engine;
+  FivLength := ivLength;
   FBuffer := TMemoryStream.Create();
 end;
 
@@ -137,16 +139,14 @@ begin
   FBuffer.Clear;
   FBuffer.SetSize(0);
 
-  // Copy parameters for use in IESEngine
-  params := TIESWithCipherParameters.Create
-    (FIESWithCipherParameters.GetDerivationV,
-    FIESWithCipherParameters.GetEncodingV, FIESWithCipherParameters.Nonce,
-    FIESWithCipherParameters.MacKeySize, FIESWithCipherParameters.CipherKeySize,
-    FIESWithCipherParameters.PointCompression);
+  // Convert parameters for use in IESEngine
+  params := TIESWithCipherParameters.Create(FIESCipherParameters.GetDerivationV,
+    FIESCipherParameters.GetEncodingV, FIESCipherParameters.MacKeySize,
+    FIESCipherParameters.CipherKeySize);
 
-  if (FIESWithCipherParameters.Nonce <> Nil) then
+  if (FIESCipherParameters.Nonce <> Nil) then
   begin
-    params := TParametersWithIV.Create(params, FIESWithCipherParameters.Nonce);
+    params := TParametersWithIV.Create(params, FIESCipherParameters.Nonce);
   end;
   ecParams := (Fkey as IECKeyParameters).Parameters;
 
@@ -157,10 +157,10 @@ begin
     gen.Init(TECKeyGenerationParameters.Create(ecParams, FRandom)
       as IECKeyGenerationParameters);
 
-    UsePointCompression := FIESWithCipherParameters.PointCompression;
+    UsePointCompression := FIESCipherParameters.PointCompression;
 
-    kGen := TEphemeralKeyPairGenerator.Create(gen, UsePointCompression,
-      KeyEncoder);
+    kGen := TEphemeralKeyPairGenerator.Create(gen,
+      TKeyEncoder.Create(UsePointCompression) as IKeyEncoder);
 
     // Encrypt the buffer
 
@@ -222,12 +222,40 @@ begin
 end;
 
 procedure TIESCipher.Init(ForEncryption: Boolean; const Key: ICipherParameters;
-  const params: IIESWithCipherParameters; const Random: ISecureRandom);
+  const IESCipherParameters: IIESWithCipherParameters;
+  const Random: ISecureRandom);
 var
   LKey: ICipherParameters;
+  Nonce: TCryptoLibByteArray;
 begin
+
   FForEncryption := ForEncryption;
+
+  if (IESCipherParameters = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SIESCipherParameterNil);
+  end
+  else if (Supports(IESCipherParameters, IIESWithCipherParameters)) then
+  begin
+    FIESCipherParameters := IESCipherParameters as IIESWithCipherParameters;
+  end
+  else
+  begin
+    raise EInvalidParameterCryptoLibException.CreateRes
+      (@SIESCipherParameterError);
+  end;
+
+  Nonce := FIESCipherParameters.Nonce;
+
+  if ((FivLength <> 0) and ((Nonce = Nil) or (System.length(Nonce) <>
+    FivLength))) then
+  begin
+    raise EInvalidParameterCryptoLibException.CreateResFmt(@SNonceInvalidLength,
+      [FivLength]);
+  end;
+
   LKey := Key;
+
   // Parse the recipient's key
   if ForEncryption then
   begin
@@ -252,15 +280,7 @@ begin
     end;
 
   end;
-  if params = Nil then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes
-      (@SIESWithCipherParametersCannotBeNil);
-  end
-  else
-  begin
-    FIESWithCipherParameters := params;
-  end;
+
   FRandom := Random;
   FBuffer.Clear;
   FBuffer.SetSize(0);

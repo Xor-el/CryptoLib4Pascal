@@ -129,8 +129,12 @@ uses
   ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
   ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
   ClpIDsaValidationParameters, ClpBase58, ClpDigest, ClpECDHCBasicAgreement, 
-  ClpIECDHCBasicAgreement, Generics.Collections, Generics.Defaults, 
-  Generics.Hashes, Generics.Helpers, Generics.MemoryExpanders, Generics.Strings;
+  ClpIECDHCBasicAgreement, ClpHMacDsaKCalculator, ClpIHMacDsaKCalculator, 
+  ClpHkdfBytesGenerator, ClpIHkdfBytesGenerator, ClpHkdfParameters, 
+  ClpIHkdfParameters, ClpDsaParameterGenerationParameters, 
+  ClpIDsaParameterGenerationParameters, ClpValidityPrecompInfo, 
+  ClpIValidityPrecompInfo, ClpDSAParametersGenerator,
+  ClpDsaParameter, ClpIDsaParameter, ClpIKeyEncoder;
 
 implementation
 

@@ -38,10 +38,6 @@ type
   strict private
     function GetWidth: Int32;
     procedure SetWidth(const Value: Int32);
-    function GetPreComp: TCryptoLibGenericArray<IECPoint>;
-      deprecated 'Will be removed';
-    procedure SetPreComp(const Value: TCryptoLibGenericArray<IECPoint>);
-      deprecated 'Will be removed';
 
     function GetLookupTable: IECLookupTable;
     procedure SetLookupTable(const Value: IECLookupTable);
@@ -52,12 +48,6 @@ type
   strict protected
   var
     Fm_offset: IECPoint;
-
-    /// <summary>
-    /// Array holding the precomputed <c>ECPoint</c>s used for a fixed point
-    /// multiplication.
-    /// </summary>
-    Fm_preComp: TCryptoLibGenericArray<IECPoint>;
 
     /// <summary>
     /// Array holding the precomputed <c>ECPoint</c>s used for a fixed point
@@ -75,8 +65,6 @@ type
   public
     constructor Create();
     property Offset: IECPoint read GetOffset write SetOffset;
-    property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp
-      write SetPreComp; {$IFDEF FPC }deprecated 'Use "LookupTable" property instead.'; {$ENDIF FPC }
     property LookupTable: IECLookupTable read GetLookupTable
       write SetLookupTable;
     property Width: Int32 read GetWidth write SetWidth;
@@ -103,11 +91,6 @@ begin
   Result := Fm_offset;
 end;
 
-function TFixedPointPreCompInfo.GetPreComp: TCryptoLibGenericArray<IECPoint>;
-begin
-  Result := Fm_preComp;
-end;
-
 function TFixedPointPreCompInfo.GetWidth: Int32;
 begin
   Result := Fm_width;
@@ -121,12 +104,6 @@ end;
 procedure TFixedPointPreCompInfo.SetOffset(const Value: IECPoint);
 begin
   Fm_offset := Value;
-end;
-
-procedure TFixedPointPreCompInfo.SetPreComp(const Value
-  : TCryptoLibGenericArray<IECPoint>);
-begin
-  Fm_preComp := Value;
 end;
 
 procedure TFixedPointPreCompInfo.SetWidth(const Value: Int32);

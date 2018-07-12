@@ -36,7 +36,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="27">
+    <Units Count="33">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -127,25 +127,49 @@
         <IsPartOfProject Value="True"/>
       </Unit21>
       <Unit22>
-        <Filename Value="..\src\Crypto\IESCipherTests.pas"/>
+        <Filename Value="..\src\Crypto\AESSICTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit22>
       <Unit23>
-        <Filename Value="..\src\Crypto\AESSICTests.pas"/>
+        <Filename Value="..\src\Crypto\HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit23>
       <Unit24>
-        <Filename Value="..\src\Crypto\HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\MD5HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit24>
       <Unit25>
-        <Filename Value="..\src\Crypto\MD5HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\Pkcs5Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit25>
       <Unit26>
-        <Filename Value="..\src\Crypto\Pkcs5Tests.pas"/>
+        <Filename Value="..\src\Crypto\HkdfGeneratorTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit26>
+      <Unit27>
+        <Filename Value="..\src\Math\ECIESTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="..\src\Math\IESCipherTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="..\src\Math\ECNRTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="..\src\Crypto\PaddingTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit30>
+      <Unit31>
+        <Filename Value="..\src\Crypto\DeterministicDsaTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit31>
+      <Unit32>
+        <Filename Value="..\src\Crypto\DSATests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit32>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

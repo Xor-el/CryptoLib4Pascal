@@ -21,7 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
 {$ENDIF FPC}
 
 uses
@@ -34,18 +33,12 @@ type
 
     function GetIsExhausted: Boolean;
 
-    function GenerateSeed(numBytes: Int32): TCryptoLibByteArray;
-
-    procedure NextBytes(buf: TCryptoLibByteArray); overload;
-    procedure NextBytes(buf: TCryptoLibByteArray; off, len: Int32); overload;
-
     property IsExhausted: Boolean read GetIsExhausted;
 
   end;
 
   IRandomChecker = interface(ISecureRandom)
     ['{EFC0D597-00E4-4DAE-8529-E14C9FE50B41}']
-    procedure NextBytes(bytes: TCryptoLibByteArray);
   end;
 
   ISource = interface(IInterface)

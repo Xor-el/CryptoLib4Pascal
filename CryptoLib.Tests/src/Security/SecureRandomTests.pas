@@ -21,11 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-// Disable Overflow and RangeChecks.
-{$OVERFLOWCHECKS OFF}
-{$RANGECHECKS OFF}
-{$HINTS OFF}
-{$NOTES OFF}
 {$ENDIF FPC}
 
 uses

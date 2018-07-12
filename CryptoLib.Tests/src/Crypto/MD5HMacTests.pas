@@ -22,7 +22,6 @@ interface
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
-{$HINTS OFF}
 
 uses
   SysUtils,
@@ -33,7 +32,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpKeyParameter,
-  ClpIKeyParameter,
   ClpHMac,
   ClpIMac,
   ClpDigestUtilities,
@@ -112,7 +110,7 @@ begin
 
   for i := 0 to System.Pred(System.Length(Fmessages)) do
   begin
-    m := TEncoding.ASCII.GetBytes(Fmessages[i]);
+    m := TEncoding.ASCII.GetBytes(UnicodeString(Fmessages[i]));
     if (TStringUtils.BeginsWith(Fmessages[i], '0x', True)) then
     begin
       m := THex.Decode(System.Copy(Fmessages[i], 3,
@@ -130,7 +128,7 @@ begin
 
   // test reset
   vector := 0; // vector used for test
-  m2 := TEncoding.ASCII.GetBytes(Fmessages[vector]);
+  m2 := TEncoding.ASCII.GetBytes(UnicodeString(Fmessages[vector]));
 
   if (TStringUtils.BeginsWith(Fmessages[vector], '0x', True)) then
   begin

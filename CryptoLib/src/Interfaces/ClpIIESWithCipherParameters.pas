@@ -30,12 +30,35 @@ type
   IIESWithCipherParameters = interface(IIESParameters)
     ['{77F38EA8-08F2-4D0D-A8E9-F3796DCCCA54}']
 
-    function GetCipherKeySize(): Int32;
+    function GetCipherKeySize: Int32;
+
+    /// <summary>
+    /// Return the key size in bits for the block cipher used with the message
+    /// </summary>
+    /// <value>
+    /// the key size in bits for the block cipher used with the message
+    /// </value>
     property CipherKeySize: Int32 read GetCipherKeySize;
-    function GetPointCompression(): Boolean;
-    property PointCompression: Boolean read GetPointCompression;
-    function GetNonce(): TCryptoLibByteArray;
+
+    function GetNonce: TCryptoLibByteArray;
+
+    /// <summary>
+    /// Return the nonce (IV) value to be associated with message.
+    /// </summary>
+    /// <value>
+    /// block cipher IV for message.
+    /// </value>
     property Nonce: TCryptoLibByteArray read GetNonce;
+
+    function GetPointCompression: Boolean;
+
+    /// <summary>
+    /// Return the 'point compression' flag.
+    /// </summary>
+    /// <value>
+    /// the point compression flag
+    /// </value>
+    property PointCompression: Boolean read GetPointCompression;
 
   end;
 

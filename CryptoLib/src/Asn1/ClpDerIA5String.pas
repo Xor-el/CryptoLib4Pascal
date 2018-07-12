@@ -140,11 +140,7 @@ end;
 
 function TDerIA5String.GetOctets: TCryptoLibByteArray;
 begin
-{$IFDEF FPC}
   result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-{$ELSE}
-  result := TEncoding.ASCII.GetBytes(Str);
-{$ENDIF FPC}
 end;
 
 class function TDerIA5String.IsIA5String(const Str: String): Boolean;
@@ -184,11 +180,7 @@ end;
 
 constructor TDerIA5String.Create(Str: TCryptoLibByteArray);
 begin
-{$IFDEF FPC}
   Create(String(TEncoding.ASCII.GetString(Str)), false);
-{$ELSE}
-  Create(TEncoding.ASCII.GetString(Str), false);
-{$ENDIF FPC}
 end;
 
 constructor TDerIA5String.Create(const Str: String);

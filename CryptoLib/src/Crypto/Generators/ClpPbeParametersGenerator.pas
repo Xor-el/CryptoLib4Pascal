@@ -92,8 +92,8 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String;
-      keySize: Int32): ICipherParameters; overload; virtual; abstract;
+    function GenerateDerivedParameters(const algorithm: String; keySize: Int32)
+      : ICipherParameters; overload; virtual; abstract;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize and iv
@@ -112,8 +112,7 @@ type
     /// a parameters object representing a key and an iv.
     /// </returns>
     function GenerateDerivedParameters(const algorithm: String;
-      keySize, ivSize: Int32): ICipherParameters; overload;
-      virtual; abstract;
+      keySize, ivSize: Int32): ICipherParameters; overload; virtual; abstract;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize,
@@ -125,8 +124,8 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedMacParameters(keySize: Int32)
-      : ICipherParameters; virtual; abstract;
+    function GenerateDerivedMacParameters(keySize: Int32): ICipherParameters;
+      virtual; abstract;
 
   end;
 

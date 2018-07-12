@@ -23,11 +23,17 @@ uses
   AESTests, // pass x64, pass arm
   BlockCipherVectorTests, // pass x64, pass arm
   AESTestVectors,
-  IESCipherTests, // pass x64, pass arm
-  AESSICTests, // pass x64, pass arm
-  MD5HMacTests, // pass x64, pass arm
- // HMacTests, // pass arm, x64 stalling
-  Pkcs5Tests, // pass x64, pass arm
+  AESSICTests,
+  IESCipherTests,
+  MD5HMacTests,
+  HMacTests,
+  Pkcs5Tests,
+  HkdfGeneratorTests,
+  ECIESTests,
+  ECNRTests,
+  PaddingTests,
+  DSATests,
+  DeterministicDsaTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
