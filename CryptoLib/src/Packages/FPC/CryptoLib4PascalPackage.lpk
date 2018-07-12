@@ -1664,11 +1664,13 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="HashLib4PascalPackage"/>
-        <MinVersion Major="2" Minor="4" Valid="True"/>
+        <MaxVersion Major="2" Minor="4"/>
+        <MinVersion Major="2" Minor="5" Valid="True"/>
       </Item1>
       <Item2>
         <PackageName Value="SimpleBaseLib4PascalPackage"/>
-        <MinVersion Major="1" Minor="2" Valid="True"/>
+        <MaxVersion Major="1" Minor="2"/>
+        <MinVersion Major="1" Minor="4" Valid="True"/>
       </Item2>
       <Item3>
         <PackageName Value="FCL"/>
