@@ -133,8 +133,9 @@ uses
   ClpHkdfBytesGenerator, ClpIHkdfBytesGenerator, ClpHkdfParameters, 
   ClpIHkdfParameters, ClpDsaParameterGenerationParameters, 
   ClpIDsaParameterGenerationParameters, ClpValidityPrecompInfo, 
-  ClpIValidityPrecompInfo, ClpDSAParametersGenerator,
-  ClpDsaParameter, ClpIDsaParameter, ClpIKeyEncoder;
+  ClpIValidityPrecompInfo, ClpDSAParametersGenerator, ClpDsaParameter, 
+  ClpIDsaParameter, ClpIKeyEncoder, ClpIDSAParametersGenerator, 
+  ClpIPreCompCallBack;
 
 implementation
 
