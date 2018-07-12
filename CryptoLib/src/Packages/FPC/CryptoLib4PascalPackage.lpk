@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -19,13 +19,13 @@
         </Optimizations>
       </CodeGeneration>
     </CompilerOptions>
-    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying ECDSA and ECShnorr Signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES ."/>
+    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES ."/>
     <License Value="MIT License                          
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="2" Minor="2"/>
-    <Files Count="391">
+    <Version Major="2" Minor="3"/>
+    <Files Count="406">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1591,6 +1591,66 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Interfaces\ClpIECDHCBasicAgreement.pas"/>
         <UnitName Value="ClpIECDHCBasicAgreement"/>
       </Item391>
+      <Item392>
+        <Filename Value="..\..\Crypto\Signers\ClpHMacDsaKCalculator.pas"/>
+        <UnitName Value="ClpHMacDsaKCalculator"/>
+      </Item392>
+      <Item393>
+        <Filename Value="..\..\Interfaces\ClpIHMacDsaKCalculator.pas"/>
+        <UnitName Value="ClpIHMacDsaKCalculator"/>
+      </Item393>
+      <Item394>
+        <Filename Value="..\..\Crypto\Generators\ClpHkdfBytesGenerator.pas"/>
+        <UnitName Value="ClpHkdfBytesGenerator"/>
+      </Item394>
+      <Item395>
+        <Filename Value="..\..\Interfaces\ClpIHkdfBytesGenerator.pas"/>
+        <UnitName Value="ClpIHkdfBytesGenerator"/>
+      </Item395>
+      <Item396>
+        <Filename Value="..\..\Crypto\Parameters\ClpHkdfParameters.pas"/>
+        <UnitName Value="ClpHkdfParameters"/>
+      </Item396>
+      <Item397>
+        <Filename Value="..\..\Interfaces\ClpIHkdfParameters.pas"/>
+        <UnitName Value="ClpIHkdfParameters"/>
+      </Item397>
+      <Item398>
+        <Filename Value="..\..\Crypto\Parameters\ClpDsaParameterGenerationParameters.pas"/>
+        <UnitName Value="ClpDsaParameterGenerationParameters"/>
+      </Item398>
+      <Item399>
+        <Filename Value="..\..\Interfaces\ClpIDsaParameterGenerationParameters.pas"/>
+        <UnitName Value="ClpIDsaParameterGenerationParameters"/>
+      </Item399>
+      <Item400>
+        <Filename Value="..\..\Math\EC\ClpValidityPrecompInfo.pas"/>
+        <UnitName Value="ClpValidityPrecompInfo"/>
+      </Item400>
+      <Item401>
+        <Filename Value="..\..\Interfaces\ClpIValidityPrecompInfo.pas"/>
+        <UnitName Value="ClpIValidityPrecompInfo"/>
+      </Item401>
+      <Item402>
+        <Filename Value="..\..\Crypto\Generators\ClpDsaParametersGenerator.pas"/>
+        <UnitName Value="ClpDsaParametersGenerator"/>
+      </Item402>
+      <Item403>
+        <Filename Value="..\..\Asn1\X509\ClpDsaParameter.pas"/>
+        <UnitName Value="ClpDsaParameter"/>
+      </Item403>
+      <Item404>
+        <Filename Value="..\..\Interfaces\ClpIAesEngine.dcu"/>
+        <Type Value="Binary"/>
+      </Item404>
+      <Item405>
+        <Filename Value="..\..\Interfaces\ClpIDsaParameter.pas"/>
+        <UnitName Value="ClpIDsaParameter"/>
+      </Item405>
+      <Item406>
+        <Filename Value="..\..\Interfaces\ClpIKeyEncoder.pas"/>
+        <UnitName Value="ClpIKeyEncoder"/>
+      </Item406>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

@@ -356,6 +356,7 @@ uses
   ClpEphemeralKeyPairGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpEphemeralKeyPairGenerator.pas',
   ClpIEphemeralKeyPairGenerator in '..\..\CryptoLib\src\Interfaces\ClpIEphemeralKeyPairGenerator.pas',
   ClpKeyEncoder in '..\..\CryptoLib\src\Crypto\ClpKeyEncoder.pas',
+  ClpIKeyEncoder in '..\..\CryptoLib\src\Interfaces\ClpIKeyEncoder.pas',
   ClpIESCipher in '..\..\CryptoLib\src\Crypto\ClpIESCipher.pas',
   ClpIIESCipher in '..\..\CryptoLib\src\Interfaces\ClpIIESCipher.pas',
   ClpECIESPublicKeyParser in '..\..\CryptoLib\src\Crypto\Parsers\ClpECIESPublicKeyParser.pas',
@@ -366,7 +367,7 @@ uses
   ClpIIESEngine in '..\..\CryptoLib\src\Interfaces\ClpIIESEngine.pas',
   ClpPascalCoinIESEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpPascalCoinIESEngine.pas',
   ClpIPascalCoinIESEngine in '..\..\CryptoLib\src\Interfaces\ClpIPascalCoinIESEngine.pas',
-  IESCipherTests in '..\src\Crypto\IESCipherTests.pas',
+  IESCipherTests in '..\src\Math\IESCipherTests.pas',
   ClpPascalCoinECIESKdfBytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPascalCoinECIESKdfBytesGenerator.pas',
   ClpIPascalCoinECIESKdfBytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPascalCoinECIESKdfBytesGenerator.pas',
   ClpISO10126d2Padding in '..\..\CryptoLib\src\Crypto\Paddings\ClpISO10126d2Padding.pas',
@@ -432,7 +433,28 @@ uses
   ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\ClpIDsaSigner.pas',
   ClpDigest in '..\..\CryptoLib\src\Crypto\Digests\ClpDigest.pas',
   ClpECDHCBasicAgreement in '..\..\CryptoLib\src\Crypto\Agreement\ClpECDHCBasicAgreement.pas',
-  ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\ClpIECDHCBasicAgreement.pas';
+  ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\ClpIECDHCBasicAgreement.pas',
+  ClpHMacDsaKCalculator in '..\..\CryptoLib\src\Crypto\Signers\ClpHMacDsaKCalculator.pas',
+  ClpIHMacDsaKCalculator in '..\..\CryptoLib\src\Interfaces\ClpIHMacDsaKCalculator.pas',
+  ClpHkdfBytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpHkdfBytesGenerator.pas',
+  ClpIHkdfBytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIHkdfBytesGenerator.pas',
+  ClpHkdfParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpHkdfParameters.pas',
+  ClpIHkdfParameters in '..\..\CryptoLib\src\Interfaces\ClpIHkdfParameters.pas',
+  ClpDsaParameterGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaParameterGenerationParameters.pas',
+  ClpIDsaParameterGenerationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameterGenerationParameters.pas',
+  ClpValidityPrecompInfo in '..\..\CryptoLib\src\Math\EC\ClpValidityPrecompInfo.pas',
+  ClpIValidityPrecompInfo in '..\..\CryptoLib\src\Interfaces\ClpIValidityPrecompInfo.pas',
+  HkdfGeneratorTests in '..\src\Crypto\HkdfGeneratorTests.pas',
+  ECIESTests in '..\src\Math\ECIESTests.pas',
+  ECNRTests in '..\src\Math\ECNRTests.pas',
+  PaddingTests in '..\src\Crypto\PaddingTests.pas',
+  ClpDsaParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpDsaParametersGenerator.pas',
+  ClpIDsaParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaParametersGenerator.pas',
+  DSATests in '..\src\Crypto\DSATests.pas',
+  ClpDsaParameter in '..\..\CryptoLib\src\Asn1\X509\ClpDsaParameter.pas',
+  ClpIDsaParameter in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameter.pas',
+  ClpIPreCompCallBack in '..\..\CryptoLib\src\Interfaces\ClpIPreCompCallBack.pas',
+  DeterministicDsaTests in '..\src\Crypto\DeterministicDsaTests.pas';
 
 begin
 
@@ -441,6 +463,5 @@ begin
     TextTestRunner.RunRegisteredTests
   else
     GUITestRunner.RunRegisteredTests;
-
 
 end.

@@ -19,7 +19,9 @@ unit NamedCurveTests;
 
 interface
 
-{$HINTS OFF}
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
 
 uses
   Classes,

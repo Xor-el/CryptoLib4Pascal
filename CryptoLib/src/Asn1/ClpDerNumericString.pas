@@ -142,11 +142,7 @@ end;
 
 function TDerNumericString.GetOctets: TCryptoLibByteArray;
 begin
-{$IFDEF FPC}
   result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-{$ELSE}
-  result := TEncoding.ASCII.GetBytes(Str);
-{$ENDIF FPC}
 end;
 
 class function TDerNumericString.IsNumericString(const Str: String): Boolean;
@@ -183,11 +179,7 @@ end;
 
 constructor TDerNumericString.Create(Str: TCryptoLibByteArray);
 begin
-{$IFDEF FPC}
   Create(String(TEncoding.ASCII.GetString(Str)), false);
-{$ELSE}
-  Create(TEncoding.ASCII.GetString(Str), false);
-{$ENDIF FPC}
 end;
 
 constructor TDerNumericString.Create(const Str: String);

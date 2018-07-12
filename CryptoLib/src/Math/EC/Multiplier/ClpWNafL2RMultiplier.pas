@@ -178,13 +178,13 @@ begin
     lr := table[TBits.Asr32(n, 1)];
 
     R := R.TwicePlus(lr);
-   R := R.TimesPow2(zeroes);
+    R := R.TimesPow2(zeroes);
   end;
 
   Result := R;
 
-  wnafPreCompInfo.preComp := Nil;
-  wnafPreCompInfo.PreCompNeg := Nil;
+  wnafPreCompInfo.preComp := Nil; // Review
+  wnafPreCompInfo.preCompNeg := Nil; // Review
 
 end;
 

@@ -324,6 +324,7 @@ uses
   ClpEphemeralKeyPairGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpEphemeralKeyPairGenerator.pas',
   ClpIEphemeralKeyPairGenerator in '..\..\CryptoLib\src\Interfaces\ClpIEphemeralKeyPairGenerator.pas',
   ClpKeyEncoder in '..\..\CryptoLib\src\Crypto\ClpKeyEncoder.pas',
+  ClpIKeyEncoder in '..\..\CryptoLib\src\Interfaces\ClpIKeyEncoder.pas',
   ClpIESCipher in '..\..\CryptoLib\src\Crypto\ClpIESCipher.pas',
   ClpIIESCipher in '..\..\CryptoLib\src\Interfaces\ClpIIESCipher.pas',
   ClpECIESPublicKeyParser in '..\..\CryptoLib\src\Crypto\Parsers\ClpECIESPublicKeyParser.pas',
@@ -394,7 +395,22 @@ uses
   ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\ClpIDsaSigner.pas',
   ClpDigest in '..\..\CryptoLib\src\Crypto\Digests\ClpDigest.pas',
   ClpECDHCBasicAgreement in '..\..\CryptoLib\src\Crypto\Agreement\ClpECDHCBasicAgreement.pas',
-  ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\ClpIECDHCBasicAgreement.pas';
+  ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\ClpIECDHCBasicAgreement.pas',
+  ClpHMacDsaKCalculator in '..\..\CryptoLib\src\Crypto\Signers\ClpHMacDsaKCalculator.pas',
+  ClpIHMacDsaKCalculator in '..\..\CryptoLib\src\Interfaces\ClpIHMacDsaKCalculator.pas',
+  ClpHkdfBytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpHkdfBytesGenerator.pas',
+  ClpIHkdfBytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIHkdfBytesGenerator.pas',
+  ClpHkdfParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpHkdfParameters.pas',
+  ClpIHkdfParameters in '..\..\CryptoLib\src\Interfaces\ClpIHkdfParameters.pas',
+  ClpDsaParameterGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaParameterGenerationParameters.pas',
+  ClpIDsaParameterGenerationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameterGenerationParameters.pas',
+  ClpValidityPrecompInfo in '..\..\CryptoLib\src\Math\EC\ClpValidityPrecompInfo.pas',
+  ClpIValidityPrecompInfo in '..\..\CryptoLib\src\Interfaces\ClpIValidityPrecompInfo.pas',
+  ClpDsaParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpDsaParametersGenerator.pas',
+  ClpIDsaParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaParametersGenerator.pas',
+  ClpDsaParameter in '..\..\CryptoLib\src\Asn1\X509\ClpDsaParameter.pas',
+  ClpIDsaParameter in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameter.pas',
+  ClpIPreCompCallBack in '..\..\CryptoLib\src\Interfaces\ClpIPreCompCallBack.pas';
 
 begin
   try

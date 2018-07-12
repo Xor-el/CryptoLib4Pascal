@@ -24,7 +24,9 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
+  ClpECAlgorithms,
   ClpICipherParameters,
+  ClpIECDomainParameters,
   ClpIECInterface,
   ClpIBasicAgreement,
   ClpIECDHBasicAgreement,
@@ -86,25 +88,38 @@ function TECDHBasicAgreement.CalculateAgreement(const pubKey: ICipherParameters)
   : TBigInteger;
 var
   pub: IECPublicKeyParameters;
-  P, pubPoint: IECPoint;
+  params: IECDomainParameters;
+  P, Q: IECPoint;
+  d, h: TBigInteger;
 begin
   pub := pubKey as IECPublicKeyParameters;
-  if (not(pub.parameters.Equals(FprivKey.parameters))) then
+  params := FprivKey.parameters;
+  if (not(params.Equals(pub.parameters))) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SWrongDomainParameter);
 
   end;
+
+  d := FprivKey.d;
   // Always perform calculations on the exact curve specified by our private key's parameters
 
-  pubPoint := FprivKey.parameters.Curve.decodePoint(pub.Q.GetEncoded(False));
-  if (pubPoint.IsInfinity) then
+  Q := TECAlgorithms.CleanPoint(params.Curve, pub.Q);
+
+  if (Q.IsInfinity) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInfinityInvalidPublicKey);
   end;
 
-  // P := pub.Q.Multiply(FprivKey.D).Normalize();
-  P := pubPoint.Multiply(FprivKey.D).Normalize();
+  h := params.h;
+
+  if (not(h.Equals(TBigInteger.One))) then
+  begin
+    d := params.HInv.Multiply(d).&Mod(params.N);
+    Q := TECAlgorithms.ReferenceMultiply(Q, h);
+  end;
+
+  P := Q.Multiply(d).Normalize();
 
   if (P.IsInfinity) then
   begin

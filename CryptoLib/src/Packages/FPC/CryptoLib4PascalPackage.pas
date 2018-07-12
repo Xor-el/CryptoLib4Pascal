@@ -129,7 +129,12 @@ uses
   ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
   ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
   ClpIDsaValidationParameters, ClpBase58, ClpDigest, ClpECDHCBasicAgreement, 
-  ClpIECDHCBasicAgreement;
+  ClpIECDHCBasicAgreement, ClpHMacDsaKCalculator, ClpIHMacDsaKCalculator, 
+  ClpHkdfBytesGenerator, ClpIHkdfBytesGenerator, ClpHkdfParameters, 
+  ClpIHkdfParameters, ClpDsaParameterGenerationParameters, 
+  ClpIDsaParameterGenerationParameters, ClpValidityPrecompInfo, 
+  ClpIValidityPrecompInfo, ClpDSAParametersGenerator,
+  ClpDsaParameter, ClpIDsaParameter, ClpIKeyEncoder;
 
 implementation
 

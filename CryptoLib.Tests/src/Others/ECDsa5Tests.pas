@@ -133,8 +133,11 @@ begin
     ('6277101735386680763835789423207666416083908700390324961279'), // q
     TBigInteger.Create('fffffffffffffffffffffffffffffffefffffffffffffffc', 16),
     // a
-    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16));
-  // b
+    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16),
+    // b
+    TBigInteger.Create
+    ('6277101735386680763835789423176059013767194773182842284081'),
+    TBigInteger.One);
 
   p := curve.DecodePoint
     (THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'));
@@ -183,7 +186,10 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16)); // b
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
+    TBigInteger.Create
+    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
+    TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode
@@ -271,7 +277,10 @@ begin
     TBigInteger.Create
     ('7fffffffffffffffffffffff7fffffffffff8000000000007ffffffffffc', 16), // a
     TBigInteger.Create
-    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16)); // b
+    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16), // b
+    TBigInteger.Create
+    ('7fffffffffffffffffffffff7fffff9e5e9a9f5d9071fbd1522688909d0b', 16),
+    TBigInteger.One);
 
   spec := TECDomainParameters.Create(curve,
 
@@ -356,7 +365,10 @@ begin
     TBigInteger.Create
     ('7fffffffffffffffffffffff7fffffffffff8000000000007ffffffffffc', 16), // a
     TBigInteger.Create
-    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16)); // b
+    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16), // b
+    TBigInteger.Create
+    ('7fffffffffffffffffffffff7fffff9e5e9a9f5d9071fbd1522688909d0b', 16),
+    TBigInteger.One);
 
   ecSpec := TECDomainParameters.Create(curve,
     curve.DecodePoint(THex.Decode

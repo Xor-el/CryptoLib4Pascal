@@ -21,7 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
 {$ENDIF FPC}
 
 uses
@@ -201,6 +200,8 @@ type
 
     procedure ImplSqrtTest(const c: IECCurve);
 
+    procedure ImplValidityTest(const c: IECCurve; const g: IECPoint);
+
     procedure ImplAddSubtractMultiplyTwiceEncodingTestAllCoords
       (const x9ECParameters: IX9ECParameters);
 
@@ -320,13 +321,13 @@ procedure TTestECPoint.ImplAddSubtractMultiplyTwiceEncodingTestAllCoords
   (const x9ECParameters: IX9ECParameters);
 var
   n, b: TBigInteger;
-  G, sg, q: IECPoint;
+  g, sg, q: IECPoint;
   c, sc: IECCurve;
   coords: TCryptoLibInt32Array;
   i, coord: Int32;
 begin
   n := x9ECParameters.n;
-  G := x9ECParameters.G;
+  g := x9ECParameters.g;
   c := x9ECParameters.curve;
 
   coords := TECCurve.GetAllCoordinateSystems();
@@ -337,12 +338,12 @@ begin
     if (c.SupportsCoordinateSystem(coord)) then
     begin
       sc := c;
-      sg := G;
+      sg := g;
 
       if (sc.CoordinateSystem <> coord) then
       begin
         sc := c.Configure().SetCoordinateSystem(coord).CreateCurve();
-        sg := sc.ImportPoint(G);
+        sg := sc.ImportPoint(g);
       end;
 
       // The generator is multiplied by random b to get random q
@@ -353,6 +354,7 @@ begin
       ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
 
       ImplSqrtTest(sc);
+      ImplValidityTest(sc, sg);
     end;
     System.Inc(i);
   end;
@@ -508,6 +510,25 @@ begin
   AssertPointsEqual('Add same point incorrect', p[3], p[0].Add(p[0]));
 end;
 
+procedure TTestECPoint.ImplValidityTest(const c: IECCurve; const g: IECPoint);
+var
+  h: TBigInteger;
+  order2, bad: IECPoint;
+begin
+  CheckTrue(g.IsValid());
+
+  h := c.getCofactor();
+  if ((h.IsInitialized) and (h.CompareTo(TBigInteger.One) > 0)) then
+  begin
+    if (TECAlgorithms.IsF2mCurve(c)) then
+    begin
+      order2 := c.CreatePoint(TBigInteger.Zero, c.b.Sqrt().ToBigInteger());
+      bad := g.Add(order2);
+      CheckFalse(bad.IsValid());
+    end;
+  end;
+end;
+
 procedure TTestECPoint.SetUp;
 begin
   inherited;
@@ -573,10 +594,7 @@ begin
     try
       for s in tempList do
       begin
-        if not tempDict.ContainsKey(s) then // make sure they are unique
-        begin
-          tempDict.Add(s, s);
-        end;
+        tempDict.AddOrSetValue(s, s); // make sure they are unique
       end;
       uniqNames := tempDict.Values.ToArray; // save unique instances to array
     finally
@@ -645,11 +663,9 @@ begin
 end;
 
 procedure TTestECPoint.TestPointCreationConsistency;
-var
-  bad: IECPoint;
 begin
   try
-    bad := FpInstance.Fcurve.CreatePoint(TBigInteger.ValueOf(12),
+    FpInstance.Fcurve.CreatePoint(TBigInteger.ValueOf(12),
       Default (TBigInteger));
     Fail('expected EArgumentCryptoLibException');
   except
@@ -661,7 +677,7 @@ begin
   end;
 
   try
-    bad := FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
+    FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
       TBigInteger.ValueOf(12));
     Fail('expected EArgumentCryptoLibException');
   except
@@ -673,7 +689,7 @@ begin
   end;
 
   try
-    bad := FpInstance.Fcurve.CreatePoint(TBigInteger.Create('1011'),
+    FpInstance.Fcurve.CreatePoint(TBigInteger.Create('1011'),
       Default (TBigInteger));
     Fail('expected EArgumentCryptoLibException');
   except
@@ -685,7 +701,7 @@ begin
   end;
 
   try
-    bad := FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
+    FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
       TBigInteger.Create('1011'));
     Fail('expected EArgumentCryptoLibException');
   except

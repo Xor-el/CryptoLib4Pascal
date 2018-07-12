@@ -25,11 +25,17 @@ uses
   AESTests,
   BlockCipherVectorTests,
   AESTestVectors,
-  IESCipherTests,
   AESSICTests,
+  IESCipherTests,
   MD5HMacTests,
   HMacTests,
   Pkcs5Tests,
+  HkdfGeneratorTests,
+  ECIESTests,
+  ECNRTests,
+  PaddingTests,
+  DSATests,
+  DeterministicDsaTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

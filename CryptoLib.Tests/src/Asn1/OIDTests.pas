@@ -21,7 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$NOTES OFF}
 {$ENDIF FPC}
 
 uses
@@ -34,6 +33,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpHex,
+  ClpArrayUtils,
   ClpCryptoLibTypes,
   ClpAsn1Object,
   ClpDerObjectIdentifier,
@@ -87,10 +87,8 @@ begin
 end;
 
 procedure TTestOID.constructorMethod;
-var
-  temp: IDerObjectIdentifier;
 begin
-  temp := TDerObjectIdentifier.Create(Foid);
+  TDerObjectIdentifier.Create(Foid);
 end;
 
 procedure TTestOID.invalidOidCheck;
@@ -133,8 +131,8 @@ begin
 
   CheckEquals(true, o.Equals(encO), 'object comparison failed');
 
-  CheckEquals(true, CompareMem(bytes, enc, System.Length(enc) *
-    System.SizeOf(Byte)), 'bytearray comparison failed');
+  CheckEquals(true, TArrayUtils.AreEqual(bytes, enc),
+    'bytearray comparison failed');
 end;
 
 procedure TTestOID.SetUp;

@@ -26,6 +26,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBits,
+  ClpIPreCompCallback,
   ClpWNafPreCompInfo,
   ClpIPreCompInfo,
   ClpIWNafPreCompInfo,
@@ -34,7 +35,6 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidBitLength = 'Must have BitLength < 2^16, "k"';
   SInvalidRange = 'Must be in the Range [2, 16], "width"';
   SInvalidRange2 = 'Must be in the Range [2, 8], "width"';
 
@@ -43,12 +43,65 @@ type
 
   strict private
 
+  type
+    IMapPointCallback = interface(IPreCompCallback)
+      ['{730BF27F-D5C3-4DF4-AC77-B8653C457C10}']
+
+    end;
+
+  type
+    TMapPointCallback = class(TInterfacedObject, IPreCompCallback,
+      IMapPointCallback)
+
+    strict private
+    var
+      Fm_wnafPreCompP: IWNafPreCompInfo;
+      Fm_includeNegated: Boolean;
+      Fm_pointMap: IECPointMap;
+
+    public
+      constructor Create(const wnafPreCompP: IWNafPreCompInfo;
+        includeNegated: Boolean; const pointMap: IECPointMap);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
+  type
+    IWNafCallback = interface(IPreCompCallback)
+      ['{A439A606-7899-4720-937E-C2F3D94D4811}']
+
+    end;
+
+  type
+    TWNafCallback = class(TInterfacedObject, IPreCompCallback, IWNafCallback)
+
+    strict private
+    var
+      Fm_p: IECPoint;
+      Fm_width: Int32;
+      Fm_includeNegated: Boolean;
+
+    public
+      constructor Create(const p: IECPoint; width: Int32;
+        includeNegated: Boolean);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
   class var
     FDEFAULT_WINDOW_SIZE_CUTOFFS, FEMPTY_INTS: TCryptoLibInt32Array;
 
     FEMPTY_BYTES: TCryptoLibByteArray;
 
     FEMPTY_POINTS: TCryptoLibGenericArray<IECPoint>;
+
+    class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
+      reqPreCompLen: Int32; includeNegated: Boolean): Boolean; static; inline;
+
+    class function CheckTable(table: TCryptoLibGenericArray<IECPoint>;
+      reqLen: Int32): Boolean; static; inline;
 
     class function Trim(a: TCryptoLibByteArray; length: Int32)
       : TCryptoLibByteArray; overload; static; inline;
@@ -146,11 +199,7 @@ uses
 class function TWNafUtilities.ResizeTable(a: TCryptoLibGenericArray<IECPoint>;
   length: Int32): TCryptoLibGenericArray<IECPoint>;
 begin
-  // Result := System.Copy(a, 0, System.length(a));
-  if a <> Nil then
-  begin
-    Result := System.Copy(a);
-  end;
+  Result := System.Copy(a);
   System.SetLength(Result, length);
 end;
 
@@ -166,11 +215,25 @@ begin
   Result := System.Copy(a, 0, length);
 end;
 
+class function TWNafUtilities.CheckTable
+  (table: TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
+begin
+  Result := (table <> Nil) and (System.length(table) >= reqLen);
+end;
+
+class function TWNafUtilities.CheckExisting(const existingWNaf
+  : IWNafPreCompInfo; reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
+begin
+  Result := (existingWNaf <> Nil) and CheckTable(existingWNaf.PreComp,
+    reqPreCompLen) and ((not includeNegated) or
+    CheckTable(existingWNaf.PreCompNeg, reqPreCompLen));
+end;
+
 class function TWNafUtilities.GenerateCompactNaf(const k: TBigInteger)
   : TCryptoLibInt32Array;
 var
   _3k, diff: TBigInteger;
-  bits, highBit, &length, zeroes, I, digit: Int32;
+  bits, highBit, &length, zeroes, i, digit: Int32;
   naf: TCryptoLibInt32Array;
 begin
   if ((TBits.Asr32(k.BitLength, 16)) <> 0) then
@@ -194,18 +257,18 @@ begin
   &length := 0;
   zeroes := 0;
 
-  I := 1;
+  i := 1;
 
-  while (I < highBit) do
+  while (i < highBit) do
   begin
-    if (not diff.TestBit(I)) then
+    if (not diff.TestBit(i)) then
     begin
       System.Inc(zeroes);
-      System.Inc(I);
+      System.Inc(i);
       continue;
     end;
 
-    if k.TestBit(I) then
+    if k.TestBit(i) then
     begin
       digit := -1;
     end
@@ -218,7 +281,7 @@ begin
     System.Inc(length);
     zeroes := 1;
 
-    System.Inc(I, 2);
+    System.Inc(i, 2);
 
   end;
 
@@ -395,7 +458,7 @@ class function TWNafUtilities.GenerateNaf(const k: TBigInteger)
   : TCryptoLibByteArray;
 var
   _3k, diff: TBigInteger;
-  digits, I: Int32;
+  digits, i: Int32;
   naf: TCryptoLibByteArray;
 begin
   if (k.SignValue = 0) then
@@ -411,24 +474,24 @@ begin
 
   diff := _3k.&Xor(k);
 
-  I := 1;
+  i := 1;
 
-  while I < digits do
+  while i < digits do
   begin
-    if (diff.TestBit(I)) then
+    if (diff.TestBit(i)) then
     begin
-      if k.TestBit(I) then
+      if k.TestBit(i) then
       begin
-        naf[I - 1] := Byte(-1);
+        naf[i - 1] := Byte(-1);
       end
       else
       begin
-        naf[I - 1] := Byte(1);
+        naf[i - 1] := Byte(1);
       end;
 
-      System.Inc(I);
+      System.Inc(i);
     end;
-    System.Inc(I);
+    System.Inc(i);
   end;
 
   naf[digits - 1] := 1;
@@ -554,68 +617,36 @@ begin
   Result := GetWindowSize(bits, FDEFAULT_WINDOW_SIZE_CUTOFFS);
 end;
 
-class function TWNafUtilities.GetWNafPreCompInfo(const p: IECPoint)
-  : IWNafPreCompInfo;
-begin
-  Result := GetWNafPreCompInfo(p.Curve.GetPreCompInfo(p, PRECOMP_NAME));
-end;
-
 class function TWNafUtilities.GetWNafPreCompInfo(const preCompInfo
   : IPreCompInfo): IWNafPreCompInfo;
 begin
-  if (Supports(preCompInfo, IWNafPreCompInfo, Result)) then
-  begin
-    Exit;
-  end;
+  Result := preCompInfo as IWNafPreCompInfo;
+end;
 
-  Result := TWNafPreCompInfo.Create();
+class function TWNafUtilities.GetWNafPreCompInfo(const p: IECPoint)
+  : IWNafPreCompInfo;
+var
+  preCompInfo: IPreCompInfo;
+begin
+  preCompInfo := p.Curve.GetPreCompInfo(p, PRECOMP_NAME);
+  Result := GetWNafPreCompInfo(preCompInfo);
 end;
 
 class function TWNafUtilities.MapPointWithPrecomp(const p: IECPoint;
   width: Int32; includeNegated: Boolean; const pointMap: IECPointMap): IECPoint;
 var
   c: IECCurve;
-  wnafPreCompP, wnafPreCompQ: IWNafPreCompInfo;
-  q, twiceP, twiceQ: IECPoint;
-  preCompP, preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
-  I: Int32;
+  wnafPreCompP: IWNafPreCompInfo;
+  q: IECPoint;
 begin
   c := p.Curve;
+
   wnafPreCompP := Precompute(p, width, includeNegated);
 
-  q := pointMap.Map(p);
-  wnafPreCompQ := GetWNafPreCompInfo(c.GetPreCompInfo(q, PRECOMP_NAME));
+  q := pointMap.map(p);
 
-  twiceP := wnafPreCompP.Twice;
-  if (twiceP <> Nil) then
-  begin
-    twiceQ := pointMap.Map(twiceP);
-    wnafPreCompQ.Twice := twiceQ;
-  end;
-
-  preCompP := wnafPreCompP.PreComp;
-  System.SetLength(preCompQ, System.length(preCompP));
-  for I := 0 to System.Pred(System.length(preCompP)) do
-  begin
-    preCompQ[I] := pointMap.Map(preCompP[I]);
-  end;
-
-  wnafPreCompQ.PreComp := preCompQ;
-
-  if (includeNegated) then
-  begin
-
-    System.SetLength(preCompNegQ, System.length(preCompQ));
-
-    for I := 0 to System.Pred(System.length(preCompNegQ)) do
-    begin
-      preCompNegQ[I] := preCompQ[I].Negate();
-    end;
-
-    wnafPreCompQ.PreCompNeg := preCompNegQ;
-  end;
-
-  c.SetPreCompInfo(q, PRECOMP_NAME, wnafPreCompQ);
+  c.Precompute(q, PRECOMP_NAME, TMapPointCallback.Create(wnafPreCompP,
+    includeNegated, pointMap) as IMapPointCallback);
 
   Result := q;
 
@@ -623,21 +654,116 @@ end;
 
 class function TWNafUtilities.Precompute(const p: IECPoint; width: Int32;
   includeNegated: Boolean): IWNafPreCompInfo;
-var
-  c: IECCurve;
-  wnafPreCompInfo: IWNafPreCompInfo;
-  iniPreCompLen, reqPreCompLen, curPreCompLen, &pos: Int32;
-  PreComp, PreCompNeg: TCryptoLibGenericArray<IECPoint>;
-  iso, iso2, iso3: IECFieldElement;
-  twiceP, last: IECPoint;
 begin
-  c := p.Curve;
-  wnafPreCompInfo := GetWNafPreCompInfo(c.GetPreCompInfo(p, PRECOMP_NAME));
+  Result := p.Curve.Precompute(p, PRECOMP_NAME, TWNafCallback.Create(p, width,
+    includeNegated) as IWNafCallback) as IWNafPreCompInfo;
+end;
+
+class constructor TWNafUtilities.WNafUtilities;
+begin
+  FDEFAULT_WINDOW_SIZE_CUTOFFS := TCryptoLibInt32Array.Create(13, 41, 121, 337,
+    897, 2305);
+  System.SetLength(FEMPTY_BYTES, 0);
+  System.SetLength(FEMPTY_INTS, 0);
+  System.SetLength(FEMPTY_POINTS, 0);
+end;
+
+{ TWNafUtilities.TMapPointCallback }
+
+constructor TWNafUtilities.TMapPointCallback.Create(const wnafPreCompP
+  : IWNafPreCompInfo; includeNegated: Boolean; const pointMap: IECPointMap);
+begin
+  Inherited Create();
+  Fm_wnafPreCompP := wnafPreCompP;
+  Fm_includeNegated := includeNegated;
+  Fm_pointMap := pointMap;
+end;
+
+function TWNafUtilities.TMapPointCallback.Precompute(const existing
+  : IPreCompInfo): IPreCompInfo;
+var
+  tempResult: IWNafPreCompInfo;
+  twiceP, twiceQ: IECPoint;
+  preCompP, preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
+  i: Int32;
+begin
+  tempResult := TWNafPreCompInfo.Create();
+
+  twiceP := Fm_wnafPreCompP.Twice;
+  if (twiceP <> Nil) then
+  begin
+    twiceQ := Fm_pointMap.map(twiceP);
+    tempResult.Twice := twiceQ;
+  end;
+
+  preCompP := Fm_wnafPreCompP.PreComp;
+
+  System.SetLength(preCompQ, System.length(preCompP));
+  for i := 0 to System.Pred(System.length(preCompP)) do
+  begin
+    preCompQ[i] := Fm_pointMap.map(preCompP[i]);
+  end;
+
+  tempResult.PreComp := preCompQ;
+
+  if (Fm_includeNegated) then
+  begin
+
+    System.SetLength(preCompNegQ, System.length(preCompQ));
+
+    for i := 0 to System.Pred(System.length(preCompNegQ)) do
+    begin
+      preCompNegQ[i] := preCompQ[i].Negate();
+    end;
+
+    tempResult.PreCompNeg := preCompNegQ;
+  end;
+
+  Result := tempResult;
+end;
+
+{ TWNafUtilities.TWNafCallback }
+
+constructor TWNafUtilities.TWNafCallback.Create(const p: IECPoint; width: Int32;
+  includeNegated: Boolean);
+begin
+  Inherited Create();
+  Fm_p := p;
+  Fm_width := width;
+  Fm_includeNegated := includeNegated;
+end;
+
+function TWNafUtilities.TWNafCallback.Precompute(const existing: IPreCompInfo)
+  : IPreCompInfo;
+var
+  twiceP, isoTwiceP, last: IECPoint;
+  c: IECCurve;
+  PreComp, PreCompNeg: TCryptoLibGenericArray<IECPoint>;
+  tempRes, existingWNaf: IWNafPreCompInfo;
+  reqPreCompLen, iniPreCompLen, curPreCompLen, pos: Int32;
+  iso, iso2, iso3: IECFieldElement;
+begin
+
+  existingWNaf := existing as IWNafPreCompInfo;
+
+  reqPreCompLen := 1 shl Max(0, Fm_width - 2);
+
+  if (CheckExisting(existingWNaf, reqPreCompLen, Fm_includeNegated)) then
+  begin
+    Result := existingWNaf;
+    Exit;
+  end;
+
+  c := Fm_p.Curve;
+
+  if (existingWNaf <> Nil) then
+  begin
+    PreComp := existingWNaf.PreComp;
+    PreCompNeg := existingWNaf.PreCompNeg;
+    twiceP := existingWNaf.Twice;
+  end;
 
   iniPreCompLen := 0;
-  reqPreCompLen := 1 shl Max(0, width - 2);
-
-  PreComp := wnafPreCompInfo.PreComp;
   if (PreComp = Nil) then
   begin
     PreComp := FEMPTY_POINTS;
@@ -649,36 +775,34 @@ begin
 
   if (iniPreCompLen < reqPreCompLen) then
   begin
-    PreComp := ResizeTable(PreComp, reqPreCompLen);
+    PreComp := TWNafUtilities.ResizeTable(PreComp, reqPreCompLen);
 
     if (reqPreCompLen = 1) then
     begin
-      PreComp[0] := p.Normalize();
+      PreComp[0] := Fm_p.Normalize();
     end
     else
     begin
       curPreCompLen := iniPreCompLen;
       if (curPreCompLen = 0) then
       begin
-        PreComp[0] := p;
+        PreComp[0] := Fm_p;
         curPreCompLen := 1;
       end;
 
-      iso := Nil;
-
       if (reqPreCompLen = 2) then
       begin
-        PreComp[1] := p.ThreeTimes();
+        PreComp[1] := Fm_p.threeTimes();
       end
       else
       begin
-        twiceP := wnafPreCompInfo.Twice;
+        isoTwiceP := twiceP;
         last := PreComp[curPreCompLen - 1];
-        if (twiceP = Nil) then
+        if (isoTwiceP = Nil) then
         begin
-          twiceP := PreComp[0].Twice();
-          wnafPreCompInfo.Twice := twiceP;
-
+          isoTwiceP := PreComp[0].Twice();
+          twiceP := isoTwiceP;
+          //
           // /*
           // * For Fp curves with Jacobian projective coordinates, use a (quasi-)isomorphism
           // * where 'twiceP' is "affine", so that the subsequent additions are cheaper. This
@@ -689,30 +813,30 @@ begin
           // *      1) additions do not use the curve's A, B coefficients.
           // *      2) no special cases (i.e. Q +/- Q) when calculating 1P, 3P, 5P, ...
           // */
-          if ((not twiceP.IsInfinity) and (TECAlgorithms.IsFpCurve(c)) and
+          if ((not(twiceP.IsInfinity)) and (TECAlgorithms.IsFpCurve(c)) and
             (c.FieldSize >= 64)) then
           begin
             case (c.CoordinateSystem) of
-
-              // TECCurve.COORD_JACOBIAN .. TECCurve.COORD_JACOBIAN_MODIFIED:
               TECCurve.COORD_JACOBIAN, TECCurve.COORD_JACOBIAN_CHUDNOVSKY,
                 TECCurve.COORD_JACOBIAN_MODIFIED:
+
                 begin
                   iso := twiceP.GetZCoord(0);
-                  twiceP := c.CreatePoint(twiceP.XCoord.ToBigInteger(),
+                  isoTwiceP := c.CreatePoint(twiceP.XCoord.ToBigInteger,
                     twiceP.YCoord.ToBigInteger());
 
-                  iso2 := iso.Square();
-                  iso3 := iso2.Multiply(iso);
-                  last := last.ScaleX(iso2).ScaleY(iso3);
+                  iso2 := iso.square();
+                  iso3 := iso2.multiply(iso);
+                  last := last.scaleX(iso2).scaleY(iso3);
 
                   if (iniPreCompLen = 0) then
                   begin
                     PreComp[0] := last;
                   end;
-
                 end;
+
             end;
+
           end;
         end;
 
@@ -722,26 +846,22 @@ begin
           // * Compute the new ECPoints for the precomputation array. The values 1, 3,
           // * 5, ..., 2^(width-1)-1 times p are computed
           // */
-
-          last := last.Add(twiceP);
+          last := last.Add(isoTwiceP);
           PreComp[curPreCompLen] := last;
           System.Inc(curPreCompLen);
         end;
       end;
-
+      //
       // /*
       // * Having oft-used operands in affine form makes operations faster.
       // */
-      c.NormalizeAll(PreComp, iniPreCompLen,
+      c.normalizeAll(PreComp, iniPreCompLen,
         reqPreCompLen - iniPreCompLen, iso);
     end;
   end;
 
-  wnafPreCompInfo.PreComp := PreComp;
-
-  if (includeNegated) then
+  if (Fm_includeNegated) then
   begin
-    PreCompNeg := wnafPreCompInfo.PreCompNeg;
 
     if (PreCompNeg = Nil) then
     begin
@@ -754,8 +874,8 @@ begin
       pos := System.length(PreCompNeg);
       if (pos < reqPreCompLen) then
       begin
-        PreCompNeg := ResizeTable(PreCompNeg, reqPreCompLen);
-      end
+        PreCompNeg := TWNafUtilities.ResizeTable(PreCompNeg, reqPreCompLen);
+      end;
     end;
 
     while (pos < reqPreCompLen) do
@@ -763,22 +883,14 @@ begin
       PreCompNeg[pos] := PreComp[pos].Negate();
       System.Inc(pos);
     end;
-
-    wnafPreCompInfo.PreCompNeg := PreCompNeg;
   end;
 
-  c.SetPreCompInfo(p, PRECOMP_NAME, wnafPreCompInfo);
+  tempRes := TWNafPreCompInfo.Create();
+  tempRes.PreComp := PreComp;
+  tempRes.PreCompNeg := PreCompNeg;
+  tempRes.Twice := twiceP;
 
-  Result := wnafPreCompInfo;
-end;
-
-class constructor TWNafUtilities.WNafUtilities;
-begin
-  FDEFAULT_WINDOW_SIZE_CUTOFFS := TCryptoLibInt32Array.Create(13, 41, 121, 337,
-    897, 2305);
-  System.SetLength(FEMPTY_BYTES, 0);
-  System.SetLength(FEMPTY_INTS, 0);
-  System.SetLength(FEMPTY_POINTS, 0);
+  Result := tempRes;
 end;
 
 end.

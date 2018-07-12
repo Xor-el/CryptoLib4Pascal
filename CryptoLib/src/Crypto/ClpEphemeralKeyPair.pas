@@ -24,11 +24,8 @@ interface
 uses
   ClpIEphemeralKeyPair,
   ClpIAsymmetricCipherKeyPair,
-  ClpKeyEncoder,
+  ClpIKeyEncoder,
   ClpCryptoLibTypes;
-
-resourcestring
-  SParameterFunctionCannotBeNil = 'Parameter Function Cannot be Nil.';
 
 type
   TEphemeralKeyPair = class sealed(TInterfacedObject, IEphemeralKeyPair)
@@ -36,17 +33,16 @@ type
   strict private
 
     FkeyPair: IAsymmetricCipherKeyPair;
-    FUsePointCompression: Boolean;
-    FpublicKeyEncoder: TKeyEncoder;
+    FpublicKeyEncoder: IKeyEncoder;
 
   public
 
     function getKeyPair(): IAsymmetricCipherKeyPair; inline;
 
-    function getEncodedPublicKey(): TCryptoLibByteArray; inline;
+    function GetEncodedPublicKey: TCryptoLibByteArray; inline;
 
     constructor Create(const keyPair: IAsymmetricCipherKeyPair;
-      usePointCompression: Boolean; const publicKeyEncoder: TKeyEncoder);
+      const publicKeyEncoder: IKeyEncoder);
 
   end;
 
@@ -55,25 +51,16 @@ implementation
 { TEphemeralKeyPair }
 
 constructor TEphemeralKeyPair.Create(const keyPair: IAsymmetricCipherKeyPair;
-  usePointCompression: Boolean; const publicKeyEncoder: TKeyEncoder);
+  const publicKeyEncoder: IKeyEncoder);
 begin
   Inherited Create();
   FkeyPair := keyPair;
-  FUsePointCompression := usePointCompression;
   FpublicKeyEncoder := publicKeyEncoder;
 end;
 
-function TEphemeralKeyPair.getEncodedPublicKey: TCryptoLibByteArray;
+function TEphemeralKeyPair.GetEncodedPublicKey: TCryptoLibByteArray;
 begin
-  if Assigned(FpublicKeyEncoder) then
-  begin
-    result := FpublicKeyEncoder(FkeyPair.Public, FUsePointCompression);
-  end
-  else
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes
-      (@SParameterFunctionCannotBeNil);
-  end;
+  result := FpublicKeyEncoder.GetEncoded(FkeyPair.Public);
 end;
 
 function TEphemeralKeyPair.getKeyPair: IAsymmetricCipherKeyPair;

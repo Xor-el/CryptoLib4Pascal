@@ -22,7 +22,6 @@ interface
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
-{$HINTS OFF}
 
 uses
   SysUtils,
@@ -35,7 +34,6 @@ uses
   AESTestVectors,
   ClpAesEngine,
   ClpIAesEngine,
-  ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
@@ -105,7 +103,6 @@ procedure TTestAES.doAESTest(const cipher: IBufferedCipher;
   const param: ICipherParameters; const input, output: String;
   withpadding: Boolean);
 var
-  len1, len2: Int32;
   LInput, LOutput, EncryptionResult, DecryptionResult: TBytes;
 begin
   LInput := THex.Decode(input);

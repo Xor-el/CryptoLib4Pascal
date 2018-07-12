@@ -32,6 +32,8 @@ type
     IAbstractECMultiplier, IECMultiplier)
 
   strict protected
+
+    function CheckResult(const p: IECPoint): IECPoint; virtual;
     function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
       : IECPoint; virtual; abstract;
 
@@ -47,6 +49,11 @@ type
 implementation
 
 { TAbstractECMultiplier }
+
+function TAbstractECMultiplier.CheckResult(const p: IECPoint): IECPoint;
+begin
+  result := TECAlgorithms.ImplCheckResult(p);
+end;
 
 constructor TAbstractECMultiplier.Create;
 begin
@@ -68,7 +75,7 @@ begin
   sign := k.SignValue;
   if ((sign = 0) or (p.IsInfinity)) then
   begin
-    Result := p.Curve.Infinity;
+    result := p.Curve.Infinity;
     Exit;
   end;
 
@@ -76,18 +83,18 @@ begin
 
   if sign > 0 then
   begin
-    Result := positive
+    result := positive
   end
   else
   begin
-    Result := positive.Negate();
+    result := positive.Negate();
   end;
 
   // /*
   // * Although the various multipliers ought not to produce invalid output under normal
   // * circumstances, a final check here is advised to guard against fault attacks.
   // */
-  Result := TECAlgorithms.ValidatePoint(Result);
+  result := CheckResult(result);
 
 end;
 

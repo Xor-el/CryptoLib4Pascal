@@ -42,8 +42,6 @@ type
   strict protected
     function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
       : IECPoint; override;
-    function GetWidthForCombSize(combSize: Int32): Int32; virtual;
-      deprecated 'Is no longer used; remove any overrides in subclasses.';
 
   public
     constructor Create();
@@ -63,18 +61,6 @@ end;
 destructor TFixedPointCombMultiplier.Destroy;
 begin
   inherited Destroy;
-end;
-
-function TFixedPointCombMultiplier.GetWidthForCombSize(combSize: Int32): Int32;
-begin
-  if (combSize > 257) then
-  begin
-    Result := 6
-  end
-  else
-  begin
-    Result := 5;
-  end;
 end;
 
 function TFixedPointCombMultiplier.MultiplyPositive(const p: IECPoint;
@@ -135,7 +121,6 @@ begin
   end;
 
   Result := R.add(info.Offset);
-  info.PreComp := Nil;
 
 end;
 

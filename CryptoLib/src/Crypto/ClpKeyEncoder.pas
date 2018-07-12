@@ -23,12 +23,39 @@ interface
 
 uses
   ClpIAsymmetricKeyParameter,
+  ClpIECPublicKeyParameters,
+  ClpIKeyEncoder,
   ClpCryptoLibTypes;
 
 type
-  TKeyEncoder = function(const keyParameter: IAsymmetricKeyParameter;
-    UsePointCompression: Boolean): TCryptoLibByteArray of Object;
+  TKeyEncoder = class(TInterfacedObject, IKeyEncoder)
+
+  strict private
+  var
+    FUsePointCompression: Boolean;
+
+  public
+    constructor Create(usePointCompression: Boolean);
+    function GetEncoded(const keyParameter: IAsymmetricKeyParameter)
+      : TCryptoLibByteArray;
+
+  end;
 
 implementation
+
+{ TKeyEncoder }
+
+constructor TKeyEncoder.Create(usePointCompression: Boolean);
+begin
+  Inherited Create();
+  FUsePointCompression := usePointCompression;
+end;
+
+function TKeyEncoder.GetEncoded(const keyParameter: IAsymmetricKeyParameter)
+  : TCryptoLibByteArray;
+begin
+  Result := (keyParameter as IECPublicKeyParameters)
+    .Q.GetEncoded(FUsePointCompression);
+end;
 
 end.

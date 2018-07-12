@@ -17,6 +17,8 @@
 
 unit ClpScaleXPointMap;
 
+{$I ..\..\Include\CryptoLib.inc}
+
 interface
 
 uses

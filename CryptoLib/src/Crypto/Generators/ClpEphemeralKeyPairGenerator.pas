@@ -27,7 +27,7 @@ uses
   ClpIEphemeralKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpKeyEncoder;
+  ClpIKeyEncoder;
 
 type
   TEphemeralKeyPairGenerator = class sealed(TInterfacedObject,
@@ -35,13 +35,12 @@ type
 
   strict private
     Fgen: IAsymmetricCipherKeyPairGenerator;
-    FUsePointCompression: Boolean;
-    FkeyEncoder: TKeyEncoder;
+    FkeyEncoder: IKeyEncoder;
 
   public
     function Generate(): IEphemeralKeyPair; inline;
     constructor Create(const gen: IAsymmetricCipherKeyPairGenerator;
-      UsePointCompression: Boolean; const keyEncoder: TKeyEncoder);
+      const keyEncoder: IKeyEncoder);
   end;
 
 implementation
@@ -49,12 +48,10 @@ implementation
 { TEphemeralKeyPairGenerator }
 
 constructor TEphemeralKeyPairGenerator.Create
-  (const gen: IAsymmetricCipherKeyPairGenerator; UsePointCompression: Boolean;
-  const keyEncoder: TKeyEncoder);
+  (const gen: IAsymmetricCipherKeyPairGenerator; const keyEncoder: IKeyEncoder);
 begin
   Inherited Create();
   Fgen := gen;
-  FUsePointCompression := UsePointCompression;
   FkeyEncoder := keyEncoder;
 end;
 
@@ -64,7 +61,7 @@ var
 begin
   eph := Fgen.generateKeyPair();
   // Encode the ephemeral public key
-  result := TEphemeralKeyPair.Create(eph, FUsePointCompression, FkeyEncoder);
+  result := TEphemeralKeyPair.Create(eph, FkeyEncoder);
 end;
 
 end.

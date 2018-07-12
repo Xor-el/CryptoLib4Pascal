@@ -74,8 +74,8 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String;
-      keySize: Int32): ICipherParameters; overload;
+    function GenerateDerivedParameters(const algorithm: String; keySize: Int32)
+      : ICipherParameters; overload;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize and iv
@@ -106,8 +106,7 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedMacParameters(keySize: Int32)
-      : ICipherParameters;
+    function GenerateDerivedMacParameters(keySize: Int32): ICipherParameters;
 
   end;
 

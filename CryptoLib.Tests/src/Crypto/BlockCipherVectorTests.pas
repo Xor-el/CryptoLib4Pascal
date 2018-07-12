@@ -22,7 +22,6 @@ interface
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
-{$HINTS OFF}
 
 uses
   SysUtils,
@@ -86,7 +85,7 @@ procedure TTestBlockCipherVector.doBlockCipherVectorTest
 var
   cipher: IBufferedBlockCipher;
   len1, len2: Int32;
-  LKey, LInput, LOutput, outBytes: TBytes;
+  LInput, LOutput, outBytes: TBytes;
 begin
   LInput := THex.Decode(input);
   LOutput := THex.Decode(output);

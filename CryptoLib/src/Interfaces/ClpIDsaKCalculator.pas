@@ -57,7 +57,8 @@ type
     // * @param d the DSA private value.
     // * @param message the message being signed.
     // */
-    procedure Init(n, d: TBigInteger; &message: TCryptoLibByteArray); overload;
+    procedure Init(const n, d: TBigInteger;
+      &message: TCryptoLibByteArray); overload;
 
     // /**
     // * Return the next valid value of K.

@@ -78,7 +78,13 @@ type
   end;
 
 type
-  IFpFieldElement = interface(IECFieldElement)
+  IAbstractFpFieldElement = interface(IECFieldElement)
+
+    ['{C3FFD257-58FB-4730-B26A-E225C48F374E}']
+  end;
+
+type
+  IFpFieldElement = interface(IAbstractFpFieldElement)
 
     ['{F5106EAC-DA8F-4815-8403-3D9C5438BF6F}']
 
@@ -102,7 +108,16 @@ type
   end;
 
 type
-  IF2mFieldElement = interface(IECFieldElement)
+  IAbstractF2mFieldElement = interface(IECFieldElement)
+
+    ['{EA6B19A3-77AF-4EDE-A96B-D736DBD71B81}']
+
+    function Trace(): Int32;
+    function HalfTrace(): IECFieldElement;
+  end;
+
+type
+  IF2mFieldElement = interface(IAbstractF2mFieldElement)
 
     ['{1B29CD22-21C3-424B-9496-BF5F1E4662E8}']
 

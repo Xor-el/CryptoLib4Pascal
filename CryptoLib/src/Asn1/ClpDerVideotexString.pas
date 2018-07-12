@@ -192,11 +192,7 @@ end;
 
 function TDerVideotexString.GetString: String;
 begin
-{$IFDEF FPC}
-  result := String(TEncoding.ASCII.GetString(mString)); // encoding.default
-{$ELSE}
-  result := TEncoding.ASCII.GetString(mString); // encoding.default
-{$ENDIF FPC}
+  result := String(TEncoding.ASCII.GetString(mString));
 end;
 
 end.

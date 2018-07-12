@@ -73,8 +73,7 @@ type
     // * @exception ArgumentException if the object cannot be converted.
     // */
 
-    class function GetInstance(obj: TObject): IDerInteger; overload;
-      static; inline;
+    class function GetInstance(obj: TObject): IDerInteger; overload; static;
 
     // /**
     // * return an Integer from a tagged object.

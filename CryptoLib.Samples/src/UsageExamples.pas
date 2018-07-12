@@ -727,8 +727,8 @@ begin
   // from a point or not in the EphemeralKeyPairGenerator
   UsePointCompression := True; // for compatibility
 
-  Result := TIESWithCipherParameters.Create(Derivation, Encoding, IVBytes,
-    MacKeySizeInBits, CipherKeySizeInBits, UsePointCompression);
+  Result := TIESWithCipherParameters.Create(Derivation, Encoding,
+    MacKeySizeInBits, CipherKeySizeInBits, IVBytes, UsePointCompression);
 end;
 
 class procedure TUsageExamples.GetPublicKeyFromPrivateKey;

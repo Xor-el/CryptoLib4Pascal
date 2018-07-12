@@ -23,6 +23,7 @@ interface
 
 uses
   ClpCryptoLibTypes,
+  ClpECDomainParameters,
   ClpBigInteger,
   ClpIECInterface,
   ClpIECPublicKeyParameters,
@@ -32,8 +33,6 @@ uses
 
 resourcestring
   SQNil = 'Q Cannot be Nil';
-  SQInfinity = 'Point at Infinity "Q"';
-  SQPointNotOnCurve = 'Point Not on Curve "Q"';
 
 type
   TECPublicKeyParameters = class sealed(TECKeyParameters,
@@ -44,7 +43,6 @@ type
     Fq: IECPoint;
 
     function GetQ: IECPoint; inline;
-    class function Validate(const q: IECPoint): IECPoint; static; inline;
 
   public
     constructor Create(const q: IECPoint;
@@ -73,29 +71,17 @@ begin
   result := Fq;
 end;
 
-class function TECPublicKeyParameters.Validate(const q: IECPoint): IECPoint;
-begin
-  if (q = Nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
-
-  if (q.IsInfinity) then
-    raise EArgumentCryptoLibException.CreateRes(@SQInfinity);
-
-  result := q.Normalize();
-
-  if (not(result.IsValid())) then
-    raise EArgumentCryptoLibException.CreateRes(@SQPointNotOnCurve);
-
-end;
-
 constructor TECPublicKeyParameters.Create(const algorithm: String;
   const q: IECPoint; const parameters: IECDomainParameters);
 begin
   Inherited Create(algorithm, false, parameters);
-  if (q = Nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
 
-  Fq := Validate(q);
+  if (q = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
+  end;
+
+  Fq := TECDomainParameters.Validate(parameters.Curve, q);
 end;
 
 constructor TECPublicKeyParameters.Create(const q: IECPoint;
@@ -108,10 +94,13 @@ constructor TECPublicKeyParameters.Create(const algorithm: String;
   const q: IECPoint; const publicKeyParamSet: IDerObjectIdentifier);
 begin
   Inherited Create(algorithm, false, publicKeyParamSet);
-  if (q = Nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
 
-  Fq := Validate(q);
+  if (q = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
+  end;
+
+  Fq := TECDomainParameters.Validate(parameters.Curve, q);
 end;
 
 function TECPublicKeyParameters.Equals(const other

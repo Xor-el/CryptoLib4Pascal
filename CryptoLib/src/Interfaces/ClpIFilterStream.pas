@@ -33,7 +33,7 @@ type
     procedure SetPosition(const Value: Int64);
 
     property Size: Int64 read GetSize;
-    property Position: Int64 read GetPosition write setPosition;
+    property Position: Int64 read GetPosition write SetPosition;
 
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
     function Read(var Buffer; Count: Int32): Int32;

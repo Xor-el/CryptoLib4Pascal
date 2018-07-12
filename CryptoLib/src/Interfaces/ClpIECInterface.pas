@@ -23,6 +23,7 @@ interface
 
 uses
   Generics.Collections,
+  ClpIPreCompCallback,
   ClpIECFieldElement,
   ClpCryptoLibTypes,
   ClpIFiniteField,
@@ -41,17 +42,13 @@ type
     procedure SetpreCompTable(const Value: TDictionary<String, IPreCompInfo>);
     function GetCurve: IECCurve;
     function GetCurveCoordinateSystem: Int32;
-    function GetX: IECFieldElement;
-      deprecated 'Use AffineXCoord, or Normalize() and XCoord, instead';
-    function GetY: IECFieldElement;
-      deprecated 'Use AffineYCoord, or Normalize() and YCoord, instead';
     function GetAffineXCoord: IECFieldElement;
     function GetAffineYCoord: IECFieldElement;
     function GetXCoord: IECFieldElement;
     function GetYCoord: IECFieldElement;
     function GetCompressionYTilde: Boolean;
 
-    function SatisfiesCofactor(): Boolean;
+    function SatisfiesOrder(): Boolean;
     function SatisfiesCurveEquation(): Boolean;
     function Detach(): IECPoint;
 
@@ -88,7 +85,11 @@ type
 
     function Normalize(const zInv: IECFieldElement): IECPoint; overload;
 
+    function ImplIsValid(decompressed, checkOrder: Boolean): Boolean;
+
     function IsValid(): Boolean;
+
+    function IsValidPartial(): Boolean;
 
     function ScaleX(const scale: IECFieldElement): IECPoint;
     function ScaleY(const scale: IECFieldElement): IECPoint;
@@ -114,27 +115,6 @@ type
 
     property preCompTable: TDictionary<String, IPreCompInfo>
       read GetpreCompTable write SetpreCompTable;
-
-    /// <summary>
-    /// <para>
-    /// Normalizes this point, and then returns the affine x-coordinate.
-    /// </para>
-    /// <para>
-    /// Note: normalization can be expensive, this method is deprecated
-    /// in favour of caller-controlled normalization.
-    /// </para>
-    /// </summary>
-    property x: IECFieldElement read GetX;
-    /// <summary>
-    /// <para>
-    /// Normalizes this point, and then returns the affine y-coordinate.
-    /// </para>
-    /// <para>
-    /// Note: normalization can be expensive, this method is deprecated
-    /// in favour of caller-controlled normalization.
-    /// </para>
-    /// </summary>
-    property y: IECFieldElement read GetY;
 
     /// <summary>
     /// Returns the affine x-coordinate after checking that this point is
@@ -340,8 +320,8 @@ type
       : IPreCompInfo;
 
     /// <summary>
-    /// Adds <c>PreCompInfo</c> for a point on this curve, under a given name.
-    /// Used by <c>ECMultiplier</c> to save the precomputation for this <c>
+    /// Compute a <c>PreCompInfo</c> for a point on this curve, under a given
+    /// name. Used by <c>ECMultiplier</c> to save the precomputation for this <c>
     /// ECPoint</c> for use by subsequent multiplication.
     /// </summary>
     /// <param name="point">
@@ -350,11 +330,11 @@ type
     /// <param name="name">
     /// A <c>String</c> used to index precomputations of different types.
     /// </param>
-    /// <param name="preCompInfo">
-    /// The values precomputed by the <c>ECMultiplier.</c>
+    /// <param name="callback">
+    /// Called to calculate the <c>PreCompInfo</c>
     /// </param>
-    procedure SetPreCompInfo(const point: IECPoint; const name: String;
-      const preCompInfo: IPreCompInfo);
+    function Precompute(const point: IECPoint; const name: String;
+      const callback: IPreCompCallback): IPreCompInfo;
 
     function ImportPoint(const p: IECPoint): IECPoint;
 
@@ -504,7 +484,7 @@ type
     // * @return the solution for <code>z<sup>2</sup> + z = beta</code> or
     // *         <code>null</code> if no solution exists.
     // */
-    function SolveQuadradicEquation(const beta: IECFieldElement)
+    function SolveQuadraticEquation(const beta: IECFieldElement)
       : IECFieldElement;
 
     // /**

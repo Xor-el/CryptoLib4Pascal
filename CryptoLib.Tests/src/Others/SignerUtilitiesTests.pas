@@ -19,10 +19,13 @@ unit SignerUtilitiesTests;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
   Classes,
   SysUtils,
-  ClpHex,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -116,15 +119,14 @@ begin
     TBigInteger.Create
     ('7fffffffffffffffffffffff7fffffffffff8000000000007ffffffffffc', 16), // a
     TBigInteger.Create
-    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16)); // b
+    ('6b016c3bdcf18941d0d654921475ca71a9db2fb27d1d37796185c2942c0a', 16), // b
+    FECParraN, FECParraH);
 
   FecDomain := TECDomainParameters.Create(Fcurve,
-    TFpPoint.Create(Fcurve, Fcurve.FromBigInteger(FECParraGX),
-    Fcurve.FromBigInteger(FECParraGY)) as IFpPoint, FECParraN);
+    Fcurve.ValidatePoint(FECParraGX, FECParraGY), FECParraN, FECParraH);
 
-  FecPub := TECPublicKeyParameters.Create(TFpPoint.Create(Fcurve,
-    Fcurve.FromBigInteger(FECPubQX), Fcurve.FromBigInteger(FECPubQY))
-    as IFpPoint, FecDomain);
+  FecPub := TECPublicKeyParameters.Create(Fcurve.ValidatePoint(FECPubQX,
+    FECPubQY), FecDomain);
 
   FecPriv := TECPrivateKeyParameters.Create(FECPrivD, FecDomain);
 

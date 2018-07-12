@@ -118,6 +118,7 @@ begin
     System.Inc(inOff);
   end;
 
+  input[inOff] := code;
   result := code;
 end;
 

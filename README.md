@@ -1,5 +1,5 @@
 # CryptoLib4Pascal
-CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying ECDSA and ECShnorr Signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES.
+CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES.
 
 **Supported Algorithms:**
 
@@ -26,9 +26,9 @@ CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that
     
    **Dependencies:**
    
-   [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) >= v2.4
+   [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) >= v2.5
    
-   [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal) >= v1.2
+   [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal) >= v1.4
     
    For FreePascal v3.0.x [Generics.Collections](https://github.com/maciej-izak/generics.collections)
 
@@ -36,7 +36,7 @@ CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that
  
     FreePascal 3.0.0 and Above.
     
-    Delphi XE3 and Above. (might work in earlier versions though.)
+    Delphi XE6 and Above. (might work in earlier versions though.)
 
 **Installing the Library.**
 

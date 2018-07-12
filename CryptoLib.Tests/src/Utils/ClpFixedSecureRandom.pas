@@ -21,7 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
 {$ENDIF FPC}
 
 uses
@@ -276,15 +275,16 @@ begin
         System.Inc(i);
       end;
 
-      System.SetLength(F_data, bOut.Size);
-      bOut.Position := 0;
-      bOut.Read(F_data[0], bOut.Size);
     end
     else
     begin
       raise EInvalidOperationCryptoLibException.CreateRes
         (@SUnRecognizedImplementation);
     end;
+
+    System.SetLength(F_data, bOut.Size);
+    bOut.Position := 0;
+    bOut.Read(F_data[0], bOut.Size);
 
   finally
     bOut.Free;

@@ -22,7 +22,6 @@ interface
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
-{$HINTS OFF}
 
 uses
   Classes,

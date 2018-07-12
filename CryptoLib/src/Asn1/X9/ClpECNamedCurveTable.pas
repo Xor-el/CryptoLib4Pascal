@@ -26,9 +26,9 @@ uses
   ClpCryptoLibTypes,
   // ClpX962NamedCurves,
   // ClpECGost3410NamedCurves,
- // ClpX9ECParameters,
+  // ClpX9ECParameters,
   ClpSecNamedCurves,
- // ClpIECDomainParameters,
+  // ClpIECDomainParameters,
   ClpIDerObjectIdentifier,
   ClpIX9ECParameters;
 

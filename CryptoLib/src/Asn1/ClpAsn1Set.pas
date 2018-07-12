@@ -450,7 +450,7 @@ begin
           else
           begin
             temp := F_set[index];
-            // review being picky for copy
+            // Review being picky for copy
             // temp := System.Copy(F_set.List, Index, 1)[0];
             F_set[index] := F_set[index + 1];
             F_set[index + 1] := temp;

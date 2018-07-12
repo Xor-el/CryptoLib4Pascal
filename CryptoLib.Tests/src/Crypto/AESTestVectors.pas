@@ -19,6 +19,10 @@ unit AESTestVectors;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
   ClpCryptoLibTypes;
 

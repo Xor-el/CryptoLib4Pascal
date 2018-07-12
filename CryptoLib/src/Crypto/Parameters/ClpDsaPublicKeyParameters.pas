@@ -98,7 +98,7 @@ function TDsaPublicKeyParameters.Equals(const other
 begin
   if other = Nil then
   begin
-    result := False;
+    result := false;
     Exit;
   end;
   if ((Self as IDsaPublicKeyParameters) = other) then

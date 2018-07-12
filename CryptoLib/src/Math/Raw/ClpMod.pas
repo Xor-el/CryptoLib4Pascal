@@ -178,7 +178,6 @@ begin
     InversionStep(p, u, len, a, ac);
   end;
 
-
   if (TNat.IsOne(len, u)) then
   begin
     InversionResult(p, ac, a, z);

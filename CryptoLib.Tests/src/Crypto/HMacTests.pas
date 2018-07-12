@@ -22,7 +22,6 @@ interface
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
-{$HINTS OFF}
 
 uses
   SysUtils,
@@ -34,7 +33,6 @@ uses
 {$ENDIF FPC}
   ClpKeyParameter,
   ClpIKeyParameter,
-  ClpHMac,
   ClpIMac,
   ClpICipherKeyGenerator,
   ClpDigestUtilities,

@@ -40,9 +40,8 @@ type
     destructor Destroy(); override;
 
     procedure Encode(const derOut: IDerOutputStream); overload; override;
-    class procedure Encode(derOut: TDerOutputStream;
-      bytes: TCryptoLibByteArray; offset, length: Int32); reintroduce; overload;
-      static; inline;
+    class procedure Encode(derOut: TDerOutputStream; bytes: TCryptoLibByteArray;
+      offset, length: Int32); reintroduce; overload; static; inline;
 
   end;
 

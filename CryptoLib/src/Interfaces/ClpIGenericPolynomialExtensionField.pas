@@ -34,7 +34,6 @@ type
       : Boolean; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
-
   end;
 
 implementation

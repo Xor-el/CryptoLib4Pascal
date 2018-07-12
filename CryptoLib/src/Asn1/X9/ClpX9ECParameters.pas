@@ -158,8 +158,15 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SBadVersion);
   end;
 
-  x9c := TX9Curve.Create(TX9FieldID.GetInstance(seq[1] as TAsn1Sequence),
-    TAsn1Sequence.GetInstance(seq[2] as TAsn1Sequence));
+  Fn := (seq[4] as IDerInteger).Value;
+
+  if (seq.Count = 6) then
+  begin
+    Fh := (seq[5] as IDerInteger).Value;
+  end;
+
+  x9c := TX9Curve.Create(TX9FieldID.GetInstance(seq[1] as TAsn1Sequence), Fn,
+    Fh, TAsn1Sequence.GetInstance(seq[2] as TAsn1Sequence));
 
   Fcurve := x9c.curve;
   p := seq[3] as TAsn1Sequence;
@@ -174,14 +181,7 @@ begin
     Fg := TX9ECPoint.Create(curve, p as TAsn1OctetString);
   end;
 
-  Fn := (seq[4] as IDerInteger).Value;
   Fseed := x9c.GetSeed();
-
-  if (seq.Count = 6) then
-  begin
-
-    Fh := (seq[5] as IDerInteger).Value;
-  end;
 end;
 
 constructor TX9ECParameters.Create(const curve: IECCurve; const g: IX9ECPoint;

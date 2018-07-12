@@ -71,12 +71,12 @@ end;
 
 function TIESParameters.GetDerivationV: TCryptoLibByteArray;
 begin
-  result := Fderivation;
+  result := System.Copy(Fderivation);
 end;
 
 function TIESParameters.GetEncodingV: TCryptoLibByteArray;
 begin
-  result := Fencoding;
+  result := System.Copy(Fencoding);
 end;
 
 function TIESParameters.GetMacKeySize: Int32;

@@ -34,7 +34,6 @@ type
     function Equals(const other: IGF2Polynomial): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
-
     property exponents: TCryptoLibInt32Array read GetExponents;
 
   end;

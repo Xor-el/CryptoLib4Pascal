@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
+  ClpECAlgorithms,
   ClpICipherParameters,
   ClpIECInterface,
   ClpIBasicAgreement,
@@ -37,6 +38,7 @@ uses
 resourcestring
   SWrongDomainParameter = 'ECDHC Public Key has Wrong Domain Parameters';
   SInvalidAgreementValue = 'Infinity is not a Valid Agreement Value for ECDHC';
+  SInfinityInvalidPublicKey = 'Infinity is not a Valid Public Key for ECDHC';
 
 type
   /// <summary>
@@ -91,21 +93,29 @@ function TECDHCBasicAgreement.CalculateAgreement(const pubKey
   : ICipherParameters): TBigInteger;
 var
   pub: IECPublicKeyParameters;
-  parameters: IECDomainParameters;
+  params: IECDomainParameters;
   hd: TBigInteger;
-  P: IECPoint;
+  P, pubPoint: IECPoint;
 begin
   pub := pubKey as IECPublicKeyParameters;
-  parameters := pub.parameters;
-  if (not(parameters.Equals(FprivKey.parameters))) then
+  params := FprivKey.parameters;
+  if (not(params.Equals(pub.parameters))) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SWrongDomainParameter);
 
   end;
 
-  hd := parameters.H.Multiply(FprivKey.D).&Mod(parameters.N);
+  hd := params.H.Multiply(FprivKey.D).&Mod(params.N);
 
-  P := pub.Q.Multiply(hd).Normalize();
+  // Always perform calculations on the exact curve specified by our private key's parameters
+  pubPoint := TECAlgorithms.CleanPoint(params.Curve, pub.Q);
+  if (pubPoint.IsInfinity) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateRes
+      (@SInfinityInvalidPublicKey);
+  end;
+
+  P := pubPoint.Multiply(hd).Normalize();
 
   if (P.IsInfinity) then
   begin

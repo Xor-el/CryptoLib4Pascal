@@ -21,7 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
 {$ENDIF FPC}
 
 uses
@@ -40,7 +39,6 @@ uses
   ClpFixedPointCombMultiplier,
   ClpIFixedPointCombMultiplier,
   ClpECAlgorithms,
-  ClpX9ECParameters,
   ClpIX9ECParameters,
   ClpCryptoLibTypes;
 
@@ -107,10 +105,7 @@ begin
     try
       for s in tempList do
       begin
-        if not tempDict.ContainsKey(s) then // make sure they are unique
-        begin
-          tempDict.Add(s, s);
-        end;
+        tempDict.AddOrSetValue(s, s); // make sure they are unique
       end;
       names := tempDict.Values.ToArray; // save unique instances to array
     finally

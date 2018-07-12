@@ -133,7 +133,7 @@ end;
 constructor TX9FieldID.Create(const seq: IAsn1Sequence);
 begin
   Inherited Create();
-  Fid := TDerObjectIdentifier.GetInstance(seq[0] as TAsn1Sequence);
+  Fid := TDerObjectIdentifier.GetInstance(seq[0] as TAsn1Encodable);
   Fparameters := seq[1].ToAsn1Object();
 end;
 

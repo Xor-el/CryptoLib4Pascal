@@ -22,7 +22,9 @@ unit ClpECDomainParameters;
 interface
 
 uses
+  SyncObjs,
   ClpBigInteger,
+  ClpECAlgorithms,
   ClpIECInterface,
   ClpCryptoLibTypes,
   ClpIECDomainParameters;
@@ -31,25 +33,40 @@ resourcestring
   SCurveNil = 'Curve Cannot be Nil';
   SGNil = 'G Cannot be Nil';
   SBigIntegerNotInitialized = 'BigInteger Not Initialized "%s"';
+  SQNil = 'Q Cannot be Nil';
+  SQInfinity = 'Point at Infinity "Q"';
+  SQPointNotOnCurve = 'Point Not on Curve "Q"';
 
 type
 
   TECDomainParameters = class sealed(TInterfacedObject, IECDomainParameters)
 
   strict private
+
+    class var
+
+      FLock: TCriticalSection;
+
   var
     Fcurve: IECCurve;
     Fseed: TCryptoLibByteArray;
     Fg: IECPoint;
-    Fn, Fh: TBigInteger;
+    Fn, Fh, FhInv: TBigInteger;
 
     function GetCurve: IECCurve; inline;
     function GetG: IECPoint; inline;
     function GetH: TBigInteger; inline;
     function GetN: TBigInteger; inline;
+    function GetHInv: TBigInteger; inline;
     function GetSeed: TCryptoLibByteArray; inline;
 
+    class constructor CreateECDomainParameters();
+    class destructor DestroyECDomainParameters();
+
   public
+
+    class function Validate(const c: IECCurve; const q: IECPoint)
+      : IECPoint; static;
 
     constructor Create(const curve: IECCurve; const g: IECPoint;
       const n: TBigInteger); overload;
@@ -62,6 +79,7 @@ type
     property g: IECPoint read GetG;
     property n: TBigInteger read GetN;
     property h: TBigInteger read GetH;
+    property HInv: TBigInteger read GetHInv;
     property seed: TCryptoLibByteArray read GetSeed;
     function Equals(const other: IECDomainParameters): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -73,35 +91,65 @@ implementation
 
 { TECDomainParameters }
 
+class function TECDomainParameters.Validate(const c: IECCurve;
+  const q: IECPoint): IECPoint;
+begin
+  if (q = Nil) then
+    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
+
+  result := TECAlgorithms.ImportPoint(c, q).Normalize();
+
+  if (result.IsInfinity) then
+    raise EArgumentCryptoLibException.CreateRes(@SQInfinity);
+
+  if (not(result.IsValid())) then
+    raise EArgumentCryptoLibException.CreateRes(@SQPointNotOnCurve);
+
+end;
+
 function TECDomainParameters.GetCurve: IECCurve;
 begin
-  Result := Fcurve;
+  result := Fcurve;
 end;
 
 function TECDomainParameters.GetG: IECPoint;
 begin
-  Result := Fg;
+  result := Fg;
 end;
 
 function TECDomainParameters.GetH: TBigInteger;
 begin
-  Result := Fh;
+  result := Fh;
 end;
 
 function TECDomainParameters.GetN: TBigInteger;
 begin
-  Result := Fn;
+  result := Fn;
+end;
+
+function TECDomainParameters.GetHInv: TBigInteger;
+begin
+  FLock.Acquire;
+  try
+    if (not(FhInv.IsInitialized)) then
+    begin
+      FhInv := h.ModInverse(n);
+    end;
+    result := FhInv;
+  finally
+    FLock.Release;
+  end;
 end;
 
 function TECDomainParameters.GetSeed: TCryptoLibByteArray;
 begin
-  Result := Fseed;
+  result := System.Copy(Fseed);
 end;
 
 constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
   const n: TBigInteger);
 begin
-  Create(curve, g, n, TBigInteger.One)
+  Create(curve, g, n, TBigInteger.One, Nil);
 end;
 
 constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
@@ -122,17 +170,26 @@ begin
     raise EArgumentNilCryptoLibException.CreateResFmt
       (@SBigIntegerNotInitialized, ['n']);
 
-  if (not h.IsInitialized) then
-    raise EArgumentNilCryptoLibException.CreateResFmt
-      (@SBigIntegerNotInitialized, ['h']);
+  // we can't check for (not (h.IsInitialized)) here as h is optional in X9.62 as it is not required for ECDSA
 
   Fcurve := curve;
-  Fg := g.Normalize();
+  Fg := Validate(curve, g);
   Fn := n;
   Fh := h;
+  FhInv := Default (TBigInteger);
 
   Fseed := System.Copy(seed);
 
+end;
+
+class constructor TECDomainParameters.CreateECDomainParameters;
+begin
+  FLock := TCriticalSection.Create;
+end;
+
+class destructor TECDomainParameters.DestroyECDomainParameters;
+begin
+  FLock.Free;
 end;
 
 function TECDomainParameters.Equals(const other: IECDomainParameters): Boolean;
@@ -140,17 +197,17 @@ begin
 
   if (other = Self as IECDomainParameters) then
   begin
-    Result := true;
+    result := true;
     Exit;
   end;
 
   if (other = Nil) then
   begin
-    Result := false;
+    result := false;
     Exit;
   end;
 
-  Result := curve.Equals(other.curve) and g.Equals(other.g) and
+  result := curve.Equals(other.curve) and g.Equals(other.g) and
     n.Equals(other.n) and h.Equals(other.h);
 
 end;
@@ -158,13 +215,13 @@ end;
 function TECDomainParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  Result := curve.GetHashCode();
-  Result := Result * 37;
-  Result := Result xor g.GetHashCode();
-  Result := Result * 37;
-  Result := Result xor n.GetHashCode();
-  Result := Result * 37;
-  Result := Result xor h.GetHashCode();
+  result := curve.GetHashCode();
+  result := result * 37;
+  result := result xor g.GetHashCode();
+  result := result * 37;
+  result := result xor n.GetHashCode();
+  result := result * 37;
+  result := result xor h.GetHashCode();
 end;
 
 end.

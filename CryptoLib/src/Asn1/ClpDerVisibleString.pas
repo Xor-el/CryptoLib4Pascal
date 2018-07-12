@@ -115,11 +115,7 @@ end;
 
 function TDerVisibleString.GetOctets: TCryptoLibByteArray;
 begin
-{$IFDEF FPC}
   result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-{$ELSE}
-  result := TEncoding.ASCII.GetBytes(Str);
-{$ENDIF FPC}
 end;
 
 function TDerVisibleString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -143,11 +139,7 @@ end;
 
 constructor TDerVisibleString.Create(Str: TCryptoLibByteArray);
 begin
-{$IFDEF FPC}
   Create(String(TEncoding.ASCII.GetString(Str)));
-{$ELSE}
-  Create(TEncoding.ASCII.GetString(Str));
-{$ENDIF FPC}
 end;
 
 constructor TDerVisibleString.Create(const Str: String);

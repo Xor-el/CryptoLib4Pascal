@@ -30,6 +30,9 @@ uses
   ClpSetWeakRef,
   ClpBigInteger,
   ClpIPreCompInfo,
+  ClpIPreCompCallBack,
+  ClpValidityPrecompInfo,
+  ClpIValidityPrecompInfo,
   ClpIECFieldElement,
   ClpIECInterface,
   ClpECAlgorithms,
@@ -52,22 +55,41 @@ type
 
   strict private
 
-    function GetIsInfinity: Boolean; inline;
-    function GetIsCompressed: Boolean; inline;
-    function GetpreCompTable: TDictionary<String, IPreCompInfo>; inline;
-    procedure SetpreCompTable(const Value
-      : TDictionary<String, IPreCompInfo>); inline;
-    function GetCurve: IECCurve; virtual;
-    function GetCurveCoordinateSystem: Int32; virtual;
-    function GetX: IECFieldElement; virtual;
-      deprecated 'Use AffineXCoord, or Normalize() and XCoord, instead';
-    function GetY: IECFieldElement; virtual;
-      deprecated 'Use AffineYCoord, or Normalize() and YCoord, instead';
-    function GetAffineXCoord: IECFieldElement; virtual;
-    function GetAffineYCoord: IECFieldElement; virtual;
-    function GetXCoord: IECFieldElement; virtual;
+  type
+    IValidityCallback = interface(IPreCompCallback)
+      ['{FD571D52-9852-45A6-BD53-47765EB86F20}']
 
-    class constructor ECPoint();
+    end;
+
+  type
+    TValidityCallback = class(TInterfacedObject, IPreCompCallback,
+      IValidityCallback)
+
+    strict private
+    var
+      Fm_outer: IECPoint;
+      Fm_decompressed, Fm_checkOrder: Boolean;
+
+    public
+      constructor Create(const outer: IECPoint;
+        decompressed, checkOrder: Boolean);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
+  function GetIsInfinity: Boolean; inline;
+  function GetIsCompressed: Boolean; inline;
+  function GetpreCompTable: TDictionary<String, IPreCompInfo>; inline;
+  procedure SetpreCompTable(const Value
+    : TDictionary<String, IPreCompInfo>); inline;
+  function GetCurve: IECCurve; virtual;
+  function GetCurveCoordinateSystem: Int32; virtual;
+  function GetAffineXCoord: IECFieldElement; virtual;
+  function GetAffineYCoord: IECFieldElement; virtual;
+  function GetXCoord: IECFieldElement; virtual;
+
+  class constructor ECPoint();
 
   strict protected
 
@@ -87,7 +109,7 @@ type
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
 
-    function SatisfiesCofactor(): Boolean; inline;
+    function SatisfiesOrder(): Boolean; virtual;
     function SatisfiesCurveEquation(): Boolean; virtual; abstract;
     function Detach(): IECPoint; virtual; abstract;
 
@@ -140,7 +162,10 @@ type
     function Normalize(const zInv: IECFieldElement): IECPoint;
       overload; virtual;
 
+    function ImplIsValid(decompressed, checkOrder: Boolean): Boolean;
+
     function IsValid(): Boolean; inline;
+    function IsValidPartial(): Boolean; inline;
 
     function ScaleX(const scale: IECFieldElement): IECPoint; virtual;
     function ScaleY(const scale: IECFieldElement): IECPoint; virtual;
@@ -169,27 +194,6 @@ type
 
     property preCompTable: TDictionary<String, IPreCompInfo>
       read GetpreCompTable write SetpreCompTable;
-
-    /// <summary>
-    /// <para>
-    /// Normalizes this point, and then returns the affine x-coordinate.
-    /// </para>
-    /// <para>
-    /// Note: normalization can be expensive, this method is deprecated
-    /// in favour of caller-controlled normalization.
-    /// </para>
-    /// </summary>
-    property x: IECFieldElement read GetX;
-    /// <summary>
-    /// <para>
-    /// Normalizes this point, and then returns the affine y-coordinate.
-    /// </para>
-    /// <para>
-    /// Note: normalization can be expensive, this method is deprecated
-    /// in favour of caller-controlled normalization.
-    /// </para>
-    /// </summary>
-    property y: IECFieldElement read GetY;
 
     /// <summary>
     /// Returns the affine x-coordinate after checking that this point is
@@ -343,8 +347,8 @@ type
     /// <param name="y">
     /// affine y co-ordinate
     /// </param>
-    constructor Create(const curve: IECCurve;
-      const x, y: IECFieldElement); overload;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement);
+      overload; deprecated 'Use ECCurve.CreatePoint to construct points';
 
     /// <summary>
     /// Create a point which encodes without point compression.
@@ -363,6 +367,8 @@ type
     /// </param>
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
+      deprecated
+      'Per-point compression property will be removed, see GetEncoded(boolean)';
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
@@ -398,6 +404,7 @@ type
       zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
+    function SatisfiesOrder(): Boolean; override;
     function SatisfiesCurveEquation(): Boolean; override;
 
   public
@@ -436,8 +443,8 @@ type
     /// <param name="y">
     /// y point
     /// </param>
-    constructor Create(const curve: IECCurve;
-      const x, y: IECFieldElement); overload;
+    constructor Create(const curve: IECCurve; const x, y: IECFieldElement);
+      overload; deprecated 'Use ECCurve.CreatePoint to construct points';
 
     /// <param name="curve">
     /// base curve
@@ -453,6 +460,8 @@ type
     /// </param>
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       withCompression: Boolean); overload;
+      deprecated
+      'Per-point compression property will be removed, see GetEncoded(boolean)';
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
       zs: TCryptoLibGenericArray<IECFieldElement>;
@@ -485,7 +494,9 @@ end;
 
 function TECPoint.GetIsInfinity: Boolean;
 begin
-  result := (Fm_x = Nil) and (Fm_y = Nil);
+  // result := (Fm_x = Nil) and (Fm_y = Nil);
+  result := (Fm_x = Nil) or (Fm_y = Nil) or
+    ((System.Length(Fm_zs) > 0) and (Fm_zs[0].IsZero));
 end;
 
 function TECPoint.RawXCoord: IECFieldElement;
@@ -534,13 +545,22 @@ begin
   end;
 end;
 
-function TECPoint.SatisfiesCofactor: Boolean;
+function TECPoint.SatisfiesOrder: Boolean;
 var
-  h: TBigInteger;
+  n: TBigInteger;
 begin
-  h := curve.Cofactor;
-  result := (not h.IsInitialized) or h.Equals(TBigInteger.One) or
-    (not TECAlgorithms.ReferenceMultiply(Self as IECPoint, h).IsInfinity);
+  if (TBigInteger.One.Equals(curve.getCofactor())) then
+  begin
+    result := True;
+    Exit;
+  end;
+
+  n := curve.getOrder();
+
+  // TODO Require order to be available for all curves
+
+  result := (not(n.IsInitialized)) or TECAlgorithms.ReferenceMultiply
+    (Self as IECPoint, n).IsInfinity;
 end;
 
 function TECPoint.ScaleX(const scale: IECFieldElement): IECPoint;
@@ -687,7 +707,7 @@ var
 begin
   if ((Self as IECPoint) = other) then
   begin
-    result := true;
+    result := True;
     Exit;
   end;
   if (other = Nil) then
@@ -841,19 +861,9 @@ begin
   result := Fm_preCompTable;
 end;
 
-function TECPoint.GetX: IECFieldElement;
-begin
-  result := Normalize().XCoord;
-end;
-
 function TECPoint.GetXCoord: IECFieldElement;
 begin
   result := Fm_x;
-end;
-
-function TECPoint.GetY: IECFieldElement;
-begin
-  result := Normalize().YCoord;
 end;
 
 function TECPoint.GetYCoord: IECFieldElement;
@@ -887,6 +897,26 @@ begin
   result := System.Copy(Fm_zs, 0, zsLen);
 end;
 
+function TECPoint.ImplIsValid(decompressed, checkOrder: Boolean): Boolean;
+var
+  Validity: IValidityPrecompInfo;
+  callback: IValidityCallback;
+begin
+
+  if (IsInfinity) then
+  begin
+    result := True;
+    Exit;
+  end;
+
+  callback := TValidityCallback.Create(Self as IECPoint, decompressed,
+    checkOrder);
+  Validity := curve.Precompute(Self as IECPoint,
+    TValidityPrecompInfo.PRECOMP_NAME, callback) as IValidityPrecompInfo;
+
+  result := not(Validity.hasFailed());
+end;
+
 function TECPoint.IsNormalized: Boolean;
 var
   coord: Int32;
@@ -899,34 +929,13 @@ begin
 end;
 
 function TECPoint.IsValid: Boolean;
-var
-  lcurve: IECCurve;
 begin
-  if (IsInfinity) then
-  begin
-    result := true;
-    Exit;
-  end;
+  result := ImplIsValid(false, True);
+end;
 
-  // TODO Sanity-check the field elements
-
-  lcurve := curve;
-  if (lcurve <> Nil) then
-  begin
-    if (not SatisfiesCurveEquation()) then
-    begin
-      result := false;
-      Exit;
-    end;
-
-    if (not SatisfiesCofactor()) then
-    begin
-      result := false;
-      Exit;
-    end;
-  end;
-
-  result := true;
+function TECPoint.IsValidPartial: Boolean;
+begin
+  result := ImplIsValid(false, false);
 end;
 
 function TECPoint.Normalize(const zInv: IECFieldElement): IECPoint;
@@ -1285,7 +1294,7 @@ end;
 
 function TF2mPoint.Detach: IECPoint;
 begin
-  result := TF2mPoint.Create(Nil, AffineXCoord, AffineYCoord);
+  result := TF2mPoint.Create(Nil, AffineXCoord, AffineYCoord, false);
 end;
 
 function TF2mPoint.GetCompressionYTilde: Boolean;
@@ -2230,7 +2239,7 @@ end;
 
 function TFpPoint.Detach: IECPoint;
 begin
-  result := TFpPoint.Create(Nil, AffineXCoord, AffineYCoord);
+  result := TFpPoint.Create(Nil, AffineXCoord, AffineYCoord, false);
 end;
 
 function TFpPoint.DoubleProductFromSquares(const a, b, aSquared,
@@ -2283,7 +2292,7 @@ end;
 
 function TFpPoint.Negate: IECPoint;
 var
-  lcurve: IECCurve;
+  Lcurve: IECCurve;
   coord: Int32;
 begin
   if (IsInfinity) then
@@ -2292,17 +2301,17 @@ begin
     Exit;
   end;
 
-  lcurve := curve;
-  coord := lcurve.CoordinateSystem;
+  Lcurve := curve;
+  coord := Lcurve.CoordinateSystem;
 
   if (TECCurve.COORD_AFFINE <> coord) then
   begin
-    result := TFpPoint.Create(lcurve, RawXCoord, RawYCoord.Negate(), RawZCoords,
+    result := TFpPoint.Create(Lcurve, RawXCoord, RawYCoord.Negate(), RawZCoords,
       IsCompressed);
     Exit;
   end;
 
-  result := TFpPoint.Create(lcurve, RawXCoord, RawYCoord.Negate(),
+  result := TFpPoint.Create(Lcurve, RawXCoord, RawYCoord.Negate(),
     IsCompressed);
 end;
 
@@ -2699,7 +2708,7 @@ begin
 
     TECCurve.COORD_JACOBIAN_MODIFIED:
       begin
-        result := TwiceJacobianModified(true);
+        result := TwiceJacobianModified(True);
         Exit;
       end
   else
@@ -2960,6 +2969,56 @@ begin
   result := lhs.Equals(rhs);
 end;
 
+function TAbstractF2mPoint.SatisfiesOrder: Boolean;
+var
+  cofactor: TBigInteger;
+  n: IECPoint;
+  x, rhs, lambda, W, T: IECFieldElement;
+  Lcurve: IECCurve;
+begin
+  Lcurve := curve;
+  cofactor := Lcurve.getCofactor();
+  if (TBigInteger.Two.Equals(cofactor)) then
+  begin
+    // /*
+    // *  Check that the trace of (X + A) is 0, then there exists a solution to L^2 + L = X + A,
+    // *  and so a halving is possible, so this point is the double of another.
+    // */
+    n := Normalize();
+    x := n.AffineXCoord;
+    rhs := x.Add(Lcurve.a);
+    result := (rhs as IAbstractF2mFieldElement).Trace() = 0;
+    Exit;
+  end;
+  if (TBigInteger.Four.Equals(cofactor)) then
+  begin
+    // /*
+    // * Solve L^2 + L = X + A to find the half of this point, if it exists (fail if not).
+    // * Generate both possibilities for the square of the half-point's x-coordinate (w),
+    // * and check if Tr(w + A) == 0 for at least one; then a second halving is possible
+    // * (see comments for cofactor 2 above), so this point is four times another.
+    // *
+    // * Note: Tr(x^2) == Tr(x).
+    // */
+    n := Normalize();
+    x := n.AffineXCoord;
+    lambda := (Lcurve as IAbstractF2mCurve).SolveQuadraticEquation
+      (x.Add(curve.a));
+    if (lambda = Nil) then
+    begin
+      result := false;
+      Exit;
+    end;
+    W := x.Multiply(lambda).Add(n.AffineYCoord);
+    T := W.Add(Lcurve.a);
+    result := ((T as IAbstractF2mFieldElement).Trace() = 0) or
+      ((T.Add(x) as IAbstractF2mFieldElement).Trace() = 0);
+    Exit;
+  end;
+
+  result := Inherited SatisfiesOrder();
+end;
+
 function TAbstractF2mPoint.ScaleX(const scale: IECFieldElement): IECPoint;
 var
   lx, L, X2, L2, Z, Z2: IECFieldElement;
@@ -3138,6 +3197,56 @@ begin
     end;
 
   end;
+end;
+
+{ TECPoint.TValidityCallback }
+
+constructor TECPoint.TValidityCallback.Create(const outer: IECPoint;
+  decompressed, checkOrder: Boolean);
+begin
+  Inherited Create();
+  Fm_outer := outer;
+  Fm_decompressed := decompressed;
+  Fm_checkOrder := checkOrder;
+end;
+
+function TECPoint.TValidityCallback.Precompute(const existing: IPreCompInfo)
+  : IPreCompInfo;
+var
+  info: IValidityPrecompInfo;
+begin
+  if (not(Supports(existing, IValidityPrecompInfo, info))) then
+  begin
+    info := TValidityPrecompInfo.Create();
+  end;
+
+  if (info.hasFailed()) then
+  begin
+    result := info;
+    Exit;
+  end;
+  if (not(info.hasCurveEquationPassed())) then
+  begin
+    if (not(Fm_decompressed) and not(Fm_outer.SatisfiesCurveEquation())) then
+    begin
+      info.reportFailed();
+      result := info;
+      Exit;
+    end;
+    info.reportCurveEquationPassed();
+  end;
+
+  if ((Fm_checkOrder) and (not(info.HasOrderPassed()))) then
+  begin
+    if (not(Fm_outer.SatisfiesOrder())) then
+    begin
+      info.reportFailed();
+      result := info;
+      Exit;
+    end;
+    info.reportOrderPassed();
+  end;
+  result := info;
 end;
 
 end.

@@ -137,6 +137,11 @@ implementation
 
 { TDerPrintableString }
 
+function TDerPrintableString.GetStr: String;
+begin
+  result := FStr;
+end;
+
 function TDerPrintableString.GetString: String;
 begin
   result := Str;
@@ -144,11 +149,7 @@ end;
 
 function TDerPrintableString.GetOctets: TCryptoLibByteArray;
 begin
-{$IFDEF FPC}
   result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-{$ELSE}
-  result := TEncoding.ASCII.GetBytes(Str);
-{$ENDIF FPC}
 end;
 
 class function TDerPrintableString.IsPrintableString(const Str: String)
@@ -171,8 +172,8 @@ begin
       continue;
     end;
 
-    case IndexStr({$IFDEF FPC}UnicodeString{$ENDIF FPC}(ch), [''' ''', '\', '(', ')', '+', '-', '.', ':', '=', '?',
-      '/', ',']) of
+    case IndexStr(UnicodeString(ch), [''' ''', '\', '(', ')', '+', '-', '.',
+      ':', '=', '?', '/', ',']) of
       0 .. 11:
         begin
           continue;
@@ -202,11 +203,7 @@ end;
 
 constructor TDerPrintableString.Create(Str: TCryptoLibByteArray);
 begin
-{$IFDEF FPC}
   Create(String(TEncoding.ASCII.GetString(Str)), false);
-{$ELSE}
-  Create(TEncoding.ASCII.GetString(Str), false);
-{$ENDIF FPC}
 end;
 
 constructor TDerPrintableString.Create(const Str: String);
@@ -262,11 +259,6 @@ begin
 
   result := TDerPrintableString.Create
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-function TDerPrintableString.GetStr: String;
-begin
-  result := FStr;
 end;
 
 end.

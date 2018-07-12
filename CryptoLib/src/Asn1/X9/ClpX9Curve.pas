@@ -35,6 +35,7 @@ uses
   ClpIX9FieldElement,
   ClpIAsn1OctetString,
   ClpECAlgorithms,
+  ClpAsn1OctetString,
   ClpAsn1EncodableVector,
   ClpIAsn1EncodableVector,
   ClpX9ObjectIdentifiers,
@@ -71,8 +72,11 @@ type
     constructor Create(const curve: IECCurve); overload;
     constructor Create(const curve: IECCurve;
       seed: TCryptoLibByteArray); overload;
+    constructor Create(const fieldID: IX9FieldID; const seq: IAsn1Sequence);
+      overload; deprecated 'Use constructor including order/cofactor';
+
     constructor Create(const fieldID: IX9FieldID;
-      const seq: IAsn1Sequence); overload;
+      const order, cofactor: TBigInteger; const seq: IAsn1Sequence); overload;
 
     function GetSeed(): TCryptoLibByteArray; inline;
 
@@ -131,9 +135,14 @@ end;
 
 constructor TX9Curve.Create(const fieldID: IX9FieldID;
   const seq: IAsn1Sequence);
+begin
+  Create(fieldID, Default (TBigInteger), Default (TBigInteger), seq);
+end;
+
+constructor TX9Curve.Create(const fieldID: IX9FieldID;
+  const order, cofactor: TBigInteger; const seq: IAsn1Sequence);
 var
-  q: TBigInteger;
-  x9A, x9B: IX9FieldElement;
+  p, A, B: TBigInteger;
   parameters: IDerSequence;
   representation: IDerObjectIdentifier;
   pentanomial: IDerSequence;
@@ -153,43 +162,46 @@ begin
 
   if (FfieldIdentifier.Equals(TX9ObjectIdentifiers.PrimeField)) then
   begin
-    q := (fieldID.parameters as IDerInteger).Value;
-    x9A := TX9FieldElement.Create(q, seq[0] as IAsn1OctetString);
-    x9B := TX9FieldElement.Create(q, seq[1] as IAsn1OctetString);
-    Fcurve := TFpCurve.Create(q, x9A.Value.ToBigInteger(),
-      x9B.Value.ToBigInteger());
+    p := (fieldID.parameters as IDerInteger).Value;
+    A := TBigInteger.Create(1,
+      TAsn1OctetString.GetInstance(seq[0] as TAsn1Encodable).GetOctets());
+    B := TBigInteger.Create(1,
+      TAsn1OctetString.GetInstance(seq[1] as TAsn1Encodable).GetOctets());
+    Fcurve := TFpCurve.Create(p, A, B, order, cofactor);
+  end
+  else if (FfieldIdentifier.Equals(TX9ObjectIdentifiers.CharacteristicTwoField))
+  then
+  begin
+    // Characteristic two field
+    parameters := fieldID.parameters as IDerSequence;
+    m := (parameters[0] as IDerInteger).Value.Int32Value;
+    representation := parameters[1] as IDerObjectIdentifier;
+
+    k2 := 0;
+    k3 := 0;
+    if (representation.Equals(TX9ObjectIdentifiers.TPBasis)) then
+    begin
+      // Trinomial basis representation
+      k1 := (parameters[2] as IDerInteger).Value.Int32Value;
+    end
+    else
+    begin
+      // Pentanomial basis representation
+      pentanomial := parameters[2] as IDerSequence;
+      k1 := (pentanomial[0] as IDerInteger).Value.Int32Value;
+      k2 := (pentanomial[1] as IDerInteger).Value.Int32Value;
+      k3 := (pentanomial[2] as IDerInteger).Value.Int32Value;
+    end;
+    A := TBigInteger.Create(1,
+      TAsn1OctetString.GetInstance(seq[0] as TAsn1Encodable).GetOctets());
+    B := TBigInteger.Create(1,
+      TAsn1OctetString.GetInstance(seq[1] as TAsn1Encodable).GetOctets());
+
+    Fcurve := TF2mCurve.Create(m, k1, k2, k3, A, B, order, cofactor);
   end
   else
   begin
-    if (FfieldIdentifier.Equals(TX9ObjectIdentifiers.CharacteristicTwoField))
-    then
-    begin
-      // Characteristic two field
-      parameters := fieldID.parameters as IDerSequence;
-      m := (parameters[0] as IDerInteger).Value.Int32Value;
-      representation := parameters[1] as IDerObjectIdentifier;
-
-      k2 := 0;
-      k3 := 0;
-      if (representation.Equals(TX9ObjectIdentifiers.TPBasis)) then
-      begin
-        // Trinomial basis representation
-        k1 := (parameters[2] as IDerInteger).Value.Int32Value;
-      end
-      else
-      begin
-        // Pentanomial basis representation
-        pentanomial := parameters[2] as IDerSequence;
-        k1 := (pentanomial[0] as IDerInteger).Value.Int32Value;
-        k2 := (pentanomial[1] as IDerInteger).Value.Int32Value;
-        k3 := (pentanomial[2] as IDerInteger).Value.Int32Value;
-      end;
-      x9A := TX9FieldElement.Create(m, k1, k2, k3, seq[0] as IAsn1OctetString);
-      x9B := TX9FieldElement.Create(m, k1, k2, k3, seq[1] as IAsn1OctetString);
-      // TODO Is it possible to get the order (n) and cofactor(h) too?
-      Fcurve := TF2mCurve.Create(m, k1, k2, k3, x9A.Value.ToBigInteger(),
-        x9B.Value.ToBigInteger());
-    end;
+    raise EArgumentCryptoLibException.CreateRes(@SNotImplementedECCurve);
   end;
 
   if (seq.Count = 3) then
