@@ -1648,7 +1648,7 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpIKeyEncoder"/>
       </Item405>
       <Item406>
-        <Filename Value="..\..\Interfaces\ClpIDSAParametersGenerator.pas"/>
+        <Filename Value="..\..\Interfaces\ClpIDsaParametersGenerator.pas"/>
         <UnitName Value="ClpIDsaParametersGenerator"/>
       </Item406>
       <Item407>
