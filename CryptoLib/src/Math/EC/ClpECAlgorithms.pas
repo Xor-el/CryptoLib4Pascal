@@ -281,10 +281,10 @@ begin
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
 
-  infoP.PreComp := Nil;
-  infoP.PreCompNeg := Nil;
-  infoQ.PreComp := Nil;
-  infoQ.PreCompNeg := Nil;
+  infoP.PreComp := Nil; // Review
+  infoP.PreCompNeg := Nil; // Review
+  infoQ.PreComp := Nil; // Review
+  infoQ.PreCompNeg := Nil; // Review
 
 end;
 
@@ -351,10 +351,10 @@ begin
 
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
-  infoP.PreComp := Nil;
-  infoP.PreCompNeg := Nil;
-  infoQ.PreComp := Nil;
-  infoQ.PreCompNeg := Nil;
+  infoP.PreComp := Nil; // Review
+  infoP.PreCompNeg := Nil; // Review
+  infoQ.PreComp := Nil; // Review
+  infoQ.PreCompNeg := Nil; // Review
 end;
 
 class function TECAlgorithms.ImplShamirsTrickWNaf(preCompP,
@@ -499,8 +499,8 @@ begin
 
   for i := System.Low(infos) to System.High(infos) do
   begin
-    infos[i].PreComp := Nil;
-    infos[i].PreCompNeg := Nil;
+    infos[i].PreComp := Nil; // Review
+    infos[i].PreCompNeg := Nil; // Review
   end;
 
 end;
@@ -537,8 +537,8 @@ begin
 
   for i := System.Low(infos) to System.High(infos) do
   begin
-    infos[i].PreComp := Nil;
-    infos[i].PreCompNeg := Nil;
+    infos[i].PreComp := Nil; // Review
+    infos[i].PreCompNeg := Nil; // Review
   end;
 
 end;
