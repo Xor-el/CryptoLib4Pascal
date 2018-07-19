@@ -104,6 +104,7 @@ procedure TTestAES.doAESTest(const cipher: IBufferedCipher;
   withpadding: Boolean);
 var
   LInput, LOutput, EncryptionResult, DecryptionResult: TBytes;
+  // len1, len2: Int32;
 begin
   LInput := THex.Decode(input);
   LOutput := THex.Decode(output);
@@ -114,15 +115,6 @@ begin
   // Single Pass
   EncryptionResult := cipher.DoFinal(LInput);
 
-  if not withpadding then
-  begin
-    if (not TArrayUtils.AreEqual(LOutput, EncryptionResult)) then
-    begin
-      Fail(Format('Encryption Failed - Expected %s but got %s',
-        [THex.Encode(LOutput), THex.Encode(EncryptionResult)]));
-    end;
-  end;
-
   { *
     // Multi Pass
     System.SetLength(EncryptionResult,
@@ -131,8 +123,17 @@ begin
     len1 := cipher.ProcessBytes(LInput, 0, System.Length(LInput),
     EncryptionResult, 0);
 
-    len1 := cipher.DoFinal(EncryptionResult, len1);
+    len1 := len1 + cipher.DoFinal(EncryptionResult, len1);
     * }
+
+  if not withpadding then
+  begin
+    if (not TArrayUtils.AreEqual(LOutput, EncryptionResult)) then
+    begin
+      Fail(Format('Encryption Failed - Expected %s but got %s',
+        [THex.Encode(LOutput), THex.Encode(EncryptionResult)]));
+    end;
+  end;
 
   cipher.Init(False, param);
 
@@ -150,8 +151,6 @@ begin
     len2 := len2 + cipher.DoFinal(DecryptionResult, len2);
 
     // remove padding important!!!
-    System.Move(DecryptionResult[0], DecryptionResult[0],
-    len2 * System.SizeOf(Byte));
     System.SetLength(DecryptionResult, len2);
     * }
 
