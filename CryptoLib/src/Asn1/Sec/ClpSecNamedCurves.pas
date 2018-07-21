@@ -823,7 +823,7 @@ begin
   Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
   Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create();
 
-  // TSecObjectIdentifiers.Boot;
+  TSecObjectIdentifiers.Boot;
 
   DefineCurve('secp112r1', TSecObjectIdentifiers.SecP112r1,
     TSecp112r1Holder.Instance);
