@@ -135,7 +135,7 @@ uses
   ClpIDsaParameterGenerationParameters, ClpValidityPrecompInfo, 
   ClpIValidityPrecompInfo, ClpDsaParametersGenerator, ClpDsaParameter, 
   ClpIDsaParameter, ClpIKeyEncoder, ClpIDsaParametersGenerator, 
-  ClpIPreCompCallBack;
+  ClpIPreCompCallBack, ClpNistNamedCurves;
 
 implementation
 

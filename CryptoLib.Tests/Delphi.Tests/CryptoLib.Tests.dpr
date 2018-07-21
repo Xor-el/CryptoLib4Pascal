@@ -454,7 +454,8 @@ uses
   ClpDsaParameter in '..\..\CryptoLib\src\Asn1\X509\ClpDsaParameter.pas',
   ClpIDsaParameter in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameter.pas',
   ClpIPreCompCallBack in '..\..\CryptoLib\src\Interfaces\ClpIPreCompCallBack.pas',
-  DeterministicDsaTests in '..\src\Crypto\DeterministicDsaTests.pas';
+  DeterministicDsaTests in '..\src\Crypto\DeterministicDsaTests.pas',
+  ClpNistNamedCurves in '..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas';
 
 begin
 

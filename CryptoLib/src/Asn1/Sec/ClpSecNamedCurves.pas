@@ -63,23 +63,28 @@ type
       const p: IGlvTypeBParameters): IECCurve; static; inline;
     class function FromHex(const Hex: String): TBigInteger; static; inline;
 
+    class constructor CreateSecNamedCurves();
+    class destructor DestroySecNamedCurves();
+
   public
-    class function GetByName(const name: String): IX9ECParameters; static;
+    class function GetByName(const name: String): IX9ECParameters;
+      static; inline;
     // /**
     // * return the X9ECParameters object for the named curve represented by
     // * the passed in object identifier. Null if the curve isn't present.
     // *
     // * @param oid an object identifier representing a named curve, if present.
     // */
-    class function GetByOid(const oid: IDerObjectIdentifier)
-      : IX9ECParameters; static;
+    class function GetByOid(const oid: IDerObjectIdentifier): IX9ECParameters;
+      static; inline;
     // /**
     // * return the object identifier signified by the passed in name. Null
     // * if there is no object identifier associated with name.
     // *
     // * @return the object identifier associated with name, if present.
     // */
-    class function GetOid(const name: String): IDerObjectIdentifier; static;
+    class function GetOid(const name: String): IDerObjectIdentifier;
+      static; inline;
     // /**
     // * return the named curve name represented by the given object identifier.
     // */
@@ -727,98 +732,11 @@ type
 
     end;
 
-  class constructor CreateSecNamedCurves();
-  class destructor DestroySecNamedCurves();
-
   end;
 
 implementation
 
 { TSecNamedCurves }
-
-class constructor TSecNamedCurves.CreateSecNamedCurves;
-begin
-  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
-  Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
-  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create();
-
-  TSecObjectIdentifiers.Boot;
-
-  DefineCurve('secp112r1', TSecObjectIdentifiers.SecP112r1,
-    TSecp112r1Holder.Instance);
-  DefineCurve('secp112r2', TSecObjectIdentifiers.SecP112r2,
-    TSecp112r2Holder.Instance);
-  DefineCurve('secp128r1', TSecObjectIdentifiers.SecP128r1,
-    TSecp128r1Holder.Instance);
-  DefineCurve('secp128r2', TSecObjectIdentifiers.SecP128r2,
-    TSecp128r2Holder.Instance);
-  DefineCurve('secp160k1', TSecObjectIdentifiers.SecP160k1,
-    TSecp160k1Holder.Instance);
-  DefineCurve('secp160r1', TSecObjectIdentifiers.SecP160r1,
-    TSecp160r1Holder.Instance);
-  DefineCurve('secp160r2', TSecObjectIdentifiers.SecP160r2,
-    TSecp160r2Holder.Instance);
-  DefineCurve('secp192k1', TSecObjectIdentifiers.SecP192k1,
-    TSecp192k1Holder.Instance);
-  DefineCurve('secp192r1', TSecObjectIdentifiers.SecP192r1,
-    TSecp192r1Holder.Instance);
-  DefineCurve('secp224k1', TSecObjectIdentifiers.SecP224k1,
-    TSecp224k1Holder.Instance);
-  DefineCurve('secp224r1', TSecObjectIdentifiers.SecP224r1,
-    TSecp224r1Holder.Instance);
-  DefineCurve('secp256k1', TSecObjectIdentifiers.SecP256k1,
-    TSecp256k1Holder.Instance);
-  DefineCurve('secp256r1', TSecObjectIdentifiers.SecP256r1,
-    TSecp256r1Holder.Instance);
-  DefineCurve('secp384r1', TSecObjectIdentifiers.SecP384r1,
-    TSecp384r1Holder.Instance);
-  DefineCurve('secp521r1', TSecObjectIdentifiers.SecP521r1,
-    TSecp521r1Holder.Instance);
-
-  DefineCurve('sect113r1', TSecObjectIdentifiers.SecT113r1,
-    TSect113r1Holder.Instance);
-  DefineCurve('sect113r2', TSecObjectIdentifiers.SecT113r2,
-    TSect113r2Holder.Instance);
-  DefineCurve('sect131r1', TSecObjectIdentifiers.SecT131r1,
-    TSect131r1Holder.Instance);
-  DefineCurve('sect131r2', TSecObjectIdentifiers.SecT131r2,
-    TSect131r2Holder.Instance);
-  DefineCurve('sect163k1', TSecObjectIdentifiers.SecT163k1,
-    TSect163k1Holder.Instance);
-  DefineCurve('sect163r1', TSecObjectIdentifiers.SecT163r1,
-    TSect163r1Holder.Instance);
-  DefineCurve('sect163r2', TSecObjectIdentifiers.SecT163r2,
-    TSect163r2Holder.Instance);
-  DefineCurve('sect193r1', TSecObjectIdentifiers.SecT193r1,
-    TSect193r1Holder.Instance);
-  DefineCurve('sect193r2', TSecObjectIdentifiers.SecT193r2,
-    TSect193r2Holder.Instance);
-  DefineCurve('sect233k1', TSecObjectIdentifiers.SecT233k1,
-    TSect233k1Holder.Instance);
-  DefineCurve('sect233r1', TSecObjectIdentifiers.SecT233r1,
-    TSect233r1Holder.Instance);
-  DefineCurve('sect239k1', TSecObjectIdentifiers.SecT239k1,
-    TSect239k1Holder.Instance);
-  DefineCurve('sect283k1', TSecObjectIdentifiers.SecT283k1,
-    TSect283k1Holder.Instance);
-  DefineCurve('sect283r1', TSecObjectIdentifiers.SecT283r1,
-    TSect283r1Holder.Instance);
-  DefineCurve('sect409k1', TSecObjectIdentifiers.SecT409k1,
-    TSect409k1Holder.Instance);
-  DefineCurve('sect409r1', TSecObjectIdentifiers.SecT409r1,
-    TSect409r1Holder.Instance);
-  DefineCurve('sect571k1', TSecObjectIdentifiers.SecT571k1,
-    TSect571k1Holder.Instance);
-  DefineCurve('sect571r1', TSecObjectIdentifiers.SecT571r1,
-    TSect571r1Holder.Instance);
-end;
-
-class destructor TSecNamedCurves.DestroySecNamedCurves;
-begin
-  FobjIds.Free;
-  Fnames.Free;
-  Fcurves.Free;
-end;
 
 class procedure TSecNamedCurves.DefineCurve(const name: String;
   const oid: IDerObjectIdentifier; const holder: IX9ECParametersHolder);
@@ -897,6 +815,90 @@ end;
 class function TSecNamedCurves.GetNames: TCryptoLibStringArray;
 begin
   result := Fnames.Values.ToArray();
+end;
+
+class constructor TSecNamedCurves.CreateSecNamedCurves;
+begin
+  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
+  Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
+  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create();
+
+  // TSecObjectIdentifiers.Boot;
+
+  DefineCurve('secp112r1', TSecObjectIdentifiers.SecP112r1,
+    TSecp112r1Holder.Instance);
+  DefineCurve('secp112r2', TSecObjectIdentifiers.SecP112r2,
+    TSecp112r2Holder.Instance);
+  DefineCurve('secp128r1', TSecObjectIdentifiers.SecP128r1,
+    TSecp128r1Holder.Instance);
+  DefineCurve('secp128r2', TSecObjectIdentifiers.SecP128r2,
+    TSecp128r2Holder.Instance);
+  DefineCurve('secp160k1', TSecObjectIdentifiers.SecP160k1,
+    TSecp160k1Holder.Instance);
+  DefineCurve('secp160r1', TSecObjectIdentifiers.SecP160r1,
+    TSecp160r1Holder.Instance);
+  DefineCurve('secp160r2', TSecObjectIdentifiers.SecP160r2,
+    TSecp160r2Holder.Instance);
+  DefineCurve('secp192k1', TSecObjectIdentifiers.SecP192k1,
+    TSecp192k1Holder.Instance);
+  DefineCurve('secp192r1', TSecObjectIdentifiers.SecP192r1,
+    TSecp192r1Holder.Instance);
+  DefineCurve('secp224k1', TSecObjectIdentifiers.SecP224k1,
+    TSecp224k1Holder.Instance);
+  DefineCurve('secp224r1', TSecObjectIdentifiers.SecP224r1,
+    TSecp224r1Holder.Instance);
+  DefineCurve('secp256k1', TSecObjectIdentifiers.SecP256k1,
+    TSecp256k1Holder.Instance);
+  DefineCurve('secp256r1', TSecObjectIdentifiers.SecP256r1,
+    TSecp256r1Holder.Instance);
+  DefineCurve('secp384r1', TSecObjectIdentifiers.SecP384r1,
+    TSecp384r1Holder.Instance);
+  DefineCurve('secp521r1', TSecObjectIdentifiers.SecP521r1,
+    TSecp521r1Holder.Instance);
+
+  DefineCurve('sect113r1', TSecObjectIdentifiers.SecT113r1,
+    TSect113r1Holder.Instance);
+  DefineCurve('sect113r2', TSecObjectIdentifiers.SecT113r2,
+    TSect113r2Holder.Instance);
+  DefineCurve('sect131r1', TSecObjectIdentifiers.SecT131r1,
+    TSect131r1Holder.Instance);
+  DefineCurve('sect131r2', TSecObjectIdentifiers.SecT131r2,
+    TSect131r2Holder.Instance);
+  DefineCurve('sect163k1', TSecObjectIdentifiers.SecT163k1,
+    TSect163k1Holder.Instance);
+  DefineCurve('sect163r1', TSecObjectIdentifiers.SecT163r1,
+    TSect163r1Holder.Instance);
+  DefineCurve('sect163r2', TSecObjectIdentifiers.SecT163r2,
+    TSect163r2Holder.Instance);
+  DefineCurve('sect193r1', TSecObjectIdentifiers.SecT193r1,
+    TSect193r1Holder.Instance);
+  DefineCurve('sect193r2', TSecObjectIdentifiers.SecT193r2,
+    TSect193r2Holder.Instance);
+  DefineCurve('sect233k1', TSecObjectIdentifiers.SecT233k1,
+    TSect233k1Holder.Instance);
+  DefineCurve('sect233r1', TSecObjectIdentifiers.SecT233r1,
+    TSect233r1Holder.Instance);
+  DefineCurve('sect239k1', TSecObjectIdentifiers.SecT239k1,
+    TSect239k1Holder.Instance);
+  DefineCurve('sect283k1', TSecObjectIdentifiers.SecT283k1,
+    TSect283k1Holder.Instance);
+  DefineCurve('sect283r1', TSecObjectIdentifiers.SecT283r1,
+    TSect283r1Holder.Instance);
+  DefineCurve('sect409k1', TSecObjectIdentifiers.SecT409k1,
+    TSect409k1Holder.Instance);
+  DefineCurve('sect409r1', TSecObjectIdentifiers.SecT409r1,
+    TSect409r1Holder.Instance);
+  DefineCurve('sect571k1', TSecObjectIdentifiers.SecT571k1,
+    TSect571k1Holder.Instance);
+  DefineCurve('sect571r1', TSecObjectIdentifiers.SecT571r1,
+    TSect571r1Holder.Instance);
+end;
+
+class destructor TSecNamedCurves.DestroySecNamedCurves;
+begin
+  FobjIds.Free;
+  Fnames.Free;
+  Fcurves.Free;
 end;
 
 { TSecNamedCurves.TSecp112r1Holder }

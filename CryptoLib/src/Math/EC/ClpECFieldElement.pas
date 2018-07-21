@@ -1017,7 +1017,8 @@ begin
     begin
       Qh := Ql;
       Uh := ModReduce(Uh.Multiply(Vl).Subtract(Ql));
-      Vh := ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
+      Vh := ModReduce(Vh.Multiply(Vl).Subtract(P.Multiply(Ql)));
+      Vl := ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
     end;
     System.Dec(j);
   end;
@@ -1233,6 +1234,7 @@ var
   u, v, K, e, t1, t2, t3, t4, y, legendreExponent, x, fourX, qMinusOne,
     P: TBigInteger;
   tempRes: TCryptoLibGenericArray<TBigInteger>;
+  CompareRes, ModReduceRes: Boolean;
 begin
   if (IsZero or IsOne) then
   begin
@@ -1294,8 +1296,12 @@ begin
 
     repeat
       P := TBigInteger.Arbitrary(Fq.BitLength);
-    until ((not P.CompareTo(Q) >= 0) or (ModReduce(P.Multiply(P).Subtract(fourX)
-      ).ModPow(legendreExponent, Q).Equals(qMinusOne)));
+
+      CompareRes := P.CompareTo(Q) >= 0;
+      ModReduceRes := (not ModReduce(P.Multiply(P).Subtract(fourX))
+        .ModPow(legendreExponent, Q).Equals(qMinusOne));
+
+    until ((not CompareRes) and (not ModReduceRes));
 
     tempRes := LucasSequence(P, x, K);
     u := tempRes[0];

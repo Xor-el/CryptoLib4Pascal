@@ -68,6 +68,7 @@ type
     class destructor DestroySecureRandom();
 
   strict protected
+  var
     Fgenerator: IRandomGenerator;
 
   public

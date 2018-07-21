@@ -410,7 +410,8 @@ uses
   ClpIDsaParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaParametersGenerator.pas',
   ClpDsaParameter in '..\..\CryptoLib\src\Asn1\X509\ClpDsaParameter.pas',
   ClpIDsaParameter in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameter.pas',
-  ClpIPreCompCallBack in '..\..\CryptoLib\src\Interfaces\ClpIPreCompCallBack.pas';
+  ClpIPreCompCallBack in '..\..\CryptoLib\src\Interfaces\ClpIPreCompCallBack.pas',
+  ClpNistNamedCurves in '..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas';
 
 begin
   try
