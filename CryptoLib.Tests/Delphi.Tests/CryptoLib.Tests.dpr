@@ -459,7 +459,15 @@ uses
   ClpNat320 in '..\..\CryptoLib\src\Math\Raw\ClpNat320.pas',
   ClpNat256 in '..\..\CryptoLib\src\Math\Raw\ClpNat256.pas',
   ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
-  ClpIAesLightEngine in '..\..\CryptoLib\src\Interfaces\ClpIAesLightEngine.pas';
+  ClpIAesLightEngine in '..\..\CryptoLib\src\Interfaces\ClpIAesLightEngine.pas',
+  BlockCipherMonteCarloTests in '..\src\Crypto\BlockCipherMonteCarloTests.pas',
+  SHA1HMacTests in '..\src\Crypto\SHA1HMacTests.pas',
+  SHA224HMacTests in '..\src\Crypto\SHA224HMacTests.pas',
+  SHA256HMacTests in '..\src\Crypto\SHA256HMacTests.pas',
+  SHA384HMacTests in '..\src\Crypto\SHA384HMacTests.pas',
+  SHA512HMacTests in '..\src\Crypto\SHA512HMacTests.pas',
+  RIPEMD128HMacTests in '..\src\Crypto\RIPEMD128HMacTests.pas',
+  RIPEMD160HMacTests in '..\src\Crypto\RIPEMD160HMacTests.pas';
 
 begin
 
