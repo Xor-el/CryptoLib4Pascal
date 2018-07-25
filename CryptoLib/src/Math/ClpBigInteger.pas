@@ -434,6 +434,8 @@ type
 
     class function Arbitrary(sizeInBits: Int32): TBigInteger; static;
 
+    class function Jacobi(const a, b: TBigInteger): Int32; static;
+
     class procedure Boot(); static;
 
   end;
@@ -2163,6 +2165,59 @@ begin
   end;
 
   Result := n.CheckProbablePrime(certainty, RandomSource, randomlySelected);
+end;
+
+class function TBigInteger.Jacobi(const a, b: TBigInteger): Int32;
+var
+  totalS, e, bLsw, a1Lsw: Int32;
+  a1, La, Lb: TBigInteger;
+begin
+  La := a;
+  Lb := b;
+{$IFDEF DEBUG}
+  System.Assert(La.SignValue >= 0);
+  System.Assert(Lb.SignValue > 0);
+  System.Assert(Lb.TestBit(0));
+  System.Assert(La.CompareTo(Lb) < 0);
+{$ENDIF DEBUG}
+  totalS := 1;
+  while True do
+  begin
+    if (La.SignValue = 0) then
+    begin
+      Result := 0;
+      Exit;
+    end;
+
+    if (La.Equals(One)) then
+    begin
+      break;
+    end;
+
+    e := La.GetLowestSetBit();
+
+    bLsw := Lb.Fmagnitude[System.length(Lb.Fmagnitude) - 1];
+    if (((e and 1) <> 0) and (((bLsw and 7) = 3) or ((bLsw and 7) = 5))) then
+    begin
+      totalS := -totalS;
+    end;
+
+    if (La.BitLength = e + 1) then
+    begin
+      break;
+    end;
+    a1 := La.ShiftRight(e);
+
+    a1Lsw := a1.Fmagnitude[System.length(a1.Fmagnitude) - 1];
+    if (((bLsw and 3) = 3) and ((a1Lsw and 3) = 3)) then
+    begin
+      totalS := -totalS;
+    end;
+
+    La := Lb.Remainder(a1);
+    Lb := a1;
+  end;
+  Result := totalS;
 end;
 
 function TBigInteger.IsProbablePrime(certainty: Int32): Boolean;

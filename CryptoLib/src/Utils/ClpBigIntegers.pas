@@ -22,6 +22,7 @@ unit ClpBigIntegers;
 interface
 
 uses
+  Math,
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpISecureRandom;
@@ -93,6 +94,25 @@ type
       // TODO Should have been just Random class
       const random: ISecureRandom): TBigInteger; static;
 
+    /// <summary>
+    /// <para>
+    /// The regular <b>BigInteger.toByteArray()</b> includes the sign bit
+    /// of the number and <br />might result in an extra byte addition.
+    /// This method removes this extra byte.
+    /// </para>
+    /// </summary>
+    /// <param name="b">
+    /// the integer to format into a byte array
+    /// </param>
+    /// <param name="numBytes">
+    /// the desired size of the resulting byte array
+    /// </param>
+    /// <returns>
+    /// numBytes byte long array.
+    /// </returns>
+    class function BigIntegerToBytes(const b: TBigInteger; numBytes: Int32)
+      : TCryptoLibByteArray; static; inline;
+
   end;
 
 implementation
@@ -127,6 +147,28 @@ begin
   System.Move(bytes[0], Result[System.length(Result) - System.length(bytes)],
     System.length(bytes) * System.SizeOf(Byte));
 
+end;
+
+class function TBigIntegers.BigIntegerToBytes(const b: TBigInteger;
+  numBytes: Int32): TCryptoLibByteArray;
+var
+  biBytes: TCryptoLibByteArray;
+  start, length: Int32;
+begin
+  System.SetLength(Result, numBytes);
+  biBytes := b.ToByteArray();
+  if System.length(biBytes) = (numBytes + 1) then
+  begin
+    start := 1
+  end
+  else
+  begin
+    start := 0
+  end;
+
+  length := min(System.length(biBytes), numBytes);
+  System.Move(biBytes[start], Result[numBytes - length],
+    length * System.SizeOf(Byte));
 end;
 
 class function TBigIntegers.CreateRandomInRange(const min, max: TBigInteger;

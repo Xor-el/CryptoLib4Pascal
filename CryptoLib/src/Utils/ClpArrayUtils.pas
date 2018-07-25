@@ -41,7 +41,11 @@ type
       : TCryptoLibStringArray; static;
 
     class function AddByteArray(const A, B: TCryptoLibByteArray)
-      : TCryptoLibByteArray; static; inline;
+      : TCryptoLibByteArray; overload; static; inline;
+
+    class function AddByteArray(const A: TCryptoLibByteArray;
+      const Others: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
+      overload; static;
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean;
       overload; static;
@@ -95,6 +99,30 @@ begin
   System.SetLength(Result, l + System.Length(B));
   System.Move(A[0], Result[0], l * System.SizeOf(Byte));
   System.Move(B[0], Result[l], System.Length(B) * System.SizeOf(Byte));
+end;
+
+class function TArrayUtils.AddByteArray(const A: TCryptoLibByteArray;
+  const Others: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
+var
+  len, Idx, Pos: Int32;
+  temp: TCryptoLibByteArray;
+begin
+  len := 0;
+  for Idx := System.Low(Others) to System.High(Others) do
+  begin
+    len := len + System.Length(Others[Idx]);
+  end;
+  len := len + System.Length(A);
+  System.SetLength(Result, len);
+  System.Move(A[0], Result[0], System.Length(A) * System.SizeOf(Byte));
+  Pos := System.Length(A);
+  for Idx := System.Low(Others) to System.High(Others) do
+  begin
+    temp := Others[Idx];
+    System.Move(temp[0], Result[Pos], System.Length(temp) *
+      System.SizeOf(Byte));
+    Pos := Pos + System.Length(temp);
+  end;
 end;
 
 class function TArrayUtils.AddStringArray(const A, B: TCryptoLibStringArray)

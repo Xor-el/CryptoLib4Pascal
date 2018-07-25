@@ -411,7 +411,11 @@ uses
   ClpDsaParameter in '..\..\CryptoLib\src\Asn1\X509\ClpDsaParameter.pas',
   ClpIDsaParameter in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameter.pas',
   ClpIPreCompCallBack in '..\..\CryptoLib\src\Interfaces\ClpIPreCompCallBack.pas',
-  ClpNistNamedCurves in '..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas';
+  ClpNistNamedCurves in '..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas',
+  ClpNat320 in '..\..\CryptoLib\src\Math\Raw\ClpNat320.pas',
+  ClpNat256 in '..\..\CryptoLib\src\Math\Raw\ClpNat256.pas',
+  ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
+  ClpIAesLightEngine in '..\..\CryptoLib\src\Interfaces\ClpIAesLightEngine.pas';
 
 begin
   try

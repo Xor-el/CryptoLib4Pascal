@@ -884,7 +884,7 @@ begin
       sLineBreak);
   end;
 
-  PrivD := TBigInteger.Create(PrivateKeyByteArray);
+  PrivD := TBigInteger.Create(1, PrivateKeyByteArray);
   RegeneratedPrivateKey := TECPrivateKeyParameters.Create('ECDSA',
     PrivD, domain);
 
