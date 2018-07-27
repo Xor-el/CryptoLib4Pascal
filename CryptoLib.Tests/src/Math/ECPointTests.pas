@@ -33,6 +33,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   Generics.Collections,
+  ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
   ClpSecureRandom,
@@ -44,7 +45,8 @@ uses
   ClpIFiniteField,
   ClpIX9ECParameters,
   ClpIECFieldElement,
-  ClpIECInterface;
+  ClpIECInterface,
+  ClpArrayUtils;
 
 type
 
@@ -111,10 +113,10 @@ type
     F2mInstance: TF2m;
 
     procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
-    // procedure AssertBigIntegersEqual(a, b: TBigInteger);
-    // procedure AssertIFiniteFieldsEqual(a, b: IFiniteField);
-    // procedure AssertOptionalValuesAgree(a, b: TBigInteger); overload;
-    // procedure AssertOptionalValuesAgree(a, b: TCryptoLibByteArray); overload;
+    procedure AssertBigIntegersEqual(a, b: TBigInteger);
+    procedure AssertIFiniteFieldsEqual(a, b: IFiniteField);
+    procedure AssertOptionalValuesAgree(a, b: TBigInteger); overload;
+    procedure AssertOptionalValuesAgree(a, b: TCryptoLibByteArray); overload;
 
     procedure AssertECFieldElementsEqual(const a, b: IECFieldElement);
 
@@ -261,31 +263,32 @@ begin
   CheckEquals(True, a.Equals(b));
 end;
 
-// procedure TTestECPoint.AssertBigIntegersEqual(a, b: TBigInteger);
-// begin
-// CheckEquals(True, a.Equals(b));
-// end;
+procedure TTestECPoint.AssertBigIntegersEqual(a, b: TBigInteger);
+begin
+  CheckEquals(True, a.Equals(b));
+end;
 
-// procedure TTestECPoint.AssertIFiniteFieldsEqual(a, b: IFiniteField);
-// begin
-// CheckEquals(True, (a as TObject).Equals(b as TObject));
-// end;
 //
-// procedure TTestECPoint.AssertOptionalValuesAgree(a, b: TBigInteger);
-// begin
-// if ((a.IsInitialized) and (b.IsInitialized)) then
-// begin
-// AssertBigIntegersEqual(a, b);
-// end;
-// end;
-//
-// procedure TTestECPoint.AssertOptionalValuesAgree(a, b: TCryptoLibByteArray);
-// begin
-// if ((a <> Nil) and (b <> Nil)) then
-// begin
-// CheckTrue(TArrayUtils.AreEqual(a, b));
-// end;
-// end;
+procedure TTestECPoint.AssertIFiniteFieldsEqual(a, b: IFiniteField);
+begin
+  CheckEquals(True, (a as TObject).Equals(b as TObject));
+end;
+
+procedure TTestECPoint.AssertOptionalValuesAgree(a, b: TBigInteger);
+begin
+  if ((a.IsInitialized) and (b.IsInitialized)) then
+  begin
+    AssertBigIntegersEqual(a, b);
+  end;
+end;
+
+procedure TTestECPoint.AssertOptionalValuesAgree(a, b: TCryptoLibByteArray);
+begin
+  if ((a <> Nil) and (b <> Nil)) then
+  begin
+    CheckTrue(TArrayUtils.AreEqual(a, b));
+  end;
+end;
 
 procedure TTestECPoint.AssertPointsEqual(const msg: String;
   const a, b: IECPoint);
@@ -581,15 +584,15 @@ var
   tempDict: TDictionary<String, String>;
   uniqNames: TCryptoLibStringArray;
   s, name: string;
-  x9A { , x9B } : IX9ECParameters;
-  // pA, pB: IECPoint;
-  // k: TBigInteger;
+  x9A, x9B: IX9ECParameters;
+  pA, pB: IECPoint;
+  k: TBigInteger;
 begin
 
   tempList := TList<String>.Create();
   try
     tempList.AddRange(TECNamedCurveTable.names); // get all collections
-    // tempList.AddRange(CustomNamedCurves.Names);
+    tempList.AddRange(TCustomNamedCurves.names);
     tempDict := TDictionary<String, String>.Create();
     try
       for s in tempList do
@@ -607,39 +610,39 @@ begin
   for name in uniqNames do
   begin
     x9A := TECNamedCurveTable.GetByName(name);
-    // x9B := TCustomNamedCurves.GetByName(name);
+    x9B := TCustomNamedCurves.GetByName(name);
 
-    // if ((x9A <> Nil) and (x9B <> Nil)) then
-    // begin
-    // AssertIFiniteFieldsEqual(x9A.curve.Field, x9B.curve.Field);
-    // AssertBigIntegersEqual(x9A.curve.a.ToBigInteger(),
-    // x9B.curve.a.ToBigInteger());
-    // AssertBigIntegersEqual(x9A.curve.b.ToBigInteger(),
-    // x9B.curve.b.ToBigInteger());
-    // AssertOptionalValuesAgree(x9A.curve.Cofactor, x9B.curve.Cofactor);
-    // AssertOptionalValuesAgree(x9A.curve.Order, x9B.curve.Order);
-    //
-    // AssertPointsEqual('Custom curve base-point inconsistency', x9A.G, x9B.G);
-    //
-    // AssertBigIntegersEqual(x9A.H, x9B.H);
-    // AssertBigIntegersEqual(x9A.n, x9B.n);
-    // AssertOptionalValuesAgree(x9A.GetSeed(), x9B.GetSeed());
-    //
-    // k := TBigInteger.Create(x9A.n.BitLength, FRandom);
-    // pA := x9A.G.Multiply(k);
-    // pB := x9B.G.Multiply(k);
-    // AssertPointsEqual('Custom curve multiplication inconsistency', pA, pB);
-    // end;
+    if ((x9A <> Nil) and (x9B <> Nil)) then
+    begin
+      AssertIFiniteFieldsEqual(x9A.curve.Field, x9B.curve.Field);
+      AssertBigIntegersEqual(x9A.curve.a.ToBigInteger(),
+        x9B.curve.a.ToBigInteger());
+      AssertBigIntegersEqual(x9A.curve.b.ToBigInteger(),
+        x9B.curve.b.ToBigInteger());
+      AssertOptionalValuesAgree(x9A.curve.Cofactor, x9B.curve.Cofactor);
+      AssertOptionalValuesAgree(x9A.curve.Order, x9B.curve.Order);
+
+      AssertPointsEqual('Custom curve base-point inconsistency', x9A.g, x9B.g);
+
+      AssertBigIntegersEqual(x9A.h, x9B.h);
+      AssertBigIntegersEqual(x9A.n, x9B.n);
+      AssertOptionalValuesAgree(x9A.GetSeed(), x9B.GetSeed());
+
+      k := TBigInteger.Create(x9A.n.BitLength, FRandom);
+      pA := x9A.g.Multiply(k);
+      pB := x9B.g.Multiply(k);
+      AssertPointsEqual('Custom curve multiplication inconsistency', pA, pB);
+    end;
 
     if (x9A <> Nil) then
     begin
       ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9A);
     end;
 
-    // if (x9B <> Nil) then
-    // begin
-    // ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
-    // end;
+    if (x9B <> Nil) then
+    begin
+      ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
+    end;
   end;
 end;
 

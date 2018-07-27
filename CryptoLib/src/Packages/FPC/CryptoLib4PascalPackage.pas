@@ -136,7 +136,9 @@ uses
   ClpIValidityPrecompInfo, ClpDsaParametersGenerator, ClpDsaParameter, 
   ClpIDsaParameter, ClpIKeyEncoder, ClpIDsaParametersGenerator, 
   ClpIPreCompCallBack, ClpNistNamedCurves, ClpNat256, ClpNat320, 
-  ClpAesLightEngine, ClpIAesLightEngine;
+  ClpAesLightEngine, ClpIAesLightEngine, ClpCustomNamedCurves, 
+  ClpSecP256K1Field, ClpSecP256K1FieldElement, ClpISecP256K1FieldElement, 
+  ClpSecP256K1Point, ClpISecP256K1Point, ClpSecP256K1Curve, ClpISecP256K1Curve;
 
 implementation
 

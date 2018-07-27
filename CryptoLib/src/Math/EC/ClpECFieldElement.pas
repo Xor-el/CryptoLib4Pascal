@@ -51,16 +51,20 @@ resourcestring
 type
   TECFieldElement = class abstract(TInterfacedObject, IECFieldElement)
 
+  strict protected
+
+    function GetBitLength: Int32; virtual;
+    function GetIsOne: Boolean; virtual;
+    function GetIsZero: Boolean; virtual;
+
+    function GetFieldName: String; virtual; abstract;
+    function GetFieldSize: Int32; virtual; abstract;
+
   public
 
     constructor Create();
     destructor Destroy; override;
 
-    function GetBitLength: Int32; virtual;
-    function GetIsOne: Boolean; virtual;
-    function GetIsZero: Boolean; virtual;
-    function GetFieldName: String; virtual; abstract;
-    function GetFieldSize: Int32; virtual; abstract;
     function ToBigInteger(): TBigInteger; virtual; abstract;
     function Add(const b: IECFieldElement): IECFieldElement; virtual; abstract;
     function AddOne(): IECFieldElement; virtual; abstract;
@@ -91,7 +95,8 @@ type
 
     function TestBitZero(): Boolean; virtual;
 
-    function Equals(const other: IECFieldElement): Boolean; reintroduce;
+    function Equals(const other: IECFieldElement): Boolean;
+      reintroduce; virtual;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -136,14 +141,6 @@ type
     function ModReduce(x: TBigInteger): TBigInteger; virtual;
     function ModSubtract(const x1, x2: TBigInteger): TBigInteger; virtual;
 
-  public
-    constructor Create(const Q, x: TBigInteger); overload;
-      deprecated 'Use ECCurve.FromBigInteger to construct field elements';
-
-    constructor Create(const Q, r, x: TBigInteger); overload;
-
-    destructor Destroy; override;
-
     /// <summary>
     /// return the field name for this field.
     /// </summary>
@@ -152,6 +149,14 @@ type
     /// </returns>
     function GetFieldName: String; override;
     function GetFieldSize: Int32; override;
+
+  public
+    constructor Create(const Q, x: TBigInteger); overload;
+      deprecated 'Use ECCurve.FromBigInteger to construct field elements';
+
+    constructor Create(const Q, r, x: TBigInteger); overload;
+
+    destructor Destroy; override;
 
     function ToBigInteger(): TBigInteger; override;
 
@@ -240,6 +245,15 @@ type
     function GetK2: Int32; inline;
     function GetK3: Int32; inline;
 
+  strict protected
+
+    function GetBitLength: Int32; override;
+    function GetIsOne: Boolean; override;
+    function GetIsZero: Boolean; override;
+
+    function GetFieldName: String; override;
+    function GetFieldSize: Int32; override;
+
   public
 
     const
@@ -295,13 +309,6 @@ type
       const x: TLongArray); overload;
 
     destructor Destroy; override;
-
-    function GetBitLength: Int32; override;
-    function GetIsOne: Boolean; override;
-    function GetIsZero: Boolean; override;
-
-    function GetFieldName: String; override;
-    function GetFieldSize: Int32; override;
 
     function TestBitZero(): Boolean; override;
     function ToBigInteger(): TBigInteger; override;

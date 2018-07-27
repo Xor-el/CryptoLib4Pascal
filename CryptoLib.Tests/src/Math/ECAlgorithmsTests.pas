@@ -42,6 +42,7 @@ uses
   ClpIECInterface,
   ClpBigInteger,
   ClpECNamedCurveTable,
+  ClpCustomNamedCurves,
   ClpECAlgorithms,
   ClpX9ECParameters,
   ClpIX9ECParameters,
@@ -243,7 +244,7 @@ begin
     tempList := TList<String>.Create();
     try
       tempList.AddRange(TECNamedCurveTable.names); // get all collections
-      // tempList.AddRange(TCustomNamedCurves.Names);
+      tempList.AddRange(TCustomNamedCurves.names);
       tempDict := TDictionary<String, String>.Create();
       try
         for s in tempList do
@@ -266,11 +267,11 @@ begin
         AddTestCurves(x9s, x9);
       end;
 
-      // x9 := TCustomNamedCurves.GetByName(name);
-      // if (x9 <> Nil) then
-      // begin
-      // AddTestCurves(x9s, x9);
-      // end;
+      x9 := TCustomNamedCurves.GetByName(name);
+      if (x9 <> Nil) then
+      begin
+        AddTestCurves(x9s, x9);
+      end;
     end;
     Result := x9s.ToArray;
   finally
@@ -294,7 +295,8 @@ var
   x9: IX9ECParameters;
 begin
   // x9 := TCustomNamedCurves.GetByName('secp256r1'); // original
-  x9 := TECNamedCurveTable.GetByName('secp256k1');
+  // x9 := TECNamedCurveTable.GetByName('secp256k1');
+  x9 := TCustomNamedCurves.GetByName('secp256k1');
   CheckNotNull(x9);
   DoTestSumOfMultiplies(x9);
 end;
@@ -314,7 +316,8 @@ var
   x9: IX9ECParameters;
 begin
   // x9 := TCustomNamedCurves.GetByName('secp256r1');  // original
-  x9 := TECNamedCurveTable.GetByName('secp256k1');
+  // x9 := TECNamedCurveTable.GetByName('secp256k1');
+  x9 := TCustomNamedCurves.GetByName('secp256k1');
   CheckNotNull(x9);
   DoTestSumOfTwoMultiplies(x9);
 end;

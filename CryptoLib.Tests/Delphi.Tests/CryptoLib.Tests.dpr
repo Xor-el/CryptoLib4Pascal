@@ -467,7 +467,15 @@ uses
   SHA384HMacTests in '..\src\Crypto\SHA384HMacTests.pas',
   SHA512HMacTests in '..\src\Crypto\SHA512HMacTests.pas',
   RIPEMD128HMacTests in '..\src\Crypto\RIPEMD128HMacTests.pas',
-  RIPEMD160HMacTests in '..\src\Crypto\RIPEMD160HMacTests.pas';
+  RIPEMD160HMacTests in '..\src\Crypto\RIPEMD160HMacTests.pas',
+  ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
+  ClpSecP256K1Field in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Field.pas',
+  ClpSecP256K1FieldElement in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1FieldElement.pas',
+  ClpISecP256K1FieldElement in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1FieldElement.pas',
+  ClpSecP256K1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Point.pas',
+  ClpISecP256K1Point in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Point.pas',
+  ClpSecP256K1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Curve.pas',
+  ClpISecP256K1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Curve.pas';
 
 begin
 

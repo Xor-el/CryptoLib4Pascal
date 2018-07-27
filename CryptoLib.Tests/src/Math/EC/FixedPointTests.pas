@@ -36,6 +36,7 @@ uses
   ClpIECInterface,
   ClpBigInteger,
   ClpECNamedCurveTable,
+  ClpCustomNamedCurves,
   ClpFixedPointCombMultiplier,
   ClpIFixedPointCombMultiplier,
   ClpECAlgorithms,
@@ -89,10 +90,10 @@ var
   tempList: TList<String>;
   tempDict: TDictionary<String, String>;
   names: TCryptoLibStringArray;
-  x9, X9A: IX9ECParameters;
+  x9, X9A, X9B: IX9ECParameters;
   M: IFixedPointCombMultiplier;
   k: TBigInteger;
-  pRef, pA: IECPoint;
+  pRef, pA, pB: IECPoint;
 
 begin
   M := TFixedPointCombMultiplier.Create();
@@ -100,7 +101,7 @@ begin
   tempList := TList<String>.Create();
   try
     tempList.AddRange(TECNamedCurveTable.names); // get all collections
-    // tempList.AddRange(TCustomNamedCurves.Names);
+    tempList.AddRange(TCustomNamedCurves.names);
     tempDict := TDictionary<String, String>.Create();
     try
       for s in tempList do
@@ -118,15 +119,15 @@ begin
   for name in names do
   begin
     X9A := TECNamedCurveTable.GetByName(name);
-    // x9B := CustomNamedCurves.GetByName(name);
-    // if (x9B <> Nil) then
-    // begin
-    // x9 := x9B
-    // end
-    // else
-    // begin
-    x9 := X9A;
-    // end;
+    X9B := TCustomNamedCurves.GetByName(name);
+    if (X9B <> Nil) then
+    begin
+      x9 := X9B
+    end
+    else
+    begin
+      x9 := X9A;
+    end;
 
     i := 0;
     while i < TestsPerCurve do
@@ -140,11 +141,11 @@ begin
         AssertPointsEqual('Standard curve fixed-point failure', pRef, pA);
       end;
 
-      // if (x9B <> Nil) then
-      // begin
-      // pB := M.Multiply(x9B.G, k);
-      // AssertPointsEqual('Custom curve fixed-point failure', pRef, pB);
-      // end;
+      if (X9B <> Nil) then
+      begin
+        pB := M.Multiply(X9B.G, k);
+        AssertPointsEqual('Custom curve fixed-point failure', pRef, pB);
+      end;
       System.Inc(i);
     end;
 
