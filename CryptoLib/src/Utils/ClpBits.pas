@@ -69,6 +69,9 @@ type
     /// should give "3221225472" but in FPC ARM, It gives "0". In some C
     /// Compilers, this is "Undefined"
     /// </summary>
+    /// <param name="Value">
+    /// Value to Perform Shift On
+    /// </param>
     /// <param name="ShiftBits">
     /// Integer, number of bits to shift value to. This Number <b>Must be
     /// Negative</b>
@@ -82,6 +85,28 @@ type
 
     class function NegativeLeftShift32(Value: UInt32; ShiftBits: Int32): UInt32;
       static; inline;
+
+    /// <summary>
+    /// Calculates Negative Right Shift. This was implemented to circumvent a
+    /// compiler issue when performing Shift Right on certain values with a
+    /// Negative Shift Bits. In some C Compilers, this is "Undefined"
+    /// </summary>
+    /// <param name="Value">
+    /// Value to Perform Shift On
+    /// </param>
+    /// <param name="ShiftBits">
+    /// Integer, number of bits to shift value to. This Number <b>Must be
+    /// Negative</b>
+    /// </param>
+    /// <param name="value">
+    /// UInt32 value to compute 'NRS' on.
+    /// </param>
+    /// <returns>
+    /// Shifted value.
+    /// </returns>
+
+    class function NegativeRightShift32(Value: UInt32; ShiftBits: Int32)
+      : UInt32; static; inline;
 
     class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32; overload;
       static; inline;
@@ -215,7 +240,19 @@ end;
 class function TBits.NegativeLeftShift32(Value: UInt32;
   ShiftBits: Int32): UInt32;
 begin
+{$IFDEF DEBUG}
+  System.Assert(ShiftBits < 0);
+{$ENDIF DEBUG}
   Result := Value shl (32 + ShiftBits);
+end;
+
+class function TBits.NegativeRightShift32(Value: UInt32;
+  ShiftBits: Int32): UInt32;
+begin
+{$IFDEF DEBUG}
+  System.Assert(ShiftBits < 0);
+{$ENDIF DEBUG}
+  Result := Value shr (32 + ShiftBits);
 end;
 
 class function TBits.RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;

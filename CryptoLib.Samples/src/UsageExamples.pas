@@ -82,7 +82,8 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpArrayUtils,
   ClpHex,
-  ClpSecNamedCurves;
+  ClpSecNamedCurves,
+  ClpCustomNamedCurves;
 
 type
   TUsageExamples = class sealed(TObject)
@@ -980,7 +981,7 @@ end;
 class constructor TUsageExamples.UsageExamples;
 begin
   FRandom := TSecureRandom.Create();
-  FCurve := TSecNamedCurves.GetByName(CurveName);
+  FCurve := TCustomNamedCurves.GetByName(CurveName);
 end;
 
 end.

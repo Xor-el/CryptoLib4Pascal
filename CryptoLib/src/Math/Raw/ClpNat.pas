@@ -43,7 +43,7 @@ type
       zPos: Int32): UInt32; overload; static; inline;
 
     class function Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static; inline;
+      zOff, zPos: Int32): UInt32; overload; static;
 
     class function Add33To(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
       : UInt32; overload; static; inline;
@@ -132,10 +132,10 @@ type
       overload; static; inline;
 
     class function IncAt(len: Int32; z: TCryptoLibUInt32Array; zPos: Int32)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function IncAt(len: Int32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static; inline;
+      zOff, zPos: Int32): UInt32; overload; static;
 
     class function IsOne(len: Int32; x: TCryptoLibUInt32Array): Boolean;
       static; inline;
@@ -1447,10 +1447,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shl bits) or (c shr (-bits));
+    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := c shr (-bits);
+  Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
@@ -1465,10 +1465,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := x[I];
-    z[I] := (next shl bits) or (c shr (-bits));
+    z[I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := c shr (-bits);
+  Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
@@ -1483,10 +1483,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := z[I];
-    z[I] := (next shl bits) or (c shr (-bits));
+    z[I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := c shr (-bits);
+  Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
@@ -1501,10 +1501,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shl bits) or (c shr (-bits));
+    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := c shr (-bits);
+  Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits64(len: Int32; x: TCryptoLibUInt64Array;
@@ -1519,10 +1519,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shl bits) or (c shr (-bits));
+    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := c shr (-bits);
+  Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits64(len: Int32; z: TCryptoLibUInt64Array;
@@ -1537,10 +1537,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shl bits) or (c shr (-bits));
+    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := c shr (-bits);
+  Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
 class procedure TNat.Square(len: Int32; x, zz: TCryptoLibUInt32Array);

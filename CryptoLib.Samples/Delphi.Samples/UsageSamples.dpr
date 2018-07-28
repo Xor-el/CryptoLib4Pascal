@@ -415,7 +415,15 @@ uses
   ClpNat320 in '..\..\CryptoLib\src\Math\Raw\ClpNat320.pas',
   ClpNat256 in '..\..\CryptoLib\src\Math\Raw\ClpNat256.pas',
   ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
-  ClpIAesLightEngine in '..\..\CryptoLib\src\Interfaces\ClpIAesLightEngine.pas';
+  ClpIAesLightEngine in '..\..\CryptoLib\src\Interfaces\ClpIAesLightEngine.pas',
+  ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
+  ClpSecP256K1Field in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Field.pas',
+  ClpSecP256K1FieldElement in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1FieldElement.pas',
+  ClpISecP256K1FieldElement in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1FieldElement.pas',
+  ClpSecP256K1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Point.pas',
+  ClpISecP256K1Point in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Point.pas',
+  ClpSecP256K1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Curve.pas',
+  ClpISecP256K1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Curve.pas';
 
 begin
   try

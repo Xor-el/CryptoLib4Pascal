@@ -23,7 +23,6 @@ interface
 
 uses
   ClpIECInterface,
-  ClpIECFieldElement,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
