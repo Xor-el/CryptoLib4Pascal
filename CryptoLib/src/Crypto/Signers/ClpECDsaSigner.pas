@@ -166,7 +166,7 @@ end;
 
 class constructor TECDsaSigner.ECDsaSigner;
 begin
-  TBigInteger.Boot;
+ // TBigInteger.Boot;
   FEight := TBigInteger.ValueOf(8);
 end;
 

@@ -371,18 +371,18 @@ begin
 
   Falgorithms.Add('NULL', 'NULL'); // Null Digest
 
-  TPkcsObjectIdentifiers.Boot;
+ // TPkcsObjectIdentifiers.Boot;
 
   Falgorithms.Add(TPkcsObjectIdentifiers.MD2.id, 'MD2');
   Falgorithms.Add(TPkcsObjectIdentifiers.MD4.id, 'MD4');
   Falgorithms.Add(TPkcsObjectIdentifiers.MD5.id, 'MD5');
 
-  TOiwObjectIdentifiers.Boot;
+ // TOiwObjectIdentifiers.Boot;
 
   Falgorithms.Add('SHA1', 'SHA-1');
   Falgorithms.Add(TOiwObjectIdentifiers.IdSha1.id, 'SHA-1');
 
-  TNistObjectIdentifiers.Boot;
+ // TNistObjectIdentifiers.Boot;
 
   Falgorithms.Add('SHA224', 'SHA-224');
   Falgorithms.Add(TNistObjectIdentifiers.IdSha224.id, 'SHA-224');
@@ -397,7 +397,7 @@ begin
   Falgorithms.Add('SHA512/256', 'SHA-512/256');
   Falgorithms.Add(TNistObjectIdentifiers.IdSha512_256.id, 'SHA-512/256');
 
-  TTeleTrusTObjectIdentifiers.Boot;
+ // TTeleTrusTObjectIdentifiers.Boot;
 
   Falgorithms.Add('RIPEMD-128', 'RIPEMD128');
   Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD128.id, 'RIPEMD128');
@@ -408,7 +408,7 @@ begin
   Falgorithms.Add('RIPEMD-320', 'RIPEMD320');
   // Falgorithms.Add(TTeleTrusTObjectIdentifiers.RipeMD320.Id,'RIPEMD320');
 
-  TCryptoProObjectIdentifiers.Boot;
+ // TCryptoProObjectIdentifiers.Boot;
 
   Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411.id, 'GOST3411');
 
@@ -417,7 +417,7 @@ begin
   Falgorithms.Add(TNistObjectIdentifiers.IdSha3_384.id, 'SHA3-384');
   Falgorithms.Add(TNistObjectIdentifiers.IdSha3_512.id, 'SHA3-512');
 
-  TMiscObjectIdentifiers.Boot;
+ // TMiscObjectIdentifiers.Boot;
 
   Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b160.id, 'BLAKE2B-160');
   Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b256.id, 'BLAKE2B-256');
@@ -428,7 +428,7 @@ begin
   Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s224.id, 'BLAKE2S-224');
   Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s256.id, 'BLAKE2S-256');
 
-  TRosstandartObjectIdentifiers.Boot;
+ // TRosstandartObjectIdentifiers.Boot;
 
   Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.
     id, 'HMAC-GOST3411-2012-256');

@@ -96,7 +96,7 @@ var
   curve: IFPCurve;
   ecParams: IECDomainParameters;
 begin
-  TBigInteger.Boot;
+ // TBigInteger.Boot;
   Fparameters := TDictionary<IDerObjectIdentifier,
     IECDomainParameters>.Create();
   FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();

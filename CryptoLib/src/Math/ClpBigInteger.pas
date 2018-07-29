@@ -871,7 +871,7 @@ begin
     TCryptoLibInt32Array.Create(1249, 1259, 1277),
     TCryptoLibInt32Array.Create(1279, 1283, 1289));
 
-  TSecureRandom.Boot;
+  //TSecureRandom.Boot;
 
   FRandomSource := TSecureRandom.Create();
 

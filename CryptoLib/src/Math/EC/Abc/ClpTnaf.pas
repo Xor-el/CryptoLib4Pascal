@@ -1114,7 +1114,7 @@ end;
 
 class constructor TTnaf.Tnaf;
 begin
-  TBigInteger.Boot;
+ // TBigInteger.Boot;
   FMinusOne := TBigInteger.One.Negate();
   FMinusTwo := TBigInteger.Two.Negate();
   FMinusThree := TBigInteger.Three.Negate();

@@ -62,7 +62,7 @@ implementation
 
 class constructor TFiniteFields.FiniteFields;
 begin
-  TBigInteger.Boot;
+ // TBigInteger.Boot;
   FGF_2 := TPrimeField.Create(TBigInteger.ValueOf(2));
   FGF_3 := TPrimeField.Create(TBigInteger.ValueOf(3));
 end;

@@ -336,7 +336,7 @@ begin
   FSecT571k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.38');
   FSecT571r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.39');
 
-  TX9ObjectIdentifiers.Boot;
+ // TX9ObjectIdentifiers.Boot;
 
   FSecP192r1 := TX9ObjectIdentifiers.Prime192v1;
 

@@ -123,7 +123,7 @@ begin
   Falgorithms := TDictionary<string, string>.Create();
   Foids := TDictionary<string, IDerObjectIdentifier>.Create();
 
-  TNistObjectIdentifiers.Boot;
+ // TNistObjectIdentifiers.Boot;
 
   // TODO Flesh out the list of aliases
 

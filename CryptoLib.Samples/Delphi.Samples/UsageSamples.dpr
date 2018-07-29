@@ -7,8 +7,8 @@ program UsageSamples;
 
 uses
   SysUtils,
-  ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
   ClpECGost3410NamedCurves in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpECGost3410NamedCurves.pas',
+  ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
   ClpNistObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Nist\ClpNistObjectIdentifiers.pas',
   ClpOiwObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Oiw\ClpOiwObjectIdentifiers.pas',
   ClpPkcsObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcsObjectIdentifiers.pas',

@@ -82,14 +82,14 @@ class procedure TMacUtilities.Boot;
 begin
   Falgorithms := TDictionary<string, string>.Create();
 
-  TIanaObjectIdentifiers.Boot;
+ // TIanaObjectIdentifiers.Boot;
 
   Falgorithms.Add(TIanaObjectIdentifiers.HmacMD5.id, 'HMAC-MD5');
   Falgorithms.Add(TIanaObjectIdentifiers.HmacRipeMD160.id, 'HMAC-RIPEMD160');
   Falgorithms.Add(TIanaObjectIdentifiers.HmacSha1.id, 'HMAC-SHA1');
   Falgorithms.Add(TIanaObjectIdentifiers.HmacTiger.id, 'HMAC-TIGER');
 
-  TPkcsObjectIdentifiers.Boot;
+ // TPkcsObjectIdentifiers.Boot;
 
   Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha1.id, 'HMAC-SHA1');
   Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha224.id, 'HMAC-SHA224');
@@ -97,7 +97,7 @@ begin
   Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha384.id, 'HMAC-SHA384');
   Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha512.id, 'HMAC-SHA512');
 
-  TNistObjectIdentifiers.Boot;
+ // TNistObjectIdentifiers.Boot;
 
   Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_224.id,
     'HMAC-SHA3-224');
@@ -108,7 +108,7 @@ begin
   Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_512.id,
     'HMAC-SHA3-512');
 
-  TRosstandartObjectIdentifiers.Boot;
+//  TRosstandartObjectIdentifiers.Boot;
 
   Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.
     id, 'HMAC-GOST3411-2012-256');
