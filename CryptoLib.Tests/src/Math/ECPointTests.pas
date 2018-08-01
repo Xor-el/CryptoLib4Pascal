@@ -268,7 +268,6 @@ begin
   CheckEquals(True, a.Equals(b));
 end;
 
-//
 procedure TTestECPoint.AssertIFiniteFieldsEqual(a, b: IFiniteField);
 begin
   CheckEquals(True, (a as TObject).Equals(b as TObject));

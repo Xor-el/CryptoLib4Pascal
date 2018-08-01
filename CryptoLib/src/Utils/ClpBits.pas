@@ -41,7 +41,7 @@ type
     /// <param name="Size">Size of the Array to Reverse.</param>
 
     class procedure ReverseByteArray(Source, Dest: Pointer;
-      Size: int64); static;
+      Size: Int64); static;
 
     /// <summary>
     /// Calculates Arithmetic shift right.
@@ -60,7 +60,7 @@ type
     /// <returns>Shifted value.</returns>
     /// Implementation was found here <see cref="https://github.com/Spelt/ZXing.Delphi/blob/master/Lib/Classes/Common/MathUtils.pas" />
 
-    class function Asr64(Value: int64; ShiftBits: Int32): int64; static; inline;
+    class function Asr64(Value: Int64; ShiftBits: Int32): Int64; static; inline;
 
     /// <summary>
     /// Calculates Negative Left Shift. This was implemented to circumvent a
@@ -108,13 +108,16 @@ type
     class function NegativeRightShift32(Value: UInt32; ShiftBits: Int32)
       : UInt32; static; inline;
 
-    class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32; overload;
+    class function RotateLeft8(a_value: Byte; a_n: Int32): Byte; static; inline;
+    class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;
       static; inline;
-    class function RotateLeft64(a_value: UInt64; a_n: Int32): UInt64; overload;
+    class function RotateLeft64(a_value: UInt64; a_n: Int32): UInt64;
       static; inline;
-    class function RotateRight32(a_value: UInt32; a_n: Int32): UInt32; overload;
+    class function RotateRight8(a_value: Byte; a_n: Int32): Byte;
       static; inline;
-    class function RotateRight64(a_value: UInt64; a_n: Int32): UInt64; overload;
+    class function RotateRight32(a_value: UInt32; a_n: Int32): UInt32;
+      static; inline;
+    class function RotateRight64(a_value: UInt64; a_n: Int32): UInt64;
       static; inline;
 
   end;
@@ -123,7 +126,7 @@ implementation
 
 { TBits }
 
-class procedure TBits.ReverseByteArray(Source, Dest: Pointer; Size: int64);
+class procedure TBits.ReverseByteArray(Source, Dest: Pointer; Size: Int64);
 var
   ptr_src, ptr_dest: PByte;
 begin
@@ -221,7 +224,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBits.Asr64(Value: int64; ShiftBits: Int32): int64;
+class function TBits.Asr64(Value: Int64; ShiftBits: Int32): Int64;
 begin
 {$IFDEF FPC}
   Result := SarInt64(Value, ShiftBits);
@@ -234,6 +237,20 @@ begin
 
   // Result := (Value shr ShiftBits) or
   // ((0 - ((Value shr 63) and 1)) shl (64 - ShiftBits));
+{$ENDIF FPC}
+end;
+
+class function TBits.RotateLeft8(a_value: Byte; a_n: Int32): Byte;
+begin
+{$IFDEF DEBUG}
+  System.Assert(a_n >= 0);
+{$ENDIF DEBUG}
+{$IFDEF FPC}
+  Result := RolByte(a_value, a_n);
+{$ELSE}
+  a_n := a_n and 7;
+
+  Result := (a_value shl a_n) or (a_value shr (8 - a_n));
 {$ENDIF FPC}
 end;
 
@@ -280,6 +297,20 @@ begin
   a_n := a_n and 63;
 
   Result := (a_value shl a_n) or (a_value shr (64 - a_n));
+{$ENDIF FPC}
+end;
+
+class function TBits.RotateRight8(a_value: Byte; a_n: Int32): Byte;
+begin
+{$IFDEF DEBUG}
+  System.Assert(a_n >= 0);
+{$ENDIF DEBUG}
+{$IFDEF FPC}
+  Result := RorByte(a_value, a_n);
+{$ELSE}
+  a_n := a_n and 7;
+
+  Result := (a_value shr a_n) or (a_value shl (8 - a_n));
 {$ENDIF FPC}
 end;
 

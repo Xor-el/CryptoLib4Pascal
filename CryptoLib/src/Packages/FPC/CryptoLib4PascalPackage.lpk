@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="2" Minor="3"/>
-    <Files Count="421">
+    <Files Count="430">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1712,6 +1712,42 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Interfaces\ClpISecP256K1Curve.pas"/>
         <UnitName Value="ClpISecP256K1Curve"/>
       </Item421>
+      <Item422>
+        <Filename Value="..\..\Math\EC\Custom\Sec\ClpSecP384R1Field.pas"/>
+        <UnitName Value="ClpSecP384R1Field"/>
+      </Item422>
+      <Item423>
+        <Filename Value="..\..\Math\Raw\ClpNat384.pas"/>
+        <UnitName Value="ClpNat384"/>
+      </Item423>
+      <Item424>
+        <Filename Value="..\..\Math\EC\Custom\Sec\ClpSecP384R1FieldElement.pas"/>
+        <UnitName Value="ClpSecP384R1FieldElement"/>
+      </Item424>
+      <Item425>
+        <Filename Value="..\..\Interfaces\ClpISecP384R1FieldElement.pas"/>
+        <UnitName Value="ClpISecP384R1FieldElement"/>
+      </Item425>
+      <Item426>
+        <Filename Value="..\..\Math\EC\Custom\Sec\ClpSecP384R1Point.pas"/>
+        <UnitName Value="ClpSecP384R1Point"/>
+      </Item426>
+      <Item427>
+        <Filename Value="..\..\Interfaces\ClpISecP384R1Point.pas"/>
+        <UnitName Value="ClpISecP384R1Point"/>
+      </Item427>
+      <Item428>
+        <Filename Value="..\..\Math\EC\Custom\Sec\ClpSecP384R1Curve.pas"/>
+        <UnitName Value="ClpSecP384R1Curve"/>
+      </Item428>
+      <Item429>
+        <Filename Value="..\..\Math\Raw\ClpNat192.pas"/>
+        <UnitName Value="ClpNat192"/>
+      </Item429>
+      <Item430>
+        <Filename Value="..\..\Interfaces\ClpISecP384R1Curve.pas"/>
+        <UnitName Value="ClpISecP384R1Curve"/>
+      </Item430>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

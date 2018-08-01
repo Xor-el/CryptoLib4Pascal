@@ -423,7 +423,16 @@ uses
   ClpSecP256K1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Point.pas',
   ClpISecP256K1Point in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Point.pas',
   ClpSecP256K1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Curve.pas',
-  ClpISecP256K1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Curve.pas';
+  ClpISecP256K1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256K1Curve.pas',
+  ClpSecP384R1Field in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP384R1Field.pas',
+  ClpNat384 in '..\..\CryptoLib\src\Math\Raw\ClpNat384.pas',
+  ClpSecP384R1FieldElement in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP384R1FieldElement.pas',
+  ClpISecP384R1FieldElement in '..\..\CryptoLib\src\Interfaces\ClpISecP384R1FieldElement.pas',
+  ClpSecP384R1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP384R1Point.pas',
+  ClpISecP384R1Point in '..\..\CryptoLib\src\Interfaces\ClpISecP384R1Point.pas',
+  ClpSecP384R1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP384R1Curve.pas',
+  ClpISecP384R1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP384R1Curve.pas',
+  ClpNat192 in '..\..\CryptoLib\src\Math\Raw\ClpNat192.pas';
 
 begin
   try

@@ -138,7 +138,10 @@ uses
   ClpIPreCompCallBack, ClpNistNamedCurves, ClpNat256, ClpNat320, 
   ClpAesLightEngine, ClpIAesLightEngine, ClpCustomNamedCurves, 
   ClpSecP256K1Field, ClpSecP256K1FieldElement, ClpISecP256K1FieldElement, 
-  ClpSecP256K1Point, ClpISecP256K1Point, ClpSecP256K1Curve, ClpISecP256K1Curve;
+  ClpSecP256K1Point, ClpISecP256K1Point, ClpSecP256K1Curve, 
+  ClpISecP256K1Curve, ClpSecP384R1Field, ClpNat384, ClpSecP384R1FieldElement, 
+  ClpISecP384R1FieldElement, ClpSecP384R1Point, ClpISecP384R1Point, 
+  ClpSecP384R1Curve, ClpNat192, ClpISecP384R1Curve;
 
 implementation
 

@@ -38,7 +38,7 @@ uses
   ClpIX9ECParameters,
   ClpSecObjectIdentifiers,
   ClpConverters,
-  ClpSecNamedCurves,
+  ClpCustomNamedCurves,
   ClpIECFieldElement,
   ClpBigInteger;
 
@@ -148,8 +148,7 @@ procedure TTestSecP384R1Field.SetUp;
 begin
   inherited;
   FRandom := TSecureRandom.Create();
-  // FDP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP384r1); // original
-  FDP := TSecNamedCurves.GetByOid(TSecObjectIdentifiers.SecP384r1);
+  FDP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP384r1);
 
   FQ := FDP.Curve.Field.Characteristic;
 end;
