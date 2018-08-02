@@ -1270,6 +1270,7 @@ begin
     next := x[xOff + I];
     z[zOff + I] := (next shr (bits)) or (TBits.NegativeLeftShift32(c, -bits));
     c := next;
+    System.Dec(I);
   end;
   Result := TBits.NegativeLeftShift32(c, -bits);
 end;

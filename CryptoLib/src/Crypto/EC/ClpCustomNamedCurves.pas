@@ -35,6 +35,8 @@ uses
   ClpISecP256K1Curve,
   ClpSecP384R1Curve,
   ClpISecP384R1Curve,
+  ClpSecP521R1Curve,
+  ClpISecP521R1Curve,
   ClpIECInterface,
   ClpX9ECPoint,
   ClpIX9ECPoint,
@@ -132,6 +134,22 @@ type
     /// secp384r1
     /// </summary>
     TSecP384R1Holder = class sealed(TX9ECParametersHolder,
+      IX9ECParametersHolder)
+
+    strict protected
+      function CreateParameters(): IX9ECParameters; override;
+
+    public
+      class function Instance(): IX9ECParametersHolder; static;
+
+    end;
+
+  type
+
+    /// <summary>
+    /// secp521r1
+    /// </summary>
+    TSecP521R1Holder = class sealed(TX9ECParametersHolder,
       IX9ECParametersHolder)
 
     strict protected
@@ -273,6 +291,9 @@ begin
   DefineCurveWithOid('secp384r1', TSecObjectIdentifiers.SecP384r1,
     TSecP384R1Holder.Instance);
 
+  DefineCurveWithOid('secp521r1', TSecObjectIdentifiers.SecP521r1,
+    TSecP521R1Holder.Instance);
+
 end;
 
 class destructor TCustomNamedCurves.DestroySecNamedCurves;
@@ -343,6 +364,30 @@ class function TCustomNamedCurves.TSecP384R1Holder.Instance
   : IX9ECParametersHolder;
 begin
   result := TSecP384R1Holder.Create();
+end;
+
+{ TCustomNamedCurves.TSecP521R1Holder }
+
+function TCustomNamedCurves.TSecP521R1Holder.CreateParameters: IX9ECParameters;
+var
+  S: TCryptoLibByteArray;
+  curve: IECCurve;
+  G: IX9ECPoint;
+begin
+  S := THex.Decode('D09E8800291CB85396CC6717393284AAA0DA64BA');
+  curve := ConfigureCurve(TSecP521R1Curve.Create() as ISecP521R1Curve);
+  G := TX9ECPoint.Create(curve,
+    THex.Decode('04' +
+    '00C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66'
+    + '011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650')
+    );
+  result := TX9ECParameters.Create(curve, G, curve.Order, curve.Cofactor, S);
+end;
+
+class function TCustomNamedCurves.TSecP521R1Holder.Instance
+  : IX9ECParametersHolder;
+begin
+  result := TSecP521R1Holder.Create();
 end;
 
 end.

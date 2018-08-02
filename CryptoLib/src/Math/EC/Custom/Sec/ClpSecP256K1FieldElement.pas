@@ -43,6 +43,9 @@ type
 
   strict private
 
+    function Equals(const other: ISecP256K1FieldElement): Boolean;
+      reintroduce; overload;
+
     class function GetQ: TBigInteger; static; inline;
 
   strict protected
@@ -83,9 +86,6 @@ type
     function Sqrt(): IECFieldElement; override;
 
     function Equals(const other: IECFieldElement): Boolean; overload; override;
-
-    function Equals(const other: ISecP256K1FieldElement): Boolean;
-      reintroduce; overload;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;

@@ -157,7 +157,7 @@ var
   c: UInt32;
 begin
   c := TNat.Add(12, x, y, z);
-  if ((c <> 0) or ((z[11] = P11) and (TNat.Gte(12, z, P)))) then
+  if ((c <> 0) or ((z[11] = P11) and (TNat.Gte(12, z, FP)))) then
   begin
     AddPInvTo(z);
   end;
@@ -251,7 +251,7 @@ begin
   end;
 
   if (((cc <> 0) and (TNat.IncAt(12, z, 5) <> 0)) or
-    ((z[11] = P11) and (TNat.Gte(12, z, P)))) then
+    ((z[11] = P11) and (TNat.Gte(12, z, FP)))) then
   begin
     AddPInvTo(z);
   end;

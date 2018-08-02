@@ -141,7 +141,9 @@ uses
   ClpSecP256K1Point, ClpISecP256K1Point, ClpSecP256K1Curve, 
   ClpISecP256K1Curve, ClpSecP384R1Field, ClpNat384, ClpSecP384R1FieldElement, 
   ClpISecP384R1FieldElement, ClpSecP384R1Point, ClpISecP384R1Point, 
-  ClpSecP384R1Curve, ClpNat192, ClpISecP384R1Curve;
+  ClpSecP384R1Curve, ClpNat192, ClpISecP384R1Curve, ClpSecP521R1Field, 
+  ClpNat512, ClpSecP521R1FieldElement, ClpISecP521R1FieldElement, 
+  ClpSecP521R1Point, ClpISecP521R1Point, ClpSecP521R1Curve, ClpISecP521R1Curve;
 
 implementation
 
