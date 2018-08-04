@@ -43,8 +43,8 @@ type
 
     class function GetP: TCryptoLibUInt32Array; static; inline;
 
-    class procedure AddPInvTo(z: TCryptoLibUInt32Array); static; inline;
-    class procedure SubPInvFrom(z: TCryptoLibUInt32Array); static; inline;
+    class procedure AddPInvTo(z: TCryptoLibUInt32Array); static;
+    class procedure SubPInvFrom(z: TCryptoLibUInt32Array); static;
 
     class constructor CreateSecP384R1Field();
 
@@ -57,9 +57,8 @@ type
     class procedure Half(x, z: TCryptoLibUInt32Array); static; inline;
     class procedure Multiply(x, y, z: TCryptoLibUInt32Array); static; inline;
     class procedure Negate(x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Reduce(xx, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Reduce32(x: UInt32; z: TCryptoLibUInt32Array);
-      static; inline;
+    class procedure Reduce(xx, z: TCryptoLibUInt32Array); static;
+    class procedure Reduce32(x: UInt32; z: TCryptoLibUInt32Array); static;
     class procedure Square(x, z: TCryptoLibUInt32Array); static; inline;
     class procedure SquareN(x: TCryptoLibUInt32Array; n: Int32;
       z: TCryptoLibUInt32Array); static; inline;

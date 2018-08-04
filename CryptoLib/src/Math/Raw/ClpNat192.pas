@@ -46,7 +46,6 @@ type
     class function AddTo(x: TCryptoLibUInt32Array; xOff: Int32;
       z: TCryptoLibUInt32Array; zOff: Int32; cIn: UInt32): UInt32;
       overload; static;
-
     class function AddToEachOther(u: TCryptoLibUInt32Array; uOff: Int32;
       v: TCryptoLibUInt32Array; vOff: Int32): UInt32; static;
 

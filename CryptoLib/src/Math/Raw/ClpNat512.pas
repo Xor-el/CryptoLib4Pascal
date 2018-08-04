@@ -30,8 +30,8 @@ type
   TNat512 = class sealed(TObject)
 
   public
-    class procedure Mul(x, y, zz: TCryptoLibUInt32Array); static; inline;
-    class procedure Square(x, zz: TCryptoLibUInt32Array); static; inline;
+    class procedure Mul(x, y, zz: TCryptoLibUInt32Array); static;
+    class procedure Square(x, zz: TCryptoLibUInt32Array); static;
 
   end;
 

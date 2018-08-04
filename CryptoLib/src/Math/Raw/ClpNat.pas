@@ -36,57 +36,57 @@ type
 
   public
 
-    class function Add(len: Int32; x, y, z: TCryptoLibUInt32Array): UInt32;
-      static; inline;
+    class function Add(len: Int32; x, y, z: TCryptoLibUInt32Array)
+      : UInt32; static;
 
     class function Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): UInt32; overload; static; inline;
+      zPos: Int32): UInt32; overload; static;
 
     class function Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
       zOff, zPos: Int32): UInt32; overload; static;
 
     class function Add33To(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function Add33To(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static; inline;
+      zOff: Int32): UInt32; overload; static;
 
     class function AddBothTo(len: Int32; x, y, z: TCryptoLibUInt32Array)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function AddBothTo(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
       y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static; inline;
+      zOff: Int32): UInt32; overload; static;
 
     class function AddDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zPos: Int32): UInt32; overload; static; inline;
+      zPos: Int32): UInt32; overload; static;
 
     class function AddDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static; inline;
+      zOff, zPos: Int32): UInt32; overload; static;
 
     class function AddDWordTo(len: Int32; x: UInt64; z: TCryptoLibUInt32Array)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function AddDWordTo(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static; inline;
+      zOff: Int32): UInt32; overload; static;
 
     class function AddTo(len: Int32; x, z: TCryptoLibUInt32Array): UInt32;
-      overload; static; inline;
+      overload; static;
 
     class function AddTo(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static; inline;
+      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
     class function AddWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): UInt32; overload; static; inline;
+      zPos: Int32): UInt32; overload; static;
 
     class function AddWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static; inline;
+      zOff, zPos: Int32): UInt32; overload; static;
 
     class function AddWordTo(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function AddWordTo(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static; inline;
+      zOff: Int32): UInt32; overload; static;
 
     class procedure Copy(len: Int32; x, z: TCryptoLibUInt32Array); overload;
       static; inline;
@@ -95,41 +95,39 @@ type
       : TCryptoLibUInt32Array; overload; static; inline;
 
     class procedure Copy(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32); overload; static;
+      z: TCryptoLibUInt32Array; zOff: Int32); overload; static; inline;
 
     class function Create(len: Int32): TCryptoLibUInt32Array; static; inline;
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
 
-    class function Dec(len: Int32; z: TCryptoLibUInt32Array): Int32; overload;
-      static; inline;
+    class function Dec(len: Int32; z: TCryptoLibUInt32Array): Int32;
+      overload; static;
 
     class function Dec(len: Int32; x, z: TCryptoLibUInt32Array): Int32;
-      overload; static; inline;
+      overload; static;
 
     class function DecAt(len: Int32; z: TCryptoLibUInt32Array; zPos: Int32)
-      : Int32; overload; static; inline;
+      : Int32; overload; static;
 
     class function DecAt(len: Int32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static; inline;
+      zOff, zPos: Int32): Int32; overload; static;
 
-    class function Eq(len: Int32; x, y: TCryptoLibUInt32Array): Boolean;
-      static; inline;
+    class function Eq(len: Int32; x, y: TCryptoLibUInt32Array): Boolean; static;
 
     class function FromBigInteger(bits: Int32; x: TBigInteger)
       : TCryptoLibUInt32Array; static;
 
-    class function GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32;
-      static; inline;
+    class function GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32; static;
 
-    class function Gte(len: Int32; x, y: TCryptoLibUInt32Array): Boolean;
-      static; inline;
+    class function Gte(len: Int32; x, y: TCryptoLibUInt32Array)
+      : Boolean; static;
 
-    class function Inc(len: Int32; z: TCryptoLibUInt32Array): UInt32; overload;
-      static; inline;
+    class function Inc(len: Int32; z: TCryptoLibUInt32Array): UInt32;
+      overload; static;
 
     class function Inc(len: Int32; x, z: TCryptoLibUInt32Array): UInt32;
-      overload; static; inline;
+      overload; static;
 
     class function IncAt(len: Int32; z: TCryptoLibUInt32Array; zPos: Int32)
       : UInt32; overload; static;
@@ -137,104 +135,101 @@ type
     class function IncAt(len: Int32; z: TCryptoLibUInt32Array;
       zOff, zPos: Int32): UInt32; overload; static;
 
-    class function IsOne(len: Int32; x: TCryptoLibUInt32Array): Boolean;
-      static; inline;
+    class function IsOne(len: Int32; x: TCryptoLibUInt32Array): Boolean; static;
 
-    class function IsZero(len: Int32; x: TCryptoLibUInt32Array): Boolean;
-      static; inline;
+    class function IsZero(len: Int32; x: TCryptoLibUInt32Array)
+      : Boolean; static;
 
-    class procedure Mul(len: Int32; x, y, zz: TCryptoLibUInt32Array); overload;
-      static; inline;
+    class procedure Mul(len: Int32; x, y, zz: TCryptoLibUInt32Array);
+      overload; static;
 
     class procedure Mul(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
       y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
-      zzOff: Int32); overload; static; inline;
+      zzOff: Int32); overload; static;
 
     class function Mul31BothAdd(len: Int32; a: UInt32; x: TCryptoLibUInt32Array;
-      b: UInt32; y, z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
-      static; inline;
+      b: UInt32; y, z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
 
     class function MulWord(len: Int32; x: UInt32; y, z: TCryptoLibUInt32Array)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function MulWord(len: Int32; x: UInt32; y: TCryptoLibUInt32Array;
-      yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload;
-      static; inline;
+      yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+      overload; static;
 
     class function MulWordAddTo(len: Int32; x: UInt32; y: TCryptoLibUInt32Array;
-      yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
-      static; inline;
+      yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
 
     class function MulWordDwordAddAt(len: Int32; x: UInt32; y: UInt64;
-      z: TCryptoLibUInt32Array; zPos: Int32): UInt32; static; inline;
+      z: TCryptoLibUInt32Array; zPos: Int32): UInt32; static;
 
     class function ShiftDownBit(len: Int32; z: TCryptoLibUInt32Array; c: UInt32)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function ShiftDownBit(len: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32; c: UInt32): UInt32; overload; static; inline;
+      zOff: Int32; c: UInt32): UInt32; overload; static;
 
     class function ShiftDownBit(len: Int32; x: TCryptoLibUInt32Array; c: UInt32;
-      z: TCryptoLibUInt32Array): UInt32; overload; static; inline;
+      z: TCryptoLibUInt32Array): UInt32; overload; static;
 
     class function ShiftDownBit(len: Int32; x: TCryptoLibUInt32Array;
       xOff: UInt32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
-      overload; static; inline;
+      overload; static;
 
     class function ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32): UInt32; overload; static; inline;
+      bits: Int32; c: UInt32): UInt32; overload; static;
 
     class function ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static; inline;
+      zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static;
 
     class function ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32; overload;
-      static; inline;
+      bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32;
+      overload; static;
 
     class function ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
       xOff, bits: Int32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function ShiftDownWord(len: Int32; z: TCryptoLibUInt32Array;
-      c: UInt32): UInt32; static; inline;
+      c: UInt32): UInt32; static;
 
     class function ShiftUpBit(len: Int32; z: TCryptoLibUInt32Array; c: UInt32)
-      : UInt32; overload; static; inline;
+      : UInt32; overload; static;
 
     class function ShiftUpBit(len: Int32; z: TCryptoLibUInt32Array; zOff: Int32;
-      c: UInt32): UInt32; overload; static; inline;
+      c: UInt32): UInt32; overload; static;
 
     class function ShiftUpBit(len: Int32; x: TCryptoLibUInt32Array; c: UInt32;
-      z: TCryptoLibUInt32Array): UInt32; overload; static; inline;
+      z: TCryptoLibUInt32Array): UInt32; overload; static;
 
     class function ShiftUpBit(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload;
-      static; inline;
+      c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+      overload; static;
 
     class function ShiftUpBit64(len: Int32; x: TCryptoLibUInt64Array;
-      xOff: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32): UInt64;
-      static; inline;
+      xOff: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32)
+      : UInt64; static;
 
     class function ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32): UInt32; overload; static; inline;
+      bits: Int32; c: UInt32): UInt32; overload; static;
 
     class function ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static; inline;
+      zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static;
 
     class function ShiftUpBits64(len: Int32; z: TCryptoLibUInt64Array;
-      zOff: Int32; bits: Int32; c: UInt64): UInt64; overload; static; inline;
+      zOff: Int32; bits: Int32; c: UInt64): UInt64; overload; static;
 
     class function ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32; overload;
-      static; inline;
+      bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32;
+      overload; static;
 
     class function ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
       xOff: Int32; bits: Int32; c: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static; inline;
+      zOff: Int32): UInt32; overload; static;
 
     class function ShiftUpBits64(len: Int32; x: TCryptoLibUInt64Array;
       xOff, bits: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32)
-      : UInt64; overload; static; inline;
+      : UInt64; overload; static;
 
     class procedure Square(len: Int32; x, zz: TCryptoLibUInt32Array);
       overload; static;
@@ -243,69 +238,69 @@ type
       zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
 
     class function SquareWordAdd(x: TCryptoLibUInt32Array; xPos: Int32;
-      z: TCryptoLibUInt32Array): UInt32; overload; static; inline;
+      z: TCryptoLibUInt32Array): UInt32; overload; static;
 
     class function SquareWordAdd(x: TCryptoLibUInt32Array; xOff, xPos: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static; inline;
+      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
     class function Sub(len: Int32; x, y, z: TCryptoLibUInt32Array): Int32;
-      overload; static; inline;
+      overload; static;
 
     class function Sub(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
       y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static; inline;
+      zOff: Int32): Int32; overload; static;
 
     class function Sub33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): Int32; overload; static; inline;
+      zPos: Int32): Int32; overload; static;
 
     class function Sub33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static; inline;
+      zOff, zPos: Int32): Int32; overload; static;
 
     class function Sub33From(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
-      : Int32; overload; static; inline;
+      : Int32; overload; static;
 
     class function Sub33From(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static; inline;
+      zOff: Int32): Int32; overload; static;
 
     class function SubBothFrom(len: Int32; x, y, z: TCryptoLibUInt32Array)
-      : Int32; overload; static; inline;
+      : Int32; overload; static;
 
     class function SubBothFrom(len: Int32; x: TCryptoLibUInt32Array;
       xOff: Int32; y: TCryptoLibUInt32Array; yOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static; inline;
+      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
 
     class function SubDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zPos: Int32): Int32; overload; static; inline;
+      zPos: Int32): Int32; overload; static;
 
     class function SubDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static; inline;
+      zOff, zPos: Int32): Int32; overload; static;
 
     class function SubDWordFrom(len: Int32; x: UInt64; z: TCryptoLibUInt32Array)
-      : Int32; overload; static; inline;
+      : Int32; overload; static;
 
     class function SubDWordFrom(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static; inline;
+      zOff: Int32): Int32; overload; static;
 
     class function SubFrom(len: Int32; x, z: TCryptoLibUInt32Array): Int32;
-      overload; static; inline;
+      overload; static;
 
     class function SubFrom(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static; inline;
+      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
 
     class function SubWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): Int32; overload; static; inline;
+      zPos: Int32): Int32; overload; static;
 
     class function SubWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static; inline;
+      zOff, zPos: Int32): Int32; overload; static;
 
     class function SubWordFrom(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
-      : Int32; overload; static; inline;
+      : Int32; overload; static;
 
     class function SubWordFrom(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static; inline;
+      zOff: Int32): Int32; overload; static;
 
     class function ToBigInteger(len: Int32; x: TCryptoLibUInt32Array)
-      : TBigInteger; static; inline;
+      : TBigInteger; static;
 
     class procedure Zero(len: Int32; z: TCryptoLibUInt32Array); static; inline;
 
