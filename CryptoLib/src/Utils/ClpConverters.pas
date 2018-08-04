@@ -22,15 +22,9 @@ unit ClpConverters;
 interface
 
 uses
-{$IFDEF HAS_UNITSCOPE}
-  System.Classes,
-  System.StrUtils,
-  System.SysUtils,
-{$ELSE}
   Classes,
   StrUtils,
   SysUtils,
-{$ENDIF HAS_UNITSCOPE}
   ClpCryptoLibTypes,
   ClpBits,
   ClpBitConverter;
