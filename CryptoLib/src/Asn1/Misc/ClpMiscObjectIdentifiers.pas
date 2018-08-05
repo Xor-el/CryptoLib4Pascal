@@ -30,9 +30,10 @@ type
 
   strict private
 
-    class var
+  class var
 
-      Fblake2, Fid_blake2b160, Fid_blake2b256, Fid_blake2b384, Fid_blake2b512,
+    FIsBooted: Boolean;
+    Fblake2, Fid_blake2b160, Fid_blake2b256, Fid_blake2b384, Fid_blake2b512,
       Fid_blake2s128, Fid_blake2s160, Fid_blake2s224, Fid_blake2s256
       : IDerObjectIdentifier;
 
@@ -119,20 +120,26 @@ end;
 
 class procedure TMiscObjectIdentifiers.Boot;
 begin
-  //
-  // Blake2b and Blake2s
-  //
-  Fblake2 := TDerObjectIdentifier.Create('1.3.6.1.4.1.1722.12.2');
 
-  Fid_blake2b160 := blake2.Branch('1.5');
-  Fid_blake2b256 := blake2.Branch('1.8');
-  Fid_blake2b384 := blake2.Branch('1.12');
-  Fid_blake2b512 := blake2.Branch('1.16');
+  if not FIsBooted then
+  begin
+    //
+    // Blake2b and Blake2s
+    //
+    Fblake2 := TDerObjectIdentifier.Create('1.3.6.1.4.1.1722.12.2');
 
-  Fid_blake2s128 := blake2.Branch('2.4');
-  Fid_blake2s160 := blake2.Branch('2.5');
-  Fid_blake2s224 := blake2.Branch('2.7');
-  Fid_blake2s256 := blake2.Branch('2.8');
+    Fid_blake2b160 := blake2.Branch('1.5');
+    Fid_blake2b256 := blake2.Branch('1.8');
+    Fid_blake2b384 := blake2.Branch('1.12');
+    Fid_blake2b512 := blake2.Branch('1.16');
+
+    Fid_blake2s128 := blake2.Branch('2.4');
+    Fid_blake2s160 := blake2.Branch('2.5');
+    Fid_blake2s224 := blake2.Branch('2.7');
+    Fid_blake2s256 := blake2.Branch('2.8');
+
+    FIsBooted := True;
+  end;
 end;
 
 class constructor TMiscObjectIdentifiers.MiscObjectIdentifiers;

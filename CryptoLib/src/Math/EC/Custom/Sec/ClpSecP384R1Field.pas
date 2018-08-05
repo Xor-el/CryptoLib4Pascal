@@ -46,7 +46,7 @@ type
     class procedure AddPInvTo(z: TCryptoLibUInt32Array); static;
     class procedure SubPInvFrom(z: TCryptoLibUInt32Array); static;
 
-    class constructor CreateSecP384R1Field();
+    class constructor SecP384R1Field();
 
   public
     class procedure Add(x, y, z: TCryptoLibUInt32Array); static; inline;
@@ -74,7 +74,7 @@ implementation
 
 { TSecP384R1Field }
 
-class constructor TSecP384R1Field.CreateSecP384R1Field;
+class constructor TSecP384R1Field.SecP384R1Field;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000000, $00000000, $FFFFFFFF,
     $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,

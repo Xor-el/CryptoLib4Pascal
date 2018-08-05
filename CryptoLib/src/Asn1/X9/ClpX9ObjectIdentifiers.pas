@@ -39,9 +39,10 @@ type
 
     AnsiX962: String = '1.2.840.10045';
 
-    class var
+  class var
 
-      Fansi_X9_62, FIdFieldType, FPrimeField, FCharacteristicTwoField, FGNBasis,
+    FIsBooted: Boolean;
+    Fansi_X9_62, FIdFieldType, FPrimeField, FCharacteristicTwoField, FGNBasis,
       FTPBasis, FPPBasis, Fid_ecSigType, FECDsaWithSha1, Fid_publicKeyType,
       FIdECPublicKey, FECDsaWithSha2, FECDsaWithSha224, FECDsaWithSha256,
       FECDsaWithSha384, FECDsaWithSha512, FEllipticCurve, FPrimeCurve,
@@ -270,63 +271,68 @@ end;
 
 class procedure TX9ObjectIdentifiers.Boot;
 begin
-  Fansi_X9_62 := TDerObjectIdentifier.Create(AnsiX962);
+  if not FIsBooted then
+  begin
+    Fansi_X9_62 := TDerObjectIdentifier.Create(AnsiX962);
 
-  FIdFieldType := ansi_X9_62.Branch('1');
+    FIdFieldType := ansi_X9_62.Branch('1');
 
-  FPrimeField := IdFieldType.Branch('1');
+    FPrimeField := IdFieldType.Branch('1');
 
-  FCharacteristicTwoField := IdFieldType.Branch('2');
+    FCharacteristicTwoField := IdFieldType.Branch('2');
 
-  FGNBasis := CharacteristicTwoField.Branch('3.1');
-  FTPBasis := CharacteristicTwoField.Branch('3.2');
-  FPPBasis := CharacteristicTwoField.Branch('3.3');
+    FGNBasis := CharacteristicTwoField.Branch('3.1');
+    FTPBasis := CharacteristicTwoField.Branch('3.2');
+    FPPBasis := CharacteristicTwoField.Branch('3.3');
 
-  Fid_ecSigType := ansi_X9_62.Branch('4');
-  //
-  FECDsaWithSha1 := id_ecSigType.Branch('1');
+    Fid_ecSigType := ansi_X9_62.Branch('4');
+    //
+    FECDsaWithSha1 := id_ecSigType.Branch('1');
 
-  Fid_publicKeyType := ansi_X9_62.Branch('2');
+    Fid_publicKeyType := ansi_X9_62.Branch('2');
 
-  FIdECPublicKey := id_publicKeyType.Branch('1');
+    FIdECPublicKey := id_publicKeyType.Branch('1');
 
-  FECDsaWithSha2 := id_ecSigType.Branch('3');
+    FECDsaWithSha2 := id_ecSigType.Branch('3');
 
-  FECDsaWithSha224 := ECDsaWithSha2.Branch('1');
-  FECDsaWithSha256 := ECDsaWithSha2.Branch('2');
-  FECDsaWithSha384 := ECDsaWithSha2.Branch('3');
-  FECDsaWithSha512 := ECDsaWithSha2.Branch('4');
-  //
-  //
-  // named curves
-  //
-  FEllipticCurve := ansi_X9_62.Branch('3');
+    FECDsaWithSha224 := ECDsaWithSha2.Branch('1');
+    FECDsaWithSha256 := ECDsaWithSha2.Branch('2');
+    FECDsaWithSha384 := ECDsaWithSha2.Branch('3');
+    FECDsaWithSha512 := ECDsaWithSha2.Branch('4');
+    //
+    //
+    // named curves
+    //
+    FEllipticCurve := ansi_X9_62.Branch('3');
 
-  //
-  // Prime
-  //
-  FPrimeCurve := EllipticCurve.Branch('1');
+    //
+    // Prime
+    //
+    FPrimeCurve := EllipticCurve.Branch('1');
 
-  FPrime192v1 := PrimeCurve.Branch('1');
-  FPrime192v2 := PrimeCurve.Branch('2');
-  FPrime192v3 := PrimeCurve.Branch('3');
-  FPrime239v1 := PrimeCurve.Branch('4');
-  FPrime239v2 := PrimeCurve.Branch('5');
-  FPrime239v3 := PrimeCurve.Branch('6');
-  FPrime256v1 := PrimeCurve.Branch('7');
+    FPrime192v1 := PrimeCurve.Branch('1');
+    FPrime192v2 := PrimeCurve.Branch('2');
+    FPrime192v3 := PrimeCurve.Branch('3');
+    FPrime239v1 := PrimeCurve.Branch('4');
+    FPrime239v2 := PrimeCurve.Branch('5');
+    FPrime239v3 := PrimeCurve.Branch('6');
+    FPrime256v1 := PrimeCurve.Branch('7');
 
-  //
-  // DSA
-  //
-  // dsapublicnumber OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-  // us(840) ansi-x957(10040) number-type(4) 1 }
-  FIdDsa := TDerObjectIdentifier.Create('1.2.840.10040.4.1');
+    //
+    // DSA
+    //
+    // dsapublicnumber OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+    // us(840) ansi-x957(10040) number-type(4) 1 }
+    FIdDsa := TDerObjectIdentifier.Create('1.2.840.10040.4.1');
 
-  // /**
-  // *   id-dsa-with-sha1 OBJECT IDENTIFIER ::=  { iso(1) member-body(2)
-  // *         us(840) x9-57 (10040) x9cm(4) 3 }
-  // */
-  FIdDsaWithSha1 := TDerObjectIdentifier.Create('1.2.840.10040.4.3');
+    // /**
+    // *   id-dsa-with-sha1 OBJECT IDENTIFIER ::=  { iso(1) member-body(2)
+    // *         us(840) x9-57 (10040) x9cm(4) 3 }
+    // */
+    FIdDsaWithSha1 := TDerObjectIdentifier.Create('1.2.840.10040.4.3');
+
+    FIsBooted := True;
+  end;
 
 end;
 

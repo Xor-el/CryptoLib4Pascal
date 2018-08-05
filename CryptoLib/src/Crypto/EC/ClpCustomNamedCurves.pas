@@ -55,6 +55,7 @@ type
 
   class var
 
+    FIsBooted: Boolean;
     FnameToCurve: TDictionary<String, IX9ECParametersHolder>;
     FnameToOid: TDictionary<String, IDerObjectIdentifier>;
     FoidToCurve: TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>;
@@ -111,6 +112,8 @@ type
     // * contained in this structure.
     // */
     class property Names: TCryptoLibStringArray read GetNames;
+
+    class procedure Boot(); static;
 
   type
 
@@ -207,6 +210,7 @@ end;
 // FnameToCurve.Add(LName, curve);
 // end;
 //
+
 class function TCustomNamedCurves.ConfigureCurve(const curve: IECCurve)
   : IECCurve;
 begin
@@ -277,23 +281,7 @@ end;
 
 class constructor TCustomNamedCurves.CreateSecNamedCurves;
 begin
-  FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create();
-  FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create();
-  FoidToCurve := TDictionary<IDerObjectIdentifier,
-    IX9ECParametersHolder>.Create();
-  FoidToName := TDictionary<IDerObjectIdentifier, String>.Create();
-
-  Fnames := TList<String>.Create();
-
-  DefineCurveWithOid('secp256k1', TSecObjectIdentifiers.SecP256k1,
-    TSecP256K1Holder.Instance);
-
-  DefineCurveWithOid('secp384r1', TSecObjectIdentifiers.SecP384r1,
-    TSecP384R1Holder.Instance);
-
-  DefineCurveWithOid('secp521r1', TSecObjectIdentifiers.SecP521r1,
-    TSecP521R1Holder.Instance);
-
+  TCustomNamedCurves.Boot;
 end;
 
 class destructor TCustomNamedCurves.DestroySecNamedCurves;
@@ -303,6 +291,31 @@ begin
   FoidToCurve.Free;
   FoidToName.Free;
   Fnames.Free;
+end;
+
+class procedure TCustomNamedCurves.Boot;
+begin
+  if not FIsBooted then
+  begin
+    FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create();
+    FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create();
+    FoidToCurve := TDictionary<IDerObjectIdentifier,
+      IX9ECParametersHolder>.Create();
+    FoidToName := TDictionary<IDerObjectIdentifier, String>.Create();
+
+    Fnames := TList<String>.Create();
+
+    DefineCurveWithOid('secp256k1', TSecObjectIdentifiers.SecP256k1,
+      TSecP256K1Holder.Instance);
+
+    DefineCurveWithOid('secp384r1', TSecObjectIdentifiers.SecP384r1,
+      TSecP384R1Holder.Instance);
+
+    DefineCurveWithOid('secp521r1', TSecObjectIdentifiers.SecP521r1,
+      TSecP521R1Holder.Instance);
+
+    FIsBooted := True;
+  end;
 end;
 
 { TCustomNamedCurves.TSecP256K1Holder }

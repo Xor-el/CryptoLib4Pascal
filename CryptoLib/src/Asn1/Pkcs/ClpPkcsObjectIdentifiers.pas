@@ -36,9 +36,10 @@ type
     //
     DigestAlgorithm: String = '1.2.840.113549.2';
 
-    class var
+  class var
 
-      FMD2, FMD4, FMD5, FIdHmacWithSha1, FIdHmacWithSha224, FIdHmacWithSha256,
+    FIsBooted: Boolean;
+    FMD2, FMD4, FMD5, FIdHmacWithSha1, FIdHmacWithSha224, FIdHmacWithSha256,
       FIdHmacWithSha384, FIdHmacWithSha512: IDerObjectIdentifier;
 
     class function GetMD2: IDerObjectIdentifier; static; inline;
@@ -91,14 +92,19 @@ implementation
 
 class procedure TPkcsObjectIdentifiers.Boot;
 begin
-  FMD2 := TDerObjectIdentifier.Create(DigestAlgorithm + '.2');
-  FMD4 := TDerObjectIdentifier.Create(DigestAlgorithm + '.4');
-  FMD5 := TDerObjectIdentifier.Create(DigestAlgorithm + '.5');
-  FIdHmacWithSha1 := TDerObjectIdentifier.Create(DigestAlgorithm + '.7');
-  FIdHmacWithSha224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.8');
-  FIdHmacWithSha256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.9');
-  FIdHmacWithSha384 := TDerObjectIdentifier.Create(DigestAlgorithm + '.10');
-  FIdHmacWithSha512 := TDerObjectIdentifier.Create(DigestAlgorithm + '.11');
+  if not FIsBooted then
+  begin
+    FMD2 := TDerObjectIdentifier.Create(DigestAlgorithm + '.2');
+    FMD4 := TDerObjectIdentifier.Create(DigestAlgorithm + '.4');
+    FMD5 := TDerObjectIdentifier.Create(DigestAlgorithm + '.5');
+    FIdHmacWithSha1 := TDerObjectIdentifier.Create(DigestAlgorithm + '.7');
+    FIdHmacWithSha224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.8');
+    FIdHmacWithSha256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.9');
+    FIdHmacWithSha384 := TDerObjectIdentifier.Create(DigestAlgorithm + '.10');
+    FIdHmacWithSha512 := TDerObjectIdentifier.Create(DigestAlgorithm + '.11');
+
+    FIsBooted := True;
+  end;
 end;
 
 class function TPkcsObjectIdentifiers.GetIdHmacWithSha1: IDerObjectIdentifier;

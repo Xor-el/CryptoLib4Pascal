@@ -43,7 +43,7 @@ type
 
     class function GetP: TCryptoLibUInt32Array; static; inline;
 
-    class constructor CreateSecP256K1Field();
+    class constructor SecP256K1Field();
 
   public
     class procedure Add(x, y, z: TCryptoLibUInt32Array); static; inline;
@@ -74,7 +74,7 @@ implementation
 
 { TSecP256K1Field }
 
-class constructor TSecP256K1Field.CreateSecP256K1Field;
+class constructor TSecP256K1Field.SecP256K1Field;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFC2F, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF,
     $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);

@@ -41,7 +41,7 @@ type
 
     class function GetP: TCryptoLibUInt32Array; static; inline;
 
-    class constructor CreateSecP521R1Field();
+    class constructor SecP521R1Field();
 
   strict protected
     class procedure ImplMultiply(x, y, zz: TCryptoLibUInt32Array);
@@ -71,7 +71,7 @@ implementation
 
 { TSecP521R1Field }
 
-class constructor TSecP521R1Field.CreateSecP521R1Field;
+class constructor TSecP521R1Field.SecP521R1Field;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
     $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,

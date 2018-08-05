@@ -131,7 +131,7 @@ type
 
     class function Inv_Mcol(x: UInt32): UInt32; static; inline;
     class function SubWord(x: UInt32): UInt32; static; inline;
-    class constructor CreateAesEngine();
+    class constructor AesEngine();
 
   public
 
@@ -289,7 +289,7 @@ begin
 
 end;
 
-class constructor TAesEngine.CreateAesEngine;
+class constructor TAesEngine.AesEngine;
 begin
   TAesEngine.Boot;
 end;

@@ -41,7 +41,7 @@ type
 
     class function GetEmptyBuffer: TCryptoLibByteArray; static; inline;
 
-    class constructor CreateBufferedCipherBase();
+    class constructor BufferedCipherBase();
 
   strict protected
 
@@ -104,7 +104,7 @@ implementation
 
 { TBufferedCipherBase }
 
-class constructor TBufferedCipherBase.CreateBufferedCipherBase;
+class constructor TBufferedCipherBase.BufferedCipherBase;
 begin
   System.SetLength(FEmptyBuffer, 0);
 end;

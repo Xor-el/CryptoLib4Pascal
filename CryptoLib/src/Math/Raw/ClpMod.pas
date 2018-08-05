@@ -231,7 +231,7 @@ end;
 
 class constructor TMod.&Mod;
 begin
-  // TSecureRandom.Boot;
+  TSecureRandom.Boot;
   FRandomSource := TSecureRandom.Create();
 end;
 

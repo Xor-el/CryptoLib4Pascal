@@ -170,7 +170,7 @@ begin
   FkpgAlgorithms := TDictionary<String, String>.Create();
   FdefaultKeySizes := TDictionary<String, Int32>.Create();
 
- // TNistObjectIdentifiers.Boot;
+  TNistObjectIdentifiers.Boot;
 
   //
   // key generators.
@@ -197,13 +197,13 @@ begin
   //
   // HMac key generators
   //
- // TIanaObjectIdentifiers.Boot;
+  TIanaObjectIdentifiers.Boot;
 
   AddHMacKeyGenerator('MD2', []);
   AddHMacKeyGenerator('MD4', []);
   AddHMacKeyGenerator('MD5', [TIanaObjectIdentifiers.HmacMD5.ID]);
 
- // TPkcsObjectIdentifiers.Boot;
+  TPkcsObjectIdentifiers.Boot;
 
   AddHMacKeyGenerator('SHA1', [TPkcsObjectIdentifiers.IdHmacWithSha1.ID,
     TIanaObjectIdentifiers.HmacSha1.ID]);
@@ -226,7 +226,7 @@ begin
   AddHMacKeyGenerator('RIPEMD160', [TIanaObjectIdentifiers.HmacRipeMD160.ID]);
   AddHMacKeyGenerator('TIGER', [TIanaObjectIdentifiers.HmacTiger.ID]);
 
- // TRosstandartObjectIdentifiers.Boot;
+  TRosstandartObjectIdentifiers.Boot;
 
   AddHMacKeyGenerator('GOST3411-2012-256',
     [TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.ID]);

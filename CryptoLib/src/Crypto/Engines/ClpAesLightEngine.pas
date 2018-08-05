@@ -131,7 +131,7 @@ type
     class function Mcol(x: UInt32): UInt32; static; inline;
     class function Inv_Mcol(x: UInt32): UInt32; static; inline;
     class function SubWord(x: UInt32): UInt32; static; inline;
-    class constructor CreateAesLightEngine();
+    class constructor AesLightEngine();
 
   public
     /// <summary>
@@ -209,7 +209,7 @@ begin
     $D4, $B3, $7D, $FA, $EF, $C5, $91);
 end;
 
-class constructor TAesLightEngine.CreateAesLightEngine;
+class constructor TAesLightEngine.AesLightEngine;
 begin
   TAesLightEngine.Boot;
 end;

@@ -107,7 +107,7 @@ begin
   Falgorithms := TDictionary<String, String>.Create();
   FbasicIVSizes := TDictionary<string, Integer>.Create();
 
- // TNistObjectIdentifiers.Boot;
+  TNistObjectIdentifiers.Boot;
 
   AddAlgorithm('AES', []);
   AddAlgorithm('AES128', ['2.16.840.1.101.3.4.2',

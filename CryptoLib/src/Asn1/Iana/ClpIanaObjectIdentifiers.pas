@@ -34,9 +34,9 @@ type
     // {iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) ipsec(8) isakmpOakley(1)}
     //
 
-    class var
-
-      FIsakmpOakley, FHmacMD5, FHmacSha1, FHmacTiger, FHmacRipeMD160
+  class var
+    FIsBooted: Boolean;
+    FIsakmpOakley, FHmacMD5, FHmacSha1, FHmacTiger, FHmacRipeMD160
       : IDerObjectIdentifier;
 
     class function GetIsakmpOakley: IDerObjectIdentifier; static; inline;
@@ -95,14 +95,20 @@ end;
 
 class procedure TIanaObjectIdentifiers.Boot;
 begin
-  FIsakmpOakley := TDerObjectIdentifier.Create('1.3.6.1.5.5.8.1');
+  if not FIsBooted then
+  begin
 
-  FHmacMD5 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.1');
-  FHmacSha1 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.2');
+    FIsakmpOakley := TDerObjectIdentifier.Create('1.3.6.1.5.5.8.1');
 
-  FHmacTiger := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.3');
+    FHmacMD5 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.1');
+    FHmacSha1 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.2');
 
-  FHmacRipeMD160 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.4');
+    FHmacTiger := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.3');
+
+    FHmacRipeMD160 := TDerObjectIdentifier.Create(IsakmpOakley.ID + '.4');
+
+    FIsBooted := True;
+  end;
 end;
 
 class constructor TIanaObjectIdentifiers.IanaObjectIdentifiers;

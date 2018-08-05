@@ -36,15 +36,15 @@ type
 
   strict private
 
-    class var
+  class var
 
-      FSecT193r1, FSecP112r2, FEllipticCurve, FSecP224r1, FSecP160r2,
-      FSecT233r1, FSecP112r1, FSecT409r1, FSecP192k1, FSecT131r2, FSecT283k1,
-      FSecT113r2, FSecT163r2, FSecP160r1, FSecT239k1, FSecP521r1, FSecP256r1,
-      FSecT131r1, FSecT113r1, FSecT163r1, FSecP224k1, FSecT233k1, FSecT409k1,
-      FSecP160k1, FSecT571r1, FSecP256k1, FSecT163k1, FSecP128r2, FSecT571k1,
-      FSecP128r1, FSecP192r1, FSecT283r1, FSecT193r2,
-      FSecP384r1: IDerObjectIdentifier;
+    FIsBooted: Boolean;
+    FSecT193r1, FSecP112r2, FEllipticCurve, FSecP224r1, FSecP160r2, FSecT233r1,
+      FSecP112r1, FSecT409r1, FSecP192k1, FSecT131r2, FSecT283k1, FSecT113r2,
+      FSecT163r2, FSecP160r1, FSecT239k1, FSecP521r1, FSecP256r1, FSecT131r1,
+      FSecT113r1, FSecT163r1, FSecP224k1, FSecT233k1, FSecT409k1, FSecP160k1,
+      FSecT571r1, FSecP256k1, FSecT163k1, FSecP128r2, FSecT571k1, FSecP128r1,
+      FSecP192r1, FSecT283r1, FSecT193r2, FSecP384r1: IDerObjectIdentifier;
 
     class constructor SecObjectIdentifiers();
 
@@ -302,45 +302,52 @@ end;
 
 class procedure TSecObjectIdentifiers.Boot;
 begin
-  FEllipticCurve := TDerObjectIdentifier.Create('1.3.132.0');
 
-  FSecT163k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.1');
-  FSecT163r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.2');
-  FSecT239k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.3');
-  FSecT113r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.4');
-  FSecT113r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.5');
-  FSecP112r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.6');
-  FSecP112r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.7');
-  FSecP160r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.8');
-  FSecP160k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.9');
-  FSecP256k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.10');
-  FSecT163r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.15');
-  FSecT283k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.16');
-  FSecT283r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.17');
-  FSecT131r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.22');
-  FSecT131r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.23');
-  FSecT193r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.24');
-  FSecT193r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.25');
-  FSecT233k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.26');
-  FSecT233r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.27');
-  FSecP128r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.28');
-  FSecP128r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.29');
-  FSecP160r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.30');
-  FSecP192k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.31');
-  FSecP224k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.32');
-  FSecP224r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.33');
-  FSecP384r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.34');
-  FSecP521r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.35');
-  FSecT409k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.36');
-  FSecT409r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.37');
-  FSecT571k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.38');
-  FSecT571r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.39');
+  if not FIsBooted then
+  begin
 
- // TX9ObjectIdentifiers.Boot;
+    FEllipticCurve := TDerObjectIdentifier.Create('1.3.132.0');
 
-  FSecP192r1 := TX9ObjectIdentifiers.Prime192v1;
+    FSecT163k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.1');
+    FSecT163r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.2');
+    FSecT239k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.3');
+    FSecT113r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.4');
+    FSecT113r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.5');
+    FSecP112r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.6');
+    FSecP112r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.7');
+    FSecP160r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.8');
+    FSecP160k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.9');
+    FSecP256k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.10');
+    FSecT163r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.15');
+    FSecT283k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.16');
+    FSecT283r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.17');
+    FSecT131r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.22');
+    FSecT131r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.23');
+    FSecT193r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.24');
+    FSecT193r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.25');
+    FSecT233k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.26');
+    FSecT233r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.27');
+    FSecP128r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.28');
+    FSecP128r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.29');
+    FSecP160r2 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.30');
+    FSecP192k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.31');
+    FSecP224k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.32');
+    FSecP224r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.33');
+    FSecP384r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.34');
+    FSecP521r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.35');
+    FSecT409k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.36');
+    FSecT409r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.37');
+    FSecT571k1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.38');
+    FSecT571r1 := TDerObjectIdentifier.Create(EllipticCurve.Id + '.39');
 
-  FSecP256r1 := TX9ObjectIdentifiers.Prime256v1;
+    TX9ObjectIdentifiers.Boot;
+
+    FSecP192r1 := TX9ObjectIdentifiers.Prime192v1;
+
+    FSecP256r1 := TX9ObjectIdentifiers.Prime256v1;
+
+    FIsBooted := True;
+  end;
 
 end;
 

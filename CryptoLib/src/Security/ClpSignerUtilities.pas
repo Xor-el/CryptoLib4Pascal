@@ -108,11 +108,11 @@ begin
   Falgorithms := TDictionary<String, String>.Create();
   Foids := TDictionary<String, IDerObjectIdentifier>.Create();
 
- // TX9ObjectIdentifiers.Boot;
- // TOiwObjectIdentifiers.Boot;
- // TNistObjectIdentifiers.Boot;
- // TTeleTrusTObjectIdentifiers.Boot;
- // TCryptoProObjectIdentifiers.Boot;
+  TX9ObjectIdentifiers.Boot;
+  TOiwObjectIdentifiers.Boot;
+  TNistObjectIdentifiers.Boot;
+  TTeleTrusTObjectIdentifiers.Boot;
+  TCryptoProObjectIdentifiers.Boot;
 
   Falgorithms.Add('NONEWITHDSA', 'NONEwithDSA');
   Falgorithms.Add('DSAWITHNONE', 'NONEwithDSA');
@@ -213,11 +213,11 @@ begin
   Falgorithms.Add(TTeleTrusTObjectIdentifiers.ECSignWithRipeMD160.id,
     'RIPEMD160withECDSA');
 
-//   Falgorithms.Add('GOST-3410', 'GOST3410');
-//   Falgorithms.Add('GOST-3410-94', 'GOST3410');
-//   Falgorithms.Add('GOST3411WITHGOST3410', 'GOST3410');
-//   Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94.id,
-//   'GOST3410');
+  // Falgorithms.Add('GOST-3410', 'GOST3410');
+  // Falgorithms.Add('GOST-3410-94', 'GOST3410');
+  // Falgorithms.Add('GOST3411WITHGOST3410', 'GOST3410');
+  // Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94.id,
+  // 'GOST3410');
 
   // Falgorithms.Add('ECGOST-3410', 'ECGOST3410');
   // Falgorithms.Add('ECGOST-3410-2001', 'ECGOST3410');

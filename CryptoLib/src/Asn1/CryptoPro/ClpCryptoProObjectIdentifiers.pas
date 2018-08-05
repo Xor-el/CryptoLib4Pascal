@@ -35,9 +35,10 @@ type
     // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2)}
     GostID: String = '1.2.643.2.2';
 
-    class var
+  class var
 
-      FGostR3411, FGostR3410x2001, FGostR3410x94, FGostR28147Cbc,
+    FIsBooted: Boolean;
+    FGostR3411, FGostR3410x2001, FGostR3410x94, FGostR28147Cbc,
       FID_Gost28147_89_CryptoPro_A_ParamSet, FGostR3411x94CryptoProParam,
       FGostR3411Hmac, FGostR3410x2001CryptoProA, FGostElSgDH3410Default,
       FGostR3410x94CryptoProXchB, FGostR3410x94CryptoProXchC,
@@ -303,45 +304,53 @@ end;
 
 class procedure TCryptoProObjectIdentifiers.Boot;
 begin
-  FGostR3411 := TDerObjectIdentifier.Create(GostID + '.9');
-  FGostR3411Hmac := TDerObjectIdentifier.Create(GostID + '.10');
+  if not FIsBooted then
+  begin
+    FGostR3411 := TDerObjectIdentifier.Create(GostID + '.9');
+    FGostR3411Hmac := TDerObjectIdentifier.Create(GostID + '.10');
 
-  FGostR28147Cbc := TDerObjectIdentifier.Create(GostID + '.21');
+    FGostR28147Cbc := TDerObjectIdentifier.Create(GostID + '.21');
 
-  FID_Gost28147_89_CryptoPro_A_ParamSet := TDerObjectIdentifier.Create
-    (GostID + '.31.1');
+    FID_Gost28147_89_CryptoPro_A_ParamSet := TDerObjectIdentifier.Create
+      (GostID + '.31.1');
 
-  FGostR3410x94 := TDerObjectIdentifier.Create(GostID + '.20');
-  FGostR3410x2001 := TDerObjectIdentifier.Create(GostID + '.19');
-  FGostR3411x94WithGostR3410x94 := TDerObjectIdentifier.Create(GostID + '.4');
-  FGostR3411x94WithGostR3410x2001 := TDerObjectIdentifier.Create(GostID + '.3');
+    FGostR3410x94 := TDerObjectIdentifier.Create(GostID + '.20');
+    FGostR3410x2001 := TDerObjectIdentifier.Create(GostID + '.19');
+    FGostR3411x94WithGostR3410x94 := TDerObjectIdentifier.Create(GostID + '.4');
+    FGostR3411x94WithGostR3410x2001 := TDerObjectIdentifier.Create
+      (GostID + '.3');
 
-  // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) hashes(30) }
-  FGostR3411x94CryptoProParamSet := TDerObjectIdentifier.Create
-    (GostID + '.30.1');
+    // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) hashes(30) }
+    FGostR3411x94CryptoProParamSet := TDerObjectIdentifier.Create
+      (GostID + '.30.1');
 
-  // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) signs(32) }
-  FGostR3410x94CryptoProA := TDerObjectIdentifier.Create(GostID + '.32.2');
-  FGostR3410x94CryptoProB := TDerObjectIdentifier.Create(GostID + '.32.3');
-  FGostR3410x94CryptoProC := TDerObjectIdentifier.Create(GostID + '.32.4');
-  FGostR3410x94CryptoProD := TDerObjectIdentifier.Create(GostID + '.32.5');
+    // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) signs(32) }
+    FGostR3410x94CryptoProA := TDerObjectIdentifier.Create(GostID + '.32.2');
+    FGostR3410x94CryptoProB := TDerObjectIdentifier.Create(GostID + '.32.3');
+    FGostR3410x94CryptoProC := TDerObjectIdentifier.Create(GostID + '.32.4');
+    FGostR3410x94CryptoProD := TDerObjectIdentifier.Create(GostID + '.32.5');
 
-  // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) exchanges(33) }
-  FGostR3410x94CryptoProXchA := TDerObjectIdentifier.Create(GostID + '.33.1');
-  FGostR3410x94CryptoProXchB := TDerObjectIdentifier.Create(GostID + '.33.2');
-  FGostR3410x94CryptoProXchC := TDerObjectIdentifier.Create(GostID + '.33.3');
+    // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) exchanges(33) }
+    FGostR3410x94CryptoProXchA := TDerObjectIdentifier.Create(GostID + '.33.1');
+    FGostR3410x94CryptoProXchB := TDerObjectIdentifier.Create(GostID + '.33.2');
+    FGostR3410x94CryptoProXchC := TDerObjectIdentifier.Create(GostID + '.33.3');
 
-  // { iso(1) member-body(2)ru(643) rans(2) cryptopro(2) ecc-signs(35) }
-  FGostR3410x2001CryptoProA := TDerObjectIdentifier.Create(GostID + '.35.1');
-  FGostR3410x2001CryptoProB := TDerObjectIdentifier.Create(GostID + '.35.2');
-  FGostR3410x2001CryptoProC := TDerObjectIdentifier.Create(GostID + '.35.3');
+    // { iso(1) member-body(2)ru(643) rans(2) cryptopro(2) ecc-signs(35) }
+    FGostR3410x2001CryptoProA := TDerObjectIdentifier.Create(GostID + '.35.1');
+    FGostR3410x2001CryptoProB := TDerObjectIdentifier.Create(GostID + '.35.2');
+    FGostR3410x2001CryptoProC := TDerObjectIdentifier.Create(GostID + '.35.3');
 
-  // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) ecc-exchanges(36) }
-  FGostR3410x2001CryptoProXchA := TDerObjectIdentifier.Create(GostID + '.36.0');
-  FGostR3410x2001CryptoProXchB := TDerObjectIdentifier.Create(GostID + '.36.1');
+    // { iso(1) member-body(2) ru(643) rans(2) cryptopro(2) ecc-exchanges(36) }
+    FGostR3410x2001CryptoProXchA := TDerObjectIdentifier.Create
+      (GostID + '.36.0');
+    FGostR3410x2001CryptoProXchB := TDerObjectIdentifier.Create
+      (GostID + '.36.1');
 
-  FGostElSgDH3410Default := TDerObjectIdentifier.Create(GostID + '.36.0');
-  FGostElSgDH3410x1 := TDerObjectIdentifier.Create(GostID + '.36.1');
+    FGostElSgDH3410Default := TDerObjectIdentifier.Create(GostID + '.36.0');
+    FGostElSgDH3410x1 := TDerObjectIdentifier.Create(GostID + '.36.1');
+
+    FIsBooted := True;
+  end;
 end;
 
 class constructor TCryptoProObjectIdentifiers.CryptoProObjectIdentifiers;
