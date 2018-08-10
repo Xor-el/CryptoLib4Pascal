@@ -411,7 +411,6 @@ var
   S: TCryptoLibByteArray;
   curve: IECCurve;
   G: IX9ECPoint;
-  r: IECPoint;
 begin
   S := THex.Decode('D09E8800291CB85396CC6717393284AAA0DA64BA');
   curve := ConfigureCurve(TSecP521R1Curve.Create() as ISecP521R1Curve);

@@ -82,7 +82,7 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpArrayUtils,
   ClpHex,
-  ClpSecNamedCurves,
+  // ClpSecNamedCurves,
   ClpCustomNamedCurves;
 
 type
@@ -377,7 +377,8 @@ begin
   System.Assert(PayloadToEncodeBytes <> Nil,
     'PayloadToDecodeBytes Cannot be Nil');
 
-  Lcurve := TSecNamedCurves.GetByName(ACurveName);
+  // Lcurve := TSecNamedCurves.GetByName(ACurveName);
+  Lcurve := TCustomNamedCurves.GetByName(ACurveName);
   System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
 
   // Set Up Asymmetric Key Pair from known public key ByteArray
@@ -439,7 +440,8 @@ begin
   System.Assert(PayloadToDecodeBytes <> Nil,
     'PayloadToDecodeBytes Cannot be Nil');
 
-  Lcurve := TSecNamedCurves.GetByName(ACurveName);
+  // Lcurve := TSecNamedCurves.GetByName(ACurveName);
+  Lcurve := TCustomNamedCurves.GetByName(ACurveName);
   System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
 
   // Set Up Asymmetric Key Pair from known private key ByteArray
@@ -688,7 +690,8 @@ const
 begin
   // Full Generation Method
 
-  Lcurve := TSecNamedCurves.GetByName(CurveName);
+  // Lcurve := TSecNamedCurves.GetByName(CurveName);
+  Lcurve := TCustomNamedCurves.GetByName(CurveName);
   KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
   domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
     Lcurve.H, Lcurve.GetSeed);
@@ -981,6 +984,7 @@ end;
 class constructor TUsageExamples.UsageExamples;
 begin
   FRandom := TSecureRandom.Create();
+  // FCurve := TSecNamedCurves.GetByName(CurveName);
   FCurve := TCustomNamedCurves.GetByName(CurveName);
 end;
 
