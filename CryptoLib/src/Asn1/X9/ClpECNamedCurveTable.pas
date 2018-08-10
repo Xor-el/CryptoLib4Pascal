@@ -28,6 +28,7 @@ uses
   // ClpECGost3410NamedCurves,
   // ClpX9ECParameters,
   ClpSecNamedCurves,
+  ClpNistNamedCurves,
   // ClpIECDomainParameters,
   ClpIDerObjectIdentifier,
   ClpIX9ECParameters;
@@ -112,6 +113,11 @@ begin
   ecP := TSecNamedCurves.GetByName(name);
   // end;
 
+  if (ecP = Nil) then
+  begin
+    ecP := TNistNamedCurves.GetByName(name);
+  end;
+
   result := ecP;
 end;
 
@@ -125,6 +131,7 @@ begin
   // begin
   ecP := TSecNamedCurves.GetByOid(oid);
   // end;
+  // NOTE: All the NIST curves are currently from SEC, so no point in redundant OID lookup
   result := ecP;
 end;
 
@@ -134,26 +141,16 @@ var
   name: String;
 begin
   // name := TX962NamedCurves.GetName(oid);
-  // if (name = Nil) then
+  // if (name = '') then
   // begin
   name := TSecNamedCurves.GetName(oid);
   // end;
-  result := name;
-end;
 
-class function TECNamedCurveTable.GetNames: TCryptoLibStringArray;
-var
-  temp: TList<String>;
-begin
-  temp := TList<String>.Create();
-  try
-    temp.AddRange(TSecNamedCurves.Names);
-    // temp.AddRange(TECGost3410NamedCurves.Names);
-    result := temp.ToArray;
-  finally
-    temp.Free;
+  if (name = '') then
+  begin
+    name := TNistNamedCurves.GetName(oid);
   end;
-
+  result := name;
 end;
 
 class function TECNamedCurveTable.GetOid(const name: String)
@@ -167,7 +164,27 @@ begin
   oid := TSecNamedCurves.GetOid(name);
   // end;
 
+  if (oid = Nil) then
+  begin
+    oid := TNistNamedCurves.GetOid(name);
+  end;
+
   result := oid;
+end;
+
+class function TECNamedCurveTable.GetNames: TCryptoLibStringArray;
+var
+  temp: TList<String>;
+begin
+  temp := TList<String>.Create();
+  try
+    temp.AddRange(TSecNamedCurves.Names);
+    temp.AddRange(TNistNamedCurves.Names);
+    result := temp.ToArray;
+  finally
+    temp.Free;
+  end;
+
 end;
 
 end.

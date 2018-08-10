@@ -37,7 +37,7 @@ uses
   ClpIECInterface,
   ClpIFixedPointCombMultiplier,
   ClpSecObjectIdentifiers,
-  // ClpCustomNamedCurves,
+  ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpX9ObjectIdentifiers,
   ClpIX9ECParameters,
@@ -119,11 +119,11 @@ var
 begin
   // TODO ECGost3410NamedCurves support (returns ECDomainParameters though)
 
-  // ecP := TCustomNamedCurves.GetByOid(oid);
-  // if (ecP = Nil) then
-  // begin
-  ecP := TECNamedCurveTable.GetByOid(oid);
-  // end;
+  ecP := TCustomNamedCurves.GetByOid(oid);
+  if (ecP = Nil) then
+  begin
+    ecP := TECNamedCurveTable.GetByOid(oid);
+  end;
 
   result := ecP;
 end;

@@ -294,8 +294,8 @@ type
     function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
 
     property FieldSize: Int32 read GetFieldSize;
-    function FromBigInteger(x: TBigInteger): IECFieldElement;
-    function IsValidFieldElement(x: TBigInteger): Boolean;
+    function FromBigInteger(const x: TBigInteger): IECFieldElement;
+    function IsValidFieldElement(const x: TBigInteger): Boolean;
 
     function Configure(): IConfig;
     function ValidatePoint(const x, y: TBigInteger): IECPoint; overload;

@@ -30,9 +30,10 @@ type
 
   strict private
 
-    class var
+  class var
 
-      FTeleTrusTAlgorithm, FRipeMD160, FRipeMD128, FRipeMD256, FECSign,
+    FIsBooted: Boolean;
+    FTeleTrusTAlgorithm, FRipeMD160, FRipeMD128, FRipeMD256, FECSign,
       FECSignWithSha1, FECSignWithRipeMD160: IDerObjectIdentifier;
 
     class function GetRipeMD128: IDerObjectIdentifier; static; inline;
@@ -105,15 +106,20 @@ end;
 
 class procedure TTeleTrusTObjectIdentifiers.Boot;
 begin
-  FTeleTrusTAlgorithm := TDerObjectIdentifier.Create('1.3.36.3');
-  FRipeMD160 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.1');
-  FRipeMD128 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.2');
-  FRipeMD256 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.3');
+  if not FIsBooted then
+  begin
+    FTeleTrusTAlgorithm := TDerObjectIdentifier.Create('1.3.36.3');
+    FRipeMD160 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.1');
+    FRipeMD128 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.2');
+    FRipeMD256 := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.2.3');
 
-  FECSign := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.3.2');
+    FECSign := TDerObjectIdentifier.Create(TeleTrusTAlgorithm.ID + '.3.2');
 
-  FECSignWithSha1 := TDerObjectIdentifier.Create(ECSign.ID + '.1');
-  FECSignWithRipeMD160 := TDerObjectIdentifier.Create(ECSign.ID + '.2');
+    FECSignWithSha1 := TDerObjectIdentifier.Create(ECSign.ID + '.1');
+    FECSignWithRipeMD160 := TDerObjectIdentifier.Create(ECSign.ID + '.2');
+
+    FIsBooted := True;
+  end;
 
 end;
 

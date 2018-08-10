@@ -30,9 +30,10 @@ type
 
   strict private
 
-    class var
+  class var
 
-      FIdSha1, FDsaWithSha1: IDerObjectIdentifier;
+    FIsBooted: Boolean;
+    FIdSha1, FDsaWithSha1: IDerObjectIdentifier;
 
     class function GetIdSha1: IDerObjectIdentifier; static; inline;
     class function GetDsaWithSha1: IDerObjectIdentifier; static; inline;
@@ -57,8 +58,12 @@ implementation
 
 class procedure TOiwObjectIdentifiers.Boot;
 begin
-  FIdSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.26');
-  FDsaWithSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.27');
+  if not FIsBooted then
+  begin
+    FIdSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.26');
+    FDsaWithSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.27');
+    FIsBooted := True;
+  end;
 end;
 
 class function TOiwObjectIdentifiers.GetDsaWithSha1: IDerObjectIdentifier;

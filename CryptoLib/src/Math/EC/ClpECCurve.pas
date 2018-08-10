@@ -112,6 +112,9 @@ type
 
     constructor Create(const field: IFiniteField);
 
+    function GetFieldSize: Int32; virtual; abstract;
+    function GetInfinity: IECPoint; virtual; abstract;
+
     function CloneCurve(): IECCurve; virtual; abstract;
 
     function CreateRawPoint(const x, y: IECFieldElement;
@@ -172,11 +175,10 @@ type
 
     end;
 
-  function GetFieldSize: Int32; virtual; abstract;
-  function GetInfinity: IECPoint; virtual; abstract;
-
-  function FromBigInteger(x: TBigInteger): IECFieldElement; virtual; abstract;
-  function IsValidFieldElement(x: TBigInteger): Boolean; virtual; abstract;
+  function FromBigInteger(const x: TBigInteger): IECFieldElement;
+    virtual; abstract;
+  function IsValidFieldElement(const x: TBigInteger): Boolean; virtual;
+    abstract;
 
   function Configure(): IConfig; virtual;
   function ValidatePoint(const x, y: TBigInteger): IECPoint; overload; virtual;
@@ -339,7 +341,7 @@ type
 
   public
     destructor Destroy; override;
-    function IsValidFieldElement(x: TBigInteger): Boolean; override;
+    function IsValidFieldElement(const x: TBigInteger): Boolean; override;
 
   end;
 
@@ -368,8 +370,6 @@ type
   const
     FP_DEFAULT_COORDS = Int32(TECCurve.COORD_JACOBIAN_MODIFIED);
 
-    function GetQ: TBigInteger; virtual;
-
   strict protected
   var
     Fm_q, Fm_r: TBigInteger;
@@ -380,6 +380,10 @@ type
       overload; deprecated 'Use constructor taking order/cofactor';
     constructor Create(const q, r: TBigInteger; const A, B: IECFieldElement;
       const Order, Cofactor: TBigInteger); overload;
+
+    function GetQ: TBigInteger; virtual;
+    function GetInfinity: IECPoint; override;
+    function GetFieldSize: Int32; override;
 
     function CloneCurve(): IECCurve; override;
     function CreateRawPoint(const x, y: IECFieldElement;
@@ -396,10 +400,7 @@ type
 
     destructor Destroy; override;
 
-    function GetInfinity: IECPoint; override;
-    function GetFieldSize: Int32; override;
-
-    function FromBigInteger(x: TBigInteger): IECFieldElement; override;
+    function FromBigInteger(const x: TBigInteger): IECFieldElement; override;
     function ImportPoint(const p: IECPoint): IECPoint; override;
 
     function SupportsCoordinateSystem(coord: Int32): Boolean; override;
@@ -421,6 +422,11 @@ type
     /// </summary>
     Fsi: TCryptoLibGenericArray<TBigInteger>;
 
+    class function BuildField(m, k1, k2, k3: Int32): IFiniteField; static;
+
+  strict protected
+    constructor Create(m, k1, k2, k3: Int32);
+
     /// <summary>
     /// Returns true if this is a Koblitz curve (ABC curve).
     /// </summary>
@@ -429,10 +435,6 @@ type
     /// </returns>
     function GetIsKoblitz: Boolean; virtual;
 
-    class function BuildField(m, k1, k2, k3: Int32): IFiniteField; static;
-
-  strict protected
-    constructor Create(m, k1, k2, k3: Int32);
     function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
       override;
 
@@ -452,7 +454,7 @@ type
 
     destructor Destroy; override;
 
-    function IsValidFieldElement(x: TBigInteger): Boolean; override;
+    function IsValidFieldElement(const x: TBigInteger): Boolean; override;
 
     function CreatePoint(const x, y: TBigInteger; withCompression: Boolean)
       : IECPoint; override;
@@ -529,6 +531,9 @@ type
     function GetK3: Int32; inline;
 
   strict protected
+    function GetFieldSize: Int32; override;
+    function GetInfinity: IECPoint; override;
+
     function CloneCurve(): IECCurve; override;
     function CreateDefaultMultiplier(): IECMultiplier; override;
 
@@ -627,11 +632,8 @@ type
 
     destructor Destroy; override;
 
-    function GetFieldSize: Int32; override;
-    function GetInfinity: IECPoint; override;
-
     function SupportsCoordinateSystem(coord: Int32): Boolean; override;
-    function FromBigInteger(x: TBigInteger): IECFieldElement; override;
+    function FromBigInteger(const x: TBigInteger): IECFieldElement; override;
 
     /// <summary>
     /// Return true if curve uses a Trinomial basis.
@@ -1253,7 +1255,7 @@ begin
   inherited Destroy;
 end;
 
-function TAbstractFpCurve.IsValidFieldElement(x: TBigInteger): Boolean;
+function TAbstractFpCurve.IsValidFieldElement(const x: TBigInteger): Boolean;
 begin
   Result := (x.IsInitialized) and (x.SignValue >= 0) and
     (x.CompareTo(field.Characteristic) < 0);
@@ -1324,7 +1326,7 @@ begin
   Result := TFpPoint.Create(Self as IECCurve, x, y, withCompression);
 end;
 
-function TFpCurve.FromBigInteger(x: TBigInteger): IECFieldElement;
+function TFpCurve.FromBigInteger(const x: TBigInteger): IECFieldElement;
 begin
   Result := TFpFieldElement.Create(Fm_q, Fm_r, x);
 end;
@@ -1528,7 +1530,7 @@ begin
   Result := TLongArray.Create(x).ModInverse(m, ks).ToBigInteger();
 end;
 
-function TAbstractF2mCurve.IsValidFieldElement(x: TBigInteger): Boolean;
+function TAbstractF2mCurve.IsValidFieldElement(const x: TBigInteger): Boolean;
 begin
   Result := (x.IsInitialized) and (x.SignValue >= 0) and
     (x.BitLength <= FieldSize);
@@ -1745,7 +1747,7 @@ begin
   inherited Destroy;
 end;
 
-function TF2mCurve.FromBigInteger(x: TBigInteger): IECFieldElement;
+function TF2mCurve.FromBigInteger(const x: TBigInteger): IECFieldElement;
 begin
   Result := TF2mFieldElement.Create(Fm, Fk1, Fk2, Fk3, x);
 end;

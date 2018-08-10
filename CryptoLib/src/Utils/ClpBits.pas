@@ -41,7 +41,7 @@ type
     /// <param name="Size">Size of the Array to Reverse.</param>
 
     class procedure ReverseByteArray(Source, Dest: Pointer;
-      Size: int64); static;
+      Size: Int64); static;
 
     /// <summary>
     /// Calculates Arithmetic shift right.
@@ -60,7 +60,7 @@ type
     /// <returns>Shifted value.</returns>
     /// Implementation was found here <see cref="https://github.com/Spelt/ZXing.Delphi/blob/master/Lib/Classes/Common/MathUtils.pas" />
 
-    class function Asr64(Value: int64; ShiftBits: Int32): int64; static; inline;
+    class function Asr64(Value: Int64; ShiftBits: Int32): Int64; static; inline;
 
     /// <summary>
     /// Calculates Negative Left Shift. This was implemented to circumvent a
@@ -69,6 +69,9 @@ type
     /// should give "3221225472" but in FPC ARM, It gives "0". In some C
     /// Compilers, this is "Undefined"
     /// </summary>
+    /// <param name="Value">
+    /// Value to Perform Shift On
+    /// </param>
     /// <param name="ShiftBits">
     /// Integer, number of bits to shift value to. This Number <b>Must be
     /// Negative</b>
@@ -83,13 +86,60 @@ type
     class function NegativeLeftShift32(Value: UInt32; ShiftBits: Int32): UInt32;
       static; inline;
 
-    class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32; overload;
+    /// <summary>
+    /// Calculates Negative Right Shift. This was implemented to circumvent a
+    /// compiler issue when performing Shift Right on certain values with a
+    /// Negative Shift Bits. In some C Compilers, this is "Undefined"
+    /// </summary>
+    /// <param name="Value">
+    /// Value to Perform Shift On
+    /// </param>
+    /// <param name="ShiftBits">
+    /// Integer, number of bits to shift value to. This Number <b>Must be
+    /// Negative</b>
+    /// </param>
+    /// <param name="value">
+    /// UInt32 value to compute 'NRS' on.
+    /// </param>
+    /// <returns>
+    /// Shifted value.
+    /// </returns>
+
+    class function NegativeRightShift32(Value: UInt32; ShiftBits: Int32)
+      : UInt32; static; inline;
+
+    /// <summary>
+    /// Calculates Negative Right Shift. This was implemented to circumvent a
+    /// compiler issue when performing Shift Right on certain values with a
+    /// Negative Shift Bits. In some C Compilers, this is "Undefined"
+    /// </summary>
+    /// <param name="Value">
+    /// Value to Perform Shift On
+    /// </param>
+    /// <param name="ShiftBits">
+    /// Integer, number of bits to shift value to. This Number <b>Must be
+    /// Negative</b>
+    /// </param>
+    /// <param name="value">
+    /// UInt64 value to compute 'NRS' on.
+    /// </param>
+    /// <returns>
+    /// Shifted value.
+    /// </returns>
+
+    class function NegativeRightShift64(Value: UInt64; ShiftBits: Int32)
+      : UInt64; static; inline;
+
+    class function RotateLeft8(a_value: Byte; a_n: Int32): Byte; static; inline;
+    class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;
       static; inline;
-    class function RotateLeft64(a_value: UInt64; a_n: Int32): UInt64; overload;
+    class function RotateLeft64(a_value: UInt64; a_n: Int32): UInt64;
       static; inline;
-    class function RotateRight32(a_value: UInt32; a_n: Int32): UInt32; overload;
+    class function RotateRight8(a_value: Byte; a_n: Int32): Byte;
       static; inline;
-    class function RotateRight64(a_value: UInt64; a_n: Int32): UInt64; overload;
+    class function RotateRight32(a_value: UInt32; a_n: Int32): UInt32;
+      static; inline;
+    class function RotateRight64(a_value: UInt64; a_n: Int32): UInt64;
       static; inline;
 
   end;
@@ -98,7 +148,7 @@ implementation
 
 { TBits }
 
-class procedure TBits.ReverseByteArray(Source, Dest: Pointer; Size: int64);
+class procedure TBits.ReverseByteArray(Source, Dest: Pointer; Size: Int64);
 var
   ptr_src, ptr_dest: PByte;
 begin
@@ -196,7 +246,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBits.Asr64(Value: int64; ShiftBits: Int32): int64;
+class function TBits.Asr64(Value: Int64; ShiftBits: Int32): Int64;
 begin
 {$IFDEF FPC}
   Result := SarInt64(Value, ShiftBits);
@@ -212,10 +262,45 @@ begin
 {$ENDIF FPC}
 end;
 
+class function TBits.RotateLeft8(a_value: Byte; a_n: Int32): Byte;
+begin
+{$IFDEF DEBUG}
+  System.Assert(a_n >= 0);
+{$ENDIF DEBUG}
+{$IFDEF FPC}
+  Result := RolByte(a_value, a_n);
+{$ELSE}
+  a_n := a_n and 7;
+
+  Result := (a_value shl a_n) or (a_value shr (8 - a_n));
+{$ENDIF FPC}
+end;
+
 class function TBits.NegativeLeftShift32(Value: UInt32;
   ShiftBits: Int32): UInt32;
 begin
+{$IFDEF DEBUG}
+  System.Assert(ShiftBits < 0);
+{$ENDIF DEBUG}
   Result := Value shl (32 + ShiftBits);
+end;
+
+class function TBits.NegativeRightShift32(Value: UInt32;
+  ShiftBits: Int32): UInt32;
+begin
+{$IFDEF DEBUG}
+  System.Assert(ShiftBits < 0);
+{$ENDIF DEBUG}
+  Result := Value shr (32 + ShiftBits);
+end;
+
+class function TBits.NegativeRightShift64(Value: UInt64;
+  ShiftBits: Int32): UInt64;
+begin
+{$IFDEF DEBUG}
+  System.Assert(ShiftBits < 0);
+{$ENDIF DEBUG}
+  Result := Value shr (64 + ShiftBits);
 end;
 
 class function TBits.RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;
@@ -243,6 +328,20 @@ begin
   a_n := a_n and 63;
 
   Result := (a_value shl a_n) or (a_value shr (64 - a_n));
+{$ENDIF FPC}
+end;
+
+class function TBits.RotateRight8(a_value: Byte; a_n: Int32): Byte;
+begin
+{$IFDEF DEBUG}
+  System.Assert(a_n >= 0);
+{$ENDIF DEBUG}
+{$IFDEF FPC}
+  Result := RorByte(a_value, a_n);
+{$ELSE}
+  a_n := a_n and 7;
+
+  Result := (a_value shr a_n) or (a_value shl (8 - a_n));
 {$ENDIF FPC}
 end;
 

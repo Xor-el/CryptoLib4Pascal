@@ -41,7 +41,11 @@ type
       : TCryptoLibStringArray; static;
 
     class function AddByteArray(const A, B: TCryptoLibByteArray)
-      : TCryptoLibByteArray; static; inline;
+      : TCryptoLibByteArray; overload; static; inline;
+
+    class function AddByteArray(const A: TCryptoLibByteArray;
+      const Others: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
+      overload; static;
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean;
       overload; static;
@@ -54,6 +58,15 @@ type
 
     class function GetArrayHashCode(const data: TCryptoLibInt32Array): Int32;
       overload; static;
+
+    class function GetArrayHashCode(const data: TCryptoLibUInt32Array): Int32;
+      overload; static;
+
+    class function GetArrayHashCode(const data: TCryptoLibUInt32Array;
+      off, len: Int32): Int32; overload; static;
+
+    class function GetArrayHashCode(const data: TCryptoLibUInt64Array;
+      off, len: Int32): Int32; overload; static;
 
     class function Prepend(const A: TCryptoLibByteArray; B: Byte)
       : TCryptoLibByteArray; static;
@@ -95,6 +108,30 @@ begin
   System.SetLength(Result, l + System.Length(B));
   System.Move(A[0], Result[0], l * System.SizeOf(Byte));
   System.Move(B[0], Result[l], System.Length(B) * System.SizeOf(Byte));
+end;
+
+class function TArrayUtils.AddByteArray(const A: TCryptoLibByteArray;
+  const Others: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
+var
+  len, Idx, Pos: Int32;
+  temp: TCryptoLibByteArray;
+begin
+  len := 0;
+  for Idx := System.Low(Others) to System.High(Others) do
+  begin
+    len := len + System.Length(Others[Idx]);
+  end;
+  len := len + System.Length(A);
+  System.SetLength(Result, len);
+  System.Move(A[0], Result[0], System.Length(A) * System.SizeOf(Byte));
+  Pos := System.Length(A);
+  for Idx := System.Low(Others) to System.High(Others) do
+  begin
+    temp := Others[Idx];
+    System.Move(temp[0], Result[Pos], System.Length(temp) *
+      System.SizeOf(Byte));
+    Pos := Pos + System.Length(temp);
+  end;
 end;
 
 class function TArrayUtils.AddStringArray(const A, B: TCryptoLibStringArray)
@@ -229,6 +266,82 @@ begin
   begin
     hc := hc * 257;
     hc := hc xor data[i];
+    System.Dec(i);
+  end;
+  Result := hc;
+end;
+
+class function TArrayUtils.GetArrayHashCode(const data
+  : TCryptoLibUInt32Array): Int32;
+var
+  i, hc: Int32;
+begin
+  if data = Nil then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  i := System.Length(data);
+  hc := i + 1;
+
+  System.Dec(i);
+  while (i >= 0) do
+  begin
+    hc := hc * 257;
+    hc := hc xor data[i];
+    System.Dec(i);
+  end;
+  Result := hc;
+end;
+
+class function TArrayUtils.GetArrayHashCode(const data: TCryptoLibUInt32Array;
+  off, len: Int32): Int32;
+var
+  i, hc: Int32;
+begin
+  if data = Nil then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  i := len;
+  hc := i + 1;
+
+  System.Dec(i);
+  while (i >= 0) do
+  begin
+    hc := hc * 257;
+    hc := hc xor data[off + i];
+    System.Dec(i);
+  end;
+  Result := hc;
+end;
+
+class function TArrayUtils.GetArrayHashCode(const data: TCryptoLibUInt64Array;
+  off, len: Int32): Int32;
+var
+  i, hc: Int32;
+  di: UInt64;
+begin
+  if data = Nil then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  i := len;
+  hc := i + 1;
+
+  System.Dec(i);
+  while (i >= 0) do
+  begin
+    di := data[off + i];
+    hc := hc * 257;
+    hc := hc xor Int32(di);
+    hc := hc * 257;
+    hc := hc xor Int32(di shr 32);
     System.Dec(i);
   end;
   Result := hc;

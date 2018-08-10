@@ -144,7 +144,7 @@ end;
 //
 // g := TECKeyPairGenerator.Create(keyAlgorithm);
 //
-// g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create() as ISecureRandom));
+// g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create() as ISecureRandom) as IECKeyGenerationParameters);
 //
 // pair := g.GenerateKeyPair();
 // sKey := pair.Private;

@@ -51,16 +51,20 @@ resourcestring
 type
   TECFieldElement = class abstract(TInterfacedObject, IECFieldElement)
 
+  strict protected
+
+    function GetBitLength: Int32; virtual;
+    function GetIsOne: Boolean; virtual;
+    function GetIsZero: Boolean; virtual;
+
+    function GetFieldName: String; virtual; abstract;
+    function GetFieldSize: Int32; virtual; abstract;
+
   public
 
     constructor Create();
     destructor Destroy; override;
 
-    function GetBitLength: Int32; virtual;
-    function GetIsOne: Boolean; virtual;
-    function GetIsZero: Boolean; virtual;
-    function GetFieldName: String; virtual; abstract;
-    function GetFieldSize: Int32; virtual; abstract;
     function ToBigInteger(): TBigInteger; virtual; abstract;
     function Add(const b: IECFieldElement): IECFieldElement; virtual; abstract;
     function AddOne(): IECFieldElement; virtual; abstract;
@@ -91,7 +95,8 @@ type
 
     function TestBitZero(): Boolean; virtual;
 
-    function Equals(const other: IECFieldElement): Boolean; reintroduce;
+    function Equals(const other: IECFieldElement): Boolean;
+      reintroduce; virtual;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -136,14 +141,6 @@ type
     function ModReduce(x: TBigInteger): TBigInteger; virtual;
     function ModSubtract(const x1, x2: TBigInteger): TBigInteger; virtual;
 
-  public
-    constructor Create(const Q, x: TBigInteger); overload;
-      deprecated 'Use ECCurve.FromBigInteger to construct field elements';
-
-    constructor Create(const Q, r, x: TBigInteger); overload;
-
-    destructor Destroy; override;
-
     /// <summary>
     /// return the field name for this field.
     /// </summary>
@@ -152,6 +149,14 @@ type
     /// </returns>
     function GetFieldName: String; override;
     function GetFieldSize: Int32; override;
+
+  public
+    constructor Create(const Q, x: TBigInteger); overload;
+      deprecated 'Use ECCurve.FromBigInteger to construct field elements';
+
+    constructor Create(const Q, r, x: TBigInteger); overload;
+
+    destructor Destroy; override;
 
     function ToBigInteger(): TBigInteger; override;
 
@@ -200,12 +205,12 @@ type
   end;
 
 type
-  TAbstract2mFieldElement = class abstract(TECFieldElement,
+  TAbstractF2mFieldElement = class abstract(TECFieldElement,
     IAbstractF2mFieldElement)
 
   public
-    function Trace(): Int32;
-    function HalfTrace(): IECFieldElement;
+    function Trace(): Int32; virtual;
+    function HalfTrace(): IECFieldElement; virtual;
 
   end;
 
@@ -217,7 +222,7 @@ type
   // * basis representations are supported. Gaussian normal basis (GNB)
   // * representation is not supported.
   // */
-  TF2mFieldElement = class(TAbstract2mFieldElement, IF2mFieldElement)
+  TF2mFieldElement = class(TAbstractF2mFieldElement, IF2mFieldElement)
 
   strict private
 
@@ -239,6 +244,15 @@ type
     function GetK1: Int32; inline;
     function GetK2: Int32; inline;
     function GetK3: Int32; inline;
+
+  strict protected
+
+    function GetBitLength: Int32; override;
+    function GetIsOne: Boolean; override;
+    function GetIsZero: Boolean; override;
+
+    function GetFieldName: String; override;
+    function GetFieldSize: Int32; override;
 
   public
 
@@ -295,13 +309,6 @@ type
       const x: TLongArray); overload;
 
     destructor Destroy; override;
-
-    function GetBitLength: Int32; override;
-    function GetIsOne: Boolean; override;
-    function GetIsZero: Boolean; override;
-
-    function GetFieldName: String; override;
-    function GetFieldSize: Int32; override;
 
     function TestBitZero(): Boolean; override;
     function ToBigInteger(): TBigInteger; override;
@@ -1017,7 +1024,8 @@ begin
     begin
       Qh := Ql;
       Uh := ModReduce(Uh.Multiply(Vl).Subtract(Ql));
-      Vh := ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
+      Vh := ModReduce(Vh.Multiply(Vl).Subtract(P.Multiply(Ql)));
+      Vl := ModReduce(Vl.Multiply(Vl).Subtract(Ql.ShiftLeft(1)));
     end;
     System.Dec(j);
   end;
@@ -1233,6 +1241,7 @@ var
   u, v, K, e, t1, t2, t3, t4, y, legendreExponent, x, fourX, qMinusOne,
     P: TBigInteger;
   tempRes: TCryptoLibGenericArray<TBigInteger>;
+  CompareRes, ModReduceRes: Boolean;
 begin
   if (IsZero or IsOne) then
   begin
@@ -1294,8 +1303,12 @@ begin
 
     repeat
       P := TBigInteger.Arbitrary(Fq.BitLength);
-    until ((not P.CompareTo(Q) >= 0) or (ModReduce(P.Multiply(P).Subtract(fourX)
-      ).ModPow(legendreExponent, Q).Equals(qMinusOne)));
+
+      CompareRes := P.CompareTo(Q) >= 0;
+      ModReduceRes := (not ModReduce(P.Multiply(P).Subtract(fourX))
+        .ModPow(legendreExponent, Q).Equals(qMinusOne));
+
+    until ((not CompareRes) and (not ModReduceRes));
 
     tempRes := LucasSequence(P, x, K);
     u := tempRes[0];
@@ -1360,7 +1373,7 @@ end;
 
 { TAbstract2mFieldElement }
 
-function TAbstract2mFieldElement.HalfTrace: IECFieldElement;
+function TAbstractF2mFieldElement.HalfTrace: IECFieldElement;
 var
   m, i: Int32;
   fe, ht: IECFieldElement;
@@ -1384,7 +1397,7 @@ begin
   result := ht;
 end;
 
-function TAbstract2mFieldElement.Trace: Int32;
+function TAbstractF2mFieldElement.Trace: Int32;
 var
   m, i: Int32;
   fe, tr: IECFieldElement;

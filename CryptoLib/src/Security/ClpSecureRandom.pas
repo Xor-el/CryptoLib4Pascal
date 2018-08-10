@@ -50,6 +50,7 @@ type
   strict private
   class var
 
+    FIsBooted: Boolean;
     FCounter: Int64;
     Fmaster: ISecureRandom;
     FDoubleScale: Double;
@@ -68,6 +69,7 @@ type
     class destructor DestroySecureRandom();
 
   strict protected
+  var
     Fgenerator: IRandomGenerator;
 
   public
@@ -267,7 +269,6 @@ end;
 class constructor TSecureRandom.CreateSecureRandom;
 begin
   TSecureRandom.Boot;
-  FLock := TCriticalSection.Create;
 end;
 
 class destructor TSecureRandom.DestroySecureRandom;
@@ -309,10 +310,16 @@ end;
 
 class procedure TSecureRandom.Boot;
 begin
-  FCounter := TTimes.NanoTime();
-  Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
-    as ICryptoApiRandomGenerator);
-  FDoubleScale := Power(2.0, 64.0);
+  if not FIsBooted then
+  begin
+    FLock := TCriticalSection.Create;
+    FCounter := TTimes.NanoTime();
+    Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
+      as ICryptoApiRandomGenerator);
+    FDoubleScale := Power(2.0, 64.0);
+
+    FIsBooted := True;
+  end;
 end;
 
 constructor TSecureRandom.Create;

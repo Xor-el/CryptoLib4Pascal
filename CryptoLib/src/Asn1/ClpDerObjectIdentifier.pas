@@ -383,7 +383,7 @@ begin
     // TODO Leading zeroes?
     if (CharInSet(ch, ['0' .. '9'])) then
     begin
-      periodAllowed := true;
+      periodAllowed := True;
       System.Dec(pos);
       continue;
     end;
@@ -445,7 +445,7 @@ var
 begin
   value := 0;
   bigValue := Default (TBigInteger);
-  first := true;
+  first := True;
   objId := TStringList.Create();
   objId.LineBreak := '';
   try

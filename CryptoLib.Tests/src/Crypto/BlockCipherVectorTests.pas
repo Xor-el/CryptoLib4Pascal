@@ -36,6 +36,8 @@ uses
   ClpICipherParameters,
   ClpAesEngine,
   ClpIAesEngine,
+  ClpAesLightEngine,
+  ClpIAesLightEngine,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -62,7 +64,7 @@ type
   TTestBlockCipherVector = class(TCryptoLibTestCase)
   private
 
-    procedure doBlockCipherVectorTest(const engine: IBlockCipher;
+    procedure DoBlockCipherVectorTest(const engine: IBlockCipher;
       const param: ICipherParameters; const input, output: String);
 
   protected
@@ -71,6 +73,7 @@ type
   published
 
     procedure TestBlockCipherAESEngine;
+    procedure TestBlockCipherAESLightEngine;
     procedure TestBadParameters;
 
   end;
@@ -79,7 +82,7 @@ implementation
 
 { TTestBlockCipherVector }
 
-procedure TTestBlockCipherVector.doBlockCipherVectorTest
+procedure TTestBlockCipherVector.DoBlockCipherVectorTest
   (const engine: IBlockCipher; const param: ICipherParameters;
   const input, output: String);
 var
@@ -96,9 +99,7 @@ begin
 
   System.SetLength(outBytes, System.Length(LInput));
 
-  // len1 := cipher.ProcessBytes(LInput, 0, System.Length(LInput), outBytes, 0);
-  len1 := cipher.ProcessBytes(LInput, 0,
-    cipher.GetOutputSize(System.Length(LInput)), outBytes, 0);
+  len1 := cipher.ProcessBytes(LInput, 0, System.Length(LInput), outBytes, 0);
 
   cipher.DoFinal(outBytes, len1);
 
@@ -136,6 +137,7 @@ procedure TTestBlockCipherVector.TestBadParameters;
 var
   dudKey, iv: TBytes;
   engine: IAesEngine;
+  engine2: IAesLightEngine;
 begin
 
   engine := TAesEngine.Create();
@@ -166,6 +168,35 @@ begin
     end;
 
   end;
+
+  engine2 := TAesLightEngine.Create();
+  //
+  // init tests
+  //
+
+  try
+    System.SetLength(dudKey, 6);
+    engine2.Init(true, TKeyParameter.Create(dudKey) as IKeyParameter);
+    Fail('failed key length check');
+  except
+    on e: EArgumentCryptoLibException do
+    begin
+      // expected
+    end;
+
+  end;
+
+  try
+    System.SetLength(iv, 16);
+    engine2.Init(true, TParametersWithIV.Create(nil, iv) as IParametersWithIV);
+    Fail('failed parameter check');
+  except
+    on e: EArgumentCryptoLibException do
+    begin
+      // expected
+    end;
+
+  end;
 end;
 
 procedure TTestBlockCipherVector.TestBlockCipherAESEngine;
@@ -175,7 +206,22 @@ begin
   for I := System.Low(TAESTestVectors.FBlockCipherVectorKeys)
     to System.High(TAESTestVectors.FBlockCipherVectorKeys) do
   begin
-    doBlockCipherVectorTest(TAesEngine.Create() as IAesEngine,
+    DoBlockCipherVectorTest(TAesEngine.Create() as IAesEngine,
+      TKeyParameter.Create(THex.Decode(TAESTestVectors.FBlockCipherVectorKeys[I]
+      )) as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
+      TAESTestVectors.FBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherAESLightEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TAESTestVectors.FBlockCipherVectorKeys)
+    to System.High(TAESTestVectors.FBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TAesLightEngine.Create() as IAesLightEngine,
       TKeyParameter.Create(THex.Decode(TAESTestVectors.FBlockCipherVectorKeys[I]
       )) as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
       TAESTestVectors.FBlockCipherVectorOutputs[I]);

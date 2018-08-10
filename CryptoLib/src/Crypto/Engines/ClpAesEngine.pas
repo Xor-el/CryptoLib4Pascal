@@ -53,6 +53,16 @@ type
   /// This implementation is based on optimizations from Dr. Brian
   /// Gladman's paper and C code at <see href="http://fp.gladman.plus.com/cryptography_technology/rijndael/" />
   /// </para>
+  /// <para>
+  /// This version uses only one 256 word table for each, for a total of
+  /// 2Kbytes, <br />adding 12 rotate operations per round to compute the
+  /// values contained in the other tables from <br />the contents of the
+  /// first.
+  /// </para>
+  /// <para>
+  /// This file contains the middle performance version with 2Kbytes of
+  /// static tables for round precomputation.
+  /// </para>
   /// </summary>
   TAesEngine = class sealed(TInterfacedObject, IAesEngine, IBlockCipher)
 
@@ -118,9 +128,10 @@ type
     // private int FFmulX(int x) { int u = x & m1; u |= (u >> 1); return ((x & m2) << 1) ^ ((u >>> 3) | (u >>> 6)); }
     // private static final int  m4 = 0x1b1b1b1b;
     // private int FFmulX(int x) { int u = x & m1; return ((x & m2) << 1) ^ ((u - (u >>> 7)) & m4); }
+
     class function Inv_Mcol(x: UInt32): UInt32; static; inline;
     class function SubWord(x: UInt32): UInt32; static; inline;
-    class constructor CreateAesEngine();
+    class constructor AesEngine();
 
   public
 
@@ -278,7 +289,7 @@ begin
 
 end;
 
-class constructor TAesEngine.CreateAesEngine;
+class constructor TAesEngine.AesEngine;
 begin
   TAesEngine.Boot;
 end;
