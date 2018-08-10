@@ -23,8 +23,7 @@ interface
 
 uses
   ClpIECInterface,
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
   ISecP521R1LookupTable = Interface(IECLookupTable)

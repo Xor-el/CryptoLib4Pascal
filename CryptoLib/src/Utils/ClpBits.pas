@@ -108,6 +108,28 @@ type
     class function NegativeRightShift32(Value: UInt32; ShiftBits: Int32)
       : UInt32; static; inline;
 
+    /// <summary>
+    /// Calculates Negative Right Shift. This was implemented to circumvent a
+    /// compiler issue when performing Shift Right on certain values with a
+    /// Negative Shift Bits. In some C Compilers, this is "Undefined"
+    /// </summary>
+    /// <param name="Value">
+    /// Value to Perform Shift On
+    /// </param>
+    /// <param name="ShiftBits">
+    /// Integer, number of bits to shift value to. This Number <b>Must be
+    /// Negative</b>
+    /// </param>
+    /// <param name="value">
+    /// UInt64 value to compute 'NRS' on.
+    /// </param>
+    /// <returns>
+    /// Shifted value.
+    /// </returns>
+
+    class function NegativeRightShift64(Value: UInt64; ShiftBits: Int32)
+      : UInt64; static; inline;
+
     class function RotateLeft8(a_value: Byte; a_n: Int32): Byte; static; inline;
     class function RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;
       static; inline;
@@ -270,6 +292,15 @@ begin
   System.Assert(ShiftBits < 0);
 {$ENDIF DEBUG}
   Result := Value shr (32 + ShiftBits);
+end;
+
+class function TBits.NegativeRightShift64(Value: UInt64;
+  ShiftBits: Int32): UInt64;
+begin
+{$IFDEF DEBUG}
+  System.Assert(ShiftBits < 0);
+{$ENDIF DEBUG}
+  Result := Value shr (64 + ShiftBits);
 end;
 
 class function TBits.RotateLeft32(a_value: UInt32; a_n: Int32): UInt32;

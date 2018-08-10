@@ -15,27 +15,18 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecP256K1Curve;
+unit ClpISecT283K1Point;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIECInterface,
-  ClpBigInteger;
+  ClpIECInterface;
 
 type
-  ISecP256K1LookupTable = Interface(IECLookupTable)
-    ['{0E204483-F303-49FD-AF66-0F30CF855CA9}']
-  end;
-
-type
-  ISecP256K1Curve = Interface(IAbstractFpCurve)
-    ['{BBE4D704-8562-4C17-9149-CA33CFE7611F}']
-
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
+  ISecT283K1Point = Interface(IAbstractF2mPoint)
+    ['{516DA5D2-430B-42FC-A3FB-691E77B76D8B}']
 
   end;
 

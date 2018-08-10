@@ -15,27 +15,38 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecP256K1Curve;
+unit ClpISecT283K1Curve;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIECInterface,
-  ClpBigInteger;
+  ClpIECInterface;
 
 type
-  ISecP256K1LookupTable = Interface(IECLookupTable)
-    ['{0E204483-F303-49FD-AF66-0F30CF855CA9}']
+  ISecT283K1LookupTable = Interface(IECLookupTable)
+    ['{3AF41553-A108-46D6-9CCC-AB1814A0A247}']
   end;
 
 type
-  ISecP256K1Curve = Interface(IAbstractFpCurve)
-    ['{BBE4D704-8562-4C17-9149-CA33CFE7611F}']
+  ISecT283K1Curve = Interface(IAbstractF2mCurve)
+    ['{1D88AF22-721F-4E89-82A2-1C1CFFB7830C}']
 
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
+    function GetM: Int32;
+    property M: Int32 read GetM;
+
+    function GetK1: Int32;
+    property K1: Int32 read GetK1;
+
+    function GetK2: Int32;
+    property K2: Int32 read GetK2;
+
+    function GetK3: Int32;
+    property K3: Int32 read GetK3;
+
+    function GetIsTrinomial: Boolean;
+    property IsTrinomial: Boolean read GetIsTrinomial;
 
   end;
 

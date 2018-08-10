@@ -143,7 +143,10 @@ uses
   ClpISecP384R1FieldElement, ClpSecP384R1Point, ClpISecP384R1Point, 
   ClpSecP384R1Curve, ClpNat192, ClpISecP384R1Curve, ClpSecP521R1Field, 
   ClpNat512, ClpSecP521R1FieldElement, ClpISecP521R1FieldElement, 
-  ClpSecP521R1Point, ClpISecP521R1Point, ClpSecP521R1Curve, ClpISecP521R1Curve;
+  ClpSecP521R1Point, ClpISecP521R1Point, ClpSecP521R1Curve, 
+  ClpISecP521R1Curve, ClpInterleave, ClpSecT283Field, ClpSecT283FieldElement, 
+  ClpISecT283FieldElement, ClpSecT283K1Point, ClpISecT283K1Point, 
+  ClpISecT283K1Curve, ClpSecT283K1Curve;
 
 implementation
 

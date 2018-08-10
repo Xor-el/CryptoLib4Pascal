@@ -41,12 +41,11 @@ type
 
     class function GetP: TCryptoLibUInt32Array; static; inline;
 
-    class constructor SecP521R1Field();
-
-  strict protected
     class procedure ImplMultiply(x, y, zz: TCryptoLibUInt32Array);
       static; inline;
     class procedure ImplSquare(x, zz: TCryptoLibUInt32Array); static; inline;
+
+    class constructor SecP521R1Field();
 
   public
     class procedure Add(x, y, z: TCryptoLibUInt32Array); static; inline;

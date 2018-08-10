@@ -65,6 +65,9 @@ type
     class function GetArrayHashCode(const data: TCryptoLibUInt32Array;
       off, len: Int32): Int32; overload; static;
 
+    class function GetArrayHashCode(const data: TCryptoLibUInt64Array;
+      off, len: Int32): Int32; overload; static;
+
     class function Prepend(const A: TCryptoLibByteArray; B: Byte)
       : TCryptoLibByteArray; static;
 
@@ -311,6 +314,34 @@ begin
   begin
     hc := hc * 257;
     hc := hc xor data[off + i];
+    System.Dec(i);
+  end;
+  Result := hc;
+end;
+
+class function TArrayUtils.GetArrayHashCode(const data: TCryptoLibUInt64Array;
+  off, len: Int32): Int32;
+var
+  i, hc: Int32;
+  di: UInt64;
+begin
+  if data = Nil then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  i := len;
+  hc := i + 1;
+
+  System.Dec(i);
+  while (i >= 0) do
+  begin
+    di := data[off + i];
+    hc := hc * 257;
+    hc := hc xor Int32(di);
+    hc := hc * 257;
+    hc := hc xor Int32(di shr 32);
     System.Dec(i);
   end;
   Result := hc;

@@ -205,12 +205,12 @@ type
   end;
 
 type
-  TAbstract2mFieldElement = class abstract(TECFieldElement,
+  TAbstractF2mFieldElement = class abstract(TECFieldElement,
     IAbstractF2mFieldElement)
 
   public
-    function Trace(): Int32;
-    function HalfTrace(): IECFieldElement;
+    function Trace(): Int32; virtual;
+    function HalfTrace(): IECFieldElement; virtual;
 
   end;
 
@@ -222,7 +222,7 @@ type
   // * basis representations are supported. Gaussian normal basis (GNB)
   // * representation is not supported.
   // */
-  TF2mFieldElement = class(TAbstract2mFieldElement, IF2mFieldElement)
+  TF2mFieldElement = class(TAbstractF2mFieldElement, IF2mFieldElement)
 
   strict private
 
@@ -1373,7 +1373,7 @@ end;
 
 { TAbstract2mFieldElement }
 
-function TAbstract2mFieldElement.HalfTrace: IECFieldElement;
+function TAbstractF2mFieldElement.HalfTrace: IECFieldElement;
 var
   m, i: Int32;
   fe, ht: IECFieldElement;
@@ -1397,7 +1397,7 @@ begin
   result := ht;
 end;
 
-function TAbstract2mFieldElement.Trace: Int32;
+function TAbstractF2mFieldElement.Trace: Int32;
 var
   m, i: Int32;
   fe, tr: IECFieldElement;

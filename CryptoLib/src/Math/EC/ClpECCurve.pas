@@ -175,8 +175,10 @@ type
 
     end;
 
-  function FromBigInteger(const x: TBigInteger): IECFieldElement; virtual; abstract;
-  function IsValidFieldElement(const x: TBigInteger): Boolean; virtual; abstract;
+  function FromBigInteger(const x: TBigInteger): IECFieldElement;
+    virtual; abstract;
+  function IsValidFieldElement(const x: TBigInteger): Boolean; virtual;
+    abstract;
 
   function Configure(): IConfig; virtual;
   function ValidatePoint(const x, y: TBigInteger): IECPoint; overload; virtual;
@@ -420,6 +422,11 @@ type
     /// </summary>
     Fsi: TCryptoLibGenericArray<TBigInteger>;
 
+    class function BuildField(m, k1, k2, k3: Int32): IFiniteField; static;
+
+  strict protected
+    constructor Create(m, k1, k2, k3: Int32);
+
     /// <summary>
     /// Returns true if this is a Koblitz curve (ABC curve).
     /// </summary>
@@ -428,10 +435,6 @@ type
     /// </returns>
     function GetIsKoblitz: Boolean; virtual;
 
-    class function BuildField(m, k1, k2, k3: Int32): IFiniteField; static;
-
-  strict protected
-    constructor Create(m, k1, k2, k3: Int32);
     function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
       override;
 

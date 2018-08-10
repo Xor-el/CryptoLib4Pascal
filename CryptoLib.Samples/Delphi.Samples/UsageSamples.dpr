@@ -440,7 +440,15 @@ uses
   ClpSecP521R1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP521R1Point.pas',
   ClpISecP521R1Point in '..\..\CryptoLib\src\Interfaces\ClpISecP521R1Point.pas',
   ClpSecP521R1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP521R1Curve.pas',
-  ClpISecP521R1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP521R1Curve.pas';
+  ClpISecP521R1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP521R1Curve.pas',
+  ClpInterleave in '..\..\CryptoLib\src\Math\Raw\ClpInterleave.pas',
+  ClpSecT283Field in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283Field.pas',
+  ClpSecT283FieldElement in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283FieldElement.pas',
+  ClpISecT283FieldElement in '..\..\CryptoLib\src\Interfaces\ClpISecT283FieldElement.pas',
+  ClpSecT283K1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283K1Point.pas',
+  ClpISecT283K1Point in '..\..\CryptoLib\src\Interfaces\ClpISecT283K1Point.pas',
+  ClpISecT283K1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecT283K1Curve.pas',
+  ClpSecT283K1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283K1Curve.pas';
 
 begin
   try

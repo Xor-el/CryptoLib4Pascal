@@ -42,7 +42,9 @@ type
 
     function GetExponentsPresent(): TCryptoLibInt32Array; virtual;
 
+    function Equals(other: TObject): Boolean; overload; override;
     function Equals(const other: IGF2Polynomial): Boolean; reintroduce;
+      overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -76,6 +78,11 @@ begin
     Exit;
   end;
   Result := TArrayUtils.AreEqual(Fexponents, other.exponents);
+end;
+
+function TGF2Polynomial.Equals(other: TObject): Boolean;
+begin
+  Result := Self.Equals((other as TGF2Polynomial) as IGF2Polynomial);
 end;
 
 function TGF2Polynomial.GetDegree: Int32;

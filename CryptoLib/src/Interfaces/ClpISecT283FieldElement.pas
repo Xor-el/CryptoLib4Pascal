@@ -15,28 +15,35 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecP256K1Curve;
+unit ClpISecT283FieldElement;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIECInterface,
-  ClpBigInteger;
+  ClpIECFieldElement,
+  ClpCryptoLibTypes;
 
 type
-  ISecP256K1LookupTable = Interface(IECLookupTable)
-    ['{0E204483-F303-49FD-AF66-0F30CF855CA9}']
-  end;
+  ISecT283FieldElement = Interface(IAbstractF2mFieldElement)
+    ['{8DD5CFAF-D879-4FC2-93D7-3C2D5D49E8D1}']
 
-type
-  ISecP256K1Curve = Interface(IAbstractFpCurve)
-    ['{BBE4D704-8562-4C17-9149-CA33CFE7611F}']
+    function GetM: Int32;
+    property M: Int32 read GetM;
 
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
+    function GetRepresentation: Int32;
+    property Representation: Int32 read GetRepresentation;
 
+    function GetK1: Int32;
+    property k1: Int32 read GetK1;
+    function GetK2: Int32;
+    property k2: Int32 read GetK2;
+    function GetK3: Int32;
+    property k3: Int32 read GetK3;
+
+    function GetX: TCryptoLibUInt64Array;
+    property X: TCryptoLibUInt64Array read GetX;
   end;
 
 implementation
