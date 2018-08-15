@@ -46,17 +46,20 @@ type
 
     class constructor &Mod();
 
-    class procedure InversionResult(p: TCryptoLibUInt32Array; ac: Int32;
-      a: TCryptoLibUInt32Array; z: TCryptoLibUInt32Array); static; inline;
-    class procedure InversionStep(p, u: TCryptoLibUInt32Array; uLen: Int32;
-      x: TCryptoLibUInt32Array; var xc: Int32); static;
+    class procedure InversionResult(const p: TCryptoLibUInt32Array; ac: Int32;
+      const a: TCryptoLibUInt32Array; const z: TCryptoLibUInt32Array);
+      static; inline;
+    class procedure InversionStep(const p, u: TCryptoLibUInt32Array;
+      uLen: Int32; const x: TCryptoLibUInt32Array; var xc: Int32); static;
 
   public
-    class procedure Invert(p, x, z: TCryptoLibUInt32Array); static;
-    class function Random(p: TCryptoLibUInt32Array)
+    class procedure Invert(const p, x, z: TCryptoLibUInt32Array); static;
+    class function Random(const p: TCryptoLibUInt32Array)
       : TCryptoLibUInt32Array; static;
-    class procedure Add(p, x, y, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Subtract(p, x, y, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Add(const p, x, y, z: TCryptoLibUInt32Array);
+      static; inline;
+    class procedure Subtract(const p, x, y, z: TCryptoLibUInt32Array);
+      static; inline;
     class function GetTrailingZeroes(x: UInt32): Int32; static; inline;
 
   end;
@@ -65,7 +68,7 @@ implementation
 
 { TMod }
 
-class procedure TMod.Add(p, x, y, z: TCryptoLibUInt32Array);
+class procedure TMod.Add(const p, x, y, z: TCryptoLibUInt32Array);
 var
   len: Int32;
   c: UInt32;
@@ -94,8 +97,8 @@ begin
   result := count;
 end;
 
-class procedure TMod.InversionResult(p: TCryptoLibUInt32Array; ac: Int32;
-  a, z: TCryptoLibUInt32Array);
+class procedure TMod.InversionResult(const p: TCryptoLibUInt32Array; ac: Int32;
+  const a, z: TCryptoLibUInt32Array);
 begin
   if (ac < 0) then
   begin
@@ -107,8 +110,8 @@ begin
   end;
 end;
 
-class procedure TMod.InversionStep(p, u: TCryptoLibUInt32Array; uLen: Int32;
-  x: TCryptoLibUInt32Array; var xc: Int32);
+class procedure TMod.InversionStep(const p, u: TCryptoLibUInt32Array;
+  uLen: Int32; const x: TCryptoLibUInt32Array; var xc: Int32);
 var
   len, count, zeroes, i: Int32;
 begin
@@ -153,7 +156,7 @@ begin
 
 end;
 
-class procedure TMod.Invert(p, x, z: TCryptoLibUInt32Array);
+class procedure TMod.Invert(const p, x, z: TCryptoLibUInt32Array);
 var
   len, ac, bc, uvLen: Int32;
   u, a, v, b: TCryptoLibUInt32Array;
@@ -236,7 +239,8 @@ begin
   FRandomSource := TSecureRandom.Create();
 end;
 
-class function TMod.Random(p: TCryptoLibUInt32Array): TCryptoLibUInt32Array;
+class function TMod.Random(const p: TCryptoLibUInt32Array)
+  : TCryptoLibUInt32Array;
 var
   len: Int32;
   m: UInt32;
@@ -265,7 +269,7 @@ begin
   result := s;
 end;
 
-class procedure TMod.Subtract(p, x, y, z: TCryptoLibUInt32Array);
+class procedure TMod.Subtract(const p, x, y, z: TCryptoLibUInt32Array);
 var
   len, c: Int32;
 begin

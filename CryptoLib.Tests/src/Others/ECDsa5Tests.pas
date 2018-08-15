@@ -69,7 +69,7 @@ type
   TTestECDsa5 = class(TCryptoLibTestCase)
 
   private
-    function derDecode(encoding: TCryptoLibByteArray)
+    function derDecode(const encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
   protected
@@ -98,7 +98,7 @@ implementation
 
 { TTestECDsa5 }
 
-function TTestECDsa5.derDecode(encoding: TCryptoLibByteArray)
+function TTestECDsa5.derDecode(const encoding: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;

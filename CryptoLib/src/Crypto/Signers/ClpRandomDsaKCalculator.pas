@@ -48,8 +48,8 @@ type
     property IsDeterministic: Boolean read GetIsDeterministic;
     procedure Init(const n: TBigInteger; const random: ISecureRandom);
       overload; virtual;
-    procedure Init(const n, d: TBigInteger; &message: TCryptoLibByteArray);
-      overload; virtual;
+    procedure Init(const n, d: TBigInteger;
+      const &message: TCryptoLibByteArray); overload; virtual;
     function NextK(): TBigInteger; virtual;
   end;
 
@@ -72,7 +72,7 @@ end;
 {$IFNDEF _FIXINSIGHT_}
 
 procedure TRandomDsaKCalculator.Init(const n, d: TBigInteger;
-  &message: TCryptoLibByteArray);
+  const &message: TCryptoLibByteArray);
 begin
   raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
 end;

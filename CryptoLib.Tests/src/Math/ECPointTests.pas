@@ -113,10 +113,11 @@ type
     F2mInstance: TF2m;
 
     procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
-    procedure AssertBigIntegersEqual(a, b: TBigInteger);
-    procedure AssertIFiniteFieldsEqual(a, b: IFiniteField);
-    procedure AssertOptionalValuesAgree(a, b: TBigInteger); overload;
-    procedure AssertOptionalValuesAgree(a, b: TCryptoLibByteArray); overload;
+    procedure AssertBigIntegersEqual(const a, b: TBigInteger);
+    procedure AssertIFiniteFieldsEqual(const a, b: IFiniteField);
+    procedure AssertOptionalValuesAgree(const a, b: TBigInteger); overload;
+    procedure AssertOptionalValuesAgree(const a,
+      b: TCryptoLibByteArray); overload;
 
     procedure AssertECFieldElementsEqual(const a, b: IECFieldElement);
 
@@ -128,7 +129,7 @@ type
     // * @param infinity
     // *            The point at infinity on the respective curve.
     // */
-    procedure ImplTestAdd(p: TCryptoLibGenericArray<IECPoint>;
+    procedure ImplTestAdd(const p: TCryptoLibGenericArray<IECPoint>;
       const infinity: IECPoint);
 
     // /**
@@ -137,9 +138,9 @@ type
     // * @param p
     // *            The array of literature values.
     // */
-    procedure ImplTestTwice(p: TCryptoLibGenericArray<IECPoint>);
+    procedure ImplTestTwice(const p: TCryptoLibGenericArray<IECPoint>);
 
-    procedure ImplTestThreeTimes(p: TCryptoLibGenericArray<IECPoint>);
+    procedure ImplTestThreeTimes(const p: TCryptoLibGenericArray<IECPoint>);
 
     // /**
     // * Goes through all points on an elliptic curve and checks, if adding a
@@ -263,17 +264,17 @@ begin
   CheckEquals(True, a.Equals(b));
 end;
 
-procedure TTestECPoint.AssertBigIntegersEqual(a, b: TBigInteger);
+procedure TTestECPoint.AssertBigIntegersEqual(const a, b: TBigInteger);
 begin
   CheckEquals(True, a.Equals(b));
 end;
 
-procedure TTestECPoint.AssertIFiniteFieldsEqual(a, b: IFiniteField);
+procedure TTestECPoint.AssertIFiniteFieldsEqual(const a, b: IFiniteField);
 begin
   CheckEquals(True, (a as TObject).Equals(b as TObject));
 end;
 
-procedure TTestECPoint.AssertOptionalValuesAgree(a, b: TBigInteger);
+procedure TTestECPoint.AssertOptionalValuesAgree(const a, b: TBigInteger);
 begin
   if ((a.IsInitialized) and (b.IsInitialized)) then
   begin
@@ -281,7 +282,8 @@ begin
   end;
 end;
 
-procedure TTestECPoint.AssertOptionalValuesAgree(a, b: TCryptoLibByteArray);
+procedure TTestECPoint.AssertOptionalValuesAgree(const a,
+  b: TCryptoLibByteArray);
 begin
   if ((a <> Nil) and (b <> Nil)) then
   begin
@@ -405,7 +407,7 @@ begin
   end;
 end;
 
-procedure TTestECPoint.ImplTestAdd(p: TCryptoLibGenericArray<IECPoint>;
+procedure TTestECPoint.ImplTestAdd(const p: TCryptoLibGenericArray<IECPoint>;
   const infinity: IECPoint);
 var
   i: Int32;
@@ -496,7 +498,8 @@ begin
 
 end;
 
-procedure TTestECPoint.ImplTestThreeTimes(p: TCryptoLibGenericArray<IECPoint>);
+procedure TTestECPoint.ImplTestThreeTimes
+  (const p: TCryptoLibGenericArray<IECPoint>);
 var
   Lp, _3P: IECPoint;
 begin
@@ -506,7 +509,7 @@ begin
   AssertPointsEqual('TwicePlus incorrect', _3P, Lp.TwicePlus(Lp));
 end;
 
-procedure TTestECPoint.ImplTestTwice(p: TCryptoLibGenericArray<IECPoint>);
+procedure TTestECPoint.ImplTestTwice(const p: TCryptoLibGenericArray<IECPoint>);
 begin
   AssertPointsEqual('Twice incorrect', p[3], p[0].Twice());
   AssertPointsEqual('Add same point incorrect', p[3], p[0].Add(p[0]));

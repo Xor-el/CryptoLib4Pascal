@@ -30,7 +30,8 @@ type
 
     ['{8C530FB2-6B8F-4E22-8EA0-D538665471EF}']
 
-    procedure Init(password, salt: TCryptoLibByteArray; iterationCount: Int32);
+    procedure Init(const password, salt: TCryptoLibByteArray;
+      iterationCount: Int32);
 
     /// <returns>
     /// the password byte array.

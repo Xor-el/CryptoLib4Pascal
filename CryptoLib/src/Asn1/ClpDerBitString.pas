@@ -73,9 +73,10 @@ type
     property mData: TCryptoLibByteArray read GetmData;
   public
 
-    constructor Create(data: TCryptoLibByteArray; padBits: Int32); overload;
+    constructor Create(const data: TCryptoLibByteArray;
+      padBits: Int32); overload;
 
-    constructor Create(data: TCryptoLibByteArray); overload;
+    constructor Create(const data: TCryptoLibByteArray); overload;
 
     constructor Create(namedBits: Int32); overload;
 
@@ -104,10 +105,10 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerBitString; overload;
+    class function GetInstance(const obj: TObject): IDerBitString; overload;
       static; inline;
 
-    class function GetInstance(obj: TCryptoLibByteArray): IDerBitString;
+    class function GetInstance(const obj: TCryptoLibByteArray): IDerBitString;
       overload; static;
 
     /// <summary>
@@ -125,7 +126,7 @@ type
     class function GetInstance(const obj: IAsn1TaggedObject;
       isExplicit: Boolean): IDerBitString; overload; static; inline;
 
-    class function FromAsn1Octets(octets: TCryptoLibByteArray)
+    class function FromAsn1Octets(const octets: TCryptoLibByteArray)
       : IDerBitString; static;
 
   end;
@@ -138,7 +139,7 @@ uses
 
 { TDerBitString }
 
-class function TDerBitString.GetInstance(obj: TCryptoLibByteArray)
+class function TDerBitString.GetInstance(const obj: TCryptoLibByteArray)
   : IDerBitString;
 begin
   try
@@ -187,7 +188,8 @@ begin
     (TArrayUtils.AreEqual(mData, other.mData));
 end;
 
-constructor TDerBitString.Create(data: TCryptoLibByteArray; padBits: Int32);
+constructor TDerBitString.Create(const data: TCryptoLibByteArray;
+  padBits: Int32);
 begin
   Inherited Create();
   if (data = Nil) then
@@ -210,7 +212,7 @@ begin
 
 end;
 
-constructor TDerBitString.Create(data: TCryptoLibByteArray);
+constructor TDerBitString.Create(const data: TCryptoLibByteArray);
 begin
   Create(data, 0);
 end;
@@ -289,7 +291,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.BitString, Byte(mPadBits), mData);
 end;
 
-class function TDerBitString.FromAsn1Octets(octets: TCryptoLibByteArray)
+class function TDerBitString.FromAsn1Octets(const octets: TCryptoLibByteArray)
   : IDerBitString;
 var
   padBits, last, mask: Int32;
@@ -331,7 +333,7 @@ begin
 
 end;
 
-class function TDerBitString.GetInstance(obj: TObject): IDerBitString;
+class function TDerBitString.GetInstance(const obj: TObject): IDerBitString;
 begin
   if ((obj = Nil) or (obj is TDerBitString)) then
   begin

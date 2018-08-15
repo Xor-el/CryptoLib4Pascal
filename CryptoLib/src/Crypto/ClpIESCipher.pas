@@ -78,17 +78,19 @@ type
       const IESCipherParameters: IIESWithCipherParameters;
       const Random: ISecureRandom);
 
-    procedure ProcessBytes(input: TCryptoLibByteArray); overload;
-    procedure ProcessBytes(input: TCryptoLibByteArray;
+    procedure ProcessBytes(const input: TCryptoLibByteArray); overload;
+    procedure ProcessBytes(const input: TCryptoLibByteArray;
       inputOffset, inputLen: Int32); overload;
 
-    function DoFinal(input: TCryptoLibByteArray): TCryptoLibByteArray; overload;
-
-    function DoFinal(input: TCryptoLibByteArray; inputOffset, inputLen: Int32)
+    function DoFinal(const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload;
 
-    function DoFinal(input: TCryptoLibByteArray; inputOffset, inputLen: Int32;
-      output: TCryptoLibByteArray; outputOffset: Int32): Int32; overload;
+    function DoFinal(const input: TCryptoLibByteArray;
+      inputOffset, inputLen: Int32): TCryptoLibByteArray; overload;
+
+    function DoFinal(const input: TCryptoLibByteArray;
+      inputOffset, inputLen: Int32; const output: TCryptoLibByteArray;
+      outputOffset: Int32): Int32; overload;
 
     constructor Create(const Engine: IIESEngine); overload;
     constructor Create(const Engine: IIESEngine; ivLength: Int32); overload;
@@ -120,7 +122,7 @@ begin
   FBuffer := TMemoryStream.Create();
 end;
 
-function TIESCipher.DoFinal(input: TCryptoLibByteArray;
+function TIESCipher.DoFinal(const input: TCryptoLibByteArray;
   inputOffset, inputLen: Int32): TCryptoLibByteArray;
 var
   &in: TCryptoLibByteArray;
@@ -204,13 +206,14 @@ begin
   inherited Destroy;
 end;
 
-function TIESCipher.DoFinal(input: TCryptoLibByteArray): TCryptoLibByteArray;
+function TIESCipher.DoFinal(const input: TCryptoLibByteArray)
+  : TCryptoLibByteArray;
 begin
   Result := DoFinal(input, 0, System.length(input));
 end;
 
-function TIESCipher.DoFinal(input: TCryptoLibByteArray;
-  inputOffset, inputLen: Int32; output: TCryptoLibByteArray;
+function TIESCipher.DoFinal(const input: TCryptoLibByteArray;
+  inputOffset, inputLen: Int32; const output: TCryptoLibByteArray;
   outputOffset: Int32): Int32;
 var
   buf: TCryptoLibByteArray;
@@ -286,12 +289,12 @@ begin
   FBuffer.SetSize(0);
 end;
 
-procedure TIESCipher.ProcessBytes(input: TCryptoLibByteArray);
+procedure TIESCipher.ProcessBytes(const input: TCryptoLibByteArray);
 begin
   ProcessBytes(input, 0, System.length(input));
 end;
 
-procedure TIESCipher.ProcessBytes(input: TCryptoLibByteArray;
+procedure TIESCipher.ProcessBytes(const input: TCryptoLibByteArray;
   inputOffset, inputLen: Int32);
 begin
   FBuffer.Write(input[inputOffset], inputLen);

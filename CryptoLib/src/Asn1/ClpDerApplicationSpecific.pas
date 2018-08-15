@@ -53,10 +53,10 @@ type
     Foctets: TCryptoLibByteArray;
 
     function GetApplicationTag: Int32; inline;
-    function GetLengthOfHeader(data: TCryptoLibByteArray): Int32; inline;
+    function GetLengthOfHeader(const data: TCryptoLibByteArray): Int32; inline;
 
-    class function ReplaceTagNumber(newTag: Int32; input: TCryptoLibByteArray)
-      : TCryptoLibByteArray; static;
+    class function ReplaceTagNumber(newTag: Int32;
+      const input: TCryptoLibByteArray): TCryptoLibByteArray; static;
 
   strict protected
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
@@ -64,8 +64,8 @@ type
 
   public
     constructor Create(isConstructed: Boolean; tag: Int32;
-      octets: TCryptoLibByteArray); overload;
-    constructor Create(tag: Int32; octets: TCryptoLibByteArray); overload;
+      const octets: TCryptoLibByteArray); overload;
+    constructor Create(tag: Int32; const octets: TCryptoLibByteArray); overload;
     constructor Create(tag: Int32; const obj: IAsn1Encodable); overload;
     constructor Create(isExplicit: Boolean; tag: Int32;
       const obj: IAsn1Encodable); overload;
@@ -124,7 +124,7 @@ begin
 end;
 
 function TDerApplicationSpecific.GetLengthOfHeader
-  (data: TCryptoLibByteArray): Int32;
+  (const data: TCryptoLibByteArray): Int32;
 var
   &length, Size: Int32;
 begin
@@ -161,13 +161,13 @@ begin
 end;
 
 constructor TDerApplicationSpecific.Create(tag: Int32;
-  octets: TCryptoLibByteArray);
+  const octets: TCryptoLibByteArray);
 begin
   Create(false, tag, octets);
 end;
 
 constructor TDerApplicationSpecific.Create(isConstructed: Boolean; tag: Int32;
-  octets: TCryptoLibByteArray);
+  const octets: TCryptoLibByteArray);
 begin
   Inherited Create();
   FisConstructed := isConstructed;
@@ -315,7 +315,7 @@ begin
 end;
 
 class function TDerApplicationSpecific.ReplaceTagNumber(newTag: Int32;
-  input: TCryptoLibByteArray): TCryptoLibByteArray;
+  const input: TCryptoLibByteArray): TCryptoLibByteArray;
 var
   tagNo, index, b: Int32;
   tmp: TCryptoLibByteArray;

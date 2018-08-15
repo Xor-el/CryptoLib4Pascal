@@ -94,10 +94,10 @@ type
   var
     FAES_IV: TBytes;
 
-    procedure DoStaticTest(iv: TBytes);
+    procedure DoStaticTest(const iv: TBytes);
     procedure DoShortTest();
     procedure DoTest(const p1, p2: IAsymmetricCipherKeyPair);
-    procedure DoEphemeralTest(iv: TBytes; usePointCompression: Boolean);
+    procedure DoEphemeralTest(const iv: TBytes; usePointCompression: Boolean);
 
   protected
     procedure SetUp; override;
@@ -112,7 +112,8 @@ implementation
 
 { TTestECIES }
 
-procedure TTestECIES.DoEphemeralTest(iv: TBytes; usePointCompression: Boolean);
+procedure TTestECIES.DoEphemeralTest(const iv: TBytes;
+  usePointCompression: Boolean);
 var
   n: TBigInteger;
   curve: IFpCurve;
@@ -382,7 +383,7 @@ begin
 
 end;
 
-procedure TTestECIES.DoStaticTest(iv: TBytes);
+procedure TTestECIES.DoStaticTest(const iv: TBytes);
 var
   n: TBigInteger;
   curve: IFpCurve;

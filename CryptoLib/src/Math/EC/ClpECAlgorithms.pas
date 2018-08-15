@@ -46,14 +46,15 @@ type
   TECAlgorithms = class sealed(TObject)
 
   strict private
-    class function ImplShamirsTrickWNaf(preCompP,
-      preCompNegP: TCryptoLibGenericArray<IECPoint>; wnafP: TCryptoLibByteArray;
-      preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
-      wnafQ: TCryptoLibByteArray): IECPoint; overload; static;
+    class function ImplShamirsTrickWNaf(const preCompP,
+      preCompNegP: TCryptoLibGenericArray<IECPoint>;
+      const wnafP: TCryptoLibByteArray;
+      const preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
+      const wnafQ: TCryptoLibByteArray): IECPoint; overload; static;
 
-    class function ImplSumOfMultiplies(negs: TCryptoLibBooleanArray;
-      infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
-      wnafs: TCryptoLibMatrixByteArray): IECPoint; overload; static;
+    class function ImplSumOfMultiplies(const negs: TCryptoLibBooleanArray;
+      const infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
+      const wnafs: TCryptoLibMatrixByteArray): IECPoint; overload; static;
 
   public
     class function IsF2mCurve(const c: IECCurve): Boolean; static;
@@ -61,11 +62,11 @@ type
     class function IsFpCurve(const c: IECCurve): Boolean; static;
     class function IsFpField(const field: IFiniteField): Boolean; static;
 
-    class function SumOfMultiplies(ps: TCryptoLibGenericArray<IECPoint>;
-      ks: TCryptoLibGenericArray<TBigInteger>): IECPoint; static;
+    class function SumOfMultiplies(const ps: TCryptoLibGenericArray<IECPoint>;
+      const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint; static;
 
     class function SumOfTwoMultiplies(const P: IECPoint; const a: TBigInteger;
-      Q: IECPoint; const b: TBigInteger): IECPoint; static;
+      const Q: IECPoint; const b: TBigInteger): IECPoint; static;
 
     // /*
     // * "Shamir's Trick", originally due to E. G. Straus
@@ -91,11 +92,13 @@ type
     class function ImportPoint(const c: IECCurve; const P: IECPoint)
       : IECPoint; static;
 
-    class procedure MontgomeryTrick(zs: TCryptoLibGenericArray<IECFieldElement>;
-      off, len: Int32); overload; static; inline;
+    class procedure MontgomeryTrick(const zs
+      : TCryptoLibGenericArray<IECFieldElement>; off, len: Int32); overload;
+      static; inline;
 
-    class procedure MontgomeryTrick(zs: TCryptoLibGenericArray<IECFieldElement>;
-      off, len: Int32; const scale: IECFieldElement); overload; static;
+    class procedure MontgomeryTrick(const zs
+      : TCryptoLibGenericArray<IECFieldElement>; off, len: Int32;
+      const scale: IECFieldElement); overload; static;
 
     // /**
     // * Simple shift-and-add multiplication. Serves as reference implementation
@@ -107,7 +110,7 @@ type
     // *            The multiplier.
     // * @return The result of the point multiplication <code>kP</code>.
     // */
-    class function ReferenceMultiply(P: IECPoint; const k: TBigInteger)
+    class function ReferenceMultiply(const P: IECPoint; const k: TBigInteger)
       : IECPoint; static;
 
     class function ImplCheckResult(const P: IECPoint): IECPoint; static;
@@ -120,22 +123,27 @@ type
     class function ImplShamirsTrickJsf(const P: IECPoint; const k: TBigInteger;
       const Q: IECPoint; const l: TBigInteger): IECPoint; static;
 
-    class function ImplShamirsTrickWNaf(const P: IECPoint; k: TBigInteger;
-      const Q: IECPoint; l: TBigInteger): IECPoint; overload; static;
+    class function ImplShamirsTrickWNaf(const P: IECPoint; const k: TBigInteger;
+      const Q: IECPoint; const l: TBigInteger): IECPoint; overload; static;
 
-    class function ImplShamirsTrickWNaf(const P: IECPoint; k: TBigInteger;
-      const pointMapQ: IECPointMap; l: TBigInteger): IECPoint; overload; static;
+    class function ImplShamirsTrickWNaf(const P: IECPoint; const k: TBigInteger;
+      const pointMapQ: IECPointMap; const l: TBigInteger): IECPoint;
+      overload; static;
 
-    class function ImplSumOfMultiplies(ps: TCryptoLibGenericArray<IECPoint>;
-      ks: TCryptoLibGenericArray<TBigInteger>): IECPoint; overload; static;
+    class function ImplSumOfMultiplies
+      (const ps: TCryptoLibGenericArray<IECPoint>;
+      const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
+      overload; static;
 
-    class function ImplSumOfMultipliesGlv(ps: TCryptoLibGenericArray<IECPoint>;
-      ks: TCryptoLibGenericArray<TBigInteger>;
+    class function ImplSumOfMultipliesGlv
+      (const ps: TCryptoLibGenericArray<IECPoint>;
+      const ks: TCryptoLibGenericArray<TBigInteger>;
       const glvEndomorphism: IGlvEndomorphism): IECPoint; static;
 
-    class function ImplSumOfMultiplies(ps: TCryptoLibGenericArray<IECPoint>;
-      const pointMap: IECPointMap; ks: TCryptoLibGenericArray<TBigInteger>)
-      : IECPoint; overload; static;
+    class function ImplSumOfMultiplies
+      (const ps: TCryptoLibGenericArray<IECPoint>; const pointMap: IECPointMap;
+      const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
+      overload; static;
 
   end;
 
@@ -224,7 +232,8 @@ begin
 end;
 
 class function TECAlgorithms.ImplShamirsTrickWNaf(const P: IECPoint;
-  k: TBigInteger; const pointMapQ: IECPointMap; l: TBigInteger): IECPoint;
+  const k: TBigInteger; const pointMapQ: IECPointMap; const l: TBigInteger)
+  : IECPoint;
 var
   negK, negL: Boolean;
   width: Int32;
@@ -233,15 +242,18 @@ var
   preCompP, preCompQ, preCompNegP, preCompNegQ
     : TCryptoLibGenericArray<IECPoint>;
   wnafP, wnafQ: TCryptoLibByteArray;
+  LK, LL: TBigInteger;
 begin
-  negK := k.SignValue < 0;
-  negL := l.SignValue < 0;
+  LK := k;
+  LL := l;
+  negK := LK.SignValue < 0;
+  negL := LL.SignValue < 0;
 
-  k := k.Abs();
-  l := l.Abs();
+  LK := LK.Abs();
+  LL := LL.Abs();
 
-  width := Max(2, Min(16, TWNafUtilities.GetWindowSize(Max(k.BitLength,
-    l.BitLength))));
+  width := Max(2, Min(16, TWNafUtilities.GetWindowSize(Max(LK.BitLength,
+    LL.BitLength))));
 
   Q := TWNafUtilities.MapPointWithPrecomp(P, width, true, pointMapQ);
   infoP := TWNafUtilities.GetWNafPreCompInfo(P);
@@ -275,8 +287,8 @@ begin
       preCompNegQ := infoQ.PreCompNeg
   end;
 
-  wnafP := TWNafUtilities.GenerateWindowNaf(width, k);
-  wnafQ := TWNafUtilities.GenerateWindowNaf(width, l);
+  wnafP := TWNafUtilities.GenerateWindowNaf(width, LK);
+  wnafQ := TWNafUtilities.GenerateWindowNaf(width, LL);
 
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
@@ -289,7 +301,7 @@ begin
 end;
 
 class function TECAlgorithms.ImplShamirsTrickWNaf(const P: IECPoint;
-  k: TBigInteger; const Q: IECPoint; l: TBigInteger): IECPoint;
+  const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
 var
   negK, negL: Boolean;
   widthP, widthQ: Int32;
@@ -297,15 +309,18 @@ var
   preCompP, preCompQ, preCompNegP, preCompNegQ
     : TCryptoLibGenericArray<IECPoint>;
   wnafP, wnafQ: TCryptoLibByteArray;
+  LK, LL: TBigInteger;
 begin
-  negK := k.SignValue < 0;
-  negL := l.SignValue < 0;
+  LK := k;
+  LL := l;
+  negK := LK.SignValue < 0;
+  negL := LL.SignValue < 0;
 
-  k := k.Abs();
-  l := l.Abs();
+  LK := LK.Abs();
+  LL := LL.Abs();
 
-  widthP := Max(2, Min(16, TWNafUtilities.GetWindowSize(k.BitLength)));
-  widthQ := Max(2, Min(16, TWNafUtilities.GetWindowSize(l.BitLength)));
+  widthP := Max(2, Min(16, TWNafUtilities.GetWindowSize(LK.BitLength)));
+  widthQ := Max(2, Min(16, TWNafUtilities.GetWindowSize(LL.BitLength)));
 
   infoP := TWNafUtilities.Precompute(P, widthP, true);
   infoQ := TWNafUtilities.Precompute(Q, widthQ, true);
@@ -346,8 +361,8 @@ begin
     preCompNegQ := infoQ.PreCompNeg
   end;
 
-  wnafP := TWNafUtilities.GenerateWindowNaf(widthP, k);
-  wnafQ := TWNafUtilities.GenerateWindowNaf(widthQ, l);
+  wnafP := TWNafUtilities.GenerateWindowNaf(widthP, LK);
+  wnafQ := TWNafUtilities.GenerateWindowNaf(widthQ, LL);
 
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
@@ -357,10 +372,11 @@ begin
   infoQ.PreCompNeg := Nil; // Review
 end;
 
-class function TECAlgorithms.ImplShamirsTrickWNaf(preCompP,
-  preCompNegP: TCryptoLibGenericArray<IECPoint>; wnafP: TCryptoLibByteArray;
-  preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
-  wnafQ: TCryptoLibByteArray): IECPoint;
+class function TECAlgorithms.ImplShamirsTrickWNaf(const preCompP,
+  preCompNegP: TCryptoLibGenericArray<IECPoint>;
+  const wnafP: TCryptoLibByteArray;
+  const preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
+  const wnafQ: TCryptoLibByteArray): IECPoint;
 var
   len, zeroes, i, wiP, wiQ, nP, nQ: Int32;
   Curve: IECCurve;
@@ -455,8 +471,8 @@ begin
 end;
 
 class function TECAlgorithms.ImplSumOfMultiplies
-  (ps: TCryptoLibGenericArray<IECPoint>; const pointMap: IECPointMap;
-  ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
+  (const ps: TCryptoLibGenericArray<IECPoint>; const pointMap: IECPointMap;
+  const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
   halfCount, fullCount: Int32;
   negs: TCryptoLibBooleanArray;
@@ -506,8 +522,8 @@ begin
 end;
 
 class function TECAlgorithms.ImplSumOfMultiplies
-  (ps: TCryptoLibGenericArray<IECPoint>;
-  ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
+  (const ps: TCryptoLibGenericArray<IECPoint>;
+  const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
   count, i, width: Int32;
   negs: TCryptoLibBooleanArray;
@@ -543,9 +559,10 @@ begin
 
 end;
 
-class function TECAlgorithms.ImplSumOfMultiplies(negs: TCryptoLibBooleanArray;
-  infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
-  wnafs: TCryptoLibMatrixByteArray): IECPoint;
+class function TECAlgorithms.ImplSumOfMultiplies
+  (const negs: TCryptoLibBooleanArray;
+  const infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
+  const wnafs: TCryptoLibMatrixByteArray): IECPoint;
 var
   len, count, zeroes: Int32;
   i, J, wi, n: Int32;
@@ -631,8 +648,8 @@ begin
 end;
 
 class function TECAlgorithms.ImplSumOfMultipliesGlv
-  (ps: TCryptoLibGenericArray<IECPoint>;
-  ks: TCryptoLibGenericArray<TBigInteger>;
+  (const ps: TCryptoLibGenericArray<IECPoint>;
+  const ks: TCryptoLibGenericArray<TBigInteger>;
   const glvEndomorphism: IGlvEndomorphism): IECPoint;
 var
   n: TBigInteger;
@@ -726,7 +743,7 @@ begin
 end;
 
 class procedure TECAlgorithms.MontgomeryTrick
-  (zs: TCryptoLibGenericArray<IECFieldElement>; off, len: Int32;
+  (const zs: TCryptoLibGenericArray<IECFieldElement>; off, len: Int32;
   const scale: IECFieldElement);
 var
   c: TCryptoLibGenericArray<IECFieldElement>;
@@ -773,34 +790,35 @@ begin
 end;
 
 class procedure TECAlgorithms.MontgomeryTrick
-  (zs: TCryptoLibGenericArray<IECFieldElement>; off, len: Int32);
+  (const zs: TCryptoLibGenericArray<IECFieldElement>; off, len: Int32);
 begin
   MontgomeryTrick(zs, off, len, Nil);
 end;
 
-class function TECAlgorithms.ReferenceMultiply(P: IECPoint;
+class function TECAlgorithms.ReferenceMultiply(const P: IECPoint;
   const k: TBigInteger): IECPoint;
 var
   x: TBigInteger;
-  Q: IECPoint;
+  Q, LP: IECPoint;
   t, i: Int32;
 begin
+  LP := P;
   x := k.Abs();
-  Q := P.Curve.infinity;
+  Q := LP.Curve.infinity;
   t := x.BitLength;
   if (t > 0) then
   begin
     if (x.TestBit(0)) then
     begin
-      Q := P;
+      Q := LP;
     end;
     i := 1;
     while (i < t) do
     begin
-      P := P.Twice();
+      LP := LP.Twice();
       if (x.TestBit(i)) then
       begin
-        Q := Q.Add(P);
+        Q := Q.Add(LP);
       end;
       System.Inc(i);
     end;
@@ -830,8 +848,8 @@ begin
 end;
 
 class function TECAlgorithms.SumOfMultiplies
-  (ps: TCryptoLibGenericArray<IECPoint>;
-  ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
+  (const ps: TCryptoLibGenericArray<IECPoint>;
+  const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
   count: Int32;
   P: IECPoint;
@@ -884,32 +902,34 @@ begin
 end;
 
 class function TECAlgorithms.SumOfTwoMultiplies(const P: IECPoint;
-  const a: TBigInteger; Q: IECPoint; const b: TBigInteger): IECPoint;
+  const a: TBigInteger; const Q: IECPoint; const b: TBigInteger): IECPoint;
 var
   cp: IECCurve;
   f2mCurve: IAbstractF2mCurve;
   glvEndomorphism: IGlvEndomorphism;
+  LQ: IECPoint;
 begin
   cp := P.Curve;
-  Q := ImportPoint(cp, Q);
+  LQ := Q;
+  LQ := ImportPoint(cp, LQ);
 
   // Point multiplication for Koblitz curves (using WTNAF) beats Shamir's trick
 
   if (Supports(cp, IAbstractF2mCurve, f2mCurve) and (f2mCurve.IsKoblitz)) then
   begin
-    result := ImplCheckResult(P.Multiply(a).Add(Q.Multiply(b)));
+    result := ImplCheckResult(P.Multiply(a).Add(LQ.Multiply(b)));
     Exit;
   end;
 
   if Supports(cp.GetEndomorphism(), IGlvEndomorphism, glvEndomorphism) then
   begin
     result := ImplCheckResult
-      (ImplSumOfMultipliesGlv(TCryptoLibGenericArray<IECPoint>.Create(P, Q),
+      (ImplSumOfMultipliesGlv(TCryptoLibGenericArray<IECPoint>.Create(P, LQ),
       TCryptoLibGenericArray<TBigInteger>.Create(a, b), glvEndomorphism));
     Exit;
   end;
 
-  result := ImplCheckResult(ImplShamirsTrickWNaf(P, a, Q, b));
+  result := ImplCheckResult(ImplShamirsTrickWNaf(P, a, LQ, b));
 end;
 
 end.

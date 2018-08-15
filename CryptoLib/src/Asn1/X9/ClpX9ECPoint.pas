@@ -50,7 +50,7 @@ type
     constructor Create(const p: IECPoint); overload;
     constructor Create(const p: IECPoint; compressed: Boolean); overload;
     constructor Create(const c: IECCurve;
-      encoding: TCryptoLibByteArray); overload;
+      const encoding: TCryptoLibByteArray); overload;
     constructor Create(const c: IECCurve; const s: IAsn1OctetString); overload;
 
     property Point: IECPoint read GetPoint;
@@ -74,7 +74,8 @@ implementation
 
 { TX9ECPoint }
 
-constructor TX9ECPoint.Create(const c: IECCurve; encoding: TCryptoLibByteArray);
+constructor TX9ECPoint.Create(const c: IECCurve;
+  const encoding: TCryptoLibByteArray);
 begin
   inherited Create();
   Fc := c;

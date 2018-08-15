@@ -29,7 +29,7 @@ type
   IDerGenerator = interface(IAsn1Generator)
     ['{2A2A6C30-6CF7-41D2-9421-923A4A82E52B}']
 
-    procedure WriteDerEncoded(tag: Int32; bytes: TCryptoLibByteArray);
+    procedure WriteDerEncoded(tag: Int32; const bytes: TCryptoLibByteArray);
 
   end;
 

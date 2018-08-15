@@ -88,7 +88,7 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the digest is longer than the key allows
     /// </exception>
-    function GenerateSignature(&message: TCryptoLibByteArray)
+    function GenerateSignature(const &message: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     /// <summary>
@@ -116,7 +116,7 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the digest is longer than the key allows
     /// </exception>
-    function VerifySignature(&message: TCryptoLibByteArray;
+    function VerifySignature(const &message: TCryptoLibByteArray;
       const r, s: TBigInteger): Boolean;
 
   end;
@@ -125,7 +125,7 @@ implementation
 
 { TECNRSigner }
 
-function TECNRSigner.GenerateSignature(&message: TCryptoLibByteArray)
+function TECNRSigner.GenerateSignature(const &message: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   n, e, r, s, Vx, x, u: TBigInteger;
@@ -225,7 +225,7 @@ begin
   end;
 end;
 
-function TECNRSigner.VerifySignature(&message: TCryptoLibByteArray;
+function TECNRSigner.VerifySignature(const &message: TCryptoLibByteArray;
   const r, s: TBigInteger): Boolean;
 var
   pubKey: IECPublicKeyParameters;

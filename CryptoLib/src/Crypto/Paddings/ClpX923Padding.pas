@@ -76,7 +76,7 @@ type
     /// <returns>
     /// returns number of bytes added
     /// </returns>
-    function AddPadding(input: TCryptoLibByteArray; inOff: Int32): Int32;
+    function AddPadding(const input: TCryptoLibByteArray; inOff: Int32): Int32;
 
     /// <summary>
     /// return the number of pad bytes present in the block.
@@ -90,7 +90,7 @@ type
     /// <exception cref="EInvalidCipherTextCryptoLibException">
     /// if the padding is badly formed or invalid.
     /// </exception>
-    function PadCount(input: TCryptoLibByteArray): Int32;
+    function PadCount(const input: TCryptoLibByteArray): Int32;
 
   end;
 
@@ -98,7 +98,7 @@ implementation
 
 { TX923Padding }
 
-function TX923Padding.AddPadding(input: TCryptoLibByteArray;
+function TX923Padding.AddPadding(const input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
   code: Byte;
@@ -132,7 +132,7 @@ begin
   FRandom := random;
 end;
 
-function TX923Padding.PadCount(input: TCryptoLibByteArray): Int32;
+function TX923Padding.PadCount(const input: TCryptoLibByteArray): Int32;
 var
   count: Int32;
 begin

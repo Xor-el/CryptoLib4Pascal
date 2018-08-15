@@ -62,7 +62,7 @@ type
     /// </param>
     constructor Create(const obj: IAsn1Encodable); overload;
 
-    constructor Create(v: array of IAsn1Encodable); overload;
+    constructor Create(const v: array of IAsn1Encodable); overload;
 
     /// <param name="v">
     /// a vector of objects making up the set.
@@ -96,7 +96,7 @@ begin
   result := FEmpty;
 end;
 
-constructor TDerSet.Create(v: array of IAsn1Encodable);
+constructor TDerSet.Create(const v: array of IAsn1Encodable);
 var
   o: IAsn1Encodable;
 begin

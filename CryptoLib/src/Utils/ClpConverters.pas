@@ -40,7 +40,7 @@ type
       : TCryptoLibStringArray; static;
 
 {$IFDEF DEBUG}
-    class procedure Check(a_in: TCryptoLibByteArray;
+    class procedure Check(const a_in: TCryptoLibByteArray;
       a_in_size, a_out_size: Int32); overload; static;
 {$ENDIF DEBUG}
     class procedure swap_copy_str_to_u32(src: Pointer; src_index: Int32;
@@ -113,7 +113,7 @@ type
     class function ConvertHexStringToBytes(a_in: String): TCryptoLibByteArray;
       static; inline;
 
-    class function ConvertBytesToHexString(a_in: TCryptoLibByteArray;
+    class function ConvertBytesToHexString(const a_in: TCryptoLibByteArray;
       a_group: Boolean): String; static;
 
   end;
@@ -124,7 +124,7 @@ implementation
 
 {$IFDEF DEBUG}
 
-class procedure TConverters.Check(a_in: TCryptoLibByteArray;
+class procedure TConverters.Check(const a_in: TCryptoLibByteArray;
   a_in_size, a_out_size: Int32);
 begin
   System.Assert(((System.length(a_in) * a_in_size) mod a_out_size) = 0);
@@ -400,8 +400,8 @@ begin
   a_out[a_index + 7] := Byte(a_in);
 end;
 
-class function TConverters.ConvertBytesToHexString(a_in: TCryptoLibByteArray;
-  a_group: Boolean): String;
+class function TConverters.ConvertBytesToHexString
+  (const a_in: TCryptoLibByteArray; a_group: Boolean): String;
 var
   I: Int32;
   hex, workstring: String;

@@ -73,7 +73,7 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if there isn't enough data in in.
     /// </exception>
-    procedure BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
 
     /// <summary>
     /// Initialise the MAC.
@@ -102,7 +102,7 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the MAC is not initialised.
     /// </exception>
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
 
     /// <summary>

@@ -69,19 +69,20 @@ type
 
     constructor Create(const oid: IDerObjectIdentifier;
       const branchID: String); overload;
-    constructor Create(bytes: TCryptoLibByteArray); overload;
+    constructor Create(const bytes: TCryptoLibByteArray); overload;
 
     function GetID: String; inline;
 
-    procedure WriteField(outputStream: TStream; fieldValue: Int64); overload;
-    procedure WriteField(outputStream: TStream;
-      fieldValue: TBigInteger); overload;
-    procedure DoOutput(bOut: TMemoryStream); overload;
+    procedure WriteField(const outputStream: TStream;
+      fieldValue: Int64); overload;
+    procedure WriteField(const outputStream: TStream;
+      const fieldValue: TBigInteger); overload;
+    procedure DoOutput(const bOut: TMemoryStream); overload;
     function GetBody(): TCryptoLibByteArray;
     class function IsValidBranchID(const branchID: String; start: Int32)
       : Boolean; static;
     class function IsValidIdentifier(const identifier: String): Boolean; static;
-    class function MakeOidStringFromBytes(bytes: TCryptoLibByteArray)
+    class function MakeOidStringFromBytes(const bytes: TCryptoLibByteArray)
       : String; static;
 
   strict protected
@@ -94,14 +95,14 @@ type
     // *
     // * @exception ArgumentException if the object cannot be converted.
     // */
-    class function GetInstance(obj: TObject): IDerObjectIdentifier;
+    class function GetInstance(const obj: TObject): IDerObjectIdentifier;
       overload; static;
 
     // /**
     // * return an Oid from the passed in byte array
     // */
-    class function GetInstance(obj: TCryptoLibByteArray): IDerObjectIdentifier;
-      overload; static; inline;
+    class function GetInstance(const obj: TCryptoLibByteArray)
+      : IDerObjectIdentifier; overload; static; inline;
 
     // /**
     // * return an object Identifier from a tagged object.
@@ -115,7 +116,7 @@ type
     class function GetInstance(const obj: IAsn1TaggedObject;
       explicitly: Boolean): IDerObjectIdentifier; overload; static; inline;
 
-    class function FromOctetString(enc: TCryptoLibByteArray)
+    class function FromOctetString(const enc: TCryptoLibByteArray)
       : IDerObjectIdentifier; static;
 
     constructor Create(const identifier: String); overload;
@@ -200,7 +201,7 @@ begin
   Fidentifier := identifier;
 end;
 
-constructor TDerObjectIdentifier.Create(bytes: TCryptoLibByteArray);
+constructor TDerObjectIdentifier.Create(const bytes: TCryptoLibByteArray);
 begin
   Inherited Create();
   Fidentifier := MakeOidStringFromBytes(bytes);
@@ -229,7 +230,7 @@ begin
   FLock.Free;
 end;
 
-procedure TDerObjectIdentifier.DoOutput(bOut: TMemoryStream);
+procedure TDerObjectIdentifier.DoOutput(const bOut: TMemoryStream);
 var
   tok: IOidTokenizer;
   token: String;
@@ -267,8 +268,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.ObjectIdentifier, GetBody());
 end;
 
-class function TDerObjectIdentifier.FromOctetString(enc: TCryptoLibByteArray)
-  : IDerObjectIdentifier;
+class function TDerObjectIdentifier.FromOctetString
+  (const enc: TCryptoLibByteArray): IDerObjectIdentifier;
 var
   HashCode, first: Int32;
   entry: IDerObjectIdentifier;
@@ -339,7 +340,7 @@ begin
     .GetOctets());
 end;
 
-class function TDerObjectIdentifier.GetInstance(obj: TObject)
+class function TDerObjectIdentifier.GetInstance(const obj: TObject)
   : IDerObjectIdentifier;
 begin
   if ((obj = Nil) or (obj is TDerObjectIdentifier)) then
@@ -352,7 +353,7 @@ begin
     [obj.ClassName]);
 end;
 
-class function TDerObjectIdentifier.GetInstance(obj: TCryptoLibByteArray)
+class function TDerObjectIdentifier.GetInstance(const obj: TCryptoLibByteArray)
   : IDerObjectIdentifier;
 begin
   result := FromOctetString(obj);
@@ -435,7 +436,7 @@ begin
 end;
 
 class function TDerObjectIdentifier.MakeOidStringFromBytes
-  (bytes: TCryptoLibByteArray): String;
+  (const bytes: TCryptoLibByteArray): String;
 var
   objId: TStringList;
   value: Int64;
@@ -530,8 +531,8 @@ begin
   result := ID;
 end;
 
-procedure TDerObjectIdentifier.WriteField(outputStream: TStream;
-  fieldValue: TBigInteger);
+procedure TDerObjectIdentifier.WriteField(const outputStream: TStream;
+  const fieldValue: TBigInteger);
 var
   byteCount, i: Int32;
   tmpValue: TBigInteger;
@@ -561,7 +562,7 @@ begin
   end;
 end;
 
-procedure TDerObjectIdentifier.WriteField(outputStream: TStream;
+procedure TDerObjectIdentifier.WriteField(const outputStream: TStream;
   fieldValue: Int64);
 var
   tempRes: TCryptoLibByteArray;

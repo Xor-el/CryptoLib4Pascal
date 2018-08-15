@@ -121,20 +121,20 @@ type
       withCompression: Boolean): IECPoint; overload; virtual; abstract;
 
     function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload; virtual; abstract;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
+      withCompression: Boolean): IECPoint; overload; virtual; abstract;
 
     function CreateDefaultMultiplier(): IECMultiplier; virtual;
 
     procedure CheckPoint(const point: IECPoint); virtual;
 
-    procedure CheckPoints(points: TCryptoLibGenericArray<IECPoint>);
+    procedure CheckPoints(const points: TCryptoLibGenericArray<IECPoint>);
       overload; virtual;
 
-    procedure CheckPoints(points: TCryptoLibGenericArray<IECPoint>;
+    procedure CheckPoints(const points: TCryptoLibGenericArray<IECPoint>;
       off, len: Int32); overload; virtual;
 
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
+    function DecompressPoint(yTilde: Int32; const X1: TBigInteger): IECPoint;
       virtual; abstract;
 
   public
@@ -192,8 +192,9 @@ type
   /// All the points MUST <br />belong to this <c>ECCurve</c> instance, and
   /// MUST already be normalized.
   /// </summary>
-  function CreateCacheSafeLookupTable(points: TCryptoLibGenericArray<IECPoint>;
-    off, len: Int32): IECLookupTable; virtual;
+  function CreateCacheSafeLookupTable(const points
+    : TCryptoLibGenericArray<IECPoint>; off, len: Int32)
+    : IECLookupTable; virtual;
 
   function CreatePoint(const x, y: TBigInteger): IECPoint; overload; virtual;
 
@@ -236,7 +237,7 @@ type
   /// An array of points that will be updated in place with their normalized
   /// versions, where necessary
   /// </param>
-  procedure NormalizeAll(points: TCryptoLibGenericArray<IECPoint>);
+  procedure NormalizeAll(const points: TCryptoLibGenericArray<IECPoint>);
     overload; virtual;
 
   /// <summary>
@@ -261,7 +262,7 @@ type
   /// <param name="iso">
   /// The (optional) z-scaling factor - can be null
   /// </param>
-  procedure NormalizeAll(points: TCryptoLibGenericArray<IECPoint>;
+  procedure NormalizeAll(const points: TCryptoLibGenericArray<IECPoint>;
     off, len: Int32; const iso: IECFieldElement); overload; virtual;
 
   function GetEndomorphism(): IECEndomorphism; virtual;
@@ -279,7 +280,7 @@ type
   /// <returns>
   /// The decoded point.
   /// </returns>
-  function DecodePoint(encoded: TCryptoLibByteArray): IECPoint; virtual;
+  function DecodePoint(const encoded: TCryptoLibByteArray): IECPoint; virtual;
 
   property coord: Int32 write SetCoord;
   property endomorphism: IECEndomorphism write SetEndomorphism;
@@ -322,7 +323,7 @@ type
     Fm_size: Int32;
 
   public
-    constructor Create(const outer: IECCurve; table: TCryptoLibByteArray;
+    constructor Create(const outer: IECCurve; const table: TCryptoLibByteArray;
       size: Int32);
     function GetSize: Int32; virtual;
     function Lookup(index: Int32): IECPoint; virtual;
@@ -336,8 +337,8 @@ type
   strict protected
 
     constructor Create(const q: TBigInteger);
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
-      override;
+    function DecompressPoint(yTilde: Int32; const X1: TBigInteger)
+      : IECPoint; override;
 
   public
     destructor Destroy; override;
@@ -355,8 +356,8 @@ type
     Fm_size: Int32;
 
   public
-    constructor Create(const outer: IF2mCurve; table: TCryptoLibInt64Array;
-      size: Int32);
+    constructor Create(const outer: IF2mCurve;
+      const table: TCryptoLibInt64Array; size: Int32);
     function GetSize: Int32; virtual;
     function Lookup(index: Int32): IECPoint; virtual;
     property size: Int32 read GetSize;
@@ -390,8 +391,8 @@ type
       withCompression: Boolean): IECPoint; overload; override;
 
     function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload; override;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
+      withCompression: Boolean): IECPoint; overload; override;
 
   public
     constructor Create(const q, A, B: TBigInteger); overload;
@@ -435,8 +436,8 @@ type
     /// </returns>
     function GetIsKoblitz: Boolean; virtual;
 
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
-      override;
+    function DecompressPoint(yTilde: Int32; const X1: TBigInteger)
+      : IECPoint; override;
 
     // /**
     // * Solves a quadratic equation <code>z<sup>2</sup> + z = beta</code>(X9.62
@@ -469,7 +470,7 @@ type
 
     property IsKoblitz: Boolean read GetIsKoblitz;
 
-    class function Inverse(m: Int32; ks: TCryptoLibInt32Array;
+    class function Inverse(m: Int32; const ks: TCryptoLibInt32Array;
       const x: TBigInteger): TBigInteger; static; inline;
 
   end;
@@ -541,8 +542,8 @@ type
       withCompression: Boolean): IECPoint; overload; override;
 
     function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload; override;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
+      withCompression: Boolean): IECPoint; overload; override;
 
   public
     // /**
@@ -643,8 +644,8 @@ type
     /// </returns>
     function IsTrinomial(): Boolean; inline;
 
-    function CreateCacheSafeLookupTable
-      (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32)
+    function CreateCacheSafeLookupTable(const points
+      : TCryptoLibGenericArray<IECPoint>; off, len: Int32)
       : IECLookupTable; override;
 
     property FieldSize: Int32 read GetFieldSize;
@@ -668,12 +669,12 @@ begin
   end;
 end;
 
-procedure TECCurve.CheckPoints(points: TCryptoLibGenericArray<IECPoint>);
+procedure TECCurve.CheckPoints(const points: TCryptoLibGenericArray<IECPoint>);
 begin
   CheckPoints(points, 0, System.Length(points));
 end;
 
-procedure TECCurve.CheckPoints(points: TCryptoLibGenericArray<IECPoint>;
+procedure TECCurve.CheckPoints(const points: TCryptoLibGenericArray<IECPoint>;
   off, len: Int32);
 var
   i: Int32;
@@ -711,8 +712,8 @@ begin
   Fm_field := field;
 end;
 
-function TECCurve.CreateCacheSafeLookupTable
-  (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
+function TECCurve.CreateCacheSafeLookupTable(const points
+  : TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
 var
   FE_BYTES, position, i, pxStart, pyStart, pxLen, pyLen: Int32;
   table, px, py: TCryptoLibByteArray;
@@ -791,7 +792,7 @@ begin
     withCompression);
 end;
 
-function TECCurve.DecodePoint(encoded: TCryptoLibByteArray): IECPoint;
+function TECCurve.DecodePoint(const encoded: TCryptoLibByteArray): IECPoint;
 var
   x, y: TBigInteger;
   p: IECPoint;
@@ -1020,7 +1021,7 @@ begin
     Lp.IsCompressed);
 end;
 
-procedure TECCurve.NormalizeAll(points: TCryptoLibGenericArray<IECPoint>;
+procedure TECCurve.NormalizeAll(const points: TCryptoLibGenericArray<IECPoint>;
   off, len: Int32; const iso: IECFieldElement);
 var
   zs: TCryptoLibGenericArray<IECFieldElement>;
@@ -1077,7 +1078,7 @@ begin
 
 end;
 
-procedure TECCurve.NormalizeAll(points: TCryptoLibGenericArray<IECPoint>);
+procedure TECCurve.NormalizeAll(const points: TCryptoLibGenericArray<IECPoint>);
 begin
   NormalizeAll(points, 0, System.Length(points), Nil);
 end;
@@ -1224,7 +1225,7 @@ begin
   Inherited Create(TFiniteFields.GetPrimeField(q));
 end;
 
-function TAbstractFpCurve.DecompressPoint(yTilde: Int32; X1: TBigInteger)
+function TAbstractFpCurve.DecompressPoint(yTilde: Int32; const X1: TBigInteger)
   : IECPoint;
 var
   x, rhs, y: IECFieldElement;
@@ -1309,7 +1310,7 @@ begin
 end;
 
 function TFpCurve.CreateRawPoint(const x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
   : IECPoint;
 begin
   Result := TFpPoint.Create(Self as IECCurve, x, y, zs, withCompression);
@@ -1450,7 +1451,7 @@ begin
   Result := CreateRawPoint(LX, LY, withCompression);
 end;
 
-function TAbstractF2mCurve.DecompressPoint(yTilde: Int32; X1: TBigInteger)
+function TAbstractF2mCurve.DecompressPoint(yTilde: Int32; const X1: TBigInteger)
   : IECPoint;
 var
   xp, yp, beta, z: IECFieldElement;
@@ -1524,8 +1525,8 @@ begin
   Result := Fsi;
 end;
 
-class function TAbstractF2mCurve.Inverse(m: Int32; ks: TCryptoLibInt32Array;
-  const x: TBigInteger): TBigInteger;
+class function TAbstractF2mCurve.Inverse(m: Int32;
+  const ks: TCryptoLibInt32Array; const x: TBigInteger): TBigInteger;
 begin
   Result := TLongArray.Create(x).ModInverse(m, ks).ToBigInteger();
 end;
@@ -1689,8 +1690,8 @@ begin
 
 end;
 
-function TF2mCurve.CreateCacheSafeLookupTable
-  (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
+function TF2mCurve.CreateCacheSafeLookupTable(const points
+  : TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
 var
   FE_LONGS, position, i: Int32;
   table: TCryptoLibInt64Array;
@@ -1736,7 +1737,7 @@ begin
 end;
 
 function TF2mCurve.CreateRawPoint(const x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
   : IECPoint;
 begin
   Result := TF2mPoint.Create(Self as IECCurve, x, y, zs, withCompression);
@@ -1769,7 +1770,7 @@ end;
 { TDefaultLookupTable }
 
 constructor TDefaultLookupTable.Create(const outer: IECCurve;
-  table: TCryptoLibByteArray; size: Int32);
+  const table: TCryptoLibByteArray; size: Int32);
 begin
   Inherited Create();
   Fm_outer := outer;
@@ -1817,7 +1818,7 @@ end;
 { TDefaultF2mLookupTable }
 
 constructor TDefaultF2mLookupTable.Create(const outer: IF2mCurve;
-  table: TCryptoLibInt64Array; size: Int32);
+  const table: TCryptoLibInt64Array; size: Int32);
 begin
   Inherited Create();
   Fm_outer := outer;

@@ -30,8 +30,8 @@ type
   TNat512 = class sealed(TObject)
 
   public
-    class procedure Mul(x, y, zz: TCryptoLibUInt32Array); static;
-    class procedure Square(x, zz: TCryptoLibUInt32Array); static;
+    class procedure Mul(const x, y, zz: TCryptoLibUInt32Array); static;
+    class procedure Square(const x, zz: TCryptoLibUInt32Array); static;
 
   end;
 
@@ -39,7 +39,7 @@ implementation
 
 { TNat512 }
 
-class procedure TNat512.Mul(x, y, zz: TCryptoLibUInt32Array);
+class procedure TNat512.Mul(const x, y, zz: TCryptoLibUInt32Array);
 var
   c24, c16: UInt32;
   dx, dy, tt: TCryptoLibUInt32Array;
@@ -71,7 +71,7 @@ begin
   TNat.AddWordAt(32, c24, zz, 24);
 end;
 
-class procedure TNat512.Square(x, zz: TCryptoLibUInt32Array);
+class procedure TNat512.Square(const x, zz: TCryptoLibUInt32Array);
 var
   c24, c16: UInt32;
   dx, m: TCryptoLibUInt32Array;

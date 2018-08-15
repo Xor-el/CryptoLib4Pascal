@@ -83,13 +83,13 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IAsn1OctetString;
+    class function GetInstance(const obj: TObject): IAsn1OctetString;
       overload; static;
 
     /// <param name="Str">
     /// the octets making up the octet string.
     /// </param>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     constructor Create(const obj: IAsn1Encodable); overload;
 
@@ -118,7 +118,7 @@ begin
   result := Self as IAsn1OctetStringParser;
 end;
 
-constructor TAsn1OctetString.Create(Str: TCryptoLibByteArray);
+constructor TAsn1OctetString.Create(const Str: TCryptoLibByteArray);
 begin
   Inherited Create();
   if (Str = Nil) then
@@ -179,7 +179,8 @@ begin
     (TAsn1Sequence.GetInstance(o as TAsn1Object));
 end;
 
-class function TAsn1OctetString.GetInstance(obj: TObject): IAsn1OctetString;
+class function TAsn1OctetString.GetInstance(const obj: TObject)
+  : IAsn1OctetString;
 var
   asn1TaggedObject: IAsn1TaggedObject;
 begin

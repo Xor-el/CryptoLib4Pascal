@@ -81,11 +81,12 @@ type
 
     class function DoFinal(const digest: IDigest): TCryptoLibByteArray;
       overload; static; inline;
-    class function DoFinal(const digest: IDigest; input: TCryptoLibByteArray)
-      : TCryptoLibByteArray; overload; static; inline;
+    class function DoFinal(const digest: IDigest;
+      const input: TCryptoLibByteArray): TCryptoLibByteArray; overload;
+      static; inline;
 
     class function CalculateDigest(const algorithm: String;
-      input: TCryptoLibByteArray): TCryptoLibByteArray; static; inline;
+      const input: TCryptoLibByteArray): TCryptoLibByteArray; static; inline;
 
     class procedure Boot(); static;
   end;
@@ -475,14 +476,14 @@ begin
 end;
 
 class function TDigestUtilities.DoFinal(const digest: IDigest;
-  input: TCryptoLibByteArray): TCryptoLibByteArray;
+  const input: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
   digest.BlockUpdate(input, 0, System.Length(input));
   result := DoFinal(digest);
 end;
 
 class function TDigestUtilities.CalculateDigest(const algorithm: String;
-  input: TCryptoLibByteArray): TCryptoLibByteArray;
+  const input: TCryptoLibByteArray): TCryptoLibByteArray;
 var
   digest: IDigest;
 begin

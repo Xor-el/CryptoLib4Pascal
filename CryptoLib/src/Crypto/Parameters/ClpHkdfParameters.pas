@@ -42,8 +42,8 @@ type
     Fikm, Fsalt, Finfo: TCryptoLibByteArray;
     FskipExpand: Boolean;
 
-    constructor Create(ikm: TCryptoLibByteArray; skip: Boolean;
-      salt, info: TCryptoLibByteArray); overload;
+    constructor Create(const ikm: TCryptoLibByteArray; skip: Boolean;
+      const salt, info: TCryptoLibByteArray); overload;
 
   strict protected
 
@@ -70,7 +70,7 @@ type
     /// <param name="info">
     /// the info to use, may be null for an info field of zero bytes
     /// </param>
-    constructor Create(ikm, salt, info: TCryptoLibByteArray); overload;
+    constructor Create(const ikm, salt, info: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// Returns the input keying material or seed.
@@ -119,11 +119,11 @@ type
     /// <returns>
     /// that makes the implementation skip step 1
     /// </returns>
-    class function SkipExtractParameters(ikm, info: TCryptoLibByteArray)
+    class function SkipExtractParameters(const ikm, info: TCryptoLibByteArray)
       : IHkdfParameters; static; inline;
 
-    class function DefaultParameters(ikm: TCryptoLibByteArray): IHkdfParameters;
-      static; inline;
+    class function DefaultParameters(const ikm: TCryptoLibByteArray)
+      : IHkdfParameters; static; inline;
 
   end;
 
@@ -131,8 +131,8 @@ implementation
 
 { THkdfParameters }
 
-constructor THkdfParameters.Create(ikm: TCryptoLibByteArray; skip: Boolean;
-  salt, info: TCryptoLibByteArray);
+constructor THkdfParameters.Create(const ikm: TCryptoLibByteArray;
+  skip: Boolean; const salt, info: TCryptoLibByteArray);
 begin
   Inherited Create();
 
@@ -163,12 +163,12 @@ begin
   end;
 end;
 
-constructor THkdfParameters.Create(ikm, salt, info: TCryptoLibByteArray);
+constructor THkdfParameters.Create(const ikm, salt, info: TCryptoLibByteArray);
 begin
   Create(ikm, false, salt, info);
 end;
 
-class function THkdfParameters.DefaultParameters(ikm: TCryptoLibByteArray)
+class function THkdfParameters.DefaultParameters(const ikm: TCryptoLibByteArray)
   : IHkdfParameters;
 begin
   result := THkdfParameters.Create(ikm, false, Nil, Nil);
@@ -194,7 +194,7 @@ begin
   result := FskipExpand;
 end;
 
-class function THkdfParameters.SkipExtractParameters(ikm,
+class function THkdfParameters.SkipExtractParameters(const ikm,
   info: TCryptoLibByteArray): IHkdfParameters;
 begin
   result := THkdfParameters.Create(ikm, true, Nil, info);

@@ -91,7 +91,7 @@ type
       const privKey: IECPrivateKeyParameters; const r, s: TBigInteger);
 
     procedure DoTestHMacDetECDsa(const detSigner: IDsa; const digest: IDigest;
-      data: TCryptoLibByteArray; const privKey: ICipherParameters;
+      const data: TCryptoLibByteArray; const privKey: ICipherParameters;
       const r, s: TBigInteger);
 
   protected
@@ -221,7 +221,7 @@ begin
 end;
 
 procedure TTestDeterministicDsa.DoTestHMacDetECDsa(const detSigner: IDsa;
-  const digest: IDigest; data: TCryptoLibByteArray;
+  const digest: IDigest; const data: TCryptoLibByteArray;
   const privKey: ICipherParameters; const r, s: TBigInteger);
 var
   m: TCryptoLibByteArray;

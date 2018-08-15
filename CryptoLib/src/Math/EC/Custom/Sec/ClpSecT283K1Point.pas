@@ -79,7 +79,7 @@ type
       'Per-point compression property will be removed, see GetEncoded(boolean)';
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
     function Add(const b: IECPoint): IECPoint; override;
@@ -232,8 +232,8 @@ begin
 end;
 
 constructor TSecT283K1Point.Create(const curve: IECCurve;
-  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
-  withCompression: Boolean);
+  const x, y: IECFieldElement;
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;

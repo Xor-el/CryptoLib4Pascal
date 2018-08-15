@@ -61,13 +61,13 @@ type
       static; inline;
 
     class function CalculateMac(const algorithm: String;
-      const cp: ICipherParameters; input: TCryptoLibByteArray)
+      const cp: ICipherParameters; const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; static; inline;
 
     class function DoFinal(const mac: IMac): TCryptoLibByteArray; overload;
       static; inline;
 
-    class function DoFinal(const mac: IMac; input: TCryptoLibByteArray)
+    class function DoFinal(const mac: IMac; const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload; static; inline;
 
     class procedure Boot(); static;
@@ -160,14 +160,15 @@ begin
 end;
 
 class function TMacUtilities.DoFinal(const mac: IMac;
-  input: TCryptoLibByteArray): TCryptoLibByteArray;
+  const input: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
   mac.BlockUpdate(input, 0, System.Length(input));
   result := DoFinal(mac);
 end;
 
 class function TMacUtilities.CalculateMac(const algorithm: String;
-  const cp: ICipherParameters; input: TCryptoLibByteArray): TCryptoLibByteArray;
+  const cp: ICipherParameters; const input: TCryptoLibByteArray)
+  : TCryptoLibByteArray;
 var
   mac: IMac;
 begin

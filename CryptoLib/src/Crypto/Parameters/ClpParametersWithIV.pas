@@ -43,9 +43,9 @@ type
 
   public
     constructor Create(const parameters: ICipherParameters;
-      iv: TCryptoLibByteArray); overload;
+      const iv: TCryptoLibByteArray); overload;
     constructor Create(const parameters: ICipherParameters;
-      iv: TCryptoLibByteArray; ivOff, ivLen: Int32); overload;
+      const iv: TCryptoLibByteArray; ivOff, ivLen: Int32); overload;
     function GetIV(): TCryptoLibByteArray; inline;
     property parameters: ICipherParameters read GetParameters;
 
@@ -56,14 +56,14 @@ implementation
 { TParametersWithIV }
 
 constructor TParametersWithIV.Create(const parameters: ICipherParameters;
-  iv: TCryptoLibByteArray);
+  const iv: TCryptoLibByteArray);
 begin
   Inherited Create();
   Create(parameters, iv, 0, System.Length(iv))
 end;
 
 constructor TParametersWithIV.Create(const parameters: ICipherParameters;
-  iv: TCryptoLibByteArray; ivOff, ivLen: Int32);
+  const iv: TCryptoLibByteArray; ivOff, ivLen: Int32);
 begin
   Inherited Create();
   // NOTE: 'parameters' may be null to imply key re-use

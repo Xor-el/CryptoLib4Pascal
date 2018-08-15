@@ -69,10 +69,10 @@ type
     procedure DoTestSumOfMultiplies(const x9: IX9ECParameters);
     procedure DoTestSumOfTwoMultiplies(const x9: IX9ECParameters);
     procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
-    function CopyPoints(ps: TCryptoLibGenericArray<IECPoint>; len: Int32)
+    function CopyPoints(const ps: TCryptoLibGenericArray<IECPoint>; len: Int32)
       : TCryptoLibGenericArray<IECPoint>;
-    function CopyScalars(ks: TCryptoLibGenericArray<TBigInteger>; len: Int32)
-      : TCryptoLibGenericArray<TBigInteger>;
+    function CopyScalars(const ks: TCryptoLibGenericArray<TBigInteger>;
+      len: Int32): TCryptoLibGenericArray<TBigInteger>;
 
     function GetRandomPoint(const x9: IX9ECParameters): IECPoint;
     function GetRandomScalar(const x9: IX9ECParameters): TBigInteger;
@@ -133,15 +133,17 @@ begin
   CheckEquals(True, a.Equals(b), msg);
 end;
 
-function TTestECAlgorithms.CopyPoints(ps: TCryptoLibGenericArray<IECPoint>;
-  len: Int32): TCryptoLibGenericArray<IECPoint>;
+function TTestECAlgorithms.CopyPoints
+  (const ps: TCryptoLibGenericArray<IECPoint>; len: Int32)
+  : TCryptoLibGenericArray<IECPoint>;
 begin
   System.SetLength(Result, len);
   Result := System.Copy(ps, 0, len);
 end;
 
-function TTestECAlgorithms.CopyScalars(ks: TCryptoLibGenericArray<TBigInteger>;
-  len: Int32): TCryptoLibGenericArray<TBigInteger>;
+function TTestECAlgorithms.CopyScalars
+  (const ks: TCryptoLibGenericArray<TBigInteger>; len: Int32)
+  : TCryptoLibGenericArray<TBigInteger>;
 begin
   System.SetLength(Result, len);
   Result := System.Copy(ks, 0, len);

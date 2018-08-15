@@ -63,7 +63,7 @@ type
 
     constructor Create(val: Int32); overload;
     constructor Create(const val: TBigInteger); overload;
-    constructor Create(bytes: TCryptoLibByteArray); overload;
+    constructor Create(const bytes: TCryptoLibByteArray); overload;
 
     procedure Encode(const derOut: IDerOutputStream); override;
 
@@ -77,7 +77,7 @@ type
     /// if the object cannot be converted.
     /// </exception>
 
-    class function GetInstance(obj: TObject): IDerEnumerated; overload;
+    class function GetInstance(const obj: TObject): IDerEnumerated; overload;
       static; inline;
 
     /// <summary>
@@ -95,7 +95,7 @@ type
     class function GetInstance(const obj: IAsn1TaggedObject;
       isExplicit: Boolean): IDerEnumerated; overload; static; inline;
 
-    class function FromOctetString(enc: TCryptoLibByteArray)
+    class function FromOctetString(const enc: TCryptoLibByteArray)
       : IDerEnumerated; static;
 
   end;
@@ -140,7 +140,7 @@ begin
   Fbytes := val.ToByteArray();
 end;
 
-constructor TDerEnumerated.Create(bytes: TCryptoLibByteArray);
+constructor TDerEnumerated.Create(const bytes: TCryptoLibByteArray);
 begin
   Inherited Create();
   if (System.Length(bytes) > 1) then
@@ -167,7 +167,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.Enumerated, Fbytes);
 end;
 
-class function TDerEnumerated.FromOctetString(enc: TCryptoLibByteArray)
+class function TDerEnumerated.FromOctetString(const enc: TCryptoLibByteArray)
   : IDerEnumerated;
 var
   LValue: Int32;
@@ -198,7 +198,7 @@ begin
   result := TDerEnumerated.Create(System.Copy(enc));
 end;
 
-class function TDerEnumerated.GetInstance(obj: TObject): IDerEnumerated;
+class function TDerEnumerated.GetInstance(const obj: TObject): IDerEnumerated;
 begin
   if ((obj = Nil) or (obj is TDerEnumerated)) then
   begin

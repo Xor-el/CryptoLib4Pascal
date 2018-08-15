@@ -60,8 +60,8 @@ type
     Fkey: IDsaKeyParameters;
     Frandom: ISecureRandom;
 
-    function CalculateE(const n: TBigInteger; &message: TCryptoLibByteArray)
-      : TBigInteger; virtual;
+    function CalculateE(const n: TBigInteger;
+      const &message: TCryptoLibByteArray): TBigInteger; virtual;
 
     function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
       : ISecureRandom; virtual;
@@ -92,7 +92,7 @@ type
     /// <param name="&amp;message">
     /// the message that will be verified later.
     /// </param>
-    function GenerateSignature(&message: TCryptoLibByteArray)
+    function GenerateSignature(const &message: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     /// <summary>
@@ -100,7 +100,7 @@ type
     /// the passed in message for standard DSA the message should be a <br />
     /// SHA-1 hash of the real message to be verified.
     /// </summary>
-    function VerifySignature(&message: TCryptoLibByteArray;
+    function VerifySignature(const &message: TCryptoLibByteArray;
       const r, s: TBigInteger): Boolean; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
@@ -118,7 +118,7 @@ begin
 end;
 
 function TDsaSigner.CalculateE(const n: TBigInteger;
-  &message: TCryptoLibByteArray): TBigInteger;
+  const &message: TCryptoLibByteArray): TBigInteger;
 var
   length: Int32;
 begin
@@ -132,7 +132,7 @@ begin
   FkCalculator := kCalculator;
 end;
 
-function TDsaSigner.GenerateSignature(&message: TCryptoLibByteArray)
+function TDsaSigner.GenerateSignature(const &message: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   parameters: IDsaParameters;
@@ -228,7 +228,7 @@ begin
 
 end;
 
-function TDsaSigner.VerifySignature(&message: TCryptoLibByteArray;
+function TDsaSigner.VerifySignature(const &message: TCryptoLibByteArray;
   const r, s: TBigInteger): Boolean;
 var
   parameters: IDsaParameters;

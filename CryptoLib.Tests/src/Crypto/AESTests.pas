@@ -74,7 +74,8 @@ type
   TTestAES = class(TCryptoLibTestCase)
   private
 
-    procedure dooidTest(oids, names: TCryptoLibStringArray; groupSize: Int32);
+    procedure dooidTest(const oids, names: TCryptoLibStringArray;
+      groupSize: Int32);
 
     procedure doAESTest(const cipher: IBufferedCipher;
       const param: ICipherParameters; const input, output: String;
@@ -161,7 +162,7 @@ begin
   end;
 end;
 
-procedure TTestAES.dooidTest(oids, names: TCryptoLibStringArray;
+procedure TTestAES.dooidTest(const oids, names: TCryptoLibStringArray;
   groupSize: Int32);
 var
   data, result, IV: TBytes;

@@ -70,12 +70,12 @@ type
       const k: TBigInteger): TCryptoLibByteArray;
 
     function Do_Verify(const pu_key: IECPublicKeyParameters;
-      sig: TCryptoLibByteArray): Boolean;
+      const sig: TCryptoLibByteArray): Boolean;
 
     class function Encode_Sig(const r, s: TBigInteger)
       : TCryptoLibByteArray; static;
 
-    class function Decode_Sig(sig: TCryptoLibByteArray)
+    class function Decode_Sig(const sig: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; static;
 
 
@@ -175,7 +175,8 @@ type
     /// <summary>
     /// update the internal digest with the byte array in
     /// </summary>
-    procedure BlockUpdate(input: TCryptoLibByteArray; inOff, length: Int32);
+    procedure BlockUpdate(const input: TCryptoLibByteArray;
+      inOff, length: Int32);
 
     /// <summary>
     /// Generate a signature for the message we've been loaded with using the
@@ -187,7 +188,7 @@ type
     /// true if the internal state represents the signature described in the
     /// passed in array.
     /// </returns>
-    function VerifySignature(signature: TCryptoLibByteArray): Boolean;
+    function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
 
     /// <summary>
     /// Reset the internal state
@@ -206,7 +207,7 @@ begin
     TDerInteger.Create(s) as IDerInteger]).GetDerEncoded();
 end;
 
-class function TECSchnorrSigner.Decode_Sig(sig: TCryptoLibByteArray)
+class function TECSchnorrSigner.Decode_Sig(const sig: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;
@@ -223,7 +224,7 @@ begin
   FBuffer.Read(Result[0], FBuffer.Size);
 end;
 
-procedure TECSchnorrSigner.BlockUpdate(input: TCryptoLibByteArray;
+procedure TECSchnorrSigner.BlockUpdate(const input: TCryptoLibByteArray;
   inOff, length: Int32);
 begin
   FBuffer.Write(input[inOff], length);
@@ -257,7 +258,7 @@ begin
 end;
 
 function TECSchnorrSigner.Do_Verify(const pu_key: IECPublicKeyParameters;
-  sig: TCryptoLibByteArray): Boolean;
+  const sig: TCryptoLibByteArray): Boolean;
 begin
 
   if (pu_key.parameters.curve = Nil) then
@@ -348,8 +349,8 @@ begin
   FBuffer.Write(TCryptoLibByteArray.Create(input)[0], 1);
 end;
 
-function TECSchnorrSigner.VerifySignature
-  (signature: TCryptoLibByteArray): Boolean;
+function TECSchnorrSigner.VerifySignature(const signature
+  : TCryptoLibByteArray): Boolean;
 var
   pu_key_params: IECPublicKeyParameters;
 begin

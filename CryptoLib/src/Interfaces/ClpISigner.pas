@@ -54,7 +54,8 @@ type
     // /**
     // * update the internal digest with the byte array in
     // */
-    procedure BlockUpdate(input: TCryptoLibByteArray; inOff, length: Int32);
+    procedure BlockUpdate(const input: TCryptoLibByteArray;
+      inOff, length: Int32);
 
     // /**
     // * Generate a signature for the message we've been loaded with using
@@ -65,7 +66,7 @@ type
     // * return true if the internal state represents the signature described
     // * in the passed in array.
     // */
-    function VerifySignature(signature: TCryptoLibByteArray): Boolean;
+    function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
 
     // /**
     // * reset the internal state

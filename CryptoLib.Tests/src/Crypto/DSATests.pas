@@ -98,9 +98,9 @@ type
     Ffirst: Boolean;
 
   public
-    constructor Create(value: TCryptoLibByteArray);
+    constructor Create(const value: TCryptoLibByteArray);
 
-    procedure NextBytes(bytes: TCryptoLibByteArray); override;
+    procedure NextBytes(const bytes: TCryptoLibByteArray); override;
 
   end;
 
@@ -129,12 +129,12 @@ type
 
     procedure DoCheckMessage(const sgr: ISigner;
       const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
-      &message, sig: TCryptoLibByteArray);
+      const &message, sig: TCryptoLibByteArray);
 
     procedure DoTestKeyGeneration(keysize: Int32);
     procedure DoTestBadStrength(strength: Int32);
 
-    function DoDerDecode(encoding: TCryptoLibByteArray)
+    function DoDerDecode(const encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
   protected
@@ -184,7 +184,7 @@ implementation
 
 procedure TTestDSA.DoCheckMessage(const sgr: ISigner;
   const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
-  &message, sig: TCryptoLibByteArray);
+  const &message, sig: TCryptoLibByteArray);
 var
   kData, sigBytes: TCryptoLibByteArray;
   k: ISecureRandom;
@@ -218,7 +218,7 @@ begin
   end;
 end;
 
-function TTestDSA.DoDerDecode(encoding: TCryptoLibByteArray)
+function TTestDSA.DoDerDecode(const encoding: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;
@@ -1946,13 +1946,13 @@ end;
 
 { TDSATestSecureRandom }
 
-constructor TDSATestSecureRandom.Create(value: TCryptoLibByteArray);
+constructor TDSATestSecureRandom.Create(const value: TCryptoLibByteArray);
 begin
   Inherited Create(System.Copy(value));
   Ffirst := true;
 end;
 
-procedure TDSATestSecureRandom.NextBytes(bytes: TCryptoLibByteArray);
+procedure TDSATestSecureRandom.NextBytes(const bytes: TCryptoLibByteArray);
 begin
   if (Ffirst) then
   begin

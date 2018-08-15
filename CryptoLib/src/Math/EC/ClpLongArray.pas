@@ -451,94 +451,100 @@ type
     procedure AddShiftedByBitsSafe(const other: TLongArray;
       otherDegree, bits: Int32);
 
-    class function ShiftUp(x: TCryptoLibInt64Array; xOff, count, shift: Int32)
-      : Int64; overload; static;
-    class function ShiftUp(x: TCryptoLibInt64Array; xOff: Int32;
-      z: TCryptoLibInt64Array; zOff, count, shift: Int32): Int64;
+    class function ShiftUp(const x: TCryptoLibInt64Array;
+      xOff, count, shift: Int32): Int64; overload; static;
+    class function ShiftUp(const x: TCryptoLibInt64Array; xOff: Int32;
+      const z: TCryptoLibInt64Array; zOff, count, shift: Int32): Int64;
       overload; static;
     class function BitLength(w: Int64): Int32; static;
-    class function AddShiftedUp(x: TCryptoLibInt64Array; xOff: Int32;
-      y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
+    class function AddShiftedUp(const x: TCryptoLibInt64Array; xOff: Int32;
+      const y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
       static; inline;
-    class function AddShiftedDown(x: TCryptoLibInt64Array; xOff: Int32;
-      y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
+    class function AddShiftedDown(const x: TCryptoLibInt64Array; xOff: Int32;
+      const y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
       static; inline;
-    class procedure Add(x: TCryptoLibInt64Array; xOff: Int32;
-      y: TCryptoLibInt64Array; yOff, count: Int32); overload; static; inline;
-    class procedure Add(x: TCryptoLibInt64Array; xOff: Int32;
-      y: TCryptoLibInt64Array; yOff: Int32; z: TCryptoLibInt64Array;
+    class procedure Add(const x: TCryptoLibInt64Array; xOff: Int32;
+      const y: TCryptoLibInt64Array; yOff, count: Int32); overload;
+      static; inline;
+    class procedure Add(const x: TCryptoLibInt64Array; xOff: Int32;
+      const y: TCryptoLibInt64Array; yOff: Int32; const z: TCryptoLibInt64Array;
       zOff, count: Int32); overload; static; inline;
 
-    class procedure AddBoth(x: TCryptoLibInt64Array; xOff: Int32;
-      y1: TCryptoLibInt64Array; y1Off: Int32; y2: TCryptoLibInt64Array;
-      y2Off, count: Int32); static; inline;
+    class procedure AddBoth(const x: TCryptoLibInt64Array; xOff: Int32;
+      const y1: TCryptoLibInt64Array; y1Off: Int32;
+      const y2: TCryptoLibInt64Array; y2Off, count: Int32); static; inline;
 
-    class procedure Distribute(x: TCryptoLibInt64Array;
+    class procedure Distribute(const x: TCryptoLibInt64Array;
       src, dst1, dst2, count: Int32); static; inline;
 
-    class procedure FlipWord(buf: TCryptoLibInt64Array; off, bit: Int32;
+    class procedure FlipWord(const buf: TCryptoLibInt64Array; off, bit: Int32;
       word: Int64); static; inline;
 
-    class function TestBit(buf: TCryptoLibInt64Array; off, n: Int32): Boolean;
+    class function TestBit(const buf: TCryptoLibInt64Array; off, n: Int32)
+      : Boolean; static; inline;
+
+    class procedure FlipBit(const buf: TCryptoLibInt64Array; off, n: Int32);
       static; inline;
 
-    class procedure FlipBit(buf: TCryptoLibInt64Array; off, n: Int32);
+    class procedure MultiplyWord(a: Int64; const b: TCryptoLibInt64Array;
+      bLen: Int32; const c: TCryptoLibInt64Array; cOff: Int32); static; inline;
+
+    class function ReduceResult(const buf: TCryptoLibInt64Array;
+      off, len, m: Int32; const ks: TCryptoLibInt32Array): TLongArray;
       static; inline;
 
-    class procedure MultiplyWord(a: Int64; b: TCryptoLibInt64Array; bLen: Int32;
-      c: TCryptoLibInt64Array; cOff: Int32); static; inline;
+    class function ReduceInPlace(const buf: TCryptoLibInt64Array;
+      off, len, m: Int32; const ks: TCryptoLibInt32Array): Int32; static;
 
-    class function ReduceResult(buf: TCryptoLibInt64Array; off, len, m: Int32;
-      ks: TCryptoLibInt32Array): TLongArray; static; inline;
+    class procedure ReduceBitWise(const buf: TCryptoLibInt64Array;
+      off, BitLength, m: Int32; const ks: TCryptoLibInt32Array); static; inline;
 
-    class function ReduceInPlace(buf: TCryptoLibInt64Array; off, len, m: Int32;
-      ks: TCryptoLibInt32Array): Int32; static;
+    class procedure ReduceBit(const buf: TCryptoLibInt64Array;
+      off, bit, m: Int32; const ks: TCryptoLibInt32Array); static; inline;
 
-    class procedure ReduceBitWise(buf: TCryptoLibInt64Array;
-      off, BitLength, m: Int32; ks: TCryptoLibInt32Array); static; inline;
+    class procedure ReduceWordWise(const buf: TCryptoLibInt64Array;
+      off, len, toBit, m: Int32; const ks: TCryptoLibInt32Array); static;
 
-    class procedure ReduceBit(buf: TCryptoLibInt64Array; off, bit, m: Int32;
-      ks: TCryptoLibInt32Array); static; inline;
+    class procedure ReduceWord(const buf: TCryptoLibInt64Array; off, bit: Int32;
+      word: Int64; m: Int32; const ks: TCryptoLibInt32Array); static; inline;
 
-    class procedure ReduceWordWise(buf: TCryptoLibInt64Array;
-      off, len, toBit, m: Int32; ks: TCryptoLibInt32Array); static;
+    class procedure ReduceVectorWise(const buf: TCryptoLibInt64Array;
+      off, len, words, m: Int32; const ks: TCryptoLibInt32Array);
+      static; inline;
 
-    class procedure ReduceWord(buf: TCryptoLibInt64Array; off, bit: Int32;
-      word: Int64; m: Int32; ks: TCryptoLibInt32Array); static; inline;
+    class procedure FlipVector(const x: TCryptoLibInt64Array; xOff: Int32;
+      const y: TCryptoLibInt64Array; yOff, yLen, bits: Int32); static;
 
-    class procedure ReduceVectorWise(buf: TCryptoLibInt64Array;
-      off, len, words, m: Int32; ks: TCryptoLibInt32Array); static; inline;
+    class procedure SquareInPlace(const x: TCryptoLibInt64Array; xLen, m: Int32;
+      const ks: TCryptoLibInt32Array); static; inline;
 
-    class procedure FlipVector(x: TCryptoLibInt64Array; xOff: Int32;
-      y: TCryptoLibInt64Array; yOff, yLen, bits: Int32); static;
+    class procedure Interleave(const x: TCryptoLibInt64Array; xOff: Int32;
+      const z: TCryptoLibInt64Array; zOff, count, width: Int32); static; inline;
 
-    class procedure SquareInPlace(x: TCryptoLibInt64Array; xLen, m: Int32;
-      ks: TCryptoLibInt32Array); static; inline;
-
-    class procedure Interleave(x: TCryptoLibInt64Array; xOff: Int32;
-      z: TCryptoLibInt64Array; zOff, count, width: Int32); static; inline;
-
-    class procedure Interleave3(x: TCryptoLibInt64Array; xOff: Int32;
-      z: TCryptoLibInt64Array; zOff, count: Int32); overload; static; inline;
+    class procedure Interleave3(const x: TCryptoLibInt64Array; xOff: Int32;
+      const z: TCryptoLibInt64Array; zOff, count: Int32); overload;
+      static; inline;
 
     class function Interleave3(x: Int64): Int64; overload; static; inline;
 
     class function Interleave3_21to63(x: Int32): Int64; static; inline;
 
-    class procedure Interleave5(x: TCryptoLibInt64Array; xOff: Int32;
-      z: TCryptoLibInt64Array; zOff, count: Int32); overload; static; inline;
+    class procedure Interleave5(const x: TCryptoLibInt64Array; xOff: Int32;
+      const z: TCryptoLibInt64Array; zOff, count: Int32); overload;
+      static; inline;
 
     class function Interleave5(x: Int64): Int64; overload; static; inline;
 
     class function Interleave3_13to65(x: Int32): Int64; static; inline;
 
-    class procedure Interleave7(x: TCryptoLibInt64Array; xOff: Int32;
-      z: TCryptoLibInt64Array; zOff, count: Int32); overload; static; inline;
+    class procedure Interleave7(const x: TCryptoLibInt64Array; xOff: Int32;
+      const z: TCryptoLibInt64Array; zOff, count: Int32); overload;
+      static; inline;
 
     class function Interleave7(x: Int64): Int64; overload; static; inline;
 
-    class procedure Interleave2_n(x: TCryptoLibInt64Array; xOff: Int32;
-      z: TCryptoLibInt64Array; zOff, count, rounds: Int32); overload;
+    class procedure Interleave2_n(const x: TCryptoLibInt64Array; xOff: Int32;
+      const z: TCryptoLibInt64Array; zOff, count, rounds: Int32); overload;
       static; inline;
 
     class function Interleave2_n(x: Int64; rounds: Int32): Int64; overload;
@@ -567,11 +573,12 @@ type
 
 {$ENDREGION}
     constructor Create(intLen: Int32); overload;
-    constructor Create(ints: TCryptoLibInt64Array); overload;
-    constructor Create(ints: TCryptoLibInt64Array; off, len: Int32); overload;
+    constructor Create(const ints: TCryptoLibInt64Array); overload;
+    constructor Create(const ints: TCryptoLibInt64Array;
+      off, len: Int32); overload;
     constructor Create(const bigInt: TBigInteger); overload;
 
-    procedure CopyTo(z: TCryptoLibInt64Array; zOff: Int32);
+    procedure CopyTo(const z: TCryptoLibInt64Array; zOff: Int32);
 
     function IsOne(): Boolean; inline;
     function IsZero(): Boolean; inline;
@@ -585,29 +592,32 @@ type
     function TestBitZero(): Boolean;
 
     function ModMultiplyLD(const other: TLongArray; m: Int32;
-      ks: TCryptoLibInt32Array): TLongArray;
+      const ks: TCryptoLibInt32Array): TLongArray;
 
     function ModMultiply(const other: TLongArray; m: Int32;
-      ks: TCryptoLibInt32Array): TLongArray;
+      const ks: TCryptoLibInt32Array): TLongArray;
 
     function ModMultiplyAlt(const other: TLongArray; m: Int32;
-      ks: TCryptoLibInt32Array): TLongArray;
+      const ks: TCryptoLibInt32Array): TLongArray;
 
-    function ModReduce(m: Int32; ks: TCryptoLibInt32Array): TLongArray; inline;
-
-    function Multiply(const other: TLongArray; m: Int32;
-      ks: TCryptoLibInt32Array): TLongArray;
-
-    procedure Reduce(m: Int32; ks: TCryptoLibInt32Array); inline;
-
-    function ModSquare(m: Int32; ks: TCryptoLibInt32Array): TLongArray; inline;
-
-    function ModSquareN(n, m: Int32; ks: TCryptoLibInt32Array)
+    function ModReduce(m: Int32; const ks: TCryptoLibInt32Array)
       : TLongArray; inline;
 
-    function Square(m: Int32; ks: TCryptoLibInt32Array): TLongArray; inline;
+    function Multiply(const other: TLongArray; m: Int32;
+      const ks: TCryptoLibInt32Array): TLongArray;
 
-    function ModInverse(m: Int32; ks: TCryptoLibInt32Array): TLongArray;
+    procedure Reduce(m: Int32; const ks: TCryptoLibInt32Array); inline;
+
+    function ModSquare(m: Int32; const ks: TCryptoLibInt32Array)
+      : TLongArray; inline;
+
+    function ModSquareN(n, m: Int32; const ks: TCryptoLibInt32Array)
+      : TLongArray; inline;
+
+    function Square(m: Int32; const ks: TCryptoLibInt32Array)
+      : TLongArray; inline;
+
+    function ModInverse(m: Int32; const ks: TCryptoLibInt32Array): TLongArray;
 
     function Copy(): TLongArray; inline;
 
@@ -624,7 +634,7 @@ implementation
 
 { TLongArray }
 
-class function TLongArray.TestBit(buf: TCryptoLibInt64Array;
+class function TLongArray.TestBit(const buf: TCryptoLibInt64Array;
   off, n: Int32): Boolean;
 var
   theInt, theBit: Int32;
@@ -638,7 +648,8 @@ begin
   Result := (buf[off + theInt] and tester) <> 0;
 end;
 
-class procedure TLongArray.FlipBit(buf: TCryptoLibInt64Array; off, n: Int32);
+class procedure TLongArray.FlipBit(const buf: TCryptoLibInt64Array;
+  off, n: Int32);
 var
   theInt, theBit: Int32;
   flipper: Int64;
@@ -651,8 +662,8 @@ begin
   buf[off + theInt] := buf[off + theInt] xor flipper;
 end;
 
-class procedure TLongArray.ReduceBit(buf: TCryptoLibInt64Array;
-  off, bit, m: Int32; ks: TCryptoLibInt32Array);
+class procedure TLongArray.ReduceBit(const buf: TCryptoLibInt64Array;
+  off, bit, m: Int32; const ks: TCryptoLibInt32Array);
 var
   n, j: Int32;
 begin
@@ -668,8 +679,8 @@ begin
   FlipBit(buf, off, n);
 end;
 
-class procedure TLongArray.ReduceBitWise(buf: TCryptoLibInt64Array;
-  off, BitLength, m: Int32; ks: TCryptoLibInt32Array);
+class procedure TLongArray.ReduceBitWise(const buf: TCryptoLibInt64Array;
+  off, BitLength, m: Int32; const ks: TCryptoLibInt32Array);
 begin
   System.Dec(BitLength);
   while (BitLength >= m) do
@@ -682,8 +693,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.ReduceVectorWise(buf: TCryptoLibInt64Array;
-  off, len, words, m: Int32; ks: TCryptoLibInt32Array);
+class procedure TLongArray.ReduceVectorWise(const buf: TCryptoLibInt64Array;
+  off, len, words, m: Int32; const ks: TCryptoLibInt32Array);
 var
   baseBit, j: Int32;
 begin
@@ -703,8 +714,8 @@ begin
   FlipVector(buf, off, buf, off + words, len - words, baseBit);
 end;
 
-class function TLongArray.ReduceInPlace(buf: TCryptoLibInt64Array;
-  off, len, m: Int32; ks: TCryptoLibInt32Array): Int32;
+class function TLongArray.ReduceInPlace(const buf: TCryptoLibInt64Array;
+  off, len, m: Int32; const ks: TCryptoLibInt32Array): Int32;
 var
   mLen, numBits, excessBits, kLen, kMax, kNext, wordWiseLimit, vectorableWords,
     vectorWiseWords: Int32;
@@ -775,8 +786,8 @@ begin
   Result := (r32 and Int64($FFFFFFFF)) shl 32 or (r00 and Int64($FFFFFFFF));
 end;
 
-class procedure TLongArray.SquareInPlace(x: TCryptoLibInt64Array;
-  xLen, m: Int32; ks: TCryptoLibInt32Array);
+class procedure TLongArray.SquareInPlace(const x: TCryptoLibInt64Array;
+  xLen, m: Int32; const ks: TCryptoLibInt32Array);
 var
   pos: Int32;
   xVal: Int64;
@@ -816,8 +827,8 @@ begin
     Interleave3_21to63(Int32(UInt64(x) shr 42) and $1FFFFF) shl 2;
 end;
 
-class procedure TLongArray.Interleave3(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count: Int32);
+class procedure TLongArray.Interleave3(const x: TCryptoLibInt64Array;
+  xOff: Int32; const z: TCryptoLibInt64Array; zOff, count: Int32);
 var
   I: Int32;
 begin
@@ -845,8 +856,8 @@ begin
     Interleave3_13to65(Int32(UInt64(x) shr 52) and $1FFF) shl 4;
 end;
 
-class procedure TLongArray.Interleave5(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count: Int32);
+class procedure TLongArray.Interleave5(const x: TCryptoLibInt64Array;
+  xOff: Int32; const z: TCryptoLibInt64Array; zOff, count: Int32);
 var
   I: Int32;
 begin
@@ -870,8 +881,8 @@ begin
     INTERLEAVE7_TABLE[Int32(UInt64(x) shr 54) and $1FF] shl 6;
 end;
 
-class procedure TLongArray.Interleave7(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count: Int32);
+class procedure TLongArray.Interleave7(const x: TCryptoLibInt64Array;
+  xOff: Int32; const z: TCryptoLibInt64Array; zOff, count: Int32);
 var
   I: Int32;
 begin
@@ -908,8 +919,8 @@ begin
   Result := x;
 end;
 
-class procedure TLongArray.Interleave2_n(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count, rounds: Int32);
+class procedure TLongArray.Interleave2_n(const x: TCryptoLibInt64Array;
+  xOff: Int32; const z: TCryptoLibInt64Array; zOff, count, rounds: Int32);
 var
   I: Int32;
 begin
@@ -919,8 +930,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.Add(x: TCryptoLibInt64Array; xOff: Int32;
-  y: TCryptoLibInt64Array; yOff: Int32; z: TCryptoLibInt64Array;
+class procedure TLongArray.Add(const x: TCryptoLibInt64Array; xOff: Int32;
+  const y: TCryptoLibInt64Array; yOff: Int32; const z: TCryptoLibInt64Array;
   zOff, count: Int32);
 var
   I: Int32;
@@ -931,8 +942,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.Add(x: TCryptoLibInt64Array; xOff: Int32;
-  y: TCryptoLibInt64Array; yOff, count: Int32);
+class procedure TLongArray.Add(const x: TCryptoLibInt64Array; xOff: Int32;
+  const y: TCryptoLibInt64Array; yOff, count: Int32);
 var
   I: Int32;
 begin
@@ -942,8 +953,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.AddBoth(x: TCryptoLibInt64Array; xOff: Int32;
-  y1: TCryptoLibInt64Array; y1Off: Int32; y2: TCryptoLibInt64Array;
+class procedure TLongArray.AddBoth(const x: TCryptoLibInt64Array; xOff: Int32;
+  const y1: TCryptoLibInt64Array; y1Off: Int32; const y2: TCryptoLibInt64Array;
   y2Off, count: Int32);
 var
   I: Int32;
@@ -983,8 +994,8 @@ begin
   Result := TLongArray.Create(ints);
 end;
 
-class function TLongArray.AddShiftedUp(x: TCryptoLibInt64Array; xOff: Int32;
-  y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
+class function TLongArray.AddShiftedUp(const x: TCryptoLibInt64Array;
+  xOff: Int32; const y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
 var
   shiftInv, I: Int32;
   prev, next: Int64;
@@ -1044,8 +1055,8 @@ begin
   Add(Fm_ints, words, other.Fm_ints, 0, otherUsedLen);
 end;
 
-class function TLongArray.AddShiftedDown(x: TCryptoLibInt64Array; xOff: Int32;
-  y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
+class function TLongArray.AddShiftedDown(const x: TCryptoLibInt64Array;
+  xOff: Int32; const y: TCryptoLibInt64Array; yOff, count, shift: Int32): Int64;
 var
   shiftInv, I: Int32;
   prev, next: Int64;
@@ -1117,7 +1128,8 @@ begin
   Result := TLongArray.Create(System.Copy(Fm_ints));
 end;
 
-constructor TLongArray.Create(ints: TCryptoLibInt64Array; off, len: Int32);
+constructor TLongArray.Create(const ints: TCryptoLibInt64Array;
+  off, len: Int32);
 begin
   if ((off = 0) and (len = System.Length(ints))) then
   begin
@@ -1130,7 +1142,7 @@ begin
   end;
 end;
 
-constructor TLongArray.Create(ints: TCryptoLibInt64Array);
+constructor TLongArray.Create(const ints: TCryptoLibInt64Array);
 begin
   Fm_ints := ints;
 end;
@@ -1246,7 +1258,7 @@ begin
   Result := (I shl 6) + BitLength(w);
 end;
 
-class procedure TLongArray.Distribute(x: TCryptoLibInt64Array;
+class procedure TLongArray.Distribute(const x: TCryptoLibInt64Array;
   src, dst1, dst2, count: Int32);
 var
   I: Int32;
@@ -1283,8 +1295,8 @@ begin
   Result := true;
 end;
 
-class procedure TLongArray.FlipVector(x: TCryptoLibInt64Array; xOff: Int32;
-  y: TCryptoLibInt64Array; yOff, yLen, bits: Int32);
+class procedure TLongArray.FlipVector(const x: TCryptoLibInt64Array;
+  xOff: Int32; const y: TCryptoLibInt64Array; yOff, yLen, bits: Int32);
 var
   carry: Int64;
 begin
@@ -1302,8 +1314,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.FlipWord(buf: TCryptoLibInt64Array; off, bit: Int32;
-  word: Int64);
+class procedure TLongArray.FlipWord(const buf: TCryptoLibInt64Array;
+  off, bit: Int32; word: Int64);
 var
   n, shift: Int32;
 begin
@@ -1391,8 +1403,8 @@ begin
   Result := 0;
 end;
 
-class procedure TLongArray.Interleave(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count, width: Int32);
+class procedure TLongArray.Interleave(const x: TCryptoLibInt64Array;
+  xOff: Int32; const z: TCryptoLibInt64Array; zOff, count, width: Int32);
 begin
   case width of
     3:
@@ -1441,7 +1453,7 @@ begin
 
 end;
 
-procedure TLongArray.CopyTo(z: TCryptoLibInt64Array; zOff: Int32);
+procedure TLongArray.CopyTo(const z: TCryptoLibInt64Array; zOff: Int32);
 begin
   System.Move(Fm_ints[0], z[zOff], System.Length(Fm_ints) *
     System.SizeOf(Int64));
@@ -1489,7 +1501,8 @@ begin
   Result := true;
 end;
 
-function TLongArray.ModInverse(m: Int32; ks: TCryptoLibInt32Array): TLongArray;
+function TLongArray.ModInverse(m: Int32; const ks: TCryptoLibInt32Array)
+  : TLongArray;
 var
   uzDegree, t, b, duv1, dgg1, j, duv2, dgg2: Int32;
   uz, vz, g1z, g2z: TLongArray;
@@ -1580,8 +1593,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.MultiplyWord(a: Int64; b: TCryptoLibInt64Array;
-  bLen: Int32; c: TCryptoLibInt64Array; cOff: Int32);
+class procedure TLongArray.MultiplyWord(a: Int64; const b: TCryptoLibInt64Array;
+  bLen: Int32; const c: TCryptoLibInt64Array; cOff: Int32);
 var
   k: Int32;
   carry: Int64;
@@ -1607,8 +1620,8 @@ begin
   end;
 end;
 
-class function TLongArray.ReduceResult(buf: TCryptoLibInt64Array;
-  off, len, m: Int32; ks: TCryptoLibInt32Array): TLongArray;
+class function TLongArray.ReduceResult(const buf: TCryptoLibInt64Array;
+  off, len, m: Int32; const ks: TCryptoLibInt32Array): TLongArray;
 var
   rLen: Int32;
 begin
@@ -1617,7 +1630,7 @@ begin
 end;
 
 function TLongArray.ModMultiply(const other: TLongArray; m: Int32;
-  ks: TCryptoLibInt32Array): TLongArray;
+  const ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, bMax, tOff, I, MASK, aPos, cOff,
     u, v: Int32;
@@ -1772,7 +1785,7 @@ begin
 end;
 
 function TLongArray.ModMultiplyAlt(const other: TLongArray; m: Int32;
-  ks: TCryptoLibInt32Array): TLongArray;
+  const ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, width, positions, top, banks, shifts, bMax,
     bTotal, stride, cTotal, I, bOff, bank, MASK, k, aPos, index, ciPos: Int32;
@@ -1839,28 +1852,6 @@ begin
     Result := ReduceResult(c0, 0, cLen, m, ks);
     Exit;
   end;
-
-  // NOTE: This works, but is slower than width 4 processing
-  // if (aLen == 2)
-  // {
-  // /*
-  // * Use common-multiplicand optimization to save ~1/4 of the adds
-  // */
-  // long a1 = A.m_ints[0], a2 = A.m_ints[1];
-  // long aa = a1 & a2; a1 ^= aa; a2 ^= aa;
-  //
-  // long[] b = B.m_ints;
-  // long[] c = new long[cLen];
-  // multiplyWord(aa, b, bLen, c, 1);
-  // add(c, 0, c, 1, cLen - 1);
-  // multiplyWord(a1, b, bLen, c, 0);
-  // multiplyWord(a2, b, bLen, c, 1);
-  //
-  // /*
-  // * Reduce the raw answer against the reduction coefficients
-  // */
-  // return ReduceResult(c, 0, cLen, m, ks);
-  // }
 
   // /*
   // * Determine the parameters of the Interleaved window algorithm: the 'width' in bits to
@@ -2026,7 +2017,7 @@ begin
 end;
 
 function TLongArray.ModMultiplyLD(const other: TLongArray; m: Int32;
-  ks: TCryptoLibInt32Array): TLongArray;
+  const ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, bMax, tOff, I, MASK, k, aVal, u,
     v, j: Int32;
@@ -2186,7 +2177,8 @@ begin
 
 end;
 
-function TLongArray.ModReduce(m: Int32; ks: TCryptoLibInt32Array): TLongArray;
+function TLongArray.ModReduce(m: Int32; const ks: TCryptoLibInt32Array)
+  : TLongArray;
 var
   buf: TCryptoLibInt64Array;
   rLen: Int32;
@@ -2196,7 +2188,8 @@ begin
   Result := TLongArray.Create(buf, 0, rLen);
 end;
 
-function TLongArray.ModSquare(m: Int32; ks: TCryptoLibInt32Array): TLongArray;
+function TLongArray.ModSquare(m: Int32; const ks: TCryptoLibInt32Array)
+  : TLongArray;
 var
   len, _2len, pos: Int32;
   r: TCryptoLibInt64Array;
@@ -2227,7 +2220,7 @@ begin
     System.Length(r), m, ks));
 end;
 
-function TLongArray.ModSquareN(n, m: Int32; ks: TCryptoLibInt32Array)
+function TLongArray.ModSquareN(n, m: Int32; const ks: TCryptoLibInt32Array)
   : TLongArray;
 var
   len, mLen: Int32;
@@ -2257,7 +2250,7 @@ begin
 end;
 
 function TLongArray.Multiply(const other: TLongArray; m: Int32;
-  ks: TCryptoLibInt32Array): TLongArray;
+  const ks: TCryptoLibInt32Array): TLongArray;
 var
   aDeg, bDeg, tmp, aLen, bLen, cLen, bMax, tOff, I, MASK, aPos, cOff,
     u, v: Int32;
@@ -2413,7 +2406,7 @@ begin
   Result := TLongArray.Create(c, 0, cLen);
 end;
 
-procedure TLongArray.Reduce(m: Int32; ks: TCryptoLibInt32Array);
+procedure TLongArray.Reduce(m: Int32; const ks: TCryptoLibInt32Array);
 var
   buf: TCryptoLibInt64Array;
   rLen: Int32;
@@ -2427,8 +2420,8 @@ begin
   end;
 end;
 
-class procedure TLongArray.ReduceWord(buf: TCryptoLibInt64Array;
-  off, bit: Int32; word: Int64; m: Int32; ks: TCryptoLibInt32Array);
+class procedure TLongArray.ReduceWord(const buf: TCryptoLibInt64Array;
+  off, bit: Int32; word: Int64; m: Int32; const ks: TCryptoLibInt32Array);
 var
   offset, j: Int32;
 begin
@@ -2443,8 +2436,8 @@ begin
   FlipWord(buf, off, offset, word);
 end;
 
-class procedure TLongArray.ReduceWordWise(buf: TCryptoLibInt64Array;
-  off, len, toBit, m: Int32; ks: TCryptoLibInt32Array);
+class procedure TLongArray.ReduceWordWise(const buf: TCryptoLibInt64Array;
+  off, len, toBit, m: Int32; const ks: TCryptoLibInt32Array);
 var
   toPos, partial: Int32;
   word: Int64;
@@ -2472,8 +2465,8 @@ begin
 
 end;
 
-class function TLongArray.ShiftUp(x: TCryptoLibInt64Array; xOff: Int32;
-  z: TCryptoLibInt64Array; zOff, count, shift: Int32): Int64;
+class function TLongArray.ShiftUp(const x: TCryptoLibInt64Array; xOff: Int32;
+  const z: TCryptoLibInt64Array; zOff, count, shift: Int32): Int64;
 var
   shiftInv, I: Int32;
   prev, next: Int64;
@@ -2490,7 +2483,7 @@ begin
   Result := prev;
 end;
 
-class function TLongArray.ShiftUp(x: TCryptoLibInt64Array;
+class function TLongArray.ShiftUp(const x: TCryptoLibInt64Array;
   xOff, count, shift: Int32): Int64;
 var
   shiftInv, I: Int32;
@@ -2508,7 +2501,8 @@ begin
   Result := prev;
 end;
 
-function TLongArray.Square(m: Int32; ks: TCryptoLibInt32Array): TLongArray;
+function TLongArray.Square(m: Int32; const ks: TCryptoLibInt32Array)
+  : TLongArray;
 var
   len, _2len, pos: Int32;
   r: TCryptoLibInt64Array;

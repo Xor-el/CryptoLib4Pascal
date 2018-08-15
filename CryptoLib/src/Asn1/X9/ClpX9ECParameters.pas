@@ -84,9 +84,9 @@ type
     constructor Create(const curve: IECCurve; const g: IECPoint;
       const n, h: TBigInteger); overload;
     constructor Create(const curve: IECCurve; const g: IECPoint;
-      const n, h: TBigInteger; seed: TCryptoLibByteArray); overload;
+      const n, h: TBigInteger; const seed: TCryptoLibByteArray); overload;
     constructor Create(const curve: IECCurve; const g: IX9ECPoint;
-      const n, h: TBigInteger; seed: TCryptoLibByteArray); overload;
+      const n, h: TBigInteger; const seed: TCryptoLibByteArray); overload;
 
     property curve: IECCurve read GetCurve;
     property g: IECPoint read GetG;
@@ -185,7 +185,7 @@ begin
 end;
 
 constructor TX9ECParameters.Create(const curve: IECCurve; const g: IX9ECPoint;
-  const n, h: TBigInteger; seed: TCryptoLibByteArray);
+  const n, h: TBigInteger; const seed: TCryptoLibByteArray);
 var
   exponents: TCryptoLibInt32Array;
   Field: IPolynomialExtensionField;
@@ -228,7 +228,7 @@ begin
 end;
 
 constructor TX9ECParameters.Create(const curve: IECCurve; const g: IECPoint;
-  const n, h: TBigInteger; seed: TCryptoLibByteArray);
+  const n, h: TBigInteger; const seed: TCryptoLibByteArray);
 begin
   Create(curve, TX9ECPoint.Create(g) as IX9ECPoint, n, h, seed)
 end;

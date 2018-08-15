@@ -56,7 +56,7 @@ type
   private
 
     procedure CompareOkm(test: Int32;
-      calculatedOkm, testOkm: TCryptoLibByteArray);
+      const calculatedOkm, testOkm: TCryptoLibByteArray);
     procedure DoTestHKDF();
 
   protected
@@ -73,7 +73,7 @@ implementation
 { TTestHkdfGenerator }
 
 procedure TTestHkdfGenerator.CompareOkm(test: Int32;
-  calculatedOkm, testOkm: TCryptoLibByteArray);
+  const calculatedOkm, testOkm: TCryptoLibByteArray);
 begin
   if (not TArrayUtils.AreEqual(calculatedOkm, testOkm)) then
   begin

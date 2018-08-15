@@ -40,14 +40,15 @@ type
     procedure WriteNull();
 
   public
-    constructor Create(os: TStream);
-    procedure WriteEncoded(tag: Int32; bytes: TCryptoLibByteArray); overload;
+    constructor Create(const os: TStream);
+    procedure WriteEncoded(tag: Int32;
+      const bytes: TCryptoLibByteArray); overload;
     procedure WriteEncoded(tag: Int32; first: Byte;
-      bytes: TCryptoLibByteArray); overload;
-    procedure WriteEncoded(tag: Int32; bytes: TCryptoLibByteArray;
+      const bytes: TCryptoLibByteArray); overload;
+    procedure WriteEncoded(tag: Int32; const bytes: TCryptoLibByteArray;
       offset, length: Int32); overload;
     procedure WriteEncoded(flags, tagNo: Int32;
-      bytes: TCryptoLibByteArray); overload;
+      const bytes: TCryptoLibByteArray); overload;
     procedure WriteTag(flags, tagNo: Int32);
 
     procedure WriteObject(const obj: IAsn1Encodable); overload; virtual;
@@ -59,13 +60,13 @@ implementation
 
 { TDerOutputStream }
 
-constructor TDerOutputStream.Create(os: TStream);
+constructor TDerOutputStream.Create(const os: TStream);
 begin
   Inherited Create(os);
 end;
 
 procedure TDerOutputStream.WriteEncoded(tag: Int32; first: Byte;
-  bytes: TCryptoLibByteArray);
+  const bytes: TCryptoLibByteArray);
 begin
   WriteByte(Byte(tag));
   WriteLength(System.length(bytes) + 1);
@@ -73,7 +74,8 @@ begin
   Write(bytes[0], System.length(bytes));
 end;
 
-procedure TDerOutputStream.WriteEncoded(tag: Int32; bytes: TCryptoLibByteArray);
+procedure TDerOutputStream.WriteEncoded(tag: Int32;
+  const bytes: TCryptoLibByteArray);
 begin
   WriteByte(Byte(tag));
   WriteLength(System.length(bytes));
@@ -81,15 +83,15 @@ begin
 end;
 
 procedure TDerOutputStream.WriteEncoded(flags, tagNo: Int32;
-  bytes: TCryptoLibByteArray);
+  const bytes: TCryptoLibByteArray);
 begin
   WriteTag(flags, tagNo);
   WriteLength(System.length(bytes));
   Write(bytes[0], System.length(bytes));
 end;
 
-procedure TDerOutputStream.WriteEncoded(tag: Int32; bytes: TCryptoLibByteArray;
-  offset, length: Int32);
+procedure TDerOutputStream.WriteEncoded(tag: Int32;
+  const bytes: TCryptoLibByteArray; offset, length: Int32);
 begin
   WriteByte(Byte(tag));
   WriteLength(length);

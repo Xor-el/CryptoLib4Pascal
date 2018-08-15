@@ -59,7 +59,7 @@ type
     /// <summary>
     /// basic constructor - byte encoded string.
     /// </summary>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// basic constructor
@@ -84,7 +84,7 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerVisibleString; overload;
+    class function GetInstance(const obj: TObject): IDerVisibleString; overload;
       static; inline;
 
     /// <summary>
@@ -137,7 +137,7 @@ begin
   result := TStringUtils.GetStringHashCode(FStr);
 end;
 
-constructor TDerVisibleString.Create(Str: TCryptoLibByteArray);
+constructor TDerVisibleString.Create(const Str: TCryptoLibByteArray);
 begin
   Create(String(TEncoding.ASCII.GetString(Str)));
 end;
@@ -158,7 +158,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.VisibleString, GetOctets());
 end;
 
-class function TDerVisibleString.GetInstance(obj: TObject): IDerVisibleString;
+class function TDerVisibleString.GetInstance(const obj: TObject)
+  : IDerVisibleString;
 var
   asn1OctetString: IAsn1OctetString;
   asn1TaggedObject: IAsn1TaggedObject;

@@ -231,7 +231,7 @@ type
     // * @return <code>&#961; := k partmod (&#964;<sup>m</sup> - 1)/(&#964; - 1)</code>
     // */
     class function PartModReduction(const k: TBigInteger; m: Int32; a: ShortInt;
-      s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt)
+      const s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt)
       : IZTauElement; static;
 
     // /**
@@ -256,7 +256,7 @@ type
     // * @return <code>&#955; * p</code>
     // */
     class function MultiplyFromTnaf(const p: IAbstractF2mPoint;
-      u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
+      const u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
 
     // /**
     // * Computes the <code>[&#964;]</code>-adic window NAF of an element
@@ -274,7 +274,7 @@ type
     // */
     class function TauAdicWNaf(mu: ShortInt; const lambda: IZTauElement;
       Width: ShortInt; const pow2w, tw: TBigInteger;
-      alpha: TCryptoLibGenericArray<IZTauElement>)
+      const alpha: TCryptoLibGenericArray<IZTauElement>)
       : TCryptoLibShortIntArray; static;
 
     // /**
@@ -628,7 +628,7 @@ begin
 end;
 
 class function TTnaf.MultiplyFromTnaf(const p: IAbstractF2mPoint;
-  u: TCryptoLibShortIntArray): IAbstractF2mPoint;
+  const u: TCryptoLibShortIntArray): IAbstractF2mPoint;
 var
   curve: IECCurve;
   q, pNeg: IAbstractF2mPoint;
@@ -769,7 +769,7 @@ begin
 end;
 
 class function TTnaf.PartModReduction(const k: TBigInteger; m: Int32;
-  a: ShortInt; s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt)
+  a: ShortInt; const s: TCryptoLibGenericArray<TBigInteger>; mu, c: ShortInt)
   : IZTauElement;
 var
   d0, vm, r0, r1: TBigInteger;
@@ -1008,7 +1008,7 @@ end;
 
 class function TTnaf.TauAdicWNaf(mu: ShortInt; const lambda: IZTauElement;
   Width: ShortInt; const pow2w, tw: TBigInteger;
-  alpha: TCryptoLibGenericArray<IZTauElement>): TCryptoLibShortIntArray;
+  const alpha: TCryptoLibGenericArray<IZTauElement>): TCryptoLibShortIntArray;
 var
   LNorm, pow2wMin1, r0, r1, t, uUnMod: TBigInteger;
   log2Norm, maxLength, i: Int32;

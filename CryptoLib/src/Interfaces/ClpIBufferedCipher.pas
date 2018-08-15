@@ -46,28 +46,30 @@ type
     function GetUpdateOutputSize(inputLen: Int32): Int32;
 
     function ProcessByte(input: Byte): TCryptoLibByteArray; overload;
-    function ProcessByte(input: Byte; output: TCryptoLibByteArray;
+    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
       outOff: Int32): Int32; overload;
 
-    function ProcessBytes(input: TCryptoLibByteArray)
+    function ProcessBytes(const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload;
-    function ProcessBytes(input: TCryptoLibByteArray; inOff, length: Int32)
-      : TCryptoLibByteArray; overload;
-    function ProcessBytes(input, output: TCryptoLibByteArray; outOff: Int32)
+    function ProcessBytes(const input: TCryptoLibByteArray;
+      inOff, length: Int32): TCryptoLibByteArray; overload;
+    function ProcessBytes(const input, output: TCryptoLibByteArray;
+      outOff: Int32): Int32; overload;
+    function ProcessBytes(const input: TCryptoLibByteArray;
+      inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
-    function ProcessBytes(input: TCryptoLibByteArray; inOff, length: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
 
     function DoFinal(): TCryptoLibByteArray; overload;
-    function DoFinal(input: TCryptoLibByteArray): TCryptoLibByteArray; overload;
-    function DoFinal(input: TCryptoLibByteArray; inOff, length: Int32)
+    function DoFinal(const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload;
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32)
+      : TCryptoLibByteArray; overload;
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
-    function DoFinal(input, output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const input, output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
-    function DoFinal(input: TCryptoLibByteArray; inOff, length: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
+    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32;
+      const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
 
     /// <summary>
     /// Reset the cipher. After resetting the cipher is in the same state

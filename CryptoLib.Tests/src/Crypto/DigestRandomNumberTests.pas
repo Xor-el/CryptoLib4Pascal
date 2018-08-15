@@ -56,12 +56,14 @@ type
       FnoCycle0SHA256, Fexpected100SHA1, Fexpected100SHA256, FexpectedTestSHA1,
       FexpectedTestSHA256, Fsha1Xors, Fsha256Xors: TBytes;
 
-    procedure doExpectedTest(digest: IDigest; seed: Int32;
-      expected: TBytes); overload;
-    procedure doExpectedTest(digest: IDigest; seed, expected: TBytes); overload;
-    procedure doExpectedTest(digest: IDigest; seed: Int32;
-      expected, noCycle: TBytes); overload;
-    procedure doCountTest(digest: IDigest; seed, expectedXors: TBytes);
+    procedure doExpectedTest(const digest: IDigest; seed: Int32;
+      const expected: TBytes); overload;
+    procedure doExpectedTest(const digest: IDigest;
+      const seed, expected: TBytes); overload;
+    procedure doExpectedTest(const digest: IDigest; seed: Int32;
+      const expected, noCycle: TBytes); overload;
+    procedure doCountTest(const digest: IDigest;
+      const seed, expectedXors: TBytes);
 
   protected
     procedure SetUp; override;
@@ -75,8 +77,8 @@ implementation
 
 { TTestDigestRandomNumber }
 
-procedure TTestDigestRandomNumber.doCountTest(digest: IDigest;
-  seed, expectedXors: TBytes);
+procedure TTestDigestRandomNumber.doCountTest(const digest: IDigest;
+  const seed, expectedXors: TBytes);
 var
   rGen: IDigestRandomGenerator;
   output, ands, xors, ors: TBytes;
@@ -133,14 +135,14 @@ begin
 
 end;
 
-procedure TTestDigestRandomNumber.doExpectedTest(digest: IDigest; seed: Int32;
-  expected: TBytes);
+procedure TTestDigestRandomNumber.doExpectedTest(const digest: IDigest;
+  seed: Int32; const expected: TBytes);
 begin
   doExpectedTest(digest, seed, expected, Nil);
 end;
 
-procedure TTestDigestRandomNumber.doExpectedTest(digest: IDigest; seed: Int32;
-  expected, noCycle: TBytes);
+procedure TTestDigestRandomNumber.doExpectedTest(const digest: IDigest;
+  seed: Int32; const expected, noCycle: TBytes);
 var
   rGen: IDigestRandomGenerator;
   output: TBytes;
@@ -173,8 +175,8 @@ begin
   end;
 end;
 
-procedure TTestDigestRandomNumber.doExpectedTest(digest: IDigest;
-  seed, expected: TBytes);
+procedure TTestDigestRandomNumber.doExpectedTest(const digest: IDigest;
+  const seed, expected: TBytes);
 var
   rGen: IDigestRandomGenerator;
   output: TBytes;

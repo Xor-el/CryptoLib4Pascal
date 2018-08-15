@@ -55,7 +55,7 @@ type
     public
 
       constructor Create(const outer: ISecP384R1Curve;
-        table: TCryptoLibUInt32Array; size: Int32);
+        const table: TCryptoLibUInt32Array; size: Int32);
 
       function Lookup(index: Int32): IECPoint; virtual;
 
@@ -88,8 +88,8 @@ type
       withCompression: Boolean): IECPoint; overload; override;
 
     function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload; override;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
+      withCompression: Boolean): IECPoint; overload; override;
 
   public
     constructor Create();
@@ -97,8 +97,8 @@ type
 
     function SupportsCoordinateSystem(coord: Int32): Boolean; override;
 
-    function CreateCacheSafeLookupTable
-      (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32)
+    function CreateCacheSafeLookupTable(const points
+      : TCryptoLibGenericArray<IECPoint>; off, len: Int32)
       : IECLookupTable; override;
 
     property Q: TBigInteger read GetQ;
@@ -155,8 +155,8 @@ begin
   result := TSecP384R1Curve.Create();
 end;
 
-function TSecP384R1Curve.CreateCacheSafeLookupTable
-  (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
+function TSecP384R1Curve.CreateCacheSafeLookupTable(const points
+  : TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
 var
   table: TCryptoLibUInt32Array;
   pos, i: Int32;
@@ -186,7 +186,7 @@ begin
 end;
 
 function TSecP384R1Curve.CreateRawPoint(const x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
   : IECPoint;
 begin
   result := TSecP384R1Point.Create(Self as IECCurve, x, y, zs, withCompression);
@@ -225,7 +225,8 @@ end;
 { TSecP384R1Curve.TSecP384R1LookupTable }
 
 constructor TSecP384R1Curve.TSecP384R1LookupTable.Create
-  (const outer: ISecP384R1Curve; table: TCryptoLibUInt32Array; size: Int32);
+  (const outer: ISecP384R1Curve; const table: TCryptoLibUInt32Array;
+  size: Int32);
 begin
   Inherited Create();
   Fm_outer := outer;

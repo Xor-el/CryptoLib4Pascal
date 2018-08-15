@@ -32,7 +32,7 @@ type
   TBase58 = class sealed(TObject)
 
   public
-    class function Encode(Input: TCryptoLibByteArray): String; static;
+    class function Encode(const Input: TCryptoLibByteArray): String; static;
     class function Decode(const Input: String): TCryptoLibByteArray; static;
   end;
 
@@ -45,7 +45,7 @@ begin
   result := SbpBase58.TBase58.BitCoin.Decode(Input);
 end;
 
-class function TBase58.Encode(Input: TCryptoLibByteArray): String;
+class function TBase58.Encode(const Input: TCryptoLibByteArray): String;
 begin
   result := SbpBase58.TBase58.BitCoin.Encode(Input);
 end;

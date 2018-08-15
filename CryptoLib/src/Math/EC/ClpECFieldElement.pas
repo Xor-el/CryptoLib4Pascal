@@ -134,11 +134,11 @@ type
   strict protected
     function ModAdd(const x1, x2: TBigInteger): TBigInteger; virtual;
     function ModDouble(const x: TBigInteger): TBigInteger; virtual;
-    function ModHalf(x: TBigInteger): TBigInteger; virtual;
-    function ModHalfAbs(x: TBigInteger): TBigInteger; virtual;
+    function ModHalf(const x: TBigInteger): TBigInteger; virtual;
+    function ModHalfAbs(const x: TBigInteger): TBigInteger; virtual;
     function ModInverse(const x: TBigInteger): TBigInteger; virtual;
     function ModMult(const x1, x2: TBigInteger): TBigInteger; virtual;
-    function ModReduce(x: TBigInteger): TBigInteger; virtual;
+    function ModReduce(const x: TBigInteger): TBigInteger; virtual;
     function ModSubtract(const x1, x2: TBigInteger): TBigInteger; virtual;
 
     /// <summary>
@@ -305,7 +305,7 @@ type
     constructor Create(m, K: Int32; const x: TBigInteger); overload;
       deprecated 'Use ECCurve.FromBigInteger to construct field elements';
 
-    constructor Create(m: Int32; ks: TCryptoLibInt32Array;
+    constructor Create(m: Int32; const ks: TCryptoLibInt32Array;
       const x: TLongArray); overload;
 
     destructor Destroy; override;
@@ -520,7 +520,7 @@ begin
   Fx := TLongArray.Create(x);
 end;
 
-constructor TF2mFieldElement.Create(m: Int32; ks: TCryptoLibInt32Array;
+constructor TF2mFieldElement.Create(m: Int32; const ks: TCryptoLibInt32Array;
   const x: TLongArray);
 begin
   Inherited Create();
@@ -1073,22 +1073,28 @@ begin
   result := _2x;
 end;
 
-function TFpFieldElement.ModHalf(x: TBigInteger): TBigInteger;
+function TFpFieldElement.ModHalf(const x: TBigInteger): TBigInteger;
+var
+  Lx: TBigInteger;
 begin
-  if (x.TestBit(0)) then
+  Lx := x;
+  if (Lx.TestBit(0)) then
   begin
-    x := Q.Add(x);
+    Lx := Q.Add(Lx);
   end;
-  result := x.ShiftRight(1);
+  result := Lx.ShiftRight(1);
 end;
 
-function TFpFieldElement.ModHalfAbs(x: TBigInteger): TBigInteger;
+function TFpFieldElement.ModHalfAbs(const x: TBigInteger): TBigInteger;
+var
+  Lx: TBigInteger;
 begin
-  if (x.TestBit(0)) then
+  Lx := x;
+  if (Lx.TestBit(0)) then
   begin
-    x := Q.Subtract(x);
+    Lx := Q.Subtract(Lx);
   end;
-  result := x.ShiftRight(1);
+  result := Lx.ShiftRight(1);
 end;
 
 function TFpFieldElement.ModInverse(const x: TBigInteger): TBigInteger;
@@ -1112,65 +1118,66 @@ begin
   result := ModReduce(x1.Multiply(x2));
 end;
 
-function TFpFieldElement.ModReduce(x: TBigInteger): TBigInteger;
+function TFpFieldElement.ModReduce(const x: TBigInteger): TBigInteger;
 var
   negative, rIsOne: Boolean;
   qLen, d: Int32;
-  qMod, u, v, mu, quot, bk1: TBigInteger;
+  qMod, u, v, mu, quot, bk1, Lx: TBigInteger;
 begin
+  Lx := x;
   if (not(Fr.IsInitialized)) then
   begin
-    x := x.&Mod(Q);
+    Lx := Lx.&Mod(Q);
   end
   else
   begin
-    negative := x.SignValue < 0;
+    negative := Lx.SignValue < 0;
     if (negative) then
     begin
-      x := x.Abs();
+      Lx := Lx.Abs();
     end;
     qLen := Q.BitLength;
     if (Fr.SignValue > 0) then
     begin
       qMod := TBigInteger.One.ShiftLeft(qLen);
       rIsOne := Fr.Equals(TBigInteger.One);
-      while (x.BitLength > (qLen + 1)) do
+      while (Lx.BitLength > (qLen + 1)) do
       begin
-        u := x.ShiftRight(qLen);
-        v := x.Remainder(qMod);
+        u := Lx.ShiftRight(qLen);
+        v := Lx.Remainder(qMod);
         if (not rIsOne) then
         begin
           u := u.Multiply(Fr);
         end;
-        x := u.Add(v);
+        Lx := u.Add(v);
       end
     end
     else
     begin
       d := ((qLen - 1) and 31) + 1;
       mu := Fr.Negate();
-      u := mu.Multiply(x.ShiftRight(qLen - d));
+      u := mu.Multiply(Lx.ShiftRight(qLen - d));
       quot := u.ShiftRight(qLen + d);
       v := quot.Multiply(Q);
       bk1 := TBigInteger.One.ShiftLeft(qLen + d);
       v := v.Remainder(bk1);
-      x := x.Remainder(bk1);
-      x := x.Subtract(v);
-      if (x.SignValue < 0) then
+      Lx := Lx.Remainder(bk1);
+      Lx := Lx.Subtract(v);
+      if (Lx.SignValue < 0) then
       begin
-        x := x.Add(bk1);
+        Lx := Lx.Add(bk1);
       end
     end;
-    while (x.CompareTo(Q) >= 0) do
+    while (Lx.CompareTo(Q) >= 0) do
     begin
-      x := x.Subtract(Q);
+      Lx := Lx.Subtract(Q);
     end;
-    if ((negative) and (x.SignValue <> 0)) then
+    if ((negative) and (Lx.SignValue <> 0)) then
     begin
-      x := Q.Subtract(x);
+      Lx := Q.Subtract(Lx);
     end;
   end;
-  result := x;
+  result := Lx;
 end;
 
 function TFpFieldElement.ModSubtract(const x1, x2: TBigInteger): TBigInteger;

@@ -55,7 +55,7 @@ type
     // * @param message the message to be signed.
     // * @return two big integers representing the r and s values respectively.
     // */
-    function GenerateSignature(&message: TCryptoLibByteArray)
+    function GenerateSignature(const &message: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
     // /**
@@ -65,7 +65,7 @@ type
     // * @param r the r signature value.
     // * @param s the s signature value.
     // */
-    function VerifySignature(&message: TCryptoLibByteArray;
+    function VerifySignature(const &message: TCryptoLibByteArray;
       const r, s: TBigInteger): Boolean;
 
   end;

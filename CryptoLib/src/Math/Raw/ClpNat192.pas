@@ -36,28 +36,30 @@ type
     M = UInt64($FFFFFFFF);
 
   public
-    class function Add(x, y, z: TCryptoLibUInt32Array): UInt32;
+    class function Add(const x, y, z: TCryptoLibUInt32Array): UInt32;
       overload; static;
 
-    class function AddBothTo(x, y, z: TCryptoLibUInt32Array): UInt32;
+    class function AddBothTo(const x, y, z: TCryptoLibUInt32Array): UInt32;
       overload; static;
 
-    class function AddTo(x, z: TCryptoLibUInt32Array): UInt32; overload; static;
-    class function AddTo(x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32; cIn: UInt32): UInt32;
+    class function AddTo(const x, z: TCryptoLibUInt32Array): UInt32;
       overload; static;
-    class function AddToEachOther(u: TCryptoLibUInt32Array; uOff: Int32;
-      v: TCryptoLibUInt32Array; vOff: Int32): UInt32; static;
+    class function AddTo(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32; cIn: UInt32): UInt32;
+      overload; static;
+    class function AddToEachOther(const u: TCryptoLibUInt32Array; uOff: Int32;
+      const v: TCryptoLibUInt32Array; vOff: Int32): UInt32; static;
 
-    class procedure Copy(x, z: TCryptoLibUInt32Array); overload; static; inline;
-    class procedure Copy(x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32); overload; static; inline;
+    class procedure Copy(const x, z: TCryptoLibUInt32Array); overload;
+      static; inline;
+    class procedure Copy(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32); overload; static; inline;
 
-    class procedure Copy64(x, z: TCryptoLibUInt64Array); overload;
+    class procedure Copy64(const x, z: TCryptoLibUInt64Array); overload;
       static; inline;
 
-    class procedure Copy64(x: TCryptoLibUInt64Array; xOff: Int32;
-      z: TCryptoLibUInt64Array; zOff: Int32); overload; static; inline;
+    class procedure Copy64(const x: TCryptoLibUInt64Array; xOff: Int32;
+      const z: TCryptoLibUInt64Array; zOff: Int32); overload; static; inline;
 
     class function Create(): TCryptoLibUInt32Array; static; inline;
 
@@ -67,13 +69,13 @@ type
 
     class function CreateExt64(): TCryptoLibUInt64Array; static; inline;
 
-    class function Diff(x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Boolean; static; inline;
+    class function Diff(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Boolean; static; inline;
 
-    class function Eq(x, y: TCryptoLibUInt32Array): Boolean; static;
+    class function Eq(const x, y: TCryptoLibUInt32Array): Boolean; static;
 
-    class function Eq64(x, y: TCryptoLibUInt64Array): Boolean; static;
+    class function Eq64(const x, y: TCryptoLibUInt64Array): Boolean; static;
 
     class function FromBigInteger(const x: TBigInteger)
       : TCryptoLibUInt32Array; static;
@@ -81,79 +83,86 @@ type
     class function FromBigInteger64(const x: TBigInteger)
       : TCryptoLibUInt64Array; static;
 
-    class function GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32;
+    class function GetBit(const x: TCryptoLibUInt32Array; bit: Int32): UInt32;
       static; inline;
 
-    class function Gte(x, y: TCryptoLibUInt32Array): Boolean; overload; static;
-
-    class function Gte(x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32): Boolean; overload; static;
-
-    class function IsOne(x: TCryptoLibUInt32Array): Boolean; static;
-
-    class function IsOne64(x: TCryptoLibUInt64Array): Boolean; static;
-
-    class function IsZero(x: TCryptoLibUInt32Array): Boolean; static;
-
-    class function IsZero64(x: TCryptoLibUInt64Array): Boolean; static;
-
-    class procedure Mul(x, y, zz: TCryptoLibUInt32Array); overload; static;
-
-    class procedure Mul(x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
-      zzOff: Int32); overload; static;
-
-    class function MulAddTo(x, y, zz: TCryptoLibUInt32Array): UInt32;
+    class function Gte(const x, y: TCryptoLibUInt32Array): Boolean;
       overload; static;
 
-    class function MulAddTo(x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
-      zzOff: Int32): UInt32; overload; static;
+    class function Gte(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32): Boolean; overload; static;
 
-    class function Mul33Add(w: UInt32; x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt64; static;
+    class function IsOne(const x: TCryptoLibUInt32Array): Boolean; static;
 
-    class function MulWordAddExt(x: UInt32; yy: TCryptoLibUInt32Array;
-      yyOff: Int32; zz: TCryptoLibUInt32Array; zzOff: Int32): UInt32; static;
+    class function IsOne64(const x: TCryptoLibUInt64Array): Boolean; static;
 
-    class function Mul33DWordAdd(x: UInt32; y: UInt64; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; static;
+    class function IsZero(const x: TCryptoLibUInt32Array): Boolean; static;
 
-    class function Mul33WordAdd(x, y: UInt32; z: TCryptoLibUInt32Array;
+    class function IsZero64(const x: TCryptoLibUInt64Array): Boolean; static;
+
+    class procedure Mul(const x, y, zz: TCryptoLibUInt32Array);
+      overload; static;
+
+    class procedure Mul(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
+
+    class function MulAddTo(const x, y, zz: TCryptoLibUInt32Array): UInt32;
+      overload; static;
+
+    class function MulAddTo(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const zz: TCryptoLibUInt32Array; zzOff: Int32): UInt32; overload; static;
+
+    class function Mul33Add(w: UInt32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt64; static;
+
+    class function MulWordAddExt(x: UInt32; const yy: TCryptoLibUInt32Array;
+      yyOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32)
+      : UInt32; static;
+
+    class function Mul33DWordAdd(x: UInt32; y: UInt64;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
+
+    class function Mul33WordAdd(x, y: UInt32; const z: TCryptoLibUInt32Array;
       zOff: Int32): UInt32; static;
 
     class function MulWordDwordAdd(x: UInt32; y: UInt64;
-      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
 
-    class function MulWord(x: UInt32; y, z: TCryptoLibUInt32Array; zOff: Int32)
-      : UInt32; static;
+    class function MulWord(x: UInt32; const y, z: TCryptoLibUInt32Array;
+      zOff: Int32): UInt32; static;
 
-    class procedure Square(x, zz: TCryptoLibUInt32Array); overload; static;
-
-    class procedure Square(x: TCryptoLibUInt32Array; xOff: Int32;
-      zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
-
-    class function Sub(x, y, z: TCryptoLibUInt32Array): Int32; overload; static;
-
-    class function Sub(x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static;
-
-    class function SubBothFrom(x, y, z: TCryptoLibUInt32Array): Int32; static;
-
-    class function SubFrom(x, z: TCryptoLibUInt32Array): Int32;
+    class procedure Square(const x, zz: TCryptoLibUInt32Array);
       overload; static;
 
-    class function SubFrom(x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+    class procedure Square(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
 
-    class function ToBigInteger(x: TCryptoLibUInt32Array): TBigInteger; static;
+    class function Sub(const x, y, z: TCryptoLibUInt32Array): Int32;
+      overload; static;
 
-    class function ToBigInteger64(x: TCryptoLibUInt64Array)
+    class function Sub(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+
+    class function SubBothFrom(const x, y, z: TCryptoLibUInt32Array)
+      : Int32; static;
+
+    class function SubFrom(const x, z: TCryptoLibUInt32Array): Int32;
+      overload; static;
+
+    class function SubFrom(const x: TCryptoLibUInt32Array; xOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+
+    class function ToBigInteger(const x: TCryptoLibUInt32Array)
       : TBigInteger; static;
 
-    class procedure Zero(z: TCryptoLibUInt32Array); static; inline;
+    class function ToBigInteger64(const x: TCryptoLibUInt64Array)
+      : TBigInteger; static;
+
+    class procedure Zero(const z: TCryptoLibUInt32Array); static; inline;
 
   end;
 
@@ -161,7 +170,7 @@ implementation
 
 { TNat192 }
 
-class function TNat192.Add(x, y, z: TCryptoLibUInt32Array): UInt32;
+class function TNat192.Add(const x, y, z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
 begin
@@ -187,7 +196,7 @@ begin
   result := UInt32(c);
 end;
 
-class function TNat192.AddBothTo(x, y, z: TCryptoLibUInt32Array): UInt32;
+class function TNat192.AddBothTo(const x, y, z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
 begin
@@ -213,7 +222,7 @@ begin
   result := UInt32(c);
 end;
 
-class function TNat192.AddTo(x, z: TCryptoLibUInt32Array): UInt32;
+class function TNat192.AddTo(const x, z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
 begin
@@ -239,8 +248,8 @@ begin
   result := UInt32(c);
 end;
 
-class function TNat192.AddTo(x: TCryptoLibUInt32Array; xOff: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32; cIn: UInt32): UInt32;
+class function TNat192.AddTo(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32; cIn: UInt32): UInt32;
 var
   c: UInt64;
 begin
@@ -266,8 +275,8 @@ begin
   result := UInt32(c);
 end;
 
-class function TNat192.AddToEachOther(u: TCryptoLibUInt32Array; uOff: Int32;
-  v: TCryptoLibUInt32Array; vOff: Int32): UInt32;
+class function TNat192.AddToEachOther(const u: TCryptoLibUInt32Array;
+  uOff: Int32; const v: TCryptoLibUInt32Array; vOff: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -299,24 +308,24 @@ begin
   result := UInt32(c);
 end;
 
-class procedure TNat192.Copy(x, z: TCryptoLibUInt32Array);
+class procedure TNat192.Copy(const x, z: TCryptoLibUInt32Array);
 begin
   System.Move(x[0], z[0], 6 * System.SizeOf(UInt32));
 end;
 
-class procedure TNat192.Copy(x: TCryptoLibUInt32Array; xOff: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32);
+class procedure TNat192.Copy(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32);
 begin
   System.Move(x[xOff], z[zOff], 6 * System.SizeOf(UInt32));
 end;
 
-class procedure TNat192.Copy64(x, z: TCryptoLibUInt64Array);
+class procedure TNat192.Copy64(const x, z: TCryptoLibUInt64Array);
 begin
   System.Move(x[0], z[0], 3 * System.SizeOf(UInt64));
 end;
 
-class procedure TNat192.Copy64(x: TCryptoLibUInt64Array; xOff: Int32;
-  z: TCryptoLibUInt64Array; zOff: Int32);
+class procedure TNat192.Copy64(const x: TCryptoLibUInt64Array; xOff: Int32;
+  const z: TCryptoLibUInt64Array; zOff: Int32);
 begin
   System.Move(x[xOff], z[zOff], 3 * System.SizeOf(UInt64));
 end;
@@ -341,8 +350,8 @@ begin
   System.SetLength(result, 6);
 end;
 
-class function TNat192.Diff(x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
+class function TNat192.Diff(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const z: TCryptoLibUInt32Array;
   zOff: Int32): Boolean;
 var
   pos: Boolean;
@@ -359,7 +368,7 @@ begin
   result := pos;
 end;
 
-class function TNat192.Eq(x, y: TCryptoLibUInt32Array): Boolean;
+class function TNat192.Eq(const x, y: TCryptoLibUInt32Array): Boolean;
 var
   i: Int32;
 begin
@@ -376,7 +385,7 @@ begin
   result := true;
 end;
 
-class function TNat192.Eq64(x, y: TCryptoLibUInt64Array): Boolean;
+class function TNat192.Eq64(const x, y: TCryptoLibUInt64Array): Boolean;
 var
   i: Int32;
 begin
@@ -437,7 +446,8 @@ begin
   end;
 end;
 
-class function TNat192.GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32;
+class function TNat192.GetBit(const x: TCryptoLibUInt32Array;
+  bit: Int32): UInt32;
 var
   w, b: Int32;
 begin
@@ -456,7 +466,7 @@ begin
   result := (x[w] shr b) and 1;
 end;
 
-class function TNat192.Gte(x, y: TCryptoLibUInt32Array): Boolean;
+class function TNat192.Gte(const x, y: TCryptoLibUInt32Array): Boolean;
 var
   i: Int32;
   x_i, y_i: UInt32;
@@ -483,8 +493,8 @@ begin
   result := true;
 end;
 
-class function TNat192.Gte(x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32): Boolean;
+class function TNat192.Gte(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32): Boolean;
 var
   i: Int32;
   x_i, y_i: UInt32;
@@ -511,7 +521,7 @@ begin
   result := true;
 end;
 
-class function TNat192.IsOne(x: TCryptoLibUInt32Array): Boolean;
+class function TNat192.IsOne(const x: TCryptoLibUInt32Array): Boolean;
 var
   i: Int32;
 begin
@@ -534,7 +544,7 @@ begin
   result := true;
 end;
 
-class function TNat192.IsOne64(x: TCryptoLibUInt64Array): Boolean;
+class function TNat192.IsOne64(const x: TCryptoLibUInt64Array): Boolean;
 var
   i: Int32;
 begin
@@ -557,7 +567,7 @@ begin
   result := true;
 end;
 
-class function TNat192.IsZero(x: TCryptoLibUInt32Array): Boolean;
+class function TNat192.IsZero(const x: TCryptoLibUInt32Array): Boolean;
 var
   i: Int32;
 begin
@@ -574,7 +584,7 @@ begin
   result := true;
 end;
 
-class function TNat192.IsZero64(x: TCryptoLibUInt64Array): Boolean;
+class function TNat192.IsZero64(const x: TCryptoLibUInt64Array): Boolean;
 var
   i: Int32;
 begin
@@ -591,7 +601,7 @@ begin
   result := true;
 end;
 
-class procedure TNat192.Mul(x, y, zz: TCryptoLibUInt32Array);
+class procedure TNat192.Mul(const x, y, zz: TCryptoLibUInt32Array);
 var
   c, x_0, x_i, y_0, y_1, y_2, y_3, y_4, y_5: UInt64;
   i: Int32;
@@ -651,8 +661,8 @@ begin
   end;
 end;
 
-class procedure TNat192.Mul(x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
+class procedure TNat192.Mul(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const zz: TCryptoLibUInt32Array;
   zzOff: Int32);
 var
   c, x_0, x_i, y_0, y_1, y_2, y_3, y_4, y_5: UInt64;
@@ -714,7 +724,7 @@ begin
   end;
 end;
 
-class function TNat192.MulAddTo(x, y, zz: TCryptoLibUInt32Array): UInt32;
+class function TNat192.MulAddTo(const x, y, zz: TCryptoLibUInt32Array): UInt32;
 var
   c, x_i, y_0, y_1, y_2, y_3, y_4, y_5, zc: UInt64;
   i: Int32;
@@ -756,8 +766,8 @@ begin
   result := UInt32(zc);
 end;
 
-class function TNat192.MulAddTo(x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
+class function TNat192.MulAddTo(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const zz: TCryptoLibUInt32Array;
   zzOff: Int32): UInt32;
 var
   c, x_i, y_0, y_1, y_2, y_3, y_4, y_5, zc: UInt64;
@@ -801,9 +811,9 @@ begin
   result := UInt32(zc);
 end;
 
-class function TNat192.Mul33Add(w: UInt32; x: TCryptoLibUInt32Array;
-  xOff: Int32; y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-  zOff: Int32): UInt64;
+class function TNat192.Mul33Add(w: UInt32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt64;
 var
   c, wVal, x0, x1, x2, x3, x4, x5: UInt64;
 begin
@@ -840,8 +850,8 @@ begin
   result := c;
 end;
 
-class function TNat192.MulWordAddExt(x: UInt32; yy: TCryptoLibUInt32Array;
-  yyOff: Int32; zz: TCryptoLibUInt32Array; zzOff: Int32): UInt32;
+class function TNat192.MulWordAddExt(x: UInt32; const yy: TCryptoLibUInt32Array;
+  yyOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32): UInt32;
 var
   c, xVal: UInt64;
 begin
@@ -873,7 +883,7 @@ begin
 end;
 
 class function TNat192.Mul33DWordAdd(x: UInt32; y: UInt64;
-  z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c, xVal, y00, y01: UInt64;
 begin
@@ -907,8 +917,8 @@ begin
   end;
 end;
 
-class function TNat192.Mul33WordAdd(x, y: UInt32; z: TCryptoLibUInt32Array;
-  zOff: Int32): UInt32;
+class function TNat192.Mul33WordAdd(x, y: UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c, yVal: UInt64;
 begin
@@ -938,7 +948,7 @@ begin
 end;
 
 class function TNat192.MulWordDwordAdd(x: UInt32; y: UInt64;
-  z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
 begin
@@ -966,7 +976,7 @@ begin
   end;
 end;
 
-class function TNat192.MulWord(x: UInt32; y, z: TCryptoLibUInt32Array;
+class function TNat192.MulWord(x: UInt32; const y, z: TCryptoLibUInt32Array;
   zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
@@ -984,7 +994,7 @@ begin
   result := UInt32(c);
 end;
 
-class procedure TNat192.Square(x, zz: TCryptoLibUInt32Array);
+class procedure TNat192.Square(const x, zz: TCryptoLibUInt32Array);
 var
   x_0, zz_1, xVal, p, x_1, zz_2, x_2, zz_3, zz_4, x_3, zz_5, zz_6, x_4, zz_7,
     zz_8, x_5, zz_9, zz_10: UInt64;
@@ -1107,8 +1117,8 @@ begin
   zz[11] := (w shl 1) or c;
 end;
 
-class procedure TNat192.Square(x: TCryptoLibUInt32Array; xOff: Int32;
-  zz: TCryptoLibUInt32Array; zzOff: Int32);
+class procedure TNat192.Square(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const zz: TCryptoLibUInt32Array; zzOff: Int32);
 var
   x_0, zz_1, xVal, p, x_1, zz_2, x_2, zz_3, zz_4, x_3, zz_5, zz_6, x_4, zz_7,
     zz_8, x_5, zz_9, zz_10: UInt64;
@@ -1231,7 +1241,7 @@ begin
   zz[zzOff + 11] := (w shl 1) or c;
 end;
 
-class function TNat192.Sub(x, y, z: TCryptoLibUInt32Array): Int32;
+class function TNat192.Sub(const x, y, z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
 begin
@@ -1257,8 +1267,8 @@ begin
   result := Int32(c);
 end;
 
-class function TNat192.Sub(x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
+class function TNat192.Sub(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const z: TCryptoLibUInt32Array;
   zOff: Int32): Int32;
 var
   c: Int64;
@@ -1285,7 +1295,7 @@ begin
   result := Int32(c);
 end;
 
-class function TNat192.SubBothFrom(x, y, z: TCryptoLibUInt32Array): Int32;
+class function TNat192.SubBothFrom(const x, y, z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
 begin
@@ -1311,7 +1321,7 @@ begin
   result := Int32(c);
 end;
 
-class function TNat192.SubFrom(x, z: TCryptoLibUInt32Array): Int32;
+class function TNat192.SubFrom(const x, z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
 begin
@@ -1337,8 +1347,8 @@ begin
   result := Int32(c);
 end;
 
-class function TNat192.SubFrom(x: TCryptoLibUInt32Array; xOff: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32): Int32;
+class function TNat192.SubFrom(const x: TCryptoLibUInt32Array; xOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1364,7 +1374,8 @@ begin
   result := Int32(c);
 end;
 
-class function TNat192.ToBigInteger(x: TCryptoLibUInt32Array): TBigInteger;
+class function TNat192.ToBigInteger(const x: TCryptoLibUInt32Array)
+  : TBigInteger;
 var
   bs, temp: TCryptoLibByteArray;
   i: Int32;
@@ -1385,7 +1396,8 @@ begin
   result := TBigInteger.Create(1, bs);
 end;
 
-class function TNat192.ToBigInteger64(x: TCryptoLibUInt64Array): TBigInteger;
+class function TNat192.ToBigInteger64(const x: TCryptoLibUInt64Array)
+  : TBigInteger;
 var
   bs, temp: TCryptoLibByteArray;
   i: Int32;
@@ -1406,7 +1418,7 @@ begin
   result := TBigInteger.Create(1, bs);
 end;
 
-class procedure TNat192.Zero(z: TCryptoLibUInt32Array);
+class procedure TNat192.Zero(const z: TCryptoLibUInt32Array);
 begin
   System.FillChar(z[0], 6 * System.SizeOf(UInt32), UInt32(0));
 end;

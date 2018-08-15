@@ -97,7 +97,7 @@ type
     // * @return <code>&#955; * p</code>
     // */
     class function MultiplyFromWTnaf(const p: IAbstractF2mPoint;
-      u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
+      const u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
 
   strict protected
     // /**
@@ -132,7 +132,7 @@ begin
 end;
 
 class function TWTauNafMultiplier.MultiplyFromWTnaf(const p: IAbstractF2mPoint;
-  u: TCryptoLibShortIntArray): IAbstractF2mPoint;
+  const u: TCryptoLibShortIntArray): IAbstractF2mPoint;
 var
   curve: IAbstractF2mCurve;
   a: ShortInt;

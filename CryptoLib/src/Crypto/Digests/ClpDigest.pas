@@ -78,7 +78,7 @@ type
     /// <param name="len">
     /// the length of the data.
     /// </param>
-    procedure BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
 
     /// <summary>
     /// Close the digest, producing the final digest value. The doFinal call
@@ -90,7 +90,7 @@ type
     /// <param name="outOff">
     /// the offset into the out array the digest is to start at.
     /// </param>
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
 
     /// <summary>
@@ -134,7 +134,8 @@ begin
   FHash.Initialize;
 end;
 
-procedure TDigest.BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
+procedure TDigest.BlockUpdate(const input: TCryptoLibByteArray;
+  inOff, len: Int32);
 begin
   FHash.TransformBytes(input, inOff, len);
 end;
@@ -146,7 +147,8 @@ begin
   FHash.Initialize;
 end;
 
-function TDigest.DoFinal(output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TDigest.DoFinal(const output: TCryptoLibByteArray;
+  outOff: Int32): Int32;
 var
   buf: TCryptoLibByteArray;
 begin

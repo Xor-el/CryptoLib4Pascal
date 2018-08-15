@@ -63,7 +63,7 @@ type
     /// <summary>
     /// basic constructor - byte encoded string.
     /// </summary>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     function GetString(): String; override;
 
@@ -83,8 +83,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerUniversalString; overload;
-      static; inline;
+    class function GetInstance(const obj: TObject): IDerUniversalString;
+      overload; static; inline;
 
     /// <summary>
     /// return a Der UniversalString from a tagged object.
@@ -131,7 +131,7 @@ begin
   result := TArrayUtils.AreEqual(Str, other.Str);
 end;
 
-constructor TDerUniversalString.Create(Str: TCryptoLibByteArray);
+constructor TDerUniversalString.Create(const Str: TCryptoLibByteArray);
 begin
   Inherited Create();
   if (Str = Nil) then
@@ -147,7 +147,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.UniversalString, Str);
 end;
 
-class function TDerUniversalString.GetInstance(obj: TObject)
+class function TDerUniversalString.GetInstance(const obj: TObject)
   : IDerUniversalString;
 begin
   if ((obj = Nil) or (obj is TDerUniversalString)) then

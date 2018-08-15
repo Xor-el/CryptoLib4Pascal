@@ -70,13 +70,14 @@ type
     ['{2210ED27-9DB1-4BFC-9462-8AA35AF0C4C5}']
 
     procedure WriteNull();
-    procedure WriteEncoded(tag: Int32; bytes: TCryptoLibByteArray); overload;
+    procedure WriteEncoded(tag: Int32;
+      const bytes: TCryptoLibByteArray); overload;
     procedure WriteEncoded(tag: Int32; first: Byte;
-      bytes: TCryptoLibByteArray); overload;
-    procedure WriteEncoded(tag: Int32; bytes: TCryptoLibByteArray;
+      const bytes: TCryptoLibByteArray); overload;
+    procedure WriteEncoded(tag: Int32; const bytes: TCryptoLibByteArray;
       offset, length: Int32); overload;
     procedure WriteEncoded(flags, tagNo: Int32;
-      bytes: TCryptoLibByteArray); overload;
+      const bytes: TCryptoLibByteArray); overload;
     procedure WriteTag(flags, tagNo: Int32);
 
     procedure WriteObject(const obj: IAsn1Encodable); overload;

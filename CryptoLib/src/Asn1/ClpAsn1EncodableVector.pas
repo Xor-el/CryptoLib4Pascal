@@ -39,17 +39,17 @@ type
     function GetSelf(Index: Int32): IAsn1Encodable;
 
   public
-    class function FromEnumerable(e: TList<IAsn1Encodable>)
+    class function FromEnumerable(const e: TList<IAsn1Encodable>)
       : IAsn1EncodableVector; static;
 
     constructor Create(); overload;
-    constructor Create(v: array of IAsn1Encodable); overload;
+    constructor Create(const v: array of IAsn1Encodable); overload;
 
     destructor Destroy(); override;
 
-    procedure Add(objs: array of IAsn1Encodable);
+    procedure Add(const objs: array of IAsn1Encodable);
 
-    procedure AddOptional(objs: array of IAsn1Encodable);
+    procedure AddOptional(const objs: array of IAsn1Encodable);
 
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 
@@ -63,7 +63,7 @@ implementation
 
 { TAsn1EncodableVector }
 
-procedure TAsn1EncodableVector.Add(objs: array of IAsn1Encodable);
+procedure TAsn1EncodableVector.Add(const objs: array of IAsn1Encodable);
 var
   obj: IAsn1Encodable;
 begin
@@ -73,7 +73,7 @@ begin
   end;
 end;
 
-procedure TAsn1EncodableVector.AddOptional(objs: array of IAsn1Encodable);
+procedure TAsn1EncodableVector.AddOptional(const objs: array of IAsn1Encodable);
 var
   obj: IAsn1Encodable;
 begin
@@ -89,7 +89,7 @@ begin
   end;
 end;
 
-constructor TAsn1EncodableVector.Create(v: array of IAsn1Encodable);
+constructor TAsn1EncodableVector.Create(const v: array of IAsn1Encodable);
 begin
   inherited Create();
   Flist := TList<IAsn1Encodable>.Create();
@@ -108,8 +108,8 @@ begin
   inherited Destroy;
 end;
 
-class function TAsn1EncodableVector.FromEnumerable(e: TList<IAsn1Encodable>)
-  : IAsn1EncodableVector;
+class function TAsn1EncodableVector.FromEnumerable
+  (const e: TList<IAsn1Encodable>): IAsn1EncodableVector;
 var
   v: IAsn1EncodableVector;
   obj: IAsn1Encodable;

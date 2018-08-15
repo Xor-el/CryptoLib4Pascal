@@ -34,14 +34,15 @@ type
 
   public
     /// <param name="str">The octets making up the octet string.</param>
-    constructor Create(str: TCryptoLibByteArray); overload;
+    constructor Create(const str: TCryptoLibByteArray); overload;
     constructor Create(const obj: IAsn1Encodable); overload;
 
     destructor Destroy(); override;
 
     procedure Encode(const derOut: IDerOutputStream); overload; override;
-    class procedure Encode(derOut: TDerOutputStream; bytes: TCryptoLibByteArray;
-      offset, length: Int32); reintroduce; overload; static; inline;
+    class procedure Encode(const derOut: TDerOutputStream;
+      const bytes: TCryptoLibByteArray; offset, length: Int32); reintroduce;
+      overload; static; inline;
 
   end;
 
@@ -49,7 +50,7 @@ implementation
 
 { TDerOctetString }
 
-constructor TDerOctetString.Create(str: TCryptoLibByteArray);
+constructor TDerOctetString.Create(const str: TCryptoLibByteArray);
 begin
   Inherited Create(str);
 end;
@@ -69,8 +70,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.OctetString, str);
 end;
 
-class procedure TDerOctetString.Encode(derOut: TDerOutputStream;
-  bytes: TCryptoLibByteArray; offset, length: Int32);
+class procedure TDerOctetString.Encode(const derOut: TDerOutputStream;
+  const bytes: TCryptoLibByteArray; offset, length: Int32);
 begin
   derOut.WriteEncoded(TAsn1Tags.OctetString, bytes, offset, length);
 end;

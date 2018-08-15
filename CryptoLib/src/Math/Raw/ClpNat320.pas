@@ -30,26 +30,26 @@ type
   TNat320 = class abstract(TObject)
 
   public
-    class procedure Copy64(x, z: TCryptoLibUInt64Array); overload;
+    class procedure Copy64(const x, z: TCryptoLibUInt64Array); overload;
       static; inline;
 
-    class procedure Copy64(x: TCryptoLibUInt64Array; xOff: Int32;
-      z: TCryptoLibUInt64Array; zOff: Int32); overload; static; inline;
+    class procedure Copy64(const x: TCryptoLibUInt64Array; xOff: Int32;
+      const z: TCryptoLibUInt64Array; zOff: Int32); overload; static; inline;
 
     class function Create64(): TCryptoLibUInt64Array; static; inline;
 
     class function CreateExt64(): TCryptoLibUInt64Array; static; inline;
 
-    class function Eq64(x, y: TCryptoLibUInt64Array): Boolean; static;
+    class function Eq64(const x, y: TCryptoLibUInt64Array): Boolean; static;
 
     class function FromBigInteger64(const x: TBigInteger)
       : TCryptoLibUInt64Array; static;
 
-    class function IsOne64(x: TCryptoLibUInt64Array): Boolean; static;
+    class function IsOne64(const x: TCryptoLibUInt64Array): Boolean; static;
 
-    class function IsZero64(x: TCryptoLibUInt64Array): Boolean; static;
+    class function IsZero64(const x: TCryptoLibUInt64Array): Boolean; static;
 
-    class function ToBigInteger64(x: TCryptoLibUInt64Array)
+    class function ToBigInteger64(const x: TCryptoLibUInt64Array)
       : TBigInteger; static;
 
   end;
@@ -58,13 +58,13 @@ implementation
 
 { TNat320 }
 
-class procedure TNat320.Copy64(x, z: TCryptoLibUInt64Array);
+class procedure TNat320.Copy64(const x, z: TCryptoLibUInt64Array);
 begin
   System.Move(x[0], z[0], 5 * System.SizeOf(UInt64));
 end;
 
-class procedure TNat320.Copy64(x: TCryptoLibUInt64Array; xOff: Int32;
-  z: TCryptoLibUInt64Array; zOff: Int32);
+class procedure TNat320.Copy64(const x: TCryptoLibUInt64Array; xOff: Int32;
+  const z: TCryptoLibUInt64Array; zOff: Int32);
 begin
   System.Move(x[xOff], z[zOff], 5 * System.SizeOf(UInt64));
 end;
@@ -79,7 +79,7 @@ begin
   System.SetLength(Result, 10);
 end;
 
-class function TNat320.Eq64(x, y: TCryptoLibUInt64Array): Boolean;
+class function TNat320.Eq64(const x, y: TCryptoLibUInt64Array): Boolean;
 var
   i: Int32;
 begin
@@ -118,7 +118,7 @@ begin
   end;
 end;
 
-class function TNat320.IsOne64(x: TCryptoLibUInt64Array): Boolean;
+class function TNat320.IsOne64(const x: TCryptoLibUInt64Array): Boolean;
 var
   i: Int32;
 begin
@@ -140,7 +140,7 @@ begin
   Result := True;
 end;
 
-class function TNat320.IsZero64(x: TCryptoLibUInt64Array): Boolean;
+class function TNat320.IsZero64(const x: TCryptoLibUInt64Array): Boolean;
 var
   i: Int32;
 begin
@@ -157,7 +157,8 @@ begin
   Result := True;
 end;
 
-class function TNat320.ToBigInteger64(x: TCryptoLibUInt64Array): TBigInteger;
+class function TNat320.ToBigInteger64(const x: TCryptoLibUInt64Array)
+  : TBigInteger;
 var
   bs, temp: TCryptoLibByteArray;
   i: Int32;

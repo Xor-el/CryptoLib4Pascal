@@ -67,7 +67,8 @@ type
   strict private
 
     // as described in Shroup's paper( ch 10, pg 20) and P1363a
-    function GetLengthTag(p2: TCryptoLibByteArray): TCryptoLibByteArray; inline;
+    function GetLengthTag(const p2: TCryptoLibByteArray)
+      : TCryptoLibByteArray; inline;
 
     procedure ExtractParams(const params: ICipherParameters); inline;
 
@@ -87,11 +88,11 @@ type
 
     function GetCipher: IBufferedBlockCipher; inline;
     function GetMac: IMac; inline;
-    function EncryptBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function EncryptBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; virtual;
 
-    function DecryptBlock(in_enc: TCryptoLibByteArray; inOff, inLen: Int32)
-      : TCryptoLibByteArray; virtual;
+    function DecryptBlock(const in_enc: TCryptoLibByteArray;
+      inOff, inLen: Int32): TCryptoLibByteArray; virtual;
 
   public
 
@@ -148,8 +149,8 @@ type
     /// encoding and derivation parameters, may be wrapped to include an IV
     /// for an underlying block cipher.
     /// </param>
-    procedure Init(forEncryption: Boolean;
-      privParam, pubParam, params: ICipherParameters); overload;
+    procedure Init(forEncryption: Boolean; const privParam, pubParam,
+      params: ICipherParameters); overload;
 
     /// <summary>
     /// Initialise the encryptor.
@@ -185,7 +186,7 @@ type
       const params: ICipherParameters;
       const publicKeyParser: IKeyParser); overload;
 
-    function ProcessBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function ProcessBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; virtual;
 
     property cipher: IBufferedBlockCipher read GetCipher;
@@ -197,7 +198,8 @@ implementation
 
 { TIESEngine }
 
-function TIESEngine.GetLengthTag(p2: TCryptoLibByteArray): TCryptoLibByteArray;
+function TIESEngine.GetLengthTag(const p2: TCryptoLibByteArray)
+  : TCryptoLibByteArray;
 begin
   System.SetLength(Result, 8);
   if (p2 <> Nil) then
@@ -229,7 +231,7 @@ begin
   Fcipher := cipher;
 end;
 
-function TIESEngine.DecryptBlock(in_enc: TCryptoLibByteArray;
+function TIESEngine.DecryptBlock(const in_enc: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
   M, K, K1, K2, p2, L2, T1, T2: TCryptoLibByteArray;
@@ -359,8 +361,8 @@ begin
   end;
 end;
 
-function TIESEngine.EncryptBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
-  : TCryptoLibByteArray;
+function TIESEngine.EncryptBlock(const &in: TCryptoLibByteArray;
+  inOff, inLen: Int32): TCryptoLibByteArray;
 var
   C, K, K1, K2, p2, L2, T: TCryptoLibByteArray;
   len, i: Int32;
@@ -509,7 +511,7 @@ begin
 end;
 
 procedure TIESEngine.Init(forEncryption: Boolean;
-  privParam, pubParam, params: ICipherParameters);
+  const privParam, pubParam, params: ICipherParameters);
 begin
   FforEncryption := forEncryption;
   FprivParam := privParam;
@@ -518,8 +520,8 @@ begin
   ExtractParams(params);
 end;
 
-function TIESEngine.ProcessBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
-  : TCryptoLibByteArray;
+function TIESEngine.ProcessBlock(const &in: TCryptoLibByteArray;
+  inOff, inLen: Int32): TCryptoLibByteArray;
 var
   ephKeyPair: IEphemeralKeyPair;
   bIn: TBytesStream;
@@ -549,7 +551,7 @@ begin
         bIn.Position := 0;
 
         try
-          FpubParam := FkeyParser.readKey(bIn);
+          FpubParam := FkeyParser.ReadKey(bIn);
         except
           on e: EIOCryptoLibException do
           begin

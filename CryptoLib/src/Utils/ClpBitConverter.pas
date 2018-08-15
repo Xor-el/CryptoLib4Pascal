@@ -70,38 +70,35 @@ type
 
     { ==================================================================== }
 
-    class function ToBoolean(value: TCryptoLibByteArray; StartIndex: Int32)
-      : Boolean; static; inline;
-    class function ToChar(value: TCryptoLibByteArray; StartIndex: Int32): Char;
-      static; inline;
-    class function ToDouble(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToBoolean(const value: TCryptoLibByteArray;
+      StartIndex: Int32): Boolean; static; inline;
+    class function ToChar(const value: TCryptoLibByteArray; StartIndex: Int32)
+      : Char; static; inline;
+    class function ToDouble(const value: TCryptoLibByteArray; StartIndex: Int32)
       : Double; static; inline;
-    class function ToInt16(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToInt16(const value: TCryptoLibByteArray; StartIndex: Int32)
       : Int16; static; inline;
-    class function ToInt32(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToInt32(const value: TCryptoLibByteArray; StartIndex: Int32)
       : Int32; static; inline;
-    class function ToInt64(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToInt64(const value: TCryptoLibByteArray; StartIndex: Int32)
       : Int64; static; inline;
-    class function ToSingle(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToSingle(const value: TCryptoLibByteArray; StartIndex: Int32)
       : Single; static; inline;
-    class function ToString(value: TCryptoLibByteArray): String; reintroduce;
-      overload; static;
-    class function ToString(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToString(const value: TCryptoLibByteArray): String;
+      reintroduce; overload; static;
+    class function ToString(const value: TCryptoLibByteArray; StartIndex: Int32)
       : String; reintroduce; overload; static;
-    class function ToString(value: TCryptoLibByteArray;
+    class function ToString(const value: TCryptoLibByteArray;
       StartIndex, &Length: Int32): String; reintroduce; overload; static;
-    class function ToUInt8(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToUInt8(const value: TCryptoLibByteArray; StartIndex: Int32)
       : UInt8; static; inline;
-    class function ToUInt16(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToUInt16(const value: TCryptoLibByteArray; StartIndex: Int32)
       : UInt16; static; inline;
-    class function ToUInt32(value: TCryptoLibByteArray; StartIndex: Int32)
+    class function ToUInt32(const value: TCryptoLibByteArray; StartIndex: Int32)
       : UInt32; overload; static; inline;
-    class function ToUInt32(value: PByte; StartIndex: Int32): UInt32; overload;
-      static; inline;
-    class function ToUInt64(value: TCryptoLibByteArray; StartIndex: Int32)
+
+    class function ToUInt64(const value: TCryptoLibByteArray; StartIndex: Int32)
       : UInt64; overload; static; inline;
-    class function ToUInt64(value: PByte; StartIndex: Int32): UInt64; overload;
-      static; inline;
 
   end;
 
@@ -241,7 +238,7 @@ end;
 
 { ==================================================================== }
 
-class function TBitConverter.ToBoolean(value: TCryptoLibByteArray;
+class function TBitConverter.ToBoolean(const value: TCryptoLibByteArray;
   StartIndex: Int32): Boolean;
 begin
   // result := PBoolean(@value[StartIndex])^;
@@ -249,7 +246,7 @@ begin
 
 end;
 
-class function TBitConverter.ToChar(value: TCryptoLibByteArray;
+class function TBitConverter.ToChar(const value: TCryptoLibByteArray;
   StartIndex: Int32): Char;
 begin
   // System.Move(value[StartIndex], result, System.SizeOf(result));
@@ -268,7 +265,7 @@ begin
 
 end;
 
-class function TBitConverter.ToDouble(value: TCryptoLibByteArray;
+class function TBitConverter.ToDouble(const value: TCryptoLibByteArray;
   StartIndex: Int32): Double;
 var
   i1, i2: Int32;
@@ -300,7 +297,7 @@ begin
 
 end;
 
-class function TBitConverter.ToInt16(value: TCryptoLibByteArray;
+class function TBitConverter.ToInt16(const value: TCryptoLibByteArray;
   StartIndex: Int32): Int16;
 begin
 
@@ -320,7 +317,7 @@ begin
 
 end;
 
-class function TBitConverter.ToInt32(value: TCryptoLibByteArray;
+class function TBitConverter.ToInt32(const value: TCryptoLibByteArray;
   StartIndex: Int32): Int32;
 begin
   // System.Move(value[StartIndex], result, System.SizeOf(result));
@@ -341,7 +338,7 @@ begin
 
 end;
 
-class function TBitConverter.ToInt64(value: TCryptoLibByteArray;
+class function TBitConverter.ToInt64(const value: TCryptoLibByteArray;
   StartIndex: Int32): Int64;
 var
   i1, i2: Int32;
@@ -368,7 +365,7 @@ begin
   end;
 end;
 
-class function TBitConverter.ToSingle(value: TCryptoLibByteArray;
+class function TBitConverter.ToSingle(const value: TCryptoLibByteArray;
   StartIndex: Int32): Single;
 var
   val: Int32;
@@ -391,7 +388,7 @@ begin
 
 end;
 
-class function TBitConverter.ToString(value: TCryptoLibByteArray): String;
+class function TBitConverter.ToString(const value: TCryptoLibByteArray): String;
 var
   LowVal: Int32;
 begin
@@ -404,13 +401,13 @@ begin
   result := ToString(value, LowVal);
 end;
 
-class function TBitConverter.ToString(value: TCryptoLibByteArray;
+class function TBitConverter.ToString(const value: TCryptoLibByteArray;
   StartIndex: Int32): String;
 begin
   result := ToString(value, StartIndex, System.Length(value) - StartIndex);
 end;
 
-class function TBitConverter.ToString(value: TCryptoLibByteArray;
+class function TBitConverter.ToString(const value: TCryptoLibByteArray;
   StartIndex, &Length: Int32): String;
 
 var
@@ -449,14 +446,14 @@ begin
 
 end;
 
-class function TBitConverter.ToUInt8(value: TCryptoLibByteArray;
+class function TBitConverter.ToUInt8(const value: TCryptoLibByteArray;
   StartIndex: Int32): UInt8;
 begin
   // result := PByte(@value[StartIndex])^;
   System.Move(value[StartIndex], result, System.SizeOf(result));
 end;
 
-class function TBitConverter.ToUInt16(value: TCryptoLibByteArray;
+class function TBitConverter.ToUInt16(const value: TCryptoLibByteArray;
   StartIndex: Int32): UInt16;
 begin
   // System.Move(value[StartIndex], result, System.SizeOf(result));
@@ -474,7 +471,7 @@ begin
   end;
 end;
 
-class function TBitConverter.ToUInt32(value: TCryptoLibByteArray;
+class function TBitConverter.ToUInt32(const value: TCryptoLibByteArray;
   StartIndex: Int32): UInt32;
 begin
   // System.Move(value[StartIndex], result, System.SizeOf(result));
@@ -495,60 +492,13 @@ begin
   end;
 end;
 
-class function TBitConverter.ToUInt32(value: PByte; StartIndex: Int32): UInt32;
-begin
-
-  if (IsLittleEndian) then
-  begin
-    result := UInt32(value[StartIndex] or (value[StartIndex + 1] shl 8) or
-      (value[StartIndex + 2] shl 16) or (value[StartIndex + 3] shl 24));
-    Exit;
-  end
-  else
-  begin
-
-    result := UInt32((value[StartIndex] shl 24) or
-      (value[StartIndex + 1] shl 16) or (value[StartIndex + 2] shl 8) or
-      (value[StartIndex + 3]));
-    Exit;
-  end;
-
-end;
-
-class function TBitConverter.ToUInt64(value: TCryptoLibByteArray;
+class function TBitConverter.ToUInt64(const value: TCryptoLibByteArray;
   StartIndex: Int32): UInt64;
 var
   i1, i2: Int32;
 begin
 
   // System.Move(value[StartIndex], result, System.SizeOf(result));
-
-  if (IsLittleEndian) then
-  begin
-    i1 := value[StartIndex] or (value[StartIndex + 1] shl 8) or
-      (value[StartIndex + 2] shl 16) or (value[StartIndex + 3] shl 24);
-    i2 := (value[StartIndex + 4]) or (value[StartIndex + 5] shl 8) or
-      (value[StartIndex + 6] shl 16) or (value[StartIndex + 7] shl 24);
-    result := UInt64(UInt32(i1) or (Int64(i2) shl 32));
-    Exit;
-  end
-  else
-  begin
-
-    i1 := (value[StartIndex] shl 24) or (value[StartIndex + 1] shl 16) or
-      (value[StartIndex + 2] shl 8) or (value[StartIndex + 3]);
-    i2 := (value[StartIndex + 4] shl 24) or (value[StartIndex + 5] shl 16) or
-      (value[StartIndex + 6] shl 8) or (value[StartIndex + 7]);
-    result := UInt64(UInt32(i2) or (Int64(i1) shl 32));
-    Exit;
-  end;
-
-end;
-
-class function TBitConverter.ToUInt64(value: PByte; StartIndex: Int32): UInt64;
-var
-  i1, i2: Int32;
-begin
 
   if (IsLittleEndian) then
   begin

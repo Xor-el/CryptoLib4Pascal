@@ -41,14 +41,14 @@ type
     function GetSharedSecret(): TCryptoLibByteArray; inline;
     function GetIV(): TCryptoLibByteArray; inline;
 
-    constructor Create(shared, iv: TCryptoLibByteArray);
+    constructor Create(const shared, iv: TCryptoLibByteArray);
   end;
 
 implementation
 
 { TKdfParameters }
 
-constructor TKdfParameters.Create(shared, iv: TCryptoLibByteArray);
+constructor TKdfParameters.Create(const shared, iv: TCryptoLibByteArray);
 begin
   Inherited Create();
   Fshared := shared;

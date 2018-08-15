@@ -60,7 +60,7 @@ type
     /// </summary>
     constructor Create(const obj: IAsn1Encodable); overload;
 
-    constructor Create(v: array of IAsn1Encodable); overload;
+    constructor Create(const v: array of IAsn1Encodable); overload;
 
     /// <summary>
     /// create a sequence containing a vector of objects.
@@ -112,7 +112,7 @@ begin
   inherited Destroy;
 end;
 
-constructor TBerSequence.Create(v: array of IAsn1Encodable);
+constructor TBerSequence.Create(const v: array of IAsn1Encodable);
 begin
   Inherited Create(v);
 end;

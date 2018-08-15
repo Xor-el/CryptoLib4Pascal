@@ -37,15 +37,16 @@ type
 
   public
 
-    class procedure Drain(inStr: TStream); static;
-    class function ReadAll(inStr: TStream): TCryptoLibByteArray; static; inline;
-    class function ReadAllLimited(inStr: TStream; limit: Int32)
+    class procedure Drain(const inStr: TStream); static;
+    class function ReadAll(const inStr: TStream): TCryptoLibByteArray;
+      static; inline;
+    class function ReadAllLimited(const inStr: TStream; limit: Int32)
       : TCryptoLibByteArray; static; inline;
-    class function ReadFully(inStr: TStream; buf: TCryptoLibByteArray): Int32;
-      overload; static; inline;
-    class function ReadFully(inStr: TStream; buf: TCryptoLibByteArray;
+    class function ReadFully(const inStr: TStream; var buf: TCryptoLibByteArray)
+      : Int32; overload; static; inline;
+    class function ReadFully(const inStr: TStream; var buf: TCryptoLibByteArray;
       off, len: Int32): Int32; overload; static;
-    class procedure PipeAll(inStr, outStr: TStream); static;
+    class procedure PipeAll(const inStr, outStr: TStream); static;
     /// <summary>
     /// Pipe all bytes from <c>inStr</c> to <c>outStr</c>, throwing <c>
     /// EStreamOverflowCryptoLibException</c> if greater than <c>limit</c> bytes in <c>
@@ -65,10 +66,11 @@ type
     /// limit</c>
     /// </returns>
     /// <exception cref="EStreamOverflowCryptoLibException" />
-    class function PipeAllLimited(inStr: TStream; limit: Int64;
-      outStr: TStream): Int64;
+    class function PipeAllLimited(const inStr: TStream; limit: Int64;
+      const outStr: TStream): Int64;
 
-    class procedure WriteBufTo(buf: TMemoryStream; output: TStream); inline;
+    class procedure WriteBufTo(const buf: TMemoryStream;
+      const output: TStream); inline;
 
   end;
 
@@ -79,7 +81,7 @@ uses
 
 { TStreams }
 
-class procedure TStreams.Drain(inStr: TStream);
+class procedure TStreams.Drain(const inStr: TStream);
 var
   bs: TCryptoLibByteArray;
 begin
@@ -91,7 +93,7 @@ begin
   end;
 end;
 
-class procedure TStreams.PipeAll(inStr, outStr: TStream);
+class procedure TStreams.PipeAll(const inStr, outStr: TStream);
 var
   numRead: Int32;
   bs: TCryptoLibByteArray;
@@ -107,8 +109,8 @@ begin
   end;
 end;
 
-class function TStreams.PipeAllLimited(inStr: TStream; limit: Int64;
-  outStr: TStream): Int64;
+class function TStreams.PipeAllLimited(const inStr: TStream; limit: Int64;
+  const outStr: TStream): Int64;
 var
   bs: TCryptoLibByteArray;
   numRead: Int32;
@@ -132,7 +134,7 @@ begin
   Result := total;
 end;
 
-class function TStreams.ReadAll(inStr: TStream): TCryptoLibByteArray;
+class function TStreams.ReadAll(const inStr: TStream): TCryptoLibByteArray;
 var
   buf: TMemoryStream;
 begin
@@ -148,7 +150,7 @@ begin
 
 end;
 
-class function TStreams.ReadAllLimited(inStr: TStream; limit: Int32)
+class function TStreams.ReadAllLimited(const inStr: TStream; limit: Int32)
   : TCryptoLibByteArray;
 var
   buf: TMemoryStream;
@@ -165,8 +167,8 @@ begin
 
 end;
 
-class function TStreams.ReadFully(inStr: TStream; buf: TCryptoLibByteArray;
-  off, len: Int32): Int32;
+class function TStreams.ReadFully(const inStr: TStream;
+  var buf: TCryptoLibByteArray; off, len: Int32): Int32;
 var
   totalRead, numRead: Int32;
 begin
@@ -185,13 +187,14 @@ begin
   Result := totalRead;
 end;
 
-class function TStreams.ReadFully(inStr: TStream;
-  buf: TCryptoLibByteArray): Int32;
+class function TStreams.ReadFully(const inStr: TStream;
+  var buf: TCryptoLibByteArray): Int32;
 begin
   Result := ReadFully(inStr, buf, 0, System.Length(buf));
 end;
 
-class procedure TStreams.WriteBufTo(buf: TMemoryStream; output: TStream);
+class procedure TStreams.WriteBufTo(const buf: TMemoryStream;
+  const output: TStream);
 begin
   output.CopyFrom(buf, buf.Size);
 end;

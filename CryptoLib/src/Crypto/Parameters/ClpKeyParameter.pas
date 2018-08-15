@@ -40,8 +40,8 @@ type
     Fkey: TCryptoLibByteArray;
 
   public
-    constructor Create(key: TCryptoLibByteArray); overload;
-    constructor Create(key: TCryptoLibByteArray;
+    constructor Create(const key: TCryptoLibByteArray); overload;
+    constructor Create(const key: TCryptoLibByteArray;
       keyOff, keyLen: Int32); overload;
     function GetKey(): TCryptoLibByteArray; inline;
 
@@ -51,7 +51,7 @@ implementation
 
 { TKeyParameter }
 
-constructor TKeyParameter.Create(key: TCryptoLibByteArray);
+constructor TKeyParameter.Create(const key: TCryptoLibByteArray);
 begin
   Inherited Create();
 
@@ -62,7 +62,7 @@ begin
   Fkey := System.Copy(key);
 end;
 
-constructor TKeyParameter.Create(key: TCryptoLibByteArray;
+constructor TKeyParameter.Create(const key: TCryptoLibByteArray;
   keyOff, keyLen: Int32);
 begin
   Inherited Create();

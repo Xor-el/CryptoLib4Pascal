@@ -79,15 +79,15 @@ type
 
   strict protected
 
-    function EncryptBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function EncryptBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; override;
 
-    function DecryptBlock(in_enc: TCryptoLibByteArray; inOff, inLen: Int32)
-      : TCryptoLibByteArray; override;
+    function DecryptBlock(const in_enc: TCryptoLibByteArray;
+      inOff, inLen: Int32): TCryptoLibByteArray; override;
 
   public
 
-    function ProcessBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function ProcessBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; override;
 
   end;
@@ -96,7 +96,7 @@ implementation
 
 { TPascalCoinIESEngine }
 
-function TPascalCoinIESEngine.DecryptBlock(in_enc: TCryptoLibByteArray;
+function TPascalCoinIESEngine.DecryptBlock(const in_enc: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
   K, K1, K2, T1, T2: TCryptoLibByteArray;
@@ -162,7 +162,7 @@ begin
   Exit;
 end;
 
-function TPascalCoinIESEngine.EncryptBlock(&in: TCryptoLibByteArray;
+function TPascalCoinIESEngine.EncryptBlock(const &in: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
   C, K, K1, K2, T, tempHolder: TCryptoLibByteArray;
@@ -263,7 +263,7 @@ begin
 
 end;
 
-function TPascalCoinIESEngine.ProcessBlock(&in: TCryptoLibByteArray;
+function TPascalCoinIESEngine.ProcessBlock(const &in: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
   ephKeyPair: IEphemeralKeyPair;
@@ -291,10 +291,11 @@ begin
       bIn := TBytesStream.Create(System.Copy(&in, inOff, inLen));
 
       try
-        bIn.Position := SECURE_HEAD_SIZE; // for compatiblity purposes
+        bIn.Position := SECURE_HEAD_SIZE;
+        // for existing PascalCoin compatiblity purposes
 
         try
-          FpubParam := FkeyParser.readKey(bIn);
+          FpubParam := FkeyParser.ReadKey(bIn);
         except
           on e: EIOCryptoLibException do
           begin

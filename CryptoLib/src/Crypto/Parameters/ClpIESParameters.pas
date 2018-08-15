@@ -52,7 +52,7 @@ type
     /// <param name="MacKeySize">
     /// the size of the MAC key (in bits).
     /// </param>
-    constructor Create(derivation, encoding: TCryptoLibByteArray;
+    constructor Create(const derivation, encoding: TCryptoLibByteArray;
       MacKeySize: Int32);
   end;
 
@@ -60,8 +60,8 @@ implementation
 
 { TIESParameters }
 
-constructor TIESParameters.Create(derivation, encoding: TCryptoLibByteArray;
-  MacKeySize: Int32);
+constructor TIESParameters.Create(const derivation,
+  encoding: TCryptoLibByteArray; MacKeySize: Int32);
 begin
   Inherited Create();
   Fderivation := derivation;

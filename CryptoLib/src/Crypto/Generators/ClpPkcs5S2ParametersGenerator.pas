@@ -66,7 +66,7 @@ type
     /// </param>
     constructor Create(const digest: IDigest);
 
-    procedure Init(password, salt: TCryptoLibByteArray;
+    procedure Init(const password, salt: TCryptoLibByteArray;
       iterationCount: Int32); override;
 
     /// <summary>
@@ -185,8 +185,8 @@ begin
   result := Fdigest;
 end;
 
-procedure TPkcs5S2ParametersGenerator.Init(password, salt: TCryptoLibByteArray;
-  iterationCount: Int32);
+procedure TPkcs5S2ParametersGenerator.Init(const password,
+  salt: TCryptoLibByteArray; iterationCount: Int32);
 begin
   inherited Init(password, salt, iterationCount);
   FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC

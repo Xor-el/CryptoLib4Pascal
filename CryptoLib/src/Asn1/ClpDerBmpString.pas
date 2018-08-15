@@ -54,7 +54,7 @@ type
     /// <summary>
     /// basic constructor - byte encoded string.
     /// </summary>
-    constructor Create(astr: TCryptoLibByteArray); overload;
+    constructor Create(const astr: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// basic constructor
@@ -74,7 +74,7 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerBmpString; overload;
+    class function GetInstance(const obj: TObject): IDerBmpString; overload;
       static; inline;
 
     /// <summary>
@@ -117,7 +117,7 @@ begin
   result := Str = other.Str;
 end;
 
-constructor TDerBmpString.Create(astr: TCryptoLibByteArray);
+constructor TDerBmpString.Create(const astr: TCryptoLibByteArray);
 var
   cs: TCryptoLibCharArray;
   i: Int32;
@@ -187,7 +187,7 @@ begin
 
 end;
 
-class function TDerBmpString.GetInstance(obj: TObject): IDerBmpString;
+class function TDerBmpString.GetInstance(const obj: TObject): IDerBmpString;
 begin
   if ((obj = Nil) or (obj is TDerBmpString)) then
   begin

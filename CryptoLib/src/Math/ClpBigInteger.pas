@@ -121,13 +121,14 @@ type
     function GetIsInitialized: Boolean; inline;
     function GetSignValue: Int32; inline;
 
-    function AddToMagnitude(magToAdd: TCryptoLibInt32Array): TBigInteger;
+    function AddToMagnitude(const magToAdd: TCryptoLibInt32Array): TBigInteger;
     function QuickPow2Check(): Boolean; inline;
     /// <summary>
     /// return z = x / y - done in place (z value preserved, x contains the *
     /// remainder)
     /// </summary>
-    function Divide(x, y: TCryptoLibInt32Array): TCryptoLibInt32Array; overload;
+    function Divide(const x, y: TCryptoLibInt32Array)
+      : TCryptoLibInt32Array; overload;
     function IsEqualMagnitude(const x: TBigInteger): Boolean;
 
     function CheckProbablePrime(certainty: Int32; const random: IRandom;
@@ -145,7 +146,7 @@ type
     /// <summary>
     /// return x = x mod y - done in place (y value preserved)
     /// </summary>
-    function Remainder(x, y: TCryptoLibInt32Array)
+    function Remainder(const x, y: TCryptoLibInt32Array)
       : TCryptoLibInt32Array; overload;
 
     function LastNBits(n: Int32): TCryptoLibInt32Array; inline;
@@ -161,8 +162,9 @@ type
     function GetLowestSetBitMaskFirst(firstWordMask: Int32): Int32;
 
     procedure ParseString(const str: String; radix: Int32);
-    procedure ParseBytes(bytes: TCryptoLibByteArray; offset, length: Int32);
-    procedure ParseBytesWithSign(sign: Int32; bytes: TCryptoLibByteArray;
+    procedure ParseBytes(const bytes: TCryptoLibByteArray;
+      offset, length: Int32);
+    procedure ParseBytesWithSign(sign: Int32; const bytes: TCryptoLibByteArray;
       offset, length: Int32);
 
     class function GetZero: TBigInteger; static; inline;
@@ -177,27 +179,28 @@ type
 
     class function GetByteLength(nBits: Int32): Int32; static; inline;
 
-    class function MakeMagnitude(bytes: TCryptoLibByteArray;
+    class function MakeMagnitude(const bytes: TCryptoLibByteArray;
       offset, length: Int32): TCryptoLibInt32Array; static;
 
     /// <summary>
     /// a = a + b - b preserved.
     /// </summary>
-    class function AddMagnitudes(a, b: TCryptoLibInt32Array)
+    class function AddMagnitudes(const a, b: TCryptoLibInt32Array)
       : TCryptoLibInt32Array; static; inline;
 
-    class function CalcBitLength(sign, indx: Int32; mag: TCryptoLibInt32Array)
-      : Int32; static;
+    class function CalcBitLength(sign, indx: Int32;
+      const mag: TCryptoLibInt32Array): Int32; static;
 
     /// <summary>
     /// unsigned comparison on two arrays - note the arrays may start with
     /// leading zeros.
     /// </summary>
-    class function CompareTo(xIndx: Int32; x: TCryptoLibInt32Array;
-      yIndx: Int32; y: TCryptoLibInt32Array): Int32; overload; static;
+    class function CompareTo(xIndx: Int32; const x: TCryptoLibInt32Array;
+      yIndx: Int32; const y: TCryptoLibInt32Array): Int32; overload; static;
 
-    class function CompareNoLeadingZeroes(xIndx: Int32; x: TCryptoLibInt32Array;
-      yIndx: Int32; y: TCryptoLibInt32Array): Int32; static;
+    class function CompareNoLeadingZeroes(xIndx: Int32;
+      const x: TCryptoLibInt32Array; yIndx: Int32;
+      const y: TCryptoLibInt32Array): Int32; static;
 
     class function ModInverse32(d: Int32): Int32; static; inline;
 
@@ -234,8 +237,8 @@ type
     class function ModPowMonty(b: TBigInteger; const e, m: TBigInteger;
       convert: Boolean): TBigInteger; static;
 
-    class function GetWindowList(mag: TCryptoLibInt32Array; extraBits: Int32)
-      : TCryptoLibInt32Array; static;
+    class function GetWindowList(const mag: TCryptoLibInt32Array;
+      extraBits: Int32): TCryptoLibInt32Array; static;
 
     class function CreateWindowEntry(mult, zeroes: Int32): Int32;
       static; inline;
@@ -243,17 +246,17 @@ type
     /// <returns>
     /// w with w = x * x - w is assumed to have enough space.
     /// </returns>
-    class function Square(w, x: TCryptoLibInt32Array): TCryptoLibInt32Array;
-      overload; static;
+    class function Square(const w, x: TCryptoLibInt32Array)
+      : TCryptoLibInt32Array; overload; static;
 
     /// <returns>
     /// x with x = y * z - x is assumed to have enough space.
     /// </returns>
-    class function Multiply(x, y, z: TCryptoLibInt32Array)
+    class function Multiply(const x, y, z: TCryptoLibInt32Array)
       : TCryptoLibInt32Array; overload; static;
 
     // mDash = -m^(-1) mod b
-    class procedure MontgomeryReduce(x, m: TCryptoLibInt32Array;
+    class procedure MontgomeryReduce(const x, m: TCryptoLibInt32Array;
       mDash: UInt32); static;
 
     // mDash = -m^(-1) mod b
@@ -267,12 +270,12 @@ type
     /// &lt;br/&gt; <br />NOTE: the indices of x, y, m, a different in HAC
     /// and in Java <br />
     /// </summary>
-    class procedure MultiplyMonty(a, x, y, m: TCryptoLibInt32Array;
+    class procedure MultiplyMonty(const a, x, y, m: TCryptoLibInt32Array;
       mDash: UInt32; smallMontyModulus: Boolean); static;
 
     // mDash = -m^(-1) mod b
-    class procedure SquareMonty(a, x, m: TCryptoLibInt32Array; mDash: UInt32;
-      smallMontyModulus: Boolean); static;
+    class procedure SquareMonty(const a, x, m: TCryptoLibInt32Array;
+      mDash: UInt32; smallMontyModulus: Boolean); static;
 
     class function MultiplyMontyNIsOne(x, y, m, mDash: UInt32): UInt32;
       static; inline;
@@ -280,29 +283,29 @@ type
     /// <summary>
     /// do a left shift - this returns a new array.
     /// </summary>
-    class function ShiftLeft(mag: TCryptoLibInt32Array; n: Int32)
+    class function ShiftLeft(const mag: TCryptoLibInt32Array; n: Int32)
       : TCryptoLibInt32Array; overload; static;
 
     /// <summary>
     /// do a right shift - this does it in place.
     /// </summary>
-    class procedure ShiftRightInPlace(start: Int32; mag: TCryptoLibInt32Array;
-      n: Int32); static;
+    class procedure ShiftRightInPlace(start: Int32;
+      const mag: TCryptoLibInt32Array; n: Int32); static;
 
     /// <summary>
     /// do a right shift by one - this does it in place.
     /// </summary>
     class procedure ShiftRightOneInPlace(start: Int32;
-      mag: TCryptoLibInt32Array); static;
+      const mag: TCryptoLibInt32Array); static;
 
     /// <summary>
     /// returns x = x - y - we assume x is &gt;= y
     /// </summary>
-    class function Subtract(xStart: Int32; x: TCryptoLibInt32Array;
-      yStart: Int32; y: TCryptoLibInt32Array): TCryptoLibInt32Array;
+    class function Subtract(xStart: Int32; const x: TCryptoLibInt32Array;
+      yStart: Int32; const y: TCryptoLibInt32Array): TCryptoLibInt32Array;
       overload; static;
 
-    class function doSubBigLil(bigMag, lilMag: TCryptoLibInt32Array)
+    class function doSubBigLil(const bigMag, lilMag: TCryptoLibInt32Array)
       : TCryptoLibInt32Array; static; inline;
 
     class procedure AppendZeroExtendedString(var sl: TStringList;
@@ -319,7 +322,7 @@ type
 
     class function IntToOctal(input: Int32): string; static;
 
-    constructor Create(signum: Int32; mag: TCryptoLibInt32Array;
+    constructor Create(signum: Int32; const mag: TCryptoLibInt32Array;
       checkMag: Boolean); overload;
 
     class constructor BigInteger();
@@ -345,11 +348,11 @@ type
 
     constructor Create(const value: String); overload;
     constructor Create(const str: String; radix: Int32); overload;
-    constructor Create(bytes: TCryptoLibByteArray); overload;
-    constructor Create(bytes: TCryptoLibByteArray;
+    constructor Create(const bytes: TCryptoLibByteArray); overload;
+    constructor Create(const bytes: TCryptoLibByteArray;
       offset, length: Int32); overload;
-    constructor Create(sign: Int32; bytes: TCryptoLibByteArray); overload;
-    constructor Create(sign: Int32; bytes: TCryptoLibByteArray;
+    constructor Create(sign: Int32; const bytes: TCryptoLibByteArray); overload;
+    constructor Create(sign: Int32; const bytes: TCryptoLibByteArray;
       offset, length: Int32); overload;
     constructor Create(sizeInBits: Int32; const random: IRandom); overload;
     constructor Create(BitLength, certainty: Int32;
@@ -475,7 +478,7 @@ begin
 end;
 
 class function TBigInteger.CalcBitLength(sign, indx: Int32;
-  mag: TCryptoLibInt32Array): Int32;
+  const mag: TCryptoLibInt32Array): Int32;
 var
   BitLength, firstMag: Int32;
 begin
@@ -956,8 +959,8 @@ begin
   Result := TBigInteger.Create(-Fsign, Fmagnitude, false);
 end;
 
-class function TBigInteger.doSubBigLil(bigMag, lilMag: TCryptoLibInt32Array)
-  : TCryptoLibInt32Array;
+class function TBigInteger.doSubBigLil(const bigMag,
+  lilMag: TCryptoLibInt32Array): TCryptoLibInt32Array;
 var
   res: TCryptoLibInt32Array;
 begin
@@ -1155,7 +1158,7 @@ begin
   Result := AddToMagnitude(value.Fmagnitude);
 end;
 
-class function TBigInteger.AddMagnitudes(a, b: TCryptoLibInt32Array)
+class function TBigInteger.AddMagnitudes(const a, b: TCryptoLibInt32Array)
   : TCryptoLibInt32Array;
 var
   tI, vI: Int32;
@@ -1192,7 +1195,7 @@ begin
   Result := a;
 end;
 
-function TBigInteger.AddToMagnitude(magToAdd: TCryptoLibInt32Array)
+function TBigInteger.AddToMagnitude(const magToAdd: TCryptoLibInt32Array)
   : TBigInteger;
 var
   big, small, bigCopy: TCryptoLibInt32Array;
@@ -1683,23 +1686,23 @@ begin
   ParseString(str, radix);
 end;
 
-constructor TBigInteger.Create(bytes: TCryptoLibByteArray);
+constructor TBigInteger.Create(const bytes: TCryptoLibByteArray);
 begin
   ParseBytes(bytes, 0, System.length(bytes));
 end;
 
-constructor TBigInteger.Create(sign: Int32; bytes: TCryptoLibByteArray);
+constructor TBigInteger.Create(sign: Int32; const bytes: TCryptoLibByteArray);
 begin
   ParseBytesWithSign(sign, bytes, 0, System.length(bytes));
 end;
 
-constructor TBigInteger.Create(bytes: TCryptoLibByteArray;
+constructor TBigInteger.Create(const bytes: TCryptoLibByteArray;
   offset, length: Int32);
 begin
   ParseBytes(bytes, offset, length);
 end;
 
-constructor TBigInteger.Create(sign: Int32; bytes: TCryptoLibByteArray;
+constructor TBigInteger.Create(sign: Int32; const bytes: TCryptoLibByteArray;
   offset, length: Int32);
 begin
   ParseBytesWithSign(sign, bytes, offset, length);
@@ -1833,7 +1836,7 @@ begin
 
 end;
 
-constructor TBigInteger.Create(signum: Int32; mag: TCryptoLibInt32Array;
+constructor TBigInteger.Create(signum: Int32; const mag: TCryptoLibInt32Array;
   checkMag: Boolean);
 var
   i: Int32;
@@ -2239,7 +2242,7 @@ begin
   Result := IsProbablePrime(certainty, false);
 end;
 
-class function TBigInteger.MakeMagnitude(bytes: TCryptoLibByteArray;
+class function TBigInteger.MakeMagnitude(const bytes: TCryptoLibByteArray;
   offset, length: Int32): TCryptoLibInt32Array;
 var
   endPoint, firstSignificant, nInts, bCount, v, magnitudeIndex, i: Int32;
@@ -2737,8 +2740,9 @@ begin
   Result := TBigInteger.Create(1, yVal, True);
 end;
 
-class function TBigInteger.Subtract(xStart: Int32; x: TCryptoLibInt32Array;
-  yStart: Int32; y: TCryptoLibInt32Array): TCryptoLibInt32Array;
+class function TBigInteger.Subtract(xStart: Int32;
+  const x: TCryptoLibInt32Array; yStart: Int32; const y: TCryptoLibInt32Array)
+  : TCryptoLibInt32Array;
 var
   iT, iV, borrow: Int32;
   m: Int64;
@@ -2778,7 +2782,7 @@ begin
   Result := x;
 end;
 
-class procedure TBigInteger.MontgomeryReduce(x, m: TCryptoLibInt32Array;
+class procedure TBigInteger.MontgomeryReduce(const x, m: TCryptoLibInt32Array;
   mDash: UInt32);
 var
   n, i, j: Int32;
@@ -2829,7 +2833,7 @@ begin
   end;
 end;
 
-class function TBigInteger.Multiply(x, y, z: TCryptoLibInt32Array)
+class function TBigInteger.Multiply(const x, y, z: TCryptoLibInt32Array)
   : TCryptoLibInt32Array;
 var
   i, xBase, j: Int32;
@@ -2963,8 +2967,8 @@ begin
   Result := UInt32(carry);
 end;
 
-class procedure TBigInteger.MultiplyMonty(a, x, y, m: TCryptoLibInt32Array;
-  mDash: UInt32; smallMontyModulus: Boolean);
+class procedure TBigInteger.MultiplyMonty(const a, x, y,
+  m: TCryptoLibInt32Array; mDash: UInt32; smallMontyModulus: Boolean);
 var
   n, aMax, j, i: Int32;
   a0, y0: UInt32;
@@ -3081,7 +3085,7 @@ begin
   Result := n;
 end;
 
-procedure TBigInteger.ParseBytes(bytes: TCryptoLibByteArray;
+procedure TBigInteger.ParseBytes(const bytes: TCryptoLibByteArray;
   offset, length: Int32);
 var
   endPoint, iBval, numBytes, index: Int32;
@@ -3162,7 +3166,7 @@ begin
 end;
 
 procedure TBigInteger.ParseBytesWithSign(sign: Int32;
-  bytes: TCryptoLibByteArray; offset, length: Int32);
+  const bytes: TCryptoLibByteArray; offset, length: Int32);
 begin
   begin
     if ((sign < -1) or (sign > 1)) then
@@ -3696,7 +3700,7 @@ begin
   Result := x;
 end;
 
-function TBigInteger.Remainder(x, y: TCryptoLibInt32Array)
+function TBigInteger.Remainder(const x, y: TCryptoLibInt32Array)
   : TCryptoLibInt32Array;
 var
   xStart, yStart, xyCmp, yBitLength, xBitLength, shift, cBitLength, cStart,
@@ -3892,7 +3896,7 @@ begin
 
 end;
 
-class function TBigInteger.ShiftLeft(mag: TCryptoLibInt32Array; n: Int32)
+class function TBigInteger.ShiftLeft(const mag: TCryptoLibInt32Array; n: Int32)
   : TCryptoLibInt32Array;
 var
   nInts, nBits, magLen, i, nBits2, highBits, m, j, Next: Int32;
@@ -4024,7 +4028,7 @@ begin
 end;
 
 class procedure TBigInteger.ShiftRightInPlace(start: Int32;
-  mag: TCryptoLibInt32Array; n: Int32);
+  const mag: TCryptoLibInt32Array; n: Int32);
 var
   nInts, nBits, magEnd, delta, i, nBits2, m, Next: Int32;
 begin
@@ -4072,7 +4076,7 @@ begin
 end;
 
 class procedure TBigInteger.ShiftRightOneInPlace(start: Int32;
-  mag: TCryptoLibInt32Array);
+  const mag: TCryptoLibInt32Array);
 var
   i, m, Next: Int32;
 begin
@@ -4091,7 +4095,7 @@ begin
   mag[start] := Int32(UInt32(mag[start]) shr 1);
 end;
 
-class function TBigInteger.Square(w, x: TCryptoLibInt32Array)
+class function TBigInteger.Square(const w, x: TCryptoLibInt32Array)
   : TCryptoLibInt32Array;
 var
   c, v, prod: UInt64;
@@ -4166,7 +4170,7 @@ begin
   Result := w;
 end;
 
-class procedure TBigInteger.SquareMonty(a, x, m: TCryptoLibInt32Array;
+class procedure TBigInteger.SquareMonty(const a, x, m: TCryptoLibInt32Array;
   mDash: UInt32; smallMontyModulus: Boolean);
 var
   n, aMax, j, i: Int32;
@@ -4482,7 +4486,7 @@ begin
   Result := ToString(10);
 end;
 
-class function TBigInteger.GetWindowList(mag: TCryptoLibInt32Array;
+class function TBigInteger.GetWindowList(const mag: TCryptoLibInt32Array;
   extraBits: Int32): TCryptoLibInt32Array;
 var
   i, v, leadingBits, resultSize, resultPos, bitPos, mult, multLimit,
@@ -4626,7 +4630,8 @@ begin
 end;
 
 class function TBigInteger.CompareNoLeadingZeroes(xIndx: Int32;
-  x: TCryptoLibInt32Array; yIndx: Int32; y: TCryptoLibInt32Array): Int32;
+  const x: TCryptoLibInt32Array; yIndx: Int32;
+  const y: TCryptoLibInt32Array): Int32;
 var
   diff: Int32;
   v1, v2: UInt32;
@@ -4676,8 +4681,9 @@ begin
   Result := 0;
 end;
 
-class function TBigInteger.CompareTo(xIndx: Int32; x: TCryptoLibInt32Array;
-  yIndx: Int32; y: TCryptoLibInt32Array): Int32;
+class function TBigInteger.CompareTo(xIndx: Int32;
+  const x: TCryptoLibInt32Array; yIndx: Int32;
+  const y: TCryptoLibInt32Array): Int32;
 begin
   while ((xIndx <> System.length(x)) and (x[xIndx] = 0)) do
   begin
@@ -4692,7 +4698,8 @@ begin
   Result := CompareNoLeadingZeroes(xIndx, x, yIndx, y);
 end;
 
-function TBigInteger.Divide(x, y: TCryptoLibInt32Array): TCryptoLibInt32Array;
+function TBigInteger.Divide(const x, y: TCryptoLibInt32Array)
+  : TCryptoLibInt32Array;
 var
   xStart, yStart, xyCmp, yBitLength, xBitLength, shift, iCountStart, cBitLength,
     cStart, len: Int32;

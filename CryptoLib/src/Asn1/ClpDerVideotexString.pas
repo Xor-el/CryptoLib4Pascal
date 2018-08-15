@@ -59,7 +59,7 @@ type
     /// <param name="encoding">
     /// the byte encoding of the characters making up the string.
     /// </param>
-    constructor Create(encoding: TCryptoLibByteArray);
+    constructor Create(const encoding: TCryptoLibByteArray);
 
     function GetString(): String; override;
 
@@ -79,11 +79,11 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerVideotexString; overload;
-      static; inline;
+    class function GetInstance(const obj: TObject): IDerVideotexString;
+      overload; static; inline;
 
-    class function GetInstance(obj: TCryptoLibByteArray): IDerVideotexString;
-      overload; static;
+    class function GetInstance(const obj: TCryptoLibByteArray)
+      : IDerVideotexString; overload; static;
 
     /// <summary>
     /// return a Videotex string from a tagged object.
@@ -130,7 +130,7 @@ begin
   result := TArrayUtils.GetArrayHashCode(mString);
 end;
 
-constructor TDerVideotexString.Create(encoding: TCryptoLibByteArray);
+constructor TDerVideotexString.Create(const encoding: TCryptoLibByteArray);
 begin
   Inherited Create();
   FmString := System.Copy(encoding);
@@ -141,7 +141,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.VideotexString, mString);
 end;
 
-class function TDerVideotexString.GetInstance(obj: TObject): IDerVideotexString;
+class function TDerVideotexString.GetInstance(const obj: TObject)
+  : IDerVideotexString;
 begin
   if ((obj = Nil) or (obj is TDerVideotexString)) then
   begin
@@ -170,7 +171,7 @@ begin
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
 end;
 
-class function TDerVideotexString.GetInstance(obj: TCryptoLibByteArray)
+class function TDerVideotexString.GetInstance(const obj: TCryptoLibByteArray)
   : IDerVideotexString;
 begin
   try

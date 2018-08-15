@@ -30,8 +30,8 @@ type
 
   public
     class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(Input: TCryptoLibByteArray; UpperCase: Boolean = True)
-      : String; static;
+    class function Encode(const Input: TCryptoLibByteArray;
+      UpperCase: Boolean = True): String; static;
   end;
 
 implementation
@@ -43,7 +43,7 @@ begin
   result := SbpBase16.TBase16.Decode(Hex);
 end;
 
-class function THex.Encode(Input: TCryptoLibByteArray;
+class function THex.Encode(const Input: TCryptoLibByteArray;
   UpperCase: Boolean): String;
 begin
   case UpperCase of

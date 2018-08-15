@@ -56,7 +56,7 @@ type
     FK, FV: TCryptoLibByteArray;
     Fn: TBigInteger;
 
-    function BitsToInt(t: TCryptoLibByteArray): TBigInteger; inline;
+    function BitsToInt(const t: TCryptoLibByteArray): TBigInteger; inline;
 
     function GetIsDeterministic: Boolean; virtual;
 
@@ -74,7 +74,7 @@ type
       overload; virtual;
 
     procedure Init(const n, d: TBigInteger;
-      &message: TCryptoLibByteArray); overload;
+      const &message: TCryptoLibByteArray); overload;
 
     function NextK(): TBigInteger; virtual;
 
@@ -91,7 +91,8 @@ begin
   result := True;
 end;
 
-function THMacDsaKCalculator.BitsToInt(t: TCryptoLibByteArray): TBigInteger;
+function THMacDsaKCalculator.BitsToInt(const t: TCryptoLibByteArray)
+  : TBigInteger;
 begin
   result := TBigInteger.Create(1, t);
   if ((System.Length(t) * 8) > Fn.BitLength) then
@@ -118,7 +119,7 @@ end;
 {$ENDIF}
 
 procedure THMacDsaKCalculator.Init(const n, d: TBigInteger;
-  &message: TCryptoLibByteArray);
+  const &message: TCryptoLibByteArray);
 var
   x, dVal, m, mVal: TCryptoLibByteArray;
   mInt: TBigInteger;

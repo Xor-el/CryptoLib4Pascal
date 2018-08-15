@@ -69,7 +69,7 @@ type
     /// <returns>
     /// returns number of bytes added
     /// </returns>
-    function AddPadding(input: TCryptoLibByteArray; inOff: Int32): Int32;
+    function AddPadding(const input: TCryptoLibByteArray; inOff: Int32): Int32;
 
     /// <summary>
     /// return the number of pad bytes present in the block.
@@ -80,7 +80,7 @@ type
     /// <returns>
     /// the number of pad bytes present in the block.
     /// </returns>
-    function PadCount(input: TCryptoLibByteArray): Int32;
+    function PadCount(const input: TCryptoLibByteArray): Int32;
 
   end;
 
@@ -88,7 +88,7 @@ implementation
 
 { TZeroBytePadding }
 
-function TZeroBytePadding.AddPadding(input: TCryptoLibByteArray;
+function TZeroBytePadding.AddPadding(const input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
   added: Int32;
@@ -117,7 +117,7 @@ begin
 end;
 {$ENDIF}
 
-function TZeroBytePadding.PadCount(input: TCryptoLibByteArray): Int32;
+function TZeroBytePadding.PadCount(const input: TCryptoLibByteArray): Int32;
 var
   count: Int32;
 begin

@@ -52,8 +52,8 @@ type
     procedure CycleSeed(); inline;
     procedure GenerateState(); inline;
     procedure DigestAddCounter(seedVal: Int64); inline;
-    procedure DigestUpdate(inSeed: TCryptoLibByteArray); inline;
-    procedure DigestDoFinal(result: TCryptoLibByteArray); inline;
+    procedure DigestUpdate(const inSeed: TCryptoLibByteArray); inline;
+    procedure DigestDoFinal(const result: TCryptoLibByteArray); inline;
 
     class var
 
@@ -65,11 +65,12 @@ type
   public
 
     constructor Create(const digest: IDigest);
-    procedure AddSeedMaterial(inSeed: TCryptoLibByteArray); overload; inline;
+    procedure AddSeedMaterial(const inSeed: TCryptoLibByteArray);
+      overload; inline;
     procedure AddSeedMaterial(rSeed: Int64); overload; inline;
-    procedure NextBytes(bytes: TCryptoLibByteArray); overload; inline;
-    procedure NextBytes(bytes: TCryptoLibByteArray; start, len: Int32);
-      overload;
+    procedure NextBytes(const bytes: TCryptoLibByteArray); overload; inline;
+    procedure NextBytes(const bytes: TCryptoLibByteArray;
+      start, len: Int32); overload;
 
   end;
 
@@ -86,12 +87,14 @@ begin
   Fdigest.BlockUpdate(bytes, 0, System.Length(bytes));
 end;
 
-procedure TDigestRandomGenerator.DigestUpdate(inSeed: TCryptoLibByteArray);
+procedure TDigestRandomGenerator.DigestUpdate(const inSeed
+  : TCryptoLibByteArray);
 begin
   Fdigest.BlockUpdate(inSeed, 0, System.Length(inSeed));
 end;
 
-procedure TDigestRandomGenerator.DigestDoFinal(result: TCryptoLibByteArray);
+procedure TDigestRandomGenerator.DigestDoFinal(const result
+  : TCryptoLibByteArray);
 begin
   Fdigest.DoFinal(result, 0);
 end;
@@ -108,7 +111,8 @@ begin
   end;
 end;
 
-procedure TDigestRandomGenerator.AddSeedMaterial(inSeed: TCryptoLibByteArray);
+procedure TDigestRandomGenerator.AddSeedMaterial(const inSeed
+  : TCryptoLibByteArray);
 begin
   FLock.Acquire;
   try
@@ -162,12 +166,12 @@ begin
   end;
 end;
 
-procedure TDigestRandomGenerator.NextBytes(bytes: TCryptoLibByteArray);
+procedure TDigestRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray);
 begin
   NextBytes(bytes, 0, System.Length(bytes));
 end;
 
-procedure TDigestRandomGenerator.NextBytes(bytes: TCryptoLibByteArray;
+procedure TDigestRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray;
   start, len: Int32);
 var
   stateOff, endPoint: Int32;

@@ -146,7 +146,7 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessByte(input: Byte; output: TCryptoLibByteArray;
+    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
       outOff: Int32): Int32; override;
 
     /// <summary>
@@ -176,8 +176,9 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessBytes(input: TCryptoLibByteArray; inOff, length: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32; override;
+    function ProcessBytes(const input: TCryptoLibByteArray;
+      inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
+      : Int32; override;
 
     /// <summary>
     /// Process the last block in the buffer. If the buffer is currently full
@@ -203,7 +204,7 @@ type
     /// <exception cref="EInvalidCipherTextCryptoLibException">
     /// if padding is expected and not found.
     /// </exception>
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; override;
 
   end;
@@ -228,7 +229,7 @@ begin
   Create(cipher, TPkcs7Padding.Create() as IPkcs7Padding);
 end;
 
-function TPaddedBufferedBlockCipher.DoFinal(output: TCryptoLibByteArray;
+function TPaddedBufferedBlockCipher.DoFinal(const output: TCryptoLibByteArray;
   outOff: Int32): Int32;
 var
   blockSize, resultLen: Int32;
@@ -349,7 +350,7 @@ begin
 end;
 
 function TPaddedBufferedBlockCipher.ProcessByte(input: Byte;
-  output: TCryptoLibByteArray; outOff: Int32): Int32;
+  const output: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   resultLen: Int32;
 begin
@@ -367,8 +368,9 @@ begin
   result := resultLen;
 end;
 
-function TPaddedBufferedBlockCipher.ProcessBytes(input: TCryptoLibByteArray;
-  inOff, length: Int32; output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TPaddedBufferedBlockCipher.ProcessBytes(const input
+  : TCryptoLibByteArray; inOff, length: Int32;
+  const output: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   blockSize, outLength, resultLen, gapLen: Int32;
 begin

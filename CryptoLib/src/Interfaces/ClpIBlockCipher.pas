@@ -53,8 +53,8 @@ type
     /// <param name="outOff">The offset into <paramref>outBuf</paramref> to write the output block.</param>
     /// <exception cref="DataLengthException">If input block is wrong size, or outBuf too small.</exception>
     /// <returns>The number of bytes processed and produced.</returns>
-    function ProcessBlock(inBuf: TCryptoLibByteArray; inOff: Int32;
-      outBuf: TCryptoLibByteArray; outOff: Int32): Int32;
+    function ProcessBlock(const inBuf: TCryptoLibByteArray; inOff: Int32;
+      const outBuf: TCryptoLibByteArray; outOff: Int32): Int32;
 
     /// <summary>
     /// Reset the cipher to the same state as it was after the last init (if there was one).

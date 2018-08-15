@@ -59,7 +59,7 @@ type
     /// </summary>
     constructor Create(const obj: IAsn1Encodable); overload;
 
-    constructor Create(v: array of IAsn1Encodable); overload;
+    constructor Create(const v: array of IAsn1Encodable); overload;
 
     /// <summary>
     /// create a sequence containing a vector of objects.
@@ -114,7 +114,7 @@ begin
   end;
 end;
 
-constructor TDerSequence.Create(v: array of IAsn1Encodable);
+constructor TDerSequence.Create(const v: array of IAsn1Encodable);
 var
   ae: IAsn1Encodable;
 begin
