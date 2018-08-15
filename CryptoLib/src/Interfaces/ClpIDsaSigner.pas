@@ -31,8 +31,8 @@ type
   IDsaSigner = interface(IDsa)
     ['{687C14CD-F126-4886-87FC-535DEB083C2F}']
 
-    function CalculateE(const n: TBigInteger; &message: TCryptoLibByteArray)
-      : TBigInteger;
+    function CalculateE(const n: TBigInteger;
+      const &message: TCryptoLibByteArray): TBigInteger;
 
     function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
       : ISecureRandom;

@@ -32,9 +32,9 @@ type
     function GetCount: Int32;
     function GetSelf(Index: Int32): IAsn1Encodable;
 
-    procedure Add(objs: array of IAsn1Encodable);
+    procedure Add(const objs: array of IAsn1Encodable);
 
-    procedure AddOptional(objs: array of IAsn1Encodable);
+    procedure AddOptional(const objs: array of IAsn1Encodable);
 
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 

@@ -66,9 +66,10 @@ type
       FoutputSha3_224, FoutputSha3_256, FoutputSha3_384, FoutputSha3_512,
       FoutputGost2012_256, FoutputGost2012_512: TBytes;
 
-    procedure DoTestHMac(const hmacName: String; output: TBytes); overload;
+    procedure DoTestHMac(const hmacName: String; const output: TBytes);
+      overload;
     procedure DoTestHMac(const hmacName: String; defKeySize: Int32;
-      output: TBytes); overload;
+      const output: TBytes); overload;
     procedure DoTestExceptions();
 
   protected
@@ -100,7 +101,7 @@ begin
   end;
 end;
 
-procedure TTestHMac.DoTestHMac(const hmacName: String; output: TBytes);
+procedure TTestHMac.DoTestHMac(const hmacName: String; const output: TBytes);
 var
   key: IKeyParameter;
   mac: IMac;
@@ -129,7 +130,7 @@ begin
 end;
 
 procedure TTestHMac.DoTestHMac(const hmacName: String; defKeySize: Int32;
-  output: TBytes);
+  const output: TBytes);
 var
   key: IKeyParameter;
   mac: IMac;

@@ -36,7 +36,7 @@ type
       const k: TBigInteger): TCryptoLibByteArray;
 
     function Do_Verify(const pu_key: IECPublicKeyParameters;
-      sig: TCryptoLibByteArray): Boolean;
+      const sig: TCryptoLibByteArray): Boolean;
 
   end;
 

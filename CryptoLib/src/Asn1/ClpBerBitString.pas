@@ -35,8 +35,9 @@ type
   TBerBitString = class(TDerBitString, IBerBitString)
 
   public
-    constructor Create(data: TCryptoLibByteArray; padBits: Int32); overload;
-    constructor Create(data: TCryptoLibByteArray); overload;
+    constructor Create(const data: TCryptoLibByteArray;
+      padBits: Int32); overload;
+    constructor Create(const data: TCryptoLibByteArray); overload;
     constructor Create(namedBits: Int32); overload;
     constructor Create(const obj: IAsn1Encodable); overload;
 
@@ -48,12 +49,13 @@ implementation
 
 { TBerBitString }
 
-constructor TBerBitString.Create(data: TCryptoLibByteArray);
+constructor TBerBitString.Create(const data: TCryptoLibByteArray);
 begin
   Inherited Create(data);
 end;
 
-constructor TBerBitString.Create(data: TCryptoLibByteArray; padBits: Int32);
+constructor TBerBitString.Create(const data: TCryptoLibByteArray;
+  padBits: Int32);
 begin
   Inherited Create(data, padBits);
 end;

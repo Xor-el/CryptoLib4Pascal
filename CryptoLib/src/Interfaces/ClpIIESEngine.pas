@@ -54,8 +54,8 @@ type
     /// encoding and derivation parameters, may be wrapped to include an IV
     /// for an underlying block cipher.
     /// </param>
-    procedure Init(forEncryption: Boolean;
-      privParam, pubParam, params: ICipherParameters); overload;
+    procedure Init(forEncryption: Boolean; const privParam, pubParam,
+      params: ICipherParameters); overload;
 
     /// <summary>
     /// Initialise the encryptor.
@@ -91,7 +91,7 @@ type
       const params: ICipherParameters;
       const publicKeyParser: IKeyParser); overload;
 
-    function ProcessBlock(&in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function ProcessBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray;
 
     property cipher: IBufferedBlockCipher read GetCipher;

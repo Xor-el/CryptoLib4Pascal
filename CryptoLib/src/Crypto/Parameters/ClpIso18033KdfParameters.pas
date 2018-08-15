@@ -40,14 +40,14 @@ type
   public
     function GetSeed(): TCryptoLibByteArray; inline;
 
-    constructor Create(seed: TCryptoLibByteArray);
+    constructor Create(const seed: TCryptoLibByteArray);
   end;
 
 implementation
 
 { TIso18033KdfParameters }
 
-constructor TIso18033KdfParameters.Create(seed: TCryptoLibByteArray);
+constructor TIso18033KdfParameters.Create(const seed: TCryptoLibByteArray);
 begin
   Inherited Create();
   Fseed := seed;

@@ -51,7 +51,8 @@ type
 
     /// <summary>Add more seed material to the generator.</summary>
     /// <param name="seed">A byte array to be mixed into the generator's state.</param>
-    procedure AddSeedMaterial(seed: TCryptoLibByteArray); overload; virtual;
+    procedure AddSeedMaterial(const seed: TCryptoLibByteArray);
+      overload; virtual;
 
     /// <summary>Add more seed material to the generator.</summary>
     /// <param name="seed">A long value to be mixed into the generator's state.</param>
@@ -59,13 +60,13 @@ type
 
     /// <summary>Fill byte array with random values.</summary>
     /// <param name="bytes">Array to be filled.</param>
-    procedure NextBytes(bytes: TCryptoLibByteArray); overload; virtual;
+    procedure NextBytes(const bytes: TCryptoLibByteArray); overload; virtual;
 
     /// <summary>Fill byte array with random values.</summary>
     /// <param name="bytes">Array to receive bytes.</param>
     /// <param name="start">Index to start filling at.</param>
     /// <param name="len">Length of segment to fill.</param>
-    procedure NextBytes(bytes: TCryptoLibByteArray; start, len: Int32);
+    procedure NextBytes(const bytes: TCryptoLibByteArray; start, len: Int32);
       overload; virtual;
 
   end;
@@ -79,7 +80,8 @@ begin
   // We don't care about the seed
 end;
 
-procedure TCryptoApiRandomGenerator.AddSeedMaterial(seed: TCryptoLibByteArray);
+procedure TCryptoApiRandomGenerator.AddSeedMaterial
+  (const seed: TCryptoLibByteArray);
 begin
   // We don't care about the seed
 end;
@@ -95,12 +97,12 @@ begin
   Create(TRandomNumberGenerator.CreateRNG());
 end;
 
-procedure TCryptoApiRandomGenerator.NextBytes(bytes: TCryptoLibByteArray);
+procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray);
 begin
   FrndProv.GetBytes(bytes);
 end;
 
-procedure TCryptoApiRandomGenerator.NextBytes(bytes: TCryptoLibByteArray;
+procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray;
   start, len: Int32);
 var
   tmpBuf: TCryptoLibByteArray;

@@ -100,16 +100,16 @@ type
     class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
       reqPreCompLen: Int32; includeNegated: Boolean): Boolean; static; inline;
 
-    class function CheckTable(table: TCryptoLibGenericArray<IECPoint>;
+    class function CheckTable(const table: TCryptoLibGenericArray<IECPoint>;
       reqLen: Int32): Boolean; static; inline;
 
-    class function Trim(a: TCryptoLibByteArray; length: Int32)
+    class function Trim(const a: TCryptoLibByteArray; length: Int32)
       : TCryptoLibByteArray; overload; static; inline;
 
-    class function Trim(a: TCryptoLibInt32Array; length: Int32)
+    class function Trim(const a: TCryptoLibInt32Array; length: Int32)
       : TCryptoLibInt32Array; overload; static; inline;
 
-    class function ResizeTable(a: TCryptoLibGenericArray<IECPoint>;
+    class function ResizeTable(const a: TCryptoLibGenericArray<IECPoint>;
       length: Int32): TCryptoLibGenericArray<IECPoint>; static; inline;
 
     class constructor WNafUtilities();
@@ -121,7 +121,7 @@ type
 
     class function GenerateCompactNaf(const k: TBigInteger)
       : TCryptoLibInt32Array; static;
-    class function GenerateCompactWindowNaf(width: Int32; k: TBigInteger)
+    class function GenerateCompactWindowNaf(width: Int32; const k: TBigInteger)
       : TCryptoLibInt32Array; static;
 
     class function GenerateJsf(const g, h: TBigInteger)
@@ -140,7 +140,7 @@ type
     // * </code>, where the <code>k<sub>i</sub></code> denote the elements of the
     // * returned <code>byte[]</code>.
     // */
-    class function GenerateWindowNaf(width: Int32; k: TBigInteger)
+    class function GenerateWindowNaf(width: Int32; const k: TBigInteger)
       : TCryptoLibByteArray; static;
 
     class function GetNafWeight(const k: TBigInteger): Int32; static; inline;
@@ -178,7 +178,7 @@ type
     /// the window size to use
     /// </returns>
     class function GetWindowSize(bits: Int32;
-      windowSizeCutoffs: TCryptoLibInt32Array): Int32; overload; static;
+      const windowSizeCutoffs: TCryptoLibInt32Array): Int32; overload; static;
 
     class function MapPointWithPrecomp(const p: IECPoint; width: Int32;
       includeNegated: Boolean; const pointMap: IECPointMap): IECPoint; static;
@@ -196,27 +196,28 @@ uses
 
 { TWNafUtilities }
 
-class function TWNafUtilities.ResizeTable(a: TCryptoLibGenericArray<IECPoint>;
-  length: Int32): TCryptoLibGenericArray<IECPoint>;
+class function TWNafUtilities.ResizeTable
+  (const a: TCryptoLibGenericArray<IECPoint>; length: Int32)
+  : TCryptoLibGenericArray<IECPoint>;
 begin
   Result := System.Copy(a);
   System.SetLength(Result, length);
 end;
 
-class function TWNafUtilities.Trim(a: TCryptoLibInt32Array; length: Int32)
+class function TWNafUtilities.Trim(const a: TCryptoLibInt32Array; length: Int32)
   : TCryptoLibInt32Array;
 begin
   Result := System.Copy(a, 0, length);
 end;
 
-class function TWNafUtilities.Trim(a: TCryptoLibByteArray; length: Int32)
+class function TWNafUtilities.Trim(const a: TCryptoLibByteArray; length: Int32)
   : TCryptoLibByteArray;
 begin
   Result := System.Copy(a, 0, length);
 end;
 
-class function TWNafUtilities.CheckTable
-  (table: TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
+class function TWNafUtilities.CheckTable(const table
+  : TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
 begin
   Result := (table <> Nil) and (System.length(table) >= reqLen);
 end;
@@ -297,15 +298,17 @@ begin
 end;
 
 class function TWNafUtilities.GenerateCompactWindowNaf(width: Int32;
-  k: TBigInteger): TCryptoLibInt32Array;
+  const k: TBigInteger): TCryptoLibInt32Array;
 var
   wnaf: TCryptoLibInt32Array;
   pow2, mask, sign, &length, &pos, digit, zeroes: Int32;
   carry: Boolean;
+  lk: TBigInteger;
 begin
+  lk := k;
   if (width = 2) then
   begin
-    Result := GenerateCompactNaf(k);
+    Result := GenerateCompactNaf(lk);
     Exit;
   end;
 
@@ -313,17 +316,17 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidRange);
   end;
-  if ((TBits.Asr32(k.BitLength, 16)) <> 0) then
+  if ((TBits.Asr32(lk.BitLength, 16)) <> 0) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBitLength);
   end;
-  if (k.SignValue = 0) then
+  if (lk.SignValue = 0) then
   begin
     Result := FEMPTY_INTS;
     Exit;
   end;
 
-  System.SetLength(wnaf, (k.BitLength div width) + 1);
+  System.SetLength(wnaf, (lk.BitLength div width) + 1);
 
   // 2^width and a mask and sign bit set accordingly
   pow2 := 1 shl width;
@@ -334,17 +337,17 @@ begin
   length := 0;
   pos := 0;
 
-  while (pos <= k.BitLength) do
+  while (pos <= lk.BitLength) do
   begin
-    if (k.TestBit(pos) = carry) then
+    if (lk.TestBit(pos) = carry) then
     begin
       System.Inc(pos);
       continue;
     end;
 
-    k := k.ShiftRight(pos);
+    lk := lk.ShiftRight(pos);
 
-    digit := k.Int32Value and mask;
+    digit := lk.Int32Value and mask;
     if (carry) then
     begin
       System.Inc(digit);
@@ -499,16 +502,18 @@ begin
   Result := naf;
 end;
 
-class function TWNafUtilities.GenerateWindowNaf(width: Int32; k: TBigInteger)
-  : TCryptoLibByteArray;
+class function TWNafUtilities.GenerateWindowNaf(width: Int32;
+  const k: TBigInteger): TCryptoLibByteArray;
 var
   wnaf: TCryptoLibByteArray;
   pow2, mask, sign, &length, &pos, digit: Int32;
   carry: Boolean;
+  lk: TBigInteger;
 begin
+  lk := k;
   if (width = 2) then
   begin
-    Result := GenerateNaf(k);
+    Result := GenerateNaf(lk);
     Exit;
   end;
 
@@ -516,13 +521,13 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidRange2);
   end;
-  if (k.SignValue = 0) then
+  if (lk.SignValue = 0) then
   begin
     Result := FEMPTY_BYTES;
     Exit;
   end;
 
-  System.SetLength(wnaf, k.BitLength + 1);
+  System.SetLength(wnaf, lk.BitLength + 1);
 
   // 2^width and a mask and sign bit set accordingly
   pow2 := 1 shl width;
@@ -533,17 +538,17 @@ begin
   length := 0;
   pos := 0;
 
-  while (pos <= k.BitLength) do
+  while (pos <= lk.BitLength) do
   begin
-    if (k.TestBit(pos) = carry) then
+    if (lk.TestBit(pos) = carry) then
     begin
       System.Inc(pos);
       continue;
     end;
 
-    k := k.ShiftRight(pos);
+    lk := lk.ShiftRight(pos);
 
-    digit := k.Int32Value and mask;
+    digit := lk.Int32Value and mask;
     if (carry) then
     begin
       System.Inc(digit);
@@ -595,7 +600,7 @@ begin
 end;
 
 class function TWNafUtilities.GetWindowSize(bits: Int32;
-  windowSizeCutoffs: TCryptoLibInt32Array): Int32;
+  const windowSizeCutoffs: TCryptoLibInt32Array): Int32;
 var
   w: Int32;
 begin

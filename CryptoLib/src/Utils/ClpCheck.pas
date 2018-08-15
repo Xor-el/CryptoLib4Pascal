@@ -29,10 +29,10 @@ type
 
   public
     class procedure DataLength(condition: Boolean; const msg: String); overload;
-    class procedure DataLength(buf: TCryptoLibByteArray; off, len: Int32;
+    class procedure DataLength(const buf: TCryptoLibByteArray; off, len: Int32;
       const msg: String); overload;
-    class procedure OutputLength(buf: TCryptoLibByteArray; off, len: Int32;
-      const msg: String); overload;
+    class procedure OutputLength(const buf: TCryptoLibByteArray;
+      off, len: Int32; const msg: String); overload;
 
   end;
 
@@ -48,8 +48,8 @@ begin
   end;
 end;
 
-class procedure TCheck.DataLength(buf: TCryptoLibByteArray; off, len: Int32;
-  const msg: String);
+class procedure TCheck.DataLength(const buf: TCryptoLibByteArray;
+  off, len: Int32; const msg: String);
 begin
   if ((off + len) > System.Length(buf)) then
   begin
@@ -57,8 +57,8 @@ begin
   end;
 end;
 
-class procedure TCheck.OutputLength(buf: TCryptoLibByteArray; off, len: Int32;
-  const msg: String);
+class procedure TCheck.OutputLength(const buf: TCryptoLibByteArray;
+  off, len: Int32; const msg: String);
 begin
   if ((off + len) > System.Length(buf)) then
   begin

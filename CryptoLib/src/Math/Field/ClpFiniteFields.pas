@@ -49,8 +49,8 @@ type
     class constructor FiniteFields();
 
   public
-    class function GetBinaryExtensionField(exponents: TCryptoLibInt32Array)
-      : IPolynomialExtensionField; static;
+    class function GetBinaryExtensionField(const exponents
+      : TCryptoLibInt32Array): IPolynomialExtensionField; static;
 
     class function GetPrimeField(const characteristic: TBigInteger)
       : IFiniteField; static;
@@ -67,8 +67,8 @@ begin
   FGF_3 := TPrimeField.Create(TBigInteger.ValueOf(3));
 end;
 
-class function TFiniteFields.GetBinaryExtensionField
-  (exponents: TCryptoLibInt32Array): IPolynomialExtensionField;
+class function TFiniteFields.GetBinaryExtensionField(const exponents
+  : TCryptoLibInt32Array): IPolynomialExtensionField;
 var
   i: Int32;
 begin

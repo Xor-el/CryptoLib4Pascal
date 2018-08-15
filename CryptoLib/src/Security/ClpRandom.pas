@@ -97,7 +97,7 @@ type
     /// <paramref name="buffer" /> is nil.
     /// </exception>
     /// <filterpriority>1</filterpriority>
-    procedure NextBytes(buf: TCryptoLibByteArray); overload; virtual;
+    procedure NextBytes(const buf: TCryptoLibByteArray); overload; virtual;
 
   end;
 
@@ -212,7 +212,7 @@ begin
   Result := InternalSample();
 end;
 
-procedure TRandom.NextBytes(buf: TCryptoLibByteArray);
+procedure TRandom.NextBytes(const buf: TCryptoLibByteArray);
 var
   i: Int32;
 begin

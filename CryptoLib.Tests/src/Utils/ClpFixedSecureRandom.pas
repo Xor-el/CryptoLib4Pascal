@@ -66,15 +66,15 @@ type
       Findex: Int32;
       constructor Create();
 
-      procedure NextBytes(bytes: TCryptoLibByteArray); override;
+      procedure NextBytes(const bytes: TCryptoLibByteArray); override;
 
     end;
 
-  class function ExpandToBitLength(bitLength: Int32; v: TCryptoLibByteArray)
-    : TCryptoLibByteArray; static;
+  class function ExpandToBitLength(bitLength: Int32;
+    const v: TCryptoLibByteArray): TCryptoLibByteArray; static;
 
   strict protected
-    constructor Create(data: TCryptoLibByteArray); overload;
+    constructor Create(const data: TCryptoLibByteArray); overload;
 
   public
 
@@ -93,7 +93,7 @@ type
 
     public
       property data: TCryptoLibByteArray read GetData;
-      constructor Create(data: TCryptoLibByteArray);
+      constructor Create(const data: TCryptoLibByteArray);
 
     end;
 
@@ -106,7 +106,7 @@ type
 
     public
 
-      constructor Create(data: TCryptoLibByteArray);
+      constructor Create(const data: TCryptoLibByteArray);
 
     end;
 
@@ -121,8 +121,9 @@ type
 
     public
 
-      constructor Create(data: TCryptoLibByteArray); overload;
-      constructor Create(bitLength: Int32; data: TCryptoLibByteArray); overload;
+      constructor Create(const data: TCryptoLibByteArray); overload;
+      constructor Create(bitLength: Int32;
+        const data: TCryptoLibByteArray); overload;
       constructor Create(const hexData: String); overload;
       constructor Create(bitLength: Int32; const hexData: String); overload;
 
@@ -130,15 +131,15 @@ type
 
   function GenerateSeed(numBytes: Int32): TCryptoLibByteArray; override;
 
-  procedure NextBytes(buf: TCryptoLibByteArray); overload; override;
-  procedure NextBytes(buf: TCryptoLibByteArray; off, len: Int32);
+  procedure NextBytes(const buf: TCryptoLibByteArray); overload; override;
+  procedure NextBytes(const buf: TCryptoLibByteArray; off, len: Int32);
     overload; override;
 
   property IsExhausted: Boolean read GetIsExhausted;
 
-  constructor Create(sources: TCryptoLibGenericArray<ISource>); overload;
+  constructor Create(const sources: TCryptoLibGenericArray<ISource>); overload;
 
-  class function From(values: TCryptoLibMatrixByteArray)
+  class function From(const values: TCryptoLibMatrixByteArray)
     : IFixedSecureRandom; static;
 
   end;
@@ -147,13 +148,14 @@ implementation
 
 { TFixedSecureRandom }
 
-constructor TFixedSecureRandom.Create(data: TCryptoLibByteArray);
+constructor TFixedSecureRandom.Create(const data: TCryptoLibByteArray);
 begin
   Inherited Create();
   F_data := data;
 end;
 
-constructor TFixedSecureRandom.Create(sources: TCryptoLibGenericArray<ISource>);
+constructor TFixedSecureRandom.Create(const sources
+  : TCryptoLibGenericArray<ISource>);
 var
   bOut: TMemoryStream;
   data: TCryptoLibByteArray;
@@ -294,17 +296,18 @@ begin
 end;
 
 class function TFixedSecureRandom.ExpandToBitLength(bitLength: Int32;
-  v: TCryptoLibByteArray): TCryptoLibByteArray;
+  const v: TCryptoLibByteArray): TCryptoLibByteArray;
 var
-  tmp: TCryptoLibByteArray;
+  tmp, lv: TCryptoLibByteArray;
   i: UInt32;
 begin
-  if (((bitLength + 7) div 8) > System.Length(v)) then
+  lv := v;
+  if (((bitLength + 7) div 8) > System.Length(lv)) then
   begin
     System.SetLength(tmp, (bitLength + 7) div 8);
 
-    System.Move(v[0], tmp[System.Length(tmp) - System.Length(v)],
-      System.Length(v));
+    System.Move(lv[0], tmp[System.Length(tmp) - System.Length(lv)],
+      System.Length(lv));
 
     if (FisAndroidStyle) then
     begin
@@ -321,18 +324,18 @@ begin
   end
   else
   begin
-    if (FisAndroidStyle and (bitLength < (System.Length(v) * 8))) then
+    if (FisAndroidStyle and (bitLength < (System.Length(lv) * 8))) then
     begin
       if (bitLength mod 8 <> 0) then
       begin
-        i := TConverters.ReadBytesAsUInt32BE(PByte(v), 0);
-        v := TConverters.ReadUInt32AsBytesBE(i shl (8 - (bitLength mod 8)));
+        i := TConverters.ReadBytesAsUInt32BE(PByte(lv), 0);
+        lv := TConverters.ReadUInt32AsBytesBE(i shl (8 - (bitLength mod 8)));
 
       end;
     end;
   end;
 
-  result := v;
+  result := lv;
 end;
 
 class constructor TFixedSecureRandom.FixedSecureRandom;
@@ -351,7 +354,7 @@ begin
   FisClasspathStyle := Fcheck2.Equals(FCLASSPATH);
 end;
 
-class function TFixedSecureRandom.From(values: TCryptoLibMatrixByteArray)
+class function TFixedSecureRandom.From(const values: TCryptoLibMatrixByteArray)
   : IFixedSecureRandom;
 var
   bOut: TMemoryStream;
@@ -399,7 +402,7 @@ begin
   result := F_index = System.Length(F_data);
 end;
 
-procedure TFixedSecureRandom.NextBytes(buf: TCryptoLibByteArray);
+procedure TFixedSecureRandom.NextBytes(const buf: TCryptoLibByteArray);
 begin
   System.Move(F_data[F_index], buf[0], System.Length(buf) *
     System.SizeOf(Byte));
@@ -407,7 +410,7 @@ begin
   F_index := F_index + System.Length(buf);
 end;
 
-procedure TFixedSecureRandom.NextBytes(buf: TCryptoLibByteArray;
+procedure TFixedSecureRandom.NextBytes(const buf: TCryptoLibByteArray;
   off, len: Int32);
 begin
   System.Move(F_data[F_index], buf[off], len * System.SizeOf(Byte));
@@ -425,7 +428,7 @@ begin
 end;
 
 procedure TFixedSecureRandom.TRandomChecker.NextBytes
-  (bytes: TCryptoLibByteArray);
+  (const bytes: TCryptoLibByteArray);
 begin
 
   System.Move(Fdata[Findex], bytes[0], System.Length(bytes) *
@@ -437,7 +440,7 @@ end;
 
 { TFixedSecureRandom.TSource }
 
-constructor TFixedSecureRandom.TSource.Create(data: TCryptoLibByteArray);
+constructor TFixedSecureRandom.TSource.Create(const data: TCryptoLibByteArray);
 begin
   Inherited Create();
   Fdata := data;
@@ -450,7 +453,7 @@ end;
 
 { TFixedSecureRandom.TData }
 
-constructor TFixedSecureRandom.TData.Create(data: TCryptoLibByteArray);
+constructor TFixedSecureRandom.TData.Create(const data: TCryptoLibByteArray);
 begin
   Inherited Create(data);
 end;
@@ -458,13 +461,13 @@ end;
 { TFixedSecureRandom.TBigIntegerSource }
 
 constructor TFixedSecureRandom.TBigIntegerSource.Create(bitLength: Int32;
-  data: TCryptoLibByteArray);
+  const data: TCryptoLibByteArray);
 begin
   Inherited Create(ExpandToBitLength(bitLength, data));
 end;
 
 constructor TFixedSecureRandom.TBigIntegerSource.Create
-  (data: TCryptoLibByteArray);
+  (const data: TCryptoLibByteArray);
 begin
   Inherited Create(data);
 end;

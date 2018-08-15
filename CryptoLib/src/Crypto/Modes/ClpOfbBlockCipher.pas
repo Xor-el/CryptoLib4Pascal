@@ -129,8 +129,8 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessBlock(input: TCryptoLibByteArray; inOff: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32;
+    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
+      const output: TCryptoLibByteArray; outOff: Int32): Int32;
 
     /// <summary>
     /// reset the chaining vector back to the IV and reset the underlying
@@ -240,8 +240,8 @@ begin
 
 end;
 
-function TOfbBlockCipher.ProcessBlock(input: TCryptoLibByteArray; inOff: Int32;
-  output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TOfbBlockCipher.ProcessBlock(const input: TCryptoLibByteArray;
+  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   I: Int32;
 begin

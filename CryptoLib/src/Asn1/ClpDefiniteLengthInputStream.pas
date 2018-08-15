@@ -56,7 +56,7 @@ type
 
     function Read(buf: TCryptoLibByteArray; off, len: Int32): Int32; override;
 
-    procedure ReadAllIntoByteArray(buf: TCryptoLibByteArray);
+    procedure ReadAllIntoByteArray(var buf: TCryptoLibByteArray);
 
     function ToArray: TCryptoLibByteArray;
 
@@ -137,7 +137,7 @@ begin
 end;
 
 procedure TDefiniteLengthInputStream.ReadAllIntoByteArray
-  (buf: TCryptoLibByteArray);
+  (var buf: TCryptoLibByteArray);
 begin
   if (F_remaining <> System.length(buf)) then
   begin

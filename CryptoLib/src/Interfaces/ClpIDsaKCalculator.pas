@@ -58,7 +58,7 @@ type
     // * @param message the message being signed.
     // */
     procedure Init(const n, d: TBigInteger;
-      &message: TCryptoLibByteArray); overload;
+      const &message: TCryptoLibByteArray); overload;
 
     // /**
     // * Return the next valid value of K.

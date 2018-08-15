@@ -85,11 +85,11 @@ type
     constructor Create(); overload;
 
     function GenerateSeed(length: Int32): TCryptoLibByteArray; virtual;
-    procedure SetSeed(seed: TCryptoLibByteArray); overload; virtual;
+    procedure SetSeed(const seed: TCryptoLibByteArray); overload; virtual;
     procedure SetSeed(seed: Int64); overload; virtual;
 
-    procedure NextBytes(buf: TCryptoLibByteArray); overload; override;
-    procedure NextBytes(buf: TCryptoLibByteArray; off, len: Int32);
+    procedure NextBytes(const buf: TCryptoLibByteArray); overload; override;
+    procedure NextBytes(const buf: TCryptoLibByteArray; off, len: Int32);
       overload; virtual;
     function NextInt32(): Int32; virtual;
     function NextInt64(): Int64; virtual;
@@ -216,13 +216,14 @@ begin
   Result := NextInt32() and System.High(Int32);
 end;
 
-procedure TSecureRandom.NextBytes(buf: TCryptoLibByteArray);
+procedure TSecureRandom.NextBytes(const buf: TCryptoLibByteArray);
 begin
   Fgenerator.NextBytes(buf);
 
 end;
 
-procedure TSecureRandom.NextBytes(buf: TCryptoLibByteArray; off, len: Int32);
+procedure TSecureRandom.NextBytes(const buf: TCryptoLibByteArray;
+  off, len: Int32);
 begin
   Fgenerator.NextBytes(buf, off, len);
 end;
@@ -281,7 +282,7 @@ begin
   Fgenerator.AddSeedMaterial(seed);
 end;
 
-procedure TSecureRandom.SetSeed(seed: TCryptoLibByteArray);
+procedure TSecureRandom.SetSeed(const seed: TCryptoLibByteArray);
 begin
   Fgenerator.AddSeedMaterial(seed);
 end;

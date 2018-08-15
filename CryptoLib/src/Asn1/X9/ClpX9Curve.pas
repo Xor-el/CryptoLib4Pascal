@@ -71,7 +71,7 @@ type
   public
     constructor Create(const curve: IECCurve); overload;
     constructor Create(const curve: IECCurve;
-      seed: TCryptoLibByteArray); overload;
+      const seed: TCryptoLibByteArray); overload;
     constructor Create(const fieldID: IX9FieldID; const seq: IAsn1Sequence);
       overload; deprecated 'Use constructor including order/cofactor';
 
@@ -103,7 +103,8 @@ implementation
 
 { TX9Curve }
 
-constructor TX9Curve.Create(const curve: IECCurve; seed: TCryptoLibByteArray);
+constructor TX9Curve.Create(const curve: IECCurve;
+  const seed: TCryptoLibByteArray);
 begin
   Inherited Create();
   if (curve = Nil) then

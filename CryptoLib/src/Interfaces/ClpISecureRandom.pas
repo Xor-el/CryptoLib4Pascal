@@ -31,10 +31,11 @@ type
     ['{BF2E135B-E889-4B2F-837E-6B2049213C83}']
 
     function GenerateSeed(length: Int32): TCryptoLibByteArray;
-    procedure SetSeed(seed: TCryptoLibByteArray); overload;
+    procedure SetSeed(const seed: TCryptoLibByteArray); overload;
     procedure SetSeed(seed: Int64); overload;
 
-    procedure NextBytes(buf: TCryptoLibByteArray; off, len: Int32); overload;
+    procedure NextBytes(const buf: TCryptoLibByteArray;
+      off, len: Int32); overload;
     function NextInt32(): Int32;
     function NextInt64(): Int64;
 

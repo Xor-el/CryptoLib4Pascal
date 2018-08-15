@@ -58,7 +58,7 @@ type
     /// <summary>
     /// basic constructor - with bytes.
     /// </summary>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// basic constructor - without validation.
@@ -100,8 +100,8 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerPrintableString; overload;
-      static; inline;
+    class function GetInstance(const obj: TObject): IDerPrintableString;
+      overload; static; inline;
 
     /// <summary>
     /// return a Printable string from a tagged object.
@@ -201,7 +201,7 @@ begin
   result := Str = other.Str;
 end;
 
-constructor TDerPrintableString.Create(Str: TCryptoLibByteArray);
+constructor TDerPrintableString.Create(const Str: TCryptoLibByteArray);
 begin
   Create(String(TEncoding.ASCII.GetString(Str)), false);
 end;
@@ -231,7 +231,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.PrintableString, GetOctets());
 end;
 
-class function TDerPrintableString.GetInstance(obj: TObject)
+class function TDerPrintableString.GetInstance(const obj: TObject)
   : IDerPrintableString;
 begin
   if ((obj = Nil) or (obj is TDerPrintableString)) then

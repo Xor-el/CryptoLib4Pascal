@@ -149,13 +149,13 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessByte(input: Byte; output: TCryptoLibByteArray;
+    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
       outOff: Int32): Int32; overload; override;
 
     function ProcessByte(input: Byte): TCryptoLibByteArray; overload; override;
 
-    function ProcessBytes(input: TCryptoLibByteArray; inOff, length: Int32)
-      : TCryptoLibByteArray; overload; override;
+    function ProcessBytes(const input: TCryptoLibByteArray;
+      inOff, length: Int32): TCryptoLibByteArray; overload; override;
 
     /// <summary>
     /// process an array of bytes, producing output if necessary.
@@ -183,11 +183,12 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessBytes(input: TCryptoLibByteArray; inOff, length: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32; overload; override;
+    function ProcessBytes(const input: TCryptoLibByteArray;
+      inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
+      : Int32; overload; override;
 
     function DoFinal(): TCryptoLibByteArray; overload; override;
-    function DoFinal(input: TCryptoLibByteArray; inOff, inLen: Int32)
+    function DoFinal(const input: TCryptoLibByteArray; inOff, inLen: Int32)
       : TCryptoLibByteArray; overload; override;
 
     /// <summary>
@@ -215,7 +216,7 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the input is not block size aligned.
     /// </exception>
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32): Int32;
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32;
       overload; override;
 
     /// <summary>
@@ -251,7 +252,7 @@ begin
   Inherited Create();
 end;
 
-function TBufferedBlockCipher.DoFinal(output: TCryptoLibByteArray;
+function TBufferedBlockCipher.DoFinal(const output: TCryptoLibByteArray;
   outOff: Int32): Int32;
 begin
   try
@@ -274,7 +275,7 @@ begin
   end;
 end;
 
-function TBufferedBlockCipher.DoFinal(input: TCryptoLibByteArray;
+function TBufferedBlockCipher.DoFinal(const input: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
   &length, &pos: Int32;
@@ -393,7 +394,7 @@ begin
 end;
 
 function TBufferedBlockCipher.ProcessByte(input: Byte;
-  output: TCryptoLibByteArray; outOff: Int32): Int32;
+  const output: TCryptoLibByteArray; outOff: Int32): Int32;
 begin
 
   Fbuf[FbufOff] := input;
@@ -443,8 +444,9 @@ begin
   result := outBytes;
 end;
 
-function TBufferedBlockCipher.ProcessBytes(input: TCryptoLibByteArray;
-  inOff, length: Int32; output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedBlockCipher.ProcessBytes(const input: TCryptoLibByteArray;
+  inOff, length: Int32; const output: TCryptoLibByteArray;
+  outOff: Int32): Int32;
 var
   blockSize, outLength, resultLen, gapLen: Int32;
 begin
@@ -494,7 +496,7 @@ begin
   result := resultLen;
 end;
 
-function TBufferedBlockCipher.ProcessBytes(input: TCryptoLibByteArray;
+function TBufferedBlockCipher.ProcessBytes(const input: TCryptoLibByteArray;
   inOff, length: Int32): TCryptoLibByteArray;
 var
   outLength, &pos: Int32;

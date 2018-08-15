@@ -279,19 +279,20 @@ type
       withCompression: Boolean): IECPoint; overload;
 
     function CreateRawPoint(const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-      : IECPoint; overload;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
+      withCompression: Boolean): IECPoint; overload;
 
     function CreateDefaultMultiplier(): IECMultiplier;
 
     procedure CheckPoint(const point: IECPoint);
 
-    procedure CheckPoints(points: TCryptoLibGenericArray<IECPoint>); overload;
+    procedure CheckPoints(const points
+      : TCryptoLibGenericArray<IECPoint>); overload;
 
-    procedure CheckPoints(points: TCryptoLibGenericArray<IECPoint>;
+    procedure CheckPoints(const points: TCryptoLibGenericArray<IECPoint>;
       off, len: Int32); overload;
 
-    function DecompressPoint(yTilde: Int32; X1: TBigInteger): IECPoint;
+    function DecompressPoint(yTilde: Int32; const X1: TBigInteger): IECPoint;
 
     property FieldSize: Int32 read GetFieldSize;
     function FromBigInteger(const x: TBigInteger): IECFieldElement;
@@ -304,9 +305,8 @@ type
       : IECPoint; overload;
       deprecated 'Per-point compression property will be removed';
 
-    function CreateCacheSafeLookupTable
-      (points: TCryptoLibGenericArray<IECPoint>; off, len: Int32)
-      : IECLookupTable;
+    function CreateCacheSafeLookupTable(const points
+      : TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
 
     function CreatePoint(const x, y: TBigInteger): IECPoint; overload;
 
@@ -349,7 +349,8 @@ type
     /// An array of points that will be updated in place with their normalized
     /// versions, where necessary
     /// </param>
-    procedure NormalizeAll(points: TCryptoLibGenericArray<IECPoint>); overload;
+    procedure NormalizeAll(const points
+      : TCryptoLibGenericArray<IECPoint>); overload;
 
     /// <summary>
     /// Normalization ensures that any projective coordinate is 1, and
@@ -373,7 +374,7 @@ type
     /// <param name="iso">
     /// The (optional) z-scaling factor - can be null
     /// </param>
-    procedure NormalizeAll(points: TCryptoLibGenericArray<IECPoint>;
+    procedure NormalizeAll(const points: TCryptoLibGenericArray<IECPoint>;
       off, len: Int32; const iso: IECFieldElement); overload;
 
     function GetEndomorphism(): IECEndomorphism;
@@ -391,7 +392,7 @@ type
     /// <returns>
     /// The decoded point.
     /// </returns>
-    function DecodePoint(encoded: TCryptoLibByteArray): IECPoint;
+    function DecodePoint(const encoded: TCryptoLibByteArray): IECPoint;
 
     property coord: Int32 write SetCoord;
     property Endomorphism: IECEndomorphism write SetEndomorphism;

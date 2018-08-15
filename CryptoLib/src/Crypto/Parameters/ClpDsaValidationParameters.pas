@@ -41,8 +41,9 @@ type
     function GetSeed: TCryptoLibByteArray; virtual;
 
   public
-    constructor Create(seed: TCryptoLibByteArray; counter: Int32); overload;
-    constructor Create(seed: TCryptoLibByteArray;
+    constructor Create(const seed: TCryptoLibByteArray;
+      counter: Int32); overload;
+    constructor Create(const seed: TCryptoLibByteArray;
       counter, usageIndex: Int32); overload;
 
     function Equals(const other: IDsaValidationParameters): Boolean;
@@ -59,13 +60,13 @@ implementation
 
 { TDsaValidationParameters }
 
-constructor TDsaValidationParameters.Create(seed: TCryptoLibByteArray;
+constructor TDsaValidationParameters.Create(const seed: TCryptoLibByteArray;
   counter: Int32);
 begin
   Create(seed, counter, -1);
 end;
 
-constructor TDsaValidationParameters.Create(seed: TCryptoLibByteArray;
+constructor TDsaValidationParameters.Create(const seed: TCryptoLibByteArray;
   counter, usageIndex: Int32);
 begin
   Inherited Create();

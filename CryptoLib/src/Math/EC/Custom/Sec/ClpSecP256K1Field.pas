@@ -46,26 +46,29 @@ type
     class constructor SecP256K1Field();
 
   public
-    class procedure Add(x, y, z: TCryptoLibUInt32Array); static; inline;
-    class procedure AddExt(xx, yy, zz: TCryptoLibUInt32Array); static; inline;
-    class procedure AddOne(x, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Add(const x, y, z: TCryptoLibUInt32Array); static; inline;
+    class procedure AddExt(const xx, yy, zz: TCryptoLibUInt32Array);
+      static; inline;
+    class procedure AddOne(const x, z: TCryptoLibUInt32Array); static; inline;
     class function FromBigInteger(const x: TBigInteger): TCryptoLibUInt32Array;
       static; inline;
-    class procedure Half(x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Multiply(x, y, z: TCryptoLibUInt32Array); static; inline;
-    class procedure MultiplyAddToExt(x, y, zz: TCryptoLibUInt32Array);
+    class procedure Half(const x, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Multiply(const x, y, z: TCryptoLibUInt32Array);
       static; inline;
-    class procedure Negate(x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Reduce(xx, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Reduce32(x: UInt32; z: TCryptoLibUInt32Array);
+    class procedure MultiplyAddToExt(const x, y, zz: TCryptoLibUInt32Array);
       static; inline;
-    class procedure Square(x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure SquareN(x: TCryptoLibUInt32Array; n: Int32;
-      z: TCryptoLibUInt32Array); static; inline;
-    class procedure Subtract(x, y, z: TCryptoLibUInt32Array); static; inline;
-    class procedure SubtractExt(xx, yy, zz: TCryptoLibUInt32Array);
+    class procedure Negate(const x, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Reduce(const xx, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Reduce32(x: UInt32; const z: TCryptoLibUInt32Array);
       static; inline;
-    class procedure Twice(x, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Square(const x, z: TCryptoLibUInt32Array); static; inline;
+    class procedure SquareN(const x: TCryptoLibUInt32Array; n: Int32;
+      const z: TCryptoLibUInt32Array); static; inline;
+    class procedure Subtract(const x, y, z: TCryptoLibUInt32Array);
+      static; inline;
+    class procedure SubtractExt(const xx, yy, zz: TCryptoLibUInt32Array);
+      static; inline;
+    class procedure Twice(const x, z: TCryptoLibUInt32Array); static; inline;
 
     class property P: TCryptoLibUInt32Array read GetP;
   end;
@@ -91,7 +94,7 @@ begin
   result := FP;
 end;
 
-class procedure TSecP256K1Field.Add(x, y, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Add(const x, y, z: TCryptoLibUInt32Array);
 var
   c: UInt32;
 begin
@@ -102,7 +105,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.AddExt(xx, yy, zz: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.AddExt(const xx, yy, zz: TCryptoLibUInt32Array);
 var
   c: UInt32;
 begin
@@ -116,7 +119,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.AddOne(x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.AddOne(const x, z: TCryptoLibUInt32Array);
 var
   c: UInt32;
 begin
@@ -140,7 +143,7 @@ begin
   result := z;
 end;
 
-class procedure TSecP256K1Field.Half(x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Half(const x, z: TCryptoLibUInt32Array);
 var
   c: UInt32;
 begin
@@ -155,7 +158,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Reduce(xx, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Reduce(const xx, z: TCryptoLibUInt32Array);
 var
   cc: UInt64;
   c: UInt32;
@@ -171,7 +174,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Multiply(x, y, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Multiply(const x, y, z: TCryptoLibUInt32Array);
 var
   tt: TCryptoLibUInt32Array;
 begin
@@ -180,7 +183,7 @@ begin
   Reduce(tt, z);
 end;
 
-class procedure TSecP256K1Field.MultiplyAddToExt(x, y,
+class procedure TSecP256K1Field.MultiplyAddToExt(const x, y,
   zz: TCryptoLibUInt32Array);
 var
   c: UInt32;
@@ -195,7 +198,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Negate(x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Negate(const x, z: TCryptoLibUInt32Array);
 begin
   if (TNat256.IsZero(x)) then
   begin
@@ -207,7 +210,8 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Reduce32(x: UInt32; z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Reduce32(x: UInt32;
+  const z: TCryptoLibUInt32Array);
 begin
   if (((x <> 0) and (TNat256.Mul33WordAdd(PInv33, x, z, 0) <> 0)) or
     ((z[7] = P7) and (TNat256.Gte(z, FP)))) then
@@ -216,7 +220,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Square(x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Square(const x, z: TCryptoLibUInt32Array);
 var
   tt: TCryptoLibUInt32Array;
 begin
@@ -225,8 +229,8 @@ begin
   Reduce(tt, z);
 end;
 
-class procedure TSecP256K1Field.SquareN(x: TCryptoLibUInt32Array; n: Int32;
-  z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.SquareN(const x: TCryptoLibUInt32Array;
+  n: Int32; const z: TCryptoLibUInt32Array);
 var
   tt: TCryptoLibUInt32Array;
 begin
@@ -246,7 +250,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Subtract(x, y, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Subtract(const x, y, z: TCryptoLibUInt32Array);
 var
   c: Int32;
 begin
@@ -257,7 +261,8 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.SubtractExt(xx, yy, zz: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.SubtractExt(const xx, yy,
+  zz: TCryptoLibUInt32Array);
 var
   c: Int32;
 begin
@@ -271,7 +276,7 @@ begin
   end;
 end;
 
-class procedure TSecP256K1Field.Twice(x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Twice(const x, z: TCryptoLibUInt32Array);
 var
   c: UInt32;
 begin

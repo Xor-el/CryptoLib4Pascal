@@ -57,7 +57,7 @@ type
 
     constructor Create(value: Int32); overload;
     constructor Create(const value: TBigInteger); overload;
-    constructor Create(bytes: TCryptoLibByteArray); overload;
+    constructor Create(const bytes: TCryptoLibByteArray); overload;
 
     property value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
@@ -73,7 +73,8 @@ type
     // * @exception ArgumentException if the object cannot be converted.
     // */
 
-    class function GetInstance(obj: TObject): IDerInteger; overload; static;
+    class function GetInstance(const obj: TObject): IDerInteger;
+      overload; static;
 
     // /**
     // * return an Integer from a tagged object.
@@ -98,7 +99,7 @@ begin
   Result := Fbytes;
 end;
 
-class function TDerInteger.GetInstance(obj: TObject): IDerInteger;
+class function TDerInteger.GetInstance(const obj: TObject): IDerInteger;
 begin
   if ((obj = Nil) or (obj is TDerInteger)) then
   begin
@@ -147,7 +148,7 @@ begin
   Fbytes := TBigInteger.ValueOf(value).ToByteArray();
 end;
 
-constructor TDerInteger.Create(bytes: TCryptoLibByteArray);
+constructor TDerInteger.Create(const bytes: TCryptoLibByteArray);
 begin
   inherited Create();
   if (System.Length(bytes) > 1) then

@@ -74,7 +74,7 @@ type
     /// <returns>
     /// the PRK as KeyParameter
     /// </returns>
-    function Extract(salt, ikm: TCryptoLibByteArray): IKeyParameter;
+    function Extract(const salt, ikm: TCryptoLibByteArray): IKeyParameter;
 
     /// <summary>
     /// Performs the expand part of the key derivation function, using
@@ -138,7 +138,7 @@ begin
   FhMacHash.DoFinal(FcurrentT, 0);
 end;
 
-function THkdfBytesGenerator.Extract(salt, ikm: TCryptoLibByteArray)
+function THkdfBytesGenerator.Extract(const salt, ikm: TCryptoLibByteArray)
   : IKeyParameter;
 var
   temp, prk: TCryptoLibByteArray;

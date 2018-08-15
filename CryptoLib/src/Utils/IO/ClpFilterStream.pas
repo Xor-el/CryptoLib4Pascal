@@ -48,7 +48,7 @@ type
 {$ENDIF MSWINDOWS};
 
   public
-    constructor Create(s: TStream);
+    constructor Create(const s: TStream);
 
     property Size: Int64 read GetSize;
     property Position: Int64 read GetPosition write SetPosition;
@@ -70,7 +70,7 @@ uses
 
 { TFilterStream }
 
-constructor TFilterStream.Create(s: TStream);
+constructor TFilterStream.Create(const s: TStream);
 begin
   inherited Create();
   Fs := s;

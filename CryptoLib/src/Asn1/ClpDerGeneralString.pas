@@ -52,7 +52,7 @@ type
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
 
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     constructor Create(const Str: String); overload;
 
@@ -62,7 +62,7 @@ type
 
     procedure Encode(const derOut: IDerOutputStream); override;
 
-    class function GetInstance(obj: TObject): IDerGeneralString; overload;
+    class function GetInstance(const obj: TObject): IDerGeneralString; overload;
       static; inline;
 
     class function GetInstance(const obj: IAsn1TaggedObject;
@@ -98,7 +98,7 @@ begin
   result := Str = other.Str;
 end;
 
-constructor TDerGeneralString.Create(Str: TCryptoLibByteArray);
+constructor TDerGeneralString.Create(const Str: TCryptoLibByteArray);
 begin
   Create(String(TEncoding.ASCII.GetString(Str)));
 end;
@@ -119,7 +119,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.GeneralString, GetOctets());
 end;
 
-class function TDerGeneralString.GetInstance(obj: TObject): IDerGeneralString;
+class function TDerGeneralString.GetInstance(const obj: TObject)
+  : IDerGeneralString;
 begin
   if ((obj = Nil) or (obj is TDerGeneralString)) then
   begin

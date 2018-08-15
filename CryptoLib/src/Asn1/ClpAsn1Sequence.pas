@@ -108,7 +108,8 @@ type
     /// <exception cref="EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IAsn1Sequence; overload; static;
+    class function GetInstance(const obj: TObject): IAsn1Sequence;
+      overload; static;
 
     /// <summary>
     /// return an Asn1Sequence from the given object.
@@ -119,7 +120,7 @@ type
     /// <exception cref="EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TCryptoLibByteArray): IAsn1Sequence;
+    class function GetInstance(const obj: TCryptoLibByteArray): IAsn1Sequence;
       overload; static;
 
     // /**
@@ -262,7 +263,7 @@ begin
   result := FSeq.ToArray;
 end;
 
-class function TAsn1Sequence.GetInstance(obj: TObject): IAsn1Sequence;
+class function TAsn1Sequence.GetInstance(const obj: TObject): IAsn1Sequence;
 var
   primitive: IAsn1Object;
   sequence: IAsn1Sequence;
@@ -297,7 +298,7 @@ begin
 
 end;
 
-class function TAsn1Sequence.GetInstance(obj: TCryptoLibByteArray)
+class function TAsn1Sequence.GetInstance(const obj: TCryptoLibByteArray)
   : IAsn1Sequence;
 begin
   try

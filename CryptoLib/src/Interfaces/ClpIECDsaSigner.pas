@@ -34,8 +34,8 @@ type
 
     ['{72930065-5893-46CA-B49F-51254C2E73FF}']
 
-    function CalculateE(const n: TBigInteger; &message: TCryptoLibByteArray)
-      : TBigInteger;
+    function CalculateE(const n: TBigInteger;
+      const &message: TCryptoLibByteArray): TBigInteger;
 
     function CreateBasePointMultiplier(): IECMultiplier;
 

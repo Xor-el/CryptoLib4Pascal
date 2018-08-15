@@ -60,38 +60,39 @@ type
     function ProcessByte(input: Byte): TCryptoLibByteArray; overload;
       virtual; abstract;
 
-    function ProcessByte(input: Byte; output: TCryptoLibByteArray;
+    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
       outOff: Int32): Int32; overload; virtual;
 
-    function ProcessBytes(input: TCryptoLibByteArray): TCryptoLibByteArray;
-      overload; virtual;
+    function ProcessBytes(const input: TCryptoLibByteArray)
+      : TCryptoLibByteArray; overload; virtual;
 
-    function ProcessBytes(input: TCryptoLibByteArray; inOff, length: Int32)
-      : TCryptoLibByteArray; overload; virtual; abstract;
+    function ProcessBytes(const input: TCryptoLibByteArray;
+      inOff, length: Int32): TCryptoLibByteArray; overload; virtual; abstract;
 
-    function ProcessBytes(input, output: TCryptoLibByteArray; outOff: Int32)
-      : Int32; overload; virtual;
+    function ProcessBytes(const input, output: TCryptoLibByteArray;
+      outOff: Int32): Int32; overload; virtual;
 
-    function ProcessBytes(input: TCryptoLibByteArray; inOff: Int32;
-      length: Int32; output: TCryptoLibByteArray; outOff: Int32): Int32;
+    function ProcessBytes(const input: TCryptoLibByteArray; inOff: Int32;
+      length: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
       overload; virtual;
 
     function DoFinal(): TCryptoLibByteArray; overload; virtual; abstract;
 
-    function DoFinal(input: TCryptoLibByteArray): TCryptoLibByteArray;
+    function DoFinal(const input: TCryptoLibByteArray): TCryptoLibByteArray;
       overload; virtual;
 
-    function DoFinal(input: TCryptoLibByteArray; inOff, length: Int32)
+    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32)
       : TCryptoLibByteArray; overload; virtual; abstract;
 
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32): Int32;
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32;
       overload; virtual;
 
-    function DoFinal(input, output: TCryptoLibByteArray; outOff: Int32): Int32;
-      overload; virtual;
+    function DoFinal(const input, output: TCryptoLibByteArray; outOff: Int32)
+      : Int32; overload; virtual;
 
-    function DoFinal(input: TCryptoLibByteArray; inOff, length: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32; overload; virtual;
+    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32;
+      const output: TCryptoLibByteArray; outOff: Int32): Int32;
+      overload; virtual;
 
     procedure Reset(); virtual; abstract;
 
@@ -109,7 +110,7 @@ begin
   System.SetLength(FEmptyBuffer, 0);
 end;
 
-function TBufferedCipherBase.DoFinal(output: TCryptoLibByteArray;
+function TBufferedCipherBase.DoFinal(const output: TCryptoLibByteArray;
   outOff: Int32): Int32;
 var
   outBytes: TCryptoLibByteArray;
@@ -123,14 +124,15 @@ begin
   result := System.length(outBytes);
 end;
 
-function TBufferedCipherBase.DoFinal(input: TCryptoLibByteArray)
+function TBufferedCipherBase.DoFinal(const input: TCryptoLibByteArray)
   : TCryptoLibByteArray;
 begin
   result := DoFinal(input, 0, System.length(input));
 end;
 
-function TBufferedCipherBase.DoFinal(input: TCryptoLibByteArray;
-  inOff, length: Int32; output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedCipherBase.DoFinal(const input: TCryptoLibByteArray;
+  inOff, length: Int32; const output: TCryptoLibByteArray;
+  outOff: Int32): Int32;
 var
   len: Int32;
 begin
@@ -139,7 +141,7 @@ begin
   result := len;
 end;
 
-function TBufferedCipherBase.DoFinal(input, output: TCryptoLibByteArray;
+function TBufferedCipherBase.DoFinal(const input, output: TCryptoLibByteArray;
   outOff: Int32): Int32;
 begin
   result := DoFinal(input, 0, System.length(input), output, outOff);
@@ -151,7 +153,7 @@ begin
 end;
 
 function TBufferedCipherBase.ProcessByte(input: Byte;
-  output: TCryptoLibByteArray; outOff: Int32): Int32;
+  const output: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   outBytes: TCryptoLibByteArray;
 begin
@@ -169,14 +171,15 @@ begin
   result := System.length(outBytes);
 end;
 
-function TBufferedCipherBase.ProcessBytes(input: TCryptoLibByteArray)
+function TBufferedCipherBase.ProcessBytes(const input: TCryptoLibByteArray)
   : TCryptoLibByteArray;
 begin
   result := ProcessBytes(input, 0, System.length(input));
 end;
 
-function TBufferedCipherBase.ProcessBytes(input: TCryptoLibByteArray;
-  inOff, length: Int32; output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedCipherBase.ProcessBytes(const input: TCryptoLibByteArray;
+  inOff, length: Int32; const output: TCryptoLibByteArray;
+  outOff: Int32): Int32;
 var
   outBytes: TCryptoLibByteArray;
 begin
@@ -194,8 +197,8 @@ begin
   result := System.length(outBytes);
 end;
 
-function TBufferedCipherBase.ProcessBytes(input, output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+function TBufferedCipherBase.ProcessBytes(const input,
+  output: TCryptoLibByteArray; outOff: Int32): Int32;
 begin
   result := ProcessBytes(input, 0, System.length(input), output, outOff);
 end;

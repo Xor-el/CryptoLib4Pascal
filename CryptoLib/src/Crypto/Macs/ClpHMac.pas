@@ -61,9 +61,9 @@ type
     function GetMacSize: Int32; inline;
 
     procedure Update(input: Byte);
-    procedure BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
     procedure Init(const parameters: ICipherParameters);
-    function DoFinal(output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
     function DoFinal: TCryptoLibByteArray; overload;
 
@@ -85,7 +85,8 @@ begin
   result := FHMAC.HashSize;
 end;
 
-procedure THMac.BlockUpdate(input: TCryptoLibByteArray; inOff, len: Int32);
+procedure THMac.BlockUpdate(const input: TCryptoLibByteArray;
+  inOff, len: Int32);
 begin
   FHMAC.TransformBytes(input, inOff, len);
 end;
@@ -97,7 +98,7 @@ begin
   FHMAC := THashFactory.THMac.CreateHMAC(FDigest.GetUnderlyingIHash);
 end;
 
-function THMac.DoFinal(output: TCryptoLibByteArray; outOff: Int32): Int32;
+function THMac.DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   buf: TCryptoLibByteArray;
 begin

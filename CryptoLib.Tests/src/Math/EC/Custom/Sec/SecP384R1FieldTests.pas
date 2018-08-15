@@ -62,7 +62,7 @@ type
     function GenerateMultiplyInput_Random(): IECFieldElement;
     function GenerateSquareInput_CarryBug(): IECFieldElement;
     function Nat_Create(len: Int32): TCryptoLibUInt32Array;
-    function Nat_ToBigInteger(len: Int32; x: TCryptoLibUInt32Array)
+    function Nat_ToBigInteger(len: Int32; const x: TCryptoLibUInt32Array)
       : TBigInteger;
 
   protected
@@ -122,7 +122,7 @@ begin
 end;
 
 function TTestSecP384R1Field.Nat_ToBigInteger(len: Int32;
-  x: TCryptoLibUInt32Array): TBigInteger;
+  const x: TCryptoLibUInt32Array): TBigInteger;
 var
   bs, temp: TCryptoLibByteArray;
   i: Int32;

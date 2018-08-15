@@ -83,8 +83,8 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function EncryptBlock(input: TCryptoLibByteArray; inOff: Int32;
-      outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
+    function EncryptBlock(const input: TCryptoLibByteArray; inOff: Int32;
+      const outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
 
     /// <summary>
     /// Do the appropriate chaining step for CBC mode decryption.
@@ -110,8 +110,8 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function DecryptBlock(input: TCryptoLibByteArray; inOff: Int32;
-      outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
+    function DecryptBlock(const input: TCryptoLibByteArray; inOff: Int32;
+      const outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
 
   public
 
@@ -182,8 +182,8 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessBlock(input: TCryptoLibByteArray; inOff: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32;
+    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
+      const output: TCryptoLibByteArray; outOff: Int32): Int32;
 
     /// <summary>
     /// reset the chaining vector back to the IV and reset the underlying
@@ -219,8 +219,8 @@ begin
   System.SetLength(FcfbOutV, Fcipher.GetBlockSize);
 end;
 
-function TCfbBlockCipher.DecryptBlock(input: TCryptoLibByteArray; inOff: Int32;
-  outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
+function TCfbBlockCipher.DecryptBlock(const input: TCryptoLibByteArray;
+  inOff: Int32; const outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   I: Int32;
 begin
@@ -255,8 +255,8 @@ begin
   result := FblockSize;
 end;
 
-function TCfbBlockCipher.EncryptBlock(input: TCryptoLibByteArray; inOff: Int32;
-  outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
+function TCfbBlockCipher.EncryptBlock(const input: TCryptoLibByteArray;
+  inOff: Int32; const outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
 var
   I: Int32;
 begin
@@ -351,8 +351,8 @@ begin
 
 end;
 
-function TCfbBlockCipher.ProcessBlock(input: TCryptoLibByteArray; inOff: Int32;
-  output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TCfbBlockCipher.ProcessBlock(const input: TCryptoLibByteArray;
+  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
 begin
   if Fencrypting then
   begin

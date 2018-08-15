@@ -39,20 +39,21 @@ type
     F_tagged, F_isExplicit: Boolean;
     F_tagNo: Int32;
 
-    class procedure WriteLength(outStr: TStream; length: Int32); static;
+    class procedure WriteLength(const outStr: TStream; length: Int32); static;
 
   strict protected
-    constructor Create(outStream: TStream); overload;
-    constructor Create(outStream: TStream; tagNo: Int32;
+    constructor Create(const outStream: TStream); overload;
+    constructor Create(const outStream: TStream; tagNo: Int32;
       isExplicit: Boolean); overload;
 
   public
-    procedure WriteDerEncoded(tag: Int32; bytes: TCryptoLibByteArray); overload;
-    class procedure WriteDerEncoded(outStream: TStream; tag: Int32;
-      bytes: TCryptoLibByteArray); overload; static;
+    procedure WriteDerEncoded(tag: Int32;
+      const bytes: TCryptoLibByteArray); overload;
+    class procedure WriteDerEncoded(const outStream: TStream; tag: Int32;
+      const bytes: TCryptoLibByteArray); overload; static;
 
-    class procedure WriteDerEncoded(outStr: TStream; tag: Int32;
-      inStr: TStream); overload; static;
+    class procedure WriteDerEncoded(const outStr: TStream; tag: Int32;
+      const inStr: TStream); overload; static;
 
   end;
 
@@ -60,12 +61,12 @@ implementation
 
 { TDerGenerator }
 
-constructor TDerGenerator.Create(outStream: TStream);
+constructor TDerGenerator.Create(const outStream: TStream);
 begin
   Inherited Create(outStream);
 end;
 
-constructor TDerGenerator.Create(outStream: TStream; tagNo: Int32;
+constructor TDerGenerator.Create(const outStream: TStream; tagNo: Int32;
   isExplicit: Boolean);
 begin
   Inherited Create(outStream);
@@ -74,15 +75,16 @@ begin
   F_tagNo := tagNo;
 end;
 
-class procedure TDerGenerator.WriteDerEncoded(outStream: TStream; tag: Int32;
-  bytes: TCryptoLibByteArray);
+class procedure TDerGenerator.WriteDerEncoded(const outStream: TStream;
+  tag: Int32; const bytes: TCryptoLibByteArray);
 begin
   outStream.WriteByte(Byte(tag));
   WriteLength(outStream, System.length(bytes));
   outStream.Write(bytes[0], System.length(bytes));
 end;
 
-procedure TDerGenerator.WriteDerEncoded(tag: Int32; bytes: TCryptoLibByteArray);
+procedure TDerGenerator.WriteDerEncoded(tag: Int32;
+  const bytes: TCryptoLibByteArray);
 var
   tagNum, newTag: Int32;
   bOut: TMemoryStream;
@@ -122,13 +124,13 @@ begin
   end;
 end;
 
-class procedure TDerGenerator.WriteDerEncoded(outStr: TStream; tag: Int32;
-  inStr: TStream);
+class procedure TDerGenerator.WriteDerEncoded(const outStr: TStream; tag: Int32;
+  const inStr: TStream);
 begin
   WriteDerEncoded(outStr, tag, TStreams.ReadAll(inStr));
 end;
 
-class procedure TDerGenerator.WriteLength(outStr: TStream; length: Int32);
+class procedure TDerGenerator.WriteLength(const outStr: TStream; length: Int32);
 var
   Size, val, i: Int32;
 begin

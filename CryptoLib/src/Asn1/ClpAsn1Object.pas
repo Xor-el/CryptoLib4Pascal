@@ -51,7 +51,7 @@ type
     /// <exception cref="IOException">
     /// If there is a problem parsing the data, or parsing an object did not exhaust the available data.
     /// </exception>
-    class function FromByteArray(data: TCryptoLibByteArray)
+    class function FromByteArray(const data: TCryptoLibByteArray)
       : IAsn1Object; static;
 
     /// <summary>Read a base ASN.1 object from a stream.</summary>
@@ -88,7 +88,7 @@ begin
   result := Asn1GetHashCode();
 end;
 
-class function TAsn1Object.FromByteArray(data: TCryptoLibByteArray)
+class function TAsn1Object.FromByteArray(const data: TCryptoLibByteArray)
   : IAsn1Object;
 var
   asn1: TAsn1InputStream;

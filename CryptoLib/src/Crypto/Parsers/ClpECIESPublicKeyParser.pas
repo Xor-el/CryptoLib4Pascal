@@ -46,7 +46,7 @@ type
     FecParams: IECDomainParameters;
 
   public
-    function ReadKey(Stream: TStream): IAsymmetricKeyParameter;
+    function ReadKey(const Stream: TStream): IAsymmetricKeyParameter;
     constructor Create(const ecParams: IECDomainParameters);
 
   end;
@@ -61,7 +61,7 @@ begin
   FecParams := ecParams;
 end;
 
-function TECIESPublicKeyParser.ReadKey(Stream: TStream)
+function TECIESPublicKeyParser.ReadKey(const Stream: TStream)
   : IAsymmetricKeyParameter;
 var
   v: TCryptoLibByteArray;

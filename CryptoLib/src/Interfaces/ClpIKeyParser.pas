@@ -31,7 +31,7 @@ type
     ['{12C134F7-7A7F-4F52-B963-ACA8DC933B48}']
 
     // raises EIOCryptoLibException if read fails
-    function readKey(stream: TStream): IAsymmetricKeyParameter;
+    function ReadKey(const stream: TStream): IAsymmetricKeyParameter;
 
   end;
 

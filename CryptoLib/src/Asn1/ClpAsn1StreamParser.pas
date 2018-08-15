@@ -70,9 +70,9 @@ type
     procedure Set00Check(enabled: Boolean); inline;
 
   public
-    constructor Create(inStream: TStream); overload;
-    constructor Create(inStream: TStream; limit: Int32); overload;
-    constructor Create(encoding: TCryptoLibByteArray); overload;
+    constructor Create(const inStream: TStream); overload;
+    constructor Create(const inStream: TStream; limit: Int32); overload;
+    constructor Create(const encoding: TCryptoLibByteArray); overload;
 
     destructor Destroy; override;
 
@@ -105,12 +105,12 @@ begin
   end;
 end;
 
-constructor TAsn1StreamParser.Create(inStream: TStream);
+constructor TAsn1StreamParser.Create(const inStream: TStream);
 begin
   Create(inStream, TAsn1InputStream.FindLimit(inStream));
 end;
 
-constructor TAsn1StreamParser.Create(inStream: TStream; limit: Int32);
+constructor TAsn1StreamParser.Create(const inStream: TStream; limit: Int32);
 begin
   Inherited Create();
   F_in := inStream;
@@ -118,7 +118,7 @@ begin
   System.SetLength(FtmpBuffers, 16);
 end;
 
-constructor TAsn1StreamParser.Create(encoding: TCryptoLibByteArray);
+constructor TAsn1StreamParser.Create(const encoding: TCryptoLibByteArray);
 begin
   // used TBytesStream here for one pass creation and population with byte array :)
   Create(TBytesStream.Create(encoding), System.Length(encoding));

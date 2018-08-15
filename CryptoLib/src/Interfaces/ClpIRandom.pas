@@ -29,7 +29,7 @@ type
   IRandom = interface(IInterface)
     ['{509F9F51-2FC4-40E6-8E4A-68B59808BF5A}']
 
-    procedure NextBytes(buf: TCryptoLibByteArray); overload;
+    procedure NextBytes(const buf: TCryptoLibByteArray); overload;
 
     function NextDouble(): Double;
 

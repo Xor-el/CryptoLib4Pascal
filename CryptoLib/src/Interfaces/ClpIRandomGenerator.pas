@@ -31,7 +31,7 @@ type
 
     /// <summary>Add more seed material to the generator.</summary>
     /// <param name="seed">A byte array to be mixed into the generator's state.</param>
-    procedure AddSeedMaterial(seed: TCryptoLibByteArray); overload;
+    procedure AddSeedMaterial(const seed: TCryptoLibByteArray); overload;
 
     /// <summary>Add more seed material to the generator.</summary>
     /// <param name="seed">A long value to be mixed into the generator's state.</param>
@@ -39,14 +39,14 @@ type
 
     /// <summary>Fill byte array with random values.</summary>
     /// <param name="bytes">Array to be filled.</param>
-    procedure NextBytes(bytes: TCryptoLibByteArray); overload;
+    procedure NextBytes(const bytes: TCryptoLibByteArray); overload;
 
     /// <summary>Fill byte array with random values.</summary>
     /// <param name="bytes">Array to receive bytes.</param>
     /// <param name="start">Index to start filling at.</param>
     /// <param name="len">Length of segment to fill.</param>
-    procedure NextBytes(bytes: TCryptoLibByteArray; start, len: Int32);
-      overload;
+    procedure NextBytes(const bytes: TCryptoLibByteArray;
+      start, len: Int32); overload;
   end;
 
 implementation

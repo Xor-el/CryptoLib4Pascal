@@ -106,7 +106,7 @@ type
 
   public
 
-    constructor Create(inputStream: TStream); overload;
+    constructor Create(const inputStream: TStream); overload;
 
     /// <summary>
     /// Create an ASN1InputStream where no DER object will be longer than
@@ -118,7 +118,7 @@ type
     /// <param name="limit">
     /// maximum size of a DER encoded object.
     /// </param>
-    constructor Create(inputStream: TStream; limit: Int32); overload;
+    constructor Create(const inputStream: TStream; limit: Int32); overload;
 
     destructor Destroy(); override;
 
@@ -128,33 +128,34 @@ type
     /// <param name="input">
     /// array containing ASN.1 encoded data.
     /// </param>
-    constructor Create(input: TCryptoLibByteArray); overload;
+    constructor Create(const input: TCryptoLibByteArray); overload;
 
     function ReadObject(): IAsn1Object;
 
     function BuildEncodableVector(): IAsn1EncodableVector;
 
-    function BuildDerEncodableVector(dIn: TDefiniteLengthInputStream)
+    function BuildDerEncodableVector(const dIn: TDefiniteLengthInputStream)
       : IAsn1EncodableVector; virtual;
 
-    function CreateDerSequence(dIn: TDefiniteLengthInputStream)
+    function CreateDerSequence(const dIn: TDefiniteLengthInputStream)
       : IDerSequence; virtual;
 
-    function CreateDerSet(dIn: TDefiniteLengthInputStream): IDerSet; virtual;
+    function CreateDerSet(const dIn: TDefiniteLengthInputStream)
+      : IDerSet; virtual;
 
-    class function FindLimit(input: TStream): Int32; static;
+    class function FindLimit(const input: TStream): Int32; static;
 
-    class function ReadTagNumber(s: TStream; tag: Int32): Int32; static;
+    class function ReadTagNumber(const s: TStream; tag: Int32): Int32; static;
 
-    class function ReadLength(s: TStream; limit: Int32): Int32; static;
+    class function ReadLength(const s: TStream; limit: Int32): Int32; static;
 
-    class function GetBuffer(defIn: TDefiniteLengthInputStream;
-      tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
+    class function GetBuffer(const defIn: TDefiniteLengthInputStream;
+      const tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
       static; inline;
 
     class function CreatePrimitiveDerObject(tagNo: Int32;
-      defIn: TDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixByteArray)
-      : IAsn1Object; static;
+      const defIn: TDefiniteLengthInputStream;
+      const tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object; static;
   end;
 
 implementation
@@ -177,7 +178,7 @@ uses
 
 { TAsn1InputStream }
 
-class function TAsn1InputStream.FindLimit(input: TStream): Int32;
+class function TAsn1InputStream.FindLimit(const input: TStream): Int32;
 var
   limitedInputStream: TLimitedInputStream;
   mem: TMemoryStream;
@@ -198,8 +199,9 @@ begin
   result := System.High(Int32);
 end;
 
-class function TAsn1InputStream.GetBuffer(defIn: TDefiniteLengthInputStream;
-  tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
+class function TAsn1InputStream.GetBuffer(const defIn
+  : TDefiniteLengthInputStream; const tmpBuffers: TCryptoLibMatrixByteArray)
+  : TCryptoLibByteArray;
 var
   len: Int32;
   buf, temp: TCryptoLibByteArray;
@@ -225,8 +227,8 @@ begin
 end;
 
 class function TAsn1InputStream.CreatePrimitiveDerObject(tagNo: Int32;
-  defIn: TDefiniteLengthInputStream; tmpBuffers: TCryptoLibMatrixByteArray)
-  : IAsn1Object;
+  const defIn: TDefiniteLengthInputStream;
+  const tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object;
 var
   bytes: TCryptoLibByteArray;
 begin
@@ -354,19 +356,19 @@ begin
   inherited Destroy; // dont free
 end;
 
-constructor TAsn1InputStream.Create(inputStream: TStream; limit: Int32);
+constructor TAsn1InputStream.Create(const inputStream: TStream; limit: Int32);
 begin
   Inherited Create(inputStream);
   Flimit := limit;
   System.SetLength(FtmpBuffers, 16);
 end;
 
-constructor TAsn1InputStream.Create(inputStream: TStream);
+constructor TAsn1InputStream.Create(const inputStream: TStream);
 begin
   Create(inputStream, FindLimit(inputStream));
 end;
 
-constructor TAsn1InputStream.Create(input: TCryptoLibByteArray);
+constructor TAsn1InputStream.Create(const input: TCryptoLibByteArray);
 begin
   // used TBytesStream here for one pass creation and population with byte array :)
   FStream := TBytesStream.Create(input);
@@ -374,7 +376,8 @@ begin
 
 end;
 
-class function TAsn1InputStream.ReadLength(s: TStream; limit: Int32): Int32;
+class function TAsn1InputStream.ReadLength(const s: TStream;
+  limit: Int32): Int32;
 var
   &length, Size, next, I: Int32;
 begin
@@ -540,7 +543,7 @@ begin
 end;
 
 function TAsn1InputStream.BuildDerEncodableVector
-  (dIn: TDefiniteLengthInputStream): IAsn1EncodableVector;
+  (const dIn: TDefiniteLengthInputStream): IAsn1EncodableVector;
 var
   res: TAsn1InputStream;
 begin
@@ -671,19 +674,20 @@ begin
 
 end;
 
-function TAsn1InputStream.CreateDerSequence(dIn: TDefiniteLengthInputStream)
-  : IDerSequence;
+function TAsn1InputStream.CreateDerSequence
+  (const dIn: TDefiniteLengthInputStream): IDerSequence;
 begin
   result := TDerSequence.FromVector(BuildDerEncodableVector(dIn));
 end;
 
-function TAsn1InputStream.CreateDerSet(dIn: TDefiniteLengthInputStream)
-  : IDerSet;
+function TAsn1InputStream.CreateDerSet(const dIn
+  : TDefiniteLengthInputStream): IDerSet;
 begin
   result := TDerSet.FromVector(BuildDerEncodableVector(dIn), false);
 end;
 
-class function TAsn1InputStream.ReadTagNumber(s: TStream; tag: Int32): Int32;
+class function TAsn1InputStream.ReadTagNumber(const s: TStream;
+  tag: Int32): Int32;
 var
   tagNo, b: Int32;
 begin

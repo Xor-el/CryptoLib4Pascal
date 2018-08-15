@@ -30,7 +30,7 @@ type
     ['{87EE7482-8D8B-4593-85B7-B5B286B43195}']
 
     function GetApplicationTag: Int32;
-    function GetLengthOfHeader(data: TCryptoLibByteArray): Int32;
+    function GetLengthOfHeader(const data: TCryptoLibByteArray): Int32;
 
     function isConstructed(): Boolean;
     function GetContents(): TCryptoLibByteArray;

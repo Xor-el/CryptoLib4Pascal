@@ -63,7 +63,7 @@ type
   public
     constructor Create(); overload;
     constructor Create(const X: TBigInteger); overload;
-    constructor Create(X: TCryptoLibUInt32Array); overload;
+    constructor Create(const X: TCryptoLibUInt32Array); overload;
 
     function TestBitZero: Boolean; override;
     function ToBigInteger(): TBigInteger; override;
@@ -129,7 +129,7 @@ begin
   Fx := TSecP384R1Field.FromBigInteger(X);
 end;
 
-constructor TSecP384R1FieldElement.Create(X: TCryptoLibUInt32Array);
+constructor TSecP384R1FieldElement.Create(const X: TCryptoLibUInt32Array);
 begin
   Inherited Create();
   Fx := X;

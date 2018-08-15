@@ -63,16 +63,16 @@ type
       static; inline;
 
     class procedure AddDefaultKeySizeEntries(size: Int32;
-      algorithms: array of String); static;
+      const algorithms: array of String); static;
 
     class procedure AddKgAlgorithm(const canonicalName: String;
-      aliases: array of String); static;
+      const aliases: array of String); static;
 
     class procedure AddKpgAlgorithm(const canonicalName: String;
-      aliases: array of String); static;
+      const aliases: array of String); static;
 
     class procedure AddHMacKeyGenerator(const algorithm: String;
-      aliases: array of String); static;
+      const aliases: array of String); static;
 
     class constructor CreateGeneratorUtilities();
     class destructor DestroyGeneratorUtilities();
@@ -109,7 +109,7 @@ implementation
 { TGeneratorUtilities }
 
 class procedure TGeneratorUtilities.AddDefaultKeySizeEntries(size: Int32;
-  algorithms: array of String);
+  const algorithms: array of String);
 var
   algorithm: string;
 begin
@@ -121,7 +121,7 @@ begin
 end;
 
 class procedure TGeneratorUtilities.AddKgAlgorithm(const canonicalName: String;
-  aliases: array of String);
+  const aliases: array of String);
 var
   alias: string;
 begin
@@ -134,7 +134,7 @@ begin
 end;
 
 class procedure TGeneratorUtilities.AddKpgAlgorithm(const canonicalName: String;
-  aliases: array of String);
+  const aliases: array of String);
 var
   alias: string;
 begin
@@ -147,7 +147,7 @@ begin
 end;
 
 class procedure TGeneratorUtilities.AddHMacKeyGenerator(const algorithm: String;
-  aliases: array of String);
+  const aliases: array of String);
 var
   alias, mainName: string;
 begin

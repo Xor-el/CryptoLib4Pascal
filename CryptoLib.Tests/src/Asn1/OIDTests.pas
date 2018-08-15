@@ -54,7 +54,7 @@ type
     Foid: string;
     Freq1, Freq2: TCryptoLibByteArray;
 
-    procedure recodeCheck(const oid: String; enc: TBytes);
+    procedure recodeCheck(const oid: String; const enc: TBytes);
     procedure validOidCheck(const oid: String);
     procedure invalidOidCheck;
     procedure branchCheck(const stem, branch: String);
@@ -116,7 +116,7 @@ begin
   CheckEquals(expected, actual, 'failed "on" check for ' + stem + '"/"' + test);
 end;
 
-procedure TTestOID.recodeCheck(const oid: String; enc: TBytes);
+procedure TTestOID.recodeCheck(const oid: String; const enc: TBytes);
 var
   o, encO: IDerObjectIdentifier;
   bytes: TBytes;

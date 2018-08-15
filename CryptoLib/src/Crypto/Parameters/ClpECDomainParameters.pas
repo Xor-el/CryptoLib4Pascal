@@ -73,7 +73,7 @@ type
     constructor Create(const curve: IECCurve; const g: IECPoint;
       const n, h: TBigInteger); overload;
     constructor Create(const curve: IECCurve; const g: IECPoint;
-      const n, h: TBigInteger; seed: TCryptoLibByteArray); overload;
+      const n, h: TBigInteger; const seed: TCryptoLibByteArray); overload;
 
     property curve: IECCurve read GetCurve;
     property g: IECPoint read GetG;
@@ -159,7 +159,7 @@ begin
 end;
 
 constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
-  const n, h: TBigInteger; seed: TCryptoLibByteArray);
+  const n, h: TBigInteger; const seed: TCryptoLibByteArray);
 begin
   if (curve = Nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SCurveNil);

@@ -58,7 +58,7 @@ type
     /// <param name="CipherKeySize">
     /// the key size (in bits) for the block cipher.
     /// </param>
-    constructor Create(derivation, encoding: TCryptoLibByteArray;
+    constructor Create(const derivation, encoding: TCryptoLibByteArray;
       macKeySize, CipherKeySize: Int32); overload;
 
     /// <summary>
@@ -79,8 +79,9 @@ type
     /// <param name="nonce">
     /// an IV to use initialising the block cipher.
     /// </param>
-    constructor Create(derivation, encoding: TCryptoLibByteArray;
-      macKeySize, CipherKeySize: Int32; nonce: TCryptoLibByteArray); overload;
+    constructor Create(const derivation, encoding: TCryptoLibByteArray;
+      macKeySize, CipherKeySize: Int32;
+      const nonce: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// Set the IES engine parameters.
@@ -103,8 +104,8 @@ type
     /// <param name="UsePointCompression">
     /// whether to use EC point compression or not (false by default)
     /// </param>
-    constructor Create(derivation, encoding: TCryptoLibByteArray;
-      macKeySize, CipherKeySize: Int32; nonce: TCryptoLibByteArray;
+    constructor Create(const derivation, encoding: TCryptoLibByteArray;
+      macKeySize, CipherKeySize: Int32; const nonce: TCryptoLibByteArray;
       UsePointCompression: Boolean); overload;
 
     /// <summary>
@@ -151,22 +152,22 @@ begin
   Result := FusePointCompression;
 end;
 
-constructor TIESWithCipherParameters.Create(derivation,
+constructor TIESWithCipherParameters.Create(const derivation,
   encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32);
 begin
   Create(derivation, encoding, macKeySize, CipherKeySize, Nil);
 end;
 
-constructor TIESWithCipherParameters.Create(derivation,
+constructor TIESWithCipherParameters.Create(const derivation,
   encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32;
-  nonce: TCryptoLibByteArray);
+  const nonce: TCryptoLibByteArray);
 begin
   Create(derivation, encoding, macKeySize, CipherKeySize, nonce, false);
 end;
 
-constructor TIESWithCipherParameters.Create(derivation,
+constructor TIESWithCipherParameters.Create(const derivation,
   encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32;
-  nonce: TCryptoLibByteArray; UsePointCompression: Boolean);
+  const nonce: TCryptoLibByteArray; UsePointCompression: Boolean);
 begin
   Inherited Create(derivation, encoding, macKeySize);
 

@@ -33,7 +33,7 @@ type
 
     function DerEncode(const r, s: TBigInteger): TCryptoLibByteArray;
 
-    function DerDecode(encoding: TCryptoLibByteArray)
+    function DerDecode(const encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
   end;

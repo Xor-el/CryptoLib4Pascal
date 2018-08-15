@@ -72,10 +72,10 @@ type
 
     procedure DoCheckSignature(size: Int32; const sKey: IECPrivateKeyParameters;
       const vKey: IECPublicKeyParameters; const sgr: ISigner;
-      const k: ISecureRandom; &message: TCryptoLibByteArray;
+      const k: ISecureRandom; const &message: TCryptoLibByteArray;
       const r, s: TBigInteger);
 
-    function DoDerDecode(encoding: TCryptoLibByteArray)
+    function DoDerDecode(const encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
   protected
@@ -137,8 +137,8 @@ implementation
 
 procedure TTestECNR.DoCheckSignature(size: Int32;
   const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
-  const sgr: ISigner; const k: ISecureRandom; &message: TCryptoLibByteArray;
-  const r, s: TBigInteger);
+  const sgr: ISigner; const k: ISecureRandom;
+  const &message: TCryptoLibByteArray; const r, s: TBigInteger);
 var
   sigBytes: TBytes;
   sig: TCryptoLibGenericArray<TBigInteger>;
@@ -176,7 +176,7 @@ begin
   end;
 end;
 
-function TTestECNR.DoDerDecode(encoding: TCryptoLibByteArray)
+function TTestECNR.DoDerDecode(const encoding: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;

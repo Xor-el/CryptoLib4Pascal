@@ -62,7 +62,7 @@ type
 
   public
 
-    procedure Init(password, salt: TCryptoLibByteArray;
+    procedure Init(const password, salt: TCryptoLibByteArray;
       iterationCount: Int32); virtual;
 
     /// <value>
@@ -148,8 +148,8 @@ begin
   result := System.Copy(FmSalt);
 end;
 
-procedure TPbeParametersGenerator.Init(password, salt: TCryptoLibByteArray;
-  iterationCount: Int32);
+procedure TPbeParametersGenerator.Init(const password,
+  salt: TCryptoLibByteArray; iterationCount: Int32);
 begin
 
   if (password = Nil) then

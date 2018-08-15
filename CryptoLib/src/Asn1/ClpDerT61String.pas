@@ -57,7 +57,7 @@ type
     /// <summary>
     /// basic constructor - with bytes.
     /// </summary>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// basic constructor
@@ -82,7 +82,7 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerT61String; overload;
+    class function GetInstance(const obj: TObject): IDerT61String; overload;
       static; inline;
 
     /// <summary>
@@ -130,7 +130,7 @@ begin
   result := Str = other.Str;
 end;
 
-constructor TDerT61String.Create(Str: TCryptoLibByteArray);
+constructor TDerT61String.Create(const Str: TCryptoLibByteArray);
 begin
   Create(String(TEncoding.ASCII.GetString(Str)));
 end;
@@ -151,7 +151,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.T61String, GetOctets());
 end;
 
-class function TDerT61String.GetInstance(obj: TObject): IDerT61String;
+class function TDerT61String.GetInstance(const obj: TObject): IDerT61String;
 begin
   if ((obj = Nil) or (obj is TDerT61String)) then
   begin

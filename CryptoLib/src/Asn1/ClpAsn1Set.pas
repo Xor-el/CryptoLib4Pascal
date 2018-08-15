@@ -65,7 +65,7 @@ type
     /// <summary>
     /// return true if a &lt;= b (arrays are assumed padded with zeros).
     /// </summary>
-    function lessThanOrEqual(a, b: TCryptoLibByteArray): Boolean; inline;
+    function LessThanOrEqual(const a, b: TCryptoLibByteArray): Boolean; inline;
 
   type
     TAsn1SetParserImpl = class sealed(TInterfacedObject, IAsn1SetParserImpl,
@@ -118,7 +118,7 @@ type
     /// <exception cref="EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IAsn1Set; overload; static;
+    class function GetInstance(const obj: TObject): IAsn1Set; overload; static;
 
     /// <summary>
     /// return an Asn1Set from the given object.
@@ -129,7 +129,7 @@ type
     /// <exception cref="EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TCryptoLibByteArray): IAsn1Set;
+    class function GetInstance(const obj: TCryptoLibByteArray): IAsn1Set;
       overload; static;
 
     // /**
@@ -273,7 +273,7 @@ begin
   result := F_set.ToArray;
 end;
 
-class function TAsn1Set.GetInstance(obj: TCryptoLibByteArray): IAsn1Set;
+class function TAsn1Set.GetInstance(const obj: TCryptoLibByteArray): IAsn1Set;
 begin
   try
     result := TAsn1Set.GetInstance(FromByteArray(obj) as TAsn1Object);
@@ -348,7 +348,7 @@ begin
 
 end;
 
-class function TAsn1Set.GetInstance(obj: TObject): IAsn1Set;
+class function TAsn1Set.GetInstance(const obj: TObject): IAsn1Set;
 var
   primitive: IAsn1Object;
   asn1Set: IAsn1Set;
@@ -393,7 +393,7 @@ begin
   result := F_set[index];
 end;
 
-function TAsn1Set.lessThanOrEqual(a, b: TCryptoLibByteArray): Boolean;
+function TAsn1Set.LessThanOrEqual(const a, b: TCryptoLibByteArray): Boolean;
 var
   len, I: Int32;
 begin
@@ -443,7 +443,7 @@ begin
         begin
           b := F_set[index + 1].GetEncoded(TAsn1Encodable.Der);
 
-          if (lessThanOrEqual(a, b)) then
+          if (LessThanOrEqual(a, b)) then
           begin
             a := b;
           end

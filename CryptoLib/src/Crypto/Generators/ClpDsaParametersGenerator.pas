@@ -79,10 +79,11 @@ type
 
     class function GetDefaultN(L: Int32): Int32; static; inline;
     class function GetMinimumIterations(L: Int32): Int32; static; inline;
-    class procedure Hash(const d: IDigest; input, output: TCryptoLibByteArray;
-      outputPos: Int32); static; inline;
+    class procedure Hash(const d: IDigest;
+      const input, output: TCryptoLibByteArray; outputPos: Int32);
+      static; inline;
 
-    class procedure Inc(buf: TCryptoLibByteArray); static; inline;
+    class procedure Inc(const buf: TCryptoLibByteArray); static; inline;
 
     class function CalculateGenerator_FIPS186_2(const p, q: TBigInteger;
       const r: ISecureRandom): TBigInteger; static; inline;
@@ -91,7 +92,7 @@ type
       q: TBigInteger; const r: ISecureRandom): TBigInteger; static; inline;
 
     class function CalculateGenerator_FIPS186_3_Verifiable(const d: IDigest;
-      const p, q: TBigInteger; seed: TCryptoLibByteArray; index: Int32)
+      const p, q: TBigInteger; const seed: TCryptoLibByteArray; index: Int32)
       : TBigInteger; static; inline;
 
   public
@@ -206,13 +207,13 @@ begin
 end;
 
 class procedure TDsaParametersGenerator.Hash(const d: IDigest;
-  input, output: TCryptoLibByteArray; outputPos: Int32);
+  const input, output: TCryptoLibByteArray; outputPos: Int32);
 begin
   d.BlockUpdate(input, 0, System.Length(input));
   d.DoFinal(output, outputPos);
 end;
 
-class procedure TDsaParametersGenerator.Inc(buf: TCryptoLibByteArray);
+class procedure TDsaParametersGenerator.Inc(const buf: TCryptoLibByteArray);
 var
   i: Int32;
   b: Byte;
@@ -264,7 +265,7 @@ begin
 end;
 
 class function TDsaParametersGenerator.CalculateGenerator_FIPS186_3_Verifiable
-  (const d: IDigest; const p, q: TBigInteger; seed: TCryptoLibByteArray;
+  (const d: IDigest; const p, q: TBigInteger; const seed: TCryptoLibByteArray;
   index: Int32): TBigInteger;
 var
   e, W, g: TBigInteger;

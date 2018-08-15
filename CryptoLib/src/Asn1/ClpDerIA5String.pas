@@ -60,7 +60,7 @@ type
     /// <summary>
     /// basic constructor - with bytes.
     /// </summary>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// basic constructor - without validation.
@@ -100,7 +100,7 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerIA5String; overload;
+    class function GetInstance(const obj: TObject): IDerIA5String; overload;
       static; inline;
 
     /// <summary>
@@ -178,7 +178,7 @@ begin
   result := TStringUtils.GetStringHashCode(FStr);
 end;
 
-constructor TDerIA5String.Create(Str: TCryptoLibByteArray);
+constructor TDerIA5String.Create(const Str: TCryptoLibByteArray);
 begin
   Create(String(TEncoding.ASCII.GetString(Str)), false);
 end;
@@ -208,7 +208,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.IA5String, GetOctets());
 end;
 
-class function TDerIA5String.GetInstance(obj: TObject): IDerIA5String;
+class function TDerIA5String.GetInstance(const obj: TObject): IDerIA5String;
 begin
   if ((obj = Nil) or (obj is TDerIA5String)) then
   begin

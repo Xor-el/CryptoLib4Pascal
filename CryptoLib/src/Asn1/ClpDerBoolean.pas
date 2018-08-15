@@ -63,7 +63,7 @@ type
 
   public
 
-    constructor Create(val: TCryptoLibByteArray); overload;
+    constructor Create(const val: TCryptoLibByteArray); overload;
 
     procedure Encode(const derOut: IDerOutputStream); override;
 
@@ -81,7 +81,7 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerBoolean; overload;
+    class function GetInstance(const obj: TObject): IDerBoolean; overload;
       static; inline;
 
     /// <summary>
@@ -106,7 +106,7 @@ type
     class function GetInstance(const obj: IAsn1TaggedObject;
       isExplicit: Boolean): IDerBoolean; overload; static; inline;
 
-    class function FromOctetString(value: TCryptoLibByteArray)
+    class function FromOctetString(const value: TCryptoLibByteArray)
       : IDerBoolean; static;
 
   end;
@@ -139,7 +139,7 @@ begin
   result := Ord(IsTrue);
 end;
 
-constructor TDerBoolean.Create(val: TCryptoLibByteArray);
+constructor TDerBoolean.Create(const val: TCryptoLibByteArray);
 begin
   Inherited Create();
   if (System.Length(val) <> 1) then
@@ -176,7 +176,7 @@ begin
   derOut.WriteEncoded(TAsn1Tags.Boolean, TCryptoLibByteArray.Create(Fvalue));
 end;
 
-class function TDerBoolean.FromOctetString(value: TCryptoLibByteArray)
+class function TDerBoolean.FromOctetString(const value: TCryptoLibByteArray)
   : IDerBoolean;
 var
   b: Byte;
@@ -213,7 +213,7 @@ begin
   end;
 end;
 
-class function TDerBoolean.GetInstance(obj: TObject): IDerBoolean;
+class function TDerBoolean.GetInstance(const obj: TObject): IDerBoolean;
 begin
   if ((obj = Nil) or (obj is TDerBoolean)) then
   begin

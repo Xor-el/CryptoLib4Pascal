@@ -36,273 +36,290 @@ type
 
   public
 
-    class function Add(len: Int32; x, y, z: TCryptoLibUInt32Array)
+    class function Add(len: Int32; const x, y, z: TCryptoLibUInt32Array)
       : UInt32; static;
 
-    class function Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): UInt32; overload; static;
+    class function Add33At(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zPos: Int32): UInt32; overload; static;
 
-    class function Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static;
-
-    class function Add33To(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
-      : UInt32; overload; static;
-
-    class function Add33To(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static;
-
-    class function AddBothTo(len: Int32; x, y, z: TCryptoLibUInt32Array)
-      : UInt32; overload; static;
-
-    class function AddBothTo(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static;
-
-    class function AddDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zPos: Int32): UInt32; overload; static;
-
-    class function AddDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static;
-
-    class function AddDWordTo(len: Int32; x: UInt64; z: TCryptoLibUInt32Array)
-      : UInt32; overload; static;
-
-    class function AddDWordTo(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static;
-
-    class function AddTo(len: Int32; x, z: TCryptoLibUInt32Array): UInt32;
+    class function Add33At(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff, zPos: Int32): UInt32;
       overload; static;
 
-    class function AddTo(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
+    class function Add33To(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array): UInt32; overload; static;
 
-    class function AddWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): UInt32; overload; static;
+    class function Add33To(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
-    class function AddWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): UInt32; overload; static;
-
-    class function AddWordTo(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
+    class function AddBothTo(len: Int32; const x, y, z: TCryptoLibUInt32Array)
       : UInt32; overload; static;
 
-    class function AddWordTo(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): UInt32; overload; static;
+    class function AddBothTo(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
-    class procedure Copy(len: Int32; x, z: TCryptoLibUInt32Array); overload;
-      static; inline;
+    class function AddDWordAt(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array; zPos: Int32): UInt32; overload; static;
 
-    class function Copy(len: Int32; x: TCryptoLibUInt32Array)
+    class function AddDWordAt(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array; zOff, zPos: Int32): UInt32;
+      overload; static;
+
+    class function AddDWordTo(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array): UInt32; overload; static;
+
+    class function AddDWordTo(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
+
+    class function AddTo(len: Int32; const x, z: TCryptoLibUInt32Array): UInt32;
+      overload; static;
+
+    class function AddTo(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+      overload; static;
+
+    class function AddWordAt(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zPos: Int32): UInt32; overload; static;
+
+    class function AddWordAt(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff, zPos: Int32): UInt32;
+      overload; static;
+
+    class function AddWordTo(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array): UInt32; overload; static;
+
+    class function AddWordTo(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
+
+    class procedure Copy(len: Int32; const x, z: TCryptoLibUInt32Array);
+      overload; static; inline;
+
+    class function Copy(len: Int32; const x: TCryptoLibUInt32Array)
       : TCryptoLibUInt32Array; overload; static; inline;
 
-    class procedure Copy(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32); overload; static; inline;
+    class procedure Copy(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32); overload;
+      static; inline;
 
     class function Create(len: Int32): TCryptoLibUInt32Array; static; inline;
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
 
-    class function Dec(len: Int32; z: TCryptoLibUInt32Array): Int32;
+    class function Dec(len: Int32; const z: TCryptoLibUInt32Array): Int32;
       overload; static;
 
-    class function Dec(len: Int32; x, z: TCryptoLibUInt32Array): Int32;
+    class function Dec(len: Int32; const x, z: TCryptoLibUInt32Array): Int32;
       overload; static;
 
-    class function DecAt(len: Int32; z: TCryptoLibUInt32Array; zPos: Int32)
-      : Int32; overload; static;
+    class function DecAt(len: Int32; const z: TCryptoLibUInt32Array;
+      zPos: Int32): Int32; overload; static;
 
-    class function DecAt(len: Int32; z: TCryptoLibUInt32Array;
+    class function DecAt(len: Int32; const z: TCryptoLibUInt32Array;
       zOff, zPos: Int32): Int32; overload; static;
 
-    class function Eq(len: Int32; x, y: TCryptoLibUInt32Array): Boolean; static;
+    class function Eq(len: Int32; const x, y: TCryptoLibUInt32Array)
+      : Boolean; static;
 
-    class function FromBigInteger(bits: Int32; x: TBigInteger)
+    class function FromBigInteger(bits: Int32; const x: TBigInteger)
       : TCryptoLibUInt32Array; static;
 
-    class function GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32; static;
+    class function GetBit(const x: TCryptoLibUInt32Array; bit: Int32)
+      : UInt32; static;
 
-    class function Gte(len: Int32; x, y: TCryptoLibUInt32Array)
+    class function Gte(len: Int32; const x, y: TCryptoLibUInt32Array)
       : Boolean; static;
 
-    class function Inc(len: Int32; z: TCryptoLibUInt32Array): UInt32;
+    class function Inc(len: Int32; const z: TCryptoLibUInt32Array): UInt32;
       overload; static;
 
-    class function Inc(len: Int32; x, z: TCryptoLibUInt32Array): UInt32;
+    class function Inc(len: Int32; const x, z: TCryptoLibUInt32Array): UInt32;
       overload; static;
 
-    class function IncAt(len: Int32; z: TCryptoLibUInt32Array; zPos: Int32)
-      : UInt32; overload; static;
+    class function IncAt(len: Int32; const z: TCryptoLibUInt32Array;
+      zPos: Int32): UInt32; overload; static;
 
-    class function IncAt(len: Int32; z: TCryptoLibUInt32Array;
+    class function IncAt(len: Int32; const z: TCryptoLibUInt32Array;
       zOff, zPos: Int32): UInt32; overload; static;
 
-    class function IsOne(len: Int32; x: TCryptoLibUInt32Array): Boolean; static;
-
-    class function IsZero(len: Int32; x: TCryptoLibUInt32Array)
+    class function IsOne(len: Int32; const x: TCryptoLibUInt32Array)
       : Boolean; static;
 
-    class procedure Mul(len: Int32; x, y, zz: TCryptoLibUInt32Array);
+    class function IsZero(len: Int32; const x: TCryptoLibUInt32Array)
+      : Boolean; static;
+
+    class procedure Mul(len: Int32; const x, y, zz: TCryptoLibUInt32Array);
       overload; static;
 
-    class procedure Mul(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
-      zzOff: Int32); overload; static;
+    class procedure Mul(len: Int32; const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
 
-    class function Mul31BothAdd(len: Int32; a: UInt32; x: TCryptoLibUInt32Array;
-      b: UInt32; y, z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
+    class function Mul31BothAdd(len: Int32; a: UInt32;
+      const x: TCryptoLibUInt32Array; b: UInt32;
+      const y, z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
 
-    class function MulWord(len: Int32; x: UInt32; y, z: TCryptoLibUInt32Array)
-      : UInt32; overload; static;
+    class function MulWord(len: Int32; x: UInt32;
+      const y, z: TCryptoLibUInt32Array): UInt32; overload; static;
 
-    class function MulWord(len: Int32; x: UInt32; y: TCryptoLibUInt32Array;
-      yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
-      overload; static;
+    class function MulWord(len: Int32; x: UInt32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
-    class function MulWordAddTo(len: Int32; x: UInt32; y: TCryptoLibUInt32Array;
-      yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
+    class function MulWordAddTo(len: Int32; x: UInt32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
 
     class function MulWordDwordAddAt(len: Int32; x: UInt32; y: UInt64;
-      z: TCryptoLibUInt32Array; zPos: Int32): UInt32; static;
+      const z: TCryptoLibUInt32Array; zPos: Int32): UInt32; static;
 
-    class function ShiftDownBit(len: Int32; z: TCryptoLibUInt32Array; c: UInt32)
-      : UInt32; overload; static;
-
-    class function ShiftDownBit(len: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32; c: UInt32): UInt32; overload; static;
-
-    class function ShiftDownBit(len: Int32; x: TCryptoLibUInt32Array; c: UInt32;
-      z: TCryptoLibUInt32Array): UInt32; overload; static;
-
-    class function ShiftDownBit(len: Int32; x: TCryptoLibUInt32Array;
-      xOff: UInt32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
-      overload; static;
-
-    class function ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32): UInt32; overload; static;
-
-    class function ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static;
-
-    class function ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32;
-      overload; static;
-
-    class function ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
-      xOff, bits: Int32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32)
-      : UInt32; overload; static;
-
-    class function ShiftDownWord(len: Int32; z: TCryptoLibUInt32Array;
-      c: UInt32): UInt32; static;
-
-    class function ShiftUpBit(len: Int32; z: TCryptoLibUInt32Array; c: UInt32)
-      : UInt32; overload; static;
-
-    class function ShiftUpBit(len: Int32; z: TCryptoLibUInt32Array; zOff: Int32;
+    class function ShiftDownBit(len: Int32; const z: TCryptoLibUInt32Array;
       c: UInt32): UInt32; overload; static;
 
-    class function ShiftUpBit(len: Int32; x: TCryptoLibUInt32Array; c: UInt32;
-      z: TCryptoLibUInt32Array): UInt32; overload; static;
+    class function ShiftDownBit(len: Int32; const z: TCryptoLibUInt32Array;
+      zOff: Int32; c: UInt32): UInt32; overload; static;
 
-    class function ShiftUpBit(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
-      overload; static;
+    class function ShiftDownBit(len: Int32; const x: TCryptoLibUInt32Array;
+      c: UInt32; const z: TCryptoLibUInt32Array): UInt32; overload; static;
 
-    class function ShiftUpBit64(len: Int32; x: TCryptoLibUInt64Array;
-      xOff: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32)
-      : UInt64; static;
+    class function ShiftDownBit(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: UInt32; c: UInt32; const z: TCryptoLibUInt32Array; zOff: Int32)
+      : UInt32; overload; static;
 
-    class function ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
+    class function ShiftDownBits(len: Int32; const z: TCryptoLibUInt32Array;
       bits: Int32; c: UInt32): UInt32; overload; static;
 
-    class function ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
+    class function ShiftDownBits(len: Int32; const z: TCryptoLibUInt32Array;
       zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static;
 
-    class function ShiftUpBits64(len: Int32; z: TCryptoLibUInt64Array;
+    class function ShiftDownBits(len: Int32; const x: TCryptoLibUInt32Array;
+      bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array): UInt32;
+      overload; static;
+
+    class function ShiftDownBits(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff, bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array; zOff: Int32)
+      : UInt32; overload; static;
+
+    class function ShiftDownWord(len: Int32; const z: TCryptoLibUInt32Array;
+      c: UInt32): UInt32; static;
+
+    class function ShiftUpBit(len: Int32; const z: TCryptoLibUInt32Array;
+      c: UInt32): UInt32; overload; static;
+
+    class function ShiftUpBit(len: Int32; const z: TCryptoLibUInt32Array;
+      zOff: Int32; c: UInt32): UInt32; overload; static;
+
+    class function ShiftUpBit(len: Int32; const x: TCryptoLibUInt32Array;
+      c: UInt32; const z: TCryptoLibUInt32Array): UInt32; overload; static;
+
+    class function ShiftUpBit(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; c: UInt32; const z: TCryptoLibUInt32Array; zOff: Int32)
+      : UInt32; overload; static;
+
+    class function ShiftUpBit64(len: Int32; const x: TCryptoLibUInt64Array;
+      xOff: Int32; c: UInt64; const z: TCryptoLibUInt64Array; zOff: Int32)
+      : UInt64; static;
+
+    class function ShiftUpBits(len: Int32; const z: TCryptoLibUInt32Array;
+      bits: Int32; c: UInt32): UInt32; overload; static;
+
+    class function ShiftUpBits(len: Int32; const z: TCryptoLibUInt32Array;
+      zOff: Int32; bits: Int32; c: UInt32): UInt32; overload; static;
+
+    class function ShiftUpBits64(len: Int32; const z: TCryptoLibUInt64Array;
       zOff: Int32; bits: Int32; c: UInt64): UInt64; overload; static;
 
-    class function ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
-      bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32;
+    class function ShiftUpBits(len: Int32; const x: TCryptoLibUInt32Array;
+      bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array): UInt32;
       overload; static;
 
-    class function ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
-      xOff: Int32; bits: Int32; c: UInt32; z: TCryptoLibUInt32Array;
+    class function ShiftUpBits(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array;
       zOff: Int32): UInt32; overload; static;
 
-    class function ShiftUpBits64(len: Int32; x: TCryptoLibUInt64Array;
-      xOff, bits: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32)
+    class function ShiftUpBits64(len: Int32; const x: TCryptoLibUInt64Array;
+      xOff, bits: Int32; c: UInt64; const z: TCryptoLibUInt64Array; zOff: Int32)
       : UInt64; overload; static;
 
-    class procedure Square(len: Int32; x, zz: TCryptoLibUInt32Array);
+    class procedure Square(len: Int32; const x, zz: TCryptoLibUInt32Array);
       overload; static;
 
-    class procedure Square(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
-
-    class function SquareWordAdd(x: TCryptoLibUInt32Array; xPos: Int32;
-      z: TCryptoLibUInt32Array): UInt32; overload; static;
-
-    class function SquareWordAdd(x: TCryptoLibUInt32Array; xOff, xPos: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
-
-    class function Sub(len: Int32; x, y, z: TCryptoLibUInt32Array): Int32;
+    class procedure Square(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32);
       overload; static;
 
-    class function Sub(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static;
+    class function SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+      const z: TCryptoLibUInt32Array): UInt32; overload; static;
 
-    class function Sub33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): Int32; overload; static;
-
-    class function Sub33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static;
-
-    class function Sub33From(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
-      : Int32; overload; static;
-
-    class function Sub33From(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static;
-
-    class function SubBothFrom(len: Int32; x, y, z: TCryptoLibUInt32Array)
-      : Int32; overload; static;
-
-    class function SubBothFrom(len: Int32; x: TCryptoLibUInt32Array;
-      xOff: Int32; y: TCryptoLibUInt32Array; yOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
-
-    class function SubDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zPos: Int32): Int32; overload; static;
-
-    class function SubDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static;
-
-    class function SubDWordFrom(len: Int32; x: UInt64; z: TCryptoLibUInt32Array)
-      : Int32; overload; static;
-
-    class function SubDWordFrom(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static;
-
-    class function SubFrom(len: Int32; x, z: TCryptoLibUInt32Array): Int32;
+    class function SquareWordAdd(const x: TCryptoLibUInt32Array;
+      xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
       overload; static;
 
-    class function SubFrom(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-      z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+    class function Sub(len: Int32; const x, y, z: TCryptoLibUInt32Array): Int32;
+      overload; static;
 
-    class function SubWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zPos: Int32): Int32; overload; static;
+    class function Sub(len: Int32; const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
 
-    class function SubWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff, zPos: Int32): Int32; overload; static;
+    class function Sub33At(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zPos: Int32): Int32; overload; static;
 
-    class function SubWordFrom(len: Int32; x: UInt32; z: TCryptoLibUInt32Array)
+    class function Sub33At(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff, zPos: Int32): Int32;
+      overload; static;
+
+    class function Sub33From(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array): Int32; overload; static;
+
+    class function Sub33From(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+
+    class function SubBothFrom(len: Int32; const x, y, z: TCryptoLibUInt32Array)
       : Int32; overload; static;
 
-    class function SubWordFrom(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-      zOff: Int32): Int32; overload; static;
+    class function SubBothFrom(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
 
-    class function ToBigInteger(len: Int32; x: TCryptoLibUInt32Array)
+    class function SubDWordAt(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array; zPos: Int32): Int32; overload; static;
+
+    class function SubDWordAt(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array; zOff, zPos: Int32): Int32;
+      overload; static;
+
+    class function SubDWordFrom(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array): Int32; overload; static;
+
+    class function SubDWordFrom(len: Int32; x: UInt64;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+
+    class function SubFrom(len: Int32; const x, z: TCryptoLibUInt32Array)
+      : Int32; overload; static;
+
+    class function SubFrom(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
+      overload; static;
+
+    class function SubWordAt(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zPos: Int32): Int32; overload; static;
+
+    class function SubWordAt(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff, zPos: Int32): Int32;
+      overload; static;
+
+    class function SubWordFrom(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array): Int32; overload; static;
+
+    class function SubWordFrom(len: Int32; x: UInt32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Int32; overload; static;
+
+    class function ToBigInteger(len: Int32; const x: TCryptoLibUInt32Array)
       : TBigInteger; static;
 
-    class procedure Zero(len: Int32; z: TCryptoLibUInt32Array); static; inline;
+    class procedure Zero(len: Int32; const z: TCryptoLibUInt32Array);
+      static; inline;
 
   end;
 
@@ -310,7 +327,7 @@ implementation
 
 { TNat }
 
-class function TNat.IncAt(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.IncAt(len: Int32; const z: TCryptoLibUInt32Array;
   zPos: Int32): UInt32;
 var
   I: Int32;
@@ -330,7 +347,7 @@ begin
   Result := 1;
 end;
 
-class function TNat.IncAt(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.IncAt(len: Int32; const z: TCryptoLibUInt32Array;
   zOff, zPos: Int32): UInt32;
 var
   I: Int32;
@@ -351,7 +368,7 @@ begin
 end;
 
 class function TNat.MulWordAddTo(len: Int32; x: UInt32;
-  y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const z: TCryptoLibUInt32Array;
   zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
@@ -374,7 +391,7 @@ begin
 end;
 
 class function TNat.MulWordDwordAddAt(len: Int32; x: UInt32; y: UInt64;
-  z: TCryptoLibUInt32Array; zPos: Int32): UInt32;
+  const z: TCryptoLibUInt32Array; zPos: Int32): UInt32;
 var
   c, xVal: UInt64;
 begin
@@ -403,7 +420,7 @@ begin
 end;
 
 class function TNat.MulWord(len: Int32; x: UInt32;
-  y, z: TCryptoLibUInt32Array): UInt32;
+  const y, z: TCryptoLibUInt32Array): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
@@ -424,8 +441,9 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.MulWord(len: Int32; x: UInt32; y: TCryptoLibUInt32Array;
-  yOff: Int32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.MulWord(len: Int32; x: UInt32;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const z: TCryptoLibUInt32Array;
+  zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
@@ -446,8 +464,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.SquareWordAdd(x: TCryptoLibUInt32Array; xOff, xPos: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array;
+  xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
@@ -467,8 +485,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.SquareWordAdd(x: TCryptoLibUInt32Array; xPos: Int32;
-  z: TCryptoLibUInt32Array): UInt32;
+class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+  const z: TCryptoLibUInt32Array): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
@@ -487,7 +505,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.Add(len: Int32; x, y, z: TCryptoLibUInt32Array): UInt32;
+class function TNat.Add(len: Int32;
+  const x, y, z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
   I: Int32;
@@ -502,8 +521,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zPos: Int32): UInt32;
+class function TNat.Add33At(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zPos: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -528,8 +547,8 @@ begin
 
 end;
 
-class function TNat.Add33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff, zPos: Int32): UInt32;
+class function TNat.Add33At(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff, zPos: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -554,8 +573,8 @@ begin
 
 end;
 
-class function TNat.Add33To(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff: Int32): UInt32;
+class function TNat.Add33To(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -578,7 +597,7 @@ begin
 end;
 
 class function TNat.Add33To(len: Int32; x: UInt32;
-  z: TCryptoLibUInt32Array): UInt32;
+  const z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
 begin
@@ -600,9 +619,9 @@ begin
 
 end;
 
-class function TNat.AddBothTo(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-  zOff: Int32): UInt32;
+class function TNat.AddBothTo(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c: UInt64;
   I: Int32;
@@ -618,7 +637,7 @@ begin
 end;
 
 class function TNat.AddBothTo(len: Int32;
-  x, y, z: TCryptoLibUInt32Array): UInt32;
+  const x, y, z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
   I: Int32;
@@ -634,8 +653,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.AddDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-  zPos: Int32): UInt32;
+class function TNat.AddDWordAt(len: Int32; x: UInt64;
+  const z: TCryptoLibUInt32Array; zPos: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -660,8 +679,8 @@ begin
 
 end;
 
-class function TNat.AddDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-  zOff, zPos: Int32): UInt32;
+class function TNat.AddDWordAt(len: Int32; x: UInt64;
+  const z: TCryptoLibUInt32Array; zOff, zPos: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -687,7 +706,7 @@ begin
 end;
 
 class function TNat.AddDWordTo(len: Int32; x: UInt64;
-  z: TCryptoLibUInt32Array): UInt32;
+  const z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
 begin
@@ -709,8 +728,8 @@ begin
 
 end;
 
-class function TNat.AddDWordTo(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-  zOff: Int32): UInt32;
+class function TNat.AddDWordTo(len: Int32; x: UInt64;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -732,8 +751,8 @@ begin
 
 end;
 
-class function TNat.AddTo(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.AddTo(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c: UInt64;
   I: Int32;
@@ -748,7 +767,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.AddTo(len: Int32; x, z: TCryptoLibUInt32Array): UInt32;
+class function TNat.AddTo(len: Int32;
+  const x, z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
   I: Int32;
@@ -763,8 +783,8 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.AddWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zPos: Int32): UInt32;
+class function TNat.AddWordAt(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zPos: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -786,8 +806,8 @@ begin
 
 end;
 
-class function TNat.AddWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff, zPos: Int32): UInt32;
+class function TNat.AddWordAt(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff, zPos: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -809,8 +829,8 @@ begin
 
 end;
 
-class function TNat.AddWordTo(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff: Int32): UInt32;
+class function TNat.AddWordTo(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c: UInt64;
 begin
@@ -830,7 +850,7 @@ begin
 end;
 
 class function TNat.AddWordTo(len: Int32; x: UInt32;
-  z: TCryptoLibUInt32Array): UInt32;
+  const z: TCryptoLibUInt32Array): UInt32;
 var
   c: UInt64;
 begin
@@ -849,20 +869,20 @@ begin
 
 end;
 
-class function TNat.Copy(len: Int32; x: TCryptoLibUInt32Array)
+class function TNat.Copy(len: Int32; const x: TCryptoLibUInt32Array)
   : TCryptoLibUInt32Array;
 begin
   System.SetLength(Result, len);
   System.Move(x[0], Result[0], len * System.SizeOf(UInt32));
 end;
 
-class procedure TNat.Copy(len: Int32; x, z: TCryptoLibUInt32Array);
+class procedure TNat.Copy(len: Int32; const x, z: TCryptoLibUInt32Array);
 begin
   System.Move(x[0], z[0], len * System.SizeOf(UInt32));
 end;
 
-class procedure TNat.Copy(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32);
+class procedure TNat.Copy(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32);
 begin
   System.Move(x[xOff], z[zOff], len * System.SizeOf(UInt32));
 end;
@@ -877,7 +897,7 @@ begin
   System.SetLength(Result, len);
 end;
 
-class function TNat.Dec(len: Int32; z: TCryptoLibUInt32Array): Int32;
+class function TNat.Dec(len: Int32; const z: TCryptoLibUInt32Array): Int32;
 var
   I: Int32;
 begin
@@ -893,7 +913,7 @@ begin
   Result := -1;
 end;
 
-class function TNat.Dec(len: Int32; x, z: TCryptoLibUInt32Array): Int32;
+class function TNat.Dec(len: Int32; const x, z: TCryptoLibUInt32Array): Int32;
 var
   I: Int32;
   c: UInt32;
@@ -919,7 +939,7 @@ begin
   Result := -1;
 end;
 
-class function TNat.DecAt(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.DecAt(len: Int32; const z: TCryptoLibUInt32Array;
   zPos: Int32): Int32;
 var
   I: Int32;
@@ -939,7 +959,7 @@ begin
   Result := -1;
 end;
 
-class function TNat.DecAt(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.DecAt(len: Int32; const z: TCryptoLibUInt32Array;
   zOff, zPos: Int32): Int32;
 var
   I: Int32;
@@ -959,7 +979,7 @@ begin
   Result := -1;
 end;
 
-class function TNat.Eq(len: Int32; x, y: TCryptoLibUInt32Array): Boolean;
+class function TNat.Eq(len: Int32; const x, y: TCryptoLibUInt32Array): Boolean;
 var
   I: Int32;
 begin
@@ -977,12 +997,14 @@ begin
   Result := true;
 end;
 
-class function TNat.FromBigInteger(bits: Int32; x: TBigInteger)
+class function TNat.FromBigInteger(bits: Int32; const x: TBigInteger)
   : TCryptoLibUInt32Array;
 var
   len, I: Int32;
+  Lx: TBigInteger;
 begin
-  if ((x.SignValue < 0) or (x.BitLength > bits)) then
+  Lx := x;
+  if ((Lx.SignValue < 0) or (Lx.BitLength > bits)) then
   begin
     raise EArgumentCryptoLibException.Create('');
   end;
@@ -991,15 +1013,15 @@ begin
   len := TBits.Asr32((bits + 31), 5);
   Result := Create(len);
   I := 0;
-  while (x.SignValue <> 0) do
+  while (Lx.SignValue <> 0) do
   begin
-    Result[I] := UInt32(x.Int32Value);
+    Result[I] := UInt32(Lx.Int32Value);
     System.Inc(I);
-    x := x.ShiftRight(32);
+    Lx := Lx.ShiftRight(32);
   end;
 end;
 
-class function TNat.GetBit(x: TCryptoLibUInt32Array; bit: Int32): UInt32;
+class function TNat.GetBit(const x: TCryptoLibUInt32Array; bit: Int32): UInt32;
 var
   w, b: Int32;
 begin
@@ -1019,7 +1041,7 @@ begin
   Result := (x[w] shr b) and 1;
 end;
 
-class function TNat.Gte(len: Int32; x, y: TCryptoLibUInt32Array): Boolean;
+class function TNat.Gte(len: Int32; const x, y: TCryptoLibUInt32Array): Boolean;
 var
   I: Int32;
   x_i, y_i: UInt32;
@@ -1044,7 +1066,7 @@ begin
   Result := true;
 end;
 
-class function TNat.Inc(len: Int32; z: TCryptoLibUInt32Array): UInt32;
+class function TNat.Inc(len: Int32; const z: TCryptoLibUInt32Array): UInt32;
 var
   I: Int32;
 begin
@@ -1060,7 +1082,7 @@ begin
   Result := 1;
 end;
 
-class function TNat.Inc(len: Int32; x, z: TCryptoLibUInt32Array): UInt32;
+class function TNat.Inc(len: Int32; const x, z: TCryptoLibUInt32Array): UInt32;
 var
   I: Int32;
   c: UInt32;
@@ -1086,7 +1108,7 @@ begin
   Result := 1;
 end;
 
-class function TNat.IsOne(len: Int32; x: TCryptoLibUInt32Array): Boolean;
+class function TNat.IsOne(len: Int32; const x: TCryptoLibUInt32Array): Boolean;
 var
   I: Int32;
 begin
@@ -1106,7 +1128,7 @@ begin
   Result := true;
 end;
 
-class function TNat.IsZero(len: Int32; x: TCryptoLibUInt32Array): Boolean;
+class function TNat.IsZero(len: Int32; const x: TCryptoLibUInt32Array): Boolean;
 var
   I: Int32;
 begin
@@ -1126,7 +1148,7 @@ begin
   Result := true;
 end;
 
-class procedure TNat.Mul(len: Int32; x, y, zz: TCryptoLibUInt32Array);
+class procedure TNat.Mul(len: Int32; const x, y, zz: TCryptoLibUInt32Array);
 var
   I: Int32;
 begin
@@ -1139,9 +1161,9 @@ begin
   end;
 end;
 
-class procedure TNat.Mul(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; zz: TCryptoLibUInt32Array;
-  zzOff: Int32);
+class procedure TNat.Mul(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const zz: TCryptoLibUInt32Array; zzOff: Int32);
 var
   I: Int32;
 begin
@@ -1155,7 +1177,7 @@ begin
 end;
 
 class function TNat.Mul31BothAdd(len: Int32; a: UInt32;
-  x: TCryptoLibUInt32Array; b: UInt32; y, z: TCryptoLibUInt32Array;
+  const x: TCryptoLibUInt32Array; b: UInt32; const y, z: TCryptoLibUInt32Array;
   zOff: Int32): UInt32;
 var
   c, aVal, bVal: UInt64;
@@ -1178,7 +1200,7 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.ShiftDownBit(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftDownBit(len: Int32; const z: TCryptoLibUInt32Array;
   zOff: Int32; c: UInt32): UInt32;
 var
   I: Int32;
@@ -1196,8 +1218,8 @@ begin
   Result := c shl 31;
 end;
 
-class function TNat.ShiftDownBit(len: Int32; x: TCryptoLibUInt32Array;
-  xOff, c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.ShiftDownBit(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff, c: UInt32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1213,8 +1235,8 @@ begin
   Result := c shl 31;
 end;
 
-class function TNat.ShiftDownBit(len: Int32; x: TCryptoLibUInt32Array;
-  c: UInt32; z: TCryptoLibUInt32Array): UInt32;
+class function TNat.ShiftDownBit(len: Int32; const x: TCryptoLibUInt32Array;
+  c: UInt32; const z: TCryptoLibUInt32Array): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1231,7 +1253,7 @@ begin
   Result := c shl 31;
 end;
 
-class function TNat.ShiftDownBit(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftDownBit(len: Int32; const z: TCryptoLibUInt32Array;
   c: UInt32): UInt32;
 var
   I: Int32;
@@ -1249,8 +1271,9 @@ begin
   Result := c shl 31;
 end;
 
-class function TNat.ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
-  xOff, bits: Int32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.ShiftDownBits(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff, bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array;
+  zOff: Int32): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1270,7 +1293,7 @@ begin
   Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
-class function TNat.ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftDownBits(len: Int32; const z: TCryptoLibUInt32Array;
   bits: Int32; c: UInt32): UInt32;
 var
   I: Int32;
@@ -1291,8 +1314,8 @@ begin
   Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
-class function TNat.ShiftDownBits(len: Int32; x: TCryptoLibUInt32Array;
-  bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32;
+class function TNat.ShiftDownBits(len: Int32; const x: TCryptoLibUInt32Array;
+  bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1312,7 +1335,7 @@ begin
   Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
-class function TNat.ShiftDownBits(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftDownBits(len: Int32; const z: TCryptoLibUInt32Array;
   zOff, bits: Int32; c: UInt32): UInt32;
 var
   I: Int32;
@@ -1333,7 +1356,7 @@ begin
   Result := TBits.NegativeLeftShift32(c, -bits);
 end;
 
-class function TNat.ShiftDownWord(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftDownWord(len: Int32; const z: TCryptoLibUInt32Array;
   c: UInt32): UInt32;
 var
   I: Int32;
@@ -1351,8 +1374,8 @@ begin
   Result := c;
 end;
 
-class function TNat.ShiftUpBit(len: Int32; x: TCryptoLibUInt32Array; c: UInt32;
-  z: TCryptoLibUInt32Array): UInt32;
+class function TNat.ShiftUpBit(len: Int32; const x: TCryptoLibUInt32Array;
+  c: UInt32; const z: TCryptoLibUInt32Array): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1367,8 +1390,8 @@ begin
   Result := c shr 31;
 end;
 
-class function TNat.ShiftUpBit(len: Int32; x: TCryptoLibUInt32Array;
-  xOff: Int32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.ShiftUpBit(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; c: UInt32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1383,7 +1406,7 @@ begin
   Result := c shr 31;
 end;
 
-class function TNat.ShiftUpBit(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftUpBit(len: Int32; const z: TCryptoLibUInt32Array;
   c: UInt32): UInt32;
 var
   I: Int32;
@@ -1399,7 +1422,7 @@ begin
   Result := c shr 31;
 end;
 
-class function TNat.ShiftUpBit(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftUpBit(len: Int32; const z: TCryptoLibUInt32Array;
   zOff: Int32; c: UInt32): UInt32;
 var
   I: Int32;
@@ -1415,8 +1438,8 @@ begin
   Result := c shr 31;
 end;
 
-class function TNat.ShiftUpBit64(len: Int32; x: TCryptoLibUInt64Array;
-  xOff: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32): UInt64;
+class function TNat.ShiftUpBit64(len: Int32; const x: TCryptoLibUInt64Array;
+  xOff: Int32; c: UInt64; const z: TCryptoLibUInt64Array; zOff: Int32): UInt64;
 var
   I: Int32;
   next: UInt64;
@@ -1431,8 +1454,9 @@ begin
   Result := c shr 63;
 end;
 
-class function TNat.ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
-  xOff, bits: Int32; c: UInt32; z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+class function TNat.ShiftUpBits(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff, bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array;
+  zOff: Int32): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1449,8 +1473,8 @@ begin
   Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
-class function TNat.ShiftUpBits(len: Int32; x: TCryptoLibUInt32Array;
-  bits: Int32; c: UInt32; z: TCryptoLibUInt32Array): UInt32;
+class function TNat.ShiftUpBits(len: Int32; const x: TCryptoLibUInt32Array;
+  bits: Int32; c: UInt32; const z: TCryptoLibUInt32Array): UInt32;
 var
   I: Int32;
   next: UInt32;
@@ -1467,7 +1491,7 @@ begin
   Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
-class function TNat.ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftUpBits(len: Int32; const z: TCryptoLibUInt32Array;
   bits: Int32; c: UInt32): UInt32;
 var
   I: Int32;
@@ -1485,7 +1509,7 @@ begin
   Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
-class function TNat.ShiftUpBits(len: Int32; z: TCryptoLibUInt32Array;
+class function TNat.ShiftUpBits(len: Int32; const z: TCryptoLibUInt32Array;
   zOff, bits: Int32; c: UInt32): UInt32;
 var
   I: Int32;
@@ -1503,8 +1527,9 @@ begin
   Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
-class function TNat.ShiftUpBits64(len: Int32; x: TCryptoLibUInt64Array;
-  xOff, bits: Int32; c: UInt64; z: TCryptoLibUInt64Array; zOff: Int32): UInt64;
+class function TNat.ShiftUpBits64(len: Int32; const x: TCryptoLibUInt64Array;
+  xOff, bits: Int32; c: UInt64; const z: TCryptoLibUInt64Array;
+  zOff: Int32): UInt64;
 var
   I: Int32;
   next: UInt64;
@@ -1521,7 +1546,7 @@ begin
   Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
-class function TNat.ShiftUpBits64(len: Int32; z: TCryptoLibUInt64Array;
+class function TNat.ShiftUpBits64(len: Int32; const z: TCryptoLibUInt64Array;
   zOff, bits: Int32; c: UInt64): UInt64;
 var
   I: Int32;
@@ -1539,7 +1564,7 @@ begin
   Result := TBits.NegativeRightShift32(c, -bits);
 end;
 
-class procedure TNat.Square(len: Int32; x, zz: TCryptoLibUInt32Array);
+class procedure TNat.Square(len: Int32; const x, zz: TCryptoLibUInt32Array);
 var
   extLen, j, k, I: Int32;
   c: UInt32;
@@ -1570,8 +1595,8 @@ begin
   ShiftUpBit(extLen, zz, x[0] shl 31);
 end;
 
-class procedure TNat.Square(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  zz: TCryptoLibUInt32Array; zzOff: Int32);
+class procedure TNat.Square(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32);
 var
   extLen, j, k, I: Int32;
   c: UInt32;
@@ -1602,8 +1627,8 @@ begin
   ShiftUpBit(extLen, zz, zzOff, x[xOff] shl 31);
 end;
 
-class function TNat.Sub(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
+class function TNat.Sub(len: Int32; const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32; const z: TCryptoLibUInt32Array;
   zOff: Int32): Int32;
 var
   c: Int64;
@@ -1620,7 +1645,8 @@ begin
   Result := Int32(c);
 end;
 
-class function TNat.Sub(len: Int32; x, y, z: TCryptoLibUInt32Array): Int32;
+class function TNat.Sub(len: Int32;
+  const x, y, z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
   I: Int32;
@@ -1636,8 +1662,8 @@ begin
   Result := Int32(c);
 end;
 
-class function TNat.Sub33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zPos: Int32): Int32;
+class function TNat.Sub33At(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zPos: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1660,8 +1686,8 @@ begin
   end;
 end;
 
-class function TNat.Sub33At(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff, zPos: Int32): Int32;
+class function TNat.Sub33At(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff, zPos: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1684,7 +1710,7 @@ begin
 end;
 
 class function TNat.Sub33From(len: Int32; x: UInt32;
-  z: TCryptoLibUInt32Array): Int32;
+  const z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
 begin
@@ -1705,8 +1731,8 @@ begin
 
 end;
 
-class function TNat.Sub33From(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff: Int32): Int32;
+class function TNat.Sub33From(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1727,7 +1753,7 @@ begin
 end;
 
 class function TNat.SubBothFrom(len: Int32;
-  x, y, z: TCryptoLibUInt32Array): Int32;
+  const x, y, z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
   I: Int32;
@@ -1743,9 +1769,9 @@ begin
   Result := Int32(c);
 end;
 
-class function TNat.SubBothFrom(len: Int32; x: TCryptoLibUInt32Array;
-  xOff: Int32; y: TCryptoLibUInt32Array; yOff: Int32; z: TCryptoLibUInt32Array;
-  zOff: Int32): Int32;
+class function TNat.SubBothFrom(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
 var
   c: Int64;
   I: Int32;
@@ -1761,8 +1787,8 @@ begin
   Result := Int32(c);
 end;
 
-class function TNat.SubDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-  zOff, zPos: Int32): Int32;
+class function TNat.SubDWordAt(len: Int32; x: UInt64;
+  const z: TCryptoLibUInt32Array; zOff, zPos: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1785,8 +1811,8 @@ begin
   end;
 end;
 
-class function TNat.SubDWordAt(len: Int32; x: UInt64; z: TCryptoLibUInt32Array;
-  zPos: Int32): Int32;
+class function TNat.SubDWordAt(len: Int32; x: UInt64;
+  const z: TCryptoLibUInt32Array; zPos: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1811,7 +1837,7 @@ begin
 end;
 
 class function TNat.SubDWordFrom(len: Int32; x: UInt64;
-  z: TCryptoLibUInt32Array; zOff: Int32): Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1832,7 +1858,7 @@ begin
 end;
 
 class function TNat.SubDWordFrom(len: Int32; x: UInt64;
-  z: TCryptoLibUInt32Array): Int32;
+  const z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
 begin
@@ -1852,7 +1878,8 @@ begin
   end;
 end;
 
-class function TNat.SubFrom(len: Int32; x, z: TCryptoLibUInt32Array): Int32;
+class function TNat.SubFrom(len: Int32;
+  const x, z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
   I: Int32;
@@ -1868,8 +1895,8 @@ begin
   Result := Int32(c);
 end;
 
-class function TNat.SubFrom(len: Int32; x: TCryptoLibUInt32Array; xOff: Int32;
-  z: TCryptoLibUInt32Array; zOff: Int32): Int32;
+class function TNat.SubFrom(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
 var
   c: Int64;
   I: Int32;
@@ -1885,8 +1912,8 @@ begin
   Result := Int32(c);
 end;
 
-class function TNat.SubWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zPos: Int32): Int32;
+class function TNat.SubWordAt(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zPos: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1907,8 +1934,8 @@ begin
 
 end;
 
-class function TNat.SubWordAt(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff, zPos: Int32): Int32;
+class function TNat.SubWordAt(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff, zPos: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1929,8 +1956,8 @@ begin
 
 end;
 
-class function TNat.SubWordFrom(len: Int32; x: UInt32; z: TCryptoLibUInt32Array;
-  zOff: Int32): Int32;
+class function TNat.SubWordFrom(len: Int32; x: UInt32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): Int32;
 var
   c: Int64;
 begin
@@ -1950,7 +1977,7 @@ begin
 end;
 
 class function TNat.SubWordFrom(len: Int32; x: UInt32;
-  z: TCryptoLibUInt32Array): Int32;
+  const z: TCryptoLibUInt32Array): Int32;
 var
   c: Int64;
 begin
@@ -1969,7 +1996,7 @@ begin
 
 end;
 
-class function TNat.ToBigInteger(len: Int32; x: TCryptoLibUInt32Array)
+class function TNat.ToBigInteger(len: Int32; const x: TCryptoLibUInt32Array)
   : TBigInteger;
 var
   bs, temp: TCryptoLibByteArray;
@@ -1991,7 +2018,7 @@ begin
   Result := TBigInteger.Create(1, bs);
 end;
 
-class procedure TNat.Zero(len: Int32; z: TCryptoLibUInt32Array);
+class procedure TNat.Zero(len: Int32; const z: TCryptoLibUInt32Array);
 begin
   System.FillChar(z[0], len * System.SizeOf(UInt32), UInt32(0));
 end;

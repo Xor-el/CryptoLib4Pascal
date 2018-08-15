@@ -58,7 +58,7 @@ type
 
     function DerEncode(const r, s: TBigInteger): TCryptoLibByteArray; inline;
 
-    function DerDecode(encoding: TCryptoLibByteArray)
+    function DerDecode(const encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; inline;
 
   public
@@ -78,7 +78,7 @@ type
     /// <summary>
     /// update the internal digest with the byte array in
     /// </summary>
-    procedure BlockUpdate(input: TCryptoLibByteArray;
+    procedure BlockUpdate(const input: TCryptoLibByteArray;
       inOff, length: Int32); virtual;
 
     /// <summary>
@@ -91,7 +91,8 @@ type
     /// true if the internal state represents the signature described in the
     /// passed in array.
     /// </returns>
-    function VerifySignature(signature: TCryptoLibByteArray): Boolean; virtual;
+    function VerifySignature(const signature: TCryptoLibByteArray)
+      : Boolean; virtual;
 
     /// <summary>
     /// Reset the internal state
@@ -104,7 +105,7 @@ implementation
 
 { TDsaDigestSigner }
 
-procedure TDsaDigestSigner.BlockUpdate(input: TCryptoLibByteArray;
+procedure TDsaDigestSigner.BlockUpdate(const input: TCryptoLibByteArray;
   inOff, length: Int32);
 begin
   Fdigest.BlockUpdate(input, inOff, length);
@@ -117,7 +118,7 @@ begin
   Fdigest := digest;
 end;
 
-function TDsaDigestSigner.DerDecode(encoding: TCryptoLibByteArray)
+function TDsaDigestSigner.DerDecode(const encoding: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;
@@ -201,8 +202,8 @@ begin
   Fdigest.Update(input);
 end;
 
-function TDsaDigestSigner.VerifySignature
-  (signature: TCryptoLibByteArray): Boolean;
+function TDsaDigestSigner.VerifySignature(const signature
+  : TCryptoLibByteArray): Boolean;
 var
   hash: TCryptoLibByteArray;
   sig: TCryptoLibGenericArray<TBigInteger>;

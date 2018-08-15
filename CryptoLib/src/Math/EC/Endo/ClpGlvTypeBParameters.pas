@@ -45,8 +45,8 @@ type
 
   public
     constructor Create(const beta, lambda: TBigInteger;
-      v1, v2: TCryptoLibGenericArray<TBigInteger>; const g1, g2: TBigInteger;
-      bits: Int32);
+      const v1, v2: TCryptoLibGenericArray<TBigInteger>;
+      const g1, g2: TBigInteger; bits: Int32);
 
     destructor Destroy; override;
 
@@ -65,7 +65,7 @@ implementation
 { TGlvTypeBParameters }
 
 constructor TGlvTypeBParameters.Create(const beta, lambda: TBigInteger;
-  v1, v2: TCryptoLibGenericArray<TBigInteger>; const g1, g2: TBigInteger;
+  const v1, v2: TCryptoLibGenericArray<TBigInteger>; const g1, g2: TBigInteger;
   bits: Int32);
 begin
   Fm_beta := beta;

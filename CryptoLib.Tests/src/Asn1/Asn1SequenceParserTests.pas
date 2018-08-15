@@ -66,8 +66,8 @@ type
       FberDerNestedSeqData, FberNestedSeqData, FberExpTagSeqData,
       FberSeqWithDERNullData: TCryptoLibByteArray;
 
-    procedure doTestNestedReading(data: TCryptoLibByteArray);
-    procedure doTestParseWithNull(data: TCryptoLibByteArray);
+    procedure doTestNestedReading(const data: TCryptoLibByteArray);
+    procedure doTestParseWithNull(const data: TCryptoLibByteArray);
 
   protected
     procedure SetUp; override;
@@ -97,7 +97,7 @@ implementation
 { TTestAsn1SequenceParser }
 
 procedure TTestAsn1SequenceParser.doTestNestedReading
-  (data: TCryptoLibByteArray);
+  (const data: TCryptoLibByteArray);
 var
   aIn: IAsn1StreamParser;
   seq, s: IAsn1SequenceParser;
@@ -147,7 +147,7 @@ begin
 end;
 
 procedure TTestAsn1SequenceParser.doTestParseWithNull
-  (data: TCryptoLibByteArray);
+  (const data: TCryptoLibByteArray);
 var
   aIn: IAsn1StreamParser;
   seq: IAsn1SequenceParser;

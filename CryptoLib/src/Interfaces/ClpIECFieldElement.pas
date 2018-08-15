@@ -96,11 +96,11 @@ type
 
     function ModAdd(const x1, x2: TBigInteger): TBigInteger;
     function ModDouble(const x: TBigInteger): TBigInteger;
-    function ModHalf(x: TBigInteger): TBigInteger;
-    function ModHalfAbs(x: TBigInteger): TBigInteger;
+    function ModHalf(const x: TBigInteger): TBigInteger;
+    function ModHalfAbs(const x: TBigInteger): TBigInteger;
     function ModInverse(const x: TBigInteger): TBigInteger;
     function ModMult(const x1, x2: TBigInteger): TBigInteger;
-    function ModReduce(x: TBigInteger): TBigInteger;
+    function ModReduce(const x: TBigInteger): TBigInteger;
     function ModSubtract(const x1, x2: TBigInteger): TBigInteger;
 
     property Q: TBigInteger read GetQ;

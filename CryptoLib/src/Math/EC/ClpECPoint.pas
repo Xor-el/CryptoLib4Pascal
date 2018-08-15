@@ -138,7 +138,7 @@ type
 
     function GetYCoord: IECFieldElement; virtual;
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
     destructor Destroy; override;
 
@@ -258,7 +258,7 @@ type
       withCompression: Boolean); overload;
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
   public
@@ -292,7 +292,7 @@ type
       withCompression: Boolean); overload;
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
     function GetCompressionYTilde(): Boolean; override;
@@ -371,7 +371,7 @@ type
       'Per-point compression property will be removed, see GetEncoded(boolean)';
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
     destructor Destroy; override;
@@ -401,7 +401,7 @@ type
       withCompression: Boolean); overload;
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
     function SatisfiesOrder(): Boolean; override;
@@ -464,7 +464,7 @@ type
       'Per-point compression property will be removed, see GetEncoded(boolean)';
 
     constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      zs: TCryptoLibGenericArray<IECFieldElement>;
+      const zs: TCryptoLibGenericArray<IECFieldElement>;
       withCompression: Boolean); overload;
 
     destructor Destroy; override;
@@ -669,7 +669,7 @@ begin
 end;
 
 constructor TECPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create();
   // Fm_curve := curve;
@@ -1282,7 +1282,7 @@ begin
 end;
 
 constructor TF2mPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -1718,8 +1718,8 @@ begin
 end;
 
 constructor TECPointBase.Create(const curve: IECCurve;
-  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
-  withCompression: Boolean);
+  const x, y: IECFieldElement;
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -1795,8 +1795,8 @@ begin
 end;
 
 constructor TAbstractFpPoint.Create(const curve: IECCurve;
-  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
-  withCompression: Boolean);
+  const x, y: IECFieldElement;
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -2212,7 +2212,7 @@ begin
 end;
 
 constructor TFpPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
-  zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;
@@ -2871,8 +2871,8 @@ begin
 end;
 
 constructor TAbstractF2mPoint.Create(const curve: IECCurve;
-  const x, y: IECFieldElement; zs: TCryptoLibGenericArray<IECFieldElement>;
-  withCompression: Boolean);
+  const x, y: IECFieldElement;
+  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create(curve, x, y, zs, withCompression);
 end;

@@ -63,7 +63,8 @@ type
 
   strict private
 
-    class function NoZeroes(data: TCryptoLibByteArray): Boolean; static; inline;
+    class function NoZeroes(const data: TCryptoLibByteArray): Boolean;
+      static; inline;
 
 {$IFDEF MSWINDOWS}
 
@@ -93,14 +94,14 @@ type
 
   public
 
-    class procedure GetBytes(data: TCryptoLibByteArray); static;
-    class procedure GetNonZeroBytes(data: TCryptoLibByteArray); static;
+    class procedure GetBytes(const data: TCryptoLibByteArray); static;
+    class procedure GetNonZeroBytes(const data: TCryptoLibByteArray); static;
 
   end;
 
 implementation
 
-class function TOSRandom.NoZeroes(data: TCryptoLibByteArray): Boolean;
+class function TOSRandom.NoZeroes(const data: TCryptoLibByteArray): Boolean;
 var
   i: Int32;
 begin
@@ -169,7 +170,7 @@ begin
 {$ENDIF MSWINDOWS}
 end;
 
-class procedure TOSRandom.GetBytes(data: TCryptoLibByteArray);
+class procedure TOSRandom.GetBytes(const data: TCryptoLibByteArray);
 var
   count: Int32;
 begin
@@ -208,7 +209,7 @@ begin
 {$ENDIF MSWINDOWS}
 end;
 
-class procedure TOSRandom.GetNonZeroBytes(data: TCryptoLibByteArray);
+class procedure TOSRandom.GetNonZeroBytes(const data: TCryptoLibByteArray);
 begin
   repeat
     TOSRandom.GetBytes(data);

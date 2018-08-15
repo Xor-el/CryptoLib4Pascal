@@ -55,8 +55,8 @@ type
 
     /// <inheritdoc />
     /// <param name="str">The octets making up the octet string.</param>
-    constructor Create(str: TCryptoLibByteArray); overload;
-    constructor Create(octets: TList<IDerOctetString>); overload;
+    constructor Create(const str: TCryptoLibByteArray); overload;
+    constructor Create(const octets: TList<IDerOctetString>); overload;
     constructor Create(const obj: IAsn1Object); overload;
     constructor Create(const obj: IAsn1Encodable); overload;
 
@@ -80,13 +80,13 @@ implementation
 
 { TBerOctetString }
 
-constructor TBerOctetString.Create(octets: TList<IDerOctetString>);
+constructor TBerOctetString.Create(const octets: TList<IDerOctetString>);
 begin
   Inherited Create(ToBytes(octets));
   Focts := octets;
 end;
 
-constructor TBerOctetString.Create(str: TCryptoLibByteArray);
+constructor TBerOctetString.Create(const str: TCryptoLibByteArray);
 begin
   Inherited Create(str);
 end;

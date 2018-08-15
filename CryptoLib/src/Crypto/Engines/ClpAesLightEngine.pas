@@ -103,15 +103,15 @@ type
     /// This code is written assuming those are the only possible values
     /// </para>
     /// </summary>
-    function GenerateWorkingKey(key: TCryptoLibByteArray;
+    function GenerateWorkingKey(const key: TCryptoLibByteArray;
       forEncryption: Boolean): TCryptoLibMatrixUInt32Array;
 
-    procedure UnPackBlock(bytes: TCryptoLibByteArray; off: Int32); inline;
-    procedure PackBlock(bytes: TCryptoLibByteArray; off: Int32); inline;
+    procedure UnPackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
+    procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
 
-    procedure EncryptBlock(KW: TCryptoLibMatrixUInt32Array);
+    procedure EncryptBlock(const KW: TCryptoLibMatrixUInt32Array);
 
-    procedure DecryptBlock(KW: TCryptoLibMatrixUInt32Array);
+    procedure DecryptBlock(const KW: TCryptoLibMatrixUInt32Array);
 
     class var
 
@@ -149,8 +149,8 @@ type
     procedure Init(forEncryption: Boolean;
       const parameters: ICipherParameters); virtual;
 
-    function ProcessBlock(input: TCryptoLibByteArray; inOff: Int32;
-      output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
+    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
+      const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
 
     procedure Reset(); virtual;
 
@@ -263,7 +263,7 @@ begin
   result := t0;
 end;
 
-procedure TAesLightEngine.EncryptBlock(KW: TCryptoLibMatrixUInt32Array);
+procedure TAesLightEngine.EncryptBlock(const KW: TCryptoLibMatrixUInt32Array);
 var
   lkw: TCryptoLibUInt32Array;
   lt0, lt1, lt2, lr0, lr1, lr2, lr3: UInt32;
@@ -341,7 +341,7 @@ begin
     xor ((UInt32(Fs[(lr2 shr 24) and 255])) shl 24) xor lkw[3];
 end;
 
-procedure TAesLightEngine.DecryptBlock(KW: TCryptoLibMatrixUInt32Array);
+procedure TAesLightEngine.DecryptBlock(const KW: TCryptoLibMatrixUInt32Array);
 var
   lkw: TCryptoLibUInt32Array;
   lt0, lt1, lt2, lr0, lr1, lr2, lr3: UInt32;
@@ -430,7 +430,7 @@ begin
     xor ((UInt32(FSi[(lr0 shr 24) and 255])) shl 24) xor lkw[3];
 end;
 
-function TAesLightEngine.GenerateWorkingKey(key: TCryptoLibByteArray;
+function TAesLightEngine.GenerateWorkingKey(const key: TCryptoLibByteArray;
   forEncryption: Boolean): TCryptoLibMatrixUInt32Array;
 var
   keyLen, KC, i, j: Int32;
@@ -673,7 +673,8 @@ begin
   FforEncryption := forEncryption;
 end;
 
-procedure TAesLightEngine.PackBlock(bytes: TCryptoLibByteArray; off: Int32);
+procedure TAesLightEngine.PackBlock(const bytes: TCryptoLibByteArray;
+  off: Int32);
 begin
   TConverters.ReadUInt32AsBytesLE(FC0, bytes, off);
   TConverters.ReadUInt32AsBytesLE(FC1, bytes, off + 4);
@@ -681,7 +682,8 @@ begin
   TConverters.ReadUInt32AsBytesLE(FC3, bytes, off + 12);
 end;
 
-procedure TAesLightEngine.UnPackBlock(bytes: TCryptoLibByteArray; off: Int32);
+procedure TAesLightEngine.UnPackBlock(const bytes: TCryptoLibByteArray;
+  off: Int32);
 begin
   FC0 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off);
   FC1 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 4);
@@ -689,8 +691,8 @@ begin
   FC3 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 12);
 end;
 
-function TAesLightEngine.ProcessBlock(input: TCryptoLibByteArray; inOff: Int32;
-  output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TAesLightEngine.ProcessBlock(const input: TCryptoLibByteArray;
+  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
 begin
   if (FWorkingKey = Nil) then
   begin

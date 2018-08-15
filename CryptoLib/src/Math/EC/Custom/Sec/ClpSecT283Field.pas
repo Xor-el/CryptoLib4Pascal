@@ -41,39 +41,44 @@ type
 
       FROOT_Z: TCryptoLibUInt64Array;
 
-    class procedure ImplCompactExt(zz: TCryptoLibUInt64Array); static;
-    class procedure ImplExpand(x, z: TCryptoLibUInt64Array); static; inline;
-    class procedure ImplMultiply(x, y, zz: TCryptoLibUInt64Array); static;
-    class procedure ImplMulw(x, y: UInt64; z: TCryptoLibUInt64Array;
+    class procedure ImplCompactExt(const zz: TCryptoLibUInt64Array); static;
+    class procedure ImplExpand(const x, z: TCryptoLibUInt64Array);
+      static; inline;
+    class procedure ImplMultiply(const x, y, zz: TCryptoLibUInt64Array); static;
+    class procedure ImplMulw(x, y: UInt64; const z: TCryptoLibUInt64Array;
       zOff: Int32); static;
 
-    class procedure ImplSquare(x, zz: TCryptoLibUInt64Array); static; inline;
+    class procedure ImplSquare(const x, zz: TCryptoLibUInt64Array);
+      static; inline;
 
     class constructor SecT283Field();
 
   public
-    class procedure Add(x, y, z: TCryptoLibUInt64Array); static; inline;
-    class procedure AddExt(xx, yy, zz: TCryptoLibUInt64Array); static; inline;
-    class procedure AddOne(x, z: TCryptoLibUInt64Array); static; inline;
+    class procedure Add(const x, y, z: TCryptoLibUInt64Array); static; inline;
+    class procedure AddExt(const xx, yy, zz: TCryptoLibUInt64Array);
+      static; inline;
+    class procedure AddOne(const x, z: TCryptoLibUInt64Array); static; inline;
     class function FromBigInteger(const x: TBigInteger): TCryptoLibUInt64Array;
       static; inline;
 
-    class procedure Invert(x, z: TCryptoLibUInt64Array); static;
-    class procedure Multiply(x, y, z: TCryptoLibUInt64Array); static; inline;
-    class procedure MultiplyAddToExt(x, y, zz: TCryptoLibUInt64Array);
+    class procedure Invert(const x, z: TCryptoLibUInt64Array); static;
+    class procedure Multiply(const x, y, z: TCryptoLibUInt64Array);
       static; inline;
-    class procedure Reduce(xx, z: TCryptoLibUInt64Array); static;
-    class procedure Reduce37(z: TCryptoLibUInt64Array; zOff: Int32);
+    class procedure MultiplyAddToExt(const x, y, zz: TCryptoLibUInt64Array);
       static; inline;
-    class procedure Sqrt(x, z: TCryptoLibUInt64Array); static;
+    class procedure Reduce(const xx, z: TCryptoLibUInt64Array); static;
+    class procedure Reduce37(const z: TCryptoLibUInt64Array; zOff: Int32);
+      static; inline;
+    class procedure Sqrt(const x, z: TCryptoLibUInt64Array); static;
 
-    class procedure Square(x, z: TCryptoLibUInt64Array); static; inline;
-    class procedure SquareAddToExt(x, zz: TCryptoLibUInt64Array);
+    class procedure Square(const x, z: TCryptoLibUInt64Array); static; inline;
+    class procedure SquareAddToExt(const x, zz: TCryptoLibUInt64Array);
       static; inline;
-    class procedure SquareN(x: TCryptoLibUInt64Array; n: Int32;
-      z: TCryptoLibUInt64Array); static; inline;
+    class procedure SquareN(const x: TCryptoLibUInt64Array; n: Int32;
+      const z: TCryptoLibUInt64Array); static; inline;
 
-    class function Trace(x: TCryptoLibUInt64Array): UInt32; static; inline;
+    class function Trace(const x: TCryptoLibUInt64Array): UInt32;
+      static; inline;
 
   end;
 
@@ -88,7 +93,8 @@ begin
     UInt64($0820820820820820), UInt64($2082082));
 end;
 
-class procedure TSecT283Field.Reduce37(z: TCryptoLibUInt64Array; zOff: Int32);
+class procedure TSecT283Field.Reduce37(const z: TCryptoLibUInt64Array;
+  zOff: Int32);
 var
   z4, t: UInt64;
 begin
@@ -98,7 +104,7 @@ begin
   z[zOff + 4] := z4 and M27;
 end;
 
-class procedure TSecT283Field.Add(x, y, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.Add(const x, y, z: TCryptoLibUInt64Array);
 begin
   z[0] := x[0] xor y[0];
   z[1] := x[1] xor y[1];
@@ -107,7 +113,7 @@ begin
   z[4] := x[4] xor y[4];
 end;
 
-class procedure TSecT283Field.AddExt(xx, yy, zz: TCryptoLibUInt64Array);
+class procedure TSecT283Field.AddExt(const xx, yy, zz: TCryptoLibUInt64Array);
 begin
   zz[0] := xx[0] xor yy[0];
   zz[1] := xx[1] xor yy[1];
@@ -120,7 +126,7 @@ begin
   zz[8] := xx[8] xor yy[8];
 end;
 
-class procedure TSecT283Field.AddOne(x, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.AddOne(const x, z: TCryptoLibUInt64Array);
 begin
   z[0] := x[0] xor UInt64(1);
   z[1] := x[1];
@@ -139,7 +145,7 @@ begin
   result := z;
 end;
 
-class procedure TSecT283Field.Multiply(x, y, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.Multiply(const x, y, z: TCryptoLibUInt64Array);
 var
   tt: TCryptoLibUInt64Array;
 begin
@@ -148,7 +154,7 @@ begin
   Reduce(tt, z);
 end;
 
-class procedure TSecT283Field.ImplSquare(x, zz: TCryptoLibUInt64Array);
+class procedure TSecT283Field.ImplSquare(const x, zz: TCryptoLibUInt64Array);
 var
   i: Int32;
 begin
@@ -160,7 +166,7 @@ begin
   zz[8] := TInterleave.Expand32to64(UInt32(x[4]));
 end;
 
-class procedure TSecT283Field.Square(x, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.Square(const x, z: TCryptoLibUInt64Array);
 var
   tt: TCryptoLibUInt64Array;
 begin
@@ -169,8 +175,8 @@ begin
   Reduce(tt, z);
 end;
 
-class procedure TSecT283Field.SquareN(x: TCryptoLibUInt64Array; n: Int32;
-  z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.SquareN(const x: TCryptoLibUInt64Array; n: Int32;
+  const z: TCryptoLibUInt64Array);
 var
   tt: TCryptoLibUInt64Array;
 begin
@@ -190,7 +196,7 @@ begin
   end;
 end;
 
-class procedure TSecT283Field.Invert(x, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.Invert(const x, z: TCryptoLibUInt64Array);
 var
   t0, t1: TCryptoLibUInt64Array;
 begin
@@ -229,7 +235,7 @@ begin
   Square(t1, z);
 end;
 
-class procedure TSecT283Field.ImplCompactExt(zz: TCryptoLibUInt64Array);
+class procedure TSecT283Field.ImplCompactExt(const zz: TCryptoLibUInt64Array);
 var
   z0, z1, z2, z3, z4, z5, z6, z7, z8, z9: UInt64;
 begin
@@ -255,7 +261,7 @@ begin
   zz[9] := (z9 shr 63); // Zero!
 end;
 
-class procedure TSecT283Field.ImplExpand(x, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.ImplExpand(const x, z: TCryptoLibUInt64Array);
 var
   x0, x1, x2, x3, x4: UInt64;
 begin
@@ -271,7 +277,8 @@ begin
   z[4] := ((x3 shr 36) xor (x4 shl 28));
 end;
 
-class procedure TSecT283Field.ImplMultiply(x, y, zz: TCryptoLibUInt64Array);
+class procedure TSecT283Field.ImplMultiply(const x, y,
+  zz: TCryptoLibUInt64Array);
 var
   a, b, p: TCryptoLibUInt64Array;
   u0, u1, u2, u3, v0, v1, v2, v3, A4, A5, B4, B5, t1, t2, t3, t4, t5, t6, t7,
@@ -397,8 +404,8 @@ begin
   ImplCompactExt(zz);
 end;
 
-class procedure TSecT283Field.ImplMulw(x, y: UInt64; z: TCryptoLibUInt64Array;
-  zOff: Int32);
+class procedure TSecT283Field.ImplMulw(x, y: UInt64;
+  const z: TCryptoLibUInt64Array; zOff: Int32);
 var
   u: TCryptoLibUInt64Array;
   j: UInt32;
@@ -444,7 +451,8 @@ begin
   z[zOff + 1] := (l shr 57) xor (h shl 7);
 end;
 
-class procedure TSecT283Field.MultiplyAddToExt(x, y, zz: TCryptoLibUInt64Array);
+class procedure TSecT283Field.MultiplyAddToExt(const x, y,
+  zz: TCryptoLibUInt64Array);
 var
   tt: TCryptoLibUInt64Array;
 begin
@@ -453,7 +461,7 @@ begin
   AddExt(zz, tt, zz);
 end;
 
-class procedure TSecT283Field.Reduce(xx, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.Reduce(const xx, z: TCryptoLibUInt64Array);
 var
   x0, x1, x2, x3, x4, x5, x6, x7, x8, t: UInt64;
 begin
@@ -487,7 +495,7 @@ begin
   z[4] := x4 and M27;
 end;
 
-class procedure TSecT283Field.Sqrt(x, z: TCryptoLibUInt64Array);
+class procedure TSecT283Field.Sqrt(const x, z: TCryptoLibUInt64Array);
 var
   u0, u1, e0, e1, e2: UInt64;
   odd: TCryptoLibUInt64Array;
@@ -515,7 +523,8 @@ begin
   z[2] := z[2] xor e2;
 end;
 
-class procedure TSecT283Field.SquareAddToExt(x, zz: TCryptoLibUInt64Array);
+class procedure TSecT283Field.SquareAddToExt(const x,
+  zz: TCryptoLibUInt64Array);
 var
   tt: TCryptoLibUInt64Array;
 begin
@@ -524,7 +533,7 @@ begin
   AddExt(zz, tt, zz);
 end;
 
-class function TSecT283Field.Trace(x: TCryptoLibUInt64Array): UInt32;
+class function TSecT283Field.Trace(const x: TCryptoLibUInt64Array): UInt32;
 begin
   // Non-zero-trace bits: 0, 271
   result := UInt32(x[0] xor (x[4] shr 15)) and UInt32(1);

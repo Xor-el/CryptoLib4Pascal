@@ -45,10 +45,10 @@ type
     FbasicIVSizes: TDictionary<String, Int32>;
 
     class procedure AddAlgorithm(const canonicalName: String;
-      aliases: array of String); static;
+      const aliases: array of String); static;
 
     class procedure AddBasicIVSizeEntries(size: Int32;
-      algorithms: array of String); static;
+      const algorithms: array of String); static;
 
     class constructor CreateParameterUtilities();
     class destructor DestroyParameterUtilities();
@@ -57,18 +57,19 @@ type
     class function GetCanonicalAlgorithmName(const algorithm: String): String;
       static; inline;
     class function CreateKeyParameter(const algOid: IDerObjectIdentifier;
-      keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static; inline;
+      const keyBytes: TCryptoLibByteArray): IKeyParameter; overload;
+      static; inline;
 
     class function CreateKeyParameter(const algorithm: String;
-      keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
+      const keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
 
     class function CreateKeyParameter(const algOid: IDerObjectIdentifier;
-      keyBytes: TCryptoLibByteArray; offset, length: Int32): IKeyParameter;
-      overload; static; inline;
+      const keyBytes: TCryptoLibByteArray; offset, length: Int32)
+      : IKeyParameter; overload; static; inline;
 
     class function CreateKeyParameter(const algorithm: String;
-      keyBytes: TCryptoLibByteArray; offset, length: Int32): IKeyParameter;
-      overload; static;
+      const keyBytes: TCryptoLibByteArray; offset, length: Int32)
+      : IKeyParameter; overload; static;
 
     class procedure Boot(); static;
 
@@ -79,7 +80,7 @@ implementation
 { TParameterUtilities }
 
 class procedure TParameterUtilities.AddAlgorithm(const canonicalName: String;
-  aliases: array of String);
+  const aliases: array of String);
 var
   alias: string;
 begin
@@ -92,7 +93,7 @@ begin
 end;
 
 class procedure TParameterUtilities.AddBasicIVSizeEntries(size: Int32;
-  algorithms: array of String);
+  const algorithms: array of String);
 var
   algorithm: string;
 begin
@@ -137,20 +138,20 @@ begin
 end;
 
 class function TParameterUtilities.CreateKeyParameter(const algorithm: String;
-  keyBytes: TCryptoLibByteArray): IKeyParameter;
+  const keyBytes: TCryptoLibByteArray): IKeyParameter;
 begin
   result := CreateKeyParameter(algorithm, keyBytes, 0, System.length(keyBytes));
 end;
 
 class function TParameterUtilities.CreateKeyParameter
-  (const algOid: IDerObjectIdentifier; keyBytes: TCryptoLibByteArray)
+  (const algOid: IDerObjectIdentifier; const keyBytes: TCryptoLibByteArray)
   : IKeyParameter;
 begin
   result := CreateKeyParameter(algOid.ID, keyBytes, 0, System.length(keyBytes));
 end;
 
 class function TParameterUtilities.CreateKeyParameter(const algorithm: String;
-  keyBytes: TCryptoLibByteArray; offset, length: Int32): IKeyParameter;
+  const keyBytes: TCryptoLibByteArray; offset, length: Int32): IKeyParameter;
 var
   canonical: string;
 begin
@@ -171,7 +172,7 @@ begin
 end;
 
 class function TParameterUtilities.CreateKeyParameter
-  (const algOid: IDerObjectIdentifier; keyBytes: TCryptoLibByteArray;
+  (const algOid: IDerObjectIdentifier; const keyBytes: TCryptoLibByteArray;
   offset, length: Int32): IKeyParameter;
 begin
   result := CreateKeyParameter(algOid.ID, keyBytes, offset, length);

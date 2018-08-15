@@ -57,7 +57,7 @@ type
     /// <summary>
     /// basic constructor - with bytes.
     /// </summary>
-    constructor Create(Str: TCryptoLibByteArray); overload;
+    constructor Create(const Str: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// basic constructor
@@ -82,7 +82,7 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerUtf8String; overload;
+    class function GetInstance(const obj: TObject): IDerUtf8String; overload;
       static; inline;
 
     /// <summary>
@@ -130,7 +130,7 @@ begin
   result := Str = other.Str;
 end;
 
-constructor TDerUtf8String.Create(Str: TCryptoLibByteArray);
+constructor TDerUtf8String.Create(const Str: TCryptoLibByteArray);
 begin
   Create(String(TEncoding.UTF8.GetString(Str)));
 end;
@@ -152,7 +152,7 @@ begin
     TEncoding.UTF8.GetBytes(UnicodeString(Str)));
 end;
 
-class function TDerUtf8String.GetInstance(obj: TObject): IDerUtf8String;
+class function TDerUtf8String.GetInstance(const obj: TObject): IDerUtf8String;
 begin
   if ((obj = Nil) or (obj is TDerUtf8String)) then
   begin

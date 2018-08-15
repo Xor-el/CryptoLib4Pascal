@@ -67,7 +67,7 @@ type
     /// should be the same as the last block of plain text.
     /// </p>
     /// </summary>
-    function AddPadding(input: TCryptoLibByteArray; inOff: Int32): Int32;
+    function AddPadding(const input: TCryptoLibByteArray; inOff: Int32): Int32;
 
     /// <summary>
     /// return the number of pad bytes present in the block.
@@ -78,7 +78,7 @@ type
     /// <returns>
     /// the number of pad bytes present in the block.
     /// </returns>
-    function PadCount(input: TCryptoLibByteArray): Int32;
+    function PadCount(const input: TCryptoLibByteArray): Int32;
 
   end;
 
@@ -86,7 +86,7 @@ implementation
 
 { TTBCPadding }
 
-function TTBCPadding.AddPadding(input: TCryptoLibByteArray;
+function TTBCPadding.AddPadding(const input: TCryptoLibByteArray;
   inOff: Int32): Int32;
 var
   count: Int32;
@@ -142,7 +142,7 @@ begin
 end;
 {$ENDIF}
 
-function TTBCPadding.PadCount(input: TCryptoLibByteArray): Int32;
+function TTBCPadding.PadCount(const input: TCryptoLibByteArray): Int32;
 var
   code: Byte;
   index: Int32;

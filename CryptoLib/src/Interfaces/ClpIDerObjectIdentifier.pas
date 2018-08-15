@@ -35,10 +35,11 @@ type
     function GetID: String;
     property ID: String read GetID;
 
-    procedure WriteField(outputStream: TStream; fieldValue: Int64); overload;
-    procedure WriteField(outputStream: TStream;
-      fieldValue: TBigInteger); overload;
-    procedure DoOutput(bOut: TMemoryStream); overload;
+    procedure WriteField(const outputStream: TStream;
+      fieldValue: Int64); overload;
+    procedure WriteField(const outputStream: TStream;
+      const fieldValue: TBigInteger); overload;
+    procedure DoOutput(const bOut: TMemoryStream); overload;
     function GetBody(): TCryptoLibByteArray;
 
     function Branch(const branchID: String): IDerObjectIdentifier;

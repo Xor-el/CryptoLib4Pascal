@@ -38,7 +38,7 @@ type
     Fexponents: TCryptoLibInt32Array;
 
   public
-    constructor Create(exponents: TCryptoLibInt32Array);
+    constructor Create(const exponents: TCryptoLibInt32Array);
 
     function GetExponentsPresent(): TCryptoLibInt32Array; virtual;
 
@@ -58,7 +58,7 @@ implementation
 
 { TGF2Polynomial }
 
-constructor TGF2Polynomial.Create(exponents: TCryptoLibInt32Array);
+constructor TGF2Polynomial.Create(const exponents: TCryptoLibInt32Array);
 begin
   Fexponents := System.Copy(exponents);
 end;

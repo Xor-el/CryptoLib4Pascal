@@ -59,7 +59,7 @@ type
     /// <param name="encoding">
     /// the byte encoding of the characters making up the string.
     /// </param>
-    constructor Create(encoding: TCryptoLibByteArray);
+    constructor Create(const encoding: TCryptoLibByteArray);
 
     function GetString(): String; override;
 
@@ -79,11 +79,11 @@ type
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the object cannot be converted.
     /// </exception>
-    class function GetInstance(obj: TObject): IDerGraphicString; overload;
+    class function GetInstance(const obj: TObject): IDerGraphicString; overload;
       static; inline;
 
-    class function GetInstance(obj: TCryptoLibByteArray): IDerGraphicString;
-      overload; static;
+    class function GetInstance(const obj: TCryptoLibByteArray)
+      : IDerGraphicString; overload; static;
 
     /// <summary>
     /// return a Graphic string from a tagged object.
@@ -130,7 +130,7 @@ begin
   result := TArrayUtils.GetArrayHashCode(mString);
 end;
 
-constructor TDerGraphicString.Create(encoding: TCryptoLibByteArray);
+constructor TDerGraphicString.Create(const encoding: TCryptoLibByteArray);
 begin
   Inherited Create();
   FmString := System.Copy(encoding);
@@ -141,7 +141,8 @@ begin
   derOut.WriteEncoded(TAsn1Tags.GraphicString, mString);
 end;
 
-class function TDerGraphicString.GetInstance(obj: TObject): IDerGraphicString;
+class function TDerGraphicString.GetInstance(const obj: TObject)
+  : IDerGraphicString;
 begin
   if ((obj = Nil) or (obj is TDerGraphicString)) then
   begin
@@ -170,7 +171,7 @@ begin
     (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
 end;
 
-class function TDerGraphicString.GetInstance(obj: TCryptoLibByteArray)
+class function TDerGraphicString.GetInstance(const obj: TCryptoLibByteArray)
   : IDerGraphicString;
 begin
   try

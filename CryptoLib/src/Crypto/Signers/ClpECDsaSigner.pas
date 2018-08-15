@@ -73,8 +73,8 @@ type
     Fkey: IECKeyParameters;
     Frandom: ISecureRandom;
 
-    function CalculateE(const n: TBigInteger; &message: TCryptoLibByteArray)
-      : TBigInteger; virtual;
+    function CalculateE(const n: TBigInteger;
+      const &message: TCryptoLibByteArray): TBigInteger; virtual;
 
     function CreateBasePointMultiplier(): IECMultiplier; virtual;
 
@@ -112,7 +112,7 @@ type
     // * hash of the message of interest.
     // *
     // * @param message the message that will be verified later.
-    function GenerateSignature(&message: TCryptoLibByteArray)
+    function GenerateSignature(const &message: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     // // 5.4 pg 29
@@ -121,7 +121,7 @@ type
     // * the passed in message (for standard DSA the message should be
     // * a SHA-1 hash of the real message to be verified).
     // */
-    function VerifySignature(&message: TCryptoLibByteArray;
+    function VerifySignature(const &message: TCryptoLibByteArray;
       const r, s: TBigInteger): Boolean;
 
   end;
@@ -137,7 +137,7 @@ begin
 end;
 
 function TECDsaSigner.CalculateE(const n: TBigInteger;
-  &message: TCryptoLibByteArray): TBigInteger;
+  const &message: TCryptoLibByteArray): TBigInteger;
 var
   messageBitLength: Int32;
   trunc: TBigInteger;
@@ -170,7 +170,7 @@ begin
   FEight := TBigInteger.ValueOf(8);
 end;
 
-function TECDsaSigner.GenerateSignature(&message: TCryptoLibByteArray)
+function TECDsaSigner.GenerateSignature(const &message: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   ec: IECDomainParameters;
@@ -305,7 +305,7 @@ begin
   end;
 end;
 
-function TECDsaSigner.VerifySignature(&message: TCryptoLibByteArray;
+function TECDsaSigner.VerifySignature(const &message: TCryptoLibByteArray;
   const r, s: TBigInteger): Boolean;
 var
   n, e, c, u1, u2, cofactor, v, Smallr: TBigInteger;

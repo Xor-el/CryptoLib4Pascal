@@ -61,7 +61,7 @@ type
     /// <returns>
     /// returns number of bytes added
     /// </returns>
-    function AddPadding(input: TCryptoLibByteArray; inOff: Int32): Int32;
+    function AddPadding(const input: TCryptoLibByteArray; inOff: Int32): Int32;
 
     /// <summary>
     /// return the number of pad bytes present in the block.
@@ -75,7 +75,7 @@ type
     /// <exception cref="EInvalidCipherTextCryptoLibException">
     /// if the padding is badly formed or invalid.
     /// </exception>
-    function PadCount(input: TCryptoLibByteArray): Int32;
+    function PadCount(const input: TCryptoLibByteArray): Int32;
 
   end;
 

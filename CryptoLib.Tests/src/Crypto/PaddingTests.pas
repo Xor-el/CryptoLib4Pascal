@@ -72,9 +72,10 @@ type
 
     procedure DoBlockCheck(const cipher: IPaddedBufferedBlockCipher;
       const padding: IBlockCipherPadding; const key: IKeyParameter;
-      data: TCryptoLibByteArray);
+      const data: TCryptoLibByteArray);
     procedure DoTestPadding(const padding: IBlockCipherPadding;
-      const rand: ISecureRandom; ffVector, ZeroVector: TCryptoLibByteArray);
+      const rand: ISecureRandom;
+      const ffVector, ZeroVector: TCryptoLibByteArray);
 
   protected
     procedure SetUp; override;
@@ -93,7 +94,7 @@ implementation
 
 procedure TTestPadding.DoBlockCheck(const cipher: IPaddedBufferedBlockCipher;
   const padding: IBlockCipherPadding; const key: IKeyParameter;
-  data: TCryptoLibByteArray);
+  const data: TCryptoLibByteArray);
 var
   &out, dec: TBytes;
   len, decLen: Int32;
@@ -231,7 +232,7 @@ begin
 end;
 
 procedure TTestPadding.DoTestPadding(const padding: IBlockCipherPadding;
-  const rand: ISecureRandom; ffVector, ZeroVector: TCryptoLibByteArray);
+  const rand: ISecureRandom; const ffVector, ZeroVector: TCryptoLibByteArray);
 var
   cipher: IPaddedBufferedBlockCipher;
   key: IKeyParameter;

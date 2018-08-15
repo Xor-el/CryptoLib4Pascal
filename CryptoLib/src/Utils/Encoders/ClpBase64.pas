@@ -32,7 +32,7 @@ type
   TBase64 = class sealed(TObject)
 
   public
-    class function Encode(Input: TCryptoLibByteArray): String; static;
+    class function Encode(const Input: TCryptoLibByteArray): String; static;
     class function Decode(const Input: String): TCryptoLibByteArray; static;
   end;
 
@@ -45,7 +45,7 @@ begin
   result := SbpBase64.TBase64.Default.Decode(Input);
 end;
 
-class function TBase64.Encode(Input: TCryptoLibByteArray): String;
+class function TBase64.Encode(const Input: TCryptoLibByteArray): String;
 begin
   result := SbpBase64.TBase64.Default.Encode(Input);
 end;
