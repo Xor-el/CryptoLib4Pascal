@@ -87,7 +87,7 @@ type
     // * 9: return R
     // */
     class function ShamirsTrick(const P: IECPoint; const k: TBigInteger;
-      Q: IECPoint; const l: TBigInteger): IECPoint; static;
+      const Q: IECPoint; const l: TBigInteger): IECPoint; static;
 
     class function ImportPoint(const c: IECCurve; const P: IECPoint)
       : IECPoint; static;
@@ -837,14 +837,16 @@ begin
 end;
 
 class function TECAlgorithms.ShamirsTrick(const P: IECPoint;
-  const k: TBigInteger; Q: IECPoint; const l: TBigInteger): IECPoint;
+  const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
 var
   cp: IECCurve;
+  LQ: IECPoint;
 begin
   cp := P.Curve;
-  Q := ImportPoint(cp, Q);
+  LQ := Q;
+  LQ := ImportPoint(cp, LQ);
 
-  result := ImplCheckResult(ImplShamirsTrickJsf(P, k, Q, l));
+  result := ImplCheckResult(ImplShamirsTrickJsf(P, k, LQ, l));
 end;
 
 class function TECAlgorithms.SumOfMultiplies

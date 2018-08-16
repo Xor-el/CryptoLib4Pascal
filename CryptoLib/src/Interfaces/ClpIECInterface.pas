@@ -190,7 +190,7 @@ type
       bSquared: IECFieldElement): IECFieldElement;
 
     function CalculateJacobianModifiedW(const Z: IECFieldElement;
-      ZSquared: IECFieldElement): IECFieldElement;
+     const ZSquared: IECFieldElement): IECFieldElement;
 
     function GetJacobianModifiedW(): IECFieldElement;
 

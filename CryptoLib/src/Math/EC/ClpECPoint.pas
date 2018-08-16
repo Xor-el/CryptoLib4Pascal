@@ -327,7 +327,7 @@ type
       bSquared: IECFieldElement): IECFieldElement; virtual;
 
     function CalculateJacobianModifiedW(const Z: IECFieldElement;
-      ZSquared: IECFieldElement): IECFieldElement; virtual;
+      const ZSquared: IECFieldElement): IECFieldElement; virtual;
 
     function GetJacobianModifiedW(): IECFieldElement; virtual;
 
@@ -2182,23 +2182,24 @@ begin
 end;
 
 function TFpPoint.CalculateJacobianModifiedW(const Z: IECFieldElement;
-  ZSquared: IECFieldElement): IECFieldElement;
+  const ZSquared: IECFieldElement): IECFieldElement;
 var
-  a4, W, a4Neg: IECFieldElement;
+  a4, W, a4Neg, LZSquared: IECFieldElement;
 begin
   a4 := curve.a;
+  LZSquared := ZSquared;
   if ((a4.IsZero) or (Z.IsOne)) then
   begin
     result := a4;
     Exit;
   end;
 
-  if (ZSquared = Nil) then
+  if (LZSquared = Nil) then
   begin
-    ZSquared := Z.Square();
+    LZSquared := Z.Square();
   end;
 
-  W := ZSquared.Square();
+  W := LZSquared.Square();
   a4Neg := a4.Negate();
   if (a4Neg.BitLength < a4.BitLength) then
   begin
