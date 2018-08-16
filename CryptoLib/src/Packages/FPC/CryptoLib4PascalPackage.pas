@@ -148,7 +148,9 @@ uses
   ClpISecT283FieldElement, ClpSecT283K1Point, ClpISecT283K1Point, 
   ClpISecT283K1Curve, ClpSecT283K1Curve, ClpSecP256R1Field, 
   ClpISecP256R1FieldElement, ClpSecP256R1FieldElement, ClpISecP256R1Point, 
-  ClpSecP256R1Point, ClpISecP256R1Curve, ClpSecP256R1Curve;
+  ClpSecP256R1Point, ClpISecP256R1Curve, ClpSecP256R1Curve, 
+  Generics.Collections, Generics.Defaults, Generics.Hashes, Generics.Helpers, 
+  Generics.MemoryExpanders, Generics.Strings;
 
 implementation
 
