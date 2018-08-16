@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit SecP384R1FieldTests;
+unit SecP256R1FieldTests;
 
 interface
 
@@ -48,7 +48,7 @@ type
 
 type
 
-  TTestSecP384R1Field = class(TCryptoLibTestCase)
+  TTestSecP256R1Field = class(TCryptoLibTestCase)
   private
   var
     FRandom: ISecureRandom;
@@ -58,10 +58,11 @@ type
     procedure AssertAreBigIntegersEqual(const a, b: TBigInteger);
     function FE(const x: TBigInteger): IECFieldElement;
     function GenerateMultiplyInput_Random(): IECFieldElement;
-    function GenerateSquareInput_CarryBug(): IECFieldElement;
-    function Nat_Create(len: Int32): TCryptoLibUInt32Array;
-    function Nat_ToBigInteger(len: Int32; const x: TCryptoLibUInt32Array)
-      : TBigInteger;
+    function GenerateSquareInput_OpenSSLBug(): IECFieldElement;
+    function GenerateMultiplyInputA_OpenSSLBug(): IECFieldElement;
+    function GenerateMultiplyInputB_OpenSSLBug(): IECFieldElement;
+    function Nat256_Create(): TCryptoLibUInt32Array;
+    function Nat256_ToBigInteger(const x: TCryptoLibUInt32Array): TBigInteger;
 
   protected
     procedure SetUp; override;
@@ -70,71 +71,114 @@ type
     procedure TestMultiply1();
     procedure TestMultiply2();
     procedure TestSquare();
-    procedure TestSquare_CarryBug();
 
     /// <summary>
-    /// Based on another example input demonstrating the carry propagation
-    /// bug in Nat192.square, as <br />reported by Joseph Friel on
-    /// dev-crypto.
+    /// <para>
+    /// Test squaring with specifically selected values that triggered a
+    /// bug in the modular reduction <br />in OpenSSL (last affected
+    /// version 0.9.8g).
+    /// </para>
+    /// <para>
+    /// See "Practical realisation and elimination of an ECC-related
+    /// software bug attack", B. B. <br />Brumley, M. Barbarosa, D. Page,
+    /// F. Vercauteren.
+    /// </para>
     /// </summary>
-    procedure TestSquare_CarryBug_Reported();
+    procedure TestSquare_OpenSSLBug();
+
+    /// <summary>
+    /// <para>
+    /// Test multiplication with specifically selected values that
+    /// triggered a bug in the modular <br />reduction in OpenSSL (last
+    /// affected version 0.9.8g).
+    /// </para>
+    /// <para>
+    /// See "Practical realisation and elimination of an ECC-related
+    /// software bug attack", B. B. <br />Brumley, M. Barbarosa, D. Page,
+    /// F. Vercauteren.
+    /// </para>
+    /// </summary>
+    procedure TestMultiply_OpenSSLBug();
 
   end;
 
 implementation
 
-{ TTestSecP384R1Field }
+{ TTestSecP256R1Field }
 
-procedure TTestSecP384R1Field.AssertAreBigIntegersEqual(const a,
+procedure TTestSecP256R1Field.AssertAreBigIntegersEqual(const a,
   b: TBigInteger);
 begin
   CheckEquals(True, a.Equals(b));
 end;
 
-function TTestSecP384R1Field.FE(const x: TBigInteger): IECFieldElement;
+function TTestSecP256R1Field.FE(const x: TBigInteger): IECFieldElement;
 begin
   result := FDP.Curve.FromBigInteger(x);
 end;
 
-function TTestSecP384R1Field.GenerateMultiplyInput_Random: IECFieldElement;
+function TTestSecP256R1Field.GenerateMultiplyInputA_OpenSSLBug: IECFieldElement;
+var
+  x: TCryptoLibUInt32Array;
+begin
+  x := Nat256_Create();
+  x[0] := UInt32(FRandom.NextInt32()) shr 1;
+  x[4] := 3;
+  x[7] := $FFFFFFFF;
+
+  result := FE(Nat256_ToBigInteger(x));
+end;
+
+function TTestSecP256R1Field.GenerateMultiplyInputB_OpenSSLBug: IECFieldElement;
+var
+  x: TCryptoLibUInt32Array;
+begin
+  x := Nat256_Create();
+  x[0] := UInt32(FRandom.NextInt32()) shr 1;
+  x[3] := 1;
+  x[7] := $FFFFFFFF;
+
+  result := FE(Nat256_ToBigInteger(x));
+end;
+
+function TTestSecP256R1Field.GenerateMultiplyInput_Random: IECFieldElement;
 begin
   result := FE(TBigInteger.Create(FDP.Curve.FieldSize + 32, FRandom).&Mod(FQ));
 end;
 
-function TTestSecP384R1Field.GenerateSquareInput_CarryBug: IECFieldElement;
+function TTestSecP256R1Field.GenerateSquareInput_OpenSSLBug: IECFieldElement;
 var
   x: TCryptoLibUInt32Array;
 begin
-  x := Nat_Create(12);
+  x := Nat256_Create();
   x[0] := UInt32(FRandom.NextInt32()) shr 1;
-  x[6] := 2;
-  x[10] := $FFFF0000;
-  x[11] := $FFFFFFFF;
+  x[4] := 2;
+  x[7] := $FFFFFFFF;
 
-  result := FE(Nat_ToBigInteger(12, x));
+  result := FE(Nat256_ToBigInteger(x));
 end;
 
-function TTestSecP384R1Field.Nat_Create(len: Int32): TCryptoLibUInt32Array;
+function TTestSecP256R1Field.Nat256_Create(): TCryptoLibUInt32Array;
 begin
-  System.SetLength(result, len);
+  System.SetLength(result, 8);
 end;
 
-function TTestSecP384R1Field.Nat_ToBigInteger(len: Int32;
-  const x: TCryptoLibUInt32Array): TBigInteger;
+function TTestSecP256R1Field.Nat256_ToBigInteger(const x: TCryptoLibUInt32Array)
+  : TBigInteger;
 var
   bs, temp: TCryptoLibByteArray;
   i: Int32;
   x_i: UInt32;
 begin
-  System.SetLength(bs, len shl 2);
-  for i := 0 to System.Pred(len) do
+  System.SetLength(bs, 32);
+  for i := 0 to System.Pred(8) do
 
   begin
     x_i := x[i];
     if (x_i <> 0) then
     begin
       temp := TConverters.ReadUInt32AsBytesBE(x_i);
-      System.Move(temp[0], bs[(len - 1 - i) shl 2], System.Length(temp) *
+      System.Move(temp[0], bs[(7 - i) shl 2], System.Length(temp) *
         SizeOf(Byte));
 
     end;
@@ -142,22 +186,22 @@ begin
   result := TBigInteger.Create(1, bs);
 end;
 
-procedure TTestSecP384R1Field.SetUp;
+procedure TTestSecP256R1Field.SetUp;
 begin
   inherited;
   FRandom := TSecureRandom.Create();
-  FDP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP384r1);
+  FDP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP256r1);
 
   FQ := FDP.Curve.Field.Characteristic;
 end;
 
-procedure TTestSecP384R1Field.TearDown;
+procedure TTestSecP256R1Field.TearDown;
 begin
   inherited;
 
 end;
 
-procedure TTestSecP384R1Field.TestMultiply1;
+procedure TTestSecP256R1Field.TestMultiply1;
 var
   Count, i: Int32;
   x, y, z: IECFieldElement;
@@ -187,7 +231,7 @@ begin
 
 end;
 
-procedure TTestSecP384R1Field.TestMultiply2;
+procedure TTestSecP256R1Field.TestMultiply2;
 var
   Count, i, J, K: Int32;
   ecFieldElements: TCryptoLibGenericArray<IECFieldElement>;
@@ -220,7 +264,7 @@ begin
   end;
 end;
 
-procedure TTestSecP384R1Field.TestSquare;
+procedure TTestSecP256R1Field.TestSquare;
 var
   Count, i: Int32;
   x, z: IECFieldElement;
@@ -245,7 +289,7 @@ begin
   end;
 end;
 
-procedure TTestSecP384R1Field.TestSquare_CarryBug;
+procedure TTestSecP256R1Field.TestSquare_OpenSSLBug;
 var
   Count, i: Int32;
   x, z: IECFieldElement;
@@ -257,7 +301,7 @@ begin
   while i < Count do
 
   begin
-    x := GenerateSquareInput_CarryBug();
+    x := GenerateSquareInput_OpenSSLBug();
 
     bigX := x.ToBigInteger();
     bigR := bigX.Multiply(bigX).&Mod(FQ);
@@ -270,22 +314,32 @@ begin
   end;
 end;
 
-procedure TTestSecP384R1Field.TestSquare_CarryBug_Reported;
+procedure TTestSecP256R1Field.TestMultiply_OpenSSLBug;
 var
-  x, z: IECFieldElement;
-  bigX, bigR, bigZ: TBigInteger;
+  x, y, z: IECFieldElement;
+  bigR, bigX, bigY, bigZ: TBigInteger;
+  Count, i: Int32;
 begin
-  x := FE(TBigInteger.Create
-    ('2fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd',
-    16));
 
-  bigX := x.ToBigInteger();
-  bigR := bigX.Multiply(bigX).&Mod(FQ);
+  Count := 100;
+  i := 0;
 
-  z := x.Square();
-  bigZ := z.ToBigInteger();
+  while i < Count do
+  begin
+    x := GenerateMultiplyInputA_OpenSSLBug();
+    y := GenerateMultiplyInputB_OpenSSLBug();
 
-  AssertAreBigIntegersEqual(bigR, bigZ);
+    bigX := x.ToBigInteger();
+    bigY := y.ToBigInteger();
+    bigR := bigX.Multiply(bigY).&Mod(FQ);
+
+    z := x.Multiply(y);
+    bigZ := z.ToBigInteger();
+
+    AssertAreBigIntegersEqual(bigR, bigZ);
+    System.Inc(i);
+  end;
+
 end;
 
 initialization
@@ -293,9 +347,9 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
-  RegisterTest(TTestSecP384R1Field);
+  RegisterTest(TTestSecP256R1Field);
 {$ELSE}
-  RegisterTest(TTestSecP384R1Field.Suite);
+  RegisterTest(TTestSecP256R1Field.Suite);
 {$ENDIF FPC}
 
 end.

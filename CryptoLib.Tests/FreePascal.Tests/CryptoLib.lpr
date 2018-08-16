@@ -13,6 +13,7 @@ uses
   BigIntegerTests,
   ECAlgorithmsTests,
   ECPointTests,
+  SecP256R1FieldTests,
   SecP384R1FieldTests,
   ECDsa5Tests,
   ECTests,
