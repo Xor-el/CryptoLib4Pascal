@@ -33,6 +33,8 @@ uses
   ClpECCurve,
   ClpSecP256K1Curve,
   ClpISecP256K1Curve,
+  ClpSecP256R1Curve,
+  ClpISecP256R1Curve,
   ClpSecP384R1Curve,
   ClpISecP384R1Curve,
   ClpSecP521R1Curve,
@@ -123,6 +125,22 @@ type
     /// secp256k1
     /// </summary>
     TSecP256K1Holder = class sealed(TX9ECParametersHolder,
+      IX9ECParametersHolder)
+
+    strict protected
+      function CreateParameters(): IX9ECParameters; override;
+
+    public
+      class function Instance(): IX9ECParametersHolder; static;
+
+    end;
+
+  type
+
+    /// <summary>
+    /// secp256r1
+    /// </summary>
+    TSecP256R1Holder = class sealed(TX9ECParametersHolder,
       IX9ECParametersHolder)
 
     strict protected
@@ -325,6 +343,9 @@ begin
     DefineCurveWithOid('secp256k1', TSecObjectIdentifiers.SecP256k1,
       TSecP256K1Holder.Instance);
 
+    DefineCurveWithOid('secp256r1', TSecObjectIdentifiers.SecP256r1,
+      TSecP256R1Holder.Instance);
+
     DefineCurveWithOid('secp384r1', TSecObjectIdentifiers.SecP384r1,
       TSecP384R1Holder.Instance);
 
@@ -336,6 +357,7 @@ begin
 
     DefineCurveAlias('K-283', TSecObjectIdentifiers.SecT283k1);
 
+    DefineCurveAlias('P-256', TSecObjectIdentifiers.SecP256r1);
     DefineCurveAlias('P-384', TSecObjectIdentifiers.SecP384r1);
     DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
 
@@ -450,6 +472,29 @@ class function TCustomNamedCurves.TSecT283K1Holder.Instance
   : IX9ECParametersHolder;
 begin
   result := TSecT283K1Holder.Create();
+end;
+
+{ TCustomNamedCurves.TSecP256R1Holder }
+
+function TCustomNamedCurves.TSecP256R1Holder.CreateParameters: IX9ECParameters;
+var
+  S: TCryptoLibByteArray;
+  curve: IECCurve;
+  G: IX9ECPoint;
+begin
+  S := THex.Decode('C49D360886E704936A6678E1139D26B7819F7E90');
+  curve := ConfigureCurve(TSecP256R1Curve.Create() as ISecP256R1Curve);
+  G := TX9ECPoint.Create(curve,
+    THex.Decode('04' +
+    '6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296' +
+    '4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5'));
+  result := TX9ECParameters.Create(curve, G, curve.Order, curve.Cofactor, S);
+end;
+
+class function TCustomNamedCurves.TSecP256R1Holder.Instance
+  : IX9ECParametersHolder;
+begin
+  result := TSecP256R1Holder.Create();
 end;
 
 end.

@@ -17,9 +17,6 @@
       <Version Value="2"/>
     </PublishOptions>
     <RunParams>
-      <local>
-        <CommandLineParams Value="--format=plain --all --progress"/>
-      </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
@@ -37,7 +34,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="41">
+    <Units Count="42">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -202,6 +199,10 @@
         <Filename Value="..\src\Crypto\RIPEMD160HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit40>
+      <Unit41>
+        <Filename Value="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit41>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -36,7 +36,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="41">
+    <Units Count="42">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -202,6 +202,10 @@
         <Filename Value="..\src\Crypto\RIPEMD160HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit40>
+      <Unit41>
+        <Filename Value="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit41>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
