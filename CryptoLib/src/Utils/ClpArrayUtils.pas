@@ -289,7 +289,7 @@ begin
   while (i >= 0) do
   begin
     hc := hc * 257;
-    hc := hc xor data[i];
+    hc := hc xor Int32(data[i]);
     System.Dec(i);
   end;
   Result := hc;
@@ -313,7 +313,7 @@ begin
   while (i >= 0) do
   begin
     hc := hc * 257;
-    hc := hc xor data[off + i];
+    hc := hc xor Int32(data[off + i]);
     System.Dec(i);
   end;
   Result := hc;
