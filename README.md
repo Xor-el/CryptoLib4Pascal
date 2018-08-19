@@ -15,7 +15,10 @@ K-283, B-283, B-409, B-233, K-163, P-521, K-233, K-409, P-192, P-384, P-224, P-2
 
 **SecNamed Curves:**
 ```
-sect131r1, secp160k1, sect193r1, secp384r1, secp128r1, sect163k1, sect193r2, sect239k1, sect409r1, secp256r1, secp521r1, sect131r2, secp112r1, sect113r2, sect163r1, secp224k1, secp224r1, sect283k1, sect233k1, sect283r1, sect409k1, sect571k1, secp192r1, sect233r1, secp256k1, sect571r1, secp192k1, secp160r1, sect113r1, secp160r2, secp112r2, sect163r2, secp128r2.
+sect131r1, secp160k1, sect193r1, secp384r1, secp128r1, sect163k1, sect193r2, sect239k1, sect409r1, secp256r1,
+secp521r1, sect131r2, secp112r1, sect113r2, sect163r1, secp224k1, secp224r1, sect283k1, sect233k1, sect283r1,
+sect409k1, sect571k1, secp192r1, sect233r1, secp256k1, sect571r1, secp192k1, secp160r1, sect113r1, secp160r2,
+secp112r2, sect163r2, secp128r2.
 ```
 
 **CustomNamed Curves:**
