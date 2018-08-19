@@ -1,11 +1,38 @@
 # CryptoLib4Pascal
 CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES.
 
-**Supported Algorithms:**
+**Supported Elliptic Curves:**
 
-    Supported Elliptic Curves at the moment are secp256k1, sect283k1, secp384r1 and secp521r1.
+Curves are grouped in three different classes.
+1. NistNamed Curves
+2. SecNamed Curves (these are bare generic implementation of curves (at the moment, not as optimized as their CustomNamed Curves Counterparts))
+3. CustomNamed Curves. (these are specially optimized implementations of curves found in the previous two.)
+
+**NistNamed Curves:**
+```
+K-283, B-283, B-409, B-233, K-163, P-521, K-233, K-409, P-192, P-384, P-224, P-256, B-163, B-571, K-571.
+```
+
+**SecNamed Curves:**
+```
+sect131r1, secp160k1, sect193r1, secp384r1, secp128r1, sect163k1, sect193r2, sect239k1, sect409r1, secp256r1, secp521r1, sect131r2, secp112r1, sect113r2, sect163r1, secp224k1, secp224r1, sect283k1, sect233k1, sect283r1, sect409k1, sect571k1, secp192r1, sect233r1, secp256k1, sect571r1, secp192k1, secp160r1, sect113r1, secp160r2, secp112r2, sect163r2, secp128r2.
+```
+
+**CustomNamed Curves:**
+
+| curve name | alias(es) |
+|--------|--------|
+|  **secp256k1**      |        |
+|  **secp256r1**      |   **P-256**    |
+|  **secp384r1**      |   **P-384**    |
+|  **secp521r1**      |   **P-521**    |
+|  **sect283k1**      |   **K-283**    |
+
+
+**Supported Algorithms:**
     
     Supported signing algorithms 
+    
     ECDSA
     NONEwithECDSA, SHA-1withECDSA, SHA-224withECDSA, 
     SHA-256withECDSA, SHA-384withECDSA, SHA-512withECDSA and RIPEMD160withECDSA
