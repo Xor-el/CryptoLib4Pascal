@@ -108,10 +108,13 @@ type
       a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
 
     class function ConvertStringToBytes(const a_in: String;
-      a_encoding: TEncoding): TCryptoLibByteArray; overload; static; inline;
+      a_encoding: TEncoding): TCryptoLibByteArray; overload; static;
 
-    class function ConvertHexStringToBytes(a_in: String): TCryptoLibByteArray;
-      static; inline;
+    class function ConvertBytesToString(const a_in: TCryptoLibByteArray;
+      const a_encoding: TEncoding): String; overload; static;
+
+    class function ConvertHexStringToBytes(const a_in: String)
+      : TCryptoLibByteArray; static; inline;
 
     class function ConvertBytesToHexString(const a_in: TCryptoLibByteArray;
       a_group: Boolean): String; static;
@@ -450,16 +453,19 @@ begin
   result := hex;
 end;
 
-class function TConverters.ConvertHexStringToBytes(a_in: String)
+class function TConverters.ConvertHexStringToBytes(const a_in: String)
   : TCryptoLibByteArray;
+var
+  l_in: string;
 begin
-  a_in := StringReplace(a_in, '-', '', [rfIgnoreCase, rfReplaceAll]);
+  l_in := a_in;
+  l_in := StringReplace(l_in, '-', '', [rfIgnoreCase, rfReplaceAll]);
 
 {$IFDEF DEBUG}
-  System.Assert(System.length(a_in) and 1 = 0);
+  System.Assert(System.length(l_in) and 1 = 0);
 {$ENDIF DEBUG}
-  System.SetLength(result, System.length(a_in) shr 1);
-  HexToBin(PChar(a_in), @result[0], System.length(result));
+  System.SetLength(result, System.length(l_in) shr 1);
+  HexToBin(PChar(l_in), @result[0], System.length(result));
 
 end;
 
@@ -476,6 +482,22 @@ begin
   result := a_encoding.GetBytes(UnicodeString(a_in));
 {$ELSE}
   result := a_encoding.GetBytes(a_in);
+{$ENDIF FPC}
+end;
+
+class function TConverters.ConvertBytesToString(const a_in: TCryptoLibByteArray;
+  const a_encoding: TEncoding): String;
+begin
+
+  if a_encoding = Nil then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncodingInstanceNil);
+  end;
+
+{$IFDEF FPC}
+  result := String(a_encoding.GetString(a_in));
+{$ELSE}
+  result := a_encoding.GetString(a_in);
 {$ENDIF FPC}
 end;
 

@@ -54,6 +54,7 @@ uses
   ClpDigestUtilities,
   ClpSignerUtilities,
   ClpBigInteger,
+  ClpConverters,
   ClpCryptoLibTypes;
 
 type
@@ -252,7 +253,7 @@ begin
     parameters);
 
   sgr := TSignerUtilities.GetSigner('SHA1withECNR');
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   DoCheckSignature(192, priKey, pubKey, sgr, k, &message, r, s);
 end;
@@ -393,7 +394,7 @@ begin
     parameters);
 
   sgr := TSignerUtilities.GetSigner('SHA1withECNR');
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   DoCheckSignature(239, priKey, pubKey, sgr, k, &message, r, s);
 end;
@@ -459,7 +460,7 @@ begin
     parameters);
 
   sgr := TSignerUtilities.GetSigner('SHA512withECNR');
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   DoCheckSignature(521, priKey, pubKey, sgr, k, &message, r, s);
 end;

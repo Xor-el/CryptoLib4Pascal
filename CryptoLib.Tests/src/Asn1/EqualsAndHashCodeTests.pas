@@ -34,6 +34,7 @@ uses
 {$ENDIF FPC}
   ClpHex,
   ClpCryptoLibTypes,
+  ClpConverters,
   ClpIProxiedInterface,
   ClpBerOctetString,
   ClpBerSequence,
@@ -118,7 +119,7 @@ begin
     TDerUtf8String.Create('hello world'),
     TDerVisibleString.Create('hello world'),
     TDerGraphicString.Create(THex.Decode('deadbeef')),
-    TDerVideotexString.Create(TEncoding.ASCII.GetBytes('Hello World')),
+    TDerVideotexString.Create(TConverters.ConvertStringToBytes('Hello World', TEncoding.ASCII)),
 
     TBerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
     as IDerPrintableString),

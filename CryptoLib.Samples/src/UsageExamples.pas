@@ -83,7 +83,8 @@ uses
   ClpArrayUtils,
   ClpHex,
   // ClpSecNamedCurves,
-  ClpCustomNamedCurves;
+  ClpCustomNamedCurves,
+  ClpConverters;
 
 type
   TUsageExamples = class sealed(TObject)
@@ -243,7 +244,8 @@ begin
   // First read the magic text and the salt - if any
   Chopped := System.Copy(CipherText, 0, SALT_MAGIC_LEN);
   if (System.Length(CipherText) >= SALT_MAGIC_LEN) and
-    (TArrayUtils.AreEqual(Chopped, TEncoding.UTF8.GetBytes(SALT_MAGIC))) then
+    (TArrayUtils.AreEqual(Chopped, TConverters.ConvertStringToBytes(SALT_MAGIC,
+    TEncoding.UTF8))) then
   begin
     System.Move(CipherText[SALT_MAGIC_LEN], SaltBytes[0], SALT_SIZE);
     If not EVP_GetKeyIV(PasswordBytes, SaltBytes, KeyBytes, IVBytes) then
@@ -306,8 +308,8 @@ begin
 
   LBufStart := 0;
 
-  System.Move(TEncoding.UTF8.GetBytes(SALT_MAGIC)[0], Buf[LBufStart],
-    SALT_MAGIC_LEN * System.SizeOf(Byte));
+  System.Move(TConverters.ConvertStringToBytes(SALT_MAGIC, TEncoding.UTF8)[0],
+    Buf[LBufStart], SALT_MAGIC_LEN * System.SizeOf(Byte));
   System.Inc(LBufStart, SALT_MAGIC_LEN);
   System.Move(SaltBytes[0], Buf[LBufStart],
     PKCS5_SALT_LEN * System.SizeOf(Byte));
@@ -330,8 +332,8 @@ var
   PlainText, PasswordBytes, CipherText, DecryptedCipherText: TBytes;
 begin
 
-  PlainText := TEncoding.UTF8.GetBytes(inputmessage);
-  PasswordBytes := TEncoding.UTF8.GetBytes(password);
+  PlainText := TConverters.ConvertStringToBytes(inputmessage, TEncoding.UTF8);
+  PasswordBytes := TConverters.ConvertStringToBytes(password, TEncoding.UTF8);
   CipherText := TUsageExamples.AES256CBCPascalCoinEncrypt(PlainText,
     PasswordBytes);
 
@@ -472,8 +474,8 @@ begin
     Writeln('ECIES PascalCoin Existing Payload Compatability Decrypt Was Successful '
       + sLineBreak);
 
-    Writeln('Decrypted Payload Message Is "' + TEncoding.UTF8.GetString
-      (DecryptedCipherText) + '"');
+    Writeln('Decrypted Payload Message Is "' + TConverters.ConvertBytesToString
+      (DecryptedCipherText, TEncoding.UTF8) + '"');
     Exit;
 
   end;
@@ -490,7 +492,7 @@ var
   KeyPair: IAsymmetricCipherKeyPair;
 begin
   KeyPair := GetECKeyPair;
-  PlainText := TEncoding.UTF8.GetBytes(input);
+  PlainText := TConverters.ConvertStringToBytes(input, TEncoding.UTF8);
   CipherText := TUsageExamples.ECIESPascalCoinEncrypt(KeyPair.Public,
     PlainText);
 
@@ -544,7 +546,7 @@ begin
 
   Writeln('Signer Name is: ' + Signer.AlgorithmName + sLineBreak);
 
-  &message := TEncoding.UTF8.GetBytes(TextToSign);
+  &message := TConverters.ConvertStringToBytes(TextToSign, TEncoding.UTF8);
 
   // Sign
   Signer.Init(True, PrivateKey);

@@ -30,7 +30,8 @@ uses
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
-  ClpIDerT61String;
+  ClpIDerT61String,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -113,7 +114,7 @@ end;
 
 function TDerT61String.GetOctets: TCryptoLibByteArray;
 begin
-  result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
+  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
 end;
 
 function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -132,7 +133,7 @@ end;
 
 constructor TDerT61String.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(String(TEncoding.ASCII.GetString(Str)));
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII));
 end;
 
 constructor TDerT61String.Create(const Str: String);

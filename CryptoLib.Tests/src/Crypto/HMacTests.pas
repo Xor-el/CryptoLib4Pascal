@@ -44,6 +44,7 @@ uses
   ClpRosstandartObjectIdentifiers,
   ClpHex,
   ClpArrayUtils,
+  ClpConverters,
   ClpCryptoLibTypes;
 
 type
@@ -165,7 +166,7 @@ procedure TTestHMac.SetUp;
 begin
   inherited;
   FkeyBytes := THex.Decode('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b');
-  Fmessage := TEncoding.ASCII.GetBytes('Hi There');
+  Fmessage := TConverters.ConvertStringToBytes('Hi There', TEncoding.ASCII);
   Foutput1 := THex.Decode('b617318655057264e28bc0b6fb378c8ef146be00');
   FoutputMD5 := THex.Decode('5ccec34ea9656392457fa1ac27f08fbc');
   FoutputMD2 := THex.Decode('dc1923ef5f161d35bef839ca8c807808');

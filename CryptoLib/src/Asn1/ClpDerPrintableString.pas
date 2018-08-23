@@ -31,7 +31,8 @@ uses
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
-  ClpIDerPrintableString;
+  ClpIDerPrintableString,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -149,7 +150,7 @@ end;
 
 function TDerPrintableString.GetOctets: TCryptoLibByteArray;
 begin
-  result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
+  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
 end;
 
 class function TDerPrintableString.IsPrintableString(const Str: String)
@@ -203,7 +204,7 @@ end;
 
 constructor TDerPrintableString.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(String(TEncoding.ASCII.GetString(Str)), false);
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII), false);
 end;
 
 constructor TDerPrintableString.Create(const Str: String);

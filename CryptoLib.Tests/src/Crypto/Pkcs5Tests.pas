@@ -37,6 +37,7 @@ uses
   ClpDigestUtilities,
   ClpHex,
   ClpArrayUtils,
+  ClpConverters,
   ClpCryptoLibTypes;
 
 type
@@ -100,7 +101,8 @@ begin
   SaltBytes := THex.Decode('1234567878563412');
 
   PasswordString := 'password';
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
   generator := TPkcs5S2ParametersGenerator.Create
     (TDigestUtilities.GetDigest('SHA-1'));
 
@@ -114,7 +116,8 @@ begin
 
   PasswordString :=
     'All n-entities must communicate with other n-entities via n-1 entiteeheehees';
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   generator.Init(PasswordBytes, SaltBytes, 500);
 
@@ -140,10 +143,11 @@ begin
     (TDigestUtilities.GetDigest('SHA-1'));
 
   PasswordString := 'password';
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   SaltString := 'salt';
-  SaltBytes := TEncoding.UTF8.GetBytes(UnicodeString(SaltString));
+  SaltBytes := TConverters.ConvertStringToBytes(SaltString, TEncoding.UTF8);
 
   // 1
 
@@ -218,10 +222,11 @@ begin
   // 5
 
   PasswordString := 'passwordPASSWORDpassword';
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   SaltString := 'saltSALTsaltSALTsaltSALTsaltSALTsalt';
-  SaltBytes := TEncoding.UTF8.GetBytes(UnicodeString(SaltString));
+  SaltBytes := TConverters.ConvertStringToBytes(SaltString, TEncoding.UTF8);
 
   iteration_count := 4096;
 
@@ -243,10 +248,11 @@ begin
 
   PasswordString := 'pass' + Char(0) + 'word';
   // Char(0) represents #0 (null char)
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   SaltString := 'sa' + Char(0) + 'lt'; // Char(0) represents #0 (null char)
-  SaltBytes := TEncoding.UTF8.GetBytes(UnicodeString(SaltString));
+  SaltBytes := TConverters.ConvertStringToBytes(SaltString, TEncoding.UTF8);
 
   iteration_count := 4096;
 
@@ -279,10 +285,11 @@ begin
     (TDigestUtilities.GetDigest('SHA-256'));
 
   PasswordString := 'password';
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   SaltString := 'salt';
-  SaltBytes := TEncoding.UTF8.GetBytes(UnicodeString(SaltString));
+  SaltBytes := TConverters.ConvertStringToBytes(SaltString, TEncoding.UTF8);
 
   // 1
 
@@ -361,10 +368,11 @@ begin
   // 5
 
   PasswordString := 'passwordPASSWORDpassword';
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   SaltString := 'saltSALTsaltSALTsaltSALTsaltSALTsalt';
-  SaltBytes := TEncoding.UTF8.GetBytes(UnicodeString(SaltString));
+  SaltBytes := TConverters.ConvertStringToBytes(SaltString, TEncoding.UTF8);
 
   iteration_count := 4096;
 
@@ -388,10 +396,11 @@ begin
 
   PasswordString := 'pass' + Char(0) + 'word';
   // Char(0) represents #0 (null char)
-  PasswordBytes := TEncoding.UTF8.GetBytes(UnicodeString(PasswordString));
+  PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
+    TEncoding.UTF8);
 
   SaltString := 'sa' + Char(0) + 'lt'; // Char(0) represents #0 (null char)
-  SaltBytes := TEncoding.UTF8.GetBytes(UnicodeString(SaltString));
+  SaltBytes := TConverters.ConvertStringToBytes(SaltString, TEncoding.UTF8);
 
   iteration_count := 4096;
 

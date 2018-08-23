@@ -56,7 +56,8 @@ uses
   ClpAsn1Object,
   ClpISigner,
   ClpIAsn1Sequence,
-  ClpIDerInteger;
+  ClpIDerInteger,
+  ClpConverters;
 
 type
 
@@ -217,7 +218,7 @@ begin
   sgr.Init(true, TParametersWithRandom.Create(sKey, k)
     as IParametersWithRandom);
 
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   sgr.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -310,7 +311,7 @@ begin
   sgr.Init(true, TParametersWithRandom.Create(sKey, k)
     as IParametersWithRandom);
 
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   sgr.BlockUpdate(&message, 0, System.Length(&message));
 

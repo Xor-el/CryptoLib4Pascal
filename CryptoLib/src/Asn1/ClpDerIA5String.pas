@@ -31,7 +31,8 @@ uses
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
-  ClpIDerIA5String;
+  ClpIDerIA5String,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -140,7 +141,7 @@ end;
 
 function TDerIA5String.GetOctets: TCryptoLibByteArray;
 begin
-  result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
+  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
 end;
 
 class function TDerIA5String.IsIA5String(const Str: String): Boolean;
@@ -180,7 +181,7 @@ end;
 
 constructor TDerIA5String.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(String(TEncoding.ASCII.GetString(Str)), false);
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII), false);
 end;
 
 constructor TDerIA5String.Create(const Str: String);

@@ -31,7 +31,8 @@ uses
   ClpIProxiedInterface,
   ClpIDerVideotexString,
   ClpIAsn1TaggedObject,
-  ClpDerStringBase;
+  ClpDerStringBase,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -193,7 +194,7 @@ end;
 
 function TDerVideotexString.GetString: String;
 begin
-  result := String(TEncoding.ASCII.GetString(mString));
+  result := TConverters.ConvertBytesToString(mString, TEncoding.ASCII)
 end;
 
 end.

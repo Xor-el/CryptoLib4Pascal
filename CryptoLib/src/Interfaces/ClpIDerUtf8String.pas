@@ -34,8 +34,6 @@ type
 
     property Str: String read GetStr;
 
-    function GetOctets(): TCryptoLibByteArray;
-
   end;
 
 implementation
