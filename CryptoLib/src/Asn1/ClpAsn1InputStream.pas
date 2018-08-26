@@ -353,7 +353,7 @@ end;
 destructor TAsn1InputStream.Destroy;
 begin
   FStream.Free;
-  inherited Destroy; // dont free
+  inherited Destroy;
 end;
 
 constructor TAsn1InputStream.Create(const inputStream: TStream; limit: Int32);
@@ -659,6 +659,7 @@ begin
         end;
     else
       begin
+        defIn.Free; // free the stream incase an unsupported tag is encountered.
         raise EIOCryptoLibException.CreateResFmt(@SUnknownTag, [tagNo]);
       end;
 

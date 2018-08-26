@@ -114,7 +114,7 @@ end;
 
 function TDerT61String.GetOctets: TCryptoLibByteArray;
 begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
+  result := TConverters.ConvertStringToBytes(Str, TEncoding.ANSI);
 end;
 
 function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -133,7 +133,7 @@ end;
 
 constructor TDerT61String.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII));
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.ANSI));
 end;
 
 constructor TDerT61String.Create(const Str: String);

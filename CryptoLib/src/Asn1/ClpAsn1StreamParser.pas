@@ -375,6 +375,7 @@ begin
         end;
     else
       begin
+        defIn.Free; // free the stream incase an unsupported tag is encountered.
         raise EIOCryptoLibException.CreateResFmt(@SUnknownTag, [tagNo]);
       end;
 

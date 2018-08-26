@@ -194,7 +194,7 @@ end;
 
 function TDerVideotexString.GetString: String;
 begin
-  result := TConverters.ConvertBytesToString(mString, TEncoding.ASCII)
+  result := TConverters.ConvertBytesToString(mString, TEncoding.ANSI)
 end;
 
 end.

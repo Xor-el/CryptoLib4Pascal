@@ -119,7 +119,8 @@ begin
     TDerUtf8String.Create('hello world'),
     TDerVisibleString.Create('hello world'),
     TDerGraphicString.Create(THex.Decode('deadbeef')),
-    TDerVideotexString.Create(TConverters.ConvertStringToBytes('Hello World', TEncoding.ASCII)),
+    TDerVideotexString.Create(TConverters.ConvertStringToBytes('Hello World',
+    TEncoding.ANSI)),
 
     TBerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
     as IDerPrintableString),

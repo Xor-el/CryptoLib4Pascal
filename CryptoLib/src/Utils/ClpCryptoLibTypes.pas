@@ -32,6 +32,7 @@ type
   PUInt64 = ^UInt64;
 {$ENDIF FPC}
   ECryptoLibException = class(Exception);
+  EInvalidCastCryptoLibException = class(EInvalidCast);
   EArithmeticCryptoLibException = class(ECryptoLibException);
   EInvalidOperationCryptoLibException = class(ECryptoLibException);
   EInvalidParameterCryptoLibException = class(ECryptoLibException);
@@ -45,7 +46,7 @@ type
   EFormatCryptoLibException = class(ECryptoLibException);
   ENotImplementedCryptoLibException = class(ECryptoLibException);
   ENotSupportedCryptoLibException = class(ECryptoLibException);
-  EEndOfStreamCryptoLibException = class(ECryptoLibException);
+  EEndOfStreamCryptoLibException = class(EIOCryptoLibException);
   EStreamOverflowCryptoLibException = class(ECryptoLibException);
   EAsn1CryptoLibException = class(ECryptoLibException);
   EAsn1ParsingCryptoLibException = class(ECryptoLibException);

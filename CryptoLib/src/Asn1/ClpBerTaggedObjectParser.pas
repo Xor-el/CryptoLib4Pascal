@@ -49,6 +49,8 @@ type
     constructor Create(constructed: Boolean; tagNumber: Int32;
       const parser: IAsn1StreamParser);
 
+    destructor Destroy; override;
+
     function GetObjectParser(tag: Int32; isExplicit: Boolean)
       : IAsn1Convertible; inline;
 
@@ -69,6 +71,12 @@ begin
   F_constructed := constructed;
   F_tagNumber := tagNumber;
   F_parser := parser;
+end;
+
+destructor TBerTaggedObjectParser.Destroy;
+begin
+  F_parser := Nil;
+  inherited Destroy;
 end;
 
 function TBerTaggedObjectParser.GetIsConstructed: Boolean;
