@@ -84,6 +84,7 @@ uses
   ClpSecureRandom,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,
+  ClpConverters,
   ClpCryptoLibTypes;
 
 type
@@ -205,7 +206,8 @@ begin
 
   if (not TArrayUtils.AreEqual(sigBytes, sig)) then
   begin
-    Fail(String(TEncoding.UTF8.GetString(&message)) + ' signature incorrect');
+    Fail(TConverters.ConvertBytesToString(&message, TEncoding.UTF8) +
+      ' signature incorrect');
   end;
 
   sgr.Init(false, vKey);
@@ -214,7 +216,8 @@ begin
 
   if (not(sgr.VerifySignature(sigBytes))) then
   begin
-    Fail(String(TEncoding.UTF8.GetString(&message)) + ' verification failed');
+    Fail(TConverters.ConvertBytesToString(&message, TEncoding.UTF8) +
+      ' verification failed');
   end;
 end;
 
@@ -970,7 +973,7 @@ begin
   sgr.Init(true, TParametersWithRandom.Create(sKey, k)
     as IParametersWithRandom);
 
-  &message := TEncoding.ASCII.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.ASCII);
 
   sgr.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -1429,16 +1432,13 @@ begin
 
   sgr := TSignerUtilities.GetSigner('ECDSA');
 
-  // KeyFactory f = KeyFactory.GetInstance('ECDSA');
-  // PrivateKey sKey = f.generatePrivate(priKey);
-  // PublicKey vKey = f.generatePublic(pubKey);
   sKey := priKey;
   vKey := pubKey;
 
   sgr.Init(true, TParametersWithRandom.Create(sKey, k)
     as IParametersWithRandom);
 
-  &message := TEncoding.ASCII.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.ASCII);
 
   sgr.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -1691,7 +1691,7 @@ begin
   sgr.Init(true, TParametersWithRandom.Create(sKey, k)
     as IParametersWithRandom);
 
-  &message := TEncoding.ASCII.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.ASCII);
 
   sgr.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -1853,20 +1853,22 @@ begin
 
   sgr := TSignerUtilities.GetSigner('NONEwithECDSA');
 
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
   sig := THex.Decode
     ('3040021e2cb7f36803ebb9c427c58d8265f11fc5084747133078fc279de874fbecb0021e64cb19604be06c57e761b3de5518f71de0f6e0cd2df677cec8a6ffcb690d');
 
   DoCheckMessage(sgr, priKey, pubKey, &message, sig);
 
-  &message := TEncoding.UTF8.GetBytes('abcdefghijklmnopqrstuvwxyz');
+  &message := TConverters.ConvertStringToBytes('abcdefghijklmnopqrstuvwxyz',
+    TEncoding.UTF8);
   sig := THex.Decode
     ('3040021e2cb7f36803ebb9c427c58d8265f11fc5084747133078fc279de874fbecb0021e43fd65b3363d76aabef8630572257dbb67c82818ad9fad31256539b1b02c');
 
   DoCheckMessage(sgr, priKey, pubKey, &message, sig);
 
-  &message := TEncoding.UTF8.GetBytes
-    ('a very very long message gauranteed to cause an overflow');
+  &message := TConverters.ConvertStringToBytes
+    ('a very very long message gauranteed to cause an overflow',
+    TEncoding.UTF8);
   sig := THex.Decode
     ('3040021e2cb7f36803ebb9c427c58d8265f11fc5084747133078fc279de874fbecb0021e7d5be84b22937a1691859a3c6fe45ed30b108574431d01b34025825ec17a');
 

@@ -73,6 +73,7 @@ uses
   ClpHex,
   ClpDigestUtilities,
   ClpMacUtilities,
+  ClpConverters,
   ClpArrayUtils;
 
 type
@@ -116,7 +117,7 @@ var
   PlainTextBytes, CipherTextBytes, DecryptionResultBytes: TBytes;
   CipherEncrypt, CipherDecrypt: IIESCipher;
 begin
-  PlainTextBytes := TEncoding.UTF8.GetBytes(UnicodeString(PlainText));
+  PlainTextBytes := TConverters.ConvertStringToBytes(PlainText, TEncoding.UTF8);
   // Encryption
   CipherEncrypt := TIESCipher.Create(GetECIESAES256CBCEngine);
   CipherEncrypt.Init(True, KeyPair.Public as IECPublicKeyParameters,

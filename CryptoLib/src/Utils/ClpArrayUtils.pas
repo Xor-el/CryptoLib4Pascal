@@ -37,13 +37,13 @@ type
 
   public
 
-    class function AddStringArray(const A, B: TCryptoLibStringArray)
-      : TCryptoLibStringArray; static;
+    class function Concatenate(const A, B: TCryptoLibStringArray)
+      : TCryptoLibStringArray; overload; static;
 
-    class function AddByteArray(const A, B: TCryptoLibByteArray)
+    class function Concatenate(const A, B: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload; static; inline;
 
-    class function AddByteArray(const A: TCryptoLibByteArray;
+    class function Concatenate(const A: TCryptoLibByteArray;
       const Others: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
       overload; static;
 
@@ -99,7 +99,7 @@ begin
   Result := newLength;
 end;
 
-class function TArrayUtils.AddByteArray(const A, B: TCryptoLibByteArray)
+class function TArrayUtils.Concatenate(const A, B: TCryptoLibByteArray)
   : TCryptoLibByteArray;
 var
   l: Int32;
@@ -110,7 +110,7 @@ begin
   System.Move(B[0], Result[l], System.Length(B) * System.SizeOf(Byte));
 end;
 
-class function TArrayUtils.AddByteArray(const A: TCryptoLibByteArray;
+class function TArrayUtils.Concatenate(const A: TCryptoLibByteArray;
   const Others: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
 var
   len, Idx, Pos: Int32;
@@ -134,7 +134,7 @@ begin
   end;
 end;
 
-class function TArrayUtils.AddStringArray(const A, B: TCryptoLibStringArray)
+class function TArrayUtils.Concatenate(const A, B: TCryptoLibStringArray)
   : TCryptoLibStringArray;
 var
   i, l: Int32;

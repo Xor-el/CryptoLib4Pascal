@@ -31,7 +31,8 @@ uses
   ClpIProxiedInterface,
   ClpIDerGraphicString,
   ClpIAsn1TaggedObject,
-  ClpDerStringBase;
+  ClpDerStringBase,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -193,7 +194,7 @@ end;
 
 function TDerGraphicString.GetString: String;
 begin
-  result := String(TEncoding.ASCII.GetString(mString));
+  result := TConverters.ConvertBytesToString(mString, TEncoding.ANSI);
 end;
 
 end.

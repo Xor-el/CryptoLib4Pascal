@@ -584,7 +584,7 @@ begin
   // Create input to KDF.
   if (System.Length(FV) <> 0) then
   begin
-    VZ := TArrayUtils.AddByteArray(FV, BigZ);
+    VZ := TArrayUtils.Concatenate(FV, BigZ);
     System.FillChar(BigZ[0], System.Length(BigZ) * System.SizeOf(Byte),
       Byte(0));
     BigZ := VZ;

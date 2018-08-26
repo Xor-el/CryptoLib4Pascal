@@ -15,27 +15,82 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDerUtf8String;
-
-{$I ..\Include\CryptoLib.inc}
+unit ParseTests;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
-  ClpCryptoLibTypes,
-  ClpIDerStringBase;
+  SysUtils,
+{$IFDEF FPC}
+  fpcunit,
+  testregistry,
+{$ELSE}
+  TestFramework,
+{$ENDIF FPC}
+  ClpAsn1StreamParser,
+  ClpIAsn1StreamParser,
+  ClpIAsn1TaggedObjectParser,
+  ClpHex;
 
 type
-  IDerUtf8String = interface(IDerStringBase)
 
-    ['{C4ACD432-807D-4A27-B3FC-0694000EB995}']
+  TCryptoLibTestCase = class abstract(TTestCase)
 
-    function GetStr: String;
+  end;
 
-    property Str: String read GetStr;
+type
+  TTestParse = class(TCryptoLibTestCase)
+  var
+  private
+    FlongTagged: TBytes;
+
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure TestParse;
 
   end;
 
 implementation
+
+{ TTestParse }
+
+procedure TTestParse.SetUp;
+begin
+  inherited;
+  FlongTagged := THex.Decode('9f1f023330');
+end;
+
+procedure TTestParse.TearDown;
+begin
+  inherited;
+
+end;
+
+procedure TTestParse.TestParse;
+var
+  aIn: IAsn1StreamParser;
+  tagged: IAsn1TaggedObjectParser;
+begin
+  aIn := TAsn1StreamParser.Create(FlongTagged);
+  tagged := aIn.ReadObject() as IAsn1TaggedObjectParser;
+
+  CheckEquals(31, tagged.TagNo);
+end;
+
+initialization
+
+// Register any test cases with the test runner
+
+{$IFDEF FPC}
+  RegisterTest(TTestParse);
+{$ELSE}
+  RegisterTest(TTestParse.Suite);
+{$ENDIF FPC}
 
 end.

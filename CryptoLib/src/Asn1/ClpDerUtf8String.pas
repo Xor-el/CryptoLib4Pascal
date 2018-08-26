@@ -30,7 +30,8 @@ uses
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
-  ClpIDerUtf8String;
+  ClpIDerUtf8String,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -65,8 +66,6 @@ type
     constructor Create(const Str: String); overload;
 
     function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
 
     procedure Encode(const derOut: IDerOutputStream); override;
 
@@ -111,11 +110,6 @@ begin
   result := FStr;
 end;
 
-function TDerUtf8String.GetOctets: TCryptoLibByteArray;
-begin
-  result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
-end;
-
 function TDerUtf8String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
   other: IDerUtf8String;
@@ -132,7 +126,7 @@ end;
 
 constructor TDerUtf8String.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(String(TEncoding.UTF8.GetString(Str)));
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.UTF8));
 end;
 
 constructor TDerUtf8String.Create(const Str: String);
@@ -149,7 +143,7 @@ end;
 procedure TDerUtf8String.Encode(const derOut: IDerOutputStream);
 begin
   derOut.WriteEncoded(TAsn1Tags.Utf8String,
-    TEncoding.UTF8.GetBytes(UnicodeString(Str)));
+    TConverters.ConvertStringToBytes(Str, TEncoding.UTF8));
 end;
 
 class function TDerUtf8String.GetInstance(const obj: TObject): IDerUtf8String;

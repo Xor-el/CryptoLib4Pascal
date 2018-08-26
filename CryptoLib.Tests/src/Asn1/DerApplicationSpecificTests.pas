@@ -60,12 +60,11 @@ type
   var
     FimpData, FcertData, FsampleData: TCryptoLibByteArray;
 
-    procedure TestTaggedObject();
-
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    procedure TestTaggedObject();
     procedure TestDerApplicationSpecific;
 
   end;
@@ -110,7 +109,6 @@ var
   appSpec, tagged, certObj: IDerApplicationSpecific;
   recVal, val: IDerInteger;
 begin
-  TestTaggedObject();
 
   appSpec := TAsn1Object.FromByteArray(FsampleData) as IDerApplicationSpecific;
 

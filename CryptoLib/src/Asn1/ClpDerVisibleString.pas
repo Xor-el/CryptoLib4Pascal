@@ -31,7 +31,8 @@ uses
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
-  ClpIDerVisibleString;
+  ClpIDerVisibleString,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -115,7 +116,7 @@ end;
 
 function TDerVisibleString.GetOctets: TCryptoLibByteArray;
 begin
-  result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
+  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
 end;
 
 function TDerVisibleString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -139,7 +140,7 @@ end;
 
 constructor TDerVisibleString.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(String(TEncoding.ASCII.GetString(Str)));
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII));
 end;
 
 constructor TDerVisibleString.Create(const Str: String);

@@ -114,7 +114,10 @@ begin
       input.Free;
     end;
   except
-    raise EIOCryptoLibException.CreateRes(@SUnRecognizedObjectByteArray);
+    on e: EInvalidCastCryptoLibException do
+    begin
+      raise EIOCryptoLibException.CreateRes(@SUnRecognizedObjectByteArray);
+    end;
   end;
 end;
 
@@ -127,7 +130,10 @@ begin
     try
       result := asn1Stream.ReadObject();
     except
-      raise EIOCryptoLibException.CreateRes(@SUnRecognizedObjectStream);
+      on e: EInvalidCastCryptoLibException do
+      begin
+        raise EIOCryptoLibException.CreateRes(@SUnRecognizedObjectStream);
+      end;
     end;
   finally
     asn1Stream.Free;

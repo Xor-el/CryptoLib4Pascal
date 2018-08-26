@@ -30,7 +30,8 @@ uses
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
-  ClpIDerNumericString;
+  ClpIDerNumericString,
+  ClpConverters;
 
 resourcestring
   SIllegalObject = 'Illegal Object in GetInstance: %s';
@@ -142,7 +143,7 @@ end;
 
 function TDerNumericString.GetOctets: TCryptoLibByteArray;
 begin
-  result := TEncoding.ASCII.GetBytes(UnicodeString(Str));
+  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
 end;
 
 class function TDerNumericString.IsNumericString(const Str: String): Boolean;
@@ -179,7 +180,7 @@ end;
 
 constructor TDerNumericString.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(String(TEncoding.ASCII.GetString(Str)), false);
+  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII), false);
 end;
 
 constructor TDerNumericString.Create(const Str: String);

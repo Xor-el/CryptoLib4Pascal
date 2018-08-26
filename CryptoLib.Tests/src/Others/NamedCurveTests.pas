@@ -48,6 +48,7 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpIECKeyGenerationParameters,
+  ClpConverters,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -101,7 +102,7 @@ begin
 
   sgr.Init(true, sKey);
 
-  &message := TEncoding.UTF8.GetBytes('abc');
+  &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   sgr.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -152,7 +153,7 @@ end;
 //
 // sgr.Init(true, sKey);
 //
-// &message := TEncoding.UTF8.GetBytes('abc');
+// &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 //
 // sgr.BlockUpdate(&message, 0, System.Length(&message));
 //

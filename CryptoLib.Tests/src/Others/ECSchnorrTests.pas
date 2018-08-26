@@ -54,7 +54,8 @@ uses
   ClpSecNamedCurves,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpSignerUtilities;
+  ClpSignerUtilities,
+  ClpConverters;
 
 type
 
@@ -134,7 +135,8 @@ begin
 
   signer.Init(true, privParams);
 
-  &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
+  &message := TConverters.ConvertStringToBytes('PascalECSCHNORR',
+    TEncoding.UTF8);
 
   signer.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -182,7 +184,8 @@ begin
 
   signer.Init(true, privParams);
 
-  &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
+  &message := TConverters.ConvertStringToBytes('PascalECSCHNORR',
+    TEncoding.UTF8);
 
   signer.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -230,7 +233,8 @@ begin
 
   signer.Init(true, privParams);
 
-  &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
+  &message := TConverters.ConvertStringToBytes('PascalECSCHNORR',
+    TEncoding.UTF8);
 
   signer.BlockUpdate(&message, 0, System.Length(&message));
 
@@ -278,7 +282,8 @@ begin
 
   signer.Init(true, privParams);
 
-  &message := TEncoding.UTF8.GetBytes('PascalECSCHNORR');
+  &message := TConverters.ConvertStringToBytes('PascalECSCHNORR',
+    TEncoding.UTF8);
 
   signer.BlockUpdate(&message, 0, System.Length(&message));
 
