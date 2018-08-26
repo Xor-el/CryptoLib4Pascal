@@ -34,6 +34,7 @@ type
     IEphemeralKeyPairGenerator)
 
   strict private
+  var
     Fgen: IAsymmetricCipherKeyPairGenerator;
     FkeyEncoder: IKeyEncoder;
 
