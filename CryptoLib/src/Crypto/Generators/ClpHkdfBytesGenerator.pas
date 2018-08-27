@@ -101,8 +101,8 @@ type
 
     procedure Init(const parameters: IDerivationParameters); virtual;
 
-    function GenerateBytes(output: TCryptoLibByteArray; outOff, len: Int32)
-      : Int32; virtual;
+    function GenerateBytes(const output: TCryptoLibByteArray;
+      outOff, len: Int32): Int32; virtual;
 
     property Digest: IDigest read GetDigest;
 
@@ -161,7 +161,7 @@ begin
   result := TKeyParameter.Create(prk);
 end;
 
-function THkdfBytesGenerator.GenerateBytes(output: TCryptoLibByteArray;
+function THkdfBytesGenerator.GenerateBytes(const output: TCryptoLibByteArray;
   outOff, len: Int32): Int32;
 var
   toGenerate, posInT, leftInT, toCopy: Int32;

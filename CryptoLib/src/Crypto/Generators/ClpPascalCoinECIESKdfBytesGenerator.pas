@@ -76,8 +76,8 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the out buffer is too small.
     /// </exception>
-    function GenerateBytes(output: TCryptoLibByteArray; outOff, length: Int32)
-      : Int32; override;
+    function GenerateBytes(const output: TCryptoLibByteArray;
+      outOff, length: Int32): Int32; override;
 
   end;
 
@@ -91,7 +91,7 @@ begin
 end;
 
 function TPascalCoinECIESKdfBytesGenerator.GenerateBytes
-  (output: TCryptoLibByteArray; outOff, length: Int32): Int32;
+  (const output: TCryptoLibByteArray; outOff, length: Int32): Int32;
 var
   outLen: Int32;
   oBytes: Int64;

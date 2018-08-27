@@ -56,6 +56,7 @@ type
     Fdigest: IDigest;
     FcounterStart: Int32;
     Fshared, Fiv: TCryptoLibByteArray;
+
     function GetDigest(): IDigest; virtual;
 
   public
@@ -88,8 +89,8 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the out buffer is too small.
     /// </exception>
-    function GenerateBytes(output: TCryptoLibByteArray; outOff, length: Int32)
-      : Int32; virtual;
+    function GenerateBytes(const output: TCryptoLibByteArray;
+      outOff, length: Int32): Int32; virtual;
 
   end;
 
@@ -105,7 +106,7 @@ begin
   Fdigest := digest;
 end;
 
-function TBaseKdfBytesGenerator.GenerateBytes(output: TCryptoLibByteArray;
+function TBaseKdfBytesGenerator.GenerateBytes(const output: TCryptoLibByteArray;
   outOff, length: Int32): Int32;
 var
   outLen, cThreshold, i: Int32;

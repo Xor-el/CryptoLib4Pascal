@@ -45,7 +45,7 @@ type
 
     /// <exception cref="EDataLengthCryptoLibException" />
     /// <exception cref="EArgumentCryptoLibException" />
-    function GenerateBytes(output: TCryptoLibByteArray;
+    function GenerateBytes(const output: TCryptoLibByteArray;
       outOff, length: Int32): Int32;
 
   end;
