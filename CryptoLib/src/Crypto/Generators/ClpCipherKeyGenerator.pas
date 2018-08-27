@@ -43,12 +43,14 @@ type
   TCipherKeyGenerator = class(TInterfacedObject, ICipherKeyGenerator)
 
   strict private
+  var
     Funinitialised: Boolean;
     FdefaultStrength: Int32;
 
     function GetdefaultStrength: Int32; inline;
 
   strict protected
+  var
     Frandom: ISecureRandom;
     Fstrength: Int32;
 
