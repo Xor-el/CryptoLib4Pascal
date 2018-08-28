@@ -296,9 +296,7 @@ procedure TTestECAlgorithms.TestSumOfMultiplies;
 var
   x9: IX9ECParameters;
 begin
-  // x9 := TCustomNamedCurves.GetByName('secp256r1'); // original
-  // x9 := TECNamedCurveTable.GetByName('secp256k1');
-  x9 := TCustomNamedCurves.GetByName('secp256k1');
+  x9 := TCustomNamedCurves.GetByName('secp256r1');
   CheckNotNull(x9);
   DoTestSumOfMultiplies(x9);
 end;
@@ -317,9 +315,7 @@ procedure TTestECAlgorithms.TestSumOfTwoMultiplies;
 var
   x9: IX9ECParameters;
 begin
-  // x9 := TCustomNamedCurves.GetByName('secp256r1');  // original
-  // x9 := TECNamedCurveTable.GetByName('secp256k1');
-  x9 := TCustomNamedCurves.GetByName('secp256k1');
+  x9 := TCustomNamedCurves.GetByName('secp256r1');
   CheckNotNull(x9);
   DoTestSumOfTwoMultiplies(x9);
 end;
