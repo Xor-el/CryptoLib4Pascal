@@ -231,10 +231,10 @@ type
     class function ModPowBarrett(const b, e, m: TBigInteger)
       : TBigInteger; static;
 
-    class function ReduceBarrett(x: TBigInteger; const m, mr, yu: TBigInteger)
-      : TBigInteger; static;
+    class function ReduceBarrett(const x: TBigInteger;
+      const m, mr, yu: TBigInteger): TBigInteger; static;
 
-    class function ModPowMonty(b: TBigInteger; const e, m: TBigInteger;
+    class function ModPowMonty(const b: TBigInteger; const e, m: TBigInteger;
       convert: Boolean): TBigInteger; static;
 
     class function GetWindowList(const mag: TCryptoLibInt32Array;
@@ -311,8 +311,8 @@ type
     class procedure AppendZeroExtendedString(var sl: TStringList;
       const s: String; minLength: Int32); static; inline;
 
-    class procedure ToString(sl: TStringList; radix: Int32;
-      moduli: TList<TBigInteger>; scale: Int32; const pos: TBigInteger);
+    class procedure ToString(var sl: TStringList; radix: Int32;
+      var moduli: TList<TBigInteger>; scale: Int32; const pos: TBigInteger);
       overload; static;
 
     class function CreateUValueOf(value: UInt64): TBigInteger; static;
@@ -393,7 +393,7 @@ type
     function Min(const value: TBigInteger): TBigInteger;
     function &Mod(const m: TBigInteger): TBigInteger;
     function ModInverse(const m: TBigInteger): TBigInteger;
-    function ModPow(e: TBigInteger; const m: TBigInteger): TBigInteger;
+    function ModPow(const e, m: TBigInteger): TBigInteger;
 
     function Multiply(const val: TBigInteger): TBigInteger; overload;
     function Square(): TBigInteger; overload;
@@ -1344,8 +1344,8 @@ begin
   sl.Add(s);
 end;
 
-class procedure TBigInteger.ToString(sl: TStringList; radix: Int32;
-  moduli: TList<TBigInteger>; scale: Int32; const pos: TBigInteger);
+class procedure TBigInteger.ToString(var sl: TStringList; radix: Int32;
+  var moduli: TList<TBigInteger>; scale: Int32; const pos: TBigInteger);
 var
   s: String;
   qr: TCryptoLibGenericArray<TBigInteger>;
@@ -2467,10 +2467,12 @@ begin
   Result := x;
 end;
 
-function TBigInteger.ModPow(e: TBigInteger; const m: TBigInteger): TBigInteger;
+function TBigInteger.ModPow(const e, m: TBigInteger): TBigInteger;
 var
   negExp: Boolean;
+  le: TBigInteger;
 begin
+  le := e;
   if (m.Fsign < 1) then
   begin
     raise EArithmeticCryptoLibException.CreateRes(@SModulusPositive);
@@ -2482,7 +2484,7 @@ begin
     Exit;
   end;
 
-  if (e.Fsign = 0) then
+  if (le.Fsign = 0) then
   begin
     Result := One;
     Exit;
@@ -2494,23 +2496,23 @@ begin
     Exit;
   end;
 
-  negExp := e.Fsign < 0;
+  negExp := le.Fsign < 0;
   if (negExp) then
   begin
-    e := e.Negate();
+    le := le.Negate();
   end;
 
   Result := &Mod(m);
 
-  if (not e.Equals(One)) then
+  if (not le.Equals(One)) then
   begin
     if ((m.Fmagnitude[System.length(m.Fmagnitude) - 1] and 1) = 0) then
     begin
-      Result := ModPowBarrett(Result, e, m);
+      Result := ModPowBarrett(Result, le, m);
     end
     else
     begin
-      Result := ModPowMonty(Result, e, m, True);
+      Result := ModPowMonty(Result, le, m, True);
 
     end;
   end;
@@ -2608,8 +2610,8 @@ begin
   Result := y;
 end;
 
-class function TBigInteger.ModPowMonty(b: TBigInteger; const e, m: TBigInteger;
-  convert: Boolean): TBigInteger;
+class function TBigInteger.ModPowMonty(const b: TBigInteger;
+  const e, m: TBigInteger; convert: Boolean): TBigInteger;
 var
   n, powR, extraBits, expLength, numPowers, i, window, mult, lastZeroes,
     windowPos, bits, j: Int32;
@@ -2617,7 +2619,9 @@ var
   mDash: UInt32;
   yAccum, zVal, tmp, zSquared, windowList, yVal: TCryptoLibInt32Array;
   oddPowers: TCryptoLibMatrixInt32Array;
+  Lb: TBigInteger;
 begin
+  Lb := b;
   n := System.length(m.Fmagnitude);
   powR := 32 * n;
   smallMontyModulus := (m.BitLength + 2) <= powR;
@@ -2626,12 +2630,12 @@ begin
   // tmp = this * R mod m
   if (convert) then
   begin
-    b := b.ShiftLeft(powR).Remainder(m);
+    Lb := Lb.ShiftLeft(powR).Remainder(m);
   end;
 
   System.SetLength(yAccum, n + 1);
 
-  zVal := b.Fmagnitude;
+  zVal := Lb.Fmagnitude;
 {$IFDEF DEBUG}
   System.Assert(System.length(zVal) <= n);
 {$ENDIF DEBUG}
@@ -3659,17 +3663,18 @@ begin
   Result := RabinMillerTest(certainty, random, false);
 end;
 
-class function TBigInteger.ReduceBarrett(x: TBigInteger;
+class function TBigInteger.ReduceBarrett(const x: TBigInteger;
   const m, mr, yu: TBigInteger): TBigInteger;
 var
   xLen, mLen, k: Int32;
-  q1, q2, q3, r1, r2, r3: TBigInteger;
+  q1, q2, q3, r1, r2, r3, lx: TBigInteger;
 begin
-  xLen := x.BitLength;
+  lx := x;
+  xLen := lx.BitLength;
   mLen := m.BitLength;
   if (xLen < mLen) then
   begin
-    Result := x;
+    Result := lx;
     Exit;
   end;
 
@@ -3677,27 +3682,27 @@ begin
   begin
     k := System.length(m.Fmagnitude);
 
-    q1 := x.DivideWords(k - 1);
+    q1 := lx.DivideWords(k - 1);
     q2 := q1.Multiply(yu); // TODO Only need partial multiplication here
     q3 := q2.DivideWords(k + 1);
 
-    r1 := x.RemainderWords(k + 1);
+    r1 := lx.RemainderWords(k + 1);
     r2 := q3.Multiply(m); // TODO Only need partial multiplication here
     r3 := r2.RemainderWords(k + 1);
 
-    x := r1.Subtract(r3);
-    if (x.Fsign < 0) then
+    lx := r1.Subtract(r3);
+    if (lx.Fsign < 0) then
     begin
-      x := x.Add(mr);
+      lx := lx.Add(mr);
     end;
   end;
 
-  while (x.CompareTo(m) >= 0) do
+  while (lx.CompareTo(m) >= 0) do
   begin
-    x := x.Subtract(m);
+    lx := lx.Subtract(m);
   end;
 
-  Result := x;
+  Result := lx;
 end;
 
 function TBigInteger.Remainder(const x, y: TCryptoLibInt32Array)
