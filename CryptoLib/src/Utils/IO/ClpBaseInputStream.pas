@@ -66,8 +66,8 @@ type
 
     function Write(const Buffer: TCryptoLibByteArray; Offset, Count: LongInt)
       : Int32; overload;
-{$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
-{$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
+{$IFDEF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
+{$ENDIF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD};
 
     function Seek(Offset: LongInt; Origin: Word): LongInt; overload; override;
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
