@@ -151,7 +151,9 @@ begin
   if (maxValue < 2) then
   begin
     if (maxValue < 0) then
+    begin
       raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCannotBeNegative);
+    end;
 
     Result := 0;
     Exit;
