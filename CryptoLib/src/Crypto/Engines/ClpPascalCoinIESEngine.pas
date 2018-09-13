@@ -291,8 +291,8 @@ begin
       bIn := TBytesStream.Create(System.Copy(&in, inOff, inLen));
 
       try
-        bIn.Position := SECURE_HEAD_SIZE;
         // for existing PascalCoin compatiblity purposes
+        bIn.Position := SECURE_HEAD_SIZE;
 
         try
           FpubParam := FkeyParser.ReadKey(bIn);
