@@ -209,7 +209,7 @@ begin
   l1 := GetEnumerable;
   l2 := other.GetEnumerable;
 
-  for Idx := Low(l1) to High(l1) do
+  for Idx := System.Low(l1) to System.High(l1) do
   begin
     o1 := GetCurrent(l1[Idx]).ToAsn1Object();
     o2 := GetCurrent(l2[Idx]).ToAsn1Object();
