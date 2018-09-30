@@ -152,10 +152,6 @@ begin
     Fail('DerT61String.GetString() result incorrect');
   end;
 
-  if (not(t61.ToString() = (t61String))) then
-  begin
-    Fail('DerT61String.ToString() result incorrect');
-  end;
 end;
 
 initialization

@@ -155,6 +155,10 @@ type
       const y: TCryptoLibUInt32Array; yOff: Int32;
       const zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
 
+    class procedure Mul(const x: TCryptoLibUInt32Array; xOff, xLen: Int32;
+      const y: TCryptoLibUInt32Array; yOff, yLen: Int32;
+      const zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
+
     class function Mul31BothAdd(len: Int32; a: UInt32;
       const x: TCryptoLibUInt32Array; b: UInt32;
       const y, z: TCryptoLibUInt32Array; zOff: Int32): UInt32; static;
@@ -1152,12 +1156,12 @@ class procedure TNat.Mul(len: Int32; const x, y, zz: TCryptoLibUInt32Array);
 var
   I: Int32;
 begin
-  zz[len] := UInt32(MulWord(len, x[0], y, zz));
+  zz[len] := MulWord(len, x[0], y, zz);
 
   for I := 1 to System.Pred(len) do
 
   begin
-    zz[I + len] := UInt32(MulWordAddTo(len, x[I], y, 0, zz, I));
+    zz[I + len] := MulWordAddTo(len, x[I], y, 0, zz, I);
   end;
 end;
 
@@ -1167,12 +1171,27 @@ class procedure TNat.Mul(len: Int32; const x: TCryptoLibUInt32Array;
 var
   I: Int32;
 begin
-  zz[zzOff + len] := UInt32(MulWord(len, x[xOff], y, yOff, zz, zzOff));
+  zz[zzOff + len] := MulWord(len, x[xOff], y, yOff, zz, zzOff);
 
   for I := 1 to System.Pred(len) do
   begin
-    zz[zzOff + I + len] := UInt32(MulWordAddTo(len, x[xOff + I], y, yOff, zz,
-      zzOff + I));
+    zz[zzOff + I + len] := MulWordAddTo(len, x[xOff + I], y, yOff, zz,
+      zzOff + I);
+  end;
+end;
+
+class procedure TNat.Mul(const x: TCryptoLibUInt32Array; xOff, xLen: Int32;
+  const y: TCryptoLibUInt32Array; yOff, yLen: Int32;
+  const zz: TCryptoLibUInt32Array; zzOff: Int32);
+var
+  I: Int32;
+begin
+  zz[zzOff + yLen] := MulWord(yLen, x[xOff], y, yOff, zz, zzOff);
+
+  for I := 1 to System.Pred(xLen) do
+  begin
+    zz[zzOff + I + yLen] := MulWordAddTo(yLen, x[xOff + I], y, yOff, zz,
+      zzOff + I);
   end;
 end;
 
