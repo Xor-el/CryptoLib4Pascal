@@ -53,6 +53,9 @@ type
     class function AreEqual(const A, B: TCryptoLibInt32Array): Boolean;
       overload; static;
 
+    class function AreAllZeroes(const buf: TCryptoLibByteArray; off, len: Int32)
+      : Boolean; static;
+
     class function GetArrayHashCode(const data: TCryptoLibByteArray): Int32;
       overload; static;
 
@@ -161,6 +164,20 @@ begin
   end;
 
   Result := CompareMem(A, B, System.Length(A) * System.SizeOf(Byte));
+end;
+
+class function TArrayUtils.AreAllZeroes(const buf: TCryptoLibByteArray;
+  off, len: Int32): Boolean;
+var
+  bits: UInt32;
+  i: Int32;
+begin
+  bits := 0;
+  for i := 0 to System.Pred(len) do
+  begin
+    bits := bits or (buf[off + i]);
+  end;
+  Result := bits = 0;
 end;
 
 class function TArrayUtils.AreEqual(const A, B: TCryptoLibInt32Array): Boolean;

@@ -67,10 +67,16 @@ type
     /// </returns>
     /// <exception cref="EStreamOverflowCryptoLibException" />
     class function PipeAllLimited(const inStr: TStream; limit: Int64;
-      const outStr: TStream): Int64;
+      const outStr: TStream): Int64; static;
 
-    class procedure WriteBufTo(const buf: TMemoryStream;
-      const output: TStream); inline;
+    class procedure WriteBufTo(const buf: TMemoryStream; const output: TStream);
+      overload; static; inline;
+
+    class function WriteBufTo(const buf: TMemoryStream;
+      const output: TCryptoLibByteArray; offset: Int32): Int32; overload;
+      static; inline;
+
+    class procedure WriteZeroes(const outStr: TStream; count: Int64); static;
 
   end;
 
@@ -185,6 +191,32 @@ begin
     totalRead := totalRead + numRead;
   end;
   Result := totalRead;
+end;
+
+class function TStreams.WriteBufTo(const buf: TMemoryStream;
+  const output: TCryptoLibByteArray; offset: Int32): Int32;
+var
+  bytes: TCryptoLibByteArray;
+begin
+  buf.Position := 0;
+  System.SetLength(bytes, buf.Size);
+  buf.Read(bytes[0], buf.Size);
+  System.Move(bytes[0], output[offset], System.Length(bytes) *
+    System.SizeOf(Byte));
+  Result := System.Length(bytes);
+end;
+
+class procedure TStreams.WriteZeroes(const outStr: TStream; count: Int64);
+var
+  zeroes: TCryptoLibByteArray;
+begin
+  System.SetLength(zeroes, BufferSize);
+  while (count > BufferSize) do
+  begin
+    outStr.Write(zeroes[0], BufferSize);
+    count := count - BufferSize;
+  end;
+  outStr.Write(zeroes[0], Int32(count));
 end;
 
 class function TStreams.ReadFully(const inStr: TStream;

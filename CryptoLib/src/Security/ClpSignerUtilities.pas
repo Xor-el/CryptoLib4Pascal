@@ -43,11 +43,14 @@ uses
   ClpOiwObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
+  ClpParameterUtilities,
+  ClpIAsymmetricKeyParameter,
   ClpDsaSigner,
   ClpIDsaSigner,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpISigner,
+  ClpISecureRandom,
   ClpIDerObjectIdentifier,
   ClpCryptoLibTypes;
 
@@ -94,6 +97,14 @@ type
       static; inline;
 
     class function GetSigner(algorithm: String): ISigner; overload; static;
+
+    class function InitSigner(const algorithm: String; forSigning: Boolean;
+      const privateKey: IAsymmetricKeyParameter; const random: ISecureRandom)
+      : ISigner; overload; static; inline;
+
+    class function InitSigner(const algorithmOid: IDerObjectIdentifier;
+      forSigning: Boolean; const privateKey: IAsymmetricKeyParameter;
+      const random: ISecureRandom): ISigner; overload; static; inline;
 
     class property Algorithms: TCryptoLibStringArray read GetAlgorithms;
 
@@ -834,6 +845,22 @@ begin
   raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm,
     [algorithm]);
 
+end;
+
+class function TSignerUtilities.InitSigner(const algorithm: String;
+  forSigning: Boolean; const privateKey: IAsymmetricKeyParameter;
+  const random: ISecureRandom): ISigner;
+begin
+  Result := TSignerUtilities.GetSigner(algorithm);
+  Result.Init(forSigning, TParameterUtilities.WithRandom(privateKey, random));
+end;
+
+class function TSignerUtilities.InitSigner(const algorithmOid
+  : IDerObjectIdentifier; forSigning: Boolean;
+  const privateKey: IAsymmetricKeyParameter;
+  const random: ISecureRandom): ISigner;
+begin
+  Result := InitSigner(algorithmOid.id, forSigning, privateKey, random);
 end;
 
 end.
