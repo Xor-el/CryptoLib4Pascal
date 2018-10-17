@@ -49,7 +49,15 @@ type
     class constructor EacObjectIdentifiers();
 
   public
+    // bsi-de OBJECT IDENTIFIER ::= {
+    // itu-t(0) identified-organization(4) etsi(0)
+    // reserved(127) etsi-identified-organization(0) 7
+    // }
     class property bsi_de: IDerObjectIdentifier read Getbsi_de;
+    //
+    // id-TA OBJECT IDENTIFIER ::= {
+    // bsi-de protocols(2) smartcard(2) 2
+    // }
     class property id_TA: IDerObjectIdentifier read Getid_TA;
     class property id_TA_ECDSA: IDerObjectIdentifier read Getid_TA_ECDSA;
     class property id_TA_ECDSA_SHA_1: IDerObjectIdentifier
