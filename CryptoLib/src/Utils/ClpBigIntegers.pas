@@ -113,6 +113,9 @@ type
     class function BigIntegerToBytes(const b: TBigInteger; numBytes: Int32)
       : TCryptoLibByteArray; static; inline;
 
+    class function GetUnsignedByteLength(const n: TBigInteger): Int32;
+      static; inline;
+
   end;
 
 implementation
@@ -212,6 +215,11 @@ begin
   // fall back to a faster (restricted) method
   Result := TBigInteger.Create(max.Subtract(min).BitLength - 1, random)
     .Add(min);
+end;
+
+class function TBigIntegers.GetUnsignedByteLength(const n: TBigInteger): Int32;
+begin
+  Result := (n.BitLength + 7) shr 3;
 end;
 
 end.

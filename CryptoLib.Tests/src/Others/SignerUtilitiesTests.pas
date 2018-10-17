@@ -201,7 +201,8 @@ begin
         System.length(upper) - withPos + System.length('WITH'));
     end;
 
-    if (cipherName = 'ECDSA') then
+    if ((cipherName = 'ECDSA') or (cipherName = 'CVC-ECDSA') or
+      (cipherName = 'PLAIN-ECDSA')) then
     begin
       signParams := FecPriv;
       verifyParams := FecPub;

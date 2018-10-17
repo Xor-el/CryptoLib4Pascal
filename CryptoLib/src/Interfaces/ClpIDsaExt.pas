@@ -15,35 +15,27 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECDsaSigner;
+unit ClpIDsaExt;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDsaExt,
-  ClpISecureRandom,
-  ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpIECInterface,
-  ClpIECFieldElement;
+  ClpIDsa,
+  ClpBigInteger;
 
 type
-  IECDsaSigner = interface(IDsaExt)
+  /// <summary>
+  /// An "extended" interface for classes implementing DSA-style algorithms, that provides access
+  /// to the group order.
+  /// </summary>
+  IDsaExt = interface(IDsa)
+    ['{FF9421DB-97F1-4409-AC00-B0000EE5EAFB}']
 
-    ['{72930065-5893-46CA-B49F-51254C2E73FF}']
-
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger;
-
-    function CreateBasePointMultiplier(): IECMultiplier;
-
-    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
-      : IECFieldElement;
-
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
-      : ISecureRandom;
+    function GetOrder: TBigInteger;
+    /// <summary>The order of the group that the r, s values in signatures belong to.</summary>
+    property Order: TBigInteger read GetOrder;
 
   end;
 

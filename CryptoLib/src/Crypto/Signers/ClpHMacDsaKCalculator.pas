@@ -33,6 +33,7 @@ uses
   ClpIKeyParameter,
   ClpIDsaKCalculator,
   ClpIHMacDsaKCalculator,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 {$IFNDEF _FIXINSIGHT_}
@@ -123,19 +124,21 @@ procedure THMacDsaKCalculator.Init(const n, d: TBigInteger;
 var
   x, dVal, m, mVal: TCryptoLibByteArray;
   mInt: TBigInteger;
+  size: Int32;
 begin
   Fn := n;
-  System.FillChar(FV[0], System.Length(FV) * System.SizeOf(Byte), Byte($01));
-  System.FillChar(FK[0], System.Length(FK) * System.SizeOf(Byte), Byte(0));
+  TArrayUtils.Fill(FV, 0, System.Length(FV), Byte($01));
+  TArrayUtils.Fill(FK, 0, System.Length(FK), Byte(0));
 
-  System.SetLength(x, (n.BitLength + 7) div 8);
+  size := TBigIntegers.GetUnsignedByteLength(n);
+  System.SetLength(x, size);
 
   dVal := TBigIntegers.AsUnsignedByteArray(d);
 
   System.Move(dVal[0], x[System.Length(x) - System.Length(dVal)],
     System.Length(dVal));
 
-  System.SetLength(m, (n.BitLength + 7) div 8);
+  System.SetLength(m, size);
 
   mInt := BitsToInt(&message);
 
@@ -184,7 +187,7 @@ var
   tOff, len: Int32;
 begin
   result := Default (TBigInteger);
-  System.SetLength(t, ((Fn.BitLength + 7) div 8));
+  System.SetLength(t, TBigIntegers.GetUnsignedByteLength(Fn));
 
   while True do
 

@@ -25,15 +25,13 @@ uses
 
   SysUtils,
   ClpIDsa,
-  ClpIAsn1Sequence,
+  ClpIDsaExt,
+  ClpIDsaEncoding,
   ClpIDigest,
-  ClpIDerInteger,
-  ClpDerSequence,
-  ClpDerInteger,
   ClpBigInteger,
-  ClpAsn1Object,
   ClpCryptoLibTypes,
   ClpIParametersWithRandom,
+  ClpStandardDsaEncoding,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpISigner,
@@ -46,6 +44,7 @@ resourcestring
     'DSADigestSigner not Initialized for Signature Generation.';
   SDSaDigestSignerNotInitializedForVerification =
     'DSADigestSigner not Initialized for Verification';
+  SEncodingError = 'Unable to Encode Signature';
 
 type
   TDsaDigestSigner = class(TInterfacedObject, ISigner, IDsaDigestSigner)
@@ -53,16 +52,18 @@ type
   strict private
   var
     Fdigest: IDigest;
-    FdsaSigner: IDsa;
+    Fdsa: IDsa;
+    Fencoding: IDsaEncoding;
     FforSigning: Boolean;
 
-    function DerEncode(const r, s: TBigInteger): TCryptoLibByteArray; inline;
+  strict protected
 
-    function DerDecode(const encoding: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>; inline;
+    function GetOrder(): TBigInteger; virtual;
 
   public
-    constructor Create(const signer: IDsa; const digest: IDigest);
+    constructor Create(const dsa: IDsa; const digest: IDigest); overload;
+    constructor Create(const dsa: IDsaExt; const digest: IDigest;
+      const encoding: IDsaEncoding); overload;
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
@@ -111,28 +112,21 @@ begin
   Fdigest.BlockUpdate(input, inOff, length);
 end;
 
-constructor TDsaDigestSigner.Create(const signer: IDsa; const digest: IDigest);
+constructor TDsaDigestSigner.Create(const dsa: IDsa; const digest: IDigest);
 begin
   Inherited Create();
-  FdsaSigner := signer;
+  Fdsa := dsa;
   Fdigest := digest;
+  Fencoding := TStandardDsaEncoding.Instance;
 end;
 
-function TDsaDigestSigner.DerDecode(const encoding: TCryptoLibByteArray)
-  : TCryptoLibGenericArray<TBigInteger>;
-var
-  s: IAsn1Sequence;
+constructor TDsaDigestSigner.Create(const dsa: IDsaExt; const digest: IDigest;
+  const encoding: IDsaEncoding);
 begin
-  s := TAsn1Object.FromByteArray(encoding) as IAsn1Sequence;
-  Result := TCryptoLibGenericArray<TBigInteger>.Create
-    ((s[0] as IDerInteger).Value, (s[1] as IDerInteger).Value);
-end;
-
-function TDsaDigestSigner.DerEncode(const r, s: TBigInteger)
-  : TCryptoLibByteArray;
-begin
-  Result := TDerSequence.Create([TDerInteger.Create(r) as IDerInteger,
-    TDerInteger.Create(s) as IDerInteger]).GetDerEncoded();
+  Inherited Create();
+  Fdsa := dsa;
+  Fdigest := digest;
+  Fencoding := encoding;
 end;
 
 function TDsaDigestSigner.GenerateSignature: TCryptoLibByteArray;
@@ -150,14 +144,31 @@ begin
 
   Fdigest.DoFinal(hash, 0);
 
-  sig := FdsaSigner.GenerateSignature(hash);
+  sig := Fdsa.GenerateSignature(hash);
 
-  Result := DerEncode(sig[0], sig[1]);
+  try
+    Result := Fencoding.Encode(GetOrder(), sig[0], sig[1]);
+  except
+    raise EInvalidOperationCryptoLibException.CreateRes(@SEncodingError);
+  end;
 end;
 
 function TDsaDigestSigner.GetAlgorithmName: String;
 begin
-  Result := Fdigest.AlgorithmName + 'with' + FdsaSigner.AlgorithmName;
+  Result := Fdigest.AlgorithmName + 'with' + Fdsa.AlgorithmName;
+end;
+
+function TDsaDigestSigner.GetOrder: TBigInteger;
+begin
+  if Supports(Fdsa, IDsaExt) then
+  begin
+    Result := (Fdsa as IDsaExt).Order;
+  end
+  else
+  begin
+    Result := Default (TBigInteger);
+  end;
+
 end;
 
 procedure TDsaDigestSigner.Init(forSigning: Boolean;
@@ -189,7 +200,7 @@ begin
 
   Reset();
 
-  FdsaSigner.Init(forSigning, parameters);
+  Fdsa.Init(forSigning, parameters);
 end;
 
 procedure TDsaDigestSigner.Reset;
@@ -219,16 +230,10 @@ begin
   Fdigest.DoFinal(hash, 0);
 
   try
-
-    sig := DerDecode(signature);
-    Result := FdsaSigner.VerifySignature(hash, sig[0], sig[1]);
-
+    sig := Fencoding.Decode(GetOrder(), signature);
+    Result := Fdsa.VerifySignature(hash, sig[0], sig[1]);
   except
-    on e: EIOCryptoLibException do
-    begin
-      Result := false;
-    end;
-
+    Result := false;
   end;
 
 end;

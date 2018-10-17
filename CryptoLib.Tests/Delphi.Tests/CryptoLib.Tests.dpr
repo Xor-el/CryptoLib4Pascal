@@ -508,12 +508,20 @@ uses
   ClpSecP256R1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Point.pas',
   ClpISecP256R1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256R1Curve.pas',
   ClpSecP256R1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Curve.pas',
-  SecP256R1FieldTests in '..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas',
+  SecP256R1FieldTests in '..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas' {/,},
   TagTests in '..\src\Asn1\TagTests.pas',
   StringTests in '..\src\Asn1\StringTests.pas',
   ParsingTests in '..\src\Asn1\ParsingTests.pas',
   ParseTests in '..\src\Asn1\ParseTests.pas',
-  EnumeratedTests in '..\src\Asn1\EnumeratedTests.pas';
+  EnumeratedTests in '..\src\Asn1\EnumeratedTests.pas',
+  ClpIDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIDsaEncoding.pas',
+  ClpIDsaExt in '..\..\CryptoLib\src\Interfaces\ClpIDsaExt.pas',
+  ClpStandardDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpStandardDsaEncoding.pas',
+  ClpIStandardDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIStandardDsaEncoding.pas',
+  ClpIPlainDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIPlainDsaEncoding.pas',
+  ClpPlainDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpPlainDsaEncoding.pas',
+  ClpBsiObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Bsi\ClpBsiObjectIdentifiers.pas',
+  ClpEacObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Eac\ClpEacObjectIdentifiers.pas';
 
 begin
 

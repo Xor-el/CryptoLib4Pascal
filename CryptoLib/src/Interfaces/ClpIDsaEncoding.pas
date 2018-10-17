@@ -15,35 +15,35 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECDsaSigner;
+unit ClpIDsaEncoding;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDsaExt,
-  ClpISecureRandom,
   ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpIECInterface,
-  ClpIECFieldElement;
+  ClpCryptoLibTypes;
 
 type
-  IECDsaSigner = interface(IDsaExt)
+  /// <summary>
+  /// An interface for different encoding formats for DSA signatures.
+  /// </summary>
+  IDsaEncoding = interface(IInterface)
+    ['{1331AB87-6BD4-46AF-A45D-440295E11AD7}']
 
-    ['{72930065-5893-46CA-B49F-51254C2E73FF}']
-
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger;
-
-    function CreateBasePointMultiplier(): IECMultiplier;
-
-    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
-      : IECFieldElement;
-
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
-      : ISecureRandom;
+    /// <summary>Decode the (r, s) pair of a DSA signature.</summary>
+    /// <param name="n">The order of the group that r, s belong to.</param>
+    /// <param name="encoding">An encoding of the (r, s) pair of a DSA signature.</param>
+    /// <returns>The (r, s) of a DSA signature, stored in an array of exactly two elements, r followed by s.</returns>
+    function Decode(const n: TBigInteger; const encoding: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
+    /// <summary>Encode the (r, s) pair of a DSA signature.</summary>
+    /// <param name="n">The order of the group that r, s belong to.</param>
+    /// <param name="r">The r value of a DSA signature.</param>
+    /// <param name="s">The s value of a DSA signature.</param>
+    /// <returns>An encoding of the DSA signature given by the provided (r, s) pair.</returns>
+    function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray;
 
   end;
 

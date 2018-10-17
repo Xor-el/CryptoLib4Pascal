@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  ClpIDsa,
+  ClpIDsaExt,
   ClpIECInterface,
   ClpIECNRSigner,
   ClpBigInteger,
@@ -54,7 +54,7 @@ type
   /// <summary>
   /// EC-NR as described in IEEE 1363-2000
   /// </summary>
-  TECNRSigner = class sealed(TInterfacedObject, IDsa, IECNRSigner)
+  TECNRSigner = class sealed(TInterfacedObject, IDsaExt, IECNRSigner)
 
   strict private
   var
@@ -63,9 +63,11 @@ type
     Frandom: ISecureRandom;
 
     function GetAlgorithmName: String; virtual;
+    function GetOrder: TBigInteger; virtual;
 
   public
 
+    property Order: TBigInteger read GetOrder;
     property AlgorithmName: String read GetAlgorithmName;
 
     procedure Init(forSigning: Boolean;
@@ -142,7 +144,7 @@ begin
       (@SNotInitializedForSigning);
   end;
 
-  n := (Fkey as IECPrivateKeyParameters).parameters.n;
+  n := Order;
   nBitLength := n.BitLength;
 
   e := TBigInteger.Create(1, &message);
@@ -184,6 +186,11 @@ end;
 function TECNRSigner.GetAlgorithmName: String;
 begin
   result := 'ECNR';
+end;
+
+function TECNRSigner.GetOrder: TBigInteger;
+begin
+  result := Fkey.Parameters.N;
 end;
 
 procedure TECNRSigner.Init(forSigning: Boolean;

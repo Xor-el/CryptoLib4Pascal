@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Collections;..\..\Utils\Encoders;..\..\Utils\Helpers;..\..\Utils\IO;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -24,8 +24,8 @@
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="2" Minor="4"/>
-    <Files Count="453">
+    <Version Major="2" Minor="5"/>
+    <Files Count="461">
       <Item1>
         <Filename Value="..\..\Asn1\ClpAsn1Encodable.pas"/>
         <UnitName Value="ClpAsn1Encodable"/>
@@ -1840,6 +1840,38 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Math\EC\Custom\Sec\ClpSecP256R1Curve.pas"/>
         <UnitName Value="ClpSecP256R1Curve"/>
       </Item453>
+      <Item454>
+        <Filename Value="..\..\Asn1\Bsi\ClpBsiObjectIdentifiers.pas"/>
+        <UnitName Value="ClpBsiObjectIdentifiers"/>
+      </Item454>
+      <Item455>
+        <Filename Value="..\..\Asn1\Eac\ClpEacObjectIdentifiers.pas"/>
+        <UnitName Value="ClpEacObjectIdentifiers"/>
+      </Item455>
+      <Item456>
+        <Filename Value="..\..\Crypto\Signers\ClpPlainDsaEncoding.pas"/>
+        <UnitName Value="ClpPlainDsaEncoding"/>
+      </Item456>
+      <Item457>
+        <Filename Value="..\..\Crypto\Signers\ClpStandardDsaEncoding.pas"/>
+        <UnitName Value="ClpStandardDsaEncoding"/>
+      </Item457>
+      <Item458>
+        <Filename Value="..\..\Interfaces\ClpIStandardDsaEncoding.pas"/>
+        <UnitName Value="ClpIStandardDsaEncoding"/>
+      </Item458>
+      <Item459>
+        <Filename Value="..\..\Interfaces\ClpIPlainDsaEncoding.pas"/>
+        <UnitName Value="ClpIPlainDsaEncoding"/>
+      </Item459>
+      <Item460>
+        <Filename Value="..\..\Interfaces\ClpIDsaExt.pas"/>
+        <UnitName Value="ClpIDsaExt"/>
+      </Item460>
+      <Item461>
+        <Filename Value="..\..\Interfaces\ClpIDsaEncoding.pas"/>
+        <UnitName Value="ClpIDsaEncoding"/>
+      </Item461>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

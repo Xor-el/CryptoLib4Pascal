@@ -15,35 +15,31 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECDsaSigner;
+unit ClpIPlainDsaEncoding;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDsaExt,
-  ClpISecureRandom,
   ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpIECInterface,
-  ClpIECFieldElement;
+  ClpIDsaEncoding,
+  ClpCryptoLibTypes;
 
 type
-  IECDsaSigner = interface(IDsaExt)
+  IPlainDsaEncoding = interface(IDsaEncoding)
+    ['{72DC1571-BE91-461B-BD2F-A0CCAA15DD59}']
 
-    ['{72930065-5893-46CA-B49F-51254C2E73FF}']
+    function CheckValue(const n, x: TBigInteger): TBigInteger;
+    function DecodeValue(const n: TBigInteger; const buf: TCryptoLibByteArray;
+      off, len: Int32): TBigInteger;
+    procedure EncodeValue(const n, x: TBigInteger;
+      const buf: TCryptoLibByteArray; off, len: Int32);
 
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger;
+    function Decode(const n: TBigInteger; const encoding: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
 
-    function CreateBasePointMultiplier(): IECMultiplier;
-
-    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
-      : IECFieldElement;
-
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
-      : ISecureRandom;
+    function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray;
 
   end;
 

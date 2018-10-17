@@ -36,11 +36,47 @@ type
     class function BeginsWith(const Input, SubString: string;
       IgnoreCase: Boolean; Offset: Int32 = 1): Boolean; static;
 
+    class function EndsWith(const Input, SubString: String; IgnoreCase: Boolean)
+      : Boolean; static;
+
+    class function LastIndexOf(const Input, SubString: string;
+      IgnoreCase: Boolean): Int32; overload; static; inline;
+
+    class function LastIndexOf(const Input, SubString: string;
+      StartIndex, Count: Int32; IgnoreCase: Boolean): Int32; overload; static;
+
   end;
 
 implementation
 
 { TStringUtils }
+
+class function TStringUtils.EndsWith(const Input, SubString: String;
+  IgnoreCase: Boolean): Boolean;
+var
+  SubStringLength: Int32;
+  TempString: String;
+begin
+  SubStringLength := System.Length(SubString);
+  Result := SubStringLength > 0;
+  if Result then
+  begin
+    TempString := System.Copy(Input, System.Length(Input) - SubStringLength + 1,
+      SubStringLength);
+    Result := System.Length(TempString) = SubStringLength;
+    if Result then
+    begin
+      if IgnoreCase then
+      begin
+        Result := CompareText(TempString, SubString) = 0
+      end
+      else
+      begin
+        Result := TempString = SubString;
+      end;
+    end;
+  end;
+end;
 
 class function TStringUtils.GetStringHashCode(const Input: string): Int32;
 var
@@ -62,6 +98,62 @@ begin
     System.Inc(LowPoint);
   end;
   Result := Int32(LResult);
+end;
+
+class function TStringUtils.LastIndexOf(const Input, SubString: string;
+  StartIndex, Count: Int32; IgnoreCase: Boolean): Int32;
+var
+  I, L, LS, M: Int32;
+  S: String;
+  P: PChar;
+
+begin
+  Result := -1;
+  LS := System.Length(Input);
+  L := System.Length(SubString);
+  if (L = 0) or (L > LS) then
+  begin
+    Exit;
+  end;
+  P := PChar(SubString);
+  S := Input;
+  I := StartIndex + 1; // 1 based
+  if (I > LS) then
+  begin
+    I := LS;
+  end;
+  I := I - L + 1;
+  M := StartIndex - Count + 1; // 1 based
+  if M < 1 then
+  begin
+    M := 1;
+  end;
+
+  while (Result = -1) and (I >= M) do
+  begin
+    if IgnoreCase then
+    begin
+      if (StrLiComp(PChar(@S[I]), P, L) = 0) then
+      begin
+        Result := I - 1;
+      end;
+    end
+    else
+    begin
+      if (StrLComp(PChar(@S[I]), P, L) = 0) then
+      begin
+        Result := I - 1;
+      end;
+    end;
+    Dec(I);
+  end;
+end;
+
+class function TStringUtils.LastIndexOf(const Input, SubString: string;
+  IgnoreCase: Boolean): Int32;
+begin
+  Result := LastIndexOf(Input, SubString, System.Length(Input) - 1,
+    System.Length(Input), IgnoreCase);
 end;
 
 class function TStringUtils.SplitString(const Input: string; Delimiter: Char)

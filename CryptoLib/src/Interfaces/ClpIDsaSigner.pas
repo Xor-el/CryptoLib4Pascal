@@ -22,13 +22,13 @@ unit ClpIDsaSigner;
 interface
 
 uses
-  ClpIDsa,
+  ClpIDsaExt,
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
-  IDsaSigner = interface(IDsa)
+  IDsaSigner = interface(IDsaExt)
     ['{687C14CD-F126-4886-87FC-535DEB083C2F}']
 
     function CalculateE(const n: TBigInteger;

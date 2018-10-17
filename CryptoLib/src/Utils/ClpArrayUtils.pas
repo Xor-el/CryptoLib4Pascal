@@ -83,6 +83,9 @@ type
     class function ConstantTimeAreEqual(const a_ar1, a_ar2: TCryptoLibByteArray)
       : Boolean; static;
 
+    class procedure Fill(const buf: TCryptoLibByteArray; from, &to: Int32;
+      B: Byte); static;
+
   end;
 
 implementation
@@ -238,6 +241,12 @@ begin
   System.SetLength(Result, newLength);
   System.Move(data[from], Result[0], Min(newLength, System.Length(data) - from)
     * System.SizeOf(Byte));
+end;
+
+class procedure TArrayUtils.Fill(const buf: TCryptoLibByteArray;
+  from, &to: Int32; B: Byte);
+begin
+  System.FillChar(buf[from], (&to - from) * System.SizeOf(Byte), B);
 end;
 
 class function TArrayUtils.GetArrayHashCode(const data

@@ -455,7 +455,15 @@ uses
   ClpISecP256R1Point in '..\..\CryptoLib\src\Interfaces\ClpISecP256R1Point.pas',
   ClpSecP256R1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Point.pas',
   ClpISecP256R1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256R1Curve.pas',
-  ClpSecP256R1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Curve.pas';
+  ClpSecP256R1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Curve.pas',
+  ClpIDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIDsaEncoding.pas',
+  ClpIDsaExt in '..\..\CryptoLib\src\Interfaces\ClpIDsaExt.pas',
+  ClpStandardDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpStandardDsaEncoding.pas',
+  ClpIStandardDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIStandardDsaEncoding.pas',
+  ClpIPlainDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIPlainDsaEncoding.pas',
+  ClpPlainDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpPlainDsaEncoding.pas',
+  ClpBsiObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Bsi\ClpBsiObjectIdentifiers.pas',
+  ClpEacObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Eac\ClpEacObjectIdentifiers.pas';
 
 begin
   try

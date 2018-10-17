@@ -24,7 +24,7 @@ interface
 uses
   Math,
   SysUtils,
-  ClpIDsa,
+  ClpIDsaExt,
   ClpIDsaSigner,
   ClpISecureRandom,
   ClpIDsaParameters,
@@ -50,9 +50,10 @@ type
   /// The Digital Signature Algorithm - as described in "Handbook of Applied <br />
   /// Cryptography", pages 452 - 453.
   /// </summary>
-  TDsaSigner = class(TInterfacedObject, IDsa, IDsaSigner)
+  TDsaSigner = class(TInterfacedObject, IDsaExt, IDsaSigner)
 
   strict private
+  function GetOrder: TBigInteger; virtual;
     function GetAlgorithmName: String; virtual;
   strict protected
   var
@@ -103,6 +104,7 @@ type
     function VerifySignature(const &message: TCryptoLibByteArray;
       const r, s: TBigInteger): Boolean; virtual;
 
+    property Order: TBigInteger read GetOrder;
     property AlgorithmName: String read GetAlgorithmName;
 
   end;
@@ -161,6 +163,11 @@ begin
   s := k.&Mod(q);
 
   result := TCryptoLibGenericArray<TBigInteger>.Create(r, s);
+end;
+
+function TDsaSigner.GetOrder: TBigInteger;
+begin
+  result := Fkey.Parameters.Q;
 end;
 
 function TDsaSigner.GetAlgorithmName: String;

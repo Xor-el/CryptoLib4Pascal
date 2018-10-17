@@ -40,7 +40,7 @@ uses
   ClpRandomDsaKCalculator,
   ClpIECKeyParameters,
   ClpIDsaKCalculator,
-  ClpIDsa,
+  ClpIDsaExt,
   ClpIECDsaSigner;
 
 resourcestring
@@ -52,7 +52,7 @@ type
   /// <summary>
   /// EC-DSA as described in X9.62
   /// </summary>
-  TECDsaSigner = class(TInterfacedObject, IDsa, IECDsaSigner)
+  TECDsaSigner = class(TInterfacedObject, IDsaExt, IECDsaSigner)
 
   strict private
 
@@ -65,6 +65,7 @@ type
 
     class property Eight: TBigInteger read GetEight;
 
+     function GetOrder: TBigInteger; virtual;
     function GetAlgorithmName: String; virtual;
 
   strict protected
@@ -100,6 +101,7 @@ type
     /// </param>
     constructor Create(const kCalculator: IDsaKCalculator); overload;
 
+    property Order: TBigInteger read GetOrder;
     property AlgorithmName: String read GetAlgorithmName;
 
     procedure Init(forSigning: Boolean;
@@ -243,6 +245,11 @@ end;
 class function TECDsaSigner.GetEight: TBigInteger;
 begin
   Result := FEight;
+end;
+
+function TECDsaSigner.GetOrder: TBigInteger;
+begin
+  result := Fkey.Parameters.N;
 end;
 
 procedure TECDsaSigner.Init(forSigning: Boolean;
