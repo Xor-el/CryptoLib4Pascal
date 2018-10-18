@@ -508,7 +508,7 @@ uses
   ClpSecP256R1Point in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Point.pas',
   ClpISecP256R1Curve in '..\..\CryptoLib\src\Interfaces\ClpISecP256R1Curve.pas',
   ClpSecP256R1Curve in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Curve.pas',
-  SecP256R1FieldTests in '..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas' {/,},
+  SecP256R1FieldTests in '..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas',
   TagTests in '..\src\Asn1\TagTests.pas',
   StringTests in '..\src\Asn1\StringTests.pas',
   ParsingTests in '..\src\Asn1\ParsingTests.pas',
