@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpDsaDigestSigner;
+unit ClpSchnorrDigestSigner;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -24,9 +24,11 @@ interface
 uses
 
   SysUtils,
-  ClpIDsa,
-  ClpIDsaExt,
-  ClpIDsaEncoding,
+  Classes,
+  ClpISchnorr,
+  ClpISchnorrExt,
+  ClpISchnorrEncoding,
+  ClpISchnorrDigestSigner,
   ClpIDigest,
   ClpBigInteger,
   ClpCryptoLibTypes,
@@ -35,35 +37,40 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpISigner,
-  ClpIDsaDigestSigner;
+  ClpArrayUtils;
 
 resourcestring
   SPrivateKey = 'Signing Requires Private Key.';
   SPublicKey = 'Verification Requires Public Key.';
-  SDsaDigestSignerNotInitializedForSignatureGeneration =
-    'DSADigestSigner not Initialized for Signature Generation.';
-  SDsaDigestSignerNotInitializedForVerification =
-    'DSADigestSigner not Initialized for Verification';
+  SSchnorrDigestSignerNotInitializedForSignatureGeneration =
+    'SchnorrDigestSigner not Initialized for Signature Generation.';
+  SSchnorrDigestSignerNotInitializedForVerification =
+    'SchnorrDigestSigner not Initialized for Verification';
   SEncodingError = 'Unable to Encode Signature';
 
 type
-  TDsaDigestSigner = class(TInterfacedObject, ISigner, IDsaDigestSigner)
+  TSchnorrDigestSigner = class(TInterfacedObject, ISigner, ISchnorrDigestSigner)
 
   strict private
   var
-    Fdigest: IDigest;
-    Fdsa: IDsa;
-    Fencoding: IDsaEncoding;
-    FforSigning: Boolean;
+    FDigest: IDigest;
+    FSchnorr: ISchnorr;
+    FForSigning: Boolean;
+    FEncoding: ISchnorrEncoding;
+    FBuffer: TMemoryStream;
+
+    function Aggregate: TCryptoLibByteArray; inline;
 
   strict protected
 
     function GetOrder(): TBigInteger; virtual;
 
   public
-    constructor Create(const dsa: IDsa; const digest: IDigest); overload;
-    constructor Create(const dsa: IDsaExt; const digest: IDigest;
-      const encoding: IDsaEncoding); overload;
+    // constructor Create(const Schnorr: ISchnorr; const digest: IDigest);
+    // overload;
+    constructor Create(const Schnorr: ISchnorrExt; const digest: IDigest;
+      const encoding: ISchnorrEncoding);
+    destructor Destroy(); override;
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
@@ -104,65 +111,75 @@ type
 
 implementation
 
-{ TDsaDigestSigner }
+{ TSchnorrDigestSigner }
 
-procedure TDsaDigestSigner.BlockUpdate(const input: TCryptoLibByteArray;
+function TSchnorrDigestSigner.Aggregate: TCryptoLibByteArray;
+begin
+  FBuffer.Position := 0;
+  System.SetLength(Result, FBuffer.Size);
+  FBuffer.Read(Result[0], FBuffer.Size);
+end;
+
+procedure TSchnorrDigestSigner.BlockUpdate(const input: TCryptoLibByteArray;
   inOff, length: Int32);
 begin
-  Fdigest.BlockUpdate(input, inOff, length);
+  FBuffer.Write(input[inOff], length);
 end;
 
-constructor TDsaDigestSigner.Create(const dsa: IDsa; const digest: IDigest);
+// constructor TSchnorrDigestSigner.Create(const Schnorr: ISchnorr;
+// const digest: IDigest);
+// begin
+// Inherited Create();
+// FSchnorr := Schnorr;
+// FDigest := digest;
+// FBuffer := TMemoryStream.Create();
+// end;
+
+constructor TSchnorrDigestSigner.Create(const Schnorr: ISchnorrExt;
+  const digest: IDigest; const encoding: ISchnorrEncoding);
 begin
   Inherited Create();
-  Fdsa := dsa;
-  Fdigest := digest;
-  Fencoding := TStandardDsaEncoding.Instance;
+  FSchnorr := Schnorr;
+  FDigest := digest;
+  FEncoding := encoding;
+  FBuffer := TMemoryStream.Create();
 end;
 
-constructor TDsaDigestSigner.Create(const dsa: IDsaExt; const digest: IDigest;
-  const encoding: IDsaEncoding);
+destructor TSchnorrDigestSigner.Destroy;
 begin
-  Inherited Create();
-  Fdsa := dsa;
-  Fdigest := digest;
-  Fencoding := encoding;
+  FBuffer.Free;
+  inherited Destroy;
 end;
 
-function TDsaDigestSigner.GenerateSignature: TCryptoLibByteArray;
+function TSchnorrDigestSigner.GenerateSignature: TCryptoLibByteArray;
 var
-  hash: TCryptoLibByteArray;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  if ((not FforSigning)) then
+  if ((not FForSigning)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
-      (@SDsaDigestSignerNotInitializedForSignatureGeneration);
+      (@SSchnorrDigestSignerNotInitializedForSignatureGeneration);
   end;
 
-  System.SetLength(hash, Fdigest.GetDigestSize);
-
-  Fdigest.DoFinal(hash, 0);
-
-  sig := Fdsa.GenerateSignature(hash);
+  sig := FSchnorr.GenerateSignature(Aggregate());
 
   try
-    Result := Fencoding.Encode(GetOrder(), sig[0], sig[1]);
+    Result := FEncoding.Encode(GetOrder(), sig[0], sig[1]);
   except
     raise EInvalidOperationCryptoLibException.CreateRes(@SEncodingError);
   end;
 end;
 
-function TDsaDigestSigner.GetAlgorithmName: String;
+function TSchnorrDigestSigner.GetAlgorithmName: String;
 begin
-  Result := Fdigest.AlgorithmName + 'with' + Fdsa.AlgorithmName;
+  Result := FDigest.AlgorithmName + 'with' + FSchnorr.AlgorithmName;
 end;
 
-function TDsaDigestSigner.GetOrder: TBigInteger;
+function TSchnorrDigestSigner.GetOrder: TBigInteger;
 begin
-  if Supports(Fdsa, IDsaExt) then
+  if Supports(FSchnorr, ISchnorrExt) then
   begin
-    Result := (Fdsa as IDsaExt).Order;
+    Result := (FSchnorr as ISchnorrExt).Order;
   end
   else
   begin
@@ -170,13 +187,13 @@ begin
   end;
 end;
 
-procedure TDsaDigestSigner.Init(forSigning: Boolean;
+procedure TSchnorrDigestSigner.Init(forSigning: Boolean;
   const parameters: ICipherParameters);
 var
   k: IAsymmetricKeyParameter;
   withRandom: IParametersWithRandom;
 begin
-  FforSigning := forSigning;
+  FForSigning := forSigning;
 
   if (Supports(parameters, IParametersWithRandom, withRandom)) then
   begin
@@ -199,38 +216,35 @@ begin
 
   Reset();
 
-  Fdsa.Init(forSigning, parameters);
+  FSchnorr.Init(forSigning, parameters, FDigest);
 end;
 
-procedure TDsaDigestSigner.Reset;
+procedure TSchnorrDigestSigner.Reset;
 begin
-  Fdigest.Reset;
+  FDigest.Reset;
+  FBuffer.Clear;
+  FBuffer.SetSize(0);
 end;
 
-procedure TDsaDigestSigner.Update(input: Byte);
+procedure TSchnorrDigestSigner.Update(input: Byte);
 begin
-  Fdigest.Update(input);
+  FBuffer.Write(TCryptoLibByteArray.Create(input)[0], 1);
 end;
 
-function TDsaDigestSigner.VerifySignature(const signature
+function TSchnorrDigestSigner.VerifySignature(const signature
   : TCryptoLibByteArray): Boolean;
 var
-  hash: TCryptoLibByteArray;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  if (FforSigning) then
+  if (FForSigning) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
-      (@SDsaDigestSignerNotInitializedForVerification);
+      (@SSchnorrDigestSignerNotInitializedForVerification);
   end;
 
-  System.SetLength(hash, Fdigest.GetDigestSize);
-
-  Fdigest.DoFinal(hash, 0);
-
   try
-    sig := Fencoding.Decode(GetOrder(), signature);
-    Result := Fdsa.VerifySignature(hash, sig[0], sig[1]);
+    sig := FEncoding.Decode(GetOrder(), signature);
+    Result := FSchnorr.VerifySignature(Aggregate(), sig[0], sig[1]);
   except
     Result := false;
   end;

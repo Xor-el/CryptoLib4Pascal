@@ -29,15 +29,6 @@ uses
   ClpIDigest,
   ClpDigestUtilities,
   ClpDsaDigestSigner,
-  ClpECSchnorrSigner,
-  ClpECSchnorrBSISigner,
-  ClpIECSchnorrBSISigner,
-  ClpECSchnorrISOSigner,
-  ClpIECSchnorrISOSigner,
-  ClpECSchnorrISOXSigner,
-  ClpIECSchnorrISOXSigner,
-  ClpECSchnorrLIBSECPSigner,
-  ClpIECSchnorrLIBSECPSigner,
   ClpX9ObjectIdentifiers,
   ClpEacObjectIdentifiers,
   ClpBsiObjectIdentifiers,
@@ -55,6 +46,10 @@ uses
   ClpISecureRandom,
   ClpIDerObjectIdentifier,
   ClpPlainDsaEncoding,
+  ClpPlainSchnorrEncoding,
+  ClpSchnorrDigestSigner,
+  ClpECSchnorrSipaSigner,
+  ClpIECSchnorrSipaSigner,
   ClpStringUtils,
   ClpCryptoLibTypes;
 
@@ -344,173 +339,46 @@ begin
   // Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001.id,
   // 'ECGOST3410');
 
-  // ECSCHNORR BSI
+  // ECSCHNORR SIPA
 
-  Falgorithms.Add('SHA1/ECSCHNORR/BSI', 'SHA-1withECSCHNORRBSI');
-  Falgorithms.Add('SHA-1/ECSCHNORR/BSI', 'SHA-1withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA1', 'SHA-1withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA-1', 'SHA-1withECSCHNORRBSI');
-  Falgorithms.Add('SHA1WITHECSCHNORRBSI', 'SHA-1withECSCHNORRBSI');
-  Falgorithms.Add('SHA-1WITHECSCHNORRBSI', 'SHA-1withECSCHNORRBSI');
+  Falgorithms.Add('SHA1/ECSCHNORR/SIPA', 'SHA-1withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-1/ECSCHNORR/SIPA', 'SHA-1withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA1', 'SHA-1withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-1', 'SHA-1withECSCHNORRSIPA');
+  Falgorithms.Add('SHA1WITHECSCHNORRSIPA', 'SHA-1withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-1WITHECSCHNORRSIPA', 'SHA-1withECSCHNORRSIPA');
 
-  Falgorithms.Add('SHA224/ECSCHNORR/BSI', 'SHA-224withECSCHNORRBSI');
-  Falgorithms.Add('SHA-224/ECSCHNORR/BSI', 'SHA-224withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA224', 'SHA-224withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA-224', 'SHA-224withECSCHNORRBSI');
-  Falgorithms.Add('SHA224WITHECSCHNORRBSI', 'SHA-224withECSCHNORRBSI');
-  Falgorithms.Add('SHA-224WITHECSCHNORRBSI', 'SHA-224withECSCHNORRBSI');
+  Falgorithms.Add('SHA224/ECSCHNORR/SIPA', 'SHA-224withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-224/ECSCHNORR/SIPA', 'SHA-224withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA224', 'SHA-224withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-224', 'SHA-224withECSCHNORRSIPA');
+  Falgorithms.Add('SHA224WITHECSCHNORRSIPA', 'SHA-224withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-224WITHECSCHNORRSIPA', 'SHA-224withECSCHNORRSIPA');
 
-  Falgorithms.Add('SHA256/ECSCHNORR/BSI', 'SHA-256withECSCHNORRBSI');
-  Falgorithms.Add('SHA-256/ECSCHNORR/BSI', 'SHA-256withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA256', 'SHA-256withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA-256', 'SHA-256withECSCHNORRBSI');
-  Falgorithms.Add('SHA256WITHECSCHNORRBSI', 'SHA-256withECSCHNORRBSI');
-  Falgorithms.Add('SHA-256WITHECSCHNORRBSI', 'SHA-256withECSCHNORRBSI');
+  Falgorithms.Add('SHA256/ECSCHNORR/SIPA', 'SHA-256withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-256/ECSCHNORR/SIPA', 'SHA-256withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA256', 'SHA-256withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-256', 'SHA-256withECSCHNORRSIPA');
+  Falgorithms.Add('SHA256WITHECSCHNORRSIPA', 'SHA-256withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-256WITHECSCHNORRSIPA', 'SHA-256withECSCHNORRSIPA');
 
-  Falgorithms.Add('SHA384/ECSCHNORR/BSI', 'SHA-384withECSCHNORRBSI');
-  Falgorithms.Add('SHA-384/ECSCHNORR/BSI', 'SHA-384withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA384', 'SHA-384withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA-384', 'SHA-384withECSCHNORRBSI');
-  Falgorithms.Add('SHA384WITHECSCHNORRBSI', 'SHA-384withECSCHNORRBSI');
-  Falgorithms.Add('SHA-384WITHECSCHNORRBSI', 'SHA-384withECSCHNORRBSI');
+  Falgorithms.Add('SHA384/ECSCHNORR/SIPA', 'SHA-384withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-384/ECSCHNORR/SIPA', 'SHA-384withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA384', 'SHA-384withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-384', 'SHA-384withECSCHNORRSIPA');
+  Falgorithms.Add('SHA384WITHECSCHNORRSIPA', 'SHA-384withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-384WITHECSCHNORRSIPA', 'SHA-384withECSCHNORRSIPA');
 
-  Falgorithms.Add('SHA512/ECSCHNORR/BSI', 'SHA-512withECSCHNORRBSI');
-  Falgorithms.Add('SHA-512/ECSCHNORR/BSI', 'SHA-512withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA512', 'SHA-512withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHSHA-512', 'SHA-512withECSCHNORRBSI');
-  Falgorithms.Add('SHA512WITHECSCHNORRBSI', 'SHA-512withECSCHNORRBSI');
-  Falgorithms.Add('SHA-512WITHECSCHNORRBSI', 'SHA-512withECSCHNORRBSI');
+  Falgorithms.Add('SHA512/ECSCHNORR/SIPA', 'SHA-512withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-512/ECSCHNORR/SIPA', 'SHA-512withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA512', 'SHA-512withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-512', 'SHA-512withECSCHNORRSIPA');
+  Falgorithms.Add('SHA512WITHECSCHNORRSIPA', 'SHA-512withECSCHNORRSIPA');
+  Falgorithms.Add('SHA-512WITHECSCHNORRSIPA', 'SHA-512withECSCHNORRSIPA');
 
-  Falgorithms.Add('RIPEMD160/ECSCHNORR/BSI', 'RIPEMD160withECSCHNORRBSI');
-  Falgorithms.Add('ECSCHNORRBSIWITHRIPEMD160', 'RIPEMD160withECSCHNORRBSI');
-  Falgorithms.Add('RIPEMD160WITHECSCHNORRBSI', 'RIPEMD160withECSCHNORRBSI');
-
-  // ECSCHNORR ISO
-
-  Falgorithms.Add('SHA1/ECSCHNORR/ISO', 'SHA-1withECSCHNORRISO');
-  Falgorithms.Add('SHA-1/ECSCHNORR/ISO', 'SHA-1withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA1', 'SHA-1withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA-1', 'SHA-1withECSCHNORRISO');
-  Falgorithms.Add('SHA1WITHECSCHNORRISO', 'SHA-1withECSCHNORRISO');
-  Falgorithms.Add('SHA-1WITHECSCHNORRISO', 'SHA-1withECSCHNORRISO');
-
-  Falgorithms.Add('SHA224/ECSCHNORR/ISO', 'SHA-224withECSCHNORRISO');
-  Falgorithms.Add('SHA-224/ECSCHNORR/ISO', 'SHA-224withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA224', 'SHA-224withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA-224', 'SHA-224withECSCHNORRISO');
-  Falgorithms.Add('SHA224WITHECSCHNORRISO', 'SHA-224withECSCHNORRISO');
-  Falgorithms.Add('SHA-224WITHECSCHNORRISO', 'SHA-224withECSCHNORRISO');
-
-  Falgorithms.Add('SHA256/ECSCHNORR/ISO', 'SHA-256withECSCHNORRISO');
-  Falgorithms.Add('SHA-256/ECSCHNORR/ISO', 'SHA-256withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA256', 'SHA-256withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA-256', 'SHA-256withECSCHNORRISO');
-  Falgorithms.Add('SHA256WITHECSCHNORRISO', 'SHA-256withECSCHNORRISO');
-  Falgorithms.Add('SHA-256WITHECSCHNORRISO', 'SHA-256withECSCHNORRISO');
-
-  Falgorithms.Add('SHA384/ECSCHNORR/ISO', 'SHA-384withECSCHNORRISO');
-  Falgorithms.Add('SHA-384/ECSCHNORR/ISO', 'SHA-384withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA384', 'SHA-384withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA-384', 'SHA-384withECSCHNORRISO');
-  Falgorithms.Add('SHA384WITHECSCHNORRISO', 'SHA-384withECSCHNORRISO');
-  Falgorithms.Add('SHA-384WITHECSCHNORRISO', 'SHA-384withECSCHNORRISO');
-
-  Falgorithms.Add('SHA512/ECSCHNORR/ISO', 'SHA-512withECSCHNORRISO');
-  Falgorithms.Add('SHA-512/ECSCHNORR/ISO', 'SHA-512withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA512', 'SHA-512withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHSHA-512', 'SHA-512withECSCHNORRISO');
-  Falgorithms.Add('SHA512WITHECSCHNORRISO', 'SHA-512withECSCHNORRISO');
-  Falgorithms.Add('SHA-512WITHECSCHNORRISO', 'SHA-512withECSCHNORRISO');
-
-  Falgorithms.Add('RIPEMD160/ECSCHNORR/ISO', 'RIPEMD160withECSCHNORRISO');
-  Falgorithms.Add('ECSCHNORRISOWITHRIPEMD160', 'RIPEMD160withECSCHNORRISO');
-  Falgorithms.Add('RIPEMD160WITHECSCHNORRISO', 'RIPEMD160withECSCHNORRISO');
-
-  // ECSCHNORR ISOX
-
-  Falgorithms.Add('SHA1/ECSCHNORR/ISOX', 'SHA-1withECSCHNORRISOX');
-  Falgorithms.Add('SHA-1/ECSCHNORR/ISOX', 'SHA-1withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA1', 'SHA-1withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA-1', 'SHA-1withECSCHNORRISOX');
-  Falgorithms.Add('SHA1WITHECSCHNORRISOX', 'SHA-1withECSCHNORRISOX');
-  Falgorithms.Add('SHA-1WITHECSCHNORRISOX', 'SHA-1withECSCHNORRISOX');
-
-  Falgorithms.Add('SHA224/ECSCHNORR/ISOX', 'SHA-224withECSCHNORRISOX');
-  Falgorithms.Add('SHA-224/ECSCHNORR/ISOX', 'SHA-224withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA224', 'SHA-224withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA-224', 'SHA-224withECSCHNORRISOX');
-  Falgorithms.Add('SHA224WITHECSCHNORRISOX', 'SHA-224withECSCHNORRISOX');
-  Falgorithms.Add('SHA-224WITHECSCHNORRISOX', 'SHA-224withECSCHNORRISOX');
-
-  Falgorithms.Add('SHA256/ECSCHNORR/ISOX', 'SHA-256withECSCHNORRISOX');
-  Falgorithms.Add('SHA-256/ECSCHNORR/ISOX', 'SHA-256withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA256', 'SHA-256withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA-256', 'SHA-256withECSCHNORRISOX');
-  Falgorithms.Add('SHA256WITHECSCHNORRISOX', 'SHA-256withECSCHNORRISOX');
-  Falgorithms.Add('SHA-256WITHECSCHNORRISOX', 'SHA-256withECSCHNORRISOX');
-
-  Falgorithms.Add('SHA384/ECSCHNORR/ISOX', 'SHA-384withECSCHNORRISOX');
-  Falgorithms.Add('SHA-384/ECSCHNORR/ISOX', 'SHA-384withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA384', 'SHA-384withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA-384', 'SHA-384withECSCHNORRISOX');
-  Falgorithms.Add('SHA384WITHECSCHNORRISOX', 'SHA-384withECSCHNORRISOX');
-  Falgorithms.Add('SHA-384WITHECSCHNORRISOX', 'SHA-384withECSCHNORRISOX');
-
-  Falgorithms.Add('SHA512/ECSCHNORR/ISOX', 'SHA-512withECSCHNORRISOX');
-  Falgorithms.Add('SHA-512/ECSCHNORR/ISOX', 'SHA-512withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA512', 'SHA-512withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHSHA-512', 'SHA-512withECSCHNORRISOX');
-  Falgorithms.Add('SHA512WITHECSCHNORRISOX', 'SHA-512withECSCHNORRISOX');
-  Falgorithms.Add('SHA-512WITHECSCHNORRISOX', 'SHA-512withECSCHNORRISOX');
-
-  Falgorithms.Add('RIPEMD160/ECSCHNORR/ISOX', 'RIPEMD160withECSCHNORRISOX');
-  Falgorithms.Add('ECSCHNORRISOXWITHRIPEMD160', 'RIPEMD160withECSCHNORRISOX');
-  Falgorithms.Add('RIPEMD160WITHECSCHNORRISOX', 'RIPEMD160withECSCHNORRISOX');
-
-
-  // ECSCHNORR LIBSECP
-
-  Falgorithms.Add('SHA1/ECSCHNORR/LIBSECP', 'SHA-1withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-1/ECSCHNORR/LIBSECP', 'SHA-1withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA1', 'SHA-1withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA-1', 'SHA-1withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA1WITHECSCHNORRLIBSECP', 'SHA-1withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-1WITHECSCHNORRLIBSECP', 'SHA-1withECSCHNORRLIBSECP');
-
-  Falgorithms.Add('SHA224/ECSCHNORR/LIBSECP', 'SHA-224withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-224/ECSCHNORR/LIBSECP', 'SHA-224withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA224', 'SHA-224withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA-224', 'SHA-224withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA224WITHECSCHNORRLIBSECP', 'SHA-224withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-224WITHECSCHNORRLIBSECP', 'SHA-224withECSCHNORRLIBSECP');
-
-  Falgorithms.Add('SHA256/ECSCHNORR/LIBSECP', 'SHA-256withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-256/ECSCHNORR/LIBSECP', 'SHA-256withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA256', 'SHA-256withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA-256', 'SHA-256withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA256WITHECSCHNORRLIBSECP', 'SHA-256withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-256WITHECSCHNORRLIBSECP', 'SHA-256withECSCHNORRLIBSECP');
-
-  Falgorithms.Add('SHA384/ECSCHNORR/LIBSECP', 'SHA-384withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-384/ECSCHNORR/LIBSECP', 'SHA-384withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA384', 'SHA-384withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA-384', 'SHA-384withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA384WITHECSCHNORRLIBSECP', 'SHA-384withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-384WITHECSCHNORRLIBSECP', 'SHA-384withECSCHNORRLIBSECP');
-
-  Falgorithms.Add('SHA512/ECSCHNORR/LIBSECP', 'SHA-512withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-512/ECSCHNORR/LIBSECP', 'SHA-512withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA512', 'SHA-512withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHSHA-512', 'SHA-512withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA512WITHECSCHNORRLIBSECP', 'SHA-512withECSCHNORRLIBSECP');
-  Falgorithms.Add('SHA-512WITHECSCHNORRLIBSECP', 'SHA-512withECSCHNORRLIBSECP');
-
-  Falgorithms.Add('RIPEMD160/ECSCHNORR/LIBSECP',
-    'RIPEMD160withECSCHNORRLIBSECP');
-  Falgorithms.Add('ECSCHNORRLIBSECPWITHRIPEMD160',
-    'RIPEMD160withECSCHNORRLIBSECP');
-  Falgorithms.Add('RIPEMD160WITHECSCHNORRLIBSECP',
-    'RIPEMD160withECSCHNORRLIBSECP');
+  Falgorithms.Add('RIPEMD160/ECSCHNORR/SIPA', 'RIPEMD160withECSCHNORRSIPA');
+  Falgorithms.Add('ECSCHNORRSIPAWITHRIPEMD160', 'RIPEMD160withECSCHNORRSIPA');
+  Falgorithms.Add('RIPEMD160WITHECSCHNORRSIPA', 'RIPEMD160withECSCHNORRSIPA');
 
   Foids.Add('SHA-1withDSA', TX9ObjectIdentifiers.IdDsaWithSha1);
 
@@ -647,209 +515,14 @@ begin
     Exit;
   end;
 
-  if (mechanism = 'SHA-1withECSCHNORRBSI') then
+  if TStringUtils.EndsWith(mechanism, 'withECSCHNORRSIPA', True) then
   begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
+    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
+      'with', True));
 
-    Result := TECSchnorrSigner.Create(TECSchnorrBSISigner.Create()
-      as IECSchnorrBSISigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-224withECSCHNORRBSI') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrBSISigner.Create()
-      as IECSchnorrBSISigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-256withECSCHNORRBSI') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrBSISigner.Create()
-      as IECSchnorrBSISigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-384withECSCHNORRBSI') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrBSISigner.Create()
-      as IECSchnorrBSISigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-512withECSCHNORRBSI') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrBSISigner.Create()
-      as IECSchnorrBSISigner, DigestInstance);
-    Exit;
-  end;
-
-  if (mechanism = 'RIPEMD160withECSCHNORRBSI') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrBSISigner.Create()
-      as IECSchnorrBSISigner, DigestInstance);
-    Exit;
-  end;
-
-  //
-
-  if (mechanism = 'SHA-1withECSCHNORRISO') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOSigner.Create()
-      as IECSchnorrISOSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-224withECSCHNORRISO') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOSigner.Create()
-      as IECSchnorrISOSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-256withECSCHNORRISO') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOSigner.Create()
-      as IECSchnorrISOSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-384withECSCHNORRISO') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOSigner.Create()
-      as IECSchnorrISOSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-512withECSCHNORRISO') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOSigner.Create()
-      as IECSchnorrISOSigner, DigestInstance);
-    Exit;
-  end;
-
-  if (mechanism = 'RIPEMD160withECSCHNORRISO') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOSigner.Create()
-      as IECSchnorrISOSigner, DigestInstance);
-    Exit;
-  end;
-
-  //
-
-  if (mechanism = 'SHA-1withECSCHNORRISOX') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOXSigner.Create()
-      as IECSchnorrISOXSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-224withECSCHNORRISOX') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOXSigner.Create()
-      as IECSchnorrISOXSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-256withECSCHNORRISOX') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOXSigner.Create()
-      as IECSchnorrISOXSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-384withECSCHNORRISOX') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOXSigner.Create()
-      as IECSchnorrISOXSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-512withECSCHNORRISOX') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOXSigner.Create()
-      as IECSchnorrISOXSigner, DigestInstance);
-    Exit;
-  end;
-
-  if (mechanism = 'RIPEMD160withECSCHNORRISOX') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrISOXSigner.Create()
-      as IECSchnorrISOXSigner, DigestInstance);
-    Exit;
-  end;
-
-  //
-
-  if (mechanism = 'SHA-1withECSCHNORRLIBSECP') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-1');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrLIBSECPSigner.Create()
-      as IECSchnorrLIBSECPSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-224withECSCHNORRLIBSECP') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-224');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrLIBSECPSigner.Create()
-      as IECSchnorrLIBSECPSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-256withECSCHNORRLIBSECP') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-256');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrLIBSECPSigner.Create()
-      as IECSchnorrLIBSECPSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-384withECSCHNORRLIBSECP') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-384');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrLIBSECPSigner.Create()
-      as IECSchnorrLIBSECPSigner, DigestInstance);
-    Exit;
-  end;
-  if (mechanism = 'SHA-512withECSCHNORRLIBSECP') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('SHA-512');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrLIBSECPSigner.Create()
-      as IECSchnorrLIBSECPSigner, DigestInstance);
-    Exit;
-  end;
-
-  if (mechanism = 'RIPEMD160withECSCHNORRLIBSECP') then
-  begin
-    DigestInstance := TDigestUtilities.GetDigest('RIPEMD-160');
-
-    Result := TECSchnorrSigner.Create(TECSchnorrLIBSECPSigner.Create()
-      as IECSchnorrLIBSECPSigner, DigestInstance);
+    DigestInstance := TDigestUtilities.GetDigest(DigestName);
+    Result := TSchnorrDigestSigner.Create(TECSchnorrSipaSigner.Create()
+      as IECSchnorrSipaSigner, DigestInstance, TPlainSchnorrEncoding.Instance);
     Exit;
   end;
 

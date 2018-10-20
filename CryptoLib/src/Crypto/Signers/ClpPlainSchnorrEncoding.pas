@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpPlainDsaEncoding;
+unit ClpPlainSchnorrEncoding;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -24,8 +24,8 @@ interface
 uses
   Math,
   ClpBigInteger,
-  ClpIDsaEncoding,
-  ClpIPlainDsaEncoding,
+  ClpISchnorrEncoding,
+  ClpIPlainSchnorrEncoding,
   ClpBigIntegers,
   ClpArrayUtils,
   ClpCryptoLibTypes;
@@ -35,16 +35,17 @@ resourcestring
   SValueOutOfRange = 'Value out of range, "%s"';
 
 type
-  TPlainDsaEncoding = class(TInterfacedObject, IDsaEncoding, IPlainDsaEncoding)
+  TPlainSchnorrEncoding = class(TInterfacedObject, ISchnorrEncoding,
+    IPlainSchnorrEncoding)
 
   strict private
     class var
 
-      FInstance: IPlainDsaEncoding;
+      FInstance: IPlainSchnorrEncoding;
 
-    class function GetInstance: IPlainDsaEncoding; static; inline;
+    class function GetInstance: IPlainSchnorrEncoding; static; inline;
 
-    class constructor PlainDsaEncoding();
+    class constructor PlainSchnorrEncoding();
 
   strict protected
 
@@ -61,7 +62,7 @@ type
 
     function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray; virtual;
 
-    class property Instance: IPlainDsaEncoding read GetInstance;
+    class property Instance: IPlainSchnorrEncoding read GetInstance;
 
   end;
 
@@ -69,7 +70,7 @@ implementation
 
 { TPlainDsaEncoding }
 
-function TPlainDsaEncoding.CheckValue(const n, x: TBigInteger): TBigInteger;
+function TPlainSchnorrEncoding.CheckValue(const n, x: TBigInteger): TBigInteger;
 begin
   if ((x.SignValue < 0) or ((x.CompareTo(n) >= 0))) then
   begin
@@ -78,7 +79,7 @@ begin
   result := x;
 end;
 
-function TPlainDsaEncoding.Decode(const n: TBigInteger;
+function TPlainSchnorrEncoding.Decode(const n: TBigInteger;
   const encoding: TCryptoLibByteArray): TCryptoLibGenericArray<TBigInteger>;
 var
   valueLength: Int32;
@@ -94,13 +95,13 @@ begin
     valueLength, valueLength));
 end;
 
-function TPlainDsaEncoding.DecodeValue(const n: TBigInteger;
+function TPlainSchnorrEncoding.DecodeValue(const n: TBigInteger;
   const buf: TCryptoLibByteArray; off, len: Int32): TBigInteger;
 begin
   result := CheckValue(n, TBigInteger.Create(1, buf, off, len));
 end;
 
-function TPlainDsaEncoding.Encode(const n, r, s: TBigInteger)
+function TPlainSchnorrEncoding.Encode(const n, r, s: TBigInteger)
   : TCryptoLibByteArray;
 var
   valueLength: Int32;
@@ -111,7 +112,7 @@ begin
   EncodeValue(n, s, result, valueLength, valueLength);
 end;
 
-procedure TPlainDsaEncoding.EncodeValue(const n, x: TBigInteger;
+procedure TPlainSchnorrEncoding.EncodeValue(const n, x: TBigInteger;
   const buf: TCryptoLibByteArray; off, len: Int32);
 var
   bs: TCryptoLibByteArray;
@@ -125,14 +126,14 @@ begin
   System.Move(bs[bsOff], buf[off + pos], bsLen * System.SizeOf(Byte));
 end;
 
-class function TPlainDsaEncoding.GetInstance: IPlainDsaEncoding;
+class function TPlainSchnorrEncoding.GetInstance: IPlainSchnorrEncoding;
 begin
   result := FInstance;
 end;
 
-class constructor TPlainDsaEncoding.PlainDsaEncoding;
+class constructor TPlainSchnorrEncoding.PlainSchnorrEncoding;
 begin
-  FInstance := TPlainDsaEncoding.Create();
+  FInstance := TPlainSchnorrEncoding.Create();
 end;
 
 end.

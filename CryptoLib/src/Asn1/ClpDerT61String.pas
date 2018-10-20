@@ -45,11 +45,18 @@ type
   TDerT61String = class(TDerStringBase, IDerT61String)
 
   strict private
+    class var
+
+      FEncoding: TEncoding;
+
   var
     FStr: String;
 
     function GetStr: String; inline;
     property Str: String read GetStr;
+
+    class constructor CreateDerT61String();
+    class destructor DestroyDerT61String();
 
   strict protected
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
@@ -114,7 +121,7 @@ end;
 
 function TDerT61String.GetOctets: TCryptoLibByteArray;
 begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ANSI);
+  result := TConverters.ConvertStringToBytes(Str, FEncoding);
 end;
 
 function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -133,7 +140,8 @@ end;
 
 constructor TDerT61String.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ANSI));
+  Inherited Create();
+  Create(TConverters.ConvertBytesToString(Str, FEncoding));
 end;
 
 constructor TDerT61String.Create(const Str: String);
@@ -145,6 +153,16 @@ begin
   end;
 
   FStr := Str;
+end;
+
+class constructor TDerT61String.CreateDerT61String;
+begin
+  FEncoding := TEncoding.GetEncoding('iso-8859-1');
+end;
+
+class destructor TDerT61String.DestroyDerT61String;
+begin
+  FEncoding.Free;
 end;
 
 procedure TDerT61String.Encode(const derOut: IDerOutputStream);

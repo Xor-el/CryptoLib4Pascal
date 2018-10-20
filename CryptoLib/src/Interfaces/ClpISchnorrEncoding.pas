@@ -15,36 +15,35 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISchnorr;
+unit ClpISchnorrEncoding;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDigest,
   ClpBigInteger,
-  ClpICipherParameters,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// interface for classes implementing the Schnorr Signature Algorithm
+  /// An interface for different encoding formats for Schnorr signatures.
   /// </summary>
-  ISchnorr = interface(IInterface)
-    ['{B8065C83-1164-4DD0-B983-8CF840F120EF}']
+  ISchnorrEncoding = interface(IInterface)
+    ['{CC5ECEFB-D806-402F-9F86-8D17EC61BE00}']
 
-    function GetAlgorithmName: String;
-    property AlgorithmName: String read GetAlgorithmName;
-
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters;
-      const digest: IDigest);
-
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    /// <summary>Decode the (r, s) pair of a Schnorr signature.</summary>
+    /// <param name="n">The order of the group that r, s belong to.</param>
+    /// <param name="encoding">An encoding of the (r, s) pair of a Schnorr signature.</param>
+    /// <returns>The (r, s) of a Schnorr signature, stored in an array of exactly two elements, r followed by s.</returns>
+    function Decode(const n: TBigInteger; const encoding: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
-
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean;
+    /// <summary>Encode the (r, s) pair of a Schnorr signature.</summary>
+    /// <param name="n">The order of the group that r, s belong to.</param>
+    /// <param name="r">The r value of a Schnorr signature.</param>
+    /// <param name="s">The s value of a Schnorr signature.</param>
+    /// <returns>An encoding of the Schnorr signature given by the provided (r, s) pair.</returns>
+    function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray;
 
   end;
 

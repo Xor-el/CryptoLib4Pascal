@@ -15,19 +15,28 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrLIBSECPSigner;
+unit ClpISchnorrExt;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorr;
+  ClpISchnorr,
+  ClpBigInteger;
 
 type
-  IECSchnorrLIBSECPSigner = interface(ISchnorr)
+  /// <summary>
+  /// An "extended" interface for classes implementing Schnorr-style algorithms, that provides access
+  /// to the group order.
+  /// </summary>
+  ISchnorrExt = interface(ISchnorr)
+    ['{0BCED764-F352-4C6C-B30C-9E0D7A2B042B}']
 
-    ['{AE748071-90D2-4EE5-9721-E69286BCC359}']
+    function GetOrder: TBigInteger;
+    /// <summary>The order of the group that the r, s values in signatures belong to.</summary>
+    property Order: TBigInteger read GetOrder;
+
   end;
 
 implementation

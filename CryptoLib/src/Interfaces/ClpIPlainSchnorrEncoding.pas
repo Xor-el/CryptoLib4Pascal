@@ -15,19 +15,32 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrISOXSigner;
+unit ClpIPlainSchnorrEncoding;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorr;
+  ClpBigInteger,
+  ClpISchnorrEncoding,
+  ClpCryptoLibTypes;
 
 type
-  IECSchnorrISOXSigner = interface(ISchnorr)
+  IPlainSchnorrEncoding = interface(ISchnorrEncoding)
+    ['{1C2D1D11-04C4-4438-B728-4BF3ED2F3E99}']
 
-    ['{D9BC810A-0554-4D54-A6D8-5350667BB3D5}']
+    function CheckValue(const n, x: TBigInteger): TBigInteger;
+    function DecodeValue(const n: TBigInteger; const buf: TCryptoLibByteArray;
+      off, len: Int32): TBigInteger;
+    procedure EncodeValue(const n, x: TBigInteger;
+      const buf: TCryptoLibByteArray; off, len: Int32);
+
+    function Decode(const n: TBigInteger; const encoding: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
+
+    function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray;
+
   end;
 
 implementation

@@ -147,7 +147,6 @@ begin
   inherited;
   FRandom := TSecureRandom.Create();
   FDP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP384r1);
-
   FQ := FDP.Curve.Field.Characteristic;
 end;
 

@@ -276,8 +276,6 @@ uses
   ClpBerSequenceGenerator in '..\..\CryptoLib\src\Asn1\ClpBerSequenceGenerator.pas',
   ClpSetWeakRef in '..\..\CryptoLib\src\Utils\ClpSetWeakRef.pas',
   UsageExamples in '..\src\UsageExamples.pas',
-  ClpIECSchnorrSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrSigner.pas',
-  ClpECSchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSigner.pas',
   ClpCipherUtilities in '..\..\CryptoLib\src\Security\ClpCipherUtilities.pas',
   ClpIBufferedCipher in '..\..\CryptoLib\src\Interfaces\ClpIBufferedCipher.pas',
   ClpIBlockCipher in '..\..\CryptoLib\src\Interfaces\ClpIBlockCipher.pas',
@@ -365,15 +363,6 @@ uses
   ClpIPbeParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPbeParametersGenerator.pas',
   ClpPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPkcs5S2ParametersGenerator.pas',
   ClpIPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPkcs5S2ParametersGenerator.pas',
-  ClpISchnorr in '..\..\CryptoLib\src\Interfaces\ClpISchnorr.pas',
-  ClpECSchnorrBSISigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrBSISigner.pas',
-  ClpIECSchnorrBSISigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrBSISigner.pas',
-  ClpIECSchnorrISOSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrISOSigner.pas',
-  ClpECSchnorrISOSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrISOSigner.pas',
-  ClpIECSchnorrISOXSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrISOXSigner.pas',
-  ClpECSchnorrISOXSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrISOXSigner.pas',
-  ClpIECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrLIBSECPSigner.pas',
-  ClpECSchnorrLIBSECPSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrLIBSECPSigner.pas',
   ClpECNRSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECNRSigner.pas',
   ClpIECNRSigner in '..\..\CryptoLib\src\Interfaces\ClpIECNRSigner.pas',
   ClpDsaValidationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaValidationParameters.pas',
@@ -463,7 +452,16 @@ uses
   ClpIPlainDsaEncoding in '..\..\CryptoLib\src\Interfaces\ClpIPlainDsaEncoding.pas',
   ClpPlainDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpPlainDsaEncoding.pas',
   ClpBsiObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Bsi\ClpBsiObjectIdentifiers.pas',
-  ClpEacObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Eac\ClpEacObjectIdentifiers.pas';
+  ClpEacObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Eac\ClpEacObjectIdentifiers.pas',
+  ClpSchnorrDigestSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpSchnorrDigestSigner.pas',
+  ClpISchnorrDigestSigner in '..\..\CryptoLib\src\Interfaces\ClpISchnorrDigestSigner.pas',
+  ClpISchnorr in '..\..\CryptoLib\src\Interfaces\ClpISchnorr.pas',
+  ClpECSchnorrSipaSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECSchnorrSipaSigner.pas',
+  ClpIECSchnorrSipaSigner in '..\..\CryptoLib\src\Interfaces\ClpIECSchnorrSipaSigner.pas',
+  ClpISchnorrExt in '..\..\CryptoLib\src\Interfaces\ClpISchnorrExt.pas',
+  ClpISchnorrEncoding in '..\..\CryptoLib\src\Interfaces\ClpISchnorrEncoding.pas',
+  ClpIPlainSchnorrEncoding in '..\..\CryptoLib\src\Interfaces\ClpIPlainSchnorrEncoding.pas',
+  ClpPlainSchnorrEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpPlainSchnorrEncoding.pas';
 
 begin
   try

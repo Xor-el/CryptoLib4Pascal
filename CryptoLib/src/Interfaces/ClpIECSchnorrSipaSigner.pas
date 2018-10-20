@@ -15,19 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrBSISigner;
+unit ClpIECSchnorrSipaSigner;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorr;
+  ClpISchnorrExt;
 
 type
-  IECSchnorrBSISigner = interface(ISchnorr)
+  IECSchnorrSipaSigner = interface(ISchnorrExt)
+    ['{8941641A-4EF7-4BC7-96FC-F6E98F418DC8}']
 
-    ['{799FABB1-D1BB-4B58-9E49-CF1CD8142554}']
   end;
 
 implementation

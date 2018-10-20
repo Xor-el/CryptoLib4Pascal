@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrSigner;
+unit ClpISchnorrDigestSigner;
 
 {$I ..\Include\CryptoLib.inc}
 
@@ -23,20 +23,14 @@ interface
 
 uses
   ClpISigner,
-  ClpIECPublicKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
-  IECSchnorrSigner = interface(ISigner)
-    ['{A941F9C5-81BE-4F0D-9294-2488C21035E3}']
 
-    function Do_Sign(const pv_key: IECPrivateKeyParameters;
-      const k: TBigInteger): TCryptoLibByteArray;
+  ISchnorrDigestSigner = interface(ISigner)
+    ['{FD48778F-A071-459A-9008-423566240F09}']
 
-    function Do_Verify(const pu_key: IECPublicKeyParameters;
-      const sig: TCryptoLibByteArray): Boolean;
+    function GetOrder(): TBigInteger;
 
   end;
 

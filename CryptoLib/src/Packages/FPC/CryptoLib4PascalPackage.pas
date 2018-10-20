@@ -90,9 +90,8 @@ uses
   ClpBase64, ClpHex, ClpStreamHelper, ClpBaseInputStream, ClpFilterStream, 
   ClpStreams, ClpOSRandom, ClpPcgRandomMinimal, ClpOSRandomNumberGenerator, 
   ClpPCGRandomNumberGenerator, ClpRandomNumberGenerator, ClpSetWeakRef, 
-  ClpDefiniteLengthInputStream, ClpECSchnorrSigner, ClpIECSchnorrSigner, 
-  ClpParameterUtilities, ClpGeneratorUtilities, ClpCipherUtilities, 
-  ClpIAesEngine, ClpIPkcs7Padding, ClpIParametersWithIV, 
+  ClpDefiniteLengthInputStream, ClpParameterUtilities, ClpGeneratorUtilities, 
+  ClpCipherUtilities, ClpIAesEngine, ClpIPkcs7Padding, ClpIParametersWithIV, 
   ClpIPaddedBufferedBlockCipher, ClpIKeyParameter, ClpICbcBlockCipher, 
   ClpIBufferedCipherBase, ClpIBufferedCipher, ClpIBufferedBlockCipher, 
   ClpIBlockCipherPadding, ClpIBlockCipher, ClpCbcBlockCipher, 
@@ -118,14 +117,11 @@ uses
   ClpISO10126d2Padding, ClpIISO10126d2Padding, ClpPkcs5S2ParametersGenerator, 
   ClpIPkcs5S2ParametersGenerator, ClpIPbeParametersGenerator, 
   ClpPbeParametersGenerator, ClpHMac, ClpMiscObjectIdentifiers, 
-  ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac, 
-  ClpIECSchnorrLIBSECPSigner, ClpIECSchnorrISOXSigner, ClpIECSchnorrISOSigner, 
-  ClpIECSchnorrBSISigner, ClpISchnorr, ClpECSchnorrLIBSECPSigner, 
-  ClpECSchnorrISOXSigner, ClpECSchnorrISOSigner, ClpECSchnorrBSISigner, 
-  ClpDsaSigner, ClpDsaKeyPairGenerator, ClpECNRSigner, 
-  ClpDsaKeyGenerationParameters, ClpDsaPrivateKeyParameters, 
-  ClpDsaPublicKeyParameters, ClpDsaValidationParameters, ClpDsaParameters, 
-  ClpDsaKeyParameters, ClpIECNRSigner, ClpIDsaSigner, ClpIDsaKeyPairGenerator, 
+  ClpIanaObjectIdentifiers, ClpMacUtilities, ClpIMac, ClpIHMac, ClpDsaSigner, 
+  ClpDsaKeyPairGenerator, ClpECNRSigner, ClpDsaKeyGenerationParameters, 
+  ClpDsaPrivateKeyParameters, ClpDsaPublicKeyParameters, 
+  ClpDsaValidationParameters, ClpDsaParameters, ClpDsaKeyParameters, 
+  ClpIECNRSigner, ClpIDsaSigner, ClpIDsaKeyPairGenerator, 
   ClpIDsaPrivateKeyParameters, ClpIDsaKeyGenerationParameters, 
   ClpIDsaKeyParameters, ClpIDsaPublicKeyParameters, ClpIDsaParameters, 
   ClpIDsaValidationParameters, ClpBase58, ClpDigest, ClpECDHCBasicAgreement, 
@@ -151,7 +147,10 @@ uses
   ClpSecP256R1Point, ClpISecP256R1Curve, ClpSecP256R1Curve, 
   ClpBsiObjectIdentifiers, ClpEacObjectIdentifiers, ClpPlainDsaEncoding, 
   ClpStandardDsaEncoding, ClpIStandardDsaEncoding, ClpIPlainDsaEncoding, 
-  ClpIDsaExt, ClpIDsaEncoding;
+  ClpIDsaExt, ClpIDsaEncoding, ClpISchnorrDigestSigner, 
+  ClpIECSchnorrSipaSigner, ClpECSchnorrSipaSigner, ClpSchnorrDigestSigner, 
+  ClpPlainSchnorrEncoding, ClpIPlainSchnorrEncoding, ClpISchnorrEncoding, 
+  ClpISchnorr, ClpISchnorrExt;
 
 implementation
 
