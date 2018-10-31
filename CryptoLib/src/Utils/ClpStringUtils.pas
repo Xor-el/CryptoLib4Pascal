@@ -201,7 +201,7 @@ end;
 class function TStringUtils.BeginsWith(const Input, SubString: string;
   IgnoreCase: Boolean; Offset: Int32): Boolean;
 var
-  L: Integer;
+  L: Int32;
   PtrInput, PtrSubString: PChar;
 begin
   L := System.Length(SubString);
