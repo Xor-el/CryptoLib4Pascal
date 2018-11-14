@@ -22,7 +22,6 @@ unit ClpSchnorrDigestSigner;
 interface
 
 uses
-
   SysUtils,
   Classes,
   ClpISchnorr,
