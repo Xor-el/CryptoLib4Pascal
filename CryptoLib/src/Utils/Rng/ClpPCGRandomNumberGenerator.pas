@@ -34,9 +34,9 @@ type
   public
     constructor Create();
 
-    procedure GetBytes(data: TCryptoLibByteArray); override;
+    procedure GetBytes(const data: TCryptoLibByteArray); override;
 
-    procedure GetNonZeroBytes(data: TCryptoLibByteArray); override;
+    procedure GetNonZeroBytes(const data: TCryptoLibByteArray); override;
 
   end;
 
@@ -49,7 +49,7 @@ begin
   inherited Create();
 end;
 
-procedure TPCGRandomNumberGenerator.GetBytes(data: TCryptoLibByteArray);
+procedure TPCGRandomNumberGenerator.GetBytes(const data: TCryptoLibByteArray);
 var
   i: Int64;
 begin
@@ -62,7 +62,7 @@ begin
 
 end;
 
-procedure TPCGRandomNumberGenerator.GetNonZeroBytes(data: TCryptoLibByteArray);
+procedure TPCGRandomNumberGenerator.GetNonZeroBytes(const data: TCryptoLibByteArray);
 var
   i: Int64;
   val: Byte;

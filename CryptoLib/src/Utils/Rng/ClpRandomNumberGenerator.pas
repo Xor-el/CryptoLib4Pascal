@@ -39,9 +39,9 @@ type
     class function CreateRNG(const rngName: String): IRandomNumberGenerator;
       overload; static;
 
-    procedure GetBytes(data: TCryptoLibByteArray); virtual; abstract;
+    procedure GetBytes(const data: TCryptoLibByteArray); virtual; abstract;
 
-    procedure GetNonZeroBytes(data: TCryptoLibByteArray); virtual; abstract;
+    procedure GetNonZeroBytes(const data: TCryptoLibByteArray); virtual; abstract;
 
   end;
 

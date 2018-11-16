@@ -28,9 +28,9 @@ type
   IRandomNumberGenerator = interface(IInterface)
     ['{48F39DBB-8BE4-4167-8CE9-265F9B3B785E}']
 
-    procedure GetBytes(data: TCryptoLibByteArray);
+    procedure GetBytes(const data: TCryptoLibByteArray);
 
-    procedure GetNonZeroBytes(data: TCryptoLibByteArray);
+    procedure GetNonZeroBytes(const data: TCryptoLibByteArray);
 
   end;
 
