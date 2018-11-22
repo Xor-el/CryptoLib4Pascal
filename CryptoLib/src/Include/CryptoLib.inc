@@ -15,8 +15,6 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-{$WARN SYMBOL_DEPRECATED OFF}
-
 {$DEFINE DELPHI}
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -77,6 +75,9 @@
 
 // Disable Duplicate Constructor Warnings
 {$WARN DUPLICATE_CTOR_DTOR OFF}
+
+// Disable Deprecated Warnings
+{$WARN SYMBOL_DEPRECATED OFF}
 
  // 2010 only
 {$IF CompilerVersion = 21.0}

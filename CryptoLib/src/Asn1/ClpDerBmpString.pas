@@ -168,7 +168,7 @@ begin
   LowPoint := 1;
   HighPoint := System.Length(Str);
 {$ENDIF DELPHIXE3_UP}
-  For i := LowPoint to HighPoint do
+  for i := LowPoint to HighPoint do
   begin
     c[i - 1] := Str[i];
   end;
