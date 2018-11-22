@@ -22,8 +22,7 @@ unit ClpCryptoLibTypes;
 interface
 
 uses
-  SysUtils,
-  Generics.Collections;
+  SysUtils;
 
 type
 
