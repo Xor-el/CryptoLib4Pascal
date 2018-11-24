@@ -22,6 +22,7 @@ unit ClpIBufferedCipher;
 interface
 
 uses
+  Classes,
   ClpICipherParameters,
   ClpCryptoLibTypes;
 
@@ -32,6 +33,14 @@ type
     /// <summary>The name of the algorithm this cipher implements.</summary>
     function GetAlgorithmName: String;
     property AlgorithmName: String read GetAlgorithmName;
+
+    function GetBufferSize: Int32;
+    procedure SetBufferSize(value: Int32);
+    /// <summary>
+    /// property for determining the buffer size to use for stream based
+    /// encryption/decryption.
+    /// </summary>
+    property BufferSize: Int32 read GetBufferSize write SetBufferSize;
 
     /// <summary>Initialise the cipher.</summary>
     /// <param name="forEncryption">If true the cipher is initialised for encryption,
@@ -45,6 +54,12 @@ type
 
     function GetUpdateOutputSize(inputLen: Int32): Int32;
 
+    procedure ProcessStream(const inputStream, outputStream: TStream;
+      Length: Int64); overload;
+
+    procedure ProcessStream(const inputStream: TStream; inOff: Int64;
+      const outputStream: TStream; outOff: Int64; Length: Int64); overload;
+
     function ProcessByte(input: Byte): TCryptoLibByteArray; overload;
     function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
       outOff: Int32): Int32; overload;
@@ -52,23 +67,23 @@ type
     function ProcessBytes(const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload;
     function ProcessBytes(const input: TCryptoLibByteArray;
-      inOff, length: Int32): TCryptoLibByteArray; overload;
+      inOff, Length: Int32): TCryptoLibByteArray; overload;
     function ProcessBytes(const input, output: TCryptoLibByteArray;
       outOff: Int32): Int32; overload;
     function ProcessBytes(const input: TCryptoLibByteArray;
-      inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
+      inOff, Length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
 
     function DoFinal(): TCryptoLibByteArray; overload;
     function DoFinal(const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload;
-    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32)
+    function DoFinal(const input: TCryptoLibByteArray; inOff, Length: Int32)
       : TCryptoLibByteArray; overload;
     function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
     function DoFinal(const input, output: TCryptoLibByteArray; outOff: Int32)
       : Int32; overload;
-    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32;
+    function DoFinal(const input: TCryptoLibByteArray; inOff, Length: Int32;
       const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
 
     /// <summary>

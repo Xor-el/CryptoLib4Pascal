@@ -22,6 +22,7 @@ unit ClpBufferedCipherBase;
 interface
 
 uses
+  Classes,
   ClpIBufferedCipher,
   ClpICipherParameters,
   ClpIBufferedCipherBase,
@@ -29,6 +30,14 @@ uses
 
 resourcestring
   SOutputBufferTooSmall = 'Output Buffer too Short';
+  SInvalidBufferSize = '"BufferSize" Must Be Greater Than Zero';
+  SInputOutputStreamSame =
+    'Input and Output Streams Must not Point to the Same Stream Instance';
+  SUnAssignedInputStream = 'Input Stream Is Unassigned';
+  SUnAssignedOutputStream = 'Output Stream Is Unassigned';
+  SPositionOutOfRange = 'Current Position Is Out Of Range';
+  SStreamPositionOutOfRange =
+    'Stream Position (or Stream Length to Process) Is Out Of Range';
 
 type
   TBufferedCipherBase = class abstract(TInterfacedObject, IBufferedCipherBase,
@@ -43,11 +52,23 @@ type
 
     class constructor BufferedCipherBase();
 
+  var
+
+    FBufferSize: Int32;
+
+  const
+    BUFFER_SIZE = Int32(64 * 1024); // 64Kb
+
+    function GetBufferSize: Int32; inline;
+    procedure SetBufferSize(value: Int32); inline;
+
   strict protected
 
     class property EmptyBuffer: TCryptoLibByteArray read GetEmptyBuffer;
 
   public
+
+    constructor Create();
 
     procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
       virtual; abstract;
@@ -76,6 +97,13 @@ type
       length: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
       overload; virtual;
 
+    procedure ProcessStream(const inputStream, outputStream: TStream;
+      length: Int64); overload; virtual;
+
+    procedure ProcessStream(const inputStream: TStream; inPos: Int64;
+      const outputStream: TStream; outPos: Int64; length: Int64);
+      overload; virtual;
+
     function DoFinal(): TCryptoLibByteArray; overload; virtual; abstract;
 
     function DoFinal(const input: TCryptoLibByteArray): TCryptoLibByteArray;
@@ -99,6 +127,12 @@ type
     function GetAlgorithmName: String; virtual; abstract;
     property AlgorithmName: String read GetAlgorithmName;
 
+    /// <summary>
+    /// property for determining the buffer size to use for stream based
+    /// encryption/decryption.
+    /// </summary>
+    property BufferSize: Int32 read GetBufferSize write SetBufferSize;
+
   end;
 
 implementation
@@ -108,6 +142,29 @@ implementation
 class constructor TBufferedCipherBase.BufferedCipherBase;
 begin
   System.SetLength(FEmptyBuffer, 0);
+end;
+
+constructor TBufferedCipherBase.Create;
+begin
+  Inherited Create();
+  FBufferSize := BUFFER_SIZE;
+end;
+
+function TBufferedCipherBase.GetBufferSize: Int32;
+begin
+  result := FBufferSize;
+end;
+
+procedure TBufferedCipherBase.SetBufferSize(value: Int32);
+begin
+  if value > 0 then
+  begin
+    FBufferSize := value;
+  end
+  else
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferSize);
+  end;
 end;
 
 function TBufferedCipherBase.DoFinal(const output: TCryptoLibByteArray;
@@ -195,6 +252,98 @@ begin
   end;
   System.Move(outBytes[0], output[outOff], System.length(outBytes));
   result := System.length(outBytes);
+end;
+
+procedure TBufferedCipherBase.ProcessStream(const inputStream: TStream;
+  inPos: Int64; const outputStream: TStream; outPos, length: Int64);
+var
+  LBufferSize, readed: Int32;
+  total: Int64;
+  data, tempRes: TCryptoLibByteArray;
+begin
+  total := 0;
+  if ((inPos < 0) or (outPos < 0) or (length <= 0)) then
+  begin
+    raise EIndexOutOfRangeCryptoLibException.CreateRes
+      (@SStreamPositionOutOfRange);
+  end;
+
+  if inputStream = Nil then
+  begin
+    raise EStreamCryptoLibException.CreateRes(@SUnAssignedInputStream);
+  end;
+
+  if outputStream = Nil then
+  begin
+    raise EStreamCryptoLibException.CreateRes(@SUnAssignedOutputStream);
+  end;
+
+  if inputStream = outputStream then
+  begin
+    raise EStreamCryptoLibException.CreateRes(@SInputOutputStreamSame);
+  end;
+
+  if ((inputStream.Position + length) > inputStream.Size) then
+  begin
+    raise EIndexOutOfRangeCryptoLibException.CreateRes(@SPositionOutOfRange);
+  end;
+
+  if (inputStream.Position >= inputStream.Size) then
+  begin
+    Exit;
+  end;
+
+  if BufferSize > inputStream.Size then // Sanity Check
+  begin
+    LBufferSize := BUFFER_SIZE;
+  end
+  else
+  begin
+    LBufferSize := BufferSize;
+  end;
+
+  System.SetLength(data, LBufferSize);
+
+  inputStream.Position := inPos;
+  outputStream.Position := outPos;
+
+  while true do
+  begin
+
+    readed := inputStream.Read(data[0], LBufferSize);
+
+    if ((total + Int64(readed)) >= length) then
+    begin
+      tempRes := ProcessBytes(data, 0, Int32(length - total));
+      if (tempRes <> Nil) then
+      begin
+        outputStream.Write(tempRes[0], System.length(tempRes));
+      end;
+      break;
+    end
+    else
+    begin
+      tempRes := ProcessBytes(data, 0, readed);
+      if (tempRes <> Nil) then
+      begin
+        outputStream.Write(tempRes[0], System.length(tempRes));
+      end;
+      total := total + readed;
+    end;
+  end;
+
+  tempRes := DoFinal();
+  if (tempRes <> Nil) then
+  begin
+    outputStream.Write(tempRes[0], System.length(tempRes));
+  end;
+
+end;
+
+procedure TBufferedCipherBase.ProcessStream(const inputStream,
+  outputStream: TStream; length: Int64);
+begin
+  ProcessStream(inputStream, 0, outputStream, 0, length);
 end;
 
 function TBufferedCipherBase.ProcessBytes(const input,

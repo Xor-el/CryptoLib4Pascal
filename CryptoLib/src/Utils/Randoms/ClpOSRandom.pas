@@ -78,6 +78,7 @@ type
 {$ENDIF MSWINDOWS}
 
   class var
+    FIsBooted: Boolean;
 {$IFDEF MSWINDOWS}
     FwinCryptOk: Int32; // Windows Random function available
     FhProvider: ULONG; // Windows HCryptProvider Handle
@@ -96,6 +97,7 @@ type
 
     class procedure GetBytes(const data: TCryptoLibByteArray); static;
     class procedure GetNonZeroBytes(const data: TCryptoLibByteArray); static;
+    class procedure Boot; static;
 
   end;
 
@@ -117,45 +119,54 @@ begin
 
 end;
 
-class constructor TOSRandom.CreateOSRandom;
+class procedure TOSRandom.Boot;
 {$IFNDEF MSWINDOWS}
 var
   RandGen: string;
 {$ENDIF MSWINDOWS}
 begin
+  if not FIsBooted then
+  begin
 {$IFDEF MSWINDOWS}
-  FWinCryptHndl := LoadLibrary(PChar('advapi32.dll'));
-  if (FWinCryptHndl < 32) then
-  begin
-    FwinCryptOk := -1;
-    Exit;
-  end;
-  @FWCCryptAcquireContextA := GetProcAddress(FWinCryptHndl,
-    'CryptAcquireContextA');
-  @FWCCryptReleaseContext := GetProcAddress(FWinCryptHndl,
-    'CryptReleaseContext');
-  @FWCCryptGenRandom := GetProcAddress(FWinCryptHndl, 'CryptGenRandom');
-
-  if FWCCryptAcquireContextA(@FhProvider, Nil, Nil, 1 { PROV_RSA_FULL } ,
-    $F0000000 { CRYPT_VERIFYCONTEXT } ) then
-  begin
-    FwinCryptOk := 1;
-  end;
-{$ELSE}
-  RandGen := '/dev/urandom';
-  if not FileExists(RandGen) then
-  begin
-    if not FileExists('/dev/random') then
+    FWinCryptHndl := LoadLibrary(PChar('advapi32.dll'));
+    if (FWinCryptHndl < 32) then
     begin
-      FunixCryptOk := -1;
+      FwinCryptOk := -1;
       Exit;
     end;
-    RandGen := '/dev/random';
-  end;
-  FStream := TFileStream.Create(RandGen, fmOpenRead);
-  FunixCryptOk := 1;
+    @FWCCryptAcquireContextA := GetProcAddress(FWinCryptHndl,
+      'CryptAcquireContextA');
+    @FWCCryptReleaseContext := GetProcAddress(FWinCryptHndl,
+      'CryptReleaseContext');
+    @FWCCryptGenRandom := GetProcAddress(FWinCryptHndl, 'CryptGenRandom');
+
+    if FWCCryptAcquireContextA(@FhProvider, Nil, Nil, 1 { PROV_RSA_FULL } ,
+      $F0000000 { CRYPT_VERIFYCONTEXT } ) then
+    begin
+      FwinCryptOk := 1;
+    end;
+{$ELSE}
+    RandGen := '/dev/urandom';
+    if not FileExists(RandGen) then
+    begin
+      if not FileExists('/dev/random') then
+      begin
+        FunixCryptOk := -1;
+        Exit;
+      end;
+      RandGen := '/dev/random';
+    end;
+    FStream := TFileStream.Create(RandGen, fmOpenRead);
+    FunixCryptOk := 1;
 
 {$ENDIF MSWINDOWS}
+    FIsBooted := True;
+  end;
+end;
+
+class constructor TOSRandom.CreateOSRandom;
+begin
+  TOSRandom.Boot;
 end;
 
 class destructor TOSRandom.DestroyOSRandom;
@@ -174,6 +185,7 @@ class procedure TOSRandom.GetBytes(const data: TCryptoLibByteArray);
 var
   count: Int32;
 begin
+  TOSRandom.Boot;
   count := System.Length(data);
 {$IFDEF MSWINDOWS}
   if FwinCryptOk = 1 then
