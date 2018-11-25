@@ -24,6 +24,7 @@ interface
 uses
   ClpIKeyParameter,
   ClpICipherParameters,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -43,6 +44,7 @@ type
     constructor Create(const key: TCryptoLibByteArray); overload;
     constructor Create(const key: TCryptoLibByteArray;
       keyOff, keyLen: Int32); overload;
+    destructor Destroy; override;
     function GetKey(): TCryptoLibByteArray; inline;
 
   end;
@@ -85,6 +87,12 @@ begin
   System.SetLength(Fkey, keyLen);
   System.Move(key[keyOff], Fkey[0], keyLen);
 
+end;
+
+destructor TKeyParameter.Destroy;
+begin
+  TArrayUtils.Fill(Fkey, 0, System.Length(Fkey), Byte(0));
+  inherited Destroy;
 end;
 
 function TKeyParameter.GetKey: TCryptoLibByteArray;

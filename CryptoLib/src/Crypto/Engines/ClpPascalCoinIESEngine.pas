@@ -344,8 +344,7 @@ begin
     end;
 
   finally
-    System.FillChar(BigZ[0], System.Length(BigZ) * System.SizeOf(Byte),
-      Byte(0));
+    TArrayUtils.Fill(BigZ, 0, System.Length(BigZ), Byte(0));
   end;
 end;
 
