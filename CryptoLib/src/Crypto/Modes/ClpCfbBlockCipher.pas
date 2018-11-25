@@ -222,7 +222,7 @@ end;
 function TCfbBlockCipher.DecryptBlock(const input: TCryptoLibByteArray;
   inOff: Int32; const outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
 var
-  I: Int32;
+  I, count: Int32;
 begin
   if ((inOff + FblockSize) > System.length(input)) then
   begin
@@ -239,8 +239,11 @@ begin
   //
   // change over the input block.
   //
-  System.Move(FcfbV[FblockSize], FcfbV[0], (System.length(FcfbV) - FblockSize) *
-    System.SizeOf(Byte));
+  count := (System.length(FcfbV) - FblockSize) * System.SizeOf(Byte);
+  if count > 0 then
+  begin
+    System.Move(FcfbV[FblockSize], FcfbV[0], count);
+  end;
 
   System.Move(input[inOff], FcfbV[(System.length(FcfbV) - FblockSize)],
     FblockSize * System.SizeOf(Byte));
@@ -258,7 +261,7 @@ end;
 function TCfbBlockCipher.EncryptBlock(const input: TCryptoLibByteArray;
   inOff: Int32; const outBytes: TCryptoLibByteArray; outOff: Int32): Int32;
 var
-  I: Int32;
+  I, count: Int32;
 begin
   if ((inOff + FblockSize) > System.length(input)) then
   begin
@@ -282,8 +285,12 @@ begin
   //
   // change over the input block.
   //
-  System.Move(FcfbV[FblockSize], FcfbV[0], (System.length(FcfbV) - FblockSize) *
-    System.SizeOf(Byte));
+  count := (System.length(FcfbV) - FblockSize) * System.SizeOf(Byte);
+
+  if count > 0 then
+  begin
+    System.Move(FcfbV[FblockSize], FcfbV[0], count);
+  end;
 
   System.Move(outBytes[outOff], FcfbV[(System.length(FcfbV) - FblockSize)],
     FblockSize * System.SizeOf(Byte));

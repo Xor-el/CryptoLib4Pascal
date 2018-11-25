@@ -79,7 +79,10 @@ procedure TDerOutputStream.WriteEncoded(tag: Int32;
 begin
   WriteByte(Byte(tag));
   WriteLength(System.length(bytes));
-  Write(bytes[0], System.length(bytes));
+  if bytes <> Nil then
+  begin
+    Write(bytes[0], System.length(bytes));
+  end;
 end;
 
 procedure TDerOutputStream.WriteEncoded(flags, tagNo: Int32;
