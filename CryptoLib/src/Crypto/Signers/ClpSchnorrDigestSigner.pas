@@ -222,7 +222,7 @@ procedure TSchnorrDigestSigner.Reset;
 begin
   FDigest.Reset;
   FBuffer.Clear;
-  FBuffer.SetSize(0);
+  FBuffer.SetSize(Int64(0));
 end;
 
 procedure TSchnorrDigestSigner.Update(input: Byte);

@@ -26,12 +26,11 @@ uses
   ClpBits,
   ClpAsn1Tags,
   ClpCryptoLibTypes,
-  ClpIFilterStream,
   ClpIProxiedInterface,
   ClpFilterStream;
 
 type
-  TDerOutputStream = class(TFilterStream, IFilterStream, IDerOutputStream)
+  TDerOutputStream = class(TFilterStream, IDerOutputStream)
 
   strict private
     procedure WriteLength(length: Int32);
