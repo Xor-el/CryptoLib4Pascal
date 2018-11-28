@@ -67,7 +67,7 @@ type
     /// <summary>
     /// Returns a ObjectIdentifier for a given digest mechanism.
     /// </summary>
-    /// <param name="mechanism">A string representation of the digest meanism.</param>
+    /// <param name="mechanism">A string representation of the digest mechanism.</param>
     /// <returns>A DerObjectIdentifier, null if the Oid is not available.</returns>
     class function GetObjectIdentifier(mechanism: String)
       : IDerObjectIdentifier; static;
