@@ -40,8 +40,8 @@ type
 
   public
     constructor Create(const parser: IAsn1StreamParser);
-    function Read(buffer: TCryptoLibByteArray; offset, count: Int32)
-      : Int32; override;
+    function Read(buffer: TCryptoLibByteArray; offset, count: LongInt)
+      : LongInt; override;
     function ReadByte(): Int32; override;
   end;
 
@@ -60,7 +60,7 @@ begin
 end;
 
 function TConstructedOctetStream.Read(buffer: TCryptoLibByteArray;
-  offset, count: Int32): Int32;
+  offset, count: LongInt): LongInt;
 var
   s, aos: IAsn1OctetStringParser;
   totalRead, numRead: Int32;

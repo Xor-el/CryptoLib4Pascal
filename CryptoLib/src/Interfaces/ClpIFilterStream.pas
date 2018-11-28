@@ -45,8 +45,8 @@ type
     property Position: Int64 read GetPosition write SetPosition;
 
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
-    function Read(var Buffer; Count: Int32): Int32;
-    function Write(const Buffer; Count: Int32): Int32;
+    function Read(var Buffer; Count: LongInt): LongInt;
+    function Write(const Buffer; Count: LongInt): LongInt;
     function ReadByte(): Int32;
     procedure WriteByte(Value: Byte);
 

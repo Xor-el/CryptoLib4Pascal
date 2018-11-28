@@ -54,7 +54,7 @@ type
 
     function ReadByte(): Int32; override;
 
-    function Read(buf: TCryptoLibByteArray; off, len: Int32): Int32; override;
+    function Read(buf: TCryptoLibByteArray; off, len: LongInt): LongInt; override;
 
     procedure ReadAllIntoByteArray(var buf: TCryptoLibByteArray);
 
@@ -106,7 +106,7 @@ begin
 end;
 
 function TDefiniteLengthInputStream.Read(buf: TCryptoLibByteArray;
-  off, len: Int32): Int32;
+  off, len: LongInt): LongInt;
 var
   toRead, numRead: Int32;
 

@@ -60,13 +60,13 @@ type
     function Write(const Buffer; Count: LongInt): LongInt; overload; override;
 
     function Read(Buffer: TCryptoLibByteArray; Offset, Count: LongInt)
-      : Int32; overload;
-{$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
-{$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
+      : LongInt; overload;
+{$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} {$IFDEF NEXTGEN} virtual{$ELSE}override
+{$ENDIF} {$ELSE} virtual {$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
 
     function Write(const Buffer: TCryptoLibByteArray; Offset, Count: LongInt)
-      : Int32; overload;
-{$IFDEF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
+      : LongInt; overload; {$IFDEF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD} {$IFDEF NEXTGEN} virtual
+{$ELSE} override{$ENDIF} {$ELSE} virtual
 {$ENDIF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD};
 
     function Seek(Offset: LongInt; Origin: Word): LongInt; overload; override;
@@ -171,7 +171,7 @@ begin
 end;
 
 function TBaseInputStream.Read(Buffer: TCryptoLibByteArray;
-  Offset, Count: LongInt): Int32;
+  Offset, Count: LongInt): LongInt;
 var
   &pos, endPoint, b: Int32;
 
@@ -204,7 +204,7 @@ end;
 {$IFNDEF _FIXINSIGHT_}
 
 function TBaseInputStream.Write(const Buffer: TCryptoLibByteArray;
-  Offset, Count: LongInt): Int32;
+  Offset, Count: LongInt): LongInt;
 begin
   raise ENotSupportedCryptoLibException.Create('');
 end;
