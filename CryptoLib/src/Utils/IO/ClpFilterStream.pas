@@ -55,8 +55,8 @@ type
     property Position: Int64 read GetPosition write SetPosition;
 
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
-    function Read(var Buffer; Count: Int32): Int32; override;
-    function Write(const Buffer; Count: Int32): Int32; override;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
 
     function ReadByte(): Int32; inline;
     procedure WriteByte(Value: Byte); inline;
@@ -106,7 +106,7 @@ begin
   Fs.Position := Value;
 end;
 
-function TFilterStream.Write(const Buffer; Count: Int32): Int32;
+function TFilterStream.Write(const Buffer; Count: LongInt): LongInt;
 begin
   Result := Fs.Write(PByte(Buffer), Count);
 end;
@@ -121,7 +121,7 @@ begin
   Result := Fs.Size;
 end;
 
-function TFilterStream.Read(var Buffer; Count: Int32): Int32;
+function TFilterStream.Read(var Buffer; Count: LongInt): LongInt;
 begin
   Result := Fs.Read(PByte(Buffer), Count);
 end;
