@@ -27,6 +27,9 @@ uses
   ClpCryptoLibTypes;
 
 type
+  TBufferedCipherProgressEvent = procedure(AProcessed, ATotal: Int64);
+
+type
   /// <remarks>Block cipher engines are expected to conform to this interface.</remarks>
   IBufferedCipher = interface(IInterface)
     ['{44FE589C-EDAE-4FDC-90AE-90C0935B4BC7}']
@@ -41,6 +44,12 @@ type
     /// encryption/decryption.
     /// </summary>
     property BufferSize: Int32 read GetBufferSize write SetBufferSize;
+
+    function GetOnProgress: TBufferedCipherProgressEvent;
+    procedure SetOnProgress(const value: TBufferedCipherProgressEvent);
+
+    property OnProgress: TBufferedCipherProgressEvent read GetOnProgress
+      write SetOnProgress;
 
     /// <summary>Initialise the cipher.</summary>
     /// <param name="forEncryption">If true the cipher is initialised for encryption,

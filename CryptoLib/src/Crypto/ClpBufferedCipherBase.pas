@@ -55,14 +55,19 @@ type
   var
 
     FBufferSize: Int32;
+    FOnProgress: TBufferedCipherProgressEvent;
 
   const
     BUFFER_SIZE = Int32(64 * 1024); // 64Kb
 
     function GetBufferSize: Int32; inline;
     procedure SetBufferSize(value: Int32); inline;
+    function GetOnProgress: TBufferedCipherProgressEvent; inline;
+    procedure SetOnProgress(const value: TBufferedCipherProgressEvent); inline;
 
   strict protected
+
+    procedure DoProgress(AProcessed, ATotal: Int64); virtual;
 
     class property EmptyBuffer: TCryptoLibByteArray read GetEmptyBuffer;
 
@@ -132,6 +137,8 @@ type
     /// encryption/decryption.
     /// </summary>
     property BufferSize: Int32 read GetBufferSize write SetBufferSize;
+    property OnProgress: TBufferedCipherProgressEvent read GetOnProgress
+      write SetOnProgress;
 
   end;
 
@@ -142,6 +149,25 @@ implementation
 class constructor TBufferedCipherBase.BufferedCipherBase;
 begin
   System.SetLength(FEmptyBuffer, 0);
+end;
+
+procedure TBufferedCipherBase.DoProgress(AProcessed, ATotal: Int64);
+begin
+  if System.Assigned(FOnProgress) then
+  begin
+    FOnProgress(AProcessed, ATotal);
+  end;
+end;
+
+function TBufferedCipherBase.GetOnProgress: TBufferedCipherProgressEvent;
+begin
+  result := FOnProgress;
+end;
+
+procedure TBufferedCipherBase.SetOnProgress(const value
+  : TBufferedCipherProgressEvent);
+begin
+  FOnProgress := value;
 end;
 
 constructor TBufferedCipherBase.Create;
@@ -307,14 +333,16 @@ begin
   inputStream.Position := inPos;
   outputStream.Position := outPos;
 
+  DoProgress(0, length);
+
   while true do
   begin
-
     readed := inputStream.Read(data[0], LBufferSize);
 
     if ((total + Int64(readed)) >= length) then
     begin
       tempRes := ProcessBytes(data, 0, Int32(length - total));
+      DoProgress(total + readed, length);
       if (tempRes <> Nil) then
       begin
         outputStream.Write(tempRes[0], System.length(tempRes));
@@ -330,6 +358,7 @@ begin
       end;
       total := total + readed;
     end;
+    DoProgress(total, length);
   end;
 
   tempRes := DoFinal();
