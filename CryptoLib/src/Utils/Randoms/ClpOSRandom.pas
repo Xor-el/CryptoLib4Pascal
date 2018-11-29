@@ -24,6 +24,12 @@ interface
 uses
 {$IF DEFINED(MSWINDOWS)}
   Windows,
+{$ELSEIF DEFINED(IOS)}
+  // iOS stuffs for Delphi
+  Macapi.Dispatch,
+  iOSapi.Foundation,
+{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+  // iOS stuffs for FreePascal
 {$ELSE}
   Classes,
   SysUtils,
@@ -32,8 +38,13 @@ uses
 
 resourcestring
 {$IF DEFINED(MSWINDOWS)}
-  SMSWIndowsCryptoAPIAvailableGenerationError =
+  SMSWIndowsCryptoAPIGenerationError =
     'An Error Occured while generating random data using MS WIndows Crypto API.';
+{$ELSEIF DEFINED(IOS)}
+  SIOSSecRandomCopyBytesGenerationError =
+    'An Error Occured while generating random data using SecRandomCopyBytes API.';
+{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+  SNotImplementedError = 'OSRandom has not been implemented for IOS';
 {$ELSE}
   SUnixRandomReadError =
     'An Error Occured while reading random data from /dev/urandom or /dev/random.';
@@ -49,9 +60,11 @@ type
   /// This class returns random bytes from an OS-specific randomness
   /// source. The returned data should be unpredictable enough for
   /// cryptographic applications, though its exact quality depends on the
-  /// OS implementation. On a UNIX-like system this will query
-  /// /dev/urandom or /dev/random (if the former is not available) , and
-  /// on MSWINDOWS it will use CryptGenRandom().
+  /// OS implementation.
+  /// On a UNIX-like system this will read directly from /dev/urandom or /dev/random
+  /// (if the former is not available),
+  /// on iOS, calls SecRandomCopyBytes as /dev/(u)random is sandboxed,
+  /// on MSWINDOWS it will call CryptGenRandom().
   /// </para>
   /// </summary>
 
@@ -64,6 +77,11 @@ type
 
 {$IF DEFINED(MSWINDOWS)}
     class function GenRandomBytesWindows(len: Int32; const data: PByte): Int32;
+{$ELSEIF DEFINED(IOS)}
+    class function GenRandomBytesIOSDelphi(len: Int32;
+      const data: PByte): Int32;
+{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+    class function GenRandomBytesIOSFPC(len: Int32; const data: PByte): Int32;
 {$ELSE}
     class function GenRandomBytesUnix(len: Int32; const data: PByte): Int32;
 {$IFEND $MSWINDOWS}
@@ -89,19 +107,40 @@ function CryptGenRandom(hProv: THandle; dwLen: DWORD; pbBuffer: PByte): BOOL;
 function CryptReleaseContext(hProv: THandle; dwFlags: DWORD): BOOL; stdcall;
   external ADVAPI32 Name 'CryptReleaseContext';
 {$ENDIF MSWINDOWS}
+{$IFDEF IOS}
+
+type
+  SecRandomRef = Pointer;
+
+const
+  libSecurity = '/System/Library/Frameworks/Security.framework/Security';
+
+function kSecRandomDefault: Pointer;
+
+function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
+  : Integer; cdecl; external libSecurity Name _PU + 'SecRandomCopyBytes';
+{$ENDIF IOS}
 
 implementation
+
+{$IFDEF IOS}
+
+function kSecRandomDefault: Pointer;
+begin
+  result := CocoaPointerConst(libSecurity, 'kSecRandomDefault');
+end;
+{$ENDIF IOS}
 
 class function TOSRandom.NoZeroes(const data: TCryptoLibByteArray): Boolean;
 var
   i: Int32;
 begin
-  Result := True;
+  result := True;
   for i := System.Low(data) to System.High(data) do
   begin
     if data[i] = 0 then
     begin
-      Result := False;
+      result := False;
       Exit;
     end;
   end;
@@ -122,23 +161,39 @@ begin
   if not CryptAcquireContextW(@hProv, nil, nil, PROV_RSA_FULL,
     CRYPT_VERIFYCONTEXT or CRYPT_SILENT) then
   begin
-    Result := HResultFromWin32(GetLastError);
+    result := HResultFromWin32(GetLastError);
     Exit;
   end;
 
   try
     if not CryptGenRandom(hProv, len, data) then
     begin
-      Result := HResultFromWin32(GetLastError);
+      result := HResultFromWin32(GetLastError);
       Exit;
     end;
   finally
     CryptReleaseContext(hProv, 0);
   end;
 
-  Result := S_OK;
+  result := S_OK;
 end;
 
+{$ELSEIF DEFINED(IOS)}
+
+class function TOSRandom.GenRandomBytesIOSDelphi(len: Int32;
+  const data: PByte): Int32;
+begin
+  // UNTESTED !!!, Please Take Note.
+  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+end;
+
+{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+
+class function TOSRandom.GenRandomBytesIOSFPC(len: Int32;
+  const data: PByte): Int32;
+begin
+  raise ENotImplementedCryptoLibException.CreateRes(@SNotImplementedError);
+end;
 {$ELSE}
 
 class function TOSRandom.GenRandomBytesUnix(len: Int32;
@@ -153,7 +208,7 @@ begin
     RandGen := '/dev/random';
     if not FileExists(RandGen) then
     begin
-      Result := -1;
+      result := -1;
       Exit;
     end;
   end;
@@ -163,9 +218,9 @@ begin
   try
     try
       LStream.ReadBuffer(data[0], len);
-      Result := 0;
+      result := 0;
     except
-      Result := -1;
+      result := -1;
     end;
   finally
     LStream.Free;
@@ -183,8 +238,23 @@ begin
   if GenRandomBytesWindows(count, PByte(data)) <> 0 then
   begin
     raise EAccessCryptoLibException.CreateRes
-      (@SMSWIndowsCryptoAPIAvailableGenerationError);
+      (@SMSWIndowsCryptoAPIGenerationError);
   end;
+
+{$ELSEIF DEFINED(IOS)}
+  if GenRandomBytesIOSDelphi(count, PByte(data)) <> 0 then
+  begin
+    raise EAccessCryptoLibException.CreateRes
+      (@SIOSSecRandomCopyBytesGenerationError);
+  end;
+
+{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+  if GenRandomBytesIOSFPC(count, PByte(data)) <> 0 then
+  begin
+    raise EAccessCryptoLibException.CreateRes
+      (@SIOSSecRandomCopyBytesGenerationError);
+  end;
+
 {$ELSE}
   if GenRandomBytesUnix(count, PByte(data)) <> 0 then
   begin
