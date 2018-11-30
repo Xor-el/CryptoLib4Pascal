@@ -24,11 +24,11 @@ interface
 uses
 {$IF DEFINED(MSWINDOWS)}
   Windows,
-{$ELSEIF DEFINED(IOS)}
+{$ELSEIF DEFINED(IOSDELPHI)}
   // iOS stuffs for Delphi
   Macapi.Dispatch,
   iOSapi.Foundation,
-{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+{$ELSEIF DEFINED(IOSFPC)}
   // iOS stuffs for FreePascal
 {$ELSE}
   Classes,
@@ -40,10 +40,10 @@ resourcestring
 {$IF DEFINED(MSWINDOWS)}
   SMSWIndowsCryptoAPIGenerationError =
     'An Error Occured while generating random data using MS WIndows Crypto API.';
-{$ELSEIF DEFINED(IOS)}
+{$ELSEIF DEFINED(IOSDELPHI)}
   SIOSSecRandomCopyBytesGenerationError =
     'An Error Occured while generating random data using SecRandomCopyBytes API.';
-{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+{$ELSEIF DEFINED(IOSFPC)}
   SNotImplementedError = 'OSRandom has not been implemented for IOS';
 {$ELSE}
   SUnixRandomReadError =
@@ -77,10 +77,10 @@ type
 
 {$IF DEFINED(MSWINDOWS)}
     class function GenRandomBytesWindows(len: Int32; const data: PByte): Int32;
-{$ELSEIF DEFINED(IOS)}
+{$ELSEIF DEFINED(IOSDELPHI)}
     class function GenRandomBytesIOSDelphi(len: Int32;
       const data: PByte): Int32;
-{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+{$ELSEIF DEFINED(IOSFPC)}
     class function GenRandomBytesIOSFPC(len: Int32; const data: PByte): Int32;
 {$ELSE}
     class function GenRandomBytesUnix(len: Int32; const data: PByte): Int32;
@@ -107,7 +107,7 @@ function CryptGenRandom(hProv: THandle; dwLen: DWORD; pbBuffer: PByte): BOOL;
 function CryptReleaseContext(hProv: THandle; dwFlags: DWORD): BOOL; stdcall;
   external ADVAPI32 Name 'CryptReleaseContext';
 {$ENDIF MSWINDOWS}
-{$IFDEF IOS}
+{$IFDEF IOSDELPHI}
 
 type
   SecRandomRef = Pointer;
@@ -119,17 +119,17 @@ function kSecRandomDefault: Pointer;
 
 function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
   : Integer; cdecl; external libSecurity Name _PU + 'SecRandomCopyBytes';
-{$ENDIF IOS}
+{$ENDIF IOSDELPHI}
 
 implementation
 
-{$IFDEF IOS}
+{$IFDEF IOSDELPHI}
 
 function kSecRandomDefault: Pointer;
 begin
   result := CocoaPointerConst(libSecurity, 'kSecRandomDefault');
 end;
-{$ENDIF IOS}
+{$ENDIF IOSDELPHI}
 
 class function TOSRandom.NoZeroes(const data: TCryptoLibByteArray): Boolean;
 var
@@ -178,7 +178,7 @@ begin
   result := S_OK;
 end;
 
-{$ELSEIF DEFINED(IOS)}
+{$ELSEIF DEFINED(IOSDELPHI)}
 
 class function TOSRandom.GenRandomBytesIOSDelphi(len: Int32;
   const data: PByte): Int32;
@@ -187,7 +187,7 @@ begin
   result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
 end;
 
-{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+{$ELSEIF DEFINED(IOSFPC)}
 
 class function TOSRandom.GenRandomBytesIOSFPC(len: Int32;
   const data: PByte): Int32;
@@ -241,14 +241,14 @@ begin
       (@SMSWIndowsCryptoAPIGenerationError);
   end;
 
-{$ELSEIF DEFINED(IOS)}
+{$ELSEIF DEFINED(IOSDELPHI)}
   if GenRandomBytesIOSDelphi(count, PByte(data)) <> 0 then
   begin
     raise EAccessCryptoLibException.CreateRes
       (@SIOSSecRandomCopyBytesGenerationError);
   end;
 
-{$ELSEIF DEFINED(DARWIN) AND (DEFINED(ARM) OR DEFINED(AARCH64))}
+{$ELSEIF DEFINED(IOSFPC)}
   if GenRandomBytesIOSFPC(count, PByte(data)) <> 0 then
   begin
     raise EAccessCryptoLibException.CreateRes

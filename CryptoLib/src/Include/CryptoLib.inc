@@ -23,6 +23,10 @@
 {$UNDEF DELPHI}
 {$MODE delphi}
 
+{$IF (DEFINED(DARWIN) AND (DEFINED(CPUARM) OR DEFINED(CPUAARCH64) OR DEFINED(IPHONESIM)))}
+{$DEFINE IOSFPC}
+{$ENDIF}
+
 {$DEFINE USE_UNROLLED_VARIANT}
 
 // Disable Overflow and RangeChecks.
@@ -56,6 +60,10 @@
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 {$IFDEF DELPHI}
+
+{$IF DEFINED(IOS)}
+{$DEFINE IOSDELPHI}
+{$ENDIF}
 
 {$DEFINE USE_UNROLLED_VARIANT}
 
