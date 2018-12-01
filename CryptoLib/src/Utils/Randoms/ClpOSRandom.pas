@@ -30,6 +30,7 @@ uses
   iOSapi.Foundation,
 {$ELSEIF DEFINED(IOSFPC)}
   // iOS stuffs for FreePascal
+{$LINKFRAMEWORK Security}
 {$ELSE}
   Classes,
   SysUtils,
@@ -40,11 +41,9 @@ resourcestring
 {$IF DEFINED(MSWINDOWS)}
   SMSWIndowsCryptoAPIGenerationError =
     'An Error Occured while generating random data using MS WIndows Crypto API.';
-{$ELSEIF DEFINED(IOSDELPHI)}
+{$ELSEIF (DEFINED(IOSDELPHI) OR DEFINED(IOSFPC))}
   SIOSSecRandomCopyBytesGenerationError =
     'An Error Occured while generating random data using SecRandomCopyBytes API.';
-{$ELSEIF DEFINED(IOSFPC)}
-  SNotImplementedError = 'OSRandom has not been implemented for IOS';
 {$ELSE}
   SUnixRandomReadError =
     'An Error Occured while reading random data from /dev/urandom or /dev/random.';
@@ -120,6 +119,23 @@ function kSecRandomDefault: Pointer;
 function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
   : Integer; cdecl; external libSecurity Name _PU + 'SecRandomCopyBytes';
 {$ENDIF IOSDELPHI}
+{$IFDEF IOSFPC}
+
+type
+
+  __SecRandom = record end;
+
+  SecRandomRef = ^__SecRandom;
+
+const
+  { * This is a synonym for NULL, if you'd rather use a named constant.   This
+    refers to a cryptographically secure random number generator.  * }
+  kSecRandomDefault: Pointer = Nil;
+
+function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
+  : Integer; cdecl; external;
+
+{$ENDIF IOSFPC}
 
 implementation
 
@@ -192,7 +208,8 @@ end;
 class function TOSRandom.GenRandomBytesIOSFPC(len: Int32;
   const data: PByte): Int32;
 begin
-  raise ENotImplementedCryptoLibException.CreateRes(@SNotImplementedError);
+  // UNTESTED !!!, Please Take Note.
+  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
 end;
 {$ELSE}
 
