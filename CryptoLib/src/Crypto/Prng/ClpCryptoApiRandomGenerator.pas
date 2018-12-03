@@ -22,6 +22,7 @@ unit ClpCryptoApiRandomGenerator;
 interface
 
 uses
+  SyncObjs,
   ClpCryptoLibTypes,
   ClpIRandomNumberGenerator,
   ClpRandomNumberGenerator,
@@ -40,7 +41,16 @@ type
     ICryptoApiRandomGenerator, IRandomGenerator)
 
   strict private
+  var
     FrndProv: IRandomNumberGenerator;
+
+  class var
+
+    FLock: TCriticalSection;
+    FIsBooted: Boolean;
+
+    class constructor CreateCryptoApiRandomGenerator();
+    class destructor DestroyCryptoApiRandomGenerator();
 
   public
     /// <summary>
@@ -69,6 +79,8 @@ type
     procedure NextBytes(const bytes: TCryptoLibByteArray; start, len: Int32);
       overload; virtual;
 
+    class procedure Boot(); static;
+
   end;
 
 implementation
@@ -78,6 +90,16 @@ implementation
 procedure TCryptoApiRandomGenerator.AddSeedMaterial(seed: Int64);
 begin
   // We don't care about the seed
+end;
+
+class procedure TCryptoApiRandomGenerator.Boot;
+begin
+  if not FIsBooted then
+  begin
+    FLock := TCriticalSection.Create;
+
+    FIsBooted := True;
+  end;
 end;
 
 procedure TCryptoApiRandomGenerator.AddSeedMaterial
@@ -92,6 +114,16 @@ begin
   FrndProv := rng;
 end;
 
+class constructor TCryptoApiRandomGenerator.CreateCryptoApiRandomGenerator;
+begin
+  TCryptoApiRandomGenerator.Boot;
+end;
+
+class destructor TCryptoApiRandomGenerator.DestroyCryptoApiRandomGenerator;
+begin
+  FLock.Free;
+end;
+
 constructor TCryptoApiRandomGenerator.Create;
 begin
   Create(TRandomNumberGenerator.CreateRNG());
@@ -99,7 +131,12 @@ end;
 
 procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray);
 begin
-  FrndProv.GetBytes(bytes);
+  FLock.Acquire;
+  try
+    FrndProv.GetBytes(bytes);
+  finally
+    FLock.Release;
+  end;
 end;
 
 procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray;

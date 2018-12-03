@@ -69,8 +69,6 @@ type
     class constructor CreateDerObjectIdentifier();
     class destructor DestroyDerObjectIdentifier();
 
-    class procedure Boot();
-
     constructor Create(const oid: IDerObjectIdentifier;
       const branchID: String); overload;
     constructor Create(const bytes: TCryptoLibByteArray); overload;
@@ -122,6 +120,8 @@ type
 
     class function FromOctetString(const enc: TCryptoLibByteArray)
       : IDerObjectIdentifier; static;
+
+    class procedure Boot(); static;
 
     constructor Create(const identifier: String); overload;
 
