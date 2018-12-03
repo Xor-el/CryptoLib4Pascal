@@ -30,6 +30,7 @@ uses
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerUniversalString;
@@ -69,7 +70,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a Universal String from the passed in object.
@@ -142,9 +143,9 @@ begin
   FStr := Str;
 end;
 
-procedure TDerUniversalString.Encode(const derOut: IDerOutputStream);
+procedure TDerUniversalString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.UniversalString, Str);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.UniversalString, Str);
 end;
 
 class function TDerUniversalString.GetInstance(const obj: TObject)

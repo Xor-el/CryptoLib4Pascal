@@ -22,12 +22,14 @@ unit ClpDerUtf8String;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerUtf8String,
@@ -67,7 +69,7 @@ type
 
     function GetString(): String; override;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return an UTF8 string from the passed in object.
@@ -140,9 +142,9 @@ begin
   FStr := Str;
 end;
 
-procedure TDerUtf8String.Encode(const derOut: IDerOutputStream);
+procedure TDerUtf8String.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.Utf8String,
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Utf8String,
     TConverters.ConvertStringToBytes(Str, TEncoding.UTF8));
 end;
 

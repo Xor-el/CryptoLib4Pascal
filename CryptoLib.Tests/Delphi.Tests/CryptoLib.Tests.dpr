@@ -400,7 +400,6 @@ uses
   ClpPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPkcs5S2ParametersGenerator.pas',
   ClpIPkcs5S2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIPkcs5S2ParametersGenerator.pas',
   Pkcs5Tests in '..\src\Crypto\Pkcs5Tests.pas',
-  ClpIFilterStream in '..\..\CryptoLib\src\Interfaces\ClpIFilterStream.pas',
   ClpECNRSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpECNRSigner.pas',
   ClpIECNRSigner in '..\..\CryptoLib\src\Interfaces\ClpIECNRSigner.pas',
   ClpDsaValidationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaValidationParameters.pas',

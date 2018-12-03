@@ -35,6 +35,7 @@ uses
   ClpAsn1Tags,
   ClpOidTokenizer,
   ClpIOidTokenizer,
+  ClpDerOutputStream,
   ClpAsn1Object,
   ClpAsn1OctetString,
   ClpIAsn1TaggedObject,
@@ -57,6 +58,7 @@ type
 
   class var
 
+    FIsBooted: Boolean;
     FLock: TCriticalSection;
     Fcache: TCryptoLibGenericArray<IDerObjectIdentifier>;
 
@@ -66,6 +68,8 @@ type
 
     class constructor CreateDerObjectIdentifier();
     class destructor DestroyDerObjectIdentifier();
+
+    class procedure Boot();
 
     constructor Create(const oid: IDerObjectIdentifier;
       const branchID: String); overload;
@@ -133,7 +137,7 @@ type
 
     function &On(const stem: IDerObjectIdentifier): Boolean; virtual;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     function ToString(): String; override;
 
@@ -165,6 +169,16 @@ end;
 function TDerObjectIdentifier.Asn1GetHashCode: Int32;
 begin
   result := TStringUtils.GetStringHashCode(Fidentifier);
+end;
+
+class procedure TDerObjectIdentifier.Boot;
+begin
+  if not FIsBooted then
+  begin
+    FLock := TCriticalSection.Create;
+    System.SetLength(Fcache, 1024);
+    FIsBooted := True;
+  end;
 end;
 
 function TDerObjectIdentifier.Branch(const branchID: String)
@@ -221,8 +235,7 @@ end;
 
 class constructor TDerObjectIdentifier.CreateDerObjectIdentifier;
 begin
-  FLock := TCriticalSection.Create;
-  System.SetLength(Fcache, 1024);
+  TDerObjectIdentifier.Boot;
 end;
 
 class destructor TDerObjectIdentifier.DestroyDerObjectIdentifier;
@@ -263,9 +276,10 @@ begin
   end;
 end;
 
-procedure TDerObjectIdentifier.Encode(const derOut: IDerOutputStream);
+procedure TDerObjectIdentifier.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.ObjectIdentifier, GetBody());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.ObjectIdentifier,
+    GetBody());
 end;
 
 class function TDerObjectIdentifier.FromOctetString
@@ -278,6 +292,7 @@ begin
   HashCode := TArrayUtils.GetArrayHashCode(enc);
   first := HashCode and 1023;
 
+  TDerObjectIdentifier.Boot;
   FLock.Acquire;
   try
     entry := Fcache[first];
@@ -300,6 +315,7 @@ function TDerObjectIdentifier.GetBody: TCryptoLibByteArray;
 var
   bOut: TMemoryStream;
 begin
+  TDerObjectIdentifier.Boot;
   FLock.Acquire;
   try
     if (Fbody = Nil) then

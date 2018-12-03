@@ -75,7 +75,7 @@ type
     /// just outputing Sequence, <br />we also have to specify Constructed,
     /// and the objects length. <br />
     /// </summary>
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     class property Empty: IDerSequence read GetEmpty;
 
@@ -136,7 +136,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TDerSequence.Encode(const derOut: IDerOutputStream);
+procedure TDerSequence.Encode(const derOut: TStream);
 var
   bOut: TMemoryStream;
   dOut: TDerOutputStream;
@@ -163,7 +163,8 @@ begin
     dOut.Free;
   end;
 
-  derOut.WriteEncoded(TAsn1Tags.Sequence or TAsn1Tags.Constructed, bytes);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Sequence or
+    TAsn1Tags.Constructed, bytes);
 end;
 
 class function TDerSequence.FromVector(const v: IAsn1EncodableVector)

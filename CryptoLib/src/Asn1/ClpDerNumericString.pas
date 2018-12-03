@@ -22,12 +22,14 @@ unit ClpDerNumericString;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerNumericString,
@@ -86,7 +88,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a Numeric string from the passed in object
@@ -203,9 +205,10 @@ begin
   FStr := Str;
 end;
 
-procedure TDerNumericString.Encode(const derOut: IDerOutputStream);
+procedure TDerNumericString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.NumericString, GetOctets());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.NumericString,
+    GetOctets());
 end;
 
 class function TDerNumericString.GetInstance(const obj: TObject)

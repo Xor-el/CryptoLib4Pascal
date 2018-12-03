@@ -28,6 +28,7 @@ uses
   ClpArrayUtils,
   ClpAsn1TaggedObject,
   ClpAsn1Tags,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerApplicationSpecific,
   ClpIAsn1EncodableVector,
@@ -99,7 +100,7 @@ type
     /// </exception>
     function GetObject(derTagNo: Int32): IAsn1Object; overload; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     property ApplicationTag: Int32 read GetApplicationTag;
   end;
@@ -247,7 +248,7 @@ begin
 
 end;
 
-procedure TDerApplicationSpecific.Encode(const derOut: IDerOutputStream);
+procedure TDerApplicationSpecific.Encode(const derOut: TStream);
 var
   classBits: Int32;
 begin
@@ -257,7 +258,7 @@ begin
     classBits := classBits or TAsn1Tags.Constructed;
   end;
 
-  derOut.WriteEncoded(classBits, Ftag, Foctets);
+  (derOut as TDerOutputStream).WriteEncoded(classBits, Ftag, Foctets);
 end;
 
 constructor TDerApplicationSpecific.Create(isExplicit: Boolean; tag: Int32;

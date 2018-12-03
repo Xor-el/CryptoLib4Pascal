@@ -30,7 +30,7 @@ uses
   ClpFilterStream;
 
 type
-  TDerOutputStream = class(TFilterStream, IDerOutputStream)
+  TDerOutputStream = class(TFilterStream)
 
   strict private
     procedure WriteLength(length: Int32);

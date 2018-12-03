@@ -22,11 +22,13 @@ unit ClpDerBoolean;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpAsn1Tags,
   ClpIAsn1OctetString,
   ClpIDerBoolean,
   ClpCryptoLibTypes,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIAsn1TaggedObject,
   ClpAsn1Object;
@@ -65,7 +67,7 @@ type
 
     constructor Create(const val: TCryptoLibByteArray); overload;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     function ToString(): String; override;
 
@@ -170,10 +172,11 @@ begin
   FTrue := TDerBoolean.Create(System.True);
 end;
 
-procedure TDerBoolean.Encode(const derOut: IDerOutputStream);
+procedure TDerBoolean.Encode(const derOut: TStream);
 begin
   // TODO Should we make sure the byte value is one of '0' or '0xff' here?
-  derOut.WriteEncoded(TAsn1Tags.Boolean, TCryptoLibByteArray.Create(Fvalue));
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Boolean,
+    TCryptoLibByteArray.Create(Fvalue));
 end;
 
 class function TDerBoolean.FromOctetString(const value: TCryptoLibByteArray)

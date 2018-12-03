@@ -22,12 +22,14 @@ unit ClpDerGraphicString;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpArrayUtils,
   ClpCryptoLibTypes,
   ClpAsn1Object,
   ClpAsn1Tags,
   ClpAsn1OctetString,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerGraphicString,
   ClpIAsn1TaggedObject,
@@ -66,7 +68,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a Graphic String from the passed in object
@@ -137,9 +139,9 @@ begin
   FmString := System.Copy(encoding);
 end;
 
-procedure TDerGraphicString.Encode(const derOut: IDerOutputStream);
+procedure TDerGraphicString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.GraphicString, mString);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.GraphicString, mString);
 end;
 
 class function TDerGraphicString.GetInstance(const obj: TObject)

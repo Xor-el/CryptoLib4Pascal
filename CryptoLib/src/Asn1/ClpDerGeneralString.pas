@@ -22,12 +22,14 @@ unit ClpDerGeneralString;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerGeneralString,
@@ -61,7 +63,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     class function GetInstance(const obj: TObject): IDerGeneralString; overload;
       static; inline;
@@ -115,9 +117,10 @@ begin
   FStr := Str;
 end;
 
-procedure TDerGeneralString.Encode(const derOut: IDerOutputStream);
+procedure TDerGeneralString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.GeneralString, GetOctets());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.GeneralString,
+    GetOctets());
 end;
 
 class function TDerGeneralString.GetInstance(const obj: TObject)

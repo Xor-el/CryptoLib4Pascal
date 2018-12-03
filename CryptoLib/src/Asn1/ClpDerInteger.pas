@@ -22,6 +22,7 @@ unit ClpDerInteger;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpCryptoLibTypes,
   ClpBigInteger,
@@ -29,6 +30,7 @@ uses
   ClpIProxiedInterface,
   ClpIAsn1TaggedObject,
   ClpAsn1OctetString,
+  ClpDerOutputStream,
   ClpAsn1Tags,
   ClpArrayUtils,
   ClpIDerInteger;
@@ -63,7 +65,7 @@ type
     property PositiveValue: TBigInteger read GetPositiveValue;
     property bytes: TCryptoLibByteArray read GetBytes;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     function ToString(): String; override;
 
@@ -165,9 +167,9 @@ begin
   Fbytes := System.Copy(bytes);
 end;
 
-procedure TDerInteger.Encode(const derOut: IDerOutputStream);
+procedure TDerInteger.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.Integer, Fbytes);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Integer, Fbytes);
 end;
 
 class function TDerInteger.GetInstance(const obj: IAsn1TaggedObject;

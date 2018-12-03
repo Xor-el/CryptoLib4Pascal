@@ -22,12 +22,14 @@ unit ClpDerT61String;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerT61String,
@@ -76,7 +78,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a T61 string from the passed in object.
@@ -165,9 +167,9 @@ begin
   FEncoding.Free;
 end;
 
-procedure TDerT61String.Encode(const derOut: IDerOutputStream);
+procedure TDerT61String.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.T61String, GetOctets());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.T61String, GetOctets());
 end;
 
 class function TDerT61String.GetInstance(const obj: TObject): IDerT61String;

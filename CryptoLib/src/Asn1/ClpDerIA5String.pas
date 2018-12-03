@@ -22,6 +22,7 @@ unit ClpDerIA5String;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
@@ -29,6 +30,7 @@ uses
   ClpAsn1Object,
   ClpStringUtils,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerIA5String,
@@ -87,7 +89,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a DerIA5String from the passed in object
@@ -204,9 +206,9 @@ begin
   FStr := Str;
 end;
 
-procedure TDerIA5String.Encode(const derOut: IDerOutputStream);
+procedure TDerIA5String.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.IA5String, GetOctets());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.IA5String, GetOctets());
 end;
 
 class function TDerIA5String.GetInstance(const obj: TObject): IDerIA5String;

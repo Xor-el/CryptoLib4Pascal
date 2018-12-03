@@ -35,8 +35,7 @@ uses
   ClpStandardDsaEncoding,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
-  ClpISigner,
-  ClpArrayUtils;
+  ClpISigner;
 
 resourcestring
   SPrivateKey = 'Signing Requires Private Key.';

@@ -22,6 +22,7 @@ unit ClpDerVisibleString;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
@@ -29,6 +30,7 @@ uses
   ClpIAsn1OctetString,
   ClpStringUtils,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerVisibleString,
@@ -71,7 +73,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a DerVisibleString from the passed in object
@@ -154,9 +156,10 @@ begin
   FStr := Str;
 end;
 
-procedure TDerVisibleString.Encode(const derOut: IDerOutputStream);
+procedure TDerVisibleString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.VisibleString, GetOctets());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.VisibleString,
+    GetOctets());
 end;
 
 class function TDerVisibleString.GetInstance(const obj: TObject)

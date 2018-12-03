@@ -22,6 +22,7 @@ unit ClpDerPrintableString;
 interface
 
 uses
+  Classes,
   SysUtils,
   StrUtils,
   ClpDerStringBase,
@@ -29,6 +30,7 @@ uses
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerPrintableString,
@@ -85,7 +87,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     property Str: String read GetStr;
 
@@ -227,9 +229,10 @@ begin
   FStr := Str;
 end;
 
-procedure TDerPrintableString.Encode(const derOut: IDerOutputStream);
+procedure TDerPrintableString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.PrintableString, GetOctets());
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.PrintableString,
+    GetOctets());
 end;
 
 class function TDerPrintableString.GetInstance(const obj: TObject)

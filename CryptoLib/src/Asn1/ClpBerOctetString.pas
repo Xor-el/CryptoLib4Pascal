@@ -32,6 +32,7 @@ uses
   ClpAsn1Tags,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
+  ClpDerOutputStream,
   ClpIBerOctetString,
   ClpIDerOctetString,
   ClpDerOctetString;
@@ -69,7 +70,7 @@ type
     /// </summary>
     function GetEnumerable: TCryptoLibGenericArray<IDerOctetString>; virtual;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     class function FromSequence(const seq: IAsn1Sequence)
       : IBerOctetString; static;
@@ -107,16 +108,17 @@ begin
   Inherited Create(obj);
 end;
 
-procedure TBerOctetString.Encode(const derOut: IDerOutputStream);
+procedure TBerOctetString.Encode(const derOut: TStream);
 var
   oct: IDerOctetString;
   LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
 begin
   if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
-    derOut.WriteByte(TAsn1Tags.Constructed or TAsn1Tags.OctetString);
+    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.Constructed or
+      TAsn1Tags.OctetString);
 
-    derOut.WriteByte($80);
+    (derOut as TDerOutputStream).WriteByte($80);
 
     //
     // write out the octet array
@@ -124,11 +126,11 @@ begin
     LListIDerOctetString := Self.GetEnumerable;
     for oct in LListIDerOctetString do
     begin
-      derOut.WriteObject(oct);
+      (derOut as TDerOutputStream).WriteObject(oct);
     end;
 
-    derOut.WriteByte($00);
-    derOut.WriteByte($00);
+    (derOut as TDerOutputStream).WriteByte($00);
+    (derOut as TDerOutputStream).WriteByte($00);
   end
   else
   begin

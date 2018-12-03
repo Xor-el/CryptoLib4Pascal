@@ -24,11 +24,10 @@ interface
 uses
   Classes,
   ClpStreamHelper,
-  ClpIFilterStream,
   ClpDefiniteLengthInputStream;
 
 type
-  TFilterStream = class(TStream, IFilterStream)
+  TFilterStream = class(TStream)
 
   protected
   var
@@ -38,15 +37,6 @@ type
     procedure SetPosition(const Value: Int64); {$IFDEF FPC} override;
 {$ENDIF FPC}
     function GetSize: Int64; override;
-
-    function QueryInterface({$IFDEF FPC}constref {$ELSE}const
-{$ENDIF FPC} IID: TGUID; out Obj): HResult;
-{$IF DEFINED(MSWINDOWS) OR DEFINED(DELPHI)} stdcall
-{$ELSE} cdecl {$IFEND};
-    function _AddRef: Integer; {$IF DEFINED(MSWINDOWS) OR DEFINED(DELPHI)} stdcall {$ELSE} cdecl
-{$IFEND};
-    function _Release: Integer; {$IF DEFINED(MSWINDOWS) OR DEFINED(DELPHI)} stdcall {$ELSE} cdecl
-{$IFEND};
 
   public
     constructor Create(const s: TStream);
@@ -58,8 +48,8 @@ type
     function Read(var Buffer; Count: LongInt): LongInt; override;
     function Write(const Buffer; Count: LongInt): LongInt; override;
 
-    function ReadByte(): Int32; inline;
-    procedure WriteByte(Value: Byte); inline;
+    function ReadByte(): Int32;
+    procedure WriteByte(Value: Byte);
 
   end;
 
@@ -70,25 +60,6 @@ uses
   ClpStreamSorter;
 
 { TFilterStream }
-
-function TFilterStream._AddRef: Integer;
-begin
-  Result := -1;
-end;
-
-function TFilterStream._Release: Integer;
-begin
-  Result := -1;
-end;
-
-function TFilterStream.QueryInterface({$IFDEF FPC}constref {$ELSE}const
-{$ENDIF FPC} IID: TGUID; out Obj): HResult;
-begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else
-    Result := E_NOINTERFACE;
-end;
 
 constructor TFilterStream.Create(const s: TStream);
 begin

@@ -165,7 +165,6 @@ uses
   ClpIECPrivateKeyParameters in '..\..\CryptoLib\src\Interfaces\ClpIECPrivateKeyParameters.pas',
   ClpIECPublicKeyParameters in '..\..\CryptoLib\src\Interfaces\ClpIECPublicKeyParameters.pas',
   ClpIExtensionField in '..\..\CryptoLib\src\Interfaces\ClpIExtensionField.pas',
-  ClpIFilterStream in '..\..\CryptoLib\src\Interfaces\ClpIFilterStream.pas',
   ClpIFiniteField in '..\..\CryptoLib\src\Interfaces\ClpIFiniteField.pas',
   ClpIFixedPointCombMultiplier in '..\..\CryptoLib\src\Interfaces\ClpIFixedPointCombMultiplier.pas',
   ClpIFixedPointPreCompInfo in '..\..\CryptoLib\src\Interfaces\ClpIFixedPointPreCompInfo.pas',
