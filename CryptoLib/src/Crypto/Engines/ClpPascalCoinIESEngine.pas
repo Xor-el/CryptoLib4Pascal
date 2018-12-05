@@ -236,8 +236,8 @@ begin
 
   PByte(Result)^ := Byte(System.Length(FV));
   (PByte(Result) + 1)^ := Byte(System.Length(T));
-  (PByte(Result) + 2)^ := UInt16(MessageToEncryptSize);
-  (PByte(Result) + 4)^ :=
+  (PWord(Result) + 1)^ := UInt16(MessageToEncryptSize);
+  (PWord(Result) + 2)^ :=
     UInt16(MessageToEncryptSize + MessageToEncryptPadSize);
 
   System.Move(FV[0], Result[SECURE_HEAD_SIZE], System.Length(FV) *
