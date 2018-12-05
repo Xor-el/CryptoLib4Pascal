@@ -112,6 +112,7 @@ constructor TCryptoApiRandomGenerator.Create(const rng: IRandomNumberGenerator);
 begin
   Inherited Create();
   FrndProv := rng;
+  TCryptoApiRandomGenerator.Boot;
 end;
 
 class constructor TCryptoApiRandomGenerator.CreateCryptoApiRandomGenerator;
