@@ -190,8 +190,8 @@ begin
 
   &message := THex.Decode('1234567890abcdef');
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
@@ -235,9 +235,9 @@ begin
 
   &message := THex.Decode('1234567890abcdef');
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
@@ -311,19 +311,19 @@ begin
 
   &message := Nil;
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
     Fail('stream cipher test failed');
   end;
 
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   try
 
-    i2.processBlock(out1, 0, System.Length(out1) - 1);
+    i2.ProcessBlock(out1, 0, System.Length(out1) - 1);
     Fail('Expected EInvalidCipherTextCryptoLibException');
 
   except
@@ -355,8 +355,8 @@ begin
   i2.Init(p2.Private, p, TECIESPublicKeyParser.Create(params)
     as IECIESPublicKeyParser);
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
@@ -365,7 +365,7 @@ begin
 
   try
 
-    i2.processBlock(out1, 0, System.Length(out1) - 1);
+    i2.ProcessBlock(out1, 0, System.Length(out1) - 1);
     Fail('Expected EInvalidCipherTextCryptoLibException');
 
   except
@@ -448,7 +448,7 @@ begin
 
   &message := THex.Decode('1234567890abcdef');
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   if (not TArrayUtils.AreEqual(out1,
     THex.Decode('468d89877e8238802403ec4cb6b329faeccfa6f3a730f2cdb3c0a8e8')))
@@ -457,7 +457,7 @@ begin
     Fail('stream cipher test failed on enc');
   end;
 
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
@@ -500,7 +500,7 @@ begin
 
   &message := THex.Decode('1234567890abcdef');
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   if iv = Nil then
   begin
@@ -518,7 +518,7 @@ begin
     Fail('AES cipher test failed on enc');
   end;
 
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
@@ -556,9 +556,9 @@ begin
 
   &message := THex.Decode('1234567890abcdef');
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
@@ -596,9 +596,9 @@ begin
 
   &message := THex.Decode('1234567890abcdef');
 
-  out1 := i1.processBlock(&message, 0, System.Length(&message));
+  out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
-  out2 := i2.processBlock(out1, 0, System.Length(out1));
+  out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
   if (not TArrayUtils.AreEqual(out2, &message)) then
   begin
