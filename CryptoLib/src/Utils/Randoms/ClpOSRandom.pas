@@ -122,15 +122,15 @@ function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
 {$IFDEF IOSFPC}
 
 type
-
+  // similar to a TOpaqueData already defined in newer FPC but not available in 3.0.4
   __SecRandom = record end;
-
+ // similar to an OpaquePointer already defined in newer FPC but not available in 3.0.4
   SecRandomRef = ^__SecRandom;
 
 const
   { * This is a synonym for NULL, if you'd rather use a named constant.   This
     refers to a cryptographically secure random number generator.  * }
-  kSecRandomDefault: Pointer = Nil;
+  kSecRandomDefault: SecRandomRef = Nil;
 
 function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
   : Integer; cdecl; external;
