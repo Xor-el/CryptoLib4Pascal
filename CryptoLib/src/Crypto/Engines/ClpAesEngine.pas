@@ -466,24 +466,24 @@ end;
 
 class function TAesEngine.FFmulX2(x: UInt32): UInt32;
 var
-  T0, t1: UInt32;
+  lt0, t1: UInt32;
 begin
-  T0 := (x and m5) shl 2;
+  lt0 := (x and m5) shl 2;
   t1 := (x and m4);
   t1 := t1 xor (t1 shr 1);
-  result := T0 xor (t1 shr 2) xor (t1 shr 5);
+  result := lt0 xor (t1 shr 2) xor (t1 shr 5);
 end;
 
 class function TAesEngine.Inv_Mcol(x: UInt32): UInt32;
 var
-  T0, t1: UInt32;
+  lt0, t1: UInt32;
 begin
-  T0 := x;
-  t1 := T0 xor Shift(T0, 8);
-  T0 := T0 xor FFmulX(t1);
-  t1 := t1 xor FFmulX2(T0);
-  T0 := T0 xor (t1 xor Shift(t1, 16));
-  result := T0;
+  lt0 := x;
+  t1 := lt0 xor Shift(lt0, 8);
+  lt0 := lt0 xor FFmulX(t1);
+  t1 := t1 xor FFmulX2(lt0);
+  lt0 := lt0 xor (t1 xor Shift(t1, 16));
+  result := lt0;
 end;
 
 function TAesEngine.GenerateWorkingKey(const key: TCryptoLibByteArray;
