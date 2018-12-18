@@ -238,8 +238,8 @@ type
     /// This code is written assuming those are the only possible values
     /// </para>
     /// </summary>
-    function GenerateWorkingKey(const key: TCryptoLibByteArray;
-      forEncryption: Boolean): TCryptoLibMatrixUInt32Array;
+    function GenerateWorkingKey(forEncryption: Boolean;
+      const key: TCryptoLibByteArray): TCryptoLibMatrixUInt32Array;
 
     procedure UnPackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
     procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
@@ -486,8 +486,8 @@ begin
   result := lt0;
 end;
 
-function TAesEngine.GenerateWorkingKey(const key: TCryptoLibByteArray;
-  forEncryption: Boolean): TCryptoLibMatrixUInt32Array;
+function TAesEngine.GenerateWorkingKey(forEncryption: Boolean;
+  const key: TCryptoLibByteArray): TCryptoLibMatrixUInt32Array;
 var
   keyLen, KC, i, j: Int32;
   smallw: TCryptoLibUInt32Array;
@@ -724,7 +724,7 @@ begin
       [(parameters as TObject).ToString]);
   end;
 
-  FWorkingKey := GenerateWorkingKey(keyParameter.GetKey(), forEncryption);
+  FWorkingKey := GenerateWorkingKey(forEncryption, keyParameter.GetKey());
 
   FforEncryption := forEncryption;
   if forEncryption then
