@@ -30,6 +30,7 @@ uses
   ClpNumberStyles,
   ClpISecureRandom,
   ClpIRandom,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -3828,8 +3829,7 @@ begin
 
   if (xyCmp = 0) then
   begin
-    System.FillChar(x[xStart], (System.length(x) - xStart) *
-      System.SizeOf(Int32), Int32(0));
+    TArrayUtils.Fill(x, xStart, System.length(x), Int32(0));
   end;
 
   Result := x;
@@ -4844,8 +4844,7 @@ begin
   if (xyCmp = 0) then
   begin
     AddMagnitudes(Count, One.Fmagnitude);
-    System.FillChar(x[xStart], (System.length(x) - xStart) *
-      System.SizeOf(Int32), Int32(0));
+    TArrayUtils.Fill(x, xStart, System.length(x), Int32(0));
   end;
 
   Result := Count;

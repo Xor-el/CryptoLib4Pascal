@@ -27,6 +27,7 @@ uses
   ClpICfbBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -343,7 +344,7 @@ begin
     diff := System.length(FIV) - System.length(iv);
 
     System.Move(iv[0], FIV[diff], System.length(iv) * System.SizeOf(Byte));
-    System.FillChar(FIV[0], diff, Byte(0));
+    TArrayUtils.Fill(FIV, 0, diff, Byte(0));
 
     Lparameters := ivParam.parameters;
   end;

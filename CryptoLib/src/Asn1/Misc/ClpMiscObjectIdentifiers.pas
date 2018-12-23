@@ -33,9 +33,23 @@ type
   class var
 
     FIsBooted: Boolean;
-    Fblake2, Fid_blake2b160, Fid_blake2b256, Fid_blake2b384, Fid_blake2b512,
-      Fid_blake2s128, Fid_blake2s160, Fid_blake2s224, Fid_blake2s256
-      : IDerObjectIdentifier;
+    Fcryptlib, Fcryptlib_algorithm, Fcryptlib_algorithm_blowfish_ECB,
+      Fcryptlib_algorithm_blowfish_CBC, Fcryptlib_algorithm_blowfish_CFB,
+      Fcryptlib_algorithm_blowfish_OFB, Fblake2, Fid_blake2b160, Fid_blake2b256,
+      Fid_blake2b384, Fid_blake2b512, Fid_blake2s128, Fid_blake2s160,
+      Fid_blake2s224, Fid_blake2s256: IDerObjectIdentifier;
+
+    class function Getcryptlib: IDerObjectIdentifier; static; inline;
+
+    class function Getcryptlib_algorithm: IDerObjectIdentifier; static; inline;
+    class function Getcryptlib_algorithm_blowfish_ECB: IDerObjectIdentifier;
+      static; inline;
+    class function Getcryptlib_algorithm_blowfish_CBC: IDerObjectIdentifier;
+      static; inline;
+    class function Getcryptlib_algorithm_blowfish_CFB: IDerObjectIdentifier;
+      static; inline;
+    class function Getcryptlib_algorithm_blowfish_OFB: IDerObjectIdentifier;
+      static; inline;
 
     class function Getblake2: IDerObjectIdentifier; static; inline;
 
@@ -52,6 +66,19 @@ type
     class constructor MiscObjectIdentifiers();
 
   public
+
+    class property cryptlib: IDerObjectIdentifier read Getcryptlib;
+
+    class property cryptlib_algorithm: IDerObjectIdentifier
+      read Getcryptlib_algorithm;
+    class property cryptlib_algorithm_blowfish_ECB: IDerObjectIdentifier
+      read Getcryptlib_algorithm_blowfish_ECB;
+    class property cryptlib_algorithm_blowfish_CBC: IDerObjectIdentifier
+      read Getcryptlib_algorithm_blowfish_CBC;
+    class property cryptlib_algorithm_blowfish_CFB: IDerObjectIdentifier
+      read Getcryptlib_algorithm_blowfish_CFB;
+    class property cryptlib_algorithm_blowfish_OFB: IDerObjectIdentifier
+      read Getcryptlib_algorithm_blowfish_OFB;
 
     class property blake2: IDerObjectIdentifier read Getblake2;
 
@@ -76,6 +103,41 @@ implementation
 class function TMiscObjectIdentifiers.Getblake2: IDerObjectIdentifier;
 begin
   result := Fblake2;
+end;
+
+class function TMiscObjectIdentifiers.Getcryptlib: IDerObjectIdentifier;
+begin
+  result := Fcryptlib;
+end;
+
+class function TMiscObjectIdentifiers.Getcryptlib_algorithm
+  : IDerObjectIdentifier;
+begin
+  result := Fcryptlib_algorithm;
+end;
+
+class function TMiscObjectIdentifiers.Getcryptlib_algorithm_blowfish_CBC
+  : IDerObjectIdentifier;
+begin
+  result := Fcryptlib_algorithm_blowfish_CBC;
+end;
+
+class function TMiscObjectIdentifiers.Getcryptlib_algorithm_blowfish_CFB
+  : IDerObjectIdentifier;
+begin
+  result := Fcryptlib_algorithm_blowfish_CFB;
+end;
+
+class function TMiscObjectIdentifiers.Getcryptlib_algorithm_blowfish_ECB
+  : IDerObjectIdentifier;
+begin
+  result := Fcryptlib_algorithm_blowfish_ECB;
+end;
+
+class function TMiscObjectIdentifiers.Getcryptlib_algorithm_blowfish_OFB
+  : IDerObjectIdentifier;
+begin
+  result := Fcryptlib_algorithm_blowfish_OFB;
 end;
 
 class function TMiscObjectIdentifiers.Getid_blake2b160: IDerObjectIdentifier;
@@ -123,6 +185,19 @@ begin
 
   if not FIsBooted then
   begin
+
+    //
+    // Peter Gutmann's Cryptlib
+    //
+
+    Fcryptlib := TDerObjectIdentifier.Create('1.3.6.1.4.1.3029');
+
+    Fcryptlib_algorithm := cryptlib.Branch('1');
+    Fcryptlib_algorithm_blowfish_ECB := cryptlib_algorithm.Branch('1.1');
+    Fcryptlib_algorithm_blowfish_CBC := cryptlib_algorithm.Branch('1.2');
+    Fcryptlib_algorithm_blowfish_CFB := cryptlib_algorithm.Branch('1.3');
+    Fcryptlib_algorithm_blowfish_OFB := cryptlib_algorithm.Branch('1.4');
+
     //
     // Blake2b and Blake2s
     //

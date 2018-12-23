@@ -518,7 +518,10 @@ uses
   ClpISchnorrExt in '..\..\CryptoLib\src\Interfaces\ClpISchnorrExt.pas',
   ClpISchnorrEncoding in '..\..\CryptoLib\src\Interfaces\ClpISchnorrEncoding.pas',
   ClpIPlainSchnorrEncoding in '..\..\CryptoLib\src\Interfaces\ClpIPlainSchnorrEncoding.pas',
-  ClpPlainSchnorrEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpPlainSchnorrEncoding.pas';
+  ClpPlainSchnorrEncoding in '..\..\CryptoLib\src\Crypto\Signers\ClpPlainSchnorrEncoding.pas',
+  ClpBlowfishEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpBlowfishEngine.pas',
+  ClpIBlowfishEngine in '..\..\CryptoLib\src\Interfaces\ClpIBlowfishEngine.pas',
+  BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas';
 
 begin
 

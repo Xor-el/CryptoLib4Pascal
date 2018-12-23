@@ -29,6 +29,7 @@ uses
   ClpIBufferedBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithRandom,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -539,7 +540,7 @@ end;
 
 procedure TBufferedBlockCipher.Reset;
 begin
-  System.FillChar(Fbuf[0], System.length(Fbuf), Byte(0));
+  TArrayUtils.Fill(Fbuf, 0, System.length(Fbuf), Byte(0));
   FbufOff := 0;
 
   Fcipher.Reset();

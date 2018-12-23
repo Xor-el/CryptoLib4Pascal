@@ -32,6 +32,7 @@ uses
   BlockCipherVectorTests,
   BlockCipherMonteCarloTests,
   AESTestVectors,
+  BlowfishTestVectors,
   AESSICTests,
   IESCipherTests,
   MD5HMacTests,

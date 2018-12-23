@@ -33,7 +33,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  AESEngineNotInitialised = 'AES Engine not Initialised';
+  SAESEngineNotInitialised = 'AES Engine not Initialised';
   SInputBuffertooShort = 'Input Buffer too Short';
   SOutputBuffertooShort = 'Output Buffer too Short';
   SInvalidParameterAESInit = 'Invalid Parameter Passed to AES Init - "%s"';
@@ -679,7 +679,7 @@ begin
   if (FWorkingKey = Nil) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
-      (@AESEngineNotInitialised);
+      (@SAESEngineNotInitialised);
   end;
 
   TCheck.DataLength(input, inOff, 16, SInputBuffertooShort);

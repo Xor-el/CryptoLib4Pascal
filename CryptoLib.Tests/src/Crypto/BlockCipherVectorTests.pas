@@ -32,12 +32,15 @@ uses
   TestFramework,
 {$ENDIF FPC}
   AESTestVectors,
+  BlowfishTestVectors,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpAesEngine,
   ClpIAesEngine,
   ClpAesLightEngine,
   ClpIAesLightEngine,
+  ClpBlowfishEngine,
+  ClpIBlowfishEngine,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -74,6 +77,7 @@ type
 
     procedure TestBlockCipherAESEngine;
     procedure TestBlockCipherAESLightEngine;
+    procedure TestBlockCipherBlowfishEngine;
     procedure TestBadParameters;
 
   end;
@@ -225,6 +229,22 @@ begin
       TKeyParameter.Create(THex.Decode(TAESTestVectors.FBlockCipherVectorKeys[I]
       )) as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
       TAESTestVectors.FBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherBlowfishEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TBlowfishTestVectors.FBlockCipherVectorKeys)
+    to System.High(TBlowfishTestVectors.FBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TBlowfishEngine.Create() as IBlowfishEngine,
+      TKeyParameter.Create
+      (THex.Decode(TBlowfishTestVectors.FBlockCipherVectorKeys[I]))
+      as IKeyParameter, TBlowfishTestVectors.FBlockCipherVectorInputs[I],
+      TBlowfishTestVectors.FBlockCipherVectorOutputs[I]);
   end;
 
 end;

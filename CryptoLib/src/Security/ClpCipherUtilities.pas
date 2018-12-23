@@ -57,6 +57,8 @@ uses
   ClpIBlockCipher,
   ClpAesEngine,
   ClpIAesEngine,
+  ClpBlowfishEngine,
+  ClpIBlowfishEngine,
   ClpIBlockCipherPadding;
 
 resourcestring
@@ -77,7 +79,7 @@ type
 
   type
 {$SCOPEDENUMS ON}
-    TCipherAlgorithm = (AES);
+    TCipherAlgorithm = (AES, BLOWFISH);
     TCipherMode = (NONE, CBC, CFB, CTR, ECB, OFB, SIC);
     TCipherPadding = (NOPADDING, ISO10126PADDING, ISO10126D2PADDING,
       ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, PKCS5,
@@ -152,6 +154,8 @@ begin
   Falgorithms.Add(TNistObjectIdentifiers.IdAes128Cfb.Id, 'AES/CFB/NOPADDING');
   Falgorithms.Add(TNistObjectIdentifiers.IdAes192Cfb.Id, 'AES/CFB/NOPADDING');
   Falgorithms.Add(TNistObjectIdentifiers.IdAes256Cfb.Id, 'AES/CFB/NOPADDING');
+
+  Falgorithms.Add('1.3.6.1.4.1.3029.1.2', 'BLOWFISH/CBC');
 
 end;
 
@@ -238,6 +242,10 @@ begin
     TCipherAlgorithm.AES:
       begin
         blockCipher := TAesEngine.Create() as IAesEngine;
+      end;
+    TCipherAlgorithm.BLOWFISH:
+      begin
+        blockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
       end
   else
     begin

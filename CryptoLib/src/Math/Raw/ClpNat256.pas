@@ -26,6 +26,7 @@ uses
   ClpConverters,
   ClpBits,
   ClpBigInteger,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 type
@@ -1774,7 +1775,7 @@ end;
 
 class procedure TNat256.Zero(const z: TCryptoLibUInt32Array);
 begin
-  System.FillChar(z[0], 8 * System.SizeOf(UInt32), UInt32(0));
+  TArrayUtils.Fill(z, 0, 8, UInt32(0));
 end;
 
 end.

@@ -33,7 +33,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  AESEngineNotInitialised = 'AES Engine not Initialised';
+  SAESEngineNotInitialised = 'AES Engine not Initialised';
   SInputBuffertooShort = 'Input Buffer too Short';
   SOutputBuffertooShort = 'Output Buffer too Short';
   SInvalidParameterAESInit = 'Invalid Parameter Passed to AES Init - "%s"';
@@ -217,7 +217,7 @@ type
     FC0, FC1, FC2, FC3: UInt32;
     FforEncryption: Boolean;
 
-    Fstate: TCryptoLibByteArray;
+    Fstate: array [0 .. 255] of Byte;
 
     function GetAlgorithmName: String; virtual;
     function GetIsPartialBlockOkay: Boolean; virtual;
@@ -727,15 +727,15 @@ begin
   FWorkingKey := GenerateWorkingKey(forEncryption, keyParameter.GetKey());
 
   FforEncryption := forEncryption;
+
   if forEncryption then
   begin
-    System.SetLength(Fstate, System.SizeOf(S));
-    System.Move(S[System.Low(S)], Fstate[0], System.SizeOf(S));
+    System.Move(S[System.Low(S)], Fstate[System.Low(Fstate)], System.SizeOf(S));
   end
   else
   begin
-    System.SetLength(Fstate, System.SizeOf(Si));
-    System.Move(Si[System.Low(Si)], Fstate[0], System.SizeOf(Si));
+    System.Move(Si[System.Low(Si)], Fstate[System.Low(Fstate)],
+      System.SizeOf(Si));
   end;
 
 end;
@@ -762,7 +762,7 @@ begin
   if (FWorkingKey = Nil) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
-      (@AESEngineNotInitialised);
+      (@SAESEngineNotInitialised);
   end;
 
   TCheck.DataLength(input, inOff, 16, SInputBuffertooShort);

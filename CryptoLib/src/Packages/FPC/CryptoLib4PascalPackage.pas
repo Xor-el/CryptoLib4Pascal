@@ -150,7 +150,7 @@ uses
   ClpIDsaExt, ClpIDsaEncoding, ClpISchnorrDigestSigner, 
   ClpIECSchnorrSipaSigner, ClpECSchnorrSipaSigner, ClpSchnorrDigestSigner, 
   ClpPlainSchnorrEncoding, ClpIPlainSchnorrEncoding, ClpISchnorrEncoding, 
-  ClpISchnorr, ClpISchnorrExt;
+  ClpISchnorr, ClpISchnorrExt, ClpBlowfishEngine, ClpIBlowfishEngine;
 
 implementation
 
