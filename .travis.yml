@@ -65,7 +65,7 @@ install:
 script:
   - curl -L -k https://github.com/Xor-el/HashLib4Pascal/archive/master.zip -o HashLib4Pascal.zip
   - curl -L -k https://github.com/Xor-el/SimpleBaseLib4Pascal/archive/master.zip -o SimpleBaseLib4Pascal.zip
- # - curl -L -k https://github.com/Xor-el/generics.collections/archive/master.zip -o generics.collections.zip
+  - curl -L -k https://github.com/Xor-el/generics.collections/archive/master.zip -o generics.collections.zip
   - unzip HashLib4Pascal.zip
   - unzip SimpleBaseLib4Pascal.zip
   - unzip generics.collections.zip
