@@ -22,12 +22,13 @@ unit ClpBerNull;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpAsn1Tags,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
+  ClpDerOutputStream,
   ClpDerNull,
-  ClpIProxiedInterface,
   ClpIBerNull;
 
 type
@@ -51,7 +52,7 @@ type
 
   public
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
     class property Instance: IBerNull read GetInstance;
 
   end;
@@ -70,12 +71,12 @@ begin
   FInstance := TBerNull.Create(0);
 end;
 
-procedure TBerNull.Encode(const derOut: IDerOutputStream);
+procedure TBerNull.Encode(const derOut: TStream);
 begin
 
   if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
-    derOut.WriteByte(TAsn1Tags.Null);
+    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.Null);
   end
   else
   begin

@@ -31,12 +31,12 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpDerT61String,
+  ClpIDerT61String,
   ClpDerBitString,
   ClpIDerBitString,
   ClpDerUniversalString,
   ClpIDerUniversalString,
-  ClpDerT61String,
-  ClpIDerT61String,
   ClpConverters;
 
 type
@@ -152,10 +152,6 @@ begin
     Fail('DerT61String.GetString() result incorrect');
   end;
 
-  if (not(t61.ToString() = (t61String))) then
-  begin
-    Fail('DerT61String.ToString() result incorrect');
-  end;
 end;
 
 initialization

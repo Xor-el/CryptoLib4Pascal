@@ -139,7 +139,7 @@ begin
 
   &in := Aggregate();
   FBuffer.Clear;
-  FBuffer.SetSize(0);
+  FBuffer.SetSize(Int64(0));
 
   // Convert parameters for use in IESEngine
   params := TIESWithCipherParameters.Create(FIESCipherParameters.GetDerivationV,
@@ -286,7 +286,7 @@ begin
 
   FRandom := Random;
   FBuffer.Clear;
-  FBuffer.SetSize(0);
+  FBuffer.SetSize(Int64(0));
 end;
 
 procedure TIESCipher.ProcessBytes(const input: TCryptoLibByteArray);

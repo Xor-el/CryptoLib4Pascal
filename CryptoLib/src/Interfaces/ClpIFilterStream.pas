@@ -28,6 +28,15 @@ type
   IFilterStream = interface(IInterface)
     ['{00DF43F6-55BB-4A90-AEE7-1C6D956E144A}']
 
+    function QueryInterface({$IFDEF FPC}constref {$ELSE}const
+{$ENDIF FPC} IID: TGUID; out Obj): HResult;
+{$IF DEFINED(MSWINDOWS) OR DEFINED(DELPHI)} stdcall
+{$ELSE} cdecl {$IFEND};
+    function _AddRef: Integer; {$IF DEFINED(MSWINDOWS) OR DEFINED(DELPHI)} stdcall {$ELSE} cdecl
+{$IFEND};
+    function _Release: Integer; {$IF DEFINED(MSWINDOWS) OR DEFINED(DELPHI)} stdcall {$ELSE} cdecl
+{$IFEND};
+
     function GetSize: Int64;
     function GetPosition: Int64;
     procedure SetPosition(const Value: Int64);
@@ -36,8 +45,8 @@ type
     property Position: Int64 read GetPosition write SetPosition;
 
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
-    function Read(var Buffer; Count: Int32): Int32;
-    function Write(const Buffer; Count: Int32): Int32;
+    function Read(var Buffer; Count: LongInt): LongInt;
+    function Write(const Buffer; Count: LongInt): LongInt;
     function ReadByte(): Int32;
     procedure WriteByte(Value: Byte);
 

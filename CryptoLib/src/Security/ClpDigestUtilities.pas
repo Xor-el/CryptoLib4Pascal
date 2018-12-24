@@ -55,7 +55,7 @@ type
 {$SCOPEDENUMS ON}
     TDigestAlgorithm = (BLAKE2B_160, BLAKE2B_256, BLAKE2B_384, BLAKE2B_512,
       BLAKE2S_128, BLAKE2S_160, BLAKE2S_224, BLAKE2S_256, GOST3411,
-      GOST3411_2012_256, GOST3411_2012_512, MD2, MD4, MD5, NULL, RIPEMD128,
+      GOST3411_2012_256, GOST3411_2012_512, MD2, MD4, MD5, NONE, RIPEMD128,
       RIPEMD160, RIPEMD256, RIPEMD320, SHA_1, SHA_224, SHA_256, SHA_384,
       SHA_512, SHA_512_224, SHA_512_256, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
       TIGER, WHIRLPOOL);
@@ -67,7 +67,7 @@ type
     /// <summary>
     /// Returns a ObjectIdentifier for a given digest mechanism.
     /// </summary>
-    /// <param name="mechanism">A string representation of the digest meanism.</param>
+    /// <param name="mechanism">A string representation of the digest mechanism.</param>
     /// <returns>A DerObjectIdentifier, null if the Oid is not available.</returns>
     class function GetObjectIdentifier(mechanism: String)
       : IDerObjectIdentifier; static;
@@ -228,7 +228,7 @@ begin
         Exit;
       end;
 
-    TDigestAlgorithm.NULL:
+    TDigestAlgorithm.NONE:
       begin
         result := TDigest.Create
           (THashFactory.TNullDigestFactory.CreateNullDigest());
@@ -370,7 +370,7 @@ begin
   Falgorithms := TDictionary<string, string>.Create();
   Foids := TDictionary<string, IDerObjectIdentifier>.Create();
 
-  Falgorithms.Add('NULL', 'NULL'); // Null Digest
+  Falgorithms.Add('NONE', 'NONE'); // Null Digest
 
   TPkcsObjectIdentifiers.Boot;
 

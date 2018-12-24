@@ -26,8 +26,11 @@ uses
   Generics.Collections,
   ClpKeyParameter,
   ClpIKeyParameter,
+  ClpICipherParameters,
+  ClpISecureRandom,
   ClpIDerObjectIdentifier,
   ClpNistObjectIdentifiers,
+  ClpParametersWithRandom,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -70,6 +73,9 @@ type
     class function CreateKeyParameter(const algorithm: String;
       const keyBytes: TCryptoLibByteArray; offset, length: Int32)
       : IKeyParameter; overload; static;
+
+    class function WithRandom(const cp: ICipherParameters;
+      const random: ISecureRandom): ICipherParameters; static; inline;
 
     class procedure Boot(); static;
 
@@ -135,6 +141,19 @@ class function TParameterUtilities.GetCanonicalAlgorithmName(const algorithm
   : String): String;
 begin
   Falgorithms.TryGetValue(UpperCase(algorithm), result);
+end;
+
+class function TParameterUtilities.WithRandom(const cp: ICipherParameters;
+  const random: ISecureRandom): ICipherParameters;
+var
+  Lcp: ICipherParameters;
+begin
+  Lcp := cp;
+  if (random <> Nil) then
+  begin
+    Lcp := TParametersWithRandom.Create(Lcp, random);
+  end;
+  result := Lcp;
 end;
 
 class function TParameterUtilities.CreateKeyParameter(const algorithm: String;

@@ -22,10 +22,12 @@ unit ClpDerNull;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpCryptoLibTypes,
   ClpAsn1Tags,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpAsn1Null,
   ClpIDerNull;
 
@@ -54,7 +56,7 @@ type
 
   public
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
     class property Instance: IDerNull read GetInstance;
 
   end;
@@ -87,9 +89,9 @@ begin
   System.SetLength(FZeroBytes, 0);
 end;
 
-procedure TDerNull.Encode(const derOut: IDerOutputStream);
+procedure TDerNull.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.Null, FZeroBytes);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Null, FZeroBytes);
 end;
 
 class function TDerNull.GetInstance: IDerNull;

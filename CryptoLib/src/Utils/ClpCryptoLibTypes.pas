@@ -22,8 +22,7 @@ unit ClpCryptoLibTypes;
 interface
 
 uses
-  SysUtils,
-  Generics.Collections;
+  SysUtils;
 
 type
 
@@ -52,6 +51,7 @@ type
   EAsn1ParsingCryptoLibException = class(ECryptoLibException);
   EInvalidKeyCryptoLibException = class(ECryptoLibException);
   EInvalidCipherTextCryptoLibException = class(ECryptoLibException);
+  EStreamCryptoLibException = class(ECryptoLibException);
   ESecurityUtilityCryptoLibException = class(ECryptoLibException);
   EAccessCryptoLibException = class(ECryptoLibException);
   EDataLengthCryptoLibException = class(ECryptoLibException);

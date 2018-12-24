@@ -15,19 +15,23 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrISOXSigner;
+unit ClpISchnorrDigestSigner;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorr;
+  ClpISigner,
+  ClpBigInteger;
 
 type
-  IECSchnorrISOXSigner = interface(ISchnorr)
 
-    ['{D9BC810A-0554-4D54-A6D8-5350667BB3D5}']
+  ISchnorrDigestSigner = interface(ISigner)
+    ['{FD48778F-A071-459A-9008-423566240F09}']
+
+    function GetOrder(): TBigInteger;
+
   end;
 
 implementation

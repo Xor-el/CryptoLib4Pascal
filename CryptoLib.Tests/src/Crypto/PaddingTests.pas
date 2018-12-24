@@ -250,7 +250,7 @@ begin
 
   if (ffVector <> Nil) then
   begin
-    padding.addPadding(data, 3);
+    padding.AddPadding(data, 3);
 
     if (not TArrayUtils.AreEqual(data, ffVector)) then
     begin
@@ -263,8 +263,8 @@ begin
   //
   if (ZeroVector <> Nil) then
   begin
-    System.FillChar(data[0], 8 * System.SizeOf(Byte), Byte(0));
-    padding.addPadding(data, 4);
+    TArrayUtils.Fill(data, 0, 8, Byte(0));
+    padding.AddPadding(data, 4);
 
     if (not TArrayUtils.AreEqual(data, ZeroVector)) then
     begin

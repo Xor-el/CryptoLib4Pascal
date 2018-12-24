@@ -39,7 +39,6 @@ uses
   ClpArrayUtils,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpBitConverter,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -165,7 +164,7 @@ end;
 function TPascalCoinIESEngine.EncryptBlock(const &in: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
-  C, K, K1, K2, T, tempHolder: TCryptoLibByteArray;
+  C, K, K1, K2, T: TCryptoLibByteArray;
   MessageToEncryptPadSize, CipherBlockSize, MessageToEncryptSize: Int32;
 begin
   if (Fcipher = Nil) then
@@ -235,22 +234,11 @@ begin
   System.SetLength(Result, SECURE_HEAD_SIZE + System.Length(FV) +
     System.Length(T) + System.Length(C));
 
-  tempHolder := TBitConverter.GetBytes(Byte(System.Length(FV)));
-
-  System.Move(tempHolder[0], Result[0], System.SizeOf(Byte));
-
-  tempHolder := TBitConverter.GetBytes(Byte(System.Length(T)));
-
-  System.Move(tempHolder[0], Result[1], System.SizeOf(Byte));
-
-  tempHolder := TBitConverter.GetBytes(UInt16(MessageToEncryptSize));
-
-  System.Move(tempHolder[0], Result[2], System.SizeOf(UInt16));
-
-  tempHolder := TBitConverter.GetBytes
-    (UInt16(MessageToEncryptSize + MessageToEncryptPadSize));
-
-  System.Move(tempHolder[0], Result[4], System.SizeOf(UInt16));
+  PByte(Result)^ := Byte(System.Length(FV));
+  (PByte(Result) + 1)^ := Byte(System.Length(T));
+  (PWord(Result) + 1)^ := UInt16(MessageToEncryptSize);
+  (PWord(Result) + 2)^ :=
+    UInt16(MessageToEncryptSize + MessageToEncryptPadSize);
 
   System.Move(FV[0], Result[SECURE_HEAD_SIZE], System.Length(FV) *
     System.SizeOf(Byte));
@@ -291,8 +279,8 @@ begin
       bIn := TBytesStream.Create(System.Copy(&in, inOff, inLen));
 
       try
-        bIn.Position := SECURE_HEAD_SIZE;
         // for existing PascalCoin compatiblity purposes
+        bIn.Position := SECURE_HEAD_SIZE;
 
         try
           FpubParam := FkeyParser.ReadKey(bIn);
@@ -344,8 +332,7 @@ begin
     end;
 
   finally
-    System.FillChar(BigZ[0], System.Length(BigZ) * System.SizeOf(Byte),
-      Byte(0));
+    TArrayUtils.Fill(BigZ, 0, System.Length(BigZ), Byte(0));
   end;
 end;
 

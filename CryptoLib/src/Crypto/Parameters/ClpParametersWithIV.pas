@@ -46,6 +46,7 @@ type
       const iv: TCryptoLibByteArray); overload;
     constructor Create(const parameters: ICipherParameters;
       const iv: TCryptoLibByteArray; ivOff, ivLen: Int32); overload;
+    destructor Destroy; override;
     function GetIV(): TCryptoLibByteArray; inline;
     property parameters: ICipherParameters read GetParameters;
 
@@ -74,6 +75,12 @@ begin
 
   Fparameters := parameters;
   Fiv := TArrayUtils.CopyOfRange(iv, ivOff, ivOff + ivLen);
+end;
+
+destructor TParametersWithIV.Destroy;
+begin
+  TArrayUtils.Fill(Fiv, 0, System.Length(Fiv), Byte(0));
+  inherited Destroy;
 end;
 
 function TParametersWithIV.GetIV: TCryptoLibByteArray;

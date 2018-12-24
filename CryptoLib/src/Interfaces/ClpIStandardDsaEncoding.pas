@@ -15,28 +15,32 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrSigner;
+unit ClpIStandardDsaEncoding;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISigner,
-  ClpIECPublicKeyParameters,
-  ClpIECPrivateKeyParameters,
   ClpBigInteger,
+  ClpIAsn1Sequence,
+  ClpIDerInteger,
+  ClpIDsaEncoding,
   ClpCryptoLibTypes;
 
 type
-  IECSchnorrSigner = interface(ISigner)
-    ['{A941F9C5-81BE-4F0D-9294-2488C21035E3}']
+  IStandardDsaEncoding = interface(IDsaEncoding)
+    ['{A8662374-922B-4D72-B956-FE0ED3505C68}']
 
-    function Do_Sign(const pv_key: IECPrivateKeyParameters;
-      const k: TBigInteger): TCryptoLibByteArray;
+    function CheckValue(const n, x: TBigInteger): TBigInteger;
+    function DecodeValue(const n: TBigInteger; const s: IAsn1Sequence;
+      pos: Int32): TBigInteger;
+    function EncodeValue(const n, x: TBigInteger): IDerInteger;
 
-    function Do_Verify(const pu_key: IECPublicKeyParameters;
-      const sig: TCryptoLibByteArray): Boolean;
+    function Decode(const n: TBigInteger; const encoding: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
+
+    function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray;
 
   end;
 

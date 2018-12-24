@@ -62,7 +62,7 @@ type
 
     function ToAsn1Object(): IAsn1Object; override;
 
-    procedure Encode(const derOut: IDerOutputStream); virtual; abstract;
+    procedure Encode(const derOut: TStream); virtual; abstract;
 
     function CallAsn1Equals(const obj: IAsn1Object): Boolean;
 

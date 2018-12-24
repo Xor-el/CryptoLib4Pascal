@@ -22,10 +22,12 @@ unit ClpBerBitString;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpCryptoLibTypes,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpDerBitString,
   ClpIBerBitString,
@@ -41,7 +43,7 @@ type
     constructor Create(namedBits: Int32); overload;
     constructor Create(const obj: IAsn1Encodable); overload;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
   end;
 
@@ -70,11 +72,12 @@ begin
   Inherited Create(namedBits);
 end;
 
-procedure TBerBitString.Encode(const derOut: IDerOutputStream);
+procedure TBerBitString.Encode(const derOut: TStream);
 begin
   if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
-    derOut.WriteEncoded(TAsn1Tags.BitString, Byte(mPadBits), mData);
+    (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BitString,
+      Byte(mPadBits), mData);
   end
   else
   begin

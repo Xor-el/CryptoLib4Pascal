@@ -29,6 +29,7 @@ uses
   ClpDerSequence,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
+  ClpDerOutputStream,
   ClpIAsn1EncodableVector,
   ClpIBerSequence,
   ClpCryptoLibTypes;
@@ -76,7 +77,7 @@ type
     /// just outputing Sequence, <br />we also have to specify Constructed,
     /// and the objects length. <br />
     /// </summary>
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     class property Empty: IBerSequence read GetEmpty;
 
@@ -122,7 +123,7 @@ begin
   FEmpty := TBerSequence.Create();
 end;
 
-procedure TBerSequence.Encode(const derOut: IDerOutputStream);
+procedure TBerSequence.Encode(const derOut: TStream);
 var
   o: IAsn1Encodable;
   LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
@@ -130,17 +131,17 @@ begin
 
   if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
-    derOut.WriteByte(TAsn1Tags.Sequence or TAsn1Tags.Constructed);
-    derOut.WriteByte($80);
+    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.Sequence or TAsn1Tags.Constructed);
+    (derOut as TDerOutputStream).WriteByte($80);
 
     LListAsn1Encodable := Self.GetEnumerable;
     for o in LListAsn1Encodable do
     begin
-      derOut.WriteObject(o);
+      (derOut as TDerOutputStream).WriteObject(o);
     end;
 
-    derOut.WriteByte($00);
-    derOut.WriteByte($00);
+    (derOut as TDerOutputStream).WriteByte($00);
+    (derOut as TDerOutputStream).WriteByte($00);
   end
   else
   begin

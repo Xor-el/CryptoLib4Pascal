@@ -29,6 +29,7 @@ uses
   ClpIBerSet,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIAsn1EncodableVector,
   ClpCryptoLibTypes;
@@ -81,7 +82,7 @@ type
     /// just outputing Set, <br />we also have to specify Constructed, and
     /// the objects length. <br />
     /// </summary>
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     class property Empty: IBerSet read GetEmpty;
 
@@ -128,25 +129,26 @@ begin
   FEmpty := TBerSet.Create();
 end;
 
-procedure TBerSet.Encode(const derOut: IDerOutputStream);
+procedure TBerSet.Encode(const derOut: TStream);
 var
   o: IAsn1Encodable;
   LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
   begin
-    derOut.WriteByte(TAsn1Tags.&Set or TAsn1Tags.Constructed);
+    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.&Set or
+      TAsn1Tags.Constructed);
 
-    derOut.WriteByte($80);
+    (derOut as TDerOutputStream).WriteByte($80);
 
     LListAsn1Encodable := Self.GetEnumerable;
     for o in LListAsn1Encodable do
     begin
-      derOut.WriteObject(o);
+      (derOut as TDerOutputStream).WriteObject(o);
     end;
 
-    derOut.WriteByte($00);
-    derOut.WriteByte($00);
+    (derOut as TDerOutputStream).WriteByte($00);
+    (derOut as TDerOutputStream).WriteByte($00);
   end
   else
   begin

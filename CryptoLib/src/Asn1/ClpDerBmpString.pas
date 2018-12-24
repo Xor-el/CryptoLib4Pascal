@@ -22,11 +22,13 @@ unit ClpDerBmpString;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpCryptoLibTypes,
   ClpAsn1Object,
   ClpAsn1Tags,
   ClpAsn1OctetString,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerBmpString,
   ClpIAsn1TaggedObject,
@@ -63,7 +65,7 @@ type
 
     function GetString(): String; override;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a BMP string from the given object.
@@ -152,7 +154,7 @@ begin
   FStr := astr;
 end;
 
-procedure TDerBmpString.Encode(const derOut: IDerOutputStream);
+procedure TDerBmpString.Encode(const derOut: TStream);
 var
   c: TCryptoLibCharArray;
   b: TCryptoLibByteArray;
@@ -168,7 +170,7 @@ begin
   LowPoint := 1;
   HighPoint := System.Length(Str);
 {$ENDIF DELPHIXE3_UP}
-  For i := LowPoint to HighPoint do
+  for i := LowPoint to HighPoint do
   begin
     c[i - 1] := Str[i];
   end;
@@ -183,7 +185,7 @@ begin
     System.Inc(i);
   end;
 
-  derOut.WriteEncoded(TAsn1Tags.BmpString, b);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BmpString, b);
 
 end;
 

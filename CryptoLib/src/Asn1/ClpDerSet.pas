@@ -81,7 +81,7 @@ type
     /// just outputing Set, <br />we also have to specify Constructed, and
     /// the objects length. <br />
     /// </summary>
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     class property Empty: IDerSet read GetEmpty;
 
@@ -155,7 +155,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TDerSet.Encode(const derOut: IDerOutputStream);
+procedure TDerSet.Encode(const derOut: TStream);
 var
   bOut: TMemoryStream;
   dOut: TDerOutputStream;
@@ -182,7 +182,8 @@ begin
     dOut.Free;
   end;
 
-  derOut.WriteEncoded(TAsn1Tags.&Set or TAsn1Tags.Constructed, bytes);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.&Set or
+    TAsn1Tags.Constructed, bytes);
 end;
 
 class function TDerSet.FromVector(const v: IAsn1EncodableVector;

@@ -22,12 +22,14 @@ unit ClpDerEnumerated;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpCryptoLibTypes,
   ClpArrayUtils,
   ClpBigInteger,
   ClpIAsn1OctetString,
   ClpAsn1Tags,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerEnumerated,
   ClpIAsn1TaggedObject,
@@ -65,7 +67,7 @@ type
     constructor Create(const val: TBigInteger); overload;
     constructor Create(const bytes: TCryptoLibByteArray); overload;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     property Value: TBigInteger read GetValue;
     property bytes: TCryptoLibByteArray read GetBytes;
@@ -162,9 +164,9 @@ begin
   System.SetLength(Fcache, 12);
 end;
 
-procedure TDerEnumerated.Encode(const derOut: IDerOutputStream);
+procedure TDerEnumerated.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.Enumerated, Fbytes);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Enumerated, Fbytes);
 end;
 
 class function TDerEnumerated.FromOctetString(const enc: TCryptoLibByteArray)

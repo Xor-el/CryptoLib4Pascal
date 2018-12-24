@@ -22,6 +22,7 @@ unit ClpBerTaggedObject;
 interface
 
 uses
+  Classes,
   SysUtils,
   Generics.Collections,
   ClpCryptoLibTypes,
@@ -33,6 +34,7 @@ uses
   ClpBerSequence,
   ClpAsn1OutputStream,
   ClpBerOutputStream,
+  ClpDerOutputStream,
   ClpIAsn1OctetString,
   ClpAsn1Encodable,
   ClpBerOctetString,
@@ -86,7 +88,7 @@ type
     /// </param>
     constructor Create(tagNo: Int32); overload;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
   end;
 
@@ -110,7 +112,7 @@ begin
   Inherited Create(false, tagNo, TBerSequence.Empty)
 end;
 
-procedure TBerTaggedObject.Encode(const derOut: IDerOutputStream);
+procedure TBerTaggedObject.Encode(const derOut: TStream);
 var
   eObj: TList<IAsn1Encodable>;
   LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
@@ -126,8 +128,9 @@ begin
   try
     if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
     begin
-      derOut.WriteTag(Byte(TAsn1Tags.Constructed or TAsn1Tags.Tagged), tagNo);
-      derOut.WriteByte($80);
+      (derOut as TDerOutputStream)
+        .WriteTag(Byte(TAsn1Tags.Constructed or TAsn1Tags.Tagged), tagNo);
+      (derOut as TDerOutputStream).WriteByte($80);
 
       if (not IsEmpty()) then
       begin
@@ -178,17 +181,17 @@ begin
 
           for o in eObj do
           begin
-            derOut.WriteObject(o);
+            (derOut as TDerOutputStream).WriteObject(o);
           end;
         end
         else
         begin
-          derOut.WriteObject(obj);
+          (derOut as TDerOutputStream).WriteObject(obj);
         end;
       end;
 
-      derOut.WriteByte($00);
-      derOut.WriteByte($00);
+      (derOut as TDerOutputStream).WriteByte($00);
+      (derOut as TDerOutputStream).WriteByte($00);
     end
     else
     begin

@@ -15,19 +15,20 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrBSISigner;
+unit ClpIBlowfishEngine;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorr;
+  ClpIBlockCipher;
 
 type
-  IECSchnorrBSISigner = interface(ISchnorr)
 
-    ['{799FABB1-D1BB-4B58-9E49-CF1CD8142554}']
+  IBlowfishEngine = interface(IBlockCipher)
+    ['{005CFC45-DEB3-4AC1-896D-1370AF09F3C5}']
+
   end;
 
 implementation

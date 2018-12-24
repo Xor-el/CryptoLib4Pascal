@@ -22,26 +22,29 @@ unit ClpISchnorr;
 interface
 
 uses
-  ClpIECPrivateKeyParameters,
-  ClpIECPublicKeyParameters,
   ClpIDigest,
   ClpBigInteger,
+  ClpICipherParameters,
   ClpCryptoLibTypes;
 
 type
+  /// <summary>
+  /// interface for classes implementing the Schnorr Signature Algorithm
+  /// </summary>
   ISchnorr = interface(IInterface)
-    ['{D3E88536-CE8D-4933-ADD8-235CAD65819F}']
+    ['{B8065C83-1164-4DD0-B983-8CF840F120EF}']
 
     function GetAlgorithmName: String;
     property AlgorithmName: String read GetAlgorithmName;
 
-    function Do_Sign(const &message: TCryptoLibByteArray; const digest: IDigest;
-      const pv_key: IECPrivateKeyParameters; const k: TBigInteger)
-      : TCryptoLibByteArray;
+    procedure Init(forSigning: Boolean; const parameters: ICipherParameters;
+      const digest: IDigest);
 
-    function Do_Verify(const &message: TCryptoLibByteArray;
-      const digest: IDigest; const pu_key: IECPublicKeyParameters;
-      const sig: TCryptoLibByteArray): Boolean;
+    function GenerateSignature(const &message: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
+
+    function VerifySignature(const &message: TCryptoLibByteArray;
+      const r, s: TBigInteger): Boolean;
 
   end;
 

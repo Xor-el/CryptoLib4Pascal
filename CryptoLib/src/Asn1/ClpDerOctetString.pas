@@ -22,6 +22,7 @@ unit ClpDerOctetString;
 interface
 
 uses
+  Classes,
   ClpCryptoLibTypes,
   ClpAsn1Tags,
   ClpDerOutputStream,
@@ -39,7 +40,7 @@ type
 
     destructor Destroy(); override;
 
-    procedure Encode(const derOut: IDerOutputStream); overload; override;
+    procedure Encode(const derOut: TStream); overload; override;
     class procedure Encode(const derOut: TDerOutputStream;
       const bytes: TCryptoLibByteArray; offset, length: Int32); reintroduce;
       overload; static; inline;
@@ -65,9 +66,9 @@ begin
   inherited Destroy;
 end;
 
-procedure TDerOctetString.Encode(const derOut: IDerOutputStream);
+procedure TDerOctetString.Encode(const derOut: TStream);
 begin
-  derOut.WriteEncoded(TAsn1Tags.OctetString, str);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.OctetString, str);
 end;
 
 class procedure TDerOctetString.Encode(const derOut: TDerOutputStream;

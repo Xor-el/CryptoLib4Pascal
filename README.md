@@ -1,5 +1,5 @@
-# CryptoLib4Pascal
-CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES.
+# CryptoLib4Pascal [![License](http://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Xor-el/CryptoLib4Pascal/blob/master/LICENSE)
+CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES, Blowfish Encryption and Decryption (With various modes and paddings) and ECIES.
 
 **Supported Elliptic Curves:**
 
@@ -41,17 +41,9 @@ secp112r2, sect163r2, secp128r2.
     SHA-256withECDSA, SHA-384withECDSA, SHA-512withECDSA and RIPEMD160withECDSA
     
     ECSchnorr
-    SHA-1withECSCHNORRBSI, SHA-224withECSCHNORRBSI, SHA-256withECSCHNORRBSI, SHA-384withECSCHNORRBSI,
-    SHA-512withECSCHNORRBSI, RIPEMD160withECSCHNORRBSI
+    SHA-1withECSCHNORRSIPA, SHA-224withECSCHNORRSIPA, SHA-256withECSCHNORRSIPA, SHA-384withECSCHNORRSIPA,
+    SHA-512withECSCHNORRSIPA, RIPEMD160withECSCHNORRSIPA
     
-    SHA-1withECSCHNORRISO, SHA-224withECSCHNORRISO, SHA-256withECSCHNORRISO, SHA-384withECSCHNORRISO, 
-    SHA-512withECSCHNORRISO, RIPEMD160withECSCHNORRISO
-    
-    SHA-1withECSCHNORRISOx, SHA-224withECSCHNORRISOx, SHA-256withECSCHNORRISOx, SHA-384withECSCHNORRISOx,
-    SHA-512withECSCHNORRISOx, RIPEMD160withECSCHNORRISOx 
-    
-    SHA-1withECSCHNORRLIBSECP, SHA-224withECSCHNORRLIBSECP, SHA-256withECSCHNORRLIBSECP, SHA-384withECSCHNORRLIBSECP,
-    SHA-512withECSCHNORRLIBSECP, RIPEMD160withECSCHNORRLIBSECP 
     
     
    **Dependencies:**
@@ -64,7 +56,7 @@ secp112r2, sect163r2, secp128r2.
 
 **Supported Compilers**
  
-    FreePascal 3.0.0 and Above.
+    FreePascal 3.0.4 and Above.
     
     Delphi XE6 and Above. (might work in earlier versions though.)
 
@@ -86,7 +78,7 @@ secp112r2, sect163r2, secp128r2.
 
 To Run Unit Tests,
 
-**For FPC 3.0.0 and above**
+**For FPC 3.0.4 and above**
 
 
     Simply compile and run "CryptoLib.Tests" project in "FreePascal.Tests" Folder.

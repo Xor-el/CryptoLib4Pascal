@@ -22,7 +22,6 @@ unit ClpIDsaDigestSigner;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpBigInteger,
   ClpISigner;
 
@@ -31,10 +30,7 @@ type
   IDsaDigestSigner = interface(ISigner)
     ['{6BED77E2-6D92-4DB7-8F3F-588EC528A2D7}']
 
-    function DerEncode(const r, s: TBigInteger): TCryptoLibByteArray;
-
-    function DerDecode(const encoding: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>;
+    function GetOrder(): TBigInteger;
 
   end;
 

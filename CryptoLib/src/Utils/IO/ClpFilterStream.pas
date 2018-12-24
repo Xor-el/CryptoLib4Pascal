@@ -24,11 +24,10 @@ interface
 uses
   Classes,
   ClpStreamHelper,
-  ClpIFilterStream,
   ClpDefiniteLengthInputStream;
 
 type
-  TFilterStream = class(TStream, IFilterStream)
+  TFilterStream = class(TStream)
 
   protected
   var
@@ -39,14 +38,6 @@ type
 {$ENDIF FPC}
     function GetSize: Int64; override;
 
-    function QueryInterface({$IFDEF FPC}constref {$ELSE}const
-{$ENDIF FPC} IID: TGUID; out Obj): HResult; {$IFDEF MSWINDOWS} stdcall
-{$ELSE} cdecl {$ENDIF MSWINDOWS};
-    function _AddRef: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
-{$ENDIF MSWINDOWS};
-    function _Release: Integer; {$IFDEF MSWINDOWS} stdcall {$ELSE} cdecl
-{$ENDIF MSWINDOWS};
-
   public
     constructor Create(const s: TStream);
 
@@ -54,11 +45,11 @@ type
     property Position: Int64 read GetPosition write SetPosition;
 
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
-    function Read(var Buffer; Count: Int32): Int32; override;
-    function Write(const Buffer; Count: Int32): Int32; override;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
 
-    function ReadByte(): Int32; inline;
-    procedure WriteByte(Value: Byte); inline;
+    function ReadByte(): Int32;
+    procedure WriteByte(Value: Byte);
 
   end;
 
@@ -86,7 +77,7 @@ begin
   Fs.Position := Value;
 end;
 
-function TFilterStream.Write(const Buffer; Count: Int32): Int32;
+function TFilterStream.Write(const Buffer; Count: LongInt): LongInt;
 begin
   Result := Fs.Write(PByte(Buffer), Count);
 end;
@@ -96,31 +87,12 @@ begin
   Fs.WriteByte(Value);
 end;
 
-function TFilterStream._AddRef: Integer;
-begin
-  Result := -1;
-end;
-
-function TFilterStream._Release: Integer;
-begin
-  Result := -1;
-end;
-
 function TFilterStream.GetSize: Int64;
 begin
   Result := Fs.Size;
 end;
 
-function TFilterStream.QueryInterface({$IFDEF FPC}constref {$ELSE}const
-{$ENDIF FPC} IID: TGUID; out Obj): HResult;
-begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else
-    Result := E_NOINTERFACE;
-end;
-
-function TFilterStream.Read(var Buffer; Count: Int32): Int32;
+function TFilterStream.Read(var Buffer; Count: LongInt): LongInt;
 begin
   Result := Fs.Read(PByte(Buffer), Count);
 end;

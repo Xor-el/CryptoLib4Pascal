@@ -82,8 +82,7 @@ function TTestSecureRandom.MeasureChiSquared(const random: ISecureRandom;
 var
   opts, bs: TCryptoLibByteArray;
   counts: TCryptoLibInt32Array;
-  I, b, total, k: Integer;
-  mask, shift: Byte;
+  I, b, total, k, mask, shift: Int32;
   chi2, diff, diff2, temp: Double;
 begin
   opts := random.GenerateSeed(2);
@@ -115,7 +114,7 @@ begin
     for b := 0 to System.Pred(256) do
     begin
 
-      counts[bs[b] xor mask] := counts[bs[b] xor mask] + 1;
+      counts[bs[b] xor Byte(mask)] := counts[bs[b] xor Byte(mask)] + 1;
 
     end;
     System.Inc(mask);
@@ -132,7 +131,7 @@ begin
     for b := 0 to System.Pred(256) do
     begin
 
-      counts[Byte(bs[b] + shift)] := counts[Byte(bs[b] + shift)] + 1;
+      counts[Byte(bs[b] + Byte(shift))] := counts[Byte(bs[b] + Byte(shift))] + 1;
 
     end;
     System.Inc(shift);

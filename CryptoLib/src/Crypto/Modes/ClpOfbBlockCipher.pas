@@ -243,7 +243,7 @@ end;
 function TOfbBlockCipher.ProcessBlock(const input: TCryptoLibByteArray;
   inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
 var
-  I: Int32;
+  I, count: Int32;
 begin
   if ((inOff + FblockSize) > System.length(input)) then
   begin
@@ -270,8 +270,12 @@ begin
   //
   // change over the input block.
   //
-  System.Move(FofbV[FblockSize], FofbV[0], (System.length(FofbV) - FblockSize) *
-    System.SizeOf(Byte));
+  count := (System.length(FofbV) - FblockSize) * System.SizeOf(Byte);
+
+  if count > 0 then
+  begin
+    System.Move(FofbV[FblockSize], FofbV[0], count);
+  end;
 
   System.Move(FofbOutV[0], FofbV[(System.length(FofbV) - FblockSize)],
     FblockSize * System.SizeOf(Byte));

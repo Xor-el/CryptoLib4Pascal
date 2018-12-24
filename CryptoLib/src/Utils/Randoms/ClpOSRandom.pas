@@ -22,26 +22,32 @@ unit ClpOSRandom;
 interface
 
 uses
-{$IFDEF MSWINDOWS}
-  Windows
+{$IF DEFINED(MSWINDOWS)}
+  Windows,
+{$ELSEIF DEFINED(IOSDELPHI)}
+  // iOS stuffs for Delphi
+  Macapi.Dispatch,
+  iOSapi.Foundation,
+{$ELSEIF DEFINED(IOSFPC)}
+  // iOS stuffs for FreePascal
+{$LINKFRAMEWORK Security}
 {$ELSE}
-    Classes
-{$ENDIF MSWINDOWS},
+  Classes,
   SysUtils,
+{$IFEND MSWINDOWS}
   ClpCryptoLibTypes;
 
 resourcestring
-{$IFDEF MSWINDOWS}
-  SWindowsCryptoAPIUnavailable =
-    'Unfortunately, Windows Crypto API is not available on this OS.';
-  SWindowsCryptoAPIAvailableGenerationError =
-    'WIndows Crypto API is available on this OS but an error occured while using it.';
+{$IF DEFINED(MSWINDOWS)}
+  SMSWIndowsCryptoAPIGenerationError =
+    'An Error Occured while generating random data using MS WIndows Crypto API.';
+{$ELSEIF (DEFINED(IOSDELPHI) OR DEFINED(IOSFPC))}
+  SIOSSecRandomCopyBytesGenerationError =
+    'An Error Occured while generating random data using SecRandomCopyBytes API.';
 {$ELSE}
-  SUnixRandomUnavailable =
-    '/dev/urandom or /dev/random is not available on this OS.';
   SUnixRandomReadError =
-    '/dev/urandom or /dev/random found but an error occured while reading it (probably due to insufficient block of data to be read).';
-{$ENDIF MSWINDOWS}
+    'An Error Occured while reading random data from /dev/urandom or /dev/random.';
+{$IFEND MSWINDOWS}
 
 type
 
@@ -53,9 +59,11 @@ type
   /// This class returns random bytes from an OS-specific randomness
   /// source. The returned data should be unpredictable enough for
   /// cryptographic applications, though its exact quality depends on the
-  /// OS implementation. On a UNIX-like system this will query
-  /// /dev/urandom or /dev/random (if the former is not available) , and
-  /// on Windows it will use CryptGenRandom().
+  /// OS implementation.
+  /// On a UNIX-like system this will read directly from /dev/urandom or /dev/random
+  /// (if the former is not available),
+  /// on iOS, calls SecRandomCopyBytes as /dev/(u)random is sandboxed,
+  /// on MSWINDOWS it will call CryptGenRandom().
   /// </para>
   /// </summary>
 
@@ -66,32 +74,16 @@ type
     class function NoZeroes(const data: TCryptoLibByteArray): Boolean;
       static; inline;
 
-{$IFDEF MSWINDOWS}
-
-  type
-    TWCCryptAcquireContextA = function(phProv: Pointer; pszContainer: LPCSTR;
-      pszProvider: LPCSTR; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
-    TWCCryptReleaseContext = function(hProv: Pointer; dwFlags: DWORD)
-      : BOOL; stdcall;
-    TWCCryptGenRandom = function(hProv: ULONG; dwLen: DWORD; pbBuffer: PBYTE)
-      : BOOL; stdcall;
-{$ENDIF MSWINDOWS}
-
-  class var
-{$IFDEF MSWINDOWS}
-    FwinCryptOk: Int32; // Windows Random function available
-    FhProvider: ULONG; // Windows HCryptProvider Handle
-    FWinCryptHndl: THandle;
-    FWCCryptAcquireContextA: TWCCryptAcquireContextA;
-    FWCCryptReleaseContext: TWCCryptReleaseContext;
-    FWCCryptGenRandom: TWCCryptGenRandom;
+{$IF DEFINED(MSWINDOWS)}
+    class function GenRandomBytesWindows(len: Int32; const data: PByte): Int32;
+{$ELSEIF DEFINED(IOSDELPHI)}
+    class function GenRandomBytesIOSDelphi(len: Int32;
+      const data: PByte): Int32;
+{$ELSEIF DEFINED(IOSFPC)}
+    class function GenRandomBytesIOSFPC(len: Int32; const data: PByte): Int32;
 {$ELSE}
-    FunixCryptOk: Int32; // Unix Random /dev/urandom or /dev/random available
-    FStream: TFileStream;
-{$ENDIF MSWINDOWS}
-    class constructor CreateOSRandom();
-    class destructor DestroyOSRandom();
-
+    class function GenRandomBytesUnix(len: Int32; const data: PByte): Int32;
+{$IFEND $MSWINDOWS}
   public
 
     class procedure GetBytes(const data: TCryptoLibByteArray); static;
@@ -99,114 +91,193 @@ type
 
   end;
 
+{$IFDEF MSWINDOWS}
+
+const
+  ADVAPI32 = 'advapi32.dll';
+
+function CryptAcquireContextW(phProv: Pointer; pszContainer: LPCWSTR;
+  pszProvider: LPCWSTR; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
+  external ADVAPI32 Name 'CryptAcquireContextW';
+
+function CryptGenRandom(hProv: THandle; dwLen: DWORD; pbBuffer: PByte): BOOL;
+  stdcall; external ADVAPI32 Name 'CryptGenRandom';
+
+function CryptReleaseContext(hProv: THandle; dwFlags: DWORD): BOOL; stdcall;
+  external ADVAPI32 Name 'CryptReleaseContext';
+{$ENDIF MSWINDOWS}
+{$IFDEF IOSDELPHI}
+
+type
+  SecRandomRef = Pointer;
+
+const
+  libSecurity = '/System/Library/Frameworks/Security.framework/Security';
+
+function kSecRandomDefault: Pointer;
+
+function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
+  : Integer; cdecl; external libSecurity Name _PU + 'SecRandomCopyBytes';
+{$ENDIF IOSDELPHI}
+{$IFDEF IOSFPC}
+
+type
+  // similar to a TOpaqueData already defined in newer FPC but not available in 3.0.4
+  __SecRandom = record end;
+ // similar to an OpaquePointer already defined in newer FPC but not available in 3.0.4
+  SecRandomRef = ^__SecRandom;
+
+const
+  { * This is a synonym for NULL, if you'd rather use a named constant.   This
+    refers to a cryptographically secure random number generator.  * }
+  kSecRandomDefault: SecRandomRef = Nil;
+
+function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
+  : Integer; cdecl; external;
+
+{$ENDIF IOSFPC}
+
 implementation
+
+{$IFDEF IOSDELPHI}
+
+function kSecRandomDefault: Pointer;
+begin
+  result := CocoaPointerConst(libSecurity, 'kSecRandomDefault');
+end;
+{$ENDIF IOSDELPHI}
 
 class function TOSRandom.NoZeroes(const data: TCryptoLibByteArray): Boolean;
 var
   i: Int32;
 begin
-  Result := True;
+  result := True;
   for i := System.Low(data) to System.High(data) do
   begin
     if data[i] = 0 then
     begin
-      Result := False;
+      result := False;
       Exit;
     end;
   end;
 
 end;
 
-class constructor TOSRandom.CreateOSRandom;
-{$IFNDEF MSWINDOWS}
+{$IF DEFINED(MSWINDOWS)}
+
+class function TOSRandom.GenRandomBytesWindows(len: Int32;
+  const data: PByte): Int32;
 var
-  RandGen: string;
-{$ENDIF MSWINDOWS}
+  hProv: THandle;
+const
+  PROV_RSA_FULL = 1;
+  CRYPT_VERIFYCONTEXT = DWORD($F0000000);
+  CRYPT_SILENT = $00000040;
 begin
-{$IFDEF MSWINDOWS}
-  FWinCryptHndl := LoadLibrary(PChar('advapi32.dll'));
-  if (FWinCryptHndl < 32) then
+  if not CryptAcquireContextW(@hProv, nil, nil, PROV_RSA_FULL,
+    CRYPT_VERIFYCONTEXT or CRYPT_SILENT) then
   begin
-    FwinCryptOk := -1;
+    result := HResultFromWin32(GetLastError);
     Exit;
   end;
-  @FWCCryptAcquireContextA := GetProcAddress(FWinCryptHndl,
-    'CryptAcquireContextA');
-  @FWCCryptReleaseContext := GetProcAddress(FWinCryptHndl,
-    'CryptReleaseContext');
-  @FWCCryptGenRandom := GetProcAddress(FWinCryptHndl, 'CryptGenRandom');
 
-  if FWCCryptAcquireContextA(@FhProvider, Nil, Nil, 1 { PROV_RSA_FULL } ,
-    $F0000000 { CRYPT_VERIFYCONTEXT } ) then
-  begin
-    FwinCryptOk := 1;
+  try
+    if not CryptGenRandom(hProv, len, data) then
+    begin
+      result := HResultFromWin32(GetLastError);
+      Exit;
+    end;
+  finally
+    CryptReleaseContext(hProv, 0);
   end;
+
+  result := S_OK;
+end;
+
+{$ELSEIF DEFINED(IOSDELPHI)}
+
+class function TOSRandom.GenRandomBytesIOSDelphi(len: Int32;
+  const data: PByte): Int32;
+begin
+  // UNTESTED !!!, Please Take Note.
+  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+end;
+
+{$ELSEIF DEFINED(IOSFPC)}
+
+class function TOSRandom.GenRandomBytesIOSFPC(len: Int32;
+  const data: PByte): Int32;
+begin
+  // UNTESTED !!!, Please Take Note.
+  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+end;
 {$ELSE}
+
+class function TOSRandom.GenRandomBytesUnix(len: Int32;
+  const data: PByte): Int32;
+var
+  LStream: TFileStream;
+  RandGen: String;
+begin
   RandGen := '/dev/urandom';
   if not FileExists(RandGen) then
   begin
-    if not FileExists('/dev/random') then
+    RandGen := '/dev/random';
+    if not FileExists(RandGen) then
     begin
-      FunixCryptOk := -1;
+      result := -1;
       Exit;
     end;
-    RandGen := '/dev/random';
   end;
-  FStream := TFileStream.Create(RandGen, fmOpenRead);
-  FunixCryptOk := 1;
 
-{$ENDIF MSWINDOWS}
+  LStream := TFileStream.Create(RandGen, fmOpenRead);
+
+  try
+    try
+      LStream.ReadBuffer(data[0], len);
+      result := 0;
+    except
+      result := -1;
+    end;
+  finally
+    LStream.Free;
+  end;
 end;
 
-class destructor TOSRandom.DestroyOSRandom;
-begin
-{$IFDEF MSWINDOWS}
-  if (FhProvider > 0) then
-  begin
-    FWCCryptReleaseContext(@FhProvider, 0);
-  end;
-{$ELSE}
-  FStream.Free;
-{$ENDIF MSWINDOWS}
-end;
+{$IFEND MSWINDOWS}
 
 class procedure TOSRandom.GetBytes(const data: TCryptoLibByteArray);
 var
   count: Int32;
 begin
   count := System.Length(data);
-{$IFDEF MSWINDOWS}
-  if FwinCryptOk = 1 then
+{$IF DEFINED(MSWINDOWS)}
+  if GenRandomBytesWindows(count, PByte(data)) <> 0 then
   begin
-    if FWCCryptGenRandom(FhProvider, UInt32(count), PBYTE(data)) then
-    begin
-      Exit;
-    end
-    else
-    begin
-      raise EAccessCryptoLibException.CreateRes
-        (@SWindowsCryptoAPIAvailableGenerationError);
-    end;
-  end
-  else
-  begin
-    raise EAccessCryptoLibException.CreateRes(@SWindowsCryptoAPIUnavailable);
-  end;
-{$ELSE}
-  if FunixCryptOk = 1 then
-  begin
-    try
-      FStream.ReadBuffer(data[0], count);
-    except
-      raise EAccessCryptoLibException.CreateRes(@SUnixRandomReadError);
-    end;
-  end
-  else
-  begin
-    raise EAccessCryptoLibException.CreateRes(@SUnixRandomUnavailable);
+    raise EAccessCryptoLibException.CreateRes
+      (@SMSWIndowsCryptoAPIGenerationError);
   end;
 
-{$ENDIF MSWINDOWS}
+{$ELSEIF DEFINED(IOSDELPHI)}
+  if GenRandomBytesIOSDelphi(count, PByte(data)) <> 0 then
+  begin
+    raise EAccessCryptoLibException.CreateRes
+      (@SIOSSecRandomCopyBytesGenerationError);
+  end;
+
+{$ELSEIF DEFINED(IOSFPC)}
+  if GenRandomBytesIOSFPC(count, PByte(data)) <> 0 then
+  begin
+    raise EAccessCryptoLibException.CreateRes
+      (@SIOSSecRandomCopyBytesGenerationError);
+  end;
+
+{$ELSE}
+  if GenRandomBytesUnix(count, PByte(data)) <> 0 then
+  begin
+    raise EAccessCryptoLibException.CreateRes(@SUnixRandomReadError);
+  end;
+{$IFEND MSWINDOWS}
 end;
 
 class procedure TOSRandom.GetNonZeroBytes(const data: TCryptoLibByteArray);

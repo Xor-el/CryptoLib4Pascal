@@ -15,19 +15,28 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrISOSigner;
+unit ClpIDsaExt;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorr;
+  ClpIDsa,
+  ClpBigInteger;
 
 type
-  IECSchnorrISOSigner = interface(ISchnorr)
+  /// <summary>
+  /// An "extended" interface for classes implementing DSA-style algorithms, that provides access
+  /// to the group order.
+  /// </summary>
+  IDsaExt = interface(IDsa)
+    ['{FF9421DB-97F1-4409-AC00-B0000EE5EAFB}']
 
-    ['{B3E5638F-0D51-4D3F-9505-5B240D894229}']
+    function GetOrder: TBigInteger;
+    /// <summary>The order of the group that the r, s values in signatures belong to.</summary>
+    property Order: TBigInteger read GetOrder;
+
   end;
 
 implementation

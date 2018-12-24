@@ -22,12 +22,12 @@ unit ClpIECNRSigner;
 interface
 
 uses
-  ClpIDsa,
+  ClpIDsaExt,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
-  IECNRSigner = interface(IDsa)
+  IECNRSigner = interface(IDsaExt)
     ['{C136F005-404E-4022-886E-DE5EFCECFF9C}']
 
   end;

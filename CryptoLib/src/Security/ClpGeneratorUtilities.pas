@@ -194,6 +194,8 @@ begin
     TNistObjectIdentifiers.IdAes256Ecb.ID,
     TNistObjectIdentifiers.IdAes256Ofb.ID]);
 
+  AddKgAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2']);
+
   //
   // HMac key generators
   //
@@ -241,8 +243,8 @@ begin
   AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDSA', []);
 
-  AddDefaultKeySizeEntries(128, ['AES128', 'HMACMD2', 'HMACMD4', 'HMACMD5',
-    'HMACRIPEMD128']);
+  AddDefaultKeySizeEntries(128, ['AES128', 'BLOWFISH', 'HMACMD2', 'HMACMD4',
+    'HMACMD5', 'HMACRIPEMD128']);
   AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
   AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER']);
   AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACSHA224',

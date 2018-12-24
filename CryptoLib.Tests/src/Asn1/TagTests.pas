@@ -99,7 +99,7 @@ var
   app: IDerApplicationSpecific;
   tagged: IAsn1TaggedObject;
   sr: ISecureRandom;
-  TestTag, I: Int32;
+  LTestTag, I: Int32;
 begin
 
   aIn := TAsn1InputStream.Create(FlongTagged);
@@ -172,19 +172,22 @@ begin
 
   sr := TSecureRandom.Create();
 
-  for I := 0 to System.Pred(100) do
+  I := 0;
+  while I < 100 do
   begin
-    TestTag := TBits.Asr32(sr.NextInt32() and System.High(Int32), sr.Next(26));
-    app := TDerApplicationSpecific.Create(TestTag, TBytes.Create(1));
+    LTestTag := TBits.Asr32(sr.NextInt32() and System.High(Int32), sr.Next(26));
+    app := TDerApplicationSpecific.Create(LTestTag, TBytes.Create(1));
     app := TAsn1Object.FromByteArray(app.GetEncoded())
       as IDerApplicationSpecific;
 
-    if (app.ApplicationTag <> TestTag) then
+    if (app.ApplicationTag <> LTestTag) then
     begin
       Fail(Format
         ('incorrect tag number read on recode (random test value: " %d ")',
-        [TestTag]));
+        [LTestTag]));
     end;
+
+    System.Inc(I);
   end;
 end;
 

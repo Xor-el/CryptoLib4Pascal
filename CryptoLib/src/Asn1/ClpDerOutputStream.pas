@@ -26,12 +26,11 @@ uses
   ClpBits,
   ClpAsn1Tags,
   ClpCryptoLibTypes,
-  ClpIFilterStream,
   ClpIProxiedInterface,
   ClpFilterStream;
 
 type
-  TDerOutputStream = class(TFilterStream, IFilterStream, IDerOutputStream)
+  TDerOutputStream = class(TFilterStream)
 
   strict private
     procedure WriteLength(length: Int32);
@@ -79,7 +78,10 @@ procedure TDerOutputStream.WriteEncoded(tag: Int32;
 begin
   WriteByte(Byte(tag));
   WriteLength(System.length(bytes));
-  Write(bytes[0], System.length(bytes));
+  if bytes <> Nil then
+  begin
+    Write(bytes[0], System.length(bytes));
+  end;
 end;
 
 procedure TDerOutputStream.WriteEncoded(flags, tagNo: Int32;

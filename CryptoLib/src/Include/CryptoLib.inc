@@ -15,8 +15,6 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-{$WARN SYMBOL_DEPRECATED OFF}
-
 {$DEFINE DELPHI}
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -24,6 +22,10 @@
 {$I CryptoLibHelper.inc} // Had to Include this Since Delphi Does not allow "FPC_FULLVERSION" to Compile.
 {$UNDEF DELPHI}
 {$MODE delphi}
+
+{$IF (DEFINED(DARWIN) AND (DEFINED(CPUARM) OR DEFINED(CPUAARCH64) OR DEFINED(IPHONESIM)))}
+{$DEFINE IOSFPC}
+{$ENDIF}
 
 {$DEFINE USE_UNROLLED_VARIANT}
 
@@ -59,6 +61,10 @@
 
 {$IFDEF DELPHI}
 
+{$IF DEFINED(IOS)}
+{$DEFINE IOSDELPHI}
+{$ENDIF}
+
 {$DEFINE USE_UNROLLED_VARIANT}
 
 // This option is needed to enable code browsing (aka Ctrl+Click)
@@ -77,6 +83,18 @@
 
 // Disable Duplicate Constructor Warnings
 {$WARN DUPLICATE_CTOR_DTOR OFF}
+
+// Disable Deprecated Warnings
+{$WARN SYMBOL_DEPRECATED OFF}
+
+ // XE3 and Above
+{$IF CompilerVersion >= 24.0}
+{$DEFINE DELPHIXE3_UP}
+{$DEFINE SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD}
+{$DEFINE SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD}
+{$LEGACYIFEND ON}
+{$ZEROBASEDSTRINGS OFF}
+{$IFEND}
 
  // 2010 only
 {$IF CompilerVersion = 21.0}
@@ -102,14 +120,6 @@
 // XE3 and Below
 {$IF CompilerVersion <= 24.0}
 {$DEFINE DELPHIXE3_DOWN}
-{$IFEND}
-
- // XE3 and Above
-{$IF CompilerVersion >= 24.0}
-{$DEFINE DELPHIXE3_UP}
-{$DEFINE SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD}
-{$LEGACYIFEND ON}
-{$ZEROBASEDSTRINGS OFF}
 {$IFEND}
 
   // XE7 and Above

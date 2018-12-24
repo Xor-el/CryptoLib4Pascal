@@ -259,12 +259,18 @@ begin
     if (System.Length(FV) <> 0) then
     begin
       System.Move(K[0], K2[0], System.Length(K2) * System.SizeOf(Byte));
-      System.Move(K[System.Length(K2)], K1[0], System.Length(K1) *
-        System.SizeOf(Byte));
+      if K1 <> Nil then
+      begin
+        System.Move(K[System.Length(K2)], K1[0],
+          System.Length(K1) * System.SizeOf(Byte));
+      end;
     end
     else
     begin
-      System.Move(K[0], K1[0], System.Length(K1) * System.SizeOf(Byte));
+      if K1 <> Nil then
+      begin
+        System.Move(K[0], K1[0], System.Length(K1) * System.SizeOf(Byte));
+      end;
       System.Move(K[System.Length(K1)], K2[0], System.Length(K2) *
         System.SizeOf(Byte));
     end;
@@ -365,7 +371,7 @@ function TIESEngine.EncryptBlock(const &in: TCryptoLibByteArray;
   inOff, inLen: Int32): TCryptoLibByteArray;
 var
   C, K, K1, K2, p2, L2, T: TCryptoLibByteArray;
-  len, i: Int32;
+  len, i, lenCount: Int32;
 begin
   if (Fcipher = Nil) then
   begin
@@ -379,12 +385,18 @@ begin
     if (System.Length(FV) <> 0) then
     begin
       System.Move(K[0], K2[0], System.Length(K2) * System.SizeOf(Byte));
-      System.Move(K[System.Length(K2)], K1[0], System.Length(K1) *
-        System.SizeOf(Byte));
+      if K1 <> Nil then
+      begin
+        System.Move(K[System.Length(K2)], K1[0],
+          System.Length(K1) * System.SizeOf(Byte));
+      end;
     end
     else
     begin
-      System.Move(K[0], K1[0], System.Length(K1) * System.SizeOf(Byte));
+      if K1 <> Nil then
+      begin
+        System.Move(K[0], K1[0], System.Length(K1) * System.SizeOf(Byte));
+      end;
       System.Move(K[inLen], K2[0], System.Length(K2) * System.SizeOf(Byte));
     end;
 
@@ -460,8 +472,15 @@ begin
   // C := Encrypted Payload
   // T := Authentication Message (MAC)
   System.SetLength(Result, System.Length(FV) + len + System.Length(T));
-  System.Move(FV[0], Result[0], System.Length(FV) * System.SizeOf(Byte));
-  System.Move(C[0], Result[System.Length(FV)], len * System.SizeOf(Byte));
+  if FV <> Nil then
+  begin
+    System.Move(FV[0], Result[0], System.Length(FV) * System.SizeOf(Byte));
+  end;
+  lenCount := len * System.SizeOf(Byte);
+  if lenCount > 0 then
+  begin
+    System.Move(C[0], Result[System.Length(FV)], lenCount);
+  end;
   System.Move(T[0], Result[System.Length(FV) + len],
     System.Length(T) * System.SizeOf(Byte));
 
@@ -585,8 +604,7 @@ begin
   if (System.Length(FV) <> 0) then
   begin
     VZ := TArrayUtils.Concatenate(FV, BigZ);
-    System.FillChar(BigZ[0], System.Length(BigZ) * System.SizeOf(Byte),
-      Byte(0));
+    TArrayUtils.Fill(BigZ, 0, System.Length(BigZ), Byte(0));
     BigZ := VZ;
   end;
 
@@ -607,8 +625,7 @@ begin
     end;
 
   finally
-    System.FillChar(BigZ[0], System.Length(BigZ) * System.SizeOf(Byte),
-      Byte(0));
+    TArrayUtils.Fill(BigZ, 0, System.Length(BigZ), Byte(0));
   end;
 end;
 

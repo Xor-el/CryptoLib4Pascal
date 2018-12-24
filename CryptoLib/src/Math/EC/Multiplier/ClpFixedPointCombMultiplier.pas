@@ -22,6 +22,7 @@ unit ClpFixedPointCombMultiplier;
 interface
 
 uses
+  ClpBits,
   ClpBigInteger,
   ClpNat,
   ClpCryptoLibTypes,
@@ -68,7 +69,8 @@ function TFixedPointCombMultiplier.MultiplyPositive(const p: IECPoint;
 var
   c: IECCurve;
   R, add: IECPoint;
-  size, width, d, top, i, j, secretIndex, fullComb: Int32;
+  size, width, d, top, i, j, fullComb: Int32;
+  secretIndex, secretBit: UInt32;
   info: IFixedPointPreCompInfo;
   lookupTable: IECLookupTable;
   LK: TCryptoLibUInt32Array;
@@ -108,14 +110,15 @@ begin
     while j >= 0 do
     begin
 
+      secretBit := LK[TBits.Asr32(j, 5)] shr (j and $1F);
+      secretIndex := secretIndex xor (secretBit shr 1);
       secretIndex := secretIndex shl 1;
-
-      secretIndex := secretIndex or Int32(TNat.GetBit(LK, j));
+      secretIndex := secretIndex xor secretBit;
 
       System.Dec(j, d);
     end;
 
-    add := lookupTable.Lookup(secretIndex);
+    add := lookupTable.Lookup(Int32(secretIndex));
     R := R.TwicePlus(add);
 
   end;

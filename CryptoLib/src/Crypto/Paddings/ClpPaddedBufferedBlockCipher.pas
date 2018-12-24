@@ -232,7 +232,7 @@ end;
 function TPaddedBufferedBlockCipher.DoFinal(const output: TCryptoLibByteArray;
   outOff: Int32): Int32;
 var
-  blockSize, resultLen: Int32;
+  blockSize, resultLen, resultTotalLen: Int32;
 begin
   blockSize := Fcipher.GetBlockSize();
   resultLen := 0;
@@ -276,8 +276,11 @@ begin
 
     try
       resultLen := resultLen - Fpadding.PadCount(Fbuf);
-
-      System.Move(Fbuf[0], output[outOff], resultLen * System.SizeOf(Byte));
+      resultTotalLen := resultLen * System.SizeOf(Byte);
+      if resultTotalLen > 0 then
+      begin
+        System.Move(Fbuf[0], output[outOff], resultTotalLen);
+      end;
 
     finally
       Reset();

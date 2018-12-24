@@ -22,12 +22,14 @@ unit ClpDerT61String;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpDerStringBase,
   ClpAsn1Tags,
   ClpAsn1OctetString,
   ClpAsn1Object,
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
   ClpIDerT61String,
@@ -45,11 +47,18 @@ type
   TDerT61String = class(TDerStringBase, IDerT61String)
 
   strict private
+    class var
+
+      FEncoding: TEncoding;
+
   var
     FStr: String;
 
     function GetStr: String; inline;
     property Str: String read GetStr;
+
+    class constructor CreateDerT61String();
+    class destructor DestroyDerT61String();
 
   strict protected
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
@@ -69,7 +78,7 @@ type
 
     function GetOctets(): TCryptoLibByteArray; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     /// <summary>
     /// return a T61 string from the passed in object.
@@ -114,7 +123,7 @@ end;
 
 function TDerT61String.GetOctets: TCryptoLibByteArray;
 begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ANSI);
+  result := TConverters.ConvertStringToBytes(Str, FEncoding);
 end;
 
 function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
@@ -133,7 +142,8 @@ end;
 
 constructor TDerT61String.Create(const Str: TCryptoLibByteArray);
 begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ANSI));
+  Inherited Create();
+  Create(TConverters.ConvertBytesToString(Str, FEncoding));
 end;
 
 constructor TDerT61String.Create(const Str: String);
@@ -147,9 +157,19 @@ begin
   FStr := Str;
 end;
 
-procedure TDerT61String.Encode(const derOut: IDerOutputStream);
+class constructor TDerT61String.CreateDerT61String;
 begin
-  derOut.WriteEncoded(TAsn1Tags.T61String, GetOctets());
+  FEncoding := TEncoding.GetEncoding('iso-8859-1');
+end;
+
+class destructor TDerT61String.DestroyDerT61String;
+begin
+  FEncoding.Free;
+end;
+
+procedure TDerT61String.Encode(const derOut: TStream);
+begin
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.T61String, GetOctets());
 end;
 
 class function TDerT61String.GetInstance(const obj: TObject): IDerT61String;

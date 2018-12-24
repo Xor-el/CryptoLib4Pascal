@@ -22,6 +22,7 @@ unit ClpDerTaggedObject;
 interface
 
 uses
+  Classes,
   ClpCryptoLibTypes,
   ClpAsn1Tags,
   ClpDerSequence,
@@ -29,6 +30,7 @@ uses
   ClpIDerSequence,
 {$ENDIF DELPHI}
   ClpIProxiedInterface,
+  ClpDerOutputStream,
   ClpAsn1TaggedObject,
   ClpIDerTaggedObject;
 
@@ -71,7 +73,7 @@ type
     /// </param>
     constructor Create(tagNo: Int32); overload;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
   end;
 
@@ -95,7 +97,7 @@ begin
   Inherited Create(false, tagNo, TDerSequence.Empty)
 end;
 
-procedure TDerTaggedObject.Encode(const derOut: IDerOutputStream);
+procedure TDerTaggedObject.Encode(const derOut: TStream);
 var
   bytes: TCryptoLibByteArray;
   flags: Int32;
@@ -106,8 +108,8 @@ begin
 
     if (explicitly) then
     begin
-      derOut.WriteEncoded(TAsn1Tags.Constructed or TAsn1Tags.Tagged,
-        tagNo, bytes);
+      (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Constructed or
+        TAsn1Tags.Tagged, tagNo, bytes);
     end
     else
     begin
@@ -115,13 +117,14 @@ begin
       // need to mark constructed types... (preserve Constructed tag)
       //
       flags := (bytes[0] and TAsn1Tags.Constructed) or TAsn1Tags.Tagged;
-      derOut.WriteTag(flags, tagNo);
+      (derOut as TDerOutputStream).WriteTag(flags, tagNo);
       derOut.Write(bytes[1], System.Length(bytes) - 1);
     end
   end
   else
   begin
-    derOut.WriteEncoded(TAsn1Tags.Constructed or TAsn1Tags.Tagged, tagNo, Nil);
+    (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Constructed or
+      TAsn1Tags.Tagged, tagNo, Nil);
   end;
 end;
 

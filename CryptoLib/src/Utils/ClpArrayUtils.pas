@@ -53,6 +53,9 @@ type
     class function AreEqual(const A, B: TCryptoLibInt32Array): Boolean;
       overload; static;
 
+    class function AreAllZeroes(const buf: TCryptoLibByteArray; off, len: Int32)
+      : Boolean; static;
+
     class function GetArrayHashCode(const data: TCryptoLibByteArray): Int32;
       overload; static;
 
@@ -79,6 +82,15 @@ type
 
     class function ConstantTimeAreEqual(const a_ar1, a_ar2: TCryptoLibByteArray)
       : Boolean; static;
+
+    class procedure Fill(const buf: TCryptoLibByteArray; from, &to: Int32;
+      filler: Byte); overload; static;
+
+    class procedure Fill(const buf: TCryptoLibInt32Array; from, &to: Int32;
+      filler: Int32); overload; static;
+
+    class procedure Fill(const buf: TCryptoLibUInt32Array; from, &to: Int32;
+      filler: UInt32); overload; static;
 
   end;
 
@@ -163,6 +175,20 @@ begin
   Result := CompareMem(A, B, System.Length(A) * System.SizeOf(Byte));
 end;
 
+class function TArrayUtils.AreAllZeroes(const buf: TCryptoLibByteArray;
+  off, len: Int32): Boolean;
+var
+  bits: UInt32;
+  i: Int32;
+begin
+  bits := 0;
+  for i := 0 to System.Pred(len) do
+  begin
+    bits := bits or (buf[off + i]);
+  end;
+  Result := bits = 0;
+end;
+
 class function TArrayUtils.AreEqual(const A, B: TCryptoLibInt32Array): Boolean;
 begin
   if System.Length(A) <> System.Length(B) then
@@ -221,6 +247,36 @@ begin
   System.SetLength(Result, newLength);
   System.Move(data[from], Result[0], Min(newLength, System.Length(data) - from)
     * System.SizeOf(Byte));
+end;
+
+class procedure TArrayUtils.Fill(const buf: TCryptoLibByteArray;
+  from, &to: Int32; filler: Byte);
+begin
+  System.FillChar(buf[from], (&to - from) * System.SizeOf(Byte), filler);
+end;
+
+class procedure TArrayUtils.Fill(const buf: TCryptoLibInt32Array;
+  from, &to: Int32; filler: Int32);
+begin
+  while from < &to do
+  begin
+    buf[from] := filler;
+    System.Inc(from);
+  end;
+end;
+
+class procedure TArrayUtils.Fill(const buf: TCryptoLibUInt32Array;
+  from, &to: Int32; filler: UInt32);
+begin
+{$IFDEF FPC}
+  System.FillDWord(buf[from], (&to - from), filler);
+{$ELSE}
+  while from < &to do
+  begin
+    buf[from] := filler;
+    System.Inc(from);
+  end;
+{$ENDIF}
 end;
 
 class function TArrayUtils.GetArrayHashCode(const data

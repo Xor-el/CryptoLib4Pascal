@@ -27,6 +27,7 @@ uses
   ClpICbcBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -283,8 +284,7 @@ end;
 procedure TCbcBlockCipher.Reset;
 begin
   System.Move(FIV[0], FcbcV[0], System.length(FIV));
-  System.FillChar(FcbcNextV[0], System.length(FcbcNextV) *
-    System.SizeOf(Byte), Byte(0));
+  TArrayUtils.Fill(FcbcNextV, 0, System.length(FcbcNextV), Byte(0));
 
   Fcipher.Reset();
 end;

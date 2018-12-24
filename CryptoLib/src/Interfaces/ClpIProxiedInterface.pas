@@ -22,8 +22,8 @@ unit ClpIProxiedInterface;
 interface
 
 uses
-  ClpCryptoLibTypes,
-  ClpIFilterStream;
+  Classes,
+  ClpCryptoLibTypes;
 
 type
   IAsn1Object = interface;
@@ -48,8 +48,6 @@ type
 {$ENDIF DELPHI}
   end;
 
-  IDerOutputStream = interface;
-
   IAsn1Object = interface(IAsn1Encodable)
 
     ['{83A52A0F-570B-43BB-9B98-8E5351FDA996}']
@@ -58,30 +56,11 @@ type
 
     function Asn1GetHashCode(): Int32;
 
-    procedure Encode(const derOut: IDerOutputStream);
+    procedure Encode(const derOut: TStream);
 
     function CallAsn1Equals(const obj: IAsn1Object): Boolean;
 
     function CallAsn1GetHashCode(): Int32;
-
-  end;
-
-  IDerOutputStream = interface(IFilterStream)
-    ['{2210ED27-9DB1-4BFC-9462-8AA35AF0C4C5}']
-
-    procedure WriteNull();
-    procedure WriteEncoded(tag: Int32;
-      const bytes: TCryptoLibByteArray); overload;
-    procedure WriteEncoded(tag: Int32; first: Byte;
-      const bytes: TCryptoLibByteArray); overload;
-    procedure WriteEncoded(tag: Int32; const bytes: TCryptoLibByteArray;
-      offset, length: Int32); overload;
-    procedure WriteEncoded(flags, tagNo: Int32;
-      const bytes: TCryptoLibByteArray); overload;
-    procedure WriteTag(flags, tagNo: Int32);
-
-    procedure WriteObject(const obj: IAsn1Encodable); overload;
-    procedure WriteObject(const obj: IAsn1Object); overload;
 
   end;
 

@@ -29,6 +29,7 @@ uses
   ClpIAsn1TaggedObject,
   ClpDerTaggedObject,
   ClpAsn1Tags,
+  ClpDerOutputStream,
   ClpIAsn1EncodableVector,
   ClpIDerTaggedObject,
   ClpIProxiedInterface,
@@ -121,7 +122,7 @@ type
       const dataValueDescriptor: IAsn1Object; encoding: Int32;
       const externalData: IAsn1Object); overload;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     property dataValueDescriptor: IAsn1Object read GetDataValueDescriptor
       write SetDataValueDescriptor;
@@ -284,7 +285,7 @@ begin
     externalData.TagNo, externalData.ToAsn1Object());
 end;
 
-procedure TDerExternal.Encode(const derOut: IDerOutputStream);
+procedure TDerExternal.Encode(const derOut: TStream);
 var
   ms: TMemoryStream;
   Buffer: TCryptoLibByteArray;
@@ -300,7 +301,8 @@ begin
     System.SetLength(Buffer, ms.Size);
     ms.Position := 0;
     ms.Read(Buffer[0], ms.Size);
-    derOut.WriteEncoded(TAsn1Tags.Constructed, TAsn1Tags.External, Buffer);
+    (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Constructed,
+      TAsn1Tags.External, Buffer);
   finally
     ms.Free;
   end;

@@ -28,6 +28,7 @@ uses
   ClpArrayUtils,
   ClpAsn1TaggedObject,
   ClpAsn1Tags,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpIDerApplicationSpecific,
   ClpIAsn1EncodableVector,
@@ -99,7 +100,7 @@ type
     /// </exception>
     function GetObject(derTagNo: Int32): IAsn1Object; overload; inline;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     property ApplicationTag: Int32 read GetApplicationTag;
   end;
@@ -247,7 +248,7 @@ begin
 
 end;
 
-procedure TDerApplicationSpecific.Encode(const derOut: IDerOutputStream);
+procedure TDerApplicationSpecific.Encode(const derOut: TStream);
 var
   classBits: Int32;
 begin
@@ -257,7 +258,7 @@ begin
     classBits := classBits or TAsn1Tags.Constructed;
   end;
 
-  derOut.WriteEncoded(classBits, Ftag, Foctets);
+  (derOut as TDerOutputStream).WriteEncoded(classBits, Ftag, Foctets);
 end;
 
 constructor TDerApplicationSpecific.Create(isExplicit: Boolean; tag: Int32;
@@ -317,7 +318,7 @@ end;
 class function TDerApplicationSpecific.ReplaceTagNumber(newTag: Int32;
   const input: TCryptoLibByteArray): TCryptoLibByteArray;
 var
-  tagNo, index, b: Int32;
+  tagNo, index, b, remaining: Int32;
   tmp: TCryptoLibByteArray;
 begin
   tagNo := input[0] and $1F;
@@ -327,35 +328,29 @@ begin
   //
   if (tagNo = $1F) then
   begin
-    // tagNo := 0;
 
-    b := input[index] and $FF;
+    b := input[index];
     System.Inc(index);
 
     // X.690-0207 8.1.2.4.2
     // "c) bits 7 to 1 of the first subsequent octet shall not all be zero."
     if ((b and $7F) = 0) then // Note: -1 will pass
     begin
-      raise EInvalidOperationCryptoLibException.CreateRes(@SCorruptedStream);
+      raise EIOCryptoLibException.CreateRes(@SCorruptedStream);
     end;
 
-    while ((b >= 0) and ((b and $80) <> 0)) do
+    while ((b and $80) <> 0) do
     begin
-      // tagNo := tagNo or ((b and $7F));
-      // tagNo := tagNo shl 7;
-      b := input[index] and $FF;
+      b := input[index];
       System.Inc(index);
     end;
 
-    // tagNo := tagNo or (b and $7F);
   end;
 
-  System.SetLength(tmp, System.Length(input) - index + 1);
-
-  System.Move(input[index], tmp[1], System.Length(tmp) - 1 *
-    System.SizeOf(Byte));
-
+  remaining := System.Length(input) - index;
+  System.SetLength(tmp, 1 + remaining);
   tmp[0] := Byte(newTag);
+  System.Move(input[index], tmp[1], remaining * System.SizeOf(Byte));
 
   result := tmp;
 end;

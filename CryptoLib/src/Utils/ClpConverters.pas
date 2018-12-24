@@ -96,16 +96,20 @@ type
       overload; static; inline;
 
     class procedure ReadUInt32AsBytesLE(a_in: UInt32;
-      a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
+      const a_out: TCryptoLibByteArray; a_index: Int32); overload;
+      static; inline;
 
     class procedure ReadUInt32AsBytesBE(a_in: UInt32;
-      a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
+      const a_out: TCryptoLibByteArray; a_index: Int32); overload;
+      static; inline;
 
     class procedure ReadUInt64AsBytesLE(a_in: UInt64;
-      a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
+      const a_out: TCryptoLibByteArray; a_index: Int32); overload;
+      static; inline;
 
     class procedure ReadUInt64AsBytesBE(a_in: UInt64;
-      a_out: TCryptoLibByteArray; a_index: Int32); overload; static; inline;
+      const a_out: TCryptoLibByteArray; a_index: Int32); overload;
+      static; inline;
 
     class function ConvertStringToBytes(const a_in: String;
       a_encoding: TEncoding): TCryptoLibByteArray; overload; static;
@@ -360,7 +364,7 @@ begin
 end;
 
 class procedure TConverters.ReadUInt32AsBytesBE(a_in: UInt32;
-  a_out: TCryptoLibByteArray; a_index: Int32);
+  const a_out: TCryptoLibByteArray; a_index: Int32);
 begin
   a_out[a_index] := Byte(a_in shr 24);
   a_out[a_index + 1] := Byte(a_in shr 16);
@@ -369,7 +373,7 @@ begin
 end;
 
 class procedure TConverters.ReadUInt32AsBytesLE(a_in: UInt32;
-  a_out: TCryptoLibByteArray; a_index: Int32);
+  const a_out: TCryptoLibByteArray; a_index: Int32);
 begin
   a_out[a_index] := Byte(a_in);
   a_out[a_index + 1] := Byte(a_in shr 8);
@@ -378,7 +382,7 @@ begin
 end;
 
 class procedure TConverters.ReadUInt64AsBytesLE(a_in: UInt64;
-  a_out: TCryptoLibByteArray; a_index: Int32);
+  const a_out: TCryptoLibByteArray; a_index: Int32);
 begin
   a_out[a_index] := Byte(a_in);
   a_out[a_index + 1] := Byte(a_in shr 8);
@@ -391,7 +395,7 @@ begin
 end;
 
 class procedure TConverters.ReadUInt64AsBytesBE(a_in: UInt64;
-  a_out: TCryptoLibByteArray; a_index: Int32);
+  const a_out: TCryptoLibByteArray; a_index: Int32);
 begin
   a_out[a_index] := Byte(a_in shr 56);
   a_out[a_index + 1] := Byte(a_in shr 48);
@@ -465,8 +469,11 @@ begin
   System.Assert(System.length(l_in) and 1 = 0);
 {$ENDIF DEBUG}
   System.SetLength(result, System.length(l_in) shr 1);
+{$IFNDEF NEXTGEN}
   HexToBin(PChar(l_in), @result[0], System.length(result));
-
+{$ELSE}
+  HexToBin(PChar(l_in), 0, result, 0, System.length(l_in));
+{$ENDIF !NEXTGEN}
 end;
 
 class function TConverters.ConvertStringToBytes(const a_in: String;

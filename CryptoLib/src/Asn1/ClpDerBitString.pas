@@ -31,6 +31,7 @@ uses
   ClpAsn1Tags,
   ClpBigInteger,
   ClpAsn1Object,
+  ClpDerOutputStream,
   ClpIProxiedInterface,
   ClpCryptoLibTypes,
   ClpIAsn1TaggedObject,
@@ -88,7 +89,7 @@ type
 
     function GetBytes(): TCryptoLibByteArray; virtual;
 
-    procedure Encode(const derOut: IDerOutputStream); override;
+    procedure Encode(const derOut: TStream); override;
 
     function GetInt32Value: Int32; virtual;
     property Int32Value: Int32 read GetInt32Value;
@@ -263,7 +264,7 @@ begin
   FmPadBits := padBits;
 end;
 
-procedure TDerBitString.Encode(const derOut: IDerOutputStream);
+procedure TDerBitString.Encode(const derOut: TStream);
 var
   last, mask, unusedBits: Int32;
   contents: TCryptoLibByteArray;
@@ -283,12 +284,13 @@ begin
       // */
       contents[System.Length(contents) - 1] := Byte(last xor unusedBits);
 
-      derOut.WriteEncoded(TAsn1Tags.BitString, contents);
+      (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BitString, contents);
       Exit;
     end;
   end;
 
-  derOut.WriteEncoded(TAsn1Tags.BitString, Byte(mPadBits), mData);
+  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BitString,
+    Byte(mPadBits), mData);
 end;
 
 class function TDerBitString.FromAsn1Octets(const octets: TCryptoLibByteArray)

@@ -48,7 +48,6 @@ uses
   ClpECPublicKeyParameters,
   ClpECPrivateKeyParameters,
   ClpIAsymmetricKeyParameter,
-  ClpECSchnorrSigner,
   ClpIECInterface,
   ClpECPoint,
   ClpISigner,
@@ -104,7 +103,7 @@ type
     /// SHA-512withECDSA and RIPEMD160withECDSA
     /// </summary>
     SigningAlgorithmECDSA = 'SHA-1withECDSA';
-    SigningAlgorithmECSCHNORR = 'SHA-256withECSCHNORRLIBSECP';
+    SigningAlgorithmECSCHNORR = 'SHA-256withECSCHNORRSIPA';
 
     PKCS5_SALT_LEN = Int32(8);
     SALT_MAGIC_LEN = Int32(8);

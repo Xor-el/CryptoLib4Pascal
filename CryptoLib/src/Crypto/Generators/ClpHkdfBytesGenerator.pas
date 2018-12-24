@@ -60,8 +60,6 @@ type
     FhashLen, FgeneratedBytes: Int32;
     Finfo, FcurrentT: TCryptoLibByteArray;
 
-  strict private
-
     /// <summary>
     /// Performs the extract part of the key derivation function.
     /// </summary>

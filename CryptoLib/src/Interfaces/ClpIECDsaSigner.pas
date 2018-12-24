@@ -22,7 +22,7 @@ unit ClpIECDsaSigner;
 interface
 
 uses
-  ClpIDsa,
+  ClpIDsaExt,
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes,
@@ -30,7 +30,7 @@ uses
   ClpIECFieldElement;
 
 type
-  IECDsaSigner = interface(IDsa)
+  IECDsaSigner = interface(IDsaExt)
 
     ['{72930065-5893-46CA-B49F-51254C2E73FF}']
 

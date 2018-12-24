@@ -44,8 +44,8 @@ type
     constructor Create(inStream: TStream; limit: Int32);
     procedure SetEofOn00(eofOn00: Boolean);
 
-    function Read(buffer: TCryptoLibByteArray; offset, count: Int32)
-      : Int32; override;
+    function Read(buffer: TCryptoLibByteArray; offset, count: LongInt)
+      : LongInt; override;
 
     function ReadByte(): Int32; override;
 
@@ -100,7 +100,7 @@ begin
 end;
 
 function TIndefiniteLengthInputStream.Read(buffer: TCryptoLibByteArray;
-  offset, count: Int32): Int32;
+  offset, count: LongInt): LongInt;
 var
   numRead: Int32;
 begin
