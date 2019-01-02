@@ -41,7 +41,7 @@ uses
   SHA512HMacTests,
   RIPEMD128HMacTests,
   RIPEMD160HMacTests,
- // HMacTests, stalling on x64 windows on travis ci
+  HMacTests,
   Pkcs5Tests,
   HkdfGeneratorTests,
   ECIESTests,
