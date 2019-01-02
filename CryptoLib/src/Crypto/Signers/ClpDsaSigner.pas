@@ -53,7 +53,7 @@ type
   TDsaSigner = class(TInterfacedObject, IDsaExt, IDsaSigner)
 
   strict private
-  function GetOrder: TBigInteger; virtual;
+    function GetOrder: TBigInteger; virtual;
     function GetAlgorithmName: String; virtual;
   strict protected
   var
@@ -167,7 +167,7 @@ end;
 
 function TDsaSigner.GetOrder: TBigInteger;
 begin
-  result := Fkey.Parameters.Q;
+  result := Fkey.parameters.q;
 end;
 
 function TDsaSigner.GetAlgorithmName: String;

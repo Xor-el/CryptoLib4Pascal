@@ -22,8 +22,8 @@ unit ClpTeleTrusTObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   TTeleTrusTObjectIdentifiers = class sealed(TObject)

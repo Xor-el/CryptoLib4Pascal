@@ -38,7 +38,7 @@ uses
   ClpGeneratorUtilities,
   ClpParameterUtilities,
   ClpCipherUtilities,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpCryptoLibTypes;
 

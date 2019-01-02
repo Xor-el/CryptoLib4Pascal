@@ -22,7 +22,7 @@ unit ClpIScaleXPointMap;
 interface
 
 uses
-  ClpIECInterface;
+  ClpIECC;
 
 type
   IScaleXPointMap = interface(IECPointMap)

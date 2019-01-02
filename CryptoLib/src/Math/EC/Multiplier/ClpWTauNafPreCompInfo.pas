@@ -23,7 +23,7 @@ interface
 
 uses
   ClpIPreCompInfo,
-  ClpIECInterface,
+  ClpIECC,
   ClpCryptoLibTypes,
   ClpIWTauNafPreCompInfo;
 

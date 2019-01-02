@@ -35,7 +35,7 @@ uses
 {$ENDIF FPC}
   ClpCryptoLibTypes,
   ClpArrayUtils,
-  ClpHex,
+  ClpEncoders,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBigInteger;

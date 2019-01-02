@@ -47,7 +47,7 @@ uses
   ClpIParametersWithIV,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpCryptoLibTypes;
 

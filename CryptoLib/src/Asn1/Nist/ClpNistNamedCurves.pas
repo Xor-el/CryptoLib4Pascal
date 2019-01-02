@@ -27,7 +27,7 @@ uses
   ClpIX9ECParameters,
   ClpSecNamedCurves,
   ClpCryptoLibTypes,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpSecObjectIdentifiers;
 
 type
@@ -41,7 +41,6 @@ type
   strict private
 
   class var
-    FIsBooted: Boolean;
     FobjIds: TDictionary<String, IDerObjectIdentifier>;
     Fnames: TDictionary<IDerObjectIdentifier, String>;
 
@@ -50,6 +49,7 @@ type
     class procedure DefineCurveAlias(const name: String;
       const oid: IDerObjectIdentifier); static; inline;
 
+    class procedure Boot; static;
     class constructor CreateNistNamedCurves();
     class destructor DestroyNistNamedCurves();
 
@@ -83,8 +83,6 @@ type
     // * contained in this structure.
     // */
     class property Names: TCryptoLibStringArray read GetNames;
-
-    class procedure Boot; static;
 
   end;
 
@@ -146,31 +144,26 @@ end;
 
 class procedure TNistNamedCurves.Boot;
 begin
-  if not FIsBooted then
-  begin
-    FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
-    Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
+  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
+  Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
 
-    DefineCurveAlias('B-163', TSecObjectIdentifiers.SecT163r2);
-    DefineCurveAlias('B-233', TSecObjectIdentifiers.SecT233r1);
-    DefineCurveAlias('B-283', TSecObjectIdentifiers.SecT283r1);
-    DefineCurveAlias('B-409', TSecObjectIdentifiers.SecT409r1);
-    DefineCurveAlias('B-571', TSecObjectIdentifiers.SecT571r1);
+  DefineCurveAlias('B-163', TSecObjectIdentifiers.SecT163r2);
+  DefineCurveAlias('B-233', TSecObjectIdentifiers.SecT233r1);
+  DefineCurveAlias('B-283', TSecObjectIdentifiers.SecT283r1);
+  DefineCurveAlias('B-409', TSecObjectIdentifiers.SecT409r1);
+  DefineCurveAlias('B-571', TSecObjectIdentifiers.SecT571r1);
 
-    DefineCurveAlias('K-163', TSecObjectIdentifiers.SecT163k1);
-    DefineCurveAlias('K-233', TSecObjectIdentifiers.SecT233k1);
-    DefineCurveAlias('K-283', TSecObjectIdentifiers.SecT283k1);
-    DefineCurveAlias('K-409', TSecObjectIdentifiers.SecT409k1);
-    DefineCurveAlias('K-571', TSecObjectIdentifiers.SecT571k1);
+  DefineCurveAlias('K-163', TSecObjectIdentifiers.SecT163k1);
+  DefineCurveAlias('K-233', TSecObjectIdentifiers.SecT233k1);
+  DefineCurveAlias('K-283', TSecObjectIdentifiers.SecT283k1);
+  DefineCurveAlias('K-409', TSecObjectIdentifiers.SecT409k1);
+  DefineCurveAlias('K-571', TSecObjectIdentifiers.SecT571k1);
 
-    DefineCurveAlias('P-192', TSecObjectIdentifiers.SecP192r1);
-    DefineCurveAlias('P-224', TSecObjectIdentifiers.SecP224r1);
-    DefineCurveAlias('P-256', TSecObjectIdentifiers.SecP256r1);
-    DefineCurveAlias('P-384', TSecObjectIdentifiers.SecP384r1);
-    DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
-
-    FIsBooted := True;
-  end;
+  DefineCurveAlias('P-192', TSecObjectIdentifiers.SecP192r1);
+  DefineCurveAlias('P-224', TSecObjectIdentifiers.SecP224r1);
+  DefineCurveAlias('P-256', TSecObjectIdentifiers.SecP256r1);
+  DefineCurveAlias('P-384', TSecObjectIdentifiers.SecP384r1);
+  DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
 end;
 
 class constructor TNistNamedCurves.CreateNistNamedCurves;

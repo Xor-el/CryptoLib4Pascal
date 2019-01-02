@@ -22,8 +22,8 @@ unit ClpPkcsObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   TPkcsObjectIdentifiers = class abstract(TObject)

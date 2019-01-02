@@ -24,27 +24,27 @@ interface
 uses
   SysUtils,
   Generics.Collections,
-  ClpHex,
+  ClpEncoders,
   ClpGlvTypeBParameters,
   ClpIGlvTypeBEndomorphism,
   ClpSecObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpECCurve,
-  ClpSecP256K1Curve,
-  ClpISecP256K1Curve,
-  ClpSecP256R1Curve,
-  ClpISecP256R1Curve,
-  ClpSecP384R1Curve,
-  ClpISecP384R1Curve,
-  ClpSecP521R1Curve,
-  ClpISecP521R1Curve,
-  ClpSecT283K1Curve,
-  ClpISecT283K1Curve,
-  ClpIECInterface,
-  ClpX9ECPoint,
-  ClpIX9ECPoint,
-  ClpIDerObjectIdentifier,
+  ClpECC,
+  ClpSecP256K1Custom,
+  ClpISecP256K1Custom,
+  ClpSecP256R1Custom,
+  ClpISecP256R1Custom,
+  ClpSecP384R1Custom,
+  ClpISecP384R1Custom,
+  ClpSecP521R1Custom,
+  ClpISecP521R1Custom,
+  ClpSecT283Custom,
+  ClpISecT283Custom,
+  ClpIECC,
+  ClpX9ECC,
+  ClpIX9ECC,
+  ClpIAsn1Objects,
   ClpGlvTypeBEndomorphism,
   ClpX9ECParameters,
   ClpIX9ECParameters,
@@ -58,8 +58,6 @@ type
   strict private
 
   class var
-
-    FIsBooted: Boolean;
     FnameToCurve: TDictionary<String, IX9ECParametersHolder>;
     FnameToOid: TDictionary<String, IDerObjectIdentifier>;
     FoidToCurve: TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>;
@@ -84,6 +82,7 @@ type
     class function ConfigureCurveGlv(const c: IECCurve;
       const p: IGlvTypeBParameters): IECCurve; static; inline;
 
+    class procedure Boot(); static;
     class constructor CreateCustomNamedCurves();
     class destructor DestroyCustomNamedCurves();
 
@@ -116,8 +115,6 @@ type
     // * contained in this structure.
     // */
     class property Names: TCryptoLibStringArray read GetNames;
-
-    class procedure Boot(); static;
 
   type
 
@@ -330,39 +327,34 @@ end;
 
 class procedure TCustomNamedCurves.Boot;
 begin
-  if not FIsBooted then
-  begin
-    FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create();
-    FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create();
-    FoidToCurve := TDictionary<IDerObjectIdentifier,
-      IX9ECParametersHolder>.Create();
-    FoidToName := TDictionary<IDerObjectIdentifier, String>.Create();
+  FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create();
+  FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create();
+  FoidToCurve := TDictionary<IDerObjectIdentifier,
+    IX9ECParametersHolder>.Create();
+  FoidToName := TDictionary<IDerObjectIdentifier, String>.Create();
 
-    Fnames := TList<String>.Create();
+  Fnames := TList<String>.Create();
 
-    DefineCurveWithOid('secp256k1', TSecObjectIdentifiers.SecP256k1,
-      TSecP256K1Holder.Instance);
+  DefineCurveWithOid('secp256k1', TSecObjectIdentifiers.SecP256k1,
+    TSecP256K1Holder.Instance);
 
-    DefineCurveWithOid('secp256r1', TSecObjectIdentifiers.SecP256r1,
-      TSecP256R1Holder.Instance);
+  DefineCurveWithOid('secp256r1', TSecObjectIdentifiers.SecP256r1,
+    TSecP256R1Holder.Instance);
 
-    DefineCurveWithOid('secp384r1', TSecObjectIdentifiers.SecP384r1,
-      TSecP384R1Holder.Instance);
+  DefineCurveWithOid('secp384r1', TSecObjectIdentifiers.SecP384r1,
+    TSecP384R1Holder.Instance);
 
-    DefineCurveWithOid('secp521r1', TSecObjectIdentifiers.SecP521r1,
-      TSecP521R1Holder.Instance);
+  DefineCurveWithOid('secp521r1', TSecObjectIdentifiers.SecP521r1,
+    TSecP521R1Holder.Instance);
 
-    DefineCurveWithOid('sect283k1', TSecObjectIdentifiers.SecT283k1,
-      TSecT283K1Holder.Instance);
+  DefineCurveWithOid('sect283k1', TSecObjectIdentifiers.SecT283k1,
+    TSecT283K1Holder.Instance);
 
-    DefineCurveAlias('K-283', TSecObjectIdentifiers.SecT283k1);
+  DefineCurveAlias('K-283', TSecObjectIdentifiers.SecT283k1);
 
-    DefineCurveAlias('P-256', TSecObjectIdentifiers.SecP256r1);
-    DefineCurveAlias('P-384', TSecObjectIdentifiers.SecP384r1);
-    DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
-
-    FIsBooted := True;
-  end;
+  DefineCurveAlias('P-256', TSecObjectIdentifiers.SecP256r1);
+  DefineCurveAlias('P-384', TSecObjectIdentifiers.SecP384r1);
+  DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
 end;
 
 { TCustomNamedCurves.TSecP256K1Holder }

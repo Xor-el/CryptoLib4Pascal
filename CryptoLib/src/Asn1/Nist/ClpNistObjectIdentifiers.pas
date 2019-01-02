@@ -22,8 +22,8 @@ unit ClpNistObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   TNistObjectIdentifiers = class sealed(TObject)

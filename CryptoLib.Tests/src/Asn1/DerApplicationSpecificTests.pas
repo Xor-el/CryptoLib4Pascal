@@ -32,19 +32,11 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpCryptoLibTypes,
-  ClpDerVisibleString,
-  ClpIDerVisibleString,
-  ClpDerTaggedObject,
-  ClpIDerTaggedObject,
-  ClpDerApplicationSpecific,
-  ClpIDerApplicationSpecific,
-  ClpDerInteger,
-  ClpIDerInteger,
-  ClpAsn1Object,
-  ClpAsn1Tags;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
 

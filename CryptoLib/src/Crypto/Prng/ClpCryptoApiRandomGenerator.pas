@@ -44,11 +44,11 @@ type
   var
     FrndProv: IRandomNumberGenerator;
 
-  class var
+    class var
 
-    FLock: TCriticalSection;
-    FIsBooted: Boolean;
+      FLock: TCriticalSection;
 
+    class procedure Boot(); static;
     class constructor CreateCryptoApiRandomGenerator();
     class destructor DestroyCryptoApiRandomGenerator();
 
@@ -79,8 +79,6 @@ type
     procedure NextBytes(const bytes: TCryptoLibByteArray; start, len: Int32);
       overload; virtual;
 
-    class procedure Boot(); static;
-
   end;
 
 implementation
@@ -94,11 +92,9 @@ end;
 
 class procedure TCryptoApiRandomGenerator.Boot;
 begin
-  if not FIsBooted then
+  if FLock = Nil then
   begin
     FLock := TCriticalSection.Create;
-
-    FIsBooted := True;
   end;
 end;
 
@@ -112,7 +108,6 @@ constructor TCryptoApiRandomGenerator.Create(const rng: IRandomNumberGenerator);
 begin
   Inherited Create();
   FrndProv := rng;
-  TCryptoApiRandomGenerator.Boot;
 end;
 
 class constructor TCryptoApiRandomGenerator.CreateCryptoApiRandomGenerator;
@@ -132,6 +127,7 @@ end;
 
 procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray);
 begin
+
   FLock.Acquire;
   try
     FrndProv.GetBytes(bytes);

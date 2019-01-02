@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpIDsaExt,
-  ClpIECInterface,
+  ClpIECC,
   ClpIECNRSigner,
   ClpBigInteger,
   ClpISecureRandom,
@@ -190,7 +190,7 @@ end;
 
 function TECNRSigner.GetOrder: TBigInteger;
 begin
-  result := Fkey.Parameters.N;
+  result := Fkey.parameters.n;
 end;
 
 procedure TECNRSigner.Init(forSigning: Boolean;

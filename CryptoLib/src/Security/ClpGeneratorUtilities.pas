@@ -28,7 +28,7 @@ uses
   ClpIECKeyPairGenerator,
   ClpCipherKeyGenerator,
   ClpICipherKeyGenerator,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpDsaKeyPairGenerator,
   ClpIDsaKeyPairGenerator,
   ClpIAsymmetricCipherKeyPairGenerator,
@@ -74,6 +74,8 @@ type
     class procedure AddHMacKeyGenerator(const algorithm: String;
       const aliases: array of String); static;
 
+    class procedure Boot(); static;
+
     class constructor CreateGeneratorUtilities();
     class destructor DestroyGeneratorUtilities();
 
@@ -99,8 +101,6 @@ type
 
     class function GetDefaultKeySize(const algorithm: String): Int32;
       overload; static;
-
-    class procedure Boot(); static;
 
   end;
 

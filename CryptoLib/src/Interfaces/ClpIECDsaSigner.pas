@@ -26,8 +26,7 @@ uses
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes,
-  ClpIECInterface,
-  ClpIECFieldElement;
+  ClpIECC;
 
 type
   IECDsaSigner = interface(IDsaExt)

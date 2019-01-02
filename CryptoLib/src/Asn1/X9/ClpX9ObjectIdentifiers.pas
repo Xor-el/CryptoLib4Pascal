@@ -22,8 +22,8 @@ unit ClpX9ObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   TX9ObjectIdentifiers = class abstract(TObject)

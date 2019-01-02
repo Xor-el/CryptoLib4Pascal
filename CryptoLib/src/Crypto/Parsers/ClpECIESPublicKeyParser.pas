@@ -22,9 +22,8 @@ unit ClpECIESPublicKeyParser;
 interface
 
 uses
-  ClpStreamHelper,
   Classes,
-  ClpStreams,
+  ClpAsn1Objects,
   ClpIECDomainParameters,
   ClpECPublicKeyParameters,
   ClpIKeyParser,
@@ -96,7 +95,7 @@ begin
   end;
 
   v[0] := Byte(first);
-  TStreams.ReadFully(Stream, v, 1, System.length(v) - 1);
+  TStreamUtils.ReadFully(Stream, v, 1, System.length(v) - 1);
 
   result := TECPublicKeyParameters.Create(FecParams.Curve.DecodePoint(v),
     FecParams);

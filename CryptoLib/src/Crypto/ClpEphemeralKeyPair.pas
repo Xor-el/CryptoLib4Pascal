@@ -31,13 +31,13 @@ type
   TEphemeralKeyPair = class sealed(TInterfacedObject, IEphemeralKeyPair)
 
   strict private
-
+  var
     FkeyPair: IAsymmetricCipherKeyPair;
     FpublicKeyEncoder: IKeyEncoder;
 
   public
 
-    function getKeyPair(): IAsymmetricCipherKeyPair; inline;
+    function GetKeyPair(): IAsymmetricCipherKeyPair; inline;
 
     function GetEncodedPublicKey: TCryptoLibByteArray; inline;
 
@@ -63,7 +63,7 @@ begin
   result := FpublicKeyEncoder.GetEncoded(FkeyPair.Public);
 end;
 
-function TEphemeralKeyPair.getKeyPair: IAsymmetricCipherKeyPair;
+function TEphemeralKeyPair.GetKeyPair: IAsymmetricCipherKeyPair;
 begin
   result := FkeyPair;
 end;

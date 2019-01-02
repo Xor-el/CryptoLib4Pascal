@@ -23,15 +23,9 @@ interface
 
 uses
   ClpIDsaParameter,
-  ClpDerInteger,
-  ClpIDerInteger,
-  ClpDerSequence,
-  ClpIProxiedInterface,
-  ClpAsn1Sequence,
-  ClpIAsn1Sequence,
-  ClpIAsn1TaggedObject,
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
   ClpBigInteger,
-  ClpAsn1Encodable,
   ClpCryptoLibTypes;
 
 resourcestring

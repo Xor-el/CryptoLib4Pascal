@@ -30,7 +30,7 @@ uses
   ClpSecNamedCurves,
   ClpNistNamedCurves,
   // ClpIECDomainParameters,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIX9ECParameters;
 
 type

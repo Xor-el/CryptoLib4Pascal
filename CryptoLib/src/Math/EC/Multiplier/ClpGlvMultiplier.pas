@@ -24,7 +24,7 @@ interface
 uses
   ClpSetWeakRef,
   ClpAbstractECMultiplier,
-  ClpIECInterface,
+  ClpIECC,
   ClpIGlvEndomorphism,
   ClpCryptoLibTypes,
   ClpECAlgorithms,

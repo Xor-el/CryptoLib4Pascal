@@ -22,8 +22,8 @@ unit ClpSecObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier,
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
   ClpX9ObjectIdentifiers;
 
 type

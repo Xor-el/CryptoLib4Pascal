@@ -25,7 +25,7 @@ uses
   SysUtils,
   ClpIDigest,
   ClpISchnorrExt,
-  ClpIECInterface,
+  ClpIECC,
   ClpIECSchnorrSipaSigner,
   ClpBigInteger,
   ClpBigIntegers,

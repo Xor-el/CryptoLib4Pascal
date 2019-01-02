@@ -23,7 +23,7 @@ interface
 
 uses
   ClpIECDomainParameters,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIKeyGenerationParameters;
 
 type

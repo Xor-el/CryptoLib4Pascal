@@ -22,7 +22,7 @@ unit ClpIECPublicKeyParameters;
 interface
 
 uses
-  ClpIECInterface,
+  ClpIECC,
   ClpIECKeyParameters;
 
 type
