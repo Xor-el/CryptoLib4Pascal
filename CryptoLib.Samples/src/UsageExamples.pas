@@ -48,8 +48,8 @@ uses
   ClpECPublicKeyParameters,
   ClpECPrivateKeyParameters,
   ClpIAsymmetricKeyParameter,
-  ClpIECInterface,
-  ClpECPoint,
+  ClpIECC,
+  ClpECC,
   ClpISigner,
   ClpSignerUtilities,
   ClpParametersWithIV,
@@ -64,10 +64,10 @@ uses
   ClpIESWithCipherParameters,
   ClpIAesEngine,
   ClpAesEngine,
-  ClpICbcBlockCipher,
-  ClpCbcBlockCipher,
-  ClpIZeroBytePadding,
-  ClpZeroBytePadding,
+  ClpIBlockCipherModes,
+  ClpBlockCipherModes,
+  ClpIPaddingModes,
+  ClpPaddingModes,
   ClpIIESCipher,
   ClpIESCipher,
   ClpIECDHBasicAgreement,
@@ -80,12 +80,15 @@ uses
   ClpGeneratorUtilities,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpArrayUtils,
-  ClpHex,
+  ClpEncoders,
   // ClpSecNamedCurves,
   ClpCustomNamedCurves,
   ClpConverters;
 
 type
+
+  { TUsageExamples }
+
   TUsageExamples = class sealed(TObject)
 
   strict private
@@ -114,8 +117,10 @@ type
     FRandom: ISecureRandom;
     FCurve: IX9ECParameters;
     class function BytesToHexString(input: TBytes): String; static;
+    class function GetCurveByName(const AName: String): IX9ECParameters;
+      static; inline;
     class constructor UsageExamples();
-  private
+
     class procedure DoSigningAndVerifying(const PublicKey
       : IECPublicKeyParameters; const PrivateKey: IECPrivateKeyParameters;
       const CallerMethod, TextToSign: String;
@@ -164,6 +169,13 @@ implementation
 
 { TUsageExamples }
 
+class function TUsageExamples.GetCurveByName(const AName: String)
+  : IX9ECParameters;
+begin
+  // result := TSecNamedCurves.GetByName(AName);
+  result := TCustomNamedCurves.GetByName(AName);
+end;
+
 class function TUsageExamples.ECIESPascalCoinDecrypt(const PrivateKey
   : IAsymmetricKeyParameter; CipherText: TBytes; out PlainText: TBytes)
   : Boolean;
@@ -174,7 +186,7 @@ begin
   CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
   CipherDecrypt.Init(False, PrivateKey, GetIESCipherParameters, FRandom);
   PlainText := CipherDecrypt.DoFinal(CipherText);
-  Result := True;
+  result := True;
 end;
 
 class function TUsageExamples.ECIESPascalCoinEncrypt(const PublicKey
@@ -185,7 +197,7 @@ begin
   // Encryption
   CipherEncrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
   CipherEncrypt.Init(True, PublicKey, GetIESCipherParameters, FRandom);
-  Result := CipherEncrypt.DoFinal(PlainText);
+  result := CipherEncrypt.DoFinal(PlainText);
 end;
 
 class function TUsageExamples.EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
@@ -220,13 +232,13 @@ begin
   LDigest.DoFinal(IVBytes, 0);
 
   System.SetLength(IVBytes, LIV);
-  Result := True;
+  result := True;
 end;
 
-class function TUsageExamples.EVP_GetSalt: TBytes;
+class function TUsageExamples.EVP_GetSalt(): TBytes;
 begin
-  System.SetLength(Result, PKCS5_SALT_LEN);
-  FRandom.NextBytes(Result);
+  System.SetLength(result, PKCS5_SALT_LEN);
+  FRandom.NextBytes(result);
 end;
 
 class function TUsageExamples.AES256CBCPascalCoinDecrypt(CipherText,
@@ -237,7 +249,7 @@ var
   cipher: IBufferedCipher;
   LBufStart, LSrcStart, Count: Int32;
 begin
-  Result := False;
+  result := False;
 
   System.SetLength(SaltBytes, SALT_SIZE);
   // First read the magic text and the salt - if any
@@ -281,7 +293,7 @@ begin
   System.SetLength(Buf, LBufStart);
 
   PlainText := System.Copy(Buf);
-  Result := True;
+  result := True;
 
 end;
 
@@ -321,7 +333,7 @@ begin
   System.Inc(LBufStart, Count);
 
   System.SetLength(Buf, LBufStart);
-  Result := Buf;
+  result := Buf;
 end;
 
 class procedure TUsageExamples.
@@ -378,8 +390,7 @@ begin
   System.Assert(PayloadToEncodeBytes <> Nil,
     'PayloadToDecodeBytes Cannot be Nil');
 
-  // Lcurve := TSecNamedCurves.GetByName(ACurveName);
-  Lcurve := TCustomNamedCurves.GetByName(ACurveName);
+  Lcurve := GetCurveByName(ACurveName);
   System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
 
   // Set Up Asymmetric Key Pair from known public key ByteArray
@@ -441,8 +452,7 @@ begin
   System.Assert(PayloadToDecodeBytes <> Nil,
     'PayloadToDecodeBytes Cannot be Nil');
 
-  // Lcurve := TSecNamedCurves.GetByName(ACurveName);
-  Lcurve := TCustomNamedCurves.GetByName(ACurveName);
+  Lcurve := GetCurveByName(ACurveName);
   System.Assert(Lcurve <> Nil, 'Lcurve Cannot be Nil');
 
   // Set Up Asymmetric Key Pair from known private key ByteArray
@@ -515,19 +525,19 @@ class function TUsageExamples.BytesToHexString(input: TBytes): String;
 var
   index: Int32;
 begin
-  Result := '';
+  result := '';
   for index := System.Low(input) to System.High(input) do
   begin
     if index = 0 then
     begin
-      Result := Result + IntToHex(input[index], 2);
+      result := result + IntToHex(input[index], 2);
     end
     else
     begin
-      Result := Result + ',' + IntToHex(input[index], 2);
+      result := result + ',' + IntToHex(input[index], 2);
     end;
   end;
-  Result := '[' + Result + ']';
+  result := '[' + result + ']';
 end;
 
 class procedure TUsageExamples.DoSigningAndVerifying(const PublicKey
@@ -572,7 +582,7 @@ begin
   end;
 end;
 
-class procedure TUsageExamples.GenerateKeyPairAndSignECDSA;
+class procedure TUsageExamples.GenerateKeyPairAndSignECDSA();
 var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
@@ -610,7 +620,7 @@ begin
 
 end;
 
-class procedure TUsageExamples.GenerateKeyPairAndSignECSchnorr;
+class procedure TUsageExamples.GenerateKeyPairAndSignECSchnorr();
 var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
@@ -677,7 +687,7 @@ begin
   cipher := TPaddedBufferedBlockCipher.Create(blockCipher,
     TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
 
-  Result := TPascalCoinIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
+  result := TPascalCoinIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
     DigestMACInstance, cipher);
 end;
 
@@ -691,17 +701,16 @@ const
 begin
   // Full Generation Method
 
-  // Lcurve := TSecNamedCurves.GetByName(CurveName);
-  Lcurve := TCustomNamedCurves.GetByName(CurveName);
+  Lcurve := GetCurveByName(CurveName);
   KeyPairGeneratorInstance := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
   domain := TECDomainParameters.Create(Lcurve.Curve, Lcurve.G, Lcurve.N,
     Lcurve.H, Lcurve.GetSeed);
   KeyPairGeneratorInstance.Init(TECKeyGenerationParameters.Create(domain,
     FRandom));
-  Result := KeyPairGeneratorInstance.GenerateKeyPair();
+  result := KeyPairGeneratorInstance.GenerateKeyPair();
 
-  DoSigningAndVerifying(Result.Public as IECPublicKeyParameters,
-    Result.Private as IECPrivateKeyParameters, MethodName, 'PascalECDSA');
+  DoSigningAndVerifying(result.Public as IECPublicKeyParameters,
+    result.Private as IECPrivateKeyParameters, MethodName, 'PascalECDSA');
 
 end;
 
@@ -732,11 +741,11 @@ begin
   // from a point or not in the EphemeralKeyPairGenerator
   UsePointCompression := True; // for compatibility
 
-  Result := TIESWithCipherParameters.Create(Derivation, Encoding,
+  result := TIESWithCipherParameters.Create(Derivation, Encoding,
     MacKeySizeInBits, CipherKeySizeInBits, IVBytes, UsePointCompression);
 end;
 
-class procedure TUsageExamples.GetPublicKeyFromPrivateKey;
+class procedure TUsageExamples.GetPublicKeyFromPrivateKey();
 var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
@@ -836,7 +845,7 @@ begin
 
 end;
 
-class procedure TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray;
+class procedure TUsageExamples.RecreatePublicAndPrivateKeyPairsFromByteArray();
 var
   domain: IECDomainParameters;
   generator: IECKeyPairGenerator;
@@ -982,11 +991,10 @@ begin
 
 end;
 
-class constructor TUsageExamples.UsageExamples;
+class constructor TUsageExamples.UsageExamples();
 begin
   FRandom := TSecureRandom.Create();
-  // FCurve := TSecNamedCurves.GetByName(CurveName);
-  FCurve := TCustomNamedCurves.GetByName(CurveName);
+  FCurve := GetCurveByName(CurveName);
 end;
 
 end.

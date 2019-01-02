@@ -31,13 +31,9 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpIProxiedInterface,
-  ClpAsn1Object,
-  ClpIDerSequence,
-  ClpIDerEnumerated,
-  ClpIDerBoolean,
-  ClpIDerObjectIdentifier,
-  ClpHex;
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
+  ClpEncoders;
 
 type
 

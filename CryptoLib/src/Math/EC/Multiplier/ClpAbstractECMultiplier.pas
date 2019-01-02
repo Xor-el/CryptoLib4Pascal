@@ -23,7 +23,7 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECInterface,
+  ClpIECC,
   ClpIAbstractECMultiplier,
   ClpECAlgorithms;
 

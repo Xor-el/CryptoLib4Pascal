@@ -26,7 +26,7 @@ uses
   ClpISecureRandom,
   ClpIECKeyGenerationParameters,
   ClpIECDomainParameters,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpKeyGenerationParameters;
 
 type

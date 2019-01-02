@@ -31,10 +31,9 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpAsn1StreamParser,
-  ClpIAsn1StreamParser,
-  ClpIAsn1TaggedObjectParser,
-  ClpHex;
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
+  ClpEncoders;
 
 type
 

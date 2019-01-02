@@ -23,12 +23,10 @@ interface
 
 uses
   ClpCryptoLibTypes,
-  ClpIProxiedInterface,
+  ClpIAsn1Objects,
   ClpBigInteger,
-  ClpIX9ECPoint,
-  ClpIX9Curve,
-  ClpIX9FieldID,
-  ClpIECInterface;
+  ClpIX9ECC,
+  ClpIECC;
 
 type
 

@@ -31,16 +31,12 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpAsn1Object,
-  ClpAsn1InputStream,
-  ClpDerApplicationSpecific,
-  ClpIDerApplicationSpecific,
-  ClpIAsn1TaggedObject,
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBits,
-  ClpHex,
-  ClpBase64,
+  ClpEncoders,
   ClpCryptoLibTypes;
 
 type

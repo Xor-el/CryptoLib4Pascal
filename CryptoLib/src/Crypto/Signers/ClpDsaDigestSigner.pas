@@ -26,15 +26,15 @@ uses
   SysUtils,
   ClpIDsa,
   ClpIDsaExt,
-  ClpIDsaEncoding,
   ClpIDigest,
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpIParametersWithRandom,
-  ClpStandardDsaEncoding,
+  ClpSignersEncodings,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpISigner,
+  ClpISignersEncodings,
   ClpIDsaDigestSigner;
 
 resourcestring

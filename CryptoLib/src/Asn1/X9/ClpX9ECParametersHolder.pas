@@ -38,6 +38,7 @@ type
 
       FLock: TCriticalSection;
 
+    class procedure Boot(); static;
     class constructor CreateX9ECParametersHolder();
     class destructor DestroyX9ECParametersHolder();
 
@@ -53,9 +54,17 @@ implementation
 
 { TX9ECParametersHolder }
 
+class procedure TX9ECParametersHolder.Boot;
+begin
+  if FLock = Nil then
+  begin
+    FLock := TCriticalSection.Create;
+  end;
+end;
+
 class constructor TX9ECParametersHolder.CreateX9ECParametersHolder;
 begin
-  FLock := TCriticalSection.Create;
+  TX9ECParametersHolder.Boot;
 end;
 
 class destructor TX9ECParametersHolder.DestroyX9ECParametersHolder;
@@ -65,6 +74,7 @@ end;
 
 function TX9ECParametersHolder.GetParameters: IX9ECParameters;
 begin
+
   FLock.Acquire;
   try
     if (Fparameters = Nil) then

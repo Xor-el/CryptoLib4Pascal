@@ -33,7 +33,7 @@ uses
   ClpIDsaValidationParameters,
   ClpIDsaParametersGenerator,
   ClpIDsaParameterGenerationParameters,
-  ClpHex,
+  ClpEncoders,
   ClpDigestUtilities,
   ClpBigInteger,
   ClpBigIntegers,

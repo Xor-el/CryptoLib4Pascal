@@ -29,9 +29,9 @@ type
   IEphemeralKeyPair = interface(IInterface)
     ['{E3CEA842-F26D-445C-8DDE-BAB041018DA0}']
 
-    function getKeyPair(): IAsymmetricCipherKeyPair;
+    function GetKeyPair(): IAsymmetricCipherKeyPair;
 
-    function getEncodedPublicKey(): TCryptoLibByteArray;
+    function GetEncodedPublicKey(): TCryptoLibByteArray;
 
   end;
 

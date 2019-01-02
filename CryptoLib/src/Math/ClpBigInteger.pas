@@ -27,7 +27,6 @@ uses
   SysUtils,
   StrUtils,
   Generics.Collections,
-  ClpNumberStyles,
   ClpISecureRandom,
   ClpIRandom,
   ClpArrayUtils,
@@ -50,6 +49,14 @@ resourcestring
   SBadCharacterRadix8 = 'Bad Character in radix 8 string: %s';
   SBadCharacterRadix2 = 'Bad Character in radix 2 string: %s';
   SUnSupportedBase = 'Only bases 2, 8, 10, 16 are allowed';
+
+type
+{$SCOPEDENUMS ON}
+  TNumberStyles = (None = 0, AllowLeadingWhite = 1, AllowTrailingWhite = 2,
+    AllowLeadingSign = 4, Integer = 4 or 2 or 1, AllowTrailingSign = 8,
+    AllowParentheses = 16, AllowDecimalPoint = 32, AllowThousands = 64,
+    AllowExponent = 128, AllowCurrencySymbol = 256, AllowHexSpecifier = 512);
+{$SCOPEDENUMS OFF}
 
 type
   TBigInteger = record
@@ -104,7 +111,6 @@ type
 
   class var
 
-    FIsBooted: Boolean;
     FZero, FOne, FTwo, FThree, FFour, FTen: TBigInteger;
     // Each list has a product < 2^31
     FprimeLists: TCryptoLibMatrixInt32Array;
@@ -326,6 +332,7 @@ type
     constructor Create(signum: Int32; const mag: TCryptoLibInt32Array;
       checkMag: Boolean); overload;
 
+    class procedure Boot(); static;
     class constructor BigInteger();
 
   public
@@ -440,8 +447,6 @@ type
     class function Arbitrary(sizeInBits: Int32): TBigInteger; static;
 
     class function Jacobi(const a, b: TBigInteger): Int32; static;
-
-    class procedure Boot(); static;
 
   end;
 
@@ -804,142 +809,131 @@ var
   product, j: Int32;
 begin
 
-  if not FIsBooted then
+  System.SetLength(FZeroEncoding, 0);
+  System.SetLength(FZeroMagnitude, 0);
+  FprimeLists := TCryptoLibMatrixInt32Array.Create
+    (TCryptoLibInt32Array.Create(3, 5, 7, 11, 13, 17, 19, 23),
+    TCryptoLibInt32Array.Create(29, 31, 37, 41, 43),
+    TCryptoLibInt32Array.Create(47, 53, 59, 61, 67),
+    TCryptoLibInt32Array.Create(71, 73, 79, 83), TCryptoLibInt32Array.Create(89,
+    97, 101, 103),
+
+    TCryptoLibInt32Array.Create(107, 109, 113, 127),
+    TCryptoLibInt32Array.Create(131, 137, 139, 149),
+    TCryptoLibInt32Array.Create(151, 157, 163, 167),
+    TCryptoLibInt32Array.Create(173, 179, 181, 191),
+    TCryptoLibInt32Array.Create(193, 197, 199, 211),
+
+    TCryptoLibInt32Array.Create(223, 227, 229), TCryptoLibInt32Array.Create(233,
+    239, 241), TCryptoLibInt32Array.Create(251, 257, 263),
+    TCryptoLibInt32Array.Create(269, 271, 277), TCryptoLibInt32Array.Create(281,
+    283, 293),
+
+    TCryptoLibInt32Array.Create(307, 311, 313), TCryptoLibInt32Array.Create(317,
+    331, 337), TCryptoLibInt32Array.Create(347, 349, 353),
+    TCryptoLibInt32Array.Create(359, 367, 373), TCryptoLibInt32Array.Create(379,
+    383, 389),
+
+    TCryptoLibInt32Array.Create(397, 401, 409), TCryptoLibInt32Array.Create(419,
+    421, 431), TCryptoLibInt32Array.Create(433, 439, 443),
+    TCryptoLibInt32Array.Create(449, 457, 461), TCryptoLibInt32Array.Create(463,
+    467, 479),
+
+    TCryptoLibInt32Array.Create(487, 491, 499), TCryptoLibInt32Array.Create(503,
+    509, 521), TCryptoLibInt32Array.Create(523, 541, 547),
+    TCryptoLibInt32Array.Create(557, 563, 569), TCryptoLibInt32Array.Create(571,
+    577, 587),
+
+    TCryptoLibInt32Array.Create(593, 599, 601), TCryptoLibInt32Array.Create(607,
+    613, 617), TCryptoLibInt32Array.Create(619, 631, 641),
+    TCryptoLibInt32Array.Create(643, 647, 653), TCryptoLibInt32Array.Create(659,
+    661, 673),
+
+    TCryptoLibInt32Array.Create(677, 683, 691), TCryptoLibInt32Array.Create(701,
+    709, 719), TCryptoLibInt32Array.Create(727, 733, 739),
+    TCryptoLibInt32Array.Create(743, 751, 757), TCryptoLibInt32Array.Create(761,
+    769, 773),
+
+    TCryptoLibInt32Array.Create(787, 797, 809), TCryptoLibInt32Array.Create(811,
+    821, 823), TCryptoLibInt32Array.Create(827, 829, 839),
+    TCryptoLibInt32Array.Create(853, 857, 859), TCryptoLibInt32Array.Create(863,
+    877, 881),
+
+    TCryptoLibInt32Array.Create(883, 887, 907), TCryptoLibInt32Array.Create(911,
+    919, 929), TCryptoLibInt32Array.Create(937, 941, 947),
+    TCryptoLibInt32Array.Create(953, 967, 971), TCryptoLibInt32Array.Create(977,
+    983, 991),
+
+    TCryptoLibInt32Array.Create(997, 1009, 1013),
+    TCryptoLibInt32Array.Create(1019, 1021, 1031),
+    TCryptoLibInt32Array.Create(1033, 1039, 1049),
+    TCryptoLibInt32Array.Create(1051, 1061, 1063),
+    TCryptoLibInt32Array.Create(1069, 1087, 1091),
+
+    TCryptoLibInt32Array.Create(1093, 1097, 1103),
+    TCryptoLibInt32Array.Create(1109, 1117, 1123),
+    TCryptoLibInt32Array.Create(1129, 1151, 1153),
+    TCryptoLibInt32Array.Create(1163, 1171, 1181),
+    TCryptoLibInt32Array.Create(1187, 1193, 1201),
+
+    TCryptoLibInt32Array.Create(1213, 1217, 1223),
+    TCryptoLibInt32Array.Create(1229, 1231, 1237),
+    TCryptoLibInt32Array.Create(1249, 1259, 1277),
+    TCryptoLibInt32Array.Create(1279, 1283, 1289));
+
+  // !!! Only Remove when we are able to move "ClpSecureRandom" to the
+  // interface uses section of this unit. !!!
+  TSecureRandom.Boot;
+
+  FRandomSource := TSecureRandom.Create();
+
+  FZero := TBigInteger.Create(0, FZeroMagnitude, false);
+  FZero.FnBits := 0;
+  FZero.FnBitLength := 0;
+
+  System.SetLength(FSMALL_CONSTANTS, 17);
+
+  FSMALL_CONSTANTS[0] := FZero;
+
+  i := 1;
+
+  while i < UInt32(System.length(FSMALL_CONSTANTS)) do
   begin
-    System.SetLength(FZeroEncoding, 0);
-    System.SetLength(FZeroMagnitude, 0);
-    FprimeLists := TCryptoLibMatrixInt32Array.Create
-      (TCryptoLibInt32Array.Create(3, 5, 7, 11, 13, 17, 19, 23),
-      TCryptoLibInt32Array.Create(29, 31, 37, 41, 43),
-      TCryptoLibInt32Array.Create(47, 53, 59, 61, 67),
-      TCryptoLibInt32Array.Create(71, 73, 79, 83),
-      TCryptoLibInt32Array.Create(89, 97, 101, 103),
+    FSMALL_CONSTANTS[i] := CreateUValueOf(i);
+    System.Inc(i);
+  end;
 
-      TCryptoLibInt32Array.Create(107, 109, 113, 127),
-      TCryptoLibInt32Array.Create(131, 137, 139, 149),
-      TCryptoLibInt32Array.Create(151, 157, 163, 167),
-      TCryptoLibInt32Array.Create(173, 179, 181, 191),
-      TCryptoLibInt32Array.Create(193, 197, 199, 211),
+  FOne := FSMALL_CONSTANTS[1];
+  FTwo := FSMALL_CONSTANTS[2];
+  FThree := FSMALL_CONSTANTS[3];
+  FFour := FSMALL_CONSTANTS[4];
+  FTen := FSMALL_CONSTANTS[10];
 
-      TCryptoLibInt32Array.Create(223, 227, 229),
-      TCryptoLibInt32Array.Create(233, 239, 241),
-      TCryptoLibInt32Array.Create(251, 257, 263),
-      TCryptoLibInt32Array.Create(269, 271, 277),
-      TCryptoLibInt32Array.Create(281, 283, 293),
+  Fradix2 := ValueOf(2);
+  Fradix2E := Fradix2.Pow(chunk2);
 
-      TCryptoLibInt32Array.Create(307, 311, 313),
-      TCryptoLibInt32Array.Create(317, 331, 337),
-      TCryptoLibInt32Array.Create(347, 349, 353),
-      TCryptoLibInt32Array.Create(359, 367, 373),
-      TCryptoLibInt32Array.Create(379, 383, 389),
+  Fradix8 := ValueOf(8);
+  Fradix8E := Fradix8.Pow(chunk8);
 
-      TCryptoLibInt32Array.Create(397, 401, 409),
-      TCryptoLibInt32Array.Create(419, 421, 431),
-      TCryptoLibInt32Array.Create(433, 439, 443),
-      TCryptoLibInt32Array.Create(449, 457, 461),
-      TCryptoLibInt32Array.Create(463, 467, 479),
+  Fradix10 := ValueOf(10);
 
-      TCryptoLibInt32Array.Create(487, 491, 499),
-      TCryptoLibInt32Array.Create(503, 509, 521),
-      TCryptoLibInt32Array.Create(523, 541, 547),
-      TCryptoLibInt32Array.Create(557, 563, 569),
-      TCryptoLibInt32Array.Create(571, 577, 587),
+  Fradix10E := Fradix10.Pow(chunk10);
 
-      TCryptoLibInt32Array.Create(593, 599, 601),
-      TCryptoLibInt32Array.Create(607, 613, 617),
-      TCryptoLibInt32Array.Create(619, 631, 641),
-      TCryptoLibInt32Array.Create(643, 647, 653),
-      TCryptoLibInt32Array.Create(659, 661, 673),
+  Fradix16 := ValueOf(16);
+  Fradix16E := Fradix16.Pow(chunk16);
 
-      TCryptoLibInt32Array.Create(677, 683, 691),
-      TCryptoLibInt32Array.Create(701, 709, 719),
-      TCryptoLibInt32Array.Create(727, 733, 739),
-      TCryptoLibInt32Array.Create(743, 751, 757),
-      TCryptoLibInt32Array.Create(761, 769, 773),
+  System.SetLength(FprimeProducts, System.length(primeLists));
 
-      TCryptoLibInt32Array.Create(787, 797, 809),
-      TCryptoLibInt32Array.Create(811, 821, 823),
-      TCryptoLibInt32Array.Create(827, 829, 839),
-      TCryptoLibInt32Array.Create(853, 857, 859),
-      TCryptoLibInt32Array.Create(863, 877, 881),
-
-      TCryptoLibInt32Array.Create(883, 887, 907),
-      TCryptoLibInt32Array.Create(911, 919, 929),
-      TCryptoLibInt32Array.Create(937, 941, 947),
-      TCryptoLibInt32Array.Create(953, 967, 971),
-      TCryptoLibInt32Array.Create(977, 983, 991),
-
-      TCryptoLibInt32Array.Create(997, 1009, 1013),
-      TCryptoLibInt32Array.Create(1019, 1021, 1031),
-      TCryptoLibInt32Array.Create(1033, 1039, 1049),
-      TCryptoLibInt32Array.Create(1051, 1061, 1063),
-      TCryptoLibInt32Array.Create(1069, 1087, 1091),
-
-      TCryptoLibInt32Array.Create(1093, 1097, 1103),
-      TCryptoLibInt32Array.Create(1109, 1117, 1123),
-      TCryptoLibInt32Array.Create(1129, 1151, 1153),
-      TCryptoLibInt32Array.Create(1163, 1171, 1181),
-      TCryptoLibInt32Array.Create(1187, 1193, 1201),
-
-      TCryptoLibInt32Array.Create(1213, 1217, 1223),
-      TCryptoLibInt32Array.Create(1229, 1231, 1237),
-      TCryptoLibInt32Array.Create(1249, 1259, 1277),
-      TCryptoLibInt32Array.Create(1279, 1283, 1289));
-
-    TSecureRandom.Boot;
-
-    FRandomSource := TSecureRandom.Create();
-
-    FZero := TBigInteger.Create(0, FZeroMagnitude, false);
-    FZero.FnBits := 0;
-    FZero.FnBitLength := 0;
-
-    System.SetLength(FSMALL_CONSTANTS, 17);
-
-    FSMALL_CONSTANTS[0] := FZero;
-
-    i := 1;
-
-    while i < UInt32(System.length(FSMALL_CONSTANTS)) do
+  for i := 0 to System.Pred(System.length(primeLists)) do
+  begin
+    primeList := primeLists[i];
+    product := primeList[0];
+    for j := 1 to System.Pred(System.length(primeList)) do
     begin
-      FSMALL_CONSTANTS[i] := CreateUValueOf(i);
-      System.Inc(i);
+      product := product * primeList[j];
     end;
 
-    FOne := FSMALL_CONSTANTS[1];
-    FTwo := FSMALL_CONSTANTS[2];
-    FThree := FSMALL_CONSTANTS[3];
-    FFour := FSMALL_CONSTANTS[4];
-    FTen := FSMALL_CONSTANTS[10];
-
-    Fradix2 := ValueOf(2);
-    Fradix2E := Fradix2.Pow(chunk2);
-
-    Fradix8 := ValueOf(8);
-    Fradix8E := Fradix8.Pow(chunk8);
-
-    Fradix10 := ValueOf(10);
-
-    Fradix10E := Fradix10.Pow(chunk10);
-
-    Fradix16 := ValueOf(16);
-    Fradix16E := Fradix16.Pow(chunk16);
-
-    System.SetLength(FprimeProducts, System.length(primeLists));
-
-    for i := 0 to System.Pred(System.length(primeLists)) do
-    begin
-      primeList := primeLists[i];
-      product := primeList[0];
-      for j := 1 to System.Pred(System.length(primeList)) do
-      begin
-        product := product * primeList[j];
-      end;
-
-      FprimeProducts[i] := product;
-    end;
-
-    FIsBooted := True;
+    FprimeProducts[i] := product;
   end;
 
 end;

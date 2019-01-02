@@ -34,6 +34,18 @@ type
 
   end;
 
+type
+  IOSRandomNumberGenerator = interface(IRandomNumberGenerator)
+    ['{EF52111D-1E69-42D7-99E0-D1C733D17995}']
+
+  end;
+
+type
+  IPCGRandomNumberGenerator = interface(IRandomNumberGenerator)
+    ['{49D3C867-E4F0-4EA3-BD81-0BCD6C0F08A8}']
+
+  end;
+
 implementation
 
 end.

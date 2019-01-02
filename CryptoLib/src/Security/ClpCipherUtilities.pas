@@ -27,32 +27,16 @@ uses
   Generics.Collections,
   ClpCryptoLibTypes,
   ClpStringUtils,
-  ClpPkcs7Padding,
-  ClpIPkcs7Padding,
-  ClpISO10126d2Padding,
-  ClpIISO10126d2Padding,
-  ClpISO7816d4Padding,
-  ClpIISO7816d4Padding,
-  ClpX923Padding,
-  ClpIX923Padding,
-  ClpZeroBytePadding,
-  ClpIZeroBytePadding,
-  ClpTTBCPadding,
-  ClpITBCPadding,
-  ClpCbcBlockCipher,
-  ClpICbcBlockCipher,
-  ClpCfbBlockCipher,
-  ClpICfbBlockCipher,
-  ClpOfbBlockCipher,
-  ClpIOfbBlockCipher,
-  ClpSicBlockCipher,
-  ClpISicBlockCipher,
+  ClpPaddingModes,
+  ClpIPaddingModes,
+  ClpBlockCipherModes,
+  ClpIBlockCipherModes,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpNistObjectIdentifiers,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIBufferedCipher,
   ClpIBlockCipher,
   ClpAesEngine,
@@ -95,6 +79,7 @@ type
     class function GetAlgorithms: TCryptoLibStringArray; static; inline;
     class function GetDigitIndex(const s: String): Int32; static; inline;
 
+    class procedure Boot(); static;
     class constructor CreateCipherUtilities();
     class destructor DestroyCipherUtilities();
 
@@ -111,7 +96,6 @@ type
       overload; static;
     class function GetCipher(const oid: IDerObjectIdentifier): IBufferedCipher;
       overload; static; inline;
-    class procedure Boot(); static;
 
     class property Algorithms: TCryptoLibStringArray read GetAlgorithms;
   end;

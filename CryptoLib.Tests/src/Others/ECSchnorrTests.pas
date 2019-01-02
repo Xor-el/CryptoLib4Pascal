@@ -48,12 +48,12 @@ uses
   ClpECKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
   ClpIX9ECParameters,
-  ClpIECInterface,
+  ClpIECC,
   ClpSecNamedCurves,
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpSignerUtilities,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpConverters;
 

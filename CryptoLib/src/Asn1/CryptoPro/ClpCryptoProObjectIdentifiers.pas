@@ -22,8 +22,8 @@ unit ClpCryptoProObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   TCryptoProObjectIdentifiers = class sealed(TObject)

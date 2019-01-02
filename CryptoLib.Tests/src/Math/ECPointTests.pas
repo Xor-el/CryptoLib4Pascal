@@ -40,12 +40,11 @@ uses
   ClpISecureRandom,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpECCurve,
   ClpECAlgorithms,
   ClpIFiniteField,
   ClpIX9ECParameters,
-  ClpIECFieldElement,
-  ClpIECInterface,
+  ClpECC,
+  ClpIECC,
   ClpArrayUtils;
 
 type

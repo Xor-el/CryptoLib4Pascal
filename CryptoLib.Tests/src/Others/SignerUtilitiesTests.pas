@@ -32,12 +32,11 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpBase64,
+  ClpEncoders,
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpISigner,
-  ClpECCurve,
-  ClpECPoint,
+  ClpECC,
   ClpIRandom,
   ClpSignerUtilities,
   ClpSecureRandom,
@@ -48,7 +47,7 @@ uses
   ClpECPrivateKeyParameters,
   ClpIECPublicKeyParameters,
   ClpIECPrivateKeyParameters,
-  ClpIECInterface,
+  ClpIECC,
   ClpIDsaParameters,
   ClpIDsaPrivateKeyParameters,
   ClpIDsaPublicKeyParameters,

@@ -30,7 +30,7 @@ uses
   ClpAbstractECMultiplier,
   ClpIWTauNafPreCompInfo,
   ClpWTauNafPreCompInfo,
-  ClpIECInterface,
+  ClpIECC,
   ClpIPreCompCallBack,
   ClpIZTauElement,
   ClpIPreCompInfo,

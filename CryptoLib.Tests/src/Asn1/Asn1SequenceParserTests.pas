@@ -33,21 +33,11 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
-  ClpHex,
+  ClpEncoders,
   ClpCryptoLibTypes,
   ClpArrayUtils,
-  ClpDerInteger,
-  ClpIDerInteger,
-  ClpIAsn1Null,
-  ClpIAsn1StreamParser,
-  ClpAsn1StreamParser,
-  ClpIBerSequenceGenerator,
-  ClpBerSequenceGenerator,
-  ClpDerSequenceGenerator,
-  ClpIDerSequenceGenerator,
-  ClpIAsn1SequenceParser,
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
 

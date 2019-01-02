@@ -36,7 +36,7 @@ uses
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
   ClpDigestUtilities,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpCryptoLibTypes;
 

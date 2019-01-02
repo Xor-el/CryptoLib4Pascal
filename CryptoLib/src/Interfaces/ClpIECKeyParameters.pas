@@ -25,7 +25,7 @@ uses
 
   ClpIAsymmetricKeyParameter,
   ClpIECDomainParameters,
-  ClpIDerObjectIdentifier;
+  ClpIAsn1Objects;
 
 type
   IECKeyParameters = interface(IAsymmetricKeyParameter)

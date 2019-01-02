@@ -35,7 +35,7 @@ uses
   ClpHMac,
   ClpIMac,
   ClpDigestUtilities,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpStringUtils,
   ClpConverters,

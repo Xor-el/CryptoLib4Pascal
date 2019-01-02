@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIMac,
   ClpHMac,
   ClpICipherParameters,
@@ -48,6 +48,7 @@ type
 
       Falgorithms: TDictionary<String, String>;
 
+    class procedure Boot(); static;
     class constructor CreateMacUtilities();
     class destructor DestroyMacUtilities();
 
@@ -69,8 +70,6 @@ type
 
     class function DoFinal(const mac: IMac; const input: TCryptoLibByteArray)
       : TCryptoLibByteArray; overload; static; inline;
-
-    class procedure Boot(); static;
 
   end;
 

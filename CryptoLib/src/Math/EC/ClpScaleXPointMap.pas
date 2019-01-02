@@ -22,8 +22,7 @@ unit ClpScaleXPointMap;
 interface
 
 uses
-  ClpIECInterface,
-  ClpIECFieldElement,
+  ClpIECC,
   ClpIScaleXPointMap;
 
 type

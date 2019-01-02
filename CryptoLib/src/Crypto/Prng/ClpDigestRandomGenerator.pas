@@ -55,11 +55,11 @@ type
     procedure DigestUpdate(const inSeed: TCryptoLibByteArray); inline;
     procedure DigestDoFinal(const result: TCryptoLibByteArray); inline;
 
-  class var
+    class var
 
-    FLock: TCriticalSection;
-    FIsBooted: Boolean;
+      FLock: TCriticalSection;
 
+    class procedure Boot(); static;
     class constructor CreateDigestRandomGenerator();
     class destructor DestroyDigestRandomGenerator();
 
@@ -72,8 +72,6 @@ type
     procedure NextBytes(const bytes: TCryptoLibByteArray); overload; inline;
     procedure NextBytes(const bytes: TCryptoLibByteArray;
       start, len: Int32); overload;
-
-    class procedure Boot(); static;
 
   end;
 
@@ -104,6 +102,7 @@ end;
 
 procedure TDigestRandomGenerator.AddSeedMaterial(rSeed: Int64);
 begin
+
   FLock.Acquire;
   try
     DigestAddCounter(rSeed);
@@ -116,17 +115,16 @@ end;
 
 class procedure TDigestRandomGenerator.Boot;
 begin
-  if not FIsBooted then
+  if FLock = Nil then
   begin
     FLock := TCriticalSection.Create;
-
-    FIsBooted := True;
   end;
 end;
 
 procedure TDigestRandomGenerator.AddSeedMaterial(const inSeed
   : TCryptoLibByteArray);
 begin
+
   FLock.Acquire;
   try
     DigestUpdate(inSeed);
@@ -145,7 +143,6 @@ begin
   FseedCounter := 1;
   System.SetLength(Fstate, digest.GetDigestSize);
   FstateCounter := 1;
-  TDigestRandomGenerator.Boot;
 end;
 
 class constructor TDigestRandomGenerator.CreateDigestRandomGenerator;
@@ -191,6 +188,7 @@ var
   stateOff, endPoint: Int32;
   I: Integer;
 begin
+
   FLock.Acquire;
   try
     stateOff := 0;

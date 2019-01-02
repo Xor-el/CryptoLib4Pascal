@@ -36,7 +36,7 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
   ClpCryptoLibTypes,
-  ClpIDerObjectIdentifier;
+  ClpIAsn1Objects;
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
@@ -60,6 +60,7 @@ type
       SHA_512, SHA_512_224, SHA_512_256, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
       TIGER, WHIRLPOOL);
 {$SCOPEDENUMS OFF}
+  class procedure Boot(); static;
   class constructor CreateDigestUtilities();
   class destructor DestroyDigestUtilities();
 
@@ -88,7 +89,6 @@ type
     class function CalculateDigest(const algorithm: String;
       const input: TCryptoLibByteArray): TCryptoLibByteArray; static; inline;
 
-    class procedure Boot(); static;
   end;
 
 implementation
@@ -111,6 +111,7 @@ begin
   begin
     TDigestUtilities.Boot;
   end;
+
   upper := UpperCase(algorithm);
   Falgorithms.TryGetValue(upper, mechanism);
 
@@ -367,105 +368,108 @@ end;
 
 class procedure TDigestUtilities.Boot;
 begin
-  Falgorithms := TDictionary<string, string>.Create();
-  Foids := TDictionary<string, IDerObjectIdentifier>.Create();
+  if (Falgorithms = Nil) or (Foids = Nil) then
+  begin
+    Falgorithms := TDictionary<string, string>.Create();
+    Foids := TDictionary<string, IDerObjectIdentifier>.Create();
 
-  Falgorithms.Add('NONE', 'NONE'); // Null Digest
+    Falgorithms.Add('NONE', 'NONE'); // Null Digest
 
-  TPkcsObjectIdentifiers.Boot;
+    TPkcsObjectIdentifiers.Boot;
 
-  Falgorithms.Add(TPkcsObjectIdentifiers.MD2.id, 'MD2');
-  Falgorithms.Add(TPkcsObjectIdentifiers.MD4.id, 'MD4');
-  Falgorithms.Add(TPkcsObjectIdentifiers.MD5.id, 'MD5');
+    Falgorithms.Add(TPkcsObjectIdentifiers.MD2.id, 'MD2');
+    Falgorithms.Add(TPkcsObjectIdentifiers.MD4.id, 'MD4');
+    Falgorithms.Add(TPkcsObjectIdentifiers.MD5.id, 'MD5');
 
-  TOiwObjectIdentifiers.Boot;
+    TOiwObjectIdentifiers.Boot;
 
-  Falgorithms.Add('SHA1', 'SHA-1');
-  Falgorithms.Add(TOiwObjectIdentifiers.IdSha1.id, 'SHA-1');
+    Falgorithms.Add('SHA1', 'SHA-1');
+    Falgorithms.Add(TOiwObjectIdentifiers.IdSha1.id, 'SHA-1');
 
-  TNistObjectIdentifiers.Boot;
+    TNistObjectIdentifiers.Boot;
 
-  Falgorithms.Add('SHA224', 'SHA-224');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha224.id, 'SHA-224');
-  Falgorithms.Add('SHA256', 'SHA-256');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha256.id, 'SHA-256');
-  Falgorithms.Add('SHA384', 'SHA-384');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha384.id, 'SHA-384');
-  Falgorithms.Add('SHA512', 'SHA-512');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha512.id, 'SHA-512');
-  Falgorithms.Add('SHA512/224', 'SHA-512/224');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha512_224.id, 'SHA-512/224');
-  Falgorithms.Add('SHA512/256', 'SHA-512/256');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha512_256.id, 'SHA-512/256');
+    Falgorithms.Add('SHA224', 'SHA-224');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha224.id, 'SHA-224');
+    Falgorithms.Add('SHA256', 'SHA-256');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha256.id, 'SHA-256');
+    Falgorithms.Add('SHA384', 'SHA-384');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha384.id, 'SHA-384');
+    Falgorithms.Add('SHA512', 'SHA-512');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha512.id, 'SHA-512');
+    Falgorithms.Add('SHA512/224', 'SHA-512/224');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha512_224.id, 'SHA-512/224');
+    Falgorithms.Add('SHA512/256', 'SHA-512/256');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha512_256.id, 'SHA-512/256');
 
-  TTeleTrusTObjectIdentifiers.Boot;
+    TTeleTrusTObjectIdentifiers.Boot;
 
-  Falgorithms.Add('RIPEMD-128', 'RIPEMD128');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD128.id, 'RIPEMD128');
-  Falgorithms.Add('RIPEMD-160', 'RIPEMD160');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD160.id, 'RIPEMD160');
-  Falgorithms.Add('RIPEMD-256', 'RIPEMD256');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD256.id, 'RIPEMD256');
-  Falgorithms.Add('RIPEMD-320', 'RIPEMD320');
-  // Falgorithms.Add(TTeleTrusTObjectIdentifiers.RipeMD320.Id,'RIPEMD320');
+    Falgorithms.Add('RIPEMD-128', 'RIPEMD128');
+    Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD128.id, 'RIPEMD128');
+    Falgorithms.Add('RIPEMD-160', 'RIPEMD160');
+    Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD160.id, 'RIPEMD160');
+    Falgorithms.Add('RIPEMD-256', 'RIPEMD256');
+    Falgorithms.Add(TTeleTrusTObjectIdentifiers.RIPEMD256.id, 'RIPEMD256');
+    Falgorithms.Add('RIPEMD-320', 'RIPEMD320');
+    // Falgorithms.Add(TTeleTrusTObjectIdentifiers.RipeMD320.Id,'RIPEMD320');
 
-  TCryptoProObjectIdentifiers.Boot;
+    TCryptoProObjectIdentifiers.Boot;
 
-  Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411.id, 'GOST3411');
+    Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411.id, 'GOST3411');
 
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha3_224.id, 'SHA3-224');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha3_256.id, 'SHA3-256');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha3_384.id, 'SHA3-384');
-  Falgorithms.Add(TNistObjectIdentifiers.IdSha3_512.id, 'SHA3-512');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha3_224.id, 'SHA3-224');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha3_256.id, 'SHA3-256');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha3_384.id, 'SHA3-384');
+    Falgorithms.Add(TNistObjectIdentifiers.IdSha3_512.id, 'SHA3-512');
 
-  TMiscObjectIdentifiers.Boot;
+    TMiscObjectIdentifiers.Boot;
 
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b160.id, 'BLAKE2B-160');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b256.id, 'BLAKE2B-256');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b384.id, 'BLAKE2B-384');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b512.id, 'BLAKE2B-512');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s128.id, 'BLAKE2S-128');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s160.id, 'BLAKE2S-160');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s224.id, 'BLAKE2S-224');
-  Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s256.id, 'BLAKE2S-256');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b160.id, 'BLAKE2B-160');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b256.id, 'BLAKE2B-256');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b384.id, 'BLAKE2B-384');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2b512.id, 'BLAKE2B-512');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s128.id, 'BLAKE2S-128');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s160.id, 'BLAKE2S-160');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s224.id, 'BLAKE2S-224');
+    Falgorithms.Add(TMiscObjectIdentifiers.id_blake2s256.id, 'BLAKE2S-256');
 
-  TRosstandartObjectIdentifiers.Boot;
+    TRosstandartObjectIdentifiers.Boot;
 
-  Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.
-    id, 'HMAC-GOST3411-2012-256');
-  Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.
-    id, 'HMAC-GOST3411-2012-512');
+    Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.
+      id, 'HMAC-GOST3411-2012-256');
+    Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.
+      id, 'HMAC-GOST3411-2012-512');
 
-  Foids.Add('MD2', TPkcsObjectIdentifiers.MD2);
-  Foids.Add('MD4', TPkcsObjectIdentifiers.MD4);
-  Foids.Add('MD5', TPkcsObjectIdentifiers.MD5);
-  Foids.Add('SHA-1', TOiwObjectIdentifiers.IdSha1);
-  Foids.Add('SHA-224', TNistObjectIdentifiers.IdSha224);
-  Foids.Add('SHA-256', TNistObjectIdentifiers.IdSha256);
-  Foids.Add('SHA-384', TNistObjectIdentifiers.IdSha384);
-  Foids.Add('SHA-512', TNistObjectIdentifiers.IdSha512);
-  Foids.Add('SHA-512/224', TNistObjectIdentifiers.IdSha512_224);
-  Foids.Add('SHA-512/256', TNistObjectIdentifiers.IdSha512_256);
-  Foids.Add('SHA3-224', TNistObjectIdentifiers.IdSha3_224);
-  Foids.Add('SHA3-256', TNistObjectIdentifiers.IdSha3_256);
-  Foids.Add('SHA3-384', TNistObjectIdentifiers.IdSha3_384);
-  Foids.Add('SHA3-512', TNistObjectIdentifiers.IdSha3_512);
-  Foids.Add('RIPEMD128', TTeleTrusTObjectIdentifiers.RIPEMD128);
-  Foids.Add('RIPEMD160', TTeleTrusTObjectIdentifiers.RIPEMD160);
-  Foids.Add('RIPEMD256', TTeleTrusTObjectIdentifiers.RIPEMD256);
-  Foids.Add('GOST3411', TCryptoProObjectIdentifiers.GostR3411);
-  Foids.Add('BLAKE2B-160', TMiscObjectIdentifiers.id_blake2b160);
-  Foids.Add('BLAKE2B-256', TMiscObjectIdentifiers.id_blake2b256);
-  Foids.Add('BLAKE2B-384', TMiscObjectIdentifiers.id_blake2b384);
-  Foids.Add('BLAKE2B-512', TMiscObjectIdentifiers.id_blake2b512);
-  Foids.Add('BLAKE2S-128', TMiscObjectIdentifiers.id_blake2s128);
-  Foids.Add('BLAKE2S-160', TMiscObjectIdentifiers.id_blake2s160);
-  Foids.Add('BLAKE2S-224', TMiscObjectIdentifiers.id_blake2s224);
-  Foids.Add('BLAKE2S-256', TMiscObjectIdentifiers.id_blake2s256);
-  Foids.Add('GOST3411-2012-256',
-    TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_256);
-  Foids.Add('GOST3411-2012-512',
-    TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_512);
+    Foids.Add('MD2', TPkcsObjectIdentifiers.MD2);
+    Foids.Add('MD4', TPkcsObjectIdentifiers.MD4);
+    Foids.Add('MD5', TPkcsObjectIdentifiers.MD5);
+    Foids.Add('SHA-1', TOiwObjectIdentifiers.IdSha1);
+    Foids.Add('SHA-224', TNistObjectIdentifiers.IdSha224);
+    Foids.Add('SHA-256', TNistObjectIdentifiers.IdSha256);
+    Foids.Add('SHA-384', TNistObjectIdentifiers.IdSha384);
+    Foids.Add('SHA-512', TNistObjectIdentifiers.IdSha512);
+    Foids.Add('SHA-512/224', TNistObjectIdentifiers.IdSha512_224);
+    Foids.Add('SHA-512/256', TNistObjectIdentifiers.IdSha512_256);
+    Foids.Add('SHA3-224', TNistObjectIdentifiers.IdSha3_224);
+    Foids.Add('SHA3-256', TNistObjectIdentifiers.IdSha3_256);
+    Foids.Add('SHA3-384', TNistObjectIdentifiers.IdSha3_384);
+    Foids.Add('SHA3-512', TNistObjectIdentifiers.IdSha3_512);
+    Foids.Add('RIPEMD128', TTeleTrusTObjectIdentifiers.RIPEMD128);
+    Foids.Add('RIPEMD160', TTeleTrusTObjectIdentifiers.RIPEMD160);
+    Foids.Add('RIPEMD256', TTeleTrusTObjectIdentifiers.RIPEMD256);
+    Foids.Add('GOST3411', TCryptoProObjectIdentifiers.GostR3411);
+    Foids.Add('BLAKE2B-160', TMiscObjectIdentifiers.id_blake2b160);
+    Foids.Add('BLAKE2B-256', TMiscObjectIdentifiers.id_blake2b256);
+    Foids.Add('BLAKE2B-384', TMiscObjectIdentifiers.id_blake2b384);
+    Foids.Add('BLAKE2B-512', TMiscObjectIdentifiers.id_blake2b512);
+    Foids.Add('BLAKE2S-128', TMiscObjectIdentifiers.id_blake2s128);
+    Foids.Add('BLAKE2S-160', TMiscObjectIdentifiers.id_blake2s160);
+    Foids.Add('BLAKE2S-224', TMiscObjectIdentifiers.id_blake2s224);
+    Foids.Add('BLAKE2S-256', TMiscObjectIdentifiers.id_blake2s256);
+    Foids.Add('GOST3411-2012-256',
+      TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_256);
+    Foids.Add('GOST3411-2012-512',
+      TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_512);
+  end;
 end;
 
 class function TDigestUtilities.DoFinal(const digest: IDigest)

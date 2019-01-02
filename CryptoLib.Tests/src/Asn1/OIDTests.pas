@@ -32,12 +32,11 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpCryptoLibTypes,
-  ClpAsn1Object,
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
 

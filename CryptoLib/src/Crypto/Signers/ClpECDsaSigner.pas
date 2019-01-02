@@ -26,13 +26,12 @@ uses
   ClpBigInteger,
   ClpSecureRandom,
   ClpECAlgorithms,
+  ClpECC,
+  ClpIECC,
   ClpIParametersWithRandom,
   ClpIECPublicKeyParameters,
   ClpIECPrivateKeyParameters,
-  ClpECCurve,
   ClpFixedPointCombMultiplier,
-  ClpIECInterface,
-  ClpIECFieldElement,
   ClpCryptoLibTypes,
   ClpICipherParameters,
   ClpIECDomainParameters,
@@ -59,13 +58,15 @@ type
     class var
 
       FEight: TBigInteger;
+
+    class procedure Boot(); static;
     class constructor ECDsaSigner();
 
     class function GetEight: TBigInteger; static; inline;
 
     class property Eight: TBigInteger read GetEight;
 
-     function GetOrder: TBigInteger; virtual;
+    function GetOrder: TBigInteger; virtual;
     function GetAlgorithmName: String; virtual;
 
   strict protected
@@ -138,6 +139,11 @@ begin
   FkCalculator := TRandomDsaKCalculator.Create();
 end;
 
+class procedure TECDsaSigner.Boot;
+begin
+  FEight := TBigInteger.ValueOf(8);
+end;
+
 function TECDsaSigner.CalculateE(const n: TBigInteger;
   const &message: TCryptoLibByteArray): TBigInteger;
 var
@@ -168,8 +174,7 @@ end;
 
 class constructor TECDsaSigner.ECDsaSigner;
 begin
-  TBigInteger.Boot;
-  FEight := TBigInteger.ValueOf(8);
+  TECDsaSigner.Boot;
 end;
 
 function TECDsaSigner.GenerateSignature(const &message: TCryptoLibByteArray)
@@ -249,7 +254,7 @@ end;
 
 function TECDsaSigner.GetOrder: TBigInteger;
 begin
-  result := Fkey.Parameters.N;
+  Result := Fkey.parameters.n;
 end;
 
 procedure TECDsaSigner.Init(forSigning: Boolean;
@@ -377,7 +382,7 @@ begin
           RLocal := curve.FromBigInteger(Smallr).Multiply(d);
           if (RLocal.Equals(X)) then
           begin
-            Result := true;
+            Result := True;
             Exit;
           end;
           Smallr := Smallr.Add(n);

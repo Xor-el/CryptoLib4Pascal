@@ -25,9 +25,9 @@ uses
   ClpCryptoLibTypes,
   ClpECDomainParameters,
   ClpBigInteger,
-  ClpIECInterface,
+  ClpIECC,
   ClpIECPublicKeyParameters,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIECDomainParameters,
   ClpECKeyParameters;
 

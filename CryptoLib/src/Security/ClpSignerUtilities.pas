@@ -44,9 +44,8 @@ uses
   ClpIECDsaSigner,
   ClpISigner,
   ClpISecureRandom,
-  ClpIDerObjectIdentifier,
-  ClpPlainDsaEncoding,
-  ClpPlainSchnorrEncoding,
+  ClpIAsn1Objects,
+  ClpSignersEncodings,
   ClpSchnorrDigestSigner,
   ClpECSchnorrSipaSigner,
   ClpIECSchnorrSipaSigner,
@@ -75,6 +74,7 @@ type
 
     class function GetAlgorithms: TCryptoLibStringArray; static; inline;
 
+    class procedure Boot(); static;
     class constructor CreateSignerUtilities();
     class destructor DestroySignerUtilities();
 
@@ -113,8 +113,9 @@ implementation
 
 { TSignerUtilities }
 
-class constructor TSignerUtilities.CreateSignerUtilities;
+class procedure TSignerUtilities.Boot;
 begin
+
   Falgorithms := TDictionary<String, String>.Create();
   Foids := TDictionary<String, IDerObjectIdentifier>.Create();
 
@@ -408,7 +409,11 @@ begin
   //
   // Foids.Add('ECGOST3410',
   // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+end;
 
+class constructor TSignerUtilities.CreateSignerUtilities;
+begin
+  TSignerUtilities.Boot;
 end;
 
 class destructor TSignerUtilities.DestroySignerUtilities;
