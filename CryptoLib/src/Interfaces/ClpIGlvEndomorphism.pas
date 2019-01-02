@@ -24,7 +24,7 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpIECInterface;
+  ClpIECC;
 
 type
   IGlvEndomorphism = interface(IECEndomorphism)

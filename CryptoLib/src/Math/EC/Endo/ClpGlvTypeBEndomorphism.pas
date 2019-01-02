@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpScaleXPointMap,
   ClpIGlvTypeBEndomorphism,
-  ClpIECInterface,
+  ClpIECC,
   ClpIGlvTypeBParameters,
   ClpIGlvEndomorphism;
 

@@ -43,6 +43,7 @@ type
 
       FRandomSource: ISecureRandom;
 
+    class procedure Boot(); static;
     class constructor &Mod();
 
     class procedure InversionResult(const p: TCryptoLibUInt32Array; ac: Int32;
@@ -78,6 +79,12 @@ begin
   begin
     TNat.SubFrom(len, p, z);
   end;
+end;
+
+class procedure TMod.Boot;
+begin
+
+  FRandomSource := TSecureRandom.Create();
 end;
 
 class function TMod.GetTrailingZeroes(x: UInt32): Int32;
@@ -234,8 +241,7 @@ end;
 
 class constructor TMod.&Mod;
 begin
-  TSecureRandom.Boot;
-  FRandomSource := TSecureRandom.Create();
+  TMod.Boot;
 end;
 
 class function TMod.Random(const p: TCryptoLibUInt32Array)

@@ -29,7 +29,7 @@ uses
   ClpIPreCompCallback,
   ClpFixedPointPreCompInfo,
   ClpIFixedPointPreCompInfo,
-  ClpIECInterface;
+  ClpIECC;
 
 type
   TFixedPointUtilities = class sealed(TObject)

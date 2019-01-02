@@ -131,7 +131,8 @@ begin
     for b := 0 to System.Pred(256) do
     begin
 
-      counts[Byte(bs[b] + Byte(shift))] := counts[Byte(bs[b] + Byte(shift))] + 1;
+      counts[Byte(bs[b] + Byte(shift))] :=
+        counts[Byte(bs[b] + Byte(shift))] + 1;
 
     end;
     System.Inc(shift);

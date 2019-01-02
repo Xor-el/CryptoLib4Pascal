@@ -31,12 +31,8 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpDerT61String,
-  ClpIDerT61String,
-  ClpDerBitString,
-  ClpIDerBitString,
-  ClpDerUniversalString,
-  ClpIDerUniversalString,
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
   ClpConverters;
 
 type

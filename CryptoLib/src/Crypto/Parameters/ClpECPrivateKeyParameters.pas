@@ -26,7 +26,7 @@ uses
   ClpCryptoLibTypes,
   ClpECKeyParameters,
   ClpIECPrivateKeyParameters,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIECDomainParameters;
 
 resourcestring

@@ -37,7 +37,7 @@ uses
   ClpBits,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpWNafUtilities,
+  ClpECAlgorithms,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -58,9 +58,6 @@ type
     IAsymmetricCipherKeyPairGenerator, IDsaKeyPairGenerator)
 
   strict private
-    class var
-
-      FOne: TBigInteger;
 
   var
     Fparam: IDsaKeyGenerationParameters;
@@ -70,8 +67,6 @@ type
 
     class function CalculatePublicKey(const p, g, x: TBigInteger): TBigInteger;
       static; inline;
-
-    class constructor DsaKeyPairGenerator();
 
   public
 
@@ -89,11 +84,6 @@ class function TDsaKeyPairGenerator.CalculatePublicKey(const p, g,
   x: TBigInteger): TBigInteger;
 begin
   result := g.ModPow(x, p);
-end;
-
-class constructor TDsaKeyPairGenerator.DsaKeyPairGenerator;
-begin
-  FOne := TBigInteger.One;
 end;
 
 function TDsaKeyPairGenerator.GenerateKeyPair: IAsymmetricCipherKeyPair;
@@ -115,8 +105,9 @@ class function TDsaKeyPairGenerator.GeneratePrivateKey(const q: TBigInteger;
   const random: ISecureRandom): TBigInteger;
 var
   minWeight: Int32;
-  x: TBigInteger;
+  x, One: TBigInteger;
 begin
+  One := TBigInteger.One;
   result := Default (TBigInteger);
   // B.1.2 Key Pair Generation by Testing Candidates
   minWeight := TBits.Asr32(q.BitLength, 2);
@@ -126,7 +117,7 @@ begin
     // B.1.1 Key Pair Generation Using Extra Random Bits
     // x := TBigInteger.Create(q.BitLength + 64, random).&Mod(q.Subtract(One)).Add(One);
 
-    x := TBigIntegers.CreateRandomInRange(FOne, q.Subtract(FOne), random);
+    x := TBigIntegers.CreateRandomInRange(One, q.Subtract(One), random);
     if (TWNafUtilities.GetNafWeight(x) >= minWeight) then
     begin
       result := x;

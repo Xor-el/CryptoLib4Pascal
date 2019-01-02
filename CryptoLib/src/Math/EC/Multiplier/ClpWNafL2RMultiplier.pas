@@ -27,9 +27,9 @@ uses
   ClpBigInteger,
   ClpLongArray,
   ClpCryptoLibTypes,
-  ClpIECInterface,
+  ClpIECC,
   ClpIWNafPreCompInfo,
-  ClpWNafUtilities,
+  ClpECAlgorithms,
   ClpAbstractECMultiplier,
   ClpIWNafL2RMultiplier;
 

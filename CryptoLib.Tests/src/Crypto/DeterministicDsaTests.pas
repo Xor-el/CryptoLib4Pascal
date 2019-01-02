@@ -52,7 +52,7 @@ uses
   ClpBigInteger,
   ClpDigestUtilities,
   ClpSecNamedCurves,
-  ClpHex,
+  ClpEncoders,
   ClpCryptoLibTypes;
 
 type

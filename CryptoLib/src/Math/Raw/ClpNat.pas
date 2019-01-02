@@ -2040,7 +2040,7 @@ end;
 
 class procedure TNat.Zero(len: Int32; const z: TCryptoLibUInt32Array);
 begin
-    TArrayUtils.Fill(z, 0, len, UInt32(0));
+  TArrayUtils.Fill(z, 0, len, UInt32(0));
 end;
 
 end.

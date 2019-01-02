@@ -26,7 +26,7 @@ interface
 uses
   Classes,
   SysUtils,
-  ClpHex,
+  ClpEncoders,
   ClpCryptoLibTypes,
   ClpConverters,
   ClpBigInteger,
@@ -55,6 +55,7 @@ type
 
     function GetIsExhausted: Boolean; inline;
 
+    class procedure Boot(); static;
     class constructor FixedSecureRandom();
 
   type
@@ -152,6 +153,22 @@ constructor TFixedSecureRandom.Create(const data: TCryptoLibByteArray);
 begin
   Inherited Create();
   F_data := data;
+end;
+
+class procedure TFixedSecureRandom.Boot;
+var
+  Fcheck1, Fcheck2: TBigInteger;
+begin
+  FREGULAR := TBigInteger.Create('01020304ffffffff0506070811111111', 16);
+  FANDROID := TBigInteger.Create('1111111105060708ffffffff01020304', 16);
+  FCLASSPATH := TBigInteger.Create('3020104ffffffff05060708111111', 16);
+
+  Fcheck1 := TBigInteger.Create(128, TRandomChecker.Create() as ISecureRandom);
+  Fcheck2 := TBigInteger.Create(120, TRandomChecker.Create() as ISecureRandom);
+
+  FisAndroidStyle := Fcheck1.Equals(FANDROID);
+  FisRegularStyle := Fcheck1.Equals(FREGULAR);
+  FisClasspathStyle := Fcheck2.Equals(FCLASSPATH);
 end;
 
 constructor TFixedSecureRandom.Create(const sources
@@ -339,19 +356,8 @@ begin
 end;
 
 class constructor TFixedSecureRandom.FixedSecureRandom;
-var
-  Fcheck1, Fcheck2: TBigInteger;
 begin
-  FREGULAR := TBigInteger.Create('01020304ffffffff0506070811111111', 16);
-  FANDROID := TBigInteger.Create('1111111105060708ffffffff01020304', 16);
-  FCLASSPATH := TBigInteger.Create('3020104ffffffff05060708111111', 16);
-
-  Fcheck1 := TBigInteger.Create(128, TRandomChecker.Create() as ISecureRandom);
-  Fcheck2 := TBigInteger.Create(120, TRandomChecker.Create() as ISecureRandom);
-
-  FisAndroidStyle := Fcheck1.Equals(FANDROID);
-  FisRegularStyle := Fcheck1.Equals(FREGULAR);
-  FisClasspathStyle := Fcheck2.Equals(FCLASSPATH);
+  TFixedSecureRandom.Boot;
 end;
 
 class function TFixedSecureRandom.From(const values: TCryptoLibMatrixByteArray)

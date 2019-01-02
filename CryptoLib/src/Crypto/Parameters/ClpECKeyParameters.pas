@@ -30,7 +30,7 @@ uses
   ClpIECKeyParameters,
   ClpIX9ECParameters,
   ClpIECDomainParameters,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpIECKeyGenerationParameters,
   ClpAsymmetricKeyParameter,
   ClpECKeyGenerationParameters,

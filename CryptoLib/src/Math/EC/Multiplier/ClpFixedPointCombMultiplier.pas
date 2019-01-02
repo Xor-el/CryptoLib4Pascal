@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpNat,
   ClpCryptoLibTypes,
-  ClpIECInterface,
+  ClpIECC,
   ClpFixedPointUtilities,
   ClpIFixedPointPreCompInfo,
   ClpAbstractECMultiplier,

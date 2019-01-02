@@ -25,8 +25,7 @@ uses
   SysUtils,
   ClpIZTauElement,
   ClpZTauElement,
-  ClpIECInterface,
-  ClpIECFieldElement,
+  ClpIECC,
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpSimpleBigDecimal;
@@ -65,6 +64,7 @@ type
     class function GetShiftsForCofactor(const h: TBigInteger): Int32;
       static; inline;
 
+    class procedure Boot(); static;
     class constructor Tnaf();
 
   public
@@ -349,6 +349,36 @@ begin
   end;
 
   Result := TSimpleBigDecimal.Create(ls, c);
+end;
+
+class procedure TTnaf.Boot;
+begin
+
+  FMinusOne := TBigInteger.One.Negate();
+  FMinusTwo := TBigInteger.Two.Negate();
+  FMinusThree := TBigInteger.Three.Negate();
+  FFour := TBigInteger.ValueOf(4);
+  FAlpha0 := TCryptoLibGenericArray<IZTauElement>.Create(Nil,
+    TZTauElement.Create(TBigInteger.One, TBigInteger.Zero), Nil,
+    TZTauElement.Create(FMinusThree, FMinusOne), Nil,
+    TZTauElement.Create(FMinusOne, FMinusOne), Nil,
+    TZTauElement.Create(TBigInteger.One, FMinusOne), Nil);
+
+  FAlpha1 := TCryptoLibGenericArray<IZTauElement>.Create(Nil,
+    TZTauElement.Create(TBigInteger.One, TBigInteger.Zero), Nil,
+    TZTauElement.Create(FMinusThree, TBigInteger.One), Nil,
+    TZTauElement.Create(FMinusOne, TBigInteger.One), Nil,
+    TZTauElement.Create(TBigInteger.One, TBigInteger.One), Nil);
+
+  FAlpha0Tnaf := TCryptoLibMatrixShortIntArray.Create(Nil,
+    TCryptoLibShortIntArray.Create(1), Nil, TCryptoLibShortIntArray.Create(-1,
+    0, 1), Nil, TCryptoLibShortIntArray.Create(1, 0, 1), Nil,
+    TCryptoLibShortIntArray.Create(-1, 0, 0, 1));
+
+  FAlpha1Tnaf := TCryptoLibMatrixShortIntArray.Create(Nil,
+    TCryptoLibShortIntArray.Create(1), Nil, TCryptoLibShortIntArray.Create(-1,
+    0, 1), Nil, TCryptoLibShortIntArray.Create(1, 0, 1), Nil,
+    TCryptoLibShortIntArray.Create(-1, 0, 0, -1));
 end;
 
 class function TTnaf.GetAlpha0: TCryptoLibGenericArray<IZTauElement>;
@@ -788,7 +818,7 @@ begin
     d0 := s[0].Subtract(s[1]);
   end;
 
-  v := GetLucas(mu, m, true);
+  v := GetLucas(mu, m, True);
   vm := v[1];
 
   lambda0 := ApproximateDivisionByN(k, s[0], vm, a, m, c);
@@ -1070,7 +1100,7 @@ begin
       // uLocal is now in [-2^(width-1), 2^(width-1)-1]
 
       u[i] := uLocal;
-      s := true;
+      s := True;
       if (uLocal < 0) then
       begin
         s := false;
@@ -1114,32 +1144,7 @@ end;
 
 class constructor TTnaf.Tnaf;
 begin
-  TBigInteger.Boot;
-  FMinusOne := TBigInteger.One.Negate();
-  FMinusTwo := TBigInteger.Two.Negate();
-  FMinusThree := TBigInteger.Three.Negate();
-  FFour := TBigInteger.ValueOf(4);
-  FAlpha0 := TCryptoLibGenericArray<IZTauElement>.Create(Nil,
-    TZTauElement.Create(TBigInteger.One, TBigInteger.Zero), Nil,
-    TZTauElement.Create(FMinusThree, FMinusOne), Nil,
-    TZTauElement.Create(FMinusOne, FMinusOne), Nil,
-    TZTauElement.Create(TBigInteger.One, FMinusOne), Nil);
-
-  FAlpha1 := TCryptoLibGenericArray<IZTauElement>.Create(Nil,
-    TZTauElement.Create(TBigInteger.One, TBigInteger.Zero), Nil,
-    TZTauElement.Create(FMinusThree, TBigInteger.One), Nil,
-    TZTauElement.Create(FMinusOne, TBigInteger.One), Nil,
-    TZTauElement.Create(TBigInteger.One, TBigInteger.One), Nil);
-
-  FAlpha0Tnaf := TCryptoLibMatrixShortIntArray.Create(Nil,
-    TCryptoLibShortIntArray.Create(1), Nil, TCryptoLibShortIntArray.Create(-1,
-    0, 1), Nil, TCryptoLibShortIntArray.Create(1, 0, 1), Nil,
-    TCryptoLibShortIntArray.Create(-1, 0, 0, 1));
-
-  FAlpha1Tnaf := TCryptoLibMatrixShortIntArray.Create(Nil,
-    TCryptoLibShortIntArray.Create(1), Nil, TCryptoLibShortIntArray.Create(-1,
-    0, 1), Nil, TCryptoLibShortIntArray.Create(1, 0, 1), Nil,
-    TCryptoLibShortIntArray.Create(-1, 0, 0, -1));
+  TTnaf.Boot();
 end;
 
 end.

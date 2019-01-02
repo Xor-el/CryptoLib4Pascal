@@ -32,40 +32,11 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpHex,
+  ClpEncoders,
   ClpCryptoLibTypes,
   ClpConverters,
-  ClpIProxiedInterface,
-  ClpBerOctetString,
-  ClpBerSequence,
-  ClpDerPrintableString,
-  ClpBerSet,
-  ClpBerTaggedObject,
-  ClpDerApplicationSpecific,
-  ClpDerBitString,
-  ClpDerBmpString,
-  ClpDerBoolean,
-  ClpDerEnumerated,
-  ClpDerGeneralString,
-  ClpDerIA5String,
-  ClpDerInteger,
-  ClpDerNull,
-  ClpDerNumericString,
-  ClpDerObjectIdentifier,
-  ClpDerOctetString,
-  ClpDerSequence,
-  ClpDerSet,
-  ClpDerT61String,
-  ClpDerTaggedObject,
-  ClpDerUniversalString,
-  ClpDerUtf8String,
-  ClpDerVisibleString,
-  ClpDerGraphicString,
-  ClpDerVideotexString,
-  ClpAsn1OutputStream,
-  ClpAsn1InputStream,
-  ClpIDerPrintableString,
-  ClpAsn1Object;
+  ClpIAsn1Objects,
+  ClpAsn1Objects;
 
 type
 

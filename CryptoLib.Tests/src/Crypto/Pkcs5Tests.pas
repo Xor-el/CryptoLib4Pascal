@@ -35,7 +35,7 @@ uses
   ClpPkcs5S2ParametersGenerator,
   ClpIPkcs5S2ParametersGenerator,
   ClpDigestUtilities,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpConverters,
   ClpCryptoLibTypes;

@@ -40,7 +40,7 @@ uses
   ClpISecureRandom;
 
 resourcestring
-  SUnrecognisedPRNGAlgorithm = 'Unrecognised PRNG Algorithm: %s "algorithm"';
+  SUnRecognisedPRNGAlgorithm = 'Unrecognised PRNG Algorithm: %s "algorithm"';
   SCannotBeNegative = 'Cannot be Negative  "maxValue"';
   SInvalidMaxValue = 'maxValue Cannot be Less Than minValue';
 
@@ -49,8 +49,6 @@ type
 
   strict private
   class var
-
-    FIsBooted: Boolean;
     FCounter: Int64;
     Fmaster: ISecureRandom;
     FDoubleScale: Double;
@@ -232,6 +230,7 @@ end;
 
 class function TSecureRandom.NextCounterValue: Int64;
 begin
+
   FLock.Acquire;
   try
     System.Inc(FCounter);
@@ -313,15 +312,13 @@ end;
 
 class procedure TSecureRandom.Boot;
 begin
-  if not FIsBooted then
+  if FLock = Nil then
   begin
     FLock := TCriticalSection.Create;
     FCounter := TTimes.NanoTime();
     Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);
-
-    FIsBooted := True;
   end;
 end;
 
@@ -358,7 +355,7 @@ begin
     end;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnrecognisedPRNGAlgorithm,
+  raise EArgumentCryptoLibException.CreateResFmt(@SUnRecognisedPRNGAlgorithm,
     [algorithm]);
 
 end;

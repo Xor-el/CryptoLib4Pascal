@@ -42,7 +42,7 @@ uses
   ClpIKeyParameter,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpCryptoLibTypes;
 

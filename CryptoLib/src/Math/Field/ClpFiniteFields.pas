@@ -46,6 +46,7 @@ type
 
       FGF_2, FGF_3: IFiniteField;
 
+    class procedure Boot(); static;
     class constructor FiniteFields();
 
   public
@@ -60,11 +61,16 @@ implementation
 
 { TFiniteFields }
 
-class constructor TFiniteFields.FiniteFields;
+class procedure TFiniteFields.Boot;
 begin
-  TBigInteger.Boot;
+
   FGF_2 := TPrimeField.Create(TBigInteger.ValueOf(2));
   FGF_3 := TPrimeField.Create(TBigInteger.ValueOf(3));
+end;
+
+class constructor TFiniteFields.FiniteFields;
+begin
+  TFiniteFields.Boot;
 end;
 
 class function TFiniteFields.GetBinaryExtensionField(const exponents

@@ -25,7 +25,7 @@ uses
   SyncObjs,
   ClpBigInteger,
   ClpECAlgorithms,
-  ClpIECInterface,
+  ClpIECC,
   ClpCryptoLibTypes,
   ClpIECDomainParameters;
 
@@ -60,6 +60,7 @@ type
     function GetHInv: TBigInteger; inline;
     function GetSeed: TCryptoLibByteArray; inline;
 
+    class procedure Boot(); static;
     class constructor CreateECDomainParameters();
     class destructor DestroyECDomainParameters();
 
@@ -129,6 +130,7 @@ end;
 
 function TECDomainParameters.GetHInv: TBigInteger;
 begin
+
   FLock.Acquire;
   try
     if (not(FhInv.IsInitialized)) then
@@ -158,6 +160,14 @@ begin
   Create(curve, g, n, h, Nil);
 end;
 
+class procedure TECDomainParameters.Boot;
+begin
+  if FLock = Nil then
+  begin
+    FLock := TCriticalSection.Create;
+  end;
+end;
+
 constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
   const n, h: TBigInteger; const seed: TCryptoLibByteArray);
 begin
@@ -184,7 +194,7 @@ end;
 
 class constructor TECDomainParameters.CreateECDomainParameters;
 begin
-  FLock := TCriticalSection.Create;
+  TECDomainParameters.Boot;
 end;
 
 class destructor TECDomainParameters.DestroyECDomainParameters;
@@ -197,7 +207,7 @@ begin
 
   if (other = Self as IECDomainParameters) then
   begin
-    result := true;
+    result := True;
     Exit;
   end;
 

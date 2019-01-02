@@ -32,12 +32,12 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
-  ClpHex,
+  ClpEncoders,
   ClpFixedSecureRandom,
   ClpISecureRandom,
   ClpSecureRandom,
   ClpCryptoLibTypes,
-  ClpECCurve,
+  ClpECC,
   ClpIECDomainParameters,
   ClpIECPrivateKeyParameters,
   ClpIECPublicKeyParameters,
@@ -50,13 +50,12 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
-  ClpIECInterface,
+  ClpIECC,
   ClpSignerUtilities,
   ClpECDomainParameters,
-  ClpAsn1Object,
+  ClpIAsn1Objects,
   ClpISigner,
-  ClpIAsn1Sequence,
-  ClpIDerInteger,
+  ClpAsn1Objects,
   ClpConverters;
 
 type

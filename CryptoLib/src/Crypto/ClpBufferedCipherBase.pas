@@ -44,16 +44,10 @@ type
     IBufferedCipher)
 
   strict private
-    class var
-
-      FEmptyBuffer: TCryptoLibByteArray;
 
     class function GetEmptyBuffer: TCryptoLibByteArray; static; inline;
 
-    class constructor BufferedCipherBase();
-
   var
-
     FBufferSize: Int32;
     FOnProgress: TBufferedCipherProgressEvent;
 
@@ -146,11 +140,6 @@ implementation
 
 { TBufferedCipherBase }
 
-class constructor TBufferedCipherBase.BufferedCipherBase;
-begin
-  System.SetLength(FEmptyBuffer, 0);
-end;
-
 procedure TBufferedCipherBase.DoProgress(AProcessed, ATotal: Int64);
 begin
   if System.Assigned(FOnProgress) then
@@ -232,7 +221,7 @@ end;
 
 class function TBufferedCipherBase.GetEmptyBuffer: TCryptoLibByteArray;
 begin
-  result := FEmptyBuffer;
+  result := Nil;
 end;
 
 function TBufferedCipherBase.ProcessByte(input: Byte;

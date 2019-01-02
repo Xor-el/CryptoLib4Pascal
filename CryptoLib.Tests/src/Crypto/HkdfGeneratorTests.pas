@@ -31,7 +31,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpHex,
+  ClpEncoders,
   ClpIDigest,
   ClpDigestUtilities,
   ClpArrayUtils,

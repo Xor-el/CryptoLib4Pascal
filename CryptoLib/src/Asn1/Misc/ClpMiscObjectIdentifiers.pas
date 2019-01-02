@@ -22,8 +22,8 @@ unit ClpMiscObjectIdentifiers;
 interface
 
 uses
-  ClpDerObjectIdentifier,
-  ClpIDerObjectIdentifier;
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   TMiscObjectIdentifiers = class abstract(TObject)

@@ -28,7 +28,7 @@ uses
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpISecureRandom,
-  ClpIDerObjectIdentifier,
+  ClpIAsn1Objects,
   ClpNistObjectIdentifiers,
   ClpParametersWithRandom,
   ClpCryptoLibTypes;
@@ -53,6 +53,7 @@ type
     class procedure AddBasicIVSizeEntries(size: Int32;
       const algorithms: array of String); static;
 
+    class procedure Boot(); static;
     class constructor CreateParameterUtilities();
     class destructor DestroyParameterUtilities();
 
@@ -76,8 +77,6 @@ type
 
     class function WithRandom(const cp: ICipherParameters;
       const random: ISecureRandom): ICipherParameters; static; inline;
-
-    class procedure Boot(); static;
 
   end;
 

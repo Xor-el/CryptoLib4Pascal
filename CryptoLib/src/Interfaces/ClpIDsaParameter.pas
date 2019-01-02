@@ -22,7 +22,7 @@ unit ClpIDsaParameter;
 interface
 
 uses
-  ClpIProxiedInterface,
+  ClpIAsn1Objects,
   ClpBigInteger;
 
 type

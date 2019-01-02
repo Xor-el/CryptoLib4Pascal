@@ -42,7 +42,7 @@ uses
   ClpIanaObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
-  ClpHex,
+  ClpEncoders,
   ClpArrayUtils,
   ClpConverters,
   ClpCryptoLibTypes;

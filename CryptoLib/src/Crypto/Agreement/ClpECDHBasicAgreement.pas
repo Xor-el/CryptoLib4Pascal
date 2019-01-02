@@ -27,7 +27,7 @@ uses
   ClpECAlgorithms,
   ClpICipherParameters,
   ClpIECDomainParameters,
-  ClpIECInterface,
+  ClpIECC,
   ClpIBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIECPrivateKeyParameters,

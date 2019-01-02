@@ -38,17 +38,12 @@ type
   const
     FMSEED = Int32(161803398);
 
-    class var
-
-      FSeedArray: TCryptoLibInt32Array;
-
   var
+    FSeedArray: array [0 .. 55] of Int32;
     Finext, Finextp: Int32;
 
     function InternalSample(): Int32; inline;
     function GetSampleForLargeRange(): Double;
-
-    class constructor Random();
 
   strict protected
     /// <summary>Returns a random floating-point number between 0.0 and 1.0.</summary>
@@ -229,11 +224,6 @@ end;
 function TRandom.NextDouble: Double;
 begin
   Result := Sample();
-end;
-
-class constructor TRandom.Random;
-begin
-  System.SetLength(FSeedArray, 56)
 end;
 
 function TRandom.Sample: Double;
