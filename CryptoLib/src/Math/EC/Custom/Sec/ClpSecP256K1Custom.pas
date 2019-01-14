@@ -31,6 +31,7 @@ uses
   ClpBigInteger,
   ClpArrayUtils,
   ClpCryptoLibTypes,
+  ClpECCurveConstants,
   ClpIECC,
   ClpISecP256K1Custom;
 
@@ -233,7 +234,7 @@ type
     end;
 
   const
-    SECP256K1_DEFAULT_COORDS = Int32(TECCurve.COORD_JACOBIAN);
+    SECP256K1_DEFAULT_COORDS = Int32(TECCurveConstants.COORD_JACOBIAN);
     SECP256K1_FE_INTS = Int32(8);
 
   var
@@ -1115,7 +1116,7 @@ end;
 function TSecP256K1Curve.SupportsCoordinateSystem(coord: Int32): Boolean;
 begin
   case coord of
-    COORD_JACOBIAN:
+    TECCurveConstants.COORD_JACOBIAN:
       result := true
   else
     result := false;

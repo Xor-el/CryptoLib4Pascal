@@ -42,12 +42,12 @@ uses
   ClpWTauNafMultiplier,
   ClpFiniteFields,
   ClpSetWeakRef,
+  ClpECCurveConstants,
   ClpTnaf,
   ClpValidityPrecompInfo,
   ClpIValidityPrecompInfo,
   ClpIECC,
   ClpIFiniteField,
-  ClpECCurveConstants,
   ClpIPreCompInfo;
 
 resourcestring
@@ -533,18 +533,8 @@ type
 
   public
 
-    const
+    type
 
-    COORD_AFFINE = Int32(0);
-    COORD_HOMOGENEOUS = Int32(1);
-    COORD_JACOBIAN = Int32(2);
-    COORD_JACOBIAN_CHUDNOVSKY = Int32(3);
-    COORD_JACOBIAN_MODIFIED = Int32(4);
-    COORD_LAMBDA_AFFINE = Int32(5);
-    COORD_LAMBDA_PROJECTIVE = Int32(6);
-    COORD_SKEWED = Int32(7);
-
-  type
     TConfig = class(TInterfacedObject, IConfig)
 
     strict protected
@@ -763,7 +753,7 @@ type
 
   strict private
   const
-    FP_DEFAULT_COORDS = Int32(TECCurve.COORD_JACOBIAN_MODIFIED);
+    FP_DEFAULT_COORDS = Int32(TECCurveConstants.COORD_JACOBIAN_MODIFIED);
 
   strict protected
   var
@@ -878,7 +868,7 @@ type
 
   strict private
   const
-    F2M_DEFAULT_COORDS = Int32(TECCurve.COORD_LAMBDA_PROJECTIVE);
+    F2M_DEFAULT_COORDS = Int32(TECCurveConstants.COORD_LAMBDA_PROJECTIVE);
 
   var
     // /**
@@ -2770,9 +2760,12 @@ end;
 
 class function TECCurve.GetAllCoordinateSystems: TCryptoLibInt32Array;
 begin
-  result := TCryptoLibInt32Array.Create(COORD_AFFINE, COORD_HOMOGENEOUS,
-    COORD_JACOBIAN, COORD_JACOBIAN_CHUDNOVSKY, COORD_JACOBIAN_MODIFIED,
-    COORD_LAMBDA_AFFINE, COORD_LAMBDA_PROJECTIVE, COORD_SKEWED);
+  result := TCryptoLibInt32Array.Create(TECCurveConstants.COORD_AFFINE,
+    TECCurveConstants.COORD_HOMOGENEOUS, TECCurveConstants.COORD_JACOBIAN,
+    TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,
+    TECCurveConstants.COORD_JACOBIAN_MODIFIED,
+    TECCurveConstants.COORD_LAMBDA_AFFINE,
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE, TECCurveConstants.COORD_SKEWED);
 end;
 
 function TECCurve.GetB: IECFieldElement;
@@ -2884,7 +2877,7 @@ var
 begin
   CheckPoints(points, off, len);
   case CoordinateSystem of
-    COORD_AFFINE, COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         if (iso <> Nil) then
         begin
@@ -2984,7 +2977,7 @@ end;
 
 function TECCurve.SupportsCoordinateSystem(coord: Int32): Boolean;
 begin
-  result := coord = COORD_AFFINE;
+  result := coord = TECCurveConstants.COORD_AFFINE;
 end;
 
 function TECCurve.ValidatePoint(const x, y: TBigInteger;
@@ -3203,11 +3196,14 @@ end;
 
 function TFpCurve.ImportPoint(const P: IECPoint): IECPoint;
 begin
-  if ((Self as IECCurve <> P.curve) and (CoordinateSystem = COORD_JACOBIAN) and
-    (not P.IsInfinity)) then
+  if ((Self as IECCurve <> P.curve) and
+    (CoordinateSystem = TECCurveConstants.COORD_JACOBIAN) and (not P.IsInfinity))
+  then
   begin
     case P.curve.CoordinateSystem of
-      COORD_JACOBIAN, COORD_JACOBIAN_CHUDNOVSKY, COORD_JACOBIAN_MODIFIED:
+      TECCurveConstants.COORD_JACOBIAN,
+        TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,
+        TECCurveConstants.COORD_JACOBIAN_MODIFIED:
         begin
           result := TFpPoint.Create(Self as IECCurve,
             FromBigInteger(P.RawXCoord.ToBigInteger()),
@@ -3225,7 +3221,9 @@ end;
 function TFpCurve.SupportsCoordinateSystem(coord: Int32): Boolean;
 begin
   case coord of
-    COORD_AFFINE, COORD_HOMOGENEOUS, COORD_JACOBIAN, COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_HOMOGENEOUS,
+      TECCurveConstants.COORD_JACOBIAN,
+      TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         result := true;
       end
@@ -3285,7 +3283,8 @@ begin
   LY := FromBigInteger(y);
 
   case CoordinateSystem of
-    COORD_LAMBDA_AFFINE, COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_AFFINE,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         if (Lx.IsZero) then
         begin
@@ -3329,7 +3328,8 @@ begin
       end;
 
       case CoordinateSystem of
-        COORD_LAMBDA_AFFINE, COORD_LAMBDA_PROJECTIVE:
+        TECCurveConstants.COORD_LAMBDA_AFFINE,
+          TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
           begin
             yp := z.Add(xp);
           end
@@ -3611,7 +3611,8 @@ end;
 function TF2mCurve.SupportsCoordinateSystem(coord: Int32): Boolean;
 begin
   case coord of
-    COORD_AFFINE, COORD_HOMOGENEOUS, COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_HOMOGENEOUS,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         result := true;
       end
@@ -3769,7 +3770,7 @@ begin
   end;
 
   case CurveCoordinateSystem of
-    TECCurve.COORD_AFFINE, TECCurve.COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         result := Self;
         Exit;
@@ -4053,7 +4054,7 @@ begin
   // Cope with null curve, most commonly used by implicitlyCa
   if curve = Nil then
   begin
-    coord := TECCurve.COORD_AFFINE;
+    coord := TECCurveConstants.COORD_AFFINE;
   end
   else
   begin
@@ -4061,7 +4062,7 @@ begin
   end;
 
   case coord of
-    TECCurve.COORD_AFFINE, TECCurve.COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         result := FEMPTY_ZS;
         Exit;
@@ -4072,20 +4073,20 @@ begin
 
   case coord of
 
-    TECCurve.COORD_HOMOGENEOUS, TECCurve.COORD_JACOBIAN,
-      TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_HOMOGENEOUS, TECCurveConstants.COORD_JACOBIAN,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         result := TCryptoLibGenericArray<IECFieldElement>.Create(One);
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN_CHUDNOVSKY:
+    TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY:
       begin
         result := TCryptoLibGenericArray<IECFieldElement>.Create(One, One, One);
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         result := TCryptoLibGenericArray<IECFieldElement>.Create(One, curve.a);
         Exit;
@@ -4167,8 +4168,8 @@ var
 begin
   coord := CurveCoordinateSystem;
 
-  result := (coord = TECCurve.COORD_AFFINE) or
-    (coord = TECCurve.COORD_LAMBDA_AFFINE) or (IsInfinity) or
+  result := (coord = TECCurveConstants.COORD_AFFINE) or
+    (coord = TECCurveConstants.COORD_LAMBDA_AFFINE) or (IsInfinity) or
     (RawZCoords[0].IsOne);
 end;
 
@@ -4187,14 +4188,16 @@ var
   zInv2, zInv3: IECFieldElement;
 begin
   case CurveCoordinateSystem of
-    TECCurve.COORD_HOMOGENEOUS, TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_HOMOGENEOUS,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         result := CreateScaledPoint(zInv, zInv);
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN, TECCurve.COORD_JACOBIAN_CHUDNOVSKY,
-      TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN,
+      TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,
+      TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         zInv2 := zInv.Square();
         zInv3 := zInv2.Multiply(zInv);
@@ -4232,7 +4235,7 @@ begin
   // Cope with null curve, most commonly used by implicitlyCa
   if Fm_curve = Nil then
   begin
-    result := TECCurve.COORD_AFFINE;
+    result := TECCurveConstants.COORD_AFFINE;
   end
   else
   begin
@@ -4302,7 +4305,7 @@ begin
   x2 := b.RawXCoord;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         Y1 := RawYCoord;
         Y2 := b.RawYCoord;
@@ -4329,7 +4332,7 @@ begin
         result := TF2mPoint.Create(ecCurve, x3, Y3, IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         Y1 := RawYCoord;
         Z1 := RawZCoords[0];
@@ -4407,7 +4410,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         if (x1.IsZero) then
         begin
@@ -4555,7 +4558,8 @@ begin
   LY := RawYCoord;
 
   case CurveCoordinateSystem of
-    TECCurve.COORD_LAMBDA_AFFINE, TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_AFFINE,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         // Y is actually Lambda (X + Y/X) here
         result := LY.TestBitZero() <> Lx.TestBitZero();
@@ -4577,7 +4581,8 @@ begin
   coord := CurveCoordinateSystem;
 
   case coord of
-    TECCurve.COORD_LAMBDA_AFFINE, TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_AFFINE,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         Lx := RawXCoord;
         L := RawYCoord;
@@ -4590,7 +4595,7 @@ begin
 
         // Y is actually Lambda (X + Y/X) here; convert to affine value on the fly
         LY := L.Add(Lx).Multiply(Lx);
-        if (TECCurve.COORD_LAMBDA_PROJECTIVE = coord) then
+        if (TECCurveConstants.COORD_LAMBDA_PROJECTIVE = coord) then
         begin
           z := RawZCoords[0];
           if (not z.IsOne) then
@@ -4632,14 +4637,14 @@ begin
   coord := ecCurve.CoordinateSystem;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         bigY := RawYCoord;
         result := TF2mPoint.Create(ecCurve, Lx, bigY.Add(Lx), IsCompressed);
         Exit;
       end;
 
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         LY := RawYCoord;
         z := RawZCoords[0];
@@ -4648,14 +4653,14 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         L := RawYCoord;
         result := TF2mPoint.Create(ecCurve, Lx, L.AddOne(), IsCompressed);
         Exit;
       end;
 
-    TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         // L is actually Lambda (X + Y/X) here
         L := RawYCoord;
@@ -4701,7 +4706,7 @@ begin
 
   coord := ecCurve.CoordinateSystem;
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         Y1 := RawYCoord;
 
@@ -4713,7 +4718,7 @@ begin
         result := TF2mPoint.Create(ecCurve, x3, Y3, IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         Y1 := RawYCoord;
         Z1 := RawZCoords[0];
@@ -4753,7 +4758,7 @@ begin
           TCryptoLibGenericArray<IECFieldElement>.Create(Z3), IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         L1 := RawYCoord;
         Z1 := RawZCoords[0];
@@ -4889,7 +4894,7 @@ begin
   coord := ecCurve.CoordinateSystem;
 
   case coord of
-    TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
 
         // NOTE: twicePlus() only optimized for lambda-affine argument
@@ -5061,12 +5066,12 @@ begin
   lhs := LY.Square();
 
   case CurveCoordinateSystem of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         // do nothing
       end;
 
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         z := RawZCoords[0];
         if (not z.IsOne) then
@@ -5079,8 +5084,9 @@ begin
         end;
       end;
 
-    TECCurve.COORD_JACOBIAN, TECCurve.COORD_JACOBIAN_CHUDNOVSKY,
-      TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN,
+      TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,
+      TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         z := RawZCoords[0];
         if (not z.IsOne) then
@@ -5155,7 +5161,7 @@ begin
   Y2 := b.RawYCoord;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
 
         dx := x2.Subtract(x1);
@@ -5182,7 +5188,7 @@ begin
         result := TFpPoint.Create(curve, x3, Y3, IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         Z1 := RawZCoords[0];
         Z2 := b.RawZCoords[0];
@@ -5274,7 +5280,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN, TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN, TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         Z1 := RawZCoords[0];
         Z2 := b.RawZCoords[0];
@@ -5400,7 +5406,7 @@ begin
           end;
         end;
 
-        if (coord = TECCurve.COORD_JACOBIAN_MODIFIED) then
+        if (coord = TECCurveConstants.COORD_JACOBIAN_MODIFIED) then
         begin
           // TODO If the result will only be used in a subsequent addition, we don't need W3
           W3 := CalculateJacobianModifiedW(Z3, Z3Squared);
@@ -5525,8 +5531,8 @@ end;
 
 function TFpPoint.GetZCoord(index: Int32): IECFieldElement;
 begin
-  if ((index = 1) and (TECCurve.COORD_JACOBIAN_MODIFIED = CurveCoordinateSystem))
-  then
+  if ((index = 1) and (TECCurveConstants.COORD_JACOBIAN_MODIFIED =
+    CurveCoordinateSystem)) then
   begin
     result := GetJacobianModifiedW();
     Exit;
@@ -5549,7 +5555,7 @@ begin
   Lcurve := curve;
   coord := Lcurve.CoordinateSystem;
 
-  if (TECCurve.COORD_AFFINE <> coord) then
+  if (TECCurveConstants.COORD_AFFINE <> coord) then
   begin
     result := TFpPoint.Create(Lcurve, RawXCoord, RawYCoord.Negate(), RawZCoords,
       IsCompressed);
@@ -5588,7 +5594,7 @@ begin
   coord := ecCurve.CoordinateSystem;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
 
         x1 := RawXCoord;
@@ -5615,7 +5621,7 @@ begin
         result := TFpPoint.Create(curve, X4, Y4, IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         result := TwiceJacobianModified(false).Add(Self);
         Exit;
@@ -5677,19 +5683,19 @@ begin
   if (not Z1.IsOne) then
   begin
     case coord of
-      TECCurve.COORD_HOMOGENEOUS:
+      TECCurveConstants.COORD_HOMOGENEOUS:
         begin
           Z1Sq := Z1.Square();
           x1 := x1.Multiply(Z1);
           Y1 := Y1.Multiply(Z1Sq);
           W1 := CalculateJacobianModifiedW(Z1, Z1Sq);
         end;
-      TECCurve.COORD_JACOBIAN:
+      TECCurveConstants.COORD_JACOBIAN:
         begin
           W1 := CalculateJacobianModifiedW(Z1, Nil);
         end;
 
-      TECCurve.COORD_JACOBIAN_MODIFIED:
+      TECCurveConstants.COORD_JACOBIAN_MODIFIED:
         begin
           W1 := GetJacobianModifiedW();
         end;
@@ -5735,7 +5741,7 @@ begin
   end;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         zInv := Z1.Invert();
         zInv2 := zInv.Square();
@@ -5746,7 +5752,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         x1 := x1.Multiply(Z1);
         Z1 := Z1.Multiply(Z1.Square());
@@ -5754,14 +5760,14 @@ begin
           TCryptoLibGenericArray<IECFieldElement>.Create(Z1), IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_JACOBIAN:
+    TECCurveConstants.COORD_JACOBIAN:
       begin
         result := TFpPoint.Create(ecCurve, x1, Y1,
           TCryptoLibGenericArray<IECFieldElement>.Create(Z1), IsCompressed);
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         result := TFpPoint.Create(ecCurve, x1, Y1,
           TCryptoLibGenericArray<IECFieldElement>.Create(Z1, W1), IsCompressed);
@@ -5806,7 +5812,7 @@ begin
   x1 := RawXCoord;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         X1Squared := x1.Square();
         gamma := Three(X1Squared).Add(curve.a).Divide(Two(Y1));
@@ -5817,7 +5823,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_HOMOGENEOUS:
+    TECCurveConstants.COORD_HOMOGENEOUS:
       begin
         Z1 := RawZCoords[0];
 
@@ -5874,7 +5880,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN:
+    TECCurveConstants.COORD_JACOBIAN:
       begin
         Z1 := RawZCoords[0];
 
@@ -5951,7 +5957,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         result := TwiceJacobianModified(true);
         Exit;
@@ -6041,7 +6047,7 @@ begin
   coord := ecCurve.CoordinateSystem;
 
   case coord of
-    TECCurve.COORD_AFFINE:
+    TECCurveConstants.COORD_AFFINE:
       begin
         x1 := RawXCoord;
         x2 := b.RawXCoord;
@@ -6088,7 +6094,7 @@ begin
         result := TFpPoint.Create(curve, X4, Y4, IsCompressed);
         Exit;
       end;
-    TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         result := TwiceJacobianModified(false).Add(b);
         Exit;
@@ -6141,7 +6147,7 @@ begin
   b := ecCurve.b;
 
   coord := ecCurve.CoordinateSystem;
-  if (coord = TECCurve.COORD_LAMBDA_PROJECTIVE) then
+  if (coord = TECCurveConstants.COORD_LAMBDA_PROJECTIVE) then
   begin
     z := RawZCoords[0];
     ZIsOne := z.IsOne;
@@ -6182,12 +6188,12 @@ begin
     lhs := LY.Add(x).Multiply(LY);
 
     case coord of
-      TECCurve.COORD_AFFINE:
+      TECCurveConstants.COORD_AFFINE:
         begin
           // do nothing;
         end;
 
-      TECCurve.COORD_HOMOGENEOUS:
+      TECCurveConstants.COORD_HOMOGENEOUS:
         begin
           z := RawZCoords[0];
           if (not z.IsOne) then
@@ -6275,7 +6281,7 @@ begin
   end;
 
   case CurveCoordinateSystem of
-    TECCurve.COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         // Y is actually Lambda (X + Y/X) here
         Lx := RawXCoord;
@@ -6288,7 +6294,7 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         // Y is actually Lambda (X + Y/X) here
         Lx := RawXCoord;
@@ -6324,7 +6330,8 @@ begin
   end;
 
   case CurveCoordinateSystem of
-    TECCurve.COORD_LAMBDA_AFFINE, TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_AFFINE,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         Lx := RawXCoord;
         L := RawYCoord;
@@ -6372,7 +6379,7 @@ begin
   x1 := RawXCoord;
 
   case coord of
-    TECCurve.COORD_AFFINE, TECCurve.COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         Y1 := RawYCoord;
         result := ecCurve.CreateRawPoint(x1.Square(), Y1.Square(), IsCompressed)
@@ -6380,7 +6387,8 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_HOMOGENEOUS, TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_HOMOGENEOUS,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         Y1 := RawYCoord;
         Z1 := RawZCoords[0];
@@ -6417,7 +6425,7 @@ begin
   x1 := RawXCoord;
 
   case coord of
-    TECCurve.COORD_AFFINE, TECCurve.COORD_LAMBDA_AFFINE:
+    TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         Y1 := RawYCoord;
         result := ecCurve.CreateRawPoint(x1.SquarePow(pow), Y1.SquarePow(pow),
@@ -6425,7 +6433,8 @@ begin
         Exit;
       end;
 
-    TECCurve.COORD_HOMOGENEOUS, TECCurve.COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_HOMOGENEOUS,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       begin
         Y1 := RawYCoord;
         Z1 := RawZCoords[0];
