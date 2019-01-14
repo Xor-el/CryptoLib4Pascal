@@ -33,6 +33,7 @@ uses
   ClpIECC,
   ClpWTauNafMultiplier,
   ClpCryptoLibTypes,
+  ClpECCurveConstants,
   ClpISecT283Custom;
 
 resourcestring
@@ -271,7 +272,7 @@ type
     end;
 
   const
-    SECT283K1_DEFAULT_COORDS = Int32(TECCurve.COORD_LAMBDA_PROJECTIVE);
+    SECT283K1_DEFAULT_COORDS = Int32(TECCurveConstants.COORD_LAMBDA_PROJECTIVE);
     SECT283K1_FE_LONGS = Int32(5);
 
     function GetM: Int32; inline;
@@ -1520,7 +1521,7 @@ end;
 function TSecT283K1Curve.SupportsCoordinateSystem(coord: Int32): Boolean;
 begin
   case coord of
-    COORD_LAMBDA_PROJECTIVE:
+    TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
       result := true
   else
     result := false;

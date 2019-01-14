@@ -39,6 +39,7 @@ uses
   ClpRandomDsaKCalculator,
   ClpIECKeyParameters,
   ClpIDsaKCalculator,
+  ClpECCurveConstants,
   ClpIDsaExt,
   ClpIECDsaSigner;
 
@@ -229,14 +230,15 @@ function TECDsaSigner.GetDenominator(coordinateSystem: Int32; const p: IECPoint)
   : IECFieldElement;
 begin
   case (coordinateSystem) of
-    TECCurve.COORD_HOMOGENEOUS, TECCurve.COORD_LAMBDA_PROJECTIVE,
-      TECCurve.COORD_SKEWED:
+    TECCurveConstants.COORD_HOMOGENEOUS,
+      TECCurveConstants.COORD_LAMBDA_PROJECTIVE, TECCurveConstants.COORD_SKEWED:
       begin
         Result := p.GetZCoord(0);
       end;
 
-    TECCurve.COORD_JACOBIAN, TECCurve.COORD_JACOBIAN_CHUDNOVSKY,
-      TECCurve.COORD_JACOBIAN_MODIFIED:
+    TECCurveConstants.COORD_JACOBIAN,
+      TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,
+      TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
         Result := p.GetZCoord(0).Square();
       end

@@ -32,6 +32,7 @@ uses
   ClpArrayUtils,
   ClpIECC,
   ClpCryptoLibTypes,
+  ClpECCurveConstants,
   ClpISecP521R1Custom;
 
 resourcestring
@@ -229,7 +230,7 @@ type
     end;
 
   const
-    SECP521R1_DEFAULT_COORDS = Int32(TECCurve.COORD_JACOBIAN);
+    SECP521R1_DEFAULT_COORDS = Int32(TECCurveConstants.COORD_JACOBIAN);
     SECP521R1_FE_INTS = Int32(17);
 
   var
@@ -1059,7 +1060,7 @@ end;
 function TSecP521R1Curve.SupportsCoordinateSystem(coord: Int32): Boolean;
 begin
   case coord of
-    COORD_JACOBIAN:
+    TECCurveConstants.COORD_JACOBIAN:
       result := true
   else
     result := false;
