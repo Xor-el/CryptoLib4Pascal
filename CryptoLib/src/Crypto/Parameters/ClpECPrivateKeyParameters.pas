@@ -54,7 +54,7 @@ type
 
     property d: TBigInteger read GetD;
 
-    function Equals(const other: IECPrivateKeyParameters): Boolean; reintroduce;
+    function Equals(const other: IECPrivateKeyParameters): Boolean; reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 

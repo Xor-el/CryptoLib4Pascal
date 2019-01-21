@@ -37,6 +37,7 @@ type
   var
     Fderivation, Fencoding: TCryptoLibByteArray;
     FmacKeySize: Int32;
+  strict protected
     function GetMacKeySize(): Int32; inline;
   public
     function GetDerivationV(): TCryptoLibByteArray; inline;

@@ -32,7 +32,6 @@ type
 
   strict private
     Fparameters: IX9ECParameters;
-    function GetParameters: IX9ECParameters; inline;
 
     class var
 
@@ -43,6 +42,7 @@ type
     class destructor DestroyX9ECParametersHolder();
 
   strict protected
+    function GetParameters: IX9ECParameters; inline;
     function CreateParameters(): IX9ECParameters; virtual; abstract;
 
   public

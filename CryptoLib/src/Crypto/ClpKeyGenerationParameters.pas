@@ -41,6 +41,8 @@ type
     FRandom: ISecureRandom;
     FStrength: Int32;
 
+  strict protected
+
     /// <returns>
     /// return the generators random source.
     /// </returns>

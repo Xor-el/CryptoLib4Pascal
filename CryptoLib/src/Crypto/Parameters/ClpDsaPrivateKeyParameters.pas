@@ -45,7 +45,7 @@ type
     constructor Create(const x: TBigInteger; const parameters: IDsaParameters);
 
     function Equals(const other: IDsaPrivateKeyParameters): Boolean;
-      reintroduce;
+      reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 

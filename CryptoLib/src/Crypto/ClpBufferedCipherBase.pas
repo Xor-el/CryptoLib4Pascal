@@ -54,13 +54,12 @@ type
   const
     BUFFER_SIZE = Int32(64 * 1024); // 64Kb
 
+  strict protected
+
     function GetBufferSize: Int32; inline;
     procedure SetBufferSize(value: Int32); inline;
     function GetOnProgress: TBufferedCipherProgressEvent; inline;
     procedure SetOnProgress(const value: TBufferedCipherProgressEvent); inline;
-
-  strict protected
-
     procedure DoProgress(AProcessed, ATotal: Int64); virtual;
 
     class property EmptyBuffer: TCryptoLibByteArray read GetEmptyBuffer;

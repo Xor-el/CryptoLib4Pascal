@@ -53,8 +53,6 @@ type
 
     FisAndroidStyle, FisClasspathStyle, FisRegularStyle: Boolean;
 
-    function GetIsExhausted: Boolean; inline;
-
     class procedure Boot(); static;
     class constructor FixedSecureRandom();
 
@@ -75,6 +73,7 @@ type
     const v: TCryptoLibByteArray): TCryptoLibByteArray; static;
 
   strict protected
+    function GetIsExhausted: Boolean; inline;
     constructor Create(const data: TCryptoLibByteArray); overload;
 
   public
@@ -89,7 +88,7 @@ type
     strict private
     var
       Fdata: TCryptoLibByteArray;
-
+    strict protected
       function GetData: TCryptoLibByteArray; inline;
 
     public
