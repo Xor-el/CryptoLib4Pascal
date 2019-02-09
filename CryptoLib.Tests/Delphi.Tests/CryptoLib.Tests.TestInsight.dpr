@@ -1,4 +1,4 @@
-program CryptoLib.Tests;
+program CryptoLib.Tests.TestInsight;
 {
 
   Delphi DUnit Test Project
@@ -16,10 +16,7 @@ program CryptoLib.Tests;
 {$ENDIF}
 
 uses
-  Forms,
-  TestFramework,
-  GUITestRunner,
-  TextTestRunner,
+  TestInsight.DUnit,
   ClpECGost3410NamedCurves in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpECGost3410NamedCurves.pas',
   ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
   ClpNistObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Nist\ClpNistObjectIdentifiers.pas',
@@ -334,10 +331,6 @@ uses
 
 begin
 
-  Application.Initialize;
-  if IsConsole then
-    TextTestRunner.RunRegisteredTests
-  else
-    GUITestRunner.RunRegisteredTests;
+  TestInsight.DUnit.RunRegisteredTests;
 
 end.
