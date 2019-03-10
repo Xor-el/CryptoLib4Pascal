@@ -94,7 +94,7 @@ uses
   ClpIAsn1Objects, ClpBlockCipherModes, ClpECCurveConstants, 
   ClpIBlockCipherModes, ClpIPaddingModes, ClpISecP256K1Custom, 
   ClpISecP256R1Custom, ClpISecP384R1Custom, ClpISecP521R1Custom, 
-  ClpISecT283Custom, ClpPaddingModes, ClpIECC;
+  ClpISecT283Custom, ClpPaddingModes, ClpIECC, ClpISpeckEngine, ClpSpeckEngine;
 
 implementation
 

@@ -19,13 +19,13 @@
         </Optimizations>
       </CodeGeneration>
     </CompilerOptions>
-    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES ."/>
+    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES, Blowfish, Speck Encryption and Decryption (With various modes and paddings) and ECIES."/>
     <License Value="MIT License                          
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="2" Minor="9"/>
-    <Files Count="269">
+    <Version Major="3"/>
+    <Files Count="271">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1104,6 +1104,14 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Interfaces\ClpIECC.pas"/>
         <UnitName Value="ClpIECC"/>
       </Item269>
+      <Item270>
+        <Filename Value="..\..\Interfaces\ClpISpeckEngine.pas"/>
+        <UnitName Value="ClpISpeckEngine"/>
+      </Item270>
+      <Item271>
+        <Filename Value="..\..\Crypto\Engines\ClpSpeckEngine.pas"/>
+        <UnitName Value="ClpSpeckEngine"/>
+      </Item271>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

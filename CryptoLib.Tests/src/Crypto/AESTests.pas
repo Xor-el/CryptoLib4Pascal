@@ -227,8 +227,7 @@ begin
 
   // // Set up
   engine := TAesEngine.Create();
-  blockCipher := TCbcBlockCipher.Create(engine); // CBC
-  // no padding
+  blockCipher := TCbcBlockCipher.Create(engine); // CBC no padding
   cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
 
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CBC)
@@ -296,8 +295,8 @@ begin
 
   // // Set up
   engine := TAesEngine.Create();
-  blockCipher := TCfbBlockCipher.Create(engine, engine.GetBlockSize * 8); // CFB
-  // no padding
+  // CFB no padding
+  blockCipher := TCfbBlockCipher.Create(engine, engine.GetBlockSize * 8);
   cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
 
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CFB)
@@ -329,8 +328,7 @@ begin
 
   // // Set up
   engine := TAesEngine.Create();
-  blockCipher := TSicBlockCipher.Create(engine); // CTR
-  // no padding
+  blockCipher := TSicBlockCipher.Create(engine); // CTR no padding
   cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
 
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CTR)
@@ -362,8 +360,7 @@ begin
 
   // // Set up
   engine := TAesEngine.Create();
-  blockCipher := engine as IBlockCipher; // ECB
-  // no padding
+  blockCipher := engine as IBlockCipher; // ECB no padding
   cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
 
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_ECB)
@@ -393,8 +390,8 @@ begin
 
   // // Set up
   engine := TAesEngine.Create();
-  blockCipher := TOfbBlockCipher.Create(engine, engine.GetBlockSize * 8); // OFB
-  // no padding
+  // OFB no padding
+  blockCipher := TOfbBlockCipher.Create(engine, engine.GetBlockSize * 8);
   cipher := TBufferedBlockCipher.Create(blockCipher) as IBufferedBlockCipher;
 
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_OFB)

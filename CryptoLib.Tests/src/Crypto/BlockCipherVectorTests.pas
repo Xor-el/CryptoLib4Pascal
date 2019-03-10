@@ -33,6 +33,7 @@ uses
 {$ENDIF FPC}
   AESTestVectors,
   BlowfishTestVectors,
+  SpeckTestVectors,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpAesEngine,
@@ -41,6 +42,8 @@ uses
   ClpIAesLightEngine,
   ClpBlowfishEngine,
   ClpIBlowfishEngine,
+  ClpSpeckEngine,
+  ClpISpeckEngine,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -78,6 +81,11 @@ type
     procedure TestBlockCipherAESEngine;
     procedure TestBlockCipherAESLightEngine;
     procedure TestBlockCipherBlowfishEngine;
+    procedure TestBlockCipherSpeck32Engine;
+    procedure TestBlockCipherSpeck48Engine;
+    procedure TestBlockCipherSpeck64Engine;
+    procedure TestBlockCipherSpeck96Engine;
+    procedure TestBlockCipherSpeck128Engine;
     procedure TestBadParameters;
 
   end;
@@ -245,6 +253,86 @@ begin
       (THex.Decode(TBlowfishTestVectors.FBlockCipherVectorKeys[I]))
       as IKeyParameter, TBlowfishTestVectors.FBlockCipherVectorInputs[I],
       TBlowfishTestVectors.FBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck32Engine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck32BlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck32BlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck32Engine.Create() as ISpeckEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck32BlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck32BlockCipherVectorInputs[I],
+      TSpeckTestVectors.FSpeck32BlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck48Engine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck48BlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck48BlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck48Engine.Create() as ISpeckEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck48BlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck48BlockCipherVectorInputs[I],
+      TSpeckTestVectors.FSpeck48BlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck64Engine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck64BlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck64BlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck64Engine.Create() as ISpeckEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck64BlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck64BlockCipherVectorInputs[I],
+      TSpeckTestVectors.FSpeck64BlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck96Engine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck96BlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck96BlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck96Engine.Create() as ISpeckEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck96BlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck96BlockCipherVectorInputs[I],
+      TSpeckTestVectors.FSpeck96BlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck128Engine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck128BlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck128BlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck128Engine.Create() as ISpeckEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck128BlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck128BlockCipherVectorInputs[I],
+      TSpeckTestVectors.FSpeck128BlockCipherVectorOutputs[I]);
   end;
 
 end;

@@ -79,33 +79,33 @@ begin
   inherited;
 
   Fkeys := TCryptoLibMatrixByteArray.Create
-    (THex.Decode('2b7e151628aed2a6abf7158809cf4f3c'),
-    THex.Decode('8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b'),
+    (THex.Decode('2B7E151628AED2A6ABF7158809CF4F3C'),
+    THex.Decode('8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B'),
     THex.Decode
-    ('603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4'));
+    ('603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4'));
 
   Fplain := TCryptoLibMatrixByteArray.Create
-    (THex.Decode('6bc1bee22e409f96e93d7e117393172a'),
-    THex.Decode('ae2d8a571e03ac9c9eb76fac45af8e51'),
-    THex.Decode('30c81c46a35ce411e5fbc1191a0a52ef'),
-    THex.Decode('f69f2445df4f9b17ad2b417be66c3710'));
+    (THex.Decode('6BC1BEE22E409F96E93D7E117393172A'),
+    THex.Decode('AE2D8A571E03AC9C9EB76FAC45AF8E51'),
+    THex.Decode('30C81C46A35CE411E5FBC1191A0A52EF'),
+    THex.Decode('F69F2445DF4F9B17AD2B417BE66C3710'));
 
   Fcipher := TCryptoLibGenericArray<TCryptoLibMatrixByteArray>.Create
     (TCryptoLibMatrixByteArray.Create
-    (THex.Decode('874d6191b620e3261bef6864990db6ce'),
-    THex.Decode('9806f66b7970fdff8617187bb9fffdff'),
-    THex.Decode('5ae4df3edbd5d35e5b4f09020db03eab'),
-    THex.Decode('1e031dda2fbe03d1792170a0f3009cee')),
+    (THex.Decode('874D6191B620E3261BEF6864990DB6CE'),
+    THex.Decode('9806F66B7970FDFF8617187BB9FFFDFF'),
+    THex.Decode('5AE4DF3EDBD5D35E5B4F09020DB03EAB'),
+    THex.Decode('1E031DDA2FBE03D1792170A0F3009CEE')),
     TCryptoLibMatrixByteArray.Create
-    (THex.Decode('1abc932417521ca24f2b0459fe7e6e0b'),
-    THex.Decode('090339ec0aa6faefd5ccc2c6f4ce8e94'),
-    THex.Decode('1e36b26bd1ebc670d1bd1d665620abf7'),
-    THex.Decode('4f78a7f6d29809585a97daec58c6b050')),
+    (THex.Decode('1ABC932417521CA24F2B0459FE7E6E0B'),
+    THex.Decode('090339EC0AA6FAEFD5CCC2C6F4CE8E94'),
+    THex.Decode('1E36B26BD1EBC670D1BD1D665620ABF7'),
+    THex.Decode('4F78A7F6D29809585A97DAEC58C6B050')),
     TCryptoLibMatrixByteArray.Create
-    (THex.Decode('601ec313775789a5b7a7f504bbf3d228'),
-    THex.Decode('f443e3ca4d62b59aca84e990cacaf5c5'),
-    THex.Decode('2b0930daa23de94ce87017ba2d84988d'),
-    THex.Decode('dfc9c58db67aada613c2dd08457941a6')));
+    (THex.Decode('601EC313775789A5B7A7F504BBF3D228'),
+    THex.Decode('F443E3CA4D62B59ACA84E990CACAF5C5'),
+    THex.Decode('2B0930DAA23DE94CE87017BA2D84988D'),
+    THex.Decode('DFC9C58DB67AADA613C2DD08457941A6')));
 end;
 
 procedure TTestAESSIC.TearDown;
