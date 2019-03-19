@@ -19,13 +19,13 @@
         </Optimizations>
       </CodeGeneration>
     </CompilerOptions>
-    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES, Blowfish, Speck Encryption and Decryption (With various modes and paddings) and ECIES."/>
+    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES, Blowfish and Speck Block Encryption and Decryption (With various modes and paddings), Salsa20, XSalsa20, ChaCha Stream Ciphers and ECIES."/>
     <License Value="MIT License                          
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="3"/>
-    <Files Count="271">
+    <Version Major="3" Minor="1"/>
+    <Files Count="279">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1112,6 +1112,38 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\Engines\ClpSpeckEngine.pas"/>
         <UnitName Value="ClpSpeckEngine"/>
       </Item271>
+      <Item272>
+        <Filename Value="..\..\Interfaces\ClpIBufferedStreamCipher.pas"/>
+        <UnitName Value="ClpIBufferedStreamCipher"/>
+      </Item272>
+      <Item273>
+        <Filename Value="..\..\Interfaces\ClpIChaChaEngine.pas"/>
+        <UnitName Value="ClpIChaChaEngine"/>
+      </Item273>
+      <Item274>
+        <Filename Value="..\..\Interfaces\ClpIXSalsa20Engine.pas"/>
+        <UnitName Value="ClpIXSalsa20Engine"/>
+      </Item274>
+      <Item275>
+        <Filename Value="..\..\Interfaces\ClpISalsa20Engine.pas"/>
+        <UnitName Value="ClpISalsa20Engine"/>
+      </Item275>
+      <Item276>
+        <Filename Value="..\..\Crypto\ClpBufferedStreamCipher.pas"/>
+        <UnitName Value="ClpBufferedStreamCipher"/>
+      </Item276>
+      <Item277>
+        <Filename Value="..\..\Crypto\Engines\ClpSalsa20Engine.pas"/>
+        <UnitName Value="ClpSalsa20Engine"/>
+      </Item277>
+      <Item278>
+        <Filename Value="..\..\Crypto\Engines\ClpXSalsa20Engine.pas"/>
+        <UnitName Value="ClpXSalsa20Engine"/>
+      </Item278>
+      <Item279>
+        <Filename Value="..\..\Crypto\Engines\ClpChaChaEngine.pas"/>
+        <UnitName Value="ClpChaChaEngine"/>
+      </Item279>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

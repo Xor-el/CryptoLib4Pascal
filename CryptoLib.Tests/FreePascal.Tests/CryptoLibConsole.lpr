@@ -51,6 +51,10 @@ uses
   PaddingTests,
   DSATests,
   DeterministicDsaTests,
+  Salsa20Tests,
+  XSalsa20Tests,
+  ChaChaTests,
+  StreamCipherResetTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

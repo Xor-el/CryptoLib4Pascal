@@ -283,6 +283,15 @@ uses
   ClpECCurveConstants in '..\..\CryptoLib\src\Math\EC\ClpECCurveConstants.pas',
   ClpAsn1Objects in '..\..\CryptoLib\src\Asn1\ClpAsn1Objects.pas',
   ClpSignersEncodings in '..\..\CryptoLib\src\Crypto\Signers\SignersEncodings\ClpSignersEncodings.pas',
+  ClpIStreamCipher in '..\..\CryptoLib\src\Interfaces\ClpIStreamCipher.pas',
+  ClpBufferedStreamCipher in '..\..\CryptoLib\src\Crypto\ClpBufferedStreamCipher.pas',
+  ClpIBufferedStreamCipher in '..\..\CryptoLib\src\Interfaces\ClpIBufferedStreamCipher.pas',
+  ClpSalsa20Engine in '..\..\CryptoLib\src\Crypto\Engines\ClpSalsa20Engine.pas',
+  ClpISalsa20Engine in '..\..\CryptoLib\src\Interfaces\ClpISalsa20Engine.pas',
+  ClpIXSalsa20Engine in '..\..\CryptoLib\src\Interfaces\ClpIXSalsa20Engine.pas',
+  ClpXSalsa20Engine in '..\..\CryptoLib\src\Crypto\Engines\ClpXSalsa20Engine.pas',
+  ClpIChaChaEngine in '..\..\CryptoLib\src\Interfaces\ClpIChaChaEngine.pas',
+  ClpChaChaEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpChaChaEngine.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
@@ -331,7 +340,11 @@ uses
   StringTests in '..\src\Asn1\StringTests.pas',
   ParsingTests in '..\src\Asn1\ParsingTests.pas',
   ParseTests in '..\src\Asn1\ParseTests.pas',
-  EnumeratedTests in '..\src\Asn1\EnumeratedTests.pas';
+  EnumeratedTests in '..\src\Asn1\EnumeratedTests.pas',
+  Salsa20Tests in '..\src\Crypto\Salsa20Tests.pas',
+  ChaChaTests in '..\src\Crypto\ChaChaTests.pas',
+  XSalsa20Tests in '..\src\Crypto\XSalsa20Tests.pas',
+  StreamCipherResetTests in '..\src\Crypto\StreamCipherResetTests.pas';
 
 begin
 

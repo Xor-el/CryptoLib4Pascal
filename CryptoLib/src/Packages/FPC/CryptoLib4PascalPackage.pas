@@ -94,7 +94,10 @@ uses
   ClpIAsn1Objects, ClpBlockCipherModes, ClpECCurveConstants, 
   ClpIBlockCipherModes, ClpIPaddingModes, ClpISecP256K1Custom, 
   ClpISecP256R1Custom, ClpISecP384R1Custom, ClpISecP521R1Custom, 
-  ClpISecT283Custom, ClpPaddingModes, ClpIECC, ClpISpeckEngine, ClpSpeckEngine;
+  ClpISecT283Custom, ClpPaddingModes, ClpIECC, ClpISpeckEngine, 
+  ClpSpeckEngine, ClpIBufferedStreamCipher, ClpIChaChaEngine, 
+  ClpIXSalsa20Engine, ClpISalsa20Engine, ClpBufferedStreamCipher, 
+  ClpSalsa20Engine, ClpXSalsa20Engine, ClpChaChaEngine;
 
 implementation
 
