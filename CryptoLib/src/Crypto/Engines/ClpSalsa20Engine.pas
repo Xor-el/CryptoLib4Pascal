@@ -28,7 +28,6 @@ uses
   ClpISalsa20Engine,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpConverters,
   ClpCryptoLibTypes;
