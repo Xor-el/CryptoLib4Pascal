@@ -71,10 +71,10 @@ type
   type
 {$SCOPEDENUMS ON}
     TCipherAlgorithm = (AES, BLOWFISH, SALSA20);
-    TCipherMode = (NONE, CBC, CFB, CTR, ECB, OFB, SIC);
+    TCipherMode = (NONE, CBC, CFB, CTR, CTS, ECB, OFB, SIC);
     TCipherPadding = (NOPADDING, ISO10126PADDING, ISO10126D2PADDING,
       ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, PKCS5,
-      PKCS5PADDING, PKCS7, PKCS7PADDING, TBCPADDING, X923PADDING,
+      PKCS5PADDING, PKCS7, PKCS7PADDING, TBCPADDING, WITHCTS, X923PADDING,
       ZEROBYTEPADDING);
 {$SCOPEDENUMS OFF}
 
@@ -192,7 +192,7 @@ class function TCipherUtilities.GetCipher(algorithm: String): IBufferedCipher;
 var
   aliased, algorithmName, temp, paddingName, mode, modeName: string;
   di, LowPoint, bits, HighPoint: Int32;
-  padded: Boolean;
+  padded, CTS: Boolean;
   parts: TCryptoLibStringArray;
   cipherAlgorithm: TCipherAlgorithm;
   cipherPadding: TCipherPadding;
@@ -263,6 +263,7 @@ begin
     Exit;
   end;
 
+  CTS := False;
   padded := true;
   padding := Nil;
 
@@ -280,7 +281,7 @@ begin
     case cipherPadding of
       TCipherPadding.NOPADDING:
         begin
-          padded := false;
+          padded := False;
         end;
 
       TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING,
@@ -303,6 +304,11 @@ begin
       TCipherPadding.TBCPADDING:
         begin
           padding := TTBCPadding.Create() as ITBCPadding;
+        end;
+
+      TCipherPadding.WITHCTS:
+        begin
+          CTS := true;
         end;
 
       TCipherPadding.X923PADDING:
@@ -393,6 +399,12 @@ begin
           blockCipher := TSicBlockCipher.Create(blockCipher) as ISicBlockCipher;
         end;
 
+      TCipherMode.CTS:
+        begin
+          CTS := true;
+          blockCipher := TCbcBlockCipher.Create(blockCipher) as ICbcBlockCipher;
+        end;
+
       TCipherMode.OFB:
         begin
           if (di < 0) then
@@ -432,6 +444,12 @@ begin
 
   if (blockCipher <> Nil) then
   begin
+
+    if (CTS) then
+    begin
+      Result := TCtsBlockCipher.Create(blockCipher) as ICtsBlockCipher;
+      Exit;
+    end;
 
     if (padding <> Nil) then
     begin

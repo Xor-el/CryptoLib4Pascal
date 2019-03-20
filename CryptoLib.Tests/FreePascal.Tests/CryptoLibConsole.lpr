@@ -55,6 +55,7 @@ uses
   XSalsa20Tests,
   ChaChaTests,
   StreamCipherResetTests,
+  CTSTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
