@@ -32,12 +32,15 @@ uses
   TestFramework,
 {$ENDIF FPC}
   AESTestVectors,
+  RijndaelTestVectors,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpAesEngine,
   ClpIAesEngine,
   ClpAesLightEngine,
   ClpIAesLightEngine,
+  ClpRijndaelEngine,
+  ClpIRijndaelEngine,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpBufferedBlockCipher,
@@ -73,6 +76,7 @@ type
 
     procedure TestBlockCipherAESEngine;
     procedure TestBlockCipherAESLightEngine;
+    procedure TestBlockCipherRijndaelEngine;
 
   end;
 
@@ -177,6 +181,26 @@ begin
       (THex.Decode(TAESTestVectors.FBlockCipherMonteCarloKeys[i]))
       as IKeyParameter, TAESTestVectors.FBlockCipherMonteCarloInputs[i],
       TAESTestVectors.FBlockCipherMonteCarloOutputs[i]);
+  end;
+
+end;
+
+procedure TTestBlockCipherMonteCarlo.TestBlockCipherRijndaelEngine;
+var
+  i: Int32;
+begin
+  for i := System.Low(TRijndaelTestVectors.FBlockCipherMonteCarloKeys)
+    to System.High(TRijndaelTestVectors.FBlockCipherMonteCarloKeys) do
+  begin
+    DoBlockCipherMonteCarloTest
+      (TRijndaelTestVectors.FBlockCipherMonteCarloIterations[i],
+      TRijndaelEngine.Create
+      (StrToInt(TRijndaelTestVectors.FBlockCipherMonteCarloBlockSizes[i]))
+      as IRijndaelEngine,
+      TKeyParameter.Create
+      (THex.Decode(TRijndaelTestVectors.FBlockCipherMonteCarloKeys[i]))
+      as IKeyParameter, TRijndaelTestVectors.FBlockCipherMonteCarloInputs[i],
+      TRijndaelTestVectors.FBlockCipherMonteCarloOutputs[i]);
   end;
 
 end;

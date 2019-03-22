@@ -32,6 +32,7 @@ uses
   AESTestVectors,
   BlowfishTestVectors,
   SpeckTestVectors,
+  RijndaelTestVectors,
   AESSICTests,
   SPECKTests,
   IESCipherTests,

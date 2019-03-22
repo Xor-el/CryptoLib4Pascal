@@ -34,6 +34,7 @@ uses
   AESTestVectors,
   BlowfishTestVectors,
   SpeckTestVectors,
+  RijndaelTestVectors,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpAesEngine,
@@ -44,6 +45,8 @@ uses
   ClpIBlowfishEngine,
   ClpSpeckEngine,
   ClpISpeckEngine,
+  ClpRijndaelEngine,
+  ClpIRijndaelEngine,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -86,6 +89,7 @@ type
     procedure TestBlockCipherSpeck64Engine;
     procedure TestBlockCipherSpeck96Engine;
     procedure TestBlockCipherSpeck128Engine;
+    procedure TestBlockCipherRijndaelEngine;
     procedure TestBadParameters;
 
   end;
@@ -253,6 +257,25 @@ begin
       (THex.Decode(TBlowfishTestVectors.FBlockCipherVectorKeys[I]))
       as IKeyParameter, TBlowfishTestVectors.FBlockCipherVectorInputs[I],
       TBlowfishTestVectors.FBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherRijndaelEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TRijndaelTestVectors.FBlockCipherVectorKeys)
+    to System.High(TRijndaelTestVectors.FBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest
+      (TRijndaelEngine.Create
+      (StrToInt(TRijndaelTestVectors.FBlockCipherVectorBlockSizes[I]))
+      as IRijndaelEngine,
+      TKeyParameter.Create
+      (THex.Decode(TRijndaelTestVectors.FBlockCipherVectorKeys[I]))
+      as IKeyParameter, TRijndaelTestVectors.FBlockCipherVectorInputs[I],
+      TRijndaelTestVectors.FBlockCipherVectorOutputs[I]);
   end;
 
 end;

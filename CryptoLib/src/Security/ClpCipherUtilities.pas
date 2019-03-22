@@ -48,6 +48,8 @@ uses
   ClpIBlowfishEngine,
   ClpSalsa20Engine,
   ClpISalsa20Engine,
+  ClpRijndaelEngine,
+  ClpIRijndaelEngine,
   ClpIBlockCipherPadding;
 
 resourcestring
@@ -70,7 +72,7 @@ type
 
   type
 {$SCOPEDENUMS ON}
-    TCipherAlgorithm = (AES, BLOWFISH, SALSA20);
+    TCipherAlgorithm = (AES, BLOWFISH, SALSA20, RIJNDAEL);
     TCipherMode = (NONE, CBC, CFB, CTR, CTS, ECB, OFB, SIC);
     TCipherPadding = (NOPADDING, ISO10126PADDING, ISO10126D2PADDING,
       ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, PKCS5,
@@ -238,6 +240,10 @@ begin
     TCipherAlgorithm.BLOWFISH:
       begin
         blockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
+      end;
+    TCipherAlgorithm.RIJNDAEL:
+      begin
+        blockCipher := TRijndaelEngine.Create() as IRijndaelEngine;
       end;
     TCipherAlgorithm.SALSA20:
       begin

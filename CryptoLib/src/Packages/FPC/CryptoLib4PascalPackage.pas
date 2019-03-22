@@ -97,7 +97,8 @@ uses
   ClpISecT283Custom, ClpPaddingModes, ClpIECC, ClpISpeckEngine, 
   ClpSpeckEngine, ClpIBufferedStreamCipher, ClpIChaChaEngine, 
   ClpIXSalsa20Engine, ClpISalsa20Engine, ClpBufferedStreamCipher, 
-  ClpSalsa20Engine, ClpXSalsa20Engine, ClpChaChaEngine;
+  ClpSalsa20Engine, ClpXSalsa20Engine, ClpChaChaEngine, ClpIRijndaelEngine, 
+  ClpRijndaelEngine;
 
 implementation
 

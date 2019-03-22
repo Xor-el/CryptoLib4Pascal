@@ -282,6 +282,8 @@ uses
   ClpXSalsa20Engine in '..\..\CryptoLib\src\Crypto\Engines\ClpXSalsa20Engine.pas',
   ClpIChaChaEngine in '..\..\CryptoLib\src\Interfaces\ClpIChaChaEngine.pas',
   ClpChaChaEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpChaChaEngine.pas',
+  ClpRijndaelEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRijndaelEngine.pas',
+  ClpIRijndaelEngine in '..\..\CryptoLib\src\Interfaces\ClpIRijndaelEngine.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin
