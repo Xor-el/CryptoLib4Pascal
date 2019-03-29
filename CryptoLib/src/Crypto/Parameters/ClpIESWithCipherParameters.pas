@@ -58,30 +58,12 @@ type
     /// <param name="CipherKeySize">
     /// the key size (in bits) for the block cipher.
     /// </param>
-    constructor Create(const derivation, encoding: TCryptoLibByteArray;
-      macKeySize, CipherKeySize: Int32); overload;
-
-    /// <summary>
-    /// Set the IES engine parameters.
-    /// </summary>
-    /// <param name="derivation">
-    /// the optional derivation vector for the KDF.
-    /// </param>
-    /// <param name="encoding">
-    /// the optional encoding vector for the KDF.
-    /// </param>
-    /// <param name="macKeySize">
-    /// the key size (in bits) for the MAC.
-    /// </param>
-    /// <param name="CipherKeySize">
-    /// the key size (in bits) for the block cipher.
-    /// </param>
     /// <param name="nonce">
     /// an IV to use initialising the block cipher.
     /// </param>
     constructor Create(const derivation, encoding: TCryptoLibByteArray;
       macKeySize, CipherKeySize: Int32;
-      const nonce: TCryptoLibByteArray); overload;
+      const nonce: TCryptoLibByteArray = Nil); overload;
 
     /// <summary>
     /// Set the IES engine parameters.
@@ -150,12 +132,6 @@ end;
 function TIESWithCipherParameters.GetPointCompression: Boolean;
 begin
   Result := FusePointCompression;
-end;
-
-constructor TIESWithCipherParameters.Create(const derivation,
-  encoding: TCryptoLibByteArray; macKeySize, CipherKeySize: Int32);
-begin
-  Create(derivation, encoding, macKeySize, CipherKeySize, Nil);
 end;
 
 constructor TIESWithCipherParameters.Create(const derivation,
