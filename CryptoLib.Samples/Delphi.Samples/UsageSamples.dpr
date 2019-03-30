@@ -284,6 +284,9 @@ uses
   ClpChaChaEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpChaChaEngine.pas',
   ClpRijndaelEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRijndaelEngine.pas',
   ClpIRijndaelEngine in '..\..\CryptoLib\src\Interfaces\ClpIRijndaelEngine.pas',
+  ClpIAlgorithmParameterSpec in '..\..\CryptoLib\src\Interfaces\ClpIAlgorithmParameterSpec.pas',
+  ClpIIESParameterSpec in '..\..\CryptoLib\src\Interfaces\ClpIIESParameterSpec.pas',
+  ClpIESParameterSpec in '..\..\CryptoLib\src\Crypto\Parameters\ClpIESParameterSpec.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

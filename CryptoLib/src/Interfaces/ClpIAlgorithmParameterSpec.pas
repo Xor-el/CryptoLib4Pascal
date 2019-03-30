@@ -15,31 +15,15 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIIESWithCipherParameters;
+unit ClpIAlgorithmParameterSpec;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  ClpIIESParameters,
-  ClpCryptoLibTypes;
-
 type
-
-  IIESWithCipherParameters = interface(IIESParameters)
-    ['{77F38EA8-08F2-4D0D-A8E9-F3796DCCCA54}']
-
-    function GetCipherKeySize: Int32;
-
-    /// <summary>
-    /// Return the key size in bits for the block cipher used with the message
-    /// </summary>
-    /// <value>
-    /// the key size in bits for the block cipher used with the message
-    /// </value>
-    property CipherKeySize: Int32 read GetCipherKeySize;
-
+  IAlgorithmParameterSpec = interface(IInterface)
+    ['{FBA69725-AEFF-4B99-92C0-1819E5DE2DA1}']
   end;
 
 implementation

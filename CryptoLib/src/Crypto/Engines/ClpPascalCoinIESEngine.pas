@@ -34,7 +34,6 @@ uses
   ClpIEphemeralKeyPair,
   ClpKdfParameters,
   ClpIKdfParameters,
-  ClpIIESWithCipherParameters,
   ClpIESEngine,
   ClpArrayUtils,
   ClpBigInteger,

@@ -98,7 +98,8 @@ uses
   ClpSpeckEngine, ClpIBufferedStreamCipher, ClpIChaChaEngine, 
   ClpIXSalsa20Engine, ClpISalsa20Engine, ClpBufferedStreamCipher, 
   ClpSalsa20Engine, ClpXSalsa20Engine, ClpChaChaEngine, ClpIRijndaelEngine, 
-  ClpRijndaelEngine;
+  ClpRijndaelEngine, ClpIIESParameterSpec, ClpIAlgorithmParameterSpec, 
+  ClpIESParameterSpec;
 
 implementation
 
