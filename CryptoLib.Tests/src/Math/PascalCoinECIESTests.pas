@@ -62,7 +62,8 @@ type
 type
 
   /// <summary>
-  /// test for PascalCoinECIES - PascalCoin Elliptic Curve Integrated Encryption Scheme
+  /// Test for PascalCoin ECIES - PascalCoin Elliptic Curve Integrated Encryption Scheme
+  /// Test vectors were gotten from the PascalCoin TESTNET Wallet.
   /// </summary>
   TTestPascalCoinECIES = class(TCryptoLibTestCase)
   private
@@ -264,9 +265,10 @@ begin
     CipherDecrypt.Init(False, RecreatePrivateKeyFromByteArray(keyType,
       THex.Decode(RawPrivateKey)), GetPascalCoinIESParameterSpec(), FRandom);
     Result := String(TEncoding.ASCII.GetString
-      ((System.Copy(CipherDecrypt.DoFinal(THex.Decode(PayloadToDecrypt))))));
+      ((CipherDecrypt.DoFinal(THex.Decode(PayloadToDecrypt)))));
   except
     // should only happen if decryption fails
+    raise;
   end;
 end;
 
@@ -279,7 +281,7 @@ begin
   DecryptedPayload := DoPascalCoinECIESDecrypt(keyType, RawPrivateKey,
     PayloadToDecrypt);
   CheckEquals(ExpectedOutput, DecryptedPayload,
-    Format('Test %s Failed, Expected "%s" but got "%s"', [id + '_Encrypt',
+    Format('Test %s Failed, Expected "%s" but got "%s"', [id + '_Decrypt',
     ExpectedOutput, DecryptedPayload]));
 end;
 
