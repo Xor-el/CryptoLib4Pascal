@@ -48,6 +48,7 @@ uses
   Pkcs5Tests,
   HkdfGeneratorTests,
   ECIESTests,
+  PascalCoinECIESTests,
   ECNRTests,
   PaddingTests,
   DSATests,

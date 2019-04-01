@@ -77,7 +77,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="56">
+    <Units Count="57">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -303,6 +303,10 @@
         <Filename Value="..\src\Crypto\RijndaelTestVectors.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit55>
+      <Unit56>
+        <Filename Value="..\src\Math\PascalCoinECIESTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit56>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

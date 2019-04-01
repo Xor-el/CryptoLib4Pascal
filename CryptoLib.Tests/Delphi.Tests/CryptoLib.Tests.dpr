@@ -297,6 +297,9 @@ uses
   ClpChaChaEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpChaChaEngine.pas',
   ClpRijndaelEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRijndaelEngine.pas',
   ClpIRijndaelEngine in '..\..\CryptoLib\src\Interfaces\ClpIRijndaelEngine.pas',
+  ClpIAlgorithmParameterSpec in '..\..\CryptoLib\src\Interfaces\ClpIAlgorithmParameterSpec.pas',
+  ClpIIESParameterSpec in '..\..\CryptoLib\src\Interfaces\ClpIIESParameterSpec.pas',
+  ClpIESParameterSpec in '..\..\CryptoLib\src\Crypto\Parameters\ClpIESParameterSpec.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
@@ -351,7 +354,8 @@ uses
   ChaChaTests in '..\src\Crypto\ChaChaTests.pas',
   XSalsa20Tests in '..\src\Crypto\XSalsa20Tests.pas',
   StreamCipherResetTests in '..\src\Crypto\StreamCipherResetTests.pas',
-  CTSTests in '..\src\Crypto\CTSTests.pas';
+  CTSTests in '..\src\Crypto\CTSTests.pas',
+  PascalCoinECIESTests in '..\src\Math\PascalCoinECIESTests.pas';
 
 begin
 

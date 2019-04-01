@@ -351,7 +351,8 @@ uses
   ChaChaTests in '..\src\Crypto\ChaChaTests.pas',
   XSalsa20Tests in '..\src\Crypto\XSalsa20Tests.pas',
   StreamCipherResetTests in '..\src\Crypto\StreamCipherResetTests.pas',
-  CTSTests in '..\src\Crypto\CTSTests.pas';
+  CTSTests in '..\src\Crypto\CTSTests.pas',
+  PascalCoinECIESTests in '..\src\Math\PascalCoinECIESTests.pas';
 
 begin
 

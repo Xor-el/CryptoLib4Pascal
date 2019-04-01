@@ -166,11 +166,9 @@ begin
 end;
 
 procedure TTestCTS.TestExceptions;
-var
-  engine: IBufferedBlockCipher;
 begin
   try
-    engine := TCTSBlockCipher.Create(TSICBlockCipher.Create(TAESEngine.Create()
+    TCTSBlockCipher.Create(TSICBlockCipher.Create(TAESEngine.Create()
       as IAESEngine) as ISICBlockCipher);
     Fail('Expected CTS construction error - only ECB/CBC supported.');
   except
