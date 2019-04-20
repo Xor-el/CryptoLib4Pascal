@@ -207,6 +207,16 @@ type
   TCryptoLibMatrixUInt64Array = array of TCryptoLibUInt64Array;
 {$ENDIF DELPHIXE_UP}
 
+  TCustomArrayBuffer<T> = record
+  public
+    Data: TCryptoLibGenericArray<T>;
+    Length: Int32;
+    IsNil: Boolean;
+  end;
+
+const
+  EmptyBytesNotNil: TCustomArrayBuffer<Byte> = (Data: Nil; Length: 0; IsNil: False);
+
 implementation
 
 {$IFDEF FPC}

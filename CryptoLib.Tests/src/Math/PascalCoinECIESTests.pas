@@ -98,11 +98,11 @@ type
     function DoPascalCoinECIESDecrypt(keyType: TKeyType;
       const RawPrivateKey, PayloadToDecrypt: String): String;
 
-    procedure DoTestPascalCoinECIESDecrypt(id: String; keyType: TKeyType;
+    procedure DoTestPascalCoinECIESDecrypt(const id: String; keyType: TKeyType;
       const RawPrivateKey, PayloadToDecrypt, ExpectedOutput: String);
 
-    procedure DoTestPascalCoinECIESEncryptDecrypt(id: String; keyType: TKeyType;
-      const RawPrivateKey, RawAffineXCoord, RawAffineYCoord,
+    procedure DoTestPascalCoinECIESEncryptDecrypt(const id: String;
+      keyType: TKeyType; const RawPrivateKey, RawAffineXCoord, RawAffineYCoord,
       PayloadToEncrypt: String);
 
   protected
@@ -272,7 +272,7 @@ begin
   end;
 end;
 
-procedure TTestPascalCoinECIES.DoTestPascalCoinECIESDecrypt(id: String;
+procedure TTestPascalCoinECIES.DoTestPascalCoinECIESDecrypt(const id: String;
   keyType: TKeyType; const RawPrivateKey, PayloadToDecrypt,
   ExpectedOutput: String);
 var
@@ -285,9 +285,9 @@ begin
     ExpectedOutput, DecryptedPayload]));
 end;
 
-procedure TTestPascalCoinECIES.DoTestPascalCoinECIESEncryptDecrypt(id: String;
-  keyType: TKeyType; const RawPrivateKey, RawAffineXCoord, RawAffineYCoord,
-  PayloadToEncrypt: String);
+procedure TTestPascalCoinECIES.DoTestPascalCoinECIESEncryptDecrypt
+  (const id: String; keyType: TKeyType; const RawPrivateKey, RawAffineXCoord,
+  RawAffineYCoord, PayloadToEncrypt: String);
 var
   ActualOutput: String;
 begin
