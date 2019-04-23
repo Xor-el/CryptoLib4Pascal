@@ -208,14 +208,22 @@ type
 {$ENDIF DELPHIXE_UP}
 
   TCustomArrayBuffer<T> = record
+  private
+    FData: TCryptoLibGenericArray<T>;
+    FLength: Int32;
+    FIsNil: Boolean;
+
   public
-    Data: TCryptoLibGenericArray<T>;
-    Length: Int32;
-    IsNil: Boolean;
+    property Data: TCryptoLibGenericArray<T> read FData;
+    property Length: Int32 read FLength;
+    property IsNil: Boolean read FIsNil;
   end;
 
+  TCustomByteArrayBuffer = TCustomArrayBuffer<Byte>;
+
 const
-  EmptyBytesNotNil: TCustomArrayBuffer<Byte> = (Data: Nil; Length: 0; IsNil: False);
+  EmptyBytesNotNil: TCustomByteArrayBuffer = (FData: Nil; FLength: 0;
+    FIsNil: False);
 
 implementation
 
