@@ -207,23 +207,25 @@ type
   TCryptoLibMatrixUInt64Array = array of TCryptoLibUInt64Array;
 {$ENDIF DELPHIXE_UP}
 
-  TCustomArrayBuffer<T> = record
+  TCryptoLibCustomArrayBuffer<T> = record
   private
     FData: TCryptoLibGenericArray<T>;
     FLength: Int32;
     FIsNil: Boolean;
 
   public
-    property Data: TCryptoLibGenericArray<T> read FData;
-    property Length: Int32 read FLength;
-    property IsNil: Boolean read FIsNil;
+    property Data: TCryptoLibGenericArray<T> read FData write FData;
+    property Length: Int32 read FLength write FLength;
+    property IsNil: Boolean read FIsNil write FIsNil;
   end;
 
-  TCustomByteArrayBuffer = TCustomArrayBuffer<Byte>;
+  TCryptoLibCustomByteArrayBuffer = TCryptoLibCustomArrayBuffer<Byte>;
 
 const
-  EmptyBytesNotNil: TCustomByteArrayBuffer = (FData: Nil; FLength: 0;
+  EmptyBytesNotNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
     FIsNil: False);
+  EmptyBytesNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
+    FIsNil: True);
 
 implementation
 

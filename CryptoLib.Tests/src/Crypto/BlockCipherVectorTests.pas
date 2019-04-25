@@ -45,6 +45,8 @@ uses
   ClpIBlowfishEngine,
   ClpSpeckEngine,
   ClpISpeckEngine,
+  ClpSpeckLegacyEngine,
+  ClpISpeckLegacyEngine,
   ClpRijndaelEngine,
   ClpIRijndaelEngine,
   ClpKeyParameter,
@@ -89,6 +91,11 @@ type
     procedure TestBlockCipherSpeck64Engine;
     procedure TestBlockCipherSpeck96Engine;
     procedure TestBlockCipherSpeck128Engine;
+    procedure TestBlockCipherSpeck32LegacyEngine;
+    procedure TestBlockCipherSpeck48LegacyEngine;
+    procedure TestBlockCipherSpeck64LegacyEngine;
+    procedure TestBlockCipherSpeck96LegacyEngine;
+    procedure TestBlockCipherSpeck128LegacyEngine;
     procedure TestBlockCipherRijndaelEngine;
     procedure TestBadParameters;
 
@@ -356,6 +363,87 @@ begin
       (THex.Decode(TSpeckTestVectors.FSpeck128BlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck128BlockCipherVectorInputs[I],
       TSpeckTestVectors.FSpeck128BlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck32LegacyEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck32LegacyEngine.Create() as ISpeckLegacyEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorInputs
+      [I], TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck48LegacyEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck48LegacyEngine.Create() as ISpeckLegacyEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorInputs
+      [I], TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck64LegacyEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck64LegacyEngine.Create() as ISpeckLegacyEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorInputs
+      [I], TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck96LegacyEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck96LegacyEngine.Create() as ISpeckLegacyEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorInputs
+      [I], TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorOutputs[I]);
+  end;
+
+end;
+
+procedure TTestBlockCipherVector.TestBlockCipherSpeck128LegacyEngine;
+var
+  I: Int32;
+begin
+  for I := System.Low(TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorKeys)
+    to System.High(TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorKeys) do
+  begin
+    DoBlockCipherVectorTest(TSpeck128LegacyEngine.Create()
+      as ISpeckLegacyEngine,
+      TKeyParameter.Create
+      (THex.Decode(TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorKeys[I]))
+      as IKeyParameter, TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorInputs
+      [I], TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorOutputs[I]);
   end;
 
 end;
