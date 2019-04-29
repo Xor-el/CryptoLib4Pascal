@@ -232,7 +232,7 @@ uses
   ClpIHkdfParameters in '..\..\CryptoLib\src\Interfaces\ClpIHkdfParameters.pas',
   ClpDsaParameterGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaParameterGenerationParameters.pas',
   ClpIDsaParameterGenerationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameterGenerationParameters.pas',
-  ClpValidityPrecompInfo in '..\..\CryptoLib\src\Math\EC\ClpValidityPrecompInfo.pas',
+  ClpValidityPrecompInfo in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpValidityPrecompInfo.pas',
   ClpIValidityPrecompInfo in '..\..\CryptoLib\src\Interfaces\ClpIValidityPrecompInfo.pas',
   ClpDsaParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpDsaParametersGenerator.pas',
   ClpIDsaParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaParametersGenerator.pas',
