@@ -37,7 +37,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="57">
+    <Units Count="59">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -266,6 +266,14 @@
         <Filename Value="..\src\Math\PascalCoinECIESTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit56>
+      <Unit57>
+        <Filename Value="..\src\Math\EC\Rfc7748\X25519Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit57>
+      <Unit58>
+        <Filename Value="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit58>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -276,7 +284,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
   </CompilerOptions>

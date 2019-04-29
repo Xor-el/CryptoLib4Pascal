@@ -58,6 +58,8 @@ uses
   ChaChaTests,
   StreamCipherResetTests,
   CTSTests,
+  X25519Tests,
+  Ed25519Tests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 
