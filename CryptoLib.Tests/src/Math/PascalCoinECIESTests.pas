@@ -34,7 +34,7 @@ uses
   ClpPaddedBufferedBlockCipher,
   ClpBlockCipherModes,
   ClpIBlockCipherModes,
-  ClpAESEngine,
+  ClpAesEngine,
   ClpIAesEngine,
   ClpEncoders,
   ClpBigInteger,

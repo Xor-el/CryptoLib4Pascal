@@ -36,7 +36,7 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpIBlockCipherPadding,
-  ClpAESEngine,
+  ClpAesEngine,
   ClpIAesEngine,
   ClpPaddingModes,
   ClpIPaddingModes,

@@ -70,7 +70,7 @@ uses
   ClpIBlockCipherModes,
   ClpKeyEncoder,
   ClpIKeyEncoder,
-  ClpAESEngine,
+  ClpAesEngine,
   ClpIAesEngine,
   ClpEncoders,
   ClpArrayUtils,
