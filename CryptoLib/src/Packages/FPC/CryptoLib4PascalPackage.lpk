@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Encoders;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac;..\..\Crypto\Signers\SignersEncodings"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Encoders;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac;..\..\Crypto\Signers\SignersEncodings;..\..\Math\EC\Custom\Djb;..\..\Math\EC\Rfc7748;..\..\Math\EC\Rfc8032;..\..\Asn1\Edec"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -19,13 +19,13 @@
         </Optimizations>
       </CodeGeneration>
     </CompilerOptions>
-    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES Encryption and Decryption (With various modes and paddings) and ECIES ."/>
+    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES, Rijndael, Blowfish and Speck Block Encryption and Decryption (With various modes and paddings), Salsa20, XSalsa20, ChaCha Stream Ciphers and ECIES."/>
     <License Value="MIT License                          
 
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
-    <Version Major="2" Minor="8"/>
-    <Files Count="269">
+    <Version Major="3" Minor="1"/>
+    <Files Count="334">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1104,6 +1104,266 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Interfaces\ClpIECC.pas"/>
         <UnitName Value="ClpIECC"/>
       </Item269>
+      <Item270>
+        <Filename Value="..\..\Interfaces\ClpISpeckEngine.pas"/>
+        <UnitName Value="ClpISpeckEngine"/>
+      </Item270>
+      <Item271>
+        <Filename Value="..\..\Crypto\Engines\ClpSpeckEngine.pas"/>
+        <UnitName Value="ClpSpeckEngine"/>
+      </Item271>
+      <Item272>
+        <Filename Value="..\..\Interfaces\ClpIBufferedStreamCipher.pas"/>
+        <UnitName Value="ClpIBufferedStreamCipher"/>
+      </Item272>
+      <Item273>
+        <Filename Value="..\..\Interfaces\ClpIChaChaEngine.pas"/>
+        <UnitName Value="ClpIChaChaEngine"/>
+      </Item273>
+      <Item274>
+        <Filename Value="..\..\Interfaces\ClpIXSalsa20Engine.pas"/>
+        <UnitName Value="ClpIXSalsa20Engine"/>
+      </Item274>
+      <Item275>
+        <Filename Value="..\..\Interfaces\ClpISalsa20Engine.pas"/>
+        <UnitName Value="ClpISalsa20Engine"/>
+      </Item275>
+      <Item276>
+        <Filename Value="..\..\Crypto\ClpBufferedStreamCipher.pas"/>
+        <UnitName Value="ClpBufferedStreamCipher"/>
+      </Item276>
+      <Item277>
+        <Filename Value="..\..\Crypto\Engines\ClpSalsa20Engine.pas"/>
+        <UnitName Value="ClpSalsa20Engine"/>
+      </Item277>
+      <Item278>
+        <Filename Value="..\..\Crypto\Engines\ClpXSalsa20Engine.pas"/>
+        <UnitName Value="ClpXSalsa20Engine"/>
+      </Item278>
+      <Item279>
+        <Filename Value="..\..\Crypto\Engines\ClpChaChaEngine.pas"/>
+        <UnitName Value="ClpChaChaEngine"/>
+      </Item279>
+      <Item280>
+        <Filename Value="..\..\Interfaces\ClpIRijndaelEngine.pas"/>
+        <UnitName Value="ClpIRijndaelEngine"/>
+      </Item280>
+      <Item281>
+        <Filename Value="..\..\Crypto\Engines\ClpRijndaelEngine.pas"/>
+        <UnitName Value="ClpRijndaelEngine"/>
+      </Item281>
+      <Item282>
+        <Filename Value="..\..\Interfaces\ClpIIESParameterSpec.pas"/>
+        <UnitName Value="ClpIIESParameterSpec"/>
+      </Item282>
+      <Item283>
+        <Filename Value="..\..\Interfaces\ClpIAlgorithmParameterSpec.pas"/>
+        <UnitName Value="ClpIAlgorithmParameterSpec"/>
+      </Item283>
+      <Item284>
+        <Filename Value="..\..\Crypto\Parameters\ClpIESParameterSpec.pas"/>
+        <UnitName Value="ClpIESParameterSpec"/>
+      </Item284>
+      <Item285>
+        <Filename Value="..\..\Math\EC\Custom\Djb\ClpCurve25519Custom.pas"/>
+        <UnitName Value="ClpCurve25519Custom"/>
+      </Item285>
+      <Item286>
+        <Filename Value="..\..\Interfaces\ClpICurve25519Custom.pas"/>
+        <UnitName Value="ClpICurve25519Custom"/>
+      </Item286>
+      <Item287>
+        <Filename Value="..\..\Crypto\Engines\ClpSpeckLegacyEngine.pas"/>
+        <UnitName Value="ClpSpeckLegacyEngine"/>
+      </Item287>
+      <Item288>
+        <Filename Value="..\..\Interfaces\ClpISpeckLegacyEngine.pas"/>
+        <UnitName Value="ClpISpeckLegacyEngine"/>
+      </Item288>
+      <Item289>
+        <Filename Value="..\..\Interfaces\ClpIEd25519.pas"/>
+        <UnitName Value="ClpIEd25519"/>
+      </Item289>
+      <Item290>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Blake2B.pas"/>
+        <UnitName Value="ClpIEd25519Blake2B"/>
+      </Item290>
+      <Item291>
+        <Filename Value="..\..\Math\EC\Rfc7748\ClpX25519Field.pas"/>
+        <UnitName Value="ClpX25519Field"/>
+      </Item291>
+      <Item292>
+        <Filename Value="..\..\Math\EC\Rfc8032\ClpEd25519.pas"/>
+        <UnitName Value="ClpEd25519"/>
+      </Item292>
+      <Item293>
+        <Filename Value="..\..\Math\EC\Rfc8032\ClpEd25519Blake2B.pas"/>
+        <UnitName Value="ClpEd25519Blake2B"/>
+      </Item293>
+      <Item294>
+        <Filename Value="..\..\Math\EC\Rfc7748\ClpX25519.pas"/>
+        <UnitName Value="ClpX25519"/>
+      </Item294>
+      <Item295>
+        <Filename Value="..\..\Asn1\Edec\ClpEdECObjectIdentifiers.pas"/>
+        <UnitName Value="ClpEdECObjectIdentifiers"/>
+      </Item295>
+      <Item296>
+        <Filename Value="..\..\Interfaces\ClpIEd25519CtxBlake2BSigner.pas"/>
+        <UnitName Value="ClpIEd25519CtxBlake2BSigner"/>
+      </Item296>
+      <Item297>
+        <Filename Value="..\..\Interfaces\ClpIEd25519PhBlake2BSigner.pas"/>
+        <UnitName Value="ClpIEd25519PhBlake2BSigner"/>
+      </Item297>
+      <Item298>
+        <Filename Value="..\..\Interfaces\ClpIEd25519PhSigner.pas"/>
+        <UnitName Value="ClpIEd25519PhSigner"/>
+      </Item298>
+      <Item299>
+        <Filename Value="..\..\Interfaces\ClpIEd25519CtxSigner.pas"/>
+        <UnitName Value="ClpIEd25519CtxSigner"/>
+      </Item299>
+      <Item300>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Blake2BSigner.pas"/>
+        <UnitName Value="ClpIEd25519Blake2BSigner"/>
+      </Item300>
+      <Item301>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Signer.pas"/>
+        <UnitName Value="ClpIEd25519Signer"/>
+      </Item301>
+      <Item302>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Blake2BKeyGenerationParameters.pas"/>
+        <UnitName Value="ClpIEd25519Blake2BKeyGenerationParameters"/>
+      </Item302>
+      <Item303>
+        <Filename Value="..\..\Interfaces\ClpIEd25519KeyGenerationParameters.pas"/>
+        <UnitName Value="ClpIEd25519KeyGenerationParameters"/>
+      </Item303>
+      <Item304>
+        <Filename Value="..\..\Interfaces\ClpIX25519KeyGenerationParameters.pas"/>
+        <UnitName Value="ClpIX25519KeyGenerationParameters"/>
+      </Item304>
+      <Item305>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Blake2BKeyPairGenerator.pas"/>
+        <UnitName Value="ClpIEd25519Blake2BKeyPairGenerator"/>
+      </Item305>
+      <Item306>
+        <Filename Value="..\..\Interfaces\ClpIEd25519KeyPairGenerator.pas"/>
+        <UnitName Value="ClpIEd25519KeyPairGenerator"/>
+      </Item306>
+      <Item307>
+        <Filename Value="..\..\Interfaces\ClpIX25519KeyPairGenerator.pas"/>
+        <UnitName Value="ClpIX25519KeyPairGenerator"/>
+      </Item307>
+      <Item308>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Blake2BPrivateKeyParameters.pas"/>
+        <UnitName Value="ClpIEd25519Blake2BPrivateKeyParameters"/>
+      </Item308>
+      <Item309>
+        <Filename Value="..\..\Interfaces\ClpIEd25519Blake2BPublicKeyParameters.pas"/>
+        <UnitName Value="ClpIEd25519Blake2BPublicKeyParameters"/>
+      </Item309>
+      <Item310>
+        <Filename Value="..\..\Interfaces\ClpIEd25519PrivateKeyParameters.pas"/>
+        <UnitName Value="ClpIEd25519PrivateKeyParameters"/>
+      </Item310>
+      <Item311>
+        <Filename Value="..\..\Interfaces\ClpIEd25519PublicKeyParameters.pas"/>
+        <UnitName Value="ClpIEd25519PublicKeyParameters"/>
+      </Item311>
+      <Item312>
+        <Filename Value="..\..\Interfaces\ClpIX25519PublicKeyParameters.pas"/>
+        <UnitName Value="ClpIX25519PublicKeyParameters"/>
+      </Item312>
+      <Item313>
+        <Filename Value="..\..\Interfaces\ClpIX25519PrivateKeyParameters.pas"/>
+        <UnitName Value="ClpIX25519PrivateKeyParameters"/>
+      </Item313>
+      <Item314>
+        <Filename Value="..\..\Interfaces\ClpIX25519Agreement.pas"/>
+        <UnitName Value="ClpIX25519Agreement"/>
+      </Item314>
+      <Item315>
+        <Filename Value="..\..\Interfaces\ClpIRawAgreement.pas"/>
+        <UnitName Value="ClpIRawAgreement"/>
+      </Item315>
+      <Item316>
+        <Filename Value="..\..\Crypto\Agreement\ClpX25519Agreement.pas"/>
+        <UnitName Value="ClpX25519Agreement"/>
+      </Item316>
+      <Item317>
+        <Filename Value="..\..\Crypto\Parameters\ClpEd25519Blake2BKeyGenerationParameters.pas"/>
+        <UnitName Value="ClpEd25519Blake2BKeyGenerationParameters"/>
+      </Item317>
+      <Item318>
+        <Filename Value="..\..\Crypto\Parameters\ClpEd25519KeyGenerationParameters.pas"/>
+        <UnitName Value="ClpEd25519KeyGenerationParameters"/>
+      </Item318>
+      <Item319>
+        <Filename Value="..\..\Crypto\Parameters\ClpX25519KeyGenerationParameters.pas"/>
+        <UnitName Value="ClpX25519KeyGenerationParameters"/>
+      </Item319>
+      <Item320>
+        <Filename Value="..\..\Crypto\Parameters\ClpEd25519Blake2BPrivateKeyParameters.pas"/>
+        <UnitName Value="ClpEd25519Blake2BPrivateKeyParameters"/>
+      </Item320>
+      <Item321>
+        <Filename Value="..\..\Crypto\Parameters\ClpEd25519Blake2BPublicKeyParameters.pas"/>
+        <UnitName Value="ClpEd25519Blake2BPublicKeyParameters"/>
+      </Item321>
+      <Item322>
+        <Filename Value="..\..\Crypto\Parameters\ClpEd25519PublicKeyParameters.pas"/>
+        <UnitName Value="ClpEd25519PublicKeyParameters"/>
+      </Item322>
+      <Item323>
+        <Filename Value="..\..\Crypto\Parameters\ClpEd25519PrivateKeyParameters.pas"/>
+        <UnitName Value="ClpEd25519PrivateKeyParameters"/>
+      </Item323>
+      <Item324>
+        <Filename Value="..\..\Crypto\Parameters\ClpX25519PublicKeyParameters.pas"/>
+        <UnitName Value="ClpX25519PublicKeyParameters"/>
+      </Item324>
+      <Item325>
+        <Filename Value="..\..\Crypto\Parameters\ClpX25519PrivateKeyParameters.pas"/>
+        <UnitName Value="ClpX25519PrivateKeyParameters"/>
+      </Item325>
+      <Item326>
+        <Filename Value="..\..\Crypto\Generators\ClpEd25519Blake2BKeyPairGenerator.pas"/>
+        <UnitName Value="ClpEd25519Blake2BKeyPairGenerator"/>
+      </Item326>
+      <Item327>
+        <Filename Value="..\..\Crypto\Generators\ClpEd25519KeyPairGenerator.pas"/>
+        <UnitName Value="ClpEd25519KeyPairGenerator"/>
+      </Item327>
+      <Item328>
+        <Filename Value="..\..\Crypto\Generators\ClpX25519KeyPairGenerator.pas"/>
+        <UnitName Value="ClpX25519KeyPairGenerator"/>
+      </Item328>
+      <Item329>
+        <Filename Value="..\..\Crypto\Signers\ClpEd25519PhBlake2BSigner.pas"/>
+        <UnitName Value="ClpEd25519PhBlake2BSigner"/>
+      </Item329>
+      <Item330>
+        <Filename Value="..\..\Crypto\Signers\ClpEd25519PhSigner.pas"/>
+        <UnitName Value="ClpEd25519PhSigner"/>
+      </Item330>
+      <Item331>
+        <Filename Value="..\..\Crypto\Signers\ClpEd25519Signer.pas"/>
+        <UnitName Value="ClpEd25519Signer"/>
+      </Item331>
+      <Item332>
+        <Filename Value="..\..\Crypto\Signers\ClpEd25519CtxBlake2BSigner.pas"/>
+        <UnitName Value="ClpEd25519CtxBlake2BSigner"/>
+      </Item332>
+      <Item333>
+        <Filename Value="..\..\Crypto\Signers\ClpEd25519CtxSigner.pas"/>
+        <UnitName Value="ClpEd25519CtxSigner"/>
+      </Item333>
+      <Item334>
+        <Filename Value="..\..\Crypto\Signers\ClpEd25519Blake2BSigner.pas"/>
+        <UnitName Value="ClpEd25519Blake2BSigner"/>
+      </Item334>
     </Files>
     <RequiredPkgs Count="4">
       <Item1>

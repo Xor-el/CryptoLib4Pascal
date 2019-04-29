@@ -670,10 +670,9 @@ type
   var
     F_out: TStream;
 
-    function GetOut: TStream; inline;
-
   strict protected
     constructor Create(outStream: TStream);
+    function GetOut: TStream; inline;
     property &Out: TStream read GetOut;
 
   public
@@ -703,10 +702,10 @@ type
   strict private
   var
     FStr: TCryptoLibByteArray;
-    function GetStr: TCryptoLibByteArray; inline;
-    function GetParser: IAsn1OctetStringParser; inline;
 
   strict protected
+    function GetStr: TCryptoLibByteArray; inline;
+    function GetParser: IAsn1OctetStringParser; inline;
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
@@ -766,11 +765,6 @@ type
   var
     FSeq: TList<IAsn1Encodable>;
 
-    function GetCount: Int32; virtual;
-    function GetParser: IAsn1SequenceParser; virtual;
-    function GetSelf(Index: Integer): IAsn1Encodable; virtual;
-    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
-
   type
     TAsn1SequenceParserImpl = class sealed(TInterfacedObject,
       IAsn1SequenceParserImpl, IAsn1SequenceParser)
@@ -788,6 +782,10 @@ type
     end;
 
   strict protected
+    function GetCount: Int32; virtual;
+    function GetParser: IAsn1SequenceParser; virtual;
+    function GetSelf(Index: Integer): IAsn1Encodable; virtual;
+    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     procedure AddObject(const obj: IAsn1Encodable); inline;
@@ -1043,10 +1041,6 @@ type
     Fexplicitly: Boolean;
     Fobj: IAsn1Encodable;
 
-    function GetTagNo: Int32; inline;
-    function Getexplicitly: Boolean; inline;
-    function Getobj: IAsn1Encodable; inline;
-
   strict protected
     // /**
     // * @param tagNo the tag number for this object.
@@ -1060,6 +1054,10 @@ type
     // */
     constructor Create(explicitly: Boolean; tagNo: Int32;
       const obj: IAsn1Encodable); overload;
+
+    function GetTagNo: Int32; inline;
+    function Getexplicitly: Boolean; inline;
+    function Getobj: IAsn1Encodable; inline;
 
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
@@ -1158,11 +1156,6 @@ type
     F_set: TList<IAsn1Encodable>;
     FisSorted: Boolean;
 
-    function GetCount: Int32; virtual;
-    function GetParser: IAsn1SetParser; inline;
-    function GetSelf(Index: Integer): IAsn1Encodable; virtual;
-    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
-
     /// <summary>
     /// return true if a &lt;= b (arrays are assumed padded with zeros).
     /// </summary>
@@ -1184,6 +1177,10 @@ type
     end;
 
   strict protected
+    function GetCount: Int32; virtual;
+    function GetParser: IAsn1SetParser; inline;
+    function GetSelf(Index: Integer): IAsn1Encodable; virtual;
+    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     procedure AddObject(const obj: IAsn1Encodable); inline;
@@ -1382,13 +1379,12 @@ type
     Ftag: Int32;
     Foctets: TCryptoLibByteArray;
 
-    function GetApplicationTag: Int32; inline;
-    function GetLengthOfHeader(const data: TCryptoLibByteArray): Int32; inline;
-
     class function ReplaceTagNumber(newTag: Int32;
       const input: TCryptoLibByteArray): TCryptoLibByteArray; static;
 
   strict protected
+    function GetApplicationTag: Int32; inline;
+    function GetLengthOfHeader(const data: TCryptoLibByteArray): Int32; inline;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
 
@@ -1595,13 +1591,12 @@ type
     F_tagged, F_isExplicit: Boolean;
     F_tagNo: Int32;
 
-    procedure WriteHdr(tag: Int32);
-
   strict protected
     constructor Create(outStream: TStream); overload;
     constructor Create(outStream: TStream; tagNo: Int32;
       isExplicit: Boolean); overload;
 
+    procedure WriteHdr(tag: Int32);
     procedure WriteBerHeader(tag: Int32);
     procedure WriteBerBody(contentStream: TStream);
     procedure WriteBerEnd();

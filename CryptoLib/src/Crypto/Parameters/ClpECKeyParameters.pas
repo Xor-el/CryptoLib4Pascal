@@ -59,10 +59,6 @@ type
     Fparameters: IECDomainParameters;
     FpublicKeyParamSet: IDerObjectIdentifier;
 
-    function GetAlgorithmName: String; inline;
-    function GetPublicKeyParamSet: IDerObjectIdentifier; inline;
-    function GetParameters: IECDomainParameters; inline;
-
   strict protected
 
     constructor Create(const algorithm: String; isPrivate: Boolean;
@@ -74,7 +70,11 @@ type
     function CreateKeyGenerationParameters(const random: ISecureRandom)
       : IECKeyGenerationParameters; inline;
 
-    function Equals(const other: IECKeyParameters): Boolean; reintroduce;
+    function GetAlgorithmName: String; inline;
+    function GetPublicKeyParamSet: IDerObjectIdentifier; inline;
+    function GetParameters: IECDomainParameters; inline;
+
+    function Equals(const other: IECKeyParameters): Boolean; reintroduce; overload;
 
   public
     class function VerifyAlgorithmName(const algorithm: String): String; static;

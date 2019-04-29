@@ -243,7 +243,8 @@ type
 
     property Q: TBigInteger read GetQ;
 
-    function Equals(const other: IFpFieldElement): Boolean; reintroduce;
+    function Equals(const other: IFpFieldElement): Boolean;
+      reintroduce; overload;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -393,7 +394,8 @@ type
 
     function SquarePow(pow: Int32): IECFieldElement; override;
 
-    function Equals(const other: IF2mFieldElement): Boolean; reintroduce;
+    function Equals(const other: IF2mFieldElement): Boolean;
+      reintroduce; overload;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -474,16 +476,6 @@ type
 
   strict private
 
-    procedure SetCoord(const Value: Int32); inline;
-    procedure SetEndomorphism(const Value: IECEndomorphism); inline;
-    procedure SetMultiplier(const Value: IECMultiplier); inline;
-    function GetField: IFiniteField; virtual;
-    function GetA: IECFieldElement; virtual;
-    function GetB: IECFieldElement; virtual;
-    function GetOrder: TBigInteger; virtual;
-    function GetCofactor: TBigInteger; virtual;
-    function GetCoordinateSystem: Int32; virtual;
-
     class procedure Boot(); static;
     class constructor CreateECCurve();
     class destructor DestroyECCurve();
@@ -505,6 +497,16 @@ type
     Fm_a, Fm_b: IECFieldElement;
 
     constructor Create(const field: IFiniteField);
+
+    procedure SetCoord(const Value: Int32); inline;
+    procedure SetEndomorphism(const Value: IECEndomorphism); inline;
+    procedure SetMultiplier(const Value: IECMultiplier); inline;
+    function GetField: IFiniteField; virtual;
+    function GetA: IECFieldElement; virtual;
+    function GetB: IECFieldElement; virtual;
+    function GetOrder: TBigInteger; virtual;
+    function GetCofactor: TBigInteger; virtual;
+    function GetCoordinateSystem: Int32; virtual;
 
     function GetFieldSize: Int32; virtual; abstract;
     function GetInfinity: IECPoint; virtual; abstract;
@@ -1073,17 +1075,6 @@ type
 
     end;
 
-  function GetIsInfinity: Boolean; inline;
-  function GetIsCompressed: Boolean; inline;
-  function GetpreCompTable: TDictionary<String, IPreCompInfo>; inline;
-  procedure SetpreCompTable(const Value
-    : TDictionary<String, IPreCompInfo>); inline;
-  function GetCurve: IECCurve; virtual;
-  function GetCurveCoordinateSystem: Int32; virtual;
-  function GetAffineXCoord: IECFieldElement; virtual;
-  function GetAffineYCoord: IECFieldElement; virtual;
-  function GetXCoord: IECFieldElement; virtual;
-
   class constructor ECPoint();
 
   strict protected
@@ -1098,6 +1089,17 @@ type
     Fm_curve: IECCurve;
 
     Fm_x, Fm_y: IECFieldElement;
+
+    function GetIsInfinity: Boolean; inline;
+    function GetIsCompressed: Boolean; inline;
+    function GetpreCompTable: TDictionary<String, IPreCompInfo>; inline;
+    procedure SetpreCompTable(const Value
+      : TDictionary<String, IPreCompInfo>); inline;
+    function GetCurve: IECCurve; virtual;
+    function GetCurveCoordinateSystem: Int32; virtual;
+    function GetAffineXCoord: IECFieldElement; virtual;
+    function GetAffineYCoord: IECFieldElement; virtual;
+    function GetXCoord: IECFieldElement; virtual;
 
     function GetCompressionYTilde: Boolean; virtual; abstract;
 
@@ -1719,8 +1721,8 @@ begin
   xx := (x as IF2mFieldElement).x;
   yx := (y as IF2mFieldElement).x;
 
-  ab := ax.Multiply(bx, Fm, FKs);
-  xy := xx.Multiply(yx, Fm, FKs);
+  ab := ax.Multiply(bx);
+  xy := xx.Multiply(yx);
 
   if ((ab.Equals(ax)) or (ab.Equals(bx))) then
   begin
@@ -1771,8 +1773,8 @@ begin
   xx := (x as IF2mFieldElement).x;
   yx := (y as IF2mFieldElement).x;
 
-  aa := ax.Square(Fm, FKs);
-  xy := xx.Multiply(yx, Fm, FKs);
+  aa := ax.Square();
+  xy := xx.Multiply(yx);
 
   if (aa.Equals(ax)) then
   begin

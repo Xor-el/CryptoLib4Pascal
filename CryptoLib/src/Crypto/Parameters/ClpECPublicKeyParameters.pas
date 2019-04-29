@@ -56,7 +56,7 @@ type
 
     property q: IECPoint read GetQ;
 
-    function Equals(const other: IECPublicKeyParameters): Boolean; reintroduce;
+    function Equals(const other: IECPublicKeyParameters): Boolean; reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 

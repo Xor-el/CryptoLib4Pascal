@@ -36,8 +36,8 @@ uses
   ClpIAesEngine,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpGeneratorUtilities,
-  ClpIESWithCipherParameters,
-  ClpIIESWithCipherParameters,
+  ClpIESParameterSpec,
+  ClpIAlgorithmParameterSpec,
   // ClpKeyParameter,
   // ClpIKeyParameter,
   // ClpParametersWithIV,
@@ -87,11 +87,11 @@ type
 
     function GetECIESAES256CBCEngine: IIESEngine;
     function GetECKeyPair: IAsymmetricCipherKeyPair;
-    function GetIESWithCipherParameters: IIESWithCipherParameters;
+    function GetIESParameterSpec: IAlgorithmParameterSpec;
 
-    procedure doIESCipher_Encryption_Decryption_TestWithIV
+    procedure DoIESCipher_Encryption_Decryption_TestWithIV
       (const KeyPair: IAsymmetricCipherKeyPair;
-      const param: IIESWithCipherParameters; const Random: ISecureRandom;
+      const param: IAlgorithmParameterSpec; const Random: ISecureRandom;
       const PlainText: String);
 
   protected
@@ -107,9 +107,9 @@ implementation
 
 { TTestIESCipher }
 
-procedure TTestIESCipher.doIESCipher_Encryption_Decryption_TestWithIV
+procedure TTestIESCipher.DoIESCipher_Encryption_Decryption_TestWithIV
   (const KeyPair: IAsymmetricCipherKeyPair;
-  const param: IIESWithCipherParameters; const Random: ISecureRandom;
+  const param: IAlgorithmParameterSpec; const Random: ISecureRandom;
   const PlainText: String);
 var
   PlainTextBytes, CipherTextBytes, DecryptionResultBytes: TBytes;
@@ -193,7 +193,7 @@ begin
   result := KeyPairGeneratorInstance.GenerateKeyPair();
 end;
 
-function TTestIESCipher.GetIESWithCipherParameters: IIESWithCipherParameters;
+function TTestIESCipher.GetIESParameterSpec: IAlgorithmParameterSpec;
 var
   Derivation, Encoding, IVBytes: TBytes;
   MacKeySizeInBits, CipherKeySizeInBits: Int32;
@@ -219,8 +219,8 @@ begin
   // from a point or not in the EphemeralKeyPairGenerator
   UsePointCompression := False;
 
-  result := TIESWithCipherParameters.Create(Derivation, Encoding,
-    MacKeySizeInBits, CipherKeySizeInBits, IVBytes, UsePointCompression);
+  result := TIESParameterSpec.Create(Derivation, Encoding, MacKeySizeInBits,
+    CipherKeySizeInBits, IVBytes, UsePointCompression);
 
 end;
 
@@ -253,8 +253,8 @@ begin
 
     // Call IESCipher Encryption and Decryption Method
 
-    doIESCipher_Encryption_Decryption_TestWithIV(GetECKeyPair,
-      GetIESWithCipherParameters, RandomInstance, PlainText);
+    DoIESCipher_Encryption_Decryption_TestWithIV(GetECKeyPair,
+      GetIESParameterSpec, RandomInstance, PlainText);
 
     System.Inc(I);
   end;

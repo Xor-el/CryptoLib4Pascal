@@ -35,6 +35,7 @@ uses
   ClpFixedSecureRandom,
   ClpSecureRandom,
   ClpISecureRandom,
+  ClpIX9ECParameters,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpIBasicAgreement,
@@ -53,6 +54,7 @@ uses
   ClpIECKeyGenerationParameters,
   ClpECKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
+  ClpCustomNamedCurves,
   ClpECC,
   ClpIECC,
   ClpEncoders,
@@ -115,12 +117,14 @@ type
     /// <summary>
     /// key generation test
     /// </summary>
-    procedure TestECDsaKeyGenTest();
+    procedure TestECDsaKeyGen();
 
     /// <summary>
     /// Basic Key Agreement Test
     /// </summary>
-    procedure TestECBasicAgreementTest();
+    procedure TestECBasicAgreement();
+
+    procedure TestECDHBasicAgreementCofactor();
 
   end;
 
@@ -604,7 +608,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsaKeyGenTest;
+procedure TTestEC.TestECDsaKeyGen;
 var
   random: ISecureRandom;
   n: TBigInteger;
@@ -663,7 +667,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECBasicAgreementTest;
+procedure TTestEC.TestECBasicAgreement;
 var
   random: ISecureRandom;
   n, k1, k2: TBigInteger;
@@ -736,6 +740,43 @@ begin
     Fail('calculated agreement test failed');
   end;
 
+end;
+
+procedure TTestEC.TestECDHBasicAgreementCofactor;
+var
+  random: ISecureRandom;
+  x9: IX9ECParameters;
+  ec: IECDomainParameters;
+  kpg: IECKeyPairGenerator;
+  p1, p2: IAsymmetricCipherKeyPair;
+  e1, e2: IBasicAgreement;
+  k1, k2: TBigInteger;
+begin
+  random := TSecureRandom.Create();
+
+  x9 := TCustomNamedCurves.GetByName('curve25519');
+  ec := TECDomainParameters.Create(x9.curve, x9.G, x9.n, x9.H, x9.GetSeed());
+
+  kpg := TECKeyPairGenerator.Create();
+  kpg.Init(TECKeyGenerationParameters.Create(ec, random)
+    as IECKeyGenerationParameters);
+
+  p1 := kpg.GenerateKeyPair();
+  p2 := kpg.GenerateKeyPair();
+
+  e1 := TECDHBasicAgreement.Create();
+  e2 := TECDHBasicAgreement.Create();
+
+  e1.Init(p1.Private);
+  e2.Init(p2.Private);
+
+  k1 := e1.CalculateAgreement(p2.Public);
+  k2 := e2.CalculateAgreement(p1.Public);
+
+  if (not(k1.Equals(k2))) then
+  begin
+    Fail('calculated agreement test failed');
+  end;
 end;
 
 initialization

@@ -60,8 +60,8 @@ uses
   // ClpIESEngine,
   ClpPascalCoinIESEngine,
   ClpIPascalCoinIESEngine,
-  ClpIIESWithCipherParameters,
-  ClpIESWithCipherParameters,
+  ClpIIESParameterSpec,
+  ClpIESParameterSpec,
   ClpIAesEngine,
   ClpAesEngine,
   ClpIBlockCipherModes,
@@ -138,7 +138,7 @@ type
     class function GetECIESPascalCoinCompatibilityEngine
       : IPascalCoinIESEngine; static;
     class function GetECKeyPair: IAsymmetricCipherKeyPair; static;
-    class function GetIESCipherParameters: IIESWithCipherParameters; static;
+    class function GetIESParameterSpec: IIESParameterSpec; static;
 
     class function ECIESPascalCoinEncrypt(const PublicKey
       : IAsymmetricKeyParameter; PlainText: TBytes): TBytes; static;
@@ -184,7 +184,7 @@ var
 begin
   // Decryption
   CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
-  CipherDecrypt.Init(False, PrivateKey, GetIESCipherParameters, FRandom);
+  CipherDecrypt.Init(False, PrivateKey, GetIESParameterSpec, FRandom);
   PlainText := CipherDecrypt.DoFinal(CipherText);
   result := True;
 end;
@@ -196,7 +196,7 @@ var
 begin
   // Encryption
   CipherEncrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
-  CipherEncrypt.Init(True, PublicKey, GetIESCipherParameters, FRandom);
+  CipherEncrypt.Init(True, PublicKey, GetIESParameterSpec, FRandom);
   result := CipherEncrypt.DoFinal(PlainText);
 end;
 
@@ -714,13 +714,13 @@ begin
 
 end;
 
-class function TUsageExamples.GetIESCipherParameters: IIESWithCipherParameters;
+class function TUsageExamples.GetIESParameterSpec: IIESParameterSpec;
 var
   Derivation, Encoding, IVBytes: TBytes;
   MacKeySizeInBits, CipherKeySizeInBits: Int32;
   UsePointCompression: Boolean;
 begin
-  // Set up  IES Cipher Parameters For Compatibility With PascalCoin Current Implementation
+  // Set up  IES Parameter Spec For Compatibility With PascalCoin Current Implementation
 
   // The derivation and encoding vectors are used when initialising the KDF and MAC.
   // They're optional but if used then they need to be known by the other user so that
@@ -741,8 +741,8 @@ begin
   // from a point or not in the EphemeralKeyPairGenerator
   UsePointCompression := True; // for compatibility
 
-  result := TIESWithCipherParameters.Create(Derivation, Encoding,
-    MacKeySizeInBits, CipherKeySizeInBits, IVBytes, UsePointCompression);
+  result := TIESParameterSpec.Create(Derivation, Encoding, MacKeySizeInBits,
+    CipherKeySizeInBits, IVBytes, UsePointCompression);
 end;
 
 class procedure TUsageExamples.GetPublicKeyFromPrivateKey();

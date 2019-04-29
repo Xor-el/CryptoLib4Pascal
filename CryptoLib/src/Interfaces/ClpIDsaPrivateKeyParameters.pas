@@ -31,7 +31,7 @@ type
 
     function GetX: TBigInteger;
 
-    function Equals(const other: IDsaPrivateKeyParameters): Boolean;
+    function Equals(const other: IDsaPrivateKeyParameters): Boolean; overload;
     property X: TBigInteger read GetX;
 
   end;

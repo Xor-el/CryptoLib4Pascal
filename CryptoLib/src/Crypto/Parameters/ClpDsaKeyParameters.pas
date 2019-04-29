@@ -32,13 +32,12 @@ type
   strict private
   var
     Fparameters: IDsaParameters;
-  strict private
-    function GetParameters: IDsaParameters;
-  protected
+  strict protected
+  function GetParameters: IDsaParameters;
     constructor Create(isPrivate: Boolean; parameters: IDsaParameters);
 
   public
-    function Equals(const other: IDsaKeyParameters): Boolean; reintroduce;
+    function Equals(const other: IDsaKeyParameters): Boolean; reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 

@@ -55,6 +55,7 @@ type
   ESecurityUtilityCryptoLibException = class(ECryptoLibException);
   EAccessCryptoLibException = class(ECryptoLibException);
   EDataLengthCryptoLibException = class(ECryptoLibException);
+  EMaxBytesExceededCryptoLibException = class(ECryptoLibException);
   EOutputLengthCryptoLibException = class(ECryptoLibException);
   EBadBlockCryptoLibException = class(ECryptoLibException);
 
@@ -205,6 +206,26 @@ type
   /// </summary>
   TCryptoLibMatrixUInt64Array = array of TCryptoLibUInt64Array;
 {$ENDIF DELPHIXE_UP}
+
+  TCryptoLibCustomArrayBuffer<T> = record
+  private
+    FData: TCryptoLibGenericArray<T>;
+    FLength: Int32;
+    FIsNil: Boolean;
+
+  public
+    property Data: TCryptoLibGenericArray<T> read FData write FData;
+    property Length: Int32 read FLength write FLength;
+    property IsNil: Boolean read FIsNil write FIsNil;
+  end;
+
+  TCryptoLibCustomByteArrayBuffer = TCryptoLibCustomArrayBuffer<Byte>;
+
+const
+  EmptyBytesNotNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
+    FIsNil: False);
+  EmptyBytesNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
+    FIsNil: True);
 
 implementation
 

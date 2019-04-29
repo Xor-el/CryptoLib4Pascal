@@ -33,16 +33,23 @@ uses
   ClpIBlockCipherModes,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
+  ClpBufferedStreamCipher,
+  ClpIBufferedStreamCipher,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpNistObjectIdentifiers,
   ClpIAsn1Objects,
   ClpIBufferedCipher,
   ClpIBlockCipher,
+  ClpIStreamCipher,
   ClpAesEngine,
   ClpIAesEngine,
   ClpBlowfishEngine,
   ClpIBlowfishEngine,
+  ClpSalsa20Engine,
+  ClpISalsa20Engine,
+  ClpRijndaelEngine,
+  ClpIRijndaelEngine,
   ClpIBlockCipherPadding;
 
 resourcestring
@@ -51,6 +58,8 @@ resourcestring
   SUnRecognizedCipher = '"Cipher " %s Not Recognised.';
   SSICModeWarning =
     'Warning: SIC-Mode Can Become a TwoTime-Pad if the Blocksize of the Cipher is Too Small. Use a Cipher With a Block Size of at Least 128 bits (e.g. AES)';
+  SModeAndPaddingNotNeededStreamCipher =
+    'Modes and Paddings Not Used for Stream Ciphers';
 
 type
 
@@ -63,11 +72,11 @@ type
 
   type
 {$SCOPEDENUMS ON}
-    TCipherAlgorithm = (AES, BLOWFISH);
-    TCipherMode = (NONE, CBC, CFB, CTR, ECB, OFB, SIC);
+    TCipherAlgorithm = (AES, BLOWFISH, SALSA20, RIJNDAEL);
+    TCipherMode = (NONE, CBC, CFB, CTR, CTS, ECB, OFB, SIC);
     TCipherPadding = (NOPADDING, ISO10126PADDING, ISO10126D2PADDING,
       ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, PKCS5,
-      PKCS5PADDING, PKCS7, PKCS7PADDING, TBCPADDING, X923PADDING,
+      PKCS5PADDING, PKCS7, PKCS7PADDING, TBCPADDING, WITHCTS, X923PADDING,
       ZEROBYTEPADDING);
 {$SCOPEDENUMS OFF}
 
@@ -185,12 +194,13 @@ class function TCipherUtilities.GetCipher(algorithm: String): IBufferedCipher;
 var
   aliased, algorithmName, temp, paddingName, mode, modeName: string;
   di, LowPoint, bits, HighPoint: Int32;
-  padded: Boolean;
+  padded, CTS: Boolean;
   parts: TCryptoLibStringArray;
   cipherAlgorithm: TCipherAlgorithm;
   cipherPadding: TCipherPadding;
   cipherMode: TCipherMode;
   blockCipher: IBlockCipher;
+  streamCipher: IStreamCipher;
   padding: IBlockCipherPadding;
 begin
   if (algorithm = '') then
@@ -207,6 +217,7 @@ begin
   parts := TStringUtils.SplitString(algorithm, '/');
 
   blockCipher := Nil;
+  streamCipher := Nil;
 
   algorithmName := parts[0];
 
@@ -230,6 +241,14 @@ begin
     TCipherAlgorithm.BLOWFISH:
       begin
         blockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
+      end;
+    TCipherAlgorithm.RIJNDAEL:
+      begin
+        blockCipher := TRijndaelEngine.Create() as IRijndaelEngine;
+      end;
+    TCipherAlgorithm.SALSA20:
+      begin
+        streamCipher := TSalsa20Engine.Create() as ISalsa20Engine;
       end
   else
     begin
@@ -238,6 +257,20 @@ begin
     end;
   end;
 
+  if (streamCipher <> Nil) then
+  begin
+    if (System.Length(parts) > 1) then
+    begin
+      raise EArgumentCryptoLibException.CreateRes
+        (@SModeAndPaddingNotNeededStreamCipher);
+    end;
+
+    Result := TBufferedStreamCipher.Create(streamCipher)
+      as IBufferedStreamCipher;
+    Exit;
+  end;
+
+  CTS := False;
   padded := true;
   padding := Nil;
 
@@ -255,7 +288,7 @@ begin
     case cipherPadding of
       TCipherPadding.NOPADDING:
         begin
-          padded := false;
+          padded := False;
         end;
 
       TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING,
@@ -278,6 +311,11 @@ begin
       TCipherPadding.TBCPADDING:
         begin
           padding := TTBCPadding.Create() as ITBCPadding;
+        end;
+
+      TCipherPadding.WITHCTS:
+        begin
+          CTS := true;
         end;
 
       TCipherPadding.X923PADDING:
@@ -368,6 +406,12 @@ begin
           blockCipher := TSicBlockCipher.Create(blockCipher) as ISicBlockCipher;
         end;
 
+      TCipherMode.CTS:
+        begin
+          CTS := true;
+          blockCipher := TCbcBlockCipher.Create(blockCipher) as ICbcBlockCipher;
+        end;
+
       TCipherMode.OFB:
         begin
           if (di < 0) then
@@ -407,6 +451,12 @@ begin
 
   if (blockCipher <> Nil) then
   begin
+
+    if (CTS) then
+    begin
+      Result := TCtsBlockCipher.Create(blockCipher) as ICtsBlockCipher;
+      Exit;
+    end;
 
     if (padding <> Nil) then
     begin

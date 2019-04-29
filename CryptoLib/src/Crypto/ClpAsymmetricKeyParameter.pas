@@ -33,10 +33,10 @@ type
   var
     FprivateKey: Boolean;
 
+  strict protected
     function GetPrivateKey: Boolean; inline;
     function GetIsPrivate: Boolean; inline;
 
-  protected
     constructor Create(privateKey: Boolean);
 
   public
