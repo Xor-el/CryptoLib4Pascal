@@ -258,7 +258,7 @@ begin
   AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph',
     TEdECObjectIdentifiers.id_Ed25519.ID]);
   AddKpgAlgorithm('Ed25519Blake2B', ['Ed25519Blake2Bctx', 'Ed25519Blake2Bph']);
-  AddKpgAlgorithm('X25519', TEdECObjectIdentifiers.id_X25519.ID);
+  AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.id_X25519.ID]);
 
   AddDefaultKeySizeEntries(128, ['AES128', 'BLOWFISH', 'HMACMD2', 'HMACMD4',
     'HMACMD5', 'HMACRIPEMD128', 'SALSA20']);
