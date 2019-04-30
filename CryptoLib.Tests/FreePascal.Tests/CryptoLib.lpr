@@ -62,6 +62,8 @@ uses
   CTSTests,
   X25519Tests,
   Ed25519Tests,
+  X25519HigherLevelTests,
+  Ed25519HigherLevelTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom;
 

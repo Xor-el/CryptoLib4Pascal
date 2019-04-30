@@ -37,7 +37,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="59">
+    <Units Count="61">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -274,6 +274,14 @@
         <Filename Value="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit58>
+      <Unit59>
+        <Filename Value="..\src\Others\Ed25519HigherLevelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit59>
+      <Unit60>
+        <Filename Value="..\src\Others\X25519HigherLevelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit60>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

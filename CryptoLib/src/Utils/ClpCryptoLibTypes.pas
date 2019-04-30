@@ -222,8 +222,6 @@ type
   TCryptoLibCustomByteArrayBuffer = TCryptoLibCustomArrayBuffer<Byte>;
 
 const
-  EmptyBytesNotNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
-    FIsNil: False);
   EmptyBytesNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
     FIsNil: True);
 
