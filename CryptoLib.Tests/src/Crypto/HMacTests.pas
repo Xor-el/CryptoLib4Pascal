@@ -63,6 +63,7 @@ type
     FkeyBytes, Fmessage, Foutput1, FoutputMD5, FoutputMD2, FoutputMD4,
       Foutput224, Foutput256, Foutput384, Foutput512, Foutput512_224,
       Foutput512_256, FoutputRipeMD128, FoutputRipeMD160, FoutputTiger,
+      FoutputKck224, FoutputKck256, FoutputKck288, FoutputKck384, FoutputKck512,
       FoutputSha3_224, FoutputSha3_256, FoutputSha3_384, FoutputSha3_512,
       FoutputGost2012_256, FoutputGost2012_512: TBytes;
 
@@ -187,6 +188,17 @@ begin
   FoutputTiger := THex.Decode
     ('1d7a658c75f8f004916e7b07e2a2e10aec7de2ae124d3647');
 
+  FoutputKck224 := THex.Decode
+    ('b73d595a2ba9af815e9f2b4e53e78581ebd34a80b3bbaac4e702c4cc');
+  FoutputKck256 := THex.Decode
+    ('9663d10c73ee294054dc9faf95647cb99731d12210ff7075fb3d3395abfb9821');
+  FoutputKck288 := THex.Decode
+    ('36145df8742160a1811139494d708f9a12757c30dedc622a98aa6ecb69da32a34ea55441');
+  FoutputKck384 := THex.Decode
+    ('892dfdf5d51e4679bf320cd16d4c9dc6f749744608e003add7fba894acff87361efa4e5799be06b6461f43b60ae97048');
+  FoutputKck512 := THex.Decode
+    ('8852c63be8cfc21541a4ee5e5a9a852fc2f7a9adec2ff3a13718ab4ed81aaea0b87b7eb397323548e261a64e7fc75198f6663a11b22cd957f7c8ec858a1c7755');
+
   FoutputSha3_224 := THex.Decode
     ('3b16546bbc7be2706a031dcafd56373d9884367641d8c59af3c860f7');
   FoutputSha3_256 := THex.Decode
@@ -229,6 +241,12 @@ begin
 
   DoTestHMac('HMac-TIGER', FoutputTiger);
 
+  DoTestHMac('HMac-KECCAK224', 224, FoutputKck224);
+  DoTestHMac('HMac-KECCAK256', 256, FoutputKck256);
+  DoTestHMac('HMac-KECCAK288', 288, FoutputKck288);
+  DoTestHMac('HMac-KECCAK384', 384, FoutputKck384);
+  DoTestHMac('HMac-KECCAK512', 512, FoutputKck512);
+
   DoTestHMac('HMac-SHA3-224', 224, FoutputSha3_224);
   DoTestHMac('HMac-SHA3-256', 256, FoutputSha3_256);
   DoTestHMac('HMac-SHA3-384', 384, FoutputSha3_384);
@@ -251,6 +269,12 @@ begin
   DoTestHMac('HMac/RIPEMD128', FoutputRipeMD128);
   DoTestHMac('HMac/RIPEMD160', FoutputRipeMD160);
   DoTestHMac('HMac/TIGER', FoutputTiger);
+
+  DoTestHMac('HMac/KECCAK224', 224, FoutputKck224);
+  DoTestHMac('HMac/KECCAK256', 256, FoutputKck256);
+  DoTestHMac('HMac/KECCAK288', 288, FoutputKck288);
+  DoTestHMac('HMac/KECCAK384', 384, FoutputKck384);
+  DoTestHMac('HMac/KECCAK512', 512, FoutputKck512);
 
   DoTestHMac('HMac/SHA3-224', 224, FoutputSha3_224);
   DoTestHMac('HMac/SHA3-256', 256, FoutputSha3_256);
