@@ -32,10 +32,13 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpBigInteger,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpISigner,
+  ClpIBasicAgreement,
   ClpSecNamedCurves,
+  ClpTeleTrusTNamedCurves,
   ClpIX9ECParameters,
   ClpECDomainParameters,
   ClpECNamedCurveTable,
@@ -48,6 +51,8 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpIECKeyGenerationParameters,
+  ClpGeneratorUtilities,
+  ClpAgreementUtilities,
   ClpConverters,
   ClpCryptoLibTypes;
 
@@ -65,8 +70,8 @@ type
   TTestNamedCurve = class(TCryptoLibTestCase)
   private
     function GetCurveParameters(const name: String): IECDomainParameters;
-    procedure doTestECDsa(const name: String);
-    // procedure doTestECGost(const name: String);
+    procedure DoTestECDsa(const name: String);
+    procedure DoTestCurve(const name: String);
 
   protected
     procedure SetUp; override;
@@ -79,7 +84,7 @@ implementation
 
 { TTestNamedCurve }
 
-procedure TTestNamedCurve.doTestECDsa(const name: String);
+procedure TTestNamedCurve.DoTestECDsa(const name: String);
 var
   ecSpec: IECDomainParameters;
   g: IAsymmetricCipherKeyPairGenerator;
@@ -114,61 +119,55 @@ begin
 
   if (not sgr.VerifySignature(sigBytes)) then
   begin
-    Fail(name + ' verification failed');
+    Fail(Format('%s verification failed', [name]));
   end;
 end;
 
-// procedure TTestNamedCurve.doTestECGost(const name: String);
-// var
-// sgr: ISigner;
-// keyAlgorithm: String;
-// ecSpec: IECDomainParameters;
-// g: IAsymmetricCipherKeyPairGenerator;
-// pair: IAsymmetricCipherKeyPair;
-// sKey, vKey: IAsymmetricKeyParameter;
-// &message, sigBytes: TCryptoLibByteArray;
-// begin
-// if System.Pos('Tc26-Gost-3410', name) > 0 then
-// begin
-// // TODO Implement ECGOST3410-2012 in SignerUtilies/GeneratorUtilities etc.
-// // Current test cases don't work for GOST34.10 2012
-// Exit;
-// end
-// else
-// begin
-// keyAlgorithm := 'ECGOST3410';
-//
-// sgr := TSignerUtilities.GetSigner('ECGOST3410');
-// end;
-//
-// ecSpec := GetCurveParameters(name);
-//
-// g := TECKeyPairGenerator.Create(keyAlgorithm);
-//
-// g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create() as ISecureRandom) as IECKeyGenerationParameters);
-//
-// pair := g.GenerateKeyPair();
-// sKey := pair.Private;
-// vKey := pair.Public;
-//
-// sgr.Init(true, sKey);
-//
-// &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
-//
-// sgr.BlockUpdate(&message, 0, System.Length(&message));
-//
-// sigBytes := sgr.GenerateSignature();
-//
-// sgr.Init(false, vKey);
-//
-// sgr.BlockUpdate(&message, 0, System.Length(&message));
-//
-// if (not sgr.VerifySignature(sigBytes)) then
-// begin
-// Fail(name + ' verification failed');
-// end;
-//
-// end;
+procedure TTestNamedCurve.DoTestCurve(const name: String);
+var
+  ecSpec: IECDomainParameters;
+  g: IAsymmetricCipherKeyPairGenerator;
+  aKeyPair, bKeyPair: IAsymmetricCipherKeyPair;
+  aKeyAgree, bKeyAgree: IBasicAgreement;
+  k1, k2: TBigInteger;
+begin
+  ecSpec := GetCurveParameters(name);
+
+  g := TGeneratorUtilities.GetKeyPairGenerator('ECDH');
+
+  g.Init(TECKeyGenerationParameters.Create(ecSpec, TSecureRandom.Create()
+    as ISecureRandom) as IECKeyGenerationParameters);
+
+  //
+  // a side
+  //
+  aKeyPair := g.GenerateKeyPair();
+
+  aKeyAgree := TAgreementUtilities.GetBasicAgreement('ECDHC');
+
+  aKeyAgree.Init(aKeyPair.Private);
+
+  //
+  // b side
+  //
+  bKeyPair := g.GenerateKeyPair();
+
+  bKeyAgree := TAgreementUtilities.GetBasicAgreement('ECDHC');
+
+  bKeyAgree.Init(bKeyPair.Private);
+
+  //
+  // agreement
+  //
+
+  k1 := aKeyAgree.CalculateAgreement(bKeyPair.Public);
+  k2 := bKeyAgree.CalculateAgreement(aKeyPair.Public);
+
+  if (not k1.Equals(k2)) then
+  begin
+    Fail('2-way test failed');
+  end;
+end;
 
 function TTestNamedCurve.GetCurveParameters(const name: String)
   : IECDomainParameters;
@@ -211,15 +210,22 @@ procedure TTestNamedCurve.TestPerform;
 var
   name: string;
 begin
+  DoTestCurve('sect571r1'); // sec
+  DoTestCurve('secp224r1');
+  DoTestCurve('B-409'); // nist
+  DoTestCurve('P-521');
+  DoTestCurve('brainpoolp160r1'); // TeleTrusT
+
   for name in TSecNamedCurves.Names do
   begin
-    doTestECDsa(name);
+    DoTestECDsa(name);
   end;
 
-  // for name in TECGost3410NamedCurves.Names do
-  // begin
-  // doTestECGost(name);
-  // end;
+  for name in TTeleTrusTNamedCurves.Names do
+  begin
+    DoTestECDsa(name);
+  end;
+
 end;
 
 initialization

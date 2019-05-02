@@ -350,6 +350,8 @@ uses
   ClpIEd25519PhBlake2BSigner in '..\..\CryptoLib\src\Interfaces\ClpIEd25519PhBlake2BSigner.pas',
   ClpEd25519PhSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhSigner.pas',
   ClpEd25519PhBlake2BSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhBlake2BSigner.pas',
+  ClpTeleTrusTNamedCurves in '..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
+  ClpAgreementUtilities in '..\..\CryptoLib\src\Security\ClpAgreementUtilities.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',

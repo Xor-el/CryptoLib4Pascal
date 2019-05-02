@@ -365,6 +365,8 @@ contains
   ClpIECKeyPairGenerator in '..\..\Interfaces\ClpIECKeyPairGenerator.pas',
   ClpIExtensionField in '..\..\Interfaces\ClpIExtensionField.pas',
   ClpOidTokenizer in '..\..\Asn1\ClpOidTokenizer.pas',
-  ClpValidityPrecompInfo in '..\..\Math\EC\Multiplier\ClpValidityPrecompInfo.pas';
+  ClpValidityPrecompInfo in '..\..\Math\EC\Multiplier\ClpValidityPrecompInfo.pas',
+  ClpTeleTrusTNamedCurves in '..\..\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
+  ClpAgreementUtilities in '..\..\Security\ClpAgreementUtilities.pas';
 
 end.
