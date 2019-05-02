@@ -40,7 +40,7 @@ uses
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
-  SUnRecognizedDigest = '"Digest " %s not recognised.';
+  SUnRecognizedDigest = 'Digest "%s" not recognised.';
 
 type
   TDigestUtilities = class sealed(TObject)
