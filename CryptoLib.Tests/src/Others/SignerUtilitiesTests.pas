@@ -40,6 +40,7 @@ uses
   ClpIRandom,
   ClpSignerUtilities,
   ClpSecureRandom,
+  ClpISecureRandom,
   ClpECDomainParameters,
   ClpICipherParameters,
   ClpIECDomainParameters,
@@ -53,7 +54,12 @@ uses
   ClpIDsaPublicKeyParameters,
   ClpDsaParameters,
   ClpDsaPrivateKeyParameters,
-  ClpDsaPublicKeyParameters;
+  ClpDsaPublicKeyParameters,
+  ClpIAsymmetricCipherKeyPairGenerator,
+  ClpEd25519KeyGenerationParameters,
+  ClpIEd25519KeyGenerationParameters,
+  ClpIAsymmetricCipherKeyPair,
+  ClpGeneratorUtilities;
 
 type
 
@@ -76,6 +82,8 @@ type
     Fpara: IDsaParameters;
     FdsaPriv: IDsaPrivateKeyParameters;
     FdsaPub: IDsaPublicKeyParameters;
+    Fed25519Kpg: IAsymmetricCipherKeyPairGenerator;
+    Fed25519Pair: IAsymmetricCipherKeyPair;
 
   protected
     procedure SetUp; override;
@@ -154,6 +162,15 @@ begin
   FdsaPriv := TDsaPrivateKeyParameters.Create(FDsaPrivateX, Fpara);
   FdsaPub := TDsaPublicKeyParameters.Create(FDSAPublicY, Fpara);
 
+  //
+  // EdDSA parameters
+  //
+
+  Fed25519Kpg := TGeneratorUtilities.GetKeyPairGenerator('Ed25519');
+  Fed25519Kpg.Init(TEd25519KeyGenerationParameters.Create(TSecureRandom.Create()
+    as ISecureRandom) as IEd25519KeyGenerationParameters);
+  Fed25519Pair := Fed25519Kpg.GenerateKeyPair();
+
 end;
 
 procedure TTestSignerUtilities.TearDown;
@@ -210,6 +227,11 @@ begin
     begin
       signParams := FdsaPriv;
       verifyParams := FdsaPub;
+    end
+    else if (cipherName = 'ED25519') then
+    begin
+      signParams := Fed25519Pair.Private;
+      verifyParams := Fed25519Pair.Public;
     end
     else
     begin
