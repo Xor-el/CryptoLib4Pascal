@@ -339,6 +339,8 @@ uses
   ClpEd25519PhBlake2BSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhBlake2BSigner.pas',
   ClpTeleTrusTNamedCurves in '..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
   ClpAgreementUtilities in '..\..\CryptoLib\src\Security\ClpAgreementUtilities.pas',
+  ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
+  ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

@@ -62,8 +62,13 @@ uses
   Ed25519Tests,
   X25519HigherLevelTests,
   Ed25519HigherLevelTests,
+  ShortenedDigestTests,
+  Kdf1GeneratorTests,
+  Kdf2GeneratorTests,
   ClpFixedSecureRandom,
-  ClpIFixedSecureRandom;
+  ClpIFixedSecureRandom,
+  ClpShortenedDigest,
+  ClpIShortenedDigest;
 
 type
 

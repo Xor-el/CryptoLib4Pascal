@@ -352,8 +352,12 @@ uses
   ClpEd25519PhBlake2BSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhBlake2BSigner.pas',
   ClpTeleTrusTNamedCurves in '..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
   ClpAgreementUtilities in '..\..\CryptoLib\src\Security\ClpAgreementUtilities.pas',
+  ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
+  ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
+  ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
+  ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
   BlockCipherVectorTests in '..\src\Crypto\BlockCipherVectorTests.pas',
   AESTestVectors in '..\src\Crypto\AESTestVectors.pas',
@@ -411,7 +415,10 @@ uses
   X25519Tests in '..\src\Math\EC\Rfc7748\X25519Tests.pas',
   Ed25519Tests in '..\src\Math\EC\Rfc8032\Ed25519Tests.pas',
   X25519HigherLevelTests in '..\src\Others\X25519HigherLevelTests.pas',
-  Ed25519HigherLevelTests in '..\src\Others\Ed25519HigherLevelTests.pas';
+  Ed25519HigherLevelTests in '..\src\Others\Ed25519HigherLevelTests.pas',
+  ShortenedDigestTests in '..\src\Others\ShortenedDigestTests.pas',
+  Kdf1GeneratorTests in '..\src\Crypto\Kdf1GeneratorTests.pas',
+  Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas';
 
 begin
 

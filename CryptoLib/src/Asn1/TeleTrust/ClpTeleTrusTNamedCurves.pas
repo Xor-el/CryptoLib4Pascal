@@ -325,42 +325,6 @@ implementation
 
 { TeleTrusTNamedCurves }
 
-class procedure TTeleTrusTNamedCurves.Boot;
-begin
-  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
-  Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
-  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create();
-
-  DefineCurve('brainpoolP160r1', TTeleTrusTObjectIdentifiers.BrainpoolP160R1,
-    TBrainpoolP160r1Holder.Instance);
-  DefineCurve('brainpoolP160t1', TTeleTrusTObjectIdentifiers.BrainpoolP160T1,
-    TBrainpoolP160t1Holder.Instance);
-  DefineCurve('brainpoolP192r1', TTeleTrusTObjectIdentifiers.BrainpoolP192R1,
-    TBrainpoolP160t1Holder.Instance);
-  DefineCurve('brainpoolP192t1', TTeleTrusTObjectIdentifiers.BrainpoolP192T1,
-    TBrainpoolP192t1Holder.Instance);
-  DefineCurve('brainpoolP224r1', TTeleTrusTObjectIdentifiers.BrainpoolP224R1,
-    TBrainpoolP224r1Holder.Instance);
-  DefineCurve('brainpoolP224t1', TTeleTrusTObjectIdentifiers.BrainpoolP224T1,
-    TBrainpoolP224t1Holder.Instance);
-  DefineCurve('brainpoolP256r1', TTeleTrusTObjectIdentifiers.BrainpoolP256R1,
-    TBrainpoolP256r1Holder.Instance);
-  DefineCurve('brainpoolP256t1', TTeleTrusTObjectIdentifiers.BrainpoolP256T1,
-    TBrainpoolP256t1Holder.Instance);
-  DefineCurve('brainpoolP320r1', TTeleTrusTObjectIdentifiers.BrainpoolP320R1,
-    TBrainpoolP320r1Holder.Instance);
-  DefineCurve('brainpoolP320t1', TTeleTrusTObjectIdentifiers.BrainpoolP320T1,
-    TBrainpoolP320t1Holder.Instance);
-  DefineCurve('brainpoolP384r1', TTeleTrusTObjectIdentifiers.BrainpoolP384R1,
-    TBrainpoolP384r1Holder.Instance);
-  DefineCurve('brainpoolP384t1', TTeleTrusTObjectIdentifiers.BrainpoolP384T1,
-    TBrainpoolP384t1Holder.Instance);
-  DefineCurve('brainpoolP512r1', TTeleTrusTObjectIdentifiers.BrainpoolP512R1,
-    TBrainpoolP512r1Holder.Instance);
-  DefineCurve('brainpoolP512t1', TTeleTrusTObjectIdentifiers.BrainpoolP512T1,
-    TBrainpoolP512t1Holder.Instance);
-end;
-
 class function TTeleTrusTNamedCurves.ConfigureCurve(const curve: IECCurve)
   : IECCurve;
 begin
@@ -439,6 +403,42 @@ end;
 class function TTeleTrusTNamedCurves.GetNames: TCryptoLibStringArray;
 begin
   result := Fnames.Values.ToArray();
+end;
+
+class procedure TTeleTrusTNamedCurves.Boot;
+begin
+  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
+  Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
+  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create();
+
+  DefineCurve('brainpoolP160r1', TTeleTrusTObjectIdentifiers.BrainpoolP160R1,
+    TBrainpoolP160r1Holder.Instance);
+  DefineCurve('brainpoolP160t1', TTeleTrusTObjectIdentifiers.BrainpoolP160T1,
+    TBrainpoolP160t1Holder.Instance);
+  DefineCurve('brainpoolP192r1', TTeleTrusTObjectIdentifiers.BrainpoolP192R1,
+    TBrainpoolP160t1Holder.Instance);
+  DefineCurve('brainpoolP192t1', TTeleTrusTObjectIdentifiers.BrainpoolP192T1,
+    TBrainpoolP192t1Holder.Instance);
+  DefineCurve('brainpoolP224r1', TTeleTrusTObjectIdentifiers.BrainpoolP224R1,
+    TBrainpoolP224r1Holder.Instance);
+  DefineCurve('brainpoolP224t1', TTeleTrusTObjectIdentifiers.BrainpoolP224T1,
+    TBrainpoolP224t1Holder.Instance);
+  DefineCurve('brainpoolP256r1', TTeleTrusTObjectIdentifiers.BrainpoolP256R1,
+    TBrainpoolP256r1Holder.Instance);
+  DefineCurve('brainpoolP256t1', TTeleTrusTObjectIdentifiers.BrainpoolP256T1,
+    TBrainpoolP256t1Holder.Instance);
+  DefineCurve('brainpoolP320r1', TTeleTrusTObjectIdentifiers.BrainpoolP320R1,
+    TBrainpoolP320r1Holder.Instance);
+  DefineCurve('brainpoolP320t1', TTeleTrusTObjectIdentifiers.BrainpoolP320T1,
+    TBrainpoolP320t1Holder.Instance);
+  DefineCurve('brainpoolP384r1', TTeleTrusTObjectIdentifiers.BrainpoolP384R1,
+    TBrainpoolP384r1Holder.Instance);
+  DefineCurve('brainpoolP384t1', TTeleTrusTObjectIdentifiers.BrainpoolP384T1,
+    TBrainpoolP384t1Holder.Instance);
+  DefineCurve('brainpoolP512r1', TTeleTrusTObjectIdentifiers.BrainpoolP512R1,
+    TBrainpoolP512r1Holder.Instance);
+  DefineCurve('brainpoolP512t1', TTeleTrusTObjectIdentifiers.BrainpoolP512T1,
+    TBrainpoolP512t1Holder.Instance);
 end;
 
 { TeleTrusTNamedCurves.TBrainpoolP160r1Holder }

@@ -110,8 +110,19 @@ implementation
 { TDigest }
 
 function TDigest.GetAlgorithmName: string;
+var
+  LName: String;
+  LowPoint, HighPoint: Int32;
 begin
-  result := FHash.Name;
+  LName := FHash.Name;
+{$IFDEF DELPHIXE3_UP}
+  LowPoint := System.Low(LName);
+  HighPoint := System.High(LName);
+{$ELSE}
+  LowPoint := 1;
+  HighPoint := System.Length(LName);
+{$ENDIF DELPHIXE3_UP}
+  result := Copy(LName, LowPoint + 1, HighPoint - 1);
 end;
 
 function TDigest.GetByteLength: Int32;

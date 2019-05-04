@@ -367,6 +367,8 @@ contains
   ClpOidTokenizer in '..\..\Asn1\ClpOidTokenizer.pas',
   ClpValidityPrecompInfo in '..\..\Math\EC\Multiplier\ClpValidityPrecompInfo.pas',
   ClpTeleTrusTNamedCurves in '..\..\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
-  ClpAgreementUtilities in '..\..\Security\ClpAgreementUtilities.pas';
+  ClpAgreementUtilities in '..\..\Security\ClpAgreementUtilities.pas',
+  ClpIKdf1BytesGenerator in '..\..\Interfaces\ClpIKdf1BytesGenerator.pas',
+  ClpKdf1BytesGenerator in '..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas';
 
 end.

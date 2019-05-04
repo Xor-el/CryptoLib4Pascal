@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="1"/>
-    <Files Count="335">
+    <Files Count="337">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1368,6 +1368,14 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Security\ClpAgreementUtilities.pas"/>
         <UnitName Value="ClpAgreementUtilities"/>
       </Item335>
+      <Item336>
+        <Filename Value="..\..\Interfaces\ClpIKdf1BytesGenerator.pas"/>
+        <UnitName Value="ClpIKdf1BytesGenerator"/>
+      </Item336>
+      <Item337>
+        <Filename Value="..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas"/>
+        <UnitName Value="ClpKdf1BytesGenerator"/>
+      </Item337>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
