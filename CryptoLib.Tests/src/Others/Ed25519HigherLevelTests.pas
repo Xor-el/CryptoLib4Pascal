@@ -233,6 +233,7 @@ var
   Signer, verifier: ISigner;
   shouldVerify, shouldNotVerify: Boolean;
   algorithmName: String;
+  tempRand: Int32;
 begin
   kpg := TEd25519KeyPairGenerator.Create();
   kpg.Init(TEd25519KeyGenerationParameters.Create(FRandom)
@@ -263,8 +264,9 @@ begin
     Fail(Format('Ed25519 (%s) signature failed to verify', [algorithmName]));
   end;
 
-  signature[FRandom.Next() mod System.length(signature)] :=
-    signature[FRandom.Next() mod System.length(signature)
+  tempRand := FRandom.Next();
+  signature[tempRand mod System.length(signature)] :=
+    signature[tempRand mod System.length(signature)
     ] xor Byte(1 shl (FRandom.NextInt32 and 7));
 
   verifier.Init(False, publicKey);
