@@ -229,7 +229,7 @@ var
   kp: IAsymmetricCipherKeyPair;
   privateKey: IEd25519PrivateKeyParameters;
   publicKey: IEd25519PublicKeyParameters;
-  msg, signature: TCryptoLibByteArray;
+  msg, signature, wrongLengthSignature: TCryptoLibByteArray;
   Signer, verifier: ISigner;
   shouldVerify, shouldNotVerify: Boolean;
   algorithmName: String;
@@ -262,6 +262,18 @@ begin
   if (not shouldVerify) then
   begin
     Fail(Format('Ed25519 (%s) signature failed to verify', [algorithmName]));
+  end;
+
+  wrongLengthSignature := TArrayUtils.Prepend(signature, Byte($00));
+
+  verifier.Init(False, publicKey);
+  verifier.BlockUpdate(msg, 0, System.length(msg));
+  shouldNotVerify := verifier.VerifySignature(wrongLengthSignature);
+
+  if (shouldNotVerify) then
+  begin
+    Fail(Format('Ed25519 (%s) wrong length signature incorrectly verified',
+      [algorithmName]));
   end;
 
   tempRand := FRandom.Next();
