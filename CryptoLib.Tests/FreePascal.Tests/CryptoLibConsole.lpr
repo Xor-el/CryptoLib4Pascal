@@ -65,6 +65,7 @@ uses
   ShortenedDigestTests,
   Kdf1GeneratorTests,
   Kdf2GeneratorTests,
+  Argon2Tests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,
   ClpShortenedDigest,

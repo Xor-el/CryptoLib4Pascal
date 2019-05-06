@@ -341,6 +341,8 @@ uses
   ClpAgreementUtilities in '..\..\CryptoLib\src\Security\ClpAgreementUtilities.pas',
   ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
   ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
+  ClpIArgon2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIArgon2ParametersGenerator.pas',
+  ClpArgon2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

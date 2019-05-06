@@ -369,6 +369,8 @@ contains
   ClpTeleTrusTNamedCurves in '..\..\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
   ClpAgreementUtilities in '..\..\Security\ClpAgreementUtilities.pas',
   ClpIKdf1BytesGenerator in '..\..\Interfaces\ClpIKdf1BytesGenerator.pas',
-  ClpKdf1BytesGenerator in '..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas';
+  ClpKdf1BytesGenerator in '..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas',
+  ClpIArgon2ParametersGenerator in '..\..\Interfaces\ClpIArgon2ParametersGenerator.pas',
+  ClpArgon2ParametersGenerator in '..\..\Crypto\Generators\ClpArgon2ParametersGenerator.pas';
 
 end.

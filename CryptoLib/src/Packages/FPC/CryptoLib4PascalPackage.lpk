@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="1"/>
-    <Files Count="337">
+    <Files Count="339">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1376,6 +1376,14 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas"/>
         <UnitName Value="ClpKdf1BytesGenerator"/>
       </Item337>
+      <Item338>
+        <Filename Value="..\..\Interfaces\ClpIArgon2ParametersGenerator.pas"/>
+        <UnitName Value="ClpIArgon2ParametersGenerator"/>
+      </Item338>
+      <Item339>
+        <Filename Value="..\..\Crypto\Generators\ClpArgon2ParametersGenerator.pas"/>
+        <UnitName Value="ClpArgon2ParametersGenerator"/>
+      </Item339>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

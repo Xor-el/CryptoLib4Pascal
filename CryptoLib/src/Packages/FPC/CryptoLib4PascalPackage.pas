@@ -120,7 +120,8 @@ uses
   ClpX25519KeyPairGenerator, ClpEd25519PhBlake2BSigner, ClpEd25519PhSigner, 
   ClpEd25519Signer, ClpEd25519CtxBlake2BSigner, ClpEd25519CtxSigner, 
   ClpEd25519Blake2BSigner, ClpTeleTrusTNamedCurves, ClpAgreementUtilities, 
-  ClpIKdf1BytesGenerator, ClpKdf1BytesGenerator;
+  ClpIKdf1BytesGenerator, ClpKdf1BytesGenerator, 
+  ClpIArgon2ParametersGenerator, ClpArgon2ParametersGenerator;
 
 implementation
 

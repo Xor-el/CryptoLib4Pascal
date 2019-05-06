@@ -351,6 +351,8 @@ uses
   ClpAgreementUtilities in '..\..\CryptoLib\src\Security\ClpAgreementUtilities.pas',
   ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
   ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
+  ClpIArgon2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIArgon2ParametersGenerator.pas',
+  ClpArgon2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
@@ -415,7 +417,8 @@ uses
   Ed25519HigherLevelTests in '..\src\Others\Ed25519HigherLevelTests.pas',
   ShortenedDigestTests in '..\src\Others\ShortenedDigestTests.pas',
   Kdf1GeneratorTests in '..\src\Crypto\Kdf1GeneratorTests.pas',
-  Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas';
+  Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas',
+  Argon2Tests in '..\src\Crypto\Argon2Tests.pas';
 
 begin
 
