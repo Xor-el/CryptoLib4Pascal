@@ -31,6 +31,7 @@ type
 {$SCOPEDENUMS ON}
   TArgon2Type = HlpArgon2TypeAndVersion.TArgon2Type;
   TArgon2Version = HlpArgon2TypeAndVersion.TArgon2Version;
+  TArgon2MemoryCostType = (a2mctMemoryAsKB, a2mctMemoryPowOfTwo);
 {$SCOPEDENUMS OFF}
 
 type
@@ -40,7 +41,8 @@ type
 
     procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
       const password, salt, secret, additional: TCryptoLibByteArray;
-      iterations, memory, parallelism: Int32; memoryAsKB: Boolean);
+      iterations, memory, parallelism: Int32;
+      memoryCostType: TArgon2MemoryCostType);
 
     /// <returns>
     /// the password byte array.

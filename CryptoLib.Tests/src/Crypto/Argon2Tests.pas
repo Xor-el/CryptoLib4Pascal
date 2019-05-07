@@ -102,7 +102,8 @@ begin
   //
 
   LArgon2Generator.Init(AArgon2Type, AArgon2Version, LPassword, LSalt, LSecret,
-    LAdditional, AIterations, AMemoryAsKB, AParallelism, True);
+    LAdditional, AIterations, AMemoryAsKB, AParallelism,
+    TArgon2MemoryCostType.a2mctMemoryAsKB);
 
   LActual := TConverters.ConvertBytesToHexString
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
@@ -132,7 +133,8 @@ begin
   //
 
   LArgon2Generator.Init(AArgon2Type, AArgon2Version, LPassword, LSalt, Nil, Nil,
-    AIterations, AMemory, AParallelism, False);
+    AIterations, AMemory, AParallelism,
+    TArgon2MemoryCostType.a2mctMemoryPowOfTwo);
 
   LActual := TConverters.ConvertBytesToHexString
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)

@@ -36,6 +36,7 @@ uses
 
 resourcestring
   SArgon2TypeInvalid = 'Selected Argon2Type is Invalid';
+  SArgon2MemoryCostTypeInvalid = 'Selected Argon2MemoryCostType is Invalid';
 
 type
 
@@ -78,7 +79,8 @@ type
 
     procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
       const password, salt, secret, additional: TCryptoLibByteArray;
-      iterations, memory, parallelism: Int32; memoryAsKB: Boolean);
+      iterations, memory, parallelism: Int32;
+      memoryCostType: TArgon2MemoryCostType);
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt, and
@@ -211,7 +213,7 @@ end;
 procedure TArgon2ParametersGenerator.Init(argon2Type: TArgon2Type;
   argon2Version: TArgon2Version; const password, salt, secret,
   additional: TCryptoLibByteArray; iterations, memory, parallelism: Int32;
-  memoryAsKB: Boolean);
+  memoryCostType: TArgon2MemoryCostType);
 var
   LArgon2ParametersBuilder: IArgon2ParametersBuilder;
 begin
@@ -237,17 +239,27 @@ begin
     end;
   end;
 
-  if memoryAsKB then
-  begin
-    LArgon2ParametersBuilder.WithVersion(argon2Version).WithSalt(salt)
-      .WithSecret(secret).WithAdditional(additional).WithIterations(iterations)
-      .WithMemoryAsKB(memory).WithParallelism(parallelism);
-  end
+  case memoryCostType of
+    TArgon2MemoryCostType.a2mctMemoryAsKB:
+      begin
+        LArgon2ParametersBuilder.WithVersion(argon2Version).WithSalt(salt)
+          .WithSecret(secret).WithAdditional(additional)
+          .WithIterations(iterations).WithMemoryAsKB(memory)
+          .WithParallelism(parallelism);
+      end;
+
+    TArgon2MemoryCostType.a2mctMemoryPowOfTwo:
+      begin
+        LArgon2ParametersBuilder.WithVersion(argon2Version).WithSalt(salt)
+          .WithSecret(secret).WithAdditional(additional)
+          .WithIterations(iterations).WithMemoryPowOfTwo(memory)
+          .WithParallelism(parallelism);
+      end
   else
-  begin
-    LArgon2ParametersBuilder.WithVersion(argon2Version).WithSalt(salt)
-      .WithSecret(secret).WithAdditional(additional).WithIterations(iterations)
-      .WithMemoryPowOfTwo(memory).WithParallelism(parallelism);
+    begin
+      raise EArgumentCryptoLibException.CreateRes
+        (@SArgon2MemoryCostTypeInvalid);
+    end;
   end;
 
   FPBKDF_Argon2 := TKDF.TPBKDF_Argon2.CreatePBKDF_Argon2(FPassword,
