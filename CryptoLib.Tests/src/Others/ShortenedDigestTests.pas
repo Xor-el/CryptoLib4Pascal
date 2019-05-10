@@ -67,7 +67,7 @@ procedure TTestShortenedDigest.DoTestShortenedDigest;
 var
   d: IDigest;
   sd: IShortenedDigest;
-  temp: TCryptoLibByteArray;
+  temp, temp2: TCryptoLibByteArray;
 begin
   d := TDigestUtilities.GetDigest('SHA-1');
   sd := TShortenedDigest.Create(TDigestUtilities.GetDigest('SHA-1'), 10);
@@ -86,9 +86,11 @@ begin
   // check output fits
   //
   System.SetLength(temp, 10);
+  System.SetLength(temp2, 10);
   sd.DoFinal(temp, 0);
+  sd.DoFinal(temp2, 0);
 
-  CheckTrue(TArrayUtils.AreEqual(temp, sd.DoFinal),
+  CheckTrue(TArrayUtils.AreEqual(temp, temp2),
     Format('DoFinal(temp, 0) <> temp := DoFinal() %s', [sd.AlgorithmName]));
 
   d := TDigestUtilities.GetDigest('SHA-512');
@@ -108,9 +110,11 @@ begin
   // check output fits
   //
   System.SetLength(temp, 20);
+  System.SetLength(temp2, 20);
   sd.DoFinal(temp, 0);
+  sd.DoFinal(temp2, 0);
 
-  CheckTrue(TArrayUtils.AreEqual(temp, sd.DoFinal),
+  CheckTrue(TArrayUtils.AreEqual(temp, temp2),
     Format('DoFinal(temp, 0) <> temp := DoFinal() %s', [sd.AlgorithmName]));
 
   try
