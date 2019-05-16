@@ -68,6 +68,8 @@ uses
   Kdf1GeneratorTests,
   Kdf2GeneratorTests,
   Argon2Tests,
+  DigestTests,
+  DigestUtilitiesTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,
   ClpShortenedDigest,

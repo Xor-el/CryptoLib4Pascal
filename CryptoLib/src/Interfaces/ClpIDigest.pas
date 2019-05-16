@@ -88,6 +88,11 @@ type
     /// </summary>
     procedure Reset();
 
+    /// <summary>
+    /// Clone the digest instance
+    /// </summary>
+    function Clone(): IDigest;
+
   end;
 
 implementation

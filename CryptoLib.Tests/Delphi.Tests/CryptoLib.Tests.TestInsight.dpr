@@ -418,7 +418,9 @@ uses
   ShortenedDigestTests in '..\src\Others\ShortenedDigestTests.pas',
   Kdf1GeneratorTests in '..\src\Crypto\Kdf1GeneratorTests.pas',
   Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas',
-  Argon2Tests in '..\src\Crypto\Argon2Tests.pas';
+  Argon2Tests in '..\src\Crypto\Argon2Tests.pas',
+  DigestUtilitiesTests in '..\src\Security\DigestUtilitiesTests.pas',
+  DigestTests in '..\src\Others\DigestTests.pas';
 
 begin
 

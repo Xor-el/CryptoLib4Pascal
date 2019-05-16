@@ -86,6 +86,8 @@ type
 
     property AlgorithmName: String read GetAlgorithmName;
 
+    function Clone(): IDigest;
+
   end;
 
 implementation
@@ -163,6 +165,12 @@ end;
 procedure TShortenedDigest.Reset;
 begin
   FBaseDigest.Reset();
+end;
+
+function TShortenedDigest.Clone(): IDigest;
+begin
+  result := (TShortenedDigest.Create(FBaseDigest.Clone(), FLength)
+    as IShortenedDigest) as IDigest;
 end;
 
 end.

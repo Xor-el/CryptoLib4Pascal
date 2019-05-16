@@ -204,8 +204,8 @@ begin
 
   if (not TArrayUtils.AreEqual(sigBytes, sig)) then
   begin
-    Fail(TConverters.ConvertBytesToString(&message, TEncoding.UTF8) +
-      ' signature incorrect');
+    Fail(Format('%s %s', [TConverters.ConvertBytesToString(&message,
+      TEncoding.UTF8), 'signature incorrect']));
   end;
 
   sgr.Init(false, vKey);
@@ -214,8 +214,8 @@ begin
 
   if (not(sgr.VerifySignature(sigBytes))) then
   begin
-    Fail(TConverters.ConvertBytesToString(&message, TEncoding.UTF8) +
-      ' verification failed');
+    Fail(Format('%s %s', [TConverters.ConvertBytesToString(&message,
+      TEncoding.UTF8), 'verification failed']));
   end;
 end;
 
