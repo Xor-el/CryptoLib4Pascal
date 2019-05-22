@@ -17,6 +17,8 @@
 
 unit ClpEdECObjectIdentifiers;
 
+{$I ..\..\Include\CryptoLib.inc}
+
 interface
 
 uses
