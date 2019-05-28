@@ -345,13 +345,13 @@ begin
 
     TDigestAlgorithm.SHAKE128:
       begin
-        result := TDigest.Create(THashFactory.TCrypto.CreateShake_128(128));
+        result := TDigest.Create(THashFactory.TXOF.CreateShake_128(128));
         Exit;
       end;
 
     TDigestAlgorithm.SHAKE256:
       begin
-        result := TDigest.Create(THashFactory.TCrypto.CreateShake_256(256));
+        result := TDigest.Create(THashFactory.TXOF.CreateShake_256(256));
         Exit;
       end;
 

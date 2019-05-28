@@ -203,10 +203,10 @@ begin
     TDigest.Create(THashFactory.TCrypto.CreateSHA3_512()) as IDigest);
 
   CheckXofDigestAlgorithm('SHAKE128',
-    TDigest.Create(THashFactory.TCrypto.CreateShake_128(128)) as IDigest);
+    TDigest.Create(THashFactory.TXOF.CreateShake_128(128)) as IDigest);
 
   CheckXofDigestAlgorithm('SHAKE256',
-    TDigest.Create(THashFactory.TCrypto.CreateShake_256(256)) as IDigest);
+    TDigest.Create(THashFactory.TXOF.CreateShake_256(256)) as IDigest);
 
   CheckPlainDigestAlgorithm('RIPEMD128',
     TDigest.Create(THashFactory.TCrypto.CreateRIPEMD128()) as IDigest);
@@ -261,10 +261,10 @@ begin
 
   // Xof test
   CheckXofDigestAlgorithm('SHAKE128',
-    TDigest.Create(THashFactory.TCrypto.CreateShake_128(128)) as IDigest);
+    TDigest.Create(THashFactory.TXOF.CreateShake_128(128)) as IDigest);
 
   CheckXofDigestAlgorithm('SHAKE256',
-    TDigest.Create(THashFactory.TCrypto.CreateShake_256(256)) as IDigest);
+    TDigest.Create(THashFactory.TXOF.CreateShake_256(256)) as IDigest);
 end;
 
 initialization
