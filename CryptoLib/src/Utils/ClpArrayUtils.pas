@@ -95,6 +95,8 @@ type
     class procedure Fill(const buf: TCryptoLibUInt32Array; from, &to: Int32;
       filler: UInt32); overload; static;
 
+    class procedure ZeroFill(const buf: TCryptoLibByteArray); static;
+
   end;
 
 implementation
@@ -280,6 +282,11 @@ begin
     System.Inc(from);
   end;
 {$ENDIF}
+end;
+
+class procedure TArrayUtils.ZeroFill(const buf: TCryptoLibByteArray);
+begin
+  TArrayUtils.Fill(buf, 0, System.Length(buf), Byte(0));
 end;
 
 class function TArrayUtils.GetArrayHashCode(const data

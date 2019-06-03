@@ -253,7 +253,7 @@ begin
   //
   if (ZeroVector <> Nil) then
   begin
-    TArrayUtils.Fill(data, 0, 8, Byte(0));
+    TArrayUtils.ZeroFill(data);
     padding.AddPadding(data, 4);
 
     if (not TArrayUtils.AreEqual(data, ZeroVector)) then
