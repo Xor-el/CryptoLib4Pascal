@@ -91,10 +91,11 @@ type
     function GetBlockSize(): Int32; virtual;
 
     /// <summary>
-    /// Checks whether a key size provided to the <see cref="ClpSpeckLegacyEngine|TSpeckLegacyEngine.EngineInit(Boolean,TCryptoLibByteArray)" />
+    /// Checks whether the key size provided to the <see cref="ClpSpeckLegacyEngine|TSpeckLegacyEngine.EngineInit(Boolean,TCryptoLibByteArray)" />
     /// method is valid.
     /// </summary>
-    procedure CheckKeySize(keySizeBytes: Int32); virtual; abstract;
+    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray);
+      virtual; abstract;
 
     /// <summary>
     /// Sets a key for this cipher instance, calculating the key schedule.
@@ -482,7 +483,7 @@ type
 
   strict protected
     function Mask(val: UInt32): UInt32; override;
-    procedure CheckKeySize(keySizeBytes: Int32); override;
+    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -503,7 +504,7 @@ type
 
   strict protected
     function Mask(val: UInt32): UInt32; override;
-    procedure CheckKeySize(keySizeBytes: Int32); override;
+    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -524,7 +525,7 @@ type
 
   strict protected
     function Mask(val: UInt32): UInt32; override;
-    procedure CheckKeySize(keySizeBytes: Int32); override;
+    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -545,7 +546,7 @@ type
 
   strict protected
     function Mask(val: UInt64): UInt64; override;
-    procedure CheckKeySize(keySizeBytes: Int32); override;
+    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -567,7 +568,7 @@ type
 
   strict protected
     function Mask(val: UInt64): UInt64; override;
-    procedure CheckKeySize(keySizeBytes: Int32); override;
+    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -599,12 +600,7 @@ procedure TSpeckLegacyEngine.EngineInit(forEncryption: Boolean;
   const keyBytes: TCryptoLibByteArray);
 begin
   FforEncryption := forEncryption;
-  // ensure we clear "Key" from memory in case of exceptions when checking KeyLength
-  try
-    CheckKeySize(System.Length(keyBytes));
-  except
-    TArrayUtils.ZeroFill(keyBytes);
-  end;
+  CheckKeySize(keyBytes);
   SetKey(keyBytes);
   Finitialised := true;
 end;
@@ -1003,10 +999,15 @@ begin
   result := (val and $FFFF);
 end;
 
-procedure TSpeck32LegacyEngine.CheckKeySize(keySizeBytes: Int32);
+procedure TSpeck32LegacyEngine.CheckKeySize(const keyBytes
+  : TCryptoLibByteArray);
+var
+  keySizeBytes: Int32;
 begin
+  keySizeBytes := System.Length(keyBytes);
   if (keySizeBytes <> 8) then
   begin
+    TArrayUtils.ZeroFill(keyBytes);
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck32LegacyInvalidKeySize, [keySizeBytes * 8]);
   end;
@@ -1024,10 +1025,15 @@ begin
   result := (val and $FFFFFF);
 end;
 
-procedure TSpeck48LegacyEngine.CheckKeySize(keySizeBytes: Int32);
+procedure TSpeck48LegacyEngine.CheckKeySize(const keyBytes
+  : TCryptoLibByteArray);
+var
+  keySizeBytes: Int32;
 begin
+  keySizeBytes := System.Length(keyBytes);
   if not(keySizeBytes in [9, 12]) then
   begin
+    TArrayUtils.ZeroFill(keyBytes);
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck48LegacyInvalidKeySize, [keySizeBytes * 8]);
   end;
@@ -1045,10 +1051,15 @@ begin
   result := val;
 end;
 
-procedure TSpeck64LegacyEngine.CheckKeySize(keySizeBytes: Int32);
+procedure TSpeck64LegacyEngine.CheckKeySize(const keyBytes
+  : TCryptoLibByteArray);
+var
+  keySizeBytes: Int32;
 begin
+  keySizeBytes := System.Length(keyBytes);
   if not(keySizeBytes in [12, 16]) then
   begin
+    TArrayUtils.ZeroFill(keyBytes);
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck64LegacyInvalidKeySize, [keySizeBytes * 8]);
   end;
@@ -1066,10 +1077,15 @@ begin
   result := (val and $0000FFFFFFFFFFFF);
 end;
 
-procedure TSpeck96LegacyEngine.CheckKeySize(keySizeBytes: Int32);
+procedure TSpeck96LegacyEngine.CheckKeySize(const keyBytes
+  : TCryptoLibByteArray);
+var
+  keySizeBytes: Int32;
 begin
+  keySizeBytes := System.Length(keyBytes);
   if not(keySizeBytes in [12, 18]) then
   begin
+    TArrayUtils.ZeroFill(keyBytes);
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck96LegacyInvalidKeySize, [keySizeBytes * 8]);
   end;
@@ -1087,10 +1103,15 @@ begin
   result := val;
 end;
 
-procedure TSpeck128LegacyEngine.CheckKeySize(keySizeBytes: Int32);
+procedure TSpeck128LegacyEngine.CheckKeySize(const keyBytes
+  : TCryptoLibByteArray);
+var
+  keySizeBytes: Int32;
 begin
+  keySizeBytes := System.Length(keyBytes);
   if not(keySizeBytes in [16, 24, 32]) then
   begin
+    TArrayUtils.ZeroFill(keyBytes);
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck128LegacyInvalidKeySize, [keySizeBytes * 8]);
   end;
