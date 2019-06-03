@@ -28,6 +28,7 @@ uses
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -601,7 +602,12 @@ procedure TSpeckEngine.EngineInit(forEncryption: Boolean;
   const keyBytes: TCryptoLibByteArray);
 begin
   FforEncryption := forEncryption;
-  CheckKeySize(System.Length(keyBytes));
+  // ensure we clear "Key" from memory in case of exceptions when checking KeyLength
+  try
+    CheckKeySize(System.Length(keyBytes));
+  except
+    TArrayUtils.ZeroFill(keyBytes);
+  end;
   SetKey(keyBytes);
   Finitialised := true;
 end;
@@ -620,7 +626,6 @@ procedure TSpeckEngine.Init(forEncryption: Boolean;
   const parameters: ICipherParameters);
 var
   keyParameter: IKeyParameter;
-  keyBytes: TCryptoLibByteArray;
 begin
 
   if not Supports(parameters, IKeyParameter, keyParameter) then
@@ -628,8 +633,7 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameterSpeckInit,
       [(parameters as TObject).ToString]);
   end;
-  keyBytes := keyParameter.GetKey;
-  EngineInit(forEncryption, keyBytes);
+  EngineInit(forEncryption, keyParameter.GetKey());
 end;
 
 function TSpeckEngine.ProcessBlock(const input: TCryptoLibByteArray;
@@ -817,6 +821,7 @@ begin
 
   end;
 
+  TArrayUtils.ZeroFill(keyBytes);
 end;
 
 { TSpeckUInt64Engine }
@@ -980,6 +985,7 @@ begin
 
   end;
 
+  TArrayUtils.ZeroFill(keyBytes);
 end;
 
 { TSpeck32Engine }
@@ -1088,4 +1094,3 @@ begin
 end;
 
 end.
-
