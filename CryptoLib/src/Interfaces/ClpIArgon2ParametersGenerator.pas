@@ -39,31 +39,12 @@ type
 
     ['{0AC3D3A8-9422-405F-B0EE-6B7AE0F64F74}']
 
+    procedure Clear();
+
     procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
       const password, salt, secret, additional: TCryptoLibByteArray;
       iterations, memory, parallelism: Int32;
       memoryCostType: TArgon2MemoryCostType);
-
-    /// <returns>
-    /// the password byte array.
-    /// </returns>
-    function GetPassword: TCryptoLibByteArray;
-
-    /// <value>
-    /// the password byte array.
-    /// </value>
-    property password: TCryptoLibByteArray read GetPassword;
-
-    /// <returns>
-    /// the Argon2 Parameter Builder Instance
-    /// </returns>
-    function GetArgon2ParametersBuilder: HlpIHashInfo.IArgon2ParametersBuilder;
-
-    /// <returns>
-    /// the Argon2 Parameter Builder Instance
-    /// </returns>
-    property Argon2ParametersBuilder: HlpIHashInfo.IArgon2ParametersBuilder
-      read GetArgon2ParametersBuilder;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize.

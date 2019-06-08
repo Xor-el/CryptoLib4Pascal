@@ -32,6 +32,7 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpParameterUtilities,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -52,22 +53,13 @@ type
   var
     FPassword: TCryptoLibByteArray;
     FPBKDF_Argon2: IPBKDF_Argon2;
-    FArgon2ParametersBuilder: HlpIHashInfo.IArgon2ParametersBuilder;
-
-    /// <returns>
-    /// the password byte array.
-    /// </returns>
-    function GetPassword: TCryptoLibByteArray; inline;
-
-    /// <returns>
-    /// the Argon2 Parameter Builder Instance
-    /// </returns>
-    function GetArgon2ParametersBuilder
-      : HlpIHashInfo.IArgon2ParametersBuilder; inline;
+    FArgon2Parameters: IArgon2Parameters;
 
     function GenerateDerivedKey(dkLen: Int32): TCryptoLibByteArray; inline;
 
   public
+
+    procedure Clear();
 
     /// <summary>
     /// construct an Argon2 Parameters generator.
@@ -76,6 +68,8 @@ type
     /// digest to use for constructing hmac
     /// </param>
     constructor Create();
+
+    destructor Destroy; override;
 
     procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
       const password, salt, secret, additional: TCryptoLibByteArray;
@@ -132,37 +126,28 @@ type
     function GenerateDerivedMacParameters(keySize: Int32)
       : ICipherParameters; overload;
 
-    /// <value>
-    /// the password byte array.
-    /// </value>
-    property password: TCryptoLibByteArray read GetPassword;
-
-    /// <returns>
-    /// the Argon2 Parameter Builder Instance
-    /// </returns>
-    property Argon2ParametersBuilder: HlpIHashInfo.IArgon2ParametersBuilder
-      read GetArgon2ParametersBuilder;
-
   end;
 
 implementation
 
 { TArgon2ParametersGenerator }
 
-function TArgon2ParametersGenerator.GetPassword: TCryptoLibByteArray;
+procedure TArgon2ParametersGenerator.Clear();
 begin
-  result := System.Copy(FPassword);
-end;
-
-function TArgon2ParametersGenerator.GetArgon2ParametersBuilder
-  : HlpIHashInfo.IArgon2ParametersBuilder;
-begin
-  result := FArgon2ParametersBuilder;
+  TArrayUtils.ZeroFill(FPassword);
+  FArgon2Parameters.Clear();
+  FPBKDF_Argon2.Clear();
 end;
 
 constructor TArgon2ParametersGenerator.Create();
 begin
   Inherited Create();
+end;
+
+destructor TArgon2ParametersGenerator.Destroy();
+begin
+  Clear();
+  inherited Destroy;
 end;
 
 function TArgon2ParametersGenerator.GenerateDerivedKey(dkLen: Int32)
@@ -217,7 +202,7 @@ procedure TArgon2ParametersGenerator.Init(argon2Type: TArgon2Type;
 var
   LArgon2ParametersBuilder: IArgon2ParametersBuilder;
 begin
-  FPassword := password;
+  FPassword := System.Copy(password);
 
   case argon2Type of
     TArgon2Type.a2tARGON2_d:
@@ -262,8 +247,10 @@ begin
     end;
   end;
 
+  FArgon2Parameters := LArgon2ParametersBuilder.Build();
+  LArgon2ParametersBuilder.Clear();
   FPBKDF_Argon2 := TKDF.TPBKDF_Argon2.CreatePBKDF_Argon2(FPassword,
-    LArgon2ParametersBuilder.Build());
+    FArgon2Parameters);
 end;
 
 end.

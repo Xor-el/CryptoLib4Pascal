@@ -257,31 +257,40 @@ end;
 class procedure TArrayUtils.Fill(const buf: TCryptoLibByteArray;
   from, &to: Int32; filler: Byte);
 begin
-  System.FillChar(buf[from], (&to - from) * System.SizeOf(Byte), filler);
+  if buf <> Nil then
+  begin
+    System.FillChar(buf[from], (&to - from) * System.SizeOf(Byte), filler);
+  end;
 end;
 
 class procedure TArrayUtils.Fill(const buf: TCryptoLibInt32Array;
   from, &to: Int32; filler: Int32);
 begin
-  while from < &to do
+  if buf <> Nil then
   begin
-    buf[from] := filler;
-    System.Inc(from);
+    while from < &to do
+    begin
+      buf[from] := filler;
+      System.Inc(from);
+    end;
   end;
 end;
 
 class procedure TArrayUtils.Fill(const buf: TCryptoLibUInt32Array;
   from, &to: Int32; filler: UInt32);
 begin
-{$IFDEF FPC}
-  System.FillDWord(buf[from], (&to - from), filler);
-{$ELSE}
-  while from < &to do
+  if buf <> Nil then
   begin
-    buf[from] := filler;
-    System.Inc(from);
-  end;
+{$IFDEF FPC}
+    System.FillDWord(buf[from], (&to - from), filler);
+{$ELSE}
+    while from < &to do
+    begin
+      buf[from] := filler;
+      System.Inc(from);
+    end;
 {$ENDIF}
+  end;
 end;
 
 class procedure TArrayUtils.ZeroFill(const buf: TCryptoLibByteArray);

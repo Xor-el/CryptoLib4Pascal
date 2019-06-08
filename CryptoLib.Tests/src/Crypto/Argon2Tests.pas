@@ -109,6 +109,8 @@ begin
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
     as IKeyParameter).GetKey(), False);
 
+  LArgon2Generator.Clear();
+
   CheckEquals(APasswordRef, LActual, Format('Expected %s but got %s.',
     [APasswordRef, LActual]));
 
@@ -139,6 +141,8 @@ begin
   LActual := TConverters.ConvertBytesToHexString
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
     as IKeyParameter).GetKey(), False);
+
+  LArgon2Generator.Clear();
 
   CheckEquals(APasswordRef, LActual, Format('Expected %s but got %s.',
     [APasswordRef, LActual]));

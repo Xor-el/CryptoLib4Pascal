@@ -58,6 +58,7 @@ type
 
   public
 
+    procedure Clear();
     /// <summary>
     /// construct a Pkcs5 Scheme 2 Parameters generator.
     /// </summary>
@@ -65,6 +66,8 @@ type
     /// digest to use for constructing hmac
     /// </param>
     constructor Create(const digest: IDigest);
+
+    destructor Destroy; override;
 
     procedure Init(const password, salt: TCryptoLibByteArray;
       iterationCount: Int32); override;
@@ -129,10 +132,21 @@ implementation
 
 { TPkcs5S2ParametersGenerator }
 
+procedure TPkcs5S2ParametersGenerator.Clear();
+begin
+  FPBKDF2_HMAC.Clear();
+end;
+
 constructor TPkcs5S2ParametersGenerator.Create(const digest: IDigest);
 begin
   Inherited Create();
   Fdigest := digest;
+end;
+
+destructor TPkcs5S2ParametersGenerator.Destroy;
+begin
+  Clear();
+  inherited Destroy;
 end;
 
 function TPkcs5S2ParametersGenerator.GenerateDerivedKey(dkLen: Int32)

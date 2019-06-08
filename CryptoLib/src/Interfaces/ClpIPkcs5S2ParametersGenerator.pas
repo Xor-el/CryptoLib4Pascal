@@ -30,6 +30,8 @@ type
 
     ['{AD345DB8-2341-4C56-B401-23444C2A81BA}']
 
+    procedure Clear();
+
     function GetDigest: IDigest;
 
     /// <value>
