@@ -34,8 +34,7 @@ uses
   ClpIKeyParameter,
   ClpArgon2ParametersGenerator,
   ClpIArgon2ParametersGenerator,
-  ClpConverters,
-  ClpCryptoLibTypes;
+  ClpConverters;
 
 type
 
@@ -87,7 +86,7 @@ procedure TTestArgon2.HashTestFromInternetDraft(AArgon2Type: TArgon2Type;
 var
   LArgon2Generator: IArgon2ParametersGenerator;
   LActual: String;
-  LAdditional, LSecret, LSalt, LPassword: TCryptoLibByteArray;
+  LAdditional, LSecret, LSalt, LPassword: TBytes;
 begin
 
   LAdditional := TConverters.ConvertHexStringToBytes(AAdditional);
@@ -121,7 +120,7 @@ procedure TTestArgon2.HashTestOthers(AArgon2Type: TArgon2Type;
   const APassword, ASalt, APasswordRef: String; AOutputLength: Int32);
 var
   LArgon2Generator: IArgon2ParametersGenerator;
-  LSalt, LPassword: TCryptoLibByteArray;
+  LSalt, LPassword: TBytes;
   LActual: String;
 begin
 

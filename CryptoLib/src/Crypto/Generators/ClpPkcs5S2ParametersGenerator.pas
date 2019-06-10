@@ -33,6 +33,7 @@ uses
   ClpParametersWithIV,
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 type
@@ -46,6 +47,7 @@ type
 
   strict private
   var
+    FPassword, FSalt: TCryptoLibByteArray;
     Fdigest: IDigest;
     FPBKDF2_HMAC: HlpIHashInfo.IPBKDF2_HMAC;
 
@@ -58,7 +60,7 @@ type
 
   public
 
-    procedure Clear();
+    procedure Clear(); override;
     /// <summary>
     /// construct a Pkcs5 Scheme 2 Parameters generator.
     /// </summary>
@@ -70,7 +72,7 @@ type
     destructor Destroy; override;
 
     procedure Init(const password, salt: TCryptoLibByteArray;
-      iterationCount: Int32); override;
+      iterationCount: Int32);
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt, and
@@ -119,8 +121,8 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedMacParameters(keySize: Int32): ICipherParameters;
-      overload; override;
+    function GenerateDerivedMacParameters(keySize: Int32)
+      : ICipherParameters; override;
 
     /// <value>
     /// the underlying digest.
@@ -134,7 +136,13 @@ implementation
 
 procedure TPkcs5S2ParametersGenerator.Clear();
 begin
-  FPBKDF2_HMAC.Clear();
+  TArrayUtils.ZeroFill(FPassword);
+  TArrayUtils.ZeroFill(FSalt);
+
+  if FPBKDF2_HMAC <> Nil then
+  begin
+    FPBKDF2_HMAC.Clear();
+  end;
 end;
 
 constructor TPkcs5S2ParametersGenerator.Create(const digest: IDigest);
@@ -202,9 +210,10 @@ end;
 procedure TPkcs5S2ParametersGenerator.Init(const password,
   salt: TCryptoLibByteArray; iterationCount: Int32);
 begin
-  inherited Init(password, salt, iterationCount);
+  FPassword := System.Copy(password);
+  FSalt := System.Copy(salt);
   FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC
-    (Fdigest.GetUnderlyingIHash, password, salt, iterationCount);
+    (Fdigest.GetUnderlyingIHash, FPassword, FSalt, iterationCount);
 end;
 
 end.

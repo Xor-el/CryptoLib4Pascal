@@ -353,6 +353,8 @@ uses
   ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
   ClpIArgon2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIArgon2ParametersGenerator.pas',
   ClpArgon2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
+  ClpScryptParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpScryptParametersGenerator.pas',
+  ClpIScryptParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIScryptParametersGenerator.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
@@ -420,7 +422,8 @@ uses
   Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas',
   Argon2Tests in '..\src\Crypto\Argon2Tests.pas',
   DigestUtilitiesTests in '..\src\Security\DigestUtilitiesTests.pas',
-  DigestTests in '..\src\Others\DigestTests.pas';
+  DigestTests in '..\src\Others\DigestTests.pas',
+  ScryptTests in '..\src\Crypto\ScryptTests.pas';
 
 begin
 

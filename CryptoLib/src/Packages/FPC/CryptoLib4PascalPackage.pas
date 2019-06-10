@@ -121,7 +121,8 @@ uses
   ClpEd25519Signer, ClpEd25519CtxBlake2BSigner, ClpEd25519CtxSigner, 
   ClpEd25519Blake2BSigner, ClpTeleTrusTNamedCurves, ClpAgreementUtilities, 
   ClpIKdf1BytesGenerator, ClpKdf1BytesGenerator, 
-  ClpIArgon2ParametersGenerator, ClpArgon2ParametersGenerator;
+  ClpIArgon2ParametersGenerator, ClpArgon2ParametersGenerator, 
+  ClpIScryptParametersGenerator, ClpScryptParametersGenerator;
 
 implementation
 

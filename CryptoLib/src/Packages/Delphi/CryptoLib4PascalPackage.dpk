@@ -371,6 +371,8 @@ contains
   ClpIKdf1BytesGenerator in '..\..\Interfaces\ClpIKdf1BytesGenerator.pas',
   ClpKdf1BytesGenerator in '..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas',
   ClpIArgon2ParametersGenerator in '..\..\Interfaces\ClpIArgon2ParametersGenerator.pas',
-  ClpArgon2ParametersGenerator in '..\..\Crypto\Generators\ClpArgon2ParametersGenerator.pas';
+  ClpArgon2ParametersGenerator in '..\..\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
+  ClpIScryptParametersGenerator in '..\..\Interfaces\ClpIScryptParametersGenerator.pas',
+  ClpScryptParametersGenerator in '..\..\Crypto\Generators\ClpScryptParametersGenerator.pas';
 
 end.

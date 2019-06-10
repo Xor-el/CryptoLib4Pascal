@@ -15,33 +15,23 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIArgon2ParametersGenerator;
+unit ClpIScryptParametersGenerator;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  HlpArgon2TypeAndVersion,
   ClpIPbeParametersGenerator,
   ClpCryptoLibTypes;
 
 type
-{$SCOPEDENUMS ON}
-  TArgon2Type = HlpArgon2TypeAndVersion.TArgon2Type;
-  TArgon2Version = HlpArgon2TypeAndVersion.TArgon2Version;
-  TArgon2MemoryCostType = (a2mctMemoryAsKB, a2mctMemoryPowOfTwo);
-{$SCOPEDENUMS OFF}
+  IScryptParametersGenerator = interface(IPbeParametersGenerator)
 
-type
-  IArgon2ParametersGenerator = interface(IPbeParametersGenerator)
+    ['{1EB9E081-1F90-409F-A5B9-3A999EB6CC70}']
 
-    ['{0AC3D3A8-9422-405F-B0EE-6B7AE0F64F74}']
-
-    procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
-      const password, salt, secret, additional: TCryptoLibByteArray;
-      iterations, memory, parallelism: Int32;
-      memoryCostType: TArgon2MemoryCostType);
+    procedure Init(const password, salt: TCryptoLibByteArray;
+      cost, blockSize, parallelism: Int32);
 
   end;
 

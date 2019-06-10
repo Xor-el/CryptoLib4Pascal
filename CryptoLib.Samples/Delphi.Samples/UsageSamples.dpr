@@ -343,6 +343,8 @@ uses
   ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
   ClpIArgon2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIArgon2ParametersGenerator.pas',
   ClpArgon2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
+  ClpScryptParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpScryptParametersGenerator.pas',
+  ClpIScryptParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIScryptParametersGenerator.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin
