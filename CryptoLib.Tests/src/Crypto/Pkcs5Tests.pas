@@ -114,6 +114,8 @@ begin
     Fail('PBKDF2 HMAC-SHA1 with iteration count "5", 64 bits key generation test failed');
   end;
 
+  generator.Clear();
+
   PasswordString :=
     'All n-entities must communicate with other n-entities via n-1 entiteeheehees';
   PasswordBytes := TConverters.ConvertStringToBytes(PasswordString,
@@ -128,6 +130,8 @@ begin
     Fail('PBKDF2 HMAC-SHA1 with iteration count "500", 192 bits key generation test failed');
   end;
 
+  generator.Clear();
+
   generator.Init(PasswordBytes, SaltBytes, 60000);
 
   if (not TArrayUtils.AreEqual((generator.GenerateDerivedMacParameters(192)
@@ -136,6 +140,8 @@ begin
   begin
     Fail('PBKDF2 HMAC-SHA1 with iteration count "60000", 192 bits key generation test failed');
   end;
+
+  generator.Clear();
 
   // https://github.com/ircmaxell/PHP-PasswordLib/blob/master/test/Data/Vectors/pbkdf2-draft-josefsson-sha1.test-vectors
 
@@ -166,6 +172,8 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
+
   // 2
 
   iteration_count := 2;
@@ -182,6 +190,8 @@ begin
       ('PBKDF2 HMAC-SHA1 with iteration count "%u", %u bits key generation test failed',
       [iteration_count, dkLen]));
   end;
+
+  generator.Clear();
 
 
   // 3
@@ -201,6 +211,8 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
+
   // 4
   // commented out because iteration_count is very large
   // iteration_count := 16777216;
@@ -217,6 +229,8 @@ begin
   // ('PBKDF2 HMAC-SHA1 with iteration count "%u", %u bits key generation test failed',
   // [iteration_count, dkLen]));
   // end;
+  //
+  // generator.Clear();
 
 
   // 5
@@ -243,6 +257,8 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
+
 
   // 6
 
@@ -268,6 +284,8 @@ begin
       ('PBKDF2 HMAC-SHA1 with iteration count "%u", %u bits key generation test failed',
       [iteration_count, dkLen]));
   end;
+
+  generator.Clear();
 
 end;
 
@@ -309,6 +327,8 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
+
   // 2
 
   iteration_count := 2;
@@ -327,6 +347,7 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
 
   // 3
 
@@ -346,6 +367,8 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
+
   // 4
   // commented out because iteration_count is very large
   // iteration_count := 16777216;
@@ -363,7 +386,8 @@ begin
   // ('PBKDF2 HMAC-SHA256 with iteration count "%u", %u bits key generation test failed',
   // [iteration_count, dkLen]));
   // end;
-
+  //
+  // generator.Clear();
 
   // 5
 
@@ -391,6 +415,7 @@ begin
       [iteration_count, dkLen]));
   end;
 
+  generator.Clear();
 
   // 6
 
@@ -416,6 +441,8 @@ begin
       ('PBKDF2 HMAC-SHA256 with iteration count "%u", %u bits key generation test failed',
       [iteration_count, dkLen]));
   end;
+
+  generator.Clear();
 
 end;
 

@@ -167,7 +167,6 @@ begin
 
     tempPair := keyGen.GenerateKeyPair();
 
-    // BigInteger Vx := tempPair.getPublic().getW().getAffineX();
     V := tempPair.Public as IECPublicKeyParameters; // get temp's public key
     Vx := V.Q.AffineXCoord.ToBigInteger(); // get the point's x coordinate
 

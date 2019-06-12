@@ -37,7 +37,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="59">
+    <Units Count="70">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -274,6 +274,50 @@
         <Filename Value="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit58>
+      <Unit59>
+        <Filename Value="..\src\Others\Ed25519HigherLevelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit59>
+      <Unit60>
+        <Filename Value="..\src\Others\X25519HigherLevelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit60>
+      <Unit61>
+        <Filename Value="..\src\Utils\ClpShortenedDigest.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit61>
+      <Unit62>
+        <Filename Value="..\src\Utils\ClpIShortenedDigest.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit62>
+      <Unit63>
+        <Filename Value="..\src\Others\ShortenedDigestTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit63>
+      <Unit64>
+        <Filename Value="..\src\Crypto\Kdf1GeneratorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit64>
+      <Unit65>
+        <Filename Value="..\src\Crypto\Kdf2GeneratorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit65>
+      <Unit66>
+        <Filename Value="..\src\Crypto\Argon2Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit66>
+      <Unit67>
+        <Filename Value="..\src\Others\DigestTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit67>
+      <Unit68>
+        <Filename Value="..\src\Security\DigestUtilitiesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit68>
+      <Unit69>
+        <Filename Value="..\src\Crypto\ScryptTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit69>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

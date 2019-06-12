@@ -222,7 +222,7 @@ uses
   ClpIHkdfParameters in '..\..\CryptoLib\src\Interfaces\ClpIHkdfParameters.pas',
   ClpDsaParameterGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDsaParameterGenerationParameters.pas',
   ClpIDsaParameterGenerationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDsaParameterGenerationParameters.pas',
-  ClpValidityPrecompInfo in '..\..\CryptoLib\src\Math\EC\ClpValidityPrecompInfo.pas',
+  ClpValidityPrecompInfo in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpValidityPrecompInfo.pas',
   ClpIValidityPrecompInfo in '..\..\CryptoLib\src\Interfaces\ClpIValidityPrecompInfo.pas',
   ClpDsaParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpDsaParametersGenerator.pas',
   ClpIDsaParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIDsaParametersGenerator.pas',
@@ -337,6 +337,14 @@ uses
   ClpIEd25519PhBlake2BSigner in '..\..\CryptoLib\src\Interfaces\ClpIEd25519PhBlake2BSigner.pas',
   ClpEd25519PhSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhSigner.pas',
   ClpEd25519PhBlake2BSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhBlake2BSigner.pas',
+  ClpTeleTrusTNamedCurves in '..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',
+  ClpAgreementUtilities in '..\..\CryptoLib\src\Security\ClpAgreementUtilities.pas',
+  ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
+  ClpIKdf1BytesGenerator in '..\..\CryptoLib\src\Interfaces\ClpIKdf1BytesGenerator.pas',
+  ClpIArgon2ParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIArgon2ParametersGenerator.pas',
+  ClpArgon2ParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
+  ClpScryptParametersGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpScryptParametersGenerator.pas',
+  ClpIScryptParametersGenerator in '..\..\CryptoLib\src\Interfaces\ClpIScryptParametersGenerator.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

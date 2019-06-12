@@ -51,6 +51,7 @@ uses
   ClpIMac,
   ClpMacUtilities,
   ClpIX9ECParameters,
+  ClpConverters,
   ClpCryptoLibTypes;
 
 type
@@ -250,8 +251,8 @@ begin
   CipherEncrypt.Init(True, RecreatePublicKeyFromAffineXandAffineYCoord(keyType,
     THex.Decode(RawAffineXCoord), THex.Decode(RawAffineYCoord)),
     GetPascalCoinIESParameterSpec(), FRandom);
-  Result := THex.Encode(CipherEncrypt.DoFinal(TEncoding.ASCII.GetBytes
-    (UnicodeString(PayloadToEncrypt))));
+  Result := THex.Encode(CipherEncrypt.DoFinal(TConverters.ConvertStringToBytes
+    (PayloadToEncrypt, TEncoding.ASCII)));
 end;
 
 function TTestPascalCoinECIES.DoPascalCoinECIESDecrypt(keyType: TKeyType;
@@ -264,8 +265,9 @@ begin
     CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine());
     CipherDecrypt.Init(False, RecreatePrivateKeyFromByteArray(keyType,
       THex.Decode(RawPrivateKey)), GetPascalCoinIESParameterSpec(), FRandom);
-    Result := String(TEncoding.ASCII.GetString
-      ((CipherDecrypt.DoFinal(THex.Decode(PayloadToDecrypt)))));
+
+    Result := TConverters.ConvertBytesToString
+      (CipherDecrypt.DoFinal(THex.Decode(PayloadToDecrypt)), TEncoding.ASCII);
   except
     // should only happen if decryption fails
     raise;

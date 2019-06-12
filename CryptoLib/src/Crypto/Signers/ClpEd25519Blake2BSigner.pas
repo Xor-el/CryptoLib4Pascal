@@ -172,6 +172,11 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SNotInitializedForVerifying);
   end;
+  if (TEd25519Blake2B.SignatureSize <> System.Length(signature)) then
+  begin
+    Result := false;
+    Exit;
+  end;
   pk := FPublicKey.GetEncoded();
   buf := Aggregate();
   count := System.Length(buf);

@@ -58,6 +58,7 @@ type
     FRandom: ISecureRandom;
 
     function val(n: Int64): TBigInteger;
+    function IsEvenUsingMod(const n: TBigInteger): Boolean;
     function mersenne(e: Int32): TBigInteger;
     procedure CheckEqualsBigInteger(const a, b: TBigInteger;
       const msg: String = '');
@@ -102,6 +103,7 @@ type
     procedure TestSignValue();
     procedure TestSubtract();
     procedure TestTestBit();
+    procedure TestIsEven();
     procedure TestToByteArray();
     procedure TestToByteArrayUnsigned();
     procedure TestToString();
@@ -122,6 +124,11 @@ procedure TTestBigInteger.CheckEqualsBigInteger(const a, b: TBigInteger;
   const msg: String = '');
 begin
   CheckEquals(True, a.Equals(b), msg);
+end;
+
+function TTestBigInteger.IsEvenUsingMod(const n: TBigInteger): Boolean;
+begin
+  result := n.&Mod(TBigInteger.Two).Equals(TBigInteger.Zero);
 end;
 
 function TTestBigInteger.mersenne(e: Int32): TBigInteger;
@@ -675,6 +682,38 @@ begin
   end;
 
   // TODO Tests for large numbers
+end;
+
+procedure TTestBigInteger.TestIsEven;
+var
+  RandomBigInteger: TBigInteger;
+  idx: Int32;
+begin
+  CheckTrue(TBigInteger.ValueOf(2).IsEven);
+  CheckTrue(TBigInteger.ValueOf(4).IsEven);
+  CheckTrue(TBigInteger.ValueOf(6).IsEven);
+  CheckTrue(TBigInteger.ValueOf(8).IsEven);
+  CheckTrue(TBigInteger.ValueOf(10).IsEven);
+  CheckTrue(TBigInteger.ValueOf(12).IsEven);
+
+  CheckFalse(TBigInteger.ValueOf(1).IsEven);
+  CheckFalse(TBigInteger.ValueOf(3).IsEven);
+  CheckFalse(TBigInteger.ValueOf(5).IsEven);
+  CheckFalse(TBigInteger.ValueOf(7).IsEven);
+  CheckFalse(TBigInteger.ValueOf(9).IsEven);
+  CheckFalse(TBigInteger.ValueOf(11).IsEven);
+
+  idx := 0;
+
+  while idx <= 1000 do
+  begin
+    RandomBigInteger := TBigInteger.Create(RandomRange(1, 256), FRandom);
+    CheckEquals(RandomBigInteger.IsEven(), IsEvenUsingMod(RandomBigInteger),
+      Format('IsEven Comparison failed with "%s"',
+      [RandomBigInteger.ToString]));
+
+    System.Inc(idx);
+  end;
 end;
 
 procedure TTestBigInteger.TestIsProbablePrime;

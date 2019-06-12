@@ -225,6 +225,12 @@ begin
   AddHMacKeyGenerator('SHA512/224', []);
   AddHMacKeyGenerator('SHA512/256', []);
 
+  AddHMacKeyGenerator('KECCAK224', []);
+  AddHMacKeyGenerator('KECCAK256', []);
+  AddHMacKeyGenerator('KECCAK288', []);
+  AddHMacKeyGenerator('KECCAK384', []);
+  AddHMacKeyGenerator('KECCAK512', []);
+
   AddHMacKeyGenerator('SHA3-224',
     [TNistObjectIdentifiers.IdHMacWithSha3_224.ID]);
   AddHMacKeyGenerator('SHA3-256',
@@ -258,19 +264,21 @@ begin
   AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph',
     TEdECObjectIdentifiers.id_Ed25519.ID]);
   AddKpgAlgorithm('Ed25519Blake2B', ['Ed25519Blake2Bctx', 'Ed25519Blake2Bph']);
-  AddKpgAlgorithm('X25519', TEdECObjectIdentifiers.id_X25519.ID);
+  AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.id_X25519.ID]);
 
   AddDefaultKeySizeEntries(128, ['AES128', 'BLOWFISH', 'HMACMD2', 'HMACMD4',
     'HMACMD5', 'HMACRIPEMD128', 'SALSA20']);
   AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
   AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER']);
-  AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACSHA224',
+  AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACKECCAK224', 'HMACSHA224',
     'HMACSHA512/224']);
   AddDefaultKeySizeEntries(256, ['AES256', 'HMACGOST3411-2012-256',
-    'HMACSHA3-256', 'HMACSHA256', 'HMACSHA512/256']);
-  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACSHA384']);
+    'HMACSHA3-256', 'HMACKECCAK256', 'HMACSHA256', 'HMACSHA512/256']);
+  AddDefaultKeySizeEntries(288, ['HMACKECCAK288']);
+  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACKECCAK384',
+    'HMACSHA384']);
   AddDefaultKeySizeEntries(512, ['HMACGOST3411-2012-512', 'HMACSHA3-512',
-    'HMACSHA512']);
+    'HMACKECCAK512', 'HMACSHA512']);
 end;
 
 class constructor TGeneratorUtilities.CreateGeneratorUtilities;

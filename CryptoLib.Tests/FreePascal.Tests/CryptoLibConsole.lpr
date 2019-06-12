@@ -60,8 +60,19 @@ uses
   CTSTests,
   X25519Tests,
   Ed25519Tests,
+  X25519HigherLevelTests,
+  Ed25519HigherLevelTests,
+  ShortenedDigestTests,
+  Kdf1GeneratorTests,
+  Kdf2GeneratorTests,
+  Argon2Tests,
+  ScryptTests,
+  DigestTests,
+  DigestUtilitiesTests,
   ClpFixedSecureRandom,
-  ClpIFixedSecureRandom;
+  ClpIFixedSecureRandom,
+  ClpShortenedDigest,
+  ClpIShortenedDigest;
 
 type
 

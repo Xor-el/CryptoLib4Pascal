@@ -164,6 +164,11 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SNotInitializedForVerifying);
   end;
+  if (TEd25519.SignatureSize <> System.Length(signature)) then
+  begin
+    Result := false;
+    Exit;
+  end;
   pk := FPublicKey.GetEncoded();
   Result := FEd25519Instance.VerifyPrehash(signature, 0, pk, 0, FContext,
     FPreHash);
