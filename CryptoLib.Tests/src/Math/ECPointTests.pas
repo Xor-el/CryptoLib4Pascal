@@ -654,14 +654,14 @@ begin
   i := 0;
   while i < System.Length(FpInstance.Fp) do
   begin
-    ImplTestAllPoints(FpInstance.Fp[0], FpInstance.FInfinity);
+    ImplTestAllPoints(FpInstance.Fp[i], FpInstance.FInfinity);
     System.Inc(i);
   end;
 
   i := 0;
   while i < System.Length(F2mInstance.Fp) do
   begin
-    ImplTestAllPoints(F2mInstance.Fp[0], F2mInstance.FInfinity);
+    ImplTestAllPoints(F2mInstance.Fp[i], F2mInstance.FInfinity);
     System.Inc(i);
   end;
 end;
