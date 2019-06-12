@@ -1401,8 +1401,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <PackageName Value="HashLib4PascalPackage"/>
         <MaxVersion Major="3" Minor="5"/>
         <MinVersion Major="3" Minor="5" Valid="True"/>
-      </Item1>
-      <Item2>
+      </Item2>
+      <Item3>
         <PackageName Value="SimpleBaseLib4PascalPackage"/>
         <MaxVersion Major="1" Minor="4"/>
         <MinVersion Major="1" Minor="4" Valid="True"/>
