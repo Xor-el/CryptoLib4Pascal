@@ -47,8 +47,6 @@ uses
 {$ELSE}
   Posix.Errno,
   Posix.Dlfcn,
-  Posix.Base,
-  /// remove
 {$ENDIF}
 {$ENDIF}  // ENDIF CRYPTOLIB_LINUX
 {$IFDEF CRYPTOLIB_PUREBSD}
