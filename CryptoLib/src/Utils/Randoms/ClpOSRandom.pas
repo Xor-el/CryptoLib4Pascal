@@ -485,7 +485,7 @@ end;
 class function TOSRandom.GenRandomBytesLinux(len: Int32; data: PByte): Int32;
 const
   GRND_DEFAULT: Int32 = $0000;
-  EINTR: Int32 = 4;
+  EINTR = {$IFDEF FPC}ESysEINTR {$ELSE}Posix.Errno.EINTR{$ENDIF};
 var
   n: Int64;
 begin
