@@ -155,7 +155,7 @@ Available Algorithms
 * `RNG wrappers for system RNG`
 * `ASN1 Parsing Utilities`
 
-### Dependencies
+### Compile-Time Dependencies
 ----------------------------------------
 
 * [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal)
