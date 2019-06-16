@@ -153,7 +153,10 @@ Available Algorithms
 ----------------------------------------
 
 * `RNG wrappers for system RNG`
+
 * `ASN1 Parsing Utilities`
+
+* `Base Encoding and Decoding Utilities`
 
 ### Compile-Time Dependencies
 ----------------------------------------
