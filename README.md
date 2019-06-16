@@ -97,7 +97,6 @@ Available Algorithms
 
 * `KDF2`
 
-
 ###### Password Hashing Schemes (Password Based Key Derivation Functions)
 ----------------------------------------
 
