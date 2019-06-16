@@ -19,8 +19,8 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 {$IFDEF FPC}
-   {$I CryptoLibHelper.inc} // Had to Include this Since Delphi Does not allow "FPC_FULLVERSION" to Compile.
-   {$UNDEF DELPHI}
+{$I CryptoLibHelper.inc} // Had to Include this Since Delphi Does not allow "FPC_FULLVERSION" to Compile.
+{$UNDEF DELPHI}
 {$MODE delphi}
 
 {$IFDEF CPU386}
@@ -55,8 +55,8 @@
          {$ELSE}
             {$DEFINE CRYPTOLIB_MACOSX}
          {$IFEND}
-      {$ELSEIF DEFINED(FREEBSD) OR DEFINED(NETBSD) OR DEFINED(OPENBSD)}
-         {$DEFINE CRYPTOLIB_TRUEBSD}
+      {$ELSEIF DEFINED(FREEBSD) OR DEFINED(NETBSD) OR DEFINED(OPENBSD) OR DEFINED(DRAGONFLY)}
+         {$DEFINE CRYPTOLIB_GENERIC_BSD}
       {$IFEND}
   {$ELSEIF DEFINED(LINUX)}
      {$DEFINE CRYPTOLIB_LINUX}

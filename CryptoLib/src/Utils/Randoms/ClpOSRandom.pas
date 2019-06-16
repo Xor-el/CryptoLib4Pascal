@@ -71,7 +71,7 @@ resourcestring
   SLinuxGetRandomError =
     'An Error Occured while generating random data using getRandom API';
 {$ENDIF}
-{$IFDEF CRYPTOLIB_TRUEBSD}
+{$IFDEF CRYPTOLIB_GENERIC_BSD}
   SArc4RandomBufGenerationError =
     'An Error Occured while generating random data using getRandom API.';
 {$ENDIF}
@@ -128,6 +128,11 @@ type
   /// <item>
   /// <term>OpenBSD</term>
   /// <description><see href="http://man.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man3/arc4random.3">
+  /// arc4random_buf</see></description>
+  /// </item>
+  /// <item>
+  /// <term>DragonFly</term>
+  /// <description><see href="https://www.dragonflybsd.org/cgi/web-man?command=arc4random&amp;section=3">
   /// arc4random_buf</see></description>
   /// </item>
   /// </list>
@@ -201,8 +206,8 @@ type
     class function GenRandomBytesLinux(len: Int32; data: PByte): Int32; static;
 {$ENDIF}
     // ================================================================//
-{$IFDEF CRYPTOLIB_TRUEBSD}
-    class function GenRandomBytesTrueBSD(len: Int32; data: PByte)
+{$IFDEF CRYPTOLIB_GENERIC_BSD}
+    class function GenRandomBytesGenericBSD(len: Int32; data: PByte)
       : Int32; static;
 {$ENDIF}
     // ================================================================//
@@ -268,7 +273,7 @@ function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
 {$ENDIF}
 {$ENDIF}
 // ************************************************************************//
-{$IFDEF CRYPTOLIB_TRUEBSD}
+{$IFDEF CRYPTOLIB_GENERIC_BSD}
 procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl; external;
 // 'c' name 'arc4random_buf';
 {$ENDIF}
@@ -516,9 +521,10 @@ begin
 end;
 
 {$ENDIF}
-{$IFDEF CRYPTOLIB_TRUEBSD}
+{$IFDEF CRYPTOLIB_GENERIC_BSD}
 
-class function TOSRandom.GenRandomBytesTrueBSD(len: Int32; data: PByte): Int32;
+class function TOSRandom.GenRandomBytesGenericBSD(len: Int32;
+  data: PByte): Int32;
 
 begin
   arc4random_buf(data, LongWord(len));
@@ -557,8 +563,8 @@ begin
     raise EAccessCryptoLibException.CreateRes(@SLinuxGetRandomError);
   end;
 
-{$ELSEIF DEFINED(CRYPTOLIB_TRUEBSD)}
-  if GenRandomBytesTrueBSD(count, PByte(data)) <> 0 then
+{$ELSEIF DEFINED(CRYPTOLIB_GENERIC_BSD)}
+  if GenRandomBytesGenericBSD(count, PByte(data)) <> 0 then
   begin
     raise EAccessCryptoLibException.CreateRes(@SArc4RandomBufGenerationError);
   end;
