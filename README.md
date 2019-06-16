@@ -33,14 +33,38 @@ Available Algorithms
 ##### Cipher Modes (for applicable algorithms) 
 ----------------------------------------
 
- `ECB` `CBC` `CFB` `CTR` `CTS` `OFB` `SIC`
+* `ECB` 
+
+* `CBC` 
+
+* `CFB` 
+
+* `CTR` 
+
+* `CTS` 
+
+* `OFB` 
+
+* `SIC`
 
 ##### Padding Modes (for applicable algorithms) 
 ----------------------------------------
 
- `ISO 10126-2` `ISO 7816-4` `Bit (ISO/IEC 9797-1)` `PKCS#5` 
+* `ISO 10126-2` 
+
+* `ISO 7816-4` 
+
+* `Bit (ISO/IEC 9797-1)` 
+
+* `PKCS#5` 
+
+* `PKCS#7`
  
- `PKCS#7` `TBC (Trailing Bit Complement)` `ANSI X9.23` `Zero`
+* `TBC (Trailing Bit Complement)` 
+
+* `ANSI X9.23` 
+
+* `Zero`
 
 ### Asymmetric Cryptography
 ----------------------------------------
