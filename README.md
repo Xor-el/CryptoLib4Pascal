@@ -171,7 +171,7 @@ Available Algorithms
 ----------------------------------------
 
 * Windows XP+
-* Linux (Including Android)
+* Linux (Including Android and Raspberry PI)
 * macOS 10.7+
 * iOS 2.0+
 * FreeBSD, NetBSD, OpenBSD and DragonBSD
