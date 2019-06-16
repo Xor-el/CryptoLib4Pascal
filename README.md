@@ -14,7 +14,7 @@ Development is coordinated on [GitHub](https://github.com/Xor-el/CryptoLib4Pasca
 Available Algorithms
 ----------------------------------------
 
- Symmetric Encryption
+ ### Symmetric Encryption
 ----------------------------------------
 ###### Block Ciphers
 * `AES (128, 192, and 256)` 
@@ -42,7 +42,7 @@ Available Algorithms
  
  `PKCS#7` `TBC (Trailing Bit Complement)` `ANSI X9.23` `Zero`
 
-Asymmetric Cryptography
+### Asymmetric Cryptography
 ----------------------------------------
 
 * `DSA`
@@ -55,7 +55,7 @@ Asymmetric Cryptography
  
 * `EdDSA (Ed25519, Ed25519Blake2B)`
 
-Key Agreement/Exchange
+### Key Agreement/Exchange
 ----------------------------------------
 
 * `ECDH`
@@ -64,7 +64,7 @@ Key Agreement/Exchange
  
 * `X25519` 
 
-Key Derivation Functions
+### Key Derivation Functions
 ----------------------------------------
 
 * `HKDF` 
@@ -74,7 +74,7 @@ Key Derivation Functions
 * `KDF2`
 
 
-Password Hashing Schemes
+### Password Hashing Schemes
 ----------------------------------------
 
 * `PBKDF2`
@@ -83,14 +83,14 @@ Password Hashing Schemes
 
 * `Scrypt`
 
-MAC
+### MAC
 ----------------------------------------
 
 * `HMAC (all supported hashes)`
  
 * `X25519` 
 
-Hashes
+### Hashes
 ----------------------------------------
 
  * `MD2`
@@ -121,30 +121,30 @@ Hashes
  
  * `Keccak (224, 256, 288, 384, 512)`
 
-XOF (Extensible Output Function)
+### XOF (Extensible Output Function)
 ----------------------------------------
 
 * `Shake (Shake-128, Shake-256)`
 
-Other Useful Things
+### Other Useful Things
 ----------------------------------------
 
 * `RNG wrappers for system RNG`
 * `ASN1 Parsing Utilities`
 
-Dependencies
+### Dependencies
 ----------------------------------------
 
 * [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal)
 * [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal)
 
-Supported Compilers
+### Supported Compilers
 ----------------------------------------
 
 * FreePascal 3.2.0+
 * Delphi Tokyo+
 
-Supported OSes
+### Supported OSes
 ----------------------------------------
 
 * Windows XP+
@@ -153,12 +153,12 @@ Supported OSes
 * iOS 2.0+
 * FreeBSD, NetBSD, OpenBSD and DragonBSD
 
-Acknowledgements
+### Acknowledgements
 ----------------------------------------
 
 * Thanks to [Sphere 10 Software](http://www.sphere10.com/) for sponsoring the development of this library.
 
-Tip Jar
+### Tip Jar
 ----------------------------------------
 
 * :dollar: **Bitcoin**: `1MhFfW7tDuEHQSgie65uJcAfJgCNchGeKf`
