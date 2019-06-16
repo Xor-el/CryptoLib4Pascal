@@ -144,7 +144,7 @@ Available Algorithms
  
  * `Keccak (224, 256, 288, 384, 512)`
 
-### XOF (Extensible Output Function)
+### XOF (Extendable Output Function)
 ----------------------------------------
 
 * `Shake (Shake-128, Shake-256)`
@@ -164,17 +164,22 @@ Available Algorithms
 ### Supported Compilers
 ----------------------------------------
 
-* FreePascal 3.2.0+
-* Delphi Tokyo+
+* `FreePascal 3.2.0+`
+
+* `Delphi Tokyo+`
 
 ### Supported OSes
 ----------------------------------------
 
-* Windows XP+
-* Linux (Including Android and Raspberry PI)
-* macOS 10.7+
-* iOS 2.0+
-* FreeBSD, NetBSD, OpenBSD and DragonBSD
+* `Windows XP+`
+
+* `Linux (Including Android and Raspberry PI)`
+
+* `macOS 10.7+`
+
+* `iOS 2.0+`
+
+* `FreeBSD, NetBSD, OpenBSD and DragonBSD`
 
 ### Acknowledgements
 ----------------------------------------
