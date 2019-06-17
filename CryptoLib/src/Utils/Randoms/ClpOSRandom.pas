@@ -55,7 +55,9 @@ uses
 {$IFDEF CRYPTOLIB_UNIX}
   Classes,
 {$ENDIF}  // ENDIF CRYPTOLIB_UNIX
+{$IF DEFINED(CRYPTOLIB_MSWINDOWS) OR DEFINED(CRYPTOLIB_UNIX)}
   SysUtils,
+{$IFEND}  // ENDIF CRYPTOLIB_MSWINDOWS OR CRYPTOLIB_UNIX
   ClpCryptoLibTypes;
 
 resourcestring
@@ -76,8 +78,8 @@ resourcestring
     'An Error Occured while generating random data using getRandom API.';
 {$ENDIF}
 {$IFDEF CRYPTOLIB_UNIX}
-  SdevurandomreadError =
-    'An Error Occured while getting random data using dev/(u)random';
+  SRandomDeviceReadError =
+    'An Error Occured while reading random data from random device (file)';
 {$ENDIF}
 
 type
@@ -212,7 +214,8 @@ type
 {$ENDIF}
     // ================================================================//
 {$IFDEF CRYPTOLIB_UNIX}
-    class function dev_urandom_read(len: Int32; data: PByte): Int32; static;
+    class function dev_random_device_read(len: Int32; data: PByte)
+      : Int32; static;
 {$ENDIF}
     // ================================================================//
 
@@ -429,7 +432,7 @@ end;
 {$ENDIF}
 {$IFDEF CRYPTOLIB_UNIX}
 
-class function TOSRandom.dev_urandom_read(len: Int32; data: PByte): Int32;
+class function TOSRandom.dev_random_device_read(len: Int32; data: PByte): Int32;
 var
   LStream: TFileStream;
   RandGen: String;
@@ -516,7 +519,7 @@ begin
   else
   begin
     // fallback for when getrandom API is not available
-    result := dev_urandom_read(len, data);
+    result := dev_random_device_read(len, data);
   end;
 end;
 
@@ -546,33 +549,33 @@ begin
 {$IF DEFINED(CRYPTOLIB_MSWINDOWS)}
   if GenRandomBytesWindows(count, PByte(data)) <> 0 then
   begin
-    raise EAccessCryptoLibException.CreateRes
+    raise EOSRandomCryptoLibException.CreateRes
       (@SMSWIndowsCryptographyAPIGenerationError);
   end;
 
 {$ELSEIF DEFINED(CRYPTOLIB_APPLE)}
   if GenRandomBytesApple(count, PByte(data)) <> 0 then
   begin
-    raise EAccessCryptoLibException.CreateRes
+    raise EOSRandomCryptoLibException.CreateRes
       (@SAppleSecRandomCopyBytesGenerationError);
   end;
 
 {$ELSEIF DEFINED(CRYPTOLIB_LINUX)}
   if GenRandomBytesLinux(count, PByte(data)) <> 0 then
   begin
-    raise EAccessCryptoLibException.CreateRes(@SLinuxGetRandomError);
+    raise EOSRandomCryptoLibException.CreateRes(@SLinuxGetRandomError);
   end;
 
 {$ELSEIF DEFINED(CRYPTOLIB_GENERIC_BSD)}
   if GenRandomBytesGenericBSD(count, PByte(data)) <> 0 then
   begin
-    raise EAccessCryptoLibException.CreateRes(@SArc4RandomBufGenerationError);
+    raise EOSRandomCryptoLibException.CreateRes(@SArc4RandomBufGenerationError);
   end;
-{$ELSEIF DEFINED(CRYPTOLIB_UNIX)}
-  // fallback option for other Unspecified Unix OSes
-  if dev_urandom_read(count, PByte(data)) <> 0 then
+{$ELSEIF DEFINED(CRYPTOLIB_UNDEFINED_UNIX_VARIANTS)}
+  // fallback option for other Undefined Unix OSes
+  if dev_random_device_read(count, PByte(data)) <> 0 then
   begin
-    raise EAccessCryptoLibException.CreateRes(@SdevurandomreadError);
+    raise EOSRandomCryptoLibException.CreateRes(@SRandomDeviceReadError);
   end;
 {$ELSE}
 {$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
