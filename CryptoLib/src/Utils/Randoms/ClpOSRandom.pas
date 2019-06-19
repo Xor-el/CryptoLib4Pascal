@@ -256,7 +256,7 @@ type
   __SecRandom = record
   end;
 
-  // similar to an OpaquePointer already defined in newer FPC but not available in 3.0.4
+  // similar to POpaqueData (or an OpaquePointer) already defined in newer FPC but not available in 3.0.4
   SecRandomRef = ^__SecRandom;
 
 function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
