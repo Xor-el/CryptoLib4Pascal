@@ -8,8 +8,8 @@ CryptoLib4Pascal: Crypto for Modern Object Pascal [![License](http://img.shields
 Development is coordinated on [GitHub](https://github.com/Xor-el/CryptoLib4Pascal) and contributions are welcome. If you need help, please open an issue [here](https://github.com/Xor-el/CryptoLib4Pascal/issues).
 
 
-**Build Status**
-[![Build Status](https://travis-ci.org/Xor-el/CryptoLib4Pascal.svg?branch=master)](https://travis-ci.org/Xor-el/CryptoLib4Pascal)
+<!--**Build Status**
+[![Build Status](https://travis-ci.org/Xor-el/CryptoLib4Pascal.svg?branch=master)](https://travis-ci.org/Xor-el/CryptoLib4Pascal)-->
 
 Available Algorithms
 ----------------------------------------
