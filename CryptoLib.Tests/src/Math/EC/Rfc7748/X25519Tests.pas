@@ -278,7 +278,7 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
-// RegisterTest(TTestX25519);
+ RegisterTest(TTestX25519);
 {$ELSE}
   RegisterTest(TTestX25519.Suite);
 {$ENDIF FPC}
