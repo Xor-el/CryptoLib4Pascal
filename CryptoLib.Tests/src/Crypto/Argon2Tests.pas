@@ -55,13 +55,15 @@ type
     // multiplied by 8 to get it in bits
     DEFAULT_OUTPUTLEN_IN_BITS = Int32(32 * 8);
 
-    procedure HashTestFromInternetDraft(AArgon2Type: TArgon2Type;
-      AArgon2Version: TArgon2Version; AIterations, AMemoryAsKB,
-      AParallelism: Int32; const AAdditional, ASecret, ASalt, APassword,
-      APasswordRef: String; AOutputLength: Int32);
+    procedure HashTestFromInternetDraft(AArgon2Type: TCryptoLibArgon2Type;
+      AArgon2Version: TCryptoLibArgon2Version;
+      AIterations, AMemoryAsKB, AParallelism: Int32;
+      const AAdditional, ASecret, ASalt, APassword, APasswordRef: String;
+      AOutputLength: Int32);
 
-    procedure HashTestOthers(AArgon2Type: TArgon2Type;
-      AArgon2Version: TArgon2Version; AIterations, AMemory, AParallelism: Int32;
+    procedure HashTestOthers(AArgon2Type: TCryptoLibArgon2Type;
+      AArgon2Version: TCryptoLibArgon2Version;
+      AIterations, AMemory, AParallelism: Int32;
       const APassword, ASalt, APasswordRef: String; AOutputLength: Int32);
 
   protected
@@ -79,8 +81,9 @@ implementation
 
 { TTestArgon2 }
 
-procedure TTestArgon2.HashTestFromInternetDraft(AArgon2Type: TArgon2Type;
-  AArgon2Version: TArgon2Version; AIterations, AMemoryAsKB, AParallelism: Int32;
+procedure TTestArgon2.HashTestFromInternetDraft(AArgon2Type
+  : TCryptoLibArgon2Type; AArgon2Version: TCryptoLibArgon2Version;
+  AIterations, AMemoryAsKB, AParallelism: Int32;
   const AAdditional, ASecret, ASalt, APassword, APasswordRef: String;
   AOutputLength: Int32);
 var
@@ -102,7 +105,7 @@ begin
 
   LArgon2Generator.Init(AArgon2Type, AArgon2Version, LPassword, LSalt, LSecret,
     LAdditional, AIterations, AMemoryAsKB, AParallelism,
-    TArgon2MemoryCostType.a2mctMemoryAsKB);
+    TCryptoLibArgon2MemoryCostType.MemoryAsKB);
 
   LActual := TConverters.ConvertBytesToHexString
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
@@ -115,8 +118,9 @@ begin
 
 end;
 
-procedure TTestArgon2.HashTestOthers(AArgon2Type: TArgon2Type;
-  AArgon2Version: TArgon2Version; AIterations, AMemory, AParallelism: Int32;
+procedure TTestArgon2.HashTestOthers(AArgon2Type: TCryptoLibArgon2Type;
+  AArgon2Version: TCryptoLibArgon2Version;
+  AIterations, AMemory, AParallelism: Int32;
   const APassword, ASalt, APasswordRef: String; AOutputLength: Int32);
 var
   LArgon2Generator: IArgon2ParametersGenerator;
@@ -135,7 +139,7 @@ begin
 
   LArgon2Generator.Init(AArgon2Type, AArgon2Version, LPassword, LSalt, Nil, Nil,
     AIterations, AMemory, AParallelism,
-    TArgon2MemoryCostType.a2mctMemoryPowOfTwo);
+    TCryptoLibArgon2MemoryCostType.MemoryPowOfTwo);
 
   LActual := TConverters.ConvertBytesToHexString
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
@@ -163,8 +167,8 @@ end;
 procedure TTestArgon2.TestVectorsFromInternetDraft;
 var
   LAdditional, LSecret, LSalt, LPassword: String;
-  Argon2Version: TArgon2Version;
-  Argon2Type: TArgon2Type;
+  Argon2Version: TCryptoLibArgon2Version;
+  Argon2Type: TCryptoLibArgon2Type;
 begin
 
   LAdditional := '040404040404040404040404';
@@ -173,23 +177,23 @@ begin
   LPassword :=
     '0101010101010101010101010101010101010101010101010101010101010101';
 
-  Argon2Version := TArgon2Version.a2vARGON2_VERSION_13;
+  Argon2Version := TCryptoLibArgon2Version.Argon2Version13;
 
-  Argon2Type := TArgon2Type.a2tARGON2_d;
+  Argon2Type := TCryptoLibArgon2Type.Argon2D;
 
   HashTestFromInternetDraft(Argon2Type, Argon2Version, 3, 32, 4, LAdditional,
     LSecret, LSalt, LPassword,
     '512B391B6F1162975371D30919734294F868E3BE3984F3C1A13A4DB9FABE4ACB',
     DEFAULT_OUTPUTLEN_IN_BITS);
 
-  Argon2Type := TArgon2Type.a2tARGON2_i;
+  Argon2Type := TCryptoLibArgon2Type.Argon2I;
 
   HashTestFromInternetDraft(Argon2Type, Argon2Version, 3, 32, 4, LAdditional,
     LSecret, LSalt, LPassword,
     'C814D9D1DC7F37AA13F0D77F2494BDA1C8DE6B016DD388D29952A4C4672B6CE8',
     DEFAULT_OUTPUTLEN_IN_BITS);
 
-  Argon2Type := TArgon2Type.a2tARGON2_id;
+  Argon2Type := TCryptoLibArgon2Type.Argon2ID;
 
   HashTestFromInternetDraft(Argon2Type, Argon2Version, 3, 32, 4, LAdditional,
     LSecret, LSalt, LPassword,
@@ -200,12 +204,12 @@ end;
 
 procedure TTestArgon2.TestOthers;
 var
-  Argon2Version: TArgon2Version;
-  Argon2Type: TArgon2Type;
+  Argon2Version: TCryptoLibArgon2Version;
+  Argon2Type: TCryptoLibArgon2Type;
 begin
 
-  Argon2Version := TArgon2Version.a2vARGON2_VERSION_10;
-  Argon2Type := TArgon2Type.a2tARGON2_i;
+  Argon2Version := TCryptoLibArgon2Version.Argon2Version10;
+  Argon2Type := TCryptoLibArgon2Type.Argon2I;
 
   // Multiple test cases for various input values
   HashTestOthers(Argon2Type, Argon2Version, 2, 16, 1, 'password', 'somesalt',
@@ -245,8 +249,8 @@ begin
     + '39FEBA4A9CD9CC5B4C798F2AAF70EB4BD044C8D148DECB569870DBD923430B82A083F284BEAE777812CCE18CDAC68EE8CCEF'
     + 'C6EC9789F30A6B5A034591F51AF830F4', 112 * 8);
 
-  Argon2Version := TArgon2Version.a2vARGON2_VERSION_13;
-  Argon2Type := TArgon2Type.a2tARGON2_i;
+  Argon2Version := TCryptoLibArgon2Version.Argon2Version13;
+  Argon2Type := TCryptoLibArgon2Type.Argon2I;
   // Multiple test cases for various input values
 
   HashTestOthers(Argon2Type, Argon2Version, 2, 16, 1, 'password', 'somesalt',

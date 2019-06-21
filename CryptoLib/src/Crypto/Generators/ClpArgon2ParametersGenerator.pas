@@ -25,6 +25,7 @@ uses
 
   HlpIHashInfo,
   HlpHashFactory,
+  HlpArgon2TypeAndVersion,
   HlpPBKDF_Argon2NotBuildInAdapter,
   ClpPbeParametersGenerator,
   ClpICipherParameters,
@@ -38,6 +39,7 @@ uses
 
 resourcestring
   SArgon2TypeInvalid = 'Selected Argon2Type is Invalid';
+  SArgon2VersionInvalid = 'Selected Argon2Version is Invalid';
   SArgon2MemoryCostTypeInvalid = 'Selected Argon2MemoryCostType is Invalid';
 
 type
@@ -72,10 +74,10 @@ type
 
     destructor Destroy; override;
 
-    procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
-      const password, salt, secret, additional: TCryptoLibByteArray;
-      iterations, memory, parallelism: Int32;
-      memoryCostType: TArgon2MemoryCostType);
+    procedure Init(argon2Type: TCryptoLibArgon2Type;
+      argon2Version: TCryptoLibArgon2Version; const password, salt, secret,
+      additional: TCryptoLibByteArray; iterations, memory, parallelism: Int32;
+      memoryCostType: TCryptoLibArgon2MemoryCostType);
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt, and
@@ -204,26 +206,27 @@ begin
   result := TParametersWithIV.Create(key, dKey, keySize, ivSize);
 end;
 
-procedure TArgon2ParametersGenerator.Init(argon2Type: TArgon2Type;
-  argon2Version: TArgon2Version; const password, salt, secret,
+procedure TArgon2ParametersGenerator.Init(argon2Type: TCryptoLibArgon2Type;
+  argon2Version: TCryptoLibArgon2Version; const password, salt, secret,
   additional: TCryptoLibByteArray; iterations, memory, parallelism: Int32;
-  memoryCostType: TArgon2MemoryCostType);
+  memoryCostType: TCryptoLibArgon2MemoryCostType);
 var
   LArgon2ParametersBuilder: IArgon2ParametersBuilder;
+  LArgon2Version: TArgon2Version;
 begin
   FPassword := System.Copy(password);
 
   case argon2Type of
-    TArgon2Type.a2tARGON2_d:
+    TCryptoLibArgon2Type.Argon2D:
       begin
         LArgon2ParametersBuilder := TArgon2dParametersBuilder.Builder();
       end;
 
-    TArgon2Type.a2tARGON2_i:
+    TCryptoLibArgon2Type.Argon2I:
       begin
         LArgon2ParametersBuilder := TArgon2iParametersBuilder.Builder();
       end;
-    TArgon2Type.a2tARGON2_id:
+    TCryptoLibArgon2Type.Argon2ID:
       begin
         LArgon2ParametersBuilder := TArgon2idParametersBuilder.Builder();
       end
@@ -233,18 +236,34 @@ begin
     end;
   end;
 
-  case memoryCostType of
-    TArgon2MemoryCostType.a2mctMemoryAsKB:
+  case argon2Version of
+    TCryptoLibArgon2Version.Argon2Version10:
       begin
-        LArgon2ParametersBuilder.WithVersion(argon2Version).WithSalt(salt)
+        LArgon2Version := TArgon2Version.a2vARGON2_VERSION_10;
+      end;
+
+    TCryptoLibArgon2Version.Argon2Version13:
+      begin
+        LArgon2Version := TArgon2Version.a2vARGON2_VERSION_13;
+      end
+  else
+    begin
+      raise EArgumentCryptoLibException.CreateRes(@SArgon2VersionInvalid);
+    end;
+  end;
+
+  case memoryCostType of
+    TCryptoLibArgon2MemoryCostType.MemoryAsKB:
+      begin
+        LArgon2ParametersBuilder.WithVersion(LArgon2Version).WithSalt(salt)
           .WithSecret(secret).WithAdditional(additional)
           .WithIterations(iterations).WithMemoryAsKB(memory)
           .WithParallelism(parallelism);
       end;
 
-    TArgon2MemoryCostType.a2mctMemoryPowOfTwo:
+    TCryptoLibArgon2MemoryCostType.MemoryPowOfTwo:
       begin
-        LArgon2ParametersBuilder.WithVersion(argon2Version).WithSalt(salt)
+        LArgon2ParametersBuilder.WithVersion(LArgon2Version).WithSalt(salt)
           .WithSecret(secret).WithAdditional(additional)
           .WithIterations(iterations).WithMemoryPowOfTwo(memory)
           .WithParallelism(parallelism);

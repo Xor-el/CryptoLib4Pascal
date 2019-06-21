@@ -28,9 +28,9 @@ uses
 
 type
 {$SCOPEDENUMS ON}
-  TArgon2Type = HlpArgon2TypeAndVersion.TArgon2Type;
-  TArgon2Version = HlpArgon2TypeAndVersion.TArgon2Version;
-  TArgon2MemoryCostType = (a2mctMemoryAsKB, a2mctMemoryPowOfTwo);
+  TCryptoLibArgon2Type = (Argon2D = $00, Argon2I = $01, Argon2ID = $02);
+  TCryptoLibArgon2Version = (Argon2Version10 = $10, Argon2Version13 = $13);
+  TCryptoLibArgon2MemoryCostType = (MemoryAsKB, MemoryPowOfTwo);
 {$SCOPEDENUMS OFF}
 
 type
@@ -38,10 +38,10 @@ type
 
     ['{0AC3D3A8-9422-405F-B0EE-6B7AE0F64F74}']
 
-    procedure Init(argon2Type: TArgon2Type; argon2Version: TArgon2Version;
-      const password, salt, secret, additional: TCryptoLibByteArray;
-      iterations, memory, parallelism: Int32;
-      memoryCostType: TArgon2MemoryCostType);
+    procedure Init(argon2Type: TCryptoLibArgon2Type;
+      argon2Version: TCryptoLibArgon2Version; const password, salt, secret,
+      additional: TCryptoLibByteArray; iterations, memory, parallelism: Int32;
+      memoryCostType: TCryptoLibArgon2MemoryCostType);
 
   end;
 
