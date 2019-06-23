@@ -22,7 +22,6 @@ unit ClpIArgon2ParametersGenerator;
 interface
 
 uses
-  HlpArgon2TypeAndVersion,
   ClpIPbeParametersGenerator,
   ClpCryptoLibTypes;
 
