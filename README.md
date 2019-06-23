@@ -47,7 +47,7 @@ Available Algorithms
 
 * `SIC`
 
-##### Block Ciphers Padding Schemes 
+##### Block Cipher Padding Schemes 
 ----------------------------------------
 
 * `ISO 10126-2` 
