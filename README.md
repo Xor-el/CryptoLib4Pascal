@@ -30,7 +30,7 @@ Available Algorithms
 
 * `(X)Salsa20` 
 
-##### Cipher Modes (for applicable algorithms) 
+##### Block Cipher Modes Of Operation 
 ----------------------------------------
 
 * `ECB` 
@@ -47,7 +47,7 @@ Available Algorithms
 
 * `SIC`
 
-##### Padding Modes (for applicable algorithms) 
+##### Block Ciphers Padding Schemes 
 ----------------------------------------
 
 * `ISO 10126-2` 
