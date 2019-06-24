@@ -19,7 +19,7 @@
         </Optimizations>
       </CodeGeneration>
     </CompilerOptions>
-    <Description Value="CryptoLib4Pascal is a Cryptographic Package for Delphi/FreePascal Compilers that provides at the moment support for creating, signing and verifying DSA, ECDSA, ECNR and ECSchnorr signatures using various curves and hashes, AES, Rijndael, Blowfish and Speck Block Encryption and Decryption (With various modes and paddings), Salsa20, XSalsa20, ChaCha Stream Ciphers and ECIES."/>
+    <Description Value="Crypto for Modern Object Pascal"/>
     <License Value="MIT License                          
 
  Acknowledgements: 
