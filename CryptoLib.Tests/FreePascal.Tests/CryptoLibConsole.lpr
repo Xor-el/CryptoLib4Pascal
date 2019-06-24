@@ -69,6 +69,7 @@ uses
   ScryptTests,
   DigestTests,
   DigestUtilitiesTests,
+  DHTests,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,
   ClpShortenedDigest,

@@ -82,6 +82,8 @@ Available Algorithms
 ### Key Agreement/Exchange
 ----------------------------------------
 
+* `DH`
+
 * `ECDH`
 
 * `ECDHC`

@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="1"/>
-    <Files Count="341">
+    <Files Count="370">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1392,21 +1392,140 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\Generators\ClpScryptParametersGenerator.pas"/>
         <UnitName Value="ClpScryptParametersGenerator"/>
       </Item341>
+      <Item342>
+        <Filename Value="..\..\Interfaces\ClpIDHAgreement.pas"/>
+        <UnitName Value="ClpIDHAgreement"/>
+      </Item342>
+      <Item343>
+        <Filename Value="..\..\Interfaces\ClpIDHBasicAgreement.pas"/>
+        <UnitName Value="ClpIDHBasicAgreement"/>
+      </Item343>
+      <Item344>
+        <Filename Value="..\..\Interfaces\ClpIDHBasicKeyPairGenerator.pas"/>
+        <UnitName Value="ClpIDHBasicKeyPairGenerator"/>
+      </Item344>
+      <Item345>
+        <Filename Value="..\..\Interfaces\ClpIDHKeyPairGenerator.pas"/>
+        <UnitName Value="ClpIDHKeyPairGenerator"/>
+      </Item345>
+      <Item346>
+        <Filename Value="..\..\Interfaces\ClpIDHPrivateKeyParameters.pas"/>
+        <UnitName Value="ClpIDHPrivateKeyParameters"/>
+      </Item346>
+      <Item347>
+        <Filename Value="..\..\Interfaces\ClpIDHPublicKeyParameters.pas"/>
+        <UnitName Value="ClpIDHPublicKeyParameters"/>
+      </Item347>
+      <Item348>
+        <Filename Value="..\..\Interfaces\ClpIDHParametersGenerator.pas"/>
+        <UnitName Value="ClpIDHParametersGenerator"/>
+      </Item348>
+      <Item349>
+        <Filename Value="..\..\Interfaces\ClpIDHKeyGenerationParameters.pas"/>
+        <UnitName Value="ClpIDHKeyGenerationParameters"/>
+      </Item349>
+      <Item350>
+        <Filename Value="..\..\Interfaces\ClpIDHParameters.pas"/>
+        <UnitName Value="ClpIDHParameters"/>
+      </Item350>
+      <Item351>
+        <Filename Value="..\..\Interfaces\ClpIDHKeyGeneratorHelper.pas"/>
+        <UnitName Value="ClpIDHKeyGeneratorHelper"/>
+      </Item351>
+      <Item352>
+        <Filename Value="..\..\Interfaces\ClpIDHKeyParameters.pas"/>
+        <UnitName Value="ClpIDHKeyParameters"/>
+      </Item352>
+      <Item353>
+        <Filename Value="..\..\Interfaces\ClpIDHValidationParameters.pas"/>
+        <UnitName Value="ClpIDHValidationParameters"/>
+      </Item353>
+      <Item354>
+        <Filename Value="..\..\Interfaces\ClpIDHDomainParameters.pas"/>
+        <UnitName Value="ClpIDHDomainParameters"/>
+      </Item354>
+      <Item355>
+        <Filename Value="..\..\Interfaces\ClpIDHValidationParams.pas"/>
+        <UnitName Value="ClpIDHValidationParams"/>
+      </Item355>
+      <Item356>
+        <Filename Value="..\..\Crypto\Agreement\ClpDHAgreement.pas"/>
+        <UnitName Value="ClpDHAgreement"/>
+      </Item356>
+      <Item357>
+        <Filename Value="..\..\Crypto\Agreement\ClpDHBasicAgreement.pas"/>
+        <UnitName Value="ClpDHBasicAgreement"/>
+      </Item357>
+      <Item358>
+        <Filename Value="..\..\Crypto\Generators\ClpDHBasicKeyPairGenerator.pas"/>
+        <UnitName Value="ClpDHBasicKeyPairGenerator"/>
+      </Item358>
+      <Item359>
+        <Filename Value="..\..\Crypto\Generators\ClpDHKeyPairGenerator.pas"/>
+        <UnitName Value="ClpDHKeyPairGenerator"/>
+      </Item359>
+      <Item360>
+        <Filename Value="..\..\Crypto\Generators\ClpDHParametersGenerator.pas"/>
+        <UnitName Value="ClpDHParametersGenerator"/>
+      </Item360>
+      <Item361>
+        <Filename Value="..\..\Crypto\Generators\ClpDHKeyGeneratorHelper.pas"/>
+        <UnitName Value="ClpDHKeyGeneratorHelper"/>
+      </Item361>
+      <Item362>
+        <Filename Value="..\..\Crypto\Generators\ClpDHParametersHelper.pas"/>
+        <UnitName Value="ClpDHParametersHelper"/>
+      </Item362>
+      <Item363>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHPrivateKeyParameters.pas"/>
+        <UnitName Value="ClpDHPrivateKeyParameters"/>
+      </Item363>
+      <Item364>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHPublicKeyParameters.pas"/>
+        <UnitName Value="ClpDHPublicKeyParameters"/>
+      </Item364>
+      <Item365>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHKeyGenerationParameters.pas"/>
+        <UnitName Value="ClpDHKeyGenerationParameters"/>
+      </Item365>
+      <Item366>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHKeyParameters.pas"/>
+        <UnitName Value="ClpDHKeyParameters"/>
+      </Item366>
+      <Item367>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHValidationParameters.pas"/>
+        <UnitName Value="ClpDHValidationParameters"/>
+      </Item367>
+      <Item368>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHParameters.pas"/>
+        <UnitName Value="ClpDHParameters"/>
+      </Item368>
+      <Item369>
+        <Filename Value="..\..\Asn1\X9\ClpDHDomainParameters.pas"/>
+        <UnitName Value="ClpDHDomainParameters"/>
+      </Item369>
+      <Item370>
+        <Filename Value="..\..\Asn1\X9\ClpDHValidationParams.pas"/>
+        <UnitName Value="ClpDHValidationParams"/>
+      </Item370>
     </Files>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="4">
       <Item1>
+        <PackageName Value="generics_collections"/>
+      </Item1>
+      <Item2>
         <PackageName Value="HashLib4PascalPackage"/>
         <MaxVersion Major="3" Minor="5"/>
         <MinVersion Major="3" Minor="5" Valid="True"/>
-      </Item1>
-      <Item2>
+      </Item2>
+      <Item3>
         <PackageName Value="SimpleBaseLib4PascalPackage"/>
         <MaxVersion Major="1" Minor="4"/>
         <MinVersion Major="1" Minor="4" Valid="True"/>
-      </Item2>
-      <Item3>
-        <PackageName Value="FCL"/>
       </Item3>
+      <Item4>
+        <PackageName Value="FCL"/>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
