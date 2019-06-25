@@ -41,17 +41,12 @@ uses
   ClpIFixedPointCombMultiplier,
   ClpECAlgorithms,
   ClpIX9ECParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestFixedPoint = class(TCryptoLibTestCase)
+  TTestFixedPoint = class(TCryptoLibAlgorithmTestCase)
   private
 
     class var

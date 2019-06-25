@@ -34,20 +34,15 @@ uses
   ClpIKeyParameter,
   ClpArgon2ParametersGenerator,
   ClpIArgon2ParametersGenerator,
-  ClpConverters;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpConverters,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// A test class for Argon2.
   /// </summary>
-  TTestArgon2 = class(TCryptoLibTestCase)
+  TTestArgon2 = class(TCryptoLibAlgorithmTestCase)
 
   private
 

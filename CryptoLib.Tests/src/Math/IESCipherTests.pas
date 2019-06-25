@@ -68,21 +68,14 @@ uses
   ClpIECPrivateKeyParameters,
   ClpIIESCipher,
   ClpIESCipher,
-  ClpEncoders,
   ClpDigestUtilities,
   ClpMacUtilities,
   ClpConverters,
-  ClpArrayUtils;
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestIESCipher = class(TCryptoLibTestCase)
+  TTestIESCipher = class(TCryptoLibAlgorithmTestCase)
   private
 
     function GetECIESAES256CBCEngine: IIESEngine;
@@ -128,10 +121,10 @@ begin
     param, Random);
   DecryptionResultBytes := CipherDecrypt.DoFinal(CipherTextBytes);
 
-  if (not TArrayUtils.AreEqual(PlainTextBytes, DecryptionResultBytes)) then
+  if (not AreEqual(PlainTextBytes, DecryptionResultBytes)) then
   begin
     Fail(Format('Decryption Failed - Expected %s but got %s',
-      [THex.Encode(PlainTextBytes), THex.Encode(DecryptionResultBytes)]));
+      [EncodeHex(PlainTextBytes), EncodeHex(DecryptionResultBytes)]));
   end;
 end;
 
@@ -249,7 +242,7 @@ begin
   begin
     System.SetLength(RandomBytes, Byte(RandomInstance.NextInt32));
     RandomInstance.NextBytes(RandomBytes);
-    PlainText := THex.Encode(RandomBytes);
+    PlainText := EncodeHex(RandomBytes);
 
     // Call IESCipher Encryption and Decryption Method
 

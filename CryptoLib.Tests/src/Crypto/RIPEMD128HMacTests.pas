@@ -35,24 +35,17 @@ uses
   ClpHMac,
   ClpIMac,
   ClpDigestUtilities,
-  ClpEncoders,
-  ClpArrayUtils,
   ClpStringUtils,
   ClpConverters,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// RIPEMD128 HMac Test, test vectors from RFC 2202
   /// </summary>
-  TTestRIPEMD128HMac = class(TCryptoLibTestCase)
+  TTestRIPEMD128HMac = class(TCryptoLibAlgorithmTestCase)
   private
   var
     Fkeys, Fdigests, Fmessages: TCryptoLibStringArray;
@@ -113,14 +106,14 @@ begin
     m := TConverters.ConvertStringToBytes(Fmessages[i], TEncoding.ASCII);
     if (TStringUtils.BeginsWith(Fmessages[i], '0x', True)) then
     begin
-      m := THex.Decode(System.Copy(Fmessages[i], 3,
+      m := DecodeHex(System.Copy(Fmessages[i], 3,
         System.Length(Fmessages[i]) - 2));
     end;
-    hmac.Init(TKeyParameter.Create(THex.Decode(Fkeys[i])));
+    hmac.Init(TKeyParameter.Create(DecodeHex(Fkeys[i])));
     hmac.BlockUpdate(m, 0, System.Length(m));
     hmac.DoFinal(resBuf, 0);
 
-    if (not TArrayUtils.AreEqual(resBuf, THex.Decode(Fdigests[i]))) then
+    if (not AreEqual(resBuf, DecodeHex(Fdigests[i]))) then
     begin
       Fail('Vector ' + IntToStr(i) + ' failed');
     end;
@@ -132,18 +125,18 @@ begin
 
   if (TStringUtils.BeginsWith(Fmessages[vector], '0x', True)) then
   begin
-    m2 := THex.Decode(System.Copy(Fmessages[vector], 3,
+    m2 := DecodeHex(System.Copy(Fmessages[vector], 3,
       System.Length(Fmessages[vector]) - 2));
   end;
 
-  hmac.Init(TKeyParameter.Create(THex.Decode(Fkeys[vector])));
+  hmac.Init(TKeyParameter.Create(DecodeHex(Fkeys[vector])));
   hmac.BlockUpdate(m2, 0, System.Length(m2));
   hmac.DoFinal(resBuf, 0);
   hmac.Reset();
   hmac.BlockUpdate(m2, 0, System.Length(m2));
   hmac.DoFinal(resBuf, 0);
 
-  if (not TArrayUtils.AreEqual(resBuf, THex.Decode(Fdigests[vector]))) then
+  if (not AreEqual(resBuf, DecodeHex(Fdigests[vector]))) then
   begin
     Fail('Reset with vector ' + IntToStr(vector) + ' failed');
   end;

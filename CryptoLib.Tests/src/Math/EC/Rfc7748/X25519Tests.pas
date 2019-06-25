@@ -34,26 +34,18 @@ uses
   ClpX25519,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpArrayUtils,
-  ClpEncoders,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestX25519 = class(TCryptoLibTestCase)
+  TTestX25519 = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FRandom: ISecureRandom;
 
     procedure CheckECDHVector(const sA, sAPub, sB, sBPub, sK, text: String);
     procedure CheckIterated(count: Int32);
-    procedure CheckValue(const n: TCryptoLibByteArray; const text, se: String);
+    procedure CheckValue(const n: TBytes; const text, se: String);
     procedure CheckX25519Vector(const sK, su, se, text: String);
   protected
     procedure SetUp; override;
@@ -77,12 +69,12 @@ implementation
 procedure TTestX25519.CheckECDHVector(const sA, sAPub, sB, sBPub, sK,
   text: String);
 var
-  a, b, aPub, bPub, aK, bK: TCryptoLibByteArray;
+  a, b, aPub, bPub, aK, bK: TBytes;
 begin
-  a := THex.Decode(sA);
+  a := DecodeHex(sA);
   CheckEquals(TX25519.ScalarSize, System.Length(a));
 
-  b := THex.Decode(sB);
+  b := DecodeHex(sB);
   CheckEquals(TX25519.ScalarSize, System.Length(b));
 
   System.SetLength(aPub, TX25519.PointSize);
@@ -107,7 +99,7 @@ end;
 
 procedure TTestX25519.CheckIterated(count: Int32);
 var
-  k, u, r: TCryptoLibByteArray;
+  k, u, r: TBytes;
   iterations: Int32;
 begin
   CheckEquals(TX25519.PointSize, TX25519.ScalarSize);
@@ -144,23 +136,22 @@ begin
   end;
 end;
 
-procedure TTestX25519.CheckValue(const n: TCryptoLibByteArray;
-  const text, se: String);
+procedure TTestX25519.CheckValue(const n: TBytes; const text, se: String);
 var
-  e: TCryptoLibByteArray;
+  e: TBytes;
 begin
-  e := THex.Decode(se);
-  CheckTrue(TArrayUtils.AreEqual(e, n), text);
+  e := DecodeHex(se);
+  CheckTrue(AreEqual(e, n), text);
 end;
 
 procedure TTestX25519.CheckX25519Vector(const sK, su, se, text: String);
 var
-  k, u, r: TCryptoLibByteArray;
+  k, u, r: TBytes;
 begin
-  k := THex.Decode(sK);
+  k := DecodeHex(sK);
   CheckEquals(TX25519.ScalarSize, System.Length(k));
 
-  u := THex.Decode(su);
+  u := DecodeHex(su);
   CheckEquals(TX25519.PointSize, System.Length(u));
 
   System.SetLength(r, TX25519.PointSize);
@@ -182,7 +173,7 @@ end;
 
 procedure TTestX25519.TestConsistency;
 var
-  u, k, rF, rV: TCryptoLibByteArray;
+  u, k, rF, rV: TBytes;
   i: Int32;
 begin
   System.SetLength(u, TX25519.PointSize);
@@ -196,13 +187,13 @@ begin
     FRandom.NextBytes(k);
     TX25519.ScalarMultBase(k, 0, rF, 0);
     TX25519.ScalarMult(k, 0, u, 0, rV, 0);
-    CheckTrue(TArrayUtils.AreEqual(rF, rV), Format('Consistency #%d', [i]));
+    CheckTrue(AreEqual(rF, rV), Format('Consistency #%d', [i]));
   end;
 end;
 
 procedure TTestX25519.TestECDH;
 var
-  kA, Kb, qA, qB, sA, sB: TCryptoLibByteArray;
+  kA, Kb, qA, qB, sA, sB: TBytes;
   i: Int32;
 begin
   System.SetLength(kA, TX25519.ScalarSize);
@@ -227,7 +218,7 @@ begin
     TX25519.ScalarMult(Kb, 0, qA, 0, sB, 0);
 
     // ... which is the same for both parties.
-    if (not TArrayUtils.AreEqual(sA, sB)) then
+    if (not AreEqual(sA, sB)) then
     begin
       Fail(Format(' %d', [i]));
     end;
@@ -278,7 +269,7 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
- RegisterTest(TTestX25519);
+  RegisterTest(TTestX25519);
 {$ELSE}
   RegisterTest(TTestX25519.Suite);
 {$ENDIF FPC}

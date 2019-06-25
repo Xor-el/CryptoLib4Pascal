@@ -36,28 +36,20 @@ uses
   ClpIDigest,
   ClpDigest,
   ClpDigestUtilities,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestDigestUtilities = class(TCryptoLibTestCase)
+  TTestDigestUtilities = class(TCryptoLibAlgorithmTestCase)
   private
   var
-    FTestBytes: TCryptoLibByteArray;
+    FTestBytes: TBytes;
 
-    function MakeTestPlainDigest(const digest: IDigest): TCryptoLibByteArray;
+    function MakeTestPlainDigest(const digest: IDigest): TBytes;
     procedure CheckPlainDigestAlgorithm(const name: String;
       const digest: IDigest);
 
-    function MakeTestXofDigest(const digest: IDigest; count: Int32)
-      : TCryptoLibByteArray;
+    function MakeTestXofDigest(const digest: IDigest; count: Int32): TBytes;
     procedure CheckXofDigestAlgorithm(const name: String;
       const digest: IDigest);
 
@@ -86,15 +78,15 @@ begin
 end;
 
 function TTestDigestUtilities.MakeTestXofDigest(const digest: IDigest;
-  count: Int32): TCryptoLibByteArray;
+  count: Int32): TBytes;
 begin
   System.SetLength(Result, count);
   digest.BlockUpdate(FTestBytes, 0, System.Length(FTestBytes));
   digest.DoFinal(Result, 0);
 end;
 
-function TTestDigestUtilities.MakeTestPlainDigest(const digest: IDigest)
-  : TCryptoLibByteArray;
+function TTestDigestUtilities.MakeTestPlainDigest(const digest
+  : IDigest): TBytes;
 var
   i: Int32;
 begin
@@ -111,7 +103,7 @@ end;
 procedure TTestDigestUtilities.CheckXofDigestAlgorithm(const name: String;
   const digest: IDigest);
 var
-  hash1, hash2: TCryptoLibByteArray;
+  hash1, hash2: TBytes;
   i: Int32;
 begin
   for i := 1 to 100 do
@@ -119,7 +111,7 @@ begin
     hash1 := MakeTestXofDigest(digest, i);
     hash2 := MakeTestXofDigest(TDigestUtilities.GetDigest(name), i);
 
-    if not TArrayUtils.AreEqual(hash1, hash2) then
+    if not AreEqual(hash1, hash2) then
     begin
       Fail(Format
         ('%s (%d) at Index %d CheckXofDigestAlgorithm Operation Failed',
@@ -131,12 +123,12 @@ end;
 procedure TTestDigestUtilities.CheckPlainDigestAlgorithm(const name: String;
   const digest: IDigest);
 var
-  hash1, hash2: TCryptoLibByteArray;
+  hash1, hash2: TBytes;
 begin
   hash1 := MakeTestPlainDigest(digest);
   hash2 := MakeTestPlainDigest(TDigestUtilities.GetDigest(name));
 
-  if not TArrayUtils.AreEqual(hash1, hash2) then
+  if not AreEqual(hash1, hash2) then
   begin
     Fail(Format('%s CheckPlainDigestAlgorithm Operation Failed', [name]));
   end;

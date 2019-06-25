@@ -36,19 +36,12 @@ uses
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
   ClpDigestUtilities,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestDigestRandomNumber = class(TCryptoLibTestCase)
+  TTestDigestRandomNumber = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
@@ -163,13 +156,13 @@ begin
 
   if (noCycle <> Nil) then
   begin
-    if (TArrayUtils.AreEqual(noCycle, output)) then
+    if (AreEqual(noCycle, output)) then
     begin
       Fail('seed not being cycled!');
     end;
   end;
 
-  if (not TArrayUtils.AreEqual(expected, output)) then
+  if (not AreEqual(expected, output)) then
   begin
     Fail('expected output doesn''t match');
   end;
@@ -195,7 +188,7 @@ begin
     System.Inc(i);
   end;
 
-  if (not TArrayUtils.AreEqual(expected, output)) then
+  if (not AreEqual(expected, output)) then
   begin
     Fail('expected output doesn''t match');
   end;
@@ -205,26 +198,27 @@ procedure TTestDigestRandomNumber.SetUp;
 begin
   FZERO_SEED := TBytes.Create(0, 0, 0, 0, 0, 0, 0, 0);
 
-  FTEST_SEED := THex.Decode('81dcfafc885914057876');
+  FTEST_SEED := DecodeHex('81dcfafc885914057876');
 
-  Fexpected0SHA1 := THex.Decode('95bca677b3d4ff793213c00892d2356ec729ee02');
-  FnoCycle0SHA1 := THex.Decode('d57ccd0eb12c3938d59226412bc1268037b6b846');
+  Fexpected0SHA1 := DecodeHex('95bca677b3d4ff793213c00892d2356ec729ee02');
+  FnoCycle0SHA1 := DecodeHex('d57ccd0eb12c3938d59226412bc1268037b6b846');
   Fexpected0SHA256 :=
-    THex.Decode
-    ('587e2dfd597d086e47ddcd343eac983a5c913bef8c6a1a560a5c1bc3a74b0991');
-  FnoCycle0SHA256 := THex.Decode
-    ('e5776c4483486ba7be081f4e1b9dafbab25c8fae290fd5474c1ceda2c16f9509');
-  Fexpected100SHA1 := THex.Decode('b9d924092546e0876cafd4937d7364ebf9efa4be');
+    DecodeHex(
+    '587e2dfd597d086e47ddcd343eac983a5c913bef8c6a1a560a5c1bc3a74b0991');
+  FnoCycle0SHA256 :=
+    DecodeHex(
+    'e5776c4483486ba7be081f4e1b9dafbab25c8fae290fd5474c1ceda2c16f9509');
+  Fexpected100SHA1 := DecodeHex('b9d924092546e0876cafd4937d7364ebf9efa4be');
   Fexpected100SHA256 :=
-    THex.Decode
-    ('fbc4aa54b948b99de104c44563a552899d718bb75d1941cc62a2444b0506abaf');
-  FexpectedTestSHA1 := THex.Decode('e9ecef9f5306daf1ac51a89a211a64cb24415649');
+    DecodeHex(
+    'fbc4aa54b948b99de104c44563a552899d718bb75d1941cc62a2444b0506abaf');
+  FexpectedTestSHA1 := DecodeHex('e9ecef9f5306daf1ac51a89a211a64cb24415649');
   FexpectedTestSHA256 :=
-    THex.Decode
-    ('bdab3ca831b472a2fa09bd1bade541ef16c96640a91fcec553679a136061de98');
+    DecodeHex(
+    'bdab3ca831b472a2fa09bd1bade541ef16c96640a91fcec553679a136061de98');
 
-  Fsha1Xors := THex.Decode('7edcc1216934f3891b03ffa65821611a3e2b1f79');
-  Fsha256Xors := THex.Decode
+  Fsha1Xors := DecodeHex('7edcc1216934f3891b03ffa65821611a3e2b1f79');
+  Fsha256Xors := DecodeHex
     ('5ec48189cc0aa71e79c707bc3c33ffd47bbba368a83d6cfebf3cd3969d7f3eed');
 end;
 

@@ -32,25 +32,19 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpEncoders,
-  ClpCryptoLibTypes,
   ClpConverters,
   ClpIAsn1Objects,
-  ClpAsn1Objects;
+  ClpAsn1Objects,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestEqualsAndHashCode = class(TCryptoLibTestCase)
+  TTestEqualsAndHashCode = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
-    Fdata: TCryptoLibByteArray;
+    Fdata: TBytes;
     Fvalues: TCryptoLibGenericArray<IAsn1Object>;
 
   protected
@@ -67,7 +61,8 @@ implementation
 
 procedure TTestEqualsAndHashCode.SetUp;
 begin
-  Fdata := TCryptoLibByteArray.Create(0, 1, 0, 1, 0, 0, 1);
+  inherited;
+  Fdata := TBytes.Create(0, 1, 0, 1, 0, 0, 1);
   Fvalues := TCryptoLibGenericArray<IAsn1Object>.Create(
 
     TBerOctetString.Create(Fdata),
@@ -89,7 +84,7 @@ begin
 
     TDerUtf8String.Create('hello world'),
     TDerVisibleString.Create('hello world'),
-    TDerGraphicString.Create(THex.Decode('deadbeef')),
+    TDerGraphicString.Create(DecodeHex('deadbeef')),
     TDerVideotexString.Create(TConverters.ConvertStringToBytes('Hello World',
     TEncoding.ANSI)),
 
@@ -124,7 +119,7 @@ var
   aOut: TAsn1OutputStream;
   aIn: TAsn1InputStream;
   o: IAsn1Object;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
   i: Int32;
 begin
   bOut := TMemoryStream.Create();

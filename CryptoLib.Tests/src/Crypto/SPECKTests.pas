@@ -45,22 +45,14 @@ uses
   ClpIBlockCipher,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestSPECK = class(TCryptoLibTestCase)
+  TTestSPECK = class(TCryptoLibAlgorithmTestCase)
   private
 
-    procedure doSPECKTest(const cipher: IBufferedCipher;
+    procedure DoSPECKTest(const cipher: IBufferedCipher;
       const param: ICipherParameters; const input, output: String;
       withpadding: Boolean = False);
 
@@ -82,15 +74,15 @@ implementation
 
 { TTestSPECK }
 
-procedure TTestSPECK.doSPECKTest(const cipher: IBufferedCipher;
+procedure TTestSPECK.DoSPECKTest(const cipher: IBufferedCipher;
   const param: ICipherParameters; const input, output: String;
   withpadding: Boolean);
 var
   LInput, LOutput, EncryptionResult, DecryptionResult: TBytes;
   // len1, len2: Int32;
 begin
-  LInput := THex.Decode(input);
-  LOutput := THex.Decode(output);
+  LInput := DecodeHex(input);
+  LOutput := DecodeHex(output);
 
   cipher.Init(True, param);
 
@@ -111,10 +103,10 @@ begin
 
   if not withpadding then
   begin
-    if (not TArrayUtils.AreEqual(LOutput, EncryptionResult)) then
+    if (not AreEqual(LOutput, EncryptionResult)) then
     begin
       Fail(Format('Encryption Failed - Expected %s but got %s',
-        [THex.Encode(LOutput), THex.Encode(EncryptionResult)]));
+        [EncodeHex(LOutput), EncodeHex(EncryptionResult)]));
     end;
   end;
 
@@ -137,10 +129,10 @@ begin
     System.SetLength(DecryptionResult, len2);
     * }
 
-  if (not TArrayUtils.AreEqual(LInput, DecryptionResult)) then
+  if (not AreEqual(LInput, DecryptionResult)) then
   begin
     Fail(Format('Decryption Failed - Expected %s but got %s',
-      [THex.Encode(LInput), THex.Encode(DecryptionResult)]));
+      [EncodeHex(LInput), EncodeHex(DecryptionResult)]));
   end;
 end;
 
@@ -174,16 +166,15 @@ begin
   for i := System.Low(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CBC)
     to System.High(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CBC) do
   begin
-    keyBytes := THex.Decode
-      (TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CBC[i]);
-    IVBytes := THex.Decode(TSPECKTestVectors.FCryptoPPVectorIVs_SPECK64_CBC[i]);
+    keyBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CBC[i]);
+    IVBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorIVs_SPECK64_CBC[i]);
     input := TSPECKTestVectors.FCryptoPPVectorInputs_SPECK64_CBC[i];
     output := TSPECKTestVectors.FCryptoPPVectorOutputs_SPECK64_CBC[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TKeyParameter.Create(keyBytes) as IKeyParameter, IVBytes);
 
-    doSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
+    DoSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
       input, output);
   end;
 
@@ -208,17 +199,16 @@ begin
   for i := System.Low(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_CBC)
     to System.High(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_CBC) do
   begin
-    keyBytes := THex.Decode
+    keyBytes := DecodeHex
       (TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_CBC[i]);
-    IVBytes := THex.Decode
-      (TSPECKTestVectors.FCryptoPPVectorIVs_SPECK128_CBC[i]);
+    IVBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorIVs_SPECK128_CBC[i]);
     input := TSPECKTestVectors.FCryptoPPVectorInputs_SPECK128_CBC[i];
     output := TSPECKTestVectors.FCryptoPPVectorOutputs_SPECK128_CBC[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TKeyParameter.Create(keyBytes) as IKeyParameter, IVBytes);
 
-    doSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
+    DoSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
       input, output);
   end;
 
@@ -243,16 +233,15 @@ begin
   for i := System.Low(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CTR)
     to System.High(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CTR) do
   begin
-    keyBytes := THex.Decode
-      (TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CTR[i]);
-    IVBytes := THex.Decode(TSPECKTestVectors.FCryptoPPVectorIVs_SPECK64_CTR[i]);
+    keyBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_CTR[i]);
+    IVBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorIVs_SPECK64_CTR[i]);
     input := TSPECKTestVectors.FCryptoPPVectorInputs_SPECK64_CTR[i];
     output := TSPECKTestVectors.FCryptoPPVectorOutputs_SPECK64_CTR[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TKeyParameter.Create(keyBytes) as IKeyParameter, IVBytes);
 
-    doSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
+    DoSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
       input, output);
   end;
 
@@ -277,17 +266,16 @@ begin
   for i := System.Low(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_CTR)
     to System.High(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_CTR) do
   begin
-    keyBytes := THex.Decode
+    keyBytes := DecodeHex
       (TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_CTR[i]);
-    IVBytes := THex.Decode
-      (TSPECKTestVectors.FCryptoPPVectorIVs_SPECK128_CTR[i]);
+    IVBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorIVs_SPECK128_CTR[i]);
     input := TSPECKTestVectors.FCryptoPPVectorInputs_SPECK128_CTR[i];
     output := TSPECKTestVectors.FCryptoPPVectorOutputs_SPECK128_CTR[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TKeyParameter.Create(keyBytes) as IKeyParameter, IVBytes);
 
-    doSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
+    DoSPECKTest(cipher, KeyParametersWithIV as ICipherParameters,
       input, output);
   end;
 
@@ -312,14 +300,13 @@ begin
   for i := System.Low(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_ECB)
     to System.High(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_ECB) do
   begin
-    keyBytes := THex.Decode
-      (TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_ECB[i]);
+    keyBytes := DecodeHex(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK64_ECB[i]);
     input := TSPECKTestVectors.FCryptoPPVectorInputs_SPECK64_ECB[i];
     output := TSPECKTestVectors.FCryptoPPVectorOutputs_SPECK64_ECB[i];
 
     keyParameter := TKeyParameter.Create(keyBytes);
 
-    doSPECKTest(cipher, keyParameter as ICipherParameters, input, output);
+    DoSPECKTest(cipher, keyParameter as ICipherParameters, input, output);
   end;
 
 end;
@@ -343,14 +330,14 @@ begin
   for i := System.Low(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_ECB)
     to System.High(TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_ECB) do
   begin
-    keyBytes := THex.Decode
+    keyBytes := DecodeHex
       (TSPECKTestVectors.FCryptoPPVectorKeys_SPECK128_ECB[i]);
     input := TSPECKTestVectors.FCryptoPPVectorInputs_SPECK128_ECB[i];
     output := TSPECKTestVectors.FCryptoPPVectorOutputs_SPECK128_ECB[i];
 
     keyParameter := TKeyParameter.Create(keyBytes);
 
-    doSPECKTest(cipher, keyParameter as ICipherParameters, input, output);
+    DoSPECKTest(cipher, keyParameter as ICipherParameters, input, output);
   end;
 
 end;

@@ -45,9 +45,7 @@ uses
   ClpIParametersWithIV,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 type
 
@@ -66,18 +64,18 @@ type
   /// Test whether block ciphers implement reset contract on init,
   /// encrypt/decrypt and reset.
   /// </summary>
-  TTestStreamCipherReset = class(TCryptoLibTestCase)
+  TTestStreamCipherReset = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FSecureRandom: ISecureRandom;
 
     procedure DoCheckReset(const cipher: IStreamCipher;
       const cipherParams: ICipherParameters; encrypt: Boolean;
-      const pretext, posttext: TCryptoLibByteArray);
+      const pretext, posttext: TBytes);
 
     function DoMake(CipherEngine: TCipherEngine): IStreamCipher;
 
-    function DoRandom(size: Int32): TCryptoLibByteArray;
+    function DoRandom(size: Int32): TBytes;
     procedure DoTestReset(CipherEngine: TCipherEngine;
       KeyLen, IVLen: Int32); overload;
     procedure DoTestReset(const cipher1, cipher2: IStreamCipher;
@@ -98,9 +96,9 @@ implementation
 
 procedure TTestStreamCipherReset.DoCheckReset(const cipher: IStreamCipher;
   const cipherParams: ICipherParameters; encrypt: Boolean;
-  const pretext, posttext: TCryptoLibByteArray);
+  const pretext, posttext: TBytes);
 var
-  output: TCryptoLibByteArray;
+  output: TBytes;
 begin
   // Do initial run
   System.SetLength(output, System.Length(posttext));
@@ -119,10 +117,10 @@ begin
 
   end;
 
-  if not(TArrayUtils.AreEqual(output, posttext)) then
+  if not(AreEqual(output, posttext)) then
   begin
     Fail(Format('%s init did not reset. Expected %s But Got %s',
-      [cipher.AlgorithmName, THex.Encode(posttext), THex.Encode(output)]));
+      [cipher.AlgorithmName, EncodeHex(posttext), EncodeHex(output)]));
   end;
 
   // Check reset resets data
@@ -139,7 +137,7 @@ begin
 
   end;
 
-  if not(TArrayUtils.AreEqual(output, posttext)) then
+  if not(AreEqual(output, posttext)) then
   begin
     Fail(Format('%s init did not reset.', [cipher.AlgorithmName]));
   end;
@@ -176,7 +174,7 @@ begin
   end;
 end;
 
-function TTestStreamCipherReset.DoRandom(size: Int32): TCryptoLibByteArray;
+function TTestStreamCipherReset.DoRandom(size: Int32): TBytes;
 begin
   Result := TSecureRandom.GetNextBytes(FSecureRandom, size);
 end;
@@ -192,7 +190,7 @@ end;
 procedure TTestStreamCipherReset.DoTestReset(const cipher1,
   cipher2: IStreamCipher; const cipherParams: ICipherParameters);
 var
-  plaintext, ciphertext: TCryptoLibByteArray;
+  plaintext, ciphertext: TBytes;
 begin
   cipher1.Init(true, cipherParams);
   System.SetLength(plaintext, 1023);

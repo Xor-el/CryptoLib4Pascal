@@ -36,20 +36,14 @@ uses
   ClpIScryptParametersGenerator,
   ClpConverters,
   HlpHashLibTypes,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// A Test class for Scrypt.
   /// </summary>
-  TTestScrypt = class(TCryptoLibTestCase)
+  TTestScrypt = class(TCryptoLibAlgorithmTestCase)
 
   private
 

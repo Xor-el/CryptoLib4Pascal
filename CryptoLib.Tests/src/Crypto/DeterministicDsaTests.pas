@@ -52,14 +52,8 @@ uses
   ClpBigInteger,
   ClpDigestUtilities,
   ClpSecNamedCurves,
-  ClpEncoders,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
@@ -68,11 +62,11 @@ type
   /// Signature Algorithm (DSA) and Elliptic Curve Digital Signature
   /// Algorithm (ECDSA)".
   /// </summary>
-  TTestDeterministicDsa = class(TCryptoLibTestCase)
+  TTestDeterministicDsa = class(TCryptoLibAlgorithmTestCase)
 
   private
   var
-    FSAMPLE, FTEST: TCryptoLibByteArray;
+    FSAMPLE, FTEST: TBytes;
 
     // test vectors from appendix in RFC 6979
     procedure DoTestHMacDeterministic;
@@ -91,7 +85,7 @@ type
       const privKey: IECPrivateKeyParameters; const r, s: TBigInteger);
 
     procedure DoTestHMacDetECDsa(const detSigner: IDsa; const digest: IDigest;
-      const data: TCryptoLibByteArray; const privKey: ICipherParameters;
+      const data: TBytes; const privKey: ICipherParameters;
       const r, s: TBigInteger);
 
   protected
@@ -221,10 +215,10 @@ begin
 end;
 
 procedure TTestDeterministicDsa.DoTestHMacDetECDsa(const detSigner: IDsa;
-  const digest: IDigest; const data: TCryptoLibByteArray;
-  const privKey: ICipherParameters; const r, s: TBigInteger);
+  const digest: IDigest; const data: TBytes; const privKey: ICipherParameters;
+  const r, s: TBigInteger);
 var
-  m: TCryptoLibByteArray;
+  m: TBytes;
   rs: TCryptoLibGenericArray<TBigInteger>;
 begin
   System.SetLength(m, digest.GetDigestSize());
@@ -399,8 +393,8 @@ end;
 procedure TTestDeterministicDsa.SetUp;
 begin
   inherited;
-  FSAMPLE := THex.Decode('73616d706c65'); // "sample"
-  FTEST := THex.Decode('74657374'); // "test"
+  FSAMPLE := DecodeHex('73616d706c65'); // "sample"
+  FTEST := DecodeHex('74657374'); // "test"
 end;
 
 procedure TTestDeterministicDsa.TearDown;

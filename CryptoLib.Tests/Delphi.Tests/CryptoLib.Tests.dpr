@@ -456,7 +456,8 @@ uses
   DigestUtilitiesTests in '..\src\Security\DigestUtilitiesTests.pas',
   DigestTests in '..\src\Others\DigestTests.pas',
   ScryptTests in '..\src\Crypto\ScryptTests.pas',
-  DHTests in '..\src\Crypto\DHTests.pas';
+  DHTests in '..\src\Crypto\DHTests.pas',
+  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin
 

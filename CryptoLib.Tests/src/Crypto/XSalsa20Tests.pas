@@ -37,19 +37,12 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestXSalsa20 = class(TCryptoLibTestCase)
+  TTestXSalsa20 = class(TCryptoLibAlgorithmTestCase)
 
   private
   var
@@ -76,13 +69,13 @@ procedure TTestXSalsa20.DoXSalsa20Test(number: Int32;
 var
   engine: IXSalsa20Engine;
 var
-  LPlainText, LCipherText, LOutput, LKey, LIV: TCryptoLibByteArray;
+  LPlainText, LCipherText, LOutput, LKey, LIV: TBytes;
 begin
-  LPlainText := THex.Decode(ATestVectorParams[2]);
+  LPlainText := DecodeHex(ATestVectorParams[2]);
   System.SetLength(LOutput, System.Length(LPlainText));
-  LKey := THex.Decode(ATestVectorParams[0]);
-  LIV := THex.Decode(ATestVectorParams[1]);
-  LCipherText := THex.Decode(ATestVectorParams[3]);
+  LKey := DecodeHex(ATestVectorParams[0]);
+  LIV := DecodeHex(ATestVectorParams[1]);
+  LCipherText := DecodeHex(ATestVectorParams[3]);
 
   engine := TXSalsa20Engine.Create();
   engine.Init(false, TParametersWithIV.Create(TKeyParameter.Create(LKey)
@@ -90,10 +83,10 @@ begin
 
   engine.ProcessBytes(LPlainText, 0, System.Length(LPlainText), LOutput, 0);
 
-  if not(TArrayUtils.AreEqual(LCipherText, LOutput)) then
+  if not(AreEqual(LCipherText, LOutput)) then
   begin
     Fail(Format('Mismatch on %d, Expected %s but found %s',
-      [number, THex.Encode(LCipherText), THex.Encode(LOutput)]));
+      [number, EncodeHex(LCipherText), EncodeHex(LOutput)]));
   end;
 
 end;

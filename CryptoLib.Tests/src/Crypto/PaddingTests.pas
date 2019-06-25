@@ -42,30 +42,22 @@ uses
   ClpIPaddingModes,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// Padding tests.
   /// </summary>
-  TTestPadding = class(TCryptoLibTestCase)
+  TTestPadding = class(TCryptoLibAlgorithmTestCase)
   private
 
     procedure DoBlockCheck(const cipher: IPaddedBufferedBlockCipher;
       const padding: IBlockCipherPadding; const key: IKeyParameter;
-      const data: TCryptoLibByteArray);
+      const data: TBytes);
     procedure DoTestPadding(const padding: IBlockCipherPadding;
-      const rand: ISecureRandom;
-      const ffVector, ZeroVector: TCryptoLibByteArray);
+      const rand: ISecureRandom; const ffVector, ZeroVector: TBytes);
 
   protected
     procedure SetUp; override;
@@ -84,7 +76,7 @@ implementation
 
 procedure TTestPadding.DoBlockCheck(const cipher: IPaddedBufferedBlockCipher;
   const padding: IBlockCipherPadding; const key: IKeyParameter;
-  const data: TCryptoLibByteArray);
+  const data: TBytes);
 var
   &out, dec: TBytes;
   len, decLen: Int32;
@@ -107,7 +99,7 @@ begin
     // decLen := decLen + cipher.doFinal(dec, decLen);
     cipher.doFinal(dec, decLen);
 
-    if (not TArrayUtils.AreEqual(data, dec)) then
+    if (not AreEqual(data, dec)) then
     begin
       Fail('failed to decrypt - i = ' + IntToStr(System.Length(data)) +
         ', padding = ' + padding.PaddingName);
@@ -143,7 +135,7 @@ var
 begin
   bc := TPaddedBufferedBlockCipher.Create(TAESEngine.Create() as IAESEngine,
     TPKCS7Padding.Create() as IPKCS7Padding);
-  key := TKeyParameter.Create(THex.decode('001122334455667788990A0B0C0D0E0F'));
+  key := TKeyParameter.Create(DecodeHex('001122334455667788990A0B0C0D0E0F'));
 
   for i := 0 to (bc.GetBlockSize * 2) do
   begin
@@ -183,7 +175,7 @@ begin
   rand := TSecureRandom.GetInstance('SHA256PRNG');
 
   DoTestPadding(TPKCS7Padding.Create() as IPKCS7Padding, rand,
-    THex.decode('ffffff0505050505'), THex.decode('0000000004040404'));
+    DecodeHex('ffffff0505050505'), DecodeHex('0000000004040404'));
 
   padder := TPKCS7Padding.Create();
   try
@@ -210,19 +202,19 @@ begin
   DoTestPadding(TX923Padding.Create() as IX923Padding, rand, Nil, Nil);
 
   DoTestPadding(TTBCPadding.Create() as ITBCPadding, rand,
-    THex.decode('ffffff0000000000'), THex.decode('00000000ffffffff'));
+    DecodeHex('ffffff0000000000'), DecodeHex('00000000ffffffff'));
 
   DoTestPadding(TZeroBytePadding.Create() as IZeroBytePadding, rand,
-    THex.decode('ffffff0000000000'), Nil);
+    DecodeHex('ffffff0000000000'), Nil);
 
   DoTestPadding(TISO7816d4Padding.Create() as IISO7816d4Padding, rand,
-    THex.decode('ffffff8000000000'), THex.decode('0000000080000000'));
+    DecodeHex('ffffff8000000000'), DecodeHex('0000000080000000'));
 
   TestOutputSizes();
 end;
 
 procedure TTestPadding.DoTestPadding(const padding: IBlockCipherPadding;
-  const rand: ISecureRandom; const ffVector, ZeroVector: TCryptoLibByteArray);
+  const rand: ISecureRandom; const ffVector, ZeroVector: TBytes);
 var
   cipher: IPaddedBufferedBlockCipher;
   key: IKeyParameter;
@@ -231,7 +223,7 @@ var
 begin
   cipher := TPaddedBufferedBlockCipher.Create(TAESEngine.Create()
     as IAESEngine, padding);
-  key := TKeyParameter.Create(THex.decode('001122334455667788990A0B0C0D0E0F'));
+  key := TKeyParameter.Create(DecodeHex('001122334455667788990A0B0C0D0E0F'));
 
   //
   // ff test
@@ -242,7 +234,7 @@ begin
   begin
     padding.AddPadding(data, 3);
 
-    if (not TArrayUtils.AreEqual(data, ffVector)) then
+    if (not AreEqual(data, ffVector)) then
     begin
       Fail('failed ff test for ' + padding.PaddingName);
     end;
@@ -253,10 +245,10 @@ begin
   //
   if (ZeroVector <> Nil) then
   begin
-    TArrayUtils.ZeroFill(data);
+    ZeroFill(data);
     padding.AddPadding(data, 4);
 
-    if (not TArrayUtils.AreEqual(data, ZeroVector)) then
+    if (not AreEqual(data, ZeroVector)) then
     begin
       Fail('failed zero test for ' + padding.PaddingName);
     end;

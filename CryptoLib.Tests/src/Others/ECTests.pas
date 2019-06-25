@@ -57,24 +57,17 @@ uses
   ClpCustomNamedCurves,
   ClpECC,
   ClpIECC,
-  ClpEncoders,
-  ClpCryptoLibTypes,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpArrayUtils;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// ECDSA tests are taken from X9.62.
   /// </summary>
-  TTestEC = class(TCryptoLibTestCase)
+  TTestEC = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
@@ -148,7 +141,7 @@ procedure TTestEC.TestDecode;
 var
   curve: IFpCurve;
   p: IECPoint;
-  encoding: TCryptoLibByteArray;
+  encoding: TBytes;
 begin
   curve := TFpCurve.Create
     (TBigInteger.Create
@@ -162,7 +155,7 @@ begin
     TBigInteger.One);
 
   p := curve.DecodePoint
-    (THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))
     .Normalize();
 
   if (not p.AffineXCoord.ToBigInteger()
@@ -181,8 +174,8 @@ begin
 
   encoding := p.GetEncoded(true);
 
-  if (not TArrayUtils.AreEqual(encoding,
-    THex.Decode('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))) then
+  if (not AreEqual(encoding,
+    DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))) then
   begin
     Fail('point compressed incorrectly');
   end;
@@ -191,7 +184,7 @@ end;
 procedure TTestEC.TestECDsa191bitBinary;
 var
   r, s: TBigInteger;
-  kData, &message: TCryptoLibByteArray;
+  kData, &message: TBytes;
   k: ISecureRandom;
   curve: IF2mCurve;
   parameters: IECDomainParameters;
@@ -222,7 +215,8 @@ begin
     TBigInteger.Two);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('0436B3DAF8A23206F9C4F299D7B21A9C369137F2C84AE1AA0D765BE73433B3F95E332932E70EA245CA2418EA0EF98018FB')
     ) as IECPoint, // G
     TBigInteger.Create
@@ -257,7 +251,8 @@ begin
 
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('045DE37E756BD55D72E3768CB396FFEB962614DEA4CE28A2E755C0E0E02F5FB132CAF416EF85B229BBB8E1352003125BA1')
     ) as IECPoint, // Q
     parameters);
@@ -272,7 +267,7 @@ end;
 procedure TTestEC.TestECDsa192bitPrime;
 var
   r, s, n: TBigInteger;
-  kData, &message: TCryptoLibByteArray;
+  kData, &message: TBytes;
   k: ISecureRandom;
   curve: IFpCurve;
   parameters: IECDomainParameters;
@@ -307,8 +302,9 @@ begin
     n, TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')) as IECPoint, // G
+    curve.DecodePoint
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012'))
+    as IECPoint, // G
     n);
 
   priKey := TECPrivateKeyParameters.Create('ECDSA',
@@ -340,8 +336,9 @@ begin
 
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
-    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')) as IECPoint, // Q
+    curve.DecodePoint
+    (DecodeHex('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5'))
+    as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);
@@ -356,14 +353,14 @@ var
   sig: TCryptoLibGenericArray<TBigInteger>;
   k: ISecureRandom;
   r, s: TBigInteger;
-  kData: TCryptoLibByteArray;
+  kData: TBytes;
   curve: IF2mCurve;
   parameters: IECDomainParameters;
   priKey: IECPrivateKeyParameters;
   pubKey: IECPublicKeyParameters;
   ecdsa: IECDsaSigner;
   param: IParametersWithRandom;
-  &message: TCryptoLibByteArray;
+  &message: TBytes;
 begin
   r := TBigInteger.Create
     ('21596333210419611985018340039034612628818151486841789642455876922391552');
@@ -388,7 +385,8 @@ begin
     TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
     ) as IECPoint, // G
     TBigInteger.Create
@@ -425,7 +423,8 @@ begin
 
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
     ) as IECPoint, // Q
     parameters);
@@ -440,7 +439,7 @@ end;
 procedure TTestEC.TestECDsa239bitBinaryAndLargeDigest;
 var
   r, s: TBigInteger;
-  kData, &message: TCryptoLibByteArray;
+  kData, &message: TBytes;
   k: ISecureRandom;
   curve: IF2mCurve;
   parameters: IECDomainParameters;
@@ -473,7 +472,8 @@ begin
     TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
     ) as IECPoint, // G
     TBigInteger.Create
@@ -511,7 +511,8 @@ begin
 
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
     ) as IECPoint, // Q
     parameters);
@@ -525,7 +526,7 @@ end;
 
 procedure TTestEC.TestECDsa239bitPrime;
 var
-  &message, kData: TCryptoLibByteArray;
+  &message, kData: TBytes;
   r, s, n: TBigInteger;
   k: ISecureRandom;
   curve: IFpCurve;
@@ -562,9 +563,9 @@ begin
     n, TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf'))
-    as IECPoint, // G
+    curve.DecodePoint
+    (DecodeHex('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')
+    ) as IECPoint, // G
     n);
 
   priKey := TECPrivateKeyParameters.Create('ECDSA',
@@ -596,9 +597,9 @@ begin
 
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
-    ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70'))
-    as IECPoint, // Q
+    curve.DecodePoint
+    (DecodeHex('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')
+    ) as IECPoint, // Q
     parameters);
 
   ecdsa.Init(false, pubKey);
@@ -619,7 +620,7 @@ var
   pair: IAsymmetricCipherKeyPair;
   param: IParametersWithRandom;
   ecdsa: IECDsaSigner;
-  &message: TCryptoLibByteArray;
+  &message: TBytes;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
   random := TSecureRandom.Create();
@@ -638,7 +639,8 @@ begin
     n, TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     n);
 
@@ -694,7 +696,8 @@ begin
     n, TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     n);
 

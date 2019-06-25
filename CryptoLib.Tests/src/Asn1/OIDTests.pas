@@ -32,33 +32,26 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes,
   ClpAsn1Objects,
-  ClpIAsn1Objects;
+  ClpIAsn1Objects,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestOID = class(TCryptoLibTestCase)
+  TTestOID = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
     Foid: string;
-    Freq1, Freq2: TCryptoLibByteArray;
+    Freq1, Freq2: TBytes;
 
-    procedure recodeCheck(const oid: String; const enc: TBytes);
-    procedure validOidCheck(const oid: String);
-    procedure invalidOidCheck;
-    procedure branchCheck(const stem, branch: String);
-    procedure onCheck(const stem, test: String; expected: Boolean);
-    procedure constructorMethod;
+    procedure DoRecodeCheck(const oid: String; const enc: TBytes);
+    procedure DoValidOidCheck(const oid: String);
+    procedure DoInvalidOidCheck;
+    procedure DoBranchCheck(const stem, branch: String);
+    procedure DoOnCheck(const stem, test: String; expected: Boolean);
+    procedure DoConstructorMethod;
 
   protected
     procedure SetUp; override;
@@ -72,7 +65,7 @@ implementation
 
 { TTestOID }
 
-procedure TTestOID.branchCheck(const stem, branch: String);
+procedure TTestOID.DoBranchCheck(const stem, branch: String);
 var
   expected, actual: String;
   instance: IDerObjectIdentifier;
@@ -85,12 +78,12 @@ begin
     + branch);
 end;
 
-procedure TTestOID.constructorMethod;
+procedure TTestOID.DoConstructorMethod;
 begin
   TDerObjectIdentifier.Create(Foid);
 end;
 
-procedure TTestOID.invalidOidCheck;
+procedure TTestOID.DoInvalidOidCheck;
 var
 {$IFNDEF FPC}
   Method: TTestMethod;
@@ -99,12 +92,12 @@ var
 {$ENDIF FPC}
 begin
 
-  Method := constructorMethod;
+  Method := DoConstructorMethod;
   CheckException(Method, EFormatCryptoLibException,
     'Expected "EFormatCryptoLibException" But None Gotten');
 end;
 
-procedure TTestOID.onCheck(const stem, test: String; expected: Boolean);
+procedure TTestOID.DoOnCheck(const stem, test: String; expected: Boolean);
 var
   tempDer, tempDer2: IDerObjectIdentifier;
   actual: Boolean;
@@ -115,7 +108,7 @@ begin
   CheckEquals(expected, actual, 'failed "on" check for ' + stem + '"/"' + test);
 end;
 
-procedure TTestOID.recodeCheck(const oid: String; const enc: TBytes);
+procedure TTestOID.DoRecodeCheck(const oid: String; const enc: TBytes);
 var
   o, encO: IDerObjectIdentifier;
   bytes: TBytes;
@@ -130,14 +123,14 @@ begin
 
   CheckEquals(true, o.Equals(encO), 'object comparison failed');
 
-  CheckEquals(true, TArrayUtils.AreEqual(bytes, enc),
-    'bytearray comparison failed');
+  CheckEquals(true, AreEqual(bytes, enc), 'bytearray comparison failed');
 end;
 
 procedure TTestOID.SetUp;
 begin
-  Freq1 := THex.Decode('0603813403');
-  Freq2 := THex.Decode('06082A36FFFFFFDD6311');
+  inherited;
+  Freq1 := DecodeHex('0603813403');
+  Freq2 := DecodeHex('06082A36FFFFFFDD6311');
 end;
 
 procedure TTestOID.TearDown;
@@ -148,58 +141,58 @@ end;
 
 procedure TTestOID.TestOID;
 begin
-  recodeCheck('2.100.3', Freq1);
-  recodeCheck('1.2.54.34359733987.17', Freq2);
+  DoRecodeCheck('2.100.3', Freq1);
+  DoRecodeCheck('1.2.54.34359733987.17', Freq2);
 
-  validOidCheck('0.1');
-  validOidCheck
+  DoValidOidCheck('0.1');
+  DoValidOidCheck
     ('1.1.127.32512.8323072.2130706432.545460846592.139637976727552.35747322042253312.9151314442816847872');
-  validOidCheck('1.2.123.12345678901.1.1.1');
+  DoValidOidCheck('1.2.123.12345678901.1.1.1');
 
-  validOidCheck('2.25.196556539987194312349856245628873852187.1');
+  DoValidOidCheck('2.25.196556539987194312349856245628873852187.1');
 
   Foid := '0';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '1';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '2';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '3.1';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '..1';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '192.168.1.1';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '.123452';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '1.';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '1.345.23.34..234';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '1.345.23.34.234.';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '.12.345.77.234';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '.12.345.77.234.';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '1.2.3.4.A.5';
-  invalidOidCheck;
+  DoInvalidOidCheck;
   Foid := '1,2';
-  invalidOidCheck;
+  DoInvalidOidCheck;
 
-  branchCheck('1.1', '2.2');
+  DoBranchCheck('1.1', '2.2');
 
-  onCheck('1.1', '1.1', false);
-  onCheck('1.1', '1.2', false);
-  onCheck('1.1', '1.2.1', false);
-  onCheck('1.1', '2.1', false);
-  onCheck('1.1', '1.11', false);
-  onCheck('1.12', '1.1.2', false);
-  onCheck('1.1', '1.1.1', true);
-  onCheck('1.1', '1.1.2', true);
+  DoOnCheck('1.1', '1.1', false);
+  DoOnCheck('1.1', '1.2', false);
+  DoOnCheck('1.1', '1.2.1', false);
+  DoOnCheck('1.1', '2.1', false);
+  DoOnCheck('1.1', '1.11', false);
+  DoOnCheck('1.12', '1.1.2', false);
+  DoOnCheck('1.1', '1.1.1', true);
+  DoOnCheck('1.1', '1.1.2', true);
 end;
 
-procedure TTestOID.validOidCheck(const oid: String);
+procedure TTestOID.DoValidOidCheck(const oid: String);
 var
   o: IDerObjectIdentifier;
 begin

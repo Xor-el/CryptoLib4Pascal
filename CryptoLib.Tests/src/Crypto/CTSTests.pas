@@ -54,27 +54,19 @@ uses
   // ClpIPaddedBufferedBlockCipher,
   // ClpPaddingModes,
   // ClpIPaddingModes,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestCTS = class(TCryptoLibTestCase)
+  TTestCTS = class(TCryptoLibAlgorithmTestCase)
   private
   var
     Faes128, FaesIn1, FaesIn2, FaesIn3, FaesOut1, FaesOut2, FaesOut3,
-      FZeroIV: TCryptoLibByteArray;
+      FZeroIV: TBytes;
 
     procedure DoCTSTest(id: Int32; const cipher: IBlockCipher;
-      const params: ICipherParameters;
-      const input, output: TCryptoLibByteArray);
+      const params: ICipherParameters; const input, output: TBytes);
 
   protected
     procedure SetUp; override;
@@ -91,9 +83,9 @@ implementation
 { TTestCTS }
 
 procedure TTestCTS.DoCTSTest(id: Int32; const cipher: IBlockCipher;
-  const params: ICipherParameters; const input, output: TCryptoLibByteArray);
+  const params: ICipherParameters; const input, output: TBytes);
 var
-  &out: TCryptoLibByteArray;
+  &out: TBytes;
   engine: IBufferedBlockCipher;
   len: Int32;
 begin
@@ -107,10 +99,10 @@ begin
 
   engine.doFinal(&out, len);
 
-  if not(TArrayUtils.AreEqual(output, &out)) then
+  if not(AreEqual(output, &out)) then
   begin
     Fail(Format('Failed Encryption, ID %d Expected %s but got %s',
-      [id, THex.Encode(output), THex.Encode(&out)]));
+      [id, EncodeHex(output), EncodeHex(&out)]));
   end;
 
   engine.Init(false, params);
@@ -119,10 +111,10 @@ begin
 
   engine.doFinal(&out, len);
 
-  if not(TArrayUtils.AreEqual(input, &out)) then
+  if not(AreEqual(input, &out)) then
   begin
     Fail(Format('Failed Decryption, ID %d Expected %s but got %s',
-      [id, THex.Encode(input), THex.Encode(&out)]));
+      [id, EncodeHex(input), EncodeHex(&out)]));
   end;
 end;
 
@@ -132,16 +124,16 @@ begin
   //
   // test vectors from rfc3962
   //
-  Faes128 := THex.Decode('636869636B656E207465726979616B69');
-  FaesIn1 := THex.Decode('4920776F756C64206C696B652074686520');
-  FaesOut1 := THex.Decode('C6353568F2BF8CB4D8A580362DA7FF7F97');
-  FaesIn2 := THex.Decode
+  Faes128 := DecodeHex('636869636B656E207465726979616B69');
+  FaesIn1 := DecodeHex('4920776F756C64206C696B652074686520');
+  FaesOut1 := DecodeHex('C6353568F2BF8CB4D8A580362DA7FF7F97');
+  FaesIn2 := DecodeHex
     ('4920776F756C64206C696B65207468652047656E6572616C20476175277320');
-  FaesOut2 := THex.Decode
+  FaesOut2 := DecodeHex
     ('FC00783E0EFDB2C1D445D4C8EFF7ED2297687268D6ECCCC0C07B25E25ECFE5');
-  FaesIn3 := THex.Decode
+  FaesIn3 := DecodeHex
     ('4920776F756C64206C696B65207468652047656E6572616C2047617527732043');
-  FaesOut3 := THex.Decode
+  FaesOut3 := DecodeHex
     ('39312523A78662D5BE7FCBCC98EBF5A897687268D6ECCCC0C07B25E25ECFE584');
   System.SetLength(FZeroIV, 16);
 end;

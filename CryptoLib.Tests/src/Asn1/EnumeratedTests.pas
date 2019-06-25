@@ -33,20 +33,14 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpEncoders;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// Tests used to verify correct decoding of the ENUMERATED type.
   /// </summary>
-  TTestEnumerated = class(TCryptoLibTestCase)
+  TTestEnumerated = class(TCryptoLibAlgorithmTestCase)
   var
   private
     FMultipleSingleByteItems, FMultipleDoubleByteItems,
@@ -82,17 +76,17 @@ begin
   /// Test vector used to test decoding of multiple items.
   /// </summary>
   /// <remarks>This sample uses an ENUMERATED and a BOOLEAN.</remarks>
-  FMultipleSingleByteItems := THex.Decode('30060a01010101ff');
+  FMultipleSingleByteItems := DecodeHex('30060a01010101ff');
   /// <summary>
   /// Test vector used to test decoding of multiple items.
   /// </summary>
   /// <remarks>This sample uses two ENUMERATEDs.</remarks>
-  FMultipleDoubleByteItems := THex.Decode('30080a0201010a020202');
+  FMultipleDoubleByteItems := DecodeHex('30080a0201010a020202');
   /// <summary>
   /// Test vector used to test decoding of multiple items.
   /// </summary>
   /// <remarks>This sample uses an ENUMERATED and an OBJECT IDENTIFIER.</remarks>
-  FMultipleTripleByteItems := THex.Decode('300a0a0301010106032b0601');
+  FMultipleTripleByteItems := DecodeHex('300a0a0301010106032b0601');
 end;
 
 procedure TTestEnumerated.TearDown;

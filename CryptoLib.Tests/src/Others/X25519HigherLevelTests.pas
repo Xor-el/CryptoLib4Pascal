@@ -24,6 +24,7 @@ interface
 {$ENDIF FPC}
 
 uses
+  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -32,7 +33,6 @@ uses
 {$ENDIF FPC}
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpArrayUtils,
   ClpX25519Agreement,
   ClpIX25519Agreement,
   ClpIAsymmetricCipherKeyPair,
@@ -41,17 +41,11 @@ uses
   ClpX25519KeyGenerationParameters,
   ClpIX25519KeyGenerationParameters,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestX25519HigherLevel = class(TCryptoLibTestCase)
+  TTestX25519HigherLevel = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FRandom: ISecureRandom;
@@ -74,7 +68,7 @@ var
   kpGen: IAsymmetricCipherKeyPairGenerator;
   kpA, kpB: IAsymmetricCipherKeyPair;
   agreeA, agreeB: IX25519Agreement;
-  secretA, secretB: TCryptoLibByteArray;
+  secretA, secretB: TBytes;
 begin
   kpGen := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
   kpGen.Init(TX25519KeyGenerationParameters.Create(FRandom)
@@ -93,7 +87,7 @@ begin
   System.SetLength(secretB, agreeB.AgreementSize);
   agreeB.CalculateAgreement(kpA.Public, secretB, 0);
 
-  if (not TArrayUtils.AreEqual(secretA, secretB)) then
+  if (not AreEqual(secretA, secretB)) then
   begin
     Fail('X25519 agreement failed');
   end;
@@ -128,7 +122,7 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
- RegisterTest(TTestX25519HigherLevel);
+  RegisterTest(TTestX25519HigherLevel);
 {$ELSE}
   RegisterTest(TTestX25519HigherLevel.Suite);
 {$ENDIF FPC}

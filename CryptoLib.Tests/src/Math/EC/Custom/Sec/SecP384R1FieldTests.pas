@@ -24,6 +24,7 @@ interface
 {$ENDIF FPC}
 
 uses
+  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -32,23 +33,18 @@ uses
 {$ENDIF FPC}
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
   ClpIX9ECParameters,
   ClpSecObjectIdentifiers,
   ClpConverters,
   ClpCustomNamedCurves,
   ClpIECC,
-  ClpBigInteger;
+  ClpBigInteger,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestSecP384R1Field = class(TCryptoLibTestCase)
+  TTestSecP384R1Field = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FRandom: ISecureRandom;
@@ -122,7 +118,7 @@ end;
 function TTestSecP384R1Field.Nat_ToBigInteger(len: Int32;
   const x: TCryptoLibUInt32Array): TBigInteger;
 var
-  bs, temp: TCryptoLibByteArray;
+  bs, temp: TBytes;
   i: Int32;
   x_i: UInt32;
 begin

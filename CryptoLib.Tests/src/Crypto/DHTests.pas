@@ -53,16 +53,11 @@ uses
   ClpDHKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-  TTestDH = class(TCryptoLibTestCase)
+  TTestDH = class(TCryptoLibAlgorithmTestCase)
 
   private
   var
