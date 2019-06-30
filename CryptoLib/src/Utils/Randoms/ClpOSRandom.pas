@@ -111,8 +111,8 @@ type
   /// <item>
   /// <term>Solaris</term>
   /// <description><see href="https://docs.oracle.com/cd/E88353_01/html/E37841/getrandom-2.html">
-  /// getrandom</see> system call if available, otherwise ( <b>
-  /// /dev/urandom</b> or <b>/dev/random</b>) (which ever is
+  /// getrandom</see> system call if available, otherwise ( <see href="https://docs.oracle.com/cd/E86824_01/html/E54777/random-7d.html">
+  /// /dev/urandom or /dev/random</see>) (which ever is
   /// available)</description>
   /// </item>
   /// <item>
