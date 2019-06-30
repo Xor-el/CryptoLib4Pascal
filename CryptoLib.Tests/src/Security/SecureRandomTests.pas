@@ -32,21 +32,16 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpCryptoLibTypes,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoApiRandomGenerator,
-  ClpICryptoApiRandomGenerator;
+  ClpICryptoApiRandomGenerator,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestSecureRandom = class(TCryptoLibTestCase)
+  TTestSecureRandom = class(TCryptoLibAlgorithmTestCase)
   private
 
     procedure CheckSecureRandom(const random: ISecureRandom);
@@ -80,7 +75,7 @@ end;
 function TTestSecureRandom.MeasureChiSquared(const random: ISecureRandom;
   rounds: Int32): Double;
 var
-  opts, bs: TCryptoLibByteArray;
+  opts, bs: TBytes;
   counts: TCryptoLibInt32Array;
   I, b, total, k, mask, shift: Int32;
   chi2, diff, diff2, temp: Double;

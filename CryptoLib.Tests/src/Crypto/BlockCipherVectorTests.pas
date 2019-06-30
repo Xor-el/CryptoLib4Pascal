@@ -55,15 +55,8 @@ uses
   ClpIParametersWithIV,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
@@ -72,7 +65,7 @@ type
   /// output string. This test wraps the engine in a buffered block cipher
   /// with padding disabled.
   /// </summary>
-  TTestBlockCipherVector = class(TCryptoLibTestCase)
+  TTestBlockCipherVector = class(TCryptoLibAlgorithmTestCase)
   private
 
     procedure DoBlockCipherVectorTest(const engine: IBlockCipher;
@@ -113,8 +106,8 @@ var
   len1, len2: Int32;
   LInput, LOutput, outBytes: TBytes;
 begin
-  LInput := THex.Decode(input);
-  LOutput := THex.Decode(output);
+  LInput := DecodeHex(input);
+  LOutput := DecodeHex(output);
 
   cipher := TBufferedBlockCipher.Create(engine);
 
@@ -126,10 +119,10 @@ begin
 
   cipher.DoFinal(outBytes, len1);
 
-  if (not TArrayUtils.AreEqual(outBytes, LOutput)) then
+  if (not AreEqual(outBytes, LOutput)) then
   begin
     Fail(Format('Encryption Failed - Expected %s but got %s',
-      [THex.Encode(LOutput), THex.Encode(outBytes)]));
+      [EncodeHex(LOutput), EncodeHex(outBytes)]));
   end;
 
   cipher.Init(false, param);
@@ -138,10 +131,10 @@ begin
 
   cipher.DoFinal(outBytes, len2);
 
-  if (not TArrayUtils.AreEqual(LInput, outBytes)) then
+  if (not AreEqual(LInput, outBytes)) then
   begin
     Fail(Format('Decryption Failed - Expected %s but got %s',
-      [THex.Encode(LInput), THex.Encode(outBytes)]));
+      [EncodeHex(LInput), EncodeHex(outBytes)]));
   end;
 end;
 
@@ -230,8 +223,8 @@ begin
     to System.High(TAESTestVectors.FBlockCipherVectorKeys) do
   begin
     DoBlockCipherVectorTest(TAesEngine.Create() as IAesEngine,
-      TKeyParameter.Create(THex.Decode(TAESTestVectors.FBlockCipherVectorKeys[I]
-      )) as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
+      TKeyParameter.Create(DecodeHex(TAESTestVectors.FBlockCipherVectorKeys[I]))
+      as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
       TAESTestVectors.FBlockCipherVectorOutputs[I]);
   end;
 
@@ -245,8 +238,8 @@ begin
     to System.High(TAESTestVectors.FBlockCipherVectorKeys) do
   begin
     DoBlockCipherVectorTest(TAesLightEngine.Create() as IAesLightEngine,
-      TKeyParameter.Create(THex.Decode(TAESTestVectors.FBlockCipherVectorKeys[I]
-      )) as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
+      TKeyParameter.Create(DecodeHex(TAESTestVectors.FBlockCipherVectorKeys[I]))
+      as IKeyParameter, TAESTestVectors.FBlockCipherVectorInputs[I],
       TAESTestVectors.FBlockCipherVectorOutputs[I]);
   end;
 
@@ -260,9 +253,8 @@ begin
     to System.High(TBlowfishTestVectors.FBlockCipherVectorKeys) do
   begin
     DoBlockCipherVectorTest(TBlowfishEngine.Create() as IBlowfishEngine,
-      TKeyParameter.Create
-      (THex.Decode(TBlowfishTestVectors.FBlockCipherVectorKeys[I]))
-      as IKeyParameter, TBlowfishTestVectors.FBlockCipherVectorInputs[I],
+      TKeyParameter.Create(DecodeHex(TBlowfishTestVectors.FBlockCipherVectorKeys
+      [I])) as IKeyParameter, TBlowfishTestVectors.FBlockCipherVectorInputs[I],
       TBlowfishTestVectors.FBlockCipherVectorOutputs[I]);
   end;
 
@@ -279,9 +271,8 @@ begin
       (TRijndaelEngine.Create
       (StrToInt(TRijndaelTestVectors.FBlockCipherVectorBlockSizes[I]))
       as IRijndaelEngine,
-      TKeyParameter.Create
-      (THex.Decode(TRijndaelTestVectors.FBlockCipherVectorKeys[I]))
-      as IKeyParameter, TRijndaelTestVectors.FBlockCipherVectorInputs[I],
+      TKeyParameter.Create(DecodeHex(TRijndaelTestVectors.FBlockCipherVectorKeys
+      [I])) as IKeyParameter, TRijndaelTestVectors.FBlockCipherVectorInputs[I],
       TRijndaelTestVectors.FBlockCipherVectorOutputs[I]);
   end;
 
@@ -296,7 +287,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck32Engine.Create() as ISpeckEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck32BlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck32BlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck32BlockCipherVectorInputs[I],
       TSpeckTestVectors.FSpeck32BlockCipherVectorOutputs[I]);
   end;
@@ -312,7 +303,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck48Engine.Create() as ISpeckEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck48BlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck48BlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck48BlockCipherVectorInputs[I],
       TSpeckTestVectors.FSpeck48BlockCipherVectorOutputs[I]);
   end;
@@ -328,7 +319,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck64Engine.Create() as ISpeckEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck64BlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck64BlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck64BlockCipherVectorInputs[I],
       TSpeckTestVectors.FSpeck64BlockCipherVectorOutputs[I]);
   end;
@@ -344,7 +335,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck96Engine.Create() as ISpeckEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck96BlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck96BlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck96BlockCipherVectorInputs[I],
       TSpeckTestVectors.FSpeck96BlockCipherVectorOutputs[I]);
   end;
@@ -360,7 +351,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck128Engine.Create() as ISpeckEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck128BlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck128BlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck128BlockCipherVectorInputs[I],
       TSpeckTestVectors.FSpeck128BlockCipherVectorOutputs[I]);
   end;
@@ -376,7 +367,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck32LegacyEngine.Create() as ISpeckLegacyEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorInputs
       [I], TSpeckTestVectors.FSpeck32LegacyBlockCipherVectorOutputs[I]);
   end;
@@ -392,7 +383,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck48LegacyEngine.Create() as ISpeckLegacyEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorInputs
       [I], TSpeckTestVectors.FSpeck48LegacyBlockCipherVectorOutputs[I]);
   end;
@@ -408,7 +399,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck64LegacyEngine.Create() as ISpeckLegacyEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorInputs
       [I], TSpeckTestVectors.FSpeck64LegacyBlockCipherVectorOutputs[I]);
   end;
@@ -424,7 +415,7 @@ begin
   begin
     DoBlockCipherVectorTest(TSpeck96LegacyEngine.Create() as ISpeckLegacyEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorInputs
       [I], TSpeckTestVectors.FSpeck96LegacyBlockCipherVectorOutputs[I]);
   end;
@@ -441,7 +432,7 @@ begin
     DoBlockCipherVectorTest(TSpeck128LegacyEngine.Create()
       as ISpeckLegacyEngine,
       TKeyParameter.Create
-      (THex.Decode(TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorKeys[I]))
+      (DecodeHex(TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorKeys[I]))
       as IKeyParameter, TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorInputs
       [I], TSpeckTestVectors.FSpeck128LegacyBlockCipherVectorOutputs[I]);
   end;

@@ -36,7 +36,6 @@ uses
   ClpIBlockCipherModes,
   ClpAesEngine,
   ClpIAesEngine,
-  ClpEncoders,
   ClpBigInteger,
   ClpCustomNamedCurves,
   ClpDigestUtilities,
@@ -52,13 +51,7 @@ uses
   ClpMacUtilities,
   ClpIX9ECParameters,
   ClpConverters,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  CryptoLibTestBase;
 
 type
 
@@ -66,7 +59,7 @@ type
   /// Test for PascalCoin ECIES - PascalCoin Elliptic Curve Integrated Encryption Scheme
   /// Test vectors were gotten from the PascalCoin TESTNET Wallet.
   /// </summary>
-  TTestPascalCoinECIES = class(TCryptoLibTestCase)
+  TTestPascalCoinECIES = class(TCryptoLibAlgorithmTestCase)
   private
 
     type
@@ -249,9 +242,9 @@ begin
   // Encryption
   CipherEncrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine());
   CipherEncrypt.Init(True, RecreatePublicKeyFromAffineXandAffineYCoord(keyType,
-    THex.Decode(RawAffineXCoord), THex.Decode(RawAffineYCoord)),
+    DecodeHex(RawAffineXCoord), DecodeHex(RawAffineYCoord)),
     GetPascalCoinIESParameterSpec(), FRandom);
-  Result := THex.Encode(CipherEncrypt.DoFinal(TConverters.ConvertStringToBytes
+  Result := EncodeHex(CipherEncrypt.DoFinal(TConverters.ConvertStringToBytes
     (PayloadToEncrypt, TEncoding.ASCII)));
 end;
 
@@ -264,10 +257,10 @@ begin
     // Decryption
     CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine());
     CipherDecrypt.Init(False, RecreatePrivateKeyFromByteArray(keyType,
-      THex.Decode(RawPrivateKey)), GetPascalCoinIESParameterSpec(), FRandom);
+      DecodeHex(RawPrivateKey)), GetPascalCoinIESParameterSpec(), FRandom);
 
     Result := TConverters.ConvertBytesToString
-      (CipherDecrypt.DoFinal(THex.Decode(PayloadToDecrypt)), TEncoding.ASCII);
+      (CipherDecrypt.DoFinal(DecodeHex(PayloadToDecrypt)), TEncoding.ASCII);
   except
     // should only happen if decryption fails
     raise;

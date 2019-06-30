@@ -53,25 +53,18 @@ uses
   // ClpIPaddedBufferedBlockCipher,
   // ClpPaddingModes,
   // ClpIPaddingModes,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestAES = class(TCryptoLibTestCase)
+  TTestAES = class(TCryptoLibAlgorithmTestCase)
   private
 
-    procedure dooidTest(const oids, names: TCryptoLibStringArray;
+    procedure DoOidTest(const oids, names: TCryptoLibStringArray;
       groupSize: Int32);
 
-    procedure doAESTest(const cipher: IBufferedCipher;
+    procedure DoAESTest(const cipher: IBufferedCipher;
       const param: ICipherParameters; const input, output: String;
       withpadding: Boolean = False);
 
@@ -94,15 +87,15 @@ implementation
 
 { TTestAES }
 
-procedure TTestAES.doAESTest(const cipher: IBufferedCipher;
+procedure TTestAES.DoAESTest(const cipher: IBufferedCipher;
   const param: ICipherParameters; const input, output: String;
   withpadding: Boolean);
 var
   LInput, LOutput, EncryptionResult, DecryptionResult: TBytes;
   // len1, len2: Int32;
 begin
-  LInput := THex.Decode(input);
-  LOutput := THex.Decode(output);
+  LInput := DecodeHex(input);
+  LOutput := DecodeHex(output);
 
   cipher.Init(True, param);
 
@@ -123,10 +116,10 @@ begin
 
   if not withpadding then
   begin
-    if (not TArrayUtils.AreEqual(LOutput, EncryptionResult)) then
+    if (not AreEqual(LOutput, EncryptionResult)) then
     begin
       Fail(Format('Encryption Failed - Expected %s but got %s',
-        [THex.Encode(LOutput), THex.Encode(EncryptionResult)]));
+        [EncodeHex(LOutput), EncodeHex(EncryptionResult)]));
     end;
   end;
 
@@ -149,14 +142,14 @@ begin
     System.SetLength(DecryptionResult, len2);
     * }
 
-  if (not TArrayUtils.AreEqual(LInput, DecryptionResult)) then
+  if (not AreEqual(LInput, DecryptionResult)) then
   begin
     Fail(Format('Decryption Failed - Expected %s but got %s',
-      [THex.Encode(LInput), THex.Encode(DecryptionResult)]));
+      [EncodeHex(LInput), EncodeHex(DecryptionResult)]));
   end;
 end;
 
-procedure TTestAES.dooidTest(const oids, names: TCryptoLibStringArray;
+procedure TTestAES.DoOidTest(const oids, names: TCryptoLibStringArray;
   groupSize: Int32);
 var
   data, result, IV: TBytes;
@@ -189,7 +182,7 @@ begin
 
     result := c2.DoFinal(c1.DoFinal(data));
 
-    if (not TArrayUtils.AreEqual(data, result)) then
+    if (not AreEqual(data, result)) then
     begin
       Fail('failed OID test');
     end;
@@ -233,15 +226,15 @@ begin
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CBC)
     to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CBC) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CBC[i]);
-    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CBC[i]);
+    keyBytes := DecodeHex(TAESTestVectors.FOfficialVectorKeys_AES_CBC[i]);
+    IVBytes := DecodeHex(TAESTestVectors.FOfficialVectorIVs_AES_CBC[i]);
     input := TAESTestVectors.FOfficialVectorInputs_AES_CBC[i];
     output := TAESTestVectors.FOfficialVectorOutputs_AES_CBC[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
 
-    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+    DoAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
   end;
 
 end;
@@ -268,15 +261,15 @@ begin
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CBC)
     to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CBC) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CBC[i]);
-    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CBC[i]);
+    keyBytes := DecodeHex(TAESTestVectors.FOfficialVectorKeys_AES_CBC[i]);
+    IVBytes := DecodeHex(TAESTestVectors.FOfficialVectorIVs_AES_CBC[i]);
     input := TAESTestVectors.FOfficialVectorInputs_AES_CBC[i];
     output := TAESTestVectors.FOfficialVectorOutputs_AES_CBC[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
 
-    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input,
+    DoAESTest(cipher, KeyParametersWithIV as ICipherParameters, input,
       output, True);
   end;
 
@@ -302,15 +295,15 @@ begin
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CFB)
     to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CFB) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CFB[i]);
-    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CFB[i]);
+    keyBytes := DecodeHex(TAESTestVectors.FOfficialVectorKeys_AES_CFB[i]);
+    IVBytes := DecodeHex(TAESTestVectors.FOfficialVectorIVs_AES_CFB[i]);
     input := TAESTestVectors.FOfficialVectorInputs_AES_CFB[i];
     output := TAESTestVectors.FOfficialVectorOutputs_AES_CFB[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
 
-    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+    DoAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
   end;
 
 end;
@@ -334,15 +327,15 @@ begin
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_CTR)
     to System.High(TAESTestVectors.FOfficialVectorKeys_AES_CTR) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_CTR[i]);
-    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_CTR[i]);
+    keyBytes := DecodeHex(TAESTestVectors.FOfficialVectorKeys_AES_CTR[i]);
+    IVBytes := DecodeHex(TAESTestVectors.FOfficialVectorIVs_AES_CTR[i]);
     input := TAESTestVectors.FOfficialVectorInputs_AES_CTR[i];
     output := TAESTestVectors.FOfficialVectorOutputs_AES_CTR[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
 
-    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+    DoAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
   end;
 
 end;
@@ -366,13 +359,13 @@ begin
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_ECB)
     to System.High(TAESTestVectors.FOfficialVectorKeys_AES_ECB) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_ECB[i]);
+    keyBytes := DecodeHex(TAESTestVectors.FOfficialVectorKeys_AES_ECB[i]);
     input := TAESTestVectors.FOfficialVectorInputs_AES_ECB[i];
     output := TAESTestVectors.FOfficialVectorOutputs_AES_ECB[i];
 
     keyParameter := TParameterUtilities.CreateKeyParameter('AES', keyBytes);
 
-    doAESTest(cipher, keyParameter as ICipherParameters, input, output);
+    DoAESTest(cipher, keyParameter as ICipherParameters, input, output);
   end;
 
 end;
@@ -397,15 +390,15 @@ begin
   for i := System.Low(TAESTestVectors.FOfficialVectorKeys_AES_OFB)
     to System.High(TAESTestVectors.FOfficialVectorKeys_AES_OFB) do
   begin
-    keyBytes := THex.Decode(TAESTestVectors.FOfficialVectorKeys_AES_OFB[i]);
-    IVBytes := THex.Decode(TAESTestVectors.FOfficialVectorIVs_AES_OFB[i]);
+    keyBytes := DecodeHex(TAESTestVectors.FOfficialVectorKeys_AES_OFB[i]);
+    IVBytes := DecodeHex(TAESTestVectors.FOfficialVectorIVs_AES_OFB[i]);
     input := TAESTestVectors.FOfficialVectorInputs_AES_OFB[i];
     output := TAESTestVectors.FOfficialVectorOutputs_AES_OFB[i];
 
     KeyParametersWithIV := TParametersWithIV.Create
       (TParameterUtilities.CreateKeyParameter('AES', keyBytes), IVBytes);
 
-    doAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
+    DoAESTest(cipher, KeyParametersWithIV as ICipherParameters, input, output);
   end;
 
 end;
@@ -433,7 +426,7 @@ begin
     'AES/CFB/NoPadding', 'AES/ECB/PKCS7Padding', 'AES/CBC/PKCS7Padding',
     'AES/OFB/NoPadding', 'AES/CFB/NoPadding');
 
-  dooidTest(oids, names, 4);
+  DoOidTest(oids, names, 4);
 end;
 
 initialization

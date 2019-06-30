@@ -38,22 +38,15 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestSalsa20 = class(TCryptoLibTestCase)
+  TTestSalsa20 = class(TCryptoLibAlgorithmTestCase)
   private
   var
-    FZeroes: TCryptoLibByteArray;
+    FZeroes: TBytes;
     FSet1v0_0, FSet1v0_192, FSet1v0_256, FSet1v0_448, FSet1v9_0, FSet1v9_192,
       FSet1v9_256, FSet1v9_448, FSet6v0_0, FSet6v0_65472, FSet6v0_65536,
       FSet6v1_0, FSet6v1_65472, FSet6v1_65536, FSalsa12_set1v0_0,
@@ -61,8 +54,7 @@ type
       FSalsa8_set1v0_0, FSalsa8_set1v0_192, FSalsa8_set1v0_256,
       FSalsa8_set1v0_448: String;
 
-    procedure Mismatch(const name, expected: String;
-      found: TCryptoLibByteArray);
+    procedure Mismatch(const name, expected: String; found: TBytes);
     procedure DoSalsa20Test1(rounds: Int32; const parameters: ICipherParameters;
       const v0, v192, v256, v448: String);
 
@@ -87,7 +79,7 @@ implementation
 procedure TTestSalsa20.SetUp;
 begin
   inherited;
-  FZeroes := THex.Decode('00000000000000000000000000000000' +
+  FZeroes := DecodeHex('00000000000000000000000000000000' +
     '00000000000000000000000000000000' + '00000000000000000000000000000000' +
     '00000000000000000000000000000000');
 
@@ -191,18 +183,17 @@ begin
 
 end;
 
-procedure TTestSalsa20.Mismatch(const name, expected: String;
-  found: TCryptoLibByteArray);
+procedure TTestSalsa20.Mismatch(const name, expected: String; found: TBytes);
 begin
   Fail(Format('Mismatch on %s, Expected %s, Found %s.',
-    [name, expected, THex.Encode(found)]));
+    [name, expected, EncodeHex(found)]));
 end;
 
 procedure TTestSalsa20.DoSalsa20Test1(rounds: Int32;
   const parameters: ICipherParameters; const v0, v192, v256, v448: String);
 var
   salsa: ISalsa20Engine;
-  buf: TCryptoLibByteArray;
+  buf: TBytes;
   i: Int32;
 begin
   salsa := TSalsa20Engine.Create(rounds);
@@ -215,21 +206,21 @@ begin
     case i of
       0:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v0))) then
+          if not(AreEqual(buf, DecodeHex(v0))) then
           begin
             Mismatch(Format('v0/%d', [rounds]), v0, buf);
           end;
         end;
       3:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v192))) then
+          if not(AreEqual(buf, DecodeHex(v192))) then
           begin
             Mismatch(Format('v192/%d', [rounds]), v192, buf);
           end;
         end;
       4:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v256))) then
+          if not(AreEqual(buf, DecodeHex(v256))) then
           begin
             Mismatch(Format('v256/%d', [rounds]), v256, buf);
           end;
@@ -249,7 +240,7 @@ begin
     System.Inc(i);
   end;
 
-  if not(TArrayUtils.AreEqual(buf, THex.Decode(v448))) then
+  if not(AreEqual(buf, DecodeHex(v448))) then
   begin
     Mismatch(Format('v448/%d', [rounds]), v448, buf);
   end;
@@ -259,7 +250,7 @@ procedure TTestSalsa20.DoSalsa20Test2(const parameters: ICipherParameters;
   const v0, v65472, v65536: String);
 var
   salsa: ISalsa20Engine;
-  buf: TCryptoLibByteArray;
+  buf: TBytes;
   i: Int32;
 begin
   salsa := TSalsa20Engine.Create();
@@ -272,21 +263,21 @@ begin
     case i of
       0:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v0))) then
+          if not(AreEqual(buf, DecodeHex(v0))) then
           begin
             Mismatch('v0', v0, buf);
           end;
         end;
       1023:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v65472))) then
+          if not(AreEqual(buf, DecodeHex(v65472))) then
           begin
             Mismatch('v65472', v65472, buf);
           end;
         end;
       1024:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v65536))) then
+          if not(AreEqual(buf, DecodeHex(v65536))) then
           begin
             Mismatch('v65536', v65536, buf);
           end;
@@ -304,21 +295,21 @@ end;
 procedure TTestSalsa20.TestSalsa20Test1;
 begin
   DoSalsa20Test1(20, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')) as IParametersWithIV,
+    (TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')) as IParametersWithIV,
     FSet1v0_0, FSet1v0_192, FSet1v0_256, FSet1v0_448);
   DoSalsa20Test1(20, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('00400000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')) as IParametersWithIV,
+    (TKeyParameter.Create(DecodeHex('00400000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')) as IParametersWithIV,
     FSet1v9_0, FSet1v9_192, FSet1v9_256, FSet1v9_448);
 
   DoSalsa20Test1(12, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')), FSalsa12_set1v0_0,
+    (TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')), FSalsa12_set1v0_0,
     FSalsa12_set1v0_192, FSalsa12_set1v0_256, FSalsa12_set1v0_448);
   DoSalsa20Test1(8, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')) as IParametersWithIV,
+    (TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')) as IParametersWithIV,
     FSalsa8_set1v0_0, FSalsa8_set1v0_192, FSalsa8_set1v0_256,
     FSalsa8_set1v0_448);
 
@@ -327,14 +318,14 @@ end;
 procedure TTestSalsa20.TestSalsa20Test2;
 begin
   DoSalsa20Test2(TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode
+    (TKeyParameter.Create(DecodeHex
     ('0053A6F94C9FF24598EB3E91E4378ADD3083D6297CCF2275C81B6EC11467BA0D'))
-    as IKeyParameter, THex.Decode('0D74DB42A91077DE')) as IParametersWithIV,
+    as IKeyParameter, DecodeHex('0D74DB42A91077DE')) as IParametersWithIV,
     FSet6v0_0, FSet6v0_65472, FSet6v0_65536);
   DoSalsa20Test2(TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode
+    (TKeyParameter.Create(DecodeHex
     ('0558ABFE51A4F74A9DF04396E93C8FE23588DB2E81D4277ACD2073C6196CBF12'))
-    as IKeyParameter, THex.Decode('167DE44BB21980E7')) as IParametersWithIV,
+    as IKeyParameter, DecodeHex('167DE44BB21980E7')) as IParametersWithIV,
     FSet6v1_0, FSet6v1_65472, FSet6v1_65536);
 end;
 
@@ -344,8 +335,8 @@ var
   parameters: IParametersWithIV;
   salsa: ISalsa20Engine;
 begin
-  key := TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'));
-  parameters := TParametersWithIV.Create(key, THex.Decode('0000000000000000'));
+  key := TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'));
+  parameters := TParametersWithIV.Create(key, DecodeHex('0000000000000000'));
 
   salsa := TSalsa20Engine.Create();
 

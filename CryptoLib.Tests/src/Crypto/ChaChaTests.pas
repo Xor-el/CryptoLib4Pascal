@@ -38,15 +38,8 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
@@ -59,10 +52,10 @@ type
   /// estreambench-20080905.
   /// </para>
   /// </summary>
-  TTestChaCha = class(TCryptoLibTestCase)
+  TTestChaCha = class(TCryptoLibAlgorithmTestCase)
   private
   var
-    FZeroes: TCryptoLibByteArray;
+    FZeroes: TBytes;
     FSet1v0_0, FSet1v0_192, FSet1v0_256, FSet1v0_448, FSet1v9_0, FSet1v9_192,
       FSet1v9_256, FSet1v9_448, FSet6v0_0, FSet6v0_65472, FSet6v0_65536,
       FSet6v1_0, FSet6v1_65472, FSet6v1_65536, FChaCha12_set1v0_0,
@@ -70,8 +63,7 @@ type
       FChaCha8_set1v0_0, FChaCha8_set1v0_192, FChaCha8_set1v0_256,
       FChaCha8_set1v0_448: String;
 
-    procedure Mismatch(const name, expected: String;
-      found: TCryptoLibByteArray);
+    procedure Mismatch(const name, expected: String; found: TBytes);
     procedure DoChaChaTest1(rounds: Int32; const parameters: ICipherParameters;
       const v0, v192, v256, v448: String);
 
@@ -96,7 +88,7 @@ implementation
 procedure TTestChaCha.SetUp;
 begin
   inherited;
-  FZeroes := THex.Decode('00000000000000000000000000000000' +
+  FZeroes := DecodeHex('00000000000000000000000000000000' +
     '00000000000000000000000000000000' + '00000000000000000000000000000000' +
     '00000000000000000000000000000000');
 
@@ -198,18 +190,17 @@ begin
 
 end;
 
-procedure TTestChaCha.Mismatch(const name, expected: String;
-  found: TCryptoLibByteArray);
+procedure TTestChaCha.Mismatch(const name, expected: String; found: TBytes);
 begin
   Fail(Format('Mismatch on %s, Expected %s, Found %s.',
-    [name, expected, THex.Encode(found)]));
+    [name, expected, EncodeHex(found)]));
 end;
 
 procedure TTestChaCha.DoChaChaTest1(rounds: Int32;
   const parameters: ICipherParameters; const v0, v192, v256, v448: String);
 var
   chacha: IChaChaEngine;
-  buf: TCryptoLibByteArray;
+  buf: TBytes;
   i: Int32;
 begin
   chacha := TChaChaEngine.Create(rounds);
@@ -222,21 +213,21 @@ begin
     case i of
       0:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v0))) then
+          if not(AreEqual(buf, DecodeHex(v0))) then
           begin
             Mismatch(Format('v0/%d', [rounds]), v0, buf);
           end;
         end;
       3:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v192))) then
+          if not(AreEqual(buf, DecodeHex(v192))) then
           begin
             Mismatch(Format('v192/%d', [rounds]), v192, buf);
           end;
         end;
       4:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v256))) then
+          if not(AreEqual(buf, DecodeHex(v256))) then
           begin
             Mismatch(Format('v256/%d', [rounds]), v256, buf);
           end;
@@ -256,7 +247,7 @@ begin
     System.Inc(i);
   end;
 
-  if not(TArrayUtils.AreEqual(buf, THex.Decode(v448))) then
+  if not(AreEqual(buf, DecodeHex(v448))) then
   begin
     Mismatch(Format('v448/%d', [rounds]), v448, buf);
   end;
@@ -266,7 +257,7 @@ procedure TTestChaCha.DoChaChaTest2(const parameters: ICipherParameters;
   const v0, v65472, v65536: String);
 var
   chacha: IChaChaEngine;
-  buf: TCryptoLibByteArray;
+  buf: TBytes;
   i: Int32;
 begin
   chacha := TChaChaEngine.Create();
@@ -279,21 +270,21 @@ begin
     case i of
       0:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v0))) then
+          if not(AreEqual(buf, DecodeHex(v0))) then
           begin
             Mismatch('v0', v0, buf);
           end;
         end;
       1023:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v65472))) then
+          if not(AreEqual(buf, DecodeHex(v65472))) then
           begin
             Mismatch('v65472', v65472, buf);
           end;
         end;
       1024:
         begin
-          if not(TArrayUtils.AreEqual(buf, THex.Decode(v65536))) then
+          if not(AreEqual(buf, DecodeHex(v65536))) then
           begin
             Mismatch('v65536', v65536, buf);
           end;
@@ -311,21 +302,21 @@ end;
 procedure TTestChaCha.TestDoChaChaTest1;
 begin
   DoChaChaTest1(20, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')) as IParametersWithIV,
+    (TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')) as IParametersWithIV,
     FSet1v0_0, FSet1v0_192, FSet1v0_256, FSet1v0_448);
   DoChaChaTest1(20, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('00400000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')) as IParametersWithIV,
+    (TKeyParameter.Create(DecodeHex('00400000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')) as IParametersWithIV,
     FSet1v9_0, FSet1v9_192, FSet1v9_256, FSet1v9_448);
 
   DoChaChaTest1(12, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')), FChaCha12_set1v0_0,
+    (TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')), FChaCha12_set1v0_0,
     FChaCha12_set1v0_192, FChaCha12_set1v0_256, FChaCha12_set1v0_448);
   DoChaChaTest1(8, TParametersWithIV.Create
-    (TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'))
-    as IKeyParameter, THex.Decode('0000000000000000')) as IParametersWithIV,
+    (TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'))
+    as IKeyParameter, DecodeHex('0000000000000000')) as IParametersWithIV,
     FChaCha8_set1v0_0, FChaCha8_set1v0_192, FChaCha8_set1v0_256,
     FChaCha8_set1v0_448);
 
@@ -334,14 +325,14 @@ end;
 procedure TTestChaCha.TestDoChaChaTest2;
 begin
   DoChaChaTest2(TParametersWithIV.Create(TKeyParameter.Create
-    (THex.Decode
+    (DecodeHex
     ('0053A6F94C9FF24598EB3E91E4378ADD3083D6297CCF2275C81B6EC11467BA0D'))
-    as IKeyParameter, THex.Decode('0D74DB42A91077DE')) as IParametersWithIV,
+    as IKeyParameter, DecodeHex('0D74DB42A91077DE')) as IParametersWithIV,
     FSet6v0_0, FSet6v0_65472, FSet6v0_65536);
   DoChaChaTest2(TParametersWithIV.Create(TKeyParameter.Create
-    (THex.Decode
+    (DecodeHex
     ('0558ABFE51A4F74A9DF04396E93C8FE23588DB2E81D4277ACD2073C6196CBF12'))
-    as IKeyParameter, THex.Decode('167DE44BB21980E7')) as IParametersWithIV,
+    as IKeyParameter, DecodeHex('167DE44BB21980E7')) as IParametersWithIV,
     FSet6v1_0, FSet6v1_65472, FSet6v1_65536);
 end;
 
@@ -351,8 +342,8 @@ var
   parameters: IParametersWithIV;
   chacha: IChaChaEngine;
 begin
-  key := TKeyParameter.Create(THex.Decode('80000000000000000000000000000000'));
-  parameters := TParametersWithIV.Create(key, THex.Decode('0000000000000000'));
+  key := TKeyParameter.Create(DecodeHex('80000000000000000000000000000000'));
+  parameters := TParametersWithIV.Create(key, DecodeHex('0000000000000000'));
 
   chacha := TChaChaEngine.Create();
 

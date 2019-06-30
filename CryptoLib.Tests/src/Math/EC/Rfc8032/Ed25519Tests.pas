@@ -36,19 +36,11 @@ uses
   ClpIDigest,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpArrayUtils,
-  ClpEncoders,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestEd25519 = class(TCryptoLibTestCase)
+  TTestEd25519 = class(TCryptoLibAlgorithmTestCase)
 
   private
 
@@ -86,21 +78,21 @@ implementation
 procedure TTestEd25519.CheckEd25519Vector(const sSK, sPK, sM, sSig,
   text: String);
 var
-  sk, pk, pkGen, m, sig, badsig, sigGen: TCryptoLibByteArray;
+  sk, pk, pkGen, m, sig, badsig, sigGen: TBytes;
   Ed25519Instance: IEd25519;
   shouldVerify, shouldNotVerify: Boolean;
 begin
-  sk := THex.Decode(sSK);
-  pk := THex.Decode(sPK);
+  sk := DecodeHex(sSK);
+  pk := DecodeHex(sPK);
 
   System.SetLength(pkGen, TEd25519.PublicKeySize);
 
   Ed25519Instance := TEd25519.Create();
   Ed25519Instance.GeneratePublicKey(sk, 0, pkGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(pk, pkGen), text);
+  CheckTrue(AreEqual(pk, pkGen), text);
 
-  m := THex.Decode(sM);
-  sig := THex.Decode(sSig);
+  m := DecodeHex(sM);
+  sig := DecodeHex(sSig);
 
   badsig := System.Copy(sig);
 
@@ -110,10 +102,10 @@ begin
   System.SetLength(sigGen, TEd25519.SignatureSize);
 
   Ed25519Instance.Sign(sk, 0, m, 0, System.Length(m), sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   Ed25519Instance.Sign(sk, 0, pk, 0, m, 0, System.Length(m), sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   shouldVerify := Ed25519Instance.Verify(sig, 0, pk, 0, m, 0, System.Length(m));
   CheckTrue(shouldVerify, text);
@@ -126,22 +118,22 @@ end;
 procedure TTestEd25519.CheckEd25519ctxVector(const sSK, sPK, sM, sCTX, sSig,
   text: String);
 var
-  sk, pk, pkGen, m, ctx, sig, badsig, sigGen: TCryptoLibByteArray;
+  sk, pk, pkGen, m, ctx, sig, badsig, sigGen: TBytes;
   Ed25519Instance: IEd25519;
   shouldVerify, shouldNotVerify: Boolean;
 begin
-  sk := THex.Decode(sSK);
-  pk := THex.Decode(sPK);
+  sk := DecodeHex(sSK);
+  pk := DecodeHex(sPK);
 
   System.SetLength(pkGen, TEd25519.PublicKeySize);
 
   Ed25519Instance := TEd25519.Create();
   Ed25519Instance.GeneratePublicKey(sk, 0, pkGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(pk, pkGen), text);
+  CheckTrue(AreEqual(pk, pkGen), text);
 
-  m := THex.Decode(sM);
-  ctx := THex.Decode(sCTX);
-  sig := THex.Decode(sSig);
+  m := DecodeHex(sM);
+  ctx := DecodeHex(sCTX);
+  sig := DecodeHex(sSig);
 
   badsig := System.Copy(sig);
 
@@ -151,10 +143,10 @@ begin
   System.SetLength(sigGen, TEd25519.SignatureSize);
 
   Ed25519Instance.Sign(sk, 0, ctx, m, 0, System.Length(m), sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   Ed25519Instance.Sign(sk, 0, pk, 0, ctx, m, 0, System.Length(m), sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   shouldVerify := Ed25519Instance.Verify(sig, 0, pk, 0, ctx, m, 0,
     System.Length(m));
@@ -168,23 +160,23 @@ end;
 procedure TTestEd25519.CheckEd25519phVector(const sSK, sPK, sM, sCTX, sSig,
   text: String);
 var
-  sk, pk, pkGen, m, ph, ctx, sig, badsig, sigGen: TCryptoLibByteArray;
+  sk, pk, pkGen, m, ph, ctx, sig, badsig, sigGen: TBytes;
   Ed25519Instance: IEd25519;
   shouldVerify, shouldNotVerify: Boolean;
   prehash: IDigest;
 begin
-  sk := THex.Decode(sSK);
-  pk := THex.Decode(sPK);
+  sk := DecodeHex(sSK);
+  pk := DecodeHex(sPK);
 
   System.SetLength(pkGen, TEd25519.PublicKeySize);
 
   Ed25519Instance := TEd25519.Create();
   Ed25519Instance.GeneratePublicKey(sk, 0, pkGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(pk, pkGen), text);
+  CheckTrue(AreEqual(pk, pkGen), text);
 
-  m := THex.Decode(sM);
-  ctx := THex.Decode(sCTX);
-  sig := THex.Decode(sSig);
+  m := DecodeHex(sM);
+  ctx := DecodeHex(sCTX);
+  sig := DecodeHex(sSig);
 
   badsig := System.Copy(sig);
 
@@ -201,10 +193,10 @@ begin
   prehash.DoFinal(ph, 0);
 
   Ed25519Instance.SignPreHash(sk, 0, ctx, ph, 0, sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   Ed25519Instance.SignPreHash(sk, 0, pk, 0, ctx, ph, 0, sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   shouldVerify := Ed25519Instance.VerifyPreHash(sig, 0, pk, 0, ctx, ph, 0);
   CheckTrue(shouldVerify, text);
@@ -217,13 +209,13 @@ begin
   prehash.BlockUpdate(m, 0, System.Length(m));
 
   Ed25519Instance.SignPreHash(sk, 0, ctx, prehash, sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   prehash := Ed25519Instance.CreatePreHash();
   prehash.BlockUpdate(m, 0, System.Length(m));
 
   Ed25519Instance.SignPreHash(sk, 0, pk, 0, ctx, prehash, sigGen, 0);
-  CheckTrue(TArrayUtils.AreEqual(sig, sigGen), text);
+  CheckTrue(AreEqual(sig, sigGen), text);
 
   prehash := Ed25519Instance.CreatePreHash();
   prehash.BlockUpdate(m, 0, System.Length(m));
@@ -255,7 +247,7 @@ end;
 
 procedure TTestEd25519.TestEd25519Consistency;
 var
-  sk, pk, m, sig1, sig2: TCryptoLibByteArray;
+  sk, pk, m, sig1, sig2: TBytes;
   i, mLen: Int32;
   Ed25519Instance: IEd25519;
   shouldVerify, shouldNotVerify: Boolean;
@@ -279,7 +271,7 @@ begin
     Ed25519Instance.Sign(sk, 0, m, 0, mLen, sig1, 0);
     Ed25519Instance.Sign(sk, 0, pk, 0, m, 0, mLen, sig2, 0);
 
-    CheckTrue(TArrayUtils.AreEqual(sig1, sig2),
+    CheckTrue(AreEqual(sig1, sig2),
       Format('Ed25519 consistent signatures #%d', [i]));
 
     shouldVerify := Ed25519Instance.Verify(sig1, 0, pk, 0, m, 0, mLen);
@@ -297,7 +289,7 @@ end;
 
 procedure TTestEd25519.TestEd25519ctxConsistency;
 var
-  sk, pk, ctx, m, sig1, sig2: TCryptoLibByteArray;
+  sk, pk, ctx, m, sig1, sig2: TBytes;
   i, mLen: Int32;
   Ed25519Instance: IEd25519;
   shouldVerify, shouldNotVerify: Boolean;
@@ -323,7 +315,7 @@ begin
     Ed25519Instance.Sign(sk, 0, ctx, m, 0, mLen, sig1, 0);
     Ed25519Instance.Sign(sk, 0, pk, 0, ctx, m, 0, mLen, sig2, 0);
 
-    CheckTrue(TArrayUtils.AreEqual(sig1, sig2),
+    CheckTrue(AreEqual(sig1, sig2),
       Format('Ed25519ctx consistent signatures #%d', [i]));
 
     shouldVerify := Ed25519Instance.Verify(sig1, 0, pk, 0, ctx, m, 0, mLen);
@@ -483,7 +475,7 @@ end;
 
 procedure TTestEd25519.TestEd25519phConsistency;
 var
-  sk, pk, ctx, m, ph, sig1, sig2: TCryptoLibByteArray;
+  sk, pk, ctx, m, ph, sig1, sig2: TBytes;
   i, mLen: Int32;
   Ed25519Instance: IEd25519;
   shouldVerify, shouldNotVerify: Boolean;
@@ -515,7 +507,7 @@ begin
     Ed25519Instance.SignPreHash(sk, 0, ctx, ph, 0, sig1, 0);
     Ed25519Instance.SignPreHash(sk, 0, pk, 0, ctx, ph, 0, sig2, 0);
 
-    CheckTrue(TArrayUtils.AreEqual(sig1, sig2),
+    CheckTrue(AreEqual(sig1, sig2),
       Format('Ed25519ph consistent signatures #%d', [i]));
 
     shouldVerify := Ed25519Instance.VerifyPreHash(sig1, 0, pk, 0, ctx, ph, 0);
@@ -538,7 +530,7 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
- // RegisterTest(TTestEd25519);
+  RegisterTest(TTestEd25519);
 {$ELSE}
   RegisterTest(TTestEd25519.Suite);
 {$ENDIF FPC}

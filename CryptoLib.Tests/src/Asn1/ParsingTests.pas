@@ -33,17 +33,11 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpEncoders,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-  TTestParsing = class(TCryptoLibTestCase)
+  TTestParsing = class(TCryptoLibAlgorithmTestCase)
   var
   private
     FStreams: TCryptoLibStringArray;
@@ -134,7 +128,7 @@ var
 begin
   for stream in FStreams do
   begin
-    aIn := TAsn1InputStream.Create(TBase64.Decode(stream));
+    aIn := TAsn1InputStream.Create(DecodeBase64(stream));
 
     try
 
@@ -180,7 +174,7 @@ var
 begin
   for stream in FStreams do
   begin
-    aIn := TAsn1StreamParser.Create(TBase64.Decode(stream));
+    aIn := TAsn1StreamParser.Create(DecodeBase64(stream));
 
     try
 

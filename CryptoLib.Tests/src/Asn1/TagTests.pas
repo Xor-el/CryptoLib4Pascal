@@ -36,25 +36,18 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBits,
-  ClpEncoders,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// X.690 test example
   /// </summary>
-  TTestTag = class(TCryptoLibTestCase)
+  TTestTag = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
-    FlongAppSpecificTag, FlongTagged: TCryptoLibByteArray;
+    FlongAppSpecificTag, FlongTagged: TBytes;
 
   protected
     procedure SetUp; override;
@@ -71,9 +64,9 @@ implementation
 procedure TTestTag.SetUp;
 begin
   inherited;
-  FlongAppSpecificTag := THex.Decode('5F610101');
+  FlongAppSpecificTag := DecodeHex('5F610101');
 
-  FlongTagged := TBase64.Decode
+  FlongTagged := DecodeBase64
     ('ZSRzIp8gEEZFRENCQTk4NzY1NDMyMTCfIQwyMDA2MDQwMTEyMzSUCCAFERVz' +
     'A4kCAHEXGBkalAggBRcYGRqUCCAFZS6QAkRFkQlURUNITklLRVKSBQECAwQF' +
     'kxAREhMUFRYXGBkalAggBREVcwOJAgBxFxgZGpQIIAUXGBkalAggBWUukAJE' +

@@ -63,7 +63,7 @@ uses
 resourcestring
 {$IFDEF CRYPTOLIB_MSWINDOWS}
   SMSWIndowsCryptographyAPIGenerationError =
-    'An Error Occured while generating random data using MS WIndows Cryptography API.';
+    'An Error Occured while generating random data using MS Windows Cryptography API.';
 {$ENDIF}
 {$IFDEF CRYPTOLIB_APPLE}
   SAppleSecRandomCopyBytesGenerationError =
@@ -75,7 +75,7 @@ resourcestring
 {$ENDIF}
 {$IFDEF CRYPTOLIB_GENERIC_BSD}
   SArc4RandomBufGenerationError =
-    'An Error Occured while generating random data using getRandom API.';
+    'An Error Occured while generating random data using arc4random_buf API.';
 {$ENDIF}
 {$IFDEF CRYPTOLIB_UNIX}
   SRandomDeviceReadError =
@@ -256,7 +256,7 @@ type
   __SecRandom = record
   end;
 
-  // similar to an OpaquePointer already defined in newer FPC but not available in 3.0.4
+  // similar to POpaqueData (or an OpaquePointer) already defined in newer FPC but not available in 3.0.4
   SecRandomRef = ^__SecRandom;
 
 function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
@@ -278,7 +278,7 @@ function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
 // ************************************************************************//
 {$IFDEF CRYPTOLIB_GENERIC_BSD}
 procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl; external;
-// 'c' name 'arc4random_buf';
+'c' name 'arc4random_buf';
 {$ENDIF}
 
 implementation

@@ -54,20 +54,14 @@ uses
   ClpGeneratorUtilities,
   ClpAgreementUtilities,
   ClpConverters,
-  ClpCryptoLibTypes;
+  CryptoLibTestBase;
 
 resourcestring
   SUnknownCurveName = 'Unknown Curve Name: %s';
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestNamedCurve = class(TCryptoLibTestCase)
+  TTestNamedCurve = class(TCryptoLibAlgorithmTestCase)
   private
     function GetCurveParameters(const name: String): IECDomainParameters;
     procedure DoTestECDsa(const name: String);
@@ -91,7 +85,7 @@ var
   sgr: ISigner;
   pair: IAsymmetricCipherKeyPair;
   sKey, vKey: IAsymmetricKeyParameter;
-  &message, sigBytes: TCryptoLibByteArray;
+  &message, sigBytes: TBytes;
 begin
   ecSpec := GetCurveParameters(name);
 

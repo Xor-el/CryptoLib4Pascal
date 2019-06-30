@@ -71,6 +71,8 @@ uses
   ScryptTests,
   DigestTests,
   DigestUtilitiesTests,
+  DHTests,
+  CryptoLibTestBase,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,
   ClpShortenedDigest,

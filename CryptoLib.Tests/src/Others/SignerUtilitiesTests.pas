@@ -32,9 +32,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpEncoders,
   ClpBigInteger,
-  ClpCryptoLibTypes,
   ClpISigner,
   ClpECC,
   ClpIRandom,
@@ -59,17 +57,12 @@ uses
   ClpEd25519KeyGenerationParameters,
   ClpIEd25519KeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
-  ClpGeneratorUtilities;
+  ClpGeneratorUtilities,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestSignerUtilities = class(TCryptoLibTestCase)
+  TTestSignerUtilities = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
@@ -106,18 +99,18 @@ begin
   //
 
   FECParraGX := TBigInteger.Create
-    (TBase64.Decode('D/qWPNyogWzMM7hkK+35BcPTWFc9Pyf7vTs8uaqv'));
+    (DecodeBase64('D/qWPNyogWzMM7hkK+35BcPTWFc9Pyf7vTs8uaqv'));
   FECParraGY := TBigInteger.Create
-    (TBase64.Decode('AhQXGxb1olGRv6s1LPRfuatMF+cx3ZTGgzSE/Q5R'));
-  FECParraH := TBigInteger.Create(TBase64.Decode('AQ=='));
+    (DecodeBase64('AhQXGxb1olGRv6s1LPRfuatMF+cx3ZTGgzSE/Q5R'));
+  FECParraH := TBigInteger.Create(DecodeBase64('AQ=='));
   FECParraN := TBigInteger.Create
-    (TBase64.Decode('f///////////////f///nl6an12QcfvRUiaIkJ0L'));
+    (DecodeBase64('f///////////////f///nl6an12QcfvRUiaIkJ0L'));
   FECPubQX := TBigInteger.Create
-    (TBase64.Decode('HWWi17Yb+Bm3PYr/DMjLOYNFhyOwX1QY7ZvqqM+l'));
+    (DecodeBase64('HWWi17Yb+Bm3PYr/DMjLOYNFhyOwX1QY7ZvqqM+l'));
   FECPubQY := TBigInteger.Create
-    (TBase64.Decode('JrlJfxu3WGhqwtL/55BOs/wsUeiDFsvXcGhB8DGx'));
+    (DecodeBase64('JrlJfxu3WGhqwtL/55BOs/wsUeiDFsvXcGhB8DGx'));
   FECPrivD := TBigInteger.Create
-    (TBase64.Decode('GYQmd/NF1B+He1iMkWt3by2Az6Eu07t0ynJ4YCAo'));
+    (DecodeBase64('GYQmd/NF1B+He1iMkWt3by2Az6Eu07t0ynJ4YCAo'));
 
   Fcurve := TFpCurve.Create
     (TBigInteger.Create
@@ -142,21 +135,20 @@ begin
   //
 
   FDSAParaG := TBigInteger.Create
-    (TBase64.Decode
+    (DecodeBase64
     ('AL0fxOTq10OHFbCf8YldyGembqEu08EDVzxyLL29Zn/t4It661YNol1rnhPIs+cirw+yf9zeCe+KL1IbZ/qIMZM=')
     );
   FDSAParaP := TBigInteger.Create
-    (TBase64.Decode
+    (DecodeBase64
     ('AM2b/UeQA+ovv3dL05wlDHEKJ+qhnJBsRT5OB9WuyRC830G79y0R8wuq8jyIYWCYcTn1TeqVPWqiTv6oAoiEeOs=')
     );
-  FDSAParaQ := TBigInteger.Create
-    (TBase64.Decode('AIlJT7mcKL6SUBMmvm24zX1EvjNx'));
+  FDSAParaQ := TBigInteger.Create(DecodeBase64('AIlJT7mcKL6SUBMmvm24zX1EvjNx'));
   FDSAPublicY := TBigInteger.Create
-    (TBase64.Decode
+    (DecodeBase64
     ('TtWy2GuT9yGBWOHi1/EpCDa/bWJCk2+yAdr56rAcqP0eHGkMnA9s9GJD2nGU8sFjNHm55swpn6JQb8q0agrCfw==')
     );
   FDsaPrivateX := TBigInteger.Create
-    (TBase64.Decode('MMpBAxNlv7eYfxLTZ2BItJeD31A='));
+    (DecodeBase64('MMpBAxNlv7eYfxLTZ2BItJeD31A='));
 
   Fpara := TDsaParameters.Create(FDSAParaP, FDSAParaQ, FDSAParaG);
   FdsaPriv := TDsaPrivateKeyParameters.Create(FDsaPrivateX, Fpara);
@@ -181,7 +173,7 @@ end;
 
 procedure TTestSignerUtilities.TestAlgorithms;
 var
-  shortMsg, longMsg, sig: TCryptoLibByteArray;
+  shortMsg, longMsg, sig: TBytes;
   LRandom: IRandom;
   algorithm, upper, cipherName: string;
   signer: ISigner;
@@ -192,7 +184,7 @@ begin
   //
   // signer loop
   //
-  shortMsg := TCryptoLibByteArray.Create(1, 4, 5, 6, 8, 8, 4, 2, 1, 3);
+  shortMsg := TBytes.Create(1, 4, 5, 6, 8, 8, 4, 2, 1, 3);
   System.SetLength(longMsg, 100);
 
   LRandom := TSecureRandom.Create();

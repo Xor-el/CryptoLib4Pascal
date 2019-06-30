@@ -46,17 +46,12 @@ uses
   ClpECAlgorithms,
   ClpX9ECParameters,
   ClpIX9ECParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestECAlgorithms = class(TCryptoLibTestCase)
+  TTestECAlgorithms = class(TCryptoLibAlgorithmTestCase)
   private
 
     class var

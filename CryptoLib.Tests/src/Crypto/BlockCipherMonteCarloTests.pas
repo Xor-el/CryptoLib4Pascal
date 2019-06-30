@@ -45,15 +45,7 @@ uses
   ClpIKeyParameter,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  CryptoLibTestBase;
 
 type
 
@@ -62,7 +54,7 @@ type
   /// output string. This test wraps the engine in a buffered block cipher
   /// with padding disabled.
   /// </summary>
-  TTestBlockCipherMonteCarlo = class(TCryptoLibTestCase)
+  TTestBlockCipherMonteCarlo = class(TCryptoLibAlgorithmTestCase)
   private
 
     procedure DoBlockCipherMonteCarloTest(const iteration: string;
@@ -92,8 +84,8 @@ var
   len1, len2, i, iterations: Int32;
   LInput, LOutput, outBytes: TBytes;
 begin
-  LInput := THex.Decode(input);
-  LOutput := THex.Decode(output);
+  LInput := DecodeHex(input);
+  LOutput := DecodeHex(output);
   iterations := StrToInt(iteration);
 
   cipher := TBufferedBlockCipher.Create(engine);
@@ -115,10 +107,10 @@ begin
     System.Inc(i);
   end;
 
-  if (not TArrayUtils.AreEqual(outBytes, LOutput)) then
+  if (not AreEqual(outBytes, LOutput)) then
   begin
     Fail(Format('Encryption Failed - Expected %s but got %s',
-      [THex.Encode(LOutput), THex.Encode(outBytes)]));
+      [EncodeHex(LOutput), EncodeHex(outBytes)]));
   end;
 
   cipher.Init(false, param);
@@ -133,10 +125,10 @@ begin
     System.Inc(i);
   end;
 
-  if (not TArrayUtils.AreEqual(LInput, outBytes)) then
+  if (not AreEqual(LInput, outBytes)) then
   begin
     Fail(Format('Decryption Failed - Expected %s but got %s',
-      [THex.Encode(LInput), THex.Encode(outBytes)]));
+      [EncodeHex(LInput), EncodeHex(outBytes)]));
   end;
 end;
 
@@ -160,9 +152,8 @@ begin
   begin
     DoBlockCipherMonteCarloTest(TAESTestVectors.FBlockCipherMonteCarloIterations
       [i], TAesEngine.Create() as IAesEngine,
-      TKeyParameter.Create
-      (THex.Decode(TAESTestVectors.FBlockCipherMonteCarloKeys[i]))
-      as IKeyParameter, TAESTestVectors.FBlockCipherMonteCarloInputs[i],
+      TKeyParameter.Create(DecodeHex(TAESTestVectors.FBlockCipherMonteCarloKeys
+      [i])) as IKeyParameter, TAESTestVectors.FBlockCipherMonteCarloInputs[i],
       TAESTestVectors.FBlockCipherMonteCarloOutputs[i]);
   end;
 
@@ -177,9 +168,8 @@ begin
   begin
     DoBlockCipherMonteCarloTest(TAESTestVectors.FBlockCipherMonteCarloIterations
       [i], TAesLightEngine.Create() as IAesLightEngine,
-      TKeyParameter.Create
-      (THex.Decode(TAESTestVectors.FBlockCipherMonteCarloKeys[i]))
-      as IKeyParameter, TAESTestVectors.FBlockCipherMonteCarloInputs[i],
+      TKeyParameter.Create(DecodeHex(TAESTestVectors.FBlockCipherMonteCarloKeys
+      [i])) as IKeyParameter, TAESTestVectors.FBlockCipherMonteCarloInputs[i],
       TAESTestVectors.FBlockCipherMonteCarloOutputs[i]);
   end;
 
@@ -198,7 +188,7 @@ begin
       (StrToInt(TRijndaelTestVectors.FBlockCipherMonteCarloBlockSizes[i]))
       as IRijndaelEngine,
       TKeyParameter.Create
-      (THex.Decode(TRijndaelTestVectors.FBlockCipherMonteCarloKeys[i]))
+      (DecodeHex(TRijndaelTestVectors.FBlockCipherMonteCarloKeys[i]))
       as IKeyParameter, TRijndaelTestVectors.FBlockCipherMonteCarloInputs[i],
       TRijndaelTestVectors.FBlockCipherMonteCarloOutputs[i]);
   end;

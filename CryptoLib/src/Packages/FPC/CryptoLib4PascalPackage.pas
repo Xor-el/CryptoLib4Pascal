@@ -122,7 +122,18 @@ uses
   ClpEd25519Blake2BSigner, ClpTeleTrusTNamedCurves, ClpAgreementUtilities, 
   ClpIKdf1BytesGenerator, ClpKdf1BytesGenerator, 
   ClpIArgon2ParametersGenerator, ClpArgon2ParametersGenerator, 
-  ClpIScryptParametersGenerator, ClpScryptParametersGenerator;
+  ClpIScryptParametersGenerator, ClpScryptParametersGenerator, 
+  ClpIDHAgreement, ClpIDHBasicAgreement, ClpIDHBasicKeyPairGenerator, 
+  ClpIDHKeyPairGenerator, ClpIDHPrivateKeyParameters, 
+  ClpIDHPublicKeyParameters, ClpIDHParametersGenerator, 
+  ClpIDHKeyGenerationParameters, ClpIDHParameters, ClpIDHKeyGeneratorHelper, 
+  ClpIDHKeyParameters, ClpIDHValidationParameters, ClpIDHDomainParameters, 
+  ClpIDHValidationParams, ClpDHAgreement, ClpDHBasicAgreement, 
+  ClpDHBasicKeyPairGenerator, ClpDHKeyPairGenerator, ClpDHParametersGenerator, 
+  ClpDHKeyGeneratorHelper, ClpDHParametersHelper, ClpDHPrivateKeyParameters, 
+  ClpDHPublicKeyParameters, ClpDHKeyGenerationParameters, ClpDHKeyParameters, 
+  ClpDHValidationParameters, ClpDHParameters, ClpDHDomainParameters, 
+  ClpDHValidationParams;
 
 implementation
 

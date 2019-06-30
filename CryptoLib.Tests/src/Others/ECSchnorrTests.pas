@@ -50,25 +50,18 @@ uses
   ClpIX9ECParameters,
   ClpIECC,
   ClpSecNamedCurves,
-  ClpCryptoLibTypes,
   ClpBigInteger,
   ClpSignerUtilities,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpConverters;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpConverters,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// ECSchnorr tests.
   /// </summary>
-  TTestECSchnorr = class(TCryptoLibTestCase)
+  TTestECSchnorr = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
@@ -270,8 +263,8 @@ begin
 
     PrivateKeyByteArray := TBigInteger.Create(vector[1], 16).ToByteArray;
     PublicKeyByteArray := TBigInteger.Create(vector[2], 16).ToByteArray;
-    &message := THex.Decode(vector[3]);
-    expectedSignature := THex.Decode(vector[4]);
+    &message := DecodeHex(vector[3]);
+    expectedSignature := DecodeHex(vector[4]);
 
     point := LCurve.Curve.DecodePoint(PublicKeyByteArray);
 
@@ -293,7 +286,7 @@ begin
 
     sigBytes := signer.GenerateSignature();
 
-    CheckTrue(TArrayUtils.AreEqual(expectedSignature, sigBytes),
+    CheckTrue(AreEqual(expectedSignature, sigBytes),
       vector[0] + ' Signature did not match Output');
 
     // verify
@@ -328,8 +321,8 @@ begin
   begin
 
     PublicKeyByteArray := TBigInteger.Create(vector[1], 16).ToByteArray;
-    &message := THex.Decode(vector[2]);
-    expectedSignature := THex.Decode(vector[3]);
+    &message := DecodeHex(vector[2]);
+    expectedSignature := DecodeHex(vector[3]);
 
     if vector[0] = 'Test vector 5' then
     begin
@@ -392,8 +385,8 @@ begin
   begin
 
     PublicKeyByteArray := TBigInteger.Create(vector[1], 16).ToByteArray;
-    &message := THex.Decode(vector[2]);
-    expectedSignature := THex.Decode(vector[3]);
+    &message := DecodeHex(vector[2]);
+    expectedSignature := DecodeHex(vector[3]);
 
     point := LCurve.Curve.DecodePoint(PublicKeyByteArray);
 

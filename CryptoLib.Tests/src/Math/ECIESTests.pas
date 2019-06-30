@@ -72,24 +72,17 @@ uses
   ClpIKeyEncoder,
   ClpAesEngine,
   ClpIAesEngine,
-  ClpEncoders,
-  ClpArrayUtils,
   ClpBigInteger,
   ClpDigestUtilities,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// test for ECIES - Elliptic Curve Integrated Encryption Scheme
   /// </summary>
-  TTestECIES = class(TCryptoLibTestCase)
+  TTestECIES = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FAES_IV: TBytes;
@@ -141,8 +134,8 @@ begin
     n, TBigInteger.One);
 
   params := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
+    curve.DecodePoint
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
     n);
 
   priKey := TECPrivateKeyParameters.Create
@@ -151,8 +144,8 @@ begin
     params);
 
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
-    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
+    (curve.DecodePoint
+    (DecodeHex('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
     params);
 
   p1 := TAsymmetricCipherKeyPair.Create(pubKey, priKey);
@@ -188,12 +181,12 @@ begin
   i2.Init(p1.Private, p, TECIESPublicKeyParser.Create(params)
     as IECIESPublicKeyParser);
 
-  &message := THex.Decode('1234567890abcdef');
+  &message := DecodeHex('1234567890abcdef');
 
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('stream cipher test failed');
   end;
@@ -233,13 +226,13 @@ begin
   i2.Init(p1.Private, p, TECIESPublicKeyParser.Create(params)
     as IECIESPublicKeyParser);
 
-  &message := THex.Decode('1234567890abcdef');
+  &message := DecodeHex('1234567890abcdef');
 
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('AES cipher test failed');
   end;
@@ -272,8 +265,8 @@ begin
     n, TBigInteger.One);
 
   params := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
+    curve.DecodePoint
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
     n);
 
   priKey := TECPrivateKeyParameters.Create
@@ -282,8 +275,8 @@ begin
     params);
 
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
-    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
+    (curve.DecodePoint
+    (DecodeHex('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
     params);
 
   p1 := TAsymmetricCipherKeyPair.Create(pubKey, priKey);
@@ -314,7 +307,7 @@ begin
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('stream cipher test failed');
   end;
@@ -358,7 +351,7 @@ begin
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('V cipher test failed');
   end;
@@ -409,8 +402,8 @@ begin
     n, TBigInteger.One);
 
   params := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
+    curve.DecodePoint
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
     n, TBigInteger.One);
 
   priKey := TECPrivateKeyParameters.Create
@@ -419,8 +412,8 @@ begin
     params);
 
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
-    ('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
+    (curve.DecodePoint
+    (DecodeHex('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), // Q
     params);
 
   p1 := TAsymmetricCipherKeyPair.Create(pubKey, priKey);
@@ -446,20 +439,19 @@ begin
   i1.Init(true, p1.Private, p2.Public, p);
   i2.Init(false, p2.getPrivate, p1.getPublic, p);
 
-  &message := THex.Decode('1234567890abcdef');
+  &message := DecodeHex('1234567890abcdef');
 
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
-  if (not TArrayUtils.AreEqual(out1,
-    THex.Decode('468d89877e8238802403ec4cb6b329faeccfa6f3a730f2cdb3c0a8e8')))
-  then
+  if (not AreEqual(out1,
+    DecodeHex('468d89877e8238802403ec4cb6b329faeccfa6f3a730f2cdb3c0a8e8'))) then
   begin
     Fail('stream cipher test failed on enc');
   end;
 
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('stream cipher test failed');
   end;
@@ -498,29 +490,31 @@ begin
   i1.Init(true, p1.Private, p2.Public, p);
   i2.Init(false, p2.Private, p1.Public, p);
 
-  &message := THex.Decode('1234567890abcdef');
+  &message := DecodeHex('1234567890abcdef');
 
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   if iv = Nil then
   begin
-    compareValue := THex.Decode
-      ('33578c27c3c044a535d42b9fe77003c3c4c9a74b987adac5c21c920b4b878debdefdff1e');
+    compareValue :=
+      DecodeHex(
+      '33578c27c3c044a535d42b9fe77003c3c4c9a74b987adac5c21c920b4b878debdefdff1e');
   end
   else
   begin
-    compareValue := THex.Decode
-      ('cae615459828884e5444a33a0271d763a8ca8affc60b8551a5fb2cc362409c0226e225e0');
+    compareValue :=
+      DecodeHex(
+      'cae615459828884e5444a33a0271d763a8ca8affc60b8551a5fb2cc362409c0226e225e0');
   end;
 
-  if (not TArrayUtils.AreEqual(out1, compareValue)) then
+  if (not AreEqual(out1, compareValue)) then
   begin
     Fail('AES cipher test failed on enc');
   end;
 
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('AES cipher test failed');
   end;
@@ -554,13 +548,13 @@ begin
   i1.Init(true, p1.Private, p2.Public, p);
   i2.Init(false, p2.getPrivate, p1.getPublic, p);
 
-  &message := THex.Decode('1234567890abcdef');
+  &message := DecodeHex('1234567890abcdef');
 
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('stream cipher test failed');
   end;
@@ -594,13 +588,13 @@ begin
   i1.Init(true, p1.Private, p2.Public, p);
   i2.Init(false, p2.Private, p1.Public, p);
 
-  &message := THex.Decode('1234567890abcdef');
+  &message := DecodeHex('1234567890abcdef');
 
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   out2 := i2.ProcessBlock(out1, 0, System.Length(out1));
 
-  if (not TArrayUtils.AreEqual(out2, &message)) then
+  if (not AreEqual(out2, &message)) then
   begin
     Fail('AES cipher test failed');
   end;
@@ -609,7 +603,7 @@ end;
 procedure TTestECIES.SetUp;
 begin
   inherited;
-  FAES_IV := THex.Decode('000102030405060708090a0b0c0d0e0f');
+  FAES_IV := DecodeHex('000102030405060708090a0b0c0d0e0f');
 end;
 
 procedure TTestECIES.TearDown;
@@ -644,8 +638,8 @@ begin
     n, TBigInteger.One);
 
   params := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
+    curve.DecodePoint
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), // G
     n, TBigInteger.One);
 
   eGen := TECKeyPairGenerator.Create();

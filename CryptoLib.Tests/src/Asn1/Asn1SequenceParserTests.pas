@@ -33,31 +33,23 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
-  ClpEncoders,
-  ClpCryptoLibTypes,
-  ClpArrayUtils,
   ClpAsn1Objects,
-  ClpIAsn1Objects;
+  ClpIAsn1Objects,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestAsn1SequenceParser = class(TCryptoLibTestCase)
+  TTestAsn1SequenceParser = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
     FseqData, FnestedSeqData, FexpTagSeqData, FimplTagSeqData,
       FnestedSeqExpTagData, FnestedSeqImpTagData, FberSeqData,
       FberDerNestedSeqData, FberNestedSeqData, FberExpTagSeqData,
-      FberSeqWithDERNullData: TCryptoLibByteArray;
+      FberSeqWithDERNullData: TBytes;
 
-    procedure doTestNestedReading(const data: TCryptoLibByteArray);
-    procedure doTestParseWithNull(const data: TCryptoLibByteArray);
+    procedure doTestNestedReading(const data: TBytes);
+    procedure doTestParseWithNull(const data: TBytes);
 
   protected
     procedure SetUp; override;
@@ -86,8 +78,7 @@ implementation
 
 { TTestAsn1SequenceParser }
 
-procedure TTestAsn1SequenceParser.doTestNestedReading
-  (const data: TCryptoLibByteArray);
+procedure TTestAsn1SequenceParser.doTestNestedReading(const data: TBytes);
 var
   aIn: IAsn1StreamParser;
   seq, s: IAsn1SequenceParser;
@@ -136,8 +127,7 @@ begin
   CheckEquals(3, count, 'wrong number of objects in sequence');
 end;
 
-procedure TTestAsn1SequenceParser.doTestParseWithNull
-  (const data: TCryptoLibByteArray);
+procedure TTestAsn1SequenceParser.doTestParseWithNull(const data: TBytes);
 var
   aIn: IAsn1StreamParser;
   seq: IAsn1SequenceParser;
@@ -180,18 +170,18 @@ end;
 procedure TTestAsn1SequenceParser.SetUp;
 begin
   inherited;
-  FseqData := THex.Decode('3006020100060129');
-  FnestedSeqData := THex.Decode('300b0201000601293003020101');
-  FexpTagSeqData := THex.Decode('a1083006020100060129');
-  FimplTagSeqData := THex.Decode('a106020100060129');
-  FnestedSeqExpTagData := THex.Decode('300d020100060129a1053003020101');
-  FnestedSeqImpTagData := THex.Decode('300b020100060129a103020101');
+  FseqData := DecodeHex('3006020100060129');
+  FnestedSeqData := DecodeHex('300b0201000601293003020101');
+  FexpTagSeqData := DecodeHex('a1083006020100060129');
+  FimplTagSeqData := DecodeHex('a106020100060129');
+  FnestedSeqExpTagData := DecodeHex('300d020100060129a1053003020101');
+  FnestedSeqImpTagData := DecodeHex('300b020100060129a103020101');
 
-  FberSeqData := THex.Decode('30800201000601290000');
-  FberDerNestedSeqData := THex.Decode('308002010006012930030201010000');
-  FberNestedSeqData := THex.Decode('3080020100060129308002010100000000');
-  FberExpTagSeqData := THex.Decode('a180308002010006012900000000');
-  FberSeqWithDERNullData := THex.Decode('308005000201000601290000');
+  FberSeqData := DecodeHex('30800201000601290000');
+  FberDerNestedSeqData := DecodeHex('308002010006012930030201010000');
+  FberNestedSeqData := DecodeHex('3080020100060129308002010100000000');
+  FberExpTagSeqData := DecodeHex('a180308002010006012900000000');
+  FberSeqWithDERNullData := DecodeHex('308005000201000601290000');
 end;
 
 procedure TTestAsn1SequenceParser.TearDown;
@@ -204,7 +194,7 @@ procedure TTestAsn1SequenceParser.TestBerExplicitTaggedSequenceWriting;
 var
   bOut: TMemoryStream;
   seqGen: IBerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -221,7 +211,7 @@ begin
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
 
-    CheckTrue(TArrayUtils.AreEqual(FberExpTagSeqData, temp),
+    CheckTrue(AreEqual(FberExpTagSeqData, temp),
       'explicit BER tag writing test failed.');
   finally
     bOut.Free;
@@ -270,7 +260,7 @@ procedure TTestAsn1SequenceParser.TestBerWriting;
 var
   bOut: TMemoryStream;
   seqGen: IBerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -285,8 +275,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FberSeqData, temp),
-      'basic BER writing test failed.');
+    CheckTrue(AreEqual(FberSeqData, temp), 'basic BER writing test failed.');
   finally
     bOut.Free;
   end;
@@ -295,7 +284,7 @@ end;
 procedure TTestAsn1SequenceParser.TestDerExplicitTaggedSequenceWriting;
 var
   bOut: TMemoryStream;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
   seqGen: IDerSequenceGenerator;
 begin
   bOut := TMemoryStream.Create();
@@ -313,7 +302,7 @@ begin
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
 
-    CheckTrue(TArrayUtils.AreEqual(FexpTagSeqData, temp),
+    CheckTrue(AreEqual(FexpTagSeqData, temp),
       'explicit tag writing test failed.');
   finally
     bOut.Free;
@@ -324,7 +313,7 @@ procedure TTestAsn1SequenceParser.TestDerImplicitTaggedSequenceWriting;
 var
   bOut: TMemoryStream;
   seqGen: IDerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -341,7 +330,7 @@ begin
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
 
-    CheckTrue(TArrayUtils.AreEqual(FimplTagSeqData, temp),
+    CheckTrue(AreEqual(FimplTagSeqData, temp),
       'implicit tag writing test failed.');
   finally
     bOut.Free;
@@ -390,7 +379,7 @@ procedure TTestAsn1SequenceParser.TestDerWriting;
 var
   bOut: TMemoryStream;
   seqGen: IDerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -405,8 +394,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FseqData, temp),
-      'basic DER writing test failed.');
+    CheckTrue(AreEqual(FseqData, temp), 'basic DER writing test failed.');
   finally
     bOut.Free;
   end;
@@ -422,7 +410,7 @@ var
   bOut: TMemoryStream;
   seqGen1: IBerSequenceGenerator;
   seqGen2: IDerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -445,7 +433,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FberDerNestedSeqData, temp),
+    CheckTrue(AreEqual(FberDerNestedSeqData, temp),
       'nested BER/DER writing test failed.');
   finally
     bOut.Free;
@@ -461,7 +449,7 @@ procedure TTestAsn1SequenceParser.TestNestedBerWriting;
 var
   bOut: TMemoryStream;
   seqGen1, seqGen2: IBerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -483,7 +471,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FberNestedSeqData, temp),
+    CheckTrue(AreEqual(FberNestedSeqData, temp),
       'nested BER writing test failed.');
   finally
     bOut.Free;
@@ -499,7 +487,7 @@ procedure TTestAsn1SequenceParser.TestNestedDerWriting;
 var
   bOut: TMemoryStream;
   seqGen1, seqGen2: IDerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -521,7 +509,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FnestedSeqData, temp),
+    CheckTrue(AreEqual(FnestedSeqData, temp),
       'nested DER writing test failed.');
   finally
     bOut.Free;
@@ -532,7 +520,7 @@ procedure TTestAsn1SequenceParser.TestNestedExplicitTagDerWriting;
 var
   bOut: TMemoryStream;
   seqGen1, seqGen2: IDerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -556,7 +544,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FnestedSeqExpTagData, temp),
+    CheckTrue(AreEqual(FnestedSeqExpTagData, temp),
       'nested explicit tagged DER writing test failed.');
   finally
     bOut.Free;
@@ -567,7 +555,7 @@ procedure TTestAsn1SequenceParser.TestNestedImplicitTagDerWriting;
 var
   bOut: TMemoryStream;
   seqGen1, seqGen2: IDerSequenceGenerator;
-  temp: TCryptoLibByteArray;
+  temp: TBytes;
 begin
   bOut := TMemoryStream.Create();
   try
@@ -591,7 +579,7 @@ begin
     bOut.Position := 0;
     System.SetLength(temp, bOut.Size);
     bOut.Read(temp[0], bOut.Size);
-    CheckTrue(TArrayUtils.AreEqual(FnestedSeqImpTagData, temp),
+    CheckTrue(AreEqual(FnestedSeqImpTagData, temp),
       'nested implicit tagged DER writing test failed.');
   finally
     bOut.Free;

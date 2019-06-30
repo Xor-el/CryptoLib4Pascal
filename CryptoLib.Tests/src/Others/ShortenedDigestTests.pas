@@ -35,18 +35,12 @@ uses
   ClpIShortenedDigest,
   ClpShortenedDigest,
   ClpDigestUtilities,
-  ClpArrayUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestShortenedDigest = class(TCryptoLibTestCase)
+  TTestShortenedDigest = class(TCryptoLibAlgorithmTestCase)
 
   private
     procedure DoTestShortenedDigest();
@@ -67,7 +61,7 @@ procedure TTestShortenedDigest.DoTestShortenedDigest;
 var
   d: IDigest;
   sd: IShortenedDigest;
-  temp, temp2: TCryptoLibByteArray;
+  temp, temp2: TBytes;
 begin
   d := TDigestUtilities.GetDigest('SHA-1');
   sd := TShortenedDigest.Create(TDigestUtilities.GetDigest('SHA-1'), 10);
@@ -90,7 +84,7 @@ begin
   sd.DoFinal(temp, 0);
   sd.DoFinal(temp2, 0);
 
-  CheckTrue(TArrayUtils.AreEqual(temp, temp2),
+  CheckTrue(AreEqual(temp, temp2),
     Format('DoFinal(temp, 0) <> temp := DoFinal() %s', [sd.AlgorithmName]));
 
   d := TDigestUtilities.GetDigest('SHA-512');
@@ -114,7 +108,7 @@ begin
   sd.DoFinal(temp, 0);
   sd.DoFinal(temp2, 0);
 
-  CheckTrue(TArrayUtils.AreEqual(temp, temp2),
+  CheckTrue(AreEqual(temp, temp2),
     Format('DoFinal(temp, 0) <> temp := DoFinal() %s', [sd.AlgorithmName]));
 
   try

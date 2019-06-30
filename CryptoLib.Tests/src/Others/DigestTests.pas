@@ -35,20 +35,13 @@ uses
   ClpRosstandartObjectIdentifiers,
   ClpIDigest,
   ClpDigestUtilities,
-  ClpEncoders,
-  ClpArrayUtils,
-  ClpCryptoLibTypes,
-  ClpConverters;
+  ClpConverters,
+  CryptoLibTestBase,
+  ClpCryptoLibTypes;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestDigest = class(TCryptoLibTestCase)
+  TTestDigest = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FabcVectors: TCryptoLibMatrixGenericArray<String>;
@@ -177,7 +170,7 @@ end;
 
 procedure TTestDigest.DoAbcTest(const algorithm, hash: String);
 var
-  abc, result: TCryptoLibByteArray;
+  abc, result: TBytes;
   digest: IDigest;
 begin
   abc := TBytes.Create($61, $62, $63);
@@ -187,7 +180,7 @@ begin
   digest.BlockUpdate(abc, 0, System.Length(abc));
   result := TDigestUtilities.DoFinal(digest);
 
-  if (not TArrayUtils.AreEqual(result, THex.Decode(hash))) then
+  if (not AreEqual(result, DecodeHex(hash))) then
   begin
     Fail(Format('abc result not equal for %s', [algorithm]));
   end;
@@ -195,7 +188,7 @@ end;
 
 procedure TTestDigest.DoTest(const algorithm: String);
 var
-  &message, result, result2: TCryptoLibByteArray;
+  &message, result, result2: TBytes;
   digest, d: IDigest;
   i: Int32;
 begin
@@ -210,7 +203,7 @@ begin
   result2 := TDigestUtilities.DoFinal(digest);
 
   // test one digest the same message with the same instance
-  if (not TArrayUtils.AreEqual(result, result2)) then
+  if (not AreEqual(result, result2)) then
   begin
     Fail('Result object 1 not equal');
   end;
@@ -223,7 +216,7 @@ begin
 
   result2 := TDigestUtilities.DoFinal(digest);
 
-  if (not TArrayUtils.AreEqual(result, result2)) then
+  if (not AreEqual(result, result2)) then
   begin
     Fail('Result object 2 not equal');
   end;
@@ -235,7 +228,7 @@ begin
 
   result2 := TDigestUtilities.DoFinal(digest);
 
-  if (not TArrayUtils.AreEqual(result, result2)) then
+  if (not AreEqual(result, result2)) then
   begin
     Fail('Result object 3 not equal');
   end;
@@ -248,7 +241,7 @@ begin
 
   result2 := TDigestUtilities.DoFinal(digest);
 
-  if (not TArrayUtils.AreEqual(result, result2)) then
+  if (not AreEqual(result, result2)) then
   begin
     Fail('Result object 4(a) not equal');
   end;
@@ -258,7 +251,7 @@ begin
 
   result2 := TDigestUtilities.DoFinal(d);
 
-  if (not TArrayUtils.AreEqual(result, result2)) then
+  if (not AreEqual(result, result2)) then
   begin
     Fail('Result object 4(b) not equal');
   end;
@@ -272,7 +265,7 @@ begin
 
   result2 := TDigestUtilities.DoFinal(digest);
 
-  if (not TArrayUtils.AreEqual(result, result2)) then
+  if (not AreEqual(result, result2)) then
   begin
     Fail('Result object 5 not equal');
   end;

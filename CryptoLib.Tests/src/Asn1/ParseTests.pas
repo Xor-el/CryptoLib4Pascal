@@ -33,18 +33,12 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpEncoders;
+  CryptoLibTestBase;
 
 type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-  TTestParse = class(TCryptoLibTestCase)
-  var
+  TTestParse = class(TCryptoLibAlgorithmTestCase)
   private
+  var
     FlongTagged: TBytes;
 
   protected
@@ -62,7 +56,7 @@ implementation
 procedure TTestParse.SetUp;
 begin
   inherited;
-  FlongTagged := THex.Decode('9f1f023330');
+  FlongTagged := DecodeHex('9f1f023330');
 end;
 
 procedure TTestParse.TearDown;

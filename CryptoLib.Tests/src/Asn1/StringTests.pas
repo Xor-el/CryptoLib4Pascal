@@ -33,20 +33,15 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpConverters;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpConverters,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// X.690 test example
   /// </summary>
-  TTestString = class(TCryptoLibTestCase)
+  TTestString = class(TCryptoLibAlgorithmTestCase)
 
   protected
     procedure SetUp; override;

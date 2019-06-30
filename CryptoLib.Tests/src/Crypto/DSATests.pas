@@ -72,9 +72,7 @@ uses
   ClpX9ObjectIdentifiers,
   ClpECKeyGenerationParameters,
   ClpIECKeyGenerationParameters,
-  ClpEncoders,
   ClpBigInteger,
-  ClpArrayUtils,
   ClpAsn1Objects,
   ClpDSADigestSigner,
   ClpIDSADigestSigner,
@@ -83,7 +81,8 @@ uses
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,
   ClpConverters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
   IDSATestSecureRandom = interface(IFixedSecureRandom)
@@ -97,15 +96,9 @@ type
     Ffirst: Boolean;
 
   public
-    constructor Create(const value: TCryptoLibByteArray);
+    constructor Create(const value: TBytes);
 
-    procedure NextBytes(const bytes: TCryptoLibByteArray); override;
-
-  end;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
+    procedure NextBytes(const bytes: TBytes); override;
 
   end;
 
@@ -114,7 +107,7 @@ type
   /// <summary>
   /// Test based on FIPS 186-2, Appendix 5, an example of DSA, and FIPS 168-3 test vectors.
   /// </summary>
-  TTestDSA = class(TCryptoLibTestCase)
+  TTestDSA = class(TCryptoLibAlgorithmTestCase)
 
   private
 
@@ -128,12 +121,12 @@ type
 
     procedure DoCheckMessage(const sgr: ISigner;
       const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
-      const &message, sig: TCryptoLibByteArray);
+      const &message, sig: TBytes);
 
     procedure DoTestKeyGeneration(keysize: Int32);
     procedure DoTestBadStrength(strength: Int32);
 
-    function DoDerDecode(const encoding: TCryptoLibByteArray)
+    function DoDerDecode(const encoding: TBytes)
       : TCryptoLibGenericArray<TBigInteger>;
 
   protected
@@ -183,9 +176,9 @@ implementation
 
 procedure TTestDSA.DoCheckMessage(const sgr: ISigner;
   const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
-  const &message, sig: TCryptoLibByteArray);
+  const &message, sig: TBytes);
 var
-  kData, sigBytes: TCryptoLibByteArray;
+  kData, sigBytes: TBytes;
   k: ISecureRandom;
 begin
 
@@ -202,7 +195,7 @@ begin
 
   sigBytes := sgr.GenerateSignature();
 
-  if (not TArrayUtils.AreEqual(sigBytes, sig)) then
+  if (not AreEqual(sigBytes, sig)) then
   begin
     Fail(Format('%s %s', [TConverters.ConvertBytesToString(&message,
       TEncoding.UTF8), 'signature incorrect']));
@@ -219,7 +212,7 @@ begin
   end;
 end;
 
-function TTestDSA.DoDerDecode(const encoding: TCryptoLibByteArray)
+function TTestDSA.DoDerDecode(const encoding: TBytes)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;
@@ -253,7 +246,7 @@ end;
 
 procedure TTestDSA.DoDSA2Test1;
 var
-  seed, msg: TCryptoLibByteArray;
+  seed, msg: TBytes;
   pGen: IDsaParametersGenerator;
   params: IDSAParameters;
   pv: IDSAValidationParameters;
@@ -264,7 +257,7 @@ var
   signer: IDSASigner;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  seed := THex.Decode('ED8BEE8D1CB89229D2903CBF0E51EE7377F48698');
+  seed := DecodeHex('ED8BEE8D1CB89229D2903CBF0E51EE7377F48698');
 
   pGen := TDsaParametersGenerator.Create();
 
@@ -280,7 +273,7 @@ begin
     Fail('counter incorrect');
   end;
 
-  if (not TArrayUtils.AreEqual(seed, pv.seed)) then
+  if (not AreEqual(seed, pv.seed)) then
   begin
     Fail('seed incorrect');
   end;
@@ -346,10 +339,10 @@ begin
     TFixedSecureRandom.Create(TCryptoLibGenericArray<ISource>.Create
     (TFixedSecureRandom.TBigIntegerSource.Create
     ('349C55648DCF992F3F33E8026CFAC87C1D2BA075'),
-    TFixedSecureRandom.TData.Create(THex.Decode('01020304')))))
+    TFixedSecureRandom.TData.Create(DecodeHex('01020304')))))
     as IParametersWithRandom);
 
-  msg := THex.Decode('A9993E364706816ABA3E25717850C26C9CD0D89D');
+  msg := DecodeHex('A9993E364706816ABA3E25717850C26C9CD0D89D');
 
   sig := signer.GenerateSignature(msg);
 
@@ -375,7 +368,7 @@ end;
 
 procedure TTestDSA.DoDSA2Test2;
 var
-  seed, msg: TCryptoLibByteArray;
+  seed, msg: TBytes;
   pGen: IDsaParametersGenerator;
   params: IDSAParameters;
   pv: IDSAValidationParameters;
@@ -386,8 +379,7 @@ var
   signer: IDSASigner;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  seed := THex.Decode
-    ('5AFCC1EFFC079A9CCA6ECA86D6E3CC3B18642D9BE1CC6207C84002A9');
+  seed := DecodeHex('5AFCC1EFFC079A9CCA6ECA86D6E3CC3B18642D9BE1CC6207C84002A9');
 
   pGen := TDsaParametersGenerator.Create(TDigestUtilities.GetDigest('SHA-224'));
 
@@ -403,7 +395,7 @@ begin
     Fail('counter incorrect');
   end;
 
-  if (not TArrayUtils.AreEqual(seed, pv.seed)) then
+  if (not AreEqual(seed, pv.seed)) then
   begin
     Fail('seed incorrect');
   end;
@@ -448,7 +440,7 @@ begin
 
   kpGen.Init(TDSAKeyGenerationParameters.Create(TFixedSecureRandom.Create
     (TCryptoLibGenericArray<ISource>.Create(TFixedSecureRandom.TData.Create
-    (THex.Decode('00D0F09ED3E2568F6CADF9224117DA2AEC5A4300E009DE1366023E17')))),
+    (DecodeHex('00D0F09ED3E2568F6CADF9224117DA2AEC5A4300E009DE1366023E17')))),
     params) as IDSAKeyGenerationParameters);
 
   kp := kpGen.GenerateKeyPair();
@@ -483,11 +475,10 @@ begin
     TFixedSecureRandom.Create(TCryptoLibGenericArray<ISource>.Create
     (TFixedSecureRandom.TBigIntegerSource.Create
     ('735959CC4463B8B440E407EECA8A473BF6A6D1FE657546F67D401F05'),
-    TFixedSecureRandom.TData.Create(THex.Decode('01020304')))))
+    TFixedSecureRandom.TData.Create(DecodeHex('01020304')))))
     as IParametersWithRandom);
 
-  msg := THex.Decode
-    ('23097D223405D8228642A477BDA255B32AADBCE4BDA0B3F7E36C9DA7');
+  msg := DecodeHex('23097D223405D8228642A477BDA255B32AADBCE4BDA0B3F7E36C9DA7');
 
   sig := signer.GenerateSignature(msg);
 
@@ -513,7 +504,7 @@ end;
 
 procedure TTestDSA.DoDSA2Test3;
 var
-  seed, msg: TCryptoLibByteArray;
+  seed, msg: TBytes;
   pGen: IDsaParametersGenerator;
   params: IDSAParameters;
   pv: IDSAValidationParameters;
@@ -524,7 +515,7 @@ var
   signer: IDSASigner;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  seed := THex.Decode
+  seed := DecodeHex
     ('4783081972865EA95D43318AB2EAF9C61A2FC7BBF1B772A09017BDF5A58F4FF0');
 
   pGen := TDsaParametersGenerator.Create(TDigestUtilities.GetDigest('SHA-256'));
@@ -541,7 +532,7 @@ begin
     Fail('counter incorrect');
   end;
 
-  if (not TArrayUtils.AreEqual(seed, pv.seed)) then
+  if (not AreEqual(seed, pv.seed)) then
   begin
     Fail('seed incorrect');
   end;
@@ -587,7 +578,7 @@ begin
 
   kpGen.Init(TDSAKeyGenerationParameters.Create(TFixedSecureRandom.Create
     (TCryptoLibGenericArray<ISource>.Create(TFixedSecureRandom.TData.Create
-    (THex.Decode
+    (DecodeHex
     ('0CAF2EF547EC49C4F3A6FE6DF4223A174D01F2C115D49A6F73437C29A2A8458C')))),
     params) as IDSAKeyGenerationParameters);
 
@@ -624,10 +615,10 @@ begin
     TFixedSecureRandom.Create(TCryptoLibGenericArray<ISource>.Create
     (TFixedSecureRandom.TBigIntegerSource.Create
     ('0CAF2EF547EC49C4F3A6FE6DF4223A174D01F2C115D49A6F73437C29A2A8458C'),
-    TFixedSecureRandom.TData.Create(THex.Decode('01020304')))))
+    TFixedSecureRandom.TData.Create(DecodeHex('01020304')))))
     as IParametersWithRandom);
 
-  msg := THex.Decode
+  msg := DecodeHex
     ('BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD');
 
   sig := signer.GenerateSignature(msg);
@@ -656,7 +647,7 @@ end;
 
 procedure TTestDSA.DoDSA2Test4;
 var
-  seed, msg: TCryptoLibByteArray;
+  seed, msg: TBytes;
   pGen: IDsaParametersGenerator;
   params: IDSAParameters;
   pv: IDSAValidationParameters;
@@ -667,7 +658,7 @@ var
   signer: IDSASigner;
   sig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  seed := THex.Decode
+  seed := DecodeHex
     ('193AFCA7C1E77B3C1ECC618C81322E47B8B8B997C9C83515C59CC446C2D9BD47');
 
   pGen := TDsaParametersGenerator.Create(TDigestUtilities.GetDigest('SHA-256'));
@@ -684,7 +675,7 @@ begin
     Fail('counter incorrect');
   end;
 
-  if (not TArrayUtils.AreEqual(seed, pv.seed)) then
+  if (not AreEqual(seed, pv.seed)) then
   begin
     Fail('seed incorrect');
   end;
@@ -742,7 +733,7 @@ begin
 
   kpGen.Init(TDSAKeyGenerationParameters.Create(TFixedSecureRandom.Create
     (TCryptoLibGenericArray<ISource>.Create(TFixedSecureRandom.TData.Create
-    (THex.Decode
+    (DecodeHex
     ('3ABC1587297CE7B9EA1AD6651CF2BC4D7F92ED25CABC8553F567D1B40EBB8764')))
     ), params));
 
@@ -785,10 +776,10 @@ begin
     TFixedSecureRandom.Create(TCryptoLibGenericArray<ISource>.Create
     (TFixedSecureRandom.TBigIntegerSource.Create
     ('A6902C1E6E3943C5628061588A8B007BCCEA91DBF12915483F04B24AB0678BEE'),
-    TFixedSecureRandom.TData.Create(THex.Decode('01020304')))))
+    TFixedSecureRandom.TData.Create(DecodeHex('01020304')))))
     as IParametersWithRandom);
 
-  msg := THex.Decode
+  msg := DecodeHex
     ('BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD');
 
   sig := signer.GenerateSignature(msg);
@@ -822,7 +813,7 @@ var
   priKey: IDSAPrivateKeyParameters;
   pubKey: IDSAPublicKeyParameters;
   k: ISecureRandom;
-  M, encSig: TCryptoLibByteArray;
+  M, encSig: TBytes;
   dsa: IDSADigestSigner;
   RS: TCryptoLibGenericArray<TBigInteger>;
 begin
@@ -873,9 +864,9 @@ begin
     (TFixedSecureRandom.TBigIntegerSource.Create(TBigInteger.Create
     ('72546832179840998877302529996971396893172522460793442785601695562409154906335')
     .ToByteArrayUnsigned), TFixedSecureRandom.TData.Create
-    (THex.Decode('01020304'))));
+    (DecodeHex('01020304'))));
 
-  M := THex.Decode
+  M := DecodeHex
     ('1BD4ED430B0F384B4E8D458EFF1A8A553286D7AC21CB2F6806172EF5F94A06AD');
 
   dsa := TDSADigestSigner.Create(TDSASigner.Create() as IDSASigner,
@@ -921,7 +912,7 @@ end;
 procedure TTestDSA.DoTestECDsa239BitBinary(const algorithm: String;
   const oid: IDerObjectIdentifier);
 var
-  kData, &message, sigBytes: TCryptoLibByteArray;
+  kData, &message, sigBytes: TBytes;
   k: ISecureRandom;
   curve: IECCurve;
   parameters: IECDomainParameters;
@@ -946,9 +937,10 @@ begin
     TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
-    ), // G
+    curve.DecodePoint
+    (DecodeHex
+    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')),
+    // G
     TBigInteger.Create
     ('220855883097298041197912187592864814557886993776713230936715041207411783'),
     // n
@@ -961,9 +953,10 @@ begin
     parameters);
 
   vKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
-    ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
-    ), // Q
+    curve.DecodePoint
+    (DecodeHex
+    ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')),
+    // Q
     parameters);
 
   sgr := TSignerUtilities.GetSigner(algorithm);
@@ -1142,7 +1135,7 @@ end;
 
 procedure TTestDSA.TestDSA;
 var
-  k1, k2, keyData, &message: TCryptoLibByteArray;
+  k1, k2, keyData, &message: TBytes;
   sig: TCryptoLibGenericArray<TBigInteger>;
   random, keyRandom: ISecureRandom;
   pValue, qValue, r, s: TBigInteger;
@@ -1155,19 +1148,19 @@ var
   param: IParametersWithRandom;
   dsa: IDSASigner;
 begin
-  k1 := THex.Decode('d5014e4b60ef2ba8b6211b4062ba3224e0427dd3');
-  k2 := THex.Decode
+  k1 := DecodeHex('d5014e4b60ef2ba8b6211b4062ba3224e0427dd3');
+  k2 := DecodeHex
     ('345e8d05c075c3a508df729a1685690e68fcfb8c8117847e89063bca1f85d968fd281540b6e13bd1af989a1fbf17e06462bf511f9d0b140fb48ac1b1baa5bded');
 
   random := TFixedSecureRandom.Create(TCryptoLibGenericArray<ISource>.Create
     (TFixedSecureRandom.TData.Create(k1), TFixedSecureRandom.TData.Create(k2)));
 
-  keyData := THex.Decode('b5014e4b60ef2ba8b6211b4062ba3224e0427dd3');
+  keyData := DecodeHex('b5014e4b60ef2ba8b6211b4062ba3224e0427dd3');
 
   keyRandom := TFixedSecureRandom.Create
     (TCryptoLibGenericArray<ISource>.Create(TFixedSecureRandom.TData.Create
     (keyData), TFixedSecureRandom.TData.Create(keyData),
-    TFixedSecureRandom.TData.Create(THex.Decode('01020304'))));
+    TFixedSecureRandom.TData.Create(DecodeHex('01020304'))));
 
   pValue := TBigInteger.Create
     ('8df2a494492276aa3d25759bb06869cbeac0d83afb8d0cf7cbb8324f0d7882e5d0762fc5b7210eafc2e9adac32ab7aac49693dfbf83724c2ec0736ee31c80291',
@@ -1250,7 +1243,7 @@ end;
 
 procedure TTestDSA.TestDsa2Parameters;
 var
-  seed, encodeParams, encodeParams_2, data, sigBytes: TCryptoLibByteArray;
+  seed, encodeParams, encodeParams_2, data, sigBytes: TBytes;
   a: IDsaParametersGenerator;
   dsaP: IDSAParameters;
   G: IAsymmetricCipherKeyPairGenerator;
@@ -1260,7 +1253,7 @@ var
   p2: IDSAParameters;
   s: ISigner;
 begin
-  seed := THex.Decode
+  seed := DecodeHex
     ('4783081972865EA95D43318AB2EAF9C61A2FC7BBF1B772A09017BDF5A58F4FF0');
 
   a := TDsaParametersGenerator.Create(TDigestUtilities.GetDigest('SHA-256'));
@@ -1310,7 +1303,7 @@ begin
   G := TGeneratorUtilities.GetKeyPairGenerator('DSA');
 
   G.Init(TDSAKeyGenerationParameters.Create(TFixedSecureRandom.From
-    (TCryptoLibMatrixByteArray.Create(THex.Decode
+    (TCryptoLibMatrixByteArray.Create(DecodeHex
     ('0CAF2EF547EC49C4F3A6FE6DF4223A174D01F2C115D49A6F73437C29A2A8458C'))),
     dsaP) as IDSAKeyGenerationParameters);
 
@@ -1347,13 +1340,13 @@ begin
 
   encodeParams_2 := TDsaParameter.Create(p2.p, p2.Q, p2.G).GetDerEncoded();
 
-  if (not TArrayUtils.AreEqual(encodeParams, encodeParams_2)) then
+  if (not AreEqual(encodeParams, encodeParams_2)) then
   begin
     Fail('encode/decode parameters failed');
   end;
 
   s := TSignerUtilities.GetSigner('DSA');
-  data := TCryptoLibByteArray.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
+  data := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
 
   s.Init(true, sKey);
 
@@ -1376,7 +1369,7 @@ end;
 procedure TTestDSA.TestECDsa239BitPrime;
 var
   r, s: TBigInteger;
-  kData, &message, sigBytes: TCryptoLibByteArray;
+  kData, &message, sigBytes: TBytes;
   k: ISecureRandom;
   curve: IECCurve;
   spec: IECDomainParameters;
@@ -1411,7 +1404,8 @@ begin
     TBigInteger.One);
 
   spec := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     TBigInteger.Create
     ('883423532389192164791648750360308884807550341691627752275345424702807307')
@@ -1424,7 +1418,8 @@ begin
     spec);
 
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
     spec);
 
@@ -1470,7 +1465,7 @@ end;
 procedure TTestDSA.TestGeneration;
 var
   s: ISigner;
-  data, sigBytes: TCryptoLibByteArray;
+  data, sigBytes: TBytes;
   rand: ISecureRandom;
   G: IAsymmetricCipherKeyPairGenerator;
   pGen: IDsaParametersGenerator;
@@ -1488,7 +1483,7 @@ begin
   DoTestBadStrength(1025);
 
   s := TSignerUtilities.GetSigner('DSA');
-  data := TCryptoLibByteArray.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
+  data := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
   rand := TSecureRandom.Create();
 
   G := TGeneratorUtilities.GetKeyPairGenerator('DSA');
@@ -1539,7 +1534,8 @@ begin
     TBigInteger.One);
 
   ecSpec := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     TBigInteger.Create
     ('883423532389192164791648750360308884807550341691627752275345424702807307')
@@ -1587,9 +1583,10 @@ begin
     TBigInteger.Four);
 
   ecSpec := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
-    ), // G
+    curve.DecodePoint
+    (DecodeHex
+    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')),
+    // G
     TBigInteger.Create
     ('220855883097298041197912187592864814557886993776713230936715041207411783'),
     // n
@@ -1632,7 +1629,7 @@ end;
 procedure TTestDSA.TestECDsa239BitBinary;
 var
   r, s: TBigInteger;
-  kData, &message, sigBytes: TCryptoLibByteArray;
+  kData, &message, sigBytes: TBytes;
   k: ISecureRandom;
   curve: IECCurve;
   parameters: IECDomainParameters;
@@ -1664,9 +1661,10 @@ begin
     TBigInteger.Four);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')
-    ), // G
+    curve.DecodePoint
+    (DecodeHex
+    ('0457927098FA932E7C0A96D3FD5B706EF7E5F5C156E16B7E7C86038552E91D61D8EE5077C33FECF6F1A16B268DE469C3C7744EA9A971649FC7A9616305')),
+    // G
     TBigInteger.Create
     ('220855883097298041197912187592864814557886993776713230936715041207411783'),
     // n
@@ -1679,9 +1677,10 @@ begin
     parameters);
 
   vKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
-    ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')
-    ), // Q
+    curve.DecodePoint
+    (DecodeHex
+    ('045894609CCECF9A92533F630DE713A958E96C97CCB8F5ABB5A688A238DEED6DC2D9D0C94EBFB7D526BA6A61764175B99CB6011E2047F9F067293F57F5')),
+    // Q
     parameters);
 
   sgr := TSignerUtilities.GetSigner('ECDSA');
@@ -1758,7 +1757,7 @@ end;
 
 procedure TTestDSA.TestNONEwithDSA;
 var
-  dummySha1, sigBytes: TCryptoLibByteArray;
+  dummySha1, sigBytes: TBytes;
   rand: ISecureRandom;
   pGen: IDsaParametersGenerator;
   G: IAsymmetricCipherKeyPairGenerator;
@@ -1767,7 +1766,7 @@ var
   signer: IDSASigner;
   RS: TCryptoLibGenericArray<TBigInteger>;
 begin
-  dummySha1 := THex.Decode('01020304050607080910111213141516');
+  dummySha1 := DecodeHex('01020304050607080910111213141516');
 
   rand := TSecureRandom.Create();
 
@@ -1811,7 +1810,7 @@ end;
 
 procedure TTestDSA.TestNONEwithECDSA239bitPrime;
 var
-  &message, sig: TCryptoLibByteArray;
+  &message, sig: TBytes;
   curve: IECCurve;
   spec: IECDomainParameters;
   priKey: IECPrivateKeyParameters;
@@ -1832,7 +1831,8 @@ begin
     TBigInteger.One);
 
   spec := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     TBigInteger.Create
     ('883423532389192164791648750360308884807550341691627752275345424702807307')
@@ -1845,21 +1845,22 @@ begin
     spec);
 
   pubKey := TECPublicKeyParameters.Create('ECDSA',
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
     spec);
 
   sgr := TSignerUtilities.GetSigner('NONEwithECDSA');
 
   &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
-  sig := THex.Decode
+  sig := DecodeHex
     ('3040021e2cb7f36803ebb9c427c58d8265f11fc5084747133078fc279de874fbecb0021e64cb19604be06c57e761b3de5518f71de0f6e0cd2df677cec8a6ffcb690d');
 
   DoCheckMessage(sgr, priKey, pubKey, &message, sig);
 
   &message := TConverters.ConvertStringToBytes('abcdefghijklmnopqrstuvwxyz',
     TEncoding.UTF8);
-  sig := THex.Decode
+  sig := DecodeHex
     ('3040021e2cb7f36803ebb9c427c58d8265f11fc5084747133078fc279de874fbecb0021e43fd65b3363d76aabef8630572257dbb67c82818ad9fad31256539b1b02c');
 
   DoCheckMessage(sgr, priKey, pubKey, &message, sig);
@@ -1867,7 +1868,7 @@ begin
   &message := TConverters.ConvertStringToBytes
     ('a very very long message gauranteed to cause an overflow',
     TEncoding.UTF8);
-  sig := THex.Decode
+  sig := DecodeHex
     ('3040021e2cb7f36803ebb9c427c58d8265f11fc5084747133078fc279de874fbecb0021e7d5be84b22937a1691859a3c6fe45ed30b108574431d01b34025825ec17a');
 
   DoCheckMessage(sgr, priKey, pubKey, &message, sig);
@@ -1879,7 +1880,7 @@ var
   random: ISecureRandom;
   a: IDsaParametersGenerator;
   p: IDSAParameters;
-  encodeParams, encodeParams_2, data, sigBytes: TCryptoLibByteArray;
+  encodeParams, encodeParams_2, data, sigBytes: TBytes;
   dsaP: IDsaParameter;
   p2: IDSAParameters;
   G: IAsymmetricCipherKeyPairGenerator;
@@ -1889,9 +1890,9 @@ var
 begin
   random := TFixedSecureRandom.From
     (TCryptoLibMatrixByteArray.Create
-    (THex.Decode('d5014e4b60ef2ba8b6211b4062ba3224e0427dd3'),
-    THex.Decode
-    ('345e8d05c075c3a508df729a1685690e68fcfb8c8117847e89063bca1f85d968fd281540b6e13bd1af989a1fbf17e06462bf511f9d0b140fb48ac1b1baa5bded'))
+    (DecodeHex('d5014e4b60ef2ba8b6211b4062ba3224e0427dd3'),
+    DecodeHex(
+    '345e8d05c075c3a508df729a1685690e68fcfb8c8117847e89063bca1f85d968fd281540b6e13bd1af989a1fbf17e06462bf511f9d0b140fb48ac1b1baa5bded'))
     );
 
   a := TDsaParametersGenerator.Create();
@@ -1908,7 +1909,7 @@ begin
   // a and a2 should be equivalent!
   encodeParams_2 := TDsaParameter.Create(p2.p, p2.Q, p2.G).GetDerEncoded();
 
-  if (not TArrayUtils.AreEqual(encodeParams, encodeParams_2)) then
+  if (not AreEqual(encodeParams, encodeParams_2)) then
   begin
     Fail('encode/Decode parameters failed');
   end;
@@ -1946,13 +1947,13 @@ end;
 
 { TDSATestSecureRandom }
 
-constructor TDSATestSecureRandom.Create(const value: TCryptoLibByteArray);
+constructor TDSATestSecureRandom.Create(const value: TBytes);
 begin
   Inherited Create(System.Copy(value));
   Ffirst := true;
 end;
 
-procedure TDSATestSecureRandom.NextBytes(const bytes: TCryptoLibByteArray);
+procedure TDSATestSecureRandom.NextBytes(const bytes: TBytes);
 begin
   if (Ffirst) then
   begin

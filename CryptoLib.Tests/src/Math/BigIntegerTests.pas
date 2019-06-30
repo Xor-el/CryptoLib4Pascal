@@ -33,22 +33,15 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpCryptoLibTypes,
-  ClpArrayUtils,
-  ClpEncoders,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpBigInteger;
+  ClpBigInteger,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestBigInteger = class(TCryptoLibTestCase)
+  TTestBigInteger = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
@@ -380,10 +373,9 @@ procedure TTestBigInteger.TestConstructors;
 var
   i: Int32;
 begin
+  CheckEqualsBigInteger(TBigInteger.Zero, TBigInteger.Create(TBytes.Create(0)));
   CheckEqualsBigInteger(TBigInteger.Zero,
-    TBigInteger.Create(TCryptoLibByteArray.Create(0)));
-  CheckEqualsBigInteger(TBigInteger.Zero,
-    TBigInteger.Create(TCryptoLibByteArray.Create(0, 0)));
+    TBigInteger.Create(TBytes.Create(0, 0)));
 
   for i := 0 to System.Pred(10) do
 
@@ -482,7 +474,7 @@ begin
 
   shift := 63;
   a := Fone.ShiftLeft(shift);
-  b := TBigInteger.Create(1, THex.Decode('2504b470dc188499'));
+  b := TBigInteger.Create(1, DecodeHex('2504b470dc188499'));
   bShift := b.ShiftRight(shift);
 
   data := Format('shift:=%d, b:=%s', [shift, b.ToString(16)]);
@@ -1263,13 +1255,13 @@ end;
 
 procedure TTestBigInteger.TestToByteArray;
 var
-  z, temp, b: TCryptoLibByteArray;
+  z, temp, b: TBytes;
   i: Int32;
   x, y: TBigInteger;
 begin
   z := TBigInteger.Zero.ToByteArray();
   System.SetLength(temp, 1);
-  CheckTrue(TArrayUtils.AreEqual(temp, z));
+  CheckTrue(AreEqual(temp, z));
   for i := 16 to 48 do
   begin
     x := TBigInteger.ProbablePrime(i, FRandom);
@@ -1288,13 +1280,13 @@ end;
 
 procedure TTestBigInteger.TestToByteArrayUnsigned;
 var
-  z, temp, b: TCryptoLibByteArray;
+  z, temp, b: TBytes;
   i: Int32;
   x, y: TBigInteger;
 begin
   z := TBigInteger.Zero.ToByteArrayUnsigned();
   System.SetLength(temp, 0);
-  CheckTrue(TArrayUtils.AreEqual(temp, z));
+  CheckTrue(AreEqual(temp, z));
   for i := 16 to 48 do
   begin
     x := TBigInteger.ProbablePrime(i, FRandom);

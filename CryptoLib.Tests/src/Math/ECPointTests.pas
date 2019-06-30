@@ -45,13 +45,7 @@ uses
   ClpIX9ECParameters,
   ClpECC,
   ClpIECC,
-  ClpArrayUtils;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  CryptoLibTestBase;
 
 type
   // /**
@@ -100,7 +94,7 @@ type
 
 type
 
-  TTestECPoint = class(TCryptoLibTestCase)
+  TTestECPoint = class(TCryptoLibAlgorithmTestCase)
   private
 
   var
@@ -115,8 +109,7 @@ type
     procedure AssertBigIntegersEqual(const a, b: TBigInteger);
     procedure AssertIFiniteFieldsEqual(const a, b: IFiniteField);
     procedure AssertOptionalValuesAgree(const a, b: TBigInteger); overload;
-    procedure AssertOptionalValuesAgree(const a,
-      b: TCryptoLibByteArray); overload;
+    procedure AssertOptionalValuesAgree(const a, b: TBytes); overload;
 
     procedure AssertECFieldElementsEqual(const a, b: IECFieldElement);
 
@@ -281,12 +274,11 @@ begin
   end;
 end;
 
-procedure TTestECPoint.AssertOptionalValuesAgree(const a,
-  b: TCryptoLibByteArray);
+procedure TTestECPoint.AssertOptionalValuesAgree(const a, b: TBytes);
 begin
   if ((a <> Nil) and (b <> Nil)) then
   begin
-    CheckTrue(TArrayUtils.AreEqual(a, b));
+    CheckTrue(AreEqual(a, b));
   end;
 end;
 
@@ -455,7 +447,7 @@ end;
 
 procedure TTestECPoint.ImplTestEncoding(const p: IECPoint);
 var
-  unCompBarr, compBarr: TCryptoLibByteArray;
+  unCompBarr, compBarr: TBytes;
   decUnComp, decComp: IECPoint;
 begin
   // Not Point Compression

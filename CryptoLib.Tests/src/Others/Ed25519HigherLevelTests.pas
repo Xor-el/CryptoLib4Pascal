@@ -57,15 +57,8 @@ uses
   ClpEd25519KeyGenerationParameters,
   ClpIEd25519KeyGenerationParameters,
   ClpSignerUtilities,
-  ClpArrayUtils,
-  ClpEncoders,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
@@ -73,7 +66,7 @@ type
   /// test vectors gotten from <see href="https://github.com/warner/python-ed25519" />
   /// and <see href="https://github.com/Matoking/python-ed25519-blake2b" />
   /// </summary>
-  TTestEd25519HigherLevel = class(TCryptoLibTestCase)
+  TTestEd25519HigherLevel = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FRandom: ISecureRandom;
@@ -83,18 +76,18 @@ type
     TEd25519SignerAlgorithm = (Ed25519, Ed25519Blake2B);
 {$SCOPEDENUMS OFF}
   function CreateSigner(algorithm: TEd25519.TEd25519Algorithm;
-    const context: TCryptoLibByteArray): ISigner;
+    const context: TBytes): ISigner;
 
   function CreateCustomSigner(const algorithm: TEd25519SignerAlgorithm)
     : ISigner;
 
   function ReconstructEd25519KeyPair(algorithm: TEd25519SignerAlgorithm;
-    const sk, pk: TCryptoLibByteArray): IAsymmetricCipherKeyPair;
+    const sk, pk: TBytes): IAsymmetricCipherKeyPair;
 
-  function RandomContext(length: Int32): TCryptoLibByteArray;
+  function RandomContext(length: Int32): TBytes;
 
   procedure DoTestConsistency(algorithm: TEd25519.TEd25519Algorithm;
-    const context: TCryptoLibByteArray);
+    const context: TBytes);
 
   procedure DoEd25519Test(id: Int32; algorithm: TEd25519SignerAlgorithm;
     const sk, pk, msg, sig: String);
@@ -122,8 +115,7 @@ begin
 end;
 
 function TTestEd25519HigherLevel.CreateSigner
-  (algorithm: TEd25519.TEd25519Algorithm;
-  const context: TCryptoLibByteArray): ISigner;
+  (algorithm: TEd25519.TEd25519Algorithm; const context: TBytes): ISigner;
 begin
   case algorithm of
     TEd25519.TEd25519Algorithm.Ed25519:
@@ -142,15 +134,15 @@ end;
 procedure TTestEd25519HigherLevel.DoEd25519Test(id: Int32;
   algorithm: TEd25519SignerAlgorithm; const sk, pk, msg, sig: String);
 var
-  LSk, LPk, LMsg, LSig, LResultSig, LKey: TCryptoLibByteArray;
+  LSk, LPk, LMsg, LSig, LResultSig, LKey: TBytes;
   LKeyPair: IAsymmetricCipherKeyPair;
   LIsVerified: Boolean;
   LSigner: ISigner;
 begin
-  LSk := THex.Decode(sk);
-  LPk := THex.Decode(pk);
-  LMsg := THex.Decode(msg);
-  LSig := THex.Decode(sig);
+  LSk := DecodeHex(sk);
+  LPk := DecodeHex(pk);
+  LMsg := DecodeHex(msg);
+  LSig := DecodeHex(sig);
   LKeyPair := ReconstructEd25519KeyPair(algorithm, LSk, LPk);
   LSigner := CreateCustomSigner(algorithm);
 
@@ -158,39 +150,39 @@ begin
     TTestEd25519HigherLevel.TEd25519SignerAlgorithm.Ed25519:
       begin
         LKey := (LKeyPair.Private as IEd25519PrivateKeyParameters).GetEncoded();
-        if not TArrayUtils.AreEqual(LKey, System.Copy(LSk, 0, 32)) then
+        if not AreEqual(LKey, System.Copy(LSk, 0, 32)) then
         begin
           Fail(Format
             ('Test with Id %d Failed on PrivateKey Reconstruction Comparison, Expected "%s" but got "%s"',
-            [id, THex.Encode(LSk), THex.Encode(LKey)]));
+            [id, EncodeHex(LSk), EncodeHex(LKey)]));
         end;
 
         LKey := (LKeyPair.Public as IEd25519PublicKeyParameters).GetEncoded();
-        if not TArrayUtils.AreEqual(LKey, System.Copy(LPk, 0, 64)) then
+        if not AreEqual(LKey, System.Copy(LPk, 0, 64)) then
         begin
           Fail(Format
             ('Test with Id %d Failed on PublicKey Reconstruction Comparison, Expected "%s" but got "%s"',
-            [id, THex.Encode(LPk), THex.Encode(LKey)]));
+            [id, EncodeHex(LPk), EncodeHex(LKey)]));
         end;
       end;
     TTestEd25519HigherLevel.TEd25519SignerAlgorithm.Ed25519Blake2B:
       begin
         LKey := (LKeyPair.Private as IEd25519Blake2BPrivateKeyParameters)
           .GetEncoded();
-        if not TArrayUtils.AreEqual(LKey, System.Copy(LSk, 0, 32)) then
+        if not AreEqual(LKey, System.Copy(LSk, 0, 32)) then
         begin
           Fail(Format
             ('Test with Id %d Failed on PrivateKey Reconstruction Comparison, Expected "%s" but got "%s"',
-            [id, THex.Encode(LSk), THex.Encode(LKey)]));
+            [id, EncodeHex(LSk), EncodeHex(LKey)]));
         end;
 
         LKey := (LKeyPair.Public as IEd25519Blake2BPublicKeyParameters)
           .GetEncoded();
-        if not TArrayUtils.AreEqual(LKey, System.Copy(LPk, 0, 64)) then
+        if not AreEqual(LKey, System.Copy(LPk, 0, 64)) then
         begin
           Fail(Format
             ('Test with Id %d Failed on PublicKey Reconstruction Comparison, Expected "%s" but got "%s"',
-            [id, THex.Encode(LPk), THex.Encode(LKey)]));
+            [id, EncodeHex(LPk), EncodeHex(LKey)]));
         end;
       end
   else
@@ -204,11 +196,11 @@ begin
   LSigner.BlockUpdate(LMsg, 0, System.length(LMsg));
   LResultSig := LSigner.GenerateSignature();
 
-  if not TArrayUtils.AreEqual(LResultSig, System.Copy(LSig, 0, 64)) then
+  if not AreEqual(LResultSig, System.Copy(LSig, 0, 64)) then
   begin
     Fail(Format
       ('Test with Id %d Failed on Signature Comparison, Expected "%s" but got "%s"',
-      [id, THex.Encode(LSig), THex.Encode(LResultSig)]));
+      [id, EncodeHex(LSig), EncodeHex(LResultSig)]));
   end;
 
   LSigner.Init(False, LKeyPair.Public);
@@ -218,18 +210,18 @@ begin
   if not LIsVerified then
   begin
     Fail(Format('Test with Id %d Failed on Verifying "%s" Signature',
-      [id, THex.Encode(LResultSig)]));
+      [id, EncodeHex(LResultSig)]));
   end;
 end;
 
 procedure TTestEd25519HigherLevel.DoTestConsistency
-  (algorithm: TEd25519.TEd25519Algorithm; const context: TCryptoLibByteArray);
+  (algorithm: TEd25519.TEd25519Algorithm; const context: TBytes);
 var
   kpg: IEd25519KeyPairGenerator;
   kp: IAsymmetricCipherKeyPair;
   privateKey: IEd25519PrivateKeyParameters;
   publicKey: IEd25519PublicKeyParameters;
-  msg, signature, wrongLengthSignature: TCryptoLibByteArray;
+  msg, signature, wrongLengthSignature: TBytes;
   Signer, verifier: ISigner;
   shouldVerify, shouldNotVerify: Boolean;
   algorithmName: String;
@@ -264,7 +256,7 @@ begin
     Fail(Format('Ed25519 (%s) signature failed to verify', [algorithmName]));
   end;
 
-  wrongLengthSignature := TArrayUtils.Prepend(signature, Byte($00));
+  wrongLengthSignature := Prepend(signature, Byte($00));
 
   verifier.Init(False, publicKey);
   verifier.BlockUpdate(msg, 0, System.length(msg));
@@ -292,15 +284,14 @@ begin
   end;
 end;
 
-function TTestEd25519HigherLevel.RandomContext(length: Int32)
-  : TCryptoLibByteArray;
+function TTestEd25519HigherLevel.RandomContext(length: Int32): TBytes;
 begin
   System.SetLength(Result, length);
   FRandom.NextBytes(Result);
 end;
 
 function TTestEd25519HigherLevel.ReconstructEd25519KeyPair
-  (algorithm: TEd25519SignerAlgorithm; const sk, pk: TCryptoLibByteArray)
+  (algorithm: TEd25519SignerAlgorithm; const sk, pk: TBytes)
   : IAsymmetricCipherKeyPair;
 begin
   case algorithm of
@@ -342,7 +333,7 @@ end;
 procedure TTestEd25519HigherLevel.TestConsistency;
 var
   i: Int32;
-  context: TCryptoLibByteArray;
+  context: TBytes;
 begin
   i := 0;
   while i < 10 do
@@ -421,7 +412,7 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
-// RegisterTest(TTestEd25519HigherLevel);
+  RegisterTest(TTestEd25519HigherLevel);
 {$ELSE}
   RegisterTest(TTestEd25519HigherLevel.Suite);
 {$ENDIF FPC}
