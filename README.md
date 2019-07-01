@@ -186,6 +186,8 @@ Available Algorithms
 
 * `FreeBSD, NetBSD, OpenBSD and DragonBSD`
 
+* `Solaris (Untested)`
+
 ### Acknowledgements
 ----------------------------------------
 
