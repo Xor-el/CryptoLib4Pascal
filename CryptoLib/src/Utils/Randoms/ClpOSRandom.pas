@@ -494,7 +494,7 @@ begin
 
       got := LStream.Read(data^, MaxChunkSize);
 
-      if (got <= 0) then
+      if (got = 0) then
       begin
         if ErrorNo = EINTR then
         begin
