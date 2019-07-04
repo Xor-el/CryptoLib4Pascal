@@ -184,7 +184,7 @@ Available Algorithms
 
 * `iOS 2.0+`
 
-* `FreeBSD, NetBSD, OpenBSD and DragonBSD`
+* `FreeBSD, NetBSD, OpenBSD and DragonBSD (Untested)`
 
 * `Solaris (Untested)`
 
