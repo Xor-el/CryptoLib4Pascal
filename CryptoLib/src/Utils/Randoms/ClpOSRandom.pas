@@ -473,7 +473,8 @@ begin
   // >= (Mac OSX 10.7+)
   if NSAppKitVersionNumber >= 1138 then // NSAppKitVersionNumber10_7
   begin
-    result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+  //  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+      result := dev_random_device_read(len, data);
   end
   else
   begin
