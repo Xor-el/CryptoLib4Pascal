@@ -67,7 +67,7 @@
   {$IFEND}
 {$ELSE}
    {$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
-{$ENDIF}
+{$IFEND}
 
 {$IF DEFINED(CRYPTOLIB_LINUX) OR DEFINED(CRYPTOLIB_SOLARIS)}
    {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
@@ -110,6 +110,36 @@
 
 {$IFDEF DELPHI}
 
+ // XE3 and Above
+{$IF CompilerVersion >= 24.0}
+   {$DEFINE DELPHIXE3_UP}
+   {$DEFINE SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD}
+   {$DEFINE SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD}
+   {$LEGACYIFEND ON}
+   {$ZEROBASEDSTRINGS OFF}
+{$IFEND}
+
+  // XE and Above
+{$IF CompilerVersion >= 22.0}
+   {$DEFINE DELPHIXE_UP}
+{$IFEND}
+
+ // XE4 and Above
+{$IF CompilerVersion >= 25.0}
+   {$DEFINE DELPHIXE4_UP}
+   {$DEFINE SHIFT_OVERFLOW_BUG_FIXED}
+{$IFEND}
+
+  // 10.2 Tokyo and Above
+{$IF CompilerVersion >= 32.0}
+   {$DEFINE DELPHI10.2_TOKYO_UP}
+{$IFEND}
+
+  // 10.2 Tokyo and Above
+{$IFNDEF DELPHI10.2_TOKYO_UP}
+   {$MESSAGE ERROR 'This Library requires Delphi Tokyo or higher.'}
+{$ENDIF}
+
 {$IFDEF CPU386}
    {$DEFINE CRYPTOLIB_X86}
 {$ENDIF}
@@ -134,7 +164,7 @@
 
 {$IFDEF IOS}
    {$DEFINE CRYPTOLIB_IOS}
-{$IFEND}
+{$ENDIF}
 
 {$IFDEF MSWINDOWS}
    {$DEFINE CRYPTOLIB_MSWINDOWS}
@@ -181,37 +211,6 @@
 
 // Disable Deprecated Warnings
 {$WARN SYMBOL_DEPRECATED OFF}
-
- // XE3 and Above
-{$IF CompilerVersion >= 24.0}
-   {$DEFINE DELPHIXE3_UP}
-   {$DEFINE SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD}
-   {$DEFINE SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD}
-   {$LEGACYIFEND ON}
-   {$ZEROBASEDSTRINGS OFF}
-{$IFEND}
-
-  // XE and Above
-{$IF CompilerVersion >= 22.0}
-   {$DEFINE DELPHIXE_UP}
-{$IFEND}
-
- // XE4 and Above
-{$IF CompilerVersion >= 25.0}
-   {$DEFINE DELPHIXE4_UP}
-   {$DEFINE SHIFT_OVERFLOW_BUG_FIXED}
-{$IFEND}
-
-  // 10.2 Tokyo and Above
-{$IF CompilerVersion >= 32.0}
-   {$DEFINE DELPHI10.2_TOKYO_UP}
-{$IFEND}
-
-  // 10.2 Tokyo and Above
-{$IFNDEF DELPHI10.2_TOKYO_UP}
-   {$MESSAGE ERROR 'This Library requires Delphi Tokyo or higher.'}
-{$ENDIF}
-
 
 {$ENDIF DELPHI}
 
