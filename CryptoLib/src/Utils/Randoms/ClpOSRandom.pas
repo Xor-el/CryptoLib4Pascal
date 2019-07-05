@@ -473,11 +473,13 @@ begin
   // >= (Mac OS X 10.7+)
   if NSAppKitVersionNumber >= 1138 then // NSAppKitVersionNumber10_7
   begin
+    writeln('SecRandomCopyBytes');
     result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
   end
   else
   begin
     // fallback for when SecRandomCopyBytes API is not available
+    writeln('dev/urandom');
     result := dev_random_device_read(len, data);
   end;
 {$ELSE}
@@ -583,6 +585,7 @@ begin
 
   if IsGetRandomSupportedOnOS then
   begin
+    writeln('getRandom');
     while (len > 0) do
     begin
 
@@ -604,6 +607,7 @@ begin
   end
   else
   begin
+    writeln('dev/urandom');
     // fallback for when getrandom API is not available
     result := dev_random_device_read(len, data);
   end;
