@@ -28,26 +28,33 @@ uses
 {$IFDEF CRYPTOLIB_APPLE}
 {$IFDEF FPC}
 {$LINKFRAMEWORK Security}
+{$IFDEF CRYPTOLIB_MACOS}
+  CocoaAll,
+{$ENDIF} // ENDIF CRYPTOLIB_MACOS
 {$ELSE}
   // Macapi.Dispatch, or
   Macapi.ObjCRuntime,
-{$IF DEFINED(CRYPTOLIB_IOS)}
+{$IFDEF CRYPTOLIB_IOS}
   iOSapi.Foundation,
-{$ELSEIF DEFINED(CRYPTOLIB_MACOS)}
+{$ENDIF} // ENDIF CRYPTOLIB_IOS
+{$IFDEF CRYPTOLIB_MACOS}
+  Macapi.AppKit,
   Macapi.Foundation,
-{$ELSE}
-{$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
-{$IFEND} // ENDIF CRYPTOLIB_MACOS
+{$ENDIF} // ENDIF CRYPTOLIB_MACOS
 {$ENDIF}  // ENDIF FPC
 {$ENDIF}   // ENDIF CRYPTOLIB_APPLE
 {$IFDEF CRYPTOLIB_UNIX}
   Classes,
 {$IFDEF FPC}
   BaseUnix,
+{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   dl,
+{$ENDIF}
 {$ELSE}
   Posix.Errno,
+{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   Posix.Dlfcn,
+{$ENDIF}
 {$ENDIF}
 {$ENDIF}  // ENDIF CRYPTOLIB_UNIX
 {$IFDEF CRYPTOLIB_PUREBSD}
@@ -122,7 +129,13 @@ type
   /// BCryptGenRandom</see> for <b>Vista</b> Upwards</description>
   /// </item>
   /// <item>
-  /// <term>macOS, iOS</term>
+  /// <term>Mac OS X</term>
+  /// <description><see href="https://developer.apple.com/documentation/security/1399291-secrandomcopybytes?language=objc">
+  /// SecRandomCopyBytes</see> for <b>10.7+,</b> ( /dev/urandom
+  /// or /dev/random) (which ever is available) for &lt; <b>10.7</b><br /></description>
+  /// </item>
+  /// <item>
+  /// <term>iOS</term>
   /// <description><see href="https://developer.apple.com/documentation/security/1399291-secrandomcopybytes?language=objc">
   /// SecRandomCopyBytes</see><br /></description>
   /// </item>
@@ -156,8 +169,14 @@ type
 
 {$IFDEF CRYPTOLIB_UNIX}
   const
-    GRND_DEFAULT: Int32 = $0000;
     EINTR = {$IFDEF FPC}ESysEINTR {$ELSE}Posix.Errno.EINTR{$ENDIF};
+
+    class function ErrorNo: Int32; static; inline;
+
+{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
+
+  const
+    GRND_DEFAULT: Int32 = $0000;
 
 {$IFDEF CRYPTOLIB_LINUX}
     LIBC_SO = 'libc.so.6';
@@ -175,8 +194,6 @@ type
     FIsGetRandomSupportedOnOS: Boolean;
     FGetRandom: TGetRandom;
 
-    class function ErrorNo: Int32; static; inline;
-
     class function GetIsGetRandomSupportedOnOS(): Boolean; static; inline;
 
     class function IsGetRandomAvailable(): Boolean; static;
@@ -184,6 +201,7 @@ type
     class property IsGetRandomSupportedOnOS: Boolean
       read GetIsGetRandomSupportedOnOS;
 
+{$ENDIF}
 {$ENDIF}
     // ================================================================//
 
@@ -328,7 +346,7 @@ begin
 {$IFDEF CRYPTOLIB_MSWINDOWS}
   FIsCngBCryptGenRandomSupportedOnOS := IsCngBCryptGenRandomAvailable();
 {$ENDIF}
-{$IFDEF CRYPTOLIB_UNIX}
+{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   FIsGetRandomSupportedOnOS := IsGetRandomAvailable();
 {$ENDIF}
 end;
@@ -451,7 +469,20 @@ class function TOSRandom.GenRandomBytesApple(len: Int32; data: PByte): Int32;
   end;
 
 begin
+{$IF DEFINED(CRYPTOLIB_MACOS)}
+  // >= (Mac OS X 10.7+)
+  if NSAppKitVersionNumber >= 1138 then // NSAppKitVersionNumber10_7
+  begin
+    result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+  end
+  else
+  begin
+    // fallback for when SecRandomCopyBytes API is not available
+    result := dev_random_device_read(len, data);
+  end;
+{$ELSE}
   result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
+{$IFEND}
 end;
 
 {$ENDIF}
@@ -520,6 +551,8 @@ class function TOSRandom.ErrorNo: Int32;
 begin
   result := Errno;
 end;
+{$ENDIF}
+{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
 
 class function TOSRandom.GetIsGetRandomSupportedOnOS(): Boolean;
 begin

@@ -180,7 +180,7 @@ Available Algorithms
 
 * `Linux (Including Android and Raspberry PI)`
 
-* `macOS 10.7+`
+* `Mac OS X`
 
 * `iOS 2.0+`
 
