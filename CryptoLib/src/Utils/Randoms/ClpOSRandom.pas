@@ -129,7 +129,7 @@ type
   /// BCryptGenRandom</see> for <b>Vista</b> Upwards</description>
   /// </item>
   /// <item>
-  /// <term>Mac OSX</term>
+  /// <term>Mac OS X</term>
   /// <description><see href="https://developer.apple.com/documentation/security/1399291-secrandomcopybytes?language=objc">
   /// SecRandomCopyBytes</see> for <b>10.7+,</b> ( /dev/urandom
   /// or /dev/random) (which ever is available) for &lt; <b>10.7</b><br /></description>
@@ -470,11 +470,10 @@ class function TOSRandom.GenRandomBytesApple(len: Int32; data: PByte): Int32;
 
 begin
 {$IF DEFINED(CRYPTOLIB_MACOS)}
-  // >= (Mac OSX 10.7+)
+  // >= (Mac OS X 10.7+)
   if NSAppKitVersionNumber >= 1138 then // NSAppKitVersionNumber10_7
   begin
-  //  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
-      result := dev_random_device_read(len, data);
+    result := SecRandomCopyBytes(kSecRandomDefault, LongWord(len), data);
   end
   else
   begin
