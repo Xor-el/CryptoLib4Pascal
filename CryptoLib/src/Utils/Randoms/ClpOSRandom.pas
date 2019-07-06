@@ -179,7 +179,11 @@ type
     GRND_DEFAULT: Int32 = $0000;
 
 {$IFDEF CRYPTOLIB_LINUX}
+{$IFDEF CRYPTOLIB_ANDROID}
+    LIBC_SO = 'libc.so';
+{$ELSE}
     LIBC_SO = 'libc.so.6';
+{$ENDIF}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_SOLARIS}
     LIBC_SO = 'libc.so.1';
