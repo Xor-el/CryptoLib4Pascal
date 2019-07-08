@@ -8134,22 +8134,11 @@ procedure TDerBmpString.Encode(const derOut: TStream);
 var
   c: TCryptoLibCharArray;
   b: TCryptoLibByteArray;
-  I, LowPoint, HighPoint: Int32;
+  I: Int32;
 begin
-  System.SetLength(c, System.length(Str));
 
-  // had to use this loop because somehow, StrPLCopy causes memory leak in FPC v3.0.5
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(Str);
-  HighPoint := System.High(Str);
-{$ELSE}
-  LowPoint := 1;
-  HighPoint := System.length(Str);
-{$ENDIF DELPHIXE3_UP}
-  for I := LowPoint to HighPoint do
-  begin
-    c[I - 1] := Str[I];
-  end;
+  c := TStringUtils.StringToCharArray(Str);
+
   System.SetLength(b, System.length(c) * 2);
 
   I := 0;

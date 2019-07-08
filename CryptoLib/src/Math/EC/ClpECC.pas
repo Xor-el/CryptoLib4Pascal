@@ -474,19 +474,10 @@ type
   /// </summary>
   TECCurve = class abstract(TInterfacedObject, IECCurve)
 
-  strict private
-
-    class procedure Boot(); static;
-    class constructor CreateECCurve();
-    class destructor DestroyECCurve();
-
   strict protected
 
-    class var
-
-      FLock: TCriticalSection;
-
   var
+    FLock: TCriticalSection;
     Fm_field: IFiniteField;
     Fm_order, Fm_cofactor: TBigInteger;
 
@@ -2496,14 +2487,6 @@ end;
 
 { TECCurve }
 
-class procedure TECCurve.Boot;
-begin
-  if FLock = Nil then
-  begin
-    FLock := TCriticalSection.Create;
-  end;
-end;
-
 procedure TECCurve.CheckPoint(const point: IECPoint);
 begin
   if ((point = Nil) or ((Self as IECCurve) <> point.curve)) then
@@ -2552,7 +2535,14 @@ end;
 constructor TECCurve.Create(const field: IFiniteField);
 begin
   inherited Create();
+  FLock := TCriticalSection.Create;
   Fm_field := field;
+end;
+
+destructor TECCurve.Destroy;
+begin
+  FLock.Free;
+  inherited Destroy;
 end;
 
 function TECCurve.CreateCacheSafeLookupTable(const points
@@ -2616,11 +2606,6 @@ begin
   end;
 
   result := TWNafL2RMultiplier.Create();
-end;
-
-class constructor TECCurve.CreateECCurve;
-begin
-  TECCurve.Boot;
 end;
 
 function TECCurve.CreatePoint(const x, y: TBigInteger): IECPoint;
@@ -2726,16 +2711,6 @@ begin
   end;
 
   result := P;
-end;
-
-destructor TECCurve.Destroy;
-begin
-  inherited Destroy;
-end;
-
-class destructor TECCurve.DestroyECCurve;
-begin
-  FLock.Free;
 end;
 
 function TECCurve.Equals(const other: IECCurve): Boolean;
