@@ -344,7 +344,6 @@ contains
   ClpIWNafPreCompInfo in '..\..\Interfaces\ClpIWNafPreCompInfo.pas',
   ClpIX9ECParametersHolder in '..\..\Interfaces\ClpIX9ECParametersHolder.pas',
   ClpParametersWithRandom in '..\..\Crypto\Parameters\ClpParametersWithRandom.pas',
-  ClpPcgRandomMinimal in '..\..\Utils\Randoms\ClpPcgRandomMinimal.pas',
   ClpRandomDsaKCalculator in '..\..\Crypto\Signers\ClpRandomDsaKCalculator.pas',
   ClpScaleXPointMap in '..\..\Math\EC\ClpScaleXPointMap.pas',
   ClpTimes in '..\..\Utils\ClpTimes.pas',
@@ -402,6 +401,7 @@ contains
   ClpIDHKeyParameters in '..\..\Interfaces\ClpIDHKeyParameters.pas',
   ClpIDHValidationParameters in '..\..\Interfaces\ClpIDHValidationParameters.pas',
   ClpIDHDomainParameters in '..\..\Interfaces\ClpIDHDomainParameters.pas',
-  ClpIDHValidationParams in '..\..\Interfaces\ClpIDHValidationParams.pas';
+  ClpIDHValidationParams in '..\..\Interfaces\ClpIDHValidationParams.pas',
+  ClpAESPRNGRandom in '..\..\Utils\Randoms\ClpAESPRNGRandom.pas';
 
 end.

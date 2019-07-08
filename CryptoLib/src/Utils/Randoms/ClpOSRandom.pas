@@ -63,6 +63,7 @@ uses
 {$IF DEFINED(CRYPTOLIB_MSWINDOWS) OR DEFINED(CRYPTOLIB_UNIX)}
   SysUtils,
 {$IFEND}  // ENDIF CRYPTOLIB_MSWINDOWS OR CRYPTOLIB_UNIX
+  ClpArrayUtils,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -266,8 +267,6 @@ type
 {$ENDIF}
     // ================================================================//
 
-    class function NoZeroes(const data: TCryptoLibByteArray): Boolean;
-      static; inline;
     class procedure Boot(); static;
     class constructor OSRandom();
 
@@ -300,10 +299,14 @@ function CryptReleaseContext(hProv: THandle; dwFlags: DWORD): BOOL; stdcall;
 
 type
   // similar to a TOpaqueData already defined in newer FPC but not available in 3.0.4
+  // TODO when we upgrade to FPC 3.2.0, remove " __SecRandom = record end;" declaration
   __SecRandom = record
   end;
 
   // similar to POpaqueData (or an OpaquePointer) already defined in newer FPC but not available in 3.0.4
+  // TODO when we upgrade to FPC 3.2.0, use inbuilt OpaquePointer instead
+  // replace "SecRandomRef = ^__SecRandom;" with "SecRandomRef = OpaquePointer;"
+
   SecRandomRef = ^__SecRandom;
 
 function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
@@ -329,21 +332,6 @@ procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl; external;
 {$ENDIF}
 
 implementation
-
-class function TOSRandom.NoZeroes(const data: TCryptoLibByteArray): Boolean;
-var
-  i: Int32;
-begin
-  result := True;
-  for i := System.Low(data) to System.High(data) do
-  begin
-    if data[i] = 0 then
-    begin
-      result := False;
-      Exit;
-    end;
-  end;
-end;
 
 class procedure TOSRandom.Boot;
 begin
@@ -721,7 +709,7 @@ class procedure TOSRandom.GetNonZeroBytes(const data: TCryptoLibByteArray);
 begin
   repeat
     TOSRandom.GetBytes(data);
-  until (NoZeroes(data));
+  until (TArrayUtils.NoZeroes(data));
 end;
 
 end.

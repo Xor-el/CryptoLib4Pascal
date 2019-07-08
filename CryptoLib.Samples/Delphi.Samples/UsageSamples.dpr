@@ -81,7 +81,6 @@ uses
   ClpDigestUtilities in '..\..\CryptoLib\src\Security\ClpDigestUtilities.pas',
   ClpRandom in '..\..\CryptoLib\src\Security\ClpRandom.pas',
   ClpSecureRandom in '..\..\CryptoLib\src\Security\ClpSecureRandom.pas',
-  ClpPcgRandomMinimal in '..\..\CryptoLib\src\Utils\Randoms\ClpPcgRandomMinimal.pas',
   ClpRandomNumberGenerator in '..\..\CryptoLib\src\Utils\Rng\ClpRandomNumberGenerator.pas',
   ClpArrayUtils in '..\..\CryptoLib\src\Utils\ClpArrayUtils.pas',
   ClpBitConverter in '..\..\CryptoLib\src\Utils\ClpBitConverter.pas',
@@ -374,6 +373,7 @@ uses
   ClpIDHValidationParameters in '..\..\CryptoLib\src\Interfaces\ClpIDHValidationParameters.pas',
   ClpIDHDomainParameters in '..\..\CryptoLib\src\Interfaces\ClpIDHDomainParameters.pas',
   ClpIDHValidationParams in '..\..\CryptoLib\src\Interfaces\ClpIDHValidationParams.pas',
+  ClpAESPRNGRandom in '..\..\CryptoLib\src\Utils\Randoms\ClpAESPRNGRandom.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin
