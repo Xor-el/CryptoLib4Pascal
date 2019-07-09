@@ -327,8 +327,8 @@ function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
 {$ENDIF}
 // ************************************************************************//
 {$IFDEF CRYPTOLIB_GENERIC_BSD}
-procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl; external;
-'c' name 'arc4random_buf';
+procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl;
+  external 'c' name 'arc4random_buf';
 {$ENDIF}
 
 implementation
