@@ -192,7 +192,7 @@ Available Algorithms
 
 * `DragonBSD (Untested)`
 
-* `Solaris (Untested)`
+* `(Oracle) Solaris`
 
 ### Acknowledgements
 ----------------------------------------
