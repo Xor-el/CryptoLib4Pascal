@@ -174,6 +174,8 @@ Available Algorithms
 * `Delphi Tokyo+`
 
 ### Supported / Tested OSes
+----------------------------------------
+
 ###### Tested OS boxes are checked
 ----------------------------------------
 
