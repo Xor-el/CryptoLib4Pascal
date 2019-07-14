@@ -240,6 +240,21 @@ type
       : Int32; static;
     class property IsCngBCryptGenRandomSupportedOnOS: Boolean
       read GetIsCngBCryptGenRandomSupportedOnOS;
+
+  type
+    TRtlGenRandom = function(RandomBuffer: PVOID; RandomBufferLength: ULONG): Boolean; stdcall;
+
+  class var
+    FIsRtlGenRandomSupportedOnOS: Boolean;
+    FRtlGenRandom: TRtlGenRandom;
+
+    class function GetIsRtlGenRandomSupportedOnOS(): Boolean;
+      static; inline;
+
+    class function IsRtlGenRandomAvailable(): Boolean; static;
+
+    class property IsRtlGenRandomSupportedOnOS: Boolean
+      read GetIsRtlGenRandomSupportedOnOS;
 {$ENDIF}
 
     // ================================================================//
@@ -336,6 +351,7 @@ implementation
 class procedure TOSRandom.Boot;
 begin
 {$IFDEF CRYPTOLIB_MSWINDOWS}
+  FIsRtlGenRandomSupportedOnOS := IsRtlGenRandomAvailable();
   FIsCngBCryptGenRandomSupportedOnOS := IsCngBCryptGenRandomAvailable();
 {$ENDIF}
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -355,22 +371,39 @@ begin
   result := FIsCngBCryptGenRandomSupportedOnOS;
 end;
 
+class function TOSRandom.GetIsRtlGenRandomSupportedOnOS(): Boolean;
+begin
+  result := FIsRtlGenRandomSupportedOnOS;
+end;
+
+function GetProcedureAddress(ModuleHandle: THandle; const AProcedureName: String;
+  var AFunctionFound: Boolean): Pointer;
+begin
+  result := GetProcAddress(ModuleHandle, PChar(AProcedureName));
+  if result = Nil then
+  begin
+    AFunctionFound := False;
+  end;
+end;
+
+class function TOSRandom.IsRtlGenRandomAvailable(): Boolean;
+var
+  ModuleHandle: THandle;
+begin
+  result := False;
+  ModuleHandle := SafeLoadLibrary(ADVAPI32, SEM_FAILCRITICALERRORS);
+  if ModuleHandle <> 0 then
+  begin
+    result := True;
+    FRtlGenRandom := GetProcedureAddress(ModuleHandle, 'SystemFunction036', result);
+  end;
+end;
+
 class function TOSRandom.IsCngBCryptGenRandomAvailable(): Boolean;
 const
   BCRYPT = 'bcrypt.dll';
 var
   ModuleHandle: THandle;
-
-  function GetProcedureAddress(const AProcedureName: String;
-    var AFunctionFound: Boolean): Pointer;
-  begin
-    result := GetProcAddress(ModuleHandle, PChar(AProcedureName));
-    if result = Nil then
-    begin
-      AFunctionFound := False;
-    end;
-  end;
-
 begin
   result := False;
   ModuleHandle := SafeLoadLibrary(PChar(BCRYPT), SEM_FAILCRITICALERRORS);
@@ -378,10 +411,10 @@ begin
   begin
     result := True;
     FBCryptOpenAlgorithmProvider :=
-      GetProcedureAddress('BCryptOpenAlgorithmProvider', result);
+      GetProcedureAddress(ModuleHandle, 'BCryptOpenAlgorithmProvider', result);
     FBCryptCloseAlgorithmProvider :=
-      GetProcedureAddress('BCryptCloseAlgorithmProvider', result);
-    FBCryptGenRandom := GetProcedureAddress('BCryptGenRandom', result);
+      GetProcedureAddress(ModuleHandle, 'BCryptCloseAlgorithmProvider', result);
+    FBCryptGenRandom := GetProcedureAddress(ModuleHandle, 'BCryptGenRandom', result);
   end;
 end;
 
@@ -402,7 +435,16 @@ const
   BCRYPT_RNG_ALGORITHM: WideString = 'RNG';
 
 begin
-  if IsCngBCryptGenRandomSupportedOnOS then
+  if IsRtlGenRandomSupportedOnOS then
+  begin
+    // Windows XP / Server 2003 and Above
+    if not FRtlGenRandom(data, ULONG(len)) then
+    begin
+      result := HResultFromWin32(GetLastError);
+      Exit;
+    end;
+  end
+  else if IsCngBCryptGenRandomSupportedOnOS then
   begin
     // Windows Vista and Above
     if (not BCRYPT_SUCCESS(FBCryptOpenAlgorithmProvider(@hProv,
