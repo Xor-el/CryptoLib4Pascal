@@ -125,9 +125,10 @@ type
   /// </item>
   /// <item>
   /// <term>Windows</term>
-  /// <description><see href="https://docs.microsoft.com/en-us/windows/desktop/api/wincrypt/nf-wincrypt-cryptgenrandom">
-  /// CryptGenRandom</see> for <b>XP</b>, <see href="https://docs.microsoft.com/en-us/windows/desktop/api/bcrypt/nf-bcrypt-bcryptgenrandom">
-  /// BCryptGenRandom</see> for <b>Vista</b> Upwards</description>
+  /// <description>Checks availability in this order, <see href="https://docs.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom">
+  /// RtlGenRandom</see> =&gt; <see href="https://docs.microsoft.com/en-us/windows/desktop/api/wincrypt/nf-wincrypt-cryptgenrandom">
+  /// CryptGenRandom</see> =&gt; <see href="https://docs.microsoft.com/en-us/windows/desktop/api/bcrypt/nf-bcrypt-bcryptgenrandom">
+  /// BCryptGenRandom</see></description>
   /// </item>
   /// <item>
   /// <term>Mac OS X</term>
@@ -212,6 +213,10 @@ type
 
 {$IFDEF CRYPTOLIB_MSWINDOWS}
 
+  const
+    BCRYPT = 'bcrypt.dll';
+    ADVAPI32 = 'advapi32.dll';
+
   type
     BCRYPT_ALG_HANDLE = THandle;
     NTStatus = HRESULT;
@@ -236,25 +241,56 @@ type
       static; inline;
 
     class function IsCngBCryptGenRandomAvailable(): Boolean; static;
-    class function GenRandomBytesWindows(len: Int32; data: PByte)
-      : Int32; static;
+
     class property IsCngBCryptGenRandomSupportedOnOS: Boolean
       read GetIsCngBCryptGenRandomSupportedOnOS;
 
   type
-    TRtlGenRandom = function(RandomBuffer: PVOID; RandomBufferLength: ULONG): Boolean; stdcall;
+
+    TCryptGenRandom = function(hProv: THandle; dwLen: DWORD; pbBuffer: PByte)
+      : BOOL; stdcall;
+
+    TCryptAcquireContextW = function(phProv: Pointer; pszContainer: LPCWSTR;
+      pszProvider: LPCWSTR; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
+
+    TCryptReleaseContext = function(hProv: THandle; dwFlags: DWORD)
+      : BOOL; stdcall;
+
+  class var
+
+    FIsCryptGenRandomSupportedOnOS: Boolean;
+    FCryptGenRandom: TCryptGenRandom;
+    FCryptAcquireContextW: TCryptAcquireContextW;
+    FCryptReleaseContext: TCryptReleaseContext;
+
+    class function GetIsCryptGenRandomSupportedOnOS(): Boolean; static; inline;
+
+    class function IsCryptGenRandomAvailable(): Boolean; static;
+
+    class property IsCryptGenRandomSupportedOnOS: Boolean
+      read GetIsCryptGenRandomSupportedOnOS;
+
+  type
+    TRtlGenRandom = function(RandomBuffer: PVOID; RandomBufferLength: ULONG)
+      : Boolean; stdcall;
 
   class var
     FIsRtlGenRandomSupportedOnOS: Boolean;
     FRtlGenRandom: TRtlGenRandom;
 
-    class function GetIsRtlGenRandomSupportedOnOS(): Boolean;
-      static; inline;
+    class function GetIsRtlGenRandomSupportedOnOS(): Boolean; static; inline;
 
     class function IsRtlGenRandomAvailable(): Boolean; static;
 
     class property IsRtlGenRandomSupportedOnOS: Boolean
       read GetIsRtlGenRandomSupportedOnOS;
+
+    class function GetProcedureAddress(ModuleHandle: THandle;
+      const AProcedureName: String; var AFunctionFound: Boolean)
+      : Pointer; static;
+
+    class function GenRandomBytesWindows(len: Int32; data: PByte)
+      : Int32; static;
 {$ENDIF}
 
     // ================================================================//
@@ -292,23 +328,6 @@ type
   end;
 
   // ************************************************************************//
-
-{$IFDEF CRYPTOLIB_MSWINDOWS}
-
-const
-  ADVAPI32 = 'advapi32.dll';
-
-function CryptAcquireContextW(phProv: Pointer; pszContainer: LPCWSTR;
-  pszProvider: LPCWSTR; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
-  external ADVAPI32 Name 'CryptAcquireContextW';
-
-function CryptGenRandom(hProv: THandle; dwLen: DWORD; pbBuffer: PByte): BOOL;
-  stdcall; external ADVAPI32 Name 'CryptGenRandom';
-
-function CryptReleaseContext(hProv: THandle; dwFlags: DWORD): BOOL; stdcall;
-  external ADVAPI32 Name 'CryptReleaseContext';
-{$ENDIF}
-// ************************************************************************//
 {$IFDEF CRYPTOLIB_APPLE}
 {$IFDEF FPC}
 
@@ -351,8 +370,9 @@ implementation
 class procedure TOSRandom.Boot;
 begin
 {$IFDEF CRYPTOLIB_MSWINDOWS}
-  FIsRtlGenRandomSupportedOnOS := IsRtlGenRandomAvailable();
   FIsCngBCryptGenRandomSupportedOnOS := IsCngBCryptGenRandomAvailable();
+  FIsCryptGenRandomSupportedOnOS := IsCryptGenRandomAvailable();
+  FIsRtlGenRandomSupportedOnOS := IsRtlGenRandomAvailable();
 {$ENDIF}
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   FIsGetRandomSupportedOnOS := IsGetRandomAvailable();
@@ -366,9 +386,24 @@ end;
 
 {$IFDEF CRYPTOLIB_MSWINDOWS}
 
+class function TOSRandom.GetProcedureAddress(ModuleHandle: THandle;
+  const AProcedureName: String; var AFunctionFound: Boolean): Pointer;
+begin
+  result := GetProcAddress(ModuleHandle, PChar(AProcedureName));
+  if result = Nil then
+  begin
+    AFunctionFound := False;
+  end;
+end;
+
 class function TOSRandom.GetIsCngBCryptGenRandomSupportedOnOS(): Boolean;
 begin
   result := FIsCngBCryptGenRandomSupportedOnOS;
+end;
+
+class function TOSRandom.GetIsCryptGenRandomSupportedOnOS(): Boolean;
+begin
+  result := FIsCryptGenRandomSupportedOnOS;
 end;
 
 class function TOSRandom.GetIsRtlGenRandomSupportedOnOS(): Boolean;
@@ -376,13 +411,39 @@ begin
   result := FIsRtlGenRandomSupportedOnOS;
 end;
 
-function GetProcedureAddress(ModuleHandle: THandle; const AProcedureName: String;
-  var AFunctionFound: Boolean): Pointer;
+class function TOSRandom.IsCngBCryptGenRandomAvailable(): Boolean;
+var
+  ModuleHandle: THandle;
 begin
-  result := GetProcAddress(ModuleHandle, PChar(AProcedureName));
-  if result = Nil then
+  result := False;
+  ModuleHandle := SafeLoadLibrary(BCRYPT, SEM_FAILCRITICALERRORS);
+  if ModuleHandle <> 0 then
   begin
-    AFunctionFound := False;
+    result := True;
+    FBCryptOpenAlgorithmProvider := GetProcedureAddress(ModuleHandle,
+      'BCryptOpenAlgorithmProvider', result);
+    FBCryptCloseAlgorithmProvider := GetProcedureAddress(ModuleHandle,
+      'BCryptCloseAlgorithmProvider', result);
+    FBCryptGenRandom := GetProcedureAddress(ModuleHandle,
+      'BCryptGenRandom', result);
+  end;
+end;
+
+class function TOSRandom.IsCryptGenRandomAvailable(): Boolean;
+var
+  ModuleHandle: THandle;
+begin
+  result := False;
+  ModuleHandle := SafeLoadLibrary(ADVAPI32, SEM_FAILCRITICALERRORS);
+  if ModuleHandle <> 0 then
+  begin
+    result := True;
+    FCryptAcquireContextW := GetProcedureAddress(ModuleHandle,
+      'CryptAcquireContextW', result);
+    FCryptReleaseContext := GetProcedureAddress(ModuleHandle,
+      'CryptReleaseContext', result);
+    FCryptGenRandom := GetProcedureAddress(ModuleHandle,
+      'CryptGenRandom', result);
   end;
 end;
 
@@ -395,26 +456,8 @@ begin
   if ModuleHandle <> 0 then
   begin
     result := True;
-    FRtlGenRandom := GetProcedureAddress(ModuleHandle, 'SystemFunction036', result);
-  end;
-end;
-
-class function TOSRandom.IsCngBCryptGenRandomAvailable(): Boolean;
-const
-  BCRYPT = 'bcrypt.dll';
-var
-  ModuleHandle: THandle;
-begin
-  result := False;
-  ModuleHandle := SafeLoadLibrary(PChar(BCRYPT), SEM_FAILCRITICALERRORS);
-  if ModuleHandle <> 0 then
-  begin
-    result := True;
-    FBCryptOpenAlgorithmProvider :=
-      GetProcedureAddress(ModuleHandle, 'BCryptOpenAlgorithmProvider', result);
-    FBCryptCloseAlgorithmProvider :=
-      GetProcedureAddress(ModuleHandle, 'BCryptCloseAlgorithmProvider', result);
-    FBCryptGenRandom := GetProcedureAddress(ModuleHandle, 'BCryptGenRandom', result);
+    FRtlGenRandom := GetProcedureAddress(ModuleHandle,
+      'SystemFunction036', result);
   end;
 end;
 
@@ -435,18 +478,40 @@ const
   BCRYPT_RNG_ALGORITHM: WideString = 'RNG';
 
 begin
+  // first check if RtlGenRandom is available to avoid the memory overhead
+  // of pulling in 'CryptoAPI'
   if IsRtlGenRandomSupportedOnOS then
   begin
-    // Windows XP / Server 2003 and Above
+    // Availability: Windows XP / Server 2003 and Above
     if not FRtlGenRandom(data, ULONG(len)) then
     begin
       result := HResultFromWin32(GetLastError);
       Exit;
     end;
   end
+  else if IsCryptGenRandomSupportedOnOS then
+  begin
+    // Availability: Windows XP / Server 2003 and Above
+    if not FCryptAcquireContextW(@hProv, nil, nil, PROV_RSA_FULL,
+      CRYPT_VERIFYCONTEXT or CRYPT_SILENT) then
+    begin
+      result := HResultFromWin32(GetLastError);
+      Exit;
+    end;
+
+    try
+      if not FCryptGenRandom(hProv, DWORD(len), data) then
+      begin
+        result := HResultFromWin32(GetLastError);
+        Exit;
+      end;
+    finally
+      FCryptReleaseContext(hProv, 0);
+    end;
+  end
   else if IsCngBCryptGenRandomSupportedOnOS then
   begin
-    // Windows Vista and Above
+    // Availability: Windows Vista / Server 2008 and Above
     if (not BCRYPT_SUCCESS(FBCryptOpenAlgorithmProvider(@hProv,
       PWideChar(BCRYPT_RNG_ALGORITHM), nil, 0))) then
     begin
@@ -467,23 +532,9 @@ begin
   end
   else
   begin
-    // Below Windows Vista
-    if not CryptAcquireContextW(@hProv, nil, nil, PROV_RSA_FULL,
-      CRYPT_VERIFYCONTEXT or CRYPT_SILENT) then
-    begin
-      result := HResultFromWin32(GetLastError);
-      Exit;
-    end;
-
-    try
-      if not CryptGenRandom(hProv, DWORD(len), data) then
-      begin
-        result := HResultFromWin32(GetLastError);
-        Exit;
-      end;
-    finally
-      CryptReleaseContext(hProv, 0);
-    end;
+    // should never happen but who knows :)
+    result := S_FALSE;
+    Exit;
   end;
   result := S_OK;
 end;

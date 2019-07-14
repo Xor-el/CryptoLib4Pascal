@@ -1661,9 +1661,13 @@ begin
   // Recode the scalar into signed-digit form, then group comb bits in each block
 
   c1 := TNat.CAdd(ScalarUints, not(Int32(n[0])) and 1, n, FL, n);
+{$IFOPT C+}
   System.Assert(c1 = 0);
+{$ENDIF}
   c2 := TNat.ShiftDownBit(ScalarUints, n, UInt32(1));
+{$IFOPT C+}
   System.Assert(c2 = (UInt32(1) shl 31));
+{$ENDIF}
   for i := 0 to System.Pred(ScalarUints) do
   begin
     n[i] := TInterleave.Shuffle2(n[i]);
