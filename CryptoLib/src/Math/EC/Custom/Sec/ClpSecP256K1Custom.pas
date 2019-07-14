@@ -240,8 +240,6 @@ type
   var
     Fq: TBigInteger;
 
-    class function GetSecP256K1Curve_Q: TBigInteger; static; inline;
-
   strict protected
   var
     Fm_infinity: ISecP256K1Point;
@@ -272,8 +270,6 @@ type
     property Q: TBigInteger read GetQ;
     property Infinity: IECPoint read GetInfinity;
     property FieldSize: Int32 read GetFieldSize;
-
-    class property SecP256K1Curve_Q: TBigInteger read GetSecP256K1Curve_Q;
 
   end;
 
@@ -500,7 +496,9 @@ end;
 
 class function TSecP256K1FieldElement.GetQ: TBigInteger;
 begin
-  result := TSecP256K1Curve.SecP256K1Curve_Q;
+  result := TBigInteger.Create(1,
+    THex.Decode
+    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'));
 end;
 
 function TSecP256K1FieldElement.GetX: TCryptoLibUInt32Array;
@@ -1032,16 +1030,9 @@ end;
 
 { TSecP256K1Curve }
 
-class function TSecP256K1Curve.GetSecP256K1Curve_Q: TBigInteger;
-begin
-  result := TBigInteger.Create(1,
-    THex.Decode
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'));
-end;
-
 constructor TSecP256K1Curve.Create;
 begin
-  Fq := SecP256K1Curve_Q;
+  Fq := TSecP256K1FieldElement.Q;
   Inherited Create(Fq);
   Fm_infinity := TSecP256K1Point.Create(Self as IECCurve, Nil, Nil);
   Fm_a := FromBigInteger(TBigInteger.Zero);

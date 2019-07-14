@@ -267,8 +267,6 @@ type
   var
     Fq: TBigInteger;
 
-    class function GetCurve25519_Q: TBigInteger; static; inline;
-
   strict protected
   var
     Fm_infinity: ICurve25519Point;
@@ -299,8 +297,6 @@ type
     property Q: TBigInteger read GetQ;
     property Infinity: IECPoint read GetInfinity;
     property FieldSize: Int32 read GetFieldSize;
-
-    class property Curve25519_Q: TBigInteger read GetCurve25519_Q;
 
   end;
 
@@ -601,7 +597,7 @@ end;
 
 class function TCurve25519FieldElement.GetQ: TBigInteger;
 begin
-  result := TCurve25519.Curve25519_Q;
+  result := TNat256.ToBigInteger(TCurve25519Field.P);
 end;
 
 class procedure TCurve25519FieldElement.Boot;
@@ -708,10 +704,10 @@ begin
     * Q == 8m + 5, so we use Pocklington's method for this case.
     *
     * First, raise this element to the exponent 2^252 - 2^1 (i.e. m + 1)
-    * 
+    *
     * Breaking up the exponent's binary representation into "repunits", we get:
     * { 251 1s } { 1 0s }
-    * 
+    *
     * Therefore we need an addition chain containing 251 (the lengths of the repunits)
     * We use: 1, 2, 3, 4, 7, 11, 15, 30, 60, 120, 131, [251]
   *)
@@ -1236,14 +1232,9 @@ end;
 
 { TCurve25519 }
 
-class function TCurve25519.GetCurve25519_Q: TBigInteger;
-begin
-  result := TNat256.ToBigInteger(TCurve25519Field.P);
-end;
-
 constructor TCurve25519.Create;
 begin
-  Fq := Curve25519_Q;
+  Fq := TCurve25519FieldElement.Q;
   Inherited Create(Fq);
   Fm_infinity := TCurve25519Point.Create(Self as IECCurve, Nil, Nil);
 
