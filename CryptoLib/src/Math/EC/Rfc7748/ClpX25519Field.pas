@@ -102,6 +102,8 @@ type
 
     class procedure Inv(const x, z: TCryptoLibInt32Array); static; inline;
 
+    class function IsZero(const x: TCryptoLibInt32Array): Int32; static;
+
     class function IsZeroVar(const x: TCryptoLibInt32Array): Boolean;
       static; inline;
 
@@ -400,7 +402,7 @@ begin
   Mul(t, x2, z);
 end;
 
-class function TX25519Field.IsZeroVar(const x: TCryptoLibInt32Array): Boolean;
+class function TX25519Field.IsZero(const x: TCryptoLibInt32Array): Int32;
 var
   d, i: Int32;
 begin
@@ -409,7 +411,13 @@ begin
   begin
     d := d or x[i];
   end;
-  Result := d = 0;
+  d := (TBits.Asr32(d, 1)) or (d and 1);
+  Result := (d - 1) shr 31;
+end;
+
+class function TX25519Field.IsZeroVar(const x: TCryptoLibInt32Array): Boolean;
+begin
+  Result := IsZero(x) <> 0;
 end;
 
 class procedure TX25519Field.Mul(const x: TCryptoLibInt32Array; y: Int32;
