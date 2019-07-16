@@ -846,7 +846,7 @@ var
   c, next, pow2, mask, LSign, carry, word, word16, bit, digit: UInt32;
 begin
 {$IFDEF DEBUG}
-  System.Assert((n[ScalarUints - 1] shr 31) = 0);
+  System.Assert((n[ScalarUints - 1] shr 28) = 0);
 {$ENDIF DEBUG}
   System.SetLength(T, ScalarUints * 2);
 
@@ -865,7 +865,7 @@ begin
     System.Dec(i);
   end;
 
-  System.SetLength(ws, 256);
+  System.SetLength(ws, 253);
 
   pow2 := UInt32(1) shl width;
   mask := pow2 - UInt32(1);
@@ -1231,7 +1231,7 @@ end;
 
 class procedure TEd25519.PointLookup(block, index: Int32; var p: TPointPrecomp);
 var
-  off, i, mask: Int32;
+  off, i, cond: Int32;
 begin
 {$IFDEF DEBUG}
   System.Assert((0 <= block) and (block < PrecompBlocks));
@@ -1241,12 +1241,12 @@ begin
 
   for i := 0 to System.Pred(PrecompPoints) do
   begin
-    mask := TBits.Asr32(((i xor index) - 1), 31);
-    TNat.CMov(TX25519Field.Size, mask, FPrecompBase, off, p.Ypx_h, 0);
+    cond := TBits.Asr32(((i xor index) - 1), 31);
+    TX25519Field.cmov(cond, FPrecompBase, off, p.Ypx_h, 0);
     off := off + TX25519Field.Size;
-    TNat.CMov(TX25519Field.Size, mask, FPrecompBase, off, p.Ymx_h, 0);
+    TX25519Field.cmov(cond, FPrecompBase, off, p.Ymx_h, 0);
     off := off + TX25519Field.Size;
-    TNat.CMov(TX25519Field.Size, mask, FPrecompBase, off, p.Xyd, 0);
+    TX25519Field.cmov(cond, FPrecompBase, off, p.Xyd, 0);
     off := off + TX25519Field.Size;
   end;
 end;
@@ -1675,13 +1675,9 @@ begin
 
   PointSetNeutral(r);
 
-  bit := 255;
-  while ((bit > 0) and ((Byte(ws_b[bit]) or Byte(ws_p[bit])) = 0)) do
-  begin
-    System.Dec(bit);
-  end;
+  bit := 252;
 
-  while true do
+  while (true) do
   begin
     wb := ws_b[bit];
     if (wb <> 0) then
@@ -1701,13 +1697,14 @@ begin
       PointAddVar((LSign <> 0), tp[index], r);
     end;
 
-    System.Dec(bit);
-    if (bit < 0) then
+    if ((bit - 1) < 0) then
     begin
       break;
     end;
 
     PointDouble(r);
+
+    System.Dec(bit);
   end;
 end;
 
