@@ -118,6 +118,13 @@ type
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
 
+    class function CSub(len, mask: Int32; const x, y, z: TCryptoLibUInt32Array)
+      : UInt32; overload; static;
+
+    class function CSub(len, mask: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
+
     class function Dec(len: Int32; const z: TCryptoLibUInt32Array): Int32;
       overload; static;
 
@@ -969,6 +976,41 @@ end;
 class function TNat.Create64(len: Int32): TCryptoLibUInt64Array;
 begin
   System.SetLength(Result, len);
+end;
+
+class function TNat.CSub(len, mask: Int32;
+  const x, y, z: TCryptoLibUInt32Array): UInt32;
+var
+  LMASK, c: UInt64;
+  I: Int32;
+begin
+  LMASK := UInt64(-(mask and 1) and M);
+  c := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + ((x[I] and M) - (y[I] and LMASK));
+    z[I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
+end;
+
+class function TNat.CSub(len, mask: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+var
+  LMASK, c: UInt64;
+  I: Int32;
+begin
+  LMASK := UInt64(-(mask and 1) and M);
+  c := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + ((x[xOff + I] and M) - (y[yOff + I] and LMASK));
+    z[zOff + I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
 end;
 
 class function TNat.Dec(len: Int32; const z: TCryptoLibUInt32Array): Int32;
