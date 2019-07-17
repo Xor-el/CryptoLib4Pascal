@@ -72,6 +72,23 @@ type
     end;
 
   type
+    TPointAffine = record
+    private
+      Fx, Fy: TCryptoLibInt32Array;
+
+      function GetX: TCryptoLibInt32Array; inline;
+      procedure SetX(const value: TCryptoLibInt32Array); inline;
+      function GetY: TCryptoLibInt32Array; inline;
+      procedure SetY(const value: TCryptoLibInt32Array); inline;
+
+    public
+      property X: TCryptoLibInt32Array read GetX write SetX;
+      property Y: TCryptoLibInt32Array read GetY write SetY;
+
+      class function CreatePointAffine(): TPointAffine; static;
+    end;
+
+  type
     TPointExt = record
     private
       Fx, Fy, Fz, Ft: TCryptoLibInt32Array;
@@ -169,7 +186,7 @@ type
       static; inline;
 
     class function DecodePointVar(const p: TCryptoLibByteArray; pOff: Int32;
-      ANegate: Boolean; var r: TPointExt): Boolean; static;
+      ANegate: Boolean; var r: TPointAffine): Boolean; static;
 
     class procedure DecodeScalar(const k: TCryptoLibByteArray; kOff: Int32;
       const n: TCryptoLibUInt32Array); static; inline;
@@ -188,6 +205,9 @@ type
 
     class procedure EncodePoint(var p: TPointAccum;
       const r: TCryptoLibByteArray; rOff: Int32); static;
+
+    class function GetWindow4(const X: TCryptoLibUInt32Array; n: Int32): Int32;
+      static; inline;
 
     class function GetWnaf(const n: TCryptoLibUInt32Array; width: Int32)
       : TCryptoLibShortIntArray; static;
@@ -214,6 +234,11 @@ type
       const ctx: TCryptoLibCustomByteArrayBuffer; phflag: Byte;
       const m: TCryptoLibByteArray; mOff, mLen: Int32): Boolean;
 
+    class procedure PointAdd(var p: TPointExt; var r: TPointAccum);
+      overload; static;
+
+    class procedure PointAdd(var p, r: TPointExt); overload; static;
+
     class procedure PointAddVar(negate: Boolean; var p: TPointExt;
       var r: TPointAccum); overload; static;
 
@@ -223,11 +248,19 @@ type
     class procedure PointAddPrecomp(var p: TPointPrecomp; var r: TPointAccum);
       overload; static;
 
+    class function PointCopy(var p: TPointAffine): TPointExt; overload;
+      static; inline;
+
     class function PointCopy(var p: TPointAccum): TPointExt; overload;
       static; inline;
 
     class function PointCopy(var p: TPointExt): TPointExt; overload;
       static; inline;
+
+    class procedure PointCopy(var p: TPointAffine; var r: TPointAccum);
+      overload; static; inline;
+
+    class procedure PointCopy(var p, r: TPointExt); overload; static; inline;
 
     class procedure PointDouble(var r: TPointAccum); static;
 
@@ -235,8 +268,17 @@ type
 
     class procedure PointExtendXY(var p: TPointExt); overload; static; inline;
 
-    class procedure PointLookup(block, index: Int32;
-      var p: TPointPrecomp); static;
+    class procedure PointLookup(block, index: Int32; var p: TPointPrecomp);
+      overload; static;
+
+    class procedure PointLookup(const X: TCryptoLibUInt32Array; n: Int32;
+      const table: TCryptoLibInt32Array; var r: TPointExt); overload; static;
+
+    class procedure PointLookup(const table: TCryptoLibInt32Array; index: Int32;
+      var r: TPointExt); overload; static;
+
+    class function PointPrecomp(var p: TPointAffine; count: Int32)
+      : TCryptoLibInt32Array; static;
 
     class function PointPrecompVar(var p: TPointExt; count: Int32)
       : TCryptoLibGenericArray<TPointExt>; static;
@@ -249,6 +291,9 @@ type
     class procedure PruneScalar(const n: TCryptoLibByteArray; nOff: Int32;
       const r: TCryptoLibByteArray); static; inline;
 
+    class procedure ScalarMult(const k: TCryptoLibByteArray;
+      var p: TPointAffine; var r: TPointAccum); static;
+
     class function ReduceScalar(const n: TCryptoLibByteArray)
       : TCryptoLibByteArray; static;
 
@@ -259,7 +304,7 @@ type
       rOff: Int32); static; inline;
 
     class procedure ScalarMultStraussVar(const nb, np: TCryptoLibUInt32Array;
-      var p: TPointExt; var r: TPointAccum); static;
+      var p: TPointAffine; var r: TPointAccum); static;
 
     class function ValidateDigestOutputSize(const ADigest: IDigest)
       : TCryptoLibByteArray; static; inline;
@@ -704,8 +749,59 @@ begin
   TX25519Field.Mul(p.X, p.Y, p.T);
 end;
 
+class procedure TEd25519.PointLookup(const table: TCryptoLibInt32Array;
+  index: Int32; var r: TPointExt);
+var
+  off: Int32;
+begin
+  off := TX25519Field.SIZE * 4 * index;
+
+  TX25519Field.Copy(table, off, r.X, 0);
+  off := off + TX25519Field.SIZE;
+  TX25519Field.Copy(table, off, r.Y, 0);
+  off := off + TX25519Field.SIZE;
+  TX25519Field.Copy(table, off, r.Z, 0);
+  off := off + TX25519Field.SIZE;
+  TX25519Field.Copy(table, off, r.T, 0);
+end;
+
+class procedure TEd25519.PointLookup(const X: TCryptoLibUInt32Array; n: Int32;
+  const table: TCryptoLibInt32Array; var r: TPointExt);
+var
+  w, Sign, abs, i, off, cond: Int32;
+begin
+  w := GetWindow4(X, n);
+
+  Sign := (TBits.Asr32(w, (PrecompTeeth - 1))) xor 1;
+  abs := (w xor -Sign) and PrecompMask;
+
+{$IFDEF DEBUG}
+  System.Assert((Sign = 0) or (Sign = 1));
+  System.Assert((abs <= 0) and (abs < PrecompPoints));
+{$ENDIF DEBUG}
+  i := 0;
+  off := 0;
+
+  while i < PrecompPoints do
+  begin
+    cond := TBits.Asr32(((i xor abs) - 1), 31);
+    TX25519Field.CMov(cond, table, off, r.X, 0);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.CMov(cond, table, off, r.Y, 0);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.CMov(cond, table, off, r.Z, 0);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.CMov(cond, table, off, r.T, 0);
+    off := off + TX25519Field.SIZE;
+    System.Inc(i);
+  end;
+
+  TX25519Field.CNegate(Sign, r.X);
+  TX25519Field.CNegate(Sign, r.T);
+end;
+
 class function TEd25519.DecodePointVar(const p: TCryptoLibByteArray;
-  pOff: Int32; ANegate: Boolean; var r: TPointExt): Boolean;
+  pOff: Int32; ANegate: Boolean; var r: TPointAffine): Boolean;
 var
   py: TCryptoLibByteArray;
   U, V: TCryptoLibInt32Array;
@@ -749,7 +845,6 @@ begin
     TX25519Field.negate(r.X, r.X);
   end;
 
-  PointExtendXY(r);
   result := true;
 end;
 
@@ -835,6 +930,17 @@ begin
   PruneScalar(h, 0, s);
 
   ScalarMultBaseEncoded(s, pk, pkOff);
+end;
+
+class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
+  n: Int32): Int32;
+var
+  w, b: Int32;
+begin
+  w := TBits.Asr32(n, 3);
+  b := (n and 7) shl 2;
+  result := (X[w] shr b) and 15;
+  // result := (TBits.Asr32(X[w], b)) and 15;
 end;
 
 class function TEd25519.GetWnaf(const n: TCryptoLibUInt32Array; width: Int32)
@@ -999,7 +1105,7 @@ function TEd25519.ImplVerify(const sig: TCryptoLibByteArray; sigOff: Int32;
 var
   r, s, h, k, check: TCryptoLibByteArray;
   nS, nA: TCryptoLibUInt32Array;
-  pA: TPointExt;
+  pA: TPointAffine;
   pR: TPointAccum;
   d: IDigest;
 begin
@@ -1024,7 +1130,7 @@ begin
     Exit;
   end;
 
-  pA := TPointExt.CreatePointExt();
+  pA := TPointAffine.CreatePointAffine();
   if (not DecodePointVar(pk, pkOff, true, pA)) then
   begin
     result := false;
@@ -1085,10 +1191,70 @@ begin
   TX25519Field.Mul(bigE, bigF, r.Z);
 end;
 
+class procedure TEd25519.PointAdd(var p: TPointExt; var r: TPointAccum);
+var
+  A, b, c, d, E, F, G, h: TCryptoLibInt32Array;
+begin
+  A := TX25519Field.Create();
+  b := TX25519Field.Create();
+  c := TX25519Field.Create();
+  d := TX25519Field.Create();
+  E := r.U;
+  F := TX25519Field.Create();
+  G := TX25519Field.Create();
+  h := r.V;
+
+  TX25519Field.Apm(r.Y, r.X, b, A);
+  TX25519Field.Apm(p.Y, p.X, d, c);
+  TX25519Field.Mul(A, c, A);
+  TX25519Field.Mul(b, d, b);
+  TX25519Field.Mul(r.U, r.V, c);
+  TX25519Field.Mul(c, p.T, c);
+  TX25519Field.Mul(c, FC_d2, c);
+  TX25519Field.Mul(r.Z, p.Z, d);
+  TX25519Field.Add(d, d, d);
+  TX25519Field.Apm(b, A, h, E);
+  TX25519Field.Apm(d, c, G, F);
+  TX25519Field.carry(G);
+  TX25519Field.Mul(E, F, r.X);
+  TX25519Field.Mul(G, h, r.Y);
+  TX25519Field.Mul(F, G, r.Z);
+end;
+
+class procedure TEd25519.PointAdd(var p, r: TPointExt);
+var
+  A, b, c, d, E, F, G, h: TCryptoLibInt32Array;
+begin
+  A := TX25519Field.Create();
+  b := TX25519Field.Create();
+  c := TX25519Field.Create();
+  d := TX25519Field.Create();
+  E := TX25519Field.Create();
+  F := TX25519Field.Create();
+  G := TX25519Field.Create();
+  h := TX25519Field.Create();
+
+  TX25519Field.Apm(p.Y, p.X, b, A);
+  TX25519Field.Apm(r.Y, r.X, d, c);
+  TX25519Field.Mul(A, c, A);
+  TX25519Field.Mul(b, d, b);
+  TX25519Field.Mul(p.T, r.T, c);
+  TX25519Field.Mul(c, FC_d2, c);
+  TX25519Field.Mul(p.Z, r.Z, d);
+  TX25519Field.Add(d, d, d);
+  TX25519Field.Apm(b, A, h, E);
+  TX25519Field.Apm(d, c, G, F);
+  TX25519Field.carry(G);
+  TX25519Field.Mul(E, F, r.X);
+  TX25519Field.Mul(G, h, r.Y);
+  TX25519Field.Mul(F, G, r.Z);
+  TX25519Field.Mul(E, h, r.T);
+end;
+
 class procedure TEd25519.PointAddVar(negate: Boolean; var p, q, r: TPointExt);
 var
-  bigA, bigB, bigC, bigD, bigE, bigF, bigG, bigH, c, d, f,
-    g: TCryptoLibInt32Array;
+  bigA, bigB, bigC, bigD, bigE, bigF, bigG, bigH, c, d, F,
+    G: TCryptoLibInt32Array;
 begin
   bigA := TX25519Field.Create();
   bigB := TX25519Field.Create();
@@ -1103,15 +1269,15 @@ begin
   begin
     c := bigD;
     d := bigC;
-    f := bigG;
-    g := bigF;
+    F := bigG;
+    G := bigF;
   end
   else
   begin
     c := bigC;
     d := bigD;
-    f := bigF;
-    g := bigG;
+    F := bigF;
+    G := bigG;
   end;
 
   TX25519Field.Apm(p.Y, p.X, bigB, bigA);
@@ -1123,8 +1289,8 @@ begin
   TX25519Field.Mul(p.Z, q.Z, bigD);
   TX25519Field.Add(bigD, bigD, bigD);
   TX25519Field.Apm(bigB, bigA, bigH, bigE);
-  TX25519Field.Apm(bigD, bigC, g, f);
-  TX25519Field.carry(g);
+  TX25519Field.Apm(bigD, bigC, G, F);
+  TX25519Field.carry(G);
   TX25519Field.Mul(bigE, bigF, r.X);
   TX25519Field.Mul(bigG, bigH, r.Y);
   TX25519Field.Mul(bigF, bigG, r.Z);
@@ -1134,8 +1300,8 @@ end;
 class procedure TEd25519.PointAddVar(negate: Boolean; var p: TPointExt;
   var r: TPointAccum);
 var
-  bigA, bigB, bigC, bigD, bigE, bigF, bigG, bigH, c, d, f,
-    g: TCryptoLibInt32Array;
+  bigA, bigB, bigC, bigD, bigE, bigF, bigG, bigH, c, d, F,
+    G: TCryptoLibInt32Array;
 begin
   bigA := TX25519Field.Create();
   bigB := TX25519Field.Create();
@@ -1150,15 +1316,15 @@ begin
   begin
     c := bigD;
     d := bigC;
-    f := bigG;
-    g := bigF;
+    F := bigG;
+    G := bigF;
   end
   else
   begin
     c := bigC;
     d := bigD;
-    f := bigF;
-    g := bigG;
+    F := bigF;
+    G := bigG;
   end;
 
   TX25519Field.Apm(r.Y, r.X, bigB, bigA);
@@ -1171,11 +1337,22 @@ begin
   TX25519Field.Mul(r.Z, p.Z, bigD);
   TX25519Field.Add(bigD, bigD, bigD);
   TX25519Field.Apm(bigB, bigA, bigH, bigE);
-  TX25519Field.Apm(bigD, bigC, g, f);
-  TX25519Field.carry(g);
+  TX25519Field.Apm(bigD, bigC, G, F);
+  TX25519Field.carry(G);
   TX25519Field.Mul(bigE, bigF, r.X);
   TX25519Field.Mul(bigG, bigH, r.Y);
   TX25519Field.Mul(bigF, bigG, r.Z);
+end;
+
+class function TEd25519.PointCopy(var p: TPointAffine): TPointExt;
+var
+  r: TPointExt;
+begin
+  r := TPointExt.CreatePointExt();
+  TX25519Field.Copy(p.X, 0, r.X, 0);
+  TX25519Field.Copy(p.Y, 0, r.Y, 0);
+  PointExtendXY(r);
+  result := r;
 end;
 
 class function TEd25519.PointCopy(var p: TPointAccum): TPointExt;
@@ -1195,10 +1372,7 @@ var
   r: TPointExt;
 begin
   r := TPointExt.CreatePointExt();
-  TX25519Field.Copy(p.X, 0, r.X, 0);
-  TX25519Field.Copy(p.Y, 0, r.Y, 0);
-  TX25519Field.Copy(p.Z, 0, r.Z, 0);
-  TX25519Field.Copy(p.T, 0, r.T, 0);
+  PointCopy(p, r);
   result := r;
 end;
 
@@ -1237,18 +1411,63 @@ begin
   System.Assert((0 <= block) and (block < PrecompBlocks));
   System.Assert((0 <= index) and (index < PrecompPoints));
 {$ENDIF DEBUG}
-  off := block * PrecompPoints * 3 * TX25519Field.Size;
+  off := block * PrecompPoints * 3 * TX25519Field.SIZE;
 
   for i := 0 to System.Pred(PrecompPoints) do
   begin
     cond := TBits.Asr32(((i xor index) - 1), 31);
-    TX25519Field.cmov(cond, FPrecompBase, off, p.Ypx_h, 0);
-    off := off + TX25519Field.Size;
-    TX25519Field.cmov(cond, FPrecompBase, off, p.Ymx_h, 0);
-    off := off + TX25519Field.Size;
-    TX25519Field.cmov(cond, FPrecompBase, off, p.Xyd, 0);
-    off := off + TX25519Field.Size;
+    TX25519Field.CMov(cond, FPrecompBase, off, p.Ypx_h, 0);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.CMov(cond, FPrecompBase, off, p.Ymx_h, 0);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.CMov(cond, FPrecompBase, off, p.Xyd, 0);
+    off := off + TX25519Field.SIZE;
   end;
+end;
+
+class function TEd25519.PointPrecomp(var p: TPointAffine; count: Int32)
+  : TCryptoLibInt32Array;
+var
+  q, d: TPointExt;
+  table: TCryptoLibInt32Array;
+  off, i: Int32;
+begin
+{$IFDEF DEBUG}
+  System.Assert(count > 0);
+{$ENDIF DEBUG}
+  q := PointCopy(p);
+  d := PointCopy(q);
+  PointAdd(q, d);
+
+  table := TX25519Field.createTable(count * 4);
+  off := 0;
+
+  i := 0;
+
+  while (true) do
+  begin
+    TX25519Field.Copy(q.X, 0, table, off);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.Copy(q.Y, 0, table, off);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.Copy(q.Z, 0, table, off);
+    off := off + TX25519Field.SIZE;
+    TX25519Field.Copy(q.T, 0, table, off);
+    off := off + TX25519Field.SIZE;
+
+    System.Inc(i);
+
+    if (i = count) then
+    begin
+      break;
+    end;
+
+    PointAdd(d, q);
+
+    System.Inc(i);
+  end;
+
+  result := table;
 end;
 
 class function TEd25519.PointPrecompVar(var p: TPointExt; count: Int32)
@@ -1297,7 +1516,7 @@ var
   bigB: TPointExt;
   p: TPointAccum;
   X, Y: TCryptoLibInt32Array;
-  off, b, T, s, k, Size, j, i: Int32;
+  off, b, T, s, k, SIZE, j, i: Int32;
   // ds, points: TCryptoLibGenericArray<TPointExt>;
   ds: array [0 .. (PrecompTeeth - 1)] of TPointExt;
   points: array [0 .. (PrecompPoints - 1)] of TPointExt;
@@ -1325,8 +1544,7 @@ begin
     TX25519Field.Copy(FB_y, 0, p.Y, 0);
     PointExtendXY(p);
 
-    System.SetLength(FPrecompBase, PrecompBlocks * PrecompPoints * 3 *
-      TX25519Field.Size);
+    FPrecompBase := TX25519Field.createTable(PrecompBlocks * PrecompPoints * 3);
 
     off := 0;
     for b := 0 to System.Pred(PrecompBlocks) do
@@ -1363,12 +1581,12 @@ begin
 
       for T := 0 to System.Pred(PrecompTeeth - 1) do
       begin
-        Size := 1 shl T;
+        SIZE := 1 shl T;
         j := 0;
-        while j < Size do
+        while j < SIZE do
         begin
           points[k] := TPointExt.CreatePointExt();
-          PointAddVar(false, points[k - Size], ds[T], points[k]);
+          PointAddVar(false, points[k - SIZE], ds[T], points[k]);
           System.Inc(k);
           System.Inc(j);
         end;
@@ -1400,11 +1618,11 @@ begin
         // TX25519Field.Normalize(r.xyd);
 
         TX25519Field.Copy(r.Ypx_h, 0, FPrecompBase, off);
-        off := off + TX25519Field.Size;
+        off := off + TX25519Field.SIZE;
         TX25519Field.Copy(r.Ymx_h, 0, FPrecompBase, off);
-        off := off + TX25519Field.Size;
+        off := off + TX25519Field.SIZE;
         TX25519Field.Copy(r.Xyd, 0, FPrecompBase, off);
-        off := off + TX25519Field.Size;
+        off := off + TX25519Field.SIZE;
       end;
     end;
 
@@ -1580,6 +1798,66 @@ begin
   Encode32(UInt32(x08), result, 28);
 end;
 
+class procedure TEd25519.ScalarMult(const k: TCryptoLibByteArray;
+  var p: TPointAffine; var r: TPointAccum);
+var
+  n: TCryptoLibUInt32Array;
+  table: TCryptoLibInt32Array;
+  q: TPointExt;
+  w, c1, c2: Int32;
+begin
+  Precompute();
+  System.SetLength(n, ScalarUints);
+
+  DecodeScalar(k, 0, n);
+
+{$IFDEF DEBUG}
+  System.Assert((n[0] and 7) = 0);
+  System.Assert((TBits.Asr32(n[ScalarUints - 1], 30)) = 1);
+{$ENDIF DEBUG}
+  TNat.ShiftDownBits(ScalarUints, n, 3, 1);
+
+  c1 := TNat.CAdd(ScalarUints, ((not n[0]) and 1), n, FL, n);
+{$IFOPT C+}
+  System.Assert(c1 = 0);
+{$ENDIF}
+  c2 := TNat.ShiftDownBit(ScalarUints, n, 0);
+{$IFOPT C+}
+  System.Assert(c2 = (1 shl 31));
+{$ENDIF}
+{$IFDEF DEBUG}
+  System.Assert((TBits.Asr32(n[ScalarUints - 1], 28)) = 1);
+{$ENDIF DEBUG}
+  PointCopy(p, r);
+
+  table := PointPrecomp(p, 8);
+
+  q := TPointExt.CreatePointExt();
+
+  // Replace first 4 doublings (2^4 * P) with 1 addition (P + 15 * P)
+  PointLookup(table, 7, q);
+  PointAdd(q, r);
+
+  w := 62;
+  while (true) do
+  begin
+    PointLookup(n, w, table, q);
+    PointAdd(q, r);
+
+    PointDouble(r);
+    PointDouble(r);
+    PointDouble(r);
+
+    System.Dec(w);
+    if (w < 0) then
+    begin
+      break;
+    end;
+
+    PointDouble(r);
+  end;
+end;
+
 class procedure TEd25519.ScalarMultBase(const k: TCryptoLibByteArray;
   var r: TPointAccum);
 var
@@ -1658,11 +1936,12 @@ begin
 end;
 
 class procedure TEd25519.ScalarMultStraussVar(const nb,
-  np: TCryptoLibUInt32Array; var p: TPointExt; var r: TPointAccum);
+  np: TCryptoLibUInt32Array; var p: TPointAffine; var r: TPointAccum);
 var
   width, bit, wb, wp, LSign, index: Int32;
   ws_b, ws_p: TCryptoLibShortIntArray;
   tp: TCryptoLibGenericArray<TPointExt>;
+  temp: TPointExt;
 begin
   Precompute();
 
@@ -1671,7 +1950,8 @@ begin
   ws_b := GetWnaf(nb, WnafWidthBase);
   ws_p := GetWnaf(np, width);
 
-  tp := PointPrecompVar(p, 1 shl (width - 2));
+  temp := PointCopy(p);
+  tp := PointPrecompVar(temp, 1 shl (width - 2));
 
   PointSetNeutral(r);
 
@@ -1697,14 +1977,14 @@ begin
       PointAddVar((LSign <> 0), tp[index], r);
     end;
 
-    if ((bit - 1) < 0) then
+    System.Dec(bit);
+
+    if (bit < 0) then
     begin
       break;
     end;
 
     PointDouble(r);
-
-    System.Dec(bit);
   end;
 end;
 
@@ -1878,6 +2158,50 @@ begin
   LCtx := ConstructCustomByteArrayBufferContext(ctx, false, System.Length(ctx));
   result := ImplVerify(sig, sigOff, pk, pkOff, LCtx, phflag, m, 0,
     System.Length(m));
+end;
+
+class procedure TEd25519.PointCopy(var p: TPointAffine; var r: TPointAccum);
+begin
+  TX25519Field.Copy(p.X, 0, r.X, 0);
+  TX25519Field.Copy(p.Y, 0, r.Y, 0);
+  PointExtendXY(r);
+end;
+
+class procedure TEd25519.PointCopy(var p, r: TPointExt);
+begin
+  TX25519Field.Copy(p.X, 0, r.X, 0);
+  TX25519Field.Copy(p.Y, 0, r.Y, 0);
+  TX25519Field.Copy(p.Z, 0, r.Z, 0);
+  TX25519Field.Copy(p.T, 0, r.T, 0);
+end;
+
+{ TEd25519.TPointAffine }
+
+function TEd25519.TPointAffine.GetX: TCryptoLibInt32Array;
+begin
+  result := Fx;
+end;
+
+function TEd25519.TPointAffine.GetY: TCryptoLibInt32Array;
+begin
+  result := Fy;
+end;
+
+procedure TEd25519.TPointAffine.SetX(const value: TCryptoLibInt32Array);
+begin
+  Fx := value;
+end;
+
+procedure TEd25519.TPointAffine.SetY(const value: TCryptoLibInt32Array);
+begin
+  Fy := value;
+end;
+
+class function TEd25519.TPointAffine.CreatePointAffine: TPointAffine;
+begin
+  result := Default (TPointAffine);
+  result.Fx := TX25519Field.Create();
+  result.Fy := TX25519Field.Create();
 end;
 
 end.
