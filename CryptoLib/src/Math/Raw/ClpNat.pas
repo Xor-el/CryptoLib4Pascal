@@ -292,10 +292,17 @@ type
       xOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32);
       overload; static;
 
-    class function SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+    // class function SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+    // const z: TCryptoLibUInt32Array): UInt32; overload; static;
+    //
+    // class function SquareWordAdd(const x: TCryptoLibUInt32Array;
+    // xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+    // overload; static;
+
+    class function SquareWordAddTo(const x: TCryptoLibUInt32Array; xPos: Int32;
       const z: TCryptoLibUInt32Array): UInt32; overload; static;
 
-    class function SquareWordAdd(const x: TCryptoLibUInt32Array;
+    class function SquareWordAddTo(const x: TCryptoLibUInt32Array;
       xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
       overload; static;
 
@@ -511,14 +518,55 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array;
+// class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array;
+// xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+// var
+// c, xVal: UInt64;
+// I: Int32;
+// begin
+// c := 0;
+// xVal := UInt64(x[xOff + xPos]);
+// I := 0;
+//
+// repeat
+// c := c + (xVal * (x[xOff + I] and M) + (z[xPos + zOff] and M));
+// z[xPos + zOff] := UInt32(c);
+// c := c shr 32;
+// System.Inc(zOff);
+// System.Inc(I);
+// until (not(I < xPos));
+//
+// Result := UInt32(c);
+// end;
+//
+// class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+// const z: TCryptoLibUInt32Array): UInt32;
+// var
+// c, xVal: UInt64;
+// I: Int32;
+// begin
+// c := 0;
+// xVal := UInt64(x[xPos]);
+// I := 0;
+//
+// repeat
+// c := c + (xVal * x[I] + z[xPos + I]);
+// z[xPos + I] := UInt32(c);
+// c := c shr 32;
+// System.Inc(I);
+// until (not(I < xPos));
+//
+// Result := UInt32(c);
+// end;
+
+class function TNat.SquareWordAddTo(const x: TCryptoLibUInt32Array;
   xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
 begin
   c := 0;
-  xVal := UInt64(x[xOff + xPos]);
+  xVal := x[xOff + xPos] and M;
   I := 0;
 
   repeat
@@ -532,18 +580,18 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+class function TNat.SquareWordAddTo(const x: TCryptoLibUInt32Array; xPos: Int32;
   const z: TCryptoLibUInt32Array): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
 begin
   c := 0;
-  xVal := UInt64(x[xPos]);
+  xVal := x[xPos] and M;
   I := 0;
 
   repeat
-    c := c + (xVal * x[I] + z[xPos + I]);
+    c := c + (xVal * (x[I] and M) + (z[xPos + I] and M));
     z[xPos + I] := UInt32(c);
     c := c shr 32;
     System.Inc(I);
@@ -1829,9 +1877,9 @@ end;
 
 class procedure TNat.Square(len: Int32; const x, zz: TCryptoLibUInt32Array);
 var
-  extLen, j, k, I: Int32;
+  extLen, j, k, I, zzPos: Int32;
   c: UInt32;
-  xVal, p: UInt64;
+  xVal, p, d: UInt64;
 begin
   extLen := len shl 1;
   c := 0;
@@ -1849,21 +1897,33 @@ begin
     c := UInt32(p);
   until (not(j > 0));
 
+  d := 0;
+  zzPos := 2;
+
   for I := 1 to System.Pred(len) do
   begin
-    c := SquareWordAdd(x, I, zz);
-    AddWordAt(extLen, c, zz, I shl 1);
+    d := d + (SquareWordAddTo(x, I, zz) and M);
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
   end;
-
+{$IFDEF DEBUG}
+  System.Assert(d = 0);
+{$ENDIF DEBUG}
   ShiftUpBit(extLen, zz, x[0] shl 31);
 end;
 
 class procedure TNat.Square(len: Int32; const x: TCryptoLibUInt32Array;
   xOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32);
 var
-  extLen, j, k, I: Int32;
+  extLen, j, k, I, zzPos: Int32;
   c: UInt32;
-  xVal, p: UInt64;
+  xVal, p, d: UInt64;
 begin
   extLen := len shl 1;
   c := 0;
@@ -1872,7 +1932,7 @@ begin
 
   repeat
     System.Dec(j);
-    xVal := UInt64(x[xOff + j]);
+    xVal := x[xOff + j] and M;
     p := xVal * xVal;
     System.Dec(k);
     zz[zzOff + k] := (c shl 31) or UInt32((p shr 33));
@@ -1881,12 +1941,24 @@ begin
     c := UInt32(p);
   until (not(j > 0));
 
+  d := 0;
+  zzPos := zzOff + 2;
+
   for I := 1 to System.Pred(len) do
   begin
-    c := SquareWordAdd(x, xOff, I, zz, zzOff);
-    AddWordAt(extLen, c, zz, zzOff, I shl 1);
+    d := d + (SquareWordAddTo(x, I, zz) and M);
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
   end;
-
+{$IFDEF DEBUG}
+  System.Assert(d = 0);
+{$ENDIF DEBUG}
   ShiftUpBit(extLen, zz, zzOff, x[xOff] shl 31);
 end;
 
