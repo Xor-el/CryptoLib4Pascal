@@ -961,7 +961,7 @@ end;
 class procedure TNat.CMov(len, mask: Int32; const x: TCryptoLibUInt32Array;
   xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32);
 var
-  LMASK, z_i, Diff: UInt32;
+  LMASK, z_i, LDiff: UInt32;
   I: Int32;
 begin
   LMASK := UInt32(-(mask and 1));
@@ -969,8 +969,8 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     z_i := z[zOff + I];
-    Diff := z_i xor x[xOff + I];
-    z_i := z_i xor ((Diff and LMASK));
+    LDiff := z_i xor x[xOff + I];
+    z_i := z_i xor ((LDiff and LMASK));
     z[zOff + I] := z_i;
   end;
 end;

@@ -765,18 +765,28 @@ begin
   TX25519Field.Copy(table, off, r.T, 0);
 end;
 
+class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
+  n: Int32): Int32;
+var
+  w, b: Int32;
+begin
+  w := TBits.Asr32(n, 3);
+  b := (n and 7) shl 2;
+  result := (X[w] shr b) and 15;
+end;
+
 class procedure TEd25519.PointLookup(const X: TCryptoLibUInt32Array; n: Int32;
   const table: TCryptoLibInt32Array; var r: TPointExt);
 var
-  w, Sign, abs, i, off, cond: Int32;
+  w, LSign, abs, i, off, cond: Int32;
 begin
   w := GetWindow4(X, n);
 
-  Sign := (TBits.Asr32(w, (PrecompTeeth - 1))) xor 1;
-  abs := (w xor -Sign) and PrecompMask;
+  LSign := (TBits.Asr32(w, (PrecompTeeth - 1))) xor 1;
+  abs := (w xor -LSign) and PrecompMask;
 
 {$IFDEF DEBUG}
-  System.Assert((Sign = 0) or (Sign = 1));
+  System.Assert((LSign = 0) or (LSign = 1));
   System.Assert((abs <= 0) and (abs < PrecompPoints));
 {$ENDIF DEBUG}
   i := 0;
@@ -796,8 +806,8 @@ begin
     System.Inc(i);
   end;
 
-  TX25519Field.CNegate(Sign, r.X);
-  TX25519Field.CNegate(Sign, r.T);
+  TX25519Field.CNegate(LSign, r.X);
+  TX25519Field.CNegate(LSign, r.T);
 end;
 
 class function TEd25519.DecodePointVar(const p: TCryptoLibByteArray;
@@ -930,17 +940,6 @@ begin
   PruneScalar(h, 0, s);
 
   ScalarMultBaseEncoded(s, pk, pkOff);
-end;
-
-class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
-  n: Int32): Int32;
-var
-  w, b: Int32;
-begin
-  w := TBits.Asr32(n, 3);
-  b := (n and 7) shl 2;
-  result := (X[w] shr b) and 15;
-  // result := (TBits.Asr32(X[w], b)) and 15;
 end;
 
 class function TEd25519.GetWnaf(const n: TCryptoLibUInt32Array; width: Int32)
