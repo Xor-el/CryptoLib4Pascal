@@ -44,25 +44,33 @@ type
       : TCryptoLibGenericArray<IECPoint>); virtual;
     function GetTwice: IECPoint; virtual;
     procedure SetTwice(const Value: IECPoint); virtual;
+
+    function GetConfWidth: Int32; virtual;
+    procedure SetConfWidth(Value: Int32); virtual;
+
+    function GetWidth: Int32; virtual;
+    procedure SetWidth(Value: Int32); virtual;
   strict protected
   var
     /// <summary>
     /// Array holding the precomputed <c>ECPoint</c>s used for a Window NAF
     /// multiplication.
     /// </summary>
-    Fm_preComp: TCryptoLibGenericArray<IECPoint>;
+    FPreComp: TCryptoLibGenericArray<IECPoint>;
 
     /// <summary>
     /// Array holding the negations of the precomputed <c>ECPoint</c>s used
     /// for a Window NAF multiplication.
     /// </summary>
-    Fm_preCompNeg: TCryptoLibGenericArray<IECPoint>;
+    FPreCompNeg: TCryptoLibGenericArray<IECPoint>;
 
     /// <summary>
     /// Holds an <c>ECPoint</c> representing Twice(this). Used for the Window
     /// NAF multiplication to create or extend the precomputed values.
     /// </summary>
-    Fm_twice: IECPoint;
+    FTwice: IECPoint;
+
+    FConfWidth, FWidth: Int32;
 
   public
 
@@ -74,6 +82,9 @@ type
       write SetPreCompNeg;
     property Twice: IECPoint read GetTwice write SetTwice;
 
+    property ConfWidth: Int32 read GetConfWidth write SetConfWidth;
+    property Width: Int32 read GetWidth write SetWidth;
+
   end;
 
 implementation
@@ -83,6 +94,8 @@ implementation
 constructor TWNafPreCompInfo.Create;
 begin
   inherited Create();
+  FConfWidth := -1;
+  FWidth := -1;
 end;
 
 destructor TWNafPreCompInfo.Destroy;
@@ -90,36 +103,56 @@ begin
   inherited Destroy;
 end;
 
+function TWNafPreCompInfo.GetConfWidth: Int32;
+begin
+  result := FConfWidth;
+end;
+
 function TWNafPreCompInfo.GetPreComp: TCryptoLibGenericArray<IECPoint>;
 begin
-  Result := Fm_preComp;
+  result := FPreComp;
 end;
 
 function TWNafPreCompInfo.GetPreCompNeg: TCryptoLibGenericArray<IECPoint>;
 begin
-  Result := Fm_preCompNeg;
+  result := FPreCompNeg;
 end;
 
 function TWNafPreCompInfo.GetTwice: IECPoint;
 begin
-  Result := Fm_twice;
+  result := FTwice;
+end;
+
+function TWNafPreCompInfo.GetWidth: Int32;
+begin
+  result := FWidth;
+end;
+
+procedure TWNafPreCompInfo.SetConfWidth(Value: Int32);
+begin
+  FConfWidth := Value;
 end;
 
 procedure TWNafPreCompInfo.SetPreComp(const Value
   : TCryptoLibGenericArray<IECPoint>);
 begin
-  Fm_preComp := Value;
+  FPreComp := Value;
 end;
 
 procedure TWNafPreCompInfo.SetPreCompNeg(const Value
   : TCryptoLibGenericArray<IECPoint>);
 begin
-  Fm_preCompNeg := Value;
+  FPreCompNeg := Value;
 end;
 
 procedure TWNafPreCompInfo.SetTwice(const Value: IECPoint);
 begin
-  Fm_twice := Value;
+  FTwice := Value;
+end;
+
+procedure TWNafPreCompInfo.SetWidth(Value: Int32);
+begin
+  FWidth := Value;
 end;
 
 end.

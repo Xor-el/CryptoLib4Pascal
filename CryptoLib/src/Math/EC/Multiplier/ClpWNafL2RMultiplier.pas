@@ -25,7 +25,6 @@ uses
   Math,
   ClpBits,
   ClpBigInteger,
-  ClpLongArray,
   ClpCryptoLibTypes,
   ClpIECC,
   ClpIWNafPreCompInfo,
@@ -52,18 +51,6 @@ type
     function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
       : IECPoint; override;
 
-    /// <summary>
-    /// Determine window width to use for a scalar multiplication of the
-    /// given size.
-    /// </summary>
-    /// <param name="bits">
-    /// the bit-length of the scalar to multiply by
-    /// </param>
-    /// <returns>
-    /// the window size to use
-    /// </returns>
-    function GetWindowSize(bits: Int32): Int32; virtual;
-
   public
 
     constructor Create();
@@ -85,26 +72,22 @@ begin
   inherited Destroy;
 end;
 
-function TWNafL2RMultiplier.GetWindowSize(bits: Int32): Int32;
-begin
-  Result := TWNafUtilities.GetWindowSize(bits);
-end;
-
 function TWNafL2RMultiplier.MultiplyPositive(const p: IECPoint;
   const k: TBigInteger): IECPoint;
 var
-  width, i, wi, digit, zeroes, n, highest, scale, lowBits, i1, i2: Int32;
-  wnafPreCompInfo: IWNafPreCompInfo;
+  width, minWidth, i, wi, digit, zeroes, n, highest, scale, lowBits, i1,
+    i2: Int32;
+  info: IWNafPreCompInfo;
   preComp, preCompNeg, table: TCryptoLibGenericArray<IECPoint>;
   wnaf: TCryptoLibInt32Array;
   R, lr: IECPoint;
 begin
-  // Clamp the window width in the range [2, 16]
-  width := Math.Max(2, Math.Min(16, GetWindowSize(k.BitLength)));
+  minWidth := TWNafUtilities.GetWindowSize(k.BitLength);
 
-  wnafPreCompInfo := TWNafUtilities.Precompute(p, width, true);
-  preComp := wnafPreCompInfo.preComp;
-  preCompNeg := wnafPreCompInfo.preCompNeg;
+  info := TWNafUtilities.Precompute(p, minWidth, true);
+  preComp := info.preComp;
+  preCompNeg := info.preCompNeg;
+  width := info.width;
 
   wnaf := TWNafUtilities.GenerateCompactWindowNaf(width, k);
 
@@ -136,7 +119,7 @@ begin
     // Optimization can only be used for values in the lower half of the table
     if ((n shl 2) < (1 shl width)) then
     begin
-      highest := TLongArray.BitLengths[n];
+      highest := 32 - TBits.NumberOfLeadingZeros(n);
 
       // TODO Get addition/doubling cost ratio from curve and compare to 'scale' to see if worth substituting?
       scale := width - highest;
@@ -183,8 +166,8 @@ begin
 
   Result := R;
 
-  wnafPreCompInfo.preComp := Nil; // Review
-  wnafPreCompInfo.preCompNeg := Nil; // Review
+  info.preComp := Nil; // Review
+  info.preCompNeg := Nil; // Review
 
 end;
 

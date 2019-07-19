@@ -51,8 +51,10 @@ type
 
   strict private
   const
-    FDEFAULT_WINDOW_SIZE_CUTOFFS: array [0 .. 5] of Int32 = (13, 41, 121, 337,
+    DEFAULT_WINDOW_SIZE_CUTOFFS: array [0 .. 5] of Int32 = (13, 41, 121, 337,
       897, 2305);
+
+    MAX_WIDTH = Int32(16);
 
   class var
     FEMPTY_BYTES: TCryptoLibByteArray;
@@ -95,11 +97,11 @@ type
 
     var
       Fm_p: IECPoint;
-      Fm_width: Int32;
+      FminWidth: Int32;
       Fm_includeNegated: Boolean;
 
     public
-      constructor Create(const p: IECPoint; width: Int32;
+      constructor Create(const p: IECPoint; minWidth: Int32;
         includeNegated: Boolean);
 
       function Precompute(const existing: IPreCompInfo): IPreCompInfo;
@@ -107,7 +109,8 @@ type
     end;
 
   class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
-    reqPreCompLen: Int32; includeNegated: Boolean): Boolean; static; inline;
+    width, reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
+    static; inline;
 
   class function CheckTable(const table: TCryptoLibGenericArray<IECPoint>;
     reqLen: Int32): Boolean; static; inline;
@@ -180,6 +183,22 @@ type
     /// <param name="bits">
     /// the bit-length of the scalar to multiply by
     /// </param>
+    /// <param name="maxWidth">
+    /// the maximum window width to return
+    /// </param>
+    /// <returns>
+    /// the window size to use
+    /// </returns>
+    class function GetWindowSize(bits, maxWidth: Int32): Int32; overload;
+      static; inline;
+
+    /// <summary>
+    /// Determine window width to use for a scalar multiplication of the
+    /// given size.
+    /// </summary>
+    /// <param name="bits">
+    /// the bit-length of the scalar to multiply by
+    /// </param>
     /// <param name="windowSizeCutoffs">
     /// a monotonically increasing list of bit sizes at which to increment
     /// the window width
@@ -190,11 +209,34 @@ type
     class function GetWindowSize(bits: Int32;
       const windowSizeCutoffs: array of Int32): Int32; overload; static;
 
-    class function MapPointWithPrecomp(const p: IECPoint; width: Int32;
+    /// <summary>
+    /// Determine window width to use for a scalar multiplication of the
+    /// given size.
+    /// </summary>
+    /// <param name="bits">
+    /// the bit-length of the scalar to multiply by
+    /// </param>
+    /// <param name="windowSizeCutoffs">
+    /// a monotonically increasing list of bit sizes at which to increment
+    /// the window width
+    /// </param>
+    /// /// <param name="maxWidth">
+    /// the maximum window width to return
+    /// </param>
+    /// <returns>
+    /// the window size to use
+    /// </returns>
+    class function GetWindowSize(bits: Int32;
+      const windowSizeCutoffs: array of Int32; maxWidth: Int32): Int32;
+      overload; static;
+
+    class function MapPointWithPrecomp(const p: IECPoint; minWidth: Int32;
       includeNegated: Boolean; const pointMap: IECPointMap): IECPoint; static;
 
-    class function Precompute(const p: IECPoint; width: Int32;
+    class function Precompute(const p: IECPoint; minWidth: Int32;
       includeNegated: Boolean): IWNafPreCompInfo; static;
+
+    // class procedure ConfigureBasepoint(const p: IECPoint); static;
 
   end;
 
@@ -392,7 +434,7 @@ class function TECAlgorithms.ImplShamirsTrickWNaf(const p: IECPoint;
   : IECPoint;
 var
   negK, negL: Boolean;
-  width: Int32;
+  minWidth, widthP, widthQ: Int32;
   Q: IECPoint;
   infoP, infoQ: IWNafPreCompInfo;
   preCompP, preCompQ, preCompNegP, preCompNegQ
@@ -408,12 +450,14 @@ begin
   LK := LK.Abs();
   LL := LL.Abs();
 
-  width := Max(2, Min(16, TWNafUtilities.GetWindowSize(Max(LK.BitLength,
-    LL.BitLength))));
+  minWidth := TWNafUtilities.GetWindowSize(Max(k.BitLength, l.BitLength), 8);
 
-  Q := TWNafUtilities.MapPointWithPrecomp(p, width, true, pointMapQ);
+  Q := TWNafUtilities.MapPointWithPrecomp(p, minWidth, true, pointMapQ);
   infoP := TWNafUtilities.GetWNafPreCompInfo(p);
   infoQ := TWNafUtilities.GetWNafPreCompInfo(Q);
+
+  widthP := Min(8, infoP.width);
+  widthQ := Min(8, infoQ.width);
 
   case negK of
     true:
@@ -443,8 +487,8 @@ begin
       preCompNegQ := infoQ.PreCompNeg
   end;
 
-  wnafP := TWNafUtilities.GenerateWindowNaf(width, LK);
-  wnafQ := TWNafUtilities.GenerateWindowNaf(width, LL);
+  wnafP := TWNafUtilities.GenerateWindowNaf(widthP, LK);
+  wnafQ := TWNafUtilities.GenerateWindowNaf(widthQ, LL);
 
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
@@ -460,7 +504,7 @@ class function TECAlgorithms.ImplShamirsTrickWNaf(const p: IECPoint;
   const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
 var
   negK, negL: Boolean;
-  widthP, widthQ: Int32;
+  minWidthP, minWidthQ, widthP, widthQ: Int32;
   infoP, infoQ: IWNafPreCompInfo;
   preCompP, preCompQ, preCompNegP, preCompNegQ
     : TCryptoLibGenericArray<IECPoint>;
@@ -475,11 +519,14 @@ begin
   LK := LK.Abs();
   LL := LL.Abs();
 
-  widthP := Max(2, Min(16, TWNafUtilities.GetWindowSize(LK.BitLength)));
-  widthQ := Max(2, Min(16, TWNafUtilities.GetWindowSize(LL.BitLength)));
+  minWidthP := TWNafUtilities.GetWindowSize(k.BitLength, 8);
+  minWidthQ := TWNafUtilities.GetWindowSize(l.BitLength, 8);
 
-  infoP := TWNafUtilities.Precompute(p, widthP, true);
-  infoQ := TWNafUtilities.Precompute(Q, widthQ, true);
+  infoP := TWNafUtilities.Precompute(p, minWidthP, true);
+  infoQ := TWNafUtilities.Precompute(Q, minWidthQ, true);
+
+  widthP := Min(8, infoP.width);
+  widthQ := Min(8, infoQ.width);
 
   if negK then
   begin
@@ -633,8 +680,9 @@ var
   halfCount, fullCount: Int32;
   negs: TCryptoLibBooleanArray;
   infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
+  infoP, infoQ: IWNafPreCompInfo;
   wnafs: TCryptoLibMatrixByteArray;
-  i, j0, j1, width: Int32;
+  i, j0, j1, minWidth, widthP, widthQ: Int32;
   kj0, kj1: TBigInteger;
   p, Q: IECPoint;
 begin
@@ -656,15 +704,21 @@ begin
     negs[j1] := kj1.SignValue < 0;
     kj1 := kj1.Abs();
 
-    width := Max(2, Min(16, TWNafUtilities.GetWindowSize(Max(kj0.BitLength,
-      kj1.BitLength))));
-
+    minWidth := TWNafUtilities.GetWindowSize
+      (Max(kj0.BitLength, kj1.BitLength), 8);
     p := ps[i];
-    Q := TWNafUtilities.MapPointWithPrecomp(p, width, true, pointMap);
-    infos[j0] := TWNafUtilities.GetWNafPreCompInfo(p);
-    infos[j1] := TWNafUtilities.GetWNafPreCompInfo(Q);
-    wnafs[j0] := TWNafUtilities.GenerateWindowNaf(width, kj0);
-    wnafs[j1] := TWNafUtilities.GenerateWindowNaf(width, kj1);
+    Q := TWNafUtilities.MapPointWithPrecomp(p, minWidth, true, pointMap);
+
+    infoP := TWNafUtilities.GetWNafPreCompInfo(p);
+    infoQ := TWNafUtilities.GetWNafPreCompInfo(Q);
+
+    widthP := Min(8, infoP.width);
+    widthQ := Min(8, infoQ.width);
+
+    infos[j0] := infoP;
+    infos[j1] := infoQ;
+    wnafs[j0] := TWNafUtilities.GenerateWindowNaf(widthP, kj0);
+    wnafs[j1] := TWNafUtilities.GenerateWindowNaf(widthQ, kj1);
   end;
 
   result := ImplSumOfMultiplies(negs, infos, wnafs);
@@ -681,8 +735,9 @@ class function TECAlgorithms.ImplSumOfMultiplies
   (const ps: TCryptoLibGenericArray<IECPoint>;
   const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
-  count, i, width: Int32;
+  count, i, width, minWidth: Int32;
   negs: TCryptoLibBooleanArray;
+  info: IWNafPreCompInfo;
   infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
   wnafs: TCryptoLibMatrixByteArray;
   ki: TBigInteger;
@@ -700,8 +755,11 @@ begin
     negs[i] := ki.SignValue < 0;
     ki := ki.Abs();
 
-    width := Max(2, Min(16, TWNafUtilities.GetWindowSize(ki.BitLength)));
-    infos[i] := TWNafUtilities.Precompute(ps[i], width, true);
+    minWidth := TWNafUtilities.GetWindowSize(ki.BitLength, 8);
+    info := TWNafUtilities.Precompute(ps[i], minWidth, true);
+    width := Min(8, info.width);
+
+    infos[i] := info;
     wnafs[i] := TWNafUtilities.GenerateWindowNaf(width, ki);
   end;
 
@@ -1129,12 +1187,43 @@ begin
   TWNafUtilities.Boot;
 end;
 
+// class procedure TWNafUtilities.ConfigureBasepoint(const p: IECPoint);
+// var
+// c: IECCurve;
+// n: TBigInteger;
+// bits, confWidth: Int32;
+// begin
+// c := p.Curve;
+// if (c = Nil) then
+// begin
+// Exit;
+// end;
+//
+// n := c.Order;
+// if (not n.IsInitialized) then
+// begin
+// bits := c.FieldSize + 1;
+// end
+// else
+// begin
+// bits := n.BitLength;
+// end;
+//
+// confWidth := Min(MAX_WIDTH, GetWindowSize(bits) + 3);
+//
+// c.Precompute(p, PRECOMP_NAME,  );
+// end;
+
 class function TWNafUtilities.CheckExisting(const existingWNaf
-  : IWNafPreCompInfo; reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
+  : IWNafPreCompInfo; width, reqPreCompLen: Int32;
+  includeNegated: Boolean): Boolean;
 begin
-  result := (existingWNaf <> Nil) and CheckTable(existingWNaf.PreComp,
-    reqPreCompLen) and ((not includeNegated) or
-    CheckTable(existingWNaf.PreCompNeg, reqPreCompLen));
+  result := (existingWNaf <> Nil) and
+    (existingWNaf.width >= Max(existingWNaf.confWidth, width))
+
+    and CheckTable(existingWNaf.PreComp, reqPreCompLen) and
+    ((not includeNegated) or CheckTable(existingWNaf.PreCompNeg,
+    reqPreCompLen));
 end;
 
 class function TWNafUtilities.GenerateCompactNaf(const k: TBigInteger)
@@ -1507,7 +1596,7 @@ begin
 end;
 
 class function TWNafUtilities.GetWindowSize(bits: Int32;
-  const windowSizeCutoffs: array of Int32): Int32;
+  const windowSizeCutoffs: array of Int32; maxWidth: Int32): Int32;
 var
   w: Int32;
 begin
@@ -1521,12 +1610,23 @@ begin
     System.Inc(w);
   end;
 
-  result := w + 2;
+  result := Max(2, Min(maxWidth, w + 2));
+end;
+
+class function TWNafUtilities.GetWindowSize(bits: Int32;
+  const windowSizeCutoffs: array of Int32): Int32;
+begin
+  result := GetWindowSize(bits, windowSizeCutoffs, MAX_WIDTH);
+end;
+
+class function TWNafUtilities.GetWindowSize(bits, maxWidth: Int32): Int32;
+begin
+  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, maxWidth);
 end;
 
 class function TWNafUtilities.GetWindowSize(bits: Int32): Int32;
 begin
-  result := GetWindowSize(bits, FDEFAULT_WINDOW_SIZE_CUTOFFS);
+  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, MAX_WIDTH);
 end;
 
 class function TWNafUtilities.GetWNafPreCompInfo(const preCompInfo
@@ -1545,30 +1645,32 @@ begin
 end;
 
 class function TWNafUtilities.MapPointWithPrecomp(const p: IECPoint;
-  width: Int32; includeNegated: Boolean; const pointMap: IECPointMap): IECPoint;
+  minWidth: Int32; includeNegated: Boolean; const pointMap: IECPointMap)
+  : IECPoint;
 var
   c: IECCurve;
-  wnafPreCompP: IWNafPreCompInfo;
+  infoP: IWNafPreCompInfo;
   Q: IECPoint;
 begin
   c := p.Curve;
 
-  wnafPreCompP := Precompute(p, width, includeNegated);
+  infoP := Precompute(p, minWidth, includeNegated);
 
   Q := pointMap.Map(p);
 
-  c.Precompute(Q, PRECOMP_NAME, TMapPointCallback.Create(wnafPreCompP,
-    includeNegated, pointMap) as IMapPointCallback);
+  c.Precompute(Q, PRECOMP_NAME, TMapPointCallback.Create(infoP, includeNegated,
+    pointMap) as IMapPointCallback);
 
   result := Q;
 
 end;
 
-class function TWNafUtilities.Precompute(const p: IECPoint; width: Int32;
+class function TWNafUtilities.Precompute(const p: IECPoint; minWidth: Int32;
   includeNegated: Boolean): IWNafPreCompInfo;
 begin
-  result := p.Curve.Precompute(p, PRECOMP_NAME, TWNafCallback.Create(p, width,
-    includeNegated) as IWNafCallback) as IWNafPreCompInfo;
+  result := p.Curve.Precompute(p, PRECOMP_NAME,
+    TWNafCallback.Create(p, minWidth, includeNegated) as IWNafCallback)
+    as IWNafPreCompInfo;
 end;
 
 { TWNafUtilities.TMapPointCallback }
@@ -1592,6 +1694,8 @@ var
 begin
   tempResult := TWNafPreCompInfo.Create();
 
+  tempResult.confWidth := Fm_wnafPreCompP.confWidth;
+
   twiceP := Fm_wnafPreCompP.Twice;
   if (twiceP <> Nil) then
   begin
@@ -1608,6 +1712,7 @@ begin
   end;
 
   tempResult.PreComp := preCompQ;
+  tempResult.width := Fm_wnafPreCompP.width;
 
   if (Fm_includeNegated) then
   begin
@@ -1627,12 +1732,12 @@ end;
 
 { TWNafUtilities.TWNafCallback }
 
-constructor TWNafUtilities.TWNafCallback.Create(const p: IECPoint; width: Int32;
-  includeNegated: Boolean);
+constructor TWNafUtilities.TWNafCallback.Create(const p: IECPoint;
+  minWidth: Int32; includeNegated: Boolean);
 begin
   Inherited Create();
   Fm_p := p;
-  Fm_width := width;
+  FminWidth := minWidth;
   Fm_includeNegated := includeNegated;
 end;
 
@@ -1643,21 +1748,23 @@ var
   c: IECCurve;
   PreComp, PreCompNeg, EMPTY_POINTS: TCryptoLibGenericArray<IECPoint>;
   tempRes, existingWNaf: IWNafPreCompInfo;
-  reqPreCompLen, iniPreCompLen, curPreCompLen, pos: Int32;
+  reqPreCompLen, iniPreCompLen, curPreCompLen, pos, width: Int32;
   iso, iso2, iso3: IECFieldElement;
 begin
+  c := Fm_p.Curve;
   EMPTY_POINTS := Nil;
   existingWNaf := existing as IWNafPreCompInfo;
 
-  reqPreCompLen := 1 shl Max(0, Fm_width - 2);
+  width := Max(2, Min(MAX_WIDTH, FminWidth));
+  reqPreCompLen := 1 shl (width - 2);
 
-  if (CheckExisting(existingWNaf, reqPreCompLen, Fm_includeNegated)) then
+  if (CheckExisting(existingWNaf, width, reqPreCompLen, Fm_includeNegated)) then
   begin
     result := existingWNaf;
     Exit;
   end;
 
-  c := Fm_p.Curve;
+  tempRes := TWNafPreCompInfo.Create();
 
   if (existingWNaf <> Nil) then
   begin
@@ -1665,6 +1772,9 @@ begin
     PreCompNeg := existingWNaf.PreCompNeg;
     twiceP := existingWNaf.Twice;
   end;
+
+  width := Min(MAX_WIDTH, Max(tempRes.confWidth, width));
+  reqPreCompLen := 1 shl (width - 2);
 
   iniPreCompLen := 0;
   if (PreComp = Nil) then
@@ -1789,10 +1899,10 @@ begin
     end;
   end;
 
-  tempRes := TWNafPreCompInfo.Create();
   tempRes.PreComp := PreComp;
   tempRes.PreCompNeg := PreCompNeg;
   tempRes.Twice := twiceP;
+  tempRes.width := width;
 
   result := tempRes;
 end;

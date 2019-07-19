@@ -30,18 +30,6 @@ type
 
     ['{E2A5E4EF-C092-4F83-ACCF-0FC8731FB274}']
 
-    /// <summary>
-    /// Determine window width to use for a scalar multiplication of the
-    /// given size.
-    /// </summary>
-    /// <param name="bits">
-    /// the bit-length of the scalar to multiply by
-    /// </param>
-    /// <returns>
-    /// the window size to use
-    /// </returns>
-    function GetWindowSize(bits: Int32): Int32;
-
   end;
 
 implementation
