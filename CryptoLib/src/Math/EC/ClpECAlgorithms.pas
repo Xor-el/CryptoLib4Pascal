@@ -108,6 +108,27 @@ type
 
     end;
 
+  type
+    IBasePointCallback = interface(IPreCompCallback)
+      ['{5A81CB00-3CB4-474D-A2A7-E949F7E71AEC}']
+
+    end;
+
+  type
+    TBasePointCallback = class(TInterfacedObject, IPreCompCallback,
+      IBasePointCallback)
+
+    strict private
+    var
+      FConfWidth: Int32;
+
+    public
+      constructor Create(ConfWidth: Int32);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
   class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
     width, reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
     static; inline;
@@ -236,7 +257,7 @@ type
     class function Precompute(const p: IECPoint; minWidth: Int32;
       includeNegated: Boolean): IWNafPreCompInfo; static;
 
-    // class procedure ConfigureBasepoint(const p: IECPoint); static;
+    class procedure ConfigureBasepoint(const p: IECPoint); static;
 
   end;
 
@@ -1187,39 +1208,74 @@ begin
   TWNafUtilities.Boot;
 end;
 
-// class procedure TWNafUtilities.ConfigureBasepoint(const p: IECPoint);
-// var
-// c: IECCurve;
-// n: TBigInteger;
-// bits, confWidth: Int32;
-// begin
-// c := p.Curve;
-// if (c = Nil) then
-// begin
-// Exit;
-// end;
-//
-// n := c.Order;
-// if (not n.IsInitialized) then
-// begin
-// bits := c.FieldSize + 1;
-// end
-// else
-// begin
-// bits := n.BitLength;
-// end;
-//
-// confWidth := Min(MAX_WIDTH, GetWindowSize(bits) + 3);
-//
-// c.Precompute(p, PRECOMP_NAME,  );
-// end;
+class function TWNafUtilities.GetWindowSize(bits: Int32;
+  const windowSizeCutoffs: array of Int32; maxWidth: Int32): Int32;
+var
+  w: Int32;
+begin
+  w := 0;
+  while (w < System.length(windowSizeCutoffs)) do
+  begin
+    if (bits < windowSizeCutoffs[w]) then
+    begin
+      break;
+    end;
+    System.Inc(w);
+  end;
+
+  result := Max(2, Min(maxWidth, w + 2));
+end;
+
+class function TWNafUtilities.GetWindowSize(bits: Int32;
+  const windowSizeCutoffs: array of Int32): Int32;
+begin
+  result := GetWindowSize(bits, windowSizeCutoffs, MAX_WIDTH);
+end;
+
+class function TWNafUtilities.GetWindowSize(bits, maxWidth: Int32): Int32;
+begin
+  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, maxWidth);
+end;
+
+class function TWNafUtilities.GetWindowSize(bits: Int32): Int32;
+begin
+  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, MAX_WIDTH);
+end;
+
+class procedure TWNafUtilities.ConfigureBasepoint(const p: IECPoint);
+var
+  c: IECCurve;
+  n: TBigInteger;
+  bits, ConfWidth: Int32;
+begin
+  c := p.Curve;
+  if (c = Nil) then
+  begin
+    Exit;
+  end;
+
+  n := c.Order;
+  if (not n.IsInitialized) then
+  begin
+    bits := c.FieldSize + 1;
+  end
+  else
+  begin
+    bits := n.BitLength;
+  end;
+
+  ConfWidth := Min(MAX_WIDTH, GetWindowSize(bits) + 3);
+
+  c.Precompute(p, PRECOMP_NAME, TBasePointCallback.Create(ConfWidth)
+    as IBasePointCallback);
+end;
 
 class function TWNafUtilities.CheckExisting(const existingWNaf
   : IWNafPreCompInfo; width, reqPreCompLen: Int32;
   includeNegated: Boolean): Boolean;
 begin
   result := (existingWNaf <> Nil) and
-    (existingWNaf.width >= Max(existingWNaf.confWidth, width))
+    (existingWNaf.width >= Max(existingWNaf.ConfWidth, width))
 
     and CheckTable(existingWNaf.PreComp, reqPreCompLen) and
     ((not includeNegated) or CheckTable(existingWNaf.PreCompNeg,
@@ -1595,40 +1651,6 @@ begin
   result := diff.BitCount;
 end;
 
-class function TWNafUtilities.GetWindowSize(bits: Int32;
-  const windowSizeCutoffs: array of Int32; maxWidth: Int32): Int32;
-var
-  w: Int32;
-begin
-  w := 0;
-  while (w < System.length(windowSizeCutoffs)) do
-  begin
-    if (bits < windowSizeCutoffs[w]) then
-    begin
-      break;
-    end;
-    System.Inc(w);
-  end;
-
-  result := Max(2, Min(maxWidth, w + 2));
-end;
-
-class function TWNafUtilities.GetWindowSize(bits: Int32;
-  const windowSizeCutoffs: array of Int32): Int32;
-begin
-  result := GetWindowSize(bits, windowSizeCutoffs, MAX_WIDTH);
-end;
-
-class function TWNafUtilities.GetWindowSize(bits, maxWidth: Int32): Int32;
-begin
-  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, maxWidth);
-end;
-
-class function TWNafUtilities.GetWindowSize(bits: Int32): Int32;
-begin
-  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, MAX_WIDTH);
-end;
-
 class function TWNafUtilities.GetWNafPreCompInfo(const preCompInfo
   : IPreCompInfo): IWNafPreCompInfo;
 begin
@@ -1694,7 +1716,7 @@ var
 begin
   tempResult := TWNafPreCompInfo.Create();
 
-  tempResult.confWidth := Fm_wnafPreCompP.confWidth;
+  tempResult.ConfWidth := Fm_wnafPreCompP.ConfWidth;
 
   twiceP := Fm_wnafPreCompP.Twice;
   if (twiceP <> Nil) then
@@ -1773,7 +1795,7 @@ begin
     twiceP := existingWNaf.Twice;
   end;
 
-  width := Min(MAX_WIDTH, Max(tempRes.confWidth, width));
+  width := Min(MAX_WIDTH, Max(tempRes.ConfWidth, width));
   reqPreCompLen := 1 shl (width - 2);
 
   iniPreCompLen := 0;
@@ -1905,6 +1927,49 @@ begin
   tempRes.width := width;
 
   result := tempRes;
+end;
+
+{ TWNafUtilities.TBasePointCallback }
+
+constructor TWNafUtilities.TBasePointCallback.Create(ConfWidth: Int32);
+begin
+  Inherited Create();
+  FConfWidth := ConfWidth;
+end;
+
+function TWNafUtilities.TBasePointCallback.Precompute(const existing
+  : IPreCompInfo): IPreCompInfo;
+var
+  existingWNaf, tempResult: IWNafPreCompInfo;
+begin
+
+  if Supports(existing, IWNafPreCompInfo) then
+  begin
+    existingWNaf := existing as IWNafPreCompInfo;
+  end
+  else
+  begin
+    existingWNaf := Nil;
+  end;
+
+  if ((existingWNaf <> Nil) and (existingWNaf.ConfWidth = FConfWidth)) then
+  begin
+    result := existingWNaf;
+    Exit;
+  end;
+
+  tempResult := TWNafPreCompInfo.Create();
+
+  tempResult.ConfWidth := FConfWidth;
+
+  if (existingWNaf <> Nil) then
+  begin
+    tempResult.PreComp := existingWNaf.PreComp;
+    tempResult.PreCompNeg := existingWNaf.PreCompNeg;
+    tempResult.Twice := existingWNaf.Twice;
+    tempResult.width := existingWNaf.width;
+  end;
+  result := tempResult;
 end;
 
 end.
