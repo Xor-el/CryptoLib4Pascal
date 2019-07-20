@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Encoders;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac;..\..\Crypto\Signers\SignersEncodings;..\..\Math\EC\Custom\Djb;..\..\Math\EC\Rfc7748;..\..\Math\EC\Rfc8032;..\..\Asn1\Edec"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Encoders;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac;..\..\Crypto\Signers\SignersEncodings;..\..\Math\EC\Custom\Djb;..\..\Math\EC\Rfc7748;..\..\Math\EC\Rfc8032;..\..\Asn1\Edec;..\..\Asn1\CryptLib"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="1"/>
-    <Files Count="370">
+    <Files Count="371">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1508,6 +1508,10 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Utils\Randoms\ClpAESPRNGRandom.pas"/>
         <UnitName Value="ClpAESPRNGRandom"/>
       </Item370>
+      <Item371>
+        <Filename Value="..\..\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas"/>
+        <UnitName Value="ClpCryptLibObjectIdentifiers"/>
+      </Item371>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

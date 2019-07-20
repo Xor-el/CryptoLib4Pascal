@@ -374,6 +374,7 @@ uses
   ClpIDHDomainParameters in '..\..\CryptoLib\src\Interfaces\ClpIDHDomainParameters.pas',
   ClpIDHValidationParams in '..\..\CryptoLib\src\Interfaces\ClpIDHValidationParams.pas',
   ClpAESPRNGRandom in '..\..\CryptoLib\src\Utils\Randoms\ClpAESPRNGRandom.pas',
+  ClpCryptLibObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

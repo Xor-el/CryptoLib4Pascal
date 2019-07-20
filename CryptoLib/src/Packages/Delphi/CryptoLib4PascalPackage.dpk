@@ -402,6 +402,7 @@ contains
   ClpIDHValidationParameters in '..\..\Interfaces\ClpIDHValidationParameters.pas',
   ClpIDHDomainParameters in '..\..\Interfaces\ClpIDHDomainParameters.pas',
   ClpIDHValidationParams in '..\..\Interfaces\ClpIDHValidationParams.pas',
-  ClpAESPRNGRandom in '..\..\Utils\Randoms\ClpAESPRNGRandom.pas';
+  ClpAESPRNGRandom in '..\..\Utils\Randoms\ClpAESPRNGRandom.pas',
+  ClpCryptLibObjectIdentifiers in '..\..\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas';
 
 end.

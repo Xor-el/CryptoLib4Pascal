@@ -133,7 +133,7 @@ uses
   ClpDHKeyGeneratorHelper, ClpDHParametersHelper, ClpDHPrivateKeyParameters, 
   ClpDHPublicKeyParameters, ClpDHKeyGenerationParameters, ClpDHKeyParameters, 
   ClpDHValidationParameters, ClpDHParameters, ClpDHDomainParameters, 
-  ClpDHValidationParams, ClpAESPRNGRandom;
+  ClpDHValidationParams, ClpAESPRNGRandom, ClpCryptLibObjectIdentifiers;
 
 implementation
 

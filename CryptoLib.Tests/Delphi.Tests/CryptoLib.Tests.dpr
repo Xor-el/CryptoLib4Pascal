@@ -387,6 +387,7 @@ uses
   ClpIDHAgreement in '..\..\CryptoLib\src\Interfaces\ClpIDHAgreement.pas',
   ClpDHAgreement in '..\..\CryptoLib\src\Crypto\Agreement\ClpDHAgreement.pas',
   ClpAESPRNGRandom in '..\..\CryptoLib\src\Utils\Randoms\ClpAESPRNGRandom.pas',
+  ClpCryptLibObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
