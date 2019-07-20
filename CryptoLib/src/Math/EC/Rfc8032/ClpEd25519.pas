@@ -303,7 +303,7 @@ type
     class procedure ScalarMultBaseEncoded(const k, r: TCryptoLibByteArray;
       rOff: Int32); static; inline;
 
-    class procedure ScalarMultStraussVar(const nb, np: TCryptoLibUInt32Array;
+    class procedure ScalarMultStrausVar(const nb, np: TCryptoLibUInt32Array;
       var p: TPointAffine; var r: TPointAccum); static;
 
     class function ValidateDigestOutputSize(const ADigest: IDigest)
@@ -1155,7 +1155,7 @@ begin
   DecodeScalar(k, 0, nA);
 
   pR := TPointAccum.CreatePointAccum();
-  ScalarMultStraussVar(nS, nA, pA, pR);
+  ScalarMultStrausVar(nS, nA, pA, pR);
 
   System.SetLength(check, PointBytes);
 
@@ -1934,7 +1934,7 @@ begin
   TX25519Field.Copy(p.Z, 0, Z, 0);
 end;
 
-class procedure TEd25519.ScalarMultStraussVar(const nb,
+class procedure TEd25519.ScalarMultStrausVar(const nb,
   np: TCryptoLibUInt32Array; var p: TPointAffine; var r: TPointAccum);
 var
   width, bit, wb, wp, LSign, index: Int32;
