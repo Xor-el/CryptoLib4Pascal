@@ -6201,21 +6201,23 @@ function TAbstractF2mPoint.SatisfiesOrder: Boolean;
 var
   Cofactor: TBigInteger;
   n: IECPoint;
-  x, rhs, lambda, w, t: IECFieldElement;
+  x, rhs, L, t, y: IECFieldElement;
   Lcurve: IECCurve;
 begin
   Lcurve := curve;
   Cofactor := Lcurve.GetCofactor();
   if (TBigInteger.Two.Equals(Cofactor)) then
   begin
-    // /*
-    // *  Check that the trace of (X + A) is 0, then there exists a solution to L^2 + L = X + A,
-    // *  and so a halving is possible, so this point is the double of another.
-    // */
+    (*
+      * Check that 0 == Tr(X + A); then there exists a solution to L^2 + L = X + A, and
+      * so a halving is possible, so this point is the double of another.
+      *
+      * Note: Tr(A) == 1 for cofactor 2 curves.
+    *)
     n := Normalize();
     x := n.AffineXCoord;
     rhs := x.Add(Lcurve.a);
-    result := (rhs as IAbstractF2mFieldElement).Trace() = 0;
+    result := (x as IAbstractF2mFieldElement).Trace() <> 0;
     Exit;
   end;
   if (TBigInteger.Four.Equals(Cofactor)) then
@@ -6226,21 +6228,33 @@ begin
     // * and check if Tr(w + A) == 0 for at least one; then a second halving is possible
     // * (see comments for cofactor 2 above), so this point is four times another.
     // *
-    // * Note: Tr(x^2) == Tr(x).
+    // * Note: Tr(A) == 0 for cofactor 4 curves.
     // */
     n := Normalize();
     x := n.AffineXCoord;
-    lambda := (Lcurve as IAbstractF2mCurve).SolveQuadraticEquation
-      (x.Add(curve.a));
-    if (lambda = Nil) then
+    L := (Lcurve as IAbstractF2mCurve).SolveQuadraticEquation(x.Add(curve.a));
+    if (L = Nil) then
     begin
       result := false;
       Exit;
     end;
-    w := x.Multiply(lambda).Add(n.AffineYCoord);
-    t := w.Add(Lcurve.a);
-    result := ((t as IAbstractF2mFieldElement).Trace() = 0) or
-      ((t.Add(x) as IAbstractF2mFieldElement).Trace() = 0);
+
+    (*
+      * A solution exists, therefore 0 == Tr(X + A) == Tr(X).
+    *)
+    y := n.AffineYCoord;
+    t := x.Multiply(L).Add(y);
+
+    (*
+      * Either T or (T + X) is the square of a half-point's x coordinate (hx). In either
+      * case, the half-point can be halved again when 0 == Tr(hx + A).
+      *
+      * Note: Tr(hx + A) == Tr(hx) == Tr(hx^2) == Tr(T) == Tr(T + X)
+      *
+      * Check that 0 == Tr(T); then there exists a solution to L^2 + L = hx + A, and so a
+      * second halving is possible and this point is four times some other.
+    *)
+    result := (t as IAbstractF2mFieldElement).Trace() = 0;
     Exit;
   end;
 

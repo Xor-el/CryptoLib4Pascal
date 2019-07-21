@@ -200,6 +200,9 @@ type
     procedure ImplAddSubtractMultiplyTwiceEncodingTestAllCoords
       (const x9ECParameters: IX9ECParameters);
 
+    function SolveQuadraticEquation(const c: IECCurve;
+      const rhs: IECFieldElement): IECFieldElement;
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -509,18 +512,47 @@ end;
 procedure TTestECPoint.ImplValidityTest(const c: IECCurve; const g: IECPoint);
 var
   h: TBigInteger;
-  order2, bad: IECPoint;
+  sqrtB, L, T, x, y: IECFieldElement;
+  order2, bad2, good2, order4, bad4_1, bad4_2, bad4_3, good4: IECPoint;
 begin
   CheckTrue(g.IsValid());
 
-  h := c.getCofactor();
-  if ((h.IsInitialized) and (h.CompareTo(TBigInteger.One) > 0)) then
+  if (TECAlgorithms.IsF2mCurve(c)) then
   begin
-    if (TECAlgorithms.IsF2mCurve(c)) then
+    h := c.Cofactor;
+    if (h.IsInitialized) then
     begin
-      order2 := c.CreatePoint(TBigInteger.Zero, c.b.Sqrt().ToBigInteger());
-      bad := g.Add(order2);
-      CheckFalse(bad.IsValid());
+      if (not h.TestBit(0)) then
+      begin
+        sqrtB := c.b.Sqrt();
+        order2 := c.CreatePoint(TBigInteger.Zero, sqrtB.ToBigInteger);
+        CheckTrue(order2.Twice().IsInfinity);
+        CheckFalse(order2.IsValid());
+        bad2 := g.Add(order2);
+        CheckFalse(bad2.IsValid());
+        good2 := bad2.Add(order2);
+        CheckTrue(good2.IsValid());
+
+        if (not h.TestBit(1)) then
+        begin
+          L := SolveQuadraticEquation(c, c.a);
+          CheckNotNull(L);
+          T := sqrtB;
+          x := T.Sqrt();
+          y := T.Add(x.Multiply(L));
+          order4 := c.CreatePoint(x.ToBigInteger(), y.ToBigInteger());
+          CheckTrue(order4.Twice().Equals(order2));
+          CheckFalse(order4.IsValid());
+          bad4_1 := g.Add(order4);
+          CheckFalse(bad4_1.IsValid());
+          bad4_2 := bad4_1.Add(order4);
+          CheckFalse(bad4_2.IsValid());
+          bad4_3 := bad4_2.Add(order4);
+          CheckFalse(bad4_3.IsValid());
+          good4 := bad4_3.Add(order4);
+          CheckTrue(good4.IsValid());
+        end;
+      end;
     end;
   end;
 end;
@@ -533,6 +565,47 @@ begin
   FpInstance.CreatePoints;
   F2mInstance := TF2m.Create;
   F2mInstance.CreatePoints;
+end;
+
+function TTestECPoint.SolveQuadraticEquation(const c: IECCurve;
+  const rhs: IECFieldElement): IECFieldElement;
+var
+  gamma, z, zeroElement, T, w, w2: IECFieldElement;
+  m, i: Int32;
+  rand: ISecureRandom;
+begin
+  if (rhs.IsZero) then
+  begin
+    result := rhs;
+    Exit;
+  end;
+
+  zeroElement := c.FromBigInteger(TBigInteger.Zero);
+  z := zeroElement;
+  gamma := z;
+
+  m := c.FieldSize;
+  rand := TSecureRandom.Create();
+
+  repeat
+    T := c.FromBigInteger(TBigInteger.Create(m, rand));
+    z := zeroElement;
+    w := rhs;
+    for i := 1 to System.Pred(m) do
+    begin
+      w2 := w.Square();
+      z := z.Square().Add(w2.Multiply(T));
+      w := w2.Add(rhs);
+    end;
+    if (not w.IsZero) then
+    begin
+      result := Nil;
+      Exit;
+    end;
+    gamma := z.Square().Add(z);
+  until (not gamma.IsZero);
+
+  result := z;
 end;
 
 procedure TTestECPoint.TearDown;
