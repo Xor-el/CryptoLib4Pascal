@@ -345,6 +345,7 @@ type
 
   class procedure Precompute(); static;
 
+  // NOTE: Only for use by X25519
   class procedure ScalarMultBaseYZ(const k: TCryptoLibByteArray; kOff: Int32;
     const Y, Z: TCryptoLibInt32Array); static; inline;
 
