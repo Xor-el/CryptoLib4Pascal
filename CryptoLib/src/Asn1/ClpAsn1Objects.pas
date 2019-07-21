@@ -4838,51 +4838,48 @@ end;
 class function TDerObjectIdentifier.IsValidBranchID(const branchID: String;
   start: Int32): Boolean;
 var
-  periodAllowed: Boolean;
-  Pos: Int32;
+  digitCount, Pos: Int32;
   ch: Char;
 begin
-  periodAllowed := False;
+  digitCount := 0;
 
   Pos := System.length(branchID) + 1;
   System.Dec(Pos);
+
   while (Pos >= start) do
   begin
     ch := branchID[Pos];
 
-    // TODO Leading zeroes?
-    // if (('0' <= ch) and (ch <= '9')) then
-    // begin
-    // periodAllowed := true;
-    // continue;
-    // end;
-
-    // TODO Leading zeroes?
-    if (CharInSet(ch, ['0' .. '9'])) then
-    begin
-      periodAllowed := True;
-      System.Dec(Pos);
-      continue;
-    end;
-
     if (ch = '.') then
     begin
-      if (not(periodAllowed)) then
+      if ((digitCount = 0) or ((digitCount > 1) and (branchID[Pos + 1] = '0')))
+      then
       begin
         result := False;
         Exit;
       end;
 
-      periodAllowed := False;
-      System.Dec(Pos);
-      continue;
+      digitCount := 0;
+    end
+    else if (CharInSet(ch, ['0' .. '9'])) then
+    begin
+      System.Inc(digitCount);
+    end
+    else
+    begin
+      result := False;
+      Exit;
     end;
+    System.Dec(Pos);
+  end;
 
+  if ((digitCount = 0) or ((digitCount > 1) and (branchID[Pos + 1] = '0'))) then
+  begin
     result := False;
     Exit;
   end;
 
-  result := periodAllowed;
+  result := True;
 end;
 
 class function TDerObjectIdentifier.IsValidIdentifier(const identifier
@@ -4897,11 +4894,7 @@ begin
   end;
 
   first := identifier[1];
-  // if ((first < '0') or (first > '2')) then
-  // begin
-  // result := false;
-  // Exit;
-  // end;
+
   if (not CharInSet(first, ['0' .. '2'])) then
   begin
     result := False;

@@ -43,15 +43,13 @@ type
   private
 
   var
-    Foid: string;
     Freq1, Freq2: TBytes;
 
     procedure DoRecodeCheck(const oid: String; const enc: TBytes);
     procedure DoValidOidCheck(const oid: String);
-    procedure DoInvalidOidCheck;
+    procedure DoInvalidOidCheck(const oid: String);
     procedure DoBranchCheck(const stem, branch: String);
     procedure DoOnCheck(const stem, test: String; expected: Boolean);
-    procedure DoConstructorMethod;
 
   protected
     procedure SetUp; override;
@@ -78,23 +76,18 @@ begin
     + branch);
 end;
 
-procedure TTestOID.DoConstructorMethod;
+procedure TTestOID.DoInvalidOidCheck(const oid: String);
 begin
-  TDerObjectIdentifier.Create(Foid);
-end;
+  try
+    TDerObjectIdentifier.Create(oid);
+    Fail(Format('failed to catch bad oid: %s', [oid]));
 
-procedure TTestOID.DoInvalidOidCheck;
-var
-{$IFNDEF FPC}
-  Method: TTestMethod;
-{$ELSE}
-  Method: TRunMethod;
-{$ENDIF FPC}
-begin
-
-  Method := DoConstructorMethod;
-  CheckException(Method, EFormatCryptoLibException,
-    'Expected "EFormatCryptoLibException" But None Gotten');
+  except
+    on e: EFormatCryptoLibException do
+    begin
+      // expected
+    end;
+  end;
 end;
 
 procedure TTestOID.DoOnCheck(const stem, test: String; expected: Boolean);
@@ -145,40 +138,35 @@ begin
   DoRecodeCheck('1.2.54.34359733987.17', Freq2);
 
   DoValidOidCheck('0.1');
+  DoValidOidCheck('1.0');
+  DoValidOidCheck('1.0.2');
+  DoValidOidCheck('1.0.20');
+  DoValidOidCheck('1.0.200');
   DoValidOidCheck
     ('1.1.127.32512.8323072.2130706432.545460846592.139637976727552.35747322042253312.9151314442816847872');
   DoValidOidCheck('1.2.123.12345678901.1.1.1');
 
   DoValidOidCheck('2.25.196556539987194312349856245628873852187.1');
 
-  Foid := '0';
-  DoInvalidOidCheck;
-  Foid := '1';
-  DoInvalidOidCheck;
-  Foid := '2';
-  DoInvalidOidCheck;
-  Foid := '3.1';
-  DoInvalidOidCheck;
-  Foid := '..1';
-  DoInvalidOidCheck;
-  Foid := '192.168.1.1';
-  DoInvalidOidCheck;
-  Foid := '.123452';
-  DoInvalidOidCheck;
-  Foid := '1.';
-  DoInvalidOidCheck;
-  Foid := '1.345.23.34..234';
-  DoInvalidOidCheck;
-  Foid := '1.345.23.34.234.';
-  DoInvalidOidCheck;
-  Foid := '.12.345.77.234';
-  DoInvalidOidCheck;
-  Foid := '.12.345.77.234.';
-  DoInvalidOidCheck;
-  Foid := '1.2.3.4.A.5';
-  DoInvalidOidCheck;
-  Foid := '1,2';
-  DoInvalidOidCheck;
+  DoInvalidOidCheck('0');
+  DoInvalidOidCheck('1');
+  DoInvalidOidCheck('2');
+  DoInvalidOidCheck('3.1');
+  DoInvalidOidCheck('0.01');
+  DoInvalidOidCheck('00.1');
+  DoInvalidOidCheck('1.00.2');
+  DoInvalidOidCheck('1.0.02');
+  DoInvalidOidCheck('1.2.00');
+  DoInvalidOidCheck('..1');
+  DoInvalidOidCheck('192.168.1.1');
+  DoInvalidOidCheck('.123452');
+  DoInvalidOidCheck('1.');
+  DoInvalidOidCheck('1.345.23.34..234');
+  DoInvalidOidCheck('1.345.23.34.234.');
+  DoInvalidOidCheck('.12.345.77.234');
+  DoInvalidOidCheck('.12.345.77.234.');
+  DoInvalidOidCheck('1.2.3.4.A.5');
+  DoInvalidOidCheck('1,2');
 
   DoBranchCheck('1.1', '2.2');
 
