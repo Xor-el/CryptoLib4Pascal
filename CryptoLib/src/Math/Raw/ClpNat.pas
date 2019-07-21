@@ -118,6 +118,16 @@ type
       xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32); overload;
       static; inline;
 
+    class procedure Copy64(len: Int32; const x, z: TCryptoLibUInt64Array);
+      overload; static; inline;
+
+    class function Copy64(len: Int32; const x: TCryptoLibUInt64Array)
+      : TCryptoLibUInt64Array; overload; static; inline;
+
+    class procedure Copy64(len: Int32; const x: TCryptoLibUInt64Array;
+      xOff: Int32; const z: TCryptoLibUInt64Array; zOff: Int32); overload;
+      static; inline;
+
     class function Create(len: Int32): TCryptoLibUInt32Array; static; inline;
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
@@ -985,6 +995,24 @@ end;
 class procedure TNat.Copy(len: Int32; const x, z: TCryptoLibUInt32Array);
 begin
   System.Move(x[0], z[0], len * System.SizeOf(UInt32));
+end;
+
+class procedure TNat.Copy64(len: Int32; const x: TCryptoLibUInt64Array;
+  xOff: Int32; const z: TCryptoLibUInt64Array; zOff: Int32);
+begin
+  System.Move(x[xOff], z[zOff], len * System.SizeOf(UInt64));
+end;
+
+class function TNat.Copy64(len: Int32; const x: TCryptoLibUInt64Array)
+  : TCryptoLibUInt64Array;
+begin
+  System.SetLength(Result, len);
+  System.Move(x[0], Result[0], len * System.SizeOf(UInt64));
+end;
+
+class procedure TNat.Copy64(len: Int32; const x, z: TCryptoLibUInt64Array);
+begin
+  System.Move(x[0], z[0], len * System.SizeOf(UInt64));
 end;
 
 class procedure TNat.Copy(len: Int32; const x: TCryptoLibUInt32Array;
