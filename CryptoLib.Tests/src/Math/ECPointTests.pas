@@ -591,12 +591,16 @@ begin
     T := c.FromBigInteger(TBigInteger.Create(m, rand));
     z := zeroElement;
     w := rhs;
-    for i := 1 to System.Pred(m) do
+    i := 1;
+
+    while i < m do
     begin
       w2 := w.Square();
       z := z.Square().Add(w2.Multiply(T));
       w := w2.Add(rhs);
+      System.Inc(i);
     end;
+
     if (not w.IsZero) then
     begin
       result := Nil;
