@@ -26,6 +26,7 @@ interface
 uses
   Classes,
   SysUtils,
+  Math,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -33,6 +34,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   Generics.Collections,
+  ClpBits,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
@@ -43,8 +45,11 @@ uses
   ClpECAlgorithms,
   ClpIFiniteField,
   ClpIX9ECParameters,
+  ClpIX9ECC,
+  ClpX9ECC,
   ClpECC,
   ClpIECC,
+  ClpX9ECParameters,
   CryptoLibTestBase;
 
 type
@@ -203,6 +208,13 @@ type
     function SolveQuadraticEquation(const c: IECCurve;
       const rhs: IECFieldElement): IECFieldElement;
 
+    function ConfigureBasepoint(const curve: IECCurve; const encoding: String)
+      : IX9ECPoint;
+
+    function ConfigureCurve(const curve: IECCurve): IECCurve;
+
+    function FromHex(const hex: String): TBigInteger;
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -248,6 +260,8 @@ type
     // */
     procedure TestAddSubtractMultiplyTwiceEncoding();
 
+    procedure TestExampleFpB0();
+
   end;
 
 implementation
@@ -292,11 +306,28 @@ begin
   CheckEquals(True, b.Equals(a), msg);
 end;
 
+function TTestECPoint.ConfigureBasepoint(const curve: IECCurve;
+  const encoding: String): IX9ECPoint;
+begin
+  result := TX9ECPoint.Create(curve, DecodeHex(encoding));
+  TWNafUtilities.ConfigureBasepoint(result.Point);
+end;
+
+function TTestECPoint.ConfigureCurve(const curve: IECCurve): IECCurve;
+begin
+  result := curve;
+end;
+
+function TTestECPoint.FromHex(const hex: String): TBigInteger;
+begin
+  result := TBigInteger.Create(1, DecodeHex(hex));
+end;
+
 procedure TTestECPoint.ImplAddSubtractMultiplyTwiceEncodingTest
   (const curve: IECCurve; const q: IECPoint; const n: TBigInteger);
 var
   infinity, p: IECPoint;
-  i: Int32;
+  i, logSize, rounds: Int32;
 begin
   // Get point at infinity on the curve
   infinity := curve.infinity;
@@ -304,10 +335,13 @@ begin
   ImplTestAddSubtract(q, infinity);
   ImplTestMultiply(q, n.BitLength);
   ImplTestMultiply(infinity, n.BitLength);
-  //
+
+  logSize := 32 - TBits.NumberOfLeadingZeros(curve.FieldSize - 1);
+  rounds := Max(2, Min(10, 32 - 3 * logSize));
+
   p := q;
   i := 0;
-  while i < 10 do
+  while i < rounds do
   begin
     ImplTestEncoding(p);
     p := p.Twice();
@@ -797,6 +831,48 @@ procedure TTestECPoint.TestTwice;
 begin
   ImplTestTwice(FpInstance.Fp);
   ImplTestTwice(F2mInstance.Fp);
+end;
+
+procedure TTestECPoint.TestExampleFpB0;
+var
+  p, a, b, n, h: TBigInteger;
+  s: TBytes;
+  curve: IECCurve;
+  g: IX9ECPoint;
+  x9: IX9ECParameters;
+begin
+  (*
+    * The supersingular curve y^2 := x^3 - 3.x (i.e. with 'B' = 0) from RFC 6508 2.1, with
+    * curve parameters from RFC 6509 Appendix A.
+  *)
+  p := FromHex('997ABB1F0A563FDA65C61198DAD0657A' +
+    '416C0CE19CB48261BE9AE358B3E01A2E' + 'F40AAB27E2FC0F1B228730D531A59CB0' +
+    'E791B39FF7C88A19356D27F4A666A6D0' + 'E26C6487326B4CD4512AC5CD65681CE1' +
+    'B6AFF4A831852A82A7CF3C521C3C09AA' + '9F94D6AF56971F1FFCE3E82389857DB0' +
+    '80C5DF10AC7ACE87666D807AFEA85FEB');
+  a := p.Subtract(TBigInteger.ValueOf(3));
+  b := TBigInteger.ValueOf(0);
+  s := Nil;
+  n := p.Add(TBigInteger.ValueOf(1)).ShiftRight(2);
+  h := TBigInteger.ValueOf(4);
+
+  curve := ConfigureCurve(TFpCurve.Create(p, a, b, n, h) as IFpCurve);
+
+  g := ConfigureBasepoint(curve, '04'
+    // Px
+    + '53FC09EE332C29AD0A7990053ED9B52A' + '2B1A2FD60AEC69C698B2F204B6FF7CBF' +
+    'B5EDB6C0F6CE2308AB10DB9030B09E10' + '43D5F22CDB9DFA55718BD9E7406CE890' +
+    '9760AF765DD5BCCB337C86548B72F2E1' + 'A702C3397A60DE74A7C1514DBA66910D' +
+    'D5CFB4CC80728D87EE9163A5B63F73EC' + '80EC46C4967E0979880DC8ABEAE63895'
+    // Py
+    + '0A8249063F6009F1F9F1F0533634A135' + 'D3E82016029906963D778D821E141178' +
+    'F5EA69F4654EC2B9E7F7F5E5F0DE55F6' + '6B598CCF9A140B2E416CFF0CA9E032B9' +
+    '70DAE117AD547C6CCAD696B5B7652FE0' + 'AC6F1E80164AA989492D979FC5A4D5F2' +
+    '13515AD7E9CB99A980BDAD5AD5BB4636' + 'ADB9B5706A67DCDE75573FD71BEF16D7');
+
+  x9 := TX9ECParameters.Create(curve, g, n, h, s);
+
+  ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9);
 end;
 
 { TFp }
