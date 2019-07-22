@@ -60,8 +60,7 @@ type
     class procedure ImplMulw(x, y: UInt64; const z: TCryptoLibUInt64Array;
       zOff: Int32); static;
 
-    class procedure ImplSquare(const x, zz: TCryptoLibUInt64Array);
-      static; inline;
+    class procedure ImplSquare(const x, zz: TCryptoLibUInt64Array); static;
 
     class procedure AddTo(const x, z: TCryptoLibUInt64Array); static; inline;
 

@@ -2434,7 +2434,7 @@ end;
 
 function TAbstractF2mFieldElement.HalfTrace: IECFieldElement;
 var
-  m, i: Int32;
+  m, n, K, nk: Int32;
   ht: IECFieldElement;
 begin
   m := FieldSize;
@@ -2443,14 +2443,22 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SHalfTraceUndefinedForM);
   end;
 
-  ht := Self as IECFieldElement;
-  i := 2;
-  while i < m do
-  begin
-    ht := ht.SquarePow(2).Add(Self as IECFieldElement);
-    System.Inc(i, 2);
-  end;
+  n := TBits.Asr32((m + 1), 1);
+  K := 31 - TBits.NumberOfLeadingZeros(n);
+  nk := 1;
 
+  ht := Self as IECFieldElement;
+  while (K > 0) do
+  begin
+    ht := ht.SquarePow(nk shl 1).Add(ht);
+    System.Dec(K);
+    nk := TBits.Asr32(n, K);
+
+    if ((nk and 1) <> 0) then
+    begin
+      ht := ht.SquarePow(2).Add(Self as IECFieldElement);
+    end;
+  end;
   result := ht;
 end;
 
@@ -2462,17 +2470,26 @@ end;
 
 function TAbstractF2mFieldElement.Trace: Int32;
 var
-  m, i: Int32;
+  m, K, mk: Int32;
   tr: IECFieldElement;
 begin
   m := FieldSize;
-  tr := Self as IECFieldElement;
 
-  i := 1;
-  while i < m do
+  K := 31 - TBits.NumberOfLeadingZeros(m);
+  mk := 1;
+
+  tr := Self as IECFieldElement;
+  while (K > 0) do
   begin
-    tr := tr.Square().Add(Self as IECFieldElement);
-    System.Inc(i);
+    tr := tr.SquarePow(mk).Add(tr);
+
+    System.Dec(K);
+    mk := TBits.Asr32(m, K);
+
+    if ((mk and 1) <> 0) then
+    begin
+      tr := tr.Square().Add(Self as IECFieldElement);
+    end;
   end;
 
   if (tr.IsZero) then
