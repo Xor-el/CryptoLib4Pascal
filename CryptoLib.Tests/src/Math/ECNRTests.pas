@@ -35,15 +35,23 @@ uses
   ClpIAsn1Objects,
   ClpIECC,
   ClpECC,
+  ClpIDigest,
   ClpECNRSigner,
   ClpIECNRSigner,
   ClpECDomainParameters,
   ClpIECDomainParameters,
+  ClpIECKeyGenerationParameters,
+  ClpECKeyGenerationParameters,
   ClpECPrivateKeyParameters,
   ClpIECPrivateKeyParameters,
   ClpECPublicKeyParameters,
   ClpIECPublicKeyParameters,
+  ClpECKeyPairGenerator,
+  ClpIECKeyPairGenerator,
   ClpISigner,
+  ClpIX9ECParameters,
+  ClpIAsymmetricCipherKeyPair,
+  ClpECNamedCurveTable,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
   ClpSecureRandom,
@@ -51,8 +59,10 @@ uses
   ClpFixedSecureRandom,
   ClpSignerUtilities,
   ClpBigInteger,
+  ClpBigIntegers,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpDigestUtilities,
   CryptoLibTestBase;
 
 type
@@ -120,6 +130,8 @@ type
     /// </para>
     /// </summary>
     procedure TestECNR521bitPrimeSHA512; // SecP521r1
+
+    procedure TestRange;
 
   end;
 
@@ -460,6 +472,79 @@ begin
   &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   DoCheckSignature(521, priKey, pubKey, sgr, k, &message, r, s);
+end;
+
+procedure TTestECNR.TestRange;
+var
+  myGenerator: IECKeyPairGenerator;
+  myRandom: ISecureRandom;
+  myCurve: String;
+  x9: IX9ECParameters;
+  myDomain: IECDomainParameters;
+  myParams: IECKeyGenerationParameters;
+  myPair: IAsymmetricCipherKeyPair;
+  myDigest: IDigest;
+  myArtifact, myMessage, msg: TCryptoLibByteArray;
+  signer: IECNRSigner;
+  order: TBigInteger;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+begin
+  // Create the generator
+  myGenerator := TECKeyPairGenerator.Create();
+  myRandom := TSecureRandom.Create();
+  myCurve := 'brainpoolP192t1';
+
+  // Lookup the parameters
+  x9 := TECNamedCurveTable.GetByName(myCurve);
+
+  // Initialise the generator
+  myDomain := TECDomainParameters.Create(x9.curve, x9.G, x9.n, x9.H,
+    x9.GetSeed());
+  myParams := TECKeyGenerationParameters.Create(myDomain, myRandom);
+  myGenerator.Init(myParams);
+
+  // Create the key Pair
+  myPair := myGenerator.GenerateKeyPair();
+
+  // Create the digest and the output buffer
+  myDigest := TDigestUtilities.GetDigest('TIGER');
+  System.SetLength(myArtifact, myDigest.GetDigestSize);
+  myMessage := TConverters.ConvertStringToBytes
+    ('Hello there. How is life treating you?', TEncoding.ASCII);
+
+  myDigest.BlockUpdate(myMessage, 0, System.Length(myMessage));
+  myDigest.DoFinal(myArtifact, 0);
+
+  // Create signer
+  signer := TECNRSigner.Create();
+  signer.Init(true, myPair.Private);
+
+  try
+    signer.GenerateSignature(myArtifact);
+    Fail('out of range input not caught');
+  except
+    on e: EDataLengthCryptoLibException do
+    begin
+      CheckEquals(e.Message, 'Input Too Large For ECNR Key.');
+    end;
+
+  end;
+
+  //
+  // check upper bound
+  order := (myPair.Public as IECPublicKeyParameters).parameters.n;
+
+  signer.Init(true, myPair.Private);
+  msg := TBigIntegers.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
+  sig := signer.GenerateSignature(msg);
+
+  signer.Init(false, myPair.getPublic());
+  if (not signer.VerifySignature(msg, sig[0], sig[1])) then
+  begin
+    Fail('ECNR failed 2');
+  end;
+
+  CheckTrue(AreEqual(msg, signer.getRecoveredMessage(sig[0], sig[1])));
 end;
 
 initialization

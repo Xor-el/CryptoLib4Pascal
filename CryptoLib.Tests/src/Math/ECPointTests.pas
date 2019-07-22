@@ -78,7 +78,9 @@ type
   // */
   TF2m = class
 
-  public const
+  public
+
+    const
     // Irreducible polynomial for TPB z^4 + z + 1
     m = Int32(4);
 
