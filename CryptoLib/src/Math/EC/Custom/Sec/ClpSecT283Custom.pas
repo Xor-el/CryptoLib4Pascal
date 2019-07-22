@@ -63,6 +63,8 @@ type
     class procedure ImplSquare(const x, zz: TCryptoLibUInt64Array);
       static; inline;
 
+    class procedure AddTo(const x, z: TCryptoLibUInt64Array); static; inline;
+
     class procedure Boot(); static;
     class constructor SecT283Field();
 
@@ -71,6 +73,10 @@ type
     class procedure AddExt(const xx, yy, zz: TCryptoLibUInt64Array);
       static; inline;
     class procedure AddOne(const x, z: TCryptoLibUInt64Array); static; inline;
+
+    class procedure HalfTrace(const x, z: TCryptoLibUInt64Array);
+      static; inline;
+
     class function FromBigInteger(const x: TBigInteger): TCryptoLibUInt64Array;
       static; inline;
 
@@ -151,6 +157,10 @@ type
     function SquarePow(pow: Int32): IECFieldElement; override;
 
     function Trace(): Int32; override;
+
+    function HalfTrace(): IECFieldElement; override;
+
+    function HasFastTrace(): Boolean; override;
 
     function Invert(): IECFieldElement; override;
 
@@ -373,11 +383,41 @@ begin
   z[4] := x[4];
 end;
 
+class procedure TSecT283Field.AddTo(const x, z: TCryptoLibUInt64Array);
+begin
+  z[0] := z[0] xor x[0];
+  z[1] := z[1] xor x[1];
+  z[2] := z[2] xor x[2];
+  z[3] := z[3] xor x[3];
+  z[4] := z[4] xor x[4];
+end;
+
 class procedure TSecT283Field.Boot;
 begin
   FROOT_Z := TCryptoLibUInt64Array.Create(UInt64($0C30C30C30C30808),
     UInt64($30C30C30C30C30C3), UInt64($820820820820830C),
     UInt64($0820820820820820), UInt64($2082082));
+end;
+
+class procedure TSecT283Field.HalfTrace(const x, z: TCryptoLibUInt64Array);
+var
+  tt: TCryptoLibUInt64Array;
+  i: Int32;
+begin
+  tt := TNat.Create64(9);
+
+  TNat320.Copy64(x, z);
+  i := 1;
+
+  while i < 283 do
+  begin
+    ImplSquare(z, tt);
+    Reduce(tt, z);
+    ImplSquare(z, tt);
+    Reduce(tt, z);
+    AddTo(x, z);
+    System.Inc(i, 2);
+  end;
 end;
 
 class function TSecT283Field.FromBigInteger(const x: TBigInteger)
@@ -907,6 +947,20 @@ end;
 function TSecT283FieldElement.GetX: TCryptoLibUInt64Array;
 begin
   result := Fx;
+end;
+
+function TSecT283FieldElement.HalfTrace: IECFieldElement;
+var
+  z: TCryptoLibUInt64Array;
+begin
+  z := TNat320.Create64();
+  TSecT283Field.HalfTrace(x, z);
+  result := TSecT283FieldElement.Create(z) as ISecT283FieldElement;
+end;
+
+function TSecT283FieldElement.HasFastTrace: Boolean;
+begin
+  result := true;
 end;
 
 function TSecT283FieldElement.Invert: IECFieldElement;

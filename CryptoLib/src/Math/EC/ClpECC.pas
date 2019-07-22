@@ -260,6 +260,7 @@ type
   public
     function Trace(): Int32; virtual;
     function HalfTrace(): IECFieldElement; virtual;
+    function HasFastTrace(): Boolean; virtual;
 
   end;
 
@@ -2434,7 +2435,7 @@ end;
 function TAbstractF2mFieldElement.HalfTrace: IECFieldElement;
 var
   m, i: Int32;
-  fe, ht: IECFieldElement;
+  ht: IECFieldElement;
 begin
   m := FieldSize;
   if ((m and 1) = 0) then
@@ -2442,33 +2443,35 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SHalfTraceUndefinedForM);
   end;
 
-  fe := Self as IECFieldElement;
-  ht := fe;
+  ht := Self as IECFieldElement;
   i := 2;
   while i < m do
   begin
-    fe := fe.SquarePow(2);
-    ht := ht.Add(fe);
+    ht := ht.SquarePow(2).Add(Self as IECFieldElement);
     System.Inc(i, 2);
   end;
 
   result := ht;
 end;
 
+function TAbstractF2mFieldElement.HasFastTrace: Boolean;
+begin
+  result := false;
+
+end;
+
 function TAbstractF2mFieldElement.Trace: Int32;
 var
   m, i: Int32;
-  fe, tr: IECFieldElement;
+  tr: IECFieldElement;
 begin
   m := FieldSize;
-  fe := Self as IECFieldElement;
-  tr := fe;
+  tr := Self as IECFieldElement;
 
   i := 1;
   while i < m do
   begin
-    fe := fe.Square();
-    tr := tr.Add(fe);
+    tr := tr.Square().Add(Self as IECFieldElement);
     System.Inc(i);
   end;
 
@@ -3372,9 +3375,36 @@ end;
 function TAbstractF2mCurve.SolveQuadraticEquation(const beta: IECFieldElement)
   : IECFieldElement;
 var
-  gamma, z, zeroElement, t, w, w2: IECFieldElement;
+  gamma, z, zeroElement, t, w, w2, r: IECFieldElement;
+  betaF2m: IAbstractF2mFieldElement;
   m, i: Int32;
+  fastTrace: Boolean;
 begin
+
+  betaF2m := beta as IAbstractF2mFieldElement;
+
+  fastTrace := betaF2m.HasFastTrace();
+  if ((fastTrace) and (betaF2m.Trace() <> 0)) then
+  begin
+    result := Nil;
+    Exit;
+  end;
+
+  m := FieldSize;
+
+  // For odd m, use the half-trace
+  if ((m and 1) <> 0) then
+  begin
+    r := betaF2m.HalfTrace();
+    if ((fastTrace) or (r.Square().Add(r).Add(beta).IsZero)) then
+    begin
+      result := r;
+      Exit;
+    end;
+    result := Nil;
+    Exit;
+  end;
+
   if (beta.IsZero) then
   begin
     result := beta;

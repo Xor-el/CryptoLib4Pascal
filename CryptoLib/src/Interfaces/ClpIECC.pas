@@ -118,6 +118,7 @@ type
 
     function Trace(): Int32;
     function HalfTrace(): IECFieldElement;
+    function HasFastTrace(): Boolean;
   end;
 
 type
