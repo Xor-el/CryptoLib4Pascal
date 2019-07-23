@@ -29,11 +29,11 @@ type
   IEndoPreCompInfo = interface(IPreCompInfo)
     ['{84C79A80-8162-4079-8146-AA1D46A739ED}']
 
-    function GetECEndomorphism: IECEndomorphism;
-    procedure SetECEndomorphism(const value: IECEndomorphism);
+    function GetEndomorphism: IECEndomorphism;
+    procedure SetEndomorphism(const value: IECEndomorphism);
 
-    property Endomorphism: IECEndomorphism read GetECEndomorphism
-      write SetECEndomorphism;
+    property Endomorphism: IECEndomorphism read GetEndomorphism
+      write SetEndomorphism;
 
     function GetMappedPoint: IECPoint;
     procedure SetMappedPoint(const value: IECPoint);

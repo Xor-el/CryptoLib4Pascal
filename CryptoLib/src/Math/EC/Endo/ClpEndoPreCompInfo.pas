@@ -35,16 +35,16 @@ type
     FEndomorphism: IECEndomorphism;
     FMappedPoint: IECPoint;
 
-    function GetECEndomorphism: IECEndomorphism; inline;
-    procedure SetECEndomorphism(const value: IECEndomorphism); inline;
+    function GetEndomorphism: IECEndomorphism; inline;
+    procedure SetEndomorphism(const value: IECEndomorphism); inline;
 
     function GetMappedPoint: IECPoint; inline;
     procedure SetMappedPoint(const value: IECPoint); inline;
 
   public
 
-    property Endomorphism: IECEndomorphism read GetECEndomorphism
-      write SetECEndomorphism;
+    property Endomorphism: IECEndomorphism read GetEndomorphism
+      write SetEndomorphism;
     property MappedPoint: IECPoint read GetMappedPoint write SetMappedPoint;
   end;
 
@@ -52,7 +52,7 @@ implementation
 
 { TEndoPreCompInfo }
 
-function TEndoPreCompInfo.GetECEndomorphism: IECEndomorphism;
+function TEndoPreCompInfo.GetEndomorphism: IECEndomorphism;
 begin
   result := FEndomorphism;
 end;
@@ -62,7 +62,7 @@ begin
   result := FMappedPoint;
 end;
 
-procedure TEndoPreCompInfo.SetECEndomorphism(const value: IECEndomorphism);
+procedure TEndoPreCompInfo.SetEndomorphism(const value: IECEndomorphism);
 begin
   FEndomorphism := value;
 end;

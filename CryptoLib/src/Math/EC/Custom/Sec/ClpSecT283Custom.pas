@@ -421,12 +421,8 @@ end;
 
 class function TSecT283Field.FromBigInteger(const x: TBigInteger)
   : TCryptoLibUInt64Array;
-var
-  z: TCryptoLibUInt64Array;
 begin
-  z := TNat320.FromBigInteger64(x);
-  Reduce37(z, 0);
-  result := z;
+  result := TNat.FromBigInteger64(283, x);
 end;
 
 class procedure TSecT283Field.Multiply(const x, y, z: TCryptoLibUInt64Array);
