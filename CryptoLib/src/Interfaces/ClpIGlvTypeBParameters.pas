@@ -23,6 +23,7 @@ interface
 
 uses
   ClpBigInteger,
+  ClpIScalarSplitParameters,
   ClpCryptoLibTypes;
 
 type
@@ -30,25 +31,13 @@ type
   IGlvTypeBParameters = interface(IInterface)
     ['{089AC2AB-15A1-47F5-BED0-C09EA77BECB9}']
 
-    function GetG1: TBigInteger;
-    function GetG2: TBigInteger;
-    function GetV1A: TBigInteger;
-    function GetV1B: TBigInteger;
-    function GetV2A: TBigInteger;
-    function GetV2B: TBigInteger;
     function GetLambda: TBigInteger;
     function GetBeta: TBigInteger;
-    function GetBits: Int32;
+    function GetSplitParams: IScalarSplitParameters;
 
-    property g1: TBigInteger read GetG1;
-    property g2: TBigInteger read GetG2;
-    property V1A: TBigInteger read GetV1A;
-    property V1B: TBigInteger read GetV1B;
-    property V2A: TBigInteger read GetV2A;
-    property V2B: TBigInteger read GetV2B;
     property lambda: TBigInteger read GetLambda;
     property beta: TBigInteger read GetBeta;
-    property bits: Int32 read GetBits;
+    property splitParams: IScalarSplitParameters read GetSplitParams;
 
   end;
 

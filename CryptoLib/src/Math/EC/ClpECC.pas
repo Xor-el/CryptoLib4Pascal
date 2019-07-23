@@ -1159,6 +1159,9 @@ type
     function ScaleX(const scale: IECFieldElement): IECPoint; virtual;
     function ScaleY(const scale: IECFieldElement): IECPoint; virtual;
 
+    function ScaleXNegateY(const scale: IECFieldElement): IECPoint; virtual;
+    function ScaleYNegateX(const scale: IECFieldElement): IECPoint; virtual;
+
     function GetEncoded(): TCryptoLibByteArray; overload; virtual;
     function GetEncoded(compressed: Boolean): TCryptoLibByteArray; overload;
       virtual; abstract;
@@ -1400,6 +1403,9 @@ type
     destructor Destroy; override;
     function ScaleX(const scale: IECFieldElement): IECPoint; override;
     function ScaleY(const scale: IECFieldElement): IECPoint; override;
+
+    function ScaleXNegateY(const scale: IECFieldElement): IECPoint; override;
+    function ScaleYNegateX(const scale: IECFieldElement): IECPoint; override;
 
     function Subtract(const b: IECPoint): IECPoint; override;
 
@@ -3845,6 +3851,19 @@ begin
   end;
 end;
 
+function TECPoint.ScaleXNegateY(const scale: IECFieldElement): IECPoint;
+begin
+  if IsInfinity then
+  begin
+    result := Self;
+  end
+  else
+  begin
+    result := curve.CreateRawPoint(RawXCoord.Multiply(scale), RawYCoord.Negate,
+      RawZCoords, IsCompressed);
+  end;
+end;
+
 function TECPoint.ScaleY(const scale: IECFieldElement): IECPoint;
 begin
   if IsInfinity then
@@ -3854,6 +3873,19 @@ begin
   else
   begin
     result := curve.CreateRawPoint(RawXCoord, RawYCoord.Multiply(scale),
+      RawZCoords, IsCompressed);
+  end;
+end;
+
+function TECPoint.ScaleYNegateX(const scale: IECFieldElement): IECPoint;
+begin
+  if IsInfinity then
+  begin
+    result := Self;
+  end
+  else
+  begin
+    result := curve.CreateRawPoint(RawXCoord.Negate, RawYCoord.Multiply(scale),
       RawZCoords, IsCompressed);
   end;
 end;
@@ -6357,6 +6389,12 @@ begin
 
 end;
 
+function TAbstractF2mPoint.ScaleXNegateY(const scale: IECFieldElement)
+  : IECPoint;
+begin
+  result := ScaleX(scale);
+end;
+
 function TAbstractF2mPoint.ScaleY(const scale: IECFieldElement): IECPoint;
 var
   Lx, L, L2: IECFieldElement;
@@ -6386,6 +6424,12 @@ begin
     end;
   end;
 
+end;
+
+function TAbstractF2mPoint.ScaleYNegateX(const scale: IECFieldElement)
+  : IECPoint;
+begin
+  result := ScaleY(scale);
 end;
 
 function TAbstractF2mPoint.Subtract(const b: IECPoint): IECPoint;

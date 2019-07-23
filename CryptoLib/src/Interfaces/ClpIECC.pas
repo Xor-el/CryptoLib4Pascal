@@ -253,6 +253,9 @@ type
     function ScaleX(const scale: IECFieldElement): IECPoint;
     function ScaleY(const scale: IECFieldElement): IECPoint;
 
+    function ScaleXNegateY(const scale: IECFieldElement): IECPoint;
+    function ScaleYNegateX(const scale: IECFieldElement): IECPoint;
+
     function GetEncoded(): TCryptoLibByteArray; overload;
     function GetEncoded(compressed: Boolean): TCryptoLibByteArray; overload;
 

@@ -31,6 +31,7 @@ uses
   ClpIPolynomialExtensionField,
   ClpIGlvEndomorphism,
   ClpIWNafPreCompInfo,
+  ClpIScalarSplitParameters,
   ClpIPreCompInfo,
   ClpIEndoPreCompInfo,
   ClpEndoPreCompInfo,
@@ -328,6 +329,9 @@ type
 
     end;
 
+  class function CalculateB(const k, g: TBigInteger; t: Int32)
+    : TBigInteger; static;
+
   public
 
     const
@@ -336,6 +340,9 @@ type
   public
     class function MapPoint(const endomorphism: IECEndomorphism;
       const p: IECPoint): IECPoint; static;
+
+    class function DecomposeScalar(const p: IScalarSplitParameters;
+      const k: TBigInteger): TCryptoLibGenericArray<TBigInteger>; static;
 
   end;
 
@@ -2178,6 +2185,48 @@ begin
 end;
 
 { TEndoUtilities }
+
+class function TEndoUtilities.CalculateB(const k, g: TBigInteger; t: Int32)
+  : TBigInteger;
+var
+  negative, extra: Boolean;
+  b: TBigInteger;
+begin
+  negative := (g.SignValue < 0);
+  b := k.Multiply(g.Abs());
+  extra := b.TestBit(t - 1);
+  b := b.ShiftRight(t);
+  if (extra) then
+  begin
+    b := b.Add(TBigInteger.One);
+  end;
+
+  if negative then
+  begin
+    result := b.Negate();
+  end
+  else
+  begin
+    result := b;
+  end;
+end;
+
+class function TEndoUtilities.DecomposeScalar(const p: IScalarSplitParameters;
+  const k: TBigInteger): TCryptoLibGenericArray<TBigInteger>;
+var
+  bits: Int32;
+  b1, b2, a, b: TBigInteger;
+begin
+
+  bits := p.bits;
+  b1 := CalculateB(k, p.G1, bits);
+  b2 := CalculateB(k, p.G2, bits);
+
+  a := k.Subtract((b1.Multiply(p.V1A)).Add(b2.Multiply(p.V2A)));
+  b := (b1.Multiply(p.V1B)).Add(b2.Multiply(p.V2B)).Negate();
+
+  result := TCryptoLibGenericArray<TBigInteger>.Create(a, b);
+end;
 
 class function TEndoUtilities.MapPoint(const endomorphism: IECEndomorphism;
   const p: IECPoint): IECPoint;

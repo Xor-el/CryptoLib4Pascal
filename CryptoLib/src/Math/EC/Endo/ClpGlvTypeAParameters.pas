@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpGlvTypeBParameters;
+unit ClpGlvTypeAParameters;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -23,57 +23,57 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIGlvTypeBParameters,
+  ClpIGlvTypeAParameters,
   ClpIScalarSplitParameters,
   ClpCryptoLibTypes;
 
 type
-  TGlvTypeBParameters = class sealed(TInterfacedObject, IGlvTypeBParameters)
+  TGlvTypeAParameters = class sealed(TInterfacedObject, IGlvTypeAParameters)
 
   strict private
   var
-    Fbeta, Flambda: TBigInteger;
+    FI, Flambda: TBigInteger;
     FsplitParams: IScalarSplitParameters;
 
     function GetLambda: TBigInteger; inline;
-    function GetBeta: TBigInteger; inline;
+    function GetI: TBigInteger; inline;
     function GetSplitParams: IScalarSplitParameters; inline;
 
   public
 
-    constructor Create(const beta, lambda: TBigInteger;
+    constructor Create(const I, lambda: TBigInteger;
       const splitParams: IScalarSplitParameters);
 
     property lambda: TBigInteger read GetLambda;
-    property beta: TBigInteger read GetBeta;
+    property beta: TBigInteger read GetI;
     property splitParams: IScalarSplitParameters read GetSplitParams;
 
   end;
 
 implementation
 
-{ TGlvTypeBParameters }
+{ TGlvTypeAParameters }
 
-constructor TGlvTypeBParameters.Create(const beta, lambda: TBigInteger;
+constructor TGlvTypeAParameters.Create(const I, lambda: TBigInteger;
   const splitParams: IScalarSplitParameters);
 begin
   Inherited Create();
-  Fbeta := beta;
+  FI := I;
   Flambda := lambda;
   FsplitParams := splitParams;
 end;
 
-function TGlvTypeBParameters.GetBeta: TBigInteger;
+function TGlvTypeAParameters.GetI: TBigInteger;
 begin
-  Result := Fbeta;
+  Result := FI;
 end;
 
-function TGlvTypeBParameters.GetLambda: TBigInteger;
+function TGlvTypeAParameters.GetLambda: TBigInteger;
 begin
   Result := Flambda;
 end;
 
-function TGlvTypeBParameters.GetSplitParams: IScalarSplitParameters;
+function TGlvTypeAParameters.GetSplitParams: IScalarSplitParameters;
 begin
   Result := FsplitParams;
 end;

@@ -133,7 +133,11 @@ uses
   ClpDHPublicKeyParameters, ClpDHKeyGenerationParameters, ClpDHKeyParameters, 
   ClpDHValidationParameters, ClpDHParameters, ClpDHDomainParameters, 
   ClpDHValidationParams, ClpAESPRNGRandom, ClpCryptLibObjectIdentifiers, 
-  ClpIEndoPreCompInfo, ClpEndoPreCompInfo;
+  ClpIEndoPreCompInfo, ClpEndoPreCompInfo, ClpScaleXNegateYPointMap, 
+  ClpScaleYNegateXPointMap, ClpGlvTypeAEndomorphism, ClpGlvTypeAParameters, 
+  ClpScalarSplitParameters, ClpIGlvTypeAParameters, ClpIGlvTypeAEndomorphism, 
+  ClpIScaleXNegateYPointMap, ClpIScaleYNegateXPointMap, 
+  ClpIScalarSplitParameters;
 
 implementation
 

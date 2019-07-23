@@ -15,67 +15,32 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpGlvTypeBParameters;
+unit ClpIGlvTypeAParameters;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
   ClpBigInteger,
-  ClpIGlvTypeBParameters,
   ClpIScalarSplitParameters,
   ClpCryptoLibTypes;
 
 type
-  TGlvTypeBParameters = class sealed(TInterfacedObject, IGlvTypeBParameters)
 
-  strict private
-  var
-    Fbeta, Flambda: TBigInteger;
-    FsplitParams: IScalarSplitParameters;
+  IGlvTypeAParameters = interface(IInterface)
+    ['{B5DDABB5-B51C-41F4-B2FD-6C8733300502}']
 
-    function GetLambda: TBigInteger; inline;
-    function GetBeta: TBigInteger; inline;
-    function GetSplitParams: IScalarSplitParameters; inline;
+    function GetI: TBigInteger;
+    function GetLambda: TBigInteger;
+    function GetSplitParams: IScalarSplitParameters;
 
-  public
-
-    constructor Create(const beta, lambda: TBigInteger;
-      const splitParams: IScalarSplitParameters);
-
+    property I: TBigInteger read GetI;
     property lambda: TBigInteger read GetLambda;
-    property beta: TBigInteger read GetBeta;
     property splitParams: IScalarSplitParameters read GetSplitParams;
 
   end;
 
 implementation
-
-{ TGlvTypeBParameters }
-
-constructor TGlvTypeBParameters.Create(const beta, lambda: TBigInteger;
-  const splitParams: IScalarSplitParameters);
-begin
-  Inherited Create();
-  Fbeta := beta;
-  Flambda := lambda;
-  FsplitParams := splitParams;
-end;
-
-function TGlvTypeBParameters.GetBeta: TBigInteger;
-begin
-  Result := Fbeta;
-end;
-
-function TGlvTypeBParameters.GetLambda: TBigInteger;
-begin
-  Result := Flambda;
-end;
-
-function TGlvTypeBParameters.GetSplitParams: IScalarSplitParameters;
-begin
-  Result := FsplitParams;
-end;
 
 end.

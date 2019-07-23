@@ -15,22 +15,42 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGlvTypeBEndomorphism;
+unit ClpScaleXNegateYPointMap;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
-  ClpIGlvEndomorphism;
+  ClpIECC,
+  ClpIScaleXNegateYPointMap;
 
 type
-  IGlvTypeBEndomorphism = interface(IGlvEndomorphism)
-    ['{4F285F6A-F627-4873-9F4C-FBC7A7B83A9C}']
+  TScaleXNegateYPointMap = class(TInterfacedObject, IECPointMap,
+    IScaleXNegateYPointMap)
 
+  strict protected
+  var
+    Fscale: IECFieldElement;
+
+  public
+    constructor Create(const scale: IECFieldElement);
+    function Map(const p: IECPoint): IECPoint; virtual;
   end;
 
 implementation
+
+{ TScaleXNegateYPointMap }
+
+constructor TScaleXNegateYPointMap.Create(const scale: IECFieldElement);
+begin
+  Inherited Create();
+  Fscale := scale;
+end;
+
+function TScaleXNegateYPointMap.Map(const p: IECPoint): IECPoint;
+begin
+  Result := p.ScaleXNegateY(Fscale);
+end;
 
 end.

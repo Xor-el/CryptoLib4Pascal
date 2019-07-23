@@ -403,7 +403,17 @@ contains
   ClpIDHValidationParams in '..\..\Interfaces\ClpIDHValidationParams.pas',
   ClpAESPRNGRandom in '..\..\Utils\Randoms\ClpAESPRNGRandom.pas',
   ClpCryptLibObjectIdentifiers in '..\..\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas',
+  ClpIGlvTypeAParameters in '..\..\Interfaces\ClpIGlvTypeAParameters.pas',
+  ClpIGlvTypeAEndomorphism in '..\..\Interfaces\ClpIGlvTypeAEndomorphism.pas',
+  ClpIScaleXNegateYPointMap in '..\..\Interfaces\ClpIScaleXNegateYPointMap.pas',
+  ClpIScaleYNegateXPointMap in '..\..\Interfaces\ClpIScaleYNegateXPointMap.pas',
+  ClpIScalarSplitParameters in '..\..\Interfaces\ClpIScalarSplitParameters.pas',
+  ClpIEndoPreCompInfo in '..\..\Interfaces\ClpIEndoPreCompInfo.pas',
+  ClpScaleXNegateYPointMap in '..\..\Math\EC\ClpScaleXNegateYPointMap.pas',
+  ClpScaleYNegateXPointMap in '..\..\Math\EC\ClpScaleYNegateXPointMap.pas',
   ClpEndoPreCompInfo in '..\..\Math\EC\Endo\ClpEndoPreCompInfo.pas',
-  ClpIEndoPreCompInfo in '..\..\Interfaces\ClpIEndoPreCompInfo.pas';
+  ClpGlvTypeAEndomorphism in '..\..\Math\EC\Endo\ClpGlvTypeAEndomorphism.pas',
+  ClpGlvTypeAParameters in '..\..\Math\EC\Endo\ClpGlvTypeAParameters.pas',
+  ClpScalarSplitParameters in '..\..\Math\EC\Endo\ClpScalarSplitParameters.pas';
 
 end.

@@ -15,19 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGlvTypeBEndomorphism;
+unit ClpIScaleXNegateYPointMap;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
-  ClpIGlvEndomorphism;
+  ClpIECC;
 
 type
-  IGlvTypeBEndomorphism = interface(IGlvEndomorphism)
-    ['{4F285F6A-F627-4873-9F4C-FBC7A7B83A9C}']
+  IScaleXNegateYPointMap = interface(IECPointMap)
+
+    ['{D4FF6900-B627-45AB-8066-00E763213CE5}']
 
   end;
 

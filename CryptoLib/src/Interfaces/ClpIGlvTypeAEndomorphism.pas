@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGlvTypeBEndomorphism;
+unit ClpIGlvTypeAEndomorphism;
 
 {$I ..\Include\CryptoLib.inc}
 
@@ -26,8 +26,8 @@ uses
   ClpIGlvEndomorphism;
 
 type
-  IGlvTypeBEndomorphism = interface(IGlvEndomorphism)
-    ['{4F285F6A-F627-4873-9F4C-FBC7A7B83A9C}']
+  IGlvTypeAEndomorphism = interface(IGlvEndomorphism)
+    ['{961A1588-7D37-46C5-BC67-F71063641B42}']
 
   end;
 
