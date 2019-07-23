@@ -439,14 +439,11 @@ begin
 end;
 
 class procedure TSecT283Field.ImplSquare(const x, zz: TCryptoLibUInt64Array);
-var
-  i: Int32;
 begin
-  for i := 0 to System.Pred(4) do
-  begin
-    TInterleave.Expand64To128(x[i], zz, i shl 1);
-  end;
-
+  TInterleave.Expand64To128(x[0], zz, 0);
+  TInterleave.Expand64To128(x[1], zz, 2);
+  TInterleave.Expand64To128(x[2], zz, 4);
+  TInterleave.Expand64To128(x[3], zz, 6);
   zz[8] := TInterleave.Expand32to64(UInt32(x[4]));
 end;
 
