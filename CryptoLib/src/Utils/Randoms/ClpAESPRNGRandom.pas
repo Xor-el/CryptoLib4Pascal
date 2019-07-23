@@ -235,8 +235,6 @@ begin
       DoIncrementCounter;
       LResult := FCipher.DoFinal(FCounter);
       System.Move(LResult[0], data[LDatum], LDataLength * System.SizeOf(Byte));
-
-      // System.Inc(LDatum, LDataLength);
       System.Inc(FBytesSinceSeed, LDataLength);
     end;
 
