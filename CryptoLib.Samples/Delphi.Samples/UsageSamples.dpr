@@ -72,7 +72,6 @@ uses
   ClpAbstractECMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpAbstractECMultiplier.pas',
   ClpFixedPointCombMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointCombMultiplier.pas',
   ClpFixedPointPreCompInfo in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointPreCompInfo.pas',
-  ClpFixedPointUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointUtilities.pas',
   ClpWNafPreCompInfo in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafPreCompInfo.pas',
   ClpECAlgorithms in '..\..\CryptoLib\src\Math\EC\ClpECAlgorithms.pas',
   ClpLongArray in '..\..\CryptoLib\src\Math\EC\ClpLongArray.pas',
@@ -375,6 +374,8 @@ uses
   ClpIDHValidationParams in '..\..\CryptoLib\src\Interfaces\ClpIDHValidationParams.pas',
   ClpAESPRNGRandom in '..\..\CryptoLib\src\Utils\Randoms\ClpAESPRNGRandom.pas',
   ClpCryptLibObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas',
+  ClpEndoPreCompInfo in '..\..\CryptoLib\src\Math\EC\Endo\ClpEndoPreCompInfo.pas',
+  ClpIEndoPreCompInfo in '..\..\CryptoLib\src\Interfaces\ClpIEndoPreCompInfo.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

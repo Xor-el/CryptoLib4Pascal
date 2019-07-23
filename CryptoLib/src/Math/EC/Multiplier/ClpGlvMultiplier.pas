@@ -65,7 +65,6 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SCurveUnknownGroupOrder);
   end;
 
-  // Fcurve := curve;
   TSetWeakRef.SetWeakReference(@Fcurve, curve);
   FglvEndomorphism := glvEndomorphism;
 end;
@@ -81,7 +80,7 @@ function TGlvMultiplier.MultiplyPositive(const p: IECPoint;
 var
   n, a, b: TBigInteger;
   ab: TCryptoLibGenericArray<TBigInteger>;
-  pointMap: IECPointMap;
+  q: IECPoint;
 begin
   if (not(Fcurve.Equals(p.curve))) then
   begin
@@ -93,14 +92,15 @@ begin
   a := ab[0];
   b := ab[1];
 
-  pointMap := FglvEndomorphism.pointMap;
   if (FglvEndomorphism.HasEfficientPointMap) then
   begin
-    Result := TECAlgorithms.ImplShamirsTrickWNaf(p, a, pointMap, b);
+    Result := TECAlgorithms.ImplShamirsTrickWNaf(FglvEndomorphism, p, a, b);
     Exit;
   end;
 
-  Result := TECAlgorithms.ImplShamirsTrickWNaf(p, a, pointMap.Map(p), b);
+  q := TEndoUtilities.MapPoint(FglvEndomorphism, p);
+
+  Result := TECAlgorithms.ImplShamirsTrickWNaf(p, a, q, b);
 end;
 
 end.

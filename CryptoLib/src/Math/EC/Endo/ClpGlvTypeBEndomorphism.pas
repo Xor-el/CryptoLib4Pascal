@@ -106,11 +106,12 @@ var
   b1, b2, a, b: TBigInteger;
   p: IGlvTypeBParameters;
 begin
-  bits := FParameters.bits;
-  b1 := CalculateB(k, FParameters.G1, bits);
-  b2 := CalculateB(k, FParameters.G2, bits);
-
   p := FParameters;
+
+  bits := p.bits;
+  b1 := CalculateB(k, p.G1, bits);
+  b2 := CalculateB(k, p.G2, bits);
+
   a := k.subtract((b1.Multiply(p.V1A)).Add(b2.Multiply(p.V2A)));
   b := (b1.Multiply(p.V1B)).Add(b2.Multiply(p.V2B)).Negate();
 

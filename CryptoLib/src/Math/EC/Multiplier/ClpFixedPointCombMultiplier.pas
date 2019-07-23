@@ -27,7 +27,7 @@ uses
   ClpNat,
   ClpCryptoLibTypes,
   ClpIECC,
-  ClpFixedPointUtilities,
+  ClpECAlgorithms,
   ClpIFixedPointPreCompInfo,
   ClpAbstractECMultiplier,
   ClpIFixedPointCombMultiplier;

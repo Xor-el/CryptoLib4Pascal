@@ -32,7 +32,11 @@ uses
   ClpIGlvEndomorphism,
   ClpIWNafPreCompInfo,
   ClpIPreCompInfo,
+  ClpIEndoPreCompInfo,
+  ClpEndoPreCompInfo,
   ClpIPreCompCallBack,
+  ClpFixedPointPreCompInfo,
+  ClpIFixedPointPreCompInfo,
   ClpIECC,
   ClpECCurveConstants,
   ClpIFiniteField;
@@ -100,9 +104,49 @@ type
       FminWidth: Int32;
       Fm_includeNegated: Boolean;
 
+      class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
+        width, reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
+        static; inline;
+
+      class function CheckTable(const table: TCryptoLibGenericArray<IECPoint>;
+        reqLen: Int32): Boolean; static; inline;
+
     public
       constructor Create(const p: IECPoint; minWidth: Int32;
         includeNegated: Boolean);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
+  type
+    IPointMapCallback = interface(IPreCompCallback)
+      ['{00A66D4E-7D61-4A47-AE36-E8D89DEE8D9F}']
+
+    end;
+
+  type
+    TPointMapCallback = class(TInterfacedObject, IPreCompCallback,
+      IPointMapCallback)
+
+    strict private
+
+    var
+      Fm_p: IECPoint;
+      FpointMap: IECPointMap;
+      FfromWNaf: IWNafPreCompInfo;
+      FIncludeNegated: Boolean;
+
+      class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
+        width, reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
+        static; inline;
+
+      class function CheckTable(const table: TCryptoLibGenericArray<IECPoint>;
+        reqLen: Int32): Boolean; static; inline;
+
+    public
+      constructor Create(const p: IECPoint; const pointMap: IECPointMap;
+        const fromWNaf: IWNafPreCompInfo; includeNegated: Boolean);
 
       function Precompute(const existing: IPreCompInfo): IPreCompInfo;
 
@@ -128,13 +172,6 @@ type
       function Precompute(const existing: IPreCompInfo): IPreCompInfo;
 
     end;
-
-  class function CheckExisting(const existingWNaf: IWNafPreCompInfo;
-    width, reqPreCompLen: Int32; includeNegated: Boolean): Boolean;
-    static; inline;
-
-  class function CheckTable(const table: TCryptoLibGenericArray<IECPoint>;
-    reqLen: Int32): Boolean; static; inline;
 
   class function Trim(const a: TCryptoLibByteArray; length: Int32)
     : TCryptoLibByteArray; overload; static; inline;
@@ -251,14 +288,100 @@ type
       const windowSizeCutoffs: array of Int32; maxWidth: Int32): Int32;
       overload; static;
 
-    class function MapPointWithPrecomp(const p: IECPoint; minWidth: Int32;
-      includeNegated: Boolean; const pointMap: IECPointMap): IECPoint; static;
-
     class function Precompute(const p: IECPoint; minWidth: Int32;
       includeNegated: Boolean): IWNafPreCompInfo; static;
 
     class procedure ConfigureBasepoint(const p: IECPoint); static;
 
+    class function PrecomputeWithPointMap(const p: IECPoint;
+      const pointMap: IECPointMap; const fromWNaf: IWNafPreCompInfo;
+      includeNegated: Boolean): IWNafPreCompInfo;
+
+  end;
+
+type
+  TEndoUtilities = class abstract(TObject)
+
+  strict private
+  type
+    IEndoCallback = interface(IPreCompCallback)
+      ['{80C0B850-A97A-4603-A42F-A476ABAF2026}']
+
+    end;
+
+  type
+    TEndoCallback = class(TInterfacedObject, IPreCompCallback, IEndoCallback)
+
+    strict private
+    var
+      Fendomorphism: IECEndomorphism;
+      Fp: IECPoint;
+
+      class function CheckExisting(const existingEndo: IEndoPreCompInfo;
+        const endomorphism: IECEndomorphism): Boolean; static; inline;
+
+    public
+      constructor Create(const endomorphism: IECEndomorphism;
+        const p: IECPoint);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
+  public
+
+    const
+    PRECOMP_NAME: String = 'bc_endo';
+
+  public
+    class function MapPoint(const endomorphism: IECEndomorphism;
+      const p: IECPoint): IECPoint; static;
+
+  end;
+
+type
+  TFixedPointUtilities = class sealed(TObject)
+  strict private
+
+  type
+    IFixedPointCallback = interface(IPreCompCallback)
+      ['{E6DFE8D3-A890-4568-AA4A-3D8BC6AF16E9}']
+
+    end;
+
+  type
+    TFixedPointCallback = class(TInterfacedObject, IPreCompCallback,
+      IFixedPointCallback)
+
+    strict private
+    var
+      Fm_p: IECPoint;
+
+      class function CheckExisting(const existingFP: IFixedPointPreCompInfo;
+        n: Int32): Boolean; static; inline;
+
+      class function CheckTable(const table: IECLookupTable; n: Int32): Boolean;
+        static; inline;
+
+    public
+      constructor Create(const p: IECPoint);
+
+      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+
+    end;
+
+  const
+    PRECOMP_NAME: String = 'bc_fixed_point';
+
+  public
+
+    class function GetFixedPointPreCompInfo(const preCompInfo: IPreCompInfo)
+      : IFixedPointPreCompInfo; static; inline;
+
+    class function GetCombSize(const c: IECCurve): Int32; static; inline;
+
+    class function Precompute(const p: IECPoint)
+      : IFixedPointPreCompInfo; static;
   end;
 
 type
@@ -345,9 +468,8 @@ type
     class function ImplShamirsTrickWNaf(const p: IECPoint; const k: TBigInteger;
       const Q: IECPoint; const l: TBigInteger): IECPoint; overload; static;
 
-    class function ImplShamirsTrickWNaf(const p: IECPoint; const k: TBigInteger;
-      const pointMapQ: IECPointMap; const l: TBigInteger): IECPoint;
-      overload; static;
+    class function ImplShamirsTrickWNaf(const endomorphism: IECEndomorphism;
+      const p: IECPoint; const k, l: TBigInteger): IECPoint; overload; static;
 
     class function ImplSumOfMultiplies
       (const ps: TCryptoLibGenericArray<IECPoint>;
@@ -359,8 +481,8 @@ type
       const ks: TCryptoLibGenericArray<TBigInteger>;
       const glvEndomorphism: IGlvEndomorphism): IECPoint; static;
 
-    class function ImplSumOfMultiplies
-      (const ps: TCryptoLibGenericArray<IECPoint>; const pointMap: IECPointMap;
+    class function ImplSumOfMultiplies(const endomorphism: IECEndomorphism;
+      const ps: TCryptoLibGenericArray<IECPoint>;
       const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
       overload; static;
 
@@ -450,9 +572,8 @@ begin
   result := R;
 end;
 
-class function TECAlgorithms.ImplShamirsTrickWNaf(const p: IECPoint;
-  const k: TBigInteger; const pointMapQ: IECPointMap; const l: TBigInteger)
-  : IECPoint;
+class function TECAlgorithms.ImplShamirsTrickWNaf(const endomorphism
+  : IECEndomorphism; const p: IECPoint; const k, l: TBigInteger): IECPoint;
 var
   negK, negL: Boolean;
   minWidth, widthP, widthQ: Int32;
@@ -473,9 +594,10 @@ begin
 
   minWidth := TWNafUtilities.GetWindowSize(Max(k.BitLength, l.BitLength), 8);
 
-  Q := TWNafUtilities.MapPointWithPrecomp(p, minWidth, true, pointMapQ);
-  infoP := TWNafUtilities.GetWNafPreCompInfo(p);
-  infoQ := TWNafUtilities.GetWNafPreCompInfo(Q);
+  infoP := TWNafUtilities.Precompute(p, minWidth, true);
+  Q := TEndoUtilities.MapPoint(endomorphism, p);
+  infoQ := TWNafUtilities.PrecomputeWithPointMap(Q, endomorphism.pointMap,
+    infoP, true);
 
   widthP := Min(8, infoP.width);
   widthQ := Min(8, infoQ.width);
@@ -607,7 +729,7 @@ var
   infinity, R, point: IECPoint;
   tableP, tableQ: TCryptoLibGenericArray<IECPoint>;
 begin
-  len := Math.Max(System.length(wnafP), System.length(wnafQ));
+  len := Max(System.length(wnafP), System.length(wnafQ));
 
   Curve := preCompP[0].Curve;
   infinity := Curve.infinity;
@@ -694,8 +816,8 @@ begin
   result := R;
 end;
 
-class function TECAlgorithms.ImplSumOfMultiplies
-  (const ps: TCryptoLibGenericArray<IECPoint>; const pointMap: IECPointMap;
+class function TECAlgorithms.ImplSumOfMultiplies(const endomorphism
+  : IECEndomorphism; const ps: TCryptoLibGenericArray<IECPoint>;
   const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
   halfCount, fullCount: Int32;
@@ -706,12 +828,15 @@ var
   i, j0, j1, minWidth, widthP, widthQ: Int32;
   kj0, kj1: TBigInteger;
   p, Q: IECPoint;
+  pointMap: IECPointMap;
 begin
   halfCount := System.length(ps);
   fullCount := halfCount shl 1;
   System.SetLength(negs, fullCount);
   System.SetLength(infos, fullCount);
   System.SetLength(wnafs, fullCount);
+
+  pointMap := endomorphism.pointMap;
 
   for i := 0 to System.Pred(halfCount) do
   begin
@@ -727,11 +852,11 @@ begin
 
     minWidth := TWNafUtilities.GetWindowSize
       (Max(kj0.BitLength, kj1.BitLength), 8);
-    p := ps[i];
-    Q := TWNafUtilities.MapPointWithPrecomp(p, minWidth, true, pointMap);
 
-    infoP := TWNafUtilities.GetWNafPreCompInfo(p);
-    infoQ := TWNafUtilities.GetWNafPreCompInfo(Q);
+    p := ps[i];
+    infoP := TWNafUtilities.Precompute(p, minWidth, true);
+    Q := TEndoUtilities.MapPoint(endomorphism, p);
+    infoQ := TWNafUtilities.PrecomputeWithPointMap(Q, pointMap, infoP, true);
 
     widthP := Min(8, infoP.width);
     widthQ := Min(8, infoQ.width);
@@ -890,7 +1015,6 @@ var
   n: TBigInteger;
   len, i, J: Int32;
   &abs, ab: TCryptoLibGenericArray<TBigInteger>;
-  pointMap: IECPointMap;
   pqs: TCryptoLibGenericArray<IECPoint>;
   p, Q: IECPoint;
 begin
@@ -914,10 +1038,9 @@ begin
     System.Inc(i);
   end;
 
-  pointMap := glvEndomorphism.pointMap;
   if (glvEndomorphism.HasEfficientPointMap) then
   begin
-    result := TECAlgorithms.ImplSumOfMultiplies(ps, pointMap, Abs);
+    result := TECAlgorithms.ImplSumOfMultiplies(glvEndomorphism, ps, Abs);
     Exit;
   end;
 
@@ -929,7 +1052,7 @@ begin
   while (i < len) do
   begin
     p := ps[i];
-    Q := pointMap.Map(p);
+    Q := TEndoUtilities.MapPoint(glvEndomorphism, p);
 
     pqs[J] := p;
     System.Inc(J);
@@ -1191,12 +1314,6 @@ begin
   result := System.Copy(a, 0, length);
 end;
 
-class function TWNafUtilities.CheckTable(const table
-  : TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
-begin
-  result := (table <> Nil) and (System.length(table) >= reqLen);
-end;
-
 class procedure TWNafUtilities.Boot;
 begin
   FEMPTY_BYTES := Nil;
@@ -1268,18 +1385,6 @@ begin
 
   c.Precompute(p, PRECOMP_NAME, TBasePointCallback.Create(ConfWidth)
     as IBasePointCallback);
-end;
-
-class function TWNafUtilities.CheckExisting(const existingWNaf
-  : IWNafPreCompInfo; width, reqPreCompLen: Int32;
-  includeNegated: Boolean): Boolean;
-begin
-  result := (existingWNaf <> Nil) and
-    (existingWNaf.width >= Max(existingWNaf.ConfWidth, width))
-
-    and CheckTable(existingWNaf.PreComp, reqPreCompLen) and
-    ((not includeNegated) or CheckTable(existingWNaf.PreCompNeg,
-    reqPreCompLen));
 end;
 
 class function TWNafUtilities.GenerateCompactNaf(const k: TBigInteger)
@@ -1666,33 +1771,23 @@ begin
   result := GetWNafPreCompInfo(preCompInfo);
 end;
 
-class function TWNafUtilities.MapPointWithPrecomp(const p: IECPoint;
-  minWidth: Int32; includeNegated: Boolean; const pointMap: IECPointMap)
-  : IECPoint;
-var
-  c: IECCurve;
-  infoP: IWNafPreCompInfo;
-  Q: IECPoint;
-begin
-  c := p.Curve;
-
-  infoP := Precompute(p, minWidth, includeNegated);
-
-  Q := pointMap.Map(p);
-
-  c.Precompute(Q, PRECOMP_NAME, TMapPointCallback.Create(infoP, includeNegated,
-    pointMap) as IMapPointCallback);
-
-  result := Q;
-
-end;
-
 class function TWNafUtilities.Precompute(const p: IECPoint; minWidth: Int32;
   includeNegated: Boolean): IWNafPreCompInfo;
 begin
   result := p.Curve.Precompute(p, PRECOMP_NAME,
     TWNafCallback.Create(p, minWidth, includeNegated) as IWNafCallback)
     as IWNafPreCompInfo;
+end;
+
+class function TWNafUtilities.PrecomputeWithPointMap(const p: IECPoint;
+  const pointMap: IECPointMap; const fromWNaf: IWNafPreCompInfo;
+  includeNegated: Boolean): IWNafPreCompInfo;
+var
+  c: IECCurve;
+begin
+  c := p.Curve;
+  result := c.Precompute(p, PRECOMP_NAME, TPointMapCallback.Create(p, pointMap,
+    fromWNaf, includeNegated) as IPointMapCallback) as IWNafPreCompInfo;
 end;
 
 { TWNafUtilities.TMapPointCallback }
@@ -1753,6 +1848,24 @@ begin
 end;
 
 { TWNafUtilities.TWNafCallback }
+
+class function TWNafUtilities.TWNafCallback.CheckTable
+  (const table: TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
+begin
+  result := (table <> Nil) and (System.length(table) >= reqLen);
+end;
+
+class function TWNafUtilities.TWNafCallback.CheckExisting(const existingWNaf
+  : IWNafPreCompInfo; width, reqPreCompLen: Int32;
+  includeNegated: Boolean): Boolean;
+begin
+  result := (existingWNaf <> Nil) and
+    (existingWNaf.width >= Max(existingWNaf.ConfWidth, width))
+
+    and CheckTable(existingWNaf.PreComp, reqPreCompLen) and
+    ((not includeNegated) or CheckTable(existingWNaf.PreCompNeg,
+    reqPreCompLen));
+end;
 
 constructor TWNafUtilities.TWNafCallback.Create(const p: IECPoint;
   minWidth: Int32; includeNegated: Boolean);
@@ -1969,6 +2082,300 @@ begin
     tempResult.Twice := existingWNaf.Twice;
     tempResult.width := existingWNaf.width;
   end;
+  result := tempResult;
+end;
+
+{ TWNafUtilities.TPointMapCallback }
+
+class function TWNafUtilities.TPointMapCallback.CheckTable
+  (const table: TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
+begin
+  result := ((table <> Nil) and (System.length(table) >= reqLen));
+end;
+
+class function TWNafUtilities.TPointMapCallback.CheckExisting(const existingWNaf
+  : IWNafPreCompInfo; width, reqPreCompLen: Int32;
+  includeNegated: Boolean): Boolean;
+begin
+  result := ((existingWNaf <> Nil) and (existingWNaf.width >= width) and
+    (CheckTable(existingWNaf.PreComp, reqPreCompLen)) and
+    ((not includeNegated) or (CheckTable(existingWNaf.PreCompNeg,
+    reqPreCompLen))));
+end;
+
+constructor TWNafUtilities.TPointMapCallback.Create(const p: IECPoint;
+  const pointMap: IECPointMap; const fromWNaf: IWNafPreCompInfo;
+  includeNegated: Boolean);
+begin
+  Inherited Create();
+  Fm_p := p;
+  FpointMap := pointMap;
+  FfromWNaf := fromWNaf;
+  FIncludeNegated := includeNegated;
+end;
+
+function TWNafUtilities.TPointMapCallback.Precompute(const existing
+  : IPreCompInfo): IPreCompInfo;
+var
+  existingWNaf: IWNafPreCompInfo;
+  width, reqPreCompLen, i: Int32;
+  tempResult: IWNafPreCompInfo;
+  twiceFrom, Ltwice: IECPoint;
+  LpreCompFrom, LpreComp, LpreCompNeg: TCryptoLibGenericArray<IECPoint>;
+begin
+  if Supports(existing, IWNafPreCompInfo) then
+  begin
+    existingWNaf := existing as IWNafPreCompInfo;
+  end
+  else
+  begin
+    existingWNaf := Nil;
+  end;
+  width := FfromWNaf.width;
+  reqPreCompLen := System.length(FfromWNaf.PreComp);
+
+  if (CheckExisting(existingWNaf, width, reqPreCompLen, FIncludeNegated)) then
+  begin
+    result := existingWNaf;
+    Exit;
+  end;
+
+  (*
+    * TODO Ideally this method would support incremental calculation, but given the
+    * existing use-cases it would be of little-to-no benefit.
+  *)
+  tempResult := TWNafPreCompInfo.Create() as IWNafPreCompInfo;
+
+  twiceFrom := FfromWNaf.Twice;
+  if (twiceFrom <> Nil) then
+  begin
+    Ltwice := FpointMap.Map(twiceFrom);
+    tempResult.Twice := Ltwice;
+  end;
+
+  LpreCompFrom := FfromWNaf.PreComp;
+  System.SetLength(LpreComp, System.length(LpreCompFrom));
+
+  for i := 0 to System.Pred(System.length(LpreCompFrom)) do
+  begin
+    LpreComp[i] := FpointMap.Map(LpreCompFrom[i]);
+  end;
+  tempResult.PreComp := LpreComp;
+  tempResult.width := width;
+
+  if (FIncludeNegated) then
+  begin
+    System.SetLength(LpreCompNeg, System.length(LpreComp));
+
+    for i := 0 to System.Pred(System.length(LpreCompNeg)) do
+    begin
+      LpreCompNeg[i] := LpreComp[i].Negate();
+    end;
+    tempResult.PreCompNeg := LpreCompNeg;
+  end;
+
+  result := tempResult;
+end;
+
+{ TEndoUtilities }
+
+class function TEndoUtilities.MapPoint(const endomorphism: IECEndomorphism;
+  const p: IECPoint): IECPoint;
+var
+  c: IECCurve;
+  PreComp: IEndoPreCompInfo;
+begin
+  c := p.Curve;
+  PreComp := c.Precompute(p, PRECOMP_NAME, TEndoCallback.Create(endomorphism, p)
+    as IEndoCallback) as IEndoPreCompInfo;
+
+  result := PreComp.MappedPoint;
+end;
+
+{ TEndoUtilities.TEndoCallback }
+
+class function TEndoUtilities.TEndoCallback.CheckExisting(const existingEndo
+  : IEndoPreCompInfo; const endomorphism: IECEndomorphism): Boolean;
+begin
+  result := ((existingEndo <> Nil) and
+    (existingEndo.endomorphism = endomorphism) and
+    (existingEndo.MappedPoint <> Nil));
+end;
+
+constructor TEndoUtilities.TEndoCallback.Create(const endomorphism
+  : IECEndomorphism; const p: IECPoint);
+begin
+  Inherited Create();
+  Fendomorphism := endomorphism;
+  Fp := p;
+end;
+
+function TEndoUtilities.TEndoCallback.Precompute(const existing: IPreCompInfo)
+  : IPreCompInfo;
+var
+  existingEndo: IEndoPreCompInfo;
+  MappedPoint: IECPoint;
+  tempResult: IEndoPreCompInfo;
+begin
+
+  if Supports(existing, IEndoPreCompInfo) then
+  begin
+    existingEndo := existing as IEndoPreCompInfo;
+  end
+  else
+  begin
+    existingEndo := Nil;
+  end;
+
+  if (CheckExisting(existingEndo, Fendomorphism)) then
+  begin
+    result := existingEndo;
+    Exit;
+  end;
+
+  MappedPoint := Fendomorphism.pointMap.Map(Fp);
+
+  tempResult := TEndoPreCompInfo.Create() as IEndoPreCompInfo;
+  tempResult.endomorphism := Fendomorphism;
+  tempResult.MappedPoint := MappedPoint;
+  result := tempResult as IPreCompInfo;
+end;
+
+{ TFixedPointUtilities }
+
+class function TFixedPointUtilities.TFixedPointCallback.CheckTable
+  (const table: IECLookupTable; n: Int32): Boolean;
+begin
+  result := (table <> Nil) and (table.Size >= n);
+end;
+
+class function TFixedPointUtilities.TFixedPointCallback.CheckExisting
+  (const existingFP: IFixedPointPreCompInfo; n: Int32): Boolean;
+begin
+  result := (existingFP <> Nil) and CheckTable(existingFP.LookUpTable, n);
+end;
+
+class function TFixedPointUtilities.GetCombSize(const c: IECCurve): Int32;
+var
+  Order: TBigInteger;
+begin
+  Order := c.Order;
+  if (not(Order.IsInitialized)) then
+  begin
+    result := c.FieldSize + 1;
+  end
+  else
+  begin
+    result := Order.BitLength;
+  end;
+end;
+
+class function TFixedPointUtilities.GetFixedPointPreCompInfo(const preCompInfo
+  : IPreCompInfo): IFixedPointPreCompInfo;
+begin
+  result := preCompInfo as IFixedPointPreCompInfo;
+end;
+
+class function TFixedPointUtilities.Precompute(const p: IECPoint)
+  : IFixedPointPreCompInfo;
+var
+  c: IECCurve;
+begin
+  c := p.Curve;
+
+  result := c.Precompute(p, PRECOMP_NAME, TFixedPointCallback.Create(p)
+    as IFixedPointCallback) as IFixedPointPreCompInfo;
+end;
+
+{ TFixedPointUtilities.TFixedPointCallback }
+
+constructor TFixedPointUtilities.TFixedPointCallback.Create(const p: IECPoint);
+begin
+  Inherited Create();
+  Fm_p := p;
+end;
+
+function TFixedPointUtilities.TFixedPointCallback.Precompute(const existing
+  : IPreCompInfo): IPreCompInfo;
+var
+  bit, bits, minWidth, n, d, i, step: Int32;
+  existingFP: IFixedPointPreCompInfo;
+  pow2Table, LookUpTable: TCryptoLibGenericArray<IECPoint>;
+  pow2: IECPoint;
+  c: IECCurve;
+  tempResult: IFixedPointPreCompInfo;
+begin
+  if Supports(existing, IFixedPointPreCompInfo) then
+  begin
+    existingFP := existing as IFixedPointPreCompInfo;
+  end
+  else
+  begin
+    existingFP := Nil;
+  end;
+
+  c := Fm_p.Curve;
+  bits := TFixedPointUtilities.GetCombSize(c);
+  if bits > 250 then
+  begin
+    minWidth := 6
+  end
+  else
+  begin
+    minWidth := 5
+  end;
+  n := 1 shl minWidth;
+
+  if (CheckExisting(existingFP, n)) then
+  begin
+    result := existingFP;
+    Exit;
+  end;
+
+  d := (bits + minWidth - 1) div minWidth;
+
+  System.SetLength(pow2Table, minWidth + 1);
+
+  pow2Table[0] := Fm_p;
+  for i := 1 to System.Pred(minWidth) do
+  begin
+    pow2Table[i] := pow2Table[i - 1].TimesPow2(d);
+  end;
+
+  // This will be the 'offset' value
+  pow2Table[minWidth] := pow2Table[0].Subtract(pow2Table[1]);
+
+  c.NormalizeAll(pow2Table);
+
+  System.SetLength(LookUpTable, n);
+  LookUpTable[0] := pow2Table[0];
+
+  bit := minWidth - 1;
+  while bit >= 0 do
+  begin
+    pow2 := pow2Table[bit];
+
+    step := 1 shl bit;
+
+    i := step;
+
+    while i < n do
+    begin
+      LookUpTable[i] := LookUpTable[i - step].Add(pow2);
+
+      System.Inc(i, step shl 1);
+    end;
+
+    System.Dec(bit);
+  end;
+
+  c.NormalizeAll(LookUpTable);
+
+  tempResult := TFixedPointPreCompInfo.Create();
+  tempResult.LookUpTable := c.CreateCacheSafeLookupTable(LookUpTable, 0,
+    System.length(LookUpTable));
+  tempResult.offset := pow2Table[minWidth];
+  tempResult.width := minWidth;
   result := tempResult;
 end;
 
