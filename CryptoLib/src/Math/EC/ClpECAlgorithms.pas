@@ -30,6 +30,7 @@ uses
   ClpBigInteger,
   ClpWNafPreCompInfo,
   ClpIPolynomialExtensionField,
+  ClpIMultipliers,
   ClpIGlvEndomorphism,
   ClpIWNafPreCompInfo,
   ClpIScalarSplitParameters,
@@ -39,7 +40,6 @@ uses
   ClpIPreCompCallBack,
   ClpFixedPointPreCompInfo,
   ClpIFixedPointPreCompInfo,
-  ClpIFixedPointCombMultiplier,
   ClpIECC,
   ClpECCurveConstants,
   ClpIFiniteField;
@@ -506,7 +506,7 @@ type
 implementation
 
 uses
-  ClpFixedPointCombMultiplier; // included here to avoid circular dependency :)
+  ClpMultipliers; // included here to avoid circular dependency :)
 
 { TECAlgorithms }
 

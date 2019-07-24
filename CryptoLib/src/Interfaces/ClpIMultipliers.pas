@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIWTauNafMultiplier;
+unit ClpIMultipliers;
 
 {$I ..\Include\CryptoLib.inc}
 
@@ -23,9 +23,36 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECC,
   ClpIZTauElement,
-  ClpIAbstractECMultiplier;
+  ClpIECC;
+
+type
+  IAbstractECMultiplier = interface(IECMultiplier)
+    ['{DD63984C-7D4D-46DE-9004-20FD909C2EFB}']
+
+    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
+      : IECPoint;
+
+  end;
+
+type
+  IFixedPointCombMultiplier = interface(IAbstractECMultiplier)
+    ['{A3345E31-4D5C-4442-9C3D-ACC7F6DA4A14}']
+
+  end;
+
+type
+  IGlvMultiplier = interface(IAbstractECMultiplier)
+    ['{F54D54F5-F544-421B-89FC-1D8058FB8F33}']
+
+  end;
+
+type
+  IWNafL2RMultiplier = interface(IAbstractECMultiplier)
+
+    ['{E2A5E4EF-C092-4F83-ACCF-0FC8731FB274}']
+
+  end;
 
 type
   IWTauNafMultiplier = interface(IAbstractECMultiplier)

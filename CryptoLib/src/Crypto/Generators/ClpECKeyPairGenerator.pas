@@ -35,7 +35,8 @@ uses
   ClpECDomainParameters,
   ClpIECDomainParameters,
   ClpIECC,
-  ClpIFixedPointCombMultiplier,
+  ClpMultipliers,
+  ClpIMultipliers,
   ClpSecObjectIdentifiers,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
@@ -47,7 +48,6 @@ uses
   ClpIECPublicKeyParameters,
   ClpECPrivateKeyParameters,
   ClpIECPrivateKeyParameters,
-  ClpFixedPointCombMultiplier,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpIAsymmetricCipherKeyPairGenerator;

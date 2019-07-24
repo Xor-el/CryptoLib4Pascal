@@ -31,7 +31,7 @@ uses
   ClpBigInteger,
   ClpArrayUtils,
   ClpIECC,
-  ClpWTauNafMultiplier,
+  ClpMultipliers,
   ClpCryptoLibTypes,
   ClpECCurveConstants,
   ClpISecT283Custom;
