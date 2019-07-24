@@ -26,6 +26,7 @@ uses
   Math,
   ClpCryptoLibTypes,
   ClpBits,
+  ClpNat,
   ClpBigInteger,
   ClpWNafPreCompInfo,
   ClpIPolynomialExtensionField,
@@ -38,6 +39,7 @@ uses
   ClpIPreCompCallBack,
   ClpFixedPointPreCompInfo,
   ClpIFixedPointPreCompInfo,
+  ClpIFixedPointCombMultiplier,
   ClpIECC,
   ClpECCurveConstants,
   ClpIFiniteField;
@@ -50,6 +52,8 @@ resourcestring
   SInvalidResult = 'Invalid Result';
   SInvalidRange = 'Must be in the Range [2, 16], "width"';
   SInvalidRange2 = 'Must be in the Range [2, 8], "width"';
+  SInvalidComputation =
+    'Fixed-Point Comb Doesn''t Support Scalars Larger Than The Curve Order';
 
 type
   TWNafUtilities = class abstract(TObject)
@@ -405,6 +409,10 @@ type
       const infos: TCryptoLibGenericArray<IWNafPreCompInfo>;
       const wnafs: TCryptoLibMatrixByteArray): IECPoint; overload; static;
 
+    class function ImplShamirsTrickFixedPoint(const p: IECPoint;
+      const k: TBigInteger; const q: IECPoint; const l: TBigInteger)
+      : IECPoint; static;
+
   public
     class function IsF2mCurve(const c: IECCurve): Boolean; static;
     class function IsF2mField(const field: IFiniteField): Boolean; static;
@@ -415,7 +423,7 @@ type
       const ks: TCryptoLibGenericArray<TBigInteger>): IECPoint; static;
 
     class function SumOfTwoMultiplies(const p: IECPoint; const a: TBigInteger;
-      const Q: IECPoint; const b: TBigInteger): IECPoint; static;
+      const q: IECPoint; const b: TBigInteger): IECPoint; static;
 
     // /*
     // * "Shamir's Trick", originally due to E. G. Straus
@@ -436,7 +444,7 @@ type
     // * 9: return R
     // */
     class function ShamirsTrick(const p: IECPoint; const k: TBigInteger;
-      const Q: IECPoint; const l: TBigInteger): IECPoint; static;
+      const q: IECPoint; const l: TBigInteger): IECPoint; static;
 
     class function ImportPoint(const c: IECCurve; const p: IECPoint)
       : IECPoint; static;
@@ -470,10 +478,10 @@ type
       : IECPoint; static;
 
     class function ImplShamirsTrickJsf(const p: IECPoint; const k: TBigInteger;
-      const Q: IECPoint; const l: TBigInteger): IECPoint; static;
+      const q: IECPoint; const l: TBigInteger): IECPoint; static;
 
     class function ImplShamirsTrickWNaf(const p: IECPoint; const k: TBigInteger;
-      const Q: IECPoint; const l: TBigInteger): IECPoint; overload; static;
+      const q: IECPoint; const l: TBigInteger): IECPoint; overload; static;
 
     class function ImplShamirsTrickWNaf(const endomorphism: IECEndomorphism;
       const p: IECPoint; const k, l: TBigInteger): IECPoint; overload; static;
@@ -496,6 +504,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpFixedPointCombMultiplier; // included here to avoid circular dependency :)
 
 { TECAlgorithms }
 
@@ -533,33 +544,124 @@ begin
   result := p;
 end;
 
+class function TECAlgorithms.ImplShamirsTrickFixedPoint(const p: IECPoint;
+  const k: TBigInteger; const q: IECPoint; const l: TBigInteger): IECPoint;
+var
+  c: IECCurve;
+  combSize, widthP, widthQ, width, d, fullComb, i, top, j: Int32;
+  infoP, infoQ: IFixedPointPreCompInfo;
+  lookupTableP, lookupTableQ: IECLookupTable;
+  m: IFixedPointCombMultiplier;
+  r1, r2, R, addP, addQ, t: IECPoint;
+  BigK, BigL: TCryptoLibUInt32Array;
+  secretBitK, secretBitL, secretIndexK, secretIndexL: UInt32;
+begin
+  c := p.Curve;
+  combSize := TFixedPointUtilities.GetCombSize(c);
+
+  if (((k.BitLength) > combSize) or (l.BitLength > combSize)) then
+  begin
+    (*
+      * TODO The comb works best when the scalars are less than the (possibly unknown) order.
+      * Still, if we want to handle larger scalars, we could allow customization of the comb
+      * size, or alternatively we could deal with the 'extra' bits either by running the comb
+      * multiple times as necessary, or by using an alternative multiplier as prelude.
+    *)
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidComputation);
+  end;
+
+  infoP := TFixedPointUtilities.Precompute(p);
+  infoQ := TFixedPointUtilities.Precompute(q);
+
+  lookupTableP := infoP.LookupTable;
+  lookupTableQ := infoQ.LookupTable;
+
+  widthP := infoP.width;
+  widthQ := infoQ.width;
+
+  // TODO This shouldn't normally happen, but a better "solution" is desirable anyway
+  if (widthP <> widthQ) then
+  begin
+    m := TFixedPointCombMultiplier.Create();
+    r1 := m.Multiply(p, k);
+    r2 := m.Multiply(q, l);
+    result := r1.Add(r2);
+    Exit;
+  end;
+
+  width := widthP;
+
+  d := ((combSize + width) - 1) div width;
+
+  R := c.Infinity;
+
+  fullComb := d * width;
+  BigK := TNat.FromBigInteger(fullComb, k);
+  BigL := TNat.FromBigInteger(fullComb, l);
+
+  top := fullComb - 1;
+
+  for i := 0 to System.Pred(d) do
+  begin
+    secretIndexK := 0;
+    secretIndexL := 0;
+
+    j := top - i;
+
+    while j >= 0 do
+    begin
+
+      secretBitK := BigK[TBits.Asr32(j, 5)] shr (j and $1F);
+      secretIndexK := secretIndexK xor (secretBitK shr 1);
+      secretIndexK := secretIndexK shl 1;
+      secretIndexK := secretIndexK xor secretBitK;
+
+      secretBitL := BigL[TBits.Asr32(j, 5)] shr (j and $1F);
+      secretIndexL := secretIndexL xor (secretBitL shr 1);
+      secretIndexL := secretIndexL shl 1;
+      secretIndexL := secretIndexL xor secretBitL;
+
+      System.Dec(j, d);
+    end;
+
+    addP := lookupTableP.Lookup(Int32(secretIndexK));
+    addQ := lookupTableQ.Lookup(Int32(secretIndexL));
+
+    t := addP.Add(addQ);
+
+    R := R.TwicePlus(t);
+  end;
+
+  result := R.Add(infoP.Offset).Add(infoQ.Offset);
+end;
+
 class function TECAlgorithms.ImplShamirsTrickJsf(const p: IECPoint;
-  const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
+  const k: TBigInteger; const q: IECPoint; const l: TBigInteger): IECPoint;
 var
   Curve: IECCurve;
-  infinity, R: IECPoint;
+  Infinity, R: IECPoint;
   PaddQ, PsubQ: IECPoint;
   points, table: TCryptoLibGenericArray<IECPoint>;
   jsf: TCryptoLibByteArray;
   i, jsfi, kDigit, lDigit, index: Int32;
 begin
   Curve := p.Curve;
-  infinity := Curve.infinity;
+  Infinity := Curve.Infinity;
 
   // TODO conjugate co-Z addition (ZADDC) can return both of these
-  PaddQ := p.Add(Q);
-  PsubQ := p.Subtract(Q);
+  PaddQ := p.Add(q);
+  PsubQ := p.Subtract(q);
 
-  points := TCryptoLibGenericArray<IECPoint>.Create(Q, PsubQ, p, PaddQ);
+  points := TCryptoLibGenericArray<IECPoint>.Create(q, PsubQ, p, PaddQ);
   Curve.NormalizeAll(points);
 
   table := TCryptoLibGenericArray<IECPoint>.Create(points[3].Negate(),
-    points[2].Negate(), points[1].Negate(), points[0].Negate(), infinity,
+    points[2].Negate(), points[1].Negate(), points[0].Negate(), Infinity,
     points[0], points[1], points[2], points[3]);
 
   jsf := TWNafUtilities.GenerateJsf(k, l);
 
-  R := infinity;
+  R := Infinity;
 
   i := System.length(jsf);
   System.Dec(i);
@@ -584,7 +686,7 @@ class function TECAlgorithms.ImplShamirsTrickWNaf(const endomorphism
 var
   negK, negL: Boolean;
   minWidth, widthP, widthQ: Int32;
-  Q: IECPoint;
+  q: IECPoint;
   infoP, infoQ: IWNafPreCompInfo;
   preCompP, preCompQ, preCompNegP, preCompNegQ
     : TCryptoLibGenericArray<IECPoint>;
@@ -602,8 +704,8 @@ begin
   minWidth := TWNafUtilities.GetWindowSize(Max(k.BitLength, l.BitLength), 8);
 
   infoP := TWNafUtilities.Precompute(p, minWidth, true);
-  Q := TEndoUtilities.MapPoint(endomorphism, p);
-  infoQ := TWNafUtilities.PrecomputeWithPointMap(Q, endomorphism.pointMap,
+  q := TEndoUtilities.MapPoint(endomorphism, p);
+  infoQ := TWNafUtilities.PrecomputeWithPointMap(q, endomorphism.pointMap,
     infoP, true);
 
   widthP := Min(8, infoP.width);
@@ -651,29 +753,41 @@ begin
 end;
 
 class function TECAlgorithms.ImplShamirsTrickWNaf(const p: IECPoint;
-  const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
+  const k: TBigInteger; const q: IECPoint; const l: TBigInteger): IECPoint;
 var
   negK, negL: Boolean;
-  minWidthP, minWidthQ, widthP, widthQ: Int32;
+  minWidthP, minWidthQ, widthP, widthQ, combSize: Int32;
   infoP, infoQ: IWNafPreCompInfo;
   preCompP, preCompQ, preCompNegP, preCompNegQ
     : TCryptoLibGenericArray<IECPoint>;
   wnafP, wnafQ: TCryptoLibByteArray;
-  LK, LL: TBigInteger;
+  kAbs, lAbs: TBigInteger;
+  c: IECCurve;
 begin
-  LK := k;
-  LL := l;
-  negK := LK.SignValue < 0;
-  negL := LL.SignValue < 0;
 
-  LK := LK.Abs();
-  LL := LL.Abs();
+  negK := k.SignValue < 0;
+  negL := l.SignValue < 0;
 
-  minWidthP := TWNafUtilities.GetWindowSize(k.BitLength, 8);
-  minWidthQ := TWNafUtilities.GetWindowSize(l.BitLength, 8);
+  kAbs := k.Abs();
+  lAbs := l.Abs();
+
+  minWidthP := TWNafUtilities.GetWindowSize(kAbs.BitLength, 8);
+  minWidthQ := TWNafUtilities.GetWindowSize(lAbs.BitLength, 8);
 
   infoP := TWNafUtilities.Precompute(p, minWidthP, true);
-  infoQ := TWNafUtilities.Precompute(Q, minWidthQ, true);
+  infoQ := TWNafUtilities.Precompute(q, minWidthQ, true);
+
+  // When P, Q are 'promoted' (i.e. reused several times), switch to fixed-point algorithm
+
+  c := p.Curve;
+  combSize := TFixedPointUtilities.GetCombSize(c);
+  if ((not negK) and (not negL) and (k.BitLength <= combSize) and
+    (l.BitLength <= combSize) and (infoP.IsPromoted) and (infoQ.IsPromoted))
+  then
+  begin
+    result := ImplShamirsTrickFixedPoint(p, k, q, l);
+    Exit;
+  end;
 
   widthP := Min(8, infoP.width);
   widthQ := Min(8, infoQ.width);
@@ -714,8 +828,8 @@ begin
     preCompNegQ := infoQ.PreCompNeg
   end;
 
-  wnafP := TWNafUtilities.GenerateWindowNaf(widthP, LK);
-  wnafQ := TWNafUtilities.GenerateWindowNaf(widthQ, LL);
+  wnafP := TWNafUtilities.GenerateWindowNaf(widthP, kAbs);
+  wnafQ := TWNafUtilities.GenerateWindowNaf(widthQ, lAbs);
 
   result := ImplShamirsTrickWNaf(preCompP, preCompNegP, wnafP, preCompQ,
     preCompNegQ, wnafQ);
@@ -733,15 +847,15 @@ class function TECAlgorithms.ImplShamirsTrickWNaf(const preCompP,
 var
   len, zeroes, i, wiP, wiQ, nP, nQ: Int32;
   Curve: IECCurve;
-  infinity, R, point: IECPoint;
+  Infinity, R, point: IECPoint;
   tableP, tableQ: TCryptoLibGenericArray<IECPoint>;
 begin
   len := Max(System.length(wnafP), System.length(wnafQ));
 
   Curve := preCompP[0].Curve;
-  infinity := Curve.infinity;
+  Infinity := Curve.Infinity;
 
-  R := infinity;
+  R := Infinity;
   zeroes := 0;
 
   i := len - 1;
@@ -773,7 +887,7 @@ begin
       continue;
     end;
 
-    point := infinity;
+    point := Infinity;
     if (wiP <> 0) then
     begin
       nP := System.Abs(wiP);
@@ -834,7 +948,7 @@ var
   wnafs: TCryptoLibMatrixByteArray;
   i, j0, j1, minWidth, widthP, widthQ: Int32;
   kj0, kj1: TBigInteger;
-  p, Q: IECPoint;
+  p, q: IECPoint;
   pointMap: IECPointMap;
 begin
   halfCount := System.length(ps);
@@ -862,8 +976,8 @@ begin
 
     p := ps[i];
     infoP := TWNafUtilities.Precompute(p, minWidth, true);
-    Q := TEndoUtilities.MapPoint(endomorphism, p);
-    infoQ := TWNafUtilities.PrecomputeWithPointMap(Q, pointMap, infoP, true);
+    q := TEndoUtilities.MapPoint(endomorphism, p);
+    infoQ := TWNafUtilities.PrecomputeWithPointMap(q, pointMap, infoP, true);
 
     widthP := Min(8, infoP.width);
     widthQ := Min(8, infoQ.width);
@@ -932,9 +1046,9 @@ class function TECAlgorithms.ImplSumOfMultiplies
   const wnafs: TCryptoLibMatrixByteArray): IECPoint;
 var
   len, count, zeroes: Int32;
-  i, J, wi, n: Int32;
+  i, j, wi, n: Int32;
   Curve: IECCurve;
-  infinity, R, point: IECPoint;
+  Infinity, R, point: IECPoint;
   wnaf: TCryptoLibByteArray;
   info: IWNafPreCompInfo;
   table: TCryptoLibGenericArray<IECPoint>;
@@ -948,19 +1062,19 @@ begin
   end;
 
   Curve := infos[0].PreComp[0].Curve;
-  infinity := Curve.infinity;
+  Infinity := Curve.Infinity;
 
-  R := infinity;
+  R := Infinity;
   zeroes := 0;
 
   i := len - 1;
   while (i >= 0) do
   begin
-    point := infinity;
+    point := Infinity;
 
-    for J := 0 to System.Pred(count) do
+    for j := 0 to System.Pred(count) do
     begin
-      wnaf := wnafs[J];
+      wnaf := wnafs[j];
       if i < System.length(wnaf) then
       begin
         wi := Int32(ShortInt(wnaf[i]));
@@ -973,8 +1087,8 @@ begin
       if (wi <> 0) then
       begin
         n := System.Abs(wi);
-        info := infos[J];
-        if (wi < 0 = negs[J]) then
+        info := infos[j];
+        if (wi < 0 = negs[j]) then
         begin
           table := info.PreComp;
         end
@@ -987,7 +1101,7 @@ begin
       end;
     end;
 
-    if (point = infinity) then
+    if (point = Infinity) then
     begin
       System.Inc(zeroes);
       System.Dec(i);
@@ -1020,10 +1134,10 @@ class function TECAlgorithms.ImplSumOfMultipliesGlv
   const glvEndomorphism: IGlvEndomorphism): IECPoint;
 var
   n: TBigInteger;
-  len, i, J: Int32;
+  len, i, j: Int32;
   &abs, ab: TCryptoLibGenericArray<TBigInteger>;
   pqs: TCryptoLibGenericArray<IECPoint>;
-  p, Q: IECPoint;
+  p, q: IECPoint;
 begin
   n := ps[0].Curve.Order;
 
@@ -1032,16 +1146,16 @@ begin
   System.SetLength(Abs, len shl 1);
 
   i := 0;
-  J := 0;
+  j := 0;
 
   while (i < len) do
   begin
     ab := glvEndomorphism.DecomposeScalar(ks[i].&Mod(n));
 
-    Abs[J] := ab[0];
-    System.Inc(J);
-    Abs[J] := ab[1];
-    System.Inc(J);
+    Abs[j] := ab[0];
+    System.Inc(j);
+    Abs[j] := ab[1];
+    System.Inc(j);
     System.Inc(i);
   end;
 
@@ -1054,17 +1168,17 @@ begin
   System.SetLength(pqs, len shl 1);
 
   i := 0;
-  J := 0;
+  j := 0;
 
   while (i < len) do
   begin
     p := ps[i];
-    Q := TEndoUtilities.MapPoint(glvEndomorphism, p);
+    q := TEndoUtilities.MapPoint(glvEndomorphism, p);
 
-    pqs[J] := p;
-    System.Inc(J);
-    pqs[J] := Q;
-    System.Inc(J);
+    pqs[j] := p;
+    System.Inc(j);
+    pqs[j] := q;
+    System.Inc(j);
     System.Inc(i);
   end;
 
@@ -1112,7 +1226,7 @@ class procedure TECAlgorithms.MontgomeryTrick
   const scale: IECFieldElement);
 var
   c: TCryptoLibGenericArray<IECFieldElement>;
-  i, J: Int32;
+  i, j: Int32;
   u, tmp: IECFieldElement;
 begin
   // /*
@@ -1144,10 +1258,10 @@ begin
 
   while (i > 0) do
   begin
-    J := off + i;
+    j := off + i;
     System.Dec(i);
-    tmp := zs[J];
-    zs[J] := c[i].Multiply(u);
+    tmp := zs[j];
+    zs[j] := c[i].Multiply(u);
     u := u.Multiply(tmp);
   end;
 
@@ -1164,18 +1278,18 @@ class function TECAlgorithms.ReferenceMultiply(const p: IECPoint;
   const k: TBigInteger): IECPoint;
 var
   x: TBigInteger;
-  Q, LP: IECPoint;
+  q, LP: IECPoint;
   t, i: Int32;
 begin
   LP := p;
   x := k.Abs();
-  Q := LP.Curve.infinity;
+  q := LP.Curve.Infinity;
   t := x.BitLength;
   if (t > 0) then
   begin
     if (x.TestBit(0)) then
     begin
-      Q := LP;
+      q := LP;
     end;
     i := 1;
     while (i < t) do
@@ -1183,7 +1297,7 @@ begin
       LP := LP.Twice();
       if (x.TestBit(i)) then
       begin
-        Q := Q.Add(LP);
+        q := q.Add(LP);
       end;
       System.Inc(i);
     end;
@@ -1192,23 +1306,23 @@ begin
 
   if k.SignValue < 0 then
   begin
-    result := Q.Negate();
+    result := q.Negate();
   end
   else
   begin
-    result := Q;
+    result := q;
   end;
 
 end;
 
 class function TECAlgorithms.ShamirsTrick(const p: IECPoint;
-  const k: TBigInteger; const Q: IECPoint; const l: TBigInteger): IECPoint;
+  const k: TBigInteger; const q: IECPoint; const l: TBigInteger): IECPoint;
 var
   cp: IECCurve;
   LQ: IECPoint;
 begin
   cp := p.Curve;
-  LQ := Q;
+  LQ := q;
   LQ := ImportPoint(cp, LQ);
 
   result := ImplCheckResult(ImplShamirsTrickJsf(p, k, LQ, l));
@@ -1269,7 +1383,7 @@ begin
 end;
 
 class function TECAlgorithms.SumOfTwoMultiplies(const p: IECPoint;
-  const a: TBigInteger; const Q: IECPoint; const b: TBigInteger): IECPoint;
+  const a: TBigInteger; const q: IECPoint; const b: TBigInteger): IECPoint;
 var
   cp: IECCurve;
   f2mCurve: IAbstractF2mCurve;
@@ -1277,7 +1391,7 @@ var
   LQ: IECPoint;
 begin
   cp := p.Curve;
-  LQ := Q;
+  LQ := q;
   LQ := ImportPoint(cp, LQ);
 
   // Point multiplication for Koblitz curves (using WTNAF) beats Shamir's trick
@@ -1549,7 +1663,7 @@ end;
 class function TWNafUtilities.GenerateJsf(const g, h: TBigInteger)
   : TCryptoLibByteArray;
 var
-  digits, J, d0, d1, offset, n0, n1, u0, u1: Int32;
+  digits, j, d0, d1, Offset, n0, n1, u0, u1: Int32;
   jsf: TCryptoLibByteArray;
   k0, k1: TBigInteger;
 begin
@@ -1559,17 +1673,17 @@ begin
 
   k0 := g;
   k1 := h;
-  J := 0;
+  j := 0;
   d0 := 0;
   d1 := 0;
 
-  offset := 0;
+  Offset := 0;
 
-  while (((d0 or d1) <> 0) or (k0.BitLength > offset) or
-    (k1.BitLength > offset)) do
+  while (((d0 or d1) <> 0) or (k0.BitLength > Offset) or
+    (k1.BitLength > Offset)) do
   begin
-    n0 := (Int32(UInt32(k0.Int32Value) shr offset) + d0) and 7;
-    n1 := (Int32(UInt32(k1.Int32Value) shr offset) + d1) and 7;
+    n0 := (Int32(UInt32(k0.Int32Value) shr Offset) + d0) and 7;
+    n1 := (Int32(UInt32(k1.Int32Value) shr Offset) + d1) and 7;
 
     u0 := n0 and 1;
     if (u0 <> 0) then
@@ -1600,22 +1714,22 @@ begin
       d1 := d1 xor 1;
     end;
 
-    System.Inc(offset);
-    if (offset = 30) then
+    System.Inc(Offset);
+    if (Offset = 30) then
     begin
-      offset := 0;
+      Offset := 0;
       k0 := k0.ShiftRight(30);
       k1 := k1.ShiftRight(30);
     end;
 
-    jsf[J] := Byte((u0 shl 4) or (u1 and $F));
-    System.Inc(J);
+    jsf[j] := Byte((u0 shl 4) or (u1 and $F));
+    System.Inc(j);
   end;
 
   // Reduce the JSF array to its actual length
-  if (System.length(jsf) > J) then
+  if (System.length(jsf) > j) then
   begin
-    jsf := Trim(jsf, J);
+    jsf := Trim(jsf, j);
   end;
 
   result := jsf;
@@ -1890,7 +2004,8 @@ var
   c: IECCurve;
   PreComp, PreCompNeg, EMPTY_POINTS: TCryptoLibGenericArray<IECPoint>;
   tempRes, existingWNaf: IWNafPreCompInfo;
-  reqPreCompLen, iniPreCompLen, curPreCompLen, pos, width: Int32;
+  reqPreCompLen, iniPreCompLen, curPreCompLen, pos, width, PromotionCountdown,
+    ConfWidth: Int32;
   iso, iso2, iso3: IECFieldElement;
 begin
   c := Fm_p.Curve;
@@ -1902,6 +2017,7 @@ begin
 
   if (CheckExisting(existingWNaf, width, reqPreCompLen, Fm_includeNegated)) then
   begin
+    existingWNaf.DecrementPromotionCountdown;
     result := existingWNaf;
     Exit;
   end;
@@ -1910,6 +2026,13 @@ begin
 
   if (existingWNaf <> Nil) then
   begin
+
+    PromotionCountdown := existingWNaf.DecrementPromotionCountdown;
+    tempRes.PromotionCountdown := PromotionCountdown;
+
+    ConfWidth := existingWNaf.ConfWidth;
+    tempRes.ConfWidth := ConfWidth;
+
     PreComp := existingWNaf.PreComp;
     PreCompNeg := existingWNaf.PreCompNeg;
     twiceP := existingWNaf.Twice;
@@ -2074,12 +2197,14 @@ begin
 
   if ((existingWNaf <> Nil) and (existingWNaf.ConfWidth = FConfWidth)) then
   begin
+    existingWNaf.PromotionCountdown := 0;
     result := existingWNaf;
     Exit;
   end;
 
   tempResult := TWNafPreCompInfo.Create();
 
+  tempResult.PromotionCountdown := 0;
   tempResult.ConfWidth := FConfWidth;
 
   if (existingWNaf <> Nil) then
@@ -2143,6 +2268,7 @@ begin
 
   if (CheckExisting(existingWNaf, width, reqPreCompLen, FIncludeNegated)) then
   begin
+    existingWNaf.DecrementPromotionCountdown;
     result := existingWNaf;
     Exit;
   end;
@@ -2151,7 +2277,9 @@ begin
     * TODO Ideally this method would support incremental calculation, but given the
     * existing use-cases it would be of little-to-no benefit.
   *)
-  tempResult := TWNafPreCompInfo.Create() as IWNafPreCompInfo;
+  tempResult := TWNafPreCompInfo.Create();
+
+  tempResult.PromotionCountdown := FfromWNaf.PromotionCountdown;
 
   twiceFrom := FfromWNaf.Twice;
   if (twiceFrom <> Nil) then
@@ -2301,7 +2429,7 @@ end;
 class function TFixedPointUtilities.TFixedPointCallback.CheckExisting
   (const existingFP: IFixedPointPreCompInfo; n: Int32): Boolean;
 begin
-  result := (existingFP <> Nil) and CheckTable(existingFP.LookUpTable, n);
+  result := (existingFP <> Nil) and CheckTable(existingFP.LookupTable, n);
 end;
 
 class function TFixedPointUtilities.GetCombSize(const c: IECCurve): Int32;
@@ -2349,7 +2477,7 @@ function TFixedPointUtilities.TFixedPointCallback.Precompute(const existing
 var
   bit, bits, minWidth, n, d, i, step: Int32;
   existingFP: IFixedPointPreCompInfo;
-  pow2Table, LookUpTable: TCryptoLibGenericArray<IECPoint>;
+  pow2Table, LookupTable: TCryptoLibGenericArray<IECPoint>;
   pow2: IECPoint;
   c: IECCurve;
   tempResult: IFixedPointPreCompInfo;
@@ -2396,8 +2524,8 @@ begin
 
   c.NormalizeAll(pow2Table);
 
-  System.SetLength(LookUpTable, n);
-  LookUpTable[0] := pow2Table[0];
+  System.SetLength(LookupTable, n);
+  LookupTable[0] := pow2Table[0];
 
   bit := minWidth - 1;
   while bit >= 0 do
@@ -2410,7 +2538,7 @@ begin
 
     while i < n do
     begin
-      LookUpTable[i] := LookUpTable[i - step].Add(pow2);
+      LookupTable[i] := LookupTable[i - step].Add(pow2);
 
       System.Inc(i, step shl 1);
     end;
@@ -2418,12 +2546,12 @@ begin
     System.Dec(bit);
   end;
 
-  c.NormalizeAll(LookUpTable);
+  c.NormalizeAll(LookupTable);
 
   tempResult := TFixedPointPreCompInfo.Create();
-  tempResult.LookUpTable := c.CreateCacheSafeLookupTable(LookUpTable, 0,
-    System.length(LookUpTable));
-  tempResult.offset := pow2Table[minWidth];
+  tempResult.LookupTable := c.CreateCacheSafeLookupTable(LookupTable, 0,
+    System.length(LookupTable));
+  tempResult.Offset := pow2Table[minWidth];
   tempResult.width := minWidth;
   result := tempResult;
 end;

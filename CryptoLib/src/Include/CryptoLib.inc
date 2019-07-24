@@ -136,6 +136,12 @@
    {$DEFINE SHIFT_OVERFLOW_BUG_FIXED}
 {$IFEND}
 
+  // 10.1 Berlin and Above
+{$IF CompilerVersion >= 31.0}
+   {$DEFINE DELPHI10.1_BERLIN_UP}
+   {$DEFINE HAS_VOLATILE}
+{$IFEND}
+
   // 10.2 Tokyo and Above
 {$IF CompilerVersion >= 32.0}
    {$DEFINE DELPHI10.2_TOKYO_UP}

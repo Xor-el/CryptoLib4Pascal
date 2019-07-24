@@ -25,9 +25,9 @@ uses
   ClpBits,
   ClpBigInteger,
   ClpNat,
+  ClpECAlgorithms,
   ClpCryptoLibTypes,
   ClpIECC,
-  ClpECAlgorithms,
   ClpIFixedPointPreCompInfo,
   ClpAbstractECMultiplier,
   ClpIFixedPointCombMultiplier;
