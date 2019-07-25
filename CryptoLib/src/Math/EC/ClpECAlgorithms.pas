@@ -273,8 +273,8 @@ begin
       System.Dec(j, d);
     end;
 
-    addP := lookupTableP.Lookup(Int32(secretIndexK));
-    addQ := lookupTableQ.Lookup(Int32(secretIndexL));
+    addP := lookupTableP.LookupVar(Int32(secretIndexK));
+    addQ := lookupTableQ.LookupVar(Int32(secretIndexL));
 
     t := addP.Add(addQ);
 

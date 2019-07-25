@@ -258,8 +258,8 @@ type
   strict private
 
   type
-    TSecT283K1LookupTable = class sealed(TInterfacedObject,
-      ISecT283K1LookupTable, IECLookupTable)
+    TSecT283K1LookupTable = class sealed(TAbstractECLookupTable,
+      ISecT283K1LookupTable)
 
     strict private
     var
@@ -267,16 +267,19 @@ type
       Fm_table: TCryptoLibUInt64Array;
       Fm_size: Int32;
 
-      function GetSize: Int32; virtual;
+      function CreatePoint(const x, y: TCryptoLibUInt64Array): IECPoint;
+
+    strict protected
+
+      function GetSize: Int32; override;
 
     public
 
       constructor Create(const outer: ISecT283K1Curve;
         const table: TCryptoLibUInt64Array; size: Int32);
 
-      function Lookup(index: Int32): IECPoint; virtual;
-
-      property size: Int32 read GetSize;
+      function Lookup(index: Int32): IECPoint; override;
+      function LookupVar(index: Int32): IECPoint; override;
 
     end;
 
@@ -1591,6 +1594,21 @@ begin
   Fm_size := size;
 end;
 
+function TSecT283K1Curve.TSecT283K1LookupTable.CreatePoint(const x,
+  y: TCryptoLibUInt64Array): IECPoint;
+var
+  XFieldElement, YFieldElement: ISecT283FieldElement;
+  SECT283K1_AFFINE_ZS: TCryptoLibGenericArray<IECFieldElement>;
+begin
+  SECT283K1_AFFINE_ZS := TCryptoLibGenericArray<IECFieldElement>.Create
+    (TSecT283FieldElement.Create(TBigInteger.One) as ISecT283FieldElement);
+
+  XFieldElement := TSecT283FieldElement.Create(x);
+  YFieldElement := TSecT283FieldElement.Create(y);
+  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement,
+    SECT283K1_AFFINE_ZS, false);
+end;
+
 function TSecT283K1Curve.TSecT283K1LookupTable.GetSize: Int32;
 begin
   result := Fm_size;
@@ -1619,9 +1637,26 @@ begin
     pos := pos + (SECT283K1_FE_LONGS * 2);
   end;
 
-  result := Fm_outer.CreateRawPoint(TSecT283FieldElement.Create(x)
-    as ISecT283FieldElement, TSecT283FieldElement.Create(y)
-    as ISecT283FieldElement, false);
+  result := CreatePoint(x, y);
+end;
+
+function TSecT283K1Curve.TSecT283K1LookupTable.LookupVar(index: Int32)
+  : IECPoint;
+var
+  x, y: TCryptoLibUInt64Array;
+  pos, j: Int32;
+begin
+  x := TNat320.Create64();
+  y := TNat320.Create64();
+  pos := index * SECT283K1_FE_LONGS * 2;
+
+  for j := 0 to System.Pred(SECT283K1_FE_LONGS) do
+  begin
+    x[j] := Fm_table[pos + j];
+    y[j] := Fm_table[pos + SECT283K1_FE_LONGS + j];
+  end;
+
+  result := CreatePoint(x, y);
 end;
 
 end.

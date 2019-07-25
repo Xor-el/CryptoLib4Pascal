@@ -595,11 +595,24 @@ type
     ['{A1839961-4FBF-42EF-BF8B-6084064A05C1}']
     function GetSize: Int32;
     function Lookup(index: Int32): IECPoint;
+    function LookupVar(index: Int32): IECPoint;
     property Size: Int32 read GetSize;
   end;
 
 type
-  IDefaultLookupTable = interface(IECLookupTable)
+  IAbstractECLookupTable = interface(IECLookupTable)
+    ['{9695E807-6A2A-4879-8438-84CE029AD143}']
+
+  end;
+
+type
+  ISimpleLookupTable = interface(IAbstractECLookupTable)
+    ['{5C2C8292-CECE-4A01-89D2-AF75B55F6FA3}']
+
+  end;
+
+type
+  IDefaultLookupTable = interface(IAbstractECLookupTable)
     ['{094881EB-24A6-41A3-BAD6-D6DAB13DD17D}']
 
   end;
@@ -611,7 +624,7 @@ type
   end;
 
 type
-  IDefaultF2mLookupTable = interface(IECLookupTable)
+  IDefaultF2mLookupTable = interface(IAbstractECLookupTable)
     ['{0C019049-9839-4322-BAF5-8E5D39BC426D}']
 
   end;

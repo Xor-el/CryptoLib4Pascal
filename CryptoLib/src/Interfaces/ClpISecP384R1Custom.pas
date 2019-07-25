@@ -50,7 +50,7 @@ type
   end;
 
 type
-  ISecP384R1LookupTable = Interface(IECLookupTable)
+  ISecP384R1LookupTable = Interface(IAbstractECLookupTable)
     ['{F1354F0B-577F-402C-A363-7761CF82DA43}']
   end;
 

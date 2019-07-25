@@ -93,6 +93,7 @@ resourcestring
   SNotProjectiveCoordSystem = 'Not a Projective Coordinate System';
   SCannotBeNegative = 'Cannot be Negative, "e"';
   SNilFieldElement = 'Exactly one of the Field Elements is Nil';
+  SUnsupportedOperation = 'Constant-time Lookup not Supported';
 
 type
   TECFieldElement = class abstract(TInterfacedObject, IECFieldElement)
@@ -690,20 +691,61 @@ type
   end;
 
 type
-  TDefaultLookupTable = class(TInterfacedObject, IDefaultLookupTable,
-    IECLookupTable)
+  TAbstractECLookupTable = class abstract(TInterfacedObject,
+    IAbstractECLookupTable, IECLookupTable)
+
+  strict protected
+    function GetSize: Int32; virtual; abstract;
+
+  public
+    function Lookup(index: Int32): IECPoint; virtual; abstract;
+    function LookupVar(index: Int32): IECPoint; virtual; abstract;
+    property Size: Int32 read GetSize;
+
+  end;
+
+type
+  TSimpleLookupTable = class abstract(TAbstractECLookupTable,
+    ISimpleLookupTable)
+
+  strict private
+  var
+    FPoints: TCryptoLibGenericArray<IECPoint>;
+
+    class function Copy(const points: TCryptoLibGenericArray<IECPoint>;
+      off, len: Int32): TCryptoLibGenericArray<IECPoint>; static;
+
+  strict protected
+    function GetSize: Int32; override;
+
+  public
+    constructor Create(const points: TCryptoLibGenericArray<IECPoint>;
+      off, len: Int32);
+
+    function Lookup(index: Int32): IECPoint; override;
+    function LookupVar(index: Int32): IECPoint; override;
+
+  end;
+
+type
+  TDefaultLookupTable = class(TAbstractECLookupTable, IDefaultLookupTable)
   strict private
   var
     Fm_outer: IECCurve;
     Fm_table: TCryptoLibByteArray;
     Fm_size: Int32;
 
+    function CreatePoint(const x, y: TCryptoLibByteArray): IECPoint;
+
+  strict protected
+    function GetSize: Int32; override;
+
   public
     constructor Create(const outer: IECCurve; const table: TCryptoLibByteArray;
-      size: Int32);
-    function GetSize: Int32; virtual;
-    function Lookup(index: Int32): IECPoint; virtual;
-    property size: Int32 read GetSize;
+      Size: Int32);
+
+    function Lookup(index: Int32): IECPoint; override;
+    function LookupVar(index: Int32): IECPoint; override;
 
   end;
 
@@ -723,20 +765,24 @@ type
   end;
 
 type
-  TDefaultF2mLookupTable = class(TInterfacedObject, IDefaultF2mLookupTable,
-    IECLookupTable)
+  TDefaultF2mLookupTable = class(TAbstractECLookupTable, IDefaultF2mLookupTable)
   strict private
   var
     Fm_outer: IF2mCurve;
     Fm_table: TCryptoLibInt64Array;
     Fm_size: Int32;
 
+    function CreatePoint(const x, y: TCryptoLibInt64Array): IECPoint;
+
+  strict protected
+    function GetSize: Int32; override;
+
   public
     constructor Create(const outer: IF2mCurve;
-      const table: TCryptoLibInt64Array; size: Int32);
-    function GetSize: Int32; virtual;
-    function Lookup(index: Int32): IECPoint; virtual;
-    property size: Int32 read GetSize;
+      const table: TCryptoLibInt64Array; Size: Int32);
+
+    function Lookup(index: Int32): IECPoint; override;
+    function LookupVar(index: Int32): IECPoint; override;
 
   end;
 
@@ -3654,12 +3700,22 @@ end;
 { TDefaultLookupTable }
 
 constructor TDefaultLookupTable.Create(const outer: IECCurve;
-  const table: TCryptoLibByteArray; size: Int32);
+  const table: TCryptoLibByteArray; Size: Int32);
 begin
   Inherited Create();
   Fm_outer := outer;
   Fm_table := table;
-  Fm_size := size;
+  Fm_size := Size;
+end;
+
+function TDefaultLookupTable.CreatePoint(const x, y: TCryptoLibByteArray)
+  : IECPoint;
+var
+  XFieldElement, YFieldElement: IECFieldElement;
+begin
+  XFieldElement := Fm_outer.FromBigInteger(TBigInteger.Create(1, x));
+  YFieldElement := Fm_outer.FromBigInteger(TBigInteger.Create(1, y));
+  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
 end;
 
 function TDefaultLookupTable.GetSize: Int32;
@@ -3672,7 +3728,6 @@ var
   FE_BYTES, position, i, j: Int32;
   x, y: TCryptoLibByteArray;
   MASK: Byte;
-  XFieldElement, YFieldElement: IECFieldElement;
 begin
   FE_BYTES := (Fm_outer.FieldSize + 7) div 8;
   System.SetLength(x, FE_BYTES);
@@ -3687,41 +3742,52 @@ begin
 
     for j := 0 to System.Pred(FE_BYTES) do
     begin
-
       x[j] := x[j] xor Byte(Fm_table[position + j] and MASK);
       y[j] := y[j] xor Byte(Fm_table[position + FE_BYTES + j] and MASK);
     end;
     position := position + (FE_BYTES * 2);
   end;
 
-  XFieldElement := Fm_outer.FromBigInteger(TBigInteger.Create(1, x));
-  YFieldElement := Fm_outer.FromBigInteger(TBigInteger.Create(1, y));
-  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
+  result := CreatePoint(x, y);
+end;
+
+function TDefaultLookupTable.LookupVar(index: Int32): IECPoint;
+var
+  FE_BYTES, position, j: Int32;
+  x, y: TCryptoLibByteArray;
+begin
+  FE_BYTES := (Fm_outer.FieldSize + 7) div 8;
+  System.SetLength(x, FE_BYTES);
+  System.SetLength(y, FE_BYTES);
+
+  position := index * FE_BYTES * 2;
+
+  for j := 0 to System.Pred(FE_BYTES) do
+  begin
+    x[j] := Fm_table[position + j];
+    y[j] := Fm_table[position + FE_BYTES + j];
+  end;
+
+  result := CreatePoint(x, y);
 end;
 
 { TDefaultF2mLookupTable }
 
 constructor TDefaultF2mLookupTable.Create(const outer: IF2mCurve;
-  const table: TCryptoLibInt64Array; size: Int32);
+  const table: TCryptoLibInt64Array; Size: Int32);
 begin
   Inherited Create();
   Fm_outer := outer;
   Fm_table := table;
-  Fm_size := size;
+  Fm_size := Size;
 end;
 
-function TDefaultF2mLookupTable.GetSize: Int32;
-begin
-  result := Fm_size;
-end;
-
-function TDefaultF2mLookupTable.Lookup(index: Int32): IECPoint;
+function TDefaultF2mLookupTable.CreatePoint(const x, y: TCryptoLibInt64Array)
+  : IECPoint;
 var
-  FE_LONGS, position, m, i, j: Int32;
-  ks: TCryptoLibInt32Array;
-  x, y: TCryptoLibInt64Array;
-  MASK: Int64;
   XFieldElement, YFieldElement: IECFieldElement;
+  m: Int32;
+  ks: TCryptoLibInt32Array;
 begin
   m := Fm_outer.m;
   if Fm_outer.IsTrinomial() then
@@ -3733,6 +3799,22 @@ begin
     ks := TCryptoLibInt32Array.Create(Fm_outer.k1, Fm_outer.k2, Fm_outer.k3);
   end;
 
+  XFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(x));
+  YFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(y));
+  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
+end;
+
+function TDefaultF2mLookupTable.GetSize: Int32;
+begin
+  result := Fm_size;
+end;
+
+function TDefaultF2mLookupTable.Lookup(index: Int32): IECPoint;
+var
+  FE_LONGS, position, i, j: Int32;
+  x, y: TCryptoLibInt64Array;
+  MASK: Int64;
+begin
   FE_LONGS := (Fm_outer.m + 63) div 64;
   System.SetLength(x, FE_LONGS);
   System.SetLength(y, FE_LONGS);
@@ -3746,16 +3828,33 @@ begin
 
     for j := 0 to System.Pred(FE_LONGS) do
     begin
-
       x[j] := x[j] xor (Fm_table[position + j] and MASK);
       y[j] := y[j] xor (Fm_table[position + FE_LONGS + j] and MASK);
     end;
     position := position + (FE_LONGS * 2);
   end;
 
-  XFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(x));
-  YFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(y));
-  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
+  result := CreatePoint(x, y);
+end;
+
+function TDefaultF2mLookupTable.LookupVar(index: Int32): IECPoint;
+var
+  FE_LONGS, position, j: Int32;
+  x, y: TCryptoLibInt64Array;
+begin
+  FE_LONGS := (Fm_outer.m + 63) div 64;
+  System.SetLength(x, FE_LONGS);
+  System.SetLength(y, FE_LONGS);
+
+  position := index * FE_LONGS * 2;
+
+  for j := 0 to System.Pred(FE_LONGS) do
+  begin
+    x[j] := Fm_table[position + j];
+    y[j] := Fm_table[position + FE_LONGS + j];
+  end;
+
+  result := CreatePoint(x, y);
 end;
 
 { TECPoint }
@@ -6581,6 +6680,43 @@ begin
     info.reportOrderPassed();
   end;
   result := info;
+end;
+
+{ TSimpleLookupTable }
+
+class function TSimpleLookupTable.Copy(const points
+  : TCryptoLibGenericArray<IECPoint>; off, len: Int32)
+  : TCryptoLibGenericArray<IECPoint>;
+var
+  i: Int32;
+begin
+  System.SetLength(result, len);
+  for i := 0 to System.Pred(len) do
+  begin
+    result[i] := points[off + i];
+  end;
+end;
+
+constructor TSimpleLookupTable.Create(const points
+  : TCryptoLibGenericArray<IECPoint>; off, len: Int32);
+begin
+  inherited Create();
+  FPoints := Copy(points, off, len);
+end;
+
+function TSimpleLookupTable.GetSize: Int32;
+begin
+  result := System.Length(FPoints);
+end;
+
+function TSimpleLookupTable.Lookup(index: Int32): IECPoint;
+begin
+  raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedOperation);
+end;
+
+function TSimpleLookupTable.LookupVar(index: Int32): IECPoint;
+begin
+  result := FPoints[index];
 end;
 
 end.
