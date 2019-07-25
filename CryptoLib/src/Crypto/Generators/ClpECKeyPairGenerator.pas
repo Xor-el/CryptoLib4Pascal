@@ -27,7 +27,7 @@ uses
   ClpBits,
   ClpCryptoLibTypes,
   ClpECKeyParameters,
-  ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpIECKeyPairGenerator,
   ClpIAsn1Objects,
   ClpIKeyGenerationParameters,

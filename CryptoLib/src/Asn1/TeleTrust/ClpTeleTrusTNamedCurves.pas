@@ -28,7 +28,7 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpECC,
   ClpIECC,
   ClpX9ECC,

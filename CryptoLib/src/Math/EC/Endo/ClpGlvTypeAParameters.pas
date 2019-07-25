@@ -45,7 +45,7 @@ type
       const splitParams: IScalarSplitParameters);
 
     property lambda: TBigInteger read GetLambda;
-    property beta: TBigInteger read GetI;
+    property I: TBigInteger read GetI;
     property splitParams: IScalarSplitParameters read GetSplitParams;
 
   end;

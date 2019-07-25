@@ -32,7 +32,7 @@ uses
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpECC,
-  ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpSecP256K1Custom,
   ClpISecP256K1Custom,
   ClpSecP256R1Custom,

@@ -24,7 +24,7 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpScaleYNegateXPointMap,
   ClpIGlvTypeAEndomorphism,
   ClpIECC,

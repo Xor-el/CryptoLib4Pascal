@@ -43,6 +43,7 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpIFiniteField,
   ClpIX9ECParameters,
   ClpIX9ECC,

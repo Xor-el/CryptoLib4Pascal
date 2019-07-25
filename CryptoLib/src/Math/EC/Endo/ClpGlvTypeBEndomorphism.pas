@@ -24,12 +24,12 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpECAlgorithms,
   ClpScaleXPointMap,
   ClpIGlvTypeBEndomorphism,
   ClpIECC,
   ClpIGlvTypeBParameters,
-  ClpIGlvEndomorphism;
+  ClpIGlvEndomorphism,
+  ClpECCompUtilities;
 
 type
   TGlvTypeBEndomorphism = class(TInterfacedObject, IECEndomorphism,

@@ -37,7 +37,7 @@ uses
   ClpIPreCompCallBack,
   ClpIMultipliers,
   ClpIWNafPreCompInfo,
-  ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpSetWeakRef,
   ClpCryptoLibTypes;
 
@@ -199,6 +199,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpECAlgorithms; // included here to avoid circular dependency :)
 
 { TAbstractECMultiplier }
 
@@ -429,8 +432,6 @@ begin
       R := table[TBits.Asr32(i1, 1)].add(table[TBits.Asr32(i2, 1)]);
 
       zeroes := zeroes - scale;
-
-      // Console.WriteLine("Optimized: 2^" + scale + " * " + n + " = " + i1 + " + " + i2);
     end
     else
     begin
@@ -487,13 +488,12 @@ var
   pre: IWTauNafPreCompInfo;
   q: IAbstractF2mPoint;
   x: IECPoint;
-  callback: IWTauNafCallback;
 begin
   curve := p.curve as IAbstractF2mCurve;
   a := ShortInt(curve.a.ToBigInteger().Int32Value);
 
-  callback := TWTauNafCallback.Create(p, a);
-  pre := curve.Precompute(p, PRECOMP_NAME, callback) as IWTauNafPreCompInfo;
+  pre := curve.Precompute(p, PRECOMP_NAME, TWTauNafCallback.Create(p, a)
+    as IWTauNafCallback) as IWTauNafPreCompInfo;
 
   pu := pre.preComp;
   // TODO Include negations in precomp (optionally) and use from here
@@ -503,7 +503,6 @@ begin
     puNeg[i] := pu[i].Negate() as IAbstractF2mPoint;
   end;
 
-  // q = infinity
   q := p.curve.Infinity as IAbstractF2mPoint;
   tauCount := 0;
   i := System.Length(u) - 1;

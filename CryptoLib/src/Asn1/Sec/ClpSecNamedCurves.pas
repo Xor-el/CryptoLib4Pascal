@@ -29,7 +29,7 @@ uses
   ClpIGlvTypeBEndomorphism,
   ClpSecObjectIdentifiers,
   ClpCryptoLibTypes,
-  ClpECAlgorithms,
+  ClpECCompUtilities,
   ClpBigInteger,
   ClpECC,
   ClpIECC,
