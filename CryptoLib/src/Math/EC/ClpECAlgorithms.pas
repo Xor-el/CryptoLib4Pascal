@@ -786,6 +786,10 @@ begin
   then
   begin
     result := ImplShamirsTrickFixedPoint(p, k, q, l);
+    infoP.PreComp := Nil; // Review
+    infoP.PreCompNeg := Nil; // Review
+    infoQ.PreComp := Nil; // Review
+    infoQ.PreCompNeg := Nil; // Review
     Exit;
   end;
 
