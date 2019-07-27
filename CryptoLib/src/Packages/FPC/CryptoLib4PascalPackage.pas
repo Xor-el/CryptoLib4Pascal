@@ -74,12 +74,12 @@ uses
   ClpIECDHCBasicAgreement, ClpHMacDsaKCalculator, ClpIHMacDsaKCalculator, 
   ClpHkdfBytesGenerator, ClpIHkdfBytesGenerator, ClpHkdfParameters, 
   ClpIHkdfParameters, ClpDsaParameterGenerationParameters, 
-  ClpIDsaParameterGenerationParameters, ClpIValidityPrecompInfo, 
-  ClpDsaParametersGenerator, ClpDsaParameter, ClpIDsaParameter, 
-  ClpIKeyEncoder, ClpIDsaParametersGenerator, ClpIPreCompCallBack, 
-  ClpNistNamedCurves, ClpNat256, ClpNat320, ClpAesLightEngine, 
-  ClpIAesLightEngine, ClpCustomNamedCurves, ClpNat384, ClpNat192, ClpNat512, 
-  ClpInterleave, ClpBsiObjectIdentifiers, ClpEacObjectIdentifiers, ClpIDsaExt, 
+  ClpIDsaParameterGenerationParameters, ClpDsaParametersGenerator, 
+  ClpDsaParameter, ClpIDsaParameter, ClpIKeyEncoder, 
+  ClpIDsaParametersGenerator, ClpIPreCompCallBack, ClpNistNamedCurves, 
+  ClpNat256, ClpNat320, ClpAesLightEngine, ClpIAesLightEngine, 
+  ClpCustomNamedCurves, ClpNat384, ClpNat192, ClpNat512, ClpInterleave, 
+  ClpBsiObjectIdentifiers, ClpEacObjectIdentifiers, ClpIDsaExt, 
   ClpISchnorrDigestSigner, ClpIECSchnorrSipaSigner, ClpECSchnorrSipaSigner, 
   ClpSchnorrDigestSigner, ClpISchnorr, ClpISchnorrExt, ClpBlowfishEngine, 
   ClpIBlowfishEngine, ClpECC, ClpAsn1Objects, ClpSignersEncodings, 
@@ -133,7 +133,8 @@ uses
   ClpScaleYNegateXPointMap, ClpGlvTypeAEndomorphism, ClpGlvTypeAParameters, 
   ClpScalarSplitParameters, ClpIGlvTypeAParameters, ClpIGlvTypeAEndomorphism, 
   ClpIScaleXNegateYPointMap, ClpIScaleYNegateXPointMap, 
-  ClpIScalarSplitParameters, ClpECCompUtilities;
+  ClpIScalarSplitParameters, ClpECCompUtilities, ClpValidityPreCompInfo, 
+  ClpIValidityPreCompInfo;
 
 implementation
 
