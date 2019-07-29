@@ -118,6 +118,16 @@ type
       xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32); overload;
       static; inline;
 
+    class procedure Copy64(len: Int32; const x, z: TCryptoLibUInt64Array);
+      overload; static; inline;
+
+    class function Copy64(len: Int32; const x: TCryptoLibUInt64Array)
+      : TCryptoLibUInt64Array; overload; static; inline;
+
+    class procedure Copy64(len: Int32; const x: TCryptoLibUInt64Array;
+      xOff: Int32; const z: TCryptoLibUInt64Array; zOff: Int32); overload;
+      static; inline;
+
     class function Create(len: Int32): TCryptoLibUInt32Array; static; inline;
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
@@ -150,6 +160,9 @@ type
 
     class function FromBigInteger(bits: Int32; const x: TBigInteger)
       : TCryptoLibUInt32Array; static;
+
+    class function FromBigInteger64(bits: Int32; const x: TBigInteger)
+      : TCryptoLibUInt64Array; static;
 
     class function GetBit(const x: TCryptoLibUInt32Array; bit: Int32)
       : UInt32; static;
@@ -961,7 +974,7 @@ end;
 class procedure TNat.CMov(len, mask: Int32; const x: TCryptoLibUInt32Array;
   xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32);
 var
-  LMASK, z_i, Diff: UInt32;
+  LMASK, z_i, LDiff: UInt32;
   I: Int32;
 begin
   LMASK := UInt32(-(mask and 1));
@@ -969,8 +982,8 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     z_i := z[zOff + I];
-    Diff := z_i xor x[xOff + I];
-    z_i := z_i xor ((Diff and LMASK));
+    LDiff := z_i xor x[xOff + I];
+    z_i := z_i xor ((LDiff and LMASK));
     z[zOff + I] := z_i;
   end;
 end;
@@ -985,6 +998,24 @@ end;
 class procedure TNat.Copy(len: Int32; const x, z: TCryptoLibUInt32Array);
 begin
   System.Move(x[0], z[0], len * System.SizeOf(UInt32));
+end;
+
+class procedure TNat.Copy64(len: Int32; const x: TCryptoLibUInt64Array;
+  xOff: Int32; const z: TCryptoLibUInt64Array; zOff: Int32);
+begin
+  System.Move(x[xOff], z[zOff], len * System.SizeOf(UInt64));
+end;
+
+class function TNat.Copy64(len: Int32; const x: TCryptoLibUInt64Array)
+  : TCryptoLibUInt64Array;
+begin
+  System.SetLength(Result, len);
+  System.Move(x[0], Result[0], len * System.SizeOf(UInt64));
+end;
+
+class procedure TNat.Copy64(len: Int32; const x, z: TCryptoLibUInt64Array);
+begin
+  System.Move(x[0], z[0], len * System.SizeOf(UInt64));
 end;
 
 class procedure TNat.Copy(len: Int32; const x: TCryptoLibUInt32Array;
@@ -1178,6 +1209,31 @@ begin
     System.Inc(I);
     Lx := Lx.ShiftRight(32);
   end;
+end;
+
+class function TNat.FromBigInteger64(bits: Int32; const x: TBigInteger)
+  : TCryptoLibUInt64Array;
+var
+  len, I: Int32;
+  z: TCryptoLibUInt64Array;
+  Lx: TBigInteger;
+begin
+  Lx := x;
+  if ((Lx.SignValue < 0) or (Lx.BitLength > bits)) then
+  begin
+    raise EArgumentCryptoLibException.Create('');
+  end;
+
+  len := (bits + 63) shr 6;
+  z := Create64(len);
+  I := 0;
+  while (Lx.SignValue <> 0) do
+  begin
+    z[I] := Lx.Int64Value;
+    System.Inc(I);
+    Lx := Lx.ShiftRight(64);
+  end;
+  Result := z;
 end;
 
 class function TNat.GetBit(const x: TCryptoLibUInt32Array; bit: Int32): UInt32;

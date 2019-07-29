@@ -15,32 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIWNafL2RMultiplier;
+unit ClpIScaleXNegateYPointMap;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
-  ClpIAbstractECMultiplier;
+  ClpIECC;
 
 type
-  IWNafL2RMultiplier = interface(IAbstractECMultiplier)
+  IScaleXNegateYPointMap = interface(IECPointMap)
 
-    ['{E2A5E4EF-C092-4F83-ACCF-0FC8731FB274}']
-
-    /// <summary>
-    /// Determine window width to use for a scalar multiplication of the
-    /// given size.
-    /// </summary>
-    /// <param name="bits">
-    /// the bit-length of the scalar to multiply by
-    /// </param>
-    /// <returns>
-    /// the window size to use
-    /// </returns>
-    function GetWindowSize(bits: Int32): Int32;
+    ['{D4FF6900-B627-45AB-8066-00E763213CE5}']
 
   end;
 

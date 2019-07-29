@@ -210,8 +210,8 @@ type
   strict private
 
   type
-    TSecP384R1LookupTable = class sealed(TInterfacedObject,
-      ISecP384R1LookupTable, IECLookupTable)
+    TSecP384R1LookupTable = class sealed(TAbstractECLookupTable,
+      ISecP384R1LookupTable)
 
     strict private
     var
@@ -219,16 +219,19 @@ type
       Fm_table: TCryptoLibUInt32Array;
       Fm_size: Int32;
 
-      function GetSize: Int32; virtual;
+      function CreatePoint(const x, y: TCryptoLibUInt32Array): IECPoint;
+
+    strict protected
+
+      function GetSize: Int32; override;
 
     public
 
       constructor Create(const outer: ISecP384R1Curve;
         const table: TCryptoLibUInt32Array; size: Int32);
 
-      function Lookup(index: Int32): IECPoint; virtual;
-
-      property size: Int32 read GetSize;
+      function Lookup(index: Int32): IECPoint; override;
+      function LookupVar(index: Int32): IECPoint; override;
 
     end;
 
@@ -1277,6 +1280,21 @@ begin
   Fm_size := size;
 end;
 
+function TSecP384R1Curve.TSecP384R1LookupTable.CreatePoint(const x,
+  y: TCryptoLibUInt32Array): IECPoint;
+var
+  XFieldElement, YFieldElement: ISecP384R1FieldElement;
+  SECP384R1_AFFINE_ZS: TCryptoLibGenericArray<IECFieldElement>;
+begin
+  SECP384R1_AFFINE_ZS := TCryptoLibGenericArray<IECFieldElement>.Create
+    (TSecP384R1FieldElement.Create(TBigInteger.One) as ISecP384R1FieldElement);
+
+  XFieldElement := TSecP384R1FieldElement.Create(x);
+  YFieldElement := TSecP384R1FieldElement.Create(y);
+  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement,
+    SECP384R1_AFFINE_ZS, false);
+end;
+
 function TSecP384R1Curve.TSecP384R1LookupTable.GetSize: Int32;
 begin
   result := Fm_size;
@@ -1305,9 +1323,26 @@ begin
     pos := pos + (SECP384R1_FE_INTS * 2);
   end;
 
-  result := Fm_outer.CreateRawPoint(TSecP384R1FieldElement.Create(x)
-    as ISecP384R1FieldElement, TSecP384R1FieldElement.Create(y)
-    as ISecP384R1FieldElement, false);
+  result := CreatePoint(x, y)
+end;
+
+function TSecP384R1Curve.TSecP384R1LookupTable.LookupVar(index: Int32)
+  : IECPoint;
+var
+  x, y: TCryptoLibUInt32Array;
+  pos, J: Int32;
+begin
+  x := TNat.Create(SECP384R1_FE_INTS);
+  y := TNat.Create(SECP384R1_FE_INTS);
+  pos := index * SECP384R1_FE_INTS * 2;
+
+  for J := 0 to System.Pred(SECP384R1_FE_INTS) do
+  begin
+    x[J] := Fm_table[pos + J];
+    y[J] := Fm_table[pos + SECP384R1_FE_INTS + J];
+  end;
+
+  result := CreatePoint(x, y)
 end;
 
 end.

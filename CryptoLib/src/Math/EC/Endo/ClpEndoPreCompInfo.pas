@@ -15,37 +15,61 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIWTauNafMultiplier;
+unit ClpEndoPreCompInfo;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
   ClpIECC,
-  ClpIZTauElement,
-  ClpIAbstractECMultiplier;
+  ClpIPreCompInfo,
+  ClpIEndoPreCompInfo;
 
 type
-  IWTauNafMultiplier = interface(IAbstractECMultiplier)
-    ['{B71E75E5-FB6D-4A54-BE8A-820FC9A1E509}']
+  TEndoPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,
+    IEndoPreCompInfo)
 
-    // /**
-    // * Multiplies an AbstractF2mPoint
-    // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code> using
-    // * the <code>&#964;</code>-adic NAF (TNAF) method.
-    // * @param p The AbstractF2mPoint to multiply.
-    // * @param lambda The element <code>&#955;</code> of
-    // * <code><b>Z</b>[&#964;]</code> of which to compute the
-    // * <code>[&#964;]</code>-adic NAF.
-    // * @return <code>p</code> multiplied by <code>&#955;</code>.
-    // */
-    function MultiplyWTnaf(const p: IAbstractF2mPoint;
-      const lambda: IZTauElement; a, mu: ShortInt): IAbstractF2mPoint;
+  strict private
+  var
+    FEndomorphism: IECEndomorphism;
+    FMappedPoint: IECPoint;
 
+    function GetEndomorphism: IECEndomorphism; inline;
+    procedure SetEndomorphism(const value: IECEndomorphism); inline;
+
+    function GetMappedPoint: IECPoint; inline;
+    procedure SetMappedPoint(const value: IECPoint); inline;
+
+  public
+
+    property Endomorphism: IECEndomorphism read GetEndomorphism
+      write SetEndomorphism;
+    property MappedPoint: IECPoint read GetMappedPoint write SetMappedPoint;
   end;
 
 implementation
+
+{ TEndoPreCompInfo }
+
+function TEndoPreCompInfo.GetEndomorphism: IECEndomorphism;
+begin
+  result := FEndomorphism;
+end;
+
+function TEndoPreCompInfo.GetMappedPoint: IECPoint;
+begin
+  result := FMappedPoint;
+end;
+
+procedure TEndoPreCompInfo.SetEndomorphism(const value: IECEndomorphism);
+begin
+  FEndomorphism := value;
+end;
+
+procedure TEndoPreCompInfo.SetMappedPoint(const value: IECPoint);
+begin
+  FMappedPoint := value;
+end;
 
 end.

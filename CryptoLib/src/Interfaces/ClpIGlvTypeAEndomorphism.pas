@@ -15,18 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFixedPointCombMultiplier;
+unit ClpIGlvTypeAEndomorphism;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAbstractECMultiplier;
+  ClpBigInteger,
+  ClpIGlvEndomorphism;
 
 type
-  IFixedPointCombMultiplier = interface(IAbstractECMultiplier)
-    ['{A3345E31-4D5C-4442-9C3D-ACC7F6DA4A14}']
+  IGlvTypeAEndomorphism = interface(IGlvEndomorphism)
+    ['{961A1588-7D37-46C5-BC67-F71063641B42}']
 
   end;
 

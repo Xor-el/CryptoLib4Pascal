@@ -15,81 +15,67 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpValidityPreCompInfo;
+unit ClpGlvTypeAParameters;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIPreCompInfo,
-  ClpIValidityPreCompInfo;
+  ClpBigInteger,
+  ClpIGlvTypeAParameters,
+  ClpIScalarSplitParameters,
+  ClpCryptoLibTypes;
 
 type
-  TValidityPreCompInfo = class(TInterfacedObject, IPreCompInfo,
-    IValidityPreCompInfo)
+  TGlvTypeAParameters = class sealed(TInterfacedObject, IGlvTypeAParameters)
 
   strict private
-
   var
-    Ffailed, FcurveEquationPassed, ForderPassed: Boolean;
+    FI, Flambda: TBigInteger;
+    FsplitParams: IScalarSplitParameters;
+
+    function GetLambda: TBigInteger; inline;
+    function GetI: TBigInteger; inline;
+    function GetSplitParams: IScalarSplitParameters; inline;
 
   public
 
-    const
-    PRECOMP_NAME = 'bc_validity';
+    constructor Create(const I, lambda: TBigInteger;
+      const splitParams: IScalarSplitParameters);
 
-    function HasFailed(): Boolean; inline;
-    procedure ReportFailed(); inline;
-    function HasCurveEquationPassed(): Boolean; inline;
-    procedure ReportCurveEquationPassed(); inline;
-    function HasOrderPassed(): Boolean; inline;
-    procedure ReportOrderPassed(); inline;
-
-    constructor Create();
+    property lambda: TBigInteger read GetLambda;
+    property I: TBigInteger read GetI;
+    property splitParams: IScalarSplitParameters read GetSplitParams;
 
   end;
 
 implementation
 
-{ TValidityPreCompInfo }
+{ TGlvTypeAParameters }
 
-constructor TValidityPreCompInfo.Create;
+constructor TGlvTypeAParameters.Create(const I, lambda: TBigInteger;
+  const splitParams: IScalarSplitParameters);
 begin
   Inherited Create();
-  Ffailed := False;
-  FcurveEquationPassed := False;
-  ForderPassed := False;
+  FI := I;
+  Flambda := lambda;
+  FsplitParams := splitParams;
 end;
 
-function TValidityPreCompInfo.HasCurveEquationPassed: Boolean;
+function TGlvTypeAParameters.GetI: TBigInteger;
 begin
-  result := FcurveEquationPassed;
+  Result := FI;
 end;
 
-function TValidityPreCompInfo.HasFailed: Boolean;
+function TGlvTypeAParameters.GetLambda: TBigInteger;
 begin
-  result := Ffailed;
+  Result := Flambda;
 end;
 
-function TValidityPreCompInfo.HasOrderPassed: Boolean;
+function TGlvTypeAParameters.GetSplitParams: IScalarSplitParameters;
 begin
-  result := ForderPassed;
-end;
-
-procedure TValidityPreCompInfo.ReportCurveEquationPassed;
-begin
-  FcurveEquationPassed := True;
-end;
-
-procedure TValidityPreCompInfo.ReportFailed;
-begin
-  Ffailed := True;
-end;
-
-procedure TValidityPreCompInfo.ReportOrderPassed;
-begin
-  ForderPassed := True;
+  Result := FsplitParams;
 end;
 
 end.

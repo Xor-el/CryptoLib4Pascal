@@ -15,22 +15,42 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGlvMultiplier;
+unit ClpScaleXNegateYPointMap;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
-  ClpIAbstractECMultiplier;
+  ClpIECC,
+  ClpIScaleXNegateYPointMap;
 
 type
-  IGlvMultiplier = interface(IAbstractECMultiplier)
-    ['{F54D54F5-F544-421B-89FC-1D8058FB8F33}']
+  TScaleXNegateYPointMap = class(TInterfacedObject, IECPointMap,
+    IScaleXNegateYPointMap)
 
+  strict protected
+  var
+    Fscale: IECFieldElement;
+
+  public
+    constructor Create(const scale: IECFieldElement);
+    function Map(const p: IECPoint): IECPoint; virtual;
   end;
 
 implementation
+
+{ TScaleXNegateYPointMap }
+
+constructor TScaleXNegateYPointMap.Create(const scale: IECFieldElement);
+begin
+  Inherited Create();
+  Fscale := scale;
+end;
+
+function TScaleXNegateYPointMap.Map(const p: IECPoint): IECPoint;
+begin
+  Result := p.ScaleXNegateY(Fscale);
+end;
 
 end.

@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecP521R1Custom;
+unit ClpIScalarSplitParameters;
 
 {$I ..\Include\CryptoLib.inc}
 
@@ -23,35 +23,28 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECC,
-  ClpCryptoLibTypes;
+  ClpIGlvEndomorphism;
 
 type
-  ISecP521R1FieldElement = Interface(IAbstractFpFieldElement)
-    ['{30C8C42B-5099-4387-BEC9-66D6D8901BB4}']
+  IScalarSplitParameters = interface(IInterface)
+    ['{C36FF223-C4F3-4483-B280-A50EF95497AF}']
 
-    function GetX: TCryptoLibUInt32Array;
-    property X: TCryptoLibUInt32Array read GetX;
-  end;
+    function GetG1: TBigInteger;
+    function GetG2: TBigInteger;
+    function GetV1A: TBigInteger;
+    function GetV1B: TBigInteger;
+    function GetV2A: TBigInteger;
+    function GetV2B: TBigInteger;
+    function GetBits: Int32;
 
-type
-  ISecP521R1Point = Interface(IAbstractFpPoint)
-    ['{BBE6F8EB-1C56-4B69-B4DE-93EF3079939A}']
+    property g1: TBigInteger read GetG1;
+    property g2: TBigInteger read GetG2;
+    property V1A: TBigInteger read GetV1A;
+    property V1B: TBigInteger read GetV1B;
+    property V2A: TBigInteger read GetV2A;
+    property V2B: TBigInteger read GetV2B;
+    property bits: Int32 read GetBits;
 
-  end;
-
-type
-  ISecP521R1Curve = Interface(IAbstractFpCurve)
-    ['{B2AACD7E-6EF2-45E2-8126-FB87D6DB65B1}']
-
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
-
-  end;
-
-type
-  ISecP521R1LookupTable = Interface(IAbstractECLookupTable)
-    ['{3A647191-94A9-483D-9AC5-57FEFDBA3060}']
   end;
 
 implementation

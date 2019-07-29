@@ -291,9 +291,6 @@ type
     class procedure PruneScalar(const n: TCryptoLibByteArray; nOff: Int32;
       const r: TCryptoLibByteArray); static; inline;
 
-    class procedure ScalarMult(const k: TCryptoLibByteArray;
-      var p: TPointAffine; var r: TPointAccum); static;
-
     class function ReduceScalar(const n: TCryptoLibByteArray)
       : TCryptoLibByteArray; static;
 
@@ -303,7 +300,7 @@ type
     class procedure ScalarMultBaseEncoded(const k, r: TCryptoLibByteArray;
       rOff: Int32); static; inline;
 
-    class procedure ScalarMultStraussVar(const nb, np: TCryptoLibUInt32Array;
+    class procedure ScalarMultStrausVar(const nb, np: TCryptoLibUInt32Array;
       var p: TPointAffine; var r: TPointAccum); static;
 
     class function ValidateDigestOutputSize(const ADigest: IDigest)
@@ -345,6 +342,7 @@ type
 
   class procedure Precompute(); static;
 
+  // NOTE: Only for use by X25519
   class procedure ScalarMultBaseYZ(const k: TCryptoLibByteArray; kOff: Int32;
     const Y, Z: TCryptoLibInt32Array); static; inline;
 
@@ -397,6 +395,9 @@ type
   function VerifyPreHash(const sig: TCryptoLibByteArray; sigOff: Int32;
     const pk: TCryptoLibByteArray; pkOff: Int32; const ctx: TCryptoLibByteArray;
     const ph: IDigest): Boolean; overload;
+
+  class procedure ScalarMult(const k: TCryptoLibByteArray; var p: TPointAffine;
+    var r: TPointAccum); static;
 
   end;
 
@@ -765,18 +766,28 @@ begin
   TX25519Field.Copy(table, off, r.T, 0);
 end;
 
+class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
+  n: Int32): Int32;
+var
+  w, b: Int32;
+begin
+  w := TBits.Asr32(n, 3);
+  b := (n and 7) shl 2;
+  result := (X[w] shr b) and 15;
+end;
+
 class procedure TEd25519.PointLookup(const X: TCryptoLibUInt32Array; n: Int32;
   const table: TCryptoLibInt32Array; var r: TPointExt);
 var
-  w, Sign, abs, i, off, cond: Int32;
+  w, LSign, abs, i, off, cond: Int32;
 begin
   w := GetWindow4(X, n);
 
-  Sign := (TBits.Asr32(w, (PrecompTeeth - 1))) xor 1;
-  abs := (w xor -Sign) and PrecompMask;
+  LSign := (TBits.Asr32(w, (PrecompTeeth - 1))) xor 1;
+  abs := (w xor -LSign) and PrecompMask;
 
 {$IFDEF DEBUG}
-  System.Assert((Sign = 0) or (Sign = 1));
+  System.Assert((LSign = 0) or (LSign = 1));
   System.Assert((abs <= 0) and (abs < PrecompPoints));
 {$ENDIF DEBUG}
   i := 0;
@@ -796,8 +807,8 @@ begin
     System.Inc(i);
   end;
 
-  TX25519Field.CNegate(Sign, r.X);
-  TX25519Field.CNegate(Sign, r.T);
+  TX25519Field.CNegate(LSign, r.X);
+  TX25519Field.CNegate(LSign, r.T);
 end;
 
 class function TEd25519.DecodePointVar(const p: TCryptoLibByteArray;
@@ -930,17 +941,6 @@ begin
   PruneScalar(h, 0, s);
 
   ScalarMultBaseEncoded(s, pk, pkOff);
-end;
-
-class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
-  n: Int32): Int32;
-var
-  w, b: Int32;
-begin
-  w := TBits.Asr32(n, 3);
-  b := (n and 7) shl 2;
-  result := (X[w] shr b) and 15;
-  // result := (TBits.Asr32(X[w], b)) and 15;
 end;
 
 class function TEd25519.GetWnaf(const n: TCryptoLibUInt32Array; width: Int32)
@@ -1156,7 +1156,7 @@ begin
   DecodeScalar(k, 0, nA);
 
   pR := TPointAccum.CreatePointAccum();
-  ScalarMultStraussVar(nS, nA, pA, pR);
+  ScalarMultStrausVar(nS, nA, pA, pR);
 
   System.SetLength(check, PointBytes);
 
@@ -1935,7 +1935,7 @@ begin
   TX25519Field.Copy(p.Z, 0, Z, 0);
 end;
 
-class procedure TEd25519.ScalarMultStraussVar(const nb,
+class procedure TEd25519.ScalarMultStrausVar(const nb,
   np: TCryptoLibUInt32Array; var p: TPointAffine; var r: TPointAccum);
 var
   width, bit, wb, wp, LSign, index: Int32;

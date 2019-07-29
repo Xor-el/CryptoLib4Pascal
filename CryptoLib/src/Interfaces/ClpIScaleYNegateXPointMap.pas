@@ -15,43 +15,20 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecP521R1Custom;
+unit ClpIScaleYNegateXPointMap;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
-  ClpIECC,
-  ClpCryptoLibTypes;
+  ClpIECC;
 
 type
-  ISecP521R1FieldElement = Interface(IAbstractFpFieldElement)
-    ['{30C8C42B-5099-4387-BEC9-66D6D8901BB4}']
+  IScaleYNegateXPointMap = interface(IECPointMap)
 
-    function GetX: TCryptoLibUInt32Array;
-    property X: TCryptoLibUInt32Array read GetX;
-  end;
+    ['{6284EFA2-DE75-437F-86D3-DD93BCAF511B}']
 
-type
-  ISecP521R1Point = Interface(IAbstractFpPoint)
-    ['{BBE6F8EB-1C56-4B69-B4DE-93EF3079939A}']
-
-  end;
-
-type
-  ISecP521R1Curve = Interface(IAbstractFpCurve)
-    ['{B2AACD7E-6EF2-45E2-8126-FB87D6DB65B1}']
-
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
-
-  end;
-
-type
-  ISecP521R1LookupTable = Interface(IAbstractECLookupTable)
-    ['{3A647191-94A9-483D-9AC5-57FEFDBA3060}']
   end;
 
 implementation
