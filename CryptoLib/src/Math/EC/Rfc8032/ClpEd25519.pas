@@ -291,9 +291,6 @@ type
     class procedure PruneScalar(const n: TCryptoLibByteArray; nOff: Int32;
       const r: TCryptoLibByteArray); static; inline;
 
-    class procedure ScalarMult(const k: TCryptoLibByteArray;
-      var p: TPointAffine; var r: TPointAccum); static;
-
     class function ReduceScalar(const n: TCryptoLibByteArray)
       : TCryptoLibByteArray; static;
 
@@ -398,6 +395,9 @@ type
   function VerifyPreHash(const sig: TCryptoLibByteArray; sigOff: Int32;
     const pk: TCryptoLibByteArray; pkOff: Int32; const ctx: TCryptoLibByteArray;
     const ph: IDigest): Boolean; overload;
+
+  class procedure ScalarMult(const k: TCryptoLibByteArray; var p: TPointAffine;
+    var r: TPointAccum); static;
 
   end;
 
