@@ -4424,21 +4424,24 @@ var
   idx: Int32;
 begin
 
+  if c.count = 0 then
+  begin
+    result := '[]';
+    Exit;
+  end;
+
   sl := TStringList.Create();
   sl.LineBreak := '';
   try
     sl.Add('[');
 
-    if (c.count <> 0) then
+    sl.Add((c[0] as TAsn1Encodable).ClassName);
+    if c.count > 1 then
     begin
-      sl.Add((c[0] as TAsn1Encodable).ClassName);
-      if c.count > 1 then
+      for idx := 1 to c.count - 2 do
       begin
-        for idx := 1 to c.count - 2 do
-        begin
-          sl.Add(', ');
-          sl.Add((c[idx] as TAsn1Encodable).ClassName);
-        end;
+        sl.Add(', ');
+        sl.Add((c[idx] as TAsn1Encodable).ClassName);
       end;
     end;
 
