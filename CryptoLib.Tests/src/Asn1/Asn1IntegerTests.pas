@@ -333,7 +333,7 @@ begin
 
   try
 
-    TDerInteger.Create(rawInt);
+    i := TDerInteger.Create(rawInt);
 
   except
     on e: EArgumentCryptoLibException do
@@ -346,6 +346,9 @@ begin
 end;
 
 procedure TTestAsn1Integer.TestAsn1Integer;
+var
+  i: IDerInteger;
+  en: IDerEnumerated;
 begin
   SetAllowUnsafeProperty(true);
 
@@ -365,11 +368,11 @@ begin
 
   SetAllowUnsafeProperty(true);
 
-  TDerInteger.Create
+  i := TDerInteger.Create
     (DecodeHex
     ('ffda47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 
-  TDerEnumerated.Create
+  en := TDerEnumerated.Create
     (DecodeHex
     ('005a47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 
@@ -377,7 +380,7 @@ begin
 
   try
 
-    TDerInteger.Create
+    i := TDerInteger.Create
       (DecodeHex
       ('ffda47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b'));
 
@@ -407,7 +410,7 @@ begin
 
   try
 
-    TDerInteger.Create
+    i := TDerInteger.Create
       (DecodeHex
       ('ffda47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 
@@ -423,7 +426,7 @@ begin
 
   try
 
-    TDerEnumerated.Create
+    en := TDerEnumerated.Create
       (DecodeHex
       ('ffda47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 
@@ -439,7 +442,7 @@ begin
 
   try
 
-    TDerEnumerated.Create
+    en := TDerEnumerated.Create
       (DecodeHex
       ('005a47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 
