@@ -459,6 +459,7 @@ uses
   DigestTests in '..\src\Others\DigestTests.pas',
   ScryptTests in '..\src\Crypto\ScryptTests.pas',
   DHTests in '..\src\Crypto\DHTests.pas',
+  Asn1IntegerTests in '..\src\Asn1\Asn1IntegerTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

@@ -67,7 +67,7 @@ resourcestring
   SProcessingError = 'Error Processing Object : "%s"';
   SInvalidObject = 'Object Implicit - Explicit Expected.';
   SUnknownObject = 'Unknown object in GetInstance:  %s, "obj"';
-  SInvalidSequence = '"Failed to Construct Sequence from byte array: " %s';
+  SInvalidSequence = 'Failed to Construct Sequence from byte array: "%s"';
   SImplicitObject = 'Implicitly Tagged Object';
   SImplicitTag = 'Implicit Tagging for Tag:  %d';
   SUnknownObjectBER = 'Unknown BER Object Encountered: $%x';
@@ -106,6 +106,19 @@ resourcestring
   SInvalidOID = '"String " %s is " not an OID"';
   SInvalidBranchId = '"String " %s " not a valid OID branch", "branchID"';
   SIllegalCharacters = 'String Contains Illegal Characters "str"';
+  SObjectEncodeError = 'Cannot Encode Object added to SET';
+  SIndexOutOfRange = '%d >= %d';
+  SInitialCapacityNegative = 'InitialCapacity must not be Negative';
+  SElementNil = 'element cannot be Nil';
+  SOtherNil = 'other cannot be Nil';
+  SOtherElementsNil = 'other elements cannot be Nil';
+  SElementsNil = '"elements" cannot be null, or contain null';
+  SElementVectorNil = 'elementVector cannot be Nil';
+  SASN1IntegerPositiveOutOfRangeError =
+    'ASN.1 Integer out of positive int range';
+  SASN1IntegerOutOfRangeError = 'ASN.1 Integer out of int range';
+  SEnumeratedNegative = 'enumerated must be non-negative';
+
 
   // ** Start Stream Operations ** //
 
@@ -351,9 +364,7 @@ type
 
     function ReadObject(): IAsn1Object;
 
-    function BuildEncodableVector(): IAsn1EncodableVector;
-
-    function BuildDerEncodableVector(const dIn: TDefiniteLengthInputStream)
+    function ReadVector(const dIn: TDefiniteLengthInputStream)
       : IAsn1EncodableVector; virtual;
 
     function CreateDerSequence(const dIn: TDefiniteLengthInputStream)
@@ -466,7 +477,8 @@ type
 
   public
 
-    class function ToStructuredString(c: TList<IAsn1Encodable>): String; static;
+    class function ToStructuredString(c: TCryptoLibGenericArray<IAsn1Encodable>)
+      : String; static;
 
   end;
 
@@ -491,13 +503,19 @@ type
     /// <returns>
     /// return a DER byte array, null otherwise.
     /// </returns>
-    function GetDerEncoded(): TCryptoLibByteArray;
+    function GetDerEncoded(): TCryptoLibByteArray; overload;
 
     function Equals(const other: IAsn1Convertible): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
     function ToAsn1Object(): IAsn1Object; virtual; abstract;
+
+    class function IsNullOrContainsNull(const data
+      : TCryptoLibGenericArray<IAsn1Encodable>): Boolean; static;
+
+    class function OpenArrayToDynamicArray(const data: array of IAsn1Encodable)
+      : TCryptoLibGenericArray<IAsn1Encodable>; static;
 
   end;
 
@@ -632,34 +650,68 @@ type
   end;
 
 type
-  TAsn1EncodableVector = class(TInterfacedObject, IAsn1EncodableVector)
+
+  /// <summary>
+  /// Mutable class for building ASN.1 constructed objects such as SETs or
+  /// SEQUENCEs.
+  /// </summary>
+  TAsn1EncodableVector = class sealed(TInterfacedObject, IAsn1EncodableVector)
 
   strict private
-  var
 
-    Flist: TList<IAsn1Encodable>;
+  const
+    DefaultCapacity = Int32(10);
+
+  var
+    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
+    FElementCount: Int32;
+    FCopyOnWrite: Boolean;
 
     function GetCount: Int32;
     function GetSelf(Index: Int32): IAsn1Encodable;
+
+    procedure Reallocate(minCapacity: Int32);
+
+    class function GetEmptyElements: TCryptoLibGenericArray<IAsn1Encodable>;
+      static; inline;
 
   public
     class function FromEnumerable(const e: TList<IAsn1Encodable>)
       : IAsn1EncodableVector; static;
 
     constructor Create(); overload;
+    constructor Create(initialCapacity: Int32); overload;
     constructor Create(const v: array of IAsn1Encodable); overload;
 
     destructor Destroy(); override;
 
-    procedure Add(const objs: array of IAsn1Encodable);
+    procedure Add(const objs: array of IAsn1Encodable); overload;
+
+    procedure Add(const element: IAsn1Encodable); overload;
+
+    procedure AddAll(const other: IAsn1EncodableVector);
 
     procedure AddOptional(const objs: array of IAsn1Encodable);
+
+    procedure AddOptionalTagged(isExplicit: Boolean; tagNo: Int32;
+      const obj: IAsn1Encodable);
 
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 
     property count: Int32 read GetCount;
 
     function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
+
+    function CopyElements(): TCryptoLibGenericArray<IAsn1Encodable>;
+
+    function TakeElements(): TCryptoLibGenericArray<IAsn1Encodable>;
+
+    class function CloneElements(const elements
+      : TCryptoLibGenericArray<IAsn1Encodable>)
+      : TCryptoLibGenericArray<IAsn1Encodable>; static;
+
+    class property EmptyElements: TCryptoLibGenericArray<IAsn1Encodable>
+      read GetEmptyElements;
 
   end;
 
@@ -763,7 +815,7 @@ type
 
   strict private
   var
-    FSeq: TList<IAsn1Encodable>;
+    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
 
   type
     TAsn1SequenceParserImpl = class sealed(TInterfacedObject,
@@ -785,12 +837,14 @@ type
     function GetCount: Int32; virtual;
     function GetParser: IAsn1SequenceParser; virtual;
     function GetSelf(Index: Int32): IAsn1Encodable; virtual;
-    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    procedure AddObject(const obj: IAsn1Encodable); inline;
+    function GetElements: TCryptoLibGenericArray<IAsn1Encodable>; inline;
 
-    constructor Create(capacity: Int32);
+    constructor Create(); overload;
+    constructor Create(const element: IAsn1Encodable); overload;
+    constructor Create(const elements: array of IAsn1Encodable); overload;
+    constructor Create(const elementVector: IAsn1EncodableVector); overload;
 
   public
 
@@ -799,6 +853,8 @@ type
     function ToString(): String; override;
 
     function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
+
+    function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
 
     // /**
     // * return the object at the sequence position indicated by index.
@@ -853,6 +909,7 @@ type
 
     property parser: IAsn1SequenceParser read GetParser;
     property count: Int32 read GetCount;
+    property elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
 
   end;
 
@@ -948,7 +1005,7 @@ type
 
   public
 
-    class function FromVector(const v: IAsn1EncodableVector)
+    class function FromVector(const elementVector: IAsn1EncodableVector)
       : IDerSequence; static;
 
     /// <summary>
@@ -959,14 +1016,14 @@ type
     /// <summary>
     /// create a sequence containing one object
     /// </summary>
-    constructor Create(const obj: IAsn1Encodable); overload;
+    constructor Create(const element: IAsn1Encodable); overload;
 
-    constructor Create(const v: array of IAsn1Encodable); overload;
+    constructor Create(const elements: array of IAsn1Encodable); overload;
 
     /// <summary>
     /// create a sequence containing a vector of objects.
     /// </summary>
-    constructor Create(const v: IAsn1EncodableVector); overload;
+    constructor Create(const elementVector: IAsn1EncodableVector); overload;
 
     destructor Destroy(); override;
 
@@ -992,7 +1049,7 @@ type
 
   public
 
-    class function FromVector(const v: IAsn1EncodableVector)
+    class function FromVector(const elementVector: IAsn1EncodableVector)
       : IBerSequence; static;
 
     /// <summary>
@@ -1003,14 +1060,14 @@ type
     /// <summary>
     /// create a sequence containing one object
     /// </summary>
-    constructor Create(const obj: IAsn1Encodable); overload;
+    constructor Create(const element: IAsn1Encodable); overload;
 
-    constructor Create(const v: array of IAsn1Encodable); overload;
+    constructor Create(const elements: array of IAsn1Encodable); overload;
 
     /// <summary>
     /// create a sequence containing a vector of objects.
     /// </summary>
-    constructor Create(const v: IAsn1EncodableVector); overload;
+    constructor Create(const elementVector: IAsn1EncodableVector); overload;
 
     destructor Destroy(); override;
 
@@ -1153,13 +1210,16 @@ type
 
   strict private
   var
-    F_set: TList<IAsn1Encodable>;
-    FisSorted: Boolean;
+    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
+
+    function GetDerEncoded(const obj: IAsn1Encodable)
+      : TCryptoLibByteArray; overload;
 
     /// <summary>
     /// return true if a &lt;= b (arrays are assumed padded with zeros).
     /// </summary>
-    function LessThanOrEqual(const a, b: TCryptoLibByteArray): Boolean; inline;
+    class function LessThanOrEqual(const a, b: TCryptoLibByteArray)
+      : Boolean; static;
 
   type
     TAsn1SetParserImpl = class sealed(TInterfacedObject, IAsn1SetParserImpl,
@@ -1180,18 +1240,21 @@ type
     function GetCount: Int32; virtual;
     function GetParser: IAsn1SetParser; inline;
     function GetSelf(Index: Int32): IAsn1Encodable; virtual;
-    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    procedure AddObject(const obj: IAsn1Encodable); inline;
+    function GetElements: TCryptoLibGenericArray<IAsn1Encodable>; inline;
     procedure Sort();
 
-    constructor Create(capacity: Int32);
+    constructor Create(); overload;
+
+    constructor Create(const element: IAsn1Encodable); overload;
+
+    constructor Create(const elements: array of IAsn1Encodable); overload;
+
+    constructor Create(const elementVector: IAsn1EncodableVector); overload;
 
   public
     destructor Destroy(); override;
-
-  public
 
     function ToString(): String; override;
 
@@ -1251,6 +1314,7 @@ type
 
     property parser: IAsn1SetParser read GetParser;
     property count: Int32 read GetCount;
+    property elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
 
   end;
 
@@ -1266,9 +1330,9 @@ type
 
   public
 
-    class function FromVector(const v: IAsn1EncodableVector): IDerSet;
-      overload; static;
-    class function FromVector(const v: IAsn1EncodableVector;
+    class function FromVector(const elementVector: IAsn1EncodableVector)
+      : IDerSet; overload; static;
+    class function FromVector(const elementVector: IAsn1EncodableVector;
       needsSorting: Boolean): IDerSet; overload; static;
 
     /// <summary>
@@ -1276,19 +1340,19 @@ type
     /// </summary>
     constructor Create(); overload;
 
-    /// <param name="obj">
+    /// <param name="element">
     /// a single object that makes up the set.
     /// </param>
-    constructor Create(const obj: IAsn1Encodable); overload;
+    constructor Create(const element: IAsn1Encodable); overload;
 
-    constructor Create(const v: array of IAsn1Encodable); overload;
+    constructor Create(const elements: array of IAsn1Encodable); overload;
 
-    /// <param name="v">
+    /// <param name="elementVector">
     /// a vector of objects making up the set.
     /// </param>
-    constructor Create(const v: IAsn1EncodableVector); overload;
+    constructor Create(const elementVector: IAsn1EncodableVector); overload;
 
-    constructor Create(const v: IAsn1EncodableVector;
+    constructor Create(const elementVector: IAsn1EncodableVector;
       needsSorting: Boolean); overload;
 
     destructor Destroy(); override;
@@ -1665,9 +1729,9 @@ type
 
   public
 
-    class function FromVector(const v: IAsn1EncodableVector): IBerSet;
-      overload; static;
-    class function FromVector(const v: IAsn1EncodableVector;
+    class function FromVector(const elementVector: IAsn1EncodableVector)
+      : IBerSet; overload; static;
+    class function FromVector(const elementVector: IAsn1EncodableVector;
       needsSorting: Boolean): IBerSet; overload; static;
 
     /// <summary>
@@ -1675,15 +1739,15 @@ type
     /// </summary>
     constructor Create(); overload;
 
-    /// <param name="obj">
+    /// <param name="element">
     /// a single object that makes up the set.
     /// </param>
-    constructor Create(const obj: IAsn1Encodable); overload;
+    constructor Create(const element: IAsn1Encodable); overload;
 
-    /// <param name="v">
+    /// <param name="elementVector">
     /// a vector of objects making up the set.
     /// </param>
-    constructor Create(const v: IAsn1EncodableVector); overload;
+    constructor Create(const elementVector: IAsn1EncodableVector); overload;
 
     constructor Create(const v: IAsn1EncodableVector;
       needsSorting: Boolean); overload;
@@ -1972,9 +2036,11 @@ type
 
   var
     Fbytes: TCryptoLibByteArray;
+    FStart: Int32;
 
     function GetValue: TBigInteger; inline;
     function GetBytes: TCryptoLibByteArray; inline;
+    function GetIntValueExact: Int32; inline;
 
   strict protected
 
@@ -1984,6 +2050,7 @@ type
   public
 
     constructor Create(val: Int32); overload;
+    constructor Create(val: Int64); overload;
     constructor Create(const val: TBigInteger); overload;
     constructor Create(const bytes: TCryptoLibByteArray); overload;
 
@@ -1991,6 +2058,9 @@ type
 
     property Value: TBigInteger read GetValue;
     property bytes: TCryptoLibByteArray read GetBytes;
+    property IntValueExact: Int32 read GetIntValueExact;
+
+    function HasValue(const x: TBigInteger): Boolean;
 
     /// <summary>
     /// return an integer from the passed in object
@@ -2186,29 +2256,55 @@ type
   TDerInteger = class sealed(TAsn1Object, IDerInteger)
 
   strict private
+
+    class var
+
+      FAllowUnsafeInteger: Boolean;
+
+    class constructor CreateDerInteger();
+
   var
     Fbytes: TCryptoLibByteArray;
+    FStart: Int32;
 
     function GetBytes: TCryptoLibByteArray; inline;
     function GetPositiveValue: TBigInteger; inline;
     function GetValue: TBigInteger; inline;
+    function GetIntPositiveValueExact: Int32; inline;
+    function GetIntValueExact: Int32; inline;
+
+    class function GetAllowUnsafeInteger: Boolean; static; inline;
+    class procedure SetAllowUnsafeInteger(const Value: Boolean); static; inline;
+
   strict protected
     function Asn1GetHashCode(): Int32; override;
     function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
 
+    const
+    SignExtSigned = Int32(-1);
+    SignExtUnsigned = Int32($FF);
+
     constructor Create(Value: Int32); overload;
+    constructor Create(Value: Int64); overload;
     constructor Create(const Value: TBigInteger); overload;
     constructor Create(const bytes: TCryptoLibByteArray); overload;
+    constructor Create(const bytes: TCryptoLibByteArray;
+      clone: Boolean); overload;
 
     property Value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
+    property IntPositiveValueExact: Int32 read GetIntPositiveValueExact;
+    property IntValueExact: Int32 read GetIntValueExact;
     property bytes: TCryptoLibByteArray read GetBytes;
 
     procedure Encode(const derOut: TStream); override;
 
+    function HasValue(const x: TBigInteger): Boolean;
+
     function ToString(): String; override;
+
 
     // /**
     // * return an integer from the passed in object
@@ -2230,6 +2326,28 @@ type
     // */
     class function GetInstance(const obj: IAsn1TaggedObject;
       isExplicit: Boolean): IDerInteger; overload; static; inline;
+
+    /// <summary>
+    /// Apply the correct validation for an INTEGER primitive following the
+    /// BER rules.
+    /// </summary>
+    /// <param name="bytes">
+    /// The raw encoding of the integer.
+    /// </param>
+    /// <returns>
+    /// if the (in)put fails this validation.
+    /// </returns>
+    class function IsMalformed(const bytes: TCryptoLibByteArray)
+      : Boolean; static;
+
+    class function SignBytesToSkip(const bytes: TCryptoLibByteArray)
+      : Int32; static;
+
+    class function IntValue(const bytes: TCryptoLibByteArray;
+      start, signExt: Int32): Int32; static;
+
+    class property AllowUnsafeInteger: Boolean read GetAllowUnsafeInteger
+      write SetAllowUnsafeInteger;
 
   end;
 
@@ -3856,31 +3974,33 @@ begin
   end;
 end;
 
-function TAsn1InputStream.BuildDerEncodableVector
-  (const dIn: TDefiniteLengthInputStream): IAsn1EncodableVector;
-var
-  res: TAsn1InputStream;
-begin
-  res := TAsn1InputStream.Create(dIn);
-  try
-    result := res.BuildEncodableVector();
-  finally
-    res.Free;
-  end;
-end;
-
-function TAsn1InputStream.BuildEncodableVector: IAsn1EncodableVector;
+function TAsn1InputStream.ReadVector(const dIn: TDefiniteLengthInputStream)
+  : IAsn1EncodableVector;
 var
   v: IAsn1EncodableVector;
   o: IAsn1Object;
+  subStream: TAsn1InputStream;
 begin
-  v := TAsn1EncodableVector.Create();
 
-  o := ReadObject();
-  while (o <> Nil) do
+  if (dIn.Remaining < 1) then
   begin
-    v.Add([o]);
-    o := ReadObject();
+    result := TAsn1EncodableVector.Create(0) as IAsn1EncodableVector;
+    Exit;
+  end;
+
+  subStream := TAsn1InputStream.Create(dIn);
+  try
+    v := TAsn1EncodableVector.Create();
+
+    o := subStream.ReadObject();
+    while (o <> Nil) do
+    begin
+      v.Add([o]);
+      o := subStream.ReadObject();
+    end;
+
+  finally
+    subStream.Free;
   end;
 
   result := v;
@@ -3928,7 +4048,7 @@ begin
         //
         begin
           try
-            v := BuildDerEncodableVector(defIn);
+            v := ReadVector(defIn);
             strings := TList<IDerOctetString>.Create;
             strings.capacity := v.count;
 
@@ -3965,7 +4085,7 @@ begin
       TAsn1Tags.External:
         begin
           try
-            result := TDerExternal.Create(BuildDerEncodableVector(defIn));
+            result := TDerExternal.Create(ReadVector(defIn));
             Exit;
           finally
             defIn.Free;
@@ -3992,13 +4112,13 @@ end;
 function TAsn1InputStream.CreateDerSequence
   (const dIn: TDefiniteLengthInputStream): IDerSequence;
 begin
-  result := TDerSequence.FromVector(BuildDerEncodableVector(dIn));
+  result := TDerSequence.FromVector(ReadVector(dIn));
 end;
 
 function TAsn1InputStream.CreateDerSet(const dIn
   : TDefiniteLengthInputStream): IDerSet;
 begin
-  result := TDerSet.FromVector(BuildDerEncodableVector(dIn), False);
+  result := TDerSet.FromVector(ReadVector(dIn), False);
 end;
 
 class function TAsn1InputStream.ReadTagNumber(const s: TStream;
@@ -4418,13 +4538,13 @@ end;
 { TCollectionUtilities }
 
 class function TCollectionUtilities.ToStructuredString
-  (c: TList<IAsn1Encodable>): String;
+  (c: TCryptoLibGenericArray<IAsn1Encodable>): String;
 var
   sl: TStringList;
   idx: Int32;
 begin
 
-  if c.count = 0 then
+  if (c = Nil) then
   begin
     result := '[]';
     Exit;
@@ -4436,9 +4556,9 @@ begin
     sl.Add('[');
 
     sl.Add((c[0] as TAsn1Encodable).ClassName);
-    if c.count > 1 then
+    if System.length(c) > 1 then
     begin
-      for idx := 1 to c.count - 2 do
+      for idx := 1 to System.length(c) - 2 do
       begin
         sl.Add(', ');
         sl.Add((c[idx] as TAsn1Encodable).ClassName);
@@ -4474,12 +4594,11 @@ begin
   o1 := ToAsn1Object();
   o2 := other.ToAsn1Object();
 
-  result := ((o1 = o2) or o1.CallAsn1Equals(o2));
+  result := ((o1 = o2) or ((o2 <> Nil) and (o1.CallAsn1Equals(o2))));
 end;
 
 function TAsn1Encodable.GetDerEncoded: TCryptoLibByteArray;
 begin
-
   try
     result := GetEncoded(Der);
   except
@@ -4540,6 +4659,42 @@ function TAsn1Encodable.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
   result := ToAsn1Object().CallAsn1GetHashCode();
+end;
+
+class function TAsn1Encodable.IsNullOrContainsNull
+  (const data: TCryptoLibGenericArray<IAsn1Encodable>): Boolean;
+var
+  count, I: Int32;
+begin
+  if (data = Nil) then
+  begin
+    result := True;
+    Exit;
+  end;
+
+  count := System.length(data);
+  for I := 0 to System.Pred(count) do
+  begin
+    if (data[I] = Nil) then
+    begin
+      result := True;
+      Exit;
+    end;
+  end;
+  result := False;
+end;
+
+class function TAsn1Encodable.OpenArrayToDynamicArray
+  (const data: array of IAsn1Encodable): TCryptoLibGenericArray<IAsn1Encodable>;
+var
+  LDataLength, LIdx: Int32;
+begin
+  LDataLength := System.length(data);
+  System.SetLength(result, LDataLength);
+  for LIdx := 0 to System.Pred(LDataLength) do
+  begin
+    result[LIdx] := data[LIdx];
+  end;
 end;
 
 { TAsn1Object }
@@ -5060,8 +5215,68 @@ var
 begin
   for obj in objs do
   begin
-    Flist.Add(obj);
+    Add(obj);
   end;
+end;
+
+procedure TAsn1EncodableVector.Add(const element: IAsn1Encodable);
+var
+  capacity, minCapacity: Int32;
+begin
+  if (element = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
+  end;
+  capacity := System.length(FElements);
+  minCapacity := FElementCount + 1;
+  if ((minCapacity > capacity) or FCopyOnWrite) then
+  begin
+    Reallocate(minCapacity);
+  end;
+
+  FElements[FElementCount] := element;
+  FElementCount := minCapacity;
+end;
+
+procedure TAsn1EncodableVector.AddAll(const other: IAsn1EncodableVector);
+var
+  otherElementCount, capacity, minCapacity, I: Int32;
+  otherElement: IAsn1Encodable;
+begin
+  if (other = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SOtherNil);
+  end;
+
+  otherElementCount := other.count;
+  if (otherElementCount < 1) then
+  begin
+    Exit;
+  end;
+
+  capacity := System.length(FElements);
+  minCapacity := FElementCount + otherElementCount;
+  if ((minCapacity > capacity) or FCopyOnWrite) then
+  begin
+    Reallocate(minCapacity);
+  end;
+
+  I := 0;
+
+  repeat
+
+    otherElement := other[I];
+    if (otherElement = Nil) then
+    begin
+      raise ENullReferenceCryptoLibException.CreateRes(@SOtherElementsNil);
+    end;
+
+    FElements[FElementCount + I] := otherElement;
+
+    System.Inc(I);
+  until not(I < otherElementCount);
+
+  FElementCount := minCapacity;
 end;
 
 procedure TAsn1EncodableVector.AddOptional(const objs: array of IAsn1Encodable);
@@ -5074,28 +5289,69 @@ begin
     begin
       if (obj <> Nil) then
       begin
-        Flist.Add(obj);
+        Add(obj);
       end;
     end;
   end;
 end;
 
+procedure TAsn1EncodableVector.AddOptionalTagged(isExplicit: Boolean;
+  tagNo: Int32; const obj: IAsn1Encodable);
+begin
+  if (obj <> Nil) then
+  begin
+    Add(TDerTaggedObject.Create(isExplicit, tagNo, obj) as IDerTaggedObject);
+  end;
+end;
+
+function TAsn1EncodableVector.CopyElements
+  : TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  if (FElementCount = 0) then
+  begin
+    result := EmptyElements;
+    Exit;
+  end;
+
+  result := System.Copy(FElements, 0, FElementCount);
+  System.SetLength(result, FElementCount);
+end;
+
 constructor TAsn1EncodableVector.Create(const v: array of IAsn1Encodable);
 begin
   inherited Create();
-  Flist := TList<IAsn1Encodable>.Create();
   Add(v);
+end;
+
+constructor TAsn1EncodableVector.Create(initialCapacity: Int32);
+begin
+  Inherited Create();
+  if (initialCapacity < 0) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SInitialCapacityNegative);
+  end;
+
+  if (initialCapacity = 0) then
+  begin
+    FElements := EmptyElements;
+  end
+  else
+  begin
+    System.SetLength(FElements, initialCapacity);
+  end;
+
+  FElementCount := 0;
+
+  FCopyOnWrite := False;
 end;
 
 constructor TAsn1EncodableVector.Create();
 begin
-  inherited Create();
-  Flist := TList<IAsn1Encodable>.Create();
+  Create(DefaultCapacity);
 end;
 
 destructor TAsn1EncodableVector.Destroy;
 begin
-  Flist.Free;
   inherited Destroy;
 end;
 
@@ -5115,18 +5371,79 @@ end;
 
 function TAsn1EncodableVector.GetCount: Int32;
 begin
-  result := Flist.count;
+  result := FElementCount;
+end;
+
+class function TAsn1EncodableVector.GetEmptyElements
+  : TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  result := Nil;
 end;
 
 function TAsn1EncodableVector.GetEnumerable
   : TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  result := Flist.ToArray;
+  result := CopyElements();
 end;
 
 function TAsn1EncodableVector.GetSelf(Index: Int32): IAsn1Encodable;
 begin
-  result := Flist[index];
+  if (Index >= FElementCount) then
+  begin
+    raise EIndexOutOfRangeCryptoLibException.CreateResFmt(@SIndexOutOfRange,
+      [Index, FElementCount]);
+  end;
+
+  result := FElements[Index];
+end;
+
+procedure TAsn1EncodableVector.Reallocate(minCapacity: Int32);
+var
+  oldCapacity, newCapacity: Int32;
+  LocalCopy: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  oldCapacity := System.length(FElements);
+  newCapacity := Max(oldCapacity, minCapacity + (TBits.Asr32(minCapacity, 1)));
+
+  LocalCopy := System.Copy(FElements, 0, FElementCount);
+  System.SetLength(LocalCopy, newCapacity);
+
+  FElements := LocalCopy;
+  FCopyOnWrite := False;
+end;
+
+function TAsn1EncodableVector.TakeElements
+  : TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  if (FElementCount = 0) then
+  begin
+    result := EmptyElements;
+    Exit;
+  end;
+
+  if (System.length(FElements) = FElementCount) then
+  begin
+    FCopyOnWrite := True;
+    result := FElements;
+    Exit;
+  end;
+
+  result := System.Copy(FElements, 0, FElementCount);
+  System.SetLength(result, FElementCount);
+end;
+
+class function TAsn1EncodableVector.CloneElements(const elements
+  : TCryptoLibGenericArray<IAsn1Encodable>)
+  : TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  if System.length(elements) < 1 then
+  begin
+    result := EmptyElements;
+  end
+  else
+  begin
+    result := System.Copy(elements);
+  end;
 end;
 
 { TAsn1Generator }
@@ -5261,56 +5578,33 @@ end;
 
 { TAsn1Sequence }
 
-function TAsn1Sequence.GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
-var
-  encObj: IAsn1Encodable;
-begin
-  encObj := e;
-
-  // unfortunately null was allowed as a substitute for DER null
-  if (encObj = Nil) then
-  begin
-    result := TDerNull.Instance;
-    Exit;
-  end;
-
-  result := encObj;
-end;
-
-procedure TAsn1Sequence.AddObject(const obj: IAsn1Encodable);
-begin
-  FSeq.Add(obj);
-end;
-
 function TAsn1Sequence.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
-  other: IAsn1Sequence;
-  l1, l2: TCryptoLibGenericArray<IAsn1Encodable>;
+  that: IAsn1Sequence;
   o1, o2: IAsn1Object;
-  idx: Int32;
+  I, LCount: Int32;
 begin
 
-  if (not Supports(asn1Object, IAsn1Sequence, other)) then
+  that := asn1Object as IAsn1Sequence;
+  if (that = Nil) then
   begin
     result := False;
     Exit;
   end;
 
-  if (count <> other.count) then
+  LCount := count;
+  if (that.count <> LCount) then
   begin
     result := False;
     Exit;
   end;
 
-  l1 := GetEnumerable;
-  l2 := other.GetEnumerable;
-
-  for idx := System.Low(l1) to System.High(l1) do
+  for I := 0 to System.Pred(LCount) do
   begin
-    o1 := GetCurrent(l1[idx]).ToAsn1Object();
-    o2 := GetCurrent(l2[idx]).ToAsn1Object();
+    o1 := FElements[I].ToAsn1Object();
+    o2 := that.elements[I].ToAsn1Object();
 
-    if (not(o1.Equals(o2))) then
+    if ((o1 <> o2) and (not o1.CallAsn1Equals(o2))) then
     begin
       result := False;
       Exit;
@@ -5322,50 +5616,81 @@ end;
 
 function TAsn1Sequence.Asn1GetHashCode: Int32;
 var
-  hc: Int32;
-  o: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+  hc, I: Int32;
 begin
-  hc := count;
+  I := System.length(FElements);
+  hc := I + 1;
 
-  LListAsn1Encodable := Self.GetEnumerable;
-  for o in LListAsn1Encodable do
+  System.Dec(I);
+  while (I >= 0) do
   begin
-    hc := hc * 17;
-    if (o = Nil) then
-    begin
-      hc := hc xor TDerNull.Instance.GetHashCode();
-    end
-    else
-    begin
-      hc := hc xor o.GetHashCode();
-    end;
+    hc := hc * 257;
+    hc := hc xor (FElements[I].ToAsn1Object().CallAsn1GetHashCode());
+    System.Dec(I);
   end;
 
   result := hc;
 end;
 
-constructor TAsn1Sequence.Create(capacity: Int32);
+constructor TAsn1Sequence.Create();
 begin
   inherited Create();
-  FSeq := TList<IAsn1Encodable>.Create();
-  FSeq.capacity := capacity;
+  FElements := TAsn1EncodableVector.EmptyElements;
+end;
+
+constructor TAsn1Sequence.Create(const element: IAsn1Encodable);
+begin
+  Inherited Create();
+  if (element = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
+  end;
+  FElements := TCryptoLibGenericArray<IAsn1Encodable>.Create(element);
+end;
+
+constructor TAsn1Sequence.Create(const elementVector: IAsn1EncodableVector);
+begin
+  Inherited Create();
+  if (elementVector = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementVectorNil);
+  end;
+
+  FElements := elementVector.TakeElements();
+end;
+
+constructor TAsn1Sequence.Create(const elements: array of IAsn1Encodable);
+var
+  LElementsCopy: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Inherited Create();
+  LElementsCopy := OpenArrayToDynamicArray(elements);
+  if (TAsn1Encodable.IsNullOrContainsNull(LElementsCopy)) then
+  begin
+    raise ENullReferenceCryptoLibException.CreateRes(@SElementsNil);
+  end;
+
+  FElements := TAsn1EncodableVector.CloneElements(LElementsCopy);
 end;
 
 destructor TAsn1Sequence.Destroy;
 begin
-  FSeq.Free;
   inherited Destroy;
 end;
 
 function TAsn1Sequence.GetCount: Int32;
 begin
-  result := FSeq.count;
+  result := System.length(FElements);
+end;
+
+function TAsn1Sequence.GetElements: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  result := FElements;
 end;
 
 function TAsn1Sequence.GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  result := FSeq.ToArray;
+  result := FElements;
 end;
 
 class function TAsn1Sequence.GetInstance(const obj: TObject): IAsn1Sequence;
@@ -5468,12 +5793,17 @@ end;
 
 function TAsn1Sequence.GetSelf(Index: Int32): IAsn1Encodable;
 begin
-  result := FSeq[index];
+  result := FElements[Index];
+end;
+
+function TAsn1Sequence.ToArray: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  result := TAsn1EncodableVector.CloneElements(FElements);
 end;
 
 function TAsn1Sequence.ToString: String;
 begin
-  result := TCollectionUtilities.ToStructuredString(FSeq);
+  result := TCollectionUtilities.ToStructuredString(FElements);
 end;
 
 { TAsn1Sequence.TAsn1SequenceParserImpl }
@@ -5735,39 +6065,24 @@ begin
   result := TDerSequence.Create();
 end;
 
-constructor TDerSequence.Create(const obj: IAsn1Encodable);
+constructor TDerSequence.Create(const element: IAsn1Encodable);
 begin
-  Inherited Create(1);
-  AddObject(obj);
+  Inherited Create(element);
 end;
 
 constructor TDerSequence.Create;
 begin
-  Inherited Create(0);
+  Inherited Create();
 end;
 
-constructor TDerSequence.Create(const v: IAsn1EncodableVector);
-var
-  ae: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+constructor TDerSequence.Create(const elementVector: IAsn1EncodableVector);
 begin
-  Inherited Create(v.count);
-  LListAsn1Encodable := v.GetEnumerable;
-  for ae in LListAsn1Encodable do
-  begin
-    AddObject(ae);
-  end;
+  Inherited Create(elementVector);
 end;
 
-constructor TDerSequence.Create(const v: array of IAsn1Encodable);
-var
-  ae: IAsn1Encodable;
+constructor TDerSequence.Create(const elements: array of IAsn1Encodable);
 begin
-  Inherited Create(System.length(v));
-  for ae in v do
-  begin
-    AddObject(ae);
-  end;
+  Inherited Create(elements);
 end;
 
 destructor TDerSequence.Destroy;
@@ -5806,16 +6121,16 @@ begin
     TAsn1Tags.Constructed, bytes);
 end;
 
-class function TDerSequence.FromVector(const v: IAsn1EncodableVector)
-  : IDerSequence;
+class function TDerSequence.FromVector(const elementVector
+  : IAsn1EncodableVector): IDerSequence;
 begin
-  if v.count < 1 then
+  if elementVector.count < 1 then
   begin
     result := Empty;
   end
   else
   begin
-    result := TDerSequence.Create(v);
+    result := TDerSequence.Create(elementVector);
   end;
 
 end;
@@ -5827,9 +6142,9 @@ begin
   result := TBerSequence.Create();
 end;
 
-constructor TBerSequence.Create(const obj: IAsn1Encodable);
+constructor TBerSequence.Create(const element: IAsn1Encodable);
 begin
-  Inherited Create(obj);
+  Inherited Create(element);
 end;
 
 constructor TBerSequence.Create;
@@ -5837,9 +6152,9 @@ begin
   Inherited Create();
 end;
 
-constructor TBerSequence.Create(const v: IAsn1EncodableVector);
+constructor TBerSequence.Create(const elementVector: IAsn1EncodableVector);
 begin
-  Inherited Create(v);
+  Inherited Create(elementVector);
 end;
 
 destructor TBerSequence.Destroy;
@@ -5847,9 +6162,9 @@ begin
   inherited Destroy;
 end;
 
-constructor TBerSequence.Create(const v: array of IAsn1Encodable);
+constructor TBerSequence.Create(const elements: array of IAsn1Encodable);
 begin
-  Inherited Create(v);
+  Inherited Create(elements);
 end;
 
 procedure TBerSequence.Encode(const derOut: TStream);
@@ -5880,16 +6195,16 @@ begin
 
 end;
 
-class function TBerSequence.FromVector(const v: IAsn1EncodableVector)
-  : IBerSequence;
+class function TBerSequence.FromVector(const elementVector
+  : IAsn1EncodableVector): IBerSequence;
 begin
-  if v.count < 1 then
+  if elementVector.count < 1 then
   begin
     result := Empty;
   end
   else
   begin
-    result := TBerSequence.Create(v);
+    result := TBerSequence.Create(elementVector);
   end;
 
 end;
@@ -5995,7 +6310,7 @@ class function TAsn1TaggedObject.GetInstance(const obj: IAsn1TaggedObject;
 begin
   if (explicitly) then
   begin
-    result := obj.GetObject() as IAsn1TaggedObject;
+    result := GetInstance(obj.GetObject() as TAsn1Object);
     Exit;
   end;
 
@@ -6074,56 +6389,44 @@ end;
 
 { TAsn1Set }
 
-procedure TAsn1Set.AddObject(const obj: IAsn1Encodable);
+function TAsn1Set.GetDerEncoded(const obj: IAsn1Encodable): TCryptoLibByteArray;
 begin
-  F_set.Add(obj);
-end;
-
-function TAsn1Set.GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
-var
-  encObj: IAsn1Encodable;
-begin
-  encObj := e;
-
-  // unfortunately null was allowed as a substitute for DER null
-  if (encObj = Nil) then
-  begin
-    result := TDerNull.Instance;
-    Exit;
+  try
+    result := obj.GetEncoded(Der);
+  except
+    on e: EIOCryptoLibException do
+    begin
+      raise EInvalidArgumentCryptoLibException.CreateRes(@SObjectEncodeError);
+    end;
   end;
-
-  result := encObj;
 end;
 
 function TAsn1Set.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
 var
-  other: IAsn1Set;
-  l1, l2: TCryptoLibGenericArray<IAsn1Encodable>;
+  that: IAsn1Set;
   o1, o2: IAsn1Object;
-  idx: Int32;
+  idx, LCount: Int32;
 begin
 
-  if (not Supports(asn1Object, IAsn1Set, other)) then
+  if (not Supports(asn1Object, IAsn1Set, that)) then
   begin
     result := False;
     Exit;
   end;
 
-  if (count <> other.count) then
+  LCount := count;
+  if (that.count <> LCount) then
   begin
     result := False;
     Exit;
   end;
 
-  l1 := GetEnumerable;
-  l2 := other.GetEnumerable;
-
-  for idx := System.Low(l1) to System.High(l1) do
+  for idx := 0 to System.Pred(LCount) do
   begin
-    o1 := GetCurrent(l1[idx]).ToAsn1Object();
-    o2 := GetCurrent(l2[idx]).ToAsn1Object();
+    o1 := FElements[idx].ToAsn1Object();
+    o2 := that.elements[idx].ToAsn1Object();
 
-    if (not(o1.Equals(o2))) then
+    if ((o1 <> o2) and (not o1.CallAsn1Equals(o2))) then
     begin
       result := False;
       Exit;
@@ -6135,51 +6438,81 @@ end;
 
 function TAsn1Set.Asn1GetHashCode: Int32;
 var
-  hc: Int32;
-  o: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+  hc, I: Int32;
 begin
-  hc := count;
+  I := System.length(FElements);
+  hc := I + 1;
 
-  LListAsn1Encodable := Self.GetEnumerable;
-  for o in LListAsn1Encodable do
+  System.Dec(I);
+  while (I >= 0) do
   begin
-    hc := hc * 17;
-    if (o = Nil) then
-    begin
-      hc := hc xor TDerNull.Instance.GetHashCode();
-    end
-    else
-    begin
-      hc := hc xor o.GetHashCode();
-    end;
+    hc := hc * 257;
+    hc := hc xor FElements[I].ToAsn1Object().CallAsn1GetHashCode();
+    System.Dec(I);
   end;
 
   result := hc;
 end;
 
-constructor TAsn1Set.Create(capacity: Int32);
+constructor TAsn1Set.Create();
 begin
   Inherited Create();
-  F_set := TList<IAsn1Encodable>.Create();
-  F_set.capacity := capacity;
-  FisSorted := False;
+  FElements := TAsn1EncodableVector.EmptyElements;
+end;
+
+constructor TAsn1Set.Create(const element: IAsn1Encodable);
+begin
+  Inherited Create();
+  if (element = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
+  end;
+  FElements := TCryptoLibGenericArray<IAsn1Encodable>.Create(element);
+end;
+
+constructor TAsn1Set.Create(const elementVector: IAsn1EncodableVector);
+begin
+  Inherited Create();
+  if (elementVector = Nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementVectorNil);
+  end;
+
+  FElements := elementVector.TakeElements();
+end;
+
+constructor TAsn1Set.Create(const elements: array of IAsn1Encodable);
+var
+  LElementsCopy: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Inherited Create();
+  LElementsCopy := OpenArrayToDynamicArray(elements);
+  if (TAsn1Encodable.IsNullOrContainsNull(LElementsCopy)) then
+  begin
+    raise ENullReferenceCryptoLibException.CreateRes(@SElementsNil);
+  end;
+
+  FElements := TAsn1EncodableVector.CloneElements(LElementsCopy);
 end;
 
 destructor TAsn1Set.Destroy;
 begin
-  F_set.Free;
   inherited Destroy;
 end;
 
 function TAsn1Set.GetCount: Int32;
 begin
-  result := F_set.count;
+  result := System.length(FElements);
+end;
+
+function TAsn1Set.GetElements: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  result := FElements;
 end;
 
 function TAsn1Set.GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  result := F_set.ToArray;
+  result := FElements;
 end;
 
 class function TAsn1Set.GetInstance(const obj: TCryptoLibByteArray): IAsn1Set;
@@ -6299,101 +6632,136 @@ end;
 
 function TAsn1Set.GetSelf(Index: Int32): IAsn1Encodable;
 begin
-  result := F_set[index];
+  result := FElements[Index];
 end;
 
-function TAsn1Set.LessThanOrEqual(const a, b: TCryptoLibByteArray): Boolean;
+class function TAsn1Set.LessThanOrEqual(const a,
+  b: TCryptoLibByteArray): Boolean;
 var
-  len, I: Int32;
+  last, I, a0, b0: Int32;
 begin
-  len := Math.Min(System.length(a), System.length(b));
+{$IFDEF DEBUG}
+  System.Assert((System.length(a) >= 2) and (System.length(b) >= 2));
+{$ENDIF DEBUG}
+  (*
+    * NOTE: Set elements in DER encodings are ordered first according to their tags (class and
+    * number); the CONSTRUCTED bit is not part of the tag.
+    *
+    * For SET-OF, this is unimportant. All elements have the same tag and DER requires them to
+    * either all be in constructed form or all in primitive form, according to that tag. The
+    * elements are effectively ordered according to their content octets.
+    *
+    * For SET, the elements will have distinct tags, and each will be in constructed or
+    * primitive form accordingly. Failing to ignore the CONSTRUCTED bit could therefore lead to
+    * ordering inversions.
+  *)
+  a0 := a[0] and (not TAsn1Tags.Constructed);
+  b0 := b[0] and (not TAsn1Tags.Constructed);
 
-  I := 0;
-  while I <> len do
+  if (a0 <> b0) then
   begin
+    result := a0 < b0;
+    Exit;
+  end;
 
+  last := Math.Min(System.length(a), System.length(b)) - 1;
+
+  I := 1;
+  while I < last do
+  begin
     if (a[I] <> b[I]) then
     begin
-
       result := (a[I]) < (b[I]);
       Exit;
     end;
     System.Inc(I);
   end;
 
-  result := len = System.length(a);
+  result := (a[last]) <= (b[last]);
 end;
 
 procedure TAsn1Set.Sort;
 var
-  swapped: Boolean;
-  lastSwap, Index, swapIndex: Int32;
-  a, b: TCryptoLibByteArray;
-  temp: IAsn1Encodable;
+  count, I, j: Int32;
+  eh, ei, et, e2, e1: IAsn1Encodable;
+  bh, bi, bt, b2, b1: TCryptoLibByteArray;
 
 begin
-  if (not FisSorted) then
+  count := System.length(FElements);
+  if (count < 2) then
   begin
-    FisSorted := True;
-    if (F_set.count > 1) then
-    begin
-      swapped := True;
-      lastSwap := F_set.count - 1;
-
-      while (swapped) do
-      begin
-        index := 0;
-        swapIndex := 0;
-        a := F_set[0].GetEncoded(TAsn1Encodable.Der);
-
-        swapped := False;
-
-        while (index <> lastSwap) do
-        begin
-          b := F_set[index + 1].GetEncoded(TAsn1Encodable.Der);
-
-          if (LessThanOrEqual(a, b)) then
-          begin
-            a := b;
-          end
-          else
-          begin
-            temp := F_set[index];
-            // Review being picky for copy
-            // temp := System.Copy(F_set.List, Index, 1)[0];
-            F_set[index] := F_set[index + 1];
-            F_set[index + 1] := temp;
-
-            swapped := True;
-            swapIndex := index;
-          end;
-
-          System.Inc(index);
-        end;
-
-        lastSwap := swapIndex;
-      end;
-    end;
+    Exit;
   end;
+
+  eh := FElements[0];
+  ei := FElements[1];
+  bh := GetDerEncoded(eh);
+  bi := GetDerEncoded(ei);
+
+  if (LessThanOrEqual(bi, bh)) then
+  begin
+    et := ei;
+    ei := eh;
+    eh := et;
+    bt := bi;
+    bi := bh;
+    bh := bt;
+  end;
+
+  for I := 2 to System.Pred(count) do
+  begin
+    e2 := FElements[I];
+    b2 := GetDerEncoded(e2);
+
+    if (LessThanOrEqual(bi, b2)) then
+    begin
+      FElements[I - 2] := eh;
+      eh := ei;
+      bh := bi;
+      ei := e2;
+      bi := b2;
+      continue;
+    end;
+
+    if (LessThanOrEqual(bh, b2)) then
+    begin
+      FElements[I - 2] := eh;
+      eh := e2;
+      bh := b2;
+      continue;
+    end;
+
+    j := I - 1;
+    System.Dec(j);
+    while (j > 0) do
+    begin
+      e1 := FElements[j - 1];
+      b1 := GetDerEncoded(e1);
+
+      if (LessThanOrEqual(b1, b2)) then
+      begin
+        break;
+      end;
+
+      FElements[j] := e1;
+      System.Dec(j);
+    end;
+
+    FElements[j] := e2;
+  end;
+
+  FElements[count - 2] := eh;
+  FElements[count - 1] := ei;
 end;
 
 function TAsn1Set.ToArray: TCryptoLibGenericArray<IAsn1Encodable>;
-var
-  values: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
 begin
-  System.SetLength(values, count);
-  for I := 0 to System.Pred(count) do
-  begin
-    values[I] := Self[I];
-  end;
-
-  result := values;
+  result := TAsn1EncodableVector.CloneElements(FElements);
 end;
 
 function TAsn1Set.ToString: String;
 begin
-  result := TCollectionUtilities.ToStructuredString(F_set);
+  result := TCollectionUtilities.ToStructuredString(FElements);
 end;
 
 { TAsn1Set.TAsn1SetParserImpl }
@@ -6451,52 +6819,36 @@ begin
   result := TDerSet.Create();
 end;
 
-constructor TDerSet.Create(const v: array of IAsn1Encodable);
-var
-  o: IAsn1Encodable;
+constructor TDerSet.Create(const elements: array of IAsn1Encodable);
 begin
-  Inherited Create(System.length(v));
-  for o in v do
-  begin
-    AddObject(o);
-  end;
-
+  Inherited Create(elements);
   Sort();
 end;
 
 constructor TDerSet.Create;
 begin
-  Inherited Create(0);
+  Inherited Create();
 end;
 
-constructor TDerSet.Create(const v: IAsn1EncodableVector;
-  needsSorting: Boolean);
-var
-  o: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+constructor TDerSet.Create(const element: IAsn1Encodable);
 begin
-  Inherited Create(v.count);
-  LListAsn1Encodable := v.GetEnumerable;
-  for o in LListAsn1Encodable do
-  begin
-    AddObject(o);
-  end;
+  Inherited Create(element);
+end;
+
+constructor TDerSet.Create(const elementVector: IAsn1EncodableVector);
+begin
+  Create(elementVector, True);
+end;
+
+constructor TDerSet.Create(const elementVector: IAsn1EncodableVector;
+  needsSorting: Boolean);
+begin
+  Inherited Create(elementVector);
 
   if (needsSorting) then
   begin
     Sort();
   end;
-end;
-
-constructor TDerSet.Create(const obj: IAsn1Encodable);
-begin
-  Inherited Create(1);
-  AddObject(obj);
-end;
-
-constructor TDerSet.Create(const v: IAsn1EncodableVector);
-begin
-  Create(v, True);
 end;
 
 destructor TDerSet.Destroy;
@@ -6535,28 +6887,29 @@ begin
     TAsn1Tags.Constructed, bytes);
 end;
 
-class function TDerSet.FromVector(const v: IAsn1EncodableVector;
+class function TDerSet.FromVector(const elementVector: IAsn1EncodableVector;
   needsSorting: Boolean): IDerSet;
 begin
-  if v.count < 1 then
+  if elementVector.count < 1 then
   begin
     result := Empty;
   end
   else
   begin
-    result := TDerSet.Create(v, needsSorting);
+    result := TDerSet.Create(elementVector, needsSorting);
   end;
 end;
 
-class function TDerSet.FromVector(const v: IAsn1EncodableVector): IDerSet;
+class function TDerSet.FromVector(const elementVector
+  : IAsn1EncodableVector): IDerSet;
 begin
-  if v.count < 1 then
+  if elementVector.count < 1 then
   begin
     result := Empty;
   end
   else
   begin
-    result := TDerSet.Create(v);
+    result := TDerSet.Create(elementVector);
   end;
 end;
 
@@ -6601,19 +6954,21 @@ end;
 
 function TAsn1StreamParser.ReadVector: IAsn1EncodableVector;
 var
-  v: IAsn1EncodableVector;
   obj: IAsn1Convertible;
 begin
-  v := TAsn1EncodableVector.Create();
-
   obj := ReadObject();
-  while (obj <> Nil) do
+  if obj = Nil then
   begin
-    v.Add([obj.ToAsn1Object()]);
-    obj := ReadObject();
+    result := TAsn1EncodableVector.Create(0);
+    Exit;
   end;
 
-  result := v;
+  result := TAsn1EncodableVector.Create();
+
+  repeat
+    result.Add([obj.ToAsn1Object()]);
+    obj := ReadObject();
+  until not(obj <> Nil);
 end;
 
 function TAsn1StreamParser.ReadImplicit(Constructed: Boolean; tag: Int32)
@@ -7776,14 +8131,14 @@ begin
   inherited Destroy;
 end;
 
-constructor TBerSet.Create(const obj: IAsn1Encodable);
+constructor TBerSet.Create(const element: IAsn1Encodable);
 begin
-  Inherited Create(obj);
+  Inherited Create(element);
 end;
 
-constructor TBerSet.Create(const v: IAsn1EncodableVector);
+constructor TBerSet.Create(const elementVector: IAsn1EncodableVector);
 begin
-  Inherited Create(v, False);
+  Inherited Create(elementVector, False);
 end;
 
 procedure TBerSet.Encode(const derOut: TStream);
@@ -7813,28 +8168,29 @@ begin
   end;
 end;
 
-class function TBerSet.FromVector(const v: IAsn1EncodableVector;
+class function TBerSet.FromVector(const elementVector: IAsn1EncodableVector;
   needsSorting: Boolean): IBerSet;
 begin
-  if v.count < 1 then
+  if elementVector.count < 1 then
   begin
     result := Empty;
   end
   else
   begin
-    result := TBerSet.Create(v, needsSorting);
+    result := TBerSet.Create(elementVector, needsSorting);
   end;
 end;
 
-class function TBerSet.FromVector(const v: IAsn1EncodableVector): IBerSet;
+class function TBerSet.FromVector(const elementVector
+  : IAsn1EncodableVector): IBerSet;
 begin
-  if v.count < 1 then
+  if elementVector.count < 1 then
   begin
     result := Empty;
   end
   else
   begin
-    result := TBerSet.Create(v);
+    result := TBerSet.Create(elementVector);
   end;
 end;
 
@@ -8351,30 +8707,51 @@ end;
 constructor TDerEnumerated.Create(val: Int32);
 begin
   Inherited Create();
+  if (val < 0) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
+  end;
   Fbytes := TBigInteger.ValueOf(val).ToByteArray();
+  FStart := 0;
+end;
+
+constructor TDerEnumerated.Create(val: Int64);
+begin
+  Inherited Create();
+  if (val < 0) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
+  end;
+  Fbytes := TBigInteger.ValueOf(val).ToByteArray();
+  FStart := 0;
 end;
 
 constructor TDerEnumerated.Create(const val: TBigInteger);
 begin
   Inherited Create();
+  if (val.SignValue < 0) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
+  end;
   Fbytes := val.ToByteArray();
+  FStart := 0;
 end;
 
 constructor TDerEnumerated.Create(const bytes: TCryptoLibByteArray);
 begin
   Inherited Create();
-  if (System.length(bytes) > 1) then
+
+  if (TDerInteger.IsMalformed(bytes)) then
   begin
-    if ((bytes[0] = 0) and ((bytes[1] and $80) = 0)) then
-    begin
-      raise EArgumentCryptoLibException.CreateRes(@SMalformedEnumerated);
-    end;
-    if ((bytes[0] = Byte($FF)) and ((bytes[1] and $80) <> 0)) then
-    begin
-      raise EArgumentCryptoLibException.CreateRes(@SMalformedEnumerated);
-    end;
+    raise EArgumentCryptoLibException.CreateRes(@SMalformedEnumerated);
   end;
+  if (0 <> (bytes[0] and $80)) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
+  end;
+
   Fbytes := System.Copy(bytes);
+  FStart := TDerInteger.SignBytesToSkip(bytes);
 end;
 
 procedure TDerEnumerated.Encode(const derOut: TStream);
@@ -8386,31 +8763,32 @@ class function TDerEnumerated.FromOctetString(const enc: TCryptoLibByteArray)
   : IDerEnumerated;
 var
   LValue: Int32;
-  cached: IDerEnumerated;
+  possibleMatch: IDerEnumerated;
 begin
+  if (System.length(enc) > 1) then
+  begin
+    result := TDerEnumerated.Create(enc);
+    Exit;
+  end;
   if (System.length(enc) = 0) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SZeroLength);
   end;
 
-  if (System.length(enc) = 1) then
+  LValue := enc[0];
+  if (LValue >= System.length(Fcache)) then
   begin
-    LValue := enc[0];
-    if (LValue < System.length(Fcache)) then
-    begin
-      cached := Fcache[LValue];
-      if (cached <> Nil) then
-      begin
-        result := cached;
-        Exit;
-      end;
-      Fcache[LValue] := TDerEnumerated.Create(System.Copy(enc));
-      result := Fcache[LValue];
-      Exit;
-    end;
+    result := TDerEnumerated.Create(enc);
+    Exit;
   end;
 
-  result := TDerEnumerated.Create(System.Copy(enc));
+  possibleMatch := Fcache[LValue];
+  if (possibleMatch = Nil) then
+  begin
+    possibleMatch := TDerEnumerated.Create(enc);
+    Fcache[LValue] := possibleMatch;
+  end;
+  result := possibleMatch;
 end;
 
 class function TDerEnumerated.GetInstance(const obj: TObject): IDerEnumerated;
@@ -8441,9 +8819,30 @@ begin
   result := FromOctetString((o as IAsn1OctetString).GetOctets());
 end;
 
+function TDerEnumerated.GetIntValueExact: Int32;
+var
+  count: Int32;
+begin
+  count := System.length(Fbytes) - FStart;
+  if (count > 4) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes(@SASN1IntegerOutOfRangeError);
+  end;
+
+  result := TDerInteger.IntValue(Fbytes, FStart, TDerInteger.SignExtSigned);
+end;
+
 function TDerEnumerated.GetValue: TBigInteger;
 begin
   result := TBigInteger.Create(Fbytes);
+end;
+
+function TDerEnumerated.HasValue(const x: TBigInteger): Boolean;
+begin
+  result := (x.IsInitialized)
+  // Fast check to avoid allocation
+    and (TDerInteger.IntValue(Fbytes, FStart, TDerInteger.SignExtSigned)
+    = x.Int32Value) and (Value.Equals(x));
 end;
 
 { TDerGraphicString }
@@ -8524,7 +8923,6 @@ begin
       raise EArgumentCryptoLibException.CreateResFmt(@SEncodingError,
         [e.Message]);
     end;
-
   end;
 end;
 
@@ -8762,6 +9160,16 @@ end;
 
 { TDerInteger }
 
+class function TDerInteger.GetAllowUnsafeInteger: Boolean;
+begin
+  result := FAllowUnsafeInteger;
+end;
+
+class procedure TDerInteger.SetAllowUnsafeInteger(const Value: Boolean);
+begin
+  FAllowUnsafeInteger := Value;
+end;
+
 function TDerInteger.GetBytes: TCryptoLibByteArray;
 begin
   result := Fbytes;
@@ -8808,29 +9216,50 @@ begin
   end;
 
   Fbytes := Value.ToByteArray();
+  FStart := 0;
 end;
 
 constructor TDerInteger.Create(Value: Int32);
 begin
   inherited Create();
   Fbytes := TBigInteger.ValueOf(Value).ToByteArray();
+  FStart := 0;
+end;
+
+constructor TDerInteger.Create(Value: Int64);
+begin
+  inherited Create();
+  Fbytes := TBigInteger.ValueOf(Value).ToByteArray();
+  FStart := 0;
 end;
 
 constructor TDerInteger.Create(const bytes: TCryptoLibByteArray);
 begin
-  inherited Create();
-  if (System.length(bytes) > 1) then
+  Create(bytes, True);
+end;
+
+constructor TDerInteger.Create(const bytes: TCryptoLibByteArray;
+  clone: Boolean);
+begin
+  Inherited Create();
+  if (IsMalformed(bytes)) then
   begin
-    if ((bytes[0] = 0) and ((bytes[1] and $80) = 0)) then
-    begin
-      raise EArgumentCryptoLibException.CreateRes(@SMalformedInteger);
-    end;
-    if ((bytes[0] = Byte($FF)) and ((bytes[1] and $80) <> 0)) then
-    begin
-      raise EArgumentCryptoLibException.CreateRes(@SMalformedInteger);
-    end;
+    raise EArgumentCryptoLibException.CreateRes(@SMalformedInteger);
   end;
-  Fbytes := System.Copy(bytes);
+  if clone then
+  begin
+    Fbytes := System.Copy(bytes);
+  end
+  else
+  begin
+    Fbytes := bytes;
+  end;
+  FStart := SignBytesToSkip(bytes);
+end;
+
+class constructor TDerInteger.CreateDerInteger;
+begin
+  FAllowUnsafeInteger := False;
 end;
 
 procedure TDerInteger.Encode(const derOut: TStream);
@@ -8859,6 +9288,33 @@ begin
 
 end;
 
+function TDerInteger.GetIntPositiveValueExact: Int32;
+var
+  count: Int32;
+begin
+  count := System.length(Fbytes) - FStart;
+  if ((count > 4) or ((count = 4) and (0 <> (bytes[FStart] and $80)))) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes
+      (@SASN1IntegerPositiveOutOfRangeError);
+  end;
+
+  result := IntValue(Fbytes, FStart, SignExtUnsigned);
+end;
+
+function TDerInteger.GetIntValueExact: Int32;
+var
+  count: Int32;
+begin
+  count := System.length(Fbytes) - FStart;
+  if (count > 4) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes(@SASN1IntegerOutOfRangeError);
+  end;
+
+  result := IntValue(Fbytes, FStart, SignExtSigned);
+end;
+
 function TDerInteger.GetPositiveValue: TBigInteger;
 begin
   result := TBigInteger.Create(1, Fbytes);
@@ -8867,6 +9323,67 @@ end;
 function TDerInteger.GetValue: TBigInteger;
 begin
   result := TBigInteger.Create(Fbytes);
+end;
+
+function TDerInteger.HasValue(const x: TBigInteger): Boolean;
+begin
+  result := (x.IsInitialized)
+  // Fast check to avoid allocation
+    and (IntValue(Fbytes, FStart, SignExtSigned) = x.Int32Value) and
+    (Value.Equals(x));
+end;
+
+class function TDerInteger.IntValue(const bytes: TCryptoLibByteArray;
+  start, signExt: Int32): Int32;
+var
+  LLength, LPos, LVal: Int32;
+begin
+  LLength := System.length(bytes);
+  LPos := Max(start, LLength - 4);
+
+  LVal := ShortInt(bytes[LPos]) and signExt;
+  System.Inc(LPos);
+  while (LPos < LLength) do
+  begin
+    LVal := (LVal shl 8) or bytes[LPos];
+    System.Inc(LPos);
+  end;
+  result := LVal;
+end;
+
+class function TDerInteger.IsMalformed(const bytes
+  : TCryptoLibByteArray): Boolean;
+begin
+  case System.length(bytes) of
+    0:
+      begin
+        result := True;
+      end;
+    1:
+      begin
+        result := False;
+      end
+  else
+    begin
+      result := (ShortInt(bytes[0]) = (TBits.Asr32(ShortInt(bytes[1]), 7))) and
+        (not AllowUnsafeInteger);
+    end;
+  end;
+end;
+
+class function TDerInteger.SignBytesToSkip(const bytes
+  : TCryptoLibByteArray): Int32;
+var
+  LPos, LLast: Int32;
+begin
+  LPos := 0;
+  LLast := System.length(bytes) - 1;
+  while ((LPos < LLast) and (ShortInt(bytes[LPos])
+    = TBits.Asr32(ShortInt(bytes[LPos + 1]), 7))) do
+  begin
+    System.Inc(LPos);
+  end;
+  result := LPos;
 end;
 
 function TDerInteger.ToString: String;

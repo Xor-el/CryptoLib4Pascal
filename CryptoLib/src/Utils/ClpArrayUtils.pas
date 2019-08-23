@@ -122,12 +122,12 @@ class function TArrayUtils.NoZeroes(const data: TCryptoLibByteArray): Boolean;
 var
   i: Int32;
 begin
-  Result := True;
+  Result := true;
   for i := System.Low(data) to System.High(data) do
   begin
     if data[i] = 0 then
     begin
-      Result := False;
+      Result := false;
       Exit;
     end;
   end;
@@ -190,7 +190,7 @@ class function TArrayUtils.AreEqual(const A, B: TCryptoLibByteArray): Boolean;
 begin
   if System.Length(A) <> System.Length(B) then
   begin
-    Result := False;
+    Result := false;
     Exit;
   end;
 
@@ -215,7 +215,7 @@ class function TArrayUtils.AreEqual(const A, B: TCryptoLibInt32Array): Boolean;
 begin
   if System.Length(A) <> System.Length(B) then
   begin
-    Result := False;
+    Result := false;
     Exit;
   end;
 

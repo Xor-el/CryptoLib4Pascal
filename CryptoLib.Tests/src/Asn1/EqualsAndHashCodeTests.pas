@@ -93,7 +93,7 @@ begin
 
     TDerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
     as IDerPrintableString),
-    //
+
     TBerSequence.Create(TDerPrintableString.Create('hello world')
     as IDerPrintableString),
     TBerSet.Create(TDerPrintableString.Create('hello world')

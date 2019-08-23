@@ -72,6 +72,7 @@ uses
   DigestTests,
   DigestUtilitiesTests,
   DHTests,
+  Asn1IntegerTests,
   CryptoLibTestBase,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,

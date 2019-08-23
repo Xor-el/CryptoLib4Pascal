@@ -37,6 +37,7 @@ type
   EInvalidParameterCryptoLibException = class(ECryptoLibException);
   EIndexOutOfRangeCryptoLibException = class(ECryptoLibException);
   EArgumentCryptoLibException = class(ECryptoLibException);
+  EInvalidArgumentCryptoLibException = class(ECryptoLibException);
   EArgumentNilCryptoLibException = class(ECryptoLibException);
   EArgumentOutOfRangeCryptoLibException = class(ECryptoLibException);
   ENullReferenceCryptoLibException = class(ECryptoLibException);

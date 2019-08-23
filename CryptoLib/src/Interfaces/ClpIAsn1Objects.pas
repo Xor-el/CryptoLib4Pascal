@@ -43,7 +43,7 @@ type
     function GetEncoded(): TCryptoLibByteArray; overload;
     function GetEncoded(const encoding: String): TCryptoLibByteArray; overload;
 
-    function GetDerEncoded(): TCryptoLibByteArray;
+    function GetDerEncoded(): TCryptoLibByteArray; overload;
 
     function Equals(const obj: IAsn1Convertible): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -96,15 +96,26 @@ type
     function GetCount: Int32;
     function GetSelf(Index: Int32): IAsn1Encodable;
 
-    procedure Add(const objs: array of IAsn1Encodable);
+    procedure Add(const objs: array of IAsn1Encodable); overload;
+
+    procedure Add(const element: IAsn1Encodable); overload;
+
+    procedure AddAll(const other: IAsn1EncodableVector);
 
     procedure AddOptional(const objs: array of IAsn1Encodable);
 
+    procedure AddOptionalTagged(isExplicit: Boolean; tagNo: Int32;
+      const obj: IAsn1Encodable);
+
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 
-    property Count: Int32 read GetCount;
+    property count: Int32 read GetCount;
 
     function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
+
+    function CopyElements(): TCryptoLibGenericArray<IAsn1Encodable>;
+
+    function TakeElements(): TCryptoLibGenericArray<IAsn1Encodable>;
 
   end;
 
@@ -208,9 +219,7 @@ type
     function GetCount: Int32;
     function GetParser: IAsn1SequenceParser;
     function GetSelf(Index: Int32): IAsn1Encodable;
-    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
-
-    procedure AddObject(const obj: IAsn1Encodable);
+    function GetElements: TCryptoLibGenericArray<IAsn1Encodable>;
 
     function ToString(): String;
 
@@ -219,7 +228,8 @@ type
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 
     property Parser: IAsn1SequenceParser read GetParser;
-    property Count: Int32 read GetCount;
+    property count: Int32 read GetCount;
+    property Elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
 
   end;
 
@@ -295,7 +305,7 @@ type
     function GetCount: Int32;
     function GetParser: IAsn1SetParser;
     function GetSelf(Index: Int32): IAsn1Encodable;
-    function GetCurrent(const e: IAsn1Encodable): IAsn1Encodable;
+    function GetElements: TCryptoLibGenericArray<IAsn1Encodable>;
 
     function ToString(): String;
 
@@ -306,7 +316,8 @@ type
     property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
 
     property Parser: IAsn1SetParser read GetParser;
-    property Count: Int32 read GetCount;
+    property count: Int32 read GetCount;
+    property Elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
 
   end;
 
@@ -549,9 +560,13 @@ type
 
     function GetValue: TBigInteger;
     function GetBytes: TCryptoLibByteArray;
+    function GetIntValueExact: Int32;
+
+    function HasValue(const x: TBigInteger): Boolean;
 
     property Value: TBigInteger read GetValue;
     property bytes: TCryptoLibByteArray read GetBytes;
+    property IntValueExact: Int32 read GetIntValueExact;
 
   end;
 
@@ -576,11 +591,18 @@ type
     function GetPositiveValue: TBigInteger;
     function GetValue: TBigInteger;
 
+    function GetIntPositiveValueExact: Int32;
+    function GetIntValueExact: Int32;
+
+    function HasValue(const x: TBigInteger): Boolean;
+
     function ToString(): String;
 
     property Value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
     property bytes: TCryptoLibByteArray read GetBytes;
+    property IntPositiveValueExact: Int32 read GetIntPositiveValueExact;
+    property IntValueExact: Int32 read GetIntValueExact;
 
   end;
 

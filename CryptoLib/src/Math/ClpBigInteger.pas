@@ -49,6 +49,8 @@ resourcestring
   SBadCharacterRadix8 = 'Bad Character in radix 8 string: %s';
   SBadCharacterRadix2 = 'Bad Character in radix 2 string: %s';
   SUnSupportedBase = 'Only bases 2, 8, 10, 16 are allowed';
+  SBigIntegerOutOfInt32Range = 'BigInteger out of Int32 range';
+  SBigIntegerOutOfInt64Range = 'BigInteger out of Int64 range';
 
 type
 {$SCOPEDENUMS ON}
@@ -125,6 +127,8 @@ type
     function GetBitCount: Int32; inline;
     function GetInt32Value: Int32; inline;
     function GetInt64Value: Int64; inline;
+    function GetInt32ValueExact: Int32; inline;
+    function GetInt64ValueExact: Int64; inline;
     function GetIsInitialized: Boolean; inline;
     function GetSignValue: Int32; inline;
 
@@ -342,6 +346,8 @@ type
     property IsInitialized: Boolean read GetIsInitialized;
     property Int32Value: Int32 read GetInt32Value;
     property Int64Value: Int64 read GetInt64Value;
+    property Int32ValueExact: Int32 read GetInt32ValueExact;
+    property Int64ValueExact: Int64 read GetInt64ValueExact;
     property SignValue: Int32 read GetSignValue;
 
     class property Zero: TBigInteger read GetZero;
@@ -654,6 +660,24 @@ begin
     Exit;
   end;
 
+end;
+
+function TBigInteger.GetInt32ValueExact: Int32;
+begin
+  if (BitLength > 31) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerOutOfInt32Range);
+  end;
+  Result := Int32Value;
+end;
+
+function TBigInteger.GetInt64ValueExact: Int64;
+begin
+  if (BitLength > 63) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerOutOfInt64Range);
+  end;
+  Result := Int64Value;
 end;
 
 function TBigInteger.GetIsInitialized: Boolean;
