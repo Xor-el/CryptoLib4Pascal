@@ -203,7 +203,7 @@ Available Algorithms
 * - [ ] `NetBSD`
 
 
-* - [ ] `DragonBSD`
+* - [ ] `DragonFlyBSD`
 
 
 
