@@ -157,7 +157,7 @@ type
   /// arc4random_buf</see></description>
   /// </item>
   /// <item>
-  /// <term>DragonFly</term>
+  /// <term>DragonFlyBSD</term>
   /// <description><see href="https://www.dragonflybsd.org/cgi/web-man?command=arc4random&amp;section=3">
   /// arc4random_buf</see></description>
   /// </item>
