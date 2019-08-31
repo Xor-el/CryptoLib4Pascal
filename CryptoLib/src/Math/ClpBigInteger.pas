@@ -63,9 +63,9 @@ type
 type
   TBigInteger = record
 
-  strict private
+  private
 
-  const
+    const
 
     IMASK = Int64($FFFFFFFF);
     UIMASK = UInt64($FFFFFFFF);
