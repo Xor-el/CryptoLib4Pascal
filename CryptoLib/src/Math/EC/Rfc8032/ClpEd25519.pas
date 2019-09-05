@@ -41,6 +41,7 @@ resourcestring
   SDigestError = 'Digest Produced Insufficient Data';
 
 type
+  // -x^2 + y^2 == 1 + 0x52036CEE2B6FFE738CC740797779E89800700A4D4141D8AB75EB4DCA135978A3 * x^2 * y^2
   TEd25519 = class(TInterfacedObject, IEd25519)
 
   strict private
@@ -203,8 +204,8 @@ type
     class procedure Encode56(n: UInt64; const bs: TCryptoLibByteArray;
       off: Int32); static; inline;
 
-    class procedure EncodePoint(var p: TPointAccum;
-      const r: TCryptoLibByteArray; rOff: Int32); static;
+    class function EncodePoint(var p: TPointAccum; const r: TCryptoLibByteArray;
+      rOff: Int32): Int32; static;
 
     class function GetWindow4(const X: TCryptoLibUInt32Array; n: Int32): Int32;
       static; inline;
@@ -309,6 +310,11 @@ type
     class function ConstructCustomByteArrayBufferContext
       (const AData: TCryptoLibByteArray; AIsNil: Boolean; ALength: Int32)
       : TCryptoLibCustomByteArrayBuffer; static; inline;
+
+    class function CheckPoint(const X, Y: TCryptoLibInt32Array): Int32;
+      overload; static;
+    class function CheckPoint(const X, Y, Z: TCryptoLibInt32Array): Int32;
+      overload; static;
 
     class procedure Boot(); static;
     class constructor CreateEd25519();
@@ -685,6 +691,50 @@ begin
     ((not ctx.IsNil) and (ctx.Length < 256));
 end;
 
+class function TEd25519.CheckPoint(const X, Y: TCryptoLibInt32Array): Int32;
+var
+  T, U, V: TCryptoLibInt32Array;
+begin
+  T := TX25519Field.Create();
+  U := TX25519Field.Create();
+  V := TX25519Field.Create();
+
+  TX25519Field.Sqr(X, U);
+  TX25519Field.Sqr(Y, V);
+  TX25519Field.Mul(U, V, T);
+  TX25519Field.Sub(V, U, V);
+  TX25519Field.Mul(T, FC_d, T);
+  TX25519Field.AddOne(T);
+  TX25519Field.Sub(T, V, T);
+  TX25519Field.Normalize(T);
+
+  result := TX25519Field.IsZero(T);
+end;
+
+class function TEd25519.CheckPoint(const X, Y, Z: TCryptoLibInt32Array): Int32;
+var
+  T, U, V, W: TCryptoLibInt32Array;
+begin
+  T := TX25519Field.Create();
+  U := TX25519Field.Create();
+  V := TX25519Field.Create();
+  W := TX25519Field.Create();
+
+  TX25519Field.Sqr(X, U);
+  TX25519Field.Sqr(Y, V);
+  TX25519Field.Sqr(Z, W);
+  TX25519Field.Mul(U, V, T);
+  TX25519Field.Sub(V, U, V);
+  TX25519Field.Mul(V, W, V);
+  TX25519Field.Sqr(W, W);
+  TX25519Field.Mul(T, FC_d, T);
+  TX25519Field.Add(T, W, T);
+  TX25519Field.Sub(T, V, T);
+  TX25519Field.Normalize(T);
+
+  result := TX25519Field.IsZero(T);
+end;
+
 class function TEd25519.CheckPointVar(const p: TCryptoLibByteArray): Boolean;
 var
   T: TCryptoLibUInt32Array;
@@ -769,22 +819,22 @@ end;
 class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
   n: Int32): Int32;
 var
-  w, b: Int32;
+  W, b: Int32;
 begin
-  w := TBits.Asr32(n, 3);
+  W := TBits.Asr32(n, 3);
   b := (n and 7) shl 2;
-  result := (X[w] shr b) and 15;
+  result := (X[W] shr b) and 15;
 end;
 
 class procedure TEd25519.PointLookup(const X: TCryptoLibUInt32Array; n: Int32;
   const table: TCryptoLibInt32Array; var r: TPointExt);
 var
-  w, LSign, abs, i, off, cond: Int32;
+  W, LSign, abs, i, off, cond: Int32;
 begin
-  w := GetWindow4(X, n);
+  W := GetWindow4(X, n);
 
-  LSign := (TBits.Asr32(w, (PrecompTeeth - 1))) xor 1;
-  abs := (w xor -LSign) and PrecompMask;
+  LSign := (TBits.Asr32(W, (PrecompTeeth - 1))) xor 1;
+  abs := (W xor -LSign) and PrecompMask;
 
 {$IFDEF DEBUG}
   System.Assert((LSign = 0) or (LSign = 1));
@@ -879,8 +929,8 @@ begin
   end;
 end;
 
-class procedure TEd25519.EncodePoint(var p: TPointAccum;
-  const r: TCryptoLibByteArray; rOff: Int32);
+class function TEd25519.EncodePoint(var p: TPointAccum;
+  const r: TCryptoLibByteArray; rOff: Int32): Int32;
 var
   X, Y: TCryptoLibInt32Array;
 begin
@@ -892,6 +942,8 @@ begin
   TX25519Field.Mul(p.Y, Y, Y);
   TX25519Field.Normalize(X);
   TX25519Field.Normalize(Y);
+
+  result := CheckPoint(X, Y);
 
   TX25519Field.Encode(Y, r, rOff);
   r[rOff + PointBytes - 1] := r[rOff + PointBytes - 1] or
@@ -921,7 +973,10 @@ var
 begin
   p := TPointAccum.CreatePointAccum();
   ScalarMultBase(k, p);
-  EncodePoint(p, r, rOff);
+  if (EncodePoint(p, r, rOff) = 0) then
+  begin
+    raise EInvalidOperationCryptoLibException.Create('');
+  end;
 end;
 
 procedure TEd25519.GeneratePublicKey(const sk: TCryptoLibByteArray;
@@ -1162,7 +1217,8 @@ begin
 
   EncodePoint(pR, check, 0);
 
-  result := TArrayUtils.ConstantTimeAreEqual(check, r);
+  result := (EncodePoint(pR, check, 0) <> 0) and
+    (TArrayUtils.ConstantTimeAreEqual(check, r));
 end;
 
 class procedure TEd25519.PointAddPrecomp(var p: TPointPrecomp;
@@ -1804,7 +1860,7 @@ var
   n: TCryptoLibUInt32Array;
   table: TCryptoLibInt32Array;
   q: TPointExt;
-  w, c1, c2: Int32;
+  W, c1, c2: Int32;
 begin
   Precompute();
   System.SetLength(n, ScalarUints);
@@ -1838,18 +1894,18 @@ begin
   PointLookup(table, 7, q);
   PointAdd(q, r);
 
-  w := 62;
+  W := 62;
   while (true) do
   begin
-    PointLookup(n, w, table, q);
+    PointLookup(n, W, table, q);
     PointAdd(q, r);
 
     PointDouble(r);
     PointDouble(r);
     PointDouble(r);
 
-    System.Dec(w);
-    if (w < 0) then
+    System.Dec(W);
+    if (W < 0) then
     begin
       break;
     end;
@@ -1862,7 +1918,7 @@ class procedure TEd25519.ScalarMultBase(const k: TCryptoLibByteArray;
   var r: TPointAccum);
 var
   n: TCryptoLibUInt32Array;
-  w, c1, c2: UInt32;
+  W, c1, c2: UInt32;
   i, cOff, b, LSign, abs: Int32;
   p: TPointPrecomp;
 begin
@@ -1895,9 +1951,9 @@ begin
   begin
     for b := 0 to System.Pred(PrecompBlocks) do
     begin
-      w := n[b] shr cOff;
-      LSign := Int32(w shr (PrecompTeeth - 1)) and 1;
-      abs := (Int32(w) xor -LSign) and PrecompMask;
+      W := n[b] shr cOff;
+      LSign := Int32(W shr (PrecompTeeth - 1)) and 1;
+      abs := (Int32(W) xor -LSign) and PrecompMask;
 
 {$IFDEF DEBUG}
       System.Assert((LSign = 0) or (LSign = 1));
@@ -1931,6 +1987,10 @@ begin
 
   p := TPointAccum.CreatePointAccum();
   ScalarMultBase(n, p);
+  if (CheckPoint(p.X, p.Y, p.Z) = 0) then
+  begin
+    raise EInvalidOperationCryptoLibException.Create('');
+  end;
   TX25519Field.Copy(p.Y, 0, Y, 0);
   TX25519Field.Copy(p.Z, 0, Z, 0);
 end;
