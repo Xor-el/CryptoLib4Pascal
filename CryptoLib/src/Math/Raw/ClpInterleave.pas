@@ -37,9 +37,9 @@ type
     class function Expand8to16(x: UInt32): UInt32; static; inline;
     class function Expand16to32(x: UInt32): UInt32; static; inline;
     class function Expand32to64(x: UInt32): UInt64; static;
-    class procedure Expand64To128(x: UInt64; z: TCryptoLibUInt64Array;
+    class procedure Expand64To128(x: UInt64; const z: TCryptoLibUInt64Array;
       zOff: Int32); static;
-    class procedure Expand64To128Rev(x: UInt64; z: TCryptoLibUInt64Array;
+    class procedure Expand64To128Rev(x: UInt64; const z: TCryptoLibUInt64Array;
       zOff: Int32); static;
     class function Shuffle(x: UInt32): UInt32; overload; static;
     class function Shuffle(x: UInt64): UInt64; overload; static;
@@ -90,8 +90,8 @@ begin
   result := ((x shr 1) and M32) shl 32 or (x and M32);
 end;
 
-class procedure TInterleave.Expand64To128(x: UInt64; z: TCryptoLibUInt64Array;
-  zOff: Int32);
+class procedure TInterleave.Expand64To128(x: UInt64;
+  const z: TCryptoLibUInt64Array; zOff: Int32);
 var
   t: UInt64;
 begin
@@ -112,7 +112,7 @@ begin
 end;
 
 class procedure TInterleave.Expand64To128Rev(x: UInt64;
-  z: TCryptoLibUInt64Array; zOff: Int32);
+  const z: TCryptoLibUInt64Array; zOff: Int32);
 var
   t: UInt64;
 begin
