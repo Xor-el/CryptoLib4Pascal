@@ -317,11 +317,10 @@ type
       : Int32; static;
 {$ENDIF}
     // ================================================================//
-
-    class procedure Boot(); static;
     class constructor OSRandom();
 
   public
+    class procedure Boot(); static;
     class procedure GetBytes(const data: TCryptoLibByteArray); static;
     class procedure GetNonZeroBytes(const data: TCryptoLibByteArray); static;
 

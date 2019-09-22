@@ -32,6 +32,7 @@ uses
   ClpIDigest,
   ClpIRandomGenerator,
   ClpRandom,
+  ClpOSRandom,
   ClpDigestUtilities,
   ClpCryptoApiRandomGenerator,
   ClpICryptoApiRandomGenerator,
@@ -324,6 +325,7 @@ begin
     Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);
+    TOSRandom.Boot;
   end;
 end;
 
