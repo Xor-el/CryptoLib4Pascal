@@ -22,7 +22,6 @@ unit ClpIMac;
 interface
 
 uses
-  ClpIDigest,
   ClpICipherParameters,
   ClpCryptoLibTypes;
 
@@ -41,8 +40,6 @@ type
     /// returns the name of the algorithm the MAC implements.
     /// </summary>
     function GetAlgorithmName: string;
-
-    function GetUnderlyingDigest: IDigest;
 
     /// <summary>
     /// the block size for this MAC (in bytes).

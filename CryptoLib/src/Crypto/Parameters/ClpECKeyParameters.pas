@@ -25,15 +25,13 @@ uses
 
   SysUtils,
   ClpECGost3410NamedCurves,
-  ClpCryptoLibTypes,
-  ClpECDomainParameters,
   ClpIECKeyParameters,
-  ClpIX9ECParameters,
   ClpIECDomainParameters,
   ClpIECKeyGenerationParameters,
   ClpAsymmetricKeyParameter,
   ClpECKeyGenerationParameters,
-  ClpISecureRandom;
+  ClpISecureRandom,
+  ClpCryptoLibTypes;
 
 resourcestring
   SAlgorithmNil = 'Algorithm Cannot be Empty';

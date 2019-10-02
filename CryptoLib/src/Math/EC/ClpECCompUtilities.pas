@@ -63,23 +63,23 @@ type
 
     end;
 
-  type
-    TMapPointCallback = class(TInterfacedObject, IPreCompCallback,
-      IMapPointCallback)
-
-    strict private
-    var
-      Fm_wnafPreCompP: IWNafPreCompInfo;
-      Fm_includeNegated: Boolean;
-      Fm_pointMap: IECPointMap;
-
-    public
-      constructor Create(const wnafPreCompP: IWNafPreCompInfo;
-        includeNegated: Boolean; const pointMap: IECPointMap);
-
-      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
-
-    end;
+    // type
+    // TMapPointCallback = class(TInterfacedObject, IPreCompCallback,
+    // IMapPointCallback)
+    //
+    // strict private
+    // var
+    // Fm_wnafPreCompP: IWNafPreCompInfo;
+    // Fm_includeNegated: Boolean;
+    // Fm_pointMap: IECPointMap;
+    //
+    // public
+    // constructor Create(const wnafPreCompP: IWNafPreCompInfo;
+    // includeNegated: Boolean; const pointMap: IECPointMap);
+    //
+    // function Precompute(const existing: IPreCompInfo): IPreCompInfo;
+    //
+    // end;
 
   type
     IWNafCallback = interface(IPreCompCallback)
@@ -886,62 +886,62 @@ begin
     fromWNaf, includeNegated) as IPointMapCallback) as IWNafPreCompInfo;
 end;
 
-{ TWNafUtilities.TMapPointCallback }
-
-constructor TWNafUtilities.TMapPointCallback.Create(const wnafPreCompP
-  : IWNafPreCompInfo; includeNegated: Boolean; const pointMap: IECPointMap);
-begin
-  Inherited Create();
-  Fm_wnafPreCompP := wnafPreCompP;
-  Fm_includeNegated := includeNegated;
-  Fm_pointMap := pointMap;
-end;
-
-function TWNafUtilities.TMapPointCallback.Precompute(const existing
-  : IPreCompInfo): IPreCompInfo;
-var
-  tempResult: IWNafPreCompInfo;
-  twiceP, twiceQ: IECPoint;
-  preCompP, preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
-  i: Int32;
-begin
-  tempResult := TWNafPreCompInfo.Create();
-
-  tempResult.ConfWidth := Fm_wnafPreCompP.ConfWidth;
-
-  twiceP := Fm_wnafPreCompP.Twice;
-  if (twiceP <> Nil) then
-  begin
-    twiceQ := Fm_pointMap.Map(twiceP);
-    tempResult.Twice := twiceQ;
-  end;
-
-  preCompP := Fm_wnafPreCompP.PreComp;
-
-  System.SetLength(preCompQ, System.length(preCompP));
-  for i := 0 to System.Pred(System.length(preCompP)) do
-  begin
-    preCompQ[i] := Fm_pointMap.Map(preCompP[i]);
-  end;
-
-  tempResult.PreComp := preCompQ;
-  tempResult.width := Fm_wnafPreCompP.width;
-
-  if (Fm_includeNegated) then
-  begin
-
-    System.SetLength(preCompNegQ, System.length(preCompQ));
-
-    for i := 0 to System.Pred(System.length(preCompNegQ)) do
-    begin
-      preCompNegQ[i] := preCompQ[i].Negate();
-    end;
-
-    tempResult.PreCompNeg := preCompNegQ;
-  end;
-
-  result := tempResult;
-end;
+// { TWNafUtilities.TMapPointCallback }
+//
+// constructor TWNafUtilities.TMapPointCallback.Create(const wnafPreCompP
+// : IWNafPreCompInfo; includeNegated: Boolean; const pointMap: IECPointMap);
+// begin
+// Inherited Create();
+// Fm_wnafPreCompP := wnafPreCompP;
+// Fm_includeNegated := includeNegated;
+// Fm_pointMap := pointMap;
+// end;
+//
+// function TWNafUtilities.TMapPointCallback.Precompute(const existing
+// : IPreCompInfo): IPreCompInfo;
+// var
+// tempResult: IWNafPreCompInfo;
+// twiceP, twiceQ: IECPoint;
+// preCompP, preCompQ, preCompNegQ: TCryptoLibGenericArray<IECPoint>;
+// i: Int32;
+// begin
+// tempResult := TWNafPreCompInfo.Create();
+//
+// tempResult.ConfWidth := Fm_wnafPreCompP.ConfWidth;
+//
+// twiceP := Fm_wnafPreCompP.Twice;
+// if (twiceP <> Nil) then
+// begin
+// twiceQ := Fm_pointMap.Map(twiceP);
+// tempResult.Twice := twiceQ;
+// end;
+//
+// preCompP := Fm_wnafPreCompP.PreComp;
+//
+// System.SetLength(preCompQ, System.length(preCompP));
+// for i := 0 to System.Pred(System.length(preCompP)) do
+// begin
+// preCompQ[i] := Fm_pointMap.Map(preCompP[i]);
+// end;
+//
+// tempResult.PreComp := preCompQ;
+// tempResult.width := Fm_wnafPreCompP.width;
+//
+// if (Fm_includeNegated) then
+// begin
+//
+// System.SetLength(preCompNegQ, System.length(preCompQ));
+//
+// for i := 0 to System.Pred(System.length(preCompNegQ)) do
+// begin
+// preCompNegQ[i] := preCompQ[i].Negate();
+// end;
+//
+// tempResult.PreCompNeg := preCompNegQ;
+// end;
+//
+// result := tempResult;
+// end;
 
 { TWNafUtilities.TWNafCallback }
 

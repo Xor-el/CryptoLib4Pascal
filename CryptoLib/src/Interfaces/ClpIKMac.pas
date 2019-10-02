@@ -15,34 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIScalarSplitParameters;
+unit ClpIKMac;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger;
+  ClpIMac;
 
 type
-  IScalarSplitParameters = interface(IInterface)
-    ['{C36FF223-C4F3-4483-B280-A50EF95497AF}']
 
-    function GetG1: TBigInteger;
-    function GetG2: TBigInteger;
-    function GetV1A: TBigInteger;
-    function GetV1B: TBigInteger;
-    function GetV2A: TBigInteger;
-    function GetV2B: TBigInteger;
-    function GetBits: Int32;
-
-    property g1: TBigInteger read GetG1;
-    property g2: TBigInteger read GetG2;
-    property V1A: TBigInteger read GetV1A;
-    property V1B: TBigInteger read GetV1B;
-    property V2A: TBigInteger read GetV2A;
-    property V2B: TBigInteger read GetV2B;
-    property bits: Int32 read GetBits;
+  IKMac = interface(IMac)
+    ['{8C0D16C4-80DD-4E8A-8D1D-958AD7C442DD}']
 
   end;
 

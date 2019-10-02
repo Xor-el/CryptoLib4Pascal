@@ -389,6 +389,8 @@ uses
   ClpMultipliers in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas',
   ClpIMultipliers in '..\..\CryptoLib\src\Interfaces\ClpIMultipliers.pas',
   ClpECCompUtilities in '..\..\CryptoLib\src\Math\EC\ClpECCompUtilities.pas',
+  ClpIKMac in '..\..\CryptoLib\src\Interfaces\ClpIKMac.pas',
+  ClpKMac in '..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
@@ -460,6 +462,7 @@ uses
   ScryptTests in '..\src\Crypto\ScryptTests.pas',
   DHTests in '..\src\Crypto\DHTests.pas',
   Asn1IntegerTests in '..\src\Asn1\Asn1IntegerTests.pas',
+  KMacTests in '..\src\Crypto\KMacTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

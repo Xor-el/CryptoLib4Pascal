@@ -379,6 +379,8 @@ uses
   ClpMultipliers in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas',
   ClpIMultipliers in '..\..\CryptoLib\src\Interfaces\ClpIMultipliers.pas',
   ClpECCompUtilities in '..\..\CryptoLib\src\Math\EC\ClpECCompUtilities.pas',
+  ClpIKMac in '..\..\CryptoLib\src\Interfaces\ClpIKMac.pas',
+  ClpKMac in '..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin

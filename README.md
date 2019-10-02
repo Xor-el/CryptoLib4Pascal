@@ -113,6 +113,8 @@ Available Algorithms
 
 * `HMAC (all supported hashes)`
 
+* `KMAC (KMAC128, KMAC256)`
+
 ### Hashes
 ----------------------------------------
 

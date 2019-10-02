@@ -22,12 +22,15 @@ unit ClpIHMac;
 interface
 
 uses
+  ClpIDigest,
   ClpIMac;
 
 type
 
   IHMac = interface(IMac)
     ['{B1182608-04D5-4985-91C8-571C51E07CB5}']
+
+    function GetUnderlyingDigest: IDigest;
 
   end;
 
