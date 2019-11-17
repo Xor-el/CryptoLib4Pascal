@@ -140,9 +140,7 @@ begin
       (@SDsaDigestSignerNotInitializedForSignatureGeneration);
   end;
 
-  System.SetLength(hash, Fdigest.GetDigestSize);
-
-  Fdigest.DoFinal(hash, 0);
+  hash := Fdigest.GetUnderlyingIHash.TransformFinal().GetBytes();
 
   sig := Fdsa.GenerateSignature(hash);
 
@@ -224,9 +222,7 @@ begin
       (@SDsaDigestSignerNotInitializedForVerification);
   end;
 
-  System.SetLength(hash, Fdigest.GetDigestSize);
-
-  Fdigest.DoFinal(hash, 0);
+  hash := Fdigest.GetUnderlyingIHash.TransformFinal().GetBytes();
 
   try
     sig := Fencoding.Decode(GetOrder(), signature);
