@@ -134,7 +134,7 @@ uses
   ClpScalarSplitParameters, ClpIGlvTypeAParameters, ClpIGlvTypeAEndomorphism, 
   ClpIScaleXNegateYPointMap, ClpIScaleYNegateXPointMap, 
   ClpIScalarSplitParameters, ClpECCompUtilities, ClpValidityPreCompInfo, 
-  ClpIValidityPreCompInfo;
+  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac;
 
 implementation
 

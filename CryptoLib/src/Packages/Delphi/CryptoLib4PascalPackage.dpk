@@ -407,6 +407,8 @@ contains
   ClpScalarSplitParameters in '..\..\Math\EC\Endo\ClpScalarSplitParameters.pas',
   ClpMultipliers in '..\..\Math\EC\Multiplier\ClpMultipliers.pas',
   ClpIMultipliers in '..\..\Interfaces\ClpIMultipliers.pas',
-  ClpECCompUtilities in '..\..\Math\EC\ClpECCompUtilities.pas';
+  ClpECCompUtilities in '..\..\Math\EC\ClpECCompUtilities.pas',
+  ClpIKMac in '..\..\Interfaces\ClpIKMac.pas',
+  ClpKMac in '..\..\Crypto\Macs\ClpKMac.pas';
 
 end.

@@ -42,8 +42,8 @@ uses
   ClpSetWeakRef,
   ClpECCurveConstants,
   ClpTnaf,
-  ClpValidityPrecompInfo,
-  ClpIValidityPrecompInfo,
+  ClpValidityPreCompInfo,
+  ClpIValidityPreCompInfo,
   ClpIECC,
   ClpIFiniteField,
   ClpIPreCompInfo;
