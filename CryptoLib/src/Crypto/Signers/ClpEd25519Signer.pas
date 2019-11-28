@@ -55,7 +55,7 @@ type
     function GetAlgorithmName: String; virtual;
 
   public
-    constructor Create();
+    constructor Create(const Ed25519Instance: IEd25519);
     destructor Destroy(); override;
 
     procedure Init(forSigning: Boolean;
@@ -96,11 +96,11 @@ begin
   end;
 end;
 
-constructor TEd25519Signer.Create;
+constructor TEd25519Signer.Create(const Ed25519Instance: IEd25519);
 begin
   Inherited Create();
   FBuffer := TMemoryStream.Create();
-  FEd25519Instance := TEd25519.Create();
+  FEd25519Instance := Ed25519Instance;
 end;
 
 destructor TEd25519Signer.Destroy;

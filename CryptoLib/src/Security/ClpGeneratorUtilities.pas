@@ -23,6 +23,8 @@ interface
 
 uses
   SysUtils,
+  ClpEd25519,
+  ClpIEd25519,
   Generics.Collections,
   ClpECKeyPairGenerator,
   ClpIECKeyPairGenerator,
@@ -35,8 +37,6 @@ uses
   ClpIDHKeyPairGenerator,
   ClpEd25519KeyPairGenerator,
   ClpIEd25519KeyPairGenerator,
-  ClpEd25519Blake2BKeyPairGenerator,
-  ClpIEd25519Blake2BKeyPairGenerator,
   ClpX25519KeyPairGenerator,
   ClpIX25519KeyPairGenerator,
   ClpIAsymmetricCipherKeyPairGenerator,
@@ -409,14 +409,15 @@ begin
 
   if (canonicalName = 'Ed25519') then
   begin
-    result := TEd25519KeyPairGenerator.Create() as IEd25519KeyPairGenerator;
+    result := TEd25519KeyPairGenerator.Create(TEd25519.Create() as IEd25519)
+      as IEd25519KeyPairGenerator;
     Exit;
   end;
 
   if (canonicalName = 'Ed25519Blake2B') then
   begin
-    result := TEd25519Blake2BKeyPairGenerator.Create()
-      as IEd25519Blake2BKeyPairGenerator;
+    result := TEd25519KeyPairGenerator.Create(TEd25519Blake2B.Create()
+      as IEd25519Blake2B) as IEd25519KeyPairGenerator;
     Exit;
   end;
 

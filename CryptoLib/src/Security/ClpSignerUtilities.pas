@@ -39,6 +39,8 @@ uses
   ClpEdECObjectIdentifiers,
   ClpParameterUtilities,
   ClpIAsymmetricKeyParameter,
+  ClpEd25519,
+  ClpIEd25519,
   ClpDsaSigner,
   ClpIDsaSigner,
   ClpECDsaSigner,
@@ -49,12 +51,6 @@ uses
   ClpIEd25519CtxSigner,
   ClpEd25519PhSigner,
   ClpIEd25519PhSigner,
-  ClpEd25519Blake2BSigner,
-  ClpIEd25519Blake2BSigner,
-  ClpEd25519CtxBlake2BSigner,
-  ClpIEd25519CtxBlake2BSigner,
-  ClpEd25519PhBlake2BSigner,
-  ClpIEd25519PhBlake2BSigner,
   ClpISigner,
   ClpISecureRandom,
   ClpIAsn1Objects,
@@ -508,19 +504,20 @@ begin
     begin
       if (mechanism = 'Ed25519Blake2B') then
       begin
-        Result := TEd25519Blake2BSigner.Create() as IEd25519Blake2BSigner;
+        Result := TEd25519Signer.Create(TEd25519Blake2B.Create()
+          as IEd25519Blake2B) as IEd25519Signer;
         Exit;
       end;
       if (mechanism = 'Ed25519ctxBlake2B') then
       begin
-        Result := TEd25519ctxBlake2BSigner.Create(Nil)
-          as IEd25519ctxBlake2BSigner;
+        Result := TEd25519ctxSigner.Create(TEd25519Blake2B.Create()
+          as IEd25519Blake2B, Nil) as IEd25519ctxSigner;
         Exit;
       end;
       if (mechanism = 'Ed25519phBlake2B') then
       begin
-        Result := TEd25519phBlake2BSigner.Create(Nil)
-          as IEd25519phBlake2BSigner;
+        Result := TEd25519phSigner.Create(TEd25519Blake2B.Create()
+          as IEd25519Blake2B, Nil) as IEd25519phSigner;
         Exit;
       end;
     end
@@ -528,17 +525,20 @@ begin
     begin
       if (mechanism = 'Ed25519') then
       begin
-        Result := TEd25519Signer.Create() as IEd25519Signer;
+        Result := TEd25519Signer.Create(TEd25519.Create() as IEd25519)
+          as IEd25519Signer;
         Exit;
       end;
       if (mechanism = 'Ed25519ctx') then
       begin
-        Result := TEd25519ctxSigner.Create(Nil) as IEd25519ctxSigner;
+        Result := TEd25519ctxSigner.Create(TEd25519.Create() as IEd25519, Nil)
+          as IEd25519ctxSigner;
         Exit;
       end;
       if (mechanism = 'Ed25519ph') then
       begin
-        Result := TEd25519phSigner.Create(Nil) as IEd25519phSigner;
+        Result := TEd25519phSigner.Create(TEd25519.Create() as IEd25519, Nil)
+          as IEd25519phSigner;
         Exit;
       end;
     end;

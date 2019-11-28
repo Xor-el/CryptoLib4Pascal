@@ -30,6 +30,7 @@ type
   IEd25519 = interface(IInterface)
     ['{2C6CD9DD-8809-44E6-979D-1EBE465CE9E2}']
 
+    function GetAlgorithmName: String;
     function CreatePreHash(): IDigest;
 
     procedure GeneratePrivateKey(const random: ISecureRandom;
@@ -89,6 +90,14 @@ type
     function VerifyPreHash(const sig: TCryptoLibByteArray; sigOff: Int32;
       const pk: TCryptoLibByteArray; pkOff: Int32;
       const ctx: TCryptoLibByteArray; const ph: IDigest): Boolean; overload;
+
+    property AlgorithmName: String read GetAlgorithmName;
+
+  end;
+
+type
+  IEd25519Blake2B = interface(IEd25519)
+    ['{4EF6C436-D49D-4442-A014-848E08D81BE6}']
 
   end;
 

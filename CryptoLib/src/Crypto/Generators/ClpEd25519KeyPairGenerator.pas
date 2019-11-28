@@ -22,6 +22,7 @@ unit ClpEd25519KeyPairGenerator;
 interface
 
 uses
+  ClpIEd25519,
   ClpAsymmetricCipherKeyPair,
   ClpIEd25519KeyPairGenerator,
   ClpIEd25519PrivateKeyParameters,
@@ -39,8 +40,10 @@ type
   strict private
   var
     FRandom: ISecureRandom;
+    FEd25519Instance: IEd25519;
 
   public
+    constructor Create(const Ed25519Instance: IEd25519);
     procedure Init(const parameters: IKeyGenerationParameters);
 
     function GenerateKeyPair(): IAsymmetricCipherKeyPair;
@@ -51,12 +54,18 @@ implementation
 
 { TEd25519KeyPairGenerator }
 
+constructor TEd25519KeyPairGenerator.Create(const Ed25519Instance: IEd25519);
+begin
+  inherited Create();
+  FEd25519Instance := Ed25519Instance;
+end;
+
 function TEd25519KeyPairGenerator.GenerateKeyPair: IAsymmetricCipherKeyPair;
 var
   privateKey: IEd25519PrivateKeyParameters;
   publicKey: IEd25519PublicKeyParameters;
 begin
-  privateKey := TEd25519PrivateKeyParameters.Create(FRandom);
+  privateKey := TEd25519PrivateKeyParameters.Create(FEd25519Instance, FRandom);
   publicKey := privateKey.GeneratePublicKey();
   result := TAsymmetricCipherKeyPair.Create(publicKey, privateKey);
 end;

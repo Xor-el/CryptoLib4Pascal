@@ -35,10 +35,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SEOFInPrivateKey = 'EOF encountered in middle of Ed25519 private key';
+  SEOFInPrivateKey = 'EOF encountered in middle of %s private key';
   SUnsupportedAlgorithm = 'Unsupported Algorithm';
-  SCtxNotNil = 'Ctx must be Nil for Ed25519 Algorithm';
-  SMsgLen = 'MsgLen must be Equal to "PreHashSize" for Ed25519ph Algorithm';
+  SCtxNotNil = 'Ctx must be Nil for %s Algorithm';
+  SMsgLen = 'MsgLen must be Equal to "PreHashSize" for %sph Algorithm';
 
 type
   TEd25519PrivateKeyParameters = class sealed(TAsymmetricKeyParameter,
@@ -55,9 +55,12 @@ type
     KeySize = Int32(TEd25519.SecretKeySize);
     SignatureSize = Int32(TEd25519.SignatureSize);
 
-    constructor Create(const random: ISecureRandom); overload;
-    constructor Create(const buf: TCryptoLibByteArray; off: Int32); overload;
-    constructor Create(input: TStream); overload;
+    constructor Create(const Ed25519Instance: IEd25519;
+      const random: ISecureRandom); overload;
+    constructor Create(const Ed25519Instance: IEd25519;
+      const buf: TCryptoLibByteArray; off: Int32); overload;
+    constructor Create(const Ed25519Instance: IEd25519;
+      input: TStream); overload;
 
     procedure Encode(const buf: TCryptoLibByteArray; off: Int32); inline;
     function GetEncoded(): TCryptoLibByteArray; inline;
@@ -94,31 +97,34 @@ begin
   result := System.Copy(FData);
 end;
 
-constructor TEd25519PrivateKeyParameters.Create(const random: ISecureRandom);
+constructor TEd25519PrivateKeyParameters.Create(const Ed25519Instance: IEd25519;
+  const random: ISecureRandom);
 begin
   Inherited Create(true);
   System.SetLength(FData, KeySize);
-  FEd25519Instance := TEd25519.Create();
+  FEd25519Instance := Ed25519Instance;
   FEd25519Instance.GeneratePrivateKey(random, FData);
 end;
 
-constructor TEd25519PrivateKeyParameters.Create(const buf: TCryptoLibByteArray;
-  off: Int32);
+constructor TEd25519PrivateKeyParameters.Create(const Ed25519Instance: IEd25519;
+  const buf: TCryptoLibByteArray; off: Int32);
 begin
   Inherited Create(true);
   System.SetLength(FData, KeySize);
-  FEd25519Instance := TEd25519.Create();
+  FEd25519Instance := Ed25519Instance;
   System.Move(buf[off], FData[0], KeySize * System.SizeOf(Byte));
 end;
 
-constructor TEd25519PrivateKeyParameters.Create(input: TStream);
+constructor TEd25519PrivateKeyParameters.Create(const Ed25519Instance: IEd25519;
+  input: TStream);
 begin
   Inherited Create(true);
   System.SetLength(FData, KeySize);
-  FEd25519Instance := TEd25519.Create();
+  FEd25519Instance := Ed25519Instance;
   if (KeySize <> TStreamUtils.ReadFully(input, FData)) then
   begin
-    raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPrivateKey);
+    raise EEndOfStreamCryptoLibException.CreateResFmt(@SEOFInPrivateKey,
+      [FEd25519Instance.AlgorithmName]);
   end;
 end;
 
@@ -175,7 +181,8 @@ begin
       begin
         if (ctx <> Nil) then
         begin
-          raise EArgumentCryptoLibException.CreateRes(@SCtxNotNil);
+          raise EArgumentCryptoLibException.CreateResFmt(@SCtxNotNil,
+            [FEd25519Instance.AlgorithmName]);
         end;
 
         FEd25519Instance.Sign(FData, 0, pk, 0, msg, msgOff, msgLen,
@@ -192,7 +199,8 @@ begin
       begin
         if (TEd25519.PreHashSize <> msgLen) then
         begin
-          raise EArgumentCryptoLibException.CreateRes(@SMsgLen);
+          raise EArgumentCryptoLibException.CreateResFmt(@SMsgLen,
+            [FEd25519Instance.AlgorithmName]);
         end;
 
         FEd25519Instance.SignPrehash(FData, 0, pk, 0, ctx, msg, msgOff,

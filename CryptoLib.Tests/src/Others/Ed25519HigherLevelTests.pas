@@ -36,6 +36,7 @@ uses
   ClpISecureRandom,
   ClpISigner,
   ClpEd25519,
+  ClpIEd25519,
   ClpEd25519Signer,
   ClpIEd25519Signer,
   ClpEd25519CtxSigner,
@@ -44,12 +45,8 @@ uses
   ClpIEd25519PhSigner,
   ClpIEd25519PrivateKeyParameters,
   ClpIEd25519PublicKeyParameters,
-  ClpIEd25519Blake2BPrivateKeyParameters,
-  ClpIEd25519Blake2BPublicKeyParameters,
   ClpEd25519PrivateKeyParameters,
   ClpEd25519PublicKeyParameters,
-  ClpEd25519Blake2BPrivateKeyParameters,
-  ClpEd25519Blake2BPublicKeyParameters,
   ClpIAsymmetricCipherKeyPair,
   ClpAsymmetricCipherKeyPair,
   ClpEd25519KeyPairGenerator,
@@ -119,11 +116,14 @@ function TTestEd25519HigherLevel.CreateSigner
 begin
   case algorithm of
     TEd25519.TEd25519Algorithm.Ed25519:
-      Result := TEd25519Signer.Create() as IEd25519Signer;
+      Result := TEd25519Signer.Create(TEd25519.Create() as IEd25519)
+        as IEd25519Signer;
     TEd25519.TEd25519Algorithm.Ed25519ctx:
-      Result := TEd25519CtxSigner.Create(context) as IEd25519CtxSigner;
+      Result := TEd25519CtxSigner.Create(TEd25519.Create() as IEd25519, context)
+        as IEd25519CtxSigner;
     TEd25519.TEd25519Algorithm.Ed25519ph:
-      Result := TEd25519PhSigner.Create(context) as IEd25519PhSigner;
+      Result := TEd25519PhSigner.Create(TEd25519.Create() as IEd25519, context)
+        as IEd25519PhSigner;
   else
     begin
       raise EArgumentCryptoLibException.Create('algorithm');
@@ -167,8 +167,7 @@ begin
       end;
     TTestEd25519HigherLevel.TEd25519SignerAlgorithm.Ed25519Blake2B:
       begin
-        LKey := (LKeyPair.Private as IEd25519Blake2BPrivateKeyParameters)
-          .GetEncoded();
+        LKey := (LKeyPair.Private as IEd25519PrivateKeyParameters).GetEncoded();
         if not AreEqual(LKey, System.Copy(LSk, 0, 32)) then
         begin
           Fail(Format
@@ -176,8 +175,7 @@ begin
             [id, EncodeHex(LSk), EncodeHex(LKey)]));
         end;
 
-        LKey := (LKeyPair.Public as IEd25519Blake2BPublicKeyParameters)
-          .GetEncoded();
+        LKey := (LKeyPair.Public as IEd25519PublicKeyParameters).GetEncoded();
         if not AreEqual(LKey, System.Copy(LPk, 0, 64)) then
         begin
           Fail(Format
@@ -227,7 +225,7 @@ var
   algorithmName: String;
   tempRand: Int32;
 begin
-  kpg := TEd25519KeyPairGenerator.Create();
+  kpg := TEd25519KeyPairGenerator.Create(TEd25519.Create() as IEd25519);
   kpg.Init(TEd25519KeyGenerationParameters.Create(FRandom)
     as IEd25519KeyGenerationParameters);
 
@@ -300,16 +298,16 @@ begin
         Result := TAsymmetricCipherKeyPair.Create
           (TEd25519PublicKeyParameters.Create(pk, 0)
           as IEd25519PublicKeyParameters,
-          TEd25519PrivateKeyParameters.Create(sk, 0)
-          as IEd25519PrivateKeyParameters);
+          TEd25519PrivateKeyParameters.Create(TEd25519.Create() as IEd25519, sk,
+          0) as IEd25519PrivateKeyParameters);
       end;
     TTestEd25519HigherLevel.TEd25519SignerAlgorithm.Ed25519Blake2B:
       begin
         Result := TAsymmetricCipherKeyPair.Create
-          (TEd25519Blake2BPublicKeyParameters.Create(pk, 0)
-          as IEd25519Blake2BPublicKeyParameters,
-          TEd25519Blake2BPrivateKeyParameters.Create(sk, 0)
-          as IEd25519Blake2BPrivateKeyParameters);
+          (TEd25519PublicKeyParameters.Create(pk, 0)
+          as IEd25519PublicKeyParameters,
+          TEd25519PrivateKeyParameters.Create(TEd25519Blake2B.Create()
+          as IEd25519Blake2B, sk, 0) as IEd25519PrivateKeyParameters);
       end
   else
     begin

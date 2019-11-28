@@ -55,7 +55,8 @@ type
     function GetAlgorithmName: String; virtual;
 
   public
-    constructor Create(const context: TCryptoLibByteArray);
+    constructor Create(const Ed25519Instance: IEd25519;
+      const context: TCryptoLibByteArray);
     destructor Destroy(); override;
 
     procedure Init(forSigning: Boolean;
@@ -82,12 +83,13 @@ begin
   FPreHash.BlockUpdate(buf, off, len);
 end;
 
-constructor TEd25519PhSigner.Create(const context: TCryptoLibByteArray);
+constructor TEd25519PhSigner.Create(const Ed25519Instance: IEd25519;
+  const context: TCryptoLibByteArray);
 begin
   Inherited Create();
   FContext := System.Copy(context);
   FEd25519Instance := TEd25519.Create();
-  FPreHash := FEd25519Instance.CreatePreHash();
+  FPreHash := Ed25519Instance.CreatePreHash();
 end;
 
 destructor TEd25519PhSigner.Destroy;

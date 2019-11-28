@@ -322,6 +322,7 @@ type
 
   strict protected
 
+    function GetAlgorithmName: String; virtual;
     function CreateDigest(): IDigest; virtual;
 
   public
@@ -404,6 +405,21 @@ type
 
   class procedure ScalarMult(const k: TCryptoLibByteArray; var p: TPointAffine;
     var r: TPointAccum); static;
+
+  property AlgorithmName: String read GetAlgorithmName;
+
+  end;
+
+type
+  TEd25519Blake2B = class sealed(TEd25519, IEd25519Blake2B)
+
+  strict protected
+
+    function GetAlgorithmName: String; override;
+    function CreateDigest(): IDigest; override;
+
+  public
+    constructor Create();
 
   end;
 
@@ -814,6 +830,11 @@ begin
   TX25519Field.Copy(table, off, r.Z, 0);
   off := off + TX25519Field.SIZE;
   TX25519Field.Copy(table, off, r.T, 0);
+end;
+
+function TEd25519.GetAlgorithmName: String;
+begin
+  result := 'Ed25519';
 end;
 
 class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
@@ -2262,6 +2283,23 @@ begin
   result := Default (TPointAffine);
   result.Fx := TX25519Field.Create();
   result.Fy := TX25519Field.Create();
+end;
+
+{ TEd25519Blake2B }
+
+constructor TEd25519Blake2B.Create;
+begin
+  Inherited Create();
+end;
+
+function TEd25519Blake2B.CreateDigest: IDigest;
+begin
+  result := TDigestUtilities.GetDigest('BLAKE2B-512');
+end;
+
+function TEd25519Blake2B.GetAlgorithmName: String;
+begin
+  result := 'Ed25519Blake2B';
 end;
 
 end.

@@ -56,7 +56,8 @@ type
     function GetAlgorithmName: String; virtual;
 
   public
-    constructor Create(const context: TCryptoLibByteArray);
+    constructor Create(const Ed25519Instance: IEd25519;
+      const context: TCryptoLibByteArray);
     destructor Destroy(); override;
 
     procedure Init(forSigning: Boolean;
@@ -97,12 +98,13 @@ begin
   end;
 end;
 
-constructor TEd25519CtxSigner.Create(const context: TCryptoLibByteArray);
+constructor TEd25519CtxSigner.Create(const Ed25519Instance: IEd25519;
+  const context: TCryptoLibByteArray);
 begin
   Inherited Create();
   FBuffer := TMemoryStream.Create();
   FContext := System.Copy(context);
-  FEd25519Instance := TEd25519.Create();
+  FEd25519Instance := Ed25519Instance;
 end;
 
 destructor TEd25519CtxSigner.Destroy;
@@ -113,7 +115,7 @@ end;
 
 function TEd25519CtxSigner.GetAlgorithmName: String;
 begin
-  Result := 'Ed25519ctx';
+  Result := 'Ed25519Ctx';
 end;
 
 procedure TEd25519CtxSigner.Init(forSigning: Boolean;
