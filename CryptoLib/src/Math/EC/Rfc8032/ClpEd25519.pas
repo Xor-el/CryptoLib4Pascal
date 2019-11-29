@@ -345,7 +345,7 @@ type
     const k: TCryptoLibByteArray); inline;
 
   procedure GeneratePublicKey(const sk: TCryptoLibByteArray; skOff: Int32;
-    pk: TCryptoLibByteArray; pkOff: Int32);
+    pk: TCryptoLibByteArray; pkOff: Int32); virtual;
 
   class procedure Precompute(); static;
 
