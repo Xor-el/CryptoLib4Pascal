@@ -28,11 +28,12 @@ type
   TCheck = class sealed(TObject)
 
   public
-    class procedure DataLength(condition: Boolean; const msg: String); overload;
+    class procedure DataLength(condition: Boolean; const msg: String);
+      overload; inline;
     class procedure DataLength(const buf: TCryptoLibByteArray; off, len: Int32;
-      const msg: String); overload;
+      const msg: String); overload; inline;
     class procedure OutputLength(const buf: TCryptoLibByteArray;
-      off, len: Int32; const msg: String); overload;
+      off, len: Int32; const msg: String); overload; inline;
 
   end;
 
