@@ -126,7 +126,7 @@ uses
   ClpScalarSplitParameters, ClpIGlvTypeAParameters, ClpIGlvTypeAEndomorphism, 
   ClpIScaleXNegateYPointMap, ClpIScaleYNegateXPointMap, 
   ClpIScalarSplitParameters, ClpECCompUtilities, ClpValidityPreCompInfo, 
-  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac;
+  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac, ClpMultipliers;
 
 implementation
 
