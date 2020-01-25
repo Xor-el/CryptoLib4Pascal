@@ -132,7 +132,7 @@ Available Algorithms
 
  * `Gost3411-2012 (256, 512)`
 
- * `RIPEMD (128, 256, 256, 320)`
+ * `RIPEMD (128, 160, 256, 256, 320)`
 
  * `Tiger`
 
