@@ -4070,7 +4070,6 @@ constructor TECPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create();
-  // Fm_curve := curve;
   TSetWeakRef.SetWeakReference(@Fm_curve, curve);
   Fm_x := x;
   Fm_y := y;

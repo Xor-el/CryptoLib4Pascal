@@ -394,20 +394,22 @@ class function TWNafUtilities.ResizeTable
   (const a: TCryptoLibGenericArray<IECPoint>; length: Int32)
   : TCryptoLibGenericArray<IECPoint>;
 begin
-  result := System.Copy(a);
-  System.SetLength(result, length);
+  Result := a;
+  System.SetLength(Result, length);
 end;
 
 class function TWNafUtilities.Trim(const a: TCryptoLibInt32Array; length: Int32)
   : TCryptoLibInt32Array;
 begin
-  result := System.Copy(a, 0, length);
+  Result := a;
+  System.SetLength(Result, length);
 end;
 
 class function TWNafUtilities.Trim(const a: TCryptoLibByteArray; length: Int32)
   : TCryptoLibByteArray;
 begin
-  result := System.Copy(a, 0, length);
+  Result := a;
+  System.SetLength(Result, length);
 end;
 
 class procedure TWNafUtilities.Boot;
@@ -436,23 +438,23 @@ begin
     System.Inc(w);
   end;
 
-  result := Max(2, Min(maxWidth, w + 2));
+  Result := Max(2, Min(maxWidth, w + 2));
 end;
 
 class function TWNafUtilities.GetWindowSize(bits: Int32;
   const windowSizeCutoffs: array of Int32): Int32;
 begin
-  result := GetWindowSize(bits, windowSizeCutoffs, MAX_WIDTH);
+  Result := GetWindowSize(bits, windowSizeCutoffs, MAX_WIDTH);
 end;
 
 class function TWNafUtilities.GetWindowSize(bits, maxWidth: Int32): Int32;
 begin
-  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, maxWidth);
+  Result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, maxWidth);
 end;
 
 class function TWNafUtilities.GetWindowSize(bits: Int32): Int32;
 begin
-  result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, MAX_WIDTH);
+  Result := GetWindowSize(bits, DEFAULT_WINDOW_SIZE_CUTOFFS, MAX_WIDTH);
 end;
 
 class procedure TWNafUtilities.ConfigureBasepoint(const p: IECPoint);
@@ -496,7 +498,7 @@ begin
   end;
   if (k.SignValue = 0) then
   begin
-    result := FEMPTY_INTS;
+    Result := FEMPTY_INTS;
     Exit;
   end;
 
@@ -547,7 +549,7 @@ begin
     naf := Trim(naf, length);
   end;
 
-  result := naf;
+  Result := naf;
 end;
 
 class function TWNafUtilities.GenerateCompactWindowNaf(width: Int32;
@@ -561,7 +563,7 @@ begin
   LK := k;
   if (width = 2) then
   begin
-    result := GenerateCompactNaf(LK);
+    Result := GenerateCompactNaf(LK);
     Exit;
   end;
 
@@ -575,7 +577,7 @@ begin
   end;
   if (LK.SignValue = 0) then
   begin
-    result := FEMPTY_INTS;
+    Result := FEMPTY_INTS;
     Exit;
   end;
 
@@ -632,7 +634,7 @@ begin
     wnaf := Trim(wnaf, length);
   end;
 
-  result := wnaf;
+  Result := wnaf;
 end;
 
 class function TWNafUtilities.GenerateJsf(const g, h: TBigInteger)
@@ -707,7 +709,7 @@ begin
     jsf := Trim(jsf, j);
   end;
 
-  result := jsf;
+  Result := jsf;
 end;
 
 class function TWNafUtilities.GenerateNaf(const k: TBigInteger)
@@ -719,7 +721,7 @@ var
 begin
   if (k.SignValue = 0) then
   begin
-    result := FEMPTY_BYTES;
+    Result := FEMPTY_BYTES;
     Exit;
   end;
 
@@ -752,7 +754,7 @@ begin
 
   naf[digits - 1] := 1;
 
-  result := naf;
+  Result := naf;
 end;
 
 class function TWNafUtilities.GenerateWindowNaf(width: Int32;
@@ -766,7 +768,7 @@ begin
   LK := k;
   if (width = 2) then
   begin
-    result := GenerateNaf(LK);
+    Result := GenerateNaf(LK);
     Exit;
   end;
 
@@ -776,7 +778,7 @@ begin
   end;
   if (LK.SignValue = 0) then
   begin
-    result := FEMPTY_BYTES;
+    Result := FEMPTY_BYTES;
     Exit;
   end;
 
@@ -833,7 +835,7 @@ begin
     wnaf := Trim(wnaf, length);
   end;
 
-  result := wnaf;
+  Result := wnaf;
 end;
 
 class function TWNafUtilities.GetNafWeight(const k: TBigInteger): Int32;
@@ -842,20 +844,20 @@ var
 begin
   if (k.SignValue = 0) then
   begin
-    result := 0;
+    Result := 0;
     Exit;
   end;
 
   _3k := k.ShiftLeft(1).Add(k);
   diff := _3k.&Xor(k);
 
-  result := diff.BitCount;
+  Result := diff.BitCount;
 end;
 
 class function TWNafUtilities.GetWNafPreCompInfo(const preCompInfo
   : IPreCompInfo): IWNafPreCompInfo;
 begin
-  result := preCompInfo as IWNafPreCompInfo;
+  Result := preCompInfo as IWNafPreCompInfo;
 end;
 
 class function TWNafUtilities.GetWNafPreCompInfo(const p: IECPoint)
@@ -864,13 +866,13 @@ var
   preCompInfo: IPreCompInfo;
 begin
   preCompInfo := p.Curve.GetPreCompInfo(p, PRECOMP_NAME);
-  result := GetWNafPreCompInfo(preCompInfo);
+  Result := GetWNafPreCompInfo(preCompInfo);
 end;
 
 class function TWNafUtilities.Precompute(const p: IECPoint; minWidth: Int32;
   includeNegated: Boolean): IWNafPreCompInfo;
 begin
-  result := p.Curve.Precompute(p, PRECOMP_NAME,
+  Result := p.Curve.Precompute(p, PRECOMP_NAME,
     TWNafCallback.Create(p, minWidth, includeNegated) as IWNafCallback)
     as IWNafPreCompInfo;
 end;
@@ -882,7 +884,7 @@ var
   c: IECCurve;
 begin
   c := p.Curve;
-  result := c.Precompute(p, PRECOMP_NAME, TPointMapCallback.Create(p, pointMap,
+  Result := c.Precompute(p, PRECOMP_NAME, TPointMapCallback.Create(p, pointMap,
     fromWNaf, includeNegated) as IPointMapCallback) as IWNafPreCompInfo;
 end;
 
@@ -948,14 +950,14 @@ end;
 class function TWNafUtilities.TWNafCallback.CheckTable
   (const table: TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
 begin
-  result := (table <> Nil) and (System.length(table) >= reqLen);
+  Result := (table <> Nil) and (System.length(table) >= reqLen);
 end;
 
 class function TWNafUtilities.TWNafCallback.CheckExisting(const existingWNaf
   : IWNafPreCompInfo; width, reqPreCompLen: Int32;
   includeNegated: Boolean): Boolean;
 begin
-  result := (existingWNaf <> Nil) and
+  Result := (existingWNaf <> Nil) and
     (existingWNaf.width >= Max(existingWNaf.ConfWidth, width))
 
     and CheckTable(existingWNaf.PreComp, reqPreCompLen) and
@@ -993,7 +995,7 @@ begin
   if (CheckExisting(existingWNaf, width, reqPreCompLen, Fm_includeNegated)) then
   begin
     existingWNaf.DecrementPromotionCountdown;
-    result := existingWNaf;
+    Result := existingWNaf;
     Exit;
   end;
 
@@ -1144,7 +1146,7 @@ begin
   tempRes.Twice := twiceP;
   tempRes.width := width;
 
-  result := tempRes;
+  Result := tempRes;
 end;
 
 { TWNafUtilities.TBasePointCallback }
@@ -1173,7 +1175,7 @@ begin
   if ((existingWNaf <> Nil) and (existingWNaf.ConfWidth = FConfWidth)) then
   begin
     existingWNaf.PromotionCountdown := 0;
-    result := existingWNaf;
+    Result := existingWNaf;
     Exit;
   end;
 
@@ -1189,7 +1191,7 @@ begin
     tempResult.Twice := existingWNaf.Twice;
     tempResult.width := existingWNaf.width;
   end;
-  result := tempResult;
+  Result := tempResult;
 end;
 
 { TWNafUtilities.TPointMapCallback }
@@ -1197,14 +1199,14 @@ end;
 class function TWNafUtilities.TPointMapCallback.CheckTable
   (const table: TCryptoLibGenericArray<IECPoint>; reqLen: Int32): Boolean;
 begin
-  result := ((table <> Nil) and (System.length(table) >= reqLen));
+  Result := ((table <> Nil) and (System.length(table) >= reqLen));
 end;
 
 class function TWNafUtilities.TPointMapCallback.CheckExisting(const existingWNaf
   : IWNafPreCompInfo; width, reqPreCompLen: Int32;
   includeNegated: Boolean): Boolean;
 begin
-  result := ((existingWNaf <> Nil) and (existingWNaf.width >= width) and
+  Result := ((existingWNaf <> Nil) and (existingWNaf.width >= width) and
     (CheckTable(existingWNaf.PreComp, reqPreCompLen)) and
     ((not includeNegated) or (CheckTable(existingWNaf.PreCompNeg,
     reqPreCompLen))));
@@ -1244,7 +1246,7 @@ begin
   if (CheckExisting(existingWNaf, width, reqPreCompLen, FIncludeNegated)) then
   begin
     existingWNaf.DecrementPromotionCountdown;
-    result := existingWNaf;
+    Result := existingWNaf;
     Exit;
   end;
 
@@ -1284,7 +1286,7 @@ begin
     tempResult.PreCompNeg := LpreCompNeg;
   end;
 
-  result := tempResult;
+  Result := tempResult;
 end;
 
 { TEndoUtilities }
@@ -1306,11 +1308,11 @@ begin
 
   if negative then
   begin
-    result := b.Negate();
+    Result := b.Negate();
   end
   else
   begin
-    result := b;
+    Result := b;
   end;
 end;
 
@@ -1328,7 +1330,7 @@ begin
   a := k.Subtract((b1.Multiply(p.V1A)).Add(b2.Multiply(p.V2A)));
   b := (b1.Multiply(p.V1B)).Add(b2.Multiply(p.V2B)).Negate();
 
-  result := TCryptoLibGenericArray<TBigInteger>.Create(a, b);
+  Result := TCryptoLibGenericArray<TBigInteger>.Create(a, b);
 end;
 
 class function TEndoUtilities.MapPoint(const endomorphism: IECEndomorphism;
@@ -1341,7 +1343,7 @@ begin
   PreComp := c.Precompute(p, PRECOMP_NAME, TEndoCallback.Create(endomorphism, p)
     as IEndoCallback) as IEndoPreCompInfo;
 
-  result := PreComp.MappedPoint;
+  Result := PreComp.MappedPoint;
 end;
 
 { TEndoUtilities.TEndoCallback }
@@ -1349,7 +1351,7 @@ end;
 class function TEndoUtilities.TEndoCallback.CheckExisting(const existingEndo
   : IEndoPreCompInfo; const endomorphism: IECEndomorphism): Boolean;
 begin
-  result := ((existingEndo <> Nil) and
+  Result := ((existingEndo <> Nil) and
     (existingEndo.endomorphism = endomorphism) and
     (existingEndo.MappedPoint <> Nil));
 end;
@@ -1381,7 +1383,7 @@ begin
 
   if (CheckExisting(existingEndo, Fendomorphism)) then
   begin
-    result := existingEndo;
+    Result := existingEndo;
     Exit;
   end;
 
@@ -1390,7 +1392,7 @@ begin
   tempResult := TEndoPreCompInfo.Create() as IEndoPreCompInfo;
   tempResult.endomorphism := Fendomorphism;
   tempResult.MappedPoint := MappedPoint;
-  result := tempResult as IPreCompInfo;
+  Result := tempResult as IPreCompInfo;
 end;
 
 { TFixedPointUtilities }
@@ -1398,13 +1400,13 @@ end;
 class function TFixedPointUtilities.TFixedPointCallback.CheckTable
   (const table: IECLookupTable; n: Int32): Boolean;
 begin
-  result := (table <> Nil) and (table.Size >= n);
+  Result := (table <> Nil) and (table.Size >= n);
 end;
 
 class function TFixedPointUtilities.TFixedPointCallback.CheckExisting
   (const existingFP: IFixedPointPreCompInfo; n: Int32): Boolean;
 begin
-  result := (existingFP <> Nil) and CheckTable(existingFP.LookupTable, n);
+  Result := (existingFP <> Nil) and CheckTable(existingFP.LookupTable, n);
 end;
 
 class function TFixedPointUtilities.GetCombSize(const c: IECCurve): Int32;
@@ -1414,18 +1416,18 @@ begin
   Order := c.Order;
   if (not(Order.IsInitialized)) then
   begin
-    result := c.FieldSize + 1;
+    Result := c.FieldSize + 1;
   end
   else
   begin
-    result := Order.BitLength;
+    Result := Order.BitLength;
   end;
 end;
 
 class function TFixedPointUtilities.GetFixedPointPreCompInfo(const preCompInfo
   : IPreCompInfo): IFixedPointPreCompInfo;
 begin
-  result := preCompInfo as IFixedPointPreCompInfo;
+  Result := preCompInfo as IFixedPointPreCompInfo;
 end;
 
 class function TFixedPointUtilities.Precompute(const p: IECPoint)
@@ -1435,7 +1437,7 @@ var
 begin
   c := p.Curve;
 
-  result := c.Precompute(p, PRECOMP_NAME, TFixedPointCallback.Create(p)
+  Result := c.Precompute(p, PRECOMP_NAME, TFixedPointCallback.Create(p)
     as IFixedPointCallback) as IFixedPointPreCompInfo;
 end;
 
@@ -1480,7 +1482,7 @@ begin
 
   if (CheckExisting(existingFP, n)) then
   begin
-    result := existingFP;
+    Result := existingFP;
     Exit;
   end;
 
@@ -1528,7 +1530,7 @@ begin
     System.length(LookupTable));
   tempResult.Offset := pow2Table[minWidth];
   tempResult.width := minWidth;
-  result := tempResult;
+  Result := tempResult;
 end;
 
 end.
