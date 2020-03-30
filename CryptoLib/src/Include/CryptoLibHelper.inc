@@ -25,6 +25,10 @@
    {$MESSAGE ERROR 'This Library requires FreePascal 3.0.4 or higher.'}
 {$IFEND}
 
+{$IF FPC_FULLVERSION > 30004}
+   {$DEFINE FPC_GREATER_THAN_3.0.4}
+{$IFEND}
+
 {$IF FPC_FULLVERSION >= 30301}
    {$DEFINE HAS_VOLATILE}
 {$IFEND}
