@@ -1,0 +1,7 @@
+{
+    "app" : "CryptoLib.Samples",
+    "lib" : "CryptoLib",
+    "tst" : "CryptoLib.Tests",
+    "opt" : "-Fu../src/*/;"
+    "pkg" : [],
+}

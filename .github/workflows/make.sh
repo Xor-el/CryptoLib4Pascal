@@ -17,19 +17,22 @@ EOF
 
 function priv_lazbuild
 (
+    mapfile -t < "${0//sh/json}"
     declare -rA VAR=(
-        [src]='CryptoLib.Samples'
-        [use]='CryptoLib'
-        [pkg]='CryptoLib/components.txt'
+        [app]=$(jq --raw-output --exit-status '.app' <<< "${MAPFILE[@]}")
+        [lib]=$(jq --raw-output --exit-status '.lib' <<< "${MAPFILE[@]}")
+        [tst]=$(jq --raw-output --exit-status '.tst' <<< "${MAPFILE[@]}")
+        [opt]=$(jq --raw-output --exit-status '.opt' <<< "${MAPFILE[@]}")
     )
-    if ! [[ -d "${VAR[src]}" ]]; then
-        printf '\x1b[31m\tSource do not find!\x1b[0m\n'
+    if ! [[ -d "${VAR[app]}" ]]; then
+        printf '\x1b[32m\t[%s] did not find!\x1b[0m\n' "${VAR[app]}"
         exit 1
-    fi
+    fi >&2
     if [[ -f '.gitmodules' ]]; then
         git submodule update --init --recursive --force --remote &
     fi
     if ! (command -v lazbuild); then
+        # shellcheck source=/dev/null
         source '/etc/os-release'
         case ${ID:?} in
             debian | ubuntu)
@@ -37,33 +40,44 @@ function priv_lazbuild
                 sudo apt-get install -y lazarus{-ide-qt5,} &
                 ;;
         esac
-    fi
+    fi &>/dev/null
     wait
-    if [[ -d "${VAR[use]}" ]]; then
-        if [[ -f "${VAR[pkg]}" ]]; then
-            while read -r; do
-                if [[ -n "${REPLY}" ]] &&
-                    ! [[ -d "${VAR[use]}/${REPLY}" ]] &&
-                    ! (lazbuild --verbose-pkgsearch "${REPLY}") &&
-                    ! (lazbuild --add-package "${REPLY}"); then
-                        (
-                            declare -A TMP=(
-                                [url]="https://packages.lazarus-ide.org/${REPLY}.zip"
-                                [dir]="${VAR[use]}/${REPLY}"
-                                [out]=$(mktemp)
-                            )
-                            wget --quiet --output-document "${TMP[out]}" "${TMP[url]}"
-                            unzip -o "${TMP[out]}" -d "${TMP[dir]}"
-                            rm --verbose "${TMP[out]}"
-                        ) &
-                    fi
-            done < "${VAR[pkg]}"
-            wait
-        fi
-        find "${VAR[use]}" -type 'f' -name '*.lpk' -printf '\033[33m\tadd package link\t%p\033[0m\n' -exec \
-            lazbuild --add-package-link {} + 1>&2
+    while read -r; do
+        (
+            declare -rA TMP=(
+                [url]="https://packages.lazarus-ide.org/${REPLY}.zip"
+                [dir]="${HOME}/.lazarus/onlinepackagemanager/packages/${REPLY}"
+                [out]=$(mktemp)
+            )
+            if ! [[ -d "${TMP[dir]}" ]] &&
+               ! (lazbuild --verbose-pkgsearch "${REPLY}") &&
+               ! (lazbuild --add-package "${REPLY}"); then
+                    wget --quiet --output-document "${TMP[out]}" "${TMP[url]}"
+                    mkdir --parents "${TMP[dir]}"
+                    unzip -o "${TMP[out]}" -d "${TMP[dir]}"
+                    rm --verbose "${TMP[out]}"
+                    find "${TMP[dir]}" -type 'f' -name '*.lpk' -printf '\033[33m\tadd package link\t%p\033[0m\n' -exec \
+                        lazbuild --add-package-link {} + >&2
+            fi
+        ) &
+    done < <(jq --raw-output --exit-status '.pkg[]' <<< "${MAPFILE[@]}")
+    wait
+    if [[ -d "${VAR[lib]}" ]]; then
+        find "${VAR[lib]}" -type 'f' -name '*.lpk' -printf '\033[33m\tadd package link\t%p\033[0m\n' -exec \
+            lazbuild --add-package-link {} + >&2
     fi
-    declare -i errors=0
+    declare -i exitCode=0
+    if [[ -f "${VAR[tst]}" ]]; then
+        declare -A TMP=(
+            [tst]=$(
+                lazbuild --build-all --recursive --no-write-project "${VAR[tst]}" |
+                    awk '/Linking/{print $3}'
+            )
+        )
+        if ! ("${TMP[tst]}" --all --format=plain --progress >&2); then
+            ((exitCode+=1))
+        fi
+    fi
     while read -r; do
         declare -A TMP=(
             [out]=$(mktemp)
@@ -74,11 +88,11 @@ function priv_lazbuild
         else
             printf '\x1b[31m\t[%s]\t%s\x1b[0m\n' "${?}" "${REPLY}"
             grep --color='always' --extended-regexp '(Error|Fatal):' "${TMP[out]}"
-            ((errors+=1))
-        fi 1>&2
+            ((exitCode+=1))
+        fi >&2
         rm "${TMP[out]}"
-    done < <(find "${VAR[src]}" -type 'f' -name '*.lpi' | sort)
-    exit "${errors}"
+    done < <(find "${VAR[app]}" -type 'f' -name '*.lpi')
+    exit "${exitCode}"
 )
 
 function priv_main
