@@ -2,5 +2,6 @@
     "app" : "CryptoLib.Samples",
     "lib" : "CryptoLib",
     "tst" : "CryptoLibConsole.Tests.lpi",
-    "pkg" : [],
+    "pkg" : [
+    ]
 }
