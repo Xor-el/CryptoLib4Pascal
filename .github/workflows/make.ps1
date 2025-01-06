@@ -69,21 +69,24 @@ Function Build-Project {
     }
     Exit $(Switch (Test-Path -Path $Var.tst) {
         true {
-            ((Get-ChildItem -Filter '*.lpk' -Recurse -File –Path $Var.tst).FullName |
-                ForEach-Object {
-                    $Env:INSTANTFPC = $VAR.opt
-                    $Output = (& instantfpc $_ --all --format=plain)
-                    $exitCode = Switch ($LastExitCode) {
-                        0 {0}
-                        Default {
-                            $Output | Out-Host
-                            1
-                        }
+            $Output = (
+                & lazbuild --build-all --recursive --no-write-project $VAR.tst |
+                    Where-Object {
+                        $_.Contains('Linking')
+                    } | ForEach-Object {
+                        $_.Split(' ')[2].Replace('bin', 'bin\.')
                     }
-                    Return $exitCode
-                } | Measure-Object -Sum
-            ).Sum
-        }
+            )
+            $Output = (& $Output --all --format=plain --progress)
+            $exitCode = Switch ($LastExitCode) {
+                0 {0}
+                Default {
+                    1
+                }
+            }
+            $Output | Out-Host
+            Return $exitCode
+K        }
         Default {0}
     }) + (
         (Get-ChildItem -Filter '*.lpi' -Recurse -File –Path $Var.app).FullName |
