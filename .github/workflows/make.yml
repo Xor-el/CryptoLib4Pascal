@@ -35,5 +35,5 @@ jobs:
       shell: bash
       run: |
         set -xeuo pipefail
-        sudo bash -c 'apt-get update; apt-get install -y lazarus yt-dlp' >/dev/null
+        sudo bash -c 'apt-get update; apt-get install -y lazarus' >/dev/null
         instantfpc -Fu/usr/lib/lazarus/*/components/lazutils .github/workflows/make.pas
