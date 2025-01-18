@@ -56,6 +56,6 @@ jobs:
         (Get-Command 'lazbuild').Source | Out-Host
         $Env:PATH+=';C:\Lazarus\fpc\3.2.2\bin\x86_64-win64'
         (Get-Command 'instantfpc').Source | Out-Host
-        instantfpc '-FuC:\Lazarus\components\lazutils' .github/workflows/make.pas
+        instantfpc '-FuC:\Lazarus\components\lazutils' .github/workflows/make.pas build
         (Get-Command 'delp').Source | Out-Host
         delp -r $Pwd.Path
