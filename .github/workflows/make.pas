@@ -1,6 +1,6 @@
 program Make;
 {$mode objfpc}{$H+}
-
+{$unitpath /usr/lib64/lazarus/components/lazutils}
 uses
   Classes,
   SysUtils,
@@ -14,8 +14,8 @@ uses
   Process;
 
 const
-  Target: string = '.';
-  Dependencies: array of string = ();
+  Target: string = 'CryptoLib.Tests';
+  Dependencies: array of string = ('HashLib', 'SimpleBaseLib');
 
 type
   TLog = (audit, info, error);
@@ -39,32 +39,23 @@ type
     if FileExists('.gitmodules') then
       if RunCommand('git', ['submodule', 'update', '--init', '--recursive',
         '--force', '--remote'], Result) then
-        OutLog(info, Result);
+        OutLog(info, Result)
+      else
+        OutLog(error, Result);
   end;
 
   function AddPackage(const Path: string): string;
   begin
-    with TRegExpr.Create do
-    begin
-      Expression :=
-        {$IFDEF MSWINDOWS}
-        '(cocoa|x11|_template)'
-      {$ELSE}
-        '(cocoa|gdi|_template)'
-      {$ENDIF}
-      ;
-      if not Exec(Path) and RunCommand('lazbuild', ['--add-package-link', Path],
-        Result) then
-        OutLog(audit, '    ' + Path);
-      Free;
-    end;
+    if RunCommand('lazbuild', ['--add-package-link', Path], Result) then
+       OutLog(audit, 'Add package:'#9 + Path);
   end;
 
   function SelectString(const Input, Reg: string): string;
   var
     Line: string;
   begin
-    for Line in SplitString(Input, LineEnding) do
+    Result := ' ';
+    for Line in Input.Split(LineEnding) do
       with TRegExpr.Create do
       begin
         Expression := Reg;
@@ -74,38 +65,35 @@ type
       end;
   end;
 
+  function RunTest(const Path: String): string;
+  begin
+    OutLog(audit, #9'run:'#9 + Path);
+    if RunCommand(Path, ['--all', '--format=plain'], Result) then
+      OutLog(info, #9'success!')
+    else
+    begin
+      ExitCode += 1;
+      OutLog(error, Result);
+    end;
+  end;
+
   function BuildProject(const Path: string): Output;
   begin
-    OutLog(audit, 'Build from ' + Path);
+    OutLog(audit, 'Build from:'#9 + Path);
     Result.Success := RunCommand('lazbuild',
       ['--build-all', '--recursive', '--no-write-project', Path], Result.Output);
     Result.Output := SelectString(Result.Output, '(Fatal:|Error:|Linking)');
     if Result.Success then
     begin
-      Result.Output := SplitString(Result.Output, ' ')[2];
-      OutLog(info, '   to ' + Result.Output);
+      Result.Output := Result.Output.Split(' ')[3].Replace(LineEnding, '');
+      OutLog(info, #9'to:'#9 + Result.Output);
+      if ContainsStr(ReadFileToString(Path.Replace('.lpi', '.lpr')), 'consoletestrunner') then
+        RunTest(Result.Output.Replace(#10, ''));
     end
     else
     begin
       ExitCode += 1;
       OutLog(error, Result.Output);
-    end;
-  end;
-
-  function RunTest(Path: string): Output;
-  begin
-    Result := BuildProject(Path);
-    if Result.Success then
-    begin
-      Path := Result.Output;
-      OutLog(audit, 'run ' + Path);
-      if not RunCommand(Path, ['--all', '--format=plain'], Result.Output) then
-      begin
-        ExitCode += 1;
-        OutLog(error, Result.Output);
-      end
-      else
-        OutLog(info, '    success!');
     end;
   end;
 
@@ -139,7 +127,7 @@ type
         OutputPath := ZipPath;
         Examine;
         UnZipAllFiles;
-        OutLog(audit, 'Unzip from ' + ZipFile + ' to ' + ZipPath);
+        OutLog(audit, 'Unzip from'#9 + ZipFile + #9'to'#9 + ZipPath);
         DeleteFile(ZipFile);
       finally
         Free;
@@ -163,35 +151,27 @@ type
     end;
   end;
 
-  procedure BuildAll;
+  function BuildAll: string;
   var
-    Each: string;
     List: TStringList;
   begin
     CheckModules;
     List := FindAllFiles(GetCurrentDir, '*.lpk', True);
     try
-      for Each in Dependencies do
-        List.AddStrings(FindAllFiles(InstallOPM(Each), '*.lpk', True));
-      if List.Count <> 0 then
-        OutLog(audit, 'Add packages: ' + IntToStr(List.Count));
-      for Each in List do
-        AddPackage(Each);
+      for Result in Dependencies do
+        List.AddStrings(FindAllFiles(InstallOPM(Result), '*.lpk', True));
+      for Result in List do
+        AddPackage(Result);
       List := FindAllFiles(Target, '*.lpi', True);
-      for Each in List do
-        if not ContainsStr(Each, 'zengl') then
-          if ContainsStr(ReadFileToString(ReplaceStr(Each, '.lpi', '.lpr')),
-            'consoletestrunner') then
-            RunTest(Each)
-          else
-            BuildProject(Each);
+      for Result in List do
+        BuildProject(Result);
     finally
       List.Free;
     end;
     case ExitCode of
-      0: OutLog(info, 'Errors: ' + IntToStr(ExitCode));
+      0: OutLog(info, 'Errors:'#9 + IntToStr(ExitCode));
       else
-        OutLog(error, 'Errors: ' + IntToStr(ExitCode));
+        OutLog(error, 'Errors:'#9 + IntToStr(ExitCode));
     end;
   end;
 

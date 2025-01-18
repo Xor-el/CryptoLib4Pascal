@@ -38,7 +38,8 @@ jobs:
       run: |
         set -xeuo pipefail
         sudo bash -c 'apt-get update; apt-get install -y lazarus' >/dev/null
-        instantfpc -Fu/usr/lib/lazarus/*/components/lazutils .github/workflows/make.pas build
+        instantfpc -Fu/usr/lib/lazarus/*/components/lazutils \
+          -B .github/workflows/make.pas build
         delp -r "${PWD}"
 
     - name: Build on Windows
@@ -56,4 +57,5 @@ jobs:
         $Env:PATH+=';C:\Lazarus\fpc\3.2.2\bin\x86_64-win64'
         (Get-Command 'instantfpc').Source | Out-Host
         instantfpc '-FuC:\Lazarus\components\lazutils' .github/workflows/make.pas
+        (Get-Command 'delp').Source | Out-Host
         delp -r $Pwd.Path
