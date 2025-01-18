@@ -176,10 +176,10 @@ type
   end;
 
 begin
-  if ParamCount <> 0 then
-    case ParamStr(1) of
-      'build': BuildAll;
-      else
-        OutLog(audit, 'Nothing!');
-    end;
+  try
+    BuildAll
+  except
+    on E: Exception do
+      Writeln(E.ClassName, #9, E.Message);
+  end;
 end.
