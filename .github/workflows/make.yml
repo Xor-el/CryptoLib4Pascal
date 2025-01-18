@@ -38,7 +38,7 @@ jobs:
       run: |
         set -xeuo pipefail
         sudo bash -c 'apt-get update; apt-get install -y lazarus' >/dev/null
-        instantfpc -Fu/usr/lib/lazarus/*/components/lazutils .github/workflows/make.pas
+        instantfpc -Fu/usr/lib/lazarus/*/components/lazutils .github/workflows/make.pas build
         delp -r "${PWD}"
 
     - name: Build on Windows
