@@ -18,20 +18,31 @@ const
   Dependencies: array of string = ();
 
 type
+  TLog = (audit, info, error);
+
   Output = record
-    Code: boolean;
-    Output: ansistring;
+    Success: boolean;
+    Output: string;
   end;
 
-  function CheckModules: Output;
+  procedure OutLog(const Knd: TLog; const Msg: string);
+  begin
+    case Knd of
+      error: Writeln(stderr, #27'[31m', Msg, #27'[0m');
+      info: Writeln(stderr, #27'[32m', Msg, #27'[0m');
+      audit: Writeln(stderr, #27'[33m', Msg, #27'[0m');
+    end;
+  end;
+
+  function CheckModules: string;
   begin
     if FileExists('.gitmodules') then
       if RunCommand('git', ['submodule', 'update', '--init', '--recursive',
-        '--force', '--remote'], Result.Output) then
-        Writeln(stderr, #27'[33m', Result.Output, #27'[0m');
+        '--force', '--remote'], Result) then
+        OutLog(info, Result);
   end;
 
-  function AddPackage(Path: string): Output;
+  function AddPackage(const Path: string): string;
   begin
     with TRegExpr.Create do
     begin
@@ -43,72 +54,100 @@ type
       {$ENDIF}
       ;
       if not Exec(Path) and RunCommand('lazbuild', ['--add-package-link', Path],
-        Result.Output) then
-        Writeln(stderr, #27'[33m', 'added ', Path, #27'[0m');
+        Result) then
+        OutLog(audit, '    ' + Path);
       Free;
     end;
   end;
 
-  function BuildProject(Path: string): Output;
+  function SelectString(const Input, Reg: string): string;
   var
     Line: string;
   begin
-    Write(stderr, #27'[33m', 'build from ', Path, #27'[0m');
-    try
-      Result.Code := RunCommand('lazbuild', ['--build-all', '--recursive',
-        '--no-write-project', Path], Result.Output);
-      if Result.Code then
-        for Line in SplitString(Result.Output, LineEnding) do
-        begin
-          if ContainsStr(Line, 'Linking') then
-          begin
-            Result.Output := SplitString(Line, ' ')[2];
-            Writeln(stderr, #27'[32m', ' to ', Result.Output, #27'[0m');
-            break;
-          end;
-        end
-      else
+    for Line in SplitString(Input, LineEnding) do
+      with TRegExpr.Create do
       begin
-        ExitCode += 1;
-        for Line in SplitString(Result.Output, LineEnding) do
-          with TRegExpr.Create do
-          begin
-            Expression := '(Fatal|Error):';
-            if Exec(Line) then
-            begin
-              WriteLn(stderr);
-              Writeln(stderr, #27'[31m', Line, #27'[0m');
-            end;
-            Free;
-          end;
+        Expression := Reg;
+        if Exec(Line) then
+          Result += Line + LineEnding;
+        Free;
       end;
-    except
-      on E: Exception do
-        WriteLn(stderr, 'Error: ' + E.ClassName + #13#10 + E.Message);
+  end;
+
+  function BuildProject(const Path: string): Output;
+  begin
+    OutLog(audit, 'Build from ' + Path);
+    Result.Success := RunCommand('lazbuild',
+      ['--build-all', '--recursive', '--no-write-project', Path], Result.Output);
+    Result.Output := SelectString(Result.Output, '(Fatal:|Error:|Linking)');
+    if Result.Success then
+    begin
+      Result.Output := SplitString(Result.Output, ' ')[2];
+      OutLog(info, '   to ' + Result.Output);
+    end
+    else
+    begin
+      ExitCode += 1;
+      OutLog(error, Result.Output);
     end;
   end;
 
   function RunTest(Path: string): Output;
-  var
-    Temp: string;
   begin
     Result := BuildProject(Path);
-    Temp:= Result.Output;
-    if Result.Code then
-        try
-          if not RunCommand(Temp, ['--all', '--format=plain', '--progress'], Result.Output) then
-            ExitCode += 1;
-          WriteLn(stderr, Result.Output);
-        except
-          on E: Exception do
-            WriteLn(stderr, 'Error: ' + E.ClassName + #13#10 + E.Message);
-        end;
+    if Result.Success then
+    begin
+      Path := Result.Output;
+      OutLog(audit, 'run ' + Path);
+      if not RunCommand(Path, ['--all', '--format=plain'], Result.Output) then
+      begin
+        ExitCode += 1;
+        OutLog(error, Result.Output);
+      end
+      else
+        OutLog(info, '    success!');
+    end;
   end;
 
-  function AddOPM(Each: string): string;
+  function DownloadFile(const Uri: string): string;
   var
-    TempFile, Url: string;
-    Zip: TStream;
+    OutFile: TStream;
+  begin
+    InitSSLInterface;
+    Result := GetTempFileName;
+    OutFile := TFileStream.Create(Result, fmCreate or fmOpenWrite);
+    with TFPHttpClient.Create(nil) do
+    begin
+      try
+        AddHeader('User-Agent', 'Mozilla/5.0 (compatible; fpweb)');
+        AllowRedirect := True;
+        Get(Uri, OutFile);
+        OutLog(audit, 'Download from ' + Uri + ' to ' + Result);
+      finally
+        Free;
+        OutFile.Free;
+      end;
+    end;
+  end;
+
+  procedure UnZip(const ZipFile, ZipPath: string);
+  begin
+    with TUnZipper.Create do
+    begin
+      try
+        FileName := ZipFile;
+        OutputPath := ZipPath;
+        Examine;
+        UnZipAllFiles;
+        OutLog(audit, 'Unzip from ' + ZipFile + ' to ' + ZipPath);
+        DeleteFile(ZipFile);
+      finally
+        Free;
+      end;
+    end;
+  end;
+
+  function InstallOPM(const Path: string): string;
   begin
     Result :=
       {$IFDEF MSWINDOWS}
@@ -116,83 +155,51 @@ type
       {$ELSE}
       GetEnvironmentVariable('HOME') + '/.lazarus/onlinepackagemanager/packages/'
       {$ENDIF}
-      + Each;
-    TempFile := GetTempFileName;
-    Url := 'https://packages.lazarus-ide.org/' + Each + '.zip';
+      + Path;
     if not DirectoryExists(Result) then
     begin
-      Zip := TFileStream.Create(TempFile, fmCreate or fmOpenWrite);
-      with TFPHttpClient.Create(nil) do
-      begin
-        try
-          AddHeader('User-Agent', 'Mozilla/5.0 (compatible; fpweb)');
-          AllowRedirect := True;
-          Get(Url, Zip);
-          WriteLn(stderr, 'Download from ', Url, ' to ', TempFile);
-        finally
-          Free;
-        end;
-      end;
-      Zip.Free;
       CreateDir(Result);
-      with TUnZipper.Create do
-      begin
-        try
-          FileName := TempFile;
-          OutputPath := Result;
-          Examine;
-          UnZipAllFiles;
-          WriteLn(stderr, 'Unzip from ', TempFile, ' to ', Result);
-        finally
-          Free;
-        end;
-      end;
-      DeleteFile(TempFile);
+      UnZip(DownloadFile('https://packages.lazarus-ide.org/' + Path + '.zip'), Result);
     end;
   end;
 
-  function Main: Output;
+  procedure BuildAll;
   var
-    Each, Item: string;
+    Each: string;
     List: TStringList;
   begin
     CheckModules;
-    InitSSLInterface;
-    for Each in Dependencies do
-    begin
-      List := FindAllFiles(AddOPM(Each), '*.lpk', True);
-      try
-        for Item in List do
-          AddPackage(Item);
-      finally
-        List.Free;
-      end;
-    end;
     List := FindAllFiles(GetCurrentDir, '*.lpk', True);
     try
+      for Each in Dependencies do
+        List.AddStrings(FindAllFiles(InstallOPM(Each), '*.lpk', True));
+      if List.Count <> 0 then
+        OutLog(audit, 'Add packages: ' + IntToStr(List.Count));
       for Each in List do
         AddPackage(Each);
-    finally
-      List.Free;
-    end;
-    List := FindAllFiles(Target, '*.lpi', True);
-    try
+      List := FindAllFiles(Target, '*.lpi', True);
       for Each in List do
-        if ContainsStr(ReadFileToString(ReplaceStr(Each, '.lpi', '.lpr')),
-          'consoletestrunner') then
-          RunTest(Each)
-        else
-          BuildProject(Each);
+        if not ContainsStr(Each, 'zengl') then
+          if ContainsStr(ReadFileToString(ReplaceStr(Each, '.lpi', '.lpr')),
+            'consoletestrunner') then
+            RunTest(Each)
+          else
+            BuildProject(Each);
     finally
       List.Free;
     end;
-    WriteLn(stderr);
-    if ExitCode <> 0 then
-      WriteLn(stderr, #27'[31m', 'Errors: ', ExitCode, #27'[0m')
-    else
-      WriteLn(stderr, #27'[32m', 'Errors: ', ExitCode, #27'[0m');
+    case ExitCode of
+      0: OutLog(info, 'Errors: ' + IntToStr(ExitCode));
+      else
+        OutLog(error, 'Errors: ' + IntToStr(ExitCode));
+    end;
   end;
 
 begin
-  Main;
+  if ParamCount <> 0 then
+    case ParamStr(1) of
+      'build': BuildAll;
+      else
+        OutLog(audit, 'Nothing!');
+    end;
 end.
