@@ -33,6 +33,7 @@ jobs:
         submodules: true
 
     - name: Build on Linux
+      if: runner.os == 'Linux'
       shell: bash
       run: |
         set -xeuo pipefail
