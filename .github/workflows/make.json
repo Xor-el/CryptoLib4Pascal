@@ -1,7 +1,0 @@
-{
-    "app" : "CryptoLib.Samples",
-    "lib" : "CryptoLib",
-    "tst" : "CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.Tests.lpi",
-    "pkg" : [
-    ]
-}
