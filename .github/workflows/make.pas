@@ -71,10 +71,8 @@ type
     if RunCommand(Path, ['--all', '--format=plain'], Result) then
       OutLog(info, #9'success!')
     else
-    begin
       ExitCode += 1;
-      OutLog(error, Result);
-    end;
+    OutLog(error, Result);
   end;
 
   function BuildProject(const Path: string): Output;
