@@ -72,7 +72,7 @@ type
       OutLog(info, #9'success!')
     else
       ExitCode += 1;
-    OutLog(error, Result);
+    OutLog(audit, Result);
   end;
 
   function BuildProject(const Path: string): Output;
