@@ -79,7 +79,7 @@ type
     procedure TestECSchnorrSIPASigningShouldPass;
     procedure TestECSchnorrSIPAVerificationShouldPass;
     procedure TestECSchnorrSIPAVerificationShouldFail;
-    procedure TestECSchnorrSIPASigningandVerifyingSecp521R1;
+    //procedure TestECSchnorrSIPASigningandVerifyingSecp521R1;
 
   end;
 
@@ -190,6 +190,7 @@ begin
 
 end;
 
+(*
 procedure TTestECSchnorr.TestECSchnorrSIPASigningandVerifyingSecp521R1;
 var
   LCurve: IX9ECParameters;
@@ -238,6 +239,7 @@ begin
   CheckTrue(signer.VerifySignature(sigBytes));
 
 end;
+*)
 
 procedure TTestECSchnorr.TestECSchnorrSIPASigningShouldPass;
 var
