@@ -43,6 +43,8 @@ type
 
   public
 
+    destructor Destroy; override;
+
     property Endomorphism: IECEndomorphism read GetEndomorphism
       write SetEndomorphism;
     property MappedPoint: IECPoint read GetMappedPoint write SetMappedPoint;
@@ -51,6 +53,13 @@ type
 implementation
 
 { TEndoPreCompInfo }
+
+destructor TEndoPreCompInfo.Destroy;
+begin
+  FEndomorphism := nil;
+  FMappedPoint := nil;
+  inherited;
+end;
 
 function TEndoPreCompInfo.GetEndomorphism: IECEndomorphism;
 begin

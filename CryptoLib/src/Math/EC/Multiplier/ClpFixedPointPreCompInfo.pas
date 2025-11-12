@@ -64,6 +64,7 @@ type
 
   public
     constructor Create();
+    destructor Destroy; override;
     property Offset: IECPoint read GetOffset write SetOffset;
     property LookupTable: IECLookupTable read GetLookupTable
       write SetLookupTable;
@@ -79,6 +80,13 @@ constructor TFixedPointPreCompInfo.Create;
 begin
   inherited Create();
   Fm_width := -1;
+end;
+
+destructor TFixedPointPreCompInfo.Destroy;
+begin
+  Fm_offset := nil;
+  Fm_lookupTable := nil;
+  inherited;
 end;
 
 function TFixedPointPreCompInfo.GetLookupTable: IECLookupTable;

@@ -201,7 +201,7 @@ type
 implementation
 
 uses
-  ClpECAlgorithms; // included here to avoid circular dependency :)
+  ClpECAlgorithms;
 
 { TAbstractECMultiplier }
 
@@ -466,9 +466,6 @@ begin
 
   result := R;
 
-  info.preComp := Nil; // Review
-  info.preCompNeg := Nil; // Review
-
 end;
 
 { TWTauNafMultiplier }
@@ -533,8 +530,6 @@ begin
     q := q.TauPow(tauCount);
   end;
   result := q;
-
-  pre.preComp := Nil; // Review
 
 end;
 
@@ -606,12 +601,11 @@ var
   tempResult: IWTauNafPreCompInfo;
 begin
 
-  // Review uncomment
-  // if (Supports(existing, IWTauNafPreCompInfo)) then
-  // begin
-  // result := existing;
-  // Exit;
-  // end;
+   if (Supports(existing, IWTauNafPreCompInfo)) then
+   begin
+     result := existing;
+     Exit;
+   end;
 
   tempResult := TWTauNafPreCompInfo.Create();
   tempResult.preComp := TTnaf.GetPreComp(Fm_p, Fm_a);

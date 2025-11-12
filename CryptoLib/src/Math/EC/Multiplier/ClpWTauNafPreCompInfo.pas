@@ -50,6 +50,8 @@ type
     Fm_preComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
 
   public
+    destructor Destroy; override;
+
     property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp
       write SetPreComp;
   end;
@@ -57,6 +59,19 @@ type
 implementation
 
 { TWTauNafPreCompInfo }
+
+destructor TWTauNafPreCompInfo.Destroy;
+var
+  i: Integer;
+begin
+  if Assigned(Fm_preComp) then
+  begin
+    for i := 0 to Length(Fm_preComp) - 1 do
+      Fm_preComp[i] := nil;
+    Fm_preComp := nil;
+  end;
+  inherited;
+end;
 
 function TWTauNafPreCompInfo.GetPreComp
   : TCryptoLibGenericArray<IAbstractF2mPoint>;

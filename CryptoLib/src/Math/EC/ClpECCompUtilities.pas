@@ -1041,7 +1041,7 @@ begin
       curPreCompLen := iniPreCompLen;
       if (curPreCompLen = 0) then
       begin
-        PreComp[0] := Fm_p;
+        PreComp[0] := Fm_p.Clone();
         curPreCompLen := 1;
       end;
 
