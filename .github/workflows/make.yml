@@ -47,16 +47,17 @@ jobs:
           $ErrorActionPreference = 'stop'
           Set-PSDebug -Strict
 
-          Write-Host "Installing Lazarus and OpenSSL via Chocolatey..."
+          Write-Host "Installing Lazarus and OpenSSL 1.1 via Chocolatey..."
           choco upgrade chocolatey -y
           choco install lazarus -y
-          choco install openssl -y
+          choco install openssl.light -y
 
           Write-Host "Verifying installed packages..."
           choco list
 
-          # Lazarus installs to C:\Lazarus by default via Chocolatey
-          $env:Path += ';C:\Lazarus;C:\Lazarus\fpc\3.2.2\bin\x86_64-win64;C:\Program Files\OpenSSL-Win64\bin'
+          # Lazarus installs to C:\Lazarus by default
+          # Add Lazarus and OpenSSL paths for instantfpc
+          $env:Path += ';C:\Lazarus;C:\Lazarus\fpc\3.2.2\bin\x86_64-win64;C:\ProgramData\chocolatey\lib\openssl.light\tools'
 
           Write-Host "Checking lazbuild and instantfpc availability..."
           Get-Command lazbuild
