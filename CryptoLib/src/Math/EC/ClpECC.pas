@@ -44,6 +44,10 @@ uses
   ClpTnaf,
   ClpValidityPreCompInfo,
   ClpIValidityPreCompInfo,
+  ClpIWNafPreCompInfo,
+  ClpIEndoPreCompInfo,
+  ClpIWTauNafPreCompInfo,
+  ClpIFixedPointPreCompInfo,
   ClpIECC,
   ClpIFiniteField,
   ClpIPreCompInfo;
@@ -722,6 +726,8 @@ type
     constructor Create(const points: TCryptoLibGenericArray<IECPoint>;
       off, len: Int32);
 
+    destructor Destroy; override;
+
     function Lookup(index: Int32): IECPoint; override;
     function LookupVar(index: Int32): IECPoint; override;
 
@@ -743,6 +749,8 @@ type
   public
     constructor Create(const outer: IECCurve; const table: TCryptoLibByteArray;
       Size: Int32);
+
+      destructor Destroy; override;
 
     function Lookup(index: Int32): IECPoint; override;
     function LookupVar(index: Int32): IECPoint; override;
@@ -780,6 +788,8 @@ type
   public
     constructor Create(const outer: IF2mCurve;
       const table: TCryptoLibInt64Array; Size: Int32);
+
+    destructor Destroy; override;
 
     function Lookup(index: Int32): IECPoint; override;
     function LookupVar(index: Int32): IECPoint; override;
@@ -1221,6 +1231,8 @@ type
     function TwicePlus(const b: IECPoint): IECPoint; virtual;
 
     function ThreeTimes(): IECPoint; virtual;
+
+    function Clone(): IECPoint; virtual;
 
     function Equals(const other: IECPoint): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -2993,6 +3005,21 @@ end;
 
 function TECCurve.Precompute(const point: IECPoint; const name: String;
   const callback: IPreCompCallback): IPreCompInfo;
+
+function IsHeavy(const info: IPreCompInfo): Boolean;
+var
+  wnaf: IWNafPreCompInfo;
+  wtnaf: IWTauNafPreCompInfo;
+  endo: IEndoPreCompInfo;
+  fixed: IFixedPointPreCompInfo;
+begin
+  Result :=
+    Supports(info, IWNafPreCompInfo, wnaf) or
+    Supports(info, IWTauNafPreCompInfo, wtnaf) or
+    Supports(info, IEndoPreCompInfo, endo) or
+    Supports(info, IFixedPointPreCompInfo, fixed);
+end;
+
 var
   table: TDictionary<String, IPreCompInfo>;
   existing: IPreCompInfo;
@@ -3012,10 +3039,10 @@ begin
 
     result := callback.Precompute(existing);
 
-    if (result <> existing) then
-    begin
-      table.AddOrSetValue(name, result);
-    end;
+   if (result <> existing) and ((existing <> Nil) or (not IsHeavy(result))) then
+   begin
+     table.AddOrSetValue(name, result);
+   end;
 
   finally
     FLock.Release;
@@ -3718,6 +3745,13 @@ begin
   result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
 end;
 
+destructor TDefaultLookupTable.Destroy;
+begin
+  Fm_outer := nil;
+  Fm_table := nil;
+  inherited;
+end;
+
 function TDefaultLookupTable.GetSize: Int32;
 begin
   result := Fm_size;
@@ -3802,6 +3836,14 @@ begin
   XFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(x));
   YFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(y));
   result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
+end;
+
+
+destructor TDefaultF2mLookupTable.Destroy;
+begin
+  Fm_outer := nil;
+  Fm_table := nil;
+  inherited;
 end;
 
 function TDefaultF2mLookupTable.GetSize: Int32;
@@ -4084,11 +4126,22 @@ begin
 end;
 
 destructor TECPoint.Destroy;
+var
+  Key: string;
 begin
-  TSetWeakRef.SetWeakReference(@Fm_curve, Nil);
-  Fm_preCompTable.Free;
+  TSetWeakRef.SetWeakReference(@Fm_curve, nil);
+
+  if Assigned(Fm_preCompTable) then
+  begin
+    for Key in Fm_preCompTable.Keys do
+      Fm_preCompTable[Key] := nil;
+
+    Fm_preCompTable.Free;
+  end;
+
   inherited Destroy;
 end;
+
 
 class constructor TECPoint.ECPoint;
 begin
@@ -4398,6 +4451,18 @@ end;
 function TECPoint.GetDetachedPoint: IECPoint;
 begin
   result := Normalize().Detach();
+end;
+
+function TECPoint.Clone: IECPoint;
+var
+ baseNorm: IECPoint;
+begin
+  baseNorm := Self.Normalize();
+  Result := Fm_curve.CreatePoint(
+          baseNorm.XCoord.ToBigInteger,
+          baseNorm.YCoord.ToBigInteger,
+          baseNorm.IsCompressed
+        );
 end;
 
 { TF2mPoint }
@@ -6701,6 +6766,19 @@ constructor TSimpleLookupTable.Create(const points
 begin
   inherited Create();
   FPoints := Copy(points, off, len);
+end;
+
+destructor TSimpleLookupTable.Destroy;
+var
+  i: Integer;
+begin
+  if Assigned(FPoints) then
+  begin
+    for i := 0 to Length(FPoints) - 1 do
+      FPoints[i] := nil;
+    FPoints := nil;
+  end;
+  inherited;
 end;
 
 function TSimpleLookupTable.GetSize: Int32;

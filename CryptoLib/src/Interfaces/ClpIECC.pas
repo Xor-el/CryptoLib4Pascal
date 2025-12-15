@@ -271,6 +271,8 @@ type
 
     function ThreeTimes(): IECPoint;
 
+    function Clone: IECPoint;
+
     function Equals(const other: IECPoint): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
     function ToString(): String;

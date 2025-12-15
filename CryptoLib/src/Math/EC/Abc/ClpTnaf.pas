@@ -519,7 +519,7 @@ begin
 
   System.SetLength(pu, UInt32(System.Length(alphaTnaf) + 1) shr 1);
 
-  pu[0] := p;
+  pu[0] := p.Clone() as IAbstractF2mPoint;
 
   precompLen := UInt32(System.Length(alphaTnaf));
 

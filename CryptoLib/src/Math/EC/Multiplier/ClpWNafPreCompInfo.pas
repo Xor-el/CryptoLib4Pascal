@@ -87,6 +87,7 @@ type
   public
 
     constructor Create();
+    destructor Destroy; override;
     property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp
       write SetPreComp;
     property PreCompNeg: TCryptoLibGenericArray<IECPoint> read GetPreCompNeg
@@ -125,6 +126,30 @@ begin
   end;
   result := t;
 end;
+
+destructor TWNafPreCompInfo.Destroy;
+var
+  i: Integer;
+begin
+  if Assigned(FPreComp) then
+  begin
+    for i := 0 to Length(FPreComp) - 1 do
+      FPreComp[i] := nil;
+    FPreComp := nil;
+  end;
+
+  if Assigned(FPreCompNeg) then
+  begin
+    for i := 0 to Length(FPreCompNeg) - 1 do
+      FPreCompNeg[i] := nil;
+    FPreCompNeg := nil;
+  end;
+
+  FTwice := nil;
+
+  inherited;
+end;
+
 
 function TWNafPreCompInfo.GetConfWidth: Int32;
 begin
