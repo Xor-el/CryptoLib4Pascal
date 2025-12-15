@@ -342,13 +342,10 @@ var
   LowPoint, HighPoint: Int32;
 begin
   upper := UpperCase(algorithm);
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(upper);
-  HighPoint := System.High(upper);
-{$ELSE}
+
   LowPoint := 1;
   HighPoint := System.length(upper);
-{$ENDIF DELPHIXE3_UP}
+
   if AnsiEndsStr('PRNG', upper) then
   begin
     digestName := System.Copy(upper, LowPoint,

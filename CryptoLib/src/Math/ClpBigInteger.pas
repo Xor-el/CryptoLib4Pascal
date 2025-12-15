@@ -3313,13 +3313,9 @@ begin
 
   end;
 
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(str);
-  HighPoint := System.High(str);
-{$ELSE}
   LowPoint := 1;
-  HighPoint := System.length(str);
-{$ENDIF DELPHIXE3_UP}
+  HighPoint := System.Length(str);
+
   index := LowPoint;
   Fsign := 1;
 
