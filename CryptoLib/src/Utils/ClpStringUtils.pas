@@ -87,13 +87,10 @@ var
   LResult: UInt32;
 begin
   LResult := 0;
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(Input);
-  HighPoint := System.High(Input);
-{$ELSE}
+
   LowPoint := 1;
   HighPoint := System.Length(Input);
-{$ENDIF DELPHIXE3_UP}
+
   while LowPoint <= HighPoint do
   begin
     LResult := TBits.RotateLeft32(LResult, 5);
@@ -168,13 +165,9 @@ begin
   if Input <> '' then
   begin
     { Determine the length of the resulting array }
-{$IFDEF DELPHIXE3_UP}
-    LowPoint := System.Low(Input);
-    HighPoint := System.High(Input);
-{$ELSE}
     LowPoint := 1;
     HighPoint := System.Length(Input);
-{$ENDIF DELPHIXE3_UP}
+
     SplitPoints := 0;
     for I := LowPoint to HighPoint do
     begin

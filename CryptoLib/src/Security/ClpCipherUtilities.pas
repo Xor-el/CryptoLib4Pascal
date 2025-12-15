@@ -172,13 +172,9 @@ class function TCipherUtilities.GetDigitIndex(const s: String): Int32;
 var
   i, LowPoint, HighPoint: Int32;
 begin
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(s);
-  HighPoint := System.High(s);
-{$ELSE}
   LowPoint := 1;
   HighPoint := System.Length(s);
-{$ENDIF DELPHIXE3_UP}
+
   For i := LowPoint to HighPoint do
   begin
     if (CharInSet(s[i], ['0' .. '9'])) then
@@ -345,11 +341,7 @@ begin
     di := GetDigitIndex(mode);
     if di >= 0 then
     begin
-{$IFDEF DELPHIXE3_UP}
-      LowPoint := System.Low(mode);
-{$ELSE}
       LowPoint := 1;
-{$ENDIF DELPHIXE3_UP}
       modeName := System.Copy(mode, LowPoint, di);
     end
     else
@@ -389,11 +381,7 @@ begin
           end
           else
           begin
-{$IFDEF DELPHIXE3_UP}
-            HighPoint := System.High(mode);
-{$ELSE}
             HighPoint := System.Length(mode);
-{$ENDIF DELPHIXE3_UP}
             bits := StrToInt(System.Copy(mode, di, HighPoint - di));
           end;
 
@@ -420,11 +408,7 @@ begin
           end
           else
           begin
-{$IFDEF DELPHIXE3_UP}
-            HighPoint := System.High(mode);
-{$ELSE}
             HighPoint := System.Length(mode);
-{$ENDIF DELPHIXE3_UP}
             bits := StrToInt(System.Copy(mode, di, HighPoint - di));
           end;
 

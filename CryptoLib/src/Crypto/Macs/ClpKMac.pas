@@ -149,13 +149,10 @@ var
   LowPoint, HighPoint: Int32;
 begin
   LName := Self.ClassName;
-{$IFDEF DELPHIXE3_UP}
-  LowPoint := System.Low(LName);
-  HighPoint := System.High(LName);
-{$ELSE}
+
   LowPoint := 1;
   HighPoint := System.Length(LName);
-{$ENDIF DELPHIXE3_UP}
+
   result := Copy(LName, LowPoint + 1, HighPoint - 1);
 end;
 

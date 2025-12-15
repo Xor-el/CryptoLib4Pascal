@@ -129,11 +129,7 @@ begin
 
   if TStringUtils.BeginsWith(mechanism, 'HMAC', True) then
   begin
-{$IFDEF DELPHIXE3_UP}
-    HighPoint := System.High(mechanism);
-{$ELSE}
     HighPoint := System.Length(mechanism);
-{$ENDIF DELPHIXE3_UP}
     if ((TStringUtils.BeginsWith(mechanism, 'HMAC-', True)) or
       (TStringUtils.BeginsWith(mechanism, 'HMAC/', True))) then
     begin
