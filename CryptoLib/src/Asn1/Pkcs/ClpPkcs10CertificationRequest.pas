@@ -59,6 +59,8 @@ resourcestring
   SBadSequenceSize = 'Bad Sequence Size: %d';
   SUnsupportedDigest = 'Unsupported digest algorithm: %s';
   SPublicKeyNotSet = 'Public key must be set before adding Subject Key Identifier';
+  SSubjectNotSet = 'Subject must be set before calling Build';
+  SPublicKeyRequiredForBuild = 'Public key must be set before calling Build';
 
 type
   /// <summary>
@@ -614,6 +616,12 @@ var
   sigAlg: IAlgorithmIdentifier;
   attrs: IDerTaggedObject;
 begin
+  // Validate required fields
+  if FSubject = nil then
+    raise EInvalidOperationCryptoLibException.Create(SSubjectNotSet);
+  if FPublicKey = nil then
+    raise EInvalidOperationCryptoLibException.Create(SPublicKeyRequiredForBuild);
+
   if not Supports(privateKey, IECPrivateKeyParameters) then
     raise EArgumentCryptoLibException.Create('Expected IECPrivateKeyParameters');
   ecPrivKey := privateKey as IECPrivateKeyParameters;
@@ -685,6 +693,12 @@ var
   sigAlg: IAlgorithmIdentifier;
   attrs: IDerTaggedObject;
 begin
+  // Validate required fields
+  if FSubject = nil then
+    raise EInvalidOperationCryptoLibException.Create(SSubjectNotSet);
+  if FEd25519PublicKey = nil then
+    raise EInvalidOperationCryptoLibException.Create(SPublicKeyRequiredForBuild);
+
   // Detect key type and handle appropriately
   if Supports(privateKey, IEd25519PrivateKeyParameters) then
   begin
