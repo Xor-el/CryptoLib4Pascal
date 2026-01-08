@@ -74,6 +74,7 @@ uses
   DHTests,
   Asn1IntegerTests,
   KMacTests,
+  Pkcs10CertificationRequestTests,
   CryptoLibTestBase,
   ClpFixedSecureRandom,
   ClpIFixedSecureRandom,

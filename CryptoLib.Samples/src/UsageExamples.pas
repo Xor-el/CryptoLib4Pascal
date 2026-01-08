@@ -83,7 +83,22 @@ uses
   ClpEncoders,
   // ClpSecNamedCurves,
   ClpCustomNamedCurves,
-  ClpConverters;
+  ClpConverters,
+  ClpX500Name,
+  ClpIX500Name,
+  ClpPkcs10CertificationRequest,
+  ClpIPkcs10CertificationRequest,
+  // Ed25519 support
+  ClpEd25519KeyPairGenerator,
+  ClpIEd25519KeyPairGenerator,
+  ClpEd25519KeyGenerationParameters,
+  ClpIEd25519KeyGenerationParameters,
+  ClpIEd25519PublicKeyParameters,
+  ClpIEd25519PrivateKeyParameters,
+  ClpEd25519,
+  ClpIEd25519,
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
 
@@ -163,6 +178,16 @@ type
     class procedure BinaryCompatiblePascalCoinECIESDecryptExistingPayloadDemo
       (const PrivateKeyInHex, EncryptedMessageInHex,
       ACurveName: string); static;
+
+    /// <summary>
+    /// Generate a PKCS#10 Certificate Signing Request using ECDSA
+    /// </summary>
+    class procedure GenerateCSRWithECDSA(); static;
+
+    /// <summary>
+    /// Generate a PKCS#10 Certificate Signing Request using Ed25519 (EdDSA)
+    /// </summary>
+    class procedure GenerateCSRWithEdDSA(); static;
   end;
 
 implementation
@@ -995,6 +1020,163 @@ class constructor TUsageExamples.UsageExamples();
 begin
   FRandom := TSecureRandom.Create();
   FCurve := GetCurveByName(CurveName);
+end;
+
+class procedure TUsageExamples.GenerateCSRWithECDSA;
+
+  procedure GenerateCSRForCurve(const curveName, digestName: string);
+  var
+    curve: IX9ECParameters;
+    domain: IECDomainParameters;
+    generator: IECKeyPairGenerator;
+    keygenParams: IECKeyGenerationParameters;
+    KeyPair: IAsymmetricCipherKeyPair;
+    privParams: IECPrivateKeyParameters;
+    pubParams: IECPublicKeyParameters;
+    subject: IX500Name;
+    builder: IPkcs10CertificationRequestBuilder;
+    csr: IPkcs10CertificationRequest;
+    digest: IDigest;
+    pemString: string;
+    customExtOid: IDerObjectIdentifier;
+    customExtValue: IDerUtf8String;
+  begin
+    Writeln('=== Generating CSR with curve: ' + curveName + ' ===' + sLineBreak);
+
+    // 1. Generate EC Key Pair
+    curve := GetCurveByName(curveName);
+    domain := TECDomainParameters.Create(curve.Curve, curve.G, curve.N,
+      curve.H, curve.GetSeed);
+    generator := TECKeyPairGenerator.Create('ECDSA');
+    keygenParams := TECKeyGenerationParameters.Create(domain, FRandom);
+    generator.Init(keygenParams);
+
+    KeyPair := generator.GenerateKeyPair();
+    privParams := KeyPair.Private as IECPrivateKeyParameters;
+    pubParams := KeyPair.Public as IECPublicKeyParameters;
+
+    Writeln('Generated EC Key Pair using curve: ' + curveName);
+
+    // 2. Build X.500 Distinguished Name
+    subject := TX500NameBuilder.Create
+      .AddCommonName('Example CSR - ' + curveName)
+      .AddOrganization('CryptoLib4Pascal')
+      .AddOrganizationalUnit('Development')
+      .AddCountry('US')
+      .Build;
+
+    // 3. Create digest for signing
+    digest := TDigestUtilities.GetDigest(digestName);
+    Writeln('Using digest algorithm: ' + digest.AlgorithmName);
+
+    // 4. Create custom extension (example: application-specific OID)
+    customExtOid := TDerObjectIdentifier.Create('1.2.3.4.5.6.7.8.9');
+    customExtValue := TDerUtf8String.Create('CryptoLib4Pascal Custom Extension');
+
+    // 5. Build PKCS#10 CSR with extensions
+    builder := TECDSACertificationRequestBuilder.Create(digest);
+    csr := builder
+      .SetSubject(subject)
+      .SetPublicKey(pubParams)
+      .AddExtension(customExtOid, False, customExtValue)  // Custom extension
+      .AddSubjectKeyIdentifier()  // X.509 Subject Key Identifier
+      .Build(privParams);
+
+    Writeln('CSR built successfully with extensions!');
+
+    // 6. Get PEM encoded CSR
+    pemString := csr.GetPemEncoded;
+
+    Writeln('PEM Encoded CSR:');
+    Writeln(pemString);
+  end;
+
+const
+  MethodName = 'GenerateCSRWithECDSA';
+begin
+  Writeln('MethodName is: ' + MethodName + sLineBreak);
+  Writeln('Demonstrating PKCS#10 CSR generation with various ECDSA curves' + sLineBreak);
+
+  // Demonstrate with different curves
+  // P-256 (NIST prime256v1) - most commonly used for web certificates
+  GenerateCSRForCurve('P-256', 'SHA-256');
+
+  // P-384 (NIST secp384r1) - stronger security
+  GenerateCSRForCurve('P-384', 'SHA-384');
+
+  // P-521 (NIST secp521r1) - highest NIST security level
+  GenerateCSRForCurve('P-521', 'SHA-512');
+
+  // secp256k1 - used by Bitcoin and Ethereum
+  GenerateCSRForCurve('secp256k1', 'SHA-256');
+
+  Writeln('');
+end;
+
+class procedure TUsageExamples.GenerateCSRWithEdDSA;
+var
+  ed25519Instance: IEd25519;
+  generator: IEd25519KeyPairGenerator;
+  keygenParams: IEd25519KeyGenerationParameters;
+  KeyPair: IAsymmetricCipherKeyPair;
+  privParams: IEd25519PrivateKeyParameters;
+  pubParams: IEd25519PublicKeyParameters;
+  subject: IX500Name;
+  builder: IPkcs10CertificationRequestBuilder;
+  csr: IPkcs10CertificationRequest;
+  pemString: string;
+  customExtOid: IDerObjectIdentifier;
+  customExtValue: IDerUtf8String;
+const
+  MethodName = 'GenerateCSRWithEdDSA';
+begin
+  Writeln('MethodName is: ' + MethodName + sLineBreak);
+  Writeln('Demonstrating PKCS#10 CSR generation with Ed25519 (EdDSA)' + sLineBreak);
+
+  // 1. Generate Ed25519 Key Pair
+  ed25519Instance := TEd25519.Create();
+  generator := TEd25519KeyPairGenerator.Create(ed25519Instance);
+  keygenParams := TEd25519KeyGenerationParameters.Create(FRandom);
+  generator.Init(keygenParams);
+
+  KeyPair := generator.GenerateKeyPair();
+  privParams := KeyPair.Private as IEd25519PrivateKeyParameters;
+  pubParams := KeyPair.Public as IEd25519PublicKeyParameters;
+
+  Writeln('Generated Ed25519 Key Pair');
+
+  // 2. Build X.500 Distinguished Name
+  subject := TX500NameBuilder.Create
+    .AddCommonName('Example Ed25519 CSR')
+    .AddOrganization('CryptoLib4Pascal')
+    .AddOrganizationalUnit('Development')
+    .AddCountry('US')
+    .Build;
+
+  Writeln('Built X.500 Distinguished Name');
+
+  // 3. Create custom extension (example: application-specific OID)
+  customExtOid := TDerObjectIdentifier.Create('1.2.3.4.5.6.7.8.9');
+  customExtValue := TDerUtf8String.Create('CryptoLib4Pascal Ed25519 Extension');
+
+  // 4. Build PKCS#10 CSR using Ed25519 with extensions
+  builder := TEdDSACertificationRequestBuilder.Create;
+  csr := builder
+    .SetSubject(subject)
+    .SetPublicKey(pubParams)
+    .AddExtension(customExtOid, False, customExtValue)  // Custom extension
+    .AddSubjectKeyIdentifier()  // X.509 Subject Key Identifier
+    .Build(privParams);
+
+  Writeln('CSR built successfully with Ed25519 and extensions!');
+
+  // 5. Get PEM encoded CSR
+  pemString := csr.GetPemEncoded;
+
+  Writeln('PEM Encoded CSR:');
+  Writeln(pemString);
+
+  Writeln('');
 end;
 
 end.

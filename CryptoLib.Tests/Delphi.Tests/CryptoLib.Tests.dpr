@@ -382,6 +382,14 @@ uses
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
+  ClpAlgorithmIdentifier in '..\..\CryptoLib\src\Asn1\X509\ClpAlgorithmIdentifier.pas',
+  ClpIAlgorithmIdentifier in '..\..\CryptoLib\src\Interfaces\ClpIAlgorithmIdentifier.pas',
+  ClpSubjectPublicKeyInfo in '..\..\CryptoLib\src\Asn1\X509\ClpSubjectPublicKeyInfo.pas',
+  ClpISubjectPublicKeyInfo in '..\..\CryptoLib\src\Interfaces\ClpISubjectPublicKeyInfo.pas',
+  ClpX500Name in '..\..\CryptoLib\src\Asn1\X509\ClpX500Name.pas',
+  ClpIX500Name in '..\..\CryptoLib\src\Interfaces\ClpIX500Name.pas',
+  ClpPkcs10CertificationRequest in '..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcs10CertificationRequest.pas',
+  ClpIPkcs10CertificationRequest in '..\..\CryptoLib\src\Interfaces\ClpIPkcs10CertificationRequest.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
   BlockCipherVectorTests in '..\src\Crypto\BlockCipherVectorTests.pas',
   AESTestVectors in '..\src\Crypto\AESTestVectors.pas',
@@ -450,6 +458,7 @@ uses
   DHTests in '..\src\Crypto\DHTests.pas',
   Asn1IntegerTests in '..\src\Asn1\Asn1IntegerTests.pas',
   KMacTests in '..\src\Crypto\KMacTests.pas',
+  Pkcs10CertificationRequestTests in '..\src\Asn1\Pkcs10CertificationRequestTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

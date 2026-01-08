@@ -365,11 +365,21 @@ uses
   ClpECCompUtilities in '..\..\CryptoLib\src\Math\EC\ClpECCompUtilities.pas',
   ClpIKMac in '..\..\CryptoLib\src\Interfaces\ClpIKMac.pas',
   ClpKMac in '..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas',
+  ClpAlgorithmIdentifier in '..\..\CryptoLib\src\Asn1\X509\ClpAlgorithmIdentifier.pas',
+  ClpIAlgorithmIdentifier in '..\..\CryptoLib\src\Interfaces\ClpIAlgorithmIdentifier.pas',
+  ClpSubjectPublicKeyInfo in '..\..\CryptoLib\src\Asn1\X509\ClpSubjectPublicKeyInfo.pas',
+  ClpISubjectPublicKeyInfo in '..\..\CryptoLib\src\Interfaces\ClpISubjectPublicKeyInfo.pas',
+  ClpX500Name in '..\..\CryptoLib\src\Asn1\X509\ClpX500Name.pas',
+  ClpIX500Name in '..\..\CryptoLib\src\Interfaces\ClpIX500Name.pas',
+  ClpPkcs10CertificationRequest in '..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcs10CertificationRequest.pas',
+  ClpIPkcs10CertificationRequest in '..\..\CryptoLib\src\Interfaces\ClpIPkcs10CertificationRequest.pas',
   UsageExamples in '..\src\UsageExamples.pas';
 
 begin
   try
     { TODO -oUser -cConsole Main : Insert code here }
+    TUsageExamples.GenerateCSRWithECDSA;
+    TUsageExamples.GenerateCSRWithEdDSA;
     TUsageExamples.GenerateKeyPairAndSignECDSA;
     TUsageExamples.GenerateKeyPairAndSignECSchnorr;
     TUsageExamples.GetPublicKeyFromPrivateKey;

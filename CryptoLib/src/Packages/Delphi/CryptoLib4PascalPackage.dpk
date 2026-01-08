@@ -393,6 +393,14 @@ contains
   ClpIMultipliers in '..\..\Interfaces\ClpIMultipliers.pas',
   ClpECCompUtilities in '..\..\Math\EC\ClpECCompUtilities.pas',
   ClpIKMac in '..\..\Interfaces\ClpIKMac.pas',
-  ClpKMac in '..\..\Crypto\Macs\ClpKMac.pas';
+  ClpKMac in '..\..\Crypto\Macs\ClpKMac.pas',
+  ClpAlgorithmIdentifier in '..\..\Asn1\X509\ClpAlgorithmIdentifier.pas',
+  ClpIAlgorithmIdentifier in '..\..\Interfaces\ClpIAlgorithmIdentifier.pas',
+  ClpSubjectPublicKeyInfo in '..\..\Asn1\X509\ClpSubjectPublicKeyInfo.pas',
+  ClpISubjectPublicKeyInfo in '..\..\Interfaces\ClpISubjectPublicKeyInfo.pas',
+  ClpX500Name in '..\..\Asn1\X509\ClpX500Name.pas',
+  ClpIX500Name in '..\..\Interfaces\ClpIX500Name.pas',
+  ClpPkcs10CertificationRequest in '..\..\Asn1\Pkcs\ClpPkcs10CertificationRequest.pas',
+  ClpIPkcs10CertificationRequest in '..\..\Interfaces\ClpIPkcs10CertificationRequest.pas';
 
 end.

@@ -126,7 +126,10 @@ uses
   ClpScalarSplitParameters, ClpIGlvTypeAParameters, ClpIGlvTypeAEndomorphism, 
   ClpIScaleXNegateYPointMap, ClpIScaleYNegateXPointMap, 
   ClpIScalarSplitParameters, ClpECCompUtilities, ClpValidityPreCompInfo, 
-  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac, ClpMultipliers;
+  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac, ClpMultipliers, 
+  ClpAlgorithmIdentifier, ClpIAlgorithmIdentifier, ClpSubjectPublicKeyInfo, 
+  ClpISubjectPublicKeyInfo, ClpX500Name, ClpIX500Name, 
+  ClpPkcs10CertificationRequest, ClpIPkcs10CertificationRequest;
 
 implementation
 
