@@ -59,7 +59,7 @@ type
       KECCAK_384, KECCAK_512, MD2, MD4, MD5, NONE, RIPEMD128, RIPEMD160,
       RIPEMD256, RIPEMD320, SHA_1, SHA_224, SHA_256, SHA_384, SHA_512,
       SHA_512_224, SHA_512_256, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
-      SHAKE128, SHAKE256, TIGER, WHIRLPOOL);
+      SHAKE128_256, SHAKE256_512, TIGER, WHIRLPOOL);
 {$SCOPEDENUMS OFF}
   class procedure Boot(); static;
   class constructor CreateDigestUtilities();
@@ -343,15 +343,15 @@ begin
         Exit;
       end;
 
-    TDigestAlgorithm.SHAKE128:
+    TDigestAlgorithm.SHAKE128_256:
       begin
-        result := TDigest.Create(THashFactory.TXOF.CreateShake_128(128));
+        result := TDigest.Create(THashFactory.TXOF.CreateShake_128(256));
         Exit;
       end;
 
-    TDigestAlgorithm.SHAKE256:
+    TDigestAlgorithm.SHAKE256_512:
       begin
-        result := TDigest.Create(THashFactory.TXOF.CreateShake_256(256));
+        result := TDigest.Create(THashFactory.TXOF.CreateShake_256(512));
         Exit;
       end;
 
@@ -395,21 +395,35 @@ begin
 
     Falgorithms.Add('SHA1', 'SHA-1');
     Falgorithms.Add(TOiwObjectIdentifiers.IdSha1.id, 'SHA-1');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha1.id, 'SHA-1');
 
     TNistObjectIdentifiers.Boot;
 
     Falgorithms.Add('SHA224', 'SHA-224');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha224.id, 'SHA-224');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha224.id, 'SHA-224');
     Falgorithms.Add('SHA256', 'SHA-256');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha256.id, 'SHA-256');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha256.id, 'SHA-256');
     Falgorithms.Add('SHA384', 'SHA-384');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha384.id, 'SHA-384');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha384.id, 'SHA-384');
     Falgorithms.Add('SHA512', 'SHA-512');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha512.id, 'SHA-512');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha512.id, 'SHA-512');
+
     Falgorithms.Add('SHA512/224', 'SHA-512/224');
+    Falgorithms.Add('SHA512-224', 'SHA-512/224');
+    Falgorithms.Add('SHA512(224)', 'SHA-512/224');
+    Falgorithms.Add('SHA-512(224)', 'SHA-512/224');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha512_224.id, 'SHA-512/224');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha512_224.id, 'SHA-512/224');
     Falgorithms.Add('SHA512/256', 'SHA-512/256');
+    Falgorithms.Add('SHA512-256', 'SHA-512/256');
+    Falgorithms.Add('SHA512(256)', 'SHA-512/256');
+    Falgorithms.Add('SHA-512(256)', 'SHA-512/256');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha512_256.id, 'SHA-512/256');
+    Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha512_256.id, 'SHA-512/256');
 
     TTeleTrusTObjectIdentifiers.Boot;
 
@@ -433,11 +447,19 @@ begin
     Falgorithms.Add('KECCAK512', 'KECCAK-512');
 
     Falgorithms.Add(TNistObjectIdentifiers.IdSha3_224.id, 'SHA3-224');
+    Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_224.id, 'SHA3-224');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha3_256.id, 'SHA3-256');
+    Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_256.id, 'SHA3-256');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha3_384.id, 'SHA3-384');
+    Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_384.id, 'SHA3-384');
     Falgorithms.Add(TNistObjectIdentifiers.IdSha3_512.id, 'SHA3-512');
-    Falgorithms.Add(TNistObjectIdentifiers.IdShake128.id, 'SHAKE128');
-    Falgorithms.Add(TNistObjectIdentifiers.IdShake256.id, 'SHAKE256');
+    Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_512.id, 'SHA3-512');
+    Falgorithms.Add('SHAKE128', 'SHAKE128-256');
+    Falgorithms.Add('SHAKE-128', 'SHAKE128-256');
+    Falgorithms.Add(TNistObjectIdentifiers.IdShake128.id, 'SHAKE128-256');
+    Falgorithms.Add('SHAKE256', 'SHAKE256-512');
+    Falgorithms.Add('SHAKE-256', 'SHAKE256-512');
+    Falgorithms.Add(TNistObjectIdentifiers.IdShake256.id, 'SHAKE256-512');
 
     TMiscObjectIdentifiers.Boot;
 
@@ -471,8 +493,8 @@ begin
     Foids.Add('SHA3-256', TNistObjectIdentifiers.IdSha3_256);
     Foids.Add('SHA3-384', TNistObjectIdentifiers.IdSha3_384);
     Foids.Add('SHA3-512', TNistObjectIdentifiers.IdSha3_512);
-    Foids.Add('SHAKE128', TNistObjectIdentifiers.IdShake128);
-    Foids.Add('SHAKE256', TNistObjectIdentifiers.IdShake256);
+    Foids.Add('SHAKE128-256', TNistObjectIdentifiers.IdShake128);
+    Foids.Add('SHAKE256-512', TNistObjectIdentifiers.IdShake256);
     Foids.Add('RIPEMD128', TTeleTrusTObjectIdentifiers.RIPEMD128);
     Foids.Add('RIPEMD160', TTeleTrusTObjectIdentifiers.RIPEMD160);
     Foids.Add('RIPEMD256', TTeleTrusTObjectIdentifiers.RIPEMD256);

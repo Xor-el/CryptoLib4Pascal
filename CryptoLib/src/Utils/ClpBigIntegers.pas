@@ -116,6 +116,24 @@ type
     class function GetUnsignedByteLength(const n: TBigInteger): Int32;
       static; inline;
 
+    /// <summary>
+    /// Calculate the modular inverse of X mod M where M is odd.
+    /// </summary>
+    /// <param name="M">The odd modulus (must be positive and odd)</param>
+    /// <param name="X">The value to invert</param>
+    /// <returns>X^(-1) mod M</returns>
+    /// <exception cref="EArithmeticCryptoLibException">If M is not positive, not odd, or X is not invertible</exception>
+    class function ModOddInverse(const M, X: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// Check if two BigIntegers are coprime (gcd = 1) for an odd modulus.
+    /// Uses GCD-based calculation - variable time but simpler than constant-time approach.
+    /// </summary>
+    /// <param name="M">The odd modulus (must be positive and odd)</param>
+    /// <param name="X">The value to check for coprimality</param>
+    /// <returns>True if gcd(M, X) = 1, False otherwise</returns>
+    class function ModOddIsCoprimeVar(const M, X: TBigInteger): Boolean; static;
+
   end;
 
 implementation
@@ -220,6 +238,65 @@ end;
 class function TBigIntegers.GetUnsignedByteLength(const n: TBigInteger): Int32;
 begin
   Result := (n.BitLength + 7) shr 3;
+end;
+
+class function TBigIntegers.ModOddIsCoprimeVar(const M, X: TBigInteger): Boolean;
+var
+  xMod, gcd: TBigInteger;
+begin
+  // Validate M is odd and positive
+  if not M.TestBit(0) then
+  begin
+    raise EArgumentCryptoLibException.Create('Modulus must be odd');
+  end;
+
+  if M.SignValue <> 1 then
+  begin
+    raise EArithmeticCryptoLibException.Create('Modulus must be positive');
+  end;
+
+  // If X is 1, it's always coprime
+  if X.Equals(TBigInteger.One) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  // Reduce X mod M if necessary
+  if (X.SignValue < 0) or (X.BitLength > M.BitLength) then
+    xMod := X.&Mod(M)
+  else
+    xMod := X;
+
+  // Check if GCD(M, X) = 1
+  gcd := M.Gcd(xMod);
+  Result := gcd.Equals(TBigInteger.One);
+end;
+
+class function TBigIntegers.ModOddInverse(const M, X: TBigInteger): TBigInteger;
+var
+  xMod: TBigInteger;
+begin
+  // Validate M is odd
+  if not M.TestBit(0) then
+  begin
+    raise EArgumentCryptoLibException.Create('Modulus must be odd');
+  end;
+
+  // Validate M is positive
+  if M.SignValue <> 1 then
+  begin
+    raise EArithmeticCryptoLibException.Create('BigInteger: modulus not positive');
+  end;
+
+  // Reduce X mod M if necessary
+  if (X.SignValue < 0) or (X.BitLength > M.BitLength) then
+    xMod := X.&Mod(M)
+  else
+    xMod := X;
+
+  // Use BigInteger's built-in ModInverse
+  Result := xMod.ModInverse(M);
 end;
 
 end.

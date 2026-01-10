@@ -31,6 +31,7 @@ uses
   ClpIAsn1Objects,
   ClpNistObjectIdentifiers,
   ClpParametersWithRandom,
+  ClpIParametersWithRandom,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -77,6 +78,10 @@ type
 
     class function WithRandom(const cp: ICipherParameters;
       const random: ISecureRandom): ICipherParameters; static; inline;
+
+    class function IgnoreRandom(const CipherParameters: ICipherParameters): ICipherParameters;
+
+    class function GetRandom(const CipherParameters: ICipherParameters; out Random: ISecureRandom): ICipherParameters;
 
   end;
 
@@ -157,6 +162,35 @@ begin
     Lcp := TParametersWithRandom.Create(Lcp, random);
   end;
   result := Lcp;
+end;
+
+class function TParameterUtilities.GetRandom(
+  const CipherParameters: ICipherParameters;
+  out Random: ISecureRandom): ICipherParameters;
+var
+  WithRandom: IParametersWithRandom;
+begin
+  if Supports(CipherParameters, IParametersWithRandom, WithRandom) then
+  begin
+    Random := WithRandom.Random;
+    Result := WithRandom.Parameters;
+  end
+  else
+  begin
+    Random := nil;
+    Result := CipherParameters;
+  end;
+end;
+
+
+class function TParameterUtilities.IgnoreRandom(const CipherParameters: ICipherParameters): ICipherParameters;
+var
+  WithRandom: IParametersWithRandom;
+begin
+  if Supports(CipherParameters, IParametersWithRandom, WithRandom) then
+    Result := WithRandom.Parameters
+  else
+    Result := CipherParameters;
 end;
 
 class function TParameterUtilities.CreateKeyParameter(const algorithm: String;

@@ -35,6 +35,8 @@ uses
   ClpIDsaKeyPairGenerator,
   ClpDHKeyPairGenerator,
   ClpIDHKeyPairGenerator,
+  ClpRsaKeyPairGenerator,
+  ClpIRsaKeyPairGenerator,
   ClpEd25519KeyPairGenerator,
   ClpIEd25519KeyPairGenerator,
   ClpX25519KeyPairGenerator,
@@ -258,6 +260,8 @@ begin
 
   AddKpgAlgorithm('DH', ['DIFFIEHELLMAN']);
   AddKpgAlgorithm('DSA', []);
+  AddKpgAlgorithm('RSA', [TPkcsObjectIdentifiers.RsaEncryption.ID]);
+  AddKpgAlgorithm('RSASSA-PSS', []);
   AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDHC', []);
   AddKpgAlgorithm('ECDSA', []);
@@ -397,6 +401,12 @@ begin
   if (canonicalName = 'DSA') then
   begin
     result := TDsaKeyPairGenerator.Create() as IDsaKeyPairGenerator;
+    Exit;
+  end;
+
+  if ((canonicalName = 'RSA') or (canonicalName = 'RSASSA-PSS')) then
+  begin
+    result := TRsaKeyPairGenerator.Create() as IRsaKeyPairGenerator;
     Exit;
   end;
 

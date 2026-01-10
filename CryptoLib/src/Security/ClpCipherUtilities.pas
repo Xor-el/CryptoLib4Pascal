@@ -35,9 +35,12 @@ uses
   ClpIBufferedBlockCipher,
   ClpBufferedStreamCipher,
   ClpIBufferedStreamCipher,
+  ClpBufferedAsymmetricBlockCipher,
+  ClpIBufferedAsymmetricBlockCipher,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpNistObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
   ClpIAsn1Objects,
   ClpIBufferedCipher,
   ClpIBlockCipher,
@@ -50,6 +53,16 @@ uses
   ClpISalsa20Engine,
   ClpRijndaelEngine,
   ClpIRijndaelEngine,
+  ClpPkcs1Encoding,
+  ClpIPkcs1Encoding,
+  ClpOaepEncoding,
+  ClpIOaepEncoding,
+  ClpISO9796d1Encoding,
+  ClpIISO9796d1Encoding,
+  ClpRsaBlindedEngine,
+  ClpIRsaBlindedEngine,
+  ClpIAsymmetricBlockCipher,
+  ClpDigestUtilities,
   ClpIBlockCipherPadding;
 
 resourcestring
@@ -72,12 +85,14 @@ type
 
   type
 {$SCOPEDENUMS ON}
-    TCipherAlgorithm = (AES, BLOWFISH, SALSA20, RIJNDAEL);
+    TCipherAlgorithm = (AES, BLOWFISH, SALSA20, RIJNDAEL, RSA);
     TCipherMode = (NONE, CBC, CFB, CTR, CTS, ECB, OFB, SIC);
-    TCipherPadding = (NOPADDING, ISO10126PADDING, ISO10126D2PADDING,
-      ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, PKCS5,
-      PKCS5PADDING, PKCS7, PKCS7PADDING, TBCPADDING, WITHCTS, X923PADDING,
-      ZEROBYTEPADDING);
+    TCipherPadding = (NOPADDING, RAW, ISO10126PADDING, ISO10126D2PADDING,
+      ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, ISO9796_1,
+      ISO9796_1PADDING, OAEP, OAEPPADDING, OAEPWITHSHA1ANDMGF1PADDING,
+      OAEPWITHSHA_1ANDMGF1PADDING, OAEPWITHSHA256ANDMGF1PADDING,
+      OAEPWITHSHA_256ANDMGF1PADDING, PKCS1, PKCS1PADDING, PKCS5, PKCS5PADDING,
+      PKCS7, PKCS7PADDING, TBCPADDING, WITHCTS, X923PADDING, ZEROBYTEPADDING);
 {$SCOPEDENUMS OFF}
 
   class var
@@ -150,6 +165,14 @@ begin
 
   Falgorithms.Add('1.3.6.1.4.1.3029.1.2', 'BLOWFISH/CBC');
 
+  TPkcsObjectIdentifiers.Boot;
+
+  // RSA
+  Falgorithms.Add('RSA/ECB/PKCS1', 'RSA//PKCS1PADDING');
+  Falgorithms.Add('RSA/ECB/PKCS1PADDING', 'RSA//PKCS1PADDING');
+  Falgorithms.Add(TPkcsObjectIdentifiers.RsaEncryption.Id, 'RSA//PKCS1PADDING');
+  Falgorithms.Add(TPkcsObjectIdentifiers.IdRsaesOaep.Id, 'RSA//OAEPPADDING');
+
 end;
 
 class constructor TCipherUtilities.CreateCipherUtilities;
@@ -196,6 +219,7 @@ var
   cipherPadding: TCipherPadding;
   cipherMode: TCipherMode;
   blockCipher: IBlockCipher;
+  asymBlockCipher: IAsymmetricBlockCipher;
   streamCipher: IStreamCipher;
   padding: IBlockCipherPadding;
 begin
@@ -213,6 +237,7 @@ begin
   parts := TStringUtils.SplitString(algorithm, '/');
 
   blockCipher := Nil;
+  asymBlockCipher := Nil;
   streamCipher := Nil;
 
   algorithmName := parts[0];
@@ -245,6 +270,10 @@ begin
     TCipherAlgorithm.SALSA20:
       begin
         streamCipher := TSalsa20Engine.Create() as ISalsa20Engine;
+      end;
+    TCipherAlgorithm.RSA:
+      begin
+        asymBlockCipher := TRsaBlindedEngine.Create() as IRsaBlindedEngine;
       end
   else
     begin
@@ -287,6 +316,11 @@ begin
           padded := False;
         end;
 
+      TCipherPadding.RAW:
+        begin
+          // Raw padding - do nothing
+        end;
+
       TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING,
         TCipherPadding.ISO10126_2PADDING:
         begin
@@ -296,6 +330,31 @@ begin
       TCipherPadding.ISO7816_4PADDING, TCipherPadding.ISO9797_1PADDING:
         begin
           padding := TISO7816d4Padding.Create() as IISO7816d4Padding;
+        end;
+
+      TCipherPadding.ISO9796_1, TCipherPadding.ISO9796_1PADDING:
+        begin
+          asymBlockCipher := TISO9796d1Encoding.Create(asymBlockCipher) as IISO9796d1Encoding;
+        end;
+
+      TCipherPadding.OAEP, TCipherPadding.OAEPPADDING:
+        begin
+          asymBlockCipher := TOaepEncoding.Create(asymBlockCipher) as IOaepEncoding;
+        end;
+
+      TCipherPadding.OAEPWITHSHA1ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_1ANDMGF1PADDING:
+        begin
+          asymBlockCipher := TOaepEncoding.Create(asymBlockCipher, TDigestUtilities.GetDigest('SHA-1')) as IOaepEncoding;
+        end;
+
+      TCipherPadding.OAEPWITHSHA256ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1PADDING:
+        begin
+          asymBlockCipher := TOaepEncoding.Create(asymBlockCipher, TDigestUtilities.GetDigest('SHA-256')) as IOaepEncoding;
+        end;
+
+      TCipherPadding.PKCS1, TCipherPadding.PKCS1PADDING:
+        begin
+          asymBlockCipher := TPkcs1Encoding.Create(asymBlockCipher) as IPkcs1Encoding;
         end;
 
       TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7,
@@ -458,6 +517,12 @@ begin
 
     Result := TPaddedBufferedBlockCipher.Create(blockCipher)
       as IPaddedBufferedBlockCipher;
+    Exit;
+  end;
+
+  if (asymBlockCipher <> Nil) then
+  begin
+    Result := TBufferedAsymmetricBlockCipher.Create(asymBlockCipher) as IBufferedAsymmetricBlockCipher;
     Exit;
   end;
 
