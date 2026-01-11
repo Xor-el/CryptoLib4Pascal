@@ -10,7 +10,7 @@
       <PathDelim Value="\"/>
       <SearchPaths>
         <IncludeFiles Value="..\..\Include"/>
-        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Encoders;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac;..\..\Crypto\Signers\SignersEncodings;..\..\Math\EC\Custom\Djb;..\..\Math\EC\Rfc7748;..\..\Math\EC\Rfc8032;..\..\Asn1\Edec;..\..\Asn1\CryptLib"/>
+        <OtherUnitFiles Value="..\..\Asn1;..\..\Asn1\CryptoPro;..\..\Asn1\Nist;..\..\Asn1\Oiw;..\..\Asn1\Pkcs;..\..\Asn1\RossStandart;..\..\Asn1\Sec;..\..\Asn1\TeleTrust;..\..\Asn1\X9;..\..\Crypto;..\..\Crypto\Generators;..\..\Crypto\Parameters;..\..\Crypto\Prng;..\..\Crypto\Signers;..\..\Interfaces;..\..\Math;..\..\Math\EC;..\..\Math\EC\Abc;..\..\Math\EC\Endo;..\..\Math\EC\Multiplier;..\..\Math\Field;..\..\Math\Raw;..\..\Security;..\..\Utils;..\..\Utils\Encoders;..\..\Utils\Randoms;..\..\Utils\Rng;..\..\Crypto\Modes;..\..\Crypto\Paddings;..\..\Crypto\Engines;..\..\Crypto\Parsers;..\..\Crypto\Agreement;..\..\Crypto\Macs;..\..\Asn1\Misc;..\..\Asn1\Iana;..\..\Crypto\Digests;..\..\Asn1\X509;..\..\Crypto\EC;..\..\Math\EC\Custom\Sec;..\..\Asn1\Bsi;..\..\Asn1\Eac;..\..\Crypto\Signers\SignersEncodings;..\..\Math\EC\Custom\Djb;..\..\Math\EC\Rfc7748;..\..\Math\EC\Rfc8032;..\..\Asn1\Edec;..\..\Asn1\CryptLib;..\..\Crypto\Encodings"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <CodeGeneration>
@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="2"/>
-    <Files Count="360">
+    <Files Count="402">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -1467,6 +1467,174 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Math\EC\Multiplier\ClpMultipliers.pas"/>
         <UnitName Value="ClpMultipliers"/>
       </Item360>
+      <Item361>
+        <Filename Value="..\..\Interfaces\ClpIPrehash.pas"/>
+        <UnitName Value="ClpIPrehash"/>
+      </Item361>
+      <Item362>
+        <Filename Value="..\..\Interfaces\ClpIPssSigner.pas"/>
+        <UnitName Value="ClpIPssSigner"/>
+      </Item362>
+      <Item363>
+        <Filename Value="..\..\Interfaces\ClpIGenericSigner.pas"/>
+        <UnitName Value="ClpIGenericSigner"/>
+      </Item363>
+      <Item364>
+        <Filename Value="..\..\Interfaces\ClpIAlgorithmIdentifier.pas"/>
+        <UnitName Value="ClpIAlgorithmIdentifier"/>
+      </Item364>
+      <Item365>
+        <Filename Value="..\..\Interfaces\ClpIAsymmetricBlockCipher.pas"/>
+        <UnitName Value="ClpIAsymmetricBlockCipher"/>
+      </Item365>
+      <Item366>
+        <Filename Value="..\..\Interfaces\ClpIBufferedAsymmetricBlockCipher.pas"/>
+        <UnitName Value="ClpIBufferedAsymmetricBlockCipher"/>
+      </Item366>
+      <Item367>
+        <Filename Value="..\..\Interfaces\ClpIDigestInfo.pas"/>
+        <UnitName Value="ClpIDigestInfo"/>
+      </Item367>
+      <Item368>
+        <Filename Value="..\..\Interfaces\ClpIISO9796d1Encoding.pas"/>
+        <UnitName Value="ClpIISO9796d1Encoding"/>
+      </Item368>
+      <Item369>
+        <Filename Value="..\..\Interfaces\ClpIOaepEncoding.pas"/>
+        <UnitName Value="ClpIOaepEncoding"/>
+      </Item369>
+      <Item370>
+        <Filename Value="..\..\Interfaces\ClpIPkcs1Encoding.pas"/>
+        <UnitName Value="ClpIPkcs1Encoding"/>
+      </Item370>
+      <Item371>
+        <Filename Value="..\..\Interfaces\ClpIRsa.pas"/>
+        <UnitName Value="ClpIRsa"/>
+      </Item371>
+      <Item372>
+        <Filename Value="..\..\Interfaces\ClpIRsaBlindedEngine.pas"/>
+        <UnitName Value="ClpIRsaBlindedEngine"/>
+      </Item372>
+      <Item373>
+        <Filename Value="..\..\Interfaces\ClpIRsaBlindingEngine.pas"/>
+        <UnitName Value="ClpIRsaBlindingEngine"/>
+      </Item373>
+      <Item374>
+        <Filename Value="..\..\Interfaces\ClpIRsaBlindingFactorGenerator.pas"/>
+        <UnitName Value="ClpIRsaBlindingFactorGenerator"/>
+      </Item374>
+      <Item375>
+        <Filename Value="..\..\Interfaces\ClpIRsaBlindingParameters.pas"/>
+        <UnitName Value="ClpIRsaBlindingParameters"/>
+      </Item375>
+      <Item376>
+        <Filename Value="..\..\Interfaces\ClpIRsaCoreEngine.pas"/>
+        <UnitName Value="ClpIRsaCoreEngine"/>
+      </Item376>
+      <Item377>
+        <Filename Value="..\..\Interfaces\ClpIRsaDigestSigner.pas"/>
+        <UnitName Value="ClpIRsaDigestSigner"/>
+      </Item377>
+      <Item378>
+        <Filename Value="..\..\Interfaces\ClpIRsaEngine.pas"/>
+        <UnitName Value="ClpIRsaEngine"/>
+      </Item378>
+      <Item379>
+        <Filename Value="..\..\Interfaces\ClpIRsaKeyGenerationParameters.pas"/>
+        <UnitName Value="ClpIRsaKeyGenerationParameters"/>
+      </Item379>
+      <Item380>
+        <Filename Value="..\..\Interfaces\ClpIRsaKeyPairGenerator.pas"/>
+        <UnitName Value="ClpIRsaKeyPairGenerator"/>
+      </Item380>
+      <Item381>
+        <Filename Value="..\..\Interfaces\ClpIRsaKeyParameters.pas"/>
+        <UnitName Value="ClpIRsaKeyParameters"/>
+      </Item381>
+      <Item382>
+        <Filename Value="..\..\Interfaces\ClpIRsaPrivateCrtKeyParameters.pas"/>
+        <UnitName Value="ClpIRsaPrivateCrtKeyParameters"/>
+      </Item382>
+      <Item383>
+        <Filename Value="..\..\Crypto\Parameters\ClpRsaBlindingParameters.pas"/>
+        <UnitName Value="ClpRsaBlindingParameters"/>
+      </Item383>
+      <Item384>
+        <Filename Value="..\..\Crypto\Parameters\ClpRsaKeyGenerationParameters.pas"/>
+        <UnitName Value="ClpRsaKeyGenerationParameters"/>
+      </Item384>
+      <Item385>
+        <Filename Value="..\..\Crypto\Parameters\ClpRsaKeyParameters.pas"/>
+        <UnitName Value="ClpRsaKeyParameters"/>
+      </Item385>
+      <Item386>
+        <Filename Value="..\..\Crypto\Parameters\ClpRsaPrivateCrtKeyParameters.pas"/>
+        <UnitName Value="ClpRsaPrivateCrtKeyParameters"/>
+      </Item386>
+      <Item387>
+        <Filename Value="..\..\Crypto\Encodings\ClpISO9796d1Encoding.pas"/>
+        <UnitName Value="ClpISO9796d1Encoding"/>
+      </Item387>
+      <Item388>
+        <Filename Value="..\..\Crypto\Encodings\ClpOaepEncoding.pas"/>
+        <UnitName Value="ClpOaepEncoding"/>
+      </Item388>
+      <Item389>
+        <Filename Value="..\..\Crypto\Encodings\ClpPkcs1Encoding.pas"/>
+        <UnitName Value="ClpPkcs1Encoding"/>
+      </Item389>
+      <Item390>
+        <Filename Value="..\..\Crypto\Engines\ClpRsaBlindedEngine.pas"/>
+        <UnitName Value="ClpRsaBlindedEngine"/>
+      </Item390>
+      <Item391>
+        <Filename Value="..\..\Crypto\Engines\ClpRsaBlindingEngine.pas"/>
+        <UnitName Value="ClpRsaBlindingEngine"/>
+      </Item391>
+      <Item392>
+        <Filename Value="..\..\Crypto\Engines\ClpRsaCoreEngine.pas"/>
+        <UnitName Value="ClpRsaCoreEngine"/>
+      </Item392>
+      <Item393>
+        <Filename Value="..\..\Crypto\Engines\ClpRsaEngine.pas"/>
+        <UnitName Value="ClpRsaEngine"/>
+      </Item393>
+      <Item394>
+        <Filename Value="..\..\Crypto\Signers\ClpPssSigner.pas"/>
+        <UnitName Value="ClpPssSigner"/>
+      </Item394>
+      <Item395>
+        <Filename Value="..\..\Crypto\Signers\ClpGenericSigner.pas"/>
+        <UnitName Value="ClpGenericSigner"/>
+      </Item395>
+      <Item396>
+        <Filename Value="..\..\Crypto\Signers\ClpRsaDigestSigner.pas"/>
+        <UnitName Value="ClpRsaDigestSigner"/>
+      </Item396>
+      <Item397>
+        <Filename Value="..\..\Crypto\Generators\ClpRsaBlindingFactorGenerator.pas"/>
+        <UnitName Value="ClpRsaBlindingFactorGenerator"/>
+      </Item397>
+      <Item398>
+        <Filename Value="..\..\Crypto\Generators\ClpRsaKeyPairGenerator.pas"/>
+        <UnitName Value="ClpRsaKeyPairGenerator"/>
+      </Item398>
+      <Item399>
+        <Filename Value="..\..\Asn1\X509\ClpAlgorithmIdentifier.pas"/>
+        <UnitName Value="ClpAlgorithmIdentifier"/>
+      </Item399>
+      <Item400>
+        <Filename Value="..\..\Asn1\X509\ClpDigestInfo.pas"/>
+        <UnitName Value="ClpDigestInfo"/>
+      </Item400>
+      <Item401>
+        <Filename Value="..\..\Asn1\X509\ClpX509ObjectIdentifiers.pas"/>
+        <UnitName Value="ClpX509ObjectIdentifiers"/>
+      </Item401>
+      <Item402>
+        <Filename Value="..\..\Crypto\Digests\ClpPrehash.pas"/>
+        <UnitName Value="ClpPrehash"/>
+      </Item402>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

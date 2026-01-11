@@ -126,7 +126,22 @@ uses
   ClpScalarSplitParameters, ClpIGlvTypeAParameters, ClpIGlvTypeAEndomorphism, 
   ClpIScaleXNegateYPointMap, ClpIScaleYNegateXPointMap, 
   ClpIScalarSplitParameters, ClpECCompUtilities, ClpValidityPreCompInfo, 
-  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac, ClpMultipliers;
+  ClpIValidityPreCompInfo, ClpKMac, ClpIKMac, ClpMultipliers, ClpIPrehash, 
+  ClpIPssSigner, ClpIGenericSigner, ClpIAlgorithmIdentifier, 
+  ClpIAsymmetricBlockCipher, ClpIBufferedAsymmetricBlockCipher, 
+  ClpIDigestInfo, ClpIISO9796d1Encoding, ClpIOaepEncoding, ClpIPkcs1Encoding, 
+  ClpIRsa, ClpIRsaBlindedEngine, ClpIRsaBlindingEngine, 
+  ClpIRsaBlindingFactorGenerator, ClpIRsaBlindingParameters, 
+  ClpIRsaCoreEngine, ClpIRsaDigestSigner, ClpIRsaEngine, 
+  ClpIRsaKeyGenerationParameters, ClpIRsaKeyPairGenerator, 
+  ClpIRsaKeyParameters, ClpIRsaPrivateCrtKeyParameters, 
+  ClpRsaBlindingParameters, ClpRsaKeyGenerationParameters, 
+  ClpRsaKeyParameters, ClpRsaPrivateCrtKeyParameters, ClpISO9796d1Encoding, 
+  ClpOaepEncoding, ClpPkcs1Encoding, ClpRsaBlindedEngine, 
+  ClpRsaBlindingEngine, ClpRsaCoreEngine, ClpRsaEngine, ClpPssSigner, 
+  ClpGenericSigner, ClpRsaDigestSigner, ClpRsaBlindingFactorGenerator, 
+  ClpRsaKeyPairGenerator, ClpAlgorithmIdentifier, ClpDigestInfo, 
+  ClpX509ObjectIdentifiers, ClpPrehash;
 
 implementation
 

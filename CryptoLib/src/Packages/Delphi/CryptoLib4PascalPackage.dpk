@@ -394,7 +394,6 @@ contains
   ClpECCompUtilities in '..\..\Math\EC\ClpECCompUtilities.pas',
   ClpIKMac in '..\..\Interfaces\ClpIKMac.pas',
   ClpKMac in '..\..\Crypto\Macs\ClpKMac.pas',
-  { RSA Implementation }
   ClpIRsa in '..\..\Interfaces\ClpIRsa.pas',
   ClpIRsaKeyParameters in '..\..\Interfaces\ClpIRsaKeyParameters.pas',
   ClpRsaKeyParameters in '..\..\Crypto\Parameters\ClpRsaKeyParameters.pas',
@@ -431,6 +430,12 @@ contains
   ClpIRsaBlindingEngine in '..\..\Interfaces\ClpIRsaBlindingEngine.pas',
   ClpRsaBlindingEngine in '..\..\Crypto\Engines\ClpRsaBlindingEngine.pas',
   ClpIBufferedAsymmetricBlockCipher in '..\..\Interfaces\ClpIBufferedAsymmetricBlockCipher.pas',
-  ClpBufferedAsymmetricBlockCipher in '..\..\Crypto\ClpBufferedAsymmetricBlockCipher.pas';
+  ClpBufferedAsymmetricBlockCipher in '..\..\Crypto\ClpBufferedAsymmetricBlockCipher.pas',
+  ClpIPssSigner in '..\..\Interfaces\ClpIPssSigner.pas',
+  ClpPssSigner in '..\..\Crypto\Signers\ClpPssSigner.pas',
+  ClpIGenericSigner in '..\..\Interfaces\ClpIGenericSigner.pas',
+  ClpGenericSigner in '..\..\Crypto\Signers\ClpGenericSigner.pas',
+  ClpIPrehash in '..\..\Interfaces\ClpIPrehash.pas',
+  ClpPrehash in '..\..\Crypto\Digests\ClpPrehash.pas';
 
 end.

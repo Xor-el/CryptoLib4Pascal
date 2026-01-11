@@ -41,12 +41,8 @@ uses
   ClpIRsaKeyPairGenerator,
   ClpRsaKeyPairGenerator,
   ClpIRsaCoreEngine,
-  ClpRsaCoreEngine,
-  ClpIRsaBlindedEngine,
   ClpRsaBlindedEngine,
-  ClpIPkcs1Encoding,
   ClpPkcs1Encoding,
-  ClpIOaepEncoding,
   ClpOaepEncoding,
   ClpIAsymmetricBlockCipher,
   ClpIAsymmetricCipherKeyPair,
@@ -75,9 +71,11 @@ type
       FPExp: TBigInteger;
       FQExp: TBigInteger;
       FCrtCoef: TBigInteger;
+      FRandom: ISecureRandom;
 
     class constructor CreateTestRSA();
 
+    procedure DoTestModPowRSA(BitLength: Integer);
     procedure DoTestRawRsa;
     procedure DoTestPkcs1Encoding;
     procedure DoTestOaepEncoding;
@@ -85,6 +83,8 @@ type
     procedure DoTestRsaSignature;
 
   published
+    procedure TestModPowRSA1024;
+    procedure TestModPowRSA2048;
     procedure TestRawRsa;
     procedure TestPkcs1Encoding;
     procedure TestOaepEncoding;
@@ -132,6 +132,61 @@ begin
   FCrtCoef := TBigInteger.Create(
     'dae7651ee69ad1d081ec5e7188ae126f6004ff39556bde90e0b870962fa7b926' +
     'd070686d8244fe5a9aa709a95686a104614834b0ada4b10f53197a5cb4c97339', 16);
+
+  FRandom := TSecureRandom.Create();
+end;
+
+procedure TTestRSA.DoTestModPowRSA(BitLength: Integer);
+var
+  i: Integer;
+  p, q, n, phi, e, d, m, c, m_dec, One: TBigInteger;
+begin
+  One := TBigInteger.One;
+  e := TBigInteger.ValueOf(65537);
+
+  for i := 1 to 5 do
+  begin
+    // Generate primes p, q
+    repeat
+      p := TBigInteger.ProbablePrime(BitLength div 2, FRandom);
+    until (not p.Subtract(One).GCD(e).Equals(e)); // Ensure gcd(e, p-1) = 1
+
+    repeat
+      q := TBigInteger.ProbablePrime(BitLength div 2, FRandom);
+    until (not q.Equals(p)) and (not q.Subtract(One).GCD(e).Equals(e));
+
+    n := p.Multiply(q);
+    phi := p.Subtract(One).Multiply(q.Subtract(One));
+
+    d := e.ModInverse(phi);
+
+    // Random message m < n
+    repeat
+      m := TBigInteger.Create(n.BitLength - 1, FRandom);
+    until (m.CompareTo(n) < 0);
+
+    // Encrypt: c = m^e mod n
+    c := m.ModPow(e, n);
+
+    // Decrypt: m' = c^d mod n
+    m_dec := c.ModPow(d, n);
+
+    if not m.Equals(m_dec) then
+    begin
+      Fail(Format('RSA ModPow Failure at Iteration %d' + sLineBreak +
+                  'p: %s' + sLineBreak +
+                  'q: %s' + sLineBreak +
+                  'n: %s' + sLineBreak +
+                  'e: %s' + sLineBreak +
+                  'd: %s' + sLineBreak +
+                  'm: %s' + sLineBreak +
+                  'c: %s' + sLineBreak +
+                  'm_dec: %s',
+                  [i, p.ToString(16), q.ToString(16), n.ToString(16),
+                   e.ToString(16), d.ToString(16), m.ToString(16),
+                   c.ToString(16), m_dec.ToString(16)]));
+    end;
+  end;
 end;
 
 procedure TTestRSA.DoTestRawRsa;
@@ -263,7 +318,7 @@ var
   kpParams: IRsaKeyGenerationParameters;
   keyPair: IAsymmetricCipherKeyPair;
   signer: ISigner;
-  message, signature: TCryptoLibByteArray;
+  &message, signature: TCryptoLibByteArray;
   verified: Boolean;
 begin
   // Generate key pair
@@ -277,31 +332,41 @@ begin
   kpGen.Init(kpParams);
   keyPair := kpGen.GenerateKeyPair();
 
-  message := TConverters.ConvertStringToBytes('Test message for RSA signature',
+  &message := TConverters.ConvertStringToBytes('Test message for RSA signature',
     TEncoding.UTF8);
 
   // Sign with SHA-256
   signer := TSignerUtilities.GetSigner('SHA-256withRSA');
   signer.Init(True, keyPair.Private);
-  signer.BlockUpdate(message, 0, System.Length(message));
+  signer.BlockUpdate(&message, 0, System.Length(&message));
   signature := signer.GenerateSignature();
 
   CheckTrue(System.Length(signature) > 0, 'Signature is empty');
 
   // Verify
   signer.Init(False, keyPair.Public);
-  signer.BlockUpdate(message, 0, System.Length(message));
+  signer.BlockUpdate(&message, 0, System.Length(&message));
   verified := signer.VerifySignature(signature);
 
   CheckTrue(verified, 'Signature verification failed');
 
   // Test with modified message (should fail)
-  message[0] := message[0] xor $FF;
+  &message[0] := &message[0] xor $FF;
   signer.Init(False, keyPair.Public);
-  signer.BlockUpdate(message, 0, System.Length(message));
+  signer.BlockUpdate(&message, 0, System.Length(&message));
   verified := signer.VerifySignature(signature);
 
   CheckFalse(verified, 'Modified message should fail verification');
+end;
+
+procedure TTestRSA.TestModPowRSA1024;
+begin
+  DoTestModPowRSA(1024);
+end;
+
+procedure TTestRSA.TestModPowRSA2048;
+begin
+  DoTestModPowRSA(2048);
 end;
 
 procedure TTestRSA.TestRawRsa;

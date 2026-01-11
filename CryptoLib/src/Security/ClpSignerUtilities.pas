@@ -60,6 +60,13 @@ uses
   ClpIECSchnorrSipaSigner,
   ClpRsaDigestSigner,
   ClpIRsaDigestSigner,
+  ClpPssSigner,
+  ClpIPssSigner,
+  ClpGenericSigner,
+  ClpIGenericSigner,
+  ClpRsaBlindedEngine,
+  ClpPkcs1Encoding,
+  ClpIPkcs1Encoding,
   ClpPkcsObjectIdentifiers,
   ClpStringUtils,
   ClpCryptoLibTypes;
@@ -453,6 +460,55 @@ begin
   Falgorithms.Add('SHA-512(256)WITHRSAENCRYPTION', 'SHA-512(256)withRSA');
   Falgorithms.Add(TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption.id, 'SHA-512(256)withRSA');
 
+  // PSS / RSA-OAEP signatures
+  Falgorithms.Add('PSSWITHRSA', 'PSSwithRSA');
+  Falgorithms.Add('RSASSA-PSS', 'PSSwithRSA');
+  Falgorithms.Add('RSAPSS', 'PSSwithRSA');
+  Falgorithms.Add(TPkcsObjectIdentifiers.IdRsassaPss.id, 'PSSwithRSA');
+
+  Falgorithms.Add('SHA1WITHRSAANDMGF1', 'SHA-1withRSAandMGF1');
+  Falgorithms.Add('SHA-1WITHRSAANDMGF1', 'SHA-1withRSAandMGF1');
+  Falgorithms.Add('SHA1WITHRSA/PSS', 'SHA-1withRSAandMGF1');
+  Falgorithms.Add('SHA-1WITHRSA/PSS', 'SHA-1withRSAandMGF1');
+  Falgorithms.Add('SHA1WITHRSASSA-PSS', 'SHA-1withRSAandMGF1');
+  Falgorithms.Add('SHA-1WITHRSASSA-PSS', 'SHA-1withRSAandMGF1');
+
+  Falgorithms.Add('SHA224WITHRSAANDMGF1', 'SHA-224withRSAandMGF1');
+  Falgorithms.Add('SHA-224WITHRSAANDMGF1', 'SHA-224withRSAandMGF1');
+  Falgorithms.Add('SHA224WITHRSA/PSS', 'SHA-224withRSAandMGF1');
+  Falgorithms.Add('SHA-224WITHRSA/PSS', 'SHA-224withRSAandMGF1');
+  Falgorithms.Add('SHA224WITHRSASSA-PSS', 'SHA-224withRSAandMGF1');
+  Falgorithms.Add('SHA-224WITHRSASSA-PSS', 'SHA-224withRSAandMGF1');
+
+  Falgorithms.Add('SHA256WITHRSAANDMGF1', 'SHA-256withRSAandMGF1');
+  Falgorithms.Add('SHA-256WITHRSAANDMGF1', 'SHA-256withRSAandMGF1');
+  Falgorithms.Add('SHA256WITHRSA/PSS', 'SHA-256withRSAandMGF1');
+  Falgorithms.Add('SHA-256WITHRSA/PSS', 'SHA-256withRSAandMGF1');
+  Falgorithms.Add('SHA256WITHRSASSA-PSS', 'SHA-256withRSAandMGF1');
+  Falgorithms.Add('SHA-256WITHRSASSA-PSS', 'SHA-256withRSAandMGF1');
+
+  Falgorithms.Add('SHA384WITHRSAANDMGF1', 'SHA-384withRSAandMGF1');
+  Falgorithms.Add('SHA-384WITHRSAANDMGF1', 'SHA-384withRSAandMGF1');
+  Falgorithms.Add('SHA384WITHRSA/PSS', 'SHA-384withRSAandMGF1');
+  Falgorithms.Add('SHA-384WITHRSA/PSS', 'SHA-384withRSAandMGF1');
+  Falgorithms.Add('SHA384WITHRSASSA-PSS', 'SHA-384withRSAandMGF1');
+  Falgorithms.Add('SHA-384WITHRSASSA-PSS', 'SHA-384withRSAandMGF1');
+
+  Falgorithms.Add('SHA512WITHRSAANDMGF1', 'SHA-512withRSAandMGF1');
+  Falgorithms.Add('SHA-512WITHRSAANDMGF1', 'SHA-512withRSAandMGF1');
+  Falgorithms.Add('SHA512WITHRSA/PSS', 'SHA-512withRSAandMGF1');
+  Falgorithms.Add('SHA-512WITHRSA/PSS', 'SHA-512withRSAandMGF1');
+  Falgorithms.Add('SHA512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
+  Falgorithms.Add('SHA-512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
+
+  // Raw RSA (NONEWITHRSA) and raw PSS
+  Falgorithms.Add('NONEWITHRSA', 'RSA');
+  Falgorithms.Add('RSAWITHNONE', 'RSA');
+  Falgorithms.Add('RAWRSA', 'RSA');
+
+  Falgorithms.Add('RAWRSAPSS', 'RAWRSASSA-PSS');
+  Falgorithms.Add('NONEWITHRSAPSS', 'RAWRSASSA-PSS');
+  Falgorithms.Add('NONEWITHRSASSA-PSS', 'RAWRSASSA-PSS');
 
   // ECSCHNORR SIPA
 
@@ -709,6 +765,23 @@ begin
     Exit;
   end;
 
+  if TStringUtils.EndsWith(mechanism, 'withRSAandMGF1', True) then
+  begin
+    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
+      'with', True));
+    DigestInstance := TDigestUtilities.GetDigest(DigestName);
+    Result := TPssSigner.Create(TRsaBlindedEngine.Create(), DigestInstance);
+    Exit;
+  end;
+
+  // TODO: PSSwithRSA - The Sha1Digest here is a default.
+  // if (mechanism = 'PSSwithRSA') then
+  // begin
+  //   Result := TPssSigner.Create(TRsaBlindedEngine.Create(),
+  //     TDigestUtilities.GetDigest('SHA-1'));
+  //   Exit;
+  // end;
+
   if TStringUtils.EndsWith(mechanism, 'withRSA', True) then
   begin
     DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
@@ -718,6 +791,22 @@ begin
     Result := TRsaDigestSigner.Create(DigestInstance) as IRsaDigestSigner;
     Exit;
   end;
+
+  if (mechanism = 'RSA') then
+  begin
+    Result := TGenericSigner.Create(
+      TPkcs1Encoding.Create(TRsaBlindedEngine.Create()),
+      TDigestUtilities.GetDigest('NONE'));
+    Exit;
+  end;
+
+  // TODO: RAWRSASSA-PSS - Add support for other parameter settings
+  // if (mechanism = 'RAWRSASSA-PSS') then
+  // begin
+  //   Result := TPssSigner.CreateRawSigner(TRsaBlindedEngine.Create(),
+  //     TDigestUtilities.GetDigest('SHA-1'));
+  //   Exit;
+  // end;
 
   raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm,
     [algorithm]);

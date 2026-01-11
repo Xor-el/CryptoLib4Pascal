@@ -151,6 +151,7 @@ class function TBigIntegers.AsUnsignedByteArray(length: Int32;
 var
   bytes: TCryptoLibByteArray;
 begin
+  Result := nil;
   bytes := n.ToByteArrayUnsigned();
 
   if (System.length(bytes) > length) then

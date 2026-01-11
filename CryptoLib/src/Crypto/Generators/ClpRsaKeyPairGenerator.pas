@@ -109,7 +109,7 @@ begin
       FDefaultPublicExponent, parameters.Random, parameters.Strength, DefaultTests);
 end;
 
-class function TRsaKeyPairGenerator.ArrayContains(const arr: TArray<Int32>;
+class function TRsaKeyPairGenerator.ArrayContains(const arr: TCryptoLibInt32Array;
   value: Int32): Boolean;
 var
   i: Int32;

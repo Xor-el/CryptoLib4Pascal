@@ -299,6 +299,7 @@ class function TSecureRandom.CreatePrng(const digestName: String;
 var
   digest: IDigest;
   prng: IDigestRandomGenerator;
+  seedLength: Int32;
 begin
   digest := TDigestUtilities.GetDigest(digestName);
   if (digest = Nil) then
@@ -310,8 +311,9 @@ begin
   prng := TDigestRandomGenerator.Create(digest);
   if (autoSeed) then
   begin
+    seedLength := 2 * digest.GetDigestSize;
     prng.AddSeedMaterial(NextCounterValue());
-    prng.AddSeedMaterial(GetNextBytes(Master, digest.GetDigestSize));
+    prng.AddSeedMaterial(GetNextBytes(Master, seedLength));
   end;
   Result := prng;
 end;

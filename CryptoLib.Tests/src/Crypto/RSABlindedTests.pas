@@ -17,9 +17,7 @@ uses
   {$ENDIF}
   ClpBigInteger,
   ClpSecureRandom,
-  ClpISecureRandom,
   ClpEncoders,
-  ClpConverters,
   ClpICipherParameters,
   ClpIAsymmetricBlockCipher,
   ClpIAsymmetricCipherKeyPair,
@@ -32,11 +30,9 @@ uses
   ClpRsaKeyPairGenerator,
   ClpIRsaKeyPairGenerator,
   ClpRsaBlindedEngine,
-  ClpIRsaBlindedEngine,
   ClpPkcs1Encoding,
   ClpIPkcs1Encoding,
   ClpOaepEncoding,
-  ClpIOaepEncoding,
   ClpCryptoLibTypes;
 
 type
