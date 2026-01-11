@@ -9,12 +9,12 @@ interface
 uses
   SysUtils,
   Classes,
-  {$IFDEF FPC}
+{$IFDEF FPC}
   fpcunit,
   testregistry,
-  {$ELSE}
+{$ELSE}
   TestFramework,
-  {$ENDIF}
+{$ENDIF}
   ClpBigInteger,
   ClpSecureRandom,
   ClpEncoders,

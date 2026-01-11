@@ -396,6 +396,10 @@ end;
 
 initialization
 
-RegisterTest(TTestRSA.Suite);
+{$IFDEF FPC}
+  RegisterTest(TTestRSA);
+{$ELSE}
+  RegisterTest(TTestRSA.Suite);
+{$ENDIF FPC}
 
 end.
