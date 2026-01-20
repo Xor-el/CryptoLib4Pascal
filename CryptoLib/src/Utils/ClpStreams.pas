@@ -87,10 +87,10 @@ type
     FBufferCount: Int32;
     FPosition: Int64;
 
-    function GetSize: Int64; override;
     procedure SetPosition(const AValue: Int64);
 
   protected
+    function GetSize: Int64; override;
     function GetCanWrite: Boolean; virtual;
 
   public

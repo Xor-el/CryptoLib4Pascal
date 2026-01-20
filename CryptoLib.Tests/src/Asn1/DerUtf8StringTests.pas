@@ -44,7 +44,7 @@ type
     /// Unicode code point U+10400 coded as surrogate in two native Java UTF-16
     /// code units
     /// </summary>
-    FGlyph1Utf16: TCryptoLibCharArray;
+    FGlyph1Utf16: TCryptoLibGenericArray<WideChar>;
     /// <summary>
     /// U+10400 coded in UTF-8
     /// </summary>
@@ -53,7 +53,7 @@ type
     /// <summary>
     /// Unicode code point U+6771 in native Java UTF-16
     /// </summary>
-    FGlyph2Utf16: TCryptoLibCharArray;
+    FGlyph2Utf16: TCryptoLibGenericArray<WideChar>;
     /// <summary>
     /// U+6771 coded in UTF-8
     /// </summary>
@@ -62,7 +62,7 @@ type
     /// <summary>
     /// Unicode code point U+00DF in native Java UTF-16
     /// </summary>
-    FGlyph3Utf16: TCryptoLibCharArray;
+    FGlyph3Utf16: TCryptoLibGenericArray<WideChar>;
     /// <summary>
     /// U+00DF coded in UTF-8
     /// </summary>
@@ -71,13 +71,13 @@ type
     /// <summary>
     /// Unicode code point U+0041 in native Java UTF-16
     /// </summary>
-    FGlyph4Utf16: TCryptoLibCharArray;
+    FGlyph4Utf16: TCryptoLibGenericArray<WideChar>;
     /// <summary>
     /// U+0041 coded in UTF-8
     /// </summary>
     FGlyph4Utf8: TCryptoLibByteArray;
 
-    class function CharArrayToString(const AChars: TCryptoLibCharArray): String; static;
+    class function WideCharArrayToString(const AChars: TCryptoLibGenericArray<WideChar>): String; static;
 
   protected
     procedure SetUp; override;
@@ -91,7 +91,9 @@ implementation
 
 { TDerUtf8StringTest }
 
-class function TDerUtf8StringTest.CharArrayToString(const AChars: TCryptoLibCharArray): String;
+class function TDerUtf8StringTest.WideCharArrayToString(const AChars: TCryptoLibGenericArray<WideChar>): String;
+var
+  LUnicodeStr: UnicodeString;
 begin
   if System.Length(AChars) = 0 then
   begin
@@ -99,8 +101,9 @@ begin
     Exit;
   end;
 
-  // Build a string from code units char array (including surrogate pairs).
-  SetString(Result, PChar(@AChars[0]), System.Length(AChars));
+  // Build a UnicodeString from code units WideChar array (including surrogate pairs).
+  SetString(LUnicodeStr, PWideChar(@AChars[0]), System.Length(AChars));
+  Result := String(LUnicodeStr);
 end;
 
 procedure TDerUtf8StringTest.SetUp;
@@ -109,23 +112,23 @@ begin
 
   // glyph1_utf16 = { 0xD801, 0xDC00 }
   System.SetLength(FGlyph1Utf16, 2);
-  FGlyph1Utf16[0] := Char($D801);
-  FGlyph1Utf16[1] := Char($DC00);
+  FGlyph1Utf16[0] := WideChar($D801);
+  FGlyph1Utf16[1] := WideChar($DC00);
   FGlyph1Utf8 := TCryptoLibByteArray.Create($F0, $90, $90, $80);
 
   // glyph2_utf16 = { 0x6771 }
   System.SetLength(FGlyph2Utf16, 1);
-  FGlyph2Utf16[0] := Char($6771);
+  FGlyph2Utf16[0] := WideChar($6771);
   FGlyph2Utf8 := TCryptoLibByteArray.Create($E6, $9D, $B1);
 
   // glyph3_utf16 = { 0x00DF }
   System.SetLength(FGlyph3Utf16, 1);
-  FGlyph3Utf16[0] := Char($00DF);
+  FGlyph3Utf16[0] := WideChar($00DF);
   FGlyph3Utf8 := TCryptoLibByteArray.Create($C3, $9F);
 
   // glyph4_utf16 = { 0x0041 }
   System.SetLength(FGlyph4Utf16, 1);
-  FGlyph4Utf16[0] := Char($0041);
+  FGlyph4Utf16[0] := WideChar($0041);
   FGlyph4Utf8 := TCryptoLibByteArray.Create($41);
 end;
 
@@ -152,7 +155,7 @@ var
   LOctetString: IDerOctetString;
   LDerUtf8StringOne, LDerUtf8StringTwo: IDerUtf8String;
 
-  LGlyphsUtf16: TCryptoLibMatrixGenericArray<Char>;
+  LGlyphsUtf16: TCryptoLibMatrixGenericArray<WideChar>;
   LGlyphsUtf8: TCryptoLibMatrixGenericArray<Byte>;
 begin
   // Build glyph tables.
@@ -173,7 +176,7 @@ begin
     for I := 0 to System.Length(LGlyphsUtf16) - 1 do
     begin
       // Convert code units char array to String safely (preserves surrogate pairs)
-      S := CharArrayToString(LGlyphsUtf16[I]);
+      S := WideCharArrayToString(LGlyphsUtf16[I]);
 
       LDerUtf8StringOne := TDerUtf8String.Create(S);
       B1 := LDerUtf8StringOne.GetEncoded();
