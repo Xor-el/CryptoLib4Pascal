@@ -3136,7 +3136,6 @@ type
     function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     const
-      //AllowUnsafeProperty = 'Org.CryptoLib4Pascal.Asn1.AllowUnsafeInteger';
       SignExtSigned = Int32(-1);
       SignExtUnsigned = Int32($FF);
     type
@@ -13400,16 +13399,13 @@ begin
 end;
 
 function TDerUniversalString.GetString(): String;
+const
+  LTable: array[0..15] of Char = ('0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
 var
   LDl, LCapacity, I: Int32;
   LBuf: TStringBuilder;
-  LTable: array[0..15] of Char;
 begin
-  LTable[0] := '0'; LTable[1] := '1'; LTable[2] := '2'; LTable[3] := '3';
-  LTable[4] := '4'; LTable[5] := '5'; LTable[6] := '6'; LTable[7] := '7';
-  LTable[8] := '8'; LTable[9] := '9'; LTable[10] := 'A'; LTable[11] := 'B';
-  LTable[12] := 'C'; LTable[13] := 'D'; LTable[14] := 'E'; LTable[15] := 'F';
-
   LDl := System.Length(FContents);
   LCapacity := 3 + 2 * (TAsn1OutputStream.GetLengthOfDL(LDl) + LDl);
   LBuf := TStringBuilder.Create('#1C', LCapacity);
@@ -13919,12 +13915,8 @@ begin
 end;
 
 class function TDerInteger.AllowUnsafe(): Boolean;
-//var
-//  LAllowUnsafeValue: String;
 begin
   Result := FAllowUnsafeInteger;
-  //LAllowUnsafeValue := TPlatform.GetEnvironmentVariable(AllowUnsafeProperty);
-  //Result := (LAllowUnsafeValue <> '') and TPlatform.EqualsIgnoreCase('true', LAllowUnsafeValue);
 end;
 
 class function TDerInteger.IsMalformed(const ABytes: TCryptoLibByteArray): Boolean;

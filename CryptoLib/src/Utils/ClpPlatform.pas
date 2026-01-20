@@ -31,10 +31,6 @@ type
   TPlatform = class sealed(TObject)
   public
     /// <summary>
-    /// Checks if running process is 64 bits.
-    /// </summary>
-    class function Is64BitProcess(): Boolean; static;
-    /// <summary>
     /// Get the type name of an object.
     /// </summary>
     class function GetTypeName(AObj: TObject): String; overload; static;
@@ -52,11 +48,6 @@ type
 implementation
 
 { TPlatform }
-
-class function TPlatform.Is64BitProcess: Boolean;
-begin
-  Result := True; //TODO: Implement
-end;
 
 class function TPlatform.GetTypeName(AObj: TObject): String;
 begin
