@@ -32,140 +32,119 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpConverters,
-  ClpIAsn1Objects,
   ClpAsn1Objects,
+  ClpIAsn1Objects,
+  ClpAsn1Streams,
+  ClpConverters,
   ClpCryptoLibTypes,
+  ClpDateTimeUtilities,
   CryptoLibTestBase;
 
 type
 
-  TTestEqualsAndHashCode = class(TCryptoLibAlgorithmTestCase)
-  private
-
-  var
-    Fdata: TBytes;
-    Fvalues: TCryptoLibGenericArray<IAsn1Object>;
-
+  TEqualsAndHashCodeTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+    FData: TCryptoLibByteArray;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
   published
     procedure TestEqualsAndHashCode;
-
   end;
 
 implementation
 
-{ TTestEqualsAndHashCode }
+{ TEqualsAndHashCodeTest }
 
-procedure TTestEqualsAndHashCode.SetUp;
+procedure TEqualsAndHashCodeTest.SetUp;
 begin
   inherited;
-  Fdata := TBytes.Create(0, 1, 0, 1, 0, 0, 1);
-  Fvalues := TCryptoLibGenericArray<IAsn1Object>.Create(
+  FData := TCryptoLibByteArray.Create(0, 1, 0, 1, 0, 0, 1);
+end;
 
-    TBerOctetString.Create(Fdata),
+procedure TEqualsAndHashCodeTest.TearDown;
+begin
+  FData := nil;
+  inherited;
+end;
 
-    TDerApplicationSpecific.Create(0, Fdata), TDerBitString.Create(Fdata),
-
-    TDerBoolean.True, TDerBoolean.False, TDerEnumerated.Create(100),
+procedure TEqualsAndHashCodeTest.TestEqualsAndHashCode;
+var
+  LValues: TCryptoLibGenericArray<IAsn1Object>;
+  LBOut: TMemoryStream;
+  LAOut: TAsn1OutputStream;
+  LAIn: TAsn1InputStream;
+  LObj: IAsn1Object;
+  LOutput: TCryptoLibByteArray;
+  I: Int32;
+  LNow: TDateTime;
+begin
+  LNow := Now;
+  LValues := TCryptoLibGenericArray<IAsn1Object>.Create(
+    TBerOctetString.Create(FData),
+    TBerSequence.Create(TDerPrintableString.Create('hello world') as IDerPrintableString),
+    TBerSet.Create(TDerPrintableString.Create('hello world') as IDerPrintableString),
+    TBerTaggedObject.Create(0, TDerPrintableString.Create('hello world') as IDerPrintableString),
+    TDerBitString.Create(FData),
     TDerBmpString.Create('hello world'),
-
-    TDerGeneralString.Create('hello world'), TDerIA5String.Create('hello'),
-    TDerInteger.Create(1000), TDerNull.Instance,
+    TDerBoolean.True,
+    TDerBoolean.False,
+    TDerEnumerated.Create(100),
+    TDerGeneralizedTime.Create('20070315173729Z'),
+    TDerGeneralString.Create('hello world'),
+    TDerIA5String.Create('hello'),
+    TDerInteger.ValueOf(1000),
+    TDerNull.Instance,
     TDerNumericString.Create('123456'),
-    TDerObjectIdentifier.Create('1.1.1.10000.1'), TDerOctetString.Create(Fdata),
+    TDerObjectIdentifier.Create('1.1.1.10000.1'),
+    TAsn1RelativeOid.Create('3.2.0.123456'),
+    TDerOctetString.Create(FData),
     TDerPrintableString.Create('hello world'),
-
+    TDerSequence.Create(TDerPrintableString.Create('hello world') as IDerPrintableString),
+    TDerSet.Create(TDerPrintableString.Create('hello world') as IDerPrintableString),
     TDerT61String.Create('hello world'),
-
-    TDerUniversalString.Create(Fdata),
-
+    TDerTaggedObject.Create(0, TDerPrintableString.Create('hello world') as IDerPrintableString),
+    TDerUniversalString.Create(FData),
+    TDerUtcTime.Create(LNow, 2049),
     TDerUtf8String.Create('hello world'),
     TDerVisibleString.Create('hello world'),
     TDerGraphicString.Create(DecodeHex('deadbeef')),
-    TDerVideotexString.Create(TConverters.ConvertStringToBytes('Hello World',
-    TEncoding.ANSI)),
+    TDerVideotexString.Create(TConverters.ConvertStringToBytes('Hello World', TEncoding.ANSI))
+  );
 
-    TBerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
-    as IDerPrintableString),
-
-    TDerTaggedObject.Create(0, TDerPrintableString.Create('hello world')
-    as IDerPrintableString),
-
-    TBerSequence.Create(TDerPrintableString.Create('hello world')
-    as IDerPrintableString),
-    TBerSet.Create(TDerPrintableString.Create('hello world')
-    as IDerPrintableString),
-    TDerSequence.Create(TDerPrintableString.Create('hello world')
-    as IDerPrintableString),
-    TDerSet.Create(TDerPrintableString.Create('hello world')
-    as IDerPrintableString)
-
-    );
-
-end;
-
-procedure TTestEqualsAndHashCode.TearDown;
-begin
-  inherited;
-
-end;
-
-procedure TTestEqualsAndHashCode.TestEqualsAndHashCode;
-var
-  bOut: TMemoryStream;
-  aOut: TAsn1OutputStream;
-  aIn: TAsn1InputStream;
-  o: IAsn1Object;
-  temp: TBytes;
-  i: Int32;
-begin
-  bOut := TMemoryStream.Create();
-  aOut := TAsn1OutputStream.Create(bOut);
+  LBOut := TMemoryStream.Create();
+   // LeaveOpen is False so TAsn1OutputStream owns LBOut and will free it.
+  LAOut := TAsn1OutputStream.CreateStream(LBOut);
   try
-
-    i := 0;
-    while i <> System.Length(Fvalues) do
+    for I := 0 to System.Length(LValues) - 1 do
     begin
-      aOut.WriteObject(Fvalues[i]);
-      System.Inc(i);
+      LAOut.WriteObject(LValues[I]);
     end;
 
-    System.SetLength(temp, bOut.Size);
-    bOut.Position := 0;
-    bOut.Read(temp[0], bOut.Size);
-    aIn := TAsn1InputStream.Create(temp);
+    System.SetLength(LOutput, LBOut.Size);
+    LBOut.Position := 0;
+    LBOut.Read(LOutput[0], LBOut.Size);
+    LAIn := TAsn1InputStream.Create(LOutput);
 
     try
-      i := 0;
-      while i <> System.Length(Fvalues) do
+      for I := 0 to System.Length(LValues) - 1 do
       begin
-
-        o := aIn.ReadObject();
-
-        if (not o.Equals(Fvalues[i])) then
+        LObj := LAIn.ReadObject();
+        if not LObj.Equals(LValues[I]) then
         begin
-          Fail(Format('Failed equality test for %s',
-            [(o as TAsn1Object).ClassName]));
+          Fail(Format('Failed equality test for %s', [(LObj as TObject).ClassName]));
         end;
-
-        if (not(o.GetHashCode() = Fvalues[i].GetHashCode())) then
+        if LObj.GetHashCode() <> LValues[I].GetHashCode() then
         begin
-          Fail(Format('Failed hashCode test for %s',
-            [(o as TAsn1Object).ClassName]));
+          Fail(Format('Failed hashCode test for %s', [(LObj as TObject).ClassName]));
         end;
-
-        System.Inc(i);
       end;
     finally
-      aIn.Free;
+      LAIn.Free;
     end;
-
   finally
-    bOut.Free;
-    aOut.Free;
+    LAOut.Free;
   end;
 end;
 
@@ -174,9 +153,9 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
-  RegisterTest(TTestEqualsAndHashCode);
+  RegisterTest(TEqualsAndHashCodeTest);
 {$ELSE}
-  RegisterTest(TTestEqualsAndHashCode.Suite);
+  RegisterTest(TEqualsAndHashCodeTest.Suite);
 {$ENDIF FPC}
 
 end.

@@ -22,6 +22,7 @@ unit ClpDHValidationParams;
 interface
 
 uses
+  SysUtils,
   ClpIDHValidationParams,
   ClpAsn1Objects,
   ClpIAsn1Objects,
@@ -62,6 +63,8 @@ type
 
     class function GetInstance(obj: TObject): IDHValidationParams; overload;
       static; inline;
+
+    class function GetOptional(const AElement: IAsn1Encodable): IDHValidationParams; static;
 
   end;
 
@@ -140,6 +143,30 @@ class function TDHValidationParams.GetInstance(const obj: IAsn1TaggedObject;
 begin
   result := GetInstance(TAsn1Sequence.GetInstance(obj, isExplicit)
     as TAsn1Sequence);
+end;
+
+class function TDHValidationParams.GetOptional(const AElement: IAsn1Encodable): IDHValidationParams;
+var
+  LValidationParams: IDHValidationParams;
+  LAsn1Sequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IDHValidationParams, LValidationParams) then
+  begin
+    Result := LValidationParams;
+    Exit;
+  end;
+
+  LAsn1Sequence := TAsn1Sequence.GetOptional(AElement);
+  if LAsn1Sequence <> nil then
+  begin
+    Result := TDHValidationParams.Create(LAsn1Sequence);
+    Exit;
+  end;
+
+  Result := nil;
 end;
 
 end.

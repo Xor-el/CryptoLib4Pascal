@@ -33,6 +33,8 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpEncoders,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
@@ -40,15 +42,27 @@ type
   /// <summary>
   /// Tests used to verify correct decoding of the ENUMERATED type.
   /// </summary>
-  TTestEnumerated = class(TCryptoLibAlgorithmTestCase)
-  var
-  private
-    FMultipleSingleByteItems, FMultipleDoubleByteItems,
-      FMultipleTripleByteItems: TBytes;
-
+  TEnumeratedTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+    /// <summary>
+    /// Test vector used to test decoding of multiple items.
+    /// </summary>
+    /// <remarks>This sample uses an ENUMERATED and a BOOLEAN.</remarks>
+    FMultipleSingleByteItems: TCryptoLibByteArray;
+    /// <summary>
+    /// Test vector used to test decoding of multiple items.
+    /// </summary>
+    /// <remarks>This sample uses two ENUMERATEDs.</remarks>
+    FMultipleDoubleByteItems: TCryptoLibByteArray;
+    /// <summary>
+    /// Test vector used to test decoding of multiple items.
+    /// </summary>
+    /// <remarks>This sample uses an ENUMERATED and an OBJECT IDENTIFIER.</remarks>
+    FMultipleTripleByteItems: TCryptoLibByteArray;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
   published
     /// <summary>
     /// Makes sure multiple identically sized values are parsed correctly.
@@ -67,126 +81,114 @@ type
 
 implementation
 
-{ TTestEnumerated }
+{ TEnumeratedTest }
 
-procedure TTestEnumerated.SetUp;
+procedure TEnumeratedTest.SetUp;
 begin
   inherited;
-  /// <summary>
-  /// Test vector used to test decoding of multiple items.
-  /// </summary>
-  /// <remarks>This sample uses an ENUMERATED and a BOOLEAN.</remarks>
   FMultipleSingleByteItems := DecodeHex('30060a01010101ff');
-  /// <summary>
-  /// Test vector used to test decoding of multiple items.
-  /// </summary>
-  /// <remarks>This sample uses two ENUMERATEDs.</remarks>
   FMultipleDoubleByteItems := DecodeHex('30080a0201010a020202');
-  /// <summary>
-  /// Test vector used to test decoding of multiple items.
-  /// </summary>
-  /// <remarks>This sample uses an ENUMERATED and an OBJECT IDENTIFIER.</remarks>
   FMultipleTripleByteItems := DecodeHex('300a0a0301010106032b0601');
 end;
 
-procedure TTestEnumerated.TearDown;
+procedure TEnumeratedTest.TearDown;
 begin
+  FMultipleSingleByteItems := nil;
+  FMultipleDoubleByteItems := nil;
+  FMultipleTripleByteItems := nil;
   inherited;
-
 end;
 
-procedure TTestEnumerated.TestReadingMultipleSingleByteItems;
+procedure TEnumeratedTest.TestReadingMultipleSingleByteItems;
 var
-  obj: IAsn1Object;
-  sequence: IDerSequence;
-  enumerated: IDerEnumerated;
-  boolean: IDerBoolean;
+  LObj: IAsn1Object;
+  LSequence: IDerSequence;
+  LEnumerated: IDerEnumerated;
+  LBoolean: IDerBoolean;
 begin
-  obj := TAsn1Object.FromByteArray(FMultipleSingleByteItems);
+  LObj := TAsn1Object.FromByteArray(FMultipleSingleByteItems);
 
-  CheckTrue(Supports(obj, IDerSequence), 'Null ASN.1 SEQUENCE');
+  CheckTrue(Supports(LObj, IDerSequence), 'Null ASN.1 SEQUENCE');
+  LSequence := LObj as IDerSequence;
 
-  sequence := obj as IDerSequence;
+  CheckEquals(2, LSequence.Count, '2 items expected');
 
-  CheckEquals(2, sequence.Count, '2 items expected');
+  LEnumerated := LSequence[0] as IDerEnumerated;
 
-  enumerated := sequence[0] as IDerEnumerated;
+  CheckTrue(LEnumerated <> nil, 'ENUMERATED expected');
 
-  CheckNotNull(enumerated, 'ENUMERATED expected');
+  CheckEquals(1, LEnumerated.IntValueExact, 'Unexpected ENUMERATED value');
+  CheckTrue(LEnumerated.HasValue(1), 'Unexpected ENUMERATED value');
 
-  CheckEquals(1, enumerated.Value.Int32Value, 'Unexpected ENUMERATED value');
+  LBoolean := LSequence[1] as IDerBoolean;
 
-  boolean := sequence[1] as IDerBoolean;
+  CheckTrue(LBoolean <> nil, 'BOOLEAN expected');
 
-  CheckNotNull(boolean, 'BOOLEAN expected');
-
-  CheckTrue(boolean.IsTrue, 'Unexpected BOOLEAN value');
+  CheckTrue(LBoolean.IsTrue, 'Unexpected BOOLEAN value');
 end;
 
-procedure TTestEnumerated.TestReadingMultipleDoubleByteItems;
+procedure TEnumeratedTest.TestReadingMultipleDoubleByteItems;
 var
-  obj: IAsn1Object;
-  sequence: IDerSequence;
-  enumerated, enumerated2: IDerEnumerated;
+  LObj: IAsn1Object;
+  LSequence: IDerSequence;
+  LEnumerated1, LEnumerated2: IDerEnumerated;
 begin
-  obj := TAsn1Object.FromByteArray(FMultipleDoubleByteItems);
+  LObj := TAsn1Object.FromByteArray(FMultipleDoubleByteItems);
 
-  CheckTrue(Supports(obj, IDerSequence), 'Null ASN.1 SEQUENCE');
+  CheckTrue(Supports(LObj, IDerSequence), 'Null ASN.1 SEQUENCE');
+  LSequence := LObj as IDerSequence;
 
-  sequence := obj as IDerSequence;
+  CheckEquals(2, LSequence.Count, '2 items expected');
 
-  CheckEquals(2, sequence.Count, '2 items expected');
+  LEnumerated1 := LSequence[0] as IDerEnumerated;
 
-  enumerated := sequence[0] as IDerEnumerated;
+  CheckTrue(LEnumerated1 <> nil, 'ENUMERATED expected');
 
-  CheckNotNull(enumerated, 'ENUMERATED expected');
+  CheckEquals(257, LEnumerated1.IntValueExact, 'Unexpected ENUMERATED value');
+  CheckTrue(LEnumerated1.HasValue(257), 'Unexpected ENUMERATED value');
 
-  CheckEquals(257, enumerated.Value.Int32Value, 'Unexpected ENUMERATED value');
+  LEnumerated2 := LSequence[1] as IDerEnumerated;
 
-  enumerated2 := sequence[1] as IDerEnumerated;
+  CheckTrue(LEnumerated2 <> nil, 'ENUMERATED expected');
 
-  CheckNotNull(enumerated2, 'ENUMERATED expected');
-
-  CheckEquals(514, enumerated2.Value.Int32Value, 'Unexpected ENUMERATED value');
+  CheckEquals(514, LEnumerated2.IntValueExact, 'Unexpected ENUMERATED value');
+  CheckTrue(LEnumerated2.HasValue(514), 'Unexpected ENUMERATED value');
 end;
 
-procedure TTestEnumerated.TestReadingMultipleTripleByteItems;
+procedure TEnumeratedTest.TestReadingMultipleTripleByteItems;
 var
-  obj: IAsn1Object;
-  sequence: IDerSequence;
-  enumerated: IDerEnumerated;
-  objectId: IDerObjectIdentifier;
+  LObj: IAsn1Object;
+  LSequence: IDerSequence;
+  LEnumerated: IDerEnumerated;
+  LObjectId: IDerObjectIdentifier;
 begin
-  obj := TAsn1Object.FromByteArray(FMultipleTripleByteItems);
+  LObj := TAsn1Object.FromByteArray(FMultipleTripleByteItems);
 
-  CheckTrue(Supports(obj, IDerSequence), 'Null ASN.1 SEQUENCE');
+  CheckTrue(Supports(LObj, IDerSequence), 'Null ASN.1 SEQUENCE');
+  LSequence := LObj as IDerSequence;
 
-  sequence := obj as IDerSequence;
+  CheckEquals(2, LSequence.Count, '2 items expected');
 
-  CheckEquals(2, sequence.Count, '2 items expected');
+  LEnumerated := LSequence[0] as IDerEnumerated;
 
-  enumerated := sequence[0] as IDerEnumerated;
+  CheckTrue(LEnumerated <> nil, 'ENUMERATED expected');
 
-  CheckNotNull(enumerated, 'ENUMERATED expected');
+  CheckEquals(65793, LEnumerated.IntValueExact, 'Unexpected ENUMERATED value');
+  CheckTrue(LEnumerated.HasValue(65793), 'Unexpected ENUMERATED value');
 
-  CheckEquals(65793, enumerated.Value.Int32Value,
-    'Unexpected ENUMERATED value');
+  LObjectId := LSequence[1] as IDerObjectIdentifier;
 
-  objectId := sequence[1] as IDerObjectIdentifier;
+  CheckTrue(LObjectId <> nil, 'OBJECT IDENTIFIER expected');
 
-  CheckNotNull(objectId, 'OBJECT IDENTIFIER expected');
-
-  CheckEquals('1.3.6.1', objectId.Id, 'Unexpected OBJECT IDENTIFIER value');
+  CheckEquals('1.3.6.1', LObjectId.Id, 'Unexpected OBJECT IDENTIFIER value');
 end;
 
 initialization
 
-// Register any test cases with the test runner
-
 {$IFDEF FPC}
-  RegisterTest(TTestEnumerated);
+RegisterTest(TEnumeratedTest);
 {$ELSE}
-  RegisterTest(TTestEnumerated.Suite);
+RegisterTest(TEnumeratedTest.Suite);
 {$ENDIF FPC}
 
 end.

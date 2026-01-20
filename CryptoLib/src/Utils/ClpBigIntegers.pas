@@ -113,6 +113,8 @@ type
     class function BigIntegerToBytes(const b: TBigInteger; numBytes: Int32)
       : TCryptoLibByteArray; static; inline;
 
+    class function GetByteLength(const n: TBigInteger): Int32;
+
     class function GetUnsignedByteLength(const n: TBigInteger): Int32;
       static; inline;
 
@@ -166,6 +168,8 @@ begin
   end;
 
   System.SetLength(Result, length);
+  // Explicitly zero-initialize the array to ensure leading zeros
+  //System.FillChar(Result[0], System.length(Result) * System.SizeOf(Byte), 0);
   System.Move(bytes[0], Result[System.length(Result) - System.length(bytes)],
     System.length(bytes) * System.SizeOf(Byte));
 
@@ -234,6 +238,11 @@ begin
   // fall back to a faster (restricted) method
   Result := TBigInteger.Create(max.Subtract(min).BitLength - 1, random)
     .Add(min);
+end;
+
+class function TBigIntegers.GetByteLength(const n: TBigInteger): Int32;
+begin
+  Result := (n.BitLength + 8) shr 3;
 end;
 
 class function TBigIntegers.GetUnsignedByteLength(const n: TBigInteger): Int32;

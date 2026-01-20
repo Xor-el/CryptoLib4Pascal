@@ -27,6 +27,7 @@ uses
   ClpDHValidationParams,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Utilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -36,6 +37,7 @@ resourcestring
   SJNil = 'J Cannot be Nil';
   SBadSequenceSize = 'Bad Sequence Size "seq": %d';
   SInvalidDHDomainParameters = 'Invalid DHDomainParameters: %s';
+  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
 
 type
   TDHDomainParameters = class(TAsn1Encodable, IDHDomainParameters)
@@ -52,9 +54,6 @@ type
     function GetValidationParams: IDHValidationParams; inline;
 
     constructor Create(const seq: IAsn1Sequence); overload;
-
-    class function GetNext(const e: TCryptoLibGenericArray<IAsn1Encodable>;
-      var Idx: Int32): IAsn1Encodable; static; inline;
 
   public
     constructor Create(const p, g, q, j: IDerInteger;
@@ -109,57 +108,41 @@ begin
   result := FvalidationParams;
 end;
 
-class function TDHDomainParameters.GetNext
-  (const e: TCryptoLibGenericArray<IAsn1Encodable>; var Idx: Int32)
-  : IAsn1Encodable;
-begin
-  if Idx <= (System.Length(e) - 1) then
-  begin
-    result := e[Idx];
-    System.Inc(Idx);
-  end
-  else
-  begin
-    result := Nil;
-  end;
-end;
-
 constructor TDHDomainParameters.Create(const seq: IAsn1Sequence);
 var
-  e: TCryptoLibGenericArray<IAsn1Encodable>;
-  next: IAsn1Encodable;
-  Idx: Int32;
+  LCount: Int32;
+  LPos: Int32;
 begin
   Inherited Create();
-  if (seq.Count < 3) or (seq.Count > 5) then
+  LCount := seq.Count;
+  LPos := 0;
+  if (LCount < 3) or (LCount > 5) then
   begin
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize,
-      [seq.Count]);
+      [LCount]);
   end;
 
-  Idx := 0;
-  e := seq.GetEnumerable();
+  Fp := TDerInteger.GetInstance(seq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
 
-  Fp := TDerInteger.GetInstance(GetNext(e, Idx) as TAsn1Encodable);
+  Fg := TDerInteger.GetInstance(seq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
 
-  Fg := TDerInteger.GetInstance(GetNext(e, Idx) as TAsn1Encodable);
+  Fq := TDerInteger.GetInstance(seq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
 
-  Fq := TDerInteger.GetInstance(GetNext(e, Idx) as TAsn1Encodable);
+  Fj := TAsn1Utilities.ReadOptional<IDerInteger>(seq, LPos, function(AElement: IAsn1Encodable): IDerInteger
+    begin
+      Result := TDerInteger.GetOptional(AElement);
+    end);
 
-  next := GetNext(e, Idx);
+  FvalidationParams := TAsn1Utilities.ReadOptional<IDHValidationParams>(seq, LPos, function(AElement: IAsn1Encodable): IDHValidationParams
+    begin
+      Result := TDHValidationParams.GetOptional(AElement);
+    end);
 
-  if ((next <> Nil) and ((next as TAsn1Encodable) is TDerInteger)) then
-  begin
-    Fj := TDerInteger.GetInstance(next as TAsn1Encodable);
-    next := GetNext(e, Idx);
-  end;
-
-  if (next <> Nil) then
-  begin
-    FvalidationParams := TDHValidationParams.GetInstance
-      (next.ToAsn1Object() as TAsn1Object);
-  end;
-
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 constructor TDHDomainParameters.Create(const p, g, q, j: IDerInteger;

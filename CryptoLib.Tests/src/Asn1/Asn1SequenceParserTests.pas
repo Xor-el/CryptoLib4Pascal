@@ -35,6 +35,7 @@ uses
   ClpBigInteger,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
@@ -43,13 +44,13 @@ type
   private
 
   var
-    FseqData, FnestedSeqData, FexpTagSeqData, FimplTagSeqData,
-      FnestedSeqExpTagData, FnestedSeqImpTagData, FberSeqData,
-      FberDerNestedSeqData, FberNestedSeqData, FberExpTagSeqData,
-      FberSeqWithDERNullData: TBytes;
+    FSeqData, FNestedSeqData, FExpTagSeqData, FImplTagSeqData,
+      FNestedSeqExpTagData, FNestedSeqImpTagData, FBerSeqData,
+      FBerDerNestedSeqData, FBerNestedSeqData, FBerExpTagSeqData,
+      FBerSeqWithDERNullData: TCryptoLibByteArray;
 
-    procedure doTestNestedReading(const data: TBytes);
-    procedure doTestParseWithNull(const data: TBytes);
+    procedure DoTestNestedReading(const AData: TCryptoLibByteArray);
+    procedure DoTestParseWithNull(const AData: TCryptoLibByteArray);
 
   protected
     procedure SetUp; override;
@@ -78,41 +79,41 @@ implementation
 
 { TTestAsn1SequenceParser }
 
-procedure TTestAsn1SequenceParser.doTestNestedReading(const data: TBytes);
+procedure TTestAsn1SequenceParser.DoTestNestedReading(const AData: TCryptoLibByteArray);
 var
-  aIn: IAsn1StreamParser;
-  seq, s: IAsn1SequenceParser;
-  o: IInterface;
-  count: Int32;
+  AIn: IAsn1StreamParser;
+  Seq, S: IAsn1SequenceParser;
+  O: IInterface;
+  Count: Int32;
 begin
-  aIn := TAsn1StreamParser.Create(data);
-  seq := aIn.ReadObject() as IAsn1SequenceParser;
+  AIn := TAsn1StreamParser.Create(AData);
+  Seq := AIn.ReadObject() as IAsn1SequenceParser;
 
-  count := 0;
+  Count := 0;
 
-  CheckNotNull(seq, 'null sequence returned');
+  CheckNotNull(Seq, 'null sequence returned');
 
-  o := seq.ReadObject();
-  while (o <> Nil) do
+  O := Seq.ReadObject();
+  while (O <> nil) do
   begin
-    case count of
+    case Count of
 
       0:
         begin
-          CheckTrue(Supports(o, IDerInteger));
+          CheckTrue(Supports(O, IDerInteger));
         end;
       1:
         begin
-          CheckTrue(Supports(o, IDerObjectIdentifier));
+          CheckTrue(Supports(O, IDerObjectIdentifier));
         end;
       2:
         begin
-          CheckTrue(Supports(o, IAsn1SequenceParser));
+          CheckTrue(Supports(O, IAsn1SequenceParser));
 
-          s := o as IAsn1SequenceParser;
+          S := O as IAsn1SequenceParser;
 
           // NB: Must exhaust the nested parser
-          while (s.ReadObject() <> Nil) do
+          while (S.ReadObject() <> nil) do
           begin
             // Ignore
           end;
@@ -120,68 +121,68 @@ begin
         end;
     end;
 
-    System.Inc(count);
-    o := seq.ReadObject();
+    System.Inc(Count);
+    O := Seq.ReadObject();
   end;
 
-  CheckEquals(3, count, 'wrong number of objects in sequence');
+  CheckEquals(3, Count, 'wrong number of objects in sequence');
 end;
 
-procedure TTestAsn1SequenceParser.doTestParseWithNull(const data: TBytes);
+procedure TTestAsn1SequenceParser.DoTestParseWithNull(const AData: TCryptoLibByteArray);
 var
-  aIn: IAsn1StreamParser;
-  seq: IAsn1SequenceParser;
-  o: IInterface;
-  count: Int32;
+  AIn: IAsn1StreamParser;
+  Seq: IAsn1SequenceParser;
+  O: IInterface;
+  Count: Int32;
 begin
-  aIn := TAsn1StreamParser.Create(data);
-  seq := aIn.ReadObject() as IAsn1SequenceParser;
+  AIn := TAsn1StreamParser.Create(AData);
+  Seq := AIn.ReadObject() as IAsn1SequenceParser;
 
-  count := 0;
+  Count := 0;
 
-  CheckNotNull(seq, 'null sequence returned');
+  CheckNotNull(Seq, 'null sequence returned');
 
-  o := seq.ReadObject();
-  while (o <> Nil) do
+  O := Seq.ReadObject();
+  while (O <> nil) do
   begin
-    case count of
+    case Count of
 
       0:
         begin
-          CheckTrue(Supports(o, IAsn1Null));
+          CheckTrue(Supports(O, IAsn1Null));
         end;
       1:
         begin
-          CheckTrue(Supports(o, IDerInteger));
+          CheckTrue(Supports(O, IDerInteger));
         end;
       2:
         begin
-          CheckTrue(Supports(o, IDerObjectIdentifier));
+          CheckTrue(Supports(O, IDerObjectIdentifier));
         end;
     end;
 
-    System.Inc(count);
-    o := seq.ReadObject();
+    System.Inc(Count);
+    O := Seq.ReadObject();
   end;
 
-  CheckEquals(3, count, 'wrong number of objects in sequence');
+  CheckEquals(3, Count, 'wrong number of objects in sequence');
 end;
 
 procedure TTestAsn1SequenceParser.SetUp;
 begin
   inherited;
-  FseqData := DecodeHex('3006020100060129');
-  FnestedSeqData := DecodeHex('300b0201000601293003020101');
-  FexpTagSeqData := DecodeHex('a1083006020100060129');
-  FimplTagSeqData := DecodeHex('a106020100060129');
-  FnestedSeqExpTagData := DecodeHex('300d020100060129a1053003020101');
-  FnestedSeqImpTagData := DecodeHex('300b020100060129a103020101');
+  FSeqData := DecodeHex('3006020100060129');
+  FNestedSeqData := DecodeHex('300b0201000601293003020101');
+  FExpTagSeqData := DecodeHex('a1083006020100060129');
+  FImplTagSeqData := DecodeHex('a106020100060129');
+  FNestedSeqExpTagData := DecodeHex('300d020100060129a1053003020101');
+  FNestedSeqImpTagData := DecodeHex('300b020100060129a103020101');
 
-  FberSeqData := DecodeHex('30800201000601290000');
-  FberDerNestedSeqData := DecodeHex('308002010006012930030201010000');
-  FberNestedSeqData := DecodeHex('3080020100060129308002010100000000');
-  FberExpTagSeqData := DecodeHex('a180308002010006012900000000');
-  FberSeqWithDERNullData := DecodeHex('308005000201000601290000');
+  FBerSeqData := DecodeHex('30800201000601290000');
+  FBerDerNestedSeqData := DecodeHex('308002010006012930030201010000');
+  FBerNestedSeqData := DecodeHex('3080020100060129308002010100000000');
+  FBerExpTagSeqData := DecodeHex('a180308002010006012900000000');
+  FBerSeqWithDERNullData := DecodeHex('308005000201000601290000');
 end;
 
 procedure TTestAsn1SequenceParser.TearDown;
@@ -192,403 +193,404 @@ end;
 
 procedure TTestAsn1SequenceParser.TestBerExplicitTaggedSequenceWriting;
 var
-  bOut: TMemoryStream;
-  seqGen: IBerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen: IBerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
+
   try
-    seqGen := TBerSequenceGenerator.Create(bOut, 1, true);
+    SeqGen := TBerSequenceGenerator.Create(BOut, 1, True);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
-      as IDerObjectIdentifier);
+    SeqGen.AddObject(TDerObjectIdentifier.Create('1.1') as IDerObjectIdentifier);
 
-    seqGen.Close();
+    SeqGen.Close();
 
-    bOut.Position := 0;
-    System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
+    BOut.Position := 0;
+    System.SetLength(Temp, BOut.Size);
+    BOut.Read(Temp[0], BOut.Size);
 
-    CheckTrue(AreEqual(FberExpTagSeqData, temp),
+    CheckTrue(AreEqual(FBerExpTagSeqData, Temp),
       'explicit BER tag writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestBerReading;
 var
-  aIn: IAsn1StreamParser;
-  seq: IAsn1SequenceParser;
-  count: Int32;
-  o: IInterface;
+  AIn: IAsn1StreamParser;
+  Seq: IAsn1SequenceParser;
+  Count: Int32;
+  O: IInterface;
 begin
-  aIn := TAsn1StreamParser.Create(FberSeqData);
+  AIn := TAsn1StreamParser.Create(FBerSeqData);
 
-  seq := aIn.ReadObject() as IAsn1SequenceParser;
-  count := 0;
+  Seq := AIn.ReadObject() as IAsn1SequenceParser;
+  Count := 0;
 
-  CheckNotNull(seq, 'null sequence returned');
+  CheckNotNull(Seq, 'null sequence returned');
 
-  o := seq.ReadObject();
-  while (o <> Nil) do
+  O := Seq.ReadObject();
+  while (O <> nil) do
   begin
-    case count of
+    case Count of
 
       0:
         begin
-          CheckTrue(Supports(o, IDerInteger));
+          CheckTrue(Supports(O, IDerInteger));
 
         end;
       1:
         begin
-          CheckTrue(Supports(o, IDerObjectIdentifier));
+          CheckTrue(Supports(O, IDerObjectIdentifier));
 
         end;
     end;
 
-    System.Inc(count);
-    o := seq.ReadObject();
+    System.Inc(Count);
+    O := Seq.ReadObject();
   end;
 
-  CheckEquals(2, count, 'wrong number of objects in sequence');
+  CheckEquals(2, Count, 'wrong number of objects in sequence');
 end;
+
 
 procedure TTestAsn1SequenceParser.TestBerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen: IBerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen: IBerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen := TBerSequenceGenerator.Create(bOut);
+    SeqGen := TBerSequenceGenerator.Create(BOut);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen.Close();
-    bOut.Position := 0;
-    System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FberSeqData, temp), 'basic BER writing test failed.');
+    SeqGen.Close();
+    BOut.Position := 0;
+    System.SetLength(Temp, BOut.Size);
+    BOut.Read(Temp[0], BOut.Size);
+    CheckTrue(AreEqual(FBerSeqData, Temp), 'basic BER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestDerExplicitTaggedSequenceWriting;
 var
-  bOut: TMemoryStream;
-  temp: TBytes;
-  seqGen: IDerSequenceGenerator;
+  BOut: TMemoryStream;
+  Temp: TCryptoLibByteArray;
+  SeqGen: IDerSequenceGenerator;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen := TDerSequenceGenerator.Create(bOut, 1, true);
+    SeqGen := TDerSequenceGenerator.Create(BOut, 1, True);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen.Close();
+    SeqGen.Close();
 
-    bOut.Position := 0;
-    System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
+    BOut.Position := 0;
+    System.SetLength(Temp, BOut.Size);
+    BOut.Read(Temp[0], BOut.Size);
 
-    CheckTrue(AreEqual(FexpTagSeqData, temp),
+    CheckTrue(AreEqual(FExpTagSeqData, Temp),
       'explicit tag writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestDerImplicitTaggedSequenceWriting;
 var
-  bOut: TMemoryStream;
-  seqGen: IDerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen: IDerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen := TDerSequenceGenerator.Create(bOut, 1, false);
+    SeqGen := TDerSequenceGenerator.Create(BOut, 1, False);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen.Close();
+    SeqGen.Close();
 
-    bOut.Position := 0;
-    System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
+    BOut.Position := 0;
+    System.SetLength(Temp, BOut.Size);
+    BOut.Read(Temp[0], BOut.Size);
 
-    CheckTrue(AreEqual(FimplTagSeqData, temp),
+    CheckTrue(AreEqual(FImplTagSeqData, Temp),
       'implicit tag writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestDerReading;
 var
-  aIn: IAsn1StreamParser;
-  seq: IAsn1SequenceParser;
-  count: Int32;
-  o: IInterface;
+  AIn: IAsn1StreamParser;
+  Seq: IAsn1SequenceParser;
+  Count: Int32;
+  O: IInterface;
 begin
-  aIn := TAsn1StreamParser.Create(FseqData);
+  AIn := TAsn1StreamParser.Create(FSeqData);
 
-  seq := aIn.ReadObject() as IAsn1SequenceParser;
-  count := 0;
+  Seq := AIn.ReadObject() as IAsn1SequenceParser;
+  Count := 0;
 
-  CheckNotNull(seq, 'null sequence returned');
+  CheckNotNull(Seq, 'null sequence returned');
 
-  o := seq.ReadObject();
-  while (o <> Nil) do
+  O := Seq.ReadObject();
+  while (O <> nil) do
   begin
-    case count of
+    case Count of
 
       0:
         begin
-          CheckTrue(Supports(o, IDerInteger));
+          CheckTrue(Supports(O, IDerInteger));
 
         end;
       1:
         begin
-          CheckTrue(Supports(o, IDerObjectIdentifier));
+          CheckTrue(Supports(O, IDerObjectIdentifier));
 
         end;
     end;
 
-    System.Inc(count);
-    o := seq.ReadObject();
+    System.Inc(Count);
+    O := Seq.ReadObject();
   end;
 
-  CheckEquals(2, count, 'wrong number of objects in sequence');
+  CheckEquals(2, Count, 'wrong number of objects in sequence');
 end;
 
 procedure TTestAsn1SequenceParser.TestDerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen: IDerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen: IDerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen := TDerSequenceGenerator.Create(bOut);
+    SeqGen := TDerSequenceGenerator.Create(BOut);
 
-    seqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen.Close();
-    bOut.Position := 0;
-    System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FseqData, temp), 'basic DER writing test failed.');
+    SeqGen.Close();
+    BOut.Position := 0;
+    System.SetLength(Temp, BOut.Size);
+    BOut.Read(Temp[0], BOut.Size);
+    CheckTrue(AreEqual(FSeqData, Temp), 'basic DER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedBerDerReading;
 begin
-  doTestNestedReading(FberDerNestedSeqData);
+  DoTestNestedReading(FBerDerNestedSeqData);
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedBerDerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen1: IBerSequenceGenerator;
-  seqGen2: IDerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen1: IBerSequenceGenerator;
+  SeqGen2: IDerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen1 := TBerSequenceGenerator.Create(bOut);
+    SeqGen1 := TBerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
+    SeqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
+    SeqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
       as IDerInteger);
 
-    seqGen2.Close();
+    SeqGen2.Close();
 
-    seqGen1.Close();
+    SeqGen1.Close();
 
-    bOut.Position := 0;
+    BOut.Position := 0;
     System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FberDerNestedSeqData, temp),
+    BOut.Read(temp[0], bOut.Size);
+    CheckTrue(AreEqual(FBerDerNestedSeqData, temp),
       'nested BER/DER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedBerReading;
 begin
-  doTestNestedReading(FberNestedSeqData);
+  DoTestNestedReading(FBerNestedSeqData);
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedBerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen1, seqGen2: IBerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen1, seqGen2: IBerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen1 := TBerSequenceGenerator.Create(bOut);
+    SeqGen1 := TBerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen2 := TBerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
+    SeqGen2 := TBerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1)));
+    SeqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1)) as IDerInteger);
 
-    seqGen2.Close();
+    SeqGen2.Close();
 
-    seqGen1.Close();
+    SeqGen1.Close();
 
-    bOut.Position := 0;
+    BOut.Position := 0;
     System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FberNestedSeqData, temp),
+    BOut.Read(temp[0], bOut.Size);
+    CheckTrue(AreEqual(FBerNestedSeqData, temp),
       'nested BER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedDerReading;
 begin
-  doTestNestedReading(FnestedSeqData);
+  DoTestNestedReading(FNestedSeqData);
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedDerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen1, seqGen2: IDerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen1, seqGen2: IDerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen1 := TDerSequenceGenerator.Create(bOut);
+    SeqGen1 := TDerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
+    SeqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream());
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.One) as IDerInteger);
+    SeqGen2.AddObject(TDerInteger.Create(TBigInteger.One) as IDerInteger);
 
-    seqGen2.Close();
+    SeqGen2.Close();
 
-    seqGen1.Close();
+    SeqGen1.Close();
 
-    bOut.Position := 0;
+    BOut.Position := 0;
     System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FnestedSeqData, temp),
+    BOut.Read(temp[0], bOut.Size);
+    CheckTrue(AreEqual(FNestedSeqData, temp),
       'nested DER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedExplicitTagDerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen1, seqGen2: IDerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen1, seqGen2: IDerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen1 := TDerSequenceGenerator.Create(bOut);
+    SeqGen1 := TDerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen2 := TDerSequenceGenerator.Create
-      (seqGen1.GetRawOutputStream(), 1, true);
+    SeqGen2 := TDerSequenceGenerator.Create
+      (seqGen1.GetRawOutputStream(), 1, True);
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
+    SeqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
       as IDerInteger);
 
-    seqGen2.Close();
+    SeqGen2.Close();
 
-    seqGen1.Close();
+    SeqGen1.Close();
 
-    bOut.Position := 0;
+    BOut.Position := 0;
     System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FnestedSeqExpTagData, temp),
+    BOut.Read(temp[0], bOut.Size);
+    CheckTrue(AreEqual(FNestedSeqExpTagData, temp),
       'nested explicit tagged DER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestNestedImplicitTagDerWriting;
 var
-  bOut: TMemoryStream;
-  seqGen1, seqGen2: IDerSequenceGenerator;
-  temp: TBytes;
+  BOut: TMemoryStream;
+  SeqGen1, seqGen2: IDerSequenceGenerator;
+  Temp: TCryptoLibByteArray;
 begin
-  bOut := TMemoryStream.Create();
+  BOut := TMemoryStream.Create();
   try
-    seqGen1 := TDerSequenceGenerator.Create(bOut);
+    SeqGen1 := TDerSequenceGenerator.Create(bOut);
 
-    seqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
+    SeqGen1.AddObject(TDerInteger.Create(TBigInteger.Zero) as IDerInteger);
 
-    seqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
+    SeqGen1.AddObject(TDerObjectIdentifier.Create('1.1')
       as IDerObjectIdentifier);
 
-    seqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream(),
-      1, false);
+    SeqGen2 := TDerSequenceGenerator.Create(seqGen1.GetRawOutputStream(),
+      1, False);
 
-    seqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
+    SeqGen2.AddObject(TDerInteger.Create(TBigInteger.ValueOf(1))
       as IDerInteger);
 
-    seqGen2.Close();
+    SeqGen2.Close();
 
-    seqGen1.Close();
+    SeqGen1.Close();
 
-    bOut.Position := 0;
+    BOut.Position := 0;
     System.SetLength(temp, bOut.Size);
-    bOut.Read(temp[0], bOut.Size);
-    CheckTrue(AreEqual(FnestedSeqImpTagData, temp),
+    BOut.Read(temp[0], bOut.Size);
+    CheckTrue(AreEqual(FNestedSeqImpTagData, temp),
       'nested implicit tagged DER writing test failed.');
   finally
-    bOut.Free;
+    BOut.Free;
   end;
 end;
 
 procedure TTestAsn1SequenceParser.TestSequenceWithDerNullReading;
 begin
-  doTestParseWithNull(FberSeqWithDERNullData);
+  DoTestParseWithNull(FBerSeqWithDERNullData);
 end;
 
 initialization

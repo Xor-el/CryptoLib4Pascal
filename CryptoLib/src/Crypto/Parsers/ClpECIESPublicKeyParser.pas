@@ -29,6 +29,7 @@ uses
   ClpIKeyParser,
   ClpIAsymmetricKeyParameter,
   ClpIECIESPublicKeyParser,
+  ClpStreams,
   ClpCryptoLibTypes;
 
 resourcestring

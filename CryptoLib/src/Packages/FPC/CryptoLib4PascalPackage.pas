@@ -141,7 +141,9 @@ uses
   ClpRsaBlindingEngine, ClpRsaCoreEngine, ClpRsaEngine, ClpPssSigner, 
   ClpGenericSigner, ClpRsaDigestSigner, ClpRsaBlindingFactorGenerator, 
   ClpRsaKeyPairGenerator, ClpAlgorithmIdentifier, ClpDigestInfo, 
-  ClpX509ObjectIdentifiers, ClpPrehash;
+  ClpX509ObjectIdentifiers, ClpPrehash, ClpDateTimeUtilities, 
+  ClpCollectionUtilities, ClpStreams, ClpPlatform, ClpAsn1Streams, 
+  ClpAsn1Utilities;
 
 implementation
 

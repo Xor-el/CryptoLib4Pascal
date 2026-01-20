@@ -23,5326 +23,4439 @@ interface
 
 uses
   Classes,
-  Math,
-  SyncObjs,
-  StrUtils,
   SysUtils,
-  Generics.Collections,
-  ClpEncoders,
+  Math,
+  DateUtils,
+  StrUtils,
   ClpBits,
-  ClpBigInteger,
-  ClpArrayUtils,
-  ClpStringUtils,
   ClpCryptoLibTypes,
-  ClpConverters,
+  ClpBigInteger,
+  ClpBigIntegers,
   ClpIAsn1Objects,
+  ClpAsn1Streams,
+  ClpAsn1Utilities,
+  ClpPlatform,
+  ClpStreams,
+  ClpArrayUtils,
+  ClpEncoders,
+  ClpConverters,
+  ClpCollectionUtilities,
+  ClpDateTimeUtilities,
   ClpOidTokenizer,
   ClpIOidTokenizer;
 
-resourcestring
-  SDataOverflow = 'Data Overflow';
-  SCorruptedStreamInvalidTag =
-    'Corrupted Stream - Invalid High Tag Number Found';
-  SEOFFound = 'EOF Found Inside Tag Value';
-  SInvalidEnd = 'EOF Found When Length Expected';
-  SInvalidDerLength = 'DER Length More Than 4 Bytes: %d';
-  SEndOfStream = 'EOF Found Reading Length';
-  SNegativeLength = 'Corrupted Stream - Negative Length Found';
-  SOutOfBoundsLength = 'Corrupted stream - Out of Bounds Length Found';
-  SUnknownTag = 'Unknown Tag " %d " Encountered';
-  SEndOfContent = 'Unexpected End-of-Contents Marker';
-  SIndefiniteLength = 'Indefinite Length Primitive Encoding Encountered';
-  SUnknownBerObject = 'Unknown BER Object Encountered';
-  SCorruptedStream = 'Corrupted Stream Detected: %s';
-  SInvalidLength = 'Negative Lengths not Allowed", "Length"';
-  SEndOfStreamTwo = 'DEF Length  %d " TObject truncated by " %d';
-  SInvalidBufferLength = 'Buffer Length Not Right For Data';
-  SMalformedContent = 'Malformed End-of-Contents Marker';
-
-  SExtraData = 'Extra Data Found After Object';
-  SUnRecognizedObjectStream = 'Cannot Recognise Object in Stream';
-  SUnRecognizedObjectByteArray = 'Cannot Recognise Object in ByteArray';
-  SIllegalObject = 'Illegal Object in GetInstance:  %s, "obj"';
-  SStrNil = '"Str" Cannot be Nil';
-  SProcessingError = 'Error Processing Object : "%s"';
-  SInvalidObject = 'Object Implicit - Explicit Expected.';
-  SUnknownObject = 'Unknown object in GetInstance:  %s, "obj"';
-  SInvalidSequence = 'Failed to Construct Sequence from byte array: "%s"';
-  SImplicitObject = 'Implicitly Tagged Object';
-  SImplicitTag = 'Implicit Tagging for Tag:  %d';
-  SUnknownObjectBER = 'Unknown BER Object Encountered: $%x';
-  SImplicitTagging = 'Implicit Tagging not Implemented';
-  SUnConstructedEncoding =
-    'Sequences Must Use Constructed Encoding (see X.690 8.9.1/8.10.1)';
-  SUnConstructedEncoding2 =
-    'Sets Must Use Constructed Encoding (see X.690 8.11.1/8.12.1)';
-  SMalformedObject = 'Malformed Object %s';
-  SUnSupportedTag = 'Unsupported Tag Number';
-  SConvertError = 'EIOCryptoLibException Converting Stream to Byte Array: %s';
-  SEncodingError = 'Encoding Error in GetInstance:  %s  "obj"';
-  SDataNil = '"data"';
-  SInvalidRange = 'Must be in the Range 0 to 7", "padBits"';
-  SPadBitError = 'If "data" is Empty, "padBits" Must be 0';
-  SUnalignedData = 'Attempt to Get non-octet Aligned Data from BIT STRING"';
-  STruncatedBitString = 'Truncated BIT STRING Detected", "octets"';
-  SNotImplemented = 'Not Implemented %s';
-  SUnConstructedTag = 'Explicit Tags Must be Constructed (see X.690 8.14.2)';
-  SParsingError = '%s';
-  SEmptyInput = 'Input Cannot be Empty "astr"';
-  SInvalidValue = 'Byte Value Should Have 1 Byte in it'', "val"';
-  SInvalidBooleanValue = 'BOOLEAN Value Should Have 1 Byte in it", "Value"';
-  SMalformedEnumerated = 'Malformed Enumerated';
-  SZeroLength = 'Enumerated has Zero Length, "enc"';
-  SInvalidEncoding = 'Invalid Encoding Value: %d';
-  SFewObject = 'Too Few Objects in Input Vector, "v"';
-  SVectorTooLarge = 'Input Vector too Large", "vector"';
-  SNoTaggedObjectFound =
-    'No Tagged Object Found in Vector. Structure Doesn ''t Seem to be of Type External, "Vector"';
-  SInvalidEncodingValue = 'Invalid Encoding Value';
-  SObjectNil = ' "obj" Can''t be Nil';
-  SValueNil = ' "value" Can''t be Nil';
-  SMalformedInteger = 'Malformed Integer';
-  SIdentifierNil = 'Identifier Cannot be Empty';
-  SInvalidOID = '"String " %s is " not an OID"';
-  SInvalidBranchId = '"String " %s " not a valid OID branch", "branchID"';
-  SIllegalCharacters = 'String Contains Illegal Characters "str"';
-  SObjectEncodeError = 'Cannot Encode Object added to SET';
-  SIndexOutOfRange = '%d >= %d';
-  SInitialCapacityNegative = 'InitialCapacity must not be Negative';
-  SElementNil = 'element cannot be Nil';
-  SOtherNil = 'other cannot be Nil';
-  SOtherElementsNil = 'other elements cannot be Nil';
-  SElementsNil = '"elements" cannot be null, or contain null';
-  SElementVectorNil = 'elementVector cannot be Nil';
-  SASN1IntegerPositiveOutOfRangeError =
-    'ASN.1 Integer out of positive int range';
-  SASN1IntegerOutOfRangeError = 'ASN.1 Integer out of int range';
-  SEnumeratedNegative = 'enumerated must be non-negative';
-
-
-  // ** Start Stream Operations ** //
-
 type
-  TStreamHelper = class helper for TStream
-
-  public
-
-    function ReadByte(): Int32;
-    procedure WriteByte(b: Byte); inline;
-  end;
-
-type
-  TStreamSorter = class sealed(TObject)
-
-  public
-
-    class function Read(input: TStream; var buffer: TCryptoLibByteArray;
-      offset, count: Int32): Int32; static;
-    class function ReadByte(input: TStream): Int32; static;
-  end;
-
-type
-  TStreamUtils = class sealed(TObject)
-
-  strict private
-  const
-    BufferSize = Int32(512);
-
-  public
-
-    class procedure Drain(const inStr: TStream); static;
-    class function ReadAll(const inStr: TStream): TCryptoLibByteArray;
-      static; inline;
-    class function ReadAllLimited(const inStr: TStream; limit: Int32)
-      : TCryptoLibByteArray; static; inline;
-    class function ReadFully(const inStr: TStream; var buf: TCryptoLibByteArray)
-      : Int32; overload; static; inline;
-    class function ReadFully(const inStr: TStream; var buf: TCryptoLibByteArray;
-      off, len: Int32): Int32; overload; static;
-    class procedure PipeAll(const inStr, outStr: TStream); static;
-    /// <summary>
-    /// Pipe all bytes from <c>inStr</c> to <c>outStr</c>, throwing <c>
-    /// EStreamOverflowCryptoLibException</c> if greater than <c>limit</c> bytes in <c>
-    /// inStr</c>.
-    /// </summary>
-    /// <param name="inStr">
-    /// Input Stream
-    /// </param>
-    /// <param name="limit">
-    /// Limit
-    /// </param>
-    /// <param name="outStr">
-    /// Output Stream
-    /// </param>
-    /// <returns>
-    /// The number of bytes actually transferred, if not greater than <c>
-    /// limit</c>
-    /// </returns>
-    /// <exception cref="EStreamOverflowCryptoLibException" />
-    class function PipeAllLimited(const inStr: TStream; limit: Int64;
-      const outStr: TStream): Int64; static;
-
-    class procedure WriteBufTo(const buf: TMemoryStream; const output: TStream);
-      overload; static; inline;
-
-    class function WriteBufTo(const buf: TMemoryStream;
-      const output: TCryptoLibByteArray; offset: Int32): Int32; overload;
-      static; inline;
-
-    class procedure WriteZeroes(const outStr: TStream; count: Int64); static;
-
-  end;
-
-type
-  TBaseInputStream = class abstract(TStream)
-
-{$IFDEF DELPHI}
-  private
-
-    function GetPosition: Int64; inline;
-    procedure SetPosition(const Pos: Int64); inline;
-    procedure SetSize64(const NewSize: Int64); inline;
-{$ENDIF DELPHI}
-  protected
-
-{$IFDEF FPC}
-    function GetPosition: Int64; override;
-    procedure SetPosition(const Pos: Int64); override;
-    procedure SetSize64(const NewSize: Int64); override;
-{$ENDIF FPC}
-    function GetSize: Int64; override;
-    procedure SetSize(NewSize: LongInt); overload; override;
-    procedure SetSize(const NewSize: Int64); overload; override;
-
-  public
-    function ReadByte: Int32; virtual;
-
-    function Read(var buffer; count: LongInt): LongInt; overload; override;
-    function Write(const buffer; count: LongInt): LongInt; overload; override;
-
-    function Read(buffer: TCryptoLibByteArray; offset, count: LongInt)
-      : LongInt; overload;
-{$IFDEF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
-{$ENDIF SUPPORT_TSTREAM_READ_BYTEARRAY_OVERLOAD};
-
-    function Write(const buffer: TCryptoLibByteArray; offset, count: LongInt)
-      : LongInt; overload; {$IFDEF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD} override {$ELSE} virtual
-{$ENDIF SUPPORT_TSTREAM_WRITE_BYTEARRAY_OVERLOAD};
-
-    function Seek(offset: LongInt; Origin: Word): LongInt; overload; override;
-    function Seek(const offset: Int64; Origin: TSeekOrigin): Int64;
-      overload; override;
-
-{$IFNDEF _FIXINSIGHT_}
-    property Size: Int64 read GetSize write SetSize64;
-{$ENDIF}
-    property Position: Int64 read GetPosition write SetPosition;
-  end;
-
-type
-  TFilterStream = class(TStream)
-
-  protected
-  var
-    Fs: TStream;
-
-    function GetPosition: Int64; {$IFDEF FPC} override; {$ENDIF FPC}
-    procedure SetPosition(const Value: Int64); {$IFDEF FPC} override;
-{$ENDIF FPC}
-    function GetSize: Int64; override;
-
-  public
-    constructor Create(const s: TStream);
-
-    property Size: Int64 read GetSize;
-    property Position: Int64 read GetPosition write SetPosition;
-
-    function Seek(const offset: Int64; Origin: TSeekOrigin): Int64; override;
-    function Read(var buffer; count: LongInt): LongInt; override;
-    function Write(const buffer; count: LongInt): LongInt; override;
-
-    function ReadByte(): Int32;
-    procedure WriteByte(Value: Byte);
-
-  end;
-
-type
-  TLimitedInputStream = class abstract(TBaseInputStream)
-
-  strict private
-  var
-    F_limit: Int32;
-  strict protected
-  var
-    F_in: TStream;
-
-    procedure SetParentEofDetect(&on: Boolean);
-
-  public
-    constructor Create(inStream: TStream; limit: Int32);
-    function GetRemaining(): Int32; virtual;
-
-  end;
-
-type
-  TDefiniteLengthInputStream = class(TLimitedInputStream)
-
-  strict private
-
-  var
-    F_originalLength, F_remaining: Int32;
-
-    function GetRemaining: Int32; reintroduce; inline;
-    class function GetEmptyBytes: TCryptoLibByteArray; static; inline;
-
-  public
-
-    constructor Create(inStream: TStream; length: Int32);
-
-    function ReadByte(): Int32; override;
-
-    function Read(buf: TCryptoLibByteArray; off, len: LongInt)
-      : LongInt; override;
-
-    procedure ReadAllIntoByteArray(var buf: TCryptoLibByteArray);
-
-    function ToArray: TCryptoLibByteArray;
-
-    property Remaining: Int32 read GetRemaining;
-    class property EmptyBytes: TCryptoLibByteArray read GetEmptyBytes;
-
-  end;
-
-type
-
   /// <summary>
-  /// a general purpose ASN.1 decoder - note: this class differs from the <br />
-  /// others in that it returns null after it has read the last object in <br />
-  /// the stream. If an ASN.1 Null is encountered a DerBER Null object is <br />
-  /// returned. <br />
+  /// ASN.1 tags constants.
   /// </summary>
-  TAsn1InputStream = class(TFilterStream)
-
-  strict private
-
-  var
-    Flimit: Int32;
-    FtmpBuffers: TCryptoLibMatrixByteArray;
-    FStream: TStream;
-
-    /// <summary>
-    /// build an object given its tag and the number of bytes to construct it
-    /// from.
-    /// </summary>
-    function BuildObject(tag, tagNo, length: Int32): IAsn1Object;
-
+  TAsn1Tags = class sealed(TObject)
   public
-
-    constructor Create(const inputStream: TStream); overload;
-
-    /// <summary>
-    /// Create an ASN1InputStream where no DER object will be longer than
-    /// limit.
-    /// </summary>
-    /// <param name="inputStream">
-    /// stream containing ASN.1 encoded data.
-    /// </param>
-    /// <param name="limit">
-    /// maximum size of a DER encoded object.
-    /// </param>
-    constructor Create(const inputStream: TStream; limit: Int32); overload;
-
-    destructor Destroy(); override;
-
-    /// <summary>
-    /// the stream is automatically limited to the length of the input array.
-    /// </summary>
-    /// <param name="input">
-    /// array containing ASN.1 encoded data.
-    /// </param>
-    constructor Create(const input: TCryptoLibByteArray); overload;
-
-    function ReadObject(): IAsn1Object;
-
-    function ReadVector(const dIn: TDefiniteLengthInputStream)
-      : IAsn1EncodableVector; virtual;
-
-    function CreateDerSequence(const dIn: TDefiniteLengthInputStream)
-      : IDerSequence; virtual;
-
-    function CreateDerSet(const dIn: TDefiniteLengthInputStream)
-      : IDerSet; virtual;
-
-    class function FindLimit(const input: TStream): Int32; static;
-
-    class function ReadTagNumber(const s: TStream; tag: Int32): Int32; static;
-
-    class function ReadLength(const s: TStream; limit: Int32): Int32; static;
-
-    class function GetBuffer(const defIn: TDefiniteLengthInputStream;
-      const tmpBuffers: TCryptoLibMatrixByteArray): TCryptoLibByteArray;
-      static; inline;
-
-    class function CreatePrimitiveDerObject(tagNo: Int32;
-      const defIn: TDefiniteLengthInputStream;
-      const tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object; static;
-  end;
-
-type
-  TDerOutputStream = class(TFilterStream)
-
-  strict private
-    procedure WriteLength(length: Int32);
-
-  strict protected
-    procedure WriteNull();
-
-  public
-    constructor Create(const os: TStream);
-    procedure WriteEncoded(tag: Int32;
-      const bytes: TCryptoLibByteArray); overload;
-    procedure WriteEncoded(tag: Int32; first: Byte;
-      const bytes: TCryptoLibByteArray); overload;
-    procedure WriteEncoded(tag: Int32; const bytes: TCryptoLibByteArray;
-      offset, length: Int32); overload;
-    procedure WriteEncoded(flags, tagNo: Int32;
-      const bytes: TCryptoLibByteArray); overload;
-    procedure WriteTag(flags, tagNo: Int32);
-
-    procedure WriteObject(const obj: IAsn1Encodable); overload; virtual;
-    procedure WriteObject(const obj: IAsn1Object); overload; virtual;
-
-  end;
-
-type
-  TAsn1OutputStream = class sealed(TDerOutputStream)
-
-  public
-    constructor Create(os: TStream);
-
-  end;
-
-type
-  // TODO Make Obsolete in favour of Asn1OutputStream?
-  TBerOutputStream = class sealed(TDerOutputStream)
-
-  public
-
-    constructor Create(os: TStream);
-
-  end;
-
-type
-  TConstructedOctetStream = class(TBaseInputStream)
-
-  strict private
-  var
-    F_parser: IAsn1StreamParser;
-    F_first: Boolean;
-    F_currentStream: TStream;
-
-  public
-    constructor Create(const parser: IAsn1StreamParser);
-    function Read(buffer: TCryptoLibByteArray; offset, count: LongInt)
-      : LongInt; override;
-    function ReadByte(): Int32; override;
-  end;
-
-type
-  TIndefiniteLengthInputStream = class(TLimitedInputStream)
-
-  strict private
-  var
-    F_lookAhead: Int32;
-    F_eofOn00: Boolean;
-
-    function CheckForEof(): Boolean; inline;
-    function RequireByte(): Int32; inline;
-
-  public
-    constructor Create(inStream: TStream; limit: Int32);
-    procedure SetEofOn00(eofOn00: Boolean);
-
-    function Read(buffer: TCryptoLibByteArray; offset, count: LongInt)
-      : LongInt; override;
-
-    function ReadByte(): Int32; override;
-
-  end;
-
-  // ** End Stream Operations ** //
-
-type
-  TCollectionUtilities = class sealed(TObject)
-
-  public
-
-    class function ToStructuredString(c: TCryptoLibGenericArray<IAsn1Encodable>)
-      : String; static;
-
-  end;
-
-type
-
-  TAsn1Encodable = class abstract(TInterfacedObject, IAsn1Encodable,
-    IAsn1Convertible)
-
-  public
-
+    // 0x00: Reserved for use by the encoding rules
     const
-    Der: String = 'DER';
-    Ber: String = 'BER';
+      Boolean = $01;
+      Integer = $02;
+      BitString = $03;
+      OctetString = $04;
+      Null = $05;
+      ObjectIdentifier = $06;
+      ObjectDescriptor = $07;
+      &External = $08;
+      Real = $09;
+      Enumerated = $0A;
+      EmbeddedPdv = $0B;
+      Utf8String = $0C;
+      RelativeOid = $0D;
+      Time = $0E;
+      // 0x0f: Reserved for future editions of this Recommendation | International Standard
+      Sequence = $10;
+      SequenceOf = $10; // for completeness
+      &Set = $11;
+      SetOf = $11; // for completeness
+      NumericString = $12;
+      PrintableString = $13;
+      T61String = $14;
+      VideotexString = $15;
+      IA5String = $16;
+      UtcTime = $17;
+      GeneralizedTime = $18;
+      GraphicString = $19;
+      VisibleString = $1A;
+      GeneralString = $1B;
+      UniversalString = $1C;
+      UnrestrictedString = $1D;
+      BmpString = $1E;
+      Date = $1F;
+      TimeOfDay = $20;
+      DateTime = $21;
+      Duration = $22;
+      ObjectIdentifierIri = $23;
+      RelativeOidIri = $24;
+      // 0x25..: Reserved for addenda to this Recommendation | International Standard
 
-    function GetEncoded(): TCryptoLibByteArray; overload;
-    function GetEncoded(const encoding: String): TCryptoLibByteArray; overload;
+      Constructed = $20;
 
-    /// <summary>
-    /// Return the DER encoding of the object, null if the DER encoding can
-    /// not be made.
-    /// </summary>
-    /// <returns>
-    /// return a DER byte array, null otherwise.
-    /// </returns>
-    function GetDerEncoded(): TCryptoLibByteArray; overload;
+      Universal = $00;
+      Application = $40;
+      ContextSpecific = $80;
+      &Private = $C0;
 
-    function Equals(const other: IAsn1Convertible): Boolean; reintroduce;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}override;
-
-    function ToAsn1Object(): IAsn1Object; virtual; abstract;
-
-    class function IsNullOrContainsNull(const data
-      : TCryptoLibGenericArray<IAsn1Encodable>): Boolean; static;
-
-    class function OpenArrayToDynamicArray(const data: array of IAsn1Encodable)
-      : TCryptoLibGenericArray<IAsn1Encodable>; static;
-
+      Flags = $E0;
   end;
-
-type
-
-  TAsn1Object = class abstract(TAsn1Encodable, IAsn1Object)
-
-  strict protected
-
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-      virtual; abstract;
-
-    function Asn1GetHashCode(): Int32; virtual; abstract;
-
-  public
-    /// <summary>Create a base ASN.1 object from a byte array.</summary>
-    /// <param name="data">The byte array to parse.</param>
-    /// <returns>The base ASN.1 object represented by the byte array.</returns>
-    /// <exception cref="IOException">
-    /// If there is a problem parsing the data, or parsing an object did not exhaust the available data.
-    /// </exception>
-    class function FromByteArray(const data: TCryptoLibByteArray)
-      : IAsn1Object; static;
-
-    /// <summary>Read a base ASN.1 object from a stream.</summary>
-    /// <param name="inStr">The stream to parse.</param>
-    /// <returns>The base ASN.1 object represented by the byte array.</returns>
-    /// <exception cref="IOException">If there is a problem parsing the data.</exception>
-    class function FromStream(const inStr: TStream): IAsn1Object; static;
-
-    function ToAsn1Object(): IAsn1Object; override;
-
-    procedure Encode(const derOut: TStream); virtual; abstract;
-
-    function CallAsn1Equals(const obj: IAsn1Object): Boolean;
-
-    function CallAsn1GetHashCode(): Int32;
-
-  end;
-
-type
-  TDerObjectIdentifier = class(TAsn1Object, IDerObjectIdentifier)
-
-  strict private
-
-  const
-    LONG_LIMIT = Int64((Int64($7FFFFFFFFFFFFFFF) shr 7) - $7F);
-
-  class var
-
-    FLock: TCriticalSection;
-    Fcache: array [0 .. 1023] of IDerObjectIdentifier;
-
-  var
-    Fidentifier: String;
-    Fbody: TCryptoLibByteArray;
-
-    class procedure Boot(); static;
-    class constructor CreateDerObjectIdentifier();
-    class destructor DestroyDerObjectIdentifier();
-
-    constructor Create(const oid: IDerObjectIdentifier;
-      const branchID: String); overload;
-    constructor Create(const bytes: TCryptoLibByteArray); overload;
-
-    function GetID: String; inline;
-
-    procedure WriteField(const outputStream: TStream;
-      fieldValue: Int64); overload;
-    procedure WriteField(const outputStream: TStream;
-      const fieldValue: TBigInteger); overload;
-    procedure DoOutput(const bOut: TMemoryStream); overload;
-    function GetBody(): TCryptoLibByteArray;
-    class function IsValidBranchID(const branchID: String; start: Int32)
-      : Boolean; static;
-    class function IsValidIdentifier(const identifier: String): Boolean; static;
-    class function MakeOidStringFromBytes(const bytes: TCryptoLibByteArray)
-      : String; static;
-
-  strict protected
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
-  public
-    // /**
-    // * return an Oid from the passed in object
-    // *
-    // * @exception ArgumentException if the object cannot be converted.
-    // */
-    class function GetInstance(const obj: TObject): IDerObjectIdentifier;
-      overload; static;
-
-    // /**
-    // * return an Oid from the passed in byte array
-    // */
-    class function GetInstance(const obj: TCryptoLibByteArray)
-      : IDerObjectIdentifier; overload; static; inline;
-
-    // /**
-    // * return an object Identifier from a tagged object.
-    // *
-    // * @param obj the tagged object holding the object we want
-    // * @param explicitly true if the object is meant to be explicitly
-    // *              tagged false otherwise.
-    // * @exception ArgumentException if the tagged object cannot
-    // *               be converted.
-    // */
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      explicitly: Boolean): IDerObjectIdentifier; overload; static; inline;
-
-    class function FromOctetString(const enc: TCryptoLibByteArray)
-      : IDerObjectIdentifier; static;
-
-    constructor Create(const identifier: String); overload;
-
-    property ID: String read GetID;
-
-    function Branch(const branchID: String): IDerObjectIdentifier; virtual;
-
-    // /**
-    // * Return  true if this oid is an extension of the passed in branch, stem.
-    // * @param stem the arc or branch that is a possible parent.
-    // * @return  true if the branch is on the passed in stem, false otherwise.
-    // */
-
-    function &on(const stem: IDerObjectIdentifier): Boolean; virtual;
-
-    procedure Encode(const derOut: TStream); override;
-
-    function ToString(): String; override;
-
-  end;
-
-type
 
   /// <summary>
-  /// Mutable class for building ASN.1 constructed objects such as SETs or
-  /// SEQUENCEs.
+  /// Abstract base class for ASN.1 types.
   /// </summary>
-  TAsn1EncodableVector = class sealed(TInterfacedObject, IAsn1EncodableVector)
+  TAsn1Type = class abstract(TInterfacedObject, IAsn1Type)
+  strict protected
+    FPlatformType: TClass;
+  public
+    constructor Create(APlatformType: TClass);
+    function GetPlatformType(): TClass;
+    property PlatformType: TClass read FPlatformType;
+  end;
+
+  /// <summary>
+  /// ASN.1 tag representation.
+  /// </summary>
+  TAsn1Tag = class sealed(TInterfacedObject, IAsn1Tag)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    constructor Create(ATagClass, ATagNo: Int32);
+  public
+    class function CreateTag(ATagClass, ATagNo: Int32): IAsn1Tag; static;
+    function GetTagClass(): Int32;
+    function GetTagNo(): Int32;
+    function GetExplicitness(): Int32;
+    property TagClass: Int32 read FTagClass;
+    property TagNo: Int32 read FTagNo;
+  end;
+
+  /// <summary>
+  /// Abstract base class for universal ASN.1 types.
+  /// </summary>
+  TAsn1UniversalType = class abstract(TAsn1Type, IAsn1UniversalType, IAsn1Type)
+  strict private
+    FTag: IAsn1Tag;
+  protected
+    function CheckedCast(const AAsn1Object: IAsn1Object): IAsn1Object; virtual;
+    function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; virtual;
+    function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; virtual;
+  public
+    constructor Create(APlatformType: TClass; ATagNo: Int32);
+    destructor Destroy; override;
+    function FromByteArray(const ABytes: TCryptoLibByteArray): IAsn1Object;
+    function GetContextTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Object;
+    function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Object;
+    property Tag: IAsn1Tag read FTag;
+  end;
+
+  /// <summary>
+  /// Factory for ASN.1 universal types.
+  /// </summary>
+  TAsn1UniversalTypes = class sealed(TObject)
+  strict private
+    constructor Create;
+  public
+    class function Get(ATagNo: Int32): IAsn1UniversalType; static;
+  end;
+
+  /// <summary>
+  /// Abstract base class for DER encoding.
+  /// </summary>
+  TDerEncoding = class abstract(TInterfacedObject, IDerEncoding, IAsn1Encoding)
+  strict protected
+    FTagClass: Int32;
+    FTagNo: Int32;
+
+  strict protected
+    /// <summary>
+    /// Compare length and contents with another DER encoding.
+    /// </summary>
+    function CompareLengthAndContents(const AOther: IDerEncoding): Int32; virtual; abstract;
+
+  public
+    /// <summary>
+    /// Create a DER encoding.
+    /// </summary>
+    constructor Create(ATagClass, ATagNo: Int32);
+
+    /// <summary>
+    /// Get the tag class.
+    /// </summary>
+    function GetTagClass(): Int32;
+    /// <summary>
+    /// Get the tag number.
+    /// </summary>
+    function GetTagNo(): Int32;
+    /// <summary>
+    /// Compare this encoding with another.
+    /// </summary>
+    function CompareTo(const AOther: IDerEncoding): Int32;
+
+    /// <summary>
+    /// Encode to the given stream (must be a TAsn1OutputStream).
+    /// </summary>
+    procedure Encode(const AOut: TStream); virtual; abstract;
+
+    /// <summary>
+    /// Get the length of the encoded data.
+    /// </summary>
+    function GetLength(): Int32; virtual; abstract;
+
+    property TagClass: Int32 read FTagClass;
+    property TagNo: Int32 read FTagNo;
+  end;
+
+  /// <summary>
+  /// Abstract base class for ASN.1 encodable objects.
+  /// </summary>
+  TAsn1Encodable = class abstract(TInterfacedObject, IAsn1Encodable, IAsn1Convertible)
+  public
+    const
+      Ber = 'BER';
+      Der = 'DER';
+      DL = 'DL';
+
+  public
+    /// <summary>
+    /// Encode this object to a stream using BER encoding.
+    /// </summary>
+    procedure EncodeTo(const AOutput: TStream); overload; virtual;
+    /// <summary>
+    /// Encode this object to a stream using the specified encoding.
+    /// </summary>
+    procedure EncodeTo(const AOutput: TStream; const AEncoding: String); overload; virtual;
+    /// <summary>
+    /// Get the encoded representation of this object.
+    /// </summary>
+    function GetEncoded(): TCryptoLibByteArray; overload;
+    function GetEncoded(const AEncoding: String): TCryptoLibByteArray; overload;
+    function GetEncoded(const AEncoding: String; APreAlloc, APostAlloc: Int32): TCryptoLibByteArray; overload; virtual;
+    /// <summary>
+    /// Get the DER encoding of the object, nil if the DER encoding cannot be made.
+    /// </summary>
+    function GetDerEncoded(): TCryptoLibByteArray;
+    /// <summary>
+    /// Check if this object equals another.
+    /// </summary>
+    function Equals(const AObj: IAsn1Convertible): Boolean; reintroduce; overload;
+    /// <summary>
+    /// Get the hash code for this object.
+    /// </summary>
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
+    /// <summary>
+    /// Convert this object to an ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; virtual; abstract;
+  end;
+
+  /// <summary>
+  /// Vector for ASN.1 encodable objects.
+  /// </summary>
+  TAsn1EncodableVector = class(TInterfacedObject, IAsn1EncodableVector)
+  strict private
+    const
+      DefaultCapacity = 10;
+
+    class var
+      FEmptyElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  
+  public
+    class property EmptyElements: TCryptoLibGenericArray<IAsn1Encodable> read FEmptyElements;
 
   strict private
-
-  const
-    DefaultCapacity = Int32(10);
-
-  var
     FElements: TCryptoLibGenericArray<IAsn1Encodable>;
     FElementCount: Int32;
     FCopyOnWrite: Boolean;
 
-    function GetCount: Int32;
-    function GetSelf(Index: Int32): IAsn1Encodable;
-
-    procedure Reallocate(minCapacity: Int32);
-
-    class function GetEmptyElements: TCryptoLibGenericArray<IAsn1Encodable>;
-      static; inline;
+    function PrepareCapacity(ARequiredCapacity: Int32): Int32;
+    procedure Reallocate(AMinCapacity: Int32);
+    class function CopyElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>;
+      AElementCount: Int32): TCryptoLibGenericArray<IAsn1Encodable>; overload; static;
 
   public
-    class function FromEnumerable(const e: TList<IAsn1Encodable>)
-      : IAsn1EncodableVector; static;
-
+    /// <summary>
+    /// Create an empty vector with default capacity.
+    /// </summary>
     constructor Create(); overload;
-    constructor Create(initialCapacity: Int32); overload;
-    constructor Create(const v: array of IAsn1Encodable); overload;
+    /// <summary>
+    /// Create an empty vector with specified initial capacity.
+    /// </summary>
+    constructor Create(AInitialCapacity: Int32); overload;
+    /// <summary>
+    /// Create a vector with a single element.
+    /// </summary>
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    /// <summary>
+    /// Create a vector with two elements.
+    /// </summary>
+    constructor Create(const AElement1, AElement2: IAsn1Encodable); overload;
+    /// <summary>
+    /// Create a vector with multiple elements.
+    /// </summary>
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
 
-    destructor Destroy(); override;
+    /// <summary>
+    /// Add an element to the vector.
+    /// </summary>
+    procedure Add(const AElement: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add two elements to the vector.
+    /// </summary>
+    procedure Add(const AElement1, AElement2: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add multiple elements to the vector.
+    /// </summary>
+    procedure Add(const AObjs: array of IAsn1Encodable); overload;
+    /// <summary>
+    /// Add an optional element (if not nil).
+    /// </summary>
+    procedure AddOptional(const AElement: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add two optional elements.
+    /// </summary>
+    procedure AddOptional(const AElement1, AElement2: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add multiple optional elements.
+    /// </summary>
+    procedure AddOptional(const AElements: array of IAsn1Encodable); overload;
+    /// <summary>
+    /// Add an optional tagged element.
+    /// </summary>
+    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add an optional tagged element with tag class.
+    /// </summary>
+    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add all elements from an enumerable.
+    /// </summary>
+    procedure AddAll(const AE: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    /// <summary>
+    /// Add all elements from another vector.
+    /// </summary>
+    procedure AddAll(const AOther: IAsn1EncodableVector); overload;
 
-    procedure Add(const objs: array of IAsn1Encodable); overload;
-
-    procedure Add(const element: IAsn1Encodable); overload;
-
-    procedure AddAll(const other: IAsn1EncodableVector);
-
-    procedure AddOptional(const objs: array of IAsn1Encodable);
-
-    procedure AddOptionalTagged(isExplicit: Boolean; tagNo: Int32;
-      const obj: IAsn1Encodable);
-
-    property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
-
-    property count: Int32 read GetCount;
-
-    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
-
-    function CopyElements(): TCryptoLibGenericArray<IAsn1Encodable>;
-
+    /// <summary>
+    /// Get an element by index.
+    /// </summary>
+    function GetItem(AIndex: Int32): IAsn1Encodable;
+    /// <summary>
+    /// Get the number of elements.
+    /// </summary>
+    function GetCount(): Int32;
+    /// <summary>
+    /// Copy all elements to a new array.
+    /// </summary>
+    function CopyElements(): TCryptoLibGenericArray<IAsn1Encodable>; overload;
+    /// <summary>
+    /// Take all elements (may return internal array if count matches capacity).
+    /// </summary>
     function TakeElements(): TCryptoLibGenericArray<IAsn1Encodable>;
 
-    class function CloneElements(const elements
-      : TCryptoLibGenericArray<IAsn1Encodable>)
-      : TCryptoLibGenericArray<IAsn1Encodable>; static;
+    /// <summary>
+    /// Create a vector from a collection.
+    /// </summary>
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IAsn1EncodableVector; static;
+    /// <summary>
+    /// Create a vector from a single element.
+    /// </summary>
+    class function FromElement(const AElement: IAsn1Encodable): IAsn1EncodableVector; static;
+    /// <summary>
+    /// Create a vector from an enumerable.
+    /// </summary>
+    class function FromEnumerable(const AE: TCryptoLibGenericArray<IAsn1Encodable>): IAsn1EncodableVector; static;
+    /// <summary>
+    /// Clone elements from an array.
+    /// </summary>
+    class function CloneElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IAsn1Encodable>; static;
 
-    class property EmptyElements: TCryptoLibGenericArray<IAsn1Encodable>
-      read GetEmptyElements;
+    /// <summary>
+    /// Class constructor to initialize static fields.
+    /// </summary>
+    class constructor Create;
 
+    property Items[AIndex: Int32]: IAsn1Encodable read GetItem; default;
+    property Count: Int32 read GetCount;
   end;
 
-type
-  TAsn1Generator = class abstract(TInterfacedObject, IAsn1Generator)
-
-  strict private
-  var
-    F_out: TStream;
-
-  strict protected
-    constructor Create(outStream: TStream);
-    function GetOut: TStream; inline;
-    property &Out: TStream read GetOut;
-
-  public
-    procedure AddObject(const obj: IAsn1Encodable); virtual; abstract;
-
-    function GetRawOutputStream(): TStream; virtual; abstract;
-
-    procedure Close(); virtual; abstract;
-  end;
-
-type
   /// <summary>
-  /// A Null object.
+  /// Abstract base class for ASN.1 objects.
   /// </summary>
-  TAsn1Null = class abstract(TAsn1Object, IAsn1Null)
+  TAsn1Object = class abstract(TAsn1Encodable, IAsn1Object)
+  strict protected
+    /// <summary>
+    /// Compare this object with another ASN.1 object.
+    /// </summary>
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; virtual; abstract;
+    /// <summary>
+    /// Get the hash code for this ASN.1 object.
+    /// </summary>
+    function Asn1GetHashCode(): Int32; virtual; abstract;
 
   public
+    /// <summary>
+    /// Encode this object to a stream using BER encoding.
+    /// </summary>
+    procedure EncodeTo(const AOutput: TStream); override;
+    /// <summary>
+    /// Encode this object to a stream using the specified encoding.
+    /// </summary>
+    procedure EncodeTo(const AOutput: TStream; const AEncoding: String); override;
+    /// <summary>
+    /// Get the encoded representation of this object.
+    /// </summary>
+    function GetEncoded(const AEncoding: String; APreAlloc, APostAlloc: Int32): TCryptoLibByteArray; override;
+    /// <summary>
+    /// Check if this object equals another.
+    /// </summary>
+    function Equals(const AOther: IAsn1Object): Boolean; reintroduce; overload;
+    /// <summary>
+    /// Create an ASN.1 object from a byte array.
+    /// </summary>
+    class function FromByteArray(const AData: TCryptoLibByteArray): IAsn1Object; static;
+    /// <summary>
+    /// Create an ASN.1 object from a stream.
+    /// </summary>
+    class function FromStream(const AInStr: TStream): IAsn1Object; static;
+    /// <summary>
+    /// Get encoding for the specified encoding type.
+    /// </summary>
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; virtual; abstract;
+    /// <summary>
+    /// Get encoding for the specified encoding type with implicit tagging.
+    /// </summary>
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; virtual; abstract;
+    /// <summary>
+    /// Get DER encoding.
+    /// </summary>
+    function GetEncodingDer(): IDerEncoding; virtual; abstract;
+    /// <summary>
+    /// Get DER encoding with implicit tagging.
+    /// </summary>
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; virtual; abstract;
 
-    function ToString(): String; override;
-
+  private
+    /// <summary>
+    /// Create an ASN.1 object from a fixed buffer stream.
+    /// </summary>
+    class function FromBufferStream(const ABufferStream: TFixedBufferStream): IAsn1Object; static;
+    /// <summary>
+    /// Convert this object to an ASN.1 object (returns self).
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+    /// <summary>
+    /// Call Asn1Equals (internal method).
+    /// </summary>
+    function CallAsn1Equals(const AObj: IAsn1Object): Boolean;
+    /// <summary>
+    /// Call Asn1GetHashCode (internal method).
+    /// </summary>
+    function CallAsn1GetHashCode(): Int32;
   end;
 
-type
-  TAsn1OctetString = class abstract(TAsn1Object, IAsn1OctetString,
-    IAsn1OctetStringParser)
-
-  strict private
-  var
-    FStr: TCryptoLibByteArray;
+  /// <summary>
+  /// Abstract base class for ASN.1 octet strings.
+  /// </summary>
+  TAsn1OctetString = class abstract(TAsn1Object, IAsn1OctetString, IAsn1OctetStringParser)
+  strict protected
+    class var
+      FEmptyOctets: TCryptoLibByteArray;
+  
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1OctetString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  
+  public
+    class property EmptyOctets: TCryptoLibByteArray read FEmptyOctets;
 
   strict protected
-    function GetStr: TCryptoLibByteArray; inline;
-    function GetParser: IAsn1OctetStringParser; inline;
+    FContents: TCryptoLibByteArray;
+
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
   public
-    property Str: TCryptoLibByteArray read GetStr;
-    property parser: IAsn1OctetStringParser read GetParser;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IAsn1OctetString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IAsn1OctetString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1OctetString; overload; static;
+    /// <summary>
+    /// Get optional octet string from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1OctetString; static;
+    /// <summary>
+    /// Get tagged octet string from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1OctetString; static;
 
     /// <summary>
-    /// return an Octet string from a tagged object.
+    /// Create an octet string from contents.
     /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want.
-    /// </param>
-    /// <param name="isExplicit">
-    /// explicitly true if the object is meant to be explicitly tagged false
-    /// otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IAsn1OctetString; overload; static;
+    constructor Create(const AContents: TCryptoLibByteArray);
+
     /// <summary>
-    /// return an Octet string from the given object.
+    /// Get the octet stream.
     /// </summary>
-    /// <param name="obj">
-    /// the object we want converted.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IAsn1OctetString;
-      overload; static;
+    function GetOctetStream(): TStream; virtual;
 
-    /// <param name="Str">
-    /// the octets making up the octet string.
-    /// </param>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
-    constructor Create(const obj: IAsn1Encodable); overload;
-
-    function GetOctetStream(): TStream;
-
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
     function GetOctets(): TCryptoLibByteArray; virtual;
 
+    /// <summary>
+    /// Get the octets length.
+    /// </summary>
+    function GetOctetsLength(): Int32; virtual;
+
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+
+    /// <summary>
+    /// Convert to string representation.
+    /// </summary>
     function ToString(): String; override;
 
+    /// <summary>
+    /// Create a primitive octet string from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+
+    /// <summary>
+    /// Class constructor to initialize static fields.
+    /// </summary>
+    class constructor Create;
   end;
 
-type
   /// <summary>
-  /// return an Asn1Sequence from the given object.
+  /// DER octet string implementation.
   /// </summary>
-  TAsn1Sequence = class abstract(TAsn1Object, IAsn1Sequence)
-
-  strict private
-  var
-    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
-
-  type
-    TAsn1SequenceParserImpl = class sealed(TInterfacedObject,
-      IAsn1SequenceParserImpl, IAsn1SequenceParser)
-
-    strict private
-    var
-      Fouter: IAsn1Sequence;
-      Fmax, Findex: Int32;
-
-    public
-      constructor Create(const outer: IAsn1Sequence);
-      function ReadObject(): IAsn1Convertible;
-      function ToAsn1Object(): IAsn1Object;
-
-    end;
-
-  strict protected
-    function GetCount: Int32; virtual;
-    function GetParser: IAsn1SequenceParser; virtual;
-    function GetSelf(Index: Int32): IAsn1Encodable; virtual;
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    function GetElements: TCryptoLibGenericArray<IAsn1Encodable>; inline;
-
-    constructor Create(); overload;
-    constructor Create(const element: IAsn1Encodable); overload;
-    constructor Create(const elements: array of IAsn1Encodable); overload;
-    constructor Create(const elementVector: IAsn1EncodableVector); overload;
-
-  public
-
-    destructor Destroy(); override;
-
-    function ToString(): String; override;
-
-    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
-
-    function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
-
-    // /**
-    // * return the object at the sequence position indicated by index.
-    // *
-    // * @param index the sequence number (starting at zero) of the object
-    // * @return the object at the sequence position indicated by index.
-    // */
-    property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
-
-    /// <summary>
-    /// return an Asn1Sequence from the given object.
-    /// </summary>
-    /// <param name="obj">
-    /// the object we want converted.
-    /// </param>
-    /// <exception cref="EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IAsn1Sequence;
-      overload; static;
-
-    /// <summary>
-    /// return an Asn1Sequence from the given object.
-    /// </summary>
-    /// <param name="obj">
-    /// the byte array we want converted.
-    /// </param>
-    /// <exception cref="EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TCryptoLibByteArray): IAsn1Sequence;
-      overload; static;
-
-    // /**
-    // * Return an ASN1 sequence from a tagged object. There is a special
-    // * case here, if an object appears to have been explicitly tagged on
-    // * reading but we were expecting it to be implicitly tagged in the
-    // * normal course of events it indicates that we lost the surrounding
-    // * sequence - so we need to add it back (this will happen if the tagged
-    // * object is a sequence that contains other sequences). If you are
-    // * dealing with implicitly tagged sequences you really <b>should</b>
-    // * be using this method.
-    // *
-    // * @param obj the tagged object.
-    // * @param explicitly true if the object is meant to be explicitly tagged,
-    // *          false otherwise.
-    // * @exception ArgumentException if the tagged object cannot
-    // *          be converted.
-    // */
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      explicitly: Boolean): IAsn1Sequence; overload; static;
-
-    property parser: IAsn1SequenceParser read GetParser;
-    property count: Int32 read GetCount;
-    property elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
-
-  end;
-
-type
   TDerOctetString = class(TAsn1OctetString, IDerOctetString)
+  strict private
+    class var
+      FEmpty: IDerOctetString;
+    class function GetEmpty(): IDerOctetString; static;
+
+    /// <summary>
+    /// Create a DER octet string with `empty` contents.
+    /// </summary>
+    constructor CreateEmpty();
 
   public
-    /// <param name="str">The octets making up the octet string.</param>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-    constructor Create(const obj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Create a DER octet string from contents.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Create a DER octet string from an ASN.1 convertible object.
+    /// </summary>
+    constructor Create(const AObj: IAsn1Convertible); overload;
+    /// <summary>
+    /// Create a DER octet string from an ASN.1 encodable object.
+    /// </summary>
+    constructor Create(const AObj: IAsn1Encodable); overload;
 
-    destructor Destroy(); override;
+    /// <summary>
+    /// Create from contents (copies the array).
+    /// </summary>
+    class function FromContents(const AContents: TCryptoLibByteArray): IDerOctetString; static;
+    /// <summary>
+    /// Create from contents optional (copies the array).
+    /// </summary>
+    class function FromContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString; static;
+    /// <summary>
+    /// Create from contents (does not copy, uses the array directly).
+    /// </summary>
+    class function WithContents(const AContents: TCryptoLibByteArray): IDerOctetString; static;
 
-    procedure Encode(const derOut: TStream); overload; override;
-    class procedure Encode(const derOut: TDerOutputStream;
-      const bytes: TCryptoLibByteArray; offset, length: Int32); reintroduce;
-      overload; static; inline;
+    /// <summary>
+    /// Get encoding for the specified encoding type.
+    /// </summary>
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    /// <summary>
+    /// Get encoding for the specified encoding type with implicit tagging.
+    /// </summary>
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    /// <summary>
+    /// Get DER encoding.
+    /// </summary>
+    function GetEncodingDer(): IDerEncoding; override;
+    /// <summary>
+    /// Get DER encoding with implicit tagging.
+    /// </summary>
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
 
+    class procedure Encode(const AAsn1Out: TAsn1OutputStream; const ABuffer: TCryptoLibByteArray; AOffset, ALength: Int32); static;
+
+    /// <summary>
+    /// Empty DER octet string.
+    /// </summary>
+    class property Empty: IDerOctetString read GetEmpty;
+
+    /// <summary>
+    /// Class constructor to initialize static fields.
+    /// </summary>
+    class constructor Create;
   end;
 
-type
+  /// <summary>
+  /// BER octet string implementation.
+  /// </summary>
   TBerOctetString = class(TDerOctetString, IBerOctetString)
-
   strict private
-  const
-    MaxLength = Int32(1000);
-
-  var
-    Focts: TList<IDerOctetString>;
-
-    function GenerateOcts(): TList<IDerOctetString>;
-
-    class function ToBytes(octs: TList<IDerOctetString>)
-      : TCryptoLibByteArray; static;
-
+    FElements: TCryptoLibGenericArray<IAsn1OctetString>;
+    class function GetEmpty(): IBerOctetString; static;
+    class function WithContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   public
-
-    /// <inheritdoc />
-    /// <param name="str">The octets making up the octet string.</param>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-    constructor Create(const octets: TList<IDerOctetString>); overload;
-    constructor Create(const obj: IAsn1Object); overload;
-    constructor Create(const obj: IAsn1Encodable); overload;
-
-    destructor Destroy(); override;
-
-    function GetOctets(): TCryptoLibByteArray; override;
-
     /// <summary>
-    /// return the DER octets that make up this string.
+    /// Empty BER octet string.
     /// </summary>
-    function GetEnumerable: TCryptoLibGenericArray<IDerOctetString>; virtual;
-
-    procedure Encode(const derOut: TStream); override;
-
-    class function FromSequence(const seq: IAsn1Sequence)
-      : IBerOctetString; static;
-
+    class property Empty: IBerOctetString read GetEmpty;
+    /// <summary>
+    /// Flatten an array of octet strings into a single byte array.
+    /// </summary>
+    class function FlattenOctetStrings(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>): TCryptoLibByteArray; static;
+    /// <summary>
+    /// Create from contents (copies the array).
+    /// </summary>
+    class function FromContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
+    /// <summary>
+    /// Create from contents optional (copies the array).
+    /// </summary>
+    class function FromContentsOptional(const AContents: TCryptoLibByteArray): IBerOctetString; static;
+    /// <summary>
+    /// Create a BER octet string from a sequence.
+    /// </summary>
+    class function FromSequence(const ASequence: IAsn1Sequence): IBerOctetString; static;
+    /// <summary>
+    /// Create a BER octet string from an array of octet strings.
+    /// </summary>
+    constructor Create(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>); overload;
   end;
-
-type
 
   /// <summary>
-  /// A Null object.
+  /// Abstract base class for DER string objects.
   /// </summary>
-  TDerNull = class(TAsn1Null, IDerNull)
-
-  strict private
-
-    class function GetInstance: IDerNull; static; inline;
-
-  const
-    ZeroBytes: TCryptoLibByteArray = Nil;
-
-  strict protected
-    constructor Create(dummy: Int32);
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    function Asn1GetHashCode(): Int32; override;
-
-  public
-
-    procedure Encode(const derOut: TStream); override;
-    class property Instance: IDerNull read GetInstance;
-
-  end;
-
-type
-  TDerSequence = class(TAsn1Sequence, IDerSequence)
-
-  strict private
-
-    class function GetEmpty: IDerSequence; static; inline;
-
-  public
-
-    class function FromVector(const elementVector: IAsn1EncodableVector)
-      : IDerSequence; static;
-
-    /// <summary>
-    /// create an empty sequence
-    /// </summary>
-    constructor Create(); overload;
-
-    /// <summary>
-    /// create a sequence containing one object
-    /// </summary>
-    constructor Create(const element: IAsn1Encodable); overload;
-
-    constructor Create(const elements: array of IAsn1Encodable); overload;
-
-    /// <summary>
-    /// create a sequence containing a vector of objects.
-    /// </summary>
-    constructor Create(const elementVector: IAsn1EncodableVector); overload;
-
-    destructor Destroy(); override;
-
-    /// <summary>
-    /// A note on the implementation: <br />As Der requires the constructed,
-    /// definite-length model to <br />be used for structured types, this
-    /// varies slightly from the <br />ASN.1 descriptions given. Rather than
-    /// just outputing Sequence, <br />we also have to specify Constructed,
-    /// and the objects length. <br />
-    /// </summary>
-    procedure Encode(const derOut: TStream); override;
-
-    class property Empty: IDerSequence read GetEmpty;
-
-  end;
-
-type
-  TBerSequence = class(TDerSequence, IBerSequence)
-
-  strict private
-
-    class function GetEmpty: IBerSequence; static; inline;
-
-  public
-
-    class function FromVector(const elementVector: IAsn1EncodableVector)
-      : IBerSequence; static;
-
-    /// <summary>
-    /// create an empty sequence
-    /// </summary>
-    constructor Create(); overload;
-
-    /// <summary>
-    /// create a sequence containing one object
-    /// </summary>
-    constructor Create(const element: IAsn1Encodable); overload;
-
-    constructor Create(const elements: array of IAsn1Encodable); overload;
-
-    /// <summary>
-    /// create a sequence containing a vector of objects.
-    /// </summary>
-    constructor Create(const elementVector: IAsn1EncodableVector); overload;
-
-    destructor Destroy(); override;
-
-    /// <summary>
-    /// A note on the implementation: <br />As Der requires the constructed,
-    /// definite-length model to <br />be used for structured types, this
-    /// varies slightly from the <br />ASN.1 descriptions given. Rather than
-    /// just outputing Sequence, <br />we also have to specify Constructed,
-    /// and the objects length. <br />
-    /// </summary>
-    procedure Encode(const derOut: TStream); override;
-
-    class property Empty: IBerSequence read GetEmpty;
-
-  end;
-
-type
-  /// **
-  // * ASN.1 TaggedObject - in ASN.1 notation this is any object preceded by
-  // * a [n] where n is some number - these are assumed to follow the construction
-  // * rules (as with sequences).
-  // */
-  TAsn1TaggedObject = class abstract(TAsn1Object, IAsn1TaggedObject,
-    IAsn1TaggedObjectParser)
-
-  strict private
-    FtagNo: Int32;
-    Fexplicitly: Boolean;
-    Fobj: IAsn1Encodable;
-
-  strict protected
-    // /**
-    // * @param tagNo the tag number for this object.
-    // * @param obj the tagged object.
-    // */
-    constructor Create(tagNo: Int32; const obj: IAsn1Encodable); overload;
-    // /**
-    // * @param explicitly true if the object is explicitly tagged.
-    // * @param tagNo the tag number for this object.
-    // * @param obj the tagged object.
-    // */
-    constructor Create(explicitly: Boolean; tagNo: Int32;
-      const obj: IAsn1Encodable); overload;
-
-    function GetTagNo: Int32; inline;
-    function Getexplicitly: Boolean; inline;
-    function Getobj: IAsn1Encodable; inline;
-
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
-    function Asn1GetHashCode(): Int32; override;
-
-  public
-    class function IsConstructed(isExplicit: Boolean; const obj: IAsn1Object)
-      : Boolean; static;
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      explicitly: Boolean): IAsn1TaggedObject; overload; static; inline;
-    class function GetInstance(obj: TObject): IAsn1TaggedObject; overload;
-      static; inline;
-
-    property tagNo: Int32 read GetTagNo;
-    property explicitly: Boolean read Getexplicitly;
-    property obj: IAsn1Encodable read Getobj;
-
-    // /**
-    // * return whether or not the object may be explicitly tagged.
-    // * <p>
-    // * Note: if the object has been read from an input stream, the only
-    // * time you can be sure if isExplicit is returning the true state of
-    // * affairs is if it returns false. An implicitly tagged object may appear
-    // * to be explicitly tagged, so you need to understand the context under
-    // * which the reading was done as well, see GetObject below.</p>
-    // */
-
-    function isExplicit(): Boolean; inline;
-
-    function IsEmpty(): Boolean; inline;
-    // /**
-    // * return whatever was following the tag.
-    // * <p>
-    // * Note: tagged objects are generally context dependent if you're
-    // * trying to extract a tagged object you should be going via the
-    // * appropriate GetInstance method.</p>
-    // */
-    function GetObject(): IAsn1Object; inline;
-    // /**
-    // * Return the object held in this tagged object as a parser assuming it has
-    // * the type of the passed in tag. If the object doesn't have a parser
-    // * associated with it, the base object is returned.
-    // */
-    function GetObjectParser(tag: Int32; isExplicit: Boolean): IAsn1Convertible;
-
-    function ToString(): String; override;
-
-  end;
-
-type
-  TAsn1Tags = class sealed(TObject)
-
-  public
-
-    const
-    &Boolean = Int32($01);
-    &Integer = Int32($02);
-    BitString = Int32($03);
-    OctetString = Int32($04);
-    Null = Int32($05);
-    ObjectIdentifier = Int32($06);
-    &External = Int32($08);
-    Enumerated = Int32($0A);
-    Sequence = Int32($10);
-    SequenceOf = Int32($10); // for completeness
-    &Set = Int32($11);
-    SetOf = Int32($11); // for completeness
-
-    NumericString = Int32($12);
-    PrintableString = Int32($13);
-    T61String = Int32($14);
-    VideotexString = Int32($15);
-    IA5String = Int32($16);
-    UtcTime = Int32($17);
-    GeneralizedTime = Int32($18);
-    GraphicString = Int32($19);
-    VisibleString = Int32($1A);
-    GeneralString = Int32($1B);
-    UniversalString = Int32($1C);
-    BmpString = Int32($1E);
-    Utf8String = Int32($0C);
-
-    Constructed = Int32($20);
-    Application = Int32($40);
-    Tagged = Int32($80);
-  end;
-
-type
-  /// <summary>
-  /// return an Asn1Set from the given object.
-  /// </summary>
-  TAsn1Set = class abstract(TAsn1Object, IAsn1Set)
-
-  strict private
-  var
-    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
-
-    function GetDerEncoded(const obj: IAsn1Encodable)
-      : TCryptoLibByteArray; overload;
-
-    /// <summary>
-    /// return true if a &lt;= b (arrays are assumed padded with zeros).
-    /// </summary>
-    class function LessThanOrEqual(const a, b: TCryptoLibByteArray)
-      : Boolean; static;
-
-  type
-    TAsn1SetParserImpl = class sealed(TInterfacedObject, IAsn1SetParserImpl,
-      IAsn1SetParser)
-
-    strict private
-      Fouter: IAsn1Set;
-      Fmax, Findex: Int32;
-
-    public
-      constructor Create(const outer: IAsn1Set);
-      function ReadObject(): IAsn1Convertible;
-      function ToAsn1Object(): IAsn1Object;
-
-    end;
-
-  strict protected
-    function GetCount: Int32; virtual;
-    function GetParser: IAsn1SetParser; inline;
-    function GetSelf(Index: Int32): IAsn1Encodable; virtual;
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    function GetElements: TCryptoLibGenericArray<IAsn1Encodable>; inline;
-    procedure Sort();
-
-    constructor Create(); overload;
-
-    constructor Create(const element: IAsn1Encodable); overload;
-
-    constructor Create(const elements: array of IAsn1Encodable); overload;
-
-    constructor Create(const elementVector: IAsn1EncodableVector); overload;
-
-  public
-    destructor Destroy(); override;
-
-    function ToString(): String; override;
-
-    function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
-
-    function GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>; virtual;
-
-    // /**
-    // * return the object at the sequence position indicated by index.
-    // *
-    // * @param index the sequence number (starting at zero) of the object
-    // * @return the object at the sequence position indicated by index.
-    // */
-    property Self[Index: Int32]: IAsn1Encodable read GetSelf; default;
-
-    /// <summary>
-    /// return an ASN1Set from the given object.
-    /// </summary>
-    /// <param name="obj">
-    /// the object we want converted.
-    /// </param>
-    /// <exception cref="EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IAsn1Set; overload; static;
-
-    /// <summary>
-    /// return an Asn1Set from the given object.
-    /// </summary>
-    /// <param name="obj">
-    /// the byte array we want converted.
-    /// </param>
-    /// <exception cref="EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TCryptoLibByteArray): IAsn1Set;
-      overload; static;
-
-    // /**
-    // * Return an ASN1 sequence from a tagged object. There is a special
-    // * case here, if an object appears to have been explicitly tagged on
-    // * reading but we were expecting it to be implicitly tagged in the
-    // * normal course of events it indicates that we lost the surrounding
-    // * sequence - so we need to add it back (this will happen if the tagged
-    // * object is a sequence that contains other sequences). If you are
-    // * dealing with implicitly tagged sequences you really <b>should</b>
-    // * be using this method.
-    // *
-    // * @param obj the tagged object.
-    // * @param explicitly true if the object is meant to be explicitly tagged,
-    // *          false otherwise.
-    // * @exception ArgumentException if the tagged object cannot
-    // *          be converted.
-    // */
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      explicitly: Boolean): IAsn1Set; overload; static;
-
-    property parser: IAsn1SetParser read GetParser;
-    property count: Int32 read GetCount;
-    property elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
-
-  end;
-
-type
-
-  /// <summary>
-  /// A Der encoded set object
-  /// </summary>
-  TDerSet = class(TAsn1Set, IDerSet)
-
-  strict private
-    class function GetEmpty: IDerSet; static; inline;
-
-  public
-
-    class function FromVector(const elementVector: IAsn1EncodableVector)
-      : IDerSet; overload; static;
-    class function FromVector(const elementVector: IAsn1EncodableVector;
-      needsSorting: Boolean): IDerSet; overload; static;
-
-    /// <summary>
-    /// create an empty set
-    /// </summary>
-    constructor Create(); overload;
-
-    /// <param name="element">
-    /// a single object that makes up the set.
-    /// </param>
-    constructor Create(const element: IAsn1Encodable); overload;
-
-    constructor Create(const elements: array of IAsn1Encodable); overload;
-
-    /// <param name="elementVector">
-    /// a vector of objects making up the set.
-    /// </param>
-    constructor Create(const elementVector: IAsn1EncodableVector); overload;
-
-    constructor Create(const elementVector: IAsn1EncodableVector;
-      needsSorting: Boolean); overload;
-
-    destructor Destroy(); override;
-
-    /// <summary>
-    /// A note on the implementation: <br />As Der requires the constructed,
-    /// definite-length model to <br />be used for structured types, this
-    /// varies slightly from the <br />ASN.1 descriptions given. Rather than
-    /// just outputing Set, <br />we also have to specify Constructed, and
-    /// the objects length. <br />
-    /// </summary>
-    procedure Encode(const derOut: TStream); override;
-
-    class property Empty: IDerSet read GetEmpty;
-
-  end;
-
-type
-  TAsn1StreamParser = class(TInterfacedObject, IAsn1StreamParser)
-
-  strict private
-  var
-    F_in: TStream;
-    F_limit: Int32;
-    FtmpBuffers: TCryptoLibMatrixByteArray;
-
-    procedure Set00Check(enabled: Boolean); inline;
-
-  public
-    constructor Create(const inStream: TStream); overload;
-    constructor Create(const inStream: TStream; limit: Int32); overload;
-    constructor Create(const encoding: TCryptoLibByteArray); overload;
-
-    destructor Destroy; override;
-
-    function ReadIndef(tagValue: Int32): IAsn1Convertible;
-    function ReadImplicit(Constructed: Boolean; tag: Int32): IAsn1Convertible;
-
-    function ReadTaggedObject(Constructed: Boolean; tag: Int32): IAsn1Object;
-
-    function ReadObject(): IAsn1Convertible; virtual;
-
-    function ReadVector(): IAsn1EncodableVector; inline;
-  end;
-
-type
-  TDerSetParser = class(TInterfacedObject, IAsn1SetParser, IAsn1Convertible,
-    IDerSetParser)
-
-  strict private
-  var
-    F_parser: IAsn1StreamParser;
-
-  public
-
-    constructor Create(const parser: IAsn1StreamParser);
-    function ReadObject(): IAsn1Convertible; inline;
-    function ToAsn1Object(): IAsn1Object; inline;
-
-  end;
-
-type
-  TDerSequenceParser = class(TInterfacedObject, IAsn1SequenceParser,
-    IAsn1Convertible, IDerSequenceParser)
-
-  strict private
-  var
-    F_parser: IAsn1StreamParser;
-
-  public
-
-    constructor Create(const parser: IAsn1StreamParser);
-    function ReadObject(): IAsn1Convertible; inline;
-    function ToAsn1Object(): IAsn1Object; inline;
-
-  end;
-
-type
-
-  /// <summary>
-  /// Base class for an application specific object
-  /// </summary>
-  TDerApplicationSpecific = class(TAsn1Object, IDerApplicationSpecific)
-
-  strict private
-  var
-    FisConstructed: Boolean;
-    Ftag: Int32;
-    Foctets: TCryptoLibByteArray;
-
-    class function ReplaceTagNumber(newTag: Int32;
-      const input: TCryptoLibByteArray): TCryptoLibByteArray; static;
-
-  strict protected
-    function GetApplicationTag: Int32; inline;
-    function GetLengthOfHeader(const data: TCryptoLibByteArray): Int32; inline;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    function Asn1GetHashCode(): Int32; override;
-
-  public
-    constructor Create(IsConstructed: Boolean; tag: Int32;
-      const octets: TCryptoLibByteArray); overload;
-    constructor Create(tag: Int32; const octets: TCryptoLibByteArray); overload;
-    constructor Create(tag: Int32; const obj: IAsn1Encodable); overload;
-    constructor Create(isExplicit: Boolean; tag: Int32;
-      const obj: IAsn1Encodable); overload;
-    constructor Create(tagNo: Int32; const vec: IAsn1EncodableVector); overload;
-
-    function IsConstructed(): Boolean; inline;
-    function GetContents(): TCryptoLibByteArray; inline;
-
-    /// <summary>
-    /// Return the enclosed object assuming explicit tagging.
-    /// </summary>
-    /// <returns>
-    /// the resulting object
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EIOCryptoLibException">
-    /// if reconstruction fails.
-    /// </exception>
-    function GetObject(): IAsn1Object; overload; inline;
-
-    /// <summary>
-    /// Return the enclosed object assuming implicit tagging.
-    /// </summary>
-    /// <param name="derTagNo">
-    /// the type tag that should be applied to the object's contents.
-    /// </param>
-    /// <returns>
-    /// the resulting object
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EIOCryptoLibException">
-    /// if reconstruction fails.
-    /// </exception>
-    function GetObject(derTagNo: Int32): IAsn1Object; overload; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
-    property ApplicationTag: Int32 read GetApplicationTag;
-  end;
-
-type
-  TBerApplicationSpecific = class(TDerApplicationSpecific,
-    IBerApplicationSpecific)
-
-  public
-    constructor Create(tagNo: Int32; const vec: IAsn1EncodableVector);
-
-  end;
-
-type
-  TBerOctetStringParser = class(TInterfacedObject, IAsn1OctetStringParser,
-    IAsn1Convertible, IBerOctetStringParser)
-
-  strict private
-  var
-    F_parser: IAsn1StreamParser;
-
-  public
-
-    constructor Create(const parser: IAsn1StreamParser);
-    function GetOctetStream(): TStream; inline;
-    function ToAsn1Object(): IAsn1Object;
-
-  end;
-
-type
-  TBerApplicationSpecificParser = class(TInterfacedObject,
-    IAsn1ApplicationSpecificParser, IAsn1Convertible,
-    IBerApplicationSpecificParser)
-
-  strict private
-  var
-    F_tag: Int32;
-    F_parser: IAsn1StreamParser;
-
-  public
-
-    constructor Create(tag: Int32; const parser: IAsn1StreamParser);
-    function ReadObject(): IAsn1Convertible; inline;
-    function ToAsn1Object(): IAsn1Object; inline;
-
-  end;
-
-type
-  TDerStringBase = class abstract(TAsn1Object, IAsn1String, IDerStringBase)
-
+  TDerStringBase = class abstract(TAsn1Object, IDerStringBase, IAsn1String)
   strict protected
     constructor Create();
     function Asn1GetHashCode(): Int32; override;
+    /// <summary>
+    /// Get the tag number for this string type (to be implemented by derived classes).
+    /// </summary>
+    function GetTagNo(): Int32; virtual; abstract;
+    /// <summary>
+    /// Get the contents as byte array (to be implemented by derived classes).
+    /// </summary>
+    function GetContents(): TCryptoLibByteArray; virtual; abstract;
   public
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
     function GetString(): String; virtual; abstract;
+    /// <summary>
+    /// Convert to string.
+    /// </summary>
     function ToString(): String; override;
+    /// <summary>
+    /// Get encoding for the specified encoding type.
+    /// </summary>
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    /// <summary>
+    /// Get encoding for the specified encoding type with implicit tagging.
+    /// </summary>
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    /// <summary>
+    /// Get DER encoding.
+    /// </summary>
+    function GetEncodingDer(): IDerEncoding; override;
+    /// <summary>
+    /// Get DER encoding with implicit tagging.
+    /// </summary>
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
-type
-
   /// <summary>
-  /// Der Bit string object.
+  /// DER bit string implementation.
   /// </summary>
-  TDerBitString = class(TDerStringBase, IDerBitString)
-
+  TDerBitString = class(TDerStringBase, IDerBitString, IAsn1BitStringParser)
   strict private
-  const
-    FTable: array [0 .. 15] of Char = ('0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
-
+    class var FEmptyOctetsContents: TCryptoLibByteArray;
+    class constructor Create;
+    class function GetEmptyOctetsContents: TCryptoLibByteArray; static;
   strict protected
-  var
-    FmData: TCryptoLibByteArray;
-    FmPadBits: Int32;
+    FContents: TCryptoLibByteArray; // First byte is padBits, rest is data
+    FBufferStream: TFixedBufferStream;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    class property EmptyOctetsContents: TCryptoLibByteArray read GetEmptyOctetsContents;
 
-    function GetmPadBits: Int32; inline;
-    function GetmData: TCryptoLibByteArray; inline;
-
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
 
-    property mPadBits: Int32 read GetmPadBits;
-    property mData: TCryptoLibByteArray read GetmData;
-  public
-
-    constructor Create(const data: TCryptoLibByteArray;
-      padBits: Int32); overload;
-
-    constructor Create(const data: TCryptoLibByteArray); overload;
-
-    constructor Create(namedBits: Int32); overload;
-
-    constructor Create(const obj: IAsn1Encodable); overload;
-
+    function GetTagNo(): Int32; override;
+    function GetPadBits(): Int32;
+    function GetContents(): TCryptoLibByteArray; override;
     function GetString(): String; override;
-
     function GetOctets(): TCryptoLibByteArray; virtual;
-
     function GetBytes(): TCryptoLibByteArray; virtual;
-
-    procedure Encode(const derOut: TStream); override;
-
-    function GetInt32Value: Int32; virtual;
-    property Int32Value: Int32 read GetInt32Value;
-
-    /// <summary>
-    /// return a Der Bit string from the passed in object
-    /// </summary>
-    /// <param name="obj">
-    /// a Bit string or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a Der Bit string instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerBitString; overload;
-      static; inline;
-
-    class function GetInstance(const obj: TCryptoLibByteArray): IDerBitString;
-      overload; static;
-
-    /// <summary>
-    /// return a Der Bit string from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerBitString; overload; static; inline;
-
-    class function FromAsn1Octets(const octets: TCryptoLibByteArray)
-      : IDerBitString; static;
-
-  end;
-
-type
-  TBerBitString = class(TDerBitString, IBerBitString)
-
+    function GetInt32Value(): Int32;
+    function GetBytesLength(): Int32;
+    function IsOctetAligned(): Boolean;
+    function GetBitStream(): TStream;
+    function GetOctetStream(): TStream;
+    function GetBufferStream(): TFixedBufferStream;
+    function GetParser(): IAsn1BitStringParser;
+    procedure CheckOctetAligned();
   public
-    constructor Create(const data: TCryptoLibByteArray;
-      padBits: Int32); overload;
-    constructor Create(const data: TCryptoLibByteArray); overload;
-    constructor Create(namedBits: Int32); overload;
-    constructor Create(const obj: IAsn1Encodable); overload;
+    type
+      /// <summary>
+      /// Meta class for TDerBitString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a DER bit string with `empty` data.
+    /// </summary>
+    constructor CreateEmpty();
+    /// <summary>
+    /// Create a DER bit string from data.
+    /// </summary>
+    constructor Create(const AData: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Create a DER bit string from contents (contents format: [padBits, data...]).
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray; ACheck: Boolean); overload;
+    /// <summary>
+    /// Create a DER bit string from data and pad bits.
+    /// </summary>
+    constructor Create(const AData: TCryptoLibByteArray; APadBits: Int32); overload;
+    /// <summary>
+    /// Create a DER bit string from a single byte and pad bits.
+    /// </summary>
+    constructor Create(AData: Byte; APadBits: Int32); overload;
+    /// <summary>
+    /// Create a DER bit string from named bits (Int32).
+    /// </summary>
+    constructor Create(ANamedBits: Int32); overload;
+    /// <summary>
+    /// Create a DER bit string from an IAsn1Convertible object.
+    /// </summary>
+    constructor Create(const AObj: IAsn1Convertible); overload;
+    /// <summary>
+    /// Create a DER bit string from an IAsn1Encodable object.
+    /// </summary>
+    constructor Create(const AObj: IAsn1Encodable); overload;
 
-    procedure Encode(const derOut: TStream); override;
+    destructor Destroy; override;
+    /// <summary>
+    /// Create a primitive DER bit string from contents (contents format: [padBits, data...]).
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IDerBitString; static;
+    /// <summary>
+    /// Create a DER bit string from contents (optional, returns nil if contents is nil).
+    /// </summary>
+    class function FromContentsOptional(const AContents: TCryptoLibByteArray): IDerBitString; static;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerBitString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerBitString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerBitString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; AIsExplicit: Boolean): IDerBitString; overload; static;
+    /// <summary>
+    /// Get optional bit string from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerBitString; static;
+    /// <summary>
+    /// Get tagged bit string from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBitString; static;
 
+    property PadBits: Int32 read GetPadBits;
+    property Int32Value: Int32 read GetInt32Value;
+    property Parser: IAsn1BitStringParser read GetParser;
+    property Contents: TCryptoLibByteArray read GetContents;
   end;
 
-type
-  TBerGenerator = class abstract(TAsn1Generator, IBerGenerator)
+  /// <summary>
+  /// DL bit string implementation.
+  /// </summary>
+  TDLBitString = class(TDerBitString, IDLBitString)
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+  public
+    /// <summary>
+    /// Create a DL bit string from contents (m_contents format: [padBits, data...]).
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray; ACheck: Boolean = True); overload;
+    /// <summary>
+    /// Create a DL bit string from data and pad bits.
+    /// </summary>
+    constructor Create(const AData: TCryptoLibByteArray; APadBits: Int32); overload;
+  end;
 
+  /// <summary>
+  /// BER bit string implementation.
+  /// </summary>
+  TBerBitString = class(TDerBitString, IBerBitString)
   strict private
-  var
-    F_tagged, F_isExplicit: Boolean;
-    F_tagNo: Int32;
+    FElements: TCryptoLibGenericArray<IDerBitString>;
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+  public
+    /// <summary>
+    /// Flatten an array of bit strings into a single m_contents byte array.
+    /// </summary>
+    class function FlattenBitStrings(const ABitStrings: TCryptoLibGenericArray<IDerBitString>): TCryptoLibByteArray; static;
+    /// <summary>
+    /// Create a BER bit string from a sequence.
+    /// </summary>
+    class function FromSequence(const ASequence: IAsn1Sequence): IBerBitString; static;
+    /// <summary>
+    /// Create a BER bit string from an array of bit strings.
+    /// </summary>
+    constructor Create(const ABitStrings: TCryptoLibGenericArray<IDerBitString>); overload;
+  end;
+
+  /// <summary>
+  /// DER BMP string implementation.
+  /// </summary>
+  TDerBmpString = class(TDerStringBase, IDerBmpString)
+  strict private
+    FStr: String;
 
   strict protected
-    constructor Create(outStream: TStream); overload;
-    constructor Create(outStream: TStream; tagNo: Int32;
-      isExplicit: Boolean); overload;
-
-    procedure WriteHdr(tag: Int32);
-    procedure WriteBerHeader(tag: Int32);
-    procedure WriteBerBody(contentStream: TStream);
-    procedure WriteBerEnd();
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
 
   public
-    procedure AddObject(const obj: IAsn1Encodable); override;
-    function GetRawOutputStream(): TStream; override;
-    procedure Close(); override;
-
+    type
+      /// <summary>
+      /// Meta class for TDerBmpString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a DER BMP string from byte array.
+    /// </summary>
+    constructor Create(const AStr: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Create a DER BMP string from string.
+    /// </summary>
+    constructor Create(const AStr: String); overload;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Create a primitive DER BMP string from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IDerBmpString; overload; static;
+    class function CreatePrimitive(const AStr: TCryptoLibCharArray): IDerBmpString; overload; static;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerBmpString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerBmpString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerBmpString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBmpString; overload; static;
+    /// <summary>
+    /// Get optional BMP string from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerBmpString; static;
+    /// <summary>
+    /// Get tagged BMP string from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBmpString; static;
   end;
-
-type
 
   /// <summary>
-  /// A BER Null object.
+  /// Abstract base class for ASN.1 tagged objects.
   /// </summary>
-  TBerNull = class sealed(TDerNull, IBerNull)
-
+  TAsn1TaggedObject = class abstract(TAsn1Object, IAsn1TaggedObject, IAsn1TaggedObjectParser)
   strict private
+    const
+      DeclaredExplicit = 1;
+      DeclaredImplicit = 2;
+      ParsedExplicit = 3;
+      ParsedImplicit = 4;
 
-    class function GetInstance: IBerNull; static; inline;
+  private
+    var
+      FExplicitness: Int32;
+      FTagClass: Int32;
+      FTagNo: Int32;
+      FObject: IAsn1Encodable;
 
-    constructor Create(dummy: Int32);
-
-  public
-
-    procedure Encode(const derOut: TStream); override;
-    class property Instance: IBerNull read GetInstance;
-
-  end;
-
-type
-  TBerSequenceGenerator = class(TBerGenerator, IBerSequenceGenerator)
-
-  public
-    constructor Create(outStream: TStream); overload;
-    constructor Create(outStream: TStream; tagNo: Int32;
-      isExplicit: Boolean); overload;
-  end;
-
-type
-  TBerSequenceParser = class(TInterfacedObject, IAsn1SequenceParser,
-    IAsn1Convertible, IBerSequenceParser)
-
-  strict private
-  var
-    F_parser: IAsn1StreamParser;
-
-  public
-
-    constructor Create(const parser: IAsn1StreamParser);
-    function ReadObject(): IAsn1Convertible; inline;
-    function ToAsn1Object(): IAsn1Object; inline;
-
-  end;
-
-type
-
-  /// <summary>
-  /// A Ber encoded set object
-  /// </summary>
-  TBerSet = class sealed(TDerSet, IBerSet)
-
-  strict private
-    class function GetEmpty: IBerSet; static; inline;
-
-  public
-
-    class function FromVector(const elementVector: IAsn1EncodableVector)
-      : IBerSet; overload; static;
-    class function FromVector(const elementVector: IAsn1EncodableVector;
-      needsSorting: Boolean): IBerSet; overload; static;
+  strict protected
 
     /// <summary>
-    /// create an empty set
+    /// Protected constructor.
     /// </summary>
-    constructor Create(); overload;
-
-    /// <param name="element">
-    /// a single object that makes up the set.
-    /// </param>
-    constructor Create(const element: IAsn1Encodable); overload;
-
-    /// <param name="elementVector">
-    /// a vector of objects making up the set.
-    /// </param>
-    constructor Create(const elementVector: IAsn1EncodableVector); overload;
-
-    constructor Create(const v: IAsn1EncodableVector;
-      needsSorting: Boolean); overload;
-
-    destructor Destroy(); override;
+    constructor Create(AIsExplicit: Boolean; ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Protected constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Protected constructor.
+    /// </summary>
+    constructor Create(AExplicitness, ATagClass, ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
 
     /// <summary>
-    /// A note on the implementation: <br />As Ber requires the constructed,
-    /// definite-length model to <br />be used for structured types, this
-    /// varies slightly from the <br />ASN.1 descriptions given. Rather than
-    /// just outputing Set, <br />we also have to specify Constructed, and
-    /// the objects length. <br />
+    /// Compare this object with another ASN.1 object.
     /// </summary>
-    procedure Encode(const derOut: TStream); override;
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    /// <summary>
+    /// Get the hash code for this ASN.1 object.
+    /// </summary>
+    function Asn1GetHashCode(): Int32; override;
 
-    class property Empty: IBerSet read GetEmpty;
-
-  end;
-
-type
-  TBerSetParser = class(TInterfacedObject, IAsn1SetParser, IAsn1Convertible,
-    IBerSetParser)
+    /// <summary>
+    /// Rebuild a constructed object.
+    /// </summary>
+    function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; virtual; abstract;
+    /// <summary>
+    /// Replace tag.
+    /// </summary>
+    function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; virtual; abstract;
 
   strict private
-  var
-    F_parser: IAsn1StreamParser;
+    /// <summary>
+    /// Check instance helper.
+    /// </summary>
+    class function CheckInstance(const AObj: TObject): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Check instance helper.
+    /// </summary>
+    class function CheckInstance(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Checked cast helper.
+    /// </summary>
+    class function CheckedCast(const AAsn1Object: IAsn1Object): IAsn1TaggedObject; static;
 
   public
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from object with tag class.
+    /// </summary>
+    class function GetInstance(const AObj: TObject; ATagClass: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object with tag class.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object; ATagClass: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from object with tag class and tag number.
+    /// </summary>
+    class function GetInstance(const AObj: TObject; ATagClass, ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object with tag class and tag number.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object; ATagClass, ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from tagged object with tag class.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject;
+      ATagClass: Int32; ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from tagged object with tag class and tag number.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject;
+      ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get optional tagged object.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get optional tagged object with tag class.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable;
+      ATagClass: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get optional tagged object with tag class and tag number.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable;
+      ATagClass, ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAsn1TaggedObject; static;
+    /// <summary>
+    /// Create a primitive tagged object.
+    /// </summary>
+    class function CreatePrimitive(ATagClass, ATagNo: Int32;
+      const AContentsOctets: TCryptoLibByteArray): IAsn1Object; static;
+    /// <summary>
+    /// Create a constructed DL tagged object.
+    /// </summary>
+    class function CreateConstructedDL(ATagClass, ATagNo: Int32;
+      const AContentsElements: IAsn1EncodableVector): IAsn1Object; static;
+    /// <summary>
+    /// Create a constructed IL tagged object.
+    /// </summary>
+    class function CreateConstructedIL(ATagClass, ATagNo: Int32;
+      const AContentsElements: IAsn1EncodableVector): IAsn1Object; static;
 
-    constructor Create(const parser: IAsn1StreamParser);
-    function ReadObject(): IAsn1Convertible; inline;
-    function ToAsn1Object(): IAsn1Object; inline;
+    // IAsn1TaggedObject methods
+    /// <summary>
+    /// Get the tag number.
+    /// </summary>
+    function GetTagNo(): Int32; virtual;
+    /// <summary>
+    /// Get the tag class.
+    /// </summary>
+    function GetTagClass(): Int32; virtual;
+    /// <summary>
+    /// Get the explicitness value.
+    /// </summary>
+    function GetExplicitness(): Int32; virtual;
+    /// <summary>
+    /// Check if this has a context tag (no parameter).
+    /// </summary>
+    function HasContextTag(): Boolean; overload; virtual;
+    /// <summary>
+    /// Check if this has a context tag.
+    /// </summary>
+    function HasContextTag(ATagNo: Int32): Boolean; overload; virtual;
+    /// <summary>
+    /// Check if this has the specified tag.
+    /// </summary>
+    function HasTag(ATagClass, ATagNo: Int32): Boolean; virtual;
+    /// <summary>
+    /// Check if this has the specified tag class.
+    /// </summary>
+    function HasTagClass(ATagClass: Int32): Boolean; virtual;
+    /// <summary>
+    /// Check if this is explicitly tagged.
+    /// </summary>
+    function IsExplicit(): Boolean; virtual;
+    /// <summary>
+    /// Check if this is parsed.
+    /// </summary>
+    function IsParsed(): Boolean;
+    /// <summary>
+    /// Get the object following the tag.
+    /// </summary>
+    function GetObject(): IAsn1Object; virtual;
+    /// <summary>
+    /// Get the base encodable object (needed for open types).
+    /// </summary>
+    function GetBaseObject(): IAsn1Encodable;
+    /// <summary>
+    /// Get the explicit base encodable object.
+    /// </summary>
+    function GetExplicitBaseObject(): IAsn1Encodable;
+    /// <summary>
+    /// Get the explicit base tagged object.
+    /// </summary>
+    function GetExplicitBaseTagged(): IAsn1TaggedObject;
+    /// <summary>
+    /// Get the implicit base tagged object.
+    /// </summary>
+    function GetImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObject;
+    /// <summary>
+    /// Get base universal object.
+    /// </summary>
+    function GetBaseUniversal(ADeclaredExplicit: Boolean; ATagNo: Int32): IAsn1Object; overload;
+    /// <summary>
+    /// Get base universal object.
+    /// </summary>
+    function GetBaseUniversal(ADeclaredExplicit: Boolean; const AUniversalType: IAsn1UniversalType): IAsn1Object; overload;
+    /// <summary>
+    /// Get an object parser for the specified tag.
+    /// </summary>
+    function GetObjectParser(ATag: Int32; AIsExplicit: Boolean): IAsn1Convertible; virtual;
+    /// <summary>
+    /// Get string representation.
+    /// </summary>
+    function ToString(): String; override;
 
+    // IAsn1TaggedObjectParser methods
+    /// <summary>
+    /// Check if this is a constructed object.
+    /// </summary>
+    function GetIsConstructed(): Boolean; virtual; abstract;
+    /// <summary>
+    /// Parse a base universal object.
+    /// </summary>
+    function ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible; virtual;
+    /// <summary>
+    /// Parse an explicit base object.
+    /// </summary>
+    function ParseExplicitBaseObject(): IAsn1Convertible; virtual;
+    /// <summary>
+    /// Parse an explicit base tagged object.
+    /// </summary>
+    function ParseExplicitBaseTagged(): IAsn1TaggedObjectParser; virtual;
+    /// <summary>
+    /// Parse an implicit base tagged object.
+    /// </summary>
+    function ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser; virtual;
   end;
 
-type
-
   /// <summary>
-  /// DER TaggedObject - in ASN.1 notation this is any object preceded by <br />
-  /// a [n] where n is some number - these are assumed to follow the
-  /// construction <br />rules (as with sequences). <br />
+  /// DER tagged object implementation.
   /// </summary>
   TDerTaggedObject = class(TAsn1TaggedObject, IDerTaggedObject)
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+    function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; override;
+    function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; override;
 
   public
-
-    /// <param name="tagNo">
-    /// the tag number for this object.
-    /// </param>
-    /// <param name="obj">
-    /// the tagged object.
-    /// </param>
-    constructor Create(tagNo: Int32; const obj: IAsn1Encodable); overload;
-    /// <param name="explicitly">
-    /// true if an explicitly tagged object.
-    /// </param>
-    /// <param name="tagNo">
-    /// the tag number for this object.
-    /// </param>
-    /// <param name="obj">
-    /// the tagged object.
-    /// </param>
-    constructor Create(explicitly: Boolean; tagNo: Int32;
-      const obj: IAsn1Encodable); overload;
-
     /// <summary>
-    /// create an implicitly tagged object that contains a zero length
-    /// sequence.
+    /// Public constructor.
     /// </summary>
-    /// <param name="tagNo">
-    /// the tag number for this object.
-    /// </param>
-    constructor Create(tagNo: Int32); overload;
-
-    procedure Encode(const derOut: TStream); override;
-
+    constructor Create(ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AExplicitness, ATagClass, ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
+    function GetIsConstructed(): Boolean; override;
   end;
-
-type
 
   /// <summary>
-  /// BER TaggedObject - in ASN.1 notation this is any object preceded by <br />
-  /// a [n] where n is some number - these are assumed to follow the
-  /// construction <br />rules (as with sequences). <br />
+  /// DL tagged object implementation.
   /// </summary>
-  TBerTaggedObject = class(TDerTaggedObject, IBerTaggedObject)
+  TDLTaggedObject = class(TDerTaggedObject, IDLTaggedObject)
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; override;
+    function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; override;
 
   public
-
-    /// <param name="tagNo">
-    /// the tag number for this object.
-    /// </param>
-    /// <param name="obj">
-    /// the tagged object.
-    /// </param>
-    constructor Create(tagNo: Int32; const obj: IAsn1Encodable); overload;
-    /// <param name="explicitly">
-    /// true if an explicitly tagged object.
-    /// </param>
-    /// <param name="tagNo">
-    /// the tag number for this object.
-    /// </param>
-    /// <param name="obj">
-    /// the tagged object.
-    /// </param>
-    constructor Create(explicitly: Boolean; tagNo: Int32;
-      const obj: IAsn1Encodable); overload;
-
     /// <summary>
-    /// create an implicitly tagged object that contains a zero length
-    /// sequence.
+    /// Public constructor.
     /// </summary>
-    /// <param name="tagNo">
-    /// the tag number for this object.
-    /// </param>
-    constructor Create(tagNo: Int32); overload;
-
-    procedure Encode(const derOut: TStream); override;
-
+    constructor Create(ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AExplicitness, ATagClass, ATagNo: Int32;
+      const AObj: IAsn1Encodable); overload;
   end;
 
-type
-  TBerTaggedObjectParser = class(TInterfacedObject, IAsn1TaggedObjectParser,
-    IAsn1Convertible, IBerTaggedObjectParser)
-
+  /// <summary>
+  /// Abstract base class for ASN.1 sequence objects.
+  /// </summary>
+  TAsn1Sequence = class abstract(TAsn1Object, IAsn1Sequence)
   strict private
-  var
-    F_constructed: Boolean;
-    F_tagNumber: Int32;
-    F_parser: IAsn1StreamParser;
+    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
+    
+    type
+      /// <summary>
+      /// Internal parser implementation for sequences.
+      /// </summary>
+      TAsn1SequenceParserImpl = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SequenceParser)
+      strict private
+        FOuter: IAsn1Sequence;
+        FIndex: Int32;
+      public
+        constructor Create(const AOuter: IAsn1Sequence);
+        function ReadObject(): IAsn1Convertible;
+        function ToAsn1Object(): IAsn1Object;
+      end;
 
-    function GetIsConstructed: Boolean; inline;
-    function GetTagNo: Int32; inline;
+  strict protected
+    function GetCount(): Int32; virtual;
+    function GetParser(): IAsn1SequenceParser; virtual;
+    function GetItem(AIndex: Int32): IAsn1Encodable; virtual;
+    function GetElements(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetConstructedBitStrings(): TCryptoLibGenericArray<IDerBitString>;
+    function GetConstructedOctetStrings(): TCryptoLibGenericArray<IAsn1OctetString>;
+  public
+    function ToAsn1BitString(): IDerBitString; virtual; abstract;
+    function ToAsn1External(): IDerExternal; virtual; abstract;
+    function ToAsn1OctetString(): IAsn1OctetString; virtual; abstract;
+    function ToAsn1Set(): IAsn1Set; virtual; abstract;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1Sequence universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
+  strict protected
+    /// <summary>
+    /// Concatenate elements from multiple sequences.
+    /// </summary>
+    class function ConcatenateElements(const ASequences: TCryptoLibGenericArray<IAsn1Sequence>): TCryptoLibGenericArray<IAsn1Encodable>; static;
+  public
+    /// <summary>
+    /// Map elements using a function.
+    /// </summary>
+    function MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+    /// <summary>
+    /// Get a cloned array of elements.
+    /// </summary>
+    function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IAsn1Sequence; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IAsn1Sequence; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Sequence; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Sequence; overload; static;
+    /// <summary>
+    /// Get optional sequence from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1Sequence; static;
+    /// <summary>
+    /// Get tagged sequence from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Sequence; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElement1, AElement2: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    destructor Destroy(); override;
+
+    function ToString(): String; override;
+
+    property Count: Int32 read GetCount;
+    property Items[AIndex: Int32]: IAsn1Encodable read GetItem; default;
+    property Parser: IAsn1SequenceParser read GetParser;
+    property Elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
+  end;
+
+  /// <summary>
+  /// DER sequence class implementation.
+  /// </summary>
+  TDerSequence = class(TAsn1Sequence, IDerSequence)
+  strict private
+    class function GetEmpty(): IDerSequence; static;
+    class function WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IDerSequence; static;
+
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    function ToAsn1BitString(): IDerBitString; override;
+    function ToAsn1External(): IDerExternal; override;
+    function ToAsn1OctetString(): IAsn1OctetString; override;
+    function ToAsn1Set(): IAsn1Set; override;
+    
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSequence; static;
+    class function FromElement(const AElement: IAsn1Encodable): IDerSequence; static;
+    class function FromElements(const AElement1, AElement2: IAsn1Encodable): IDerSequence; overload; static;
+    class function FromElements(const AElements: array of IAsn1Encodable): IDerSequence; overload; static;
+    class function FromElementsOptional(const AElements: array of IAsn1Encodable): IDerSequence; static;
+    class function FromSequence(const ASequence: IAsn1Sequence): IDerSequence; static;
+    class function FromVector(const AElementVector: IAsn1EncodableVector): IDerSequence; static;
+    class function Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence; overload; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSequence; overload; static;
+    class function Concatenate(const ASequences: array of IAsn1Sequence): IDerSequence; static;
+    /// <summary>
+    /// Get encoding length for a given contents length.
+    /// </summary>
+    class function GetEncodingLength(AContentsLength: Int32): Int32; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElement1, AElement2: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+
+    class property Empty: IDerSequence read GetEmpty;
+  end;
+
+  /// <summary>
+  /// DL sequence class implementation.
+  /// </summary>
+  TDLSequence = class(TDerSequence, IDLSequence)
+  strict private
+    class function GetEmpty(): IDLSequence; static;
+    class function WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IDLSequence; static;
+
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
 
   public
-    constructor Create(Constructed: Boolean; tagNumber: Int32;
-      const parser: IAsn1StreamParser);
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSequence; static;
+    class function FromElement(const AElement: IAsn1Encodable): IDLSequence; static;
+    class function FromElements(const AElement1, AElement2: IAsn1Encodable): IDLSequence; overload; static;
+    class function FromElements(const AElements: array of IAsn1Encodable): IDLSequence; overload; static;
+    class function FromElementsOptional(const AElements: array of IAsn1Encodable): IDLSequence; static;
+    class function FromSequence(const ASequence: IAsn1Sequence): IDLSequence; static;
+    class function FromVector(const AElementVector: IAsn1EncodableVector): IDLSequence; static;
+    class function Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence; overload; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSequence; overload; static;
+    class function Concatenate(const ASequences: array of IAsn1Sequence): IDLSequence; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElement1, AElement2: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+
+    /// <summary>
+    /// Convert to ASN.1 external.
+    /// </summary>
+    function ToAsn1External(): IDerExternal; override;
+    /// <summary>
+    /// Convert to ASN.1 bit string.
+    /// </summary>
+    function ToAsn1BitString(): IDerBitString; override;
+    /// <summary>
+    /// Convert to ASN.1 set.
+    /// </summary>
+    function ToAsn1Set(): IAsn1Set; override;
+
+    class property Empty: IDLSequence read GetEmpty;
+  end;
+
+  /// <summary>
+  /// Abstract base class for ASN.1 set objects.
+  /// </summary>
+  TAsn1Set = class abstract(TAsn1Object, IAsn1Set)
+  strict private
+    FElements: TCryptoLibGenericArray<IAsn1Encodable>;
+    
+    type
+      /// <summary>
+      /// Internal parser implementation for sets.
+      /// </summary>
+      TAsn1SetParserImpl = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SetParser)
+      strict private
+        FOuter: TAsn1Set;
+        FIndex: Int32;
+      public
+        constructor Create(const AOuter: TAsn1Set);
+        function ReadObject(): IAsn1Convertible;
+        function ToAsn1Object(): IAsn1Object;
+      end;
+
+    /// <summary>
+    /// Sort elements based on their DER encodings.
+    /// </summary>
+    class procedure SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>); static;
+
+  strict protected
+    function GetCount(): Int32; virtual;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1Set universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+    function GetParser(): IAsn1SetParser; virtual;
+    function GetItem(AIndex: Int32): IAsn1Encodable; virtual;
+    function GetElements(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    /// <summary>
+    /// Map elements using a function.
+    /// </summary>
+    function MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+    /// <summary>
+    /// Get a cloned array of elements.
+    /// </summary>
+    function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
+
+  public
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IAsn1Set; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IAsn1Set; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Set; overload; static;
+    /// <summary>
+    /// Get optional set from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1Set; static;
+    /// <summary>
+    /// Get tagged set from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Set; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable; ADoSort: Boolean); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector; ADoSort: Boolean); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>; ADoSort: Boolean); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+    constructor Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    destructor Destroy(); override;
+
+    function ToString(): String; override;
+
+    property Count: Int32 read GetCount;
+    property Items[AIndex: Int32]: IAsn1Encodable read GetItem; default;
+    property Parser: IAsn1SetParser read GetParser;
+    property Elements: TCryptoLibGenericArray<IAsn1Encodable> read GetElements;
+  end;
+
+  /// <summary>
+  /// DER set class implementation.
+  /// </summary>
+  TDerSet = class(TAsn1Set, IDerSet)
+  strict private
+    FSortedDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
+    
+    class function GetEmpty(): IDerSet; static;
+    function GetSortedDerEncodings(): TCryptoLibGenericArray<IDerEncoding>;
+    class function CreateSortedDerEncodings(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>; static;
+
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
+  public
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSet; static;
+    class function FromElement(const AElement: IAsn1Encodable): IDerSet; static;
+    class function FromVector(const AElementVector: IAsn1EncodableVector): IDerSet; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSet; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+
+    class property Empty: IDerSet read GetEmpty;
+  end;
+
+  /// <summary>
+  /// DL set class implementation.
+  /// </summary>
+  TDLSet = class(TDerSet, IDLSet)
+  strict private
+    class function GetEmpty(): IDLSet; static;
+
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
+  public
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSet; static;
+    class function FromElement(const AElement: IAsn1Encodable): IDLSet; static;
+    class function FromVector(const AElementVector: IAsn1EncodableVector): IDLSet; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSet; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+    constructor Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+
+    class property Empty: IDLSet read GetEmpty;
+  end;
+
+  /// <summary>
+  /// BER sequence class implementation.
+  /// </summary>
+  TBerSequence = class(TDLSequence, IBerSequence)
+  strict private
+    class function GetEmpty(): IBerSequence; static;
+    class function WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IBerSequence; static;
+
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
+  public
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSequence; static;
+    class function FromElement(const AElement: IAsn1Encodable): IBerSequence; static;
+    class function FromElements(const AElement1, AElement2: IAsn1Encodable): IBerSequence; overload; static;
+    class function FromElements(const AElements: array of IAsn1Encodable): IBerSequence; overload; static;
+    class function FromElementsOptional(const AElements: array of IAsn1Encodable): IBerSequence; static;
+    class function FromSequence(const ASequence: IAsn1Sequence): IBerSequence; static;
+    class function FromVector(const AElementVector: IAsn1EncodableVector): IBerSequence; static;
+    class function Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence; overload; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSequence; overload; static;
+    class function Concatenate(const ASequences: array of IAsn1Sequence): IBerSequence; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElement1, AElement2: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+
+    function ToAsn1BitString(): IDerBitString; override;
+    function ToAsn1External(): IDerExternal; override;
+    function ToAsn1OctetString(): IAsn1OctetString; override;
+    function ToAsn1Set(): IAsn1Set; override;
+
+    class property Empty: IBerSequence read GetEmpty;
+  end;
+
+  /// <summary>
+  /// BER set class implementation.
+  /// </summary>
+  TBerSet = class(TDLSet, IBerSet)
+  strict private
+    class function GetEmpty(): IBerSet; static;
+
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
+  public
+    class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSet; static;
+    class function FromElement(const AElement: IAsn1Encodable): IBerSet; static;
+    class function FromVector(const AElementVector: IAsn1EncodableVector): IBerSet; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSet; static;
+
+    constructor Create(); overload;
+    constructor Create(const AElement: IAsn1Encodable); overload;
+    constructor Create(const AElements: array of IAsn1Encodable); overload;
+    constructor Create(const AElementVector: IAsn1EncodableVector); overload;
+    constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ASet: IAsn1Set); overload;
+    constructor Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>); overload;
+
+    class property Empty: IBerSet read GetEmpty;
+  end;
+
+  /// <summary>
+  /// BER tagged object class implementation.
+  /// </summary>
+  TBerTaggedObject = class(TDLTaggedObject, IBerTaggedObject)
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; override;
+    function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; override;
+
+  public
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+    /// <summary>
+    /// Public constructor.
+    /// </summary>
+    constructor Create(AExplicitness, ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+  end;
+
+  /// <summary>
+  /// ASN.1 stream parser for reading ASN.1 objects from a stream.
+  /// </summary>
+  TAsn1StreamParser = class sealed(TInterfacedObject, IAsn1StreamParser)
+  strict private
+    FIn: TStream;
+    FLimit: Int32;
+    FTmpBuffers: TCryptoLibMatrixByteArray;
+
+    procedure Set00Check(AEnabled: Boolean);
+    function ImplParseObject(ATagHdr: Int32): IAsn1Convertible;
+    function ParseImplicitPrimitive(AUnivTagNo: Int32;
+      const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Convertible; overload;
+
+  public
+    /// <summary>
+    /// Create an ASN.1 stream parser from a stream.
+    /// </summary>
+    constructor Create(const AInput: TStream); overload;
+    /// <summary>
+    /// Create an ASN.1 stream parser from a byte array.
+    /// </summary>
+    constructor Create(const AEncoding: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Create an ASN.1 stream parser from a stream with a limit.
+    /// </summary>
+    constructor Create(const AInput: TStream; ALimit: Int32); overload;
+    /// <summary>
+    /// Public constructor with TmpBuffers.
+    /// </summary>
+    constructor Create(const AInput: TStream; ALimit: Int32;
+      const ATmpBuffers: TCryptoLibMatrixByteArray); overload;
 
     destructor Destroy; override;
 
-    function GetObjectParser(tag: Int32; isExplicit: Boolean)
-      : IAsn1Convertible; inline;
-
-    function ToAsn1Object(): IAsn1Object;
-
-    property IsConstructed: Boolean read GetIsConstructed;
-    property tagNo: Int32 read GetTagNo;
-
-  end;
-
-type
-  TDerBmpString = class(TDerStringBase, IDerBmpString)
+    /// <summary>
+    /// Read the next object from the stream.
+    /// </summary>
+    function ReadObject(): IAsn1Convertible; virtual;
+    /// <summary>
+    /// Parse an object with a specific universal tag number.
+    /// </summary>
+    function ParseObject(AUnivTagNo: Int32): IAsn1Convertible;
+    /// <summary>
+    /// Parse an implicit constructed indefinite-length object.
+    /// </summary>
+    function ParseImplicitConstructedIL(AUnivTagNo: Int32): IAsn1Convertible;
+    /// <summary>
+    /// Parse an implicit constructed definite-length object.
+    /// </summary>
+    function ParseImplicitConstructedDL(AUnivTagNo: Int32): IAsn1Convertible;
+    /// <summary>
+    /// Parse an implicit primitive object.
+    /// </summary>
+    function ParseImplicitPrimitive(AUnivTagNo: Int32): IAsn1Convertible; overload;
+    /// <summary>
+    /// Parse a tagged object.
+    /// </summary>
+    function ParseTaggedObject(): IAsn1TaggedObjectParser;
+    /// <summary>
+    /// Load a tagged object with definite length.
+    /// </summary>
+    function LoadTaggedDL(ATagClass, ATagNo: Int32; AConstructed: Boolean): IAsn1Object;
+    /// <summary>
+    /// Load a tagged object with indefinite length.
+    /// </summary>
+    function LoadTaggedIL(ATagClass, ATagNo: Int32): IAsn1Object;
 
   strict private
-  var
-    FStr: String;
-
-    function GetStr: String; inline;
-
-  strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
-  public
-    property Str: String read GetStr;
-
     /// <summary>
-    /// basic constructor - byte encoded string.
+    /// Read a vector of ASN.1 objects.
     /// </summary>
-    constructor Create(const astr: TCryptoLibByteArray); overload;
-
-    /// <summary>
-    /// basic constructor
-    /// </summary>
-    constructor Create(const astr: String); overload;
-
-    function GetString(): String; override;
-
-    procedure Encode(const derOut: TStream); override;
-
-    /// <summary>
-    /// return a BMP string from the given object.
-    /// </summary>
-    /// <param name="obj">
-    /// the object we want converted.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerBmpString; overload;
-      static; inline;
-
-    /// <summary>
-    /// return a BMP string from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerBmpString; overload; static; inline;
-
+    function ReadVector(): IAsn1EncodableVector;
   end;
 
-type
-  TDerBoolean = class(TAsn1Object, IDerBoolean)
-
-  strict private
-  var
-
-    Fvalue: Byte;
-
-    function GetIsTrue: Boolean; inline;
-
-    constructor Create(Value: Boolean); overload;
-
-    class function GetFalse: IDerBoolean; static; inline;
-    class function GetTrue: IDerBoolean; static; inline;
-
-  strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    function Asn1GetHashCode(): Int32; override;
-
-  public
-
-    constructor Create(const val: TCryptoLibByteArray); overload;
-
-    procedure Encode(const derOut: TStream); override;
-
-    function ToString(): String; override;
-
-    property IsTrue: Boolean read GetIsTrue;
-
-    class property True: IDerBoolean read GetTrue;
-
-    class property False: IDerBoolean read GetFalse;
-
-    /// <summary>
-    /// return a DerBoolean from the passed in object.
-    /// </summary>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerBoolean; overload;
-      static; inline;
-
-    /// <summary>
-    /// return a DerBoolean from the passed in boolean.
-    /// </summary>
-    class function GetInstance(Value: Boolean): IDerBoolean; overload;
-      static; inline;
-
-    /// <summary>
-    /// return a Boolean from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// explicitly true if the object is meant to be explicitly tagged false
-    /// otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerBoolean; overload; static; inline;
-
-    class function FromOctetString(const Value: TCryptoLibByteArray)
-      : IDerBoolean; static;
-
-  end;
-
-type
-  TDerEnumerated = class(TAsn1Object, IDerEnumerated)
-
-  strict private
-
-    class var
-
-      Fcache: array [0 .. 11] of IDerEnumerated;
-
-  var
-    Fbytes: TCryptoLibByteArray;
-    FStart: Int32;
-
-    function GetValue: TBigInteger; inline;
-    function GetBytes: TCryptoLibByteArray; inline;
-    function GetIntValueExact: Int32; inline;
-
-  strict protected
-
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-    function Asn1GetHashCode(): Int32; override;
-
-  public
-
-    constructor Create(val: Int32); overload;
-    constructor Create(val: Int64); overload;
-    constructor Create(const val: TBigInteger); overload;
-    constructor Create(const bytes: TCryptoLibByteArray); overload;
-
-    procedure Encode(const derOut: TStream); override;
-
-    property Value: TBigInteger read GetValue;
-    property bytes: TCryptoLibByteArray read GetBytes;
-    property IntValueExact: Int32 read GetIntValueExact;
-
-    function HasValue(const x: TBigInteger): Boolean;
-
-    /// <summary>
-    /// return an integer from the passed in object
-    /// </summary>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-
-    class function GetInstance(const obj: TObject): IDerEnumerated; overload;
-      static; inline;
-
-    /// <summary>
-    /// return an Enumerated from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerEnumerated; overload; static; inline;
-
-    class function FromOctetString(const enc: TCryptoLibByteArray)
-      : IDerEnumerated; static;
-
-  end;
-
-type
-  TDerGraphicString = class(TDerStringBase, IDerGraphicString)
-
-  strict private
-  var
-    FmString: TCryptoLibByteArray;
-
-    function GetmString: TCryptoLibByteArray; inline;
-
-  protected
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
-  public
-    property mString: TCryptoLibByteArray read GetmString;
-
-    /// <summary>
-    /// basic constructor - with bytes.
-    /// </summary>
-    /// <param name="encoding">
-    /// the byte encoding of the characters making up the string.
-    /// </param>
-    constructor Create(const encoding: TCryptoLibByteArray);
-
-    function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
-    /// <summary>
-    /// return a Graphic String from the passed in object
-    /// </summary>
-    /// <param name="obj">
-    /// a DerGraphicString or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a DerGraphicString instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerGraphicString; overload;
-      static; inline;
-
-    class function GetInstance(const obj: TCryptoLibByteArray)
-      : IDerGraphicString; overload; static;
-
-    /// <summary>
-    /// return a Graphic string from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerGraphicString; overload; static; inline;
-
-  end;
-
-type
 
   /// <summary>
-  /// Class representing the DER-type External
+  /// Base class for ASN.1 bit string parsers.
   /// </summary>
-  TDerExternal = class(TAsn1Object, IDerExternal)
-
-  strict private
-  var
-    FdirectReference: IDerObjectIdentifier;
-    FindirectReference: IDerInteger;
-    FdataValueDescriptor, FexternalContent: IAsn1Object;
-    Fencoding: Int32;
-
-    function GetDataValueDescriptor: IAsn1Object;
-    function GetDirectReference: IDerObjectIdentifier;
-
-    /// <summary>
-    /// <para>
-    /// The encoding of the content. Valid values are
-    /// </para>
-    /// <para>
-    /// &lt;ul&gt; <br />&lt;li&gt;&lt;code&gt;0&lt;/code&gt;
-    /// single-ASN1-type&lt;/li&gt; <br />
-    /// &lt;li&gt;&lt;code&gt;1&lt;/code&gt; OCTET STRING&lt;/li&gt; <br />
-    /// &lt;li&gt;&lt;code&gt;2&lt;/code&gt; BIT STRING&lt;/li&gt; <br />
-    /// &lt;/ul&gt;
-    /// </para>
-    /// </summary>
-    function GetEncoding: Int32;
-    function GetExternalContent: IAsn1Object;
-    function GetIndirectReference: IDerInteger;
-    procedure SetDataValueDescriptor(const Value: IAsn1Object);
-    procedure SetDirectReference(const Value: IDerObjectIdentifier);
-    procedure SetEncoding(const Value: Int32);
-    procedure SetExternalContent(const Value: IAsn1Object);
-    procedure SetIndirectReference(const Value: IDerInteger);
-
-    class function GetObjFromVector(const v: IAsn1EncodableVector; Index: Int32)
-      : IAsn1Object; static; inline;
-    class procedure WriteEncodable(ms: TMemoryStream; const e: IAsn1Encodable);
-      static; inline;
-
-  strict protected
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
+  TAsn1BitStringParser = class abstract(TInterfacedObject, IAsn1BitStringParser)
   public
-    constructor Create(const vector: IAsn1EncodableVector); overload;
-
     /// <summary>
-    /// Creates a new instance of DerExternal <br />See X.690 for more
-    /// informations about the meaning of these parameters
+    /// Return a stream representing the contents of the BIT STRING.
     /// </summary>
-    /// <param name="directReference">
-    /// The direct reference or &lt;code&gt;null&lt;/code&gt; if not set.
-    /// </param>
-    /// <param name="indirectReference">
-    /// The indirect reference or &lt;code&gt;null&lt;/code&gt; if not set.
-    /// </param>
-    /// <param name="dataValueDescriptor">
-    /// The data value descriptor or &lt;code&gt;null&lt;/code&gt; if not
-    /// set.
-    /// </param>
-    /// <param name="externalData">
-    /// The external data in its encoded form.
-    /// </param>
-    constructor Create(const directReference: IDerObjectIdentifier;
-      const indirectReference: IDerInteger;
-      const dataValueDescriptor: IAsn1Object;
-      const externalData: IDerTaggedObject); overload;
+    function GetBitStream(): TStream; virtual; abstract;
+    /// <summary>
+    /// Return a stream representing the contents of the BIT STRING, where the content is
+    /// expected to be octet-aligned.
+    /// </summary>
+    function GetOctetStream(): TStream; virtual; abstract;
+    /// <summary>
+    /// Return the number of pad bits in the final byte.
+    /// </summary>
+    function GetPadBits(): Int32; virtual; abstract;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; virtual; abstract;
 
-    constructor Create(const directReference: IDerObjectIdentifier;
-      const indirectReference: IDerInteger;
-      const dataValueDescriptor: IAsn1Object; encoding: Int32;
-      const externalData: IAsn1Object); overload;
-
-    procedure Encode(const derOut: TStream); override;
-
-    property dataValueDescriptor: IAsn1Object read GetDataValueDescriptor
-      write SetDataValueDescriptor;
-
-    property directReference: IDerObjectIdentifier read GetDirectReference
-      write SetDirectReference;
-
-    property encoding: Int32 read GetEncoding write SetEncoding;
-
-    property ExternalContent: IAsn1Object read GetExternalContent
-      write SetExternalContent;
-
-    property indirectReference: IDerInteger read GetIndirectReference
-      write SetIndirectReference;
-
+    property PadBits: Int32 read GetPadBits;
   end;
 
-type
-  TDerInteger = class sealed(TAsn1Object, IDerInteger)
-
-  strict private
-
-    class var
-
-      FAllowUnsafeInteger: Boolean;
-
-    class constructor CreateDerInteger();
-
-  var
-    Fbytes: TCryptoLibByteArray;
-    FStart: Int32;
-
-    function GetBytes: TCryptoLibByteArray; inline;
-    function GetPositiveValue: TBigInteger; inline;
-    function GetValue: TBigInteger; inline;
-    function GetIntPositiveValueExact: Int32; inline;
-    function GetIntValueExact: Int32; inline;
-
-    class function GetAllowUnsafeInteger: Boolean; static; inline;
-    class procedure SetAllowUnsafeInteger(const Value: Boolean); static; inline;
-
-  strict protected
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
+  /// <summary>
+  /// Base class for ASN.1 octet string parsers.
+  /// </summary>
+  TAsn1OctetStringParser = class abstract(TInterfacedObject, IAsn1OctetStringParser)
   public
-
-    const
-    SignExtSigned = Int32(-1);
-    SignExtUnsigned = Int32($FF);
-
-    constructor Create(Value: Int32); overload;
-    constructor Create(Value: Int64); overload;
-    constructor Create(const Value: TBigInteger); overload;
-    constructor Create(const bytes: TCryptoLibByteArray); overload;
-    constructor Create(const bytes: TCryptoLibByteArray;
-      clone: Boolean); overload;
-
-    property Value: TBigInteger read GetValue;
-    property PositiveValue: TBigInteger read GetPositiveValue;
-    property IntPositiveValueExact: Int32 read GetIntPositiveValueExact;
-    property IntValueExact: Int32 read GetIntValueExact;
-    property bytes: TCryptoLibByteArray read GetBytes;
-
-    procedure Encode(const derOut: TStream); override;
-
-    function HasValue(const x: TBigInteger): Boolean;
-
-    function ToString(): String; override;
-
-
-    // /**
-    // * return an integer from the passed in object
-    // *
-    // * @exception ArgumentException if the object cannot be converted.
-    // */
-
-    class function GetInstance(const obj: TObject): IDerInteger;
-      overload; static;
-
-    // /**
-    // * return an Integer from a tagged object.
-    // *
-    // * @param obj the tagged object holding the object we want
-    // * @param isExplicit true if the object is meant to be explicitly
-    // *              tagged false otherwise.
-    // * @exception ArgumentException if the tagged object cannot
-    // *               be converted.
-    // */
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerInteger; overload; static; inline;
-
     /// <summary>
-    /// Apply the correct validation for an INTEGER primitive following the
-    /// BER rules.
+    /// Return the content of the OCTET STRING as a stream.
     /// </summary>
-    /// <param name="bytes">
-    /// The raw encoding of the integer.
-    /// </param>
-    /// <returns>
-    /// if the (in)put fails this validation.
-    /// </returns>
-    class function IsMalformed(const bytes: TCryptoLibByteArray)
-      : Boolean; static;
-
-    class function SignBytesToSkip(const bytes: TCryptoLibByteArray)
-      : Int32; static;
-
-    class function IntValue(const bytes: TCryptoLibByteArray;
-      start, signExt: Int32): Int32; static;
-
-    class property AllowUnsafeInteger: Boolean read GetAllowUnsafeInteger
-      write SetAllowUnsafeInteger;
-
+    function GetOctetStream(): TStream; virtual; abstract;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; virtual; abstract;
   end;
 
-type
-  TDerExternalParser = class(TAsn1Encodable, IDerExternalParser)
-
+  /// <summary>
+  /// Parser for BER bit strings.
+  /// </summary>
+  TBerBitStringParser = class sealed(TAsn1BitStringParser, IAsn1Convertible, IAsn1BitStringParser, IBerBitStringParser)
   strict private
-  var
-    F_parser: IAsn1StreamParser;
+    FParser: IAsn1StreamParser;
+    FBitStream: TAsn1ConstructedBitStream;
 
   public
+    /// <summary>
+    /// Create a BER bit string parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
 
-    constructor Create(const parser: IAsn1StreamParser);
-    function ReadObject(): IAsn1Convertible; inline;
+    /// <summary>
+    /// Return a <see cref="Stream"/> representing the contents of the BIT STRING. The final byte, if any,
+    /// may include pad bits. See <see cref="PadBits"/>.
+    /// </summary>
+    /// <remarks>
+    ///  Returns NEW stream - caller owns it and MUST free it.
+    /// </remarks>
+    /// <returns>A <see cref="Stream"/> with its source as the BIT STRING content.</returns>
+    function GetBitStream(): TStream; override;
+    /// <summary>Return a <see cref="Stream"/> representing the contents of the BIT STRING, where the content is
+    /// expected to be octet-aligned (this will be automatically checked during parsing).
+    ///</summary>
+    /// <remarks>
+    ///  Returns NEW stream - caller owns it and MUST free it.
+    /// </remarks>
+    /// <returns>A <see cref="Stream"/> with its source as the BIT STRING content.</returns>
+    function GetOctetStream(): TStream; override;
+    /// <summary>
+    /// Return the number of pad bits, if any, in the final byte, if any, read from
+    /// <see cref="GetBitStream"/>.
+    /// </summary>
+    /// <remarks>
+    /// This number is in the range zero to seven. That number of the least significant bits of the final byte, if
+    /// any, are not part of the contents and should be ignored. NOTE: Must be called AFTER the stream has been
+    /// fully processed (before it is freed). (Does not need to be called if <see cref="GetOctetStream"/> was used instead of
+    /// <see cref="GetBitStream"/>.
+    /// </remarks>
+    /// <returns>The number of pad bits. In the range zero to seven.</returns>
+    function GetPadBits(): Int32; override;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
     function ToAsn1Object(): IAsn1Object; override;
-
+    /// <summary>
+    /// Parse a BER bit string from a stream parser.
+    /// </summary>
+    class function Parse(const ASp: IAsn1StreamParser): IBerBitString; static;
   end;
 
-type
-  TDerOctetStringParser = class(TInterfacedObject, IAsn1OctetStringParser,
-    IAsn1Convertible, IDerOctetStringParser)
-
+  /// <summary>
+  /// Parser for BER octet strings.
+  /// </summary>
+  TBerOctetStringParser = class sealed(TAsn1OctetStringParser, IAsn1Convertible, IAsn1OctetStringParser, IBerOctetStringParser)
   strict private
-  var
-    FStream: TStream;
+    FParser: IAsn1StreamParser;
 
   public
+    /// <summary>
+    /// Create a BER octet string parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
 
-    constructor Create(stream: TStream);
-    destructor Destroy(); override;
-    function GetOctetStream(): TStream; inline;
+    /// <summary>
+    /// Get the octet stream. Returns a NEW stream - caller owns it.
+    /// </summary>
+    function GetOctetStream(): TStream; override;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+    /// <summary>
+    /// Parse a BER octet string from a stream parser.
+    /// </summary>
+    class function Parse(const ASp: IAsn1StreamParser): IBerOctetString; static;
+  end;
+
+  /// <summary>
+  /// Parser for DER octet strings.
+  /// </summary>
+  TDerOctetStringParser = class sealed(TAsn1OctetStringParser, IAsn1Convertible, IAsn1OctetStringParser)
+  strict private
+    FStream: TAsn1DefiniteLengthInputStream;
+
+  public
+    /// <summary>
+    /// Create a DER octet string parser.
+    /// </summary>
+    constructor Create(const AStream: TAsn1DefiniteLengthInputStream);
+
+    destructor Destroy; override;
+
+    /// <summary>
+    /// Get the octet stream.
+    /// </summary>
+    function GetOctetStream(): TStream; override;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+  end;
+
+  /// <summary>
+  /// Parser for DL bit strings.
+  /// </summary>
+  TDLBitStringParser = class sealed(TAsn1BitStringParser, IAsn1Convertible, IAsn1BitStringParser)
+  strict private
+    FStream: TAsn1DefiniteLengthInputStream;
+    FPadBits: Int32;
+
+    function GetBitStreamInternal(AOctetAligned: Boolean): TStream;
+
+  public
+    /// <summary>
+    /// Create a DL bit string parser.
+    /// </summary>
+    constructor Create(const AStream: TAsn1DefiniteLengthInputStream);
+
+    destructor Destroy; override;
+
+    /// <summary>
+    /// Get the bit stream.
+    /// </summary>
+    function GetBitStream(): TStream; override;
+    /// <summary>
+    /// Get the octet stream.
+    /// </summary>
+    function GetOctetStream(): TStream; override;
+    /// <summary>
+    /// Get the number of pad bits.
+    /// </summary>
+    function GetPadBits(): Int32; override;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+  end;
+
+  /// <summary>
+  /// Parser for DER sequences.
+  /// </summary>
+  TDerSequenceParser = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SequenceParser, IDerSequenceParser)
+  strict private
+    FParser: IAsn1StreamParser;
+
+  public
+    /// <summary>
+    /// Create a DER sequence parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
+
+    /// <summary>
+    /// Read the next object from the sequence.
+    /// </summary>
+    function ReadObject(): IAsn1Convertible;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
     function ToAsn1Object(): IAsn1Object;
-
   end;
-
-type
-
-  TDerGeneralString = class(TDerStringBase, IDerGeneralString)
-
-  strict private
-  var
-    FStr: String;
-
-    function GetStr: String; inline;
-
-    property Str: String read GetStr;
-
-  strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-  public
-
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
-    constructor Create(const Str: String); overload;
-
-    function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
-    class function GetInstance(const obj: TObject): IDerGeneralString; overload;
-      static; inline;
-
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerGeneralString; overload; static; inline;
-
-  end;
-
-type
-  TDerGenerator = class abstract(TAsn1Generator, IDerGenerator)
-
-  strict private
-  var
-    F_tagged, F_isExplicit: Boolean;
-    F_tagNo: Int32;
-
-    class procedure WriteLength(const outStr: TStream; length: Int32); static;
-
-  strict protected
-    constructor Create(const outStream: TStream); overload;
-    constructor Create(const outStream: TStream; tagNo: Int32;
-      isExplicit: Boolean); overload;
-
-  public
-    procedure WriteDerEncoded(tag: Int32;
-      const bytes: TCryptoLibByteArray); overload;
-    class procedure WriteDerEncoded(const outStream: TStream; tag: Int32;
-      const bytes: TCryptoLibByteArray); overload; static;
-
-    class procedure WriteDerEncoded(const outStr: TStream; tag: Int32;
-      const inStr: TStream); overload; static;
-
-  end;
-
-type
 
   /// <summary>
-  /// Der IA5String object - this is an ascii string.
+  /// Parser for DER sets.
   /// </summary>
-  TDerIA5String = class(TDerStringBase, IDerIA5String)
-
+  TDerSetParser = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SetParser, IDerSetParser)
   strict private
-  var
-    FStr: String;
+    FParser: IAsn1StreamParser;
 
-    function GetStr: String; inline;
-    property Str: String read GetStr;
-
-  strict protected
-    function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
+    /// <summary>
+    /// Create a DER set parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
 
     /// <summary>
-    /// basic constructor - with bytes.
+    /// Read the next object from the set.
     /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
+    function ReadObject(): IAsn1Convertible;
     /// <summary>
-    /// basic constructor - without validation.
+    /// Convert to ASN.1 object.
     /// </summary>
-    constructor Create(const Str: String); overload;
-
-    /// <summary>
-    /// Constructor with optional validation.
-    /// </summary>
-    /// <param name="Str">
-    /// the base string to wrap.
-    /// </param>
-    /// <param name="validate">
-    /// whether or not to check the string.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if validate is true and the string contains characters that should
-    /// not be in an IA5String.
-    /// </exception>
-    constructor Create(const Str: String; validate: Boolean); overload;
-
-    function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
-    /// <summary>
-    /// return a DerIA5String from the passed in object
-    /// </summary>
-    /// <param name="obj">
-    /// a DerIA5String or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a DerIA5String instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerIA5String; overload;
-      static; inline;
-
-    /// <summary>
-    /// return a DerIA5String from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerIA5String; overload; static; inline;
-
-    /// <summary>
-    /// return true if the passed in String can be represented without loss
-    /// as an IA5String, false otherwise.
-    /// </summary>
-    /// <param name="Str">
-    /// true if in printable set, false otherwise.
-    /// </param>
-    class function IsIA5String(const Str: String): Boolean; static; inline;
-
+    function ToAsn1Object(): IAsn1Object;
   end;
-
-type
 
   /// <summary>
-  /// Der NumericString object - this is an ascii string of characters
-  /// {0,1,2,3,4,5,6,7,8,9, }.
+  /// Parser for BER sequences.
   /// </summary>
-  TDerNumericString = class(TDerStringBase, IDerNumericString)
-
+  TBerSequenceParser = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SequenceParser, IBerSequenceParser)
   strict private
-  var
-    FStr: String;
+    FParser: IAsn1StreamParser;
 
-    function GetStr: String; inline;
-    property Str: String read GetStr;
-
-  strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
+    /// <summary>
+    /// Create a BER sequence parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
 
     /// <summary>
-    /// basic constructor - with bytes.
+    /// Read the next object from the sequence.
     /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
+    function ReadObject(): IAsn1Convertible;
     /// <summary>
-    /// basic constructor - without validation.
+    /// Convert to ASN.1 object.
     /// </summary>
-    constructor Create(const Str: String); overload;
-
+    function ToAsn1Object(): IAsn1Object;
     /// <summary>
-    /// Constructor with optional validation.
+    /// Parse a BER sequence from a stream parser.
     /// </summary>
-    /// <param name="Str">
-    /// the base string to wrap.
-    /// </param>
-    /// <param name="validate">
-    /// whether or not to check the string.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if validate is true and the string contains characters that should
-    /// not be in an IA5String.
-    /// </exception>
-    constructor Create(const Str: String; validate: Boolean); overload;
-
-    function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
-    /// <summary>
-    /// return a Numeric string from the passed in object
-    /// </summary>
-    /// <param name="obj">
-    /// a DerNumericString or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a DerNumericString instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerNumericString; overload;
-      static; inline;
-
-    /// <summary>
-    /// return a Numeric String from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerNumericString; overload; static; inline;
-
-    /// <summary>
-    /// Return true if the string can be represented as a NumericString
-    /// ('0'..'9', ' ')
-    /// </summary>
-    /// <param name="Str">
-    /// string to validate.
-    /// </param>
-    /// <returns>
-    /// true if numeric, false otherwise.
-    /// </returns>
-    class function IsNumericString(const Str: String): Boolean; static; inline;
-
+    class function Parse(const ASp: IAsn1StreamParser): IBerSequence; static;
   end;
-
-type
 
   /// <summary>
-  /// Der PrintableString object.
+  /// Parser for BER sets.
   /// </summary>
-  TDerPrintableString = class(TDerStringBase, IDerPrintableString)
-
+  TBerSetParser = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SetParser, IBerSetParser)
   strict private
-  var
-    FStr: String;
+    FParser: IAsn1StreamParser;
 
-    function GetStr: String; inline;
-
-  strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
   public
+    /// <summary>
+    /// Create a BER set parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
 
     /// <summary>
-    /// basic constructor - with bytes.
+    /// Read the next object from the set.
     /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
+    function ReadObject(): IAsn1Convertible;
     /// <summary>
-    /// basic constructor - without validation.
+    /// Convert to ASN.1 object.
     /// </summary>
-    constructor Create(const Str: String); overload;
-
+    function ToAsn1Object(): IAsn1Object;
     /// <summary>
-    /// Constructor with optional validation.
+    /// Parse a BER set from a stream parser.
     /// </summary>
-    /// <param name="Str">
-    /// the base string to wrap.
-    /// </param>
-    /// <param name="validate">
-    /// whether or not to check the string.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if validate is true and the string contains characters that should
-    /// not be in an PrintableString.
-    /// </exception>
-    constructor Create(const Str: String; validate: Boolean); overload;
-
-    function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
-    property Str: String read GetStr;
-
-    /// <summary>
-    /// return a printable string from the passed in object.
-    /// </summary>
-    /// <param name="obj">
-    /// a DerPrintableString or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a DerPrintableString instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerPrintableString;
-      overload; static; inline;
-
-    /// <summary>
-    /// return a Printable string from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerPrintableString; overload; static; inline;
-
-    /// <summary>
-    /// return true if the passed in String can be represented without loss
-    /// as a PrintableString, false otherwise.
-    /// </summary>
-    /// <param name="Str">
-    /// string to validate.
-    /// </param>
-    /// <returns>
-    /// return true if in printable set, false otherwise.
-    /// </returns>
-    class function IsPrintableString(const Str: String): Boolean;
-      static; inline;
-
+    class function Parse(const ASp: IAsn1StreamParser): IBerSet; static;
   end;
 
-type
-  TDerSequenceGenerator = class(TDerGenerator, IDerSequenceGenerator)
-
+  /// <summary>
+  /// Abstract base class for ASN.1 generators.
+  /// </summary>
+  TAsn1Generator = class abstract(TInterfacedObject, IAsn1Generator)
   strict private
-  var
-    F_bOut: TMemoryStream;
-
+    FOut: TStream;
+    FClosed: Boolean;
+  strict protected
+    constructor Create(AOutStream: TStream);
+    function GetOut: TStream; inline;
+    function GetIsClosed: Boolean; inline;
+    property &Out: TStream read GetOut;
+    procedure Finish(); virtual; abstract;
+    procedure DoClose();
   public
-    constructor Create(outStream: TStream); overload;
-    constructor Create(outStream: TStream; tagNo: Int32;
-      isExplicit: Boolean); overload;
     destructor Destroy(); override;
-    procedure AddObject(const obj: IAsn1Encodable); override;
+    procedure AddObject(const AObj: IAsn1Encodable); overload; virtual; abstract;
+    procedure AddObject(const AObj: IAsn1Object); overload; virtual; abstract;
+    function GetRawOutputStream(): TStream; virtual; abstract;
+    procedure Close(); virtual; abstract;
+    property IsClosed: Boolean read GetIsClosed;
+    class function InheritConstructedFlag(AIntoTag, AFromTag: Int32): Int32; static;
+  end;
+
+  /// <summary>
+  /// Abstract base class for BER generators.
+  /// </summary>
+  TBerGenerator = class abstract(TAsn1Generator, IBerGenerator)
+  strict private
+    FTagged, FIsExplicit: Boolean;
+    FTagNo: Int32;
+  strict protected
+    constructor Create(AOutStream: TStream); overload;
+    constructor Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
+
+    procedure WriteHdr(ATag: Int32);
+    procedure WriteBerHeader(ATag: Int32);
+    procedure WriteBerBody(AContentStream: TStream);
+    procedure WriteBerEnd();
+    procedure Finish(); override;
+  public
+    procedure AddObject(const AObj: IAsn1Encodable); override;
+    procedure AddObject(const AObj: IAsn1Object); override;
     function GetRawOutputStream(): TStream; override;
     procedure Close(); override;
   end;
 
-type
+  /// <summary>
+  /// BER sequence generator.
+  /// </summary>
+  TBerSequenceGenerator = class(TBerGenerator, IBerSequenceGenerator)
+  public
+    constructor Create(AOutStream: TStream); overload;
+    constructor Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
+  end;
 
   /// <summary>
-  /// Der T61String (also the teletex string) - 8-bit characters
+  /// BER octet string generator.
+  /// </summary>
+  TBerOctetStringGenerator = class(TBerGenerator, IBerOctetStringGenerator)
+  public
+    constructor Create(AOutStream: TStream); overload;
+    constructor Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
+    function GetOctetOutputStream(): TStream; overload;
+    function GetOctetOutputStream(ABufSize: Int32): TStream; overload;
+    function GetOctetOutputStream(const ABuf: TCryptoLibByteArray): TStream; overload;
+  end;
+
+  /// <summary>
+  /// Abstract base class for DER generators.
+  /// </summary>
+  TDerGenerator = class abstract(TAsn1Generator, IDerGenerator)
+  strict private
+    FTagged, FIsExplicit: Boolean;
+    FTagNo: Int32;
+    class procedure WriteLength(const AOutStr: TStream; ALength: Int32); static;
+  strict protected
+    constructor Create(const AOutStream: TStream); overload;
+    constructor Create(const AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
+  public
+    procedure WriteDerEncoded(ATag: Int32; const ABytes: TCryptoLibByteArray); overload;
+    class procedure WriteDerEncoded(const AOutStream: TStream; ATag: Int32; const ABytes: TCryptoLibByteArray); overload; static;
+    class procedure WriteDerEncoded(const AOutStr: TStream; ATag: Int32; const AInStr: TStream); overload; static;
+  end;
+
+  /// <summary>
+  /// DER sequence generator.
+  /// </summary>
+  TDerSequenceGenerator = class(TDerGenerator, IDerSequenceGenerator)
+  strict private
+    FBOut: TMemoryStream;
+  strict protected
+    procedure Finish(); override;
+  public
+    constructor Create(AOutStream: TStream); overload;
+    constructor Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
+    destructor Destroy(); override;
+    procedure AddObject(const AObj: IAsn1Encodable); overload; override;
+    procedure AddObject(const AObj: IAsn1Object); overload;
+    function GetRawOutputStream(): TStream; override;
+    procedure Close(); override;
+  end;
+
+  /// <summary>
+  /// Parser for DER external objects.
+  /// </summary>
+  TDerExternalParser = class sealed(TAsn1Encodable, IDerExternalParser)
+  strict private
+    FParser: IAsn1StreamParser;
+
+  public
+    /// <summary>
+    /// Create a DER external parser.
+    /// </summary>
+    constructor Create(const AParser: IAsn1StreamParser);
+
+    /// <summary>
+    /// Read the next object.
+    /// </summary>
+    function ReadObject(): IAsn1Convertible;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+    /// <summary>
+    /// Parse a DER external from a stream parser.
+    /// </summary>
+    class function Parse(const ASp: IAsn1StreamParser): IDerExternal; static;
+  end;
+
+  /// <summary>
+  /// Parser for BER tagged objects.
+  /// </summary>
+  TBerTaggedObjectParser = class(TInterfacedObject, IAsn1Convertible, IAsn1TaggedObjectParser, IBerTaggedObjectParser)
+  strict protected
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FParser: IAsn1StreamParser;
+
+  public
+    /// <summary>
+    /// Create a BER tagged object parser.
+    /// </summary>
+    constructor Create(ATagClass, ATagNo: Int32; const AParser: IAsn1StreamParser);
+
+    /// <summary>
+    /// Get the tag class.
+    /// </summary>
+    function GetTagClass(): Int32;
+    /// <summary>
+    /// Get the tag number.
+    /// </summary>
+    function GetTagNo(): Int32;
+    /// <summary>
+    /// Check if this is a constructed object.
+    /// </summary>
+    function GetIsConstructed(): Boolean; virtual;
+    /// <summary>
+    /// Check if this has a context tag.
+    /// </summary>
+    function HasContextTag(ATagNo: Int32): Boolean;
+    /// <summary>
+    /// Check if this has the specified tag.
+    /// </summary>
+    function HasTag(ATagClass, ATagNo: Int32): Boolean; virtual;
+    /// <summary>
+    /// Parse a base universal object.
+    /// </summary>
+    function ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible; virtual;
+    /// <summary>
+    /// Parse an explicit base object.
+    /// </summary>
+    function ParseExplicitBaseObject(): IAsn1Convertible; virtual;
+    /// <summary>
+    /// Parse an explicit base tagged object.
+    /// </summary>
+    function ParseExplicitBaseTagged(): IAsn1TaggedObjectParser; virtual;
+    /// <summary>
+    /// Parse an implicit base tagged object.
+    /// </summary>
+    function ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser; virtual;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; virtual;
+
+    property TagClass: Int32 read GetTagClass;
+    property TagNo: Int32 read GetTagNo;
+  end;
+
+  /// <summary>
+  /// Parser for DL tagged objects.
+  /// </summary>
+  TDLTaggedObjectParser = class sealed(TBerTaggedObjectParser, IAsn1TaggedObjectParser, IDLTaggedObjectParser)
+  strict private
+    FConstructed: Boolean;
+
+    function CheckConstructed(): IAsn1StreamParser;
+
+  public
+    /// <summary>
+    /// Check if this is a constructed object.
+    /// </summary>
+    function GetIsConstructed(): Boolean; override;
+    /// <summary>
+    /// Create a DL tagged object parser.
+    /// </summary>
+    constructor Create(ATagClass, ATagNo: Int32; AConstructed: Boolean;
+      const AParser: IAsn1StreamParser);
+
+    /// <summary>
+    /// Parse a base universal object.
+    /// </summary>
+    function ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible; override;
+    /// <summary>
+    /// Parse an explicit base object.
+    /// </summary>
+    function ParseExplicitBaseObject(): IAsn1Convertible; override;
+    /// <summary>
+    /// Parse an explicit base tagged object.
+    /// </summary>
+    function ParseExplicitBaseTagged(): IAsn1TaggedObjectParser; override;
+    /// <summary>
+    /// Parse an implicit base tagged object.
+    /// </summary>
+    function ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser; override;
+    /// <summary>
+    /// Convert to ASN.1 object.
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
+  end;
+
+  /// <summary>
+  /// DER external class.
+  /// </summary>
+  TDerExternal = class(TAsn1Object, IDerExternal)
+  strict private
+    class function GetObjFromSequence(const ASequence: IAsn1Sequence; AIndex: Int32): IAsn1Object; static;
+    class function CheckEncoding(AEncoding: Int32): Int32; static;
+    class function CheckExternalContent(ATagNo: Int32; const AExternalContent: IAsn1Object): IAsn1Object; static;
+    class function GetExternalContent(const AEncoding: IAsn1TaggedObject): IAsn1Object; overload; static;
+    class function CheckDataValueDescriptor(const ADataValueDescriptor: IAsn1Object): IAsn1ObjectDescriptor; static;
+  protected
+    FDirectReference: IDerObjectIdentifier;
+    FIndirectReference: IDerInteger;
+    FDataValueDescriptor: IAsn1ObjectDescriptor;
+    FEncoding: Int32;
+    FExternalContent: IAsn1Object;
+    
+    function BuildSequence(): IAsn1Sequence; virtual;
+
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding;  overload; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerExternal universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(const AVector: IAsn1EncodableVector); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ADirectReference: IDerObjectIdentifier;
+      const AIndirectReference: IDerInteger;
+      const ADataValueDescriptor: IAsn1ObjectDescriptor;
+      const AExternalData: IAsn1TaggedObject); overload;
+    constructor Create(const ADirectReference: IDerObjectIdentifier;
+      const AIndirectReference: IDerInteger;
+      const ADataValueDescriptor: IAsn1ObjectDescriptor;
+      AEncoding: Int32; const AExternalData: IAsn1Object); overload;
+    function GetSequence(): IAsn1Sequence;
+    // Interface methods for IDerExternal
+    function GetDataValueDescriptor(): IAsn1Object;
+    function GetDirectReference(): IDerObjectIdentifier;
+    function GetEncoding(): Int32; overload;
+    function GetExternalContent(): IAsn1Object; overload;
+    function GetIndirectReference(): IDerInteger;
+  end;
+
+  /// <summary>
+  /// DL external class.
+  /// </summary>
+  TDLExternal = class sealed(TDerExternal, IDLExternal)
+  protected
+    function BuildSequence(): IAsn1Sequence; override;
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
+  public
+    constructor Create(const AVector: IAsn1EncodableVector); overload;
+    constructor Create(const ASequence: IAsn1Sequence); overload;
+    constructor Create(const ADirectReference: IDerObjectIdentifier;
+      const AIndirectReference: IDerInteger;
+      const ADataValueDescriptor: IAsn1ObjectDescriptor;
+      const AExternalData: IAsn1TaggedObject); overload;
+    constructor Create(const ADirectReference: IDerObjectIdentifier;
+      const AIndirectReference: IDerInteger;
+      const ADataValueDescriptor: IAsn1ObjectDescriptor;
+      AEncoding: Int32; const AExternalData: IAsn1Object); overload;
+  end;
+
+  /// <summary>
+  /// DER boolean implementation.
+  /// </summary>
+  TDerBoolean = class(TAsn1Object, IAsn1Object, IDerBoolean)
+  strict private
+    FValue: Byte;
+    class var FFalse: IDerBoolean;
+    class var FTrue: IDerBoolean;
+    class function GetFalse: IDerBoolean; static;
+    class function GetTrue: IDerBoolean; static;
+    constructor Create(AValue: Boolean); overload;
+    function GetContents(AEncoding: Int32): TCryptoLibByteArray;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerBoolean universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    class function FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    class function GetInstance(const AObj: TObject): IDerBoolean; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IDerBoolean; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerBoolean; overload; static;
+    class function GetInstance(AValue: Boolean): IDerBoolean; overload; static;
+    class function GetInstance(AValue: Int32): IDerBoolean; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBoolean; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IDerBoolean; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBoolean; static;
+    function GetValue(): Byte;
+    function GetIsTrue(): Boolean;
+    function ToString(): String; override;
+    class property False: IDerBoolean read GetFalse;
+    class property True: IDerBoolean read GetTrue;
+  end;
+
+  /// <summary>
+  /// DER enumerated object implementation.
+  /// </summary>
+  TDerEnumerated = class(TAsn1Object, IAsn1Object, IDerEnumerated)
+  strict private
+    class var
+      FCache: TCryptoLibGenericArray<IDerEnumerated>;
+    var
+      FContents: TCryptoLibByteArray;
+      FStart: Int32;
+    function GetValue(): TBigInteger;
+    function GetIntValueExact(): Int32;
+    /// <summary>
+    /// Class constructor to initialize static fields.
+    /// </summary>
+    class constructor Create;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerEnumerated universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(AVal: Int32); overload;
+    constructor Create(AVal: Int64); overload;
+    constructor Create(const AVal: TBigInteger); overload;
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+    class function GetInstance(const AObj: TObject): IDerEnumerated; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IDerEnumerated; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated; static;
+    class function FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
+    function GetBytes(): TCryptoLibByteArray;
+    function HasValue(AX: Int32): Boolean; overload;
+    function HasValue(const AX: TBigInteger): Boolean; overload;
+  end;
+
+  /// <summary>
+  /// ASN.1 null object base class.
+  /// </summary>
+  TAsn1Null = class abstract(TAsn1Object, IAsn1Null)
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1Null universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create;
+    class procedure CheckContentsLength(AContentsLength: Int32); static;
+    class function CreatePrimitive(): IAsn1Object; static;
+    class function GetInstance(const AObj: TObject): IAsn1Null; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IAsn1Null; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Null; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Null; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1Null; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Null; static;
+  end;
+
+  /// <summary>
+  /// DER null object implementation.
+  /// </summary>
+  TDerNull = class(TAsn1Null, IDerNull)
+  strict private
+    class var FInstance: IDerNull;
+    class function GetInstance: IDerNull; static;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    constructor Create;
+    class property Instance: IDerNull read GetInstance;
+  end;
+
+  /// <summary>
+  /// DER Object Identifier implementation.
+  /// </summary>
+  TDerObjectIdentifier = class(TAsn1Object, IAsn1Object, IDerObjectIdentifier)
+  strict private
+    const
+      MaxContentsLength = 4096;
+      MaxIdentifierLength = MaxContentsLength * 4 + 1;
+      LongLimit = Int64((Int64.MaxValue shr 7) - $7F);
+    class var
+      FCache: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    var
+      FContents: TCryptoLibByteArray;
+      FIdentifier: String;
+    class function IsValidIdentifier(const AIdentifier: String): Boolean; static;
+    class function ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray; static;
+    class function ParseContents(const AContents: TCryptoLibByteArray): String; static;
+    class procedure CheckIdentifier(const AIdentifier: String); static;
+    class procedure WriteField(const AOutputStream: TStream; AFieldValue: Int64); overload; static;
+    class procedure WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger); overload; static;
+    constructor Create(const AContents: TCryptoLibByteArray; const AIdentifier: String); overload;
+    function GetID(): String;
+    class constructor Create;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerObjectIdentifier universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+    constructor Create(const AIdentifier: String); overload;
+    class function FromContents(const AContents: TCryptoLibByteArray): IDerObjectIdentifier; static;
+    class function GetInstance(const AObj: TObject): IDerObjectIdentifier; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IDerObjectIdentifier; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerObjectIdentifier; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerObjectIdentifier; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IDerObjectIdentifier; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerObjectIdentifier; static;
+    class function TryFromID(const AIdentifier: String; out AOid: IDerObjectIdentifier): Boolean; static;
+    class procedure CheckContentsLength(AContentsLength: Int32); static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
+    class function FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    function GetContents(): TCryptoLibByteArray;
+    function Branch(const ABranchID: String): IDerObjectIdentifier;
+    function &On(const AStem: IDerObjectIdentifier): Boolean;
+    function ToString(): String; override;
+  end;
+
+  /// <summary>
+  /// ASN.1 relative OID implementation.
+  /// </summary>
+  TAsn1RelativeOid = class(TAsn1Object, IAsn1RelativeOid)
+  strict private
+    const
+      MaxContentsLength = 4096;
+      MaxIdentifierLength = MaxContentsLength * 4 - 1;
+      LongLimit = Int64((Int64.MaxValue shr 7) - $7F);
+    class var
+      FCache: TCryptoLibGenericArray<IAsn1RelativeOid>;
+    var
+      FContents: TCryptoLibByteArray;
+      FIdentifier: String;
+    function GetID(): String;
+    constructor Create(const AContents: TCryptoLibByteArray; const AIdentifier: String); overload;
+  protected
+    class function IsValidIdentifier(const AIdentifier: String; AFrom: Int32): Boolean; static;
+    class function IsValidContents(const AContents: TCryptoLibByteArray): Boolean; static;
+    class function ParseContents(const AContents: TCryptoLibByteArray): String; static;
+    class function ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray; static;
+    class procedure WriteField(const AOutputStream: TStream; AFieldValue: Int64); overload; static;
+    class procedure WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger); overload; static;
+    class procedure CheckIdentifier(const AIdentifier: String); static;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1RelativeOid universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    class constructor Create;
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+    constructor Create(const AIdentifier: String); overload;
+    class function FromContents(const AContents: TCryptoLibByteArray): IAsn1RelativeOid; static;
+    class function GetInstance(const AObj: TObject): IAsn1RelativeOid; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IAsn1RelativeOid; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1RelativeOid; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1RelativeOid; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1RelativeOid; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1RelativeOid; static;
+    class function TryFromID(const AIdentifier: String; out AOid: IAsn1RelativeOid): Boolean; static;
+    class procedure CheckContentsLength(AContentsLength: Int32); static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
+    function Branch(const ABranchID: String): IAsn1RelativeOid;
+    function GetContents(): TCryptoLibByteArray;
+    function ToString(): String; override;
+  end;
+
+  /// <summary>
+  /// ASN.1 generalized time implementation.
+  /// </summary>
+  TAsn1GeneralizedTime = class(TAsn1Object, IAsn1GeneralizedTime)
+  strict private
+    FTimeString: String;
+    FTimeStringCanonical: Boolean;
+    FDateTime: TDateTime;
+    class function FromString(const AStr: String): TDateTime; static;
+    class function IndexOfSign(const AStr: String; AStartIndex: Int32): Int32; static;
+    class function ParseLocal(const AStr, AFormat: String): TDateTime; static;
+    class function ParseTimeZone(const AStr, AFormat: String): TDateTime; static;
+    class function ParseUtc(const AStr, AFormat: String): TDateTime; static;
+    class function ToStringCanonical(const ADateTime: TDateTime): String; static;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1GeneralizedTime universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor Create(const ATimeString: String); overload;
+    constructor Create(const ADateTime: TDateTime); overload;
+    class function GetInstance(const AObj: TObject): IAsn1GeneralizedTime; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IAsn1GeneralizedTime; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1GeneralizedTime; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1GeneralizedTime; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1GeneralizedTime; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1GeneralizedTime; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    function GetContents(AEncoding: Int32): TCryptoLibByteArray;
+    function GetTimeString: String;
+    function ToDateTime: TDateTime;
+  end;
+
+  /// <summary>
+  /// ASN.1 UTC time implementation.
+  /// </summary>
+  TAsn1UtcTime = class(TAsn1Object, IAsn1UtcTime)
+  strict private
+    FTimeString: String;
+    FDateTime: TDateTime;
+    FDateTimeLocked: Boolean;
+    FTwoDigitYearMax: Int32;
+    class function FromString(const AStr: String; out ATwoDigitYearMax: Int32): TDateTime; static;
+    class function InRange(const ADateTime: TDateTime; ATwoDigitYearMax: Int32): Boolean; static;
+    class function ToStringCanonical(const ADateTime: TDateTime; out ATwoDigitYearMax: Int32): String; overload; static;
+    class function ToStringCanonical(const ADateTime: TDateTime): String; overload; static;
+    class procedure Validate(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); static;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1UtcTime universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor Create(const ATimeString: String); overload;
+    constructor Create(const ADateTime: TDateTime); overload; deprecated 'Use Create(DateTime, Int32) instead';
+    constructor Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
+    class function GetInstance(const AObj: TObject): IAsn1UtcTime; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IAsn1UtcTime; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1UtcTime; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1UtcTime; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1UtcTime; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1UtcTime; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    function GetContents(AEncoding: Int32): TCryptoLibByteArray;
+    function GetTimeString: String;
+    function GetTwoDigitYearMax: Int32;
+    function ToString(): String; override;
+    function ToDateTime: TDateTime; overload;
+    function ToDateTime(ATwoDigitYearMax: Int32): TDateTime; overload;
+    function ToAdjustedDateTime: TDateTime; deprecated 'Use ToDateTime(2049) instead';
+  end;
+
+  /// <summary>
+  /// DER UTC time implementation.
+  /// </summary>
+  TDerUtcTime = class(TAsn1UtcTime, IDerUtcTime)
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+  public
+    constructor Create(const ATimeString: String); overload;
+    constructor Create(const ADateTime: TDateTime); overload; deprecated 'Use Create(DateTime, Int32) instead';
+    constructor Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+  end;
+
+  /// <summary>
+  /// DER generalized time implementation.
+  /// </summary>
+  TDerGeneralizedTime = class(TAsn1GeneralizedTime, IDerGeneralizedTime)
+  strict protected
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+  public
+    constructor Create(const ATimeString: String); overload;
+    constructor Create(const ADateTime: TDateTime); overload;
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+  end;
+
+  /// <summary>
+  /// ASN.1 object descriptor implementation.
+  /// </summary>
+  TAsn1ObjectDescriptor = class(TAsn1Object, IAsn1ObjectDescriptor)
+  strict private
+    FGraphicString: IAsn1Object;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TAsn1ObjectDescriptor universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    constructor Create(const AGraphicString: IAsn1Object);
+    class function GetInstance(const AObj: TObject): IAsn1ObjectDescriptor; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IAsn1ObjectDescriptor; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1ObjectDescriptor; overload; static;
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1ObjectDescriptor; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IAsn1ObjectDescriptor; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1ObjectDescriptor; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    function GetGraphicString(): IAsn1Object;
+  end;
+
+  /// <summary>
+  /// DER GeneralString object.
+  /// </summary>
+  TDerGeneralString = class(TDerStringBase, IDerGeneralString)
+  strict private
+    FContents: TCryptoLibByteArray;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerGeneralString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a GeneralString from a string.
+    /// </summary>
+    constructor Create(const AStr: String); overload;
+    /// <summary>
+    /// Create a GeneralString from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerGeneralString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerGeneralString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerGeneralString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGeneralString; overload; static;
+    /// <summary>
+    /// Get optional GeneralString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerGeneralString; static;
+    /// <summary>
+    /// Get tagged GeneralString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGeneralString; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
+    function GetOctets(): TCryptoLibByteArray;
+    /// <summary>
+    /// Create primitive from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  strict private
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  end;
+
+  /// <summary>
+  /// DER GraphicString object.
+  /// </summary>
+  TDerGraphicString = class(TDerStringBase, IDerGraphicString)
+  strict private
+    FContents: TCryptoLibByteArray;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerGraphicString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a GraphicString from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerGraphicString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerGraphicString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerGraphicString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGraphicString; overload; static;
+    /// <summary>
+    /// Get optional GraphicString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerGraphicString; static;
+    /// <summary>
+    /// Get tagged GraphicString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGraphicString; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
+    function GetOctets(): TCryptoLibByteArray;
+    /// <summary>
+    /// Create primitive from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  strict private
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  end;
+
+  /// <summary>
+  /// DER IA5String object.
+  /// </summary>
+  TDerIA5String = class(TDerStringBase, IDerIA5String)
+  strict private
+    FContents: TCryptoLibByteArray;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerIA5String universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create an IA5String from a string.
+    /// </summary>
+    constructor Create(const AStr: String); overload;
+    /// <summary>
+    /// Create an IA5String from a string with optional validation.
+    /// </summary>
+    constructor Create(const AStr: String; AValidate: Boolean); overload;
+    /// <summary>
+    /// Create an IA5String from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Check if string can be represented as IA5String.
+    /// </summary>
+    class function IsIA5String(const AStr: String): Boolean; static;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerIA5String; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerIA5String; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerIA5String; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerIA5String; overload; static;
+    /// <summary>
+    /// Get optional IA5String from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerIA5String; static;
+    /// <summary>
+    /// Get tagged IA5String from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerIA5String; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
+    function GetOctets(): TCryptoLibByteArray;
+    /// <summary>
+    /// Create primitive from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  end;
+
+  /// <summary>
+  /// DER integer implementation.
+  /// </summary>
+  TDerInteger = class(TAsn1Object, IAsn1Object, IDerInteger)
+  strict private
+    FBytes: TCryptoLibByteArray;
+    FStart: Int32;
+    class var
+      FSmallConstants: TCryptoLibGenericArray<IDerInteger>;
+      FZero: IDerInteger;
+      FOne: IDerInteger;
+      FTwo: IDerInteger;
+      FThree: IDerInteger;
+      FFour: IDerInteger;
+      FFive: IDerInteger;
+      FAllowUnsafeInteger: Boolean;
+    class function GetZero(): IDerInteger; static;
+    class function GetOne(): IDerInteger; static;
+    class function GetTwo(): IDerInteger; static;
+    class function GetThree(): IDerInteger; static;
+    class function GetFour(): IDerInteger; static;
+    class function GetFive(): IDerInteger; static;
+    class function GetAllowUnsafeInteger(): Boolean; static;
+    class procedure SetAllowUnsafeInteger(const AValue: Boolean); static;
+    class function AllowUnsafe(): Boolean; static;
+    class constructor Create;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+  public
+    const
+      //AllowUnsafeProperty = 'Org.CryptoLib4Pascal.Asn1.AllowUnsafeInteger';
+      SignExtSigned = Int32(-1);
+      SignExtUnsigned = Int32($FF);
+    type
+      /// <summary>
+      /// Meta class for TDerInteger universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create from Int32 value.
+    /// </summary>
+    constructor Create(AValue: Int32); overload;
+    /// <summary>
+    /// Create from Int64 value.
+    /// </summary>
+    constructor Create(AValue: Int64); overload;
+    /// <summary>
+    /// Create from BigInteger value.
+    /// </summary>
+    constructor Create(const AValue: TBigInteger); overload;
+    /// <summary>
+    /// Create from byte array.
+    /// </summary>
+    constructor Create(const ABytes: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Create from byte array with clone option.
+    /// </summary>
+    constructor Create(const ABytes: TCryptoLibByteArray; AClone: Boolean); overload;
+
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerInteger; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerInteger; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerInteger; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerInteger; overload; static;
+    /// <summary>
+    /// Get optional integer from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerInteger; static;
+    /// <summary>
+    /// Get tagged integer from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerInteger; static;
+    /// <summary>
+    /// Get or create integer from value (uses cached small constants).
+    /// </summary>
+    class function ValueOf(AValue: Int64): IDerInteger; static;
+    /// <summary>
+    /// Get encoding length for a BigInteger.
+    /// </summary>
+    class function GetEncodingLength(const AX: TBigInteger): Int32; static;
+    /// <summary>
+    /// Extract Int64 value from bytes with sign extension.
+    /// </summary>
+    class function LongValue(const ABytes: TCryptoLibByteArray; AStart, ASignExt: Int32): Int64; static;
+    
+    /// <summary>
+    /// Static constants.
+    /// </summary>
+    class property Zero: IDerInteger read GetZero;
+    class property One: IDerInteger read GetOne;
+    class property Two: IDerInteger read GetTwo;
+    class property Three: IDerInteger read GetThree;
+    class property Four: IDerInteger read GetFour;
+    class property Five: IDerInteger read GetFive;
+    /// <summary>
+    /// Allow unsafe integer operations (bypasses some validation).
+    /// </summary>
+    class property AllowUnsafeInteger: Boolean read GetAllowUnsafeInteger write SetAllowUnsafeInteger;
+    
+    function GetBytes(): TCryptoLibByteArray;
+    /// <summary>
+    /// Get the BigInteger value.
+    /// </summary>
+    function GetValue(): TBigInteger;
+    /// <summary>
+    /// Get the positive BigInteger value.
+    /// </summary>
+    function GetPositiveValue(): TBigInteger;
+    /// <summary>
+    /// Check if this integer has a specific Int32 value.
+    /// </summary>
+    function HasValue(AX: Int32): Boolean; overload;
+    /// <summary>
+    /// Check if this integer has a specific Int64 value.
+    /// </summary>
+    function HasValue(AX: Int64): Boolean; overload;
+    /// <summary>
+    /// Check if this integer has a specific BigInteger value.
+    /// </summary>
+    function HasValue(const AX: TBigInteger): Boolean; overload;
+    /// <summary>
+    /// Get Int32 value, throwing if out of range.
+    /// </summary>
+    function GetIntValueExact(): Int32;
+    /// <summary>
+    /// Get positive Int32 value, throwing if out of range.
+    /// </summary>
+    function GetIntPositiveValueExact(): Int32;
+    /// <summary>
+    /// Get Int64 value, throwing if out of range.
+    /// </summary>
+    function GetLongValueExact(): Int64;
+    /// <summary>
+    /// Try to get Int32 value, returning false if out of range.
+    /// </summary>
+    function TryGetIntValueExact(out AValue: Int32): Boolean;
+    /// <summary>
+    /// Try to get positive Int32 value, returning false if out of range.
+    /// </summary>
+    function TryGetIntPositiveValueExact(out AValue: Int32): Boolean;
+    /// <summary>
+    /// Try to get Int64 value, returning false if out of range.
+    /// </summary>
+    function TryGetLongValueExact(out AValue: Int64): Boolean;
+    /// <summary>
+    /// Check if bytes are malformed (invalid INTEGER encoding).
+    /// </summary>
+    class function IsMalformed(const ABytes: TCryptoLibByteArray): Boolean; static;
+    /// <summary>
+    /// Calculate number of sign extension bytes to skip.
+    /// </summary>
+    class function SignBytesToSkip(const ABytes: TCryptoLibByteArray): Int32; static;
+    /// <summary>
+    /// Extract Int32 value from bytes with sign extension.
+    /// </summary>
+    class function IntValue(const ABytes: TCryptoLibByteArray; AStart, ASignExt: Int32): Int32; static;
+    
+    function ToString(): String; override;
+    
+    property Value: TBigInteger read GetValue;
+    property PositiveValue: TBigInteger read GetPositiveValue;
+    property IntValueExact: Int32 read GetIntValueExact;
+    property IntPositiveValueExact: Int32 read GetIntPositiveValueExact;
+    property LongValueExact: Int64 read GetLongValueExact;
+  end;
+
+  /// <summary>
+  /// DER NumericString object.
+  /// </summary>
+  TDerNumericString = class(TDerStringBase, IDerNumericString)
+  strict private
+    FContents: TCryptoLibByteArray;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerNumericString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a NumericString from a string.
+    /// </summary>
+    constructor Create(const AStr: String); overload;
+    /// <summary>
+    /// Create a NumericString from a string with optional validation.
+    /// </summary>
+    constructor Create(const AStr: String; AValidate: Boolean); overload;
+    /// <summary>
+    /// Create a NumericString from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Check if string can be represented as NumericString.
+    /// </summary>
+    class function IsNumericString(const AStr: String): Boolean;  overload; static;
+    /// <summary>
+    /// Check if byte array can be represented as NumericString.
+    /// </summary>
+    class function IsNumericString(const AContents: TCryptoLibByteArray): Boolean;  overload; static;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerNumericString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerNumericString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerNumericString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerNumericString; overload; static;
+    /// <summary>
+    /// Get optional NumericString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerNumericString; static;
+    /// <summary>
+    /// Get tagged NumericString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerNumericString; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
+    function GetOctets(): TCryptoLibByteArray;
+    /// <summary>
+    /// Create primitive from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  end;
+
+  /// <summary>
+  /// DER PrintableString object.
+  /// </summary>
+  TDerPrintableString = class(TDerStringBase, IDerPrintableString)
+  strict private
+    FContents: TCryptoLibByteArray;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerPrintableString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a PrintableString from a string.
+    /// </summary>
+    constructor Create(const AStr: String); overload;
+    /// <summary>
+    /// Create a PrintableString from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerPrintableString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerPrintableString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerPrintableString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerPrintableString; overload; static;
+    /// <summary>
+    /// Get optional PrintableString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerPrintableString; static;
+    /// <summary>
+    /// Get tagged PrintableString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerPrintableString; static;
+    /// <summary>
+    /// Check if string can be represented as PrintableString.
+    /// </summary>
+    class function IsPrintableString(const AStr: String): Boolean; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
+    function GetOctets(): TCryptoLibByteArray;
+    /// <summary>
+    /// Create primitive from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  strict private
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  end;
+
+  /// <summary>
+  /// DER T61String object.
   /// </summary>
   TDerT61String = class(TDerStringBase, IDerT61String)
-
   strict private
+    class var FEncoding: TEncoding;
 
-  var
-    FStr: String;
+    var
+     FContents: TCryptoLibByteArray;
 
-    function GetStr: String; inline;
-    property Str: String read GetStr;
+    class constructor Create;
+    class destructor Destroy;
 
-    class function GetEncoding: TEncoding; static; inline;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
 
   strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
   public
-
+    type
+      /// <summary>
+      /// Meta class for TDerT61String universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
     /// <summary>
-    /// basic constructor - with bytes.
+    /// Create a T61String from a string.
     /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
+    constructor Create(const AStr: String); overload;
     /// <summary>
-    /// basic constructor
+    /// Create a T61String from byte array.
     /// </summary>
-    constructor Create(const Str: String); overload;
-
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerT61String; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerT61String; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerT61String; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerT61String; overload; static;
+    /// <summary>
+    /// Get optional T61String from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerT61String; static;
+    /// <summary>
+    /// Get tagged T61String from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerT61String; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
     function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
     /// <summary>
-    /// return a T61 string from the passed in object.
+    /// Get the octets.
     /// </summary>
-    /// <param name="obj">
-    /// a Der T61 string or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a Der T61 string instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerT61String; overload;
-      static; inline;
-
+    function GetOctets(): TCryptoLibByteArray;
     /// <summary>
-    /// return a Der T61 string from a tagged object.
+    /// Create primitive from contents.
     /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerT61String; overload; static; inline;
-
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
   end;
 
-type
-
   /// <summary>
-  /// Der UniversalString object.
+  /// DER UniversalString object.
   /// </summary>
   TDerUniversalString = class(TDerStringBase, IDerUniversalString)
-
   strict private
-  var
-    FStr: TCryptoLibByteArray;
-
-  const
-    FTable: array [0 .. 15] of Char = ('0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
-
-    function GetStr: TCryptoLibByteArray; inline;
-    property Str: TCryptoLibByteArray read GetStr;
-
+    FContents: TCryptoLibByteArray;
+    procedure EncodeHexByte(ABuf: TStringBuilder; AByte: Byte; const ATable: array of Char);
+    procedure EncodeHexDL(ABuf: TStringBuilder; ADl: Int32; const ATable: array of Char);
   strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
   public
-
+    type
+      /// <summary>
+      /// Meta class for TDerUniversalString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
     /// <summary>
-    /// basic constructor - byte encoded string.
+    /// Create a UniversalString from byte array.
     /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerUniversalString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerUniversalString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerUniversalString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUniversalString; overload; static;
+    /// <summary>
+    /// Get optional UniversalString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerUniversalString; static;
+    /// <summary>
+    /// Get tagged UniversalString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUniversalString; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
     function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
     /// <summary>
-    /// return a Universal String from the passed in object.
+    /// Get the octets.
     /// </summary>
-    /// <param name="obj">
-    /// a Der T61 string or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a Der UniversalString instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerUniversalString;
-      overload; static; inline;
-
+    function GetOctets(): TCryptoLibByteArray;
     /// <summary>
-    /// return a Der UniversalString from a tagged object.
+    /// Create primitive from contents.
     /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerUniversalString; overload; static; inline;
-
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  strict private
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
   end;
 
-type
-
   /// <summary>
-  /// Der UTF8String object.
+  /// DER UTF8String object.
   /// </summary>
   TDerUtf8String = class(TDerStringBase, IDerUtf8String)
-
   strict private
-  var
-    FStr: String;
-
-    function GetStr: String; inline;
-    property Str: String read GetStr;
-
+    FContents: TCryptoLibByteArray;
   strict protected
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-  public
-
-    /// <summary>
-    /// basic constructor - with bytes.
-    /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
-    /// <summary>
-    /// basic constructor
-    /// </summary>
-    constructor Create(const Str: String); overload;
-
-    function GetString(): String; override;
-
-    procedure Encode(const derOut: TStream); override;
-
-    /// <summary>
-    /// return an UTF8 string from the passed in object.
-    /// </summary>
-    /// <param name="obj">
-    /// a Der UTF8String or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a Der UTF8String instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerUtf8String; overload;
-      static; inline;
-
-    /// <summary>
-    /// return a Der UTF8String from a tagged object.
-    /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerUtf8String; overload; static; inline;
-
-  end;
-
-type
-  TDerVideotexString = class(TDerStringBase, IDerVideotexString)
-
-  strict private
-  var
-    FmString: TCryptoLibByteArray;
-
-    function GetmString: TCryptoLibByteArray; inline;
-
-  protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
-
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
   public
-    property mString: TCryptoLibByteArray read GetmString;
-
+    type
+      /// <summary>
+      /// Meta class for TDerUtf8String universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
     /// <summary>
-    /// basic constructor - with bytes.
+    /// Create a UTF8 string from a string.
     /// </summary>
-    /// <param name="encoding">
-    /// the byte encoding of the characters making up the string.
-    /// </param>
-    constructor Create(const encoding: TCryptoLibByteArray);
-
+    constructor Create(const AStr: String); overload;
+    /// <summary>
+    /// Create a UTF8 string from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerUtf8String; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerUtf8String; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerUtf8String; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUtf8String; overload; static;
+    /// <summary>
+    /// Get optional UTF8 string from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerUtf8String; static;
+    /// <summary>
+    /// Get tagged UTF8 string from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUtf8String; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
     function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
     /// <summary>
-    /// return a Videotex String from the passed in object
+    /// Get the octets.
     /// </summary>
-    /// <param name="obj">
-    /// a DerVideotexString or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a DerVideotexString instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerVideotexString;
-      overload; static; inline;
-
-    class function GetInstance(const obj: TCryptoLibByteArray)
-      : IDerVideotexString; overload; static;
-
+    function GetOctets(): TCryptoLibByteArray;
     /// <summary>
-    /// return a Videotex string from a tagged object.
+    /// Create primitive from contents.
     /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerVideotexString; overload; static; inline;
-
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  strict private
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
   end;
-
-type
 
   /// <summary>
-  /// Der VisibleString object.
+  /// DER VideotexString object.
+  /// </summary>
+  TDerVideotexString = class(TDerStringBase, IDerVideotexString)
+  strict private
+    FContents: TCryptoLibByteArray;
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
+    function Asn1GetHashCode(): Int32; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
+  public
+    type
+      /// <summary>
+      /// Meta class for TDerVideotexString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
+    /// <summary>
+    /// Create a VideotexString from byte array.
+    /// </summary>
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerVideotexString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerVideotexString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerVideotexString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVideotexString; overload; static;
+    /// <summary>
+    /// Get optional VideotexString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerVideotexString; static;
+    /// <summary>
+    /// Get tagged VideotexString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVideotexString; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
+    function GetString(): String; override;
+    /// <summary>
+    /// Get the octets.
+    /// </summary>
+    function GetOctets(): TCryptoLibByteArray;
+    /// <summary>
+    /// Create primitive from contents.
+    /// </summary>
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  end;
+
+  /// <summary>
+  /// DER VisibleString object.
   /// </summary>
   TDerVisibleString = class(TDerStringBase, IDerVisibleString)
-
   strict private
-  var
-    FStr: String;
-
-    function GetStr: String; inline;
-    property Str: String read GetStr;
-
+    FContents: TCryptoLibByteArray;
   strict protected
+    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function Asn1Equals(const asn1Object: IAsn1Object): Boolean; override;
+    function GetTagNo(): Int32; override;
+    function GetContents(): TCryptoLibByteArray; override;
   public
-
+    type
+      /// <summary>
+      /// Meta class for TDerVisibleString universal type.
+      /// </summary>
+      Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
+      strict private
+        class var FInstance: IAsn1UniversalType;
+        class function GetInstance: IAsn1UniversalType; static;
+        constructor Create;
+      strict protected
+        function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+      public
+        class property Instance: IAsn1UniversalType read GetInstance;
+      end;
+  public
     /// <summary>
-    /// basic constructor - byte encoded string.
+    /// Create a VisibleString from a string.
     /// </summary>
-    constructor Create(const Str: TCryptoLibByteArray); overload;
-
+    constructor Create(const AStr: String); overload;
     /// <summary>
-    /// basic constructor
+    /// Create a VisibleString from byte array.
     /// </summary>
-    constructor Create(const Str: String); overload;
-
+    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Get instance from object.
+    /// </summary>
+    class function GetInstance(const AObj: TObject): IDerVisibleString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Object): IDerVisibleString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerVisibleString; overload; static;
+    /// <summary>
+    /// Get instance from tagged object.
+    /// </summary>
+    class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVisibleString; overload; static;
+    /// <summary>
+    /// Get optional VisibleString from element.
+    /// </summary>
+    class function GetOptional(const AElement: IAsn1Encodable): IDerVisibleString; static;
+    /// <summary>
+    /// Get tagged VisibleString from tagged object.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVisibleString; static;
+    /// <summary>
+    /// Get the string representation.
+    /// </summary>
     function GetString(): String; override;
-
-    function GetOctets(): TCryptoLibByteArray; inline;
-
-    procedure Encode(const derOut: TStream); override;
-
     /// <summary>
-    /// return a DerVisibleString from the passed in object
+    /// Get the octets.
     /// </summary>
-    /// <param name="obj">
-    /// a DerVisibleString or an object that can be converted into one.
-    /// </param>
-    /// <returns>
-    /// return a DerVisibleString instance, or null.
-    /// </returns>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: TObject): IDerVisibleString; overload;
-      static; inline;
-
+    function GetOctets(): TCryptoLibByteArray;
     /// <summary>
-    /// return a DerVisibleString from a tagged object.
+    /// Create primitive from contents.
     /// </summary>
-    /// <param name="obj">
-    /// the tagged object holding the object we want
-    /// </param>
-    /// <param name="isExplicit">
-    /// true if the object is meant to be explicitly tagged false otherwise.
-    /// </param>
-    /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
-    /// if the tagged object cannot be converted.
-    /// </exception>
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      isExplicit: Boolean): IDerVisibleString; overload; static; inline;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+  strict private
+    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
+  end;
 
+  /// <summary>
+  /// DL (Definite Length) constructed encoding.
+  /// </summary>
+  TConstructedDLEncoding = class sealed(TInterfacedObject, IAsn1Encoding)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FContentsElements: TCryptoLibGenericArray<IAsn1Encoding>;
+    FContentsLength: Int32;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsElements: TCryptoLibGenericArray<IAsn1Encoding>);
+    procedure Encode(const AOut: TStream);
+    function GetLength(): Int32;
+  end;
+
+  /// <summary>
+  /// DL tagged encoding.
+  /// </summary>
+  TTaggedDLEncoding = class sealed(TInterfacedObject, IAsn1Encoding)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FContentsElement: IAsn1Encoding;
+    FContentsLength: Int32;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsElement: IAsn1Encoding);
+    procedure Encode(const AOut: TStream);
+    function GetLength(): Int32;
+  end;
+
+  /// <summary>
+  /// DER constructed encoding.
+  /// </summary>
+  TConstructedDerEncoding = class sealed(TDerEncoding, IConstructedDerEncoding)
+  strict private
+    FContentsElements: TCryptoLibGenericArray<IDerEncoding>;
+    FContentsLength: Int32;
+  strict protected
+    function CompareLengthAndContents(const AOther: IDerEncoding): Int32; override;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsElements: TCryptoLibGenericArray<IDerEncoding>);
+    procedure Encode(const AOut: TStream); override;
+    function GetLength(): Int32; override;
+    function GetContentsLength(): Int32;
+    function GetContentsElements(): TCryptoLibGenericArray<IDerEncoding>;
+  end;
+
+  /// <summary>
+  /// DER tagged encoding.
+  /// </summary>
+  TTaggedDerEncoding = class sealed(TDerEncoding, ITaggedDerEncoding)
+  strict private
+    FContentsElement: IDerEncoding;
+    FContentsLength: Int32;
+  strict protected
+    function CompareLengthAndContents(const AOther: IDerEncoding): Int32; override;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsElement: IDerEncoding);
+    procedure Encode(const AOut: TStream); override;
+    function GetLength(): Int32; override;
+    function GetContentsLength(): Int32;
+    function GetContentsElement(): IDerEncoding;
+  end;
+
+  /// <summary>
+  /// IL (Indefinite Length) constructed encoding.
+  /// </summary>
+  TConstructedILEncoding = class sealed(TInterfacedObject, IAsn1Encoding)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FContentsElements: TCryptoLibGenericArray<IAsn1Encoding>;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsElements: TCryptoLibGenericArray<IAsn1Encoding>);
+    procedure Encode(const AOut: TStream);
+    function GetLength(): Int32;
+  end;
+
+  /// <summary>
+  /// IL tagged encoding.
+  /// </summary>
+  TTaggedILEncoding = class sealed(TInterfacedObject, IAsn1Encoding)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FContentsElement: IAsn1Encoding;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsElement: IAsn1Encoding);
+    procedure Encode(const AOut: TStream);
+    function GetLength(): Int32;
+  end;
+
+  /// <summary>
+  /// Primitive encoding.
+  /// </summary>
+  TPrimitiveEncoding = class sealed(TInterfacedObject, IAsn1Encoding)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FContentsOctets: TCryptoLibByteArray;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsOctets: TCryptoLibByteArray);
+    procedure Encode(const AOut: TStream);
+    function GetLength(): Int32;
+  end;
+
+  /// <summary>
+  /// DER primitive encoding.
+  /// </summary>
+  TPrimitiveDerEncoding = class sealed(TDerEncoding, IPrimitiveDerEncoding)
+  protected
+    FContentsOctets: TCryptoLibByteArray;
+    function CompareLengthAndContents(const AOther: IDerEncoding): Int32; override;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsOctets: TCryptoLibByteArray); overload;
+    procedure Encode(const AOut: TStream); override;
+    function GetLength(): Int32; override;
+    function GetContentsOctets(): TCryptoLibByteArray;
+  end;
+
+  /// <summary>
+  /// Primitive encoding with suffix.
+  /// </summary>
+  TPrimitiveEncodingSuffixed = class sealed(TInterfacedObject, IAsn1Encoding)
+  strict private
+    FTagClass: Int32;
+    FTagNo: Int32;
+    FContentsOctets: TCryptoLibByteArray;
+    FContentsSuffix: Byte;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsOctets: TCryptoLibByteArray; AContentsSuffix: Byte);
+    procedure Encode(const AOut: TStream);
+    function GetLength(): Int32;
+  end;
+
+  /// <summary>
+  /// DER primitive encoding with suffix.
+  /// </summary>
+  TPrimitiveDerEncodingSuffixed = class sealed(TDerEncoding, IPrimitiveDerEncodingSuffixed)
+  protected
+    FContentsOctets: TCryptoLibByteArray;
+    FContentsSuffix: Byte;
+    function CompareLengthAndContents(const AOther: IDerEncoding): Int32; override;
+    class function CompareSuffixed(const AOctetsA: TCryptoLibByteArray;
+      ASuffixA: Byte; const AOctetsB: TCryptoLibByteArray; ASuffixB: Byte): Int32; static;
+  public
+    constructor Create(ATagClass, ATagNo: Int32;
+      const AContentsOctets: TCryptoLibByteArray; AContentsSuffix: Byte);
+    procedure Encode(const AOut: TStream); override;
+    function GetLength(): Int32; override;
+    function GetContentsOctets(): TCryptoLibByteArray;
+    function GetContentsSuffix(): Byte;
   end;
 
 implementation
 
-{ TStreamHelper }
+{ TAsn1StreamParser }
 
-function TStreamHelper.ReadByte: Int32;
+constructor TAsn1StreamParser.Create(const AInput: TStream);
+begin
+  Create(AInput, TAsn1InputStream.FindLimit(AInput));
+end;
+
+constructor TAsn1StreamParser.Create(const AEncoding: TCryptoLibByteArray);
+begin
+  Create(TFixedBufferStream.Create(AEncoding, 0, System.Length(AEncoding), False), System.Length(AEncoding));
+end;
+
+constructor TAsn1StreamParser.Create(const AInput: TStream; ALimit: Int32);
 var
-  buffer: TCryptoLibByteArray;
+  LTmpBuffers: TCryptoLibMatrixByteArray;
+  I: Int32;
 begin
-  System.SetLength(buffer, 1);
-  if (TStreamSorter.Read(Self, buffer, 0, 1) = 0) then
+  System.SetLength(LTmpBuffers, 16);
+  for I := 0 to System.Length(LTmpBuffers) - 1 do
+    System.SetLength(LTmpBuffers[I], 0);
+  Create(AInput, ALimit, LTmpBuffers);
+end;
+
+constructor TAsn1StreamParser.Create(const AInput: TStream; ALimit: Int32;
+  const ATmpBuffers: TCryptoLibMatrixByteArray);
+begin
+  inherited Create;
+  if not AInput.CanRead then
+    raise EArgumentCryptoLibException.Create('Expected stream to be readable');
+
+  FIn := AInput;
+  FLimit := ALimit;
+  FTmpBuffers := ATmpBuffers;
+end;
+
+destructor TAsn1StreamParser.Destroy;
+begin
+  // Parser ALWAYS owns and frees its stream
+  if FIn <> nil then
   begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(buffer[0]);
+    FIn.Free;
+    FIn := nil;
   end;
-end;
-
-procedure TStreamHelper.WriteByte(b: Byte);
-var
-  oneByteArray: TCryptoLibByteArray;
-begin
-  System.SetLength(oneByteArray, 1);
-  oneByteArray[0] := b;
-  // Self.Write(oneByteArray, 0, 1);
-  Self.Write(oneByteArray[0], 1);
-end;
-
-{ TStreamSorter }
-
-class function TStreamSorter.Read(input: TStream;
-  var buffer: TCryptoLibByteArray; offset, count: Int32): Int32;
-begin
-  if input is TIndefiniteLengthInputStream then
-  begin
-    result := (input as TIndefiniteLengthInputStream).
-      Read(buffer, offset, count);
-  end
-  else if input is TDefiniteLengthInputStream then
-
-  begin
-    result := (input as TDefiniteLengthInputStream).Read(buffer, offset, count);
-  end
-  else if input is TConstructedOctetStream then
-
-  begin
-    result := (input as TConstructedOctetStream).Read(buffer, offset, count);
-  end
-  else
-  begin
-    result := input.Read(buffer[offset], count);
-  end;
-end;
-
-class function TStreamSorter.ReadByte(input: TStream): Int32;
-begin
-  if input is TIndefiniteLengthInputStream then
-  begin
-    result := (input as TIndefiniteLengthInputStream).ReadByte();
-  end
-  else if input is TDefiniteLengthInputStream then
-
-  begin
-    result := (input as TDefiniteLengthInputStream).ReadByte();
-  end
-  else if input is TConstructedOctetStream then
-
-  begin
-    result := (input as TConstructedOctetStream).ReadByte();
-  end
-  else
-  begin
-    result := input.ReadByte();
-  end;
-end;
-
-{ TStreamUtils }
-
-class procedure TStreamUtils.Drain(const inStr: TStream);
-var
-  bs: TCryptoLibByteArray;
-begin
-  System.SetLength(bs, BufferSize);
-
-  while (TStreamSorter.Read(inStr, bs, 0, System.length(bs)) > 0) do
-  begin
-    // do nothing
-  end;
-end;
-
-class procedure TStreamUtils.PipeAll(const inStr, outStr: TStream);
-var
-  numRead: Int32;
-  bs: TCryptoLibByteArray;
-begin
-  System.SetLength(bs, BufferSize);
-
-  numRead := TStreamSorter.Read(inStr, bs, 0, System.length(bs));
-  while ((numRead) > 0) do
-  begin
-    outStr.Write(bs[0], numRead);
-    numRead := TStreamSorter.Read(inStr, bs, 0, System.length(bs));
-
-  end;
-end;
-
-class function TStreamUtils.PipeAllLimited(const inStr: TStream; limit: Int64;
-  const outStr: TStream): Int64;
-var
-  bs: TCryptoLibByteArray;
-  numRead: Int32;
-  total: Int64;
-begin
-  System.SetLength(bs, BufferSize);
-  total := 0;
-
-  numRead := TStreamSorter.Read(inStr, bs, 0, System.length(bs));
-  while ((numRead) > 0) do
-  begin
-    if ((limit - total) < numRead) then
-    begin
-      raise EStreamOverflowCryptoLibException.CreateRes(@SDataOverflow);
-    end;
-    total := total + numRead;
-    outStr.Write(bs[0], numRead);
-    numRead := TStreamSorter.Read(inStr, bs, 0, System.length(bs));
-
-  end;
-  result := total;
-end;
-
-class function TStreamUtils.ReadAll(const inStr: TStream): TCryptoLibByteArray;
-var
-  buf: TMemoryStream;
-begin
-  buf := TMemoryStream.Create();
-  try
-    PipeAll(inStr, buf);
-    System.SetLength(result, buf.Size);
-    buf.Position := 0;
-    buf.Read(result[0], buf.Size);
-  finally
-    buf.Free;
-  end;
-
-end;
-
-class function TStreamUtils.ReadAllLimited(const inStr: TStream; limit: Int32)
-  : TCryptoLibByteArray;
-var
-  buf: TMemoryStream;
-begin
-  buf := TMemoryStream.Create();
-  try
-    PipeAllLimited(inStr, limit, buf);
-    System.SetLength(result, buf.Size);
-    buf.Position := 0;
-    buf.Read(result[0], buf.Size);
-  finally
-    buf.Free;
-  end;
-
-end;
-
-class function TStreamUtils.ReadFully(const inStr: TStream;
-  var buf: TCryptoLibByteArray; off, len: Int32): Int32;
-var
-  totalRead, numRead: Int32;
-begin
-  totalRead := 0;
-
-  while (totalRead < len) do
-  begin
-
-    numRead := TStreamSorter.Read(inStr, buf, off + totalRead, len - totalRead);
-    if (numRead < 1) then
-    begin
-      break;
-    end;
-    totalRead := totalRead + numRead;
-  end;
-  result := totalRead;
-end;
-
-class function TStreamUtils.WriteBufTo(const buf: TMemoryStream;
-  const output: TCryptoLibByteArray; offset: Int32): Int32;
-var
-  bytes: TCryptoLibByteArray;
-begin
-  buf.Position := 0;
-  System.SetLength(bytes, buf.Size);
-  buf.Read(bytes[0], buf.Size);
-  System.Move(bytes[0], output[offset], System.length(bytes) *
-    System.SizeOf(Byte));
-  result := System.length(bytes);
-end;
-
-class procedure TStreamUtils.WriteZeroes(const outStr: TStream; count: Int64);
-var
-  zeroes: TCryptoLibByteArray;
-begin
-  System.SetLength(zeroes, BufferSize);
-  while (count > BufferSize) do
-  begin
-    outStr.Write(zeroes[0], BufferSize);
-    count := count - BufferSize;
-  end;
-  outStr.Write(zeroes[0], Int32(count));
-end;
-
-class function TStreamUtils.ReadFully(const inStr: TStream;
-  var buf: TCryptoLibByteArray): Int32;
-begin
-  result := ReadFully(inStr, buf, 0, System.length(buf));
-end;
-
-class procedure TStreamUtils.WriteBufTo(const buf: TMemoryStream;
-  const output: TStream);
-begin
-  output.CopyFrom(buf, buf.Size);
-end;
-
-{ TBaseInputStream }
-
-function TBaseInputStream.GetPosition: Int64;
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-function TBaseInputStream.GetSize: Int64;
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-{$IFNDEF _FIXINSIGHT_}
-
-function TBaseInputStream.Read(var buffer; count: LongInt): LongInt;
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-function TBaseInputStream.Write(const buffer; count: LongInt): LongInt;
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-{$ENDIF}
-
-function TBaseInputStream.ReadByte: Int32;
-var
-  buffer: TCryptoLibByteArray;
-begin
-  System.SetLength(buffer, 1);
-
-  // if (Read(Buffer, 0, 1) = 0) then
-  if (TStreamSorter.Read(Self, buffer, 0, 1) = 0) then
-  begin
-    result := -1;
-  end
-  else
-  begin
-    result := Int32(buffer[0]);
-  end;
-end;
-
-function TBaseInputStream.Seek(offset: LongInt; Origin: Word): LongInt;
-begin
-  result := Seek(Int64(offset), TSeekOrigin(Origin));
-end;
-
-{$IFNDEF _FIXINSIGHT_}
-
-function TBaseInputStream.Seek(const offset: Int64; Origin: TSeekOrigin): Int64;
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-procedure TBaseInputStream.SetPosition(const Pos: Int64);
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-{$ENDIF}
-
-procedure TBaseInputStream.SetSize(const NewSize: Int64);
-begin
-  SetSize(LongInt(NewSize));
-end;
-
-procedure TBaseInputStream.SetSize(NewSize: LongInt);
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-procedure TBaseInputStream.SetSize64(const NewSize: Int64);
-begin
-  SetSize(NewSize);
-end;
-
-function TBaseInputStream.Read(buffer: TCryptoLibByteArray;
-  offset, count: LongInt): LongInt;
-var
-  &pos, endPoint, b: Int32;
-
-begin
-  Pos := offset;
-  try
-    endPoint := offset + count;
-    while (Pos < endPoint) do
-    begin
-      b := ReadByte();
-      if (b = -1) then
-      begin
-        break;
-      end;
-      buffer[Pos] := Byte(b);
-      System.Inc(Pos);
-    end;
-  except
-    on e: EIOCryptoLibException do
-    begin
-      if (Pos = offset) then
-        raise;
-    end;
-
-  end;
-
-  result := Pos - offset;
-end;
-
-{$IFNDEF _FIXINSIGHT_}
-
-function TBaseInputStream.Write(const buffer: TCryptoLibByteArray;
-  offset, count: LongInt): LongInt;
-begin
-  raise ENotSupportedCryptoLibException.Create('');
-end;
-
-{$ENDIF}
-{ TFilterStream }
-
-constructor TFilterStream.Create(const s: TStream);
-begin
-  inherited Create();
-  Fs := s;
-end;
-
-function TFilterStream.GetPosition: Int64;
-begin
-  result := Fs.Position;
-end;
-
-procedure TFilterStream.SetPosition(const Value: Int64);
-begin
-  Fs.Position := Value;
-end;
-
-function TFilterStream.Write(const buffer; count: LongInt): LongInt;
-begin
-  result := Fs.Write(PByte(buffer), count);
-end;
-
-procedure TFilterStream.WriteByte(Value: Byte);
-begin
-  Fs.WriteByte(Value);
-end;
-
-function TFilterStream.GetSize: Int64;
-begin
-  result := Fs.Size;
-end;
-
-function TFilterStream.Read(var buffer; count: LongInt): LongInt;
-begin
-  result := Fs.Read(PByte(buffer), count);
-end;
-
-function TFilterStream.ReadByte: Int32;
-begin
-
-  result := TStreamSorter.ReadByte(Fs);
-
-end;
-
-function TFilterStream.Seek(const offset: Int64; Origin: TSeekOrigin): Int64;
-begin
-  result := Fs.Seek(offset, Origin);
-end;
-
-{ TLimitedInputStream }
-
-constructor TLimitedInputStream.Create(inStream: TStream; limit: Int32);
-begin
-  Inherited Create();
-  F_in := inStream;
-  F_limit := limit;
-end;
-
-function TLimitedInputStream.GetRemaining: Int32;
-begin
-  // TODO: maybe one day this can become more accurate
-  result := F_limit;
-end;
-
-procedure TLimitedInputStream.SetParentEofDetect(&on: Boolean);
-var
-  indefiniteLengthInputStream: TIndefiniteLengthInputStream;
-begin
-
-  if F_in is TIndefiniteLengthInputStream then
-  begin
-    indefiniteLengthInputStream := F_in as TIndefiniteLengthInputStream;
-    indefiniteLengthInputStream.SetEofOn00(&on);
-  end;
-
-end;
-
-{ TDefiniteLengthInputStream }
-
-constructor TDefiniteLengthInputStream.Create(inStream: TStream; length: Int32);
-begin
-  Inherited Create(inStream, length);
-  if (length < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidLength);
-  end;
-
-  F_originalLength := length;
-  F_remaining := length;
-
-  if (length = 0) then
-  begin
-    SetParentEofDetect(True);
-  end;
-end;
-
-class function TDefiniteLengthInputStream.GetEmptyBytes: TCryptoLibByteArray;
-begin
-  result := Nil;
-end;
-
-function TDefiniteLengthInputStream.GetRemaining: Int32;
-begin
-  result := F_remaining;
-end;
-
-function TDefiniteLengthInputStream.Read(buf: TCryptoLibByteArray;
-  off, len: LongInt): LongInt;
-var
-  toRead, numRead: Int32;
-
-begin
-  if (F_remaining = 0) then
-  begin
-    result := 0;
-    Exit;
-  end;
-
-  toRead := Min(len, F_remaining);
-
-  numRead := TStreamSorter.Read(F_in, buf, off, toRead);
-
-  if (numRead < 1) then
-  begin
-    raise EEndOfStreamCryptoLibException.CreateResFmt(@SEndOfStreamTwo,
-      [F_originalLength, F_remaining]);
-  end;
-  F_remaining := F_remaining - numRead;
-
-  if (F_remaining = 0) then
-  begin
-    SetParentEofDetect(True);
-  end;
-
-  result := numRead;
-end;
-
-procedure TDefiniteLengthInputStream.ReadAllIntoByteArray
-  (var buf: TCryptoLibByteArray);
-begin
-  if (F_remaining <> System.length(buf)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
-  end;
-  F_remaining := F_remaining - TStreamUtils.ReadFully(F_in, buf);
-  if ((F_remaining <> 0)) then
-  begin
-    raise EEndOfStreamCryptoLibException.CreateResFmt(@SEndOfStreamTwo,
-      [F_originalLength, F_remaining]);
-  end;
-  SetParentEofDetect(True);
-end;
-
-function TDefiniteLengthInputStream.ReadByte: Int32;
-begin
-  if (F_remaining = 0) then
-  begin
-    result := -1;
-    Exit;
-  end;
-
-  // result := F_in.ReadByte();
-  result := TStreamSorter.ReadByte(F_in);
-
-  if (result < 0) then
-  begin
-    raise EEndOfStreamCryptoLibException.CreateResFmt(@SEndOfStreamTwo,
-      [F_originalLength, F_remaining]);
-  end;
-
-  System.Dec(F_remaining);
-  if (F_remaining = 0) then
-  begin
-    SetParentEofDetect(True);
-  end;
-
-end;
-
-function TDefiniteLengthInputStream.ToArray: TCryptoLibByteArray;
-var
-  bytes: TCryptoLibByteArray;
-begin
-  if (F_remaining = 0) then
-  begin
-    result := EmptyBytes;
-    Exit;
-  end;
-  System.SetLength(bytes, F_remaining);
-  F_remaining := F_remaining - TStreamUtils.ReadFully(F_in, bytes);
-  if (F_remaining <> 0) then
-  begin
-    raise EEndOfStreamCryptoLibException.CreateResFmt(@SEndOfStreamTwo,
-      [F_originalLength, F_remaining]);
-  end;
-  SetParentEofDetect(True);
-  result := bytes;
-end;
-
-{ TAsn1InputStream }
-
-class function TAsn1InputStream.FindLimit(const input: TStream): Int32;
-var
-  limitedInputStream: TLimitedInputStream;
-  mem: TMemoryStream;
-begin
-  limitedInputStream := input as TLimitedInputStream;
-  if (limitedInputStream <> Nil) then
-  begin
-    result := limitedInputStream.GetRemaining();
-    Exit;
-  end
-  else if (input is TMemoryStream) then
-  begin
-    mem := input as TMemoryStream;
-    result := Int32(mem.Size - mem.Position);
-    Exit;
-  end;
-
-  result := System.High(Int32);
-end;
-
-class function TAsn1InputStream.GetBuffer(const defIn
-  : TDefiniteLengthInputStream; const tmpBuffers: TCryptoLibMatrixByteArray)
-  : TCryptoLibByteArray;
-var
-  len: Int32;
-  buf, temp: TCryptoLibByteArray;
-begin
-  len := defIn.GetRemaining();
-  if (len >= System.length(tmpBuffers)) then
-  begin
-    result := defIn.ToArray();
-    Exit;
-  end;
-
-  buf := tmpBuffers[len];
-  if (buf = Nil) then
-  begin
-    System.SetLength(temp, len);
-    tmpBuffers[len] := temp;
-    buf := tmpBuffers[len];
-  end;
-
-  defIn.ReadAllIntoByteArray(buf);
-
-  result := buf;
-end;
-
-class function TAsn1InputStream.CreatePrimitiveDerObject(tagNo: Int32;
-  const defIn: TDefiniteLengthInputStream;
-  const tmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object;
-var
-  bytes: TCryptoLibByteArray;
-begin
-  case tagNo of
-    TAsn1Tags.Boolean:
-      begin
-        result := TDerBoolean.FromOctetString(GetBuffer(defIn, tmpBuffers));
-        Exit;
-      end;
-    TAsn1Tags.Enumerated:
-      begin
-        result := TDerEnumerated.FromOctetString(GetBuffer(defIn, tmpBuffers));
-        Exit;
-      end;
-    TAsn1Tags.ObjectIdentifier:
-      begin
-        result := TDerObjectIdentifier.FromOctetString
-          (GetBuffer(defIn, tmpBuffers));
-        Exit;
-      end;
-
-  end;
-
-  bytes := defIn.ToArray();
-
-  case tagNo of
-
-    TAsn1Tags.BitString:
-      begin
-        result := TDerBitString.FromAsn1Octets(bytes);
-        Exit;
-      end;
-    TAsn1Tags.BmpString:
-      begin
-        result := TDerBmpString.Create(bytes);
-        Exit;
-      end;
-    // TAsn1Tags.GeneralizedTime:
-    // begin
-    // result := TDerGeneralizedTime.Create(bytes);
-    // Exit;
-    // end;
-    TAsn1Tags.GeneralString:
-      begin
-        result := TDerGeneralString.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.GraphicString:
-      begin
-        result := TDerGraphicString.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.IA5String:
-      begin
-        result := TDerIA5String.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.Integer:
-      begin
-        result := TDerInteger.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.Null:
-      begin
-        // actual content is ignored (enforce 0 length?)
-        result := TDerNull.Instance;
-        Exit;
-      end;
-    TAsn1Tags.NumericString:
-      begin
-        result := TDerNumericString.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.OctetString:
-      begin
-        result := TDerOctetString.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.PrintableString:
-      begin
-        result := TDerPrintableString.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.T61String:
-      begin
-        result := TDerT61String.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.UniversalString:
-      begin
-        result := TDerUniversalString.Create(bytes);
-        Exit;
-      end;
-    // TAsn1Tags.UtcTime:
-    // begin
-    // result := TDerUtcTime.Create(bytes);
-    // Exit;
-    // end;
-    TAsn1Tags.Utf8String:
-      begin
-        result := TDerUtf8String.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.VideotexString:
-      begin
-        result := TDerVideotexString.Create(bytes);
-        Exit;
-      end;
-    TAsn1Tags.VisibleString:
-      begin
-        result := TDerVisibleString.Create(bytes);
-        Exit;
-      end;
-  else
-    begin
-      raise EIOCryptoLibException.CreateResFmt(@SUnknownTag, [tagNo]);
-    end;
-
-  end;
-end;
-
-destructor TAsn1InputStream.Destroy;
-begin
-  FStream.Free;
   inherited Destroy;
 end;
 
-constructor TAsn1InputStream.Create(const inputStream: TStream; limit: Int32);
-begin
-  Inherited Create(inputStream);
-  Flimit := limit;
-  System.SetLength(FtmpBuffers, 16);
-end;
-
-constructor TAsn1InputStream.Create(const inputStream: TStream);
-begin
-  Create(inputStream, FindLimit(inputStream));
-end;
-
-constructor TAsn1InputStream.Create(const input: TCryptoLibByteArray);
-begin
-  // used TBytesStream here for one pass creation and population with byte array :)
-  FStream := TBytesStream.Create(input);
-  Create(FStream, System.length(input));
-
-end;
-
-class function TAsn1InputStream.ReadLength(const s: TStream;
-  limit: Int32): Int32;
+function TAsn1StreamParser.ReadObject(): IAsn1Convertible;
 var
-  &length, Size, next, I: Int32;
+  LTagHdr: Int32;
 begin
-
-  length := TStreamSorter.ReadByte(s);
-
-  if (length < 0) then
+  LTagHdr := FIn.ReadByte();
+  if LTagHdr < 0 then
   begin
-    raise EEndOfStreamCryptoLibException.CreateRes(@SInvalidEnd);
-  end;
-
-  if (length = $80) then
-  begin
-    result := -1; // indefinite-length encoding
+    Result := nil;
     Exit;
   end;
 
-  if (length > 127) then
-  begin
-    Size := length and $7F;
-
-    // Note: The invalid long form "$ff" (see X.690 8.1.3.5c) will be caught here
-    if (Size > 4) then
-    begin
-      raise EIOCryptoLibException.CreateResFmt(@SInvalidDerLength, [Size]);
-    end;
-
-    length := 0;
-    I := 0;
-    while I < Size do
-    begin
-
-      next := TStreamSorter.ReadByte(s);
-
-      if (next < 0) then
-      begin
-        raise EEndOfStreamCryptoLibException.CreateRes(@SEndOfStream);
-      end;
-
-      length := (length shl 8) + next;
-
-      System.Inc(I);
-    end;
-
-    if (length < 0) then
-    begin
-      raise EIOCryptoLibException.CreateRes(@SNegativeLength);
-    end;
-
-    if (length >= limit) then // after all we must have read at least 1 byte
-    begin
-      raise EIOCryptoLibException.CreateRes(@SOutOfBoundsLength);
-    end;
-  end;
-
-  result := length;
+  Result := ImplParseObject(LTagHdr);
 end;
 
-function TAsn1InputStream.ReadObject: IAsn1Object;
+procedure TAsn1StreamParser.Set00Check(AEnabled: Boolean);
 var
-  tag, tagNo, &length: Int32;
-  IsConstructed: Boolean;
-  indIn: TIndefiniteLengthInputStream;
-  sp: IAsn1StreamParser;
+  LIndefiniteLengthInputStream: TAsn1IndefiniteLengthInputStream;
 begin
-
-  tag := ReadByte();
-
-  if (tag <= 0) then
+  if FIn is TAsn1IndefiniteLengthInputStream then
   begin
-    if (tag = 0) then
-    begin
-      raise EIOCryptoLibException.CreateRes(@SEndOfContent);
-    end;
-
-    result := Nil;
-    Exit;
+    LIndefiniteLengthInputStream := FIn as TAsn1IndefiniteLengthInputStream;
+    LIndefiniteLengthInputStream.SetEofOn00(AEnabled);
   end;
+end;
 
-  //
+function TAsn1StreamParser.ImplParseObject(ATagHdr: Int32): IAsn1Convertible;
+var
+  LTagNo, LLength, LTagClass: Int32;
+  LIndIn: TAsn1IndefiniteLengthInputStream;
+  LDefIn: TAsn1DefiniteLengthInputStream;
+  LSp: IAsn1StreamParser;
+  LIsConstructed: Boolean;
+begin
+  // turn off looking for "00" while we resolve the tag
+  Set00Check(False);
+
   // calculate tag number
-  //
-  tagNo := ReadTagNumber(Fs, tag);
+  LTagNo := TAsn1InputStream.ReadTagNumber(FIn, ATagHdr);
 
-  IsConstructed := (tag and TAsn1Tags.Constructed) <> 0;
-
-  //
   // calculate length
-  //
-  length := ReadLength(Fs, Flimit);
+  LLength := TAsn1InputStream.ReadLength(FIn, FLimit,
+    (LTagNo = TAsn1Tags.BitString) or (LTagNo = TAsn1Tags.OctetString) or
+    (LTagNo = TAsn1Tags.Sequence) or (LTagNo = TAsn1Tags.&Set) or
+    (LTagNo = TAsn1Tags.External));
 
-  if (length < 0) then // indefinite length method
+  if LLength < 0 then // indefinite-length method
   begin
-    if (not IsConstructed) then
-    begin
+    if 0 = (ATagHdr and TAsn1Tags.Constructed) then
+      raise EIOCryptoLibException.Create
+        ('indefinite-length primitive encoding encountered');
 
-      raise EIOCryptoLibException.CreateRes(@SIndefiniteLength);
-
-    end;
-
-    indIn := TIndefiniteLengthInputStream.Create(Fs, Flimit);
-    sp := TAsn1StreamParser.Create(indIn, Flimit);
-
-    if ((tag and TAsn1Tags.Application) <> 0) then
-    begin
-      result := (TBerApplicationSpecificParser.Create(tagNo, sp)
-        as IBerApplicationSpecificParser).ToAsn1Object();
-      Exit;
-    end;
-
-    if ((tag and TAsn1Tags.Tagged) <> 0) then
-    begin
-      result := (TBerTaggedObjectParser.Create(True, tagNo, sp)
-        as IBerTaggedObjectParser).ToAsn1Object();
-      Exit;
-    end;
-
-    // TODO There are other tags that may be constructed (e.g. BitString)
-
-    case tagNo of
-      TAsn1Tags.OctetString:
-        begin
-          result := (TBerOctetStringParser.Create(sp) as IBerOctetStringParser)
-            .ToAsn1Object();
-          Exit;
-        end;
-      TAsn1Tags.Sequence:
-        begin
-          result := (TBerSequenceParser.Create(sp) as IBerSequenceParser)
-            .ToAsn1Object();
-          Exit;
-        end;
-      TAsn1Tags.&Set:
-        begin
-          result := (TBerSetParser.Create(sp) as IBerSetParser).ToAsn1Object();
-          Exit;
-        end;
-      TAsn1Tags.External:
-        begin
-          result := (TDerExternalParser.Create(sp) as IDerExternalParser)
-            .ToAsn1Object();
-          Exit;
-        end;
-    else
-      begin
-        raise EIOCryptoLibException.CreateRes(@SUnknownBerObject);
-      end;
-    end;
-
-  end
-  else
-  begin
+    LIndIn := TAsn1IndefiniteLengthInputStream.Create(FIn, FLimit);
     try
-      result := BuildObject(tag, tagNo, length);
+      LSp := TAsn1StreamParser.Create(LIndIn, FLimit, FTmpBuffers);
     except
-      on e: EArgumentCryptoLibException do
-      begin
-        raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStream,
-          [e.Message]);
-      end;
+      LIndIn.Free;
+      raise;
     end;
-  end;
-end;
 
-function TAsn1InputStream.ReadVector(const dIn: TDefiniteLengthInputStream)
-  : IAsn1EncodableVector;
-var
-  v: IAsn1EncodableVector;
-  o: IAsn1Object;
-  subStream: TAsn1InputStream;
-begin
-
-  if (dIn.Remaining < 1) then
-  begin
-    result := TAsn1EncodableVector.Create(0) as IAsn1EncodableVector;
-    Exit;
-  end;
-
-  subStream := TAsn1InputStream.Create(dIn);
-  try
-    v := TAsn1EncodableVector.Create();
-
-    o := subStream.ReadObject();
-    while (o <> Nil) do
+    LTagClass := ATagHdr and TAsn1Tags.Private;
+    if 0 <> LTagClass then
     begin
-      v.Add([o]);
-      o := subStream.ReadObject();
+      Result := TBerTaggedObjectParser.Create(LTagClass, LTagNo, LSp);
+      Exit;
     end;
 
-  finally
-    subStream.Free;
-  end;
-
-  result := v;
-end;
-
-function TAsn1InputStream.BuildObject(tag, tagNo, length: Int32): IAsn1Object;
-var
-  IsConstructed: Boolean;
-  defIn: TDefiniteLengthInputStream;
-  v: IAsn1EncodableVector;
-  strings: TList<IDerOctetString>;
-  I: Int32;
-begin
-  IsConstructed := (tag and TAsn1Tags.Constructed) <> 0;
-  defIn := TDefiniteLengthInputStream.Create(Fs, length);
-
-  if ((tag and TAsn1Tags.Application) <> 0) then
+    Result := LSp.ParseImplicitConstructedIL(LTagNo);
+  end
+  else
   begin
+    LDefIn := TAsn1DefiniteLengthInputStream.Create(FIn, LLength, FLimit);
+
+    if 0 = (ATagHdr and TAsn1Tags.Flags) then
+    begin
+      try
+        Result := ParseImplicitPrimitive(LTagNo, LDefIn);
+      except
+        LDefIn.Free;
+        raise;
+      end;
+      Exit;
+    end;
+
     try
-      result := TDerApplicationSpecific.Create(IsConstructed, tagNo,
-        defIn.ToArray());
+      LSp := TAsn1StreamParser.Create(LDefIn, LDefIn.Remaining, FTmpBuffers);
+    except
+      LDefIn.Free;
+      raise;
+    end;
+
+    LTagClass := ATagHdr and TAsn1Tags.Private;
+    if 0 <> LTagClass then
+    begin
+      LIsConstructed := (ATagHdr and TAsn1Tags.Constructed) <> 0;
+      Result := TDLTaggedObjectParser.Create(LTagClass, LTagNo, LIsConstructed, LSp);
       Exit;
-    finally
-      defIn.Free;
     end;
+
+    Result := LSp.ParseImplicitConstructedDL(LTagNo);
   end;
+end;
 
-  if ((tag and TAsn1Tags.Tagged) <> 0) then
-  begin
-
-    result := (TAsn1StreamParser.Create(defIn) as IAsn1StreamParser)
-      .ReadTaggedObject(IsConstructed, tagNo);
-    Exit;
-
+function TAsn1StreamParser.ParseImplicitConstructedDL(AUnivTagNo: Int32)
+  : IAsn1Convertible;
+begin
+  case AUnivTagNo of
+    TAsn1Tags.BitString:
+      // TODO[asn1] DLConstructedBitStringParser
+      Result := TBerBitStringParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.External:
+      // TODO[asn1] DLExternalParser
+      Result := TDerExternalParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.OctetString:
+      // TODO[asn1] DLConstructedOctetStringParser
+      Result := TBerOctetStringParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.&Set:
+      // TODO[asn1] DLSetParser
+      Result := TDerSetParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.Sequence:
+      // TODO[asn1] DLSequenceParser
+      Result := TDerSequenceParser.Create(Self as IAsn1StreamParser);
+  else
+    raise EAsn1CryptoLibException.CreateFmt
+      ('unknown DL object encountered: 0x%x', [AUnivTagNo]);
   end;
+end;
 
-  if (IsConstructed) then
-  begin
-    // TODO There are other tags that may be constructed (e.g. BitString)
-    case (tagNo) of
+function TAsn1StreamParser.ParseImplicitConstructedIL(AUnivTagNo: Int32)
+  : IAsn1Convertible;
+begin
+  case AUnivTagNo of
+    TAsn1Tags.BitString:
+      Result := TBerBitStringParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.External:
+      // TODO[asn1] BERExternalParser
+      Result := TDerExternalParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.OctetString:
+      Result := TBerOctetStringParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.Sequence:
+      Result := TBerSequenceParser.Create(Self as IAsn1StreamParser);
+    TAsn1Tags.&Set:
+      Result := TBerSetParser.Create(Self as IAsn1StreamParser);
+  else
+    raise EAsn1CryptoLibException.CreateFmt
+      ('unknown BER object encountered: 0x%x', [AUnivTagNo]);
+  end;
+end;
 
-      TAsn1Tags.OctetString:
-        //
-        // yes, people actually do this...
-        //
-        begin
-          try
-            v := ReadVector(defIn);
-            strings := TList<IDerOctetString>.Create;
-            strings.capacity := v.count;
+function TAsn1StreamParser.ParseImplicitPrimitive(AUnivTagNo: Int32)
+  : IAsn1Convertible;
+begin
+  if FIn is TAsn1DefiniteLengthInputStream then
+    Result := ParseImplicitPrimitive(AUnivTagNo,
+      FIn as TAsn1DefiniteLengthInputStream)
+  else
+    raise EAsn1CryptoLibException.Create
+      ('ParseImplicitPrimitive requires DefiniteLengthInputStream');
+end;
 
-            I := 0;
-            while (I <> v.count) do
-            begin
-              strings.Add(v[I] as IDerOctetString);
-            end;
-
-            result := TBerOctetString.Create(strings);
-            Exit;
-          finally
-            defIn.Free;
-          end;
-        end;
-      TAsn1Tags.Sequence:
-        begin
-          try
-            result := CreateDerSequence(defIn);
-            Exit;
-          finally
-            defIn.Free;
-          end;
-        end;
-      TAsn1Tags.&Set:
-        begin
-          try
-            result := CreateDerSet(defIn);
-            Exit;
-          finally
-            defIn.Free;
-          end;
-        end;
-      TAsn1Tags.External:
-        begin
-          try
-            result := TDerExternal.Create(ReadVector(defIn));
-            Exit;
-          finally
-            defIn.Free;
-          end;
-        end;
-    else
-      begin
-        defIn.Free; // free the stream incase an unsupported tag is encountered.
-        raise EIOCryptoLibException.CreateResFmt(@SUnknownTag, [tagNo]);
+function TAsn1StreamParser.ParseImplicitPrimitive(AUnivTagNo: Int32;
+  const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Convertible;
+begin
+  // Some primitive encodings can be handled by parsers too...
+  case AUnivTagNo of
+    TAsn1Tags.BitString:
+      Result := TDLBitStringParser.Create(ADefIn);
+    TAsn1Tags.External:
+      raise EAsn1CryptoLibException.Create
+        ('externals must use constructed encoding (see X.690 8.18)');
+    TAsn1Tags.OctetString:
+      Result := TDerOctetStringParser.Create(ADefIn);
+    TAsn1Tags.&Set:
+      raise EAsn1CryptoLibException.Create
+        ('sequences must use constructed encoding (see X.690 8.9.1/8.10.1)');
+    TAsn1Tags.Sequence:
+      raise EAsn1CryptoLibException.Create
+        ('sets must use constructed encoding (see X.690 8.11.1/8.12.1)');
+  else
+    begin
+      try
+        Result := TAsn1InputStream.CreatePrimitiveDerObject(AUnivTagNo, ADefIn, FTmpBuffers);
+        ADefIn.Free;
+      except
+        on e: EArgumentCryptoLibException do
+          raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
       end;
-
     end;
+  end;
+end;
 
+function TAsn1StreamParser.LoadTaggedDL(ATagClass, ATagNo: Int32; AConstructed: Boolean): IAsn1Object;
+var
+  LContentsOctets: TCryptoLibByteArray;
+  LDefIn: TAsn1DefiniteLengthInputStream;
+  LContentsElements: IAsn1EncodableVector;
+  LContentsElementsClass: TAsn1EncodableVector;
+begin
+  if not AConstructed then
+  begin
+    LDefIn := FIn as TAsn1DefiniteLengthInputStream;
+    LContentsOctets := LDefIn.ToArray();
+    Result := TAsn1TaggedObject.CreatePrimitive(ATagClass, ATagNo, LContentsOctets);
+  end
+  else
+  begin
+    LContentsElements := ReadVector();
+    Result := TAsn1TaggedObject.CreateConstructedDL(ATagClass, ATagNo, LContentsElements);
+  end;
+end;
+
+function TAsn1StreamParser.LoadTaggedIL(ATagClass, ATagNo: Int32): IAsn1Object;
+var
+  LContentsElements: IAsn1EncodableVector;
+  LContentsElementsClass: TAsn1EncodableVector;
+begin
+  LContentsElements := ReadVector();
+  Result := TAsn1TaggedObject.CreateConstructedIL(ATagClass, ATagNo, LContentsElements);
+end;
+
+function TAsn1StreamParser.ReadVector(): IAsn1EncodableVector;
+var
+  LTagHdr: Int32;
+  LObj: IAsn1Convertible;
+  LV: TAsn1EncodableVector;
+begin
+  LTagHdr := FIn.ReadByte();
+  if LTagHdr < 0 then
+  begin
+    Result := TAsn1EncodableVector.Create(0);
+    Exit;
   end;
 
+  LV := TAsn1EncodableVector.Create();
   try
-    result := CreatePrimitiveDerObject(tagNo, defIn, FtmpBuffers);
+    repeat
+      LObj := ImplParseObject(LTagHdr);
+      LV.Add(LObj.ToAsn1Object());
+      LTagHdr := FIn.ReadByte();
+    until LTagHdr < 0;
+    Result := LV;
+    LV := nil; // Don't free, interface owns it
   finally
-    defIn.Free;
+    if LV <> nil then
+      LV.Free;
   end;
-
 end;
 
-function TAsn1InputStream.CreateDerSequence
-  (const dIn: TDefiniteLengthInputStream): IDerSequence;
-begin
-  result := TDerSequence.FromVector(ReadVector(dIn));
-end;
-
-function TAsn1InputStream.CreateDerSet(const dIn
-  : TDefiniteLengthInputStream): IDerSet;
-begin
-  result := TDerSet.FromVector(ReadVector(dIn), False);
-end;
-
-class function TAsn1InputStream.ReadTagNumber(const s: TStream;
-  tag: Int32): Int32;
+function TAsn1StreamParser.ParseObject(AUnivTagNo: Int32): IAsn1Convertible;
 var
-  tagNo, b: Int32;
+  LTagHdr: Int32;
 begin
-  tagNo := tag and $1F;
+  if (AUnivTagNo < 0) or (AUnivTagNo > 30) then
+    raise EArgumentCryptoLibException.CreateFmt('invalid universal tag number: %d', [AUnivTagNo]);
 
-  //
-  // with tagged object tag number is bottom 5 bits, or stored at the start of the content
-  //
-  if (tagNo = $1F) then
+  LTagHdr := FIn.ReadByte();
+  if LTagHdr < 0 then
   begin
-    tagNo := 0;
-
-    b := TStreamSorter.ReadByte(s);
-
-    // X.690-0207 8.1.2.4.2
-    // "c) bits 7 to 1 of the first subsequent octet shall not all be zero."
-    if ((b and $7F) = 0) then // Note: -1 will pass
-    begin
-      raise EIOCryptoLibException.CreateRes(@SCorruptedStreamInvalidTag);
-    end;
-
-    while ((b >= 0) and ((b and $80) <> 0)) do
-    begin
-      tagNo := tagNo or (b and $7F);
-      tagNo := tagNo shl 7;
-
-      b := TStreamSorter.ReadByte(s);
-
-    end;
-
-    if (b < 0) then
-    begin
-      raise EEndOfStreamCryptoLibException.CreateRes(@SEOFFound);
-    end;
-    tagNo := tagNo or (b and $7F);
-  end;
-
-  result := tagNo;
-end;
-
-{ TDerOutputStream }
-
-constructor TDerOutputStream.Create(const os: TStream);
-begin
-  Inherited Create(os);
-end;
-
-procedure TDerOutputStream.WriteEncoded(tag: Int32; first: Byte;
-  const bytes: TCryptoLibByteArray);
-begin
-  WriteByte(Byte(tag));
-  WriteLength(System.length(bytes) + 1);
-  WriteByte(first);
-  Write(bytes[0], System.length(bytes));
-end;
-
-procedure TDerOutputStream.WriteEncoded(tag: Int32;
-  const bytes: TCryptoLibByteArray);
-begin
-  WriteByte(Byte(tag));
-  WriteLength(System.length(bytes));
-  if bytes <> Nil then
-  begin
-    Write(bytes[0], System.length(bytes));
-  end;
-end;
-
-procedure TDerOutputStream.WriteEncoded(flags, tagNo: Int32;
-  const bytes: TCryptoLibByteArray);
-begin
-  WriteTag(flags, tagNo);
-  WriteLength(System.length(bytes));
-  Write(bytes[0], System.length(bytes));
-end;
-
-procedure TDerOutputStream.WriteEncoded(tag: Int32;
-  const bytes: TCryptoLibByteArray; offset, length: Int32);
-begin
-  WriteByte(Byte(tag));
-  WriteLength(length);
-  Write(bytes[offset], length);
-end;
-
-procedure TDerOutputStream.WriteLength(length: Int32);
-var
-  Size, I: Int32;
-  val: UInt32;
-begin
-  if (length > 127) then
-  begin
-    Size := 1;
-    val := UInt32(length);
-    val := val shr 8;
-    while (val <> 0) do
-    begin
-      System.Inc(Size);
-      val := val shr 8;
-    end;
-
-    WriteByte(Byte(Size or $80));
-
-    I := (Size - 1) * 8;
-
-    while I >= 0 do
-    begin
-      WriteByte(Byte(TBits.Asr32(length, I)));
-      System.Dec(I, 8);
-    end;
-
-  end
-  else
-  begin
-    WriteByte(Byte(length));
-  end;
-end;
-
-procedure TDerOutputStream.WriteNull;
-begin
-  WriteByte(TAsn1Tags.Null);
-  WriteByte($00);
-end;
-
-procedure TDerOutputStream.WriteObject(const obj: IAsn1Encodable);
-var
-  asn1: IAsn1Object;
-begin
-  if (obj = Nil) then
-  begin
-    WriteNull();
-  end
-  else
-  begin
-    asn1 := obj.ToAsn1Object();
-    asn1.Encode(Self);
-  end;
-end;
-
-procedure TDerOutputStream.WriteObject(const obj: IAsn1Object);
-begin
-  if (obj = Nil) then
-  begin
-    WriteNull();
-  end
-  else
-  begin
-    obj.Encode(Self);
-  end;
-end;
-
-procedure TDerOutputStream.WriteTag(flags, tagNo: Int32);
-var
-  stack: TCryptoLibByteArray;
-  Pos: Int32;
-begin
-  if (tagNo < 31) then
-  begin
-    WriteByte(Byte(flags or tagNo));
-  end
-  else
-  begin
-    WriteByte(Byte(flags or $1F));
-    if (tagNo < 128) then
-    begin
-      WriteByte(Byte(tagNo));
-    end
-    else
-    begin
-      System.SetLength(stack, 5);
-      Pos := System.length(stack);
-
-      System.Dec(Pos);
-      stack[Pos] := Byte(tagNo and $7F);
-
-      repeat
-        tagNo := TBits.Asr32(tagNo, 7);
-        System.Dec(Pos);
-        stack[Pos] := Byte(tagNo and $7F or $80);
-      until (not(tagNo > 127));
-
-      Write(stack[Pos], System.length(stack) - Pos);
-    end;
-  end;
-end;
-
-{ TAsn1OutputStream }
-
-constructor TAsn1OutputStream.Create(os: TStream);
-begin
-  Inherited Create(os);
-end;
-
-{ TBerOutputStream }
-
-constructor TBerOutputStream.Create(os: TStream);
-begin
-  Inherited Create(os);
-end;
-
-{ TConstructedOctetStream }
-
-constructor TConstructedOctetStream.Create(const parser: IAsn1StreamParser);
-begin
-  Inherited Create();
-  F_parser := parser;
-  F_first := True;
-end;
-
-function TConstructedOctetStream.Read(buffer: TCryptoLibByteArray;
-  offset, count: LongInt): LongInt;
-var
-  s, aos: IAsn1OctetStringParser;
-  totalRead, numRead: Int32;
-begin
-  if (F_currentStream = Nil) then
-  begin
-    if (not F_first) then
-    begin
-      result := 0;
-      Exit;
-    end;
-
-    if (not Supports(F_parser.ReadObject(), IAsn1OctetStringParser, s)) then
-    begin
-      result := 0;
-      Exit;
-    end;
-
-    F_first := False;
-    F_currentStream := s.GetOctetStream();
-  end;
-
-  totalRead := 0;
-
-  while True do
-
-  begin
-
-    numRead := TStreamSorter.Read(F_currentStream, buffer, offset + totalRead,
-      count - totalRead);
-
-    if (numRead > 0) then
-    begin
-      totalRead := totalRead + numRead;
-
-      if (totalRead = count) then
-      begin
-        result := totalRead;
-        Exit;
-      end;
-    end
-    else
-    begin
-
-      if (not Supports(F_parser.ReadObject(), IAsn1OctetStringParser, aos)) then
-      begin
-        F_currentStream := Nil;
-        result := totalRead;
-        Exit;
-      end;
-
-      F_currentStream := aos.GetOctetStream();
-    end
-  end;
-  result := 0;
-end;
-
-function TConstructedOctetStream.ReadByte: Int32;
-var
-  s, aos: IAsn1OctetStringParser;
-  b: Int32;
-begin
-  if (F_currentStream = Nil) then
-  begin
-    if (not F_first) then
-    begin
-      result := 0;
-      Exit;
-    end;
-
-    if (not Supports(F_parser.ReadObject(), IAsn1OctetStringParser, s)) then
-    begin
-      result := 0;
-      Exit;
-    end;
-
-    F_first := False;
-    F_currentStream := s.GetOctetStream();
-  end;
-
-  while True do
-
-  begin
-
-    // b := F_currentStream.ReadByte();
-    b := TStreamSorter.ReadByte(F_currentStream);
-
-    if (b >= 0) then
-    begin
-      result := b;
-      Exit;
-    end;
-
-    if (not Supports(F_parser.ReadObject(), IAsn1OctetStringParser, aos)) then
-    begin
-      F_currentStream := Nil;
-      result := -1;
-      Exit;
-    end;
-
-    F_currentStream := aos.GetOctetStream();
-  end;
-
-  result := 0;
-end;
-
-{ TIndefiniteLengthInputStream }
-
-function TIndefiniteLengthInputStream.RequireByte: Int32;
-begin
-
-  // result := F_in.ReadByte();
-  result := TStreamSorter.ReadByte(F_in);
-
-  if (result < 0) then
-  begin
-    // Corrupted stream
-    raise EEndOfStreamCryptoLibException.Create('');
-  end;
-end;
-
-function TIndefiniteLengthInputStream.CheckForEof: Boolean;
-var
-  extra: Int32;
-begin
-  if (F_lookAhead = $00) then
-  begin
-    extra := RequireByte();
-    if (extra <> 0) then
-    begin
-      raise EIOCryptoLibException.CreateRes(@SMalformedContent);
-    end;
-
-    F_lookAhead := -1;
-    SetParentEofDetect(True);
-    result := True;
-    Exit;
-  end;
-  result := F_lookAhead < 0;
-end;
-
-constructor TIndefiniteLengthInputStream.Create(inStream: TStream;
-  limit: Int32);
-begin
-  Inherited Create(inStream, limit);
-  F_lookAhead := RequireByte();
-  CheckForEof();
-end;
-
-function TIndefiniteLengthInputStream.Read(buffer: TCryptoLibByteArray;
-  offset, count: LongInt): LongInt;
-var
-  numRead: Int32;
-begin
-  // Only use this optimisation if we aren't checking for 00
-  if ((F_eofOn00) or (count <= 1)) then
-  begin
-    result := (Inherited Read(buffer, offset, count));
+    Result := nil;
     Exit;
   end;
 
-  if (F_lookAhead < 0) then
-  begin
-    result := 0;
-    Exit;
-  end;
+  if ((LTagHdr and not TAsn1Tags.Constructed) <> AUnivTagNo) then
+    raise EIOCryptoLibException.CreateFmt('unexpected identifier encountered: %d', [LTagHdr]);
 
-  numRead := TStreamSorter.Read(F_in, buffer, offset + 1, count - 1);
-
-  if (numRead <= 0) then
-  begin
-    // Corrupted stream
-    raise EEndOfStreamCryptoLibException.Create('');
-  end;
-
-  buffer[offset] := Byte(F_lookAhead);
-  F_lookAhead := RequireByte();
-
-  result := numRead + 1;
+  Result := ImplParseObject(LTagHdr);
 end;
 
-function TIndefiniteLengthInputStream.ReadByte: Int32;
-begin
-  if (F_eofOn00 and CheckForEof()) then
-  begin
-    result := -1;
-    Exit;
-  end;
-
-  result := F_lookAhead;
-  F_lookAhead := RequireByte();
-
-end;
-
-procedure TIndefiniteLengthInputStream.SetEofOn00(eofOn00: Boolean);
-begin
-  F_eofOn00 := eofOn00;
-  if (F_eofOn00) then
-  begin
-    CheckForEof();
-  end;
-end;
-
-{ TCollectionUtilities }
-
-class function TCollectionUtilities.ToStructuredString
-  (c: TCryptoLibGenericArray<IAsn1Encodable>): String;
+function TAsn1StreamParser.ParseTaggedObject(): IAsn1TaggedObjectParser;
 var
-  sl: TStringList;
-  idx: Int32;
+  LTagHdr, LTagClass: Int32;
+  LResult: IAsn1Convertible;
 begin
-
-  if (c = Nil) then
+  LTagHdr := FIn.ReadByte();
+  if LTagHdr < 0 then
   begin
-    result := '[]';
+    Result := nil;
     Exit;
   end;
 
-  sl := TStringList.Create();
-  sl.LineBreak := '';
-  try
-    sl.Add('[');
+  LTagClass := LTagHdr and TAsn1Tags.Private;
+  if LTagClass = 0 then
+    raise EAsn1CryptoLibException.Create('no tagged object found');
 
-    sl.Add((c[0] as TAsn1Encodable).ClassName);
-    if System.length(c) > 1 then
-    begin
-      for idx := 1 to System.length(c) - 2 do
-      begin
-        sl.Add(', ');
-        sl.Add((c[idx] as TAsn1Encodable).ClassName);
-      end;
-    end;
-
-    sl.Add(']');
-    result := sl.Text;
-  finally
-    sl.Free;
-  end;
-
+  LResult := ImplParseObject(LTagHdr);
+  Result := LResult as IAsn1TaggedObjectParser;
 end;
 
 { TAsn1Encodable }
 
-function TAsn1Encodable.Equals(const other: IAsn1Convertible): Boolean;
-var
-  o1, o2: IAsn1Object;
+procedure TAsn1Encodable.EncodeTo(const AOutput: TStream);
 begin
-
-  if (other = Self as IAsn1Convertible) then
-  begin
-    result := True;
-    Exit;
-  end;
-
-  if (other = Nil) then
-  begin
-    result := False;
-    Exit;
-  end;
-  o1 := ToAsn1Object();
-  o2 := other.ToAsn1Object();
-
-  result := ((o1 = o2) or ((o2 <> Nil) and (o1.CallAsn1Equals(o2))));
+  ToAsn1Object().EncodeTo(AOutput);
 end;
 
-function TAsn1Encodable.GetDerEncoded: TCryptoLibByteArray;
+procedure TAsn1Encodable.EncodeTo(const AOutput: TStream; const AEncoding: String);
+begin
+  ToAsn1Object().EncodeTo(AOutput, AEncoding);
+end;
+
+function TAsn1Encodable.GetEncoded(): TCryptoLibByteArray;
+begin
+  Result := GetEncoded(Ber, 0, 0);
+end;
+
+function TAsn1Encodable.GetEncoded(const AEncoding: String): TCryptoLibByteArray;
+begin
+  Result := GetEncoded(AEncoding, 0, 0);
+end;
+
+function TAsn1Encodable.GetEncoded(const AEncoding: String; APreAlloc, APostAlloc: Int32): TCryptoLibByteArray;
+begin
+  Result := ToAsn1Object().GetEncoded(AEncoding, APreAlloc, APostAlloc);
+end;
+
+function TAsn1Encodable.GetDerEncoded(): TCryptoLibByteArray;
 begin
   try
-    result := GetEncoded(Der);
+    Result := GetEncoded(Der);
   except
-    on e: EIOCryptoLibException do
-    begin
-      result := Nil;
-    end;
+    on E: EIOCryptoLibException do
+      Result := nil;
   end;
 end;
 
-function TAsn1Encodable.GetEncoded: TCryptoLibByteArray;
+function TAsn1Encodable.Equals(const AObj: IAsn1Convertible): Boolean;
 var
-  bOut: TMemoryStream;
-  aOut: TAsn1OutputStream;
+  LO1, LO2: IAsn1Object;
 begin
-
-  bOut := TMemoryStream.Create();
-  aOut := TAsn1OutputStream.Create(bOut);
-  try
-    aOut.WriteObject(Self as IAsn1Encodable);
-    System.SetLength(result, bOut.Size);
-    bOut.Position := 0;
-    bOut.Read(result[0], System.length(result));
-
-  finally
-    bOut.Free;
-    aOut.Free;
-  end;
-
-end;
-
-function TAsn1Encodable.GetEncoded(const encoding: String): TCryptoLibByteArray;
-var
-  bOut: TMemoryStream;
-  dOut: TDerOutputStream;
-begin
-  if (encoding = Der) then
+  if (Self as IAsn1Convertible) = AObj then
   begin
-    bOut := TMemoryStream.Create();
-    dOut := TDerOutputStream.Create(bOut);
-    try
-      dOut.WriteObject(Self as IAsn1Encodable);
-      System.SetLength(result, bOut.Size);
-      bOut.Position := 0;
-      bOut.Read(result[0], System.length(result));
-
-    finally
-      bOut.Free;
-      dOut.Free;
-    end;
+    Result := True;
     Exit;
   end;
 
-  result := GetEncoded();
-end;
-
-function TAsn1Encodable.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
-begin
-  result := ToAsn1Object().CallAsn1GetHashCode();
-end;
-
-class function TAsn1Encodable.IsNullOrContainsNull
-  (const data: TCryptoLibGenericArray<IAsn1Encodable>): Boolean;
-var
-  count, I: Int32;
-begin
-  if (data = Nil) then
+  if AObj = nil then
   begin
-    result := True;
+    Result := False;
     Exit;
   end;
 
-  count := System.length(data);
-  for I := 0 to System.Pred(count) do
+  LO1 := ToAsn1Object();
+  LO2 := AObj.ToAsn1Object();
+  Result := (LO1 = LO2) or ((LO2 <> nil) and LO1.CallAsn1Equals(LO2));
+end;
+
+function TAsn1Encodable.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
+begin
+  Result := ToAsn1Object().CallAsn1GetHashCode();
+end;
+
+{ TDerEncoding }
+
+constructor TDerEncoding.Create(ATagClass, ATagNo: Int32);
+begin
+  inherited Create;
+  // Assert((ATagClass and TAsn1Tags.Private) = ATagClass);
+  // Assert(ATagNo >= 0);
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+end;
+
+function TDerEncoding.GetTagClass(): Int32;
+begin
+  Result := FTagClass;
+end;
+
+function TDerEncoding.GetTagNo(): Int32;
+begin
+  Result := FTagNo;
+end;
+
+function TDerEncoding.CompareTo(const AOther: IDerEncoding): Int32;
+begin
+  if AOther = nil then
   begin
-    if (data[I] = Nil) then
-    begin
-      result := True;
-      Exit;
-    end;
-  end;
-  result := False;
-end;
-
-class function TAsn1Encodable.OpenArrayToDynamicArray
-  (const data: array of IAsn1Encodable): TCryptoLibGenericArray<IAsn1Encodable>;
-var
-  LDataLength, LIdx: Int32;
-begin
-  LDataLength := System.length(data);
-  System.SetLength(result, LDataLength);
-  for LIdx := 0 to System.Pred(LDataLength) do
-  begin
-    result[LIdx] := data[LIdx];
-  end;
-end;
-
-{ TAsn1Object }
-
-function TAsn1Object.CallAsn1Equals(const obj: IAsn1Object): Boolean;
-begin
-  result := Asn1Equals(obj);
-end;
-
-function TAsn1Object.CallAsn1GetHashCode: Int32;
-begin
-  result := Asn1GetHashCode();
-end;
-
-class function TAsn1Object.FromByteArray(const data: TCryptoLibByteArray)
-  : IAsn1Object;
-var
-  asn1: TAsn1InputStream;
-  input: TBytesStream;
-begin
-  try
-    // used TBytesStream here for one pass creation and population with byte array :)
-    input := TBytesStream.Create(data);
-    try
-
-      asn1 := TAsn1InputStream.Create(input, System.length(data));
-
-      try
-        result := asn1.ReadObject();
-      finally
-        asn1.Free;
-      end;
-      if (input.Position <> input.Size) then
-      begin
-        raise EIOCryptoLibException.CreateRes(@SExtraData);
-      end;
-    finally
-      input.Free;
-    end;
-  except
-    on e: EInvalidCastCryptoLibException do
-    begin
-      raise EIOCryptoLibException.CreateRes(@SUnRecognizedObjectByteArray);
-    end;
-  end;
-end;
-
-class function TAsn1Object.FromStream(const inStr: TStream): IAsn1Object;
-var
-  asn1Stream: TAsn1InputStream;
-begin
-  asn1Stream := TAsn1InputStream.Create(inStr);
-  try
-    try
-      result := asn1Stream.ReadObject();
-    except
-      on e: EInvalidCastCryptoLibException do
-      begin
-        raise EIOCryptoLibException.CreateRes(@SUnRecognizedObjectStream);
-      end;
-    end;
-  finally
-    asn1Stream.Free;
-  end;
-end;
-
-function TAsn1Object.ToAsn1Object: IAsn1Object;
-begin
-  result := Self as IAsn1Object;
-end;
-
-{ TDerObjectIdentifier }
-
-function TDerObjectIdentifier.GetID: String;
-begin
-  result := Fidentifier;
-end;
-
-function TDerObjectIdentifier.Asn1Equals(const asn1Object: IAsn1Object)
-  : Boolean;
-var
-  other: IDerObjectIdentifier;
-begin
-  if (not Supports(asn1Object, IDerObjectIdentifier, other)) then
-  begin
-    result := False;
+    Result := 1;
     Exit;
   end;
 
-  result := ID = other.ID;
-end;
-
-function TDerObjectIdentifier.Asn1GetHashCode: Int32;
-begin
-  result := TStringUtils.GetStringHashCode(Fidentifier);
-end;
-
-class procedure TDerObjectIdentifier.Boot;
-begin
-  if FLock = Nil then
+  if FTagClass <> AOther.TagClass then
   begin
-    FLock := TCriticalSection.Create;
-  end;
-end;
-
-function TDerObjectIdentifier.Branch(const branchID: String)
-  : IDerObjectIdentifier;
-begin
-  result := TDerObjectIdentifier.Create(Self as IDerObjectIdentifier, branchID);
-end;
-
-constructor TDerObjectIdentifier.Create(const oid: IDerObjectIdentifier;
-  const branchID: String);
-begin
-  Inherited Create();
-  if (not(IsValidBranchID(branchID, 1))) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidBranchId,
-      [branchID]);
-  end;
-
-  Fidentifier := oid.ID + '.' + branchID;
-end;
-
-constructor TDerObjectIdentifier.Create(const identifier: String);
-begin
-  Inherited Create();
-  if (identifier = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SIdentifierNil);
-  end;
-  if (not(IsValidIdentifier(identifier))) then
-  begin
-    raise EFormatCryptoLibException.CreateResFmt(@SInvalidOID, [identifier]);
-  end;
-
-  Fidentifier := identifier;
-end;
-
-constructor TDerObjectIdentifier.Create(const bytes: TCryptoLibByteArray);
-begin
-  Inherited Create();
-  Fidentifier := MakeOidStringFromBytes(bytes);
-  Fbody := System.Copy(bytes);
-end;
-
-function TDerObjectIdentifier.&on(const stem: IDerObjectIdentifier): Boolean;
-var
-  LocalId, stemId: String;
-begin
-  LocalId := ID;
-  stemId := stem.ID;
-  result := (System.length(LocalId) > System.length(stemId)) and
-    (LocalId[System.length(stemId) + 1] = '.') and
-    (AnsiStartsStr(stemId, LocalId));
-end;
-
-class constructor TDerObjectIdentifier.CreateDerObjectIdentifier;
-begin
-  TDerObjectIdentifier.Boot;
-end;
-
-class destructor TDerObjectIdentifier.DestroyDerObjectIdentifier;
-begin
-  FLock.Free;
-end;
-
-procedure TDerObjectIdentifier.DoOutput(const bOut: TMemoryStream);
-var
-  tok: IOidTokenizer;
-  token: String;
-  first: Int32;
-begin
-  tok := TOidTokenizer.Create(Fidentifier);
-  token := tok.NextToken();
-  first := StrToInt(token) * 40;
-  token := tok.NextToken();
-  if (System.length(token) <= 18) then
-  begin
-    WriteField(bOut, Int64(first + StrToInt64(token)));
-  end
-  else
-  begin
-    WriteField(bOut, TBigInteger.Create(token).Add(TBigInteger.ValueOf(first)));
-  end;
-
-  while (tok.HasMoreTokens) do
-  begin
-    token := tok.NextToken();
-    if (System.length(token) <= 18) then
-    begin
-      WriteField(bOut, StrToInt64(token));
-    end
-    else
-    begin
-      WriteField(bOut, TBigInteger.Create(token));
-    end;
-  end;
-end;
-
-procedure TDerObjectIdentifier.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.ObjectIdentifier,
-    GetBody());
-end;
-
-class function TDerObjectIdentifier.FromOctetString
-  (const enc: TCryptoLibByteArray): IDerObjectIdentifier;
-var
-  HashCode, first: Int32;
-  entry: IDerObjectIdentifier;
-begin
-
-  HashCode := TArrayUtils.GetArrayHashCode(enc);
-  first := HashCode and 1023;
-
-  FLock.Acquire;
-  try
-    entry := Fcache[first];
-    if ((entry <> Nil) and (TArrayUtils.AreEqual(enc, entry.GetBody()))) then
-    begin
-      result := entry;
-      Exit;
-    end;
-
-    Fcache[first] := TDerObjectIdentifier.Create(enc);
-    result := Fcache[first];
-
-  finally
-    FLock.Release;
-  end;
-
-end;
-
-function TDerObjectIdentifier.GetBody: TCryptoLibByteArray;
-var
-  bOut: TMemoryStream;
-begin
-
-  FLock.Acquire;
-  try
-    if (Fbody = Nil) then
-    begin
-      bOut := TMemoryStream.Create();
-      try
-        DoOutput(bOut);
-        System.SetLength(Fbody, bOut.Size);
-        bOut.Position := 0;
-        bOut.Read(Fbody[0], System.length(Fbody));
-      finally
-        bOut.Free;
-      end;
-    end;
-
-  finally
-    FLock.Release;
-  end;
-
-  result := Fbody;
-end;
-
-class function TDerObjectIdentifier.GetInstance(const obj: IAsn1TaggedObject;
-  explicitly: Boolean): IDerObjectIdentifier;
-var
-  o: IAsn1Object;
-begin
-
-  o := obj.GetObject();
-
-  if ((explicitly) or (Supports(o, IDerObjectIdentifier))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
+    Result := FTagClass - AOther.TagClass;
     Exit;
   end;
 
-  result := FromOctetString(TAsn1OctetString.GetInstance(o as TAsn1Object)
-    .GetOctets());
-end;
-
-class function TDerObjectIdentifier.GetInstance(const obj: TObject)
-  : IDerObjectIdentifier;
-begin
-  if ((obj = Nil) or (obj is TDerObjectIdentifier)) then
+  if FTagNo <> AOther.TagNo then
   begin
-    result := obj as TDerObjectIdentifier;
+    Result := FTagNo - AOther.TagNo;
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerObjectIdentifier.GetInstance(const obj: TCryptoLibByteArray)
-  : IDerObjectIdentifier;
-begin
-  result := FromOctetString(obj);
-end;
-
-class function TDerObjectIdentifier.IsValidBranchID(const branchID: String;
-  start: Int32): Boolean;
-var
-  digitCount, Pos: Int32;
-  ch: Char;
-begin
-  digitCount := 0;
-
-  Pos := System.length(branchID) + 1;
-  System.Dec(Pos);
-
-  while (Pos >= start) do
-  begin
-    ch := branchID[Pos];
-
-    if (ch = '.') then
-    begin
-      if ((digitCount = 0) or ((digitCount > 1) and (branchID[Pos + 1] = '0')))
-      then
-      begin
-        result := False;
-        Exit;
-      end;
-
-      digitCount := 0;
-    end
-    else if (CharInSet(ch, ['0' .. '9'])) then
-    begin
-      System.Inc(digitCount);
-    end
-    else
-    begin
-      result := False;
-      Exit;
-    end;
-    System.Dec(Pos);
-  end;
-
-  if ((digitCount = 0) or ((digitCount > 1) and (branchID[Pos + 1] = '0'))) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := True;
-end;
-
-class function TDerObjectIdentifier.IsValidIdentifier(const identifier
-  : String): Boolean;
-var
-  first: Char;
-begin
-  if ((System.length(identifier) < 3) or (identifier[2] <> '.')) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  first := identifier[1];
-
-  if (not CharInSet(first, ['0' .. '2'])) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := IsValidBranchID(identifier, 3);
-end;
-
-class function TDerObjectIdentifier.MakeOidStringFromBytes
-  (const bytes: TCryptoLibByteArray): String;
-var
-  objId: TStringList;
-  Value: Int64;
-  bigValue: TBigInteger;
-  first: Boolean;
-  I, b: Int32;
-begin
-  Value := 0;
-  bigValue := Default (TBigInteger);
-  first := True;
-  objId := TStringList.Create();
-  objId.LineBreak := '';
-  try
-    I := 0;
-    while I <> System.length(bytes) do
-    begin
-      b := Int32(bytes[I]);
-
-      if (Value <= LONG_LIMIT) then
-      begin
-        Value := Value + (b and $7F);
-        if ((b and $80) = 0) then // end of number reached
-        begin
-          if (first) then
-          begin
-            if (Value < 40) then
-            begin
-              objId.Add('0');
-            end
-            else if (Value < 80) then
-            begin
-              objId.Add('1');
-              Value := Value - 40;
-            end
-            else
-            begin
-              objId.Add('2');
-              Value := Value - 80;
-            end;
-            first := False;
-          end;
-
-          objId.Add('.');
-          objId.Add(IntToStr(Value));
-          Value := 0;
-        end
-        else
-        begin
-          Value := Value shl 7;
-        end;
-      end
-      else
-      begin
-        if (not bigValue.IsInitialized) then
-        begin
-          bigValue := TBigInteger.ValueOf(Value);
-        end;
-        bigValue := bigValue.&Or(TBigInteger.ValueOf(b and $7F));
-        if ((b and $80) = 0) then
-        begin
-          if (first) then
-          begin
-            objId.Add('2');
-            bigValue := bigValue.Subtract(TBigInteger.ValueOf(80));
-            first := False;
-          end;
-
-          objId.Add('.');
-          objId.Add(bigValue.ToString());
-          bigValue := Default (TBigInteger);
-          Value := 0;
-        end
-        else
-        begin
-          bigValue := bigValue.ShiftLeft(7);
-        end
-      end;
-
-      System.Inc(I);
-    end;
-
-    result := objId.Text;
-
-  finally
-    objId.Free;
-  end;
-
-end;
-
-function TDerObjectIdentifier.ToString: String;
-begin
-  result := ID;
-end;
-
-procedure TDerObjectIdentifier.WriteField(const outputStream: TStream;
-  const fieldValue: TBigInteger);
-var
-  byteCount, I: Int32;
-  tmpValue: TBigInteger;
-  tmp: TCryptoLibByteArray;
-begin
-  byteCount := (fieldValue.BitLength + 6) div 7;
-  if (byteCount = 0) then
-  begin
-    outputStream.WriteByte(0);
-  end
-  else
-  begin
-    tmpValue := fieldValue;
-    System.SetLength(tmp, byteCount);
-
-    I := byteCount - 1;
-
-    while I >= 0 do
-    begin
-      tmp[I] := Byte((tmpValue.Int32Value and $7F) or $80);
-      tmpValue := tmpValue.ShiftRight(7);
-      System.Dec(I);
-    end;
-
-    tmp[byteCount - 1] := tmp[byteCount - 1] and $7F;
-    outputStream.Write(tmp[0], System.length(tmp));
-  end;
-end;
-
-procedure TDerObjectIdentifier.WriteField(const outputStream: TStream;
-  fieldValue: Int64);
-var
-  tempRes: TCryptoLibByteArray;
-  Pos: Int32;
-begin
-  System.SetLength(tempRes, 9);
-  Pos := 8;
-  tempRes[Pos] := Byte(fieldValue and $7F);
-  while (fieldValue >= (Int64(1) shl 7)) do
-  begin
-    fieldValue := TBits.Asr64(fieldValue, 7);
-    System.Dec(Pos);
-    tempRes[Pos] := Byte((fieldValue and $7F) or $80);
-  end;
-  outputStream.Write(tempRes[Pos], 9 - Pos);
+  Result := CompareLengthAndContents(AOther);
 end;
 
 { TAsn1EncodableVector }
 
-procedure TAsn1EncodableVector.Add(const objs: array of IAsn1Encodable);
+class function TAsn1EncodableVector.CopyElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  AElementCount: Int32): TCryptoLibGenericArray<IAsn1Encodable>;
 var
-  obj: IAsn1Encodable;
+  I: Int32;
 begin
-  for obj in objs do
+  if AElementCount < 1 then
   begin
-    Add(obj);
-  end;
-end;
-
-procedure TAsn1EncodableVector.Add(const element: IAsn1Encodable);
-var
-  capacity, minCapacity: Int32;
-begin
-  if (element = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
-  end;
-  capacity := System.length(FElements);
-  minCapacity := FElementCount + 1;
-  if ((minCapacity > capacity) or FCopyOnWrite) then
-  begin
-    Reallocate(minCapacity);
-  end;
-
-  FElements[FElementCount] := element;
-  FElementCount := minCapacity;
-end;
-
-procedure TAsn1EncodableVector.AddAll(const other: IAsn1EncodableVector);
-var
-  otherElementCount, capacity, minCapacity, I: Int32;
-  otherElement: IAsn1Encodable;
-begin
-  if (other = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SOtherNil);
-  end;
-
-  otherElementCount := other.count;
-  if (otherElementCount < 1) then
-  begin
+    Result := FEmptyElements;
     Exit;
   end;
 
-  capacity := System.length(FElements);
-  minCapacity := FElementCount + otherElementCount;
-  if ((minCapacity > capacity) or FCopyOnWrite) then
-  begin
-    Reallocate(minCapacity);
-  end;
-
-  I := 0;
-
-  repeat
-
-    otherElement := other[I];
-    if (otherElement = Nil) then
-    begin
-      raise ENullReferenceCryptoLibException.CreateRes(@SOtherElementsNil);
-    end;
-
-    FElements[FElementCount + I] := otherElement;
-
-    System.Inc(I);
-  until not(I < otherElementCount);
-
-  FElementCount := minCapacity;
-end;
-
-procedure TAsn1EncodableVector.AddOptional(const objs: array of IAsn1Encodable);
-var
-  obj: IAsn1Encodable;
-begin
-  if (System.length(objs) <> 0) then
-  begin
-    for obj in objs do
-    begin
-      if (obj <> Nil) then
-      begin
-        Add(obj);
-      end;
-    end;
-  end;
-end;
-
-procedure TAsn1EncodableVector.AddOptionalTagged(isExplicit: Boolean;
-  tagNo: Int32; const obj: IAsn1Encodable);
-begin
-  if (obj <> Nil) then
-  begin
-    Add(TDerTaggedObject.Create(isExplicit, tagNo, obj) as IDerTaggedObject);
-  end;
-end;
-
-function TAsn1EncodableVector.CopyElements
-  : TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (FElementCount = 0) then
-  begin
-    result := EmptyElements;
-    Exit;
-  end;
-
-  result := System.Copy(FElements, 0, FElementCount);
-  System.SetLength(result, FElementCount);
-end;
-
-constructor TAsn1EncodableVector.Create(const v: array of IAsn1Encodable);
-begin
-  inherited Create();
-  Add(v);
-end;
-
-constructor TAsn1EncodableVector.Create(initialCapacity: Int32);
-begin
-  Inherited Create();
-  if (initialCapacity < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInitialCapacityNegative);
-  end;
-
-  if (initialCapacity = 0) then
-  begin
-    FElements := EmptyElements;
-  end
-  else
-  begin
-    System.SetLength(FElements, initialCapacity);
-  end;
-
-  FElementCount := 0;
-
-  FCopyOnWrite := False;
+  System.SetLength(Result, AElementCount);
+  for I := 0 to AElementCount - 1 do
+    Result[I] := AElements[I];
 end;
 
 constructor TAsn1EncodableVector.Create();
@@ -5350,327 +4463,1173 @@ begin
   Create(DefaultCapacity);
 end;
 
-destructor TAsn1EncodableVector.Destroy;
+constructor TAsn1EncodableVector.Create(AInitialCapacity: Int32);
 begin
-  inherited Destroy;
-end;
+  inherited Create;
+  if AInitialCapacity < 0 then
+    raise EArgumentCryptoLibException.Create('must not be negative');
 
-class function TAsn1EncodableVector.FromEnumerable
-  (const e: TList<IAsn1Encodable>): IAsn1EncodableVector;
-var
-  v: IAsn1EncodableVector;
-  obj: IAsn1Encodable;
-begin
-  v := TAsn1EncodableVector.Create();
-  for obj in e do
-  begin
-    v.Add(obj);
-  end;
-  result := v;
-end;
-
-function TAsn1EncodableVector.GetCount: Int32;
-begin
-  result := FElementCount;
-end;
-
-class function TAsn1EncodableVector.GetEmptyElements
-  : TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  result := Nil;
-end;
-
-function TAsn1EncodableVector.GetEnumerable
-  : TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  result := CopyElements();
-end;
-
-function TAsn1EncodableVector.GetSelf(Index: Int32): IAsn1Encodable;
-begin
-  if (Index >= FElementCount) then
-  begin
-    raise EIndexOutOfRangeCryptoLibException.CreateResFmt(@SIndexOutOfRange,
-      [Index, FElementCount]);
-  end;
-
-  result := FElements[Index];
-end;
-
-procedure TAsn1EncodableVector.Reallocate(minCapacity: Int32);
-var
-  oldCapacity, newCapacity: Int32;
-  LocalCopy: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  oldCapacity := System.length(FElements);
-  newCapacity := Max(oldCapacity, minCapacity + (TBits.Asr32(minCapacity, 1)));
-
-  LocalCopy := System.Copy(FElements, 0, FElementCount);
-  System.SetLength(LocalCopy, newCapacity);
-
-  FElements := LocalCopy;
+  if AInitialCapacity = 0 then
+    FElements := FEmptyElements
+  else
+    System.SetLength(FElements, AInitialCapacity);
+  FElementCount := 0;
   FCopyOnWrite := False;
 end;
 
-function TAsn1EncodableVector.TakeElements
-  : TCryptoLibGenericArray<IAsn1Encodable>;
+constructor TAsn1EncodableVector.Create(const AElement: IAsn1Encodable);
 begin
-  if (FElementCount = 0) then
+  Create();
+  Add(AElement);
+end;
+
+constructor TAsn1EncodableVector.Create(const AElement1, AElement2: IAsn1Encodable);
+begin
+  Create();
+  Add(AElement1);
+  Add(AElement2);
+end;
+
+constructor TAsn1EncodableVector.Create(const AElements: array of IAsn1Encodable);
+var
+  I: Int32;
+begin
+  Create();
+  for I := 0 to System.Length(AElements) - 1 do
+    Add(AElements[I]);
+end;
+
+procedure TAsn1EncodableVector.Add(const AElement: IAsn1Encodable);
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  PrepareCapacity(1);
+  FElements[FElementCount] := AElement;
+  System.Inc(FElementCount);
+end;
+
+procedure TAsn1EncodableVector.Add(const AElement1, AElement2: IAsn1Encodable);
+begin
+  Add(AElement1);
+  Add(AElement2);
+end;
+
+procedure TAsn1EncodableVector.Add(const AObjs: array of IAsn1Encodable);
+var
+  I: Int32;
+begin
+  for I := 0 to System.Length(AObjs) - 1 do
+    Add(AObjs[I]);
+end;
+
+procedure TAsn1EncodableVector.AddOptional(const AElement: IAsn1Encodable);
+begin
+  if AElement <> nil then
+    Add(AElement);
+end;
+
+procedure TAsn1EncodableVector.AddOptional(const AElement1, AElement2: IAsn1Encodable);
+begin
+  AddOptional(AElement1);
+  AddOptional(AElement2);
+end;
+
+procedure TAsn1EncodableVector.AddOptional(const AElements: array of IAsn1Encodable);
+var
+  I: Int32;
+begin
+  if System.Length(AElements) > 0 then
   begin
-    result := EmptyElements;
+    for I := 0 to System.Length(AElements) - 1 do
+      AddOptional(AElements[I]);
+  end;
+end;
+
+procedure TAsn1EncodableVector.AddOptionalTagged(AIsExplicit: Boolean; ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+var
+  LExplicitness: Int32;
+begin
+  if AObj <> nil then
+  begin
+    if AIsExplicit then
+      LExplicitness := 1  // DeclaredExplicit
+    else
+      LExplicitness := 2; // DeclaredImplicit
+    Add(TDerTaggedObject.Create(LExplicitness, TAsn1Tags.ContextSpecific, ATagNo, AObj));
+  end;
+end;
+
+procedure TAsn1EncodableVector.AddOptionalTagged(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+var
+  LExplicitness: Int32;
+begin
+  if AObj <> nil then
+  begin
+    if AIsExplicit then
+      LExplicitness := 1  // DeclaredExplicit
+    else
+      LExplicitness := 2; // DeclaredImplicit
+    Add(TDerTaggedObject.Create(LExplicitness, ATagClass, ATagNo, AObj));
+  end;
+end;
+
+procedure TAsn1EncodableVector.AddAll(const AE: TCryptoLibGenericArray<IAsn1Encodable>);
+var
+  I: Int32;
+begin
+  if AE = nil then
+    raise EArgumentNilCryptoLibException.Create('e');
+
+  for I := 0 to System.Length(AE) - 1 do
+    Add(AE[I]);
+end;
+
+procedure TAsn1EncodableVector.AddAll(const AOther: IAsn1EncodableVector);
+var
+  I: Int32;
+  LOtherElementCount: Int32;
+begin
+  if AOther = nil then
+    raise EArgumentNilCryptoLibException.Create('other');
+
+  LOtherElementCount := AOther.Count;
+  if LOtherElementCount < 1 then
+    Exit;
+
+  PrepareCapacity(LOtherElementCount);
+  for I := 0 to LOtherElementCount - 1 do
+  begin
+    FElements[FElementCount] := AOther[I];
+    System.Inc(FElementCount);
+  end;
+end;
+
+function TAsn1EncodableVector.GetItem(AIndex: Int32): IAsn1Encodable;
+begin
+  if AIndex >= FElementCount then
+    raise EArgumentOutOfRangeCryptoLibException.CreateFmt('%d >= %d', [AIndex, FElementCount]);
+
+  Result := FElements[AIndex];
+end;
+
+function TAsn1EncodableVector.GetCount(): Int32;
+begin
+  Result := FElementCount;
+end;
+
+function TAsn1EncodableVector.CopyElements(): TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Result := CopyElements(FElements, FElementCount);
+end;
+
+function TAsn1EncodableVector.TakeElements(): TCryptoLibGenericArray<IAsn1Encodable>;
+var
+  I: Int32;
+begin
+  if FElementCount = 0 then
+  begin
+    Result := FEmptyElements;
     Exit;
   end;
 
-  if (System.length(FElements) = FElementCount) then
+  if System.Length(FElements) = FElementCount then
   begin
     FCopyOnWrite := True;
-    result := FElements;
+    Result := FElements;
     Exit;
   end;
 
-  result := System.Copy(FElements, 0, FElementCount);
-  System.SetLength(result, FElementCount);
+  System.SetLength(Result, FElementCount);
+
+  for I := 0 to FElementCount - 1 do
+    Result[I] := FElements[I];
 end;
 
-class function TAsn1EncodableVector.CloneElements(const elements
-  : TCryptoLibGenericArray<IAsn1Encodable>)
-  : TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if System.length(elements) < 1 then
-  begin
-    result := EmptyElements;
-  end
-  else
-  begin
-    result := System.Copy(elements);
-  end;
-end;
-
-{ TAsn1Generator }
-
-constructor TAsn1Generator.Create(outStream: TStream);
-begin
-  F_out := outStream;
-end;
-
-function TAsn1Generator.GetOut: TStream;
-begin
-  result := F_out;
-end;
-
-{ TAsn1Null }
-
-function TAsn1Null.ToString: String;
-begin
-  result := 'NULL';
-end;
-
-{ TAsn1OctetString }
-
-function TAsn1OctetString.GetStr: TCryptoLibByteArray;
-begin
-  result := FStr;
-end;
-
-function TAsn1OctetString.GetParser: IAsn1OctetStringParser;
-begin
-  result := Self as IAsn1OctetStringParser;
-end;
-
-constructor TAsn1OctetString.Create(const Str: TCryptoLibByteArray);
-begin
-  Inherited Create();
-  if (Str = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-
-  FStr := Str;
-end;
-
-function TAsn1OctetString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+function TAsn1EncodableVector.PrepareCapacity(ARequiredCapacity: Int32): Int32;
 var
-  other: IDerOctetString;
+  LCapacity, LMinCapacity: Int32;
 begin
-
-  if (not Supports(asn1Object, IDerOctetString, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := TArrayUtils.AreEqual(GetOctets(), other.GetOctets());
+  LCapacity := System.Length(FElements);
+  LMinCapacity := FElementCount + ARequiredCapacity;
+  if (LMinCapacity > LCapacity) or FCopyOnWrite then
+    Reallocate(LMinCapacity);
+  Result := LMinCapacity;
 end;
 
-function TAsn1OctetString.Asn1GetHashCode: Int32;
+procedure TAsn1EncodableVector.Reallocate(AMinCapacity: Int32);
+var
+  I: Int32;
+  LOldCapacity, LNewCapacity: Int32;
+  LCopy: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  result := TArrayUtils.GetArrayHashCode(GetOctets());
+  LOldCapacity := System.Length(FElements);
+  LNewCapacity := Math.Max(LOldCapacity, AMinCapacity + (TBits.Asr32(AMinCapacity, 1)));
+
+  System.SetLength(LCopy, LNewCapacity);
+  for I := 0 to FElementCount - 1 do
+    LCopy[I] := FElements[I];
+
+  FElements := LCopy;
+  FCopyOnWrite := False;
 end;
 
-constructor TAsn1OctetString.Create(const obj: IAsn1Encodable);
+class function TAsn1EncodableVector.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IAsn1EncodableVector;
+var
+  LV: TAsn1EncodableVector;
 begin
-  Inherited Create();
+  LV := TAsn1EncodableVector.Create(System.Length(AC));
+  LV.AddAll(AC);
+  Result := LV;
+end;
+
+class function TAsn1EncodableVector.FromElement(const AElement: IAsn1Encodable): IAsn1EncodableVector;
+var
+  LV: TAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(1);
+  LV.Add(AElement);
+  Result := LV;
+end;
+
+class function TAsn1EncodableVector.FromEnumerable(const AE: TCryptoLibGenericArray<IAsn1Encodable>): IAsn1EncodableVector;
+var
+  LV: TAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create();
+  LV.AddAll(AE);
+  Result := LV;
+end;
+
+class function TAsn1EncodableVector.CloneElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Result := CopyElements(AElements, System.Length(AElements));
+end;
+
+class constructor TAsn1EncodableVector.Create;
+begin
+  FEmptyElements := nil;
+end;
+
+{ TAsn1Object }
+
+procedure TAsn1Object.EncodeTo(const AOutput: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.CreateStream(AOutput, TAsn1Encodable.Ber, True);
   try
-    FStr := obj.GetEncoded(TAsn1Encodable.Der);
-  except
-    on e: EIOCryptoLibException do
+    GetEncoding(LAsn1Out.Encoding).Encode(LAsn1Out);
+  finally
+    LAsn1Out.Free;
+  end;
+end;
+
+procedure TAsn1Object.EncodeTo(const AOutput: TStream; const AEncoding: String);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.CreateStream(AOutput, AEncoding, True);
+  try
+    GetEncoding(LAsn1Out.Encoding).Encode(LAsn1Out);
+  finally
+    LAsn1Out.Free;
+  end;
+end;
+
+function TAsn1Object.GetEncoded(const AEncoding: String; APreAlloc, APostAlloc: Int32): TCryptoLibByteArray;
+var
+  LEncodingType, LLength: Int32;
+  LAsn1Encoding: IAsn1Encoding;
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LEncodingType := TAsn1OutputStream.GetEncodingType(AEncoding);
+  LAsn1Encoding := GetEncoding(LEncodingType);
+  LLength := LAsn1Encoding.GetLength();
+  System.SetLength(Result, APreAlloc + LLength + APostAlloc);
+  LAsn1Out := TAsn1OutputStream.CreateStream(Result, APreAlloc, LLength, AEncoding, False);
+  try
+    LAsn1Encoding.Encode(LAsn1Out);
+    // Assert(LAsn1Out.Length = LAsn1Out.Position);
+  finally
+    LAsn1Out.Free;
+  end;
+end;
+
+function TAsn1Object.Equals(const AOther: IAsn1Object): Boolean;
+begin
+  Result := (Self as IAsn1Object) = AOther;
+  if not Result and (AOther <> nil) then
+    Result := Asn1Equals(AOther);
+end;
+
+class function TAsn1Object.FromByteArray(const AData: TCryptoLibByteArray): IAsn1Object;
+var
+  LBufferStream: TFixedBufferStream;
+begin
+  LBufferStream := TFixedBufferStream.Create(AData, 0, System.Length(AData), False);
+  try
+    Result := FromBufferStream(LBufferStream);
+  finally
+    //LBufferStream.Free;
+  end;
+end;
+
+class function TAsn1Object.FromBufferStream(const ABufferStream: TFixedBufferStream): IAsn1Object;
+var
+  LAsn1In: TAsn1InputStream;
+begin
+  LAsn1In := TAsn1InputStream.Create(ABufferStream);
+  try
+    Result := LAsn1In.ReadObject();
+    if LAsn1In.Position <> LAsn1In.Size then
+      raise EIOCryptoLibException.Create('extra data found after object');
+  finally
+    LAsn1In.Free;
+  end;
+end;
+
+class function TAsn1Object.FromStream(const AInStr: TStream): IAsn1Object;
+var
+  LLimit: Int32;
+  LAsn1In: TAsn1InputStream;
+begin
+  LLimit := TAsn1InputStream.FindLimit(AInStr);
+  LAsn1In := TAsn1InputStream.Create(AInStr, LLimit, True);
+  try
+    Result := LAsn1In.ReadObject();
+  finally
+    LAsn1In.Free;
+  end;
+end;
+
+function TAsn1Object.ToAsn1Object(): IAsn1Object;
+begin
+  Result := Self as IAsn1Object;
+end;
+
+function TAsn1Object.CallAsn1Equals(const AObj: IAsn1Object): Boolean;
+begin
+  Result := Asn1Equals(AObj);
+end;
+
+function TAsn1Object.CallAsn1GetHashCode(): Int32;
+begin
+  Result := Asn1GetHashCode();
+end;
+
+
+{ TAsn1TaggedObject }
+
+constructor TAsn1TaggedObject.Create(AIsExplicit: Boolean; ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+begin
+  Create(AIsExplicit, TAsn1Tags.ContextSpecific, ATagNo, AObj);
+end;
+
+constructor TAsn1TaggedObject.Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+begin
+  if AIsExplicit then
+    Create(DeclaredExplicit, ATagClass, ATagNo, AObj)
+  else
+    Create(DeclaredImplicit, ATagClass, ATagNo, AObj);
+end;
+
+constructor TAsn1TaggedObject.Create(AExplicitness, ATagClass, ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+var
+  LChoice: IAsn1Choice;
+begin
+  inherited Create;
+  if AObj = nil then
+    raise EArgumentNilCryptoLibException.Create('obj');
+  if (TAsn1Tags.Universal = ATagClass) or ((ATagClass and TAsn1Tags.Private) <> ATagClass) then
+    raise EArgumentCryptoLibException.Create('invalid tag class: ' + IntToStr(ATagClass));
+  
+  // IAsn1Choice marker interface 'insists' on explicit tagging
+  if Supports(AObj, IAsn1Choice, LChoice) then
+    FExplicitness := DeclaredExplicit
+  else
+    FExplicitness := AExplicitness;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FObject := AObj;
+end;
+
+function TAsn1TaggedObject.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IAsn1TaggedObject;
+  LP1, LP2: IAsn1Object;
+  LD1, LD2: TCryptoLibByteArray;
+begin
+  if not Supports(AAsn1Object, IAsn1TaggedObject, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if (FTagNo <> LThat.TagNo) or (FTagClass <> LThat.TagClass) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  // Check explicitness
+  if FExplicitness <> LThat.Explicitness then
+  begin
+    // If explicitness differs, check if IsExplicit() differs
+    if IsExplicit() <> LThat.IsExplicit() then
     begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SProcessingError,
-        [e.Message]);
-    end;
-  end;
-end;
-
-class function TAsn1OctetString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IAsn1OctetString;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IAsn1OctetString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TBerOctetString.FromSequence
-    (TAsn1Sequence.GetInstance(o as TAsn1Object));
-end;
-
-class function TAsn1OctetString.GetInstance(const obj: TObject)
-  : IAsn1OctetString;
-var
-  asn1TaggedObject: IAsn1TaggedObject;
-begin
-  if ((obj = Nil) or (obj is TAsn1OctetString)) then
-  begin
-    result := obj as TAsn1OctetString;
-    Exit;
-  end;
-
-  // TODO: this needs to be deleted in V2
-  if Supports(obj, IAsn1TaggedObject, asn1TaggedObject) then
-  begin
-    result := GetInstance(asn1TaggedObject.GetObject() as TAsn1Object);
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-function TAsn1OctetString.GetOctets: TCryptoLibByteArray;
-begin
-  result := Str;
-end;
-
-function TAsn1OctetString.GetOctetStream: TStream;
-begin
-  // used TBytesStream here for one pass creation and population with byte array :)
-  result := TBytesStream.Create(Str);
-end;
-
-function TAsn1OctetString.ToString: String;
-begin
-  result := '#' + THex.Encode(Str);
-end;
-
-{ TAsn1Sequence }
-
-function TAsn1Sequence.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  that: IAsn1Sequence;
-  o1, o2: IAsn1Object;
-  I, LCount: Int32;
-begin
-
-  that := asn1Object as IAsn1Sequence;
-  if (that = Nil) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  LCount := count;
-  if (that.count <> LCount) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  for I := 0 to System.Pred(LCount) do
-  begin
-    o1 := FElements[I].ToAsn1Object();
-    o2 := that.elements[I].ToAsn1Object();
-
-    if ((o1 <> o2) and (not o1.CallAsn1Equals(o2))) then
-    begin
-      result := False;
+      Result := False;
       Exit;
     end;
   end;
 
-  result := True;
-end;
+  LP1 := FObject.ToAsn1Object();
+  LP2 := LThat.GetBaseObject().ToAsn1Object();
 
-function TAsn1Sequence.Asn1GetHashCode: Int32;
-var
-  hc, I: Int32;
-begin
-  I := System.length(FElements);
-  hc := I + 1;
-
-  System.Dec(I);
-  while (I >= 0) do
+  if LP1 = LP2 then
   begin
-    hc := hc * 257;
-    hc := hc xor (FElements[I].ToAsn1Object().CallAsn1GetHashCode());
-    System.Dec(I);
+    Result := True;
+    Exit;
   end;
 
-  result := hc;
+  if not IsExplicit() then
+  begin
+    try
+      LD1 := GetEncoded();
+      LD2 := AAsn1Object.GetEncoded();
+      Result := TArrayUtils.AreEqual(LD1, LD2);
+      Exit;
+    except
+      on E: Exception do
+      begin
+        Result := False;
+        Exit;
+      end;
+    end;
+  end;
+
+  Result := LP1.CallAsn1Equals(LP2);
 end;
+
+function TAsn1TaggedObject.Asn1GetHashCode(): Int32;
+begin
+  Result := (FTagClass * 7919) xor FTagNo;
+  if IsExplicit() then
+    Result := Result xor $0F
+  else
+    Result := Result xor $F0;
+  Result := Result xor FObject.ToAsn1Object().CallAsn1GetHashCode();
+end;
+
+function TAsn1TaggedObject.GetTagClass(): Int32;
+begin
+  Result := FTagClass;
+end;
+
+function TAsn1TaggedObject.GetTagNo(): Int32;
+begin
+  Result := FTagNo;
+end;
+
+function TAsn1TaggedObject.GetExplicitness(): Int32;
+begin
+  Result := FExplicitness;
+end;
+
+function TAsn1TaggedObject.IsExplicit(): Boolean;
+begin
+  case FExplicitness of
+    DeclaredExplicit, ParsedExplicit:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function TAsn1TaggedObject.IsParsed(): Boolean;
+begin
+  case FExplicitness of
+    ParsedExplicit, ParsedImplicit:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function TAsn1TaggedObject.GetObject(): IAsn1Object;
+var
+  LTagged: IAsn1TaggedObject;
+begin
+  // Check that tag class is ContextSpecific using TAsn1Utilities
+  LTagged := Self as IAsn1TaggedObject;
+  TAsn1Utilities.CheckContextTagClass(LTagged);
+  Result := FObject.ToAsn1Object();
+end;
+
+function TAsn1TaggedObject.GetObjectParser(ATag: Int32; AIsExplicit: Boolean): IAsn1Convertible;
+var
+  LTagged: IAsn1TaggedObject;
+begin
+  LTagged := Self as IAsn1TaggedObject;
+  
+  // Handle specific tag types first
+  case ATag of
+    TAsn1Tags.&Set:
+      begin
+        Result := TAsn1Set.GetInstance(LTagged, AIsExplicit).Parser;
+        Exit;
+      end;
+    TAsn1Tags.Sequence:
+      begin
+        Result := TAsn1Sequence.GetInstance(LTagged, AIsExplicit).Parser;
+        Exit;
+      end;
+    TAsn1Tags.OctetString:
+      begin
+        Result := TAsn1OctetString.GetInstance(LTagged, AIsExplicit);
+        Exit;
+      end;
+  end;
+
+  // If explicit, return the object itself
+  if AIsExplicit then
+  begin
+    Result := GetObject();
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateFmt('implicit tagging not implemented for tag %d', [ATag]);
+end;
+
+function TAsn1TaggedObject.ToString(): String;
+var
+  LTagText: String;
+  LObj: IAsn1Object;
+  LTagged: IAsn1TaggedObject;
+begin
+  LTagged := Self as IAsn1TaggedObject;
+  LTagText := TAsn1Utilities.GetTagText(LTagged);
+
+  LObj := FObject.ToAsn1Object();
+  Result := LTagText + LObj.ToString();
+end;
+
+function TAsn1TaggedObject.HasContextTag(): Boolean;
+begin
+  Result := FTagClass = TAsn1Tags.ContextSpecific;
+end;
+
+function TAsn1TaggedObject.HasContextTag(ATagNo: Int32): Boolean;
+begin
+  Result := (FTagClass = TAsn1Tags.ContextSpecific) and (FTagNo = ATagNo);
+end;
+
+function TAsn1TaggedObject.HasTag(ATagClass, ATagNo: Int32): Boolean;
+begin
+  Result := (FTagClass = ATagClass) and (FTagNo = ATagNo);
+end;
+
+function TAsn1TaggedObject.HasTagClass(ATagClass: Int32): Boolean;
+begin
+  Result := FTagClass = ATagClass;
+end;
+
+function TAsn1TaggedObject.ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible;
+var
+  LAsn1Object: IAsn1Object;
+  LBitString: IDerBitString;
+  LOctetString: IAsn1OctetString;
+  LSequence: IAsn1Sequence;
+  LSet: IAsn1Set;
+begin
+  LAsn1Object := GetBaseUniversal(ADeclaredExplicit, ABaseTagNo);
+  
+  case ABaseTagNo of
+    TAsn1Tags.BitString:
+      begin
+        if Supports(LAsn1Object, IDerBitString, LBitString) then
+          Result := LBitString.Parser
+        else
+          Result := LAsn1Object;
+      end;
+    TAsn1Tags.OctetString:
+      begin
+        if Supports(LAsn1Object, IAsn1OctetString, LOctetString) then
+          Result := LOctetString as IAsn1Convertible
+        else
+          Result := LAsn1Object;
+      end;
+    TAsn1Tags.Sequence:
+      begin
+        if Supports(LAsn1Object, IAsn1Sequence, LSequence) then
+          Result := LSequence.Parser
+        else
+          Result := LAsn1Object;
+      end;
+    TAsn1Tags.&Set:
+      begin
+        if Supports(LAsn1Object, IAsn1Set, LSet) then
+          Result := LSet.Parser
+        else
+          Result := LAsn1Object;
+      end;
+  else
+    Result := LAsn1Object;
+  end;
+end;
+
+function TAsn1TaggedObject.GetBaseObject(): IAsn1Encodable;
+begin
+  Result := FObject;
+end;
+
+function TAsn1TaggedObject.GetExplicitBaseObject(): IAsn1Encodable;
+begin
+  if not IsExplicit() then
+    raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
+  Result := FObject;
+end;
+
+function TAsn1TaggedObject.GetExplicitBaseTagged(): IAsn1TaggedObject;
+var
+  LObj: IAsn1Object;
+  LTagged: IAsn1TaggedObject;
+begin
+  if not IsExplicit() then
+    raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
+  
+  LObj := FObject.ToAsn1Object();
+  if not Supports(LObj, IAsn1TaggedObject, LTagged) then
+    raise EInvalidOperationCryptoLibException.Create('unexpected object type');
+  
+  Result := LTagged;
+end;
+
+function TAsn1TaggedObject.GetImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObject;
+var
+  LObj: IAsn1Object;
+  LTagged: IAsn1TaggedObject;
+begin
+  if (TAsn1Tags.Universal = ABaseTagClass) or ((ABaseTagClass and TAsn1Tags.Private) <> ABaseTagClass) then
+    raise EArgumentCryptoLibException.Create('invalid base tag class: ' + IntToStr(ABaseTagClass));
+
+  case FExplicitness of
+    DeclaredExplicit:
+      raise EInvalidOperationCryptoLibException.Create('object explicit - implicit expected.');
+    DeclaredImplicit:
+      begin
+        LObj := FObject.ToAsn1Object();
+        if not Supports(LObj, IAsn1TaggedObject, LTagged) then
+          raise EInvalidOperationCryptoLibException.Create('unexpected object type');
+        
+        // Check tag using TAsn1Utilities
+        Result := TAsn1Utilities.CheckTag(LTagged, ABaseTagClass, ABaseTagNo);
+      end;
+  else
+    // Parsed; return a virtual tag (i.e. that couldn't have been present in the encoding)
+    Result := ReplaceTag(ABaseTagClass, ABaseTagNo);
+  end;
+end;
+
+function TAsn1TaggedObject.GetBaseUniversal(ADeclaredExplicit: Boolean; ATagNo: Int32): IAsn1Object;
+var
+  LUniversalType: IAsn1UniversalType;
+begin
+  LUniversalType := TAsn1UniversalTypes.Get(ATagNo);
+  if LUniversalType = nil then
+    raise EArgumentCryptoLibException.CreateFmt('unsupported UNIVERSAL tag number: %d', [ATagNo]);
+  
+  Result := GetBaseUniversal(ADeclaredExplicit, LUniversalType);
+end;
+
+function TAsn1TaggedObject.GetBaseUniversal(ADeclaredExplicit: Boolean; const AUniversalType: IAsn1UniversalType): IAsn1Object;
+var
+  LBaseObject: IAsn1Object;
+  LSequence: IAsn1Sequence;
+  LOctetString: IDerOctetString;
+  LRebuiltSequence: IAsn1Sequence;
+begin
+  if ADeclaredExplicit then
+  begin
+    if not IsExplicit() then
+      raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
+    
+    Result := AUniversalType.CheckedCast(GetBaseObject().ToAsn1Object());
+    Exit;
+  end;
+  
+  if FExplicitness = DeclaredExplicit then
+    raise EInvalidOperationCryptoLibException.Create('object explicit - implicit expected.');
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  case FExplicitness of
+    ParsedExplicit:
+      begin
+        LRebuiltSequence := RebuildConstructed(LBaseObject);
+        Result := AUniversalType.FromImplicitConstructed(LRebuiltSequence);
+      end;
+    ParsedImplicit:
+      begin
+        if Supports(LBaseObject, IAsn1Sequence, LSequence) then
+          Result := AUniversalType.FromImplicitConstructed(LSequence)
+        else if Supports(LBaseObject, IDerOctetString, LOctetString) then
+        begin
+          Result := AUniversalType.FromImplicitPrimitive(LOctetString);
+        end
+        else
+          raise EInvalidOperationCryptoLibException.Create('unexpected object type in ParsedImplicit');
+      end;
+  else
+    Result := AUniversalType.CheckedCast(LBaseObject);
+  end;
+end;
+
+function TAsn1TaggedObject.ParseExplicitBaseObject(): IAsn1Convertible;
+begin
+  Result := GetExplicitBaseObject();
+end;
+
+function TAsn1TaggedObject.ParseExplicitBaseTagged(): IAsn1TaggedObjectParser;
+var
+  LTagged: IAsn1TaggedObject;
+begin
+  LTagged := GetExplicitBaseTagged();
+  if Supports(LTagged, IAsn1TaggedObjectParser, Result) then
+    // Already a parser
+  else
+    raise EInvalidOperationCryptoLibException.Create('Cannot convert to parser');
+end;
+
+function TAsn1TaggedObject.ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser;
+var
+  LTagged: IAsn1TaggedObject;
+begin
+  LTagged := GetImplicitBaseTagged(ABaseTagClass, ABaseTagNo);
+  if Supports(LTagged, IAsn1TaggedObjectParser, Result) then
+    // Already a parser
+  else
+    raise EInvalidOperationCryptoLibException.Create('Cannot convert to parser');
+end;
+
+// Static methods
+
+class function TAsn1TaggedObject.CheckInstance(const AObj: TObject): IAsn1TaggedObject;
+begin
+  Result := GetInstance(AObj);
+  if Result = nil then
+    raise EArgumentNilCryptoLibException.Create('obj');
+end;
+
+class function TAsn1TaggedObject.CheckInstance(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAsn1TaggedObject;
+begin
+  if not ADeclaredExplicit then
+    raise EArgumentCryptoLibException.Create('this method not valid for implicitly tagged tagged objects');
+  if ATaggedObject = nil then
+    raise EArgumentNilCryptoLibException.Create('taggedObject');
+  Result := ATaggedObject;
+end;
+
+class function TAsn1TaggedObject.CheckedCast(const AAsn1Object: IAsn1Object): IAsn1TaggedObject;
+begin
+  if not Supports(AAsn1Object, IAsn1TaggedObject, Result) then
+    raise EInvalidOperationCryptoLibException.Create('unexpected object type');
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: TObject): IAsn1TaggedObject;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object): IAsn1TaggedObject;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IAsn1TaggedObject, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: TObject; ATagClass: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckTagClass(CheckInstance(AObj), ATagClass);
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object; ATagClass: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckTagClass(GetInstance(AObj), ATagClass);
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: TObject; ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckTag(CheckInstance(AObj), ATagClass, ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object; ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckTag(GetInstance(AObj), ATagClass, ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetInstance(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.GetExplicitContextBaseTagged(CheckInstance(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TAsn1TaggedObject.GetInstance(const ATaggedObject: IAsn1TaggedObject;
+  ATagClass: Int32; ADeclaredExplicit: Boolean): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.GetExplicitBaseTagged(CheckInstance(ATaggedObject, ADeclaredExplicit), ATagClass);
+end;
+
+class function TAsn1TaggedObject.GetInstance(const ATaggedObject: IAsn1TaggedObject;
+  ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.GetExplicitBaseTagged(CheckInstance(ATaggedObject, ADeclaredExplicit), ATagClass, ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetOptional(const AElement: IAsn1Encodable): IAsn1TaggedObject;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IAsn1TaggedObject, Result) then
+    Exit;
+  Result := nil;
+end;
+
+class function TAsn1TaggedObject.GetOptional(const AElement: IAsn1Encodable;
+  ATagClass: Int32): IAsn1TaggedObject;
+begin
+  Result := GetOptional(AElement);
+  if (Result <> nil) and Result.HasTagClass(ATagClass) then
+    Exit;
+  Result := nil;
+end;
+
+class function TAsn1TaggedObject.GetOptional(const AElement: IAsn1Encodable;
+  ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := GetOptional(AElement);
+  if (Result <> nil) and Result.HasTag(ATagClass, ATagNo) then
+    Exit;
+  Result := nil;
+end;
+
+class function TAsn1TaggedObject.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAsn1TaggedObject;
+begin
+  Result := CheckInstance(ATaggedObject, ADeclaredExplicit).GetExplicitBaseTagged();
+end;
+
+{ TDerTaggedObject }
+
+constructor TDerTaggedObject.Create(ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(True, ATagNo, AObj);
+end;
+
+constructor TDerTaggedObject.Create(ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(True, ATagClass, ATagNo, AObj);
+end;
+
+constructor TDerTaggedObject.Create(AIsExplicit: Boolean; ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(AIsExplicit, ATagNo, AObj);
+end;
+
+constructor TDerTaggedObject.Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(AIsExplicit, ATagClass, ATagNo, AObj);
+end;
+
+constructor TDerTaggedObject.Create(AExplicitness, ATagClass, ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+begin
+  inherited Create(AExplicitness, ATagClass, ATagNo, AObj);
+end;
+
+function TDerTaggedObject.GetIsConstructed(): Boolean;
+begin
+  // DER tagged objects are always constructed
+  Result := True;
+end;
+
+function TDerTaggedObject.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+begin
+  // TDerTaggedObject inherits Asn1Equals from TAsn1TaggedObject
+  Result := inherited Asn1Equals(AAsn1Object);
+end;
+
+function TDerTaggedObject.Asn1GetHashCode(): Int32;
+begin
+  // TDerTaggedObject inherits Asn1GetHashCode from TAsn1TaggedObject
+  Result := inherited Asn1GetHashCode();
+end;
+
+function TDerTaggedObject.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+var
+  LBaseObject: IAsn1Object;
+begin
+  AEncoding := TAsn1OutputStream.EncodingDer;
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingImplicit(AEncoding, GetTagClass(), GetTagNo());
+    Exit;
+  end;
+  
+  Result := TTaggedDLEncoding.Create(GetTagClass(), GetTagNo(), LBaseObject.GetEncoding(AEncoding));
+end;
+
+function TDerTaggedObject.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+var
+  LBaseObject: IAsn1Object;
+begin
+  AEncoding := TAsn1OutputStream.EncodingDer;
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  Result := TTaggedDLEncoding.Create(ATagClass, ATagNo, LBaseObject.GetEncoding(AEncoding));
+end;
+
+function TDerTaggedObject.GetEncodingDer(): IDerEncoding;
+var
+  LBaseObject: IAsn1Object;
+begin
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingDerImplicit(GetTagClass(), GetTagNo());
+    Exit;
+  end;
+  
+  Result := TTaggedDerEncoding.Create(GetTagClass(), GetTagNo(), LBaseObject.GetEncodingDer());
+end;
+
+function TDerTaggedObject.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+var
+  LBaseObject: IAsn1Object;
+begin
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingDerImplicit(ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  Result := TTaggedDerEncoding.Create(ATagClass, ATagNo, LBaseObject.GetEncodingDer());
+end;
+
+function TDerTaggedObject.RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence;
+begin
+  Result := TDerSequence.Create(AAsn1Object as IAsn1Encodable);
+end;
+
+function TDerTaggedObject.ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+var
+  LExplicitness: Int32;
+begin
+  if IsExplicit() then
+    LExplicitness := 1  // DeclaredExplicit
+  else
+    LExplicitness := 2; // DeclaredImplicit
+  Result := TDerTaggedObject.Create(LExplicitness, ATagClass, ATagNo, FObject);
+end;
+
+{ TDLTaggedObject }
+
+constructor TDLTaggedObject.Create(ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(ATagNo, AObj);
+end;
+
+constructor TDLTaggedObject.Create(ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(ATagClass, ATagNo, AObj);
+end;
+
+constructor TDLTaggedObject.Create(AIsExplicit: Boolean; ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(AIsExplicit, ATagNo, AObj);
+end;
+
+constructor TDLTaggedObject.Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
+begin
+  inherited Create(AIsExplicit, ATagClass, ATagNo, AObj);
+end;
+
+constructor TDLTaggedObject.Create(AExplicitness, ATagClass, ATagNo: Int32;
+  const AObj: IAsn1Encodable);
+begin
+  inherited Create(AExplicitness, ATagClass, ATagNo, AObj);
+end;
+
+function TDLTaggedObject.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+var
+  LBaseObject: IAsn1Object;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncoding(AEncoding);
+    Exit;
+  end;
+  
+  AEncoding := TAsn1OutputStream.EncodingDL;
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingImplicit(AEncoding, GetTagClass(), GetTagNo());
+    Exit;
+  end;
+  
+  Result := TTaggedDLEncoding.Create(GetTagClass(), GetTagNo(), LBaseObject.GetEncoding(AEncoding));
+end;
+
+function TDLTaggedObject.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+var
+  LBaseObject: IAsn1Object;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  AEncoding := TAsn1OutputStream.EncodingDL;
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  Result := TTaggedDLEncoding.Create(ATagClass, ATagNo, LBaseObject.GetEncoding(AEncoding));
+end;
+
+function TDLTaggedObject.RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence;
+begin
+  Result := TDLSequence.Create(AAsn1Object as IAsn1Encodable);
+end;
+
+function TDLTaggedObject.ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+var
+  LExplicitness: Int32;
+begin
+  if IsExplicit() then
+    LExplicitness := 1  // DeclaredExplicit
+  else
+    LExplicitness := 2; // DeclaredImplicit
+  Result := TDLTaggedObject.Create(LExplicitness, ATagClass, ATagNo, FObject);
+end;
+
+{ TAsn1Sequence }
 
 constructor TAsn1Sequence.Create();
 begin
-  inherited Create();
+  inherited Create;
   FElements := TAsn1EncodableVector.EmptyElements;
 end;
 
-constructor TAsn1Sequence.Create(const element: IAsn1Encodable);
+constructor TAsn1Sequence.Create(const AElement: IAsn1Encodable);
 begin
-  Inherited Create();
-  if (element = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
-  end;
-  FElements := TCryptoLibGenericArray<IAsn1Encodable>.Create(element);
+  inherited Create;
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  System.SetLength(FElements, 1);
+  FElements[0] := AElement;
 end;
 
-constructor TAsn1Sequence.Create(const elementVector: IAsn1EncodableVector);
+constructor TAsn1Sequence.Create(const AElement1, AElement2: IAsn1Encodable);
 begin
-  Inherited Create();
-  if (elementVector = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementVectorNil);
-  end;
-
-  FElements := elementVector.TakeElements();
+  inherited Create;
+  if AElement1 = nil then
+    raise EArgumentNilCryptoLibException.Create('element1');
+  if AElement2 = nil then
+    raise EArgumentNilCryptoLibException.Create('element2');
+  System.SetLength(FElements, 2);
+  FElements[0] := AElement1;
+  FElements[1] := AElement2;
 end;
 
-constructor TAsn1Sequence.Create(const elements: array of IAsn1Encodable);
+constructor TAsn1Sequence.Create(const AElements: array of IAsn1Encodable);
 var
-  LElementsCopy: TCryptoLibGenericArray<IAsn1Encodable>;
+  I: Int32;
 begin
-  Inherited Create();
-  LElementsCopy := OpenArrayToDynamicArray(elements);
-  if (TAsn1Encodable.IsNullOrContainsNull(LElementsCopy)) then
-  begin
-    raise ENullReferenceCryptoLibException.CreateRes(@SElementsNil);
-  end;
+  inherited Create;
+  // Check for null elements
+  for I := 0 to System.Length(AElements) - 1 do
+    if AElements[I] = nil then
+      raise ENullReferenceCryptoLibException.Create('elements cannot contain null');
+  System.SetLength(FElements, System.Length(AElements));
+  for I := 0 to System.Length(AElements) - 1 do
+    FElements[I] := AElements[I];
+end;
 
-  FElements := TAsn1EncodableVector.CloneElements(LElementsCopy);
+constructor TAsn1Sequence.Create(const AElementVector: IAsn1EncodableVector);
+begin
+  inherited Create;
+  if AElementVector = nil then
+    raise EArgumentNilCryptoLibException.Create('elementVector');
+  FElements := AElementVector.TakeElements();
+end;
+
+constructor TAsn1Sequence.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
+var
+  I: Int32;
+begin
+  inherited Create;
+  if AC = nil then
+    raise EArgumentNilCryptoLibException.Create('elements');
+  System.SetLength(FElements, System.Length(AC));
+  for I := 0 to System.Length(AC) - 1 do
+    FElements[I] := AC[I];
 end;
 
 destructor TAsn1Sequence.Destroy;
@@ -5678,821 +5637,773 @@ begin
   inherited Destroy;
 end;
 
-function TAsn1Sequence.GetCount: Int32;
+function TAsn1Sequence.GetCount(): Int32;
 begin
-  result := System.length(FElements);
+  Result := System.Length(FElements);
 end;
 
-function TAsn1Sequence.GetElements: TCryptoLibGenericArray<IAsn1Encodable>;
+function TAsn1Sequence.GetParser(): IAsn1SequenceParser;
 begin
-  result := FElements;
+  Result := TAsn1SequenceParserImpl.Create(Self);
 end;
 
-function TAsn1Sequence.GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
+function TAsn1Sequence.GetItem(AIndex: Int32): IAsn1Encodable;
 begin
-  result := FElements;
+  if (AIndex < 0) or (AIndex >= System.Length(FElements)) then
+    raise EIndexOutOfRangeCryptoLibException.Create('Index out of range');
+  Result := FElements[AIndex];
 end;
 
-class function TAsn1Sequence.GetInstance(const obj: TObject): IAsn1Sequence;
+function TAsn1Sequence.GetElements(): TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Result := System.Copy(FElements);
+end;
+
+function TAsn1Sequence.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
 var
-  primitive: IAsn1Object;
-  Sequence: IAsn1Sequence;
-  res: IAsn1SequenceParser;
+  LThat: IAsn1Sequence;
+  I: Int32;
 begin
-  if ((obj = Nil) or (obj is TAsn1Sequence)) then
+  if not Supports(AAsn1Object, IAsn1Sequence, LThat) then
   begin
-    result := obj as TAsn1Sequence;
+    Result := False;
     Exit;
   end;
 
-  if (Supports(obj, IAsn1SequenceParser, res)) then
+  if GetCount() <> LThat.Count then
   begin
-    result := TAsn1Sequence.GetInstance(res.ToAsn1Object() as TAsn1Object);
+    Result := False;
     Exit;
-
   end;
 
-  if (obj is TAsn1Encodable) then
+  for I := 0 to GetCount() - 1 do
   begin
-    primitive := (obj as TAsn1Encodable).ToAsn1Object();
-
-    if (Supports(primitive, IAsn1Sequence, Sequence)) then
+    if not FElements[I].ToAsn1Object().Equals(LThat[I].ToAsn1Object()) then
     begin
-      result := Sequence;
+      Result := False;
       Exit;
     end;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObject,
-    [obj.ClassName]);
-
+  Result := True;
 end;
 
-class function TAsn1Sequence.GetInstance(const obj: TCryptoLibByteArray)
-  : IAsn1Sequence;
+function TAsn1Sequence.Asn1GetHashCode(): Int32;
+var
+  I: Int32;
 begin
+  I := GetCount();
+  Result := I + 1;
+  while I > 0 do
+  begin
+    Dec(I);
+    Result := Result * 257;
+    Result := Result xor FElements[I].ToAsn1Object().CallAsn1GetHashCode();
+  end;
+end;
+
+function TAsn1Sequence.GetConstructedBitStrings(): TCryptoLibGenericArray<IDerBitString>;
+var
+  I: Int32;
+  LObj: IAsn1Object;
+begin
+  System.SetLength(Result, GetCount());
+  for I := 0 to GetCount() - 1 do
+  begin
+    LObj := FElements[I].ToAsn1Object();
+    Result[I] := TDerBitString.GetInstance(LObj);
+  end;
+end;
+
+function TAsn1Sequence.GetConstructedOctetStrings(): TCryptoLibGenericArray<IAsn1OctetString>;
+var
+  I: Int32;
+  LObj: IAsn1Object;
+begin
+  System.SetLength(Result, GetCount());
+  for I := 0 to GetCount() - 1 do
+  begin
+    LObj := FElements[I].ToAsn1Object();
+    Result[I] := TAsn1OctetString.GetInstance(LObj);
+  end;
+end;
+
+function TAsn1Sequence.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TConstructedDLEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Sequence,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
+end;
+
+function TAsn1Sequence.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TConstructedDLEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
+end;
+
+function TAsn1Sequence.ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Result := TAsn1EncodableVector.CloneElements(FElements);
+end;
+
+function TAsn1Sequence.ToString(): String;
+begin
+  Result := TCollectionUtilities.ToString<IAsn1Encodable>(FElements,
+    function(AElement: IAsn1Encodable): String
+    var
+      LObj: IAsn1Object;
+    begin
+      if AElement <> nil then
+      begin
+        LObj := AElement.ToAsn1Object();
+        Result := LObj.ToString();
+      end
+      else
+        Result := '[null]';
+    end);
+end;
+
+class function TAsn1Sequence.ConcatenateElements(const ASequences: TCryptoLibGenericArray<IAsn1Sequence>): TCryptoLibGenericArray<IAsn1Encodable>;
+var
+  LCount, I, J, LPos, LTotalElements, LElementCount: Int32;
+  LSequence: IAsn1Sequence;
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  LCount := System.Length(ASequences);
+  LTotalElements := 0;
+  for I := 0 to LCount - 1 do
+  begin
+    LTotalElements := LTotalElements + ASequences[I].Count;
+  end;
+
+  System.SetLength(Result, LTotalElements);
+  LPos := 0;
+  for I := 0 to LCount - 1 do
+  begin
+    LSequence := ASequences[I];
+    LElements := LSequence.Elements;
+    LElementCount := System.Length(LElements);
+    for J := 0 to LElementCount - 1 do
+    begin
+      Result[LPos] := LElements[J];
+      System.Inc(LPos);
+    end;
+  end;
+end;
+
+function TAsn1Sequence.MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+begin
+  Result := TCollectionUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
+end;
+
+class function TAsn1Sequence.GetInstance(const AObj: TObject): IAsn1Sequence;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+end;
+
+class function TAsn1Sequence.GetInstance(const AObj: IAsn1Object): IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IAsn1Sequence, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1Sequence.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Sequence;
+begin
+  Result := TAsn1Sequence.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Sequence;
+end;
+
+class function TAsn1Sequence.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Sequence;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
   try
-    result := TAsn1Sequence.GetInstance(FromByteArray(obj) as TAsn1Object);
+    Result := TAsn1Sequence.Meta.Instance.FromByteArray(ABytes) as IAsn1Sequence;
   except
-    on e: EIOCryptoLibException do
-    begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidSequence,
-        [e.Message]);
-    end;
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct sequence from byte[]: ' + E.Message);
   end;
 end;
 
-class function TAsn1Sequence.GetInstance(const obj: IAsn1TaggedObject;
-  explicitly: Boolean): IAsn1Sequence;
+class function TAsn1Sequence.GetOptional(const AElement: IAsn1Encodable): IAsn1Sequence;
 var
-  inner: IAsn1Object;
-  Sequence: IAsn1Sequence;
+  LSequence: IAsn1Sequence;
 begin
-  inner := obj.GetObject();
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
 
-  if (explicitly) then
-  begin
-    if (not(obj.isExplicit())) then
-      raise EArgumentCryptoLibException.CreateRes(@SInvalidObject);
-
-    result := inner as IAsn1Sequence;
-    Exit;
-  end;
-
-  //
-  // constructed object which appears to be explicitly tagged
-  // when it should be implicit means we have to add the
-  // surrounding sequence.
-  //
-  if (obj.isExplicit()) then
-  begin
-    if (Supports(obj, IBerTaggedObject)) then
-    begin
-      result := TBerSequence.Create(inner);
-      Exit;
-    end;
-
-    result := TDerSequence.Create(inner);
-    Exit;
-  end;
-
-  if (Supports(inner, IAsn1Sequence, Sequence)) then
-  begin
-    result := Sequence;
-    Exit;
-  end;
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObject,
-    [(obj as TAsn1TaggedObject).ClassName]);
-
-end;
-
-function TAsn1Sequence.GetParser: IAsn1SequenceParser;
-begin
-  result := TAsn1SequenceParserImpl.Create(Self as IAsn1Sequence);
-end;
-
-function TAsn1Sequence.GetSelf(Index: Int32): IAsn1Encodable;
-begin
-  result := FElements[Index];
-end;
-
-function TAsn1Sequence.ToArray: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  result := TAsn1EncodableVector.CloneElements(FElements);
-end;
-
-function TAsn1Sequence.ToString: String;
-begin
-  result := TCollectionUtilities.ToStructuredString(FElements);
-end;
-
-{ TAsn1Sequence.TAsn1SequenceParserImpl }
-
-constructor TAsn1Sequence.TAsn1SequenceParserImpl.Create
-  (const outer: IAsn1Sequence);
-begin
-  inherited Create();
-  Fouter := outer;
-  Fmax := outer.count;
-end;
-
-function TAsn1Sequence.TAsn1SequenceParserImpl.ReadObject: IAsn1Convertible;
-var
-  obj: IAsn1Encodable;
-  Sequence: IAsn1Sequence;
-  asn1Set: IAsn1Set;
-begin
-  if (Findex = Fmax) then
-  begin
-    result := Nil;
-    Exit;
-  end;
-
-  obj := Fouter[Findex];
-  System.Inc(Findex);
-
-  if (Supports(obj, IAsn1Sequence, Sequence)) then
-  begin
-    result := Sequence.parser;
-    Exit;
-  end;
-
-  if (Supports(obj, IAsn1Set, asn1Set)) then
-  begin
-    result := asn1Set.parser;
-    Exit;
-  end;
-
-  // NB: Asn1OctetString implements Asn1OctetStringParser directly
-  // if (obj is Asn1OctetString)
-  // return ((Asn1OctetString)obj).Parser;
-
-  result := obj;
-end;
-
-function TAsn1Sequence.TAsn1SequenceParserImpl.ToAsn1Object: IAsn1Object;
-begin
-  result := Fouter;
-end;
-
-{ TDerOctetString }
-
-constructor TDerOctetString.Create(const Str: TCryptoLibByteArray);
-begin
-  Inherited Create(Str);
-end;
-
-constructor TDerOctetString.Create(const obj: IAsn1Encodable);
-begin
-  Inherited Create(obj);
-end;
-
-destructor TDerOctetString.Destroy;
-begin
-  inherited Destroy;
-end;
-
-procedure TDerOctetString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.OctetString, Str);
-end;
-
-class procedure TDerOctetString.Encode(const derOut: TDerOutputStream;
-  const bytes: TCryptoLibByteArray; offset, length: Int32);
-begin
-  derOut.WriteEncoded(TAsn1Tags.OctetString, bytes, offset, length);
-end;
-
-{ TBerOctetString }
-
-constructor TBerOctetString.Create(const octets: TList<IDerOctetString>);
-begin
-  Inherited Create(ToBytes(octets));
-  Focts := octets;
-end;
-
-constructor TBerOctetString.Create(const Str: TCryptoLibByteArray);
-begin
-  Inherited Create(Str);
-end;
-
-constructor TBerOctetString.Create(const obj: IAsn1Encodable);
-begin
-  Inherited Create(obj.ToAsn1Object());
-end;
-
-destructor TBerOctetString.Destroy;
-begin
-  Focts.Free;
-  inherited Destroy;
-end;
-
-constructor TBerOctetString.Create(const obj: IAsn1Object);
-begin
-  Inherited Create(obj);
-end;
-
-procedure TBerOctetString.Encode(const derOut: TStream);
-var
-  oct: IDerOctetString;
-  LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
-begin
-  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
-  begin
-    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.Constructed or
-      TAsn1Tags.OctetString);
-
-    (derOut as TDerOutputStream).WriteByte($80);
-
-    //
-    // write out the octet array
-    //
-    LListIDerOctetString := Self.GetEnumerable;
-    for oct in LListIDerOctetString do
-    begin
-      (derOut as TDerOutputStream).WriteObject(oct);
-    end;
-
-    (derOut as TDerOutputStream).WriteByte($00);
-    (derOut as TDerOutputStream).WriteByte($00);
-  end
+  if Supports(AElement, IAsn1Sequence, LSequence) then
+    Result := LSequence
   else
-  begin
-    (Inherited Encode(derOut));
-  end;
+    Result := nil;
 end;
 
-class function TBerOctetString.FromSequence(const seq: IAsn1Sequence)
-  : IBerOctetString;
-var
-  v: TList<IDerOctetString>;
-  obj: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+class function TAsn1Sequence.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Sequence;
 begin
-  v := TList<IDerOctetString>.Create();
-
-  LListAsn1Encodable := seq.GetEnumerable;
-  for obj in LListAsn1Encodable do
-  begin
-    v.Add(obj as IDerOctetString);
-  end;
-
-  result := TBerOctetString.Create(v);
-
-end;
-
-function TBerOctetString.GenerateOcts: TList<IDerOctetString>;
-var
-  I, endPoint: Int32;
-  nStr: TCryptoLibByteArray;
-begin
-  result := TList<IDerOctetString>.Create();
-  I := 0;
-  while I < System.length(Str) do
-  begin
-    endPoint := Min(System.length(Str), I + MaxLength);
-
-    System.SetLength(nStr, endPoint - I);
-
-    System.Move(Str[I], nStr[0], System.length(nStr) * System.SizeOf(Byte));
-    result.Add(TDerOctetString.Create(nStr) as IDerOctetString);
-    System.Inc(I, MaxLength);
-  end;
-end;
-
-function TBerOctetString.GetEnumerable: TCryptoLibGenericArray<IDerOctetString>;
-var
-  LList: TList<IDerOctetString>;
-begin
-
-  if (Focts = Nil) then
-  begin
-    LList := GenerateOcts();
-    try
-      result := LList.ToArray;
-      Exit;
-    finally
-      LList.Free;
-    end;
-  end;
-
-  result := Focts.ToArray;
-
-end;
-
-function TBerOctetString.GetOctets: TCryptoLibByteArray;
-begin
-  result := Str;
-end;
-
-class function TBerOctetString.ToBytes(octs: TList<IDerOctetString>)
-  : TCryptoLibByteArray;
-var
-  bOut: TMemoryStream;
-  o: IDerOctetString;
-  octets: TCryptoLibByteArray;
-begin
-  bOut := TMemoryStream.Create();
-  try
-    for o in octs do
-    begin
-      octets := o.GetOctets();
-      bOut.Write(octets[0], System.length(octets));
-    end;
-
-    System.SetLength(result, bOut.Size);
-    bOut.Position := 0;
-    bOut.Read(result[0], bOut.Size);
-  finally
-    bOut.Free;
-  end;
-end;
-
-{ TDerNull }
-
-function TDerNull.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-begin
-  result := Supports(asn1Object, IDerNull);
-end;
-
-function TDerNull.Asn1GetHashCode: Int32;
-begin
-  result := -1;
-end;
-
-{$IFNDEF _FIXINSIGHT_}
-
-constructor TDerNull.Create(dummy: Int32);
-begin
-  Inherited Create();
-end;
-{$ENDIF}
-
-procedure TDerNull.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Null, ZeroBytes);
-end;
-
-class function TDerNull.GetInstance: IDerNull;
-begin
-  result := TDerNull.Create(0);
+  Result := TAsn1Sequence.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Sequence;
 end;
 
 { TDerSequence }
 
-class function TDerSequence.GetEmpty: IDerSequence;
+class function TDerSequence.GetEmpty(): IDerSequence;
 begin
-  result := TDerSequence.Create();
+  Result := TDerSequence.Create();
 end;
 
-constructor TDerSequence.Create(const element: IAsn1Encodable);
+constructor TDerSequence.Create();
 begin
-  Inherited Create(element);
+  inherited Create();
 end;
 
-constructor TDerSequence.Create;
+constructor TDerSequence.Create(const AElement: IAsn1Encodable);
 begin
-  Inherited Create();
+  inherited Create(AElement);
 end;
 
-constructor TDerSequence.Create(const elementVector: IAsn1EncodableVector);
+constructor TDerSequence.Create(const AElements: array of IAsn1Encodable);
 begin
-  Inherited Create(elementVector);
+  inherited Create(AElements);
 end;
 
-constructor TDerSequence.Create(const elements: array of IAsn1Encodable);
+constructor TDerSequence.Create(const AElementVector: IAsn1EncodableVector);
 begin
-  Inherited Create(elements);
+  inherited Create(AElementVector);
 end;
 
-destructor TDerSequence.Destroy;
+class function TDerSequence.FromVector(const AElementVector: IAsn1EncodableVector): IDerSequence;
 begin
-  inherited Destroy;
-end;
-
-procedure TDerSequence.Encode(const derOut: TStream);
-var
-  bOut: TMemoryStream;
-  dOut: TDerOutputStream;
-  obj: IAsn1Encodable;
-  bytes: TCryptoLibByteArray;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  // TODO Intermediate buffer could be avoided if we could calculate expected length
-  bOut := TMemoryStream.Create();
-  dOut := TDerOutputStream.Create(bOut);
-  try
-
-    LListAsn1Encodable := Self.GetEnumerable;
-    for obj in LListAsn1Encodable do
-    begin
-      dOut.WriteObject(obj);
-    end;
-
-    System.SetLength(bytes, bOut.Size);
-    bOut.Position := 0;
-    bOut.Read(bytes[0], bOut.Size);
-  finally
-    bOut.Free;
-    dOut.Free;
-  end;
-
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Sequence or
-    TAsn1Tags.Constructed, bytes);
-end;
-
-class function TDerSequence.FromVector(const elementVector
-  : IAsn1EncodableVector): IDerSequence;
-begin
-  if elementVector.count < 1 then
-  begin
-    result := Empty;
-  end
+  if (AElementVector = nil) or (AElementVector.Count < 1) then
+    Result := GetEmpty()
   else
-  begin
-    result := TDerSequence.Create(elementVector);
-  end;
-
+    Result := TDerSequence.Create(AElementVector);
 end;
 
-{ TBerSequence }
-
-class function TBerSequence.GetEmpty: IBerSequence;
+function TDerSequence.GetEncoding(AEncoding: Int32): IAsn1Encoding;
 begin
-  result := TBerSequence.Create();
+  Result := TConstructedDLEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Sequence,
+    TAsn1OutputStream.GetContentsEncodings(TAsn1OutputStream.EncodingDer, Elements));
 end;
 
-constructor TBerSequence.Create(const element: IAsn1Encodable);
+function TDerSequence.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
 begin
-  Inherited Create(element);
+  Result := TConstructedDLEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(TAsn1OutputStream.EncodingDer, Elements));
 end;
 
-constructor TBerSequence.Create;
+function TDerSequence.GetEncodingDer(): IDerEncoding;
 begin
-  Inherited Create();
+  Result := TConstructedDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Sequence,
+    TAsn1OutputStream.GetContentsEncodingsDer(Elements));
 end;
 
-constructor TBerSequence.Create(const elementVector: IAsn1EncodableVector);
+function TDerSequence.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
 begin
-  Inherited Create(elementVector);
+  Result := TConstructedDerEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodingsDer(Elements));
 end;
 
-destructor TBerSequence.Destroy;
-begin
-  inherited Destroy;
-end;
-
-constructor TBerSequence.Create(const elements: array of IAsn1Encodable);
-begin
-  Inherited Create(elements);
-end;
-
-procedure TBerSequence.Encode(const derOut: TStream);
+function TDerSequence.ToAsn1BitString(): IDerBitString;
 var
-  o: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+  LBitStrings: TCryptoLibGenericArray<IDerBitString>;
 begin
+  LBitStrings := GetConstructedBitStrings();
+  Result := TDerBitString.Create(TBerBitString.FlattenBitStrings(LBitStrings), False);
+end;
 
-  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
-  begin
-    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.Sequence or
-      TAsn1Tags.Constructed);
-    (derOut as TDerOutputStream).WriteByte($80);
+function TDerSequence.ToAsn1External(): IDerExternal;
+begin
+  Result := TDerExternal.Create(Self);
+end;
 
-    LListAsn1Encodable := Self.GetEnumerable;
-    for o in LListAsn1Encodable do
-    begin
-      (derOut as TDerOutputStream).WriteObject(o);
-    end;
+function TDerSequence.ToAsn1OctetString(): IAsn1OctetString;
+var
+  LOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>;
+begin
+  LOctetStrings := GetConstructedOctetStrings();
+  Result := TDerOctetString.WithContents(TBerOctetString.FlattenOctetStrings(LOctetStrings));
+end;
 
-    (derOut as TDerOutputStream).WriteByte($00);
-    (derOut as TDerOutputStream).WriteByte($00);
-  end
+function TDerSequence.ToAsn1Set(): IAsn1Set;
+begin
+  // NOTE: DLSet is intentional, we don't want sorting
+  Result := TDLSet.Create(False, Elements);
+end;
+
+class function TDerSequence.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSequence;
+begin
+  if (AC = nil) or (System.Length(AC) < 1) then
+    Result := GetEmpty()
   else
-  begin
-    (Inherited Encode(derOut));
-  end;
-
+    Result := TDerSequence.Create(AC);
 end;
 
-class function TBerSequence.FromVector(const elementVector
-  : IAsn1EncodableVector): IBerSequence;
+class function TDerSequence.FromElement(const AElement: IAsn1Encodable): IDerSequence;
 begin
-  if elementVector.count < 1 then
-  begin
-    result := Empty;
-  end
+  Result := TDerSequence.Create(AElement);
+end;
+
+class function TDerSequence.FromElements(const AElement1, AElement2: IAsn1Encodable): IDerSequence;
+begin
+  Result := TDerSequence.Create(AElement1, AElement2);
+end;
+
+class function TDerSequence.FromElements(const AElements: array of IAsn1Encodable): IDerSequence;
+begin
+  if System.Length(AElements) < 1 then
+    Result := GetEmpty()
   else
-  begin
-    result := TBerSequence.Create(elementVector);
-  end;
-
+    Result := TDerSequence.Create(AElements);
 end;
 
-{ TAsn1TaggedObject }
-
-function TAsn1TaggedObject.GetObject: IAsn1Object;
+class function TDerSequence.FromElementsOptional(const AElements: array of IAsn1Encodable): IDerSequence;
 begin
-  if (Fobj <> Nil) then
+  if System.Length(AElements) < 1 then
   begin
-    result := Fobj.ToAsn1Object();
+    Result := nil;
     Exit;
   end;
-
-  result := Nil;
+  Result := TDerSequence.Create(AElements);
 end;
 
-function TAsn1TaggedObject.GetTagNo: Int32;
-begin
-  result := FtagNo;
-end;
-
-function TAsn1TaggedObject.Getexplicitly: Boolean;
-begin
-  result := Fexplicitly;
-end;
-
-function TAsn1TaggedObject.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+class function TDerSequence.FromSequence(const ASequence: IAsn1Sequence): IDerSequence;
 var
-  other: IAsn1TaggedObject;
+  LDerSequence: IDerSequence;
 begin
-
-  if (not Supports(asn1Object, IAsn1TaggedObject, other)) then
+  if ASequence = nil then
   begin
-    result := False;
+    Result := nil;
     Exit;
   end;
-
-  result := ((tagNo = other.tagNo) and
-    // TODO Should this be part of equality?
-    (explicitly = other.explicitly)) and
-    (GetObject().Equals(other.GetObject()));
+  if Supports(ASequence, IDerSequence, LDerSequence) then
+  begin
+    Result := LDerSequence;
+    Exit;
+  end;
+  Result := WithElements(ASequence.Elements);
 end;
 
-function TAsn1TaggedObject.Asn1GetHashCode: Int32;
+class function TDerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence;
 var
-  code: Int32;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  code := Abs(tagNo);
-
-  // TODO: actually this is wrong - the problem is that a re-encoded
-  // object may end up with a different hashCode due to implicit
-  // tagging. As implicit tagging is ambiguous if a sequence is involved
-  // it seems the only correct method for both equals and hashCode is to
-  // compare the encodings...
-  // code := code xor explicitly.GetHashCode();
-
-  if (Fobj <> Nil) then
+  if (ASequence = nil) or (ASequence.Count < 1) then
   begin
-    code := code xor Fobj.GetHashCode();
-  end;
-
-  result := code;
-end;
-
-constructor TAsn1TaggedObject.Create(tagNo: Int32; const obj: IAsn1Encodable);
-begin
-  Inherited Create();
-  Fexplicitly := True;
-  FtagNo := tagNo;
-  Fobj := obj;
-end;
-
-constructor TAsn1TaggedObject.Create(explicitly: Boolean; tagNo: Int32;
-  const obj: IAsn1Encodable);
-begin
-  Inherited Create();
-  // IAsn1Choice marker interface 'insists' on explicit tagging
-  Fexplicitly := explicitly or (Supports(obj, IAsn1Choice));
-  FtagNo := tagNo;
-  Fobj := obj;
-end;
-
-class function TAsn1TaggedObject.GetInstance(obj: TObject): IAsn1TaggedObject;
-begin
-  if ((obj = Nil) or (obj is TAsn1TaggedObject)) then
-  begin
-    result := obj as TAsn1TaggedObject;
+    Result := GetEmpty();
     Exit;
   end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObject,
-    [obj.ClassName]);
+  LMapped := TCollectionUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
+  Result := WithElements(LMapped);
 end;
 
-function TAsn1TaggedObject.Getobj: IAsn1Encodable;
-begin
-  result := Fobj;
-end;
-
-class function TAsn1TaggedObject.GetInstance(const obj: IAsn1TaggedObject;
-  explicitly: Boolean): IAsn1TaggedObject;
-begin
-  if (explicitly) then
-  begin
-    result := GetInstance(obj.GetObject() as TAsn1Object);
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateRes(@SImplicitObject);
-end;
-
-function TAsn1TaggedObject.GetObjectParser(tag: Int32; isExplicit: Boolean)
-  : IAsn1Convertible;
-begin
-  case tag of
-
-    TAsn1Tags.&Set:
-      begin
-        result := TAsn1Set.GetInstance(Self as IAsn1TaggedObject,
-          isExplicit).parser;
-        Exit;
-      end;
-    TAsn1Tags.Sequence:
-      begin
-        result := TAsn1Sequence.GetInstance(Self as IAsn1TaggedObject,
-          isExplicit).parser;
-        Exit;
-      end;
-    TAsn1Tags.OctetString:
-      begin
-        result := TAsn1OctetString.GetInstance(Self as IAsn1TaggedObject,
-          isExplicit).parser;
-        Exit;
-      end;
-  end;
-
-  if (isExplicit) then
-  begin
-    result := GetObject();
-    Exit;
-  end;
-
-  raise ENotImplementedCryptoLibException.CreateResFmt(@SImplicitTag, [tag]);
-
-end;
-
-class function TAsn1TaggedObject.IsConstructed(isExplicit: Boolean;
-  const obj: IAsn1Object): Boolean;
+class function TDerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSequence;
 var
-  Tagged: IAsn1TaggedObject;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  if ((isExplicit) or (Supports(obj, IAsn1Sequence)) or
-    (Supports(obj, IAsn1Set))) then
+  if (ATs = nil) or (System.Length(ATs) < 1) then
   begin
-    result := True;
+    Result := GetEmpty();
     Exit;
   end;
+  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  Result := WithElements(LMapped);
+end;
 
-  if (not Supports(obj, IAsn1TaggedObject, Tagged)) then
+class function TDerSequence.Concatenate(const ASequences: array of IAsn1Sequence): IDerSequence;
+var
+  LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
+  I: Int32;
+begin
+  if System.Length(ASequences) = 0 then
   begin
-    result := False;
+    Result := GetEmpty();
     Exit;
   end;
-  result := IsConstructed(Tagged.isExplicit(), Tagged.GetObject());
+  
+  System.SetLength(LSequences, System.Length(ASequences));
+  for I := 0 to System.Length(ASequences) - 1 do
+    LSequences[I] := ASequences[I];
+  
+  case System.Length(LSequences) of
+    0:
+      Result := GetEmpty();
+    1:
+      Result := FromSequence(LSequences[0]);
+  else
+    Result := WithElements(ConcatenateElements(LSequences));
+  end;
 end;
 
-function TAsn1TaggedObject.IsEmpty: Boolean;
+class function TDerSequence.WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IDerSequence;
 begin
-  result := False; // empty;
+  if (AElements = nil) or (System.Length(AElements) < 1) then
+    Result := GetEmpty()
+  else
+    Result := TDerSequence.Create(AElements);
 end;
 
-function TAsn1TaggedObject.isExplicit: Boolean;
+class function TDerSequence.GetEncodingLength(AContentsLength: Int32): Int32;
 begin
-  result := Fexplicitly;
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(TAsn1Tags.Sequence, AContentsLength);
 end;
 
-function TAsn1TaggedObject.ToString: String;
+constructor TDerSequence.Create(const AElement1, AElement2: IAsn1Encodable);
 begin
-  result := '[' + IntToStr(tagNo) + ']' + (Fobj as TAsn1Encodable).ClassName;
+  inherited Create(AElement1, AElement2);
+end;
+
+constructor TDerSequence.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
+begin
+  inherited Create(AC);
+end;
+
+constructor TDerSequence.Create(const ASequence: IAsn1Sequence);
+begin
+  inherited Create(ASequence as IAsn1Encodable);
+end;
+
+constructor TDerSequence.Create(const ASet: IAsn1Set);
+begin
+  inherited Create(ASet as IAsn1Encodable);
+end;
+
+{ TDLSequence }
+
+class function TDLSequence.GetEmpty(): IDLSequence;
+begin
+  Result := TDLSequence.Create();
+end;
+
+constructor TDLSequence.Create();
+begin
+  inherited Create();
+end;
+
+constructor TDLSequence.Create(const AElement: IAsn1Encodable);
+begin
+  inherited Create(AElement);
+end;
+
+constructor TDLSequence.Create(const AElements: array of IAsn1Encodable);
+begin
+  inherited Create(AElements);
+end;
+
+constructor TDLSequence.Create(const AElementVector: IAsn1EncodableVector);
+begin
+  inherited Create(AElementVector);
+end;
+
+class function TDLSequence.FromVector(const AElementVector: IAsn1EncodableVector): IDLSequence;
+begin
+  if (AElementVector = nil) or (AElementVector.Count < 1) then
+    Result := GetEmpty()
+  else
+    Result := TDLSequence.Create(AElementVector);
+end;
+
+function TDLSequence.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncoding(AEncoding);
+    Exit;
+  end;
+  
+  Result := TConstructedDLEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Sequence,
+    TAsn1OutputStream.GetContentsEncodings(TAsn1OutputStream.EncodingDL, Elements));
+end;
+
+function TDLSequence.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  Result := TConstructedDLEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(TAsn1OutputStream.EncodingDL, Elements));
+end;
+
+function TDLSequence.ToAsn1External(): IDerExternal;
+begin
+  Result := TDLExternal.Create(Self);
+end;
+
+function TDLSequence.ToAsn1BitString(): IDerBitString;
+var
+  LBitStrings: TCryptoLibGenericArray<IDerBitString>;
+begin
+  LBitStrings := GetConstructedBitStrings();
+  Result := TDLBitString.Create(TBerBitString.FlattenBitStrings(LBitStrings), False);
+end;
+
+function TDLSequence.ToAsn1Set(): IAsn1Set;
+begin
+  // NOTE: DLSet is intentional, we don't want sorting
+  Result := TDLSet.Create(False, Elements);
+end;
+
+class function TDLSequence.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSequence;
+begin
+  if (AC = nil) or (System.Length(AC) < 1) then
+    Result := GetEmpty()
+  else
+    Result := TDLSequence.Create(AC);
+end;
+
+class function TDLSequence.FromElement(const AElement: IAsn1Encodable): IDLSequence;
+begin
+  Result := TDLSequence.Create(AElement);
+end;
+
+class function TDLSequence.FromElements(const AElement1, AElement2: IAsn1Encodable): IDLSequence;
+begin
+  Result := TDLSequence.Create(AElement1, AElement2);
+end;
+
+class function TDLSequence.FromElements(const AElements: array of IAsn1Encodable): IDLSequence;
+begin
+  if System.Length(AElements) < 1 then
+    Result := GetEmpty()
+  else
+    Result := TDLSequence.Create(AElements);
+end;
+
+class function TDLSequence.FromElementsOptional(const AElements: array of IAsn1Encodable): IDLSequence;
+begin
+  if System.Length(AElements) < 1 then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  Result := TDLSequence.Create(AElements);
+end;
+
+class function TDLSequence.FromSequence(const ASequence: IAsn1Sequence): IDLSequence;
+var
+  LDLSequence: IDLSequence;
+begin
+  if ASequence = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(ASequence, IDLSequence, LDLSequence) then
+  begin
+    Result := LDLSequence;
+    Exit;
+  end;
+  Result := WithElements(ASequence.Elements);
+end;
+
+class function TDLSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence;
+var
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  if (ASequence = nil) or (ASequence.Count < 1) then
+  begin
+    Result := GetEmpty();
+    Exit;
+  end;
+  LMapped := TCollectionUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
+  Result := WithElements(LMapped);
+end;
+
+class function TDLSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSequence;
+var
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  if (ATs = nil) or (System.Length(ATs) < 1) then
+  begin
+    Result := GetEmpty();
+    Exit;
+  end;
+  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  Result := WithElements(LMapped);
+end;
+
+class function TDLSequence.Concatenate(const ASequences: array of IAsn1Sequence): IDLSequence;
+var
+  LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
+  I: Int32;
+begin
+  if System.Length(ASequences) = 0 then
+  begin
+    Result := GetEmpty();
+    Exit;
+  end;
+  
+  System.SetLength(LSequences, System.Length(ASequences));
+  for I := 0 to System.Length(ASequences) - 1 do
+    LSequences[I] := ASequences[I];
+  
+  case System.Length(LSequences) of
+    0:
+      Result := GetEmpty();
+    1:
+      Result := FromSequence(LSequences[0]);
+  else
+    Result := WithElements(ConcatenateElements(LSequences));
+  end;
+end;
+
+class function TDLSequence.WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IDLSequence;
+begin
+  if (AElements = nil) or (System.Length(AElements) < 1) then
+    Result := GetEmpty()
+  else
+    Result := TDLSequence.Create(AElements);
+end;
+
+constructor TDLSequence.Create(const AElement1, AElement2: IAsn1Encodable);
+begin
+  inherited Create(AElement1, AElement2);
+end;
+
+constructor TDLSequence.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
+begin
+  inherited Create(AC);
+end;
+
+constructor TDLSequence.Create(const ASequence: IAsn1Sequence);
+begin
+  inherited Create(ASequence);
+end;
+
+constructor TDLSequence.Create(const ASet: IAsn1Set);
+begin
+  inherited Create(ASet);
 end;
 
 { TAsn1Set }
 
-function TAsn1Set.GetDerEncoded(const obj: IAsn1Encodable): TCryptoLibByteArray;
-begin
-  try
-    result := obj.GetEncoded(Der);
-  except
-    on e: EIOCryptoLibException do
-    begin
-      raise EInvalidArgumentCryptoLibException.CreateRes(@SObjectEncodeError);
-    end;
-  end;
-end;
-
-function TAsn1Set.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  that: IAsn1Set;
-  o1, o2: IAsn1Object;
-  idx, LCount: Int32;
-begin
-
-  if (not Supports(asn1Object, IAsn1Set, that)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  LCount := count;
-  if (that.count <> LCount) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  for idx := 0 to System.Pred(LCount) do
-  begin
-    o1 := FElements[idx].ToAsn1Object();
-    o2 := that.elements[idx].ToAsn1Object();
-
-    if ((o1 <> o2) and (not o1.CallAsn1Equals(o2))) then
-    begin
-      result := False;
-      Exit;
-    end;
-  end;
-
-  result := True;
-end;
-
-function TAsn1Set.Asn1GetHashCode: Int32;
-var
-  hc, I: Int32;
-begin
-  I := System.length(FElements);
-  hc := I + 1;
-
-  System.Dec(I);
-  while (I >= 0) do
-  begin
-    hc := hc * 257;
-    hc := hc xor FElements[I].ToAsn1Object().CallAsn1GetHashCode();
-    System.Dec(I);
-  end;
-
-  result := hc;
-end;
-
 constructor TAsn1Set.Create();
 begin
-  Inherited Create();
+  inherited Create;
   FElements := TAsn1EncodableVector.EmptyElements;
 end;
 
-constructor TAsn1Set.Create(const element: IAsn1Encodable);
+constructor TAsn1Set.Create(const AElement: IAsn1Encodable);
 begin
-  Inherited Create();
-  if (element = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
-  end;
-  FElements := TCryptoLibGenericArray<IAsn1Encodable>.Create(element);
+  inherited Create;
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  System.SetLength(FElements, 1);
+  FElements[0] := AElement;
 end;
 
-constructor TAsn1Set.Create(const elementVector: IAsn1EncodableVector);
-begin
-  Inherited Create();
-  if (elementVector = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementVectorNil);
-  end;
-
-  FElements := elementVector.TakeElements();
-end;
-
-constructor TAsn1Set.Create(const elements: array of IAsn1Encodable);
+constructor TAsn1Set.Create(const AElements: array of IAsn1Encodable; ADoSort: Boolean);
 var
-  LElementsCopy: TCryptoLibGenericArray<IAsn1Encodable>;
+  I: Int32;
 begin
-  Inherited Create();
-  LElementsCopy := OpenArrayToDynamicArray(elements);
-  if (TAsn1Encodable.IsNullOrContainsNull(LElementsCopy)) then
-  begin
-    raise ENullReferenceCryptoLibException.CreateRes(@SElementsNil);
-  end;
+  inherited Create;
+  // Check for null elements
+  for I := 0 to System.Length(AElements) - 1 do
+    if AElements[I] = nil then
+      raise ENullReferenceCryptoLibException.Create('elements cannot contain null');
+  System.SetLength(FElements, System.Length(AElements));
+  for I := 0 to System.Length(AElements) - 1 do
+    FElements[I] := AElements[I];
+  if ADoSort and (System.Length(FElements) > 1) then
+    SortElements(FElements);
+end;
 
-  FElements := TAsn1EncodableVector.CloneElements(LElementsCopy);
+constructor TAsn1Set.Create(const AElementVector: IAsn1EncodableVector; ADoSort: Boolean);
+begin
+  inherited Create;
+  if AElementVector = nil then
+    raise EArgumentNilCryptoLibException.Create('elementVector');
+  if ADoSort and (AElementVector.Count > 1) then
+  begin
+    FElements := AElementVector.CopyElements();
+    SortElements(FElements);
+  end
+  else
+    FElements := AElementVector.TakeElements();
+end;
+
+constructor TAsn1Set.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>; ADoSort: Boolean);
+var
+  I: Int32;
+begin
+  inherited Create;
+  if AC = nil then
+    raise EArgumentNilCryptoLibException.Create('elements');
+  System.SetLength(FElements, System.Length(AC));
+  for I := 0 to System.Length(AC) - 1 do
+    FElements[I] := AC[I];
+  if ADoSort then
+    SortElements(FElements);
+end;
+
+constructor TAsn1Set.Create(const ASequence: IAsn1Sequence);
+var
+  I: Int32;
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  inherited Create;
+  if ASequence = nil then
+    raise EArgumentNilCryptoLibException.Create('sequence');
+  LElements := ASequence.Elements;
+  System.SetLength(FElements, System.Length(LElements));
+  for I := 0 to System.Length(LElements) - 1 do
+    FElements[I] := LElements[I];
+end;
+
+constructor TAsn1Set.Create(const ASet: IAsn1Set);
+var
+  I: Int32;
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  inherited Create;
+  if ASet = nil then
+    raise EArgumentNilCryptoLibException.Create('set');
+  LElements := ASet.Elements;
+  System.SetLength(FElements, System.Length(LElements));
+  for I := 0 to System.Length(LElements) - 1 do
+    FElements[I] := LElements[I];
+end;
+
+constructor TAsn1Set.Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
+begin
+  inherited Create;
+  if AElements = nil then
+    raise EArgumentNilCryptoLibException.Create('elements');
+  FElements := System.Copy(AElements);
+  // If isSorted is false, elements need to be sorted
+  if not AIsSorted and (System.Length(FElements) > 1) then
+    SortElements(FElements);
 end;
 
 destructor TAsn1Set.Destroy;
@@ -6500,3990 +6411,9050 @@ begin
   inherited Destroy;
 end;
 
-function TAsn1Set.GetCount: Int32;
+function TAsn1Set.GetCount(): Int32;
 begin
-  result := System.length(FElements);
+  Result := System.Length(FElements);
 end;
 
-function TAsn1Set.GetElements: TCryptoLibGenericArray<IAsn1Encodable>;
+function TAsn1Set.GetParser(): IAsn1SetParser;
 begin
-  result := FElements;
+  Result := TAsn1SetParserImpl.Create(Self);
 end;
 
-function TAsn1Set.GetEnumerable: TCryptoLibGenericArray<IAsn1Encodable>;
+function TAsn1Set.GetItem(AIndex: Int32): IAsn1Encodable;
 begin
-  result := FElements;
+  if (AIndex < 0) or (AIndex >= System.Length(FElements)) then
+    raise EIndexOutOfRangeCryptoLibException.Create('Index out of range');
+  Result := FElements[AIndex];
 end;
 
-class function TAsn1Set.GetInstance(const obj: TCryptoLibByteArray): IAsn1Set;
+function TAsn1Set.GetElements(): TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  try
-    result := TAsn1Set.GetInstance(FromByteArray(obj) as TAsn1Object);
-  except
-    on e: EIOCryptoLibException do
-    begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidSequence,
-        [e.Message]);
-    end;
-  end;
+  Result := System.Copy(FElements);
 end;
 
-class function TAsn1Set.GetInstance(const obj: IAsn1TaggedObject;
-  explicitly: Boolean): IAsn1Set;
+function TAsn1Set.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
 var
-  inner: IAsn1Object;
-  asn1Set: IAsn1Set;
-  asn1Sequence: IAsn1Sequence;
-  v: IAsn1EncodableVector;
-  ae: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+  LThat: IAsn1Set;
+  I: Int32;
 begin
-  inner := obj.GetObject();
-
-  if (explicitly) then
+  if not Supports(AAsn1Object, IAsn1Set, LThat) then
   begin
-    if (not(obj.isExplicit())) then
-      raise EArgumentCryptoLibException.CreateRes(@SInvalidObject);
-
-    result := inner as IAsn1Set;
+    Result := False;
     Exit;
   end;
 
-  //
-  // constructed object which appears to be explicitly tagged
-  // when it should be implicit means we have to add the
-  // surrounding sequence.
-  //
-  if (obj.isExplicit()) then
+  if GetCount() <> LThat.Count then
   begin
-
-    result := TDerSet.Create(inner);
+    Result := False;
     Exit;
   end;
 
-  if (Supports(inner, IAsn1Set, asn1Set)) then
+  for I := 0 to GetCount() - 1 do
   begin
-    result := asn1Set;
-    Exit;
-  end;
-  //
-  // in this case the parser returns a sequence, convert it
-  // into a set.
-  //
-
-  if (Supports(inner, IAsn1Sequence, asn1Sequence)) then
-  begin
-    v := TAsn1EncodableVector.Create();
-
-    LListAsn1Encodable := asn1Sequence.GetEnumerable;
-    for ae in LListAsn1Encodable do
+    if not FElements[I].ToAsn1Object().Equals(LThat[I].ToAsn1Object()) then
     begin
-      v.Add(ae);
-    end;
-
-    // TODO Should be able to construct set directly from sequence?
-    result := TDerSet.Create(v, False);
-    Exit;
-  end;
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObject,
-    [(obj as TAsn1TaggedObject).ClassName]);
-
-end;
-
-class function TAsn1Set.GetInstance(const obj: TObject): IAsn1Set;
-var
-  primitive: IAsn1Object;
-  asn1Set: IAsn1Set;
-  res: IAsn1SetParser;
-begin
-  if ((obj = Nil) or (obj is TAsn1Set)) then
-  begin
-    result := obj as TAsn1Set;
-    Exit;
-  end;
-
-  if (Supports(obj, IAsn1SetParser, res)) then
-  begin
-    result := TAsn1Set.GetInstance(res.ToAsn1Object() as TAsn1Object);
-    Exit;
-
-  end;
-
-  if (obj is TAsn1Encodable) then
-  begin
-    primitive := (obj as TAsn1Encodable).ToAsn1Object();
-
-    if (Supports(primitive, IAsn1Set, asn1Set)) then
-    begin
-      result := asn1Set;
+      Result := False;
       Exit;
     end;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObject,
-    [obj.ClassName]);
-
+  Result := True;
 end;
 
-function TAsn1Set.GetParser: IAsn1SetParser;
-begin
-  result := TAsn1SetParserImpl.Create(Self as IAsn1Set);
-end;
-
-function TAsn1Set.GetSelf(Index: Int32): IAsn1Encodable;
-begin
-  result := FElements[Index];
-end;
-
-class function TAsn1Set.LessThanOrEqual(const a,
-  b: TCryptoLibByteArray): Boolean;
+function TAsn1Set.Asn1GetHashCode(): Int32;
 var
-  last, I, a0, b0: Int32;
+  I: Int32;
 begin
-{$IFDEF DEBUG}
-  System.Assert((System.length(a) >= 2) and (System.length(b) >= 2));
-{$ENDIF DEBUG}
-  (*
-    * NOTE: Set elements in DER encodings are ordered first according to their tags (class and
-    * number); the CONSTRUCTED bit is not part of the tag.
-    *
-    * For SET-OF, this is unimportant. All elements have the same tag and DER requires them to
-    * either all be in constructed form or all in primitive form, according to that tag. The
-    * elements are effectively ordered according to their content octets.
-    *
-    * For SET, the elements will have distinct tags, and each will be in constructed or
-    * primitive form accordingly. Failing to ignore the CONSTRUCTED bit could therefore lead to
-    * ordering inversions.
-  *)
-  a0 := a[0] and (not TAsn1Tags.Constructed);
-  b0 := b[0] and (not TAsn1Tags.Constructed);
-
-  if (a0 <> b0) then
+  I := GetCount();
+  Result := I + 1;
+  while I > 0 do
   begin
-    result := a0 < b0;
-    Exit;
+    Dec(I);
+    Result := Result * 257;
+    Result := Result xor FElements[I].ToAsn1Object().CallAsn1GetHashCode();
   end;
-
-  last := Math.Min(System.length(a), System.length(b)) - 1;
-
-  I := 1;
-  while I < last do
-  begin
-    if (a[I] <> b[I]) then
-    begin
-      result := (a[I]) < (b[I]);
-      Exit;
-    end;
-    System.Inc(I);
-  end;
-
-  result := (a[last]) <= (b[last]);
 end;
 
-procedure TAsn1Set.Sort;
-var
-  count, I, j: Int32;
-  eh, ei, et, e2, e1: IAsn1Encodable;
-  bh, bi, bt, b2, b1: TCryptoLibByteArray;
-
+function TAsn1Set.GetEncoding(AEncoding: Int32): IAsn1Encoding;
 begin
-  count := System.length(FElements);
-  if (count < 2) then
-  begin
-    Exit;
-  end;
+  Result := TConstructedDLEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.&Set,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
+end;
 
-  eh := FElements[0];
-  ei := FElements[1];
-  bh := GetDerEncoded(eh);
-  bi := GetDerEncoded(ei);
+function TAsn1Set.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TConstructedDLEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
+end;
 
-  if (LessThanOrEqual(bi, bh)) then
-  begin
-    et := ei;
-    ei := eh;
-    eh := et;
-    bt := bi;
-    bi := bh;
-    bh := bt;
-  end;
+function TAsn1Set.MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+begin
+  Result := TCollectionUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
+end;
 
-  for I := 2 to System.Pred(count) do
-  begin
-    e2 := FElements[I];
-    b2 := GetDerEncoded(e2);
+function TAsn1Set.ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  Result := TAsn1EncodableVector.CloneElements(FElements);
+end;
 
-    if (LessThanOrEqual(bi, b2)) then
+function TAsn1Set.ToString(): String;
+begin
+  Result := TCollectionUtilities.ToString<IAsn1Encodable>(FElements,
+    function(AElement: IAsn1Encodable): String
+    var
+      LObj: IAsn1Object;
     begin
-      FElements[I - 2] := eh;
-      eh := ei;
-      bh := bi;
-      ei := e2;
-      bi := b2;
-      continue;
-    end;
-
-    if (LessThanOrEqual(bh, b2)) then
-    begin
-      FElements[I - 2] := eh;
-      eh := e2;
-      bh := b2;
-      continue;
-    end;
-
-    j := I - 1;
-    System.Dec(j);
-    while (j > 0) do
-    begin
-      e1 := FElements[j - 1];
-      b1 := GetDerEncoded(e1);
-
-      if (LessThanOrEqual(b1, b2)) then
+      if AElement <> nil then
       begin
-        break;
-      end;
-
-      FElements[j] := e1;
-      System.Dec(j);
-    end;
-
-    FElements[j] := e2;
-  end;
-
-  FElements[count - 2] := eh;
-  FElements[count - 1] := ei;
+        LObj := AElement.ToAsn1Object();
+        Result := LObj.ToString();
+      end
+      else
+        Result := '[null]';
+    end);
 end;
 
-function TAsn1Set.ToArray: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  result := TAsn1EncodableVector.CloneElements(FElements);
-end;
-
-function TAsn1Set.ToString: String;
-begin
-  result := TCollectionUtilities.ToStructuredString(FElements);
-end;
-
-{ TAsn1Set.TAsn1SetParserImpl }
-
-constructor TAsn1Set.TAsn1SetParserImpl.Create(const outer: IAsn1Set);
-begin
-  Inherited Create();
-  Fouter := outer;
-  Fmax := outer.count;
-end;
-
-function TAsn1Set.TAsn1SetParserImpl.ReadObject: IAsn1Convertible;
+class function TAsn1Set.GetInstance(const AObj: TObject): IAsn1Set;
 var
-  obj: IAsn1Encodable;
-  Sequence: IAsn1Sequence;
-  asn1Set: IAsn1Set;
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
 begin
-  if (Findex = Fmax) then
+  if AObj = nil then
   begin
-    result := Nil;
+    Result := nil;
     Exit;
   end;
 
-  obj := Fouter[Findex];
-  System.Inc(Findex);
-
-  if (Supports(obj, IAsn1Sequence, Sequence)) then
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
   begin
-    result := Sequence.parser;
+    Result := GetInstance(LAsn1Obj);
     Exit;
   end;
 
-  if (Supports(obj, IAsn1Set, asn1Set)) then
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
   begin
-    result := asn1Set.parser;
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
     Exit;
   end;
 
-  // NB: Asn1OctetString implements Asn1OctetStringParser directly
-  // if (obj is Asn1OctetString)
-  // return ((Asn1OctetString)obj).Parser;
-
-  result := obj;
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
 end;
 
-function TAsn1Set.TAsn1SetParserImpl.ToAsn1Object: IAsn1Object;
+class function TAsn1Set.GetInstance(const AObj: IAsn1Object): IAsn1Set;
 begin
-  result := Fouter;
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IAsn1Set, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1Set.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Set;
+begin
+  Result := TAsn1Set.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Set;
+end;
+
+class function TAsn1Set.GetOptional(const AElement: IAsn1Encodable): IAsn1Set;
+var
+  LSet: IAsn1Set;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IAsn1Set, LSet) then
+    Result := LSet
+  else
+    Result := nil;
+end;
+
+class function TAsn1Set.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Set;
+begin
+  Result := TAsn1Set.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Set;
+end;
+
+class procedure TAsn1Set.SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
+var
+  LCount, I, J: Int32;
+  LDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
+  LTemp: IAsn1Encodable;
+  LTempEncoding: IDerEncoding;
+begin
+  LCount := System.Length(AElements);
+  if LCount <= 1 then
+    Exit;
+
+  // Get DER encodings for each element
+  LDerEncodings := TAsn1OutputStream.GetContentsEncodingsDer(AElements);
+
+  // Sort elements based on DER encodings using insertion sort
+  for I := 1 to LCount - 1 do
+  begin
+    J := I;
+    while (J > 0) and (LDerEncodings[J].CompareTo(LDerEncodings[J - 1]) < 0) do
+    begin
+      // Swap encodings
+      LTempEncoding := LDerEncodings[J];
+      LDerEncodings[J] := LDerEncodings[J - 1];
+      LDerEncodings[J - 1] := LTempEncoding;
+      // Swap elements
+      LTemp := AElements[J];
+      AElements[J] := AElements[J - 1];
+      AElements[J - 1] := LTemp;
+      System.Dec(J);
+    end;
+  end;
 end;
 
 { TDerSet }
 
-class function TDerSet.GetEmpty: IDerSet;
+class function TDerSet.GetEmpty(): IDerSet;
 begin
-  result := TDerSet.Create();
+  Result := TDerSet.Create();
 end;
 
-constructor TDerSet.Create(const elements: array of IAsn1Encodable);
+constructor TDerSet.Create();
 begin
-  Inherited Create(elements);
-  Sort();
+  inherited Create();
 end;
 
-constructor TDerSet.Create;
+constructor TDerSet.Create(const AElement: IAsn1Encodable);
 begin
-  Inherited Create();
+  inherited Create(AElement);
 end;
 
-constructor TDerSet.Create(const element: IAsn1Encodable);
+constructor TDerSet.Create(const AElements: array of IAsn1Encodable);
 begin
-  Inherited Create(element);
+  inherited Create(AElements, True); // doSort = True for DER
 end;
 
-constructor TDerSet.Create(const elementVector: IAsn1EncodableVector);
+constructor TDerSet.Create(const AElementVector: IAsn1EncodableVector);
 begin
-  Create(elementVector, True);
+  inherited Create(AElementVector, True); // doSort = True for DER
 end;
 
-constructor TDerSet.Create(const elementVector: IAsn1EncodableVector;
-  needsSorting: Boolean);
+constructor TDerSet.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
 begin
-  Inherited Create(elementVector);
-
-  if (needsSorting) then
-  begin
-    Sort();
-  end;
+  inherited Create(AC, True); // doSort = True for DER
 end;
 
-destructor TDerSet.Destroy;
+constructor TDerSet.Create(const ASequence: IAsn1Sequence);
 begin
-  inherited Destroy;
+  inherited Create(ASequence);
 end;
 
-procedure TDerSet.Encode(const derOut: TStream);
-var
-  bOut: TMemoryStream;
-  dOut: TDerOutputStream;
-  obj: IAsn1Encodable;
-  bytes: TCryptoLibByteArray;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+constructor TDerSet.Create(const ASet: IAsn1Set);
 begin
-  // TODO Intermediate buffer could be avoided if we could calculate expected length
-  bOut := TMemoryStream.Create();
-  dOut := TDerOutputStream.Create(bOut);
-
-  try
-    LListAsn1Encodable := Self.GetEnumerable;
-    for obj in LListAsn1Encodable do
-    begin
-      dOut.WriteObject(obj);
-    end;
-
-    System.SetLength(bytes, bOut.Size);
-    bOut.Position := 0;
-    bOut.Read(bytes[0], bOut.Size);
-  finally
-    bOut.Free;
-    dOut.Free;
-  end;
-
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.&Set or
-    TAsn1Tags.Constructed, bytes);
+  inherited Create(ASet);
 end;
 
-class function TDerSet.FromVector(const elementVector: IAsn1EncodableVector;
-  needsSorting: Boolean): IDerSet;
+class function TDerSet.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSet;
 begin
-  if elementVector.count < 1 then
-  begin
-    result := Empty;
-  end
+  if (AC = nil) or (System.Length(AC) < 1) then
+    Result := GetEmpty()
   else
-  begin
-    result := TDerSet.Create(elementVector, needsSorting);
-  end;
+    Result := TDerSet.Create(AC);
 end;
 
-class function TDerSet.FromVector(const elementVector
-  : IAsn1EncodableVector): IDerSet;
+class function TDerSet.FromElement(const AElement: IAsn1Encodable): IDerSet;
 begin
-  if elementVector.count < 1 then
-  begin
-    result := Empty;
-  end
+  Result := TDerSet.Create(AElement);
+end;
+
+class function TDerSet.FromVector(const AElementVector: IAsn1EncodableVector): IDerSet;
+begin
+  if (AElementVector = nil) or (AElementVector.Count < 1) then
+    Result := GetEmpty()
   else
-  begin
-    result := TDerSet.Create(elementVector);
-  end;
+    Result := TDerSet.Create(AElementVector);
 end;
 
-{ TAsn1StreamParser }
-
-procedure TAsn1StreamParser.Set00Check(enabled: Boolean);
+class function TDerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSet;
 var
-  indefiniteLengthInputStream: TIndefiniteLengthInputStream;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  if (F_in is TIndefiniteLengthInputStream) then
+  if (ATs = nil) or (System.Length(ATs) < 1) then
   begin
-    indefiniteLengthInputStream := F_in as TIndefiniteLengthInputStream;
-    indefiniteLengthInputStream.SetEofOn00(enabled);
-  end;
-end;
-
-constructor TAsn1StreamParser.Create(const inStream: TStream);
-begin
-  Create(inStream, TAsn1InputStream.FindLimit(inStream));
-end;
-
-constructor TAsn1StreamParser.Create(const inStream: TStream; limit: Int32);
-begin
-  Inherited Create();
-  F_in := inStream;
-  F_limit := limit;
-  System.SetLength(FtmpBuffers, 16);
-end;
-
-constructor TAsn1StreamParser.Create(const encoding: TCryptoLibByteArray);
-begin
-  // used TBytesStream here for one pass creation and population with byte array :)
-  Create(TBytesStream.Create(encoding), System.length(encoding));
-
-end;
-
-destructor TAsn1StreamParser.Destroy;
-begin
-  F_in.Free;
-  inherited Destroy;
-end;
-
-function TAsn1StreamParser.ReadVector: IAsn1EncodableVector;
-var
-  obj: IAsn1Convertible;
-begin
-  obj := ReadObject();
-  if obj = Nil then
-  begin
-    result := TAsn1EncodableVector.Create(0);
+    Result := GetEmpty();
     Exit;
   end;
-
-  result := TAsn1EncodableVector.Create();
-
-  repeat
-    result.Add([obj.ToAsn1Object()]);
-    obj := ReadObject();
-  until not(obj <> Nil);
+  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  Result := TDerSet.Create(LMapped);
 end;
 
-function TAsn1StreamParser.ReadImplicit(Constructed: Boolean; tag: Int32)
-  : IAsn1Convertible;
+
+function TDerSet.GetSortedDerEncodings(): TCryptoLibGenericArray<IDerEncoding>;
 begin
-  if (F_in is TIndefiniteLengthInputStream) then
+  if FSortedDerEncodings = nil then
   begin
-    if (not Constructed) then
+    FSortedDerEncodings := CreateSortedDerEncodings(Elements);
+  end;
+  Result := FSortedDerEncodings;
+end;
+
+class function TDerSet.CreateSortedDerEncodings(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>;
+var
+  LDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
+  LCount, I, J: Int32;
+  LTemp: IDerEncoding;
+begin
+  LDerEncodings := TAsn1OutputStream.GetContentsEncodingsDer(AElements);
+  LCount := System.Length(LDerEncodings);
+  
+  if LCount > 1 then
+  begin
+    // Sort using insertion sort
+    for I := 1 to LCount - 1 do
     begin
-      raise EIOCryptoLibException.CreateRes(@SIndefiniteLength);
+      J := I;
+      while (J > 0) and (LDerEncodings[J].CompareTo(LDerEncodings[J - 1]) < 0) do
+      begin
+        LTemp := LDerEncodings[J];
+        LDerEncodings[J] := LDerEncodings[J - 1];
+        LDerEncodings[J - 1] := LTemp;
+        System.Dec(J);
+      end;
     end;
-
-    result := ReadIndef(tag);
-    Exit;
   end;
+  
+  Result := LDerEncodings;
+end;
 
-  if (Constructed) then
-  begin
-    case tag of
+function TDerSet.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TConstructedDLEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.&Set,
+    TCryptoLibGenericArray<IAsn1Encoding>(GetSortedDerEncodings()));
+end;
 
-      TAsn1Tags.&Set:
-        begin
-          result := TDerSetParser.Create(Self as IAsn1StreamParser);
-          Exit;
-        end;
-      TAsn1Tags.Sequence:
-        begin
-          result := TDerSequenceParser.Create(Self as IAsn1StreamParser);
-          Exit;
-        end;
-      TAsn1Tags.OctetString:
-        begin
-          result := TBerOctetStringParser.Create(Self as IAsn1StreamParser);
-          Exit;
-        end;
+function TDerSet.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TConstructedDLEncoding.Create(ATagClass, ATagNo,
+    TCryptoLibGenericArray<IAsn1Encoding>(GetSortedDerEncodings()));
+end;
 
-    end;
-  end
+function TDerSet.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TConstructedDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.&Set,
+    GetSortedDerEncodings());
+end;
+
+function TDerSet.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TConstructedDerEncoding.Create(ATagClass, ATagNo,
+    GetSortedDerEncodings());
+end;
+
+
+{ TDLSet }
+
+class function TDLSet.GetEmpty(): IDLSet;
+begin
+  Result := TDLSet.Create();
+end;
+
+constructor TDLSet.Create();
+begin
+  inherited Create();
+end;
+
+constructor TDLSet.Create(const AElement: IAsn1Encodable);
+begin
+  inherited Create(AElement);
+end;
+
+constructor TDLSet.Create(const AElements: array of IAsn1Encodable);
+begin
+  inherited Create(AElements, False); // doSort = False for DL
+end;
+
+constructor TDLSet.Create(const AElementVector: IAsn1EncodableVector);
+begin
+  inherited Create(AElementVector, False); // doSort = False for DL
+end;
+
+class function TDLSet.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSet;
+begin
+  if (AC = nil) or (System.Length(AC) < 1) then
+    Result := GetEmpty()
   else
-  begin
-    case tag of
-
-      TAsn1Tags.&Set:
-        begin
-          raise EAsn1CryptoLibException.CreateRes(@SUnConstructedEncoding);
-        end;
-      TAsn1Tags.Sequence:
-        begin
-          raise EAsn1CryptoLibException.CreateRes(@SUnConstructedEncoding2);
-        end;
-      TAsn1Tags.OctetString:
-        begin
-          result := TDerOctetStringParser.Create
-            (F_in as TDefiniteLengthInputStream);
-          Exit;
-        end;
-    end;
-
-  end;
-
-  raise EAsn1CryptoLibException.CreateRes(@SImplicitTagging);
-
+    Result := TDLSet.Create(AC);
 end;
 
-function TAsn1StreamParser.ReadIndef(tagValue: Int32): IAsn1Convertible;
+class function TDLSet.FromElement(const AElement: IAsn1Encodable): IDLSet;
 begin
-  // Note: INDEF => CONSTRUCTED
+  Result := TDLSet.Create(AElement);
+end;
 
-  // TODO There are other tags that may be constructed (e.g. BIT_STRING)
-  case tagValue of
-    TAsn1Tags.External:
-      begin
-        result := TDerExternalParser.Create(Self as IAsn1StreamParser);
-        Exit;
-      end;
-
-    TAsn1Tags.OctetString:
-      begin
-        result := TBerOctetStringParser.Create(Self as IAsn1StreamParser);
-        Exit;
-      end;
-
-    TAsn1Tags.Sequence:
-      begin
-        result := TBerSequenceParser.Create(Self as IAsn1StreamParser);
-        Exit;
-      end;
-
-    TAsn1Tags.&Set:
-      begin
-        result := TBerSetParser.Create(Self as IAsn1StreamParser);
-        Exit;
-      end;
-
+class function TDLSet.FromVector(const AElementVector: IAsn1EncodableVector): IDLSet;
+begin
+  if (AElementVector = nil) or (AElementVector.Count < 1) then
+    Result := GetEmpty()
   else
-    begin
-      raise EAsn1CryptoLibException.CreateResFmt(@SUnknownObjectBER,
-        [tagValue]);
-    end;
-
-  end;
+    Result := TDLSet.Create(AElementVector);
 end;
 
-function TAsn1StreamParser.ReadObject: IAsn1Convertible;
+class function TDLSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSet;
 var
-  tag, tagNo, &length: Int32;
-  IsConstructed: Boolean;
-  indIn: TIndefiniteLengthInputStream;
-  sp: IAsn1StreamParser;
-  defIn: TDefiniteLengthInputStream;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  tag := TStreamSorter.ReadByte(F_in);
-
-  if (tag = -1) then
+  if (ATs = nil) or (System.Length(ATs) < 1) then
   begin
-    result := Nil;
+    Result := GetEmpty();
     Exit;
   end;
-
-  // turn off looking for "00" while we resolve the tag
-  Set00Check(False);
-
-  //
-  // calculate tag number
-  //
-  tagNo := TAsn1InputStream.ReadTagNumber(F_in, tag);
-
-  IsConstructed := (tag and TAsn1Tags.Constructed) <> 0;
-
-  //
-  // calculate length
-  //
-  length := TAsn1InputStream.ReadLength(F_in, F_limit);
-
-  if (length < 0) then // indefinite length method
-  begin
-    if (not IsConstructed) then
-    begin
-      raise EIOCryptoLibException.CreateRes(@SIndefiniteLength);
-    end;
-
-    indIn := TIndefiniteLengthInputStream.Create(F_in, F_limit);
-
-    sp := TAsn1StreamParser.Create(indIn, F_limit);
-
-    if ((tag and TAsn1Tags.Application) <> 0) then
-    begin
-
-      result := TBerApplicationSpecificParser.Create(tagNo, sp);
-      Exit;
-
-    end;
-
-    if ((tag and TAsn1Tags.Tagged) <> 0) then
-    begin
-
-      result := TBerTaggedObjectParser.Create(True, tagNo, sp);
-      Exit;
-
-    end;
-
-    result := sp.ReadIndef(tagNo);
-    Exit;
-
-  end;
-
-  defIn := TDefiniteLengthInputStream.Create(F_in, length);
-
-  if ((tag and TAsn1Tags.Application) <> 0) then
-  begin
-    try
-      result := TDerApplicationSpecific.Create(IsConstructed, tagNo,
-        defIn.ToArray());
-      Exit;
-    finally
-      defIn.Free;
-    end;
-  end;
-
-  if ((tag and TAsn1Tags.Tagged) <> 0) then
-  begin
-    result := TBerTaggedObjectParser.Create(IsConstructed, tagNo,
-      TAsn1StreamParser.Create(defIn) as IAsn1StreamParser);
-    Exit;
-
-  end;
-
-  if (IsConstructed) then
-  begin
-    // TODO There are other tags that may be constructed (e.g. BitString)
-    case tagNo of
-
-      TAsn1Tags.OctetString:
-        begin
-          //
-          // yes, people actually do this...
-          //
-
-          result := TBerOctetStringParser.Create(TAsn1StreamParser.Create(defIn)
-            as IAsn1StreamParser);
-          Exit;
-
-        end;
-      TAsn1Tags.Sequence:
-        begin
-
-          result := TDerSequenceParser.Create(TAsn1StreamParser.Create(defIn)
-            as IAsn1StreamParser);
-          Exit;
-
-        end;
-      TAsn1Tags.&Set:
-        begin
-
-          result := TDerSetParser.Create(TAsn1StreamParser.Create(defIn)
-            as IAsn1StreamParser);
-          Exit;
-
-        end;
-
-      TAsn1Tags.External:
-        begin
-
-          result := TDerExternalParser.Create(TAsn1StreamParser.Create(defIn)
-            as IAsn1StreamParser);
-          Exit;
-
-        end;
-    else
-      begin
-        defIn.Free; // free the stream incase an unsupported tag is encountered.
-        raise EIOCryptoLibException.CreateResFmt(@SUnknownTag, [tagNo]);
-      end;
-
-    end;
-  end;
-
-  // Some primitive encodings can be handled by parsers too...
-  case tagNo of
-    TAsn1Tags.OctetString:
-      begin
-        result := TDerOctetStringParser.Create(defIn);
-        Exit;
-      end;
-  end;
-
-  try
-    try
-      result := TAsn1InputStream.CreatePrimitiveDerObject(tagNo, defIn,
-        FtmpBuffers);
-      Exit;
-
-    except
-
-      on e: EArgumentCryptoLibException do
-      begin
-        raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStream,
-          [e.Message]);
-      end;
-
-    end;
-  finally
-    defIn.Free;
-  end;
-
+  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  Result := TDLSet.Create(False, LMapped); // isSorted = False, need to sort
 end;
 
-function TAsn1StreamParser.ReadTaggedObject(Constructed: Boolean; tag: Int32)
-  : IAsn1Object;
-var
-  defIn: TDefiniteLengthInputStream;
-  v: IAsn1EncodableVector;
+constructor TDLSet.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
 begin
-  if (not Constructed) then
+  inherited Create(AC, False); // doSort = False for DL
+end;
+
+constructor TDLSet.Create(const ASequence: IAsn1Sequence);
+begin
+  inherited Create(ASequence);
+end;
+
+constructor TDLSet.Create(const ASet: IAsn1Set);
+begin
+  inherited Create(ASet);
+end;
+
+constructor TDLSet.Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
+begin
+  inherited Create(AIsSorted, AElements);
+end;
+
+function TDLSet.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
   begin
-    // Note: !CONSTRUCTED => IMPLICIT
-    defIn := F_in as TDefiniteLengthInputStream;
-    result := TDerTaggedObject.Create(False, tag,
-      TDerOctetString.Create(defIn.ToArray()));
+    Result := inherited GetEncoding(AEncoding);
     Exit;
   end;
+  
+  Result := TConstructedDLEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.&Set,
+    TAsn1OutputStream.GetContentsEncodings(TAsn1OutputStream.EncodingDL, Elements));
+end;
 
-  v := ReadVector();
-
-  if (F_in is TIndefiniteLengthInputStream) then
+function TDLSet.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
   begin
-    if v.count = 1 then
-    begin
-      result := TBerTaggedObject.Create(True, tag, v[0]);
-      Exit;
-    end
-    else
-    begin
-      result := TBerTaggedObject.Create(False, tag, TBerSequence.FromVector(v));
-      Exit;
-    end;
-
-  end;
-
-  if v.count = 1 then
-  begin
-    result := TDerTaggedObject.Create(True, tag, v[0]);
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
     Exit;
-  end
+  end;
+  
+  Result := TConstructedDLEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(TAsn1OutputStream.EncodingDL, Elements));
+end;
+
+{ TBerSequence }
+
+class function TBerSequence.GetEmpty(): IBerSequence;
+begin
+  Result := TBerSequence.Create();
+end;
+
+constructor TBerSequence.Create();
+begin
+  inherited Create();
+end;
+
+constructor TBerSequence.Create(const AElement: IAsn1Encodable);
+begin
+  inherited Create(AElement);
+end;
+
+constructor TBerSequence.Create(const AElement1, AElement2: IAsn1Encodable);
+begin
+  inherited Create(AElement1, AElement2);
+end;
+
+constructor TBerSequence.Create(const AElements: array of IAsn1Encodable);
+begin
+  inherited Create(AElements);
+end;
+
+constructor TBerSequence.Create(const AElementVector: IAsn1EncodableVector);
+begin
+  inherited Create(AElementVector);
+end;
+
+constructor TBerSequence.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
+begin
+  inherited Create(AC);
+end;
+
+constructor TBerSequence.Create(const ASequence: IAsn1Sequence);
+begin
+  inherited Create(ASequence);
+end;
+
+constructor TBerSequence.Create(const ASet: IAsn1Set);
+begin
+  inherited Create(ASet);
+end;
+
+class function TBerSequence.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSequence;
+begin
+  if (AC = nil) or (System.Length(AC) < 1) then
+    Result := GetEmpty()
   else
+    Result := TBerSequence.Create(AC);
+end;
+
+class function TBerSequence.FromElement(const AElement: IAsn1Encodable): IBerSequence;
+begin
+  Result := TBerSequence.Create(AElement);
+end;
+
+class function TBerSequence.FromElements(const AElement1, AElement2: IAsn1Encodable): IBerSequence;
+begin
+  Result := TBerSequence.Create(AElement1, AElement2);
+end;
+
+class function TBerSequence.FromElements(const AElements: array of IAsn1Encodable): IBerSequence;
+begin
+  if System.Length(AElements) < 1 then
+    Result := GetEmpty()
+  else
+    Result := TBerSequence.Create(AElements);
+end;
+
+class function TBerSequence.FromElementsOptional(const AElements: array of IAsn1Encodable): IBerSequence;
+begin
+  if System.Length(AElements) < 1 then
   begin
-    result := TDerTaggedObject.Create(False, tag, TDerSequence.FromVector(v));
+    Result := nil;
     Exit;
   end;
-
+  if System.Length(AElements) < 1 then
+    Result := GetEmpty()
+  else
+    Result := TBerSequence.Create(AElements);
 end;
 
-{ TDerSetParser }
-
-constructor TDerSetParser.Create(const parser: IAsn1StreamParser);
-begin
-  F_parser := parser;
-end;
-
-function TDerSetParser.ReadObject: IAsn1Convertible;
-begin
-  result := F_parser.ReadObject();
-end;
-
-function TDerSetParser.ToAsn1Object: IAsn1Object;
-begin
-  result := TDerSet.Create(F_parser.ReadVector(), False);
-end;
-
-{ TDerSequenceParser }
-
-constructor TDerSequenceParser.Create(const parser: IAsn1StreamParser);
-begin
-  F_parser := parser;
-end;
-
-function TDerSequenceParser.ReadObject: IAsn1Convertible;
-begin
-  result := F_parser.ReadObject();
-end;
-
-function TDerSequenceParser.ToAsn1Object: IAsn1Object;
-begin
-  result := TDerSequence.Create(F_parser.ReadVector());
-end;
-
-{ TDerApplicationSpecific }
-
-function TDerApplicationSpecific.GetApplicationTag: Int32;
-begin
-  result := Ftag;
-end;
-
-function TDerApplicationSpecific.GetContents: TCryptoLibByteArray;
-begin
-  result := Foctets;
-end;
-
-function TDerApplicationSpecific.IsConstructed: Boolean;
-begin
-  result := FisConstructed;
-end;
-
-function TDerApplicationSpecific.GetLengthOfHeader
-  (const data: TCryptoLibByteArray): Int32;
+class function TBerSequence.FromSequence(const ASequence: IAsn1Sequence): IBerSequence;
 var
-  &length, Size: Int32;
+  LBerSequence: IBerSequence;
 begin
-  length := data[1]; // TODO: assumes 1 byte tag
-
-  if (length = $80) then
+  if ASequence = nil then
   begin
-    result := 2; // indefinite-length encoding
+    Result := nil;
     Exit;
   end;
-
-  if (length > 127) then
+  if Supports(ASequence, IBerSequence, LBerSequence) then
   begin
-    Size := length and $7F;
-
-    // Note: The invalid long form "0xff" (see X.690 8.1.3.5c) will be caught here
-    if (Size > 4) then
-    begin
-      raise EInvalidOperationCryptoLibException.CreateResFmt
-        (@SInvalidDerLength, [Size]);
-    end;
-
-    result := Size + 2;
+    Result := LBerSequence;
     Exit;
   end;
-
-  result := 2;
+  Result := WithElements(ASequence.Elements);
 end;
 
-constructor TDerApplicationSpecific.Create(tag: Int32;
-  const obj: IAsn1Encodable);
+class function TBerSequence.FromVector(const AElementVector: IAsn1EncodableVector): IBerSequence;
 begin
-  Create(True, tag, obj);
+  if (AElementVector = nil) or (AElementVector.Count < 1) then
+    Result := GetEmpty()
+  else
+    Result := TBerSequence.Create(AElementVector);
 end;
 
-constructor TDerApplicationSpecific.Create(tag: Int32;
-  const octets: TCryptoLibByteArray);
-begin
-  Create(False, tag, octets);
-end;
-
-constructor TDerApplicationSpecific.Create(IsConstructed: Boolean; tag: Int32;
-  const octets: TCryptoLibByteArray);
-begin
-  Inherited Create();
-  FisConstructed := IsConstructed;
-  Ftag := tag;
-  Foctets := octets;
-end;
-
-function TDerApplicationSpecific.Asn1Equals(const asn1Object
-  : IAsn1Object): Boolean;
+class function TBerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence;
 var
-  other: IDerApplicationSpecific;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-
-  if (not Supports(asn1Object, IDerApplicationSpecific, other)) then
+  if (ASequence = nil) or (ASequence.Count < 1) then
   begin
-    result := False;
+    Result := GetEmpty();
     Exit;
   end;
-
-  result := (IsConstructed = other.IsConstructed) and
-    (ApplicationTag = other.ApplicationTag) and
-    TArrayUtils.AreEqual(GetContents, other.GetContents);
+  LMapped := TCollectionUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
+  Result := WithElements(LMapped);
 end;
 
-function TDerApplicationSpecific.Asn1GetHashCode: Int32;
+class function TBerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSequence;
 var
-  HashCode: Int32;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  case IsConstructed of
-    True:
-      HashCode := 1;
-    False:
-      HashCode := 0;
+  if (ATs = nil) or (System.Length(ATs) < 1) then
+  begin
+    Result := GetEmpty();
+    Exit;
   end;
-  result := HashCode xor Ftag xor TArrayUtils.GetArrayHashCode(Foctets);
+  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  Result := WithElements(LMapped);
 end;
 
-constructor TDerApplicationSpecific.Create(tagNo: Int32;
-  const vec: IAsn1EncodableVector);
+class function TBerSequence.Concatenate(const ASequences: array of IAsn1Sequence): IBerSequence;
 var
-  bOut: TMemoryStream;
-  bs: TCryptoLibByteArray;
+  LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
   I: Int32;
-  val: IAsn1Encodable;
 begin
-  Inherited Create();
-  Ftag := tagNo;
-  FisConstructed := True;
-
-  bOut := TMemoryStream.Create();
-  try
-    I := 0;
-    while I <> vec.count do
-
-    begin
-      try
-        val := vec[I];
-        bs := val.GetDerEncoded();
-        bOut.Write(bs[0], System.length(bs));
-      except
-        on e: EIOCryptoLibException do
-        begin
-          raise EInvalidOperationCryptoLibException.CreateResFmt
-            (@SMalformedObject, [e.Message]);
-        end;
-      end;
-      System.Inc(I);
-    end;
-
-    System.SetLength(Foctets, bOut.Size);
-    bOut.Position := 0;
-    bOut.Read(Foctets[0], bOut.Size);
-
-  finally
-    bOut.Free;
-  end;
-
-end;
-
-procedure TDerApplicationSpecific.Encode(const derOut: TStream);
-var
-  classBits: Int32;
-begin
-  classBits := TAsn1Tags.Application;
-  if (IsConstructed) then
+  if System.Length(ASequences) = 0 then
   begin
-    classBits := classBits or TAsn1Tags.Constructed;
-  end;
-
-  (derOut as TDerOutputStream).WriteEncoded(classBits, Ftag, Foctets);
-end;
-
-constructor TDerApplicationSpecific.Create(isExplicit: Boolean; tag: Int32;
-  const obj: IAsn1Encodable);
-var
-  asn1Obj: IAsn1Object;
-  data, tmp: TCryptoLibByteArray;
-  lenBytes: Int32;
-begin
-  Inherited Create();
-  asn1Obj := obj.ToAsn1Object();
-
-  data := asn1Obj.GetDerEncoded();
-
-  FisConstructed := TAsn1TaggedObject.IsConstructed(isExplicit, asn1Obj);
-  Ftag := tag;
-
-  if (isExplicit) then
-  begin
-    Foctets := data;
-  end
-  else
-  begin
-    lenBytes := GetLengthOfHeader(data);
-    System.SetLength(tmp, System.length(data) - lenBytes);
-    System.Move(data[lenBytes], tmp[0], System.length(tmp) *
-      System.SizeOf(Byte));
-    Foctets := tmp;
-  end;
-end;
-
-function TDerApplicationSpecific.GetObject: IAsn1Object;
-begin
-  result := FromByteArray(GetContents());
-end;
-
-function TDerApplicationSpecific.GetObject(derTagNo: Int32): IAsn1Object;
-var
-  orig, tmp: TCryptoLibByteArray;
-begin
-  if (derTagNo >= $1F) then
-  begin
-    raise EIOCryptoLibException.CreateRes(@SUnSupportedTag);
-  end;
-
-  orig := GetEncoded();
-  tmp := ReplaceTagNumber(derTagNo, orig);
-
-  if ((orig[0] and TAsn1Tags.Constructed) <> 0) then
-  begin
-    tmp[0] := tmp[0] or TAsn1Tags.Constructed;
-  end;
-
-  result := FromByteArray(tmp);
-end;
-
-class function TDerApplicationSpecific.ReplaceTagNumber(newTag: Int32;
-  const input: TCryptoLibByteArray): TCryptoLibByteArray;
-var
-  tagNo, Index, b, Remaining: Int32;
-  tmp: TCryptoLibByteArray;
-begin
-  tagNo := input[0] and $1F;
-  index := 1;
-  //
-  // with tagged object tag number is bottom 5 bits, or stored at the start of the content
-  //
-  if (tagNo = $1F) then
-  begin
-
-    b := input[index];
-    System.Inc(index);
-
-    // X.690-0207 8.1.2.4.2
-    // "c) bits 7 to 1 of the first subsequent octet shall not all be zero."
-    if ((b and $7F) = 0) then // Note: -1 will pass
-    begin
-      raise EIOCryptoLibException.CreateRes(@SCorruptedStreamInvalidTag);
-    end;
-
-    while ((b and $80) <> 0) do
-    begin
-      b := input[index];
-      System.Inc(index);
-    end;
-
-  end;
-
-  Remaining := System.length(input) - index;
-  System.SetLength(tmp, 1 + Remaining);
-  tmp[0] := Byte(newTag);
-  System.Move(input[index], tmp[1], Remaining * System.SizeOf(Byte));
-
-  result := tmp;
-end;
-
-{ TBerApplicationSpecific }
-
-constructor TBerApplicationSpecific.Create(tagNo: Int32;
-  const vec: IAsn1EncodableVector);
-begin
-  inherited Create(tagNo, vec);
-end;
-
-{ TBerOctetStringParser }
-
-constructor TBerOctetStringParser.Create(const parser: IAsn1StreamParser);
-begin
-  Inherited Create();
-  F_parser := parser;
-end;
-
-function TBerOctetStringParser.GetOctetStream: TStream;
-begin
-  result := TConstructedOctetStream.Create(F_parser);
-end;
-
-function TBerOctetStringParser.ToAsn1Object: IAsn1Object;
-var
-  LStream: TStream;
-begin
-  try
-    LStream := GetOctetStream();
-
-    try
-      result := TBerOctetString.Create(TStreamUtils.ReadAll(LStream));
-    finally
-      LStream.Free;
-    end;
-
-  except
-    on e: EIOCryptoLibException do
-    begin
-      raise EAsn1ParsingCryptoLibException.CreateResFmt(@SConvertError,
-        [e.Message]);
-    end;
-
-  end;
-end;
-
-{ TBerApplicationSpecificParser }
-
-constructor TBerApplicationSpecificParser.Create(tag: Int32;
-  const parser: IAsn1StreamParser);
-begin
-  F_tag := tag;
-  F_parser := parser;
-end;
-
-function TBerApplicationSpecificParser.ReadObject: IAsn1Convertible;
-begin
-  result := F_parser.ReadObject();
-end;
-
-function TBerApplicationSpecificParser.ToAsn1Object: IAsn1Object;
-begin
-  result := TBerApplicationSpecific.Create(F_tag, F_parser.ReadVector());
-end;
-
-{ TDerStringBase }
-
-function TDerStringBase.Asn1GetHashCode: Int32;
-begin
-  result := TStringUtils.GetStringHashCode(GetString());
-end;
-
-constructor TDerStringBase.Create;
-begin
-  Inherited Create();
-end;
-
-function TDerStringBase.ToString: String;
-begin
-  result := GetString();
-end;
-
-{ TDerBitString }
-
-class function TDerBitString.GetInstance(const obj: TCryptoLibByteArray)
-  : IDerBitString;
-begin
-  try
-    result := FromByteArray(obj) as IDerBitString;
-  except
-    on e: Exception do
-    begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SEncodingError,
-        [e.Message]);
-    end;
-
-  end;
-end;
-
-function TDerBitString.GetmData: TCryptoLibByteArray;
-begin
-  result := FmData;
-end;
-
-function TDerBitString.GetmPadBits: Int32;
-begin
-  result := FmPadBits;
-end;
-
-function TDerBitString.GetOctets: TCryptoLibByteArray;
-begin
-  if (mPadBits <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateRes(@SUnalignedData);
-  end;
-  result := System.Copy(mData);
-end;
-
-function TDerBitString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerBitString;
-begin
-
-  if (not Supports(asn1Object, IDerBitString, other)) then
-  begin
-    result := False;
+    Result := GetEmpty();
     Exit;
   end;
-
-  result := (mPadBits = other.mPadBits) and
-    (TArrayUtils.AreEqual(mData, other.mData));
+  
+  System.SetLength(LSequences, System.Length(ASequences));
+  for I := 0 to System.Length(ASequences) - 1 do
+    LSequences[I] := ASequences[I];
+  
+  case System.Length(LSequences) of
+    0:
+      Result := GetEmpty();
+    1:
+      Result := FromSequence(LSequences[0]);
+  else
+    Result := WithElements(ConcatenateElements(LSequences));
+  end;
 end;
 
-constructor TDerBitString.Create(const data: TCryptoLibByteArray;
-  padBits: Int32);
+class function TBerSequence.WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IBerSequence;
 begin
-  Inherited Create();
-  if (data = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SDataNil);
-  end;
-
-  if ((padBits < 0) or (padBits > 7)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidRange);
-  end;
-
-  if ((System.length(data) = 0) and (padBits <> 0)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SPadBitError);
-  end;
-
-  FmData := System.Copy(data);
-  FmPadBits := padBits;
-
+  if (AElements = nil) or (System.Length(AElements) < 1) then
+    Result := GetEmpty()
+  else
+    Result := TBerSequence.Create(AElements);
 end;
 
-constructor TDerBitString.Create(const data: TCryptoLibByteArray);
-begin
-  Create(data, 0);
-end;
-
-constructor TDerBitString.Create(namedBits: Int32);
+function TBerSequence.ToAsn1BitString(): IDerBitString;
 var
-  bits, bytes, I, padBits: Int32;
-  data: TCryptoLibByteArray;
+  LBitStrings: TCryptoLibGenericArray<IDerBitString>;
 begin
-  Inherited Create();
-  if (namedBits = 0) then
+  LBitStrings := GetConstructedBitStrings();
+  Result := TBerBitString.Create(LBitStrings);
+end;
+
+function TBerSequence.ToAsn1External(): IDerExternal;
+begin
+  // TODO[asn1] There is currently no BerExternal (or Asn1External)
+  Result := TDLExternal.Create(Self);
+end;
+
+function TBerSequence.ToAsn1OctetString(): IAsn1OctetString;
+var
+  LOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>;
+begin
+  LOctetStrings := GetConstructedOctetStrings();
+  Result := TBerOctetString.Create(LOctetStrings);
+end;
+
+function TBerSequence.ToAsn1Set(): IAsn1Set;
+begin
+  Result := TBerSet.Create(False, Elements);
+end;
+
+function TBerSequence.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
-    System.SetLength(FmData, 0);
-    FmPadBits := 0;
+    Result := inherited GetEncoding(AEncoding);
     Exit;
   end;
-  bits := TBigInteger.BitLen(namedBits);
-  bytes := (bits + 7) div 8;
-
-{$IFDEF DEBUG}
-  System.Assert((0 < bytes) and (bytes <= 4));
-{$ENDIF DEBUG}
-  System.SetLength(data, bytes);
-
-  System.Dec(bytes);
-
-  for I := 0 to System.Pred(bytes) do
-  begin
-    data[I] := Byte(namedBits);
-    namedBits := TBits.Asr32(namedBits, 8);
-  end;
-
-{$IFDEF DEBUG}
-  System.Assert((namedBits and $FF) <> 0);
-{$ENDIF DEBUG}
-  data[bytes] := Byte(namedBits);
-
-  padBits := 0;
-  while ((namedBits and (1 shl padBits)) = 0) do
-  begin
-    System.Inc(padBits);
-  end;
-
-{$IFDEF DEBUG}
-  System.Assert(padBits < 8);
-{$ENDIF DEBUG}
-  FmData := data;
-  FmPadBits := padBits;
+  
+  Result := TConstructedILEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Sequence,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
 end;
 
-procedure TDerBitString.Encode(const derOut: TStream);
-var
-  last, mask, unusedBits: Int32;
-  contents: TCryptoLibByteArray;
+function TBerSequence.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
 begin
-  if (mPadBits > 0) then
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
-    last := mData[System.length(mData) - 1];
-    mask := (1 shl mPadBits) - 1;
-    unusedBits := last and mask;
-
-    if (unusedBits <> 0) then
-    begin
-      contents := TArrayUtils.Prepend(mData, Byte(mPadBits));
-
-      // /*
-      // * X.690-0207 11.2.1: Each unused bit in the final octet of the encoding of a bit string value shall be set to zero.
-      // */
-      contents[System.length(contents) - 1] := Byte(last xor unusedBits);
-
-      (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BitString, contents);
-      Exit;
-    end;
-  end;
-
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BitString,
-    Byte(mPadBits), mData);
-end;
-
-class function TDerBitString.FromAsn1Octets(const octets: TCryptoLibByteArray)
-  : IDerBitString;
-var
-  padBits, last, mask: Int32;
-  data: TCryptoLibByteArray;
-begin
-  if (System.length(octets) < 1) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@STruncatedBitString);
-  end;
-
-  padBits := octets[0];
-  data := TArrayUtils.CopyOfRange(octets, 1, System.length(octets));
-
-  if ((padBits > 0) and (padBits < 8) and (System.length(data) > 0)) then
-  begin
-    last := data[System.length(data) - 1];
-    mask := (1 shl padBits) - 1;
-
-    if ((last and mask) <> 0) then
-    begin
-      result := TBerBitString.Create(data, padBits);
-      Exit;
-    end;
-  end;
-
-  result := TDerBitString.Create(data, padBits);
-end;
-
-function TDerBitString.GetBytes: TCryptoLibByteArray;
-begin
-  result := System.Copy(mData);
-
-  // DER requires pad bits be zero
-  if (mPadBits > 0) then
-  begin
-    result[System.length(result) - 1] := result[System.length(result) - 1] and
-      Byte($FF shl mPadBits);
-  end;
-
-end;
-
-class function TDerBitString.GetInstance(const obj: TObject): IDerBitString;
-begin
-  if ((obj = Nil) or (obj is TDerBitString)) then
-  begin
-    result := obj as TDerBitString;
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
     Exit;
   end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerBitString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerBitString;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerBitString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := FromAsn1Octets((o as IAsn1OctetString).GetOctets());
-end;
-
-function TDerBitString.GetInt32Value: Int32;
-var
-  Value, &length, I, mask: Int32;
-begin
-  Value := 0;
-  length := Min(4, System.length(mData));
-  for I := 0 to System.Pred(length) do
-  begin
-    Value := Value or (Int32(mData[I]) shl (8 * I));
-  end;
-
-  if ((mPadBits > 0) and (length = System.length(mData))) then
-  begin
-    mask := (1 shl mPadBits) - 1;
-    Value := Value and (not(mask shl (8 * (length - 1))));
-  end;
-  result := Value;
-end;
-
-function TDerBitString.GetString: String;
-var
-  buffer: TStringList;
-  I: Int32;
-  Str: TCryptoLibByteArray;
-  ubyte: UInt32;
-begin
-  buffer := TStringList.Create();
-  buffer.LineBreak := '';
-  Str := GetDerEncoded();
-  buffer.Add('#');
-  I := 0;
-  try
-    while I <> System.length(Str) do
-    begin
-      ubyte := Str[I];
-      buffer.Add(FTable[(ubyte shr 4) and $F]);
-      buffer.Add(FTable[Str[I] and $F]);
-      System.Inc(I);
-    end;
-    result := buffer.Text;
-  finally
-    buffer.Free;
-  end;
-end;
-
-function TDerBitString.Asn1GetHashCode: Int32;
-begin
-  result := mPadBits xor TArrayUtils.GetArrayHashCode(mData);
-end;
-
-constructor TDerBitString.Create(const obj: IAsn1Encodable);
-begin
-  Create(obj.GetDerEncoded());
-end;
-
-{ TBerBitString }
-
-constructor TBerBitString.Create(const data: TCryptoLibByteArray);
-begin
-  Inherited Create(data);
-end;
-
-constructor TBerBitString.Create(const data: TCryptoLibByteArray;
-  padBits: Int32);
-begin
-  Inherited Create(data, padBits);
-end;
-
-constructor TBerBitString.Create(const obj: IAsn1Encodable);
-begin
-  Inherited Create(obj);
-end;
-
-constructor TBerBitString.Create(namedBits: Int32);
-begin
-  Inherited Create(namedBits);
-end;
-
-procedure TBerBitString.Encode(const derOut: TStream);
-begin
-  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
-  begin
-    (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BitString,
-      Byte(mPadBits), mData);
-  end
-  else
-  begin
-    Inherited Encode(derOut);
-  end;
-end;
-
-{ TBerGenerator }
-
-constructor TBerGenerator.Create(outStream: TStream);
-begin
-  Inherited Create(outStream);
-end;
-
-procedure TBerGenerator.AddObject(const obj: IAsn1Encodable);
-var
-  temp: TBerOutputStream;
-begin
-  temp := TBerOutputStream.Create(&Out);
-  try
-    temp.WriteObject(obj);
-  finally
-    temp.Free;
-  end;
-end;
-
-procedure TBerGenerator.Close;
-begin
-  WriteBerEnd();
-end;
-
-constructor TBerGenerator.Create(outStream: TStream; tagNo: Int32;
-  isExplicit: Boolean);
-begin
-  Inherited Create(outStream);
-  F_tagged := True;
-  F_isExplicit := isExplicit;
-  F_tagNo := tagNo;
-end;
-
-function TBerGenerator.GetRawOutputStream: TStream;
-begin
-  result := &Out;
-end;
-
-procedure TBerGenerator.WriteBerBody(contentStream: TStream);
-begin
-  TStreamUtils.PipeAll(contentStream, &Out);
-end;
-
-procedure TBerGenerator.WriteBerEnd;
-begin
-  &Out.WriteByte($00);
-  &Out.WriteByte($00);
-
-  if (F_tagged and F_isExplicit) then // write extra end for tag header
-  begin
-    &Out.WriteByte($00);
-    &Out.WriteByte($00);
-  end;
-end;
-
-procedure TBerGenerator.WriteBerHeader(tag: Int32);
-var
-  tagNum: Int32;
-begin
-  if (F_tagged) then
-  begin
-    tagNum := F_tagNo or TAsn1Tags.Tagged;
-
-    if (F_isExplicit) then
-    begin
-      WriteHdr(tagNum or TAsn1Tags.Constructed);
-      WriteHdr(tag);
-    end
-    else
-    begin
-      if ((tag and TAsn1Tags.Constructed) <> 0) then
-      begin
-        WriteHdr(tagNum or TAsn1Tags.Constructed);
-      end
-      else
-      begin
-        WriteHdr(tagNum);
-      end;
-    end
-  end
-  else
-  begin
-    WriteHdr(tag);
-  end;
-end;
-
-procedure TBerGenerator.WriteHdr(tag: Int32);
-begin
-  &Out.WriteByte(Byte(tag));
-  &Out.WriteByte($80);
-end;
-
-{ TBerNull }
-
-constructor TBerNull.Create(dummy: Int32);
-begin
-  Inherited Create(dummy);
-end;
-
-procedure TBerNull.Encode(const derOut: TStream);
-begin
-
-  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
-  begin
-    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.Null);
-  end
-  else
-  begin
-    Inherited Encode(derOut);
-  end;
-end;
-
-class function TBerNull.GetInstance: IBerNull;
-begin
-  result := TBerNull.Create(0);
-end;
-
-{ TBerSequenceGenerator }
-
-constructor TBerSequenceGenerator.Create(outStream: TStream);
-begin
-  Inherited Create(outStream);
-  WriteBerHeader(TAsn1Tags.Constructed or TAsn1Tags.Sequence);
-end;
-
-constructor TBerSequenceGenerator.Create(outStream: TStream; tagNo: Int32;
-  isExplicit: Boolean);
-begin
-  Inherited Create(outStream, tagNo, isExplicit);
-  WriteBerHeader(TAsn1Tags.Constructed or TAsn1Tags.Sequence);
-end;
-
-{ TBerSequenceParser }
-
-constructor TBerSequenceParser.Create(const parser: IAsn1StreamParser);
-begin
-  F_parser := parser;
-end;
-
-function TBerSequenceParser.ReadObject: IAsn1Convertible;
-begin
-  result := F_parser.ReadObject();
-end;
-
-function TBerSequenceParser.ToAsn1Object: IAsn1Object;
-begin
-  result := TBerSequence.Create(F_parser.ReadVector());
+  
+  Result := TConstructedILEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
 end;
 
 { TBerSet }
 
-class function TBerSet.GetEmpty: IBerSet;
+class function TBerSet.GetEmpty(): IBerSet;
 begin
-  result := TBerSet.Create();
+  Result := TBerSet.Create();
 end;
 
-constructor TBerSet.Create;
+constructor TBerSet.Create();
 begin
-  Inherited Create();
+  inherited Create();
 end;
 
-constructor TBerSet.Create(const v: IAsn1EncodableVector;
-  needsSorting: Boolean);
+constructor TBerSet.Create(const AElement: IAsn1Encodable);
 begin
-  Inherited Create(v, needsSorting);
+  inherited Create(AElement);
 end;
 
-destructor TBerSet.Destroy;
+constructor TBerSet.Create(const AElements: array of IAsn1Encodable);
 begin
-  inherited Destroy;
+  inherited Create(AElements, False); // doSort = False for BER
 end;
 
-constructor TBerSet.Create(const element: IAsn1Encodable);
+constructor TBerSet.Create(const AElementVector: IAsn1EncodableVector);
 begin
-  Inherited Create(element);
+  inherited Create(AElementVector, False); // doSort = False for BER
 end;
 
-constructor TBerSet.Create(const elementVector: IAsn1EncodableVector);
+class function TBerSet.FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSet;
 begin
-  Inherited Create(elementVector, False);
+  if (AC = nil) or (System.Length(AC) < 1) then
+    Result := GetEmpty()
+  else
+    Result := TBerSet.Create(AC);
 end;
 
-procedure TBerSet.Encode(const derOut: TStream);
+class function TBerSet.FromElement(const AElement: IAsn1Encodable): IBerSet;
+begin
+  Result := TBerSet.Create(AElement);
+end;
+
+class function TBerSet.FromVector(const AElementVector: IAsn1EncodableVector): IBerSet;
+begin
+  if (AElementVector = nil) or (AElementVector.Count < 1) then
+    Result := GetEmpty()
+  else
+    Result := TBerSet.Create(AElementVector);
+end;
+
+class function TBerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSet;
 var
-  o: IAsn1Encodable;
-  LListAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
+  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
+  if (ATs = nil) or (System.Length(ATs) < 1) then
   begin
-    (derOut as TDerOutputStream).WriteByte(TAsn1Tags.&Set or
-      TAsn1Tags.Constructed);
-
-    (derOut as TDerOutputStream).WriteByte($80);
-
-    LListAsn1Encodable := Self.GetEnumerable;
-    for o in LListAsn1Encodable do
-    begin
-      (derOut as TDerOutputStream).WriteObject(o);
-    end;
-
-    (derOut as TDerOutputStream).WriteByte($00);
-    (derOut as TDerOutputStream).WriteByte($00);
-  end
-  else
-  begin
-    (Inherited Encode(derOut));
+    Result := GetEmpty();
+    Exit;
   end;
+  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  Result := TBerSet.Create(False, LMapped); // isSorted = False
 end;
 
-class function TBerSet.FromVector(const elementVector: IAsn1EncodableVector;
-  needsSorting: Boolean): IBerSet;
+constructor TBerSet.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
 begin
-  if elementVector.count < 1 then
+  inherited Create(AC, False); // doSort = False for BER
+end;
+
+constructor TBerSet.Create(const ASequence: IAsn1Sequence);
+begin
+  inherited Create(ASequence);
+end;
+
+constructor TBerSet.Create(const ASet: IAsn1Set);
+begin
+  inherited Create(ASet);
+end;
+
+constructor TBerSet.Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
+begin
+  inherited Create(AIsSorted, AElements);
+end;
+
+function TBerSet.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
-    result := Empty;
-  end
-  else
-  begin
-    result := TBerSet.Create(elementVector, needsSorting);
+    Result := inherited GetEncoding(AEncoding);
+    Exit;
   end;
+  
+  Result := TConstructedILEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.&Set,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
 end;
 
-class function TBerSet.FromVector(const elementVector
-  : IAsn1EncodableVector): IBerSet;
+function TBerSet.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
 begin
-  if elementVector.count < 1 then
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
-    result := Empty;
-  end
-  else
-  begin
-    result := TBerSet.Create(elementVector);
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
   end;
-end;
-
-{ TBerSetParser }
-
-constructor TBerSetParser.Create(const parser: IAsn1StreamParser);
-begin
-  F_parser := parser;
-end;
-
-function TBerSetParser.ReadObject: IAsn1Convertible;
-begin
-  result := F_parser.ReadObject();
-end;
-
-function TBerSetParser.ToAsn1Object: IAsn1Object;
-begin
-  result := TBerSet.Create(F_parser.ReadVector(), False);
-end;
-
-{ TDerTaggedObject }
-
-constructor TDerTaggedObject.Create(tagNo: Int32; const obj: IAsn1Encodable);
-begin
-  Inherited Create(tagNo, obj);
-end;
-
-constructor TDerTaggedObject.Create(explicitly: Boolean; tagNo: Int32;
-  const obj: IAsn1Encodable);
-begin
-  Inherited Create(explicitly, tagNo, obj)
-end;
-
-constructor TDerTaggedObject.Create(tagNo: Int32);
-begin
-  Inherited Create(False, tagNo, TDerSequence.Empty)
-end;
-
-procedure TDerTaggedObject.Encode(const derOut: TStream);
-var
-  bytes: TCryptoLibByteArray;
-  flags: Int32;
-begin
-  if (not IsEmpty()) then
-  begin
-    bytes := obj.GetDerEncoded();
-
-    if (explicitly) then
-    begin
-      (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Constructed or
-        TAsn1Tags.Tagged, tagNo, bytes);
-    end
-    else
-    begin
-      //
-      // need to mark constructed types... (preserve Constructed tag)
-      //
-      flags := (bytes[0] and TAsn1Tags.Constructed) or TAsn1Tags.Tagged;
-      (derOut as TDerOutputStream).WriteTag(flags, tagNo);
-      derOut.Write(bytes[1], System.length(bytes) - 1);
-    end
-  end
-  else
-  begin
-    (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Constructed or
-      TAsn1Tags.Tagged, tagNo, Nil);
-  end;
+  
+  Result := TConstructedILEncoding.Create(ATagClass, ATagNo,
+    TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
 end;
 
 { TBerTaggedObject }
 
-constructor TBerTaggedObject.Create(tagNo: Int32; const obj: IAsn1Encodable);
+constructor TBerTaggedObject.Create(ATagNo: Int32; const AObj: IAsn1Encodable);
 begin
-  Inherited Create(tagNo, obj);
+  Create(True, TAsn1Tags.ContextSpecific, ATagNo, AObj);
 end;
 
-constructor TBerTaggedObject.Create(explicitly: Boolean; tagNo: Int32;
-  const obj: IAsn1Encodable);
+constructor TBerTaggedObject.Create(AIsExplicit: Boolean; ATagNo: Int32; const AObj: IAsn1Encodable);
 begin
-  Inherited Create(explicitly, tagNo, obj)
+  Create(AIsExplicit, TAsn1Tags.ContextSpecific, ATagNo, AObj);
 end;
 
-constructor TBerTaggedObject.Create(tagNo: Int32);
+constructor TBerTaggedObject.Create(ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
 begin
-  Inherited Create(False, tagNo, TBerSequence.Empty)
+  Create(True, ATagClass, ATagNo, AObj);
 end;
 
-procedure TBerTaggedObject.Encode(const derOut: TStream);
+constructor TBerTaggedObject.Create(AIsExplicit: Boolean; ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
 var
-  eObj: TList<IAsn1Encodable>;
-  LListIDerOctetString: TCryptoLibGenericArray<IDerOctetString>;
-  LListIAsn1Encodable: TCryptoLibGenericArray<IAsn1Encodable>;
-  asn1OctetString: IAsn1OctetString;
-  berOctetString: IBerOctetString;
-  derOctetString: IDerOctetString;
-  asn1Sequence: IAsn1Sequence;
-  asn1Set: IAsn1Set;
-  o: IAsn1Encodable;
+  LExplicitness: Int32;
 begin
-  eObj := TList<IAsn1Encodable>.Create();
-  try
-    if ((derOut is TAsn1OutputStream) or (derOut is TBerOutputStream)) then
-    begin
-      (derOut as TDerOutputStream)
-        .WriteTag(Byte(TAsn1Tags.Constructed or TAsn1Tags.Tagged), tagNo);
-      (derOut as TDerOutputStream).WriteByte($80);
-
-      if (not IsEmpty()) then
-      begin
-        if (not explicitly) then
-        begin
-          if (Supports(obj, IAsn1OctetString, asn1OctetString)) then
-          begin
-            if (Supports(asn1OctetString, IBerOctetString, berOctetString)) then
-            begin
-              LListIDerOctetString := berOctetString.GetEnumerable;
-              for derOctetString in LListIDerOctetString do
-              begin
-                eObj.Add(derOctetString as IAsn1Encodable);
-              end;
-            end
-            else
-            begin
-              berOctetString := TBerOctetString.Create
-                (asn1OctetString.GetOctets());
-              LListIDerOctetString := berOctetString.GetEnumerable;
-              for derOctetString in LListIDerOctetString do
-              begin
-                eObj.Add(derOctetString as IAsn1Encodable);
-              end;
-            end
-          end
-          else if Supports(obj, IAsn1Sequence, asn1Sequence) then
-          begin
-            LListIAsn1Encodable := asn1Sequence.GetEnumerable;
-            for o in LListIAsn1Encodable do
-            begin
-              eObj.Add(o);
-            end;
-          end
-          else if Supports(obj, IAsn1Set, asn1Set) then
-          begin
-            LListIAsn1Encodable := asn1Set.GetEnumerable;
-            for o in LListIAsn1Encodable do
-            begin
-              eObj.Add(o);
-            end;
-          end
-          else
-          begin
-            raise ENotImplementedCryptoLibException.CreateResFmt
-              (@SNotImplemented, [(obj as TAsn1Encodable).ClassName]);
-          end;
-
-          for o in eObj do
-          begin
-            (derOut as TDerOutputStream).WriteObject(o);
-          end;
-        end
-        else
-        begin
-          (derOut as TDerOutputStream).WriteObject(obj);
-        end;
-      end;
-
-      (derOut as TDerOutputStream).WriteByte($00);
-      (derOut as TDerOutputStream).WriteByte($00);
-    end
-    else
-    begin
-      (Inherited Encode(derOut));
-    end
-  finally
-    eObj.Free;
-  end;
-
+  if AIsExplicit then
+    LExplicitness := 3  // ParsedExplicit
+  else
+    LExplicitness := 4;  // ParsedImplicit
+  Create(LExplicitness, ATagClass, ATagNo, AObj);
 end;
 
-{ TBerTaggedObjectParser }
-
-constructor TBerTaggedObjectParser.Create(Constructed: Boolean;
-  tagNumber: Int32; const parser: IAsn1StreamParser);
+constructor TBerTaggedObject.Create(AExplicitness, ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable);
 begin
-  F_constructed := Constructed;
-  F_tagNumber := tagNumber;
-  F_parser := parser;
+  inherited Create(AExplicitness, ATagClass, ATagNo, AObj);
 end;
 
-destructor TBerTaggedObjectParser.Destroy;
+function TBerTaggedObject.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+var
+  LBaseObject: IAsn1Object;
 begin
-  F_parser := Nil;
-  inherited Destroy;
-end;
-
-function TBerTaggedObjectParser.GetIsConstructed: Boolean;
-begin
-  result := F_constructed;
-end;
-
-function TBerTaggedObjectParser.GetObjectParser(tag: Int32; isExplicit: Boolean)
-  : IAsn1Convertible;
-begin
-  if (isExplicit) then
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
-    if (not F_constructed) then
-    begin
-      raise EIOCryptoLibException.CreateRes(@SUnConstructedTag);
-    end;
-
-    result := F_parser.ReadObject();
+    Result := inherited GetEncoding(AEncoding);
     Exit;
   end;
-
-  result := F_parser.ReadImplicit(F_constructed, tag);
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingImplicit(AEncoding, GetTagClass(), GetTagNo());
+    Exit;
+  end;
+  
+  Result := TTaggedILEncoding.Create(GetTagClass(), GetTagNo(), LBaseObject.GetEncoding(AEncoding));
 end;
 
-function TBerTaggedObjectParser.GetTagNo: Int32;
+function TBerTaggedObject.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+var
+  LBaseObject: IAsn1Object;
 begin
-  result := F_tagNumber;
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  LBaseObject := GetBaseObject().ToAsn1Object();
+  
+  if not IsExplicit() then
+  begin
+    Result := LBaseObject.GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  Result := TTaggedILEncoding.Create(ATagClass, ATagNo, LBaseObject.GetEncoding(AEncoding));
 end;
 
-function TBerTaggedObjectParser.ToAsn1Object: IAsn1Object;
+function TBerTaggedObject.RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence;
+begin
+  Result := TBerSequence.Create(AAsn1Object as IAsn1Encodable);
+end;
+
+function TBerTaggedObject.ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TBerTaggedObject.Create(FExplicitness, ATagClass, ATagNo, FObject);
+end;
+
+class function TAsn1TaggedObject.CreatePrimitive(ATagClass, ATagNo: Int32;
+  const AContentsOctets: TCryptoLibByteArray): IAsn1Object;
+begin
+  // Note: !CONSTRUCTED => IMPLICIT
+  Result := TDLTaggedObject.Create(ParsedImplicit, ATagClass, ATagNo,
+    TDerOctetString.WithContents(AContentsOctets));
+end;
+
+class function TAsn1TaggedObject.CreateConstructedDL(ATagClass, ATagNo: Int32;
+  const AContentsElements: IAsn1EncodableVector): IAsn1Object;
+var
+  LMaybeExplicit: Boolean;
+begin
+  if AContentsElements = nil then
+    raise EArgumentNilCryptoLibException.Create('contentsElements');
+  LMaybeExplicit := (AContentsElements.Count = 1);
+  if LMaybeExplicit then
+    Result := TDLTaggedObject.Create(ParsedExplicit, ATagClass, ATagNo,
+      AContentsElements[0])
+  else
+    Result := TDLTaggedObject.Create(ParsedImplicit, ATagClass, ATagNo,
+      TDLSequence.FromVector(AContentsElements));
+end;
+
+class function TAsn1TaggedObject.CreateConstructedIL(ATagClass, ATagNo: Int32;
+  const AContentsElements: IAsn1EncodableVector): IAsn1Object;
+var
+  LMaybeExplicit: Boolean;
+begin
+  if AContentsElements = nil then
+    raise EArgumentNilCryptoLibException.Create('contentsElements');
+  LMaybeExplicit := (AContentsElements.Count = 1);
+  if LMaybeExplicit then
+    Result := TBerTaggedObject.Create(ParsedExplicit, ATagClass, ATagNo,
+      AContentsElements[0])
+  else
+    Result := TBerTaggedObject.Create(ParsedImplicit, ATagClass, ATagNo,
+      TBerSequence.FromVector(AContentsElements));
+end;
+
+{ TBerBitStringParser }
+
+constructor TBerBitStringParser.Create(const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FParser := AParser;
+  FBitStream := nil;
+end;
+
+function TBerBitStringParser.GetBitStream(): TStream;
+begin
+  FBitStream := TAsn1ConstructedBitStream.Create(FParser, False);
+  Result := FBitStream;
+end;
+
+function TBerBitStringParser.GetOctetStream(): TStream;
+begin
+  FBitStream := TAsn1ConstructedBitStream.Create(FParser, True);
+  Result := FBitStream;
+end;
+
+function TBerBitStringParser.GetPadBits(): Int32;
+begin
+  Result := FBitStream.PadBits;
+end;
+
+
+function TBerBitStringParser.ToAsn1Object(): IAsn1Object;
 begin
   try
-    result := F_parser.ReadTaggedObject(F_constructed, F_tagNumber);
+    Result := Parse(FParser);
   except
-    on e: EIOCryptoLibException do
-    begin
-      raise EAsn1ParsingCryptoLibException.CreateResFmt(@SParsingError,
-        [e.Message]);
-    end;
-
+    on E: EIOCryptoLibException do
+      raise EAsn1ParsingCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
   end;
 end;
 
-{ TDerBmpString }
-
-function TDerBmpString.GetStr: String;
-begin
-  result := FStr;
-end;
-
-function TDerBmpString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+class function TBerBitStringParser.Parse(const ASp: IAsn1StreamParser): IBerBitString;
 var
-  other: IDerBmpString;
+  LBitStream: TAsn1ConstructedBitStream;
+  LData: TCryptoLibByteArray;
+  LPadBits: Int32;
 begin
-
-  if (not Supports(asn1Object, IDerBmpString, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := Str = other.Str;
-end;
-
-constructor TDerBmpString.Create(const astr: TCryptoLibByteArray);
-var
-  cs: TCryptoLibCharArray;
-  I: Int32;
-begin
-  Inherited Create();
-  if (astr = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SEmptyInput);
-  end;
-
-  System.SetLength(cs, System.length(astr) shr 1);
-
-  I := 0;
-
-  while I <> System.length(cs) do
-  begin
-    cs[I] := Char((astr[2 * I] shl 8) or (astr[2 * I + 1] and $FF));
-    System.Inc(I);
-  end;
-
-  System.SetString(FStr, PChar(@cs[0]), System.length(cs));
-end;
-
-constructor TDerBmpString.Create(const astr: String);
-begin
-  Inherited Create();
-  if (astr = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SEmptyInput);
-  end;
-
-  FStr := astr;
-end;
-
-procedure TDerBmpString.Encode(const derOut: TStream);
-var
-  c: TCryptoLibCharArray;
-  b: TCryptoLibByteArray;
-  I: Int32;
-begin
-
-  c := TStringUtils.StringToCharArray(Str);
-
-  System.SetLength(b, System.length(c) * 2);
-
-  I := 0;
-
-  while I <> System.length(c) do
-  begin
-    b[2 * I] := Byte(Ord(c[I]) shr 8);
-    b[2 * I + 1] := Byte(c[I]);
-    System.Inc(I);
-  end;
-
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.BmpString, b);
-
-end;
-
-class function TDerBmpString.GetInstance(const obj: TObject): IDerBmpString;
-begin
-  if ((obj = Nil) or (obj is TDerBmpString)) then
-  begin
-    result := obj as TDerBmpString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerBmpString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerBmpString;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerBmpString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerBmpString.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
-    .GetOctets());
-end;
-
-function TDerBmpString.GetString: String;
-begin
-  result := FStr;
-end;
-
-{ TDerBoolean }
-
-function TDerBoolean.GetIsTrue: Boolean;
-begin
-  result := Fvalue <> 0;
-end;
-
-function TDerBoolean.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerBoolean;
-begin
-
-  if (not Supports(asn1Object, IDerBoolean, other)) then
-  begin
-    result := System.False;
-    Exit;
-  end;
-
-  result := IsTrue = other.IsTrue;
-end;
-
-function TDerBoolean.Asn1GetHashCode: Int32;
-begin
-  result := Ord(IsTrue);
-end;
-
-constructor TDerBoolean.Create(const val: TCryptoLibByteArray);
-begin
-  Inherited Create();
-  if (System.length(val) <> 1) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidValue);
-  end;
-
-  // TODO Are there any constraints on the possible byte values?
-  Fvalue := val[0];
-end;
-
-constructor TDerBoolean.Create(Value: Boolean);
-begin
-  Inherited Create();
-  if Value then
-  begin
-    Fvalue := Byte($FF)
-  end
-  else
-  begin
-    Fvalue := Byte(0)
-  end;
-end;
-
-procedure TDerBoolean.Encode(const derOut: TStream);
-begin
-  // TODO Should we make sure the byte value is one of '0' or '0xff' here?
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Boolean,
-    TCryptoLibByteArray.Create(Fvalue));
-end;
-
-class function TDerBoolean.FromOctetString(const Value: TCryptoLibByteArray)
-  : IDerBoolean;
-var
-  b: Byte;
-begin
-  if (System.length(Value) <> 1) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBooleanValue);
-  end;
-
-  b := Value[0];
-
-  case b of
-    0:
-      result := TDerBoolean.False;
-    $FF:
-      result := TDerBoolean.True
-  else
-    begin
-      result := TDerBoolean.Create(Value);
-    end;
-  end;
-
-end;
-
-class function TDerBoolean.GetInstance(Value: Boolean): IDerBoolean;
-begin
-  if Value then
-  begin
-    result := TDerBoolean.True;
-  end
-  else
-  begin
-    result := TDerBoolean.False;
-  end;
-end;
-
-class function TDerBoolean.GetInstance(const obj: TObject): IDerBoolean;
-begin
-  if ((obj = Nil) or (obj is TDerBoolean)) then
-  begin
-    Supports(obj, IDerBoolean, result);
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerBoolean.GetFalse: IDerBoolean;
-begin
-  result := TDerBoolean.Create(System.False);
-end;
-
-class function TDerBoolean.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerBoolean;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerBoolean))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := FromOctetString((o as IAsn1OctetString).GetOctets());
-end;
-
-class function TDerBoolean.GetTrue: IDerBoolean;
-begin
-  result := TDerBoolean.Create(System.True);
-end;
-
-function TDerBoolean.ToString: String;
-begin
-  result := BoolToStr(IsTrue, System.True);
-end;
-
-{ TDerEnumerated }
-
-function TDerEnumerated.GetBytes: TCryptoLibByteArray;
-begin
-  result := Fbytes;
-end;
-
-function TDerEnumerated.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerEnumerated;
-begin
-
-  if (not Supports(asn1Object, IDerEnumerated, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := TArrayUtils.AreEqual(bytes, other.bytes);
-end;
-
-function TDerEnumerated.Asn1GetHashCode: Int32;
-begin
-  result := TArrayUtils.GetArrayHashCode(bytes);
-end;
-
-constructor TDerEnumerated.Create(val: Int32);
-begin
-  Inherited Create();
-  if (val < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
-  end;
-  Fbytes := TBigInteger.ValueOf(val).ToByteArray();
-  FStart := 0;
-end;
-
-constructor TDerEnumerated.Create(val: Int64);
-begin
-  Inherited Create();
-  if (val < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
-  end;
-  Fbytes := TBigInteger.ValueOf(val).ToByteArray();
-  FStart := 0;
-end;
-
-constructor TDerEnumerated.Create(const val: TBigInteger);
-begin
-  Inherited Create();
-  if (val.SignValue < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
-  end;
-  Fbytes := val.ToByteArray();
-  FStart := 0;
-end;
-
-constructor TDerEnumerated.Create(const bytes: TCryptoLibByteArray);
-begin
-  Inherited Create();
-
-  if (TDerInteger.IsMalformed(bytes)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SMalformedEnumerated);
-  end;
-  if (0 <> (bytes[0] and $80)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedNegative);
-  end;
-
-  Fbytes := System.Copy(bytes);
-  FStart := TDerInteger.SignBytesToSkip(bytes);
-end;
-
-procedure TDerEnumerated.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Enumerated, Fbytes);
-end;
-
-class function TDerEnumerated.FromOctetString(const enc: TCryptoLibByteArray)
-  : IDerEnumerated;
-var
-  LValue: Int32;
-  possibleMatch: IDerEnumerated;
-begin
-  if (System.length(enc) > 1) then
-  begin
-    result := TDerEnumerated.Create(enc);
-    Exit;
-  end;
-  if (System.length(enc) = 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SZeroLength);
-  end;
-
-  LValue := enc[0];
-  if (LValue >= System.length(Fcache)) then
-  begin
-    result := TDerEnumerated.Create(enc);
-    Exit;
-  end;
-
-  possibleMatch := Fcache[LValue];
-  if (possibleMatch = Nil) then
-  begin
-    possibleMatch := TDerEnumerated.Create(enc);
-    Fcache[LValue] := possibleMatch;
-  end;
-  result := possibleMatch;
-end;
-
-class function TDerEnumerated.GetInstance(const obj: TObject): IDerEnumerated;
-begin
-  if ((obj = Nil) or (obj is TDerEnumerated)) then
-  begin
-    result := obj as TDerEnumerated;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerEnumerated.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerEnumerated;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if (isExplicit or (Supports(o, IDerEnumerated))) then
-  begin
-    result := GetInstance(o as TObject);
-    Exit;
-  end;
-
-  result := FromOctetString((o as IAsn1OctetString).GetOctets());
-end;
-
-function TDerEnumerated.GetIntValueExact: Int32;
-var
-  count: Int32;
-begin
-  count := System.length(Fbytes) - FStart;
-  if (count > 4) then
-  begin
-    raise EArithmeticCryptoLibException.CreateRes(@SASN1IntegerOutOfRangeError);
-  end;
-
-  result := TDerInteger.IntValue(Fbytes, FStart, TDerInteger.SignExtSigned);
-end;
-
-function TDerEnumerated.GetValue: TBigInteger;
-begin
-  result := TBigInteger.Create(Fbytes);
-end;
-
-function TDerEnumerated.HasValue(const x: TBigInteger): Boolean;
-begin
-  result := (x.IsInitialized)
-  // Fast check to avoid allocation
-    and (TDerInteger.IntValue(Fbytes, FStart, TDerInteger.SignExtSigned)
-    = x.Int32Value) and (Value.Equals(x));
-end;
-
-{ TDerGraphicString }
-
-function TDerGraphicString.GetmString: TCryptoLibByteArray;
-begin
-  result := FmString;
-end;
-
-function TDerGraphicString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerGraphicString;
-begin
-
-  if (not Supports(asn1Object, IDerGraphicString, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := TArrayUtils.AreEqual(mString, other.mString);
-end;
-
-function TDerGraphicString.Asn1GetHashCode: Int32;
-begin
-  result := TArrayUtils.GetArrayHashCode(mString);
-end;
-
-constructor TDerGraphicString.Create(const encoding: TCryptoLibByteArray);
-begin
-  Inherited Create();
-  FmString := System.Copy(encoding);
-end;
-
-procedure TDerGraphicString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.GraphicString, mString);
-end;
-
-class function TDerGraphicString.GetInstance(const obj: TObject)
-  : IDerGraphicString;
-begin
-  if ((obj = Nil) or (obj is TDerGraphicString)) then
-  begin
-    result := obj as TDerGraphicString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerGraphicString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerGraphicString;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerGraphicString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerGraphicString.Create
-    (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-class function TDerGraphicString.GetInstance(const obj: TCryptoLibByteArray)
-  : IDerGraphicString;
-begin
+  LBitStream := TAsn1ConstructedBitStream.Create(ASp, False);
   try
-    result := FromByteArray(obj) as IDerGraphicString;
-  except
-    on e: Exception do
-    begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SEncodingError,
-        [e.Message]);
-    end;
-  end;
-end;
-
-function TDerGraphicString.GetOctets: TCryptoLibByteArray;
-begin
-  result := System.Copy(mString);
-end;
-
-function TDerGraphicString.GetString: String;
-begin
-  result := TConverters.ConvertBytesToString(mString, TEncoding.ANSI);
-end;
-
-{ TDerExternal }
-
-class function TDerExternal.GetObjFromVector(const v: IAsn1EncodableVector;
-  Index: Int32): IAsn1Object;
-var
-  val: IAsn1Encodable;
-begin
-  if (v.count <= index) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SFewObject);
-  end;
-
-  val := v[index];
-  result := val.ToAsn1Object();
-end;
-
-class procedure TDerExternal.WriteEncodable(ms: TMemoryStream;
-  const e: IAsn1Encodable);
-var
-  bs: TCryptoLibByteArray;
-begin
-  if (e <> Nil) then
-  begin
-    bs := e.GetDerEncoded();
-    ms.Write(bs[0], System.length(bs));
-  end;
-end;
-
-function TDerExternal.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerExternal;
-begin
-  if (Self.Equals(asn1Object)) then
-  begin
-    result := True;
-    Exit;
-  end;
-
-  if (not Supports(asn1Object, IDerExternal, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := directReference.Equals(other.directReference) and
-    indirectReference.Equals(other.indirectReference) and
-    dataValueDescriptor.Equals(other.dataValueDescriptor) and
-    ExternalContent.Equals(other.ExternalContent);
-end;
-
-function TDerExternal.Asn1GetHashCode: Int32;
-var
-  ret: Int32;
-begin
-  ret := ExternalContent.GetHashCode();
-  if (directReference <> Nil) then
-  begin
-    ret := ret xor directReference.GetHashCode();
-  end;
-  if (indirectReference <> Nil) then
-  begin
-    ret := ret xor indirectReference.GetHashCode();
-  end;
-  if (dataValueDescriptor <> Nil) then
-  begin
-    ret := ret xor dataValueDescriptor.GetHashCode();
-  end;
-  result := ret;
-end;
-
-constructor TDerExternal.Create(const directReference: IDerObjectIdentifier;
-  const indirectReference: IDerInteger; const dataValueDescriptor: IAsn1Object;
-  encoding: Int32; const externalData: IAsn1Object);
-begin
-  Inherited Create();
-  FdirectReference := directReference;
-  FindirectReference := indirectReference;
-  FdataValueDescriptor := dataValueDescriptor;
-  Fencoding := encoding;
-  FexternalContent := externalData.ToAsn1Object();
-end;
-
-constructor TDerExternal.Create(const vector: IAsn1EncodableVector);
-var
-  offset: Int32;
-  enc: IAsn1Object;
-  derObjectIdentifier: IDerObjectIdentifier;
-  derInteger: IDerInteger;
-  obj: IAsn1TaggedObject;
-begin
-  Inherited Create();
-  offset := 0;
-  enc := GetObjFromVector(vector, offset);
-
-  if (Supports(enc, IDerObjectIdentifier, derObjectIdentifier)) then
-  begin
-    directReference := derObjectIdentifier;
-    System.Inc(offset);
-    enc := GetObjFromVector(vector, offset);
-  end;
-
-  if (Supports(enc, IDerInteger, derInteger)) then
-  begin
-    indirectReference := derInteger;
-    System.Inc(offset);
-    enc := GetObjFromVector(vector, offset);
-  end;
-  if (not(Supports(enc, IAsn1TaggedObject))) then
-  begin
-    dataValueDescriptor := enc;
-    System.Inc(offset);
-    enc := GetObjFromVector(vector, offset);
-  end;
-
-  if (vector.count <> (offset + 1)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SVectorTooLarge);
-  end;
-
-  if (not(Supports(enc, IAsn1TaggedObject, obj))) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SNoTaggedObjectFound);
-  end;
-
-  // Use property accessor to include check on value
-  encoding := obj.tagNo;
-
-  if ((Fencoding < 0) or (Fencoding > 2)) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidEncodingValue);
-  end;
-
-  FexternalContent := obj.GetObject();
-end;
-
-constructor TDerExternal.Create(const directReference: IDerObjectIdentifier;
-  const indirectReference: IDerInteger; const dataValueDescriptor: IAsn1Object;
-  const externalData: IDerTaggedObject);
-begin
-  Create(directReference, indirectReference, dataValueDescriptor,
-    externalData.tagNo, externalData.ToAsn1Object());
-end;
-
-procedure TDerExternal.Encode(const derOut: TStream);
-var
-  ms: TMemoryStream;
-  buffer: TCryptoLibByteArray;
-begin
-  ms := TMemoryStream.Create();
-  try
-    WriteEncodable(ms, directReference);
-    WriteEncodable(ms, indirectReference);
-    WriteEncodable(ms, dataValueDescriptor);
-    WriteEncodable(ms, TDerTaggedObject.Create(TAsn1Tags.External,
-      ExternalContent));
-
-    System.SetLength(buffer, ms.Size);
-    ms.Position := 0;
-    ms.Read(buffer[0], ms.Size);
-    (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Constructed,
-      TAsn1Tags.External, buffer);
+    LData := TStreamUtils.ReadAll(LBitStream);
+    LPadBits := LBitStream.PadBits;
+    Result := TBerBitString.Create(LData, LPadBits);
   finally
-    ms.Free;
+    LBitStream.Free;
   end;
 end;
 
-function TDerExternal.GetDataValueDescriptor: IAsn1Object;
+{ TBerOctetStringParser }
+
+constructor TBerOctetStringParser.Create(const AParser: IAsn1StreamParser);
 begin
-  result := FdataValueDescriptor;
+  inherited Create;
+  FParser := AParser;
 end;
 
-function TDerExternal.GetDirectReference: IDerObjectIdentifier;
+function TBerOctetStringParser.GetOctetStream(): TStream;
 begin
-  result := FdirectReference;
+  Result := TAsn1ConstructedOctetStream.Create(FParser);
 end;
 
-function TDerExternal.GetEncoding: Int32;
+function TBerOctetStringParser.ToAsn1Object(): IAsn1Object;
 begin
-  result := Fencoding;
-end;
-
-function TDerExternal.GetExternalContent: IAsn1Object;
-begin
-  result := FexternalContent;
-end;
-
-function TDerExternal.GetIndirectReference: IDerInteger;
-begin
-  result := FindirectReference;
-end;
-
-procedure TDerExternal.SetDataValueDescriptor(const Value: IAsn1Object);
-begin
-  FdataValueDescriptor := Value;
-end;
-
-procedure TDerExternal.SetDirectReference(const Value: IDerObjectIdentifier);
-begin
-  FdirectReference := Value;
-end;
-
-procedure TDerExternal.SetEncoding(const Value: Int32);
-begin
-  if ((Fencoding < 0) or (Fencoding > 2)) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt
-      (@SInvalidEncoding, [Value]);
+  try
+    Result := Parse(FParser);
+  except
+    on E: EIOCryptoLibException do
+      raise EAsn1ParsingCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
   end;
-
-  Fencoding := Value;
 end;
 
-procedure TDerExternal.SetExternalContent(const Value: IAsn1Object);
-begin
-  FexternalContent := Value;
-end;
-
-procedure TDerExternal.SetIndirectReference(const Value: IDerInteger);
-begin
-  FindirectReference := Value;
-end;
-
-{ TDerInteger }
-
-class function TDerInteger.GetAllowUnsafeInteger: Boolean;
-begin
-  result := FAllowUnsafeInteger;
-end;
-
-class procedure TDerInteger.SetAllowUnsafeInteger(const Value: Boolean);
-begin
-  FAllowUnsafeInteger := Value;
-end;
-
-function TDerInteger.GetBytes: TCryptoLibByteArray;
-begin
-  result := Fbytes;
-end;
-
-class function TDerInteger.GetInstance(const obj: TObject): IDerInteger;
-begin
-  if ((obj = Nil) or (obj is TDerInteger)) then
-  begin
-    result := obj as TDerInteger;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-
-end;
-
-function TDerInteger.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+class function TBerOctetStringParser.Parse(const ASp: IAsn1StreamParser): IBerOctetString;
 var
-  other: IDerInteger;
+  LOctetStream: TAsn1ConstructedOctetStream;
 begin
-
-  if (not Supports(asn1Object, IDerInteger, other)) then
-  begin
-    result := False;
-    Exit;
+  LOctetStream := TAsn1ConstructedOctetStream.Create(ASp);
+  try
+    Result := TBerOctetString.Create(TStreamUtils.ReadAll(LOctetStream));
+  finally
+    LOctetStream.Free;
   end;
-
-  result := TArrayUtils.AreEqual(bytes, other.bytes);
-end;
-
-function TDerInteger.Asn1GetHashCode: Int32;
-begin
-  result := TArrayUtils.GetArrayHashCode(Fbytes);
-end;
-
-constructor TDerInteger.Create(const Value: TBigInteger);
-begin
-  inherited Create();
-  if (not Value.IsInitialized) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SValueNil);
-  end;
-
-  Fbytes := Value.ToByteArray();
-  FStart := 0;
-end;
-
-constructor TDerInteger.Create(Value: Int32);
-begin
-  inherited Create();
-  Fbytes := TBigInteger.ValueOf(Value).ToByteArray();
-  FStart := 0;
-end;
-
-constructor TDerInteger.Create(Value: Int64);
-begin
-  inherited Create();
-  Fbytes := TBigInteger.ValueOf(Value).ToByteArray();
-  FStart := 0;
-end;
-
-constructor TDerInteger.Create(const bytes: TCryptoLibByteArray);
-begin
-  Create(bytes, True);
-end;
-
-constructor TDerInteger.Create(const bytes: TCryptoLibByteArray;
-  clone: Boolean);
-begin
-  Inherited Create();
-  if (IsMalformed(bytes)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SMalformedInteger);
-  end;
-  if clone then
-  begin
-    Fbytes := System.Copy(bytes);
-  end
-  else
-  begin
-    Fbytes := bytes;
-  end;
-  FStart := SignBytesToSkip(bytes);
-end;
-
-class constructor TDerInteger.CreateDerInteger;
-begin
-  FAllowUnsafeInteger := False;
-end;
-
-procedure TDerInteger.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Integer, Fbytes);
-end;
-
-class function TDerInteger.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerInteger;
-var
-  o: IAsn1Object;
-begin
-  if (obj = Nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SObjectNil);
-
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerInteger))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerInteger.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
-    .GetOctets());
-
-end;
-
-function TDerInteger.GetIntPositiveValueExact: Int32;
-var
-  count: Int32;
-begin
-  count := System.length(Fbytes) - FStart;
-  if ((count > 4) or ((count = 4) and (0 <> (bytes[FStart] and $80)))) then
-  begin
-    raise EArithmeticCryptoLibException.CreateRes
-      (@SASN1IntegerPositiveOutOfRangeError);
-  end;
-
-  result := IntValue(Fbytes, FStart, SignExtUnsigned);
-end;
-
-function TDerInteger.GetIntValueExact: Int32;
-var
-  count: Int32;
-begin
-  count := System.length(Fbytes) - FStart;
-  if (count > 4) then
-  begin
-    raise EArithmeticCryptoLibException.CreateRes(@SASN1IntegerOutOfRangeError);
-  end;
-
-  result := IntValue(Fbytes, FStart, SignExtSigned);
-end;
-
-function TDerInteger.GetPositiveValue: TBigInteger;
-begin
-  result := TBigInteger.Create(1, Fbytes);
-end;
-
-function TDerInteger.GetValue: TBigInteger;
-begin
-  result := TBigInteger.Create(Fbytes);
-end;
-
-function TDerInteger.HasValue(const x: TBigInteger): Boolean;
-begin
-  result := (x.IsInitialized)
-  // Fast check to avoid allocation
-    and (IntValue(Fbytes, FStart, SignExtSigned) = x.Int32Value) and
-    (Value.Equals(x));
-end;
-
-class function TDerInteger.IntValue(const bytes: TCryptoLibByteArray;
-  start, signExt: Int32): Int32;
-var
-  LLength, LPos, LVal: Int32;
-begin
-  LLength := System.length(bytes);
-  LPos := Max(start, LLength - 4);
-
-  LVal := ShortInt(bytes[LPos]) and signExt;
-  System.Inc(LPos);
-  while (LPos < LLength) do
-  begin
-    LVal := (LVal shl 8) or bytes[LPos];
-    System.Inc(LPos);
-  end;
-  result := LVal;
-end;
-
-class function TDerInteger.IsMalformed(const bytes
-  : TCryptoLibByteArray): Boolean;
-begin
-  case System.length(bytes) of
-    0:
-      begin
-        result := True;
-      end;
-    1:
-      begin
-        result := False;
-      end
-  else
-    begin
-      result := (ShortInt(bytes[0]) = (TBits.Asr32(ShortInt(bytes[1]), 7))) and
-        (not AllowUnsafeInteger);
-    end;
-  end;
-end;
-
-class function TDerInteger.SignBytesToSkip(const bytes
-  : TCryptoLibByteArray): Int32;
-var
-  LPos, LLast: Int32;
-begin
-  LPos := 0;
-  LLast := System.length(bytes) - 1;
-  while ((LPos < LLast) and (ShortInt(bytes[LPos])
-    = TBits.Asr32(ShortInt(bytes[LPos + 1]), 7))) do
-  begin
-    System.Inc(LPos);
-  end;
-  result := LPos;
-end;
-
-function TDerInteger.ToString: String;
-begin
-  result := Value.ToString();
-end;
-
-{ TDerExternalParser }
-
-constructor TDerExternalParser.Create(const parser: IAsn1StreamParser);
-begin
-  Inherited Create();
-  F_parser := parser;
-end;
-
-function TDerExternalParser.ReadObject: IAsn1Convertible;
-begin
-  result := F_parser.ReadObject();
-end;
-
-function TDerExternalParser.ToAsn1Object: IAsn1Object;
-begin
-  result := TDerExternal.Create(F_parser.ReadVector());
 end;
 
 { TDerOctetStringParser }
 
-constructor TDerOctetStringParser.Create(stream: TStream);
+constructor TDerOctetStringParser.Create(const AStream: TAsn1DefiniteLengthInputStream);
 begin
-  FStream := stream;
+  inherited Create;
+  FStream := AStream;
 end;
 
 destructor TDerOctetStringParser.Destroy;
 begin
-  FStream.Free;
+  // Parser OWNS the stream and always frees it
+  if FStream <> nil then
+  begin
+    FStream.Free;
+    FStream := nil;
+  end;
   inherited Destroy;
 end;
 
-function TDerOctetStringParser.GetOctetStream: TStream;
+function TDerOctetStringParser.GetOctetStream(): TStream;
 begin
-  result := FStream;
+  // Transfers ownership to caller - caller MUST free the stream
+  Result := FStream;
+  FStream := nil;  // Transfer ownership, destructor won't free
 end;
 
-function TDerOctetStringParser.ToAsn1Object: IAsn1Object;
+function TDerOctetStringParser.ToAsn1Object(): IAsn1Object;
 begin
   try
-    result := TDerOctetString.Create((FStream as TDefiniteLengthInputStream)
-      .ToArray());
+    Result := TDerOctetString.WithContents(FStream.ToArray());
   except
-    on e: EIOCryptoLibException do
-    begin
-      raise EInvalidOperationCryptoLibException.CreateResFmt(@SConvertError,
-        [e.Message]);
+    on E: EIOCryptoLibException do
+      raise EInvalidOperationCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
+  end;
+end;
+
+{ TDLBitStringParser }
+
+constructor TDLBitStringParser.Create(const AStream: TAsn1DefiniteLengthInputStream);
+begin
+  inherited Create;
+  FStream := AStream;
+  FPadBits := 0;
+end;
+
+destructor TDLBitStringParser.Destroy;
+begin
+  // Parser OWNS the stream and always frees it
+  if FStream <> nil then
+  begin
+    FStream.Free;
+    FStream := nil;
+  end;
+  inherited Destroy;
+end;
+
+function TDLBitStringParser.GetBitStreamInternal(AOctetAligned: Boolean): TStream;
+var
+  LLength: Int32;
+begin
+  LLength := FStream.Remaining;
+  if LLength < 1 then
+    raise EInvalidOperationCryptoLibException.Create('content octets cannot be empty');
+
+  FPadBits := FStream.ReadByte();
+  if FPadBits > 0 then
+  begin
+    if LLength < 2 then
+      raise EInvalidOperationCryptoLibException.Create('zero length data with non-zero pad bits');
+    if FPadBits > 7 then
+      raise EInvalidOperationCryptoLibException.Create('pad bits cannot be greater than 7 or less than 0');
+    if AOctetAligned then
+      raise EIOCryptoLibException.CreateFmt('expected octet-aligned bitstring, but found padBits: %d', [FPadBits]);
+  end;
+
+  // Transfers ownership to caller - caller MUST free the stream
+  Result := FStream;
+  FStream := nil;  // Transfer ownership, destructor won't free
+end;
+
+function TDLBitStringParser.GetBitStream(): TStream;
+begin
+  Result := GetBitStreamInternal(False);
+end;
+
+function TDLBitStringParser.GetOctetStream(): TStream;
+begin
+  Result := GetBitStreamInternal(True);
+end;
+
+function TDLBitStringParser.GetPadBits(): Int32;
+begin
+  Result := FPadBits;
+end;
+
+function TDLBitStringParser.ToAsn1Object(): IAsn1Object;
+begin
+  try
+    Result := TDerBitString.CreatePrimitive(FStream.ToArray());
+  except
+    on E: EIOCryptoLibException do
+      raise EAsn1ParsingCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
+  end;
+end;
+
+{ TDerSequenceParser }
+
+constructor TDerSequenceParser.Create(const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FParser := AParser;
+end;
+
+function TDerSequenceParser.ReadObject(): IAsn1Convertible;
+begin
+  Result := FParser.ReadObject();
+end;
+
+function TDerSequenceParser.ToAsn1Object(): IAsn1Object;
+begin
+  Result := TDLSequence.FromVector(FParser.ReadVector());
+end;
+
+{ TDerSetParser }
+
+constructor TDerSetParser.Create(const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FParser := AParser;
+end;
+
+function TDerSetParser.ReadObject(): IAsn1Convertible;
+begin
+  Result := FParser.ReadObject();
+end;
+
+function TDerSetParser.ToAsn1Object(): IAsn1Object;
+begin
+  Result := TDLSet.FromVector(FParser.ReadVector());
+end;
+
+{ TBerSequenceParser }
+
+constructor TBerSequenceParser.Create(const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FParser := AParser;
+end;
+
+function TBerSequenceParser.ReadObject(): IAsn1Convertible;
+begin
+  Result := FParser.ReadObject();
+end;
+
+function TBerSequenceParser.ToAsn1Object(): IAsn1Object;
+begin
+  Result := Parse(FParser);
+end;
+
+class function TBerSequenceParser.Parse(const ASp: IAsn1StreamParser): IBerSequence;
+begin
+  Result := TBerSequence.FromVector(ASp.ReadVector());
+end;
+
+{ TBerSetParser }
+
+constructor TBerSetParser.Create(const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FParser := AParser;
+end;
+
+function TBerSetParser.ReadObject(): IAsn1Convertible;
+begin
+  Result := FParser.ReadObject();
+end;
+
+function TBerSetParser.ToAsn1Object(): IAsn1Object;
+begin
+  Result := Parse(FParser);
+end;
+
+class function TBerSetParser.Parse(const ASp: IAsn1StreamParser): IBerSet;
+begin
+  Result := TBerSet.FromVector(ASp.ReadVector());
+end;
+
+{ TAsn1Generator }
+
+constructor TAsn1Generator.Create(AOutStream: TStream);
+begin
+  inherited Create;
+  if AOutStream = nil then
+    raise EArgumentNilCryptoLibException.Create('outStream');
+  FOut := AOutStream;
+  FClosed := False;
+end;
+
+destructor TAsn1Generator.Destroy;
+begin
+  DoClose();
+  inherited Destroy;
+end;
+
+procedure TAsn1Generator.DoClose();
+begin
+  if (FOut <> nil) and (not FClosed) then
+  begin
+    FClosed := True;
+    try
+      Finish();
+    finally
+      FOut := nil;  // Prevent any further access to the stream
     end;
   end;
 end;
 
-{ TDerGeneralString }
-
-function TDerGeneralString.GetStr: String;
+function TAsn1Generator.GetIsClosed: Boolean;
 begin
-  result := FStr;
+  Result := FClosed;
 end;
 
-function TDerGeneralString.GetOctets: TCryptoLibByteArray;
+function TAsn1Generator.GetOut: TStream;
 begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
+  if FOut = nil then
+    raise EInvalidOperationCryptoLibException.Create('Stream is null');
+  Result := FOut;
 end;
 
-function TDerGeneralString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+class function TAsn1Generator.InheritConstructedFlag(AIntoTag, AFromTag: Int32): Int32;
+begin
+  if ((AFromTag and TAsn1Tags.Constructed) <> 0) then
+    Result := AIntoTag or TAsn1Tags.Constructed
+  else
+    Result := AIntoTag and (not TAsn1Tags.Constructed);
+end;
+
+{ TBerGenerator }
+
+constructor TBerGenerator.Create(AOutStream: TStream);
+begin
+  inherited Create(AOutStream);
+end;
+
+constructor TBerGenerator.Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean);
+begin
+  inherited Create(AOutStream);
+  FTagged := True;
+  FIsExplicit := AIsExplicit;
+  FTagNo := ATagNo;
+end;
+
+procedure TBerGenerator.AddObject(const AObj: IAsn1Encodable);
+begin
+  AObj.EncodeTo(&Out);
+end;
+
+procedure TBerGenerator.AddObject(const AObj: IAsn1Object);
+begin
+  AObj.EncodeTo(&Out);
+end;
+
+procedure TBerGenerator.Finish();
+begin
+  WriteBerEnd();
+end;
+
+procedure TBerGenerator.Close();
+begin
+  DoClose();
+end;
+
+function TBerGenerator.GetRawOutputStream(): TStream;
+begin
+  Result := &Out;
+end;
+
+procedure TBerGenerator.WriteBerBody(AContentStream: TStream);
+begin
+  TStreamUtils.PipeAll(AContentStream, &Out);
+end;
+
+procedure TBerGenerator.WriteBerEnd();
+begin
+  &Out.WriteByte($00);
+  &Out.WriteByte($00);
+
+  if (FTagged and FIsExplicit) then // write extra end for tag header
+  begin
+    &Out.WriteByte($00);
+    &Out.WriteByte($00);
+  end;
+end;
+
+procedure TBerGenerator.WriteBerHeader(ATag: Int32);
+begin
+  if not FTagged then
+  begin
+    WriteHdr(ATag);
+  end
+  else if FIsExplicit then
+  begin
+    {
+     * X.690-0207 8.14.2. If implicit tagging [..] was not used [..], the encoding shall be constructed
+     * and the contents octets shall be the complete base encoding.
+     }
+    WriteHdr(FTagNo or TAsn1Tags.ContextSpecific or TAsn1Tags.Constructed);
+    WriteHdr(ATag);
+  end
+  else
+  begin
+    {
+     * X.690-0207 8.14.3. If implicit tagging was used [..], then: a) the encoding shall be constructed
+     * if the base encoding is constructed, and shall be primitive otherwise; and b) the contents octets
+     * shall be [..] the contents octets of the base encoding.
+     }
+    WriteHdr(InheritConstructedFlag(FTagNo or TAsn1Tags.ContextSpecific, ATag));
+  end;
+end;
+
+procedure TBerGenerator.WriteHdr(ATag: Int32);
+begin
+  &Out.WriteByte(Byte(ATag));
+  &Out.WriteByte($80);
+end;
+
+{ TBerSequenceGenerator }
+
+constructor TBerSequenceGenerator.Create(AOutStream: TStream);
+begin
+  inherited Create(AOutStream);
+  WriteBerHeader(TAsn1Tags.Constructed or TAsn1Tags.Sequence);
+end;
+
+constructor TBerSequenceGenerator.Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean);
+begin
+  inherited Create(AOutStream, ATagNo, AIsExplicit);
+  WriteBerHeader(TAsn1Tags.Constructed or TAsn1Tags.Sequence);
+end;
+
+{ TBerOctetStringGenerator }
+
+constructor TBerOctetStringGenerator.Create(AOutStream: TStream);
+begin
+  inherited Create(AOutStream);
+  WriteBerHeader(TAsn1Tags.Constructed or TAsn1Tags.OctetString);
+end;
+
+constructor TBerOctetStringGenerator.Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean);
+begin
+  inherited Create(AOutStream, ATagNo, AIsExplicit);
+  WriteBerHeader(TAsn1Tags.Constructed or TAsn1Tags.OctetString);
+end;
+
+function TBerOctetStringGenerator.GetOctetOutputStream(): TStream;
 var
-  other: IDerGeneralString;
+  LBuf: TCryptoLibByteArray;
 begin
-
-  if (not Supports(asn1Object, IDerGeneralString, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := Str = other.Str;
+  System.SetLength(LBuf, 1000);
+  Result := GetOctetOutputStream(LBuf); // limit for CER encoding.
 end;
 
-constructor TDerGeneralString.Create(const Str: TCryptoLibByteArray);
-begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII));
-end;
-
-constructor TDerGeneralString.Create(const Str: String);
-begin
-  Inherited Create();
-  if (Str = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-
-  FStr := Str;
-end;
-
-procedure TDerGeneralString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.GeneralString,
-    GetOctets());
-end;
-
-class function TDerGeneralString.GetInstance(const obj: TObject)
-  : IDerGeneralString;
-begin
-  if ((obj = Nil) or (obj is TDerGeneralString)) then
-  begin
-    result := obj as TDerGeneralString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerGeneralString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerGeneralString;
+function TBerOctetStringGenerator.GetOctetOutputStream(ABufSize: Int32): TStream;
 var
-  o: IAsn1Object;
+  LBuf: TCryptoLibByteArray;
 begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerGeneralString))) then
+  if ABufSize < 1 then
+    Result := GetOctetOutputStream()
+  else
   begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
+    System.SetLength(LBuf, ABufSize);
+    Result := GetOctetOutputStream(LBuf);
   end;
-
-  result := TDerGeneralString.Create
-    (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
 end;
 
-function TDerGeneralString.GetString: String;
+function TBerOctetStringGenerator.GetOctetOutputStream(const ABuf: TCryptoLibByteArray): TStream;
 begin
-  result := Str;
+  Result := TAsn1BufferedBerOctetStream.Create(GetRawOutputStream(), ABuf);
 end;
 
 { TDerGenerator }
 
-constructor TDerGenerator.Create(const outStream: TStream);
+constructor TDerGenerator.Create(const AOutStream: TStream);
 begin
-  Inherited Create(outStream);
+  inherited Create(AOutStream);
 end;
 
-constructor TDerGenerator.Create(const outStream: TStream; tagNo: Int32;
-  isExplicit: Boolean);
+constructor TDerGenerator.Create(const AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean);
 begin
-  Inherited Create(outStream);
-  F_tagged := True;
-  F_isExplicit := isExplicit;
-  F_tagNo := tagNo;
+  inherited Create(AOutStream);
+  FTagged := True;
+  FIsExplicit := AIsExplicit;
+  FTagNo := ATagNo;
 end;
 
-class procedure TDerGenerator.WriteDerEncoded(const outStream: TStream;
-  tag: Int32; const bytes: TCryptoLibByteArray);
+class procedure TDerGenerator.WriteDerEncoded(const AOutStream: TStream; ATag: Int32; const ABytes: TCryptoLibByteArray);
 begin
-  outStream.WriteByte(Byte(tag));
-  WriteLength(outStream, System.length(bytes));
-  outStream.Write(bytes[0], System.length(bytes));
+  AOutStream.WriteByte(Byte(ATag));
+  WriteLength(AOutStream, System.Length(ABytes));
+  if System.Length(ABytes) > 0 then
+    AOutStream.Write(ABytes[0], System.Length(ABytes));
 end;
 
-procedure TDerGenerator.WriteDerEncoded(tag: Int32;
-  const bytes: TCryptoLibByteArray);
+class procedure TDerGenerator.WriteDerEncoded(const AOutStr: TStream; ATag: Int32; const AInStr: TStream);
+begin
+  WriteDerEncoded(AOutStr, ATag, TStreamUtils.ReadAll(AInStr));
+end;
+
+class procedure TDerGenerator.WriteLength(const AOutStr: TStream; ALength: Int32);
 var
-  tagNum, newTag: Int32;
-  bOut: TMemoryStream;
-  temp: TCryptoLibByteArray;
+  LSize, LVal, I: Int32;
 begin
-  if (F_tagged) then
+  if ALength > 127 then
   begin
-    tagNum := F_tagNo or TAsn1Tags.Tagged;
-
-    if (F_isExplicit) then
+    LSize := 1;
+    LVal := ALength;
+    LVal := TBits.Asr32(LVal, 8);
+    while LVal <> 0 do
     begin
-      newTag := F_tagNo or TAsn1Tags.Constructed or TAsn1Tags.Tagged;
-      bOut := TMemoryStream.Create();
-      try
-        WriteDerEncoded(bOut, tag, bytes);
-        bOut.Position := 0;
-        System.SetLength(temp, bOut.Size);
-        bOut.Read(temp[0], bOut.Size);
-        WriteDerEncoded(&Out, newTag, temp);
-      finally
-        bOut.Free;
-      end;
-    end
-    else
-    begin
-      if ((tag and TAsn1Tags.Constructed) <> 0) then
-      begin
-        tagNum := tagNum or TAsn1Tags.Constructed;
-      end;
-
-      WriteDerEncoded(&Out, tagNum, bytes);
+      System.Inc(LSize);
+      LVal := TBits.Asr32(LVal, 8);
     end;
-  end
-  else
-  begin
-    WriteDerEncoded(&Out, tag, bytes);
-  end;
-end;
-
-class procedure TDerGenerator.WriteDerEncoded(const outStr: TStream; tag: Int32;
-  const inStr: TStream);
-begin
-  WriteDerEncoded(outStr, tag, TStreamUtils.ReadAll(inStr));
-end;
-
-class procedure TDerGenerator.WriteLength(const outStr: TStream; length: Int32);
-var
-  Size, val, I: Int32;
-begin
-  if (length > 127) then
-  begin
-    Size := 1;
-    val := length;
-
-    val := TBits.Asr32(val, 8);
-    while (val <> 0) do
-    begin
-      System.Inc(Size);
-      val := TBits.Asr32(val, 8);
-    end;
-
-    outStr.WriteByte(Byte(Size or $80));
-
-    I := (Size - 1) * 8;
-
+    AOutStr.WriteByte(Byte(LSize or $80));
+    I := (LSize - 1) * 8;
     while I >= 0 do
     begin
-      outStr.WriteByte(Byte(TBits.Asr32(length, I)));
+      AOutStr.WriteByte(Byte(TBits.Asr32(ALength, I)));
       System.Dec(I, 8);
     end;
   end
   else
   begin
-    outStr.WriteByte(Byte(length));
+    AOutStr.WriteByte(Byte(ALength));
   end;
 end;
 
-{ TDerIA5String }
-
-function TDerIA5String.GetStr: String;
-begin
-  result := FStr;
-end;
-
-function TDerIA5String.GetOctets: TCryptoLibByteArray;
-begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
-end;
-
-class function TDerIA5String.IsIA5String(const Str: String): Boolean;
+procedure TDerGenerator.WriteDerEncoded(ATag: Int32; const ABytes: TCryptoLibByteArray);
 var
-  ch: Char;
+  LBOut: TMemoryStream;
+  LTemp: TCryptoLibByteArray;
 begin
-  for ch in Str do
+  if not FTagged then
   begin
-    if (Ord(ch) > $007F) then
-    begin
-      result := False;
-      Exit;
+    WriteDerEncoded(&Out, ATag, ABytes);
+  end
+  else if FIsExplicit then
+  begin
+    {
+     * X.690-0207 8.14.2. If implicit tagging [..] was not used [..], the encoding shall be constructed
+     * and the contents octets shall be the complete base encoding.
+     }
+    LBOut := TMemoryStream.Create();
+    try
+      WriteDerEncoded(LBOut, ATag, ABytes);
+      LBOut.Position := 0;
+      System.SetLength(LTemp, LBOut.Size);
+      LBOut.Read(LTemp[0], LBOut.Size);
+      WriteDerEncoded(&Out, FTagNo or TAsn1Tags.ContextSpecific or TAsn1Tags.Constructed, LTemp);
+    finally
+      LBOut.Free;
     end;
-  end;
-
-  result := True;
-end;
-
-function TDerIA5String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerIA5String;
-begin
-
-  if (not Supports(asn1Object, IDerIA5String, other)) then
+  end
+  else
   begin
-    result := False;
-    Exit;
+    {
+     * X.690-0207 8.14.3. If implicit tagging was used [..], then: a) the encoding shall be constructed
+     * if the base encoding is constructed, and shall be primitive otherwise; and b) the contents octets
+     * shall be [..] the contents octets of the base encoding.
+     }
+    WriteDerEncoded(&Out, InheritConstructedFlag(FTagNo or TAsn1Tags.ContextSpecific, ATag), ABytes);
   end;
-
-  result := Str = other.Str;
-end;
-
-function TDerIA5String.Asn1GetHashCode: Int32;
-begin
-  result := TStringUtils.GetStringHashCode(FStr);
-end;
-
-constructor TDerIA5String.Create(const Str: TCryptoLibByteArray);
-begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII), False);
-end;
-
-constructor TDerIA5String.Create(const Str: String);
-begin
-  Create(Str, False);
-end;
-
-constructor TDerIA5String.Create(const Str: String; validate: Boolean);
-begin
-  Inherited Create();
-  if (Str = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-  if (validate and (not IsIA5String(Str))) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SIllegalCharacters);
-  end;
-
-  FStr := Str;
-end;
-
-procedure TDerIA5String.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.IA5String, GetOctets());
-end;
-
-class function TDerIA5String.GetInstance(const obj: TObject): IDerIA5String;
-begin
-  if ((obj = Nil) or (obj is TDerIA5String)) then
-  begin
-    result := obj as TDerIA5String;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerIA5String.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerIA5String;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerIA5String))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerIA5String.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
-    .GetOctets());
-end;
-
-function TDerIA5String.GetString: String;
-begin
-  result := Str;
-end;
-
-{ TDerNumericString }
-
-function TDerNumericString.GetStr: String;
-begin
-  result := FStr;
-end;
-
-function TDerNumericString.GetOctets: TCryptoLibByteArray;
-begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
-end;
-
-class function TDerNumericString.IsNumericString(const Str: String): Boolean;
-var
-  ch: Char;
-begin
-  for ch in Str do
-  begin
-    // char.IsDigit(ch)
-    if ((Ord(ch) > $007F) or ((ch <> ' ') and (not CharInSet(ch, ['0' .. '9']))))
-    then
-    begin
-      result := False;
-      Exit;
-    end;
-  end;
-
-  result := True;
-end;
-
-function TDerNumericString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerNumericString;
-begin
-
-  if (not Supports(asn1Object, IDerNumericString, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := Str = other.Str;
-end;
-
-constructor TDerNumericString.Create(const Str: TCryptoLibByteArray);
-begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII), False);
-end;
-
-constructor TDerNumericString.Create(const Str: String);
-begin
-  Create(Str, False);
-end;
-
-constructor TDerNumericString.Create(const Str: String; validate: Boolean);
-begin
-  Inherited Create();
-  if (Str = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-  if (validate and (not IsNumericString(Str))) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SIllegalCharacters);
-  end;
-
-  FStr := Str;
-end;
-
-procedure TDerNumericString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.NumericString,
-    GetOctets());
-end;
-
-class function TDerNumericString.GetInstance(const obj: TObject)
-  : IDerNumericString;
-begin
-  if ((obj = Nil) or (obj is TDerNumericString)) then
-  begin
-    result := obj as TDerNumericString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerNumericString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerNumericString;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerNumericString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerNumericString.Create
-    (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-function TDerNumericString.GetString: String;
-begin
-  result := Str;
-end;
-
-{ TDerPrintableString }
-
-function TDerPrintableString.GetStr: String;
-begin
-  result := FStr;
-end;
-
-function TDerPrintableString.GetString: String;
-begin
-  result := Str;
-end;
-
-function TDerPrintableString.GetOctets: TCryptoLibByteArray;
-begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
-end;
-
-class function TDerPrintableString.IsPrintableString(const Str: String)
-  : Boolean;
-var
-  ch: Char;
-begin
-  for ch in Str do
-  begin
-
-    if ((Ord(ch) > $007F)) then
-    begin
-      result := False;
-      Exit;
-    end;
-
-    // if (char.IsLetterOrDigit(ch))
-    if CharInSet(ch, ['a' .. 'z', 'A' .. 'Z', '0' .. '9']) then
-    begin
-      continue;
-    end;
-
-    case IndexStr(UnicodeString(ch), [''' ''', '\', '(', ')', '+', '-', '.',
-      ':', '=', '?', '/', ',']) of
-      0 .. 11:
-        begin
-          continue;
-        end;
-    end;
-
-    result := False;
-    Exit;
-  end;
-
-  result := True;
-end;
-
-function TDerPrintableString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerPrintableString;
-begin
-
-  if (not Supports(asn1Object, IDerPrintableString, other)) then
-  begin
-    result := False;
-    Exit;
-  end;
-
-  result := Str = other.Str;
-end;
-
-constructor TDerPrintableString.Create(const Str: TCryptoLibByteArray);
-begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII), False);
-end;
-
-constructor TDerPrintableString.Create(const Str: String);
-begin
-  Create(Str, False);
-end;
-
-constructor TDerPrintableString.Create(const Str: String; validate: Boolean);
-begin
-  Inherited Create();
-  if (Str = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-  if (validate and (not IsPrintableString(Str))) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SIllegalCharacters);
-  end;
-
-  FStr := Str;
-end;
-
-procedure TDerPrintableString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.PrintableString,
-    GetOctets());
-end;
-
-class function TDerPrintableString.GetInstance(const obj: TObject)
-  : IDerPrintableString;
-begin
-  if ((obj = Nil) or (obj is TDerPrintableString)) then
-  begin
-    result := obj as TDerPrintableString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerPrintableString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerPrintableString;
-var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerPrintableString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerPrintableString.Create
-    (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
 end;
 
 { TDerSequenceGenerator }
 
-procedure TDerSequenceGenerator.AddObject(const obj: IAsn1Encodable);
-var
-  temp: TDerOutputStream;
+constructor TDerSequenceGenerator.Create(AOutStream: TStream);
 begin
-  temp := TDerOutputStream.Create(F_bOut);
-  try
-    temp.WriteObject(obj);
-  finally
-    temp.Free;
-  end;
+  inherited Create(AOutStream);
+  FBOut := TMemoryStream.Create();
 end;
 
-procedure TDerSequenceGenerator.Close;
-var
-  temp: TCryptoLibByteArray;
+constructor TDerSequenceGenerator.Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean);
 begin
-  F_bOut.Position := 0;
-  System.SetLength(temp, F_bOut.Size);
-  F_bOut.Read(temp[0], F_bOut.Size);
-  WriteDerEncoded(TAsn1Tags.Constructed or TAsn1Tags.Sequence, temp);
-end;
-
-constructor TDerSequenceGenerator.Create(outStream: TStream);
-begin
-  Inherited Create(outStream);
-  F_bOut := TMemoryStream.Create();
-end;
-
-constructor TDerSequenceGenerator.Create(outStream: TStream; tagNo: Int32;
-  isExplicit: Boolean);
-begin
-  Inherited Create(outStream, tagNo, isExplicit);
-  F_bOut := TMemoryStream.Create();
+  inherited Create(AOutStream, ATagNo, AIsExplicit);
+  FBOut := TMemoryStream.Create();
 end;
 
 destructor TDerSequenceGenerator.Destroy;
 begin
-  F_bOut.Free;
+  FBOut.Free;
   inherited Destroy;
 end;
 
-function TDerSequenceGenerator.GetRawOutputStream: TStream;
+procedure TDerSequenceGenerator.AddObject(const AObj: IAsn1Encodable);
 begin
-  result := F_bOut;
+  AObj.EncodeTo(FBOut, TAsn1Encodable.Der);
 end;
 
-{ TDerT61String }
-
-class function TDerT61String.GetEncoding: TEncoding;
+procedure TDerSequenceGenerator.AddObject(const AObj: IAsn1Object);
 begin
-  result := TEncoding.GetEncoding('iso-8859-1');
+  (AObj as IAsn1Encodable).EncodeTo(FBOut, TAsn1Encodable.Der);
 end;
 
-function TDerT61String.GetStr: String;
+function TDerSequenceGenerator.GetRawOutputStream(): TStream;
 begin
-  result := FStr;
+  Result := FBOut;
 end;
 
-function TDerT61String.GetOctets: TCryptoLibByteArray;
+procedure TDerSequenceGenerator.Finish();
 var
-  LEncoding: TEncoding;
+  LTemp: TCryptoLibByteArray;
 begin
-  LEncoding := TDerT61String.GetEncoding();
+  FBOut.Position := 0;
+  System.SetLength(LTemp, FBOut.Size);
+  FBOut.Read(LTemp[0], FBOut.Size);
+  WriteDerEncoded(TAsn1Tags.Constructed or TAsn1Tags.Sequence, LTemp);
+end;
+
+procedure TDerSequenceGenerator.Close();
+begin
+  DoClose();
+end;
+
+{ TDerExternalParser }
+
+constructor TDerExternalParser.Create(const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FParser := AParser;
+end;
+
+function TDerExternalParser.ReadObject(): IAsn1Convertible;
+begin
+  Result := FParser.ReadObject();
+end;
+
+function TDerExternalParser.ToAsn1Object(): IAsn1Object;
+begin
+  Result := Parse(FParser);
+end;
+
+class function TDerExternalParser.Parse(const ASp: IAsn1StreamParser): IDerExternal;
+begin
+  Result := TDLExternal.Create(TDLSequence.FromVector(ASp.ReadVector()));
+end;
+
+{ TBerTaggedObjectParser }
+
+constructor TBerTaggedObjectParser.Create(ATagClass, ATagNo: Int32; const AParser: IAsn1StreamParser);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FParser := AParser;
+end;
+
+function TBerTaggedObjectParser.GetTagClass(): Int32;
+begin
+  Result := FTagClass;
+end;
+
+function TBerTaggedObjectParser.GetTagNo(): Int32;
+begin
+  Result := FTagNo;
+end;
+
+function TBerTaggedObjectParser.GetIsConstructed(): Boolean;
+begin
+  Result := True; // BER tagged objects are always constructed
+end;
+
+function TBerTaggedObjectParser.HasContextTag(ATagNo: Int32): Boolean;
+begin
+  Result := (FTagClass = TAsn1Tags.ContextSpecific) and (FTagNo = ATagNo);
+end;
+
+function TBerTaggedObjectParser.HasTag(ATagClass, ATagNo: Int32): Boolean;
+begin
+  Result := (FTagClass = ATagClass) and (FTagNo = ATagNo);
+end;
+
+function TBerTaggedObjectParser.ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible;
+begin
+  if ADeclaredExplicit then
+    Result := FParser.ParseObject(ABaseTagNo)
+  else
+    Result := FParser.ParseImplicitConstructedIL(ABaseTagNo);
+end;
+
+function TBerTaggedObjectParser.ParseExplicitBaseObject(): IAsn1Convertible;
+begin
+  Result := FParser.ReadObject();
+end;
+
+function TBerTaggedObjectParser.ParseExplicitBaseTagged(): IAsn1TaggedObjectParser;
+begin
+  Result := FParser.ParseTaggedObject();
+end;
+
+function TBerTaggedObjectParser.ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser;
+begin
+  Result := TBerTaggedObjectParser.Create(ABaseTagClass, ABaseTagNo, FParser);
+end;
+
+function TBerTaggedObjectParser.ToAsn1Object(): IAsn1Object;
+begin
   try
-    result := TConverters.ConvertStringToBytes(Str, LEncoding);
-  finally
-    LEncoding.Free;
+    Result := FParser.LoadTaggedIL(FTagClass, FTagNo);
+  except
+    on E: EIOCryptoLibException do
+      raise EAsn1ParsingCryptoLibException.Create(E.Message);
   end;
 end;
 
-function TDerT61String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
-var
-  other: IDerT61String;
-begin
+{ TDLTaggedObjectParser }
 
-  if (not Supports(asn1Object, IDerT61String, other)) then
+constructor TDLTaggedObjectParser.Create(ATagClass, ATagNo: Int32; AConstructed: Boolean;
+  const AParser: IAsn1StreamParser);
+begin
+  inherited Create(ATagClass, ATagNo, AParser);
+  FConstructed := AConstructed;
+end;
+
+function TDLTaggedObjectParser.ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible;
+var
+  LSp: IAsn1StreamParser;
+begin
+  if ADeclaredExplicit then
   begin
-    result := False;
-    Exit;
+    LSp := CheckConstructed();
+    Result := LSp.ParseObject(ABaseTagNo);
+  end
+  else
+  begin
+    if FConstructed then
+      Result := FParser.ParseImplicitConstructedDL(ABaseTagNo)
+    else
+      Result := FParser.ParseImplicitPrimitive(ABaseTagNo);
   end;
-
-  result := Str = other.Str;
 end;
 
-constructor TDerT61String.Create(const Str: TCryptoLibByteArray);
+function TDLTaggedObjectParser.ParseExplicitBaseObject(): IAsn1Convertible;
 var
-  LEncoding: TEncoding;
+  LSp: IAsn1StreamParser;
 begin
-  Inherited Create();
-  LEncoding := TDerT61String.GetEncoding();
+  LSp := CheckConstructed();
+  Result := LSp.ReadObject();
+end;
+
+function TDLTaggedObjectParser.ParseExplicitBaseTagged(): IAsn1TaggedObjectParser;
+var
+  LSp: IAsn1StreamParser;
+begin
+  LSp := CheckConstructed();
+  Result := LSp.ParseTaggedObject();
+end;
+
+function TDLTaggedObjectParser.ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser;
+begin
+  Result := TDLTaggedObjectParser.Create(ABaseTagClass, ABaseTagNo, FConstructed, FParser);
+end;
+
+function TDLTaggedObjectParser.ToAsn1Object(): IAsn1Object;
+begin
   try
-    Create(TConverters.ConvertBytesToString(Str, LEncoding));
-  finally
-    LEncoding.Free;
+    Result := FParser.LoadTaggedDL(FTagClass, FTagNo, FConstructed);
+  except
+    on E: EIOCryptoLibException do
+      raise EAsn1ParsingCryptoLibException.Create(E.Message);
   end;
 end;
 
-constructor TDerT61String.Create(const Str: String);
+function TDLTaggedObjectParser.GetIsConstructed(): Boolean;
 begin
-  Inherited Create();
-  if (Str = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-
-  FStr := Str;
+  Result := FConstructed;
 end;
 
-procedure TDerT61String.Encode(const derOut: TStream);
+function TDLTaggedObjectParser.CheckConstructed(): IAsn1StreamParser;
 begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.T61String, GetOctets());
+  if not FConstructed then
+    raise EIOCryptoLibException.Create('Explicit tags must be constructed (see X.690 8.14.2)');
+  Result := FParser;
 end;
 
-class function TDerT61String.GetInstance(const obj: TObject): IDerT61String;
-begin
-  if ((obj = Nil) or (obj is TDerT61String)) then
-  begin
-    result := obj as TDerT61String;
-    Exit;
-  end;
+{ TAsn1OctetString }
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
+class constructor TAsn1OctetString.Create;
+begin
+  FEmptyOctets := nil;
 end;
 
-class function TDerT61String.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerT61String;
+constructor TAsn1OctetString.Create(const AContents: TCryptoLibByteArray);
+begin
+  inherited Create;
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  FContents := AContents;
+end;
+
+function TAsn1OctetString.GetOctetStream(): TStream;
 var
-  o: IAsn1Object;
+  LMemStream: TMemoryStream;
 begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerT61String))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerT61String.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
-    .GetOctets());
+  LMemStream := TMemoryStream.Create;
+  LMemStream.Write(FContents[0], System.Length(FContents));
+  LMemStream.Position := 0;
+  Result := LMemStream;
 end;
 
-function TDerT61String.GetString: String;
+function TAsn1OctetString.GetOctets(): TCryptoLibByteArray;
 begin
-  result := Str;
+  Result := FContents;
 end;
 
-{ TDerUniversalString }
-
-function TDerUniversalString.GetStr: TCryptoLibByteArray;
+function TAsn1OctetString.GetOctetsLength(): Int32;
 begin
-  result := FStr;
+  Result := System.Length(FContents);
 end;
 
-function TDerUniversalString.GetOctets: TCryptoLibByteArray;
+function TAsn1OctetString.ToAsn1Object(): IAsn1Object;
 begin
-  result := System.Copy(Str);
+  Result := Self as IAsn1Object;
 end;
 
-function TDerUniversalString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+function TAsn1OctetString.ToString(): String;
+begin
+  Result := '#' + THex.Encode(FContents);
+end;
+
+function TAsn1OctetString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
 var
-  other: IDerUniversalString;
+  LThat: IAsn1OctetString;
 begin
-
-  if (not Supports(asn1Object, IDerUniversalString, other)) then
+  if not Supports(AAsn1Object, IAsn1OctetString, LThat) then
   begin
-    result := False;
+    Result := False;
     Exit;
   end;
-
-  result := TArrayUtils.AreEqual(Str, other.Str);
+  Result := TArrayUtils.AreEqual(GetOctets(), LThat.GetOctets());
 end;
 
-constructor TDerUniversalString.Create(const Str: TCryptoLibByteArray);
+function TAsn1OctetString.Asn1GetHashCode(): Int32;
 begin
-  Inherited Create();
-  if (Str = Nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-
-  FStr := Str;
+  Result := TArrayUtils.GetArrayHashCode(GetOctets());
 end;
 
-procedure TDerUniversalString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.UniversalString, Str);
-end;
-
-class function TDerUniversalString.GetInstance(const obj: TObject)
-  : IDerUniversalString;
-begin
-  if ((obj = Nil) or (obj is TDerUniversalString)) then
-  begin
-    result := obj as TDerUniversalString;
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
-end;
-
-class function TDerUniversalString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerUniversalString;
+class function TAsn1OctetString.GetInstance(const AObj: TObject): IAsn1OctetString;
 var
-  o: IAsn1Object;
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
 begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerUniversalString))) then
+  if AObj = nil then
   begin
-    result := GetInstance(o as TAsn1Object);
+    Result := nil;
     Exit;
   end;
 
-  result := TDerUniversalString.Create
-    (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
 end;
 
-function TDerUniversalString.GetString: String;
+class function TAsn1OctetString.GetInstance(const AObj: IAsn1Object): IAsn1OctetString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IAsn1OctetString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1OctetString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1OctetString;
+begin
+  Result := TAsn1OctetString.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1OctetString;
+end;
+
+class function TAsn1OctetString.GetOptional(const AElement: IAsn1Encodable): IAsn1OctetString;
 var
-  buffer: TStringList;
+  LOctetString: IAsn1OctetString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IAsn1OctetString, LOctetString) then
+    Result := LOctetString
+  else
+    Result := nil;
+end;
+
+class function TAsn1OctetString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1OctetString;
+begin
+  Result := TAsn1OctetString.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1OctetString;
+end;
+
+class function TAsn1OctetString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerOctetString.WithContents(AContents);
+end;
+
+{ TDerOctetString }
+
+constructor TDerOctetString.CreateEmpty;
+begin
+  FContents := TAsn1OctetString.EmptyOctets;
+end;
+
+class constructor TDerOctetString.Create;
+begin
+  FEmpty := TDerOctetString.CreateEmpty;
+end;
+
+class function TDerOctetString.GetEmpty(): IDerOctetString;
+begin
+  Result := FEmpty;
+end;
+
+constructor TDerOctetString.Create(const AContents: TCryptoLibByteArray);
+begin
+  inherited Create(AContents);
+end;
+
+constructor TDerOctetString.Create(const AObj: IAsn1Convertible);
+begin
+  Create(AObj.ToAsn1Object());
+end;
+
+constructor TDerOctetString.Create(const AObj: IAsn1Encodable);
+begin
+  inherited Create(AObj.GetEncoded(TAsn1Encodable.Der));
+end;
+
+class function TDerOctetString.FromContents(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if System.Length(AContents) < 1 then
+    Result := FEmpty
+  else
+    Result := TDerOctetString.Create(TArrayUtils.CopyOf(AContents, System.Length(AContents)));
+end;
+
+class function TDerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if AContents = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if System.Length(AContents) < 1 then
+    Result := FEmpty
+  else
+    Result := TDerOctetString.Create(TArrayUtils.CopyOf(AContents, System.Length(AContents)));
+end;
+
+class function TDerOctetString.WithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if System.Length(AContents) < 1 then
+    Result := FEmpty
+  else
+    Result := TDerOctetString.Create(AContents);
+end;
+
+function TDerOctetString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.OctetString, FContents);
+end;
+
+function TDerOctetString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+function TDerOctetString.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.OctetString, FContents);
+end;
+
+function TDerOctetString.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+class procedure TDerOctetString.Encode(const AAsn1Out: TAsn1OutputStream;
+  const ABuffer: TCryptoLibByteArray; AOffset, ALength: Int32);
+begin
+  AAsn1Out.WriteIdentifier(TAsn1Tags.Universal, TAsn1Tags.OctetString);
+  AAsn1Out.WriteDL(ALength);
+  AAsn1Out.Write(ABuffer, AOffset, ALength);
+end;
+
+{ TBerOctetString }
+
+function MapElementToOctetString(const AElement: IAsn1Encodable): IAsn1OctetString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := AElement.ToAsn1Object();
+  Result := TAsn1OctetString.GetInstance(LObj);
+end;
+
+function MapElementToBitString(const AElement: IAsn1Encodable): IDerBitString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := AElement.ToAsn1Object();
+  Result := TDerBitString.GetInstance(LObj);
+end;
+
+class function TBerOctetString.GetEmpty(): IBerOctetString;
+begin
+  Result := TBerOctetString.Create(TAsn1OctetString.EmptyOctets);
+end;
+
+class function TBerOctetString.FromContents(const AContents: TCryptoLibByteArray): IBerOctetString;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if System.Length(AContents) < 1 then
+    Result := GetEmpty()
+  else
+    Result := TBerOctetString.Create(System.Copy(AContents));
+end;
+
+class function TBerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IBerOctetString;
+begin
+  if AContents = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if System.Length(AContents) < 1 then
+    Result := GetEmpty()
+  else
+    Result := TBerOctetString.Create(System.Copy(AContents));
+end;
+
+class function TBerOctetString.FromSequence(const ASequence: IAsn1Sequence): IBerOctetString;
+var
+  LMapped: TCryptoLibGenericArray<IAsn1OctetString>;
+  LSequence: TAsn1Sequence;
+begin
+  if ASequence = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  // Cast to class to access MapElements (interfaces can't have generic methods in Pascal)
+  if ASequence is TAsn1Sequence then
+  begin
+    LSequence := ASequence as TAsn1Sequence;
+    LMapped := LSequence.MapElements<IAsn1OctetString>(
+      function(AElement: IAsn1Encodable): IAsn1OctetString
+      var
+        LObj: IAsn1Object;
+      begin
+        LObj := AElement.ToAsn1Object();
+        Result := TAsn1OctetString.GetInstance(LObj);
+      end);
+  end
+  else
+  begin
+    raise EArgumentCryptoLibException.Create('sequence must be a TAsn1Sequence instance');
+  end;
+  Result := TBerOctetString.Create(LMapped);
+end;
+
+class function TBerOctetString.WithContents(const AContents: TCryptoLibByteArray): IBerOctetString;
+begin
+  if System.Length(AContents) < 1 then
+    Result := GetEmpty()
+  else
+    Result := TBerOctetString.Create(AContents);
+end;
+
+constructor TBerOctetString.Create(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>);
+begin
+  inherited Create(FlattenOctetStrings(AOctetStrings));
+  FElements := AOctetStrings;
+end;
+
+function TBerOctetString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+var
+  LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
   I: Int32;
-  enc: TCryptoLibByteArray;
-  ubyte: UInt32;
 begin
-  buffer := TStringList.Create();
-  buffer.LineBreak := '';
-  enc := GetDerEncoded();
-  buffer.Add('#');
-  I := 0;
-  try
-    while I <> System.length(enc) do
-    begin
-      ubyte := enc[I];
-      buffer.Add(FTable[(ubyte shr 4) and $F]);
-      buffer.Add(FTable[enc[I] and $F]);
-      System.Inc(I);
-    end;
-    result := buffer.Text;
-  finally
-    buffer.Free;
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
+  begin
+    Result := inherited GetEncoding(AEncoding);
+    Exit;
   end;
+
+  if FElements = nil then
+    Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.OctetString, FContents)
+  else
+  begin
+    System.SetLength(LEncodableElements, System.Length(FElements));
+    for I := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[I] := FElements[I];
+    Result := TConstructedILEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.OctetString,
+      TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
+  end;
+end;
+
+function TBerOctetString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+var
+  LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  I: Int32;
+begin
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+
+  if FElements = nil then
+    Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents)
+  else
+  begin
+    System.SetLength(LEncodableElements, System.Length(FElements));
+    for I := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[I] := FElements[I];
+    Result := TConstructedILEncoding.Create(ATagClass, ATagNo,
+      TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
+  end;
+end;
+
+class function TBerOctetString.FlattenOctetStrings(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>): TCryptoLibByteArray;
+var
+  LCount, I, LTotalOctets, LPos: Int32;
+  LOctets: TCryptoLibByteArray;
+begin
+  LCount := System.Length(AOctetStrings);
+  case LCount of
+    0:
+      Result := TAsn1OctetString.EmptyOctets;
+    1:
+      Result := AOctetStrings[0].GetOctets();
+  else
+    begin
+      LTotalOctets := 0;
+      for I := 0 to LCount - 1 do
+        LTotalOctets := LTotalOctets + System.Length(AOctetStrings[I].GetOctets());
+
+      System.SetLength(Result, LTotalOctets);
+      LPos := 0;
+      for I := 0 to LCount - 1 do
+      begin
+        LOctets := AOctetStrings[I].GetOctets();
+        System.Move(LOctets[0], Result[LPos], System.Length(LOctets) * SizeOf(Byte));
+        LPos := LPos + System.Length(LOctets);
+      end;
+    end;
+  end;
+end;
+
+{ TDerStringBase }
+
+constructor TDerStringBase.Create();
+begin
+  inherited Create();
+end;
+
+function TDerStringBase.Asn1GetHashCode(): Int32;
+begin
+  Result := GetString().GetHashCode();
+end;
+
+function TDerStringBase.ToString(): String;
+begin
+  Result := GetString();
+end;
+
+function TDerStringBase.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, GetTagNo(), GetContents());
+end;
+
+function TDerStringBase.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, GetContents());
+end;
+
+function TDerStringBase.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, GetTagNo(), GetContents());
+end;
+
+function TDerStringBase.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, GetContents());
+end;
+
+{ TDerBitString }
+
+constructor TDerBitString.CreateEmpty();
+begin
+  inherited Create;
+  FContents := TArrayUtils.Prepend(nil, Byte(0));
+end;
+
+constructor TDerBitString.Create(const AData: TCryptoLibByteArray);
+begin
+  Create(AData, 0);
+end;
+
+constructor TDerBitString.Create(const AContents: TCryptoLibByteArray; ACheck: Boolean);
+var
+  LPadBits: Int32;
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if System.Length(AContents) < 1 then
+    raise EArgumentCryptoLibException.Create('zero length data with non-zero pad bits');
+  if ACheck then
+  begin
+    LPadBits := AContents[0];
+    if (System.Length(AContents) = 1) and (LPadBits > 0) then
+      raise EArgumentCryptoLibException.Create('zero length data with non-zero pad bits');
+    if LPadBits > 7 then
+      raise EArgumentCryptoLibException.Create('pad bits cannot be greater than 7 or less than 0');
+  end;
+  FContents := System.Copy(AContents);
+end;
+
+constructor TDerBitString.Create(const AData: TCryptoLibByteArray; APadBits: Int32);
+begin
+  inherited Create();
+  if AData = nil then
+    raise EArgumentNilCryptoLibException.Create('data');
+  if (APadBits < 0) or (APadBits > 7) then
+    raise EArgumentCryptoLibException.Create('must be in the range 0 to 7');
+  if (System.Length(AData) = 0) and (APadBits <> 0) then
+    raise EArgumentCryptoLibException.Create('if ''data'' is empty, ''padBits'' must be 0');
+  FContents := TArrayUtils.Prepend(AData, Byte(APadBits));
+end;
+
+function TDerBitString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerBitString;
+  LThisContents, LThatContents: TCryptoLibByteArray;
+  LLength, I, LLast, LPadBits: Int32;
+  LThisLastDer, LThatLastDer: Byte;
+begin
+  if not Supports(AAsn1Object, IDerBitString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  LThisContents := FContents;
+  LThatContents := LThat.Contents;
+  LLength := System.Length(LThisContents);
+
+  if System.Length(LThatContents) <> LLength then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if LLength = 1 then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  LLast := LLength - 1;
+  // Compare all bytes except the last one
+  for I := 0 to LLast - 1 do
+  begin
+    if LThisContents[I] <> LThatContents[I] then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  // For the last byte, mask with pad bits before comparing (DER requires pad bits be zero)
+  LPadBits := LThisContents[0];
+  LThisLastDer := Byte(LThisContents[LLast] and ($FF shl LPadBits));
+  LThatLastDer := Byte(LThatContents[LLast] and ($FF shl LPadBits));
+  Result := LThisLastDer = LThatLastDer;
+end;
+
+function TDerBitString.Asn1GetHashCode(): Int32;
+var
+  LLast: Int32;
+  LPadBits: Byte;
+  LLastDer: Byte;
+begin
+  if System.Length(FContents) < 2 then
+  begin
+    Result := 1;
+    Exit;
+  end;
+
+  LPadBits := FContents[0];
+  LLast := System.Length(FContents) - 1;
+  LLastDer := Byte(FContents[LLast] and ($FF shl LPadBits));
+
+  // Calculate hash code for bytes 0 to LLast-1
+  Result := TArrayUtils.GetArrayHashCode(FContents, 0, LLast);
+  
+  // Add the masked last byte
+  Result := Result * 257;
+  Result := Result xor LLastDer;
+end;
+
+function TDerBitString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.BitString;
+end;
+
+function TDerBitString.GetPadBits(): Int32;
+begin
+  Result := FContents[0];
+end;
+
+function TDerBitString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerBitString.GetString(): String;
+var
+  LStr: TCryptoLibByteArray;
+begin
+  LStr := GetDerEncoded();
+  Result := Format('#%s', [UpperCase(TConverters.ConvertBytesToHexString(LStr, False))]);
+end;
+
+function TDerBitString.GetOctets(): TCryptoLibByteArray;
+begin
+  if System.Length(FContents) = 1 then
+    Result := TAsn1OctetString.EmptyOctets
+  else
+    Result := TArrayUtils.CopyOfRange(FContents, 1, System.Length(FContents));
+end;
+
+function TDerBitString.GetBytes(): TCryptoLibByteArray;
+var
+  LPadBits: Int32;
+begin
+  if System.Length(FContents) = 1 then
+    Result := TAsn1OctetString.EmptyOctets
+  else
+  begin
+    Result := TArrayUtils.CopyOfRange(FContents, 1, System.Length(FContents));
+    LPadBits := FContents[0];
+    if LPadBits > 0 then
+      Result[System.Length(Result) - 1] := Result[System.Length(Result) - 1] and Byte($FF shl LPadBits);
+  end;
+end;
+
+function TDerBitString.GetInt32Value(): Int32;
+var
+  LEnd, I, LPadBits: Int32;
+  LDer: Byte;
+begin
+  LEnd := Math.Min(5, System.Length(FContents) - 1);
+  Result := 0;
+  
+  // Process bytes 1 to end-1 (excluding pad bits byte and last byte)
+  for I := 1 to LEnd - 1 do
+  begin
+    Result := Result or (Int32(FContents[I]) shl (8 * (I - 1)));
+  end;
+  
+  // Handle the last byte with pad bits masking (if end < 5)
+  if (1 <= LEnd) and (LEnd < 5) then
+  begin
+    LPadBits := FContents[0];
+    LDer := Byte(FContents[LEnd] and ($FF shl LPadBits));
+    Result := Result or (Int32(LDer) shl (8 * (LEnd - 1)));
+  end;
+end;
+
+
+class function TDerBitString.CreatePrimitive(const AContents: TCryptoLibByteArray): IDerBitString;
+var
+  LLength, LPadBits: Int32;
+  LFinalOctet, LFinalOctetDer: Byte;
+begin
+  LLength := System.Length(AContents);
+  if LLength < 1 then
+    raise EArgumentCryptoLibException.Create('truncated BIT STRING detected');
+
+  LPadBits := AContents[0];
+  if LPadBits > 0 then
+  begin
+    if (LPadBits > 7) or (LLength < 2) then
+      raise EArgumentCryptoLibException.Create('invalid pad bits detected');
+
+    LFinalOctet := AContents[LLength - 1];
+    LFinalOctetDer := Byte(LFinalOctet and ($FF shl LPadBits));
+    if LFinalOctet <> LFinalOctetDer then
+    begin
+      // Pad bits not properly masked - return DLBitString
+      Result := TDLBitString.Create(AContents, False);
+      Exit;
+    end;
+  end;
+
+  Result := TDerBitString.Create(AContents, False);
+end;
+
+constructor TDerBitString.Create(AData: Byte; APadBits: Int32);
+begin
+  inherited Create();
+  if (APadBits > 7) or (APadBits < 0) then
+    raise EArgumentCryptoLibException.Create('pad bits cannot be greater than 7 or less than 0');
+  System.SetLength(FContents, 2);
+  FContents[0] := Byte(APadBits);
+  FContents[1] := AData;
+end;
+
+constructor TDerBitString.Create(ANamedBits: Int32);
+var
+  LBits, LBytes, I, LPadBits: Int32;
+  LData: TCryptoLibByteArray;
+begin
+  inherited Create();
+  if ANamedBits = 0 then
+  begin
+    System.SetLength(FContents, 1);
+    FContents[0] := 0;
+    Exit;
+  end;
+  LBits := 32 - TBits.NumberOfLeadingZeros(UInt32(ANamedBits));
+  LBytes := (LBits + 7) div 8;
+  System.SetLength(LData, 1 + LBytes);
+  for I := 1 to LBytes - 1 do
+  begin
+    LData[I] := Byte(ANamedBits);
+    ANamedBits := TBits.Asr32(ANamedBits, 8);
+  end;
+  LData[LBytes] := Byte(ANamedBits);
+  LPadBits := 0;
+  while ((ANamedBits and (1 shl LPadBits)) = 0) do
+    System.Inc(LPadBits);
+  LData[0] := Byte(LPadBits);
+  FContents := LData;
+end;
+
+constructor TDerBitString.Create(const AObj: IAsn1Convertible);
+begin
+  Create(AObj.ToAsn1Object());
+end;
+
+constructor TDerBitString.Create(const AObj: IAsn1Encodable);
+var
+  LContents: TCryptoLibByteArray;
+begin
+  inherited Create();
+  LContents := AObj.GetEncoded(TAsn1Encodable.Der);
+  if System.Length(LContents) > 0 then
+    LContents[0] := $00;
+  FContents := LContents;
+end;
+
+destructor TDerBitString.Destroy;
+begin
+  if FBufferStream <> nil then
+  begin
+    FBufferStream.Free;
+    FBufferStream := nil;
+  end;
+  inherited Destroy;
+end;
+
+class function TDerBitString.FromContentsOptional(const AContents: TCryptoLibByteArray): IDerBitString;
+begin
+  if AContents = nil then
+    Result := nil
+  else
+    Result := TDerBitString.Create(AContents);
+end;
+
+class function TDerBitString.GetInstance(const AObj: TObject): IDerBitString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerBitString.GetInstance(const AObj: IAsn1Object): IDerBitString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerBitString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerBitString.GetInstance(const ABytes: TCryptoLibByteArray): IDerBitString;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    Result := TDerBitString.Meta.Instance.FromByteArray(ABytes) as IDerBitString;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct BIT STRING from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerBitString.GetInstance(const ATaggedObject: IAsn1TaggedObject; AIsExplicit: Boolean): IDerBitString;
+begin
+  Result := TDerBitString.Meta.Instance.GetContextTagged(ATaggedObject, AIsExplicit) as IDerBitString;
+end;
+
+class function TDerBitString.GetOptional(const AElement: IAsn1Encodable): IDerBitString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerBitString, Result) then
+    // Found
+  else
+    Result := nil;
+end;
+
+class function TDerBitString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBitString;
+begin
+  Result := TDerBitString.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IDerBitString;
+end;
+
+function TDerBitString.GetBytesLength(): Int32;
+begin
+  Result := System.Length(FContents) - 1;
+end;
+
+function TDerBitString.IsOctetAligned(): Boolean;
+begin
+  Result := PadBits = 0;
+end;
+
+function TDerBitString.GetBitStream(): TStream;
+begin
+  Result := GetBufferStream();
+end;
+
+function TDerBitString.GetOctetStream(): TStream;
+begin
+  CheckOctetAligned();
+  Result := GetBufferStream();
+end;
+
+function TDerBitString.GetBufferStream(): TFixedBufferStream;
+begin
+ if FBufferStream = nil then
+  FBufferStream := TFixedBufferStream.Create(FContents, 1, System.Length(FContents) - 1, False);
+
+  Result := FBufferStream;
+end;
+
+function TDerBitString.GetParser(): IAsn1BitStringParser;
+begin
+  Result := Self as IAsn1BitStringParser;
+end;
+
+procedure TDerBitString.CheckOctetAligned();
+begin
+  if FContents[0] <> $00 then
+    raise EIOCryptoLibException.Create('expected octet-aligned bitstring, but found padBits: ' + IntToStr(FContents[0]));
+end;
+
+function TDerBitString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+var
+  LPadBits: Int32;
+  LLast: Int32;
+  LLastBer, LLastDer: Byte;
+begin
+  LPadBits := FContents[0];
+  if LPadBits <> 0 then
+  begin
+    LLast := System.Length(FContents) - 1;
+    LLastBer := FContents[LLast];
+    LLastDer := Byte(LLastBer and ($FF shl LPadBits));
+    
+    if LLastBer <> LLastDer then
+    begin
+      Result := TPrimitiveEncodingSuffixed.Create(TAsn1Tags.Universal, TAsn1Tags.BitString, FContents, LLastDer);
+      Exit;
+    end;
+  end;
+  
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.BitString, FContents);
+end;
+
+function TDerBitString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+var
+  LPadBits: Int32;
+  LLast: Int32;
+  LLastBer, LLastDer: Byte;
+begin
+  LPadBits := FContents[0];
+  if LPadBits <> 0 then
+  begin
+    LLast := System.Length(FContents) - 1;
+    LLastBer := FContents[LLast];
+    LLastDer := Byte(LLastBer and ($FF shl LPadBits));
+    
+    if LLastBer <> LLastDer then
+    begin
+      Result := TPrimitiveEncodingSuffixed.Create(ATagClass, ATagNo, FContents, LLastDer);
+      Exit;
+    end;
+  end;
+  
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+function TDerBitString.GetEncodingDer(): IDerEncoding;
+var
+  LPadBits: Int32;
+  LLast: Int32;
+  LLastBer, LLastDer: Byte;
+begin
+  LPadBits := FContents[0];
+  if LPadBits <> 0 then
+  begin
+    LLast := System.Length(FContents) - 1;
+    LLastBer := FContents[LLast];
+    LLastDer := Byte(LLastBer and ($FF shl LPadBits));
+    
+    if LLastBer <> LLastDer then
+    begin
+      Result := TPrimitiveDerEncodingSuffixed.Create(TAsn1Tags.Universal, TAsn1Tags.BitString, FContents, LLastDer);
+      Exit;
+    end;
+  end;
+  
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.BitString, FContents);
+end;
+
+function TDerBitString.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+var
+  LPadBits: Int32;
+  LLast: Int32;
+  LLastBer, LLastDer: Byte;
+begin
+  LPadBits := FContents[0];
+  if LPadBits <> 0 then
+  begin
+    LLast := System.Length(FContents) - 1;
+    LLastBer := FContents[LLast];
+    LLastDer := Byte(LLastBer and ($FF shl LPadBits));
+    
+    if LLastBer <> LLastDer then
+    begin
+      Result := TPrimitiveDerEncodingSuffixed.Create(ATagClass, ATagNo, FContents, LLastDer);
+      Exit;
+    end;
+  end;
+  
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+{ TDLBitString }
+
+constructor TDLBitString.Create(const AContents: TCryptoLibByteArray; ACheck: Boolean);
+begin
+  inherited Create(AContents, ACheck);
+end;
+
+constructor TDLBitString.Create(const AData: TCryptoLibByteArray; APadBits: Int32);
+begin
+  inherited Create(AData, APadBits);
+end;
+
+function TDLBitString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncoding(AEncoding);
+    Exit;
+  end;
+  
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.BitString, FContents);
+end;
+
+function TDLBitString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+{ TBerBitString }
+
+class function TBerBitString.FromSequence(const ASequence: IAsn1Sequence): IBerBitString;
+var
+  LMapped: TCryptoLibGenericArray<IDerBitString>;
+  LSequence: TAsn1Sequence;
+begin
+  if ASequence = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  // Cast to class to access MapElements (interfaces can't have generic methods in Pascal)
+  if ASequence is TAsn1Sequence then
+  begin
+    LSequence := ASequence as TAsn1Sequence;
+    LMapped := LSequence.MapElements<IDerBitString>(
+      function(AElement: IAsn1Encodable): IDerBitString
+      var
+        LObj: IAsn1Object;
+      begin
+        LObj := AElement.ToAsn1Object();
+        Result := TDerBitString.GetInstance(LObj);
+      end);
+  end
+  else
+  begin
+    raise EArgumentCryptoLibException.Create('sequence must be a TAsn1Sequence instance');
+  end;
+  Result := TBerBitString.Create(LMapped);
+end;
+
+constructor TBerBitString.Create(const ABitStrings: TCryptoLibGenericArray<IDerBitString>);
+begin
+  inherited Create(FlattenBitStrings(ABitStrings), False);
+  FElements := ABitStrings;
+end;
+
+function TBerBitString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+var
+  LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  I: Int32;
+begin
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
+  begin
+    Result := inherited GetEncoding(AEncoding);
+    Exit;
+  end;
+
+  if FElements = nil then
+    Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.BitString, FContents)
+  else
+  begin
+    System.SetLength(LEncodableElements, System.Length(FElements));
+    for I := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[I] := FElements[I];
+    Result := TConstructedILEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.BitString,
+      TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
+  end;
+end;
+
+function TBerBitString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+var
+  LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  I: Int32;
+begin
+  if AEncoding <> TAsn1OutputStream.EncodingBer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+
+  if FElements = nil then
+    Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents)
+  else
+  begin
+    System.SetLength(LEncodableElements, System.Length(FElements));
+    for I := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[I] := FElements[I];
+    Result := TConstructedILEncoding.Create(ATagClass, ATagNo,
+      TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
+  end;
+end;
+
+class function TBerBitString.FlattenBitStrings(const ABitStrings: TCryptoLibGenericArray<IDerBitString>): TCryptoLibByteArray;
+var
+  LCount, I, LLast, LTotalLength, LPos, LLength: Int32;
+  LElementContents, LLastElementContents: TCryptoLibByteArray;
+  LPadBits: Byte;
+begin
+  LCount := System.Length(ABitStrings);
+  case LCount of
+    0:
+      Result := TDerBitString.EmptyOctetsContents;
+    1:
+      Result := ABitStrings[0].Contents;
+  else
+    begin
+      LLast := LCount - 1;
+      LTotalLength := 0;
+      for I := 0 to LLast - 1 do
+      begin
+        LElementContents := ABitStrings[I].Contents;
+        if LElementContents[0] <> 0 then
+          raise EArgumentCryptoLibException.Create('only the last nested bitstring can have padding');
+        LTotalLength := LTotalLength + System.Length(LElementContents) - 1;
+      end;
+      // Last one can have padding
+      LLastElementContents := ABitStrings[LLast].Contents;
+      LPadBits := LLastElementContents[0];
+      LTotalLength := LTotalLength + System.Length(LLastElementContents);
+
+      System.SetLength(Result, LTotalLength);
+      Result[0] := LPadBits;
+      LPos := 1;
+      for I := 0 to LCount - 1 do
+      begin
+        LElementContents := ABitStrings[I].Contents;
+        LLength := System.Length(LElementContents) - 1;
+        System.Move(LElementContents[1], Result[LPos], LLength * SizeOf(Byte));
+        LPos := LPos + LLength;
+      end;
+    end;
+  end;
+end;
+
+{ TDerExternal }
+
+class function TDerExternal.GetObjFromSequence(const ASequence: IAsn1Sequence; AIndex: Int32): IAsn1Object;
+begin
+  if ASequence.Count <= AIndex then
+    raise EArgumentCryptoLibException.Create('too few objects in input sequence');
+  Result := ASequence[AIndex].ToAsn1Object();
+end;
+
+class function TDerExternal.CheckEncoding(AEncoding: Int32): Int32;
+begin
+  if (AEncoding < 0) or (AEncoding > 2) then
+    raise EInvalidOperationCryptoLibException.CreateFmt('invalid encoding value: %d', [AEncoding]);
+  Result := AEncoding;
+end;
+
+class function TDerExternal.CheckExternalContent(ATagNo: Int32; const AExternalContent: IAsn1Object): IAsn1Object;
+begin
+  case ATagNo of
+    1:
+      Result := TAsn1OctetString.Meta.Instance.CheckedCast(AExternalContent);
+    2:
+      Result := TDerBitString.Meta.Instance.CheckedCast(AExternalContent);
+  else
+    Result := AExternalContent;
+  end;
+end;
+
+class function TDerExternal.GetExternalContent(const AEncoding: IAsn1TaggedObject): IAsn1Object;
+begin
+  TAsn1Utilities.CheckContextTagClass(AEncoding);
+  
+  case AEncoding.TagNo of
+    0:
+      Result := AEncoding.GetExplicitBaseObject().ToAsn1Object();
+    1:
+      Result := TAsn1OctetString.GetTagged(AEncoding, False);
+    2:
+      Result := TDerBitString.GetTagged(AEncoding, False);
+  else
+    raise EArgumentCryptoLibException.CreateFmt('unknown tag: %s', [TAsn1Utilities.GetTagText(AEncoding)]);
+  end;
+end;
+
+class function TDerExternal.CheckDataValueDescriptor(const ADataValueDescriptor: IAsn1Object): IAsn1ObjectDescriptor;
+var
+  LObjDesc: IAsn1ObjectDescriptor;
+  LGraphicString: IDerGraphicString;
+begin
+  if Supports(ADataValueDescriptor, IAsn1ObjectDescriptor, LObjDesc) then
+    Result := LObjDesc
+  else if Supports(ADataValueDescriptor, IDerGraphicString, LGraphicString) then
+    Result := TAsn1ObjectDescriptor.Create(ADataValueDescriptor)
+  else
+    raise EArgumentCryptoLibException.Create('incompatible type for data-value-descriptor');
+end;
+
+constructor TDerExternal.Create(const AVector: IAsn1EncodableVector);
+begin
+  Create(TBerSequence.Create(AVector));
+end;
+
+constructor TDerExternal.Create(const ASequence: IAsn1Sequence);
+var
+  LOffset: Int32;
+  LAsn1: IAsn1Object;
+  LDerObjectIdentifier: IDerObjectIdentifier;
+  LDerInteger: IDerInteger;
+  LObj: IAsn1TaggedObject;
+begin
+  inherited Create();
+  if ASequence = nil then
+    raise EArgumentNilCryptoLibException.Create('sequence');
+  
+  LOffset := 0;
+  LAsn1 := GetObjFromSequence(ASequence, LOffset);
+  
+  if Supports(LAsn1, IDerObjectIdentifier, LDerObjectIdentifier) then
+  begin
+    FDirectReference := LDerObjectIdentifier;
+    System.Inc(LOffset);
+    LAsn1 := GetObjFromSequence(ASequence, LOffset);
+  end;
+  
+  if Supports(LAsn1, IDerInteger, LDerInteger) then
+  begin
+    FIndirectReference := LDerInteger;
+    System.Inc(LOffset);
+    LAsn1 := GetObjFromSequence(ASequence, LOffset);
+  end;
+  
+  if not Supports(LAsn1, IAsn1TaggedObject) then
+  begin
+    FDataValueDescriptor := CheckDataValueDescriptor(LAsn1);
+    System.Inc(LOffset);
+    LAsn1 := GetObjFromSequence(ASequence, LOffset);
+  end;
+  
+  if ASequence.Count <> LOffset + 1 then
+    raise EArgumentCryptoLibException.Create('input sequence too large');
+  
+  if not Supports(LAsn1, IAsn1TaggedObject, LObj) then
+    raise EArgumentCryptoLibException.Create('No tagged object found in sequence. Structure doesn''t seem to be of type External');
+  
+  FEncoding := CheckEncoding(LObj.TagNo);
+  FExternalContent := GetExternalContent(LObj);
+end;
+
+constructor TDerExternal.Create(const ADirectReference: IDerObjectIdentifier;
+  const AIndirectReference: IDerInteger;
+  const ADataValueDescriptor: IAsn1ObjectDescriptor;
+  const AExternalData: IAsn1TaggedObject);
+begin
+  inherited Create();
+  FDirectReference := ADirectReference;
+  FIndirectReference := AIndirectReference;
+  FDataValueDescriptor := ADataValueDescriptor;
+  FEncoding := CheckEncoding(AExternalData.TagNo);
+  FExternalContent := GetExternalContent(AExternalData);
+end;
+
+constructor TDerExternal.Create(const ADirectReference: IDerObjectIdentifier;
+  const AIndirectReference: IDerInteger;
+  const ADataValueDescriptor: IAsn1ObjectDescriptor;
+  AEncoding: Int32; const AExternalData: IAsn1Object);
+begin
+  inherited Create();
+  FDirectReference := ADirectReference;
+  FIndirectReference := AIndirectReference;
+  FDataValueDescriptor := ADataValueDescriptor;
+  FEncoding := CheckEncoding(AEncoding);
+  FExternalContent := CheckExternalContent(AEncoding, AExternalData);
+end;
+
+function TDerExternal.BuildSequence(): IAsn1Sequence;
+var
+  LV: IAsn1EncodableVector;
+  LIsExplicit: Boolean;
+begin
+  LV := TAsn1EncodableVector.Create(4);
+  LV.AddOptional([FDirectReference, FIndirectReference, FDataValueDescriptor]);
+  LIsExplicit := (FEncoding = 0);
+  LV.Add(TDerTaggedObject.Create(LIsExplicit, FEncoding, FExternalContent));
+  Result := TDerSequence.Create(LV);
+end;
+
+function TDerExternal.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerExternal;
+begin
+  if not Supports(AAsn1Object, IDerExternal, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  
+  Result := ((FDirectReference = nil) = (LThat.DirectReference = nil)) and
+    ((FDirectReference = nil) or FDirectReference.Equals(LThat.DirectReference)) and
+    ((FIndirectReference = nil) = (LThat.IndirectReference = nil)) and
+    ((FIndirectReference = nil) or FIndirectReference.Equals(LThat.IndirectReference)) and
+    ((FDataValueDescriptor = nil) = (LThat.DataValueDescriptor = nil)) and
+    ((FDataValueDescriptor = nil) or FDataValueDescriptor.Equals(LThat.DataValueDescriptor)) and
+    (FEncoding = LThat.Encoding) and
+    FExternalContent.Equals(LThat.ExternalContent);
+end;
+
+function TDerExternal.Asn1GetHashCode(): Int32;
+var
+  LHash: Int32;
+begin
+  if FDirectReference <> nil then
+    LHash := FDirectReference.GetHashCode()
+  else
+    LHash := 0;
+  
+  if FIndirectReference <> nil then
+    LHash := LHash xor FIndirectReference.GetHashCode();
+  
+  if FDataValueDescriptor <> nil then
+    LHash := LHash xor FDataValueDescriptor.GetHashCode();
+  
+  LHash := LHash xor FEncoding;
+  LHash := LHash xor FExternalContent.GetHashCode();
+  
+  Result := LHash;
+end;
+
+function TDerExternal.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := GetEncodingImplicit(AEncoding, TAsn1Tags.Universal, TAsn1Tags.External);
+end;
+
+function TDerExternal.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := BuildSequence().GetEncodingImplicit(TAsn1OutputStream.EncodingDer, ATagClass, ATagNo);
+end;
+
+function TDerExternal.GetEncodingDer(): IDerEncoding;
+begin
+  Result := GetEncodingDerImplicit(TAsn1Tags.Universal, TAsn1Tags.External);
+end;
+
+function TDerExternal.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := BuildSequence().GetEncodingDerImplicit(ATagClass, ATagNo);
+end;
+
+function TDerExternal.GetDataValueDescriptor(): IAsn1Object;
+begin
+  Result := FDataValueDescriptor;
+end;
+
+function TDerExternal.GetDirectReference(): IDerObjectIdentifier;
+begin
+  Result := FDirectReference;
+end;
+
+function TDerExternal.GetEncoding(): Int32;
+begin
+  Result := FEncoding;
+end;
+
+function TDerExternal.GetExternalContent(): IAsn1Object;
+begin
+  Result := FExternalContent;
+end;
+
+function TDerExternal.GetIndirectReference(): IDerInteger;
+begin
+  Result := FIndirectReference;
+end;
+
+function TDerExternal.GetSequence(): IAsn1Sequence;
+begin
+  Result := BuildSequence();
+end;
+
+{ TDLExternal }
+
+constructor TDLExternal.Create(const AVector: IAsn1EncodableVector);
+begin
+  inherited Create(AVector);
+end;
+
+constructor TDLExternal.Create(const ASequence: IAsn1Sequence);
+begin
+  inherited Create(ASequence);
+end;
+
+constructor TDLExternal.Create(const ADirectReference: IDerObjectIdentifier;
+  const AIndirectReference: IDerInteger;
+  const ADataValueDescriptor: IAsn1ObjectDescriptor;
+  const AExternalData: IAsn1TaggedObject);
+begin
+  inherited Create(ADirectReference, AIndirectReference, ADataValueDescriptor, AExternalData);
+end;
+
+constructor TDLExternal.Create(const ADirectReference: IDerObjectIdentifier;
+  const AIndirectReference: IDerInteger;
+  const ADataValueDescriptor: IAsn1ObjectDescriptor;
+  AEncoding: Int32; const AExternalData: IAsn1Object);
+begin
+  inherited Create(ADirectReference, AIndirectReference, ADataValueDescriptor, AEncoding, AExternalData);
+end;
+
+function TDLExternal.BuildSequence(): IAsn1Sequence;
+var
+  LV: IAsn1EncodableVector;
+  LIsExplicit: Boolean;
+begin
+  LV := TAsn1EncodableVector.Create(4);
+  LV.AddOptional([FDirectReference, FIndirectReference, FDataValueDescriptor]);
+  LIsExplicit := (FEncoding = 0);
+  LV.Add(TDLTaggedObject.Create(LIsExplicit, FEncoding, FExternalContent));
+  Result := TDLSequence.Create(LV);
+end;
+
+function TDLExternal.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := GetEncodingImplicit(AEncoding, TAsn1Tags.Universal, TAsn1Tags.External);
+end;
+
+function TDLExternal.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  // If encoding is DER, use base class implementation
+  if AEncoding = TAsn1OutputStream.EncodingDer then
+  begin
+    Result := inherited GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+    Exit;
+  end;
+  // Otherwise use DL encoding
+  Result := BuildSequence().GetEncodingImplicit(TAsn1OutputStream.EncodingDL, ATagClass, ATagNo);
+end;
+
+{ TDerBmpString }
+
+constructor TDerBmpString.Create(const AStr: TCryptoLibByteArray);
+var
+  LByteLen, LCharLen, I: Int32;
+  LCs: TCryptoLibCharArray;
+begin
+  inherited Create();
+  if AStr = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  LByteLen := System.Length(AStr);
+  if (LByteLen and 1) <> 0 then
+    raise EArgumentCryptoLibException.Create('malformed BMPString encoding encountered');
+  LCharLen := TBits.Asr32(LByteLen, 1);
+  System.SetLength(LCs, LCharLen);
+  for I := 0 to LCharLen - 1 do
+    LCs[I] := Char((AStr[2 * I] shl 8) or (AStr[2 * I + 1] and $FF));
+  System.SetString(FStr, PChar(@LCs[0]), LCharLen);
+end;
+
+constructor TDerBmpString.Create(const AStr: String);
+begin
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  FStr := AStr;
+end;
+
+function TDerBmpString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.BmpString;
+end;
+
+function TDerBmpString.GetContents(): TCryptoLibByteArray;
+var
+  LCount, I: Int32;
+  LChar: Char;
+begin
+  LCount := System.Length(FStr);
+  System.SetLength(Result, LCount * 2); // BMP string uses 2 bytes per character
+  for I := 0 to LCount - 1 do
+  begin
+    LChar := FStr[I + 1]; // Pascal strings are 1-indexed
+    Result[I * 2] := Byte((Ord(LChar) shr 8) and $FF); // High byte
+    Result[I * 2 + 1] := Byte(Ord(LChar) and $FF); // Low byte
+  end;
+end;
+
+function TDerBmpString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerBmpString;
+begin
+  if not Supports(AAsn1Object, IDerBmpString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := FStr = LThat.GetString();
+end;
+
+function TDerBmpString.Asn1GetHashCode(): Int32;
+begin
+  Result := FStr.GetHashCode();
+end;
+
+function TDerBmpString.GetString(): String;
+begin
+  Result := FStr;
+end;
+
+class function TDerBmpString.CreatePrimitive(const AContents: TCryptoLibByteArray): IDerBmpString;
+begin
+  Result := TDerBmpString.Create(AContents);
+end;
+
+class function TDerBmpString.CreatePrimitive(const AStr: TCryptoLibCharArray): IDerBmpString;
+var
+  LStr: String;
+begin
+  System.SetString(LStr, PChar(@AStr[0]), System.Length(AStr));
+  Result := TDerBmpString.Create(LStr);
+end;
+
+class function TDerBmpString.GetInstance(const AObj: TObject): IDerBmpString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerBmpString.GetInstance(const AObj: IAsn1Object): IDerBmpString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerBmpString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerBmpString.GetInstance(const ABytes: TCryptoLibByteArray): IDerBmpString;
+var
+  LObj: IAsn1Object;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  try
+    LObj := TDerBmpString.Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerBmpString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct BMP string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct BMP string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerBmpString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBmpString;
+begin
+  Result := TDerBmpString.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IDerBmpString;
+end;
+
+class function TDerBmpString.GetOptional(const AElement: IAsn1Encodable): IDerBmpString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerBmpString, Result) then
+    Exit;
+  Result := nil;
+end;
+
+class function TDerBmpString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBmpString;
+begin
+  Result := TDerBmpString.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IDerBmpString;
+end;
+
+{ TDerBoolean }
+
+class function TDerBoolean.GetFalse: IDerBoolean;
+var
+  LInstance: TDerBoolean;
+begin
+  if FFalse = nil then
+  begin
+    LInstance := TDerBoolean.Create(System.False);
+    if not Supports(LInstance, IDerBoolean, FFalse) then
+      raise EInvalidOperationCryptoLibException.Create('failed to get IDerBoolean interface');
+  end;
+  Result := FFalse;
+end;
+
+class function TDerBoolean.GetTrue: IDerBoolean;
+var
+  LInstance: TDerBoolean;
+begin
+  if FTrue = nil then
+  begin
+    LInstance := TDerBoolean.Create(System.True);
+    if not Supports(LInstance, IDerBoolean, FTrue) then
+      raise EInvalidOperationCryptoLibException.Create('failed to get IDerBoolean interface');
+  end;
+  Result := FTrue;
+end;
+
+constructor TDerBoolean.Create(AValue: Boolean);
+begin
+  inherited Create();
+  if AValue then
+    FValue := $FF
+  else
+    FValue := 0;
+end;
+
+constructor TDerBoolean.Create(const AContents: TCryptoLibByteArray);
+begin
+  inherited Create();
+  if System.Length(AContents) <> 1 then
+    raise EArgumentCryptoLibException.Create('byte value should have 1 byte in it');
+  // TODO Are there any constraints on the possible byte values?
+  FValue := AContents[0];
+end;
+
+class function TDerBoolean.FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerBoolean.Create(AContents);
+end;
+
+class function TDerBoolean.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+var
+  LB: Byte;
+begin
+  if System.Length(AContents) <> 1 then
+    raise EArgumentCryptoLibException.Create('BOOLEAN value should have 1 byte in it');
+  LB := AContents[0];
+
+  if LB = 0 then
+    Result := TDerBoolean.False
+  else if LB = $FF then
+    Result := TDerBoolean.True
+  else
+    Result := TDerBoolean.Create(AContents);
+end;
+
+class function TDerBoolean.GetInstance(AValue: Boolean): IDerBoolean;
+begin
+  if AValue then
+    Result := TDerBoolean.True
+  else
+    Result := TDerBoolean.False;
+end;
+
+class function TDerBoolean.GetInstance(AValue: Int32): IDerBoolean;
+begin
+  if AValue <> 0 then
+    Result := TDerBoolean.True
+  else
+    Result := TDerBoolean.False;
+end;
+
+class function TDerBoolean.GetInstance(const AObj: TObject): IDerBoolean;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerBoolean.GetInstance(const AObj: IAsn1Object): IDerBoolean;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerBoolean, Result) then
+    Exit;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TDerBoolean.GetInstance(const ABytes: TCryptoLibByteArray): IDerBoolean;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    Result := TDerBoolean.Meta.Instance.FromByteArray(ABytes) as IDerBoolean;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct boolean from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerBoolean.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBoolean;
+begin
+  Result := TDerBoolean.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IDerBoolean;
+end;
+
+class function TDerBoolean.GetOptional(const AElement: IAsn1Encodable): IDerBoolean;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IDerBoolean, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TDerBoolean.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBoolean;
+begin
+  Result := TDerBoolean.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IDerBoolean;
+end;
+
+function TDerBoolean.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerBoolean;
+begin
+  if not Supports(AAsn1Object, IDerBoolean, LThat) then
+  begin
+    Result := System.False;
+    Exit;
+  end;
+  Result := GetIsTrue() = LThat.IsTrue;
+end;
+
+function TDerBoolean.Asn1GetHashCode(): Int32;
+begin
+  Result := Ord(GetIsTrue());
+end;
+
+function TDerBoolean.GetValue(): Byte;
+begin
+  Result := FValue;
+end;
+
+function TDerBoolean.GetIsTrue(): Boolean;
+begin
+  Result := FValue <> 0;
+end;
+
+function TDerBoolean.ToString(): String;
+begin
+  if GetIsTrue() then
+    Result := 'TRUE'
+  else
+    Result := 'FALSE';
+end;
+
+function TDerBoolean.GetContents(AEncoding: Int32): TCryptoLibByteArray;
+var
+  LContents: Byte;
+begin
+  LContents := FValue;
+  // if DER encoding and IsTrue, use 0xFF
+  if (TAsn1OutputStream.EncodingDer = AEncoding) and GetIsTrue() then
+    LContents := $FF;
+  Result := TCryptoLibByteArray.Create(LContents);
+end;
+
+function TDerBoolean.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Boolean, GetContents(AEncoding));
+end;
+
+function TDerBoolean.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, GetContents(AEncoding));
+end;
+
+function TDerBoolean.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Boolean,
+    GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TDerBoolean.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+{ TDerEnumerated }
+
+class constructor TDerEnumerated.Create;
+begin
+  System.SetLength(FCache, 12);
+end;
+
+class function TDerEnumerated.GetInstance(const AObj: TObject): IDerEnumerated;
+var
+  LAsn1Convertible: IAsn1Convertible;
+  LConverted: IAsn1Object;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerEnumerated, Result) then
+    Exit;
+
+  if Supports(AObj, IAsn1Convertible, LAsn1Convertible) then
+  begin
+    if not Supports(AObj, IAsn1Object) then
+    begin
+      LConverted := LAsn1Convertible.ToAsn1Object();
+      if Supports(LConverted, IDerEnumerated, Result) then
+        Exit;
+    end;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerEnumerated.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated;
+begin
+  Result := TDerEnumerated.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IDerEnumerated;
+end;
+
+class function TDerEnumerated.GetOptional(const AElement: IAsn1Encodable): IDerEnumerated;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IDerEnumerated, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TDerEnumerated.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated;
+begin
+  Result := TDerEnumerated.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IDerEnumerated;
+end;
+
+constructor TDerEnumerated.Create(AVal: Int32);
+var
+  LBytes: TCryptoLibByteArray;
+begin
+  inherited Create();
+  if AVal < 0 then
+    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+
+  LBytes := TBigInteger.ValueOf(AVal).ToByteArray();
+  FContents := LBytes;
+  FStart := 0;
+end;
+
+constructor TDerEnumerated.Create(AVal: Int64);
+var
+  LBytes: TCryptoLibByteArray;
+begin
+  inherited Create();
+  if AVal < 0 then
+    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+
+  LBytes := TBigInteger.ValueOf(AVal).ToByteArray();
+  FContents := LBytes;
+  FStart := 0;
+end;
+
+constructor TDerEnumerated.Create(const AVal: TBigInteger);
+var
+  LBytes: TCryptoLibByteArray;
+begin
+  inherited Create();
+  if AVal.SignValue < 0 then
+    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+
+  LBytes := AVal.ToByteArray();
+  FContents := LBytes;
+  FStart := 0;
+end;
+
+constructor TDerEnumerated.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerEnumerated.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if TDerInteger.IsMalformed(AContents) then
+    raise EArgumentCryptoLibException.Create('malformed enumerated');
+  if (AContents[0] and $80) <> 0 then
+    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+  FStart := TDerInteger.SignBytesToSkip(FContents);
+end;
+
+function TDerEnumerated.GetValue(): TBigInteger;
+begin
+  Result := TBigInteger.Create(FContents);
+end;
+
+function TDerEnumerated.HasValue(AX: Int32): Boolean;
+var
+  LLength: Int32;
+begin
+  LLength := System.Length(FContents) - FStart;
+  Result := (LLength <= 4) and
+    (TDerInteger.IntValue(FContents, FStart, TDerInteger.SignExtSigned) = AX);
+end;
+
+function TDerEnumerated.HasValue(const AX: TBigInteger): Boolean;
+var
+  LValue: TBigInteger;
+begin
+  if not AX.IsInitialized then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  // Fast check to avoid allocation
+  if TDerInteger.IntValue(FContents, FStart, TDerInteger.SignExtSigned) <> AX.Int32Value then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  LValue := GetValue();
+  Result := LValue.Equals(AX);
+end;
+
+function TDerEnumerated.GetIntValueExact(): Int32;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FContents) - FStart;
+  if LCount > 4 then
+    raise EArithmeticCryptoLibException.Create('ASN.1 Enumerated out of int range');
+
+  Result := TDerInteger.IntValue(FContents, FStart, TDerInteger.SignExtSigned);
+end;
+
+function TDerEnumerated.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Enumerated, FContents);
+end;
+
+function TDerEnumerated.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+function TDerEnumerated.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Enumerated, FContents);
+end;
+
+function TDerEnumerated.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+function TDerEnumerated.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerEnumerated;
+  LThatContents: TCryptoLibByteArray;
+begin
+  if not Supports(AAsn1Object, IDerEnumerated, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  LThatContents := LThat.Bytes;
+  Result := TArrayUtils.AreEqual(FContents, LThatContents);
+end;
+
+function TDerEnumerated.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerEnumerated.FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerEnumerated.Create(AContents);
+end;
+
+class function TDerEnumerated.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+var
+  LLength, LValue: Int32;
+  LPossibleMatch: IDerEnumerated;
+begin
+  LLength := System.Length(AContents);
+  if LLength > 1 then
+  begin
+    Result := TDerEnumerated.Create(AContents, AClone);
+    Exit;
+  end;
+  if LLength = 0 then
+    raise EArgumentCryptoLibException.Create('ENUMERATED has zero length');
+
+  LValue := AContents[0];
+  if LValue >= System.Length(FCache) then
+  begin
+    Result := TDerEnumerated.Create(AContents, AClone);
+    Exit;
+  end;
+
+  LPossibleMatch := FCache[LValue];
+  if LPossibleMatch = nil then
+  begin
+    LPossibleMatch := TDerEnumerated.Create(AContents, AClone);
+    FCache[LValue] := LPossibleMatch;
+  end;
+  Result := LPossibleMatch;
+end;
+
+function TDerEnumerated.GetBytes(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+{ TAsn1Null }
+
+constructor TAsn1Null.Create;
+begin
+  inherited Create();
+end;
+
+class procedure TAsn1Null.CheckContentsLength(AContentsLength: Int32);
+begin
+  if AContentsLength <> 0 then
+    raise EInvalidOperationCryptoLibException.Create('malformed NULL encoding encountered');
+end;
+
+class function TAsn1Null.CreatePrimitive(): IAsn1Object;
+begin
+  Result := TDerNull.Instance;
+end;
+
+class function TAsn1Null.GetInstance(const AObj: TObject): IAsn1Null;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TAsn1Null.GetInstance(const AObj: IAsn1Object): IAsn1Null;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IAsn1Null, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1Null.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Null;
+var
+  LObj: IAsn1Object;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  try
+    LObj := TAsn1Null.Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IAsn1Null, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct NULL from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct NULL from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TAsn1Null.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Null;
+begin
+  Result := TAsn1Null.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Null;
+end;
+
+class function TAsn1Null.GetOptional(const AElement: IAsn1Encodable): IAsn1Null;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IAsn1Null, Result) then
+    Exit;
+  Result := nil;
+end;
+
+class function TAsn1Null.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Null;
+begin
+  Result := TAsn1Null.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Null;
+end;
+
+function TAsn1Null.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LNull: IAsn1Null;
+begin
+  Result := Supports(AAsn1Object, IAsn1Null, LNull);
+end;
+
+function TAsn1Null.Asn1GetHashCode(): Int32;
+begin
+  Result := -1;
+end;
+
+{ TDerNull }
+
+constructor TDerNull.Create;
+begin
+  inherited Create();
+end;
+
+class function TDerNull.GetInstance: IDerNull;
+begin
+  if FInstance = nil then
+    FInstance := TDerNull.Create;
+  Result := FInstance;
+end;
+
+function TDerNull.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LNull: IDerNull;
+begin
+  Result := Supports(AAsn1Object, IDerNull, LNull);
+end;
+
+function TDerNull.Asn1GetHashCode(): Int32;
+begin
+  Result := -1;
+end;
+
+function TDerNull.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Null, TAsn1OctetString.EmptyOctets);
+end;
+
+function TDerNull.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, TAsn1OctetString.EmptyOctets);
+end;
+
+function TDerNull.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Null, TAsn1OctetString.EmptyOctets);
+end;
+
+function TDerNull.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, TAsn1OctetString.EmptyOctets);
+end;
+
+{ TDerObjectIdentifier }
+
+constructor TDerObjectIdentifier.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerObjectIdentifier.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  CheckContentsLength(System.Length(AContents));
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class procedure TDerObjectIdentifier.CheckContentsLength(AContentsLength: Int32);
+begin
+  if AContentsLength > 4096 then
+    raise EArgumentCryptoLibException.Create('exceeded OID contents length limit');
+end;
+
+class function TDerObjectIdentifier.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+var
+  LIndex: UInt32;
+  LOriginalEntry, LNewEntry: IDerObjectIdentifier;
+  LExchangedEntry: IDerObjectIdentifier;
+begin
+  CheckContentsLength(System.Length(AContents));
+
+  LIndex := UInt32(TArrayUtils.GetArrayHashCode(AContents));
+  LIndex := LIndex xor (LIndex shr 20);
+  LIndex := LIndex xor (LIndex shr 10);
+  LIndex := LIndex and 1023;
+
+  if System.Length(FCache) = 0 then
+    System.SetLength(FCache, 1024);
+
+  LOriginalEntry := FCache[LIndex];
+  if (LOriginalEntry <> nil) and TArrayUtils.AreEqual(AContents, LOriginalEntry.Contents) then
+  begin
+    Result := LOriginalEntry;
+    Exit;
+  end;
+
+  if not TAsn1RelativeOid.IsValidContents(AContents) then
+    raise EArgumentCryptoLibException.Create('invalid OID contents');
+
+  if AClone then
+    LNewEntry := TDerObjectIdentifier.Create(System.Copy(AContents), '')
+  else
+    LNewEntry := TDerObjectIdentifier.Create(AContents, '');
+
+  LExchangedEntry := FCache[LIndex];
+  if LExchangedEntry <> LOriginalEntry then
+  begin
+    if (LExchangedEntry <> nil) and TArrayUtils.AreEqual(AContents, LExchangedEntry.Contents) then
+    begin
+      Result := LExchangedEntry;
+      Exit;
+    end;
+  end;
+
+  FCache[LIndex] := LNewEntry;
+  Result := LNewEntry;
+end;
+
+class constructor TDerObjectIdentifier.Create;
+begin
+  System.SetLength(FCache, 1024);
+end;
+
+constructor TDerObjectIdentifier.Create(const AContents: TCryptoLibByteArray; const AIdentifier: String);
+begin
+  inherited Create();
+  FContents := AContents;
+  FIdentifier := AIdentifier;
+end;
+
+class function TDerObjectIdentifier.FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerObjectIdentifier.Create(AContents);
+end;
+
+class function TDerObjectIdentifier.FromContents(const AContents: TCryptoLibByteArray): IDerObjectIdentifier;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  Result := CreatePrimitive(AContents, True) as IDerObjectIdentifier;
+end;
+
+class function TDerObjectIdentifier.GetInstance(const AObj: TObject): IDerObjectIdentifier;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerObjectIdentifier.GetInstance(const AObj: IAsn1Object): IDerObjectIdentifier;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerObjectIdentifier, Result) then
+    Exit;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TDerObjectIdentifier.GetInstance(const ABytes: TCryptoLibByteArray): IDerObjectIdentifier;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    Result := TDerObjectIdentifier.Meta.Instance.FromByteArray(ABytes) as IDerObjectIdentifier;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct object identifier from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerObjectIdentifier.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerObjectIdentifier;
+begin
+  Result := TDerObjectIdentifier.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IDerObjectIdentifier;
+end;
+
+class function TDerObjectIdentifier.GetOptional(const AElement: IAsn1Encodable): IDerObjectIdentifier;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IDerObjectIdentifier, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TDerObjectIdentifier.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerObjectIdentifier;
+begin
+  Result := TDerObjectIdentifier.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IDerObjectIdentifier;
+end;
+
+class function TDerObjectIdentifier.TryFromID(const AIdentifier: String; out AOid: IDerObjectIdentifier): Boolean;
+var
+  LContents: TCryptoLibByteArray;
+begin
+  if AIdentifier = '' then
+    raise EArgumentNilCryptoLibException.Create('identifier');
+
+  if (System.Length(AIdentifier) <= MaxIdentifierLength) and IsValidIdentifier(AIdentifier) then
+  begin
+    LContents := ParseIdentifier(AIdentifier);
+    if System.Length(LContents) <= MaxContentsLength then
+    begin
+      AOid := TDerObjectIdentifier.Create(LContents, AIdentifier) as IDerObjectIdentifier;
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  AOid := nil;
+  Result := False;
+end;
+
+constructor TDerObjectIdentifier.Create(const AIdentifier: String);
+var
+  LContents: TCryptoLibByteArray;
+begin
+  inherited Create();
+  CheckIdentifier(AIdentifier);
+  LContents := ParseIdentifier(AIdentifier);
+  CheckContentsLength(System.Length(LContents));
+  FContents := LContents;
+  FIdentifier := AIdentifier;
+end;
+
+function TDerObjectIdentifier.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerObjectIdentifier;
+begin
+  if not Supports(AAsn1Object, IDerObjectIdentifier, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerObjectIdentifier.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+function TDerObjectIdentifier.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerObjectIdentifier.GetID(): String;
+begin
+  if FIdentifier = '' then
+    FIdentifier := ParseContents(FContents);
+  Result := FIdentifier;
+end;
+
+function TDerObjectIdentifier.Branch(const ABranchID: String): IDerObjectIdentifier;
+var
+  LContents: TCryptoLibByteArray;
+  LSubID: Int32;
+  LRootID, LIdentifier: String;
+begin
+  TAsn1RelativeOid.CheckIdentifier(ABranchID);
+
+  if System.Length(ABranchID) <= 2 then
+  begin
+    CheckContentsLength(System.Length(FContents) + 1);
+    LSubID := Ord(ABranchID[1]) - Ord('0');
+    if System.Length(ABranchID) = 2 then
+    begin
+      LSubID := LSubID * 10;
+      LSubID := LSubID + (Ord(ABranchID[2]) - Ord('0'));
+    end;
+    LContents := TArrayUtils.Append(FContents, Byte(LSubID));
+  end
+  else
+  begin
+    LContents := TAsn1RelativeOid.ParseIdentifier(ABranchID);
+    CheckContentsLength(System.Length(FContents) + System.Length(LContents));
+    LContents := TArrayUtils.Concatenate(FContents, LContents);
+  end;
+
+  LRootID := GetID();
+  LIdentifier := LRootID + '.' + ABranchID;
+  Result := TDerObjectIdentifier.Create(LContents, LIdentifier);
+end;
+
+function TDerObjectIdentifier.On(const AStem: IDerObjectIdentifier): Boolean;
+var
+  LStemContents: TCryptoLibByteArray;
+  LStemLength: Int32;
+begin
+  LStemContents := AStem.Contents;
+  LStemLength := System.Length(LStemContents);
+  // Compare the first LStemLength bytes of both arrays
+  Result := (System.Length(FContents) > LStemLength) and
+    TArrayUtils.AreEqual(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength));
+end;
+
+function TDerObjectIdentifier.ToString(): String;
+begin
+  Result := GetID();
+end;
+
+function TDerObjectIdentifier.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.ObjectIdentifier, FContents);
+end;
+
+function TDerObjectIdentifier.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+function TDerObjectIdentifier.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.ObjectIdentifier, FContents);
+end;
+
+function TDerObjectIdentifier.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+class procedure TDerObjectIdentifier.CheckIdentifier(const AIdentifier: String);
+begin
+  if AIdentifier = '' then
+    raise EArgumentNilCryptoLibException.Create('identifier');
+  if System.Length(AIdentifier) > MaxIdentifierLength then
+    raise EArgumentCryptoLibException.Create('exceeded OID contents length limit');
+  if not IsValidIdentifier(AIdentifier) then
+    raise EFormatCryptoLibException.Create('string ' + AIdentifier + ' not a valid OID');
+end;
+
+class function TDerObjectIdentifier.IsValidIdentifier(const AIdentifier: String): Boolean;
+var
+  LFirst: Char;
+begin
+  if (System.Length(AIdentifier) < 3) or (AIdentifier[2] <> '.') then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  LFirst := AIdentifier[1];
+  if (LFirst < '0') or (LFirst > '2') then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if not TAsn1RelativeOid.IsValidIdentifier(AIdentifier, 2) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if LFirst = '2' then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  if (System.Length(AIdentifier) = 3) or (AIdentifier[4] = '.') then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  if (System.Length(AIdentifier) = 4) or (AIdentifier[5] = '.') then
+  begin
+    Result := AIdentifier[3] < '4';
+    Exit;
+  end;
+
+  Result := False;
+end;
+
+class function TDerObjectIdentifier.ParseContents(const AContents: TCryptoLibByteArray): String;
+var
+  LObjId: String;
+  LValue: Int64;
+  LBigValue: TBigInteger;
+  I, LB: Int32;
+  LFirst: Boolean;
+begin
+  LObjId := '';
+  LValue := 0;
+  LBigValue := Default(TBigInteger);
+  LFirst := True;
+
+  for I := 0 to System.Length(AContents) - 1 do
+  begin
+    LB := AContents[I];
+
+    if LValue <= LongLimit then
+    begin
+      LValue := LValue + (LB and $7F);
+      if (LB and $80) = 0 then
+      begin
+        if LFirst then
+        begin
+          if LValue < 40 then
+            LObjId := LObjId + '0'
+          else if LValue < 80 then
+          begin
+            LObjId := LObjId + '1';
+            LValue := LValue - 40;
+          end
+          else
+          begin
+            LObjId := LObjId + '2';
+            LValue := LValue - 80;
+          end;
+          LFirst := False;
+        end;
+
+        LObjId := LObjId + '.' + IntToStr(LValue);
+        LValue := 0;
+      end
+      else
+      begin
+        LValue := LValue shl 7;
+      end;
+    end
+    else
+    begin
+      if not LBigValue.IsInitialized then
+        LBigValue := TBigInteger.ValueOf(LValue);
+      LBigValue := LBigValue.&Or(TBigInteger.ValueOf(LB and $7F));
+      if (LB and $80) = 0 then
+      begin
+        if LFirst then
+        begin
+          LObjId := LObjId + '2';
+          LBigValue := LBigValue.Subtract(TBigInteger.ValueOf(80));
+          LFirst := False;
+        end;
+
+        LObjId := LObjId + '.' + LBigValue.ToString();
+        LBigValue := Default(TBigInteger);
+        LValue := 0;
+      end
+      else
+      begin
+        LBigValue := LBigValue.ShiftLeft(7);
+      end;
+    end;
+  end;
+
+  Result := LObjId;
+end;
+
+class function TDerObjectIdentifier.ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray;
+var
+  LBOut: TMemoryStream;
+  LTok: IOidTokenizer;
+  LToken: String;
+  LFirst: Int32;
+  LBytes: TCryptoLibByteArray;
+begin
+  LBOut := TMemoryStream.Create();
+  try
+    LTok := TOidTokenizer.Create(AIdentifier);
+    LToken := LTok.NextToken();
+    LFirst := StrToInt(LToken) * 40;
+
+    LToken := LTok.NextToken();
+    if System.Length(LToken) <= 18 then
+      WriteField(LBOut, Int64(LFirst + StrToInt64(LToken)))
+    else
+      WriteField(LBOut, TBigInteger.Create(LToken).Add(TBigInteger.ValueOf(LFirst)));
+
+    while LTok.HasMoreTokens do
+    begin
+      LToken := LTok.NextToken();
+      if System.Length(LToken) <= 18 then
+        WriteField(LBOut, StrToInt64(LToken))
+      else
+        WriteField(LBOut, TBigInteger.Create(LToken));
+    end;
+
+    System.SetLength(LBytes, LBOut.Size);
+    LBOut.Position := 0;
+    LBOut.Read(LBytes[0], LBOut.Size);
+    Result := LBytes;
+  finally
+    LBOut.Free();
+  end;
+end;
+
+class procedure TDerObjectIdentifier.WriteField(const AOutputStream: TStream; AFieldValue: Int64);
+var
+  LResult: TCryptoLibByteArray;
+  LPos: Int32;
+begin
+  System.SetLength(LResult, 9);
+  LPos := 8;
+  LResult[LPos] := Byte(AFieldValue and $7F);
+  while AFieldValue >= (Int64(1) shl 7) do
+  begin
+    AFieldValue := AFieldValue shr 7;
+    System.Dec(LPos);
+    LResult[LPos] := Byte(AFieldValue or $80);
+  end;
+  AOutputStream.Write(LResult[LPos], 9 - LPos);
+end;
+
+class procedure TDerObjectIdentifier.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
+var
+  LByteCount, I: Int32;
+  LTmp: TCryptoLibByteArray;
+  LTmpValue: TBigInteger;
+begin
+  LByteCount := (AFieldValue.BitLength + 6) div 7;
+  if LByteCount = 0 then
+  begin
+    AOutputStream.WriteByte(0);
+  end
+  else
+  begin
+    LTmpValue := AFieldValue;
+    System.SetLength(LTmp, LByteCount);
+    for I := LByteCount - 1 downto 0 do
+    begin
+      LTmp[I] := Byte(LTmpValue.Int32Value or $80);
+      LTmpValue := LTmpValue.ShiftRight(7);
+    end;
+    LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
+    AOutputStream.Write(LTmp[0], System.Length(LTmp));
+  end;
+end;
+
+
+{ TAsn1RelativeOid }
+
+constructor TAsn1RelativeOid.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TAsn1RelativeOid.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  CheckContentsLength(System.Length(AContents));
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class procedure TAsn1RelativeOid.CheckContentsLength(AContentsLength: Int32);
+begin
+  if AContentsLength > 4096 then
+    raise EArgumentCryptoLibException.Create('exceeded relative OID contents length limit');
+end;
+
+function TAsn1RelativeOid.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IAsn1RelativeOid;
+begin
+  if not Supports(AAsn1Object, IAsn1RelativeOid, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TAsn1RelativeOid.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class constructor TAsn1RelativeOid.Create;
+begin
+  System.SetLength(FCache, 64);
+end;
+
+function TAsn1RelativeOid.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+constructor TAsn1RelativeOid.Create(const AIdentifier: String);
+var
+  LContents: TCryptoLibByteArray;
+begin
+  inherited Create();
+  CheckIdentifier(AIdentifier);
+  LContents := ParseIdentifier(AIdentifier);
+  CheckContentsLength(System.Length(LContents));
+  FContents := LContents;
+  FIdentifier := AIdentifier;
+end;
+
+constructor TAsn1RelativeOid.Create(const AContents: TCryptoLibByteArray; const AIdentifier: String);
+begin
+  FContents := AContents;
+  FIdentifier := AIdentifier;
+end;
+
+class function TAsn1RelativeOid.FromContents(const AContents: TCryptoLibByteArray): IAsn1RelativeOid;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  Result := CreatePrimitive(AContents, True) as IAsn1RelativeOid;
+end;
+
+class function TAsn1RelativeOid.GetInstance(const AObj: TObject): IAsn1RelativeOid;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TAsn1RelativeOid.GetInstance(const AObj: IAsn1Object): IAsn1RelativeOid;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IAsn1RelativeOid, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1RelativeOid.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1RelativeOid;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  try
+    Result := TAsn1RelativeOid.Meta.Instance.FromByteArray(ABytes) as IAsn1RelativeOid;
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct relative OID from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TAsn1RelativeOid.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1RelativeOid;
+begin
+  Result := TAsn1RelativeOid.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1RelativeOid;
+end;
+
+class function TAsn1RelativeOid.GetOptional(const AElement: IAsn1Encodable): IAsn1RelativeOid;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IAsn1RelativeOid, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TAsn1RelativeOid.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1RelativeOid;
+begin
+  Result := TAsn1RelativeOid.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1RelativeOid;
+end;
+
+class function TAsn1RelativeOid.TryFromID(const AIdentifier: String; out AOid: IAsn1RelativeOid): Boolean;
+var
+  LContents: TCryptoLibByteArray;
+begin
+  if AIdentifier = '' then
+    raise EArgumentNilCryptoLibException.Create('identifier');
+
+  if (System.Length(AIdentifier) <= MaxIdentifierLength) and IsValidIdentifier(AIdentifier, 0) then
+  begin
+    LContents := ParseIdentifier(AIdentifier);
+    if System.Length(LContents) <= MaxContentsLength then
+    begin
+      AOid := TAsn1RelativeOid.Create(LContents, False);
+      (AOid as TAsn1RelativeOid).FIdentifier := AIdentifier;
+      Result := True;
+      Exit;
+    end;
+  end;
+
+  AOid := nil;
+  Result := False;
+end;
+
+class procedure TAsn1RelativeOid.CheckIdentifier(const AIdentifier: String);
+begin
+  if AIdentifier = '' then
+    raise EArgumentNilCryptoLibException.Create('identifier');
+  if System.Length(AIdentifier) > MaxIdentifierLength then
+    raise EArgumentCryptoLibException.Create('exceeded relative OID contents length limit');
+  if not IsValidIdentifier(AIdentifier, 0) then
+    raise EFormatCryptoLibException.Create('string ' + AIdentifier + ' not a valid relative OID');
+end;
+
+class function TAsn1RelativeOid.IsValidIdentifier(const AIdentifier: String; AFrom: Int32): Boolean;
+var
+  LDigitCount, LPos: Int32;
+  LCh: Char;
+begin
+  LDigitCount := 0;
+  LPos := System.Length(AIdentifier);
+  while LPos > AFrom do
+  begin
+    System.Dec(LPos);
+    LCh := AIdentifier[LPos + 1];
+
+    if LCh = '.' then
+    begin
+      if (LDigitCount = 0) or ((LDigitCount > 1) and (AIdentifier[LPos + 2] = '0')) then
+      begin
+        Result := False;
+        Exit;
+      end;
+      LDigitCount := 0;
+    end
+    else if (LCh >= '0') and (LCh <= '9') then
+    begin
+      System.Inc(LDigitCount);
+    end
+    else
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  if (LDigitCount = 0) or ((LDigitCount > 1) and (AIdentifier[AFrom + 1] = '0')) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Result := True;
+end;
+
+class function TAsn1RelativeOid.IsValidContents(const AContents: TCryptoLibByteArray): Boolean;
+var
+  I: Int32;
+  LSubIDStart: Boolean;
+begin
+  if System.Length(AContents) < 1 then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  LSubIDStart := True;
+  for I := 0 to System.Length(AContents) - 1 do
+  begin
+    if LSubIDStart and (AContents[I] = $80) then
+    begin
+      Result := False;
+      Exit;
+    end;
+    LSubIDStart := (AContents[I] and $80) = 0;
+  end;
+
+  Result := LSubIDStart;
+end;
+
+class function TAsn1RelativeOid.ParseContents(const AContents: TCryptoLibByteArray): String;
+var
+  LObjId: String;
+  LValue: Int64;
+  LBigValue: TBigInteger;
+  I, LB: Int32;
+  LFirst: Boolean;
+begin
+  LObjId := '';
+  LValue := 0;
+  LBigValue := Default(TBigInteger);
+  LFirst := True;
+
+  for I := 0 to System.Length(AContents) - 1 do
+  begin
+    LB := AContents[I];
+
+    if LValue <= LongLimit then
+    begin
+      LValue := LValue + (LB and $7F);
+      if (LB and $80) = 0 then
+      begin
+        if LFirst then
+        begin
+          LFirst := False;
+        end
+        else
+        begin
+          LObjId := LObjId + '.';
+        end;
+        LObjId := LObjId + IntToStr(LValue);
+        LValue := 0;
+      end
+      else
+      begin
+        LValue := LValue shl 7;
+      end;
+    end
+    else
+    begin
+      if not LBigValue.IsInitialized then
+      begin
+        LBigValue := TBigInteger.ValueOf(LValue);
+      end;
+      LBigValue := LBigValue.&Or(TBigInteger.ValueOf(LB and $7F));
+      if (LB and $80) = 0 then
+      begin
+        if LFirst then
+        begin
+          LFirst := False;
+        end
+        else
+        begin
+          LObjId := LObjId + '.';
+        end;
+        LObjId := LObjId + LBigValue.ToString();
+        LBigValue := Default(TBigInteger);
+        LValue := 0;
+      end
+      else
+      begin
+        LBigValue := LBigValue.ShiftLeft(7);
+      end;
+    end;
+  end;
+
+  Result := LObjId;
+end;
+
+class function TAsn1RelativeOid.ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray;
+var
+  LBOut: TMemoryStream;
+  LTok: IOidTokenizer;
+  LToken: String;
+  LBytes: TCryptoLibByteArray;
+begin
+  LBOut := TMemoryStream.Create();
+  try
+    LTok := TOidTokenizer.Create(AIdentifier);
+    while LTok.HasMoreTokens do
+    begin
+      LToken := LTok.NextToken();
+      if System.Length(LToken) <= 18 then
+      begin
+        WriteField(LBOut, StrToInt64(LToken));
+      end
+      else
+      begin
+        WriteField(LBOut, TBigInteger.Create(LToken));
+      end;
+    end;
+    System.SetLength(LBytes, LBOut.Size);
+    LBOut.Position := 0;
+    LBOut.Read(LBytes[0], LBOut.Size);
+    Result := LBytes;
+  finally
+    LBOut.Free();
+  end;
+end;
+
+class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; AFieldValue: Int64);
+var
+  LResult: TCryptoLibByteArray;
+  LPos: Int32;
+begin
+  System.SetLength(LResult, 9);
+  LPos := 8;
+  LResult[LPos] := Byte(AFieldValue and $7F);
+  while AFieldValue >= (Int64(1) shl 7) do
+  begin
+    AFieldValue := AFieldValue shr 7;
+    System.Dec(LPos);
+    LResult[LPos] := Byte(AFieldValue or $80);
+  end;
+  AOutputStream.Write(LResult[LPos], 9 - LPos);
+end;
+
+class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
+var
+  LByteCount, I: Int32;
+  LTmp: TCryptoLibByteArray;
+  LTmpValue: TBigInteger;
+begin
+  LByteCount := (AFieldValue.BitLength + 6) div 7;
+  if LByteCount = 0 then
+  begin
+    AOutputStream.WriteByte(0);
+  end
+  else
+  begin
+    LTmpValue := AFieldValue;
+    System.SetLength(LTmp, LByteCount);
+    for I := LByteCount - 1 downto 0 do
+    begin
+      LTmp[I] := Byte(LTmpValue.Int32Value or $80);
+      LTmpValue := LTmpValue.ShiftRight(7);
+    end;
+    LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
+    AOutputStream.Write(LTmp[0], System.Length(LTmp));
+  end;
+end;
+
+function TAsn1RelativeOid.GetID(): String;
+begin
+  if FIdentifier = '' then
+  begin
+    FIdentifier := ParseContents(FContents);
+  end;
+  Result := FIdentifier;
+end;
+
+function TAsn1RelativeOid.Branch(const ABranchID: String): IAsn1RelativeOid;
+var
+  LContents: TCryptoLibByteArray;
+  LRootID, LIdentifier: String;
+  LSubID: Int32;
+  LBranchContents: TCryptoLibByteArray;
+begin
+  CheckIdentifier(ABranchID);
+
+  if System.Length(ABranchID) <= 2 then
+  begin
+    CheckContentsLength(System.Length(FContents) + 1);
+    LSubID := Ord(ABranchID[1]) - Ord('0');
+    if System.Length(ABranchID) = 2 then
+    begin
+      LSubID := LSubID * 10;
+      LSubID := LSubID + (Ord(ABranchID[2]) - Ord('0'));
+    end;
+    LContents := TArrayUtils.Append(FContents, Byte(LSubID));
+  end
+  else
+  begin
+    LBranchContents := ParseIdentifier(ABranchID);
+    CheckContentsLength(System.Length(FContents) + System.Length(LBranchContents));
+    LContents := TArrayUtils.Concatenate(FContents, LBranchContents);
+  end;
+
+  LRootID := GetID();
+  LIdentifier := LRootID + '.' + ABranchID;
+  Result := TAsn1RelativeOid.Create(LContents, LIdentifier);
+end;
+
+function TAsn1RelativeOid.ToString(): String;
+begin
+  Result := GetID();
+end;
+
+function TAsn1RelativeOid.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.RelativeOid, FContents);
+end;
+
+function TAsn1RelativeOid.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+function TAsn1RelativeOid.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.RelativeOid, FContents);
+end;
+
+function TAsn1RelativeOid.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FContents);
+end;
+
+class function TAsn1RelativeOid.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+var
+  LIndex: UInt32;
+  LOriginalEntry: IAsn1RelativeOid;
+  LNewEntry: IAsn1RelativeOid;
+  LExchangedEntry: IAsn1RelativeOid;
+begin
+  CheckContentsLength(System.Length(AContents));
+
+  LIndex := UInt32(TArrayUtils.GetArrayHashCode(AContents));
+  LIndex := LIndex xor (LIndex shr 24);
+  LIndex := LIndex xor (LIndex shr 12);
+  LIndex := LIndex xor (LIndex shr 6);
+  LIndex := LIndex and 63;
+
+  if System.Length(FCache) = 0 then
+    System.SetLength(FCache, 64);
+
+  LOriginalEntry := FCache[LIndex];
+  if (LOriginalEntry <> nil) and TArrayUtils.AreEqual(AContents, LOriginalEntry.Contents) then
+  begin
+    Result := LOriginalEntry;
+    Exit;
+  end;
+
+  if not IsValidContents(AContents) then
+    raise EArgumentCryptoLibException.Create('invalid relative OID contents');
+
+  if AClone then
+    LNewEntry := TAsn1RelativeOid.Create(AContents, True)
+  else
+    LNewEntry := TAsn1RelativeOid.Create(AContents, False);
+
+  LExchangedEntry := FCache[LIndex];
+  if LExchangedEntry <> LOriginalEntry then
+  begin
+    if (LExchangedEntry <> nil) and TArrayUtils.AreEqual(AContents, LExchangedEntry.Contents) then
+    begin
+      Result := LExchangedEntry;
+      Exit;
+    end;
+  end;
+
+  FCache[LIndex] := LNewEntry;
+  Result := LNewEntry;
+end;
+
+{ TAsn1GeneralizedTime }
+
+constructor TAsn1GeneralizedTime.Create(const AContents: TCryptoLibByteArray);
+var
+  LTimeString: String;
+begin
+  inherited Create();
+  LTimeString := TConverters.ConvertBytesToString(AContents, TEncoding.ASCII);
+  Create(LTimeString);
+end;
+
+constructor TAsn1GeneralizedTime.Create(const ATimeString: String);
+begin
+  inherited Create();
+  if ATimeString = '' then
+    raise EArgumentNilCryptoLibException.Create('timeString');
+  
+  FTimeString := ATimeString;
+  FTimeStringCanonical := False; // TODO Dynamic check?
+  
+  try
+    FDateTime := FromString(ATimeString);
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('invalid date string: ' + E.Message);
+  end;
+end;
+
+constructor TAsn1GeneralizedTime.Create(const ADateTime: TDateTime);
+var
+  LUtc: TDateTime;
+begin
+  inherited Create();
+  // Convert to UTC
+  LUtc := TTimeZone.Local.ToUniversalTime(ADateTime);
+  
+  FDateTime := LUtc;
+  FTimeString := ToStringCanonical(LUtc);
+  FTimeStringCanonical := True;
+end;
+
+class function TAsn1GeneralizedTime.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TAsn1GeneralizedTime.Create(AContents);
+end;
+
+class function TAsn1GeneralizedTime.GetInstance(const AObj: TObject): IAsn1GeneralizedTime;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TAsn1GeneralizedTime.GetInstance(const AObj: IAsn1Object): IAsn1GeneralizedTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1GeneralizedTime, Result) then
+    Exit;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TAsn1GeneralizedTime.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1GeneralizedTime;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    Result := TAsn1GeneralizedTime.Meta.Instance.FromByteArray(ABytes) as IAsn1GeneralizedTime;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct generalized time from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TAsn1GeneralizedTime.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1GeneralizedTime;
+begin
+  Result := TAsn1GeneralizedTime.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1GeneralizedTime;
+end;
+
+class function TAsn1GeneralizedTime.GetOptional(const AElement: IAsn1Encodable): IAsn1GeneralizedTime;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IAsn1GeneralizedTime, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TAsn1GeneralizedTime.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1GeneralizedTime;
+begin
+  Result := TAsn1GeneralizedTime.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1GeneralizedTime;
+end;
+
+function TAsn1GeneralizedTime.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IAsn1GeneralizedTime;
+  LThisContents, LThatContents: TCryptoLibByteArray;
+begin
+  if not Supports(AAsn1Object, IAsn1GeneralizedTime, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  // TODO Performance
+  LThisContents := GetContents(TAsn1OutputStream.EncodingDer);
+  LThatContents := LThat.GetContents(TAsn1OutputStream.EncodingDer);
+  Result := TArrayUtils.AreEqual(LThisContents, LThatContents);
+end;
+
+function TAsn1GeneralizedTime.Asn1GetHashCode(): Int32;
+var
+  LContents: TCryptoLibByteArray;
+begin
+  // TODO Performance
+  LContents := GetContents(TAsn1OutputStream.EncodingDer);
+  Result := TArrayUtils.GetArrayHashCode(LContents);
+end;
+
+function TAsn1GeneralizedTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.GeneralizedTime, GetContents(AEncoding));
+end;
+
+function TAsn1GeneralizedTime.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, GetContents(AEncoding));
+end;
+
+function TAsn1GeneralizedTime.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.GeneralizedTime,
+    GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TAsn1GeneralizedTime.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TAsn1GeneralizedTime.GetContents(AEncoding: Int32): TCryptoLibByteArray;
+begin
+  if (AEncoding = TAsn1OutputStream.EncodingDer) and (not FTimeStringCanonical) then
+    Result := TConverters.ConvertStringToBytes(ToStringCanonical(FDateTime), TEncoding.ASCII)
+  else
+    Result := TConverters.ConvertStringToBytes(FTimeString, TEncoding.ASCII);
+end;
+
+function TAsn1GeneralizedTime.GetTimeString: String;
+begin
+  Result := FTimeString;
+end;
+
+function TAsn1GeneralizedTime.ToDateTime: TDateTime;
+begin
+  Result := FDateTime;
+end;
+
+class function TAsn1GeneralizedTime.FromString(const AStr: String): TDateTime;
+var
+  LS: String;
+  LSignIndex: Int32;
+begin
+  if System.Length(AStr) < 10 then
+    raise EFormatCryptoLibException.Create('Invalid time string length');
+
+  LS := StringReplace(AStr, ',', '.', [rfReplaceAll]);
+
+  // Check if string ends with 'Z' (UTC indicator)
+  if (System.Length(LS) > 0) and (LS[System.Length(LS)] = 'Z') then
+  begin
+    case System.Length(LS) of
+      11: Result := ParseUtc(LS, 'yyyyMMddHH"Z"');
+      13: Result := ParseUtc(LS, 'yyyyMMddHHmm"Z"');
+      15: Result := ParseUtc(LS, 'yyyyMMddHHmmss"Z"');
+      17: Result := ParseUtc(LS, 'yyyyMMddHHmmss.f"Z"');
+      18: Result := ParseUtc(LS, 'yyyyMMddHHmmss.ff"Z"');
+      19: Result := ParseUtc(LS, 'yyyyMMddHHmmss.fff"Z"');
+      20: Result := ParseUtc(LS, 'yyyyMMddHHmmss.ffff"Z"');
+      21: Result := ParseUtc(LS, 'yyyyMMddHHmmss.fffff"Z"');
+      22: Result := ParseUtc(LS, 'yyyyMMddHHmmss.ffffff"Z"');
+      23: Result := ParseUtc(LS, 'yyyyMMddHHmmss.fffffff"Z"');
+    else
+      raise EFormatCryptoLibException.Create('Invalid UTC time format');
+    end;
+    Exit;
+  end;
+
+  LSignIndex := IndexOfSign(LS, Math.Max(11, System.Length(LS) - 4));
+
+  if LSignIndex = 0 then
+  begin
+    case System.Length(LS) of
+      10: Result := ParseLocal(LS, 'yyyyMMddHH');
+      12: Result := ParseLocal(LS, 'yyyyMMddHHmm');
+      14: Result := ParseLocal(LS, 'yyyyMMddHHmmss');
+      16: Result := ParseLocal(LS, 'yyyyMMddHHmmss.f');
+      17: Result := ParseLocal(LS, 'yyyyMMddHHmmss.ff');
+      18: Result := ParseLocal(LS, 'yyyyMMddHHmmss.fff');
+      19: Result := ParseLocal(LS, 'yyyyMMddHHmmss.ffff');
+      20: Result := ParseLocal(LS, 'yyyyMMddHHmmss.fffff');
+      21: Result := ParseLocal(LS, 'yyyyMMddHHmmss.ffffff');
+      22: Result := ParseLocal(LS, 'yyyyMMddHHmmss.fffffff');
+    else
+      raise EFormatCryptoLibException.Create('Invalid local time format');
+    end;
+    Exit;
+  end;
+
+  if LSignIndex = System.Length(LS) - 4 then
+  begin
+    case System.Length(LS) of
+      15: Result := ParseTimeZone(LS, 'yyyyMMddHHzzz');
+      17: Result := ParseTimeZone(LS, 'yyyyMMddHHmmzzz');
+      19: Result := ParseTimeZone(LS, 'yyyyMMddHHmmsszzz');
+      21: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fzzz');
+      22: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffzzz');
+      23: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffzzz');
+      24: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffffzzz');
+      25: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffffzzz');
+      26: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffffffzzz');
+      27: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffffffzzz');
+    else
+      raise EFormatCryptoLibException.Create('Invalid timezone format (5 chars)');
+    end;
+    Exit;
+  end;
+
+  if LSignIndex = System.Length(LS) - 2 then
+  begin
+    case System.Length(LS) of
+      13: Result := ParseTimeZone(LS, 'yyyyMMddHHzz');
+      15: Result := ParseTimeZone(LS, 'yyyyMMddHHmmzz');
+      17: Result := ParseTimeZone(LS, 'yyyyMMddHHmmsszz');
+      19: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fzz');
+      20: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffzz');
+      21: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffzz');
+      22: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffffzz');
+      23: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffffzz');
+      24: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffffffzz');
+      25: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffffffzz');
+    else
+      raise EFormatCryptoLibException.Create('Invalid timezone format (3 chars)');
+    end;
+    Exit;
+  end;
+
+  raise EFormatCryptoLibException.Create('Invalid time format');
+end;
+
+class function TAsn1GeneralizedTime.IndexOfSign(const AStr: String; AStartIndex: Int32): Int32;
+var
+  LIndex: Int32;
+begin
+  LIndex := PosEx('+', AStr, AStartIndex);
+  if LIndex = 0 then
+    LIndex := PosEx('-', AStr, AStartIndex);
+    Result := LIndex;
+end;
+
+class function TAsn1GeneralizedTime.ParseLocal(const AStr, AFormat: String): TDateTime;
+begin
+  Result := TDateTimeUtilities.ParseExact(
+    AStr,
+    AFormat,
+    [TDateTimeParseFlag.AssumeLocal],
+    TFormatSettings.Invariant
+  );
+end;
+
+class function TAsn1GeneralizedTime.ParseTimeZone(const AStr, AFormat: String): TDateTime;
+begin
+  Result := TDateTimeUtilities.ParseExact(
+    AStr,
+    AFormat,
+    [TDateTimeParseFlag.AdjustToUniversal],
+    TFormatSettings.Invariant
+  );
+end;
+
+class function TAsn1GeneralizedTime.ParseUtc(const AStr, AFormat: String): TDateTime;
+begin
+  Result := TDateTimeUtilities.ParseExact(
+    AStr,
+    AFormat,
+    [TDateTimeParseFlag.AdjustToUniversal, TDateTimeParseFlag.AssumeUniversal],
+    TFormatSettings.Invariant
+  );
+end;
+
+class function TAsn1GeneralizedTime.ToStringCanonical(const ADateTime: TDateTime): String;
+begin
+  Result := TDateTimeUtilities.FormatCanonical(
+    ADateTime,
+    'yyyyMMddHHmmss.FFFFFFFK',
+    TFormatSettings.Invariant,
+    False
+  );
+end;
+
+{ TAsn1UtcTime }
+
+constructor TAsn1UtcTime.Create(const AContents: TCryptoLibByteArray);
+var
+  LTimeString: String;
+begin
+  inherited Create();
+  LTimeString := TConverters.ConvertBytesToString(AContents, TEncoding.ASCII);
+  Create(LTimeString);
+end;
+
+constructor TAsn1UtcTime.Create(const ATimeString: String);
+begin
+  inherited Create();
+  if ATimeString = '' then
+    raise EArgumentNilCryptoLibException.Create('timeString');
+  
+  FTimeString := ATimeString;
+  try
+    FDateTime := FromString(ATimeString, FTwoDigitYearMax);
+    FDateTimeLocked := False;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('invalid date string: ' + E.Message);
+  end;
+end;
+
+constructor TAsn1UtcTime.Create(const ADateTime: TDateTime);
+var
+  LUtc: TDateTime;
+  LTwoDigitYearMax: Int32;
+begin
+  inherited Create();
+  // Convert to UTC and truncate to seconds precision
+  LUtc := TDateTimeUtilities.WithPrecisionSecond(TTimeZone.Local.ToUniversalTime(ADateTime));
+  
+  FDateTime := LUtc;
+  FDateTimeLocked := True;
+  FTimeString := ToStringCanonical(LUtc, LTwoDigitYearMax);
+  FTwoDigitYearMax := LTwoDigitYearMax;
+end;
+
+constructor TAsn1UtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
+var
+  LUtc: TDateTime;
+begin
+  inherited Create();
+  // Convert to UTC and truncate to seconds precision
+  LUtc := TDateTimeUtilities.WithPrecisionSecond(TTimeZone.Local.ToUniversalTime(ADateTime));
+  
+  Validate(LUtc, ATwoDigitYearMax);
+  
+  FDateTime := LUtc;
+  FDateTimeLocked := True;
+  FTimeString := ToStringCanonical(LUtc);
+  FTwoDigitYearMax := ATwoDigitYearMax;
+end;
+
+class function TAsn1UtcTime.GetInstance(const AObj: TObject): IAsn1UtcTime;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TAsn1UtcTime.GetInstance(const AObj: IAsn1Object): IAsn1UtcTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1UtcTime, Result) then
+    Exit;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TAsn1UtcTime.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1UtcTime;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    Result := TAsn1UtcTime.Meta.Instance.FromByteArray(ABytes) as IAsn1UtcTime;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct UTC time from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TAsn1UtcTime.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1UtcTime;
+begin
+  Result := TAsn1UtcTime.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1UtcTime;
+end;
+
+class function TAsn1UtcTime.GetOptional(const AElement: IAsn1Encodable): IAsn1UtcTime;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IAsn1UtcTime, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TAsn1UtcTime.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1UtcTime;
+begin
+  Result := TAsn1UtcTime.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1UtcTime;
+end;
+
+class function TAsn1UtcTime.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TAsn1UtcTime.Create(AContents);
+end;
+
+function TAsn1UtcTime.GetContents(AEncoding: Int32): TCryptoLibByteArray;
+var
+  LCanonical: String;
+begin
+  if (AEncoding = TAsn1OutputStream.EncodingDer) and (System.Length(FTimeString) <> 13) then
+  begin
+    LCanonical := ToStringCanonical(FDateTime);
+    Result := TConverters.ConvertStringToBytes(LCanonical, TEncoding.ASCII);
+  end
+  else
+    Result := TConverters.ConvertStringToBytes(FTimeString, TEncoding.ASCII);
+end;
+
+function TAsn1UtcTime.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IAsn1UtcTime;
+  LThisContents, LThatContents: TCryptoLibByteArray;
+begin
+  if not Supports(AAsn1Object, IAsn1UtcTime, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  // TODO Performance
+  LThisContents := GetContents(TAsn1OutputStream.EncodingDer);
+  LThatContents := LThat.GetContents(TAsn1OutputStream.EncodingDer);
+  Result := TArrayUtils.AreEqual(LThisContents, LThatContents);
+end;
+
+function TAsn1UtcTime.Asn1GetHashCode(): Int32;
+var
+  LContents: TCryptoLibByteArray;
+begin
+  // TODO Performance
+  LContents := GetContents(TAsn1OutputStream.EncodingDer);
+  Result := TArrayUtils.GetArrayHashCode(LContents);
+end;
+
+function TAsn1UtcTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.UtcTime, GetContents(AEncoding));
+end;
+
+function TAsn1UtcTime.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, GetContents(AEncoding));
+end;
+
+function TAsn1UtcTime.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.UtcTime,
+    GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TAsn1UtcTime.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TAsn1UtcTime.GetTimeString: String;
+begin
+  Result := FTimeString;
+end;
+
+function TAsn1UtcTime.GetTwoDigitYearMax: Int32;
+begin
+  Result := FTwoDigitYearMax;
+end;
+
+function TAsn1UtcTime.ToString(): String;
+begin
+  Result := FTimeString;
+end;
+
+function TAsn1UtcTime.ToDateTime: TDateTime;
+begin
+  Result := FDateTime;
+end;
+
+{ TDerUtcTime }
+
+constructor TDerUtcTime.Create(const ATimeString: String);
+begin
+  inherited Create(ATimeString);
+end;
+
+constructor TDerUtcTime.Create(const ADateTime: TDateTime);
+begin
+  inherited Create(ADateTime);
+end;
+
+constructor TDerUtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
+begin
+  inherited Create(ADateTime, ATwoDigitYearMax);
+end;
+
+constructor TDerUtcTime.Create(const AContents: TCryptoLibByteArray);
+begin
+  inherited Create(AContents);
+end;
+
+function TDerUtcTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.UtcTime,
+    GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TDerUtcTime.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+{ TDerGeneralizedTime }
+
+constructor TDerGeneralizedTime.Create(const ATimeString: String);
+begin
+  inherited Create(ATimeString);
+end;
+
+constructor TDerGeneralizedTime.Create(const ADateTime: TDateTime);
+begin
+  inherited Create(ADateTime);
+end;
+
+constructor TDerGeneralizedTime.Create(const AContents: TCryptoLibByteArray);
+begin
+  inherited Create(AContents);
+end;
+
+function TDerGeneralizedTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.GeneralizedTime,
+    GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TDerGeneralizedTime.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, GetContents(TAsn1OutputStream.EncodingDer));
+end;
+
+function TAsn1UtcTime.ToDateTime(ATwoDigitYearMax: Int32): TDateTime;
+var
+  LTwoDigitYear, LTwoDigitYearCutoff, LDiff, LNewYear: Int32;
+begin
+  if InRange(FDateTime, ATwoDigitYearMax) then
+  begin
+    Result := FDateTime;
+    Exit;
+  end;
+  
+  if FDateTimeLocked then
+    raise EInvalidOperationCryptoLibException.Create('DateTime is locked');
+  
+  LTwoDigitYear := YearOf(FDateTime) mod 100;
+  LTwoDigitYearCutoff := ATwoDigitYearMax mod 100;
+  
+  LDiff := LTwoDigitYear - LTwoDigitYearCutoff;
+  LNewYear := ATwoDigitYearMax + LDiff;
+  if LDiff > 0 then
+    LNewYear := LNewYear - 100;
+  
+  Result := IncYear(FDateTime, LNewYear - YearOf(FDateTime));
+end;
+
+function TAsn1UtcTime.ToAdjustedDateTime: TDateTime;
+begin
+  Result := ToDateTime(2049);
+end;
+
+class function TAsn1UtcTime.InRange(const ADateTime: TDateTime; ATwoDigitYearMax: Int32): Boolean;
+var
+  LYear: Int32;
+begin
+  LYear := YearOf(ADateTime);
+  Result := (UInt32(ATwoDigitYearMax - LYear) < 100);
+end;
+
+class function TAsn1UtcTime.FromString(const AStr: String; out ATwoDigitYearMax: Int32): TDateTime;
+var
+  LFormatSettings: TFormatSettings;
+begin
+  LFormatSettings := TFormatSettings.Invariant;
+
+  ATwoDigitYearMax := TDateTimeUtilities.TwoDigitYearMax;
+
+  case System.Length(AStr) of
+    11:
+      begin
+        // yyMMddHHmm"Z"
+        Result := TDateTimeUtilities.ParseExact(
+          AStr,
+          'yyMMddHHmm"Z"',
+          [TDateTimeParseFlag.AdjustToUniversal, TDateTimeParseFlag.AssumeUniversal],
+          LFormatSettings
+        );
+      end;
+
+    13:
+      begin
+        // yyMMddHHmmss"Z"
+        Result := TDateTimeUtilities.ParseExact(
+          AStr,
+          'yyMMddHHmmss"Z"',
+          [TDateTimeParseFlag.AdjustToUniversal, TDateTimeParseFlag.AssumeUniversal],
+          LFormatSettings
+        );
+      end;
+
+    15:
+      begin
+        // yyMMddHHmmzzz  (HHMM)
+        Result := TDateTimeUtilities.ParseExact(
+          AStr,
+          'yyMMddHHmmzzz',
+          [TDateTimeParseFlag.AdjustToUniversal],
+          LFormatSettings
+        );
+      end;
+
+    17:
+      begin
+        // yyMMddHHmmsszzz (HHMM)
+        Result := TDateTimeUtilities.ParseExact(
+          AStr,
+          'yyMMddHHmmsszzz',
+          [TDateTimeParseFlag.AdjustToUniversal],
+          LFormatSettings
+        );
+      end;
+  else
+    raise EFormatCryptoLibException.Create('Invalid UTC time string length');
+  end;
+end;
+
+class function TAsn1UtcTime.ToStringCanonical(
+  const ADateTime: TDateTime; out ATwoDigitYearMax: Int32): String;
+begin
+  ATwoDigitYearMax := TDateTimeUtilities.TwoDigitYearMax;
+  Validate(ADateTime, ATwoDigitYearMax);
+
+  Result := TDateTimeUtilities.FormatCanonical(
+    ADateTime,
+    'yyMMddHHmmss"Z"',
+    TFormatSettings.Invariant,
+    False
+  );
+end;
+
+
+class function TAsn1UtcTime.ToStringCanonical(const ADateTime: TDateTime): String;
+begin
+  Result := TDateTimeUtilities.FormatCanonical(
+    ADateTime,
+    'yyMMddHHmmss"Z"',
+    TFormatSettings.Invariant,
+    False
+  );
+end;
+
+class procedure TAsn1UtcTime.Validate(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
+begin
+  if not InRange(ADateTime, ATwoDigitYearMax) then
+    raise EArgumentOutOfRangeCryptoLibException.Create('DateTime value out of range');
+end;
+
+{ TAsn1ObjectDescriptor }
+
+constructor TAsn1ObjectDescriptor.Create(const AGraphicString: IAsn1Object);
+begin
+  inherited Create();
+  FGraphicString := AGraphicString;
+end;
+
+class function TAsn1ObjectDescriptor.GetInstance(const AObj: TObject): IAsn1ObjectDescriptor;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TAsn1ObjectDescriptor.GetInstance(const AObj: IAsn1Object): IAsn1ObjectDescriptor;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1ObjectDescriptor, Result) then
+    Exit;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TAsn1ObjectDescriptor.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1ObjectDescriptor;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    Result := TAsn1ObjectDescriptor.Meta.Instance.FromByteArray(ABytes) as IAsn1ObjectDescriptor;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct object descriptor from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TAsn1ObjectDescriptor.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1ObjectDescriptor;
+begin
+  Result := TAsn1ObjectDescriptor.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1ObjectDescriptor;
+end;
+
+class function TAsn1ObjectDescriptor.GetOptional(const AElement: IAsn1Encodable): IAsn1ObjectDescriptor;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IAsn1ObjectDescriptor, Result) then
+    Exit;
+
+  Result := nil;
+end;
+
+class function TAsn1ObjectDescriptor.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1ObjectDescriptor;
+begin
+  Result := TAsn1ObjectDescriptor.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1ObjectDescriptor;
+end;
+
+class function TAsn1ObjectDescriptor.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+var
+  LGraphicString: IAsn1Object;
+begin
+  LGraphicString := TDerGraphicString.CreatePrimitive(AContents);
+  Result := TAsn1ObjectDescriptor.Create(LGraphicString);
+end;
+
+function TAsn1ObjectDescriptor.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IAsn1ObjectDescriptor;
+begin
+  if not Supports(AAsn1Object, IAsn1ObjectDescriptor, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := FGraphicString.Equals(LThat.GraphicString);
+end;
+
+function TAsn1ObjectDescriptor.Asn1GetHashCode(): Int32;
+begin
+  Result := not FGraphicString.CallAsn1GetHashCode();
+end;
+
+function TAsn1ObjectDescriptor.GetGraphicString(): IAsn1Object;
+begin
+  Result := FGraphicString;
+end;
+
+function TAsn1ObjectDescriptor.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := FGraphicString.GetEncodingImplicit(AEncoding, TAsn1Tags.Universal, TAsn1Tags.ObjectDescriptor);
+end;
+
+function TAsn1ObjectDescriptor.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := FGraphicString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo);
+end;
+
+function TAsn1ObjectDescriptor.GetEncodingDer(): IDerEncoding;
+begin
+  Result := FGraphicString.GetEncodingDerImplicit(TAsn1Tags.Universal, TAsn1Tags.ObjectDescriptor);
+end;
+
+function TAsn1ObjectDescriptor.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := FGraphicString.GetEncodingDerImplicit(ATagClass, ATagNo);
 end;
 
 { TDerUtf8String }
 
-function TDerUtf8String.GetStr: String;
+constructor TDerUtf8String.Create(const AStr: String);
 begin
-  result := FStr;
+  Create(TConverters.ConvertStringToBytes(AStr, TEncoding.UTF8), False);
 end;
 
-function TDerUtf8String.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+constructor TDerUtf8String.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerUtf8String.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerUtf8String.GetInstance(const AObj: TObject): IDerUtf8String;
 var
-  other: IDerUtf8String;
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
 begin
-
-  if (not Supports(asn1Object, IDerUtf8String, other)) then
+  if AObj = nil then
   begin
-    result := False;
+    Result := nil;
     Exit;
   end;
 
-  result := Str = other.Str;
-end;
-
-constructor TDerUtf8String.Create(const Str: TCryptoLibByteArray);
-begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.UTF8));
-end;
-
-constructor TDerUtf8String.Create(const Str: String);
-begin
-  Inherited Create();
-  if (Str = '') then
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
-  end;
-
-  FStr := Str;
-end;
-
-procedure TDerUtf8String.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.Utf8String,
-    TConverters.ConvertStringToBytes(Str, TEncoding.UTF8));
-end;
-
-class function TDerUtf8String.GetInstance(const obj: TObject): IDerUtf8String;
-begin
-  if ((obj = Nil) or (obj is TDerUtf8String)) then
-  begin
-    result := obj as TDerUtf8String;
+    Result := GetInstance(LAsn1Obj);
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
 end;
 
-class function TDerUtf8String.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerUtf8String;
+class function TDerUtf8String.GetInstance(const AObj: IAsn1Object): IDerUtf8String;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerUtf8String, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerUtf8String.GetInstance(const ABytes: TCryptoLibByteArray): IDerUtf8String;
 var
-  o: IAsn1Object;
+  LObj: IAsn1Object;
 begin
-  o := obj.GetObject();
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerUtf8String, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct UTF8 string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct UTF8 string from byte[]: ' + E.Message);
+  end;
+end;
 
-  if ((isExplicit) or (Supports(o, IDerUtf8String))) then
+class function TDerUtf8String.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUtf8String;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerUtf8String, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get UTF8 string from tagged object');
+end;
+
+class function TDerUtf8String.GetOptional(const AElement: IAsn1Encodable): IDerUtf8String;
+var
+  LUtf8String: IDerUtf8String;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerUtf8String, LUtf8String) then
+    Result := LUtf8String
+  else
+    Result := nil;
+end;
+
+class function TDerUtf8String.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUtf8String;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerUtf8String, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get UTF8 string from tagged object');
+end;
+
+function TDerUtf8String.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.UTF8);
+end;
+
+function TDerUtf8String.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerUtf8String.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerUtf8String.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.Utf8String;
+end;
+
+function TDerUtf8String.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerUtf8String;
+begin
+  if not Supports(AAsn1Object, IDerUtf8String, LThat) then
   begin
-    result := GetInstance(o as TAsn1Object);
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerUtf8String.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerUtf8String.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerUtf8String.Create(AContents, False);
+end;
+
+{ TDerGeneralString }
+
+constructor TDerGeneralString.Create(const AStr: String);
+begin
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
+end;
+
+constructor TDerGeneralString.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerGeneralString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerGeneralString.GetInstance(const AObj: TObject): IDerGeneralString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
     Exit;
   end;
 
-  result := TDerUtf8String.Create(TAsn1OctetString.GetInstance(o as TAsn1Object)
-    .GetOctets());
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
 end;
 
-function TDerUtf8String.GetString: String;
+class function TDerGeneralString.GetInstance(const AObj: IAsn1Object): IDerGeneralString;
 begin
-  result := Str;
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerGeneralString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerGeneralString.GetInstance(const ABytes: TCryptoLibByteArray): IDerGeneralString;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerGeneralString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct general string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct general string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerGeneralString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGeneralString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerGeneralString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get general string from tagged object');
+end;
+
+class function TDerGeneralString.GetOptional(const AElement: IAsn1Encodable): IDerGeneralString;
+var
+  LGeneralString: IDerGeneralString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerGeneralString, LGeneralString) then
+    Result := LGeneralString
+  else
+    Result := nil;
+end;
+
+class function TDerGeneralString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGeneralString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerGeneralString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get general string from tagged object');
+end;
+
+function TDerGeneralString.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ASCII);
+end;
+
+function TDerGeneralString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerGeneralString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerGeneralString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.GeneralString;
+end;
+
+function TDerGeneralString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerGeneralString;
+begin
+  if not Supports(AAsn1Object, IDerGeneralString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerGeneralString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerGeneralString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerGeneralString.Create(AContents, False);
+end;
+
+{ TDerGraphicString }
+
+constructor TDerGraphicString.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerGraphicString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerGraphicString.GetInstance(const AObj: TObject): IDerGraphicString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerGraphicString.GetInstance(const AObj: IAsn1Object): IDerGraphicString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerGraphicString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerGraphicString.GetInstance(const ABytes: TCryptoLibByteArray): IDerGraphicString;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerGraphicString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct graphic string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct graphic string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerGraphicString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGraphicString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerGraphicString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get graphic string from tagged object');
+end;
+
+class function TDerGraphicString.GetOptional(const AElement: IAsn1Encodable): IDerGraphicString;
+var
+  LGraphicString: IDerGraphicString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerGraphicString, LGraphicString) then
+    Result := LGraphicString
+  else
+    Result := nil;
+end;
+
+class function TDerGraphicString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerGraphicString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerGraphicString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get graphic string from tagged object');
+end;
+
+function TDerGraphicString.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ANSI);
+end;
+
+function TDerGraphicString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerGraphicString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerGraphicString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.GraphicString;
+end;
+
+function TDerGraphicString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerGraphicString;
+begin
+  if not Supports(AAsn1Object, IDerGraphicString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerGraphicString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerGraphicString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerGraphicString.Create(AContents, False);
+end;
+
+{ TDerIA5String }
+
+constructor TDerIA5String.Create(const AStr: String);
+begin
+  Create(AStr, False);
+end;
+
+constructor TDerIA5String.Create(const AStr: String; AValidate: Boolean);
+begin
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  if AValidate and not IsIA5String(AStr) then
+    raise EArgumentCryptoLibException.Create('string contains illegal characters');
+  FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
+end;
+
+constructor TDerIA5String.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerIA5String.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerIA5String.IsIA5String(const AStr: String): Boolean;
+var
+  I: Int32;
+  LCh: Char;
+begin
+  for I := 1 to System.Length(AStr) do
+  begin
+    LCh := AStr[I];
+    if Ord(LCh) > $007F then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+class function TDerIA5String.GetInstance(const AObj: TObject): IDerIA5String;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerIA5String.GetInstance(const AObj: IAsn1Object): IDerIA5String;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerIA5String, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerIA5String.GetInstance(const ABytes: TCryptoLibByteArray): IDerIA5String;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerIA5String, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct IA5 string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct IA5 string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerIA5String.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerIA5String;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerIA5String, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get IA5 string from tagged object');
+end;
+
+class function TDerIA5String.GetOptional(const AElement: IAsn1Encodable): IDerIA5String;
+var
+  LIA5String: IDerIA5String;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerIA5String, LIA5String) then
+    Result := LIA5String
+  else
+    Result := nil;
+end;
+
+class function TDerIA5String.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerIA5String;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerIA5String, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get IA5 string from tagged object');
+end;
+
+function TDerIA5String.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ASCII);
+end;
+
+function TDerIA5String.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerIA5String.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerIA5String.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.IA5String;
+end;
+
+function TDerIA5String.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerIA5String;
+begin
+  if not Supports(AAsn1Object, IDerIA5String, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerIA5String.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerIA5String.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerIA5String.Create(AContents, False);
+end;
+
+{ TDerNumericString }
+
+constructor TDerNumericString.Create(const AStr: String);
+begin
+  Create(AStr, False);
+end;
+
+constructor TDerNumericString.Create(const AStr: String; AValidate: Boolean);
+begin
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  if AValidate and not IsNumericString(AStr) then
+    raise EArgumentCryptoLibException.Create('string contains illegal characters');
+  FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
+end;
+
+constructor TDerNumericString.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerNumericString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerNumericString.IsNumericString(const AStr: String): Boolean;
+var
+  I: Int32;
+  LCh: Char;
+  LOrd: Int32;
+begin
+  for I := 1 to System.Length(AStr) do
+  begin
+    LCh := AStr[I];
+    LOrd := Ord(LCh);
+    if (LOrd > $007F) or ((LCh <> ' ') and ((LOrd < Ord('0')) or (LOrd > Ord('9')))) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+class function TDerNumericString.IsNumericString(const AContents: TCryptoLibByteArray): Boolean;
+var
+  I: Int32;
+  LB: Byte;
+begin
+  for I := 0 to System.Length(AContents) - 1 do
+  begin
+    LB := AContents[I];
+    case LB of
+      $20, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39:
+        // Valid character
+        ;
+    else
+      Result := False;
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+class function TDerNumericString.GetInstance(const AObj: TObject): IDerNumericString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerNumericString.GetInstance(const AObj: IAsn1Object): IDerNumericString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerNumericString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerNumericString.GetInstance(const ABytes: TCryptoLibByteArray): IDerNumericString;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerNumericString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct numeric string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct numeric string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerNumericString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerNumericString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerNumericString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get numeric string from tagged object');
+end;
+
+class function TDerNumericString.GetOptional(const AElement: IAsn1Encodable): IDerNumericString;
+var
+  LNumericString: IDerNumericString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerNumericString, LNumericString) then
+    Result := LNumericString
+  else
+    Result := nil;
+end;
+
+class function TDerNumericString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerNumericString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerNumericString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get numeric string from tagged object');
+end;
+
+function TDerNumericString.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ASCII);
+end;
+
+function TDerNumericString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerNumericString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerNumericString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.NumericString;
+end;
+
+function TDerNumericString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerNumericString;
+begin
+  if not Supports(AAsn1Object, IDerNumericString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerNumericString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerNumericString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerNumericString.Create(AContents, False);
+end;
+
+{ TDerPrintableString }
+
+constructor TDerPrintableString.Create(const AStr: String);
+begin
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
+end;
+
+constructor TDerPrintableString.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerPrintableString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerPrintableString.GetInstance(const AObj: TObject): IDerPrintableString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerPrintableString.GetInstance(const AObj: IAsn1Object): IDerPrintableString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerPrintableString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerPrintableString.GetInstance(const ABytes: TCryptoLibByteArray): IDerPrintableString;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerPrintableString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct printable string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct printable string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerPrintableString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerPrintableString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerPrintableString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get printable string from tagged object');
+end;
+
+class function TDerPrintableString.GetOptional(const AElement: IAsn1Encodable): IDerPrintableString;
+var
+  LPrintableString: IDerPrintableString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerPrintableString, LPrintableString) then
+    Result := LPrintableString
+  else
+    Result := nil;
+end;
+
+class function TDerPrintableString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerPrintableString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerPrintableString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get printable string from tagged object');
+end;
+
+function TDerPrintableString.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ASCII);
+end;
+
+function TDerPrintableString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerPrintableString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerPrintableString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.PrintableString;
+end;
+
+function TDerPrintableString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerPrintableString;
+begin
+  if not Supports(AAsn1Object, IDerPrintableString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerPrintableString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerPrintableString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerPrintableString.Create(AContents, False);
+end;
+
+class function TDerPrintableString.IsPrintableString(const AStr: String): Boolean;
+var
+  I: Int32;
+  LCh: Char;
+  LOrd: Int32;
+begin
+  for I := 1 to System.Length(AStr) do
+  begin
+    LCh := AStr[I];
+    LOrd := Ord(LCh);
+    if LOrd > $007F then
+    begin
+      Result := False;
+      Exit;
+    end;
+    
+    // Check if letter or digit
+    if ((LOrd >= Ord('A')) and (LOrd <= Ord('Z'))) or
+       ((LOrd >= Ord('a')) and (LOrd <= Ord('z'))) or
+       ((LOrd >= Ord('0')) and (LOrd <= Ord('9'))) then
+      Continue;
+
+    // Check allowed special characters
+    case LCh of
+      ' ', '''', '(', ')', '+', '-', '.', ':', '=', '?', '/', ',':
+        Continue;
+    else
+      Result := False;
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+{ TDerT61String }
+
+class constructor TDerT61String.Create;
+begin
+  FEncoding := TEncoding.GetEncoding('iso-8859-1');
+end;
+
+class destructor TDerT61String.Destroy;
+begin
+  FEncoding.Free;
+  FEncoding := nil;
+end;
+
+constructor TDerT61String.Create(const AStr: String);
+begin
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  FContents := TConverters.ConvertStringToBytes(AStr, FEncoding);
+end;
+
+constructor TDerT61String.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerT61String.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerT61String.GetInstance(const AObj: TObject): IDerT61String;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerT61String.GetInstance(const AObj: IAsn1Object): IDerT61String;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerT61String, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerT61String.GetInstance(const ABytes: TCryptoLibByteArray): IDerT61String;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerT61String, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct T61 string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct T61 string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerT61String.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerT61String;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerT61String, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get T61 string from tagged object');
+end;
+
+class function TDerT61String.GetOptional(const AElement: IAsn1Encodable): IDerT61String;
+var
+  LT61String: IDerT61String;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerT61String, LT61String) then
+    Result := LT61String
+  else
+    Result := nil;
+end;
+
+class function TDerT61String.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerT61String;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerT61String, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get T61 string from tagged object');
+end;
+
+function TDerT61String.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, FEncoding);
+end;
+
+function TDerT61String.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerT61String.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerT61String.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.T61String;
+end;
+
+function TDerT61String.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerT61String;
+begin
+  if not Supports(AAsn1Object, IDerT61String, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerT61String.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerT61String.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerT61String.Create(AContents, False);
+end;
+
+{ TDerUniversalString }
+
+constructor TDerUniversalString.Create(const AContents: TCryptoLibByteArray);
+begin
+  Create(AContents, True);
+end;
+
+constructor TDerUniversalString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerUniversalString.GetInstance(const AObj: TObject): IDerUniversalString;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerUniversalString.GetInstance(const AObj: IAsn1Object): IDerUniversalString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerUniversalString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerUniversalString.GetInstance(const ABytes: TCryptoLibByteArray): IDerUniversalString;
+var
+  LObj: IAsn1Object;
+begin
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerUniversalString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct universal string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct universal string from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerUniversalString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUniversalString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerUniversalString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get universal string from tagged object');
+end;
+
+class function TDerUniversalString.GetOptional(const AElement: IAsn1Encodable): IDerUniversalString;
+var
+  LUniversalString: IDerUniversalString;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerUniversalString, LUniversalString) then
+    Result := LUniversalString
+  else
+    Result := nil;
+end;
+
+class function TDerUniversalString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerUniversalString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerUniversalString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get universal string from tagged object');
+end;
+
+function TDerUniversalString.GetString(): String;
+var
+  LDl, LCapacity, I: Int32;
+  LBuf: TStringBuilder;
+  LTable: array[0..15] of Char;
+begin
+  LTable[0] := '0'; LTable[1] := '1'; LTable[2] := '2'; LTable[3] := '3';
+  LTable[4] := '4'; LTable[5] := '5'; LTable[6] := '6'; LTable[7] := '7';
+  LTable[8] := '8'; LTable[9] := '9'; LTable[10] := 'A'; LTable[11] := 'B';
+  LTable[12] := 'C'; LTable[13] := 'D'; LTable[14] := 'E'; LTable[15] := 'F';
+
+  LDl := System.Length(FContents);
+  LCapacity := 3 + 2 * (TAsn1OutputStream.GetLengthOfDL(LDl) + LDl);
+  LBuf := TStringBuilder.Create('#1C', LCapacity);
+  try
+    EncodeHexDL(LBuf, LDl, LTable);
+    for I := 0 to LDl - 1 do
+      EncodeHexByte(LBuf, FContents[I], LTable);
+    Result := LBuf.ToString();
+  finally
+    LBuf.Free;
+  end;
+end;
+
+function TDerUniversalString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerUniversalString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerUniversalString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.UniversalString;
+end;
+
+function TDerUniversalString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerUniversalString;
+begin
+  if not Supports(AAsn1Object, IDerUniversalString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerUniversalString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerUniversalString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerUniversalString.Create(AContents, False);
+end;
+
+procedure TDerUniversalString.EncodeHexByte(ABuf: TStringBuilder; AByte: Byte; const ATable: array of Char);
+begin
+  ABuf.Append(ATable[(AByte shr 4) and $F]);
+  ABuf.Append(ATable[AByte and $F]);
+end;
+
+procedure TDerUniversalString.EncodeHexDL(ABuf: TStringBuilder; ADl: Int32; const ATable: array of Char);
+var
+  LStack: array[0..4] of Byte;
+  LPos, LCount: Int32;
+begin
+  if ADl < 128 then
+  begin
+    EncodeHexByte(ABuf, ADl, ATable);
+    Exit;
+  end;
+
+  LPos := 5;
+  repeat
+    System.Dec(LPos);
+    LStack[LPos] := Byte(ADl);
+    ADl := ADl shr 8;
+  until ADl = 0;
+
+  LCount := 5 - LPos;
+  System.Dec(LPos);
+  LStack[LPos] := Byte($80 or LCount);
+
+  repeat
+    EncodeHexByte(ABuf, LStack[LPos], ATable);
+    System.Inc(LPos);
+  until LPos >= 5;
 end;
 
 { TDerVideotexString }
 
-function TDerVideotexString.GetmString: TCryptoLibByteArray;
+constructor TDerVideotexString.Create(const AContents: TCryptoLibByteArray);
 begin
-  result := FmString;
+  Create(AContents, True);
 end;
 
-function TDerVideotexString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+constructor TDerVideotexString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerVideotexString.GetInstance(const AObj: TObject): IDerVideotexString;
 var
-  other: IDerVideotexString;
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
 begin
-
-  if (not Supports(asn1Object, IDerVideotexString, other)) then
+  if AObj = nil then
   begin
-    result := False;
+    Result := nil;
     Exit;
   end;
 
-  result := TArrayUtils.AreEqual(mString, other.mString);
-end;
-
-function TDerVideotexString.Asn1GetHashCode: Int32;
-begin
-  result := TArrayUtils.GetArrayHashCode(mString);
-end;
-
-constructor TDerVideotexString.Create(const encoding: TCryptoLibByteArray);
-begin
-  Inherited Create();
-  FmString := System.Copy(encoding);
-end;
-
-procedure TDerVideotexString.Encode(const derOut: TStream);
-begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.VideotexString, mString);
-end;
-
-class function TDerVideotexString.GetInstance(const obj: TObject)
-  : IDerVideotexString;
-begin
-  if ((obj = Nil) or (obj is TDerVideotexString)) then
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
   begin
-    result := obj as TDerVideotexString;
+    Result := GetInstance(LAsn1Obj);
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
 end;
 
-class function TDerVideotexString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerVideotexString;
+class function TDerVideotexString.GetInstance(const AObj: IAsn1Object): IDerVideotexString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerVideotexString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerVideotexString.GetInstance(const ABytes: TCryptoLibByteArray): IDerVideotexString;
 var
-  o: IAsn1Object;
-begin
-  o := obj.GetObject();
-
-  if ((isExplicit) or (Supports(o, IDerVideotexString))) then
-  begin
-    result := GetInstance(o as TAsn1Object);
-    Exit;
-  end;
-
-  result := TDerVideotexString.Create
-    (TAsn1OctetString.GetInstance(o as TAsn1Object).GetOctets());
-end;
-
-class function TDerVideotexString.GetInstance(const obj: TCryptoLibByteArray)
-  : IDerVideotexString;
+  LObj: IAsn1Object;
 begin
   try
-    result := FromByteArray(obj) as IDerVideotexString;
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerVideotexString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct videotex string from byte[]');
   except
-    on e: Exception do
-    begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SEncodingError,
-        [e.Message]);
-    end;
-
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct videotex string from byte[]: ' + E.Message);
   end;
 end;
 
-function TDerVideotexString.GetOctets: TCryptoLibByteArray;
+class function TDerVideotexString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVideotexString;
+var
+  LObj: IAsn1Object;
 begin
-  result := System.Copy(mString);
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerVideotexString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get videotex string from tagged object');
 end;
 
-function TDerVideotexString.GetString: String;
+class function TDerVideotexString.GetOptional(const AElement: IAsn1Encodable): IDerVideotexString;
+var
+  LVideotexString: IDerVideotexString;
 begin
-  result := TConverters.ConvertBytesToString(mString, TEncoding.ANSI)
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerVideotexString, LVideotexString) then
+    Result := LVideotexString
+  else
+    Result := nil;
+end;
+
+class function TDerVideotexString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVideotexString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerVideotexString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get videotex string from tagged object');
+end;
+
+function TDerVideotexString.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ANSI);
+end;
+
+function TDerVideotexString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerVideotexString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerVideotexString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.VideotexString;
+end;
+
+function TDerVideotexString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerVideotexString;
+begin
+  if not Supports(AAsn1Object, IDerVideotexString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerVideotexString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerVideotexString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerVideotexString.Create(AContents, False);
 end;
 
 { TDerVisibleString }
 
-function TDerVisibleString.GetStr: String;
+constructor TDerVisibleString.Create(const AStr: String);
 begin
-  result := FStr;
+  inherited Create();
+  if AStr = '' then
+    raise EArgumentNilCryptoLibException.Create('str');
+  FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
-function TDerVisibleString.GetOctets: TCryptoLibByteArray;
+constructor TDerVisibleString.Create(const AContents: TCryptoLibByteArray);
 begin
-  result := TConverters.ConvertStringToBytes(Str, TEncoding.ASCII);
+  Create(AContents, True);
 end;
 
-function TDerVisibleString.Asn1Equals(const asn1Object: IAsn1Object): Boolean;
+constructor TDerVisibleString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  if AClone then
+    FContents := System.Copy(AContents)
+  else
+    FContents := AContents;
+end;
+
+class function TDerVisibleString.GetInstance(const AObj: TObject): IDerVisibleString;
 var
-  other: IDerVisibleString;
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
 begin
-
-  if (not Supports(asn1Object, IDerVisibleString, other)) then
+  if AObj = nil then
   begin
-    result := False;
+    Result := nil;
     Exit;
   end;
 
-  result := Str = other.Str;
-end;
-
-function TDerVisibleString.Asn1GetHashCode: Int32;
-begin
-  result := TStringUtils.GetStringHashCode(FStr);
-end;
-
-constructor TDerVisibleString.Create(const Str: TCryptoLibByteArray);
-begin
-  Create(TConverters.ConvertBytesToString(Str, TEncoding.ASCII));
-end;
-
-constructor TDerVisibleString.Create(const Str: String);
-begin
-  Inherited Create();
-  if (Str = '') then
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
+    Result := GetInstance(LAsn1Obj);
+    Exit;
   end;
 
-  FStr := Str;
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
 end;
 
-procedure TDerVisibleString.Encode(const derOut: TStream);
+class function TDerVisibleString.GetInstance(const AObj: IAsn1Object): IDerVisibleString;
 begin
-  (derOut as TDerOutputStream).WriteEncoded(TAsn1Tags.VisibleString,
-    GetOctets());
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerVisibleString, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
-class function TDerVisibleString.GetInstance(const obj: TObject)
-  : IDerVisibleString;
+class function TDerVisibleString.GetInstance(const ABytes: TCryptoLibByteArray): IDerVisibleString;
 var
-  asn1OctetString: IAsn1OctetString;
-  asn1TaggedObject: IAsn1TaggedObject;
+  LObj: IAsn1Object;
 begin
-  if ((obj = Nil) or (obj is TDerVisibleString)) then
-  begin
-    result := obj as TDerVisibleString;
-    Exit;
+  try
+    LObj := Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerVisibleString, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct visible string from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct visible string from byte[]: ' + E.Message);
   end;
-
-  if Supports(obj, IAsn1OctetString, asn1OctetString) then
-  begin
-    result := TDerVisibleString.Create(asn1OctetString.GetOctets());
-    Exit;
-  end;
-
-  if Supports(obj, IAsn1TaggedObject, asn1TaggedObject) then
-  begin
-    result := GetInstance(asn1TaggedObject.GetObject() as TAsn1Object);
-    Exit;
-  end;
-
-  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObject,
-    [obj.ClassName]);
 end;
 
-{$IFNDEF _FIXINSIGHT_}
-
-class function TDerVisibleString.GetInstance(const obj: IAsn1TaggedObject;
-  isExplicit: Boolean): IDerVisibleString;
+class function TDerVisibleString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVisibleString;
+var
+  LObj: IAsn1Object;
 begin
-  result := GetInstance(obj.GetObject() as TAsn1Object);
+  LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerVisibleString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get visible string from tagged object');
 end;
-{$ENDIF}
 
-function TDerVisibleString.GetString: String;
+class function TDerVisibleString.GetOptional(const AElement: IAsn1Encodable): IDerVisibleString;
+var
+  LVisibleString: IDerVisibleString;
 begin
-  result := Str;
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerVisibleString, LVisibleString) then
+    Result := LVisibleString
+  else
+    Result := nil;
+end;
+
+class function TDerVisibleString.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerVisibleString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
+  if not Supports(LObj, IDerVisibleString, Result) then
+    raise EArgumentCryptoLibException.Create('failed to get visible string from tagged object');
+end;
+
+function TDerVisibleString.GetString(): String;
+begin
+  Result := TConverters.ConvertBytesToString(FContents, TEncoding.ASCII);
+end;
+
+function TDerVisibleString.GetOctets(): TCryptoLibByteArray;
+begin
+  Result := System.Copy(FContents);
+end;
+
+function TDerVisibleString.GetContents(): TCryptoLibByteArray;
+begin
+  Result := FContents;
+end;
+
+function TDerVisibleString.GetTagNo(): Int32;
+begin
+  Result := TAsn1Tags.VisibleString;
+end;
+
+function TDerVisibleString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerVisibleString;
+begin
+  if not Supports(AAsn1Object, IDerVisibleString, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+end;
+
+function TDerVisibleString.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FContents);
+end;
+
+class function TDerVisibleString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerVisibleString.Create(AContents, False);
+end;
+
+{ TDerInteger }
+
+class constructor TDerInteger.Create;
+var
+  I: Int32;
+begin
+  System.SetLength(FSmallConstants, 17);
+  for I := 0 to System.Length(FSmallConstants) - 1 do
+  begin
+    FSmallConstants[I] := TDerInteger.Create(I);
+  end;
+  
+  FZero := FSmallConstants[0];
+  FOne := FSmallConstants[1];
+  FTwo := FSmallConstants[2];
+  FThree := FSmallConstants[3];
+  FFour := FSmallConstants[4];
+  FFive := FSmallConstants[5];
+  FAllowUnsafeInteger := False;
+end;
+
+class function TDerInteger.GetZero(): IDerInteger;
+begin
+  Result := FZero;
+end;
+
+class function TDerInteger.GetOne(): IDerInteger;
+begin
+  Result := FOne;
+end;
+
+class function TDerInteger.GetTwo(): IDerInteger;
+begin
+  Result := FTwo;
+end;
+
+class function TDerInteger.GetThree(): IDerInteger;
+begin
+  Result := FThree;
+end;
+
+class function TDerInteger.GetFour(): IDerInteger;
+begin
+  Result := FFour;
+end;
+
+class function TDerInteger.GetFive(): IDerInteger;
+begin
+  Result := FFive;
+end;
+
+constructor TDerInteger.Create(AValue: Int32);
+begin
+  inherited Create();
+  FBytes := TBigInteger.ValueOf(AValue).ToByteArray();
+  FStart := 0;
+end;
+
+constructor TDerInteger.Create(AValue: Int64);
+begin
+  inherited Create();
+  FBytes := TBigInteger.ValueOf(AValue).ToByteArray();
+  FStart := 0;
+end;
+
+constructor TDerInteger.Create(const AValue: TBigInteger);
+begin
+  inherited Create();
+  if not AValue.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('value');
+  FBytes := AValue.ToByteArray();
+  FStart := 0;
+end;
+
+constructor TDerInteger.Create(const ABytes: TCryptoLibByteArray);
+begin
+  Create(ABytes, True);
+end;
+
+constructor TDerInteger.Create(const ABytes: TCryptoLibByteArray; AClone: Boolean);
+begin
+  inherited Create();
+  if IsMalformed(ABytes) then
+    raise EArgumentCryptoLibException.Create('malformed integer');
+  if AClone then
+    FBytes := System.Copy(ABytes)
+  else
+    FBytes := ABytes;
+  FStart := SignBytesToSkip(FBytes);
+end;
+
+function TDerInteger.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
+var
+  LThat: IDerInteger;
+begin
+  if not Supports(AAsn1Object, IDerInteger, LThat) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := TArrayUtils.AreEqual(FBytes, LThat.Bytes);
+end;
+
+function TDerInteger.Asn1GetHashCode(): Int32;
+begin
+  Result := TArrayUtils.GetArrayHashCode(FBytes);
+end;
+
+function TDerInteger.GetBytes(): TCryptoLibByteArray;
+begin
+  Result := FBytes;
+end;
+
+class function TDerInteger.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := TDerInteger.Create(AContents, False);
+end;
+
+class function TDerInteger.GetAllowUnsafeInteger(): Boolean;
+begin
+  Result := FAllowUnsafeInteger;
+end;
+
+class procedure TDerInteger.SetAllowUnsafeInteger(const AValue: Boolean);
+begin
+  FAllowUnsafeInteger := AValue;
+end;
+
+class function TDerInteger.AllowUnsafe(): Boolean;
+//var
+//  LAllowUnsafeValue: String;
+begin
+  Result := FAllowUnsafeInteger;
+  //LAllowUnsafeValue := TPlatform.GetEnvironmentVariable(AllowUnsafeProperty);
+  //Result := (LAllowUnsafeValue <> '') and TPlatform.EqualsIgnoreCase('true', LAllowUnsafeValue);
+end;
+
+class function TDerInteger.IsMalformed(const ABytes: TCryptoLibByteArray): Boolean;
+var
+  LLength: Int32;
+begin
+  LLength := System.Length(ABytes);
+  case LLength of
+    0:
+      Result := True;
+    1:
+      Result := False;
+  else
+    Result := (ShortInt(ABytes[0]) = TBits.Asr32(ShortInt(ABytes[1]), 7)) and (not AllowUnsafe());
+  end;
+end;
+
+class function TDerInteger.SignBytesToSkip(const ABytes: TCryptoLibByteArray): Int32;
+var
+  LPos, LLast: Int32;
+begin
+  LPos := 0;
+  LLast := System.Length(ABytes) - 1;
+  while (LPos < LLast) and (ShortInt(ABytes[LPos]) = TBits.Asr32(ShortInt(ABytes[LPos + 1]), 7)) do
+  begin
+    System.Inc(LPos);
+  end;
+  Result := LPos;
+end;
+
+class function TDerInteger.IntValue(const ABytes: TCryptoLibByteArray; AStart, ASignExt: Int32): Int32;
+var
+  LLength, LPos, LVal: Int32;
+begin
+  LLength := System.Length(ABytes);
+  LPos := Math.Max(AStart, LLength - 4);
+  
+  LVal := ShortInt(ABytes[LPos]) and ASignExt;
+  System.Inc(LPos);
+  while LPos < LLength do
+  begin
+    LVal := (LVal shl 8) or ABytes[LPos];
+    System.Inc(LPos);
+  end;
+  Result := LVal;
+end;
+
+class function TDerInteger.LongValue(const ABytes: TCryptoLibByteArray; AStart, ASignExt: Int32): Int64;
+var
+  LLength, LPos: Int32;
+  LVal: Int64;
+begin
+  LLength := System.Length(ABytes);
+  LPos := Math.Max(AStart, LLength - 8);
+  
+  LVal := Int64(ShortInt(ABytes[LPos])) and ASignExt;
+  System.Inc(LPos);
+  while LPos < LLength do
+  begin
+    LVal := (LVal shl 8) or ABytes[LPos];
+    System.Inc(LPos);
+  end;
+  Result := LVal;
+end;
+
+class function TDerInteger.GetEncodingLength(const AX: TBigInteger): Int32;
+var
+  LByteLength: Int32;
+begin
+  LByteLength := TBigIntegers.GetByteLength(AX);
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(TAsn1Tags.Integer, LByteLength);
+end;
+
+class function TDerInteger.ValueOf(AValue: Int64): IDerInteger;
+begin
+  if (AValue >= 0) and (AValue < Int64(System.Length(FSmallConstants))) then
+    Result := FSmallConstants[Int32(AValue)]
+  else
+    Result := TDerInteger.Create(AValue);
+end;
+
+class function TDerInteger.GetInstance(const AObj: TObject): IDerInteger;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+end;
+
+class function TDerInteger.GetInstance(const AObj: IAsn1Object): IDerInteger;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerInteger, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerInteger.GetInstance(const ABytes: TCryptoLibByteArray): IDerInteger;
+var
+  LObj: IAsn1Object;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  try
+    LObj := TDerInteger.Meta.Instance.FromByteArray(ABytes);
+    if not Supports(LObj, IDerInteger, Result) then
+      raise EArgumentCryptoLibException.Create('failed to construct integer from byte[]');
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct integer from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TDerInteger.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerInteger;
+begin
+  Result := TDerInteger.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IDerInteger;
+end;
+
+class function TDerInteger.GetOptional(const AElement: IAsn1Encodable): IDerInteger;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+  if Supports(AElement, IDerInteger, Result) then
+    Exit;
+  Result := nil;
+end;
+
+class function TDerInteger.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerInteger;
+begin
+  Result := TDerInteger.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IDerInteger;
+end;
+
+function TDerInteger.GetValue(): TBigInteger;
+begin
+  Result := TBigInteger.Create(FBytes);
+end;
+
+function TDerInteger.GetPositiveValue(): TBigInteger;
+begin
+  Result := TBigInteger.Create(1, FBytes);
+end;
+
+function TDerInteger.HasValue(AX: Int32): Boolean;
+var
+  LIntVal: Int32;
+begin
+  if (System.Length(FBytes) - FStart) > 4 then
+  begin
+    Result := False;
+    Exit;
+  end;
+  LIntVal := TDerInteger.IntValue(FBytes, FStart, SignExtSigned);
+  Result := (LIntVal = AX);
+end;
+
+function TDerInteger.HasValue(AX: Int64): Boolean;
+var
+  LLongVal: Int64;
+begin
+  if (System.Length(FBytes) - FStart) > 8 then
+  begin
+    Result := False;
+    Exit;
+  end;
+  LLongVal := TDerInteger.LongValue(FBytes, FStart, SignExtSigned);
+  Result := (LLongVal = AX);
+end;
+
+function TDerInteger.HasValue(const AX: TBigInteger): Boolean;
+var
+  LIntValue: Int32;
+  LValue: TBigInteger;
+begin
+  if not AX.IsInitialized then
+  begin
+    Result := False;
+    Exit;
+  end;
+  // Fast check to avoid allocation
+  LIntValue := TDerInteger.IntValue(FBytes, FStart, SignExtSigned);
+  LValue := GetValue();
+  Result := (LIntValue = AX.Int32Value) and LValue.Equals(AX);
+end;
+
+function TDerInteger.GetIntValueExact(): Int32;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if LCount > 4 then
+    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of int range');
+  Result := TDerInteger.IntValue(FBytes, FStart, SignExtSigned);
+end;
+
+function TDerInteger.GetIntPositiveValueExact(): Int32;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if (LCount > 4) or ((LCount = 4) and ((FBytes[FStart] and $80) <> 0)) then
+    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of positive int range');
+  Result := TDerInteger.IntValue(FBytes, FStart, SignExtUnsigned);
+end;
+
+function TDerInteger.GetLongValueExact(): Int64;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if LCount > 8 then
+    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of long range');
+  Result := TDerInteger.LongValue(FBytes, FStart, SignExtSigned);
+end;
+
+function TDerInteger.TryGetIntValueExact(out AValue: Int32): Boolean;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if LCount > 4 then
+  begin
+    AValue := 0;
+    Result := False;
+    Exit;
+  end;
+  AValue := TDerInteger.IntValue(FBytes, FStart, SignExtSigned);
+  Result := True;
+end;
+
+function TDerInteger.TryGetIntPositiveValueExact(out AValue: Int32): Boolean;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if (LCount > 4) or ((LCount = 4) and ((FBytes[FStart] and $80) <> 0)) then
+  begin
+    AValue := 0;
+    Result := False;
+    Exit;
+  end;
+  AValue := TDerInteger.IntValue(FBytes, FStart, SignExtUnsigned);
+  Result := True;
+end;
+
+function TDerInteger.TryGetLongValueExact(out AValue: Int64): Boolean;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if LCount > 8 then
+  begin
+    AValue := 0;
+    Result := False;
+    Exit;
+  end;
+  AValue := TDerInteger.LongValue(FBytes, FStart, SignExtSigned);
+  Result := True;
+end;
+
+function TDerInteger.GetEncoding(AEncoding: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Integer, FBytes);
+end;
+
+function TDerInteger.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
+begin
+  Result := TPrimitiveEncoding.Create(ATagClass, ATagNo, FBytes);
+end;
+
+function TDerInteger.GetEncodingDer(): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.Integer, FBytes);
+end;
+
+function TDerInteger.GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
+begin
+  Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FBytes);
+end;
+
+function TDerInteger.ToString(): String;
+var
+  LValue: TBigInteger;
+begin
+  LValue := GetValue();
+  Result := LValue.ToString();
+end;
+
+{ TConstructedDLEncoding }
+
+constructor TConstructedDLEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsElements: TCryptoLibGenericArray<IAsn1Encoding>);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FContentsElements := AContentsElements;
+  FContentsLength := TAsn1OutputStream.GetLengthOfContents(AContentsElements);
+end;
+
+procedure TConstructedDLEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(TAsn1Tags.Constructed or FTagClass, FTagNo);
+  LAsn1Out.WriteDL(FContentsLength);
+  LAsn1Out.EncodeContents(FContentsElements);
+end;
+
+function TConstructedDLEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, FContentsLength);
+end;
+
+{ TTaggedDLEncoding }
+
+constructor TTaggedDLEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsElement: IAsn1Encoding);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FContentsElement := AContentsElement;
+  FContentsLength := AContentsElement.GetLength();
+end;
+
+procedure TTaggedDLEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(TAsn1Tags.Constructed or FTagClass, FTagNo);
+  LAsn1Out.WriteDL(FContentsLength);
+  FContentsElement.Encode(AOut);
+end;
+
+function TTaggedDLEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, FContentsLength);
+end;
+
+{ TConstructedDerEncoding }
+
+constructor TConstructedDerEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsElements: TCryptoLibGenericArray<IDerEncoding>);
+begin
+  inherited Create(ATagClass, ATagNo);
+  if AContentsElements = nil then
+    raise EArgumentNilCryptoLibException.Create('contentsElements');
+  FContentsElements := AContentsElements;
+  FContentsLength := TAsn1OutputStream.GetLengthOfContents(TCryptoLibGenericArray<IAsn1Encoding>(AContentsElements));
+end;
+
+function TConstructedDerEncoding.CompareLengthAndContents(const AOther: IDerEncoding): Int32;
+var
+  LThat: IConstructedDerEncoding;
+  I, LLength: Int32;
+begin
+  if not Supports(AOther, IConstructedDerEncoding, LThat) then
+    raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+
+  if FContentsLength <> LThat.ContentsLength then
+  begin
+    Result := FContentsLength - LThat.ContentsLength;
+    Exit;
+  end;
+
+  LLength := Math.Min(System.Length(FContentsElements), System.Length(LThat.ContentsElements));
+  for I := 0 to LLength - 1 do
+  begin
+    Result := FContentsElements[I].CompareTo(LThat.ContentsElements[I]);
+    if Result <> 0 then
+      Exit;
+  end;
+
+  Result := System.Length(FContentsElements) - System.Length(LThat.ContentsElements);
+end;
+
+procedure TConstructedDerEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(TAsn1Tags.Constructed or FTagClass, FTagNo);
+  LAsn1Out.WriteDL(FContentsLength);
+  LAsn1Out.EncodeContents(TCryptoLibGenericArray<IAsn1Encoding>(FContentsElements));
+end;
+
+function TConstructedDerEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, FContentsLength);
+end;
+
+function TConstructedDerEncoding.GetContentsLength(): Int32;
+begin
+  Result := FContentsLength;
+end;
+
+function TConstructedDerEncoding.GetContentsElements(): TCryptoLibGenericArray<IDerEncoding>;
+begin
+  Result := FContentsElements;
+end;
+
+{ TTaggedDerEncoding }
+
+constructor TTaggedDerEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsElement: IDerEncoding);
+begin
+  inherited Create(ATagClass, ATagNo);
+  if AContentsElement = nil then
+    raise EArgumentNilCryptoLibException.Create('contentsElement');
+  FContentsElement := AContentsElement;
+  FContentsLength := AContentsElement.GetLength();
+end;
+
+function TTaggedDerEncoding.CompareLengthAndContents(const AOther: IDerEncoding): Int32;
+var
+  LThat: ITaggedDerEncoding;
+begin
+  if not Supports(AOther, ITaggedDerEncoding, LThat) then
+    raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+
+  if FContentsLength <> LThat.ContentsLength then
+  begin
+    Result := FContentsLength - LThat.ContentsLength;
+    Exit;
+  end;
+
+  Result := FContentsElement.CompareTo(LThat.ContentsElement);
+end;
+
+procedure TTaggedDerEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(TAsn1Tags.Constructed or FTagClass, FTagNo);
+  LAsn1Out.WriteDL(FContentsLength);
+  FContentsElement.Encode(AOut);
+end;
+
+function TTaggedDerEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, FContentsLength);
+end;
+
+function TTaggedDerEncoding.GetContentsLength(): Int32;
+begin
+  Result := FContentsLength;
+end;
+
+function TTaggedDerEncoding.GetContentsElement(): IDerEncoding;
+begin
+  Result := FContentsElement;
+end;
+
+{ TConstructedILEncoding }
+
+constructor TConstructedILEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsElements: TCryptoLibGenericArray<IAsn1Encoding>);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FContentsElements := AContentsElements;
+end;
+
+procedure TConstructedILEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(TAsn1Tags.Constructed or FTagClass, FTagNo);
+  LAsn1Out.WriteByte($80);
+  LAsn1Out.EncodeContents(FContentsElements);
+  LAsn1Out.WriteByte($00);
+  LAsn1Out.WriteByte($00);
+end;
+
+function TConstructedILEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingIL(FTagNo, FContentsElements);
+end;
+
+{ TTaggedILEncoding }
+
+constructor TTaggedILEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsElement: IAsn1Encoding);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FContentsElement := AContentsElement;
+end;
+
+procedure TTaggedILEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(TAsn1Tags.Constructed or FTagClass, FTagNo);
+  LAsn1Out.WriteByte($80);
+  FContentsElement.Encode(AOut);
+  LAsn1Out.WriteByte($00);
+  LAsn1Out.WriteByte($00);
+end;
+
+function TTaggedILEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingIL(FTagNo, FContentsElement);
+end;
+
+{ TPrimitiveEncoding }
+
+constructor TPrimitiveEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsOctets: TCryptoLibByteArray);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FContentsOctets := AContentsOctets;
+end;
+
+procedure TPrimitiveEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(FTagClass, FTagNo);
+  LAsn1Out.WriteDL(System.Length(FContentsOctets));
+  if System.Length(FContentsOctets) > 0 then
+    LAsn1Out.Write(FContentsOctets[0], System.Length(FContentsOctets));
+end;
+
+function TPrimitiveEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, System.Length(FContentsOctets));
+end;
+
+{ TPrimitiveDerEncoding }
+
+constructor TPrimitiveDerEncoding.Create(ATagClass, ATagNo: Int32;
+  const AContentsOctets: TCryptoLibByteArray);
+begin
+  inherited Create(ATagClass, ATagNo);
+  if AContentsOctets = nil then
+    raise EArgumentNilCryptoLibException.Create('contentsOctets');
+  FContentsOctets := AContentsOctets;
+end;
+
+function TPrimitiveDerEncoding.CompareLengthAndContents(const AOther: IDerEncoding): Int32;
+var
+  LThat: IPrimitiveDerEncoding;
+  LSuffixed: IPrimitiveDerEncodingSuffixed;
+  I, LLength: Int32;
+  LThatOctets: TCryptoLibByteArray;
+begin
+  if Supports(AOther, IPrimitiveDerEncodingSuffixed, LSuffixed) then
+  begin
+    // Call the overridden method on the suffixed instance, passing Self
+    Result := -LSuffixed.CompareLengthAndContents(Self as IDerEncoding);
+    Exit;
+  end;
+
+  if not Supports(AOther, IPrimitiveDerEncoding, LThat) then
+    raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+
+  LThatOctets := LThat.ContentsOctets;
+  LLength := System.Length(FContentsOctets);
+  if LLength <> System.Length(LThatOctets) then
+  begin
+    Result := LLength - System.Length(LThatOctets);
+    Exit;
+  end;
+
+  for I := 0 to LLength - 1 do
+  begin
+    if FContentsOctets[I] <> LThatOctets[I] then
+    begin
+      Result := Int32(FContentsOctets[I]) - Int32(LThatOctets[I]);
+      Exit;
+    end;
+  end;
+
+  Result := 0;
+end;
+
+procedure TPrimitiveDerEncoding.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(FTagClass, FTagNo);
+  LAsn1Out.WriteDL(System.Length(FContentsOctets));
+  if System.Length(FContentsOctets) > 0 then
+    LAsn1Out.Write(FContentsOctets[0], System.Length(FContentsOctets));
+end;
+
+function TPrimitiveDerEncoding.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, System.Length(FContentsOctets));
+end;
+
+function TPrimitiveDerEncoding.GetContentsOctets(): TCryptoLibByteArray;
+begin
+  Result := FContentsOctets;
+end;
+
+{ TPrimitiveEncodingSuffixed }
+
+constructor TPrimitiveEncodingSuffixed.Create(ATagClass, ATagNo: Int32;
+  const AContentsOctets: TCryptoLibByteArray; AContentsSuffix: Byte);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+  FContentsOctets := AContentsOctets;
+  FContentsSuffix := AContentsSuffix;
+end;
+
+procedure TPrimitiveEncodingSuffixed.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(FTagClass, FTagNo);
+  LAsn1Out.WriteDL(System.Length(FContentsOctets));
+  if System.Length(FContentsOctets) > 1 then
+    LAsn1Out.Write(FContentsOctets[0], System.Length(FContentsOctets) - 1);
+  LAsn1Out.WriteByte(FContentsSuffix);
+end;
+
+function TPrimitiveEncodingSuffixed.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, System.Length(FContentsOctets));
+end;
+
+{ TPrimitiveDerEncodingSuffixed }
+
+constructor TPrimitiveDerEncodingSuffixed.Create(ATagClass, ATagNo: Int32;
+  const AContentsOctets: TCryptoLibByteArray; AContentsSuffix: Byte);
+begin
+  inherited Create(ATagClass, ATagNo);
+  if AContentsOctets = nil then
+    raise EArgumentNilCryptoLibException.Create('contentsOctets');
+  if System.Length(AContentsOctets) = 0 then
+    raise EArgumentCryptoLibException.Create('contentsOctets length must be > 0');
+  FContentsOctets := AContentsOctets;
+  FContentsSuffix := AContentsSuffix;
+end;
+
+function TPrimitiveDerEncodingSuffixed.CompareLengthAndContents(const AOther: IDerEncoding): Int32;
+var
+  LSuff: IPrimitiveDerEncodingSuffixed;
+  LThat: IPrimitiveDerEncoding;
+  LThatOctets: TCryptoLibByteArray;
+  LLength: Int32;
+begin
+  if Supports(AOther, IPrimitiveDerEncodingSuffixed, LSuff) then
+  begin
+    Result := CompareSuffixed(FContentsOctets, FContentsSuffix,
+      LSuff.ContentsOctets, LSuff.ContentsSuffix);
+    Exit;
+  end;
+
+  if Supports(AOther, IPrimitiveDerEncoding, LThat) then
+  begin
+    LThatOctets := LThat.ContentsOctets;
+    LLength := System.Length(LThatOctets);
+    if LLength = 0 then
+    begin
+      Result := System.Length(FContentsOctets);
+      Exit;
+    end;
+
+    Result := CompareSuffixed(FContentsOctets, FContentsSuffix,
+      LThatOctets, LThatOctets[LLength - 1]);
+    Exit;
+  end;
+
+  raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+end;
+
+class function TPrimitiveDerEncodingSuffixed.CompareSuffixed(const AOctetsA: TCryptoLibByteArray;
+  ASuffixA: Byte; const AOctetsB: TCryptoLibByteArray; ASuffixB: Byte): Int32;
+var
+  LLength, I, LLast: Int32;
+begin
+  if (System.Length(AOctetsA) = 0) or (System.Length(AOctetsB) = 0) then
+    raise EArgumentCryptoLibException.Create('Octets length must be > 0');
+
+  LLength := System.Length(AOctetsA);
+  if LLength <> System.Length(AOctetsB) then
+  begin
+    Result := LLength - System.Length(AOctetsB);
+    Exit;
+  end;
+
+  LLast := LLength - 1;
+  for I := 0 to LLast - 1 do
+  begin
+    if AOctetsA[I] <> AOctetsB[I] then
+    begin
+      Result := Int32(AOctetsA[I]) - Int32(AOctetsB[I]);
+      Exit;
+    end;
+  end;
+
+  Result := Int32(ASuffixA) - Int32(ASuffixB);
+end;
+
+procedure TPrimitiveDerEncodingSuffixed.Encode(const AOut: TStream);
+var
+  LAsn1Out: TAsn1OutputStream;
+begin
+  LAsn1Out := TAsn1OutputStream.ValidateAsn1OutputStream(AOut);
+  LAsn1Out.WriteIdentifier(FTagClass, FTagNo);
+  LAsn1Out.WriteDL(System.Length(FContentsOctets));
+  if System.Length(FContentsOctets) > 1 then
+    LAsn1Out.Write(FContentsOctets[0], System.Length(FContentsOctets) - 1);
+  LAsn1Out.WriteByte(FContentsSuffix);
+end;
+
+function TPrimitiveDerEncodingSuffixed.GetLength(): Int32;
+begin
+  Result := TAsn1OutputStream.GetLengthOfEncodingDL(FTagNo, System.Length(FContentsOctets));
+end;
+
+function TPrimitiveDerEncodingSuffixed.GetContentsOctets(): TCryptoLibByteArray;
+begin
+  Result := FContentsOctets;
+end;
+
+function TPrimitiveDerEncodingSuffixed.GetContentsSuffix(): Byte;
+begin
+  Result := FContentsSuffix;
+end;
+
+{ TAsn1Type }
+
+constructor TAsn1Type.Create(APlatformType: TClass);
+begin
+  inherited Create;
+  FPlatformType := APlatformType;
+end;
+
+function TAsn1Type.GetPlatformType(): TClass;
+begin
+  Result := FPlatformType;
+end;
+
+{ TAsn1Tag }
+
+constructor TAsn1Tag.Create(ATagClass, ATagNo: Int32);
+begin
+  inherited Create;
+  FTagClass := ATagClass;
+  FTagNo := ATagNo;
+end;
+
+class function TAsn1Tag.CreateTag(ATagClass, ATagNo: Int32): IAsn1Tag;
+var
+  LTag: TAsn1Tag;
+begin
+  LTag := TAsn1Tag.Create(ATagClass, ATagNo);
+  if not Supports(LTag, IAsn1Tag, Result) then
+    raise EInvalidOperationCryptoLibException.Create('failed to get IAsn1Tag interface');
+end;
+
+function TAsn1Tag.GetTagClass(): Int32;
+begin
+  Result := FTagClass;
+end;
+
+function TAsn1Tag.GetTagNo(): Int32;
+begin
+  Result := FTagNo;
+end;
+
+function TAsn1Tag.GetExplicitness(): Int32;
+begin
+  // TAsn1Tag doesn't have explicitness - return a default value
+  // This method exists because IAsn1Tag interface may require it
+  Result := 0;
+end;
+
+{ TAsn1UniversalType }
+
+constructor TAsn1UniversalType.Create(APlatformType: TClass; ATagNo: Int32);
+begin
+  inherited Create(APlatformType);
+  FTag := TAsn1Tag.CreateTag(TAsn1Tags.Universal, ATagNo);
+end;
+
+destructor TAsn1UniversalType.Destroy;
+begin
+  FTag := nil; // Release reference
+  inherited Destroy();
+end;
+
+function TAsn1UniversalType.CheckedCast(const AAsn1Object: IAsn1Object): IAsn1Object;
+var
+  LObj: TAsn1Object;
+begin
+  if AAsn1Object = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LObj := AAsn1Object as TAsn1Object;
+  // Check if the object is an instance of the platform type
+  if (FPlatformType <> nil) and LObj.InheritsFrom(FPlatformType) then
+    Result := AAsn1Object
+  else
+    raise EInvalidOperationCryptoLibException.CreateFmt('unexpected object: %s', [TPlatform.GetTypeName(LObj)]);
+end;
+
+function TAsn1UniversalType.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  raise EInvalidOperationCryptoLibException.Create('unexpected implicit primitive encoding');
+end;
+
+function TAsn1UniversalType.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+begin
+  raise EInvalidOperationCryptoLibException.Create('unexpected implicit constructed encoding');
+end;
+
+function TAsn1UniversalType.FromByteArray(const ABytes: TCryptoLibByteArray): IAsn1Object;
+begin
+  Result := CheckedCast(TAsn1Object.FromByteArray(ABytes));
+end;
+
+function TAsn1UniversalType.GetContextTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Object;
+begin
+  Result := CheckedCast(TAsn1Utilities.CheckContextTagClass(ATaggedObject).GetBaseUniversal(ADeclaredExplicit, Self));
+end;
+
+function TAsn1UniversalType.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Object;
+begin
+  Result := CheckedCast(ATaggedObject.GetBaseUniversal(ADeclaredExplicit, Self));
+end;
+
+{ TAsn1UniversalTypes }
+
+constructor TAsn1UniversalTypes.Create;
+begin
+  // Private constructor - static class
+end;
+
+class function TAsn1UniversalTypes.Get(ATagNo: Int32): IAsn1UniversalType;
+begin
+  case ATagNo of
+    TAsn1Tags.Boolean:
+      Result := TDerBoolean.Meta.Instance;
+    TAsn1Tags.Integer:
+      Result := TDerInteger.Meta.Instance;
+    TAsn1Tags.BitString:
+      Result := TDerBitString.Meta.Instance;
+    TAsn1Tags.OctetString:
+      Result := TAsn1OctetString.Meta.Instance;
+    TAsn1Tags.Null:
+      Result := TAsn1Null.Meta.Instance;
+    TAsn1Tags.ObjectIdentifier:
+      Result := TDerObjectIdentifier.Meta.Instance;
+    TAsn1Tags.ObjectDescriptor:
+      Result := TAsn1ObjectDescriptor.Meta.Instance;
+    TAsn1Tags.External:
+      Result := TDerExternal.Meta.Instance;
+    TAsn1Tags.Enumerated:
+      Result := TDerEnumerated.Meta.Instance;
+    TAsn1Tags.Utf8String:
+      Result := TDerUtf8String.Meta.Instance;
+    TAsn1Tags.RelativeOid:
+      Result := TAsn1RelativeOid.Meta.Instance;
+    TAsn1Tags.Sequence:
+      Result := TAsn1Sequence.Meta.Instance;
+    TAsn1Tags.&Set:
+      Result := TAsn1Set.Meta.Instance;
+    TAsn1Tags.NumericString:
+      Result := TDerNumericString.Meta.Instance;
+    TAsn1Tags.PrintableString:
+      Result := TDerPrintableString.Meta.Instance;
+    TAsn1Tags.T61String:
+      Result := TDerT61String.Meta.Instance;
+    TAsn1Tags.VideotexString:
+      Result := TDerVideotexString.Meta.Instance;
+    TAsn1Tags.IA5String:
+      Result := TDerIA5String.Meta.Instance;
+    TAsn1Tags.UtcTime:
+      Result := TAsn1UtcTime.Meta.Instance;
+    TAsn1Tags.GeneralizedTime:
+      Result := TAsn1GeneralizedTime.Meta.Instance;
+    TAsn1Tags.GraphicString:
+      Result := TDerGraphicString.Meta.Instance;
+    TAsn1Tags.VisibleString:
+      Result := TDerVisibleString.Meta.Instance;
+    TAsn1Tags.GeneralString:
+      Result := TDerGeneralString.Meta.Instance;
+    TAsn1Tags.UniversalString:
+      Result := TDerUniversalString.Meta.Instance;
+    TAsn1Tags.BmpString:
+      Result := TDerBmpString.Meta.Instance;
+  else
+    Result := nil;
+  end;
+end;
+
+{ TDerBoolean.Meta }
+
+constructor TDerBoolean.Meta.Create;
+begin
+  inherited Create(TDerBoolean, TAsn1Tags.Boolean);
+end;
+
+class function TDerBoolean.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerBoolean.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerBoolean.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerBoolean.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerInteger.Meta }
+
+constructor TDerInteger.Meta.Create;
+begin
+  inherited Create(TDerInteger, TAsn1Tags.Integer);
+end;
+
+class function TDerInteger.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerInteger.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerInteger.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerInteger.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TAsn1Null.Meta }
+
+constructor TAsn1Null.Meta.Create;
+begin
+  inherited Create(TAsn1Null, TAsn1Tags.Null);
+end;
+
+class function TAsn1Null.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1Null.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1Null.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  TAsn1Null.CheckContentsLength(AOctetString.GetOctetsLength());
+  Result := TAsn1Null.CreatePrimitive();
+end;
+
+{ TDerObjectIdentifier.Meta }
+
+constructor TDerObjectIdentifier.Meta.Create;
+begin
+  inherited Create(TDerObjectIdentifier, TAsn1Tags.ObjectIdentifier);
+end;
+
+class function TDerObjectIdentifier.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerObjectIdentifier.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerObjectIdentifier.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerObjectIdentifier.CreatePrimitive(AOctetString.GetOctets(), False);
+end;
+
+{ TDerEnumerated.Meta }
+
+constructor TDerEnumerated.Meta.Create;
+begin
+  inherited Create(TDerEnumerated, TAsn1Tags.Enumerated);
+end;
+
+class function TDerEnumerated.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerEnumerated.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerEnumerated.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerEnumerated.CreatePrimitive(AOctetString.GetOctets(), False);
+end;
+
+{ TAsn1RelativeOid.Meta }
+
+constructor TAsn1RelativeOid.Meta.Create;
+begin
+  inherited Create(TAsn1RelativeOid, TAsn1Tags.RelativeOid);
+end;
+
+class function TAsn1RelativeOid.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1RelativeOid.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1RelativeOid.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TAsn1RelativeOid.CreatePrimitive(AOctetString.GetOctets(), False);
+end;
+
+{ TAsn1OctetString.Meta }
+
+constructor TAsn1OctetString.Meta.Create;
+begin
+  inherited Create(TAsn1OctetString, TAsn1Tags.OctetString);
+end;
+
+class function TAsn1OctetString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1OctetString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1OctetString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := AOctetString as IAsn1Object;
+end;
+
+{ TAsn1Sequence.Meta }
+
+constructor TAsn1Sequence.Meta.Create;
+begin
+  inherited Create(TAsn1Sequence, TAsn1Tags.Sequence);
+end;
+
+class function TAsn1Sequence.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1Sequence.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1Sequence.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+begin
+  Result := ASequence as IAsn1Object;
+end;
+
+{ TAsn1Set.Meta }
+
+constructor TAsn1Set.Meta.Create;
+begin
+  inherited Create(TAsn1Set, TAsn1Tags.&Set);
+end;
+
+class function TAsn1Set.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1Set.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1Set.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+begin
+  // For Set, we need to convert the sequence to a set
+  // Set can be constructed from a Sequence
+  Result := TAsn1Set.Create(ASequence.Elements, False);
+end;
+
+{ TAsn1Sequence.TAsn1SequenceParserImpl }
+
+constructor TAsn1Sequence.TAsn1SequenceParserImpl.Create(const AOuter: IAsn1Sequence);
+begin
+  inherited Create();
+  FOuter := AOuter;
+  FIndex := 0;
+end;
+
+function TAsn1Sequence.TAsn1SequenceParserImpl.ReadObject(): IAsn1Convertible;
+var
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  LObj: IAsn1Encodable;
+  LSequence: IAsn1Sequence;
+  LSet: IAsn1Set;
+  LOctetString: IAsn1OctetString;
+begin
+  LElements := FOuter.Elements;
+  if FIndex >= System.Length(LElements) then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LObj := LElements[FIndex];
+  Inc(FIndex);
+
+  if Supports(LObj, IAsn1Sequence, LSequence) then
+    Result := LSequence.Parser
+  else if Supports(LObj, IAsn1Set, LSet) then
+    Result := LSet.Parser
+  else if Supports(LObj, IAsn1OctetString, LOctetString) then
+    // NB: Asn1OctetString implements Asn1OctetStringParser directly
+    Result := LOctetString as IAsn1Convertible
+  else
+    Result := LObj as IAsn1Convertible;
+end;
+
+function TAsn1Sequence.TAsn1SequenceParserImpl.ToAsn1Object(): IAsn1Object;
+begin
+  Result := FOuter;
+end;
+
+{ TAsn1Set.TAsn1SetParserImpl }
+
+constructor TAsn1Set.TAsn1SetParserImpl.Create(const AOuter: TAsn1Set);
+begin
+  inherited Create();
+  FOuter := AOuter;
+  FIndex := 0;
+end;
+
+function TAsn1Set.TAsn1SetParserImpl.ReadObject(): IAsn1Convertible;
+var
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  LObj: IAsn1Encodable;
+  LSequence: IAsn1Sequence;
+  LSet: IAsn1Set;
+  LOctetString: IAsn1OctetString;
+begin
+  LElements := FOuter.FElements;
+  if FIndex >= System.Length(LElements) then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LObj := LElements[FIndex];
+  Inc(FIndex);
+
+  if Supports(LObj, IAsn1Sequence, LSequence) then
+    Result := LSequence.Parser
+  else if Supports(LObj, IAsn1Set, LSet) then
+    Result := LSet.Parser
+  else if Supports(LObj, IAsn1OctetString, LOctetString) then
+    // NB: Asn1OctetString implements Asn1OctetStringParser directly
+    Result := LOctetString as IAsn1Convertible
+  else
+    Result := LObj as IAsn1Convertible;
+end;
+
+function TAsn1Set.TAsn1SetParserImpl.ToAsn1Object(): IAsn1Object;
+begin
+  Result := FOuter;
+end;
+
+{ TDerBitString }
+
+class constructor TDerBitString.Create;
+begin
+  System.SetLength(FEmptyOctetsContents, 1);
+  FEmptyOctetsContents[0] := $00;
+end;
+
+class function TDerBitString.GetEmptyOctetsContents: TCryptoLibByteArray;
+begin
+  Result := FEmptyOctetsContents;
+end;
+
+{ TDerBitString.Meta }
+
+constructor TDerBitString.Meta.Create;
+begin
+  inherited Create(TDerBitString, TAsn1Tags.BitString);
+end;
+
+class function TDerBitString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerBitString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerBitString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerBitString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+function TDerBitString.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+var
+  LBitString: IDerBitString;
+begin
+  LBitString := ASequence.ToAsn1BitString();
+  Result := LBitString as IAsn1Object;
+end;
+
+{ TAsn1GeneralizedTime.Meta }
+
+constructor TAsn1GeneralizedTime.Meta.Create;
+begin
+  inherited Create(TAsn1GeneralizedTime, TAsn1Tags.GeneralizedTime);
+end;
+
+class function TAsn1GeneralizedTime.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1GeneralizedTime.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1GeneralizedTime.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TAsn1GeneralizedTime.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TAsn1UtcTime.Meta }
+
+constructor TAsn1UtcTime.Meta.Create;
+begin
+  inherited Create(TAsn1UtcTime, TAsn1Tags.UtcTime);
+end;
+
+class function TAsn1UtcTime.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1UtcTime.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1UtcTime.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TAsn1UtcTime.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TAsn1ObjectDescriptor.Meta }
+
+constructor TAsn1ObjectDescriptor.Meta.Create;
+begin
+  inherited Create(TAsn1ObjectDescriptor, TAsn1Tags.ObjectDescriptor);
+end;
+
+class function TAsn1ObjectDescriptor.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TAsn1ObjectDescriptor.Meta.Create;
+  Result := FInstance;
+end;
+
+function TAsn1ObjectDescriptor.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TAsn1ObjectDescriptor.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+function TAsn1ObjectDescriptor.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+var
+  LGraphicString: IAsn1Object;
+begin
+  LGraphicString := TDerGraphicString.Meta.Instance.FromImplicitConstructed(ASequence);
+  Result := TAsn1ObjectDescriptor.Create(LGraphicString);
+end;
+
+{ TDerExternal.Meta }
+
+constructor TDerExternal.Meta.Create;
+begin
+  inherited Create(TDerExternal, TAsn1Tags.External);
+end;
+
+class function TDerExternal.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerExternal.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerExternal.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+var
+  LExternal: IDerExternal;
+begin
+  LExternal := ASequence.ToAsn1External();
+  Result := LExternal as IAsn1Object;
+end;
+
+{ TDerUtf8String.Meta }
+
+constructor TDerUtf8String.Meta.Create;
+begin
+  inherited Create(TDerUtf8String, TAsn1Tags.Utf8String);
+end;
+
+class function TDerUtf8String.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerUtf8String.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerUtf8String.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerUtf8String.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerNumericString.Meta }
+
+constructor TDerNumericString.Meta.Create;
+begin
+  inherited Create(TDerNumericString, TAsn1Tags.NumericString);
+end;
+
+class function TDerNumericString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerNumericString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerNumericString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerNumericString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerPrintableString.Meta }
+
+constructor TDerPrintableString.Meta.Create;
+begin
+  inherited Create(TDerPrintableString, TAsn1Tags.PrintableString);
+end;
+
+class function TDerPrintableString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerPrintableString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerPrintableString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerPrintableString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerT61String.Meta }
+
+constructor TDerT61String.Meta.Create;
+begin
+  inherited Create(TDerT61String, TAsn1Tags.T61String);
+end;
+
+class function TDerT61String.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerT61String.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerT61String.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerT61String.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerVideotexString.Meta }
+
+constructor TDerVideotexString.Meta.Create;
+begin
+  inherited Create(TDerVideotexString, TAsn1Tags.VideotexString);
+end;
+
+class function TDerVideotexString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerVideotexString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerVideotexString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerVideotexString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerIA5String.Meta }
+
+constructor TDerIA5String.Meta.Create;
+begin
+  inherited Create(TDerIA5String, TAsn1Tags.IA5String);
+end;
+
+class function TDerIA5String.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerIA5String.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerIA5String.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerIA5String.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerGraphicString.Meta }
+
+constructor TDerGraphicString.Meta.Create;
+begin
+  inherited Create(TDerGraphicString, TAsn1Tags.GraphicString);
+end;
+
+class function TDerGraphicString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerGraphicString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerGraphicString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerGraphicString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerVisibleString.Meta }
+
+constructor TDerVisibleString.Meta.Create;
+begin
+  inherited Create(TDerVisibleString, TAsn1Tags.VisibleString);
+end;
+
+class function TDerVisibleString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerVisibleString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerVisibleString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerVisibleString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerGeneralString.Meta }
+
+constructor TDerGeneralString.Meta.Create;
+begin
+  inherited Create(TDerGeneralString, TAsn1Tags.GeneralString);
+end;
+
+class function TDerGeneralString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerGeneralString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerGeneralString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerGeneralString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerUniversalString.Meta }
+
+constructor TDerUniversalString.Meta.Create;
+begin
+  inherited Create(TDerUniversalString, TAsn1Tags.UniversalString);
+end;
+
+class function TDerUniversalString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerUniversalString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerUniversalString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerUniversalString.CreatePrimitive(AOctetString.GetOctets());
+end;
+
+{ TDerBmpString.Meta }
+
+constructor TDerBmpString.Meta.Create;
+begin
+  inherited Create(TDerBmpString, TAsn1Tags.BmpString);
+end;
+
+class function TDerBmpString.Meta.GetInstance: IAsn1UniversalType;
+begin
+  if FInstance = nil then
+    FInstance := TDerBmpString.Meta.Create;
+  Result := FInstance;
+end;
+
+function TDerBmpString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
+begin
+  Result := TDerBmpString.CreatePrimitive(AOctetString.GetOctets());
 end;
 
 end.
+

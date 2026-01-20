@@ -28,6 +28,7 @@ uses
   ClpIEd25519PublicKeyParameters,
   ClpArrayUtils,
   ClpAsn1Objects,
+  ClpStreams,
   ClpCryptoLibTypes;
 
 resourcestring
