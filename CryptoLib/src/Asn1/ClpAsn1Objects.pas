@@ -154,8 +154,6 @@ type
   /// Factory for ASN.1 universal types.
   /// </summary>
   TAsn1UniversalTypes = class sealed(TObject)
-  strict private
-    constructor Create;
   public
     class function Get(ATagNo: Int32): IAsn1UniversalType; static;
   end;
@@ -437,16 +435,17 @@ type
     /// Get DER encoding with implicit tagging.
     /// </summary>
     function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; virtual; abstract;
+    /// <summary>
+    /// Convert this object to an ASN.1 object (returns self).
+    /// </summary>
+    function ToAsn1Object(): IAsn1Object; override;
 
   private
     /// <summary>
     /// Create an ASN.1 object from a fixed buffer stream.
     /// </summary>
     class function FromBufferStream(const ABufferStream: TFixedBufferStream): IAsn1Object; static;
-    /// <summary>
-    /// Convert this object to an ASN.1 object (returns self).
-    /// </summary>
-    function ToAsn1Object(): IAsn1Object; override;
+
     /// <summary>
     /// Call Asn1Equals (internal method).
     /// </summary>
@@ -593,11 +592,6 @@ type
     /// Create from contents (does not copy, uses the array directly).
     /// </summary>
     class function WithContents(const AContents: TCryptoLibByteArray): IDerOctetString; static;
-
-    /// <summary>
-    /// Get encoding for the specified encoding type.
-    /// </summary>
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     /// <summary>
     /// Get encoding for the specified encoding type with implicit tagging.
     /// </summary>
@@ -606,6 +600,11 @@ type
     /// Get DER encoding.
     /// </summary>
     function GetEncodingDer(): IDerEncoding; override;
+
+    /// <summary>
+    /// Get encoding for the specified encoding type.
+    /// </summary>
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     /// <summary>
     /// Get DER encoding with implicit tagging.
     /// </summary>
@@ -631,10 +630,7 @@ type
   strict private
     FElements: TCryptoLibGenericArray<IAsn1OctetString>;
     class function GetEmpty(): IBerOctetString; static;
-    class function WithContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
   public
     /// <summary>
     /// Empty BER octet string.
@@ -656,10 +652,16 @@ type
     /// Create a BER octet string from a sequence.
     /// </summary>
     class function FromSequence(const ASequence: IAsn1Sequence): IBerOctetString; static;
+
+    class function WithContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
     /// <summary>
     /// Create a BER octet string from an array of octet strings.
     /// </summary>
     constructor Create(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -715,10 +717,7 @@ type
   strict protected
     FContents: TCryptoLibByteArray; // First byte is padBits, rest is data
     FBufferStream: TFixedBufferStream;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
   public
     class property EmptyOctetsContents: TCryptoLibByteArray read GetEmptyOctetsContents;
 
@@ -739,6 +738,11 @@ type
     function GetBufferStream(): TFixedBufferStream;
     function GetParser(): IAsn1BitStringParser;
     procedure CheckOctetAligned();
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -833,9 +837,7 @@ type
   /// DL bit string implementation.
   /// </summary>
   TDLBitString = class(TDerBitString, IDLBitString)
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
   public
     /// <summary>
     /// Create a DL bit string from contents (m_contents format: [padBits, data...]).
@@ -845,6 +847,9 @@ type
     /// Create a DL bit string from data and pad bits.
     /// </summary>
     constructor Create(const AData: TCryptoLibByteArray; APadBits: Int32); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -853,9 +858,7 @@ type
   TBerBitString = class(TDerBitString, IBerBitString)
   strict private
     FElements: TCryptoLibGenericArray<IDerBitString>;
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
   public
     /// <summary>
     /// Flatten an array of bit strings into a single m_contents byte array.
@@ -869,6 +872,9 @@ type
     /// Create a BER bit string from an array of bit strings.
     /// </summary>
     constructor Create(const ABitStrings: TCryptoLibGenericArray<IDerBitString>); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -1191,10 +1197,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
     function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; override;
     function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; override;
 
@@ -1221,6 +1223,11 @@ type
     constructor Create(AExplicitness, ATagClass, ATagNo: Int32;
       const AObj: IAsn1Encodable); overload;
     function GetIsConstructed(): Boolean; override;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
@@ -1228,8 +1235,6 @@ type
   /// </summary>
   TDLTaggedObject = class(TDerTaggedObject, IDLTaggedObject)
   strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
     function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; override;
     function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; override;
 
@@ -1255,6 +1260,9 @@ type
     /// </summary>
     constructor Create(AExplicitness, ATagClass, ATagNo: Int32;
       const AObj: IAsn1Encodable); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -1373,16 +1381,16 @@ type
     class function GetEmpty(): IDerSequence; static;
     class function WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IDerSequence; static;
 
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     function ToAsn1BitString(): IDerBitString; override;
     function ToAsn1External(): IDerExternal; override;
     function ToAsn1OctetString(): IAsn1OctetString; override;
     function ToAsn1Set(): IAsn1Set; override;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
     
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSequence; static;
     class function FromElement(const AElement: IAsn1Encodable): IDerSequence; static;
@@ -1419,10 +1427,6 @@ type
     class function GetEmpty(): IDLSequence; static;
     class function WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IDLSequence; static;
 
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-
   public
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSequence; static;
     class function FromElement(const AElement: IAsn1Encodable): IDLSequence; static;
@@ -1443,6 +1447,9 @@ type
     constructor Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>); overload;
     constructor Create(const ASequence: IAsn1Sequence); overload;
     constructor Create(const ASet: IAsn1Set); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
 
     /// <summary>
     /// Convert to ASN.1 external.
@@ -1466,7 +1473,6 @@ type
   TAsn1Set = class abstract(TAsn1Object, IAsn1Set)
   strict private
     FElements: TCryptoLibGenericArray<IAsn1Encodable>;
-    
     type
       /// <summary>
       /// Internal parser implementation for sets.
@@ -1483,10 +1489,12 @@ type
 
     /// <summary>
     /// Sort elements based on their DER encodings.
+    /// Returns the sorted DER encodings array.
     /// </summary>
-    class procedure SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>); static;
+    class function SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>; static;
 
   strict protected
+    FSortedDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
     function GetCount(): Int32; virtual;
   public
     type
@@ -1564,17 +1572,9 @@ type
   /// </summary>
   TDerSet = class(TAsn1Set, IDerSet)
   strict private
-    FSortedDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
-    
     class function GetEmpty(): IDerSet; static;
     function GetSortedDerEncodings(): TCryptoLibGenericArray<IDerEncoding>;
     class function CreateSortedDerEncodings(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>; static;
-
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
 
   public
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSet; static;
@@ -1590,6 +1590,11 @@ type
     constructor Create(const ASequence: IAsn1Sequence); overload;
     constructor Create(const ASet: IAsn1Set); overload;
 
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
     class property Empty: IDerSet read GetEmpty;
   end;
 
@@ -1599,10 +1604,6 @@ type
   TDLSet = class(TDerSet, IDLSet)
   strict private
     class function GetEmpty(): IDLSet; static;
-
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
 
   public
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSet; static;
@@ -1619,6 +1620,9 @@ type
     constructor Create(const ASet: IAsn1Set); overload;
     constructor Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>); overload;
 
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
     class property Empty: IDLSet read GetEmpty;
   end;
 
@@ -1629,10 +1633,6 @@ type
   strict private
     class function GetEmpty(): IBerSequence; static;
     class function WithElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): IBerSequence; static;
-
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
 
   public
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSequence; static;
@@ -1655,6 +1655,9 @@ type
     constructor Create(const ASequence: IAsn1Sequence); overload;
     constructor Create(const ASet: IAsn1Set); overload;
 
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
     function ToAsn1BitString(): IDerBitString; override;
     function ToAsn1External(): IDerExternal; override;
     function ToAsn1OctetString(): IAsn1OctetString; override;
@@ -1669,10 +1672,6 @@ type
   TBerSet = class(TDLSet, IBerSet)
   strict private
     class function GetEmpty(): IBerSet; static;
-
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
 
   public
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSet; static;
@@ -1689,6 +1688,9 @@ type
     constructor Create(const ASet: IAsn1Set); overload;
     constructor Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>); overload;
 
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+
     class property Empty: IBerSet read GetEmpty;
   end;
 
@@ -1697,8 +1699,6 @@ type
   /// </summary>
   TBerTaggedObject = class(TDLTaggedObject, IBerTaggedObject)
   strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
     function RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence; override;
     function ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject; override;
 
@@ -1723,6 +1723,9 @@ type
     /// Public constructor.
     /// </summary>
     constructor Create(AExplicitness, ATagClass, ATagNo: Int32; const AObj: IAsn1Encodable); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -2181,7 +2184,7 @@ type
     constructor Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
     destructor Destroy(); override;
     procedure AddObject(const AObj: IAsn1Encodable); overload; override;
-    procedure AddObject(const AObj: IAsn1Object); overload;
+    procedure AddObject(const AObj: IAsn1Object); overload; override;
     function GetRawOutputStream(): TStream; override;
     procedure Close(); override;
   end;
@@ -2325,7 +2328,7 @@ type
     class function CheckExternalContent(ATagNo: Int32; const AExternalContent: IAsn1Object): IAsn1Object; static;
     class function GetExternalContent(const AEncoding: IAsn1TaggedObject): IAsn1Object; overload; static;
     class function CheckDataValueDescriptor(const ADataValueDescriptor: IAsn1Object): IAsn1ObjectDescriptor; static;
-  protected
+  strict protected
     FDirectReference: IDerObjectIdentifier;
     FIndirectReference: IDerInteger;
     FDataValueDescriptor: IAsn1ObjectDescriptor;
@@ -2334,13 +2337,8 @@ type
     
     function BuildSequence(): IAsn1Sequence; virtual;
 
-  strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding;  overload; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
 
   public
     type
@@ -2369,10 +2367,17 @@ type
       const ADataValueDescriptor: IAsn1ObjectDescriptor;
       AEncoding: Int32; const AExternalData: IAsn1Object); overload;
     function GetSequence(): IAsn1Sequence;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding;  overload; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
+    function GetEncoding(): Int32; reintroduce; overload;
+
     // Interface methods for IDerExternal
     function GetDataValueDescriptor(): IAsn1Object;
     function GetDirectReference(): IDerObjectIdentifier;
-    function GetEncoding(): Int32; overload;
     function GetExternalContent(): IAsn1Object; overload;
     function GetIndirectReference(): IDerInteger;
   end;
@@ -2383,9 +2388,6 @@ type
   TDLExternal = class sealed(TDerExternal, IDLExternal)
   protected
     function BuildSequence(): IAsn1Sequence; override;
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
 
   public
     constructor Create(const AVector: IAsn1EncodableVector); overload;
@@ -2398,6 +2400,9 @@ type
       const AIndirectReference: IDerInteger;
       const ADataValueDescriptor: IAsn1ObjectDescriptor;
       AEncoding: Int32; const AExternalData: IAsn1Object); overload;
+
+      function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -2415,10 +2420,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2449,6 +2450,12 @@ type
     function GetValue(): Byte;
     function GetIsTrue(): Boolean;
     function ToString(): String; override;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
     class property False: IDerBoolean read GetFalse;
     class property True: IDerBoolean read GetTrue;
   end;
@@ -2472,10 +2479,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2506,6 +2509,11 @@ type
     function GetBytes(): TCryptoLibByteArray;
     function HasValue(AX: Int32): Boolean; overload;
     function HasValue(const AX: TBigInteger): Boolean; overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
@@ -2552,12 +2560,13 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
+  public
+    constructor Create;
     function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
     function GetEncodingDer(): IDerEncoding; override;
     function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
-  public
-    constructor Create;
+
     class property Instance: IDerNull read GetInstance;
   end;
 
@@ -2587,10 +2596,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2625,6 +2630,11 @@ type
     function Branch(const ABranchID: String): IDerObjectIdentifier;
     function &On(const AStem: IDerObjectIdentifier): Boolean;
     function ToString(): String; override;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
@@ -2654,10 +2664,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2694,6 +2700,11 @@ type
     function Branch(const ABranchID: String): IAsn1RelativeOid;
     function GetContents(): TCryptoLibByteArray;
     function ToString(): String; override;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
@@ -2713,10 +2724,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2746,6 +2753,11 @@ type
     function GetContents(AEncoding: Int32): TCryptoLibByteArray;
     function GetTimeString: String;
     function ToDateTime: TDateTime;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
@@ -2765,10 +2777,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2803,33 +2811,38 @@ type
     function ToDateTime: TDateTime; overload;
     function ToDateTime(ATwoDigitYearMax: Int32): TDateTime; overload;
     function ToAdjustedDateTime: TDateTime; deprecated 'Use ToDateTime(2049) instead';
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
   /// DER UTC time implementation.
   /// </summary>
   TDerUtcTime = class(TAsn1UtcTime, IDerUtcTime)
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   public
     constructor Create(const ATimeString: String); overload;
     constructor Create(const ADateTime: TDateTime); overload; deprecated 'Use Create(DateTime, Int32) instead';
     constructor Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
     constructor Create(const AContents: TCryptoLibByteArray); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
   /// DER generalized time implementation.
   /// </summary>
   TDerGeneralizedTime = class(TAsn1GeneralizedTime, IDerGeneralizedTime)
-  strict protected
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   public
     constructor Create(const ATimeString: String); overload;
     constructor Create(const ADateTime: TDateTime); overload;
     constructor Create(const AContents: TCryptoLibByteArray); overload;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
   end;
 
   /// <summary>
@@ -2841,10 +2854,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     type
       /// <summary>
@@ -2871,6 +2880,11 @@ type
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1ObjectDescriptor; static;
     class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
     function GetGraphicString(): IAsn1Object;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   end;
 
   /// <summary>
@@ -3130,10 +3144,6 @@ type
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
-    function GetEncodingDer(): IDerEncoding; override;
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
   public
     const
       SignExtSigned = Int32(-1);
@@ -3286,6 +3296,11 @@ type
     class function IntValue(const ABytes: TCryptoLibByteArray; AStart, ASignExt: Int32): Int32; static;
     
     function ToString(): String; override;
+
+    function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
+    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
+    function GetEncodingDer(): IDerEncoding; override;
+    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
     
     property Value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
@@ -4240,7 +4255,6 @@ var
   LContentsOctets: TCryptoLibByteArray;
   LDefIn: TAsn1DefiniteLengthInputStream;
   LContentsElements: IAsn1EncodableVector;
-  LContentsElementsClass: TAsn1EncodableVector;
 begin
   if not AConstructed then
   begin
@@ -4258,7 +4272,6 @@ end;
 function TAsn1StreamParser.LoadTaggedIL(ATagClass, ATagNo: Int32): IAsn1Object;
 var
   LContentsElements: IAsn1EncodableVector;
-  LContentsElementsClass: TAsn1EncodableVector;
 begin
   LContentsElements := ReadVector();
   Result := TAsn1TaggedObject.CreateConstructedIL(ATagClass, ATagNo, LContentsElements);
@@ -5095,23 +5108,15 @@ begin
 end;
 
 function TAsn1TaggedObject.GetExplicitBaseTagged(): IAsn1TaggedObject;
-var
-  LObj: IAsn1Object;
-  LTagged: IAsn1TaggedObject;
 begin
   if not IsExplicit() then
     raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
-  
-  LObj := FObject.ToAsn1Object();
-  if not Supports(LObj, IAsn1TaggedObject, LTagged) then
-    raise EInvalidOperationCryptoLibException.Create('unexpected object type');
-  
-  Result := LTagged;
+
+  Result := CheckedCast(FObject.ToAsn1Object());
 end;
 
 function TAsn1TaggedObject.GetImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObject;
 var
-  LObj: IAsn1Object;
   LTagged: IAsn1TaggedObject;
 begin
   if (TAsn1Tags.Universal = ABaseTagClass) or ((ABaseTagClass and TAsn1Tags.Private) <> ABaseTagClass) then
@@ -5122,10 +5127,7 @@ begin
       raise EInvalidOperationCryptoLibException.Create('object explicit - implicit expected.');
     DeclaredImplicit:
       begin
-        LObj := FObject.ToAsn1Object();
-        if not Supports(LObj, IAsn1TaggedObject, LTagged) then
-          raise EInvalidOperationCryptoLibException.Create('unexpected object type');
-        
+        LTagged := CheckedCast(FObject.ToAsn1Object());
         // Check tag using TAsn1Utilities
         Result := TAsn1Utilities.CheckTag(LTagged, ABaseTagClass, ABaseTagNo);
       end;
@@ -6311,6 +6313,7 @@ constructor TAsn1Set.Create();
 begin
   inherited Create;
   FElements := TAsn1EncodableVector.EmptyElements;
+  FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(const AElement: IAsn1Encodable);
@@ -6320,6 +6323,7 @@ begin
     raise EArgumentNilCryptoLibException.Create('element');
   System.SetLength(FElements, 1);
   FElements[0] := AElement;
+  FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(const AElements: array of IAsn1Encodable; ADoSort: Boolean);
@@ -6335,7 +6339,9 @@ begin
   for I := 0 to System.Length(AElements) - 1 do
     FElements[I] := AElements[I];
   if ADoSort and (System.Length(FElements) > 1) then
-    SortElements(FElements);
+    FSortedDerEncodings := SortElements(FElements)
+  else
+    FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(const AElementVector: IAsn1EncodableVector; ADoSort: Boolean);
@@ -6346,10 +6352,13 @@ begin
   if ADoSort and (AElementVector.Count > 1) then
   begin
     FElements := AElementVector.CopyElements();
-    SortElements(FElements);
+    FSortedDerEncodings := SortElements(FElements);
   end
   else
+  begin
     FElements := AElementVector.TakeElements();
+    FSortedDerEncodings := nil;
+  end;
 end;
 
 constructor TAsn1Set.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>; ADoSort: Boolean);
@@ -6362,8 +6371,10 @@ begin
   System.SetLength(FElements, System.Length(AC));
   for I := 0 to System.Length(AC) - 1 do
     FElements[I] := AC[I];
-  if ADoSort then
-    SortElements(FElements);
+  if ADoSort and (System.Length(FElements) > 1) then
+    FSortedDerEncodings := SortElements(FElements)
+  else
+    FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(const ASequence: IAsn1Sequence);
@@ -6378,6 +6389,7 @@ begin
   System.SetLength(FElements, System.Length(LElements));
   for I := 0 to System.Length(LElements) - 1 do
     FElements[I] := LElements[I];
+  FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(const ASet: IAsn1Set);
@@ -6392,6 +6404,7 @@ begin
   System.SetLength(FElements, System.Length(LElements));
   for I := 0 to System.Length(LElements) - 1 do
     FElements[I] := LElements[I];
+  FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
@@ -6399,10 +6412,10 @@ begin
   inherited Create;
   if AElements = nil then
     raise EArgumentNilCryptoLibException.Create('elements');
+
+  System.Assert(not AIsSorted);
   FElements := System.Copy(AElements);
-  // If isSorted is false, elements need to be sorted
-  if not AIsSorted and (System.Length(FElements) > 1) then
-    SortElements(FElements);
+  FSortedDerEncodings := nil;
 end;
 
 destructor TAsn1Set.Destroy;
@@ -6577,21 +6590,19 @@ begin
   Result := TAsn1Set.Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Set;
 end;
 
-class procedure TAsn1Set.SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
+class function TAsn1Set.SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>;
 var
   LCount, I, J: Int32;
   LDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
   LTemp: IAsn1Encodable;
   LTempEncoding: IDerEncoding;
 begin
-  LCount := System.Length(AElements);
-  if LCount <= 1 then
-    Exit;
-
   // Get DER encodings for each element
   LDerEncodings := TAsn1OutputStream.GetContentsEncodingsDer(AElements);
+  LCount := System.Length(LDerEncodings);
 
   // Sort elements based on DER encodings using insertion sort
+  // (handles 0 or 1 elements gracefully - loop simply doesn't execute)
   for I := 1 to LCount - 1 do
   begin
     J := I;
@@ -6608,6 +6619,8 @@ begin
       System.Dec(J);
     end;
   end;
+
+  Result := LDerEncodings;
 end;
 
 { TDerSet }
@@ -14789,11 +14802,6 @@ end;
 
 { TAsn1UniversalTypes }
 
-constructor TAsn1UniversalTypes.Create;
-begin
-  // Private constructor - static class
-end;
-
 class function TAsn1UniversalTypes.Get(ATagNo: Int32): IAsn1UniversalType;
 begin
   case ATagNo of
@@ -15023,7 +15031,7 @@ function TAsn1Set.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): 
 begin
   // For Set, we need to convert the sequence to a set
   // Set can be constructed from a Sequence
-  Result := TAsn1Set.Create(ASequence.Elements, False);
+  Result := ASequence.ToAsn1Set();
 end;
 
 { TAsn1Sequence.TAsn1SequenceParserImpl }

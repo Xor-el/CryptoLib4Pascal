@@ -30,6 +30,7 @@ type
   IAsn1Object = interface;
   IAsn1Sequence = interface;
   IAsn1UniversalType = interface;
+  IAsn1Set = interface;
 
   /// <summary>
   /// Interface for ASN.1 encoding operations.
@@ -989,6 +990,10 @@ type
     /// Convert to ASN.1 external.
     /// </summary>
     function ToAsn1External(): IDerExternal;
+    /// <summary>
+    /// Convert to ASN.1 set.
+    /// </summary>
+    function ToAsn1Set(): IAsn1Set;
     /// <summary>
     /// Convert to string representation.
     /// </summary>

@@ -1837,7 +1837,7 @@ end;
 class function TAsn1InputStream.CreateDerBmpString(const ADefIn
   : TAsn1DefiniteLengthInputStream): IAsn1Object;
 var
-  LRemainingBytes, LLength, LStringPos, LBufPos, I: Int32;
+  LRemainingBytes, LLength, LStringPos, LBufPos: Int32;
   LBuf: TCryptoLibByteArray;
   LStr: TCryptoLibCharArray;
 begin

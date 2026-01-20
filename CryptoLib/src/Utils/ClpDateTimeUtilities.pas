@@ -129,7 +129,6 @@ type
     class var FTransforms: TCryptoLibGenericArray<TTokenTransformFunc>;
     class constructor Create;
 
-    constructor Create;
   public
     /// <summary>
     /// Register a new transform function (appended to the chain).
@@ -156,8 +155,6 @@ type
   /// Reusable parsing utilities for strict date/time string parsing.
   /// </summary>
   TDateTimeParseHelper = class sealed
-  strict private
-    constructor Create;
   public
     /// <summary>
     /// Read an integer from a substring with strict validation.
@@ -190,7 +187,6 @@ type
   /// </summary>
   TDateTimeUtilities = class sealed(TObject)
   strict private
-    constructor Create;
 
     class var
       /// <summary>
@@ -426,11 +422,6 @@ begin
   end);
 end;
 
-constructor TDateTimeFormatTransformer.Create;
-begin
-  raise ENotSupportedException.Create('TDateTimeFormatTransformer is a static class');
-end;
-
 class procedure TDateTimeFormatTransformer.Register(const ATransform: TTokenTransformFunc);
 begin
   SetLength(FTransforms, System.Length(FTransforms) + 1);
@@ -475,11 +466,6 @@ begin
 end;
 
 { TDateTimeParseHelper }
-
-constructor TDateTimeParseHelper.Create;
-begin
-  raise ENotSupportedException.Create('TDateTimeParseHelper is a static class');
-end;
 
 class function TDateTimeParseHelper.ReadInt(
   const S: String; AIndex, ACount: Int32; out AValue: Int32): Boolean;
@@ -565,11 +551,6 @@ begin
   FMaxUnixMs := LMaxMs - LUnixEpochMs;
   // GregorianCalendar TwoDigitYearMax value (2049)
   FTwoDigitYearMax := 2049;
-end;
-
-constructor TDateTimeUtilities.Create;
-begin
-  raise ENotSupportedException.Create('TDateTimeUtilities is a static class');
 end;
 
 class function TDateTimeUtilities.DateTimeToUnixMs(const ADateTime: TDateTime): Int64;

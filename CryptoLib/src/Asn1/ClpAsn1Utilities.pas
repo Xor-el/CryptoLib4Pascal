@@ -219,7 +219,6 @@ type
 implementation
 
 uses
-  ClpAsn1Streams,
   ClpAsn1Objects;
 
 { TAsn1Utilities }

@@ -26,13 +26,11 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpICipherParameters,
-  ClpIParametersWithRandom,
   ClpIRsaKeyParameters,
   ClpIRsaPrivateCrtKeyParameters,
   ClpIRsa,
   ClpIAsymmetricBlockCipher,
   ClpIRsaBlindedEngine,
-  ClpIRsaCoreEngine,
   ClpRsaCoreEngine,
   ClpISecureRandom,
   ClpSecureRandom,
@@ -140,7 +138,7 @@ function TRsaBlindedEngine.ProcessBlock(const inBuf: TCryptoLibByteArray;
 var
   input, output: TBigInteger;
   crtKey: IRsaPrivateCrtKeyParameters;
-  e, m, n: TBigInteger;
+  e, m: TBigInteger;
   r, blind, unblind: TBigInteger;
   blindedInput, blindedResult: TBigInteger;
 begin

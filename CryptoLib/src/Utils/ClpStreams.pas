@@ -91,7 +91,7 @@ type
 
   protected
     function GetSize: Int64; override;
-    function GetCanWrite: Boolean; virtual;
+    function GetCanWrite: Boolean; override;
 
   public
     constructor Create(const ABuffer: TCryptoLibByteArray; AIndex, ACount: Int32); overload;
@@ -182,9 +182,9 @@ type
     function Read(var ABuffer; ACount: LongInt): LongInt; override;
     function Write(const ABuffer; ACount: LongInt): LongInt; override;
 
-    function ReadByte: Int32; virtual;
-    procedure WriteByte(AValue: Byte); virtual;
-    procedure Flush; virtual;
+    function ReadByte: Int32; override;
+    procedure WriteByte(AValue: Byte); override;
+    procedure Flush; override;
 
     destructor Destroy; override;
 

@@ -30,8 +30,6 @@ type
   /// Collection utility class with static methods.
   /// </summary>
   TCollectionUtilities = class sealed(TObject)
-  strict private
-    constructor Create;
   public
     /// <summary>
     /// Map an array or collection using a function.
@@ -46,17 +44,12 @@ type
     /// Convert a collection to a string representation using a converter function.
     /// </summary>
     class function ToString<T>(const AC: TCryptoLibGenericArray<T>;
-      const AConverter: TFunc<T, String>): String; overload; static;
+      const AConverter: TFunc<T, String>): String; reintroduce; overload; static;
   end;
 
 implementation
 
 { TCollectionUtilities }
-
-constructor TCollectionUtilities.Create;
-begin
-  raise ENotSupportedException.Create('TCollectionUtilities is a static class');
-end;
 
 class function TCollectionUtilities.Map<T, TResult>(const ATs: TCryptoLibGenericArray<T>;
   const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>;
