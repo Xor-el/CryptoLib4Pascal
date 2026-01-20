@@ -30,7 +30,7 @@ type
 {$IFDEF FPC}
   PUInt64 = ^UInt64;
 
-  TProc = reference to procedure;
+  //TProc = reference to procedure;
   TProc<T> = reference to procedure(Arg1: T);
   TProc<T1, T2> = reference to procedure(Arg1: T1; Arg2: T2);
   TProc<T1, T2, T3> = reference to procedure(Arg1: T1; Arg2: T2; Arg3: T3);
