@@ -55,6 +55,12 @@ type
     DigestAlgorithm: String = '1.2.840.113549.2';
 
     //
+    // pkcs-7 OBJECT IDENTIFIER ::= {
+    //       iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 7 }
+    //
+    Pkcs7: String = '1.2.840.113549.1.7';
+
+    //
     // pkcs-9 OBJECT IDENTIFIER ::= {
     //       iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 9 }
     //
@@ -87,6 +93,9 @@ type
 
     // PKCS#5
     FIdPbkdf2,
+
+    // PKCS#7
+    FSignedData,
 
     // Digest algorithms
     FMD2, FMD4, FMD5,
@@ -124,6 +133,9 @@ type
 
     // PKCS#5
     class function GetIdPbkdf2: IDerObjectIdentifier; static; inline;
+
+    // PKCS#7 getters
+    class function GetSignedData: IDerObjectIdentifier; static; inline;
 
     // Digest algorithm getters
     class function GetMD2: IDerObjectIdentifier; static; inline;
@@ -176,6 +188,11 @@ type
     // PKCS#5
     //
     class property IdPbkdf2: IDerObjectIdentifier read GetIdPbkdf2;
+
+    //
+    // PKCS#7
+    //
+    class property SignedData: IDerObjectIdentifier read GetSignedData;
 
     //
     // Digest algorithms
@@ -235,6 +252,9 @@ begin
 
     // PKCS#5
     FIdPbkdf2 := TDerObjectIdentifier.Create(Pkcs5 + '.12');
+
+    // PKCS#7
+    FSignedData := TDerObjectIdentifier.Create(Pkcs7 + '.2');
 
     // Digest algorithms
     FMD2 := TDerObjectIdentifier.Create(DigestAlgorithm + '.2');
@@ -352,6 +372,13 @@ end;
 class function TPkcsObjectIdentifiers.GetIdPbkdf2: IDerObjectIdentifier;
 begin
   Result := FIdPbkdf2;
+end;
+
+// PKCS#7
+
+class function TPkcsObjectIdentifiers.GetSignedData: IDerObjectIdentifier;
+begin
+  Result := FSignedData;
 end;
 
 // Digest algorithms

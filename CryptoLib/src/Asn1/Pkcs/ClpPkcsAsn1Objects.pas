@@ -33,7 +33,8 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpOiwObjectIdentifiers,
   ClpCryptoLibTypes,
-  ClpAsn1Utilities;
+  ClpAsn1Utilities,
+  ClpPlatform;
 
 resourcestring
   SBadSequenceSize = 'Bad sequence size: %d';
@@ -53,6 +54,84 @@ resourcestring
   SVersionNil = 'version';
 
 type
+  /// <summary>
+  /// The ContentInfo object (PKCS#7).
+  /// </summary>
+  TContentInfo = class(TAsn1Encodable, IContentInfo)
+  strict private
+  var
+    FContentType: IDerObjectIdentifier;
+    FContent: IAsn1Encodable;
+
+  strict protected
+    function GetContentType: IDerObjectIdentifier;
+    function GetContent: IAsn1Encodable;
+
+  public
+    class function GetInstance(AObj: TObject): IContentInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IContentInfo; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IContentInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IContentInfo; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IContentInfo; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AContentType: IDerObjectIdentifier;
+      const AContent: IAsn1Encodable); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property ContentType: IDerObjectIdentifier read GetContentType;
+    property Content: IAsn1Encodable read GetContent;
+  end;
+
+  /// <summary>
+  /// The SignedData object (PKCS#7).
+  /// </summary>
+  TSignedData = class(TAsn1Encodable, ISignedData)
+  strict private
+  var
+    FVersion: IDerInteger;
+    FDigestAlgorithms: IAsn1Set;
+    FContentInfo: IContentInfo;
+    FCertificates: IAsn1Set;
+    FCrls: IAsn1Set;
+    FSignerInfos: IAsn1Set;
+
+  strict protected
+    function GetVersion: IDerInteger;
+    function GetDigestAlgorithms: IAsn1Set;
+    function GetContentInfo: IContentInfo;
+    function GetCertificates: IAsn1Set;
+    function GetCrls: IAsn1Set;
+    function GetSignerInfos: IAsn1Set;
+
+  public
+    class function GetInstance(AObj: TObject): ISignedData; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): ISignedData; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ISignedData; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ISignedData; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ISignedData; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AVersion: IDerInteger;
+      const ADigestAlgorithms: IAsn1Set; const AContentInfo: IContentInfo;
+      const ACertificates: IAsn1Set; const ACrls: IAsn1Set;
+      const ASignerInfos: IAsn1Set); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Version: IDerInteger read GetVersion;
+    property DigestAlgorithms: IAsn1Set read GetDigestAlgorithms;
+    property ContentInfo: IContentInfo read GetContentInfo;
+    property Certificates: IAsn1Set read GetCertificates;
+    property Crls: IAsn1Set read GetCrls;
+    property SignerInfos: IAsn1Set read GetSignerInfos;
+  end;
+
   /// <summary>
   /// The AttributePkcs object.
   /// </summary>
@@ -1439,6 +1518,294 @@ begin
   end;
 
   Result := TDerSequence.Create(LV);
+end;
+
+{ TContentInfo }
+
+class function TContentInfo.GetInstance(AObj: TObject): IContentInfo;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IContentInfo, Result) then
+    Exit;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+end;
+
+class function TContentInfo.GetInstance(const AObj: IAsn1Object): IContentInfo;
+var
+  LSeq: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IContentInfo, Result) then
+    Exit;
+
+  LSeq := TAsn1Sequence.GetInstance(AObj);
+  Result := TContentInfo.Create(LSeq);
+end;
+
+class function TContentInfo.GetInstance(const AEncoded: TCryptoLibByteArray): IContentInfo;
+begin
+  Result := TContentInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TContentInfo.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IContentInfo;
+begin
+  Result := GetInstance(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TContentInfo.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IContentInfo;
+begin
+  Result := GetInstance(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TContentInfo.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+  LTagged: IAsn1TaggedObject;
+begin
+  Inherited Create();
+  LCount := ASeq.Count;
+  if (LCount < 1) or (LCount > 2) then
+    raise EArgumentCryptoLibException.CreateFmt('Bad sequence size: %d', [LCount]);
+
+  FContentType := TDerObjectIdentifier.GetInstance(ASeq[0] as TObject);
+
+  if ASeq.Count > 1 then
+  begin
+    LTagged := TAsn1TaggedObject.GetInstance(ASeq[1] as TObject, TAsn1Tags.ContextSpecific, 0);
+    FContent := LTagged.GetExplicitBaseObject();
+  end
+  else
+  begin
+    FContent := nil;
+  end;
+end;
+
+constructor TContentInfo.Create(const AContentType: IDerObjectIdentifier;
+  const AContent: IAsn1Encodable);
+begin
+  Inherited Create();
+  if AContentType = nil then
+    raise EArgumentNilCryptoLibException.Create('contentType');
+  FContentType := AContentType;
+  FContent := AContent;
+end;
+
+function TContentInfo.GetContentType: IDerObjectIdentifier;
+begin
+  Result := FContentType;
+end;
+
+function TContentInfo.GetContent: IAsn1Encodable;
+begin
+  Result := FContent;
+end;
+
+function TContentInfo.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(2);
+  LV.Add(FContentType);
+  if FContent <> nil then
+  begin
+    LV.Add(TBerTaggedObject.Create(True, 0, FContent));
+  end;
+  Result := TBerSequence.Create(LV);
+end;
+
+{ TSignedData }
+
+class function TSignedData.GetInstance(AObj: TObject): ISignedData;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ISignedData, Result) then
+    Exit;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+end;
+
+class function TSignedData.GetInstance(const AObj: IAsn1Object): ISignedData;
+var
+  LSeq: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ISignedData, Result) then
+    Exit;
+
+  LSeq := TAsn1Sequence.GetInstance(AObj);
+  Result := TSignedData.Create(LSeq);
+end;
+
+class function TSignedData.GetInstance(const AEncoded: TCryptoLibByteArray): ISignedData;
+begin
+  Result := TSignedData.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TSignedData.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ISignedData;
+begin
+  Result := GetInstance(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TSignedData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ISignedData;
+begin
+  Result := GetInstance(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TSignedData.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  Inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 4) or (LCount > 6) then
+    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+
+  FVersion := TDerInteger.GetInstance(ASeq[LPos] as TObject);
+  System.Inc(LPos);
+  FDigestAlgorithms := TAsn1Set.GetInstance(ASeq[LPos] as TObject);
+  System.Inc(LPos);
+  FContentInfo := TContentInfo.GetInstance(ASeq[LPos] as TObject);
+  System.Inc(LPos);
+  FCertificates := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Sequence, IAsn1Set>(
+    ASeq, LPos, 0, ASeq,
+    function(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set
+    begin
+      Result := TAsn1Set.GetTagged(ATagged, False);
+    end);
+  FCrls := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Sequence, IAsn1Set>(
+    ASeq, LPos, 1, ASeq,
+    function(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set
+    begin
+      Result := TAsn1Set.GetTagged(ATagged, False);
+    end);
+  FSignerInfos := TAsn1Set.GetInstance(ASeq[LPos] as TObject);
+  System.Inc(LPos);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+constructor TSignedData.Create(const AVersion: IDerInteger;
+  const ADigestAlgorithms: IAsn1Set; const AContentInfo: IContentInfo;
+  const ACertificates: IAsn1Set; const ACrls: IAsn1Set;
+  const ASignerInfos: IAsn1Set);
+begin
+  Inherited Create();
+  if AVersion = nil then
+    raise EArgumentNilCryptoLibException.Create(SVersionNil);
+  if ADigestAlgorithms = nil then
+    raise EArgumentNilCryptoLibException.Create('digestAlgorithms');
+  if AContentInfo = nil then
+    raise EArgumentNilCryptoLibException.Create('contentInfo');
+  if ASignerInfos = nil then
+    raise EArgumentNilCryptoLibException.Create('signerInfos');
+
+  FVersion := AVersion;
+  FDigestAlgorithms := ADigestAlgorithms;
+  FContentInfo := AContentInfo;
+  FCertificates := ACertificates;
+  FCrls := ACrls;
+  FSignerInfos := ASignerInfos;
+end;
+
+function TSignedData.GetVersion: IDerInteger;
+begin
+  Result := FVersion;
+end;
+
+function TSignedData.GetDigestAlgorithms: IAsn1Set;
+begin
+  Result := FDigestAlgorithms;
+end;
+
+function TSignedData.GetContentInfo: IContentInfo;
+begin
+  Result := FContentInfo;
+end;
+
+function TSignedData.GetCertificates: IAsn1Set;
+begin
+  Result := FCertificates;
+end;
+
+function TSignedData.GetCrls: IAsn1Set;
+begin
+  Result := FCrls;
+end;
+
+function TSignedData.GetSignerInfos: IAsn1Set;
+begin
+  Result := FSignerInfos;
+end;
+
+function TSignedData.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(6);
+  LV.Add([FVersion, FDigestAlgorithms, FContentInfo]);
+  LV.AddOptionalTagged(False, 0, FCertificates);
+  LV.AddOptionalTagged(False, 1, FCrls);
+  LV.Add(FSignerInfos);
+  Result := TBerSequence.Create(LV);
 end;
 
 end.

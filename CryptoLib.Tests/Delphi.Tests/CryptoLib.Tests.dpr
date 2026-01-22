@@ -483,6 +483,8 @@ uses
   ClpX509SignatureUtilities in '..\..\CryptoLib\src\Asn1\X509\ClpX509SignatureUtilities.pas',
   ClpX509Utilities in '..\..\CryptoLib\src\Asn1\X509\ClpX509Utilities.pas',
   ClpAsn1Dumper in '..\..\CryptoLib\src\Asn1\ClpAsn1Dumper.pas',
+  ClpX509CertificateParser in '..\..\CryptoLib\src\Asn1\X509\ClpX509CertificateParser.pas',
+  ClpIX509CertificateParser in '..\..\CryptoLib\src\Interfaces\ClpIX509CertificateParser.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
@@ -577,6 +579,7 @@ uses
   PrivateKeyInfoTests in '..\src\Asn1\PKCS\PrivateKeyInfoTests.pas',
   IPAddressUtilitiesTests in '..\src\Utils\Net\IPAddressUtilitiesTests.pas',
   PemReaderTests in '..\src\Utils\Pem\PemReaderTests.pas',
+  CertificateTest in '..\src\Asn1\X509\CertificateTest.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

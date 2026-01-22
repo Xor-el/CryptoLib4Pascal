@@ -23,7 +23,8 @@ interface
 
 uses
   Classes,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpIAsn1Objects;
 
 type
   IPemHeader = interface;
@@ -144,6 +145,20 @@ type
     /// </summary>
     /// <param name="AObjGen">The PEM object generator</param>
     procedure WriteObject(const AObjGen: IPemObjectGenerator);
+  end;
+
+  /// <summary>
+  /// Interface for PEM parser.
+  /// </summary>
+  IPemParser = interface(IInterface)
+    ['{F6A7B8C9-D0E1-2345-F012-3456789ABCDE}']
+
+    /// <summary>
+    /// Read a PEM object from the stream and return it as an ASN.1 sequence.
+    /// </summary>
+    /// <param name="AInStream">The input stream to read from</param>
+    /// <returns>An ASN.1 sequence, or nil if no PEM object found</returns>
+    function ReadPemObject(const AInStream: TStream): IAsn1Sequence;
   end;
 
 implementation

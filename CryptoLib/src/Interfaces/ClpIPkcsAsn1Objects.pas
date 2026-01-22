@@ -32,8 +32,10 @@ type
   IAttributePkcs = interface;
   ICertificationRequest = interface;
   ICertificationRequestInfo = interface;
+  IContentInfo = interface;
   IPrivateKeyInfo = interface;
   IRsassaPssParameters = interface;
+  ISignedData = interface;
 
   /// <summary>
   /// Interface for AttributePkcs.
@@ -128,6 +130,19 @@ type
   end;
 
   /// <summary>
+  /// Interface for ContentInfo.
+  /// </summary>
+  IContentInfo = interface(IAsn1Encodable)
+    ['{B9C0D1E2-F3A4-5678-9012-3456789ABCDE}']
+
+    function GetContentType: IDerObjectIdentifier;
+    function GetContent: IAsn1Encodable;
+
+    property ContentType: IDerObjectIdentifier read GetContentType;
+    property Content: IAsn1Encodable read GetContent;
+  end;
+
+  /// <summary>
   /// Interface for RsassaPssParameters.
   /// </summary>
   IRsassaPssParameters = interface(IAsn1Encodable)
@@ -142,6 +157,27 @@ type
     property MaskGenAlgorithm: IAlgorithmIdentifier read GetMaskGenAlgorithm;
     property SaltLength: IDerInteger read GetSaltLength;
     property TrailerField: IDerInteger read GetTrailerField;
+  end;
+
+  /// <summary>
+  /// Interface for SignedData (PKCS#7).
+  /// </summary>
+  ISignedData = interface(IAsn1Encodable)
+    ['{C0D1E2F3-A4B5-6789-0123-456789ABCDEF}']
+
+    function GetVersion: IDerInteger;
+    function GetDigestAlgorithms: IAsn1Set;
+    function GetContentInfo: IContentInfo;
+    function GetCertificates: IAsn1Set;
+    function GetCrls: IAsn1Set;
+    function GetSignerInfos: IAsn1Set;
+
+    property Version: IDerInteger read GetVersion;
+    property DigestAlgorithms: IAsn1Set read GetDigestAlgorithms;
+    property ContentInfo: IContentInfo read GetContentInfo;
+    property Certificates: IAsn1Set read GetCertificates;
+    property Crls: IAsn1Set read GetCrls;
+    property SignerInfos: IAsn1Set read GetSignerInfos;
   end;
 
 implementation

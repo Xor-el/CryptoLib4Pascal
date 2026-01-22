@@ -287,8 +287,8 @@ type
       EncipherOnly = (1 shl 0);
       DecipherOnly = (1 shl 15);
 
-    class function GetInstance(AObj: TObject): IKeyUsage; overload; static;
-    class function GetInstance(const AEncoded: TCryptoLibByteArray): IKeyUsage; overload; static;
+    class function GetInstance(AObj: TObject): IKeyUsage; reintroduce; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IKeyUsage; reintroduce; overload; static;
 
     constructor Create(AUsage: Int32); overload;
     constructor Create(const AUsage: IDerBitString); overload;

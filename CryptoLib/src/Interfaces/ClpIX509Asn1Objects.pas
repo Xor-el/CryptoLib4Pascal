@@ -363,6 +363,7 @@ type
     function ToAsn1ObjectTrimmed: IAsn1Sequence;
 
     property Count: Int32 read GetCount;
+    property ExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier> read GetExtensionOids;
   end;
 
   /// <summary>

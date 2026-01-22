@@ -6413,11 +6413,8 @@ end;
 constructor TAsn1Set.Create(AIsSorted: Boolean; const AElements: TCryptoLibGenericArray<IAsn1Encodable>);
 begin
   inherited Create;
-  if AElements = nil then
-    raise EArgumentNilCryptoLibException.Create('elements');
-
   System.Assert(not AIsSorted);
-  FElements := System.Copy(AElements);
+  FElements := AElements;
   FSortedDerEncodings := nil;
 end;
 

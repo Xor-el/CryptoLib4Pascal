@@ -31,7 +31,9 @@ uses
   ClpPlatform,
   ClpStreams,
   ClpStringUtils,
-  ClpConverters;
+  ClpConverters,
+  ClpAsn1Objects,
+  ClpIAsn1Objects;
 
 type
   /// <summary>
@@ -142,6 +144,24 @@ type
     procedure WriteObject(const AObjGen: IPemObjectGenerator);
 
     property Writer: TStream read GetWriter;
+  end;
+
+  /// <summary>
+  /// PEM parser implementation.
+  /// </summary>
+  TPemParser = class sealed(TInterfacedObject, IPemParser)
+  strict private
+    FHeader1: String;
+    FHeader2: String;
+    FFooter1: String;
+    FFooter2: String;
+
+    function ReadLine(const AInStream: TStream): String;
+
+  public
+    constructor Create(const AType: String);
+
+    function ReadPemObject(const AInStream: TStream): IAsn1Sequence;
   end;
 
 implementation
@@ -675,6 +695,109 @@ begin
 
   WriteEncoded(LObj.Content);
   WritePostEncapsulationBoundary(LObj.&Type);
+end;
+
+{ TPemParser }
+
+constructor TPemParser.Create(const AType: String);
+begin
+  Inherited Create();
+  FHeader1 := '-----BEGIN ' + AType + '-----';
+  FHeader2 := '-----BEGIN X509 ' + AType + '-----';
+  FFooter1 := '-----END ' + AType + '-----';
+  FFooter2 := '-----END X509 ' + AType + '-----';
+end;
+
+function TPemParser.ReadLine(const AInStream: TStream): String;
+var
+  LC: Int32;
+  LByte: Byte;
+  LBytesRead: Int32;
+  LBuilder: TStringBuilder;
+begin
+  LBuilder := TStringBuilder.Create();
+  try
+    repeat
+      while True do
+      begin
+        LBytesRead := AInStream.Read(LByte, 1);
+        if LBytesRead = 0 then
+        begin
+          LC := -1;
+          Break;
+        end;
+        LC := Int32(LByte);
+
+        if (LC = Ord(#13)) or (LC = Ord(#10)) then
+        begin
+          if LC = Ord(#13) then
+            Continue;
+          Break;
+        end;
+
+        if LC >= 0 then
+          LBuilder.Append(Char(LC));
+      end;
+    until (LC < 0) or (LBuilder.Length > 0);
+
+    if LC < 0 then
+      Result := ''
+    else
+      Result := LBuilder.ToString();
+  finally
+    LBuilder.Free();
+  end;
+end;
+
+function TPemParser.ReadPemObject(const AInStream: TStream): IAsn1Sequence;
+var
+  LLine: String;
+  LPemBuf: TStringBuilder;
+  LDecoded: TCryptoLibByteArray;
+  LAsn1Obj: IAsn1Object;
+begin
+  Result := nil;
+  LPemBuf := TStringBuilder.Create();
+  try
+    // Skip until we find the header
+    while True do
+    begin
+      LLine := ReadLine(AInStream);
+      if LLine = '' then
+      begin
+        Exit;
+      end;
+
+      if TPlatform.StartsWith(LLine, FHeader1) or TPlatform.StartsWith(LLine, FHeader2) then
+        Break;
+    end;
+
+    // Read until we find the footer
+    while True do
+    begin
+      LLine := ReadLine(AInStream);
+      if LLine = '' then
+      begin
+        Exit;
+      end;
+
+      if TPlatform.StartsWith(LLine, FFooter1) or TPlatform.StartsWith(LLine, FFooter2) then
+        Break;
+
+      LPemBuf.Append(LLine);
+    end;
+
+    if LPemBuf.Length > 0 then
+    begin
+      LDecoded := TBase64.Decode(LPemBuf.ToString());
+      LAsn1Obj := TAsn1Object.FromByteArray(LDecoded);
+
+      if not Supports(LAsn1Obj, IAsn1Sequence, Result) then
+        raise EIOCryptoLibException.Create('malformed PEM data encountered');
+    end;
+  finally
+    LPemBuf.Free();
+  end;
 end;
 
 end.

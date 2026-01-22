@@ -75,6 +75,7 @@ type
   EOutputLengthCryptoLibException = class(ECryptoLibException);
   EBadBlockCryptoLibException = class(ECryptoLibException);
   EPemGenerationCryptoLibException = class(ECryptoLibException);
+  ECertificateCryptoLibException = class(ECryptoLibException);
 
   /// <summary>
   /// Represents a dynamic array of Byte.
