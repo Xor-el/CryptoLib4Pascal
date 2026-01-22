@@ -58,6 +58,8 @@ type
 
     function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray; virtual;
 
+    function GetMaxEncodingSize(const n: TBigInteger): Int32; virtual;
+
     class property Instance: IStandardDsaEncoding read GetInstance;
 
   end;
@@ -83,6 +85,8 @@ type
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray; virtual;
+
+    function GetMaxEncodingSize(const n: TBigInteger): Int32; virtual;
 
     class property Instance: IPlainDsaEncoding read GetInstance;
 
@@ -172,6 +176,11 @@ begin
   result := TDerInteger.Create(CheckValue(n, x));
 end;
 
+function TStandardDsaEncoding.GetMaxEncodingSize(const n: TBigInteger): Int32;
+begin
+  result := TDerSequence.GetEncodingLength(TDerInteger.GetEncodingLength(n) * 2);
+end;
+
 class function TStandardDsaEncoding.GetInstance: IStandardDsaEncoding;
 begin
   result := TStandardDsaEncoding.Create();
@@ -233,6 +242,11 @@ begin
   pos := len - bsLen;
   TArrayUtils.Fill(buf, off, off + pos, Byte(0));
   System.Move(bs[bsOff], buf[off + pos], bsLen * System.SizeOf(Byte));
+end;
+
+function TPlainDsaEncoding.GetMaxEncodingSize(const n: TBigInteger): Int32;
+begin
+  result := TBigIntegers.GetUnsignedByteLength(n) * 2;
 end;
 
 class function TPlainDsaEncoding.GetInstance: IPlainDsaEncoding;

@@ -90,6 +90,8 @@ type
 
     class function GetInstance(obj: TObject): IX9ECParameters; static;
 
+    class function GetOptional(const AElement: IAsn1Encodable): IX9ECParameters; static;
+
   end;
 
 implementation
@@ -250,6 +252,23 @@ begin
   end;
 
   Result := Nil;
+end;
+
+class function TX9ECParameters.GetOptional(const AElement: IAsn1Encodable): IX9ECParameters;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IX9ECParameters, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TX9ECParameters.Create(LSequence)
+  else
+    Result := nil;
 end;
 
 function TX9ECParameters.GetN: TBigInteger;

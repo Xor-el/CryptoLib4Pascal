@@ -681,25 +681,24 @@ type
     function GetObjectParser(ATag: Int32; AIsExplicit: Boolean): IAsn1Convertible;
     function ToString(): String;
 
-    // Additional public methods from TAsn1TaggedObject class (matching BC reference)
     /// <summary>
-    /// Get the base encodable object (public, matching BC line 274-277).
+    /// Get the base encodable object
     /// </summary>
     function GetBaseObject(): IAsn1Encodable;
     /// <summary>
-    /// Get the explicit base encodable object (public, matching BC line 285-291).
+    /// Get the explicit base encodable object
     /// </summary>
     function GetExplicitBaseObject(): IAsn1Encodable;
     /// <summary>
-    /// Get the explicit base tagged object (public, matching BC line 293-299).
+    /// Get the explicit base tagged object
     /// </summary>
     function GetExplicitBaseTagged(): IAsn1TaggedObject;
     /// <summary>
-    /// Get the implicit base tagged object (public, matching BC line 301-321).
+    /// Get the implicit base tagged object
     /// </summary>
     function GetImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObject;
     /// <summary>
-    /// Get base universal object (public, matching BC line 323-329).
+    /// Get base universal object
     /// </summary>
     function GetBaseUniversal(ADeclaredExplicit: Boolean; ATagNo: Int32): IAsn1Object; overload;
     /// <summary>
@@ -709,19 +708,19 @@ type
 
     // Methods from IAsn1TaggedObjectParser (since TAsn1TaggedObject implements both interfaces)
     /// <summary>
-    /// Parse a base universal object (public, matching BC line 361-378).
+    /// Parse a base universal object
     /// </summary>
     function ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible;
     /// <summary>
-    /// Parse an explicit base object (public, matching BC line 380-383).
+    /// Parse an explicit base object
     /// </summary>
     function ParseExplicitBaseObject(): IAsn1Convertible;
     /// <summary>
-    /// Parse an explicit base tagged object (public, matching BC line 385-388).
+    /// Parse an explicit base tagged object
     /// </summary>
     function ParseExplicitBaseTagged(): IAsn1TaggedObjectParser;
     /// <summary>
-    /// Parse an implicit base tagged object (public, matching BC line 390-393).
+    /// Parse an implicit base tagged object
     /// </summary>
     function ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser;
   end;
@@ -808,7 +807,7 @@ type
     /// </summary>
     function LoadTaggedIL(ATagClass, ATagNo: Int32): IAsn1Object;
     /// <summary>
-    /// Read a vector of ASN.1 objects (internal method - public in Delphi as internal in C# is public in Delphi).
+    /// Read a vector of ASN.1 objects.
     /// </summary>
     function ReadVector(): IAsn1EncodableVector;
   end;

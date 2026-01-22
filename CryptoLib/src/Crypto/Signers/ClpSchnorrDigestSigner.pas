@@ -30,6 +30,7 @@ uses
   ClpISchnorrDigestSigner,
   ClpIDigest,
   ClpBigInteger,
+  ClpBigIntegers,
   ClpCryptoLibTypes,
   ClpIParametersWithRandom,
   ClpIAsymmetricKeyParameter,
@@ -85,6 +86,11 @@ type
     /// </summary>
     procedure BlockUpdate(const input: TCryptoLibByteArray;
       inOff, length: Int32); virtual;
+
+    /// <summary>
+    /// Return the maximum size for a signature produced by this signer.
+    /// </summary>
+    function GetMaxSignatureSize: Int32; virtual;
 
     /// <summary>
     /// Generate a signature for the message we've been loaded with using the
@@ -177,6 +183,24 @@ end;
 function TSchnorrDigestSigner.GetAlgorithmName: String;
 begin
   Result := FDigest.AlgorithmName + 'with' + FSchnorr.AlgorithmName;
+end;
+
+function TSchnorrDigestSigner.GetMaxSignatureSize: Int32;
+var
+  LOrder: TBigInteger;
+begin
+  LOrder := GetOrder();
+  if LOrder.IsInitialized then
+  begin
+    // Schnorr signature is two big integers (r, s), each the size of the order
+    // For standard encoding, add some overhead for ASN.1 structure
+    Result := (TBigIntegers.GetByteLength(LOrder) * 2) + 20; // 20 bytes overhead for ASN.1
+  end
+  else
+  begin
+    // Fallback: assume 256-bit order (32 bytes per component)
+    Result := 84; // 2 * 32 + 20 overhead
+  end;
 end;
 
 function TSchnorrDigestSigner.GetOrder: TBigInteger;

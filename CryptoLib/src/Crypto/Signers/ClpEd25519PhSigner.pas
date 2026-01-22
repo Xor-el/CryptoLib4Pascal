@@ -64,6 +64,7 @@ type
     procedure Update(b: Byte); virtual;
     procedure BlockUpdate(const buf: TCryptoLibByteArray;
       off, len: Int32); virtual;
+    function GetMaxSignatureSize: Int32; virtual;
     function GenerateSignature(): TCryptoLibByteArray; virtual;
     function VerifySignature(const signature: TCryptoLibByteArray)
       : Boolean; virtual;
@@ -131,6 +132,11 @@ end;
 procedure TEd25519PhSigner.Update(b: Byte);
 begin
   FPreHash.Update(b);
+end;
+
+function TEd25519PhSigner.GetMaxSignatureSize: Int32;
+begin
+  Result := TEd25519.SignatureSize;
 end;
 
 function TEd25519PhSigner.GenerateSignature: TCryptoLibByteArray;

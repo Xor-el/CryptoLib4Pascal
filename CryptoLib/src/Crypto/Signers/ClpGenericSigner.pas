@@ -63,6 +63,7 @@ type
     procedure Update(input: Byte);
     procedure BlockUpdate(const input: TCryptoLibByteArray;
       inOff, len: Int32);
+    function GetMaxSignatureSize: Int32;
     function GenerateSignature: TCryptoLibByteArray;
     function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
     procedure Reset;
@@ -127,6 +128,11 @@ procedure TGenericSigner.BlockUpdate(const input: TCryptoLibByteArray;
   inOff, len: Int32);
 begin
   FDigest.BlockUpdate(input, inOff, len);
+end;
+
+function TGenericSigner.GetMaxSignatureSize: Int32;
+begin
+  Result := FEngine.OutputBlockSize;
 end;
 
 function TGenericSigner.GenerateSignature: TCryptoLibByteArray;

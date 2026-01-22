@@ -26,7 +26,6 @@ uses
   SysUtils,
   Math,
   DateUtils,
-  StrUtils,
   ClpBits,
   ClpCryptoLibTypes,
   ClpBigInteger,
@@ -494,6 +493,10 @@ type
     /// Get instance from object.
     /// </summary>
     class function GetInstance(const AObj: TObject): IAsn1OctetString; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IAsn1OctetString; overload; static;
     /// <summary>
     /// Get instance from ASN.1 object.
     /// </summary>
@@ -8181,6 +8184,16 @@ begin
   raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
 end;
 
+class function TAsn1OctetString.GetInstance(const AEncoded: TCryptoLibByteArray): IAsn1OctetString;
+begin
+  try
+    Result := TAsn1OctetString.Meta.Instance.FromByteArray(AEncoded) as IAsn1OctetString;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.CreateFmt('failed to construct OCTET STRING from byte[]: %s', [E.Message]);
+  end;
+end;
+
 class function TAsn1OctetString.GetInstance(const AObj: IAsn1Object): IAsn1OctetString;
 begin
   if AObj = nil then
@@ -11549,9 +11562,9 @@ class function TAsn1GeneralizedTime.IndexOfSign(const AStr: String; AStartIndex:
 var
   LIndex: Int32;
 begin
-  LIndex := PosEx('+', AStr, AStartIndex);
+  LIndex := TPlatform.IndexOf(AStr, '+', AStartIndex);
   if LIndex = 0 then
-    LIndex := PosEx('-', AStr, AStartIndex);
+    LIndex := TPlatform.IndexOf(AStr, '-', AStartIndex);
     Result := LIndex;
 end;
 
@@ -13929,7 +13942,7 @@ end;
 
 class function TDerInteger.AllowUnsafe(): Boolean;
 begin
-  Result := FAllowUnsafeInteger;
+  Result := AllowUnsafeInteger;
 end;
 
 class function TDerInteger.IsMalformed(const ABytes: TCryptoLibByteArray): Boolean;

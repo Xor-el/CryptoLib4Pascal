@@ -46,6 +46,11 @@ type
     /// <returns>An encoding of the DSA signature given by the provided (r, s) pair.</returns>
     function Encode(const n, r, s: TBigInteger): TCryptoLibByteArray;
 
+    /// <summary>Get the maximum encoding size for a given order.</summary>
+    /// <param name="n">The order of the group.</param>
+    /// <returns>The maximum size in bytes for an encoding.</returns>
+    function GetMaxEncodingSize(const n: TBigInteger): Int32;
+
   end;
 
 type

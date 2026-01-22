@@ -54,6 +54,12 @@ type
     //
     DigestAlgorithm: String = '1.2.840.113549.2';
 
+    //
+    // pkcs-9 OBJECT IDENTIFIER ::= {
+    //       iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 9 }
+    //
+    Pkcs9: String = '1.2.840.113549.1.9';
+
   class var
 
     FIsBooted: Boolean;
@@ -86,7 +92,13 @@ type
     FMD2, FMD4, FMD5,
     FIdHmacWithSha1, FIdHmacWithSha224, FIdHmacWithSha256,
     FIdHmacWithSha384, FIdHmacWithSha512,
-    FIdHmacWithSha512_224, FIdHmacWithSha512_256
+    FIdHmacWithSha512_224, FIdHmacWithSha512_256,
+
+    // PKCS#9
+    FPkcs9AtEmailAddress,
+    FPkcs9AtChallengePassword,
+    FPkcs9AtUnstructuredName,
+    FPkcs9AtUnstructuredAddress
       : IDerObjectIdentifier;
 
     // PKCS#1 RSA getters
@@ -124,6 +136,12 @@ type
     class function GetIdHmacWithSha512: IDerObjectIdentifier; static; inline;
     class function GetIdHmacWithSha512_224: IDerObjectIdentifier; static; inline;
     class function GetIdHmacWithSha512_256: IDerObjectIdentifier; static; inline;
+
+    // PKCS#9 getters
+    class function GetPkcs9AtEmailAddress: IDerObjectIdentifier; static; inline;
+    class function GetPkcs9AtChallengePassword: IDerObjectIdentifier; static; inline;
+    class function GetPkcs9AtUnstructuredName: IDerObjectIdentifier; static; inline;
+    class function GetPkcs9AtUnstructuredAddress: IDerObjectIdentifier; static; inline;
 
     class constructor PkcsObjectIdentifiers();
 
@@ -174,6 +192,14 @@ type
     class property IdHmacWithSha512_224: IDerObjectIdentifier read GetIdHmacWithSha512_224;
     class property IdHmacWithSha512_256: IDerObjectIdentifier read GetIdHmacWithSha512_256;
 
+    //
+    // PKCS#9
+    //
+    class property Pkcs9AtEmailAddress: IDerObjectIdentifier read GetPkcs9AtEmailAddress;
+    class property Pkcs9AtChallengePassword: IDerObjectIdentifier read GetPkcs9AtChallengePassword;
+    class property Pkcs9AtUnstructuredName: IDerObjectIdentifier read GetPkcs9AtUnstructuredName;
+    class property Pkcs9AtUnstructuredAddress: IDerObjectIdentifier read GetPkcs9AtUnstructuredAddress;
+
     class procedure Boot(); static;
 
   end;
@@ -221,6 +247,12 @@ begin
     FIdHmacWithSha512 := TDerObjectIdentifier.Create(DigestAlgorithm + '.11');
     FIdHmacWithSha512_224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.12');
     FIdHmacWithSha512_256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.13');
+
+    // PKCS#9
+    FPkcs9AtEmailAddress := TDerObjectIdentifier.Create(Pkcs9 + '.1');
+    FPkcs9AtUnstructuredName := TDerObjectIdentifier.Create(Pkcs9 + '.2');
+    FPkcs9AtChallengePassword := TDerObjectIdentifier.Create(Pkcs9 + '.7');
+    FPkcs9AtUnstructuredAddress := TDerObjectIdentifier.Create(Pkcs9 + '.8');
 
     FIsBooted := True;
   end;
@@ -372,6 +404,28 @@ end;
 class function TPkcsObjectIdentifiers.GetIdHmacWithSha512_256: IDerObjectIdentifier;
 begin
   Result := FIdHmacWithSha512_256;
+end;
+
+// PKCS#9 getters
+
+class function TPkcsObjectIdentifiers.GetPkcs9AtEmailAddress: IDerObjectIdentifier;
+begin
+  Result := FPkcs9AtEmailAddress;
+end;
+
+class function TPkcsObjectIdentifiers.GetPkcs9AtChallengePassword: IDerObjectIdentifier;
+begin
+  Result := FPkcs9AtChallengePassword;
+end;
+
+class function TPkcsObjectIdentifiers.GetPkcs9AtUnstructuredName: IDerObjectIdentifier;
+begin
+  Result := FPkcs9AtUnstructuredName;
+end;
+
+class function TPkcsObjectIdentifiers.GetPkcs9AtUnstructuredAddress: IDerObjectIdentifier;
+begin
+  Result := FPkcs9AtUnstructuredAddress;
 end;
 
 class constructor TPkcsObjectIdentifiers.PkcsObjectIdentifiers;

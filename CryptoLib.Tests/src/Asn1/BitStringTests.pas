@@ -33,6 +33,8 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpX509Asn1Objects,
+  ClpIX509Asn1Objects,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -43,7 +45,7 @@ type
     procedure EncodingCheck(const ADerData, ADlData: TCryptoLibByteArray);
 
   published
-    //procedure TestBitString;
+    procedure TestBitString;
     procedure TestZeroLengthStrings;
     procedure TestRandomPadBits;
 
@@ -144,11 +146,10 @@ begin
   CheckTrue(Supports(LDer, IDerBitString), 'DER test failed');
 end;
 
-(*
+
 procedure TBitStringTest.TestBitString;
 var
   LK: IKeyUsage;
-  LEmptyBytes: TCryptoLibByteArray;
 begin
   LK := TKeyUsage.Create(TKeyUsage.DigitalSignature);
   if (LK.GetBytes()[0] <> Byte(TKeyUsage.DigitalSignature)) or
@@ -185,9 +186,8 @@ begin
     Fail('failed decipherOnly');
   end;
 
-  System.SetLength(LEmptyBytes, 0);
   try
-    TAsn1Object.FromByteArray((TDerBitString.Create(LEmptyBytes, 0) as IDerBitString).GetEncoded());
+    TAsn1Object.FromByteArray((TDerBitString.CreateEmpty as IDerBitString).GetEncoded());
   except
     on E: Exception do
     begin
@@ -195,7 +195,7 @@ begin
     end;
   end;
 
-end; *)
+end;
 
 initialization
 

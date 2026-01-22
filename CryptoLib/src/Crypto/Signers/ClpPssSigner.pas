@@ -132,6 +132,7 @@ type
     procedure Update(input: Byte);
     procedure BlockUpdate(const input: TCryptoLibByteArray;
       inOff, len: Int32);
+    function GetMaxSignatureSize: Int32;
     function GenerateSignature: TCryptoLibByteArray;
     function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
     procedure Reset;
@@ -291,7 +292,6 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SKeyTooSmall);
   end;
 
-  // C# creates new array each time, so we must zero it to match behavior
   SetLength(FBlock, (FEmBits + 7) div 8);
   ClearBlock(FBlock);
 end;
@@ -324,7 +324,7 @@ begin
     raise EInvalidOperationCryptoLibException.Create('Digest size mismatch');
   end;
 
-  // Ensure block is zero-initialized before use (C# creates new array in Init)
+  // Ensure block is zero-initialized before use
   ClearBlock(FBlock);
 
   // PSS requires first 8 bytes of mDash to be zeros (padding1)
@@ -366,6 +366,11 @@ begin
   Result := FCipher.ProcessBlock(FBlock, 0, System.Length(FBlock));
 
   ClearBlock(FBlock);
+end;
+
+function TPssSigner.GetMaxSignatureSize: Int32;
+begin
+  Result := FCipher.OutputBlockSize;
 end;
 
 function TPssSigner.VerifySignature(

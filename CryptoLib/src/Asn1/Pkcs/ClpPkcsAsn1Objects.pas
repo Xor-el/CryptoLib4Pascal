@@ -1,0 +1,1444 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpPkcsAsn1Objects;
+
+{$I ..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  SysUtils,
+  Classes,
+  ClpBigInteger,
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
+  ClpIPkcsAsn1Objects,
+  ClpX509Asn1Objects,
+  ClpIX509Asn1Objects,
+  ClpPkcsObjectIdentifiers,
+  ClpOiwObjectIdentifiers,
+  ClpCryptoLibTypes,
+  ClpAsn1Utilities;
+
+resourcestring
+  SBadSequenceSize = 'Bad sequence size: %d';
+  SAttrTypeNil = 'attrType';
+  SAttrValuesNil = 'attrValues';
+  SWrongNumberOfElements = 'Wrong number of elements in sequence';
+  SRequestInfoNil = 'requestInfo';
+  SAlgorithmNil = 'algorithm';
+  SSignatureNil = 'signature';
+  SSubjectNil = 'subject';
+  SSubjectPKInfoNil = 'subjectPKInfo';
+  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
+  SChallengePasswordMustHaveSingleValue = 'challengePassword attribute must have exactly one value';
+  SUnstructuredNameMustHaveSingleValue = 'unstructuredName attribute must have exactly one value';
+  SPrivateKeyAlgorithmNil = 'privateKeyAlgorithm';
+  SPrivateKeyNil = 'privateKey';
+  SVersionNil = 'version';
+
+type
+  /// <summary>
+  /// The AttributePkcs object.
+  /// </summary>
+  TAttributePkcs = class(TAsn1Encodable, IAttributePkcs)
+
+  strict private
+  var
+    FAttrType: IDerObjectIdentifier;
+    FAttrValues: IAsn1Set;
+
+  strict protected
+    function GetAttrType: IDerObjectIdentifier;
+    function GetAttrValues: IAsn1Set;
+
+  public
+    class function GetInstance(AObj: TObject): IAttributePkcs; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IAttributePkcs; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IAttributePkcs; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IAttributePkcs; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAttributePkcs; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AAttrType: IDerObjectIdentifier;
+      const AAttrValues: IAsn1Set); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property AttrType: IDerObjectIdentifier read GetAttrType;
+    property AttrValues: IAsn1Set read GetAttrValues;
+
+  end;
+
+  /// <summary>
+  /// The CertificationRequestInfo object.
+  /// </summary>
+  TCertificationRequestInfo = class(TAsn1Encodable, ICertificationRequestInfo)
+
+  strict private
+  var
+    FVersion: IDerInteger;
+    FSubject: IX509Name;
+    FSubjectPKInfo: ISubjectPublicKeyInfo;
+    FAttributes: IAsn1Set;
+
+  strict protected
+    function GetVersion: IDerInteger;
+    function GetSubject: IX509Name;
+    function GetSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+    function GetAttributes: IAsn1Set;
+
+  public
+    class function ValidateAttributes(const AAttributes: IAsn1Set): IAsn1Set; static;
+
+    class function GetInstance(AObj: TObject): ICertificationRequestInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): ICertificationRequestInfo; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ICertificationRequestInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ICertificationRequestInfo; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICertificationRequestInfo; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ASubject: IX509Name;
+      const APkInfo: ISubjectPublicKeyInfo; const AAttributes: IAsn1Set); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Version: IDerInteger read GetVersion;
+    property Subject: IX509Name read GetSubject;
+    property SubjectPublicKeyInfo: ISubjectPublicKeyInfo read GetSubjectPublicKeyInfo;
+    property Attributes: IAsn1Set read GetAttributes;
+
+  end;
+
+  /// <summary>
+  /// The CertificationRequest object.
+  /// </summary>
+  TCertificationRequest = class(TAsn1Encodable, ICertificationRequest)
+
+  strict private
+  var
+    FReqInfo: ICertificationRequestInfo;
+    FSigAlgId: IAlgorithmIdentifier;
+    FSigBits: IDerBitString;
+
+  strict protected
+    function GetCertificationRequestInfo: ICertificationRequestInfo;
+    function GetSignatureAlgorithm: IAlgorithmIdentifier;
+    function GetSignature: IDerBitString;
+    function GetSignatureOctets: TCryptoLibByteArray;
+
+  public
+    class function GetInstance(AObj: TObject): ICertificationRequest; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): ICertificationRequest; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ICertificationRequest; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ICertificationRequest; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICertificationRequest; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ARequestInfo: ICertificationRequestInfo;
+      const AAlgorithm: IAlgorithmIdentifier; const ASignature: IDerBitString); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;
+    property Signature: IDerBitString read GetSignature;
+
+  end;
+
+  /// <summary>
+  /// The PrivateKeyInfo object.
+  /// </summary>
+  TPrivateKeyInfo = class(TAsn1Encodable, IPrivateKeyInfo)
+
+  strict private
+  var
+    FVersion: IDerInteger;
+    FPrivateKeyAlgorithm: IAlgorithmIdentifier;
+    FPrivateKey: IAsn1OctetString;
+    FAttributes: IAsn1Set;
+    FPublicKey: IDerBitString;
+
+  strict protected
+    function GetVersion: IDerInteger;
+    function GetPrivateKeyAlgorithm: IAlgorithmIdentifier;
+    function GetPrivateKey: IAsn1OctetString;
+    function GetAttributes: IAsn1Set;
+    function GetPublicKey: IDerBitString;
+    function HasPublicKey: Boolean;
+    function ParsePrivateKey: IAsn1Object;
+    function ParsePublicKey: IAsn1Object;
+
+  public
+    class function GetInstance(AObj: TObject): IPrivateKeyInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IPrivateKeyInfo; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IPrivateKeyInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IPrivateKeyInfo; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IPrivateKeyInfo; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPrivateKeyInfo; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
+      const APrivateKey: IAsn1Encodable); overload;
+    constructor Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
+      const APrivateKey: IAsn1Encodable; const AAttributes: IAsn1Set); overload;
+    constructor Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
+      const APrivateKey: IAsn1Encodable; const AAttributes: IAsn1Set;
+      const APublicKey: TCryptoLibByteArray); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Version: IDerInteger read GetVersion;
+    property PrivateKeyAlgorithm: IAlgorithmIdentifier read GetPrivateKeyAlgorithm;
+    property PrivateKey: IAsn1OctetString read GetPrivateKey;
+    property Attributes: IAsn1Set read GetAttributes;
+    property PublicKey: IDerBitString read GetPublicKey;
+
+  end;
+
+  /// <summary>
+  /// The RsaPrivateKeyStructure object.
+  /// </summary>
+  TRsaPrivateKeyStructure = class(TAsn1Encodable, IRsaPrivateKeyStructure)
+
+  strict private
+  var
+    FVersion: IDerInteger;
+    FModulus: TBigInteger;
+    FPublicExponent: TBigInteger;
+    FPrivateExponent: TBigInteger;
+    FPrime1: TBigInteger;
+    FPrime2: TBigInteger;
+    FExponent1: TBigInteger;
+    FExponent2: TBigInteger;
+    FCoefficient: TBigInteger;
+
+  strict protected
+    function GetModulus: TBigInteger;
+    function GetPublicExponent: TBigInteger;
+    function GetPrivateExponent: TBigInteger;
+    function GetPrime1: TBigInteger;
+    function GetPrime2: TBigInteger;
+    function GetExponent1: TBigInteger;
+    function GetExponent2: TBigInteger;
+    function GetCoefficient: TBigInteger;
+
+  public
+    class function GetInstance(AObj: TObject): IRsaPrivateKeyStructure; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IRsaPrivateKeyStructure; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IRsaPrivateKeyStructure; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IRsaPrivateKeyStructure; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IRsaPrivateKeyStructure; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AModulus, APublicExponent, APrivateExponent,
+      APrime1, APrime2, AExponent1, AExponent2, ACoefficient: TBigInteger); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Modulus: TBigInteger read GetModulus;
+    property PublicExponent: TBigInteger read GetPublicExponent;
+    property PrivateExponent: TBigInteger read GetPrivateExponent;
+    property Prime1: TBigInteger read GetPrime1;
+    property Prime2: TBigInteger read GetPrime2;
+    property Exponent1: TBigInteger read GetExponent1;
+    property Exponent2: TBigInteger read GetExponent2;
+    property Coefficient: TBigInteger read GetCoefficient;
+
+  end;
+
+  /// <summary>
+  /// The RsassaPssParameters object.
+  /// <pre>
+  /// RSASSA-PSS-params ::= SEQUENCE {
+  ///   hashAlgorithm      [0] OAEP-PSSDigestAlgorithms  DEFAULT sha1,
+  ///    maskGenAlgorithm   [1] PKCS1MGFAlgorithms  DEFAULT mgf1SHA1,
+  ///    saltLength         [2] INTEGER  DEFAULT 20,
+  ///    trailerField       [3] TrailerField  DEFAULT trailerFieldBC
+  ///  }
+  /// </pre>
+  /// </summary>
+  TRsassaPssParameters = class(TAsn1Encodable, IRsassaPssParameters)
+
+  public
+    class var
+      DefaultHashAlgorithm: IAlgorithmIdentifier;
+      DefaultMaskGenAlgorithm: IAlgorithmIdentifier;
+      DefaultMaskGenFunction: IAlgorithmIdentifier; // Obsolete, use DefaultMaskGenAlgorithm
+      DefaultSaltLength: IDerInteger;
+      DefaultTrailerField: IDerInteger;
+
+    class procedure Boot; static;
+    class constructor Create;
+
+  strict private
+  var
+    FHashAlgorithm: IAlgorithmIdentifier;
+    FMaskGenAlgorithm: IAlgorithmIdentifier;
+    FSaltLength: IDerInteger;
+    FTrailerField: IDerInteger;
+
+  strict protected
+    function GetHashAlgorithm: IAlgorithmIdentifier;
+    function GetMaskGenAlgorithm: IAlgorithmIdentifier;
+    function GetSaltLength: IDerInteger;
+    function GetTrailerField: IDerInteger;
+
+  public
+    class function GetInstance(AObj: TObject): IRsassaPssParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IRsassaPssParameters; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IRsassaPssParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IRsassaPssParameters; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IRsassaPssParameters; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create; overload;
+    constructor Create(const AHashAlgorithm, AMaskGenAlgorithm: IAlgorithmIdentifier;
+      const ASaltLength, ATrailerField: IDerInteger); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property HashAlgorithm: IAlgorithmIdentifier read GetHashAlgorithm;
+    property MaskGenAlgorithm: IAlgorithmIdentifier read GetMaskGenAlgorithm;
+    property SaltLength: IDerInteger read GetSaltLength;
+    property TrailerField: IDerInteger read GetTrailerField;
+
+  end;
+
+implementation
+
+{ TAttributePkcs }
+
+class function TAttributePkcs.GetInstance(AObj: TObject): IAttributePkcs;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAttributePkcs, Result) then
+    Exit;
+
+  Result := TAttributePkcs.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAttributePkcs.GetInstance(const AObj: IAsn1Object): IAttributePkcs;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAttributePkcs, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetInstance(AObj);
+  Result := TAttributePkcs.Create(LSequence);
+end;
+
+class function TAttributePkcs.GetInstance(const AEncoded: TCryptoLibByteArray): IAttributePkcs;
+var
+  LAsn1Obj: IAsn1Object;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    LAsn1Obj := TAsn1Object.FromByteArray(AEncoded);
+    Result := GetInstance(LAsn1Obj);
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct AttributePkcs from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TAttributePkcs.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IAttributePkcs;
+begin
+  Result := TAttributePkcs.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TAttributePkcs.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAttributePkcs;
+begin
+  Result := TAttributePkcs.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TAttributePkcs.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if LCount <> 2 then
+  begin
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+  end;
+
+  FAttrType := TDerObjectIdentifier.GetInstance(ASeq[0] as TAsn1Encodable);
+  FAttrValues := TAsn1Set.GetInstance(ASeq[1] as TAsn1Encodable);
+end;
+
+constructor TAttributePkcs.Create(const AAttrType: IDerObjectIdentifier;
+  const AAttrValues: IAsn1Set);
+begin
+  inherited Create();
+
+  if AAttrType = nil then
+    raise EArgumentNilCryptoLibException.Create(SAttrTypeNil);
+  if AAttrValues = nil then
+    raise EArgumentNilCryptoLibException.Create(SAttrValuesNil);
+
+  FAttrType := AAttrType;
+  FAttrValues := AAttrValues;
+end;
+
+function TAttributePkcs.GetAttrType: IDerObjectIdentifier;
+begin
+  Result := FAttrType;
+end;
+
+function TAttributePkcs.GetAttrValues: IAsn1Set;
+begin
+  Result := FAttrValues;
+end;
+
+function TAttributePkcs.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create([FAttrType, FAttrValues]);
+end;
+
+{ TCertificationRequestInfo }
+
+class function TCertificationRequestInfo.GetInstance(AObj: TObject): ICertificationRequestInfo;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificationRequestInfo, Result) then
+    Exit;
+
+  Result := TCertificationRequestInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertificationRequestInfo.GetInstance(const AObj: IAsn1Object): ICertificationRequestInfo;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificationRequestInfo, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetInstance(AObj);
+  Result := TCertificationRequestInfo.Create(LSequence);
+end;
+
+class function TCertificationRequestInfo.GetInstance(const AEncoded: TCryptoLibByteArray): ICertificationRequestInfo;
+var
+  LAsn1Obj: IAsn1Object;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    LAsn1Obj := TAsn1Object.FromByteArray(AEncoded);
+    Result := GetInstance(LAsn1Obj);
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct CertificationRequestInfo from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TCertificationRequestInfo.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ICertificationRequestInfo;
+begin
+  Result := TCertificationRequestInfo.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TCertificationRequestInfo.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICertificationRequestInfo;
+begin
+  Result := TCertificationRequestInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCertificationRequestInfo.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 3) or (LCount > 4) then
+  begin
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+  end;
+
+  FVersion := TDerInteger.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
+  FSubject := TX509Name.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
+  FSubjectPKInfo := TSubjectPublicKeyInfo.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
+
+  // NOTE: some CertificationRequestInfo objects seem to treat this field as optional.
+  FAttributes := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set
+    begin
+      Result := TAsn1Set.GetTagged(ATagged, AState);
+    end);
+
+  if LPos <> LCount then
+  begin
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+  end;
+
+  ValidateAttributes(FAttributes);
+end;
+
+constructor TCertificationRequestInfo.Create(const ASubject: IX509Name;
+  const APkInfo: ISubjectPublicKeyInfo; const AAttributes: IAsn1Set);
+begin
+  inherited Create();
+
+  FVersion := TDerInteger.Zero;
+  if ASubject = nil then
+    raise EArgumentNilCryptoLibException.Create(SSubjectNil);
+  if APkInfo = nil then
+    raise EArgumentNilCryptoLibException.Create(SSubjectPKInfoNil);
+
+  FSubject := ASubject;
+  FSubjectPKInfo := APkInfo;
+  FAttributes := ValidateAttributes(AAttributes);
+end;
+
+class function TCertificationRequestInfo.ValidateAttributes(const AAttributes: IAsn1Set): IAsn1Set;
+var
+  I: Int32;
+  LAttr: IAttributePkcs;
+begin
+  if AAttributes <> nil then
+  begin
+    for I := 0 to AAttributes.Count - 1 do
+    begin
+      LAttr := TAttributePkcs.GetInstance(AAttributes[I] as TAsn1Encodable);
+      if TPkcsObjectIdentifiers.Pkcs9AtChallengePassword.Equals(LAttr.AttrType) then
+      begin
+        if LAttr.AttrValues.Count <> 1 then
+        begin
+          raise EArgumentCryptoLibException.Create(SChallengePasswordMustHaveSingleValue);
+        end;
+      end
+      else if TPkcsObjectIdentifiers.Pkcs9AtUnstructuredName.Equals(LAttr.AttrType) then
+      begin
+        if LAttr.AttrValues.Count <> 1 then
+        begin
+          raise EArgumentCryptoLibException.Create(SUnstructuredNameMustHaveSingleValue);
+        end;
+      end;
+    end;
+  end;
+  Result := AAttributes;
+end;
+
+function TCertificationRequestInfo.GetVersion: IDerInteger;
+begin
+  Result := FVersion;
+end;
+
+function TCertificationRequestInfo.GetSubject: IX509Name;
+begin
+  Result := FSubject;
+end;
+
+function TCertificationRequestInfo.GetSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+begin
+  Result := FSubjectPKInfo;
+end;
+
+function TCertificationRequestInfo.GetAttributes: IAsn1Set;
+begin
+  Result := FAttributes;
+end;
+
+function TCertificationRequestInfo.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(4);
+  LV.Add([FVersion, FSubject, FSubjectPKInfo]);
+  LV.AddOptionalTagged(False, 0, FAttributes);
+  Result := TDerSequence.Create(LV);
+end;
+
+{ TCertificationRequest }
+
+class function TCertificationRequest.GetInstance(AObj: TObject): ICertificationRequest;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificationRequest, Result) then
+    Exit;
+
+  Result := TCertificationRequest.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertificationRequest.GetInstance(const AObj: IAsn1Object): ICertificationRequest;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificationRequest, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetInstance(AObj);
+  Result := TCertificationRequest.Create(LSequence);
+end;
+
+class function TCertificationRequest.GetInstance(const AEncoded: TCryptoLibByteArray): ICertificationRequest;
+var
+  LAsn1Obj: IAsn1Object;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    LAsn1Obj := TAsn1Object.FromByteArray(AEncoded);
+    Result := GetInstance(LAsn1Obj);
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct CertificationRequest from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TCertificationRequest.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ICertificationRequest;
+begin
+  Result := TCertificationRequest.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TCertificationRequest.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICertificationRequest;
+begin
+  Result := TCertificationRequest.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCertificationRequest.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if LCount <> 3 then
+  begin
+    raise EArgumentCryptoLibException.Create(SWrongNumberOfElements);
+  end;
+
+  FReqInfo := TCertificationRequestInfo.GetInstance(ASeq[0] as TObject);
+  FSigAlgId := TAlgorithmIdentifier.GetInstance(ASeq[1] as TObject);
+  FSigBits := TDerBitString.GetInstance(ASeq[2] as TObject);
+end;
+
+constructor TCertificationRequest.Create(const ARequestInfo: ICertificationRequestInfo;
+  const AAlgorithm: IAlgorithmIdentifier; const ASignature: IDerBitString);
+begin
+  inherited Create();
+
+  if ARequestInfo = nil then
+    raise EArgumentNilCryptoLibException.Create(SRequestInfoNil);
+  if AAlgorithm = nil then
+    raise EArgumentNilCryptoLibException.Create(SAlgorithmNil);
+  if ASignature = nil then
+    raise EArgumentNilCryptoLibException.Create(SSignatureNil);
+
+  FReqInfo := ARequestInfo;
+  FSigAlgId := AAlgorithm;
+  FSigBits := ASignature;
+end;
+
+function TCertificationRequest.GetCertificationRequestInfo: ICertificationRequestInfo;
+begin
+  Result := FReqInfo;
+end;
+
+function TCertificationRequest.GetSignatureAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FSigAlgId;
+end;
+
+function TCertificationRequest.GetSignature: IDerBitString;
+begin
+  Result := FSigBits;
+end;
+
+function TCertificationRequest.GetSignatureOctets: TCryptoLibByteArray;
+begin
+  Result := FSigBits.GetOctets();
+end;
+
+function TCertificationRequest.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create([FReqInfo, FSigAlgId, FSigBits]);
+end;
+
+{ TPrivateKeyInfo }
+
+class function TPrivateKeyInfo.GetInstance(AObj: TObject): IPrivateKeyInfo;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IPrivateKeyInfo, Result) then
+    Exit;
+
+  Result := TPrivateKeyInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPrivateKeyInfo.GetInstance(const AObj: IAsn1Object): IPrivateKeyInfo;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPrivateKeyInfo, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetInstance(AObj);
+  Result := TPrivateKeyInfo.Create(LSequence);
+end;
+
+class function TPrivateKeyInfo.GetInstance(const AEncoded: TCryptoLibByteArray): IPrivateKeyInfo;
+var
+  LAsn1Obj: IAsn1Object;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    LAsn1Obj := TAsn1Object.FromByteArray(AEncoded);
+    Result := GetInstance(LAsn1Obj);
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct PrivateKeyInfo from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TPrivateKeyInfo.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IPrivateKeyInfo;
+begin
+  Result := TPrivateKeyInfo.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TPrivateKeyInfo.GetOptional(const AElement: IAsn1Encodable): IPrivateKeyInfo;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IPrivateKeyInfo, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TPrivateKeyInfo.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TPrivateKeyInfo.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPrivateKeyInfo;
+begin
+  Result := TPrivateKeyInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TPrivateKeyInfo.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos, LVersionValue: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 3) or (LCount > 5) then
+  begin
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+  end;
+
+  FVersion := TDerInteger.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
+  FPrivateKeyAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
+  FPrivateKey := TAsn1OctetString.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  System.Inc(LPos);
+
+  FAttributes := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set
+    begin
+      Result := TAsn1Set.GetTagged(ATagged, AState);
+    end);
+
+  FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString
+    begin
+      Result := TDerBitString.GetTagged(ATagged, AState);
+    end);
+
+  if LPos <> LCount then
+  begin
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+  end;
+
+  LVersionValue := FVersion.IntValueExact;
+  if (FPublicKey <> nil) and (LVersionValue < 1) then
+  begin
+    raise EArgumentCryptoLibException.Create('''publicKey'' requires version v2(1) or later');
+  end;
+end;
+
+constructor TPrivateKeyInfo.Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
+  const APrivateKey: IAsn1Encodable);
+begin
+  Create(APrivateKeyAlgorithm, APrivateKey, nil, nil);
+end;
+
+constructor TPrivateKeyInfo.Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
+  const APrivateKey: IAsn1Encodable; const AAttributes: IAsn1Set);
+begin
+  Create(APrivateKeyAlgorithm, APrivateKey, AAttributes, nil);
+end;
+
+constructor TPrivateKeyInfo.Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
+  const APrivateKey: IAsn1Encodable; const AAttributes: IAsn1Set;
+  const APublicKey: TCryptoLibByteArray);
+begin
+  inherited Create();
+
+  if APublicKey <> nil then
+    FVersion := TDerInteger.ValueOf(1)
+  else
+    FVersion := TDerInteger.Zero;
+
+  if APrivateKeyAlgorithm = nil then
+    raise EArgumentNilCryptoLibException.Create('privateKeyAlgorithm');
+  if APrivateKey = nil then
+    raise EArgumentNilCryptoLibException.Create('privateKey');
+
+  FPrivateKeyAlgorithm := APrivateKeyAlgorithm;
+  FPrivateKey := TDerOctetString.Create(APrivateKey);
+  FAttributes := AAttributes;
+  if APublicKey <> nil then
+    FPublicKey := TDerBitString.FromContentsOptional(APublicKey)
+  else
+    FPublicKey := nil;
+end;
+
+function TPrivateKeyInfo.GetVersion: IDerInteger;
+begin
+  Result := FVersion;
+end;
+
+function TPrivateKeyInfo.GetPrivateKeyAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FPrivateKeyAlgorithm;
+end;
+
+function TPrivateKeyInfo.GetPrivateKey: IAsn1OctetString;
+begin
+  Result := FPrivateKey;
+end;
+
+function TPrivateKeyInfo.GetAttributes: IAsn1Set;
+begin
+  Result := FAttributes;
+end;
+
+function TPrivateKeyInfo.GetPublicKey: IDerBitString;
+begin
+  Result := FPublicKey;
+end;
+
+function TPrivateKeyInfo.HasPublicKey: Boolean;
+begin
+  Result := FPublicKey <> nil;
+end;
+
+function TPrivateKeyInfo.ParsePrivateKey: IAsn1Object;
+begin
+  Result := TAsn1Object.FromByteArray(FPrivateKey.GetOctets());
+end;
+
+function TPrivateKeyInfo.ParsePublicKey: IAsn1Object;
+var
+  LStream: TStream;
+  LBitStringParser: IAsn1BitStringParser;
+begin
+  if FPublicKey = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(FPublicKey, IAsn1BitStringParser, LBitStringParser) then
+  begin
+    LStream := LBitStringParser.GetOctetStream();
+    try
+      Result := TAsn1Object.FromStream(LStream);
+    finally
+      LStream.Free;
+    end;
+  end
+  else
+  begin
+    // Fallback: parse from bytes (assuming octet-aligned)
+    Result := TAsn1Object.FromByteArray(FPublicKey.GetOctets());
+  end;
+end;
+
+function TPrivateKeyInfo.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(5);
+  LV.Add([FVersion, FPrivateKeyAlgorithm, FPrivateKey]);
+  LV.AddOptionalTagged(False, 0, FAttributes);
+  LV.AddOptionalTagged(False, 1, FPublicKey);
+  Result := TDerSequence.Create(LV);
+end;
+
+{ TRsaPrivateKeyStructure }
+
+class function TRsaPrivateKeyStructure.GetInstance(AObj: TObject): IRsaPrivateKeyStructure;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IRsaPrivateKeyStructure, Result) then
+    Exit;
+
+  Result := TRsaPrivateKeyStructure.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TRsaPrivateKeyStructure.GetInstance(const AObj: IAsn1Object): IRsaPrivateKeyStructure;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IRsaPrivateKeyStructure, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetInstance(AObj);
+  Result := TRsaPrivateKeyStructure.Create(LSequence);
+end;
+
+class function TRsaPrivateKeyStructure.GetInstance(const AEncoded: TCryptoLibByteArray): IRsaPrivateKeyStructure;
+var
+  LAsn1Obj: IAsn1Object;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  try
+    LAsn1Obj := TAsn1Object.FromByteArray(AEncoded);
+    Result := GetInstance(LAsn1Obj);
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct RsaPrivateKeyStructure from byte[]: ' + E.Message);
+  end;
+end;
+
+class function TRsaPrivateKeyStructure.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IRsaPrivateKeyStructure;
+begin
+  Result := TRsaPrivateKeyStructure.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TRsaPrivateKeyStructure.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IRsaPrivateKeyStructure;
+begin
+  Result := TRsaPrivateKeyStructure.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TRsaPrivateKeyStructure.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+  LVersion: IDerInteger;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if LCount <> 9 then
+  begin
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+  end;
+
+  LVersion := TDerInteger.GetInstance(ASeq[0] as TAsn1Encodable);
+  FModulus := TDerInteger.GetInstance(ASeq[1] as TAsn1Encodable).Value;
+  FPublicExponent := TDerInteger.GetInstance(ASeq[2] as TAsn1Encodable).Value;
+  FPrivateExponent := TDerInteger.GetInstance(ASeq[3] as TAsn1Encodable).Value;
+  FPrime1 := TDerInteger.GetInstance(ASeq[4] as TAsn1Encodable).Value;
+  FPrime2 := TDerInteger.GetInstance(ASeq[5] as TAsn1Encodable).Value;
+  FExponent1 := TDerInteger.GetInstance(ASeq[6] as TAsn1Encodable).Value;
+  FExponent2 := TDerInteger.GetInstance(ASeq[7] as TAsn1Encodable).Value;
+  FCoefficient := TDerInteger.GetInstance(ASeq[8] as TAsn1Encodable).Value;
+
+  if not LVersion.HasValue(0) then
+    raise EArgumentCryptoLibException.Create('wrong version for RSA private key');
+
+  FVersion := LVersion;
+end;
+
+constructor TRsaPrivateKeyStructure.Create(const AModulus, APublicExponent, APrivateExponent,
+  APrime1, APrime2, AExponent1, AExponent2, ACoefficient: TBigInteger);
+begin
+  inherited Create();
+
+  if not AModulus.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('modulus');
+  if not APublicExponent.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('publicExponent');
+  if not APrivateExponent.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('privateExponent');
+  if not APrime1.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('prime1');
+  if not APrime2.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('prime2');
+  if not AExponent1.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('exponent1');
+  if not AExponent2.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('exponent2');
+  if not ACoefficient.IsInitialized then
+    raise EArgumentNilCryptoLibException.Create('coefficient');
+
+  FVersion := TDerInteger.Zero;
+  FModulus := AModulus;
+  FPublicExponent := APublicExponent;
+  FPrivateExponent := APrivateExponent;
+  FPrime1 := APrime1;
+  FPrime2 := APrime2;
+  FExponent1 := AExponent1;
+  FExponent2 := AExponent2;
+  FCoefficient := ACoefficient;
+end;
+
+function TRsaPrivateKeyStructure.GetModulus: TBigInteger;
+begin
+  Result := FModulus;
+end;
+
+function TRsaPrivateKeyStructure.GetPublicExponent: TBigInteger;
+begin
+  Result := FPublicExponent;
+end;
+
+function TRsaPrivateKeyStructure.GetPrivateExponent: TBigInteger;
+begin
+  Result := FPrivateExponent;
+end;
+
+function TRsaPrivateKeyStructure.GetPrime1: TBigInteger;
+begin
+  Result := FPrime1;
+end;
+
+function TRsaPrivateKeyStructure.GetPrime2: TBigInteger;
+begin
+  Result := FPrime2;
+end;
+
+function TRsaPrivateKeyStructure.GetExponent1: TBigInteger;
+begin
+  Result := FExponent1;
+end;
+
+function TRsaPrivateKeyStructure.GetExponent2: TBigInteger;
+begin
+  Result := FExponent2;
+end;
+
+function TRsaPrivateKeyStructure.GetCoefficient: TBigInteger;
+begin
+  Result := FCoefficient;
+end;
+
+function TRsaPrivateKeyStructure.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create([
+    FVersion,
+    TDerInteger.Create(FModulus),
+    TDerInteger.Create(FPublicExponent),
+    TDerInteger.Create(FPrivateExponent),
+    TDerInteger.Create(FPrime1),
+    TDerInteger.Create(FPrime2),
+    TDerInteger.Create(FExponent1),
+    TDerInteger.Create(FExponent2),
+    TDerInteger.Create(FCoefficient)
+  ]);
+end;
+
+{ TRsassaPssParameters }
+
+class constructor TRsassaPssParameters.Create;
+begin
+  Boot;
+end;
+
+class procedure TRsassaPssParameters.Boot;
+begin
+  DefaultHashAlgorithm := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
+  DefaultMaskGenAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, DefaultHashAlgorithm);
+  DefaultMaskGenFunction := DefaultMaskGenAlgorithm; // Obsolete, use DefaultMaskGenAlgorithm
+  DefaultSaltLength := TDerInteger.ValueOf(20);
+  DefaultTrailerField := TDerInteger.One;
+end;
+
+class function TRsassaPssParameters.GetInstance(AObj: TObject): IRsassaPssParameters;
+var
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IRsassaPssParameters, Result) then
+    Exit;
+
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  Result := TRsassaPssParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TRsassaPssParameters.GetInstance(const AObj: IAsn1Object): IRsassaPssParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IRsassaPssParameters, Result) then
+    Exit;
+
+  Result := TRsassaPssParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TRsassaPssParameters.GetInstance(const AEncoded: TCryptoLibByteArray): IRsassaPssParameters;
+begin
+  Result := GetInstance(TAsn1Object.FromByteArray(AEncoded));
+end;
+
+class function TRsassaPssParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IRsassaPssParameters;
+begin
+  Result := TRsassaPssParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TRsassaPssParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IRsassaPssParameters;
+begin
+  Result := TRsassaPssParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TRsassaPssParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 0) or (LCount > 4) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
+    begin
+      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+    end);
+  if FHashAlgorithm = nil then
+    FHashAlgorithm := DefaultHashAlgorithm;
+
+  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
+    begin
+      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+    end);
+  if FMaskGenAlgorithm = nil then
+    FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
+
+  FSaltLength := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger
+    begin
+      Result := TDerInteger.GetTagged(ATagged, AState);
+    end);
+  if FSaltLength = nil then
+    FSaltLength := DefaultSaltLength;
+
+  FTrailerField := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 3, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger
+    begin
+      Result := TDerInteger.GetTagged(ATagged, AState);
+    end);
+  if FTrailerField = nil then
+    FTrailerField := DefaultTrailerField;
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+end;
+
+constructor TRsassaPssParameters.Create;
+begin
+  inherited Create();
+  FHashAlgorithm := DefaultHashAlgorithm;
+  FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
+  FSaltLength := DefaultSaltLength;
+  FTrailerField := DefaultTrailerField;
+end;
+
+constructor TRsassaPssParameters.Create(const AHashAlgorithm, AMaskGenAlgorithm: IAlgorithmIdentifier;
+  const ASaltLength, ATrailerField: IDerInteger);
+begin
+  inherited Create();
+  if AHashAlgorithm = nil then
+    FHashAlgorithm := DefaultHashAlgorithm
+  else
+    FHashAlgorithm := AHashAlgorithm;
+
+  if AMaskGenAlgorithm = nil then
+    FMaskGenAlgorithm := DefaultMaskGenAlgorithm
+  else
+    FMaskGenAlgorithm := AMaskGenAlgorithm;
+
+  if ASaltLength = nil then
+    FSaltLength := DefaultSaltLength
+  else
+    FSaltLength := ASaltLength;
+
+  if ATrailerField = nil then
+    FTrailerField := DefaultTrailerField
+  else
+    FTrailerField := ATrailerField;
+end;
+
+function TRsassaPssParameters.GetHashAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FHashAlgorithm;
+end;
+
+function TRsassaPssParameters.GetMaskGenAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FMaskGenAlgorithm;
+end;
+
+function TRsassaPssParameters.GetSaltLength: IDerInteger;
+begin
+  Result := FSaltLength;
+end;
+
+function TRsassaPssParameters.GetTrailerField: IDerInteger;
+begin
+  Result := FTrailerField;
+end;
+
+function TRsassaPssParameters.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(4);
+
+  if not DefaultHashAlgorithm.Equals(FHashAlgorithm) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 0, FHashAlgorithm));
+  end;
+
+  if not DefaultMaskGenAlgorithm.Equals(FMaskGenAlgorithm) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 1, FMaskGenAlgorithm));
+  end;
+
+  if not DefaultSaltLength.Equals(FSaltLength) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 2, FSaltLength));
+  end;
+
+  if not DefaultTrailerField.Equals(FTrailerField) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 3, FTrailerField));
+  end;
+
+  Result := TDerSequence.Create(LV);
+end;
+
+end.

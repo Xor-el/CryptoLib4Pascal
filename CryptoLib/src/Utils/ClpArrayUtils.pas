@@ -99,6 +99,11 @@ type
 
     class procedure ZeroFill(const buf: TCryptoLibByteArray); static;
 
+    class function Clone(const AData: TCryptoLibByteArray): TCryptoLibByteArray; overload; static;
+    class function Clone(const AData: TCryptoLibStringArray): TCryptoLibStringArray; overload; static;
+    class function Clone<T>(const AData: TCryptoLibGenericArray<T>): TCryptoLibGenericArray<T>; overload; static;
+    class function Clone<T>(const AData: TCryptoLibGenericArray<T>; const ACloneFunc: TFunc<T, T>): TCryptoLibGenericArray<T>; overload; static;
+
     class function NoZeroes(const data: TCryptoLibByteArray): Boolean; static;
 
   end;
@@ -497,6 +502,65 @@ begin
   System.SetLength(Result, Length + 1);
   System.Move(A[0], Result[0], Length * System.SizeOf(Byte));
   Result[Length] := B;
+end;
+
+class function TArrayUtils.Clone(const AData: TCryptoLibByteArray): TCryptoLibByteArray;
+begin
+  if AData = nil then
+    Result := nil
+  else
+  begin
+    System.SetLength(Result, System.Length(AData));
+    System.Move(AData[0], Result[0], System.Length(AData) * System.SizeOf(Byte));
+  end;
+end;
+
+class function TArrayUtils.Clone(const AData: TCryptoLibStringArray): TCryptoLibStringArray;
+var
+  I: Int32;
+begin
+  if AData = nil then
+    Result := nil
+  else
+  begin
+    System.SetLength(Result, System.Length(AData));
+    for I := 0 to System.High(AData) do
+    begin
+      Result[I] := AData[I];
+    end;
+  end;
+end;
+
+class function TArrayUtils.Clone<T>(const AData: TCryptoLibGenericArray<T>): TCryptoLibGenericArray<T>;
+var
+  I: Int32;
+begin
+  if (AData = nil) or (System.Length(AData) = 0) then
+    Result := nil
+  else
+  begin
+    System.SetLength(Result, System.Length(AData));
+    for I := 0 to System.High(AData) do
+    begin
+      Result[I] := AData[I];
+    end;
+  end;
+end;
+
+class function TArrayUtils.Clone<T>(const AData: TCryptoLibGenericArray<T>; const ACloneFunc: TFunc<T, T>): TCryptoLibGenericArray<T>;
+var
+  I: Int32;
+begin
+  if (AData = nil) or (System.Length(AData) = 0) then
+    Result := nil
+  else
+  begin
+    System.SetLength(Result, System.Length(AData));
+    for I := 0 to System.High(AData) do
+    begin
+      Result[I] := ACloneFunc(AData[I]);
+    end;
+  end;
 end;
 
 end.

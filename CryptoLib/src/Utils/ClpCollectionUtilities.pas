@@ -23,6 +23,7 @@ interface
 
 uses
   SysUtils,
+  Generics.Collections,
   ClpCryptoLibTypes;
 
 type
@@ -45,6 +46,10 @@ type
     /// </summary>
     class function ToString<T>(const AC: TCryptoLibGenericArray<T>;
       const AConverter: TFunc<T, String>): String; reintroduce; overload; static;
+    /// <summary>
+    /// Create a proxy array from an enumerable collection (like TDictionary.Keys).
+    /// </summary>
+    class function Proxy<T>(const AEnumerable: IEnumerable<T>): TCryptoLibGenericArray<T>; static;
   end;
 
 implementation
@@ -102,6 +107,23 @@ begin
     Result := SB.ToString();
   finally
     SB.Free;
+  end;
+end;
+
+class function TCollectionUtilities.Proxy<T>(const AEnumerable: IEnumerable<T>): TCryptoLibGenericArray<T>;
+var
+  LList: TList<T>;
+  LItem: T;
+begin
+  LList := TList<T>.Create();
+  try
+    for LItem in AEnumerable do
+    begin
+      LList.Add(LItem);
+    end;
+    Result := LList.ToArray();
+  finally
+    LList.Free;
   end;
 end;
 

@@ -58,6 +58,11 @@ type
       inOff, length: Int32);
 
     // /**
+    // * Return the maximum size for a signature produced by this signer.
+    // */
+    function GetMaxSignatureSize: Int32;
+
+    // /**
     // * Generate a signature for the message we've been loaded with using
     // * the key we were initialised with.
     // */

@@ -39,10 +39,8 @@ uses
   ClpRsaBlindedEngine,
   ClpIPkcs1Encoding,
   ClpPkcs1Encoding,
-  ClpIAlgorithmIdentifier,
-  ClpAlgorithmIdentifier,
-  ClpIDigestInfo,
-  ClpDigestInfo,
+  ClpIX509Asn1Objects,
+  ClpX509Asn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Objects,
   ClpX509ObjectIdentifiers,
@@ -253,9 +251,11 @@ end;
 
 class function TRsaDigestSigner.CheckDerEncoded(
   const hash: TCryptoLibByteArray): TCryptoLibByteArray;
+var
+  LDigestInfo: IDigestInfo;
 begin
   // Validate that hash is a valid DER-encoded DigestInfo
-  TDigestInfo.GetInstance(hash);
+  LDigestInfo := TDigestInfo.GetInstance(hash);
   Result := hash;
 end;
 
@@ -356,14 +356,8 @@ function TRsaDigestSigner.DerEncode(const digestAlgID: IAlgorithmIdentifier;
   const hash: TCryptoLibByteArray): TCryptoLibByteArray;
 var
   digestInfo: IDigestInfo;
-  digestOctetString: IDerOctetString;
 begin
-  if System.Length(hash) < 1 then
-    digestOctetString := TDerOctetString.Create(nil)
-  else
-    digestOctetString := TDerOctetString.Create(hash);
-
-  digestInfo := TDigestInfo.Create(digestAlgID, digestOctetString as IAsn1OctetString);
+  digestInfo := TDigestInfo.Create(digestAlgID, TDerOctetString.WithContents(hash) as IAsn1OctetString);
   Result := digestInfo.GetDerEncoded();
 end;
 

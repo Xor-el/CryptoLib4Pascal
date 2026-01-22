@@ -28,6 +28,7 @@ uses
   ClpIDsaExt,
   ClpIDigest,
   ClpBigInteger,
+  ClpBigIntegers,
   ClpCryptoLibTypes,
   ClpIParametersWithRandom,
   ClpSignersEncodings,
@@ -81,6 +82,11 @@ type
     /// </summary>
     procedure BlockUpdate(const input: TCryptoLibByteArray;
       inOff, length: Int32); virtual;
+
+    /// <summary>
+    /// Return the maximum size for a signature produced by this signer.
+    /// </summary>
+    function GetMaxSignatureSize: Int32; virtual;
 
     /// <summary>
     /// Generate a signature for the message we've been loaded with using the
@@ -140,7 +146,8 @@ begin
       (@SDsaDigestSignerNotInitializedForSignatureGeneration);
   end;
 
-  hash := Fdigest.GetUnderlyingIHash.TransformFinal().GetBytes();
+  SetLength(hash, Fdigest.GetDigestSize());
+  Fdigest.DoFinal(hash, 0);
 
   sig := Fdsa.GenerateSignature(hash);
 
@@ -166,6 +173,11 @@ begin
   begin
     Result := Default (TBigInteger);
   end;
+end;
+
+function TDsaDigestSigner.GetMaxSignatureSize: Int32;
+begin
+  Result := Fencoding.GetMaxEncodingSize(GetOrder());
 end;
 
 procedure TDsaDigestSigner.Init(forSigning: Boolean;
@@ -222,7 +234,8 @@ begin
       (@SDsaDigestSignerNotInitializedForVerification);
   end;
 
-  hash := Fdigest.GetUnderlyingIHash.TransformFinal().GetBytes();
+  SetLength(hash, Fdigest.GetDigestSize());
+  Fdigest.DoFinal(hash, 0);
 
   try
     sig := Fencoding.Decode(GetOrder(), signature);
