@@ -43,7 +43,9 @@ type
       FDsaWithSha256, FDsaWithSha384, FDsaWithSha512, FIdDsaWithSha3_224,
       FIdDsaWithSha3_256, FIdDsaWithSha3_384, FIdDsaWithSha3_512,
       FIdECDsaWithSha3_224, FIdECDsaWithSha3_256, FIdECDsaWithSha3_384,
-      FIdECDsaWithSha3_512: IDerObjectIdentifier;
+      FIdECDsaWithSha3_512, FIdRsassaPkcs1V15WithSha3_224,
+      FIdRsassaPkcs1V15WithSha3_256, FIdRsassaPkcs1V15WithSha3_384,
+      FIdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier;
 
     class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgs: IDerObjectIdentifier; static; inline;
@@ -97,6 +99,10 @@ type
     class function GetIdECDsaWithSha3_256: IDerObjectIdentifier; static; inline;
     class function GetIdECDsaWithSha3_384: IDerObjectIdentifier; static; inline;
     class function GetIdECDsaWithSha3_512: IDerObjectIdentifier; static; inline;
+    class function GetIdRsassaPkcs1V15WithSha3_224: IDerObjectIdentifier; static; inline;
+    class function GetIdRsassaPkcs1V15WithSha3_256: IDerObjectIdentifier; static; inline;
+    class function GetIdRsassaPkcs1V15WithSha3_384: IDerObjectIdentifier; static; inline;
+    class function GetIdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier; static; inline;
 
     class constructor NistObjectIdentifiers();
 
@@ -173,6 +179,14 @@ type
       read GetIdECDsaWithSha3_384;
     class property IdECDsaWithSha3_512: IDerObjectIdentifier
       read GetIdECDsaWithSha3_512;
+    class property IdRsassaPkcs1V15WithSha3_224: IDerObjectIdentifier
+      read GetIdRsassaPkcs1V15WithSha3_224;
+    class property IdRsassaPkcs1V15WithSha3_256: IDerObjectIdentifier
+      read GetIdRsassaPkcs1V15WithSha3_256;
+    class property IdRsassaPkcs1V15WithSha3_384: IDerObjectIdentifier
+      read GetIdRsassaPkcs1V15WithSha3_384;
+    class property IdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier
+      read GetIdRsassaPkcs1V15WithSha3_512;
 
     class procedure Boot(); static;
 
@@ -409,6 +423,30 @@ begin
   result := FIdECDsaWithSha3_512;
 end;
 
+class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_224
+  : IDerObjectIdentifier;
+begin
+  result := FIdRsassaPkcs1V15WithSha3_224;
+end;
+
+class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_256
+  : IDerObjectIdentifier;
+begin
+  result := FIdRsassaPkcs1V15WithSha3_256;
+end;
+
+class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_384
+  : IDerObjectIdentifier;
+begin
+  result := FIdRsassaPkcs1V15WithSha3_384;
+end;
+
+class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_512
+  : IDerObjectIdentifier;
+begin
+  result := FIdRsassaPkcs1V15WithSha3_512;
+end;
+
 class function TNistObjectIdentifiers.GetNistAlgorithm: IDerObjectIdentifier;
 begin
   result := FNistAlgorithm;
@@ -484,6 +522,12 @@ begin
     FIdECDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.id + '.10');
     FIdECDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.id + '.11');
     FIdECDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.id + '.12');
+
+    // RSA PKCS #1 v1.5 Signature with SHA-3 family
+    FIdRsassaPkcs1V15WithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.id + '.13');
+    FIdRsassaPkcs1V15WithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.id + '.14');
+    FIdRsassaPkcs1V15WithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.id + '.15');
+    FIdRsassaPkcs1V15WithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.id + '.16');
 
     FIsBooted := True;
   end;

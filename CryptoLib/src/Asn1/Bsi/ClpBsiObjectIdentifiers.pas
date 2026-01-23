@@ -36,16 +36,21 @@ type
     FIsBooted: Boolean;
     Fbsi_de, Fid_ecc, Fecdsa_plain_signatures, Fecdsa_plain_SHA1,
       Fecdsa_plain_SHA224, Fecdsa_plain_SHA256, Fecdsa_plain_SHA384,
-      Fecdsa_plain_SHA512, Fecdsa_plain_RIPEMD160: IDerObjectIdentifier;
+      Fecdsa_plain_SHA512, Fecdsa_plain_RIPEMD160, Fecdsa_plain_SHA3_224,
+      Fecdsa_plain_SHA3_256, Fecdsa_plain_SHA3_384, Fecdsa_plain_SHA3_512: IDerObjectIdentifier;
 
     class function Getbsi_de: IDerObjectIdentifier; static; inline;
     class function Getecdsa_plain_RIPEMD160: IDerObjectIdentifier;
       static; inline;
     class function Getecdsa_plain_SHA1: IDerObjectIdentifier; static; inline;
-    class function Getecdsa_plain_SHA224: IDerObjectIdentifier; static; inline;
-    class function Getecdsa_plain_SHA256: IDerObjectIdentifier; static; inline;
-    class function Getecdsa_plain_SHA384: IDerObjectIdentifier; static; inline;
-    class function Getecdsa_plain_SHA512: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA224: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA256: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA384: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA512: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA3_224: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA3_256: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA3_384: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlain_SHA3_512: IDerObjectIdentifier; static; inline;
     class function Getecdsa_plain_signatures: IDerObjectIdentifier;
       static; inline;
     class function Getid_ecc: IDerObjectIdentifier; static; inline;
@@ -60,16 +65,24 @@ type
       read Getecdsa_plain_signatures;
     class property ecdsa_plain_SHA1: IDerObjectIdentifier
       read Getecdsa_plain_SHA1;
-    class property ecdsa_plain_SHA224: IDerObjectIdentifier
-      read Getecdsa_plain_SHA224;
-    class property ecdsa_plain_SHA256: IDerObjectIdentifier
-      read Getecdsa_plain_SHA256;
-    class property ecdsa_plain_SHA384: IDerObjectIdentifier
-      read Getecdsa_plain_SHA384;
-    class property ecdsa_plain_SHA512: IDerObjectIdentifier
-      read Getecdsa_plain_SHA512;
+    class property EcdsaPlain_SHA224: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA224;
+    class property EcdsaPlain_SHA256: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA256;
+    class property EcdsaPlain_SHA384: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA384;
+    class property EcdsaPlain_SHA512: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA512;
     class property ecdsa_plain_RIPEMD160: IDerObjectIdentifier
       read Getecdsa_plain_RIPEMD160;
+    class property EcdsaPlain_SHA3_224: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA3_224;
+    class property EcdsaPlain_SHA3_256: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA3_256;
+    class property EcdsaPlain_SHA3_384: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA3_384;
+    class property EcdsaPlain_SHA3_512: IDerObjectIdentifier
+      read GetEcdsaPlain_SHA3_512;
 
     class procedure Boot(); static;
 
@@ -109,6 +122,18 @@ begin
     // /* 0.4.0.127.0.7.1.1.4.1.6 */
     Fecdsa_plain_RIPEMD160 := Fecdsa_plain_signatures.Branch('6');
 
+    // /* 0.4.0.127.0.7.1.1.4.1.8 */
+    Fecdsa_plain_SHA3_224 := Fecdsa_plain_signatures.Branch('8');
+
+    // /* 0.4.0.127.0.7.1.1.4.1.9 */
+    Fecdsa_plain_SHA3_256 := Fecdsa_plain_signatures.Branch('9');
+
+    // /* 0.4.0.127.0.7.1.1.4.1.10 */
+    Fecdsa_plain_SHA3_384 := Fecdsa_plain_signatures.Branch('10');
+
+    // /* 0.4.0.127.0.7.1.1.4.1.11 */
+    Fecdsa_plain_SHA3_512 := Fecdsa_plain_signatures.Branch('11');
+
     FIsBooted := True;
   end;
 end;
@@ -134,28 +159,52 @@ begin
   result := Fecdsa_plain_SHA1;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_SHA224
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA224
   : IDerObjectIdentifier;
 begin
   result := Fecdsa_plain_SHA224;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_SHA256
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA256
   : IDerObjectIdentifier;
 begin
   result := Fecdsa_plain_SHA256;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_SHA384
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA384
   : IDerObjectIdentifier;
 begin
   result := Fecdsa_plain_SHA384;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_SHA512
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA512
   : IDerObjectIdentifier;
 begin
   result := Fecdsa_plain_SHA512;
+end;
+
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_224
+  : IDerObjectIdentifier;
+begin
+  result := Fecdsa_plain_SHA3_224;
+end;
+
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_256
+  : IDerObjectIdentifier;
+begin
+  result := Fecdsa_plain_SHA3_256;
+end;
+
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_384
+  : IDerObjectIdentifier;
+begin
+  result := Fecdsa_plain_SHA3_384;
+end;
+
+class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_512
+  : IDerObjectIdentifier;
+begin
+  result := Fecdsa_plain_SHA3_512;
 end;
 
 class function TBsiObjectIdentifiers.Getecdsa_plain_signatures

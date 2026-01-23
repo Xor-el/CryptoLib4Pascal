@@ -57,6 +57,7 @@ type
 
     class procedure Boot; static;
     class constructor Create;
+    class destructor Destroy;
 
   public
     class function AreEquivalentAlgorithms(const AId1, AId2: IAlgorithmIdentifier): Boolean; static;
@@ -73,9 +74,8 @@ type
     class function CalculateResult<TResult>(const AStreamCalculator: IStreamCalculator<TResult>;
       const AAsn1Encodable: IAsn1Encodable): TResult; overload; static;
     class function CollectDerBitString(const AResult: IBlockResult): IDerBitString; static;
-    // TODO: CreateIssuerSerial methods require IssuerSerial class which doesn't exist yet
-    // class function CreateIssuerSerial(const ACertificate: IX509Certificate): IIssuerSerial; overload; static;
-    // class function CreateIssuerSerial(const ACertificate: IX509CertificateStructure): IIssuerSerial; overload; static;
+     class function CreateIssuerSerial(const ACertificate: IX509Certificate): IIssuerSerial; overload; static;
+     class function CreateIssuerSerial(const ACertificate: IX509CertificateStructure): IIssuerSerial; overload; static;
     class function GenerateBitString(const AStreamCalculator: IStreamCalculator<IBlockResult>;
       const AAsn1Encodable: IAsn1Encodable): IDerBitString; static;
     class function GenerateDigest(const ADigestFactory: IDigestFactory;
@@ -109,6 +109,11 @@ uses
 class constructor TX509Utilities.Create;
 begin
   Boot;
+end;
+
+class destructor TX509Utilities.Destroy;
+begin
+  FAlgorithms.Free;
 end;
 
 class procedure TX509Utilities.Boot;
@@ -299,16 +304,15 @@ begin
   Result := TDerBitString.Create(LData);
 end;
 
-// TODO: Implement when IssuerSerial class is available
-// class function TX509Utilities.CreateIssuerSerial(const ACertificate: IX509Certificate): IIssuerSerial;
-// begin
-//   Result := CreateIssuerSerial(ACertificate.CertificateStructure);
-// end;
-//
-// class function TX509Utilities.CreateIssuerSerial(const ACertificate: IX509CertificateStructure): IIssuerSerial;
-// begin
-//   Result := TIssuerSerial.Create(ACertificate.Issuer, ACertificate.SerialNumber);
-// end;
+ class function TX509Utilities.CreateIssuerSerial(const ACertificate: IX509Certificate): IIssuerSerial;
+ begin
+   Result := CreateIssuerSerial(ACertificate.CertificateStructure);
+ end;
+
+ class function TX509Utilities.CreateIssuerSerial(const ACertificate: IX509CertificateStructure): IIssuerSerial;
+ begin
+   Result := TIssuerSerial.Create(ACertificate.Issuer, ACertificate.SerialNumber);
+ end;
 
 class function TX509Utilities.GenerateBitString(const AStreamCalculator: IStreamCalculator<IBlockResult>;
   const AAsn1Encodable: IAsn1Encodable): IDerBitString;

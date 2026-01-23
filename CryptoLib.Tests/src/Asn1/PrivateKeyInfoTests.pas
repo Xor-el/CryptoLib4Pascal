@@ -52,7 +52,8 @@ type
     procedure SetUp; override;
 
   published
-    procedure TestFunction;
+    procedure TestPrivateKeyWithoutPublicKey;
+    procedure TestPrivateKeyWithPublicKey;
 
   end;
 
@@ -75,10 +76,9 @@ begin
   SetUpTestData;
 end;
 
-procedure TPrivateKeyInfoTest.TestFunction;
+procedure TPrivateKeyInfoTest.TestPrivateKeyWithoutPublicKey;
 var
   LPrivInfo1, LPrivInfo2: IPrivateKeyInfo;
-  LPublicKey: IDerBitString;
 begin
   LPrivInfo1 := TPrivateKeyInfo.GetInstance(FPriv);
 
@@ -86,8 +86,14 @@ begin
 
   LPrivInfo2 := TPrivateKeyInfo.Create(LPrivInfo1.PrivateKeyAlgorithm, LPrivInfo1.ParsePrivateKey());
 
-  CheckTrue(AreEqual(FPriv, LPrivInfo2.GetEncoded()), 'enc 1 failed');
+  CheckTrue(AreEqual(FPriv, LPrivInfo2.GetEncoded()), 'Encoding round-trip failed for private key without public key');
+end;
 
+procedure TPrivateKeyInfoTest.TestPrivateKeyWithPublicKey;
+var
+  LPrivInfo1, LPrivInfo2: IPrivateKeyInfo;
+  LPublicKey: IDerBitString;
+begin
   LPrivInfo1 := TPrivateKeyInfo.GetInstance(FPrivWithPub);
 
   CheckTrue(LPrivInfo1.HasPublicKey, 'PrivateKeyInfo should have public key');
@@ -97,7 +103,7 @@ begin
   LPrivInfo2 := TPrivateKeyInfo.Create(LPrivInfo1.PrivateKeyAlgorithm, LPrivInfo1.ParsePrivateKey(),
     LPrivInfo1.Attributes, LPublicKey.GetOctets());
 
-  CheckTrue(AreEqual(FPrivWithPub, LPrivInfo2.GetEncoded()), 'enc 2 failed');
+  CheckTrue(AreEqual(FPrivWithPub, LPrivInfo2.GetEncoded()), 'Encoding round-trip failed for private key with public key');
 end;
 
 initialization

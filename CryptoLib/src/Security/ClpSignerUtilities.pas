@@ -304,7 +304,7 @@ begin
   Falgorithms.Add('PLAIN-ECDSAWITHSHA-224', 'SHA-224withPLAIN-ECDSA');
   Falgorithms.Add('SHA224WITHPLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
   Falgorithms.Add('SHA-224WITHPLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.ecdsa_plain_SHA224.id,
+  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA224.id,
     'SHA-224withPLAIN-ECDSA');
   Falgorithms.Add('SHA256/PLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
   Falgorithms.Add('SHA-256/PLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
@@ -312,7 +312,7 @@ begin
   Falgorithms.Add('PLAIN-ECDSAWITHSHA-256', 'SHA-256withPLAIN-ECDSA');
   Falgorithms.Add('SHA256WITHPLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
   Falgorithms.Add('SHA-256WITHPLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.ecdsa_plain_SHA256.id,
+  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA256.id,
     'SHA-256withPLAIN-ECDSA');
   Falgorithms.Add('SHA384/PLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
   Falgorithms.Add('SHA-384/PLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
@@ -320,7 +320,7 @@ begin
   Falgorithms.Add('PLAIN-ECDSAWITHSHA-384', 'SHA-384withPLAIN-ECDSA');
   Falgorithms.Add('SHA384WITHPLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
   Falgorithms.Add('SHA-384WITHPLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.ecdsa_plain_SHA384.id,
+  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA384.id,
     'SHA-384withPLAIN-ECDSA');
   Falgorithms.Add('SHA512/PLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
   Falgorithms.Add('SHA-512/PLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
@@ -328,7 +328,7 @@ begin
   Falgorithms.Add('PLAIN-ECDSAWITHSHA-512', 'SHA-512withPLAIN-ECDSA');
   Falgorithms.Add('SHA512WITHPLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
   Falgorithms.Add('SHA-512WITHPLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.ecdsa_plain_SHA512.id,
+  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA512.id,
     'SHA-512withPLAIN-ECDSA');
   Falgorithms.Add('RIPEMD160/PLAIN-ECDSA', 'RIPEMD160withPLAIN-ECDSA');
   Falgorithms.Add('PLAIN-ECDSAWITHRIPEMD160', 'RIPEMD160withPLAIN-ECDSA');
@@ -567,10 +567,10 @@ begin
   Foids.Add('SHA-384withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_384);
   Foids.Add('SHA-512withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_512);
   Foids.Add('SHA-1withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA1);
-  Foids.Add('SHA-224withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA224);
-  Foids.Add('SHA-256withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA256);
-  Foids.Add('SHA-384withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA384);
-  Foids.Add('SHA-512withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA512);
+  Foids.Add('SHA-224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA224);
+  Foids.Add('SHA-256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA256);
+  Foids.Add('SHA-384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA384);
+  Foids.Add('SHA-512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA512);
   Foids.Add('RIPEMD160withPLAIN-ECDSA',
     TBsiObjectIdentifiers.ecdsa_plain_RIPEMD160);
 

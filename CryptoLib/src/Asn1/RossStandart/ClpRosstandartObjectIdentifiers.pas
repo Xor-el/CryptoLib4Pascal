@@ -76,9 +76,9 @@ type
       static; inline;
     class function Getid_tc26_hmac_gost_3411_12_512: IDerObjectIdentifier;
       static; inline;
-    class function Getid_tc26_signwithdigest_gost_3410_12_256
+    class function GetIdTc26SignWithDigestGost3410_12_256
       : IDerObjectIdentifier; static; inline;
-    class function Getid_tc26_signwithdigest_gost_3410_12_512
+    class function GetIdTc26SignWithDigestGost3410_12_512
       : IDerObjectIdentifier; static; inline;
     class function Getrosstandart: IDerObjectIdentifier; static; inline;
 
@@ -99,10 +99,10 @@ type
       read Getid_tc26_gost_3410_12_256;
     class property id_tc26_gost_3410_12_512: IDerObjectIdentifier
       read Getid_tc26_gost_3410_12_512;
-    class property id_tc26_signwithdigest_gost_3410_12_256: IDerObjectIdentifier
-      read Getid_tc26_signwithdigest_gost_3410_12_256;
-    class property id_tc26_signwithdigest_gost_3410_12_512: IDerObjectIdentifier
-      read Getid_tc26_signwithdigest_gost_3410_12_512;
+    class property IdTc26SignWithDigestGost3410_12_256: IDerObjectIdentifier
+      read GetIdTc26SignWithDigestGost3410_12_256;
+    class property IdTc26SignWithDigestGost3410_12_512: IDerObjectIdentifier
+      read GetIdTc26SignWithDigestGost3410_12_512;
     class property id_tc26_agreement: IDerObjectIdentifier
       read Getid_tc26_agreement;
     class property id_tc26_agreement_gost_3410_12_256: IDerObjectIdentifier
@@ -244,14 +244,14 @@ begin
   result := Fid_tc26_hmac_gost_3411_12_512;
 end;
 
-class function TRosstandartObjectIdentifiers.
-  Getid_tc26_signwithdigest_gost_3410_12_256: IDerObjectIdentifier;
+class function TRosstandartObjectIdentifiers.GetIdTc26SignWithDigestGost3410_12_256
+  : IDerObjectIdentifier;
 begin
   result := Fid_tc26_signwithdigest_gost_3410_12_256;
 end;
 
-class function TRosstandartObjectIdentifiers.
-  Getid_tc26_signwithdigest_gost_3410_12_512: IDerObjectIdentifier;
+class function TRosstandartObjectIdentifiers.GetIdTc26SignWithDigestGost3410_12_512
+  : IDerObjectIdentifier;
 begin
   result := Fid_tc26_signwithdigest_gost_3410_12_512;
 end;

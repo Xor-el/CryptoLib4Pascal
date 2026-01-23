@@ -576,7 +576,7 @@ uses
   X509ExtensionsTests in '..\src\Asn1\X509\X509ExtensionsTests.pas',
   X509NameTests in '..\src\Asn1\X509\X509NameTests.pas',
   Pkcs10CertRequestTests in '..\src\Asn1\PKCS\Pkcs10CertRequestTests.pas',
-  PrivateKeyInfoTests in '..\src\Asn1\PKCS\PrivateKeyInfoTests.pas',
+  PrivateKeyInfoTests in '..\src\Asn1\PrivateKeyInfoTests.pas',
   IPAddressUtilitiesTests in '..\src\Utils\Net\IPAddressUtilitiesTests.pas',
   PemReaderTests in '..\src\Utils\Pem\PemReaderTests.pas',
   CertificateTest in '..\src\Asn1\X509\CertificateTest.pas',

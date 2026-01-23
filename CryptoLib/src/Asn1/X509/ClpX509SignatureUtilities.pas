@@ -37,6 +37,9 @@ uses
   ClpOiwObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
+  ClpBsiObjectIdentifiers,
+  ClpEdECObjectIdentifiers,
+  ClpX509ObjectIdentifiers,
   ClpSignerUtilities,
   ClpX509Utilities,
   ClpCryptoLibComparers,
@@ -55,8 +58,12 @@ type
       FNoParams: TDictionary<IDerObjectIdentifier, IAlgorithmIdentifier>;
 
     class function GetDigestName(const ADigestAlgOid: IDerObjectIdentifier): String; static;
+    class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier; AIsNoParams: Boolean); static;
+    class procedure AddNoParams(const AOid: IDerObjectIdentifier); static;
+    class function CreatePssParams(const ADigAlgID: IAlgorithmIdentifier; ASaltSize: Int32): IRsassaPssParameters; static;
     class procedure Boot; static;
     class constructor Create;
+    class destructor Destroy;
 
   public
     class function GetSignatureName(const ASigAlgID: IAlgorithmIdentifier): String; static;
@@ -75,13 +82,21 @@ begin
   Boot;
 end;
 
+class destructor TX509SignatureUtilities.Destroy;
+begin
+  FAlgorithms.Free;
+  FExParams.Free;
+  FNoParams.Free;
+end;
+
 class procedure TX509SignatureUtilities.Boot;
+var
+  LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FExParams := TDictionary<String, IAsn1Encodable>.Create();
   FNoParams := TDictionary<IDerObjectIdentifier, IAlgorithmIdentifier>.Create(TCryptoLibComparers.OidEqualityComparer);
 
-  // Initialize algorithms - same as TX509Utilities
   // MD2 algorithms
   FAlgorithms.Add('MD2WITHRSAENCRYPTION', TPkcsObjectIdentifiers.MD2WithRsaEncryption);
   FAlgorithms.Add('MD2WITHRSA', TPkcsObjectIdentifiers.MD2WithRsaEncryption);
@@ -132,6 +147,16 @@ begin
   FAlgorithms.Add('SHA512(256)WITHRSA', TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption);
   FAlgorithms.Add('SHA-512(256)WITHRSA', TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption);
 
+  // SHA3-224/256/384/512 with RSA algorithms
+  FAlgorithms.Add('SHA3-224WITHRSAENCRYPTION', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_224);
+  FAlgorithms.Add('SHA3-256WITHRSAENCRYPTION', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_256);
+  FAlgorithms.Add('SHA3-384WITHRSAENCRYPTION', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_384);
+  FAlgorithms.Add('SHA3-512WITHRSAENCRYPTION', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_512);
+  FAlgorithms.Add('SHA3-224WITHRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_224);
+  FAlgorithms.Add('SHA3-256WITHRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_256);
+  FAlgorithms.Add('SHA3-384WITHRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_384);
+  FAlgorithms.Add('SHA3-512WITHRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_512);
+
   // RSA-PSS algorithms
   FAlgorithms.Add('SHA1WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FAlgorithms.Add('SHA224WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
@@ -163,20 +188,116 @@ begin
   FAlgorithms.Add('SHA384WITHECDSA', TX9ObjectIdentifiers.ECDsaWithSha384);
   FAlgorithms.Add('SHA512WITHECDSA', TX9ObjectIdentifiers.ECDsaWithSha512);
 
+  // BSI Plain ECDSA algorithms
+  FAlgorithms.Add('SHA1withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA1);
+  FAlgorithms.Add('SHA224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA224);
+  FAlgorithms.Add('SHA256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA256);
+  FAlgorithms.Add('SHA384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA384);
+  FAlgorithms.Add('SHA512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA512);
+  FAlgorithms.Add('RIPEMD160withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_RIPEMD160);
+
   // GOST algorithms
   FAlgorithms.Add('GOST3411WITHGOST3410', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
   FAlgorithms.Add('GOST3411WITHGOST3410-94', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
   FAlgorithms.Add('GOST3411WITHECGOST3410', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   FAlgorithms.Add('GOST3411WITHECGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   FAlgorithms.Add('GOST3411WITHGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+  FAlgorithms.Add('GOST3411-2012-256WITHECGOST3410', TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  FAlgorithms.Add('GOST3411-2012-256WITHECGOST3410-2012-256', TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  FAlgorithms.Add('GOST3411-2012-512WITHECGOST3410', TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+  FAlgorithms.Add('GOST3411-2012-512WITHECGOST3410-2012-512', TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
 
-  // Add no-params entries for algorithms that don't require parameters
-  FNoParams.Add(TX9ObjectIdentifiers.IdDsaWithSha1, TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsaWithSha1));
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha1, TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.ECDsaWithSha1));
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha224, TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.ECDsaWithSha224));
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha256, TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.ECDsaWithSha256));
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha384, TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.ECDsaWithSha384));
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha512, TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.ECDsaWithSha512));
+  // SHAKE algorithms
+  FAlgorithms.Add('SHAKE128WITHRSAPSS', TX509ObjectIdentifiers.IdRsassaPssShake128);
+  FAlgorithms.Add('SHAKE256WITHRSAPSS', TX509ObjectIdentifiers.IdRsassaPssShake256);
+  FAlgorithms.Add('SHAKE128WITHRSASSA-PSS', TX509ObjectIdentifiers.IdRsassaPssShake128);
+  FAlgorithms.Add('SHAKE256WITHRSASSA-PSS', TX509ObjectIdentifiers.IdRsassaPssShake256);
+  FAlgorithms.Add('SHAKE128WITHECDSA', TX509ObjectIdentifiers.IdEcdsaWithShake128);
+  FAlgorithms.Add('SHAKE256WITHECDSA', TX509ObjectIdentifiers.IdEcdsaWithShake256);
+
+  //
+  // According to RFC 3279, the ASN.1 encoding SHALL (id-dsa-with-sha1) or MUST (ecdsa-with-SHA*) omit the parameters field.
+  // The parameters field SHALL be NULL for RSA based signature algorithms.
+  //
+
+  AddNoParams(TX9ObjectIdentifiers.IdDsaWithSha1);
+  AddNoParams(TOiwObjectIdentifiers.DsaWithSha1);
+  AddNoParams(TNistObjectIdentifiers.DsaWithSha224);
+  AddNoParams(TNistObjectIdentifiers.DsaWithSha256);
+  AddNoParams(TNistObjectIdentifiers.DsaWithSha384);
+  AddNoParams(TNistObjectIdentifiers.DsaWithSha512);
+
+  AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha1);
+  AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha224);
+  AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha256);
+  AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha384);
+  AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha512);
+
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA224);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA256);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA384);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA512);
+
+  //
+  // RFC 4491
+  //
+  AddNoParams(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
+  AddNoParams(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+  AddNoParams(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  AddNoParams(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+
+  AddNoParams(TX509ObjectIdentifiers.IdRsassaPssShake128);
+  AddNoParams(TX509ObjectIdentifiers.IdRsassaPssShake256);
+  AddNoParams(TX509ObjectIdentifiers.IdEcdsaWithShake128);
+  AddNoParams(TX509ObjectIdentifiers.IdEcdsaWithShake256);
+
+  //
+  // explicit params
+  //
+  LSha1AlgId := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
+  FExParams.Add('SHA1WITHRSAANDMGF1', CreatePssParams(LSha1AlgId, 20));
+
+  LSha224AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha224, TDerNull.Instance);
+  FExParams.Add('SHA224WITHRSAANDMGF1', CreatePssParams(LSha224AlgId, 28));
+
+  LSha256AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, TDerNull.Instance);
+  FExParams.Add('SHA256WITHRSAANDMGF1', CreatePssParams(LSha256AlgId, 32));
+
+  LSha384AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha384, TDerNull.Instance);
+  FExParams.Add('SHA384WITHRSAANDMGF1', CreatePssParams(LSha384AlgId, 48));
+
+  LSha512AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha512, TDerNull.Instance);
+  FExParams.Add('SHA512WITHRSAANDMGF1', CreatePssParams(LSha512AlgId, 64));
+
+  //
+  // DSA with SHA3
+  //
+  AddAlgorithm('SHA3-224WITHDSA', TNistObjectIdentifiers.IdDsaWithSha3_224, True);
+  AddAlgorithm('SHA3-256WITHDSA', TNistObjectIdentifiers.IdDsaWithSha3_256, True);
+  AddAlgorithm('SHA3-384WITHDSA', TNistObjectIdentifiers.IdDsaWithSha3_384, True);
+  AddAlgorithm('SHA3-512WITHDSA', TNistObjectIdentifiers.IdDsaWithSha3_512, True);
+
+  //
+  // ECDSA with SHA3
+  //
+  AddAlgorithm('SHA3-224WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_224, True);
+  AddAlgorithm('SHA3-256WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_256, True);
+  AddAlgorithm('SHA3-384WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_384, True);
+  AddAlgorithm('SHA3-512WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_512, True);
+
+  //
+  // BSI Plain ECDSA with SHA3
+  //
+  AddAlgorithm('SHA3-224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_224, True);
+  AddAlgorithm('SHA3-256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_256, True);
+  AddAlgorithm('SHA3-384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_384, True);
+  AddAlgorithm('SHA3-512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_512, True);
+
+  //
+  // EdDSA
+  //
+  AddAlgorithm('Ed25519', TEdECObjectIdentifiers.id_Ed25519, True);
+  AddAlgorithm('Ed448', TEdECObjectIdentifiers.id_Ed448, True);
 end;
 
 class function TX509SignatureUtilities.GetDigestName(const ADigestAlgOid: IDerObjectIdentifier): String;
@@ -319,6 +440,32 @@ begin
   finally
     LList.Free;
   end;
+end;
+
+class procedure TX509SignatureUtilities.AddAlgorithm(const AName: String;
+  const AOid: IDerObjectIdentifier; AIsNoParams: Boolean);
+begin
+  FAlgorithms.Add(AName, AOid);
+  if AIsNoParams then
+    AddNoParams(AOid);
+end;
+
+class procedure TX509SignatureUtilities.AddNoParams(const AOid: IDerObjectIdentifier);
+begin
+  FNoParams.Add(AOid, TAlgorithmIdentifier.Create(AOid));
+end;
+
+class function TX509SignatureUtilities.CreatePssParams(const ADigAlgID: IAlgorithmIdentifier;
+  ASaltSize: Int32): IRsassaPssParameters;
+var
+  LHashAlgId: IAlgorithmIdentifier;
+  LMgfAlgId: IAlgorithmIdentifier;
+  LSaltLength: IDerInteger;
+begin
+  LHashAlgId := ADigAlgID;
+  LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, LHashAlgId);
+  LSaltLength := TDerInteger.Create(ASaltSize);
+  Result := TRsassaPssParameters.Create(LHashAlgId, LMgfAlgId, LSaltLength, TRsassaPssParameters.DefaultTrailerField);
 end;
 
 end.
