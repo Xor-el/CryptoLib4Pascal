@@ -298,42 +298,42 @@ begin
 
         if LOid.Equals(TX509Extensions.SubjectKeyIdentifier) then
         begin
-          TSubjectKeyIdentifier.GetInstance(LExtObj as TObject);
+          TSubjectKeyIdentifier.GetInstance(LExtObj);
         end
         else if LOid.Equals(TX509Extensions.KeyUsage) then
         begin
-          //TKeyUsage.GetInstance(LExtObj as TObject);
+          TKeyUsage.GetKeyUsageInstance(LExtObj);
         end
         else if LOid.Equals(TX509Extensions.ExtendedKeyUsage) then
         begin
-          LExtendedKeyUsage := TExtendedKeyUsage.GetInstance(LExtObj as TObject);
+          LExtendedKeyUsage := TExtendedKeyUsage.GetInstance(LExtObj);
           LSeq := LExtendedKeyUsage.ToAsn1Object() as IAsn1Sequence;
           for I := 0 to LSeq.Count - 1 do
           begin
-            TDerObjectIdentifier.GetInstance(LSeq[I] as TObject);
+            TDerObjectIdentifier.GetInstance(LSeq[I]);
           end;
         end
         else if LOid.Equals(TX509Extensions.SubjectAlternativeName) then
         begin
-          LGeneralNames := TGeneralNames.GetInstance(LExtObj as TObject);
+          LGeneralNames := TGeneralNames.GetInstance(LExtObj);
           LSeq := LGeneralNames.ToAsn1Object() as IAsn1Sequence;
           for I := 0 to LSeq.Count - 1 do
           begin
-            TGeneralName.GetInstance(LSeq[I] as TObject);
+            TGeneralName.GetInstance(LSeq[I]);
           end;
         end
         else if LOid.Equals(TX509Extensions.IssuerAlternativeName) then
         begin
-          LGeneralNames := TGeneralNames.GetInstance(LExtObj as TObject);
+          LGeneralNames := TGeneralNames.GetInstance(LExtObj);
           LSeq := LGeneralNames.ToAsn1Object() as IAsn1Sequence;
           for I := 0 to LSeq.Count - 1 do
           begin
-            TGeneralName.GetInstance(LSeq[I] as TObject);
+            TGeneralName.GetInstance(LSeq[I]);
           end;
         end
         else if LOid.Equals(TX509Extensions.CrlDistributionPoints) then
         begin
-          LCrlDistPoint := TCrlDistPoint.GetInstance(LExtObj as TObject);
+          LCrlDistPoint := TCrlDistPoint.GetInstance(LExtObj);
           LPoints := LCrlDistPoint.GetDistributionPoints();
           // do nothing - just verify it parses
         end
@@ -342,16 +342,16 @@ begin
           LPolicySeq := LExtObj as IAsn1Sequence;
           for I := 0 to LPolicySeq.Count - 1 do
           begin
-            LPolicyInfo := TPolicyInformation.GetInstance(LPolicySeq[I] as TObject);
+            LPolicyInfo := TPolicyInformation.GetInstance(LPolicySeq[I]);
           end;
         end
         else if LOid.Equals(TX509Extensions.AuthorityKeyIdentifier) then
         begin
-          TAuthorityKeyIdentifier.GetInstance(LExtObj as TObject);
+          TAuthorityKeyIdentifier.GetInstance(LExtObj);
         end
         else if LOid.Equals(TX509Extensions.BasicConstraints) then
         begin
-          TBasicConstraints.GetInstance(LExtObj as TObject);
+          TBasicConstraints.GetInstance(LExtObj);
         end;
       end;
     end;

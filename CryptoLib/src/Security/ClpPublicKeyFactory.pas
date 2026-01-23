@@ -73,12 +73,12 @@ implementation
 
 class function TPublicKeyFactory.CreateKey(const AKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter;
 begin
-  Result := CreateKey(TSubjectPublicKeyInfo.GetInstance(TAsn1Sequence.GetInstance(AKeyInfoData) as TObject));
+  Result := CreateKey(TSubjectPublicKeyInfo.GetInstance(TAsn1Sequence.GetInstance(AKeyInfoData)));
 end;
 
 class function TPublicKeyFactory.CreateKey(const AInStr: TStream): IAsymmetricKeyParameter;
 begin
-  Result := CreateKey(TSubjectPublicKeyInfo.GetInstance(TAsn1Object.FromStream(AInStr) as TAsn1Object));
+  Result := CreateKey(TSubjectPublicKeyInfo.GetInstance(TAsn1Object.FromStream(AInStr)));
 end;
 
 class function TPublicKeyFactory.CreateKey(const AKeyInfo: ISubjectPublicKeyInfo): IAsymmetricKeyParameter;
@@ -110,7 +110,7 @@ begin
     LAlgOid.Equals(TPkcsObjectIdentifiers.IdRsassaPss) or
     LAlgOid.Equals(TPkcsObjectIdentifiers.IdRsaesOaep) then
   begin
-    LPubKey := TRsaPublicKeyStructure.GetInstance(AKeyInfo.ParsePublicKey() as TObject);
+    LPubKey := TRsaPublicKeyStructure.GetInstance(AKeyInfo.ParsePublicKey());
     Result := TRsaKeyParameters.Create(False, LPubKey.Modulus, LPubKey.PublicExponent);
     Exit;
   end;

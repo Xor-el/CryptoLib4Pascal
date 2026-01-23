@@ -496,11 +496,15 @@ type
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
-    class function GetInstance(const AEncoded: TCryptoLibByteArray): IAsn1OctetString; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1OctetString; overload; static;
     /// <summary>
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IAsn1OctetString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1OctetString; overload; static;
     /// <summary>
     /// Get instance from tagged object.
     /// </summary>
@@ -814,6 +818,10 @@ type
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerBitString; overload; static;
     /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerBitString; overload; static;
+    /// <summary>
     /// Get instance from byte array.
     /// </summary>
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerBitString; overload; static;
@@ -935,6 +943,10 @@ type
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerBmpString; overload; static;
     /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerBmpString; overload; static;
+    /// <summary>
     /// Get instance from byte array.
     /// </summary>
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerBmpString; overload; static;
@@ -1014,6 +1026,10 @@ type
     /// <summary>
     /// Check instance helper.
     /// </summary>
+    class function CheckInstance(const AObj: IAsn1Object): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Check instance helper.
+    /// </summary>
     class function CheckInstance(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
     /// <summary>
@@ -1030,6 +1046,14 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1TaggedObject; overload; static;
     /// <summary>
     /// Get instance from object with tag class.
     /// </summary>
@@ -1344,6 +1368,10 @@ type
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IAsn1Sequence; overload; static;
     /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1Sequence; overload; static;
+    /// <summary>
     /// Get instance from tagged object.
     /// </summary>
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Sequence; overload; static;
@@ -1539,6 +1567,14 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IAsn1Set; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1Set; overload; static;
+    /// <summary>
+    /// Get instance from byte array.
+    /// </summary>
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Set; overload; static;
     /// <summary>
     /// Get instance from tagged object.
     /// </summary>
@@ -2444,6 +2480,7 @@ type
     class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
     class function GetInstance(const AObj: TObject): IDerBoolean; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IDerBoolean; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IDerBoolean; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerBoolean; overload; static;
     class function GetInstance(AValue: Boolean): IDerBoolean; overload; static;
     class function GetInstance(AValue: Int32): IDerBoolean; overload; static;
@@ -2504,6 +2541,9 @@ type
     constructor Create(const AContents: TCryptoLibByteArray); overload;
     constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
     class function GetInstance(const AObj: TObject): IDerEnumerated; overload; static;
+    class function GetInstance(const AObj: IAsn1Object): IDerEnumerated; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IDerEnumerated; overload; static;
+    class function GetInstance(const ABytes: TCryptoLibByteArray): IDerEnumerated; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IDerEnumerated; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated; static;
@@ -2547,6 +2587,7 @@ type
     class function CreatePrimitive(): IAsn1Object; static;
     class function GetInstance(const AObj: TObject): IAsn1Null; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1Null; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1Null; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Null; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Null; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IAsn1Null; static;
@@ -2621,6 +2662,7 @@ type
     class function FromContents(const AContents: TCryptoLibByteArray): IDerObjectIdentifier; static;
     class function GetInstance(const AObj: TObject): IDerObjectIdentifier; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IDerObjectIdentifier; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IDerObjectIdentifier; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerObjectIdentifier; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerObjectIdentifier; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IDerObjectIdentifier; static;
@@ -2693,6 +2735,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IAsn1RelativeOid; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1RelativeOid; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1RelativeOid; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1RelativeOid; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IAsn1RelativeOid; static;
@@ -2748,6 +2794,7 @@ type
     constructor Create(const ADateTime: TDateTime); overload;
     class function GetInstance(const AObj: TObject): IAsn1GeneralizedTime; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1GeneralizedTime; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1GeneralizedTime; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1GeneralizedTime; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1GeneralizedTime; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IAsn1GeneralizedTime; static;
@@ -2802,6 +2849,10 @@ type
     constructor Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
     class function GetInstance(const AObj: TObject): IAsn1UtcTime; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1UtcTime; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1UtcTime; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1UtcTime; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1UtcTime; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IAsn1UtcTime; static;
@@ -2877,6 +2928,10 @@ type
     constructor Create(const AGraphicString: IAsn1Object);
     class function GetInstance(const AObj: TObject): IAsn1ObjectDescriptor; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1ObjectDescriptor; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAsn1ObjectDescriptor; overload; static;
     class function GetInstance(const ABytes: TCryptoLibByteArray): IAsn1ObjectDescriptor; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1ObjectDescriptor; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IAsn1ObjectDescriptor; static;
@@ -2933,6 +2988,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerGeneralString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerGeneralString; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3004,6 +3063,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerGraphicString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerGraphicString; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3088,6 +3151,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerIA5String; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerIA5String; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3197,6 +3264,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerInteger; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerInteger; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3369,6 +3440,10 @@ type
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerNumericString; overload; static;
     /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerNumericString; overload; static;
+    /// <summary>
     /// Get instance from byte array.
     /// </summary>
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerNumericString; overload; static;
@@ -3441,6 +3516,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerPrintableString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerPrintableString; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3530,6 +3609,10 @@ type
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerT61String; overload; static;
     /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerT61String; overload; static;
+    /// <summary>
     /// Get instance from byte array.
     /// </summary>
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerT61String; overload; static;
@@ -3600,6 +3683,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerUniversalString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerUniversalString; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3676,6 +3763,10 @@ type
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerUtf8String; overload; static;
     /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerUtf8String; overload; static;
+    /// <summary>
     /// Get instance from byte array.
     /// </summary>
     class function GetInstance(const ABytes: TCryptoLibByteArray): IDerUtf8String; overload; static;
@@ -3747,6 +3838,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerVideotexString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerVideotexString; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -3820,6 +3915,10 @@ type
     /// Get instance from ASN.1 object.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object): IDerVisibleString; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDerVisibleString; overload; static;
     /// <summary>
     /// Get instance from byte array.
     /// </summary>
@@ -4781,15 +4880,8 @@ begin
 end;
 
 class function TAsn1Object.FromByteArray(const AData: TCryptoLibByteArray): IAsn1Object;
-var
-  LBufferStream: TFixedBufferStream;
 begin
-  LBufferStream := TFixedBufferStream.Create(AData, 0, System.Length(AData), False);
-  try
-    Result := FromBufferStream(LBufferStream);
-  finally
-    //LBufferStream.Free;
-  end;
+  Result := FromBufferStream(TFixedBufferStream.Create(AData, 0, System.Length(AData), False));
 end;
 
 class function TAsn1Object.FromBufferStream(const ABufferStream: TFixedBufferStream): IAsn1Object;
@@ -5230,6 +5322,13 @@ begin
     raise EArgumentNilCryptoLibException.Create('obj');
 end;
 
+class function TAsn1TaggedObject.CheckInstance(const AObj: IAsn1Object): IAsn1TaggedObject;
+begin
+  Result := GetInstance(AObj);
+  if Result = nil then
+    raise EArgumentNilCryptoLibException.Create('obj');
+end;
+
 class function TAsn1TaggedObject.CheckInstance(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): IAsn1TaggedObject;
 begin
@@ -5286,6 +5385,38 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1TaggedObject, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
+class function TAsn1TaggedObject.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1TaggedObject;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  try
+    Result := CheckedCast(TAsn1Object.FromByteArray(ABytes));
+  except
+    on E: EIOCryptoLibException do
+      raise EArgumentCryptoLibException.Create('failed to construct tagged object from byte[]: ' + E.Message);
+  end;
+end;
+
 class function TAsn1TaggedObject.GetInstance(const AObj: TObject; ATagClass: Int32): IAsn1TaggedObject;
 begin
   Result := TAsn1Utilities.CheckTagClass(CheckInstance(AObj), ATagClass);
@@ -5293,7 +5424,7 @@ end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object; ATagClass: Int32): IAsn1TaggedObject;
 begin
-  Result := TAsn1Utilities.CheckTagClass(GetInstance(AObj), ATagClass);
+  Result := TAsn1Utilities.CheckTagClass(CheckInstance(AObj), ATagClass);
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: TObject; ATagClass, ATagNo: Int32): IAsn1TaggedObject;
@@ -5303,7 +5434,7 @@ end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object; ATagClass, ATagNo: Int32): IAsn1TaggedObject;
 begin
-  Result := TAsn1Utilities.CheckTag(GetInstance(AObj), ATagClass, ATagNo);
+  Result := TAsn1Utilities.CheckTag(CheckInstance(AObj), ATagClass, ATagNo);
 end;
 
 class function TAsn1TaggedObject.GetInstance(const ATaggedObject: IAsn1TaggedObject;
@@ -5839,6 +5970,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TAsn1Sequence.GetInstance(const AObj: IAsn1Convertible): IAsn1Sequence;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Sequence, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TAsn1Sequence.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Sequence;
 begin
   Result := TAsn1Sequence.Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit) as IAsn1Sequence;
@@ -5851,6 +5999,7 @@ begin
     Result := nil;
     Exit;
   end;
+
   try
     Result := TAsn1Sequence.Meta.Instance.FromByteArray(ABytes) as IAsn1Sequence;
   except
@@ -6553,7 +6702,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
 end;
 
 class function TAsn1Set.GetInstance(const AObj: IAsn1Object): IAsn1Set;
@@ -6565,6 +6714,38 @@ begin
   end;
   if not Supports(AObj, IAsn1Set, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1Set.GetInstance(const AObj: IAsn1Convertible): IAsn1Set;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Set, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
+class function TAsn1Set.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Set;
+begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  try
+    Result := TAsn1Set.Meta.Instance.FromByteArray(ABytes) as IAsn1Set;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct set from byte[]: ' + E.Message);
+  end;
 end;
 
 class function TAsn1Set.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1Set;
@@ -8181,13 +8362,18 @@ begin
   raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
 end;
 
-class function TAsn1OctetString.GetInstance(const AEncoded: TCryptoLibByteArray): IAsn1OctetString;
+class function TAsn1OctetString.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1OctetString;
 begin
+  if ABytes = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
   try
-    Result := TAsn1OctetString.Meta.Instance.FromByteArray(AEncoded) as IAsn1OctetString;
+    Result := TAsn1OctetString.Meta.Instance.FromByteArray(ABytes) as IAsn1OctetString;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.CreateFmt('failed to construct OCTET STRING from byte[]: %s', [E.Message]);
+      raise EArgumentCryptoLibException.Create('failed to construct OCTET STRING from byte[]: ' + E.Message);
   end;
 end;
 
@@ -8200,6 +8386,23 @@ begin
   end;
   if not Supports(AObj, IAsn1OctetString, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TAsn1OctetString.GetInstance(const AObj: IAsn1Convertible): IAsn1OctetString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1OctetString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TAsn1OctetString.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1OctetString;
@@ -8847,6 +9050,23 @@ begin
   end;
   if not Supports(AObj, IDerBitString, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerBitString.GetInstance(const AObj: IAsn1Convertible): IDerBitString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerBitString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerBitString.GetInstance(const ABytes: TCryptoLibByteArray): IDerBitString;
@@ -9594,6 +9814,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TDerBmpString.GetInstance(const AObj: IAsn1Convertible): IDerBmpString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerBmpString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TDerBmpString.GetInstance(const ABytes: TCryptoLibByteArray): IDerBmpString;
 var
   LObj: IAsn1Object;
@@ -9744,6 +9981,23 @@ begin
   raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
 end;
 
+class function TDerBoolean.GetInstance(const AObj: IAsn1Convertible): IDerBoolean;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerBoolean, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TDerBoolean.GetInstance(const AObj: IAsn1Object): IDerBoolean;
 begin
   if AObj = nil then
@@ -9871,8 +10125,45 @@ end;
 
 class function TDerEnumerated.GetInstance(const AObj: TObject): IDerEnumerated;
 var
-  LAsn1Convertible: IAsn1Convertible;
-  LConverted: IAsn1Object;
+  LAsn1Obj: IAsn1Object;
+  LConvertible: IAsn1Convertible;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // If it's already IAsn1Object, forward directly
+  if Supports(AObj, IAsn1Object, LAsn1Obj) then
+  begin
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  // Handle IAsn1Convertible conversion
+  if Supports(AObj, IAsn1Convertible, LConvertible) then
+  begin
+    LAsn1Obj := LConvertible.ToAsn1Object();
+    Result := GetInstance(LAsn1Obj);
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+end;
+
+class function TDerEnumerated.GetInstance(const AObj: IAsn1Object): IDerEnumerated;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if not Supports(AObj, IDerEnumerated, Result) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerEnumerated.GetInstance(const AObj: IAsn1Convertible): IDerEnumerated;
 begin
   if AObj = nil then
   begin
@@ -9882,18 +10173,26 @@ begin
 
   if Supports(AObj, IDerEnumerated, Result) then
     Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
 
-  if Supports(AObj, IAsn1Convertible, LAsn1Convertible) then
+class function TDerEnumerated.GetInstance(const ABytes: TCryptoLibByteArray): IDerEnumerated;
+begin
+  if ABytes = nil then
   begin
-    if not Supports(AObj, IAsn1Object) then
-    begin
-      LConverted := LAsn1Convertible.ToAsn1Object();
-      if Supports(LConverted, IDerEnumerated, Result) then
-        Exit;
-    end;
+    Result := nil;
+    Exit;
   end;
-
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  try
+    Result := TDerEnumerated.Meta.Instance.FromByteArray(ABytes) as IDerEnumerated;
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('failed to construct enumerated from byte[]: ' + E.Message);
+  end;
 end;
 
 class function TDerEnumerated.GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated;
@@ -10159,6 +10458,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TAsn1Null.GetInstance(const AObj: IAsn1Convertible): IAsn1Null;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1Null, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TAsn1Null.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1Null;
 var
   LObj: IAsn1Object;
@@ -10388,6 +10704,23 @@ begin
     Exit;
 
   raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TDerObjectIdentifier.GetInstance(const AObj: IAsn1Convertible): IDerObjectIdentifier;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerObjectIdentifier, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerObjectIdentifier.GetInstance(const ABytes: TCryptoLibByteArray): IDerObjectIdentifier;
@@ -10883,6 +11216,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TAsn1RelativeOid.GetInstance(const AObj: IAsn1Convertible): IAsn1RelativeOid;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1RelativeOid, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TAsn1RelativeOid.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1RelativeOid;
 begin
   if ABytes = nil then
@@ -11362,6 +11712,23 @@ begin
   raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
 end;
 
+class function TAsn1GeneralizedTime.GetInstance(const AObj: IAsn1Convertible): IAsn1GeneralizedTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1GeneralizedTime, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TAsn1GeneralizedTime.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1GeneralizedTime;
 begin
   if ABytes = nil then
@@ -11704,6 +12071,23 @@ begin
     Exit;
 
   raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+end;
+
+class function TAsn1UtcTime.GetInstance(const AObj: IAsn1Convertible): IAsn1UtcTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1UtcTime, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TAsn1UtcTime.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1UtcTime;
@@ -12064,6 +12448,23 @@ begin
   raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
 end;
 
+class function TAsn1ObjectDescriptor.GetInstance(const AObj: IAsn1Convertible): IAsn1ObjectDescriptor;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1ObjectDescriptor, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TAsn1ObjectDescriptor.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1ObjectDescriptor;
 begin
   if ABytes = nil then
@@ -12212,6 +12613,23 @@ begin
   end;
   if not Supports(AObj, IDerUtf8String, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerUtf8String.GetInstance(const AObj: IAsn1Convertible): IDerUtf8String;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerUtf8String, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerUtf8String.GetInstance(const ABytes: TCryptoLibByteArray): IDerUtf8String;
@@ -12366,6 +12784,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TDerGeneralString.GetInstance(const AObj: IAsn1Convertible): IDerGeneralString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerGeneralString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TDerGeneralString.GetInstance(const ABytes: TCryptoLibByteArray): IDerGeneralString;
 var
   LObj: IAsn1Object;
@@ -12508,6 +12943,23 @@ begin
   end;
   if not Supports(AObj, IDerGraphicString, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerGraphicString.GetInstance(const AObj: IAsn1Convertible): IDerGraphicString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerGraphicString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerGraphicString.GetInstance(const ABytes: TCryptoLibByteArray): IDerGraphicString;
@@ -12684,6 +13136,23 @@ begin
   end;
   if not Supports(AObj, IDerIA5String, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerIA5String.GetInstance(const AObj: IAsn1Convertible): IDerIA5String;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerIA5String, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerIA5String.GetInstance(const ABytes: TCryptoLibByteArray): IDerIA5String;
@@ -12884,6 +13353,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TDerNumericString.GetInstance(const AObj: IAsn1Convertible): IDerNumericString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerNumericString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TDerNumericString.GetInstance(const ABytes: TCryptoLibByteArray): IDerNumericString;
 var
   LObj: IAsn1Object;
@@ -13034,6 +13520,23 @@ begin
   end;
   if not Supports(AObj, IDerPrintableString, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerPrintableString.GetInstance(const AObj: IAsn1Convertible): IDerPrintableString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerPrintableString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerPrintableString.GetInstance(const ABytes: TCryptoLibByteArray): IDerPrintableString;
@@ -13233,6 +13736,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TDerT61String.GetInstance(const AObj: IAsn1Convertible): IDerT61String;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerT61String, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TDerT61String.GetInstance(const ABytes: TCryptoLibByteArray): IDerT61String;
 var
   LObj: IAsn1Object;
@@ -13375,6 +13895,23 @@ begin
   end;
   if not Supports(AObj, IDerUniversalString, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerUniversalString.GetInstance(const AObj: IAsn1Convertible): IDerUniversalString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerUniversalString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerUniversalString.GetInstance(const ABytes: TCryptoLibByteArray): IDerUniversalString;
@@ -13571,6 +14108,23 @@ begin
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
+class function TDerVideotexString.GetInstance(const AObj: IAsn1Convertible): IDerVideotexString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerVideotexString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
+end;
+
 class function TDerVideotexString.GetInstance(const ABytes: TCryptoLibByteArray): IDerVideotexString;
 var
   LObj: IAsn1Object;
@@ -13721,6 +14275,23 @@ begin
   end;
   if not Supports(AObj, IDerVisibleString, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerVisibleString.GetInstance(const AObj: IAsn1Convertible): IDerVisibleString;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerVisibleString, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerVisibleString.GetInstance(const ABytes: TCryptoLibByteArray): IDerVisibleString;
@@ -14059,6 +14630,23 @@ begin
   end;
   if not Supports(AObj, IDerInteger, Result) then
     raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+end;
+
+class function TDerInteger.GetInstance(const AObj: IAsn1Convertible): IDerInteger;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDerInteger, Result) then
+    Exit;
+  
+  if Supports(AObj, IAsn1Object) then
+    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    
+  Result := GetInstance(AObj.ToAsn1Object());
 end;
 
 class function TDerInteger.GetInstance(const ABytes: TCryptoLibByteArray): IDerInteger;

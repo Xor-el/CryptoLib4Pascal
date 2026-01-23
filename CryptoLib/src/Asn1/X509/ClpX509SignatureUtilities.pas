@@ -218,7 +218,7 @@ var
   LSigAlgOid: IDerObjectIdentifier;
   LSigAlgParams: IAsn1Encodable;
   LRsassaPssParams: IRsassaPssParameters;
-  LECdsaParams: IAlgorithmIdentifier;
+  LECDsaParams: IAlgorithmIdentifier;
 begin
   if ASigAlgID = nil then
   begin
@@ -233,14 +233,14 @@ begin
   begin
     if TPkcsObjectIdentifiers.IdRsassaPss.Equals(LSigAlgOid) then
     begin
-      LRsassaPssParams := TRsassaPssParameters.GetInstance(LSigAlgParams as TObject);
+      LRsassaPssParams := TRsassaPssParameters.GetInstance(LSigAlgParams);
       Result := GetDigestName(LRsassaPssParams.HashAlgorithm.Algorithm) + 'withRSAandMGF1';
       Exit;
     end;
     if TX9ObjectIdentifiers.ECDsaWithSha2.Equals(LSigAlgOid) then
     begin
-      LECdsaParams := TAlgorithmIdentifier.GetInstance(LSigAlgParams as TObject);
-      Result := GetDigestName(LECdsaParams.Algorithm) + 'withECDSA';
+      LECDsaParams := TAlgorithmIdentifier.GetInstance(LSigAlgParams);
+      Result := GetDigestName(LECDsaParams.Algorithm) + 'withECDSA';
       Exit;
     end;
   end;

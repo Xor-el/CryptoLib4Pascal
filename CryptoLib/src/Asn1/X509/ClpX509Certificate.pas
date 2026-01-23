@@ -432,7 +432,7 @@ begin
     try
       for I := 0 to LSeq.Count - 1 do
       begin
-        LResult.Add(TDerObjectIdentifier.GetInstance(LSeq[I] as TAsn1Encodable));
+        LResult.Add(TDerObjectIdentifier.GetInstance(LSeq[I]));
       end;
       Result := LResult.ToArray();
     finally
@@ -483,7 +483,7 @@ begin
   Result := TX509ExtensionUtilities.GetExtension<IGeneralNames>(GetX509Extensions(), AOid,
     function(AOctets: TCryptoLibByteArray): IGeneralNames
     begin
-      Result := TGeneralNames.GetInstance(TAsn1Object.FromByteArray(AOctets) as TObject);
+      Result := TGeneralNames.GetInstance(TAsn1Object.FromByteArray(AOctets));
     end);
 end;
 
@@ -532,7 +532,7 @@ begin
               if Supports(LName, IX509Name, LNameObj) then
                 LEntry.Add(TValue.From<String>(LNameObj.ToString()))
               else
-                LEntry.Add(TValue.From<String>(TX509Name.GetInstance(LName as TAsn1Object).ToString()));
+                LEntry.Add(TValue.From<String>(TX509Name.GetInstance(LName).ToString()));
             end;
           TGeneralName.DnsName,
           TGeneralName.Rfc822Name,
@@ -543,12 +543,12 @@ begin
             end;
           TGeneralName.RegisteredID:
             begin
-              LOid := TDerObjectIdentifier.GetInstance(LGn.Name as TObject);
+              LOid := TDerObjectIdentifier.GetInstance(LGn.Name);
               LEntry.Add(TValue.From<String>(LOid.Id));
             end;
           TGeneralName.IPAddress:
             begin
-              LOctetString := TAsn1OctetString.GetInstance(LGn.Name as TObject);
+              LOctetString := TAsn1OctetString.GetInstance(LGn.Name);
               LIPAddr := IPAddressToString(LOctetString.GetOctets());
               LEntry.Add(TValue.From<String>(LIPAddr));
             end;
@@ -767,7 +767,7 @@ begin
               try
                 if LOid.Equals(TX509Extensions.BasicConstraints) then
                 begin
-                  LBuf.Append(TBasicConstraints.GetInstance(LObj as TObject).ToString());
+                  LBuf.Append(TBasicConstraints.GetInstance(LObj).ToString());
                 end
                 else if LOid.Equals(TX509Extensions.KeyUsage) then
                 begin
@@ -807,7 +807,7 @@ end;
 
 function TX509Certificate.IsSignatureValid(const AVerifierProvider: IVerifierFactoryProvider): Boolean;
 begin
-  Result := CheckSignatureValid(AVerifierProvider.CreateVerifierFactory(FCertificateStructure.SignatureAlgorithm as TObject));
+  Result := CheckSignatureValid(AVerifierProvider.CreateVerifierFactory(FCertificateStructure.SignatureAlgorithm));
 end;
 
 function TX509Certificate.IsAlternativeSignatureValid(const APublicKey: IAsymmetricKeyParameter): Boolean;
@@ -833,7 +833,7 @@ begin
   LAltSigAlg := TAltSignatureAlgorithm.FromExtensions(LExtensions);
   LAltSigValue := TAltSignatureValue.FromExtensions(LExtensions);
 
-  LVerifier := AVerifierProvider.CreateVerifierFactory(LAltSigAlg.Algorithm as TObject);
+  LVerifier := AVerifierProvider.CreateVerifierFactory(LAltSigAlg.Algorithm);
 
   LTbsSeq := TAsn1Sequence.GetInstance(LTbsCertificate.ToAsn1Object());
   LV := TAsn1EncodableVector.Create();
@@ -859,7 +859,7 @@ end;
 
 procedure TX509Certificate.Verify(const AVerifierProvider: IVerifierFactoryProvider);
 begin
-  CheckSignature(AVerifierProvider.CreateVerifierFactory(FCertificateStructure.SignatureAlgorithm as TObject));
+  CheckSignature(AVerifierProvider.CreateVerifierFactory(FCertificateStructure.SignatureAlgorithm));
 end;
 
 procedure TX509Certificate.VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);

@@ -85,7 +85,7 @@ begin
     LPemObject := LPemReader.ReadPemObject();
 
     LPkcs10 := TCertificationRequest.GetInstance(
-      TAsn1Sequence.GetInstance(LPemObject.Content) as TObject);
+      TAsn1Sequence.GetInstance(LPemObject.Content));
     LSubject := LPkcs10.GetCertificationRequestInfo().Subject.ToString();
 
     CheckEquals('CERTIFICATE REQUEST', LPemObject.&Type, 'PEM type should be CERTIFICATE REQUEST');
@@ -155,7 +155,7 @@ begin
     LPemObject := LPemReader.ReadPemObject();
     
     LCert := TX509CertificateStructure.GetInstance(
-      TAsn1Sequence.GetInstance(LPemObject.Content) as TObject);
+      TAsn1Sequence.GetInstance(LPemObject.Content));
     LIssuer := LCert.Issuer.ToString();
 
     CheckEquals('CERTIFICATE', LPemObject.&Type, 'PEM type should be CERTIFICATE');
@@ -200,7 +200,7 @@ begin
     LPemObject := LPemReader.ReadPemObject();
 
     LCert := TX509CertificateStructure.GetInstance(
-      TAsn1Sequence.GetInstance(LPemObject.Content) as TObject);
+      TAsn1Sequence.GetInstance(LPemObject.Content));
     LIssuer := LCert.Issuer.ToString();
 
     CheckEquals('CERTIFICATE', LPemObject.&Type, 'PEM type should be CERTIFICATE');
@@ -257,7 +257,7 @@ begin
     LPemObject := LPemReader.ReadPemObject();
     
     LCert := TX509CertificateStructure.GetInstance(
-      TAsn1Sequence.GetInstance(LPemObject.Content) as TObject);
+      TAsn1Sequence.GetInstance(LPemObject.Content));
     LIssuer := LCert.Issuer.ToString();
 
     CheckEquals('CERTIFICATE', LPemObject.&Type, 'PEM type should be CERTIFICATE');

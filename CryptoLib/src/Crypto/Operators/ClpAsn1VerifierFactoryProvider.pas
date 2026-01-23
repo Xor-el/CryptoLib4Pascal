@@ -45,7 +45,7 @@ type
   public
     constructor Create(const APublicKey: IAsymmetricKeyParameter);
 
-    function CreateVerifierFactory(AAlgorithmDetails: TObject): IVerifierFactory;
+    function CreateVerifierFactory(AAlgorithmDetails: IAlgorithmIdentifier): IVerifierFactory;
 
     /// <summary>
     /// Allows enumeration of the signature names supported by the verifier provider.
@@ -68,14 +68,12 @@ begin
   FPublicKey := APublicKey;
 end;
 
-function TAsn1VerifierFactoryProvider.CreateVerifierFactory(AAlgorithmDetails: TObject): IVerifierFactory;
-var
-  LAlgID: IAlgorithmIdentifier;
+function TAsn1VerifierFactoryProvider.CreateVerifierFactory(AAlgorithmDetails: IAlgorithmIdentifier): IVerifierFactory;
 begin
-  if not Supports(AAlgorithmDetails, IAlgorithmIdentifier, LAlgID) then
-    raise EInvalidCastCryptoLibException.Create('algorithmDetails must be IAlgorithmIdentifier');
+  if AAlgorithmDetails = nil then
+    raise EArgumentNilCryptoLibException.Create('algorithmDetails');
 
-  Result := TAsn1VerifierFactory.Create(LAlgID, FPublicKey);
+  Result := TAsn1VerifierFactory.Create(AAlgorithmDetails, FPublicKey);
 end;
 
 function TAsn1VerifierFactoryProvider.SignatureAlgNames: TCryptoLibStringArray;

@@ -91,6 +91,7 @@ type
     function GetVersion: IDerInteger;
     function GetPrivateKeyAlgorithm: IAlgorithmIdentifier;
     function GetPrivateKey: IAsn1OctetString;
+    function GetPrivateKeyLength: Int32;
     function GetAttributes: IAsn1Set;
     function GetPublicKey: IDerBitString;
     function HasPublicKey: Boolean;
@@ -100,6 +101,7 @@ type
     property Version: IDerInteger read GetVersion;
     property PrivateKeyAlgorithm: IAlgorithmIdentifier read GetPrivateKeyAlgorithm;
     property PrivateKey: IAsn1OctetString read GetPrivateKey;
+    property PrivateKeyLength: Int32 read GetPrivateKeyLength;
     property Attributes: IAsn1Set read GetAttributes;
     property PublicKey: IDerBitString read GetPublicKey;
   end;

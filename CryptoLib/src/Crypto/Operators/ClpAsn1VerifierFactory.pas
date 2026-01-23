@@ -47,7 +47,7 @@ type
     FPublicKey: IAsymmetricKeyParameter;
 
   strict protected
-    function GetAlgorithmDetails: TObject;
+    function GetAlgorithmDetails: IAlgorithmIdentifier;
 
   public
     constructor Create(const AAlgorithm: String;
@@ -57,7 +57,7 @@ type
 
     function CreateCalculator: IStreamCalculator<IVerifier>;
 
-    property AlgorithmDetails: TObject read GetAlgorithmDetails;
+    property AlgorithmDetails: IAlgorithmIdentifier read GetAlgorithmDetails;
   end;
 
 implementation
@@ -96,9 +96,9 @@ begin
   FPublicKey := APublicKey;
 end;
 
-function TAsn1VerifierFactory.GetAlgorithmDetails: TObject;
+function TAsn1VerifierFactory.GetAlgorithmDetails: IAlgorithmIdentifier;
 begin
-  Result := FAlgID as TObject;
+  Result := FAlgID;
 end;
 
 function TAsn1VerifierFactory.CreateCalculator: IStreamCalculator<IVerifier>;

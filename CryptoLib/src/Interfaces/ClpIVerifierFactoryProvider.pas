@@ -22,7 +22,8 @@ unit ClpIVerifierFactoryProvider;
 interface
 
 uses
-  ClpIVerifierFactory;
+  ClpIVerifierFactory,
+  ClpIX509Asn1Objects;
 
 type
   /// <summary>
@@ -34,7 +35,7 @@ type
     /// <summary>
     /// Return a signature verifier for signature algorithm described in the passed in algorithm details object.
     /// </summary>
-    function CreateVerifierFactory(AAlgorithmDetails: TObject): IVerifierFactory;
+    function CreateVerifierFactory(AAlgorithmDetails: IAlgorithmIdentifier): IVerifierFactory;
   end;
 
 implementation

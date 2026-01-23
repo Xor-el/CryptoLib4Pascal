@@ -49,7 +49,7 @@ type
     FRandom: ISecureRandom;
 
   strict protected
-    function GetAlgorithmDetails: TObject;
+    function GetAlgorithmDetails: IAlgorithmIdentifier;
 
   public
     constructor Create(const AAlgorithm: String;
@@ -65,7 +65,7 @@ type
 
     function CreateCalculator: IStreamCalculator<IBlockResult>;
 
-    property AlgorithmDetails: TObject read GetAlgorithmDetails;
+    property AlgorithmDetails: IAlgorithmIdentifier read GetAlgorithmDetails;
 
     /// <summary>
     /// Allows enumeration of the signature names supported.
@@ -123,9 +123,9 @@ begin
   FRandom := ARandom;
 end;
 
-function TAsn1SignatureFactory.GetAlgorithmDetails: TObject;
+function TAsn1SignatureFactory.GetAlgorithmDetails: IAlgorithmIdentifier;
 begin
-  Result := FAlgID as TObject;
+  Result := FAlgID;
 end;
 
 function TAsn1SignatureFactory.CreateCalculator: IStreamCalculator<IBlockResult>;

@@ -23,7 +23,8 @@ interface
 
 uses
   ClpIStreamCalculator,
-  ClpIBlockResult;
+  ClpIBlockResult,
+  ClpIX509Asn1Objects;
 
 type
   /// <summary>
@@ -35,14 +36,14 @@ type
     /// <summary>
     /// The algorithm details object for this calculator.
     /// </summary>
-    function GetAlgorithmDetails: TObject;
+    function GetAlgorithmDetails: IAlgorithmIdentifier;
 
     /// <summary>
     /// Create a stream calculator for this signature calculator.
     /// </summary>
     function CreateCalculator: IStreamCalculator<IBlockResult>;
 
-    property AlgorithmDetails: TObject read GetAlgorithmDetails;
+    property AlgorithmDetails: IAlgorithmIdentifier read GetAlgorithmDetails;
   end;
 
 implementation

@@ -23,7 +23,8 @@ interface
 
 uses
   ClpIStreamCalculator,
-  ClpIVerifier;
+  ClpIVerifier,
+  ClpIX509Asn1Objects;
 
 type
   /// <summary>
@@ -35,14 +36,14 @@ type
     /// <summary>
     /// The algorithm details object for this verifier.
     /// </summary>
-    function GetAlgorithmDetails: TObject;
+    function GetAlgorithmDetails: IAlgorithmIdentifier;
 
     /// <summary>
     /// Create a stream calculator for this verifier.
     /// </summary>
     function CreateCalculator: IStreamCalculator<IVerifier>;
 
-    property AlgorithmDetails: TObject read GetAlgorithmDetails;
+    property AlgorithmDetails: IAlgorithmIdentifier read GetAlgorithmDetails;
   end;
 
 implementation

@@ -134,7 +134,7 @@ begin
     end;
   end;
 
-  Result := TX509Certificate.Create(TX509CertificateStructure.GetInstance(LSeq as TObject));
+  Result := TX509Certificate.Create(TX509CertificateStructure.GetInstance(LSeq));
 end;
 
 function TX509CertificateParser.ReadPemCertificate(const AInStream: TStream): IX509Certificate;
@@ -146,7 +146,7 @@ begin
   if LSeq = nil then
     Result := nil
   else
-    Result := TX509Certificate.Create(TX509CertificateStructure.GetInstance(LSeq as TObject));
+    Result := TX509Certificate.Create(TX509CertificateStructure.GetInstance(LSeq));
 end;
 
 function TX509CertificateParser.GetCertificate(): IX509Certificate;

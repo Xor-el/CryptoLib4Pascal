@@ -57,7 +57,7 @@ type
   published
     procedure TestDuplicateExtensions;
     procedure TestAllowedDuplicateExtensions;
-    procedure TestFunction;
+    procedure TestEqualsAndEquivalent;
 
   end;
 
@@ -100,30 +100,30 @@ begin
     TDerSequence.Create(TAsn1EncodableVector.Create([LName2]) as IAsn1EncodableVector) as IDerSequence);
 
   LBytes := LExtGen.Generate().GetEncoded();
-  LExts := TX509Extensions.GetInstance(TAsn1Sequence.GetInstance(LBytes) as TObject);
+  LExts := TX509Extensions.GetInstance(TAsn1Sequence.GetInstance(LBytes));
 
   LReturnedExtension := LExts.GetExtension(TX509Extensions.SubjectAlternativeName);
 
   LSeq := TAsn1Sequence.GetInstance(LReturnedExtension.GetParsedValue());
 
-  CheckTrue(TGeneralName.GetInstance(LSeq[0] as TObject).Equals(LName1), 'expected name 1');
+  CheckTrue(TGeneralName.GetInstance(LSeq[0]).Equals(LName1), 'expected name 1');
 
-  CheckTrue(TGeneralName.GetInstance(LSeq[1] as TObject).Equals(LName2), 'expected name 2');
+  CheckTrue(TGeneralName.GetInstance(LSeq[1]).Equals(LName2), 'expected name 2');
 
   LGenX := TX509ExtensionsGenerator.Create();
 
   LGenX.AddExtensions(LExts);
 
   LBytes := LGenX.Generate().GetEncoded();
-  LExts := TX509Extensions.GetInstance(TAsn1Sequence.GetInstance(LBytes) as TObject);
+  LExts := TX509Extensions.GetInstance(TAsn1Sequence.GetInstance(LBytes));
 
   LReturnedExtension := LExts.GetExtension(TX509Extensions.SubjectAlternativeName);
 
   LSeq := TAsn1Sequence.GetInstance(LReturnedExtension.GetParsedValue());
 
-  CheckTrue(TGeneralName.GetInstance(LSeq[0] as TObject).Equals(LName1), 'expected name 1');
+  CheckTrue(TGeneralName.GetInstance(LSeq[0]).Equals(LName1), 'expected name 1');
 
-  CheckTrue(TGeneralName.GetInstance(LSeq[1] as TObject).Equals(LName2), 'expected name 2');
+  CheckTrue(TGeneralName.GetInstance(LSeq[1]).Equals(LName2), 'expected name 2');
 end;
 
 procedure TX509ExtensionsTest.TestAllowedDuplicateExtensions;
@@ -173,7 +173,7 @@ begin
   end;
 end;
 
-procedure TX509ExtensionsTest.TestFunction;
+procedure TX509ExtensionsTest.TestEqualsAndEquivalent;
 var
   LGen: IX509ExtensionsGenerator;
   LExt1, LExt2: IX509Extensions;

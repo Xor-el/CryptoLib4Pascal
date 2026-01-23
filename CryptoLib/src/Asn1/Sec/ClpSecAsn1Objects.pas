@@ -134,10 +134,10 @@ begin
   if (LCount < 2) or (LCount > 4) then
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
-  FVersion := TDerInteger.GetInstance(ASeq[LPos] as TObject);
+  FVersion := TDerInteger.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   
-  FPrivateKey := TAsn1OctetString.GetInstance(ASeq[LPos] as TObject);
+  FPrivateKey := TAsn1OctetString.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   
   FParameters := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
