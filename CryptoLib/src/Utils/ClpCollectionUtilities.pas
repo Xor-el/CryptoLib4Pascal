@@ -50,6 +50,14 @@ type
     /// Create a proxy array from an enumerable collection (like TDictionary.Keys).
     /// </summary>
     class function Proxy<T>(const AEnumerable: IEnumerable<T>): TCryptoLibGenericArray<T>; static;
+    /// <summary>
+    /// Get the value for AKey if it exists, otherwise Default(V) (e.g. '' for string, nil for class/interface).
+    /// </summary>
+    class function GetValueOrNull<K, V>(const D: TDictionary<K, V>; const AKey: K): V; static;
+    /// <summary>
+    /// Get D[AKey] if the key exists, otherwise return AKey. For TDictionary&lt;T,T&gt;.
+    /// </summary>
+    class function GetValueOrKey<T>(const D: TDictionary<T, T>; const AKey: T): T; static;
   end;
 
 implementation
@@ -125,6 +133,24 @@ begin
   finally
     LList.Free;
   end;
+end;
+
+class function TCollectionUtilities.GetValueOrNull<K, V>(const D: TDictionary<K, V>;
+  const AKey: K): V;
+begin
+  if D.TryGetValue(AKey, Result) then
+    { Result already set }
+  else
+    Result := Default(V);
+end;
+
+class function TCollectionUtilities.GetValueOrKey<T>(const D: TDictionary<T, T>;
+  const AKey: T): T;
+begin
+  if D.TryGetValue(AKey, Result) then
+    { Result already set }
+  else
+    Result := AKey;
 end;
 
 end.

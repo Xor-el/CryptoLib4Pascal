@@ -234,18 +234,18 @@ begin
   FAlgorithms.Add('SHA3-256WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_256);
   FAlgorithms.Add('SHA3-384WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_384);
   FAlgorithms.Add('SHA3-512WITHECDSA', TNistObjectIdentifiers.IdECDsaWithSha3_512);
-  FAlgorithms.Add('SHA1WITHPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA1);
-  FAlgorithms.Add('SHA224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA224);
-  FAlgorithms.Add('SHA256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA256);
-  FAlgorithms.Add('SHA384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA384);
-  FAlgorithms.Add('SHA512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA512);
-  FAlgorithms.Add('RIPEMD160WITHPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_RIPEMD160);
-  FAlgorithms.Add('SHA3-224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_224);
-  FAlgorithms.Add('SHA3-256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_256);
-  FAlgorithms.Add('SHA3-384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_384);
-  FAlgorithms.Add('SHA3-512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_512);
-  FAlgorithms.Add('Ed25519', TEdECObjectIdentifiers.id_Ed25519);
-  FAlgorithms.Add('Ed448', TEdECObjectIdentifiers.id_Ed448);
+  FAlgorithms.Add('SHA1WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha1);
+  FAlgorithms.Add('SHA224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha224);
+  FAlgorithms.Add('SHA256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha256);
+  FAlgorithms.Add('SHA384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha384);
+  FAlgorithms.Add('SHA512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha512);
+  FAlgorithms.Add('RIPEMD160WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainRipeMD160);
+  FAlgorithms.Add('SHA3-224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_224);
+  FAlgorithms.Add('SHA3-256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_256);
+  FAlgorithms.Add('SHA3-384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_384);
+  FAlgorithms.Add('SHA3-512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_512);
+  FAlgorithms.Add('Ed25519', TEdECObjectIdentifiers.IdEd25519);
+  FAlgorithms.Add('Ed448', TEdECObjectIdentifiers.IdEd448);
 
   // FKeyAlgorithms
   FKeyAlgorithms.Add(TPkcsObjectIdentifiers.RsaEncryption, 'RSA');
@@ -271,18 +271,18 @@ begin
   FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_256, True);
   FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_384, True);
   FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_512, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA224, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA256, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA384, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA512, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA3_224, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA3_256, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA3_384, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA3_512, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha224, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha256, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha384, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha512, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_224, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_256, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_384, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_512, True);
   FNoParams.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94, True);
   FNoParams.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001, True);
-  FNoParams.Add(TEdECObjectIdentifiers.id_Ed25519, True);
-  FNoParams.Add(TEdECObjectIdentifiers.id_Ed448, True);
+  FNoParams.Add(TEdECObjectIdentifiers.IdEd25519, True);
+  FNoParams.Add(TEdECObjectIdentifiers.IdEd448, True);
 
   // FExParams (PSS)
   LSha1AlgId := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);

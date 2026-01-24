@@ -24,7 +24,12 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpAsn1Objects,
+  ClpIX509Asn1Objects,
+  ClpCollectionUtilities,
+  ClpCryptoLibComparers,
   ClpECNRSigner,
+  ClpICipherParameters,
   ClpIECNRSigner,
   ClpIDigest,
   ClpDigestUtilities,
@@ -65,11 +70,15 @@ uses
   ClpGenericSigner,
   ClpIGenericSigner,
   ClpRsaBlindedEngine,
+  ClpIRsaBlindedEngine,
   ClpPkcs1Encoding,
   ClpIPkcs1Encoding,
   ClpPkcsObjectIdentifiers,
   ClpStringUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpPlatform,
+  ClpPkcsAsn1Objects,
+  ClpX509Asn1Objects;
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
@@ -77,52 +86,99 @@ resourcestring
   SUnRecognizedAlgorithm = 'Signer " %s " not recognised.';
 
 type
-
   /// <summary>
-  /// Signer Utility class contains methods that can not be specifically
-  /// grouped into other classes.
+  ///  Signer Utility class contains methods that can not be specifically grouped into other classes.
   /// </summary>
   TSignerUtilities = class sealed(TObject)
 
   strict private
+    class var
+      FAlgorithmMap: TDictionary<String, String>;
+      FAlgorithmOidMap: TDictionary<IDerObjectIdentifier, String>;
+      FNoRandom: TDictionary<String, Byte>;
+      FOids: TDictionary<String, IDerObjectIdentifier>;
 
-  class var
+    class function GetMechanism(const AAlgorithm: String): String; static;
+    class function GetAlgorithms: TCryptoLibStringArray; static;
 
-    Falgorithms: TDictionary<String, String>;
-    Foids: TDictionary<String, IDerObjectIdentifier>;
-
-    class function GetAlgorithms: TCryptoLibStringArray; static; inline;
-
-    class procedure Boot(); static;
-    class constructor CreateSignerUtilities();
-    class destructor DestroySignerUtilities();
+    class function GetSignerForMechanism(const AMechanism: String): ISigner; static;
+    class function GetDefaultX509ParametersForMechanism(const AMechanism: String): IAsn1Encodable; static;
+    class function GetPssX509Parameters(const ADigestName: String): IAsn1Encodable; static;
+    class function InitSignerForMechanism(const AMechanism: String; AForSigning: Boolean;
+      const AKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; static;
+    class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier; AIsNoRandom: Boolean); static;
+    class procedure Boot; static;
+    class constructor Create;
+    class destructor Destroy;
 
   public
 
+   /// <summary>
+   /// Returns an ObjectIdentifier for a given signature mechanism.
+   /// </summary>
+   /// <param name="mechanism">A string representation of the signature mechanism.</param>
+   /// <returns>A DerObjectIdentifier, null if the OID is not available.</returns>
+    class function GetObjectIdentifier(const AMechanism: String): IDerObjectIdentifier;
+      static; inline;
+
+    class function GetEncodingName(const AOid: IDerObjectIdentifier): String;
+      static; inline;
+
     /// <summary>
-    /// Returns an ObjectIdentifier for a given encoding.
+    /// Returns a Signer for a given signature mechanism OID.
     /// </summary>
-    /// <param name="mechanism">A string representation of the encoding.</param>
-    /// <returns>A DerObjectIdentifier, null if the OID is not available.</returns>
-    // TODO Don't really want to support this
-    class function GetObjectIdentifier(mechanism: String): IDerObjectIdentifier;
-      static; inline;
+    /// <param name="AOid">A DerObjectIdentifier representing the signature mechanism.</param>
+    /// <returns>An ISigner instance.</returns>
+    class function GetSigner(const AOid: IDerObjectIdentifier): ISigner; overload;
+      static;
 
-    class function GetEncodingName(const oid: IDerObjectIdentifier): String;
-      static; inline;
+    /// <summary>
+    /// Returns a Signer for a given signature mechanism name.
+    /// </summary>
+    /// <param name="AAlgorithm">A string representation of the signature mechanism.</param>
+    /// <returns>An ISigner instance.</returns>
+    class function GetSigner(const AAlgorithm: String): ISigner; overload;
+      static;
 
-    class function GetSigner(const id: IDerObjectIdentifier): ISigner; overload;
-      static; inline;
+    /// <summary>
+    /// Returns default X.509 parameters for a given signature mechanism OID.
+    /// </summary>
+    /// <param name="AOid">A DerObjectIdentifier representing the signature mechanism.</param>
+    /// <returns>An IAsn1Encodable instance (typically DerNull or RsassaPssParameters).</returns>
+    class function GetDefaultX509Parameters(const AOid: IDerObjectIdentifier): IAsn1Encodable; overload;
+      static;
 
-    class function GetSigner(algorithm: String): ISigner; overload; static;
+    /// <summary>
+    /// Returns default X.509 parameters for a given signature mechanism name.
+    /// </summary>
+    /// <param name="AAlgorithm">A string representation of the signature mechanism.</param>
+    /// <returns>An IAsn1Encodable instance (typically DerNull or RsassaPssParameters).</returns>
+    class function GetDefaultX509Parameters(const AAlgorithm: String): IAsn1Encodable; overload;
+      static;
 
-    class function InitSigner(const algorithm: String; forSigning: Boolean;
-      const privateKey: IAsymmetricKeyParameter; const random: ISecureRandom)
-      : ISigner; overload; static; inline;
+    /// <summary>
+    /// Initializes a Signer for signing or verification with the given key and random.
+    /// </summary>
+    /// <param name="AAlgorithmOid">A DerObjectIdentifier representing the signature mechanism.</param>
+    /// <param name="AForSigning">True for signing, False for verification.</param>
+    /// <param name="APrivateKey">The key to use (private for signing, public for verification).</param>
+    /// <param name="ARandom">Secure random instance (can be nil for verification or deterministic algorithms).</param>
+    /// <returns>An initialized ISigner instance.</returns>
+    class function InitSigner(const AAlgorithmOid: IDerObjectIdentifier; AForSigning: Boolean;
+      const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; overload;
+      static;
 
-    class function InitSigner(const algorithmOid: IDerObjectIdentifier;
-      forSigning: Boolean; const privateKey: IAsymmetricKeyParameter;
-      const random: ISecureRandom): ISigner; overload; static; inline;
+    /// <summary>
+    /// Initializes a Signer for signing or verification with the given key and random.
+    /// </summary>
+    /// <param name="AAlgorithm">A string representation of the signature mechanism.</param>
+    /// <param name="AForSigning">True for signing, False for verification.</param>
+    /// <param name="APrivateKey">The key to use (private for signing, public for verification).</param>
+    /// <param name="ARandom">Secure random instance (can be nil for verification or deterministic algorithms).</param>
+    /// <returns>An initialized ISigner instance.</returns>
+    class function InitSigner(const AAlgorithm: String; AForSigning: Boolean;
+      const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; overload;
+      static;
 
     class property Algorithms: TCryptoLibStringArray read GetAlgorithms;
 
@@ -132,701 +188,871 @@ implementation
 
 { TSignerUtilities }
 
+class procedure TSignerUtilities.AddAlgorithm(const AName: String;
+  const AOid: IDerObjectIdentifier; AIsNoRandom: Boolean);
+begin
+  if AName = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  if UpperCase(AName) <> AName then
+    FAlgorithmMap.Add(AName, AName);
+  if AOid <> nil then
+  begin
+    FAlgorithmOidMap.Add(AOid, AName);
+    FOids.Add(AName, AOid);
+  end;
+  if AIsNoRandom then
+    FNoRandom.Add(AName, 0);
+end;
+
 class procedure TSignerUtilities.Boot;
 begin
+  FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FNoRandom := TDictionary<String, Byte>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
-  Falgorithms := TDictionary<String, String>.Create();
-  Foids := TDictionary<String, IDerObjectIdentifier>.Create();
-
+  TPkcsObjectIdentifiers.Boot;
   TX9ObjectIdentifiers.Boot;
   TOiwObjectIdentifiers.Boot;
   TNistObjectIdentifiers.Boot;
   TTeleTrusTObjectIdentifiers.Boot;
   TCryptoProObjectIdentifiers.Boot;
-  TEacObjectIdentifiers.Boot;
   TBsiObjectIdentifiers.Boot;
   TEdECObjectIdentifiers.Boot;
 
-  Falgorithms.Add('NONEWITHDSA', 'NONEwithDSA');
-  Falgorithms.Add('DSAWITHNONE', 'NONEwithDSA');
-  Falgorithms.Add('RAWDSA', 'NONEwithDSA');
+  FAlgorithmMap.AddOrSetValue('MD2WITHRSA', 'MD2withRSA');
+  FAlgorithmMap.AddOrSetValue('MD2WITHRSAENCRYPTION', 'MD2withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.MD2WithRsaEncryption, 'MD2withRSA');
 
-  Falgorithms.Add('DSA', 'SHA-1withDSA');
-  Falgorithms.Add('DSAWITHSHA1', 'SHA-1withDSA');
-  Falgorithms.Add('DSAWITHSHA-1', 'SHA-1withDSA');
-  Falgorithms.Add('SHA/DSA', 'SHA-1withDSA');
-  Falgorithms.Add('SHA1/DSA', 'SHA-1withDSA');
-  Falgorithms.Add('SHA-1/DSA', 'SHA-1withDSA');
-  Falgorithms.Add('SHA1WITHDSA', 'SHA-1withDSA');
-  Falgorithms.Add('SHA-1WITHDSA', 'SHA-1withDSA');
-  Falgorithms.Add(TX9ObjectIdentifiers.IdDsaWithSha1.id, 'SHA-1withDSA');
-  Falgorithms.Add(TOiwObjectIdentifiers.DsaWithSha1.id, 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('MD4WITHRSA', 'MD4withRSA');
+  FAlgorithmMap.AddOrSetValue('MD4WITHRSAENCRYPTION', 'MD4withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.MD4WithRsaEncryption, 'MD4withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.MD4WithRsa, 'MD4withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.MD4WithRsaEncryption, 'MD4withRSA');
 
-  Falgorithms.Add('DSAWITHSHA224', 'SHA-224withDSA');
-  Falgorithms.Add('DSAWITHSHA-224', 'SHA-224withDSA');
-  Falgorithms.Add('SHA224/DSA', 'SHA-224withDSA');
-  Falgorithms.Add('SHA-224/DSA', 'SHA-224withDSA');
-  Falgorithms.Add('SHA224WITHDSA', 'SHA-224withDSA');
-  Falgorithms.Add('SHA-224WITHDSA', 'SHA-224withDSA');
-  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha224.id, 'SHA-224withDSA');
+  FAlgorithmMap.AddOrSetValue('MD5WITHRSA', 'MD5withRSA');
+  FAlgorithmMap.AddOrSetValue('MD5WITHRSAENCRYPTION', 'MD5withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.MD5WithRsaEncryption, 'MD5withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.MD5WithRsa, 'MD5withRSA');
 
-  Falgorithms.Add('DSAWITHSHA256', 'SHA-256withDSA');
-  Falgorithms.Add('DSAWITHSHA-256', 'SHA-256withDSA');
-  Falgorithms.Add('SHA256/DSA', 'SHA-256withDSA');
-  Falgorithms.Add('SHA-256/DSA', 'SHA-256withDSA');
-  Falgorithms.Add('SHA256WITHDSA', 'SHA-256withDSA');
-  Falgorithms.Add('SHA-256WITHDSA', 'SHA-256withDSA');
-  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha256.id, 'SHA-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHRSA', 'SHA-1withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHRSA', 'SHA-1withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHRSAENCRYPTION', 'SHA-1withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHRSAENCRYPTION', 'SHA-1withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha1WithRsaEncryption, 'SHA-1withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.Sha1WithRsa, 'SHA-1withRSA');
 
-  Falgorithms.Add('DSAWITHSHA384', 'SHA-384withDSA');
-  Falgorithms.Add('DSAWITHSHA-384', 'SHA-384withDSA');
-  Falgorithms.Add('SHA384/DSA', 'SHA-384withDSA');
-  Falgorithms.Add('SHA-384/DSA', 'SHA-384withDSA');
-  Falgorithms.Add('SHA384WITHDSA', 'SHA-384withDSA');
-  Falgorithms.Add('SHA-384WITHDSA', 'SHA-384withDSA');
-  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha384.id, 'SHA-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHRSA', 'SHA-224withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHRSA', 'SHA-224withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHRSAENCRYPTION', 'SHA-224withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHRSAENCRYPTION', 'SHA-224withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha224WithRsaEncryption, 'SHA-224withRSA');
 
-  Falgorithms.Add('DSAWITHSHA512', 'SHA-512withDSA');
-  Falgorithms.Add('DSAWITHSHA-512', 'SHA-512withDSA');
-  Falgorithms.Add('SHA512/DSA', 'SHA-512withDSA');
-  Falgorithms.Add('SHA-512/DSA', 'SHA-512withDSA');
-  Falgorithms.Add('SHA512WITHDSA', 'SHA-512withDSA');
-  Falgorithms.Add('SHA-512WITHDSA', 'SHA-512withDSA');
-  Falgorithms.Add(TNistObjectIdentifiers.DsaWithSha512.id, 'SHA-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHRSA', 'SHA-256withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHRSA', 'SHA-256withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHRSAENCRYPTION', 'SHA-256withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHRSAENCRYPTION', 'SHA-256withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha256WithRsaEncryption, 'SHA-256withRSA');
 
-  Falgorithms.Add('NONEWITHECDSA', 'NONEwithECDSA');
-  Falgorithms.Add('ECDSAWITHNONE', 'NONEwithECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHRSA', 'SHA-384withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHRSA', 'SHA-384withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHRSAENCRYPTION', 'SHA-384withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHRSAENCRYPTION', 'SHA-384withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha384WithRsaEncryption, 'SHA-384withRSA');
 
-  Falgorithms.Add('ECDSA', 'SHA-1withECDSA');
-  Falgorithms.Add('SHA1/ECDSA', 'SHA-1withECDSA');
-  Falgorithms.Add('SHA-1/ECDSA', 'SHA-1withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA1', 'SHA-1withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA-1', 'SHA-1withECDSA');
-  Falgorithms.Add('SHA1WITHECDSA', 'SHA-1withECDSA');
-  Falgorithms.Add('SHA-1WITHECDSA', 'SHA-1withECDSA');
-  Falgorithms.Add(TX9ObjectIdentifiers.ECDsaWithSha1.id, 'SHA-1withECDSA');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.ECSignWithSha1.id,
-    'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHRSA', 'SHA-512withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHRSA', 'SHA-512withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHRSAENCRYPTION', 'SHA-512withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHRSAENCRYPTION', 'SHA-512withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha512WithRsaEncryption, 'SHA-512withRSA');
 
-  Falgorithms.Add('SHA224/ECDSA', 'SHA-224withECDSA');
-  Falgorithms.Add('SHA-224/ECDSA', 'SHA-224withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA224', 'SHA-224withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA-224', 'SHA-224withECDSA');
-  Falgorithms.Add('SHA224WITHECDSA', 'SHA-224withECDSA');
-  Falgorithms.Add('SHA-224WITHECDSA', 'SHA-224withECDSA');
-  Falgorithms.Add(TX9ObjectIdentifiers.ECDsaWithSha224.id, 'SHA-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512(224)WITHRSA', 'SHA-512(224)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512(224)WITHRSA', 'SHA-512(224)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA512(224)WITHRSAENCRYPTION', 'SHA-512(224)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512(224)WITHRSAENCRYPTION', 'SHA-512(224)withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha512_224WithRSAEncryption, 'SHA-512(224)withRSA');
 
-  Falgorithms.Add('SHA256/ECDSA', 'SHA-256withECDSA');
-  Falgorithms.Add('SHA-256/ECDSA', 'SHA-256withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA256', 'SHA-256withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA-256', 'SHA-256withECDSA');
-  Falgorithms.Add('SHA256WITHECDSA', 'SHA-256withECDSA');
-  Falgorithms.Add('SHA-256WITHECDSA', 'SHA-256withECDSA');
-  Falgorithms.Add(TX9ObjectIdentifiers.ECDsaWithSha256.id, 'SHA-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512(256)WITHRSA', 'SHA-512(256)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512(256)WITHRSA', 'SHA-512(256)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA512(256)WITHRSAENCRYPTION', 'SHA-512(256)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512(256)WITHRSAENCRYPTION', 'SHA-512(256)withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption, 'SHA-512(256)withRSA');
 
-  Falgorithms.Add('SHA384/ECDSA', 'SHA-384withECDSA');
-  Falgorithms.Add('SHA-384/ECDSA', 'SHA-384withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA384', 'SHA-384withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA-384', 'SHA-384withECDSA');
-  Falgorithms.Add('SHA384WITHECDSA', 'SHA-384withECDSA');
-  Falgorithms.Add('SHA-384WITHECDSA', 'SHA-384withECDSA');
-  Falgorithms.Add(TX9ObjectIdentifiers.ECDsaWithSha384.id, 'SHA-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-224WITHRSA', 'SHA3-224withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-224WITHRSAENCRYPTION', 'SHA3-224withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_224, 'SHA3-224withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-256WITHRSA', 'SHA3-256withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-256WITHRSAENCRYPTION', 'SHA3-256withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_256, 'SHA3-256withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384WITHRSA', 'SHA3-384withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384WITHRSAENCRYPTION', 'SHA3-384withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_384, 'SHA3-384withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-512WITHRSA', 'SHA3-512withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-512WITHRSAENCRYPTION', 'SHA3-512withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_512, 'SHA3-512withRSA');
 
-  Falgorithms.Add('SHA512/ECDSA', 'SHA-512withECDSA');
-  Falgorithms.Add('SHA-512/ECDSA', 'SHA-512withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA512', 'SHA-512withECDSA');
-  Falgorithms.Add('ECDSAWITHSHA-512', 'SHA-512withECDSA');
-  Falgorithms.Add('SHA512WITHECDSA', 'SHA-512withECDSA');
-  Falgorithms.Add('SHA-512WITHECDSA', 'SHA-512withECDSA');
-  Falgorithms.Add(TX9ObjectIdentifiers.ECDsaWithSha512.id, 'SHA-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('PSSWITHRSA', 'PSSwithRSA');
+  FAlgorithmMap.AddOrSetValue('RSASSA-PSS', 'PSSwithRSA');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdRsassaPss, 'PSSwithRSA');
+  FAlgorithmMap.AddOrSetValue('RSAPSS', 'PSSwithRSA');
 
-  Falgorithms.Add('RIPEMD160/ECDSA', 'RIPEMD160withECDSA');
-  Falgorithms.Add('ECDSAWITHRIPEMD160', 'RIPEMD160withECDSA');
-  Falgorithms.Add('RIPEMD160WITHECDSA', 'RIPEMD160withECDSA');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.ECSignWithRipeMD160.id,
-    'RIPEMD160withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHRSAANDMGF1', 'SHA-1withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHRSAANDMGF1', 'SHA-1withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHRSA/PSS', 'SHA-1withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHRSA/PSS', 'SHA-1withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHRSASSA-PSS', 'SHA-1withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHRSASSA-PSS', 'SHA-1withRSAandMGF1');
 
-  Falgorithms.Add('NONEWITHCVC-ECDSA', 'NONEwithCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHNONE', 'NONEwithCVC-ECDSA');
-  Falgorithms.Add('SHA1/CVC-ECDSA', 'SHA-1withCVC-ECDSA');
-  Falgorithms.Add('SHA-1/CVC-ECDSA', 'SHA-1withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA1', 'SHA-1withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA-1', 'SHA-1withCVC-ECDSA');
-  Falgorithms.Add('SHA1WITHCVC-ECDSA', 'SHA-1withCVC-ECDSA');
-  Falgorithms.Add('SHA-1WITHCVC-ECDSA', 'SHA-1withCVC-ECDSA');
-  Falgorithms.Add(TEacObjectIdentifiers.id_TA_ECDSA_SHA_1.id,
-    'SHA-1withCVC-ECDSA');
-  Falgorithms.Add('SHA224/CVC-ECDSA', 'SHA-224withCVC-ECDSA');
-  Falgorithms.Add('SHA-224/CVC-ECDSA', 'SHA-224withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA224', 'SHA-224withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA-224', 'SHA-224withCVC-ECDSA');
-  Falgorithms.Add('SHA224WITHCVC-ECDSA', 'SHA-224withCVC-ECDSA');
-  Falgorithms.Add('SHA-224WITHCVC-ECDSA', 'SHA-224withCVC-ECDSA');
-  Falgorithms.Add(TEacObjectIdentifiers.id_TA_ECDSA_SHA_224.id,
-    'SHA-224withCVC-ECDSA');
-  Falgorithms.Add('SHA256/CVC-ECDSA', 'SHA-256withCVC-ECDSA');
-  Falgorithms.Add('SHA-256/CVC-ECDSA', 'SHA-256withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA256', 'SHA-256withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA-256', 'SHA-256withCVC-ECDSA');
-  Falgorithms.Add('SHA256WITHCVC-ECDSA', 'SHA-256withCVC-ECDSA');
-  Falgorithms.Add('SHA-256WITHCVC-ECDSA', 'SHA-256withCVC-ECDSA');
-  Falgorithms.Add(TEacObjectIdentifiers.id_TA_ECDSA_SHA_256.id,
-    'SHA-256withCVC-ECDSA');
-  Falgorithms.Add('SHA384/CVC-ECDSA', 'SHA-384withCVC-ECDSA');
-  Falgorithms.Add('SHA-384/CVC-ECDSA', 'SHA-384withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA384', 'SHA-384withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA-384', 'SHA-384withCVC-ECDSA');
-  Falgorithms.Add('SHA384WITHCVC-ECDSA', 'SHA-384withCVC-ECDSA');
-  Falgorithms.Add('SHA-384WITHCVC-ECDSA', 'SHA-384withCVC-ECDSA');
-  Falgorithms.Add(TEacObjectIdentifiers.id_TA_ECDSA_SHA_384.id,
-    'SHA-384withCVC-ECDSA');
-  Falgorithms.Add('SHA512/CVC-ECDSA', 'SHA-512withCVC-ECDSA');
-  Falgorithms.Add('SHA-512/CVC-ECDSA', 'SHA-512withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA512', 'SHA-512withCVC-ECDSA');
-  Falgorithms.Add('CVC-ECDSAWITHSHA-512', 'SHA-512withCVC-ECDSA');
-  Falgorithms.Add('SHA512WITHCVC-ECDSA', 'SHA-512withCVC-ECDSA');
-  Falgorithms.Add('SHA-512WITHCVC-ECDSA', 'SHA-512withCVC-ECDSA');
-  Falgorithms.Add(TEacObjectIdentifiers.id_TA_ECDSA_SHA_512.id,
-    'SHA-512withCVC-ECDSA');
-  Falgorithms.Add('NONEWITHPLAIN-ECDSA', 'NONEwithPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHNONE', 'NONEwithPLAIN-ECDSA');
-  Falgorithms.Add('SHA1/PLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-1/PLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA1', 'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA-1', 'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add('SHA1WITHPLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-1WITHPLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.ecdsa_plain_SHA1.id,
-    'SHA-1withPLAIN-ECDSA');
-  Falgorithms.Add('SHA224/PLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-224/PLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA224', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA-224', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add('SHA224WITHPLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-224WITHPLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA224.id,
-    'SHA-224withPLAIN-ECDSA');
-  Falgorithms.Add('SHA256/PLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-256/PLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA256', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA-256', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add('SHA256WITHPLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-256WITHPLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA256.id,
-    'SHA-256withPLAIN-ECDSA');
-  Falgorithms.Add('SHA384/PLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-384/PLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA384', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA-384', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add('SHA384WITHPLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-384WITHPLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA384.id,
-    'SHA-384withPLAIN-ECDSA');
-  Falgorithms.Add('SHA512/PLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-512/PLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA512', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHSHA-512', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add('SHA512WITHPLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add('SHA-512WITHPLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.EcdsaPlain_SHA512.id,
-    'SHA-512withPLAIN-ECDSA');
-  Falgorithms.Add('RIPEMD160/PLAIN-ECDSA', 'RIPEMD160withPLAIN-ECDSA');
-  Falgorithms.Add('PLAIN-ECDSAWITHRIPEMD160', 'RIPEMD160withPLAIN-ECDSA');
-  Falgorithms.Add('RIPEMD160WITHPLAIN-ECDSA', 'RIPEMD160withPLAIN-ECDSA');
-  Falgorithms.Add(TBsiObjectIdentifiers.ecdsa_plain_RIPEMD160.id,
-    'RIPEMD160withPLAIN-ECDSA');
-  Falgorithms.Add('SHA1WITHECNR', 'SHA-1withECNR');
-  Falgorithms.Add('SHA-1WITHECNR', 'SHA-1withECNR');
-  Falgorithms.Add('SHA224WITHECNR', 'SHA-224withECNR');
-  Falgorithms.Add('SHA-224WITHECNR', 'SHA-224withECNR');
-  Falgorithms.Add('SHA256WITHECNR', 'SHA-256withECNR');
-  Falgorithms.Add('SHA-256WITHECNR', 'SHA-256withECNR');
-  Falgorithms.Add('SHA384WITHECNR', 'SHA-384withECNR');
-  Falgorithms.Add('SHA-384WITHECNR', 'SHA-384withECNR');
-  Falgorithms.Add('SHA512WITHECNR', 'SHA-512withECNR');
-  Falgorithms.Add('SHA-512WITHECNR', 'SHA-512withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHRSAANDMGF1', 'SHA-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHRSAANDMGF1', 'SHA-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHRSA/PSS', 'SHA-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHRSA/PSS', 'SHA-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHRSASSA-PSS', 'SHA-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHRSASSA-PSS', 'SHA-224withRSAandMGF1');
 
+  FAlgorithmMap.AddOrSetValue('SHA256WITHRSAANDMGF1', 'SHA-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHRSAANDMGF1', 'SHA-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHRSA/PSS', 'SHA-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHRSA/PSS', 'SHA-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHRSASSA-PSS', 'SHA-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHRSASSA-PSS', 'SHA-256withRSAandMGF1');
 
+  FAlgorithmMap.AddOrSetValue('SHA384WITHRSAANDMGF1', 'SHA-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHRSAANDMGF1', 'SHA-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHRSA/PSS', 'SHA-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHRSA/PSS', 'SHA-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHRSASSA-PSS', 'SHA-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHRSASSA-PSS', 'SHA-384withRSAandMGF1');
 
-  // Falgorithms.Add('GOST-3410', 'GOST3410');
-  // Falgorithms.Add('GOST-3410-94', 'GOST3410');
-  // Falgorithms.Add('GOST3411WITHGOST3410', 'GOST3410');
-  // Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94.id,
-  // 'GOST3410');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHRSAANDMGF1', 'SHA-512withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHRSAANDMGF1', 'SHA-512withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHRSA/PSS', 'SHA-512withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHRSA/PSS', 'SHA-512withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
 
-  // Falgorithms.Add('ECGOST-3410', 'ECGOST3410');
-  // Falgorithms.Add('ECGOST-3410-2001', 'ECGOST3410');
-  // Falgorithms.Add('GOST3411WITHECGOST3410', 'ECGOST3410');
-  // Falgorithms.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001.id,
-  // 'ECGOST3410');
+  FAlgorithmMap.AddOrSetValue('RIPEMD128WITHRSA', 'RIPEMD128withRSA');
+  FAlgorithmMap.AddOrSetValue('RIPEMD128WITHRSAENCRYPTION', 'RIPEMD128withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128, 'RIPEMD128withRSA');
 
-  // ED25519
-  Falgorithms.Add('ED25519', 'Ed25519');
-  Falgorithms.Add(TEdECObjectIdentifiers.id_Ed25519.id, 'Ed25519');
-  Falgorithms.Add('ED25519CTX', 'Ed25519ctx');
-  Falgorithms.Add('ED25519PH', 'Ed25519ph');
+  FAlgorithmMap.AddOrSetValue('RIPEMD160WITHRSA', 'RIPEMD160withRSA');
+  FAlgorithmMap.AddOrSetValue('RIPEMD160WITHRSAENCRYPTION', 'RIPEMD160withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160, 'RIPEMD160withRSA');
 
-  // ED25519Blake2B
-  Falgorithms.Add('ED25519BLAKE2B', 'Ed25519Blake2B');
-  Falgorithms.Add('ED25519BLAKE2BCTX', 'Ed25519Blake2Bctx');
-  Falgorithms.Add('ED25519BLAKE2BPH', 'Ed25519Blake2Bph');
+  FAlgorithmMap.AddOrSetValue('RIPEMD256WITHRSA', 'RIPEMD256withRSA');
+  FAlgorithmMap.AddOrSetValue('RIPEMD256WITHRSAENCRYPTION', 'RIPEMD256withRSA');
+  FAlgorithmOidMap.AddOrSetValue(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD256, 'RIPEMD256withRSA');
 
-  // RSA
-  TPkcsObjectIdentifiers.Boot;
-  Falgorithms.Add('RSA', 'SHA-1withRSA');
-  Falgorithms.Add('RSAWITHSHA1', 'SHA-1withRSA');
-  Falgorithms.Add('RSAWITHSHA-1', 'SHA-1withRSA');
-  Falgorithms.Add('SHA1/RSA', 'SHA-1withRSA');
-  Falgorithms.Add('SHA-1/RSA', 'SHA-1withRSA');
-  Falgorithms.Add('SHA1WITHRSA', 'SHA-1withRSA');
-  Falgorithms.Add('SHA-1WITHRSA', 'SHA-1withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha1WithRsaEncryption.id, 'SHA-1withRSA');
+  FAlgorithmMap.AddOrSetValue('NONEWITHRSA', 'RSA');
+  FAlgorithmMap.AddOrSetValue('RSAWITHNONE', 'RSA');
+  FAlgorithmMap.AddOrSetValue('RAWRSA', 'RSA');
 
-  Falgorithms.Add('SHA224/RSA', 'SHA-224withRSA');
-  Falgorithms.Add('SHA-224/RSA', 'SHA-224withRSA');
-  Falgorithms.Add('SHA224WITHRSA', 'SHA-224withRSA');
-  Falgorithms.Add('SHA-224WITHRSA', 'SHA-224withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha224WithRsaEncryption.id, 'SHA-224withRSA');
+  FAlgorithmMap.AddOrSetValue('RAWRSAPSS', 'RAWRSASSA-PSS');
+  FAlgorithmMap.AddOrSetValue('NONEWITHRSAPSS', 'RAWRSASSA-PSS');
+  FAlgorithmMap.AddOrSetValue('NONEWITHRSASSA-PSS', 'RAWRSASSA-PSS');
 
-  Falgorithms.Add('SHA256/RSA', 'SHA-256withRSA');
-  Falgorithms.Add('SHA-256/RSA', 'SHA-256withRSA');
-  Falgorithms.Add('SHA256WITHRSA', 'SHA-256withRSA');
-  Falgorithms.Add('SHA-256WITHRSA', 'SHA-256withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha256WithRsaEncryption.id, 'SHA-256withRSA');
+  FAlgorithmMap.AddOrSetValue('NONEWITHDSA', 'NONEwithDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHNONE', 'NONEwithDSA');
+  FAlgorithmMap.AddOrSetValue('RAWDSA', 'NONEwithDSA');
 
-  Falgorithms.Add('SHA384/RSA', 'SHA-384withRSA');
-  Falgorithms.Add('SHA-384/RSA', 'SHA-384withRSA');
-  Falgorithms.Add('SHA384WITHRSA', 'SHA-384withRSA');
-  Falgorithms.Add('SHA-384WITHRSA', 'SHA-384withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha384WithRsaEncryption.id, 'SHA-384withRSA');
+  FAlgorithmMap.AddOrSetValue('DSA', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA1', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA-1', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA/DSA', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1/DSA', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1/DSA', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHDSA', 'SHA-1withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHDSA', 'SHA-1withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.IdDsaWithSha1, 'SHA-1withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.DsaWithSha1, 'SHA-1withDSA');
 
-  Falgorithms.Add('SHA512/RSA', 'SHA-512withRSA');
-  Falgorithms.Add('SHA-512/RSA', 'SHA-512withRSA');
-  Falgorithms.Add('SHA512WITHRSA', 'SHA-512withRSA');
-  Falgorithms.Add('SHA-512WITHRSA', 'SHA-512withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha512WithRsaEncryption.id, 'SHA-512withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA224', 'SHA-224withDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA-224', 'SHA-224withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA224/DSA', 'SHA-224withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224/DSA', 'SHA-224withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHDSA', 'SHA-224withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHDSA', 'SHA-224withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.DsaWithSha224, 'SHA-224withDSA');
 
-  Falgorithms.Add('MD5/RSA', 'MD5withRSA');
-  Falgorithms.Add('MD5WITHRSA', 'MD5withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.MD5WithRsaEncryption.id, 'MD5withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA256', 'SHA-256withDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA-256', 'SHA-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA256/DSA', 'SHA-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256/DSA', 'SHA-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHDSA', 'SHA-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHDSA', 'SHA-256withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.DsaWithSha256, 'SHA-256withDSA');
 
-  Falgorithms.Add('RIPEMD160/RSA', 'RIPEMD160withRSA');
-  Falgorithms.Add('RIPEMD160WITHRSA', 'RIPEMD160withRSA');
-  Falgorithms.Add('RIPEMD160WITHRSAENCRYPTION', 'RIPEMD160withRSA');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160.id, 'RIPEMD160withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA384', 'SHA-384withDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA-384', 'SHA-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA384/DSA', 'SHA-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384/DSA', 'SHA-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHDSA', 'SHA-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHDSA', 'SHA-384withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.DsaWithSha384, 'SHA-384withDSA');
 
-  Falgorithms.Add('RIPEMD128WITHRSA', 'RIPEMD128withRSA');
-  Falgorithms.Add('RIPEMD128WITHRSAENCRYPTION', 'RIPEMD128withRSA');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128.id, 'RIPEMD128withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA512', 'SHA-512withDSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA-512', 'SHA-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512/DSA', 'SHA-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512/DSA', 'SHA-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHDSA', 'SHA-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHDSA', 'SHA-512withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.DsaWithSha512, 'SHA-512withDSA');
 
-  Falgorithms.Add('RIPEMD256WITHRSA', 'RIPEMD256withRSA');
-  Falgorithms.Add('RIPEMD256WITHRSAENCRYPTION', 'RIPEMD256withRSA');
-  Falgorithms.Add(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD256.id, 'RIPEMD256withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA3-224', 'SHA3-224withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-224/DSA', 'SHA3-224withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-224WITHDSA', 'SHA3-224withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdDsaWithSha3_224, 'SHA3-224withDSA');
 
-  // MD2/MD4 with RSA
-  Falgorithms.Add('MD2WITHRSA', 'MD2withRSA');
-  Falgorithms.Add('MD2WITHRSAENCRYPTION', 'MD2withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.MD2WithRsaEncryption.id, 'MD2withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA3-256', 'SHA3-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-256/DSA', 'SHA3-256withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-256WITHDSA', 'SHA3-256withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdDsaWithSha3_256, 'SHA3-256withDSA');
 
-  Falgorithms.Add('MD4WITHRSA', 'MD4withRSA');
-  Falgorithms.Add('MD4WITHRSAENCRYPTION', 'MD4withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.MD4WithRsaEncryption.id, 'MD4withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA3-384', 'SHA3-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384/DSA', 'SHA3-384withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384WITHDSA', 'SHA3-384withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdDsaWithSha3_384, 'SHA3-384withDSA');
 
-  // Extended MD5 with RSA aliases
-  Falgorithms.Add('MD5WITHRSAENCRYPTION', 'MD5withRSA');
+  FAlgorithmMap.AddOrSetValue('DSAWITHSHA3-512', 'SHA3-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-512/DSA', 'SHA3-512withDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-512WITHDSA', 'SHA3-512withDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdDsaWithSha3_512, 'SHA3-512withDSA');
 
-  // Extended SHA with RSA aliases
-  Falgorithms.Add('SHA1WITHRSAENCRYPTION', 'SHA-1withRSA');
-  Falgorithms.Add('SHA-1WITHRSAENCRYPTION', 'SHA-1withRSA');
-  Falgorithms.Add('SHA224WITHRSAENCRYPTION', 'SHA-224withRSA');
-  Falgorithms.Add('SHA-224WITHRSAENCRYPTION', 'SHA-224withRSA');
-  Falgorithms.Add('SHA256WITHRSAENCRYPTION', 'SHA-256withRSA');
-  Falgorithms.Add('SHA-256WITHRSAENCRYPTION', 'SHA-256withRSA');
-  Falgorithms.Add('SHA384WITHRSAENCRYPTION', 'SHA-384withRSA');
-  Falgorithms.Add('SHA-384WITHRSAENCRYPTION', 'SHA-384withRSA');
-  Falgorithms.Add('SHA512WITHRSAENCRYPTION', 'SHA-512withRSA');
-  Falgorithms.Add('SHA-512WITHRSAENCRYPTION', 'SHA-512withRSA');
+  FAlgorithmMap.AddOrSetValue('NONEWITHECDSA', 'NONEwithECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHNONE', 'NONEwithECDSA');
 
-  // SHA-512/224 and SHA-512/256 with RSA
-  Falgorithms.Add('SHA512(224)WITHRSA', 'SHA-512(224)withRSA');
-  Falgorithms.Add('SHA-512(224)WITHRSA', 'SHA-512(224)withRSA');
-  Falgorithms.Add('SHA512(224)WITHRSAENCRYPTION', 'SHA-512(224)withRSA');
-  Falgorithms.Add('SHA-512(224)WITHRSAENCRYPTION', 'SHA-512(224)withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha512_224WithRSAEncryption.id, 'SHA-512(224)withRSA');
+  FAlgorithmMap.AddOrSetValue('ECDSA', 'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1/ECDSA', 'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1/ECDSA', 'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA1', 'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA-1', 'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHECDSA', 'SHA-1withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHECDSA', 'SHA-1withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.ECDsaWithSha1, 'SHA-1withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TTeleTrusTObjectIdentifiers.ECSignWithSha1, 'SHA-1withECDSA');
 
-  Falgorithms.Add('SHA512(256)WITHRSA', 'SHA-512(256)withRSA');
-  Falgorithms.Add('SHA-512(256)WITHRSA', 'SHA-512(256)withRSA');
-  Falgorithms.Add('SHA512(256)WITHRSAENCRYPTION', 'SHA-512(256)withRSA');
-  Falgorithms.Add('SHA-512(256)WITHRSAENCRYPTION', 'SHA-512(256)withRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption.id, 'SHA-512(256)withRSA');
+  FAlgorithmMap.AddOrSetValue('SHA224/ECDSA', 'SHA-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224/ECDSA', 'SHA-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA224', 'SHA-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA-224', 'SHA-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHECDSA', 'SHA-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHECDSA', 'SHA-224withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.ECDsaWithSha224, 'SHA-224withECDSA');
 
-  // PSS / RSA-OAEP signatures
-  Falgorithms.Add('PSSWITHRSA', 'PSSwithRSA');
-  Falgorithms.Add('RSASSA-PSS', 'PSSwithRSA');
-  Falgorithms.Add('RSAPSS', 'PSSwithRSA');
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdRsassaPss.id, 'PSSwithRSA');
+  FAlgorithmMap.AddOrSetValue('SHA256/ECDSA', 'SHA-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256/ECDSA', 'SHA-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA256', 'SHA-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA-256', 'SHA-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHECDSA', 'SHA-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHECDSA', 'SHA-256withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.ECDsaWithSha256, 'SHA-256withECDSA');
 
-  Falgorithms.Add('SHA1WITHRSAANDMGF1', 'SHA-1withRSAandMGF1');
-  Falgorithms.Add('SHA-1WITHRSAANDMGF1', 'SHA-1withRSAandMGF1');
-  Falgorithms.Add('SHA1WITHRSA/PSS', 'SHA-1withRSAandMGF1');
-  Falgorithms.Add('SHA-1WITHRSA/PSS', 'SHA-1withRSAandMGF1');
-  Falgorithms.Add('SHA1WITHRSASSA-PSS', 'SHA-1withRSAandMGF1');
-  Falgorithms.Add('SHA-1WITHRSASSA-PSS', 'SHA-1withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA384/ECDSA', 'SHA-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384/ECDSA', 'SHA-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA384', 'SHA-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA-384', 'SHA-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHECDSA', 'SHA-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHECDSA', 'SHA-384withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.ECDsaWithSha384, 'SHA-384withECDSA');
 
-  Falgorithms.Add('SHA224WITHRSAANDMGF1', 'SHA-224withRSAandMGF1');
-  Falgorithms.Add('SHA-224WITHRSAANDMGF1', 'SHA-224withRSAandMGF1');
-  Falgorithms.Add('SHA224WITHRSA/PSS', 'SHA-224withRSAandMGF1');
-  Falgorithms.Add('SHA-224WITHRSA/PSS', 'SHA-224withRSAandMGF1');
-  Falgorithms.Add('SHA224WITHRSASSA-PSS', 'SHA-224withRSAandMGF1');
-  Falgorithms.Add('SHA-224WITHRSASSA-PSS', 'SHA-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA512/ECDSA', 'SHA-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512/ECDSA', 'SHA-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA512', 'SHA-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA-512', 'SHA-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHECDSA', 'SHA-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHECDSA', 'SHA-512withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.ECDsaWithSha512, 'SHA-512withECDSA');
 
-  Falgorithms.Add('SHA256WITHRSAANDMGF1', 'SHA-256withRSAandMGF1');
-  Falgorithms.Add('SHA-256WITHRSAANDMGF1', 'SHA-256withRSAandMGF1');
-  Falgorithms.Add('SHA256WITHRSA/PSS', 'SHA-256withRSAandMGF1');
-  Falgorithms.Add('SHA-256WITHRSA/PSS', 'SHA-256withRSAandMGF1');
-  Falgorithms.Add('SHA256WITHRSASSA-PSS', 'SHA-256withRSAandMGF1');
-  Falgorithms.Add('SHA-256WITHRSASSA-PSS', 'SHA-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('RIPEMD160/ECDSA', 'RIPEMD160withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHRIPEMD160', 'RIPEMD160withECDSA');
+  FAlgorithmMap.AddOrSetValue('RIPEMD160WITHECDSA', 'RIPEMD160withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TTeleTrusTObjectIdentifiers.ECSignWithRipeMD160, 'RIPEMD160withECDSA');
 
-  Falgorithms.Add('SHA384WITHRSAANDMGF1', 'SHA-384withRSAandMGF1');
-  Falgorithms.Add('SHA-384WITHRSAANDMGF1', 'SHA-384withRSAandMGF1');
-  Falgorithms.Add('SHA384WITHRSA/PSS', 'SHA-384withRSAandMGF1');
-  Falgorithms.Add('SHA-384WITHRSA/PSS', 'SHA-384withRSAandMGF1');
-  Falgorithms.Add('SHA384WITHRSASSA-PSS', 'SHA-384withRSAandMGF1');
-  Falgorithms.Add('SHA-384WITHRSASSA-PSS', 'SHA-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA3-224/ECDSA', 'SHA3-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA3-224', 'SHA3-224withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-224WITHECDSA', 'SHA3-224withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdEcdsaWithSha3_224, 'SHA3-224withECDSA');
 
-  Falgorithms.Add('SHA512WITHRSAANDMGF1', 'SHA-512withRSAandMGF1');
-  Falgorithms.Add('SHA-512WITHRSAANDMGF1', 'SHA-512withRSAandMGF1');
-  Falgorithms.Add('SHA512WITHRSA/PSS', 'SHA-512withRSAandMGF1');
-  Falgorithms.Add('SHA-512WITHRSA/PSS', 'SHA-512withRSAandMGF1');
-  Falgorithms.Add('SHA512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
-  Falgorithms.Add('SHA-512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA3-256/ECDSA', 'SHA3-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA3-256', 'SHA3-256withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-256WITHECDSA', 'SHA3-256withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdEcdsaWithSha3_256, 'SHA3-256withECDSA');
 
-  // Raw RSA (NONEWITHRSA) and raw PSS
-  Falgorithms.Add('NONEWITHRSA', 'RSA');
-  Falgorithms.Add('RSAWITHNONE', 'RSA');
-  Falgorithms.Add('RAWRSA', 'RSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384/ECDSA', 'SHA3-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA3-384', 'SHA3-384withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384WITHECDSA', 'SHA3-384withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdEcdsaWithSha3_384, 'SHA3-384withECDSA');
 
-  Falgorithms.Add('RAWRSAPSS', 'RAWRSASSA-PSS');
-  Falgorithms.Add('NONEWITHRSAPSS', 'RAWRSASSA-PSS');
-  Falgorithms.Add('NONEWITHRSASSA-PSS', 'RAWRSASSA-PSS');
+  FAlgorithmMap.AddOrSetValue('SHA3-512/ECDSA', 'SHA3-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('ECDSAWITHSHA3-512', 'SHA3-512withECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-512WITHECDSA', 'SHA3-512withECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdEcdsaWithSha3_512, 'SHA3-512withECDSA');
 
-  // ECSCHNORR SIPA
+  FAlgorithmMap.AddOrSetValue('NONEWITHCVC-ECDSA', 'NONEwithCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHNONE', 'NONEwithCVC-ECDSA');
 
-  Falgorithms.Add('SHA1/ECSCHNORR/SIPA', 'SHA-1withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-1/ECSCHNORR/SIPA', 'SHA-1withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA1', 'SHA-1withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-1', 'SHA-1withECSCHNORRSIPA');
-  Falgorithms.Add('SHA1WITHECSCHNORRSIPA', 'SHA-1withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-1WITHECSCHNORRSIPA', 'SHA-1withECSCHNORRSIPA');
+  FAlgorithmMap.AddOrSetValue('SHA1/CVC-ECDSA', 'SHA-1withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1/CVC-ECDSA', 'SHA-1withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA1', 'SHA-1withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA-1', 'SHA-1withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHCVC-ECDSA', 'SHA-1withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHCVC-ECDSA', 'SHA-1withCVC-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TEacObjectIdentifiers.IdTAEcdsaSha1, 'SHA-1withCVC-ECDSA');
 
-  Falgorithms.Add('SHA224/ECSCHNORR/SIPA', 'SHA-224withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-224/ECSCHNORR/SIPA', 'SHA-224withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA224', 'SHA-224withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-224', 'SHA-224withECSCHNORRSIPA');
-  Falgorithms.Add('SHA224WITHECSCHNORRSIPA', 'SHA-224withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-224WITHECSCHNORRSIPA', 'SHA-224withECSCHNORRSIPA');
+  FAlgorithmMap.AddOrSetValue('SHA224/CVC-ECDSA', 'SHA-224withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224/CVC-ECDSA', 'SHA-224withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA224', 'SHA-224withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA-224', 'SHA-224withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHCVC-ECDSA', 'SHA-224withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHCVC-ECDSA', 'SHA-224withCVC-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TEacObjectIdentifiers.IdTAEcdsaSha224, 'SHA-224withCVC-ECDSA');
 
-  Falgorithms.Add('SHA256/ECSCHNORR/SIPA', 'SHA-256withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-256/ECSCHNORR/SIPA', 'SHA-256withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA256', 'SHA-256withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-256', 'SHA-256withECSCHNORRSIPA');
-  Falgorithms.Add('SHA256WITHECSCHNORRSIPA', 'SHA-256withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-256WITHECSCHNORRSIPA', 'SHA-256withECSCHNORRSIPA');
+  FAlgorithmMap.AddOrSetValue('SHA256/CVC-ECDSA', 'SHA-256withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256/CVC-ECDSA', 'SHA-256withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA256', 'SHA-256withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA-256', 'SHA-256withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHCVC-ECDSA', 'SHA-256withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHCVC-ECDSA', 'SHA-256withCVC-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TEacObjectIdentifiers.IdTAEcdsaSha256, 'SHA-256withCVC-ECDSA');
 
-  Falgorithms.Add('SHA384/ECSCHNORR/SIPA', 'SHA-384withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-384/ECSCHNORR/SIPA', 'SHA-384withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA384', 'SHA-384withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-384', 'SHA-384withECSCHNORRSIPA');
-  Falgorithms.Add('SHA384WITHECSCHNORRSIPA', 'SHA-384withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-384WITHECSCHNORRSIPA', 'SHA-384withECSCHNORRSIPA');
+  FAlgorithmMap.AddOrSetValue('SHA384/CVC-ECDSA', 'SHA-384withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384/CVC-ECDSA', 'SHA-384withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA384', 'SHA-384withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA-384', 'SHA-384withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHCVC-ECDSA', 'SHA-384withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHCVC-ECDSA', 'SHA-384withCVC-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TEacObjectIdentifiers.IdTAEcdsaSha384, 'SHA-384withCVC-ECDSA');
 
-  Falgorithms.Add('SHA512/ECSCHNORR/SIPA', 'SHA-512withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-512/ECSCHNORR/SIPA', 'SHA-512withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA512', 'SHA-512withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHSHA-512', 'SHA-512withECSCHNORRSIPA');
-  Falgorithms.Add('SHA512WITHECSCHNORRSIPA', 'SHA-512withECSCHNORRSIPA');
-  Falgorithms.Add('SHA-512WITHECSCHNORRSIPA', 'SHA-512withECSCHNORRSIPA');
+  FAlgorithmMap.AddOrSetValue('SHA512/CVC-ECDSA', 'SHA-512withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512/CVC-ECDSA', 'SHA-512withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA512', 'SHA-512withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('CVC-ECDSAWITHSHA-512', 'SHA-512withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHCVC-ECDSA', 'SHA-512withCVC-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHCVC-ECDSA', 'SHA-512withCVC-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TEacObjectIdentifiers.IdTAEcdsaSha512, 'SHA-512withCVC-ECDSA');
 
-  Falgorithms.Add('RIPEMD160/ECSCHNORR/SIPA', 'RIPEMD160withECSCHNORRSIPA');
-  Falgorithms.Add('ECSCHNORRSIPAWITHRIPEMD160', 'RIPEMD160withECSCHNORRSIPA');
-  Falgorithms.Add('RIPEMD160WITHECSCHNORRSIPA', 'RIPEMD160withECSCHNORRSIPA');
+  FAlgorithmMap.AddOrSetValue('NONEWITHPLAIN-ECDSA', 'NONEwithPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHNONE', 'NONEwithPLAIN-ECDSA');
 
-  Foids.Add('SHA-1withDSA', TX9ObjectIdentifiers.IdDsaWithSha1);
+  FAlgorithmMap.AddOrSetValue('SHA1/PLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1/PLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA1', 'SHA-1withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA-1', 'SHA-1withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA1WITHPLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHPLAIN-ECDSA', 'SHA-1withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha1, 'SHA-1withPLAIN-ECDSA');
 
-  Foids.Add('SHA-1withECDSA', TX9ObjectIdentifiers.ECDsaWithSha1);
-  Foids.Add('SHA-224withECDSA', TX9ObjectIdentifiers.ECDsaWithSha224);
-  Foids.Add('SHA-256withECDSA', TX9ObjectIdentifiers.ECDsaWithSha256);
-  Foids.Add('SHA-384withECDSA', TX9ObjectIdentifiers.ECDsaWithSha384);
-  Foids.Add('SHA-512withECDSA', TX9ObjectIdentifiers.ECDsaWithSha512);
+  FAlgorithmMap.AddOrSetValue('SHA224/PLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224/PLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA224', 'SHA-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA-224', 'SHA-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHPLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHPLAIN-ECDSA', 'SHA-224withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha224, 'SHA-224withPLAIN-ECDSA');
 
-  Foids.Add('RIPEMD160withECDSA',
-    TTeleTrusTObjectIdentifiers.ECSignWithRipeMD160);
-  Foids.Add('SHA-1withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_1);
-  Foids.Add('SHA-224withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_224);
-  Foids.Add('SHA-256withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_256);
-  Foids.Add('SHA-384withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_384);
-  Foids.Add('SHA-512withCVC-ECDSA', TEacObjectIdentifiers.id_TA_ECDSA_SHA_512);
-  Foids.Add('SHA-1withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA1);
-  Foids.Add('SHA-224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA224);
-  Foids.Add('SHA-256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA256);
-  Foids.Add('SHA-384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA384);
-  Foids.Add('SHA-512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA512);
-  Foids.Add('RIPEMD160withPLAIN-ECDSA',
-    TBsiObjectIdentifiers.ecdsa_plain_RIPEMD160);
+  FAlgorithmMap.AddOrSetValue('SHA256/PLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256/PLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA256', 'SHA-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA-256', 'SHA-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHPLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHPLAIN-ECDSA', 'SHA-256withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha256, 'SHA-256withPLAIN-ECDSA');
 
-  // Foids.Add('GOST3410',
-  // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
-  //
-  // Foids.Add('ECGOST3410',
-  // TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+  FAlgorithmMap.AddOrSetValue('SHA384/PLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384/PLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA384', 'SHA-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA-384', 'SHA-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHPLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHPLAIN-ECDSA', 'SHA-384withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha384, 'SHA-384withPLAIN-ECDSA');
 
-  Foids.Add('Ed25519', TEdECObjectIdentifiers.id_Ed25519);
+  FAlgorithmMap.AddOrSetValue('SHA512/PLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512/PLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA512', 'SHA-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA-512', 'SHA-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHPLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHPLAIN-ECDSA', 'SHA-512withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha512, 'SHA-512withPLAIN-ECDSA');
 
-  // RSA signature OIDs
-  Foids.Add('MD2withRSA', TPkcsObjectIdentifiers.MD2WithRsaEncryption);
-  Foids.Add('MD4withRSA', TPkcsObjectIdentifiers.MD4WithRsaEncryption);
-  Foids.Add('MD5withRSA', TPkcsObjectIdentifiers.MD5WithRsaEncryption);
-  Foids.Add('SHA-1withRSA', TPkcsObjectIdentifiers.Sha1WithRsaEncryption);
-  Foids.Add('SHA-224withRSA', TPkcsObjectIdentifiers.Sha224WithRsaEncryption);
-  Foids.Add('SHA-256withRSA', TPkcsObjectIdentifiers.Sha256WithRsaEncryption);
-  Foids.Add('SHA-384withRSA', TPkcsObjectIdentifiers.Sha384WithRsaEncryption);
-  Foids.Add('SHA-512withRSA', TPkcsObjectIdentifiers.Sha512WithRsaEncryption);
-  Foids.Add('SHA-512(224)withRSA', TPkcsObjectIdentifiers.Sha512_224WithRSAEncryption);
-  Foids.Add('SHA-512(256)withRSA', TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption);
+  FAlgorithmMap.AddOrSetValue('RIPEMD160/PLAIN-ECDSA', 'RIPEMD160withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHRIPEMD160', 'RIPEMD160withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('RIPEMD160WITHPLAIN-ECDSA', 'RIPEMD160withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainRipeMD160, 'RIPEMD160withPLAIN-ECDSA');
 
-  Foids.Add('RIPEMD128withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128);
-  Foids.Add('RIPEMD160withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);
-  Foids.Add('RIPEMD256withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD256);
+  FAlgorithmMap.AddOrSetValue('SHA3-224/PLAIN-ECDSA', 'SHA3-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA3-224', 'SHA3-224withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-224WITHPLAIN-ECDSA', 'SHA3-224withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha3_224, 'SHA3-224withPLAIN-ECDSA');
+
+  FAlgorithmMap.AddOrSetValue('SHA3-256/PLAIN-ECDSA', 'SHA3-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA3-256', 'SHA3-256withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-256WITHPLAIN-ECDSA', 'SHA3-256withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha3_256, 'SHA3-256withPLAIN-ECDSA');
+
+  FAlgorithmMap.AddOrSetValue('SHA3-384/PLAIN-ECDSA', 'SHA3-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA3-384', 'SHA3-384withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-384WITHPLAIN-ECDSA', 'SHA3-384withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha3_384, 'SHA3-384withPLAIN-ECDSA');
+
+  FAlgorithmMap.AddOrSetValue('SHA3-512/PLAIN-ECDSA', 'SHA3-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('PLAIN-ECDSAWITHSHA3-512', 'SHA3-512withPLAIN-ECDSA');
+  FAlgorithmMap.AddOrSetValue('SHA3-512WITHPLAIN-ECDSA', 'SHA3-512withPLAIN-ECDSA');
+  FAlgorithmOidMap.AddOrSetValue(TBsiObjectIdentifiers.EcdsaPlainSha3_512, 'SHA3-512withPLAIN-ECDSA');
+
+  FAlgorithmMap.AddOrSetValue('SHA1WITHECNR', 'SHA-1withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA-1WITHECNR', 'SHA-1withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA224WITHECNR', 'SHA-224withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA-224WITHECNR', 'SHA-224withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA256WITHECNR', 'SHA-256withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA-256WITHECNR', 'SHA-256withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA384WITHECNR', 'SHA-384withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA-384WITHECNR', 'SHA-384withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA512WITHECNR', 'SHA-512withECNR');
+  FAlgorithmMap.AddOrSetValue('SHA-512WITHECNR', 'SHA-512withECNR');
+
+  FOids.AddOrSetValue('MD2withRSA', TPkcsObjectIdentifiers.MD2WithRsaEncryption);
+  FOids.AddOrSetValue('MD4withRSA', TPkcsObjectIdentifiers.MD4WithRsaEncryption);
+  FOids.AddOrSetValue('MD5withRSA', TPkcsObjectIdentifiers.MD5WithRsaEncryption);
+
+  FOids.AddOrSetValue('SHA-1withRSA', TPkcsObjectIdentifiers.Sha1WithRsaEncryption);
+  FOids.AddOrSetValue('SHA-224withRSA', TPkcsObjectIdentifiers.Sha224WithRsaEncryption);
+  FOids.AddOrSetValue('SHA-256withRSA', TPkcsObjectIdentifiers.Sha256WithRsaEncryption);
+  FOids.AddOrSetValue('SHA-384withRSA', TPkcsObjectIdentifiers.Sha384WithRsaEncryption);
+  FOids.AddOrSetValue('SHA-512withRSA', TPkcsObjectIdentifiers.Sha512WithRsaEncryption);
+  FOids.AddOrSetValue('SHA-512(224)withRSA', TPkcsObjectIdentifiers.Sha512_224WithRSAEncryption);
+  FOids.AddOrSetValue('SHA-512(256)withRSA', TPkcsObjectIdentifiers.Sha512_256WithRSAEncryption);
+  FOids.AddOrSetValue('SHA3-224withRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_224);
+  FOids.AddOrSetValue('SHA3-256withRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_256);
+  FOids.AddOrSetValue('SHA3-384withRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_384);
+  FOids.AddOrSetValue('SHA3-512withRSA', TNistObjectIdentifiers.IdRsassaPkcs1V15WithSha3_512);
+
+  FOids.AddOrSetValue('PSSwithRSA', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA-1withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA-224withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA-256withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA-384withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA-512withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+
+  FOids.AddOrSetValue('RIPEMD128withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128);
+  FOids.AddOrSetValue('RIPEMD160withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);
+  FOids.AddOrSetValue('RIPEMD256withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD256);
+
+  FOids.AddOrSetValue('SHA-1withDSA', TX9ObjectIdentifiers.IdDsaWithSha1);
+  FOids.AddOrSetValue('SHA-224withDSA', TNistObjectIdentifiers.DsaWithSha224);
+  FOids.AddOrSetValue('SHA-256withDSA', TNistObjectIdentifiers.DsaWithSha256);
+  FOids.AddOrSetValue('SHA-384withDSA', TNistObjectIdentifiers.DsaWithSha384);
+  FOids.AddOrSetValue('SHA-512withDSA', TNistObjectIdentifiers.DsaWithSha512);
+
+  FOids.AddOrSetValue('SHA3-224withDSA', TNistObjectIdentifiers.IdDsaWithSha3_224);
+  FOids.AddOrSetValue('SHA3-256withDSA', TNistObjectIdentifiers.IdDsaWithSha3_256);
+  FOids.AddOrSetValue('SHA3-384withDSA', TNistObjectIdentifiers.IdDsaWithSha3_384);
+  FOids.AddOrSetValue('SHA3-512withDSA', TNistObjectIdentifiers.IdDsaWithSha3_512);
+
+  FOids.AddOrSetValue('SHA-1withECDSA', TX9ObjectIdentifiers.ECDsaWithSha1);
+  FOids.AddOrSetValue('SHA-224withECDSA', TX9ObjectIdentifiers.ECDsaWithSha224);
+  FOids.AddOrSetValue('SHA-256withECDSA', TX9ObjectIdentifiers.ECDsaWithSha256);
+  FOids.AddOrSetValue('SHA-384withECDSA', TX9ObjectIdentifiers.ECDsaWithSha384);
+  FOids.AddOrSetValue('SHA-512withECDSA', TX9ObjectIdentifiers.ECDsaWithSha512);
+  FOids.AddOrSetValue('RIPEMD160withECDSA', TTeleTrusTObjectIdentifiers.ECSignWithRipeMD160);
+
+  FOids.AddOrSetValue('SHA3-224withECDSA', TNistObjectIdentifiers.IdEcdsaWithSha3_224);
+  FOids.AddOrSetValue('SHA3-256withECDSA', TNistObjectIdentifiers.IdEcdsaWithSha3_256);
+  FOids.AddOrSetValue('SHA3-384withECDSA', TNistObjectIdentifiers.IdEcdsaWithSha3_384);
+  FOids.AddOrSetValue('SHA3-512withECDSA', TNistObjectIdentifiers.IdEcdsaWithSha3_512);
+
+  FOids.AddOrSetValue('SHA-1withCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha1);
+  FOids.AddOrSetValue('SHA-224withCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha224);
+  FOids.AddOrSetValue('SHA-256withCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha256);
+  FOids.AddOrSetValue('SHA-384withCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha384);
+  FOids.AddOrSetValue('SHA-512withCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha512);
+
+  FOids.AddOrSetValue('SHA-1withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha1);
+  FOids.AddOrSetValue('SHA-224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha224);
+  FOids.AddOrSetValue('SHA-256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha256);
+  FOids.AddOrSetValue('SHA-384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha384);
+  FOids.AddOrSetValue('SHA-512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha512);
+  FOids.AddOrSetValue('RIPEMD160withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainRipeMD160);
+
+  FOids.AddOrSetValue('SHA3-224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_224);
+  FOids.AddOrSetValue('SHA3-256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_256);
+  FOids.AddOrSetValue('SHA3-384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_384);
+  FOids.AddOrSetValue('SHA3-512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_512);
+
+  // EdDSA algorithms
+  AddAlgorithm('Ed25519', TEdECObjectIdentifiers.IdEd25519, True);
+  AddAlgorithm('Ed25519ctx', nil, True);
+  AddAlgorithm('Ed25519ph', nil, True);
 end;
 
-class constructor TSignerUtilities.CreateSignerUtilities;
+class constructor TSignerUtilities.Create;
 begin
-  TSignerUtilities.Boot;
+  Boot;
 end;
 
-class destructor TSignerUtilities.DestroySignerUtilities;
+class destructor TSignerUtilities.Destroy;
 begin
-  Falgorithms.Free;
-  Foids.Free;
+  FAlgorithmMap.Free;
+  FAlgorithmOidMap.Free;
+  FNoRandom.Free;
+  FOids.Free;
+end;
+
+class function TSignerUtilities.GetMechanism(const AAlgorithm: String): String;
+var
+  LOid: IDerObjectIdentifier;
+  LMechanism: String;
+begin
+  if FAlgorithmMap.TryGetValue(AAlgorithm, LMechanism) then
+  begin
+    Result := LMechanism;
+    Exit;
+  end;
+  if TDerObjectIdentifier.TryFromID(AAlgorithm, LOid) and FAlgorithmOidMap.TryGetValue(LOid, LMechanism) then
+  begin
+    Result := LMechanism;
+    Exit;
+  end;
+  Result := '';
 end;
 
 class function TSignerUtilities.GetAlgorithms: TCryptoLibStringArray;
-begin
-  Result := Foids.Keys.ToArray;
-end;
-
-class function TSignerUtilities.GetEncodingName
-  (const oid: IDerObjectIdentifier): String;
-begin
-  Falgorithms.TryGetValue(oid.id, Result);
-end;
-
-class function TSignerUtilities.GetObjectIdentifier(mechanism: String)
-  : IDerObjectIdentifier;
 var
-  aliased: string;
+  LList: TList<String>;
+  LKey: String;
 begin
-  if (mechanism = '') then
-  begin
+  LList := TList<String>.Create;
+  try
+    for LKey in FOids.Keys do
+      LList.Add(LKey);
+    Result := LList.ToArray;
+  finally
+    LList.Free;
+  end;
+end;
+
+class function TSignerUtilities.GetEncodingName(const AOid: IDerObjectIdentifier): String;
+begin
+  Result := TCollectionUtilities.GetValueOrNull<IDerObjectIdentifier, String>(FAlgorithmOidMap, AOid);
+end;
+
+class function TSignerUtilities.GetObjectIdentifier(const AMechanism: String): IDerObjectIdentifier;
+var
+  LCanonical: String;
+begin
+  if AMechanism = '' then
     raise EArgumentNilCryptoLibException.CreateRes(@SMechanismNil);
-  end;
-
-  mechanism := UpperCase(mechanism);
-  if (Falgorithms.TryGetValue(mechanism, aliased)) then
-  begin
-    mechanism := aliased;
-  end;
-
-  Foids.TryGetValue(mechanism, Result);
+  LCanonical := TCollectionUtilities.GetValueOrKey<String>(FAlgorithmMap, UpperCase(AMechanism));
+  FOids.TryGetValue(LCanonical, Result);
 end;
 
-class function TSignerUtilities.GetSigner
-  (const id: IDerObjectIdentifier): ISigner;
-begin
-  Result := GetSigner(id.id);
-end;
-
-class function TSignerUtilities.GetSigner(algorithm: String): ISigner;
+class function TSignerUtilities.GetSigner(const AOid: IDerObjectIdentifier): ISigner;
 var
-  mechanism, DigestName: string;
-  DigestInstance: IDigest;
+  LMechanism: String;
+  LSigner: ISigner;
 begin
-  if (algorithm = '') then
-  begin
+  if AOid = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
-  end;
 
-  algorithm := UpperCase(algorithm);
-
-  if (not Falgorithms.TryGetValue(algorithm, mechanism)) then
+  if FAlgorithmOidMap.TryGetValue(AOid, LMechanism) then
   begin
-    mechanism := algorithm;
-  end;
-
-  if (TStringUtils.BeginsWith(mechanism, 'Ed25519', True)) then
-  begin
-    if TStringUtils.EndsWith(mechanism, 'Blake2B', True) then
+    LSigner := GetSignerForMechanism(LMechanism);
+    if LSigner <> nil then
     begin
-      if (mechanism = 'Ed25519Blake2B') then
-      begin
-        Result := TEd25519Signer.Create(TEd25519Blake2B.Create()
-          as IEd25519Blake2B) as IEd25519Signer;
-        Exit;
-      end;
-      if (mechanism = 'Ed25519ctxBlake2B') then
-      begin
-        Result := TEd25519ctxSigner.Create(TEd25519Blake2B.Create()
-          as IEd25519Blake2B, Nil) as IEd25519ctxSigner;
-        Exit;
-      end;
-      if (mechanism = 'Ed25519phBlake2B') then
-      begin
-        Result := TEd25519phSigner.Create(TEd25519Blake2B.Create()
-          as IEd25519Blake2B, Nil) as IEd25519phSigner;
-        Exit;
-      end;
-    end
-    else
-    begin
-      if (mechanism = 'Ed25519') then
-      begin
-        Result := TEd25519Signer.Create(TEd25519.Create() as IEd25519)
-          as IEd25519Signer;
-        Exit;
-      end;
-      if (mechanism = 'Ed25519ctx') then
-      begin
-        Result := TEd25519ctxSigner.Create(TEd25519.Create() as IEd25519, Nil)
-          as IEd25519ctxSigner;
-        Exit;
-      end;
-      if (mechanism = 'Ed25519ph') then
-      begin
-        Result := TEd25519phSigner.Create(TEd25519.Create() as IEd25519, Nil)
-          as IEd25519phSigner;
-        Exit;
-      end;
+      Result := LSigner;
+      Exit;
     end;
   end;
 
-  if TStringUtils.EndsWith(mechanism, 'withDSA', True) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := (TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner,
-      DigestInstance));
-    Exit;
-  end;
-
-  if TStringUtils.EndsWith(mechanism, 'withECDSA', false) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      DigestInstance));
-    Exit;
-  end;
-
-  if (TStringUtils.EndsWith(mechanism, 'withCVC-ECDSA', True) or
-    TStringUtils.EndsWith(mechanism, 'withPLAIN-ECDSA', True)) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := (TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner,
-      DigestInstance, TPlainDsaEncoding.Instance));
-    Exit;
-  end;
-
-  if TStringUtils.EndsWith(mechanism, 'withECNR', True) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := (TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner,
-      DigestInstance));
-    Exit;
-  end;
-
-  if TStringUtils.EndsWith(mechanism, 'withECSCHNORRSIPA', True) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := TSchnorrDigestSigner.Create(TECSchnorrSipaSigner.Create()
-      as IECSchnorrSipaSigner, DigestInstance, TPlainSchnorrEncoding.Instance);
-    Exit;
-  end;
-
-  if TStringUtils.EndsWith(mechanism, 'withRSAandMGF1', True) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := TPssSigner.Create(TRsaBlindedEngine.Create(), DigestInstance);
-    Exit;
-  end;
-
-  // TODO: PSSwithRSA - The Sha1Digest here is a default.
-  // if (mechanism = 'PSSwithRSA') then
-  // begin
-  //   Result := TPssSigner.Create(TRsaBlindedEngine.Create(),
-  //     TDigestUtilities.GetDigest('SHA-1'));
-  //   Exit;
-  // end;
-
-  if TStringUtils.EndsWith(mechanism, 'withRSA', True) then
-  begin
-    DigestName := System.Copy(mechanism, 1, TStringUtils.LastIndexOf(mechanism,
-      'with', True));
-
-    DigestInstance := TDigestUtilities.GetDigest(DigestName);
-    Result := TRsaDigestSigner.Create(DigestInstance) as IRsaDigestSigner;
-    Exit;
-  end;
-
-  if (mechanism = 'RSA') then
-  begin
-    Result := TGenericSigner.Create(
-      TPkcs1Encoding.Create(TRsaBlindedEngine.Create()),
-      TDigestUtilities.GetDigest('NONE'));
-    Exit;
-  end;
-
-  // TODO: RAWRSASSA-PSS - Add support for other parameter settings
-  // if (mechanism = 'RAWRSASSA-PSS') then
-  // begin
-  //   Result := TPssSigner.CreateRawSigner(TRsaBlindedEngine.Create(),
-  //     TDigestUtilities.GetDigest('SHA-1'));
-  //   Exit;
-  // end;
-
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm,
-    [algorithm]);
-
+  raise ESecurityUtilityCryptoLibException.CreateRes(@SUnRecognizedAlgorithm);
 end;
 
-class function TSignerUtilities.InitSigner(const algorithm: String;
-  forSigning: Boolean; const privateKey: IAsymmetricKeyParameter;
-  const random: ISecureRandom): ISigner;
+class function TSignerUtilities.GetSigner(const AAlgorithm: String): ISigner;
+var
+  LMechanism: String;
+  LSigner: ISigner;
 begin
-  Result := TSignerUtilities.GetSigner(algorithm);
-  Result.Init(forSigning, TParameterUtilities.WithRandom(privateKey, random));
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  LMechanism := GetMechanism(AAlgorithm);
+  if LMechanism = '' then
+    LMechanism := TPlatform.ToUpperInvariant(AAlgorithm);
+
+  LSigner := GetSignerForMechanism(LMechanism);
+  if LSigner <> nil then
+  begin
+    Result := LSigner;
+    Exit;
+  end;
+
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm, [AAlgorithm]);
 end;
 
-class function TSignerUtilities.InitSigner(const algorithmOid
-  : IDerObjectIdentifier; forSigning: Boolean;
-  const privateKey: IAsymmetricKeyParameter;
-  const random: ISecureRandom): ISigner;
+class function TSignerUtilities.GetDefaultX509Parameters(const AOid: IDerObjectIdentifier): IAsn1Encodable;
+var
+  LMechanism: String;
 begin
-  Result := InitSigner(algorithmOid.id, forSigning, privateKey, random);
+  if AOid = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  if FAlgorithmOidMap.TryGetValue(AOid, LMechanism) then
+    Result := GetDefaultX509ParametersForMechanism(LMechanism)
+  else
+    Result := TDerNull.Instance;
+end;
+
+class function TSignerUtilities.GetDefaultX509Parameters(const AAlgorithm: String): IAsn1Encodable;
+var
+  LMechanism: String;
+begin
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  LMechanism := GetMechanism(AAlgorithm);
+  if LMechanism = '' then
+    LMechanism := AAlgorithm;
+
+  Result := GetDefaultX509ParametersForMechanism(LMechanism);
+end;
+
+class function TSignerUtilities.GetDefaultX509ParametersForMechanism(const AMechanism: String): IAsn1Encodable;
+var
+  LDigestName: String;
+begin
+  if AMechanism = 'PSSwithRSA' then
+  begin
+    // TODO The Sha1Digest here is a default. In JCE version, the actual digest
+    // to be used can be overridden by subsequent parameter settings.
+    Result := GetPssX509Parameters('SHA-1');
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withRSAandMGF1') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    Result := GetPssX509Parameters(LDigestName);
+    Exit;
+  end;
+
+  Result := TDerNull.Instance;
+end;
+
+class function TSignerUtilities.GetPssX509Parameters(const ADigestName: String): IAsn1Encodable;
+var
+  LHashAlgorithm: IAlgorithmIdentifier;
+  LMaskGenAlgorithm: IAlgorithmIdentifier;
+  LSaltLen: Int32;
+  LDigest: IDigest;
+begin
+  LHashAlgorithm := TAlgorithmIdentifier.Create(
+    TDigestUtilities.GetObjectIdentifier(ADigestName), TDerNull.Instance);
+
+  // TODO Is it possible for the MGF hash alg to be different from the PSS one?
+  LMaskGenAlgorithm := TAlgorithmIdentifier.Create(
+    TPkcsObjectIdentifiers.IdMgf1, LHashAlgorithm);
+
+  LDigest := TDigestUtilities.GetDigest(ADigestName);
+  LSaltLen := LDigest.GetDigestSize();
+  Result := TRsassaPssParameters.Create(LHashAlgorithm, LMaskGenAlgorithm,
+    TDerInteger.ValueOf(LSaltLen), TRsassaPssParameters.DefaultTrailerField);
+end;
+
+class function TSignerUtilities.GetSignerForMechanism(const AMechanism: String): ISigner;
+var
+  LDigestName: String;
+  LDigest: IDigest;
+  LWithPos, LEndPos: Int32;
+  LCipherName: String;
+  // LX931: String;  // For X9.31 section (commented out)
+  // LCipher: IAsymmetricBlockCipher;  // For X9.31 section (commented out)
+begin
+  Result := nil;
+
+  // EdDSA algorithms
+  if TPlatform.StartsWith(AMechanism, 'Ed') then
+  begin
+    if AMechanism = 'Ed25519' then
+    begin
+      Result := TEd25519Signer.Create() as IEd25519Signer;
+      Exit;
+    end;
+    if AMechanism = 'Ed25519ctx' then
+    begin
+      Result := TEd25519CtxSigner.Create(nil) as IEd25519CtxSigner;
+      Exit;
+    end;
+    if AMechanism = 'Ed25519ph' then
+    begin
+      Result := TEd25519PhSigner.Create(nil) as IEd25519PhSigner;
+      Exit;
+    end;
+  end;
+
+  if AMechanism = 'RSA' then
+  begin
+    Result := TGenericSigner.Create(TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine) as IPkcs1Encoding, TDigestUtilities.GetDigest('NONE'));
+    Exit;
+  end;
+
+  if AMechanism = 'RAWRSASSA-PSS' then
+  begin
+    // TODO Add support for other parameter settings
+    Result := TPssSigner.CreateRawSigner(TRsaBlindedEngine.Create() as IRsaBlindedEngine, TDigestUtilities.GetDigest('SHA-1'));
+    Exit;
+  end;
+
+  if AMechanism = 'PSSwithRSA' then
+  begin
+    // TODO The Sha1Digest here is a default. In JCE version, the actual digest
+    // to be used can be overridden by subsequent parameter settings.
+    Result := TPssSigner.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine, TDigestUtilities.GetDigest('SHA-1'));
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withRSA') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigest := TDigestUtilities.GetDigest(LDigestName);
+    Result := TRsaDigestSigner.Create(LDigest);
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withRSAandMGF1') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigest := TDigestUtilities.GetDigest(LDigestName);
+    Result := TPssSigner.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine, LDigest);
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withDSA') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigest := TDigestUtilities.GetDigest(LDigestName);
+    Result := TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner, LDigest);
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withECDSA') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigest := TDigestUtilities.GetDigest(LDigestName);
+    Result := TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner, LDigest);
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withCVC-ECDSA') or TPlatform.EndsWith(AMechanism, 'withPLAIN-ECDSA') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigest := TDigestUtilities.GetDigest(LDigestName);
+    Result := TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner, LDigest, TPlainDsaEncoding.Instance);
+    Exit;
+  end;
+
+  if TPlatform.EndsWith(AMechanism, 'withECNR') then
+  begin
+    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigest := TDigestUtilities.GetDigest(LDigestName);
+    Result := TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner, LDigest);
+    Exit;
+  end;
+
+  // Skip SM2, GOST3410, ECGOST3410, X9.31, MLDsa, SlhDsa as requested
+
+  // ISO9796-2 is not yet implemented
+  // if TPlatform.EndsWith(AMechanism, '/ISO9796-2') then
+  // begin
+  //   if AMechanism = 'SHA1WITHRSA/ISO9796-2' then
+  //   begin
+  //     Result := TIso9796d2Signer.Create(TRsaBlindedEngine.Create(), TDigestUtilities.GetDigest('SHA-1'), True);
+  //     Exit;
+  //   end;
+  //   if AMechanism = 'MD5WITHRSA/ISO9796-2' then
+  //   begin
+  //     Result := TIso9796d2Signer.Create(TRsaBlindedEngine.Create(), TDigestUtilities.GetDigest('MD5'), True);
+  //     Exit;
+  //   end;
+  //   if AMechanism = 'RIPEMD160WITHRSA/ISO9796-2' then
+  //   begin
+  //     Result := TIso9796d2Signer.Create(TRsaBlindedEngine.Create(), TDigestUtilities.GetDigest('RIPEMD160'), True);
+  //     Exit;
+  //   end;
+  // end;
+
+  // X9.31 section - commented out as requested
+  // if TPlatform.EndsWith(AMechanism, '/X9.31') then
+  // begin
+  //   LX931 := TPlatform.Substring(AMechanism, 1, System.Length(AMechanism) - System.Length('/X9.31'));
+  //   LWithPos := TPlatform.IndexOf(LX931, 'WITH');
+  //   if LWithPos > 0 then
+  //   begin
+  //     LEndPos := LWithPos + System.Length('WITH');
+  //
+  //     LCipherName := TPlatform.Substring(LX931, LEndPos, System.Length(LX931) - LEndPos + 1);
+  //     if LCipherName = 'RSA' then
+  //     begin
+  //       LCipher := TRsaBlindedEngine.Create();
+  //
+  //       LDigestName := TPlatform.Substring(LX931, 1, LWithPos - 1);
+  //       LDigest := TDigestUtilities.GetDigest(LDigestName);
+  //
+  //       Result := TX931Signer.Create(LCipher, LDigest);
+  //       Exit;
+  //     end;
+  //   end;
+  // end;
+end;
+
+class function TSignerUtilities.InitSigner(const AAlgorithmOid: IDerObjectIdentifier;
+  AForSigning: Boolean; const APrivateKey: IAsymmetricKeyParameter;
+  const ARandom: ISecureRandom): ISigner;
+var
+  LMechanism: String;
+begin
+  if AAlgorithmOid = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  if not FAlgorithmOidMap.TryGetValue(AAlgorithmOid, LMechanism) then
+    raise ESecurityUtilityCryptoLibException.CreateRes(@SUnRecognizedAlgorithm);
+
+  Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom);
+end;
+
+class function TSignerUtilities.InitSigner(const AAlgorithm: String; AForSigning: Boolean;
+  const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner;
+var
+  LMechanism: String;
+begin
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  LMechanism := GetMechanism(AAlgorithm);
+  if LMechanism = '' then
+    LMechanism := TPlatform.ToUpperInvariant(AAlgorithm);
+
+  Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom);
+end;
+
+class function TSignerUtilities.InitSignerForMechanism(const AMechanism: String;
+  AForSigning: Boolean; const AKey: IAsymmetricKeyParameter;
+  const ARandom: ISecureRandom): ISigner;
+var
+  LSigner: ISigner;
+  LCipherParameters: ICipherParameters;
+begin
+  LSigner := GetSignerForMechanism(AMechanism);
+  if LSigner = nil then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm, [AMechanism]);
+
+  LCipherParameters := AKey;
+  if AForSigning and (not FNoRandom.ContainsKey(AMechanism)) then
+  begin
+    LCipherParameters := TParameterUtilities.WithRandom(LCipherParameters, ARandom);
+  end;
+
+  LSigner.Init(AForSigning, LCipherParameters);
+  Result := LSigner;
 end;
 
 end.

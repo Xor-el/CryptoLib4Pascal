@@ -305,9 +305,9 @@ begin
   DoTestHMac(TNistObjectIdentifiers.IdHMacWithSha3_512.Id, 512,
     FoutputSha3_512);
 
-  DoTestHMac(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.Id,
+  DoTestHMac(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_256.ID,
     256, FoutputGost2012_256);
-  DoTestHMac(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.Id,
+  DoTestHMac(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512.ID,
     512, FoutputGost2012_512);
 
   DoTestExceptions();

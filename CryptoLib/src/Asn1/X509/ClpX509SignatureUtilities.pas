@@ -189,12 +189,12 @@ begin
   FAlgorithms.Add('SHA512WITHECDSA', TX9ObjectIdentifiers.ECDsaWithSha512);
 
   // BSI Plain ECDSA algorithms
-  FAlgorithms.Add('SHA1withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_SHA1);
-  FAlgorithms.Add('SHA224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA224);
-  FAlgorithms.Add('SHA256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA256);
-  FAlgorithms.Add('SHA384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA384);
-  FAlgorithms.Add('SHA512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA512);
-  FAlgorithms.Add('RIPEMD160withPLAIN-ECDSA', TBsiObjectIdentifiers.ecdsa_plain_RIPEMD160);
+  FAlgorithms.Add('SHA1withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha1);
+  FAlgorithms.Add('SHA224withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha224);
+  FAlgorithms.Add('SHA256withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha256);
+  FAlgorithms.Add('SHA384withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha384);
+  FAlgorithms.Add('SHA512withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha512);
+  FAlgorithms.Add('RIPEMD160withPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainRipeMD160);
 
   // GOST algorithms
   FAlgorithms.Add('GOST3411WITHGOST3410', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
@@ -233,10 +233,10 @@ begin
   AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha384);
   AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha512);
 
-  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA224);
-  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA256);
-  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA384);
-  AddNoParams(TBsiObjectIdentifiers.EcdsaPlain_SHA512);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha224);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha256);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha384);
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha512);
 
   //
   // RFC 4491
@@ -288,16 +288,16 @@ begin
   //
   // BSI Plain ECDSA with SHA3
   //
-  AddAlgorithm('SHA3-224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_224, True);
-  AddAlgorithm('SHA3-256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_256, True);
-  AddAlgorithm('SHA3-384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_384, True);
-  AddAlgorithm('SHA3-512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlain_SHA3_512, True);
+  AddAlgorithm('SHA3-224WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_224, True);
+  AddAlgorithm('SHA3-256WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_256, True);
+  AddAlgorithm('SHA3-384WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_384, True);
+  AddAlgorithm('SHA3-512WITHPLAIN-ECDSA', TBsiObjectIdentifiers.EcdsaPlainSha3_512, True);
 
   //
   // EdDSA
   //
-  AddAlgorithm('Ed25519', TEdECObjectIdentifiers.id_Ed25519, True);
-  AddAlgorithm('Ed448', TEdECObjectIdentifiers.id_Ed448, True);
+  AddAlgorithm('Ed25519', TEdECObjectIdentifiers.IdEd25519, True);
+  AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, True);
 end;
 
 class function TX509SignatureUtilities.GetDigestName(const ADigestAlgOid: IDerObjectIdentifier): String;
@@ -326,9 +326,9 @@ begin
     Result := 'RIPEMD256'
   else if TCryptoProObjectIdentifiers.GostR3411.Equals(ADigestAlgOid) then
     Result := 'GOST3411'
-  else if TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_256.Equals(ADigestAlgOid) then
+  else if TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256.Equals(ADigestAlgOid) then
     Result := 'GOST3411-2012-256'
-  else if TRosstandartObjectIdentifiers.id_tc26_gost_3411_12_512.Equals(ADigestAlgOid) then
+  else if TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512.Equals(ADigestAlgOid) then
     Result := 'GOST3411-2012-512'
   else
     Result := ADigestAlgOid.Id;

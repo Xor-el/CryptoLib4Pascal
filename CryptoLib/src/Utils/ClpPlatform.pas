@@ -50,15 +50,19 @@ type
     /// <summary>
     /// Check if a string starts with a specified value (case-sensitive).
     /// </summary>
-    class function StartsWith(const AValue: String; const AStr: String): Boolean; overload; static;
+    class function StartsWith(const ASource: String; const APrefix: String): Boolean; overload; static;
     /// <summary>
     /// Check if a string starts with a specified value (optionally case-insensitive).
     /// </summary>
-    class function StartsWith(const AValue: String; const AStr: String; AIgnoreCase: Boolean): Boolean; overload; static;
+    class function StartsWith(const ASource, APrefix: String; AIgnoreCase: Boolean): Boolean; overload; static;
     /// <summary>
     /// Convert string to lowercase using invariant culture.
     /// </summary>
     class function ToLowerInvariant(const AStr: String): String; static;
+    /// <summary>
+    /// Convert string to uppercase using invariant culture.
+    /// </summary>
+    class function ToUpperInvariant(const AStr: String): String; static;
     /// <summary>
     /// Find the index of a character in a string (1-based, returns 0 if not found).
     /// </summary>
@@ -87,6 +91,20 @@ type
     /// Find the last index of a substring in a string (1-based, returns 0 if not found).
     /// </summary>
     class function LastIndexOf(const ASource: String; const AValue: String): Int32; static;
+    /// <summary>
+    /// Returns a substring from AStartIndex (1-based) to the end of the string.
+    /// If AStartIndex is less than 1, it is treated as 1. If AStartIndex is greater
+    /// than the string length, returns an empty string.
+    /// </summary>
+    class function Substring(const AStr: String; AStartIndex: Int32): String; overload; static;
+    /// <summary>
+    /// Returns a substring of ACount characters starting at AStartIndex (1-based).
+    /// If AStartIndex is less than 1, it is treated as 1. If AStartIndex is greater
+    /// than the string length, returns an empty string. If ACount would exceed the
+    /// remaining characters, returns from AStartIndex to the end of the string.
+    /// If ACount is less than or equal to 0, returns an empty string.
+    /// </summary>
+    class function Substring(const AStr: String; AStartIndex: Int32; ACount: Int32): String; overload; static;
     /// <summary>
     /// Check if the current process is 64-bit.
     /// </summary>
@@ -134,33 +152,38 @@ begin
   Result := SysUtils.Trim(AStr);
 end;
 
-class function TPlatform.StartsWith(const AValue: String; const AStr: String): Boolean;
+class function TPlatform.StartsWith(const ASource: String; const APrefix: String): Boolean;
 begin
-  Result := StartsWith(AValue, AStr, False);
+  Result := StartsWith(ASource, APrefix, False);
 end;
 
-class function TPlatform.StartsWith(const AValue: String; const AStr: String; AIgnoreCase: Boolean): Boolean;
+class function TPlatform.StartsWith(const ASource, APrefix: String; AIgnoreCase: Boolean): Boolean;
 var
-  LValueLen, LStrLen: Int32;
+  LPrefixLen, LSourceLen: Int32;
   LSubStr: String;
 begin
-  LValueLen := System.Length(AValue);
-  LStrLen := System.Length(AStr);
-  if (LValueLen = 0) or (LStrLen < LValueLen) then
-  begin
-    Result := False;
-    Exit;
-  end;
-  LSubStr := System.Copy(AStr, 1, LValueLen);
+  LPrefixLen := System.Length(APrefix);
+  LSourceLen := System.Length(ASource);
+
+  if (LPrefixLen = 0) or (LPrefixLen > LSourceLen) then
+    Exit(False);
+
+  LSubStr := System.Copy(ASource, 1, LPrefixLen);
+
   if AIgnoreCase then
-    Result := SameText(LSubStr, AValue)
+    Result := SameText(LSubStr, APrefix)
   else
-    Result := (LSubStr = AValue);
+    Result := (LSubStr = APrefix);
 end;
 
 class function TPlatform.ToLowerInvariant(const AStr: String): String;
 begin
   Result := LowerCase(AStr);
+end;
+
+class function TPlatform.ToUpperInvariant(const AStr: String): String;
+begin
+  Result := UpperCase(AStr);
 end;
 
 class function TPlatform.IndexOf(const ASource: String; AValue: Char): Int32;
@@ -265,6 +288,39 @@ begin
   end;
   
   Result := 0;  // Not found
+end;
+
+class function TPlatform.Substring(const AStr: String; AStartIndex: Int32): String;
+var
+  LLen: Int32;
+begin
+  LLen := System.Length(AStr);
+  Result := Substring(AStr, AStartIndex, LLen - AStartIndex + 1);
+end;
+
+class function TPlatform.Substring(const AStr: String; AStartIndex: Int32;
+  ACount: Int32): String;
+var
+  LLen: Int32;
+  LActualCount: Int32;
+begin
+  LLen := System.Length(AStr);
+  if (LLen = 0) or (ACount <= 0) then
+  begin
+    Result := '';
+    Exit;
+  end;
+  if AStartIndex < 1 then
+    AStartIndex := 1;
+  if AStartIndex > LLen then
+  begin
+    Result := '';
+    Exit;
+  end;
+  LActualCount := ACount;
+  if AStartIndex + LActualCount - 1 > LLen then
+    LActualCount := LLen - AStartIndex + 1;
+  Result := System.Copy(AStr, AStartIndex, LActualCount);
 end;
 
 class function TPlatform.Is64BitProcess: Boolean;

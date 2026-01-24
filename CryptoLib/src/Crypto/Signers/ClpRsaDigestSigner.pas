@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpCryptoLibComparers,
   ClpICipherParameters,
   ClpIAsymmetricKeyParameter,
   ClpIParametersWithRandom,
@@ -117,7 +118,8 @@ implementation
 
 class constructor TRsaDigestSigner.CreateRsaDigestSigner;
 begin
-  FOidMap := TDictionary<String, IDerObjectIdentifier>.Create();
+  FOidMap := TDictionary<String, IDerObjectIdentifier>.Create(
+    TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
   FOidMap.Add('RIPEMD128', TTeleTrusTObjectIdentifiers.RipeMD128);
   FOidMap.Add('RIPEMD160', TTeleTrusTObjectIdentifiers.RipeMD160);
@@ -313,9 +315,8 @@ begin
     Exit;
   end;
 
-  //SetLength(hash, FDigest.GetDigestSize);
-  //FDigest.DoFinal(hash, 0);
-  hash := FDigest.DoFinal();
+  SetLength(hash, FDigest.GetDigestSize);
+  FDigest.DoFinal(hash, 0);
 
   if FDigestAlgID = nil then
   begin

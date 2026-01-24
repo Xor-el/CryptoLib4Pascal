@@ -25,7 +25,19 @@ uses
   SysUtils,
   TypInfo,
   Generics.Collections,
+  ClpAsn1Objects,
+  ClpCollectionUtilities,
+  ClpCryptoLibComparers,
   ClpCryptoLibTypes,
+  ClpDigestUtilities,
+  ClpEnumUtilities,
+  ClpIAsn1Objects,
+  ClpIBlockCipherPadding,
+  ClpIBlockCipher,
+  ClpIBufferedCipher,
+  ClpIStreamCipher,
+  ClpNistObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
   ClpStringUtils,
   ClpPaddingModes,
   ClpIPaddingModes,
@@ -39,16 +51,12 @@ uses
   ClpIBufferedAsymmetricBlockCipher,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
-  ClpNistObjectIdentifiers,
-  ClpPkcsObjectIdentifiers,
-  ClpIAsn1Objects,
-  ClpIBufferedCipher,
-  ClpIBlockCipher,
-  ClpIStreamCipher,
   ClpAesEngine,
   ClpIAesEngine,
   ClpBlowfishEngine,
   ClpIBlowfishEngine,
+  ClpChaChaEngine,
+  ClpIChaChaEngine,
   ClpSalsa20Engine,
   ClpISalsa20Engine,
   ClpRijndaelEngine,
@@ -61,9 +69,7 @@ uses
   ClpIISO9796d1Encoding,
   ClpRsaBlindedEngine,
   ClpIRsaBlindedEngine,
-  ClpIAsymmetricBlockCipher,
-  ClpDigestUtilities,
-  ClpIBlockCipherPadding;
+  ClpIAsymmetricBlockCipher;
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
@@ -73,6 +79,8 @@ resourcestring
     'Warning: SIC-Mode Can Become a TwoTime-Pad if the Blocksize of the Cipher is Too Small. Use a Cipher With a Block Size of at Least 128 bits (e.g. AES)';
   SModeAndPaddingNotNeededStreamCipher =
     'Modes and Paddings Not Used for Stream Ciphers';
+  SOidNotRecognised = 'Cipher OID not recognised.';
+  SOidNil = 'OID Cannot be Nil';
 
 type
 
@@ -84,44 +92,66 @@ type
   strict private
 
   type
-{$SCOPEDENUMS ON}
-    TCipherAlgorithm = (AES, BLOWFISH, SALSA20, RIJNDAEL, RSA);
-    TCipherMode = (NONE, CBC, CFB, CTR, CTS, ECB, OFB, SIC);
-    TCipherPadding = (NOPADDING, RAW, ISO10126PADDING, ISO10126D2PADDING,
-      ISO10126_2PADDING, ISO7816_4PADDING, ISO9797_1PADDING, ISO9796_1,
-      ISO9796_1PADDING, OAEP, OAEPPADDING, OAEPWITHSHA1ANDMGF1PADDING,
-      OAEPWITHSHA_1ANDMGF1PADDING, OAEPWITHSHA256ANDMGF1PADDING,
-      OAEPWITHSHA_256ANDMGF1PADDING, PKCS1, PKCS1PADDING, PKCS5, PKCS5PADDING,
-      PKCS7, PKCS7PADDING, TBCPADDING, WITHCTS, X923PADDING, ZEROBYTEPADDING);
-{$SCOPEDENUMS OFF}
+    TCipherAlgorithm = (
+      AES,
+      BLOWFISH,
+      CHACHA,
+      SALSA20,
+      RIJNDAEL,
+      RSA);
+
+    TCipherMode = (
+      NONE,
+      CBC,
+      CFB,
+      CTR,
+      CTS,
+      ECB,
+      OFB,
+      SIC);
+
+    TCipherPadding = (
+      NOPADDING,
+      RAW,
+      ISO10126PADDING,
+      ISO10126D2PADDING,
+      ISO10126_2PADDING,
+      ISO7816_4PADDING,
+      ISO9797_1PADDING,
+      ISO9796_1,
+      ISO9796_1PADDING,
+      OAEP,
+      OAEPPADDING,
+      OAEPWITHSHA1ANDMGF1PADDING,
+      OAEPWITHSHA_1ANDMGF1PADDING,
+      OAEPWITHSHA256ANDMGF1PADDING,
+      OAEPWITHSHA_256ANDMGF1PADDING,
+      PKCS1,
+      PKCS1PADDING,
+      PKCS5,
+      PKCS5PADDING,
+      PKCS7,
+      PKCS7PADDING,
+      TBCPADDING,
+      WITHCTS,
+      X923PADDING,
+      ZEROBYTEPADDING);
 
   class var
+      FAlgorithmMap: TDictionary<String, String>;
+      FAlgorithmOidMap: TDictionary<IDerObjectIdentifier, String>;
 
-    Falgorithms: TDictionary<String, String>;
-    Foids: TDictionary<String, IDerObjectIdentifier>;
+    class function GetMechanism(const AAlgorithm: String): String; static;
+    class function GetCipherForMechanism(const AMechanism: String): IBufferedCipher; static;
 
-    class function GetAlgorithms: TCryptoLibStringArray; static; inline;
-    class function GetDigitIndex(const s: String): Int32; static; inline;
-
-    class procedure Boot(); static;
-    class constructor CreateCipherUtilities();
-    class destructor DestroyCipherUtilities();
+    class procedure Boot; static;
+    class constructor Create;
+    class destructor Destroy;
 
   public
-    /// <summary>
-    /// Returns a ObjectIdentifier for a give encoding.
-    /// </summary>
-    /// <param name="mechanism">A string representation of the encoding.</param>
-    /// <returns>A DerObjectIdentifier, null if the Oid is not available.</returns>
-    // TODO Don't really want to support this
-    class function GetObjectIdentifier(mechanism: String)
-      : IDerObjectIdentifier; static;
-    class function GetCipher(algorithm: String): IBufferedCipher;
-      overload; static;
-    class function GetCipher(const oid: IDerObjectIdentifier): IBufferedCipher;
-      overload; static; inline;
-
-    class property Algorithms: TCryptoLibStringArray read GetAlgorithms;
+    class function GetAlgorithmName(const AOid: IDerObjectIdentifier): String; static;
+    class function GetCipher(const AAlgorithm: String): IBufferedCipher; overload; static;
+    class function GetCipher(const AOid: IDerObjectIdentifier): IBufferedCipher; overload; static;
   end;
 
 implementation
@@ -130,428 +160,301 @@ implementation
 
 class procedure TCipherUtilities.Boot;
 begin
-  Falgorithms := TDictionary<string, string>.Create();
-  Foids := TDictionary<string, IDerObjectIdentifier>.Create();
+  FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
 
   TNistObjectIdentifiers.Boot;
-
-  // TODO Flesh out the list of aliases
-
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Ecb.Id,
-    'AES/ECB/PKCS7PADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Ecb.Id,
-    'AES/ECB/PKCS7PADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Ecb.Id,
-    'AES/ECB/PKCS7PADDING');
-  Falgorithms.Add('AES//PKCS7', 'AES/ECB/PKCS7PADDING');
-  Falgorithms.Add('AES//PKCS7PADDING', 'AES/ECB/PKCS7PADDING');
-  Falgorithms.Add('AES//PKCS5', 'AES/ECB/PKCS7PADDING');
-  Falgorithms.Add('AES//PKCS5PADDING', 'AES/ECB/PKCS7PADDING');
-
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Cbc.Id,
-    'AES/CBC/PKCS7PADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Cbc.Id,
-    'AES/CBC/PKCS7PADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Cbc.Id,
-    'AES/CBC/PKCS7PADDING');
-
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Ofb.Id, 'AES/OFB/NOPADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Ofb.Id, 'AES/OFB/NOPADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Ofb.Id, 'AES/OFB/NOPADDING');
-
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes128Cfb.Id, 'AES/CFB/NOPADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes192Cfb.Id, 'AES/CFB/NOPADDING');
-  Falgorithms.Add(TNistObjectIdentifiers.IdAes256Cfb.Id, 'AES/CFB/NOPADDING');
-
-  Falgorithms.Add('1.3.6.1.4.1.3029.1.2', 'BLOWFISH/CBC');
-
   TPkcsObjectIdentifiers.Boot;
 
-  // RSA
-  Falgorithms.Add('RSA/ECB/PKCS1', 'RSA//PKCS1PADDING');
-  Falgorithms.Add('RSA/ECB/PKCS1PADDING', 'RSA//PKCS1PADDING');
-  Falgorithms.Add(TPkcsObjectIdentifiers.RsaEncryption.Id, 'RSA//PKCS1PADDING');
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdRsaesOaep.Id, 'RSA//OAEPPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Cbc, 'AES/CBC/PKCS7PADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Cbc, 'AES/CBC/PKCS7PADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes256Cbc, 'AES/CBC/PKCS7PADDING');
 
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Cfb, 'AES/CFB/NOPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Cfb, 'AES/CFB/NOPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes256Cfb, 'AES/CFB/NOPADDING');
+
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Ecb, 'AES/ECB/PKCS7PADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Ecb, 'AES/ECB/PKCS7PADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes256Ecb, 'AES/ECB/PKCS7PADDING');
+
+  FAlgorithmMap.AddOrSetValue('AES//PKCS7', 'AES/ECB/PKCS7PADDING');
+  FAlgorithmMap.AddOrSetValue('AES//PKCS7PADDING', 'AES/ECB/PKCS7PADDING');
+  FAlgorithmMap.AddOrSetValue('AES//PKCS5', 'AES/ECB/PKCS7PADDING');
+  FAlgorithmMap.AddOrSetValue('AES//PKCS5PADDING', 'AES/ECB/PKCS7PADDING');
+
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Ofb, 'AES/OFB/NOPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Ofb, 'AES/OFB/NOPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes256Ofb, 'AES/OFB/NOPADDING');
+
+  FAlgorithmMap.AddOrSetValue('RSA/ECB/PKCS1', 'RSA//PKCS1PADDING');
+  FAlgorithmMap.AddOrSetValue('RSA/ECB/PKCS1PADDING', 'RSA//PKCS1PADDING');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.RsaEncryption, 'RSA//PKCS1PADDING');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdRsaesOaep, 'RSA//OAEPPADDING');
+
+  FAlgorithmMap.AddOrSetValue('1.3.6.1.4.1.3029.1.2', 'BLOWFISH/CBC');
+
+  FAlgorithmMap.AddOrSetValue('CHACHA20', 'CHACHA');
 end;
 
-class constructor TCipherUtilities.CreateCipherUtilities;
+class constructor TCipherUtilities.Create;
 begin
-  TCipherUtilities.Boot;
+  Boot;
 end;
 
-class destructor TCipherUtilities.DestroyCipherUtilities;
+class destructor TCipherUtilities.Destroy;
 begin
-  Falgorithms.Free;
-  Foids.Free;
+  FAlgorithmMap.Free;
+  FAlgorithmOidMap.Free;
 end;
 
-class function TCipherUtilities.GetAlgorithms: TCryptoLibStringArray;
-begin
-  Result := Foids.Keys.ToArray;
-end;
-
-class function TCipherUtilities.GetDigitIndex(const s: String): Int32;
+class function TCipherUtilities.GetMechanism(const AAlgorithm: String): String;
 var
-  i, LowPoint, HighPoint: Int32;
+  LOid: IDerObjectIdentifier;
+  LMechanism: String;
 begin
-  LowPoint := 1;
-  HighPoint := System.Length(s);
-
-  For i := LowPoint to HighPoint do
+  if FAlgorithmMap.TryGetValue(AAlgorithm, LMechanism) then
   begin
-    if (CharInSet(s[i], ['0' .. '9'])) then
+    Result := LMechanism;
+    Exit;
+  end;
+  if TDerObjectIdentifier.TryFromID(AAlgorithm, LOid) and FAlgorithmOidMap.TryGetValue(LOid, LMechanism) then
+  begin
+    Result := LMechanism;
+    Exit;
+  end;
+  Result := '';
+end;
+
+class function TCipherUtilities.GetAlgorithmName(const AOid: IDerObjectIdentifier): String;
+begin
+  Result := TCollectionUtilities.GetValueOrNull<IDerObjectIdentifier, String>(FAlgorithmOidMap, AOid);
+end;
+
+class function TCipherUtilities.GetCipherForMechanism(const AMechanism: String): IBufferedCipher;
+
+  function GetDigitIndex(const S: String): Int32;
+  var
+    I: Int32;
+  begin
+    for I := 1 to System.Length(S) do
     begin
-      Result := i;
-      Exit;
+      if CharInSet(S[I], ['0' .. '9']) then
+      begin
+        Result := I;
+        Exit;
+      end;
     end;
+    Result := -1;
   end;
-  Result := -1;
-end;
 
-class function TCipherUtilities.GetCipher(algorithm: String): IBufferedCipher;
 var
-  aliased, algorithmName, temp, paddingName, mode, modeName: string;
-  di, LowPoint, bits, HighPoint: Int32;
-  padded, CTS: Boolean;
-  parts: TCryptoLibStringArray;
-  cipherAlgorithm: TCipherAlgorithm;
-  cipherPadding: TCipherPadding;
-  cipherMode: TCipherMode;
-  blockCipher: IBlockCipher;
-  asymBlockCipher: IAsymmetricBlockCipher;
-  streamCipher: IStreamCipher;
-  padding: IBlockCipherPadding;
+  LAlgorithmName, LPaddingName, LMode, LModeName: String;
+  LDi, LBits: Int32;
+  LPadded, LCTS: Boolean;
+  LParts: TCryptoLibStringArray;
+  LCipherAlgorithm: TCipherAlgorithm;
+  LCipherPadding: TCipherPadding;
+  LCipherMode: TCipherMode;
+  LBlockCipher: IBlockCipher;
+  LAsymBlockCipher: IAsymmetricBlockCipher;
+  LStreamCipher: IStreamCipher;
+  LPadding: IBlockCipherPadding;
 begin
-  if (algorithm = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
-  end;
-  algorithm := UpperCase(algorithm);
+  Result := nil;
+  LParts := TStringUtils.SplitString(AMechanism, '/');
+  if System.Length(LParts) < 1 then
+    Exit;
 
-  if (Falgorithms.TryGetValue(algorithm, aliased)) then
-  begin
-    algorithm := aliased;
-  end;
+  LAlgorithmName := UpperCase(TCollectionUtilities.GetValueOrKey<String>(FAlgorithmMap, LParts[0]));
+  if not TEnumUtilities.TryGetEnumValue<TCipherAlgorithm>(LAlgorithmName, LCipherAlgorithm) then
+    Exit;
 
-  parts := TStringUtils.SplitString(algorithm, '/');
-
-  blockCipher := Nil;
-  asymBlockCipher := Nil;
-  streamCipher := Nil;
-
-  algorithmName := parts[0];
-
-  if (Falgorithms.TryGetValue(algorithmName, aliased)) then
-  begin
-    algorithmName := aliased;
-  end;
-
-  temp := StringReplace(algorithmName, '-', '_', [rfReplaceAll, rfIgnoreCase]);
-
-  temp := StringReplace(temp, '/', '_', [rfReplaceAll, rfIgnoreCase]);
-
-  cipherAlgorithm := TCipherAlgorithm
-    (GetEnumValue(TypeInfo(TCipherAlgorithm), temp));
-
-  case cipherAlgorithm of
+  LBlockCipher := nil;
+  LAsymBlockCipher := nil;
+  LStreamCipher := nil;
+  case LCipherAlgorithm of
     TCipherAlgorithm.AES:
-      begin
-        blockCipher := TAesEngine.Create() as IAesEngine;
-      end;
+      LBlockCipher := TAesEngine.Create() as IAesEngine;
     TCipherAlgorithm.BLOWFISH:
-      begin
-        blockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
-      end;
+      LBlockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
+    TCipherAlgorithm.CHACHA:
+      LStreamCipher := TChaChaEngine.Create() as IChaChaEngine;
     TCipherAlgorithm.RIJNDAEL:
-      begin
-        blockCipher := TRijndaelEngine.Create() as IRijndaelEngine;
-      end;
+      LBlockCipher := TRijndaelEngine.Create() as IRijndaelEngine;
     TCipherAlgorithm.SALSA20:
-      begin
-        streamCipher := TSalsa20Engine.Create() as ISalsa20Engine;
-      end;
+      LStreamCipher := TSalsa20Engine.Create() as ISalsa20Engine;
     TCipherAlgorithm.RSA:
-      begin
-        asymBlockCipher := TRsaBlindedEngine.Create() as IRsaBlindedEngine;
-      end
+      LAsymBlockCipher := TRsaBlindedEngine.Create() as IRsaBlindedEngine;
   else
-    begin
-      raise ESecurityUtilityCryptoLibException.CreateResFmt
-        (@SUnRecognizedCipher, [algorithm]);
-    end;
-  end;
-
-  if (streamCipher <> Nil) then
-  begin
-    if (System.Length(parts) > 1) then
-    begin
-      raise EArgumentCryptoLibException.CreateRes
-        (@SModeAndPaddingNotNeededStreamCipher);
-    end;
-
-    Result := TBufferedStreamCipher.Create(streamCipher)
-      as IBufferedStreamCipher;
     Exit;
   end;
 
-  CTS := False;
-  padded := true;
-  padding := Nil;
-
-  if System.Length(parts) > 2 then
+  if LStreamCipher <> nil then
   begin
-    paddingName := parts[2];
-
-    temp := StringReplace(paddingName, '-', '_', [rfReplaceAll, rfIgnoreCase]);
-
-    temp := StringReplace(temp, '/', '_', [rfReplaceAll, rfIgnoreCase]);
-
-    cipherPadding := TCipherPadding
-      (GetEnumValue(TypeInfo(TCipherPadding), temp));
-
-    case cipherPadding of
-      TCipherPadding.NOPADDING:
-        begin
-          padded := False;
-        end;
-
-      TCipherPadding.RAW:
-        begin
-          // Raw padding - do nothing
-        end;
-
-      TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING,
-        TCipherPadding.ISO10126_2PADDING:
-        begin
-          padding := TISO10126d2Padding.Create() as IISO10126d2Padding;
-        end;
-
-      TCipherPadding.ISO7816_4PADDING, TCipherPadding.ISO9797_1PADDING:
-        begin
-          padding := TISO7816d4Padding.Create() as IISO7816d4Padding;
-        end;
-
-      TCipherPadding.ISO9796_1, TCipherPadding.ISO9796_1PADDING:
-        begin
-          asymBlockCipher := TISO9796d1Encoding.Create(asymBlockCipher) as IISO9796d1Encoding;
-        end;
-
-      TCipherPadding.OAEP, TCipherPadding.OAEPPADDING:
-        begin
-          asymBlockCipher := TOaepEncoding.Create(asymBlockCipher) as IOaepEncoding;
-        end;
-
-      TCipherPadding.OAEPWITHSHA1ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_1ANDMGF1PADDING:
-        begin
-          asymBlockCipher := TOaepEncoding.Create(asymBlockCipher, TDigestUtilities.GetDigest('SHA-1')) as IOaepEncoding;
-        end;
-
-      TCipherPadding.OAEPWITHSHA256ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1PADDING:
-        begin
-          asymBlockCipher := TOaepEncoding.Create(asymBlockCipher, TDigestUtilities.GetDigest('SHA-256')) as IOaepEncoding;
-        end;
-
-      TCipherPadding.PKCS1, TCipherPadding.PKCS1PADDING:
-        begin
-          asymBlockCipher := TPkcs1Encoding.Create(asymBlockCipher) as IPkcs1Encoding;
-        end;
-
-      TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7,
-        TCipherPadding.PKCS7PADDING:
-        begin
-          padding := TPkcs7Padding.Create() as IPkcs7Padding;
-        end;
-
-      TCipherPadding.TBCPADDING:
-        begin
-          padding := TTBCPadding.Create() as ITBCPadding;
-        end;
-
-      TCipherPadding.WITHCTS:
-        begin
-          CTS := true;
-        end;
-
-      TCipherPadding.X923PADDING:
-        begin
-          padding := TX923Padding.Create() as IX923Padding;
-        end;
-
-      TCipherPadding.ZEROBYTEPADDING:
-        begin
-          padding := TZeroBytePadding.Create() as IZeroBytePadding;
-        end
-
-    else
-      begin
-        raise ESecurityUtilityCryptoLibException.CreateResFmt
-          (@SUnRecognizedCipher, [algorithm]);
-      end;
-    end;
-
+    if System.Length(LParts) > 1 then
+      raise EArgumentCryptoLibException.CreateRes(@SModeAndPaddingNotNeededStreamCipher);
+    Result := TBufferedStreamCipher.Create(LStreamCipher) as IBufferedStreamCipher;
+    Exit;
   end;
 
-  mode := '';
-  if (System.Length(parts) > 1) then
+  LCTS := False;
+  LPadded := True;
+  LPadding := nil;
+
+  if System.Length(LParts) > 2 then
   begin
-    mode := parts[1];
+    LPaddingName := LParts[2];
+    if LPaddingName = '' then
+      LCipherPadding := TCipherPadding.RAW
+    else if LPaddingName = 'X9.23PADDING' then
+      LCipherPadding := TCipherPadding.X923PADDING
+    else if not TEnumUtilities.TryGetEnumValue<TCipherPadding>(LPaddingName, LCipherPadding) then
+      Exit;
 
-    di := GetDigitIndex(mode);
-    if di >= 0 then
-    begin
-      LowPoint := 1;
-      modeName := System.Copy(mode, LowPoint, di);
-    end
+    case LCipherPadding of
+      TCipherPadding.NOPADDING:
+        LPadded := False;
+      TCipherPadding.RAW: ;
+      TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING, TCipherPadding.ISO10126_2PADDING:
+        LPadding := TISO10126d2Padding.Create() as IISO10126d2Padding;
+      TCipherPadding.ISO7816_4PADDING, TCipherPadding.ISO9797_1PADDING:
+        LPadding := TISO7816d4Padding.Create() as IISO7816d4Padding;
+      TCipherPadding.ISO9796_1, TCipherPadding.ISO9796_1PADDING:
+        LAsymBlockCipher := TISO9796d1Encoding.Create(LAsymBlockCipher) as IISO9796d1Encoding;
+      TCipherPadding.OAEP, TCipherPadding.OAEPPADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher) as IOaepEncoding;
+      TCipherPadding.OAEPWITHSHA1ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_1ANDMGF1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-1')) as IOaepEncoding;
+      TCipherPadding.OAEPWITHSHA256ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256')) as IOaepEncoding;
+      TCipherPadding.PKCS1, TCipherPadding.PKCS1PADDING:
+        LAsymBlockCipher := TPkcs1Encoding.Create(LAsymBlockCipher) as IPkcs1Encoding;
+      TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7, TCipherPadding.PKCS7PADDING:
+        LPadding := TPkcs7Padding.Create() as IPkcs7Padding;
+      TCipherPadding.TBCPADDING:
+        LPadding := TTBCPadding.Create() as ITBCPadding;
+      TCipherPadding.WITHCTS:
+        LCTS := True;
+      TCipherPadding.X923PADDING:
+        LPadding := TX923Padding.Create() as IX923Padding;
+      TCipherPadding.ZEROBYTEPADDING:
+        LPadding := TZeroBytePadding.Create() as IZeroBytePadding;
     else
-    begin
-      modeName := mode;
+      Exit;
     end;
+  end;
 
-    if modeName = '' then
-    begin
-      cipherMode := TCipherMode.NONE;
-    end
+  if System.Length(LParts) > 1 then
+  begin
+    LMode := LParts[1];
+    LDi := GetDigitIndex(LMode);
+    if LDi >= 1 then
+      LModeName := System.Copy(LMode, 1, LDi - 1)
     else
-    begin
-      temp := StringReplace(modeName, '-', '_', [rfReplaceAll, rfIgnoreCase]);
+      LModeName := LMode;
 
-      temp := StringReplace(temp, '/', '_', [rfReplaceAll, rfIgnoreCase]);
+    if LModeName = '' then
+      LCipherMode := TCipherMode.NONE
+    else if not TEnumUtilities.TryGetEnumValue<TCipherMode>(LModeName, LCipherMode) then
+      Exit;
 
-      cipherMode := TCipherMode(GetEnumValue(TypeInfo(TCipherMode), temp));
-    end;
-
-    case cipherMode of
-      TCipherMode.ECB, TCipherMode.NONE:
-        begin
-          // do nothing
-        end;
-
+    case LCipherMode of
+      TCipherMode.ECB, TCipherMode.NONE: ;
       TCipherMode.CBC:
-        begin
-          blockCipher := TCbcBlockCipher.Create(blockCipher) as ICbcBlockCipher;
-        end;
-
+        LBlockCipher := TCbcBlockCipher.Create(LBlockCipher) as ICbcBlockCipher;
       TCipherMode.CFB:
         begin
-          if (di < 0) then
-          begin
-            bits := 8 * blockCipher.GetBlockSize();
-          end
+          if LDi < 1 then
+            LBits := 8 * LBlockCipher.GetBlockSize()
           else
-          begin
-            HighPoint := System.Length(mode);
-            bits := StrToInt(System.Copy(mode, di, HighPoint - di));
-          end;
-
-          blockCipher := TCfbBlockCipher.Create(blockCipher, bits)
-            as ICfbBlockCipher;
+            LBits := StrToInt(System.Copy(LMode, LDi, System.Length(LMode) - LDi + 1));
+          LBlockCipher := TCfbBlockCipher.Create(LBlockCipher, LBits) as ICfbBlockCipher;
         end;
-
       TCipherMode.CTR:
-        begin
-          blockCipher := TSicBlockCipher.Create(blockCipher) as ISicBlockCipher;
-        end;
-
+        LBlockCipher := TSicBlockCipher.Create(LBlockCipher) as ISicBlockCipher;
       TCipherMode.CTS:
         begin
-          CTS := true;
-          blockCipher := TCbcBlockCipher.Create(blockCipher) as ICbcBlockCipher;
+          LCTS := True;
+          LBlockCipher := TCbcBlockCipher.Create(LBlockCipher) as ICbcBlockCipher;
         end;
-
       TCipherMode.OFB:
         begin
-          if (di < 0) then
-          begin
-            bits := 8 * blockCipher.GetBlockSize();
-          end
+          if LDi < 1 then
+            LBits := 8 * LBlockCipher.GetBlockSize()
           else
-          begin
-            HighPoint := System.Length(mode);
-            bits := StrToInt(System.Copy(mode, di, HighPoint - di));
-          end;
-
-          blockCipher := TOfbBlockCipher.Create(blockCipher, bits)
-            as IOfbBlockCipher;
+            LBits := StrToInt(System.Copy(LMode, LDi, System.Length(LMode) - LDi + 1));
+          LBlockCipher := TOfbBlockCipher.Create(LBlockCipher, LBits) as IOfbBlockCipher;
         end;
-
       TCipherMode.SIC:
         begin
-          if (blockCipher.GetBlockSize() < 16) then
-          begin
-            raise EArgumentCryptoLibException.CreateRes(@SSICModeWarning);
-          end;
-          blockCipher := TSicBlockCipher.Create(blockCipher) as ISicBlockCipher;
-        end
-
+          if LBlockCipher.GetBlockSize() < 16 then
+            Exit;
+          LBlockCipher := TSicBlockCipher.Create(LBlockCipher) as ISicBlockCipher;
+        end;
     else
-      begin
-        raise ESecurityUtilityCryptoLibException.CreateResFmt
-          (@SUnRecognizedCipher, [algorithm]);
-      end;
+      Exit;
     end;
   end;
 
-  if (blockCipher <> Nil) then
+  if LBlockCipher <> nil then
   begin
-
-    if (CTS) then
+    if LCTS then
     begin
-      Result := TCtsBlockCipher.Create(blockCipher) as ICtsBlockCipher;
+      Result := TCtsBlockCipher.Create(LBlockCipher) as ICtsBlockCipher;
       Exit;
     end;
-
-    if (padding <> Nil) then
+    if LPadding <> nil then
     begin
-      Result := TPaddedBufferedBlockCipher.Create(blockCipher, padding)
-        as IPaddedBufferedBlockCipher;
+      Result := TPaddedBufferedBlockCipher.Create(LBlockCipher, LPadding) as IPaddedBufferedBlockCipher;
       Exit;
     end;
-
-    if ((not padded) or (blockCipher.IsPartialBlockOkay)) then
+    if (not LPadded) or LBlockCipher.IsPartialBlockOkay then
     begin
-      Result := TBufferedBlockCipher.Create(blockCipher)
-        as IBufferedBlockCipher;
+      Result := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
       Exit;
     end;
-
-    Result := TPaddedBufferedBlockCipher.Create(blockCipher)
-      as IPaddedBufferedBlockCipher;
+    Result := TPaddedBufferedBlockCipher.Create(LBlockCipher) as IPaddedBufferedBlockCipher;
     Exit;
   end;
 
-  if (asymBlockCipher <> Nil) then
+  if LAsymBlockCipher <> nil then
   begin
-    Result := TBufferedAsymmetricBlockCipher.Create(asymBlockCipher) as IBufferedAsymmetricBlockCipher;
+    Result := TBufferedAsymmetricBlockCipher.Create(LAsymBlockCipher) as IBufferedAsymmetricBlockCipher;
     Exit;
   end;
-
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedCipher,
-    [algorithm]);
 end;
 
-class function TCipherUtilities.GetCipher(const oid: IDerObjectIdentifier)
-  : IBufferedCipher;
-begin
-  Result := GetCipher(oid.Id);
-end;
-
-class function TCipherUtilities.GetObjectIdentifier(mechanism: String)
-  : IDerObjectIdentifier;
+class function TCipherUtilities.GetCipher(const AAlgorithm: String): IBufferedCipher;
 var
-  aliased: String;
+  LMechanism: String;
+  LCipher: IBufferedCipher;
 begin
-  if (mechanism = '') then
-    raise EArgumentNilCryptoLibException.CreateRes(@SMechanismNil);
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+  LMechanism := GetMechanism(UpperCase(AAlgorithm));
+  if LMechanism = '' then
+    LMechanism := UpperCase(AAlgorithm);
 
-  mechanism := UpperCase(mechanism);
-  if Falgorithms.TryGetValue(mechanism, aliased) then
-  begin
-    mechanism := aliased;
-  end;
+  LCipher := GetCipherForMechanism(LMechanism);
+  if LCipher = nil then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedCipher, [AAlgorithm]);
+  Result := LCipher;
+end;
 
-  Foids.TryGetValue(mechanism, Result);
-
+class function TCipherUtilities.GetCipher(const AOid: IDerObjectIdentifier): IBufferedCipher;
+var
+  LMechanism: String;
+  LCipher: IBufferedCipher;
+begin
+  if AOid = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
+  if not FAlgorithmOidMap.TryGetValue(AOid, LMechanism) then
+    raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognised);
+  LCipher := GetCipherForMechanism(LMechanism);
+  if LCipher = nil then
+    raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognised);
+  Result := LCipher;
 end;
 
 end.

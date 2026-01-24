@@ -26,89 +26,76 @@ uses
   ClpIAsn1Objects;
 
 type
-
-  /// <summary>
-  /// Edwards Elliptic Curve Object Identifiers (RFC 8410)
-  /// </summary>
+  /// <summary>Edwards Elliptic Curve Object Identifiers (RFC 8410)</summary>
   TEdECObjectIdentifiers = class abstract(TObject)
-
   strict private
+    class var
+      FIsBooted: Boolean;
+      FIdEdwardsCurveAlgs, FIdX25519, FIdX448, FIdEd25519, FIdEd448: IDerObjectIdentifier;
 
-  class var
+    class function GetIdEdwardsCurveAlgs: IDerObjectIdentifier; static; inline;
+    class function GetIdX25519: IDerObjectIdentifier; static; inline;
+    class function GetIdX448: IDerObjectIdentifier; static; inline;
+    class function GetIdEd25519: IDerObjectIdentifier; static; inline;
+    class function GetIdEd448: IDerObjectIdentifier; static; inline;
 
-    FIsBooted: Boolean;
-    Fid_edwards_curve_algs, Fid_X25519, Fid_X448, Fid_Ed25519,
-      Fid_Ed448: IDerObjectIdentifier;
-
-    class constructor EdECObjectIdentifiers();
-  private
-    class function Getid_Ed25519: IDerObjectIdentifier; static; inline;
-    class function Getid_Ed448: IDerObjectIdentifier; static; inline;
-    class function Getid_edwards_curve_algs: IDerObjectIdentifier;
-      static; inline;
-    class function Getid_X25519: IDerObjectIdentifier; static; inline;
-    class function Getid_X448: IDerObjectIdentifier; static; inline;
-
+    class constructor Create;
   public
+    class property IdEdwardsCurveAlgs: IDerObjectIdentifier read GetIdEdwardsCurveAlgs;
+    class property IdX25519: IDerObjectIdentifier read GetIdX25519;
+    class property IdX448: IDerObjectIdentifier read GetIdX448;
+    class property IdEd25519: IDerObjectIdentifier read GetIdEd25519;
+    class property IdEd448: IDerObjectIdentifier read GetIdEd448;
 
-    class property id_edwards_curve_algs: IDerObjectIdentifier
-      read Getid_edwards_curve_algs;
-    class property id_X25519: IDerObjectIdentifier read Getid_X25519;
-    class property id_X448: IDerObjectIdentifier read Getid_X448;
-    class property id_Ed25519: IDerObjectIdentifier read Getid_Ed25519;
-    class property id_Ed448: IDerObjectIdentifier read Getid_Ed448;
-
-    class procedure Boot(); static;
+    class procedure Boot; static;
   end;
 
 implementation
 
 { TEdECObjectIdentifiers }
 
+class constructor TEdECObjectIdentifiers.Create;
+begin
+  Boot;
+end;
+
 class procedure TEdECObjectIdentifiers.Boot;
 begin
   if not FIsBooted then
   begin
-    Fid_edwards_curve_algs := TDerObjectIdentifier.Create('1.3.101');
-
-    Fid_X25519 := id_edwards_curve_algs.Branch('110');
-    Fid_X448 := id_edwards_curve_algs.Branch('111');
-    Fid_Ed25519 := id_edwards_curve_algs.Branch('112');
-    Fid_Ed448 := id_edwards_curve_algs.Branch('113');
+    FIdEdwardsCurveAlgs := TDerObjectIdentifier.Create('1.3.101');
+    FIdX25519 := FIdEdwardsCurveAlgs.Branch('110');
+    FIdX448 := FIdEdwardsCurveAlgs.Branch('111');
+    FIdEd25519 := FIdEdwardsCurveAlgs.Branch('112');
+    FIdEd448 := FIdEdwardsCurveAlgs.Branch('113');
 
     FIsBooted := True;
   end;
 end;
 
-class constructor TEdECObjectIdentifiers.EdECObjectIdentifiers;
+class function TEdECObjectIdentifiers.GetIdEd448: IDerObjectIdentifier;
 begin
-  TEdECObjectIdentifiers.Boot();
+  Result := FIdEd448;
 end;
 
-class function TEdECObjectIdentifiers.Getid_Ed25519: IDerObjectIdentifier;
+class function TEdECObjectIdentifiers.GetIdEd25519: IDerObjectIdentifier;
 begin
-  result := Fid_Ed25519;
+  Result := FIdEd25519;
 end;
 
-class function TEdECObjectIdentifiers.Getid_Ed448: IDerObjectIdentifier;
+class function TEdECObjectIdentifiers.GetIdEdwardsCurveAlgs: IDerObjectIdentifier;
 begin
-  result := Fid_Ed448;
+  Result := FIdEdwardsCurveAlgs;
 end;
 
-class function TEdECObjectIdentifiers.Getid_edwards_curve_algs
-  : IDerObjectIdentifier;
+class function TEdECObjectIdentifiers.GetIdX25519: IDerObjectIdentifier;
 begin
-  result := Fid_edwards_curve_algs;
+  Result := FIdX25519;
 end;
 
-class function TEdECObjectIdentifiers.Getid_X25519: IDerObjectIdentifier;
+class function TEdECObjectIdentifiers.GetIdX448: IDerObjectIdentifier;
 begin
-  result := Fid_X25519;
-end;
-
-class function TEdECObjectIdentifiers.Getid_X448: IDerObjectIdentifier;
-begin
-  result := Fid_X448;
+  Result := FIdX448;
 end;
 
 end.

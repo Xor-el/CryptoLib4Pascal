@@ -71,7 +71,13 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure TestPerform;
+    procedure TestSecCurveSect571r1;
+    procedure TestSecCurveSecp224r1;
+    procedure TestNistCurveB409;
+    procedure TestNistCurveP521;
+    procedure TestTeleTrusTCurveBrainpoolp160r1;
+    procedure TestSecNamedCurvesECDsa;
+    procedure TestTeleTrusTNamedCurvesECDsa;
   end;
 
 implementation
@@ -200,26 +206,49 @@ begin
 
 end;
 
-procedure TTestNamedCurve.TestPerform;
+procedure TTestNamedCurve.TestSecCurveSect571r1;
+begin
+  DoTestCurve('sect571r1');
+end;
+
+procedure TTestNamedCurve.TestSecCurveSecp224r1;
+begin
+  DoTestCurve('secp224r1');
+end;
+
+procedure TTestNamedCurve.TestNistCurveB409;
+begin
+  DoTestCurve('B-409');
+end;
+
+procedure TTestNamedCurve.TestNistCurveP521;
+begin
+  DoTestCurve('P-521');
+end;
+
+procedure TTestNamedCurve.TestTeleTrusTCurveBrainpoolp160r1;
+begin
+  DoTestCurve('brainpoolp160r1');
+end;
+
+procedure TTestNamedCurve.TestSecNamedCurvesECDsa;
 var
   name: string;
 begin
-  DoTestCurve('sect571r1'); // sec
-  DoTestCurve('secp224r1');
-  DoTestCurve('B-409'); // nist
-  DoTestCurve('P-521');
-  DoTestCurve('brainpoolp160r1'); // TeleTrusT
-
   for name in TSecNamedCurves.Names do
   begin
     DoTestECDsa(name);
   end;
+end;
 
+procedure TTestNamedCurve.TestTeleTrusTNamedCurvesECDsa;
+var
+  name: string;
+begin
   for name in TTeleTrusTNamedCurves.Names do
   begin
     DoTestECDsa(name);
   end;
-
 end;
 
 initialization

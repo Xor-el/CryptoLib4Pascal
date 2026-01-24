@@ -1,4 +1,4 @@
-{ *********************************************************************************** }
+﻿{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -24,225 +24,307 @@ interface
 uses
   SysUtils,
   Generics.Collections,
-  ClpKeyParameter,
+  ClpAsn1Objects,
+  ClpCollectionUtilities,
+  ClpCryptoLibComparers,
+  ClpCryptoLibTypes,
+  ClpCryptoProObjectIdentifiers,
+  ClpIAsn1Objects,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpISecureRandom,
-  ClpIAsn1Objects,
-  ClpNistObjectIdentifiers,
-  ClpParametersWithRandom,
   ClpIParametersWithRandom,
-  ClpCryptoLibTypes;
+  ClpISecureRandom,
+  ClpKeyParameter,
+  ClpMiscObjectIdentifiers,
+  ClpNistObjectIdentifiers,
+  ClpOiwObjectIdentifiers,
+  ClpParametersWithRandom,
+  ClpParametersWithIV,
+  ClpSecureRandom;
 
 resourcestring
   SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SAlgorithmNotRecognised = 'Algorithm "%s" not Recognised.';
+  SAlgorithmNotRecognised = 'Algorithm "%s" not recognised.';
+  SCouldNotProcessAsn1Parameters = 'Could not process ASN.1 parameters';
+  SCouldNotProcessAsn1ParametersFmt = 'Could not process ASN.1 parameters: %s';
+  SParametersWithContextNotImpl = 'ParametersWithContext not implemented';
 
 type
-
   TParameterUtilities = class sealed(TObject)
-
   strict private
-  class var
+    class var
+      FAlgorithms: TDictionary<String, String>;
+      FBasicIVSizes: TDictionary<String, Int32>;
 
-    Falgorithms: TDictionary<String, String>;
-    FbasicIVSizes: TDictionary<String, Int32>;
-
-    class procedure AddAlgorithm(const canonicalName: String;
-      const aliases: array of String); static;
-
-    class procedure AddBasicIVSizeEntries(size: Int32;
-      const algorithms: array of String); static;
-
-    class procedure Boot(); static;
-    class constructor CreateParameterUtilities();
-    class destructor DestroyParameterUtilities();
-
+    class procedure AddAlgorithm(const ACanonicalName: String;
+      const AAliases: array of String); static;
+    class procedure AddBasicIVSizeEntries(ASize: Int32;
+      const AAlgorithms: array of String); static;
+    class function FindBasicIVSize(const ACanonicalName: String): Int32; static;
+    class function CreateIV(const ARandom: ISecureRandom; AIVLength: Int32): TCryptoLibByteArray; static;
+    class function CreateIVOctetString(const ARandom: ISecureRandom;
+      AIVLength: Int32): IAsn1Encodable; static;
+    class procedure Boot; static;
+    class constructor Create;
+    class destructor Destroy;
   public
-    class function GetCanonicalAlgorithmName(const algorithm: String): String;
-      static; inline;
-    class function CreateKeyParameter(const algOid: IDerObjectIdentifier;
-      const keyBytes: TCryptoLibByteArray): IKeyParameter; overload;
-      static; inline;
-
-    class function CreateKeyParameter(const algorithm: String;
-      const keyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
-
-    class function CreateKeyParameter(const algOid: IDerObjectIdentifier;
-      const keyBytes: TCryptoLibByteArray; offset, length: Int32)
-      : IKeyParameter; overload; static; inline;
-
-    class function CreateKeyParameter(const algorithm: String;
-      const keyBytes: TCryptoLibByteArray; offset, length: Int32)
-      : IKeyParameter; overload; static;
-
-    class function WithRandom(const cp: ICipherParameters;
-      const random: ISecureRandom): ICipherParameters; static; inline;
-
-    class function IgnoreRandom(const CipherParameters: ICipherParameters): ICipherParameters;
-
-    class function GetRandom(const CipherParameters: ICipherParameters; out Random: ISecureRandom): ICipherParameters;
-
+    class function GetCanonicalAlgorithmName(const AAlgorithm: String): String; static;
+    class function CreateKeyParameter(const AAlgOid: IDerObjectIdentifier;
+      const AKeyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
+    class function CreateKeyParameter(const AAlgorithm: String;
+      const AKeyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
+    class function CreateKeyParameter(const AAlgOid: IDerObjectIdentifier;
+      const AKeyBytes: TCryptoLibByteArray; AOffset, ALength: Int32): IKeyParameter; overload; static;
+    class function CreateKeyParameter(const AAlgorithm: String;
+      const AKeyBytes: TCryptoLibByteArray; AOffset, ALength: Int32): IKeyParameter; overload; static;
+    class function GetCipherParameters(const AAlgOid: IDerObjectIdentifier;
+      const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters; overload; static;
+    class function GetCipherParameters(const AAlgorithm: String;
+      const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters; overload; static;
+    class function GenerateParameters(const AAlgId: IDerObjectIdentifier;
+      const ARandom: ISecureRandom): IAsn1Encodable; overload; static;
+    class function GenerateParameters(const AAlgorithm: String;
+      const ARandom: ISecureRandom): IAsn1Encodable; overload; static;
+    class function GetRandom(const ACipherParameters: ICipherParameters;
+      out ARandom: ISecureRandom): ICipherParameters; static;
+    class function IgnoreRandom(const ACipherParameters: ICipherParameters): ICipherParameters; static;
+    class function WithRandom(const ACp: ICipherParameters;
+      const ARandom: ISecureRandom): ICipherParameters; static;
   end;
 
 implementation
 
 { TParameterUtilities }
 
-class procedure TParameterUtilities.AddAlgorithm(const canonicalName: String;
-  const aliases: array of String);
+class procedure TParameterUtilities.AddAlgorithm(const ACanonicalName: String;
+  const AAliases: array of String);
 var
-  alias: string;
+  LAlias: String;
 begin
-  Falgorithms.Add(canonicalName, canonicalName);
-  for alias in aliases do
-  begin
-    Falgorithms.Add(alias, canonicalName);
-  end;
-
+  FAlgorithms.AddOrSetValue(ACanonicalName, ACanonicalName);
+  for LAlias in AAliases do
+    FAlgorithms.AddOrSetValue(LAlias, ACanonicalName);
 end;
 
-class procedure TParameterUtilities.AddBasicIVSizeEntries(size: Int32;
-  const algorithms: array of String);
+class procedure TParameterUtilities.AddBasicIVSizeEntries(ASize: Int32;
+  const AAlgorithms: array of String);
 var
-  algorithm: string;
+  LAlg: String;
 begin
-  for algorithm in algorithms do
-  begin
-    FbasicIVSizes.Add(algorithm, size);
-  end;
+  for LAlg in AAlgorithms do
+    FBasicIVSizes.Add(LAlg, ASize);
+end;
+
+class function TParameterUtilities.FindBasicIVSize(const ACanonicalName: String): Int32;
+var
+  LSize: Int32;
+begin
+  if FBasicIVSizes.TryGetValue(ACanonicalName, LSize) then
+    Result := LSize
+  else
+    Result := -1;
+end;
+
+class function TParameterUtilities.CreateIV(const ARandom: ISecureRandom;
+  AIVLength: Int32): TCryptoLibByteArray;
+begin
+  Result := TSecureRandom.GetNextBytes(ARandom, AIVLength);
+end;
+
+class function TParameterUtilities.CreateIVOctetString(const ARandom: ISecureRandom;
+  AIVLength: Int32): IAsn1Encodable;
+begin
+  Result := TDerOctetString.Create(CreateIV(ARandom, AIVLength));
 end;
 
 class procedure TParameterUtilities.Boot;
 begin
-  Falgorithms := TDictionary<String, String>.Create();
-  FbasicIVSizes := TDictionary<string, Int32>.Create();
-
   TNistObjectIdentifiers.Boot;
 
-  AddAlgorithm('AES', []);
-  AddAlgorithm('AES128', ['2.16.840.1.101.3.4.2',
+  FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FBasicIVSizes := TDictionary<String, Int32>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+
+  AddAlgorithm('AES', ['AESWRAP']);
+
+  AddAlgorithm('AES128', [
     TNistObjectIdentifiers.IdAes128Cbc.ID,
     TNistObjectIdentifiers.IdAes128Cfb.ID,
     TNistObjectIdentifiers.IdAes128Ecb.ID,
-    TNistObjectIdentifiers.IdAes128Ofb.ID]);
-  AddAlgorithm('AES192', ['2.16.840.1.101.3.4.22',
+    TNistObjectIdentifiers.IdAes128Ofb.ID
+    ]);
+
+  AddAlgorithm('AES192', [
     TNistObjectIdentifiers.IdAes192Cbc.ID,
     TNistObjectIdentifiers.IdAes192Cfb.ID,
     TNistObjectIdentifiers.IdAes192Ecb.ID,
-    TNistObjectIdentifiers.IdAes192Ofb.ID]);
-  AddAlgorithm('AES256', ['2.16.840.1.101.3.4.42',
+    TNistObjectIdentifiers.IdAes192Ofb.ID
+    ]);
+
+  AddAlgorithm('AES256', [
     TNistObjectIdentifiers.IdAes256Cbc.ID,
     TNistObjectIdentifiers.IdAes256Cfb.ID,
     TNistObjectIdentifiers.IdAes256Ecb.ID,
-    TNistObjectIdentifiers.IdAes256Ofb.ID]);
-  AddAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2']);
+    TNistObjectIdentifiers.IdAes256Ofb.ID
+    ]);
+
+
+  AddAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2', TMiscObjectIdentifiers.CryptlibAlgorithmBlowfishCbc.ID]);
+
   AddAlgorithm('RIJNDAEL', []);
   AddAlgorithm('SALSA20', []);
 
-  AddBasicIVSizeEntries(8, ['BLOWFISH']);
+  AddBasicIVSizeEntries(8, ['BLOWFISH', 'SALSA20']);
   AddBasicIVSizeEntries(16, ['AES', 'AES128', 'AES192', 'AES256']);
-
 end;
 
-class function TParameterUtilities.GetCanonicalAlgorithmName(const algorithm
-  : String): String;
+class constructor TParameterUtilities.Create;
 begin
-  Falgorithms.TryGetValue(UpperCase(algorithm), result);
+  Boot;
 end;
 
-class function TParameterUtilities.WithRandom(const cp: ICipherParameters;
-  const random: ISecureRandom): ICipherParameters;
+class destructor TParameterUtilities.Destroy;
+begin
+  FAlgorithms.Free;
+  FBasicIVSizes.Free;
+end;
+
+class function TParameterUtilities.GetCanonicalAlgorithmName(const AAlgorithm: String): String;
+begin
+  Result := TCollectionUtilities.GetValueOrNull<String, String>(FAlgorithms, AAlgorithm);
+end;
+
+class function TParameterUtilities.CreateKeyParameter(const AAlgorithm: String;
+  const AKeyBytes: TCryptoLibByteArray; AOffset, ALength: Int32): IKeyParameter;
 var
-  Lcp: ICipherParameters;
+  LCanonical: String;
 begin
-  Lcp := cp;
-  if (random <> Nil) then
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+  LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
+  if LCanonical = '' then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+
+  Result := TKeyParameter.Create(AKeyBytes, AOffset, ALength) as IKeyParameter;
+end;
+
+class function TParameterUtilities.CreateKeyParameter(const AAlgorithm: String;
+  const AKeyBytes: TCryptoLibByteArray): IKeyParameter;
+begin
+  Result := CreateKeyParameter(AAlgorithm, AKeyBytes, 0, System.Length(AKeyBytes));
+end;
+
+class function TParameterUtilities.CreateKeyParameter(const AAlgOid: IDerObjectIdentifier;
+  const AKeyBytes: TCryptoLibByteArray): IKeyParameter;
+begin
+  Result := CreateKeyParameter(AAlgOid.ID, AKeyBytes, 0, System.Length(AKeyBytes));
+end;
+
+class function TParameterUtilities.CreateKeyParameter(const AAlgOid: IDerObjectIdentifier;
+  const AKeyBytes: TCryptoLibByteArray; AOffset, ALength: Int32): IKeyParameter;
+begin
+  Result := CreateKeyParameter(AAlgOid.ID, AKeyBytes, AOffset, ALength);
+end;
+
+class function TParameterUtilities.GetCipherParameters(const AAlgOid: IDerObjectIdentifier;
+  const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters;
+begin
+  Result := GetCipherParameters(AAlgOid.ID, AKey, AAsn1Params);
+end;
+
+class function TParameterUtilities.GetCipherParameters(const AAlgorithm: String;
+  const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters;
+var
+  LCanonical: String;
+  LBasicIVSize: Int32;
+  LOctet: IAsn1OctetString;
+  LIV: TCryptoLibByteArray;
+begin
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
+  if LCanonical = '' then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+
+  LBasicIVSize := FindBasicIVSize(LCanonical);
+  if (LBasicIVSize >= 0) or (LCanonical = 'RIJNDAEL') then
   begin
-    Lcp := TParametersWithRandom.Create(Lcp, random);
+    try
+      LOctet := TAsn1OctetString.GetInstance(AAsn1Params as IAsn1Convertible);
+      LIV := LOctet.GetOctets();
+      Result := TParametersWithIV.Create(AKey, LIV);
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.CreateResFmt(@SCouldNotProcessAsn1ParametersFmt, [E.Message]);
+    end;
+    Exit;
   end;
-  result := Lcp;
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
 end;
 
-class function TParameterUtilities.GetRandom(
-  const CipherParameters: ICipherParameters;
-  out Random: ISecureRandom): ICipherParameters;
-var
-  WithRandom: IParametersWithRandom;
+class function TParameterUtilities.GenerateParameters(const AAlgId: IDerObjectIdentifier;
+  const ARandom: ISecureRandom): IAsn1Encodable;
 begin
-  if Supports(CipherParameters, IParametersWithRandom, WithRandom) then
+  Result := GenerateParameters(AAlgId.ID, ARandom);
+end;
+
+class function TParameterUtilities.GenerateParameters(const AAlgorithm: String;
+  const ARandom: ISecureRandom): IAsn1Encodable;
+var
+  LCanonical: String;
+  LBasicIVSize: Int32;
+begin
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+  LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
+  if LCanonical = '' then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+  LBasicIVSize := FindBasicIVSize(LCanonical);
+  if LBasicIVSize >= 0 then
   begin
-    Random := WithRandom.Random;
-    Result := WithRandom.Parameters;
+    Result := CreateIVOctetString(ARandom, LBasicIVSize);
+    Exit;
+  end;
+
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+end;
+
+class function TParameterUtilities.GetRandom(const ACipherParameters: ICipherParameters;
+  out ARandom: ISecureRandom): ICipherParameters;
+var
+  LWithRandom: IParametersWithRandom;
+begin
+  if Supports(ACipherParameters, IParametersWithRandom, LWithRandom) then
+  begin
+    ARandom := LWithRandom.Random;
+    Result := LWithRandom.Parameters;
   end
   else
   begin
-    Random := nil;
-    Result := CipherParameters;
+    ARandom := nil;
+    Result := ACipherParameters;
   end;
 end;
 
-
-class function TParameterUtilities.IgnoreRandom(const CipherParameters: ICipherParameters): ICipherParameters;
+class function TParameterUtilities.IgnoreRandom(const ACipherParameters: ICipherParameters): ICipherParameters;
 var
-  WithRandom: IParametersWithRandom;
+  LWithRandom: IParametersWithRandom;
 begin
-  if Supports(CipherParameters, IParametersWithRandom, WithRandom) then
-    Result := WithRandom.Parameters
+  if Supports(ACipherParameters, IParametersWithRandom, LWithRandom) then
+    Result := LWithRandom.Parameters
   else
-    Result := CipherParameters;
+    Result := ACipherParameters;
 end;
 
-class function TParameterUtilities.CreateKeyParameter(const algorithm: String;
-  const keyBytes: TCryptoLibByteArray): IKeyParameter;
-begin
-  result := CreateKeyParameter(algorithm, keyBytes, 0, System.length(keyBytes));
-end;
-
-class function TParameterUtilities.CreateKeyParameter
-  (const algOid: IDerObjectIdentifier; const keyBytes: TCryptoLibByteArray)
-  : IKeyParameter;
-begin
-  result := CreateKeyParameter(algOid.ID, keyBytes, 0, System.length(keyBytes));
-end;
-
-class function TParameterUtilities.CreateKeyParameter(const algorithm: String;
-  const keyBytes: TCryptoLibByteArray; offset, length: Int32): IKeyParameter;
+class function TParameterUtilities.WithRandom(const ACp: ICipherParameters;
+  const ARandom: ISecureRandom): ICipherParameters;
 var
-  canonical: string;
+  LCp: ICipherParameters;
 begin
-
-  if (algorithm = '') then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
-  end;
-
-  canonical := GetCanonicalAlgorithmName(algorithm);
-
-  if (canonical = '') then
-  begin
-    raise ESecurityUtilityCryptoLibException.CreateResFmt
-      (@SAlgorithmNotRecognised, [algorithm]);
-  end;
-  result := TKeyParameter.Create(keyBytes, offset, length) as IKeyParameter;
-end;
-
-class function TParameterUtilities.CreateKeyParameter
-  (const algOid: IDerObjectIdentifier; const keyBytes: TCryptoLibByteArray;
-  offset, length: Int32): IKeyParameter;
-begin
-  result := CreateKeyParameter(algOid.ID, keyBytes, offset, length);
-end;
-
-class constructor TParameterUtilities.CreateParameterUtilities;
-begin
-  TParameterUtilities.Boot;
-end;
-
-class destructor TParameterUtilities.DestroyParameterUtilities;
-begin
-  Falgorithms.Free;
-  FbasicIVSizes.Free;
+  LCp := ACp;
+  if ARandom <> nil then
+    LCp := TParametersWithRandom.Create(LCp, ARandom);
+  Result := LCp;
 end;
 
 end.

@@ -208,7 +208,7 @@ end;
 class function TIetfUtilities.ValueToString(const AValue: IAsn1Encodable): String;
 var
   LVBuf: TStringBuilder;
-  LV, LResult: String;
+  LV: String;
   LStr: IAsn1String;
   LEnd, LIndex, LStart, LEndBuf: Int32;
 begin
@@ -234,21 +234,20 @@ begin
       end;
     end;
 
-    LResult := LVBuf.ToString();
-    LEnd := System.Length(LResult);
-    LIndex := 1; // Pascal strings are 1-based
+    LEnd := LVBuf.Length;
+    LIndex := 0; // TStringBuilder.Chars uses 0-based indexing
 
-    if TPlatform.StartsWith(LResult, '\#') then
+    if (LVBuf.Length >= 2) and (LVBuf.Chars[0] = '\') and (LVBuf.Chars[1] = '#') then
     begin
       System.Inc(LIndex, 2);
     end;
 
-    while LIndex <= LEnd do
+    while LIndex < LEnd do
     begin
-      case LResult[LIndex] of
+      case LVBuf.Chars[LIndex] of
         ',', '"', '\', '+', '=', '<', '>', ';':
           begin
-            System.Insert('\', LResult, LIndex);
+            LVBuf.Insert(LIndex, '\');
             System.Inc(LIndex, 2);
             System.Inc(LEnd);
           end;
@@ -257,24 +256,25 @@ begin
       end;
     end;
 
-    LStart := 1;
-    if System.Length(LResult) > 0 then
+    LStart := 0;
+    if LVBuf.Length > 0 then
     begin
-      while (System.Length(LResult) >= LStart) and (LResult[LStart] = ' ') do
+      while (LVBuf.Length > LStart) and (LVBuf.Chars[LStart] = ' ') do
       begin
-        System.Insert('\', LResult, LStart);
+        LVBuf.Insert(LStart, '\');
         System.Inc(LStart, 2);
       end;
     end;
 
-    LEndBuf := System.Length(LResult);
-    while (LEndBuf >= 1) and (LResult[LEndBuf] = ' ') do
+    LEndBuf := LVBuf.Length - 1;
+
+    while (LEndBuf >= 0) and (LVBuf.Chars[LEndBuf] = ' ') do
     begin
-      System.Insert('\', LResult, LEndBuf);
+      LVBuf.Insert(LEndBuf, '\');
       System.Dec(LEndBuf);
     end;
 
-    Result := LResult;
+    Result := LVBuf.ToString();
   finally
     LVBuf.Free;
   end;

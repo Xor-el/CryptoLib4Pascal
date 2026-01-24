@@ -39,8 +39,7 @@ type
       FRsaSignature, FRsaSignatureWithRipeMD160, FRsaSignatureWithRipeMD128,
       FRsaSignatureWithRipeMD256,
       FECSign, FECSignWithSha1, FECSignWithRipeMD160, FECSignWithMD2,
-      FECSignWithMD5, FTttEcg, FEcStdCurvesAndGeneration,
-      FEccBrainpool, FEllipticCurve,
+      FECSignWithMD5, FTttEcg,       FEcStdCurvesAndGeneration, FEllipticCurve,
       FVersionOne, FBrainpoolP160R1, FBrainpoolP160T1, FBrainpoolP192R1,
       FBrainpoolP192T1, FBrainpoolP224R1, FBrainpoolP224T1, FBrainpoolP256R1,
       FBrainpoolP256T1, FBrainpoolP320R1, FBrainpoolP320T1, FBrainpoolP384R1,
@@ -49,7 +48,6 @@ type
 
     class function GetTeleTrusT: IDerObjectIdentifier; static; inline;
     class function GetAlgorithm: IDerObjectIdentifier; static; inline;
-    class function GetTeleTrusTAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetEncryptionAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetSignatureAlgorithm: IDerObjectIdentifier; static; inline;
@@ -68,7 +66,6 @@ type
     class function GetECSignWithMD5: IDerObjectIdentifier; static; inline;
     class function GetTttEcg: IDerObjectIdentifier; static; inline;
     class function GetEcStdCurvesAndGeneration: IDerObjectIdentifier; static; inline;
-
     class function GetBrainpoolP160R1: IDerObjectIdentifier; static; inline;
     class function GetBrainpoolP160T1: IDerObjectIdentifier; static; inline;
     class function GetBrainpoolP192R1: IDerObjectIdentifier; static; inline;
@@ -83,17 +80,15 @@ type
     class function GetBrainpoolP384T1: IDerObjectIdentifier; static; inline;
     class function GetBrainpoolP512R1: IDerObjectIdentifier; static; inline;
     class function GetBrainpoolP512T1: IDerObjectIdentifier; static; inline;
-    class function GetEccBrainpool: IDerObjectIdentifier; static; inline;
     class function GetEllipticCurve: IDerObjectIdentifier; static; inline;
     class function GetVersionOne: IDerObjectIdentifier; static; inline;
 
-    class constructor TeleTrusTObjectIdentifiers();
+    class constructor Create;
 
   public
 
     class property TeleTrusT: IDerObjectIdentifier read GetTeleTrusT;
     class property Algorithm: IDerObjectIdentifier read GetAlgorithm;
-    class property TeleTrusTAlgorithm: IDerObjectIdentifier read GetTeleTrusTAlgorithm;
     class property EncryptionAlgorithm: IDerObjectIdentifier read GetEncryptionAlgorithm;
     class property HashAlgorithm: IDerObjectIdentifier read GetHashAlgorithm;
     class property SignatureAlgorithm: IDerObjectIdentifier read GetSignatureAlgorithm;
@@ -112,8 +107,6 @@ type
     class property ECSignWithMD5: IDerObjectIdentifier read GetECSignWithMD5;
     class property TttEcg: IDerObjectIdentifier read GetTttEcg;
     class property EcStdCurvesAndGeneration: IDerObjectIdentifier read GetEcStdCurvesAndGeneration;
-
-    class property EccBrainpool: IDerObjectIdentifier read GetEccBrainpool;
     class property EllipticCurve: IDerObjectIdentifier read GetEllipticCurve;
     class property VersionOne: IDerObjectIdentifier read GetVersionOne;
     class property BrainpoolP160R1: IDerObjectIdentifier
@@ -159,11 +152,6 @@ begin
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetAlgorithm: IDerObjectIdentifier;
-begin
-  result := FAlgorithm;
-end;
-
-class function TTeleTrusTObjectIdentifiers.GetTeleTrusTAlgorithm: IDerObjectIdentifier;
 begin
   result := FAlgorithm;
 end;
@@ -256,11 +244,6 @@ end;
 class function TTeleTrusTObjectIdentifiers.GetEcStdCurvesAndGeneration: IDerObjectIdentifier;
 begin
   result := FEcStdCurvesAndGeneration;
-end;
-
-class function TTeleTrusTObjectIdentifiers.GetEccBrainpool: IDerObjectIdentifier;
-begin
-  result := FEccBrainpool;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetVersionOne: IDerObjectIdentifier;
@@ -377,9 +360,7 @@ begin
     FTttEcg := FECSign.Branch('5');
     FEcStdCurvesAndGeneration := FECSign.Branch('8');
 
-    // Brainpool curves
-    FEccBrainpool := FEcStdCurvesAndGeneration;
-    FEllipticCurve := FEccBrainpool.Branch('1');
+    FEllipticCurve := FEcStdCurvesAndGeneration.Branch('1');
     FVersionOne := FEllipticCurve.Branch('1');
 
     FBrainpoolP160R1 := FVersionOne.Branch('1');
@@ -401,9 +382,9 @@ begin
   end;
 end;
 
-class constructor TTeleTrusTObjectIdentifiers.TeleTrusTObjectIdentifiers;
+class constructor TTeleTrusTObjectIdentifiers.Create;
 begin
-  TTeleTrusTObjectIdentifiers.Boot;
+  Boot;
 end;
 
 end.

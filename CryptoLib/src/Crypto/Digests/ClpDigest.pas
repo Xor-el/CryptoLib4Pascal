@@ -128,8 +128,6 @@ class constructor TDigest.Create;
 begin
   FNameMap := TDictionary<string, string>.Create;
 
-  FNameMap.Add('NullDigest', 'NULL');
-
   FNameMap.Add('Tiger_3_128', 'Tiger');
   FNameMap.Add('Tiger_3_160', 'Tiger');
   FNameMap.Add('Tiger_3_192', 'Tiger');

@@ -233,7 +233,7 @@ begin
     mod_q); // q
 
   Fparameters.Add(TRosstandartObjectIdentifiers.
-    id_tc26_gost_3410_12_256_paramSetA, ecParams);
+    IdTc26Gost3410_12_256ParamSetA, ecParams);
 
   mod_p := TBigInteger.Create
     ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7',
@@ -260,7 +260,7 @@ begin
     mod_q); // q
 
   Fparameters.Add(TRosstandartObjectIdentifiers.
-    id_tc26_gost_3410_12_512_paramSetA, ecParams);
+    IdTc26Gost3410_12_512ParamSetA, ecParams);
 
   mod_p := TBigInteger.Create
     ('8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006F',
@@ -287,7 +287,7 @@ begin
     mod_q); // q
 
   Fparameters.Add(TRosstandartObjectIdentifiers.
-    id_tc26_gost_3410_12_512_paramSetB, ecParams);
+    IdTc26Gost3410_12_512ParamSetB, ecParams);
 
   mod_p := TBigInteger.Create
     ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7',
@@ -314,7 +314,7 @@ begin
     mod_q); // q
 
   Fparameters.Add(TRosstandartObjectIdentifiers.
-    id_tc26_gost_3410_12_512_paramSetC, ecParams);
+    IdTc26Gost3410_12_512ParamSetC, ecParams);
 
   FobjIds.Add('GostR3410-2001-CryptoPro-A',
     TCryptoProObjectIdentifiers.GostR3410x2001CryptoProA);
@@ -327,13 +327,13 @@ begin
   FobjIds.Add('GostR3410-2001-CryptoPro-XchB',
     TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchB);
   FobjIds.Add('Tc26-Gost-3410-12-256-paramSetA',
-    TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_256_paramSetA);
+    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetA);
   FobjIds.Add('Tc26-Gost-3410-12-512-paramSetA',
-    TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_512_paramSetA);
+    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetA);
   FobjIds.Add('Tc26-Gost-3410-12-512-paramSetB',
-    TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_512_paramSetB);
+    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetB);
   FobjIds.Add('Tc26-Gost-3410-12-512-paramSetC',
-    TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_512_paramSetC);
+    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetC);
 
   Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProA,
     'GostR3410-2001-CryptoPro-A');
@@ -345,13 +345,13 @@ begin
     'GostR3410-2001-CryptoPro-XchA');
   Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchB,
     'GostR3410-2001-CryptoPro-XchB');
-  Fnames.Add(TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_256_paramSetA,
+  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetA,
     'Tc26-Gost-3410-12-256-paramSetA');
-  Fnames.Add(TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_512_paramSetA,
+  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetA,
     'Tc26-Gost-3410-12-512-paramSetA');
-  Fnames.Add(TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_512_paramSetB,
+  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetB,
     'Tc26-Gost-3410-12-512-paramSetB');
-  Fnames.Add(TRosstandartObjectIdentifiers.id_tc26_gost_3410_12_512_paramSetC,
+  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetC,
     'Tc26-Gost-3410-12-512-paramSetC');
 end;
 

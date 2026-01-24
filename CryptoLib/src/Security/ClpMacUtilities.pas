@@ -1,4 +1,4 @@
-{ *********************************************************************************** }
+﻿{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -24,53 +24,52 @@ interface
 uses
   SysUtils,
   Generics.Collections,
-  ClpIAsn1Objects,
-  ClpIMac,
-  ClpHMac,
-  ClpICipherParameters,
-  ClpIanaObjectIdentifiers,
-  ClpPkcsObjectIdentifiers,
-  ClpNistObjectIdentifiers,
-  ClpRosstandartObjectIdentifiers,
+  ClpAsn1Objects,
+  ClpCollectionUtilities,
+  ClpCryptoLibComparers,
+  ClpCryptoLibTypes,
   ClpDigestUtilities,
-  ClpStringUtils,
-  ClpCryptoLibTypes;
+  ClpIAsn1Objects,
+  ClpICipherParameters,
+  ClpIMac,
+  ClpIanaObjectIdentifiers,
+  ClpMiscObjectIdentifiers,
+  ClpNistObjectIdentifiers,
+  ClpOiwObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
+  ClpRosstandartObjectIdentifiers,
+  ClpHMac,
+  ClpPlatform;
 
 resourcestring
+  SOidNil = 'OID Cannot be Nil';
+  SAlgorithmNil = 'Algorithm Cannot be Nil';
   SUnRecognizedMac = 'Mac "%s" not recognised.';
+  SUnRecognizedMacOid = 'Mac OID not recognised.';
 
 type
+  /// <summary>
+  /// Utility class for creating IMac (HMAC) objects from names/OIDs.
+  /// </summary>
   TMacUtilities = class sealed(TObject)
-
   strict private
-
     class var
+      FAlgorithmMap: TDictionary<String, String>;
+      FAlgorithmOidMap: TDictionary<IDerObjectIdentifier, String>;
 
-      Falgorithms: TDictionary<String, String>;
-
-    class procedure Boot(); static;
-    class constructor CreateMacUtilities();
-    class destructor DestroyMacUtilities();
-
+    class function GetMechanism(const AAlgorithm: String): String; static;
+    class function GetMacForMechanism(const AMechanism: String): IMac; static;
+    class procedure Boot; static;
+    class constructor Create;
+    class destructor Destroy;
   public
-
-    class function GetMac(const id: IDerObjectIdentifier): IMac; overload;
-      static; inline;
-    class function GetMac(const algorithm: string): IMac; overload; static;
-
-    class function GetAlgorithmName(const oid: IDerObjectIdentifier): string;
-      static; inline;
-
-    class function CalculateMac(const algorithm: String;
-      const cp: ICipherParameters; const input: TCryptoLibByteArray)
-      : TCryptoLibByteArray; static; inline;
-
-    class function DoFinal(const mac: IMac): TCryptoLibByteArray; overload;
-      static; inline;
-
-    class function DoFinal(const mac: IMac; const input: TCryptoLibByteArray)
-      : TCryptoLibByteArray; overload; static; inline;
-
+    class function GetAlgorithmName(const AOid: IDerObjectIdentifier): String; static;
+    class function GetMac(const AOid: IDerObjectIdentifier): IMac; overload; static;
+    class function GetMac(const AAlgorithm: String): IMac; overload; static;
+    class function CalculateMac(const AAlgorithm: String; const ACp: ICipherParameters;
+      const AInput: TCryptoLibByteArray): TCryptoLibByteArray; static;
+    class function DoFinal(const AMac: IMac): TCryptoLibByteArray; overload; static;
+    class function DoFinal(const AMac: IMac; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static;
   end;
 
 implementation
@@ -79,119 +78,159 @@ implementation
 
 class procedure TMacUtilities.Boot;
 begin
-  Falgorithms := TDictionary<string, string>.Create();
+  FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
 
   TIanaObjectIdentifiers.Boot;
-
-  Falgorithms.Add(TIanaObjectIdentifiers.HmacMD5.id, 'HMAC-MD5');
-  Falgorithms.Add(TIanaObjectIdentifiers.HmacRipeMD160.id, 'HMAC-RIPEMD160');
-  Falgorithms.Add(TIanaObjectIdentifiers.HmacSha1.id, 'HMAC-SHA1');
-  Falgorithms.Add(TIanaObjectIdentifiers.HmacTiger.id, 'HMAC-TIGER');
-
   TPkcsObjectIdentifiers.Boot;
-
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha1.id, 'HMAC-SHA1');
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha224.id, 'HMAC-SHA224');
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha256.id, 'HMAC-SHA256');
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha384.id, 'HMAC-SHA384');
-  Falgorithms.Add(TPkcsObjectIdentifiers.IdHmacWithSha512.id, 'HMAC-SHA512');
-
+  TMiscObjectIdentifiers.Boot;
   TNistObjectIdentifiers.Boot;
-
-  Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_224.id,
-    'HMAC-SHA3-224');
-  Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_256.id,
-    'HMAC-SHA3-256');
-  Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_384.id,
-    'HMAC-SHA3-384');
-  Falgorithms.Add(TNistObjectIdentifiers.IdHMacWithSha3_512.id,
-    'HMAC-SHA3-512');
-
   TRosstandartObjectIdentifiers.Boot;
+  TOiwObjectIdentifiers.Boot;
 
-  Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.
-    id, 'HMAC-GOST3411-2012-256');
-  Falgorithms.Add(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.
-    id, 'HMAC-GOST3411-2012-512');
+  FAlgorithmOidMap.AddOrSetValue(TIanaObjectIdentifiers.HmacMD5, 'HMAC-MD5');
+  FAlgorithmOidMap.AddOrSetValue(TIanaObjectIdentifiers.HmacRipeMD160, 'HMAC-RIPEMD160');
+  FAlgorithmOidMap.AddOrSetValue(TIanaObjectIdentifiers.HmacSha1, 'HMAC-SHA1');
+  FAlgorithmOidMap.AddOrSetValue(TIanaObjectIdentifiers.HmacTiger, 'HMAC-TIGER');
+
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha1, 'HMAC-SHA1');
+  FAlgorithmOidMap.AddOrSetValue(TMiscObjectIdentifiers.HmacSha1, 'HMAC-SHA1');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha224, 'HMAC-SHA224');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha256, 'HMAC-SHA256');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha384, 'HMAC-SHA384');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha512, 'HMAC-SHA512');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha512_224, 'HMAC-SHA512-224');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdHmacWithSha512_256, 'HMAC-SHA512-256');
+
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdHMacWithSha3_224, 'HMAC-SHA3-224');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdHMacWithSha3_256, 'HMAC-SHA3-256');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdHMacWithSha3_384, 'HMAC-SHA3-384');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdHMacWithSha3_512, 'HMAC-SHA3-512');
+
+  FAlgorithmOidMap.AddOrSetValue(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_256, 'HMAC-GOST3411-2012-256');
+  FAlgorithmOidMap.AddOrSetValue(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512, 'HMAC-GOST3411-2012-512');
+
+  FAlgorithmMap.AddOrSetValue('PBEWITHHMACSHA', 'PBEWITHHMACSHA1');
+  FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.IdSha1, 'PBEWITHHMACSHA1');
 end;
 
-class function TMacUtilities.GetMac(const algorithm: string): IMac;
-var
-  upper, mechanism, digestName: string;
-  HighPoint: Int32;
+class constructor TMacUtilities.Create;
 begin
-  upper := UpperCase(algorithm);
+  Boot;
+end;
 
-  if not Falgorithms.TryGetValue(upper, mechanism) then
+class destructor TMacUtilities.Destroy;
+begin
+  FAlgorithmMap.Free;
+  FAlgorithmOidMap.Free;
+end;
+
+class function TMacUtilities.GetMechanism(const AAlgorithm: String): String;
+var
+  LOid: IDerObjectIdentifier;
+  LMechanism: String;
+begin
+  if FAlgorithmMap.TryGetValue(AAlgorithm, LMechanism) then
   begin
-    mechanism := upper;
-  end;
-
-  if TStringUtils.BeginsWith(mechanism, 'HMAC', True) then
-  begin
-    HighPoint := System.Length(mechanism);
-    if ((TStringUtils.BeginsWith(mechanism, 'HMAC-', True)) or
-      (TStringUtils.BeginsWith(mechanism, 'HMAC/', True))) then
-    begin
-      digestName := System.Copy(mechanism, 6, HighPoint - 5);
-    end
-    else
-    begin
-      digestName := System.Copy(mechanism, 5, HighPoint - 4);
-    end;
-
-    result := THMac.Create(TDigestUtilities.GetDigest(digestName));
+    Result := LMechanism;
     Exit;
   end;
-
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedMac,
-    [mechanism]);
+  if TDerObjectIdentifier.TryFromID(AAlgorithm, LOid) and FAlgorithmOidMap.TryGetValue(LOid, LMechanism) then
+  begin
+    Result := LMechanism;
+    Exit;
+  end;
+  Result := '';
 end;
 
-class function TMacUtilities.DoFinal(const mac: IMac): TCryptoLibByteArray;
-begin
-  System.SetLength(result, mac.GetMacSize());
-  mac.DoFinal(result, 0);
-end;
-
-class function TMacUtilities.DoFinal(const mac: IMac;
-  const input: TCryptoLibByteArray): TCryptoLibByteArray;
-begin
-  mac.BlockUpdate(input, 0, System.Length(input));
-  result := DoFinal(mac);
-end;
-
-class function TMacUtilities.CalculateMac(const algorithm: String;
-  const cp: ICipherParameters; const input: TCryptoLibByteArray)
-  : TCryptoLibByteArray;
+class function TMacUtilities.GetMacForMechanism(const AMechanism: String): IMac;
 var
-  mac: IMac;
+  LMechanism: String;
+  LDigestName: String;
 begin
-  mac := GetMac(algorithm);
-  mac.Init(cp);
-  mac.BlockUpdate(input, 0, System.Length(input));
-  result := DoFinal(mac);
+  Result := nil;
+  LMechanism := AMechanism;
+  if TPlatform.StartsWith(LMechanism, 'PBEWITH') then
+    LMechanism := TPlatform.Substring(LMechanism, System.Length('PBEWITH') + 1);
+
+  if TPlatform.StartsWith(LMechanism, 'HMAC') then
+  begin
+    if TPlatform.StartsWith(LMechanism, 'HMAC-') or TPlatform.StartsWith(LMechanism, 'HMAC/') then
+      LDigestName := TPlatform.Substring(LMechanism, 6)
+    else
+      LDigestName := TPlatform.Substring(LMechanism, 5);
+    if LDigestName = 'SHA512-224' then
+      LDigestName := 'SHA-512/224'
+    else if LDigestName = 'SHA512-256' then
+      LDigestName := 'SHA-512/256';
+    Result := THMac.Create(TDigestUtilities.GetDigest(LDigestName));
+  end;
 end;
 
-class constructor TMacUtilities.CreateMacUtilities;
+class function TMacUtilities.GetAlgorithmName(const AOid: IDerObjectIdentifier): String;
 begin
-  TMacUtilities.Boot;
+  Result := TCollectionUtilities.GetValueOrNull<IDerObjectIdentifier, String>(FAlgorithmOidMap, AOid);
 end;
 
-class destructor TMacUtilities.DestroyMacUtilities;
+class function TMacUtilities.GetMac(const AOid: IDerObjectIdentifier): IMac;
+var
+  LMechanism: String;
+  LMac: IMac;
 begin
-  Falgorithms.Free;
+  if AOid = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
+  if FAlgorithmOidMap.TryGetValue(AOid, LMechanism) then
+  begin
+    LMac := GetMacForMechanism(LMechanism);
+    if LMac <> nil then
+    begin
+      Result := LMac;
+      Exit;
+    end;
+  end;
+  raise ESecurityUtilityCryptoLibException.CreateRes(@SUnRecognizedMacOid);
 end;
 
-class function TMacUtilities.GetMac(const id: IDerObjectIdentifier): IMac;
+class function TMacUtilities.GetMac(const AAlgorithm: String): IMac;
+var
+  LMechanism: String;
+  LMac: IMac;
 begin
-  result := GetMac(id.id);
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+  LMechanism := GetMechanism(AAlgorithm);
+  if LMechanism = '' then
+    LMechanism := UpperCase(AAlgorithm);
+  LMac := GetMacForMechanism(LMechanism);
+  if LMac <> nil then
+  begin
+    Result := LMac;
+    Exit;
+  end;
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedMac, [AAlgorithm]);
 end;
 
-class function TMacUtilities.GetAlgorithmName
-  (const oid: IDerObjectIdentifier): string;
+class function TMacUtilities.CalculateMac(const AAlgorithm: String; const ACp: ICipherParameters;
+  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
+var
+  LMac: IMac;
 begin
-  Falgorithms.TryGetValue(oid.id, result);
+  LMac := GetMac(AAlgorithm);
+  LMac.Init(ACp);
+  LMac.BlockUpdate(AInput, 0, System.Length(AInput));
+  Result := DoFinal(LMac);
+end;
+
+class function TMacUtilities.DoFinal(const AMac: IMac): TCryptoLibByteArray;
+begin
+  System.SetLength(Result, AMac.GetMacSize());
+  AMac.DoFinal(Result, 0);
+end;
+
+class function TMacUtilities.DoFinal(const AMac: IMac; const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
+begin
+  AMac.BlockUpdate(AInput, 0, System.Length(AInput));
+  Result := DoFinal(AMac);
 end;
 
 end.

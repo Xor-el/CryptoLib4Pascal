@@ -26,196 +26,262 @@ uses
   ClpIAsn1Objects;
 
 type
+  /// <remarks>See https://www.bsi.bund.de/cae/servlet/contentblob/471398/publicationFile/30615/BSI-TR-03111_pdf.pdf</remarks>
   TBsiObjectIdentifiers = class abstract(TObject)
-
   strict private
+    class var
+      FIsBooted: Boolean;
+      FBsiDe, FIdEcc, FAlgorithm, FEcdsaPlainSignatures,
+      FEcdsaPlainSha1, FEcdsaPlainSha224, FEcdsaPlainSha256, FEcdsaPlainSha384,
+      FEcdsaPlainSha512, FEcdsaPlainRipeMD160, FEcdsaPlainSha3_224,
+      FEcdsaPlainSha3_256, FEcdsaPlainSha3_384, FEcdsaPlainSha3_512,
+      FEckaEg, FEckaEgX963Kdf, FEckaEgX963KdfSha1, FEckaEgX963KdfSha224,
+      FEckaEgX963KdfSha256, FEckaEgX963KdfSha384, FEckaEgX963KdfSha512,
+      FEckaEgX963KdfRipeMD160, FEckaEgSessionKdf, FEckaEgSessionKdf3Des,
+      FEckaEgSessionKdfAes128, FEckaEgSessionKdfAes192, FEckaEgSessionKdfAes256: IDerObjectIdentifier;
 
-    /// <remarks>See https://www.bsi.bund.de/cae/servlet/contentblob/471398/publicationFile/30615/BSI-TR-03111_pdf.pdf</remarks>
-  class var
+    class function GetBsiDe: IDerObjectIdentifier; static; inline;
+    class function GetIdEcc: IDerObjectIdentifier; static; inline;
+    class function GetAlgorithm: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSignatures: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha1: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha224: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha256: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha384: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha512: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainRipeMD160: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha3_224: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha3_256: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha3_384: IDerObjectIdentifier; static; inline;
+    class function GetEcdsaPlainSha3_512: IDerObjectIdentifier; static; inline;
+    class function GetEckaEg: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963Kdf: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963KdfSha1: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963KdfSha224: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963KdfSha256: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963KdfSha384: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963KdfSha512: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgX963KdfRipeMD160: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgSessionKdf: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgSessionKdf3Des: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgSessionKdfAes128: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgSessionKdfAes192: IDerObjectIdentifier; static; inline;
+    class function GetEckaEgSessionKdfAes256: IDerObjectIdentifier; static; inline;
 
-    FIsBooted: Boolean;
-    Fbsi_de, Fid_ecc, Fecdsa_plain_signatures, Fecdsa_plain_SHA1,
-      Fecdsa_plain_SHA224, Fecdsa_plain_SHA256, Fecdsa_plain_SHA384,
-      Fecdsa_plain_SHA512, Fecdsa_plain_RIPEMD160, Fecdsa_plain_SHA3_224,
-      Fecdsa_plain_SHA3_256, Fecdsa_plain_SHA3_384, Fecdsa_plain_SHA3_512: IDerObjectIdentifier;
-
-    class function Getbsi_de: IDerObjectIdentifier; static; inline;
-    class function Getecdsa_plain_RIPEMD160: IDerObjectIdentifier;
-      static; inline;
-    class function Getecdsa_plain_SHA1: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA224: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA256: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA384: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA512: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA3_224: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA3_256: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA3_384: IDerObjectIdentifier; static; inline;
-    class function GetEcdsaPlain_SHA3_512: IDerObjectIdentifier; static; inline;
-    class function Getecdsa_plain_signatures: IDerObjectIdentifier;
-      static; inline;
-    class function Getid_ecc: IDerObjectIdentifier; static; inline;
-
-    class constructor BsiObjectIdentifiers();
-
+    class constructor Create;
   public
+    class property BsiDe: IDerObjectIdentifier read GetBsiDe;
+    class property IdEcc: IDerObjectIdentifier read GetIdEcc;
+    class property Algorithm: IDerObjectIdentifier read GetAlgorithm;
+    class property EcdsaPlainSignatures: IDerObjectIdentifier read GetEcdsaPlainSignatures;
+    class property EcdsaPlainSha1: IDerObjectIdentifier read GetEcdsaPlainSha1;
+    class property EcdsaPlainSha224: IDerObjectIdentifier read GetEcdsaPlainSha224;
+    class property EcdsaPlainSha256: IDerObjectIdentifier read GetEcdsaPlainSha256;
+    class property EcdsaPlainSha384: IDerObjectIdentifier read GetEcdsaPlainSha384;
+    class property EcdsaPlainSha512: IDerObjectIdentifier read GetEcdsaPlainSha512;
+    class property EcdsaPlainRipeMD160: IDerObjectIdentifier read GetEcdsaPlainRipeMD160;
+    class property EcdsaPlainSha3_224: IDerObjectIdentifier read GetEcdsaPlainSha3_224;
+    class property EcdsaPlainSha3_256: IDerObjectIdentifier read GetEcdsaPlainSha3_256;
+    class property EcdsaPlainSha3_384: IDerObjectIdentifier read GetEcdsaPlainSha3_384;
+    class property EcdsaPlainSha3_512: IDerObjectIdentifier read GetEcdsaPlainSha3_512;
+    class property EckaEg: IDerObjectIdentifier read GetEckaEg;
+    class property EckaEgX963Kdf: IDerObjectIdentifier read GetEckaEgX963Kdf;
+    class property EckaEgX963KdfSha1: IDerObjectIdentifier read GetEckaEgX963KdfSha1;
+    class property EckaEgX963KdfSha224: IDerObjectIdentifier read GetEckaEgX963KdfSha224;
+    class property EckaEgX963KdfSha256: IDerObjectIdentifier read GetEckaEgX963KdfSha256;
+    class property EckaEgX963KdfSha384: IDerObjectIdentifier read GetEckaEgX963KdfSha384;
+    class property EckaEgX963KdfSha512: IDerObjectIdentifier read GetEckaEgX963KdfSha512;
+    class property EckaEgX963KdfRipeMD160: IDerObjectIdentifier read GetEckaEgX963KdfRipeMD160;
+    class property EckaEgSessionKdf: IDerObjectIdentifier read GetEckaEgSessionKdf;
+    class property EckaEgSessionKdf3Des: IDerObjectIdentifier read GetEckaEgSessionKdf3Des;
+    class property EckaEgSessionKdfAes128: IDerObjectIdentifier read GetEckaEgSessionKdfAes128;
+    class property EckaEgSessionKdfAes192: IDerObjectIdentifier read GetEckaEgSessionKdfAes192;
+    class property EckaEgSessionKdfAes256: IDerObjectIdentifier read GetEckaEgSessionKdfAes256;
 
-    class property bsi_de: IDerObjectIdentifier read Getbsi_de;
-    class property id_ecc: IDerObjectIdentifier read Getid_ecc;
-    class property ecdsa_plain_signatures: IDerObjectIdentifier
-      read Getecdsa_plain_signatures;
-    class property ecdsa_plain_SHA1: IDerObjectIdentifier
-      read Getecdsa_plain_SHA1;
-    class property EcdsaPlain_SHA224: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA224;
-    class property EcdsaPlain_SHA256: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA256;
-    class property EcdsaPlain_SHA384: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA384;
-    class property EcdsaPlain_SHA512: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA512;
-    class property ecdsa_plain_RIPEMD160: IDerObjectIdentifier
-      read Getecdsa_plain_RIPEMD160;
-    class property EcdsaPlain_SHA3_224: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA3_224;
-    class property EcdsaPlain_SHA3_256: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA3_256;
-    class property EcdsaPlain_SHA3_384: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA3_384;
-    class property EcdsaPlain_SHA3_512: IDerObjectIdentifier
-      read GetEcdsaPlain_SHA3_512;
-
-    class procedure Boot(); static;
-
+    class procedure Boot; static;
   end;
 
 implementation
 
 { TBsiObjectIdentifiers }
 
+class constructor TBsiObjectIdentifiers.Create;
+begin
+  Boot;
+end;
+
 class procedure TBsiObjectIdentifiers.Boot;
 begin
   if not FIsBooted then
   begin
-    Fbsi_de := TDerObjectIdentifier.Create('0.4.0.127.0.7');
+    FBsiDe := TDerObjectIdentifier.Create('0.4.0.127.0.7');
+    FIdEcc := FBsiDe.Branch('1.1');
+    FAlgorithm := FBsiDe.Branch('1');
 
-    // /* 0.4.0.127.0.7.1.1 */
-    Fid_ecc := Fbsi_de.Branch('1.1');
+    FEcdsaPlainSignatures := FIdEcc.Branch('4.1');
+    FEcdsaPlainSha1 := FEcdsaPlainSignatures.Branch('1');
+    FEcdsaPlainSha224 := FEcdsaPlainSignatures.Branch('2');
+    FEcdsaPlainSha256 := FEcdsaPlainSignatures.Branch('3');
+    FEcdsaPlainSha384 := FEcdsaPlainSignatures.Branch('4');
+    FEcdsaPlainSha512 := FEcdsaPlainSignatures.Branch('5');
+    FEcdsaPlainRipeMD160 := FEcdsaPlainSignatures.Branch('6');
+    FEcdsaPlainSha3_224 := FEcdsaPlainSignatures.Branch('8');
+    FEcdsaPlainSha3_256 := FEcdsaPlainSignatures.Branch('9');
+    FEcdsaPlainSha3_384 := FEcdsaPlainSignatures.Branch('10');
+    FEcdsaPlainSha3_512 := FEcdsaPlainSignatures.Branch('11');
 
-    // /* 0.4.0.127.0.7.1.1.4.1 */
-    Fecdsa_plain_signatures := Fid_ecc.Branch('4.1');
+    FEckaEg := FIdEcc.Branch('5.1');
+    FEckaEgX963Kdf := FEckaEg.Branch('1');
+    FEckaEgX963KdfSha1 := FEckaEgX963Kdf.Branch('1');
+    FEckaEgX963KdfSha224 := FEckaEgX963Kdf.Branch('2');
+    FEckaEgX963KdfSha256 := FEckaEgX963Kdf.Branch('3');
+    FEckaEgX963KdfSha384 := FEckaEgX963Kdf.Branch('4');
+    FEckaEgX963KdfSha512 := FEckaEgX963Kdf.Branch('5');
+    FEckaEgX963KdfRipeMD160 := FEckaEgX963Kdf.Branch('6');
 
-    // /* 0.4.0.127.0.7.1.1.4.1.1 */
-    Fecdsa_plain_SHA1 := Fecdsa_plain_signatures.Branch('1');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.2 */
-    Fecdsa_plain_SHA224 := Fecdsa_plain_signatures.Branch('2');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.3 */
-    Fecdsa_plain_SHA256 := Fecdsa_plain_signatures.Branch('3');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.4 */
-    Fecdsa_plain_SHA384 := Fecdsa_plain_signatures.Branch('4');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.5 */
-    Fecdsa_plain_SHA512 := Fecdsa_plain_signatures.Branch('5');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.6 */
-    Fecdsa_plain_RIPEMD160 := Fecdsa_plain_signatures.Branch('6');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.8 */
-    Fecdsa_plain_SHA3_224 := Fecdsa_plain_signatures.Branch('8');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.9 */
-    Fecdsa_plain_SHA3_256 := Fecdsa_plain_signatures.Branch('9');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.10 */
-    Fecdsa_plain_SHA3_384 := Fecdsa_plain_signatures.Branch('10');
-
-    // /* 0.4.0.127.0.7.1.1.4.1.11 */
-    Fecdsa_plain_SHA3_512 := Fecdsa_plain_signatures.Branch('11');
+    FEckaEgSessionKdf := FEckaEg.Branch('2');
+    FEckaEgSessionKdf3Des := FEckaEgSessionKdf.Branch('1');
+    FEckaEgSessionKdfAes128 := FEckaEgSessionKdf.Branch('2');
+    FEckaEgSessionKdfAes192 := FEckaEgSessionKdf.Branch('3');
+    FEckaEgSessionKdfAes256 := FEckaEgSessionKdf.Branch('4');
 
     FIsBooted := True;
   end;
 end;
 
-class constructor TBsiObjectIdentifiers.BsiObjectIdentifiers;
+class function TBsiObjectIdentifiers.GetAlgorithm: IDerObjectIdentifier;
 begin
-  TBsiObjectIdentifiers.Boot;
+  Result := FAlgorithm;
 end;
 
-class function TBsiObjectIdentifiers.Getbsi_de: IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetBsiDe: IDerObjectIdentifier;
 begin
-  result := Fbsi_de;
+  Result := FBsiDe;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_RIPEMD160
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainRipeMD160: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_RIPEMD160;
+  Result := FEcdsaPlainRipeMD160;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_SHA1: IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha1: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA1;
+  Result := FEcdsaPlainSha1;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA224
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha224: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA224;
+  Result := FEcdsaPlainSha224;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA256
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha256: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA256;
+  Result := FEcdsaPlainSha256;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA384
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha384: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA384;
+  Result := FEcdsaPlainSha384;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA512
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha512: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA512;
+  Result := FEcdsaPlainSha512;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_224
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha3_224: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA3_224;
+  Result := FEcdsaPlainSha3_224;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_256
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha3_256: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA3_256;
+  Result := FEcdsaPlainSha3_256;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_384
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha3_384: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA3_384;
+  Result := FEcdsaPlainSha3_384;
 end;
 
-class function TBsiObjectIdentifiers.GetEcdsaPlain_SHA3_512
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSha3_512: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_SHA3_512;
+  Result := FEcdsaPlainSha3_512;
 end;
 
-class function TBsiObjectIdentifiers.Getecdsa_plain_signatures
-  : IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEcdsaPlainSignatures: IDerObjectIdentifier;
 begin
-  result := Fecdsa_plain_signatures;
+  Result := FEcdsaPlainSignatures;
 end;
 
-class function TBsiObjectIdentifiers.Getid_ecc: IDerObjectIdentifier;
+class function TBsiObjectIdentifiers.GetEckaEg: IDerObjectIdentifier;
 begin
-  result := Fid_ecc;
+  Result := FEckaEg;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgSessionKdf: IDerObjectIdentifier;
+begin
+  Result := FEckaEgSessionKdf;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgSessionKdf3Des: IDerObjectIdentifier;
+begin
+  Result := FEckaEgSessionKdf3Des;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgSessionKdfAes128: IDerObjectIdentifier;
+begin
+  Result := FEckaEgSessionKdfAes128;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgSessionKdfAes192: IDerObjectIdentifier;
+begin
+  Result := FEckaEgSessionKdfAes192;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgSessionKdfAes256: IDerObjectIdentifier;
+begin
+  Result := FEckaEgSessionKdfAes256;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963Kdf: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963Kdf;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963KdfRipeMD160: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963KdfRipeMD160;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963KdfSha1: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963KdfSha1;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963KdfSha224: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963KdfSha224;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963KdfSha256: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963KdfSha256;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963KdfSha384: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963KdfSha384;
+end;
+
+class function TBsiObjectIdentifiers.GetEckaEgX963KdfSha512: IDerObjectIdentifier;
+begin
+  Result := FEckaEgX963KdfSha512;
+end;
+
+class function TBsiObjectIdentifiers.GetIdEcc: IDerObjectIdentifier;
+begin
+  Result := FIdEcc;
 end;
 
 end.

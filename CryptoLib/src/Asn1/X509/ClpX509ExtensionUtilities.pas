@@ -100,7 +100,7 @@ implementation
 
 class function TX509ExtensionUtilities.CalculateSha1(const AData: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
-  Result := TDigestUtilities.CalculateDigest(TOiwObjectIdentifiers.IdSha1.id, AData);
+  Result := TDigestUtilities.CalculateDigest(TOiwObjectIdentifiers.IdSha1.ID, AData);
 end;
 
 class function TX509ExtensionUtilities.CalculateSha1(const ASpki: ISubjectPublicKeyInfo): TCryptoLibByteArray;

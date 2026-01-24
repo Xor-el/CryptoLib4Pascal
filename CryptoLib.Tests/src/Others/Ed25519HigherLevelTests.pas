@@ -116,13 +116,13 @@ function TTestEd25519HigherLevel.CreateSigner
 begin
   case algorithm of
     TEd25519.TEd25519Algorithm.Ed25519:
-      Result := TEd25519Signer.Create(TEd25519.Create() as IEd25519)
+      Result := TEd25519Signer.Create()
         as IEd25519Signer;
     TEd25519.TEd25519Algorithm.Ed25519ctx:
-      Result := TEd25519CtxSigner.Create(TEd25519.Create() as IEd25519, context)
+      Result := TEd25519CtxSigner.Create(context)
         as IEd25519CtxSigner;
     TEd25519.TEd25519Algorithm.Ed25519ph:
-      Result := TEd25519PhSigner.Create(TEd25519.Create() as IEd25519, context)
+      Result := TEd25519PhSigner.Create(context)
         as IEd25519PhSigner;
   else
     begin

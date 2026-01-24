@@ -37,7 +37,7 @@ type
       FIdSha224, FIdSha512_224, FIdSha512_256, FIdSha3_224, FIdSha3_256,
       FIdSha3_384, FIdSha3_512, FIdShake128, FIdShake256, FIdHMacWithSha3_224,
       FIdHMacWithSha3_256, FIdHMacWithSha3_384, FIdHMacWithSha3_512, FAES,
-      FIdAES128Ecb, FIdAes128Cbc, FIdAes128Ofb, FIdAes128Cfb, FidAes192Ecb,
+      FIdAES128Ecb, FIdAes128Cbc, FIdAes128Ofb, FIdAes128Cfb, FIdAes192Ecb,
       FIdAes192Cbc, FIdAes192Ofb, FIdAes192Cfb, FIdAes256Ecb, FIdAes256Cbc,
       FIdAes256Ofb, FIdAes256Cfb, FIdDsaWithSha2, FDsaWithSha224,
       FDsaWithSha256, FDsaWithSha384, FDsaWithSha512, FIdDsaWithSha3_224,
@@ -263,7 +263,7 @@ end;
 
 class function TNistObjectIdentifiers.GetIdAes192Ecb: IDerObjectIdentifier;
 begin
-  result := FidAes192Ecb;
+  result := FIdAes192Ecb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Ofb: IDerObjectIdentifier;
@@ -492,7 +492,7 @@ begin
     FIdAes128Cbc := TDerObjectIdentifier.Create(AES.id + '.2');
     FIdAes128Ofb := TDerObjectIdentifier.Create(AES.id + '.3');
     FIdAes128Cfb := TDerObjectIdentifier.Create(AES.id + '.4');
-    FidAes192Ecb := TDerObjectIdentifier.Create(AES.id + '.21');
+    FIdAes192Ecb := TDerObjectIdentifier.Create(AES.ID + '.21');
     FIdAes192Cbc := TDerObjectIdentifier.Create(AES.id + '.22');
     FIdAes192Ofb := TDerObjectIdentifier.Create(AES.id + '.23');
     FIdAes192Cfb := TDerObjectIdentifier.Create(AES.id + '.24');
@@ -507,27 +507,27 @@ begin
     FSigAlgs := NistAlgorithm.Branch('3');
     FIdDsaWithSha2 := SigAlgs;
 
-    FDsaWithSha224 := TDerObjectIdentifier.Create(SigAlgs.id + '.1');
-    FDsaWithSha256 := TDerObjectIdentifier.Create(SigAlgs.id + '.2');
-    FDsaWithSha384 := TDerObjectIdentifier.Create(SigAlgs.id + '.3');
-    FDsaWithSha512 := TDerObjectIdentifier.Create(SigAlgs.id + '.4');
+    FDsaWithSha224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.1');
+    FDsaWithSha256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.2');
+    FDsaWithSha384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.3');
+    FDsaWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.4');
 
-    FIdDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.id + '.5');
-    FIdDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.id + '.6');
-    FIdDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.id + '.7');
-    FIdDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.id + '.8');
+    FIdDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.5');
+    FIdDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.6');
+    FIdDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.7');
+    FIdDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.8');
 
     // ECDSA with SHA-3
-    FIdECDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.id + '.9');
-    FIdECDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.id + '.10');
-    FIdECDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.id + '.11');
-    FIdECDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.id + '.12');
+    FIdECDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.9');
+    FIdECDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.10');
+    FIdECDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.11');
+    FIdECDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.12');
 
     // RSA PKCS #1 v1.5 Signature with SHA-3 family
-    FIdRsassaPkcs1V15WithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.id + '.13');
-    FIdRsassaPkcs1V15WithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.id + '.14');
-    FIdRsassaPkcs1V15WithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.id + '.15');
-    FIdRsassaPkcs1V15WithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.id + '.16');
+    FIdRsassaPkcs1V15WithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.13');
+    FIdRsassaPkcs1V15WithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.14');
+    FIdRsassaPkcs1V15WithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.15');
+    FIdRsassaPkcs1V15WithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.16');
 
     FIsBooted := True;
   end;

@@ -23,32 +23,36 @@ interface
 
 uses
   SysUtils,
-  ClpEd25519,
-  ClpIEd25519,
   Generics.Collections,
-  ClpECKeyPairGenerator,
-  ClpIECKeyPairGenerator,
+  ClpCollectionUtilities,
   ClpCipherKeyGenerator,
-  ClpICipherKeyGenerator,
-  ClpIAsn1Objects,
+  ClpCryptoLibComparers,
+  ClpCryptoLibTypes,
   ClpDsaKeyPairGenerator,
-  ClpIDsaKeyPairGenerator,
-  ClpDHKeyPairGenerator,
-  ClpIDHKeyPairGenerator,
-  ClpRsaKeyPairGenerator,
-  ClpIRsaKeyPairGenerator,
+  ClpECKeyPairGenerator,
+  ClpEd25519,
   ClpEd25519KeyPairGenerator,
-  ClpIEd25519KeyPairGenerator,
-  ClpX25519KeyPairGenerator,
-  ClpIX25519KeyPairGenerator,
+  ClpEdECObjectIdentifiers,
+  ClpDHKeyPairGenerator,
+  ClpIAsn1Objects,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpNistObjectIdentifiers,
+  ClpICipherKeyGenerator,
+  ClpIDsaKeyPairGenerator,
+  ClpIDHKeyPairGenerator,
+  ClpIECKeyPairGenerator,
+  ClpIEd25519,
+  ClpIEd25519KeyPairGenerator,
+  ClpIRsaKeyPairGenerator,
+  ClpIX25519KeyPairGenerator,
   ClpIanaObjectIdentifiers,
+  ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
-  ClpEdECObjectIdentifiers,
+  ClpRsaKeyPairGenerator,
+  ClpSecObjectIdentifiers,
   ClpStringUtils,
-  ClpCryptoLibTypes;
+  ClpX25519KeyPairGenerator,
+  ClpX9ObjectIdentifiers;
 
 resourcestring
   SKeyGeneratorAlgorithmNotRecognised = 'KeyGenerator "%s" not Recognised.';
@@ -64,54 +68,37 @@ type
   TGeneratorUtilities = class sealed(TObject)
 
   strict private
-  class var
+    class var
+      FKgAlgorithms: TDictionary<String, String>;
+      FKpgAlgorithms: TDictionary<String, String>;
+      FDefaultKeySizes: TDictionary<String, Int32>;
 
-    FkgAlgorithms: TDictionary<String, String>;
-    FkpgAlgorithms: TDictionary<String, String>;
-    FdefaultKeySizes: TDictionary<String, Int32>;
-
-    class function FindDefaultKeySize(const canonicalName: String): Int32;
-      static; inline;
-
-    class procedure AddDefaultKeySizeEntries(size: Int32;
-      const algorithms: array of String); static;
-
-    class procedure AddKgAlgorithm(const canonicalName: String;
-      const aliases: array of String); static;
-
-    class procedure AddKpgAlgorithm(const canonicalName: String;
-      const aliases: array of String); static;
-
-    class procedure AddHMacKeyGenerator(const algorithm: String;
-      const aliases: array of String); static;
-
-    class procedure Boot(); static;
-
-    class constructor CreateGeneratorUtilities();
-    class destructor DestroyGeneratorUtilities();
+    class function FindDefaultKeySize(const ACanonicalName: String): Int32; static;
+    class procedure AddDefaultKeySizeEntries(ASize: Int32; const AAlgorithms: array of String); static;
+    class procedure AddKgAlgorithm(const ACanonicalName: String; const AAliases: array of String); static;
+    class procedure AddKpgAlgorithm(const ACanonicalName: String; const AAliases: array of String); static;
+    class procedure AddHMacKeyGenerator(const AAlgorithm: String; const AAliases: array of String); static;
+    class procedure Boot; static;
+    class constructor Create;
+    class destructor Destroy;
 
   public
 
-    class function GetCanonicalKeyGeneratorAlgorithm(const algorithm: String)
-      : String; static; inline;
+    class function GetCanonicalKeyGeneratorAlgorithm(const AAlgorithm: String): String; static; inline;
 
-    class function GetCanonicalKeyPairGeneratorAlgorithm(const algorithm
-      : String): String; static; inline;
+    class function GetCanonicalKeyPairGeneratorAlgorithm(const AAlgorithm: String): String; static; inline;
 
-    class function GetKeyPairGenerator(const oid: IDerObjectIdentifier)
-      : IAsymmetricCipherKeyPairGenerator; overload; static; inline;
+    class function GetKeyPairGenerator(const AOid: IDerObjectIdentifier): IAsymmetricCipherKeyPairGenerator; overload; static; inline;
 
-    class function GetKeyPairGenerator(const algorithm: String)
-      : IAsymmetricCipherKeyPairGenerator; overload; static;
+    class function GetKeyPairGenerator(const AAlgorithm: String): IAsymmetricCipherKeyPairGenerator; overload; static;
 
-    class function GetKeyGenerator(const algorithm: String)
-      : ICipherKeyGenerator; static;
+    class function GetKeyGenerator(const AOid: IDerObjectIdentifier): ICipherKeyGenerator; overload; static; inline;
 
-    class function GetDefaultKeySize(const oid: IDerObjectIdentifier): Int32;
-      overload; static; inline;
+    class function GetKeyGenerator(const AAlgorithm: String): ICipherKeyGenerator; overload; static;
 
-    class function GetDefaultKeySize(const algorithm: String): Int32;
-      overload; static;
+    class function GetDefaultKeySize(const AOid: IDerObjectIdentifier): Int32; overload; static; inline;
+
+    class function GetDefaultKeySize(const AAlgorithm: String): Int32; overload; static;
 
   end;
 
@@ -119,88 +106,71 @@ implementation
 
 { TGeneratorUtilities }
 
-class procedure TGeneratorUtilities.AddDefaultKeySizeEntries(size: Int32;
-  const algorithms: array of String);
+class procedure TGeneratorUtilities.AddDefaultKeySizeEntries(ASize: Int32;
+  const AAlgorithms: array of String);
 var
-  algorithm: string;
+  LAlg: String;
 begin
-  for algorithm in algorithms do
-  begin
-    FdefaultKeySizes.Add(algorithm, size);
-  end;
-
+  for LAlg in AAlgorithms do
+    FDefaultKeySizes.Add(LAlg, ASize);
 end;
 
-class procedure TGeneratorUtilities.AddKgAlgorithm(const canonicalName: String;
-  const aliases: array of String);
+class procedure TGeneratorUtilities.AddKgAlgorithm(const ACanonicalName: String;
+  const AAliases: array of String);
 var
-  alias: string;
+  LAlias: String;
 begin
-  FkgAlgorithms.Add(UpperCase(canonicalName), canonicalName);
-  for alias in aliases do
-  begin
-    FkgAlgorithms.Add(UpperCase(alias), canonicalName);
-  end;
-
+  FKgAlgorithms.AddOrSetValue(ACanonicalName, ACanonicalName);
+  for LAlias in AAliases do
+    FKgAlgorithms.AddOrSetValue(LAlias, ACanonicalName);
 end;
 
-class procedure TGeneratorUtilities.AddKpgAlgorithm(const canonicalName: String;
-  const aliases: array of String);
+class procedure TGeneratorUtilities.AddKpgAlgorithm(const ACanonicalName: String;
+  const AAliases: array of String);
 var
-  alias: string;
+  LAlias: String;
 begin
-  FkpgAlgorithms.Add(UpperCase(canonicalName), canonicalName);
-  for alias in aliases do
-  begin
-    FkpgAlgorithms.Add(UpperCase(alias), canonicalName);
-  end;
-
+  FKpgAlgorithms.AddOrSetValue(ACanonicalName, ACanonicalName);
+  for LAlias in AAliases do
+    FKpgAlgorithms.AddOrSetValue(LAlias, ACanonicalName);
 end;
 
-class procedure TGeneratorUtilities.AddHMacKeyGenerator(const algorithm: String;
-  const aliases: array of String);
+class procedure TGeneratorUtilities.AddHMacKeyGenerator(const AAlgorithm: String;
+  const AAliases: array of String);
 var
-  alias, mainName: string;
+  LAlias, LMainName: String;
 begin
-  mainName := 'HMAC' + algorithm;
-
-  FkgAlgorithms.Add(mainName, mainName);
-  FkgAlgorithms.Add('HMAC-' + algorithm, mainName);
-  FkgAlgorithms.Add('HMAC/' + algorithm, mainName);
-
-  for alias in aliases do
-  begin
-    FkgAlgorithms.Add(UpperCase(alias), mainName);
-  end;
-
+  LMainName := 'HMAC' + AAlgorithm;
+  FKgAlgorithms.AddOrSetValue(LMainName, LMainName);
+  FKgAlgorithms.AddOrSetValue('HMAC-' + AAlgorithm, LMainName);
+  FKgAlgorithms.AddOrSetValue('HMAC/' + AAlgorithm, LMainName);
+  for LAlias in AAliases do
+    FKgAlgorithms.AddOrSetValue(LAlias, LMainName);
 end;
 
 class procedure TGeneratorUtilities.Boot;
 begin
-  FkgAlgorithms := TDictionary<String, String>.Create();
-  FkpgAlgorithms := TDictionary<String, String>.Create();
-  FdefaultKeySizes := TDictionary<String, Int32>.Create();
+  FKgAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FKpgAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FDefaultKeySizes := TDictionary<String, Int32>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
   TNistObjectIdentifiers.Boot;
+  TIanaObjectIdentifiers.Boot;
 
-  //
-  // key generators.
-  //
-
-  AddKgAlgorithm('AES128', ['2.16.840.1.101.3.4.2',
-    TNistObjectIdentifiers.IdAes128Cbc.ID,
+  // key generators
+  AddKgAlgorithm('AES', ['AESWRAP']);
+  AddKgAlgorithm('AES128',
+    [TNistObjectIdentifiers.IdAes128Cbc.ID,
     TNistObjectIdentifiers.IdAes128Cfb.ID,
     TNistObjectIdentifiers.IdAes128Ecb.ID,
     TNistObjectIdentifiers.IdAes128Ofb.ID]);
-
-  AddKgAlgorithm('AES192', ['2.16.840.1.101.3.4.22',
-    TNistObjectIdentifiers.IdAes192Cbc.ID,
+  AddKgAlgorithm('AES192',
+    [TNistObjectIdentifiers.IdAes192Cbc.ID,
     TNistObjectIdentifiers.IdAes192Cfb.ID,
     TNistObjectIdentifiers.IdAes192Ecb.ID,
     TNistObjectIdentifiers.IdAes192Ofb.ID]);
-
-  AddKgAlgorithm('AES256', ['2.16.840.1.101.3.4.42',
-    TNistObjectIdentifiers.IdAes256Cbc.ID,
+  AddKgAlgorithm('AES256',
+    [TNistObjectIdentifiers.IdAes256Cbc.ID,
     TNistObjectIdentifiers.IdAes256Cfb.ID,
     TNistObjectIdentifiers.IdAes256Ecb.ID,
     TNistObjectIdentifiers.IdAes256Ofb.ID]);
@@ -212,7 +182,6 @@ begin
   //
   // HMac key generators
   //
-  TIanaObjectIdentifiers.Boot;
 
   AddHMacKeyGenerator('MD2', []);
   AddHMacKeyGenerator('MD4', []);
@@ -220,7 +189,8 @@ begin
 
   TPkcsObjectIdentifiers.Boot;
 
-  AddHMacKeyGenerator('SHA1', [TPkcsObjectIdentifiers.IdHmacWithSha1.ID,
+  AddHMacKeyGenerator('SHA1',
+    [TPkcsObjectIdentifiers.IdHmacWithSha1.ID,
     TIanaObjectIdentifiers.HmacSha1.ID]);
   AddHMacKeyGenerator('SHA224', [TPkcsObjectIdentifiers.IdHmacWithSha224.ID]);
   AddHMacKeyGenerator('SHA256', [TPkcsObjectIdentifiers.IdHmacWithSha256.ID]);
@@ -250,202 +220,186 @@ begin
   TRosstandartObjectIdentifiers.Boot;
 
   AddHMacKeyGenerator('GOST3411-2012-256',
-    [TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.ID]);
+    [TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_256.ID]);
   AddHMacKeyGenerator('GOST3411-2012-512',
-    [TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.ID]);
+    [TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512.ID]);
 
   //
   // key pair generators.
   //
 
+  TX9ObjectIdentifiers.Boot;
+  TSecObjectIdentifiers.Boot;
+
   AddKpgAlgorithm('DH', ['DIFFIEHELLMAN']);
   AddKpgAlgorithm('DSA', []);
   AddKpgAlgorithm('RSA', [TPkcsObjectIdentifiers.RsaEncryption.ID]);
   AddKpgAlgorithm('RSASSA-PSS', []);
+  AddKpgAlgorithm('EC', [
+    TX9ObjectIdentifiers.DHSinglePassStdDHSha1KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassStdDHSha224KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassStdDHSha256KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassStdDHSha384KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassStdDHSha512KdfScheme.ID,
+    TX9ObjectIdentifiers.DHSinglePassCofactorDHSha1KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassCofactorDHSha224KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassCofactorDHSha256KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassCofactorDHSha384KdfScheme.ID,
+    TSecObjectIdentifiers.DhSinglePassCofactorDHSha512KdfScheme.ID
+    ]);
   AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDHC', []);
   AddKpgAlgorithm('ECDSA', []);
 
   TEdECObjectIdentifiers.Boot;
 
-  AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph',
-    TEdECObjectIdentifiers.id_Ed25519.ID]);
-  AddKpgAlgorithm('Ed25519Blake2B', ['Ed25519Blake2Bctx', 'Ed25519Blake2Bph']);
-  AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.id_X25519.ID]);
+  AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph', TEdECObjectIdentifiers.IdEd25519.ID]);
+  AddKpgAlgorithm('GOST3410', ['GOST-3410', 'GOST-3410-94']);
+  AddKpgAlgorithm('RSA', [TPkcsObjectIdentifiers.RsaEncryption.ID]);
+  AddKpgAlgorithm('RSASSA-PSS', []);
+  AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.IdX25519.ID]);
 
-  AddDefaultKeySizeEntries(128, ['AES128', 'BLOWFISH', 'HMACMD2', 'HMACMD4',
-    'HMACMD5', 'HMACRIPEMD128', 'SALSA20']);
+  AddDefaultKeySizeEntries(128, [
+    'AES128',
+    'BLOWFISH',
+    'CHACHA',
+    'HMACMD2',
+    'HMACMD4',
+    'HMACMD5',
+    'HMACRIPEMD128',
+    'SALSA20'
+    ]);
   AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
   AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER']);
-  AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACKECCAK224', 'HMACSHA224',
+  AddDefaultKeySizeEntries(224,
+    ['HMACSHA3-224',
+    'HMACKECCAK224',
+    'HMACSHA224',
     'HMACSHA512/224']);
-  AddDefaultKeySizeEntries(256, ['AES256', 'HMACGOST3411-2012-256',
-    'HMACSHA3-256', 'HMACKECCAK256', 'HMACSHA256', 'HMACSHA512/256']);
+  AddDefaultKeySizeEntries(256, [
+    'AES256',
+    'HMACGOST3411-2012-256',
+    'HMACSHA3-256',
+    'HMACKECCAK256',
+    'HMACSHA256',
+    'HMACSHA512/256'
+    ]);
   AddDefaultKeySizeEntries(288, ['HMACKECCAK288']);
-  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACKECCAK384',
-    'HMACSHA384']);
-  AddDefaultKeySizeEntries(512, ['HMACGOST3411-2012-512', 'HMACSHA3-512',
-    'HMACKECCAK512', 'HMACSHA512']);
+  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACKECCAK384', 'HMACSHA384']);
+  AddDefaultKeySizeEntries(512, ['HMACGOST3411-2012-512', 'HMACSHA3-512', 'HMACKECCAK512', 'HMACSHA512']);
 end;
 
-class constructor TGeneratorUtilities.CreateGeneratorUtilities;
+class constructor TGeneratorUtilities.Create;
 begin
-  TGeneratorUtilities.Boot;
+  Boot;
 end;
 
-class destructor TGeneratorUtilities.DestroyGeneratorUtilities;
+class destructor TGeneratorUtilities.Destroy;
 begin
-  FkgAlgorithms.Free;
-  FkpgAlgorithms.Free;
-  FdefaultKeySizes.Free;
+  FKgAlgorithms.Free;
+  FKpgAlgorithms.Free;
+  FDefaultKeySizes.Free;
 end;
 
-class function TGeneratorUtilities.FindDefaultKeySize(const canonicalName
-  : String): Int32;
+class function TGeneratorUtilities.FindDefaultKeySize(const ACanonicalName: String): Int32;
 begin
-  if (not FdefaultKeySizes.ContainsKey(canonicalName)) then
-  begin
-    result := -1;
-    Exit;
-  end;
-
-  FdefaultKeySizes.TryGetValue(canonicalName, result);
+  if not FDefaultKeySizes.TryGetValue(ACanonicalName, Result) then
+    Result := -1;
 end;
 
-class function TGeneratorUtilities.GetCanonicalKeyGeneratorAlgorithm
-  (const algorithm: String): String;
+class function TGeneratorUtilities.GetCanonicalKeyGeneratorAlgorithm(const AAlgorithm: String): String;
 begin
-  FkgAlgorithms.TryGetValue(UpperCase(algorithm), result);
+  Result := TCollectionUtilities.GetValueOrNull<String, String>(FKgAlgorithms, AAlgorithm);
 end;
 
-class function TGeneratorUtilities.GetCanonicalKeyPairGeneratorAlgorithm
-  (const algorithm: String): String;
+class function TGeneratorUtilities.GetCanonicalKeyPairGeneratorAlgorithm(const AAlgorithm: String): String;
 begin
-  FkpgAlgorithms.TryGetValue(UpperCase(algorithm), result);
+  Result := TCollectionUtilities.GetValueOrNull<String, String>(FKpgAlgorithms, AAlgorithm);
 end;
 
-class function TGeneratorUtilities.GetDefaultKeySize(const algorithm
-  : String): Int32;
+class function TGeneratorUtilities.GetDefaultKeySize(const AAlgorithm: String): Int32;
 var
-  canonicalName: string;
-  defaultKeySize: Int32;
+  LCanonicalName: String;
+  LDefaultKeySize: Int32;
 begin
-  canonicalName := GetCanonicalKeyGeneratorAlgorithm(algorithm);
-
-  if (canonicalName = '') then
-  begin
-    raise ESecurityUtilityCryptoLibException.CreateResFmt
-      (@SKeyGeneratorAlgorithmNotRecognised, [algorithm]);
-  end;
-
-  defaultKeySize := FindDefaultKeySize(canonicalName);
-  if (defaultKeySize = -1) then
-  begin
-
-    raise ESecurityUtilityCryptoLibException.CreateResFmt
-      (@SKeyGeneratorAlgorithmNotSupported, [algorithm, canonicalName]);
-  end;
-
-  result := defaultKeySize;
+  LCanonicalName := GetCanonicalKeyGeneratorAlgorithm(AAlgorithm);
+  if LCanonicalName = '' then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotRecognised, [AAlgorithm]);
+  LDefaultKeySize := FindDefaultKeySize(LCanonicalName);
+  if LDefaultKeySize = -1 then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotSupported, [AAlgorithm, LCanonicalName]);
+  Result := LDefaultKeySize;
 end;
 
-class function TGeneratorUtilities.GetDefaultKeySize
-  (const oid: IDerObjectIdentifier): Int32;
+class function TGeneratorUtilities.GetDefaultKeySize(const AOid: IDerObjectIdentifier): Int32;
 begin
-  result := GetDefaultKeySize(oid.ID);
+  Result := GetDefaultKeySize(AOid.ID);
 end;
 
-class function TGeneratorUtilities.GetKeyGenerator(const algorithm: String)
-  : ICipherKeyGenerator;
+class function TGeneratorUtilities.GetKeyGenerator(const AOid: IDerObjectIdentifier): ICipherKeyGenerator;
+begin
+  Result := GetKeyGenerator(AOid.ID);
+end;
+
+class function TGeneratorUtilities.GetKeyGenerator(const AAlgorithm: String): ICipherKeyGenerator;
 var
-  canonicalName: string;
-  defaultKeySize: Int32;
+  LCanonicalName: String;
+  LDefaultKeySize: Int32;
 begin
-
-  canonicalName := GetCanonicalKeyGeneratorAlgorithm(algorithm);
-  if (canonicalName = '') then
-  begin
-    raise ESecurityUtilityCryptoLibException.CreateResFmt
-      (@SKeyGeneratorAlgorithmNotRecognised, [algorithm]);
-  end;
-
-  defaultKeySize := FindDefaultKeySize(canonicalName);
-  if (defaultKeySize = -1) then
-  begin
-    raise ESecurityUtilityCryptoLibException.CreateResFmt
-      (@SKeyGeneratorAlgorithmNotSupported, [algorithm, canonicalName]);
-  end;
-
-  result := TCipherKeyGenerator.Create(defaultKeySize);
+  LCanonicalName := GetCanonicalKeyGeneratorAlgorithm(AAlgorithm);
+  if LCanonicalName = '' then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotRecognised, [AAlgorithm]);
+  LDefaultKeySize := FindDefaultKeySize(LCanonicalName);
+  if LDefaultKeySize = -1 then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotSupported, [AAlgorithm, LCanonicalName]);
+  Result := TCipherKeyGenerator.Create(LDefaultKeySize);
 end;
 
-class function TGeneratorUtilities.GetKeyPairGenerator(const algorithm: String)
-  : IAsymmetricCipherKeyPairGenerator;
+class function TGeneratorUtilities.GetKeyPairGenerator(const AAlgorithm: String): IAsymmetricCipherKeyPairGenerator;
 var
-  canonicalName: string;
+  LCanonicalName: String;
 begin
-  canonicalName := GetCanonicalKeyPairGeneratorAlgorithm(algorithm);
+  LCanonicalName := GetCanonicalKeyPairGeneratorAlgorithm(AAlgorithm);
+  if LCanonicalName = '' then
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyPairGeneratorAlgorithmNotRecognised, [AAlgorithm]);
 
-  if (canonicalName = '') then
+  if LCanonicalName = 'DH' then
   begin
-    raise ESecurityUtilityCryptoLibException.CreateResFmt
-      (@SKeyPairGeneratorAlgorithmNotRecognised, [algorithm]);
+    Result := TDHKeyPairGenerator.Create() as IDHKeyPairGenerator;
+    Exit;
   end;
-
-  if (canonicalName = 'DH') then
+  if LCanonicalName = 'DSA' then
   begin
-    result := TDHKeyPairGenerator.Create() as IDHKeyPairGenerator;
+    Result := TDsaKeyPairGenerator.Create() as IDsaKeyPairGenerator;
+    Exit;
+  end;
+  if (LCanonicalName = 'RSA') or (LCanonicalName = 'RSASSA-PSS') then
+  begin
+    Result := TRsaKeyPairGenerator.Create() as IRsaKeyPairGenerator;
+    Exit;
+  end;
+  if TStringUtils.BeginsWith(LCanonicalName, 'EC', True) then
+  begin
+    Result := TECKeyPairGenerator.Create(LCanonicalName) as IECKeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'Ed25519' then
+  begin
+    Result := TEd25519KeyPairGenerator.Create(TEd25519.Create() as IEd25519) as IEd25519KeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'X25519' then
+  begin
+    Result := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
     Exit;
   end;
 
-  if (canonicalName = 'DSA') then
-  begin
-    result := TDsaKeyPairGenerator.Create() as IDsaKeyPairGenerator;
-    Exit;
-  end;
-
-  if ((canonicalName = 'RSA') or (canonicalName = 'RSASSA-PSS')) then
-  begin
-    result := TRsaKeyPairGenerator.Create() as IRsaKeyPairGenerator;
-    Exit;
-  end;
-
-  // "EC", "ECDH", "ECDHC", "ECDSA", "ECGOST3410", "ECMQV"
-  if TStringUtils.BeginsWith(canonicalName, 'EC', True) then
-  begin
-    result := TECKeyPairGenerator.Create(canonicalName) as IECKeyPairGenerator;
-    Exit;
-  end;
-
-  if (canonicalName = 'Ed25519') then
-  begin
-    result := TEd25519KeyPairGenerator.Create(TEd25519.Create() as IEd25519)
-      as IEd25519KeyPairGenerator;
-    Exit;
-  end;
-
-  if (canonicalName = 'Ed25519Blake2B') then
-  begin
-    result := TEd25519KeyPairGenerator.Create(TEd25519Blake2B.Create()
-      as IEd25519Blake2B) as IEd25519KeyPairGenerator;
-    Exit;
-  end;
-
-  if (canonicalName = 'X25519') then
-  begin
-    result := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
-    Exit;
-  end;
-
-  raise ESecurityUtilityCryptoLibException.CreateResFmt
-    (@SKeyPairGeneratorAlgorithmNotSupported, [algorithm, canonicalName]);
-
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyPairGeneratorAlgorithmNotSupported, [AAlgorithm, LCanonicalName]);
 end;
 
-class function TGeneratorUtilities.GetKeyPairGenerator
-  (const oid: IDerObjectIdentifier): IAsymmetricCipherKeyPairGenerator;
+class function TGeneratorUtilities.GetKeyPairGenerator(const AOid: IDerObjectIdentifier): IAsymmetricCipherKeyPairGenerator;
 begin
-  result := GetKeyPairGenerator(oid.ID);
+  Result := GetKeyPairGenerator(AOid.ID);
 end;
 
 end.

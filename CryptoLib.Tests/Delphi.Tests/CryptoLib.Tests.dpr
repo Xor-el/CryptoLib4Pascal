@@ -498,6 +498,8 @@ uses
   ClpAsn1Dumper in '..\..\CryptoLib\src\Asn1\ClpAsn1Dumper.pas',
   ClpX509CertificateParser in '..\..\CryptoLib\src\Asn1\X509\ClpX509CertificateParser.pas',
   ClpIX509CertificateParser in '..\..\CryptoLib\src\Interfaces\ClpIX509CertificateParser.pas',
+  ClpEnumUtilities in '..\..\CryptoLib\src\Utils\ClpEnumUtilities.pas',
+  ClpNoOpDigest in '..\..\CryptoLib\src\Crypto\Digests\ClpNoOpDigest.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',

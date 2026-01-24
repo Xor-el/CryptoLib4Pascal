@@ -115,14 +115,14 @@ begin
 
   if Supports(APublicKey, IX25519PublicKeyParameters, LX25519Key) then
   begin
-    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.id_X25519);
+    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdX25519);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, LX25519Key.GetEncoded());
     Exit;
   end;
 
   if Supports(APublicKey, IEd25519PublicKeyParameters, LEd25519Key) then
   begin
-    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.id_Ed25519);
+    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdEd25519);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, LEd25519Key.GetEncoded());
     Exit;
   end;
