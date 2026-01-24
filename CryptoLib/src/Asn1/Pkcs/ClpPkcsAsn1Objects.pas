@@ -213,7 +213,7 @@ type
   /// </summary>
   TCertificationRequest = class(TAsn1Encodable, ICertificationRequest)
 
-  strict private
+  strict protected
   var
     FReqInfo: ICertificationRequestInfo;
     FSigAlgId: IAlgorithmIdentifier;
@@ -224,6 +224,9 @@ type
     function GetSignatureAlgorithm: IAlgorithmIdentifier;
     function GetSignature: IDerBitString;
     function GetSignatureOctets: TCryptoLibByteArray;
+
+    /// <summary>Protected parameterless constructor for TPkcs10CertificationRequest.Init.</summary>
+    constructor Create; overload;
 
   public
     class function GetInstance(AObj: TObject): ICertificationRequest; overload; static;
@@ -726,6 +729,11 @@ class function TCertificationRequest.GetTagged(const ATaggedObject: IAsn1TaggedO
   ADeclaredExplicit: Boolean): ICertificationRequest;
 begin
   Result := TCertificationRequest.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCertificationRequest.Create;
+begin
+  inherited Create();
 end;
 
 constructor TCertificationRequest.Create(const ASeq: IAsn1Sequence);

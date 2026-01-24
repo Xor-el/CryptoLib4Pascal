@@ -71,6 +71,9 @@ resourcestring
   SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
   SInvalidKeyIdentifier = 'keyID';
   SInvalidKeyID = 'keyID';
+  SDeltaCertDescSerialNil = 'serialNumber';
+  SDeltaCertDescSpkiNil = 'subjectPublicKeyInfo';
+  SDeltaCertDescSigValNil = 'signatureValue';
 
 type
   /// <summary>
@@ -186,6 +189,71 @@ type
 
     property DigestAlgorithm: IAlgorithmIdentifier read GetDigestAlgorithm;
     property Digest: IAsn1OctetString read GetDigest;
+
+  end;
+
+  /// <summary>
+  /// DeltaCertificateDescriptor (draft-bonnell-lamps-chameleon-certs).
+  /// DeltaCertificateDescriptor ::= SEQUENCE { serialNumber, signature [0] OPTIONAL,
+  ///   issuer [1] OPTIONAL, validity [2] OPTIONAL, subject [3] OPTIONAL,
+  ///   subjectPublicKeyInfo, extensions [4] OPTIONAL, signatureValue }
+  /// </summary>
+  TDeltaCertificateDescriptor = class(TAsn1Encodable, IAsn1Encodable,
+    IDeltaCertificateDescriptor)
+
+  strict private
+  var
+    FSerialNumber: IDerInteger;
+    FSignature: IAlgorithmIdentifier;
+    FIssuer: IX509Name;
+    FValidity: IValidity;
+    FSubject: IX509Name;
+    FSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+    FExtensions: IX509Extensions;
+    FSignatureValue: IDerBitString;
+
+  strict private
+    procedure ImplCreate(const ASeq: IAsn1Sequence);
+
+  strict protected
+    function GetSerialNumber: IDerInteger;
+    function GetSignature: IAlgorithmIdentifier;
+    function GetIssuer: IX509Name;
+    function GetValidity: IValidity;
+    function GetSubject: IX509Name;
+    function GetSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+    function GetExtensions: IX509Extensions;
+    function GetSignatureValue: IDerBitString;
+
+  public
+  /// <summary>
+    /// Parse a DeltaCertificateDescriptor from an object.
+    /// </summary>
+    class function GetInstance(AObj: TObject): IDeltaCertificateDescriptor; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDeltaCertificateDescriptor; overload; static;
+    /// <summary>
+    /// Parse a DeltaCertificateDescriptor from DER-encoded bytes.
+    /// </summary>
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IDeltaCertificateDescriptor; overload; static;
+
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IDeltaCertificateDescriptor; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IDeltaCertificateDescriptor; static;
+    class function FromExtensions(const AExtensions: IX509Extensions): IDeltaCertificateDescriptor; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ASerialNumber: IDerInteger;
+      const ASignature: IAlgorithmIdentifier; const AIssuer: IX509Name;
+      const AValidity: IValidity; const ASubject: IX509Name;
+      const ASubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+      const AExtensions: IX509Extensions;
+      const ASignatureValue: IDerBitString); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
 
   end;
 
@@ -1937,8 +2005,7 @@ begin
     Exit;
   end;
 
-  LAsn1Obj := TAsn1Object.FromByteArray(AEncoded);
-  Result := TDigestInfo.Create(TAsn1Sequence.GetInstance(LAsn1Obj));
+  Result := TDigestInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
 end;
 
 class function TDigestInfo.GetInstance(const AObj: IAsn1TaggedObject;
@@ -2020,6 +2087,207 @@ end;
 function TDigestInfo.ToAsn1Object: IAsn1Object;
 begin
   Result := TDerSequence.Create([FDigestAlgorithm, FDigest]);
+end;
+
+{ TDeltaCertificateDescriptor }
+
+procedure TDeltaCertificateDescriptor.ImplCreate(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 3) or (LCount > 8) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FSerialNumber := TDerInteger.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  FSignature := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(
+    ASeq, LPos, 0, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
+    begin
+      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+    end);
+
+  FIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Name>(ASeq, LPos, 1, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Name
+    begin
+      Result := TX509Name.GetTagged(ATagged, AState);
+    end);
+
+  FValidity := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IValidity>(ASeq, LPos, 2, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IValidity
+    begin
+      Result := TValidity.GetTagged(ATagged, AState);
+    end);
+
+  FSubject := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Name>(ASeq, LPos, 3, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Name
+    begin
+      Result := TX509Name.GetTagged(ATagged, AState);
+    end);
+
+  FSubjectPublicKeyInfo := TSubjectPublicKeyInfo.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  FExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 4, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions
+    begin
+      Result := TX509Extensions.GetTagged(ATagged, AState);
+    end);
+
+  FSignatureValue := TDerBitString.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+end;
+
+constructor TDeltaCertificateDescriptor.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+  ImplCreate(ASeq);
+end;
+
+constructor TDeltaCertificateDescriptor.Create(const ASerialNumber: IDerInteger;
+  const ASignature: IAlgorithmIdentifier; const AIssuer: IX509Name;
+  const AValidity: IValidity; const ASubject: IX509Name;
+  const ASubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+  const AExtensions: IX509Extensions;
+  const ASignatureValue: IDerBitString);
+begin
+  inherited Create();
+  if ASerialNumber = nil then
+    raise EArgumentNilCryptoLibException.Create(SDeltaCertDescSerialNil);
+  if ASubjectPublicKeyInfo = nil then
+    raise EArgumentNilCryptoLibException.Create(SDeltaCertDescSpkiNil);
+  if ASignatureValue = nil then
+    raise EArgumentNilCryptoLibException.Create(SDeltaCertDescSigValNil);
+  FSerialNumber := ASerialNumber;
+  FSignature := ASignature;
+  FIssuer := AIssuer;
+  FValidity := AValidity;
+  FSubject := ASubject;
+  FSubjectPublicKeyInfo := ASubjectPublicKeyInfo;
+  FExtensions := AExtensions;
+  FSignatureValue := ASignatureValue;
+end;
+
+class function TDeltaCertificateDescriptor.FromExtensions(
+  const AExtensions: IX509Extensions): IDeltaCertificateDescriptor;
+begin
+  Result := GetInstance(TX509Extensions.GetExtensionParsedValue(AExtensions,
+    TX509Extensions.DraftDeltaCertificateDescriptor));
+end;
+
+class function TDeltaCertificateDescriptor.GetInstance(AObj: TObject): IDeltaCertificateDescriptor;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDeltaCertificateDescriptor, Result) then
+    Exit;
+
+  Result := TDeltaCertificateDescriptor.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TDeltaCertificateDescriptor.GetInstance(const AObj: IAsn1Convertible): IDeltaCertificateDescriptor;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDeltaCertificateDescriptor, Result) then
+    Exit;
+
+  Result := TDeltaCertificateDescriptor.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TDeltaCertificateDescriptor.GetInstance(const AEncoded: TCryptoLibByteArray): IDeltaCertificateDescriptor;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TDeltaCertificateDescriptor.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TDeltaCertificateDescriptor.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IDeltaCertificateDescriptor;
+begin
+  Result := TDeltaCertificateDescriptor.Create(
+    TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TDeltaCertificateDescriptor.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IDeltaCertificateDescriptor;
+begin
+  Result := TDeltaCertificateDescriptor.Create(
+    TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+function TDeltaCertificateDescriptor.GetSerialNumber: IDerInteger;
+begin
+  Result := FSerialNumber;
+end;
+
+function TDeltaCertificateDescriptor.GetSignature: IAlgorithmIdentifier;
+begin
+  Result := FSignature;
+end;
+
+function TDeltaCertificateDescriptor.GetIssuer: IX509Name;
+begin
+  Result := FIssuer;
+end;
+
+function TDeltaCertificateDescriptor.GetValidity: IValidity;
+begin
+  Result := FValidity;
+end;
+
+function TDeltaCertificateDescriptor.GetSubject: IX509Name;
+begin
+  Result := FSubject;
+end;
+
+function TDeltaCertificateDescriptor.GetSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+begin
+  Result := FSubjectPublicKeyInfo;
+end;
+
+function TDeltaCertificateDescriptor.GetExtensions: IX509Extensions;
+begin
+  Result := FExtensions;
+end;
+
+function TDeltaCertificateDescriptor.GetSignatureValue: IDerBitString;
+begin
+  Result := FSignatureValue;
+end;
+
+function TDeltaCertificateDescriptor.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create();
+  LV.Add(FSerialNumber);
+  LV.AddOptionalTagged(True, 0, FSignature);
+  LV.AddOptionalTagged(True, 1, FIssuer);
+  LV.AddOptionalTagged(True, 2, FValidity);
+  LV.AddOptionalTagged(True, 3, FSubject);
+  LV.Add(FSubjectPublicKeyInfo);
+  LV.AddOptionalTagged(True, 4, FExtensions);
+  LV.Add(FSignatureValue);
+  Result := TDerSequence.Create(LV);
 end;
 
 { TTime }

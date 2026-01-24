@@ -15,69 +15,76 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpDefaultSignatureResult;
+unit ClpX509Attribute;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIBlockResult,
-  ClpISigner,
+  ClpIAsn1Objects,
+  ClpIX509Asn1Objects,
+  ClpX509Asn1Objects,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Interface for default signature result operations.
+  /// Class for carrying the values in an X.509 Attribute.
   /// </summary>
-  IDefaultSignatureResult = interface(IBlockResult)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+  IX509Attribute = interface
+    ['{B1C2D3E4-F5A6-7890-BCDE-F12345678901}']
+
+    function GetOid: String;
+    function GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
+    function ToAsn1Object: IAsn1Object;
+
+    property Oid: String read GetOid;
   end;
 
   /// <summary>
-  /// Default implementation of IBlockResult for signature operations.
+  /// Implementation of X.509 Attribute.
   /// </summary>
-  TDefaultSignatureResult = class sealed(TInterfacedObject, IBlockResult, IDefaultSignatureResult)
+  TX509Attribute = class sealed(TInterfacedObject, IX509Attribute)
 
   strict private
-  var
-    FSigner: ISigner;
+    FAttr: IAttributeX509;
+
+    function GetOid: String;
+    function GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
+    function ToAsn1Object: IAsn1Object;
 
   public
-    constructor Create(const ASigner: ISigner);
+    /// <summary>
+    /// Create from an object representing an attribute.
+    /// </summary>
+    constructor Create(const AAttr: IAsn1Encodable); overload;
 
-    function Collect: TCryptoLibByteArray; overload;
-    function Collect(const ABuf: TCryptoLibByteArray; AOff: Int32): Int32; overload;
-    function GetMaxResultLength: Int32;
+    property Oid: String read GetOid;
   end;
 
 implementation
 
-{ TDefaultSignatureResult }
+{ TX509Attribute }
 
-constructor TDefaultSignatureResult.Create(const ASigner: ISigner);
+constructor TX509Attribute.Create(const AAttr: IAsn1Encodable);
 begin
   inherited Create();
-  FSigner := ASigner;
+  FAttr := TAttributeX509.GetInstance(AAttr);
 end;
 
-function TDefaultSignatureResult.Collect: TCryptoLibByteArray;
+function TX509Attribute.GetOid: String;
 begin
-  Result := FSigner.GenerateSignature();
+  Result := FAttr.AttrType.Id;
 end;
 
-function TDefaultSignatureResult.Collect(const ABuf: TCryptoLibByteArray; AOff: Int32): Int32;
-var
-  LSignature: TCryptoLibByteArray;
+function TX509Attribute.GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  LSignature := Collect();
-  System.Move(LSignature[0], ABuf[AOff], System.Length(LSignature));
-  Result := System.Length(LSignature);
+  Result := FAttr.GetAttributeValues;
 end;
 
-function TDefaultSignatureResult.GetMaxResultLength: Int32;
+function TX509Attribute.ToAsn1Object: IAsn1Object;
 begin
-  Result := FSigner.GetMaxSignatureSize();
+  Result := FAttr.ToAsn1Object;
 end;
 
 end.

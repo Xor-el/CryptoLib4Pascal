@@ -47,6 +47,8 @@ uses
   ClpAsn1VerifierFactoryProvider,
   ClpPublicKeyFactory,
   ClpBigInteger,
+  ClpRfc5280Asn1Utilities,
+  ClpIX509Extension,
   ClpCryptoLibTypes,
   ClpArrayUtils,
   ClpEncoders,
@@ -173,10 +175,6 @@ type
   end;
 
 implementation
-
-uses
-  ClpRfc5280Asn1Utilities,
-  ClpIX509Extension;
 
 { TX509Certificate.TCachedEncoding }
 
@@ -924,11 +922,7 @@ var
 begin
   LCalculator := AVerifierFactory.CreateCalculator();
   LStream := LCalculator.Stream;
-  try
-    AAsn1Encodable.EncodeTo(LStream, TAsn1Encodable.Der);
-  finally
-    LStream.Free;
-  end;
+  AAsn1Encodable.EncodeTo(LStream, TAsn1Encodable.Der);
   LResult := LCalculator.GetResult();
   Result := LResult.IsVerified(ASignature.GetOctets());
 end;

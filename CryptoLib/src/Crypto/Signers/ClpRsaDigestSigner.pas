@@ -266,8 +266,6 @@ begin
   if not FForSigning then
     raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForSignature);
 
-  //SetLength(hash, FDigest.GetDigestSize);
-  //FDigest.DoFinal(hash, 0);
   hash := FDigest.DoFinal();
 
   try
@@ -286,8 +284,7 @@ begin
 
     on E: ECryptoLibException do
     begin
-      // All other CryptoLib exceptions propagate unchanged
-      raise;
+      raise ECryptoLibException.Create(SUnableToEncode + E.Message);
     end;
 
     on E: Exception do

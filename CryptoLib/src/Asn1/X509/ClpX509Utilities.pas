@@ -25,6 +25,7 @@ uses
   SysUtils,
   Classes,
   Generics.Collections,
+  ClpBits,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
@@ -41,6 +42,12 @@ uses
   ClpNistObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoProObjectIdentifiers,
+  ClpDigestUtilities,
+  ClpDefaultDigestCalculator,
+  ClpDefaultDigestResult,
+  ClpIDigest,
+  ClpIVerifier,
+  ClpCryptoLibComparers,
   ClpCryptoLibTypes,
   ClpArrayUtils,
   ClpCollectionUtilities;
@@ -73,6 +80,7 @@ type
       const ABuf: TCryptoLibByteArray; AOff, ALen: Int32): TResult; overload; static;
     class function CalculateResult<TResult>(const AStreamCalculator: IStreamCalculator<TResult>;
       const AAsn1Encodable: IAsn1Encodable): TResult; overload; static;
+    class function BooleanToBitString(const AId: TCryptoLibBooleanArray): IDerBitString; static;
     class function CollectDerBitString(const AResult: IBlockResult): IDerBitString; static;
      class function CreateIssuerSerial(const ACertificate: IX509Certificate): IIssuerSerial; overload; static;
      class function CreateIssuerSerial(const ACertificate: IX509CertificateStructure): IIssuerSerial; overload; static;
@@ -95,14 +103,6 @@ type
   end;
 
 implementation
-
-uses
-  ClpDigestUtilities,
-  ClpDefaultDigestCalculator,
-  ClpDefaultDigestResult,
-  ClpIDigest,
-  ClpIVerifier,
-  ClpCryptoLibComparers;
 
 { TX509Utilities }
 
@@ -288,12 +288,22 @@ var
   LStream: TStream;
 begin
   LStream := AStreamCalculator.Stream;
-  try
-    AAsn1Encodable.EncodeTo(LStream, TAsn1Encodable.Der);
-  finally
-    LStream.Free;
-  end;
+  AAsn1Encodable.EncodeTo(LStream, TAsn1Encodable.Der);
   Result := AStreamCalculator.GetResult();
+end;
+
+class function TX509Utilities.BooleanToBitString(const AId: TCryptoLibBooleanArray): IDerBitString;
+var
+  LByteLen, LPad, I: Int32;
+  LBytes: TCryptoLibByteArray;
+begin
+  LByteLen := (System.Length(AId) + 7) div 8;
+  SetLength(LBytes, LByteLen);
+  for I := 0 to System.High(AId) do
+    if AId[I] then
+      LBytes[TBits.Asr32(I, 3)] := LBytes[TBits.Asr32(I, 3)] or Byte(TBits.Asr32($80, (I and 7)));
+  LPad := (8 - System.Length(AId)) and 7;
+  Result := TDerBitString.Create(LBytes, LPad);
 end;
 
 class function TX509Utilities.CollectDerBitString(const AResult: IBlockResult): IDerBitString;

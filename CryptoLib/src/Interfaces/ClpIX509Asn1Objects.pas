@@ -64,6 +64,7 @@ type
   IAttributeCertificateInfo = interface;
   IPolicyInformation = interface;
   ICrlDistPoint = interface;
+  IDeltaCertificateDescriptor = interface;
 
   /// <summary>
   /// Interface for the AlgorithmIdentifier object.
@@ -489,6 +490,34 @@ type
   ICrlDistPoint = interface(IAsn1Encodable)
     ['{B8C9D0E1-F2A3-4567-1234-567890123456}']
     function GetDistributionPoints: TCryptoLibGenericArray<IDistributionPoint>;
+  end;
+
+  /// <summary>
+  /// Interface for DeltaCertificateDescriptor (draft-bonnell-lamps-chameleon-certs).
+  /// DeltaCertificateDescriptor ::= SEQUENCE { serialNumber, signature [0] OPTIONAL,
+  ///   issuer [1] OPTIONAL, validity [2] OPTIONAL, subject [3] OPTIONAL,
+  ///   subjectPublicKeyInfo, extensions [4] OPTIONAL, signatureValue }
+  /// </summary>
+  IDeltaCertificateDescriptor = interface(IAsn1Encodable)
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}']
+
+    function GetSerialNumber: IDerInteger;
+    function GetSignature: IAlgorithmIdentifier;
+    function GetIssuer: IX509Name;
+    function GetValidity: IValidity;
+    function GetSubject: IX509Name;
+    function GetSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
+    function GetExtensions: IX509Extensions;
+    function GetSignatureValue: IDerBitString;
+
+    property SerialNumber: IDerInteger read GetSerialNumber;
+    property Signature: IAlgorithmIdentifier read GetSignature;
+    property Issuer: IX509Name read GetIssuer;
+    property Validity: IValidity read GetValidity;
+    property Subject: IX509Name read GetSubject;
+    property SubjectPublicKeyInfo: ISubjectPublicKeyInfo read GetSubjectPublicKeyInfo;
+    property Extensions: IX509Extensions read GetExtensions;
+    property SignatureValue: IDerBitString read GetSignatureValue;
   end;
 
   /// <summary>

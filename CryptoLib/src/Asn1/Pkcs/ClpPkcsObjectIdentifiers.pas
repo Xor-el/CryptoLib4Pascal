@@ -107,7 +107,8 @@ type
     FPkcs9AtEmailAddress,
     FPkcs9AtChallengePassword,
     FPkcs9AtUnstructuredName,
-    FPkcs9AtUnstructuredAddress
+    FPkcs9AtUnstructuredAddress,
+    FPkcs9AtExtensionRequest
       : IDerObjectIdentifier;
 
     // PKCS#1 RSA getters
@@ -154,6 +155,7 @@ type
     class function GetPkcs9AtChallengePassword: IDerObjectIdentifier; static; inline;
     class function GetPkcs9AtUnstructuredName: IDerObjectIdentifier; static; inline;
     class function GetPkcs9AtUnstructuredAddress: IDerObjectIdentifier; static; inline;
+    class function GetPkcs9AtExtensionRequest: IDerObjectIdentifier; static; inline;
 
     class constructor PkcsObjectIdentifiers();
 
@@ -216,6 +218,7 @@ type
     class property Pkcs9AtChallengePassword: IDerObjectIdentifier read GetPkcs9AtChallengePassword;
     class property Pkcs9AtUnstructuredName: IDerObjectIdentifier read GetPkcs9AtUnstructuredName;
     class property Pkcs9AtUnstructuredAddress: IDerObjectIdentifier read GetPkcs9AtUnstructuredAddress;
+    class property Pkcs9AtExtensionRequest: IDerObjectIdentifier read GetPkcs9AtExtensionRequest;
 
     class procedure Boot(); static;
 
@@ -273,6 +276,7 @@ begin
     FPkcs9AtUnstructuredName := TDerObjectIdentifier.Create(Pkcs9 + '.2');
     FPkcs9AtChallengePassword := TDerObjectIdentifier.Create(Pkcs9 + '.7');
     FPkcs9AtUnstructuredAddress := TDerObjectIdentifier.Create(Pkcs9 + '.8');
+    FPkcs9AtExtensionRequest := TDerObjectIdentifier.Create(Pkcs9 + '.14');
 
     FIsBooted := True;
   end;
@@ -453,6 +457,11 @@ end;
 class function TPkcsObjectIdentifiers.GetPkcs9AtUnstructuredAddress: IDerObjectIdentifier;
 begin
   Result := FPkcs9AtUnstructuredAddress;
+end;
+
+class function TPkcsObjectIdentifiers.GetPkcs9AtExtensionRequest: IDerObjectIdentifier;
+begin
+  Result := FPkcs9AtExtensionRequest;
 end;
 
 class constructor TPkcsObjectIdentifiers.PkcsObjectIdentifiers;
