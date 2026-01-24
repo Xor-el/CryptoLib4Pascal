@@ -428,6 +428,8 @@ uses
   ClpPssSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpPssSigner.pas',
   ClpIGenericSigner in '..\..\CryptoLib\src\Interfaces\ClpIGenericSigner.pas',
   ClpGenericSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpGenericSigner.pas',
+  ClpIsoTrailers in '..\..\CryptoLib\src\Crypto\Signers\ClpIsoTrailers.pas',
+  ClpX931Signer in '..\..\CryptoLib\src\Crypto\Signers\ClpX931Signer.pas',
   ClpIPrehash in '..\..\CryptoLib\src\Interfaces\ClpIPrehash.pas',
   ClpPrehash in '..\..\CryptoLib\src\Crypto\Digests\ClpPrehash.pas',
   ClpX509Asn1Objects in '..\..\CryptoLib\src\Asn1\X509\ClpX509Asn1Objects.pas',
@@ -596,6 +598,7 @@ uses
   PemReaderTests in '..\src\Utils\Pem\PemReaderTests.pas',
   CertificateTests in '..\src\Asn1\X509\CertificateTests.pas',
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
+  X931SignerTests in '..\src\Crypto\X931SignerTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

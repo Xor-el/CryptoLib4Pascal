@@ -30,6 +30,7 @@ uses
   ClpCryptoLibComparers,
   ClpECNRSigner,
   ClpICipherParameters,
+  ClpIAsymmetricBlockCipher,
   ClpIECNRSigner,
   ClpIDigest,
   ClpDigestUtilities,
@@ -69,6 +70,7 @@ uses
   ClpIPssSigner,
   ClpGenericSigner,
   ClpIGenericSigner,
+  ClpX931Signer,
   ClpRsaBlindedEngine,
   ClpIRsaBlindedEngine,
   ClpPkcs1Encoding,
@@ -864,8 +866,8 @@ var
   LDigest: IDigest;
   LWithPos, LEndPos: Int32;
   LCipherName: String;
-  // LX931: String;  // For X9.31 section (commented out)
-  // LCipher: IAsymmetricBlockCipher;  // For X9.31 section (commented out)
+  LX931: String;
+  LCipher: IAsymmetricBlockCipher;
 begin
   Result := nil;
 
@@ -958,50 +960,28 @@ begin
     Exit;
   end;
 
-  // Skip SM2, GOST3410, ECGOST3410, X9.31, MLDsa, SlhDsa as requested
+  // X9.31 section
+  if TPlatform.EndsWith(AMechanism, '/X9.31') then
+  begin
+    LX931 := TPlatform.Substring(AMechanism, 1, System.Length(AMechanism) - System.Length('/X9.31'));
+    LWithPos := TPlatform.IndexOf(LX931, 'WITH');
+    if LWithPos > 0 then
+    begin
+      LEndPos := LWithPos + System.Length('WITH');
 
-  // ISO9796-2 is not yet implemented
-  // if TPlatform.EndsWith(AMechanism, '/ISO9796-2') then
-  // begin
-  //   if AMechanism = 'SHA1WITHRSA/ISO9796-2' then
-  //   begin
-  //     Result := TIso9796d2Signer.Create(TRsaBlindedEngine.Create(), TDigestUtilities.GetDigest('SHA-1'), True);
-  //     Exit;
-  //   end;
-  //   if AMechanism = 'MD5WITHRSA/ISO9796-2' then
-  //   begin
-  //     Result := TIso9796d2Signer.Create(TRsaBlindedEngine.Create(), TDigestUtilities.GetDigest('MD5'), True);
-  //     Exit;
-  //   end;
-  //   if AMechanism = 'RIPEMD160WITHRSA/ISO9796-2' then
-  //   begin
-  //     Result := TIso9796d2Signer.Create(TRsaBlindedEngine.Create(), TDigestUtilities.GetDigest('RIPEMD160'), True);
-  //     Exit;
-  //   end;
-  // end;
+      LCipherName := TPlatform.Substring(LX931, LEndPos, System.Length(LX931) - LEndPos + 1);
+      if LCipherName = 'RSA' then
+      begin
+        LCipher := TRsaBlindedEngine.Create();
 
-  // X9.31 section - commented out as requested
-  // if TPlatform.EndsWith(AMechanism, '/X9.31') then
-  // begin
-  //   LX931 := TPlatform.Substring(AMechanism, 1, System.Length(AMechanism) - System.Length('/X9.31'));
-  //   LWithPos := TPlatform.IndexOf(LX931, 'WITH');
-  //   if LWithPos > 0 then
-  //   begin
-  //     LEndPos := LWithPos + System.Length('WITH');
-  //
-  //     LCipherName := TPlatform.Substring(LX931, LEndPos, System.Length(LX931) - LEndPos + 1);
-  //     if LCipherName = 'RSA' then
-  //     begin
-  //       LCipher := TRsaBlindedEngine.Create();
-  //
-  //       LDigestName := TPlatform.Substring(LX931, 1, LWithPos - 1);
-  //       LDigest := TDigestUtilities.GetDigest(LDigestName);
-  //
-  //       Result := TX931Signer.Create(LCipher, LDigest);
-  //       Exit;
-  //     end;
-  //   end;
-  // end;
+        LDigestName := TPlatform.Substring(LX931, 1, LWithPos - 1);
+        LDigest := TDigestUtilities.GetDigest(LDigestName);
+
+        Result := TX931Signer.Create(LCipher, LDigest);
+        Exit;
+      end;
+    end;
+  end;
 end;
 
 class function TSignerUtilities.InitSigner(const AAlgorithmOid: IDerObjectIdentifier;
