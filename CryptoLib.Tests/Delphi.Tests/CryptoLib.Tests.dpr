@@ -456,6 +456,7 @@ uses
   ClpSpeckEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpSpeckEngine.pas',
   ClpSpeckLegacyEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpSpeckLegacyEngine.pas',
   ClpStreams in '..\..\CryptoLib\src\IO\ClpStreams.pas',
+  ClpStreamUtilities in '..\..\CryptoLib\src\IO\ClpStreamUtilities.pas',
   ClpStringUtils in '..\..\CryptoLib\src\GeneralUtilities\ClpStringUtils.pas',
   ClpSubjectPublicKeyInfoFactory in '..\..\CryptoLib\src\Factories\ClpSubjectPublicKeyInfoFactory.pas',
   ClpTeleTrusTNamedCurves in '..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas',

@@ -29,6 +29,7 @@ uses
   ClpArrayUtils,
   ClpAsn1Objects,
   ClpStreams,
+  ClpStreamUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -81,7 +82,7 @@ constructor TX25519PublicKeyParameters.Create(input: TStream);
 begin
   Inherited Create(false);
   System.SetLength(FData, KeySize);
-  if (KeySize <> TStreamUtils.ReadFully(input, FData)) then
+  if (KeySize <> TStreamUtilities.ReadFully(input, FData)) then
   begin
     raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPublicKey);
   end;

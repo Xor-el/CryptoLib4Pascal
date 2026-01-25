@@ -29,7 +29,8 @@ uses
   ClpBits,
   ClpPlatform,
   ClpCryptoLibTypes,
-  ClpStreams;
+  ClpStreams,
+  ClpStreamUtilities;
 
 type
   /// <summary>
@@ -161,20 +162,20 @@ type
     /// <summary>
     /// Create an ASN.1 output stream.
     /// </summary>
-    class function CreateStream(const AOutput: TStream): TAsn1OutputStream; overload; static;
+    class function CreateInstance(const AOutput: TStream): TAsn1OutputStream; overload; static;
     /// <summary>
     /// Create an ASN.1 output stream with encoding.
     /// </summary>
-    class function CreateStream(const AOutput: TStream; const AEncoding: String): TAsn1OutputStream; overload; static;
+    class function CreateInstance(const AOutput: TStream; const AEncoding: String): TAsn1OutputStream; overload; static;
     /// <summary>
     /// Create an ASN.1 output stream from byte array.
     /// </summary>
-    class function CreateStream(const ABuffer: TCryptoLibByteArray; AIndex, ACount: Int32; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream; overload; static;
+    class function CreateInstance(const ABuffer: TCryptoLibByteArray; AIndex, ACount: Int32; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream; overload; static;
 
     /// <summary>
     /// Create an ASN.1 output stream with encoding and leaveOpen (factory method).
     /// </summary>
-    class function CreateStream(const AOutput: TStream; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream; overload; static;
+    class function CreateInstance(const AOutput: TStream; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream; overload; static;
 
     /// <summary>
     /// Destructor.
@@ -602,7 +603,7 @@ begin
       ('corrupted stream - out of bounds length found: %d >= %d',
       [FRemaining, LLimit]);
 
-  FRemaining := FRemaining - TStreamUtils.ReadFully(FIn, ABuf, 0,
+  FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, ABuf, 0,
     System.Length(ABuf));
   if FRemaining <> 0 then
     raise EEndOfStreamCryptoLibException.CreateFmt
@@ -628,7 +629,7 @@ begin
       [FRemaining, LLimit]);
 
   System.SetLength(Result, FRemaining);
-  FRemaining := FRemaining - TStreamUtils.ReadFully(FIn, Result, 0,
+  FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, Result, 0,
     System.Length(Result));
   if FRemaining <> 0 then
     raise EEndOfStreamCryptoLibException.CreateFmt
@@ -750,17 +751,17 @@ begin
   inherited Destroy;
 end;
 
-class function TAsn1OutputStream.CreateStream(const AOutput: TStream): TAsn1OutputStream;
+class function TAsn1OutputStream.CreateInstance(const AOutput: TStream): TAsn1OutputStream;
 begin
   Result := TAsn1OutputStream.Create(AOutput, False);
 end;
 
-class function TAsn1OutputStream.CreateStream(const AOutput: TStream; const AEncoding: String): TAsn1OutputStream;
+class function TAsn1OutputStream.CreateInstance(const AOutput: TStream; const AEncoding: String): TAsn1OutputStream;
 begin
-  Result := TAsn1OutputStream.CreateStream(AOutput, AEncoding, False);
+  Result := TAsn1OutputStream.CreateInstance(AOutput, AEncoding, False);
 end;
 
-class function TAsn1OutputStream.CreateStream(const AOutput: TStream; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream;
+class function TAsn1OutputStream.CreateInstance(const AOutput: TStream; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream;
 begin
   if SameText(AEncoding, TAsn1Encodable.Der) then
     Result := TAsn1DerOutputStream.Create(AOutput, ALeaveOpen)
@@ -770,9 +771,9 @@ begin
     Result := TAsn1OutputStream.Create(AOutput, ALeaveOpen);
 end;
 
-class function TAsn1OutputStream.CreateStream(const ABuffer: TCryptoLibByteArray; AIndex, ACount: Int32; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream;
+class function TAsn1OutputStream.CreateInstance(const ABuffer: TCryptoLibByteArray; AIndex, ACount: Int32; const AEncoding: String; ALeaveOpen: Boolean): TAsn1OutputStream;
 begin
-  Result := TAsn1OutputStream.CreateStream(TFixedBufferStream.Create(ABuffer, AIndex, ACount, True), AEncoding, ALeaveOpen);
+  Result := TAsn1OutputStream.CreateInstance(TFixedBufferStream.Create(ABuffer, AIndex, ACount, True), AEncoding, ALeaveOpen);
 end;
 
 procedure TAsn1OutputStream.FlushInternal;
@@ -1025,7 +1026,7 @@ begin
     raise EArgumentNilCryptoLibException.Create('buf');
   FBuf := ABuf;
   FOff := 0;
-  FAsn1Out := TAsn1OutputStream.CreateStream(AOutStream, TAsn1Encodable.Ber, True);
+  FAsn1Out := TAsn1OutputStream.CreateInstance(AOutStream, TAsn1Encodable.Ber, True);
 end;
 
 destructor TAsn1BufferedBerOctetStream.Destroy;
@@ -1048,7 +1049,7 @@ function TAsn1BufferedBerOctetStream.Write(const ABuffer: TCryptoLibByteArray;
 var
   LBufLen, LAvailable, LPos, LRemaining: Int32;
 begin
-  TStreamUtils.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
   LBufLen := System.Length(FBuf);
   LAvailable := LBufLen - FOff;
   
@@ -1165,7 +1166,7 @@ function TAsn1ConstructedBitStream.Read(ABuffer: TCryptoLibByteArray;
 var
   LTotalRead, LNumRead: Int32;
 begin
-  TStreamUtils.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
 
   if ACount < 1 then
   begin
@@ -1319,7 +1320,7 @@ function TAsn1ConstructedOctetStream.Read(ABuffer: TCryptoLibByteArray;
 var
   LTotalRead, LNumRead: Int32;
 begin
-  TStreamUtils.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
 
   if ACount < 1 then
   begin
@@ -1854,7 +1855,7 @@ begin
   // Read in chunks of 8 bytes
   while LRemainingBytes >= 8 do
   begin
-    if TStreamUtils.ReadFully(ADefIn, LBuf, 0, 8) <> 8 then
+    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, 8) <> 8 then
       raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
 
     LStr[LStringPos    ] := Char((LBuf[0] shl 8) or (LBuf[1] and $FF));
@@ -1868,7 +1869,7 @@ begin
   // Read remaining bytes
   if LRemainingBytes > 0 then
   begin
-    if TStreamUtils.ReadFully(ADefIn, LBuf, 0, LRemainingBytes) <> LRemainingBytes then
+    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, LRemainingBytes) <> LRemainingBytes then
       raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
 
     LBufPos := 0;

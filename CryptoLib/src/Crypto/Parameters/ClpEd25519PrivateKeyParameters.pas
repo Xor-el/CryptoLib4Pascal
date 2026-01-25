@@ -33,6 +33,7 @@ uses
   ClpArrayUtils,
   ClpAsn1Objects,
   ClpStreams,
+  ClpStreamUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -122,7 +123,7 @@ begin
   Inherited Create(true);
   System.SetLength(FData, KeySize);
   FEd25519Instance := Ed25519Instance;
-  if (KeySize <> TStreamUtils.ReadFully(input, FData)) then
+  if (KeySize <> TStreamUtilities.ReadFully(input, FData)) then
   begin
     raise EEndOfStreamCryptoLibException.CreateResFmt(@SEOFInPrivateKey,
       [FEd25519Instance.AlgorithmName]);

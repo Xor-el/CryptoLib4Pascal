@@ -115,7 +115,7 @@ begin
 
   LBOut := TMemoryStream.Create();
    // LeaveOpen is False so TAsn1OutputStream owns LBOut and will free it.
-  LAOut := TAsn1OutputStream.CreateStream(LBOut);
+  LAOut := TAsn1OutputStream.CreateInstance(LBOut);
   try
     for I := 0 to System.Length(LValues) - 1 do
     begin

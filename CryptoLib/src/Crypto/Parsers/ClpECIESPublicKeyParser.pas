@@ -30,6 +30,7 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpIECIESPublicKeyParser,
   ClpStreams,
+  ClpStreamUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -96,7 +97,7 @@ begin
   end;
 
   v[0] := Byte(first);
-  TStreamUtils.ReadFully(Stream, v, 1, System.length(v) - 1);
+  TStreamUtilities.ReadFully(Stream, v, 1, System.length(v) - 1);
 
   result := TECPublicKeyParameters.Create(FecParams.Curve.DecodePoint(v),
     FecParams);

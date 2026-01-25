@@ -35,6 +35,7 @@ uses
   ClpAsn1Utilities,
   ClpPlatform,
   ClpStreams,
+  ClpStreamUtilities,
   ClpArrayUtils,
   ClpEncoders,
   ClpConverters,
@@ -4833,7 +4834,7 @@ procedure TAsn1Object.EncodeTo(const AOutput: TStream);
 var
   LAsn1Out: TAsn1OutputStream;
 begin
-  LAsn1Out := TAsn1OutputStream.CreateStream(AOutput, TAsn1Encodable.Ber, True);
+  LAsn1Out := TAsn1OutputStream.CreateInstance(AOutput, TAsn1Encodable.Ber, True);
   try
     GetEncoding(LAsn1Out.Encoding).Encode(LAsn1Out);
   finally
@@ -4845,7 +4846,7 @@ procedure TAsn1Object.EncodeTo(const AOutput: TStream; const AEncoding: String);
 var
   LAsn1Out: TAsn1OutputStream;
 begin
-  LAsn1Out := TAsn1OutputStream.CreateStream(AOutput, AEncoding, True);
+  LAsn1Out := TAsn1OutputStream.CreateInstance(AOutput, AEncoding, True);
   try
     GetEncoding(LAsn1Out.Encoding).Encode(LAsn1Out);
   finally
@@ -4863,7 +4864,7 @@ begin
   LAsn1Encoding := GetEncoding(LEncodingType);
   LLength := LAsn1Encoding.GetLength();
   System.SetLength(Result, APreAlloc + LLength + APostAlloc);
-  LAsn1Out := TAsn1OutputStream.CreateStream(Result, APreAlloc, LLength, AEncoding, False);
+  LAsn1Out := TAsn1OutputStream.CreateInstance(Result, APreAlloc, LLength, AEncoding, False);
   try
     LAsn1Encoding.Encode(LAsn1Out);
     // Assert(LAsn1Out.Length = LAsn1Out.Position);
@@ -7544,7 +7545,7 @@ var
 begin
   LBitStream := TAsn1ConstructedBitStream.Create(ASp, False);
   try
-    LData := TStreamUtils.ReadAll(LBitStream);
+    LData := TStreamUtilities.ReadAll(LBitStream);
     LPadBits := LBitStream.PadBits;
     Result := TBerBitString.Create(LData, LPadBits);
   finally
@@ -7581,7 +7582,7 @@ var
 begin
   LOctetStream := TAsn1ConstructedOctetStream.Create(ASp);
   try
-    Result := TBerOctetString.Create(TStreamUtils.ReadAll(LOctetStream));
+    Result := TBerOctetString.Create(TStreamUtilities.ReadAll(LOctetStream));
   finally
     LOctetStream.Free;
   end;
@@ -7866,7 +7867,7 @@ end;
 
 procedure TBerGenerator.WriteBerBody(AContentStream: TStream);
 begin
-  TStreamUtils.PipeAll(AContentStream, &Out);
+  TStreamUtilities.PipeAll(AContentStream, &Out);
 end;
 
 procedure TBerGenerator.WriteBerEnd();
@@ -7992,7 +7993,7 @@ end;
 
 class procedure TDerGenerator.WriteDerEncoded(const AOutStr: TStream; ATag: Int32; const AInStr: TStream);
 begin
-  WriteDerEncoded(AOutStr, ATag, TStreamUtils.ReadAll(AInStr));
+  WriteDerEncoded(AOutStr, ATag, TStreamUtilities.ReadAll(AInStr));
 end;
 
 class procedure TDerGenerator.WriteLength(const AOutStr: TStream; ALength: Int32);
