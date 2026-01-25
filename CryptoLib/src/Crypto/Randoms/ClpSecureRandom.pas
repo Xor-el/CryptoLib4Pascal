@@ -52,7 +52,7 @@ type
   strict private
   class var
     FCounter: Int64;
-    Fmaster: ISecureRandom;
+    FMaster: ISecureRandom;
     FDoubleScale: Double;
     FLock: TCriticalSection;
 
@@ -64,12 +64,12 @@ type
 
     class property Master: ISecureRandom read GetMaster;
 
-    class constructor CreateSecureRandom();
-    class destructor DestroySecureRandom();
+    class constructor Create(); overload;
+    class destructor Destroy();
 
   strict protected
   var
-    Fgenerator: IRandomGenerator;
+    FGenerator: IRandomGenerator;
 
   public
     /// <summary>Use the specified instance of IRandomGenerator as random source.</summary>
@@ -126,12 +126,12 @@ implementation
 constructor TSecureRandom.Create(const AGenerator: IRandomGenerator);
 begin
   inherited Create(0);
-  Fgenerator := AGenerator;
+  FGenerator := AGenerator;
 end;
 
 class function TSecureRandom.GetMaster: ISecureRandom;
 begin
-  Result := Fmaster;
+  Result := FMaster;
 end;
 
 class function TSecureRandom.GetNextBytes(const ASecureRandom: ISecureRandom;
@@ -217,13 +217,13 @@ end;
 
 procedure TSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray);
 begin
-  Fgenerator.NextBytes(ABuf);
+  FGenerator.NextBytes(ABuf);
 
 end;
 
 procedure TSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
 begin
-  Fgenerator.NextBytes(ABuf, AOff, ALen);
+  FGenerator.NextBytes(ABuf, AOff, ALen);
 end;
 
 class function TSecureRandom.NextCounterValue: Int64;
@@ -271,24 +271,24 @@ begin
   Result := (Int64(UInt32(NextInt32())) shl 32) or (Int64(UInt32(NextInt32())));
 end;
 
-class constructor TSecureRandom.CreateSecureRandom;
+class constructor TSecureRandom.Create;
 begin
   TSecureRandom.Boot;
 end;
 
-class destructor TSecureRandom.DestroySecureRandom;
+class destructor TSecureRandom.Destroy;
 begin
   FLock.Free;
 end;
 
 procedure TSecureRandom.SetSeed(ASeed: Int64);
 begin
-  Fgenerator.AddSeedMaterial(ASeed);
+  FGenerator.AddSeedMaterial(ASeed);
 end;
 
 procedure TSecureRandom.SetSeed(const ASeed: TCryptoLibByteArray);
 begin
-  Fgenerator.AddSeedMaterial(ASeed);
+  FGenerator.AddSeedMaterial(ASeed);
 end;
 
 class function TSecureRandom.CreatePrng(const ADigestName: String;
@@ -321,7 +321,7 @@ begin
   begin
     FLock := TCriticalSection.Create;
     FCounter := TTimes.NanoTime();
-    Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
+    FMaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);
     TOSRandomProvider.Boot;
