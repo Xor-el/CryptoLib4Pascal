@@ -17,7 +17,7 @@
 
 unit ClpIRandomNumberGenerator;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
@@ -28,27 +28,9 @@ type
   IRandomNumberGenerator = interface(IInterface)
     ['{48F39DBB-8BE4-4167-8CE9-265F9B3B785E}']
 
-    procedure GetBytes(const data: TCryptoLibByteArray);
+    procedure GetBytes(const AData: TCryptoLibByteArray);
 
-    procedure GetNonZeroBytes(const data: TCryptoLibByteArray);
-
-  end;
-
-type
-  IOSRandomNumberGenerator = interface(IRandomNumberGenerator)
-    ['{EF52111D-1E69-42D7-99E0-D1C733D17995}']
-
-  end;
-
-type
-  IPCGRandomNumberGenerator = interface(IRandomNumberGenerator)
-    ['{49D3C867-E4F0-4EA3-BD81-0BCD6C0F08A8}']
-
-  end;
-
-type
-  IAESPRNGRandomNumberGenerator = interface(IRandomNumberGenerator)
-    ['{9E0D8D8F-D9D4-42D6-9D55-36271293B59E}']
+    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
 
   end;
 

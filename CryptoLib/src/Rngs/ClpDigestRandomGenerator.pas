@@ -37,12 +37,11 @@ type
   // * Internal access to the digest is synchronized so a single one of these can be shared.
   // * </p>
   // */
-  TDigestRandomGenerator = class sealed(TInterfacedObject,
-    IDigestRandomGenerator, IRandomGenerator)
+  TDigestRandomGenerator = class sealed(TInterfacedObject, IDigestRandomGenerator, IRandomGenerator)
 
   strict private
   const
-    CYCLE_COUNT = Int64(10);
+    CycleCount = Int64(10);
 
   var
     FLock: TCriticalSection;
@@ -52,20 +51,20 @@ type
 
     procedure CycleSeed(); inline;
     procedure GenerateState(); inline;
-    procedure DigestAddCounter(seedVal: Int64); inline;
-    procedure DigestUpdate(const inSeed: TCryptoLibByteArray); inline;
-    procedure DigestDoFinal(const result: TCryptoLibByteArray); inline;
+    procedure DigestAddCounter(ASeedVal: Int64); inline;
+    procedure DigestUpdate(const AInSeed: TCryptoLibByteArray); inline;
+    procedure DigestDoFinal(const AResult: TCryptoLibByteArray); inline;
 
   public
 
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
     destructor Destroy; override;
-    procedure AddSeedMaterial(const inSeed: TCryptoLibByteArray);
+    procedure AddSeedMaterial(const AInSeed: TCryptoLibByteArray);
       overload; inline;
-    procedure AddSeedMaterial(rSeed: Int64); overload; inline;
-    procedure NextBytes(const bytes: TCryptoLibByteArray); overload; inline;
-    procedure NextBytes(const bytes: TCryptoLibByteArray;
-      start, len: Int32); overload;
+    procedure AddSeedMaterial(ARSeed: Int64); overload; inline;
+    procedure NextBytes(const ABytes: TCryptoLibByteArray); overload; inline;
+    procedure NextBytes(const ABytes: TCryptoLibByteArray;
+      AStart, ALen: Int32); overload;
 
   end;
 
@@ -73,69 +72,69 @@ implementation
 
 { TDigestRandomGenerator }
 
-procedure TDigestRandomGenerator.DigestAddCounter(seedVal: Int64);
+procedure TDigestRandomGenerator.DigestAddCounter(ASeedVal: Int64);
 var
-  bytes: TCryptoLibByteArray;
+  LBytes: TCryptoLibByteArray;
 begin
-  System.SetLength(bytes, 8);
-  bytes := TConverters.ReadUInt64AsBytesLE(UInt64(seedVal));
-  Fdigest.BlockUpdate(bytes, 0, System.Length(bytes));
+  System.SetLength(LBytes, 8);
+  LBytes := TConverters.ReadUInt64AsBytesLE(UInt64(ASeedVal));
+  FDigest.BlockUpdate(LBytes, 0, System.Length(LBytes));
 end;
 
-procedure TDigestRandomGenerator.DigestUpdate(const inSeed
+procedure TDigestRandomGenerator.DigestUpdate(const AInSeed
   : TCryptoLibByteArray);
 begin
-  Fdigest.BlockUpdate(inSeed, 0, System.Length(inSeed));
+  FDigest.BlockUpdate(AInSeed, 0, System.Length(AInSeed));
 end;
 
-procedure TDigestRandomGenerator.DigestDoFinal(const result
+procedure TDigestRandomGenerator.DigestDoFinal(const AResult
   : TCryptoLibByteArray);
 begin
-  Fdigest.DoFinal(result, 0);
+  FDigest.DoFinal(AResult, 0);
 end;
 
-procedure TDigestRandomGenerator.AddSeedMaterial(rSeed: Int64);
+procedure TDigestRandomGenerator.AddSeedMaterial(ARSeed: Int64);
 begin
   FLock.Acquire;
   try
-    DigestAddCounter(rSeed);
-    DigestUpdate(Fseed);
-    DigestDoFinal(Fseed);
+    DigestAddCounter(ARSeed);
+    DigestUpdate(FSeed);
+    DigestDoFinal(FSeed);
   finally
     FLock.Release;
   end;
 end;
 
-procedure TDigestRandomGenerator.AddSeedMaterial(const inSeed
+procedure TDigestRandomGenerator.AddSeedMaterial(const AInSeed
   : TCryptoLibByteArray);
 begin
   FLock.Acquire;
   try
-    DigestUpdate(inSeed);
-    DigestUpdate(Fseed);
-    DigestDoFinal(Fseed);
+    DigestUpdate(AInSeed);
+    DigestUpdate(FSeed);
+    DigestDoFinal(FSeed);
   finally
     FLock.Release;
   end;
 end;
 
-constructor TDigestRandomGenerator.Create(const digest: IDigest);
+constructor TDigestRandomGenerator.Create(const ADigest: IDigest);
 begin
-  Inherited Create();
+  inherited Create();
   FLock := TCriticalSection.Create;
-  Fdigest := digest;
-  System.SetLength(Fseed, digest.GetDigestSize);
-  FseedCounter := 1;
-  System.SetLength(Fstate, digest.GetDigestSize);
-  FstateCounter := 1;
+  FDigest := ADigest;
+  System.SetLength(FSeed, ADigest.GetDigestSize);
+  FSeedCounter := 1;
+  System.SetLength(FState, ADigest.GetDigestSize);
+  FStateCounter := 1;
 end;
 
 procedure TDigestRandomGenerator.CycleSeed;
 begin
-  DigestUpdate(Fseed);
-  DigestAddCounter(FseedCounter);
-  System.Inc(FseedCounter);
-  DigestDoFinal(Fseed);
+  DigestUpdate(FSeed);
+  DigestAddCounter(FSeedCounter);
+  System.Inc(FSeedCounter);
+  DigestDoFinal(FSeed);
 end;
 
 destructor TDigestRandomGenerator.Destroy;
@@ -146,44 +145,44 @@ end;
 
 procedure TDigestRandomGenerator.GenerateState;
 begin
-  DigestAddCounter(FstateCounter);
-  System.Inc(FstateCounter);
-  DigestUpdate(Fstate);
-  DigestUpdate(Fseed);
-  DigestDoFinal(Fstate);
+  DigestAddCounter(FStateCounter);
+  System.Inc(FStateCounter);
+  DigestUpdate(FState);
+  DigestUpdate(FSeed);
+  DigestDoFinal(FState);
 
-  if ((FstateCounter mod CYCLE_COUNT) = 0) then
+  if ((FStateCounter mod CycleCount) = 0) then
   begin
     CycleSeed();
   end;
 end;
 
-procedure TDigestRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray);
+procedure TDigestRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray);
 begin
-  NextBytes(bytes, 0, System.Length(bytes));
+  NextBytes(ABytes, 0, System.Length(ABytes));
 end;
 
-procedure TDigestRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray;
-  start, len: Int32);
+procedure TDigestRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray;
+  AStart, ALen: Int32);
 var
-  stateOff, endPoint: Int32;
-  I: Int32;
+  LStateOff, LEndPoint: Int32;
+  LI: Int32;
 begin
   FLock.Acquire;
   try
-    stateOff := 0;
+    LStateOff := 0;
     GenerateState();
-    endPoint := start + len;
+    LEndPoint := AStart + ALen;
 
-    for I := start to System.Pred(endPoint) do
+    for LI := AStart to System.Pred(LEndPoint) do
     begin
-      if (stateOff = System.Length(Fstate)) then
+      if (LStateOff = System.Length(FState)) then
       begin
         GenerateState();
-        stateOff := 0;
+        LStateOff := 0;
       end;
-      bytes[I] := Fstate[stateOff];
-      System.Inc(stateOff);
+      ABytes[LI] := FState[LStateOff];
+      System.Inc(LStateOff);
     end;
 
   finally

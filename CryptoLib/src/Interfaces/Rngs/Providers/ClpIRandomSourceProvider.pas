@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIRandom;
+unit ClpIRandomSourceProvider;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -25,18 +25,26 @@ uses
   ClpCryptoLibTypes;
 
 type
+  /// <summary>
+  /// Interface for random source providers.
+  /// </summary>
+  IRandomSourceProvider = interface(IInterface)
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}']
 
-  IRandom = interface(IInterface)
-    ['{509F9F51-2FC4-40E6-8E4A-68B59808BF5A}']
+    /// <summary>Fill byte array with random bytes from implementing source.</summary>
+    procedure GetBytes(const AData: TCryptoLibByteArray);
 
-    procedure NextBytes(const ABuf: TCryptoLibByteArray); overload;
+    /// <summary>Fill byte array with non-zero random bytes from implementing source.</summary>
+    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
 
-    function NextDouble(): Double;
+    /// <summary>Returns true if this implementing random implementation is available.</summary>
+    function GetIsAvailable: Boolean;
 
-    function Next(): Int32; overload;
-    function Next(AMaxValue: Int32): Int32; overload;
-    function Next(AMinValue, AMaxValue: Int32): Int32; overload;
+    /// <summary>Returns the name of this random source provider.</summary>
+    function GetName: String;
 
+    property IsAvailable: Boolean read GetIsAvailable;
+    property Name: String read GetName;
   end;
 
 implementation

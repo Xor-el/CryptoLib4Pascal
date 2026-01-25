@@ -32,10 +32,12 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpAESPRNGRandom,
+  ClpOSRandomProvider,
+  ClpAesRandomProvider,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpRandomNumberGenerator,
+  ClpIRandomNumberGenerator,
   ClpCryptoApiRandomGenerator,
   ClpICryptoApiRandomGenerator,
   ClpCryptoLibTypes,
@@ -199,8 +201,7 @@ var
   &random: ISecureRandom;
 begin
   random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
-    (TRandomNumberGenerator.CreateRNG
-    (TRandomNumberGenerator.TRandomNumberGeneratorMode.rngmOS))
+    (TRandomNumberGenerator.CreateRng(TOSRandomProvider.Instance))
     as ICryptoApiRandomGenerator);
 
   CheckSecureRandom(random);
@@ -211,8 +212,7 @@ var
   &random: ISecureRandom;
 begin
   random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
-    (TRandomNumberGenerator.CreateRNG
-    (TRandomNumberGenerator.TRandomNumberGeneratorMode.rngmAES))
+    (TRandomNumberGenerator.CreateRng(TAesRandomProvider.Instance))
     as ICryptoApiRandomGenerator);
 
   CheckSecureRandom(random);
@@ -220,34 +220,31 @@ end;
 
 procedure TTestSecureRandom.TestAESPRNGRandom;
 var
-  b1, b2, NilBytes: TBytes;
-  a1, a2: IAESPRNGRandom;
+  b1, b2: TBytes;
+  a1, a2: IRandomNumberGenerator;
   Idx: Int32;
 begin
   // it is hard to validate randomness - we just test the feature set
   System.SetLength(b1, 16);
   System.SetLength(b2, 16);
-  NilBytes := Nil;
-  TAESPRNGRandom.GetBytes(b1);
-  TAESPRNGRandom.GetBytes(b2);
+  TAesRandomProvider.Instance.GetBytes(b1);
+  TAesRandomProvider.Instance.GetBytes(b2);
 
   CheckTrue(not AreEqual(b1, b2));
 
-  a1 := TAESPRNGRandom.Create();
-  a2 := TAESPRNGRandom.Create();
+  a1 := TRandomNumberGenerator.CreateRng(TAesRandomProvider.Instance);
+  a2 := TRandomNumberGenerator.CreateRng(TAesRandomProvider.Instance);
 
-  a1.FillBytes(b1);
-  a2.FillBytes(b2);
+  a1.GetBytes(b1);
+  a2.GetBytes(b2);
   CheckTrue(not AreEqual(b1, b2));
-  a1.FillBytes(NilBytes);
-  CheckEquals(System.Length(NilBytes), 0);
 
   for Idx := 1 to 10000 do
   begin
     System.SetLength(b1, Idx);
     System.SetLength(b2, Idx);
-    a1.FillBytes(b1);
-    a2.FillBytes(b2);
+    a1.GetBytes(b1);
+    a2.GetBytes(b2);
 
     CheckTrue(not AreEqual(b1, b2));
   end;

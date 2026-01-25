@@ -34,10 +34,9 @@ resourcestring
 
 type
   /// <summary>
-  /// Uses TRandomNumberGenerator.Create() to Get randomness generator
+  /// Uses TRandomNumberGenerator.CreateRng() to Get randomness generator
   /// </summary>
-  TCryptoApiRandomGenerator = class(TInterfacedObject,
-    ICryptoApiRandomGenerator, IRandomGenerator)
+  TCryptoApiRandomGenerator = class(TInterfacedObject, ICryptoApiRandomGenerator, IRandomGenerator)
 
   strict private
   var
@@ -45,29 +44,29 @@ type
 
   public
     /// <summary>
-    /// Uses TRandomNumberGenerator.CreateRNG() to Get randomness generator
+    /// Uses TRandomNumberGenerator.Create() to Get randomness generator
     /// </summary>
     constructor Create(); overload;
-    constructor Create(const rng: IRandomNumberGenerator); overload;
+    constructor Create(const ARng: IRandomNumberGenerator); overload;
 
     /// <summary>Add more seed material to the generator.</summary>
-    /// <param name="seed">A byte array to be mixed into the generator's state.</param>
-    procedure AddSeedMaterial(const seed: TCryptoLibByteArray);
+    /// <param name="ASeed">A byte array to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(const ASeed: TCryptoLibByteArray);
       overload; virtual;
 
     /// <summary>Add more seed material to the generator.</summary>
-    /// <param name="seed">A long value to be mixed into the generator's state.</param>
-    procedure AddSeedMaterial(seed: Int64); overload; virtual;
+    /// <param name="ASeed">A long value to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(ASeed: Int64); overload; virtual;
 
     /// <summary>Fill byte array with random values.</summary>
-    /// <param name="bytes">Array to be filled.</param>
-    procedure NextBytes(const bytes: TCryptoLibByteArray); overload; virtual;
+    /// <param name="ABytes">Array to be filled.</param>
+    procedure NextBytes(const ABytes: TCryptoLibByteArray); overload; virtual;
 
     /// <summary>Fill byte array with random values.</summary>
-    /// <param name="bytes">Array to receive bytes.</param>
-    /// <param name="start">Index to start filling at.</param>
-    /// <param name="len">Length of segment to fill.</param>
-    procedure NextBytes(const bytes: TCryptoLibByteArray; start, len: Int32);
+    /// <param name="ABytes">Array to receive bytes.</param>
+    /// <param name="AStart">Index to start filling at.</param>
+    /// <param name="ALen">Length of segment to fill.</param>
+    procedure NextBytes(const ABytes: TCryptoLibByteArray; AStart, ALen: Int32);
       overload; virtual;
 
   end;
@@ -76,58 +75,58 @@ implementation
 
 { TCryptoApiRandomGenerator }
 
-procedure TCryptoApiRandomGenerator.AddSeedMaterial(seed: Int64);
+procedure TCryptoApiRandomGenerator.AddSeedMaterial(ASeed: Int64);
 begin
   // We don't care about the seed
 end;
 
 procedure TCryptoApiRandomGenerator.AddSeedMaterial
-  (const seed: TCryptoLibByteArray);
+  (const ASeed: TCryptoLibByteArray);
 begin
   // We don't care about the seed
 end;
 
-constructor TCryptoApiRandomGenerator.Create(const rng: IRandomNumberGenerator);
+constructor TCryptoApiRandomGenerator.Create(const ARng: IRandomNumberGenerator);
 begin
-  Inherited Create();
-  FrndProv := rng;
+  inherited Create();
+  FRndProv := ARng;
 end;
 
 constructor TCryptoApiRandomGenerator.Create;
 begin
-  Create(TRandomNumberGenerator.CreateRNG());
+  Create(TRandomNumberGenerator.CreateRng());
 end;
 
-procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray);
+procedure TCryptoApiRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray);
 begin
-  FrndProv.GetBytes(bytes);
+  FRndProv.GetBytes(ABytes);
 end;
 
-procedure TCryptoApiRandomGenerator.NextBytes(const bytes: TCryptoLibByteArray;
-  start, len: Int32);
+procedure TCryptoApiRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray;
+  AStart, ALen: Int32);
 var
-  tmpBuf: TCryptoLibByteArray;
+  LTmpBuf: TCryptoLibByteArray;
 begin
-  if (start < 0) then
+  if (AStart < 0) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SNegativeOffset);
   end;
-  if (System.Length(bytes) < (start + len)) then
+  if (System.Length(ABytes) < (AStart + ALen)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SArrayTooSmall);
 
   end;
 
-  if ((System.Length(bytes) = len) and (start = 0)) then
+  if ((System.Length(ABytes) = ALen) and (AStart = 0)) then
   begin
-    NextBytes(bytes);
+    NextBytes(ABytes);
   end
   else
   begin
-    System.SetLength(tmpBuf, len);
-    NextBytes(tmpBuf);
+    System.SetLength(LTmpBuf, ALen);
+    NextBytes(LTmpBuf);
 
-    System.Move(tmpBuf[0], bytes[start], len * System.SizeOf(Byte));
+    System.Move(LTmpBuf[0], ABytes[AStart], ALen * System.SizeOf(Byte));
 
   end;
 end;

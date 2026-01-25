@@ -32,13 +32,14 @@ uses
   ClpIDigest,
   ClpIRandomGenerator,
   ClpRandom,
-  ClpOSRandom,
+  ClpOSRandomProvider,
   ClpDigestUtilities,
   ClpCryptoApiRandomGenerator,
   ClpICryptoApiRandomGenerator,
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
-  ClpISecureRandom;
+  ClpISecureRandom,
+  ClpPlatform;
 
 resourcestring
   SUnRecognisedPRNGAlgorithm = 'Unrecognised PRNG Algorithm: %s "algorithm"';
@@ -59,8 +60,7 @@ type
 
     class function NextCounterValue(): Int64; static; inline;
 
-    class function CreatePrng(const digestName: String; autoSeed: Boolean)
-      : IDigestRandomGenerator; static; inline;
+    class function CreatePrng(const ADigestName: String; AAutoSeed: Boolean): IDigestRandomGenerator; static; inline;
 
     class property Master: ISecureRandom read GetMaster;
 
@@ -79,16 +79,16 @@ type
     /// proper seed material as necessary/appropriate for the given <c>IRandomGenerator</c>
     /// implementation.
     /// </remarks>
-    /// <param name="generator">The source to generate all random bytes from.</param>
-    constructor Create(const generator: IRandomGenerator); overload;
+    /// <param name="AGenerator">The source to generate all random bytes from.</param>
+    constructor Create(const AGenerator: IRandomGenerator); overload;
     constructor Create(); overload;
 
-    function GenerateSeed(length: Int32): TCryptoLibByteArray; virtual;
-    procedure SetSeed(const seed: TCryptoLibByteArray); overload; virtual;
-    procedure SetSeed(seed: Int64); overload; virtual;
+    function GenerateSeed(ALength: Int32): TCryptoLibByteArray; virtual;
+    procedure SetSeed(const ASeed: TCryptoLibByteArray); overload; virtual;
+    procedure SetSeed(ASeed: Int64); overload; virtual;
 
-    procedure NextBytes(const buf: TCryptoLibByteArray); overload; override;
-    procedure NextBytes(const buf: TCryptoLibByteArray; off, len: Int32);
+    procedure NextBytes(const ABuf: TCryptoLibByteArray); overload; override;
+    procedure NextBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
       overload; virtual;
     function NextInt32(): Int32; virtual;
     function NextInt64(): Int64; virtual;
@@ -96,26 +96,24 @@ type
     function NextDouble(): Double; override;
 
     function Next(): Int32; overload; override;
-    function Next(maxValue: Int32): Int32; overload; override;
-    function Next(minValue, maxValue: Int32): Int32; overload; override;
+    function Next(AMaxValue: Int32): Int32; overload; override;
+    function Next(AMinValue, AMaxValue: Int32): Int32; overload; override;
 
-    class function GetNextBytes(const SecureRandom: ISecureRandom;
-      length: Int32): TCryptoLibByteArray; static;
+    class function GetNextBytes(const ASecureRandom: ISecureRandom;
+      ALength: Int32): TCryptoLibByteArray; static;
 
     /// <summary>
     /// Create and auto-seed an instance based on the given algorithm.
     /// </summary>
-    /// <remarks>Equivalent to GetInstance(algorithm, true)</remarks>
-    /// <param name="algorithm">e.g. "SHA256PRNG"</param>
-    class function GetInstance(const algorithm: String): ISecureRandom;
-      overload; static; inline;
+    /// <remarks>Equivalent to GetInstance(AAlgorithm, true)</remarks>
+    /// <param name="AAlgorithm">e.g. "SHA256PRNG"</param>
+    class function GetInstance(const AAlgorithm: String): ISecureRandom; overload; static; inline;
     /// <summary>
     /// Create an instance based on the given algorithm, with optional auto-seeding
     /// </summary>
-    /// <param name="algorithm">e.g. "SHA256PRNG"</param>
-    /// <param name="autoSeed">If true, the instance will be auto-seeded.</param>
-    class function GetInstance(const algorithm: String; autoSeed: Boolean)
-      : ISecureRandom; overload; static;
+    /// <param name="AAlgorithm">e.g. "SHA256PRNG"</param>
+    /// <param name="AAutoSeed">If true, the instance will be auto-seeded.</param>
+    class function GetInstance(const AAlgorithm: String; AAutoSeed: Boolean): ISecureRandom; overload; static;
 
     class procedure Boot(); static;
 
@@ -125,10 +123,10 @@ implementation
 
 { TSecureRandom }
 
-constructor TSecureRandom.Create(const generator: IRandomGenerator);
+constructor TSecureRandom.Create(const AGenerator: IRandomGenerator);
 begin
-  Inherited Create(0);
-  Fgenerator := generator;
+  inherited Create(0);
+  Fgenerator := AGenerator;
 end;
 
 class function TSecureRandom.GetMaster: ISecureRandom;
@@ -136,20 +134,20 @@ begin
   Result := Fmaster;
 end;
 
-class function TSecureRandom.GetNextBytes(const SecureRandom: ISecureRandom;
-  length: Int32): TCryptoLibByteArray;
+class function TSecureRandom.GetNextBytes(const ASecureRandom: ISecureRandom;
+  ALength: Int32): TCryptoLibByteArray;
 begin
-  System.SetLength(Result, length);
-  SecureRandom.NextBytes(Result);
+  System.SetLength(Result, ALength);
+  ASecureRandom.NextBytes(Result);
 end;
 
-function TSecureRandom.Next(maxValue: Int32): Int32;
+function TSecureRandom.Next(AMaxValue: Int32): Int32;
 var
-  bits: Int32;
+  LBits: Int32;
 begin
-  if (maxValue < 2) then
+  if (AMaxValue < 2) then
   begin
-    if (maxValue < 0) then
+    if (AMaxValue < 0) then
     begin
       raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCannotBeNegative);
     end;
@@ -158,52 +156,52 @@ begin
     Exit;
   end;
 
-  // Test whether maxValue is a power of 2
-  if ((maxValue and (maxValue - 1)) = 0) then
+  // Test whether AMaxValue is a power of 2
+  if ((AMaxValue and (AMaxValue - 1)) = 0) then
   begin
-    bits := NextInt32() and System.High(Int32);
-    Result := Int32(TBits.Asr64((Int64(bits) * maxValue), 31));
+    LBits := NextInt32() and System.High(Int32);
+    Result := Int32(TBits.Asr64((Int64(LBits) * AMaxValue), 31));
     Exit;
   end;
 
   repeat
-    bits := NextInt32() and System.High(Int32);
-    Result := bits mod maxValue;
+    LBits := NextInt32() and System.High(Int32);
+    Result := LBits mod AMaxValue;
     // Ignore results near overflow
-  until (not((bits - (Result + (maxValue - 1))) < 0));
+  until (not((LBits - (Result + (AMaxValue - 1))) < 0));
 
 end;
 
-function TSecureRandom.Next(minValue, maxValue: Int32): Int32;
+function TSecureRandom.Next(AMinValue, AMaxValue: Int32): Int32;
 var
-  diff, i: Int32;
+  LDiff, LI: Int32;
 begin
-  if (maxValue <= minValue) then
+  if (AMaxValue <= AMinValue) then
   begin
-    if (maxValue = minValue) then
+    if (AMaxValue = AMinValue) then
     begin
-      Result := minValue;
+      Result := AMinValue;
       Exit;
     end;
 
     raise EArgumentCryptoLibException.CreateRes(@SInvalidMaxValue);
   end;
 
-  diff := maxValue - minValue;
-  if (diff > 0) then
+  LDiff := AMaxValue - AMinValue;
+  if (LDiff > 0) then
   begin
-    Result := minValue + Next(diff);
+    Result := AMinValue + Next(LDiff);
     Exit;
   end;
 
   while True do
 
   begin
-    i := NextInt32();
+    LI := NextInt32();
 
-    if ((i >= minValue) and (i < maxValue)) then
+    if ((LI >= AMinValue) and (LI < AMaxValue)) then
     begin
-      Result := i;
+      Result := LI;
       Exit;
     end;
   end;
@@ -217,16 +215,15 @@ begin
   Result := NextInt32() and System.High(Int32);
 end;
 
-procedure TSecureRandom.NextBytes(const buf: TCryptoLibByteArray);
+procedure TSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray);
 begin
-  Fgenerator.NextBytes(buf);
+  Fgenerator.NextBytes(ABuf);
 
 end;
 
-procedure TSecureRandom.NextBytes(const buf: TCryptoLibByteArray;
-  off, len: Int32);
+procedure TSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
 begin
-  Fgenerator.NextBytes(buf, off, len);
+  Fgenerator.NextBytes(ABuf, AOff, ALen);
 end;
 
 class function TSecureRandom.NextCounterValue: Int64;
@@ -253,20 +250,20 @@ end;
 
 function TSecureRandom.NextInt32: Int32;
 var
-  tempRes: UInt32;
-  bytes: TCryptoLibByteArray;
+  LTempRes: UInt32;
+  LBytes: TCryptoLibByteArray;
 begin
-  System.SetLength(bytes, 4);
-  NextBytes(bytes);
+  System.SetLength(LBytes, 4);
+  NextBytes(LBytes);
 
-  tempRes := bytes[0];
-  tempRes := tempRes shl 8;
-  tempRes := tempRes or bytes[1];
-  tempRes := tempRes shl 8;
-  tempRes := tempRes or bytes[2];
-  tempRes := tempRes shl 8;
-  tempRes := tempRes or bytes[3];
-  Result := Int32(tempRes);
+  LTempRes := LBytes[0];
+  LTempRes := LTempRes shl 8;
+  LTempRes := LTempRes or LBytes[1];
+  LTempRes := LTempRes shl 8;
+  LTempRes := LTempRes or LBytes[2];
+  LTempRes := LTempRes shl 8;
+  LTempRes := LTempRes or LBytes[3];
+  Result := Int32(LTempRes);
 end;
 
 function TSecureRandom.NextInt64: Int64;
@@ -284,50 +281,50 @@ begin
   FLock.Free;
 end;
 
-procedure TSecureRandom.SetSeed(seed: Int64);
+procedure TSecureRandom.SetSeed(ASeed: Int64);
 begin
-  Fgenerator.AddSeedMaterial(seed);
+  Fgenerator.AddSeedMaterial(ASeed);
 end;
 
-procedure TSecureRandom.SetSeed(const seed: TCryptoLibByteArray);
+procedure TSecureRandom.SetSeed(const ASeed: TCryptoLibByteArray);
 begin
-  Fgenerator.AddSeedMaterial(seed);
+  Fgenerator.AddSeedMaterial(ASeed);
 end;
 
-class function TSecureRandom.CreatePrng(const digestName: String;
-  autoSeed: Boolean): IDigestRandomGenerator;
+class function TSecureRandom.CreatePrng(const ADigestName: String;
+  AAutoSeed: Boolean): IDigestRandomGenerator;
 var
-  digest: IDigest;
-  prng: IDigestRandomGenerator;
-  seedLength: Int32;
+  LDigest: IDigest;
+  LPrng: IDigestRandomGenerator;
+  LSeedLength: Int32;
 begin
-  digest := TDigestUtilities.GetDigest(digestName);
-  if (digest = Nil) then
+  LDigest := TDigestUtilities.GetDigest(ADigestName);
+  if (LDigest = nil) then
   begin
-    Result := Nil;
+    Result := nil;
     Exit;
   end;
 
-  prng := TDigestRandomGenerator.Create(digest);
-  if (autoSeed) then
+  LPrng := TDigestRandomGenerator.Create(LDigest);
+  if (AAutoSeed) then
   begin
-    seedLength := 2 * digest.GetDigestSize;
-    prng.AddSeedMaterial(NextCounterValue());
-    prng.AddSeedMaterial(GetNextBytes(Master, seedLength));
+    LSeedLength := 2 * LDigest.GetDigestSize;
+    LPrng.AddSeedMaterial(NextCounterValue());
+    LPrng.AddSeedMaterial(GetNextBytes(Master, LSeedLength));
   end;
-  Result := prng;
+  Result := LPrng;
 end;
 
 class procedure TSecureRandom.Boot;
 begin
-  if FLock = Nil then
+  if FLock = nil then
   begin
     FLock := TCriticalSection.Create;
     FCounter := TTimes.NanoTime();
     Fmaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);
-    TOSRandom.Boot;
+    TOSRandomProvider.Boot;
   end;
 end;
 
@@ -336,45 +333,47 @@ begin
   Create(CreatePrng('SHA256', True));
 end;
 
-class function TSecureRandom.GetInstance(const algorithm: String;
-  autoSeed: Boolean): ISecureRandom;
+class function TSecureRandom.GetInstance(const AAlgorithm: String; AAutoSeed: Boolean): ISecureRandom;
 var
-  upper, digestName: String;
-  prng: IDigestRandomGenerator;
-  LowPoint, HighPoint: Int32;
+  LUpper, LDigestName: String;
+  LPrng: IDigestRandomGenerator;
+  LPrngIndex: Int32;
 begin
-  upper := UpperCase(algorithm);
+  LUpper := TPlatform.ToUpperInvariant(AAlgorithm);
 
-  LowPoint := 1;
-  HighPoint := System.length(upper);
-
-  if AnsiEndsStr('PRNG', upper) then
+  if TPlatform.EndsWith(LUpper, 'PRNG', True) then
   begin
-    digestName := System.Copy(upper, LowPoint,
-      HighPoint - System.length('PRNG'));
-
-    prng := CreatePrng(digestName, autoSeed);
-    if (prng <> Nil) then
+    LPrngIndex := TPlatform.LastIndexOf(LUpper, 'PRNG');
+    if LPrngIndex > 0 then
     begin
-      Result := TSecureRandom.Create(prng);
+      LDigestName := TPlatform.Substring(LUpper, 1, LPrngIndex - 1);
+    end
+    else
+    begin
+      LDigestName := '';
+    end;
+
+    LPrng := CreatePrng(LDigestName, AAutoSeed);
+    if (LPrng <> nil) then
+    begin
+      Result := TSecureRandom.Create(LPrng);
       Exit;
     end;
   end;
 
   raise EArgumentCryptoLibException.CreateResFmt(@SUnRecognisedPRNGAlgorithm,
-    [algorithm]);
+    [AAlgorithm]);
 
 end;
 
-class function TSecureRandom.GetInstance(const algorithm: String)
-  : ISecureRandom;
+class function TSecureRandom.GetInstance(const AAlgorithm: String) : ISecureRandom;
 begin
-  Result := GetInstance(algorithm, True);
+  Result := GetInstance(AAlgorithm, True);
 end;
 
-function TSecureRandom.GenerateSeed(length: Int32): TCryptoLibByteArray;
+function TSecureRandom.GenerateSeed(ALength: Int32): TCryptoLibByteArray;
 begin
-  Result := GetNextBytes(Master, length);
+  Result := GetNextBytes(Master, ALength);
 end;
 
 end.

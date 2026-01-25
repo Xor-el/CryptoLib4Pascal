@@ -30,12 +30,12 @@ type
   ISecureRandom = interface(IRandom)
     ['{BF2E135B-E889-4B2F-837E-6B2049213C83}']
 
-    function GenerateSeed(length: Int32): TCryptoLibByteArray;
-    procedure SetSeed(const seed: TCryptoLibByteArray); overload;
-    procedure SetSeed(seed: Int64); overload;
+    function GenerateSeed(ALength: Int32): TCryptoLibByteArray;
+    procedure SetSeed(const ASeed: TCryptoLibByteArray); overload;
+    procedure SetSeed(ASeed: Int64); overload;
 
-    procedure NextBytes(const buf: TCryptoLibByteArray;
-      off, len: Int32); overload;
+    procedure NextBytes(const ABuf: TCryptoLibByteArray;
+      AOff, ALen: Int32); overload;
     function NextInt32(): Int32;
     function NextInt64(): Int64;
 
