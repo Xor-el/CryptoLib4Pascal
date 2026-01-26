@@ -207,7 +207,6 @@ uses
   ClpIDigestRandomGenerator in '..\..\CryptoLib\src\Interfaces\Rngs\ClpIDigestRandomGenerator.pas',
   ClpIDsa in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsa.pas',
   ClpIDsaDigestSigner in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaDigestSigner.pas',
-  ClpIDsaExt in '..\..\CryptoLib\src\Interfaces\ClpIDsaExt.pas',
   ClpIDsaKCalculator in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaKCalculator.pas',
   ClpIDsaKeyGenerationParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDsaKeyGenerationParameters.pas',
   ClpIDsaKeyPairGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDsaKeyPairGenerator.pas',

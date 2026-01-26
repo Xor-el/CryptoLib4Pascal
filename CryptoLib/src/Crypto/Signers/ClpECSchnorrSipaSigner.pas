@@ -31,13 +31,13 @@ uses
   ClpBigIntegers,
   ClpISecureRandom,
   ClpIECKeyParameters,
-  ClpIParametersWithRandom,
   ClpICipherParameters,
   ClpIECPrivateKeyParameters,
   ClpIECPublicKeyParameters,
   ClpSecureRandom,
   ClpECAlgorithms,
   ClpDigestUtilities,
+  ClpParameterUtilities,
   ClpArrayUtils,
   ClpCryptoLibTypes;
 
@@ -93,14 +93,14 @@ type
     property Order: TBigInteger read GetOrder;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters;
-      const digest: IDigest); virtual;
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters;
+      const ADigest: IDigest); virtual;
 
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const RSig, SSig: TBigInteger): Boolean; virtual;
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const ARSig, ASSig: TBigInteger): Boolean; virtual;
 
   end;
 
@@ -108,13 +108,13 @@ implementation
 
 { TECSchnorrSipaSigner }
 
-function TECSchnorrSipaSigner.GenerateSignature(const &message
+function TECSchnorrSipaSigner.GenerateSignature(const AMessage
   : TCryptoLibByteArray): TCryptoLibGenericArray<TBigInteger>;
 var
-  N, k, s, Xr, Yr, e, PrivateKey: TBigInteger;
-  input, keyPrefixedM: TCryptoLibByteArray;
-  P, r: IECPoint;
-  numBytes: Int32;
+  LN, LK, LS, LXr, LYr, LE, LPrivateKey: TBigInteger;
+  LInput, LKeyPrefixedM: TCryptoLibByteArray;
+  LP, LR: IECPoint;
+  LNumBytes: Int32;
 begin
   if (not FForSigning) then
   begin
@@ -123,65 +123,65 @@ begin
       (@SNotInitializedForSigning);
   end;
 
-  N := Order;
-  numBytes := TBigIntegers.GetUnsignedByteLength(N);
+  LN := Order;
+  LNumBytes := TBigIntegers.GetUnsignedByteLength(LN);
 
-  PrivateKey := (FKey as IECPrivateKeyParameters).D;
+  LPrivateKey := (FKey as IECPrivateKeyParameters).D;
 
-  input := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(PrivateKey,
-    numBytes), &message);
+  LInput := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(LPrivateKey,
+    LNumBytes), AMessage);
 
-  k := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest, input)).&Mod(N);
+  LK := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest, LInput)).&Mod(LN);
 
-  if k.CompareTo(TBigInteger.Zero) = 0 then
+  if LK.CompareTo(TBigInteger.Zero) = 0 then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SSignatureGenerationError);
   end;
 
-  r := G.Multiply(k).Normalize();
-  Xr := r.XCoord.ToBigInteger();
-  Yr := r.YCoord.ToBigInteger();
-  if (TBigInteger.Jacobi(Yr, PP) <> 1) then
+  LR := G.Multiply(LK).Normalize();
+  LXr := LR.XCoord.ToBigInteger();
+  LYr := LR.YCoord.ToBigInteger();
+  if (TBigInteger.Jacobi(LYr, PP) <> 1) then
   begin
-    k := N.Subtract(k);
+    LK := LN.Subtract(LK);
   end;
 
-  P := G.Multiply(PrivateKey);
-  keyPrefixedM := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(Xr,
-    numBytes), TCryptoLibMatrixByteArray.Create(P.GetEncoded(true), &message));
+  LP := G.Multiply(LPrivateKey);
+  LKeyPrefixedM := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(LXr,
+    LNumBytes), TCryptoLibMatrixByteArray.Create(LP.GetEncoded(true), AMessage));
 
-  e := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest,
-    keyPrefixedM)).&Mod(N);
+  LE := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest,
+    LKeyPrefixedM)).&Mod(LN);
 
-  s := k.Add(e.Multiply(PrivateKey)).&Mod(N);
+  LS := LK.Add(LE.Multiply(LPrivateKey)).&Mod(LN);
 
-  result := TCryptoLibGenericArray<TBigInteger>.Create(Xr, s);
+  Result := TCryptoLibGenericArray<TBigInteger>.Create(LXr, LS);
 end;
 
 function TECSchnorrSipaSigner.GetAlgorithmName: String;
 begin
-  result := 'ECSCHNORRSIPA';
+  Result := 'ECSCHNORRSIPA';
 end;
 
 function TECSchnorrSipaSigner.GetCurve: IECCurve;
 begin
-  result := FKey.parameters.Curve;
+  Result := FKey.Parameters.Curve;
 end;
 
 function TECSchnorrSipaSigner.GetG: IECPoint;
 begin
-  result := FKey.parameters.G;
+  Result := FKey.Parameters.G;
 end;
 
 function TECSchnorrSipaSigner.GetOrder: TBigInteger;
 begin
-  result := FKey.parameters.N;
+  Result := FKey.Parameters.N;
 end;
 
 function TECSchnorrSipaSigner.GetPP: TBigInteger;
 begin
-  result := Curve.Field.Characteristic;
+  Result := Curve.Field.Characteristic;
 end;
 
 class procedure TECSchnorrSipaSigner.ValidateAllowedCurves
@@ -193,44 +193,41 @@ begin
   end;
 end;
 
-procedure TECSchnorrSipaSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters; const digest: IDigest);
+procedure TECSchnorrSipaSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters; const ADigest: IDigest);
 var
-  rParam: IParametersWithRandom;
-  Lparameters: ICipherParameters;
+  LParameters: ICipherParameters;
+  LProvidedRandom: ISecureRandom;
 begin
-  FForSigning := forSigning;
-  FDigest := digest;
-  Lparameters := parameters;
+  FForSigning := AForSigning;
+  FDigest := ADigest;
 
-  if (forSigning) then
+  if (AForSigning) then
   begin
+    LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-    if (Supports(Lparameters, IParametersWithRandom, rParam)) then
-    begin
-      FRandom := rParam.random;
-      Lparameters := rParam.parameters;
-    end
+    if LProvidedRandom <> nil then
+      FRandom := LProvidedRandom
     else
-    begin
       FRandom := TSecureRandom.Create();
-    end;
 
-    if (not(Supports(Lparameters, IECPrivateKeyParameters))) then
+    if (not(Supports(LParameters, IECPrivateKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPrivateKeyNotFound);
     end;
 
-    FKey := Lparameters as IECPrivateKeyParameters;
+    FKey := LParameters as IECPrivateKeyParameters;
   end
   else
   begin
-    if (not(Supports(Lparameters, IECPublicKeyParameters))) then
+    LParameters := TParameterUtilities.IgnoreRandom(AParameters);
+
+    if (not(Supports(LParameters, IECPublicKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPublicKeyNotFound);
     end;
 
-    FKey := Lparameters as IECPublicKeyParameters;
+    FKey := LParameters as IECPublicKeyParameters;
   end;
 
   ValidateAllowedCurves(Curve);
@@ -242,14 +239,14 @@ begin
   FDigest.Reset;
 end;
 
-function TECSchnorrSipaSigner.VerifySignature(const &message
-  : TCryptoLibByteArray; const RSig, SSig: TBigInteger): Boolean;
+function TECSchnorrSipaSigner.VerifySignature(const AMessage
+  : TCryptoLibByteArray; const ARSig, ASSig: TBigInteger): Boolean;
 var
-  N, e: TBigInteger;
-  PublicKeyBytes, input: TCryptoLibByteArray;
-  PublicKey: IECPublicKeyParameters;
-  P, Q, r: IECPoint;
-  numBytes: Int32;
+  LN, LE: TBigInteger;
+  LPublicKeyBytes, LInput: TCryptoLibByteArray;
+  LPublicKey: IECPublicKeyParameters;
+  LP, LQ, LR: IECPoint;
+  LNumBytes: Int32;
 begin
   if (FForSigning) then
   begin
@@ -258,35 +255,35 @@ begin
       (@SNotInitializedForVerifying);
   end;
 
-  N := Order;
-  numBytes := TBigIntegers.GetUnsignedByteLength(N);
+  LN := Order;
+  LNumBytes := TBigIntegers.GetUnsignedByteLength(LN);
 
-  if ((RSig.CompareTo(PP) >= 0) or (SSig.CompareTo(N) >= 0)) then
+  if ((ARSig.CompareTo(PP) >= 0) or (ASSig.CompareTo(LN) >= 0)) then
   begin
-    result := false;
+    Result := false;
     Exit;
   end;
 
-  PublicKey := (FKey as IECPublicKeyParameters);
-  PublicKeyBytes := PublicKey.Q.GetEncoded(true);
+  LPublicKey := (FKey as IECPublicKeyParameters);
+  LPublicKeyBytes := LPublicKey.Q.GetEncoded(true);
 
-  input := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(RSig,
-    numBytes), TCryptoLibMatrixByteArray.Create(PublicKeyBytes, &message));
+  LInput := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(ARSig,
+    LNumBytes), TCryptoLibMatrixByteArray.Create(LPublicKeyBytes, AMessage));
 
-  e := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest, input)).&Mod(N);
-  Q := PublicKey.Q.Normalize();
-  P := Curve.CreatePoint(Q.XCoord.ToBigInteger(), Q.YCoord.ToBigInteger());
+  LE := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest, LInput)).&Mod(LN);
+  LQ := LPublicKey.Q.Normalize();
+  LP := Curve.CreatePoint(LQ.XCoord.ToBigInteger(), LQ.YCoord.ToBigInteger());
 
-  r := G.Multiply(SSig).Add(P.Multiply(N.Subtract(e))).Normalize();
+  LR := G.Multiply(ASSig).Add(LP.Multiply(LN.Subtract(LE))).Normalize();
 
-  if ((r.IsInfinity) or (r.XCoord.ToBigInteger().CompareTo(RSig) <> 0) or
-    (TBigInteger.Jacobi(r.YCoord.ToBigInteger(), PP) <> 1)) then
+  if ((LR.IsInfinity) or (LR.XCoord.ToBigInteger().CompareTo(ARSig) <> 0) or
+    (TBigInteger.Jacobi(LR.YCoord.ToBigInteger(), PP) <> 1)) then
   begin
-    result := false;
+    Result := false;
     Exit;
   end;
 
-  result := true;
+  Result := true;
 end;
 
 end.

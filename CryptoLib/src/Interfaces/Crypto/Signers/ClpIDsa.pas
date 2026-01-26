@@ -39,6 +39,10 @@ type
     function GetAlgorithmName: String;
     property AlgorithmName: String read GetAlgorithmName;
 
+    function GetOrder: TBigInteger;
+    /// <summary>The order of the group that the r, s values in signatures belong to.</summary>
+    property Order: TBigInteger read GetOrder;
+
     // /**
     // * initialise the signer for signature generation or signature
     // * verification.
@@ -47,7 +51,7 @@ type
     // * otherwise.
     // * @param param key parameters for signature generation.
     // */
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
 
     // /**
     // * sign the passed in message (usually the output of a hash function).
@@ -55,7 +59,7 @@ type
     // * @param message the message to be signed.
     // * @return two big integers representing the r and s values respectively.
     // */
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
     // /**
@@ -65,8 +69,8 @@ type
     // * @param r the r signature value.
     // * @param s the s signature value.
     // */
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean;
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const AR, &AS: TBigInteger): Boolean;
 
   end;
 

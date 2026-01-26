@@ -32,10 +32,10 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpCryptoLibTypes,
-  ClpIParametersWithRandom,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
-  ClpISigner;
+  ClpISigner,
+  ClpParameterUtilities;
 
 resourcestring
   SPrivateKey = 'Signing Requires Private Key.';
@@ -66,26 +66,26 @@ type
   public
     // constructor Create(const Schnorr: ISchnorr; const digest: IDigest);
     // overload;
-    constructor Create(const Schnorr: ISchnorrExt; const digest: IDigest;
-      const encoding: ISchnorrEncoding);
+    constructor Create(const ASchnorr: ISchnorrExt; const ADigest: IDigest;
+      const AEncoding: ISchnorrEncoding);
     destructor Destroy(); override;
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForSigning: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
     /// <summary>
     /// update the internal digest with the byte b
     /// </summary>
-    procedure Update(input: Byte); virtual;
+    procedure Update(AInput: Byte); virtual;
 
     /// <summary>
     /// update the internal digest with the byte array in
     /// </summary>
-    procedure BlockUpdate(const input: TCryptoLibByteArray;
-      inOff, length: Int32); virtual;
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32); virtual;
 
     /// <summary>
     /// Return the maximum size for a signature produced by this signer.
@@ -102,7 +102,7 @@ type
     /// true if the internal state represents the signature described in the
     /// passed in array.
     /// </returns>
-    function VerifySignature(const signature: TCryptoLibByteArray)
+    function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
 
     /// <summary>
@@ -118,7 +118,7 @@ implementation
 
 function TSchnorrDigestSigner.Aggregate: TCryptoLibByteArray;
 begin
-  Result := Nil;
+  Result := nil;
   if FBuffer.Size > 0 then
   begin
     FBuffer.Position := 0;
@@ -127,12 +127,12 @@ begin
   end;
 end;
 
-procedure TSchnorrDigestSigner.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, length: Int32);
+procedure TSchnorrDigestSigner.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32);
 begin
-  if input <> Nil then
+  if AInput <> nil then
   begin
-    FBuffer.Write(input[inOff], length);
+    FBuffer.Write(AInput[AInOff], ALength);
   end;
 end;
 
@@ -145,13 +145,13 @@ end;
 // FBuffer := TMemoryStream.Create();
 // end;
 
-constructor TSchnorrDigestSigner.Create(const Schnorr: ISchnorrExt;
-  const digest: IDigest; const encoding: ISchnorrEncoding);
+constructor TSchnorrDigestSigner.Create(const ASchnorr: ISchnorrExt;
+  const ADigest: IDigest; const AEncoding: ISchnorrEncoding);
 begin
   Inherited Create();
-  FSchnorr := Schnorr;
-  FDigest := digest;
-  FEncoding := encoding;
+  FSchnorr := ASchnorr;
+  FDigest := ADigest;
+  FEncoding := AEncoding;
   FBuffer := TMemoryStream.Create();
 end;
 
@@ -163,7 +163,7 @@ end;
 
 function TSchnorrDigestSigner.GenerateSignature: TCryptoLibByteArray;
 var
-  sig: TCryptoLibGenericArray<TBigInteger>;
+  LSig: TCryptoLibGenericArray<TBigInteger>;
 begin
   if ((not FForSigning)) then
   begin
@@ -171,10 +171,10 @@ begin
       (@SSchnorrDigestSignerNotInitializedForSignatureGeneration);
   end;
 
-  sig := FSchnorr.GenerateSignature(Aggregate());
+  LSig := FSchnorr.GenerateSignature(Aggregate());
 
   try
-    Result := FEncoding.Encode(GetOrder(), sig[0], sig[1]);
+    Result := FEncoding.Encode(GetOrder(), LSig[0], LSig[1]);
   except
     raise EInvalidOperationCryptoLibException.CreateRes(@SEncodingError);
   end;
@@ -211,40 +211,32 @@ begin
   end
   else
   begin
-    Result := Default (TBigInteger);
+    Result := Default(TBigInteger);
   end;
 end;
 
-procedure TSchnorrDigestSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TSchnorrDigestSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  k: IAsymmetricKeyParameter;
-  withRandom: IParametersWithRandom;
+  LKey: IAsymmetricKeyParameter;
 begin
-  FForSigning := forSigning;
+  FForSigning := AForSigning;
 
-  if (Supports(parameters, IParametersWithRandom, withRandom)) then
-  begin
-    k := withRandom.parameters as IAsymmetricKeyParameter;
-  end
-  else
-  begin
-    k := parameters as IAsymmetricKeyParameter;
-  end;
+  LKey := TParameterUtilities.IgnoreRandom(AParameters) as IAsymmetricKeyParameter;
 
-  if ((forSigning) and (not k.IsPrivate)) then
+  if (AForSigning and (not LKey.IsPrivate)) then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SPrivateKey);
   end;
 
-  if ((not forSigning) and (k.IsPrivate)) then
+  if ((not AForSigning) and LKey.IsPrivate) then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SPublicKey);
   end;
 
   Reset();
 
-  FSchnorr.Init(forSigning, parameters, FDigest);
+  FSchnorr.Init(AForSigning, AParameters, FDigest);
 end;
 
 procedure TSchnorrDigestSigner.Reset;
@@ -254,15 +246,15 @@ begin
   FBuffer.SetSize(Int64(0));
 end;
 
-procedure TSchnorrDigestSigner.Update(input: Byte);
+procedure TSchnorrDigestSigner.Update(AInput: Byte);
 begin
-  FBuffer.Write(TCryptoLibByteArray.Create(input)[0], 1);
+  FBuffer.Write(TCryptoLibByteArray.Create(AInput)[0], 1);
 end;
 
-function TSchnorrDigestSigner.VerifySignature(const signature
+function TSchnorrDigestSigner.VerifySignature(const ASignature
   : TCryptoLibByteArray): Boolean;
 var
-  sig: TCryptoLibGenericArray<TBigInteger>;
+  LSig: TCryptoLibGenericArray<TBigInteger>;
 begin
   if (FForSigning) then
   begin
@@ -271,8 +263,8 @@ begin
   end;
 
   try
-    sig := FEncoding.Decode(GetOrder(), signature);
-    Result := FSchnorr.VerifySignature(Aggregate(), sig[0], sig[1]);
+    LSig := FEncoding.Decode(GetOrder(), ASignature);
+    Result := FSchnorr.VerifySignature(Aggregate(), LSig[0], LSig[1]);
   except
     Result := false;
   end;

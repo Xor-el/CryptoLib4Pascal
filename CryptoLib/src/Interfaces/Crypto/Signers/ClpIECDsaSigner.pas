@@ -22,26 +22,26 @@ unit ClpIECDsaSigner;
 interface
 
 uses
-  ClpIDsaExt,
+  ClpIDsa,
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpIECC;
 
 type
-  IECDsaSigner = interface(IDsaExt)
+  IECDsaSigner = interface(IDsa)
 
     ['{72930065-5893-46CA-B49F-51254C2E73FF}']
 
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger;
+    function CalculateE(const AN: TBigInteger;
+      const AMessage: TCryptoLibByteArray): TBigInteger;
 
     function CreateBasePointMultiplier(): IECMultiplier;
 
-    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
+    function GetDenominator(ACoordinateSystem: Int32; const AP: IECPoint)
       : IECFieldElement;
 
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
+    function InitSecureRandom(ANeeded: Boolean; const AProvided: ISecureRandom)
       : ISecureRandom;
 
   end;

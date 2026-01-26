@@ -56,16 +56,16 @@ type
     function GetAlgorithmName: String;
 
   public
-    constructor Create(const engine: IAsymmetricBlockCipher;
-      const digest: IDigest);
+    constructor Create(const AEngine: IAsymmetricBlockCipher;
+      const ADigest: IDigest);
 
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
-    procedure Update(input: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray;
-      inOff, len: Int32);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
+    procedure Update(AInput: Byte);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32);
     function GetMaxSignatureSize: Int32;
     function GenerateSignature: TCryptoLibByteArray;
-    function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
+    function VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
     procedure Reset;
 
     property AlgorithmName: String read GetAlgorithmName;
@@ -76,12 +76,12 @@ implementation
 
 { TGenericSigner }
 
-constructor TGenericSigner.Create(const engine: IAsymmetricBlockCipher;
-  const digest: IDigest);
+constructor TGenericSigner.Create(const AEngine: IAsymmetricBlockCipher;
+  const ADigest: IDigest);
 begin
   inherited Create();
-  FEngine := engine;
-  FDigest := digest;
+  FEngine := AEngine;
+  FDigest := ADigest;
 end;
 
 function TGenericSigner.GetAlgorithmName: String;
@@ -89,45 +89,45 @@ begin
   Result := 'Generic(' + FEngine.AlgorithmName + '/' + FDigest.AlgorithmName + ')';
 end;
 
-procedure TGenericSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TGenericSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  key: IAsymmetricKeyParameter;
-  keyParams: ICipherParameters;
+  LKey: IAsymmetricKeyParameter;
+  LKeyParams: ICipherParameters;
 begin
-  FForSigning := forSigning;
+  FForSigning := AForSigning;
 
-  keyParams := TParameterUtilities.IgnoreRandom(parameters);
+  LKeyParams := TParameterUtilities.IgnoreRandom(AParameters);
 
-  if not Supports(keyParams, IAsymmetricKeyParameter, key) then
+  if not Supports(LKeyParams, IAsymmetricKeyParameter, LKey) then
   begin
     raise EInvalidKeyCryptoLibException.Create('Expected asymmetric key parameter');
   end;
 
-  if forSigning and (not key.IsPrivate) then
+  if AForSigning and (not LKey.IsPrivate) then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SSigningRequiresPrivate);
   end;
 
-  if (not forSigning) and key.IsPrivate then
+  if (not AForSigning) and LKey.IsPrivate then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SVerificationRequiresPublic);
   end;
 
   Reset();
 
-  FEngine.Init(forSigning, parameters);
+  FEngine.Init(AForSigning, AParameters);
 end;
 
-procedure TGenericSigner.Update(input: Byte);
+procedure TGenericSigner.Update(AInput: Byte);
 begin
-  FDigest.Update(input);
+  FDigest.Update(AInput);
 end;
 
-procedure TGenericSigner.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+procedure TGenericSigner.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32);
 begin
-  FDigest.BlockUpdate(input, inOff, len);
+  FDigest.BlockUpdate(AInput, AInOff, ALength);
 end;
 
 function TGenericSigner.GetMaxSignatureSize: Int32;
@@ -137,43 +137,43 @@ end;
 
 function TGenericSigner.GenerateSignature: TCryptoLibByteArray;
 var
-  hash: TCryptoLibByteArray;
+  LHash: TCryptoLibByteArray;
 begin
   if not FForSigning then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForSigning);
   end;
 
-  hash := TDigestUtilities.DoFinal(FDigest);
+  LHash := TDigestUtilities.DoFinal(FDigest);
 
-  Result := FEngine.ProcessBlock(hash, 0, System.Length(hash));
+  Result := FEngine.ProcessBlock(LHash, 0, System.Length(LHash));
 end;
 
 function TGenericSigner.VerifySignature(
-  const signature: TCryptoLibByteArray): Boolean;
+  const ASignature: TCryptoLibByteArray): Boolean;
 var
-  hash, sig, tmp: TCryptoLibByteArray;
+  LHash, LSig, LTmp: TCryptoLibByteArray;
 begin
   if FForSigning then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForVerification);
   end;
 
-  hash := TDigestUtilities.DoFinal(FDigest);
+  LHash := TDigestUtilities.DoFinal(FDigest);
 
   try
-    sig := FEngine.ProcessBlock(signature, 0, System.Length(signature));
+    LSig := FEngine.ProcessBlock(ASignature, 0, System.Length(ASignature));
 
     // Extend with leading zeroes to match the digest size, if necessary.
-    if System.Length(sig) < System.Length(hash) then
+    if System.Length(LSig) < System.Length(LHash) then
     begin
-      SetLength(tmp, System.Length(hash));
-      System.Move(sig[0], tmp[System.Length(tmp) - System.Length(sig)],
-        System.Length(sig));
-      sig := tmp;
+      SetLength(LTmp, System.Length(LHash));
+      System.Move(LSig[0], LTmp[System.Length(LTmp) - System.Length(LSig)],
+        System.Length(LSig));
+      LSig := LTmp;
     end;
 
-    Result := TArrayUtils.ConstantTimeAreEqual(sig, hash);
+    Result := TArrayUtils.ConstantTimeAreEqual(LSig, LHash);
   except
     Result := False;
   end;

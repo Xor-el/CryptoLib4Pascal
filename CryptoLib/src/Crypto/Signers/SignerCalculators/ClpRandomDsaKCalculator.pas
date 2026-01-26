@@ -39,17 +39,17 @@ type
     IRandomDsaKCalculator)
 
   strict private
-    Fq: TBigInteger;
-    Frandom: ISecureRandom;
+    FQ: TBigInteger;
+    FRandom: ISecureRandom;
 
     function GetIsDeterministic: Boolean; virtual;
 
   public
     property IsDeterministic: Boolean read GetIsDeterministic;
-    procedure Init(const n: TBigInteger; const random: ISecureRandom);
+    procedure Init(const AN: TBigInteger; const ARandom: ISecureRandom);
       overload; virtual;
-    procedure Init(const n, d: TBigInteger;
-      const &message: TCryptoLibByteArray); overload; virtual;
+    procedure Init(const AN, AD: TBigInteger;
+      const AMessage: TCryptoLibByteArray); overload; virtual;
     function NextK(): TBigInteger; virtual;
   end;
 
@@ -62,17 +62,17 @@ begin
   Result := False;
 end;
 
-procedure TRandomDsaKCalculator.Init(const n: TBigInteger;
-  const random: ISecureRandom);
+procedure TRandomDsaKCalculator.Init(const AN: TBigInteger;
+  const ARandom: ISecureRandom);
 begin
-  Fq := n;
-  Frandom := random;
+  FQ := AN;
+  FRandom := ARandom;
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-procedure TRandomDsaKCalculator.Init(const n, d: TBigInteger;
-  const &message: TCryptoLibByteArray);
+procedure TRandomDsaKCalculator.Init(const AN, AD: TBigInteger;
+  const AMessage: TCryptoLibByteArray);
 begin
   raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
 end;
@@ -80,16 +80,16 @@ end;
 
 function TRandomDsaKCalculator.NextK: TBigInteger;
 var
-  qBitLength: Int32;
-  k: TBigInteger;
+  LQBitLength: Int32;
+  LK: TBigInteger;
 begin
-  qBitLength := Fq.BitLength;
+  LQBitLength := FQ.BitLength;
 
   repeat
-    k := TBigInteger.Create(qBitLength, Frandom);
-  until (not((k.SignValue < 1) or (k.CompareTo(Fq) >= 0)));
+    LK := TBigInteger.Create(LQBitLength, FRandom);
+  until (not((LK.SignValue < 1) or (LK.CompareTo(FQ) >= 0)));
 
-  Result := k;
+  Result := LK;
 
 end;
 

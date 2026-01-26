@@ -44,18 +44,18 @@ type
     // * @param forSigning true if for signing, false otherwise
     // * @param param necessary parameters.
     // */
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
 
     // /**
     // * update the internal digest with the byte b
     // */
-    procedure Update(input: Byte);
+    procedure Update(AInput: Byte);
 
     // /**
     // * update the internal digest with the byte array in
     // */
-    procedure BlockUpdate(const input: TCryptoLibByteArray;
-      inOff, length: Int32);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32);
 
     // /**
     // * Return the maximum size for a signature produced by this signer.
@@ -71,7 +71,7 @@ type
     // * return true if the internal state represents the signature described
     // * in the passed in array.
     // */
-    function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
+    function VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
 
     // /**
     // * reset the internal state

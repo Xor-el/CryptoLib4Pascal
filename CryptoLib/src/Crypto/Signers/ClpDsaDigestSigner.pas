@@ -25,12 +25,11 @@ uses
 
   SysUtils,
   ClpIDsa,
-  ClpIDsaExt,
   ClpIDigest,
   ClpBigInteger,
   ClpBigIntegers,
   ClpCryptoLibTypes,
-  ClpIParametersWithRandom,
+  ClpParameterUtilities,
   ClpSignersEncodings,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
@@ -52,36 +51,36 @@ type
 
   strict private
   var
-    Fdigest: IDigest;
-    Fdsa: IDsa;
-    Fencoding: IDsaEncoding;
-    FforSigning: Boolean;
+    FDigest: IDigest;
+    FDsa: IDsa;
+    FEncoding: IDsaEncoding;
+    FForSigning: Boolean;
 
   strict protected
 
     function GetOrder(): TBigInteger; virtual;
 
   public
-    constructor Create(const dsa: IDsa; const digest: IDigest); overload;
-    constructor Create(const dsa: IDsaExt; const digest: IDigest;
-      const encoding: IDsaEncoding); overload;
+    constructor Create(const ADsa: IDsa; const ADigest: IDigest); overload;
+    constructor Create(const ADsa: IDsa; const ADigest: IDigest;
+      const AEncoding: IDsaEncoding); overload;
 
     function GetAlgorithmName: String; virtual;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForSigning: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
     /// <summary>
     /// update the internal digest with the byte b
     /// </summary>
-    procedure Update(input: Byte); virtual;
+    procedure Update(AInput: Byte); virtual;
 
     /// <summary>
     /// update the internal digest with the byte array in
     /// </summary>
-    procedure BlockUpdate(const input: TCryptoLibByteArray;
-      inOff, length: Int32); virtual;
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32); virtual;
 
     /// <summary>
     /// Return the maximum size for a signature produced by this signer.
@@ -98,7 +97,7 @@ type
     /// true if the internal state represents the signature described in the
     /// passed in array.
     /// </returns>
-    function VerifySignature(const signature: TCryptoLibByteArray)
+    function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
 
     /// <summary>
@@ -112,47 +111,47 @@ implementation
 
 { TDsaDigestSigner }
 
-procedure TDsaDigestSigner.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, length: Int32);
+procedure TDsaDigestSigner.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32);
 begin
-  Fdigest.BlockUpdate(input, inOff, length);
+  FDigest.BlockUpdate(AInput, AInOff, ALength);
 end;
 
-constructor TDsaDigestSigner.Create(const dsa: IDsa; const digest: IDigest);
+constructor TDsaDigestSigner.Create(const ADsa: IDsa; const ADigest: IDigest);
 begin
   Inherited Create();
-  Fdsa := dsa;
-  Fdigest := digest;
-  Fencoding := TStandardDsaEncoding.Instance;
+  FDsa := ADsa;
+  FDigest := ADigest;
+  FEncoding := TStandardDsaEncoding.Instance;
 end;
 
-constructor TDsaDigestSigner.Create(const dsa: IDsaExt; const digest: IDigest;
-  const encoding: IDsaEncoding);
+constructor TDsaDigestSigner.Create(const ADsa: IDsa; const ADigest: IDigest;
+  const AEncoding: IDsaEncoding);
 begin
   Inherited Create();
-  Fdsa := dsa;
-  Fdigest := digest;
-  Fencoding := encoding;
+  FDsa := ADsa;
+  FDigest := ADigest;
+  FEncoding := AEncoding;
 end;
 
 function TDsaDigestSigner.GenerateSignature: TCryptoLibByteArray;
 var
-  hash: TCryptoLibByteArray;
-  sig: TCryptoLibGenericArray<TBigInteger>;
+  LHash: TCryptoLibByteArray;
+  LSig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  if ((not FforSigning)) then
+  if ((not FForSigning)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SDsaDigestSignerNotInitializedForSignatureGeneration);
   end;
 
-  SetLength(hash, Fdigest.GetDigestSize());
-  Fdigest.DoFinal(hash, 0);
+  SetLength(LHash, FDigest.GetDigestSize());
+  FDigest.DoFinal(LHash, 0);
 
-  sig := Fdsa.GenerateSignature(hash);
+  LSig := FDsa.GenerateSignature(LHash);
 
   try
-    Result := Fencoding.Encode(GetOrder(), sig[0], sig[1]);
+    Result := FEncoding.Encode(GetOrder(), LSig[0], LSig[1]);
   except
     raise EInvalidOperationCryptoLibException.CreateRes(@SEncodingError);
   end;
@@ -160,86 +159,71 @@ end;
 
 function TDsaDigestSigner.GetAlgorithmName: String;
 begin
-  Result := Fdigest.AlgorithmName + 'with' + Fdsa.AlgorithmName;
+  Result := FDigest.AlgorithmName + 'with' + FDsa.AlgorithmName;
 end;
 
 function TDsaDigestSigner.GetOrder: TBigInteger;
 begin
-  if Supports(Fdsa, IDsaExt) then
-  begin
-    Result := (Fdsa as IDsaExt).Order;
-  end
-  else
-  begin
-    Result := Default (TBigInteger);
-  end;
+  Result := FDsa.Order;
 end;
 
 function TDsaDigestSigner.GetMaxSignatureSize: Int32;
 begin
-  Result := Fencoding.GetMaxEncodingSize(GetOrder());
+  Result := FEncoding.GetMaxEncodingSize(GetOrder());
 end;
 
-procedure TDsaDigestSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TDsaDigestSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  k: IAsymmetricKeyParameter;
-  withRandom: IParametersWithRandom;
+  LK: IAsymmetricKeyParameter;
 begin
-  FforSigning := forSigning;
+  FForSigning := AForSigning;
 
-  if (Supports(parameters, IParametersWithRandom, withRandom)) then
-  begin
-    k := withRandom.parameters as IAsymmetricKeyParameter;
-  end
-  else
-  begin
-    k := parameters as IAsymmetricKeyParameter;
-  end;
+  LK := TParameterUtilities.IgnoreRandom(AParameters) as IAsymmetricKeyParameter;
 
-  if ((forSigning) and (not k.IsPrivate)) then
+  if ((AForSigning) and (not LK.IsPrivate)) then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SPrivateKey);
   end;
 
-  if ((not forSigning) and (k.IsPrivate)) then
+  if ((not AForSigning) and (LK.IsPrivate)) then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SPublicKey);
   end;
 
   Reset();
 
-  Fdsa.Init(forSigning, parameters);
+  FDsa.Init(AForSigning, AParameters);
 end;
 
 procedure TDsaDigestSigner.Reset;
 begin
-  Fdigest.Reset;
+  FDigest.Reset;
 end;
 
-procedure TDsaDigestSigner.Update(input: Byte);
+procedure TDsaDigestSigner.Update(AInput: Byte);
 begin
-  Fdigest.Update(input);
+  FDigest.Update(AInput);
 end;
 
-function TDsaDigestSigner.VerifySignature(const signature
+function TDsaDigestSigner.VerifySignature(const ASignature
   : TCryptoLibByteArray): Boolean;
 var
-  hash: TCryptoLibByteArray;
-  sig: TCryptoLibGenericArray<TBigInteger>;
+  LHash: TCryptoLibByteArray;
+  LSig: TCryptoLibGenericArray<TBigInteger>;
 begin
-  if (FforSigning) then
+  if (FForSigning) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SDsaDigestSignerNotInitializedForVerification);
   end;
 
-  SetLength(hash, Fdigest.GetDigestSize());
-  Fdigest.DoFinal(hash, 0);
+  SetLength(LHash, FDigest.GetDigestSize());
+  FDigest.DoFinal(LHash, 0);
 
   try
-    sig := Fencoding.Decode(GetOrder(), signature);
-    Result := Fdsa.VerifySignature(hash, sig[0], sig[1]);
+    LSig := FEncoding.Decode(GetOrder(), ASignature);
+    Result := FDsa.VerifySignature(LHash, LSig[0], LSig[1]);
   except
     Result := false;
   end;

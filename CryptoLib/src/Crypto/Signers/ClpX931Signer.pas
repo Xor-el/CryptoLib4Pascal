@@ -245,7 +245,7 @@ end;
 
 procedure TX931Signer.CreateSignatureBlock;
 var
-  LDigSize, LDelta, I: Int32;
+  LDigSize, LDelta, LI: Int32;
 begin
   LDigSize := FDigest.GetDigestSize();
 
@@ -264,11 +264,11 @@ begin
   end;
 
   FBlock[0] := $6B;
-  I := LDelta - 2;
-  while I <> 0 do
+  LI := LDelta - 2;
+  while LI <> 0 do
   begin
-    FBlock[I] := $BB;
-    System.Dec(I);
+    FBlock[LI] := $BB;
+    System.Dec(LI);
   end;
   FBlock[LDelta - 1] := $BA;
 end;

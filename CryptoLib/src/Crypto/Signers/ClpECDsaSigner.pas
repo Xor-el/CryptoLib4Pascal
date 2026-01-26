@@ -28,7 +28,6 @@ uses
   ClpECAlgorithms,
   ClpECC,
   ClpIECC,
-  ClpIParametersWithRandom,
   ClpIECPublicKeyParameters,
   ClpIECPrivateKeyParameters,
   ClpMultipliers,
@@ -36,11 +35,12 @@ uses
   ClpICipherParameters,
   ClpIECDomainParameters,
   ClpISecureRandom,
+  ClpParameterUtilities,
   ClpRandomDsaKCalculator,
   ClpIECKeyParameters,
   ClpIDsaKCalculator,
   ClpECCurveConstants,
-  ClpIDsaExt,
+  ClpIDsa,
   ClpIECDsaSigner;
 
 resourcestring
@@ -52,7 +52,7 @@ type
   /// <summary>
   /// EC-DSA as described in X9.62
   /// </summary>
-  TECDsaSigner = class(TInterfacedObject, IDsaExt, IECDsaSigner)
+  TECDsaSigner = class(TInterfacedObject, IDsa, IECDsaSigner)
 
   strict private
 
@@ -72,19 +72,19 @@ type
 
   strict protected
   var
-    FkCalculator: IDsaKCalculator;
-    Fkey: IECKeyParameters;
-    Frandom: ISecureRandom;
+    FKCalculator: IDsaKCalculator;
+    FKey: IECKeyParameters;
+    FRandom: ISecureRandom;
 
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger; virtual;
+    function CalculateE(const AN: TBigInteger;
+      const AMessage: TCryptoLibByteArray): TBigInteger; virtual;
 
     function CreateBasePointMultiplier(): IECMultiplier; virtual;
 
-    function GetDenominator(coordinateSystem: Int32; const p: IECPoint)
+    function GetDenominator(ACoordinateSystem: Int32; const AP: IECPoint)
       : IECFieldElement; virtual;
 
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
+    function InitSecureRandom(ANeeded: Boolean; const AProvided: ISecureRandom)
       : ISecureRandom; virtual;
 
   public
@@ -101,13 +101,13 @@ type
     /// <param name="kCalculator">
     /// kCalculator a K value calculator.
     /// </param>
-    constructor Create(const kCalculator: IDsaKCalculator); overload;
+    constructor Create(const AKCalculator: IDsaKCalculator); overload;
 
     property Order: TBigInteger read GetOrder;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForSigning: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
     // // 5.3 pg 28
     // /**
@@ -116,7 +116,7 @@ type
     // * hash of the message of interest.
     // *
     // * @param message the message that will be verified later.
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     // // 5.4 pg 29
@@ -125,8 +125,8 @@ type
     // * the passed in message (for standard DSA the message should be
     // * a SHA-1 hash of the real message to be verified).
     // */
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean;
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const AR, &AS: TBigInteger): Boolean;
 
   end;
 
@@ -137,7 +137,7 @@ implementation
 constructor TECDsaSigner.Create;
 begin
   inherited Create();
-  FkCalculator := TRandomDsaKCalculator.Create();
+  FKCalculator := TRandomDsaKCalculator.Create();
 end;
 
 class procedure TECDsaSigner.Boot;
@@ -145,27 +145,27 @@ begin
   FEight := TBigInteger.ValueOf(8);
 end;
 
-function TECDsaSigner.CalculateE(const n: TBigInteger;
-  const &message: TCryptoLibByteArray): TBigInteger;
+function TECDsaSigner.CalculateE(const AN: TBigInteger;
+  const AMessage: TCryptoLibByteArray): TBigInteger;
 var
-  messageBitLength: Int32;
-  trunc: TBigInteger;
+  LMessageBitLength: Int32;
+  LTrunc: TBigInteger;
 begin
-  messageBitLength := System.Length(&message) * 8;
-  trunc := TBigInteger.Create(1, &message);
+  LMessageBitLength := System.Length(AMessage) * 8;
+  LTrunc := TBigInteger.Create(1, AMessage);
 
-  if (n.BitLength < messageBitLength) then
+  if (AN.BitLength < LMessageBitLength) then
   begin
-    trunc := trunc.ShiftRight(messageBitLength - n.BitLength);
+    LTrunc := LTrunc.ShiftRight(LMessageBitLength - AN.BitLength);
   end;
 
-  Result := trunc;
+  Result := LTrunc;
 end;
 
-constructor TECDsaSigner.Create(const kCalculator: IDsaKCalculator);
+constructor TECDsaSigner.Create(const AKCalculator: IDsaKCalculator);
 begin
   inherited Create();
-  FkCalculator := kCalculator;
+  FKCalculator := AKCalculator;
 end;
 
 function TECDsaSigner.CreateBasePointMultiplier: IECMultiplier;
@@ -178,47 +178,47 @@ begin
   TECDsaSigner.Boot;
 end;
 
-function TECDsaSigner.GenerateSignature(const &message: TCryptoLibByteArray)
+function TECDsaSigner.GenerateSignature(const AMessage: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
-  ec: IECDomainParameters;
-  basePointMultiplier: IECMultiplier;
-  n, e, d, r, s, k: TBigInteger;
-  p: IECPoint;
+  LEC: IECDomainParameters;
+  LBasePointMultiplier: IECMultiplier;
+  LN, LE, LD, LR, LS, LK: TBigInteger;
+  LP: IECPoint;
 begin
-  ec := Fkey.parameters;
-  n := ec.n;
-  e := CalculateE(n, &message);
-  d := (Fkey as IECPrivateKeyParameters).d;
+  LEC := FKey.Parameters;
+  LN := LEC.N;
+  LE := CalculateE(LN, AMessage);
+  LD := (FKey as IECPrivateKeyParameters).D;
 
-  if (FkCalculator.IsDeterministic) then
+  if (FKCalculator.IsDeterministic) then
   begin
-    FkCalculator.Init(n, d, &message);
+    FKCalculator.Init(LN, LD, AMessage);
   end
   else
   begin
-    FkCalculator.Init(n, Frandom);
+    FKCalculator.Init(LN, FRandom);
   end;
 
-  basePointMultiplier := CreateBasePointMultiplier();
+  LBasePointMultiplier := CreateBasePointMultiplier();
 
   // 5.3.2
   repeat // Generate s
 
     repeat // Generate r
-      k := FkCalculator.NextK();
+      LK := FKCalculator.NextK();
 
-      p := basePointMultiplier.Multiply(ec.G, k).Normalize();
+      LP := LBasePointMultiplier.Multiply(LEC.G, LK).Normalize();
 
       // 5.3.3
-      r := p.AffineXCoord.ToBigInteger().&Mod(n);
-    until (not(r.SignValue = 0));
+      LR := LP.AffineXCoord.ToBigInteger().&Mod(LN);
+    until (not(LR.SignValue = 0));
 
-    s := k.ModInverse(n).Multiply(e.Add(d.Multiply(r))).&Mod(n);
+    LS := LK.ModInverse(LN).Multiply(LE.Add(LD.Multiply(LR))).&Mod(LN);
 
-  until (not(s.SignValue = 0));
+  until (not(LS.SignValue = 0));
 
-  Result := TCryptoLibGenericArray<TBigInteger>.Create(r, s);
+  Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
 end;
 
 function TECDsaSigner.GetAlgorithmName: String;
@@ -226,25 +226,25 @@ begin
   Result := 'ECDSA';
 end;
 
-function TECDsaSigner.GetDenominator(coordinateSystem: Int32; const p: IECPoint)
+function TECDsaSigner.GetDenominator(ACoordinateSystem: Int32; const AP: IECPoint)
   : IECFieldElement;
 begin
-  case (coordinateSystem) of
+  case (ACoordinateSystem) of
     TECCurveConstants.COORD_HOMOGENEOUS,
       TECCurveConstants.COORD_LAMBDA_PROJECTIVE, TECCurveConstants.COORD_SKEWED:
       begin
-        Result := p.GetZCoord(0);
+        Result := AP.GetZCoord(0);
       end;
 
     TECCurveConstants.COORD_JACOBIAN,
       TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,
       TECCurveConstants.COORD_JACOBIAN_MODIFIED:
       begin
-        Result := p.GetZCoord(0).Square();
+        Result := AP.GetZCoord(0).Square();
       end
   else
     begin
-      Result := Nil;
+      Result := nil;
     end;
   end;
 end;
@@ -256,61 +256,51 @@ end;
 
 function TECDsaSigner.GetOrder: TBigInteger;
 begin
-  Result := Fkey.parameters.n;
+  Result := FKey.Parameters.N;
 end;
 
-procedure TECDsaSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TECDsaSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  providedRandom: ISecureRandom;
-  rParam: IParametersWithRandom;
-  Lparameters: ICipherParameters;
+  LProvidedRandom: ISecureRandom;
+  LParameters: ICipherParameters;
 begin
-  providedRandom := Nil;
-  Lparameters := parameters;
-
-  if (forSigning) then
+  if (AForSigning) then
   begin
+    LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-    if (Supports(Lparameters, IParametersWithRandom, rParam)) then
-    begin
-      providedRandom := rParam.random;
-      Lparameters := rParam.parameters;
-    end;
-
-    if (not(Supports(Lparameters, IECPrivateKeyParameters))) then
+    if (not(Supports(LParameters, IECPrivateKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPrivateKeyNotFound);
     end;
 
-    Fkey := Lparameters as IECPrivateKeyParameters;
+    FKey := LParameters as IECPrivateKeyParameters;
+    FRandom := InitSecureRandom(not FKCalculator.IsDeterministic, LProvidedRandom);
   end
   else
   begin
-    if (not(Supports(Lparameters, IECPublicKeyParameters))) then
+    if (not(Supports(AParameters, IECPublicKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPublicKeyNotFound);
     end;
 
-    Fkey := Lparameters as IECPublicKeyParameters;
+    FKey := AParameters as IECPublicKeyParameters;
+    FRandom := nil;
   end;
-
-  Frandom := InitSecureRandom((forSigning) and
-    (not FkCalculator.IsDeterministic), providedRandom);
 end;
 
-function TECDsaSigner.InitSecureRandom(needed: Boolean;
-  const provided: ISecureRandom): ISecureRandom;
+function TECDsaSigner.InitSecureRandom(ANeeded: Boolean;
+  const AProvided: ISecureRandom): ISecureRandom;
 begin
-  if (not needed) then
+  if (not ANeeded) then
   begin
-    Result := Nil;
+    Result := nil;
   end
   else
   begin
-    if (provided <> Nil) then
+    if (AProvided <> nil) then
     begin
-      Result := provided;
+      Result := AProvided;
     end
     else
     begin
@@ -319,38 +309,38 @@ begin
   end;
 end;
 
-function TECDsaSigner.VerifySignature(const &message: TCryptoLibByteArray;
-  const r, s: TBigInteger): Boolean;
+function TECDsaSigner.VerifySignature(const AMessage: TCryptoLibByteArray;
+  const AR, &AS: TBigInteger): Boolean;
 var
-  n, e, c, u1, u2, cofactor, v, Smallr: TBigInteger;
-  G, Q, point: IECPoint;
-  curve: IECCurve;
-  d, X, RLocal: IECFieldElement;
+  LN, LE, LC, LU1, LU2, LCofactor, LV, LSmallR: TBigInteger;
+  LG, LQ, LPoint: IECPoint;
+  LCurve: IECCurve;
+  LD, LX, LRLocal: IECFieldElement;
 begin
-  n := Fkey.parameters.n;
-  Smallr := r;
+  LN := FKey.Parameters.N;
+  LSmallR := AR;
 
   // r and s should both in the range [1,n-1]
-  if ((Smallr.SignValue < 1) or (s.SignValue < 1) or (Smallr.CompareTo(n) >= 0)
-    or (s.CompareTo(n) >= 0)) then
+  if ((LSmallR.SignValue < 1) or (&AS.SignValue < 1) or (LSmallR.CompareTo(LN) >= 0)
+    or (&AS.CompareTo(LN) >= 0)) then
   begin
     Result := false;
     Exit;
   end;
 
-  e := CalculateE(n, &message);
-  c := s.ModInverse(n);
+  LE := CalculateE(LN, AMessage);
+  LC := &AS.ModInverse(LN);
 
-  u1 := e.Multiply(c).&Mod(n);
-  u2 := Smallr.Multiply(c).&Mod(n);
+  LU1 := LE.Multiply(LC).&Mod(LN);
+  LU2 := LSmallR.Multiply(LC).&Mod(LN);
 
-  G := Fkey.parameters.G;
+  LG := FKey.Parameters.G;
 
-  Q := (Fkey as IECPublicKeyParameters).Q;
+  LQ := (FKey as IECPublicKeyParameters).Q;
 
-  point := TECAlgorithms.SumOfTwoMultiplies(G, u1, Q, u2);
+  LPoint := TECAlgorithms.SumOfTwoMultiplies(LG, LU1, LQ, LU2);
 
-  if (point.IsInfinity) then
+  if (LPoint.IsInfinity) then
   begin
     Result := false;
     Exit;
@@ -369,25 +359,25 @@ begin
   // * Based on an original idea by Gregory Maxwell (https://github.com/gmaxwell), as implemented in
   // * the libsecp256k1 project (https://github.com/bitcoin/secp256k1).
   // */
-  curve := point.curve;
-  if (curve <> Nil) then
+  LCurve := LPoint.Curve;
+  if (LCurve <> nil) then
   begin
-    cofactor := curve.cofactor;
-    if ((cofactor.IsInitialized) and (cofactor.CompareTo(Eight) <= 0)) then
+    LCofactor := LCurve.Cofactor;
+    if ((LCofactor.IsInitialized) and (LCofactor.CompareTo(Eight) <= 0)) then
     begin
-      d := GetDenominator(curve.coordinateSystem, point);
-      if ((d <> Nil) and (not d.IsZero)) then
+      LD := GetDenominator(LCurve.CoordinateSystem, LPoint);
+      if ((LD <> nil) and (not LD.IsZero)) then
       begin
-        X := point.XCoord;
-        while (curve.IsValidFieldElement(Smallr)) do
+        LX := LPoint.XCoord;
+        while (LCurve.IsValidFieldElement(LSmallR)) do
         begin
-          RLocal := curve.FromBigInteger(Smallr).Multiply(d);
-          if (RLocal.Equals(X)) then
+          LRLocal := LCurve.FromBigInteger(LSmallR).Multiply(LD);
+          if (LRLocal.Equals(LX)) then
           begin
             Result := True;
             Exit;
           end;
-          Smallr := Smallr.Add(n);
+          LSmallR := LSmallR.Add(LN);
         end;
         Result := false;
         Exit;
@@ -395,8 +385,8 @@ begin
     end;
   end;
 
-  v := point.Normalize().AffineXCoord.ToBigInteger().&Mod(n);
-  Result := v.Equals(Smallr);
+  LV := LPoint.Normalize().AffineXCoord.ToBigInteger().&Mod(LN);
+  Result := LV.Equals(LSmallR);
 end;
 
 end.

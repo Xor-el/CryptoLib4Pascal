@@ -22,19 +22,19 @@ unit ClpIDsaSigner;
 interface
 
 uses
-  ClpIDsaExt,
+  ClpIDsa,
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
-  IDsaSigner = interface(IDsaExt)
+  IDsaSigner = interface(IDsa)
     ['{687C14CD-F126-4886-87FC-535DEB083C2F}']
 
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger;
+    function CalculateE(const AN: TBigInteger;
+      const AMessage: TCryptoLibByteArray): TBigInteger;
 
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
+    function InitSecureRandom(ANeeded: Boolean; const AProvided: ISecureRandom)
       : ISecureRandom;
 
   end;

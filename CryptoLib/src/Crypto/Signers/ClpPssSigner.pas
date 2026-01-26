@@ -60,22 +60,22 @@ type
     FMgfDigest: IDigest;
     FCipher: IAsymmetricBlockCipher;
     FRandom: ISecureRandom;
-    FhLen: Int32;
+    FHLen: Int32;
     FMgfhLen: Int32;
-    FsLen: Int32;
+    FSLen: Int32;
     FSSet: Boolean;
     FEmBits: Int32;
     FSalt: TCryptoLibByteArray;
-    FmDash: TCryptoLibByteArray;
+    FMDash: TCryptoLibByteArray;
     FBlock: TCryptoLibByteArray;
     FTrailer: Byte;
 
-    procedure ClearBlock(const block: TCryptoLibByteArray);
-    procedure ItoOSP(i: Int32; const sp: TCryptoLibByteArray);
-    function MaskGeneratorFunction(const Z: TCryptoLibByteArray;
-      zOff, zLen, length: Int32): TCryptoLibByteArray;
-    function MaskGeneratorFunction1(const Z: TCryptoLibByteArray;
-      zOff, zLen, length: Int32): TCryptoLibByteArray;
+    procedure ClearBlock(const ABlock: TCryptoLibByteArray);
+    procedure ItoOSP(AI: Int32; const ASP: TCryptoLibByteArray);
+    function MaskGeneratorFunction(const AZ: TCryptoLibByteArray;
+      AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
+    function MaskGeneratorFunction1(const AZ: TCryptoLibByteArray;
+      AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
 
   strict protected
     function GetAlgorithmName: String;
@@ -128,13 +128,13 @@ type
       saltLen: Int32; const salt: TCryptoLibByteArray;
       trailer: Byte); overload;
 
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
-    procedure Update(input: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray;
-      inOff, len: Int32);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
+    procedure Update(AInput: Byte);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32);
     function GetMaxSignatureSize: Int32;
     function GenerateSignature: TCryptoLibByteArray;
-    function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
+    function VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
     procedure Reset;
 
     property AlgorithmName: String read GetAlgorithmName;
@@ -233,9 +233,9 @@ begin
   FContentDigest1 := contentDigest1;
   FContentDigest2 := contentDigest2;
   FMgfDigest := mgfDigest;
-  FhLen := contentDigest2.GetDigestSize();
+  FHLen := contentDigest2.GetDigestSize();
   FMgfhLen := mgfDigest.GetDigestSize();
-  FsLen := saltLen;
+  FSLen := saltLen;
   FSSet := salt <> nil;
   if FSSet then
   begin
@@ -245,7 +245,7 @@ begin
   begin
     SetLength(FSalt, saltLen);
   end;
-  SetLength(FmDash, 8 + saltLen + FhLen);
+  SetLength(FMDash, 8 + saltLen + FHLen);
   FTrailer := trailer;
 end;
 
@@ -254,40 +254,40 @@ begin
   Result := FMgfDigest.AlgorithmName + 'withRSAandMGF1';
 end;
 
-procedure TPssSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TPssSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  kParams: ICipherParameters;
-  providedRandom: ISecureRandom;
-  kParam: IRsaKeyParameters;
-  blinding: IRsaBlindingParameters;
+  LKParams: ICipherParameters;
+  LProvidedRandom: ISecureRandom;
+  LKParam: IRsaKeyParameters;
+  LBlinding: IRsaBlindingParameters;
 begin
-  FCipher.Init(forSigning, parameters);
+  FCipher.Init(AForSigning, AParameters);
 
-  kParams := TParameterUtilities.GetRandom(parameters, providedRandom);
+  LKParams := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-  if forSigning then
+  if AForSigning then
   begin
-    if providedRandom <> nil then
-      FRandom := providedRandom
+    if LProvidedRandom <> nil then
+      FRandom := LProvidedRandom
     else
       FRandom := TSecureRandom.Create();
   end
   else
     FRandom := nil;
 
-  if Supports(kParams, IRsaBlindingParameters, blinding) then
+  if Supports(LKParams, IRsaBlindingParameters, LBlinding) then
   begin
-    kParam := blinding.PublicKey;
+    LKParam := LBlinding.PublicKey;
   end
   else
   begin
-    kParam := kParams as IRsaKeyParameters;
+    LKParam := LKParams as IRsaKeyParameters;
   end;
 
-  FEmBits := kParam.Modulus.BitLength - 1;
+  FEmBits := LKParam.Modulus.BitLength - 1;
 
-  if FEmBits < ((8 * FhLen) + (8 * FsLen) + 9) then
+  if FEmBits < ((8 * FHLen) + (8 * FSLen) + 9) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SKeyTooSmall);
   end;
@@ -296,30 +296,30 @@ begin
   ClearBlock(FBlock);
 end;
 
-procedure TPssSigner.ClearBlock(const block: TCryptoLibByteArray);
+procedure TPssSigner.ClearBlock(const ABlock: TCryptoLibByteArray);
 begin
-  if block <> nil then
-    FillChar(block[0], System.Length(block), 0);
+  if ABlock <> nil then
+    FillChar(ABlock[0], System.Length(ABlock), 0);
 end;
 
-procedure TPssSigner.Update(input: Byte);
+procedure TPssSigner.Update(AInput: Byte);
 begin
-  FContentDigest1.Update(input);
+  FContentDigest1.Update(AInput);
 end;
 
-procedure TPssSigner.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+procedure TPssSigner.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32);
 begin
-  FContentDigest1.BlockUpdate(input, inOff, len);
+  FContentDigest1.BlockUpdate(AInput, AInOff, ALength);
 end;
 
 function TPssSigner.GenerateSignature: TCryptoLibByteArray;
 var
-  h, dbMask: TCryptoLibByteArray;
-  firstByteMask: UInt32;
-  i: Int32;
+  LH, LDbMask: TCryptoLibByteArray;
+  LFirstByteMask: UInt32;
+  LI: Int32;
 begin
-  if FContentDigest1.GetDigestSize() <> FhLen then
+  if FContentDigest1.GetDigestSize() <> FHLen then
   begin
     raise EInvalidOperationCryptoLibException.Create('Digest size mismatch');
   end;
@@ -328,39 +328,39 @@ begin
   ClearBlock(FBlock);
 
   // PSS requires first 8 bytes of mDash to be zeros (padding1)
-  FillChar(FmDash[0], 8, 0);
+  FillChar(FMDash[0], 8, 0);
 
-  FContentDigest1.DoFinal(FmDash, System.Length(FmDash) - FhLen - FsLen);
+  FContentDigest1.DoFinal(FMDash, System.Length(FMDash) - FHLen - FSLen);
 
-  if FsLen <> 0 then
+  if FSLen <> 0 then
   begin
     if not FSSet then
     begin
       FRandom.NextBytes(FSalt);
     end;
-    System.Move(FSalt[0], FmDash[System.Length(FmDash) - FsLen], FsLen);
+    System.Move(FSalt[0], FMDash[System.Length(FMDash) - FSLen], FSLen);
   end;
 
-  SetLength(h, FhLen);
+  SetLength(LH, FHLen);
 
-  FContentDigest2.BlockUpdate(FmDash, 0, System.Length(FmDash));
-  FContentDigest2.DoFinal(h, 0);
+  FContentDigest2.BlockUpdate(FMDash, 0, System.Length(FMDash));
+  FContentDigest2.DoFinal(LH, 0);
 
-  FBlock[System.Length(FBlock) - FsLen - 1 - FhLen - 1] := $01;
-  System.Move(FSalt[0], FBlock[System.Length(FBlock) - FsLen - FhLen - 1], FsLen);
+  FBlock[System.Length(FBlock) - FSLen - 1 - FHLen - 1] := $01;
+  System.Move(FSalt[0], FBlock[System.Length(FBlock) - FSLen - FHLen - 1], FSLen);
 
-  dbMask := MaskGeneratorFunction(h, 0, System.Length(h),
-    System.Length(FBlock) - FhLen - 1);
-  for i := 0 to System.Length(dbMask) - 1 do
+  LDbMask := MaskGeneratorFunction(LH, 0, System.Length(LH),
+    System.Length(FBlock) - FHLen - 1);
+  for LI := 0 to System.Length(LDbMask) - 1 do
   begin
-    FBlock[i] := FBlock[i] xor dbMask[i];
+    FBlock[LI] := FBlock[LI] xor LDbMask[LI];
   end;
 
-  System.Move(h[0], FBlock[System.Length(FBlock) - FhLen - 1], System.Length(h));
+  System.Move(LH[0], FBlock[System.Length(FBlock) - FHLen - 1], System.Length(LH));
 
-  firstByteMask := $FF shr ((System.Length(FBlock) * 8) - FEmBits);
+  LFirstByteMask := $FF shr ((System.Length(FBlock) * 8) - FEmBits);
 
-  FBlock[0] := FBlock[0] and Byte(firstByteMask);
+  FBlock[0] := FBlock[0] and Byte(LFirstByteMask);
   FBlock[System.Length(FBlock) - 1] := FTrailer;
 
   Result := FCipher.ProcessBlock(FBlock, 0, System.Length(FBlock));
@@ -374,31 +374,31 @@ begin
 end;
 
 function TPssSigner.VerifySignature(
-  const signature: TCryptoLibByteArray): Boolean;
+  const ASignature: TCryptoLibByteArray): Boolean;
 var
-  b, dbMask: TCryptoLibByteArray;
-  firstByteMask: UInt32;
-  i, j: Int32;
+  LB, LDbMask: TCryptoLibByteArray;
+  LFirstByteMask: UInt32;
+  LI, LJ: Int32;
 begin
-  if FContentDigest1.GetDigestSize() <> FhLen then
+  if FContentDigest1.GetDigestSize() <> FHLen then
   begin
     raise EInvalidOperationCryptoLibException.Create('Digest size mismatch');
   end;
 
   // PSS requires first 8 bytes of mDash to be zeros (padding1)
-  FillChar(FmDash[0], 8, 0);
+  FillChar(FMDash[0], 8, 0);
 
-  FContentDigest1.DoFinal(FmDash, System.Length(FmDash) - FhLen - FsLen);
+  FContentDigest1.DoFinal(FMDash, System.Length(FMDash) - FHLen - FSLen);
 
-  b := FCipher.ProcessBlock(signature, 0, System.Length(signature));
+  LB := FCipher.ProcessBlock(ASignature, 0, System.Length(ASignature));
   
-  FillChar(FBlock[0], System.Length(FBlock) - System.Length(b), 0);
-  System.Move(b[0], FBlock[System.Length(FBlock) - System.Length(b)],
-    System.Length(b));
+  FillChar(FBlock[0], System.Length(FBlock) - System.Length(LB), 0);
+  System.Move(LB[0], FBlock[System.Length(FBlock) - System.Length(LB)],
+    System.Length(LB));
 
-  firstByteMask := $FF shr ((System.Length(FBlock) * 8) - FEmBits);
+  LFirstByteMask := $FF shr ((System.Length(FBlock) * 8) - FEmBits);
 
-  if (FBlock[0] <> Byte(FBlock[0] and firstByteMask)) or
+  if (FBlock[0] <> Byte(FBlock[0] and LFirstByteMask)) or
      (FBlock[System.Length(FBlock) - 1] <> FTrailer) then
   begin
     ClearBlock(FBlock);
@@ -406,19 +406,19 @@ begin
     Exit;
   end;
 
-  dbMask := MaskGeneratorFunction(FBlock, System.Length(FBlock) - FhLen - 1,
-    FhLen, System.Length(FBlock) - FhLen - 1);
+  LDbMask := MaskGeneratorFunction(FBlock, System.Length(FBlock) - FHLen - 1,
+    FHLen, System.Length(FBlock) - FHLen - 1);
 
-  for i := 0 to System.Length(dbMask) - 1 do
+  for LI := 0 to System.Length(LDbMask) - 1 do
   begin
-    FBlock[i] := FBlock[i] xor dbMask[i];
+    FBlock[LI] := FBlock[LI] xor LDbMask[LI];
   end;
 
-  FBlock[0] := FBlock[0] and Byte(firstByteMask);
+  FBlock[0] := FBlock[0] and Byte(LFirstByteMask);
 
-  for i := 0 to System.Length(FBlock) - FhLen - FsLen - 3 do
+  for LI := 0 to System.Length(FBlock) - FHLen - FSLen - 3 do
   begin
-    if FBlock[i] <> 0 then
+    if FBlock[LI] <> 0 then
     begin
       ClearBlock(FBlock);
       Result := False;
@@ -426,7 +426,7 @@ begin
     end;
   end;
 
-  if FBlock[System.Length(FBlock) - FhLen - FsLen - 2] <> $01 then
+  if FBlock[System.Length(FBlock) - FHLen - FSLen - 2] <> $01 then
   begin
     ClearBlock(FBlock);
     Result := False;
@@ -435,33 +435,33 @@ begin
 
   if FSSet then
   begin
-    System.Move(FSalt[0], FmDash[System.Length(FmDash) - FsLen], FsLen);
+    System.Move(FSalt[0], FMDash[System.Length(FMDash) - FSLen], FSLen);
   end
   else
   begin
-    System.Move(FBlock[System.Length(FBlock) - FsLen - FhLen - 1],
-      FmDash[System.Length(FmDash) - FsLen], FsLen);
+    System.Move(FBlock[System.Length(FBlock) - FSLen - FHLen - 1],
+      FMDash[System.Length(FMDash) - FSLen], FSLen);
   end;
 
-  FContentDigest2.BlockUpdate(FmDash, 0, System.Length(FmDash));
-  FContentDigest2.DoFinal(FmDash, System.Length(FmDash) - FhLen);
+  FContentDigest2.BlockUpdate(FMDash, 0, System.Length(FMDash));
+  FContentDigest2.DoFinal(FMDash, System.Length(FMDash) - FHLen);
 
-  i := System.Length(FBlock) - FhLen - 1;
-  j := System.Length(FmDash) - FhLen;
-  while j < System.Length(FmDash) do
+  LI := System.Length(FBlock) - FHLen - 1;
+  LJ := System.Length(FMDash) - FHLen;
+  while LJ < System.Length(FMDash) do
   begin
-    if (FBlock[i] xor FmDash[j]) <> 0 then
+    if (FBlock[LI] xor FMDash[LJ]) <> 0 then
     begin
-      ClearBlock(FmDash);
+      ClearBlock(FMDash);
       ClearBlock(FBlock);
       Result := False;
       Exit;
     end;
-    Inc(i);
-    Inc(j);
+    Inc(LI);
+    Inc(LJ);
   end;
 
-  ClearBlock(FmDash);
+  ClearBlock(FMDash);
   ClearBlock(FBlock);
 
   Result := True;
@@ -472,73 +472,73 @@ begin
   FContentDigest1.Reset();
 end;
 
-procedure TPssSigner.ItoOSP(i: Int32; const sp: TCryptoLibByteArray);
+procedure TPssSigner.ItoOSP(AI: Int32; const ASP: TCryptoLibByteArray);
 begin
-  sp[0] := Byte(UInt32(i) shr 24);
-  sp[1] := Byte(UInt32(i) shr 16);
-  sp[2] := Byte(UInt32(i) shr 8);
-  sp[3] := Byte(UInt32(i) shr 0);
+  ASP[0] := Byte(UInt32(AI) shr 24);
+  ASP[1] := Byte(UInt32(AI) shr 16);
+  ASP[2] := Byte(UInt32(AI) shr 8);
+  ASP[3] := Byte(UInt32(AI) shr 0);
 end;
 
-function TPssSigner.MaskGeneratorFunction(const Z: TCryptoLibByteArray;
-  zOff, zLen, length: Int32): TCryptoLibByteArray;
+function TPssSigner.MaskGeneratorFunction(const AZ: TCryptoLibByteArray;
+  AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
 var
-  mask: TCryptoLibByteArray;
-  xof: IXOF;
+  LMask: TCryptoLibByteArray;
+  LXof: IXOF;
 begin
   // Check if mgfDigest wraps an XOF hash
-  if Supports(FMgfDigest.GetUnderlyingIHash, IXOF, xof) then
+  if Supports(FMgfDigest.GetUnderlyingIHash, IXOF, LXof) then
   begin
-    SetLength(mask, length);
-    xof.XOFSizeInBits := length * 8;
-    xof.Initialize;
-    xof.TransformBytes(Z, zOff, zLen);
-    mask := xof.TransformFinal.GetBytes();
-    Result := mask;
+    SetLength(LMask, ALength);
+    LXof.XOFSizeInBits := ALength * 8;
+    LXof.Initialize;
+    LXof.TransformBytes(AZ, AZOff, AZLen);
+    LMask := LXof.TransformFinal.GetBytes();
+    Result := LMask;
     Exit;
   end;
 
-  Result := MaskGeneratorFunction1(Z, zOff, zLen, length);
+  Result := MaskGeneratorFunction1(AZ, AZOff, AZLen, ALength);
 end;
 
-function TPssSigner.MaskGeneratorFunction1(const Z: TCryptoLibByteArray;
-  zOff, zLen, length: Int32): TCryptoLibByteArray;
+function TPssSigner.MaskGeneratorFunction1(const AZ: TCryptoLibByteArray;
+  AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
 var
-  mask, hashBuf, C: TCryptoLibByteArray;
-  counter: Int32;
+  LMask, LHashBuf, LC: TCryptoLibByteArray;
+  LCounter: Int32;
 begin
-  SetLength(mask, length);
-  SetLength(hashBuf, FMgfhLen);
-  SetLength(C, 4);
-  counter := 0;
+  SetLength(LMask, ALength);
+  SetLength(LHashBuf, FMgfhLen);
+  SetLength(LC, 4);
+  LCounter := 0;
 
   FMgfDigest.Reset();
 
-  while counter < (length div FMgfhLen) do
+  while LCounter < (ALength div FMgfhLen) do
   begin
-    ItoOSP(counter, C);
+    ItoOSP(LCounter, LC);
 
-    FMgfDigest.BlockUpdate(Z, zOff, zLen);
-    FMgfDigest.BlockUpdate(C, 0, System.Length(C));
-    FMgfDigest.DoFinal(hashBuf, 0);
+    FMgfDigest.BlockUpdate(AZ, AZOff, AZLen);
+    FMgfDigest.BlockUpdate(LC, 0, System.Length(LC));
+    FMgfDigest.DoFinal(LHashBuf, 0);
 
-    System.Move(hashBuf[0], mask[counter * FMgfhLen], System.Length(hashBuf));
-    Inc(counter);
+    System.Move(LHashBuf[0], LMask[LCounter * FMgfhLen], System.Length(LHashBuf));
+    Inc(LCounter);
   end;
 
-  if (counter * FMgfhLen) < length then
+  if (LCounter * FMgfhLen) < ALength then
   begin
-    ItoOSP(counter, C);
+    ItoOSP(LCounter, LC);
 
-    FMgfDigest.BlockUpdate(Z, zOff, zLen);
-    FMgfDigest.BlockUpdate(C, 0, System.Length(C));
-    FMgfDigest.DoFinal(hashBuf, 0);
+    FMgfDigest.BlockUpdate(AZ, AZOff, AZLen);
+    FMgfDigest.BlockUpdate(LC, 0, System.Length(LC));
+    FMgfDigest.DoFinal(LHashBuf, 0);
 
-    System.Move(hashBuf[0], mask[counter * FMgfhLen],
-      System.Length(mask) - (counter * FMgfhLen));
+    System.Move(LHashBuf[0], LMask[LCounter * FMgfhLen],
+      System.Length(LMask) - (LCounter * FMgfhLen));
   end;
 
-  Result := mask;
+  Result := LMask;
 end;
 
 end.

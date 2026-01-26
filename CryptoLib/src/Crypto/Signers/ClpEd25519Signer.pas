@@ -44,7 +44,7 @@ type
   strict private
   var
     FBuffer: TMemoryStream;
-    FforSigning: Boolean;
+    FForSigning: Boolean;
     FEd25519Instance: IEd25519;
     FPrivateKey: IEd25519PrivateKeyParameters;
     FPublicKey: IEd25519PublicKeyParameters;
@@ -58,14 +58,14 @@ type
     constructor Create();
     destructor Destroy(); override;
 
-    procedure Init(forSigning: Boolean;
-      const parameters: ICipherParameters); virtual;
-    procedure Update(b: Byte); virtual;
-    procedure BlockUpdate(const buf: TCryptoLibByteArray;
-      off, len: Int32); virtual;
+    procedure Init(AForSigning: Boolean;
+      const AParameters: ICipherParameters); virtual;
+    procedure Update(AInput: Byte); virtual;
+    procedure BlockUpdate(const ABuf: TCryptoLibByteArray;
+      AOff, ALength: Int32); virtual;
     function GetMaxSignatureSize: Int32; virtual;
     function GenerateSignature(): TCryptoLibByteArray; virtual;
-    function VerifySignature(const signature: TCryptoLibByteArray)
+    function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
     procedure Reset(); virtual;
 
@@ -79,7 +79,7 @@ implementation
 
 function TEd25519Signer.Aggregate: TCryptoLibByteArray;
 begin
-  Result := Nil;
+  Result := nil;
   if FBuffer.Size > 0 then
   begin
     FBuffer.Position := 0;
@@ -88,12 +88,12 @@ begin
   end;
 end;
 
-procedure TEd25519Signer.BlockUpdate(const buf: TCryptoLibByteArray;
-  off, len: Int32);
+procedure TEd25519Signer.BlockUpdate(const ABuf: TCryptoLibByteArray;
+  AOff, ALength: Int32);
 begin
-  if buf <> Nil then
+  if ABuf <> nil then
   begin
-    FBuffer.Write(buf[off], len);
+    FBuffer.Write(ABuf[AOff], ALength);
   end;
 end;
 
@@ -115,22 +115,22 @@ begin
   Result := 'Ed25519';
 end;
 
-procedure TEd25519Signer.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TEd25519Signer.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 begin
-  FforSigning := forSigning;
+  FForSigning := AForSigning;
 
-  if (forSigning) then
+  if (AForSigning) then
   begin
     // TODO Allow IAsymmetricCipherKeyPair to be an ICipherParameters?
 
-    FPrivateKey := parameters as IEd25519PrivateKeyParameters;
+    FPrivateKey := AParameters as IEd25519PrivateKeyParameters;
     FPublicKey := FPrivateKey.GeneratePublicKey();
   end
   else
   begin
-    FPrivateKey := Nil;
-    FPublicKey := parameters as IEd25519PublicKeyParameters;
+    FPrivateKey := nil;
+    FPublicKey := AParameters as IEd25519PublicKeyParameters;
   end;
 
   Reset();
@@ -142,9 +142,9 @@ begin
   FBuffer.SetSize(Int64(0));
 end;
 
-procedure TEd25519Signer.Update(b: Byte);
+procedure TEd25519Signer.Update(AInput: Byte);
 begin
-  FBuffer.Write(TCryptoLibByteArray.Create(b)[0], 1);
+  FBuffer.Write(TCryptoLibByteArray.Create(AInput)[0], 1);
 end;
 
 function TEd25519Signer.GetMaxSignatureSize: Int32;
@@ -154,45 +154,45 @@ end;
 
 function TEd25519Signer.GenerateSignature: TCryptoLibByteArray;
 var
-  signature, buf: TCryptoLibByteArray;
-  count: Int32;
+  LSignature, LBuf: TCryptoLibByteArray;
+  LCount: Int32;
 begin
-  if ((not FforSigning) or (FPrivateKey = Nil)) then
+  if ((not FForSigning) or (FPrivateKey = nil)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SNotInitializedForSigning);
   end;
 
-  System.SetLength(signature, TEd25519PrivateKeyParameters.SignatureSize);
-  buf := Aggregate();
-  count := System.Length(buf);
+  System.SetLength(LSignature, TEd25519PrivateKeyParameters.SignatureSize);
+  LBuf := Aggregate();
+  LCount := System.Length(LBuf);
 
-  FPrivateKey.Sign(TEd25519.TEd25519Algorithm.Ed25519, FPublicKey, Nil, buf, 0,
-    count, signature, 0);
+  FPrivateKey.Sign(TEd25519.TEd25519Algorithm.Ed25519, FPublicKey, nil, LBuf, 0,
+    LCount, LSignature, 0);
   Reset();
-  Result := signature;
+  Result := LSignature;
 end;
 
-function TEd25519Signer.VerifySignature(const signature
+function TEd25519Signer.VerifySignature(const ASignature
   : TCryptoLibByteArray): Boolean;
 var
-  buf, pk: TCryptoLibByteArray;
-  count: Int32;
+  LBuf, LPk: TCryptoLibByteArray;
+  LCount: Int32;
 begin
-  if ((FforSigning) or (FPublicKey = Nil)) then
+  if ((FForSigning) or (FPublicKey = nil)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SNotInitializedForVerifying);
   end;
-  if (TEd25519.SignatureSize <> System.Length(signature)) then
+  if (TEd25519.SignatureSize <> System.Length(ASignature)) then
   begin
     Result := false;
     Exit;
   end;
-  pk := FPublicKey.GetEncoded();
-  buf := Aggregate();
-  count := System.Length(buf);
-  Result := FEd25519Instance.Verify(signature, 0, pk, 0, buf, 0, count);
+  LPk := FPublicKey.GetEncoded();
+  LBuf := Aggregate();
+  LCount := System.Length(LBuf);
+  Result := FEd25519Instance.Verify(ASignature, 0, LPk, 0, LBuf, 0, LCount);
   Reset();
 end;
 

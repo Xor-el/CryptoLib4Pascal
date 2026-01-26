@@ -48,7 +48,7 @@ type
     // * @param n the order of the DSA group.
     // * @param random a source of randomness.
     // */
-    procedure Init(const n: TBigInteger; const random: ISecureRandom); overload;
+    procedure Init(const AN: TBigInteger; const ARandom: ISecureRandom); overload;
 
     // /**
     // * Deterministic initialiser.
@@ -57,8 +57,8 @@ type
     // * @param d the DSA private value.
     // * @param message the message being signed.
     // */
-    procedure Init(const n, d: TBigInteger;
-      const &message: TCryptoLibByteArray); overload;
+    procedure Init(const AN, AD: TBigInteger;
+      const AMessage: TCryptoLibByteArray); overload;
 
     // /**
     // * Return the next valid value of K.

@@ -77,11 +77,11 @@ type
     class constructor CreateRsaDigestSigner();
     class destructor DestroyRsaDigestSigner();
 
-    class function CheckDerEncoded(const hash: TCryptoLibByteArray): TCryptoLibByteArray; static;
-    function DerEncode(const digestAlgID: IAlgorithmIdentifier;
-      const hash: TCryptoLibByteArray): TCryptoLibByteArray;
-    class function TryGetAltAlgID(const algID: IAlgorithmIdentifier;
-      out altAlgID: IAlgorithmIdentifier): Boolean; static;
+    class function CheckDerEncoded(const AHash: TCryptoLibByteArray): TCryptoLibByteArray; static;
+    function DerEncode(const ADigestAlgID: IAlgorithmIdentifier;
+      const AHash: TCryptoLibByteArray): TCryptoLibByteArray;
+    class function TryGetAltAlgID(const AAlgID: IAlgorithmIdentifier;
+      out AAltAlgID: IAlgorithmIdentifier): Boolean; static;
 
   strict protected
     function GetAlgorithmName: String;
@@ -100,12 +100,12 @@ type
       const digest: IDigest;
       const algId: IAlgorithmIdentifier); overload;
 
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
-    procedure Update(input: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
+    procedure Update(AInput: Byte);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32);
     function GetMaxSignatureSize: Int32;
     function GenerateSignature(): TCryptoLibByteArray;
-    function VerifySignature(const signature: TCryptoLibByteArray): Boolean;
+    function VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
     procedure Reset();
 
     property AlgorithmName: String read GetAlgorithmName;
@@ -212,38 +212,38 @@ begin
   Result := FDigest.AlgorithmName + 'withRSA';
 end;
 
-procedure TRsaDigestSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TRsaDigestSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  key: IAsymmetricKeyParameter;
+  LKey: IAsymmetricKeyParameter;
 begin
-  FForSigning := forSigning;
+  FForSigning := AForSigning;
 
-  key := TParameterUtilities.IgnoreRandom(parameters) as IAsymmetricKeyParameter;
+  LKey := TParameterUtilities.IgnoreRandom(AParameters) as IAsymmetricKeyParameter;
 
-  if forSigning and (not key.IsPrivate) then
+  if AForSigning and (not LKey.IsPrivate) then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SSigningRequiresPrivateKey);
   end;
 
-  if (not forSigning) and key.IsPrivate then
+  if (not AForSigning) and LKey.IsPrivate then
   begin
     raise EInvalidKeyCryptoLibException.CreateRes(@SVerificationRequiresPublicKey);
   end;
 
   Reset();
-  FEngine.Init(forSigning, parameters);
+  FEngine.Init(AForSigning, AParameters);
 end;
 
-procedure TRsaDigestSigner.Update(input: Byte);
+procedure TRsaDigestSigner.Update(AInput: Byte);
 begin
-  FDigest.Update(input);
+  FDigest.Update(AInput);
 end;
 
-procedure TRsaDigestSigner.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+procedure TRsaDigestSigner.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32);
 begin
-  FDigest.BlockUpdate(input, inOff, len);
+  FDigest.BlockUpdate(AInput, AInOff, ALength);
 end;
 
 function TRsaDigestSigner.GetMaxSignatureSize: Int32;
@@ -252,13 +252,13 @@ begin
 end;
 
 class function TRsaDigestSigner.CheckDerEncoded(
-  const hash: TCryptoLibByteArray): TCryptoLibByteArray;
+  const AHash: TCryptoLibByteArray): TCryptoLibByteArray;
 var
   LDigestInfo: IDigestInfo;
 begin
   // Validate that hash is a valid DER-encoded DigestInfo
-  LDigestInfo := TDigestInfo.GetInstance(hash);
-  Result := hash;
+  LDigestInfo := TDigestInfo.GetInstance(AHash);
+  Result := AHash;
 end;
 
 function TRsaDigestSigner.GenerateSignature: TCryptoLibByteArray;
@@ -298,10 +298,10 @@ begin
 end;
 
 function TRsaDigestSigner.VerifySignature(
-  const signature: TCryptoLibByteArray): Boolean;
+  const ASignature: TCryptoLibByteArray): Boolean;
 var
-  sig, hash, expected: TCryptoLibByteArray;
-  altAlgID: IAlgorithmIdentifier;
+  LSig, LHash, LExpected: TCryptoLibByteArray;
+  LAltAlgID: IAlgorithmIdentifier;
 begin
   if FForSigning then
   begin
@@ -309,33 +309,33 @@ begin
   end;
 
   try
-    sig := FEngine.ProcessBlock(signature, 0, System.Length(signature));
+    LSig := FEngine.ProcessBlock(ASignature, 0, System.Length(ASignature));
   except
     Result := False;
     Exit;
   end;
 
-  SetLength(hash, FDigest.GetDigestSize);
-  FDigest.DoFinal(hash, 0);
+  SetLength(LHash, FDigest.GetDigestSize);
+  FDigest.DoFinal(LHash, 0);
 
   if FDigestAlgID = nil then
   begin
-    Result := TArrayUtils.ConstantTimeAreEqual(sig, CheckDerEncoded(hash));
+    Result := TArrayUtils.ConstantTimeAreEqual(LSig, CheckDerEncoded(LHash));
     Exit;
   end;
 
-  expected := DerEncode(FDigestAlgID, hash);
-  if TArrayUtils.ConstantTimeAreEqual(sig, expected) then
+  LExpected := DerEncode(FDigestAlgID, LHash);
+  if TArrayUtils.ConstantTimeAreEqual(LSig, LExpected) then
   begin
     Result := True;
     Exit;
   end;
 
   // Try alternate algorithm identifier encoding (with/without DerNull)
-  if TryGetAltAlgID(FDigestAlgID, altAlgID) then
+  if TryGetAltAlgID(FDigestAlgID, LAltAlgID) then
   begin
-    expected := DerEncode(altAlgID, hash);
-    if TArrayUtils.ConstantTimeAreEqual(sig, expected) then
+    LExpected := DerEncode(LAltAlgID, LHash);
+    if TArrayUtils.ConstantTimeAreEqual(LSig, LExpected) then
     begin
       Result := True;
       Exit;
@@ -350,31 +350,31 @@ begin
   FDigest.Reset();
 end;
 
-function TRsaDigestSigner.DerEncode(const digestAlgID: IAlgorithmIdentifier;
-  const hash: TCryptoLibByteArray): TCryptoLibByteArray;
+function TRsaDigestSigner.DerEncode(const ADigestAlgID: IAlgorithmIdentifier;
+  const AHash: TCryptoLibByteArray): TCryptoLibByteArray;
 var
-  digestInfo: IDigestInfo;
+  LDigestInfo: IDigestInfo;
 begin
-  digestInfo := TDigestInfo.Create(digestAlgID, TDerOctetString.WithContents(hash) as IAsn1OctetString);
-  Result := digestInfo.GetDerEncoded();
+  LDigestInfo := TDigestInfo.Create(ADigestAlgID, TDerOctetString.WithContents(AHash) as IAsn1OctetString);
+  Result := LDigestInfo.GetDerEncoded();
 end;
 
-class function TRsaDigestSigner.TryGetAltAlgID(const algID: IAlgorithmIdentifier;
-  out altAlgID: IAlgorithmIdentifier): Boolean;
+class function TRsaDigestSigner.TryGetAltAlgID(const AAlgID: IAlgorithmIdentifier;
+  out AAltAlgID: IAlgorithmIdentifier): Boolean;
 begin
-  if algID.Parameters = nil then
+  if AAlgID.Parameters = nil then
   begin
-    altAlgID := TAlgorithmIdentifier.Create(algID.Algorithm, TDerNull.Instance);
+    AAltAlgID := TAlgorithmIdentifier.Create(AAlgID.Algorithm, TDerNull.Instance);
     Result := True;
   end
-  else if TDerNull.Instance.Equals(algID.Parameters) then
+  else if TDerNull.Instance.Equals(AAlgID.Parameters) then
   begin
-    altAlgID := TAlgorithmIdentifier.Create(algID.Algorithm, nil);
+    AAltAlgID := TAlgorithmIdentifier.Create(AAlgID.Algorithm, nil);
     Result := True;
   end
   else
   begin
-    altAlgID := nil;
+    AAltAlgID := nil;
     Result := False;
   end;
 end;

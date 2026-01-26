@@ -24,16 +24,16 @@ interface
 uses
   Math,
   SysUtils,
-  ClpIDsaExt,
+  ClpIDsa,
   ClpIDsaSigner,
   ClpISecureRandom,
   ClpIDsaParameters,
   ClpIDsaKCalculator,
   ClpICipherParameters,
   ClpIDsaKeyParameters,
-  ClpIParametersWithRandom,
   ClpIDsaPublicKeyParameters,
   ClpIDsaPrivateKeyParameters,
+  ClpParameterUtilities,
   ClpSecureRandom,
   ClpRandomDsaKCalculator,
   ClpBits,
@@ -50,21 +50,21 @@ type
   /// The Digital Signature Algorithm - as described in "Handbook of Applied <br />
   /// Cryptography", pages 452 - 453.
   /// </summary>
-  TDsaSigner = class(TInterfacedObject, IDsaExt, IDsaSigner)
+  TDsaSigner = class(TInterfacedObject, IDsa, IDsaSigner)
 
   strict private
     function GetOrder: TBigInteger; virtual;
     function GetAlgorithmName: String; virtual;
   strict protected
   var
-    FkCalculator: IDsaKCalculator;
-    Fkey: IDsaKeyParameters;
-    Frandom: ISecureRandom;
+    FKCalculator: IDsaKCalculator;
+    FKey: IDsaKeyParameters;
+    FRandom: ISecureRandom;
 
-    function CalculateE(const n: TBigInteger;
-      const &message: TCryptoLibByteArray): TBigInteger; virtual;
+    function CalculateE(const AN: TBigInteger;
+      const AMessage: TCryptoLibByteArray): TBigInteger; virtual;
 
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom)
+    function InitSecureRandom(ANeeded: Boolean; const AProvided: ISecureRandom)
       : ISecureRandom; virtual;
 
   public
@@ -81,9 +81,9 @@ type
     /// <param name="kCalculator">
     /// a K value calculator.
     /// </param>
-    constructor Create(const kCalculator: IDsaKCalculator); overload;
+    constructor Create(const AKCalculator: IDsaKCalculator); overload;
 
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
 
     /// <summary>
     /// Generate a signature for the given message using the key we were <br />
@@ -93,7 +93,7 @@ type
     /// <param name="&amp;message">
     /// the message that will be verified later.
     /// </param>
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     /// <summary>
@@ -101,8 +101,8 @@ type
     /// the passed in message for standard DSA the message should be a <br />
     /// SHA-1 hash of the real message to be verified.
     /// </summary>
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean; virtual;
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const AR, &AS: TBigInteger): Boolean; virtual;
 
     property Order: TBigInteger read GetOrder;
     property AlgorithmName: String read GetAlgorithmName;
@@ -116,159 +116,150 @@ implementation
 constructor TDsaSigner.Create;
 begin
   Inherited Create();
-  FkCalculator := TRandomDsaKCalculator.Create();
+  FKCalculator := TRandomDsaKCalculator.Create();
 end;
 
-function TDsaSigner.CalculateE(const n: TBigInteger;
-  const &message: TCryptoLibByteArray): TBigInteger;
+function TDsaSigner.CalculateE(const AN: TBigInteger;
+  const AMessage: TCryptoLibByteArray): TBigInteger;
 var
-  length: Int32;
+  LLength: Int32;
 begin
-  length := Math.Min(System.length(&message), TBits.Asr32(n.BitLength, 3));
-  result := TBigInteger.Create(1, &message, 0, length);
+  LLength := Math.Min(System.length(AMessage), TBits.Asr32(AN.BitLength, 3));
+  Result := TBigInteger.Create(1, AMessage, 0, LLength);
 end;
 
-constructor TDsaSigner.Create(const kCalculator: IDsaKCalculator);
+constructor TDsaSigner.Create(const AKCalculator: IDsaKCalculator);
 begin
   Inherited Create();
-  FkCalculator := kCalculator;
+  FKCalculator := AKCalculator;
 end;
 
-function TDsaSigner.GenerateSignature(const &message: TCryptoLibByteArray)
+function TDsaSigner.GenerateSignature(const AMessage: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
-  parameters: IDsaParameters;
-  q, m, x, k, r, s: TBigInteger;
+  LParameters: IDsaParameters;
+  LQ, LM, LX, LK, LR, LS: TBigInteger;
 begin
-  parameters := Fkey.parameters;
-  q := parameters.q;
-  m := CalculateE(q, &message);
-  x := (Fkey as IDsaPrivateKeyParameters).x;
+  LParameters := FKey.Parameters;
+  LQ := LParameters.Q;
+  LM := CalculateE(LQ, AMessage);
+  LX := (FKey as IDsaPrivateKeyParameters).X;
 
-  if (FkCalculator.IsDeterministic) then
+  if (FKCalculator.IsDeterministic) then
   begin
-    FkCalculator.Init(q, x, &message);
+    FKCalculator.Init(LQ, LX, AMessage);
   end
   else
   begin
-    FkCalculator.Init(q, Frandom);
+    FKCalculator.Init(LQ, FRandom);
   end;
 
-  k := FkCalculator.NextK();
+  LK := FKCalculator.NextK();
 
-  r := parameters.G.ModPow(k, parameters.P).&Mod(q);
+  LR := LParameters.G.ModPow(LK, LParameters.P).&Mod(LQ);
 
-  k := k.ModInverse(q).Multiply(m.Add(x.Multiply(r)));
+  LK := LK.ModInverse(LQ).Multiply(LM.Add(LX.Multiply(LR)));
 
-  s := k.&Mod(q);
+  LS := LK.&Mod(LQ);
 
-  result := TCryptoLibGenericArray<TBigInteger>.Create(r, s);
+  Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
 end;
 
 function TDsaSigner.GetOrder: TBigInteger;
 begin
-  result := Fkey.parameters.q;
+  Result := FKey.Parameters.Q;
 end;
 
 function TDsaSigner.GetAlgorithmName: String;
 begin
-  result := 'DSA';
+  Result := 'DSA';
 end;
 
-procedure TDsaSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TDsaSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  providedRandom: ISecureRandom;
-  rParam: IParametersWithRandom;
-  Lparameters: ICipherParameters;
+  LProvidedRandom: ISecureRandom;
+  LParameters: ICipherParameters;
 begin
-  providedRandom := Nil;
-  Lparameters := parameters;
-
-  if (forSigning) then
+  if (AForSigning) then
   begin
-    if (Supports(Lparameters, IParametersWithRandom, rParam)) then
-    begin
-      providedRandom := rParam.Random;
-      Lparameters := rParam.parameters;
-    end;
+    LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-    if (not Supports(Lparameters, IDsaPrivateKeyParameters)) then
+    if (not Supports(LParameters, IDsaPrivateKeyParameters)) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SDSAPrivateKeyNotFound);
     end;
 
-    Fkey := Lparameters as IDsaPrivateKeyParameters;
+    FKey := LParameters as IDsaPrivateKeyParameters;
+    FRandom := InitSecureRandom(not FKCalculator.IsDeterministic, LProvidedRandom);
   end
   else
   begin
-    if (not Supports(Lparameters, IDsaPublicKeyParameters)) then
+    if (not Supports(AParameters, IDsaPublicKeyParameters)) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SDSAPublicKeyNotFound);
     end;
 
-    Fkey := Lparameters as IDsaPublicKeyParameters;
+    FKey := AParameters as IDsaPublicKeyParameters;
+    FRandom := nil;
   end;
-
-  Frandom := InitSecureRandom(forSigning and (not FkCalculator.IsDeterministic),
-    providedRandom);
 end;
 
-function TDsaSigner.InitSecureRandom(needed: Boolean;
-  const provided: ISecureRandom): ISecureRandom;
+function TDsaSigner.InitSecureRandom(ANeeded: Boolean;
+  const AProvided: ISecureRandom): ISecureRandom;
 begin
-  if (not needed) then
+  if (not ANeeded) then
   begin
-    result := Nil;
+    Result := nil;
   end
   else
   begin
-    if provided <> Nil then
+    if AProvided <> nil then
     begin
-      result := provided;
+      Result := AProvided;
     end
     else
     begin
-      result := TSecureRandom.Create();
+      Result := TSecureRandom.Create();
     end;
   end;
 
 end;
 
-function TDsaSigner.VerifySignature(const &message: TCryptoLibByteArray;
-  const r, s: TBigInteger): Boolean;
+function TDsaSigner.VerifySignature(const AMessage: TCryptoLibByteArray;
+  const AR, &AS: TBigInteger): Boolean;
 var
-  parameters: IDsaParameters;
-  q, m, w, u1, u2, P, v: TBigInteger;
+  LParameters: IDsaParameters;
+  LQ, LM, LW, LU1, LU2, LP, LV: TBigInteger;
 begin
-  parameters := Fkey.parameters;
-  q := parameters.q;
-  m := CalculateE(q, &message);
+  LParameters := FKey.Parameters;
+  LQ := LParameters.Q;
+  LM := CalculateE(LQ, AMessage);
 
-  if ((r.SignValue <= 0) or (q.CompareTo(r) <= 0)) then
+  if ((AR.SignValue <= 0) or (LQ.CompareTo(AR) <= 0)) then
   begin
-    result := false;
+    Result := false;
     Exit;
   end;
 
-  if ((s.SignValue <= 0) or (q.CompareTo(s) <= 0)) then
+  if ((&AS.SignValue <= 0) or (LQ.CompareTo(&AS) <= 0)) then
   begin
-    result := false;
+    Result := false;
     Exit;
   end;
 
-  w := s.ModInverse(q);
+  LW := &AS.ModInverse(LQ);
 
-  u1 := m.Multiply(w).&Mod(q);
-  u2 := r.Multiply(w).&Mod(q);
+  LU1 := LM.Multiply(LW).&Mod(LQ);
+  LU2 := AR.Multiply(LW).&Mod(LQ);
 
-  P := parameters.P;
-  u1 := parameters.G.ModPow(u1, P);
-  u2 := (Fkey as IDsaPublicKeyParameters).Y.ModPow(u2, P);
+  LP := LParameters.P;
+  LU1 := LParameters.G.ModPow(LU1, LP);
+  LU2 := (FKey as IDsaPublicKeyParameters).Y.ModPow(LU2, LP);
 
-  v := u1.Multiply(u2).&Mod(P).&Mod(q);
+  LV := LU1.Multiply(LU2).&Mod(LP).&Mod(LQ);
 
-  result := v.Equals(r);
+  Result := LV.Equals(AR);
 end;
 
 end.

@@ -37,14 +37,14 @@ type
     function GetAlgorithmName: String;
     property AlgorithmName: String read GetAlgorithmName;
 
-    procedure Init(forSigning: Boolean; const parameters: ICipherParameters;
-      const digest: IDigest);
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters;
+      const ADigest: IDigest);
 
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>;
 
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean;
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const AR, &AS: TBigInteger): Boolean;
 
   end;
 

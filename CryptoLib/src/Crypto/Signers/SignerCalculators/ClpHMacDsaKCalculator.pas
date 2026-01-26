@@ -53,11 +53,11 @@ type
 
   strict private
   var
-    FhMac: IHMac;
+    FHmac: IHMac;
     FK, FV: TCryptoLibByteArray;
-    Fn: TBigInteger;
+    FN: TBigInteger;
 
-    function BitsToInt(const t: TCryptoLibByteArray): TBigInteger; inline;
+    function BitsToInt(const AT: TCryptoLibByteArray): TBigInteger; inline;
 
     function GetIsDeterministic: Boolean; virtual;
 
@@ -69,13 +69,13 @@ type
     /// <param name="digest">
     /// digest to build the HMAC on.
     /// </param>
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
 
-    procedure Init(const n: TBigInteger; const random: ISecureRandom);
+    procedure Init(const AN: TBigInteger; const ARandom: ISecureRandom);
       overload; virtual;
 
-    procedure Init(const n, d: TBigInteger;
-      const &message: TCryptoLibByteArray); overload;
+    procedure Init(const AN, AD: TBigInteger;
+      const AMessage: TCryptoLibByteArray); overload;
 
     function NextK(): TBigInteger; virtual;
 
@@ -89,139 +89,139 @@ implementation
 
 function THMacDsaKCalculator.GetIsDeterministic: Boolean;
 begin
-  result := True;
+  Result := True;
 end;
 
-function THMacDsaKCalculator.BitsToInt(const t: TCryptoLibByteArray)
+function THMacDsaKCalculator.BitsToInt(const AT: TCryptoLibByteArray)
   : TBigInteger;
 begin
-  result := TBigInteger.Create(1, t);
-  if ((System.Length(t) * 8) > Fn.BitLength) then
+  Result := TBigInteger.Create(1, AT);
+  if ((System.Length(AT) * 8) > FN.BitLength) then
   begin
-    result := result.ShiftRight((System.Length(t) * 8) - Fn.BitLength);
+    Result := Result.ShiftRight((System.Length(AT) * 8) - FN.BitLength);
   end;
 end;
 
-constructor THMacDsaKCalculator.Create(const digest: IDigest);
+constructor THMacDsaKCalculator.Create(const ADigest: IDigest);
 begin
   Inherited Create();
-  FhMac := THMac.Create(digest);
-  System.SetLength(FV, FhMac.GetMacSize());
-  System.SetLength(FK, FhMac.GetMacSize());
+  FHmac := THMac.Create(ADigest);
+  System.SetLength(FV, FHmac.GetMacSize());
+  System.SetLength(FK, FHmac.GetMacSize());
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-procedure THMacDsaKCalculator.Init(const n: TBigInteger;
-  const random: ISecureRandom);
+procedure THMacDsaKCalculator.Init(const AN: TBigInteger;
+  const ARandom: ISecureRandom);
 begin
   raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
 end;
 {$ENDIF}
 
-procedure THMacDsaKCalculator.Init(const n, d: TBigInteger;
-  const &message: TCryptoLibByteArray);
+procedure THMacDsaKCalculator.Init(const AN, AD: TBigInteger;
+  const AMessage: TCryptoLibByteArray);
 var
-  x, dVal, m, mVal: TCryptoLibByteArray;
-  mInt: TBigInteger;
-  size: Int32;
+  LX, LDVal, LM, LMVal: TCryptoLibByteArray;
+  LMInt: TBigInteger;
+  LSize: Int32;
 begin
-  Fn := n;
+  FN := AN;
   TArrayUtils.Fill(FV, 0, System.Length(FV), Byte($01));
   TArrayUtils.ZeroFill(FK);
 
-  size := TBigIntegers.GetUnsignedByteLength(n);
-  System.SetLength(x, size);
+  LSize := TBigIntegers.GetUnsignedByteLength(AN);
+  System.SetLength(LX, LSize);
 
-  dVal := TBigIntegers.AsUnsignedByteArray(d);
+  LDVal := TBigIntegers.AsUnsignedByteArray(AD);
 
-  System.Move(dVal[0], x[System.Length(x) - System.Length(dVal)],
-    System.Length(dVal));
+  System.Move(LDVal[0], LX[System.Length(LX) - System.Length(LDVal)],
+    System.Length(LDVal));
 
-  System.SetLength(m, size);
+  System.SetLength(LM, LSize);
 
-  mInt := BitsToInt(&message);
+  LMInt := BitsToInt(AMessage);
 
-  if (mInt.CompareTo(n) >= 0) then
+  if (LMInt.CompareTo(AN) >= 0) then
   begin
-    mInt := mInt.Subtract(n);
+    LMInt := LMInt.Subtract(AN);
   end;
 
-  mVal := TBigIntegers.AsUnsignedByteArray(mInt);
+  LMVal := TBigIntegers.AsUnsignedByteArray(LMInt);
 
-  System.Move(mVal[0], m[System.Length(m) - System.Length(mVal)],
-    System.Length(mVal));
+  System.Move(LMVal[0], LM[System.Length(LM) - System.Length(LMVal)],
+    System.Length(LMVal));
 
-  FhMac.Init(TKeyParameter.Create(FK) as IKeyParameter);
+  FHmac.Init(TKeyParameter.Create(FK) as IKeyParameter);
 
-  FhMac.BlockUpdate(FV, 0, System.Length(FV));
-  FhMac.Update(Byte($00));
-  FhMac.BlockUpdate(x, 0, System.Length(x));
-  FhMac.BlockUpdate(m, 0, System.Length(m));
+  FHmac.BlockUpdate(FV, 0, System.Length(FV));
+  FHmac.Update(Byte($00));
+  FHmac.BlockUpdate(LX, 0, System.Length(LX));
+  FHmac.BlockUpdate(LM, 0, System.Length(LM));
 
-  FhMac.DoFinal(FK, 0);
+  FHmac.DoFinal(FK, 0);
 
-  FhMac.Init(TKeyParameter.Create(FK) as IKeyParameter);
+  FHmac.Init(TKeyParameter.Create(FK) as IKeyParameter);
 
-  FhMac.BlockUpdate(FV, 0, System.Length(FV));
+  FHmac.BlockUpdate(FV, 0, System.Length(FV));
 
-  FhMac.DoFinal(FV, 0);
+  FHmac.DoFinal(FV, 0);
 
-  FhMac.BlockUpdate(FV, 0, System.Length(FV));
-  FhMac.Update(Byte($01));
-  FhMac.BlockUpdate(x, 0, System.Length(x));
-  FhMac.BlockUpdate(m, 0, System.Length(m));
+  FHmac.BlockUpdate(FV, 0, System.Length(FV));
+  FHmac.Update(Byte($01));
+  FHmac.BlockUpdate(LX, 0, System.Length(LX));
+  FHmac.BlockUpdate(LM, 0, System.Length(LM));
 
-  FhMac.DoFinal(FK, 0);
+  FHmac.DoFinal(FK, 0);
 
-  FhMac.Init(TKeyParameter.Create(FK) as IKeyParameter);
+  FHmac.Init(TKeyParameter.Create(FK) as IKeyParameter);
 
-  FhMac.BlockUpdate(FV, 0, System.Length(FV));
+  FHmac.BlockUpdate(FV, 0, System.Length(FV));
 
-  FhMac.DoFinal(FV, 0);
+  FHmac.DoFinal(FV, 0);
 end;
 
 function THMacDsaKCalculator.NextK: TBigInteger;
 var
-  t: TCryptoLibByteArray;
-  tOff, len: Int32;
+  LT: TCryptoLibByteArray;
+  LTOff, LLength: Int32;
 begin
-  result := Default (TBigInteger);
-  System.SetLength(t, TBigIntegers.GetUnsignedByteLength(Fn));
+  Result := Default (TBigInteger);
+  System.SetLength(LT, TBigIntegers.GetUnsignedByteLength(FN));
 
   while True do
 
   begin
-    tOff := 0;
+    LTOff := 0;
 
-    while (tOff < System.Length(t)) do
+    while (LTOff < System.Length(LT)) do
     begin
-      FhMac.BlockUpdate(FV, 0, System.Length(FV));
+      FHmac.BlockUpdate(FV, 0, System.Length(FV));
 
-      FhMac.DoFinal(FV, 0);
+      FHmac.DoFinal(FV, 0);
 
-      len := Min(System.Length(t) - tOff, System.Length(FV));
-      System.Move(FV[0], t[tOff], len * System.SizeOf(Byte));
-      tOff := tOff + len;
+      LLength := Min(System.Length(LT) - LTOff, System.Length(FV));
+      System.Move(FV[0], LT[LTOff], LLength * System.SizeOf(Byte));
+      LTOff := LTOff + LLength;
     end;
 
-    result := BitsToInt(t);
+    Result := BitsToInt(LT);
 
-    if ((result.SignValue > 0) and (result.CompareTo(Fn) < 0)) then
+    if ((Result.SignValue > 0) and (Result.CompareTo(FN) < 0)) then
     begin
       Exit;
     end;
 
-    FhMac.BlockUpdate(FV, 0, System.Length(FV));
-    FhMac.Update(Byte($00));
+    FHmac.BlockUpdate(FV, 0, System.Length(FV));
+    FHmac.Update(Byte($00));
 
-    FhMac.DoFinal(FK, 0);
+    FHmac.DoFinal(FK, 0);
 
-    FhMac.Init(TKeyParameter.Create(FK) as IKeyParameter);
+    FHmac.Init(TKeyParameter.Create(FK) as IKeyParameter);
 
-    FhMac.BlockUpdate(FV, 0, System.Length(FV));
+    FHmac.BlockUpdate(FV, 0, System.Length(FV));
 
-    FhMac.DoFinal(FV, 0);
+    FHmac.DoFinal(FV, 0);
   end;
 end;
 
