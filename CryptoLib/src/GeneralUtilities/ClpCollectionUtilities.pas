@@ -40,7 +40,7 @@ type
     /// <summary>
     /// Convert a collection to an array.
     /// </summary>
-    class function ToArray<T>(const AC: TCryptoLibGenericArray<T>): TCryptoLibGenericArray<T>; static;
+    class function ToArray<T>(const AC: TList<T>): TCryptoLibGenericArray<T>; static;
     /// <summary>
     /// Convert a collection to a string representation using a converter function.
     /// </summary>
@@ -77,11 +77,11 @@ begin
   end;
 end;
 
-class function TCollectionUtilities.ToArray<T>(const AC: TCryptoLibGenericArray<T>): TCryptoLibGenericArray<T>;
+class function TCollectionUtilities.ToArray<T>(const AC: TList<T>): TCryptoLibGenericArray<T>;
 var
   LCount, I: Int32;
 begin
-  LCount := System.Length(AC);
+  LCount := AC.Count;
   System.SetLength(Result, LCount);
   for I := 0 to LCount - 1 do
   begin

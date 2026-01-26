@@ -33,7 +33,8 @@ uses
   ClpStringUtils,
   ClpConverters,
   ClpAsn1Objects,
-  ClpIAsn1Objects;
+  ClpIAsn1Objects,
+  ClpCollectionUtilities;
 
 type
   /// <summary>
@@ -463,7 +464,6 @@ var
   LC: Int32;
   LPayload: String;
   LDecodedContent: TCryptoLibByteArray;
-  I: Int32;
   LHeadersArray: TCryptoLibGenericArray<IPemHeader>;
 begin
   Result := nil;
@@ -553,11 +553,7 @@ begin
     LDecodedContent := TBase64.Decode(LPayload);
 
     // Convert headers list to array
-    System.SetLength(LHeadersArray, LHeaders.Count);
-    for I := 0 to LHeaders.Count - 1 do
-    begin
-      LHeadersArray[I] := LHeaders[I];
-    end;
+    LHeadersArray := TCollectionUtilities.ToArray<IPemHeader>(LHeaders);
 
     Result := TPemObject.Create(LType, LHeadersArray, LDecodedContent);
   finally

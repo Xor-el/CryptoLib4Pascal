@@ -5072,14 +5072,8 @@ begin
 end;
 
 function TX509Extensions.GetExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
-var
-  I: Int32;
 begin
-  System.SetLength(Result, FOrdering.Count);
-  for I := 0 to FOrdering.Count - 1 do
-  begin
-    Result[I] := FOrdering[I];
-  end;
+  Result := TCollectionUtilities.ToArray<IDerObjectIdentifier>(FOrdering);
 end;
 
 function TX509Extensions.GetNonCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
@@ -5357,18 +5351,10 @@ begin
     end;
 
     // Convert lists to arrays
-    System.SetLength(FOids, LOidList.Count);
-    System.SetLength(FValues, LValueList.Count);
-    System.SetLength(FAdded, LAddedList.Count);
-    System.SetLength(FValueList, LValueList.Count);
-
-    for I := 0 to LOidList.Count - 1 do
-    begin
-      FOids[I] := LOidList[I];
-      FValues[I] := LValueList[I];
-      FValueList[I] := LValueList[I];
-      FAdded[I] := LAddedList[I];
-    end;
+    FOids := TCollectionUtilities.ToArray<IDerObjectIdentifier>(LOidList);
+    FValues := TCollectionUtilities.ToArray<String>(LValueList);
+    FAdded := TCollectionUtilities.ToArray<Boolean>(LAddedList);
+    FValueList := TCollectionUtilities.ToArray<String>(LValueList);
   finally
     LOidList.Free;
     LValueList.Free;
@@ -5447,7 +5433,7 @@ begin
   inherited Create();
   FConverter := AConverter;
 
-  System.SetLength(FOids, AOrdering.Count);
+  FOids := TCollectionUtilities.ToArray<IDerObjectIdentifier>(AOrdering);
   System.SetLength(FValues, AOrdering.Count);
   System.SetLength(FAdded, AOrdering.Count);
 
@@ -5457,7 +5443,6 @@ begin
     if not AAttributes.TryGetValue(LOid, LAttribute) then
       raise EArgumentCryptoLibException.CreateFmt('No attribute for object id - %s - passed to distinguished name', [LOid.Id]);
 
-    FOids[I] := LOid;
     FValues[I] := LAttribute;
     FAdded[I] := False;
   end;
@@ -5480,14 +5465,11 @@ begin
   if AOids.Count <> AValues.Count then
     raise EArgumentCryptoLibException.Create('''oids'' must be same length as ''values''.');
 
-  System.SetLength(FOids, AOids.Count);
-  System.SetLength(FValues, AValues.Count);
+  FOids := TCollectionUtilities.ToArray<IDerObjectIdentifier>(AOids);
+  FValues := TCollectionUtilities.ToArray<String>(AValues);
   System.SetLength(FAdded, AOids.Count);
-
   for I := 0 to AOids.Count - 1 do
   begin
-    FOids[I] := AOids[I];
-    FValues[I] := AValues[I];
     FAdded[I] := False;
   end;
 end;
@@ -5577,18 +5559,10 @@ begin
       end;
     end;
 
-    System.SetLength(FOids, LOidList.Count);
-    System.SetLength(FValues, LValueList.Count);
-    System.SetLength(FAdded, LAddedList.Count);
-    System.SetLength(FValueList, LValueList.Count);
-
-    for I := 0 to LOidList.Count - 1 do
-    begin
-      FOids[I] := LOidList[I];
-      FValues[I] := LValueList[I];
-      FAdded[I] := LAddedList[I];
-      FValueList[I] := LValueList[I];
-    end;
+    FOids := TCollectionUtilities.ToArray<IDerObjectIdentifier>(LOidList);
+    FValues := TCollectionUtilities.ToArray<String>(LValueList);
+    FAdded := TCollectionUtilities.ToArray<Boolean>(LAddedList);
+    FValueList := TCollectionUtilities.ToArray<String>(LValueList);
   finally
     LOidList.Free;
     LValueList.Free;
