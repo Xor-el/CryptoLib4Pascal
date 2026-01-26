@@ -202,6 +202,7 @@ var
   LDeltaExt: IX509Extension;
   LRsaKgParams: IRsaKeyGenerationParameters;
   LSignerA, LSignerB: ISignatureFactory;
+  LIssuerDN, LSubjectDN: IX509Name;
 begin
   LRsaKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
   LRsaKgParams := TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf(65537), FSecureRandom, 2048, 80);
@@ -210,11 +211,13 @@ begin
   LBaseKp := LRsaKpg.GenerateKeyPair();
 
   LDeltaBldr := TX509V3CertificateGenerator.Create;
-  LDeltaBldr.SetIssuerDN(TX509Name.Create('CN=Issuer') as IX509Name);
+  LIssuerDN := TX509Name.Create('CN=Issuer');
+  LDeltaBldr.SetIssuerDN(LIssuerDN);
   LDeltaBldr.SetSerialNumber(TBigInteger.One);
   LDeltaBldr.SetNotBefore(Now);
   LDeltaBldr.SetNotAfter(IncYear(Now, 1));
-  LDeltaBldr.SetSubjectDN(TX509Name.Create('CN=Subject') as IX509Name);
+  LSubjectDN := TX509Name.Create('CN=Subject');
+  LDeltaBldr.SetSubjectDN(LSubjectDN);
   LDeltaBldr.SetPublicKey(LDeltaKp.Public);
   LSignerA := TAsn1SignatureFactory.Create('SHA256withRSA', LDeltaKp.Private);
   LDeltaCert := LDeltaBldr.Generate(LSignerA);
@@ -222,11 +225,13 @@ begin
   LDeltaExt := TDeltaCertificateTool.CreateDeltaCertificateExtension(False, LDeltaCert);
 
   LBaseBldr := TX509V3CertificateGenerator.Create;
-  LBaseBldr.SetIssuerDN(TX509Name.Create('CN=Issuer') as IX509Name);
+  LIssuerDN := TX509Name.Create('CN=Issuer');
+  LBaseBldr.SetIssuerDN(LIssuerDN);
   LBaseBldr.SetSerialNumber(TBigInteger.Two);
   LBaseBldr.SetNotBefore(Now);
   LBaseBldr.SetNotAfter(IncYear(Now, 1));
-  LBaseBldr.SetSubjectDN(TX509Name.Create('CN=Subject') as IX509Name);
+  LSubjectDN := TX509Name.Create('CN=Subject');
+  LBaseBldr.SetSubjectDN(LSubjectDN);
   LBaseBldr.SetPublicKey(LBaseKp.Public);
   LBaseBldr.AddExtension(TX509Extensions.DraftDeltaCertificateDescriptor, LDeltaExt);
   LSignerB := TAsn1SignatureFactory.Create('SHA256withRSA', LBaseKp.Private);
@@ -250,6 +255,8 @@ var
   LDeltaCert, LChameleonCert, LExDeltaCert: IX509Certificate;
   LDeltaExt: IX509Extension;
   LDeltaCertDesc: IDeltaCertificateDescriptor;
+  LIssuerDN1, LIssuerDN2: IX509Name;
+  LBasicConstraints1, LBasicConstraints2: IBasicConstraints;
 begin
   LSubject := TX509Name.Create('CN=Test Subject');
 
@@ -271,22 +278,26 @@ begin
   LNotAfter := IncHour(Now, 1);
 
   LBldr := TX509V3CertificateGenerator.Create;
-  LBldr.SetIssuerDN(TX509Name.Create('CN=Chameleon CA 1') as IX509Name);
+  LIssuerDN1 := TX509Name.Create('CN=Chameleon CA 1');
+  LBldr.SetIssuerDN(LIssuerDN1);
   LBldr.SetSerialNumber(TBigInteger.ValueOf(1000));
   LBldr.SetNotBefore(LNotBefore);
   LBldr.SetNotAfter(LNotAfter);
   LBldr.SetSubjectDN(LSubject);
   LBldr.SetPublicKey(LKpA.Public);
-  LBldr.AddExtension(TX509Extensions.BasicConstraints, True, TBasicConstraints.Create(False) as IBasicConstraints);
+  LBasicConstraints1 := TBasicConstraints.Create(False);
+  LBldr.AddExtension(TX509Extensions.BasicConstraints, True, LBasicConstraints1);
 
   LDeltaBldr := TX509V3CertificateGenerator.Create;
-  LDeltaBldr.SetIssuerDN(TX509Name.Create('CN=Chameleon CA 2') as IX509Name);
+  LIssuerDN2 := TX509Name.Create('CN=Chameleon CA 2');
+  LDeltaBldr.SetIssuerDN(LIssuerDN2);
   LDeltaBldr.SetSerialNumber(TBigInteger.ValueOf(1001));
   LDeltaBldr.SetNotBefore(LNotBefore);
   LDeltaBldr.SetNotAfter(LNotAfter);
   LDeltaBldr.SetSubjectDN(LSubject);
   LDeltaBldr.SetPublicKey(LKpB.Public);
-  LDeltaBldr.AddExtension(TX509Extensions.BasicConstraints, True, TBasicConstraints.Create(False) as IBasicConstraints);
+  LBasicConstraints2 := TBasicConstraints.Create(False);
+  LDeltaBldr.AddExtension(TX509Extensions.BasicConstraints, True, LBasicConstraints2);
   LDeltaCert := LDeltaBldr.Generate(LSignerB);
 
   LDeltaExt := TDeltaCertificateTool.CreateDeltaCertificateExtension(False, LDeltaCert);

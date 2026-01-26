@@ -800,7 +800,7 @@ end;
 
 function TX509Certificate.IsSignatureValid(const AKey: IAsymmetricKeyParameter): Boolean;
 begin
-  Result := CheckSignatureValid(TAsn1VerifierFactory.Create(FCertificateStructure.SignatureAlgorithm, AKey));
+  Result := CheckSignatureValid(TAsn1VerifierFactory.Create(FCertificateStructure.SignatureAlgorithm, AKey) as IVerifierFactory);
 end;
 
 function TX509Certificate.IsSignatureValid(const AVerifierProvider: IVerifierFactoryProvider): Boolean;
@@ -810,7 +810,7 @@ end;
 
 function TX509Certificate.IsAlternativeSignatureValid(const APublicKey: IAsymmetricKeyParameter): Boolean;
 begin
-  Result := IsAlternativeSignatureValid(TAsn1VerifierFactoryProvider.Create(APublicKey));
+  Result := IsAlternativeSignatureValid(TAsn1VerifierFactoryProvider.Create(APublicKey) as IVerifierFactoryProvider);
 end;
 
 function TX509Certificate.IsAlternativeSignatureValid(const AVerifierProvider: IVerifierFactoryProvider): Boolean;
@@ -847,7 +847,7 @@ begin
     LTagged := TDerTaggedObject.Create(True, 3, LExtensions.ToAsn1ObjectTrimmed());
   LV.Add(LTagged);
 
-  Result := TX509Utilities.VerifySignature(LVerifier, TDerSequence.Create(LV), LAltSigValue.Signature);
+  Result := TX509Utilities.VerifySignature(LVerifier, TDerSequence.Create(LV) as IDerSequence, LAltSigValue.Signature);
 end;
 
 procedure TX509Certificate.Verify(const AKey: IAsymmetricKeyParameter);

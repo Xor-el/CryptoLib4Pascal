@@ -177,7 +177,7 @@ procedure TX509V3CertificateGenerator.SetSerialNumber(const ASerialNumber: TBigI
 begin
   if ASerialNumber.SignValue <= 0 then
     raise EArgumentCryptoLibException.Create('serial number must be a positive integer');
-  FTbsGen.SetSerialNumber(TDerInteger.Create(ASerialNumber));
+  FTbsGen.SetSerialNumber(TDerInteger.Create(ASerialNumber) as IDerInteger);
 end;
 
 procedure TX509V3CertificateGenerator.SetIssuerDN(const AIssuer: IX509Name);
@@ -192,12 +192,12 @@ end;
 
 procedure TX509V3CertificateGenerator.SetNotBefore(const ADate: TDateTime);
 begin
-  FTbsGen.SetStartDate(TTime.Create(ADate));
+  FTbsGen.SetStartDate(TTime.Create(ADate) as ITime);
 end;
 
 procedure TX509V3CertificateGenerator.SetNotAfter(const ADate: TDateTime);
 begin
-  FTbsGen.SetEndDate(TTime.Create(ADate));
+  FTbsGen.SetEndDate(TTime.Create(ADate) as ITime);
 end;
 
 procedure TX509V3CertificateGenerator.SetSubjectDN(const ASubject: IX509Name);
@@ -208,7 +208,7 @@ end;
 procedure TX509V3CertificateGenerator.SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
 begin
   FTbsGen.SetSubjectPublicKeyInfo(
-    TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(APublicKey));
+    TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(APublicKey) as ISubjectPublicKeyInfo);
 end;
 
 procedure TX509V3CertificateGenerator.SetSubjectPublicKeyInfo(const APubKeyInfo: ISubjectPublicKeyInfo);
@@ -229,7 +229,7 @@ end;
 procedure TX509V3CertificateGenerator.AddExtension(const AOid: String;
   ACritical: Boolean; const AExtValue: IAsn1Encodable);
 begin
-  AddExtension(TDerObjectIdentifier.Create(AOid), ACritical, AExtValue);
+  AddExtension(TDerObjectIdentifier.Create(AOid) as IDerObjectIdentifier, ACritical, AExtValue);
 end;
 
 procedure TX509V3CertificateGenerator.AddExtension(const AOid: IDerObjectIdentifier;
@@ -241,7 +241,7 @@ end;
 procedure TX509V3CertificateGenerator.AddExtension(const AOid: String;
   ACritical: Boolean; const AExtValue: IAsn1Convertible);
 begin
-  AddExtension(TDerObjectIdentifier.Create(AOid), ACritical, AExtValue);
+  AddExtension(TDerObjectIdentifier.Create(AOid) as IDerObjectIdentifier, ACritical, AExtValue);
 end;
 
 procedure TX509V3CertificateGenerator.AddExtension(const AOid: IDerObjectIdentifier;
@@ -253,7 +253,7 @@ end;
 procedure TX509V3CertificateGenerator.AddExtension(const AOid: String;
   ACritical: Boolean; const AExtValue: TCryptoLibByteArray);
 begin
-  AddExtension(TDerObjectIdentifier.Create(AOid), ACritical, AExtValue);
+  AddExtension(TDerObjectIdentifier.Create(AOid) as IDerObjectIdentifier, ACritical, AExtValue);
 end;
 
 procedure TX509V3CertificateGenerator.AddExtension(const AOid: IDerObjectIdentifier;

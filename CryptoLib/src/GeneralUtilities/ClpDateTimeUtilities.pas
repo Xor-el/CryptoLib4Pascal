@@ -236,6 +236,20 @@ type
     class function CurrentUnixMs(): Int64; static;
 
     /// <summary>
+    /// Return the number of ticks (100-nanosecond intervals) since January 1, 0001 12:00am for a given DateTime value.
+    /// </summary>
+    /// <param name="ADateTime">A DateTime value.</param>
+    /// <returns>Number of 100-nanosecond intervals since January 1, 0001 12:00am.</returns>
+    class function DateTimeToTicks(const ADateTime: TDateTime): Int64; static;
+
+    /// <summary>
+    /// Create a DateTime value from the number of ticks (100-nanosecond intervals) since January 1, 0001 12:00am.
+    /// </summary>
+    /// <param name="ATicks">Number of 100-nanosecond intervals since January 1, 0001 12:00am.</param>
+    /// <returns>A DateTime value</returns>
+    class function TicksToDateTime(const ATicks: Int64): TDateTime; static;
+
+    /// <summary>
     /// Round DateTime to centisecond precision (10 milliseconds).
     /// </summary>
     class function WithPrecisionCentisecond(const ADateTime: TDateTime): TDateTime; static;
@@ -581,6 +595,39 @@ end;
 class function TDateTimeUtilities.CurrentUnixMs(): Int64;
 begin
   Result := DateTimeToUnixMs(TTimeZone.Local.ToUniversalTime(Now));
+end;
+
+class function TDateTimeUtilities.DateTimeToTicks(const ADateTime: TDateTime): Int64;
+var
+  LEpoch: TDateTime;
+  LMsSinceEpoch: Int64;
+begin
+  // Epoch: January 1, 0001 12:00am
+  LEpoch := EncodeDateTime(1, 1, 1, 0, 0, 0, 0);
+  
+  // Calculate milliseconds since epoch (preserving sign)
+  if ADateTime >= LEpoch then
+    LMsSinceEpoch := MilliSecondsBetween(ADateTime, LEpoch)
+  else
+    LMsSinceEpoch := -MilliSecondsBetween(ADateTime, LEpoch);
+  
+  // Convert milliseconds to ticks (1 millisecond = 10,000 ticks)
+  Result := LMsSinceEpoch * Int64(10000);
+end;
+
+class function TDateTimeUtilities.TicksToDateTime(const ATicks: Int64): TDateTime;
+var
+  LEpoch: TDateTime;
+  LMsSinceEpoch: Int64;
+begin
+  // Epoch: January 1, 0001 12:00am
+  LEpoch := EncodeDateTime(1, 1, 1, 0, 0, 0, 0);
+  
+  // Convert ticks to milliseconds (1 millisecond = 10,000 ticks)
+  LMsSinceEpoch := ATicks div Int64(10000);
+  
+  // Add milliseconds to epoch to get the DateTime
+  Result := IncMilliSecond(LEpoch, LMsSinceEpoch);
 end;
 
 class function TDateTimeUtilities.WithPrecisionCentisecond(const ADateTime: TDateTime): TDateTime;

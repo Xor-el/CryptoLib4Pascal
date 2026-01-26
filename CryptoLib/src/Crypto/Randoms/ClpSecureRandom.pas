@@ -25,10 +25,10 @@ uses
   Math,
   SyncObjs,
   SysUtils,
-  StrUtils,
+  DateUtils,
   ClpBits,
   ClpCryptoLibTypes,
-  ClpTimes,
+  ClpDateTimeUtilities,
   ClpIDigest,
   ClpIRandomGenerator,
   ClpRandom,
@@ -320,7 +320,7 @@ begin
   if FLock = nil then
   begin
     FLock := TCriticalSection.Create;
-    FCounter := TTimes.NanoTime();
+    FCounter := TDateTimeUtilities.DateTimeToTicks(TTimeZone.Local.ToUniversalTime(Now));
     FMaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);

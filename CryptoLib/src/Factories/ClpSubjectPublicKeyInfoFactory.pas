@@ -37,8 +37,9 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
-  ClpIDsaParameters,
+  ClpIDsaParameter,
   ClpDsaParameter,
+  ClpIDsaParameters,
   ClpX9Asn1Objects,
   ClpIX9Asn1Objects,
   ClpX9ECParameters,
@@ -85,7 +86,7 @@ begin
   if Supports(APublicKey, IRsaKeyParameters, LRsaKey) then
   begin
     LAlgID := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.RsaEncryption, TDerNull.Instance);
-    Result := TSubjectPublicKeyInfo.Create(LAlgID, TRsaPublicKeyStructure.Create(LRsaKey.Modulus, LRsaKey.Exponent));
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, TRsaPublicKeyStructure.Create(LRsaKey.Modulus, LRsaKey.Exponent) as IRsaPublicKeyStructure);
     Exit;
   end;
 
@@ -95,8 +96,8 @@ begin
     if LKp = nil then
       raise EArgumentCryptoLibException.Create('DSA public key requires parameters.');
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsa,
-      TDsaParameter.Create(LKp.p, LKp.q, LKp.g));
-    Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.y));
+      TDsaParameter.Create(LKp.p, LKp.q, LKp.g) as IDsaParameter);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.y) as IDerInteger);
     Exit;
   end;
 
