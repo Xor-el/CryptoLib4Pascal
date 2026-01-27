@@ -35,6 +35,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpStreams,
+  ClpStreamUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

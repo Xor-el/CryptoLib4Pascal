@@ -24,7 +24,8 @@ interface
 uses
   Classes,
   SysUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpStreams;
 
 type
   /// <summary>
@@ -74,10 +75,26 @@ type
 
   end;
 
-implementation
+type
+  /// <summary>
+  /// Class helper for TStream to add ReadByte, WriteByte, Flush, and capability properties.
+  /// </summary>
+  TStreamHelper = class helper for TStream
+  public
+    function ReadByte(): Int32;
+    procedure WriteByte(AValue: Byte);
+    procedure Flush;
 
-uses
-  ClpStreams;
+    function GetCanRead: Boolean;
+    function GetCanSeek: Boolean;
+    function GetCanWrite: Boolean;
+
+    property CanRead: Boolean read GetCanRead;
+    property CanSeek: Boolean read GetCanSeek;
+    property CanWrite: Boolean read GetCanWrite;
+  end;
+
+implementation
 
 { TStreamUtilities }
 
@@ -231,6 +248,73 @@ begin
 
   // Copy directly from stream buffer into the byte array
   Move(PByte(ABuf.Memory)^, AOutput[AOffset], Result);
+end;
+
+{ TStreamHelper }
+
+function TStreamHelper.ReadByte(): Int32;
+var
+  LBuffer: TCryptoLibByteArray;
+begin
+  LBuffer := nil;
+  if Self is TBaseStream then
+    Result := (Self as TBaseStream).ReadByte
+  else
+  begin
+    System.SetLength(LBuffer, 1);
+    if Self.Read(LBuffer, 0, 1) = 0 then
+      Result := -1
+    else
+      Result := Int32(LBuffer[0]);
+  end;
+end;
+
+procedure TStreamHelper.WriteByte(AValue: Byte);
+var
+  LOneByteArray: TCryptoLibByteArray;
+begin
+  if Self is TBaseStream then
+   (Self as TBaseStream).WriteByte(AValue)
+  else
+  begin
+    System.SetLength(LOneByteArray, 1);
+    LOneByteArray[0] := AValue;
+    Self.Write(LOneByteArray, 0, 1);
+  end;
+end;
+
+procedure TStreamHelper.Flush;
+begin
+  if Self is TBaseStream then
+    (Self as TBaseStream).Flush
+  else
+  begin
+   // For plain TStream, Flush is a no-op (do nothing)
+  end;
+end;
+
+function TStreamHelper.GetCanRead: Boolean;
+begin
+  if Self is TBaseStream then
+    Result := (Self as TBaseStream).CanRead
+  else
+    Result := True; // Default for TStream
+end;
+
+function TStreamHelper.GetCanSeek: Boolean;
+begin
+  if Self is TBaseStream then
+    Result := (Self as TBaseStream).CanSeek
+  else
+    Result := True; // Default for TStream
+end;
+
+function TStreamHelper.GetCanWrite: Boolean;
+begin
+  if Self is TBaseStream then
+    Result := (Self as TBaseStream).CanWrite
+  else
+    Result := True; // Default for TStream
 end;
 
 end.

@@ -38,6 +38,7 @@ uses
   ClpAsn1Utilities,
   ClpCryptoLibTypes,
   ClpStreams,
+  ClpStreamUtilities,
   ClpPkcsAsn1Objects,
   ClpIPkcsAsn1Objects,
   ClpPkcsObjectIdentifiers;
