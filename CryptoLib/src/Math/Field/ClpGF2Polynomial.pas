@@ -23,7 +23,7 @@ interface
 
 uses
   ClpCryptoLibTypes,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpIGF2Polynomial,
   ClpIPolynomial;
 
@@ -77,7 +77,7 @@ begin
     Result := false;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(Fexponents, other.exponents);
+  Result := TArrayUtilities.AreEqual<Int32>(Fexponents, other.exponents);
 end;
 
 function TGF2Polynomial.Equals(other: TObject): Boolean;
@@ -103,7 +103,7 @@ end;
 function TGF2Polynomial.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  Result := TArrayUtils.GetArrayHashCode(Fexponents);
+  Result := TArrayUtilities.GetArrayHashCode(Fexponents);
 end;
 
 end.

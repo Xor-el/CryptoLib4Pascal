@@ -30,7 +30,7 @@ uses
   ClpIEd25519PrivateKeyParameters,
   ClpIEd25519PublicKeyParameters,
   ClpEd25519PublicKeyParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpAsn1Objects,
   ClpStreams,
   ClpStreamUtilities,
@@ -150,13 +150,13 @@ begin
     result := false;
     Exit;
   end;
-  result := TArrayUtils.ConstantTimeAreEqual(FData, other.GetEncoded())
+  result := TArrayUtilities.FixedTimeEquals(FData, other.GetEncoded())
 end;
 
 function TEd25519PrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := TArrayUtils.GetArrayHashCode(FData);
+  result := TArrayUtilities.GetArrayHashCode(FData);
 end;
 
 procedure TEd25519PrivateKeyParameters.Sign

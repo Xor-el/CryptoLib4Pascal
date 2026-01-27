@@ -25,7 +25,7 @@ uses
   SysUtils,
   TypInfo,
   ClpIAsn1Objects,
-  ClpPlatform,
+  ClpPlatformUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -394,7 +394,7 @@ begin
     end;
   end;
 
-  raise EArgumentCryptoLibException.Create('Invalid object: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('Invalid object: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const AObj: IAsn1Object;
@@ -417,7 +417,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('Invalid object: ' + TPlatform.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.Create('Invalid object: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const ABytes: TCryptoLibByteArray;

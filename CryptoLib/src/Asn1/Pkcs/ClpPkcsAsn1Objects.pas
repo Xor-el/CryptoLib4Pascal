@@ -34,7 +34,7 @@ uses
   ClpOiwObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpAsn1Utilities,
-  ClpPlatform;
+  ClpPlatformUtilities;
 
 resourcestring
   SBadSequenceSize = 'Bad sequence size: %d';
@@ -1387,7 +1387,7 @@ begin
   if Supports(AObj, IContentInfo, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TContentInfo.GetInstance(const AObj: IAsn1Convertible): IContentInfo;
@@ -1496,7 +1496,7 @@ begin
   if Supports(AObj, ISignedData, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TSignedData.GetInstance(const AObj: IAsn1Convertible): ISignedData;

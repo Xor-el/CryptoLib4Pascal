@@ -31,7 +31,7 @@ uses
   ClpDigestUtilities,
   ClpBigInteger,
   ClpCryptoLibTypes,
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 type
   /// <summary>
@@ -182,7 +182,7 @@ var
   LId: TCryptoLibByteArray;
 begin
   LSha1 := CalculateSha1(ASpki);
-  LId := TArrayUtils.CopyOfRange(LSha1, System.Length(LSha1) - 8, System.Length(LSha1));
+  LId := TArrayUtilities.CopyOfRange<Byte>(LSha1, System.Length(LSha1) - 8, System.Length(LSha1));
   LId[0] := LId[0] and $0F;
   LId[0] := LId[0] or $40;
   Result := TSubjectKeyIdentifier.Create(LId);

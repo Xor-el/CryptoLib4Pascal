@@ -24,7 +24,8 @@ interface
 uses
   Generics.Defaults,
   ClpIAsn1Objects,
-  ClpPlatform;
+  ClpStringUtilities,
+  ClpPlatformUtilities;
 
 type
   /// <summary>
@@ -172,7 +173,7 @@ end;
 function TOrdinalIgnoreCaseEqualityComparer.Equals(const ALeft, ARight: String): Boolean;
 begin
   // Use ordinal case-insensitive comparison (invariant culture)
-  Result := TPlatform.EqualsIgnoreCase(ALeft, ARight);
+  Result := TStringUtilities.EqualsIgnoreCase(ALeft, ARight);
 end;
 
 function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(const AValue: String): Integer;
@@ -187,7 +188,7 @@ begin
   end;
   
   // Convert to lowercase using invariant culture for consistent hashing
-  LLowerValue := TPlatform.ToLowerInvariant(AValue);
+  LLowerValue := TStringUtilities.ToLowerInvariant(AValue);
   
   // Compute hash code from lowercase string
   // Using a simple hash algorithm (FNV-1a style)

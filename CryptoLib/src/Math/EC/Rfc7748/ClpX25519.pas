@@ -25,7 +25,7 @@ uses
   ClpISecureRandom,
   ClpX25519Field,
   ClpEd25519,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpConverters,
   ClpCryptoLibTypes;
 
@@ -80,7 +80,7 @@ class function TX25519.CalculateAgreement(const k: TCryptoLibByteArray;
   const r: TCryptoLibByteArray; rOff: Int32): Boolean;
 begin
   ScalarMult(k, kOff, u, uOff, r, rOff);
-  result := not TArrayUtils.AreAllZeroes(r, rOff, PointSize);
+  result := not TArrayUtilities.AreAllZeroes(r, rOff, PointSize);
 end;
 
 class function TX25519.Decode32(const bs: TCryptoLibByteArray;

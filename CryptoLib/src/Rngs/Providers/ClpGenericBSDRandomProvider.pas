@@ -58,7 +58,7 @@ procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl;
 implementation
 
 uses
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 { TGenericBSDRandomProvider }
 
@@ -103,7 +103,7 @@ procedure TGenericBSDRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteA
 begin
   repeat
     GetBytes(AData);
-  until (TArrayUtils.NoZeroes(AData));
+  until (TArrayUtilities.NoZeroes(AData));
 end;
 
 function TGenericBSDRandomProvider.GetIsAvailable: Boolean;

@@ -33,10 +33,11 @@ uses
   ClpIAsn1Objects,
   ClpAsn1Streams,
   ClpAsn1Utilities,
-  ClpPlatform,
+  ClpPlatformUtilities,
   ClpStreams,
   ClpStreamUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
+  ClpStringUtilities,
   ClpEncoders,
   ClpConverters,
   ClpCollectionUtilities,
@@ -5010,7 +5011,7 @@ begin
     try
       LD1 := GetEncoded();
       LD2 := AAsn1Object.GetEncoded();
-      Result := TArrayUtils.AreEqual(LD1, LD2);
+      Result := TArrayUtilities.AreEqual<Byte>(LD1, LD2);
       Exit;
     except
       on E: Exception do
@@ -5372,7 +5373,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object): IAsn1TaggedObject;
@@ -5883,7 +5884,7 @@ end;
 
 function TAsn1Sequence.ToString(): String;
 begin
-  Result := TCollectionUtilities.ToString<IAsn1Encodable>(FElements,
+  Result := TArrayUtilities.ToString<IAsn1Encodable>(FElements,
     function(AElement: IAsn1Encodable): String
     var
       LObj: IAsn1Object;
@@ -5928,7 +5929,7 @@ end;
 
 function TAsn1Sequence.MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
 begin
-  Result := TCollectionUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
+  Result := TArrayUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
 end;
 
 class function TAsn1Sequence.GetInstance(const AObj: TObject): IAsn1Sequence;
@@ -5957,7 +5958,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1Sequence.GetInstance(const AObj: IAsn1Object): IAsn1Sequence;
@@ -6175,7 +6176,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
   Result := WithElements(LMapped);
 end;
 
@@ -6188,7 +6189,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
   Result := WithElements(LMapped);
 end;
 
@@ -6390,7 +6391,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
   Result := WithElements(LMapped);
 end;
 
@@ -6403,7 +6404,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
   Result := WithElements(LMapped);
 end;
 
@@ -6652,7 +6653,7 @@ end;
 
 function TAsn1Set.MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
 begin
-  Result := TCollectionUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
+  Result := TArrayUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
 end;
 
 function TAsn1Set.ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
@@ -6662,7 +6663,7 @@ end;
 
 function TAsn1Set.ToString(): String;
 begin
-  Result := TCollectionUtilities.ToString<IAsn1Encodable>(FElements,
+  Result := TArrayUtilities.ToString<IAsn1Encodable>(FElements,
     function(AElement: IAsn1Encodable): String
     var
       LObj: IAsn1Object;
@@ -6703,7 +6704,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1Set.GetInstance(const AObj: IAsn1Object): IAsn1Set;
@@ -6877,7 +6878,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
   Result := TDerSet.Create(LMapped);
 end;
 
@@ -7001,7 +7002,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
   Result := TDLSet.Create(False, LMapped); // isSorted = False, need to sort
 end;
 
@@ -7169,7 +7170,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
   Result := WithElements(LMapped);
 end;
 
@@ -7182,7 +7183,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
   Result := WithElements(LMapped);
 end;
 
@@ -7327,7 +7328,7 @@ begin
     Result := GetEmpty();
     Exit;
   end;
-  LMapped := TCollectionUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
+  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
   Result := TBerSet.Create(False, LMapped); // isSorted = False
 end;
 
@@ -8326,12 +8327,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(GetOctets(), LThat.GetOctets());
+  Result := TArrayUtilities.AreEqual<Byte>(GetOctets(), LThat.GetOctets());
 end;
 
 function TAsn1OctetString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(GetOctets());
+  Result := TArrayUtilities.GetArrayHashCode(GetOctets());
 end;
 
 class function TAsn1OctetString.GetInstance(const AObj: TObject): IAsn1OctetString;
@@ -8360,7 +8361,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1OctetString.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1OctetString;
@@ -8473,7 +8474,7 @@ begin
   if System.Length(AContents) < 1 then
     Result := FEmpty
   else
-    Result := TDerOctetString.Create(TArrayUtils.CopyOf(AContents, System.Length(AContents)));
+    Result := TDerOctetString.Create(TArrayUtilities.CopyOf<Byte>(AContents, System.Length(AContents)));
 end;
 
 class function TDerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString;
@@ -8486,7 +8487,7 @@ begin
   if System.Length(AContents) < 1 then
     Result := FEmpty
   else
-    Result := TDerOctetString.Create(TArrayUtils.CopyOf(AContents, System.Length(AContents)));
+    Result := TDerOctetString.Create(TArrayUtilities.CopyOf<Byte>(AContents, System.Length(AContents)));
 end;
 
 class function TDerOctetString.WithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
@@ -8732,7 +8733,7 @@ end;
 constructor TDerBitString.CreateEmpty();
 begin
   inherited Create;
-  FContents := TArrayUtils.Prepend(nil, Byte(0));
+  FContents := TArrayUtilities.Prepend<Byte>(nil, Byte(0));
 end;
 
 constructor TDerBitString.Create(const AData: TCryptoLibByteArray);
@@ -8769,7 +8770,7 @@ begin
     raise EArgumentCryptoLibException.Create('must be in the range 0 to 7');
   if (System.Length(AData) = 0) and (APadBits <> 0) then
     raise EArgumentCryptoLibException.Create('if ''data'' is empty, ''padBits'' must be 0');
-  FContents := TArrayUtils.Prepend(AData, Byte(APadBits));
+  FContents := TArrayUtilities.Prepend<Byte>(AData, Byte(APadBits));
 end;
 
 function TDerBitString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
@@ -8836,7 +8837,7 @@ begin
   LLastDer := Byte(FContents[LLast] and ($FF shl LPadBits));
 
   // Calculate hash code for bytes 0 to LLast-1
-  Result := TArrayUtils.GetArrayHashCode(FContents, 0, LLast);
+  Result := TArrayUtilities.GetArrayHashCode(FContents, 0, LLast);
   
   // Add the masked last byte
   Result := Result * 257;
@@ -8871,7 +8872,7 @@ begin
   if System.Length(FContents) = 1 then
     Result := TAsn1OctetString.EmptyOctets
   else
-    Result := TArrayUtils.CopyOfRange(FContents, 1, System.Length(FContents));
+    Result := TArrayUtilities.CopyOfRange<Byte>(FContents, 1, System.Length(FContents));
 end;
 
 function TDerBitString.GetBytes(): TCryptoLibByteArray;
@@ -8882,7 +8883,7 @@ begin
     Result := TAsn1OctetString.EmptyOctets
   else
   begin
-    Result := TArrayUtils.CopyOfRange(FContents, 1, System.Length(FContents));
+    Result := TArrayUtilities.CopyOfRange<Byte>(FContents, 1, System.Length(FContents));
     LPadBits := FContents[0];
     if LPadBits > 0 then
       Result[System.Length(Result) - 1] := Result[System.Length(Result) - 1] and Byte($FF shl LPadBits);
@@ -9039,7 +9040,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerBitString.GetInstance(const AObj: IAsn1Object): IDerBitString;
@@ -9801,7 +9802,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerBmpString.GetInstance(const AObj: IAsn1Object): IDerBmpString;
@@ -9979,7 +9980,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerBoolean.GetInstance(const AObj: IAsn1Convertible): IDerBoolean;
@@ -10010,7 +10011,7 @@ begin
   if Supports(AObj, IDerBoolean, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
 end;
 
 class function TDerBoolean.GetInstance(const ABytes: TCryptoLibByteArray): IDerBoolean;
@@ -10150,7 +10151,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerEnumerated.GetInstance(const AObj: IAsn1Object): IDerEnumerated;
@@ -10353,12 +10354,12 @@ begin
     Exit;
   end;
   LThatContents := LThat.Bytes;
-  Result := TArrayUtils.AreEqual(FContents, LThatContents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThatContents);
 end;
 
 function TDerEnumerated.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerEnumerated.FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -10445,7 +10446,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1Null.GetInstance(const AObj: IAsn1Object): IAsn1Null;
@@ -10603,7 +10604,7 @@ var
 begin
   CheckContentsLength(System.Length(AContents));
 
-  LIndex := UInt32(TArrayUtils.GetArrayHashCode(AContents));
+  LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents));
   LIndex := LIndex xor (LIndex shr 20);
   LIndex := LIndex xor (LIndex shr 10);
   LIndex := LIndex and 1023;
@@ -10612,7 +10613,7 @@ begin
     System.SetLength(FCache, 1024);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and TArrayUtils.AreEqual(AContents, LOriginalEntry.Contents) then
+  if (LOriginalEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -10629,7 +10630,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and TArrayUtils.AreEqual(AContents, LExchangedEntry.Contents) then
+    if (LExchangedEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -10690,7 +10691,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerObjectIdentifier.GetInstance(const AObj: IAsn1Object): IDerObjectIdentifier;
@@ -10704,7 +10705,7 @@ begin
   if Supports(AObj, IDerObjectIdentifier, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
 end;
 
 class function TDerObjectIdentifier.GetInstance(const AObj: IAsn1Convertible): IDerObjectIdentifier;
@@ -10804,12 +10805,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerObjectIdentifier.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 function TDerObjectIdentifier.GetContents(): TCryptoLibByteArray;
@@ -10841,13 +10842,13 @@ begin
       LSubID := LSubID * 10;
       LSubID := LSubID + (Ord(ABranchID[2]) - Ord('0'));
     end;
-    LContents := TArrayUtils.Append(FContents, Byte(LSubID));
+    LContents := TArrayUtilities.Append<Byte>(FContents, Byte(LSubID));
   end
   else
   begin
     LContents := TAsn1RelativeOid.ParseIdentifier(ABranchID);
     CheckContentsLength(System.Length(FContents) + System.Length(LContents));
-    LContents := TArrayUtils.Concatenate(FContents, LContents);
+    LContents := TArrayUtilities.Concatenate<Byte>(FContents, LContents);
   end;
 
   LRootID := GetID();
@@ -10864,7 +10865,7 @@ begin
   LStemLength := System.Length(LStemContents);
   // Compare the first LStemLength bytes of both arrays
   Result := (System.Length(FContents) > LStemLength) and
-    TArrayUtils.AreEqual(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength));
+    TArrayUtilities.AreEqual<Byte>(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength));
 end;
 
 function TDerObjectIdentifier.ToString(): String;
@@ -11134,12 +11135,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TAsn1RelativeOid.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class constructor TAsn1RelativeOid.Create;
@@ -11203,7 +11204,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1RelativeOid.GetInstance(const AObj: IAsn1Object): IAsn1RelativeOid;
@@ -11538,13 +11539,13 @@ begin
       LSubID := LSubID * 10;
       LSubID := LSubID + (Ord(ABranchID[2]) - Ord('0'));
     end;
-    LContents := TArrayUtils.Append(FContents, Byte(LSubID));
+    LContents := TArrayUtilities.Append<Byte>(FContents, Byte(LSubID));
   end
   else
   begin
     LBranchContents := ParseIdentifier(ABranchID);
     CheckContentsLength(System.Length(FContents) + System.Length(LBranchContents));
-    LContents := TArrayUtils.Concatenate(FContents, LBranchContents);
+    LContents := TArrayUtilities.Concatenate<Byte>(FContents, LBranchContents);
   end;
 
   LRootID := GetID();
@@ -11586,7 +11587,7 @@ var
 begin
   CheckContentsLength(System.Length(AContents));
 
-  LIndex := UInt32(TArrayUtils.GetArrayHashCode(AContents));
+  LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents));
   LIndex := LIndex xor (LIndex shr 24);
   LIndex := LIndex xor (LIndex shr 12);
   LIndex := LIndex xor (LIndex shr 6);
@@ -11596,7 +11597,7 @@ begin
     System.SetLength(FCache, 64);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and TArrayUtils.AreEqual(AContents, LOriginalEntry.Contents) then
+  if (LOriginalEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -11613,7 +11614,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and TArrayUtils.AreEqual(AContents, LExchangedEntry.Contents) then
+    if (LExchangedEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -11696,7 +11697,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1GeneralizedTime.GetInstance(const AObj: IAsn1Object): IAsn1GeneralizedTime;
@@ -11710,7 +11711,7 @@ begin
   if Supports(AObj, IAsn1GeneralizedTime, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
 end;
 
 class function TAsn1GeneralizedTime.GetInstance(const AObj: IAsn1Convertible): IAsn1GeneralizedTime;
@@ -11780,7 +11781,7 @@ begin
   // TODO Performance
   LThisContents := GetContents(TAsn1OutputStream.EncodingDer);
   LThatContents := LThat.GetContents(TAsn1OutputStream.EncodingDer);
-  Result := TArrayUtils.AreEqual(LThisContents, LThatContents);
+  Result := TArrayUtilities.AreEqual<Byte>(LThisContents, LThatContents);
 end;
 
 function TAsn1GeneralizedTime.Asn1GetHashCode(): Int32;
@@ -11789,7 +11790,7 @@ var
 begin
   // TODO Performance
   LContents := GetContents(TAsn1OutputStream.EncodingDer);
-  Result := TArrayUtils.GetArrayHashCode(LContents);
+  Result := TArrayUtilities.GetArrayHashCode(LContents);
 end;
 
 function TAsn1GeneralizedTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
@@ -11927,9 +11928,9 @@ class function TAsn1GeneralizedTime.IndexOfSign(const AStr: String; AStartIndex:
 var
   LIndex: Int32;
 begin
-  LIndex := TPlatform.IndexOf(AStr, '+', AStartIndex);
+  LIndex := TStringUtilities.IndexOf(AStr, '+', AStartIndex);
   if LIndex = 0 then
-    LIndex := TPlatform.IndexOf(AStr, '-', AStartIndex);
+    LIndex := TStringUtilities.IndexOf(AStr, '-', AStartIndex);
     Result := LIndex;
 end;
 
@@ -12057,7 +12058,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1UtcTime.GetInstance(const AObj: IAsn1Object): IAsn1UtcTime;
@@ -12071,7 +12072,7 @@ begin
   if Supports(AObj, IAsn1UtcTime, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
 end;
 
 class function TAsn1UtcTime.GetInstance(const AObj: IAsn1Convertible): IAsn1UtcTime;
@@ -12159,7 +12160,7 @@ begin
   // TODO Performance
   LThisContents := GetContents(TAsn1OutputStream.EncodingDer);
   LThatContents := LThat.GetContents(TAsn1OutputStream.EncodingDer);
-  Result := TArrayUtils.AreEqual(LThisContents, LThatContents);
+  Result := TArrayUtilities.AreEqual<Byte>(LThisContents, LThatContents);
 end;
 
 function TAsn1UtcTime.Asn1GetHashCode(): Int32;
@@ -12168,7 +12169,7 @@ var
 begin
   // TODO Performance
   LContents := GetContents(TAsn1OutputStream.EncodingDer);
-  Result := TArrayUtils.GetArrayHashCode(LContents);
+  Result := TArrayUtilities.GetArrayHashCode(LContents);
 end;
 
 function TAsn1UtcTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
@@ -12432,7 +12433,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TAsn1ObjectDescriptor.GetInstance(const AObj: IAsn1Object): IAsn1ObjectDescriptor;
@@ -12446,7 +12447,7 @@ begin
   if Supports(AObj, IAsn1ObjectDescriptor, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
 end;
 
 class function TAsn1ObjectDescriptor.GetInstance(const AObj: IAsn1Convertible): IAsn1ObjectDescriptor;
@@ -12602,7 +12603,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerUtf8String.GetInstance(const AObj: IAsn1Object): IDerUtf8String;
@@ -12706,12 +12707,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerUtf8String.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerUtf8String.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -12771,7 +12772,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerGeneralString.GetInstance(const AObj: IAsn1Object): IDerGeneralString;
@@ -12875,12 +12876,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerGeneralString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerGeneralString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -12932,7 +12933,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerGraphicString.GetInstance(const AObj: IAsn1Object): IDerGraphicString;
@@ -13036,12 +13037,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerGraphicString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerGraphicString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -13125,7 +13126,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerIA5String.GetInstance(const AObj: IAsn1Object): IDerIA5String;
@@ -13229,12 +13230,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerIA5String.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerIA5String.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -13340,7 +13341,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerNumericString.GetInstance(const AObj: IAsn1Object): IDerNumericString;
@@ -13444,12 +13445,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerNumericString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerNumericString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -13509,7 +13510,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerPrintableString.GetInstance(const AObj: IAsn1Object): IDerPrintableString;
@@ -13613,12 +13614,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerPrintableString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerPrintableString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -13723,7 +13724,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerT61String.GetInstance(const AObj: IAsn1Object): IDerT61String;
@@ -13827,12 +13828,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerT61String.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerT61String.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -13884,7 +13885,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerUniversalString.GetInstance(const AObj: IAsn1Object): IDerUniversalString;
@@ -14004,12 +14005,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerUniversalString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerUniversalString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -14095,7 +14096,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerVideotexString.GetInstance(const AObj: IAsn1Object): IDerVideotexString;
@@ -14199,12 +14200,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerVideotexString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerVideotexString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -14264,7 +14265,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TDerVisibleString.GetInstance(const AObj: IAsn1Object): IDerVisibleString;
@@ -14368,12 +14369,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
 end;
 
 function TDerVisibleString.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FContents);
+  Result := TArrayUtilities.GetArrayHashCode(FContents);
 end;
 
 class function TDerVisibleString.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
@@ -14481,12 +14482,12 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtils.AreEqual(FBytes, LThat.Bytes);
+  Result := TArrayUtilities.AreEqual<Byte>(FBytes, LThat.Bytes);
 end;
 
 function TDerInteger.Asn1GetHashCode(): Int32;
 begin
-  Result := TArrayUtils.GetArrayHashCode(FBytes);
+  Result := TArrayUtilities.GetArrayHashCode(FBytes);
 end;
 
 function TDerInteger.GetBytes(): TCryptoLibByteArray;
@@ -14619,7 +14620,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatform.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerInteger.GetInstance(const AObj: IAsn1Object): IDerInteger;
@@ -15371,7 +15372,7 @@ begin
   if (FPlatformType <> nil) and LObj.InheritsFrom(FPlatformType) then
     Result := AAsn1Object
   else
-    raise EInvalidOperationCryptoLibException.CreateFmt('unexpected object: %s', [TPlatform.GetTypeName(LObj)]);
+    raise EInvalidOperationCryptoLibException.CreateFmt('unexpected object: %s', [TPlatformUtilities.GetTypeName(LObj)]);
 end;
 
 function TAsn1UniversalType.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;

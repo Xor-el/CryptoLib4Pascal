@@ -32,7 +32,7 @@ uses
   ClpParameterUtilities,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -184,7 +184,7 @@ begin
 
   LT := TBigInteger.Create(1, FCipher.ProcessBlock(FBlock, 0,
     System.Length(FBlock)));
-  TArrayUtils.Fill(FBlock, 0, System.Length(FBlock), Byte($00));
+  TArrayUtilities.Fill<Byte>(FBlock, 0, System.Length(FBlock), Byte($00));
 
   LT := LT.Min(FKParam.Modulus.Subtract(LT));
 
@@ -230,10 +230,10 @@ begin
   System.SetLength(LFBlock, System.Length(FBlock));
   LFBlock := TBigIntegers.AsUnsignedByteArray(System.Length(FBlock), LF);
 
-  LRv := TArrayUtils.ConstantTimeAreEqual(FBlock, LFBlock);
+  LRv := TArrayUtilities.FixedTimeEquals(FBlock, LFBlock);
 
-  TArrayUtils.Fill(FBlock, 0, System.Length(FBlock), Byte($00));
-  TArrayUtils.Fill(LFBlock, 0, System.Length(LFBlock), Byte($00));
+  TArrayUtilities.Fill<Byte>(FBlock, 0, System.Length(FBlock), Byte($00));
+  TArrayUtilities.Fill<Byte>(LFBlock, 0, System.Length(LFBlock), Byte($00));
 
   Result := LRv;
 end;

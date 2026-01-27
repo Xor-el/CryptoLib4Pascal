@@ -67,7 +67,7 @@ type
 implementation
 
 uses
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 { TUnixRandomProvider }
 
@@ -163,7 +163,7 @@ procedure TUnixRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
 begin
   repeat
     GetBytes(AData);
-  until (TArrayUtils.NoZeroes(AData));
+  until (TArrayUtilities.NoZeroes(AData));
 end;
 
 function TUnixRandomProvider.GetIsAvailable: Boolean;

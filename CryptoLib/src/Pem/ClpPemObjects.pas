@@ -28,9 +28,9 @@ uses
   ClpIPemObjects,
   ClpCryptoLibTypes,
   ClpEncoders,
-  ClpPlatform,
+  ClpPlatformUtilities,
   ClpStreams,
-  ClpStringUtils,
+  ClpStringUtilities,
   ClpConverters,
   ClpAsn1Objects,
   ClpIAsn1Objects,
@@ -191,7 +191,7 @@ begin
   if AStr = '' then
     Result := 1
   else
-    Result := TStringUtils.GetStringHashCode(AStr);
+    Result := TStringUtilities.GetStringHashCode(AStr);
 end;
 
 function TPemHeader.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
@@ -491,7 +491,7 @@ begin
   if not BufferUntilStopChar('-', False) then
     raise EIOCryptoLibException.Create('ran out of data before consuming type');
 
-  LType := TPlatform.Trim(BufferedString());
+  LType := TStringUtilities.Trim(BufferedString());
 
   // Consume dashes after type.
   if not ConsumeDash() then
@@ -508,7 +508,7 @@ begin
       if not BufferUntilStopChar(':', False) then
         raise EIOCryptoLibException.Create('ran out of data reading header key value');
 
-      LKey := TPlatform.Trim(BufferedString());
+      LKey := TStringUtilities.Trim(BufferedString());
 
       LC := ReadChar();
       if LC <> Ord(':') then
@@ -521,7 +521,7 @@ begin
 
       SkipWhiteSpace();
 
-      LValue := TPlatform.Trim(BufferedString());
+      LValue := TStringUtilities.Trim(BufferedString());
       LHeaders.Add(TPemHeader.Create(LKey, LValue));
     end;
 
@@ -764,7 +764,7 @@ begin
         Exit;
       end;
 
-      if TPlatform.StartsWith(LLine, FHeader1) or TPlatform.StartsWith(LLine, FHeader2) then
+      if TStringUtilities.StartsWith(LLine, FHeader1) or TStringUtilities.StartsWith(LLine, FHeader2) then
         Break;
     end;
 
@@ -777,7 +777,7 @@ begin
         Exit;
       end;
 
-      if TPlatform.StartsWith(LLine, FFooter1) or TPlatform.StartsWith(LLine, FFooter2) then
+      if TStringUtilities.StartsWith(LLine, FFooter1) or TStringUtilities.StartsWith(LLine, FFooter2) then
         Break;
 
       LPemBuf.Append(LLine);

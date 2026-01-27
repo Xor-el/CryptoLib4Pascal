@@ -31,7 +31,7 @@ uses
   ClpIGenericSigner,
   ClpParameterUtilities,
   ClpDigestUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -173,7 +173,7 @@ begin
       LSig := LTmp;
     end;
 
-    Result := TArrayUtils.ConstantTimeAreEqual(LSig, LHash);
+    Result := TArrayUtilities.FixedTimeEquals(LSig, LHash);
   except
     Result := False;
   end;

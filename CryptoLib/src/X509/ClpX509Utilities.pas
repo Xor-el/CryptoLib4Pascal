@@ -49,7 +49,7 @@ uses
   ClpIVerifier,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCollectionUtilities;
 
 type
@@ -384,7 +384,7 @@ var
   LResult: TCryptoLibByteArray;
 begin
   LResult := CalculateResult<IBlockResult>(AMacFactory.CreateCalculator(), AAsn1Encodable).Collect();
-  Result := TArrayUtils.ConstantTimeAreEqual(LResult, AExpected.GetOctets());
+  Result := TArrayUtilities.FixedTimeEquals(LResult, AExpected.GetOctets());
 end;
 
 class function TX509Utilities.VerifySignature(const AVerifierFactory: IVerifierFactory;

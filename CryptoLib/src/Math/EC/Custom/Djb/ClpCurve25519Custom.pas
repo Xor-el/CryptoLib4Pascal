@@ -32,7 +32,7 @@ uses
   ClpECCurveConstants,
   ClpBits,
   ClpEncoders,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -656,7 +656,7 @@ end;
 function TCurve25519FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := Q.GetHashCode() xor TArrayUtils.GetArrayHashCode(Fx, 0, 8);
+  result := Q.GetHashCode() xor TArrayUtilities.GetArrayHashCode(Fx, 0, 8);
 end;
 
 function TCurve25519FieldElement.GetIsOne: Boolean;

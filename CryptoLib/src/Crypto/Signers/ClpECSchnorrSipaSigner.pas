@@ -38,7 +38,7 @@ uses
   ClpECAlgorithms,
   ClpDigestUtilities,
   ClpParameterUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -128,7 +128,7 @@ begin
 
   LPrivateKey := (FKey as IECPrivateKeyParameters).D;
 
-  LInput := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(LPrivateKey,
+  LInput := TArrayUtilities.Concatenate<Byte>(TBigIntegers.BigIntegerToBytes(LPrivateKey,
     LNumBytes), AMessage);
 
   LK := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest, LInput)).&Mod(LN);
@@ -148,8 +148,13 @@ begin
   end;
 
   LP := G.Multiply(LPrivateKey);
-  LKeyPrefixedM := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(LXr,
-    LNumBytes), TCryptoLibMatrixByteArray.Create(LP.GetEncoded(true), AMessage));
+
+  LKeyPrefixedM := TArrayUtilities.Concatenate<Byte>
+  ([
+    TBigIntegers.BigIntegerToBytes(LXr, LNumBytes),
+    LP.GetEncoded(true),
+    AMessage
+  ]);
 
   LE := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest,
     LKeyPrefixedM)).&Mod(LN);
@@ -267,8 +272,12 @@ begin
   LPublicKey := (FKey as IECPublicKeyParameters);
   LPublicKeyBytes := LPublicKey.Q.GetEncoded(true);
 
-  LInput := TArrayUtils.Concatenate(TBigIntegers.BigIntegerToBytes(ARSig,
-    LNumBytes), TCryptoLibMatrixByteArray.Create(LPublicKeyBytes, AMessage));
+  LInput := TArrayUtilities.Concatenate<Byte>
+  ([
+    TBigIntegers.BigIntegerToBytes(ARSig, LNumBytes),
+    LPublicKeyBytes,
+    AMessage
+  ]);
 
   LE := TBigInteger.Create(1, TDigestUtilities.DoFinal(FDigest, LInput)).&Mod(LN);
   LQ := LPublicKey.Q.Normalize();

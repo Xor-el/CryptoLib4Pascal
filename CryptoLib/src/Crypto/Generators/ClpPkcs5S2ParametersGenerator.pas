@@ -33,7 +33,7 @@ uses
   ClpParametersWithIV,
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -136,8 +136,8 @@ implementation
 
 procedure TPkcs5S2ParametersGenerator.Clear();
 begin
-  TArrayUtils.ZeroFill(FPassword);
-  TArrayUtils.ZeroFill(FSalt);
+  TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
+  TArrayUtilities.Fill<Byte>(FSalt, 0, System.Length(FSalt), Byte(0));
 
   if FPBKDF2_HMAC <> Nil then
   begin

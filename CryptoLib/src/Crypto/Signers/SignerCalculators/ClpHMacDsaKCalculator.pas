@@ -33,7 +33,7 @@ uses
   ClpIKeyParameter,
   ClpIDsaKCalculator,
   ClpIHMacDsaKCalculator,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 {$IFNDEF _FIXINSIGHT_}
@@ -127,8 +127,8 @@ var
   LSize: Int32;
 begin
   FN := AN;
-  TArrayUtils.Fill(FV, 0, System.Length(FV), Byte($01));
-  TArrayUtils.ZeroFill(FK);
+  TArrayUtilities.Fill<Byte>(FV, 0, System.Length(FV), Byte($01));
+  TArrayUtilities.Fill<Byte>(FK, 0, System.Length(FK), Byte(0));
 
   LSize := TBigIntegers.GetUnsignedByteLength(AN);
   System.SetLength(LX, LSize);

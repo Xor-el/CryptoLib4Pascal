@@ -27,7 +27,7 @@ uses
   SysUtils,
   ClpIAsn1Objects,
   ClpBits,
-  ClpPlatform,
+  ClpPlatformUtilities,
   ClpCryptoLibTypes,
   ClpStreams,
   ClpStreamUtilities;
@@ -1157,7 +1157,7 @@ begin
   else
   begin
     raise EIOCryptoLibException.CreateFmt('unknown object encountered: %s',
-      [TPlatform.GetTypeName(LAsn1Obj as TObject)]);
+      [TPlatformUtilities.GetTypeName(LAsn1Obj as TObject)]);
   end;
 end;
 
@@ -1311,7 +1311,7 @@ begin
   if not Supports(LAsn1Obj, IAsn1OctetStringParser, Result) then
   begin
     raise EIOCryptoLibException.CreateFmt('unknown object encountered: %s',
-      [TPlatform.GetTypeName(LAsn1Obj as TObject)]);
+      [TPlatformUtilities.GetTypeName(LAsn1Obj as TObject)]);
   end;
 end;
 
@@ -1807,7 +1807,7 @@ begin
   begin
     if not Supports(AContentsElements[I], IDerBitString, LBitString) then
       raise EAsn1CryptoLibException.CreateFmt('unknown object encountered in constructed BIT STRING: %s',
-        [TPlatform.GetTypeName(AContentsElements[I] as TObject)]);
+        [TPlatformUtilities.GetTypeName(AContentsElements[I] as TObject)]);
     LBitStrings[I] := LBitString;
   end;
 
@@ -1827,7 +1827,7 @@ begin
   begin
     if not Supports(AContentsElements[I], IAsn1OctetString, LOctetString) then
       raise EAsn1CryptoLibException.CreateFmt('unknown object encountered in constructed OCTET STRING: %s',
-        [TPlatform.GetTypeName(AContentsElements[I] as TObject)]);
+        [TPlatformUtilities.GetTypeName(AContentsElements[I] as TObject)]);
     LOctetStrings[I] := LOctetString;
   end;
 

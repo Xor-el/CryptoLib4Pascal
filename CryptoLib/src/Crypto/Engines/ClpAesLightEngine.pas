@@ -30,7 +30,7 @@ uses
   ClpCheck,
   ClpBits,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -426,7 +426,7 @@ begin
   keyLen := System.Length(key);
   if ((keyLen < 16) or (keyLen > 32) or ((keyLen and 7) <> 0)) then
   begin
-    TArrayUtils.ZeroFill(key);
+    TArrayUtilities.Fill<Byte>(key, 0, System.Length(key), Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
@@ -604,7 +604,7 @@ begin
       end
   else
     begin
-      TArrayUtils.ZeroFill(key);
+      TArrayUtilities.Fill<Byte>(key, 0, System.Length(key), Byte(0));
       raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperation);
     end;
   end;
@@ -625,7 +625,7 @@ begin
 
   result := bigW;
 
-  TArrayUtils.ZeroFill(key);
+  TArrayUtilities.Fill<Byte>(key, 0, System.Length(key), Byte(0));
 end;
 
 function TAesLightEngine.GetAlgorithmName: String;

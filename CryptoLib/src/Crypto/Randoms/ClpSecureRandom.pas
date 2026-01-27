@@ -34,12 +34,13 @@ uses
   ClpRandom,
   ClpOSRandomProvider,
   ClpDigestUtilities,
+  ClpStringUtilities,
   ClpCryptoApiRandomGenerator,
   ClpICryptoApiRandomGenerator,
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
   ClpISecureRandom,
-  ClpPlatform;
+  ClpPlatformUtilities;
 
 resourcestring
   SUnRecognisedPRNGAlgorithm = 'Unrecognised PRNG Algorithm: %s "algorithm"';
@@ -339,14 +340,14 @@ var
   LPrng: IDigestRandomGenerator;
   LPrngIndex: Int32;
 begin
-  LUpper := TPlatform.ToUpperInvariant(AAlgorithm);
+  LUpper := TStringUtilities.ToUpperInvariant(AAlgorithm);
 
-  if TPlatform.EndsWith(LUpper, 'PRNG', True) then
+  if TStringUtilities.EndsWith(LUpper, 'PRNG', True) then
   begin
-    LPrngIndex := TPlatform.LastIndexOf(LUpper, 'PRNG');
+    LPrngIndex := TStringUtilities.LastIndexOf(LUpper, 'PRNG');
     if LPrngIndex > 0 then
     begin
-      LDigestName := TPlatform.Substring(LUpper, 1, LPrngIndex - 1);
+      LDigestName := TStringUtilities.Substring(LUpper, 1, LPrngIndex - 1);
     end
     else
     begin

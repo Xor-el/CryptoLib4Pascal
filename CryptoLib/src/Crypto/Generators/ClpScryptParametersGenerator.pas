@@ -32,7 +32,7 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpParameterUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -122,8 +122,8 @@ implementation
 
 procedure TScryptParametersGenerator.Clear();
 begin
-  TArrayUtils.ZeroFill(FPassword);
-  TArrayUtils.ZeroFill(FSalt);
+  TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
+  TArrayUtilities.Fill<Byte>(FSalt, 0, System.Length(FSalt), Byte(0));
 
   if FPBKDF_Scrypt <> Nil then
   begin

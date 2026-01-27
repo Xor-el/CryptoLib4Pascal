@@ -34,7 +34,7 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpParameterUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -137,7 +137,7 @@ implementation
 
 procedure TArgon2ParametersGenerator.Clear();
 begin
-  TArrayUtils.ZeroFill(FPassword);
+  TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
 
   if FArgon2Parameters <> Nil then
   begin

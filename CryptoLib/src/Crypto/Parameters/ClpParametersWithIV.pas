@@ -24,7 +24,7 @@ interface
 uses
   ClpIParametersWithIV,
   ClpICipherParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -66,7 +66,7 @@ end;
 
 procedure TParametersWithIV.Clear;
 begin
-  TArrayUtils.ZeroFill(Fiv);
+  TArrayUtilities.Fill<Byte>(Fiv, 0, System.Length(Fiv), Byte(0));
 end;
 
 constructor TParametersWithIV.Create(const parameters: ICipherParameters;
@@ -80,7 +80,7 @@ begin
   end;
 
   Fparameters := parameters;
-  Fiv := TArrayUtils.CopyOfRange(iv, ivOff, ivOff + ivLen);
+  Fiv := TArrayUtilities.CopyOfRange<Byte>(iv, ivOff, ivOff + ivLen);
 end;
 
 destructor TParametersWithIV.Destroy;

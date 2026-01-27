@@ -26,7 +26,7 @@ uses
   ClpX25519,
   ClpAsymmetricKeyParameter,
   ClpIX25519PublicKeyParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpAsn1Objects,
   ClpStreams,
   ClpStreamUtilities,
@@ -108,13 +108,13 @@ begin
     result := false;
     Exit;
   end;
-  result := TArrayUtils.ConstantTimeAreEqual(FData, other.GetEncoded())
+  result := TArrayUtilities.FixedTimeEquals(FData, other.GetEncoded())
 end;
 
 function TX25519PublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := TArrayUtils.GetArrayHashCode(FData);
+  result := TArrayUtilities.GetArrayHashCode(FData);
 end;
 
 end.

@@ -29,7 +29,7 @@ uses
   ClpECC,
   ClpInterleave,
   ClpBigInteger,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpIECC,
   ClpMultipliers,
   ClpCryptoLibTypes,
@@ -901,7 +901,7 @@ end;
 function TSecT283FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := 2831275 xor TArrayUtils.GetArrayHashCode(Fx, 0, 5);
+  result := 2831275 xor TArrayUtilities.GetArrayHashCode(Fx, 0, 5);
 end;
 
 function TSecT283FieldElement.GetIsOne: Boolean;

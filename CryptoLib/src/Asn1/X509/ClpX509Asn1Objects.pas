@@ -41,10 +41,11 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpCryptoLibTypes,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpAsn1Utilities,
   ClpCollectionUtilities,
-  ClpPlatform,
+  ClpStringUtilities,
+  ClpPlatformUtilities,
   ClpIPAddressUtilities,
   ClpRfc5280Asn1Utilities,
   ClpDateTimeUtilities,
@@ -2081,7 +2082,7 @@ end;
 
 function TDigestInfo.GetDigestBytes: TCryptoLibByteArray;
 begin
-  Result := TArrayUtils.Clone(FDigest.GetOctets());
+  Result := System.Copy(FDigest.GetOctets());
 end;
 
 function TDigestInfo.ToAsn1Object: IAsn1Object;
@@ -2826,7 +2827,7 @@ begin
     raise EArgumentNilCryptoLibException.Create(SInvalidKeyIdentifier);
   end;
 
-  FKeyIdentifier := TArrayUtils.Clone(AKeyID);
+  FKeyIdentifier := System.Copy(AKeyID);
 end;
 
 constructor TSubjectKeyIdentifier.Create(const AKeyID: IAsn1OctetString);
@@ -2836,7 +2837,7 @@ end;
 
 function TSubjectKeyIdentifier.GetKeyIdentifier: TCryptoLibByteArray;
 begin
-  Result := TArrayUtils.Clone(FKeyIdentifier);
+  Result := System.Copy(FKeyIdentifier);
 end;
 
 function TSubjectKeyIdentifier.ToAsn1Object: IAsn1Object;
@@ -4015,7 +4016,7 @@ var
 begin
   if TIPAddressUtilities.IsValidIPv6WithNetmask(AIp) or TIPAddressUtilities.IsValidIPv6(AIp) then
   begin
-    LSlashIndex := TPlatform.IndexOf(AIp, '/');
+    LSlashIndex := TStringUtilities.IndexOf(AIp, '/');
 
     if LSlashIndex = 0 then
     begin
@@ -4031,7 +4032,7 @@ begin
       LParsedIp := ParseIPv6(System.Copy(AIp, 1, LSlashIndex - 1));
       CopyInts(LParsedIp, LAddr, 0);
       LMask := System.Copy(AIp, LSlashIndex + 1, System.Length(AIp) - LSlashIndex);
-      if TPlatform.IndexOf(LMask, ':') > 0 then
+      if TStringUtilities.IndexOf(LMask, ':') > 0 then
       begin
         LParsedIp := ParseIPv6(LMask);
       end
@@ -4045,7 +4046,7 @@ begin
   end
   else if TIPAddressUtilities.IsValidIPv4WithNetmask(AIp) or TIPAddressUtilities.IsValidIPv4(AIp) then
   begin
-    LSlashIndex := TPlatform.IndexOf(AIp, '/');
+    LSlashIndex := TStringUtilities.IndexOf(AIp, '/');
 
     if LSlashIndex = 0 then
     begin
@@ -4059,7 +4060,7 @@ begin
       // LSlashIndex is 1-based position of '/', copy from start to slash (exclusive)
       ParseIPv4(System.Copy(AIp, 1, LSlashIndex - 1), LAddr, 0);
       LMask := System.Copy(AIp, LSlashIndex + 1, System.Length(AIp) - LSlashIndex);
-      if TPlatform.IndexOf(LMask, '.') > 0 then
+      if TStringUtilities.IndexOf(LMask, '.') > 0 then
       begin
         ParseIPv4(LMask, LAddr, 4);
       end
@@ -4155,11 +4156,11 @@ var
   LTokens: TCryptoLibStringArray;
 begin
   LProcessedIp := AIp;
-  if TPlatform.StartsWith(LProcessedIp, '::') then
+  if TStringUtilities.StartsWith(LProcessedIp, '::') then
   begin
     LProcessedIp := System.Copy(LProcessedIp, 2, System.Length(LProcessedIp) - 1);
   end
-  else if TPlatform.EndsWith(LProcessedIp, '::') then
+  else if TStringUtilities.EndsWith(LProcessedIp, '::') then
   begin
     LProcessedIp := System.Copy(LProcessedIp, 1, System.Length(LProcessedIp) - 1);
   end;
@@ -4201,7 +4202,7 @@ begin
     end
     else
     begin
-      if TPlatform.IndexOf(LSegment, '.') = 0 then
+      if TStringUtilities.IndexOf(LSegment, '.') = 0 then
       begin
         // Parse as hex
         LVal[LIndex] := StrToInt('$' + LSegment);
@@ -4371,13 +4372,17 @@ begin
     if ANames[I] = nil then
       raise EArgumentNilCryptoLibException.Create('names cannot contain null');
   end;
-  FNames := TArrayUtils.Clone<IGeneralName>(ANames);
+  FNames := TArrayUtilities.Clone<IGeneralName>(ANames,
+    function(A: IGeneralName): IGeneralName
+    begin
+      Result := A;
+    end);
 end;
 
 constructor TGeneralNames.Create(const ASeq: IAsn1Sequence);
 begin
   inherited Create();
-  FNames := TCollectionUtilities.Map<IAsn1Encodable, IGeneralName>(ASeq.Elements,
+  FNames := TArrayUtilities.Map<IAsn1Encodable, IGeneralName>(ASeq.Elements,
     function(AElement: IAsn1Encodable): IGeneralName
     begin
       Result := TGeneralName.GetInstance(AElement);
@@ -4391,7 +4396,11 @@ end;
 
 function TGeneralNames.GetNames: TCryptoLibGenericArray<IGeneralName>;
 begin
-  Result := TArrayUtils.Clone<IGeneralName>(FNames);
+  Result := TArrayUtilities.Clone<IGeneralName>(FNames,
+    function(A: IGeneralName): IGeneralName
+    begin
+      Result := A;
+    end);
 end;
 
 function TGeneralNames.ToAsn1Object: IAsn1Object;
@@ -4872,7 +4881,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('unknown object in factory: ' + TPlatform.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.Create('unknown object in factory: ' + TPlatformUtilities.GetTypeName(AObj));
 end;
 
 class function TX509Extensions.GetInstance(const AObj: IAsn1Convertible): IX509Extensions;
@@ -5577,9 +5586,13 @@ var
 begin
   inherited Create();
   FConverter := CreateDefaultConverter();
-  FOids := TArrayUtils.Clone<IDerObjectIdentifier>(AOids);
-  FValues := TArrayUtils.Clone(AValues);
-  FValueList := TArrayUtils.Clone(AValues);
+  FOids := TArrayUtilities.Clone<IDerObjectIdentifier>(AOids,
+    function(A: IDerObjectIdentifier): IDerObjectIdentifier
+    begin
+      Result := A;
+    end);
+  FValues := System.Copy(AValues);
+  FValueList := System.Copy(AValues);
   // Initialize FAdded array - all false for direct constructor
   System.SetLength(FAdded, System.Length(FOids));
   for I := 0 to System.Length(FAdded) - 1 do
@@ -5590,12 +5603,16 @@ end;
 
 function TX509Name.GetOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
 begin
-  Result := TArrayUtils.Clone<IDerObjectIdentifier>(FOids);
+  Result := TArrayUtilities.Clone<IDerObjectIdentifier>(FOids,
+    function(A: IDerObjectIdentifier): IDerObjectIdentifier
+    begin
+      Result := A;
+    end);
 end;
 
 function TX509Name.GetValues: TCryptoLibStringArray;
 begin
-  Result := TArrayUtils.Clone(FValues);
+  Result := System.Copy(FValues);
 end;
 
 function TX509Name.GetValueList: TCryptoLibStringArray;
@@ -5949,7 +5966,7 @@ class function TX509Name.DecodeOid(const AName: String;
 var
   LOid: IDerObjectIdentifier;
 begin
-  if (System.Length(AName) >= 4) and TPlatform.StartsWith(AName, 'OID.', True) then
+  if (System.Length(AName) >= 4) and TStringUtilities.StartsWith(AName, 'OID.', True) then
   begin
     // Skip "OID." (4 characters), copy rest of string
     Result := TDerObjectIdentifier.Create(System.Copy(AName, 5, System.Length(AName) - 4));
@@ -6104,7 +6121,11 @@ end;
 
 function TX509Name.GetOidList: TCryptoLibGenericArray<IDerObjectIdentifier>;
 begin
-  Result := TArrayUtils.Clone<IDerObjectIdentifier>(FOids);
+  Result := TArrayUtilities.Clone<IDerObjectIdentifier>(FOids,
+    function(A: IDerObjectIdentifier): IDerObjectIdentifier
+    begin
+      Result := A;
+    end);
 end;
 
 function TX509Name.GetValueList(const AOid: IDerObjectIdentifier): TCryptoLibStringArray;
@@ -6120,7 +6141,7 @@ begin
       if (AOid = nil) or AOid.Equals(FOids[I]) then
       begin
         LValue := FValues[I];
-        if TPlatform.StartsWith(LValue, '\#') then
+        if TStringUtilities.StartsWith(LValue, '\#') then
         begin
           // Skip '\' at position 1, copy rest of string
           LValue := System.Copy(LValue, 2, System.Length(LValue) - 1);

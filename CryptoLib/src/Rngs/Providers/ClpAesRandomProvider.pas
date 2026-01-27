@@ -31,7 +31,7 @@ uses
   ClpIBufferedCipher,
   ClpIBufferedBlockCipher,
   ClpBufferedBlockCipher,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpOSRandomProvider,
   ClpIRandomSourceProvider,
   ClpCryptoLibTypes;
@@ -201,7 +201,7 @@ begin
   FReseedAfterBytes := AReseedAfterBytes;
   ValidateAESRNGSeedLength(FAESRNGSeedLength);
   DoSeed(LAESRNGSeed);
-  TArrayUtils.ZeroFill(LAESRNGSeed); // clear key from memory
+  TArrayUtilities.Fill<Byte>(LAESRNGSeed, 0, System.Length(LAESRNGSeed), Byte(0)); // clear key from memory
 end;
 
 constructor TAesRandomProvider.Create(AAesRngSeedLength, AReseedAfterBytes: Int32);
@@ -211,7 +211,7 @@ begin
   System.SetLength(LSeed, AAesRngSeedLength);
   GetRawEntropy(LSeed); // pure entropy from OS
   Create(LSeed, AReseedAfterBytes);
-  TArrayUtils.ZeroFill(LSeed); // clear seed from memory
+  TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
 end;
 
 destructor TAesRandomProvider.Destroy;
@@ -236,7 +236,7 @@ begin
     System.SetLength(LSeed, FAESRNGSeedLength);
     GetRawEntropy(LSeed); // pure entropy from OS
     DoSeed(LSeed);
-    TArrayUtils.ZeroFill(LSeed); // clear seed from memory
+    TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
   end;
 
   LDatum := 0;
@@ -270,7 +270,7 @@ procedure TAesRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
 begin
   repeat
     GetBytes(AData);
-  until (TArrayUtils.NoZeroes(AData));
+  until (TArrayUtilities.NoZeroes(AData));
 end;
 
 function TAesRandomProvider.GetIsAvailable: Boolean;

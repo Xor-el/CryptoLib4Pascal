@@ -28,7 +28,7 @@ uses
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -817,7 +817,7 @@ begin
 
   end;
 
-  TArrayUtils.ZeroFill(keyBytes);
+  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
 end;
 
 { TSpeckUInt64LegacyEngine }
@@ -984,7 +984,7 @@ begin
 
   end;
 
-  TArrayUtils.ZeroFill(keyBytes);
+  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
 end;
 
 { TSpeck32LegacyEngine }
@@ -1007,7 +1007,7 @@ begin
   keyBytesSize := System.Length(keyBytes);
   if (keyBytesSize <> 8) then
   begin
-    TArrayUtils.ZeroFill(keyBytes);
+    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck32LegacyInvalidKeySize, [keyBytesSize * 8]);
   end;
@@ -1033,7 +1033,7 @@ begin
   keyBytesSize := System.Length(keyBytes);
   if not(keyBytesSize in [9, 12]) then
   begin
-    TArrayUtils.ZeroFill(keyBytes);
+    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck48LegacyInvalidKeySize, [keyBytesSize * 8]);
   end;
@@ -1059,7 +1059,7 @@ begin
   keyBytesSize := System.Length(keyBytes);
   if not(keyBytesSize in [12, 16]) then
   begin
-    TArrayUtils.ZeroFill(keyBytes);
+    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck64LegacyInvalidKeySize, [keyBytesSize * 8]);
   end;
@@ -1085,7 +1085,7 @@ begin
   keyBytesSize := System.Length(keyBytes);
   if not(keyBytesSize in [12, 18]) then
   begin
-    TArrayUtils.ZeroFill(keyBytes);
+    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck96LegacyInvalidKeySize, [keyBytesSize * 8]);
   end;
@@ -1111,7 +1111,7 @@ begin
   keyBytesSize := System.Length(keyBytes);
   if not(keyBytesSize in [16, 24, 32]) then
   begin
-    TArrayUtils.ZeroFill(keyBytes);
+    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt
       (@SSpeck128LegacyInvalidKeySize, [keyBytesSize * 8]);
   end;

@@ -15,30 +15,33 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpPlatform;
+unit ClpStringUtilities;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  SysUtils;
+  SysUtils,
+  StrUtils,
+  ClpBits,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Platform utility class with static methods.
+  /// String utility class with static methods.
   /// </summary>
-  TPlatform = class sealed(TObject)
+  TStringUtilities = class sealed(TObject)
   public
     /// <summary>
-    /// Get the type name of an object.
+    /// Get hash code for a string.
     /// </summary>
-    class function GetTypeName(AObj: TObject): String; overload; static;
-    class function GetTypeName(AClass: TClass): String; overload; static;
+    class function GetStringHashCode(const AInput: string): Int32; static;
     /// <summary>
-    /// Get an environment variable value.
+    /// Split a string by delimiter into an array.
     /// </summary>
-    class function GetEnvironmentVariable(const AVariable: String): String; static;
+    class function SplitString(const AInput: string; ADelimiter: Char)
+      : TCryptoLibStringArray; static;
     /// <summary>
     /// Compare two strings ignoring case.
     /// </summary>
@@ -105,59 +108,85 @@ type
     /// If ACount is less than or equal to 0, returns an empty string.
     /// </summary>
     class function Substring(const AStr: String; AStartIndex: Int32; ACount: Int32): String; overload; static;
-    /// <summary>
-    /// Check if the current process is 64-bit.
-    /// </summary>
-    class function Is64BitProcess: Boolean; static;
   end;
 
 implementation
 
-{ TPlatform }
+{ TStringUtilities }
 
-class function TPlatform.GetTypeName(AObj: TObject): String;
+class function TStringUtilities.GetStringHashCode(const AInput: string): Int32;
+var
+  LLowPoint, LHighPoint: Int32;
+  LResult: UInt32;
 begin
-  if AObj = nil then
-    Result := 'nil'
-  else
-    Result := AObj.ClassName;
+  LResult := 0;
+
+  LLowPoint := 1;
+  LHighPoint := System.Length(AInput);
+
+  while LLowPoint <= LHighPoint do
+  begin
+    LResult := TBits.RotateLeft32(LResult, 5);
+    LResult := LResult xor UInt32(AInput[LLowPoint]);
+    System.Inc(LLowPoint);
+  end;
+  Result := Int32(LResult);
 end;
 
-class function TPlatform.GetTypeName(AClass: TClass): String;
+class function TStringUtilities.SplitString(const AInput: string; ADelimiter: Char)
+  : TCryptoLibStringArray;
+var
+  LPosStart, LPosDel, LSplitPoints, I, LLowPoint, LHighPoint, LLen: Int32;
 begin
-  if AClass = nil then
-    Result := 'nil'
-  else
-    Result := AClass.ClassName;
-end;
+  Result := nil;
+  if AInput <> '' then
+  begin
+    { Determine the length of the resulting array }
+    LLowPoint := 1;
+    LHighPoint := System.Length(AInput);
 
-class function TPlatform.GetEnvironmentVariable(const AVariable: String): String;
-begin
-  try
-    Result := SysUtils.GetEnvironmentVariable(AVariable);
-  except
-    // We don't have the required permission to read this environment variable,
-    // which is fine, just act as if it's not set
-    Result := '';
+    LSplitPoints := 0;
+    for I := LLowPoint to LHighPoint do
+    begin
+      if (ADelimiter = AInput[I]) then
+        System.Inc(LSplitPoints);
+    end;
+
+    System.SetLength(Result, LSplitPoints + 1);
+
+    { Split the string and fill the resulting array }
+
+    I := 0;
+    LLen := System.Length(ADelimiter);
+    LPosStart := 1;
+    LPosDel := System.Pos(ADelimiter, AInput);
+    while LPosDel > 0 do
+    begin
+      Result[I] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
+      LPosStart := LPosDel + LLen;
+      LPosDel := PosEx(ADelimiter, AInput, LPosStart);
+      System.Inc(I);
+    end;
+    Result[I] := System.Copy(AInput, LPosStart, System.Length(AInput));
   end;
 end;
 
-class function TPlatform.EqualsIgnoreCase(const A, B: String): Boolean;
+class function TStringUtilities.EqualsIgnoreCase(const A, B: String): Boolean;
 begin
   Result := SameText(A, B);
 end;
 
-class function TPlatform.Trim(const AStr: String): String;
+class function TStringUtilities.Trim(const AStr: String): String;
 begin
   Result := SysUtils.Trim(AStr);
 end;
 
-class function TPlatform.StartsWith(const ASource: String; const APrefix: String): Boolean;
+class function TStringUtilities.StartsWith(const ASource: String; const APrefix: String): Boolean;
 begin
   Result := StartsWith(ASource, APrefix, False);
 end;
 
-class function TPlatform.StartsWith(const ASource, APrefix: String; AIgnoreCase: Boolean): Boolean;
+class function TStringUtilities.StartsWith(const ASource, APrefix: String; AIgnoreCase: Boolean): Boolean;
 var
   LPrefixLen, LSourceLen: Int32;
   LSubStr: String;
@@ -176,22 +205,22 @@ begin
     Result := (LSubStr = APrefix);
 end;
 
-class function TPlatform.ToLowerInvariant(const AStr: String): String;
+class function TStringUtilities.ToLowerInvariant(const AStr: String): String;
 begin
   Result := LowerCase(AStr);
 end;
 
-class function TPlatform.ToUpperInvariant(const AStr: String): String;
+class function TStringUtilities.ToUpperInvariant(const AStr: String): String;
 begin
   Result := UpperCase(AStr);
 end;
 
-class function TPlatform.IndexOf(const ASource: String; AValue: Char): Int32;
+class function TStringUtilities.IndexOf(const ASource: String; AValue: Char): Int32;
 begin
   Result := System.Pos(AValue, ASource);
 end;
 
-class function TPlatform.IndexOf(const ASource: String; AValue: Char; AStartIndex: Int32): Int32;
+class function TStringUtilities.IndexOf(const ASource: String; AValue: Char; AStartIndex: Int32): Int32;
 var
   LPos: Int32;
   LSubStr: String;
@@ -212,12 +241,12 @@ begin
     Result := 0;
 end;
 
-class function TPlatform.IndexOf(const ASource: String; const AValue: String): Int32;
+class function TStringUtilities.IndexOf(const ASource: String; const AValue: String): Int32;
 begin
   Result := System.Pos(AValue, ASource);
 end;
 
-class function TPlatform.IndexOf(const ASource: String; const AValue: String; AStartIndex: Int32): Int32;
+class function TStringUtilities.IndexOf(const ASource: String; const AValue: String; AStartIndex: Int32): Int32;
 var
   LPos: Int32;
   LSubStr: String;
@@ -238,12 +267,12 @@ begin
     Result := 0;
 end;
 
-class function TPlatform.EndsWith(const ASource: String; const ASuffix: String): Boolean;
+class function TStringUtilities.EndsWith(const ASource: String; const ASuffix: String): Boolean;
 begin
   Result := EndsWith(ASource, ASuffix, False);
 end;
 
-class function TPlatform.EndsWith(const ASource: String; const ASuffix: String; AIgnoreCase: Boolean): Boolean;
+class function TStringUtilities.EndsWith(const ASource: String; const ASuffix: String; AIgnoreCase: Boolean): Boolean;
 var
   LSourceLen, LSuffixLen: Int32;
   LSubStr: String;
@@ -262,7 +291,7 @@ begin
     Result := (LSubStr = ASuffix);
 end;
 
-class function TPlatform.LastIndexOf(const ASource: String; const AValue: String): Int32;
+class function TStringUtilities.LastIndexOf(const ASource: String; const AValue: String): Int32;
 var
   I, LSourceLen, LValueLen: Int32;
   LSubStr: String;
@@ -290,7 +319,7 @@ begin
   Result := 0;  // Not found
 end;
 
-class function TPlatform.Substring(const AStr: String; AStartIndex: Int32): String;
+class function TStringUtilities.Substring(const AStr: String; AStartIndex: Int32): String;
 var
   LLen: Int32;
 begin
@@ -298,7 +327,7 @@ begin
   Result := Substring(AStr, AStartIndex, LLen - AStartIndex + 1);
 end;
 
-class function TPlatform.Substring(const AStr: String; AStartIndex: Int32;
+class function TStringUtilities.Substring(const AStr: String; AStartIndex: Int32;
   ACount: Int32): String;
 var
   LLen: Int32;
@@ -321,12 +350,6 @@ begin
   if AStartIndex + LActualCount - 1 > LLen then
     LActualCount := LLen - AStartIndex + 1;
   Result := System.Copy(AStr, AStartIndex, LActualCount);
-end;
-
-class function TPlatform.Is64BitProcess: Boolean;
-begin
-  // Check if SizeOf(Pointer) is 8 bytes (64-bit) or 4 bytes (32-bit)
-  Result := SizeOf(Pointer) = 8;
 end;
 
 end.

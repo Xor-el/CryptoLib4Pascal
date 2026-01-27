@@ -17,7 +17,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpEncoders,
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 type
 
@@ -61,17 +61,17 @@ end;
 function TCryptoLibAlgorithmTestCase.Prepend(const data: TBytes;
   b: Byte): TBytes;
 begin
-  result := TArrayUtils.Prepend(data, b);
+  result := TArrayUtilities.Prepend<Byte>(data, b);
 end;
 
 procedure TCryptoLibAlgorithmTestCase.ZeroFill(const data: TBytes);
 begin
-  TArrayUtils.ZeroFill(data);
+  TArrayUtilities.Fill<Byte>(data, 0, System.Length(data), Byte(0));
 end;
 
 function TCryptoLibAlgorithmTestCase.AreEqual(const A, b: TBytes): Boolean;
 begin
-  result := TArrayUtils.AreEqual(A, b);
+  result := TArrayUtilities.AreEqual<Byte>(A, b);
 end;
 
 end.

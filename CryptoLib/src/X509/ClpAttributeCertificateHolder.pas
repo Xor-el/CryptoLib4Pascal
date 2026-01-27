@@ -31,7 +31,7 @@ uses
   ClpX509Asn1Objects,
   ClpX509Utilities,
   ClpDigestUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
@@ -376,7 +376,7 @@ begin
         LDigest.BlockUpdate(LData, 0, System.Length(LData));
         LComputed := TDigestUtilities.DoFinal(LDigest);
         LExpected := GetObjectDigest;
-        if TArrayUtils.ConstantTimeAreEqual(LComputed, LExpected) then
+        if TArrayUtilities.FixedTimeEquals(LComputed, LExpected) then
           Result := True;
       end;
     end;

@@ -26,7 +26,7 @@ uses
   ClpIX509Extension,
   ClpBigInteger,
   ClpCryptoLibTypes,
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 type
   // Forward declarations

@@ -50,7 +50,7 @@ uses
   ClpRosstandartObjectIdentifiers,
   ClpRsaKeyPairGenerator,
   ClpSecObjectIdentifiers,
-  ClpStringUtils,
+  ClpStringUtilities,
   ClpX25519KeyPairGenerator,
   ClpX9ObjectIdentifiers;
 
@@ -378,7 +378,7 @@ begin
     Result := TRsaKeyPairGenerator.Create() as IRsaKeyPairGenerator;
     Exit;
   end;
-  if TStringUtils.BeginsWith(LCanonicalName, 'EC', True) then
+  if TStringUtilities.StartsWith(LCanonicalName, 'EC', True) then
   begin
     Result := TECKeyPairGenerator.Create(LCanonicalName) as IECKeyPairGenerator;
     Exit;

@@ -34,7 +34,7 @@ uses
   ClpIAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpIPkcsAsn1Objects,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

@@ -28,7 +28,7 @@ uses
   Generics.Collections,
   ClpNat,
   ClpMod,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpIPreCompCallback,
   ClpCryptoLibTypes,
   ClpBigInteger,
@@ -1591,7 +1591,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SIncorrectRepresentation);
   end;
 
-  if ((aF2m.m <> bF2m.m) or (not TArrayUtils.AreEqual(aF2m.ks, bF2m.ks))) then
+  if ((aF2m.m <> bF2m.m) or (not TArrayUtilities.AreEqual<Int32>(aF2m.ks, bF2m.ks))) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidFieldElements);
   end;
@@ -1678,7 +1678,7 @@ begin
     Exit;
   end;
   result := ((m = other.m) and (Representation = other.Representation) and
-    TArrayUtils.AreEqual(ks, other.ks) and (x.Equals(other.x)));
+    TArrayUtilities.AreEqual<Int32>(ks, other.ks) and (x.Equals(other.x)));
 end;
 
 function TF2mFieldElement.GetBitLength: Int32;
@@ -1699,7 +1699,7 @@ end;
 function TF2mFieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := Fx.GetHashCode() xor Fm xor TArrayUtils.GetArrayHashCode(FKs);
+  result := Fx.GetHashCode() xor Fm xor TArrayUtilities.GetArrayHashCode(FKs);
 end;
 
 function TF2mFieldElement.GetIsOne: Boolean;

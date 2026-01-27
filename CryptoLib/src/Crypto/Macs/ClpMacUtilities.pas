@@ -39,7 +39,8 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
   ClpHMac,
-  ClpPlatform;
+  ClpStringUtilities,
+  ClpPlatformUtilities;
 
 resourcestring
   SOidNil = 'OID Cannot be Nil';
@@ -150,15 +151,15 @@ var
 begin
   Result := nil;
   LMechanism := AMechanism;
-  if TPlatform.StartsWith(LMechanism, 'PBEWITH') then
-    LMechanism := TPlatform.Substring(LMechanism, System.Length('PBEWITH') + 1);
+  if TStringUtilities.StartsWith(LMechanism, 'PBEWITH') then
+    LMechanism := TStringUtilities.Substring(LMechanism, System.Length('PBEWITH') + 1);
 
-  if TPlatform.StartsWith(LMechanism, 'HMAC') then
+  if TStringUtilities.StartsWith(LMechanism, 'HMAC') then
   begin
-    if TPlatform.StartsWith(LMechanism, 'HMAC-') or TPlatform.StartsWith(LMechanism, 'HMAC/') then
-      LDigestName := TPlatform.Substring(LMechanism, 6)
+    if TStringUtilities.StartsWith(LMechanism, 'HMAC-') or TStringUtilities.StartsWith(LMechanism, 'HMAC/') then
+      LDigestName := TStringUtilities.Substring(LMechanism, 6)
     else
-      LDigestName := TPlatform.Substring(LMechanism, 5);
+      LDigestName := TStringUtilities.Substring(LMechanism, 5);
     if LDigestName = 'SHA512-224' then
       LDigestName := 'SHA-512/224'
     else if LDigestName = 'SHA512-256' then

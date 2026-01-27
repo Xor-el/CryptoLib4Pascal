@@ -25,7 +25,7 @@ uses
   ClpIVerifier,
   ClpISigner,
   ClpCryptoLibTypes,
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 type
   /// <summary>
@@ -63,7 +63,7 @@ function TDefaultVerifierResult.IsVerified(const ASource: TCryptoLibByteArray; A
 var
   LSignature: TCryptoLibByteArray;
 begin
-  LSignature := TArrayUtils.CopyOfRange(ASource, AOff, AOff + ALength);
+  LSignature := TArrayUtilities.CopyOfRange<Byte>(ASource, AOff, AOff + ALength);
   Result := FSigner.VerifySignature(LSignature);
 end;
 

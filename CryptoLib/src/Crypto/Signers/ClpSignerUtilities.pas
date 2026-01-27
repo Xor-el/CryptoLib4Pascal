@@ -76,9 +76,9 @@ uses
   ClpPkcs1Encoding,
   ClpIPkcs1Encoding,
   ClpPkcsObjectIdentifiers,
-  ClpStringUtils,
+  ClpStringUtilities,
   ClpCryptoLibTypes,
-  ClpPlatform,
+  ClpPlatformUtilities,
   ClpPkcsAsn1Objects,
   ClpX509Asn1Objects;
 
@@ -779,7 +779,7 @@ begin
 
   LMechanism := GetMechanism(AAlgorithm);
   if LMechanism = '' then
-    LMechanism := TPlatform.ToUpperInvariant(AAlgorithm);
+    LMechanism := TStringUtilities.ToUpperInvariant(AAlgorithm);
 
   LSigner := GetSignerForMechanism(LMechanism);
   if LSigner <> nil then
@@ -830,9 +830,9 @@ begin
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withRSAandMGF1') then
+  if TStringUtilities.EndsWith(AMechanism, 'withRSAandMGF1') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     Result := GetPssX509Parameters(LDigestName);
     Exit;
   end;
@@ -872,7 +872,7 @@ begin
   Result := nil;
 
   // EdDSA algorithms
-  if TPlatform.StartsWith(AMechanism, 'Ed') then
+  if TStringUtilities.StartsWith(AMechanism, 'Ed') then
   begin
     if AMechanism = 'Ed25519' then
     begin
@@ -912,69 +912,69 @@ begin
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withRSA') then
+  if TStringUtilities.EndsWith(AMechanism, 'withRSA') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     LDigest := TDigestUtilities.GetDigest(LDigestName);
     Result := TRsaDigestSigner.Create(LDigest);
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withRSAandMGF1') then
+  if TStringUtilities.EndsWith(AMechanism, 'withRSAandMGF1') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     LDigest := TDigestUtilities.GetDigest(LDigestName);
     Result := TPssSigner.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine, LDigest);
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withDSA') then
+  if TStringUtilities.EndsWith(AMechanism, 'withDSA') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     LDigest := TDigestUtilities.GetDigest(LDigestName);
     Result := TDsaDigestSigner.Create(TDsaSigner.Create() as IDsaSigner, LDigest);
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withECDSA') then
+  if TStringUtilities.EndsWith(AMechanism, 'withECDSA') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     LDigest := TDigestUtilities.GetDigest(LDigestName);
     Result := TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner, LDigest);
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withCVC-ECDSA') or TPlatform.EndsWith(AMechanism, 'withPLAIN-ECDSA') then
+  if TStringUtilities.EndsWith(AMechanism, 'withCVC-ECDSA') or TStringUtilities.EndsWith(AMechanism, 'withPLAIN-ECDSA') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     LDigest := TDigestUtilities.GetDigest(LDigestName);
     Result := TDsaDigestSigner.Create(TECDsaSigner.Create() as IECDsaSigner, LDigest, TPlainDsaEncoding.Instance);
     Exit;
   end;
 
-  if TPlatform.EndsWith(AMechanism, 'withECNR') then
+  if TStringUtilities.EndsWith(AMechanism, 'withECNR') then
   begin
-    LDigestName := TPlatform.Substring(AMechanism, 1, TPlatform.LastIndexOf(AMechanism, 'with') - 1);
+    LDigestName := TStringUtilities.Substring(AMechanism, 1, TStringUtilities.LastIndexOf(AMechanism, 'with') - 1);
     LDigest := TDigestUtilities.GetDigest(LDigestName);
     Result := TDsaDigestSigner.Create(TECNRSigner.Create() as IECNRSigner, LDigest);
     Exit;
   end;
 
   // X9.31 section
-  if TPlatform.EndsWith(AMechanism, '/X9.31') then
+  if TStringUtilities.EndsWith(AMechanism, '/X9.31') then
   begin
-    LX931 := TPlatform.Substring(AMechanism, 1, System.Length(AMechanism) - System.Length('/X9.31'));
-    LWithPos := TPlatform.IndexOf(LX931, 'WITH');
+    LX931 := TStringUtilities.Substring(AMechanism, 1, System.Length(AMechanism) - System.Length('/X9.31'));
+    LWithPos := TStringUtilities.IndexOf(LX931, 'WITH');
     if LWithPos > 0 then
     begin
       LEndPos := LWithPos + System.Length('WITH');
 
-      LCipherName := TPlatform.Substring(LX931, LEndPos, System.Length(LX931) - LEndPos + 1);
+      LCipherName := TStringUtilities.Substring(LX931, LEndPos, System.Length(LX931) - LEndPos + 1);
       if LCipherName = 'RSA' then
       begin
         LCipher := TRsaBlindedEngine.Create();
 
-        LDigestName := TPlatform.Substring(LX931, 1, LWithPos - 1);
+        LDigestName := TStringUtilities.Substring(LX931, 1, LWithPos - 1);
         LDigest := TDigestUtilities.GetDigest(LDigestName);
 
         Result := TX931Signer.Create(LCipher, LDigest);
@@ -1009,7 +1009,7 @@ begin
 
   LMechanism := GetMechanism(AAlgorithm);
   if LMechanism = '' then
-    LMechanism := TPlatform.ToUpperInvariant(AAlgorithm);
+    LMechanism := TStringUtilities.ToUpperInvariant(AAlgorithm);
 
   Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom);
 end;

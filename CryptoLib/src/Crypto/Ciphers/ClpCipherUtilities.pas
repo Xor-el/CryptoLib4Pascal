@@ -38,7 +38,7 @@ uses
   ClpIStreamCipher,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
-  ClpStringUtils,
+  ClpStringUtilities,
   ClpPaddingModes,
   ClpIPaddingModes,
   ClpBlockCipherModes,
@@ -262,7 +262,7 @@ var
   LPadding: IBlockCipherPadding;
 begin
   Result := nil;
-  LParts := TStringUtils.SplitString(AMechanism, '/');
+  LParts := TStringUtilities.SplitString(AMechanism, '/');
   if System.Length(LParts) < 1 then
     Exit;
 

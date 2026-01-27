@@ -35,7 +35,7 @@ uses
   ClpKdfParameters,
   ClpIKdfParameters,
   ClpIESEngine,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpBigInteger,
   ClpBigIntegers,
   ClpCryptoLibTypes;
@@ -141,7 +141,7 @@ begin
 
   T2 := Fmac.DoFinal();
 
-  if (not TArrayUtils.ConstantTimeAreEqual(T1, T2)) then
+  if not TArrayUtilities.FixedTimeEquals(T1, T2) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidMAC);
   end;
@@ -281,7 +281,7 @@ begin
         end;
 
         encLength := (inLen - (bIn.Size - bIn.Position));
-        FV := TArrayUtils.CopyOfRange(&in, inOff + SECURE_HEAD_SIZE,
+        FV := TArrayUtilities.CopyOfRange<Byte>(&in, inOff + SECURE_HEAD_SIZE,
           inOff + encLength);
 
       finally
@@ -313,7 +313,7 @@ begin
     end;
 
   finally
-    TArrayUtils.ZeroFill(BigZ);
+    TArrayUtilities.Fill<Byte>(BigZ, 0, System.Length(BigZ), Byte(0));
   end;
 end;
 

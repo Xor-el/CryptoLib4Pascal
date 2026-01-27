@@ -50,7 +50,7 @@ uses
   ClpRfc5280Asn1Utilities,
   ClpIX509Extension,
   ClpCryptoLibTypes,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpEncoders,
   ClpIPAddressUtilities;
 
@@ -384,7 +384,7 @@ end;
 
 function TX509Certificate.GetSigAlgParams: TCryptoLibByteArray;
 begin
-  Result := TArrayUtils.Clone(FSigAlgParams);
+  Result := System.Copy(FSigAlgParams);
 end;
 
 function TX509Certificate.GetSignatureAlgorithm: IAlgorithmIdentifier;
@@ -404,7 +404,7 @@ end;
 
 function TX509Certificate.GetKeyUsage: TCryptoLibBooleanArray;
 begin
-  Result := TArrayUtils.Clone<Boolean>(FKeyUsage);
+  Result := System.Copy(FKeyUsage);
 end;
 
 function TX509Certificate.GetExtendedKeyUsage: TCryptoLibGenericArray<IDerObjectIdentifier>;
@@ -622,7 +622,7 @@ end;
 
 function TX509Certificate.GetEncoded: TCryptoLibByteArray;
 begin
-  Result := TArrayUtils.Clone(GetCachedEncoding().GetEncoded());
+  Result := System.Copy(GetCachedEncoding().GetEncoded());
 end;
 
 function TX509Certificate.GetCachedEncoding: ICachedEncoding;
@@ -695,7 +695,7 @@ begin
   LThatEncoding := LThat.GetCachedEncoding().GetEncoding();
 
   if (LThisEncoding <> nil) and (LThatEncoding <> nil) then
-    Result := TArrayUtils.AreEqual(LThisEncoding, LThatEncoding)
+    Result := TArrayUtilities.AreEqual<Byte>(LThisEncoding, LThatEncoding)
   else
     Result := False;
 end;
@@ -707,7 +707,7 @@ begin
   if not FHashValueSet then
   begin
     LEncoding := GetCachedEncoding().GetEncoding();
-    FHashValue := TArrayUtils.GetArrayHashCode(LEncoding);
+    FHashValue := TArrayUtilities.GetArrayHashCode(LEncoding);
     FHashValueSet := True;
   end;
   Result := FHashValue;
@@ -737,13 +737,13 @@ begin
 
     LSig := GetSignature();
     LLen := System.Math.Min(20, System.Length(LSig));
-    LBuf.Append('            Signature: ').AppendLine(THex.Encode(TArrayUtils.CopyOfRange(LSig, 0, LLen)));
+    LBuf.Append('            Signature: ').AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LLen)));
 
     I := 20;
     while I < System.Length(LSig) do
     begin
       LLen := Math.Min(20, System.Length(LSig) - I);
-      LBuf.Append('                       ').AppendLine(THex.Encode(TArrayUtils.CopyOfRange(LSig, I, I + LLen)));
+      LBuf.Append('                       ').AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LLen)));
       System.Inc(I, 20);
     end;
 

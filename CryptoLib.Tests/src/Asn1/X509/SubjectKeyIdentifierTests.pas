@@ -34,7 +34,7 @@ uses
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
   ClpX509ExtensionUtilities,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

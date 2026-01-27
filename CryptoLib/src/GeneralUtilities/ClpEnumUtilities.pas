@@ -25,7 +25,8 @@ uses
   SysUtils,
   TypInfo,
   ClpDateTimeUtilities,
-  ClpPlatform,
+  ClpPlatformUtilities,
+  ClpStringUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -137,7 +138,7 @@ begin
     Exit;
   end;
   // Only parse single named constants: non-empty, first char a letter, no comma
-  if (System.Length(S) = 0) or (TPlatform.IndexOf(S, ',') > 0) then
+  if (System.Length(S) = 0) or (TStringUtilities.IndexOf(S, ',') > 0) then
   begin
     Result := False;
     Exit;

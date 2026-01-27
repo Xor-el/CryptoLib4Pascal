@@ -33,7 +33,7 @@ uses
   ClpIEd25519,
   ClpX25519Field,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -889,7 +889,7 @@ var
   U, V: TCryptoLibInt32Array;
   x_0: Int32;
 begin
-  py := TArrayUtils.CopyOfRange(p, pOff, pOff + PointBytes);
+  py := TArrayUtilities.CopyOfRange<Byte>(p, pOff, pOff + PointBytes);
   if (not CheckPointVar(py)) then
   begin
     result := false;
@@ -1190,8 +1190,8 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
   end;
 
-  r := TArrayUtils.CopyOfRange(sig, sigOff, sigOff + PointBytes);
-  s := TArrayUtils.CopyOfRange(sig, sigOff + PointBytes,
+  r := TArrayUtilities.CopyOfRange<Byte>(sig, sigOff, sigOff + PointBytes);
+  s := TArrayUtilities.CopyOfRange<Byte>(sig, sigOff + PointBytes,
     sigOff + SignatureSize);
 
   if (not CheckPointVar(r)) then
@@ -1239,7 +1239,7 @@ begin
   EncodePoint(pR, check, 0);
 
   result := (EncodePoint(pR, check, 0) <> 0) and
-    (TArrayUtils.ConstantTimeAreEqual(check, r));
+    (TArrayUtilities.FixedTimeEquals(check, r));
 end;
 
 class procedure TEd25519.PointAddPrecomp(var p: TPointPrecomp;

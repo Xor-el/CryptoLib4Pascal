@@ -33,7 +33,7 @@ uses
 {$ENDIF FPC}
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

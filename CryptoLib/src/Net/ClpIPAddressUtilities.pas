@@ -23,7 +23,8 @@ interface
 
 uses
   SysUtils,
-  ClpPlatform;
+  ClpStringUtilities,
+  ClpPlatformUtilities;
 
 type
   /// <summary>
@@ -97,8 +98,8 @@ begin
   LPos := 1; // 1-based position
   for LOctetIndex := 0 to 2 do
   begin
-    // TPlatform.IndexOf returns 1-based index (0 if not found)
-    LEnd := TPlatform.IndexOf(AAddress, '.', LPos);
+    // TStringUtilities.IndexOf returns 1-based index (0 if not found)
+    LEnd := TStringUtilities.IndexOf(AAddress, '.', LPos);
     if LEnd = 0 then
     begin
       Result := False;
@@ -124,7 +125,7 @@ var
   LIndex: Int32;
   LBefore, LAfter: String;
 begin
-  LIndex := TPlatform.IndexOf(AAddress, '/');
+  LIndex := TStringUtilities.IndexOf(AAddress, '/');
   if LIndex = 0 then
   begin
     Result := False;
@@ -165,7 +166,7 @@ begin
   LPos := 1; // 1-based position
   while LPos <= System.Length(LTemp) do
   begin
-    LEnd := TPlatform.IndexOf(LTemp, ':', LPos);
+    LEnd := TStringUtilities.IndexOf(LTemp, ':', LPos);
     if LEnd = 0 then
       Break;
 
@@ -181,7 +182,7 @@ begin
       LValue := System.Copy(LTemp, LPos, LEnd - LPos);
 
       // Check if this is the last segment and contains IPv4 notation
-      if (LEnd = System.Length(LTemp)) and (TPlatform.IndexOf(LValue, '.') > 0) then
+      if (LEnd = System.Length(LTemp)) and (TStringUtilities.IndexOf(LValue, '.') > 0) then
       begin
         // Add an extra one as address covers 2 words
         System.Inc(LSegmentCount);
@@ -227,7 +228,7 @@ var
   LIndex: Int32;
   LBefore, LAfter: String;
 begin
-  LIndex := TPlatform.IndexOf(AAddress, '/');
+  LIndex := TStringUtilities.IndexOf(AAddress, '/');
   if LIndex = 0 then
   begin
     Result := False;

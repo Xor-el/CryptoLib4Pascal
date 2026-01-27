@@ -104,7 +104,7 @@ type
 implementation
 
 uses
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 { TWindowsRandomProvider }
 
@@ -298,7 +298,7 @@ procedure TWindowsRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArra
 begin
   repeat
     GetBytes(AData);
-  until (TArrayUtils.NoZeroes(AData));
+  until (TArrayUtilities.NoZeroes(AData));
 end;
 
 function TWindowsRandomProvider.GetIsAvailable: Boolean;

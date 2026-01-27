@@ -53,7 +53,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -215,7 +215,7 @@ begin
   engine.Init(False, privParams);
   decrypted := engine.ProcessBlock(encrypted, 0, System.Length(encrypted));
 
-  CheckTrue(TArrayUtils.AreEqual(input, decrypted), 'RSA round-trip failed');
+  CheckTrue(TArrayUtilities.AreEqual<Byte>(input, decrypted), 'RSA round-trip failed');
 end;
 
 procedure TTestRSA.DoTestPkcs1Encoding;
@@ -241,7 +241,7 @@ begin
   engine.Init(False, privParams);
   decrypted := engine.ProcessBlock(encrypted, 0, System.Length(encrypted));
 
-  CheckTrue(TArrayUtils.AreEqual(input, decrypted), 'PKCS1 round-trip failed');
+  CheckTrue(TArrayUtilities.AreEqual<Byte>(input, decrypted), 'PKCS1 round-trip failed');
 end;
 
 procedure TTestRSA.DoTestOaepEncoding;
@@ -267,7 +267,7 @@ begin
   engine.Init(False, privParams);
   decrypted := engine.ProcessBlock(encrypted, 0, System.Length(encrypted));
 
-  CheckTrue(TArrayUtils.AreEqual(input, decrypted), 'OAEP round-trip failed');
+  CheckTrue(TArrayUtilities.AreEqual<Byte>(input, decrypted), 'OAEP round-trip failed');
 end;
 
 procedure TTestRSA.DoTestKeyGeneration;
@@ -308,7 +308,7 @@ begin
   engine.Init(False, privKey);
   decrypted := engine.ProcessBlock(encrypted, 0, System.Length(encrypted));
 
-  CheckTrue(TArrayUtils.AreEqual(input, decrypted), 'Generated key round-trip failed');
+  CheckTrue(TArrayUtilities.AreEqual<Byte>(input, decrypted), 'Generated key round-trip failed');
 end;
 
 procedure TTestRSA.DoTestRsaSignature;

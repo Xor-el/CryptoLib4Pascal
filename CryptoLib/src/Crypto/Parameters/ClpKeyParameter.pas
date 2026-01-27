@@ -24,7 +24,7 @@ interface
 uses
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -67,7 +67,7 @@ end;
 
 procedure TKeyParameter.Clear;
 begin
-  TArrayUtils.ZeroFill(Fkey);
+  TArrayUtilities.Fill<Byte>(Fkey, 0, System.Length(Fkey), Byte(0));
 end;
 
 constructor TKeyParameter.Create(const key: TCryptoLibByteArray;

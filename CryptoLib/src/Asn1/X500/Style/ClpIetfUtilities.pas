@@ -27,7 +27,8 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpCryptoLibTypes,
-  ClpPlatform,
+  ClpStringUtilities,
+  ClpPlatformUtilities,
   ClpEncoders;
 
 type
@@ -115,9 +116,9 @@ begin
     Exit;
   end;
 
-  if (TPlatform.IndexOf(AElt, '\') = 0) and (TPlatform.IndexOf(AElt, '"') = 0) then
+  if (TStringUtilities.IndexOf(AElt, '\') = 0) and (TStringUtilities.IndexOf(AElt, '"') = 0) then
   begin
-    Result := TPlatform.Trim(AElt);
+    Result := TStringUtilities.Trim(AElt);
     Exit;
   end;
 
@@ -287,14 +288,14 @@ var
   LStr: IAsn1String;
   LStart, LEnd: Int32;
 begin
-  LV := TPlatform.Trim(TPlatform.ToLowerInvariant(AStr));
+  LV := TStringUtilities.Trim(TStringUtilities.ToLowerInvariant(AStr));
 
   if (System.Length(LV) > 0) and (LV[1] = '#') then
   begin
     LObj := DecodeObject(LV);
     if Supports(LObj, IAsn1String, LStr) then
     begin
-      LV := TPlatform.Trim(TPlatform.ToLowerInvariant(LStr.GetString()));
+      LV := TStringUtilities.Trim(TStringUtilities.ToLowerInvariant(LStr.GetString()));
     end;
   end;
 

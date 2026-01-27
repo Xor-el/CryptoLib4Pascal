@@ -24,7 +24,7 @@ interface
 uses
   ClpBits,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -942,7 +942,7 @@ end;
 
 class procedure TX25519Field.Zero(const z: TCryptoLibInt32Array);
 begin
-  TArrayUtils.Fill(z, 0, Size, Int32(0));
+  TArrayUtilities.Fill<Int32>(z, 0, Size, Int32(0));
 end;
 
 end.

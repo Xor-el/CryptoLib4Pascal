@@ -29,7 +29,7 @@ uses
   Generics.Collections,
   ClpISecureRandom,
   ClpIRandom,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -3866,7 +3866,7 @@ begin
 
   if (xyCmp = 0) then
   begin
-    TArrayUtils.Fill(x, xStart, System.length(x), Int32(0));
+    TArrayUtilities.Fill<Int32>(x, xStart, System.Length(x), Int32(0));
   end;
 
   Result := x;
@@ -4881,7 +4881,7 @@ begin
   if (xyCmp = 0) then
   begin
     AddMagnitudes(Count, One.Fmagnitude);
-    TArrayUtils.Fill(x, xStart, System.length(x), Int32(0));
+    TArrayUtilities.Fill<Int32>(x, xStart, System.Length(x), Int32(0));
   end;
 
   Result := Count;

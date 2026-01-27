@@ -26,7 +26,7 @@ uses
   ClpSalsa20Engine,
   ClpIXSalsa20Engine,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -80,8 +80,8 @@ begin
 
   if (System.Length(keyBytes) <> 32) then
   begin
-    TArrayUtils.ZeroFill(keyBytes);
-    TArrayUtils.ZeroFill(ivBytes);
+    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
       [AlgorithmName]);
   end;
@@ -114,8 +114,8 @@ begin
     PCardinal(FEngineState), 6 * System.SizeOf(UInt32),
     2 * System.SizeOf(UInt32));
 
-  TArrayUtils.ZeroFill(keyBytes);
-  TArrayUtils.ZeroFill(ivBytes);
+  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));
 end;
 
 end.

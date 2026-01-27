@@ -33,18 +33,13 @@ type
   TCollectionUtilities = class sealed(TObject)
   public
     /// <summary>
-    /// Map an array or collection using a function.
-    /// </summary>
-    class function Map<T, TResult>(const ATs: TCryptoLibGenericArray<T>;
-      const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>; static;
-    /// <summary>
     /// Convert a collection to an array.
     /// </summary>
     class function ToArray<T>(const AC: TList<T>): TCryptoLibGenericArray<T>; static;
     /// <summary>
-    /// Convert a collection to a string representation using a converter function.
+    /// Convert a list to a string representation using a converter function.
     /// </summary>
-    class function ToString<T>(const AC: TCryptoLibGenericArray<T>;
+    class function ToString<T>(const AC: TList<T>;
       const AConverter: TFunc<T, String>): String; reintroduce; overload; static;
     /// <summary>
     /// Create a proxy array from an enumerable collection (like TDictionary.Keys).
@@ -64,19 +59,6 @@ implementation
 
 { TCollectionUtilities }
 
-class function TCollectionUtilities.Map<T, TResult>(const ATs: TCryptoLibGenericArray<T>;
-  const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>;
-var
-  LCount, I: Int32;
-begin
-  LCount := System.Length(ATs);
-  System.SetLength(Result, LCount);
-  for I := 0 to LCount - 1 do
-  begin
-    Result[I] := AFunc(ATs[I]);
-  end;
-end;
-
 class function TCollectionUtilities.ToArray<T>(const AC: TList<T>): TCryptoLibGenericArray<T>;
 var
   LCount, I: Int32;
@@ -89,32 +71,31 @@ begin
   end;
 end;
 
-class function TCollectionUtilities.ToString<T>(const AC: TCryptoLibGenericArray<T>;
+class function TCollectionUtilities.ToString<T>(const AC: TList<T>;
   const AConverter: TFunc<T, String>): String;
 var
-  LCount, I: Int32;
-  SB: TStringBuilder;
+  I, LCount: Int32;
+  LSB: TStringBuilder;
 begin
-  LCount := System.Length(AC);
+  LCount := AC.Count;
   if LCount = 0 then
   begin
     Result := '[]';
     Exit;
   end;
-
-  SB := TStringBuilder.Create;
+  LSB := TStringBuilder.Create;
   try
-    SB.Append('[');
-    SB.Append(AConverter(AC[0]));
+    LSB.Append('[');
+    LSB.Append(AConverter(AC[0]));
     for I := 1 to LCount - 1 do
     begin
-      SB.Append(', ');
-      SB.Append(AConverter(AC[I]));
+      LSB.Append(', ');
+      LSB.Append(AConverter(AC[I]));
     end;
-    SB.Append(']');
-    Result := SB.ToString();
+    LSB.Append(']');
+    Result := LSB.ToString;
   finally
-    SB.Free;
+    LSB.Free;
   end;
 end;
 

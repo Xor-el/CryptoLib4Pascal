@@ -48,7 +48,7 @@ uses
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -320,12 +320,12 @@ begin
 
   if FDigestAlgID = nil then
   begin
-    Result := TArrayUtils.ConstantTimeAreEqual(LSig, CheckDerEncoded(LHash));
+    Result := TArrayUtilities.FixedTimeEquals(LSig, CheckDerEncoded(LHash));
     Exit;
   end;
 
   LExpected := DerEncode(FDigestAlgID, LHash);
-  if TArrayUtils.ConstantTimeAreEqual(LSig, LExpected) then
+  if TArrayUtilities.FixedTimeEquals(LSig, LExpected) then
   begin
     Result := True;
     Exit;
@@ -335,7 +335,7 @@ begin
   if TryGetAltAlgID(FDigestAlgID, LAltAlgID) then
   begin
     LExpected := DerEncode(LAltAlgID, LHash);
-    if TArrayUtils.ConstantTimeAreEqual(LSig, LExpected) then
+    if TArrayUtilities.FixedTimeEquals(LSig, LExpected) then
     begin
       Result := True;
       Exit;

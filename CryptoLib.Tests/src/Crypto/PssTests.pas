@@ -55,7 +55,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -291,7 +291,7 @@ begin
   eng.BlockUpdate(msg, 0, System.Length(msg));
   s := eng.GenerateSignature();
 
-  CheckTrue(TArrayUtils.AreEqual(s, sig),
+  CheckTrue(TArrayUtilities.AreEqual<Byte>(s, sig),
     Format('Test %d: PSS signature generation failed', [id]));
 
   eng.Init(False, pub);

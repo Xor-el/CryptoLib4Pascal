@@ -93,7 +93,7 @@ type
 implementation
 
 uses
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 { TSolarisRandomProvider }
 
@@ -257,7 +257,7 @@ procedure TSolarisRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArra
 begin
   repeat
     GetBytes(AData);
-  until (TArrayUtils.NoZeroes(AData));
+  until (TArrayUtilities.NoZeroes(AData));
 end;
 
 function TSolarisRandomProvider.GetIsAvailable: Boolean;

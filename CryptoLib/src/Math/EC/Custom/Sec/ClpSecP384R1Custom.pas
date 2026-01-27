@@ -29,7 +29,7 @@ uses
   ClpNat384,
   ClpECC,
   ClpBigInteger,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpECCurveConstants,
   ClpIECC,
@@ -677,7 +677,7 @@ end;
 function TSecP384R1FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := Q.GetHashCode() xor TArrayUtils.GetArrayHashCode(Fx, 0, 12);
+  result := Q.GetHashCode() xor TArrayUtilities.GetArrayHashCode(Fx, 0, 12);
 end;
 
 function TSecP384R1FieldElement.GetIsOne: Boolean;

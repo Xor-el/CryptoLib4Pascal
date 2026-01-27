@@ -28,7 +28,7 @@ uses
   ClpBufferedBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpIBlockCipherModes;
 
@@ -789,7 +789,7 @@ end;
 procedure TCbcBlockCipher.Reset;
 begin
   System.Move(FIV[0], FcbcV[0], System.Length(FIV));
-  TArrayUtils.ZeroFill(FcbcNextV);
+  TArrayUtilities.Fill<Byte>(FcbcNextV, 0, System.Length(FcbcNextV), Byte(0));
 
   Fcipher.Reset();
 end;
@@ -1005,7 +1005,7 @@ begin
     diff := System.Length(FIV) - System.Length(iv);
 
     System.Move(iv[0], FIV[diff], System.Length(iv) * System.SizeOf(Byte));
-    TArrayUtils.Fill(FIV, 0, diff, Byte(0));
+    TArrayUtilities.Fill<Byte>(FIV, 0, diff, Byte(0));
 
     Lparameters := ivParam.parameters;
   end;
@@ -1179,7 +1179,7 @@ end;
 
 procedure TSicBlockCipher.Reset;
 begin
-  TArrayUtils.ZeroFill(Fcounter);
+  TArrayUtilities.Fill<Byte>(Fcounter, 0, System.Length(Fcounter), Byte(0));
   System.Move(FIV[0], Fcounter[0], System.Length(FIV) * System.SizeOf(Byte));
 
   Fcipher.Reset();

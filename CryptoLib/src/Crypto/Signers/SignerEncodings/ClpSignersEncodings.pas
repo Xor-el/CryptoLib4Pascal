@@ -27,7 +27,7 @@ uses
   ClpBigInteger,
   ClpISignersEncodings,
   ClpIAsn1Objects,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpBigIntegers,
   ClpCryptoLibTypes;
 
@@ -145,7 +145,7 @@ begin
     LR := DecodeValue(AN, LSeq, 0);
     LS := DecodeValue(AN, LSeq, 1);
     LExpectedEncoding := Encode(AN, LR, LS);
-    if (TArrayUtils.AreEqual(LExpectedEncoding, AEncoding)) then
+    if TArrayUtilities.AreEqual<Byte>(LExpectedEncoding, AEncoding) then
     begin
       Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
       Exit;
@@ -240,7 +240,7 @@ begin
   LBsOff := Max(0, System.Length(LBs) - ALength);
   LBsLen := System.Length(LBs) - LBsOff;
   LPos := ALength - LBsLen;
-  TArrayUtils.Fill(ABuf, AOff, AOff + LPos, Byte(0));
+  TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPos, Byte(0));
   System.Move(LBs[LBsOff], ABuf[AOff + LPos], LBsLen * System.SizeOf(Byte));
 end;
 
@@ -308,7 +308,7 @@ begin
   LBsOff := Max(0, System.Length(LBs) - ALength);
   LBsLen := System.Length(LBs) - LBsOff;
   LPos := ALength - LBsLen;
-  TArrayUtils.Fill(ABuf, AOff, AOff + LPos, Byte(0));
+  TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPos, Byte(0));
   System.Move(LBs[LBsOff], ABuf[AOff + LPos], LBsLen * System.SizeOf(Byte));
 end;
 

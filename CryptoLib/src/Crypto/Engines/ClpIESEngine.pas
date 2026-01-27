@@ -43,7 +43,7 @@ uses
   ClpIKdfParameters,
   ClpIIESWithCipherParameters,
   ClpConverters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpBigInteger,
   ClpBigIntegers,
   ClpCryptoLibTypes;
@@ -358,7 +358,7 @@ begin
 
   // Verify the MAC.
   endPoint := inOff + inLen;
-  T1 := TArrayUtils.CopyOfRange(in_enc, endPoint - Fmac.GetMacSize, endPoint);
+  T1 := TArrayUtilities.CopyOfRange<Byte>(in_enc, endPoint - Fmac.GetMacSize, endPoint);
   System.SetLength(T2, System.Length(T1));
 
   Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
@@ -368,7 +368,7 @@ begin
 
   T2 := SimilarMacCompute(p2, L2);
 
-  if (not TArrayUtils.ConstantTimeAreEqual(T1, T2)) then
+  if not TArrayUtilities.FixedTimeEquals(T1, T2) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidMAC);
   end;
@@ -382,7 +382,7 @@ begin
   begin
     len := len + Fcipher.DoFinal(M, len);
 
-    Result := TArrayUtils.CopyOfRange(M, 0, len);
+    Result := TArrayUtilities.CopyOfRange<Byte>(M, 0, len);
     Exit;
   end;
 end;
@@ -591,7 +591,7 @@ begin
         end;
 
         encLength := (inLen - (bIn.Size - bIn.Position));
-        FV := TArrayUtils.CopyOfRange(&in, inOff, inOff + encLength);
+        FV := TArrayUtilities.CopyOfRange<Byte>(&in, inOff, inOff + encLength);
 
       finally
         bIn.Free;
@@ -607,8 +607,8 @@ begin
   // Create input to KDF.
   if (System.Length(FV) <> 0) then
   begin
-    VZ := TArrayUtils.Concatenate(FV, BigZ);
-    TArrayUtils.ZeroFill(BigZ);
+    VZ := TArrayUtilities.Concatenate<Byte>(FV, BigZ);
+    TArrayUtilities.Fill<Byte>(BigZ, 0, System.Length(BigZ), Byte(0));
     BigZ := VZ;
   end;
 
@@ -629,7 +629,7 @@ begin
     end;
 
   finally
-    TArrayUtils.ZeroFill(BigZ);
+    TArrayUtilities.Fill<Byte>(BigZ, 0, System.Length(BigZ), Byte(0));
   end;
 end;
 

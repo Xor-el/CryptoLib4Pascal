@@ -23,7 +23,7 @@ interface
 
 uses
   ClpIDHValidationParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -80,7 +80,7 @@ begin
     result := True;
     Exit;
   end;
-  result := (counter = other.counter) and TArrayUtils.AreEqual(seed,
+  result := (counter = other.counter) and TArrayUtilities.AreEqual<Byte>(seed,
     other.seed);
 end;
 
@@ -92,7 +92,7 @@ end;
 function TDHValidationParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := counter xor TArrayUtils.GetArrayHashCode(seed);
+  result := counter xor TArrayUtilities.GetArrayHashCode(seed);
 end;
 
 function TDHValidationParameters.GetSeed: TCryptoLibByteArray;

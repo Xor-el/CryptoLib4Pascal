@@ -31,7 +31,7 @@ uses
   ClpAsn1Streams,
   ClpEncoders,
   ClpCryptoLibTypes,
-  ClpArrayUtils;
+  ClpArrayUtilities;
 
 type
   /// <summary>
@@ -353,7 +353,7 @@ begin
     LChunk := Math.Min(LRemaining, SampleSize);
 
     ABuf.Append(LIndent);
-    ABuf.Append(THex.Encode(TArrayUtils.CopyOfRange(ABytes, I, I + LChunk)));
+    ABuf.Append(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(ABytes, I, I + LChunk)));
     J := LChunk;
     while J < SampleSize do
     begin
