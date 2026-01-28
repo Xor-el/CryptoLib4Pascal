@@ -23,13 +23,13 @@ interface
 
 uses
   SysUtils,
+  ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpOiwObjectIdentifiers,
   ClpDigestUtilities,
-  ClpBigInteger,
   ClpCryptoLibTypes,
   ClpArrayUtilities;
 

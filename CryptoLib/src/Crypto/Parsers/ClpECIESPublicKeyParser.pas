@@ -23,13 +23,11 @@ interface
 
 uses
   Classes,
-  ClpAsn1Objects,
   ClpIECDomainParameters,
   ClpECPublicKeyParameters,
   ClpIKeyParser,
   ClpIAsymmetricKeyParameter,
   ClpIECIESPublicKeyParser,
-  ClpStreams,
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 

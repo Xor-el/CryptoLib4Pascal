@@ -23,7 +23,6 @@ interface
 
 uses
   SysUtils,
-  DateUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -33,7 +32,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpDateTimeUtilities,
-  ClpCryptoLibTypes,
+
   CryptoLibTestBase;
 
 type

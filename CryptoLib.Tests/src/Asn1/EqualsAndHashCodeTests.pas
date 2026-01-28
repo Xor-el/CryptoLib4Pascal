@@ -34,10 +34,10 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpAsn1Streams,
   ClpConverters,
   ClpCryptoLibTypes,
-  ClpDateTimeUtilities,
   CryptoLibTestBase;
 
 type

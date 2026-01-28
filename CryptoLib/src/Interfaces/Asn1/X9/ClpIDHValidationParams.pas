@@ -22,6 +22,7 @@ unit ClpIDHValidationParams;
 interface
 
 uses
+  ClpIAsn1Core,
   ClpIAsn1Objects;
 
 type

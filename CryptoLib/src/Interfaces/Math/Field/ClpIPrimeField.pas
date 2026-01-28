@@ -22,7 +22,6 @@ unit ClpIPrimeField;
 interface
 
 uses
-  ClpBigInteger,
   ClpIFiniteField;
 
 type

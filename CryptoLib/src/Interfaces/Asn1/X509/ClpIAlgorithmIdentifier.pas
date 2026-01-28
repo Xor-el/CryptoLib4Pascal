@@ -22,6 +22,7 @@ unit ClpIAlgorithmIdentifier;
 interface
 
 uses
+  ClpIAsn1Core,
   ClpIAsn1Objects;
 
 type

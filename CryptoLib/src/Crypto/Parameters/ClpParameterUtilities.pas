@@ -28,8 +28,8 @@ uses
   ClpCollectionUtilities,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
-  ClpCryptoProObjectIdentifiers,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpIParametersWithRandom,
@@ -37,7 +37,6 @@ uses
   ClpKeyParameter,
   ClpMiscObjectIdentifiers,
   ClpNistObjectIdentifiers,
-  ClpOiwObjectIdentifiers,
   ClpParametersWithRandom,
   ClpParametersWithIV,
   ClpSecureRandom;

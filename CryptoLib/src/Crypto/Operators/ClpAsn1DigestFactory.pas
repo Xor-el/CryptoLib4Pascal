@@ -30,8 +30,7 @@ uses
   ClpX509Asn1Objects,
   ClpIAsn1Objects,
   ClpDigestUtilities,
-  ClpDefaultDigestCalculator,
-  ClpCryptoLibTypes;
+  ClpDefaultDigestCalculator;
 
 type
   /// <summary>

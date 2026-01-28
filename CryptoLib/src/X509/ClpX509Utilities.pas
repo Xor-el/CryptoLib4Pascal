@@ -28,6 +28,8 @@ uses
   ClpBitUtilities,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Certificate,
@@ -44,13 +46,11 @@ uses
   ClpCryptoProObjectIdentifiers,
   ClpDigestUtilities,
   ClpDefaultDigestCalculator,
-  ClpDefaultDigestResult,
   ClpIDigest,
   ClpIVerifier,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
-  ClpArrayUtilities,
-  ClpCollectionUtilities;
+  ClpArrayUtilities;
 
 type
   /// <summary>

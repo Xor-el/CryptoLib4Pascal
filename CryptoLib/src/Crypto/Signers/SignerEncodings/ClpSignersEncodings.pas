@@ -25,6 +25,7 @@ uses
   Math,
   ClpAsn1Objects,
   ClpBigInteger,
+  ClpAsn1Core,
   ClpISignersEncodings,
   ClpIAsn1Objects,
   ClpArrayUtilities,

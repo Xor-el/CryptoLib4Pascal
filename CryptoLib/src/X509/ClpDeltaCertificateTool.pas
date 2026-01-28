@@ -24,6 +24,8 @@ interface
 uses
   SysUtils,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIX509Asn1Objects,
   ClpIX509Certificate,
   ClpIX509Extension,

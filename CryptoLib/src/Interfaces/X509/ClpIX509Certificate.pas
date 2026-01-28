@@ -22,7 +22,6 @@ unit ClpIX509Certificate;
 interface
 
 uses
-  SysUtils,
   Rtti,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,

@@ -31,8 +31,6 @@ uses
   ClpIEd25519PublicKeyParameters,
   ClpEd25519PublicKeyParameters,
   ClpArrayUtilities,
-  ClpAsn1Objects,
-  ClpStreams,
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 

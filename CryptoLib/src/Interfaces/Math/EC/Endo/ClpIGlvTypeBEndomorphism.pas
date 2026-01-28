@@ -22,7 +22,6 @@ unit ClpIGlvTypeBEndomorphism;
 interface
 
 uses
-  ClpBigInteger,
   ClpIGlvEndomorphism;
 
 type

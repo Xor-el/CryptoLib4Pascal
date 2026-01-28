@@ -23,8 +23,7 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpIBufferedBlockCipher,
-  ClpCryptoLibTypes;
+  ClpIBufferedBlockCipher;
 
 type
   ICbcBlockCipher = interface(IBlockCipher)

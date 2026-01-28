@@ -25,7 +25,12 @@ uses
   Classes,
   Math,
   SysUtils,
+  ClpIAsn1Core,
+  ClpIAsn1Encodings,
   ClpIAsn1Objects,
+  ClpIAsn1Parsers,
+  ClpAsn1Encodings,
+  ClpAsn1Tags,
   ClpBitUtilities,
   ClpPlatformUtilities,
   ClpCryptoLibTypes,
@@ -485,7 +490,9 @@ type
 implementation
 
 uses
-  ClpAsn1Objects;
+  ClpAsn1Objects,
+  ClpAsn1Parsers,
+  ClpAsn1Core;
 
 { TAsn1LimitedInputStream }
 

@@ -35,13 +35,10 @@ uses
   ClpPemObjects,
   ClpIPemObjects,
   ClpAsn1Objects,
-  ClpIAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpIPkcsAsn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
-  ClpConverters,
-  ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

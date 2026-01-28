@@ -22,7 +22,6 @@ unit ClpEacObjectIdentifiers;
 interface
 
 uses
-  ClpAsn1Objects,
   ClpBsiObjectIdentifiers,
   ClpIAsn1Objects;
 

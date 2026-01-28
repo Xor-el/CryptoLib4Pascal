@@ -23,10 +23,10 @@ interface
 
 uses
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpIX509Extension,
   ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpArrayUtilities;
+  ClpCryptoLibTypes;
 
 type
   // Forward declarations

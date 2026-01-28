@@ -25,13 +25,11 @@ uses
   SysUtils,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIX9Asn1Objects,
   ClpIX9ECParameters,
-  ClpX9ObjectIdentifiers,
-  ClpX9ECC,
   ClpX9ECParameters,
-  ClpBigInteger,
-  ClpBigIntegers,
   ClpCryptoLibTypes,
   ClpAsn1Utilities;
 

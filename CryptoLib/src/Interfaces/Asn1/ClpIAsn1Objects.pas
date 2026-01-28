@@ -24,245 +24,16 @@ interface
 uses
   Classes,
   ClpCryptoLibTypes,
-  ClpBigInteger;
+  ClpBigInteger,
+  ClpIAsn1Core,
+  ClpIAsn1Encodings,
+  ClpIAsn1Parsers;
 
 type
-  IAsn1Object = interface;
   IAsn1Sequence = interface;
   IAsn1UniversalType = interface;
   IAsn1Set = interface;
 
-  /// <summary>
-  /// Interface for ASN.1 encoding operations.
-  /// </summary>
-  IAsn1Encoding = interface(IInterface)
-    ['{C4D5E6F7-8901-2345-6789-ABCDEF012345}']
-
-    /// <summary>
-    /// Encode to the given stream (must be a TAsn1OutputStream).
-    /// </summary>
-    procedure Encode(const AOut: TStream);
-
-    /// <summary>
-    /// Get the length of the encoded data.
-    /// </summary>
-    function GetLength(): Int32;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 convertible objects.
-  /// </summary>
-  IAsn1Convertible = interface(IInterface)
-    ['{13104D9E-9DF1-4CCE-B48C-1ACC2AC362B1}']
-
-    function ToAsn1Object(): IAsn1Object;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 encodable objects.
-  /// </summary>
-  IAsn1Encodable = interface(IAsn1Convertible)
-    ['{E6F78901-2345-6789-ABCD-EF0123456789}']
-
-    procedure EncodeTo(const AOutput: TStream); overload;
-    procedure EncodeTo(const AOutput: TStream; const AEncoding: String); overload;
-    function GetEncoded(): TCryptoLibByteArray; overload;
-    function GetEncoded(const AEncoding: String): TCryptoLibByteArray; overload;
-    function GetDerEncoded(): TCryptoLibByteArray;
-    function Equals(const AObj: IAsn1Convertible): Boolean; overload;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
-  end;
-
-  /// <summary>
-  /// Interface for DER encoding.
-  /// </summary>
-  IDerEncoding = interface(IAsn1Encoding)
-    ['{3456789A-BCDE-F012-3456-789ABCDEF012}']
-
-    /// <summary>
-    /// Get the tag class.
-    /// </summary>
-    function GetTagClass(): Int32;
-    /// <summary>
-    /// Get the tag number.
-    /// </summary>
-    function GetTagNo(): Int32;
-    /// <summary>
-    /// Compare this encoding with another.
-    /// </summary>
-    function CompareTo(const AOther: IDerEncoding): Int32;
-
-    property TagClass: Int32 read GetTagClass;
-    property TagNo: Int32 read GetTagNo;
-  end;
-
-  /// <summary>
-  /// Interface for constructed DER encoding.
-  /// </summary>
-  IConstructedDerEncoding = interface(IDerEncoding)
-    ['{E1F2A3B4-C5D6-E7F8-9A0B-1C2D3E4F5A6B}']
-
-    /// <summary>
-    /// Get the contents length.
-    /// </summary>
-    function GetContentsLength(): Int32;
-    /// <summary>
-    /// Get the contents elements.
-    /// </summary>
-    function GetContentsElements(): TCryptoLibGenericArray<IDerEncoding>;
-    /// <summary>
-    /// Compare length and contents with another encoding.
-    /// </summary>
-    function CompareLengthAndContents(const AOther: IDerEncoding): Int32;
-
-    property ContentsLength: Int32 read GetContentsLength;
-    property ContentsElements: TCryptoLibGenericArray<IDerEncoding> read GetContentsElements;
-  end;
-
-  /// <summary>
-  /// Interface for tagged DER encoding.
-  /// </summary>
-  ITaggedDerEncoding = interface(IDerEncoding)
-    ['{F2A3B4C5-D6E7-F8A9-0B1C-2D3E4F5A6B7C}']
-
-    /// <summary>
-    /// Get the contents length.
-    /// </summary>
-    function GetContentsLength(): Int32;
-    /// <summary>
-    /// Get the contents element.
-    /// </summary>
-    function GetContentsElement(): IDerEncoding;
-    /// <summary>
-    /// Compare length and contents with another encoding.
-    /// </summary>
-    function CompareLengthAndContents(const AOther: IDerEncoding): Int32;
-
-    property ContentsLength: Int32 read GetContentsLength;
-    property ContentsElement: IDerEncoding read GetContentsElement;
-  end;
-
-  /// <summary>
-  /// Interface for primitive DER encoding.
-  /// </summary>
-  IPrimitiveDerEncoding = interface(IDerEncoding)
-    ['{A3B4C5D6-E7F8-A9B0-1C2D-3E4F5A6B7C8D}']
-
-    /// <summary>
-    /// Get the contents octets.
-    /// </summary>
-    function GetContentsOctets(): TCryptoLibByteArray;
-    /// <summary>
-    /// Compare length and contents with another encoding.
-    /// </summary>
-    function CompareLengthAndContents(const AOther: IDerEncoding): Int32;
-
-    property ContentsOctets: TCryptoLibByteArray read GetContentsOctets;
-  end;
-
-  /// <summary>
-  /// Interface for primitive DER encoding with suffix.
-  /// </summary>
-  IPrimitiveDerEncodingSuffixed = interface(IPrimitiveDerEncoding)
-    ['{B4C5D6E7-F8A9-B0C1-2D3E-4F5A6B7C8D9E}']
-
-    /// <summary>
-    /// Get the contents suffix.
-    /// </summary>
-    function GetContentsSuffix(): Byte;
-    /// <summary>
-    /// Compare length and contents with another encoding.
-    /// </summary>
-    function CompareLengthAndContents(const AOther: IDerEncoding): Int32;
-
-    property ContentsSuffix: Byte read GetContentsSuffix;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 objects.
-  /// </summary>
-  IAsn1Object = interface(IAsn1Encodable)
-    ['{F7890123-4567-89AB-CDEF-0123456789AB}']
-
-    procedure EncodeTo(const AOutput: TStream); overload;
-    procedure EncodeTo(const AOutput: TStream; const AEncoding: String); overload;
-    function GetEncoded(const AEncoding: String; APreAlloc, APostAlloc: Int32): TCryptoLibByteArray; overload;
-    function Equals(const AOther: IAsn1Object): Boolean; overload;
-    function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
-    function Asn1GetHashCode(): Int32;
-    function CallAsn1Equals(const AObj: IAsn1Object): Boolean;
-    function CallAsn1GetHashCode(): Int32;
-    /// <summary>
-    /// Get string representation of the object.
-    /// </summary>
-    function ToString(): String;
-    /// <summary>
-    /// Get encoding for the specified encoding type.
-    /// </summary>
-    function GetEncoding(AEncoding: Int32): IAsn1Encoding;
-    /// <summary>
-    /// Get encoding for the specified encoding type with implicit tagging.
-    /// </summary>
-    function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
-    /// <summary>
-    /// Get DER encoding.
-    /// </summary>
-    function GetEncodingDer(): IDerEncoding;
-    /// <summary>
-    /// Get DER encoding with implicit tagging.
-    /// </summary>
-    function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 bit string parsers.
-  /// </summary>
-  IAsn1BitStringParser = interface(IAsn1Convertible)
-    ['{A2B3C4D5-E6F7-8901-2345-6789ABCDEF01}']
-
-    /// <summary>
-    /// Return a stream representing the contents of the BIT STRING.
-    /// </summary>
-    function GetBitStream(): TStream;
-
-    /// <summary>
-    /// Return a stream representing the contents of the BIT STRING, where the content is
-    /// expected to be octet-aligned.
-    /// </summary>
-    function GetOctetStream(): TStream;
-
-    /// <summary>
-    /// Return the number of pad bits in the final byte.
-    /// </summary>
-    function GetPadBits(): Int32;
-    property PadBits: Int32 read GetPadBits;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 octet string parsers.
-  /// </summary>
-  IAsn1OctetStringParser = interface(IAsn1Convertible)
-    ['{B3C4D5E6-F789-0123-4567-89ABCDEF0123}']
-
-    /// <summary>
-    /// Return the content of the OCTET STRING as a stream.
-    /// </summary>
-    function GetOctetStream(): TStream;
-  end;
-
-  /// <summary>
-  /// Interface for BER octet string parsers.
-  /// </summary>
-  IBerOctetStringParser = interface(IAsn1OctetStringParser)
-    ['{C4D5E6F7-089A-1234-5678-9ABCDEF01234}']
-  end;
-
-  /// <summary>
-  /// Interface for BER bit string parsers.
-  /// </summary>
-  IBerBitStringParser = interface(IAsn1BitStringParser)
-    ['{D5E6F789-01AB-2345-6789-ABCDEF012345}']
-  end;
 
   /// <summary>
   /// Interface for ASN.1 octet string objects.
@@ -614,48 +385,6 @@ type
     ['{6AB7DC7E-CD61-4D34-AE15-99E036688C77}']
   end;
 
-  /// <summary>
-  /// Interface for ASN.1 tagged object parsers.
-  /// </summary>
-  IAsn1TaggedObjectParser = interface(IAsn1Convertible)
-    ['{23456789-ABCD-EF01-2345-6789ABCDEF01}']
-
-    /// <summary>
-    /// Get the tag class.
-    /// </summary>
-    function GetTagClass(): Int32;
-    /// <summary>
-    /// Get the tag number.
-    /// </summary>
-    function GetTagNo(): Int32;
-    /// <summary>
-    /// Check if this has a context tag.
-    /// </summary>
-    function HasContextTag(ATagNo: Int32): Boolean;
-    /// <summary>
-    /// Check if this has the specified tag.
-    /// </summary>
-    function HasTag(ATagClass, ATagNo: Int32): Boolean;
-    /// <summary>
-    /// Parse a base universal object.
-    /// </summary>
-    function ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible;
-    /// <summary>
-    /// Parse an explicit base object.
-    /// </summary>
-    function ParseExplicitBaseObject(): IAsn1Convertible;
-    /// <summary>
-    /// Parse an explicit base tagged object.
-    /// </summary>
-    function ParseExplicitBaseTagged(): IAsn1TaggedObjectParser;
-    /// <summary>
-    /// Parse an implicit base tagged object.
-    /// </summary>
-    function ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser;
-
-    property TagClass: Int32 read GetTagClass;
-    property TagNo: Int32 read GetTagNo;
-  end;
 
   /// <summary>
   /// Interface for ASN.1 tagged objects.
@@ -739,102 +468,7 @@ type
     ['{8BC8ED8F-DE72-5E45-BF26-AF16A7F7E8C8}']
   end;
 
-   /// <summary>
-  /// Interface for ASN.1 encodable vector.
-  /// </summary>
-  IAsn1EncodableVector = interface(IInterface)
-    ['{A78E22EB-DB67-472E-A55F-CD710BCBDBFA}']
 
-    function GetCount(): Int32;
-    function GetItem(AIndex: Int32): IAsn1Encodable;
-
-    procedure Add(const AElement: IAsn1Encodable); overload;
-    procedure Add(const AElement1, AElement2: IAsn1Encodable); overload;
-    procedure Add(const AObjs: array of IAsn1Encodable); overload;
-    procedure AddOptional(const AElement: IAsn1Encodable); overload;
-    procedure AddOptional(const AElement1, AElement2: IAsn1Encodable); overload;
-    procedure AddOptional(const AElements: array of IAsn1Encodable); overload;
-    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagNo: Int32;
-      const AObj: IAsn1Encodable); overload;
-    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
-      const AObj: IAsn1Encodable); overload;
-    procedure AddAll(const AE: TCryptoLibGenericArray<IAsn1Encodable>); overload;
-    procedure AddAll(const AOther: IAsn1EncodableVector); overload;
-
-    function CopyElements(): TCryptoLibGenericArray<IAsn1Encodable>;
-    function TakeElements(): TCryptoLibGenericArray<IAsn1Encodable>;
-
-    property Items[AIndex: Int32]: IAsn1Encodable read GetItem; default;
-    property Count: Int32 read GetCount;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 stream parsers.
-  /// </summary>
-  IAsn1StreamParser = interface(IInterface)
-    ['{D5E6F789-0123-4567-89AB-CDEF01234567}']
-
-    /// <summary>
-    /// Read the next object from the stream.
-    /// </summary>
-    function ReadObject(): IAsn1Convertible;
-    /// <summary>
-    /// Parse an object with the given universal tag number.
-    /// </summary>
-    function ParseObject(AUnivTagNo: Int32): IAsn1Convertible;
-    /// <summary>
-    /// Parse an implicit constructed indefinite-length object.
-    /// </summary>
-    function ParseImplicitConstructedIL(AUnivTagNo: Int32): IAsn1Convertible;
-    /// <summary>
-    /// Parse an implicit constructed definite-length object.
-    /// </summary>
-    function ParseImplicitConstructedDL(AUnivTagNo: Int32): IAsn1Convertible;
-    /// <summary>
-    /// Parse an implicit primitive object.
-    /// </summary>
-    function ParseImplicitPrimitive(AUnivTagNo: Int32): IAsn1Convertible;
-    /// <summary>
-    /// Parse a tagged object.
-    /// </summary>
-    function ParseTaggedObject(): IAsn1TaggedObjectParser;
-    /// <summary>
-    /// Load a tagged object with definite length.
-    /// </summary>
-    function LoadTaggedDL(ATagClass, ATagNo: Int32; AConstructed: Boolean): IAsn1Object;
-    /// <summary>
-    /// Load a tagged object with indefinite length.
-    /// </summary>
-    function LoadTaggedIL(ATagClass, ATagNo: Int32): IAsn1Object;
-    /// <summary>
-    /// Read a vector of ASN.1 objects.
-    /// </summary>
-    function ReadVector(): IAsn1EncodableVector;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 sequence parsers.
-  /// </summary>
-  IAsn1SequenceParser = interface(IAsn1Convertible)
-    ['{01234567-89AB-CDEF-0123-456789ABCDEF}']
-
-    /// <summary>
-    /// Read the next object from the sequence.
-    /// </summary>
-    function ReadObject(): IAsn1Convertible;
-  end;
-
-  /// <summary>
-  /// Interface for ASN.1 set parsers.
-  /// </summary>
-  IAsn1SetParser = interface(IAsn1Convertible)
-    ['{12345678-9ABC-DEF0-1234-56789ABCDEF0}']
-
-    /// <summary>
-    /// Read the next object from the set.
-    /// </summary>
-    function ReadObject(): IAsn1Convertible;
-  end;
 
   /// <summary>
   /// Interface for DER object identifier objects.
@@ -1192,31 +826,6 @@ type
     // marker interface
   end;
 
-  /// <summary>
-  /// Interface for DER external parsers.
-  /// </summary>
-  IDerExternalParser = interface(IAsn1Encodable)
-    ['{6BF2AB32-0307-4E49-BC4C-844ADCD884E0}']
-
-    /// <summary>
-    /// Read the next object.
-    /// </summary>
-    function ReadObject(): IAsn1Convertible;
-  end;
-
-  /// <summary>
-  /// Interface for BER tagged object parsers.
-  /// </summary>
-  IBerTaggedObjectParser = interface(IAsn1TaggedObjectParser)
-    ['{7BF3BC43-1418-5F5A-CD5D-955BEDED9951}']
-  end;
-
-  /// <summary>
-  /// Interface for DL tagged object parsers.
-  /// </summary>
-  IDLTaggedObjectParser = interface(IAsn1TaggedObjectParser)
-    ['{8CF4CD54-2529-6F6B-DE6E-A66CFEFEAA62}']
-  end;
 
   /// <summary>
   /// Interface for BER tagged objects.
@@ -1225,12 +834,6 @@ type
     ['{EE7B113E-81ED-5539-930A-73E9930A84CB}']
   end;
 
-  /// <summary>
-  /// Interface for BER sequence parsers.
-  /// </summary>
-  IBerSequenceParser = interface(IAsn1SequenceParser)
-    ['{A1AD456A-BE9F-481D-87CA-40B84C32050D}']
-  end;
 
   /// <summary>
   /// Interface for ASN.1 generators.
@@ -1286,26 +889,6 @@ type
     procedure AddObject(const AObj: IAsn1Object); overload;
   end;
 
-  /// <summary>
-  /// Interface for BER set parsers.
-  /// </summary>
-  IBerSetParser = interface(IAsn1SetParser)
-    ['{024F6BF0-6503-4452-B7A2-42D1E53D254D}']
-  end;
-
-  /// <summary>
-  /// Interface for DER sequence parsers.
-  /// </summary>
-  IDerSequenceParser = interface(IAsn1SequenceParser)
-    ['{148A0382-C536-44FC-8AE2-4836E6BE0E5C}']
-  end;
-
-  /// <summary>
-  /// Interface for DER set parsers.
-  /// </summary>
-  IDerSetParser = interface(IAsn1SetParser)
-    ['{8BA4C05B-5E75-4F2A-B5D1-DCFDF19366EE}']
-  end;
 
   /// <summary>
   /// Interface for ASN.1 types.

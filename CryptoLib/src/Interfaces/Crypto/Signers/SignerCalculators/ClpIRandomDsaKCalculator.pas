@@ -22,7 +22,6 @@ unit ClpIRandomDsaKCalculator;
 interface
 
 uses
-  ClpBigInteger,
   ClpIDsaKCalculator;
 
 type

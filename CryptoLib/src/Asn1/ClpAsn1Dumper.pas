@@ -26,7 +26,7 @@ uses
   SysUtils,
   Classes,
   ClpIAsn1Objects,
-  ClpAsn1Objects,
+  ClpIAsn1Core,
   ClpAsn1Utilities,
   ClpAsn1Streams,
   ClpEncoders,

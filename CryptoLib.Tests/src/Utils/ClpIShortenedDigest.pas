@@ -24,8 +24,7 @@ interface
 {$ENDIF FPC}
 
 uses
-  ClpIDigest,
-  ClpCryptoLibTypes;
+  ClpIDigest;
 
 type
 

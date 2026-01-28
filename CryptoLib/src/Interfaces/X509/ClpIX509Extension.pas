@@ -22,6 +22,7 @@ unit ClpIX509Extension;
 interface
 
 uses
+  ClpIAsn1Core,
   ClpIAsn1Objects;
 
 type

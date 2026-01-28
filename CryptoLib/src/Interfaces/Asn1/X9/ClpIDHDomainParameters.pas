@@ -22,6 +22,7 @@ unit ClpIDHDomainParameters;
 interface
 
 uses
+  ClpIAsn1Core,
   ClpIDHValidationParams,
   ClpIAsn1Objects;
 

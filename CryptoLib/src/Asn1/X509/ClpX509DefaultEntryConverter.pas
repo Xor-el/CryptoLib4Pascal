@@ -25,11 +25,10 @@ uses
   SysUtils,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpIX509NameEntryConverter,
   ClpX509NameEntryConverter,
   ClpX509Asn1Objects,
-  ClpX509ObjectIdentifiers,
-  ClpPkcsObjectIdentifiers,
   ClpCryptoLibTypes;
 
 type

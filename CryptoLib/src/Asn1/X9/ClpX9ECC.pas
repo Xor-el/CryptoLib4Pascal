@@ -25,6 +25,8 @@ uses
   ClpECC,
   ClpIECC,
   ClpIX9ECC,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpCryptoLibTypes,
   ClpECAlgorithms,
   ClpBigInteger,

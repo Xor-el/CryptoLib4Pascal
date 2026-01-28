@@ -33,7 +33,7 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpEncoders,
+  ClpIAsn1Core,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

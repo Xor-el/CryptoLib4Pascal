@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,

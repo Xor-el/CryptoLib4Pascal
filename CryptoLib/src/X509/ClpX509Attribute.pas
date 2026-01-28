@@ -22,6 +22,7 @@ unit ClpX509Attribute;
 interface
 
 uses
+  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,

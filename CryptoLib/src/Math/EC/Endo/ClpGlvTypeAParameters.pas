@@ -24,8 +24,7 @@ interface
 uses
   ClpBigInteger,
   ClpIGlvTypeAParameters,
-  ClpIScalarSplitParameters,
-  ClpCryptoLibTypes;
+  ClpIScalarSplitParameters;
 
 type
   TGlvTypeAParameters = class sealed(TInterfacedObject, IGlvTypeAParameters)

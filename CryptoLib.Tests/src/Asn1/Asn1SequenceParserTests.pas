@@ -35,6 +35,8 @@ uses
   ClpBigInteger,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpIAsn1Parsers,
+  ClpAsn1Parsers,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

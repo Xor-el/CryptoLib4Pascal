@@ -23,8 +23,7 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIScalarSplitParameters,
-  ClpCryptoLibTypes;
+  ClpIScalarSplitParameters;
 
 type
 

@@ -25,7 +25,6 @@ interface
 
 uses
   Classes,
-  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -34,7 +33,8 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpStreams,
+  ClpIAsn1Parsers,
+  ClpAsn1Parsers,
   ClpStreamUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

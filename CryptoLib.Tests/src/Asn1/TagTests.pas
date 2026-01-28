@@ -24,7 +24,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
 {$IFDEF FPC}
   fpcunit,
@@ -35,6 +34,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Streams,
+  ClpAsn1Tags,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBitUtilities,

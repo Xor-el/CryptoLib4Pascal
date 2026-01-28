@@ -27,6 +27,8 @@ uses
   ClpDHValidationParams,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpAsn1Utilities,
   ClpCryptoLibTypes;
 

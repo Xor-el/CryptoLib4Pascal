@@ -21,6 +21,7 @@ uses
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpIAsn1Core,
   ClpX509Attribute,
   ClpX509V2AttributeCertificate,
   ClpAttributeCertificateHolder,

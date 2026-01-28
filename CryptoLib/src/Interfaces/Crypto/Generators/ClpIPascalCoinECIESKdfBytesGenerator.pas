@@ -22,8 +22,7 @@ unit ClpIPascalCoinECIESKdfBytesGenerator;
 interface
 
 uses
-  ClpIBaseKdfBytesGenerator,
-  ClpCryptoLibTypes;
+  ClpIBaseKdfBytesGenerator;
 
 type
 

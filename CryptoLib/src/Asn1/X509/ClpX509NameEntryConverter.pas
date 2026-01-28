@@ -25,6 +25,7 @@ uses
   SysUtils,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpIX509NameEntryConverter,
   ClpEncoders,
   ClpCryptoLibTypes;

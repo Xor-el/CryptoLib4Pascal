@@ -30,6 +30,8 @@ uses
   DateUtils,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpX509ExtensionBase,
@@ -47,12 +49,10 @@ uses
   ClpAsn1VerifierFactoryProvider,
   ClpPublicKeyFactory,
   ClpBigInteger,
-  ClpRfc5280Asn1Utilities,
   ClpIX509Extension,
   ClpCryptoLibTypes,
   ClpArrayUtilities,
-  ClpEncoders,
-  ClpIPAddressUtilities;
+  ClpEncoders;
 
 type
   /// <summary>

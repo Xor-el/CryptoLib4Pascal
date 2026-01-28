@@ -22,9 +22,7 @@ unit ClpECKeyParameters;
 interface
 
 uses
-
   SysUtils,
-  ClpECGost3410NamedCurves,
   ClpIECKeyParameters,
   ClpIECDomainParameters,
   ClpIECKeyGenerationParameters,

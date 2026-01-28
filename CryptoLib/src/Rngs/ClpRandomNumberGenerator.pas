@@ -24,7 +24,6 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpOSRandomProvider,
-  ClpAesRandomProvider,
   ClpIRandomNumberGenerator,
   ClpIRandomSourceProvider;
 

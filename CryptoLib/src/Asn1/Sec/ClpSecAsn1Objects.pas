@@ -27,6 +27,8 @@ uses
   ClpBigIntegers,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpISecAsn1Objects,
   ClpCryptoLibTypes,
   ClpAsn1Utilities;

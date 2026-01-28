@@ -23,6 +23,7 @@ interface
 
 uses
   ClpIECC,
+  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpCryptoLibTypes;
 

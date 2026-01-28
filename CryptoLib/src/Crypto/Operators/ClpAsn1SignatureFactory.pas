@@ -23,7 +23,6 @@ interface
 
 uses
   ClpISignatureFactory,
-  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIAsymmetricKeyParameter,
   ClpISecureRandom,

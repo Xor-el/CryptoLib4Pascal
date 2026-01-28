@@ -25,6 +25,8 @@ uses
   ClpIDsaParameter,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpBigInteger,
   ClpCryptoLibTypes;
 

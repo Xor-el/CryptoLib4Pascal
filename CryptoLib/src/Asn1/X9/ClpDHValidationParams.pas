@@ -26,7 +26,8 @@ uses
   ClpIDHValidationParams,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpBigInteger,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpCryptoLibTypes;
 
 resourcestring

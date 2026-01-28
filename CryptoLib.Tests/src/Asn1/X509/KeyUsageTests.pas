@@ -32,7 +32,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpX509Asn1Objects,
-  ClpIX509Asn1Objects,
   CryptoLibTestBase;
 
 type

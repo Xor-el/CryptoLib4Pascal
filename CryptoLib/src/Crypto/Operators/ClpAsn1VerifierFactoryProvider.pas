@@ -25,7 +25,6 @@ uses
   SysUtils,
   ClpIVerifierFactoryProvider,
   ClpIVerifierFactory,
-  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIAsymmetricKeyParameter,
   ClpAsn1VerifierFactory,

@@ -24,7 +24,10 @@ interface
 uses
   SysUtils,
   TypInfo,
+  ClpAsn1Tags,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
+  ClpIAsn1Parsers,
   ClpPlatformUtilities,
   ClpCryptoLibTypes;
 

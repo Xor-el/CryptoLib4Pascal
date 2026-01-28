@@ -35,8 +35,8 @@ uses
   ClpIX509Asn1Objects,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpIX509Extension,
-  ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

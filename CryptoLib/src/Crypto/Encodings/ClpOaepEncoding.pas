@@ -32,8 +32,7 @@ uses
   ClpIOaepEncoding,
   ClpISecureRandom,
   ClpSecureRandom,
-  ClpCryptoLibTypes,
-  ClpConverters;
+  ClpCryptoLibTypes;
 
 resourcestring
   SInputDataTooLong = 'Input data too long';

@@ -24,7 +24,7 @@ interface
 {$ENDIF FPC}
 
 uses
-  SysUtils,
+
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -40,7 +40,6 @@ uses
   ClpIRsaEngine,
   ClpX931Signer,
   ClpDigestUtilities,
-  ClpIDigest,
   ClpISigner,
   ClpEncoders,
   ClpArrayUtilities,

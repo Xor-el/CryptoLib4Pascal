@@ -31,9 +31,7 @@ uses
   ClpIX9ECParameters,
   ClpIAsn1Objects,
   ClpIX9Asn1Objects,
-  ClpX9Asn1Objects,
-  ClpX9ECParameters,
-  ClpIECNamedDomainParameters;
+  ClpX9ECParameters;
 
 resourcestring
   SCurveNil = 'Curve Cannot be Nil';

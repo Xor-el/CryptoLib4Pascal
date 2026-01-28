@@ -24,6 +24,7 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpBigInteger,
   ClpIX9ECC,
   ClpIECC;

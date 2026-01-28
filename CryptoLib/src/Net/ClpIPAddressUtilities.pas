@@ -23,8 +23,7 @@ interface
 
 uses
   SysUtils,
-  ClpStringUtilities,
-  ClpPlatformUtilities;
+  ClpStringUtilities;
 
 type
   /// <summary>

@@ -23,6 +23,7 @@ interface
 
 uses
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpBigInteger;
 
 type

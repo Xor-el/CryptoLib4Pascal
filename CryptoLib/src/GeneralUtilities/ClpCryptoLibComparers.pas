@@ -24,8 +24,7 @@ interface
 uses
   Generics.Defaults,
   ClpIAsn1Objects,
-  ClpStringUtilities,
-  ClpPlatformUtilities;
+  ClpStringUtilities;
 
 type
   /// <summary>

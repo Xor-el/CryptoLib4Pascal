@@ -23,12 +23,12 @@ interface
 
 uses
   SysUtils,
-  Classes,
-  ClpAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpCryptoLibTypes,
   ClpStringUtilities,
-  ClpPlatformUtilities,
+
   ClpEncoders;
 
 type

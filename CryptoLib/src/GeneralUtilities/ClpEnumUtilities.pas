@@ -25,7 +25,6 @@ uses
   SysUtils,
   TypInfo,
   ClpDateTimeUtilities,
-  ClpPlatformUtilities,
   ClpStringUtilities,
   ClpCryptoLibTypes;
 

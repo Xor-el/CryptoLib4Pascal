@@ -22,7 +22,6 @@ unit ClpIECIESPublicKeyParser;
 interface
 
 uses
-  Classes,
   ClpIKeyParser;
 
 type

@@ -27,6 +27,7 @@ uses
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpIAsn1Core,
   ClpIX509Certificate,
   ClpX509Certificate,
   ClpIX509Extension,

@@ -23,10 +23,12 @@ interface
 
 uses
   SysUtils,
-  Classes,
   ClpBigInteger,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
+  ClpAsn1Tags,
   ClpIPkcsAsn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,

@@ -34,6 +34,7 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
   ClpDateTimeUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

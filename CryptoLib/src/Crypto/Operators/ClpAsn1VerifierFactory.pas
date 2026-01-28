@@ -23,7 +23,6 @@ interface
 
 uses
   ClpIVerifierFactory,
-  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIAsymmetricKeyParameter,
   ClpIVerifier,

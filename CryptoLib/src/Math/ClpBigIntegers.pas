@@ -149,9 +149,6 @@ type
 
 implementation
 
-uses
-  ClpArrayUtilities;
-
 { TBigIntegers }
 
 class constructor TBigIntegers.Create;

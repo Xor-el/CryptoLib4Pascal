@@ -22,7 +22,6 @@ unit ClpIFixedPointPreCompInfo;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpIECC,
   ClpIPreCompInfo;
 

@@ -23,7 +23,6 @@ interface
 
 uses
   ClpCryptoLibTypes,
-  ClpBigInteger,
   ClpIECC,
   ClpIECPublicKeyParameters,
   ClpIECDomainParameters,

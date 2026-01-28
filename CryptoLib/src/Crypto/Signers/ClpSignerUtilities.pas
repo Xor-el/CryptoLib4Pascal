@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIX509Asn1Objects,
   ClpCollectionUtilities,
@@ -45,8 +46,6 @@ uses
   ClpEdECObjectIdentifiers,
   ClpParameterUtilities,
   ClpIAsymmetricKeyParameter,
-  ClpEd25519,
-  ClpIEd25519,
   ClpDsaSigner,
   ClpIDsaSigner,
   ClpECDsaSigner,
@@ -62,11 +61,8 @@ uses
   ClpIAsn1Objects,
   ClpSignersEncodings,
   ClpRsaDigestSigner,
-  ClpIRsaDigestSigner,
   ClpPssSigner,
-  ClpIPssSigner,
   ClpGenericSigner,
-  ClpIGenericSigner,
   ClpX931Signer,
   ClpRsaBlindedEngine,
   ClpIRsaBlindedEngine,
@@ -75,7 +71,6 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpStringUtilities,
   ClpCryptoLibTypes,
-  ClpPlatformUtilities,
   ClpPkcsAsn1Objects,
   ClpX509Asn1Objects;
 

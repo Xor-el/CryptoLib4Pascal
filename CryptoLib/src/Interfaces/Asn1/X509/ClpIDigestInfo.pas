@@ -23,6 +23,7 @@ interface
 
 uses
   ClpIAlgorithmIdentifier,
+  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpCryptoLibTypes;
 

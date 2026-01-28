@@ -22,8 +22,8 @@ unit ClpIX9Asn1Objects;
 interface
 
 uses
-  ClpIAsn1Objects,
-  ClpBigInteger;
+  ClpIAsn1Core,
+  ClpIAsn1Objects;
 
 type
   /// <summary>

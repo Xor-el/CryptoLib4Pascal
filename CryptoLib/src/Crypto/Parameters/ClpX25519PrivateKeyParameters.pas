@@ -30,8 +30,6 @@ uses
   ClpIX25519PublicKeyParameters,
   ClpX25519PublicKeyParameters,
   ClpArrayUtilities,
-  ClpAsn1Objects,
-  ClpStreams,
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 

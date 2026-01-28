@@ -22,8 +22,7 @@ unit ClpIPbeParametersGenerator;
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpICipherParameters;
 
 type
   IPbeParametersGenerator = interface(IInterface)

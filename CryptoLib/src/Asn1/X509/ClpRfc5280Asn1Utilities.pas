@@ -22,7 +22,6 @@ unit ClpRfc5280Asn1Utilities;
 interface
 
 uses
-  SysUtils,
   ClpDateTimeUtilities,
   ClpAsn1Objects,
   ClpIAsn1Objects;

@@ -25,6 +25,8 @@ uses
   SysUtils,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIAlgorithmIdentifier,
   ClpAlgorithmIdentifier,
   ClpIDigestInfo,

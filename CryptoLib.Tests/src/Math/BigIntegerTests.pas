@@ -24,7 +24,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   Math,
   SysUtils,
 {$IFDEF FPC}

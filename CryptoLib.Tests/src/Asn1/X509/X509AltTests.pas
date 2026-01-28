@@ -38,7 +38,6 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

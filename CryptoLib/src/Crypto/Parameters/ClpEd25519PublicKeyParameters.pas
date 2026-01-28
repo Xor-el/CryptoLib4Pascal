@@ -27,8 +27,6 @@ uses
   ClpAsymmetricKeyParameter,
   ClpIEd25519PublicKeyParameters,
   ClpArrayUtilities,
-  ClpAsn1Objects,
-  ClpStreams,
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 

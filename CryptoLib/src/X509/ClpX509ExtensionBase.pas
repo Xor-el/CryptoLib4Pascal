@@ -23,8 +23,8 @@ interface
 
 uses
   SysUtils,
+  ClpIAsn1Core,
   Generics.Collections,
-  ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIX509Extension,

@@ -26,6 +26,8 @@ uses
   Generics.Collections,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIX509ExtensionsGenerator,
   ClpIX509Asn1Objects,
   ClpIX509Extension,

@@ -22,7 +22,6 @@ unit ClpIGenericPolynomialExtensionField;
 interface
 
 uses
-  ClpBigInteger,
   ClpIPolynomialExtensionField;
 
 type

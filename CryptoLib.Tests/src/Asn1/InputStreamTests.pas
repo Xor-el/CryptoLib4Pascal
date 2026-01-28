@@ -24,7 +24,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
 {$IFDEF FPC}
   fpcunit,
@@ -34,6 +33,7 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpIAsn1Core,
   ClpAsn1Streams,
   ClpEncoders,
   ClpCryptoLibTypes,

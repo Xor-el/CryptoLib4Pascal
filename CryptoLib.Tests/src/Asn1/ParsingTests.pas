@@ -24,16 +24,14 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
-  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpAsn1Objects,
-  ClpIAsn1Objects,
+  ClpIAsn1Parsers,
+  ClpAsn1Parsers,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

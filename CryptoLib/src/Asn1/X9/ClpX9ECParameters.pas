@@ -27,6 +27,8 @@ uses
   ClpBigInteger,
   ClpIPolynomialExtensionField,
   ClpIAsn1Objects,
+  ClpAsn1Core,
+  ClpIAsn1Core,
   ClpIECC,
   ClpECAlgorithms,
   ClpX9ECC,

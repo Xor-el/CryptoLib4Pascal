@@ -39,8 +39,7 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
   ClpHMac,
-  ClpStringUtilities,
-  ClpPlatformUtilities;
+  ClpStringUtilities;
 
 resourcestring
   SOidNil = 'OID Cannot be Nil';

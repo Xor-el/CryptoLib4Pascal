@@ -39,8 +39,7 @@ uses
   ClpICryptoApiRandomGenerator,
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
-  ClpISecureRandom,
-  ClpPlatformUtilities;
+  ClpISecureRandom;
 
 resourcestring
   SUnRecognisedPRNGAlgorithm = 'Unrecognised PRNG Algorithm: %s "algorithm"';
