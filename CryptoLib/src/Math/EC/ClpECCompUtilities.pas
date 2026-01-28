@@ -42,6 +42,7 @@ uses
 resourcestring
   SInvalidRange = 'Must be in the Range [2, 16], "width"';
   SInvalidRange2 = 'Must be in the Range [2, 8], "width"';
+  SInvalidBitLength = 'Invalid BitLength';
 
 type
   TWNafUtilities = class abstract(TObject)

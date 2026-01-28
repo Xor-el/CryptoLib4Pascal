@@ -58,6 +58,8 @@ type
 
   public
     class function GetInstance(AObj: TObject): IECPrivateKeyStructure; overload; static;
+    class function GetInstance(AObj: IAsn1Convertible): IECPrivateKeyStructure; overload; static;
+    class function GetInstance(AObj: TCryptoLibByteArray): IECPrivateKeyStructure; overload; static;
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): IECPrivateKeyStructure; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
@@ -108,6 +110,16 @@ begin
     Exit;
   end;
 
+  Result := TECPrivateKeyStructure.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TECPrivateKeyStructure.GetInstance(AObj: IAsn1Convertible): IECPrivateKeyStructure;
+begin
+  Result := TECPrivateKeyStructure.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TECPrivateKeyStructure.GetInstance(AObj: TCryptoLibByteArray): IECPrivateKeyStructure;
+begin
   Result := TECPrivateKeyStructure.Create(TAsn1Sequence.GetInstance(AObj));
 end;
 

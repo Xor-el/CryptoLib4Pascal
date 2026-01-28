@@ -61,6 +61,8 @@ type
     class procedure Subtract(const p, x, y, z: TCryptoLibUInt32Array);
       static; inline;
     class function GetTrailingZeroes(x: UInt32): Int32; static; inline;
+    class function Inverse32(const AD: UInt32): UInt32; static; inline;
+    class function Inverse64(const AD: UInt64): UInt64; static; inline;
 
   end;
 
@@ -101,6 +103,54 @@ begin
     System.Inc(count);
   end;
   result := count;
+end;
+
+class function TMod.Inverse32(const AD: UInt32): UInt32;
+var
+  LX: UInt32;
+begin
+{$IFDEF DEBUG}
+  System.Assert((AD and 1) = 1);
+{$ENDIF DEBUG}
+  // x = d (d.x == 1 mod 2**3)
+  LX := AD;
+  // d.x == 1 mod 2**6
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**12
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**24
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**48
+  LX := LX * (2 - AD * LX);
+{$IFDEF DEBUG}
+  System.Assert(AD * LX = 1);
+{$ENDIF DEBUG}
+  Result := LX;
+end;
+
+class function TMod.Inverse64(const AD: UInt64): UInt64;
+var
+  LX: UInt64;
+begin
+{$IFDEF DEBUG}
+  System.Assert((AD and 1) = 1);
+{$ENDIF DEBUG}
+  // x = d (d.x == 1 mod 2**3)
+  LX := AD;
+  // d.x == 1 mod 2**6
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**12
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**24
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**48
+  LX := LX * (2 - AD * LX);
+  // d.x == 1 mod 2**96
+  LX := LX * (2 - AD * LX);
+{$IFDEF DEBUG}
+  System.Assert(AD * LX = 1);
+{$ENDIF DEBUG}
+  Result := LX;
 end;
 
 class procedure TMod.InversionResult(const p: TCryptoLibUInt32Array; ac: Int32;

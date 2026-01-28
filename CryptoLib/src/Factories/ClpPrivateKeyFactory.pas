@@ -49,6 +49,7 @@ uses
   ClpPkcsAsn1Objects,
   ClpX509Asn1Objects,
   ClpECNamedCurveTable,
+  ClpECNamedDomainParameters,
   ClpIECDomainParameters,
   ClpIDsaParameters,
   ClpIDsaParameter,
@@ -151,7 +152,6 @@ begin
     Exit;
   end;
 
- (* // TODO?
   // EC keys
   if LAlgOid.Equals(TX9ObjectIdentifiers.IdECPublicKey) then
   begin
@@ -161,7 +161,7 @@ begin
     LECParams := TECDomainParameters.FromX962Parameters(LX962Params);
     Result := TECPrivateKeyParameters.Create('EC', LECPrivateKeySeq.GetKey(), LECParams);
     Exit;
-  end; *)
+  end;
 
   // TODO: Add support for other key types (DH, ElGamal, GOST, EdDSA, etc.)
   raise ENotSupportedCryptoLibException.CreateFmt('Key type with OID %s not yet supported', [LAlgOid.Id]);

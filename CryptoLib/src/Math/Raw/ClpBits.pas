@@ -150,6 +150,10 @@ type
       static; inline;
 
     class function NumberOfLeadingZeros(a_value: UInt32): Int32; static;
+
+    class function NumberOfTrailingZeros(a_value: UInt32): Int32; static;
+
+    class function PopCount(AValue: UInt32): Int32; static;
   end;
 
 implementation
@@ -389,6 +393,7 @@ begin
 {$IFDEF FPC}
   Result := BsrDWord(a_value) xor ((System.SizeOf(UInt32) * 8) - 1);
   // this also works
+    //Result := ((SizeOf(UInt32) * 8) - 1) - BsrDWord(a_value);
   // Result := ((System.SizeOf(UInt32) * 8) - 1) - BsrDWord(a_value);
 {$ELSE}
   n := 1;
@@ -417,6 +422,71 @@ begin
   end;
 
   Result := Int32(n) - Int32(a_value shr 31);
+{$ENDIF FPC}
+end;
+
+class function TBits.NumberOfTrailingZeros(a_value: UInt32): Int32;
+{$IFNDEF FPC}
+var
+  n: UInt32;
+{$ENDIF FPC}
+begin
+  if (a_value = 0) then
+  begin
+    // Same trick as leading zeros: returns 32
+    Result := ((not a_value) shr (31 - 5)) and (1 shl 5);
+    Exit;
+  end;
+
+{$IFDEF FPC}
+  // BSF = Bit Scan Forward -> index of least-significant 1 bit
+  Result := BsfDWord(a_value);
+{$ELSE}
+  n := 0;
+
+  if ((a_value and $0000FFFF) = 0) then
+  begin
+    n := n + 16;
+    a_value := a_value shr 16;
+  end;
+
+  if ((a_value and $000000FF) = 0) then
+  begin
+    n := n + 8;
+    a_value := a_value shr 8;
+  end;
+
+  if ((a_value and $0000000F) = 0) then
+  begin
+    n := n + 4;
+    a_value := a_value shr 4;
+  end;
+
+  if ((a_value and $00000003) = 0) then
+  begin
+    n := n + 2;
+    a_value := a_value shr 2;
+  end;
+
+  Result := Int32(n + (a_value and 1) xor 1);
+{$ENDIF FPC}
+end;
+
+
+class function TBits.PopCount(AValue: UInt32): Int32;
+begin
+{$IFDEF FPC}
+  Result := PopCnt(AValue);
+{$ELSE}
+  // Population count (number of set bits) using bit manipulation
+  Result := AValue;
+  Result := Result - ((Result shr 1) and UInt32($55555555));
+  Result := (Result and UInt32($33333333)) + ((Result shr 2) and UInt32($33333333));
+  Result := (Result + (Result shr 4)) and UInt32($0F0F0F0F);
+  Result := Result + (Result shr 8);
+  Result := Result + (Result shr 16);
+  Result := Result and UInt32($3F);
+  Result := Int32(Result);
 {$ENDIF FPC}
 end;
 

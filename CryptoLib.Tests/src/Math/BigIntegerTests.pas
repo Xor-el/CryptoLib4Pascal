@@ -1317,8 +1317,8 @@ begin
   CheckEquals(s, TBigInteger.Create(s, 10).ToString(10));
   CheckEquals(s, TBigInteger.Create(s, 16).ToString(16));
 
-  CheckEquals('-e4437ed6010e88286f547fa90abfe4c3',
-    TBigInteger.Create('-e4437ed6010e88286f547fa90abfe4c3', 16).ToString(16));
+  CheckEquals('-E4437ED6010E88286F547FA90ABFE4C3',
+    TBigInteger.Create('-E4437ED6010E88286F547FA90ABFE4C3', 16).ToString(16));
 
   for i := 0 to System.Pred(100) do
   begin

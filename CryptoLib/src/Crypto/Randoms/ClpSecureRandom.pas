@@ -53,17 +53,15 @@ type
   strict private
   class var
     FCounter: Int64;
-    FMaster: ISecureRandom;
+    FMasterRandom: ISecureRandom;
     FDoubleScale: Double;
     FLock: TCriticalSection;
 
-    class function GetMaster: ISecureRandom; static; inline;
+    class function GetMasterRandom: ISecureRandom; static; inline;
 
     class function NextCounterValue(): Int64; static; inline;
 
     class function CreatePrng(const ADigestName: String; AAutoSeed: Boolean): IDigestRandomGenerator; static; inline;
-
-    class property Master: ISecureRandom read GetMaster;
 
     class constructor Create(); overload;
     class destructor Destroy();
@@ -118,6 +116,8 @@ type
 
     class procedure Boot(); static;
 
+    class property MasterRandom: ISecureRandom read GetMasterRandom;
+
   end;
 
 implementation
@@ -130,9 +130,9 @@ begin
   FGenerator := AGenerator;
 end;
 
-class function TSecureRandom.GetMaster: ISecureRandom;
+class function TSecureRandom.GetMasterRandom: ISecureRandom;
 begin
-  Result := FMaster;
+  Result := FMasterRandom;
 end;
 
 class function TSecureRandom.GetNextBytes(const ASecureRandom: ISecureRandom;
@@ -311,7 +311,7 @@ begin
   begin
     LSeedLength := 2 * LDigest.GetDigestSize;
     LPrng.AddSeedMaterial(NextCounterValue());
-    LPrng.AddSeedMaterial(GetNextBytes(Master, LSeedLength));
+    LPrng.AddSeedMaterial(GetNextBytes(MasterRandom, LSeedLength));
   end;
   Result := LPrng;
 end;
@@ -322,7 +322,7 @@ begin
   begin
     FLock := TCriticalSection.Create;
     FCounter := TDateTimeUtilities.DateTimeToTicks(TTimeZone.Local.ToUniversalTime(Now));
-    FMaster := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
+    FMasterRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);
     TOSRandomProvider.Boot;
@@ -374,7 +374,7 @@ end;
 
 function TSecureRandom.GenerateSeed(ALength: Int32): TCryptoLibByteArray;
 begin
-  Result := GetNextBytes(Master, ALength);
+  Result := GetNextBytes(MasterRandom, ALength);
 end;
 
 end.

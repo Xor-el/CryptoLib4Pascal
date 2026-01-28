@@ -27,7 +27,13 @@ uses
   ClpECAlgorithms,
   ClpIECC,
   ClpCryptoLibTypes,
-  ClpIECDomainParameters;
+  ClpIECDomainParameters,
+  ClpIX9ECParameters,
+  ClpIAsn1Objects,
+  ClpIX9Asn1Objects,
+  ClpX9Asn1Objects,
+  ClpX9ECParameters,
+  ClpIECNamedDomainParameters;
 
 resourcestring
   SCurveNil = 'Curve Cannot be Nil';
@@ -38,10 +44,11 @@ resourcestring
   SQInfinity = 'Point at Infinity "Q"';
   SQPointNotOnCurve = 'Point Not on Curve "Q"';
   SScalarInvalidRange = 'Scalar is not in the Interval [1, n - 1]';
+  SImplicitlyCANotImplemented = 'implicitlyCA';
 
 type
 
-  TECDomainParameters = class sealed(TInterfacedObject, IECDomainParameters)
+  TECDomainParameters = class(TInterfacedObject, IECDomainParameters)
 
   strict private
 
@@ -63,6 +70,9 @@ type
 
     class function ValidatePublicPoint(const c: IECCurve; const q: IECPoint)
       : IECPoint; overload; static;
+
+    class function FromX9ECParameters(const AX9ECParameters: IX9ECParameters): IECDomainParameters; static;
+    class function FromX962Parameters(const AX962Parameters: IX962Parameters): IECDomainParameters; static;
 
     constructor Create(const curve: IECCurve; const g: IECPoint;
       const n: TBigInteger); overload;
@@ -90,6 +100,9 @@ type
 
 implementation
 
+uses
+  ClpECNamedDomainParameters;
+
 { TECDomainParameters }
 
 class function TECDomainParameters.ValidatePublicPoint(const c: IECCurve;
@@ -106,6 +119,30 @@ begin
   if (not(result.IsValid())) then
     raise EArgumentCryptoLibException.CreateRes(@SQPointNotOnCurve);
 
+end;
+
+class function TECDomainParameters.FromX9ECParameters(const AX9ECParameters: IX9ECParameters): IECDomainParameters;
+begin
+  Result := TECDomainParameters.Create(AX9ECParameters.Curve, AX9ECParameters.G, AX9ECParameters.N, AX9ECParameters.H, AX9ECParameters.GetSeed());
+end;
+
+class function TECDomainParameters.FromX962Parameters(const AX962Parameters: IX962Parameters): IECDomainParameters;
+var
+  LNamedCurve: IDerObjectIdentifier;
+  LX9: IX9ECParameters;
+begin
+  if AX962Parameters.IsImplicitlyCA then
+    raise ENotSupportedCryptoLibException.Create(SImplicitlyCANotImplemented);
+
+  LNamedCurve := AX962Parameters.GetNamedCurve;
+  if LNamedCurve <> nil then
+  begin
+    Result := TECNamedDomainParameters.LookupOid(LNamedCurve);
+    Exit;
+  end;
+
+  LX9 := TX9ECParameters.GetInstance(AX962Parameters.GetParameters as TObject);
+  Result := FromX9ECParameters(LX9);
 end;
 
 function TECDomainParameters.GetCurve: IECCurve;
