@@ -25,7 +25,7 @@ uses
   ClpMod,
   ClpEncoders,
   ClpNat,
-  ClpBits,
+  ClpBitUtilities,
   ClpNat256,
   ClpECC,
   ClpBigInteger,
@@ -330,34 +330,34 @@ var
 begin
   c := Int64(z[0]) + 1;
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if (c <> 0) then
   begin
     c := c + Int64(z[1]);
     z[1] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
     c := c + Int64(z[2]);
     z[2] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   c := c + (Int64(z[3]) - 1);
   z[3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if (c <> 0) then
   begin
     c := c + Int64(z[4]);
     z[4] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
     c := c + Int64(z[5]);
     z[5] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   c := c + (Int64(z[6]) - 1);
   z[6] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[7]) + 1);
   z[7] := UInt32(c);
-  // c := TBits.Asr64(c, 32);
+  // c := TBitUtilities.Asr64(c, 32);
 end;
 
 class procedure TSecP256R1Field.Boot;
@@ -429,28 +429,28 @@ begin
 
   cc := cc + (Int64(xx[0]) - t3 - t7);
   z[0] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[1]) + t1 - t4 - t6);
   z[1] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[2]) + t2 - t5);
   z[2] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[3]) + (t3 shl 1) + t7 - t6);
   z[3] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[4]) + (t4 shl 1) + xx14 - t1);
   z[4] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[5]) + (t5 shl 1) - t2);
   z[5] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[6]) + (t6 shl 1) + t7);
   z[6] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + (Int64(xx[7]) + (xx15 shl 1) + xx08 - t2 - t4);
   z[7] := UInt32(cc);
-  cc := TBits.Asr64(cc, 32);
+  cc := TBitUtilities.Asr64(cc, 32);
   cc := cc + n;
 
 {$IFDEF DEBUG}
@@ -505,34 +505,34 @@ begin
 
     cc := cc + (Int64(z[0]) + xx08);
     z[0] := UInt32(cc);
-    cc := TBits.Asr64(cc, 32);
+    cc := TBitUtilities.Asr64(cc, 32);
     if (cc <> 0) then
     begin
       cc := cc + Int64(z[1]);
       z[1] := UInt32(cc);
-      cc := TBits.Asr64(cc, 32);
+      cc := TBitUtilities.Asr64(cc, 32);
       cc := cc + Int64(z[2]);
       z[2] := UInt32(cc);
-      cc := TBits.Asr64(cc, 32);
+      cc := TBitUtilities.Asr64(cc, 32);
     end;
     cc := cc + (Int64(z[3]) - xx08);
     z[3] := UInt32(cc);
-    cc := TBits.Asr64(cc, 32);
+    cc := TBitUtilities.Asr64(cc, 32);
     if (cc <> 0) then
     begin
       cc := cc + Int64(z[4]);
       z[4] := UInt32(cc);
-      cc := TBits.Asr64(cc, 32);
+      cc := TBitUtilities.Asr64(cc, 32);
       cc := cc + Int64(z[5]);
       z[5] := UInt32(cc);
-      cc := TBits.Asr64(cc, 32);
+      cc := TBitUtilities.Asr64(cc, 32);
     end;
     cc := cc + (Int64(z[6]) - xx08);
     z[6] := UInt32(cc);
-    cc := TBits.Asr64(cc, 32);
+    cc := TBitUtilities.Asr64(cc, 32);
     cc := cc + (Int64(z[7]) + xx08);
     z[7] := UInt32(cc);
-    cc := TBits.Asr64(cc, 32);
+    cc := TBitUtilities.Asr64(cc, 32);
 
 {$IFDEF DEBUG}
     System.Assert((cc = 0) or (cc = 1));
@@ -581,34 +581,34 @@ var
 begin
   c := Int64(z[0]) - 1;
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if (c <> 0) then
   begin
     c := c + Int64(z[1]);
     z[1] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
     c := c + Int64(z[2]);
     z[2] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   c := c + (Int64(z[3]) + 1);
   z[3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if (c <> 0) then
   begin
     c := c + Int64(z[4]);
     z[4] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
     c := c + Int64(z[5]);
     z[5] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   c := c + (Int64(z[6]) + 1);
   z[6] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[7]) - 1);
   z[7] := UInt32(c);
-  // c := TBits.Asr64(c, 32);
+  // c := TBitUtilities.Asr64(c, 32);
 end;
 
 class procedure TSecP256R1Field.Subtract(const x, y, z: TCryptoLibUInt32Array);
@@ -1304,7 +1304,7 @@ begin
 
   for i := 0 to System.Pred(Fm_size) do
   begin
-    MASK := UInt32(TBits.Asr32((i xor index) - 1, 31));
+    MASK := UInt32(TBitUtilities.Asr32((i xor index) - 1, 31));
 
     for J := 0 to System.Pred(SECP256R1_FE_INTS) do
     begin

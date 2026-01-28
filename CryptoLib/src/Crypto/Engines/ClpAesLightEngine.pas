@@ -28,7 +28,7 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCheck,
-  ClpBits,
+  ClpBitUtilities,
   ClpConverters,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
@@ -205,7 +205,7 @@ implementation
 
 class function TAesLightEngine.Shift(r: UInt32; Shift: Int32): UInt32;
 begin
-  result := TBits.RotateRight32(r, Shift);
+  result := TBitUtilities.RotateRight32(r, Shift);
 end;
 
 class function TAesLightEngine.SubWord(x: UInt32): UInt32;

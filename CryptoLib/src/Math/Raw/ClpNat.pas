@@ -23,7 +23,7 @@ interface
 
 uses
   ClpConverters,
-  ClpBits,
+  ClpBitUtilities,
   ClpBigInteger,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
@@ -1200,7 +1200,7 @@ begin
     raise EArgumentCryptoLibException.Create('');
   end;
 
-  len := TBits.Asr32((bits + 31), 5);
+  len := TBitUtilities.Asr32((bits + 31), 5);
   Result := Create(len);
   I := 0;
   while (Lx.SignValue <> 0) do
@@ -1246,7 +1246,7 @@ begin
     Exit;
   end;
 
-  w := TBits.Asr32(bit, 5);
+  w := TBitUtilities.Asr32(bit, 5);
   if ((w < 0) or (w >= System.Length(x))) then
   begin
     Result := 0;
@@ -1574,11 +1574,11 @@ begin
   while (I >= 0) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shr (bits)) or (TBits.NegativeLeftShift32(c, -bits));
+    z[zOff + I] := (next shr (bits)) or (TBitUtilities.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := TBits.NegativeLeftShift32(c, -bits);
+  Result := TBitUtilities.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; const z: TCryptoLibUInt32Array;
@@ -1595,11 +1595,11 @@ begin
   while (I >= 0) do
   begin
     next := z[I];
-    z[I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
+    z[I] := (next shr bits) or (TBitUtilities.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := TBits.NegativeLeftShift32(c, -bits);
+  Result := TBitUtilities.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; const x: TCryptoLibUInt32Array;
@@ -1616,11 +1616,11 @@ begin
   while (I >= 0) do
   begin
     next := x[I];
-    z[I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
+    z[I] := (next shr bits) or (TBitUtilities.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := TBits.NegativeLeftShift32(c, -bits);
+  Result := TBitUtilities.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownBits(len: Int32; const z: TCryptoLibUInt32Array;
@@ -1637,11 +1637,11 @@ begin
   while (I >= 0) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shr bits) or (TBits.NegativeLeftShift32(c, -bits));
+    z[zOff + I] := (next shr bits) or (TBitUtilities.NegativeLeftShift32(c, -bits));
     c := next;
     System.Dec(I);
   end;
-  Result := TBits.NegativeLeftShift32(c, -bits);
+  Result := TBitUtilities.NegativeLeftShift32(c, -bits);
 end;
 
 class function TNat.ShiftDownWord(len: Int32; const z: TCryptoLibUInt32Array;
@@ -1750,10 +1750,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
+    z[zOff + I] := (next shl bits) or (TBitUtilities.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := TBits.NegativeRightShift32(c, -bits);
+  Result := TBitUtilities.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits(len: Int32; const x: TCryptoLibUInt32Array;
@@ -1768,10 +1768,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := x[I];
-    z[I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
+    z[I] := (next shl bits) or (TBitUtilities.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := TBits.NegativeRightShift32(c, -bits);
+  Result := TBitUtilities.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits(len: Int32; const z: TCryptoLibUInt32Array;
@@ -1786,10 +1786,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := z[I];
-    z[I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
+    z[I] := (next shl bits) or (TBitUtilities.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := TBits.NegativeRightShift32(c, -bits);
+  Result := TBitUtilities.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits(len: Int32; const z: TCryptoLibUInt32Array;
@@ -1804,10 +1804,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
+    z[zOff + I] := (next shl bits) or (TBitUtilities.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := TBits.NegativeRightShift32(c, -bits);
+  Result := TBitUtilities.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits64(len: Int32; const x: TCryptoLibUInt64Array;
@@ -1823,10 +1823,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := x[xOff + I];
-    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
+    z[zOff + I] := (next shl bits) or (TBitUtilities.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := TBits.NegativeRightShift32(c, -bits);
+  Result := TBitUtilities.NegativeRightShift32(c, -bits);
 end;
 
 class function TNat.ShiftUpBits64(len: Int32; const z: TCryptoLibUInt64Array;
@@ -1841,10 +1841,10 @@ begin
   for I := 0 to System.Pred(len) do
   begin
     next := z[zOff + I];
-    z[zOff + I] := (next shl bits) or (TBits.NegativeRightShift32(c, -bits));
+    z[zOff + I] := (next shl bits) or (TBitUtilities.NegativeRightShift32(c, -bits));
     c := next;
   end;
-  Result := TBits.NegativeRightShift32(c, -bits);
+  Result := TBitUtilities.NegativeRightShift32(c, -bits);
 end;
 
 class procedure TNat.Square(len: Int32; const x, zz: TCryptoLibUInt32Array);
@@ -1946,7 +1946,7 @@ begin
   begin
     c := c + (Int64(x[xOff + I]) - y[yOff + I]);
     z[zOff + I] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   Result := Int32(c);
 end;
@@ -1962,7 +1962,7 @@ begin
   begin
     c := c + (Int64(x[I]) - y[I]);
     z[I] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   Result := Int32(c);
 end;
@@ -1977,10 +1977,10 @@ begin
 {$ENDIF DEBUG}
   c := Int64(z[zPos + 0]) - x;
   z[zPos + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zPos + 1]) - 1);
   z[zPos + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2001,9 +2001,9 @@ begin
 {$ENDIF DEBUG}
   c := Int64(z[zOff + zPos]) - x;
   z[zOff + zPos] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + zPos + 1]) - 1);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2021,10 +2021,10 @@ var
 begin
   c := Int64(z[0]) - x;
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[1]) - 1);
   z[1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2043,10 +2043,10 @@ var
 begin
   c := Int64(z[zOff + 0]) - x;
   z[zOff + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 1]) - 1);
   z[zOff + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2068,7 +2068,7 @@ begin
   begin
     c := c + (Int64(z[I]) - x[I] - y[I]);
     z[I] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   Result := Int32(c);
 end;
@@ -2085,7 +2085,7 @@ begin
   begin
     c := c + (Int64(z[zOff + I]) - x[xOff + I] - y[yOff + I]);
     z[zOff + I] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   Result := Int32(c);
 end;
@@ -2100,10 +2100,10 @@ begin
 {$ENDIF DEBUG}
   c := Int64(z[zOff + zPos]) - Int64(x and M);
   z[zOff + zPos] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + zPos + 1]) - Int64(x shr 32));
   z[zOff + zPos + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2124,10 +2124,10 @@ begin
 {$ENDIF DEBUG}
   c := Int64(z[zPos + 0]) - Int64(x and M);
   z[zPos + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zPos + 1]) - Int64(x shr 32));
   z[zPos + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2146,10 +2146,10 @@ var
 begin
   c := Int64(z[zOff + 0]) - Int64(x and M);
   z[zOff + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 1]) - Int64(x shr 32));
   z[zOff + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2167,10 +2167,10 @@ var
 begin
   c := Int64(z[0]) - Int64(x and M);
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[1]) - Int64(x shr 32));
   z[1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2192,7 +2192,7 @@ begin
   begin
     c := c + (Int64(z[I]) - x[I]);
     z[I] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   Result := Int32(c);
 end;
@@ -2208,7 +2208,7 @@ begin
   begin
     c := c + (Int64(z[zOff + I]) - x[xOff + I]);
     z[zOff + I] := UInt32(c);
-    c := TBits.Asr64(c, 32);
+    c := TBitUtilities.Asr64(c, 32);
   end;
   Result := Int32(c);
 end;
@@ -2223,7 +2223,7 @@ begin
 {$ENDIF DEBUG}
   c := Int64(z[zPos]) - x;
   z[zPos] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2245,7 +2245,7 @@ begin
 {$ENDIF DEBUG}
   c := Int64(z[zOff + zPos]) - x;
   z[zOff + zPos] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   if c = 0 then
   begin
     Result := 0;
@@ -2264,7 +2264,7 @@ var
 begin
   c := Int64(z[zOff + 0]) - x;
   z[zOff + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
 
   if c = 0 then
   begin
@@ -2284,7 +2284,7 @@ var
 begin
   c := Int64(z[0]) - x;
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
 
   if c = 0 then
   begin

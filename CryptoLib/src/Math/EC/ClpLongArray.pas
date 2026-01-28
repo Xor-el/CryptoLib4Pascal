@@ -26,7 +26,7 @@ uses
   SysUtils,
   StrUtils,
   Math,
-  ClpBits,
+  ClpBitUtilities,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
@@ -718,7 +718,7 @@ var
   mLen, numBits, excessBits, kLen, kMax, kNext, wordWiseLimit, vectorableWords,
     vectorWiseWords: Int32;
 begin
-  mLen := TBits.Asr32((m + 63), 6);
+  mLen := TBitUtilities.Asr32((m + 63), 6);
   if (len < mLen) then
   begin
     Result := len;
@@ -745,7 +745,7 @@ begin
   end;
 
   wordWiseLimit := Math.Max(m, kMax + 64);
-  vectorableWords := TBits.Asr32((excessBits + Math.Min(numBits - wordWiseLimit,
+  vectorableWords := TBitUtilities.Asr32((excessBits + Math.Min(numBits - wordWiseLimit,
     m - kNext)), 6);
   if (vectorableWords > 1) then
   begin
@@ -1529,7 +1529,7 @@ begin
   // u(z) := a(z)
   uz := Copy();
 
-  t := TBits.Asr32((m + 63), 6);
+  t := TBitUtilities.Asr32((m + 63), 6);
 
   // v(z) := f(z)
   vz := TLongArray.Create(t);
@@ -2231,7 +2231,7 @@ begin
     Exit;
   end;
 
-  mLen := TBits.Asr32((m + 63), 6);
+  mLen := TBitUtilities.Asr32((m + 63), 6);
 
   System.SetLength(r, mLen shl 1);
   System.Move(Fm_ints[0], r[0], len * System.SizeOf(Int64));

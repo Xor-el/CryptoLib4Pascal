@@ -26,7 +26,7 @@ uses
   Math,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpBits,
+  ClpBitUtilities,
   ClpNat,
   ClpIECC,
   ClpECCompUtilities,
@@ -260,12 +260,12 @@ begin
     while j >= 0 do
     begin
 
-      secretBitK := BigK[TBits.Asr32(j, 5)] shr (j and $1F);
+      secretBitK := BigK[TBitUtilities.Asr32(j, 5)] shr (j and $1F);
       secretIndexK := secretIndexK xor (secretBitK shr 1);
       secretIndexK := secretIndexK shl 1;
       secretIndexK := secretIndexK xor secretBitK;
 
-      secretBitL := BigL[TBits.Asr32(j, 5)] shr (j and $1F);
+      secretBitL := BigL[TBitUtilities.Asr32(j, 5)] shr (j and $1F);
       secretIndexL := secretIndexL xor (secretBitL shr 1);
       secretIndexL := secretIndexL shl 1;
       secretIndexL := secretIndexL xor secretBitL;
@@ -319,8 +319,8 @@ begin
     jsfi := jsf[i];
 
     // NOTE: The shifting ensures the sign is extended correctly
-    kDigit := (TBits.Asr32((jsfi shl 24), 28));
-    lDigit := (TBits.Asr32((jsfi shl 28), 28));
+    kDigit := (TBitUtilities.Asr32((jsfi shl 24), 28));
+    lDigit := (TBitUtilities.Asr32((jsfi shl 28), 28));
 
     index := 4 + (kDigit * 3) + lDigit;
     R := R.TwicePlus(table[index]);
@@ -540,7 +540,7 @@ begin
         tableP := preCompP;
       end;
 
-      point := point.Add(tableP[TBits.Asr32(nP, 1)]);
+      point := point.Add(tableP[TBitUtilities.Asr32(nP, 1)]);
     end;
     if (wiQ <> 0) then
     begin
@@ -555,7 +555,7 @@ begin
         tableQ := preCompQ;
       end;
 
-      point := point.Add(tableQ[TBits.Asr32(nQ, 1)]);
+      point := point.Add(tableQ[TBitUtilities.Asr32(nQ, 1)]);
 
     end;
 
@@ -723,7 +723,7 @@ begin
           table := info.PreCompNeg;
         end;
 
-        point := point.Add(table[TBits.Asr32(n, 1)]);
+        point := point.Add(table[TBitUtilities.Asr32(n, 1)]);
       end;
     end;
 

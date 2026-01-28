@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   Math,
-  ClpBits,
+  ClpBitUtilities,
   ClpIECC,
   ClpIPreCompInfo,
   ClpIWNafPreCompInfo,
@@ -493,7 +493,7 @@ var
   bits, highBit, &length, zeroes, i, digit: Int32;
   naf: TCryptoLibInt32Array;
 begin
-  if ((TBits.Asr32(k.BitLength, 16)) <> 0) then
+  if ((TBitUtilities.Asr32(k.BitLength, 16)) <> 0) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBitLength);
   end;
@@ -506,7 +506,7 @@ begin
   _3k := k.ShiftLeft(1).Add(k);
 
   bits := _3k.BitLength;
-  System.SetLength(naf, TBits.Asr32(bits, 1));
+  System.SetLength(naf, TBitUtilities.Asr32(bits, 1));
 
   diff := _3k.&Xor(k);
 
@@ -572,7 +572,7 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidRange);
   end;
-  if ((TBits.Asr32(LK.BitLength, 16)) <> 0) then
+  if ((TBitUtilities.Asr32(LK.BitLength, 16)) <> 0) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBitLength);
   end;
@@ -587,7 +587,7 @@ begin
   // 2^width and a mask and sign bit set accordingly
   pow2 := 1 shl width;
   mask := pow2 - 1;
-  sign := TBits.Asr32(pow2, 1);
+  sign := TBitUtilities.Asr32(pow2, 1);
 
   carry := false;
   length := 0;
@@ -788,7 +788,7 @@ begin
   // 2^width and a mask and sign bit set accordingly
   pow2 := 1 shl width;
   mask := pow2 - 1;
-  sign := TBits.Asr32(pow2, 1);
+  sign := TBitUtilities.Asr32(pow2, 1);
 
   carry := false;
   length := 0;

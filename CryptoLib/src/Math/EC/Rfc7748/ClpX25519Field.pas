@@ -22,7 +22,7 @@ unit ClpX25519Field;
 interface
 
 uses
-  ClpBits,
+  ClpBitUtilities,
   ClpConverters,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
@@ -198,28 +198,28 @@ begin
   z8 := z[8];
   z9 := z[9];
 
-  z3 := z3 + TBits.Asr32(z2, 25);
+  z3 := z3 + TBitUtilities.Asr32(z2, 25);
   z2 := z2 and M25;
-  z5 := z5 + TBits.Asr32(z4, 25);
+  z5 := z5 + TBitUtilities.Asr32(z4, 25);
   z4 := z4 and M25;
-  z8 := z8 + TBits.Asr32(z7, 25);
+  z8 := z8 + TBitUtilities.Asr32(z7, 25);
   z7 := z7 and M25;
   // z0 := z0 + (z9 shr 24) * 19; z9 := z9 and M24;
-  z0 := z0 + (TBits.Asr32(z9, 25) * 38);
+  z0 := z0 + (TBitUtilities.Asr32(z9, 25) * 38);
   z9 := z9 and M25;
 
-  z1 := z1 + TBits.Asr32(z0, 26);
+  z1 := z1 + TBitUtilities.Asr32(z0, 26);
   z0 := z0 and M26;
-  z6 := z6 + TBits.Asr32(z5, 26);
+  z6 := z6 + TBitUtilities.Asr32(z5, 26);
   z5 := z5 and M26;
 
-  z2 := z2 + TBits.Asr32(z1, 26);
+  z2 := z2 + TBitUtilities.Asr32(z1, 26);
   z1 := z1 and M26;
-  z4 := z4 + TBits.Asr32(z3, 26);
+  z4 := z4 + TBitUtilities.Asr32(z3, 26);
   z3 := z3 and M26;
-  z7 := z7 + TBits.Asr32(z6, 26);
+  z7 := z7 + TBitUtilities.Asr32(z6, 26);
   z6 := z6 and M26;
-  z9 := z9 + TBits.Asr32(z8, 26);
+  z9 := z9 + TBitUtilities.Asr32(z8, 26);
   z8 := z8 and M26;
 
   z[0] := z0;
@@ -257,7 +257,7 @@ var
   mask, i: Int32;
 begin
 {$IFDEF DEBUG}
-  System.Assert(TBits.Asr32(ANegate, 1) = 0);
+  System.Assert(TBitUtilities.Asr32(ANegate, 1) = 0);
 {$ENDIF DEBUG}
   mask := 0 - ANegate;
   for i := 0 to System.Pred(Size) do
@@ -293,7 +293,7 @@ var
   mask, i, ai, bi, dummy: Int32;
 begin
 {$IFDEF DEBUG}
-  System.Assert(TBits.Asr32(swap, 1) = 0);
+  System.Assert(TBitUtilities.Asr32(swap, 1) = 0);
   System.Assert(a <> b);
 {$ENDIF DEBUG}
   mask := 0 - swap;
@@ -411,7 +411,7 @@ begin
   begin
     d := d or x[i];
   end;
-  d := (TBits.Asr32(d, 1)) or (d and 1);
+  d := (TBitUtilities.Asr32(d, 1)) or (d and 1);
   Result := (d - 1) shr 31;
 end;
 
@@ -439,39 +439,39 @@ begin
 
   c0 := Int64(x2) * y;
   x2 := Int32(c0) and M25;
-  c0 := TBits.Asr64(c0, 25);
+  c0 := TBitUtilities.Asr64(c0, 25);
   c1 := Int64(x4) * y;
   x4 := Int32(c1) and M25;
-  c1 := TBits.Asr64(c1, 25);
+  c1 := TBitUtilities.Asr64(c1, 25);
   c2 := Int64(x7) * y;
   x7 := Int32(c2) and M25;
-  c2 := TBits.Asr64(c2, 25);
-  // c3 := Int64(x9) * y; x9 := Int32(c3) and M24; c3 := TBits.Asr64(c3 , 24);
+  c2 := TBitUtilities.Asr64(c2, 25);
+  // c3 := Int64(x9) * y; x9 := Int32(c3) and M24; c3 := TBitUtilities.Asr64(c3 , 24);
   // c3 := c3 * 19;
   c3 := Int64(x9) * y;
   x9 := Int32(c3) and M25;
-  c3 := TBits.Asr64(c3, 25);
+  c3 := TBitUtilities.Asr64(c3, 25);
   c3 := c3 * 38;
 
   c3 := c3 + (Int64(x0) * y);
   z[0] := Int32(c3) and M26;
-  c3 := TBits.Asr64(c3, 26);
+  c3 := TBitUtilities.Asr64(c3, 26);
   c1 := c1 + (Int64(x5) * y);
   z[5] := Int32(c1) and M26;
-  c1 := TBits.Asr64(c1, 26);
+  c1 := TBitUtilities.Asr64(c1, 26);
 
   c3 := c3 + (Int64(x1) * y);
   z[1] := Int32(c3) and M26;
-  c3 := TBits.Asr64(c3, 26);
+  c3 := TBitUtilities.Asr64(c3, 26);
   c0 := c0 + (Int64(x3) * y);
   z[3] := Int32(c0) and M26;
-  c0 := TBits.Asr64(c0, 26);
+  c0 := TBitUtilities.Asr64(c0, 26);
   c1 := c1 + (Int64(x6) * y);
   z[6] := Int32(c1) and M26;
-  c1 := TBits.Asr64(c1, 26);
+  c1 := TBitUtilities.Asr64(c1, 26);
   c2 := c2 + (Int64(x8) * y);
   z[8] := Int32(c2) and M26;
-  c2 := TBits.Asr64(c2, 26);
+  c2 := TBitUtilities.Asr64(c2, 26);
 
   z[2] := x2 + Int32(c3);
   z[4] := x4 + Int32(c0);
@@ -588,41 +588,41 @@ begin
 
   t := a8 + (c3 - a3);
   z8 := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   // t       := t + (a9 + (c4 - a4));
   t := t + ((c4 - a4) - b4);
-  // z9       := Int32(t) and M24; t := TBits.Asr64(t , 24);
+  // z9       := Int32(t) and M24; t := TBitUtilities.Asr64(t , 24);
   // t        := a0 + (t + ((c5 - a5) shl 1)) * 19;
   z9 := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := a0 + (t + c5 - a5) * 38;
   z[0] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a1 + (c6 - a6) * 38);
   z[1] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a2 + (c7 - a7) * 38);
   z[2] := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := t + (a3 + (c8 - a8) * 38);
   z[3] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   // t       := t + (a4 - (a9 * 38));
   t := t + (a4 + b4 * 38);
   z[4] := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := t + (a5 + (c0 - a0));
   z[5] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a6 + (c1 - a1));
   z[6] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a7 + (c2 - a2));
   z[7] := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := t + z8;
   z[8] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   z[9] := z9 + Int32(t);
 end;
 
@@ -640,11 +640,11 @@ class procedure TX25519Field.Normalize(const z: TCryptoLibInt32Array);
 var
   x: Int32;
 begin
-  x := TBits.Asr32(z[9], 23) and 1;
+  x := TBitUtilities.Asr32(z[9], 23) and 1;
   Reduce(z, x);
   Reduce(z, -x);
 {$IFDEF DEBUG}
-  System.Assert(TBits.Asr32(z[9], 24) = 0);
+  System.Assert(TBitUtilities.Asr32(z[9], 24) = 0);
 {$ENDIF DEBUG}
 end;
 
@@ -710,36 +710,36 @@ begin
   z9 := z[9];
   t := z9;
   z9 := t and M24;
-  t := TBits.Asr32(t, 24);
+  t := TBitUtilities.Asr32(t, 24);
   t := t + c;
   t := t * 19;
   t := t + z[0];
   z[0] := t and M26;
-  t := TBits.Asr32(t, 26);
+  t := TBitUtilities.Asr32(t, 26);
   t := t + z[1];
   z[1] := t and M26;
-  t := TBits.Asr32(t, 26);
+  t := TBitUtilities.Asr32(t, 26);
   t := t + z[2];
   z[2] := t and M25;
-  t := TBits.Asr32(t, 25);
+  t := TBitUtilities.Asr32(t, 25);
   t := t + z[3];
   z[3] := t and M26;
-  t := TBits.Asr32(t, 26);
+  t := TBitUtilities.Asr32(t, 26);
   t := t + z[4];
   z[4] := t and M25;
-  t := TBits.Asr32(t, 25);
+  t := TBitUtilities.Asr32(t, 25);
   t := t + z[5];
   z[5] := t and M26;
-  t := TBits.Asr32(t, 26);
+  t := TBitUtilities.Asr32(t, 26);
   t := t + z[6];
   z[6] := t and M26;
-  t := TBits.Asr32(t, 26);
+  t := TBitUtilities.Asr32(t, 26);
   t := t + z[7];
   z[7] := t and M25;
-  t := TBits.Asr32(t, 25);
+  t := TBitUtilities.Asr32(t, 25);
   t := t + z[8];
   z[8] := t and M26;
-  t := TBits.Asr32(t, 26);
+  t := TBitUtilities.Asr32(t, 26);
   t := t + z9;
   z[9] := t;
 end;
@@ -827,41 +827,41 @@ begin
 
   t := a8 + (c3 - a3);
   z8 := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   // t  = t + (a9 + (c4 - a4));
   t := t + ((c4 - a4) - b4);
-  // z9  := Int32(t) and M24; t := TBits.Asr64(t , 24);
+  // z9  := Int32(t) and M24; t := TBitUtilities.Asr64(t , 24);
   // t  := a0 + (t + ((c5 - a5) shl 1)) * 19;
   z9 := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := a0 + (t + c5 - a5) * 38;
   z[0] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a1 + (c6 - a6) * 38);
   z[1] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a2 + (c7 - a7) * 38);
   z[2] := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := t + (a3 + (c8 - a8) * 38);
   z[3] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   // t       := t + (a4 - a9 * 38);
   t := t + (a4 + b4 * 38);
   z[4] := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := t + (a5 + (c0 - a0));
   z[5] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a6 + (c1 - a1));
   z[6] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   t := t + (a7 + (c2 - a2));
   z[7] := Int32(t) and M25;
-  t := TBits.Asr64(t, 25);
+  t := TBitUtilities.Asr64(t, 25);
   t := t + z8;
   z[8] := Int32(t) and M26;
-  t := TBits.Asr64(t, 26);
+  t := TBitUtilities.Asr64(t, 26);
   z[9] := z9 + Int32(t);
 end;
 

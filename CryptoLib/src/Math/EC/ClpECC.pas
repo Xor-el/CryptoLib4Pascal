@@ -33,7 +33,7 @@ uses
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpBits,
+  ClpBitUtilities,
   ClpIGlvEndomorphism,
   ClpECAlgorithms,
   ClpLongArray,
@@ -2217,7 +2217,7 @@ var
   P, n, z: TCryptoLibUInt32Array;
 begin
   bits := FieldSize;
-  len := TBits.Asr32((bits + 31), 5);
+  len := TBitUtilities.Asr32((bits + 31), 5);
   P := TNat.FromBigInteger(bits, Q);
   n := TNat.FromBigInteger(bits, x);
   z := TNat.Create(len);
@@ -2505,8 +2505,8 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SHalfTraceUndefinedForM);
   end;
 
-  n := TBits.Asr32((m + 1), 1);
-  K := 31 - TBits.NumberOfLeadingZeros(n);
+  n := TBitUtilities.Asr32((m + 1), 1);
+  K := 31 - TBitUtilities.NumberOfLeadingZeros(n);
   nk := 1;
 
   ht := Self as IECFieldElement;
@@ -2514,7 +2514,7 @@ begin
   begin
     ht := ht.SquarePow(nk shl 1).Add(ht);
     System.Dec(K);
-    nk := TBits.Asr32(n, K);
+    nk := TBitUtilities.Asr32(n, K);
 
     if ((nk and 1) <> 0) then
     begin
@@ -2537,7 +2537,7 @@ var
 begin
   m := FieldSize;
 
-  K := 31 - TBits.NumberOfLeadingZeros(m);
+  K := 31 - TBitUtilities.NumberOfLeadingZeros(m);
   mk := 1;
 
   tr := Self as IECFieldElement;
@@ -2546,7 +2546,7 @@ begin
     tr := tr.SquarePow(mk).Add(tr);
 
     System.Dec(K);
-    mk := TBits.Asr32(m, K);
+    mk := TBitUtilities.Asr32(m, K);
 
     if ((mk and 1) <> 0) then
     begin
@@ -2856,8 +2856,8 @@ function TECCurve.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
   result := (field as TObject).GetHashCode()
-    xor Int32(TBits.RotateLeft32(a.ToBigInteger().GetHashCode(), 8))
-    xor Int32(TBits.RotateLeft32(b.ToBigInteger().GetHashCode(), 16));
+    xor Int32(TBitUtilities.RotateLeft32(a.ToBigInteger().GetHashCode(), 8))
+    xor Int32(TBitUtilities.RotateLeft32(b.ToBigInteger().GetHashCode(), 16));
 end;
 
 function TECCurve.GetMultiplier: IECMultiplier;
@@ -3772,7 +3772,7 @@ begin
   for i := 0 to System.Pred(Fm_size) do
   begin
 
-    MASK := Byte(TBits.Asr32((i xor index) - 1, 31));
+    MASK := Byte(TBitUtilities.Asr32((i xor index) - 1, 31));
 
     for j := 0 to System.Pred(FE_BYTES) do
     begin
@@ -3866,7 +3866,7 @@ begin
   for i := 0 to System.Pred(Fm_size) do
   begin
 
-    MASK := TBits.Asr32((i xor index) - 1, 31);
+    MASK := TBitUtilities.Asr32((i xor index) - 1, 31);
 
     for j := 0 to System.Pred(FE_LONGS) do
     begin
@@ -5031,7 +5031,7 @@ begin
 
         b := ecCurve.b;
 
-        if (b.BitLength < (TBits.Asr32(ecCurve.FieldSize, 1))) then
+        if (b.BitLength < (TBitUtilities.Asr32(ecCurve.FieldSize, 1))) then
         begin
           t1 := L1.Add(x1).Square();
 

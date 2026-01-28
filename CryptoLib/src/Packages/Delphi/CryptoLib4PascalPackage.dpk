@@ -44,7 +44,7 @@ contains
   ClpStreams in '..\..\Utils\ClpStreams.pas',
   ClpPlatform in '..\..\Utils\ClpPlatform.pas',
   ClpCollectionUtilities in '..\..\Utils\ClpCollectionUtilities.pas',
-  ClpBits in '..\..\Utils\ClpBits.pas',
+  ClpBitUtilities in '..\..\GeneralUtilities\ClpBitUtilities.pas',
   ClpGeneratorUtilities in '..\..\Security\ClpGeneratorUtilities.pas',
   ClpParameterUtilities in '..\..\Security\ClpParameterUtilities.pas',
   ClpBitConverter in '..\..\Utils\ClpBitConverter.pas',

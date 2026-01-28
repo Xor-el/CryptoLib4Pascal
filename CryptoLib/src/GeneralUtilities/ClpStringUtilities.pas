@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   StrUtils,
-  ClpBits,
+  ClpBitUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -116,19 +116,19 @@ implementation
 
 class function TStringUtilities.GetStringHashCode(const AInput: string): Int32;
 var
-  LLowPoint, LHighPoint: Int32;
+  LStart, LEnd: Int32;
   LResult: UInt32;
 begin
   LResult := 0;
 
-  LLowPoint := 1;
-  LHighPoint := System.Length(AInput);
+  LStart := 1;
+  LEnd := System.Length(AInput);
 
-  while LLowPoint <= LHighPoint do
+  while LStart <= LEnd do
   begin
-    LResult := TBits.RotateLeft32(LResult, 5);
-    LResult := LResult xor UInt32(AInput[LLowPoint]);
-    System.Inc(LLowPoint);
+    LResult := TBitUtilities.RotateLeft32(LResult, 5);
+    LResult := LResult xor UInt32(AInput[LStart]);
+    System.Inc(LStart);
   end;
   Result := Int32(LResult);
 end;

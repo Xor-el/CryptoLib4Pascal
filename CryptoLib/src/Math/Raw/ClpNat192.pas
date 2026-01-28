@@ -22,7 +22,7 @@ unit ClpNat192;
 interface
 
 uses
-  ClpBits,
+  ClpBitUtilities,
   ClpNat,
   ClpBigInteger,
   ClpConverters,
@@ -457,7 +457,7 @@ begin
     result := x[0] and 1;
     Exit;
   end;
-  w := TBits.Asr32(bit, 5);
+  w := TBitUtilities.Asr32(bit, 5);
   if ((w < 0) or (w >= 6)) then
   begin
     result := 0;
@@ -1249,22 +1249,22 @@ begin
   c := 0;
   c := c + (Int64(x[0]) - y[0]);
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[1]) - y[1]);
   z[1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[2]) - y[2]);
   z[2] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[3]) - y[3]);
   z[3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[4]) - y[4]);
   z[4] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[5]) - y[5]);
   z[5] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   result := Int32(c);
 end;
 
@@ -1277,22 +1277,22 @@ begin
   c := 0;
   c := c + (Int64(x[xOff + 0]) - y[yOff + 0]);
   z[zOff + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[xOff + 1]) - y[yOff + 1]);
   z[zOff + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[xOff + 2]) - y[yOff + 2]);
   z[zOff + 2] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[xOff + 3]) - y[yOff + 3]);
   z[zOff + 3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[xOff + 4]) - y[yOff + 4]);
   z[zOff + 4] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(x[xOff + 5]) - y[yOff + 5]);
   z[zOff + 5] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   result := Int32(c);
 end;
 
@@ -1303,22 +1303,22 @@ begin
   c := 0;
   c := c + (Int64(z[0]) - x[0] - y[0]);
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[1]) - x[1] - y[1]);
   z[1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[2]) - x[2] - y[2]);
   z[2] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[3]) - x[3] - y[3]);
   z[3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[4]) - x[4] - y[4]);
   z[4] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[5]) - x[5] - y[5]);
   z[5] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   result := Int32(c);
 end;
 
@@ -1329,22 +1329,22 @@ begin
   c := 0;
   c := c + (Int64(z[0]) - x[0]);
   z[0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[1]) - x[1]);
   z[1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[2]) - x[2]);
   z[2] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[3]) - x[3]);
   z[3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[4]) - x[4]);
   z[4] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[5]) - x[5]);
   z[5] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   result := Int32(c);
 end;
 
@@ -1356,22 +1356,22 @@ begin
   c := 0;
   c := c + (Int64(z[zOff + 0]) - x[xOff + 0]);
   z[zOff + 0] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 1]) - x[xOff + 1]);
   z[zOff + 1] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 2]) - x[xOff + 2]);
   z[zOff + 2] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 3]) - x[xOff + 3]);
   z[zOff + 3] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 4]) - x[xOff + 4]);
   z[zOff + 4] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   c := c + (Int64(z[zOff + 5]) - x[xOff + 5]);
   z[zOff + 5] := UInt32(c);
-  c := TBits.Asr64(c, 32);
+  c := TBitUtilities.Asr64(c, 32);
   result := Int32(c);
 end;
 

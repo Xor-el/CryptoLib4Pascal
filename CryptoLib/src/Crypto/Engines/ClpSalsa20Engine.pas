@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  ClpBits,
+  ClpBitUtilities,
   ClpCheck,
   ClpIStreamCipher,
   ClpISalsa20Engine,
@@ -329,7 +329,7 @@ end;
 
 class function TSalsa20Engine.R(x: UInt32; y: Int32): UInt32;
 begin
-  result := TBits.RotateLeft32(x, y);
+  result := TBitUtilities.RotateLeft32(x, y);
 end;
 
 procedure TSalsa20Engine.ResetCounter;

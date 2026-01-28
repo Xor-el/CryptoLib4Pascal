@@ -30,7 +30,7 @@ uses
   ClpBigInteger,
   ClpICurve25519Custom,
   ClpECCurveConstants,
-  ClpBits,
+  ClpBitUtilities,
   ClpEncoders,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
@@ -1373,7 +1373,7 @@ begin
 
   for i := 0 to System.Pred(Fm_size) do
   begin
-    MASK := UInt32(TBits.Asr32((i xor index) - 1, 31));
+    MASK := UInt32(TBitUtilities.Asr32((i xor index) - 1, 31));
 
     for J := 0 to System.Pred(CURVE25519_FE_INTS) do
     begin

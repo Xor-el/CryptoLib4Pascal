@@ -26,7 +26,7 @@ uses
   Math,
   ClpCryptoLibTypes,
   ClpConverters,
-  ClpBits,
+  ClpBitUtilities,
   ClpArrayUtilities,
   ClpISecureRandom,
   ClpIRandom;
@@ -445,13 +445,13 @@ end;
 
 class function TBigInteger.PopCount(const AValue: UInt32): Int32;
 begin
-  Result := TBits.PopCount(AValue);
+  Result := TBitUtilities.PopCount(AValue);
 end;
 
 class function TBigInteger.BitLen(const AValue: Byte): Int32;
 begin
   //Result := BitLengthTable[AValue];
-  Result := 32 - TBits.NumberOfLeadingZeros(AValue);
+  Result := 32 - TBitUtilities.NumberOfLeadingZeros(AValue);
 end;
 
 class function TBigInteger.BitLen(const AValue: UInt32): Int32;
@@ -477,7 +477,7 @@ begin
     Exit;
   end;
   Result := BitLengthTable[AValue]; *)
-  Result := 32 - TBits.NumberOfLeadingZeros(AValue);
+  Result := 32 - TBitUtilities.NumberOfLeadingZeros(AValue);
 end;
 
 class function TBigInteger.CreateUValueOf(const AValue: UInt32): TBigInteger;
@@ -852,7 +852,7 @@ begin
     System.Dec(LIV);
     LM := Int64(AX[LIT] and UIMASK) - Int64(AY[LIV] and UIMASK) + LBorrow;
     AX[LIT] := UInt32(LM);
-    LBorrow := Int32(TBits.Asr64(LM, 63));
+    LBorrow := Int32(TBitUtilities.Asr64(LM, 63));
   until LIV <= AYStart;
   if LBorrow <> 0 then
   begin
@@ -891,10 +891,7 @@ begin
     begin
       LNewMag[I] := AMag[I];
     end;
-    for I := LMagLen to System.Pred(System.Length(LNewMag)) do
-    begin
-      LNewMag[I] := 0;
-    end;
+    TArrayUtilities.Fill<UInt32>(LNewMag, LMagLen, System.Length(LNewMag), UInt32(0));
   end
   else
   begin
@@ -1061,10 +1058,7 @@ begin
     begin
       AMag[I] := AMag[I - LDelta];
     end;
-    for I := LNInts - 1 downto AStart do
-    begin
-      AMag[I] := 0;
-    end;
+    TArrayUtilities.Fill<UInt32>(AMag, AStart, LNInts, UInt32(0));
   end;
   if LNBits <> 0 then
   begin
@@ -1111,7 +1105,7 @@ begin
 
     if LShift > 0 then
     begin
-      System.SetLength(LICount, (TBits.Asr32(LShift, 5)) + 1);
+      System.SetLength(LICount, (TBitUtilities.Asr32(LShift, 5)) + 1);
       LICount[0] := UInt32(1) shl (LShift mod 32);
       LC := ShiftLeft(AY, LShift);
       LCBitLength := LCBitLength + LShift;
@@ -1195,10 +1189,7 @@ begin
   if LXYCmp = 0 then
   begin
     LCount := AddMagnitudes(LCount, FOne.FMagnitude);
-    for I := LXStart to System.Pred(System.Length(AX)) do
-    begin
-      AX[I] := 0;
-    end;
+    TArrayUtilities.Fill<UInt32>(AX, LXStart, System.Length(AX), UInt32(0));
   end;
   Result := LCount;
 end;
@@ -1303,10 +1294,7 @@ begin
   end;
   if LXYCmp = 0 then
   begin
-    for I := LXStart to System.Pred(System.Length(AX)) do
-    begin
-      AX[I] := 0;
-    end;
+    TArrayUtilities.Fill<UInt32>(AX, LXStart, System.Length(AX), UInt32(0));
   end;
   Result := AX;
 end;
@@ -1960,10 +1948,7 @@ begin
   end;
   LResLength := System.Length(FMagnitude) + System.Length(AValue.FMagnitude);
   System.SetLength(LRes, LResLength);
-  for I := 0 to System.Pred(System.Length(LRes)) do
-  begin
-    LRes[I] := 0;
-  end;
+  TArrayUtilities.Fill<UInt32>(LRes, 0, System.Length(LRes), UInt32(0));
   Multiply(LRes, FMagnitude, AValue.FMagnitude);
   LResSign := FSign xor AValue.FSign xor 1;
   Result := TBigInteger.Create(LResSign, LRes, True);
@@ -2235,7 +2220,7 @@ begin
     begin
       LY := LY.Multiply(LZ);
     end;
-    LExp := TBits.Asr32(LExp, 1);
+    LExp := TBitUtilities.Asr32(LExp, 1);
     if LExp = 0 then
       Break;
     LZ := LZ.Multiply(LZ);
@@ -2386,9 +2371,9 @@ begin
       Result := FZero;
     Exit;
   end;
-  LResultLength := TBits.Asr32((BitLength - AN + 31), 5);
+  LResultLength := TBitUtilities.Asr32((BitLength - AN + 31), 5);
   System.SetLength(LRes, LResultLength);
-  LNInts := TBits.Asr32(AN, 5);
+  LNInts := TBitUtilities.Asr32(AN, 5);
   LNBits := AN and 31;
   if LNBits = 0 then
   begin
@@ -2676,7 +2661,7 @@ var
 begin
   // Clone magnitude
   LMag := System.Copy(FMagnitude);
-  LMag[System.Length(LMag) - 1 - (TBits.Asr32(AN, 5))] := LMag[System.Length(LMag) - 1 - (TBits.Asr32(AN, 5))] xor (UInt32(1) shl (AN and 31));
+  LMag[System.Length(LMag) - 1 - (TBitUtilities.Asr32(AN, 5))] := LMag[System.Length(LMag) - 1 - (TBitUtilities.Asr32(AN, 5))] xor (UInt32(1) shl (AN and 31));
   Result := TBigInteger.Create(FSign, LMag, False);
 end;
 
@@ -2710,7 +2695,7 @@ begin
     LOffset := LOffset + 32;
   end;
 
-  LOffset := LOffset + TBits.NumberOfTrailingZeros(LWord);
+  LOffset := LOffset + TBitUtilities.NumberOfTrailingZeros(LWord);
  (*
   while (LWord and $FF) = 0 do
   begin
@@ -2851,7 +2836,7 @@ begin
     LMult := LMult shr 1;
     System.Inc(LZeros);
   end; *)
-  LTZ := TBits.NumberOfTrailingZeros(LMult);
+  LTZ := TBitUtilities.NumberOfTrailingZeros(LMult);
   LMult := LMult shr LTZ;
   LZeros := LZeros + UInt32(LTZ);
   // Combine multiplier and zeros: mult | (zeros << 8)

@@ -423,8 +423,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpBitConverter"/>
       </Item99>
       <Item100>
-        <Filename Value="..\..\Utils\ClpBits.pas"/>
-        <UnitName Value="ClpBits"/>
+        <Filename Value="..\..\GeneralUtilities\ClpBitUtilities.pas"/>
+        <UnitName Value="ClpBitUtilities"/>
       </Item100>
       <Item101>
         <Filename Value="..\..\Utils\ClpConverters.pas"/>

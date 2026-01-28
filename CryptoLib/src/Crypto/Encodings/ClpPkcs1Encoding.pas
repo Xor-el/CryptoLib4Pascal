@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   Math,
-  ClpBits,
+  ClpBitUtilities,
   ClpICipherParameters,
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricBlockCipher,
@@ -277,8 +277,8 @@ begin
   for i := 1 to System.Length(buf) - 1 do
   begin
     padByte := buf[i];
-    is0x00Mask := TBits.Asr32((padByte xor $00) - 1, 31);
-    is0xFFMask := TBits.Asr32((padByte xor $FF) - 1, 31);
+    is0x00Mask := TBitUtilities.Asr32((padByte xor $00) - 1, 31);
+    is0xFFMask := TBitUtilities.Asr32((padByte xor $FF) - 1, 31);
     lastPadPos := lastPadPos xor (i and (not foundZeroMask) and is0x00Mask);
     foundZeroMask := foundZeroMask or is0x00Mask;
     badPadSign := badPadSign or (not (foundZeroMask or is0xFFMask));
@@ -288,7 +288,7 @@ begin
   badPadSign := badPadSign or (lastPadPos - 9);
 
   plaintextLength := System.Length(buf) - 1 - lastPadPos;
-  Result := plaintextLength or TBits.Asr32(badPadSign, 31);
+  Result := plaintextLength or TBitUtilities.Asr32(badPadSign, 31);
 end;
 
 class function TPkcs1Encoding.CheckPkcs1Encoding2(
@@ -308,7 +308,7 @@ begin
   for i := 1 to System.Length(buf) - 1 do
   begin
     padByte := buf[i];
-    is0x00Mask := TBits.Asr32((padByte xor $00) - 1, 31);
+    is0x00Mask := TBitUtilities.Asr32((padByte xor $00) - 1, 31);
     lastPadPos := lastPadPos xor (i and (not foundZeroMask) and is0x00Mask);
     foundZeroMask := foundZeroMask or is0x00Mask;
   end;
@@ -317,7 +317,7 @@ begin
   badPadSign := badPadSign or (lastPadPos - 9);
 
   plaintextLength := System.Length(buf) - 1 - lastPadPos;
-  Result := plaintextLength or TBits.Asr32(badPadSign, 31);
+  Result := plaintextLength or TBitUtilities.Asr32(badPadSign, 31);
 end;
 
 class function TPkcs1Encoding.CheckPkcs1Encoding2(
@@ -341,7 +341,7 @@ begin
   // Last pad byte should be zero
   badPadSign := badPadSign or (-buf[lastPadPos]);
 
-  Result := TBits.Asr32(badPadSign, 31);
+  Result := TBitUtilities.Asr32(badPadSign, 31);
 end;
 
 function TPkcs1Encoding.DecodeBlockOrRandom(const input: TCryptoLibByteArray;

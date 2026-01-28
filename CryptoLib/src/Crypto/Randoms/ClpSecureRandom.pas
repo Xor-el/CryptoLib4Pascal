@@ -26,7 +26,7 @@ uses
   SyncObjs,
   SysUtils,
   DateUtils,
-  ClpBits,
+  ClpBitUtilities,
   ClpCryptoLibTypes,
   ClpDateTimeUtilities,
   ClpIDigest,
@@ -161,7 +161,7 @@ begin
   if ((AMaxValue and (AMaxValue - 1)) = 0) then
   begin
     LBits := NextInt32() and System.High(Int32);
-    Result := Int32(TBits.Asr64((Int64(LBits) * AMaxValue), 31));
+    Result := Int32(TBitUtilities.Asr64((Int64(LBits) * AMaxValue), 31));
     Exit;
   end;
 

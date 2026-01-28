@@ -26,7 +26,7 @@ uses
   SysUtils,
   Math,
   DateUtils,
-  ClpBits,
+  ClpBitUtilities,
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpBigIntegers,
@@ -4782,7 +4782,7 @@ var
   LCopy: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   LOldCapacity := System.Length(FElements);
-  LNewCapacity := Math.Max(LOldCapacity, AMinCapacity + (TBits.Asr32(AMinCapacity, 1)));
+  LNewCapacity := Math.Max(LOldCapacity, AMinCapacity + (TBitUtilities.Asr32(AMinCapacity, 1)));
 
   System.SetLength(LCopy, LNewCapacity);
   for I := 0 to FElementCount - 1 do
@@ -8005,17 +8005,17 @@ begin
   begin
     LSize := 1;
     LVal := ALength;
-    LVal := TBits.Asr32(LVal, 8);
+    LVal := TBitUtilities.Asr32(LVal, 8);
     while LVal <> 0 do
     begin
       System.Inc(LSize);
-      LVal := TBits.Asr32(LVal, 8);
+      LVal := TBitUtilities.Asr32(LVal, 8);
     end;
     AOutStr.WriteByte(Byte(LSize or $80));
     I := (LSize - 1) * 8;
     while I >= 0 do
     begin
-      AOutStr.WriteByte(Byte(TBits.Asr32(ALength, I)));
+      AOutStr.WriteByte(Byte(TBitUtilities.Asr32(ALength, I)));
       System.Dec(I, 8);
     end;
   end
@@ -8964,13 +8964,13 @@ begin
     FContents[0] := 0;
     Exit;
   end;
-  LBits := 32 - TBits.NumberOfLeadingZeros(UInt32(ANamedBits));
+  LBits := 32 - TBitUtilities.NumberOfLeadingZeros(UInt32(ANamedBits));
   LBytes := (LBits + 7) div 8;
   System.SetLength(LData, 1 + LBytes);
   for I := 1 to LBytes - 1 do
   begin
     LData[I] := Byte(ANamedBits);
-    ANamedBits := TBits.Asr32(ANamedBits, 8);
+    ANamedBits := TBitUtilities.Asr32(ANamedBits, 8);
   end;
   LData[LBytes] := Byte(ANamedBits);
   LPadBits := 0;
@@ -9706,7 +9706,7 @@ begin
   LByteLen := System.Length(AStr);
   if (LByteLen and 1) <> 0 then
     raise EArgumentCryptoLibException.Create('malformed BMPString encoding encountered');
-  LCharLen := TBits.Asr32(LByteLen, 1);
+  LCharLen := TBitUtilities.Asr32(LByteLen, 1);
   System.SetLength(LCs, LCharLen);
   for I := 0 to LCharLen - 1 do
     LCs[I] := Char((AStr[2 * I] shl 8) or (AStr[2 * I + 1] and $FF));
@@ -14526,7 +14526,7 @@ begin
     1:
       Result := False;
   else
-    Result := (ShortInt(ABytes[0]) = TBits.Asr32(ShortInt(ABytes[1]), 7)) and (not AllowUnsafe());
+    Result := (ShortInt(ABytes[0]) = TBitUtilities.Asr32(ShortInt(ABytes[1]), 7)) and (not AllowUnsafe());
   end;
 end;
 
@@ -14536,7 +14536,7 @@ var
 begin
   LPos := 0;
   LLast := System.Length(ABytes) - 1;
-  while (LPos < LLast) and (ShortInt(ABytes[LPos]) = TBits.Asr32(ShortInt(ABytes[LPos + 1]), 7)) do
+  while (LPos < LLast) and (ShortInt(ABytes[LPos]) = TBitUtilities.Asr32(ShortInt(ABytes[LPos + 1]), 7)) do
   begin
     System.Inc(LPos);
   end;

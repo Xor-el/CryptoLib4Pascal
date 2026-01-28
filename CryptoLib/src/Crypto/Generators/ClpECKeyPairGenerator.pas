@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBits,
+  ClpBitUtilities,
   ClpCryptoLibTypes,
   ClpECKeyParameters,
   ClpECCompUtilities,
@@ -134,7 +134,7 @@ var
   q: IECPoint;
 begin
   n := Fparameters.n;
-  minWeight := TBits.Asr32(n.BitLength, 2);
+  minWeight := TBitUtilities.Asr32(n.BitLength, 2);
 
   while (true) do
   begin

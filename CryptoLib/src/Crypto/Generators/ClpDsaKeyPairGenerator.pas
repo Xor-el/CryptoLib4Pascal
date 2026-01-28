@@ -34,7 +34,7 @@ uses
   ClpIKeyGenerationParameters,
   ClpIDsaKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpBits,
+  ClpBitUtilities,
   ClpBigInteger,
   ClpBigIntegers,
   ClpECCompUtilities,
@@ -110,7 +110,7 @@ begin
   One := TBigInteger.One;
   result := Default (TBigInteger);
   // B.1.2 Key Pair Generation by Testing Candidates
-  minWeight := TBits.Asr32(q.BitLength, 2);
+  minWeight := TBitUtilities.Asr32(q.BitLength, 2);
   while (True) do
   begin
     // TODO Prefer this method? (change test cases that used fixed random)

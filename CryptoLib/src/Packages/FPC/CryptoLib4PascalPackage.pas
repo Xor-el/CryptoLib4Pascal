@@ -39,7 +39,7 @@ uses
   ClpWTauNafPreCompInfo, ClpFiniteFields, ClpGenericPolynomialExtensionField, 
   ClpGF2Polynomial, ClpPrimeField, ClpMod, ClpNat, ClpDigestUtilities, 
   ClpRandom, ClpSecureRandom, ClpSignerUtilities, ClpArrayUtils, 
-  ClpBigIntegers, ClpBitConverter, ClpBits, ClpConverters, ClpCryptoLibTypes, 
+  ClpBigIntegers, ClpBitConverter, ClpBitUtilities, ClpConverters, ClpCryptoLibTypes, 
   ClpTimes, ClpOSRandom, ClpRandomNumberGenerator, ClpSetWeakRef, 
   ClpParameterUtilities, ClpGeneratorUtilities, ClpCipherUtilities, 
   ClpIAesEngine, ClpIParametersWithIV, ClpIPaddedBufferedBlockCipher, 

@@ -24,7 +24,7 @@ interface
 uses
   SyncObjs,
   ClpNat,
-  ClpBits,
+  ClpBitUtilities,
   ClpNat256,
   ClpInterleave,
   ClpDigestUtilities,
@@ -829,7 +829,7 @@ class function TEd25519.GetWindow4(const X: TCryptoLibUInt32Array;
 var
   W, b: Int32;
 begin
-  W := TBits.Asr32(n, 3);
+  W := TBitUtilities.Asr32(n, 3);
   b := (n and 7) shl 2;
   result := (X[W] shr b) and 15;
 end;
@@ -841,7 +841,7 @@ var
 begin
   W := GetWindow4(X, n);
 
-  LSign := (TBits.Asr32(W, (PrecompTeeth - 1))) xor 1;
+  LSign := (TBitUtilities.Asr32(W, (PrecompTeeth - 1))) xor 1;
   abs := (W xor -LSign) and PrecompMask;
 
 {$IFDEF DEBUG}
@@ -853,7 +853,7 @@ begin
 
   while i < PrecompPoints do
   begin
-    cond := TBits.Asr32(((i xor abs) - 1), 31);
+    cond := TBitUtilities.Asr32(((i xor abs) - 1), 31);
     TX25519Field.CMov(cond, table, off, r.X, 0);
     off := off + TX25519Field.SIZE;
     TX25519Field.CMov(cond, table, off, r.Y, 0);
@@ -1479,7 +1479,7 @@ begin
 
   for i := 0 to System.Pred(PrecompPoints) do
   begin
-    cond := TBits.Asr32(((i xor index) - 1), 31);
+    cond := TBitUtilities.Asr32(((i xor index) - 1), 31);
     TX25519Field.CMov(cond, FPrecompBase, off, p.Ypx_h, 0);
     off := off + TX25519Field.SIZE;
     TX25519Field.CMov(cond, FPrecompBase, off, p.Ymx_h, 0);
@@ -1731,7 +1731,7 @@ begin
   x12 := x12 - (x18 * L3); // x12:32/31
   x13 := x13 - (x18 * L4); // x13:28/21
 
-  x17 := x17 + TBits.Asr64(x16, 28); // x17:28/--
+  x17 := x17 + TBitUtilities.Asr64(x16, 28); // x17:28/--
   x16 := x16 and Int64(M28L); // x16:28/--
   x08 := x08 - (x17 * L0); // x08:54/32
   x09 := x09 - (x17 * L1); // x09:52/51
@@ -1746,7 +1746,7 @@ begin
   x10 := x10 - (x16 * L3); // x10:55/52
   x11 := x11 - (x16 * L4); // x11:51/41
 
-  x15 := x15 + TBits.Asr64(x14, 28); // x15:28/--
+  x15 := x15 + TBitUtilities.Asr64(x14, 28); // x15:28/--
   x14 := x14 and Int64(M28L); // x14:28/--
   x06 := x06 - (x15 * L0); // x06:54/32
   x07 := x07 - (x15 * L1); // x07:54/53
@@ -1761,7 +1761,7 @@ begin
   x08 := x08 - (x14 * L3); // x08:56/51
   x09 := x09 - (x14 * L4); // x09:56/--
 
-  x13 := x13 + TBits.Asr64(x12, 28); // x13:28/22
+  x13 := x13 + TBitUtilities.Asr64(x12, 28); // x13:28/22
   x12 := x12 and Int64(M28L); // x12:28/--
   x04 := x04 - (x13 * L0); // x04:54/49
   x05 := x05 - (x13 * L1); // x05:54/53
@@ -1769,7 +1769,7 @@ begin
   x07 := x07 - (x13 * L3); // x07:56/52
   x08 := x08 - (x13 * L4); // x08:56/52
 
-  x12 := x12 + TBits.Asr64(x11, 28); // x12:28/24
+  x12 := x12 + TBitUtilities.Asr64(x11, 28); // x12:28/24
   x11 := x11 and Int64(M28L); // x11:28/--
   x03 := x03 - (x12 * L0); // x03:54/49
   x04 := x04 - (x12 * L1); // x04:54/51
@@ -1777,7 +1777,7 @@ begin
   x06 := x06 - (x12 * L3); // x06:56/52
   x07 := x07 - (x12 * L4); // x07:56/53
 
-  x11 := x11 + TBits.Asr64(x10, 28); // x11:29/--
+  x11 := x11 + TBitUtilities.Asr64(x10, 28); // x11:29/--
   x10 := x10 and Int64(M28L); // x10:28/--
   x02 := x02 - (x11 * L0); // x02:55/32
   x03 := x03 - (x11 * L1); // x03:55/--
@@ -1785,7 +1785,7 @@ begin
   x05 := x05 - (x11 * L3); // x05:56/52
   x06 := x06 - (x11 * L4); // x06:56/53
 
-  x10 := x10 + TBits.Asr64(x09, 28); // x10:29/--
+  x10 := x10 + TBitUtilities.Asr64(x09, 28); // x10:29/--
   x09 := x09 and Int64(M28L); // x09:28/--
   x01 := x01 - (x10 * L0); // x01:55/28
   x02 := x02 - (x10 * L1); // x02:55/54
@@ -1793,12 +1793,12 @@ begin
   x04 := x04 - (x10 * L3); // x04:57/--
   x05 := x05 - (x10 * L4); // x05:56/53
 
-  x08 := x08 + TBits.Asr64(x07, 28); // x08:56/53
+  x08 := x08 + TBitUtilities.Asr64(x07, 28); // x08:56/53
   x07 := x07 and Int64(M28L); // x07:28/--
-  x09 := x09 + TBits.Asr64(x08, 28); // x09:29/25
+  x09 := x09 + TBitUtilities.Asr64(x08, 28); // x09:29/25
   x08 := x08 and Int64(M28L); // x08:28/--
 
-  T := TBits.Asr64(x08, 27) and Int64(1);
+  T := TBitUtilities.Asr64(x08, 27) and Int64(1);
   x09 := x09 + T; // x09:29/26
 
   x00 := x00 - (x09 * L0); // x00:55/53
@@ -1807,23 +1807,23 @@ begin
   x03 := x03 - (x09 * L3); // x03:57/--
   x04 := x04 - (x09 * L4); // x04:57/42
 
-  x01 := x01 + TBits.Asr64(x00, 28);
+  x01 := x01 + TBitUtilities.Asr64(x00, 28);
   x00 := x00 and Int64(M28L);
-  x02 := x02 + TBits.Asr64(x01, 28);
+  x02 := x02 + TBitUtilities.Asr64(x01, 28);
   x01 := x01 and Int64(M28L);
-  x03 := x03 + TBits.Asr64(x02, 28);
+  x03 := x03 + TBitUtilities.Asr64(x02, 28);
   x02 := x02 and Int64(M28L);
-  x04 := x04 + TBits.Asr64(x03, 28);
+  x04 := x04 + TBitUtilities.Asr64(x03, 28);
   x03 := x03 and Int64(M28L);
-  x05 := x05 + TBits.Asr64(x04, 28);
+  x05 := x05 + TBitUtilities.Asr64(x04, 28);
   x04 := x04 and Int64(M28L);
-  x06 := x06 + TBits.Asr64(x05, 28);
+  x06 := x06 + TBitUtilities.Asr64(x05, 28);
   x05 := x05 and Int64(M28L);
-  x07 := x07 + TBits.Asr64(x06, 28);
+  x07 := x07 + TBitUtilities.Asr64(x06, 28);
   x06 := x06 and Int64(M28L);
-  x08 := x08 + TBits.Asr64(x07, 28);
+  x08 := x08 + TBitUtilities.Asr64(x07, 28);
   x07 := x07 and Int64(M28L);
-  x09 := TBits.Asr64(x08, 28);
+  x09 := TBitUtilities.Asr64(x08, 28);
   x08 := x08 and Int64(M28L);
 
   x09 := x09 - T;
@@ -1837,21 +1837,21 @@ begin
   x03 := x03 + (x09 and L3);
   x04 := x04 + (x09 and L4);
 
-  x01 := x01 + TBits.Asr64(x00, 28);
+  x01 := x01 + TBitUtilities.Asr64(x00, 28);
   x00 := x00 and Int64(M28L);
-  x02 := x02 + TBits.Asr64(x01, 28);
+  x02 := x02 + TBitUtilities.Asr64(x01, 28);
   x01 := x01 and Int64(M28L);
-  x03 := x03 + TBits.Asr64(x02, 28);
+  x03 := x03 + TBitUtilities.Asr64(x02, 28);
   x02 := x02 and Int64(M28L);
-  x04 := x04 + TBits.Asr64(x03, 28);
+  x04 := x04 + TBitUtilities.Asr64(x03, 28);
   x03 := x03 and Int64(M28L);
-  x05 := x05 + TBits.Asr64(x04, 28);
+  x05 := x05 + TBitUtilities.Asr64(x04, 28);
   x04 := x04 and Int64(M28L);
-  x06 := x06 + TBits.Asr64(x05, 28);
+  x06 := x06 + TBitUtilities.Asr64(x05, 28);
   x05 := x05 and Int64(M28L);
-  x07 := x07 + TBits.Asr64(x06, 28);
+  x07 := x07 + TBitUtilities.Asr64(x06, 28);
   x06 := x06 and Int64(M28L);
-  x08 := x08 + TBits.Asr64(x07, 28);
+  x08 := x08 + TBitUtilities.Asr64(x07, 28);
   x07 := x07 and Int64(M28L);
 
   System.SetLength(result, ScalarBytes);
@@ -1877,7 +1877,7 @@ begin
 
 {$IFDEF DEBUG}
   System.Assert((n[0] and 7) = 0);
-  System.Assert((TBits.Asr32(n[ScalarUints - 1], 30)) = 1);
+  System.Assert((TBitUtilities.Asr32(n[ScalarUints - 1], 30)) = 1);
 {$ENDIF DEBUG}
   TNat.ShiftDownBits(ScalarUints, n, 3, 1);
 
@@ -1890,7 +1890,7 @@ begin
   System.Assert(c2 = (1 shl 31));
 {$ENDIF}
 {$IFDEF DEBUG}
-  System.Assert((TBits.Asr32(n[ScalarUints - 1], 28)) = 1);
+  System.Assert((TBitUtilities.Asr32(n[ScalarUints - 1], 28)) = 1);
 {$ENDIF DEBUG}
   PointCopy(p, r);
 
@@ -2030,8 +2030,8 @@ begin
     wb := ws_b[bit];
     if (wb <> 0) then
     begin
-      LSign := TBits.Asr32(wb, 31);
-      index := TBits.Asr32((wb xor LSign), 1);
+      LSign := TBitUtilities.Asr32(wb, 31);
+      index := TBitUtilities.Asr32((wb xor LSign), 1);
 
       PointAddVar((LSign <> 0), FPrecompBaseTable[index], r);
     end;
@@ -2039,8 +2039,8 @@ begin
     wp := ws_p[bit];
     if (wp <> 0) then
     begin
-      LSign := TBits.Asr32(wp, 31);
-      index := TBits.Asr32((wp xor LSign), 1);
+      LSign := TBitUtilities.Asr32(wp, 31);
+      index := TBitUtilities.Asr32((wp xor LSign), 1);
 
       PointAddVar((LSign <> 0), tp[index], r);
     end;

@@ -25,7 +25,7 @@ uses
   SysUtils,
   Classes,
   Generics.Collections,
-  ClpBits,
+  ClpBitUtilities,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
@@ -301,7 +301,7 @@ begin
   SetLength(LBytes, LByteLen);
   for I := 0 to System.High(AId) do
     if AId[I] then
-      LBytes[TBits.Asr32(I, 3)] := LBytes[TBits.Asr32(I, 3)] or Byte(TBits.Asr32($80, (I and 7)));
+      LBytes[TBitUtilities.Asr32(I, 3)] := LBytes[TBitUtilities.Asr32(I, 3)] or Byte(TBitUtilities.Asr32($80, (I and 7)));
   LPad := (8 - System.Length(AId)) and 7;
   Result := TDerBitString.Create(LBytes, LPad);
 end;

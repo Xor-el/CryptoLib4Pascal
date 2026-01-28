@@ -37,7 +37,7 @@ uses
   ClpAsn1Streams,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpBits,
+  ClpBitUtilities,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -158,8 +158,8 @@ begin
   LSR := TSecureRandom.Create();
   for I := 0 to 99 do
   begin
-    LTestTag := TBits.Asr32(LSR.NextInt32() and System.High(Int32), LSR.Next(26));
-    LApp := TDerTaggedObject.Create(False, TAsn1Tags.Application, LTestTag, TDerOctetString.Create(TCryptoLibByteArray.Create(1)));
+    LTestTag := TBitUtilities.Asr32(LSR.NextInt32() and System.High(Int32), LSR.Next(26));
+    LApp := TDerTaggedObject.Create(False, TAsn1Tags.Application, LTestTag, TDerOctetString.Create(TCryptoLibByteArray.Create(1)) as IDerOctetString);
     LApp := TAsn1TaggedObject.GetInstance(TAsn1Object.FromByteArray(LApp.GetEncoded())) as IAsn1TaggedObject;
 
     if not LApp.HasTag(TAsn1Tags.Application, LTestTag) then
@@ -168,7 +168,7 @@ begin
     end;
   end;
 
-  LTagged := TDerTaggedObject.Create(False, 34, TDerTaggedObject.Create(True, 1000, TDerInteger.One));
+  LTagged := TDerTaggedObject.Create(False, 34, TDerTaggedObject.Create(True, 1000, TDerInteger.One) as IDerTaggedObject);
   if not AreEqual(FTaggedInteger, LTagged.GetEncoded()) then
   begin
     Fail('incorrect encoding for implicit explicit tagged integer');

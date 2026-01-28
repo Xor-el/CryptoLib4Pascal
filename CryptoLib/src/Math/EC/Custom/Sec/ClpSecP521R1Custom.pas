@@ -25,7 +25,7 @@ uses
   ClpNat,
   ClpMod,
   ClpEncoders,
-  ClpBits,
+  ClpBitUtilities,
   ClpNat512,
   ClpECC,
   ClpBigInteger,
@@ -1105,7 +1105,7 @@ begin
 
   for i := 0 to System.Pred(Fm_size) do
   begin
-    MASK := UInt32(TBits.Asr32((i xor index) - 1, 31));
+    MASK := UInt32(TBitUtilities.Asr32((i xor index) - 1, 31));
 
     for J := 0 to System.Pred(SECP521R1_FE_INTS) do
     begin
