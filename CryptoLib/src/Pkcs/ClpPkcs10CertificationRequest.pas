@@ -29,14 +29,15 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIPkcsAsn1Objects,
+  ClpIPkcs10CertificationRequest,
   ClpPkcsAsn1Objects,
   ClpPkcsObjectIdentifiers,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Utilities,
-  ClpX509ExtensionsGenerator,
-  ClpIX509ExtensionsGenerator,
   ClpAsn1SignatureFactory,
+  ClpIX509Asn1Generators,
+  ClpX509Asn1Generators,
   ClpAsn1VerifierFactoryProvider,
   ClpSubjectPublicKeyInfoFactory,
   ClpPublicKeyFactory,
@@ -56,22 +57,6 @@ uses
   ClpCryptoLibTypes;
 
 type
-  /// <summary>
-  /// Interface for Pkcs10CertificationRequest (PKCS#10 CSR with verify/get public key/extensions).
-  /// </summary>
-  IPkcs10CertificationRequest = interface(ICertificationRequest)
-    ['{D4E5F6A7-B8C9-0123-DEF0-123456789ABC}']
-
-    function GetPublicKey: IAsymmetricKeyParameter;
-    function GetRequestedExtensions: IX509Extensions;
-    function Verify: Boolean; overload;
-    function Verify(const APublicKey: IAsymmetricKeyParameter): Boolean; overload;
-    function Verify(const AVerifierProvider: IVerifierFactoryProvider): Boolean; overload;
-    function Verify(const AVerifier: IVerifierFactory): Boolean; overload;
-
-    property RequestedExtensions: IX509Extensions read GetRequestedExtensions;
-  end;
-
   /// <summary>
   /// A class for verifying and creating PKCS#10 Certification requests.
   /// </summary>

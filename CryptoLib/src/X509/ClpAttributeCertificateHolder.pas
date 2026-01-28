@@ -24,6 +24,7 @@ interface
 uses
   Generics.Collections,
   ClpIAsn1Objects,
+  ClpIAttributeCertificateHolder,
   ClpIX509Asn1Objects,
   ClpIX509Certificate,
   ClpIDigest,
@@ -36,32 +37,6 @@ uses
   ClpCryptoLibTypes;
 
 type
-  /// <summary>
-  /// The Holder object for attribute certificates.
-  /// </summary>
-  IAttributeCertificateHolder = interface
-    ['{C2D3E4F5-A6B7-8901-CDEF-234567890ABC}']
-
-    function GetDigestedObjectType: Int32;
-    function GetDigestAlgorithm: String;
-    function GetObjectDigest: TCryptoLibByteArray;
-    function GetOtherObjectTypeID: String;
-    function GetHolder: IHolder;
-    function GetSerialNumber: TBigInteger;
-
-    function GetEntityNames: TCryptoLibGenericArray<IX509Name>;
-    function GetIssuer: TCryptoLibGenericArray<IX509Name>;
-    function Clone: IAttributeCertificateHolder;
-    function Match(const AX509Cert: IX509Certificate): Boolean;
-    function Equals(const AOther: IAttributeCertificateHolder): Boolean;
-
-    property DigestedObjectType: Int32 read GetDigestedObjectType;
-    property DigestAlgorithm: String read GetDigestAlgorithm;
-    property OtherObjectTypeID: String read GetOtherObjectTypeID;
-    property SerialNumber: TBigInteger read GetSerialNumber;
-    property Holder: IHolder read GetHolder;
-  end;
-
   /// <summary>
   /// Implementation of AttributeCertificateHolder.
   /// </summary>
@@ -133,14 +108,14 @@ end;
 constructor TAttributeCertificateHolder.Create(const AIssuerName: IX509Name;
   const ASerialNumber: TBigInteger);
 begin
-  Create(AIssuerName, TDerInteger.Create(ASerialNumber));
+  Create(AIssuerName, TDerInteger.Create(ASerialNumber) as IDerInteger);
 end;
 
 constructor TAttributeCertificateHolder.Create(const AIssuerName: IX509Name;
   const ASerialNumber: IDerInteger);
 begin
   inherited Create();
-  FHolder := THolder.Create(TIssuerSerial.Create(AIssuerName, ASerialNumber));
+  FHolder := THolder.Create(TIssuerSerial.Create(AIssuerName, ASerialNumber) as IIssuerSerial);
 end;
 
 constructor TAttributeCertificateHolder.Create(const ACert: IX509Certificate);
@@ -152,7 +127,7 @@ end;
 constructor TAttributeCertificateHolder.Create(const APrincipal: IX509Name);
 begin
   inherited Create();
-  FHolder := THolder.Create(TGeneralNames.Create(TGeneralName.Create(APrincipal)));
+  FHolder := THolder.Create(TGeneralNames.Create(TGeneralName.Create(APrincipal) as IGeneralName) as IGeneralNames);
 end;
 
 constructor TAttributeCertificateHolder.Create(ADigestedObjectType: Int32;

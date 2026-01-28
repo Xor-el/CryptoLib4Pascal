@@ -15,65 +15,36 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpX509Attribute;
+unit ClpIPkcs10CertificationRequest;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAsn1Core,
-  ClpIAsn1Objects,
-  ClpIX509Attribute,
+  ClpIPkcsAsn1Objects,
   ClpIX509Asn1Objects,
-  ClpX509Asn1Objects,
-  ClpCryptoLibTypes;
+  ClpIAsymmetricKeyParameter,
+  ClpIVerifierFactoryProvider,
+  ClpIVerifierFactory;
 
 type
   /// <summary>
-  /// Implementation of X.509 Attribute.
+  /// Interface for Pkcs10CertificationRequest (PKCS#10 CSR with verify/get public key/extensions).
   /// </summary>
-  TX509Attribute = class sealed(TInterfacedObject, IX509Attribute)
+  IPkcs10CertificationRequest = interface(ICertificationRequest)
+    ['{D4E5F6A7-B8C9-0123-DEF0-123456789ABC}']
 
-  strict private
-    FAttr: IAttributeX509;
+    function GetPublicKey: IAsymmetricKeyParameter;
+    function GetRequestedExtensions: IX509Extensions;
+    function Verify: Boolean; overload;
+    function Verify(const APublicKey: IAsymmetricKeyParameter): Boolean; overload;
+    function Verify(const AVerifierProvider: IVerifierFactoryProvider): Boolean; overload;
+    function Verify(const AVerifier: IVerifierFactory): Boolean; overload;
 
-    function GetOid: String;
-    function GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
-    function ToAsn1Object: IAsn1Object;
-
-  public
-    /// <summary>
-    /// Create from an object representing an attribute.
-    /// </summary>
-    constructor Create(const AAttr: IAsn1Encodable); overload;
-
-    property Oid: String read GetOid;
+    property RequestedExtensions: IX509Extensions read GetRequestedExtensions;
   end;
 
 implementation
-
-{ TX509Attribute }
-
-constructor TX509Attribute.Create(const AAttr: IAsn1Encodable);
-begin
-  inherited Create();
-  FAttr := TAttributeX509.GetInstance(AAttr);
-end;
-
-function TX509Attribute.GetOid: String;
-begin
-  Result := FAttr.AttrType.Id;
-end;
-
-function TX509Attribute.GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  Result := FAttr.GetAttributeValues;
-end;
-
-function TX509Attribute.ToAsn1Object: IAsn1Object;
-begin
-  Result := FAttr.ToAsn1Object;
-end;
 
 end.

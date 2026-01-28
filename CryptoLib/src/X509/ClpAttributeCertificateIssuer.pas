@@ -23,29 +23,16 @@ interface
 
 uses
   SysUtils,
+  Generics.Collections,
   ClpIAsn1Core,
   ClpIAsn1Objects,
+  ClpIAttributeCertificateIssuer,
   ClpIX509Asn1Objects,
+  ClpX509Asn1Objects,
   ClpIX509Certificate,
   ClpCryptoLibTypes;
 
 type
-  /// <summary>
-  /// Carrying class for an attribute certificate issuer.
-  /// </summary>
-  IAttributeCertificateIssuer = interface
-    ['{D3E4F5A6-B7C8-9012-DEF0-3456789ABCDE}']
-
-    function GetForm: IAsn1Encodable;
-    function GetAttCertIssuer: IAttCertIssuer;
-    function GetPrincipals: TCryptoLibGenericArray<IX509Name>;
-    function Clone: IAttributeCertificateIssuer;
-    function Match(const AX509Cert: IX509Certificate): Boolean;
-    function Equals(const AOther: IAttributeCertificateIssuer): Boolean;
-
-    property Form: IAsn1Encodable read GetForm;
-  end;
-
   /// <summary>
   /// Implementation of AttributeCertificateIssuer.
   /// </summary>
@@ -79,10 +66,6 @@ type
 
 implementation
 
-uses
-  Generics.Collections,
-  ClpX509Asn1Objects;
-
 { TAttributeCertificateIssuer }
 
 constructor TAttributeCertificateIssuer.Create(const AIssuer: IAttCertIssuer);
@@ -94,7 +77,7 @@ end;
 constructor TAttributeCertificateIssuer.Create(const APrincipal: IX509Name);
 begin
   inherited Create();
-  FForm := TV2Form.Create(TGeneralNames.Create(TGeneralName.Create(APrincipal)));
+  FForm := TV2Form.Create(TGeneralNames.Create(TGeneralName.Create(APrincipal) as IGeneralName) as IGeneralNames);
 end;
 
 function TAttributeCertificateIssuer.GetNames

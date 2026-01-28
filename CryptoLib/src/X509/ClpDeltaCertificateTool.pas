@@ -30,7 +30,7 @@ uses
   ClpIX509Certificate,
   ClpIX509Extension,
   ClpX509Asn1Objects,
-  ClpX509ExtensionsGenerator,
+  ClpX509Asn1Generators,
   ClpCryptoLibTypes;
 
 type

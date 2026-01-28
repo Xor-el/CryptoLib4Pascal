@@ -50,7 +50,6 @@ resourcestring
   SSubjectPKInfoNil = 'subjectPKInfo';
   SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
   SChallengePasswordMustHaveSingleValue = 'challengePassword attribute must have exactly one value';
-  SUnstructuredNameMustHaveSingleValue = 'unstructuredName attribute must have exactly one value';
   SPrivateKeyAlgorithmNil = 'privateKeyAlgorithm';
   SPrivateKeyNil = 'privateKey';
   SVersionNil = 'version';
@@ -370,18 +369,14 @@ type
   /// </summary>
   TRsassaPssParameters = class(TAsn1Encodable, IRsassaPssParameters)
 
-  public
+  strict private
     class var
-      DefaultHashAlgorithm: IAlgorithmIdentifier;
-      DefaultMaskGenAlgorithm: IAlgorithmIdentifier;
-      DefaultMaskGenFunction: IAlgorithmIdentifier; // Obsolete, use DefaultMaskGenAlgorithm
-      DefaultSaltLength: IDerInteger;
-      DefaultTrailerField: IDerInteger;
+      FDefaultHashAlgorithm, FDefaultMaskGenAlgorithm: IAlgorithmIdentifier;
+      FDefaultSaltLength, FDefaultTrailerField: IDerInteger;
 
     class procedure Boot; static;
     class constructor Create;
 
-  strict private
   var
     FHashAlgorithm: IAlgorithmIdentifier;
     FMaskGenAlgorithm: IAlgorithmIdentifier;
@@ -414,6 +409,11 @@ type
     property MaskGenAlgorithm: IAlgorithmIdentifier read GetMaskGenAlgorithm;
     property SaltLength: IDerInteger read GetSaltLength;
     property TrailerField: IDerInteger read GetTrailerField;
+
+    class property DefaultHashAlgorithm: IAlgorithmIdentifier read FDefaultHashAlgorithm;
+    class property DefaultMaskGenAlgorithm: IAlgorithmIdentifier read FDefaultMaskGenAlgorithm;
+    class property DefaultSaltLength: IDerInteger read FDefaultSaltLength;
+    class property DefaultTrailerField: IDerInteger read FDefaultTrailerField;
 
   end;
 
@@ -636,13 +636,6 @@ begin
         if LAttr.AttrValues.Count <> 1 then
         begin
           raise EArgumentCryptoLibException.Create(SChallengePasswordMustHaveSingleValue);
-        end;
-      end
-      else if TPkcsObjectIdentifiers.Pkcs9AtUnstructuredName.Equals(LAttr.AttrType) then
-      begin
-        if LAttr.AttrValues.Count <> 1 then
-        begin
-          raise EArgumentCryptoLibException.Create(SUnstructuredNameMustHaveSingleValue);
         end;
       end;
     end;
@@ -1169,14 +1162,14 @@ function TRsaPrivateKeyStructure.ToAsn1Object: IAsn1Object;
 begin
   Result := TDerSequence.Create([
     FVersion,
-    TDerInteger.Create(FModulus),
-    TDerInteger.Create(FPublicExponent),
-    TDerInteger.Create(FPrivateExponent),
-    TDerInteger.Create(FPrime1),
-    TDerInteger.Create(FPrime2),
-    TDerInteger.Create(FExponent1),
-    TDerInteger.Create(FExponent2),
-    TDerInteger.Create(FCoefficient)
+    TDerInteger.Create(FModulus) as IDerInteger,
+    TDerInteger.Create(FPublicExponent) as IDerInteger,
+    TDerInteger.Create(FPrivateExponent) as IDerInteger,
+    TDerInteger.Create(FPrime1) as IDerInteger,
+    TDerInteger.Create(FPrime2) as IDerInteger,
+    TDerInteger.Create(FExponent1) as IDerInteger,
+    TDerInteger.Create(FExponent2) as IDerInteger,
+    TDerInteger.Create(FCoefficient) as IDerInteger
   ]);
 end;
 
@@ -1189,11 +1182,10 @@ end;
 
 class procedure TRsassaPssParameters.Boot;
 begin
-  DefaultHashAlgorithm := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
-  DefaultMaskGenAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, DefaultHashAlgorithm);
-  DefaultMaskGenFunction := DefaultMaskGenAlgorithm; // Obsolete, use DefaultMaskGenAlgorithm
-  DefaultSaltLength := TDerInteger.ValueOf(20);
-  DefaultTrailerField := TDerInteger.One;
+  FDefaultHashAlgorithm := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
+  FDefaultMaskGenAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, DefaultHashAlgorithm);
+  FDefaultSaltLength := TDerInteger.ValueOf(20);
+  FDefaultTrailerField := TDerInteger.One;
 end;
 
 class function TRsassaPssParameters.GetInstance(AObj: TObject): IRsassaPssParameters;

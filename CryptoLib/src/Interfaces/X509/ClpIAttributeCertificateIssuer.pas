@@ -15,65 +15,37 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpX509Attribute;
+unit ClpIAttributeCertificateIssuer;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
   ClpIAsn1Core,
   ClpIAsn1Objects,
-  ClpIX509Attribute,
   ClpIX509Asn1Objects,
-  ClpX509Asn1Objects,
+  ClpIX509Certificate,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Implementation of X.509 Attribute.
+  /// Carrying class for an attribute certificate issuer.
   /// </summary>
-  TX509Attribute = class sealed(TInterfacedObject, IX509Attribute)
+  IAttributeCertificateIssuer = interface
+    ['{D3E4F5A6-B7C8-9012-DEF0-3456789ABCDE}']
 
-  strict private
-    FAttr: IAttributeX509;
+    function GetForm: IAsn1Encodable;
+    function GetAttCertIssuer: IAttCertIssuer;
+    function GetPrincipals: TCryptoLibGenericArray<IX509Name>;
+    function Clone: IAttributeCertificateIssuer;
+    function Match(const AX509Cert: IX509Certificate): Boolean;
+    function Equals(const AOther: IAttributeCertificateIssuer): Boolean;
 
-    function GetOid: String;
-    function GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
-    function ToAsn1Object: IAsn1Object;
-
-  public
-    /// <summary>
-    /// Create from an object representing an attribute.
-    /// </summary>
-    constructor Create(const AAttr: IAsn1Encodable); overload;
-
-    property Oid: String read GetOid;
+    property Form: IAsn1Encodable read GetForm;
   end;
 
 implementation
 
-{ TX509Attribute }
-
-constructor TX509Attribute.Create(const AAttr: IAsn1Encodable);
-begin
-  inherited Create();
-  FAttr := TAttributeX509.GetInstance(AAttr);
-end;
-
-function TX509Attribute.GetOid: String;
-begin
-  Result := FAttr.AttrType.Id;
-end;
-
-function TX509Attribute.GetValues: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  Result := FAttr.GetAttributeValues;
-end;
-
-function TX509Attribute.ToAsn1Object: IAsn1Object;
-begin
-  Result := FAttr.ToAsn1Object;
-end;
-
 end.
+

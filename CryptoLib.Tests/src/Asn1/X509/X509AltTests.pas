@@ -33,9 +33,9 @@ uses
 {$ENDIF FPC}
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
-  ClpX509ExtensionsGenerator,
-  ClpIX509ExtensionsGenerator,
   ClpPkcsObjectIdentifiers,
+  ClpIX509Asn1Generators,
+  ClpX509Asn1Generators,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpCryptoLibTypes,
