@@ -1512,10 +1512,10 @@ type
       /// </summary>
       TAsn1SetParserImpl = class sealed(TInterfacedObject, IAsn1Convertible, IAsn1SetParser)
       strict private
-        FOuter: TAsn1Set;
+        FOuter: IAsn1Set;
         FIndex: Int32;
       public
-        constructor Create(const AOuter: TAsn1Set);
+        constructor Create(const AOuter: IAsn1Set);
         function ReadObject(): IAsn1Convertible;
         function ToAsn1Object(): IAsn1Object;
       end;
@@ -15679,7 +15679,7 @@ end;
 
 { TAsn1Set.TAsn1SetParserImpl }
 
-constructor TAsn1Set.TAsn1SetParserImpl.Create(const AOuter: TAsn1Set);
+constructor TAsn1Set.TAsn1SetParserImpl.Create(const AOuter: IAsn1Set);
 begin
   inherited Create();
   FOuter := AOuter;
@@ -15694,7 +15694,7 @@ var
   LSet: IAsn1Set;
   LOctetString: IAsn1OctetString;
 begin
-  LElements := FOuter.FElements;
+  LElements := FOuter.Elements;
   if FIndex >= System.Length(LElements) then
   begin
     Result := nil;
