@@ -45,8 +45,7 @@ type
 
   const
 
-    Falgorithms: array [0 .. 6] of String = ('EC', 'ECDSA', 'ECDH', 'ECDHC',
-      'ECGOST3410', 'ECMQV', 'ECSCHNORR');
+    Falgorithms: array [0 .. 5] of String = ('EC', 'ECDSA', 'ECDH', 'ECDHC', 'ECGOST3410', 'ECMQV');
 
   var
     Falgorithm: String;

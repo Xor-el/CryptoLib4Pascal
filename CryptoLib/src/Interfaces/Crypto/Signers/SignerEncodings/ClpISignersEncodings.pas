@@ -54,28 +54,6 @@ type
   end;
 
 type
-  /// <summary>
-  /// An interface for different encoding formats for Schnorr signatures.
-  /// </summary>
-  ISchnorrEncoding = interface(IInterface)
-    ['{CC5ECEFB-D806-402F-9F86-8D17EC61BE00}']
-
-    /// <summary>Decode the (r, s) pair of a Schnorr signature.</summary>
-    /// <param name="n">The order of the group that r, s belong to.</param>
-    /// <param name="encoding">An encoding of the (r, s) pair of a Schnorr signature.</param>
-    /// <returns>The (r, s) of a Schnorr signature, stored in an array of exactly two elements, r followed by s.</returns>
-    function Decode(const AN: TBigInteger; const AEncoding: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>;
-    /// <summary>Encode the (r, s) pair of a Schnorr signature.</summary>
-    /// <param name="n">The order of the group that r, s belong to.</param>
-    /// <param name="r">The r value of a Schnorr signature.</param>
-    /// <param name="s">The s value of a Schnorr signature.</param>
-    /// <returns>An encoding of the Schnorr signature given by the provided (r, s) pair.</returns>
-    function Encode(const AN, AR, &AS: TBigInteger): TCryptoLibByteArray;
-
-  end;
-
-type
   IStandardDsaEncoding = interface(IDsaEncoding)
     ['{A8662374-922B-4D72-B956-FE0ED3505C68}']
 
@@ -89,18 +67,6 @@ type
 type
   IPlainDsaEncoding = interface(IDsaEncoding)
     ['{72DC1571-BE91-461B-BD2F-A0CCAA15DD59}']
-
-    function CheckValue(const AN, AX: TBigInteger): TBigInteger;
-    function DecodeValue(const AN: TBigInteger; const ABuf: TCryptoLibByteArray;
-      AOff, ALength: Int32): TBigInteger;
-    procedure EncodeValue(const AN, AX: TBigInteger;
-      const ABuf: TCryptoLibByteArray; AOff, ALength: Int32);
-
-  end;
-
-type
-  IPlainSchnorrEncoding = interface(ISchnorrEncoding)
-    ['{1C2D1D11-04C4-4438-B728-4BF3ED2F3E99}']
 
     function CheckValue(const AN, AX: TBigInteger): TBigInteger;
     function DecodeValue(const AN: TBigInteger; const ABuf: TCryptoLibByteArray;

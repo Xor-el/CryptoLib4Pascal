@@ -218,6 +218,8 @@ type
     function ToByteArray(): TCryptoLibByteArray;
     function ToByteArrayUnsigned(): TCryptoLibByteArray;
     function ToByteArrayInternal(const AUnsigned: Boolean): TCryptoLibByteArray;
+    function GetLengthofByteArray(): Int32;
+    function GetLengthofByteArrayUnsigned(): Int32;
     function ToString(): String; overload;
     function ToString(const ARadix: Int32): String; overload;
     procedure ToStringRecursive(var ASb: String; const ARadix: Int32; const AModuli: TCryptoLibGenericArray<TBigInteger>; const AScale: Int32; const APos: TBigInteger);
@@ -3212,6 +3214,19 @@ end;
 function TBigInteger.ToByteArrayUnsigned(): TCryptoLibByteArray;
 begin
   Result := ToByteArrayInternal(True);
+end;
+
+function TBigInteger.GetLengthofByteArray(): Int32;
+begin
+  Result := GetBytesLength(BitLength + 1);
+end;
+
+function TBigInteger.GetLengthofByteArrayUnsigned(): Int32;
+begin
+  if SignValue < 0 then
+    Result := GetBytesLength(BitLength + 1)
+  else
+    Result := GetBytesLength(BitLength);
 end;
 
 function TBigInteger.ToByteArrayInternal(const AUnsigned: Boolean): TCryptoLibByteArray;

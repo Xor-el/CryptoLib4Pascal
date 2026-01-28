@@ -70,7 +70,7 @@ type
 
   type
 {$SCOPEDENUMS ON}
-    TEd25519SignerAlgorithm = (Ed25519, Ed25519Blake2B);
+    TEd25519SignerAlgorithm = (Ed25519);
 {$SCOPEDENUMS OFF}
   function CreateSigner(algorithm: TEd25519.TEd25519Algorithm;
     const context: TBytes): ISigner;
@@ -165,24 +165,6 @@ begin
             [id, EncodeHex(LPk), EncodeHex(LKey)]));
         end;
       end;
-    TTestEd25519HigherLevel.TEd25519SignerAlgorithm.Ed25519Blake2B:
-      begin
-        LKey := (LKeyPair.Private as IEd25519PrivateKeyParameters).GetEncoded();
-        if not AreEqual(LKey, System.Copy(LSk, 0, 32)) then
-        begin
-          Fail(Format
-            ('Test with Id %d Failed on PrivateKey Reconstruction Comparison, Expected "%s" but got "%s"',
-            [id, EncodeHex(LSk), EncodeHex(LKey)]));
-        end;
-
-        LKey := (LKeyPair.Public as IEd25519PublicKeyParameters).GetEncoded();
-        if not AreEqual(LKey, System.Copy(LPk, 0, 64)) then
-        begin
-          Fail(Format
-            ('Test with Id %d Failed on PublicKey Reconstruction Comparison, Expected "%s" but got "%s"',
-            [id, EncodeHex(LPk), EncodeHex(LKey)]));
-        end;
-      end
   else
     begin
       raise EArgumentCryptoLibException.Create('algorithm');
@@ -301,14 +283,6 @@ begin
           TEd25519PrivateKeyParameters.Create(TEd25519.Create() as IEd25519, sk,
           0) as IEd25519PrivateKeyParameters);
       end;
-    TTestEd25519HigherLevel.TEd25519SignerAlgorithm.Ed25519Blake2B:
-      begin
-        Result := TAsymmetricCipherKeyPair.Create
-          (TEd25519PublicKeyParameters.Create(pk, 0)
-          as IEd25519PublicKeyParameters,
-          TEd25519PrivateKeyParameters.Create(TEd25519Blake2B.Create()
-          as IEd25519Blake2B, sk, 0) as IEd25519PrivateKeyParameters);
-      end
   else
     begin
       raise EArgumentCryptoLibException.Create('algorithm');
@@ -375,34 +349,6 @@ begin
     'c0dac102c4533186e25dc43128472353eaabdb878b152aeb8e001f92d90233a7',
     '5f4c8989',
     '124f6fc6b0d100842769e71bd530664d888df8507df6c56dedfdb509aeb93416e26b918d38aa06305df3095697c18b2aa832eaa52edc0ae49fbae5a85e150c075f4c8989');
-
-  // TEd25519SignerAlgorithm.Ed25519Blake2B
-
-  DoEd25519Test(6, TEd25519SignerAlgorithm.Ed25519Blake2B,
-    '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
-    '78e65bf30f893d32fc57ef051c341bdede242544fc2a2112f0fa2c7afdebc02f', '',
-    '99a523bd4616c8161144d6a99d3c32400cb4a326f4d79e307340f6afa11750a0085d7d84626bc9e4b153fc0e396d15ce44c39bae4533804db1fe5b52f2b1b805');
-
-  DoEd25519Test(7, TEd25519SignerAlgorithm.Ed25519Blake2B,
-    '4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb',
-    '5e71392d91e6a58fedeb0850364f56cd158a60447557d7890389c9b3d4576d4d', '72',
-    '6da75e15b5707f4de5a153c48a5d839fb85074c38aeb6285977f03a13977597f976069fdb903f183474aaa5ed0cfe878ba8ef868c5e47ca3f96ccfb3a89b2a0672');
-
-  DoEd25519Test(8, TEd25519SignerAlgorithm.Ed25519Blake2B,
-    'c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7',
-    '8d53ca70f0eab23b9178345785fcdb69ed6723f8148f7e339e88653700b718da', 'af82',
-    '7cc3c13852bd12abf3ce4ca8ca2836cbf86da96c4634c50df3fb80dc809e29db0e109c361353407c1236a904f636868aa33977a99d3f844598db1538b4295203af82');
-
-  DoEd25519Test(9, TEd25519SignerAlgorithm.Ed25519Blake2B,
-    '0d4a05b07352a5436e180356da0ae6efa0345ff7fb1572575772e8005ed978e9',
-    '0c6989f1abebe219db9d1e2cb8b0c602b191828ef7238f8e6dbff8a506802c09',
-    'cbc77b', '7fb2c11db736d16ebd07a653463dc8739d3315f89f61a66715e41528cb32b7689393f5af8a66c9c7336e209e6b187259fe266f7941a435fecb8cd7a7fc759400cbc77b');
-
-  DoEd25519Test(10, TEd25519SignerAlgorithm.Ed25519Blake2B,
-    '6df9340c138cc188b5fe4464ebaa3f7fc206a2d55c3434707e74c9fc04e20ebb',
-    'ce99a0d41b2c1bdf593cfe41b0bf38f40ab77a804a71138188cc879b59869d90',
-    '5f4c8989',
-    'e09625735d184975409020659f3c0b07f036a19a7e7aa2100964cef577806e26125d1437577d2d3286c29df871797cac3fc0cdecbbeca616030cfcc6711db6065f4c8989');
 end;
 
 initialization

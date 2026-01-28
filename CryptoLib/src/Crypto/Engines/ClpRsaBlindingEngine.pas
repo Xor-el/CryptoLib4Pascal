@@ -150,7 +150,7 @@ var
   m, blindFactorInverse, res: TBigInteger;
 begin
   m := FKey.Modulus;
-  blindFactorInverse := TBigIntegers.ModOddInverse(m, FBlindingFactor);
+  blindFactorInverse := TBigIntegers.ModOddInverseVar(m, FBlindingFactor);
   res := blindedMsg.Multiply(blindFactorInverse);
   Result := res.&Mod(m);
 end;

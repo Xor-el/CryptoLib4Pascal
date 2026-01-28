@@ -92,33 +92,6 @@ type
 
   end;
 
-type
-  TPlainSchnorrEncoding = class(TInterfacedObject, ISchnorrEncoding,
-    IPlainSchnorrEncoding)
-
-  strict private
-
-    class function GetInstance: IPlainSchnorrEncoding; static; inline;
-
-  strict protected
-
-    function CheckValue(const AN, AX: TBigInteger): TBigInteger; virtual;
-    function DecodeValue(const AN: TBigInteger; const ABuf: TCryptoLibByteArray;
-      AOff, ALength: Int32): TBigInteger; virtual;
-    procedure EncodeValue(const AN, AX: TBigInteger;
-      const ABuf: TCryptoLibByteArray; AOff, ALength: Int32); virtual;
-
-  public
-
-    function Decode(const AN: TBigInteger; const AEncoding: TCryptoLibByteArray)
-      : TCryptoLibGenericArray<TBigInteger>; virtual;
-
-    function Encode(const AN, AR, &AS: TBigInteger): TCryptoLibByteArray; virtual;
-
-    class property Instance: IPlainSchnorrEncoding read GetInstance;
-
-  end;
-
 implementation
 
 { TStandardDsaEncoding }
@@ -252,69 +225,6 @@ end;
 class function TPlainDsaEncoding.GetInstance: IPlainDsaEncoding;
 begin
   Result := TPlainDsaEncoding.Create();
-end;
-
-{ TPlainSchnorrEncoding }
-
-function TPlainSchnorrEncoding.CheckValue(const AN, AX: TBigInteger): TBigInteger;
-begin
-  if ((AX.SignValue < 0) or ((AX.CompareTo(AN) >= 0))) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SValueOutOfRange, ['x']);
-  end;
-  Result := AX;
-end;
-
-function TPlainSchnorrEncoding.Decode(const AN: TBigInteger;
-  const AEncoding: TCryptoLibByteArray): TCryptoLibGenericArray<TBigInteger>;
-var
-  LValueLength: Int32;
-begin
-  LValueLength := TBigIntegers.GetUnsignedByteLength(AN);
-  if (System.Length(AEncoding) <> (LValueLength * 2)) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidEncodingLength,
-      ['encoding']);
-  end;
-  Result := TCryptoLibGenericArray<TBigInteger>.Create
-    (DecodeValue(AN, AEncoding, 0, LValueLength), DecodeValue(AN, AEncoding,
-    LValueLength, LValueLength));
-end;
-
-function TPlainSchnorrEncoding.DecodeValue(const AN: TBigInteger;
-  const ABuf: TCryptoLibByteArray; AOff, ALength: Int32): TBigInteger;
-begin
-  Result := CheckValue(AN, TBigInteger.Create(1, ABuf, AOff, ALength));
-end;
-
-function TPlainSchnorrEncoding.Encode(const AN, AR, &AS: TBigInteger)
-  : TCryptoLibByteArray;
-var
-  LValueLength: Int32;
-begin
-  LValueLength := TBigIntegers.GetUnsignedByteLength(AN);
-  System.SetLength(Result, LValueLength * 2);
-  EncodeValue(AN, AR, Result, 0, LValueLength);
-  EncodeValue(AN, &AS, Result, LValueLength, LValueLength);
-end;
-
-procedure TPlainSchnorrEncoding.EncodeValue(const AN, AX: TBigInteger;
-  const ABuf: TCryptoLibByteArray; AOff, ALength: Int32);
-var
-  LBs: TCryptoLibByteArray;
-  LBsOff, LBsLen, LPos: Int32;
-begin
-  LBs := CheckValue(AN, AX).ToByteArrayUnsigned();
-  LBsOff := Max(0, System.Length(LBs) - ALength);
-  LBsLen := System.Length(LBs) - LBsOff;
-  LPos := ALength - LBsLen;
-  TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPos, Byte(0));
-  System.Move(LBs[LBsOff], ABuf[AOff + LPos], LBsLen * System.SizeOf(Byte));
-end;
-
-class function TPlainSchnorrEncoding.GetInstance: IPlainSchnorrEncoding;
-begin
-  Result := TPlainSchnorrEncoding.Create();
 end;
 
 end.

@@ -95,12 +95,6 @@ type
 
   end;
 
-type
-  IEd25519Blake2B = interface(IEd25519)
-    ['{4EF6C436-D49D-4442-A014-848E08D81BE6}']
-
-  end;
-
 implementation
 
 end.

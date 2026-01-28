@@ -161,7 +161,7 @@ begin
     // blind = r^e mod m
     blind := r.ModPow(e, m);
     // unblind = r^(-1) mod m
-    unblind := TBigIntegers.ModOddInverse(m, r);
+    unblind := TBigIntegers.ModOddInverseVar(m, r);
 
     // Blind the input: blindedInput = blind * input mod m
     blindedInput := blind.Multiply(input).&Mod(m);

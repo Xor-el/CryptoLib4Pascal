@@ -249,7 +249,7 @@ begin
     // Calculate CRT parameters
     dP := d.Remainder(pSub1);
     dQ := d.Remainder(qSub1);
-    qInv := TBigIntegers.ModOddInverse(p, q);
+    qInv := TBigIntegers.ModOddInverseVar(p, q);
 
     // Create key pair
     pubKey := TRsaKeyParameters.Create(False, n, e) as IRsaKeyParameters;

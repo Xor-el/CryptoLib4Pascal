@@ -22,291 +22,327 @@ unit ClpBigIntegers;
 interface
 
 uses
-  Math,
+  SysUtils,
+  Classes,
   ClpBigInteger,
-  ClpCryptoLibTypes,
-  ClpISecureRandom;
+  ClpISecureRandom,
+  ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidLength = 'Standard Length Exceeded, "n"';
-  SInvalidMinValue = '"min" may not be greater than "max""';
+  SStandardLengthExceeded = 'standard length exceeded';
+  SMinMayNotBeGreaterThanMax = '''min'' may not be greater than ''max''';
+  SMustBeOdd = 'must be odd';
+  SModulusNotPositive = 'BigInteger: modulus not positive';
 
 type
-
   /// <summary>
   /// BigInteger utilities.
   /// </summary>
-  TBigIntegers = class abstract(TObject)
-
+  TBigIntegers = class sealed(TObject)
   strict private
-  const
-    MaxIterations = Int32(1000);
+    const
+      MaxIterations = 1000;
+
+    class constructor Create;
 
   public
+    class var
+      Zero: TBigInteger;
+      One: TBigInteger;
 
     /// <summary>
     /// Return the passed in value as an unsigned byte array.
     /// </summary>
-    /// <param name="n">
-    /// value to be converted.
-    /// </param>
-    /// <returns>
-    /// a byte array without a leading zero byte if present in the signed
-    /// encoding.
-    /// </returns>
-    class function AsUnsignedByteArray(const n: TBigInteger)
-      : TCryptoLibByteArray; overload; static;
+    /// <param name="AN">the value to be converted.</param>
+    /// <returns>a byte array without a leading zero byte if present in the signed encoding.</returns>
+    class function AsUnsignedByteArray(const AN: TBigInteger): TCryptoLibByteArray; overload; static;
 
     /// <summary>
-    /// the passed in value as an unsigned byte array of specified length,
-    /// zero-extended as necessary.
+    /// Return the passed in value as an unsigned byte array of the specified length, padded with
+    /// leading zeros as necessary.
     /// </summary>
-    /// <param name="length">
-    /// length desired length of result array.
-    /// </param>
-    /// <param name="n">
-    /// value to be converted.
-    /// </param>
-    /// <returns>
-    /// a byte array of specified length, with leading zeroes as necessary
-    /// given the size of n.
-    /// </returns>
-    class function AsUnsignedByteArray(length: Int32; const n: TBigInteger)
-      : TCryptoLibByteArray; overload; static;
+    /// <param name="ALength">the fixed length of the result.</param>
+    /// <param name="AN">the value to be converted.</param>
+    /// <returns>a byte array padded to a fixed length with leading zeros.</returns>
+    class function AsUnsignedByteArray(const ALength: Int32; const AN: TBigInteger): TCryptoLibByteArray; overload; static;
 
     /// <summary>
-    /// Return a random BigInteger not less than 'min' and not greater than
-    /// 'max'
+    /// Write the passed in value as unsigned bytes to the specified buffer range, padded with
+    /// leading zeros as necessary.
     /// </summary>
-    /// <param name="min">
-    /// the least value that may be generated
-    /// </param>
-    /// <param name="max">
-    /// the greatest value that may be generated
-    /// </param>
-    /// <param name="random">
-    /// the source of randomness
-    /// </param>
-    /// <returns>
-    /// a random BigInteger value in the range [min,max]
-    /// </returns>
-    class function CreateRandomInRange(const min, max: TBigInteger;
-      // TODO Should have been just Random class
-      const random: ISecureRandom): TBigInteger; static;
+    /// <param name="AN">the value to be converted.</param>
+    /// <param name="ABuf">the buffer to which the value is written.</param>
+    /// <param name="AOff">the start offset in array ABuf at which the data is written.</param>
+    /// <param name="ALen">the fixed length of data written (possibly padded with leading zeros).</param>
+    class procedure AsUnsignedByteArray(const AN: TBigInteger; var ABuf: TCryptoLibByteArray; const AOff, ALen: Int32); overload; static;
 
     /// <summary>
-    /// <para>
-    /// The regular <b>BigInteger.toByteArray()</b> includes the sign bit
-    /// of the number and <br />might result in an extra byte addition.
-    /// This method removes this extra byte.
-    /// </para>
+    /// Creates a Random BigInteger from the secure random of a given bit length.
     /// </summary>
-    /// <param name="b">
-    /// the integer to format into a byte array
-    /// </param>
-    /// <param name="numBytes">
-    /// the desired size of the resulting byte array
-    /// </param>
-    /// <returns>
-    /// numBytes byte long array.
-    /// </returns>
-    class function BigIntegerToBytes(const b: TBigInteger; numBytes: Int32)
-      : TCryptoLibByteArray; static; inline;
-
-    class function GetByteLength(const n: TBigInteger): Int32;
-
-    class function GetUnsignedByteLength(const n: TBigInteger): Int32;
-      static; inline;
+    /// <param name="ABitLength">the bit length.</param>
+    /// <param name="ASecureRandom">the source of randomness.</param>
+    /// <returns>a random BigInteger value.</returns>
+    class function CreateRandomBigInteger(const ABitLength: Int32; const ASecureRandom: ISecureRandom): TBigInteger; static;
 
     /// <summary>
-    /// Calculate the modular inverse of X mod M where M is odd.
+    /// Return a random BigInteger not less than 'min' and not greater than 'max'
     /// </summary>
-    /// <param name="M">The odd modulus (must be positive and odd)</param>
-    /// <param name="X">The value to invert</param>
-    /// <returns>X^(-1) mod M</returns>
-    /// <exception cref="EArithmeticCryptoLibException">If M is not positive, not odd, or X is not invertible</exception>
-    class function ModOddInverse(const M, X: TBigInteger): TBigInteger; static;
+    /// <param name="AMin">the least value that may be generated.</param>
+    /// <param name="AMax">the greatest value that may be generated.</param>
+    /// <param name="ARandom">the source of randomness.</param>
+    /// <returns>a random BigInteger value in the range [min,max].</returns>
+    class function CreateRandomInRange(const AMin, AMax: TBigInteger; const ARandom: ISecureRandom): TBigInteger; static;
 
     /// <summary>
-    /// Check if two BigIntegers are coprime (gcd = 1) for an odd modulus.
-    /// Uses GCD-based calculation - variable time but simpler than constant-time approach.
+    /// Create a BigInteger from an unsigned byte array.
     /// </summary>
-    /// <param name="M">The odd modulus (must be positive and odd)</param>
-    /// <param name="X">The value to check for coprimality</param>
-    /// <returns>True if gcd(M, X) = 1, False otherwise</returns>
-    class function ModOddIsCoprimeVar(const M, X: TBigInteger): Boolean; static;
+    /// <param name="ABuf">the byte array.</param>
+    /// <returns>a BigInteger value.</returns>
+    class function FromUnsignedByteArray(const ABuf: TCryptoLibByteArray): TBigInteger; overload; static;
 
+    /// <summary>
+    /// Create a BigInteger from an unsigned byte array.
+    /// </summary>
+    /// <param name="ABuf">the byte array.</param>
+    /// <param name="AOff">the start offset in array ABuf.</param>
+    /// <param name="ALength">the length of data.</param>
+    /// <returns>a BigInteger value.</returns>
+    class function FromUnsignedByteArray(const ABuf: TCryptoLibByteArray; const AOff, ALength: Int32): TBigInteger; overload; static;
+
+    /// <summary>
+    /// Get the byte length of a BigInteger.
+    /// </summary>
+    /// <param name="AN">the BigInteger.</param>
+    /// <returns>the byte length.</returns>
+    class function GetByteLength(const AN: TBigInteger): Int32; static;
+
+    /// <summary>
+    /// Get the unsigned byte length of a BigInteger.
+    /// </summary>
+    /// <param name="AN">the BigInteger.</param>
+    /// <returns>the unsigned byte length.</returns>
+    class function GetUnsignedByteLength(const AN: TBigInteger): Int32; static;
+
+    /// <summary>
+    /// Write the passed in value as unsigned bytes to the specified stream.
+    /// </summary>
+    /// <param name="AOutStr">the stream to which the value is written.</param>
+    /// <param name="AN">the value to be converted.</param>
+    class procedure WriteUnsignedByteArray(const AOutStr: TStream; const AN: TBigInteger); static;
+
+    /// <summary>
+    /// ModOddInverseVar.
+    /// </summary>
+    /// <param name="AM">the modulus (must be odd).</param>
+    /// <param name="AX">the value to invert.</param>
+    /// <returns>inverse.</returns>
+    class function ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// ModOddIsCoprimeVar.
+    /// </summary>
+    /// <param name="AM">the modulus (must be odd).</param>
+    /// <param name="AX">the value to check.</param>
+    /// <returns>whether is coprime or not.</returns>
+    class function ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean; static;
   end;
 
 implementation
 
+uses
+  ClpArrayUtilities;
+
 { TBigIntegers }
 
-class function TBigIntegers.AsUnsignedByteArray(const n: TBigInteger)
-  : TCryptoLibByteArray;
+class constructor TBigIntegers.Create;
 begin
-  Result := n.ToByteArrayUnsigned();
+  Zero := TBigInteger.Zero;
+  One := TBigInteger.One;
 end;
 
-class function TBigIntegers.AsUnsignedByteArray(length: Int32;
-  const n: TBigInteger): TCryptoLibByteArray;
-var
-  bytes: TCryptoLibByteArray;
+class function TBigIntegers.AsUnsignedByteArray(const AN: TBigInteger): TCryptoLibByteArray;
 begin
-  Result := nil;
-  bytes := n.ToByteArrayUnsigned();
+  Result := AN.ToByteArrayUnsigned();
+end;
 
-  if (System.length(bytes) > length) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidLength);
-  end;
+class function TBigIntegers.AsUnsignedByteArray(const ALength: Int32; const AN: TBigInteger): TCryptoLibByteArray;
+var
+  LBytes: TCryptoLibByteArray;
+  LBytesLength: Int32;
+  I: Int32;
+begin
+  LBytes := AN.ToByteArrayUnsigned();
+  LBytesLength := System.Length(LBytes);
 
-  if (System.length(bytes) = length) then
+  if LBytesLength > ALength then
+    raise EArgumentCryptoLibException.Create(SStandardLengthExceeded);
+
+  if LBytesLength = ALength then
   begin
-    Result := bytes;
+    Result := LBytes;
     Exit;
   end;
 
-  System.SetLength(Result, length);
-  // Explicitly zero-initialize the array to ensure leading zeros
-  //System.FillChar(Result[0], System.length(Result) * System.SizeOf(Byte), 0);
-  System.Move(bytes[0], Result[System.length(Result) - System.length(bytes)],
-    System.length(bytes) * System.SizeOf(Byte));
-
+  System.SetLength(Result, ALength);
+  // Fill leading bytes with zeros
+  for I := 0 to System.Pred(ALength - LBytesLength) do
+  begin
+    Result[I] := 0;
+  end;
+  // Copy the actual bytes
+  System.Move(LBytes[0], Result[ALength - LBytesLength], LBytesLength * System.SizeOf(Byte));
 end;
 
-class function TBigIntegers.BigIntegerToBytes(const b: TBigInteger;
-  numBytes: Int32): TCryptoLibByteArray;
+class procedure TBigIntegers.AsUnsignedByteArray(const AN: TBigInteger; var ABuf: TCryptoLibByteArray; const AOff, ALen: Int32);
 var
-  biBytes: TCryptoLibByteArray;
-  start, length: Int32;
+  LBytes: TCryptoLibByteArray;
+  LBytesLength: Int32;
+  LPadLen: Int32;
+  I: Int32;
 begin
-  System.SetLength(Result, numBytes);
-  biBytes := b.ToByteArray();
-  if System.length(biBytes) = (numBytes + 1) then
+  LBytes := AN.ToByteArrayUnsigned();
+  LBytesLength := System.Length(LBytes);
+
+  if LBytesLength > ALen then
+    raise EArgumentCryptoLibException.Create(SStandardLengthExceeded);
+
+  LPadLen := ALen - LBytesLength;
+  // Fill padding bytes with zeros
+  for I := 0 to System.Pred(LPadLen) do
   begin
-    start := 1
-  end
-  else
+    ABuf[AOff + I] := 0;
+  end;
+  // Copy the actual bytes
+  System.Move(LBytes[0], ABuf[AOff + LPadLen], LBytesLength * System.SizeOf(Byte));
+end;
+
+class function TBigIntegers.CreateRandomBigInteger(const ABitLength: Int32; const ASecureRandom: ISecureRandom): TBigInteger;
+begin
+  Result := TBigInteger.Create(ABitLength, ASecureRandom);
+end;
+
+class function TBigIntegers.CreateRandomInRange(const AMin, AMax: TBigInteger; const ARandom: ISecureRandom): TBigInteger;
+var
+  LCmp: Int32;
+  I: Int32;
+  LX: TBigInteger;
+begin
+  LCmp := AMin.CompareTo(AMax);
+  if LCmp >= 0 then
   begin
-    start := 0
+    if LCmp > 0 then
+      raise EArgumentCryptoLibException.Create(SMinMayNotBeGreaterThanMax);
+
+    Result := AMin;
+    Exit;
   end;
 
-  length := min(System.length(biBytes), numBytes);
-  System.Move(biBytes[start], Result[numBytes - length],
-    length * System.SizeOf(Byte));
-end;
-
-class function TBigIntegers.CreateRandomInRange(const min, max: TBigInteger;
-  // TODO Should have been just Random class
-  const random: ISecureRandom): TBigInteger;
-var
-  cmp, I: Int32;
-  x: TBigInteger;
-begin
-  cmp := min.CompareTo(max);
-  if (cmp >= 0) then
+  if AMin.BitLength > (AMax.BitLength div 2) then
   begin
-    if (cmp > 0) then
+    Result := CreateRandomInRange(TBigInteger.Zero, AMax.Subtract(AMin), ARandom).Add(AMin);
+    Exit;
+  end;
+
+  for I := 0 to System.Pred(MaxIterations) do
+  begin
+    LX := TBigInteger.Create(AMax.BitLength, ARandom);
+    if (LX.CompareTo(AMin) >= 0) and (LX.CompareTo(AMax) <= 0) then
     begin
-      raise EArgumentCryptoLibException.CreateRes(@SInvalidMinValue);
-    end;
-
-    Result := min;
-    Exit;
-  end;
-
-  if (min.BitLength > (max.BitLength shr 1)) then
-  begin
-    Result := CreateRandomInRange(TBigInteger.Zero, max.Subtract(min),
-      random).Add(min);
-    Exit;
-  end;
-
-  I := 0;
-  while I < MaxIterations do
-  begin
-    x := TBigInteger.Create(max.BitLength, random);
-    if ((x.CompareTo(min) >= 0) and (x.CompareTo(max) <= 0)) then
-    begin
-      Result := x;
+      Result := LX;
       Exit;
     end;
-    System.Inc(I);
   end;
 
   // fall back to a faster (restricted) method
-  Result := TBigInteger.Create(max.Subtract(min).BitLength - 1, random)
-    .Add(min);
+  Result := TBigInteger.Create(AMax.Subtract(AMin).BitLength - 1, ARandom).Add(AMin);
 end;
 
-class function TBigIntegers.GetByteLength(const n: TBigInteger): Int32;
+class function TBigIntegers.FromUnsignedByteArray(const ABuf: TCryptoLibByteArray): TBigInteger;
 begin
-  Result := (n.BitLength + 8) shr 3;
+  Result := TBigInteger.Create(1, ABuf);
 end;
 
-class function TBigIntegers.GetUnsignedByteLength(const n: TBigInteger): Int32;
+class function TBigIntegers.FromUnsignedByteArray(const ABuf: TCryptoLibByteArray; const AOff, ALength: Int32): TBigInteger;
 begin
-  Result := (n.BitLength + 7) shr 3;
+  Result := TBigInteger.Create(1, ABuf, AOff, ALength);
 end;
 
-class function TBigIntegers.ModOddIsCoprimeVar(const M, X: TBigInteger): Boolean;
+class function TBigIntegers.GetByteLength(const AN: TBigInteger): Int32;
+begin
+  Result := AN.GetLengthofByteArray();
+end;
+
+class function TBigIntegers.GetUnsignedByteLength(const AN: TBigInteger): Int32;
+begin
+  Result := AN.GetLengthofByteArrayUnsigned();
+end;
+
+class procedure TBigIntegers.WriteUnsignedByteArray(const AOutStr: TStream; const AN: TBigInteger);
 var
-  xMod, gcd: TBigInteger;
+  LBuffer: TCryptoLibByteArray;
 begin
-  // Validate M is odd and positive
-  if not M.TestBit(0) then
+  LBuffer := AN.ToByteArrayUnsigned();
+  AOutStr.Write(LBuffer, 0, System.Length(LBuffer));
+end;
+
+class function TBigIntegers.ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger;
+var
+  LX: TBigInteger;
+begin
+  if not AM.TestBit(0) then
+    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+
+  if AM.SignValue <> 1 then
+    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+
+  if AM.Equals(One) then
   begin
-    raise EArgumentCryptoLibException.Create('Modulus must be odd');
+    Result := Zero;
+    Exit;
   end;
 
-  if M.SignValue <> 1 then
+  LX := AX;
+
+  if (LX.SignValue < 0) or (LX.BitLength > AM.BitLength) then
   begin
-    raise EArithmeticCryptoLibException.Create('Modulus must be positive');
+    LX := LX.&Mod(AM);
   end;
 
-  // If X is 1, it's always coprime
-  if X.Equals(TBigInteger.One) then
+  if LX.Equals(One) then
+  begin
+    Result := One;
+    Exit;
+  end;
+
+  // Use BigInteger's built-in ModInverse
+  Result := LX.ModInverse(AM);
+end;
+
+class function TBigIntegers.ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean;
+var
+  LX: TBigInteger;
+begin
+  if not AM.TestBit(0) then
+    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+
+  if AM.SignValue <> 1 then
+    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+
+  LX := AX;
+
+  if (LX.SignValue < 0) or (LX.BitLength > AM.BitLength) then
+  begin
+    LX := LX.&Mod(AM);
+  end;
+
+  if LX.Equals(One) then
   begin
     Result := True;
     Exit;
   end;
 
-  // Reduce X mod M if necessary
-  if (X.SignValue < 0) or (X.BitLength > M.BitLength) then
-    xMod := X.&Mod(M)
-  else
-    xMod := X;
-
   // Check if GCD(M, X) = 1
-  gcd := M.Gcd(xMod);
-  Result := gcd.Equals(TBigInteger.One);
-end;
-
-class function TBigIntegers.ModOddInverse(const M, X: TBigInteger): TBigInteger;
-var
-  xMod: TBigInteger;
-begin
-  // Validate M is odd
-  if not M.TestBit(0) then
-  begin
-    raise EArgumentCryptoLibException.Create('Modulus must be odd');
-  end;
-
-  // Validate M is positive
-  if M.SignValue <> 1 then
-  begin
-    raise EArithmeticCryptoLibException.Create('BigInteger: modulus not positive');
-  end;
-
-  // Reduce X mod M if necessary
-  if (X.SignValue < 0) or (X.BitLength > M.BitLength) then
-    xMod := X.&Mod(M)
-  else
-    xMod := X;
-
-  // Use BigInteger's built-in ModInverse
-  Result := xMod.ModInverse(M);
+  Result := AM.Gcd(LX).Equals(One);
 end;
 
 end.

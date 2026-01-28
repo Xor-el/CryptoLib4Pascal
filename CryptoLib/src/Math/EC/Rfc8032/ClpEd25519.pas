@@ -410,19 +410,6 @@ type
 
   end;
 
-type
-  TEd25519Blake2B = class sealed(TEd25519, IEd25519Blake2B)
-
-  strict protected
-
-    function GetAlgorithmName: String; override;
-    function CreateDigest(): IDigest; override;
-
-  public
-    constructor Create();
-
-  end;
-
 implementation
 
 { TEd25519.TPointExt }
@@ -2283,23 +2270,6 @@ begin
   result := Default (TPointAffine);
   result.Fx := TX25519Field.Create();
   result.Fy := TX25519Field.Create();
-end;
-
-{ TEd25519Blake2B }
-
-constructor TEd25519Blake2B.Create;
-begin
-  Inherited Create();
-end;
-
-function TEd25519Blake2B.CreateDigest: IDigest;
-begin
-  result := TDigestUtilities.GetDigest('BLAKE2B-512');
-end;
-
-function TEd25519Blake2B.GetAlgorithmName: String;
-begin
-  result := 'Ed25519Blake2B';
 end;
 
 end.
