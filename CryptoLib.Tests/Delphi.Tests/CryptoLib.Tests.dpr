@@ -515,6 +515,8 @@ uses
   ClpAsn1Tags in '..\..\CryptoLib\src\Asn1\ClpAsn1Tags.pas',
   ClpIAsn1Encodings in '..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Encodings.pas',
   ClpAsn1Encodings in '..\..\CryptoLib\src\Asn1\ClpAsn1Encodings.pas',
+  ClpAsn1Generators in '..\..\CryptoLib\src\Asn1\ClpAsn1Generators.pas',
+  ClpIAsn1Generators in '..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Generators.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',

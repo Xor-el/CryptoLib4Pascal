@@ -37,6 +37,8 @@ uses
   ClpIAsn1Objects,
   ClpIAsn1Parsers,
   ClpAsn1Parsers,
+  ClpIAsn1Generators,
+  ClpAsn1Generators,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
