@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpCryptoLibComparers,
   ClpEncoders,
   ClpGlvTypeBParameters,
   ClpIGlvTypeBEndomorphism,
@@ -359,11 +360,11 @@ end;
 
 class procedure TCustomNamedCurves.Boot;
 begin
-  FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create();
-  FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create();
+  FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FoidToCurve := TDictionary<IDerObjectIdentifier,
-    IX9ECParametersHolder>.Create();
-  FoidToName := TDictionary<IDerObjectIdentifier, String>.Create();
+    IX9ECParametersHolder>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FoidToName := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
 
   Fnames := TList<String>.Create();
 

@@ -591,6 +591,11 @@ uses
   RSADigestSignerTests in '..\src\Crypto\RSADigestSignerTests.pas',
   ISO9796Tests in '..\src\Crypto\ISO9796Tests.pas',
   PssTests in '..\src\Crypto\PssTests.pas',
+  PrivateKeyInfoTests in '..\src\Asn1\PrivateKeyInfoTests.pas',
+  IPAddressUtilitiesTests in '..\src\Utils\Net\IPAddressUtilitiesTests.pas',
+  PemReaderTests in '..\src\Utils\Pem\PemReaderTests.pas',
+  X931SignerTests in '..\src\Crypto\X931SignerTests.pas',
+  CertificateTests in '..\src\Asn1\X509\CertificateTests.pas',
   GeneralNameTests in '..\src\Asn1\X509\GeneralNameTests.pas',
   KeyUsageTests in '..\src\Asn1\X509\KeyUsageTests.pas',
   SubjectKeyIdentifierTests in '..\src\Asn1\X509\SubjectKeyIdentifierTests.pas',
@@ -598,12 +603,7 @@ uses
   X509ExtensionsTests in '..\src\Asn1\X509\X509ExtensionsTests.pas',
   X509NameTests in '..\src\Asn1\X509\X509NameTests.pas',
   Pkcs10CertRequestTests in '..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas',
-  PrivateKeyInfoTests in '..\src\Asn1\PrivateKeyInfoTests.pas',
-  IPAddressUtilitiesTests in '..\src\Utils\Net\IPAddressUtilitiesTests.pas',
-  PemReaderTests in '..\src\Utils\Pem\PemReaderTests.pas',
-  CertificateTests in '..\src\Asn1\X509\CertificateTests.pas',
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
-  X931SignerTests in '..\src\Crypto\X931SignerTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin
