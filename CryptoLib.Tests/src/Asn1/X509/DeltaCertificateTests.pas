@@ -58,7 +58,7 @@ uses
   ClpAsn1SignatureFactory,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIECDomainParameters,
   ClpISignatureFactory,
   CryptoLibTestBase;

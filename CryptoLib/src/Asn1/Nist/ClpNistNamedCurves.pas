@@ -25,7 +25,7 @@ uses
   SysUtils,
   Generics.Collections,
   ClpCryptoLibComparers,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpSecNamedCurves,
   ClpCryptoLibTypes,
   ClpIAsn1Objects,

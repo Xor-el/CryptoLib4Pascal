@@ -39,7 +39,7 @@ uses
   ClpX509ObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpX9Asn1Objects,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpIECDomainParameters,
   ClpIDsaParameters,

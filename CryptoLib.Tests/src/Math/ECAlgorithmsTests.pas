@@ -43,8 +43,8 @@ uses
   ClpECNamedCurveTable,
   ClpCustomNamedCurves,
   ClpECAlgorithms,
-  ClpX9ECParameters,
-  ClpIX9ECParameters,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -115,7 +115,7 @@ begin
     begin
       c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
       point := c.ImportPoint(x9.G);
-      params := TX9ECParameters.Create(c, point, x9.N, x9.H);
+      params := TX9ECParameters.Create(c, TX9ECPoint.Create(point, False) as IX9ECPoint, x9.N, x9.H);
       x9s.Add(params);
     end;
   end;

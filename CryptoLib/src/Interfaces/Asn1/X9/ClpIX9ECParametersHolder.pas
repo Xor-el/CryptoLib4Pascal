@@ -22,7 +22,7 @@ unit ClpIX9ECParametersHolder;
 interface
 
 uses
-  ClpIX9ECParameters;
+  ClpIX9ECAsn1Objects;
 
 type
   IX9ECParametersHolder = interface(IInterface)

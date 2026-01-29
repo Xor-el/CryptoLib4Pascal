@@ -33,7 +33,7 @@ uses
 {$ENDIF FPC}
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpSecObjectIdentifiers,
   ClpConverters,
   ClpCustomNamedCurves,

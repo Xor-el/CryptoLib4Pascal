@@ -27,7 +27,7 @@ uses
   ClpIECC,
   ClpIECDomainParameters,
   ClpIECNamedDomainParameters,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpX9Asn1Objects,
   ClpIX9Asn1Objects,
   ClpECDomainParameters,

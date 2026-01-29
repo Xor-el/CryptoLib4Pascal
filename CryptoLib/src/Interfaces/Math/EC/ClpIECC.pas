@@ -72,6 +72,7 @@ type
     function ToString(): String;
 
     function GetEncoded(): TCryptoLibByteArray;
+    function GetEncodedLength(): Int32;
 
     property FieldName: string read GetFieldName;
     property FieldSize: Int32 read GetFieldSize;
@@ -458,7 +459,10 @@ type
 
     function DecompressPoint(yTilde: Int32; const x1: TBigInteger): IECPoint;
 
+    function GetFieldElementEncodingLength: Int32;
+
     property FieldSize: Int32 read GetFieldSize;
+    property FieldElementEncodingLength: Int32 read GetFieldElementEncodingLength;
     function FromBigInteger(const x: TBigInteger): IECFieldElement;
     function IsValidFieldElement(const x: TBigInteger): Boolean;
 

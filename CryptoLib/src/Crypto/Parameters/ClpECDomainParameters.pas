@@ -28,12 +28,10 @@ uses
   ClpIECC,
   ClpCryptoLibTypes,
   ClpIECDomainParameters,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIAsn1Objects,
   ClpIX9Asn1Objects,
-  ClpX9ECParameters,
-  ClpX9ECC,
-  ClpIX9ECC,
+  ClpX9ECAsn1Objects,
   ClpX9Asn1Objects;
 
 resourcestring

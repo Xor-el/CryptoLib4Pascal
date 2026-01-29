@@ -44,12 +44,10 @@ uses
   ClpECAlgorithms,
   ClpECCompUtilities,
   ClpIFiniteField,
-  ClpIX9ECParameters,
-  ClpIX9ECC,
-  ClpX9ECC,
+  ClpIX9ECAsn1Objects,
   ClpECC,
   ClpIECC,
-  ClpX9ECParameters,
+  ClpX9ECAsn1Objects,
   CryptoLibTestBase;
 
 type

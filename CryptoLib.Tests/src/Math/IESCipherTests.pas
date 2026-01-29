@@ -56,7 +56,7 @@ uses
   ClpIPaddingModes,
   ClpKdf2BytesGenerator,
   ClpIKdf2BytesGenerator,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpSecNamedCurves,
   ClpIECDomainParameters,
   ClpECDomainParameters,

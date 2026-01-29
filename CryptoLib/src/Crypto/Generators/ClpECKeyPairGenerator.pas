@@ -41,7 +41,7 @@ uses
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpX9ObjectIdentifiers,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPair,
   ClpECPublicKeyParameters,

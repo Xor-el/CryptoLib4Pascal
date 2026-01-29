@@ -40,7 +40,7 @@ uses
   ClpMultipliers,
   ClpIMultipliers,
   ClpECAlgorithms,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

@@ -23,7 +23,7 @@ interface
 
 uses
   SyncObjs,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIX9ECParametersHolder;
 
 type

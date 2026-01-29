@@ -26,7 +26,7 @@ uses
   ClpIECC,
   ClpCryptoLibTypes,
   ClpIX9Asn1Objects,
-  ClpIX9ECParameters;
+  ClpIX9ECAsn1Objects;
 
 type
   IECDomainParameters = interface(IInterface)

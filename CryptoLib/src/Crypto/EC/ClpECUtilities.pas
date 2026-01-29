@@ -23,7 +23,7 @@ interface
 
 uses
   ClpIAsn1Objects,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable;
 

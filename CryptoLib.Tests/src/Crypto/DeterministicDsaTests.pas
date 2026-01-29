@@ -42,7 +42,7 @@ uses
   ClpHMacDsaKCalculator,
   ClpIHMacDsaKCalculator,
   ClpICipherParameters,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIECPrivateKeyParameters,
   ClpECPrivateKeyParameters,
   ClpIDsaPrivateKeyParameters,

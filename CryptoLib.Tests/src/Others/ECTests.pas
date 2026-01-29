@@ -34,7 +34,7 @@ uses
   ClpFixedSecureRandom,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpIBasicAgreement,

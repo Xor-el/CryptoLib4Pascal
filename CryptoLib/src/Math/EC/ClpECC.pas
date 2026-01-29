@@ -155,6 +155,7 @@ type
     function ToString(): String; override;
 
     function GetEncoded(): TCryptoLibByteArray; virtual;
+    function GetEncodedLength(): Int32; virtual;
 
     property FieldName: string read GetFieldName;
     property FieldSize: Int32 read GetFieldSize;
@@ -502,6 +503,7 @@ type
     function GetOrder: TBigInteger; virtual;
     function GetCofactor: TBigInteger; virtual;
     function GetCoordinateSystem: Int32; virtual;
+    function GetFieldElementEncodingLength: Int32; virtual;
 
     function GetFieldSize: Int32; virtual; abstract;
     function GetInfinity: IECPoint; virtual; abstract;
@@ -1903,8 +1905,13 @@ end;
 
 function TECFieldElement.GetEncoded: TCryptoLibByteArray;
 begin
-  result := TBigIntegers.AsUnsignedByteArray((FieldSize + 7) div 8,
+  result := TBigIntegers.AsUnsignedByteArray(GetEncodedLength(),
     ToBigInteger());
+end;
+
+function TECFieldElement.GetEncodedLength: Int32;
+begin
+  Result := (FieldSize + 7) div 8;
 end;
 
 function TECFieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -2612,6 +2619,11 @@ function TECCurve.Configure: IConfig;
 begin
   result := TConfig.Create(Self as IECCurve, Self.Fm_coord,
     Self.Fm_endomorphism, Self.Fm_multiplier);
+end;
+
+function TECCurve.GetFieldElementEncodingLength: Int32;
+begin
+  Result := (FieldSize + 7) div 8;
 end;
 
 constructor TECCurve.Create(const field: IFiniteField);

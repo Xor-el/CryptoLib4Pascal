@@ -40,8 +40,8 @@ uses
   ClpX509Asn1Objects,
   ClpX9Asn1Objects,
   ClpIX9Asn1Objects,
-  ClpX9ECParameters,
-  ClpIX9ECParameters,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes;
 
 type

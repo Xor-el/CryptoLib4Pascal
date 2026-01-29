@@ -49,7 +49,7 @@ uses
   ClpECKeyPairGenerator,
   ClpIECKeyPairGenerator,
   ClpISigner,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIAsymmetricCipherKeyPair,
   ClpECNamedCurveTable,
   ClpParametersWithRandom,

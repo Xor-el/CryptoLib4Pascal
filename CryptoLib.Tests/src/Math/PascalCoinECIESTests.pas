@@ -48,7 +48,7 @@ uses
   ClpIPaddingModes,
   ClpIMac,
   ClpMacUtilities,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpConverters,
   CryptoLibTestBase;
 

@@ -38,7 +38,7 @@ uses
   ClpIBasicAgreement,
   ClpSecNamedCurves,
   ClpTeleTrusTNamedCurves,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpECDomainParameters,
   ClpECNamedCurveTable,
   ClpECGost3410NamedCurves,

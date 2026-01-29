@@ -32,11 +32,9 @@ uses
   ClpECCompUtilities,
   ClpECC,
   ClpIECC,
-  ClpX9ECC,
-  ClpIX9ECC,
   ClpIAsn1Objects,
-  ClpX9ECParameters,
-  ClpIX9ECParameters,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
   ClpX9ECParametersHolder,
   ClpIX9ECParametersHolder;
 

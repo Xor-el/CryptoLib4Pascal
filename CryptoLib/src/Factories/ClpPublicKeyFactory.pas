@@ -36,7 +36,7 @@ uses
   ClpOiwObjectIdentifiers,
   ClpX9Asn1Objects,
   ClpIX9Asn1Objects,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpAsn1Objects,
   ClpIECC,
   ClpIECDomainParameters,
