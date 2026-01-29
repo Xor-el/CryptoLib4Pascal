@@ -22,7 +22,6 @@ unit ClpIDsaParameter;
 interface
 
 uses
-  ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpBigInteger;
 
@@ -31,13 +30,13 @@ type
     ['{037E0113-0BD6-4A61-8BDC-DBEBE6136A6C}']
 
     function GetP: TBigInteger;
-    property p: TBigInteger read GetP;
+    property P: TBigInteger read GetP;
 
     function GetG: TBigInteger;
-    property g: TBigInteger read GetG;
+    property G: TBigInteger read GetG;
 
     function GetQ: TBigInteger;
-    property q: TBigInteger read GetQ;
+    property Q: TBigInteger read GetQ;
 
   end;
 

@@ -22,6 +22,7 @@ unit ClpDsaParameter;
 interface
 
 uses
+  SysUtils,
   ClpIDsaParameter,
   ClpAsn1Objects,
   ClpIAsn1Objects,
@@ -39,28 +40,43 @@ type
 
   strict private
   var
-    Fp, Fq, Fg: IDerInteger;
+    FP, FQ, FG: IDerInteger;
 
     function GetG: TBigInteger; inline;
     function GetP: TBigInteger; inline;
     function GetQ: TBigInteger; inline;
 
-    constructor Create(const seq: IAsn1Sequence); overload;
+    constructor Create(const ASeq: IAsn1Sequence); overload;
 
   public
-    constructor Create(const p, q, g: TBigInteger); overload;
+    constructor Create(const AP, AQ, AG: TBigInteger); overload;
 
     function ToAsn1Object(): IAsn1Object; override;
 
-    property p: TBigInteger read GetP;
-    property q: TBigInteger read GetQ;
-    property g: TBigInteger read GetG;
+    property P: TBigInteger read GetP;
+    property Q: TBigInteger read GetQ;
+    property G: TBigInteger read GetG;
 
-    class function GetInstance(const obj: IAsn1TaggedObject;
-      explicitly: Boolean): IDsaParameter; overload; static; inline;
-
-    class function GetInstance(obj: TObject): IDsaParameter; overload;
-      static; inline;
+    /// <summary>
+    /// Parse a DsaParameter from an object.
+    /// </summary>
+    class function GetInstance(AObj: TObject): IDsaParameter; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IDsaParameter; overload; static;
+    /// <summary>
+    /// Parse a DsaParameter from DER-encoded bytes.
+    /// </summary>
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IDsaParameter; overload; static;
+    /// <summary>
+    /// Parse a DsaParameter from a tagged object.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1TaggedObject; AExplicitly: Boolean): IDsaParameter; overload; static;
+    /// <summary>
+    /// Get tagged DsaParameter.
+    /// </summary>
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDsaParameter; static;
 
   end;
 
@@ -70,69 +86,93 @@ implementation
 
 function TDsaParameter.GetP: TBigInteger;
 begin
-  result := Fp.PositiveValue;
+  result := FP.PositiveValue;
 end;
 
 function TDsaParameter.GetQ: TBigInteger;
 begin
-  result := Fq.PositiveValue;
+  result := FQ.PositiveValue;
 end;
 
 function TDsaParameter.GetG: TBigInteger;
 begin
-  result := Fg.PositiveValue;
+  result := FG.PositiveValue;
 end;
 
 function TDsaParameter.ToAsn1Object: IAsn1Object;
 begin
-  result := TDerSequence.Create([Fp, Fq, Fg]);
+  result := TDerSequence.Create([FP, FQ, FG]);
 end;
 
-constructor TDsaParameter.Create(const seq: IAsn1Sequence);
+constructor TDsaParameter.Create(const ASeq: IAsn1Sequence);
 begin
   Inherited Create();
-  if (seq.Count <> 3) then
+  if (ASeq.Count <> 3) then
   begin
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize,
-      [seq.Count]);
+      [ASeq.Count]);
   end;
 
-  Fp := TDerInteger.GetInstance(seq[0] as TAsn1Encodable);
-  Fq := TDerInteger.GetInstance(seq[1] as TAsn1Encodable);
-  Fg := TDerInteger.GetInstance(seq[2] as TAsn1Encodable);
+  FP := TDerInteger.GetInstance(ASeq[0]);
+  FQ := TDerInteger.GetInstance(ASeq[1]);
+  FG := TDerInteger.GetInstance(ASeq[2]);
 end;
 
-constructor TDsaParameter.Create(const p, q, g: TBigInteger);
+constructor TDsaParameter.Create(const AP, AQ, AG: TBigInteger);
 begin
   Inherited Create();
-  Fp := TDerInteger.Create(p);
-  Fq := TDerInteger.Create(q);
-  Fg := TDerInteger.Create(g);
+  FP := TDerInteger.Create(AP);
+  FQ := TDerInteger.Create(AQ);
+  FG := TDerInteger.Create(AG);
 end;
 
-class function TDsaParameter.GetInstance(obj: TObject): IDsaParameter;
+class function TDsaParameter.GetInstance(AObj: TObject): IDsaParameter;
 begin
-  if ((obj = Nil) or (obj is TDsaParameter)) then
+  if AObj = nil then
   begin
-    result := obj as TDsaParameter;
+    Result := nil;
     Exit;
   end;
 
-  if (obj is TAsn1Sequence) then
+  if Supports(AObj, IDsaParameter, Result) then
+    Exit;
+
+  Result := TDsaParameter.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TDsaParameter.GetInstance(const AObj: IAsn1Convertible): IDsaParameter;
+begin
+  if AObj = nil then
   begin
-    result := TDsaParameter.Create(obj as TAsn1Sequence);
+    Result := nil;
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDsaParameter,
-    [obj.ToString]);
+  if Supports(AObj, IDsaParameter, Result) then
+    Exit;
+
+  Result := TDsaParameter.Create(TAsn1Sequence.GetInstance(AObj));
 end;
 
-class function TDsaParameter.GetInstance(const obj: IAsn1TaggedObject;
-  explicitly: Boolean): IDsaParameter;
+class function TDsaParameter.GetInstance(const AEncoded: TCryptoLibByteArray): IDsaParameter;
 begin
-  result := GetInstance(TAsn1Sequence.GetInstance(obj, explicitly)
-    as TAsn1Sequence);
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TDsaParameter.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TDsaParameter.GetInstance(const AObj: IAsn1TaggedObject; AExplicitly: Boolean): IDsaParameter;
+begin
+  Result := TDsaParameter.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TDsaParameter.GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDsaParameter;
+begin
+  Result := TDsaParameter.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
 end.

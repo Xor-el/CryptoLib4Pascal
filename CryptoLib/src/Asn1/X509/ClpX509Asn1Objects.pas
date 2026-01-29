@@ -1998,8 +1998,6 @@ begin
 end;
 
 class function TDigestInfo.GetInstance(const AEncoded: TCryptoLibByteArray): IDigestInfo;
-var
-  LAsn1Obj: IAsn1Object;
 begin
   if AEncoded = nil then
   begin

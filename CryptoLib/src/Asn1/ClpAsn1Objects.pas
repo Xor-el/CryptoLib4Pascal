@@ -4188,8 +4188,11 @@ begin
     Result := nil;
     Exit;
   end;
-  if not Supports(AObj, IAsn1Sequence, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+
+  if Supports(AObj, IAsn1Sequence, Result) then
+    Exit;
+
+  raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
 end;
 
 class function TAsn1Sequence.GetInstance(const AObj: IAsn1Convertible): IAsn1Sequence;
@@ -4202,9 +4205,6 @@ begin
 
   if Supports(AObj, IAsn1Sequence, Result) then
     Exit;
-  
-  if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
