@@ -576,7 +576,3 @@ begin
 end;
 
 end.
-</think>
-Removing the erroneous `LHashAlgs` declaration from X9 Boot.
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-StrReplace
