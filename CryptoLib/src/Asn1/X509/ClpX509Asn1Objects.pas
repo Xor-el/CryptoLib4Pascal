@@ -486,7 +486,6 @@ type
     FExtensions: TDictionary<IDerObjectIdentifier, IX509Extension>;
     FOrdering: TList<IDerObjectIdentifier>;
 
-  strict private
     class var
       FSubjectDirectoryAttributes: IDerObjectIdentifier;
       FSubjectKeyIdentifier: IDerObjectIdentifier;

@@ -44,8 +44,8 @@ uses
   ClpIDsaParameters,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
-  ClpSecAsn1Objects,
-  ClpISecAsn1Objects,
+  ClpSecECAsn1Objects,
+  ClpISecECAsn1Objects,
   ClpBigInteger,
   ClpCryptoLibTypes;
 

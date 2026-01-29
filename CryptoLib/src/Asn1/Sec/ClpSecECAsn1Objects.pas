@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpSecAsn1Objects;
+unit ClpSecECAsn1Objects;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -29,7 +29,7 @@ uses
   ClpIAsn1Objects,
   ClpAsn1Core,
   ClpIAsn1Core,
-  ClpISecAsn1Objects,
+  ClpISecECAsn1Objects,
   ClpCryptoLibTypes,
   ClpAsn1Utilities;
 

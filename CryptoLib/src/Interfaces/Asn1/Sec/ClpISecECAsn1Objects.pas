@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecAsn1Objects;
+unit ClpISecECAsn1Objects;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
