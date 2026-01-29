@@ -35,7 +35,6 @@ type
   ICertificationRequestInfo = interface;
   IContentInfo = interface;
   IPrivateKeyInfo = interface;
-  IRsassaPssParameters = interface;
   ISignedData = interface;
 
   /// <summary>
@@ -143,23 +142,6 @@ type
 
     property ContentType: IDerObjectIdentifier read GetContentType;
     property Content: IAsn1Encodable read GetContent;
-  end;
-
-  /// <summary>
-  /// Interface for RsassaPssParameters.
-  /// </summary>
-  IRsassaPssParameters = interface(IAsn1Encodable)
-    ['{A8B9C0D1-E2F3-4567-8901-23456789ABCD}']
-
-    function GetHashAlgorithm: IAlgorithmIdentifier;
-    function GetMaskGenAlgorithm: IAlgorithmIdentifier;
-    function GetSaltLength: IDerInteger;
-    function GetTrailerField: IDerInteger;
-
-    property HashAlgorithm: IAlgorithmIdentifier read GetHashAlgorithm;
-    property MaskGenAlgorithm: IAlgorithmIdentifier read GetMaskGenAlgorithm;
-    property SaltLength: IDerInteger read GetSaltLength;
-    property TrailerField: IDerInteger read GetTrailerField;
   end;
 
   /// <summary>

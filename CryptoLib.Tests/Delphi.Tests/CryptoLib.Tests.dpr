@@ -507,6 +507,8 @@ uses
   ClpIX509Extension in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509Extension.pas',
   ClpIPkcs10CertificationRequest in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs10CertificationRequest.pas',
   ClpX9IntegerConverter in '..\..\CryptoLib\src\Asn1\X9\ClpX9IntegerConverter.pas',
+  ClpPkcsRsaAsn1Objects in '..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcsRsaAsn1Objects.pas',
+  ClpIPkcsRsaAsn1Objects in '..\..\CryptoLib\src\Interfaces\Asn1\Pkcs\ClpIPkcsRsaAsn1Objects.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
   ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
