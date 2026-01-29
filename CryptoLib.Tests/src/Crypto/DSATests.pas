@@ -76,6 +76,8 @@ uses
   ClpAsn1Objects,
   ClpDSADigestSigner,
   ClpIDSADigestSigner,
+  ClpX509DsaAsn1Objects,
+  ClpIX509DsaAsn1Objects,
   ClpISecureRandom,
   ClpSecureRandom,
   ClpFixedSecureRandom,

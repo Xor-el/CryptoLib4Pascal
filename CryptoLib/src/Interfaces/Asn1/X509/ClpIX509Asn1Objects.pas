@@ -40,7 +40,6 @@ type
   IGeneralName = interface;
   IGeneralNames = interface;
   IKeyUsage = interface;
-  IRsaPublicKeyStructure = interface;
   ISubjectAltPublicKeyInfo = interface;
   ISubjectKeyIdentifier = interface;
   ISubjectPublicKeyInfo = interface;
@@ -53,7 +52,6 @@ type
   IIssuerSerial = interface;
   IObjectDigestInfo = interface;
   IDistributionPoint = interface;
-  IDsaParameter = interface;
   IV2Form = interface;
   IDistributionPointName = interface;
   IReasonFlags = interface;
@@ -200,19 +198,6 @@ type
   /// </summary>
   IKeyUsage = interface(IDerBitString)
     ['{A7B8C9D0-E1F2-3456-0123-456789ABCDEF}']
-  end;
-
-  /// <summary>
-  /// Interface for RsaPublicKeyStructure.
-  /// </summary>
-  IRsaPublicKeyStructure = interface(IAsn1Encodable)
-    ['{B8C9D0E1-F2A3-4567-1234-56789ABCDEF0}']
-
-    function GetModulus: TBigInteger;
-    function GetPublicExponent: TBigInteger;
-
-    property Modulus: TBigInteger read GetModulus;
-    property PublicExponent: TBigInteger read GetPublicExponent;
   end;
 
   /// <summary>
@@ -573,23 +558,6 @@ type
     property DistributionPointName: IDistributionPointName read GetDistributionPointName;
     property Reasons: IReasonFlags read GetReasons;
     property CrlIssuer: IGeneralNames read GetCrlIssuer;
-  end;
-
-  /// <summary>
-  /// Interface for DsaParameter.
-  /// </summary>
-  IDsaParameter = interface(IAsn1Encodable)
-    ['{037E0113-0BD6-4A61-8BDC-DBEBE6136A6C}']
-
-    function GetP: TBigInteger;
-    property P: TBigInteger read GetP;
-
-    function GetG: TBigInteger;
-    property G: TBigInteger read GetG;
-
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
-
   end;
 
   /// <summary>

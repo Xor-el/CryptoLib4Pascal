@@ -41,7 +41,11 @@ uses
   ClpIECDomainParameters,
   ClpIDsaParameters,
   ClpIX509Asn1Objects,
+  ClpIX509RsaAsn1Objects,
+  ClpIX509DsaAsn1Objects,
   ClpX509Asn1Objects,
+  ClpX509RsaAsn1Objects,
+  ClpX509DsaAsn1Objects,
   ClpCryptoLibTypes;
 
 type

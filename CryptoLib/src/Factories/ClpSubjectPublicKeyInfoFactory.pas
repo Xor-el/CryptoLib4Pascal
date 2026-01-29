@@ -37,7 +37,11 @@ uses
   ClpEdECObjectIdentifiers,
   ClpIDsaParameters,
   ClpIX509Asn1Objects,
+  ClpIX509RsaAsn1Objects,
+  ClpIX509DsaAsn1Objects,
   ClpX509Asn1Objects,
+  ClpX509RsaAsn1Objects,
+  ClpX509DsaAsn1Objects,
   ClpX9ECAsn1Objects,
   ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes;
