@@ -24,7 +24,6 @@ interface
 uses
   Classes,
   ClpIAsn1Objects,
-  ClpIX509Asn1Objects,
   ClpIAsymmetricKeyParameter,
   ClpRsaKeyParameters,
   ClpDsaPublicKeyParameters,
@@ -38,13 +37,12 @@ uses
   ClpX9Asn1Objects,
   ClpIX9Asn1Objects,
   ClpIX9ECParameters,
-  ClpX509Asn1Objects,
   ClpAsn1Objects,
   ClpIECC,
   ClpIECDomainParameters,
   ClpIDsaParameters,
-  ClpIDsaParameter,
-  ClpDsaParameter,
+  ClpIX509Asn1Objects,
+  ClpX509Asn1Objects,
   ClpCryptoLibTypes;
 
 type

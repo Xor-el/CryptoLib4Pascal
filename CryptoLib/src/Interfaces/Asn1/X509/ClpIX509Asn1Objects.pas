@@ -53,6 +53,7 @@ type
   IIssuerSerial = interface;
   IObjectDigestInfo = interface;
   IDistributionPoint = interface;
+  IDsaParameter = interface;
   IV2Form = interface;
   IDistributionPointName = interface;
   IReasonFlags = interface;
@@ -572,6 +573,23 @@ type
     property DistributionPointName: IDistributionPointName read GetDistributionPointName;
     property Reasons: IReasonFlags read GetReasons;
     property CrlIssuer: IGeneralNames read GetCrlIssuer;
+  end;
+
+  /// <summary>
+  /// Interface for DsaParameter.
+  /// </summary>
+  IDsaParameter = interface(IAsn1Encodable)
+    ['{037E0113-0BD6-4A61-8BDC-DBEBE6136A6C}']
+
+    function GetP: TBigInteger;
+    property P: TBigInteger read GetP;
+
+    function GetG: TBigInteger;
+    property G: TBigInteger read GetG;
+
+    function GetQ: TBigInteger;
+    property Q: TBigInteger read GetQ;
+
   end;
 
   /// <summary>
