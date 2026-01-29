@@ -217,7 +217,6 @@ begin
     Exit;
   end;
 
-  // TODO Java has a property to control whether absent parameters can match NULL parameters
   if HasAbsentParameters(AId1) and HasAbsentParameters(AId2) then
   begin
     Result := True;

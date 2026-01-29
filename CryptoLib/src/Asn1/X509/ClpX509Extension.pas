@@ -56,7 +56,7 @@ type
     constructor Create(ACritical: Boolean; const AValue: IAsn1OctetString); overload;
 
     function GetHashCode: Int32;
-    function Equals(AObj: TObject): Boolean; reintroduce;
+    function Equals(AObj: IX509Extension): Boolean; reintroduce;
 
     property IsCritical: Boolean read GetIsCritical;
     property Value: IAsn1OctetString read GetValue;
@@ -123,16 +123,9 @@ begin
     Result := not LVH;
 end;
 
-function TX509Extension.Equals(AObj: TObject): Boolean;
-var
-  LThat: IX509Extension;
+function TX509Extension.Equals(AObj: IX509Extension): Boolean;
 begin
-  if not Supports(AObj, IX509Extension, LThat) then
-  begin
-    Result := False;
-    Exit;
-  end;
-  Result := FValue.Equals(LThat.Value) and (FCritical = LThat.IsCritical);
+  Result := FValue.Equals(AObj.Value) and (FCritical = AObj.IsCritical);
 end;
 
 end.
