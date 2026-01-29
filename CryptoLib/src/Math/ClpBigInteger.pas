@@ -25,7 +25,7 @@ uses
   SysUtils,
   Math,
   ClpCryptoLibTypes,
-  ClpConverters,
+  ClpPack,
   ClpBitUtilities,
   ClpArrayUtilities,
   ClpISecureRandom,
@@ -628,7 +628,6 @@ class function TBigInteger.MakeMagnitudeBE(const ABytes: TCryptoLibByteArray; co
 var
   LEnd, LStart, LNBytes, LNInts, LFirst, I: Int32;
   LMagnitude: TCryptoLibUInt32Array;
-  LPBytes: PByte;
 begin
   LEnd := AOffset + ALength;
   // strip leading zeros
@@ -646,21 +645,9 @@ begin
   LNInts := (LNBytes + BytesPerInt - 1) div BytesPerInt;
   System.SetLength(LMagnitude, LNInts);
   LFirst := ((LNBytes - 1) mod BytesPerInt) + 1;
-  LPBytes := @ABytes[LStart];
-  // Read first partial UInt32
-  if LFirst = 1 then
-    LMagnitude[0] := UInt32(LPBytes^)
-  else if LFirst = 2 then
-    LMagnitude[0] := (UInt32(LPBytes^) shl 8) or UInt32((LPBytes + 1)^)
-  else if LFirst = 3 then
-    LMagnitude[0] := (UInt32(LPBytes^) shl 16) or (UInt32((LPBytes + 1)^) shl 8) or UInt32((LPBytes + 2)^)
-  else
-    LMagnitude[0] := TConverters.ReadBytesAsUInt32BE(LPBytes, 0);
-  // Read remaining full UInt32s
-  for I := 1 to System.Pred(LNInts) do
-  begin
-    LMagnitude[I] := TConverters.ReadBytesAsUInt32BE(LPBytes, LFirst + (I - 1) * BytesPerInt);
-  end;
+
+  LMagnitude[0] := TPack.BE_To_UInt32_Low(ABytes, LStart, LFirst);
+  TPack.BE_To_UInt32(ABytes, LStart + LFirst, LMagnitude, 1, LNInts - 1);
   Result := LMagnitude;
 end;
 
@@ -668,7 +655,6 @@ class function TBigInteger.MakeMagnitudeLE(const ABytes: TCryptoLibByteArray; co
 var
   LLast, LNInts, LPartial, LFirst, LPos, I: Int32;
   LMagnitude: TCryptoLibUInt32Array;
-  LPBytes: PByte;
 begin
   // strip leading zeros (from the end in little-endian)
   LLast := ALength;
@@ -687,23 +673,13 @@ begin
   LPartial := LLast mod BytesPerInt;
   LFirst := LPartial + 1;
   LPos := AOffset + LLast - LPartial;
-  LPBytes := @ABytes[LPos];
-  // Read first partial UInt32
- // LMagnitude[0] := TConverters.ReadBytesAsUInt32LE(LPBytes, LFirst);
-  // Read first partial UInt32
-  if LFirst = 1 then
-    LMagnitude[0] := UInt32(LPBytes^)
-  else if LFirst = 2 then
-    LMagnitude[0] := UInt32(LPBytes^) or (UInt32((LPBytes + 1)^) shl 8)
-  else if LFirst = 3 then
-    LMagnitude[0] := UInt32(LPBytes^) or (UInt32((LPBytes + 1)^) shl 8) or (UInt32((LPBytes + 2)^) shl 16)
-  else
-    LMagnitude[0] := TConverters.ReadBytesAsUInt32LE(LPBytes, 0);
-  // Read remaining full UInt32s
+
+  LMagnitude[0] := TPack.LE_To_UInt32_Low(ABytes, LPos, LFirst);
+
   for I := 1 to System.Pred(LNInts) do
   begin
     LPos := LPos - BytesPerInt;
-    LMagnitude[I] := TConverters.ReadBytesAsUInt32LE(@ABytes[LPos], 0);
+    LMagnitude[I] := TPack.LE_To_UInt32(ABytes, LPos);
   end;
   Result := LMagnitude;
 end;
@@ -887,10 +863,8 @@ begin
   if LNBits = 0 then
   begin
     System.SetLength(LNewMag, LMagLen + LNInts);
-    for I := 0 to System.Pred(LMagLen) do
-    begin
-      LNewMag[I] := AMag[I];
-    end;
+    if LMagLen > 0 then
+      Move(AMag[0], LNewMag[0], LMagLen * SizeOf(UInt32));
     TArrayUtilities.Fill<UInt32>(LNewMag, LMagLen, System.Length(LNewMag), UInt32(0));
   end
   else
@@ -1301,7 +1275,7 @@ end;
 
 function TBigInteger.LastNBits(const AN: Int32): TCryptoLibUInt32Array;
 var
-  LNumWords, LExcessBits, I: Int32;
+  LNumWords, LExcessBits, LSourceIndex: Int32;
 begin
   if AN < 1 then
   begin
@@ -1313,10 +1287,10 @@ begin
   LNumWords := Math.Min(LNumWords, System.Length(FMagnitude));
   System.SetLength(Result, LNumWords);
 
-  // Copy last LNumWords from magnitude to result
-  for I := 0 to System.Pred(LNumWords) do
+  if LNumWords > 0 then
   begin
-    Result[I] := FMagnitude[System.Length(FMagnitude) - LNumWords + I];
+    LSourceIndex := System.Length(FMagnitude) - LNumWords;
+    Move(FMagnitude[LSourceIndex], Result[0], LNumWords * SizeOf(UInt32));
   end;
 
   // Mask excess bits from result[0]
@@ -3248,7 +3222,7 @@ begin
       System.Dec(LMagIndex);
       LMag := FMagnitude[LMagIndex];
       LBytesIndex := LBytesIndex - 4;
-      TConverters.ReadUInt32AsBytesBE(LMag, Result, LBytesIndex);
+      TPack.UInt32_To_BE(LMag, Result, LBytesIndex);
     end;
     LLastMag := FMagnitude[0];
     while LLastMag > Byte.MaxValue do
@@ -3274,7 +3248,7 @@ begin
         LCarry := (LMag = UInt32.MinValue);
       end;
       LBytesIndex := LBytesIndex - 4;
-      TConverters.ReadUInt32AsBytesBE(LMag, Result, LBytesIndex);
+      TPack.UInt32_To_BE(LMag, Result, LBytesIndex);
     end;
     LLastMag := FMagnitude[0];
     if LCarry then

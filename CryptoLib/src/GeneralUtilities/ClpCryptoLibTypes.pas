@@ -114,6 +114,11 @@ type
   TCryptoLibInt64Array = TArray<Int64>;
 
   /// <summary>
+  /// Represents a dynamic array of UInt16.
+  /// </summary>
+  TCryptoLibUInt16Array = TArray<UInt16>;
+
+  /// <summary>
   /// Represents a dynamic array of UInt32.
   /// </summary>
   TCryptoLibUInt32Array = TArray<UInt32>;
@@ -178,6 +183,11 @@ type
   /// Represents a dynamic array of Int64.
   /// </summary>
   TCryptoLibInt64Array = array of Int64;
+
+  /// <summary>
+  /// Represents a dynamic array of UInt16.
+  /// </summary>
+  TCryptoLibUInt16Array = array of UInt16;
 
   /// <summary>
   /// Represents a dynamic array of UInt32.
