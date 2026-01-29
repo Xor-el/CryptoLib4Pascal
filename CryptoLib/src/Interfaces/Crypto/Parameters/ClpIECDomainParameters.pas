@@ -24,7 +24,9 @@ interface
 uses
   ClpBigInteger,
   ClpIECC,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpIX9Asn1Objects,
+  ClpIX9ECParameters;
 
 type
   IECDomainParameters = interface(IInterface)
@@ -50,6 +52,8 @@ type
 {$ENDIF DELPHI}
     function ValidatePrivateScalar(const d: TBigInteger): TBigInteger;
     function ValidatePublicPoint(const q: IECPoint): IECPoint;
+    function ToX962Parameters: IX962Parameters;
+    function ToX9ECParameters: IX9ECParameters;
   end;
 
 implementation

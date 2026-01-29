@@ -31,7 +31,10 @@ uses
   ClpIX9ECParameters,
   ClpIAsn1Objects,
   ClpIX9Asn1Objects,
-  ClpX9ECParameters;
+  ClpX9ECParameters,
+  ClpX9ECC,
+  ClpIX9ECC,
+  ClpX9Asn1Objects;
 
 resourcestring
   SCurveNil = 'Curve Cannot be Nil';
@@ -93,6 +96,8 @@ type
     function Equals(const other: IECDomainParameters): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
+    function ToX962Parameters: IX962Parameters;
+    function ToX9ECParameters: IX9ECParameters;
 
   end;
 
@@ -286,6 +291,20 @@ begin
     result := result * 257;
     result := result xor Fh.GetHashCode();
   end;
+end;
+
+function TECDomainParameters.ToX962Parameters: IX962Parameters;
+begin
+  Result := TX962Parameters.Create(ToX9ECParameters());
+end;
+
+function TECDomainParameters.ToX9ECParameters: IX9ECParameters;
+var
+  LG: IX9ECPoint;
+begin
+  // TODO Support for choosing compressed==true?
+  LG := TX9ECPoint.Create(g, False);
+  Result := TX9ECParameters.Create(curve, LG, n, h, seed);
 end;
 
 end.

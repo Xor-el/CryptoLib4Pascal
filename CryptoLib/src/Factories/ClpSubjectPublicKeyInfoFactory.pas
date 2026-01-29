@@ -72,7 +72,6 @@ var
   LX25519Key: IX25519PublicKeyParameters;
   LKp: IDsaParameters;
   LParams: IECDomainParameters;
-  LX9: IX9ECParameters;
   LX962: IX962Parameters;
   LPubKey: TCryptoLibByteArray;
 begin
@@ -104,8 +103,8 @@ begin
     LParams := LECKey.Parameters;
     if LParams = nil then
       raise EArgumentCryptoLibException.Create('EC public key requires parameters.');
-    LX9 := TX9ECParameters.Create(LParams.Curve, LParams.G, LParams.N, LParams.H, LParams.Seed);
-    LX962 := TX962Parameters.Create(LX9.ToAsn1Object());
+
+    LX962 := LParams.ToX962Parameters();
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdECPublicKey, LX962);
     LPubKey := LECKey.Q.GetEncoded(False);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, LPubKey);
