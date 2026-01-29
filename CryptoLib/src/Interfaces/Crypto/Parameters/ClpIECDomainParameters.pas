@@ -25,7 +25,6 @@ uses
   ClpBigInteger,
   ClpIECC,
   ClpCryptoLibTypes,
-  ClpIX9Asn1Objects,
   ClpIX9ECAsn1Objects;
 
 type

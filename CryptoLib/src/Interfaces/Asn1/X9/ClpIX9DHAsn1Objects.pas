@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIX9Asn1Objects;
+unit ClpIX9DHAsn1Objects;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 

@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpX9Asn1Objects;
+unit ClpX9DHAsn1Objects;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -27,7 +27,7 @@ uses
   ClpIAsn1Objects,
   ClpAsn1Core,
   ClpIAsn1Core,
-  ClpIX9Asn1Objects,
+  ClpIX9DHAsn1Objects,
   ClpIX9ECAsn1Objects,
   ClpX9ECAsn1Objects,
   ClpCryptoLibTypes,
