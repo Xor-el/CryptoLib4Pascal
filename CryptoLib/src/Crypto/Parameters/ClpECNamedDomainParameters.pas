@@ -28,8 +28,7 @@ uses
   ClpIECDomainParameters,
   ClpIECNamedDomainParameters,
   ClpIX9ECAsn1Objects,
-  ClpX9Asn1Objects,
-  ClpIX9Asn1Objects,
+  ClpX9ECAsn1Objects,
   ClpECDomainParameters,
   ClpECUtilities,
   ClpCryptoLibTypes;

@@ -107,6 +107,21 @@ type
     property BaseEntry: IX9ECPoint read GetBaseEntry;
   end;
 
+  /// <summary>
+  /// Interface for X962Parameters.
+  /// </summary>
+  IX962Parameters = interface(IAsn1Encodable)
+    ['{D1E2F3A4-B5C6-7890-DEF1-23456789ABCD}']
+
+    function GetParameters: IAsn1Object;
+    function GetNamedCurve: IDerObjectIdentifier;
+    function IsImplicitlyCA: Boolean;
+    function IsNamedCurve: Boolean;
+
+    property Parameters: IAsn1Object read GetParameters;
+    property NamedCurve: IDerObjectIdentifier read GetNamedCurve;
+  end;
+
 implementation
 
 end.

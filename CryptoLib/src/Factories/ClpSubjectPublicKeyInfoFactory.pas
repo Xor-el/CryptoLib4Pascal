@@ -38,8 +38,6 @@ uses
   ClpIDsaParameters,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
-  ClpX9Asn1Objects,
-  ClpIX9Asn1Objects,
   ClpX9ECAsn1Objects,
   ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes;
