@@ -89,8 +89,11 @@ type
 
     class function NoZeroes(const AData: TCryptoLibByteArray): Boolean; static;
 
-    class function Exists<T>(const AData: TCryptoLibGenericArray<T>;
-      const APredicate: TFunc<T, Boolean>): Boolean; static;
+    class function Contains<T>(const AData: TCryptoLibGenericArray<T>;
+      const APredicate: TFunc<T, Boolean>): Boolean; overload; static;
+
+    class function Contains<T>(const AData: TCryptoLibGenericArray<T>;
+      const AValue: T; const AComparer: IEqualityComparer<T> = nil): Boolean; overload; static;
 
     class function Map<T, TResult>(const AData: TCryptoLibGenericArray<T>;
       const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>; static;
@@ -412,7 +415,7 @@ begin
     Result[I] := ACloneFunc(AData[I]);
 end;
 
-class function TArrayUtilities.Exists<T>(const AData: TCryptoLibGenericArray<T>;
+class function TArrayUtilities.Contains<T>(const AData: TCryptoLibGenericArray<T>;
   const APredicate: TFunc<T, Boolean>): Boolean;
 var
   I: Int32;
@@ -421,6 +424,24 @@ begin
     Exit(False);
   for I := System.Low(AData) to System.High(AData) do
     if APredicate(AData[I]) then
+      Exit(True);
+  Result := False;
+end;
+
+class function TArrayUtilities.Contains<T>(const AData: TCryptoLibGenericArray<T>;
+  const AValue: T; const AComparer: IEqualityComparer<T>): Boolean;
+var
+  I: Int32;
+  LComparer: IEqualityComparer<T>;
+begin
+  if (AData = nil) or (System.Length(AData) = 0) then
+    Exit(False);
+  if AComparer = nil then
+    LComparer := TEqualityComparer<T>.Default
+  else
+    LComparer := AComparer;
+  for I := System.Low(AData) to System.High(AData) do
+    if LComparer.Equals(AData[I], AValue) then
       Exit(True);
   Result := False;
 end;

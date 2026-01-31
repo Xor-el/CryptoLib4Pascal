@@ -23,6 +23,7 @@ interface
 
 uses
   SysUtils,
+  ClpArrayUtilities,
   ClpBigInteger,
   ClpBigIntegers,
   ClpIKeyGenerationParameters,
@@ -69,9 +70,6 @@ type
     function ChooseRandomPrime(bitLength: Int32;
       const e: TBigInteger): TBigInteger;
 
-
-    class function ArrayContains(const arr: TCryptoLibInt32Array; value: Int32): Boolean; static;
-
   public
     constructor Create();
 
@@ -108,31 +106,13 @@ begin
       FDefaultPublicExponent, parameters.Random, parameters.Strength, DefaultTests);
 end;
 
-class function TRsaKeyPairGenerator.ArrayContains(const arr: TCryptoLibInt32Array;
-  value: Int32): Boolean;
-var
-  i: Int32;
-begin
-  for i := 0 to System.Length(arr) - 1 do
-  begin
-    if arr[i] = value then
-    begin
-      Result := True;
-      Exit;
-    end;
-  end;
-  Result := False;
-end;
-
-
-
 function TRsaKeyPairGenerator.ChooseRandomPrime(bitLength: Int32;
   const e: TBigInteger): TBigInteger;
 var
   p, pSub1: TBigInteger;
   eIsKnownOddPrime: Boolean;
 begin
-  eIsKnownOddPrime := (e.BitLength <= FSpecialEBits) and ArrayContains(FSpecialEValues, e.Int32Value);
+  eIsKnownOddPrime := (e.BitLength <= FSpecialEBits) and TArrayUtilities.Contains<Int32>(FSpecialEValues, e.Int32Value);
 
   while True do
   begin
@@ -248,7 +228,7 @@ begin
     // Calculate CRT parameters
     dP := d.Remainder(pSub1);
     dQ := d.Remainder(qSub1);
-    qInv := TBigIntegers.ModOddInverseVar(p, q);
+    qInv := TBigIntegers.ModOddInverse(p, q);
 
     // Create key pair
     pubKey := TRsaKeyParameters.Create(False, n, e) as IRsaKeyParameters;

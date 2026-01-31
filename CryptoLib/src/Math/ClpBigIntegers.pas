@@ -25,6 +25,8 @@ uses
   SysUtils,
   Classes,
   ClpBigInteger,
+  ClpMod,
+  ClpNat,
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
@@ -33,6 +35,7 @@ resourcestring
   SMinMayNotBeGreaterThanMax = '''min'' may not be greater than ''max''';
   SMustBeOdd = 'must be odd';
   SModulusNotPositive = 'BigInteger: modulus not positive';
+  SBigIntegerNotInvertible = 'BigInteger not invertible';
 
 type
   /// <summary>
@@ -131,7 +134,15 @@ type
     class procedure WriteUnsignedByteArray(const AOutStr: TStream; const AN: TBigInteger); static;
 
     /// <summary>
-    /// ModOddInverseVar.
+    /// ModOddInverse: modular inverse of X mod M (M must be odd). Throws if not invertible.
+    /// </summary>
+    /// <param name="AM">the modulus (must be odd).</param>
+    /// <param name="AX">the value to invert.</param>
+    /// <returns>inverse.</returns>
+    class function ModOddInverse(const AM, AX: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// ModOddInverseVar: variable-time modular inverse of X mod M (M must be odd). Throws if not invertible.
     /// </summary>
     /// <param name="AM">the modulus (must be odd).</param>
     /// <param name="AX">the value to invert.</param>
@@ -139,7 +150,15 @@ type
     class function ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger; static;
 
     /// <summary>
-    /// ModOddIsCoprimeVar.
+    /// ModOddIsCoprime: whether X is coprime to M (M must be odd).
+    /// </summary>
+    /// <param name="AM">the modulus (must be odd).</param>
+    /// <param name="AX">the value to check.</param>
+    /// <returns>whether is coprime or not.</returns>
+    class function ModOddIsCoprime(const AM, AX: TBigInteger): Boolean; static;
+
+    /// <summary>
+    /// ModOddIsCoprimeVar: variable-time check whether X is coprime to M (M must be odd).
     /// </summary>
     /// <param name="AM">the modulus (must be odd).</param>
     /// <param name="AX">the value to check.</param>
@@ -282,9 +301,39 @@ begin
   AOutStr.Write(LBuffer, 0, System.Length(LBuffer));
 end;
 
+class function TBigIntegers.ModOddInverse(const AM, AX: TBigInteger): TBigInteger;
+var
+  LBits, LLen: Int32;
+  LReducedX: TBigInteger;
+  LM, LX, LZ: TCryptoLibUInt32Array;
+begin
+  if not AM.TestBit(0) then
+    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+
+  if AM.SignValue <> 1 then
+    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+
+  LReducedX := AX;
+  if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then
+    LReducedX := LReducedX.&Mod(AM);
+
+  LBits := AM.BitLength;
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, LReducedX);
+  LLen := System.Length(LM);
+  LZ := TNat.Create(LLen);
+
+  if TMod.ModOddInverse(LM, LX, LZ) = 0 then
+    raise EArithmeticCryptoLibException.Create(SBigIntegerNotInvertible);
+
+  Result := TNat.ToBigInteger(LLen, LZ);
+end;
+
 class function TBigIntegers.ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger;
 var
-  LX: TBigInteger;
+  LBits, LLen: Int32;
+  LReducedX: TBigInteger;
+  LM, LX, LZ: TCryptoLibUInt32Array;
 begin
   if not AM.TestBit(0) then
     raise EArgumentCryptoLibException.Create(SMustBeOdd);
@@ -298,26 +347,33 @@ begin
     Exit;
   end;
 
-  LX := AX;
+  LReducedX := AX;
+  if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then
+    LReducedX := LReducedX.&Mod(AM);
 
-  if (LX.SignValue < 0) or (LX.BitLength > AM.BitLength) then
-  begin
-    LX := LX.&Mod(AM);
-  end;
-
-  if LX.Equals(One) then
+  if LReducedX.Equals(One) then
   begin
     Result := One;
     Exit;
   end;
 
-  // Use BigInteger's built-in ModInverse
-  Result := LX.ModInverse(AM);
+  LBits := AM.BitLength;
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, LReducedX);
+  LLen := System.Length(LM);
+  LZ := TNat.Create(LLen);
+
+  if not TMod.ModOddInverseVar(LM, LX, LZ) then
+    raise EArithmeticCryptoLibException.Create(SBigIntegerNotInvertible);
+
+  Result := TNat.ToBigInteger(LLen, LZ);
 end;
 
-class function TBigIntegers.ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean;
+class function TBigIntegers.ModOddIsCoprime(const AM, AX: TBigInteger): Boolean;
 var
-  LX: TBigInteger;
+  LBits: Int32;
+  LReducedX: TBigInteger;
+  LM, LX: TCryptoLibUInt32Array;
 begin
   if not AM.TestBit(0) then
     raise EArgumentCryptoLibException.Create(SMustBeOdd);
@@ -325,21 +381,44 @@ begin
   if AM.SignValue <> 1 then
     raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
 
-  LX := AX;
+  LReducedX := AX;
+  if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then
+    LReducedX := LReducedX.&Mod(AM);
 
-  if (LX.SignValue < 0) or (LX.BitLength > AM.BitLength) then
-  begin
-    LX := LX.&Mod(AM);
-  end;
+  LBits := AM.BitLength;
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, LReducedX);
 
-  if LX.Equals(One) then
+  Result := TMod.ModOddIsCoprime(LM, LX) <> 0;
+end;
+
+class function TBigIntegers.ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean;
+var
+  LBits: Int32;
+  LReducedX: TBigInteger;
+  LM, LX: TCryptoLibUInt32Array;
+begin
+  if not AM.TestBit(0) then
+    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+
+  if AM.SignValue <> 1 then
+    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+
+  LReducedX := AX;
+  if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then
+    LReducedX := LReducedX.&Mod(AM);
+
+  if LReducedX.Equals(One) then
   begin
     Result := True;
     Exit;
   end;
 
-  // Check if GCD(M, X) = 1
-  Result := AM.Gcd(LX).Equals(One);
+  LBits := AM.BitLength;
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, LReducedX);
+
+  Result := TMod.ModOddIsCoprimeVar(LM, LX);
 end;
 
 end.

@@ -22,74 +22,79 @@ unit ClpNat384;
 interface
 
 uses
+  SysUtils,
   ClpNat,
   ClpNat192,
+  ClpPack,
+  ClpBigInteger,
+  ClpBitUtilities,
   ClpCryptoLibTypes;
 
 type
-  TNat384 = class sealed(TObject)
-
+  TNat384 = class sealed
   public
-    class procedure Mul(const x, y, zz: TCryptoLibUInt32Array); static;
-    class procedure Square(const x, zz: TCryptoLibUInt32Array); static;
+    class procedure Mul(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array); static;
 
+    class procedure Square(const AX: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array); static;
   end;
 
 implementation
 
 { TNat384 }
 
-class procedure TNat384.Mul(const x, y, zz: TCryptoLibUInt32Array);
+class procedure TNat384.Mul(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array;
+  AZz: TCryptoLibUInt32Array);
 var
-  c18, c12: UInt32;
-  dx, dy, tt: TCryptoLibUInt32Array;
-  neg: Boolean;
+  LC18, LC12: UInt32;
+  LDx, LDy, LTt: TCryptoLibUInt32Array;
+  LNeg: Boolean;
 begin
-  TNat192.Mul(x, y, zz);
-  TNat192.Mul(x, 6, y, 6, zz, 12);
+  TNat192.Mul(AX, AY, AZz);
+  TNat192.Mul(AX, 6, AY, 6, AZz, 12);
 
-  c18 := TNat192.AddToEachOther(zz, 6, zz, 12);
-  c12 := c18 + TNat192.AddTo(zz, 0, zz, 6, 0);
-  c18 := c18 + (TNat192.AddTo(zz, 18, zz, 12, c12));
+  LC18 := TNat192.AddToEachOther(AZz, 6, AZz, 12);
+  LC12 := LC18 + TNat192.AddTo(AZz, 0, AZz, 6, 0);
+  LC18 := LC18 + TNat192.AddTo(AZz, 18, AZz, 12, LC12);
 
-  dx := TNat192.Create();
-  dy := TNat192.Create();
-  neg := TNat192.Diff(x, 6, x, 0, dx, 0) <> TNat192.Diff(y, 6, y, 0, dy, 0);
+  LDx := TNat192.Create();
+  LDy := TNat192.Create();
+  LNeg := (TNat192.Diff(AX, 6, AX, 0, LDx, 0) <> TNat192.Diff(AY, 6, AY, 0, LDy, 0));
 
-  tt := TNat192.CreateExt();
-  TNat192.Mul(dx, dy, tt);
+  LTt := TNat192.CreateExt();
+  TNat192.Mul(LDx, LDy, LTt);
 
-  if neg then
+  if LNeg then
   begin
-    c18 := c18 + TNat.AddTo(12, tt, 0, zz, 6);
+    LC18 := LC18 + TNat.AddTo(12, LTt, 0, AZz, 6);
   end
   else
   begin
-    c18 := c18 + UInt32(TNat.SubFrom(12, tt, 0, zz, 6));
+    LC18 := LC18 + UInt32(TNat.SubFrom(12, LTt, 0, AZz, 6));
   end;
-  TNat.AddWordAt(24, c18, zz, 18);
+
+  TNat.AddWordAt(24, LC18, AZz, 18);
 end;
 
-class procedure TNat384.Square(const x, zz: TCryptoLibUInt32Array);
+class procedure TNat384.Square(const AX: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array);
 var
-  c18, c12: UInt32;
-  dx, m: TCryptoLibUInt32Array;
+  LC18, LC12: UInt32;
+  LDx, LM: TCryptoLibUInt32Array;
 begin
-  TNat192.Square(x, zz);
-  TNat192.Square(x, 6, zz, 12);
+  TNat192.Square(AX, AZz);
+  TNat192.Square(AX, 6, AZz, 12);
 
-  c18 := TNat192.AddToEachOther(zz, 6, zz, 12);
-  c12 := c18 + TNat192.AddTo(zz, 0, zz, 6, 0);
-  c18 := c18 + TNat192.AddTo(zz, 18, zz, 12, c12);
+  LC18 := TNat192.AddToEachOther(AZz, 6, AZz, 12);
+  LC12 := LC18 + TNat192.AddTo(AZz, 0, AZz, 6, 0);
+  LC18 := LC18 + TNat192.AddTo(AZz, 18, AZz, 12, LC12);
 
-  dx := TNat192.Create();
-  TNat192.Diff(x, 6, x, 0, dx, 0);
+  LDx := TNat192.Create();
+  TNat192.Diff(AX, 6, AX, 0, LDx, 0);
 
-  m := TNat192.CreateExt();
-  TNat192.Square(dx, m);
+  LM := TNat192.CreateExt();
+  TNat192.Square(LDx, LM);
 
-  c18 := c18 + UInt32(TNat.SubFrom(12, m, 0, zz, 6));
-  TNat.AddWordAt(24, c18, zz, 18);
+  LC18 := LC18 + UInt32(TNat.SubFrom(12, LM, 0, AZz, 6));
+  TNat.AddWordAt(24, LC18, AZz, 18);
 end;
 
 end.

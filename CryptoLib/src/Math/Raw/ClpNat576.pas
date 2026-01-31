@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpNat320;
+unit ClpNat576;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -23,15 +23,12 @@ interface
 
 uses
   SysUtils,
-  ClpNat,
   ClpPack,
   ClpBigInteger,
-  ClpBitUtilities,
   ClpCryptoLibTypes;
 
 type
-  TNat320 = class sealed
-  strict private
+  TNat576 = class sealed
   public
     class procedure Copy64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array); overload; static;
     class procedure Copy64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
@@ -45,33 +42,33 @@ type
 
 implementation
 
-class procedure TNat320.Copy64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
+{ TNat576 }
+
+class procedure TNat576.Copy64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
 begin
-  System.Move(AX[0], AZ[0], 5 * System.SizeOf(UInt64));
+  System.Move(AX[0], AZ[0], 9 * System.SizeOf(UInt64));
 end;
 
-class procedure TNat320.Copy64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
+class procedure TNat576.Copy64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
-  System.Move(AX[AXOff], AZ[AZOff], 5 * System.SizeOf(UInt64));
+  System.Move(AX[AXOff], AZ[AZOff], 9 * System.SizeOf(UInt64));
 end;
 
-class function TNat320.Create64(): TCryptoLibUInt64Array;
+class function TNat576.Create64(): TCryptoLibUInt64Array;
 begin
-  SetLength(Result, 5);
-  Exit;
+  System.SetLength(Result, 9);
 end;
 
-class function TNat320.CreateExt64(): TCryptoLibUInt64Array;
+class function TNat576.CreateExt64(): TCryptoLibUInt64Array;
 begin
-  SetLength(Result, 10);
-  Exit;
+  System.SetLength(Result, 18);
 end;
 
-class function TNat320.Eq64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array): Boolean;
+class function TNat576.Eq64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array): Boolean;
 var
   LI: Int32;
 begin
-  for LI := 4 downto 0 do
+  for LI := 8 downto 0 do
   begin
     if AX[LI] <> AY[LI] then
     begin
@@ -82,7 +79,7 @@ begin
   Result := True;
 end;
 
-class function TNat320.IsOne64(const AX: TCryptoLibUInt64Array): Boolean;
+class function TNat576.IsOne64(const AX: TCryptoLibUInt64Array): Boolean;
 var
   LI: Int32;
 begin
@@ -91,7 +88,8 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (5) - 1 do
+
+  for LI := 1 to 8 do
   begin
     if AX[LI] <> UInt64(0) then
     begin
@@ -99,14 +97,15 @@ begin
       Exit;
     end;
   end;
+
   Result := True;
 end;
 
-class function TNat320.IsZero64(const AX: TCryptoLibUInt64Array): Boolean;
+class function TNat576.IsZero64(const AX: TCryptoLibUInt64Array): Boolean;
 var
   LI: Int32;
 begin
-  for LI := 0 to (5) - 1 do
+  for LI := 0 to 8 do
   begin
     if AX[LI] <> UInt64(0) then
     begin
@@ -117,19 +116,19 @@ begin
   Result := True;
 end;
 
-class function TNat320.ToBigInteger64(const AX: TCryptoLibUInt64Array): TBigInteger;
+class function TNat576.ToBigInteger64(const AX: TCryptoLibUInt64Array): TBigInteger;
 var
   LBs: TBytes;
-  LX_i: UInt64;
   LI: Int32;
+  LXI: UInt64;
 begin
-  SetLength(LBs, 40);
-  for LI := 0 to (5) - 1 do
+  System.SetLength(LBs, 72);
+  for LI := 0 to 8 do
   begin
-    LX_i := AX[LI];
-    if (LX_i <> Int64(0)) then
+    LXI := AX[LI];
+    if LXI <> UInt64(0) then
     begin
-      TPack.UInt64_To_BE(LX_i, LBs, (4 - LI) shl 3);
+      TPack.UInt64_To_BE(LXI, LBs, (8 - LI) shl 3);
     end;
   end;
   Result := TBigInteger.Create(1, LBs);
