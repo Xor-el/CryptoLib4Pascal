@@ -44,7 +44,7 @@ implementation
 
 procedure TWeakRef<T>.Clear;
 begin
-  //FTarget := nil;
+  FTarget := nil;
 end;
 
 procedure TWeakRef<T>.Assign(const AValue: T);

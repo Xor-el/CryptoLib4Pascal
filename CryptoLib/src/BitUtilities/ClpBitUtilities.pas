@@ -77,6 +77,11 @@ type
     class function NegativeLeftShift32(AValue: UInt32; AShiftBits: Int32): UInt32; static; inline;
 
     /// <summary>
+    /// Calculates Negative Left Shift for 64-bit (same semantics as NegativeLeftShift32).
+    /// </summary>
+    class function NegativeLeftShift64(AValue: UInt64; AShiftBits: Int32): UInt64; static; inline;
+
+    /// <summary>
     /// Calculates Negative Right Shift. This was implemented to circumvent a
     /// compiler issue when performing Shift Right on certain values with a
     /// Negative Shift Bits. In some C Compilers, this is "Undefined"
@@ -231,6 +236,14 @@ begin
   System.Assert(AShiftBits < 0);
 {$ENDIF DEBUG}
   Result := AValue shr (32 + AShiftBits);
+end;
+
+class function TBitUtilities.NegativeLeftShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
+begin
+{$IFDEF DEBUG}
+  System.Assert(AShiftBits < 0);
+{$ENDIF DEBUG}
+  Result := AValue shl (64 + AShiftBits);
 end;
 
 class function TBitUtilities.NegativeRightShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
