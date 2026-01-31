@@ -91,7 +91,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (5) - 1 do
+  for LI := 1 to 4 do
   begin
     if AX[LI] <> UInt64(0) then
     begin
@@ -106,7 +106,7 @@ class function TNat320.IsZero64(const AX: TCryptoLibUInt64Array): Boolean;
 var
   LI: Int32;
 begin
-  for LI := 0 to (5) - 1 do
+  for LI := 0 to 4 do
   begin
     if AX[LI] <> UInt64(0) then
     begin
@@ -124,7 +124,7 @@ var
   LI: Int32;
 begin
   SetLength(LBs, 40);
-  for LI := 0 to (5) - 1 do
+  for LI := 0 to 4 do
   begin
     LX_i := AX[LI];
     if (LX_i <> Int64(0)) then

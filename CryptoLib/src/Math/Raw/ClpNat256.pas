@@ -322,14 +322,7 @@ end;
 
 class procedure TNat256.Copy(const AX: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array);
 begin
-  AZ[0] := AX[0];
-  AZ[1] := AX[1];
-  AZ[2] := AX[2];
-  AZ[3] := AX[3];
-  AZ[4] := AX[4];
-  AZ[5] := AX[5];
-  AZ[6] := AX[6];
-  AZ[7] := AX[7];
+  System.Move(AX[0], AZ[0], 8 * System.SizeOf(UInt32));
 end;
 
 class procedure TNat256.Copy(const AX: TCryptoLibUInt32Array; AXOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32);
@@ -339,10 +332,7 @@ end;
 
 class procedure TNat256.Copy64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
 begin
-  AZ[0] := AX[0];
-  AZ[1] := AX[1];
-  AZ[2] := AX[2];
-  AZ[3] := AX[3];
+  System.Move(AX[0], AZ[0], 4 * System.SizeOf(UInt64));
 end;
 
 class procedure TNat256.Copy64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
@@ -497,7 +487,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (8) - 1 do
+  for LI := 1 to 7 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -517,7 +507,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (4) - 1 do
+  for LI := 1 to 3 do
   begin
     if AX[LI] <> UInt64(0) then
     begin
@@ -567,63 +557,63 @@ begin
   LY_6 := AY[6];
   LY_7 := AY[7];
   begin
-  LC := 0;
-  LX_0 := AX[0];
-  LC := LC + (LX_0 * LY_0);
-  AZz[0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_1);
-  AZz[1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_2);
-  AZz[2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_3);
-  AZz[3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_4);
-  AZz[4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_5);
-  AZz[5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_6);
-  AZz[6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_7);
-  AZz[7] := UInt32(LC);
-  LC := LC shr 32;
-  AZz[8] := UInt32(LC);
+    LC := 0;
+    LX_0 := AX[0];
+    LC := LC + (LX_0 * LY_0);
+    AZz[0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_1);
+    AZz[1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_2);
+    AZz[2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_3);
+    AZz[3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_4);
+    AZz[4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_5);
+    AZz[5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_6);
+    AZz[6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_7);
+    AZz[7] := UInt32(LC);
+    LC := LC shr 32;
+    AZz[8] := UInt32(LC);
   end;
-  for LI := 1 to (8) - 1 do
+  for LI := 1 to 7 do
   begin
-  LC := 0;
-  LX_i := AX[LI];
-  LC := LC + (LX_i * LY_0 + AZz[LI + 0]);
-  AZz[LI + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_1 + AZz[LI + 1]);
-  AZz[LI + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_2 + AZz[LI + 2]);
-  AZz[LI + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_3 + AZz[LI + 3]);
-  AZz[LI + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_4 + AZz[LI + 4]);
-  AZz[LI + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_5 + AZz[LI + 5]);
-  AZz[LI + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_6 + AZz[LI + 6]);
-  AZz[LI + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_7 + AZz[LI + 7]);
-  AZz[LI + 7] := UInt32(LC);
-  LC := LC shr 32;
-  AZz[LI + 8] := UInt32(LC);
+    LC := 0;
+    LX_i := AX[LI];
+    LC := LC + (LX_i * LY_0 + AZz[LI + 0]);
+    AZz[LI + 0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_1 + AZz[LI + 1]);
+    AZz[LI + 1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_2 + AZz[LI + 2]);
+    AZz[LI + 2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_3 + AZz[LI + 3]);
+    AZz[LI + 3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_4 + AZz[LI + 4]);
+    AZz[LI + 4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_5 + AZz[LI + 5]);
+    AZz[LI + 5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_6 + AZz[LI + 6]);
+    AZz[LI + 6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_7 + AZz[LI + 7]);
+    AZz[LI + 7] := UInt32(LC);
+    LC := LC shr 32;
+    AZz[LI + 8] := UInt32(LC);
   end;
 end;
 
@@ -651,64 +641,64 @@ begin
   LY_6 := AY[AYOff + 6];
   LY_7 := AY[AYOff + 7];
   begin
-  LC := 0;
-  LX_0 := AX[AXOff + 0];
-  LC := LC + (LX_0 * LY_0);
-  AZz[AZzOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_1);
-  AZz[AZzOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_2);
-  AZz[AZzOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_3);
-  AZz[AZzOff + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_4);
-  AZz[AZzOff + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_5);
-  AZz[AZzOff + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_6);
-  AZz[AZzOff + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_0 * LY_7);
-  AZz[AZzOff + 7] := UInt32(LC);
-  LC := LC shr 32;
-  AZz[AZzOff + 8] := UInt32(LC);
+    LC := 0;
+    LX_0 := AX[AXOff + 0];
+    LC := LC + (LX_0 * LY_0);
+    AZz[AZzOff + 0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_1);
+    AZz[AZzOff + 1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_2);
+    AZz[AZzOff + 2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_3);
+    AZz[AZzOff + 3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_4);
+    AZz[AZzOff + 4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_5);
+    AZz[AZzOff + 5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_6);
+    AZz[AZzOff + 6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_0 * LY_7);
+    AZz[AZzOff + 7] := UInt32(LC);
+    LC := LC shr 32;
+    AZz[AZzOff + 8] := UInt32(LC);
   end;
-  for LI := 1 to (8) - 1 do
+  for LI := 1 to 7 do
   begin
-  Inc(AZzOff);
-  LC := 0;
-  LX_i := AX[AXOff + LI];
-  LC := LC + (LX_i * LY_0 + AZz[AZzOff + 0]);
-  AZz[AZzOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_1 + AZz[AZzOff + 1]);
-  AZz[AZzOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_2 + AZz[AZzOff + 2]);
-  AZz[AZzOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_3 + AZz[AZzOff + 3]);
-  AZz[AZzOff + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_4 + AZz[AZzOff + 4]);
-  AZz[AZzOff + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_5 + AZz[AZzOff + 5]);
-  AZz[AZzOff + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_6 + AZz[AZzOff + 6]);
-  AZz[AZzOff + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_7 + AZz[AZzOff + 7]);
-  AZz[AZzOff + 7] := UInt32(LC);
-  LC := LC shr 32;
-  AZz[AZzOff + 8] := UInt32(LC);
+    Inc(AZzOff);
+    LC := 0;
+    LX_i := AX[AXOff + LI];
+    LC := LC + (LX_i * LY_0 + AZz[AZzOff + 0]);
+    AZz[AZzOff + 0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_1 + AZz[AZzOff + 1]);
+    AZz[AZzOff + 1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_2 + AZz[AZzOff + 2]);
+    AZz[AZzOff + 2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_3 + AZz[AZzOff + 3]);
+    AZz[AZzOff + 3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_4 + AZz[AZzOff + 4]);
+    AZz[AZzOff + 4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_5 + AZz[AZzOff + 5]);
+    AZz[AZzOff + 5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_6 + AZz[AZzOff + 6]);
+    AZz[AZzOff + 6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_7 + AZz[AZzOff + 7]);
+    AZz[AZzOff + 7] := UInt32(LC);
+    LC := LC shr 32;
+    AZz[AZzOff + 8] := UInt32(LC);
   end;
 end;
 
@@ -736,63 +726,63 @@ begin
   LX_6 := AX[6];
   LX_7 := AX[7];
   begin
-  LC := 0;
-  LY_0 := AY128[0];
-  LC := LC + (LY_0 * LX_0);
-  AZz[0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_1);
-  AZz[1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_2);
-  AZz[2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_3);
-  AZz[3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_4);
-  AZz[4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_5);
-  AZz[5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_6);
-  AZz[6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_0 * LX_7);
-  AZz[7] := UInt32(LC);
-  LC := LC shr 32;
-  AZz[8] := UInt32(LC);
+    LC := 0;
+    LY_0 := AY128[0];
+    LC := LC + (LY_0 * LX_0);
+    AZz[0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_1);
+    AZz[1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_2);
+    AZz[2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_3);
+    AZz[3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_4);
+    AZz[4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_5);
+    AZz[5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_6);
+    AZz[6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_0 * LX_7);
+    AZz[7] := UInt32(LC);
+    LC := LC shr 32;
+    AZz[8] := UInt32(LC);
   end;
-  for LI := 1 to (4) - 1 do
+  for LI := 1 to 3 do
   begin
-  LC := 0;
-  LY_i := AY128[LI];
-  LC := LC + (LY_i * LX_0 + AZz[LI + 0]);
-  AZz[LI + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_1 + AZz[LI + 1]);
-  AZz[LI + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_2 + AZz[LI + 2]);
-  AZz[LI + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_3 + AZz[LI + 3]);
-  AZz[LI + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_4 + AZz[LI + 4]);
-  AZz[LI + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_5 + AZz[LI + 5]);
-  AZz[LI + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_6 + AZz[LI + 6]);
-  AZz[LI + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY_i * LX_7 + AZz[LI + 7]);
-  AZz[LI + 7] := UInt32(LC);
-  LC := LC shr 32;
-  AZz[LI + 8] := UInt32(LC);
+    LC := 0;
+    LY_i := AY128[LI];
+    LC := LC + (LY_i * LX_0 + AZz[LI + 0]);
+    AZz[LI + 0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_1 + AZz[LI + 1]);
+    AZz[LI + 1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_2 + AZz[LI + 2]);
+    AZz[LI + 2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_3 + AZz[LI + 3]);
+    AZz[LI + 3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_4 + AZz[LI + 4]);
+    AZz[LI + 4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_5 + AZz[LI + 5]);
+    AZz[LI + 5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_6 + AZz[LI + 6]);
+    AZz[LI + 6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LY_i * LX_7 + AZz[LI + 7]);
+    AZz[LI + 7] := UInt32(LC);
+    LC := LC shr 32;
+    AZz[LI + 8] := UInt32(LC);
   end;
 end;
 
@@ -820,37 +810,37 @@ begin
   LY_6 := AY[6];
   LY_7 := AY[7];
   LZc := 0;
-  for LI := 0 to (8) - 1 do
+  for LI := 0 to 7 do
   begin
-  LC := 0;
-  LX_i := AX[LI];
-  LC := LC + (LX_i * LY_0 + AZz[LI + 0]);
-  AZz[LI + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_1 + AZz[LI + 1]);
-  AZz[LI + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_2 + AZz[LI + 2]);
-  AZz[LI + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_3 + AZz[LI + 3]);
-  AZz[LI + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_4 + AZz[LI + 4]);
-  AZz[LI + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_5 + AZz[LI + 5]);
-  AZz[LI + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_6 + AZz[LI + 6]);
-  AZz[LI + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_7 + AZz[LI + 7]);
-  AZz[LI + 7] := UInt32(LC);
-  LC := LC shr 32;
-  LZc := LZc + (LC + AZz[LI + 8]);
-  AZz[LI + 8] := UInt32(LZc);
-  LZc := LZc shr (32);
+    LC := 0;
+    LX_i := AX[LI];
+    LC := LC + (LX_i * LY_0 + AZz[LI + 0]);
+    AZz[LI + 0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_1 + AZz[LI + 1]);
+    AZz[LI + 1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_2 + AZz[LI + 2]);
+    AZz[LI + 2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_3 + AZz[LI + 3]);
+    AZz[LI + 3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_4 + AZz[LI + 4]);
+    AZz[LI + 4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_5 + AZz[LI + 5]);
+    AZz[LI + 5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_6 + AZz[LI + 6]);
+    AZz[LI + 6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_7 + AZz[LI + 7]);
+    AZz[LI + 7] := UInt32(LC);
+    LC := LC shr 32;
+    LZc := LZc + (LC + AZz[LI + 8]);
+    AZz[LI + 8] := UInt32(LZc);
+    LZc := LZc shr (32);
   end;
   Result := UInt32(LZc);
 end;
@@ -879,38 +869,38 @@ begin
   LY_6 := AY[AYOff + 6];
   LY_7 := AY[AYOff + 7];
   LZc := 0;
-  for LI := 0 to (8) - 1 do
+  for LI := 0 to 7 do
   begin
-  LC := 0;
-  LX_i := AX[AXOff + LI];
-  LC := LC + (LX_i * LY_0 + AZz[AZzOff + 0]);
-  AZz[AZzOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_1 + AZz[AZzOff + 1]);
-  AZz[AZzOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_2 + AZz[AZzOff + 2]);
-  AZz[AZzOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_3 + AZz[AZzOff + 3]);
-  AZz[AZzOff + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_4 + AZz[AZzOff + 4]);
-  AZz[AZzOff + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_5 + AZz[AZzOff + 5]);
-  AZz[AZzOff + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_6 + AZz[AZzOff + 6]);
-  AZz[AZzOff + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX_i * LY_7 + AZz[AZzOff + 7]);
-  AZz[AZzOff + 7] := UInt32(LC);
-  LC := LC shr 32;
-  LZc := LZc + (LC + AZz[AZzOff + 8]);
-  AZz[AZzOff + 8] := UInt32(LZc);
-  LZc := LZc shr (32);
-  Inc(AZzOff);
+    LC := 0;
+    LX_i := AX[AXOff + LI];
+    LC := LC + (LX_i * LY_0 + AZz[AZzOff + 0]);
+    AZz[AZzOff + 0] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_1 + AZz[AZzOff + 1]);
+    AZz[AZzOff + 1] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_2 + AZz[AZzOff + 2]);
+    AZz[AZzOff + 2] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_3 + AZz[AZzOff + 3]);
+    AZz[AZzOff + 3] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_4 + AZz[AZzOff + 4]);
+    AZz[AZzOff + 4] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_5 + AZz[AZzOff + 5]);
+    AZz[AZzOff + 5] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_6 + AZz[AZzOff + 6]);
+    AZz[AZzOff + 6] := UInt32(LC);
+    LC := LC shr 32;
+    LC := LC + (LX_i * LY_7 + AZz[AZzOff + 7]);
+    AZz[AZzOff + 7] := UInt32(LC);
+    LC := LC shr 32;
+    LZc := LZc + (LC + AZz[AZzOff + 8]);
+    AZz[AZzOff + 8] := UInt32(LZc);
+    LZc := LZc shr (32);
+    Inc(AZzOff);
   end;
   Result := UInt32(LZc);
 end;
@@ -1236,17 +1226,17 @@ begin
   LC := UInt32(LP shr 32) and 1;
   LX_1 := AX[1];
   LZz_2 := AZz[2];
-  begin
+
   LZz_1 := LZz_1 + (LX_1 * LX_0);
   LW := UInt32(LZz_1);
   AZz[1] := (LW  shl 1)  or LC;
   LC := LW  shr 31;
   LZz_2 := LZz_2 + (LZz_1  shr 32);
-  end;
+
   LX_2 := AX[2];
   LZz_3 := AZz[3];
   LZz_4 := AZz[4];
-  begin
+
   LZz_2 := LZz_2 + (LX_2 * LX_0);
   LW := UInt32(LZz_2);
   AZz[2] := (LW  shl 1)  or LC;
@@ -1254,11 +1244,11 @@ begin
   LZz_3 := LZz_3 + ((LZz_2  shr 32) + LX_2 * LX_1);
   LZz_4 := LZz_4 + (LZz_3  shr 32);
   LZz_3 := LZz_3 and M;
-  end;
+
   LX_3 := AX[3];
   LZz_5 := AZz[5] + (LZz_4 shr 32); LZz_4 := LZz_4 and M;
   LZz_6 := AZz[6] + (LZz_5 shr 32); LZz_5 := LZz_5 and M;
-  begin
+
   LZz_3 := LZz_3 + (LX_3 * LX_0);
   LW := UInt32(LZz_3);
   AZz[3] := (LW  shl 1)  or LC;
@@ -1268,11 +1258,11 @@ begin
   LZz_4 := LZz_4 and M;
   LZz_6 := LZz_6 + (LZz_5  shr 32);
   LZz_5 := LZz_5 and M;
-  end;
+
   LX_4 := AX[4];
   LZz_7 := AZz[7] + (LZz_6 shr 32); LZz_6 := LZz_6 and M;
   LZz_8 := AZz[8] + (LZz_7 shr 32); LZz_7 := LZz_7 and M;
-  begin
+
   LZz_4 := LZz_4 + (LX_4 * LX_0);
   LW := UInt32(LZz_4);
   AZz[4] := (LW  shl 1)  or LC;
@@ -1284,11 +1274,11 @@ begin
   LZz_6 := LZz_6 and M;
   LZz_8 := LZz_8 + (LZz_7  shr 32);
   LZz_7 := LZz_7 and M;
-  end;
+
   LX_5 := AX[5];
   LZz_9 := AZz[9] + (LZz_8 shr 32); LZz_8 := LZz_8 and M;
   LZz_10 := AZz[10] + (LZz_9 shr 32); LZz_9 := LZz_9 and M;
-  begin
+
   LZz_5 := LZz_5 + (LX_5 * LX_0);
   LW := UInt32(LZz_5);
   AZz[5] := (LW  shl 1)  or LC;
@@ -1302,11 +1292,11 @@ begin
   LZz_8 := LZz_8 and M;
   LZz_10 := LZz_10 + (LZz_9  shr 32);
   LZz_9 := LZz_9 and M;
-  end;
+
   LX_6 := AX[6];
   LZz_11 := AZz[11] + (LZz_10 shr 32); LZz_10 := LZz_10 and M;
   LZz_12 := AZz[12] + (LZz_11 shr 32); LZz_11 := LZz_11 and M;
-  begin
+
   LZz_6 := LZz_6 + (LX_6 * LX_0);
   LW := UInt32(LZz_6);
   AZz[6] := (LW  shl 1)  or LC;
@@ -1322,11 +1312,11 @@ begin
   LZz_10 := LZz_10 and M;
   LZz_12 := LZz_12 + (LZz_11  shr 32);
   LZz_11 := LZz_11 and M;
-  end;
+
   LX_7 := AX[7];
   LZz_13 := AZz[13] + (LZz_12 shr 32); LZz_12 := LZz_12 and M;
   LZz_14 := AZz[14] + (LZz_13 shr 32); LZz_13 := LZz_13 and M;
-  begin
+
   LZz_7 := LZz_7 + (LX_7 * LX_0);
   LW := UInt32(LZz_7);
   AZz[7] := (LW  shl 1)  or LC;
@@ -1338,7 +1328,7 @@ begin
   LZz_12 := LZz_12 + ((LZz_11  shr 32) + LX_7 * LX_5);
   LZz_13 := LZz_13 + ((LZz_12  shr 32) + LX_7 * LX_6);
   LZz_14 := LZz_14 + (LZz_13  shr 32);
-  end;
+
   LW := UInt32(LZz_8);
   AZz[8] := (LW  shl 1)  or LC;
   LC := LW  shr 31;
@@ -1410,23 +1400,24 @@ begin
     AZz[AZzOff + LJ] := UInt32(LP shr 1);
     LC := UInt32(LP);
   end;
+
   LP := LX_0 * LX_0;
   LZz_1 := UInt64(LC shl 31) or (LP shr 33);
   AZz[AZzOff + 0] := UInt32(LP);
   LC := UInt32(LP shr 32) and 1;
   LX_1 := AX[AXOff + 1];
   LZz_2 := AZz[AZzOff + 2];
-  begin
+
   LZz_1 := LZz_1 + (LX_1 * LX_0);
   LW := UInt32(LZz_1);
   AZz[AZzOff + 1] := (LW  shl 1)  or LC;
   LC := LW  shr 31;
   LZz_2 := LZz_2 + (LZz_1  shr 32);
-  end;
+
   LX_2 := AX[AXOff + 2];
   LZz_3 := AZz[AZzOff + 3];
   LZz_4 := AZz[AZzOff + 4];
-  begin
+
   LZz_2 := LZz_2 + (LX_2 * LX_0);
   LW := UInt32(LZz_2);
   AZz[AZzOff + 2] := (LW  shl 1)  or LC;
@@ -1434,11 +1425,11 @@ begin
   LZz_3 := LZz_3 + ((LZz_2  shr 32) + LX_2 * LX_1);
   LZz_4 := LZz_4 + (LZz_3  shr 32);
   LZz_3 := LZz_3 and M;
-  end;
+
   LX_3 := AX[AXOff + 3];
   LZz_5 := AZz[AZzOff + 5] + (LZz_4 shr 32); LZz_4 := LZz_4 and M;
   LZz_6 := AZz[AZzOff + 6] + (LZz_5 shr 32); LZz_5 := LZz_5 and M;
-  begin
+
   LZz_3 := LZz_3 + (LX_3 * LX_0);
   LW := UInt32(LZz_3);
   AZz[AZzOff + 3] := (LW  shl 1)  or LC;
@@ -1448,11 +1439,11 @@ begin
   LZz_4 := LZz_4 and M;
   LZz_6 := LZz_6 + (LZz_5  shr 32);
   LZz_5 := LZz_5 and M;
-  end;
+
   LX_4 := AX[AXOff + 4];
   LZz_7 := AZz[AZzOff + 7] + (LZz_6 shr 32); LZz_6 := LZz_6 and M;
   LZz_8 := AZz[AZzOff + 8] + (LZz_7 shr 32); LZz_7 := LZz_7 and M;
-  begin
+
   LZz_4 := LZz_4 + (LX_4 * LX_0);
   LW := UInt32(LZz_4);
   AZz[AZzOff + 4] := (LW  shl 1)  or LC;
@@ -1464,11 +1455,11 @@ begin
   LZz_6 := LZz_6 and M;
   LZz_8 := LZz_8 + (LZz_7  shr 32);
   LZz_7 := LZz_7 and M;
-  end;
+
   LX_5 := AX[AXOff + 5];
   LZz_9 := AZz[AZzOff + 9] + (LZz_8 shr 32); LZz_8 := LZz_8 and M;
   LZz_10 := AZz[AZzOff + 10] + (LZz_9 shr 32); LZz_9 := LZz_9 and M;
-  begin
+
   LZz_5 := LZz_5 + (LX_5 * LX_0);
   LW := UInt32(LZz_5);
   AZz[AZzOff + 5] := (LW  shl 1)  or LC;
@@ -1482,11 +1473,11 @@ begin
   LZz_8 := LZz_8 and M;
   LZz_10 := LZz_10 + (LZz_9  shr 32);
   LZz_9 := LZz_9 and M;
-  end;
+
   LX_6 := AX[AXOff + 6];
   LZz_11 := AZz[AZzOff + 11] + (LZz_10 shr 32); LZz_10 := LZz_10 and M;
   LZz_12 := AZz[AZzOff + 12] + (LZz_11 shr 32); LZz_11 := LZz_11 and M;
-  begin
+
   LZz_6 := LZz_6 + (LX_6 * LX_0);
   LW := UInt32(LZz_6);
   AZz[AZzOff + 6] := (LW  shl 1)  or LC;
@@ -1502,11 +1493,11 @@ begin
   LZz_10 := LZz_10 and M;
   LZz_12 := LZz_12 + (LZz_11  shr 32);
   LZz_11 := LZz_11 and M;
-  end;
+
   LX_7 := AX[AXOff + 7];
   LZz_13 := AZz[AZzOff + 13] + (LZz_12 shr 32); LZz_12 := LZz_12 and M;
   LZz_14 := AZz[AZzOff + 14] + (LZz_13 shr 32); LZz_13 := LZz_13 and M;
-  begin
+
   LZz_7 := LZz_7 + (LX_7 * LX_0);
   LW := UInt32(LZz_7);
   AZz[AZzOff + 7] := (LW  shl 1)  or LC;
@@ -1518,7 +1509,7 @@ begin
   LZz_12 := LZz_12 + ((LZz_11  shr 32) + LX_7 * LX_5);
   LZz_13 := LZz_13 + ((LZz_12  shr 32) + LX_7 * LX_6);
   LZz_14 := LZz_14 + (LZz_13  shr 32);
-  end;
+
   LW := UInt32(LZz_8);
   AZz[AZzOff + 8] := (LW  shl 1)  or LC;
   LC := LW  shr 31;
@@ -1711,13 +1702,13 @@ var
   LI: Int32;
 begin
   SetLength(LBs, 32);
-  for LI := 0 to (8) - 1 do
+  for LI := 0 to 7 do
   begin
-  LX_i := AX[LI];
-  if (LX_i <> 0) then
-  begin
-  TPack.UInt32_To_BE(LX_i, LBs, (7 - LI)  shl 2);
-  end;
+    LX_i := AX[LI];
+    if (LX_i <> 0) then
+    begin
+      TPack.UInt32_To_BE(LX_i, LBs, (7 - LI)  shl 2);
+    end;
   end;
   Result := TBigInteger.Create(1, LBs);
 end;
@@ -1729,13 +1720,13 @@ var
   LI: Int32;
 begin
   SetLength(LBs, 32);
-  for LI := 0 to (4) - 1 do
+  for LI := 0 to 3 do
   begin
-  LX_i := AX[LI];
-  if (LX_i <> Int64(0)) then
-  begin
-  TPack.UInt64_To_BE(LX_i, LBs, (3 - LI) shl 3);
-  end;
+    LX_i := AX[LI];
+    if (LX_i <> Int64(0)) then
+    begin
+      TPack.UInt64_To_BE(LX_i, LBs, (3 - LI) shl 3);
+    end;
   end;
   Result := TBigInteger.Create(1, LBs);
 end;

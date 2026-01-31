@@ -238,8 +238,7 @@ end;
 
 class procedure TNat128.Copy64(const AX: TCryptoLibUInt64Array; const AZ: TCryptoLibUInt64Array);
 begin
-  AZ[0] := AX[0];
-  AZ[1] := AX[1];
+  System.Move(AX[0], AZ[0], 2 * System.SizeOf(UInt64));
 end;
 
 class procedure TNat128.Copy64(const AX: TCryptoLibUInt64Array; AXOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);

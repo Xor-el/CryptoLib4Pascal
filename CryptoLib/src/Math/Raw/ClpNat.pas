@@ -176,7 +176,7 @@ var
   LI: Int32;
 begin
   LC := UInt64(0);
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[LI]) + AY[LI];
     AZ[LI] := UInt32(LC);
@@ -277,7 +277,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[LI]) + AY[LI] + AZ[LI];
     AZ[LI] := UInt32(LC);
@@ -292,7 +292,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[AXOff + LI]) + AY[AYOff + LI] + AZ[AZOff + LI];
     AZ[AZOff + LI] := UInt32(LC);
@@ -393,7 +393,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[LI]) + AZ[LI];
     AZ[LI] := UInt32(LC);
@@ -408,7 +408,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[AXOff + LI]) + AZ[AZOff + LI];
     AZ[AZOff + LI] := UInt32(LC);
@@ -423,7 +423,7 @@ var
   LI: Int32;
 begin
   LC := ACIn;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[AXOff + LI]) + AZ[AZOff + LI];
     AZ[AZOff + LI] := UInt32(LC);
@@ -438,7 +438,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AU[AUOff + LI]) + AV[AVOff + LI];
     AU[AUOff + LI] := UInt32(LC);
@@ -530,7 +530,7 @@ var
 begin
   LMASK := UInt32(-(AMask ) and 1);
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AX[LI]) + (AY[LI] and LMASK);
     AZ[LI] := UInt32(LC);
@@ -547,7 +547,7 @@ var
 begin
   LMASK := UInt32(-(AMask ) and 1);
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + UInt64(AZ[LI]) + (AX[LI] and LMASK);
     AZ[LI] := UInt32(LC);
@@ -566,7 +566,7 @@ begin
   LMASK := UInt32(-(AMask ) and 1);
   LZI := AZ[AZOff + LI];
   LDiff := LZI xor AX[AXOff + LI];
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LZI := LZI xor (LDiff and LMASK);
     AZ[AZOff + LI] := LZI;
@@ -679,7 +679,7 @@ var
 begin
   LMASK := UInt32(-(AMask ) and 1);
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (AX[LI] - (AY[LI] and LMASK));
     AZ[LI] := UInt32(LC);
@@ -696,7 +696,7 @@ var
 begin
   LMASK := UInt32(-(AMask ) and 1);
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (AX[AXOff + LI] - (AY[AYOff + LI] and LMASK));
     AZ[AZOff + LI] := UInt32(LC);
@@ -709,7 +709,7 @@ class function TNat.Dec(ALen: Int32; const AZ: TCryptoLibUInt32Array): Int32;
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     System.Dec(AZ[LI]);
     if AZ[LI] <> UInt32.MaxValue then
@@ -749,7 +749,7 @@ begin
   {$IFDEF DEBUG}
   System.Assert(AZPos <= ALen);
   {$ENDIF}
-  for LI := AZPos to (ALen) - 1 do
+  for LI := AZPos to ALen - 1 do
   begin
     System.Dec(AZ[LI]);
     if AZ[LI] <> UInt32.MaxValue then
@@ -768,7 +768,7 @@ begin
   {$IFDEF DEBUG}
   System.Assert(AZPos <= ALen);
   {$ENDIF}
-  for LI := AZPos to (ALen) - 1 do
+  for LI := AZPos to ALen - 1 do
   begin
     System.Dec(AZ[AZOff + LI]);
     if AZ[AZOff + LI] <> UInt32.MaxValue then
@@ -801,7 +801,7 @@ var
   LI: Int32;
 begin
   LD := AX[AXOff] xor AY;
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     LD := LD or (AX[AXOff + LI]);
   end;
@@ -815,7 +815,7 @@ var
   LI: Int32;
 begin
   LD := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LD := LD or (AX[AXOff + LI] xor AY[AYOff + LI]);
   end;
@@ -829,7 +829,7 @@ var
   LI: Int32;
 begin
   LD := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LD := LD or (AX[AXOff + LI]);
   end;
@@ -848,7 +848,7 @@ begin
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
   raise EArgumentCryptoLibException.Create('');
   LZ[0] := UInt32(AX.Int32Value);
-  for LI := 1 to (LLen) - 1 do
+  for LI := 1 to LLen - 1 do
   begin
     AX := AX.ShiftRight(32);
     LZ[LI] := UInt32(AX.Int32Value);
@@ -867,7 +867,7 @@ begin
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
   raise EArgumentCryptoLibException.Create('');
   LZ[0] := UInt64(AX.Int64Value);
-  for LI := 1 to (LLen) - 1 do
+  for LI := 1 to LLen - 1 do
   begin
     AX := AX.ShiftRight(64);
     LZ[LI] := UInt64(AX.Int64Value);
@@ -971,7 +971,7 @@ class function TNat.Inc(ALen: Int32; const AZ: TCryptoLibUInt32Array): UInt32;
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     System.Inc(AZ[LI]);
     if AZ[LI] <> UInt32(0) then
@@ -1011,7 +1011,7 @@ begin
   {$IFDEF DEBUG}
   System.Assert(AZPos <= ALen);
   {$ENDIF}
-  for LI := AZPos to (ALen) - 1 do
+  for LI := AZPos to ALen - 1 do
   begin
     System.Inc(AZ[LI]);
     if AZ[LI] <> UInt32(0) then
@@ -1030,7 +1030,7 @@ begin
   {$IFDEF DEBUG}
   System.Assert(AZPos <= ALen);
   {$ENDIF}
-  for LI := AZPos to (ALen) - 1 do
+  for LI := AZPos to ALen - 1 do
   begin
     System.Inc(AZ[AZOff + LI]);
     if AZ[AZOff + LI] <> UInt32(0) then
@@ -1051,7 +1051,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -1071,7 +1071,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -1088,7 +1088,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AX[LI]) - AY[LI]);
     LC := TBitUtilities.Asr64(LC, 32);
@@ -1103,7 +1103,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AX[AXOff + LI]) - Int64(AY[AYOff + LI]));
     LC := TBitUtilities.Asr64(LC, 32);
@@ -1119,7 +1119,7 @@ var
   LI: Int32;
 begin
   AZz[ALen] := MulWord(ALen, AX[0], AY, AZz);
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     AZz[LI + ALen] := MulWordAddTo(ALen, AX[LI], AY, 0, AZz, LI);
   end;
@@ -1130,7 +1130,7 @@ var
   LI: Int32;
 begin
   AZz[AZzOff + ALen] := MulWord(ALen, AX[AXOff], AY, AYOff, AZz, AZzOff);
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     AZz[AZzOff + LI + ALen] := MulWordAddTo(ALen, AX[AXOff + LI], AY, AYOff, AZz, AZzOff + LI);
   end;
@@ -1141,7 +1141,7 @@ var
   LI: Int32;
 begin
   AZz[AZzOff + AYLen] := MulWord(AYLen, AX[AXOff], AY, AYOff, AZz, AZzOff);
-  for LI := 1 to (AXLen) - 1 do
+  for LI := 1 to AXLen - 1 do
   begin
     AZz[AZzOff + LI + AYLen] := MulWordAddTo(AYLen, AX[AXOff + LI], AY, AYOff, AZz, AZzOff + LI);
   end;
@@ -1153,7 +1153,7 @@ var
   LI: Int32;
 begin
   LZc := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LZc := LZc + (MulWordAddTo(ALen, AX[LI], AY, 0, AZz, LI) and M);
     LZc := LZc + (AZz[LI + ALen] and M);
@@ -1169,7 +1169,7 @@ var
   LI: Int32;
 begin
   LZc := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LZc := LZc + (MulWordAddTo(ALen, AX[AXOff + LI], AY, AYOff, AZz, AZzOff) and M);
     LZc := LZc + (AZz[AZzOff + ALen] and M);
@@ -1226,7 +1226,7 @@ var
 begin
   LC := 0;
   LXVal := AX;
-  for LI := 0 to (ALen - 1) do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (LXVal * AY[AYOff + LI]);
     AZ[AZOff + LI] := UInt32(LC);
@@ -1243,7 +1243,7 @@ var
 begin
   LC := 0;
   LXVal := AX;
-  for LI := 0 to (ALen - 1) do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (LXVal * AY[AYOff + LI] + AZ[AZOff + LI]);
     AZ[AZOff + LI] := UInt32(LC);
@@ -1287,7 +1287,7 @@ var
   LI: Int32;
 begin
   LC := Int64(0);
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC - (AX[LI]);
     AZ[LI] := UInt32(LC);
@@ -2018,7 +2018,7 @@ begin
   LD := UInt64(0);
   LZzPos := 2;
 
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     LD := LD + SquareWordAddTo(AX, LI, AZz);
 
@@ -2073,7 +2073,7 @@ begin
   LD := UInt64(0);
   LZzPos := AZzOff + 2;
 
-  for LI := 1 to (ALen) - 1 do
+  for LI := 1 to ALen - 1 do
   begin
     LD := LD + SquareWordAddTo(AX, AXOff, LI, AZz, AZzOff);
 
@@ -2144,7 +2144,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AX[LI]) - Int64(AY[LI]));
     AZ[LI] := UInt32(LC);
@@ -2159,7 +2159,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AX[AXOff + LI]) - Int64(AY[AYOff + LI]));
     AZ[AZOff + LI] := UInt32(LC);
@@ -2260,7 +2260,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AZ[LI]) - Int64(AX[LI]) - Int64(AY[LI]));
     AZ[LI] := UInt32(LC);
@@ -2275,7 +2275,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AZ[AZOff + LI]) - Int64(AX[AXOff + LI]) - Int64(AY[AYOff + LI]));
     AZ[AZOff + LI] := UInt32(LC);
@@ -2376,7 +2376,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AZ[LI]) - Int64(AX[LI]));
     AZ[LI] := UInt32(LC);
@@ -2391,7 +2391,7 @@ var
   LI: Int32;
 begin
   LC := 0;
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AZ[AZOff + LI]) - Int64(AX[AXOff + LI]));
     AZ[AZOff + LI] := UInt32(LC);
@@ -2496,7 +2496,7 @@ class procedure TNat.&Xor(ALen: Int32; const AX: TCryptoLibUInt32Array; const AY
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AX[LI] xor AY[LI];
   end;
@@ -2506,7 +2506,7 @@ class procedure TNat.&Xor(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: I
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AX[AXOff + LI] xor AY[AYOff + LI];
   end;
@@ -2516,7 +2516,7 @@ class procedure TNat.Xor64(ALen: Int32; const AX: TCryptoLibUInt64Array; AY: UIn
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AX[LI] xor AY;
   end;
@@ -2526,7 +2526,7 @@ class procedure TNat.Xor64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: 
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AX[AXOff + LI] xor AY;
   end;
@@ -2536,7 +2536,7 @@ class procedure TNat.Xor64(ALen: Int32; const AX: TCryptoLibUInt64Array; const A
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AX[LI] xor AY[LI];
   end;
@@ -2546,7 +2546,7 @@ class procedure TNat.Xor64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: 
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AX[AXOff + LI] xor AY[AYOff + LI];
   end;
@@ -2556,7 +2556,7 @@ class procedure TNat.XorBothTo(ALen: Int32; const AX: TCryptoLibUInt32Array; con
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AZ[LI] xor (AX[LI] xor AY[LI]);
   end;
@@ -2566,7 +2566,7 @@ class procedure TNat.XorBothTo(ALen: Int32; const AX: TCryptoLibUInt32Array; AXO
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AZ[AZOff + LI] xor (AX[AXOff + LI] xor AY[AYOff + LI]);
   end;
@@ -2576,7 +2576,7 @@ class procedure TNat.XorBothTo64(ALen: Int32; const AX: TCryptoLibUInt64Array; c
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AZ[LI] xor (AX[LI] xor AY[LI]);
   end;
@@ -2586,7 +2586,7 @@ class procedure TNat.XorBothTo64(ALen: Int32; const AX: TCryptoLibUInt64Array; A
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AZ[AZOff + LI] xor (AX[AXOff + LI] xor AY[AYOff + LI]);
   end;
@@ -2596,7 +2596,7 @@ class procedure TNat.XorTo(ALen: Int32; const AX: TCryptoLibUInt32Array; const A
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AZ[LI] xor (AX[LI]);
   end;
@@ -2606,7 +2606,7 @@ class procedure TNat.XorTo(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: 
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AZ[AZOff + LI] xor (AX[AXOff + LI]);
   end;
@@ -2616,7 +2616,7 @@ class procedure TNat.XorTo64(ALen: Int32; const AX: TCryptoLibUInt64Array; const
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[LI] := AZ[LI] xor (AX[LI]);
   end;
@@ -2626,7 +2626,7 @@ class procedure TNat.XorTo64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff
 var
   LI: Int32;
 begin
-  for LI := 0 to (ALen) - 1 do
+  for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AZ[AZOff + LI] xor (AX[AXOff + LI]);
   end;

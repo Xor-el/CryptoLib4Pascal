@@ -229,9 +229,7 @@ end;
 
 class procedure TNat192.Copy64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
 begin
-  AZ[0] := AX[0];
-  AZ[1] := AX[1];
-  AZ[2] := AX[2];
+  System.Move(AX[0], AZ[0], 3 * System.SizeOf(UInt64));
 end;
 
 class procedure TNat192.Copy64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
@@ -382,7 +380,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (6) - 1 do
+  for LI := 1 to 5 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -402,7 +400,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (3) - 1 do
+  for LI := 1 to 2 do
   begin
     if AX[LI] <> UInt64(0) then
     begin
@@ -417,7 +415,7 @@ class function TNat192.IsZero(const AX: TCryptoLibUInt32Array): Boolean;
 var
   LI: Int32;
 begin
-  for LI := 0 to (6) - 1 do
+  for LI := 0 to 5 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -468,7 +466,7 @@ begin
   AZz[5] := UInt32(LC);
   LC := LC shr 32;
   AZz[6] := UInt32(LC);
-  for LI := 1 to (6) - 1 do
+  for LI := 1 to 5 do
   begin
     LC := 0;
     LXI := AX[LI];
@@ -534,7 +532,7 @@ begin
   AZz[AZzOff + 5] := UInt32(LC);
   LC := LC shr 32;
   AZz[AZzOff + 6] := UInt32(LC);
-  for LI := 1 to (6) - 1 do
+  for LI := 1 to 5 do
   begin
     Inc(AZzOff);
     LC := 0;
@@ -581,7 +579,7 @@ begin
   LY4 := AY[4];
   LY5 := AY[5];
   LZc := 0;
-  for LI := 0 to (6) - 1 do
+  for LI := 0 to 5 do
   begin
     LC := 0;
     LXI := AX[LI];
@@ -630,7 +628,7 @@ begin
   LY4 := AY[AYOff + 4];
   LY5 := AY[AYOff + 5];
   LZc := 0;
-  for LI := 0 to (6) - 1 do
+  for LI := 0 to 5 do
   begin
     LC := 0;
     LXI := AX[AXOff + LI];
@@ -1221,7 +1219,7 @@ var
   LXI: UInt32;
 begin
   SetLength(LBs, 24);
-  for LI := 0 to (6) - 1 do
+  for LI := 0 to 5 do
   begin
     LXI := AX[LI];
     if LXI <> 0 then
@@ -1237,7 +1235,7 @@ var
   LXI: UInt64;
 begin
   SetLength(LBs, 24);
-  for LI := 0 to (3) - 1 do
+  for LI := 0 to 2 do
   begin
     LXI := AX[LI];
     if LXI <> Int64(0) then

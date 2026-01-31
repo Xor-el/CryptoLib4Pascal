@@ -239,11 +239,7 @@ end;
 
 class procedure TNat160.Copy(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AZ: TCryptoLibUInt32Array; AZOff: Int32);
 begin
-  AZ[AZOff + 0] := AX[AXOff + 0];
-  AZ[AZOff + 1] := AX[AXOff + 1];
-  AZ[AZOff + 2] := AX[AXOff + 2];
-  AZ[AZOff + 3] := AX[AXOff + 3];
-  AZ[AZOff + 4] := AX[AXOff + 4];
+  System.Move(AX[AXOff], AZ[AZOff], 5 * System.SizeOf(UInt32));
 end;
 
 class function TNat160.Create: TCryptoLibUInt32Array;

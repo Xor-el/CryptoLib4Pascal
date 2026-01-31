@@ -414,7 +414,7 @@ begin
     Result := False;
     Exit;
   end;
-  for LI := 1 to (7) - 1 do
+  for LI := 1 to 6 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -429,7 +429,7 @@ class function TNat224.IsZero(const AX: TCryptoLibUInt32Array): Boolean;
 var
   LI: Int32;
 begin
-  for LI := 0 to (7) - 1 do
+  for LI := 0 to 6 do
   begin
     if AX[LI] <> 0 then
     begin
@@ -485,7 +485,7 @@ begin
   AZz[6] := UInt32(LC);
   LC := LC shr 32;
   AZz[7] := UInt32(LC);
-  for LI := 1 to (7) - 1 do
+  for LI := 1 to 6 do
   begin
     LC := 0;
     LXI := AX[LI];
@@ -559,7 +559,7 @@ begin
   AZz[AZzOff + 6] := UInt32(LC);
   LC := LC shr 32;
   AZz[AZzOff + 7] := UInt32(LC);
-  for LI := 1 to (7) - 1 do
+  for LI := 1 to 6 do
   begin
     Inc(AZzOff);
     LC := 0;
@@ -611,7 +611,7 @@ begin
   LY5 := AY[5];
   LY6 := AY[6];
   LZc := 0;
-  for LI := 0 to (7) - 1 do
+  for LI := 0 to 6 do
   begin
     LC := 0;
     LXI := AX[LI];
@@ -665,7 +665,7 @@ begin
   LY5 := AY[AYOff + 5];
   LY6 := AY[AYOff + 6];
   LZc := 0;
-  for LI := 0 to (7) - 1 do
+  for LI := 0 to 6 do
   begin
     LC := 0;
     LXI := AX[AXOff + LI];
@@ -1390,7 +1390,7 @@ var
   LXI: UInt32;
 begin
   SetLength(LBs, 28);
-  for LI := 0 to (7) - 1 do
+  for LI := 0 to 6 do
   begin
     LXI := AX[LI];
     if LXI <> 0 then
