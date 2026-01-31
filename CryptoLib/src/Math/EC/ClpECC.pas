@@ -39,7 +39,7 @@ uses
   ClpLongArray,
   ClpMultipliers,
   ClpFiniteFields,
-  ClpSetWeakRef,
+  ClpWeakRef,
   ClpECCurveConstants,
   ClpTnaf,
   ClpValidityPreCompInfo,
@@ -1134,7 +1134,7 @@ type
   var
     Fm_zs: TCryptoLibGenericArray<IECFieldElement>;
     Fm_withCompression: Boolean;
-    Fm_curve: IECCurve;
+    Fm_curve: TWeakRef<IECCurve>;
 
     Fm_x, Fm_y: IECFieldElement;
 
@@ -2219,19 +2219,8 @@ begin
 end;
 
 function TFpFieldElement.ModInverse(const x: TBigInteger): TBigInteger;
-var
-  bits, len: Int32;
-  P, n, z: TCryptoLibUInt32Array;
 begin
-  bits := FieldSize;
-  len := TBitUtilities.Asr32((bits + 31), 5);
-  P := TNat.FromBigInteger(bits, Q);
-  n := TNat.FromBigInteger(bits, x);
-  z := TNat.Create(len);
-
-  TMod.Invert(P, n, z);
-
-  result := TNat.ToBigInteger(len, z);
+  Result := TBigIntegers.ModOddInverse(Q, x);
 end;
 
 function TFpFieldElement.ModMult(const x1, x2: TBigInteger): TBigInteger;
@@ -4124,7 +4113,7 @@ constructor TECPoint.Create(const curve: IECCurve; const x, y: IECFieldElement;
   const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
 begin
   Inherited Create();
-  TSetWeakRef.SetWeakReference(@Fm_curve, curve);
+  Fm_curve := curve;
   Fm_x := x;
   Fm_y := y;
   Fm_zs := zs;
@@ -4141,7 +4130,7 @@ destructor TECPoint.Destroy;
 var
   Key: string;
 begin
-  TSetWeakRef.SetWeakReference(@Fm_curve, nil);
+  Fm_curve.Clear;
 
   if Assigned(Fm_preCompTable) then
   begin
@@ -4448,15 +4437,18 @@ begin
 end;
 
 function TECPoint.GetCurveCoordinateSystem: Int32;
+var
+ curve: IECCurve;
 begin
   // Cope with null curve, most commonly used by implicitlyCa
-  if Fm_curve = Nil then
+  curve := Fm_curve;
+  if curve = Nil then
   begin
     result := TECCurveConstants.COORD_AFFINE;
   end
   else
   begin
-    result := Fm_curve.CoordinateSystem;
+    result := curve.CoordinateSystem;
   end;
 end;
 
@@ -4468,9 +4460,11 @@ end;
 function TECPoint.Clone: IECPoint;
 var
  baseNorm: IECPoint;
+ curve: IECCurve;
 begin
+  curve := Fm_curve;
   baseNorm := Self.Normalize();
-  Result := Fm_curve.CreatePoint(
+  Result := curve.CreatePoint(
           baseNorm.XCoord.ToBigInteger,
           baseNorm.YCoord.ToBigInteger,
           baseNorm.IsCompressed

@@ -777,24 +777,14 @@ end;
 
 class procedure TSecT283Field.Sqrt(const x, z: TCryptoLibUInt64Array);
 var
-  u0, u1, e0, e1, e2: UInt64;
+  e0, e1, e2: UInt64;
   odd: TCryptoLibUInt64Array;
 begin
   odd := TNat320.Create64();
 
-  u0 := TInterleave.Unshuffle(x[0]);
-  u1 := TInterleave.Unshuffle(x[1]);
-  e0 := (u0 and UInt64($00000000FFFFFFFF)) or (u1 shl 32);
-  odd[0] := (u0 shr 32) or (u1 and UInt64($FFFFFFFF00000000));
-
-  u0 := TInterleave.Unshuffle(x[2]);
-  u1 := TInterleave.Unshuffle(x[3]);
-  e1 := (u0 and UInt64($00000000FFFFFFFF)) or (u1 shl 32);
-  odd[1] := (u0 shr 32) or (u1 and UInt64($FFFFFFFF00000000));
-
-  u0 := TInterleave.Unshuffle(x[4]);
-  e2 := (u0 and UInt64($00000000FFFFFFFF));
-  odd[2] := (u0 shr 32);
+  odd[0] := TInterleave.Unshuffle(x[0], x[1], e0);
+  odd[1] := TInterleave.Unshuffle(x[2], x[3], e1);
+  odd[2] := TInterleave.Unshuffle(x[4], e2);
 
   Multiply(odd, FROOT_Z, z);
 

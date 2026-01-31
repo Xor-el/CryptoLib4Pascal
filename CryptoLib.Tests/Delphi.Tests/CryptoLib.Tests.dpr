@@ -418,6 +418,7 @@ uses
   ClpSecT283Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283Custom.pas',
   ClpSecureRandom in '..\..\CryptoLib\src\Crypto\Randoms\ClpSecureRandom.pas',
   ClpSetWeakRef in '..\..\CryptoLib\src\GeneralUtilities\ClpSetWeakRef.pas',
+  ClpWeakRef in '..\..\CryptoLib\src\GeneralUtilities\ClpWeakRef.pas',
   ClpSignersEncodings in '..\..\CryptoLib\src\Crypto\Signers\SignerEncodings\ClpSignersEncodings.pas',
   ClpSignerSink in '..\..\CryptoLib\src\Crypto\IO\ClpSignerSink.pas',
   ClpSignerUtilities in '..\..\CryptoLib\src\Crypto\Signers\ClpSignerUtilities.pas',

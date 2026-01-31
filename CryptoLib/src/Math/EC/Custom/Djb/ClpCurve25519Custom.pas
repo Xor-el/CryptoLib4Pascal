@@ -443,10 +443,10 @@ class function TCurve25519Field.FromBigInteger(const x: TBigInteger)
 var
   z: TCryptoLibUInt32Array;
 begin
-  z := TNat256.FromBigInteger(x);
+  z := TNat.FromBigInteger(256, x);
   while (TNat256.Gte(z, P)) do
   begin
-    TNat256.SubFrom(P, z);
+    TNat256.SubFrom(P, z, 0);
   end;
   result := z;
 end;
@@ -674,7 +674,7 @@ var
   z: TCryptoLibUInt32Array;
 begin
   z := TNat256.Create();
-  TMod.Invert(TCurve25519Field.P, Fx, z);
+  TMod.CheckedModOddInverse(TCurve25519Field.P, Fx, z);
   result := TCurve25519FieldElement.Create(z);
 end;
 
@@ -839,7 +839,7 @@ var
   z: TCryptoLibUInt32Array;
 begin
   z := TNat256.Create();
-  TMod.Invert(TCurve25519Field.P, (b as ICurve25519FieldElement).x, z);
+  TMod.CheckedModOddInverse(TCurve25519Field.P, (b as ICurve25519FieldElement).x, z);
   TCurve25519Field.Multiply(z, Fx, z);
   result := TCurve25519FieldElement.Create(z);
 end;
@@ -929,7 +929,7 @@ begin
   M := TNat256.Create();
   TCurve25519Field.Square(x1.x, M);
   c := TNat256.AddBothTo(M, M, M);
-  c := c + TNat256.AddTo(W1.x, M);
+  c := c + TNat256.AddTo(W1.x, M, 0);
   TCurve25519Field.Reduce27(c, M);
 
   _2Y1 := TNat256.Create();

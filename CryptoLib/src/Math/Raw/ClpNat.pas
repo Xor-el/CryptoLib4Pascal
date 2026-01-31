@@ -1262,10 +1262,10 @@ begin
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 3));
   {$ENDIF}
-  LC := LC + (LXVal * UInt32(AY + AZ[AZPos + 0]));
+  LC := LC + (LXVal * UInt32(AY) + AZ[AZPos + 0]);
   AZ[AZPos + 0] := UInt32(LC);
   LC := LC shr 32;
-  LC := LC + (LXVal * ((AY shr 32)) + AZ[AZPos + 1]);
+  LC := LC + (LXVal * (AY shr 32) + AZ[AZPos + 1]);
   AZ[AZPos + 1] := UInt32(LC);
   LC := LC shr 32;
   LC := LC + (AZ[AZPos + 2]);
@@ -1441,14 +1441,14 @@ var
   LI: Int32;
   LNext: UInt64;
 begin
-  LI := ALen;
-  LNext := AZ[AZOff + LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 64));
   {$ENDIF}
-  System.Dec(LI);
-  while LI >= 0 do
+  LI := ALen;
+  while LI > 0 do
   begin
+    System.Dec(LI);
+    LNext := AZ[AZOff + LI];
     AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitUtilities.NegativeLeftShift32(AC, -ABits));
     AC := LNext;
   end;
@@ -1483,13 +1483,12 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AZ[LI + 0];
-  LNext1 := AZ[LI + 1];
-  LNext2 := AZ[LI + 2];
-  LNext3 := AZ[LI + 3];
-  LNext := AZ[LI];
   while LI <= LLimit4 do
   begin
+    LNext0 := AZ[LI + 0];
+    LNext1 := AZ[LI + 1];
+    LNext2 := AZ[LI + 2];
+    LNext3 := AZ[LI + 3];
     AZ[LI + 0] := ((LNext0 shl 1)) or ((AC shr 31));
     AZ[LI + 1] := ((LNext1 shl 1)) or ((LNext0 shr 31));
     AZ[LI + 2] := ((LNext2 shl 1)) or ((LNext1 shr 31));
@@ -1499,6 +1498,7 @@ begin
   end;
   while LI < ALen do
   begin
+    LNext := AZ[LI];
     AZ[LI] := ((LNext shl 1)) or ((AC shr 31));
     AC := LNext;
     System.Inc(LI);
@@ -1518,13 +1518,12 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AZ[AZOff + LI + 0];
-  LNext1 := AZ[AZOff + LI + 1];
-  LNext2 := AZ[AZOff + LI + 2];
-  LNext3 := AZ[AZOff + LI + 3];
-  LNext := AZ[AZOff + LI];
   while LI <= LLimit4 do
   begin
+    LNext0 := AZ[AZOff + LI + 0];
+    LNext1 := AZ[AZOff + LI + 1];
+    LNext2 := AZ[AZOff + LI + 2];
+    LNext3 := AZ[AZOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl 1)) or ((AC shr 31));
     AZ[AZOff + LI + 1] := ((LNext1 shl 1)) or ((LNext0 shr 31));
     AZ[AZOff + LI + 2] := ((LNext2 shl 1)) or ((LNext1 shr 31));
@@ -1534,6 +1533,7 @@ begin
   end;
   while LI < ALen do
   begin
+    LNext := AZ[AZOff + LI];
     AZ[AZOff + LI] := ((LNext shl 1)) or ((AC shr 31));
     AC := LNext;
     System.Inc(LI);
@@ -1553,13 +1553,12 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[LI + 0];
-  LNext1 := AX[LI + 1];
-  LNext2 := AX[LI + 2];
-  LNext3 := AX[LI + 3];
-  LNext := AX[LI];
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[LI + 0];
+    LNext1 := AX[LI + 1];
+    LNext2 := AX[LI + 2];
+    LNext3 := AX[LI + 3];
     AZ[LI + 0] := ((LNext0 shl 1)) or ((AC shr 31));
     AZ[LI + 1] := ((LNext1 shl 1)) or ((LNext0 shr 31));
     AZ[LI + 2] := ((LNext2 shl 1)) or ((LNext1 shr 31));
@@ -1569,6 +1568,7 @@ begin
   end;
   while LI < ALen do
   begin
+    LNext := AX[LI];
     AZ[LI] := ((LNext shl 1)) or ((AC shr 31));
     AC := LNext;
     System.Inc(LI);
@@ -1588,13 +1588,12 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[AXOff + LI + 0];
-  LNext1 := AX[AXOff + LI + 1];
-  LNext2 := AX[AXOff + LI + 2];
-  LNext3 := AX[AXOff + LI + 3];
-  LNext := AX[AXOff + LI];
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[AXOff + LI + 0];
+    LNext1 := AX[AXOff + LI + 1];
+    LNext2 := AX[AXOff + LI + 2];
+    LNext3 := AX[AXOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl 1)) or ((AC shr 31));
     AZ[AZOff + LI + 1] := ((LNext1 shl 1)) or ((LNext0 shr 31));
     AZ[AZOff + LI + 2] := ((LNext2 shl 1)) or ((LNext1 shr 31));
@@ -1604,6 +1603,7 @@ begin
   end;
   while LI < ALen do
   begin
+    LNext := AX[AXOff + LI];
     AZ[AZOff + LI] := ((LNext shl 1)) or ((AC shr 31));
     AC := LNext;
     System.Inc(LI);
@@ -1623,13 +1623,12 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[LI + 0];
-  LNext1 := AX[LI + 1];
-  LNext2 := AX[LI + 2];
-  LNext3 := AX[LI + 3];
-  LNext := AX[LI];
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[LI + 0];
+    LNext1 := AX[LI + 1];
+    LNext2 := AX[LI + 2];
+    LNext3 := AX[LI + 3];
     AZ[LI + 0] := ((LNext0 shl 1)) or ((AC shr 63));
     AZ[LI + 1] := ((LNext1 shl 1)) or ((LNext0 shr 63));
     AZ[LI + 2] := ((LNext2 shl 1)) or ((LNext1 shr 63));
@@ -1639,6 +1638,7 @@ begin
   end;
   while LI < ALen do
   begin
+    LNext := AX[LI];
     AZ[LI] := ((LNext shl 1)) or ((AC shr 63));
     AC := LNext;
     System.Inc(LI);
@@ -1658,13 +1658,12 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[AXOff + LI + 0];
-  LNext1 := AX[AXOff + LI + 1];
-  LNext2 := AX[AXOff + LI + 2];
-  LNext3 := AX[AXOff + LI + 3];
-  LNext := AX[AXOff + LI];
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[AXOff + LI + 0];
+    LNext1 := AX[AXOff + LI + 1];
+    LNext2 := AX[AXOff + LI + 2];
+    LNext3 := AX[AXOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl 1)) or ((AC shr 63));
     AZ[AZOff + LI + 1] := ((LNext1 shl 1)) or ((LNext0 shr 63));
     AZ[AZOff + LI + 2] := ((LNext2 shl 1)) or ((LNext1 shr 63));
@@ -1674,6 +1673,7 @@ begin
   end;
   while LI < ALen do
   begin
+    LNext := AX[AXOff + LI];
     AZ[AZOff + LI] := ((LNext shl 1)) or ((AC shr 63));
     AC := LNext;
     System.Inc(LI);
@@ -1693,25 +1693,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AZ[LI + 0];
-  LNext1 := AZ[LI + 1];
-  LNext2 := AZ[LI + 2];
-  LNext3 := AZ[LI + 3];
-  LNext := AZ[LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 32));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AZ[LI + 0];
+    LNext1 := AZ[LI + 1];
+    LNext2 := AZ[LI + 2];
+    LNext3 := AZ[LI + 3];
     AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AZ[LI];
     AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1731,25 +1731,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AZ[AZOff + LI + 0];
-  LNext1 := AZ[AZOff + LI + 1];
-  LNext2 := AZ[AZOff + LI + 2];
-  LNext3 := AZ[AZOff + LI + 3];
-  LNext := AZ[AZOff + LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 32));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AZ[AZOff + LI + 0];
+    LNext1 := AZ[AZOff + LI + 1];
+    LNext2 := AZ[AZOff + LI + 2];
+    LNext3 := AZ[AZOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AZ[AZOff + LI];
     AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1769,25 +1769,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[LI + 0];
-  LNext1 := AX[LI + 1];
-  LNext2 := AX[LI + 2];
-  LNext3 := AX[LI + 3];
-  LNext := AX[LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 32));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[LI + 0];
+    LNext1 := AX[LI + 1];
+    LNext2 := AX[LI + 2];
+    LNext3 := AX[LI + 3];
     AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AX[LI];
     AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1807,25 +1807,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[AXOff + LI + 0];
-  LNext1 := AX[AXOff + LI + 1];
-  LNext2 := AX[AXOff + LI + 2];
-  LNext3 := AX[AXOff + LI + 3];
-  LNext := AX[AXOff + LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 32));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[AXOff + LI + 0];
+    LNext1 := AX[AXOff + LI + 1];
+    LNext2 := AX[AXOff + LI + 2];
+    LNext3 := AX[AXOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AX[AXOff + LI];
     AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1845,25 +1845,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AZ[LI + 0];
-  LNext1 := AZ[LI + 1];
-  LNext2 := AZ[LI + 2];
-  LNext3 := AZ[LI + 3];
-  LNext := AZ[LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 64));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AZ[LI + 0];
+    LNext1 := AZ[LI + 1];
+    LNext2 := AZ[LI + 2];
+    LNext3 := AZ[LI + 3];
     AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AZ[LI];
     AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1883,25 +1883,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AZ[AZOff + LI + 0];
-  LNext1 := AZ[AZOff + LI + 1];
-  LNext2 := AZ[AZOff + LI + 2];
-  LNext3 := AZ[AZOff + LI + 3];
-  LNext := AZ[AZOff + LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 64));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AZ[AZOff + LI + 0];
+    LNext1 := AZ[AZOff + LI + 1];
+    LNext2 := AZ[AZOff + LI + 2];
+    LNext3 := AZ[AZOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AZ[AZOff + LI];
     AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1921,25 +1921,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[LI + 0];
-  LNext1 := AX[LI + 1];
-  LNext2 := AX[LI + 2];
-  LNext3 := AX[LI + 3];
-  LNext := AX[LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 64));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[LI + 0];
+    LNext1 := AX[LI + 1];
+    LNext2 := AX[LI + 2];
+    LNext3 := AX[LI + 3];
     AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AX[LI];
     AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -1959,25 +1959,25 @@ var
 begin
   LI := 0;
   LLimit4 := ALen - 4;
-  LNext0 := AX[AXOff + LI + 0];
-  LNext1 := AX[AXOff + LI + 1];
-  LNext2 := AX[AXOff + LI + 2];
-  LNext3 := AX[AXOff + LI + 3];
-  LNext := AX[AXOff + LI];
   {$IFDEF DEBUG}
   System.Assert((ABits > 0) and (ABits < 64));
   {$ENDIF}
   while LI <= LLimit4 do
   begin
+    LNext0 := AX[AXOff + LI + 0];
+    LNext1 := AX[AXOff + LI + 1];
+    LNext2 := AX[AXOff + LI + 2];
+    LNext3 := AX[AXOff + LI + 3];
     AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
     AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
     AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
-    LI := LI + (4);
+    LI := LI + 4;
   end;
   while LI < ALen do
   begin
+    LNext := AX[AXOff + LI];
     AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
@@ -2288,13 +2288,13 @@ class function TNat.SubDWordAt(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Arra
 var
   LC: Int64;
 begin
-  LC := AZ[AZPos + 0] - Int64((AX ) and M);
+  LC := AZ[AZPos + 0] - Int64(AX and M);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZPos + 0] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
-  LC := LC + (AZ[AZPos + 1] - Int64(((AX ) shr 32)));
+  LC := LC + (AZ[AZPos + 1] - Int64(AX shr 32));
   AZ[AZPos + 1] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
   if (LC = 0) then
@@ -2311,13 +2311,13 @@ class function TNat.SubDWordAt(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Arra
 var
   LC: Int64;
 begin
-  LC := AZ[AZOff + AZPos] - Int64((AX ) and M);
+  LC := AZ[AZOff + AZPos] - Int64(AX and M);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZOff + AZPos] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
-  LC := LC + (AZ[AZOff + AZPos + 1] - Int64(((AX ) shr 32)));
+  LC := LC + (AZ[AZOff + AZPos + 1] - Int64(AX shr 32));
   AZ[AZOff + AZPos + 1] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
   if (LC = 0) then
@@ -2334,10 +2334,10 @@ class function TNat.SubDWordFrom(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Ar
 var
   LC: Int64;
 begin
-  LC := AZ[0] - Int64((AX ) and M);
+  LC := AZ[0] - Int64(AX and M);
   AZ[0] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
-  LC := LC + (AZ[1] - Int64(((AX ) shr 32)));
+  LC := LC + (AZ[1] - Int64(AX shr 32));
   AZ[1] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
   if (LC = 0) then
@@ -2354,10 +2354,10 @@ class function TNat.SubDWordFrom(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Ar
 var
   LC: Int64;
 begin
-  LC := AZ[AZOff + 0] - Int64((AX ) and M);
+  LC := AZ[AZOff + 0] - Int64(AX and M);
   AZ[AZOff + 0] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
-  LC := LC + (AZ[AZOff + 1] - Int64(((AX ) shr 32)));
+  LC := LC + (AZ[AZOff + 1] - Int64(AX shr 32));
   AZ[AZOff + 1] := UInt32(LC);
   LC := TBitUtilities.Asr64(LC, 32);
   if (LC = 0) then

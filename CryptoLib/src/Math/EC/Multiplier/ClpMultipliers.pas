@@ -38,7 +38,7 @@ uses
   ClpIMultipliers,
   ClpIWNafPreCompInfo,
   ClpECCompUtilities,
-  ClpSetWeakRef,
+  ClpWeakRef,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -83,7 +83,7 @@ type
 
   strict protected
   var
-    Fcurve: IECCurve;
+    Fcurve: TWeakRef<IECCurve>;
     FglvEndomorphism: IGlvEndomorphism;
 
     function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
@@ -329,13 +329,13 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SCurveUnknownGroupOrder);
   end;
 
-  TSetWeakRef.SetWeakReference(@Fcurve, curve);
+  Fcurve := curve;
   FglvEndomorphism := glvEndomorphism;
 end;
 
 destructor TGlvMultiplier.Destroy;
 begin
-  TSetWeakRef.SetWeakReference(@Fcurve, Nil);
+  //TSetWeakRef.SetWeakReference(@Fcurve, Nil);
   inherited Destroy;
 end;
 
@@ -345,8 +345,10 @@ var
   n, a, b: TBigInteger;
   ab: TCryptoLibGenericArray<TBigInteger>;
   q: IECPoint;
+  LCurve: IECCurve;
 begin
-  if (not(Fcurve.Equals(p.curve))) then
+  LCurve :=  Fcurve;
+  if (not(LCurve.Equals(p.curve))) then
   begin
     raise EInvalidOperationCryptoLibException.Create('');
   end;

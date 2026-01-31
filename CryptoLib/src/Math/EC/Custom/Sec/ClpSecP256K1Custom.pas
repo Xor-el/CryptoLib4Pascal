@@ -343,10 +343,10 @@ class function TSecP256K1Field.FromBigInteger(const x: TBigInteger)
 var
   z: TCryptoLibUInt32Array;
 begin
-  z := TNat256.FromBigInteger(x);
+  z := TNat.FromBigInteger(256, x);
   if ((z[7] = P7) and (TNat256.Gte(z, FP))) then
   begin
-    TNat256.SubFrom(FP, z);
+    TNat256.SubFrom(FP, z, 0);
   end;
   result := z;
 end;
@@ -563,7 +563,7 @@ var
   z: TCryptoLibUInt32Array;
 begin
   z := TNat256.Create();
-  TMod.Invert(TSecP256K1Field.P, Fx, z);
+  TMod.CheckedModOddInverse(TSecP256K1Field.P, Fx, z);
   result := TSecP256K1FieldElement.Create(z);
 end;
 
@@ -715,7 +715,7 @@ var
   z: TCryptoLibUInt32Array;
 begin
   z := TNat256.Create();
-  TMod.Invert(TSecP256K1Field.P, (b as ISecP256K1FieldElement).x, z);
+  TMod.CheckedModOddInverse(TSecP256K1Field.P, (b as ISecP256K1FieldElement).x, z);
   TSecP256K1Field.Multiply(z, Fx, z);
   result := TSecP256K1FieldElement.Create(z);
 end;

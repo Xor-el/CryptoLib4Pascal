@@ -613,7 +613,7 @@ var
   z: TCryptoLibUInt32Array;
 begin
   z := TNat.Create(17);
-  TMod.Invert(TSecP521R1Field.P, (b as ISecP521R1FieldElement).x, z);
+  TMod.CheckedModOddInverse(TSecP521R1Field.P, (b as ISecP521R1FieldElement).x, z);
   TSecP521R1Field.Multiply(z, Fx, z);
   result := TSecP521R1FieldElement.Create(z);
 end;
@@ -641,7 +641,7 @@ var
   z: TCryptoLibUInt32Array;
 begin
   z := TNat.Create(17);
-  TMod.Invert(TSecP521R1Field.P, Fx, z);
+  TMod.CheckedModOddInverse(TSecP521R1Field.P, Fx, z);
   result := TSecP521R1FieldElement.Create(z);
 end;
 
