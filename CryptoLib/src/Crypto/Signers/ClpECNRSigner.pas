@@ -164,14 +164,14 @@ begin
   // r in the range [1,n-1]
   if ((AR.CompareTo(TBigInteger.One) < 0) or (AR.CompareTo(LN) >= 0)) then
   begin
-    Result := Default(TBigInteger);
+    Result := TBigInteger.GetDefault;
     Exit;
   end;
 
   // s in the range [0,n-1]           NB: ECNR spec says 0
   if ((&AS.CompareTo(TBigInteger.Zero) < 0) or (&AS.CompareTo(LN) >= 0)) then
   begin
-    Result := Default(TBigInteger);
+    Result := TBigInteger.GetDefault;
     Exit;
   end;
 
@@ -185,7 +185,7 @@ begin
   // components must be bogus.
   if (LP.IsInfinity) then
   begin
-    Result := Default(TBigInteger);
+    Result := TBigInteger.GetDefault;
     Exit;
   end;
 

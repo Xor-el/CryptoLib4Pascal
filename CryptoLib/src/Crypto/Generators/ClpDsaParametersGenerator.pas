@@ -242,7 +242,7 @@ class function TDsaParametersGenerator.CalculateGenerator_FIPS186_2(const p,
 var
   e, pSub2, h, g: TBigInteger;
 begin
-  result := Default (TBigInteger);
+  result := TBigInteger.GetDefault;
   e := p.subtract(TBigInteger.One).Divide(q);
   pSub2 := p.subtract(TBigInteger.Two);
 
@@ -300,7 +300,7 @@ begin
     System.Inc(count);
   end;
 
-  result := Default (TBigInteger);
+  result := TBigInteger.GetDefault;
 end;
 
 function TDsaParametersGenerator.GenerateParameters_FIPS186_2: IDsaParameters;

@@ -2030,7 +2030,7 @@ begin
       Exit;
     end;
   end;
-  result := Default (TBigInteger);
+  result := TBigInteger.GetDefault;
 end;
 
 function TFpFieldElement.CheckSqrt(const z: IECFieldElement): IECFieldElement;
@@ -3209,7 +3209,7 @@ end;
 constructor TFpCurve.Create(const Q, r: TBigInteger;
   const a, b: IECFieldElement);
 begin
-  Create(Q, r, a, b, Default (TBigInteger), Default (TBigInteger));
+  Create(Q, r, a, b, TBigInteger.GetDefault, TBigInteger.GetDefault);
 end;
 
 constructor TFpCurve.Create(const Q, a, b, Order, Cofactor: TBigInteger);
@@ -3228,7 +3228,7 @@ end;
 
 constructor TFpCurve.Create(const Q, a, b: TBigInteger);
 begin
-  Create(Q, a, b, Default (TBigInteger), Default (TBigInteger));
+  Create(Q, a, b, TBigInteger.GetDefault, TBigInteger.GetDefault);
 end;
 
 function TFpCurve.CreateRawPoint(const x, y: IECFieldElement;
@@ -3578,7 +3578,7 @@ end;
 
 constructor TF2mCurve.Create(m, K: Int32; const a, b: TBigInteger);
 begin
-  Create(m, K, 0, 0, a, b, Default (TBigInteger), Default (TBigInteger));
+  Create(m, K, 0, 0, a, b, TBigInteger.GetDefault, TBigInteger.GetDefault);
 end;
 
 constructor TF2mCurve.Create(m, k1, k2, k3: Int32; const a, b: IECFieldElement;
@@ -3673,7 +3673,7 @@ end;
 
 constructor TF2mCurve.Create(m, k1, k2, k3: Int32; const a, b: TBigInteger);
 begin
-  Create(m, k1, k2, k3, a, b, Default (TBigInteger), Default (TBigInteger));
+  Create(m, k1, k2, k3, a, b, TBigInteger.GetDefault, TBigInteger.GetDefault);
 end;
 
 function TF2mCurve.CreateDefaultMultiplier: IECMultiplier;

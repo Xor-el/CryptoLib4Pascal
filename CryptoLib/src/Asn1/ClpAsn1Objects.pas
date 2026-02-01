@@ -688,8 +688,11 @@ type
     /// <summary>
     /// Check instance helper.
     /// </summary>
-    class function CheckInstance(const ATaggedObject: IAsn1TaggedObject;
-      ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
+    class function CheckInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Check instance helper.
+    /// </summary>
+    class function CheckInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
     /// <summary>
     /// Checked cast helper.
     /// </summary>
@@ -728,6 +731,10 @@ type
     /// Get instance from ASN.1 object with tag class and tag number.
     /// </summary>
     class function GetInstance(const AObj: IAsn1Object; ATagClass, ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 object with tag class and tag number.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible; ATagClass, ATagNo: Int32): IAsn1TaggedObject; overload; static;
     /// <summary>
     /// Get instance from tagged object.
     /// </summary>
@@ -3551,6 +3558,13 @@ begin
     raise EArgumentNilCryptoLibException.Create('obj');
 end;
 
+class function TAsn1TaggedObject.CheckInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject;
+begin
+  Result := GetInstance(AObj);
+  if Result = nil then
+    raise EArgumentNilCryptoLibException.Create('obj');
+end;
+
 class function TAsn1TaggedObject.CheckInstance(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): IAsn1TaggedObject;
 begin
@@ -3655,6 +3669,11 @@ begin
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object; ATagClass, ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckTag(CheckInstance(AObj), ATagClass, ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Convertible; ATagClass, ATagNo: Int32): IAsn1TaggedObject;
 begin
   Result := TAsn1Utilities.CheckTag(CheckInstance(AObj), ATagClass, ATagNo);
 end;
@@ -8566,7 +8585,7 @@ var
 begin
   LObjId := '';
   LValue := 0;
-  LBigValue := Default(TBigInteger);
+  LBigValue := TBigInteger.GetDefault;
   LFirst := True;
 
   for I := 0 to System.Length(AContents) - 1 do
@@ -8618,7 +8637,7 @@ begin
         end;
 
         LObjId := LObjId + '.' + LBigValue.ToString();
-        LBigValue := Default(TBigInteger);
+        LBigValue := TBigInteger.GetDefault;
         LValue := 0;
       end
       else
@@ -8989,7 +9008,7 @@ var
 begin
   LObjId := '';
   LValue := 0;
-  LBigValue := Default(TBigInteger);
+  LBigValue := TBigInteger.GetDefault;
   LFirst := True;
 
   for I := 0 to System.Length(AContents) - 1 do
@@ -9035,7 +9054,7 @@ begin
           LObjId := LObjId + '.';
         end;
         LObjId := LObjId + LBigValue.ToString();
-        LBigValue := Default(TBigInteger);
+        LBigValue := TBigInteger.GetDefault;
         LValue := 0;
       end
       else

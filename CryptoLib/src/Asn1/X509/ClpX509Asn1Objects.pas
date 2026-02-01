@@ -2923,7 +2923,7 @@ end;
 function TBasicConstraints.GetPathLenConstraint: TBigInteger;
 begin
   if FPathLenConstraint = nil then
-    Result := Default(TBigInteger)
+    Result := TBigInteger.GetDefault
   else
     Result := FPathLenConstraint.Value;
 end;
@@ -4462,7 +4462,7 @@ end;
 
 constructor TAuthorityKeyIdentifier.Create(const AKeyIdentifier: TCryptoLibByteArray);
 begin
-  Create(AKeyIdentifier, nil, Default(TBigInteger));
+  Create(AKeyIdentifier, nil, TBigInteger.GetDefault);
 end;
 
 constructor TAuthorityKeyIdentifier.Create(const AKeyIdentifier: TCryptoLibByteArray;

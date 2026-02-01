@@ -116,7 +116,7 @@ var
   dhkgParams: IDHKeyGenerationParameters;
   kpGen: IDHBasicKeyPairGenerator;
 begin
-  dhParams := TDHParameters.Create(p, g, Default (TBigInteger),
+  dhParams := TDHParameters.Create(p, g, TBigInteger.GetDefault,
     privateValueSize);
 
   dhkgParams := TDHKeyGenerationParameters.Create(TSecureRandom.Create()

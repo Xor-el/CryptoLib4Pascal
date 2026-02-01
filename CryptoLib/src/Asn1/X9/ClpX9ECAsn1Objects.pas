@@ -764,15 +764,15 @@ begin
   if (LCount < 5) or (LCount > 6) then
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
-  LVersion := TDerInteger.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  LVersion := TDerInteger.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
-  FFieldID := TX9FieldID.GetInstance(ASeq[LPos] as TAsn1Encodable);
+  FFieldID := TX9FieldID.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   LX9CurveSequence := TAsn1Sequence.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
-  LP := ASeq[LPos] as TAsn1Encodable;
+  LP := ASeq[LPos];
   System.Inc(LPos);
-  FN := (TDerInteger.GetInstance(ASeq[LPos] as TAsn1Encodable) as IDerInteger).Value;
+  FN := (TDerInteger.GetInstance(ASeq[LPos]) as IDerInteger).Value;
   System.Inc(LPos);
   FH := TAsn1Utilities.ReadOptional<TBigInteger>(ASeq, LPos, function(AElement: IAsn1Encodable): TBigInteger
     var
@@ -782,7 +782,7 @@ begin
       if LDerInt <> nil then
         Result := LDerInt.Value
       else
-        Result := Default(TBigInteger);
+        Result := TBigInteger.GetDefault;
     end);
 
   if LPos <> LCount then

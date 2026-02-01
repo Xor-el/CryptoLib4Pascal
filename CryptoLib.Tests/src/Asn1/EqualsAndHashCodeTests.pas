@@ -37,6 +37,7 @@ uses
   ClpIAsn1Core,
   ClpAsn1Streams,
   ClpConverters,
+  ClpPlatformUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -133,11 +134,11 @@ begin
         LObj := LAIn.ReadObject();
         if not LObj.Equals(LValues[I]) then
         begin
-          Fail(Format('Failed equality test for %s', [(LObj as TObject).ClassName]));
+          Fail(Format('Failed equality test for %s', [TPlatformUtilities.GetTypeName(LObj as TObject)]));
         end;
         if LObj.GetHashCode() <> LValues[I].GetHashCode() then
         begin
-          Fail(Format('Failed hashCode test for %s', [(LObj as TObject).ClassName]));
+          Fail(Format('Failed hashCode test for %s', [TPlatformUtilities.GetTypeName(LObj as TObject)]));
         end;
       end;
     finally

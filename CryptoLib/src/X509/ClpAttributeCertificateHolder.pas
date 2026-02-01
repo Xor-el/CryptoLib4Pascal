@@ -205,7 +205,7 @@ var
 begin
   LBaseId := FHolder.BaseCertificateID;
   if LBaseId = nil then
-    Result := Default(TBigInteger)
+    Result := TBigInteger.GetDefault
   else
     Result := LBaseId.Serial.Value;
 end;

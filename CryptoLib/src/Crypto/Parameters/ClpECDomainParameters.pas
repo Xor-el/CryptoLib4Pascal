@@ -140,7 +140,7 @@ begin
     Exit;
   end;
 
-  LX9 := TX9ECParameters.GetInstance(AX962Parameters.GetParameters as TObject);
+  LX9 := TX9ECParameters.GetInstance(AX962Parameters.GetParameters);
   Result := FromX9ECParameters(LX9);
 end;
 
@@ -215,7 +215,7 @@ begin
   Fg := ValidatePublicPoint(curve, g);
   Fn := n;
   Fh := h;
-  FhInv := Default (TBigInteger);
+  FhInv := TBigInteger.GetDefault;
 
   Fseed := System.Copy(seed);
 

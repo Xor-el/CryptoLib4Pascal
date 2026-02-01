@@ -76,7 +76,7 @@ var
   limit, minWeight, m: Int32;
   x, min, q, max: TBigInteger;
 begin
-  Result := Default (TBigInteger);
+  Result := TBigInteger.GetDefault;
   limit := dhParams.L;
 
   if (limit <> 0) then

@@ -108,7 +108,7 @@ var
   x, One: TBigInteger;
 begin
   One := TBigInteger.One;
-  result := Default (TBigInteger);
+  result := TBigInteger.GetDefault;
   // B.1.2 Key Pair Generation by Testing Candidates
   minWeight := TBitUtilities.Asr32(q.BitLength, 2);
   while (True) do

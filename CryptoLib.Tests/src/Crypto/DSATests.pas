@@ -1904,8 +1904,7 @@ begin
 
   encodeParams := (TDsaParameter.Create(p.p, p.Q, p.G) as IDsaParameter).GetDerEncoded();
 
-  dsaP := TDsaParameter.GetInstance(TAsn1Object.FromByteArray(encodeParams)
-    as TAsn1Object);
+  dsaP := TDsaParameter.GetInstance(TAsn1Object.FromByteArray(encodeParams));
   p2 := TDSAParameters.Create(dsaP.p, dsaP.Q, dsaP.G);
 
   // a and a2 should be equivalent!

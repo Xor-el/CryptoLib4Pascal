@@ -956,7 +956,7 @@ begin
 
   if ASeq.Count > 1 then
   begin
-    LTagged := TAsn1TaggedObject.GetInstance(ASeq[1] as TObject, TAsn1Tags.ContextSpecific, 0);
+    LTagged := TAsn1TaggedObject.GetInstance(ASeq[1], TAsn1Tags.ContextSpecific, 0);
     FContent := LTagged.GetExplicitBaseObject();
   end
   else

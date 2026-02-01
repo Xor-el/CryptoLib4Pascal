@@ -429,7 +429,7 @@ begin
   while i < k do
   begin
     // u2 = mu*u1 - 2*u0;
-    s := Default (TBigInteger);
+    s := TBigInteger.GetDefault;
     if (mu = 1) then
     begin
       s := u1;

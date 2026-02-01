@@ -186,7 +186,7 @@ var
   LT: TCryptoLibByteArray;
   LTOff, LLength: Int32;
 begin
-  Result := Default (TBigInteger);
+  Result := TBigInteger.GetDefault;
   System.SetLength(LT, TBigIntegers.GetUnsignedByteLength(FN));
 
   while True do

@@ -435,7 +435,6 @@ type
     /// </summary>
     function GetBaseUniversal(ADeclaredExplicit: Boolean; const AUniversalType: IAsn1UniversalType): IAsn1Object; overload;
 
-    // Methods from IAsn1TaggedObjectParser (since TAsn1TaggedObject implements both interfaces)
     /// <summary>
     /// Parse a base universal object
     /// </summary>

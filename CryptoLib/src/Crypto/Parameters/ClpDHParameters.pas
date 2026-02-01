@@ -144,7 +144,7 @@ end;
 
 constructor TDHParameters.Create(const p, g: TBigInteger);
 begin
-  Create(p, g, Default (TBigInteger), 0);
+  Create(p, g, TBigInteger.GetDefault, 0);
 end;
 
 constructor TDHParameters.Create(const p, g, q: TBigInteger);
@@ -154,12 +154,12 @@ end;
 
 constructor TDHParameters.Create(const p, g, q: TBigInteger; l: Int32);
 begin
-  Create(p, g, q, GetDefaultMParam(l), l, Default (TBigInteger), Nil);
+  Create(p, g, q, GetDefaultMParam(l), l, TBigInteger.GetDefault, Nil);
 end;
 
 constructor TDHParameters.Create(const p, g, q: TBigInteger; m, l: Int32);
 begin
-  Create(p, g, q, m, l, Default (TBigInteger), Nil);
+  Create(p, g, q, m, l, TBigInteger.GetDefault, Nil);
 end;
 
 constructor TDHParameters.Create(const p, g, q, j: TBigInteger;

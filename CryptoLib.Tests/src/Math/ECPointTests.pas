@@ -772,8 +772,7 @@ end;
 procedure TTestECPoint.TestPointCreationConsistency;
 begin
   try
-    FpInstance.Fcurve.CreatePoint(TBigInteger.ValueOf(12),
-      Default (TBigInteger));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.ValueOf(12), TBigInteger.GetDefault);
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -784,8 +783,7 @@ begin
   end;
 
   try
-    FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
-      TBigInteger.ValueOf(12));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.GetDefault, TBigInteger.ValueOf(12));
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -796,8 +794,7 @@ begin
   end;
 
   try
-    FpInstance.Fcurve.CreatePoint(TBigInteger.Create('1011'),
-      Default (TBigInteger));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.Create('1011'), TBigInteger.GetDefault);
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -808,8 +805,7 @@ begin
   end;
 
   try
-    FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
-      TBigInteger.Create('1011'));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.GetDefault, TBigInteger.Create('1011'));
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
