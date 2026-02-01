@@ -22,127 +22,126 @@ unit ClpX25519;
 interface
 
 uses
-  ClpISecureRandom,
-  ClpX25519Field,
-  ClpEd25519,
   ClpArrayUtilities,
-  ClpConverters,
-  ClpCryptoLibTypes;
+  ClpBitUtilities,
+  ClpCryptoLibTypes,
+  ClpEd25519,
+  ClpISecureRandom,
+  ClpX25519Field;
+
+
+resourcestring
+  SInvalidKeyLength = 'Invalid key length';
 
 type
-  TX25519 = class sealed(TObject)
+  TX25519 = class sealed
   strict private
   const
-    C_A = Int32(486662);
-    C_A24 = Int32((C_A + 2) div 4);
-
+    C_A = 486662;
+    C_A24 = (C_A + 2) div 4;
+  class function Decode32(const Abs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
+  class procedure DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
+    AN: TCryptoLibUInt32Array); static;
+  class procedure PointDouble(AX, AZ: TCryptoLibInt32Array); static;
   public
+  const
+    PointSize = 32;
+    ScalarSize = 32;
 
-    const
-    PointSize = Int32(32);
-    ScalarSize = Int32(32);
+    class function CalculateAgreement(const AK: TCryptoLibByteArray; AKOff: Int32;
+      const AU: TCryptoLibByteArray; AUOff: Int32; AR: TCryptoLibByteArray; AROff: Int32): Boolean; static;
 
-    class function CalculateAgreement(const k: TCryptoLibByteArray; kOff: Int32;
-      const u: TCryptoLibByteArray; uOff: Int32; const r: TCryptoLibByteArray;
-      rOff: Int32): Boolean; static; inline;
+    class procedure ClampPrivateKey(AK: TCryptoLibByteArray); static;
 
-    class function Decode32(const bs: TCryptoLibByteArray; off: Int32): UInt32;
-      static; inline;
+    class procedure GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray); static;
 
-    class procedure DecodeScalar(const k: TCryptoLibByteArray; kOff: Int32;
-      const n: TCryptoLibUInt32Array); static; inline;
+    class procedure GeneratePublicKey(const AK: TCryptoLibByteArray; AKOff: Int32;
+      AR: TCryptoLibByteArray; AROff: Int32); static;
 
-    class procedure GeneratePrivateKey(const random: ISecureRandom;
-      const k: TCryptoLibByteArray); static; inline;
+    class procedure Precompute; static;
 
-    class procedure GeneratePublicKey(const k: TCryptoLibByteArray; kOff: Int32;
-      r: TCryptoLibByteArray; rOff: Int32); static; inline;
+    class procedure ScalarMult(const AK: TCryptoLibByteArray; AKOff: Int32;
+      const AU: TCryptoLibByteArray; AUOff: Int32; AR: TCryptoLibByteArray; AROff: Int32); static;
 
-    class procedure PointDouble(const x, z: TCryptoLibInt32Array); static;
-
-    class procedure Precompute(); static;
-
-    class procedure ScalarMult(const k: TCryptoLibByteArray; kOff: Int32;
-      const u: TCryptoLibByteArray; uOff: Int32; const r: TCryptoLibByteArray;
-      rOff: Int32); static;
-
-    class procedure ScalarMultBase(const k: TCryptoLibByteArray; kOff: Int32;
-      const r: TCryptoLibByteArray; rOff: Int32); static;
-
+    class procedure ScalarMultBase(const AK: TCryptoLibByteArray; AKOff: Int32;
+      AR: TCryptoLibByteArray; AROff: Int32); static;
   end;
 
 implementation
 
 { TX25519 }
 
-class function TX25519.CalculateAgreement(const k: TCryptoLibByteArray;
-  kOff: Int32; const u: TCryptoLibByteArray; uOff: Int32;
-  const r: TCryptoLibByteArray; rOff: Int32): Boolean;
+class function TX25519.CalculateAgreement(const AK: TCryptoLibByteArray; AKOff: Int32;
+  const AU: TCryptoLibByteArray; AUOff: Int32; AR: TCryptoLibByteArray; AROff: Int32): Boolean;
 begin
-  ScalarMult(k, kOff, u, uOff, r, rOff);
-  result := not TArrayUtilities.AreAllZeroes(r, rOff, PointSize);
+  ScalarMult(AK, AKOff, AU, AUOff, AR, AROff);
+  Result := not TArrayUtilities.AreAllZeroes(AR, AROff, PointSize);
 end;
 
-class function TX25519.Decode32(const bs: TCryptoLibByteArray;
-  off: Int32): UInt32;
+class procedure TX25519.ClampPrivateKey(AK: TCryptoLibByteArray);
 begin
-  // UInt32 n := bs[off];
-  // System.Inc(off);
-  // n := n or (UInt32(bs[off]) shl 8);
-  // System.Inc(off);
-  // n := n or (UInt32(bs[off]) shl 16);
-  // System.Inc(off);
-  // n := n or (UInt32(bs[off]) shl 24);
-  // result := n;
-  result := TConverters.ReadBytesAsUInt32LE(PByte(bs), off);
+  if System.Length(AK) <> ScalarSize then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
+  AK[0] := AK[0] and $F8;
+  AK[ScalarSize - 1] := AK[ScalarSize - 1] and $7F;
+  AK[ScalarSize - 1] := AK[ScalarSize - 1] or $40;
 end;
 
-class procedure TX25519.DecodeScalar(const k: TCryptoLibByteArray; kOff: Int32;
-  const n: TCryptoLibUInt32Array);
+class function TX25519.Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32;
 var
-  i: Int32;
+  LN: UInt32;
 begin
-  for i := 0 to System.Pred(8) do
+  LN := ABs[AOff];
+  LN := LN or (UInt32(ABs[AOff + 1]) shl 8);
+  LN := LN or (UInt32(ABs[AOff + 2]) shl 16);
+  LN := LN or (UInt32(ABs[AOff + 3]) shl 24);
+  Result := LN;
+end;
+
+class procedure TX25519.DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
+  AN: TCryptoLibUInt32Array);
+var
+  LI: Int32;
+begin
+  LI := 0;
+  while LI < 8 do
   begin
-    n[i] := Decode32(k, kOff + i * 4);
+    AN[LI] := Decode32(AK, AKOff + LI * 4);
+    System.Inc(LI);
   end;
-
-  n[0] := n[0] and UInt32($FFFFFFF8);
-  n[7] := n[7] and UInt32($7FFFFFFF);
-  n[7] := n[7] or UInt32($40000000);
+  AN[0] := AN[0] and $FFFFFFF8;
+  AN[7] := AN[7] and $7FFFFFFF;
+  AN[7] := AN[7] or $40000000;
 end;
 
-class procedure TX25519.GeneratePrivateKey(const random: ISecureRandom;
-  const k: TCryptoLibByteArray);
+class procedure TX25519.GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
 begin
-  random.NextBytes(k);
-
-  k[0] := k[0] and $F8;
-  k[ScalarSize - 1] := k[ScalarSize - 1] and $7F;
-  k[ScalarSize - 1] := k[ScalarSize - 1] or $40;
+  if System.Length(AK) <> ScalarSize then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
+  ARandom.NextBytes(AK);
+  ClampPrivateKey(AK);
 end;
 
-class procedure TX25519.GeneratePublicKey(const k: TCryptoLibByteArray;
-  kOff: Int32; r: TCryptoLibByteArray; rOff: Int32);
+class procedure TX25519.GeneratePublicKey(const AK: TCryptoLibByteArray; AKOff: Int32;
+  AR: TCryptoLibByteArray; AROff: Int32);
 begin
-  ScalarMultBase(k, kOff, r, rOff);
+  ScalarMultBase(AK, AKOff, AR, AROff);
 end;
 
-class procedure TX25519.PointDouble(const x, z: TCryptoLibInt32Array);
+class procedure TX25519.PointDouble(AX, AZ: TCryptoLibInt32Array);
 var
-  A, B: TCryptoLibInt32Array;
+  LA, LB: TCryptoLibInt32Array;
 begin
-  A := TX25519Field.Create();
-  B := TX25519Field.Create();
-
-  TX25519Field.Apm(x, z, A, B);
-  TX25519Field.Sqr(A, A);
-  TX25519Field.Sqr(B, B);
-  TX25519Field.Mul(A, B, x);
-  TX25519Field.Sub(A, B, A);
-  TX25519Field.Mul(A, C_A24, z);
-  TX25519Field.Add(z, B, z);
-  TX25519Field.Mul(z, A, z);
+  LA := TX25519Field.Create();
+  LB := TX25519Field.Create();
+  TX25519Field.Apm(AX, AZ, LA, LB);
+  TX25519Field.Sqr(LA, LA);
+  TX25519Field.Sqr(LB, LB);
+  TX25519Field.Mul(LA, LB, AX);
+  TX25519Field.Sub(LA, LB, LA);
+  TX25519Field.Mul(LA, C_A24, AZ);
+  TX25519Field.Add(AZ, LB, AZ);
+  TX25519Field.Mul(AZ, LA, AZ);
 end;
 
 class procedure TX25519.Precompute;
@@ -150,100 +149,79 @@ begin
   TEd25519.Precompute();
 end;
 
-class procedure TX25519.ScalarMult(const k: TCryptoLibByteArray; kOff: Int32;
-  const u: TCryptoLibByteArray; uOff: Int32; const r: TCryptoLibByteArray;
-  rOff: Int32);
+class procedure TX25519.ScalarMult(const AK: TCryptoLibByteArray; AKOff: Int32;
+  const AU: TCryptoLibByteArray; AUOff: Int32; AR: TCryptoLibByteArray; AROff: Int32);
 var
-  n: TCryptoLibUInt32Array;
-  x1, x2, z2, x3, z3, t1, t2: TCryptoLibInt32Array;
-  bit, swap, word, shift, kt, i: Int32;
+  LN: TCryptoLibUInt32Array;
+  LX1, LX2, LZ2, LX3, LZ3: TCryptoLibInt32Array;
+  LT1, LT2: TCryptoLibInt32Array;
+  LBit, LSwap, LWord, LShift, LKt: Int32;
+  LI: Int32;
 begin
-  System.SetLength(n, 8);
-  DecodeScalar(k, kOff, n);
-
-  x1 := TX25519Field.Create();
-  TX25519Field.Decode(u, uOff, x1);
-  x2 := TX25519Field.Create();
-  TX25519Field.Copy(x1, 0, x2, 0);
-  z2 := TX25519Field.Create();
-  z2[0] := 1;
-  x3 := TX25519Field.Create();
-  x3[0] := 1;
-  z3 := TX25519Field.Create();
-
-  t1 := TX25519Field.Create();
-  t2 := TX25519Field.Create();
-
-{$IFDEF DEBUG}
-  System.Assert((n[7] shr 30) = UInt32(1));
-{$ENDIF DEBUG}
-  bit := 254;
-  swap := 1;
+  System.SetLength(LN, 8);
+  DecodeScalar(AK, AKOff, LN);
+  LX1 := TX25519Field.Create();
+  TX25519Field.Decode(AU, AUOff, LX1);
+  LX2 := TX25519Field.Create();
+  TX25519Field.Copy(LX1, 0, LX2, 0);
+  LZ2 := TX25519Field.Create();
+  LZ2[0] := 1;
+  LX3 := TX25519Field.Create();
+  LX3[0] := 1;
+  LZ3 := TX25519Field.Create();
+  LT1 := TX25519Field.Create();
+  LT2 := TX25519Field.Create();
+  LBit := 254;
+  LSwap := 1;
   repeat
-    TX25519Field.Apm(x3, z3, t1, x3);
-    TX25519Field.Apm(x2, z2, z3, x2);
-    TX25519Field.Mul(t1, x2, t1);
-    TX25519Field.Mul(x3, z3, x3);
-    TX25519Field.Sqr(z3, z3);
-    TX25519Field.Sqr(x2, x2);
-
-    TX25519Field.Sub(z3, x2, t2);
-    TX25519Field.Mul(t2, C_A24, z2);
-    TX25519Field.Add(z2, x2, z2);
-    TX25519Field.Mul(z2, t2, z2);
-    TX25519Field.Mul(x2, z3, x2);
-
-    TX25519Field.Apm(t1, x3, x3, z3);
-    TX25519Field.Sqr(x3, x3);
-    TX25519Field.Sqr(z3, z3);
-    TX25519Field.Mul(z3, x1, z3);
-
-    System.Dec(bit);
-
-    word := bit shr 5;
-    shift := bit and $1F;
-    kt := Int32(n[word] shr shift) and 1;
-    swap := swap xor kt;
-    TX25519Field.CSwap(swap, x2, x3);
-    TX25519Field.CSwap(swap, z2, z3);
-    swap := kt;
-
-  until (bit < 3);
-
-{$IFDEF DEBUG}
-  System.Assert(swap = 0);
-{$ENDIF DEBUG}
-  i := 0;
-  while i < 3 do
-  begin
-    PointDouble(x2, z2);
-    System.Inc(i);
-  end;
-
-  TX25519Field.Inv(z2, z2);
-  TX25519Field.Mul(x2, z2, x2);
-
-  TX25519Field.Normalize(x2);
-  TX25519Field.Encode(x2, r, rOff);
+    TX25519Field.Apm(LX3, LZ3, LT1, LX3);
+    TX25519Field.Apm(LX2, LZ2, LZ3, LX2);
+    TX25519Field.Mul(LT1, LX2, LT1);
+    TX25519Field.Mul(LX3, LZ3, LX3);
+    TX25519Field.Sqr(LZ3, LZ3);
+    TX25519Field.Sqr(LX2, LX2);
+    TX25519Field.Sub(LZ3, LX2, LT2);
+    TX25519Field.Mul(LT2, C_A24, LZ2);
+    TX25519Field.Add(LZ2, LX2, LZ2);
+    TX25519Field.Mul(LZ2, LT2, LZ2);
+    TX25519Field.Mul(LX2, LZ3, LX2);
+    TX25519Field.Apm(LT1, LX3, LX3, LZ3);
+    TX25519Field.Sqr(LX3, LX3);
+    TX25519Field.Sqr(LZ3, LZ3);
+    TX25519Field.Mul(LZ3, LX1, LZ3);
+    System.Dec(LBit);
+    LWord := TBitUtilities.Asr32(LBit, 5);
+    LShift := LBit and $1F;
+    LKt := Int32(LN[LWord] shr LShift) and 1;
+    LSwap := LSwap xor LKt;
+    TX25519Field.CSwap(LSwap, LX2, LX3);
+    TX25519Field.CSwap(LSwap, LZ2, LZ3);
+    LSwap := LKt;
+  until LBit < 3;
+  {$IFDEF DEBUG}
+  System.Assert(LSwap = 0);
+  {$ENDIF}
+  for LI := 0 to 2 do
+    PointDouble(LX2, LZ2);
+  TX25519Field.Inv(LZ2, LZ2);
+  TX25519Field.Mul(LX2, LZ2, LX2);
+  TX25519Field.Normalize(LX2);
+  TX25519Field.Encode(LX2, AR, AROff);
 end;
 
-class procedure TX25519.ScalarMultBase(const k: TCryptoLibByteArray;
-  kOff: Int32; const r: TCryptoLibByteArray; rOff: Int32);
+class procedure TX25519.ScalarMultBase(const AK: TCryptoLibByteArray; AKOff: Int32;
+  AR: TCryptoLibByteArray; AROff: Int32);
 var
-  y, z: TCryptoLibInt32Array;
+  LY, LZ: TCryptoLibInt32Array;
 begin
-  y := TX25519Field.Create();
-  z := TX25519Field.Create();
-
-  TEd25519.ScalarMultBaseYZ(k, kOff, y, z);
-
-  TX25519Field.Apm(z, y, y, z);
-
-  TX25519Field.Inv(z, z);
-  TX25519Field.Mul(y, z, y);
-
-  TX25519Field.Normalize(y);
-  TX25519Field.Encode(y, r, rOff);
+  LY := TX25519Field.Create();
+  LZ := TX25519Field.Create();
+  TEd25519.ScalarMultBaseYZ(AK, AKOff, LY, LZ);
+  TX25519Field.Apm(LZ, LY, LY, LZ);
+  TX25519Field.Inv(LZ, LZ);
+  TX25519Field.Mul(LY, LZ, LY);
+  TX25519Field.Normalize(LY);
+  TX25519Field.Encode(LY, AR, AROff);
 end;
 
 end.

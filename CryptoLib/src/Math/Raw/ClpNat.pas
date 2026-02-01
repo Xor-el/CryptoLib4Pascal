@@ -528,7 +528,7 @@ var
   LC: UInt64;
   LI: Int32;
 begin
-  LMASK := UInt32(-(AMask ) and 1);
+  LMASK := UInt32(-(AMask and 1));
   LC := 0;
   for LI := 0 to ALen - 1 do
   begin
@@ -545,7 +545,7 @@ var
   LC: UInt64;
   LI: Int32;
 begin
-  LMASK := UInt32(-(AMask ) and 1);
+  LMASK := UInt32(-(AMask and 1));
   LC := 0;
   for LI := 0 to ALen - 1 do
   begin
@@ -563,7 +563,7 @@ var
   LZI: UInt32;
   LDiff: UInt32;
 begin
-  LMASK := UInt32(-(AMask ) and 1);
+  LMASK := UInt32(-(AMask and 1));
   LZI := AZ[AZOff + LI];
   LDiff := LZI xor AX[AXOff + LI];
   for LI := 0 to ALen - 1 do
@@ -677,7 +677,7 @@ var
   LC: Int64;
   LI: Int32;
 begin
-  LMASK := UInt32(-(AMask ) and 1);
+  LMASK := UInt32(-(AMask and 1));
   LC := 0;
   for LI := 0 to ALen - 1 do
   begin
@@ -694,7 +694,7 @@ var
   LC: Int64;
   LI: Int32;
 begin
-  LMASK := UInt32(-(AMask ) and 1);
+  LMASK := UInt32(-(AMask and 1));
   LC := 0;
   for LI := 0 to ALen - 1 do
   begin

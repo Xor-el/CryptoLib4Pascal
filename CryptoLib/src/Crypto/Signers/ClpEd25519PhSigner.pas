@@ -23,9 +23,9 @@ interface
 
 uses
   ClpIDigest,
-  ClpIEd25519,
   ClpEd25519,
   ClpICipherParameters,
+  ClpISigner,
   ClpIEd25519PhSigner,
   ClpIEd25519PrivateKeyParameters,
   ClpIEd25519PublicKeyParameters,
@@ -40,14 +40,13 @@ resourcestring
   SPreHashDigestFailed = 'PreHash Digest Failed';
 
 type
-  TEd25519PhSigner = class(TInterfacedObject, IEd25519PhSigner)
+  TEd25519PhSigner = class(TInterfacedObject, ISigner, IEd25519PhSigner)
 
   strict private
   var
     FPreHash: IDigest;
     FContext: TCryptoLibByteArray;
     FForSigning: Boolean;
-    FEd25519Instance: IEd25519;
     FPrivateKey: IEd25519PrivateKeyParameters;
     FPublicKey: IEd25519PublicKeyParameters;
 
@@ -87,8 +86,7 @@ constructor TEd25519PhSigner.Create(const AContext: TCryptoLibByteArray);
 begin
   Inherited Create();
   FContext := System.Copy(AContext);
-  FEd25519Instance := TEd25519.Create();
-  FPreHash := FEd25519Instance.CreatePreHash();
+  FPreHash := TEd25519.CreatePreHash();
 end;
 
 destructor TEd25519PhSigner.Destroy;
@@ -98,7 +96,7 @@ end;
 
 function TEd25519PhSigner.GetAlgorithmName: String;
 begin
-  Result := 'Ed25519Ph';
+  Result := 'Ed25519ph';
 end;
 
 procedure TEd25519PhSigner.Init(AForSigning: Boolean;
@@ -108,10 +106,8 @@ begin
 
   if (AForSigning) then
   begin
-    // TODO Allow IAsymmetricCipherKeyPair to be an ICipherParameters?
-
     FPrivateKey := AParameters as IEd25519PrivateKeyParameters;
-    FPublicKey := FPrivateKey.GeneratePublicKey();
+    FPublicKey := nil;
   end
   else
   begin
@@ -155,15 +151,15 @@ begin
 
   System.SetLength(LSignature, TEd25519PrivateKeyParameters.SignatureSize);
 
-  FPrivateKey.Sign(TEd25519.TEd25519Algorithm.Ed25519Ph, FPublicKey, FContext,
-    LMsg, 0, TEd25519.PreHashSize, LSignature, 0);
+  FPrivateKey.Sign(TEd25519.TAlgorithm.Ed25519ph, FContext, LMsg, 0,
+    TEd25519.PreHashSize, LSignature, 0);
   Result := LSignature;
 end;
 
 function TEd25519PhSigner.VerifySignature(const ASignature
   : TCryptoLibByteArray): Boolean;
 var
-  LPk: TCryptoLibByteArray;
+  LMsg: TCryptoLibByteArray;
 begin
   if ((FForSigning) or (FPublicKey = nil)) then
   begin
@@ -172,12 +168,17 @@ begin
   end;
   if (TEd25519.SignatureSize <> System.Length(ASignature)) then
   begin
-    Result := false;
+    FPreHash.Reset();
+    Result := False;
     Exit;
   end;
-  LPk := FPublicKey.GetEncoded();
-  Result := FEd25519Instance.VerifyPrehash(ASignature, 0, LPk, 0, FContext,
-    FPreHash);
+  System.SetLength(LMsg, TEd25519.PreHashSize);
+  if (TEd25519.PreHashSize <> FPreHash.DoFinal(LMsg, 0)) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateRes(@SPreHashDigestFailed);
+  end;
+  Result := FPublicKey.Verify(TEd25519.TAlgorithm.Ed25519ph, FContext, LMsg, 0,
+    TEd25519.PreHashSize, ASignature, 0);
 end;
 
 end.

@@ -35,10 +35,9 @@ type
     function GetEncoded(): TCryptoLibByteArray;
     function GeneratePublicKey(): IEd25519PublicKeyParameters;
 
-    procedure Sign(algorithm: TEd25519.TEd25519Algorithm;
-      const publicKey: IEd25519PublicKeyParameters;
-      const ctx, msg: TCryptoLibByteArray; msgOff, msgLen: Int32;
-      const sig: TCryptoLibByteArray; sigOff: Int32);
+    procedure Sign(AAlgorithm: TEd25519.TAlgorithm;
+      const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
+      const ASig: TCryptoLibByteArray; ASigOff: Int32);
 
     function Equals(const other: IEd25519PrivateKeyParameters)
       : Boolean; overload;

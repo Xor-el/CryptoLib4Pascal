@@ -32,6 +32,8 @@ uses
 
 resourcestring
   SEOFInPublicKey = 'EOF encountered in middle of Ed25519 public key';
+  SInvalidPublicKey = 'invalid public key';
+  SMustHaveLengthKeySize = 'must have length %d';
 
 type
   TEd25519PublicKeyParameters = class sealed(TAsymmetricKeyParameter,
@@ -39,20 +41,26 @@ type
 
   strict private
   var
-    FData: TCryptoLibByteArray;
+    FPublicPoint: TEd25519.IPublicPoint;
 
   public
 
     const
     KeySize = Int32(TEd25519.PublicKeySize);
 
-    constructor Create(const buf: TCryptoLibByteArray; off: Int32); overload;
-    constructor Create(input: TStream); overload;
+    constructor Create(const ABuf: TCryptoLibByteArray); overload;
+    constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    constructor Create(AInput: TStream); overload;
+    constructor Create(const APublicPoint: TEd25519.IPublicPoint); overload;
 
-    procedure Encode(const buf: TCryptoLibByteArray; off: Int32); inline;
+    procedure Encode(const ABuf: TCryptoLibByteArray; AOff: Int32); inline;
     function GetEncoded(): TCryptoLibByteArray; inline;
 
-    function Equals(const other: IEd25519PublicKeyParameters): Boolean;
+    function Verify(AAlgorithm: TEd25519.TAlgorithm;
+      const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
+      const ASig: TCryptoLibByteArray; ASigOff: Int32): Boolean;
+
+    function Equals(const AOther: IEd25519PublicKeyParameters): Boolean;
       reintroduce; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -63,56 +71,134 @@ implementation
 
 { TEd25519PublicKeyParameters }
 
+constructor TEd25519PublicKeyParameters.Create(const ABuf: TCryptoLibByteArray);
+begin
+  if System.Length(ABuf) <> KeySize then
+    raise EArgumentCryptoLibException.CreateResFmt(@SMustHaveLengthKeySize,
+      [KeySize]);
+  Create(ABuf, 0);
+end;
+
+constructor TEd25519PublicKeyParameters.Create(const ABuf: TCryptoLibByteArray;
+  AOff: Int32);
+var
+  LPoint: TEd25519.IPublicPoint;
+begin
+  Inherited Create(False);
+  LPoint := TEd25519.ValidatePublicKeyPartialExport(ABuf, AOff);
+  if LPoint = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPublicKey);
+  FPublicPoint := LPoint;
+end;
+
+constructor TEd25519PublicKeyParameters.Create(AInput: TStream);
+var
+  LData: TCryptoLibByteArray;
+  LPoint: TEd25519.IPublicPoint;
+begin
+  Inherited Create(False);
+  System.SetLength(LData, KeySize);
+  if KeySize <> TStreamUtilities.ReadFully(AInput, LData) then
+    raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPublicKey);
+  LPoint := TEd25519.ValidatePublicKeyPartialExport(LData, 0);
+  if LPoint = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPublicKey);
+  FPublicPoint := LPoint;
+end;
+
+constructor TEd25519PublicKeyParameters.Create(const APublicPoint
+  : TEd25519.IPublicPoint);
+begin
+  Inherited Create(False);
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SInvalidPublicKey);
+  FPublicPoint := APublicPoint;
+end;
+
+procedure TEd25519PublicKeyParameters.Encode(const ABuf: TCryptoLibByteArray;
+  AOff: Int32);
+begin
+  TEd25519.EncodePublicPoint(FPublicPoint, ABuf, AOff);
+end;
+
 function TEd25519PublicKeyParameters.GetEncoded: TCryptoLibByteArray;
 begin
-  result := System.Copy(FData);
+  System.SetLength(Result, KeySize);
+  Encode(Result, 0);
 end;
 
-constructor TEd25519PublicKeyParameters.Create(const buf: TCryptoLibByteArray;
-  off: Int32);
+function TEd25519PublicKeyParameters.Verify(AAlgorithm: TEd25519.TAlgorithm;
+  const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
+  const ASig: TCryptoLibByteArray; ASigOff: Int32): Boolean;
+var
+  LEd25519: TEd25519;
 begin
-  Inherited Create(false);
-  System.SetLength(FData, KeySize);
-  System.Move(buf[off], FData[0], KeySize * System.SizeOf(Byte));
-end;
-
-constructor TEd25519PublicKeyParameters.Create(input: TStream);
-begin
-  Inherited Create(false);
-  System.SetLength(FData, KeySize);
-  if (KeySize <> TStreamUtilities.ReadFully(input, FData)) then
-  begin
-    raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPublicKey);
+  LEd25519 := TEd25519.Create();
+  try
+    case AAlgorithm of
+      TEd25519.TAlgorithm.Ed25519:
+        begin
+          if ACtx <> nil then
+            raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidPublicKey);
+          Result := LEd25519.Verify(ASig, ASigOff, FPublicPoint, AMsg, AMsgOff,
+            AMsgLen);
+        end;
+      TEd25519.TAlgorithm.Ed25519ctx:
+        begin
+          if ACtx = nil then
+            raise EArgumentNilCryptoLibException.CreateRes(@SInvalidPublicKey);
+          if System.Length(ACtx) > 255 then
+            raise EArgumentOutOfRangeCryptoLibException.CreateRes
+              (@SInvalidPublicKey);
+          Result := LEd25519.Verify(ASig, ASigOff, FPublicPoint, ACtx, AMsg,
+            AMsgOff, AMsgLen);
+        end;
+      TEd25519.TAlgorithm.Ed25519ph:
+        begin
+          if ACtx = nil then
+            raise EArgumentNilCryptoLibException.CreateRes(@SInvalidPublicKey);
+          if System.Length(ACtx) > 255 then
+            raise EArgumentOutOfRangeCryptoLibException.CreateRes
+              (@SInvalidPublicKey);
+          if TEd25519.PrehashSize <> AMsgLen then
+            raise EArgumentOutOfRangeCryptoLibException.CreateRes
+              (@SInvalidPublicKey);
+          Result := LEd25519.VerifyPreHash(ASig, ASigOff, FPublicPoint, ACtx,
+            AMsg, AMsgOff);
+        end
+    else
+      raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidPublicKey);
+    end;
+  finally
+    LEd25519.Free;
   end;
 end;
 
-procedure TEd25519PublicKeyParameters.Encode(const buf: TCryptoLibByteArray;
-  off: Int32);
-begin
-  System.Move(FData[0], buf[off], KeySize * System.SizeOf(Byte));
-end;
-
-function TEd25519PublicKeyParameters.Equals(const other
+function TEd25519PublicKeyParameters.Equals(const AOther
   : IEd25519PublicKeyParameters): Boolean;
+var
+  LEncoded, LOtherEncoded: TCryptoLibByteArray;
 begin
-  if (other = Self as IEd25519PublicKeyParameters) then
+  if (AOther = Self as IEd25519PublicKeyParameters) then
   begin
-    result := true;
+    Result := True;
     Exit;
   end;
 
-  if (other = Nil) then
+  if (AOther = nil) then
   begin
-    result := false;
+    Result := False;
     Exit;
   end;
-  result := TArrayUtilities.FixedTimeEquals(FData, other.GetEncoded())
+  LEncoded := GetEncoded();
+  LOtherEncoded := AOther.GetEncoded();
+  Result := TArrayUtilities.FixedTimeEquals(LEncoded, LOtherEncoded);
 end;
 
 function TEd25519PublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := TArrayUtilities.GetArrayHashCode(FData);
+  Result := TArrayUtilities.GetArrayHashCode(GetEncoded());
 end;
 
 end.

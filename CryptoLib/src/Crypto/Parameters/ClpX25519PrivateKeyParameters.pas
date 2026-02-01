@@ -36,6 +36,7 @@ uses
 resourcestring
   SEOFInPrivateKey = 'EOF encountered in middle of X25519 private key';
   SAgreementCalculationFailed = 'X25519 Agreement Failed';
+  SMustHaveLengthKeySize = 'must have length %d';
 
 type
   TX25519PrivateKeyParameters = class sealed(TAsymmetricKeyParameter,
@@ -44,6 +45,7 @@ type
   strict private
   var
     FData: TCryptoLibByteArray;
+  class function Validate(const ABuf: TCryptoLibByteArray): TCryptoLibByteArray; static;
 
   public
 
@@ -51,9 +53,10 @@ type
     KeySize = Int32(TX25519.ScalarSize);
     SecretSize = Int32(TX25519.PointSize);
 
-    constructor Create(const random: ISecureRandom); overload;
-    constructor Create(const buf: TCryptoLibByteArray; off: Int32); overload;
-    constructor Create(input: TStream); overload;
+    constructor Create(const ARandom: ISecureRandom); overload;
+    constructor Create(const ABuf: TCryptoLibByteArray); overload;
+    constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    constructor Create(AInput: TStream); overload;
 
     procedure Encode(const buf: TCryptoLibByteArray; off: Int32); inline;
     function GetEncoded(): TCryptoLibByteArray; inline;
@@ -101,26 +104,39 @@ begin
   result := System.Copy(FData);
 end;
 
-constructor TX25519PrivateKeyParameters.Create(const random: ISecureRandom);
+class function TX25519PrivateKeyParameters.Validate(const ABuf: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
-  Inherited Create(true);
-  System.SetLength(FData, KeySize);
-  TX25519.GeneratePrivateKey(random, FData);
+  if System.Length(ABuf) <> TX25519PrivateKeyParameters.KeySize then
+    raise EArgumentCryptoLibException.CreateResFmt(@SMustHaveLengthKeySize,
+      [TX25519PrivateKeyParameters.KeySize]);
+  Result := ABuf;
 end;
 
-constructor TX25519PrivateKeyParameters.Create(const buf: TCryptoLibByteArray;
-  off: Int32);
+constructor TX25519PrivateKeyParameters.Create(const ARandom: ISecureRandom);
 begin
   Inherited Create(true);
-  System.SetLength(FData, KeySize);
-  System.Move(buf[off], FData[0], KeySize * System.SizeOf(Byte));
+  System.SetLength(FData, TX25519PrivateKeyParameters.KeySize);
+  TX25519.GeneratePrivateKey(ARandom, FData);
 end;
 
-constructor TX25519PrivateKeyParameters.Create(input: TStream);
+constructor TX25519PrivateKeyParameters.Create(const ABuf: TCryptoLibByteArray);
+begin
+  Create(TX25519PrivateKeyParameters.Validate(ABuf), 0);
+end;
+
+constructor TX25519PrivateKeyParameters.Create(const ABuf: TCryptoLibByteArray;
+  AOff: Int32);
 begin
   Inherited Create(true);
-  System.SetLength(FData, KeySize);
-  if (KeySize <> TStreamUtilities.ReadFully(input, FData)) then
+  System.SetLength(FData, TX25519PrivateKeyParameters.KeySize);
+  System.Move(ABuf[AOff], FData[0], TX25519PrivateKeyParameters.KeySize * System.SizeOf(Byte));
+end;
+
+constructor TX25519PrivateKeyParameters.Create(AInput: TStream);
+begin
+  Inherited Create(true);
+  System.SetLength(FData, TX25519PrivateKeyParameters.KeySize);
+  if (TX25519PrivateKeyParameters.KeySize <> TStreamUtilities.ReadFully(AInput, FData)) then
   begin
     raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPrivateKey);
   end;
@@ -129,7 +145,7 @@ end;
 procedure TX25519PrivateKeyParameters.Encode(const buf: TCryptoLibByteArray;
   off: Int32);
 begin
-  System.Move(FData[0], buf[off], KeySize * System.SizeOf(Byte));
+  System.Move(FData[0], buf[off], TX25519PrivateKeyParameters.KeySize * System.SizeOf(Byte));
 end;
 
 function TX25519PrivateKeyParameters.Equals(const other

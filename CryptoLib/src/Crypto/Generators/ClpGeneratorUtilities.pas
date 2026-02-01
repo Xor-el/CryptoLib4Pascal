@@ -30,7 +30,6 @@ uses
   ClpCryptoLibTypes,
   ClpDsaKeyPairGenerator,
   ClpECKeyPairGenerator,
-  ClpEd25519,
   ClpEd25519KeyPairGenerator,
   ClpEdECObjectIdentifiers,
   ClpDHKeyPairGenerator,
@@ -40,7 +39,6 @@ uses
   ClpIDsaKeyPairGenerator,
   ClpIDHKeyPairGenerator,
   ClpIECKeyPairGenerator,
-  ClpIEd25519,
   ClpIEd25519KeyPairGenerator,
   ClpIRsaKeyPairGenerator,
   ClpIX25519KeyPairGenerator,
@@ -385,7 +383,7 @@ begin
   end;
   if LCanonicalName = 'Ed25519' then
   begin
-    Result := TEd25519KeyPairGenerator.Create(TEd25519.Create() as IEd25519) as IEd25519KeyPairGenerator;
+    Result := TEd25519KeyPairGenerator.Create() as IEd25519KeyPairGenerator;
     Exit;
   end;
   if LCanonicalName = 'X25519' then

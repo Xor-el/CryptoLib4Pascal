@@ -41,7 +41,15 @@ type
     /// Split a string by delimiter into an array.
     /// </summary>
     class function SplitString(const AInput: string; ADelimiter: Char)
-      : TCryptoLibStringArray; static;
+      : TCryptoLibStringArray; overload; static;
+    /// <summary>
+    /// Split a string by delimiter into an array, with a maximum number of parts.
+    /// When AMaxCount is greater than 0, returns at most AMaxCount parts; the last
+    /// part contains the remainder of the string (including any remaining delimiters).
+    /// String indices are 1-based.
+    /// </summary>
+    class function SplitString(const AInput: string; ADelimiter: Char;
+      AMaxCount: Int32): TCryptoLibStringArray; overload; static;
     /// <summary>
     /// Compare two strings ignoring case.
     /// </summary>
@@ -157,7 +165,7 @@ begin
     { Split the string and fill the resulting array }
 
     I := 0;
-    LLen := System.Length(ADelimiter);
+    LLen := 1;
     LPosStart := 1;
     LPosDel := System.Pos(ADelimiter, AInput);
     while LPosDel > 0 do
@@ -169,6 +177,42 @@ begin
     end;
     Result[I] := System.Copy(AInput, LPosStart, System.Length(AInput));
   end;
+end;
+
+class function TStringUtilities.SplitString(const AInput: string; ADelimiter: Char;
+  AMaxCount: Int32): TCryptoLibStringArray;
+var
+  LPosStart, LPosDel, J, K: Int32;
+begin
+  Result := nil;
+  if AMaxCount <= 0 then
+  begin
+    Result := SplitString(AInput, ADelimiter);
+    Exit;
+  end;
+  if AInput = '' then
+  begin
+    System.SetLength(Result, 1);
+    Result[0] := '';
+    Exit;
+  end;
+  System.SetLength(Result, AMaxCount);
+  LPosStart := 1;
+  for J := 0 to AMaxCount - 2 do
+  begin
+    LPosDel := PosEx(ADelimiter, AInput, LPosStart);
+    if LPosDel < 1 then
+    begin
+      Result[J] := System.Copy(AInput, LPosStart, System.Length(AInput));
+      for K := J + 1 to AMaxCount - 1 do
+        Result[K] := '';
+      System.SetLength(Result, J + 1);
+      Exit;
+    end;
+    Result[J] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
+    LPosStart := LPosDel + 1;
+  end;
+  Result[AMaxCount - 1] := System.Copy(AInput, LPosStart, System.Length(AInput));
 end;
 
 class function TStringUtilities.EqualsIgnoreCase(const A, B: String): Boolean;

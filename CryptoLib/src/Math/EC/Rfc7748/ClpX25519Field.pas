@@ -22,927 +22,966 @@ unit ClpX25519Field;
 interface
 
 uses
+  ClpMod,
   ClpBitUtilities,
-  ClpConverters,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type
-  TX25519Field = class sealed(TObject)
-
-  strict private
-
-  const
-    M24 = Int32($00FFFFFF);
-    M25 = Int32($01FFFFFF);
-    M26 = Int32($03FFFFFF);
-
-    class var
-
-      FRootNegOne: TCryptoLibInt32Array;
-
-    class procedure Decode128(const bs: TCryptoLibByteArray; off: Int32;
-      const z: TCryptoLibInt32Array; zOff: Int32); static; inline;
-
-    class function Decode32(const bs: TCryptoLibByteArray; off: Int32): UInt32;
-      static; inline;
-
-    class procedure Encode32(n: UInt32; const bs: TCryptoLibByteArray;
-      off: Int32); static; inline;
-
-    class procedure Encode128(const x: TCryptoLibInt32Array; xOff: Int32;
-      const bs: TCryptoLibByteArray; off: Int32); static; inline;
-
-    class procedure PowPm5d8(const x, rx2, rz: TCryptoLibInt32Array); static;
-
-    class procedure Reduce(const z: TCryptoLibInt32Array; c: Int32); static;
-
-    class procedure Boot(); static;
-    class constructor X25519Field();
-
+  TX25519Field = class sealed
   public
-
-    const
-    Size = Int32(10);
-
-    class procedure Add(const x, y, z: TCryptoLibInt32Array); static; inline;
-
-    class procedure AddOne(const z: TCryptoLibInt32Array); overload;
-      static; inline;
-
-    class procedure AddOne(const z: TCryptoLibInt32Array; zOff: Int32);
-      overload; static; inline;
-
-    class procedure Apm(const x, y, zp, zm: TCryptoLibInt32Array);
-      static; inline;
-
-    class procedure Carry(const z: TCryptoLibInt32Array); static;
-
-    class procedure CMov(cond: Int32; const x: TCryptoLibInt32Array;
-      xOff: Int32; const z: TCryptoLibInt32Array; zOff: Int32); static;
-
-    class procedure CNegate(ANegate: Int32; const z: TCryptoLibInt32Array);
-      static; inline;
-
-    class procedure Copy(const x: TCryptoLibInt32Array; xOff: Int32;
-      const z: TCryptoLibInt32Array; zOff: Int32); static; inline;
-
-    class function Create(): TCryptoLibInt32Array; static; inline;
-
-    class function CreateTable(n: Int32): TCryptoLibInt32Array; static; inline;
-
-    class procedure CSwap(swap: Int32;
-      const a, b: TCryptoLibInt32Array); static;
-
-    class procedure Decode(const x: TCryptoLibByteArray; xOff: Int32;
-      const z: TCryptoLibInt32Array); static; inline;
-
-    class procedure Encode(const x: TCryptoLibInt32Array;
-      const z: TCryptoLibByteArray; zOff: Int32); static; inline;
-
-    class procedure Inv(const x, z: TCryptoLibInt32Array); static; inline;
-
-    class function IsZero(const x: TCryptoLibInt32Array): Int32; static;
-
-    class function IsZeroVar(const x: TCryptoLibInt32Array): Boolean;
-      static; inline;
-
-    class procedure Mul(const x: TCryptoLibInt32Array; y: Int32;
-      const z: TCryptoLibInt32Array); overload; static;
-
-    class procedure Mul(const x, y, z: TCryptoLibInt32Array); overload; static;
-
-    class procedure Negate(const x, z: TCryptoLibInt32Array); static; inline;
-
-    class procedure Normalize(const z: TCryptoLibInt32Array); static; inline;
-
-    class procedure One(const z: TCryptoLibInt32Array); static; inline;
-
-    class procedure Sqr(const x, z: TCryptoLibInt32Array); overload; static;
-
-    class procedure Sqr(const x: TCryptoLibInt32Array; n: Int32;
-      const z: TCryptoLibInt32Array); overload; static;
-
-    class function SqrtRatioVar(const u, v, z: TCryptoLibInt32Array)
-      : Boolean; static;
-
-    class procedure Sub(const x, y, z: TCryptoLibInt32Array); static; inline;
-
-    class procedure SubOne(const z: TCryptoLibInt32Array); static; inline;
-
-    class procedure Zero(const z: TCryptoLibInt32Array); static; inline;
-
+  const
+    Size = 10;
+  strict private
+  const
+    M24 = $00FFFFFF;
+    M25 = $01FFFFFF;
+    M26 = $03FFFFFF;
+  class var
+    FP32: TCryptoLibUInt32Array;
+    FRootNegOne: TCryptoLibInt32Array;
+  class procedure Boot; static;
+  class constructor Create;
+  class procedure Decode128(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+    const AZ: TCryptoLibInt32Array; AZOff: Int32); overload; static;
+  class procedure Decode128(const ABs: TCryptoLibByteArray; AOff: Int32;
+    const AZ: TCryptoLibInt32Array; AZOff: Int32); overload; static;
+  class function Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
+  class procedure Encode128(const AX: TCryptoLibInt32Array; AXOff: Int32;
+    const AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+  class procedure Encode128(const AX: TCryptoLibInt32Array; AXOff: Int32;
+    const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+  class procedure Encode32(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); static;
+  class procedure PowPm5d8(const AX: TCryptoLibInt32Array; const ARx2: TCryptoLibInt32Array;
+    const ARz: TCryptoLibInt32Array); static;
+  class procedure Reduce(AZ: TCryptoLibInt32Array; AX: Int32); static;
+  public
+    class procedure Add(const AX, AY, AZ: TCryptoLibInt32Array); static;
+    class procedure AddOne(const AZ: TCryptoLibInt32Array); overload; static;
+    class procedure AddOne(const AZ: TCryptoLibInt32Array; AZOff: Int32); overload; static;
+    class procedure Apm(const AX, AY, AZp, AZm: TCryptoLibInt32Array); static;
+    class function AreEqual(const AX, AY: TCryptoLibInt32Array): Int32; static;
+    class function AreEqualVar(const AX, AY: TCryptoLibInt32Array): Boolean; static;
+    class procedure Carry(AZ: TCryptoLibInt32Array); static;
+    class procedure CMov(ACond: Int32; const AX: TCryptoLibInt32Array; AXOff: Int32;
+      const AZ: TCryptoLibInt32Array; AZOff: Int32); static;
+    class procedure CNegate(ANegate: Int32; AZ: TCryptoLibInt32Array); static;
+    class procedure Copy(const AX: TCryptoLibInt32Array; AXOff: Int32;
+      const AZ: TCryptoLibInt32Array; AZOff: Int32); static;
+    class function Create: TCryptoLibInt32Array; static;
+    class function CreateTable(AN: Int32): TCryptoLibInt32Array; static;
+    class procedure CSwap(ASwap: Int32; AA, AB: TCryptoLibInt32Array); static;
+    class procedure Decode(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+      AZ: TCryptoLibInt32Array); overload; static;
+    class procedure Decode(const ABs: TCryptoLibByteArray; AZ: TCryptoLibInt32Array); overload; static;
+    class procedure Decode(const ABs: TCryptoLibByteArray; ABsOff: Int32;
+      AZ: TCryptoLibInt32Array); overload; static;
+    class procedure Decode(const ABs: TCryptoLibByteArray; ABsOff: Int32;
+      const AZ: TCryptoLibInt32Array; AZOff: Int32); overload; static;
+    class procedure Encode(const AX: TCryptoLibInt32Array; const AZ: TCryptoLibUInt32Array;
+      AZOff: Int32); overload; static;
+    class procedure Encode(const AX: TCryptoLibInt32Array; const ABs: TCryptoLibByteArray); overload; static;
+    class procedure Encode(const AX: TCryptoLibInt32Array; const ABs: TCryptoLibByteArray;
+      ABsOff: Int32); overload; static;
+    class procedure Encode(const AX: TCryptoLibInt32Array; AXOff: Int32;
+      const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
+    class procedure Inv(const AX, AZ: TCryptoLibInt32Array); static;
+    class procedure InvVar(const AX, AZ: TCryptoLibInt32Array); static;
+    class function IsOne(const AX: TCryptoLibInt32Array): Int32; static;
+    class function IsOneVar(const AX: TCryptoLibInt32Array): Boolean; static;
+    class function IsZero(const AX: TCryptoLibInt32Array): Int32; static;
+    class function IsZeroVar(const AX: TCryptoLibInt32Array): Boolean; static;
+    class procedure Mul(const AX: TCryptoLibInt32Array; AY: Int32; const AZ: TCryptoLibInt32Array); overload; static;
+    class procedure Mul(const AX, AY, AZ: TCryptoLibInt32Array); overload; static;
+    class procedure Negate(const AX, AZ: TCryptoLibInt32Array); static;
+    class procedure Normalize(AZ: TCryptoLibInt32Array); static;
+    class procedure One(AZ: TCryptoLibInt32Array); static;
+    class procedure Sqr(const AX, AZ: TCryptoLibInt32Array); overload; static;
+    class procedure Sqr(const AX: TCryptoLibInt32Array; AN: Int32; const AZ: TCryptoLibInt32Array); overload; static;
+    class function SqrtRatioVar(const AU, AV, AZ: TCryptoLibInt32Array): Boolean; static;
+    class procedure Sub(const AX, AY, AZ: TCryptoLibInt32Array); static;
+    class procedure SubOne(AZ: TCryptoLibInt32Array); static;
+    class procedure Zero(AZ: TCryptoLibInt32Array); static;
   end;
 
 implementation
 
-{ TX25519Field }
+class constructor TX25519Field.Create;
+begin
+  Boot;
+end;
 
 class procedure TX25519Field.Boot;
 begin
-  FRootNegOne := TCryptoLibInt32Array.Create($020EA0B0, $0386C9D2, $00478C4E,
-    $0035697F, $005E8630, $01FBD7A7, $0340264F, $01F0B2B4, $00027E0E,
-    $00570649);
+  FP32 := TCryptoLibUInt32Array.Create($FFFFFFED, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
+  FRootNegOne := TCryptoLibInt32Array.Create(-$01F15F50, -$0079362D, $00478C4F, $0035697F,
+    $005E8630, $01FBD7A7, -$00BFD9B1, -$000F4D4B, $00027E0F, $00570649);
 end;
 
-class constructor TX25519Field.X25519Field;
-begin
-  TX25519Field.Boot();
-end;
-
-class procedure TX25519Field.Add(const x, y, z: TCryptoLibInt32Array);
+class procedure TX25519Field.Add(const AX, AY, AZ: TCryptoLibInt32Array);
 var
-  i: Int32;
+  LI: Int32;
 begin
-  for i := 0 to System.Pred(Size) do
+  LI := 0;
+  while LI < Size do
   begin
-    z[i] := x[i] + y[i];
+    AZ[LI] := AX[LI] + AY[LI];
+    System.Inc(LI);
   end;
 end;
 
-class procedure TX25519Field.AddOne(const z: TCryptoLibInt32Array);
+class procedure TX25519Field.AddOne(const AZ: TCryptoLibInt32Array);
 begin
-  z[0] := z[0] + 1;
+  AZ[0] := AZ[0] + 1;
 end;
 
-class procedure TX25519Field.AddOne(const z: TCryptoLibInt32Array; zOff: Int32);
+class procedure TX25519Field.AddOne(const AZ: TCryptoLibInt32Array; AZOff: Int32);
 begin
-  z[zOff] := z[zOff] + 1;
+  AZ[AZOff] := AZ[AZOff] + 1;
 end;
 
-class procedure TX25519Field.Apm(const x, y, zp, zm: TCryptoLibInt32Array);
+class procedure TX25519Field.Apm(const AX, AY, AZp, AZm: TCryptoLibInt32Array);
 var
-  i, xi, yi: Int32;
+  LI: Int32;
+  LXi, LYi: Int32;
 begin
-  for i := 0 to System.Pred(Size) do
+  LI := 0;
+  while LI < Size do
   begin
-    xi := x[i];
-    yi := y[i];
-    zp[i] := xi + yi;
-    zm[i] := xi - yi;
+    LXi := AX[LI];
+    LYi := AY[LI];
+    AZp[LI] := LXi + LYi;
+    AZm[LI] := LXi - LYi;
+    System.Inc(LI);
   end;
 end;
 
-class procedure TX25519Field.Carry(const z: TCryptoLibInt32Array);
+class function TX25519Field.AreEqual(const AX, AY: TCryptoLibInt32Array): Int32;
 var
-  z0, z1, z2, z3, z4, z5, z6, z7, z8, z9: Int32;
+  Ld: Int32;
+  LI: Int32;
 begin
-  z0 := z[0];
-  z1 := z[1];
-  z2 := z[2];
-  z3 := z[3];
-  z4 := z[4];
-  z5 := z[5];
-  z6 := z[6];
-  z7 := z[7];
-  z8 := z[8];
-  z9 := z[9];
-
-  z3 := z3 + TBitUtilities.Asr32(z2, 25);
-  z2 := z2 and M25;
-  z5 := z5 + TBitUtilities.Asr32(z4, 25);
-  z4 := z4 and M25;
-  z8 := z8 + TBitUtilities.Asr32(z7, 25);
-  z7 := z7 and M25;
-  // z0 := z0 + (z9 shr 24) * 19; z9 := z9 and M24;
-  z0 := z0 + (TBitUtilities.Asr32(z9, 25) * 38);
-  z9 := z9 and M25;
-
-  z1 := z1 + TBitUtilities.Asr32(z0, 26);
-  z0 := z0 and M26;
-  z6 := z6 + TBitUtilities.Asr32(z5, 26);
-  z5 := z5 and M26;
-
-  z2 := z2 + TBitUtilities.Asr32(z1, 26);
-  z1 := z1 and M26;
-  z4 := z4 + TBitUtilities.Asr32(z3, 26);
-  z3 := z3 and M26;
-  z7 := z7 + TBitUtilities.Asr32(z6, 26);
-  z6 := z6 and M26;
-  z9 := z9 + TBitUtilities.Asr32(z8, 26);
-  z8 := z8 and M26;
-
-  z[0] := z0;
-  z[1] := z1;
-  z[2] := z2;
-  z[3] := z3;
-  z[4] := z4;
-  z[5] := z5;
-  z[6] := z6;
-  z[7] := z7;
-  z[8] := z8;
-  z[9] := z9;
+  Ld := 0;
+  LI := 0;
+  while LI < Size do
+  begin
+    Ld := Ld or (AX[LI] xor AY[LI]);
+    System.Inc(LI);
+  end;
+  Ld := Ld or TBitUtilities.Asr32(Ld, 16);
+  Ld := Ld and $FFFF;
+  Result := TBitUtilities.Asr32(Ld - 1, 31);
 end;
 
-class procedure TX25519Field.CMov(cond: Int32; const x: TCryptoLibInt32Array;
-  xOff: Int32; const z: TCryptoLibInt32Array; zOff: Int32);
-var
-  i, z_i, diff: Int32;
+class function TX25519Field.AreEqualVar(const AX, AY: TCryptoLibInt32Array): Boolean;
 begin
-{$IFDEF DEBUG}
-  System.Assert((cond = 0) or (cond = -1));
-{$ENDIF DEBUG}
-  for i := 0 to System.Pred(Size) do
+  Result := AreEqual(AX, AY) <> 0;
+end;
+
+class procedure TX25519Field.Carry(AZ: TCryptoLibInt32Array);
+var
+  Lz0, Lz1, Lz2, Lz3, Lz4, Lz5, Lz6, Lz7, Lz8, Lz9: Int32;
+begin
+  Lz0 := AZ[0];
+  Lz1 := AZ[1];
+  Lz2 := AZ[2];
+  Lz3 := AZ[3];
+  Lz4 := AZ[4];
+  Lz5 := AZ[5];
+  Lz6 := AZ[6];
+  Lz7 := AZ[7];
+  Lz8 := AZ[8];
+  Lz9 := AZ[9];
+  Lz2 := Lz2 + TBitUtilities.Asr32(Lz1, 26);
+  Lz1 := Lz1 and M26;
+  Lz4 := Lz4 + TBitUtilities.Asr32(Lz3, 26);
+  Lz3 := Lz3 and M26;
+  Lz7 := Lz7 + TBitUtilities.Asr32(Lz6, 26);
+  Lz6 := Lz6 and M26;
+  Lz9 := Lz9 + TBitUtilities.Asr32(Lz8, 26);
+  Lz8 := Lz8 and M26;
+  Lz3 := Lz3 + TBitUtilities.Asr32(Lz2, 25);
+  Lz2 := Lz2 and M25;
+  Lz5 := Lz5 + TBitUtilities.Asr32(Lz4, 25);
+  Lz4 := Lz4 and M25;
+  Lz8 := Lz8 + TBitUtilities.Asr32(Lz7, 25);
+  Lz7 := Lz7 and M25;
+  Lz0 := Lz0 + TBitUtilities.Asr32(Lz9, 25) * 38;
+  Lz9 := Lz9 and M25;
+  Lz1 := Lz1 + TBitUtilities.Asr32(Lz0, 26);
+  Lz0 := Lz0 and M26;
+  Lz6 := Lz6 + TBitUtilities.Asr32(Lz5, 26);
+  Lz5 := Lz5 and M26;
+  Lz2 := Lz2 + TBitUtilities.Asr32(Lz1, 26);
+  Lz1 := Lz1 and M26;
+  Lz4 := Lz4 + TBitUtilities.Asr32(Lz3, 26);
+  Lz3 := Lz3 and M26;
+  Lz7 := Lz7 + TBitUtilities.Asr32(Lz6, 26);
+  Lz6 := Lz6 and M26;
+  Lz9 := Lz9 + TBitUtilities.Asr32(Lz8, 26);
+  Lz8 := Lz8 and M26;
+  AZ[0] := Lz0;
+  AZ[1] := Lz1;
+  AZ[2] := Lz2;
+  AZ[3] := Lz3;
+  AZ[4] := Lz4;
+  AZ[5] := Lz5;
+  AZ[6] := Lz6;
+  AZ[7] := Lz7;
+  AZ[8] := Lz8;
+  AZ[9] := Lz9;
+end;
+
+class procedure TX25519Field.CMov(ACond: Int32; const AX: TCryptoLibInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibInt32Array; AZOff: Int32);
+var
+  LI: Int32;
+  LZi, Ldiff: Int32;
+begin
+  LI := 0;
+  while LI < Size do
   begin
-    z_i := z[zOff + i];
-    diff := z_i xor x[xOff + i];
-    z_i := z_i xor (diff and cond);
-    z[zOff + i] := z_i;
+    LZi := AZ[AZOff + LI];
+    Ldiff := LZi xor AX[AXOff + LI];
+    LZi := LZi xor (Ldiff and ACond);
+    AZ[AZOff + LI] := LZi;
+    System.Inc(LI);
   end;
 end;
 
-class procedure TX25519Field.CNegate(ANegate: Int32;
-  const z: TCryptoLibInt32Array);
+class procedure TX25519Field.CNegate(ANegate: Int32; AZ: TCryptoLibInt32Array);
 var
-  mask, i: Int32;
+  LMask: Int32;
+  LI: Int32;
 begin
-{$IFDEF DEBUG}
+  {$IFDEF DEBUG}
   System.Assert(TBitUtilities.Asr32(ANegate, 1) = 0);
-{$ENDIF DEBUG}
-  mask := 0 - ANegate;
-  for i := 0 to System.Pred(Size) do
+  {$ENDIF}
+  LMask := 0 - ANegate;
+  LI := 0;
+  while LI < Size do
   begin
-    z[i] := (z[i] xor mask) - mask;
+    AZ[LI] := (AZ[LI] xor LMask) - LMask;
+    System.Inc(LI);
   end;
 end;
 
-class procedure TX25519Field.Copy(const x: TCryptoLibInt32Array; xOff: Int32;
-  const z: TCryptoLibInt32Array; zOff: Int32);
-var
-  i: Int32;
+class procedure TX25519Field.Copy(const AX: TCryptoLibInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibInt32Array; AZOff: Int32);
 begin
-  for i := 0 to System.Pred(Size) do
-  begin
-    z[zOff + i] := x[xOff + i];
-  end;
+  System.Move(AX[AXOff], AZ[AZOff], Size * System.SizeOf(Int32));
 end;
 
 class function TX25519Field.Create: TCryptoLibInt32Array;
 begin
-  System.SetLength(Result, Size);
+  Result := TCryptoLibInt32Array.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 end;
 
-class function TX25519Field.CreateTable(n: Int32): TCryptoLibInt32Array;
+class function TX25519Field.CreateTable(AN: Int32): TCryptoLibInt32Array;
 begin
-  System.SetLength(Result, Size * n);
+  System.SetLength(Result, Size * AN);
 end;
 
-class procedure TX25519Field.CSwap(swap: Int32;
-  const a, b: TCryptoLibInt32Array);
+class procedure TX25519Field.CSwap(ASwap: Int32; AA, AB: TCryptoLibInt32Array);
 var
-  mask, i, ai, bi, dummy: Int32;
+  Lmask: Int32;
+  LI: Int32;
+  Lai, Lbi, Ldummy: Int32;
 begin
-{$IFDEF DEBUG}
-  System.Assert(TBitUtilities.Asr32(swap, 1) = 0);
-  System.Assert(a <> b);
-{$ENDIF DEBUG}
-  mask := 0 - swap;
-  for i := 0 to System.Pred(Size) do
+  Lmask := 0 - ASwap;
+  LI := 0;
+  while LI < Size do
   begin
-    ai := a[i];
-    bi := b[i];
-    dummy := mask and (ai xor bi);
-    a[i] := ai xor dummy;
-    b[i] := bi xor dummy;
+    Lai := AA[LI];
+    Lbi := AB[LI];
+    Ldummy := Lmask and (Lai xor Lbi);
+    AA[LI] := Lai xor Ldummy;
+    AB[LI] := Lbi xor Ldummy;
+    System.Inc(LI);
   end;
 end;
 
-class function TX25519Field.Decode32(const bs: TCryptoLibByteArray;
-  off: Int32): UInt32;
-begin
-  // UInt32 n := bs[off];
-  // System.Inc(off);
-  // n := n or (UInt32(bs[off]) shl 8);
-  // System.Inc(off);
-  // n := n or (UInt32(bs[off]) shl 16);
-  // System.Inc(off);
-  // n := n or (UInt32(bs[off]) shl 24);
-  // result := n;
-  Result := TConverters.ReadBytesAsUInt32LE(PByte(bs), off);
-end;
-
-class procedure TX25519Field.Decode128(const bs: TCryptoLibByteArray;
-  off: Int32; const z: TCryptoLibInt32Array; zOff: Int32);
+class function TX25519Field.Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32;
 var
-  t0, t1, t2, t3: UInt32;
+  LOff: Int32;
 begin
-  t0 := Decode32(bs, off + 0);
-  t1 := Decode32(bs, off + 4);
-  t2 := Decode32(bs, off + 8);
-  t3 := Decode32(bs, off + 12);
-
-  z[zOff + 0] := Int32(t0 and M26);
-  z[zOff + 1] := Int32((t1 shl 6) or (t0 shr 26)) and M26;
-  z[zOff + 2] := Int32((t2 shl 12) or (t1 shr 20)) and M25;
-  z[zOff + 3] := Int32((t3 shl 19) or (t2 shr 13)) and M26;
-  z[zOff + 4] := Int32(t3 shr 7);
+  LOff := AOff;
+  Result := UInt32(ABs[LOff]);
+  System.Inc(LOff);
+  Result := Result or (UInt32(ABs[LOff]) shl 8);
+  System.Inc(LOff);
+  Result := Result or (UInt32(ABs[LOff]) shl 16);
+  System.Inc(LOff);
+  Result := Result or (UInt32(ABs[LOff]) shl 24);
 end;
 
-class procedure TX25519Field.Decode(const x: TCryptoLibByteArray; xOff: Int32;
-  const z: TCryptoLibInt32Array);
-begin
-  Decode128(x, xOff, z, 0);
-  Decode128(x, xOff + 16, z, 5);
-  z[9] := z[9] and M24;
-end;
-
-class procedure TX25519Field.Encode32(n: UInt32; const bs: TCryptoLibByteArray;
-  off: Int32);
-begin
-  // bs[  off] := Byte(n      );
-  // System.Inc(off);
-  // bs[off] := Byte(n shr  8);
-  // System.Inc(off);
-  // bs[off] := Byte(n shr  16);
-  // System.Inc(off);
-  // bs[off] := Byte(n shr  24);
-  TConverters.ReadUInt32AsBytesLE(n, bs, off);
-end;
-
-class procedure TX25519Field.Encode128(const x: TCryptoLibInt32Array;
-  xOff: Int32; const bs: TCryptoLibByteArray; off: Int32);
+class procedure TX25519Field.Decode128(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibInt32Array; AZOff: Int32);
 var
-  x0, x1, x2, x3, x4, t0, t1, t2, t3: UInt32;
+  Lt0, Lt1, Lt2, Lt3: UInt32;
 begin
-  x0 := UInt32(x[xOff + 0]);
-  x1 := UInt32(x[xOff + 1]);
-  x2 := UInt32(x[xOff + 2]);
-  x3 := UInt32(x[xOff + 3]);
-  x4 := UInt32(x[xOff + 4]);
-
-  t0 := x0 or (x1 shl 26);
-  Encode32(t0, bs, off + 0);
-  t1 := (x1 shr 6) or (x2 shl 20);
-  Encode32(t1, bs, off + 4);
-  t2 := (x2 shr 12) or (x3 shl 13);
-  Encode32(t2, bs, off + 8);
-  t3 := (x3 shr 19) or (x4 shl 7);
-  Encode32(t3, bs, off + 12);
+  Lt0 := AX[AXOff + 0];
+  Lt1 := AX[AXOff + 1];
+  Lt2 := AX[AXOff + 2];
+  Lt3 := AX[AXOff + 3];
+  AZ[AZOff + 0] := Int32(Lt0) and M26;
+  AZ[AZOff + 1] := Int32((Lt1 shl 6) or (Lt0 shr 26)) and M26;
+  AZ[AZOff + 2] := Int32((Lt2 shl 12) or (Lt1 shr 20)) and M25;
+  AZ[AZOff + 3] := Int32((Lt3 shl 19) or (Lt2 shr 13)) and M26;
+  AZ[AZOff + 4] := Int32(Lt3 shr 7);
 end;
 
-class procedure TX25519Field.Encode(const x: TCryptoLibInt32Array;
-  const z: TCryptoLibByteArray; zOff: Int32);
-begin
-  Encode128(x, 0, z, zOff);
-  Encode128(x, 5, z, zOff + 16);
-end;
-
-class procedure TX25519Field.Inv(const x, z: TCryptoLibInt32Array);
+class procedure TX25519Field.Decode128(const ABs: TCryptoLibByteArray; AOff: Int32;
+  const AZ: TCryptoLibInt32Array; AZOff: Int32);
 var
-  x2, t: TCryptoLibInt32Array;
+  Lt0, Lt1, Lt2, Lt3: UInt32;
 begin
-  // z = x^(p-2) = x^7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEB
-  // (250 1s) (1 0s) (1 1s) (1 0s) (2 1s)
-  // Addition chain: [1] [2] 3 5 10 15 25 50 75 125 [250]
-
-  x2 := Create();
-  t := Create();
-  PowPm5d8(x, x2, t);
-  Sqr(t, 3, t);
-  Mul(t, x2, z);
+  Lt0 := Decode32(ABs, AOff + 0);
+  Lt1 := Decode32(ABs, AOff + 4);
+  Lt2 := Decode32(ABs, AOff + 8);
+  Lt3 := Decode32(ABs, AOff + 12);
+  AZ[AZOff + 0] := Int32(Lt0) and M26;
+  AZ[AZOff + 1] := Int32((Lt1 shl 6) or (Lt0 shr 26)) and M26;
+  AZ[AZOff + 2] := Int32((Lt2 shl 12) or (Lt1 shr 20)) and M25;
+  AZ[AZOff + 3] := Int32((Lt3 shl 19) or (Lt2 shr 13)) and M26;
+  AZ[AZOff + 4] := Int32(Lt3 shr 7);
 end;
 
-class function TX25519Field.IsZero(const x: TCryptoLibInt32Array): Int32;
-var
-  d, i: Int32;
+class procedure TX25519Field.Decode(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+  AZ: TCryptoLibInt32Array);
 begin
-  d := 0;
-  for i := 0 to System.Pred(Size) do
+  Decode128(AX, AXOff, AZ, 0);
+  Decode128(AX, AXOff + 4, AZ, 5);
+  AZ[9] := AZ[9] and M24;
+end;
+
+class procedure TX25519Field.Decode(const ABs: TCryptoLibByteArray; AZ: TCryptoLibInt32Array);
+begin
+  Decode(ABs, 0, AZ);
+end;
+
+class procedure TX25519Field.Decode(const ABs: TCryptoLibByteArray; ABsOff: Int32;
+  AZ: TCryptoLibInt32Array);
+begin
+  Decode128(ABs, ABsOff, AZ, 0);
+  Decode128(ABs, ABsOff + 16, AZ, 5);
+  AZ[9] := AZ[9] and M24;
+end;
+
+class procedure TX25519Field.Decode(const ABs: TCryptoLibByteArray; ABsOff: Int32;
+  const AZ: TCryptoLibInt32Array; AZOff: Int32);
+begin
+  Decode128(ABs, ABsOff, AZ, AZOff);
+  Decode128(ABs, ABsOff + 16, AZ, AZOff + 5);
+  AZ[AZOff + 9] := AZ[AZOff + 9] and M24;
+end;
+
+class procedure TX25519Field.Encode32(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32);
+var
+  LOff: Int32;
+begin
+  LOff := AOff;
+  ABs[LOff] := Byte(AN);
+  System.Inc(LOff);
+  ABs[LOff] := Byte(AN shr 8);
+  System.Inc(LOff);
+  ABs[LOff] := Byte(AN shr 16);
+  System.Inc(LOff);
+  ABs[LOff] := Byte(AN shr 24);
+end;
+
+class procedure TX25519Field.Encode128(const AX: TCryptoLibInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array; AZOff: Int32);
+var
+  Lx0, Lx1, Lx2, Lx3, Lx4: UInt32;
+begin
+  Lx0 := UInt32(AX[AXOff + 0]);
+  Lx1 := UInt32(AX[AXOff + 1]);
+  Lx2 := UInt32(AX[AXOff + 2]);
+  Lx3 := UInt32(AX[AXOff + 3]);
+  Lx4 := UInt32(AX[AXOff + 4]);
+  AZ[AZOff + 0] := Lx0 or (Lx1 shl 26);
+  AZ[AZOff + 1] := (Lx1 shr 6) or (Lx2 shl 20);
+  AZ[AZOff + 2] := (Lx2 shr 12) or (Lx3 shl 13);
+  AZ[AZOff + 3] := (Lx3 shr 19) or (Lx4 shl 7);
+end;
+
+class procedure TX25519Field.Encode128(const AX: TCryptoLibInt32Array; AXOff: Int32;
+  const ABs: TCryptoLibByteArray; AOff: Int32);
+var
+  Lx0, Lx1, Lx2, Lx3, Lx4: UInt32;
+  Lt0, Lt1, Lt2, Lt3: UInt32;
+begin
+  Lx0 := UInt32(AX[AXOff + 0]);
+  Lx1 := UInt32(AX[AXOff + 1]);
+  Lx2 := UInt32(AX[AXOff + 2]);
+  Lx3 := UInt32(AX[AXOff + 3]);
+  Lx4 := UInt32(AX[AXOff + 4]);
+  Lt0 := Lx0 or (Lx1 shl 26);
+  Encode32(Lt0, ABs, AOff + 0);
+  Lt1 := (Lx1 shr 6) or (Lx2 shl 20);
+  Encode32(Lt1, ABs, AOff + 4);
+  Lt2 := (Lx2 shr 12) or (Lx3 shl 13);
+  Encode32(Lt2, ABs, AOff + 8);
+  Lt3 := (Lx3 shr 19) or (Lx4 shl 7);
+  Encode32(Lt3, ABs, AOff + 12);
+end;
+
+class procedure TX25519Field.Encode(const AX: TCryptoLibInt32Array; const AZ: TCryptoLibUInt32Array;
+  AZOff: Int32);
+begin
+  Encode128(AX, 0, AZ, AZOff);
+  Encode128(AX, 5, AZ, AZOff + 4);
+end;
+
+class procedure TX25519Field.Encode(const AX: TCryptoLibInt32Array; const ABs: TCryptoLibByteArray);
+begin
+  Encode128(AX, 0, ABs, 0);
+  Encode128(AX, 5, ABs, 16);
+end;
+
+class procedure TX25519Field.Encode(const AX: TCryptoLibInt32Array; const ABs: TCryptoLibByteArray;
+  ABsOff: Int32);
+begin
+  Encode128(AX, 0, ABs, ABsOff);
+  Encode128(AX, 5, ABs, ABsOff + 16);
+end;
+
+class procedure TX25519Field.Encode(const AX: TCryptoLibInt32Array; AXOff: Int32;
+  const ABs: TCryptoLibByteArray; ABsOff: Int32);
+begin
+  Encode128(AX, AXOff, ABs, ABsOff);
+  Encode128(AX, AXOff + 5, ABs, ABsOff + 16);
+end;
+
+class procedure TX25519Field.Inv(const AX, AZ: TCryptoLibInt32Array);
+var
+  Lt: TCryptoLibInt32Array;
+  Lu: TCryptoLibUInt32Array;
+begin
+  Lt := Create;
+  System.SetLength(Lu, 8);
+  Copy(AX, 0, Lt, 0);
+  Normalize(Lt);
+  Encode(Lt, Lu, 0);
+  TMod.ModOddInverse(FP32, Lu, Lu);
+  Decode(Lu, 0, AZ);
+end;
+
+class procedure TX25519Field.InvVar(const AX, AZ: TCryptoLibInt32Array);
+var
+  Lt: TCryptoLibInt32Array;
+  Lu: TCryptoLibUInt32Array;
+begin
+  Lt := Create;
+  System.SetLength(Lu, 8);
+  Copy(AX, 0, Lt, 0);
+  Normalize(Lt);
+  Encode(Lt, Lu, 0);
+  TMod.ModOddInverseVar(FP32, Lu, Lu);
+  Decode(Lu, 0, AZ);
+end;
+
+class function TX25519Field.IsOne(const AX: TCryptoLibInt32Array): Int32;
+var
+  Ld: Int32;
+  LI: Int32;
+begin
+  Ld := AX[0] xor 1;
+  LI := 1;
+  while LI < Size do
   begin
-    d := d or x[i];
+    Ld := Ld or AX[LI];
+    System.Inc(LI);
   end;
-  d := (TBitUtilities.Asr32(d, 1)) or (d and 1);
-  Result := (d - 1) shr 31;
+  Ld := Ld or TBitUtilities.Asr32(Ld, 16);
+  Ld := Ld and $FFFF;
+  Result := TBitUtilities.Asr32(Ld - 1, 31);
 end;
 
-class function TX25519Field.IsZeroVar(const x: TCryptoLibInt32Array): Boolean;
+class function TX25519Field.IsOneVar(const AX: TCryptoLibInt32Array): Boolean;
 begin
-  Result := IsZero(x) <> 0;
+  Result := IsOne(AX) <> 0;
 end;
 
-class procedure TX25519Field.Mul(const x: TCryptoLibInt32Array; y: Int32;
-  const z: TCryptoLibInt32Array);
+class function TX25519Field.IsZero(const AX: TCryptoLibInt32Array): Int32;
 var
-  x0, x1, x2, x3, x4, x5, x6, x7, x8, x9: Int32;
-  c0, c1, c2, c3: Int64;
+  Ld: Int32;
+  LI: Int32;
 begin
-  x0 := x[0];
-  x1 := x[1];
-  x2 := x[2];
-  x3 := x[3];
-  x4 := x[4];
-  x5 := x[5];
-  x6 := x[6];
-  x7 := x[7];
-  x8 := x[8];
-  x9 := x[9];
-
-  c0 := Int64(x2) * y;
-  x2 := Int32(c0) and M25;
-  c0 := TBitUtilities.Asr64(c0, 25);
-  c1 := Int64(x4) * y;
-  x4 := Int32(c1) and M25;
-  c1 := TBitUtilities.Asr64(c1, 25);
-  c2 := Int64(x7) * y;
-  x7 := Int32(c2) and M25;
-  c2 := TBitUtilities.Asr64(c2, 25);
-  // c3 := Int64(x9) * y; x9 := Int32(c3) and M24; c3 := TBitUtilities.Asr64(c3 , 24);
-  // c3 := c3 * 19;
-  c3 := Int64(x9) * y;
-  x9 := Int32(c3) and M25;
-  c3 := TBitUtilities.Asr64(c3, 25);
-  c3 := c3 * 38;
-
-  c3 := c3 + (Int64(x0) * y);
-  z[0] := Int32(c3) and M26;
-  c3 := TBitUtilities.Asr64(c3, 26);
-  c1 := c1 + (Int64(x5) * y);
-  z[5] := Int32(c1) and M26;
-  c1 := TBitUtilities.Asr64(c1, 26);
-
-  c3 := c3 + (Int64(x1) * y);
-  z[1] := Int32(c3) and M26;
-  c3 := TBitUtilities.Asr64(c3, 26);
-  c0 := c0 + (Int64(x3) * y);
-  z[3] := Int32(c0) and M26;
-  c0 := TBitUtilities.Asr64(c0, 26);
-  c1 := c1 + (Int64(x6) * y);
-  z[6] := Int32(c1) and M26;
-  c1 := TBitUtilities.Asr64(c1, 26);
-  c2 := c2 + (Int64(x8) * y);
-  z[8] := Int32(c2) and M26;
-  c2 := TBitUtilities.Asr64(c2, 26);
-
-  z[2] := x2 + Int32(c3);
-  z[4] := x4 + Int32(c0);
-  z[7] := x7 + Int32(c1);
-  z[9] := x9 + Int32(c2);
-end;
-
-class procedure TX25519Field.Mul(const x, y, z: TCryptoLibInt32Array);
-var
-  x0, x1, x2, x3, x4, y0, y1, y2, y3, y4, u0, u1, u2, u3, u4, z8, z9: Int32;
-  a0, a1, a2, a3, a4, a5, a6, a7, a8, b0, b1, b2, b3, b4, b5, b6, b7, b8, c0,
-    c1, c2, c3, c4, c5, c6, c7, c8, v0, v1, v2, v3, v4, t: Int64;
-begin
-  x0 := x[0];
-  y0 := y[0];
-  x1 := x[1];
-  y1 := y[1];
-  x2 := x[2];
-  y2 := y[2];
-  x3 := x[3];
-  y3 := y[3];
-  x4 := x[4];
-  y4 := y[4];
-
-  u0 := x[5];
-  v0 := y[5];
-  u1 := x[6];
-  v1 := y[6];
-  u2 := x[7];
-  v2 := y[7];
-  u3 := x[8];
-  v3 := y[8];
-  u4 := x[9];
-  v4 := y[9];
-
-  a0 := Int64(x0) * y0;
-  a1 := Int64(x0) * y1 + Int64(x1) * y0;
-  a2 := Int64(x0) * y2 + Int64(x1) * y1 + Int64(x2) * y0;
-  a3 := Int64(x1) * y2 + Int64(x2) * y1;
-  a3 := a3 shl 1;
-  a3 := a3 + (Int64(x0) * y3 + Int64(x3) * y0);
-  a4 := Int64(x2) * y2;
-  a4 := a4 shl 1;
-  a4 := a4 + (Int64(x0) * y4 + Int64(x1) * y3 + Int64(x3) * y1 +
-    Int64(x4) * y0);
-  a5 := Int64(x1) * y4 + Int64(x2) * y3 + Int64(x3) * y2 + Int64(x4) * y1;
-  a5 := a5 shl 1;
-  a6 := Int64(x2) * y4 + Int64(x4) * y2;
-  a6 := a6 shl 1;
-  a6 := a6 + (Int64(x3) * y3);
-  a7 := Int64(x3) * y4 + Int64(x4) * y3;
-  a8 := Int64(x4) * y4;
-  a8 := a8 shl 1;
-
-  b0 := Int64(u0) * v0;
-  b1 := Int64(u0) * v1 + Int64(u1) * v0;
-  b2 := Int64(u0) * v2 + Int64(u1) * v1 + Int64(u2) * v0;
-  b3 := Int64(u1) * v2 + Int64(u2) * v1;
-  b3 := b3 shl 1;
-  b3 := b3 + (Int64(u0) * v3 + Int64(u3) * v0);
-  b4 := Int64(u2) * v2;
-  b4 := b4 shl 1;
-  b4 := b4 + (Int64(u0) * v4 + Int64(u1) * v3 + Int64(u3) * v1 +
-    Int64(u4) * v0);
-  b5 := Int64(u1) * v4 + Int64(u2) * v3 + Int64(u3) * v2 + Int64(u4) * v1;
-  // b5     := b5 shl 1;
-  b6 := Int64(u2) * v4 + Int64(u4) * v2;
-  b6 := b6 shl 1;
-  b6 := b6 + (Int64(u3) * v3);
-  b7 := Int64(u3) * v4 + Int64(u4) * v3;
-  b8 := Int64(u4) * v4;
-  // b8     := b8 shl 1;
-
-  a0 := a0 - (b5 * 76);
-  a1 := a1 - (b6 * 38);
-  a2 := a2 - (b7 * 38);
-  a3 := a3 - (b8 * 76);
-
-  a5 := a5 - b0;
-  a6 := a6 - b1;
-  a7 := a7 - b2;
-  a8 := a8 - b3;
-  // a9 := -b4;
-
-  x0 := x0 + u0;
-  y0 := y0 + v0;
-  x1 := x1 + u1;
-  y1 := y1 + v1;
-  x2 := x2 + u2;
-  y2 := y2 + v2;
-  x3 := x3 + u3;
-  y3 := y3 + v3;
-  x4 := x4 + u4;
-  y4 := y4 + v4;
-
-  c0 := Int64(x0) * y0;
-  c1 := Int64(x0) * y1 + Int64(x1) * y0;
-  c2 := Int64(x0) * y2 + Int64(x1) * y1 + Int64(x2) * y0;
-  c3 := Int64(x1) * y2 + Int64(x2) * y1;
-  c3 := c3 shl 1;
-  c3 := c3 + (Int64(x0) * y3 + Int64(x3) * y0);
-  c4 := Int64(x2) * y2;
-  c4 := c4 shl 1;
-  c4 := c4 + (Int64(x0) * y4 + Int64(x1) * y3 + Int64(x3) * y1 +
-    Int64(x4) * y0);
-  c5 := Int64(x1) * y4 + Int64(x2) * y3 + Int64(x3) * y2 + Int64(x4) * y1;
-  c5 := c5 shl 1;
-  c6 := Int64(x2) * y4 + Int64(x4) * y2;
-  c6 := c6 shl 1;
-  c6 := c6 + (Int64(x3) * y3);
-  c7 := Int64(x3) * y4 + Int64(x4) * y3;
-  c8 := Int64(x4) * y4;
-  c8 := c8 shl 1;
-
-  t := a8 + (c3 - a3);
-  z8 := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  // t       := t + (a9 + (c4 - a4));
-  t := t + ((c4 - a4) - b4);
-  // z9       := Int32(t) and M24; t := TBitUtilities.Asr64(t , 24);
-  // t        := a0 + (t + ((c5 - a5) shl 1)) * 19;
-  z9 := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := a0 + (t + c5 - a5) * 38;
-  z[0] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a1 + (c6 - a6) * 38);
-  z[1] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a2 + (c7 - a7) * 38);
-  z[2] := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := t + (a3 + (c8 - a8) * 38);
-  z[3] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  // t       := t + (a4 - (a9 * 38));
-  t := t + (a4 + b4 * 38);
-  z[4] := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := t + (a5 + (c0 - a0));
-  z[5] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a6 + (c1 - a1));
-  z[6] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a7 + (c2 - a2));
-  z[7] := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := t + z8;
-  z[8] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  z[9] := z9 + Int32(t);
-end;
-
-class procedure TX25519Field.Negate(const x, z: TCryptoLibInt32Array);
-var
-  i: Int32;
-begin
-  for i := 0 to System.Pred(Size) do
+  Ld := 0;
+  LI := 0;
+  while LI < Size do
   begin
-    z[i] := -x[i];
+    Ld := Ld or AX[LI];
+    System.Inc(LI);
   end;
+  Ld := Ld or TBitUtilities.Asr32(Ld, 16);
+  Ld := Ld and $FFFF;
+  Result := TBitUtilities.Asr32(Ld - 1, 31);
 end;
 
-class procedure TX25519Field.Normalize(const z: TCryptoLibInt32Array);
-var
-  x: Int32;
+class function TX25519Field.IsZeroVar(const AX: TCryptoLibInt32Array): Boolean;
 begin
-  x := TBitUtilities.Asr32(z[9], 23) and 1;
-  Reduce(z, x);
-  Reduce(z, -x);
-{$IFDEF DEBUG}
-  System.Assert(TBitUtilities.Asr32(z[9], 24) = 0);
-{$ENDIF DEBUG}
+  Result := IsZero(AX) <> 0;
 end;
 
-class procedure TX25519Field.One(const z: TCryptoLibInt32Array);
+class procedure TX25519Field.Mul(const AX: TCryptoLibInt32Array; AY: Int32; const AZ: TCryptoLibInt32Array);
 var
-  i: Int32;
+  Lx0, Lx1, Lx2, Lx3, Lx4, Lx5, Lx6, Lx7, Lx8, Lx9: Int32;
+  Lc0, Lc1, Lc2, Lc3: Int64;
 begin
-  z[0] := 1;
-  for i := 1 to System.Pred(Size) do
+  Lx0 := AX[0];
+  Lx1 := AX[1];
+  Lx2 := AX[2];
+  Lx3 := AX[3];
+  Lx4 := AX[4];
+  Lx5 := AX[5];
+  Lx6 := AX[6];
+  Lx7 := AX[7];
+  Lx8 := AX[8];
+  Lx9 := AX[9];
+  Lc0 := Int64(Lx2) * AY;
+  Lx2 := Int32(Lc0) and M25;
+  Lc0 := TBitUtilities.Asr64(Lc0, 25);
+  Lc1 := Int64(Lx4) * AY;
+  Lx4 := Int32(Lc1) and M25;
+  Lc1 := TBitUtilities.Asr64(Lc1, 25);
+  Lc2 := Int64(Lx7) * AY;
+  Lx7 := Int32(Lc2) and M25;
+  Lc2 := TBitUtilities.Asr64(Lc2, 25);
+  Lc3 := Int64(Lx9) * AY;
+  Lx9 := Int32(Lc3) and M25;
+  Lc3 := TBitUtilities.Asr64(Lc3, 25);
+  Lc3 := Lc3 * 38;
+  Lc3 := Lc3 + Int64(Lx0) * AY;
+  AZ[0] := Int32(Lc3) and M26;
+  Lc3 := TBitUtilities.Asr64(Lc3, 26);
+  Lc1 := Lc1 + Int64(Lx5) * AY;
+  AZ[5] := Int32(Lc1) and M26;
+  Lc1 := TBitUtilities.Asr64(Lc1, 26);
+  Lc3 := Lc3 + Int64(Lx1) * AY;
+  AZ[1] := Int32(Lc3) and M26;
+  Lc3 := TBitUtilities.Asr64(Lc3, 26);
+  Lc0 := Lc0 + Int64(Lx3) * AY;
+  AZ[3] := Int32(Lc0) and M26;
+  Lc0 := TBitUtilities.Asr64(Lc0, 26);
+  Lc1 := Lc1 + Int64(Lx6) * AY;
+  AZ[6] := Int32(Lc1) and M26;
+  Lc1 := TBitUtilities.Asr64(Lc1, 26);
+  Lc2 := Lc2 + Int64(Lx8) * AY;
+  AZ[8] := Int32(Lc2) and M26;
+  Lc2 := TBitUtilities.Asr64(Lc2, 26);
+  AZ[2] := Lx2 + Int32(Lc3);
+  AZ[4] := Lx4 + Int32(Lc0);
+  AZ[7] := Lx7 + Int32(Lc1);
+  AZ[9] := Lx9 + Int32(Lc2);
+end;
+
+class procedure TX25519Field.Mul(const AX, AY, AZ: TCryptoLibInt32Array);
+var
+  Lx0, Ly0, Lx1, Ly1, Lx2, Ly2, Lx3, Ly3, Lx4, Ly4: Int32;
+  Lu0, Lv0, Lu1, Lv1, Lu2, Lv2, Lu3, Lv3, Lu4, Lv4: Int32;
+  La0, La1, La2, La3, La4, La5, La6, La7, La8: Int64;
+  Lb0, Lb1, Lb2, Lb3, Lb4, Lb5, Lb6, Lb7, Lb8: Int64;
+  Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: Int64;
+  Lt: Int64;
+  Lz8, Lz9: Int32;
+begin
+  Lx0 := AX[0];
+  Ly0 := AY[0];
+  Lx1 := AX[1];
+  Ly1 := AY[1];
+  Lx2 := AX[2];
+  Ly2 := AY[2];
+  Lx3 := AX[3];
+  Ly3 := AY[3];
+  Lx4 := AX[4];
+  Ly4 := AY[4];
+  Lu0 := AX[5];
+  Lv0 := AY[5];
+  Lu1 := AX[6];
+  Lv1 := AY[6];
+  Lu2 := AX[7];
+  Lv2 := AY[7];
+  Lu3 := AX[8];
+  Lv3 := AY[8];
+  Lu4 := AX[9];
+  Lv4 := AY[9];
+  La0 := Int64(Lx0) * Ly0;
+  La1 := Int64(Lx0) * Ly1 + Int64(Lx1) * Ly0;
+  La2 := Int64(Lx0) * Ly2 + Int64(Lx1) * Ly1 + Int64(Lx2) * Ly0;
+  La3 := (Int64(Lx1) * Ly2 + Int64(Lx2) * Ly1) shl 1;
+  La3 := La3 + Int64(Lx0) * Ly3 + Int64(Lx3) * Ly0;
+  La4 := (Int64(Lx2) * Ly2) shl 1;
+  La4 := La4 + Int64(Lx0) * Ly4 + Int64(Lx1) * Ly3 + Int64(Lx3) * Ly1 + Int64(Lx4) * Ly0;
+  La5 := (Int64(Lx1) * Ly4 + Int64(Lx2) * Ly3 + Int64(Lx3) * Ly2 + Int64(Lx4) * Ly1) shl 1;
+  La6 := (Int64(Lx2) * Ly4 + Int64(Lx4) * Ly2) shl 1 + Int64(Lx3) * Ly3;
+  La7 := Int64(Lx3) * Ly4 + Int64(Lx4) * Ly3;
+  La8 := (Int64(Lx4) * Ly4) shl 1;
+  Lb0 := Int64(Lu0) * Lv0;
+  Lb1 := Int64(Lu0) * Lv1 + Int64(Lu1) * Lv0;
+  Lb2 := Int64(Lu0) * Lv2 + Int64(Lu1) * Lv1 + Int64(Lu2) * Lv0;
+  Lb3 := (Int64(Lu1) * Lv2 + Int64(Lu2) * Lv1) shl 1;
+  Lb3 := Lb3 + Int64(Lu0) * Lv3 + Int64(Lu3) * Lv0;
+  Lb4 := (Int64(Lu2) * Lv2) shl 1;
+  Lb4 := Lb4 + Int64(Lu0) * Lv4 + Int64(Lu1) * Lv3 + Int64(Lu3) * Lv1 + Int64(Lu4) * Lv0;
+  Lb5 := Int64(Lu1) * Lv4 + Int64(Lu2) * Lv3 + Int64(Lu3) * Lv2 + Int64(Lu4) * Lv1;
+  Lb6 := (Int64(Lu2) * Lv4 + Int64(Lu4) * Lv2) shl 1 + Int64(Lu3) * Lv3;
+  Lb7 := Int64(Lu3) * Lv4 + Int64(Lu4) * Lv3;
+  Lb8 := Int64(Lu4) * Lv4;
+  La0 := La0 - Lb5 * 76;
+  La1 := La1 - Lb6 * 38;
+  La2 := La2 - Lb7 * 38;
+  La3 := La3 - Lb8 * 76;
+  La5 := La5 - Lb0;
+  La6 := La6 - Lb1;
+  La7 := La7 - Lb2;
+  La8 := La8 - Lb3;
+  Lx0 := Lx0 + Lu0;
+  Ly0 := Ly0 + Lv0;
+  Lx1 := Lx1 + Lu1;
+  Ly1 := Ly1 + Lv1;
+  Lx2 := Lx2 + Lu2;
+  Ly2 := Ly2 + Lv2;
+  Lx3 := Lx3 + Lu3;
+  Ly3 := Ly3 + Lv3;
+  Lx4 := Lx4 + Lu4;
+  Ly4 := Ly4 + Lv4;
+  Lc0 := Int64(Lx0) * Ly0;
+  Lc1 := Int64(Lx0) * Ly1 + Int64(Lx1) * Ly0;
+  Lc2 := Int64(Lx0) * Ly2 + Int64(Lx1) * Ly1 + Int64(Lx2) * Ly0;
+  Lc3 := (Int64(Lx1) * Ly2 + Int64(Lx2) * Ly1) shl 1;
+  Lc3 := Lc3 + Int64(Lx0) * Ly3 + Int64(Lx3) * Ly0;
+  Lc4 := (Int64(Lx2) * Ly2) shl 1;
+  Lc4 := Lc4 + Int64(Lx0) * Ly4 + Int64(Lx1) * Ly3 + Int64(Lx3) * Ly1 + Int64(Lx4) * Ly0;
+  Lc5 := (Int64(Lx1) * Ly4 + Int64(Lx2) * Ly3 + Int64(Lx3) * Ly2 + Int64(Lx4) * Ly1) shl 1;
+  Lc6 := (Int64(Lx2) * Ly4 + Int64(Lx4) * Ly2) shl 1 + Int64(Lx3) * Ly3;
+  Lc7 := Int64(Lx3) * Ly4 + Int64(Lx4) * Ly3;
+  Lc8 := (Int64(Lx4) * Ly4) shl 1;
+  Lt := La8 + (Lc3 - La3);
+  Lz8 := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + (Lc4 - La4) - Lb4;
+  Lz9 := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := La0 + (Lt + Lc5 - La5) * 38;
+  AZ[0] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La1 + (Lc6 - La6) * 38;
+  AZ[1] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La2 + (Lc7 - La7) * 38;
+  AZ[2] := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := Lt + La3 + (Lc8 - La8) * 38;
+  AZ[3] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La4 + Lb4 * 38;
+  AZ[4] := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := Lt + La5 + (Lc0 - La0);
+  AZ[5] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La6 + (Lc1 - La1);
+  AZ[6] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La7 + (Lc2 - La2);
+  AZ[7] := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := Lt + Lz8;
+  AZ[8] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  AZ[9] := Lz9 + Int32(Lt);
+end;
+
+class procedure TX25519Field.Negate(const AX, AZ: TCryptoLibInt32Array);
+var
+  LI: Int32;
+begin
+  LI := 0;
+  while LI < Size do
   begin
-    z[i] := 0;
-  end;
-end;
-
-class procedure TX25519Field.PowPm5d8(const x, rx2, rz: TCryptoLibInt32Array);
-var
-  x2, x3, x5, x10, x15, x25, x50, x75, x125, x250, t: TCryptoLibInt32Array;
-begin
-  // z = x^((p-5)/8) = x^FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD
-  // (250 1s) (1 0s) (1 1s)
-  // Addition chain: [1] 2 3 5 10 15 25 50 75 125 [250]
-
-  x2 := rx2;
-  Sqr(x, x2);
-  Mul(x, x2, x2);
-  x3 := Create();
-  Sqr(x2, x3);
-  Mul(x, x3, x3);
-  x5 := x3;
-  Sqr(x3, 2, x5);
-  Mul(x2, x5, x5);
-  x10 := Create();
-  Sqr(x5, 5, x10);
-  Mul(x5, x10, x10);
-  x15 := Create();
-  Sqr(x10, 5, x15);
-  Mul(x5, x15, x15);
-  x25 := x5;
-  Sqr(x15, 10, x25);
-  Mul(x10, x25, x25);
-  x50 := x10;
-  Sqr(x25, 25, x50);
-  Mul(x25, x50, x50);
-  x75 := x15;
-  Sqr(x50, 25, x75);
-  Mul(x25, x75, x75);
-  x125 := x25;
-  Sqr(x75, 50, x125);
-  Mul(x50, x125, x125);
-  x250 := x50;
-  Sqr(x125, 125, x250);
-  Mul(x125, x250, x250);
-
-  t := x125;
-  Sqr(x250, 2, t);
-  Mul(t, x, rz);
-end;
-
-class procedure TX25519Field.Reduce(const z: TCryptoLibInt32Array; c: Int32);
-var
-  z9, t: Int32;
-begin
-  z9 := z[9];
-  t := z9;
-  z9 := t and M24;
-  t := TBitUtilities.Asr32(t, 24);
-  t := t + c;
-  t := t * 19;
-  t := t + z[0];
-  z[0] := t and M26;
-  t := TBitUtilities.Asr32(t, 26);
-  t := t + z[1];
-  z[1] := t and M26;
-  t := TBitUtilities.Asr32(t, 26);
-  t := t + z[2];
-  z[2] := t and M25;
-  t := TBitUtilities.Asr32(t, 25);
-  t := t + z[3];
-  z[3] := t and M26;
-  t := TBitUtilities.Asr32(t, 26);
-  t := t + z[4];
-  z[4] := t and M25;
-  t := TBitUtilities.Asr32(t, 25);
-  t := t + z[5];
-  z[5] := t and M26;
-  t := TBitUtilities.Asr32(t, 26);
-  t := t + z[6];
-  z[6] := t and M26;
-  t := TBitUtilities.Asr32(t, 26);
-  t := t + z[7];
-  z[7] := t and M25;
-  t := TBitUtilities.Asr32(t, 25);
-  t := t + z[8];
-  z[8] := t and M26;
-  t := TBitUtilities.Asr32(t, 26);
-  t := t + z9;
-  z[9] := t;
-end;
-
-class procedure TX25519Field.Sqr(const x, z: TCryptoLibInt32Array);
-var
-  x0, x1, x2, x3, x4, u0, u1, u2, u3, u4, x1_2, x2_2, x3_2, x4_2, u1_2, u2_2,
-    u3_2, u4_2, z8, z9: Int32;
-  a0, a1, a2, a3, a4, a5, a6, a7, a8, b0, b1, b2, b3, b4, b5, b6, b7, b8, c0,
-    c1, c2, c3, c4, c5, c6, c7, c8, t: Int64;
-begin
-  x0 := x[0];
-  x1 := x[1];
-  x2 := x[2];
-  x3 := x[3];
-  x4 := x[4];
-
-  u0 := x[5];
-  u1 := x[6];
-  u2 := x[7];
-  u3 := x[8];
-  u4 := x[9];
-
-  x1_2 := x1 * 2;
-  x2_2 := x2 * 2;
-  x3_2 := x3 * 2;
-  x4_2 := x4 * 2;
-
-  a0 := Int64(x0) * x0;
-  a1 := Int64(x0) * x1_2;
-  a2 := Int64(x0) * x2_2 + Int64(x1) * x1;
-  a3 := Int64(x1_2) * x2_2 + Int64(x0) * x3_2;
-  a4 := Int64(x2) * x2_2 + Int64(x0) * x4_2 + Int64(x1) * x3_2;
-  a5 := Int64(x1_2) * x4_2 + Int64(x2_2) * x3_2;
-  a6 := Int64(x2_2) * x4_2 + Int64(x3) * x3;
-  a7 := Int64(x3) * x4_2;
-  a8 := Int64(x4) * x4_2;
-
-  u1_2 := u1 * 2;
-  u2_2 := u2 * 2;
-  u3_2 := u3 * 2;
-  u4_2 := u4 * 2;
-
-  b0 := Int64(u0) * u0;
-  b1 := Int64(u0) * u1_2;
-  b2 := Int64(u0) * u2_2 + Int64(u1) * u1;
-  b3 := Int64(u1_2) * u2_2 + Int64(u0) * u3_2;
-  b4 := Int64(u2) * u2_2 + Int64(u0) * u4_2 + Int64(u1) * u3_2;
-  b5 := Int64(u1_2) * u4_2 + Int64(u2_2) * u3_2;
-  b6 := Int64(u2_2) * u4_2 + Int64(u3) * u3;
-  b7 := Int64(u3) * u4_2;
-  b8 := Int64(u4) * u4_2;
-
-  a0 := a0 - (b5 * 38);
-  a1 := a1 - (b6 * 38);
-  a2 := a2 - (b7 * 38);
-  a3 := a3 - (b8 * 38);
-
-  a5 := a5 - b0;
-  a6 := a6 - b1;
-  a7 := a7 - b2;
-  a8 := a8 - b3;
-  // Int64 a9 = -b4;
-
-  x0 := x0 + u0;
-  x1 := x1 + u1;
-  x2 := x2 + u2;
-  x3 := x3 + u3;
-  x4 := x4 + u4;
-
-  x1_2 := x1 * 2;
-  x2_2 := x2 * 2;
-  x3_2 := x3 * 2;
-  x4_2 := x4 * 2;
-
-  c0 := Int64(x0) * x0;
-  c1 := Int64(x0) * x1_2;
-  c2 := Int64(x0) * x2_2 + Int64(x1) * x1;
-  c3 := Int64(x1_2) * x2_2 + Int64(x0) * x3_2;
-  c4 := Int64(x2) * x2_2 + Int64(x0) * x4_2 + Int64(x1) * x3_2;
-  c5 := Int64(x1_2) * x4_2 + Int64(x2_2) * x3_2;
-  c6 := Int64(x2_2) * x4_2 + Int64(x3) * x3;
-  c7 := Int64(x3) * x4_2;
-  c8 := Int64(x4) * x4_2;
-
-  t := a8 + (c3 - a3);
-  z8 := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  // t  = t + (a9 + (c4 - a4));
-  t := t + ((c4 - a4) - b4);
-  // z9  := Int32(t) and M24; t := TBitUtilities.Asr64(t , 24);
-  // t  := a0 + (t + ((c5 - a5) shl 1)) * 19;
-  z9 := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := a0 + (t + c5 - a5) * 38;
-  z[0] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a1 + (c6 - a6) * 38);
-  z[1] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a2 + (c7 - a7) * 38);
-  z[2] := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := t + (a3 + (c8 - a8) * 38);
-  z[3] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  // t       := t + (a4 - a9 * 38);
-  t := t + (a4 + b4 * 38);
-  z[4] := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := t + (a5 + (c0 - a0));
-  z[5] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a6 + (c1 - a1));
-  z[6] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  t := t + (a7 + (c2 - a2));
-  z[7] := Int32(t) and M25;
-  t := TBitUtilities.Asr64(t, 25);
-  t := t + z8;
-  z[8] := Int32(t) and M26;
-  t := TBitUtilities.Asr64(t, 26);
-  z[9] := z9 + Int32(t);
-end;
-
-class procedure TX25519Field.Sqr(const x: TCryptoLibInt32Array; n: Int32;
-  const z: TCryptoLibInt32Array);
-begin
-{$IFDEF DEBUG}
-  System.Assert(n > 0);
-{$ENDIF DEBUG}
-  Sqr(x, z);
-  System.Dec(n);
-
-  while (n > 0) do
-  begin
-    Sqr(z, z);
-    System.Dec(n);
+    AZ[LI] := -AX[LI];
+    System.Inc(LI);
   end;
 end;
 
-class procedure TX25519Field.Sub(const x, y, z: TCryptoLibInt32Array);
+class procedure TX25519Field.Reduce(AZ: TCryptoLibInt32Array; AX: Int32);
 var
-  i: Int32;
+  Lt, Lz9: Int32;
+  Lcc: Int64;
 begin
-  for i := 0 to System.Pred(Size) do
-  begin
-    z[i] := x[i] - y[i];
-  end;
+  Lt := AZ[9];
+  Lz9 := Lt and M24;
+  Lt := TBitUtilities.Asr32(Lt, 24) + AX;
+  Lcc := Int64(Lt) * 19;
+  Lcc := Lcc + AZ[0];
+  AZ[0] := Int32(Lcc) and M26;
+  Lcc := TBitUtilities.Asr64(Lcc, 26);
+  Lcc := Lcc + AZ[1];
+  AZ[1] := Int32(Lcc) and M26;
+  Lcc := TBitUtilities.Asr64(Lcc, 26);
+  Lcc := Lcc + AZ[2];
+  AZ[2] := Int32(Lcc) and M25;
+  Lcc := TBitUtilities.Asr64(Lcc, 25);
+  Lcc := Lcc + AZ[3];
+  AZ[3] := Int32(Lcc) and M26;
+  Lcc := TBitUtilities.Asr64(Lcc, 26);
+  Lcc := Lcc + AZ[4];
+  AZ[4] := Int32(Lcc) and M25;
+  Lcc := TBitUtilities.Asr64(Lcc, 25);
+  Lcc := Lcc + AZ[5];
+  AZ[5] := Int32(Lcc) and M26;
+  Lcc := TBitUtilities.Asr64(Lcc, 26);
+  Lcc := Lcc + AZ[6];
+  AZ[6] := Int32(Lcc) and M26;
+  Lcc := TBitUtilities.Asr64(Lcc, 26);
+  Lcc := Lcc + AZ[7];
+  AZ[7] := Int32(Lcc) and M25;
+  Lcc := TBitUtilities.Asr64(Lcc, 25);
+  Lcc := Lcc + AZ[8];
+  AZ[8] := Int32(Lcc) and M26;
+  Lcc := TBitUtilities.Asr64(Lcc, 26);
+  AZ[9] := Lz9 + Int32(Lcc);
 end;
 
-class procedure TX25519Field.SubOne(const z: TCryptoLibInt32Array);
-begin
-  z[0] := z[0] - 1;
-end;
-
-class function TX25519Field.SqrtRatioVar(const u, v,
-  z: TCryptoLibInt32Array): Boolean;
+class procedure TX25519Field.Normalize(AZ: TCryptoLibInt32Array);
 var
-  uv3, uv7, t, x, vx2: TCryptoLibInt32Array;
+  Lx: Int32;
 begin
-  uv3 := Create();
-  uv7 := Create();
-
-  Mul(u, v, uv3);
-  Sqr(v, uv7);
-  Mul(uv3, uv7, uv3);
-  Sqr(uv7, uv7);
-  Mul(uv7, uv3, uv7);
-
-  t := Create();
-  x := Create();
-  PowPm5d8(uv7, t, x);
-  Mul(x, uv3, x);
-
-  vx2 := Create();
-  Sqr(x, vx2);
-  Mul(vx2, v, vx2);
-
-  Sub(vx2, u, t);
-  Normalize(t);
-  if (IsZeroVar(t)) then
-  begin
-    Copy(x, 0, z, 0);
-    Result := true;
-    Exit;
-  end;
-
-  Add(vx2, u, t);
-  Normalize(t);
-  if (IsZeroVar(t)) then
-  begin
-    Mul(x, FRootNegOne, z);
-    Result := true;
-    Exit;
-  end;
-
-  Result := false;
+  Lx := TBitUtilities.Asr32(AZ[9], 23) and 1;
+  Reduce(AZ, Lx);
+  Reduce(AZ, -Lx);
+  {$IFDEF DEBUG}
+  System.Assert(TBitUtilities.Asr32(AZ[9], 24) = 0);
+  {$ENDIF}
 end;
 
-class procedure TX25519Field.Zero(const z: TCryptoLibInt32Array);
+class procedure TX25519Field.One(AZ: TCryptoLibInt32Array);
 begin
-  TArrayUtilities.Fill<Int32>(z, 0, Size, Int32(0));
+  AZ[0] := 1;
+  TArrayUtilities.Fill<Int32>(AZ, 1, Size, 0);
+end;
+
+class procedure TX25519Field.PowPm5d8(const AX: TCryptoLibInt32Array; const ARx2: TCryptoLibInt32Array;
+  const ARz: TCryptoLibInt32Array);
+var
+  Lx2, Lx3, Lx5, Lx10, Lx15, Lx25, Lx50, Lx75, Lx125, Lx250, Lt: TCryptoLibInt32Array;
+begin
+  Lx2 := ARx2;
+  Sqr(AX, Lx2);
+  Mul(AX, Lx2, Lx2);
+  Lx3 := Create;
+  Sqr(Lx2, Lx3);
+  Mul(AX, Lx3, Lx3);
+  Lx5 := Lx3;
+  Sqr(Lx3, 2, Lx5);
+  Mul(Lx2, Lx5, Lx5);
+  Lx10 := Create;
+  Sqr(Lx5, 5, Lx10);
+  Mul(Lx5, Lx10, Lx10);
+  Lx15 := Create;
+  Sqr(Lx10, 5, Lx15);
+  Mul(Lx5, Lx15, Lx15);
+  Lx25 := Lx5;
+  Sqr(Lx15, 10, Lx25);
+  Mul(Lx10, Lx25, Lx25);
+  Lx50 := Lx10;
+  Sqr(Lx25, 25, Lx50);
+  Mul(Lx25, Lx50, Lx50);
+  Lx75 := Lx15;
+  Sqr(Lx50, 25, Lx75);
+  Mul(Lx25, Lx75, Lx75);
+  Lx125 := Lx25;
+  Sqr(Lx75, 50, Lx125);
+  Mul(Lx50, Lx125, Lx125);
+  Lx250 := Lx50;
+  Sqr(Lx125, 125, Lx250);
+  Mul(Lx125, Lx250, Lx250);
+  Lt := Lx125;
+  Sqr(Lx250, 2, Lt);
+  Mul(Lt, AX, ARz);
+end;
+
+class procedure TX25519Field.Sqr(const AX, AZ: TCryptoLibInt32Array);
+var
+  Lx0, Lx1, Lx2, Lx3, Lx4, Lu0, Lu1, Lu2, Lu3, Lu4: Int32;
+  Lx1_2, Lx2_2, Lx3_2, Lx4_2, Lu1_2, Lu2_2, Lu3_2, Lu4_2: Int32;
+  La0, La1, La2, La3, La4, La5, La6, La7, La8: Int64;
+  Lb0, Lb1, Lb2, Lb3, Lb4, Lb5, Lb6, Lb7, Lb8: Int64;
+  Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: Int64;
+  Lt: Int64;
+  Lz8, Lz9: Int32;
+begin
+  Lx0 := AX[0];
+  Lx1 := AX[1];
+  Lx2 := AX[2];
+  Lx3 := AX[3];
+  Lx4 := AX[4];
+  Lu0 := AX[5];
+  Lu1 := AX[6];
+  Lu2 := AX[7];
+  Lu3 := AX[8];
+  Lu4 := AX[9];
+  Lx1_2 := Lx1 * 2;
+  Lx2_2 := Lx2 * 2;
+  Lx3_2 := Lx3 * 2;
+  Lx4_2 := Lx4 * 2;
+  La0 := Int64(Lx0) * Lx0;
+  La1 := Int64(Lx0) * Lx1_2;
+  La2 := Int64(Lx0) * Lx2_2 + Int64(Lx1) * Lx1;
+  La3 := Int64(Lx1_2) * Lx2_2 + Int64(Lx0) * Lx3_2;
+  La4 := Int64(Lx2) * Lx2_2 + Int64(Lx0) * Lx4_2 + Int64(Lx1) * Lx3_2;
+  La5 := Int64(Lx1_2) * Lx4_2 + Int64(Lx2_2) * Lx3_2;
+  La6 := Int64(Lx2_2) * Lx4_2 + Int64(Lx3) * Lx3;
+  La7 := Int64(Lx3) * Lx4_2;
+  La8 := Int64(Lx4) * Lx4_2;
+  Lu1_2 := Lu1 * 2;
+  Lu2_2 := Lu2 * 2;
+  Lu3_2 := Lu3 * 2;
+  Lu4_2 := Lu4 * 2;
+  Lb0 := Int64(Lu0) * Lu0;
+  Lb1 := Int64(Lu0) * Lu1_2;
+  Lb2 := Int64(Lu0) * Lu2_2 + Int64(Lu1) * Lu1;
+  Lb3 := Int64(Lu1_2) * Lu2_2 + Int64(Lu0) * Lu3_2;
+  Lb4 := Int64(Lu2) * Lu2_2 + Int64(Lu0) * Lu4_2 + Int64(Lu1) * Lu3_2;
+  Lb5 := Int64(Lu1_2) * Lu4_2 + Int64(Lu2_2) * Lu3_2;
+  Lb6 := Int64(Lu2_2) * Lu4_2 + Int64(Lu3) * Lu3;
+  Lb7 := Int64(Lu3) * Lu4_2;
+  Lb8 := Int64(Lu4) * Lu4_2;
+  La0 := La0 - Lb5 * 38;
+  La1 := La1 - Lb6 * 38;
+  La2 := La2 - Lb7 * 38;
+  La3 := La3 - Lb8 * 38;
+  La5 := La5 - Lb0;
+  La6 := La6 - Lb1;
+  La7 := La7 - Lb2;
+  La8 := La8 - Lb3;
+  Lx0 := Lx0 + Lu0;
+  Lx1 := Lx1 + Lu1;
+  Lx2 := Lx2 + Lu2;
+  Lx3 := Lx3 + Lu3;
+  Lx4 := Lx4 + Lu4;
+  Lx1_2 := Lx1 * 2;
+  Lx2_2 := Lx2 * 2;
+  Lx3_2 := Lx3 * 2;
+  Lx4_2 := Lx4 * 2;
+  Lc0 := Int64(Lx0) * Lx0;
+  Lc1 := Int64(Lx0) * Lx1_2;
+  Lc2 := Int64(Lx0) * Lx2_2 + Int64(Lx1) * Lx1;
+  Lc3 := Int64(Lx1_2) * Lx2_2 + Int64(Lx0) * Lx3_2;
+  Lc4 := Int64(Lx2) * Lx2_2 + Int64(Lx0) * Lx4_2 + Int64(Lx1) * Lx3_2;
+  Lc5 := Int64(Lx1_2) * Lx4_2 + Int64(Lx2_2) * Lx3_2;
+  Lc6 := Int64(Lx2_2) * Lx4_2 + Int64(Lx3) * Lx3;
+  Lc7 := Int64(Lx3) * Lx4_2;
+  Lc8 := Int64(Lx4) * Lx4_2;
+  Lt := La8 + (Lc3 - La3);
+  Lz8 := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + (Lc4 - La4) - Lb4;
+  Lz9 := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := La0 + (Lt + Lc5 - La5) * 38;
+  AZ[0] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La1 + (Lc6 - La6) * 38;
+  AZ[1] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La2 + (Lc7 - La7) * 38;
+  AZ[2] := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := Lt + La3 + (Lc8 - La8) * 38;
+  AZ[3] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La4 + Lb4 * 38;
+  AZ[4] := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := Lt + La5 + (Lc0 - La0);
+  AZ[5] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La6 + (Lc1 - La1);
+  AZ[6] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  Lt := Lt + La7 + (Lc2 - La2);
+  AZ[7] := Int32(Lt) and M25;
+  Lt := TBitUtilities.Asr64(Lt, 25);
+  Lt := Lt + Lz8;
+  AZ[8] := Int32(Lt) and M26;
+  Lt := TBitUtilities.Asr64(Lt, 26);
+  AZ[9] := Lz9 + Int32(Lt);
+end;
+
+class procedure TX25519Field.Sqr(const AX: TCryptoLibInt32Array; AN: Int32; const AZ: TCryptoLibInt32Array);
+begin
+  {$IFDEF DEBUG}
+  System.Assert(AN > 0);
+  {$ENDIF}
+  Sqr(AX, AZ);
+  while AN > 1 do
+  begin
+    System.Dec(AN);
+    Sqr(AZ, AZ);
+  end;
+end;
+
+class function TX25519Field.SqrtRatioVar(const AU, AV, AZ: TCryptoLibInt32Array): Boolean;
+var
+  Luv3, Luv7, Lt, Lx, Lvx2: TCryptoLibInt32Array;
+begin
+  Luv3 := Create;
+  Luv7 := Create;
+  Mul(AU, AV, Luv3);
+  Sqr(AV, Luv7);
+  Mul(Luv3, Luv7, Luv3);
+  Sqr(Luv7, Luv7);
+  Mul(Luv7, Luv3, Luv7);
+  Lt := Create;
+  Lx := Create;
+  PowPm5d8(Luv7, Lt, Lx);
+  Mul(Lx, Luv3, Lx);
+  Lvx2 := Create;
+  Sqr(Lx, Lvx2);
+  Mul(Lvx2, AV, Lvx2);
+  Sub(Lvx2, AU, Lt);
+  Normalize(Lt);
+  if IsZeroVar(Lt) then
+  begin
+    Copy(Lx, 0, AZ, 0);
+    Exit(True);
+  end;
+  Add(Lvx2, AU, Lt);
+  Normalize(Lt);
+  if IsZeroVar(Lt) then
+  begin
+    Mul(Lx, FRootNegOne, AZ);
+    Exit(True);
+  end;
+  Result := False;
+end;
+
+class procedure TX25519Field.Sub(const AX, AY, AZ: TCryptoLibInt32Array);
+var
+  LI: Int32;
+begin
+  LI := 0;
+  while LI < Size do
+  begin
+    AZ[LI] := AX[LI] - AY[LI];
+    System.Inc(LI);
+  end;
+end;
+
+class procedure TX25519Field.SubOne(AZ: TCryptoLibInt32Array);
+begin
+  AZ[0] := AZ[0] - 1;
+end;
+
+class procedure TX25519Field.Zero(AZ: TCryptoLibInt32Array);
+begin
+  TArrayUtilities.Fill<Int32>(AZ, 0, Size, 0);
 end;
 
 end.
+
