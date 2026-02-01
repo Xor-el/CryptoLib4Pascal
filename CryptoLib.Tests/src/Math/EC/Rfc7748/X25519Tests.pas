@@ -31,9 +31,11 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpX25519,
   ClpSecureRandom,
   ClpISecureRandom,
+  ClpX25519,
+  ClpArrayUtilities,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
@@ -43,10 +45,10 @@ type
   var
     FRandom: ISecureRandom;
 
-    procedure CheckECDHVector(const sA, sAPub, sB, sBPub, sK, text: String);
-    procedure CheckIterated(count: Int32);
-    procedure CheckValue(const n: TBytes; const text, se: String);
-    procedure CheckX25519Vector(const sK, su, se, text: String);
+    procedure CheckValue(const AN: TBytes; const AText, ASe: String);
+    procedure CheckECDHVector(const ASa, ASaPub, ASb, ASbPub, ASk, AText: String);
+    procedure CheckIterated(ACount: Int32);
+    procedure CheckX25519Vector(const ASk, ASu, ASe, AText: String);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -55,180 +57,169 @@ type
     procedure TestECDH();
     procedure TestECDHVector1();
     procedure TestX25519Iterated();
-    // disabled because it takes a lot of time
-    // procedure TestX25519IteratedFull();
+    //procedure TestX25519IteratedFull(); //intentionally excluded as it takes a long time as expected.
     procedure TestX25519Vector1();
     procedure TestX25519Vector2();
-
   end;
 
 implementation
 
 { TTestX25519 }
 
-procedure TTestX25519.CheckECDHVector(const sA, sAPub, sB, sBPub, sK,
-  text: String);
+procedure TTestX25519.CheckValue(const AN: TBytes; const AText, ASe: String);
 var
-  a, b, aPub, bPub, aK, bK: TBytes;
+  LE: TBytes;
 begin
-  a := DecodeHex(sA);
-  CheckEquals(TX25519.ScalarSize, System.Length(a));
-
-  b := DecodeHex(sB);
-  CheckEquals(TX25519.ScalarSize, System.Length(b));
-
-  System.SetLength(aPub, TX25519.PointSize);
-
-  TX25519.ScalarMultBase(a, 0, aPub, 0);
-  CheckValue(aPub, text, sAPub);
-
-  System.SetLength(bPub, TX25519.PointSize);
-  TX25519.ScalarMultBase(b, 0, bPub, 0);
-  CheckValue(bPub, text, sBPub);
-
-  System.SetLength(aK, TX25519.PointSize);
-
-  TX25519.ScalarMult(a, 0, bPub, 0, aK, 0);
-  CheckValue(aK, text, sK);
-
-  System.SetLength(bK, TX25519.PointSize);
-
-  TX25519.ScalarMult(b, 0, aPub, 0, bK, 0);
-  CheckValue(bK, text, sK);
+  LE := DecodeHex(ASe);
+  CheckTrue(AreEqual(LE, AN), AText);
 end;
 
-procedure TTestX25519.CheckIterated(count: Int32);
+procedure TTestX25519.CheckECDHVector(const ASa, ASaPub, ASb, ASbPub, ASk,
+  AText: String);
 var
-  k, u, r: TBytes;
-  iterations: Int32;
+  LA, LB, LAPub, LBPub, LAK, LBK: TBytes;
 begin
-  CheckEquals(TX25519.PointSize, TX25519.ScalarSize);
+  LA := DecodeHex(ASa);
+  CheckEquals(TX25519.ScalarSize, System.Length(LA), AText);
 
-  System.SetLength(k, TX25519.PointSize);
-  k[0] := 9;
-  System.SetLength(u, TX25519.PointSize);
-  u[0] := 9;
-  System.SetLength(r, TX25519.PointSize);
+  LB := DecodeHex(ASb);
+  CheckEquals(TX25519.ScalarSize, System.Length(LB), AText);
 
-  iterations := 0;
+  System.SetLength(LAPub, TX25519.PointSize);
+  TX25519.ScalarMultBase(LA, 0, LAPub, 0);
+  CheckValue(LAPub, AText, ASaPub);
 
-  while (iterations < count) do
+  System.SetLength(LBPub, TX25519.PointSize);
+  TX25519.ScalarMultBase(LB, 0, LBPub, 0);
+  CheckValue(LBPub, AText, ASbPub);
+
+  System.SetLength(LAK, TX25519.PointSize);
+  TX25519.ScalarMult(LA, 0, LBPub, 0, LAK, 0);
+  CheckValue(LAK, AText, ASk);
+
+  System.SetLength(LBK, TX25519.PointSize);
+  TX25519.ScalarMult(LB, 0, LAPub, 0, LBK, 0);
+  CheckValue(LBK, AText, ASk);
+end;
+
+procedure TTestX25519.CheckIterated(ACount: Int32);
+var
+  LK, LU, LR: TBytes;
+  LIterations: Int32;
+begin
+  CheckEquals(TX25519.PointSize, TX25519.ScalarSize, 'PointSize = ScalarSize');
+
+  System.SetLength(LK, TX25519.PointSize);
+  LK[0] := 9;
+  System.SetLength(LU, TX25519.PointSize);
+  LU[0] := 9;
+  System.SetLength(LR, TX25519.PointSize);
+
+  LIterations := 0;
+  while LIterations < ACount do
   begin
+    TX25519.ScalarMult(LK, 0, LU, 0, LR, 0);
 
-    TX25519.ScalarMult(k, 0, u, 0, r, 0);
+    System.Move(LK[0], LU[0], TX25519.PointSize);
+    System.Move(LR[0], LK[0], TX25519.PointSize);
 
-    System.Move(k[0], u[0], TX25519.PointSize * System.SizeOf(Byte));
-    System.Move(r[0], k[0], TX25519.PointSize * System.SizeOf(Byte));
-
-    System.Inc(iterations);
-    case iterations of
+    System.Inc(LIterations);
+    case LIterations of
       1:
-        CheckValue(k, 'Iterated @1',
+        CheckValue(LK, 'Iterated @1',
           '422c8e7a6227d7bca1350b3e2bb7279f7897b87bb6854b783c60e80311ae3079');
       1000:
-        CheckValue(k, 'Iterated @1000',
+        CheckValue(LK, 'Iterated @1000',
           '684cf59ba83309552800ef566f2f4d3c1c3887c49360e3875f2eb94d99532c51');
       1000000:
-        CheckValue(k, 'Iterated @1000000',
+        CheckValue(LK, 'Iterated @1000000',
           '7c3911e0ab2586fd864497297e575e6f3bc601c0883c30df5f4dd2d24f665424');
+    else
+      ;
     end;
-
   end;
 end;
 
-procedure TTestX25519.CheckValue(const n: TBytes; const text, se: String);
+procedure TTestX25519.CheckX25519Vector(const ASk, ASu, ASe, AText: String);
 var
-  e: TBytes;
+  LK, LU, LR: TBytes;
 begin
-  e := DecodeHex(se);
-  CheckTrue(AreEqual(e, n), text);
-end;
+  LK := DecodeHex(ASk);
+  CheckEquals(TX25519.ScalarSize, System.Length(LK), AText);
 
-procedure TTestX25519.CheckX25519Vector(const sK, su, se, text: String);
-var
-  k, u, r: TBytes;
-begin
-  k := DecodeHex(sK);
-  CheckEquals(TX25519.ScalarSize, System.Length(k));
+  LU := DecodeHex(ASu);
+  CheckEquals(TX25519.PointSize, System.Length(LU), AText);
 
-  u := DecodeHex(su);
-  CheckEquals(TX25519.PointSize, System.Length(u));
-
-  System.SetLength(r, TX25519.PointSize);
-  TX25519.ScalarMult(k, 0, u, 0, r, 0);
-  CheckValue(r, text, se);
+  System.SetLength(LR, TX25519.PointSize);
+  TX25519.ScalarMult(LK, 0, LU, 0, LR, 0);
+  CheckValue(LR, AText, ASe);
 end;
 
 procedure TTestX25519.SetUp;
 begin
-  inherited;
+  inherited SetUp();
   FRandom := TSecureRandom.Create();
   TX25519.Precompute();
 end;
 
 procedure TTestX25519.TearDown;
 begin
-  inherited;
+  FRandom := nil;
+  inherited TearDown();
 end;
 
-procedure TTestX25519.TestConsistency;
+procedure TTestX25519.TestConsistency();
 var
-  u, k, rF, rV: TBytes;
-  i: Int32;
+  LU, LK, LRf, LRv: TBytes;
+  LI: Int32;
 begin
-  System.SetLength(u, TX25519.PointSize);
-  u[0] := 9;
-  System.SetLength(k, TX25519.ScalarSize);
-  System.SetLength(rF, TX25519.PointSize);
-  System.SetLength(rV, TX25519.PointSize);
+  System.SetLength(LU, TX25519.PointSize);
+  LU[0] := 9;
+  System.SetLength(LK, TX25519.ScalarSize);
+  System.SetLength(LRf, TX25519.PointSize);
+  System.SetLength(LRv, TX25519.PointSize);
 
-  for i := 1 to 100 do
+  for LI := 1 to 100 do
   begin
-    FRandom.NextBytes(k);
-    TX25519.ScalarMultBase(k, 0, rF, 0);
-    TX25519.ScalarMult(k, 0, u, 0, rV, 0);
-    CheckTrue(AreEqual(rF, rV), Format('Consistency #%d', [i]));
+    FRandom.NextBytes(LK);
+    TX25519.ScalarMultBase(LK, 0, LRf, 0);
+    TX25519.ScalarMult(LK, 0, LU, 0, LRv, 0);
+    CheckTrue(AreEqual(LRf, LRv), Format('Consistency #%d', [LI]));
   end;
 end;
 
-procedure TTestX25519.TestECDH;
+procedure TTestX25519.TestECDH();
 var
-  kA, Kb, qA, qB, sA, sB: TBytes;
-  i: Int32;
+  LKa, LKb, LQa, LQb, LSa, LSb: TBytes;
+  LRa, LRb: Boolean;
+  LI: Int32;
 begin
-  System.SetLength(kA, TX25519.ScalarSize);
-  System.SetLength(Kb, TX25519.ScalarSize);
-  System.SetLength(qA, TX25519.PointSize);
-  System.SetLength(qB, TX25519.PointSize);
-  System.SetLength(sA, TX25519.PointSize);
-  System.SetLength(sB, TX25519.PointSize);
+  System.SetLength(LKa, TX25519.ScalarSize);
+  System.SetLength(LKb, TX25519.ScalarSize);
+  System.SetLength(LQa, TX25519.PointSize);
+  System.SetLength(LQb, TX25519.PointSize);
+  System.SetLength(LSa, TX25519.PointSize);
+  System.SetLength(LSb, TX25519.PointSize);
 
-  for i := 1 to 100 do
+  for LI := 1 to 100 do
   begin
-    // Each party generates an ephemeral private key, ...
-    FRandom.NextBytes(kA);
-    FRandom.NextBytes(Kb);
+    TX25519.GeneratePrivateKey(FRandom, LKa);
+    TX25519.GeneratePrivateKey(FRandom, LKb);
 
-    // ... publishes their public key, ...
-    TX25519.ScalarMultBase(kA, 0, qA, 0);
-    TX25519.ScalarMultBase(Kb, 0, qB, 0);
+    TX25519.GeneratePublicKey(LKa, 0, LQa, 0);
+    TX25519.GeneratePublicKey(LKb, 0, LQb, 0);
 
-    // ... computes the shared secret, ...
-    TX25519.ScalarMult(kA, 0, qB, 0, sA, 0);
-    TX25519.ScalarMult(Kb, 0, qA, 0, sB, 0);
+    LRa := TX25519.CalculateAgreement(LKa, 0, LQb, 0, LSa, 0);
+    LRb := TX25519.CalculateAgreement(LKb, 0, LQa, 0, LSb, 0);
 
-    // ... which is the same for both parties.
-    if (not AreEqual(sA, sB)) then
-    begin
-      Fail(Format(' %d', [i]));
-    end;
+    CheckTrue((LRa = LRb) and AreEqual(LSa, LSb), Format('ECDH #%d', [LI]));
   end;
 end;
 
-procedure TTestX25519.TestECDHVector1;
+procedure TTestX25519.TestECDHVector1();
 begin
-  CheckECDHVector
-    ('77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a',
+  CheckECDHVector(
+    '77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a',
     '8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a',
     '5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb',
     'de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f',
@@ -236,37 +227,35 @@ begin
     'ECDH Vector #1');
 end;
 
-procedure TTestX25519.TestX25519Iterated;
+procedure TTestX25519.TestX25519Iterated();
 begin
   CheckIterated(1000);
 end;
-
-// procedure TTestX25519.TestX25519IteratedFull;
-// begin
-// CheckIterated(1000000);
-// end;
-
-procedure TTestX25519.TestX25519Vector1;
+(*
+procedure TTestX25519.TestX25519IteratedFull();
 begin
-  CheckX25519Vector
-    ('a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4',
+  CheckIterated(1000000);
+end; *)
+
+procedure TTestX25519.TestX25519Vector1();
+begin
+  CheckX25519Vector(
+    'a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5a18506a2244ba449ac4',
     'e6db6867583030db3594c1a424b15f7c726624ec26b3353b10a903a6d0ab1c4c',
     'c3da55379de9c6908e94ea4df28d084f32eccf03491c71f754b4075577a28552',
     'Vector #1');
 end;
 
-procedure TTestX25519.TestX25519Vector2;
+procedure TTestX25519.TestX25519Vector2();
 begin
-  CheckX25519Vector
-    ('4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea01d42ca4169e7918ba0d',
+  CheckX25519Vector(
+    '4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea01d42ca4169e7918ba0d',
     'e5210f12786811d3f4b7959d0538ae2c31dbe7106fc03c3efc4cd549c715a493',
     '95cbde9476e8907d7aade45cb4b873f88b595a68799fa152e6f8f7647aac7957',
     'Vector #2');
 end;
 
 initialization
-
-// Register any test cases with the test runner
 
 {$IFDEF FPC}
   RegisterTest(TTestX25519);

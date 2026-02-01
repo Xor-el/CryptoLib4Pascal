@@ -561,6 +561,9 @@ uses
   ShortenedDigestTests in '..\src\Others\ShortenedDigestTests.pas',
   SignerUtilitiesTests in '..\src\Others\SignerUtilitiesTests.pas',
   X25519HigherLevelTests in '..\src\Others\X25519HigherLevelTests.pas',
+  Ed25519HigherLevelTests in '..\src\Others\Ed25519HigherLevelTests.pas',
+  X25519Tests in '..\src\Math\EC\Rfc7748\X25519Tests.pas',
+  Ed25519Tests in '..\src\Math\EC\Rfc8032\Ed25519Tests.pas',
   DigestRandomNumberTests in '..\src\Crypto\DigestRandomNumberTests.pas',
   FixedPointTests in '..\src\Math\EC\FixedPointTests.pas',
   AESTests in '..\src\Crypto\AESTests.pas',
@@ -591,7 +594,6 @@ uses
   StreamCipherResetTests in '..\src\Crypto\StreamCipherResetTests.pas',
   CTSTests in '..\src\Crypto\CTSTests.pas',
   PascalCoinECIESTests in '..\src\Math\PascalCoinECIESTests.pas',
-  X25519Tests in '..\src\Math\EC\Rfc7748\X25519Tests.pas',
   Kdf1GeneratorTests in '..\src\Crypto\Kdf1GeneratorTests.pas',
   Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas',
   Argon2Tests in '..\src\Crypto\Argon2Tests.pas',
@@ -617,8 +619,6 @@ uses
   X509NameTests in '..\src\Asn1\X509\X509NameTests.pas',
   Pkcs10CertRequestTests in '..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas',
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
-  Ed25519HigherLevelTests in '..\src\Others\Ed25519HigherLevelTests.pas',
-  Ed25519Tests in '..\src\Math\EC\Rfc8032\Ed25519Tests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

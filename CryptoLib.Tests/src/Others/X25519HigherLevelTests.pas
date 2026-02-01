@@ -31,16 +31,17 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpSecureRandom,
-  ClpISecureRandom,
-  ClpX25519Agreement,
-  ClpIX25519Agreement,
-  ClpIAsymmetricCipherKeyPair,
   ClpX25519KeyPairGenerator,
   ClpIX25519KeyPairGenerator,
   ClpX25519KeyGenerationParameters,
   ClpIX25519KeyGenerationParameters,
-  ClpIAsymmetricCipherKeyPairGenerator,
+  ClpX25519Agreement,
+  ClpIX25519Agreement,
+  ClpIAsymmetricCipherKeyPair,
+  ClpSecureRandom,
+  ClpISecureRandom,
+  ClpArrayUtilities,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
@@ -55,71 +56,62 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure TestAgreement();
-
+    procedure TestFunction();
   end;
 
 implementation
 
 { TTestX25519HigherLevel }
 
-procedure TTestX25519HigherLevel.DoTestAgreement;
+procedure TTestX25519HigherLevel.DoTestAgreement();
 var
-  kpGen: IAsymmetricCipherKeyPairGenerator;
-  kpA, kpB: IAsymmetricCipherKeyPair;
-  agreeA, agreeB: IX25519Agreement;
-  secretA, secretB: TBytes;
+  LKpGen: IX25519KeyPairGenerator;
+  LKpA, LKpB: IAsymmetricCipherKeyPair;
+  LAgreeA, LAgreeB: IX25519Agreement;
+  LSecretA, LSecretB: TBytes;
 begin
-  kpGen := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
-  kpGen.Init(TX25519KeyGenerationParameters.Create(FRandom)
+  LKpGen := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
+  LKpGen.Init(TX25519KeyGenerationParameters.Create(FRandom)
     as IX25519KeyGenerationParameters);
 
-  kpA := kpGen.GenerateKeyPair();
-  kpB := kpGen.GenerateKeyPair();
+  LKpA := LKpGen.GenerateKeyPair();
+  LKpB := LKpGen.GenerateKeyPair();
 
-  agreeA := TX25519Agreement.Create();
-  agreeA.Init(kpA.Private);
-  System.SetLength(secretA, agreeA.AgreementSize);
-  agreeA.CalculateAgreement(kpB.Public, secretA, 0);
+  LAgreeA := TX25519Agreement.Create() as IX25519Agreement;
+  LAgreeA.Init(LKpA.Private);
+  System.SetLength(LSecretA, LAgreeA.AgreementSize);
+  LAgreeA.CalculateAgreement(LKpB.Public, LSecretA, 0);
 
-  agreeB := TX25519Agreement.Create();
-  agreeB.Init(kpB.Private);
-  System.SetLength(secretB, agreeB.AgreementSize);
-  agreeB.CalculateAgreement(kpA.Public, secretB, 0);
+  LAgreeB := TX25519Agreement.Create() as IX25519Agreement;
+  LAgreeB.Init(LKpB.Private);
+  System.SetLength(LSecretB, LAgreeB.AgreementSize);
+  LAgreeB.CalculateAgreement(LKpA.Public, LSecretB, 0);
 
-  if (not AreEqual(secretA, secretB)) then
-  begin
+  if not AreEqual(LSecretA, LSecretB) then
     Fail('X25519 agreement failed');
-  end;
 end;
 
 procedure TTestX25519HigherLevel.SetUp;
 begin
-  inherited;
+  inherited SetUp();
   FRandom := TSecureRandom.Create();
 end;
 
 procedure TTestX25519HigherLevel.TearDown;
 begin
-  inherited;
-
+  FRandom := nil;
+  inherited TearDown();
 end;
 
-procedure TTestX25519HigherLevel.TestAgreement;
+procedure TTestX25519HigherLevel.TestFunction();
 var
-  i: Int32;
+  LI: Int32;
 begin
-  i := 0;
-  while i < 10 do
-  begin
+  for LI := 0 to 9 do
     DoTestAgreement();
-    System.Inc(i);
-  end;
 end;
 
 initialization
-
-// Register any test cases with the test runner
 
 {$IFDEF FPC}
   RegisterTest(TTestX25519HigherLevel);
