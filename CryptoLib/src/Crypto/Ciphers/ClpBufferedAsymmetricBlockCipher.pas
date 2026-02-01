@@ -22,7 +22,6 @@ unit ClpBufferedAsymmetricBlockCipher;
 interface
 
 uses
-  Classes,
   SysUtils,
   ClpICipherParameters,
   ClpIAsymmetricBlockCipher,
@@ -45,56 +44,35 @@ type
     FCipher: IAsymmetricBlockCipher;
     FBuffer: TCryptoLibByteArray;
     FBufOff: Int32;
-    FBufferSize: Int32;
-    FOnProgress: TBufferedCipherProgressEvent;
 
   strict protected
     function GetAlgorithmName: String;
     function GetBlockSize: Int32;
-    function GetBufferSize: Int32;
-    procedure SetBufferSize(value: Int32);
-    function GetOnProgress: TBufferedCipherProgressEvent;
-    procedure SetOnProgress(const value: TBufferedCipherProgressEvent);
 
   public
-    constructor Create(const cipher: IAsymmetricBlockCipher);
+    constructor Create(const ACipher: IAsymmetricBlockCipher);
 
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
-    function GetOutputSize(inputLen: Int32): Int32;
-    function GetUpdateOutputSize(inputLen: Int32): Int32;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    function GetOutputSize(AInputLen: Int32): Int32;
+    function GetUpdateOutputSize(AInputLen: Int32): Int32;
 
-    procedure ProcessStream(const inputStream, outputStream: TStream;
-      Length: Int64); overload;
-    procedure ProcessStream(const inputStream: TStream; inOff: Int64;
-      const outputStream: TStream; outOff: Int64; Length: Int64); overload;
-
-    function ProcessByte(input: Byte): TCryptoLibByteArray; overload;
-    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
-      outOff: Int32): Int32; overload;
-    function ProcessBytes(const input: TCryptoLibByteArray; inOff,
-      length: Int32): TCryptoLibByteArray; overload;
-    function ProcessBytes(const input: TCryptoLibByteArray)
-      : TCryptoLibByteArray; overload;
-    function ProcessBytes(const input, output: TCryptoLibByteArray;
-      outOff: Int32): Int32; overload;
-    function ProcessBytes(const input: TCryptoLibByteArray; inOff, length: Int32;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
+    function ProcessByte(AInput: Byte): TCryptoLibByteArray; overload;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+    function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray; overload;
+    function ProcessBytes(const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload;
+    function ProcessBytes(const AInput, AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+    function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
     function DoFinal(): TCryptoLibByteArray; overload;
-    function DoFinal(const input: TCryptoLibByteArray): TCryptoLibByteArray; overload;
-    function DoFinal(const input: TCryptoLibByteArray; inOff, inLen: Int32)
-      : TCryptoLibByteArray; overload;
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
-      : Int32; overload;
-    function DoFinal(const input: TCryptoLibByteArray;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
-    function DoFinal(const input: TCryptoLibByteArray; inOff, length: Int32;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
+    function DoFinal(const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload;
+    function DoFinal(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32): TCryptoLibByteArray; overload;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+    function DoFinal(const AInput: TCryptoLibByteArray; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+    function DoFinal(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+
     procedure Reset();
 
     property AlgorithmName: String read GetAlgorithmName;
     property BlockSize: Int32 read GetBlockSize;
-    property BufferSize: Int32 read GetBufferSize write SetBufferSize;
-    property OnProgress: TBufferedCipherProgressEvent read GetOnProgress write SetOnProgress;
 
   end;
 
@@ -102,11 +80,10 @@ implementation
 
 { TBufferedAsymmetricBlockCipher }
 
-constructor TBufferedAsymmetricBlockCipher.Create(const cipher: IAsymmetricBlockCipher);
+constructor TBufferedAsymmetricBlockCipher.Create(const ACipher: IAsymmetricBlockCipher);
 begin
   inherited Create();
-  FCipher := cipher;
-  FBufferSize := 4096;
+  FCipher := ACipher;
 end;
 
 function TBufferedAsymmetricBlockCipher.GetAlgorithmName: String;
@@ -119,131 +96,82 @@ begin
   Result := FCipher.InputBlockSize;
 end;
 
-function TBufferedAsymmetricBlockCipher.GetBufferSize: Int32;
-begin
-  Result := FBufferSize;
-end;
-
-procedure TBufferedAsymmetricBlockCipher.SetBufferSize(value: Int32);
-begin
-  FBufferSize := value;
-end;
-
-function TBufferedAsymmetricBlockCipher.GetOnProgress: TBufferedCipherProgressEvent;
-begin
-  Result := FOnProgress;
-end;
-
-procedure TBufferedAsymmetricBlockCipher.SetOnProgress(const value: TBufferedCipherProgressEvent);
-begin
-  FOnProgress := value;
-end;
-
-procedure TBufferedAsymmetricBlockCipher.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TBufferedAsymmetricBlockCipher.Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
 begin
   Reset();
-  FCipher.Init(forEncryption, parameters);
+  FCipher.Init(AForEncryption, AParameters);
   // Allow for an extra byte where people are using their own padding
   // mechanisms on a raw cipher.
-  if forEncryption then
-    SetLength(FBuffer, FCipher.InputBlockSize + 1)
+  if AForEncryption then
+    System.SetLength(FBuffer, FCipher.InputBlockSize + 1)
   else
-    SetLength(FBuffer, FCipher.InputBlockSize);
+    System.SetLength(FBuffer, FCipher.InputBlockSize);
   FBufOff := 0;
 end;
 
-function TBufferedAsymmetricBlockCipher.GetOutputSize(inputLen: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.GetOutputSize(AInputLen: Int32): Int32;
 begin
   Result := FCipher.OutputBlockSize;
 end;
 
-function TBufferedAsymmetricBlockCipher.GetUpdateOutputSize(inputLen: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.GetUpdateOutputSize(AInputLen: Int32): Int32;
 begin
   Result := 0;
 end;
 
-procedure TBufferedAsymmetricBlockCipher.ProcessStream(const inputStream,
-  outputStream: TStream; Length: Int64);
-begin
-  ProcessStream(inputStream, inputStream.Position, outputStream, outputStream.Position, Length);
-end;
-
-procedure TBufferedAsymmetricBlockCipher.ProcessStream(const inputStream: TStream;
-  inOff: Int64; const outputStream: TStream; outOff: Int64; Length: Int64);
-var
-  inputData, outputData: TCryptoLibByteArray;
-begin
-  // For asymmetric ciphers, we read the whole input, process, and write
-  inputStream.Position := inOff;
-  SetLength(inputData, Length);
-  inputStream.ReadBuffer(inputData[0], Length);
-
-  outputData := DoFinal(inputData, 0, Length);
-
-  outputStream.Position := outOff;
-  if outputData <> nil then
-    outputStream.WriteBuffer(outputData[0], System.Length(outputData));
-end;
-
-function TBufferedAsymmetricBlockCipher.ProcessByte(input: Byte): TCryptoLibByteArray;
+function TBufferedAsymmetricBlockCipher.ProcessByte(AInput: Byte): TCryptoLibByteArray;
 begin
   if FBufOff >= System.Length(FBuffer) then
     raise EDataLengthCryptoLibException.CreateRes(@SDataTooLongForCipher);
 
-  FBuffer[FBufOff] := input;
-  Inc(FBufOff);
+  FBuffer[FBufOff] := AInput;
+  System.Inc(FBufOff);
   Result := nil;
 end;
 
-function TBufferedAsymmetricBlockCipher.ProcessByte(input: Byte;
-  const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
   if FBufOff >= System.Length(FBuffer) then
     raise EDataLengthCryptoLibException.CreateRes(@SDataTooLongForCipher);
 
-  FBuffer[FBufOff] := input;
-  Inc(FBufOff);
+  FBuffer[FBufOff] := AInput;
+  System.Inc(FBufOff);
   Result := 0;
 end;
 
-function TBufferedAsymmetricBlockCipher.ProcessBytes(const input: TCryptoLibByteArray;
-  inOff, length: Int32): TCryptoLibByteArray;
+function TBufferedAsymmetricBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
 begin
-  if length < 1 then
+  if ALength < 1 then
   begin
     Result := nil;
     Exit;
   end;
 
-  if input = nil then
+  if AInput = nil then
     raise EArgumentNilCryptoLibException.Create('input');
 
-  if length > System.Length(FBuffer) - FBufOff then
+  if ALength > System.Length(FBuffer) - FBufOff then
     raise EDataLengthCryptoLibException.CreateRes(@SDataTooLongForCipher);
 
-  System.Move(input[inOff], FBuffer[FBufOff], length);
-  Inc(FBufOff, length);
+  System.Move(AInput[AInOff], FBuffer[FBufOff], ALength);
+  System.Inc(FBufOff, ALength);
   Result := nil;
 end;
 
-function TBufferedAsymmetricBlockCipher.ProcessBytes(const input: TCryptoLibByteArray)
-  : TCryptoLibByteArray;
+function TBufferedAsymmetricBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
-  Result := ProcessBytes(input, 0, System.Length(input));
+  Result := ProcessBytes(AInput, 0, System.Length(AInput));
 end;
 
-function TBufferedAsymmetricBlockCipher.ProcessBytes(const input, output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.ProcessBytes(const AInput, AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  ProcessBytes(input, 0, System.Length(input));
+  ProcessBytes(AInput, 0, System.Length(AInput));
   Result := 0;
 end;
 
-function TBufferedAsymmetricBlockCipher.ProcessBytes(const input: TCryptoLibByteArray;
-  inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  ProcessBytes(input, inOff, length);
+  ProcessBytes(AInput, AInOff, ALength);
   Result := 0;
 end;
 
@@ -256,49 +184,44 @@ begin
   Reset();
 end;
 
-function TBufferedAsymmetricBlockCipher.DoFinal(const input: TCryptoLibByteArray)
-  : TCryptoLibByteArray;
+function TBufferedAsymmetricBlockCipher.DoFinal(const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
-  ProcessBytes(input, 0, System.Length(input));
+  ProcessBytes(AInput, 0, System.Length(AInput));
   Result := DoFinal();
 end;
 
-function TBufferedAsymmetricBlockCipher.DoFinal(const input: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TBufferedAsymmetricBlockCipher.DoFinal(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32): TCryptoLibByteArray;
 begin
-  ProcessBytes(input, inOff, inLen);
+  ProcessBytes(AInput, AInOff, AInLen);
   Result := DoFinal();
 end;
 
-function TBufferedAsymmetricBlockCipher.DoFinal(const output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  outBytes: TCryptoLibByteArray;
+  LOutBytes: TCryptoLibByteArray;
 begin
-  outBytes := DoFinal();
-  if outBytes <> nil then
+  LOutBytes := DoFinal();
+  if LOutBytes <> nil then
   begin
-    if (System.Length(output) - outOff) < System.Length(outBytes) then
+    if (System.Length(AOutput) - AOutOff) < System.Length(LOutBytes) then
       raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
-    System.Move(outBytes[0], output[outOff], System.Length(outBytes));
-    Result := System.Length(outBytes);
+    System.Move(LOutBytes[0], AOutput[AOutOff], System.Length(LOutBytes));
+    Result := System.Length(LOutBytes);
   end
   else
     Result := 0;
 end;
 
-function TBufferedAsymmetricBlockCipher.DoFinal(const input: TCryptoLibByteArray;
-  const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.DoFinal(const AInput: TCryptoLibByteArray; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  ProcessBytes(input, 0, System.Length(input));
-  Result := DoFinal(output, outOff);
+  ProcessBytes(AInput, 0, System.Length(AInput));
+  Result := DoFinal(AOutput, AOutOff);
 end;
 
-function TBufferedAsymmetricBlockCipher.DoFinal(const input: TCryptoLibByteArray;
-  inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedAsymmetricBlockCipher.DoFinal(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  ProcessBytes(input, inOff, length);
-  Result := DoFinal(output, outOff);
+  ProcessBytes(AInput, AInOff, ALength);
+  Result := DoFinal(AOutput, AOutOff);
 end;
 
 procedure TBufferedAsymmetricBlockCipher.Reset;
@@ -311,4 +234,3 @@ begin
 end;
 
 end.
-
