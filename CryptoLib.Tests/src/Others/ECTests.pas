@@ -35,6 +35,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpIX9ECAsn1Objects,
+  ClpX9ECAsn1Objects,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpIBasicAgreement,
@@ -747,6 +748,9 @@ end;
 procedure TTestEC.TestECDHBasicAgreementCofactor;
 var
   random: ISecureRandom;
+  q, a, b, n, h: TBigInteger;
+  curve: IFpCurve;
+  G: IX9ECPoint;
   x9: IX9ECParameters;
   ec: IECDomainParameters;
   kpg: IECKeyPairGenerator;
@@ -756,8 +760,17 @@ var
 begin
   random := TSecureRandom.Create();
 
-  x9 := TCustomNamedCurves.GetByName('curve25519');
-  ec := TECDomainParameters.Create(x9.curve, x9.G, x9.n, x9.H, x9.GetSeed());
+  // "curve25519" in short Weierstrass form
+  q := TBigInteger.One.ShiftLeft(255).Subtract(TBigInteger.ValueOf(19));
+  a := TBigInteger.Create(1, DecodeHex('2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA984914A144'));
+  b := TBigInteger.Create(1, DecodeHex('7B425ED097B425ED097B425ED097B425ED097B425ED097B4260B5E9C7710C864'));
+  n := TBigInteger.Create(1, DecodeHex('1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED'));
+  h := TBigInteger.ValueOf(8);
+
+  curve := TFpCurve.Create(q, a, b, n, h);
+  G := TX9ECPoint.Create(curve, DecodeHex('042AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD245A20AE19A1B8A086B4E01EDD2C7748D14C923D4D7E6D7C61B229E9C5A27ECED3D9'));
+  x9 := TX9ECParameters.Create(curve, G, n, h);
+  ec := TECDomainParameters.Create(x9.Curve, x9.G, x9.N, x9.H);
 
   kpg := TECKeyPairGenerator.Create();
   kpg.Init(TECKeyGenerationParameters.Create(ec, random)
