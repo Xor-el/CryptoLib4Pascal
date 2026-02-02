@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIPascalCoinIESEngine;
+unit ClpIPascalCoinIesEngine;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -26,7 +26,7 @@ uses
 
 type
 
-  IPascalCoinIESEngine = interface(IIESEngine)
+  IPascalCoinIesEngine = interface(IIesEngine)
     ['{CEB707A3-6000-4771-A0F9-7C146B8DDE7A}']
 
   end;

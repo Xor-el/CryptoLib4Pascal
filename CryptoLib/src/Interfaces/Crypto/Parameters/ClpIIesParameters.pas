@@ -15,37 +15,42 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIIESParameterSpec;
+unit ClpIIesParameters;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAlgorithmParameterSpec,
+  ClpICipherParameters,
   ClpCryptoLibTypes;
 
 type
-  IIESParameterSpec = interface(IAlgorithmParameterSpec)
-    ['{F83CD14B-C049-4878-8D78-0214FD9D2B8A}']
+
+  IIesParameters = interface(ICipherParameters)
+    ['{F95232BB-594C-492E-AF63-C5A6822C96FD}']
+
+    function GetDerivationV: TCryptoLibByteArray;
 
     /// <summary>
-    /// Returns the derivation vector.
+    /// Return the derivation vector.
     /// </summary>
     /// <value>
     /// the derivation vector.
     /// </value>
-    function GetDerivationV: TCryptoLibByteArray;
     property DerivationV: TCryptoLibByteArray read GetDerivationV;
 
+    function GetEncodingV: TCryptoLibByteArray;
+
     /// <summary>
-    /// Returns the encoding vector.
+    /// Return the encoding vector.
     /// </summary>
     /// <value>
     /// the encoding vector.
     /// </value>
-    function GetEncodingV: TCryptoLibByteArray;
     property EncodingV: TCryptoLibByteArray read GetEncodingV;
+
+    function GetMacKeySize: Int32;
 
     /// <summary>
     /// Return the key size in bits for the MAC used with the message
@@ -53,35 +58,7 @@ type
     /// <value>
     /// the key size in bits for the MAC used with the message
     /// </value>
-    function GetMacKeySize: Int32;
-    property MacKeySize: Int32 read GetMacKeySize;
-
-    /// <summary>
-    /// Return the key size in bits for the block cipher used with the message
-    /// </summary>
-    /// <value>
-    /// the key size in bits for the block cipher used with the message
-    /// </value>
-    function GetCipherKeySize: Int32;
-    property CipherKeySize: Int32 read GetCipherKeySize;
-
-    /// <summary>
-    /// Return the Nonce (IV) value to be associated with message.
-    /// </summary>
-    /// <value>
-    /// block cipher IV for message.
-    /// </value>
-    function GetNonce: TCryptoLibByteArray;
-    property Nonce: TCryptoLibByteArray read GetNonce;
-
-    /// <summary>
-    /// Return the 'point compression' flag.
-    /// </summary>
-    /// <value>
-    /// the point compression flag
-    /// </value>
-    function GetPointCompression: Boolean;
-    property PointCompression: Boolean read GetPointCompression;
+    property macKeySize: Int32 read GetMacKeySize;
 
   end;
 

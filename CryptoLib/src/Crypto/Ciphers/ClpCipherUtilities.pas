@@ -69,7 +69,16 @@ uses
   ClpIISO9796d1Encoding,
   ClpRsaBlindedEngine,
   ClpIRsaBlindedEngine,
-  ClpIAsymmetricBlockCipher;
+  ClpIAsymmetricBlockCipher,
+  ClpBufferedIesCipher,
+  ClpIESEngine,
+  ClpIIESEngine,
+  ClpECDHBasicAgreement,
+  ClpIECDHBasicAgreement,
+  ClpKdf2BytesGenerator,
+  ClpIKdf2BytesGenerator,
+  ClpHMac,
+  ClpIHMac;
 
 resourcestring
   SMechanismNil = 'Mechanism Cannot be Nil';
@@ -262,6 +271,17 @@ var
   LPadding: IBlockCipherPadding;
 begin
   Result := nil;
+
+  if UpperCase(AMechanism) = 'ECIES' then
+  begin
+    Result := TBufferedIesCipher.Create(TIesEngine.Create(
+      TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+      TKdf2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
+        as IKdf2BytesGenerator,
+      THMac.Create(TDigestUtilities.GetDigest('SHA-1')) as IHMac));
+    Exit;
+  end;
+
   LParts := TStringUtilities.SplitString(AMechanism, '/');
   if System.Length(LParts) < 1 then
     Exit;

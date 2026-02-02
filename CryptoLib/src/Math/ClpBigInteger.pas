@@ -2270,7 +2270,6 @@ end;
 
 function TBigInteger.Int32ValueExact(): Int32;
 begin
-  // Match C# IntValueExact: if (BitLength > 31) throw; else return IntValue
   if BitLength > 31 then
   begin
     raise EArithmeticCryptoLibException.Create(SBigIntegerOutOfIntRange);
@@ -2281,7 +2280,6 @@ end;
 
 function TBigInteger.Int64ValueExact(): Int64;
 begin
-  // Match C# LongValueExact: if (BitLength > 63) throw; else return Int64Value
   if BitLength > 63 then
   begin
     raise EArithmeticCryptoLibException.Create(SBigIntegerOutOfLongRange);

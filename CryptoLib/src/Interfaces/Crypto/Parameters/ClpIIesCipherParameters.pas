@@ -15,15 +15,31 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAlgorithmParameterSpec;
+unit ClpIIesCipherParameters;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
+uses
+  ClpICipherParameters,
+  ClpIIESParameters;
+
 type
-  IAlgorithmParameterSpec = interface(IInterface)
-    ['{FBA69725-AEFF-4B99-92C0-1819E5DE2DA1}']
+  /// <summary>
+  /// Parameters for BufferedIesCipher Init: bundles private key, public key,
+  /// and IES parameters for engine.Init(forEncryption, priv, pub, iesParams).
+  /// </summary>
+  IIesCipherParameters = interface(ICipherParameters)
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+
+    function GetPrivateKey: ICipherParameters;
+    function GetPublicKey: ICipherParameters;
+    function GetIesParameters: IIesParameters;
+
+    property PrivateKey: ICipherParameters read GetPrivateKey;
+    property PublicKey: ICipherParameters read GetPublicKey;
+    property IesParameters: IIesParameters read GetIesParameters;
   end;
 
 implementation

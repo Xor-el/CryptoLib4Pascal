@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIIESEngine;
+unit ClpIIesEngine;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -32,7 +32,7 @@ uses
 
 type
 
-  IIESEngine = interface(IInterface)
+  IIesEngine = interface(IInterface)
     ['{9FA0E287-9988-467D-9E00-3BECEE4A78C6}']
 
     function GetCipher: IBufferedBlockCipher;
@@ -41,61 +41,61 @@ type
     /// <summary>
     /// Initialise the encryptor/decryptor.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// whether or not this is encryption/decryption.
     /// </param>
-    /// <param name="privParam">
+    /// <param name="APrivParam">
     /// our private key parameters
     /// </param>
-    /// <param name="pubParam">
+    /// <param name="APubParam">
     /// the recipient's/sender's public key parameters
     /// </param>
-    /// <param name="params">
+    /// <param name="AParams">
     /// encoding and derivation parameters, may be wrapped to include an IV
     /// for an underlying block cipher.
     /// </param>
-    procedure Init(forEncryption: Boolean; const privParam, pubParam,
-      params: ICipherParameters); overload;
+    procedure Init(AForEncryption: Boolean; const APrivParam, APubParam,
+      AParams: ICipherParameters); overload;
 
     /// <summary>
     /// Initialise the encryptor.
     /// </summary>
-    /// <param name="publicKey">
+    /// <param name="APublicKey">
     /// the recipient's/sender's public key parameters
     /// </param>
-    /// <param name="params">
+    /// <param name="AParams">
     /// encoding and derivation parameters, may be wrapped to include an IV
     /// for an underlying block cipher.
     /// </param>
-    /// <param name="ephemeralKeyPairGenerator">
+    /// <param name="AEphemeralKeyPairGenerator">
     /// the ephemeral key pair generator to use.
     /// </param>
-    procedure Init(const publicKey: IAsymmetricKeyParameter;
-      const params: ICipherParameters;
-      const ephemeralKeyPairGenerator: IEphemeralKeyPairGenerator); overload;
+    procedure Init(const APublicKey: IAsymmetricKeyParameter;
+      const AParams: ICipherParameters;
+      const AEphemeralKeyPairGenerator: IEphemeralKeyPairGenerator); overload;
 
     /// <summary>
     /// Initialise the decryptor.
     /// </summary>
-    /// <param name="privateKey">
+    /// <param name="APrivateKey">
     /// the recipient's private key.
     /// </param>
-    /// <param name="params">
+    /// <param name="AParams">
     /// encoding and derivation parameters, may be wrapped to include an IV
     /// for an underlying block cipher.
     /// </param>
-    /// <param name="publicKeyParser">
+    /// <param name="APublicKeyParser">
     /// the parser for reading the ephemeral public key.
     /// </param>
-    procedure Init(const privateKey: IAsymmetricKeyParameter;
-      const params: ICipherParameters;
-      const publicKeyParser: IKeyParser); overload;
+    procedure Init(const APrivateKey: IAsymmetricKeyParameter;
+      const AParams: ICipherParameters;
+      const APublicKeyParser: IKeyParser); overload;
 
-    function ProcessBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function ProcessBlock(const AIn: TCryptoLibByteArray; AInOff, AInLen: Int32)
       : TCryptoLibByteArray;
 
-    property cipher: IBufferedBlockCipher read GetCipher;
-    property mac: IMac read GetMac;
+    property Cipher: IBufferedBlockCipher read GetCipher;
+    property Mac: IMac read GetMac;
   end;
 
 implementation

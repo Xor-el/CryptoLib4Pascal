@@ -31,7 +31,7 @@ type
   /// <summary>
   /// parameters for using an integrated cipher in stream mode.
   /// </summary>
-  TIESParameters = class(TInterfacedObject, IIESParameters, ICipherParameters)
+  TIesParameters = class(TInterfacedObject, IIesParameters, ICipherParameters)
 
   strict private
   var
@@ -44,45 +44,45 @@ type
     function GetEncodingV(): TCryptoLibByteArray; inline;
     property MacKeySize: Int32 read GetMacKeySize;
 
-    /// <param name="derivation">
+    /// <param name="ADerivation">
     /// the derivation parameter for the KDF function.
     /// </param>
-    /// <param name="encoding">
+    /// <param name="AEncoding">
     /// the encoding parameter for the KDF function.
     /// </param>
-    /// <param name="MacKeySize">
+    /// <param name="AMacKeySize">
     /// the size of the MAC key (in bits).
     /// </param>
-    constructor Create(const derivation, encoding: TCryptoLibByteArray;
-      MacKeySize: Int32);
+    constructor Create(const ADerivation, AEncoding: TCryptoLibByteArray;
+      AMacKeySize: Int32);
   end;
 
 implementation
 
 { TIESParameters }
 
-constructor TIESParameters.Create(const derivation,
-  encoding: TCryptoLibByteArray; MacKeySize: Int32);
+constructor TIesParameters.Create(const ADerivation,
+  AEncoding: TCryptoLibByteArray; AMacKeySize: Int32);
 begin
   Inherited Create();
-  Fderivation := derivation;
-  Fencoding := encoding;
-  FmacKeySize := MacKeySize;
+  Fderivation := ADerivation;
+  Fencoding := AEncoding;
+  FmacKeySize := AMacKeySize;
 end;
 
-function TIESParameters.GetDerivationV: TCryptoLibByteArray;
+function TIesParameters.GetDerivationV: TCryptoLibByteArray;
 begin
-  result := System.Copy(Fderivation);
+  Result := System.Copy(Fderivation);
 end;
 
-function TIESParameters.GetEncodingV: TCryptoLibByteArray;
+function TIesParameters.GetEncodingV: TCryptoLibByteArray;
 begin
-  result := System.Copy(Fencoding);
+  Result := System.Copy(Fencoding);
 end;
 
-function TIESParameters.GetMacKeySize: Int32;
+function TIesParameters.GetMacKeySize: Int32;
 begin
-  result := FmacKeySize;
+  Result := FmacKeySize;
 end;
 
 end.

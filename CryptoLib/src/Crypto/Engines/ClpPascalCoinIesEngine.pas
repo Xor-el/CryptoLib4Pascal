@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpPascalCoinIESEngine;
+unit ClpPascalCoinIesEngine;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -53,7 +53,7 @@ type
   /// <summary>
   /// Compatibility Class for PascalCoin IESEngine
   /// </summary>
-  TPascalCoinIESEngine = class(TIESEngine, IPascalCoinIESEngine)
+  TPascalCoinIesEngine = class(TIesEngine, IPascalCoinIesEngine)
 
   strict private
   type
@@ -77,15 +77,15 @@ type
 
   strict protected
 
-    function EncryptBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function EncryptBlock(const AIn: TCryptoLibByteArray; AInOff, AInLen: Int32)
       : TCryptoLibByteArray; override;
 
-    function DecryptBlock(const in_enc: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray; override;
+    function DecryptBlock(const AInEnc: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray; override;
 
   public
 
-    function ProcessBlock(const &in: TCryptoLibByteArray; inOff, inLen: Int32)
+    function ProcessBlock(const AIn: TCryptoLibByteArray; AInOff, AInLen: Int32)
       : TCryptoLibByteArray; override;
 
   end;
@@ -94,20 +94,20 @@ implementation
 
 { TPascalCoinIESEngine }
 
-function TPascalCoinIESEngine.DecryptBlock(const in_enc: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPascalCoinIesEngine.DecryptBlock(const AInEnc: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  K1, K2, T1, T2: TCryptoLibByteArray;
-  cp: ICipherParameters;
+  LK1, LK2, LT1, LT2: TCryptoLibByteArray;
+  LCp: ICipherParameters;
 begin
   // Ensure that the length of the input is greater than the MAC in bytes
-  if (inLen < (System.Length(FV) + Fmac.GetMacSize)) then
+  if (AInLen < (System.Length(FV) + FMac.GetMacSize)) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes
       (@SInvalidCipherTextLength);
   end;
   // note order is important: set up keys, do simple encryptions, check mac, do final encryption.
-  if (Fcipher = Nil) then
+  if (FCipher = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes
       (@SCipherCannotbeNilInThisMode);
@@ -116,48 +116,48 @@ begin
   begin
     // Block cipher mode.
 
-    SetupBlockCipherAndMacKeyBytes(K1, K2);
+    SetupBlockCipherAndMacKeyBytes(LK1, LK2);
 
-    cp := TKeyParameter.Create(K1);
+    LCp := TKeyParameter.Create(LK1);
 
     // If iv is provided use it to initialise the cipher
-    if (FIV <> Nil) then
+    if (FIV <> nil) then
     begin
-      cp := TParametersWithIV.Create(cp, FIV);
+      LCp := TParametersWithIV.Create(LCp, FIV);
     end;
 
-    Fcipher.Init(False, cp);
+    FCipher.Init(False, LCp);
 
   end;
 
   // Verify the MAC.
-  T1 := System.Copy(in_enc, System.Length(FV), Fmac.GetMacSize);
-  System.SetLength(T2, System.Length(T1));
+  LT1 := System.Copy(AInEnc, System.Length(FV), FMac.GetMacSize);
+  System.SetLength(LT2, System.Length(LT1));
 
-  Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
+  FMac.Init((TKeyParameter.Create(LK2) as IKeyParameter) as ICipherParameters);
 
-  Fmac.BlockUpdate(in_enc, inOff + System.Length(FV) + System.Length(T2),
-    inLen - System.Length(FV) - System.Length(T2));
+  FMac.BlockUpdate(AInEnc, AInOff + System.Length(FV) + System.Length(LT2),
+    AInLen - System.Length(FV) - System.Length(LT2));
 
-  T2 := Fmac.DoFinal();
+  LT2 := FMac.DoFinal();
 
-  if not TArrayUtilities.FixedTimeEquals(T1, T2) then
+  if not TArrayUtilities.FixedTimeEquals(LT1, LT2) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidMAC);
   end;
 
-  Result := Fcipher.DoFinal(in_enc, inOff + System.Length(FV) + Fmac.GetMacSize,
-    inLen - System.Length(FV) - System.Length(T2));
+  Result := FCipher.DoFinal(AInEnc, AInOff + System.Length(FV) + FMac.GetMacSize,
+    AInLen - System.Length(FV) - System.Length(LT2));
   Exit;
 end;
 
-function TPascalCoinIESEngine.EncryptBlock(const &in: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPascalCoinIesEngine.EncryptBlock(const AIn: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  C, K1, K2, T: TCryptoLibByteArray;
-  MessageToEncryptPadSize, CipherBlockSize, MessageToEncryptSize: Int32;
+  LC, LK1, LK2, LT: TCryptoLibByteArray;
+  LMessageToEncryptPadSize, LCipherBlockSize, LMessageToEncryptSize: Int32;
 begin
-  if (Fcipher = Nil) then
+  if (FCipher = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes
       (@SCipherCannotbeNilInThisMode);
@@ -166,41 +166,41 @@ begin
   begin
     // Block cipher mode.
 
-    SetupBlockCipherAndMacKeyBytes(K1, K2);
+    SetupBlockCipherAndMacKeyBytes(LK1, LK2);
 
     // If iv is provided use it to initialise the cipher
-    if (FIV <> Nil) then
+    if (FIV <> nil) then
     begin
-      Fcipher.Init(true, TParametersWithIV.Create(TKeyParameter.Create(K1)
+      FCipher.Init(True, TParametersWithIV.Create(TKeyParameter.Create(LK1)
         as IKeyParameter, FIV));
     end
     else
     begin
-      Fcipher.Init(true, TKeyParameter.Create(K1) as IKeyParameter);
+      FCipher.Init(True, TKeyParameter.Create(LK1) as IKeyParameter);
     end;
 
-    C := Fcipher.DoFinal(&in, inOff, inLen);
+    LC := FCipher.DoFinal(AIn, AInOff, AInLen);
   end;
 
   // Apply the MAC.
-  System.SetLength(T, Fmac.GetMacSize);
+  System.SetLength(LT, FMac.GetMacSize);
 
-  Fmac.Init((TKeyParameter.Create(K2) as IKeyParameter) as ICipherParameters);
+  FMac.Init((TKeyParameter.Create(LK2) as IKeyParameter) as ICipherParameters);
 
-  Fmac.BlockUpdate(C, 0, System.Length(C));
+  FMac.BlockUpdate(LC, 0, System.Length(LC));
 
-  T := Fmac.DoFinal();
-  CipherBlockSize := Fcipher.GetBlockSize;
-  MessageToEncryptSize := inLen - inOff;
+  LT := FMac.DoFinal();
+  LCipherBlockSize := FCipher.GetBlockSize;
+  LMessageToEncryptSize := AInLen - AInOff;
 
-  if (MessageToEncryptSize mod CipherBlockSize) = 0 then
+  if (LMessageToEncryptSize mod LCipherBlockSize) = 0 then
   begin
-    MessageToEncryptPadSize := 0
+    LMessageToEncryptPadSize := 0
   end
   else
   begin
-    MessageToEncryptPadSize := CipherBlockSize -
-      (MessageToEncryptSize mod CipherBlockSize);
+    LMessageToEncryptPadSize := LCipherBlockSize -
+      (LMessageToEncryptSize mod LCipherBlockSize);
   end;
   // Output the quadruple (SECURE_HEAD_DETAILS,V,T,C).
   // SECURE_HEAD_DETAILS :=
@@ -213,58 +213,58 @@ begin
   // C := Encrypted Payload
 
   System.SetLength(Result, SECURE_HEAD_SIZE + System.Length(FV) +
-    System.Length(T) + System.Length(C));
+    System.Length(LT) + System.Length(LC));
 
   PByte(Result)^ := Byte(System.Length(FV));
-  (PByte(Result) + 1)^ := Byte(System.Length(T));
-  (PWord(Result) + 1)^ := UInt16(MessageToEncryptSize);
+  (PByte(Result) + 1)^ := Byte(System.Length(LT));
+  (PWord(Result) + 1)^ := UInt16(LMessageToEncryptSize);
   (PWord(Result) + 2)^ :=
-    UInt16(MessageToEncryptSize + MessageToEncryptPadSize);
+    UInt16(LMessageToEncryptSize + LMessageToEncryptPadSize);
 
   System.Move(FV[0], Result[SECURE_HEAD_SIZE], System.Length(FV) *
     System.SizeOf(Byte));
 
-  System.Move(T[0], Result[SECURE_HEAD_SIZE + System.Length(FV)],
-    System.Length(T) * System.SizeOf(Byte));
+  System.Move(LT[0], Result[SECURE_HEAD_SIZE + System.Length(FV)],
+    System.Length(LT) * System.SizeOf(Byte));
 
-  System.Move(C[0], Result[SECURE_HEAD_SIZE + System.Length(FV) +
-    System.Length(T)], System.Length(C) * System.SizeOf(Byte));
+  System.Move(LC[0], Result[SECURE_HEAD_SIZE + System.Length(FV) +
+    System.Length(LT)], System.Length(LC) * System.SizeOf(Byte));
 
 end;
 
-function TPascalCoinIESEngine.ProcessBlock(const &in: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPascalCoinIesEngine.ProcessBlock(const AIn: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  ephKeyPair: IEphemeralKeyPair;
-  bIn: TBytesStream;
-  encLength: Int32;
-  z: TBigInteger;
-  BigZ: TCryptoLibByteArray;
-  kdfParam: IKDFParameters;
+  LEphKeyPair: IEphemeralKeyPair;
+  LBIn: TBytesStream;
+  LEncLength: Int32;
+  LZ: TBigInteger;
+  LBigZ: TCryptoLibByteArray;
+  LKdfParam: IKDFParameters;
 begin
-  if (FforEncryption) then
+  if (FForEncryption) then
   begin
-    if (FkeyPairGenerator <> Nil) then
+    if (FKeyPairGenerator <> nil) then
     begin
-      ephKeyPair := FkeyPairGenerator.Generate;
+      LEphKeyPair := FKeyPairGenerator.Generate;
 
-      FprivParam := ephKeyPair.GetKeyPair.Private;
-      FV := ephKeyPair.GetEncodedPublicKey;
+      FPrivParam := LEphKeyPair.GetKeyPair.Private;
+      FV := LEphKeyPair.GetEncodedPublicKey;
     end
   end
   else
   begin
-    if (FkeyParser <> Nil) then
+    if (FKeyParser <> nil) then
     begin
       // used TBytesStream here for one pass creation and population with byte array :)
-      bIn := TBytesStream.Create(System.Copy(&in, inOff, inLen));
+      LBIn := TBytesStream.Create(System.Copy(AIn, AInOff, AInLen));
 
       try
         // for existing PascalCoin compatiblity purposes
-        bIn.Position := SECURE_HEAD_SIZE;
+        LBIn.Position := SECURE_HEAD_SIZE;
 
         try
-          FpubParam := FkeyParser.ReadKey(bIn);
+          FPubParam := FKeyParser.ReadKey(LBIn);
         except
           on e: EIOCryptoLibException do
           begin
@@ -280,40 +280,40 @@ begin
 
         end;
 
-        encLength := (inLen - (bIn.Size - bIn.Position));
-        FV := TArrayUtilities.CopyOfRange<Byte>(&in, inOff + SECURE_HEAD_SIZE,
-          inOff + encLength);
+        LEncLength := (AInLen - (LBIn.Size - LBIn.Position));
+        FV := TArrayUtilities.CopyOfRange<Byte>(AIn, AInOff + SECURE_HEAD_SIZE,
+          AInOff + LEncLength);
 
       finally
-        bIn.Free;
+        LBIn.Free;
       end;
     end;
   end;
 
   // Compute the common value and convert to byte array.
-  Fagree.Init(FprivParam);
-  z := Fagree.CalculateAgreement(FpubParam);
-  BigZ := TBigIntegers.AsUnsignedByteArray(Fagree.GetFieldSize, z);
+  FAgree.Init(FPrivParam);
+  LZ := FAgree.CalculateAgreement(FPubParam);
+  LBigZ := TBigIntegers.AsUnsignedByteArray(FAgree.GetFieldSize, LZ);
 
   try
     // Initialise the KDF.
-    kdfParam := TKDFParameters.Create(BigZ, Nil);
-    Fkdf.Init(kdfParam);
+    LKdfParam := TKDFParameters.Create(LBigZ, nil);
+    FKdf.Init(LKdfParam);
 
-    if FforEncryption then
+    if FForEncryption then
     begin
-      Result := EncryptBlock(&in, inOff, inLen);
+      Result := EncryptBlock(AIn, AInOff, AInLen);
       Exit;
     end
     else
     begin
-      Result := DecryptBlock(System.Copy(&in, inOff + SECURE_HEAD_SIZE,
-        inLen - SECURE_HEAD_SIZE), inOff, inLen - SECURE_HEAD_SIZE);
+      Result := DecryptBlock(System.Copy(AIn, AInOff + SECURE_HEAD_SIZE,
+        AInLen - SECURE_HEAD_SIZE), AInOff, AInLen - SECURE_HEAD_SIZE);
       Exit;
     end;
 
   finally
-    TArrayUtilities.Fill<Byte>(BigZ, 0, System.Length(BigZ), Byte(0));
+    TArrayUtilities.Fill<Byte>(LBigZ, 0, System.Length(LBigZ), Byte(0));
   end;
 end;
 

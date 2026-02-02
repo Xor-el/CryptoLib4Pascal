@@ -17,8 +17,18 @@ uses
 {$ENDIF FPC}
   ClpIECC,
   ClpIESEngine,
-  ClpIIESCipher,
-  ClpIESCipher,
+  ClpIIESEngine,
+  ClpIKeyParser,
+  ClpIECIESPublicKeyParser,
+  ClpECIESPublicKeyParser,
+  ClpIEphemeralKeyPairGenerator,
+  ClpEphemeralKeyPairGenerator,
+  ClpIECKeyPairGenerator,
+  ClpECKeyPairGenerator,
+  ClpECKeyGenerationParameters,
+  ClpIECKeyGenerationParameters,
+  ClpIKeyEncoder,
+  ClpKeyEncoder,
   ClpIECDHBasicAgreement,
   ClpECDHBasicAgreement,
   ClpECPrivateKeyParameters,
@@ -38,8 +48,13 @@ uses
   ClpBigInteger,
   ClpCustomNamedCurves,
   ClpDigestUtilities,
-  ClpIIESParameterSpec,
-  ClpIESParameterSpec,
+  ClpICipherParameters,
+  ClpIIESParameters,
+  ClpIIESWithCipherParameters,
+  ClpIESParameters,
+  ClpIESWithCipherParameters,
+  ClpParametersWithIV,
+  ClpIParametersWithIV,
   ClpIPascalCoinIESEngine,
   ClpPascalCoinIESEngine,
   ClpPascalCoinECIESKdfBytesGenerator,
@@ -75,27 +90,27 @@ type
   var
     FRandom: ISecureRandom;
 
-    function GetCurveFromKeyType(keyType: TKeyType): IX9ECParameters;
-    function GetPascalCoinIESParameterSpec: IIESParameterSpec;
-    function GetECIESPascalCoinCompatibilityEngine: IPascalCoinIESEngine;
+    function GetCurveFromKeyType(AKeyType: TKeyType): IX9ECParameters;
+    function GetPascalCoinIESParameters: ICipherParameters;
+    function GetECIESPascalCoinCompatibilityEngine: IPascalCoinIesEngine;
 
-    function RecreatePublicKeyFromAffineXandAffineYCoord(keyType: TKeyType;
+    function RecreatePublicKeyFromAffineXandAffineYCoord(AKeyType: TKeyType;
       const RawAffineX, RawAffineY: TBytes): IECPublicKeyParameters;
 
-    function RecreatePrivateKeyFromByteArray(keyType: TKeyType;
+    function RecreatePrivateKeyFromByteArray(AKeyType: TKeyType;
       const RawPrivateKey: TBytes): IECPrivateKeyParameters;
 
-    function DoPascalCoinECIESEncrypt(keyType: TKeyType;
+    function DoPascalCoinECIESEncrypt(AKeyType: TKeyType;
       const RawAffineXCoord, RawAffineYCoord, PayloadToEncrypt: String): String;
 
-    function DoPascalCoinECIESDecrypt(keyType: TKeyType;
+    function DoPascalCoinECIESDecrypt(AKeyType: TKeyType;
       const RawPrivateKey, PayloadToDecrypt: String): String;
 
-    procedure DoTestPascalCoinECIESDecrypt(const id: String; keyType: TKeyType;
+    procedure DoTestPascalCoinECIESDecrypt(const AId: String; AKeyType: TKeyType;
       const RawPrivateKey, PayloadToDecrypt, ExpectedOutput: String);
 
-    procedure DoTestPascalCoinECIESEncryptDecrypt(const id: String;
-      keyType: TKeyType; const RawPrivateKey, RawAffineXCoord, RawAffineYCoord,
+    procedure DoTestPascalCoinECIESEncryptDecrypt(const AId: String;
+      AKeyType: TKeyType; const RawPrivateKey, RawAffineXCoord, RawAffineYCoord,
       PayloadToEncrypt: String);
 
   protected
@@ -124,80 +139,65 @@ begin
   FRandom := Nil;
 end;
 
-function TTestPascalCoinECIES.GetCurveFromKeyType(keyType: TKeyType)
+function TTestPascalCoinECIES.GetCurveFromKeyType(AKeyType: TKeyType)
   : IX9ECParameters;
 var
-  CurveName: string;
+  LCurveName: String;
 begin
-  CurveName := GetEnumName(TypeInfo(TKeyType), Ord(keyType));
-  Result := TCustomNamedCurves.GetByName(CurveName);
+  LCurveName := GetEnumName(TypeInfo(TKeyType), Ord(AKeyType));
+  Result := TCustomNamedCurves.GetByName(LCurveName);
 end;
 
-function TTestPascalCoinECIES.GetPascalCoinIESParameterSpec: IIESParameterSpec;
+function TTestPascalCoinECIES.GetPascalCoinIESParameters: ICipherParameters;
 var
-  Derivation, Encoding, IVBytes: TBytes;
-  MacKeySizeInBits, CipherKeySizeInBits: Int32;
-  UsePointCompression: boolean;
+  LDerivation, LEncoding, LIVBytes: TBytes;
+  LMacKeySizeInBits, LCipherKeySizeInBits: Int32;
+  LIesParams: IIesWithCipherParameters;
 begin
-  // Set up IES Parameter Spec For Compatibility With PascalCoin Current Implementation
+  LDerivation := nil;
+  LEncoding := nil;
+  System.SetLength(LIVBytes, 16); // Zero-initialized IV for PascalCoin compatibility
+  LMacKeySizeInBits := 32 * 8;
+  LCipherKeySizeInBits := 32 * 8;
 
-  // The derivation and encoding vectors are used when initialising the KDF and MAC.
-  // They're optional but if used then they need to be known by the other user so that
-  // they can decrypt the ciphertext and verify the MAC correctly. The security is based
-  // on the shared secret coming from the (static-ephemeral) ECDH key agreement.
-  Derivation := nil;
-
-  Encoding := nil;
-
-  System.SetLength(IVBytes, 16); // using Zero Initialized IV for compatibility
-
-  MacKeySizeInBits := 32 * 8;
-
-  // Since we are using AES256_CBC for compatibility
-  CipherKeySizeInBits := 32 * 8;
-
-  // whether to use point compression when deriving the octets string
-  // from a point or not in the EphemeralKeyPairGenerator
-  UsePointCompression := True; // for compatibility
-
-  Result := TIESParameterSpec.Create(Derivation, Encoding, MacKeySizeInBits,
-    CipherKeySizeInBits, IVBytes, UsePointCompression);
+  LIesParams := TIesWithCipherParameters.Create(LDerivation, LEncoding,
+    LMacKeySizeInBits, LCipherKeySizeInBits);
+  Result := TParametersWithIV.Create(LIesParams, LIVBytes);
 end;
 
 function TTestPascalCoinECIES.GetECIESPascalCoinCompatibilityEngine
-  : IPascalCoinIESEngine;
+  : IPascalCoinIesEngine;
 var
-  cipher: IBufferedBlockCipher;
-  AesEngine: IAesEngine;
-  blockCipher: ICbcBlockCipher;
-  ECDHBasicAgreementInstance: IECDHBasicAgreement;
-  KDFInstance: IPascalCoinECIESKdfBytesGenerator;
-  DigestMACInstance: IMac;
-
+  LCipher: IBufferedBlockCipher;
+  LAesEngine: IAesEngine;
+  LBlockCipher: ICbcBlockCipher;
+  LECDHBasicAgreementInstance: IECDHBasicAgreement;
+  LKDFInstance: IPascalCoinECIESKdfBytesGenerator;
+  LDigestMACInstance: IMac;
 begin
   // Set up IES Cipher Engine For Compatibility With PascalCoin
 
-  ECDHBasicAgreementInstance := TECDHBasicAgreement.Create();
+  LECDHBasicAgreementInstance := TECDHBasicAgreement.Create();
 
-  KDFInstance := TPascalCoinECIESKdfBytesGenerator.Create
+  LKDFInstance := TPascalCoinECIESKdfBytesGenerator.Create
     (TDigestUtilities.GetDigest('SHA-512'));
 
-  DigestMACInstance := TMacUtilities.GetMac('HMAC-MD5');
+  LDigestMACInstance := TMacUtilities.GetMac('HMAC-MD5');
 
   // Set Up Block Cipher
-  AesEngine := TAesEngine.Create(); // AES Engine
+  LAesEngine := TAesEngine.Create(); // AES Engine
 
-  blockCipher := TCbcBlockCipher.Create(AesEngine); // CBC
+  LBlockCipher := TCbcBlockCipher.Create(LAesEngine); // CBC
 
-  cipher := TPaddedBufferedBlockCipher.Create(blockCipher,
+  LCipher := TPaddedBufferedBlockCipher.Create(LBlockCipher,
     TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
 
-  Result := TPascalCoinIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
-    DigestMACInstance, cipher);
+  Result := TPascalCoinIesEngine.Create(LECDHBasicAgreementInstance, LKDFInstance,
+    LDigestMACInstance, LCipher);
 end;
 
 function TTestPascalCoinECIES.RecreatePublicKeyFromAffineXandAffineYCoord
-  (keyType: TKeyType; const RawAffineX, RawAffineY: TBytes)
+  (AKeyType: TKeyType; const RawAffineX, RawAffineY: TBytes)
   : IECPublicKeyParameters;
 var
   domain: IECDomainParameters;
@@ -205,7 +205,7 @@ var
   point: IECPoint;
   BigXCoord, BigYCoord: TBigInteger;
 begin
-  LCurve := GetCurveFromKeyType(keyType);
+  LCurve := GetCurveFromKeyType(AKeyType);
   domain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N,
     LCurve.H, LCurve.GetSeed);
 
@@ -217,14 +217,14 @@ begin
   Result := TECPublicKeyParameters.Create('ECDSA', point, domain);
 end;
 
-function TTestPascalCoinECIES.RecreatePrivateKeyFromByteArray(keyType: TKeyType;
+function TTestPascalCoinECIES.RecreatePrivateKeyFromByteArray(AKeyType: TKeyType;
   const RawPrivateKey: TBytes): IECPrivateKeyParameters;
 var
   domain: IECDomainParameters;
   LCurve: IX9ECParameters;
   PrivD: TBigInteger;
 begin
-  LCurve := GetCurveFromKeyType(keyType);
+  LCurve := GetCurveFromKeyType(AKeyType);
   domain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N,
     LCurve.H, LCurve.GetSeed);
 
@@ -233,65 +233,81 @@ begin
   Result := TECPrivateKeyParameters.Create('ECDSA', PrivD, domain);
 end;
 
-function TTestPascalCoinECIES.DoPascalCoinECIESEncrypt(keyType: TKeyType;
+function TTestPascalCoinECIES.DoPascalCoinECIESEncrypt(AKeyType: TKeyType;
   const RawAffineXCoord, RawAffineYCoord, PayloadToEncrypt: String): String;
 var
-  CipherEncrypt: IIESCipher;
+  LEngine: IIesEngine;
+  LCurve: IX9ECParameters;
+  LDomain: IECDomainParameters;
+  LGen: IECKeyPairGenerator;
+  LKeyGen: IEphemeralKeyPairGenerator;
+  LPlainBytes: TBytes;
 begin
-  // Encryption
-  CipherEncrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine());
-  CipherEncrypt.Init(True, RecreatePublicKeyFromAffineXandAffineYCoord(keyType,
+  LEngine := GetECIESPascalCoinCompatibilityEngine() as IIesEngine;
+  LCurve := GetCurveFromKeyType(AKeyType);
+  LDomain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N,
+    LCurve.H, LCurve.GetSeed);
+  LGen := TECKeyPairGenerator.Create();
+  LGen.Init(TECKeyGenerationParameters.Create(LDomain, FRandom));
+  LKeyGen := TEphemeralKeyPairGenerator.Create(LGen, TKeyEncoder.Create(True) as IKeyEncoder);
+  LEngine.Init(RecreatePublicKeyFromAffineXandAffineYCoord(AKeyType,
     DecodeHex(RawAffineXCoord), DecodeHex(RawAffineYCoord)),
-    GetPascalCoinIESParameterSpec(), FRandom);
-  Result := EncodeHex(CipherEncrypt.DoFinal(TConverters.ConvertStringToBytes
-    (PayloadToEncrypt, TEncoding.ASCII)));
+    GetPascalCoinIESParameters(), LKeyGen);
+  LPlainBytes := TConverters.ConvertStringToBytes(PayloadToEncrypt, TEncoding.ASCII);
+  Result := EncodeHex(LEngine.ProcessBlock(LPlainBytes, 0, System.Length(LPlainBytes)));
 end;
 
-function TTestPascalCoinECIES.DoPascalCoinECIESDecrypt(keyType: TKeyType;
+function TTestPascalCoinECIES.DoPascalCoinECIESDecrypt(AKeyType: TKeyType;
   const RawPrivateKey, PayloadToDecrypt: String): String;
 var
-  CipherDecrypt: IIESCipher;
+  LEngine: IIesEngine;
+  LCurve: IX9ECParameters;
+  LDomain: IECDomainParameters;
+  LParser: IKeyParser;
+  LCipherBytes: TBytes;
 begin
   try
-    // Decryption
-    CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine());
-    CipherDecrypt.Init(False, RecreatePrivateKeyFromByteArray(keyType,
-      DecodeHex(RawPrivateKey)), GetPascalCoinIESParameterSpec(), FRandom);
-
+    LEngine := GetECIESPascalCoinCompatibilityEngine() as IIesEngine;
+    LCurve := GetCurveFromKeyType(AKeyType);
+    LDomain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N,
+      LCurve.H, LCurve.GetSeed);
+    LParser := TECIESPublicKeyParser.Create(LDomain) as IKeyParser;
+    LEngine.Init(RecreatePrivateKeyFromByteArray(AKeyType, DecodeHex(RawPrivateKey)),
+      GetPascalCoinIESParameters(), LParser);
+    LCipherBytes := DecodeHex(PayloadToDecrypt);
     Result := TConverters.ConvertBytesToString
-      (CipherDecrypt.DoFinal(DecodeHex(PayloadToDecrypt)), TEncoding.ASCII);
+      (LEngine.ProcessBlock(LCipherBytes, 0, System.Length(LCipherBytes)), TEncoding.ASCII);
   except
-    // should only happen if decryption fails
     raise;
   end;
 end;
 
-procedure TTestPascalCoinECIES.DoTestPascalCoinECIESDecrypt(const id: String;
-  keyType: TKeyType; const RawPrivateKey, PayloadToDecrypt,
+procedure TTestPascalCoinECIES.DoTestPascalCoinECIESDecrypt(const AId: String;
+  AKeyType: TKeyType; const RawPrivateKey, PayloadToDecrypt,
   ExpectedOutput: String);
 var
   DecryptedPayload: String;
 begin
-  DecryptedPayload := DoPascalCoinECIESDecrypt(keyType, RawPrivateKey,
+  DecryptedPayload := DoPascalCoinECIESDecrypt(AKeyType, RawPrivateKey,
     PayloadToDecrypt);
   CheckEquals(ExpectedOutput, DecryptedPayload,
-    Format('Test %s Failed, Expected "%s" but got "%s"', [id + '_Decrypt',
+    Format('Test %s Failed, Expected "%s" but got "%s"', [AId + '_Decrypt',
     ExpectedOutput, DecryptedPayload]));
 end;
 
 procedure TTestPascalCoinECIES.DoTestPascalCoinECIESEncryptDecrypt
-  (const id: String; keyType: TKeyType; const RawPrivateKey, RawAffineXCoord,
+  (const AId: String; AKeyType: TKeyType; const RawPrivateKey, RawAffineXCoord,
   RawAffineYCoord, PayloadToEncrypt: String);
 var
   ActualOutput: String;
 begin
-  ActualOutput := DoPascalCoinECIESDecrypt(keyType, RawPrivateKey,
-    DoPascalCoinECIESEncrypt(keyType, RawAffineXCoord, RawAffineYCoord,
+  ActualOutput := DoPascalCoinECIESDecrypt(AKeyType, RawPrivateKey,
+    DoPascalCoinECIESEncrypt(AKeyType, RawAffineXCoord, RawAffineYCoord,
     PayloadToEncrypt));
 
   CheckEquals(PayloadToEncrypt, ActualOutput,
     Format('Test %s Failed, Expected "%s" but got "%s"',
-    [id + '_EncryptDecrypt', PayloadToEncrypt, ActualOutput]));
+    [AId + '_EncryptDecrypt', PayloadToEncrypt, ActualOutput]));
 end;
 
 procedure TTestPascalCoinECIES.TestPacalCoinECIESDecrypt;
