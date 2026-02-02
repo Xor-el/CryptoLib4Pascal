@@ -22,7 +22,7 @@ unit ClpIPascalCoinIesEngine;
 interface
 
 uses
-  ClpIIESEngine;
+  ClpIIesEngine;
 
 type
 
