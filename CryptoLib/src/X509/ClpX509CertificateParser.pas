@@ -60,8 +60,8 @@ type
     FSDataObjectCount: Int32;
     FCurrentStream: TStream;
 
-    class constructor Boot();
-    class procedure InitializePemCertParser();
+    class constructor Create();
+    class procedure Boot();
 
     function ReadDerCertificate(const ADIn: TAsn1InputStream): IX509Certificate;
     function ReadPemCertificate(const AInStream: TStream): IX509Certificate;
@@ -82,12 +82,12 @@ implementation
 
 { TX509CertificateParser }
 
-class constructor TX509CertificateParser.Boot();
+class constructor TX509CertificateParser.Create();
 begin
-  InitializePemCertParser();
+  Boot();
 end;
 
-class procedure TX509CertificateParser.InitializePemCertParser();
+class procedure TX509CertificateParser.Boot();
 begin
   FPemCertParser := TPemParser.Create('CERTIFICATE');
 end;

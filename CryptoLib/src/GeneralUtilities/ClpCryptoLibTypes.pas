@@ -76,6 +76,7 @@ type
   EBadBlockCryptoLibException = class(ECryptoLibException);
   EPemGenerationCryptoLibException = class(ECryptoLibException);
   ECertificateCryptoLibException = class(ECryptoLibException);
+  ECrlCryptoLibException = class(ECryptoLibException);
 
   /// <summary>
   /// Represents a dynamic array of Byte.

@@ -167,6 +167,8 @@ type
     function GetCount: Int32;
     function GetNames: TCryptoLibGenericArray<IGeneralName>;
 
+    function ToString: String;
+
     property Count: Int32 read GetCount;
   end;
 
@@ -481,6 +483,8 @@ type
   ICrlDistPoint = interface(IAsn1Encodable)
     ['{B8C9D0E1-F2A3-4567-1234-567890123456}']
     function GetDistributionPoints: TCryptoLibGenericArray<IDistributionPoint>;
+
+    function ToString: String;
   end;
 
   /// <summary>
