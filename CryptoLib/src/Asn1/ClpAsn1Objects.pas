@@ -1761,6 +1761,10 @@ type
     function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
     function GetEncodingDer(): IDerEncoding; override;
     function GetEncodingDerImplicit(ATagClass, ATagNo: Int32): IDerEncoding; override;
+
+    property Bytes: TCryptoLibByteArray read GetBytes;
+    property Value: TBigInteger read GetValue;
+    property IntValueExact: Int32 read GetIntValueExact;
   end;
 
   /// <summary>
@@ -1930,8 +1934,6 @@ type
       end;
   public
     class constructor Create;
-    constructor Create(const AContents: TCryptoLibByteArray); overload;
-    constructor Create(const AContents: TCryptoLibByteArray; AClone: Boolean); overload;
     constructor Create(const AIdentifier: String); overload;
     class function FromContents(const AContents: TCryptoLibByteArray): IAsn1RelativeOid; static;
     class function GetInstance(const AObj: TObject): IAsn1RelativeOid; overload; static;
@@ -6203,30 +6205,22 @@ end;
 class function TBerOctetString.FromSequence(const ASequence: IAsn1Sequence): IBerOctetString;
 var
   LMapped: TCryptoLibGenericArray<IAsn1OctetString>;
-  LSequence: TAsn1Sequence;
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   if ASequence = nil then
   begin
     Result := nil;
     Exit;
   end;
-  // Cast to class to access MapElements (interfaces can't have generic methods in Pascal)
-  if ASequence is TAsn1Sequence then
-  begin
-    LSequence := ASequence as TAsn1Sequence;
-    LMapped := LSequence.MapElements<IAsn1OctetString>(
-      function(AElement: IAsn1Encodable): IAsn1OctetString
-      var
-        LObj: IAsn1Object;
-      begin
-        LObj := AElement.ToAsn1Object();
-        Result := TAsn1OctetString.GetInstance(LObj);
-      end);
-  end
-  else
-  begin
-    raise EArgumentCryptoLibException.Create('sequence must be a TAsn1Sequence instance');
-  end;
+  LElements := ASequence.GetElements();
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1OctetString>(LElements,
+    function(AElement: IAsn1Encodable): IAsn1OctetString
+    var
+      LObj: IAsn1Object;
+    begin
+      LObj := AElement.ToAsn1Object();
+      Result := TAsn1OctetString.GetInstance(LObj);
+    end);
   Result := TBerOctetString.Create(LMapped);
 end;
 
@@ -6906,30 +6900,22 @@ end;
 class function TBerBitString.FromSequence(const ASequence: IAsn1Sequence): IBerBitString;
 var
   LMapped: TCryptoLibGenericArray<IDerBitString>;
-  LSequence: TAsn1Sequence;
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   if ASequence = nil then
   begin
     Result := nil;
     Exit;
   end;
-  // Cast to class to access MapElements (interfaces can't have generic methods in Pascal)
-  if ASequence is TAsn1Sequence then
-  begin
-    LSequence := ASequence as TAsn1Sequence;
-    LMapped := LSequence.MapElements<IDerBitString>(
-      function(AElement: IAsn1Encodable): IDerBitString
-      var
-        LObj: IAsn1Object;
-      begin
-        LObj := AElement.ToAsn1Object();
-        Result := TDerBitString.GetInstance(LObj);
-      end);
-  end
-  else
-  begin
-    raise EArgumentCryptoLibException.Create('sequence must be a TAsn1Sequence instance');
-  end;
+  LElements := ASequence.GetElements();
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IDerBitString>(LElements,
+    function(AElement: IAsn1Encodable): IDerBitString
+    var
+      LObj: IAsn1Object;
+    begin
+      LObj := AElement.ToAsn1Object();
+      Result := TDerBitString.GetInstance(LObj);
+    end);
   Result := TBerBitString.Create(LMapped);
 end;
 
@@ -8733,21 +8719,6 @@ end;
 
 { TAsn1RelativeOid }
 
-constructor TAsn1RelativeOid.Create(const AContents: TCryptoLibByteArray);
-begin
-  Create(AContents, True);
-end;
-
-constructor TAsn1RelativeOid.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
-begin
-  inherited Create();
-  CheckContentsLength(System.Length(AContents));
-  if AClone then
-    FContents := System.Copy(AContents)
-  else
-    FContents := AContents;
-end;
-
 class procedure TAsn1RelativeOid.CheckContentsLength(AContentsLength: Int32);
 begin
   if AContentsLength > 4096 then
@@ -8795,6 +8766,7 @@ end;
 
 constructor TAsn1RelativeOid.Create(const AContents: TCryptoLibByteArray; const AIdentifier: String);
 begin
+  inherited Create();
   FContents := AContents;
   FIdentifier := AIdentifier;
 end;
@@ -8808,7 +8780,6 @@ end;
 
 class function TAsn1RelativeOid.GetInstance(const AObj: TObject): IAsn1RelativeOid;
 var
-  LAsn1Obj: IAsn1Object;
   LConvertible: IAsn1Convertible;
 begin
   if AObj = nil then
@@ -8817,19 +8788,16 @@ begin
     Exit;
   end;
 
-  // If it's already IAsn1Object, forward directly
-  if Supports(AObj, IAsn1Object, LAsn1Obj) then
-  begin
-    Result := GetInstance(LAsn1Obj);
+  if Supports(AObj, IAsn1RelativeOid, Result) then
     Exit;
-  end;
 
-  // Handle IAsn1Convertible conversion
   if Supports(AObj, IAsn1Convertible, LConvertible) then
   begin
-    LAsn1Obj := LConvertible.ToAsn1Object();
-    Result := GetInstance(LAsn1Obj);
-    Exit;
+    if not (AObj is TAsn1Object) then
+    begin
+      Result := GetInstance(LConvertible.ToAsn1Object());
+      Exit;
+    end;
   end;
 
   raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
@@ -8911,8 +8879,7 @@ begin
     LContents := ParseIdentifier(AIdentifier);
     if System.Length(LContents) <= MaxContentsLength then
     begin
-      AOid := TAsn1RelativeOid.Create(LContents, False);
-      (AOid as TAsn1RelativeOid).FIdentifier := AIdentifier;
+      AOid := TAsn1RelativeOid.Create(LContents, AIdentifier);
       Result := True;
       Exit;
     end;
@@ -9209,6 +9176,7 @@ end;
 class function TAsn1RelativeOid.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
 var
   LIndex: UInt32;
+  LContents: TCryptoLibByteArray;
   LOriginalEntry: IAsn1RelativeOid;
   LNewEntry: IAsn1RelativeOid;
   LExchangedEntry: IAsn1RelativeOid;
@@ -9235,9 +9203,10 @@ begin
     raise EArgumentCryptoLibException.Create('invalid relative OID contents');
 
   if AClone then
-    LNewEntry := TAsn1RelativeOid.Create(AContents, True)
+    LContents := System.Copy(AContents)
   else
-    LNewEntry := TAsn1RelativeOid.Create(AContents, False);
+    LContents := AContents;
+  LNewEntry := TAsn1RelativeOid.Create(LContents, '');
 
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then

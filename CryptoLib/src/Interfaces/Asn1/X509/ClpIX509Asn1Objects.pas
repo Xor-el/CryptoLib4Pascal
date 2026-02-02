@@ -64,6 +64,11 @@ type
   IPolicyInformation = interface;
   ICrlDistPoint = interface;
   IDeltaCertificateDescriptor = interface;
+  ICrlEntry = interface;
+  ITbsCertificateList = interface;
+  ICrlReason = interface;
+  IIssuingDistributionPoint = interface;
+  ICertificateList = interface;
 
   /// <summary>
   /// Interface for the AlgorithmIdentifier object.
@@ -565,6 +570,8 @@ type
   /// </summary>
   IDistributionPointName = interface(IAsn1Choice)
     ['{A3B4C5D6-E7F8-9012-4567-890123456789}']
+
+    function ToString: String;
   end;
 
   /// <summary>
@@ -572,6 +579,106 @@ type
   /// </summary>
   IReasonFlags = interface(IAsn1Encodable)
     ['{B4C5D6E7-F8A9-0123-5678-901234567890}']
+
+    function ToString: String;
+  end;
+
+  /// <summary>
+  /// Interface for CrlEntry (revoked certificate entry in a CRL).
+  /// </summary>
+  ICrlEntry = interface(IAsn1Encodable)
+    ['{E8F9A0B1-C2D3-E4F5-A6B7-C8D9E0F1A2B3}']
+
+    function GetUserCertificate: IDerInteger;
+    function GetRevocationDate: ITime;
+    function GetExtensions: IX509Extensions;
+
+    property UserCertificate: IDerInteger read GetUserCertificate;
+    property RevocationDate: ITime read GetRevocationDate;
+    property Extensions: IX509Extensions read GetExtensions;
+  end;
+
+  /// <summary>
+  /// Interface for TbsCertificateList (TBSCertList).
+  /// </summary>
+  ITbsCertificateList = interface(IAsn1Encodable)
+    ['{F9A0B1C2-D3E4-F5A6-B7C8-D9E0F1A2B3C4}']
+
+    function GetVersion: Int32;
+    function GetVersionNumber: IDerInteger;
+    function GetSignature: IAlgorithmIdentifier;
+    function GetIssuer: IX509Name;
+    function GetThisUpdate: ITime;
+    function GetNextUpdate: ITime;
+    function GetRevokedCertificates: TCryptoLibGenericArray<ICrlEntry>;
+    function GetExtensions: IX509Extensions;
+
+    property Version: Int32 read GetVersion;
+    property VersionNumber: IDerInteger read GetVersionNumber;
+    property Signature: IAlgorithmIdentifier read GetSignature;
+    property Issuer: IX509Name read GetIssuer;
+    property ThisUpdate: ITime read GetThisUpdate;
+    property NextUpdate: ITime read GetNextUpdate;
+    property Extensions: IX509Extensions read GetExtensions;
+  end;
+
+  /// <summary>
+  /// Interface for CrlReason (CRL reason enumeration).
+  /// </summary>
+  ICrlReason = interface(IDerEnumerated)
+    ['{A0B1C2D3-E4F5-A6B7-C8D9-E0F1A2B3C4D5}']
+
+    function ToString: String;
+  end;
+
+  /// <summary>
+  /// Interface for IssuingDistributionPoint.
+  /// </summary>
+  IIssuingDistributionPoint = interface(IAsn1Encodable)
+    ['{B1C2D3E4-F5A6-B7C8-D9E0-F1A2B3C4D5E6}']
+
+    function GetDistributionPoint: IDistributionPointName;
+    function GetOnlyContainsUserCerts: Boolean;
+    function GetOnlyContainsCACerts: Boolean;
+    function GetOnlySomeReasons: IReasonFlags;
+    function GetIsIndirectCrl: Boolean;
+    function GetOnlyContainsAttributeCerts: Boolean;
+
+    function ToString: String;
+
+    property DistributionPoint: IDistributionPointName read GetDistributionPoint;
+    property OnlyContainsUserCerts: Boolean read GetOnlyContainsUserCerts;
+    property OnlyContainsCACerts: Boolean read GetOnlyContainsCACerts;
+    property OnlySomeReasons: IReasonFlags read GetOnlySomeReasons;
+    property IsIndirectCrl: Boolean read GetIsIndirectCrl;
+    property OnlyContainsAttributeCerts: Boolean read GetOnlyContainsAttributeCerts;
+  end;
+
+  /// <summary>
+  /// Interface for CertificateList (X.509 CRL).
+  /// </summary>
+  ICertificateList = interface(IAsn1Encodable)
+    ['{C2D3E4F5-A6B7-C8D9-E0F1-A2B3C4D5E6F7}']
+
+    function GetTbsCertList: ITbsCertificateList;
+    function GetRevokedCertificates: TCryptoLibGenericArray<ICrlEntry>;
+    function GetSignatureAlgorithm: IAlgorithmIdentifier;
+    function GetSignature: IDerBitString;
+    function GetSignatureOctets: TCryptoLibByteArray;
+    function GetVersion: Int32;
+    function GetIssuer: IX509Name;
+    function GetThisUpdate: ITime;
+    function GetNextUpdate: ITime;
+    function GetExtensions: IX509Extensions;
+
+    property TbsCertList: ITbsCertificateList read GetTbsCertList;
+    property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;
+    property Signature: IDerBitString read GetSignature;
+    property Version: Int32 read GetVersion;
+    property Issuer: IX509Name read GetIssuer;
+    property ThisUpdate: ITime read GetThisUpdate;
+    property NextUpdate: ITime read GetNextUpdate;
+    property Extensions: IX509Extensions read GetExtensions;
   end;
 
 implementation

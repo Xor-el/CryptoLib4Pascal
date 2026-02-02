@@ -877,6 +877,42 @@ type
   end;
 
   /// <summary>
+  /// CrlEntry - revoked certificate entry in a CRL.
+  /// </summary>
+  TCrlEntry = class(TAsn1Encodable, ICrlEntry)
+
+  strict private
+  var
+    FSeq: IAsn1Sequence;
+    FUserCertificate: IDerInteger;
+    FRevocationDate: ITime;
+    FCrlEntryExtensions: IX509Extensions;
+
+  strict protected
+    function GetUserCertificate: IDerInteger;
+    function GetRevocationDate: ITime;
+    function GetExtensions: IX509Extensions;
+
+  public
+    class function GetInstance(AObj: TObject): ICrlEntry; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ICrlEntry; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ICrlEntry; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICrlEntry; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICrlEntry; static;
+
+    constructor Create(const ASeq: IAsn1Sequence);
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property UserCertificate: IDerInteger read GetUserCertificate;
+    property RevocationDate: ITime read GetRevocationDate;
+    property Extensions: IX509Extensions read GetExtensions;
+
+  end;
+
+  /// <summary>
   /// The AltSignatureAlgorithm object.
   /// </summary>
   TAltSignatureAlgorithm = class(TAsn1Encodable, IAltSignatureAlgorithm)
@@ -1554,6 +1590,100 @@ type
   end;
 
   /// <summary>
+  /// CrlReason - CRL reason enumeration.
+  /// </summary>
+  /// <remarks>
+  /// <para>
+  /// Based on the X.509 CRLReason enumeration:
+  /// </para>
+  /// <code>
+  /// CRLReason ::= Enumerated {
+  ///   unspecified             (0),
+  ///   keyCompromise           (1),
+  ///   cACompromise            (2),
+  ///   affiliationChanged      (3),
+  ///   superseded              (4),
+  ///   cessationOfOperation    (5),
+  ///   certificateHold         (6),
+  ///   removeFromCRL           (8),
+  ///   privilegeWithdrawn      (9),
+  ///   aACompromise           (10)
+  /// }
+  /// </code>
+  /// </remarks>
+  TCrlReason = class(TDerEnumerated, ICrlReason)
+
+  public
+  const
+    Unspecified = 0;
+    KeyCompromise = 1;
+    CACompromise = 2;
+    AffiliationChanged = 3;
+    Superseded = 4;
+    CessationOfOperation = 5;
+    CertificateHold = 6;
+    // 7 -> Unknown
+    RemoveFromCrl = 8;
+    PrivilegeWithdrawn = 9;
+    AACompromise = 10;
+
+    constructor Create(AReason: Int32); overload;
+    constructor Create(const AReason: IDerEnumerated); overload;
+
+    function ToString: String; override;
+
+  end;
+
+  /// <summary>
+  /// TbsCertificateList - TBSCertList (RFC-2459).
+  /// </summary>
+  TTbsCertificateList = class(TAsn1Encodable, ITbsCertificateList)
+
+  strict private
+  var
+    FSeq: IAsn1Sequence;
+    FVersion: IDerInteger;
+    FSignature: IAlgorithmIdentifier;
+    FIssuer: IX509Name;
+    FThisUpdate: ITime;
+    FNextUpdate: ITime;
+    FRevokedCertificates: IAsn1Sequence;
+    FCrlExtensions: IX509Extensions;
+
+  strict protected
+    function GetVersion: Int32;
+    function GetVersionNumber: IDerInteger;
+    function GetSignature: IAlgorithmIdentifier;
+    function GetIssuer: IX509Name;
+    function GetThisUpdate: ITime;
+    function GetNextUpdate: ITime;
+    function GetExtensions: IX509Extensions;
+
+  public
+    class function GetInstance(AObj: TObject): ITbsCertificateList; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ITbsCertificateList; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ITbsCertificateList; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ITbsCertificateList; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ITbsCertificateList; static;
+
+    constructor Create(const ASeq: IAsn1Sequence);
+
+    function ToAsn1Object: IAsn1Object; override;
+    function GetRevokedCertificates: TCryptoLibGenericArray<ICrlEntry>;
+
+    property Version: Int32 read GetVersion;
+    property VersionNumber: IDerInteger read GetVersionNumber;
+    property Signature: IAlgorithmIdentifier read GetSignature;
+    property Issuer: IX509Name read GetIssuer;
+    property ThisUpdate: ITime read GetThisUpdate;
+    property NextUpdate: ITime read GetNextUpdate;
+    property Extensions: IX509Extensions read GetExtensions;
+
+  end;
+
+  /// <summary>
   /// The DistributionPoint object.
   /// </summary>
   TDistributionPoint = class(TAsn1Encodable, IDistributionPoint)
@@ -1591,6 +1721,125 @@ type
     property DistributionPointName: IDistributionPointName read GetDistributionPointName;
     property Reasons: IReasonFlags read GetReasons;
     property CrlIssuer: IGeneralNames read GetCrlIssuer;
+
+  end;
+
+  /// <remarks>
+  /// <code>
+  /// IssuingDistributionPoint ::= SEQUENCE {
+  ///   distributionPoint          [0] DistributionPointName OPTIONAL,
+  ///   onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+  ///   onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+  ///   onlySomeReasons            [3] ReasonFlags OPTIONAL,
+  ///   indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+  ///   onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+  /// }
+  /// </code>
+  /// </remarks>
+  TIssuingDistributionPoint = class(TAsn1Encodable, IIssuingDistributionPoint)
+
+  strict private
+  var
+    FDistributionPoint: IDistributionPointName;
+    FOnlyContainsUserCerts: IDerBoolean;
+    FOnlyContainsCACerts: IDerBoolean;
+    FOnlySomeReasons: IReasonFlags;
+    FIndirectCRL: IDerBoolean;
+    FOnlyContainsAttributeCerts: IDerBoolean;
+    FSeq: IAsn1Sequence;
+
+  strict protected
+    function GetDistributionPoint: IDistributionPointName;
+    function GetOnlyContainsUserCerts: Boolean;
+    function GetOnlyContainsCACerts: Boolean;
+    function GetOnlySomeReasons: IReasonFlags;
+    function GetIsIndirectCrl: Boolean;
+    function GetOnlyContainsAttributeCerts: Boolean;
+
+  public
+    class function GetInstance(AObj: TObject): IIssuingDistributionPoint; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IIssuingDistributionPoint; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IIssuingDistributionPoint; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IIssuingDistributionPoint; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IIssuingDistributionPoint; static;
+
+    constructor Create(const ADistributionPoint: IDistributionPointName;
+      AOnlyContainsUserCerts, AOnlyContainsCACerts: Boolean;
+      const AOnlySomeReasons: IReasonFlags; AIndirectCRL, AOnlyContainsAttributeCerts: Boolean); overload;
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+    function ToString: String; override;
+
+    property DistributionPoint: IDistributionPointName read GetDistributionPoint;
+    property OnlyContainsUserCerts: Boolean read GetOnlyContainsUserCerts;
+    property OnlyContainsCACerts: Boolean read GetOnlyContainsCACerts;
+    property OnlySomeReasons: IReasonFlags read GetOnlySomeReasons;
+    property IsIndirectCrl: Boolean read GetIsIndirectCrl;
+    property OnlyContainsAttributeCerts: Boolean read GetOnlyContainsAttributeCerts;
+
+  end;
+
+  /// <summary>
+  /// PKIX RFC-2459.
+  /// </summary>
+  /// <remarks>
+  /// <para>
+  /// The X.509 v2 CRL syntax is defined as follows. For signature calculation,
+  /// the data that is to be signed is ASN.1 DER-encoded.
+  /// </para>
+  /// <code>
+  /// CertificateList ::= SEQUENCE {
+  ///     tbsCertList          TbsCertList,
+  ///     signatureAlgorithm   AlgorithmIdentifier,
+  ///     signatureValue       BIT STRING
+  /// }
+  /// </code>
+  /// </remarks>
+  TCertificateList = class(TAsn1Encodable, ICertificateList)
+
+  strict private
+  var
+    FTbsCertList: ITbsCertificateList;
+    FSignatureAlgorithm: IAlgorithmIdentifier;
+    FSignatureValue: IDerBitString;
+
+  strict protected
+    function GetTbsCertList: ITbsCertificateList;
+    function GetRevokedCertificates: TCryptoLibGenericArray<ICrlEntry>;
+    function GetSignatureAlgorithm: IAlgorithmIdentifier;
+    function GetSignature: IDerBitString;
+    function GetSignatureOctets: TCryptoLibByteArray;
+    function GetVersion: Int32;
+    function GetIssuer: IX509Name;
+    function GetThisUpdate: ITime;
+    function GetNextUpdate: ITime;
+    function GetExtensions: IX509Extensions;
+
+  public
+    class function GetInstance(AObj: TObject): ICertificateList; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ICertificateList; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ICertificateList; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ICertificateList; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): ICertificateList; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICertificateList; static;
+
+    constructor Create(const ASeq: IAsn1Sequence);
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property TbsCertList: ITbsCertificateList read GetTbsCertList;
+    property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;
+    property Signature: IDerBitString read GetSignature;
+    property Version: Int32 read GetVersion;
+    property Issuer: IX509Name read GetIssuer;
+    property ThisUpdate: ITime read GetThisUpdate;
+    property NextUpdate: ITime read GetNextUpdate;
+    property Extensions: IX509Extensions read GetExtensions;
 
   end;
 
@@ -2549,6 +2798,106 @@ end;
 function TValidity.ToAsn1Object: IAsn1Object;
 begin
   Result := TDerSequence.Create([FNotBefore, FNotAfter]);
+end;
+
+{ TCrlEntry }
+
+class function TCrlEntry.GetInstance(AObj: TObject): ICrlEntry;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICrlEntry, Result) then
+    Exit;
+
+  Result := TCrlEntry.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCrlEntry.GetInstance(const AObj: IAsn1Convertible): ICrlEntry;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICrlEntry, Result) then
+    Exit;
+
+  Result := TCrlEntry.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCrlEntry.GetInstance(const AEncoded: TCryptoLibByteArray): ICrlEntry;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TCrlEntry.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TCrlEntry.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICrlEntry;
+begin
+  Result := TCrlEntry.Create(TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TCrlEntry.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICrlEntry;
+begin
+  Result := TCrlEntry.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCrlEntry.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 2) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FUserCertificate := TDerInteger.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FRevocationDate := TTime.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FCrlEntryExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos,
+    function(AElement: IAsn1Encodable): IX509Extensions
+    begin
+      Result := TX509Extensions.GetOptional(AElement);
+    end);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+
+  FSeq := ASeq;
+end;
+
+function TCrlEntry.GetUserCertificate: IDerInteger;
+begin
+  Result := FUserCertificate;
+end;
+
+function TCrlEntry.GetRevocationDate: ITime;
+begin
+  Result := FRevocationDate;
+end;
+
+function TCrlEntry.GetExtensions: IX509Extensions;
+begin
+  Result := FCrlEntryExtensions;
+end;
+
+function TCrlEntry.ToAsn1Object: IAsn1Object;
+begin
+  Result := FSeq as IAsn1Object;
 end;
 
 { TAltSignatureAlgorithm }
@@ -6949,6 +7298,386 @@ begin
   end;
 end;
 
+{ TIssuingDistributionPoint }
+
+class function TIssuingDistributionPoint.GetInstance(AObj: TObject): IIssuingDistributionPoint;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IIssuingDistributionPoint, Result) then
+    Exit;
+
+  Result := TIssuingDistributionPoint.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TIssuingDistributionPoint.GetInstance(const AObj: IAsn1Convertible): IIssuingDistributionPoint;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IIssuingDistributionPoint, Result) then
+    Exit;
+
+  Result := TIssuingDistributionPoint.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TIssuingDistributionPoint.GetInstance(const AEncoded: TCryptoLibByteArray): IIssuingDistributionPoint;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TIssuingDistributionPoint.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TIssuingDistributionPoint.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IIssuingDistributionPoint;
+begin
+  Result := TIssuingDistributionPoint.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TIssuingDistributionPoint.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IIssuingDistributionPoint;
+begin
+  Result := TIssuingDistributionPoint.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TIssuingDistributionPoint.Create(const ADistributionPoint: IDistributionPointName;
+  AOnlyContainsUserCerts, AOnlyContainsCACerts: Boolean;
+  const AOnlySomeReasons: IReasonFlags; AIndirectCRL, AOnlyContainsAttributeCerts: Boolean);
+var
+  LCount: Int32;
+  LV: IAsn1EncodableVector;
+begin
+  inherited Create();
+
+  LCount := Ord(AOnlyContainsUserCerts) + Ord(AOnlyContainsCACerts) + Ord(AOnlyContainsAttributeCerts);
+  if LCount > 1 then
+    raise EArgumentCryptoLibException.Create(
+      'only one of onlyContainsCACerts, onlyContainsUserCerts, or onlyContainsAttributeCerts can be true');
+
+  FDistributionPoint := ADistributionPoint;
+  FOnlyContainsUserCerts := TDerBoolean.GetInstance(AOnlyContainsUserCerts);
+  FOnlyContainsCACerts := TDerBoolean.GetInstance(AOnlyContainsCACerts);
+  FOnlySomeReasons := AOnlySomeReasons;
+  FIndirectCRL := TDerBoolean.GetInstance(AIndirectCRL);
+  FOnlyContainsAttributeCerts := TDerBoolean.GetInstance(AOnlyContainsAttributeCerts);
+
+  LV := TAsn1EncodableVector.Create(6);
+  if ADistributionPoint <> nil then
+    LV.Add(TDerTaggedObject.Create(True, 0, ADistributionPoint as IAsn1Encodable));
+  if AOnlyContainsUserCerts then
+    LV.Add(TDerTaggedObject.Create(False, 1, TDerBoolean.True as IAsn1Encodable));
+  if AOnlyContainsCACerts then
+    LV.Add(TDerTaggedObject.Create(False, 2, TDerBoolean.True as IAsn1Encodable));
+  if AOnlySomeReasons <> nil then
+    LV.Add(TDerTaggedObject.Create(False, 3, AOnlySomeReasons as IAsn1Encodable));
+  if AIndirectCRL then
+    LV.Add(TDerTaggedObject.Create(False, 4, TDerBoolean.True as IAsn1Encodable));
+  if AOnlyContainsAttributeCerts then
+    LV.Add(TDerTaggedObject.Create(False, 5, TDerBoolean.True as IAsn1Encodable));
+
+  FSeq := TDerSequence.Create(LV);
+end;
+
+constructor TIssuingDistributionPoint.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LOnlyContainsUserCerts, LOnlyContainsCACerts, LIndirectCRL, LOnlyContainsAttributeCerts: IDerBoolean;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 0) or (LCount > 6) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FDistributionPoint := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDistributionPointName>(ASeq, LPos, 0, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDistributionPointName
+    begin
+      Result := TDistributionPointName.GetTagged(ATagged, AState);
+    end);
+
+  LOnlyContainsUserCerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 1, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBoolean
+    begin
+      Result := TDerBoolean.GetTagged(ATagged, AState);
+    end);
+
+  if LOnlyContainsUserCerts <> nil then
+    FOnlyContainsUserCerts := LOnlyContainsUserCerts
+  else
+    FOnlyContainsUserCerts := TDerBoolean.False;
+
+  LOnlyContainsCACerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 2, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBoolean
+    begin
+      Result := TDerBoolean.GetTagged(ATagged, AState);
+    end);
+
+  if LOnlyContainsCACerts <> nil then
+    FOnlyContainsCACerts := LOnlyContainsCACerts
+  else
+    FOnlyContainsCACerts := TDerBoolean.False;
+
+  FOnlySomeReasons := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IReasonFlags>(ASeq, LPos, 3, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags
+    begin
+      Result := TReasonFlags.Create(TDerBitString.GetTagged(ATagged, AState));
+    end);
+
+  LIndirectCRL := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 4, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBoolean
+    begin
+      Result := TDerBoolean.GetTagged(ATagged, AState);
+    end);
+
+  if LIndirectCRL <> nil then
+    FIndirectCRL := LIndirectCRL
+  else
+    FIndirectCRL := TDerBoolean.False;
+
+  LOnlyContainsAttributeCerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 5, False,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBoolean
+    begin
+      Result := TDerBoolean.GetTagged(ATagged, AState);
+    end);
+
+  if LOnlyContainsAttributeCerts <> nil then
+    FOnlyContainsAttributeCerts := LOnlyContainsAttributeCerts
+  else
+    FOnlyContainsAttributeCerts := TDerBoolean.False;
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+
+  FSeq := ASeq;
+end;
+
+function TIssuingDistributionPoint.GetDistributionPoint: IDistributionPointName;
+begin
+  Result := FDistributionPoint;
+end;
+
+function TIssuingDistributionPoint.GetOnlyContainsUserCerts: Boolean;
+begin
+  Result := FOnlyContainsUserCerts.IsTrue;
+end;
+
+function TIssuingDistributionPoint.GetOnlyContainsCACerts: Boolean;
+begin
+  Result := FOnlyContainsCACerts.IsTrue;
+end;
+
+function TIssuingDistributionPoint.GetOnlySomeReasons: IReasonFlags;
+begin
+  Result := FOnlySomeReasons;
+end;
+
+function TIssuingDistributionPoint.GetIsIndirectCrl: Boolean;
+begin
+  Result := FIndirectCRL.IsTrue;
+end;
+
+function TIssuingDistributionPoint.GetOnlyContainsAttributeCerts: Boolean;
+begin
+  Result := FOnlyContainsAttributeCerts.IsTrue;
+end;
+
+function TIssuingDistributionPoint.ToAsn1Object: IAsn1Object;
+begin
+  Result := FSeq as IAsn1Object;
+end;
+
+function TIssuingDistributionPoint.ToString: String;
+var
+  LBuf: TStringBuilder;
+  LIndent: String;
+
+  procedure AppendObject(const AName, AVal: String);
+  begin
+    LBuf.Append(LIndent).Append(AName).Append(':').AppendLine();
+    LBuf.Append(LIndent).Append(LIndent).Append(AVal).AppendLine();
+  end;
+begin
+  LBuf := TStringBuilder.Create();
+  try
+    LBuf.AppendLine('IssuingDistributionPoint: [');
+    LIndent := '    ';
+    if FDistributionPoint <> nil then
+      AppendObject('distributionPoint', FDistributionPoint.ToString());
+    if FOnlyContainsUserCerts.IsTrue then
+      AppendObject('onlyContainsUserCerts', FOnlyContainsUserCerts.ToString());
+    if FOnlyContainsCACerts.IsTrue then
+      AppendObject('onlyContainsCACerts', FOnlyContainsCACerts.ToString());
+    if FOnlySomeReasons <> nil then
+      AppendObject('onlySomeReasons', FOnlySomeReasons.ToString());
+    if FOnlyContainsAttributeCerts.IsTrue then
+      AppendObject('onlyContainsAttributeCerts', FOnlyContainsAttributeCerts.ToString());
+    if FIndirectCRL.IsTrue then
+      AppendObject('indirectCRL', FIndirectCRL.ToString());
+    LBuf.AppendLine(']');
+    Result := LBuf.ToString();
+  finally
+    LBuf.Free;
+  end;
+end;
+
+{ TCertificateList }
+
+class function TCertificateList.GetInstance(AObj: TObject): ICertificateList;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificateList, Result) then
+    Exit;
+
+  Result := TCertificateList.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertificateList.GetInstance(const AObj: IAsn1Convertible): ICertificateList;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificateList, Result) then
+    Exit;
+
+  Result := TCertificateList.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertificateList.GetInstance(const AEncoded: TCryptoLibByteArray): ICertificateList;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TCertificateList.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TCertificateList.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ICertificateList;
+begin
+  Result := TCertificateList.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TCertificateList.GetOptional(const AElement: IAsn1Encodable): ICertificateList;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, ICertificateList, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TCertificateList.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TCertificateList.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICertificateList;
+begin
+  Result := TCertificateList.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCertificateList.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if LCount <> 3 then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FTbsCertList := TTbsCertificateList.GetInstance(ASeq[0]);
+  FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[1]);
+  FSignatureValue := TDerBitString.GetInstance(ASeq[2]);
+end;
+
+function TCertificateList.GetTbsCertList: ITbsCertificateList;
+begin
+  Result := FTbsCertList;
+end;
+
+function TCertificateList.GetRevokedCertificates: TCryptoLibGenericArray<ICrlEntry>;
+begin
+  Result := FTbsCertList.GetRevokedCertificates();
+end;
+
+function TCertificateList.GetSignatureAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FSignatureAlgorithm;
+end;
+
+function TCertificateList.GetSignature: IDerBitString;
+begin
+  Result := FSignatureValue;
+end;
+
+function TCertificateList.GetSignatureOctets: TCryptoLibByteArray;
+begin
+  Result := FSignatureValue.GetOctets();
+end;
+
+function TCertificateList.GetVersion: Int32;
+begin
+  Result := FTbsCertList.Version;
+end;
+
+function TCertificateList.GetIssuer: IX509Name;
+begin
+  Result := FTbsCertList.Issuer;
+end;
+
+function TCertificateList.GetThisUpdate: ITime;
+begin
+  Result := FTbsCertList.ThisUpdate;
+end;
+
+function TCertificateList.GetNextUpdate: ITime;
+begin
+  Result := FTbsCertList.NextUpdate;
+end;
+
+function TCertificateList.GetExtensions: IX509Extensions;
+begin
+  Result := FTbsCertList.Extensions;
+end;
+
+function TCertificateList.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(3);
+  LV.Add(FTbsCertList as IAsn1Encodable);
+  LV.Add(FSignatureAlgorithm as IAsn1Encodable);
+  LV.Add(FSignatureValue as IAsn1Encodable);
+  Result := TDerSequence.Create(LV);
+end;
+
 { TDistributionPointName }
 
 class function TDistributionPointName.GetInstance(AObj: TObject): IDistributionPointName;
@@ -7114,6 +7843,196 @@ begin
   inherited Create(AReasons.GetBytes(), AReasons.PadBits);
 end;
 
+{ TCrlReason }
+
+constructor TCrlReason.Create(AReason: Int32);
+begin
+  inherited Create(AReason);
+end;
+
+constructor TCrlReason.Create(const AReason: IDerEnumerated);
+begin
+  inherited Create(AReason.IntValueExact);
+end;
+
+function TCrlReason.ToString: String;
+const
+  ReasonString: array [0 .. 10] of String = (
+    'Unspecified', 'KeyCompromise', 'CACompromise', 'AffiliationChanged',
+    'Superseded', 'CessationOfOperation', 'CertificateHold', 'Unknown',
+    'RemoveFromCrl', 'PrivilegeWithdrawn', 'AACompromise');
+var
+  LReason: Int32;
+  LStr: String;
+begin
+  LReason := IntValueExact;
+  if (LReason < 0) or (LReason > 10) then
+    LStr := 'Invalid'
+  else
+    LStr := ReasonString[LReason];
+  Result := 'CrlReason: ' + LStr;
+end;
+
+{ TTbsCertificateList }
+
+class function TTbsCertificateList.GetInstance(AObj: TObject): ITbsCertificateList;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITbsCertificateList, Result) then
+    Exit;
+
+  Result := TTbsCertificateList.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TTbsCertificateList.GetInstance(const AObj: IAsn1Convertible): ITbsCertificateList;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITbsCertificateList, Result) then
+    Exit;
+
+  Result := TTbsCertificateList.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TTbsCertificateList.GetInstance(const AEncoded: TCryptoLibByteArray): ITbsCertificateList;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TTbsCertificateList.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TTbsCertificateList.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ITbsCertificateList;
+begin
+  Result := TTbsCertificateList.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TTbsCertificateList.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ITbsCertificateList;
+begin
+  Result := TTbsCertificateList.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TTbsCertificateList.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LVersion: IDerInteger;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 3) or (LCount > 7) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  LVersion := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos,
+    function(AElement: IAsn1Encodable): IDerInteger
+    begin
+      Result := TDerInteger.GetOptional(AElement);
+    end);
+  if LVersion <> nil then
+    FVersion := LVersion
+  else
+    FVersion := TDerInteger.Zero;
+
+  FSignature := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FIssuer := TX509Name.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FThisUpdate := TTime.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FNextUpdate := TAsn1Utilities.ReadOptional<ITime>(ASeq, LPos,
+    function(AElement: IAsn1Encodable): ITime
+    begin
+      Result := TTime.GetOptional(AElement);
+    end);
+  FRevokedCertificates := TAsn1Utilities.ReadOptional<IAsn1Sequence>(ASeq, LPos,
+    function(AElement: IAsn1Encodable): IAsn1Sequence
+    begin
+      Result := TAsn1Sequence.GetOptional(AElement);
+    end);
+  FCrlExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 0, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions
+    begin
+      Result := TX509Extensions.GetTagged(ATagged, AState);
+    end);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+
+  FSeq := ASeq;
+end;
+
+function TTbsCertificateList.GetVersion: Int32;
+begin
+  Result := FVersion.IntValueExact + 1;
+end;
+
+function TTbsCertificateList.GetVersionNumber: IDerInteger;
+begin
+  Result := FVersion;
+end;
+
+function TTbsCertificateList.GetSignature: IAlgorithmIdentifier;
+begin
+  Result := FSignature;
+end;
+
+function TTbsCertificateList.GetIssuer: IX509Name;
+begin
+  Result := FIssuer;
+end;
+
+function TTbsCertificateList.GetThisUpdate: ITime;
+begin
+  Result := FThisUpdate;
+end;
+
+function TTbsCertificateList.GetNextUpdate: ITime;
+begin
+  Result := FNextUpdate;
+end;
+
+function TTbsCertificateList.GetRevokedCertificates: TCryptoLibGenericArray<ICrlEntry>;
+var
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  if FRevokedCertificates = nil then
+  begin
+    System.SetLength(Result, 0);
+    Exit;
+  end;
+  LElements := FRevokedCertificates.GetElements();
+  Result := TArrayUtilities.Map<IAsn1Encodable, ICrlEntry>(LElements,
+    function(A: IAsn1Encodable): ICrlEntry
+    begin
+      Result := TCrlEntry.GetInstance(A);
+    end);
+end;
+
+function TTbsCertificateList.GetExtensions: IX509Extensions;
+begin
+  Result := FCrlExtensions;
+end;
+
+function TTbsCertificateList.ToAsn1Object: IAsn1Object;
+begin
+  Result := FSeq as IAsn1Object;
+end;
+
 { TAttCertIssuer }
 
 class function TAttCertIssuer.GetInstance(AObj: TObject): IAttCertIssuer;
@@ -7121,7 +8040,7 @@ begin
   Result := TAsn1Utilities.GetInstanceChoice<IAttCertIssuer>(AObj,
     function(AElement: IAsn1Encodable): IAttCertIssuer
     begin
-      Result := GetOptional(AElement);
+      Exit(GetOptional(AElement));
     end);
 end;
 
@@ -7139,7 +8058,7 @@ begin
   Result := TAsn1Utilities.GetInstanceChoice<IAttCertIssuer>(AObj.ToAsn1Object(),
     function(AElement: IAsn1Encodable): IAttCertIssuer
     begin
-      Result := GetOptional(AElement);
+      Exit(GetOptional(AElement));
     end);
 end;
 
@@ -7148,7 +8067,7 @@ begin
   Result := TAsn1Utilities.GetInstanceChoice<IAttCertIssuer>(AEncoded,
     function(AElement: IAsn1Encodable): IAttCertIssuer
     begin
-      Result := GetOptional(AElement);
+      Exit(GetOptional(AElement));
     end);
 end;
 
@@ -7158,7 +8077,7 @@ begin
   Result := TAsn1Utilities.GetInstanceChoice<IAttCertIssuer>(AObj, AIsExplicit,
     function(AElement: IAsn1Encodable): IAttCertIssuer
     begin
-      Result := GetInstance(AElement);
+      Exit(GetInstance(AElement));
     end);
 end;
 
