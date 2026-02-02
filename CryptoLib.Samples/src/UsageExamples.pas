@@ -60,16 +60,28 @@ uses
   // ClpIESEngine,
   ClpPascalCoinIESEngine,
   ClpIPascalCoinIESEngine,
-  ClpIIESParameterSpec,
-  ClpIESParameterSpec,
+  ClpIIESEngine,
+  ClpIESEngine,
+  ClpIKeyParser,
+  ClpIECIESPublicKeyParser,
+  ClpECIESPublicKeyParser,
+  ClpIEphemeralKeyPairGenerator,
+  ClpEphemeralKeyPairGenerator,
+  ClpIECKeyPairGenerator,
+  ClpECKeyPairGenerator,
+  ClpICipherParameters,
+  ClpIIESParameters,
+  ClpIIESWithCipherParameters,
+  ClpIESParameters,
+  ClpIESWithCipherParameters,
+  ClpParametersWithIV,
+  ClpIParametersWithIV,
   ClpIAesEngine,
   ClpAesEngine,
   ClpIBlockCipherModes,
   ClpBlockCipherModes,
   ClpIPaddingModes,
   ClpPaddingModes,
-  ClpIIESCipher,
-  ClpIESCipher,
   ClpIECDHBasicAgreement,
   ClpECDHBasicAgreement,
   ClpIPascalCoinECIESKdfBytesGenerator,
@@ -138,7 +150,7 @@ type
     class function GetECIESPascalCoinCompatibilityEngine
       : IPascalCoinIESEngine; static;
     class function GetECKeyPair: IAsymmetricCipherKeyPair; static;
-    class function GetIESParameterSpec: IIESParameterSpec; static;
+    class function GetPascalCoinIESParameters: ICipherParameters; static;
 
     class function ECIESPascalCoinEncrypt(const PublicKey
       : IAsymmetricKeyParameter; PlainText: TBytes): TBytes; static;
@@ -180,24 +192,39 @@ class function TUsageExamples.ECIESPascalCoinDecrypt(const PrivateKey
   : IAsymmetricKeyParameter; CipherText: TBytes; out PlainText: TBytes)
   : Boolean;
 var
-  CipherDecrypt: IIESCipher;
+  LEngine: IIESEngine;
+  LPrivKey: IECPrivateKeyParameters;
+  LDomain: IECDomainParameters;
+  LParser: IKeyParser;
 begin
-  // Decryption
-  CipherDecrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
-  CipherDecrypt.Init(False, PrivateKey, GetIESParameterSpec, FRandom);
-  PlainText := CipherDecrypt.DoFinal(CipherText);
-  result := True;
+  LEngine := GetECIESPascalCoinCompatibilityEngine as IIESEngine;
+  if not Supports(PrivateKey, IECPrivateKeyParameters, LPrivKey) then
+    raise EArgumentCryptoLibException.Create('PrivateKey must be IECPrivateKeyParameters');
+  LDomain := LPrivKey.Parameters;
+  LParser := TECIESPublicKeyParser.Create(LDomain) as IKeyParser;
+  LEngine.Init(PrivateKey, GetPascalCoinIESParameters, LParser);
+  PlainText := LEngine.ProcessBlock(CipherText, 0, System.Length(CipherText));
+  Result := True;
 end;
 
 class function TUsageExamples.ECIESPascalCoinEncrypt(const PublicKey
   : IAsymmetricKeyParameter; PlainText: TBytes): TBytes;
 var
-  CipherEncrypt: IIESCipher;
+  LEngine: IIESEngine;
+  LPubKey: IECPublicKeyParameters;
+  LDomain: IECDomainParameters;
+  LGen: IECKeyPairGenerator;
+  LKeyGen: IEphemeralKeyPairGenerator;
 begin
-  // Encryption
-  CipherEncrypt := TIESCipher.Create(GetECIESPascalCoinCompatibilityEngine);
-  CipherEncrypt.Init(True, PublicKey, GetIESParameterSpec, FRandom);
-  result := CipherEncrypt.DoFinal(PlainText);
+  LEngine := GetECIESPascalCoinCompatibilityEngine as IIESEngine;
+  if not Supports(PublicKey, IECPublicKeyParameters, LPubKey) then
+    raise EArgumentCryptoLibException.Create('PublicKey must be IECPublicKeyParameters');
+  LDomain := LPubKey.Parameters;
+  LGen := TECKeyPairGenerator.Create();
+  LGen.Init(TECKeyGenerationParameters.Create(LDomain, FRandom));
+  LKeyGen := TEphemeralKeyPairGenerator.Create(LGen, True);
+  LEngine.Init(PublicKey, GetPascalCoinIESParameters, LKeyGen);
+  Result := LEngine.ProcessBlock(PlainText, 0, System.Length(PlainText));
 end;
 
 class function TUsageExamples.EVP_GetKeyIV(PasswordBytes, SaltBytes: TBytes;
@@ -714,35 +741,21 @@ begin
 
 end;
 
-class function TUsageExamples.GetIESParameterSpec: IIESParameterSpec;
+class function TUsageExamples.GetPascalCoinIESParameters: ICipherParameters;
 var
   Derivation, Encoding, IVBytes: TBytes;
   MacKeySizeInBits, CipherKeySizeInBits: Int32;
-  UsePointCompression: Boolean;
+  LIesParams: IIESWithCipherParameters;
 begin
-  // Set up  IES Parameter Spec For Compatibility With PascalCoin Current Implementation
-
-  // The derivation and encoding vectors are used when initialising the KDF and MAC.
-  // They're optional but if used then they need to be known by the other user so that
-  // they can decrypt the ciphertext and verify the MAC correctly. The security is based
-  // on the shared secret coming from the (static-ephemeral) ECDH key agreement.
-  Derivation := Nil;
-
-  Encoding := Nil;
-
-  System.SetLength(IVBytes, 16); // using Zero Initialized IV for compatibility
-
+  // BC-aligned IES parameters for PascalCoin compatibility
+  Derivation := nil;
+  Encoding := nil;
+  System.SetLength(IVBytes, 16); // Zero-initialized IV for compatibility
   MacKeySizeInBits := 32 * 8;
-
-  // Since we are using AES256_CBC for compatibility
-  CipherKeySizeInBits := 32 * 8;
-
-  // whether to use point compression when deriving the octets string
-  // from a point or not in the EphemeralKeyPairGenerator
-  UsePointCompression := True; // for compatibility
-
-  result := TIESParameterSpec.Create(Derivation, Encoding, MacKeySizeInBits,
-    CipherKeySizeInBits, IVBytes, UsePointCompression);
+  CipherKeySizeInBits := 32 * 8; // AES256_CBC
+  LIesParams := TIESWithCipherParameters.Create(Derivation, Encoding,
+    MacKeySizeInBits, CipherKeySizeInBits);
+  Result := TParametersWithIV.Create(LIesParams, IVBytes);
 end;
 
 class procedure TUsageExamples.GetPublicKeyFromPrivateKey();
