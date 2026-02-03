@@ -40,7 +40,7 @@ type
     function GetSerialNumber: TBigInteger;
     function GetRevocationDate: TDateTime;
     function GetHasExtensions: Boolean;
-    function Equals(const AOther: TObject): Boolean;
+    function Equals(const AOther: IX509CrlEntry): Boolean;
     function GetHashCode: Int32;
     function ToString: String;
 

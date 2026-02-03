@@ -61,7 +61,7 @@ type
     function GetSerialNumber: TBigInteger;
     function GetRevocationDate: TDateTime;
     function GetHasExtensions: Boolean;
-    function Equals(const AOther: TObject): Boolean; reintroduce;
+    function Equals(const AOther: IX509CrlEntry): Boolean;
     function GetHashCode: Int32; reintroduce;
     function ToString: String; override;
 
@@ -173,11 +173,14 @@ begin
   Result := FCrlEntry.Extensions <> nil;
 end;
 
-function TX509CrlEntry.Equals(const AOther: TObject): Boolean;
+function TX509CrlEntry.Equals(const AOther: IX509CrlEntry): Boolean;
 var
+  LSelfIntf: IX509CrlEntry;
   LThat: IX509CrlEntry;
+  LThatObj: TX509CrlEntry;
 begin
-  if Self = AOther then
+  LSelfIntf := Self;
+  if AOther = LSelfIntf then
   begin
     Result := True;
     Exit;
@@ -189,16 +192,17 @@ begin
     Exit;
   end;
 
-  if FHashValueSet and (LThat as TX509CrlEntry).FHashValueSet then
+  LThatObj := LThat as TX509CrlEntry;
+  if FHashValueSet and LThatObj.FHashValueSet then
   begin
-    if FHashValue <> (LThat as TX509CrlEntry).FHashValue then
+    if FHashValue <> LThatObj.FHashValue then
     begin
       Result := False;
       Exit;
     end;
   end;
 
-  Result := FCrlEntry.Equals(LThat.CrlEntry as IAsn1Convertible);
+  Result := FCrlEntry.Equals(AOther.CrlEntry);
 end;
 
 function TX509CrlEntry.GetHashCode: Int32;
