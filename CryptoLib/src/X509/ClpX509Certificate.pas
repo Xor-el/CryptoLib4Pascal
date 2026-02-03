@@ -287,7 +287,7 @@ end;
 
 function TX509Certificate.IsValidNow: Boolean;
 begin
-  Result := IsValid(Now);
+  Result := IsValid(TTimeZone.Local.ToUniversalTime(Now));
 end;
 
 function TX509Certificate.IsValid(const ATime: TDateTime): Boolean;
@@ -297,7 +297,7 @@ end;
 
 procedure TX509Certificate.CheckValidity();
 begin
-  CheckValidity(Now);
+  CheckValidity(TTimeZone.Local.ToUniversalTime(Now));
 end;
 
 procedure TX509Certificate.CheckValidity(const ATime: TDateTime);
@@ -844,7 +844,7 @@ begin
     end;
   end;
 
-    LTagged := TDerTaggedObject.Create(True, 3, LExtensions.ToAsn1ObjectTrimmed());
+  LTagged := TDerTaggedObject.Create(True, 3, LExtensions.ToAsn1ObjectTrimmed());
   LV.Add(LTagged);
 
   Result := TX509Utilities.VerifySignature(LVerifier, TDerSequence.Create(LV) as IDerSequence, LAltSigValue.Signature);
@@ -852,7 +852,7 @@ end;
 
 procedure TX509Certificate.Verify(const AKey: IAsymmetricKeyParameter);
 begin
-  CheckSignature(TAsn1VerifierFactory.Create(FCertificateStructure.SignatureAlgorithm, AKey));
+  CheckSignature(TAsn1VerifierFactory.Create(FCertificateStructure.SignatureAlgorithm, AKey) as IVerifierFactory);
 end;
 
 procedure TX509Certificate.Verify(const AVerifierProvider: IVerifierFactoryProvider);

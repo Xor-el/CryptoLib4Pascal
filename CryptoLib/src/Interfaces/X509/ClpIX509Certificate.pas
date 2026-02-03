@@ -69,6 +69,9 @@ type
     function GetSubjectPublicKeyInfo: ISubjectPublicKeyInfo;
     function GetPublicKey: IAsymmetricKeyParameter;
     function GetEncoded: TCryptoLibByteArray;
+    function GetNonCriticalExtensionOids: TCryptoLibStringArray;
+    function GetCriticalExtensionOids: TCryptoLibStringArray;
+    function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
 
     function IsSignatureValid(const AKey: IAsymmetricKeyParameter): Boolean; overload;
     function IsSignatureValid(const AVerifierProvider: IVerifierFactoryProvider): Boolean; overload;

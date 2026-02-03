@@ -831,6 +831,7 @@ type
     constructor Create(const AGeneralizedTime: IAsn1GeneralizedTime); overload;
     constructor Create(const AUtcTime: IAsn1UtcTime); overload;
     constructor Create(const ADateTime: TDateTime); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime);
 
     function ToDateTime: TDateTime;
     function ToAsn1Object: IAsn1Object; override;
@@ -2610,8 +2611,12 @@ begin
 end;
 
 constructor TTime.Create(const ADateTime: TDateTime);
+begin
+  CreateUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
+end;
+
+constructor TTime.CreateUtc(const AUtcDateTime: TDateTime);
 var
-  LUtc: TDateTime;
   LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond: Word;
 begin
   inherited Create();
@@ -2619,16 +2624,15 @@ begin
   // creates a time object from a given date - if the date is between 1950
   // and 2049 a UTCTime object is Generated, otherwise a GeneralizedTime
   // is used.
-  LUtc := TTimeZone.Local.ToUniversalTime(ADateTime);
-  DecodeDateTime(LUtc, LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond);
+  DecodeDateTime(AUtcDateTime, LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond);
 
   if (LYear < 1950) or (LYear > 2049) then
   begin
-    FTimeObject := TRfc5280Asn1Utilities.CreateGeneralizedTime(LUtc);
+    FTimeObject := TRfc5280Asn1Utilities.CreateGeneralizedTimeFromUtc(AUtcDateTime);
   end
   else
   begin
-    FTimeObject := TRfc5280Asn1Utilities.CreateUtcTime(LUtc);
+    FTimeObject := TRfc5280Asn1Utilities.CreateUtcTimeFromUtc(AUtcDateTime);
   end;
 end;
 
@@ -3420,15 +3424,8 @@ begin
 end;
 
 function TSubjectPublicKeyInfo.ParsePublicKey: IAsn1Object;
-var
-  LStream: TStream;
 begin
-  LStream := FPublicKey.GetOctetStream();
-  try
-    Result := TAsn1Object.FromStream(LStream);
-  finally
-    LStream.Free;
-  end;
+  Result := TAsn1Object.FromStream(FPublicKey.GetOctetStream());
 end;
 
 function TSubjectPublicKeyInfo.ToAsn1Object: IAsn1Object;

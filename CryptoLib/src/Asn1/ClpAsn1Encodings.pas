@@ -549,8 +549,6 @@ constructor TPrimitiveDerEncoding.Create(ATagClass, ATagNo: Int32;
   const AContentsOctets: TCryptoLibByteArray);
 begin
   inherited Create(ATagClass, ATagNo);
-  if AContentsOctets = nil then
-    raise EArgumentNilCryptoLibException.Create('contentsOctets');
   FContentsOctets := AContentsOctets;
 end;
 
@@ -647,8 +645,6 @@ constructor TPrimitiveDerEncodingSuffixed.Create(ATagClass, ATagNo: Int32;
   const AContentsOctets: TCryptoLibByteArray; AContentsSuffix: Byte);
 begin
   inherited Create(ATagClass, ATagNo);
-  if AContentsOctets = nil then
-    raise EArgumentNilCryptoLibException.Create('contentsOctets');
   if System.Length(AContentsOctets) = 0 then
     raise EArgumentCryptoLibException.Create('contentsOctets length must be > 0');
   FContentsOctets := AContentsOctets;

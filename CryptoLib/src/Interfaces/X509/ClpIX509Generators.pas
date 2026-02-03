@@ -47,6 +47,8 @@ type
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
+    procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
+    procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure SetSubjectDN(const ASubject: IX509Name);
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
@@ -61,6 +63,8 @@ type
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
+    procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
+    procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure SetSubjectDN(const ASubject: IX509Name);
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     procedure SetSubjectPublicKeyInfo(const APubKeyInfo: ISubjectPublicKeyInfo);
@@ -98,6 +102,8 @@ type
     procedure SetSerialNumber(const ASerialNumber: TBigInteger);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
+    procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
+    procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure AddAttribute(const AAttribute: IX509Attribute);
     procedure SetIssuerUniqueID(const AIui: TCryptoLibBooleanArray);
     procedure AddExtension(const AOid: String; ACritical: Boolean;
@@ -117,10 +123,17 @@ type
     procedure SetIssuerDN(const AIssuer: IX509Name);
     procedure SetThisUpdate(const ADate: TDateTime);
     procedure SetNextUpdate(const ADate: TDateTime);
+    procedure SetThisUpdateUtc(const AUtcDate: TDateTime);
+    procedure SetNextUpdateUtc(const AUtcDate: TDateTime);
     procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32); overload;
     procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32;
       const AInvalidityDate: TDateTime); overload;
     procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime;
+      const AExtensions: IX509Extensions); overload;
+    procedure AddCrlEntryUtc(const AUserCertificate: TBigInteger; const ARevocationDateUtc: TDateTime; AReason: Int32); overload;
+    procedure AddCrlEntryUtc(const AUserCertificate: TBigInteger; const ARevocationDateUtc: TDateTime; AReason: Int32;
+      const AInvalidityDateUtc: TDateTime); overload;
+    procedure AddCrlEntryUtc(const AUserCertificate: TBigInteger; const ARevocationDateUtc: TDateTime;
       const AExtensions: IX509Extensions); overload;
     procedure AddCrl(const AOther: IX509Crl);
     procedure AddExtension(const AOid: String; ACritical: Boolean;

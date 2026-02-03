@@ -97,7 +97,7 @@ var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FExParams := TDictionary<String, IAsn1Encodable>.Create();
+  FExParams := TDictionary<String, IAsn1Encodable>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FNoParams := TDictionary<IDerObjectIdentifier, IAlgorithmIdentifier>.Create(TCryptoLibComparers.OidEqualityComparer);
 
   // MD2 algorithms
@@ -455,7 +455,7 @@ end;
 
 class procedure TX509SignatureUtilities.AddNoParams(const AOid: IDerObjectIdentifier);
 begin
-  FNoParams.Add(AOid, TAlgorithmIdentifier.Create(AOid));
+  FNoParams.Add(AOid, TAlgorithmIdentifier.Create(AOid) as IAlgorithmIdentifier);
 end;
 
 class function TX509SignatureUtilities.CreatePssParams(const ADigAlgID: IAlgorithmIdentifier;

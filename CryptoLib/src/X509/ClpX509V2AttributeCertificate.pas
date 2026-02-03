@@ -293,7 +293,7 @@ end;
 function TX509V2AttributeCertificate.IsSignatureValid(const AKey
   : IAsymmetricKeyParameter): Boolean;
 begin
-  Result := CheckSignatureValid(TAsn1VerifierFactory.Create(FCert.SignatureAlgorithm, AKey));
+  Result := CheckSignatureValid(TAsn1VerifierFactory.Create(FCert.SignatureAlgorithm, AKey) as IVerifierFactory);
 end;
 
 function TX509V2AttributeCertificate.IsSignatureValid(const AVerifierProvider
@@ -304,7 +304,7 @@ end;
 
 procedure TX509V2AttributeCertificate.Verify(const AKey: IAsymmetricKeyParameter);
 begin
-  CheckSignature(TAsn1VerifierFactory.Create(FCert.SignatureAlgorithm, AKey));
+  CheckSignature(TAsn1VerifierFactory.Create(FCert.SignatureAlgorithm, AKey) as IVerifierFactory);
 end;
 
 procedure TX509V2AttributeCertificate.Verify(const AVerifierProvider
@@ -329,7 +329,7 @@ begin
   LList := TList<IX509Attribute>.Create;
   try
     for I := 0 to LSeq.Count - 1 do
-      LList.Add(TX509Attribute.Create(LSeq[I]));
+      LList.Add(TX509Attribute.Create(LSeq[I]) as IX509Attribute);
     Result := LList.ToArray;
   finally
     LList.Free;

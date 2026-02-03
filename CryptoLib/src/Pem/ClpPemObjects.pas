@@ -30,6 +30,7 @@ uses
   ClpCryptoLibTypes,
   ClpEncoders,
   ClpStringUtilities,
+  ClpStreamUtilities,
   ClpConverters,
   ClpAsn1Objects,
   ClpIAsn1Objects,
@@ -706,41 +707,34 @@ end;
 function TPemParser.ReadLine(const AInStream: TStream): String;
 var
   LC: Int32;
-  LByte: Byte;
-  LBytesRead: Int32;
   LBuilder: TStringBuilder;
 begin
-  LBuilder := TStringBuilder.Create();
+  LBuilder := TStringBuilder.Create;
   try
     repeat
       while True do
       begin
-        LBytesRead := AInStream.Read(LByte, 1);
-        if LBytesRead = 0 then
-        begin
-          LC := -1;
-          Break;
-        end;
-        LC := Int32(LByte);
+        // ReadByte returns 0..255, or -1 on EOF
+        LC := AInStream.ReadByte;
 
+        // EOF
+        if LC < 0 then
+          Break;
+
+        // Stop on CR or LF - terminate on either one
         if (LC = Ord(#13)) or (LC = Ord(#10)) then
-        begin
-          if LC = Ord(#13) then
-            Continue;
           Break;
-        end;
 
-        if LC >= 0 then
-          LBuilder.Append(Char(LC));
+        LBuilder.Append(Char(LC));
       end;
     until (LC < 0) or (LBuilder.Length > 0);
 
     if LC < 0 then
       Result := ''
     else
-      Result := LBuilder.ToString();
+      Result := LBuilder.ToString;
   finally
-    LBuilder.Free();
+    LBuilder.Free;
   end;
 end;
 

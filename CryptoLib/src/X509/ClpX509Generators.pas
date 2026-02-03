@@ -63,6 +63,8 @@ type
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
+    procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
+    procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure SetSubjectDN(const ASubject: IX509Name);
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
@@ -86,6 +88,8 @@ type
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
+    procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
+    procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure SetSubjectDN(const ASubject: IX509Name);
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     procedure SetSubjectPublicKeyInfo(const APubKeyInfo: ISubjectPublicKeyInfo);
@@ -128,6 +132,8 @@ type
     procedure SetSerialNumber(const ASerialNumber: TBigInteger);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
+    procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
+    procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure AddAttribute(const AAttribute: IX509Attribute);
     procedure SetIssuerUniqueID(const AIui: TCryptoLibBooleanArray);
     procedure AddExtension(const AOid: String; ACritical: Boolean;
@@ -156,10 +162,17 @@ type
     procedure SetIssuerDN(const AIssuer: IX509Name);
     procedure SetThisUpdate(const ADate: TDateTime);
     procedure SetNextUpdate(const ADate: TDateTime);
+    procedure SetThisUpdateUtc(const AUtcDate: TDateTime);
+    procedure SetNextUpdateUtc(const AUtcDate: TDateTime);
     procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32); overload;
     procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32;
       const AInvalidityDate: TDateTime); overload;
     procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime;
+      const AExtensions: IX509Extensions); overload;
+    procedure AddCrlEntryUtc(const AUserCertificate: TBigInteger; const ARevocationDateUtc: TDateTime; AReason: Int32); overload;
+    procedure AddCrlEntryUtc(const AUserCertificate: TBigInteger; const ARevocationDateUtc: TDateTime; AReason: Int32;
+      const AInvalidityDateUtc: TDateTime); overload;
+    procedure AddCrlEntryUtc(const AUserCertificate: TBigInteger; const ARevocationDateUtc: TDateTime;
       const AExtensions: IX509Extensions); overload;
     procedure AddCrl(const AOther: IX509Crl);
     procedure AddExtension(const AOid: String; ACritical: Boolean;
@@ -216,6 +229,16 @@ end;
 procedure TX509V1CertificateGenerator.SetNotAfter(const ADate: TDateTime);
 begin
   FTbsGen.SetEndDate(TTime.Create(ADate) as ITime);
+end;
+
+procedure TX509V1CertificateGenerator.SetNotBeforeUtc(const AUtcDate: TDateTime);
+begin
+  FTbsGen.SetStartDate(TTime.CreateUtc(AUtcDate) as ITime);
+end;
+
+procedure TX509V1CertificateGenerator.SetNotAfterUtc(const AUtcDate: TDateTime);
+begin
+  FTbsGen.SetEndDate(TTime.CreateUtc(AUtcDate) as ITime);
 end;
 
 procedure TX509V1CertificateGenerator.SetSubjectDN(const ASubject: IX509Name);
@@ -331,6 +354,16 @@ end;
 procedure TX509V3CertificateGenerator.SetNotAfter(const ADate: TDateTime);
 begin
   FTbsGen.SetEndDate(TTime.Create(ADate) as ITime);
+end;
+
+procedure TX509V3CertificateGenerator.SetNotBeforeUtc(const AUtcDate: TDateTime);
+begin
+  FTbsGen.SetStartDate(TTime.CreateUtc(AUtcDate) as ITime);
+end;
+
+procedure TX509V3CertificateGenerator.SetNotAfterUtc(const AUtcDate: TDateTime);
+begin
+  FTbsGen.SetEndDate(TTime.CreateUtc(AUtcDate) as ITime);
 end;
 
 procedure TX509V3CertificateGenerator.SetSubjectDN(const ASubject: IX509Name);
@@ -501,6 +534,16 @@ begin
   FACInfoGen.SetEndDate(TRfc5280Asn1Utilities.CreateGeneralizedTime(ADate));
 end;
 
+procedure TX509V2AttributeCertificateGenerator.SetNotBeforeUtc(const AUtcDate: TDateTime);
+begin
+  FACInfoGen.SetStartDate(TRfc5280Asn1Utilities.CreateGeneralizedTime(AUtcDate));
+end;
+
+procedure TX509V2AttributeCertificateGenerator.SetNotAfterUtc(const AUtcDate: TDateTime);
+begin
+  FACInfoGen.SetEndDate(TRfc5280Asn1Utilities.CreateGeneralizedTime(AUtcDate));
+end;
+
 procedure TX509V2AttributeCertificateGenerator.AddAttribute(const AAttribute: IX509Attribute);
 begin
   FACInfoGen.AddAttribute(TAttributeX509.GetInstance(AAttribute.ToAsn1Object));
@@ -616,6 +659,16 @@ begin
   FTbsGen.SetNextUpdate(TTime.Create(ADate) as ITime);
 end;
 
+procedure TX509V2CrlGenerator.SetThisUpdateUtc(const AUtcDate: TDateTime);
+begin
+  FTbsGen.SetThisUpdate(TTime.CreateUtc(AUtcDate) as ITime);
+end;
+
+procedure TX509V2CrlGenerator.SetNextUpdateUtc(const AUtcDate: TDateTime);
+begin
+  FTbsGen.SetNextUpdate(TTime.CreateUtc(AUtcDate) as ITime);
+end;
+
 procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
   const ARevocationDate: TDateTime; AReason: Int32);
 begin
@@ -633,6 +686,25 @@ procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
   const ARevocationDate: TDateTime; const AExtensions: IX509Extensions);
 begin
   FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AExtensions);
+end;
+
+procedure TX509V2CrlGenerator.AddCrlEntryUtc(const AUserCertificate: TBigInteger;
+  const ARevocationDateUtc: TDateTime; AReason: Int32);
+begin
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.CreateUtc(ARevocationDateUtc) as ITime, AReason);
+end;
+
+procedure TX509V2CrlGenerator.AddCrlEntryUtc(const AUserCertificate: TBigInteger;
+  const ARevocationDateUtc: TDateTime; AReason: Int32; const AInvalidityDateUtc: TDateTime);
+begin
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.CreateUtc(ARevocationDateUtc) as ITime, AReason,
+    TRfc5280Asn1Utilities.CreateGeneralizedTime(AInvalidityDateUtc));
+end;
+
+procedure TX509V2CrlGenerator.AddCrlEntryUtc(const AUserCertificate: TBigInteger;
+  const ARevocationDateUtc: TDateTime; const AExtensions: IX509Extensions);
+begin
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.CreateUtc(ARevocationDateUtc) as ITime, AExtensions);
 end;
 
 procedure TX509V2CrlGenerator.AddCrl(const AOther: IX509Crl);
@@ -689,7 +761,7 @@ begin
 
   LTbsCertList := FTbsGen.GenerateTbsCertList;
   LSignature := TX509Utilities.GenerateSignature(ASignatureFactory, LTbsCertList);
-  LCertList := TCertificateList.GetInstance(TDerSequence.Create([LTbsCertList, LSigAlgID, LSignature]));
+  LCertList := TCertificateList.GetInstance(TDerSequence.Create([LTbsCertList, LSigAlgID, LSignature]) as IDerSequence);
   Result := TX509Crl.Create(LCertList);
 end;
 

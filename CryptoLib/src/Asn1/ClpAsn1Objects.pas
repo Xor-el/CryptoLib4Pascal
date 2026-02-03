@@ -1998,6 +1998,7 @@ type
     constructor Create(const AContents: TCryptoLibByteArray); overload;
     constructor Create(const ATimeString: String); overload;
     constructor Create(const ADateTime: TDateTime); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime); overload;
     class function GetInstance(const AObj: TObject): IAsn1GeneralizedTime; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1GeneralizedTime; overload; static;
     class function GetInstance(const AObj: IAsn1Convertible): IAsn1GeneralizedTime; overload; static;
@@ -2053,6 +2054,8 @@ type
     constructor Create(const ATimeString: String); overload;
     constructor Create(const ADateTime: TDateTime); overload; deprecated 'Use Create(DateTime, Int32) instead';
     constructor Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
     class function GetInstance(const AObj: TObject): IAsn1UtcTime; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1UtcTime; overload; static;
     /// <summary>
@@ -2087,6 +2090,8 @@ type
     constructor Create(const ADateTime: TDateTime); overload; deprecated 'Use Create(DateTime, Int32) instead';
     constructor Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
     constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime; ATwoDigitYearMax: Int32); overload;
 
     function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
@@ -2100,6 +2105,7 @@ type
     constructor Create(const ATimeString: String); overload;
     constructor Create(const ADateTime: TDateTime); overload;
     constructor Create(const AContents: TCryptoLibByteArray); overload;
+    constructor CreateUtc(const AUtcDateTime: TDateTime); overload;
 
     function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
@@ -5914,8 +5920,9 @@ constructor TAsn1OctetString.Create(const AContents: TCryptoLibByteArray);
 begin
   inherited Create;
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
-  FContents := AContents;
+    SetLength(FContents, 0)
+  else
+    FContents := AContents;
 end;
 
 function TAsn1OctetString.GetOctetStream(): TStream;
@@ -5923,7 +5930,8 @@ var
   LMemStream: TMemoryStream;
 begin
   LMemStream := TMemoryStream.Create;
-  LMemStream.Write(FContents[0], System.Length(FContents));
+  if System.Length(FContents) > 0 then
+    LMemStream.Write(FContents[0], System.Length(FContents));
   LMemStream.Position := 0;
   Result := LMemStream;
 end;
@@ -6612,9 +6620,9 @@ var
   LContents: TCryptoLibByteArray;
 begin
   inherited Create();
-  LContents := AObj.GetEncoded(TAsn1Encodable.Der);
-  if System.Length(LContents) > 0 then
-    LContents[0] := $00;
+  // Pre-allocate 1 byte at the start for the pad bits indicator
+  LContents := AObj.ToAsn1Object().GetEncoded(TAsn1Encodable.Der, 1, 0);
+  LContents[0] := $00;  // Set the pre-allocated byte to 0 (no padding)
   FContents := LContents;
 end;
 
@@ -9251,15 +9259,15 @@ begin
 end;
 
 constructor TAsn1GeneralizedTime.Create(const ADateTime: TDateTime);
-var
-  LUtc: TDateTime;
+begin
+  CreateUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
+end;
+
+constructor TAsn1GeneralizedTime.CreateUtc(const AUtcDateTime: TDateTime);
 begin
   inherited Create();
-  // Convert to UTC
-  LUtc := TTimeZone.Local.ToUniversalTime(ADateTime);
-  
-  FDateTime := LUtc;
-  FTimeString := ToStringCanonical(LUtc);
+  FDateTime := TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime);
+  FTimeString := ToStringCanonical(FDateTime);
   FTimeStringCanonical := True;
 end;
 
@@ -9599,30 +9607,39 @@ begin
 end;
 
 constructor TAsn1UtcTime.Create(const ADateTime: TDateTime);
-var
-  LUtc: TDateTime;
-  LTwoDigitYearMax: Int32;
 begin
-  inherited Create();
-  // Convert to UTC and truncate to seconds precision
-  LUtc := TDateTimeUtilities.WithPrecisionSecond(TTimeZone.Local.ToUniversalTime(ADateTime));
-  
-  FDateTime := LUtc;
-  FDateTimeLocked := True;
-  FTimeString := ToStringCanonical(LUtc, LTwoDigitYearMax);
-  FTwoDigitYearMax := LTwoDigitYearMax;
+  CreateUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
 end;
 
 constructor TAsn1UtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
+begin
+  CreateUtc(TTimeZone.Local.ToUniversalTime(ADateTime), ATwoDigitYearMax);
+end;
+
+constructor TAsn1UtcTime.CreateUtc(const AUtcDateTime: TDateTime);
+const
+  DefaultTwoDigitYearMax = 2049;
 var
   LUtc: TDateTime;
 begin
   inherited Create();
-  // Convert to UTC and truncate to seconds precision
-  LUtc := TDateTimeUtilities.WithPrecisionSecond(TTimeZone.Local.ToUniversalTime(ADateTime));
-  
+  // truncate to seconds precision
+  LUtc := TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime);
+  Validate(LUtc, DefaultTwoDigitYearMax);
+  FDateTime := LUtc;
+  FDateTimeLocked := True;
+  FTimeString := ToStringCanonical(LUtc);
+  FTwoDigitYearMax := DefaultTwoDigitYearMax;
+end;
+
+constructor TAsn1UtcTime.CreateUtc(const AUtcDateTime: TDateTime; ATwoDigitYearMax: Int32);
+var
+  LUtc: TDateTime;
+begin
+  inherited Create();
+  // truncate to seconds precision
+  LUtc := TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime);
   Validate(LUtc, ATwoDigitYearMax);
-  
   FDateTime := LUtc;
   FDateTimeLocked := True;
   FTimeString := ToStringCanonical(LUtc);
@@ -9832,6 +9849,16 @@ begin
   inherited Create(AContents);
 end;
 
+constructor TDerUtcTime.CreateUtc(const AUtcDateTime: TDateTime);
+begin
+  inherited CreateUtc(AUtcDateTime);
+end;
+
+constructor TDerUtcTime.CreateUtc(const AUtcDateTime: TDateTime; ATwoDigitYearMax: Int32);
+begin
+  inherited CreateUtc(AUtcDateTime, ATwoDigitYearMax);
+end;
+
 function TDerUtcTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
 begin
   Result := TPrimitiveEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.UtcTime,
@@ -9858,6 +9885,11 @@ end;
 constructor TDerGeneralizedTime.Create(const AContents: TCryptoLibByteArray);
 begin
   inherited Create(AContents);
+end;
+
+constructor TDerGeneralizedTime.CreateUtc(const AUtcDateTime: TDateTime);
+begin
+  inherited CreateUtc(AUtcDateTime);
 end;
 
 function TDerGeneralizedTime.GetEncoding(AEncoding: Int32): IAsn1Encoding;
@@ -10166,8 +10198,6 @@ end;
 constructor TDerUtf8String.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -10335,8 +10365,6 @@ end;
 constructor TDerGeneralString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -10496,8 +10524,6 @@ end;
 constructor TDerGraphicString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -10672,8 +10698,6 @@ end;
 constructor TDerIA5String.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -10865,8 +10889,6 @@ end;
 constructor TDerNumericString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -11073,8 +11095,6 @@ end;
 constructor TDerPrintableString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -11287,8 +11307,6 @@ end;
 constructor TDerT61String.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -11448,8 +11466,6 @@ end;
 constructor TDerUniversalString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -11659,8 +11675,6 @@ end;
 constructor TDerVideotexString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else
@@ -11828,8 +11842,6 @@ end;
 constructor TDerVisibleString.Create(const AContents: TCryptoLibByteArray; AClone: Boolean);
 begin
   inherited Create();
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if AClone then
     FContents := System.Copy(AContents)
   else

@@ -37,9 +37,17 @@ type
     /// </summary>
     class function CreateGeneralizedTime(const ADateTime: TDateTime): IAsn1GeneralizedTime; static;
     /// <summary>
+    /// Create a GeneralizedTime from a Utc DateTime with second precision.
+    /// </summary>
+    class function CreateGeneralizedTimeFromUtc(const AUtcDateTime: TDateTime): IAsn1GeneralizedTime; static;
+    /// <summary>
     /// Create a UtcTime from a DateTime with 2049 as the two-digit year maximum.
     /// </summary>
     class function CreateUtcTime(const ADateTime: TDateTime): IAsn1UtcTime; static;
+    /// <summary>
+    /// Create a UtcTime from a Utc DateTime with 2049 as the two-digit year maximum.
+    /// </summary>
+    class function CreateUtcTimeFromUtc(const AUtcDateTime: TDateTime): IAsn1UtcTime; static;
   end;
 
 implementation
@@ -51,9 +59,19 @@ begin
   Result := TDerGeneralizedTime.Create(TDateTimeUtilities.WithPrecisionSecond(ADateTime));
 end;
 
+class function TRfc5280Asn1Utilities.CreateGeneralizedTimeFromUtc(const AUtcDateTime: TDateTime): IAsn1GeneralizedTime;
+begin
+  Result := TDerGeneralizedTime.CreateUtc(TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime));
+end;
+
 class function TRfc5280Asn1Utilities.CreateUtcTime(const ADateTime: TDateTime): IAsn1UtcTime;
 begin
   Result := TDerUtcTime.Create(ADateTime, 2049);
+end;
+
+class function TRfc5280Asn1Utilities.CreateUtcTimeFromUtc(const AUtcDateTime: TDateTime): IAsn1UtcTime;
+begin
+  Result := TDerUtcTime.CreateUtc(AUtcDateTime, 2049);
 end;
 
 end.

@@ -54,6 +54,7 @@ implementation
 
 constructor TAsymmetricKeyParameter.Create(privateKey: Boolean);
 begin
+  inherited Create();
   FprivateKey := privateKey;
 end;
 

@@ -119,12 +119,9 @@ begin
         end) then
       begin
         FSCrlData := LSignedData.Crls;
-        if FSCrlData <> nil then
-        begin
-          FSCrlDataObjectCount := 0;
-          Result := GetCrl();
-          Exit;
-        end;
+        FSCrlDataObjectCount := 0;
+        Result := GetCrl();
+        Exit;
       end;
     end;
   end;

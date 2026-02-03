@@ -125,12 +125,9 @@ begin
         end) then
       begin
         FSData := LSignedData.Certificates;
-        if FSData <> nil then
-        begin
-          FSDataObjectCount := 0;
-          Result := GetCertificate();
-          Exit;
-        end;
+        FSDataObjectCount := 0;
+        Result := GetCertificate();
+        Exit;
       end;
     end;
   end;
