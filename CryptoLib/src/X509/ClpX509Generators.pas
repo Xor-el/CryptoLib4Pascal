@@ -30,6 +30,9 @@ uses
   ClpIAsn1Core,
   ClpIX509Certificate,
   ClpX509Certificate,
+  ClpIX509Crl,
+  ClpX509Crl,
+  ClpIX509CrlEntry,
   ClpIX509Extension,
   ClpIAsymmetricKeyParameter,
   ClpISignatureFactory,
@@ -132,6 +135,44 @@ type
     procedure AddExtension(const AOid: String; ACritical: Boolean;
       const AExtensionValue: TCryptoLibByteArray); overload;
     function Generate(const ASignatureFactory: ISignatureFactory): IX509V2AttributeCertificate;
+    function GetSignatureAlgNames: TCryptoLibStringArray;
+  end;
+
+  /// <summary>
+  /// Class to produce an X.509 Version 2 CRL.
+  /// </summary>
+  TX509V2CrlGenerator = class(TInterfacedObject, IX509V2CrlGenerator)
+  strict private
+    FExtGenerator: IX509ExtensionsGenerator;
+    FTbsGen: IV2TbsCertListGenerator;
+
+    procedure ImplInitFromTemplate(const ATemplate: ICertificateList);
+  public
+    constructor Create; overload;
+    constructor Create(const ATemplate: IX509Crl); overload;
+    constructor Create(const ATemplate: ICertificateList); overload;
+
+    procedure Reset;
+    procedure SetIssuerDN(const AIssuer: IX509Name);
+    procedure SetThisUpdate(const ADate: TDateTime);
+    procedure SetNextUpdate(const ADate: TDateTime);
+    procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32); overload;
+    procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32;
+      const AInvalidityDate: TDateTime); overload;
+    procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime;
+      const AExtensions: IX509Extensions); overload;
+    procedure AddCrl(const AOther: IX509Crl);
+    procedure AddExtension(const AOid: String; ACritical: Boolean;
+      const AExtensionValue: IAsn1Encodable); overload;
+    procedure AddExtension(const AOid: IDerObjectIdentifier; ACritical: Boolean;
+      const AExtensionValue: IAsn1Encodable); overload;
+    procedure AddExtension(const AOid: String; ACritical: Boolean;
+      const AExtensionValue: TCryptoLibByteArray); overload;
+    procedure AddExtension(const AOid: IDerObjectIdentifier; ACritical: Boolean;
+      const AExtensionValue: TCryptoLibByteArray); overload;
+    function Generate(const ASignatureFactory: ISignatureFactory): IX509Crl; overload;
+    function Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
+      const AAltSignatureFactory: ISignatureFactory): IX509Crl; overload;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
@@ -503,6 +544,171 @@ begin
 end;
 
 function TX509V2AttributeCertificateGenerator.GetSignatureAlgNames: TCryptoLibStringArray;
+begin
+  Result := TX509Utilities.GetAlgNames;
+end;
+
+{ TX509V2CrlGenerator }
+
+procedure TX509V2CrlGenerator.ImplInitFromTemplate(const ATemplate: ICertificateList);
+var
+  LExtensions: IX509Extensions;
+  LOid: IDerObjectIdentifier;
+  LExt: IX509Extension;
+  LCrl: IX509Crl;
+begin
+  FTbsGen.SetIssuer(ATemplate.TbsCertList.Issuer);
+  FTbsGen.SetThisUpdate(ATemplate.TbsCertList.ThisUpdate);
+  FTbsGen.SetNextUpdate(ATemplate.TbsCertList.NextUpdate);
+
+  LCrl := TX509Crl.Create(ATemplate);
+  AddCrl(LCrl);
+
+  LExtensions := ATemplate.TbsCertList.Extensions;
+  if LExtensions <> nil then
+    for LOid in LExtensions.ExtensionOids do
+    begin
+      if TX509Extensions.AltSignatureAlgorithm.Equals(LOid) or
+         TX509Extensions.AltSignatureValue.Equals(LOid) then
+        Continue;
+      LExt := LExtensions.GetExtension(LOid);
+      FExtGenerator.AddExtension(LOid, LExt.IsCritical, LExt.Value.GetOctets());
+    end;
+end;
+
+constructor TX509V2CrlGenerator.Create;
+begin
+  inherited Create;
+  FExtGenerator := TX509ExtensionsGenerator.Create;
+  FTbsGen := TV2TbsCertListGenerator.Create;
+end;
+
+constructor TX509V2CrlGenerator.Create(const ATemplate: IX509Crl);
+begin
+  Create;
+  ImplInitFromTemplate(ATemplate.CertificateList);
+end;
+
+constructor TX509V2CrlGenerator.Create(const ATemplate: ICertificateList);
+begin
+  Create;
+  ImplInitFromTemplate(ATemplate);
+end;
+
+procedure TX509V2CrlGenerator.Reset;
+begin
+  FTbsGen := TV2TbsCertListGenerator.Create;
+  FExtGenerator.Reset;
+end;
+
+procedure TX509V2CrlGenerator.SetIssuerDN(const AIssuer: IX509Name);
+begin
+  FTbsGen.SetIssuer(AIssuer);
+end;
+
+procedure TX509V2CrlGenerator.SetThisUpdate(const ADate: TDateTime);
+begin
+  FTbsGen.SetThisUpdate(TTime.Create(ADate) as ITime);
+end;
+
+procedure TX509V2CrlGenerator.SetNextUpdate(const ADate: TDateTime);
+begin
+  FTbsGen.SetNextUpdate(TTime.Create(ADate) as ITime);
+end;
+
+procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
+  const ARevocationDate: TDateTime; AReason: Int32);
+begin
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AReason);
+end;
+
+procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
+  const ARevocationDate: TDateTime; AReason: Int32; const AInvalidityDate: TDateTime);
+begin
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AReason,
+    TRfc5280Asn1Utilities.CreateGeneralizedTime(AInvalidityDate));
+end;
+
+procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
+  const ARevocationDate: TDateTime; const AExtensions: IX509Extensions);
+begin
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AExtensions);
+end;
+
+procedure TX509V2CrlGenerator.AddCrl(const AOther: IX509Crl);
+var
+  LRevocations: TCryptoLibGenericArray<IX509CrlEntry>;
+  LEntry: IX509CrlEntry;
+begin
+  if AOther = nil then
+    raise EArgumentNilCryptoLibException.Create('AOther');
+
+  LRevocations := AOther.GetRevokedCertificates;
+  if LRevocations <> nil then
+    for LEntry in LRevocations do
+      FTbsGen.AddCrlEntry(TAsn1Sequence.GetInstance(LEntry.CrlEntry.ToAsn1Object));
+end;
+
+procedure TX509V2CrlGenerator.AddExtension(const AOid: String; ACritical: Boolean;
+  const AExtensionValue: IAsn1Encodable);
+begin
+  FExtGenerator.AddExtension(TDerObjectIdentifier.Create(AOid) as IDerObjectIdentifier, ACritical, AExtensionValue);
+end;
+
+procedure TX509V2CrlGenerator.AddExtension(const AOid: IDerObjectIdentifier; ACritical: Boolean;
+  const AExtensionValue: IAsn1Encodable);
+begin
+  FExtGenerator.AddExtension(AOid, ACritical, AExtensionValue);
+end;
+
+procedure TX509V2CrlGenerator.AddExtension(const AOid: String; ACritical: Boolean;
+  const AExtensionValue: TCryptoLibByteArray);
+begin
+  FExtGenerator.AddExtension(TDerObjectIdentifier.Create(AOid) as IDerObjectIdentifier, ACritical,
+    TDerOctetString.FromContents(AExtensionValue));
+end;
+
+procedure TX509V2CrlGenerator.AddExtension(const AOid: IDerObjectIdentifier; ACritical: Boolean;
+  const AExtensionValue: TCryptoLibByteArray);
+begin
+  FExtGenerator.AddExtension(AOid, ACritical, TDerOctetString.FromContents(AExtensionValue));
+end;
+
+function TX509V2CrlGenerator.Generate(const ASignatureFactory: ISignatureFactory): IX509Crl;
+var
+  LSigAlgID: IAlgorithmIdentifier;
+  LTbsCertList: ITbsCertificateList;
+  LSignature: IDerBitString;
+  LCertList: ICertificateList;
+begin
+  LSigAlgID := ASignatureFactory.AlgorithmDetails;
+  FTbsGen.SetSignature(LSigAlgID);
+
+  if not FExtGenerator.IsEmpty then
+    FTbsGen.SetExtensions(FExtGenerator.Generate);
+
+  LTbsCertList := FTbsGen.GenerateTbsCertList;
+  LSignature := TX509Utilities.GenerateSignature(ASignatureFactory, LTbsCertList);
+  LCertList := TCertificateList.GetInstance(TDerSequence.Create([LTbsCertList, LSigAlgID, LSignature]));
+  Result := TX509Crl.Create(LCertList);
+end;
+
+function TX509V2CrlGenerator.Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
+  const AAltSignatureFactory: ISignatureFactory): IX509Crl;
+var
+  LAltSigAlgID: IAlgorithmIdentifier;
+  LAltSignature: IDerBitString;
+begin
+  FTbsGen.SetSignature(nil);
+  LAltSigAlgID := AAltSignatureFactory.AlgorithmDetails;
+  FExtGenerator.AddExtension(TX509Extensions.AltSignatureAlgorithm, AIsCritical, LAltSigAlgID);
+  FTbsGen.SetExtensions(FExtGenerator.Generate);
+  LAltSignature := TX509Utilities.GenerateSignature(AAltSignatureFactory, FTbsGen.GeneratePreTbsCertList);
+  FExtGenerator.AddExtension(TX509Extensions.AltSignatureValue, AIsCritical, LAltSignature);
+  Result := Generate(ASignatureFactory);
+end;
+
+function TX509V2CrlGenerator.GetSignatureAlgNames: TCryptoLibStringArray;
 begin
   Result := TX509Utilities.GetAlgNames;
 end;

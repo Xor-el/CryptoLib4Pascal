@@ -88,6 +88,29 @@ type
   end;
 
   /// <summary>
+  /// Interface for V2 TbsCertList structure generator.
+  /// </summary>
+  IV2TbsCertListGenerator = interface
+    ['{D4E5F6A7-B8C9-0123-DEF0-123456789012}']
+    procedure SetSignature(const ASignature: IAlgorithmIdentifier);
+    procedure SetIssuer(const AIssuer: IX509Name);
+    procedure SetThisUpdate(const AThisUpdate: IAsn1UtcTime); overload;
+    procedure SetThisUpdate(const AThisUpdate: ITime); overload;
+    procedure SetNextUpdate(const ANextUpdate: IAsn1UtcTime); overload;
+    procedure SetNextUpdate(const ANextUpdate: ITime); overload;
+    procedure AddCrlEntry(const ACrlEntry: IAsn1Sequence); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: IAsn1UtcTime; AReason: Int32); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: ITime; AReason: Int32); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: ITime; AReason: Int32;
+      const AInvalidityDate: IAsn1GeneralizedTime); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: ITime;
+      const AExtensions: IX509Extensions); overload;
+    procedure SetExtensions(const AExtensions: IX509Extensions);
+    function GeneratePreTbsCertList: IAsn1Sequence;
+    function GenerateTbsCertList: ITbsCertificateList;
+  end;
+
+  /// <summary>
   /// Interface for X509ExtensionsGenerator.
   /// </summary>
   IX509ExtensionsGenerator = interface

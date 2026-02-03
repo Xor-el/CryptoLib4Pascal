@@ -501,6 +501,8 @@ uses
   ClpIX509CrlEntry in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CrlEntry.pas',
   ClpIX509Crl in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509Crl.pas',
   ClpIX509CrlParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CrlParser.pas',
+  ClpIX509AttrCertParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509AttrCertParser.pas',
+  ClpX509AttrCertParser in '..\..\CryptoLib\src\X509\ClpX509AttrCertParser.pas',
   ClpIX509Extension in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509Extension.pas',
   ClpIPkcs10CertificationRequest in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs10CertificationRequest.pas',
   ClpX9IntegerConverter in '..\..\CryptoLib\src\Asn1\X9\ClpX9IntegerConverter.pas',

@@ -45,9 +45,9 @@ type
 
   var
     FLock: TCriticalSection;
-    FstateCounter, FseedCounter: Int64;
-    Fdigest: IDigest;
-    Fstate, Fseed: TCryptoLibByteArray;
+    FStateCounter, FSeedCounter: Int64;
+    FDigest: IDigest;
+    FState, FSeed: TCryptoLibByteArray;
 
     procedure CycleSeed(); inline;
     procedure GenerateState(); inline;

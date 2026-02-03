@@ -35,7 +35,8 @@ uses
   ClpIAttributeCertificateIssuer,
   ClpIAsymmetricKeyParameter,
   ClpISignatureFactory,
-  ClpIX509Certificate;
+  ClpIX509Certificate,
+  ClpIX509Crl;
 
 type
   IX509V1CertificateGenerator = interface
@@ -104,6 +105,35 @@ type
     procedure AddExtension(const AOid: String; ACritical: Boolean;
       const AExtensionValue: TCryptoLibByteArray); overload;
     function Generate(const ASignatureFactory: ISignatureFactory): IX509V2AttributeCertificate;
+    function GetSignatureAlgNames: TCryptoLibStringArray;
+  end;
+
+  /// <summary>
+  /// Interface for X.509 Version 2 CRL generator.
+  /// </summary>
+  IX509V2CrlGenerator = interface
+    ['{B6C7D8E9-F0A1-2345-6789-ABCDEF012345}']
+    procedure Reset;
+    procedure SetIssuerDN(const AIssuer: IX509Name);
+    procedure SetThisUpdate(const ADate: TDateTime);
+    procedure SetNextUpdate(const ADate: TDateTime);
+    procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32); overload;
+    procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime; AReason: Int32;
+      const AInvalidityDate: TDateTime); overload;
+    procedure AddCrlEntry(const AUserCertificate: TBigInteger; const ARevocationDate: TDateTime;
+      const AExtensions: IX509Extensions); overload;
+    procedure AddCrl(const AOther: IX509Crl);
+    procedure AddExtension(const AOid: String; ACritical: Boolean;
+      const AExtensionValue: IAsn1Encodable); overload;
+    procedure AddExtension(const AOid: IDerObjectIdentifier; ACritical: Boolean;
+      const AExtensionValue: IAsn1Encodable); overload;
+    procedure AddExtension(const AOid: String; ACritical: Boolean;
+      const AExtensionValue: TCryptoLibByteArray); overload;
+    procedure AddExtension(const AOid: IDerObjectIdentifier; ACritical: Boolean;
+      const AExtensionValue: TCryptoLibByteArray); overload;
+    function Generate(const ASignatureFactory: ISignatureFactory): IX509Crl; overload;
+    function Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
+      const AAltSignatureFactory: ISignatureFactory): IX509Crl; overload;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 

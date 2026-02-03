@@ -32,6 +32,7 @@ uses
   ClpX509Asn1Objects,
   ClpIX509Extension,
   ClpX509Extension,
+  ClpRfc5280Asn1Utilities,
   ClpCryptoLibTypes,
   ClpCryptoLibComparers,
   ClpIX509Asn1Generators;
@@ -127,6 +128,42 @@ type
     procedure SetIssuerUniqueID(const AIssuerUniqueID: IDerBitString);
     procedure SetExtensions(const AExtensions: IX509Extensions);
     function GenerateAttributeCertificateInfo: IAttributeCertificateInfo;
+  end;
+
+  /// <summary>
+  /// Generator for Version 2 TbsCertList structures.
+  /// </summary>
+  TV2TbsCertListGenerator = class(TInterfacedObject, IV2TbsCertListGenerator)
+  strict private
+    FVersion: IDerInteger;
+    FSignature: IAlgorithmIdentifier;
+    FIssuer: IX509Name;
+    FThisUpdate: ITime;
+    FNextUpdate: ITime;
+    FExtensions: IAsn1Encodable;
+    FCrlEntries: TList<IAsn1Sequence>;
+
+    function GenerateTbsCertificateStructure: IAsn1Sequence;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure SetSignature(const ASignature: IAlgorithmIdentifier);
+    procedure SetIssuer(const AIssuer: IX509Name);
+    procedure SetThisUpdate(const AThisUpdate: IAsn1UtcTime); overload;
+    procedure SetThisUpdate(const AThisUpdate: ITime); overload;
+    procedure SetNextUpdate(const ANextUpdate: IAsn1UtcTime); overload;
+    procedure SetNextUpdate(const ANextUpdate: ITime); overload;
+    procedure AddCrlEntry(const ACrlEntry: IAsn1Sequence); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: IAsn1UtcTime; AReason: Int32); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: ITime; AReason: Int32); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: ITime; AReason: Int32;
+      const AInvalidityDate: IAsn1GeneralizedTime); overload;
+    procedure AddCrlEntry(const AUserCertificate: IDerInteger; const ARevocationDate: ITime;
+      const AExtensions: IX509Extensions); overload;
+    procedure SetExtensions(const AExtensions: IX509Extensions);
+    function GeneratePreTbsCertList: IAsn1Sequence;
+    function GenerateTbsCertList: ITbsCertificateList;
   end;
 
   /// <remarks>Generator for X.509 extensions</remarks>
@@ -398,6 +435,169 @@ begin
   Result := TTbsCertificateStructure.Create(TDerInteger.Two, FSerialNumber,
     FSignature, FIssuer, LValidity, LSubject, FSubjectPublicKeyInfo,
     FIssuerUniqueID, FSubjectUniqueID, FExtensions);
+end;
+
+{ TV2TbsCertListGenerator }
+
+constructor TV2TbsCertListGenerator.Create;
+begin
+  inherited Create;
+  FVersion := TDerInteger.One;
+  FCrlEntries := TList<IAsn1Sequence>.Create;
+end;
+
+destructor TV2TbsCertListGenerator.Destroy;
+begin
+  FCrlEntries.Free;
+  inherited Destroy;
+end;
+
+procedure TV2TbsCertListGenerator.SetSignature(const ASignature: IAlgorithmIdentifier);
+begin
+  FSignature := ASignature;
+end;
+
+procedure TV2TbsCertListGenerator.SetIssuer(const AIssuer: IX509Name);
+begin
+  FIssuer := AIssuer;
+end;
+
+procedure TV2TbsCertListGenerator.SetThisUpdate(const AThisUpdate: IAsn1UtcTime);
+begin
+  FThisUpdate := TTime.Create(AThisUpdate);
+end;
+
+procedure TV2TbsCertListGenerator.SetThisUpdate(const AThisUpdate: ITime);
+begin
+  FThisUpdate := AThisUpdate;
+end;
+
+procedure TV2TbsCertListGenerator.SetNextUpdate(const ANextUpdate: IAsn1UtcTime);
+begin
+  if ANextUpdate <> nil then
+    FNextUpdate := TTime.Create(ANextUpdate)
+  else
+    FNextUpdate := nil;
+end;
+
+procedure TV2TbsCertListGenerator.SetNextUpdate(const ANextUpdate: ITime);
+begin
+  FNextUpdate := ANextUpdate;
+end;
+
+procedure TV2TbsCertListGenerator.AddCrlEntry(const ACrlEntry: IAsn1Sequence);
+begin
+  FCrlEntries.Add(ACrlEntry);
+end;
+
+procedure TV2TbsCertListGenerator.AddCrlEntry(const AUserCertificate: IDerInteger;
+  const ARevocationDate: IAsn1UtcTime; AReason: Int32);
+begin
+  AddCrlEntry(AUserCertificate, TTime.Create(ARevocationDate) as ITime, AReason);
+end;
+
+procedure TV2TbsCertListGenerator.AddCrlEntry(const AUserCertificate: IDerInteger;
+  const ARevocationDate: ITime; AReason: Int32);
+begin
+  AddCrlEntry(AUserCertificate, ARevocationDate, AReason, nil);
+end;
+
+procedure TV2TbsCertListGenerator.AddCrlEntry(const AUserCertificate: IDerInteger;
+  const ARevocationDate: ITime; AReason: Int32; const AInvalidityDate: IAsn1GeneralizedTime);
+var
+  LExtOids: TList<IDerObjectIdentifier>;
+  LExtValues: TList<IX509Extension>;
+  LCrlReason: ICrlReason;
+  LExtensions: IX509Extensions;
+begin
+  LExtOids := TList<IDerObjectIdentifier>.Create;
+  try
+    LExtValues := TList<IX509Extension>.Create;
+    try
+      if AReason <> 0 then
+      begin
+        LCrlReason := TCrlReason.Create(AReason);
+        LExtOids.Add(TX509Extensions.ReasonCode);
+        LExtValues.Add(TX509Extension.Create(False, TDerOctetString.Create(LCrlReason.GetEncoded(TAsn1Encodable.Der))) as IX509Extension);
+      end;
+
+      if AInvalidityDate <> nil then
+      begin
+        LExtOids.Add(TX509Extensions.InvalidityDate);
+        LExtValues.Add(TX509Extension.Create(False, TDerOctetString.Create(AInvalidityDate.GetEncoded(TAsn1Encodable.Der))) as IX509Extension);
+      end;
+
+      if LExtOids.Count >= 1 then
+        LExtensions := TX509Extensions.Create(LExtOids, LExtValues)
+      else
+        LExtensions := nil;
+
+      AddCrlEntry(AUserCertificate, ARevocationDate, LExtensions);
+    finally
+      LExtValues.Free;
+    end;
+  finally
+    LExtOids.Free;
+  end;
+end;
+
+procedure TV2TbsCertListGenerator.AddCrlEntry(const AUserCertificate: IDerInteger;
+  const ARevocationDate: ITime; const AExtensions: IX509Extensions);
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create([AUserCertificate, ARevocationDate]);
+  LV.AddOptional(AExtensions);
+  AddCrlEntry(TDerSequence.Create(LV));
+end;
+
+procedure TV2TbsCertListGenerator.SetExtensions(const AExtensions: IX509Extensions);
+begin
+  FExtensions := AExtensions;
+end;
+
+function TV2TbsCertListGenerator.GeneratePreTbsCertList: IAsn1Sequence;
+begin
+  if FSignature <> nil then
+    raise EInvalidOperationCryptoLibException.Create('signature should not be set in PreTBSCertList generator');
+
+  if (FIssuer = nil) or (FThisUpdate = nil) then
+    raise EInvalidOperationCryptoLibException.Create('Not all mandatory fields set in V2 PreTBSCertList generator');
+
+  Result := GenerateTbsCertificateStructure;
+end;
+
+function TV2TbsCertListGenerator.GenerateTbsCertList: ITbsCertificateList;
+begin
+  if (FSignature = nil) or (FIssuer = nil) or (FThisUpdate = nil) then
+    raise EInvalidOperationCryptoLibException.Create('Not all mandatory fields set in V2 TbsCertList generator.');
+
+  Result := TTbsCertificateList.GetInstance(GenerateTbsCertificateStructure);
+end;
+
+function TV2TbsCertListGenerator.GenerateTbsCertificateStructure: IAsn1Sequence;
+var
+  LV: IAsn1EncodableVector;
+  LCrlEntriesArray: TCryptoLibGenericArray<IAsn1Encodable>;
+  I: Int32;
+begin
+  LV := TAsn1EncodableVector.Create(7);
+  LV.Add(FVersion);
+  LV.AddOptional(FSignature);
+  LV.Add(FIssuer);
+  LV.Add(FThisUpdate);
+  LV.AddOptional(FNextUpdate);
+
+  if (FCrlEntries <> nil) and (FCrlEntries.Count > 0) then
+  begin
+    SetLength(LCrlEntriesArray, FCrlEntries.Count);
+    for I := 0 to FCrlEntries.Count - 1 do
+      LCrlEntriesArray[I] := FCrlEntries[I];
+    LV.Add(TDerSequence.Create(LCrlEntriesArray));
+  end;
+
+  LV.AddOptionalTagged(True, 0, FExtensions);
+  Result := TDerSequence.Create(LV);
 end;
 
 { TV2AttributeCertificateInfoGenerator }
