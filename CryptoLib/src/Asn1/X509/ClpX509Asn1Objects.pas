@@ -467,6 +467,7 @@ type
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const AUsages: TCryptoLibGenericArray<IDerObjectIdentifier>); overload;
+    constructor Create(const AUsages: array of IDerObjectIdentifier); overload;
 
     destructor Destroy; override;
 
@@ -605,6 +606,122 @@ type
     function ToAsn1ObjectTrimmed: IAsn1Sequence;
 
     property Count: Int32 read GetCount;
+
+  end;
+
+  /// <summary>
+  /// Key purpose ID registry (OIDs for extended key usage).
+  /// KeyPurposeID ::= OBJECT IDENTIFIER
+  /// </summary>
+  TKeyPurposeId = class abstract(TObject)
+
+  strict private
+  class var
+    FAnyExtendedKeyUsage: IDerObjectIdentifier;
+    FIdKpServerAuth: IDerObjectIdentifier;
+    FIdKpClientAuth: IDerObjectIdentifier;
+    FIdKpCodeSigning: IDerObjectIdentifier;
+    FIdKpEmailProtection: IDerObjectIdentifier;
+    FIdKpIpsecEndSystem: IDerObjectIdentifier;
+    FIdKpIpsecTunnel: IDerObjectIdentifier;
+    FIdKpIpsecUser: IDerObjectIdentifier;
+    FIdKpTimeStamping: IDerObjectIdentifier;
+    FIdKpOcspSigning: IDerObjectIdentifier;
+    FIdKpDvcs: IDerObjectIdentifier;
+    FIdKpSbgpCertAaServerAuth: IDerObjectIdentifier;
+    FIdKpScvpResponder: IDerObjectIdentifier;
+    FIdKpEapOverPpp: IDerObjectIdentifier;
+    FIdKpEapOverLan: IDerObjectIdentifier;
+    FIdKpScvpServer: IDerObjectIdentifier;
+    FIdKpScvpClient: IDerObjectIdentifier;
+    FIdKpIpsecIke: IDerObjectIdentifier;
+    FIdKpCapwapAc: IDerObjectIdentifier;
+    FIdKpCapwapWtp: IDerObjectIdentifier;
+    FIdKpCmcCa: IDerObjectIdentifier;
+    FIdKpCmcRa: IDerObjectIdentifier;
+    FIdKpCmKga: IDerObjectIdentifier;
+    FIdKpSmartcardlogon: IDerObjectIdentifier;
+    FIdKpMacAddress: IDerObjectIdentifier;
+    FIdKpMsSgc: IDerObjectIdentifier;
+    FScSysNodeNumber: IDerObjectIdentifier;
+    FIdPkinitAuthData: IDerObjectIdentifier;
+    FIdPkinitDHKeyData: IDerObjectIdentifier;
+    FIdPkinitRkeyData: IDerObjectIdentifier;
+    FKeyPurposeClientAuth: IDerObjectIdentifier;
+    FKeyPurposeKdc: IDerObjectIdentifier;
+    FIdKpNsSgc: IDerObjectIdentifier;
+
+    class function GetAnyExtendedKeyUsage: IDerObjectIdentifier; static; inline;
+    class function GetIdKpServerAuth: IDerObjectIdentifier; static; inline;
+    class function GetIdKpClientAuth: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCodeSigning: IDerObjectIdentifier; static; inline;
+    class function GetIdKpEmailProtection: IDerObjectIdentifier; static; inline;
+    class function GetIdKpIpsecEndSystem: IDerObjectIdentifier; static; inline;
+    class function GetIdKpIpsecTunnel: IDerObjectIdentifier; static; inline;
+    class function GetIdKpIpsecUser: IDerObjectIdentifier; static; inline;
+    class function GetIdKpTimeStamping: IDerObjectIdentifier; static; inline;
+    class function GetIdKpOcspSigning: IDerObjectIdentifier; static; inline;
+    class function GetIdKpDvcs: IDerObjectIdentifier; static; inline;
+    class function GetIdKpSbgpCertAaServerAuth: IDerObjectIdentifier; static; inline;
+    class function GetIdKpScvpResponder: IDerObjectIdentifier; static; inline;
+    class function GetIdKpEapOverPpp: IDerObjectIdentifier; static; inline;
+    class function GetIdKpEapOverLan: IDerObjectIdentifier; static; inline;
+    class function GetIdKpScvpServer: IDerObjectIdentifier; static; inline;
+    class function GetIdKpScvpClient: IDerObjectIdentifier; static; inline;
+    class function GetIdKpIpsecIke: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCapwapAc: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCapwapWtp: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCmcCa: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCmcRa: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCmKga: IDerObjectIdentifier; static; inline;
+    class function GetIdKpSmartcardlogon: IDerObjectIdentifier; static; inline;
+    class function GetIdKpMacAddress: IDerObjectIdentifier; static; inline;
+    class function GetIdKpMsSgc: IDerObjectIdentifier; static; inline;
+    class function GetScSysNodeNumber: IDerObjectIdentifier; static; inline;
+    class function GetIdPkinitAuthData: IDerObjectIdentifier; static; inline;
+    class function GetIdPkinitDHKeyData: IDerObjectIdentifier; static; inline;
+    class function GetIdPkinitRkeyData: IDerObjectIdentifier; static; inline;
+    class function GetKeyPurposeClientAuth: IDerObjectIdentifier; static; inline;
+    class function GetKeyPurposeKdc: IDerObjectIdentifier; static; inline;
+    class function GetIdKpNsSgc: IDerObjectIdentifier; static; inline;
+
+    class procedure Boot; static;
+    class constructor Create;
+
+  public
+    class property AnyExtendedKeyUsage: IDerObjectIdentifier read GetAnyExtendedKeyUsage;
+    class property IdKpServerAuth: IDerObjectIdentifier read GetIdKpServerAuth;
+    class property IdKpClientAuth: IDerObjectIdentifier read GetIdKpClientAuth;
+    class property IdKpCodeSigning: IDerObjectIdentifier read GetIdKpCodeSigning;
+    class property IdKpEmailProtection: IDerObjectIdentifier read GetIdKpEmailProtection;
+    class property IdKpIpsecEndSystem: IDerObjectIdentifier read GetIdKpIpsecEndSystem;
+    class property IdKpIpsecTunnel: IDerObjectIdentifier read GetIdKpIpsecTunnel;
+    class property IdKpIpsecUser: IDerObjectIdentifier read GetIdKpIpsecUser;
+    class property IdKpTimeStamping: IDerObjectIdentifier read GetIdKpTimeStamping;
+    class property IdKpOcspSigning: IDerObjectIdentifier read GetIdKpOcspSigning;
+    class property IdKpDvcs: IDerObjectIdentifier read GetIdKpDvcs;
+    class property IdKpSbgpCertAaServerAuth: IDerObjectIdentifier read GetIdKpSbgpCertAaServerAuth;
+    class property IdKpScvpResponder: IDerObjectIdentifier read GetIdKpScvpResponder;
+    class property IdKpEapOverPpp: IDerObjectIdentifier read GetIdKpEapOverPpp;
+    class property IdKpEapOverLan: IDerObjectIdentifier read GetIdKpEapOverLan;
+    class property IdKpScvpServer: IDerObjectIdentifier read GetIdKpScvpServer;
+    class property IdKpScvpClient: IDerObjectIdentifier read GetIdKpScvpClient;
+    class property IdKpIpsecIke: IDerObjectIdentifier read GetIdKpIpsecIke;
+    class property IdKpCapwapAc: IDerObjectIdentifier read GetIdKpCapwapAc;
+    class property IdKpCapwapWtp: IDerObjectIdentifier read GetIdKpCapwapWtp;
+    class property IdKpCmcCa: IDerObjectIdentifier read GetIdKpCmcCa;
+    class property IdKpCmcRa: IDerObjectIdentifier read GetIdKpCmcRa;
+    class property IdKpCmKga: IDerObjectIdentifier read GetIdKpCmKga;
+    class property IdKpSmartcardlogon: IDerObjectIdentifier read GetIdKpSmartcardlogon;
+    class property IdKpMacAddress: IDerObjectIdentifier read GetIdKpMacAddress;
+    class property IdKpMsSgc: IDerObjectIdentifier read GetIdKpMsSgc;
+    class property ScSysNodeNumber: IDerObjectIdentifier read GetScSysNodeNumber;
+    class property IdPkinitAuthData: IDerObjectIdentifier read GetIdPkinitAuthData;
+    class property IdPkinitDHKeyData: IDerObjectIdentifier read GetIdPkinitDHKeyData;
+    class property IdPkinitRkeyData: IDerObjectIdentifier read GetIdPkinitRkeyData;
+    class property KeyPurposeClientAuth: IDerObjectIdentifier read GetKeyPurposeClientAuth;
+    class property KeyPurposeKdc: IDerObjectIdentifier read GetKeyPurposeKdc;
+    class property IdKpNsSgc: IDerObjectIdentifier read GetIdKpNsSgc;
 
   end;
 
@@ -4973,6 +5090,26 @@ begin
   FSeq := TDerSequence.Create(LV);
 end;
 
+constructor TExtendedKeyUsage.Create(const AUsages: array of IDerObjectIdentifier);
+var
+  I: Int32;
+  LV: IAsn1EncodableVector;
+  LOid: IDerObjectIdentifier;
+begin
+  inherited Create();
+  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
+  LV := TAsn1EncodableVector.Create();
+
+  for I := Low(AUsages) to High(AUsages) do
+  begin
+    LOid := AUsages[I];
+    LV.Add(LOid);
+    FUsageTable.Add(LOid, True);
+  end;
+
+  FSeq := TDerSequence.Create(LV);
+end;
+
 destructor TExtendedKeyUsage.Destroy;
 begin
   FUsageTable.Free;
@@ -5061,6 +5198,220 @@ begin
   FAltSignatureAlgorithm := TDerObjectIdentifier.Create('2.5.29.73');
   FAltSignatureValue := TDerObjectIdentifier.Create('2.5.29.74');
   FDraftDeltaCertificateDescriptor := TDerObjectIdentifier.Create('2.16.840.1.114027.80.6.1');
+end;
+
+{ TKeyPurposeId }
+
+class constructor TKeyPurposeId.Create;
+begin
+  Boot;
+end;
+
+class procedure TKeyPurposeId.Boot;
+var
+  LIdKp: IDerObjectIdentifier;
+  LIdPkinit: String;
+begin
+  LIdKp := TX509ObjectIdentifiers.IdPkix.Branch('3');
+  FAnyExtendedKeyUsage := TDerObjectIdentifier.Create(TX509Extensions.ExtendedKeyUsage.ID + '.0');
+  FIdKpServerAuth := TDerObjectIdentifier.Create(LIdKp.ID + '.1');
+  FIdKpClientAuth := TDerObjectIdentifier.Create(LIdKp.ID + '.2');
+  FIdKpCodeSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.3');
+  FIdKpEmailProtection := TDerObjectIdentifier.Create(LIdKp.ID + '.4');
+  FIdKpIpsecEndSystem := TDerObjectIdentifier.Create(LIdKp.ID + '.5');
+  FIdKpIpsecTunnel := TDerObjectIdentifier.Create(LIdKp.ID + '.6');
+  FIdKpIpsecUser := TDerObjectIdentifier.Create(LIdKp.ID + '.7');
+  FIdKpTimeStamping := TDerObjectIdentifier.Create(LIdKp.ID + '.8');
+  FIdKpOcspSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.9');
+  FIdKpDvcs := TDerObjectIdentifier.Create(LIdKp.ID + '.10');
+  FIdKpSbgpCertAaServerAuth := TDerObjectIdentifier.Create(LIdKp.ID + '.11');
+  FIdKpScvpResponder := TDerObjectIdentifier.Create(LIdKp.ID + '.12');
+  FIdKpEapOverPpp := TDerObjectIdentifier.Create(LIdKp.ID + '.13');
+  FIdKpEapOverLan := TDerObjectIdentifier.Create(LIdKp.ID + '.14');
+  FIdKpScvpServer := TDerObjectIdentifier.Create(LIdKp.ID + '.15');
+  FIdKpScvpClient := TDerObjectIdentifier.Create(LIdKp.ID + '.16');
+  FIdKpIpsecIke := TDerObjectIdentifier.Create(LIdKp.ID + '.17');
+  FIdKpCapwapAc := TDerObjectIdentifier.Create(LIdKp.ID + '.18');
+  FIdKpCapwapWtp := TDerObjectIdentifier.Create(LIdKp.ID + '.19');
+  FIdKpCmcCa := TDerObjectIdentifier.Create(LIdKp.ID + '.27');
+  FIdKpCmcRa := TDerObjectIdentifier.Create(LIdKp.ID + '.28');
+  FIdKpCmKga := TDerObjectIdentifier.Create(LIdKp.ID + '.32');
+  FIdKpSmartcardlogon := TDerObjectIdentifier.Create('1.3.6.1.4.1.311.20.2.2');
+  FIdKpMacAddress := TDerObjectIdentifier.Create('1.3.6.1.1.1.1.22');
+  FIdKpMsSgc := TDerObjectIdentifier.Create('1.3.6.1.4.1.311.10.3.3');
+  LIdPkinit := '1.3.6.1.5.2.3';
+  FScSysNodeNumber := TDerObjectIdentifier.Create(LIdPkinit + '.0');
+  FIdPkinitAuthData := TDerObjectIdentifier.Create(LIdPkinit + '.1');
+  FIdPkinitDHKeyData := TDerObjectIdentifier.Create(LIdPkinit + '.2');
+  FIdPkinitRkeyData := TDerObjectIdentifier.Create(LIdPkinit + '.3');
+  FKeyPurposeClientAuth := TDerObjectIdentifier.Create(LIdPkinit + '.4');
+  FKeyPurposeKdc := TDerObjectIdentifier.Create(LIdPkinit + '.5');
+  FIdKpNsSgc := TDerObjectIdentifier.Create('2.16.840.1.113730.4.1');
+end;
+
+class function TKeyPurposeId.GetAnyExtendedKeyUsage: IDerObjectIdentifier;
+begin
+  Result := FAnyExtendedKeyUsage;
+end;
+
+class function TKeyPurposeId.GetIdKpServerAuth: IDerObjectIdentifier;
+begin
+  Result := FIdKpServerAuth;
+end;
+
+class function TKeyPurposeId.GetIdKpClientAuth: IDerObjectIdentifier;
+begin
+  Result := FIdKpClientAuth;
+end;
+
+class function TKeyPurposeId.GetIdKpCodeSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpCodeSigning;
+end;
+
+class function TKeyPurposeId.GetIdKpEmailProtection: IDerObjectIdentifier;
+begin
+  Result := FIdKpEmailProtection;
+end;
+
+class function TKeyPurposeId.GetIdKpIpsecEndSystem: IDerObjectIdentifier;
+begin
+  Result := FIdKpIpsecEndSystem;
+end;
+
+class function TKeyPurposeId.GetIdKpIpsecTunnel: IDerObjectIdentifier;
+begin
+  Result := FIdKpIpsecTunnel;
+end;
+
+class function TKeyPurposeId.GetIdKpIpsecUser: IDerObjectIdentifier;
+begin
+  Result := FIdKpIpsecUser;
+end;
+
+class function TKeyPurposeId.GetIdKpTimeStamping: IDerObjectIdentifier;
+begin
+  Result := FIdKpTimeStamping;
+end;
+
+class function TKeyPurposeId.GetIdKpOcspSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpOcspSigning;
+end;
+
+class function TKeyPurposeId.GetIdKpDvcs: IDerObjectIdentifier;
+begin
+  Result := FIdKpDvcs;
+end;
+
+class function TKeyPurposeId.GetIdKpSbgpCertAaServerAuth: IDerObjectIdentifier;
+begin
+  Result := FIdKpSbgpCertAaServerAuth;
+end;
+
+class function TKeyPurposeId.GetIdKpScvpResponder: IDerObjectIdentifier;
+begin
+  Result := FIdKpScvpResponder;
+end;
+
+class function TKeyPurposeId.GetIdKpEapOverPpp: IDerObjectIdentifier;
+begin
+  Result := FIdKpEapOverPpp;
+end;
+
+class function TKeyPurposeId.GetIdKpEapOverLan: IDerObjectIdentifier;
+begin
+  Result := FIdKpEapOverLan;
+end;
+
+class function TKeyPurposeId.GetIdKpScvpServer: IDerObjectIdentifier;
+begin
+  Result := FIdKpScvpServer;
+end;
+
+class function TKeyPurposeId.GetIdKpScvpClient: IDerObjectIdentifier;
+begin
+  Result := FIdKpScvpClient;
+end;
+
+class function TKeyPurposeId.GetIdKpIpsecIke: IDerObjectIdentifier;
+begin
+  Result := FIdKpIpsecIke;
+end;
+
+class function TKeyPurposeId.GetIdKpCapwapAc: IDerObjectIdentifier;
+begin
+  Result := FIdKpCapwapAc;
+end;
+
+class function TKeyPurposeId.GetIdKpCapwapWtp: IDerObjectIdentifier;
+begin
+  Result := FIdKpCapwapWtp;
+end;
+
+class function TKeyPurposeId.GetIdKpCmcCa: IDerObjectIdentifier;
+begin
+  Result := FIdKpCmcCa;
+end;
+
+class function TKeyPurposeId.GetIdKpCmcRa: IDerObjectIdentifier;
+begin
+  Result := FIdKpCmcRa;
+end;
+
+class function TKeyPurposeId.GetIdKpCmKga: IDerObjectIdentifier;
+begin
+  Result := FIdKpCmKga;
+end;
+
+class function TKeyPurposeId.GetIdKpSmartcardlogon: IDerObjectIdentifier;
+begin
+  Result := FIdKpSmartcardlogon;
+end;
+
+class function TKeyPurposeId.GetIdKpMacAddress: IDerObjectIdentifier;
+begin
+  Result := FIdKpMacAddress;
+end;
+
+class function TKeyPurposeId.GetIdKpMsSgc: IDerObjectIdentifier;
+begin
+  Result := FIdKpMsSgc;
+end;
+
+class function TKeyPurposeId.GetScSysNodeNumber: IDerObjectIdentifier;
+begin
+  Result := FScSysNodeNumber;
+end;
+
+class function TKeyPurposeId.GetIdPkinitAuthData: IDerObjectIdentifier;
+begin
+  Result := FIdPkinitAuthData;
+end;
+
+class function TKeyPurposeId.GetIdPkinitDHKeyData: IDerObjectIdentifier;
+begin
+  Result := FIdPkinitDHKeyData;
+end;
+
+class function TKeyPurposeId.GetIdPkinitRkeyData: IDerObjectIdentifier;
+begin
+  Result := FIdPkinitRkeyData;
+end;
+
+class function TKeyPurposeId.GetKeyPurposeClientAuth: IDerObjectIdentifier;
+begin
+  Result := FKeyPurposeClientAuth;
+end;
+
+class function TKeyPurposeId.GetKeyPurposeKdc: IDerObjectIdentifier;
+begin
+  Result := FKeyPurposeKdc;
+end;
+
+class function TKeyPurposeId.GetIdKpNsSgc: IDerObjectIdentifier;
+begin
+  Result := FIdKpNsSgc;
 end;
 
 class function TX509Extensions.GetInstance(AObj: TObject): IX509Extensions;

@@ -930,7 +930,7 @@ begin
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(FRsaPublic);
   LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
-  LCertGen.AddExtension('2.5.29.37', True, TDerSequence.Create([TDerObjectIdentifier.Create('2.5.29.37.0') as IAsn1Encodable]) as IDerSequence);
+  LCertGen.AddExtension(TX509Extensions.ExtendedKeyUsage.ID, True, TDerSequence.Create(TKeyPurposeId.AnyExtendedKeyUsage) as IDerSequence);
   LCertGen.AddExtension('2.5.29.17', True, TGeneralNames.Create(TGeneralName.Create(TGeneralName.Rfc822Name, 'test@test.test') as IGeneralName) as IGeneralNames);
 
   LSigner := TAsn1SignatureFactory.Create('MD5WithRSAEncryption', FRsaPrivate, nil);
@@ -947,7 +947,7 @@ begin
     Fail('error generating cert - key usage wrong.');
 
   LEkus := LCert.GetExtendedKeyUsage();
-  if (LEkus = nil) or (System.Length(LEkus) < 1) or (not LEkus[0].Equals(TDerObjectIdentifier.Create('2.5.29.37.0'))) then
+  if (LEkus = nil) or (System.Length(LEkus) < 1) or (not TKeyPurposeId.AnyExtendedKeyUsage.Equals(LEkus[0])) then
     Fail('failed extended key usage test');
 
   LSanExt := LCert.GetSubjectAlternativeNameExtension();
@@ -1167,11 +1167,11 @@ begin
     LOrd.Add(TX509Name.L);
     LOrd.Add(TX509Name.ST);
     LOrd.Add(TX509Name.E);
-    LValues.Add('AU');
-    LValues.Add('The Legion of the Bouncy Castle');
-    LValues.Add('Melbourne');
-    LValues.Add('Victoria');
-    LValues.Add('feedback-crypto@bouncycastle.org');
+    LValues.Add('NG');
+    LValues.Add('CryptoLib4Pascal');
+    LValues.Add('Alausa');
+    LValues.Add('Lagos');
+    LValues.Add('feedback-crypto@cryptolib4pascal.org');
     LName := TX509Name.Create(LOrd, LValues);
 
     LCertGen := TX509V3CertificateGenerator.Create;
@@ -1182,7 +1182,7 @@ begin
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
     LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
-    LCertGen.AddExtension('2.5.29.37', True, TDerSequence.Create([TDerObjectIdentifier.Create('2.5.29.37.0') as IAsn1Encodable]) as IDerSequence);
+    LCertGen.AddExtension(TX509Extensions.ExtendedKeyUsage.ID, True, TDerSequence.Create(TKeyPurposeId.AnyExtendedKeyUsage) as IDerSequence);
     LCertGen.AddExtension('2.5.29.17', True, TGeneralNames.Create(TGeneralName.Create(TGeneralName.Rfc822Name, 'test@test.test') as IGeneralName) as IGeneralNames);
 
     LSigner := TAsn1SignatureFactory.Create('MD5WithRSAEncryption', LPrivKey, nil);
@@ -1196,7 +1196,7 @@ begin
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
     LCertGen.CopyAndAddExtension(TDerObjectIdentifier.Create('2.5.29.15') as IDerObjectIdentifier, True, LBaseCert);
-    LCertGen.CopyAndAddExtension(TDerObjectIdentifier.Create('2.5.29.37') as IDerObjectIdentifier, False, LBaseCert);
+    LCertGen.CopyAndAddExtension(TX509Extensions.ExtendedKeyUsage, False, LBaseCert);
 
     LCert := LCertGen.Generate(LSigner);
 
@@ -1211,7 +1211,7 @@ begin
     if (LBaseVal <> nil) and (not AreEqual(LBaseVal.GetEncoded(), LCertVal.GetEncoded())) then
       Fail('2.5.29.15 differs');
 
-    LOid2 := TDerObjectIdentifier.Create('2.5.29.37');
+    LOid2 := TX509Extensions.ExtendedKeyUsage;
     LBaseVal := LBaseCert.GetExtensionValue(LOid2);
     LCertVal := LCert.GetExtensionValue(LOid2);
     if (LBaseVal = nil) <> (LCertVal = nil) then
@@ -2154,7 +2154,7 @@ begin
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LKp.Public);
     LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
-    LCertGen.AddExtension('2.5.29.37', True, TDerSequence.Create([TDerObjectIdentifier.Create('2.5.29.37.0') as IDerObjectIdentifier]) as IDerSequence);
+    LCertGen.AddExtension(TX509Extensions.ExtendedKeyUsage.ID, True, TDerSequence.Create(TKeyPurposeId.AnyExtendedKeyUsage) as IDerSequence);
     LCertGen.AddExtension('2.5.29.17', True, TGeneralNames.Create(TGeneralName.Create(TGeneralName.Rfc822Name, 'test@test.test') as IGeneralName) as IGeneralNames);
 
     LSigner := TAsn1SignatureFactory.Create(AAlgorithm, LKp.Private, nil);
