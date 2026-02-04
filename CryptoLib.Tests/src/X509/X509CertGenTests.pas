@@ -69,7 +69,7 @@ uses
   ClpDigestUtilities,
   ClpIAsn1Objects,
   ClpCryptoLibTypes,
-  ClpCryptoLibComparers,
+  ClpAsn1Comparers,
   CryptoLibTestBase;
 
 type
@@ -174,8 +174,8 @@ var
   LAttrs: TDictionary<IDerObjectIdentifier, String>;
   LOrd: TList<IDerObjectIdentifier>;
 begin
-  LAttrs := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
-  LOrd := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+  LAttrs := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+  LOrd := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   try
     LAttrs.Add(TX509Name.C, 'NG');
     LAttrs.Add(TX509Name.O, 'CryptoLib4Pascal');

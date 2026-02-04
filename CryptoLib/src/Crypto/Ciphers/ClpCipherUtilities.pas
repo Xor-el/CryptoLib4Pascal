@@ -27,6 +27,7 @@ uses
   Generics.Collections,
   ClpAsn1Objects,
   ClpCollectionUtilities,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
   ClpDigestUtilities,
@@ -170,7 +171,7 @@ implementation
 class procedure TCipherUtilities.Boot;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
 
   TNistObjectIdentifiers.Boot;
   TPkcsObjectIdentifiers.Boot;

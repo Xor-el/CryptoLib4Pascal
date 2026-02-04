@@ -83,7 +83,7 @@ uses
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpCryptoLibTypes,
-  ClpCryptoLibComparers,
+  ClpAsn1Comparers,
   ClpPkcsObjectIdentifiers,
   ClpPkcsAsn1Objects,
   ClpIPkcsAsn1Objects,
@@ -447,7 +447,7 @@ var
   LAttrs: TDictionary<IDerObjectIdentifier, String>;
   LOrd: TList<IDerObjectIdentifier>;
 begin
-  LAttrs := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  LAttrs := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   LOrd := TList<IDerObjectIdentifier>.Create;
   try
     LAttrs.Add(TX509Name.C, 'AU');

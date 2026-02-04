@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpEncoders,
   ClpGlvTypeBParameters,
@@ -844,8 +845,8 @@ end;
 class procedure TSecNamedCurves.Boot;
 begin
   FobjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  Fnames := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
-  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TCryptoLibComparers.OidEqualityComparer);
+  Fnames := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
 
   DefineCurve('secp112r1', TSecObjectIdentifiers.SecP112r1,
     TSecp112r1Holder.Instance);

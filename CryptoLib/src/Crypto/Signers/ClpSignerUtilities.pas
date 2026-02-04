@@ -28,6 +28,7 @@ uses
   ClpAsn1Objects,
   ClpIX509Asn1Objects,
   ClpCollectionUtilities,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpECNRSigner,
   ClpICipherParameters,
@@ -203,7 +204,7 @@ end;
 class procedure TSignerUtilities.Boot;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FNoRandom := TDictionary<String, Byte>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 

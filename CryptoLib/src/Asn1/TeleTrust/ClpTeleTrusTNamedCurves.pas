@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpEncoders,
   ClpTeleTrusTObjectIdentifiers,
@@ -418,8 +419,8 @@ end;
 class procedure TTeleTrusTNamedCurves.Boot;
 begin
   FobjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  Fnames := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
-  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TCryptoLibComparers.OidEqualityComparer);
+  Fnames := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+  Fcurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
 
   DefineCurve('brainpoolP160r1', TTeleTrusTObjectIdentifiers.BrainpoolP160R1,
     TBrainpoolP160r1Holder.Instance);

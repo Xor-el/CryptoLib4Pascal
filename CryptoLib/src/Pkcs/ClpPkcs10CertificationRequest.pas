@@ -55,6 +55,7 @@ uses
   ClpEdECObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
   ClpX9ObjectIdentifiers,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes;
 
@@ -144,8 +145,8 @@ var
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FExParams := TDictionary<String, IAsn1Encodable>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FNoParams := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
-  FKeyAlgorithms := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FNoParams := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
+  FKeyAlgorithms := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
 
   // FAlgorithms
   FAlgorithms.Add('MD2WITHRSAENCRYPTION', TPkcsObjectIdentifiers.MD2WithRsaEncryption);

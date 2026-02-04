@@ -34,6 +34,7 @@ uses
   ClpX509Extension,
   ClpRfc5280Asn1Utilities,
   ClpCryptoLibTypes,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpIX509Asn1Generators;
 
@@ -690,7 +691,7 @@ end;
 
 class procedure TX509ExtensionsGenerator.Boot;
 begin
-  FDupsAllowed := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FDupsAllowed := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
   // OIDs that allow duplicate extensions
   FDupsAllowed.Add(TX509Extensions.SubjectAlternativeName, True);
   FDupsAllowed.Add(TX509Extensions.IssuerAlternativeName, True);
@@ -701,8 +702,8 @@ end;
 constructor TX509ExtensionsGenerator.Create;
 begin
   inherited Create();
-  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TCryptoLibComparers.OidEqualityComparer);
-  FOrdering := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
+  FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
 end;
 
 destructor TX509ExtensionsGenerator.Destroy;

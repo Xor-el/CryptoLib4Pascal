@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpEncoders,
   ClpGlvTypeBParameters,
@@ -343,8 +344,8 @@ begin
   FnameToCurve := TDictionary<String, IX9ECParametersHolder>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FnameToOid := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FoidToCurve := TDictionary<IDerObjectIdentifier,
-    IX9ECParametersHolder>.Create(TCryptoLibComparers.OidEqualityComparer);
-  FoidToName := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+    IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
+  FoidToName := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
 
   Fnames := TList<String>.Create();
 

@@ -52,6 +52,7 @@ uses
   ClpDateTimeUtilities,
   ClpIetfUtilities,
   ClpEncoders,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers;
 
 resourcestring
@@ -5061,7 +5062,7 @@ var
 begin
   inherited Create();
   FSeq := ASeq;
-  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
 
   for I := 0 to ASeq.Count - 1 do
   begin
@@ -5077,7 +5078,7 @@ var
   LOid: IDerObjectIdentifier;
 begin
   inherited Create();
-  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
   LV := TAsn1EncodableVector.Create();
 
   for I := 0 to System.Length(AUsages) - 1 do
@@ -5097,7 +5098,7 @@ var
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   inherited Create();
-  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
 
   LCount := High(AUsages) - Low(AUsages) + 1;
   System.SetLength(LElements, LCount);
@@ -5520,8 +5521,8 @@ var
 begin
   inherited Create();
 
-  FOrdering := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
-  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
 
   // Don't require non-empty sequence; we see empty extension blocks in the wild
   for I := 0 to ASeq.Count - 1 do
@@ -5560,7 +5561,7 @@ begin
 
   if AOrdering = nil then
   begin
-    FOrdering := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+    FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
     for LOid in AExtensions.Keys do
     begin
       FOrdering.Add(LOid);
@@ -5568,11 +5569,11 @@ begin
   end
   else
   begin
-    FOrdering := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+    FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
     FOrdering.AddRange(AOrdering);
   end;
 
-  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
   for LOid in FOrdering do
   begin
     FExtensions.Add(LOid, AExtensions[LOid]);
@@ -5586,9 +5587,9 @@ var
 begin
   inherited Create();
 
-  FOrdering := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+  FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   FOrdering.AddRange(AOids);
-  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
 
   I := 0;
   for I := 0 to FOrdering.Count - 1 do
@@ -5866,7 +5867,7 @@ begin
   FSeq := ASeq;
   FConverter := nil;
 
-  LOidList := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+  LOidList := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   LValueList := TList<String>.Create();
   LAddedList := TList<Boolean>.Create();
   try
@@ -6079,7 +6080,7 @@ begin
   inherited Create();
   FConverter := AConverter;
 
-  LOidList := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+  LOidList := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   LValueList := TList<String>.Create();
   LAddedList := TList<Boolean>.Create();
   try
@@ -6100,7 +6101,7 @@ begin
     if AReverse then
     begin
       // Reverse the order
-      LO := TList<IDerObjectIdentifier>.Create(TCryptoLibComparers.OidComparer);
+      LO := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
       LV := TList<String>.Create();
       LA := TList<Boolean>.Create();
       try
@@ -6367,9 +6368,9 @@ end;
 class procedure TX509Name.Boot;
 begin
   FDefaultReverse := False;
-  FDefaultSymbols := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
-  FRFC2253Symbols := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
-  FRFC1779Symbols := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FDefaultSymbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+  FRFC2253Symbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+  FRFC1779Symbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FDefaultLookup := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
   // OID constants

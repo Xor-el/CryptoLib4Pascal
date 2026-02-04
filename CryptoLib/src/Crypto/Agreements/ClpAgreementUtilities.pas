@@ -26,6 +26,7 @@ uses
   Generics.Collections,
   ClpAsn1Objects,
   ClpCollectionUtilities,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
   ClpDHBasicAgreement,
@@ -90,7 +91,7 @@ begin
   FAlgorithmMap.Add('DIFFIEHELLMAN', 'DH');
   FAlgorithmMap.Add('ECCDH', 'ECDHC');
 
-  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FAlgorithmOidMap.AddOrSetValue(TEdECObjectIdentifiers.IdX25519, 'X25519');
 end;
 

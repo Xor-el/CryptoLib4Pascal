@@ -23,30 +23,9 @@ interface
 
 uses
   Generics.Defaults,
-  ClpIAsn1Objects,
   ClpStringUtilities;
 
 type
-  /// <summary>
-  /// Equality comparer for IDerObjectIdentifier that uses value-based comparison
-  /// (Asn1Equals) instead of reference equality. Used with TDictionary.
-  /// </summary>
-  TOidEqualityComparer = class(TInterfacedObject, IEqualityComparer<IDerObjectIdentifier>)
-  strict private
-    function Equals(const ALeft, ARight: IDerObjectIdentifier): Boolean; reintroduce;
-    function GetHashCode(const AValue: IDerObjectIdentifier): Integer;
-  end;
-
-  /// <summary>
-  /// Comparer for IDerObjectIdentifier that uses value-based comparison
-  /// (Asn1Equals) for equality and ID string comparison for ordering.
-  /// Used with TList to ensure Contains, IndexOf, and Remove work correctly.
-  /// </summary>
-  TOidComparer = class(TInterfacedObject, IComparer<IDerObjectIdentifier>)
-  strict private
-    function Compare(const ALeft, ARight: IDerObjectIdentifier): Integer;
-  end;
-
   /// <summary>
   /// Equality comparer for String that uses ordinal case-insensitive comparison.
   /// Uses invariant culture for case conversion (OrdinalIgnoreCase).
@@ -64,21 +43,9 @@ type
   TCryptoLibComparers = class sealed(TObject)
   strict private
     class var
-      FOidEqualityComparer: IEqualityComparer<IDerObjectIdentifier>;
-      FOidComparer: IComparer<IDerObjectIdentifier>;
       FOrdinalIgnoreCaseEqualityComparer: IEqualityComparer<String>;
     class constructor Create;
   public
-    /// <summary>
-    /// Gets the OID equality comparer for use with TDictionary.
-    /// </summary>
-    class property OidEqualityComparer: IEqualityComparer<IDerObjectIdentifier> read FOidEqualityComparer;
-    
-    /// <summary>
-    /// Gets the OID comparer for use with TList.
-    /// </summary>
-    class property OidComparer: IComparer<IDerObjectIdentifier> read FOidComparer;
-    
     /// <summary>
     /// Gets the string ordinal ignore case equality comparer for use with TDictionary.
     /// </summary>
@@ -86,86 +53,6 @@ type
   end;
 
 implementation
-
-{ TOidEqualityComparer }
-
-function TOidEqualityComparer.Equals(const ALeft, ARight: IDerObjectIdentifier): Boolean;
-begin
-  // Use value-based comparison via Asn1Equals
-  if ALeft = ARight then
-  begin
-    Result := True;
-    Exit;
-  end;
-  
-  if (ALeft = nil) or (ARight = nil) then
-  begin
-    Result := False;
-    Exit;
-  end;
-  
-  // Use Asn1Equals which compares the contents byte arrays
-  Result := ALeft.Equals(ARight);
-end;
-
-function TOidEqualityComparer.GetHashCode(const AValue: IDerObjectIdentifier): Integer;
-begin
-  if AValue = nil then
-  begin
-    Result := 0;
-    Exit;
-  end;
-  
-  // Use Asn1GetHashCode which is based on contents byte array
-  Result := AValue.CallAsn1GetHashCode();
-end;
-
-{ TOidComparer }
-
-function TOidComparer.Compare(const ALeft, ARight: IDerObjectIdentifier): Integer;
-begin
-  // If both are nil, they're equal
-  if (ALeft = nil) and (ARight = nil) then
-  begin
-    Result := 0;
-    Exit;
-  end;
-  
-  // nil is less than non-nil
-  if ALeft = nil then
-  begin
-    Result := -1;
-    Exit;
-  end;
-  
-  if ARight = nil then
-  begin
-    Result := 1;
-    Exit;
-  end;
-  
-  // If they're the same reference, they're equal
-  if ALeft = ARight then
-  begin
-    Result := 0;
-    Exit;
-  end;
-  
-  // Use value-based equality check (Asn1Equals)
-  if ALeft.Equals(ARight) then
-  begin
-    Result := 0;
-    Exit;
-  end;
-  
-  // If not equal, compare by ID string for ordering
-  if ALeft.Id < ARight.Id then
-    Result := -1
-  else if ALeft.Id > ARight.Id then
-    Result := 1
-  else
-    Result := 0; // Should not happen if Equals returned False, but handle it
-end;
 
 { TOrdinalIgnoreCaseEqualityComparer }
 
@@ -202,8 +89,6 @@ end;
 
 class constructor TCryptoLibComparers.Create;
 begin
-  FOidEqualityComparer := TOidEqualityComparer.Create();
-  FOidComparer := TOidComparer.Create();
   FOrdinalIgnoreCaseEqualityComparer := TOrdinalIgnoreCaseEqualityComparer.Create();
 end;
 

@@ -30,6 +30,7 @@ uses
   ClpNoOpDigest,
   ClpAsn1Objects,
   ClpCollectionUtilities,
+  ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
   ClpCryptoProObjectIdentifiers,
@@ -281,7 +282,7 @@ end;
 class procedure TDigestUtilities.Boot;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TCryptoLibComparers.OidEqualityComparer);
+  FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
   TPkcsObjectIdentifiers.Boot;

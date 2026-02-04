@@ -34,6 +34,7 @@ uses
   ClpArrayUtilities in '..\..\CryptoLib\src\GeneralUtilities\ClpArrayUtilities.pas',
   ClpAsn1DigestFactory in '..\..\CryptoLib\src\Crypto\Operators\ClpAsn1DigestFactory.pas',
   ClpAsn1Dumper in '..\..\CryptoLib\src\Asn1\ClpAsn1Dumper.pas',
+  ClpAsn1Comparers in '..\..\CryptoLib\src\Asn1\ClpAsn1Comparers.pas',
   ClpAsn1Objects in '..\..\CryptoLib\src\Asn1\ClpAsn1Objects.pas',
   ClpAsn1SignatureFactory in '..\..\CryptoLib\src\Crypto\Operators\ClpAsn1SignatureFactory.pas',
   ClpAsn1Streams in '..\..\CryptoLib\src\Asn1\ClpAsn1Streams.pas',
