@@ -190,8 +190,8 @@ begin
 
       TEd25519.TAlgorithm.Ed25519ctx:
         begin
-          if ACtx = nil then
-            raise EArgumentNilCryptoLibException.CreateRes(@SCtxNil);
+          // Note: In Pascal, nil and empty arrays are equivalent.
+          // We allow nil here, treating it as an empty context.
           if System.Length(ACtx) > 255 then
             raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCtxLength);
           LEd25519.Sign(FData, 0, LPk, 0, ACtx, AMsg, AMsgOff, AMsgLen, ASig,
@@ -200,8 +200,8 @@ begin
 
       TEd25519.TAlgorithm.Ed25519ph:
         begin
-          if ACtx = nil then
-            raise EArgumentNilCryptoLibException.CreateRes(@SCtxNil);
+          // Note: In Pascal, nil and empty arrays are equivalent.
+          // We allow nil here, treating it as an empty context.
           if System.Length(ACtx) > 255 then
             raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCtxLength);
           if TEd25519.PrehashSize <> AMsgLen then

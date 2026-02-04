@@ -145,8 +145,8 @@ begin
         end;
       TEd25519.TAlgorithm.Ed25519ctx:
         begin
-          if ACtx = nil then
-            raise EArgumentNilCryptoLibException.CreateRes(@SInvalidPublicKey);
+          // Note: In Pascal, nil and empty arrays are equivalent.
+          // We allow nil here, treating it as an empty context.
           if System.Length(ACtx) > 255 then
             raise EArgumentOutOfRangeCryptoLibException.CreateRes
               (@SInvalidPublicKey);
@@ -155,8 +155,8 @@ begin
         end;
       TEd25519.TAlgorithm.Ed25519ph:
         begin
-          if ACtx = nil then
-            raise EArgumentNilCryptoLibException.CreateRes(@SInvalidPublicKey);
+          // Note: In Pascal, nil and empty arrays are equivalent.
+          // We allow nil here, treating it as an empty context.
           if System.Length(ACtx) > 255 then
             raise EArgumentOutOfRangeCryptoLibException.CreateRes
               (@SInvalidPublicKey);

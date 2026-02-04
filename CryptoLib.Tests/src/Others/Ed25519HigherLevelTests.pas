@@ -153,7 +153,7 @@ begin
   end;
 
   LBadSignature := System.Copy(LSignature);
-  LIdx := (FRandom.Next() and $7FFFFFFF) mod System.Length(LBadSignature);
+  LIdx := (FRandom.Next()) mod System.Length(LBadSignature);
   LBit := FRandom.NextInt32() and 7;
   LBadSignature[LIdx] := Byte(LBadSignature[LIdx] xor (1 shl LBit));
   LVerifier.Init(False, LPub as ICipherParameters);

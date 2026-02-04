@@ -223,8 +223,8 @@ end;
 constructor TEd25519CtxSigner.Create(const AContext: TCryptoLibByteArray);
 begin
   Inherited Create();
-  if AContext = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SContextNil);
+  // Note: In Pascal, nil and empty arrays are equivalent.
+  // We allow nil here, treating it as an empty context.
   FBuffer := TBuffer.Create();
   FContext := System.Copy(AContext);
 end;
