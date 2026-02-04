@@ -126,7 +126,6 @@ type
     function CheckProbablePrime(const ACertainty: Int32; const ARandom: IRandom;
       const ARandomlySelected: Boolean): Boolean;
     function GetLowestSetBitMaskFirst(const AFirstWordMaskX: UInt32): Int32;
-    function Square(): TBigInteger; overload;
     function &Inc(): TBigInteger;
     function AddToMagnitude(const AMagToAdd: TCryptoLibUInt32Array): TBigInteger;
     constructor Create(const ASignum: Int32; const AMag: TCryptoLibUInt32Array; const ACheckMag: Boolean); overload;
@@ -189,6 +188,7 @@ type
     function Gcd(const AValue: TBigInteger): TBigInteger;
     function Abs(): TBigInteger;
     function Negate(): TBigInteger;
+    function Square(): TBigInteger; overload;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
     function Int32ValueExact(): Int32;
     function Int64ValueExact(): Int64;
