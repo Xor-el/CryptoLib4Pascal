@@ -188,6 +188,13 @@ type
   end;
 
   /// <summary>
+  /// Key purpose ID (OID for extended key usage).
+  /// </summary>
+  IKeyPurposeId = interface(IDerObjectIdentifier)
+    ['{E8A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C3}']
+  end;
+
+  /// <summary>
   /// Interface for ExtendedKeyUsage.
   /// </summary>
   IExtendedKeyUsage = interface(IAsn1Encodable)

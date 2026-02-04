@@ -467,7 +467,7 @@ type
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const AUsages: TCryptoLibGenericArray<IDerObjectIdentifier>); overload;
-    constructor Create(const AUsages: array of IDerObjectIdentifier); overload;
+    constructor Create(const AUsages: array of IKeyPurposeId); overload;
 
     destructor Destroy; override;
 
@@ -5090,24 +5090,26 @@ begin
   FSeq := TDerSequence.Create(LV);
 end;
 
-constructor TExtendedKeyUsage.Create(const AUsages: array of IDerObjectIdentifier);
+constructor TExtendedKeyUsage.Create(const AUsages: array of IKeyPurposeId);
 var
   I: Int32;
-  LV: IAsn1EncodableVector;
-  LOid: IDerObjectIdentifier;
+  LCount: Int32;
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   inherited Create();
   FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TCryptoLibComparers.OidEqualityComparer);
-  LV := TAsn1EncodableVector.Create();
+
+  LCount := High(AUsages) - Low(AUsages) + 1;
+  System.SetLength(LElements, LCount);
+  for I := 0 to LCount - 1 do
+    LElements[I] := AUsages[Low(AUsages) + I];
+
+  FSeq := TDerSequence.Create(LElements);
 
   for I := Low(AUsages) to High(AUsages) do
   begin
-    LOid := AUsages[I];
-    LV.Add(LOid);
-    FUsageTable.Add(LOid, True);
+    FUsageTable.Add(AUsages[I], True);
   end;
-
-  FSeq := TDerSequence.Create(LV);
 end;
 
 destructor TExtendedKeyUsage.Destroy;
