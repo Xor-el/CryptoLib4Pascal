@@ -31,7 +31,7 @@ uses
   ClpIAsn1Parsers,
   ClpAsn1Encodings,
   ClpAsn1Tags,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpPlatformUtilities,
   ClpCryptoLibTypes,
   ClpStreams,
@@ -846,7 +846,7 @@ begin
   repeat
     System.Dec(LPos);
     LStack[LPos] := Byte(ADl);
-    ADl := TBitUtilities.Asr32(ADl, 8);
+    ADl := TBitOperations.Asr32(ADl, 8);
   until ADl = 0;
 
   LCount := System.Length(LStack) - LPos;
@@ -874,7 +874,7 @@ begin
   LStack[LPos] := Byte(ATagNo and $7F);
   while ATagNo > 127 do
   begin
-    ATagNo := TBitUtilities.Asr32(ATagNo, 7);
+    ATagNo := TBitOperations.Asr32(ATagNo, 7);
     System.Dec(LPos);
     LStack[LPos] := Byte((ATagNo and $7F) or $80);
   end;
@@ -904,9 +904,9 @@ begin
   end;
 
   Result := 2;
-  while TBitUtilities.Asr32(ADl, 8) > 0 do
+  while TBitOperations.Asr32(ADl, 8) > 0 do
   begin
-    ADl := TBitUtilities.Asr32(ADl, 8);
+    ADl := TBitOperations.Asr32(ADl, 8);
     System.Inc(Result);
   end;
 end;
@@ -920,9 +920,9 @@ begin
   end;
 
   Result := 2;
-  while TBitUtilities.Asr32(ATagNo, 7) > 0 do
+  while TBitOperations.Asr32(ATagNo, 7) > 0 do
   begin
-    ATagNo := TBitUtilities.Asr32(ATagNo, 7);
+    ATagNo := TBitOperations.Asr32(ATagNo, 7);
     System.Inc(Result);
   end;
 end;

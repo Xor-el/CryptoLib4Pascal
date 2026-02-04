@@ -28,7 +28,9 @@ uses
   ClpIAsn1Core,
   ClpAsn1Tags,
   ClpAsn1Core,
-  ClpAsn1Streams;
+  ClpAsn1Streams,
+  ClpBitOperations,
+  ClpStreamUtilities;
 
 type
   /// <summary>
@@ -135,10 +137,6 @@ type
   end;
 
 implementation
-
-uses
-  ClpBitUtilities,
-  ClpStreamUtilities;
 
 { TAsn1Generator }
 
@@ -369,17 +367,17 @@ begin
   begin
     LSize := 1;
     LVal := ALength;
-    LVal := TBitUtilities.Asr32(LVal, 8);
+    LVal := TBitOperations.Asr32(LVal, 8);
     while LVal <> 0 do
     begin
       System.Inc(LSize);
-      LVal := TBitUtilities.Asr32(LVal, 8);
+      LVal := TBitOperations.Asr32(LVal, 8);
     end;
     AOutStr.WriteByte(Byte(LSize or $80));
     I := (LSize - 1) * 8;
     while I >= 0 do
     begin
-      AOutStr.WriteByte(Byte(TBitUtilities.Asr32(ALength, I)));
+      AOutStr.WriteByte(Byte(TBitOperations.Asr32(ALength, I)));
       System.Dec(I, 8);
     end;
   end

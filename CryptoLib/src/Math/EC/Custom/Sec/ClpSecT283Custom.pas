@@ -22,7 +22,7 @@ unit ClpSecT283Custom;
 interface
 
 uses
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpEncoders,
   ClpNat,
   ClpNat320,
@@ -716,13 +716,13 @@ begin
     j := UInt32(x shr k);
     g := u[j and 7] xor u[(j shr 3) and 7] shl 3 xor u[(j shr 6) and 7] shl 6;
     l := l xor ((g shl k));
-    h := h xor TBitUtilities.NegativeRightShift64(g, -k);
+    h := h xor TBitOperations.NegativeRightShift64(g, -k);
 
     System.Dec(k, 9);
   until not(k > 0);
 
   h := h xor (((x and Int64($0100804020100800)) and
-    UInt64(TBitUtilities.Asr64(Int64(y) shl 7, 63))) shr 8);
+    UInt64(TBitOperations.Asr64(Int64(y) shl 7, 63))) shr 8);
 
 {$IFDEF DEBUG}
   System.Assert((h shr 49) = 0);
@@ -1616,7 +1616,7 @@ begin
 
   for i := 0 to System.Pred(Fm_size) do
   begin
-    MASK := UInt64(Int64(TBitUtilities.Asr32((i xor index) - 1, 31)));
+    MASK := UInt64(Int64(TBitOperations.Asr32((i xor index) - 1, 31)));
 
     for j := 0 to System.Pred(SECT283K1_FE_LONGS) do
     begin

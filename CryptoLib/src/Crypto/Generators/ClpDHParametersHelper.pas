@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpECCompUtilities,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type
@@ -125,7 +125,7 @@ var
 begin
   retryFlag := False;
   qLength := size - 1;
-  minWeight := TBitUtilities.Asr32(size, 2);
+  minWeight := TBitOperations.Asr32(size, 2);
 
   if (size <= 32) then
   begin
@@ -176,7 +176,7 @@ begin
         begin
           prime := LPrimeList[j];
           qRem := test mod prime;
-          if ((qRem = 0) or (qRem = TBitUtilities.Asr32(prime, 1))) then
+          if ((qRem = 0) or (qRem = TBitOperations.Asr32(prime, 1))) then
           begin
             q := q.Add(FSix);
             retryFlag := True;

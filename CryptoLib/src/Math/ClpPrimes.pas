@@ -29,6 +29,8 @@ uses
   ClpPack,
   ClpIDigest,
   ClpISecureRandom,
+  ClpArrayUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -149,10 +151,6 @@ type
   end;
 
 implementation
-
-uses
-  ClpArrayUtilities,
-  ClpBitUtilities;
 
 { TPrimes.TMROutput }
 
@@ -630,7 +628,7 @@ begin
       Break;
     AC := AC + ASeed[LPos];
     ASeed[LPos] := Byte(AC);
-    AC := TBitUtilities.Asr32(AC, 8);
+    AC := TBitOperations.Asr32(AC, 8);
   end;
 end;
 

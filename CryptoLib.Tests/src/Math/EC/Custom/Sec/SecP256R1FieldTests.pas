@@ -35,7 +35,7 @@ uses
   ClpISecureRandom,
   ClpIX9ECAsn1Objects,
   ClpSecObjectIdentifiers,
-  ClpConverters,
+  ClpPack,
   ClpCustomNamedCurves,
   ClpIECC,
   ClpBigInteger,
@@ -173,7 +173,7 @@ begin
     x_i := x[i];
     if (x_i <> 0) then
     begin
-      temp := TConverters.ReadUInt32AsBytesBE(x_i);
+      temp := TPack.UInt32_To_BE(x_i);
       System.Move(temp[0], bs[(7 - i) shl 2], System.Length(temp) *
         SizeOf(Byte));
 

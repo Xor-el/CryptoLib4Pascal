@@ -27,7 +27,7 @@ uses
   ClpNat192,
   ClpPack,
   ClpBigInteger,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type

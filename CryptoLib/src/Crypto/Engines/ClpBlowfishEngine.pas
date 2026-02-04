@@ -28,7 +28,7 @@ uses
   ClpICipherParameters,
   ClpIBlowfishEngine,
   ClpCheck,
-  ClpConverters,
+  ClpPack,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -422,8 +422,8 @@ var
   xl, xr: UInt32;
   i: Int32;
 begin
-  xl := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex);
-  xr := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex + 4);
+  xl := TPack.BE_To_UInt32(src, srcIndex);
+  xr := TPack.BE_To_UInt32(src, srcIndex + 4);
 
   xl := xl xor FP[0];
 
@@ -438,8 +438,8 @@ begin
 
   xr := xr xor FP[ROUNDS + 1];
 
-  TConverters.ReadUInt32AsBytesBE(xr, dst, dstIndex);
-  TConverters.ReadUInt32AsBytesBE(xl, dst, dstIndex + 4);
+  TPack.UInt32_To_BE(xr, dst, dstIndex);
+  TPack.UInt32_To_BE(xl, dst, dstIndex + 4);
 end;
 
 procedure TBlowfishEngine.DecryptBlock(const src: TCryptoLibByteArray;
@@ -448,8 +448,8 @@ var
   xl, xr: UInt32;
   i: Int32;
 begin
-  xl := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex);
-  xr := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex + 4);
+  xl := TPack.BE_To_UInt32(src, srcIndex);
+  xr := TPack.BE_To_UInt32(src, srcIndex + 4);
 
   xl := xl xor FP[ROUNDS + 1];
 
@@ -464,8 +464,8 @@ begin
 
   xr := xr xor FP[0];
 
-  TConverters.ReadUInt32AsBytesBE(xr, dst, dstIndex);
-  TConverters.ReadUInt32AsBytesBE(xl, dst, dstIndex + 4);
+  TPack.UInt32_To_BE(xr, dst, dstIndex);
+  TPack.UInt32_To_BE(xl, dst, dstIndex + 4);
 end;
 
 function TBlowfishEngine.GetAlgorithmName: String;

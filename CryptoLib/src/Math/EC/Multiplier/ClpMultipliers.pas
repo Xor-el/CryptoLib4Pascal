@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpNat,
   ClpTnaf,
   ClpIECC,
@@ -301,7 +301,7 @@ begin
     while j >= 0 do
     begin
 
-      secretBit := LK[TBitUtilities.Asr32(j, 5)] shr (j and $1F);
+      secretBit := LK[TBitOperations.Asr32(j, 5)] shr (j and $1F);
       secretIndex := secretIndex xor (secretBit shr 1);
       secretIndex := secretIndex shl 1;
       secretIndex := secretIndex xor secretBit;
@@ -407,7 +407,7 @@ begin
   begin
     System.Dec(i);
     wi := wnaf[i];
-    digit := TBitUtilities.Asr32(wi, 16);
+    digit := TBitOperations.Asr32(wi, 16);
     zeroes := wi and $FFFF;
 
     n := System.Abs(digit);
@@ -423,7 +423,7 @@ begin
     // Optimization can only be used for values in the lower half of the table
     if ((n shl 2) < (1 shl width)) then
     begin
-      highest := 32 - TBitUtilities.NumberOfLeadingZeros32(n);
+      highest := 32 - TBitOperations.NumberOfLeadingZeros32(n);
 
       // TODO Get addition/doubling cost ratio from curve and compare to 'scale' to see if worth substituting?
       scale := width - highest;
@@ -431,13 +431,13 @@ begin
 
       i1 := ((1 shl (width - 1)) - 1);
       i2 := (lowBits shl scale) + 1;
-      R := table[TBitUtilities.Asr32(i1, 1)].add(table[TBitUtilities.Asr32(i2, 1)]);
+      R := table[TBitOperations.Asr32(i1, 1)].add(table[TBitOperations.Asr32(i2, 1)]);
 
       zeroes := zeroes - scale;
     end
     else
     begin
-      R := table[TBitUtilities.Asr32(n, 1)];
+      R := table[TBitOperations.Asr32(n, 1)];
     end;
 
     R := R.TimesPow2(zeroes);
@@ -447,7 +447,7 @@ begin
   begin
     System.Dec(i);
     wi := wnaf[i];
-    digit := TBitUtilities.Asr32(wi, 16);
+    digit := TBitOperations.Asr32(wi, 16);
     zeroes := wi and $FFFF;
 
     n := System.Abs(digit);
@@ -460,7 +460,7 @@ begin
       table := preComp;
     end;
 
-    lr := table[TBitUtilities.Asr32(n, 1)];
+    lr := table[TBitOperations.Asr32(n, 1)];
 
     R := R.TwicePlus(lr);
     R := R.TimesPow2(zeroes);
@@ -516,11 +516,11 @@ begin
 
       if ui > 0 then
       begin
-        x := pu[TBitUtilities.Asr32(ui, 1)];
+        x := pu[TBitOperations.Asr32(ui, 1)];
       end
       else
       begin
-        x := puNeg[TBitUtilities.Asr32(-ui, 1)];
+        x := puNeg[TBitOperations.Asr32(-ui, 1)];
       end;
 
       q := q.add(x) as IAbstractF2mPoint;

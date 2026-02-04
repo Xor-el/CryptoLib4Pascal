@@ -37,7 +37,7 @@ uses
   ClpAsn1Tags,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -158,7 +158,7 @@ begin
   LSR := TSecureRandom.Create();
   for I := 0 to 99 do
   begin
-    LTestTag := TBitUtilities.Asr32(LSR.NextInt32() and System.High(Int32), LSR.Next(26));
+    LTestTag := TBitOperations.Asr32(LSR.NextInt32() and System.High(Int32), LSR.Next(26));
     LApp := TDerTaggedObject.Create(False, TAsn1Tags.Application, LTestTag, TDerOctetString.Create(TCryptoLibByteArray.Create(1)) as IDerOctetString);
     LApp := TAsn1TaggedObject.GetInstance(TAsn1Object.FromByteArray(LApp.GetEncoded())) as IAsn1TaggedObject;
 

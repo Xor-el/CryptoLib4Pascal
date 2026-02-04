@@ -22,7 +22,7 @@ unit ClpScalarUtilities;
 interface
 
 uses
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type
@@ -82,19 +82,19 @@ begin
     while LI <= ALast do
     begin
       Lp_i := AP[LI];
-      Lp_s := (Lp_i shl AShift) or TBitUtilities.NegativeRightShift32(Lprev_p, -AShift);
+      Lp_s := (Lp_i shl AShift) or TBitOperations.NegativeRightShift32(Lprev_p, -AShift);
       Lprev_p := Lp_i;
       Lcc_Nu := Lcc_Nu + ANu[LI];
       Lcc_Nu := Lcc_Nu + Lp_s;
       Lnext_v := ANv[LI];
-      Lv_s := (Lnext_v shl AShift) or TBitUtilities.NegativeRightShift32(Lprev_v, -AShift);
+      Lv_s := (Lnext_v shl AShift) or TBitOperations.NegativeRightShift32(Lprev_v, -AShift);
       Lprev_v := Lnext_v;
       Lcc_p := Lcc_p + Lp_i;
       Lcc_p := Lcc_p + Lv_s;
       Lp_i := UInt32(Lcc_p);
       Lcc_p := Lcc_p shr 32;
       AP[LI] := Lp_i;
-      Lq_s := (Lp_i shl AShift) or TBitUtilities.NegativeRightShift32(Lprev_q, -AShift);
+      Lq_s := (Lp_i shl AShift) or TBitOperations.NegativeRightShift32(Lprev_q, -AShift);
       Lprev_q := Lp_i;
       Lcc_Nu := Lcc_Nu + Lq_s;
       ANu[LI] := UInt32(Lcc_Nu);
@@ -107,7 +107,7 @@ begin
   // Copy the low limbs of the original p
   System.Move(AP[0], AT[0], ALast * System.SizeOf(UInt32));
 
-  LsWords := TBitUtilities.Asr32(AShift, 5);
+  LsWords := TBitOperations.Asr32(AShift, 5);
   LsBits := AShift and 31;
 
   if LsBits = 0 then
@@ -136,19 +136,19 @@ begin
   while LI <= ALast do
   begin
     Lnext_t := AT[LI - LsWords];
-    Lt_s := (Lnext_t shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_t, -LsBits);
+    Lt_s := (Lnext_t shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_t, -LsBits);
     Lprev_t := Lnext_t;
     Lcc_Nu := Lcc_Nu + ANu[LI];
     Lcc_Nu := Lcc_Nu + Lt_s;
     Lnext_v := ANv[LI - LsWords];
-    Lv_s := (Lnext_v shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_v, -LsBits);
+    Lv_s := (Lnext_v shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_v, -LsBits);
     Lprev_v := Lnext_v;
     Lcc_p := Lcc_p + AP[LI];
     Lcc_p := Lcc_p + Lv_s;
     AP[LI] := UInt32(Lcc_p);
     Lcc_p := Lcc_p shr 32;
     Lnext_q := AP[LI - LsWords];
-    Lq_s := (Lnext_q shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_q, -LsBits);
+    Lq_s := (Lnext_q shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_q, -LsBits);
     Lprev_q := Lnext_q;
     Lcc_Nu := Lcc_Nu + Lq_s;
     ANu[LI] := UInt32(Lcc_Nu);
@@ -164,7 +164,7 @@ var
   Lnext_v0, Lnext_v1, Lv0_s, Lv1_s: UInt32;
   Lprev_v0, Lprev_v1: UInt32;
 begin
-  LsWords := TBitUtilities.Asr32(AShift, 5);
+  LsWords := TBitOperations.Asr32(AShift, 5);
   LsBits := AShift and 31;
   Lcc_u0 := 0;
   Lcc_u1 := 0;
@@ -194,8 +194,8 @@ begin
   begin
     Lnext_v0 := AV0[LI - LsWords];
     Lnext_v1 := AV1[LI - LsWords];
-    Lv0_s := (Lnext_v0 shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_v0, -LsBits);
-    Lv1_s := (Lnext_v1 shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_v1, -LsBits);
+    Lv0_s := (Lnext_v0 shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_v0, -LsBits);
+    Lv1_s := (Lnext_v1 shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_v1, -LsBits);
     Lprev_v0 := Lnext_v0;
     Lprev_v1 := Lnext_v1;
     Lcc_u0 := Lcc_u0 + AU0[LI];
@@ -216,10 +216,10 @@ var
   LSign: UInt32;
 begin
   LI := ALast;
-  LSign := UInt32(TBitUtilities.Asr32(Int32(AX[LI]), 31));
+  LSign := UInt32(TBitOperations.Asr32(Int32(AX[LI]), 31));
   while (LI > 0) and (AX[LI] = LSign) do
     System.Dec(LI);
-  Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(UInt32(Int32(AX[LI]) xor Int32(LSign)));
+  Result := LI * 32 + 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(Int32(AX[LI]) xor Int32(LSign)));
 end;
 
 class function TScalarUtilities.GetBitLengthPositive(ALast: Int32; const AX: TCryptoLibUInt32Array): Int32;
@@ -229,7 +229,7 @@ begin
   LI := ALast;
   while (LI > 0) and (AX[LI] = 0) do
     System.Dec(LI);
-  Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(UInt32(AX[LI]));
+  Result := LI * 32 + 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(AX[LI]));
 end;
 
 class function TScalarUtilities.LessThan(ALast: Int32; const AX: TCryptoLibUInt32Array;
@@ -269,11 +269,11 @@ begin
       Lcc_p := Lcc_p + Lp_i;
       Lcc_p := Lcc_p - Int64(ANv[LI]);
       Lp_i := UInt32(Lcc_p);
-      Lcc_p := TBitUtilities.Asr64(Lcc_p, 32);
+      Lcc_p := TBitOperations.Asr64(Lcc_p, 32);
       AP[LI] := Lp_i;
       Lcc_Nu := Lcc_Nu - Int64(Lp_i);
       ANu[LI] := UInt32(Lcc_Nu);
-      Lcc_Nu := TBitUtilities.Asr64(Lcc_Nu, 32);
+      Lcc_Nu := TBitOperations.Asr64(Lcc_Nu, 32);
       System.Inc(LI);
     end;
     Exit;
@@ -288,30 +288,30 @@ begin
     while LI <= ALast do
     begin
       Lp_i := AP[LI];
-      Lp_s := (Lp_i shl AShift) or TBitUtilities.NegativeRightShift32(Lprev_p, -AShift);
+      Lp_s := (Lp_i shl AShift) or TBitOperations.NegativeRightShift32(Lprev_p, -AShift);
       Lprev_p := Lp_i;
       Lcc_Nu := Lcc_Nu + Int64(ANu[LI]);
       Lcc_Nu := Lcc_Nu - Int64(Lp_s);
       Lnext_v := ANv[LI];
-      Lv_s := (Lnext_v shl AShift) or TBitUtilities.NegativeRightShift32(Lprev_v, -AShift);
+      Lv_s := (Lnext_v shl AShift) or TBitOperations.NegativeRightShift32(Lprev_v, -AShift);
       Lprev_v := Lnext_v;
       Lcc_p := Lcc_p + Lp_i;
       Lcc_p := Lcc_p - Int64(Lv_s);
       Lp_i := UInt32(Lcc_p);
-      Lcc_p := TBitUtilities.Asr64(Lcc_p, 32);
+      Lcc_p := TBitOperations.Asr64(Lcc_p, 32);
       AP[LI] := Lp_i;
-      Lq_s := (Lp_i shl AShift) or TBitUtilities.NegativeRightShift32(Lprev_q, -AShift);
+      Lq_s := (Lp_i shl AShift) or TBitOperations.NegativeRightShift32(Lprev_q, -AShift);
       Lprev_q := Lp_i;
       Lcc_Nu := Lcc_Nu - Int64(Lq_s);
       ANu[LI] := UInt32(Lcc_Nu);
-      Lcc_Nu := TBitUtilities.Asr64(Lcc_Nu, 32);
+      Lcc_Nu := TBitOperations.Asr64(Lcc_Nu, 32);
       System.Inc(LI);
     end;
     Exit;
   end;
 
   System.Move(AP[0], AT[0], ALast * System.SizeOf(UInt32));
-  LsWords := TBitUtilities.Asr32(AShift, 5);
+  LsWords := TBitOperations.Asr32(AShift, 5);
   LsBits := AShift and 31;
 
   if LsBits = 0 then
@@ -324,10 +324,10 @@ begin
       Lcc_p := Lcc_p + Int64(AP[LI]);
       Lcc_p := Lcc_p - Int64(ANv[LI - LsWords]);
       AP[LI] := UInt32(Lcc_p);
-      Lcc_p := TBitUtilities.Asr64(Lcc_p, 32);
+      Lcc_p := TBitOperations.Asr64(Lcc_p, 32);
       Lcc_Nu := Lcc_Nu - Int64(AP[LI - LsWords]);
       ANu[LI] := UInt32(Lcc_Nu);
-      Lcc_Nu := TBitUtilities.Asr64(Lcc_Nu, 32);
+      Lcc_Nu := TBitOperations.Asr64(Lcc_Nu, 32);
       System.Inc(LI);
     end;
     Exit;
@@ -340,23 +340,23 @@ begin
   while LI <= ALast do
   begin
     Lnext_t := AT[LI - LsWords];
-    Lt_s := (Lnext_t shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_t, -LsBits);
+    Lt_s := (Lnext_t shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_t, -LsBits);
     Lprev_t := Lnext_t;
     Lcc_Nu := Lcc_Nu + Int64(ANu[LI]);
     Lcc_Nu := Lcc_Nu - Int64(Lt_s);
     Lnext_v := ANv[LI - LsWords];
-    Lv_s := (Lnext_v shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_v, -LsBits);
+    Lv_s := (Lnext_v shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_v, -LsBits);
     Lprev_v := Lnext_v;
     Lcc_p := Lcc_p + Int64(AP[LI]);
     Lcc_p := Lcc_p - Int64(Lv_s);
     AP[LI] := UInt32(Lcc_p);
-    Lcc_p := TBitUtilities.Asr64(Lcc_p, 32);
+    Lcc_p := TBitOperations.Asr64(Lcc_p, 32);
     Lnext_q := AP[LI - LsWords];
-    Lq_s := (Lnext_q shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_q, -LsBits);
+    Lq_s := (Lnext_q shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_q, -LsBits);
     Lprev_q := Lnext_q;
     Lcc_Nu := Lcc_Nu - Int64(Lq_s);
     ANu[LI] := UInt32(Lcc_Nu);
-    Lcc_Nu := TBitUtilities.Asr64(Lcc_Nu, 32);
+    Lcc_Nu := TBitOperations.Asr64(Lcc_Nu, 32);
     System.Inc(LI);
   end;
 end;
@@ -368,7 +368,7 @@ var
   Lnext_v0, Lnext_v1, Lv0_s, Lv1_s: UInt32;
   Lprev_v0, Lprev_v1: UInt32;
 begin
-  LsWords := TBitUtilities.Asr32(AShift, 5);
+  LsWords := TBitOperations.Asr32(AShift, 5);
   LsBits := AShift and 31;
   Lcc_u0 := 0;
   Lcc_u1 := 0;
@@ -383,9 +383,9 @@ begin
       Lcc_u0 := Lcc_u0 - AV0[LI - LsWords];
       Lcc_u1 := Lcc_u1 - AV1[LI - LsWords];
       AU0[LI] := UInt32(Lcc_u0);
-      Lcc_u0 := TBitUtilities.Asr64(Lcc_u0, 32);
+      Lcc_u0 := TBitOperations.Asr64(Lcc_u0, 32);
       AU1[LI] := UInt32(Lcc_u1);
-      Lcc_u1 := TBitUtilities.Asr64(Lcc_u1, 32);
+      Lcc_u1 := TBitOperations.Asr64(Lcc_u1, 32);
       System.Inc(LI);
     end;
     Exit;
@@ -398,8 +398,8 @@ begin
   begin
     Lnext_v0 := AV0[LI - LsWords];
     Lnext_v1 := AV1[LI - LsWords];
-    Lv0_s := (Lnext_v0 shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_v0, -LsBits);
-    Lv1_s := (Lnext_v1 shl LsBits) or TBitUtilities.NegativeRightShift32(Lprev_v1, -LsBits);
+    Lv0_s := (Lnext_v0 shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_v0, -LsBits);
+    Lv1_s := (Lnext_v1 shl LsBits) or TBitOperations.NegativeRightShift32(Lprev_v1, -LsBits);
     Lprev_v0 := Lnext_v0;
     Lprev_v1 := Lnext_v1;
     Lcc_u0 := Lcc_u0 + AU0[LI];
@@ -407,9 +407,9 @@ begin
     Lcc_u0 := Lcc_u0 - Int64(Lv0_s);
     Lcc_u1 := Lcc_u1 - Int64(Lv1_s);
     AU0[LI] := UInt32(Lcc_u0);
-    Lcc_u0 := TBitUtilities.Asr64(Lcc_u0, 32);
+    Lcc_u0 := TBitOperations.Asr64(Lcc_u0, 32);
     AU1[LI] := UInt32(Lcc_u1);
-    Lcc_u1 := TBitUtilities.Asr64(Lcc_u1, 32);
+    Lcc_u1 := TBitOperations.Asr64(Lcc_u1, 32);
     System.Inc(LI);
   end;
 end;

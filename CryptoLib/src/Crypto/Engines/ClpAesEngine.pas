@@ -28,8 +28,8 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCheck,
-  ClpBitUtilities,
-  ClpConverters,
+  ClpBitOperations,
+  ClpPack,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -296,7 +296,7 @@ implementation
 
 class function TAesEngine.Shift(r: UInt32; Shift: Int32): UInt32;
 begin
-  result := TBitUtilities.RotateRight32(r, Shift);
+  result := TBitOperations.RotateRight32(r, Shift);
 end;
 
 class function TAesEngine.SubWord(x: UInt32): UInt32;
@@ -517,13 +517,13 @@ begin
   case KC of
     4:
       begin
-        lt0 := TConverters.ReadBytesAsUInt32LE(PByte(key), 0);
+        lt0 := TPack.LE_To_UInt32(key, 0);
         bigW[0][0] := lt0;
-        t1 := TConverters.ReadBytesAsUInt32LE(PByte(key), 4);
+        t1 := TPack.LE_To_UInt32(key, 4);
         bigW[0][1] := t1;
-        t2 := TConverters.ReadBytesAsUInt32LE(PByte(key), 8);
+        t2 := TPack.LE_To_UInt32(key, 8);
         bigW[0][2] := t2;
-        t3 := TConverters.ReadBytesAsUInt32LE(PByte(key), 12);
+        t3 := TPack.LE_To_UInt32(key, 12);
         bigW[0][3] := t3;
 
         for i := 1 to 10 do
@@ -542,17 +542,17 @@ begin
 
     6:
       begin
-        lt0 := TConverters.ReadBytesAsUInt32LE(PByte(key), 0);
+        lt0 := TPack.LE_To_UInt32(key, 0);
         bigW[0][0] := lt0;
-        t1 := TConverters.ReadBytesAsUInt32LE(PByte(key), 4);
+        t1 := TPack.LE_To_UInt32(key, 4);
         bigW[0][1] := t1;
-        t2 := TConverters.ReadBytesAsUInt32LE(PByte(key), 8);
+        t2 := TPack.LE_To_UInt32(key, 8);
         bigW[0][2] := t2;
-        t3 := TConverters.ReadBytesAsUInt32LE(PByte(key), 12);
+        t3 := TPack.LE_To_UInt32(key, 12);
         bigW[0][3] := t3;
-        t4 := TConverters.ReadBytesAsUInt32LE(PByte(key), 16);
+        t4 := TPack.LE_To_UInt32(key, 16);
         bigW[1][0] := t4;
-        t5 := TConverters.ReadBytesAsUInt32LE(PByte(key), 20);
+        t5 := TPack.LE_To_UInt32(key, 20);
         bigW[1][1] := t5;
 
         lrcon := 1;
@@ -620,21 +620,21 @@ begin
 
     8:
       begin
-        lt0 := TConverters.ReadBytesAsUInt32LE(PByte(key), 0);
+        lt0 := TPack.LE_To_UInt32(key, 0);
         bigW[0][0] := lt0;
-        t1 := TConverters.ReadBytesAsUInt32LE(PByte(key), 4);
+        t1 := TPack.LE_To_UInt32(key, 4);
         bigW[0][1] := t1;
-        t2 := TConverters.ReadBytesAsUInt32LE(PByte(key), 8);
+        t2 := TPack.LE_To_UInt32(key, 8);
         bigW[0][2] := t2;
-        t3 := TConverters.ReadBytesAsUInt32LE(PByte(key), 12);
+        t3 := TPack.LE_To_UInt32(key, 12);
         bigW[0][3] := t3;
-        t4 := TConverters.ReadBytesAsUInt32LE(PByte(key), 16);
+        t4 := TPack.LE_To_UInt32(key, 16);
         bigW[1][0] := t4;
-        t5 := TConverters.ReadBytesAsUInt32LE(PByte(key), 20);
+        t5 := TPack.LE_To_UInt32(key, 20);
         bigW[1][1] := t5;
-        t6 := TConverters.ReadBytesAsUInt32LE(PByte(key), 24);
+        t6 := TPack.LE_To_UInt32(key, 24);
         bigW[1][2] := t6;
-        t7 := TConverters.ReadBytesAsUInt32LE(PByte(key), 28);
+        t7 := TPack.LE_To_UInt32(key, 28);
         bigW[1][3] := t7;
 
         lrcon := 1;
@@ -747,18 +747,18 @@ end;
 
 procedure TAesEngine.PackBlock(const bytes: TCryptoLibByteArray; off: Int32);
 begin
-  TConverters.ReadUInt32AsBytesLE(FC0, bytes, off);
-  TConverters.ReadUInt32AsBytesLE(FC1, bytes, off + 4);
-  TConverters.ReadUInt32AsBytesLE(FC2, bytes, off + 8);
-  TConverters.ReadUInt32AsBytesLE(FC3, bytes, off + 12);
+  TPack.UInt32_To_LE(FC0, bytes, off);
+  TPack.UInt32_To_LE(FC1, bytes, off + 4);
+  TPack.UInt32_To_LE(FC2, bytes, off + 8);
+  TPack.UInt32_To_LE(FC3, bytes, off + 12);
 end;
 
 procedure TAesEngine.UnPackBlock(const bytes: TCryptoLibByteArray; off: Int32);
 begin
-  FC0 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off);
-  FC1 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 4);
-  FC2 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 8);
-  FC3 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 12);
+  FC0 := TPack.LE_To_UInt32(bytes, off);
+  FC1 := TPack.LE_To_UInt32(bytes, off + 4);
+  FC2 := TPack.LE_To_UInt32(bytes, off + 8);
+  FC3 := TPack.LE_To_UInt32(bytes, off + 12);
 end;
 
 function TAesEngine.ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;

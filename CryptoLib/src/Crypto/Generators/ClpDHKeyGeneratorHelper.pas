@@ -24,7 +24,7 @@ interface
 uses
 
   ClpISecureRandom,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpBigInteger,
   ClpBigIntegers,
   ClpECCompUtilities,
@@ -81,7 +81,7 @@ begin
 
   if (limit <> 0) then
   begin
-    minWeight := TBitUtilities.Asr32(limit, 2);
+    minWeight := TBitOperations.Asr32(limit, 2);
 
     while True do
     begin
@@ -108,7 +108,7 @@ begin
   end;
   max := q.Subtract(TBigInteger.Two);
 
-  minWeight := TBitUtilities.Asr32(max.BitLength, 2);
+  minWeight := TBitOperations.Asr32(max.BitLength, 2);
 
   while True do
   begin

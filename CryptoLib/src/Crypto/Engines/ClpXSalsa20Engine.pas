@@ -25,7 +25,7 @@ uses
   ClpIStreamCipher,
   ClpSalsa20Engine,
   ClpIXSalsa20Engine,
-  ClpConverters,
+  ClpPack,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -90,9 +90,7 @@ begin
   Inherited SetKey(keyBytes, ivBytes);
 
   // Pack next 64 bits of IV into engine state instead of counter
-  TConverters.le32_copy(PByte(ivBytes), 8 * System.SizeOf(Byte),
-    PCardinal(FEngineState), 8 * System.SizeOf(UInt32),
-    2 * System.SizeOf(UInt32));
+  TPack.LE_To_UInt32(ivBytes, 8, FEngineState, 8, 2);
 
   // Process engine state to generate Salsa20 key
   System.SetLength(hsalsa20Out, System.Length(FEngineState));
@@ -110,9 +108,7 @@ begin
   FEngineState[14] := hsalsa20Out[9] - FEngineState[9];
 
   // Last 64 bits of input IV
-  TConverters.le32_copy(PByte(ivBytes), 16 * System.SizeOf(Byte),
-    PCardinal(FEngineState), 6 * System.SizeOf(UInt32),
-    2 * System.SizeOf(UInt32));
+  TPack.LE_To_UInt32(ivBytes, 16, FEngineState, 6, 2);
 
   TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
   TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));

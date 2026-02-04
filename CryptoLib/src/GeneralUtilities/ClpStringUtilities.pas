@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   StrUtils,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type
@@ -134,7 +134,7 @@ begin
 
   while LStart <= LEnd do
   begin
-    LResult := TBitUtilities.RotateLeft32(LResult, 5);
+    LResult := TBitOperations.RotateLeft32(LResult, 5);
     LResult := LResult xor UInt32(AInput[LStart]);
     System.Inc(LStart);
   end;
@@ -143,51 +143,42 @@ end;
 
 class function TStringUtilities.SplitString(const AInput: string; ADelimiter: Char)
   : TCryptoLibStringArray;
-var
-  LPosStart, LPosDel, LSplitPoints, I, LLowPoint, LHighPoint, LLen: Int32;
 begin
-  Result := nil;
-  if AInput <> '' then
-  begin
-    { Determine the length of the resulting array }
-    LLowPoint := 1;
-    LHighPoint := System.Length(AInput);
-
-    LSplitPoints := 0;
-    for I := LLowPoint to LHighPoint do
-    begin
-      if (ADelimiter = AInput[I]) then
-        System.Inc(LSplitPoints);
-    end;
-
-    System.SetLength(Result, LSplitPoints + 1);
-
-    { Split the string and fill the resulting array }
-
-    I := 0;
-    LLen := 1;
-    LPosStart := 1;
-    LPosDel := System.Pos(ADelimiter, AInput);
-    while LPosDel > 0 do
-    begin
-      Result[I] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
-      LPosStart := LPosDel + LLen;
-      LPosDel := PosEx(ADelimiter, AInput, LPosStart);
-      System.Inc(I);
-    end;
-    Result[I] := System.Copy(AInput, LPosStart, System.Length(AInput));
-  end;
+  Result := SplitString(AInput, ADelimiter, 0);
 end;
 
 class function TStringUtilities.SplitString(const AInput: string; ADelimiter: Char;
   AMaxCount: Int32): TCryptoLibStringArray;
 var
-  LPosStart, LPosDel, J, K: Int32;
+  LPosStart, LPosDel, LSplitPoints, I, J, K, LLowPoint, LHighPoint: Int32;
 begin
   Result := nil;
   if AMaxCount <= 0 then
   begin
-    Result := SplitString(AInput, ADelimiter);
+    { Unlimited split: count delimiters then split }
+    if AInput <> '' then
+    begin
+      LLowPoint := 1;
+      LHighPoint := System.Length(AInput);
+      LSplitPoints := 0;
+      for I := LLowPoint to LHighPoint do
+      begin
+        if (ADelimiter = AInput[I]) then
+          System.Inc(LSplitPoints);
+      end;
+      System.SetLength(Result, LSplitPoints + 1);
+      I := 0;
+      LPosStart := 1;
+      LPosDel := System.Pos(ADelimiter, AInput);
+      while LPosDel > 0 do
+      begin
+        Result[I] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
+        LPosStart := LPosDel + 1;
+        LPosDel := PosEx(ADelimiter, AInput, LPosStart);
+        System.Inc(I);
+      end;
+      Result[I] := System.Copy(AInput, LPosStart, System.Length(AInput));
+    end;
     Exit;
   end;
   if AInput = '' then

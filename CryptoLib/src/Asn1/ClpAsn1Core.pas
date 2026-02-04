@@ -30,6 +30,8 @@ uses
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpIAsn1Encodings,
+  ClpBitOperations,
+  ClpAsn1Tags,
   ClpAsn1Streams;
 
 type
@@ -287,8 +289,6 @@ type
 implementation
 
 uses
-  ClpBitUtilities,
-  ClpAsn1Tags,
   ClpAsn1Objects; // For TDerTaggedObject in AddOptionalTagged
 
 { TAsn1Encodable }
@@ -580,7 +580,7 @@ var
   LCopy: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   LOldCapacity := System.Length(FElements);
-  LNewCapacity := Math.Max(LOldCapacity, AMinCapacity + (TBitUtilities.Asr32(AMinCapacity, 1)));
+  LNewCapacity := Math.Max(LOldCapacity, AMinCapacity + (TBitOperations.Asr32(AMinCapacity, 1)));
 
   System.SetLength(LCopy, LNewCapacity);
   for I := 0 to FElementCount - 1 do

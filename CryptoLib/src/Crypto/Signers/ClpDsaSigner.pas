@@ -36,7 +36,7 @@ uses
   ClpParameterUtilities,
   ClpSecureRandom,
   ClpRandomDsaKCalculator,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
@@ -124,7 +124,7 @@ function TDsaSigner.CalculateE(const AN: TBigInteger;
 var
   LLength: Int32;
 begin
-  LLength := Math.Min(System.length(AMessage), TBitUtilities.Asr32(AN.BitLength, 3));
+  LLength := Math.Min(System.length(AMessage), TBitOperations.Asr32(AN.BitLength, 3));
   Result := TBigInteger.Create(1, AMessage, 0, LLength);
 end;
 

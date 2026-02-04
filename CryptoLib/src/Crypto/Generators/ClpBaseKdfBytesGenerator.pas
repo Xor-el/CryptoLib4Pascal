@@ -29,7 +29,7 @@ uses
   ClpIDerivationFunction,
   ClpIDerivationParameters,
   ClpIBaseKdfBytesGenerator,
-  ClpConverters,
+  ClpPack,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -141,7 +141,7 @@ begin
 
   System.SetLength(C, 4);
 
-  TConverters.ReadUInt32AsBytesBE(UInt32(FcounterStart), C, 0);
+  TPack.UInt32_To_BE(UInt32(FcounterStart), C, 0);
 
   counterBase := UInt32(FcounterStart and (not $FF));
 
@@ -174,7 +174,7 @@ begin
 
     begin
       counterBase := counterBase + $100;
-      TConverters.ReadUInt32AsBytesBE(counterBase, C, 0);
+      TPack.UInt32_To_BE(counterBase, C, 0);
     end;
 
     System.Inc(i);

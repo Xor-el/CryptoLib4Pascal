@@ -27,7 +27,7 @@ uses
   ClpISecureRandom,
   ClpPack,
   ClpNat,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type
@@ -164,7 +164,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   SetLength(LT, 4);
@@ -193,7 +193,7 @@ begin
     Inc(LDivSteps, 30);
   end;
 
-  LSignF := TBitUtilities.Asr32(LF[LLen30 - 1], 31);
+  LSignF := TBitOperations.Asr32(LF[LLen30 - 1], 31);
   CNegate30(LLen30, LSignF, LF);
 
   CNormalize30(LLen30, LSignF, LD, LM);
@@ -223,7 +223,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   LClz := LBits - TNat.GetBitLength(LLen32, AX);
@@ -265,10 +265,10 @@ begin
     LLenFG := TrimFG30Var(LLenFG, LF, LG);
   end;
 
-  LSignF := TBitUtilities.Asr32(LF[LLenFG - 1], 31);
+  LSignF := TBitOperations.Asr32(LF[LLenFG - 1], 31);
 
   // D is in the range (-2.M, M) ...
-  LSignD := TBitUtilities.Asr32(LD[LLenDE - 1], 31);
+  LSignD := TBitOperations.Asr32(LD[LLenDE - 1], 31);
   if LSignD < 0 then
     LSignD := Add30(LLenDE, LD, LM);
 
@@ -314,7 +314,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   SetLength(LT, 4);
@@ -337,7 +337,7 @@ begin
     Inc(LDivSteps, 30);
   end;
 
-  LSignF := TBitUtilities.Asr32(LF[LLen30 - 1], 31);
+  LSignF := TBitOperations.Asr32(LF[LLen30 - 1], 31);
   CNegate30(LLen30, LSignF, LF);
 
   Result := UInt32(EqualTo(LLen30, LF, 1) and EqualTo(LLen30, LG, 0));
@@ -356,7 +356,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   LClz := LBits - TNat.GetBitLength(LLen32, AX);
@@ -392,7 +392,7 @@ begin
     LLenFG := TrimFG30Var(LLenFG, LF, LG);
   end;
 
-  LSignF := TBitUtilities.Asr32(LF[LLenFG - 1], 31);
+  LSignF := TBitOperations.Asr32(LF[LLenFG - 1], 31);
   if LSignF < 0 then
   begin
     LSignF := Negate30(LLenFG, LF);
@@ -452,12 +452,12 @@ begin
   begin
     LC := LC + AD[LI] + AM[LI];
     AD[LI] := LC and M30;
-    LC := TBitUtilities.Asr32(LC, 30);
+    LC := TBitOperations.Asr32(LC, 30);
   end;
 
   LC := LC + AD[LLast] + AM[LLast];
   AD[LLast] := LC;
-  LC := TBitUtilities.Asr32(LC, 30);
+  LC := TBitOperations.Asr32(LC, 30);
   Result := LC;
 end;
 
@@ -477,7 +477,7 @@ begin
   begin
     LC := LC + ((AD[LI] xor ACond) - ACond);
     AD[LI] := LC and M30;
-    LC := TBitUtilities.Asr32(LC, 30);
+    LC := TBitOperations.Asr32(LC, 30);
   end;
 
   LC := LC + ((AD[LLast] xor ACond) - ACond);
@@ -500,14 +500,14 @@ begin
 
   begin
     LC := 0;
-    LCondAdd := TBitUtilities.Asr32(AD[LLast], 31);
+    LCondAdd := TBitOperations.Asr32(AD[LLast], 31);
     for LI := 0 to LLast - 1 do
     begin
       LDi := AD[LI] + (AM[LI] and LCondAdd);
       LDi := (LDi xor ACondNegate) - ACondNegate;
       LC := LC + LDi;
       AD[LI] := LC and M30;
-      LC := TBitUtilities.Asr32(LC, 30);
+      LC := TBitOperations.Asr32(LC, 30);
     end;
 
     LDi := AD[LLast] + (AM[LLast] and LCondAdd);
@@ -518,13 +518,13 @@ begin
 
   begin
     LC := 0;
-    LCondAdd := TBitUtilities.Asr32(AD[LLast], 31);
+    LCondAdd := TBitOperations.Asr32(AD[LLast], 31);
     for LI := 0 to LLast - 1 do
     begin
       LDi := AD[LI] + (AM[LI] and LCondAdd);
       LC := LC + LDi;
       AD[LI] := LC and M30;
-      LC := TBitUtilities.Asr32(LC, 30);
+      LC := TBitOperations.Asr32(LC, 30);
     end;
 
     LDi := AD[LLast] + (AM[LLast] and LCondAdd);
@@ -532,7 +532,7 @@ begin
     AD[LLast] := LC;
 
     {$IFDEF DEBUG}
-    System.Assert((TBitUtilities.Asr32(LC, 30)) = 0);
+    System.Assert((TBitOperations.Asr32(LC, 30)) = 0);
     {$ENDIF}
   end;
 end;
@@ -584,9 +584,9 @@ begin
   begin
     // sentinel bit to count zeros only up to i.
     //LZeros := TBitUtilities.NumberOfTrailingZeros(UInt32(LG) or (-1 shl LI));
-    LZeros := TBitUtilities.NumberOfTrailingZeros32(UInt32(LG) or (UInt32($FFFFFFFF) shl LI));
+    LZeros := TBitOperations.NumberOfTrailingZeros32(UInt32(LG) or (UInt32($FFFFFFFF) shl LI));
 
-    LG := TBitUtilities.Asr32(LG, LZeros);
+    LG := TBitOperations.Asr32(LG, LZeros);
     LU := LU shl LZeros;
     LV := LV shl LZeros;
     AEta := AEta - LZeros;
@@ -682,7 +682,7 @@ begin
   end;
 
   LD := Int32(UInt32(LD) shr 1) or (LD and 1);
-  Result := TBitUtilities.Asr32(LD - 1, 31);
+  Result := TBitOperations.Asr32(LD - 1, 31);
 end;
 
 class function TMod.EqualToVar(ALen: Int32; const AX: TCryptoLibInt32Array; AY: Int32): Boolean;
@@ -706,7 +706,7 @@ end;
 
 class function TMod.GetMaximumHDDivsteps(ABits: Int32): Int32;
 begin
-  Result := Int32(TBitUtilities.Asr64((Int64(150964) * ABits + 99243), 16));
+  Result := Int32(TBitOperations.Asr64((Int64(150964) * ABits + 99243), 16));
 end;
 
 class function TMod.HDDivsteps30(ATheta: Int32; AF0: Int32; AG0: Int32; const AT: TCryptoLibInt32Array): Int32;
@@ -722,7 +722,7 @@ begin
 
   for LI := 0 to 29 do
   begin
-    LC1 := TBitUtilities.Asr32(ATheta, 31);
+    LC1 := TBitOperations.Asr32(ATheta, 31);
     LC2 := -(LG and 1);
 
     LX := LF xor LC1;
@@ -740,9 +740,9 @@ begin
     LU := LU + (LQ and LC3);
     LV := LV + (LR and LC3);
 
-    LG := TBitUtilities.Asr32(LG, 1);
-    LQ := TBitUtilities.Asr32(LQ, 1);
-    LR := TBitUtilities.Asr32(LR, 1);
+    LG := TBitOperations.Asr32(LG, 1);
+    LQ := TBitOperations.Asr32(LQ, 1);
+    LR := TBitOperations.Asr32(LR, 1);
   end;
 
   AT[0] := LU;
@@ -769,12 +769,12 @@ begin
   begin
     LC := LC - AD[LI];
     AD[LI] := LC and M30;
-    LC := TBitUtilities.Asr32(LC, 30);
+    LC := TBitOperations.Asr32(LC, 30);
   end;
 
   LC := LC - AD[LLast];
   AD[LLast] := LC;
-  LC := TBitUtilities.Asr32(LC, 30);
+  LC := TBitOperations.Asr32(LC, 30);
   Result := LC;
 end;
 
@@ -791,9 +791,9 @@ begin
   LFn := AF[ALen30 - 1];
   LGn := AG[ALen30 - 1];
 
-  LCond := TBitUtilities.Asr32(ALen30 - 2, 31);
-  LCond := LCond or (LFn xor (TBitUtilities.Asr32(LFn, 31)));
-  LCond := LCond or (LGn xor (TBitUtilities.Asr32(LGn, 31)));
+  LCond := TBitOperations.Asr32(ALen30 - 2, 31);
+  LCond := LCond or (LFn xor (TBitOperations.Asr32(LFn, 31)));
+  LCond := LCond or (LGn xor (TBitOperations.Asr32(LGn, 31)));
 
   if LCond = 0 then
   begin
@@ -822,8 +822,8 @@ begin
 
   LU := AT[0]; LV := AT[1]; LQ := AT[2]; LR := AT[3];
 
-  LSd := TBitUtilities.Asr32(AD[ALen30 - 1], 31);
-  LSe := TBitUtilities.Asr32(AE[ALen30 - 1], 31);
+  LSd := TBitOperations.Asr32(AD[ALen30 - 1], 31);
+  LSe := TBitOperations.Asr32(AE[ALen30 - 1], 31);
 
   LMd := (LU and LSd) + (LV and LSe);
   LMe := (LQ and LSd) + (LR and LSe);
@@ -846,8 +846,8 @@ begin
   System.Assert((Int32(LCe) and M30) = 0);
   {$ENDIF}
 
-  LCd := TBitUtilities.Asr64(LCd, 30);
-  LCe := TBitUtilities.Asr64(LCe, 30);
+  LCd := TBitOperations.Asr64(LCd, 30);
+  LCe := TBitOperations.Asr64(LCe, 30);
 
   for LI := 1 to ALen30 - 1 do
   begin
@@ -859,10 +859,10 @@ begin
     LCe := LCe + Int64(LQ) * LDi + Int64(LR) * LEi + Int64(LMi) * LMe;
 
     AD[LI - 1] := Int32(LCd) and M30;
-    LCd := TBitUtilities.Asr64(LCd, 30);
+    LCd := TBitOperations.Asr64(LCd, 30);
 
     AE[LI - 1] := Int32(LCe) and M30;
-    LCe := TBitUtilities.Asr64(LCe, 30);
+    LCe := TBitOperations.Asr64(LCe, 30);
   end;
 
   AD[ALen30 - 1] := Int32(LCd);
@@ -895,8 +895,8 @@ begin
   System.Assert((Int32(LCg) and M30) = 0);
   {$ENDIF}
 
-  LCf := TBitUtilities.Asr64(LCf, 30);
-  LCg := TBitUtilities.Asr64(LCg, 30);
+  LCf := TBitOperations.Asr64(LCf, 30);
+  LCg := TBitOperations.Asr64(LCg, 30);
 
   for LI := 1 to ALen30 - 1 do
   begin
@@ -907,10 +907,10 @@ begin
     LCg := LCg + Int64(LQ) * LFi + Int64(LR) * LGi;
 
     AF[LI - 1] := Int32(LCf) and M30;
-    LCf := TBitUtilities.Asr64(LCf, 30);
+    LCf := TBitOperations.Asr64(LCf, 30);
 
     AG[LI - 1] := Int32(LCg) and M30;
-    LCg := TBitUtilities.Asr64(LCg, 30);
+    LCg := TBitOperations.Asr64(LCg, 30);
   end;
 
   AF[ALen30 - 1] := Int32(LCf);

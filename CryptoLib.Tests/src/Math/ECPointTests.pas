@@ -33,7 +33,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   Generics.Collections,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
@@ -336,7 +336,7 @@ begin
   ImplTestMultiply(q, n.BitLength);
   ImplTestMultiply(infinity, n.BitLength);
 
-  logSize := 32 - TBitUtilities.NumberOfLeadingZeros32(curve.FieldSize - 1);
+  logSize := 32 - TBitOperations.NumberOfLeadingZeros32(curve.FieldSize - 1);
   rounds := Max(2, Min(10, 32 - 3 * logSize));
 
   p := q;

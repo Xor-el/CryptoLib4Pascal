@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpICipherParameters,
   ClpIParametersWithRandom,
   ClpIDigest,
@@ -235,12 +235,12 @@ begin
   defHashLen := System.Length(FDefHash);
 
   // Check reduced block size is valid
-  wrongMask := TBitUtilities.Asr32(GetReducedBlockSize(outBlockSize), 31);
+  wrongMask := TBitOperations.Asr32(GetReducedBlockSize(outBlockSize), 31);
 
   SetLength(block, outBlockSize);
   data := FEngine.ProcessBlock(inBytes, inOff, inLen);
 
-  wrongMask := wrongMask or TBitUtilities.Asr32((System.Length(block) - System.Length(data)), 31);
+  wrongMask := wrongMask or TBitOperations.Asr32((System.Length(block) - System.Length(data)), 31);
 
   copyLen := System.Length(data);
   if copyLen > System.Length(block) then
@@ -271,11 +271,11 @@ begin
   begin
     octet := block[index];
     // Mask will be 0xFFFFFFFF if octet is non-zero and start is (still) negative
-    shouldSetMask := TBitUtilities.Asr32((-octet) and start, 31);
+    shouldSetMask := TBitOperations.Asr32((-octet) and start, 31);
     start := start + (index and shouldSetMask);
   end;
 
-  wrongMask := wrongMask or TBitUtilities.Asr32(start, 31);
+  wrongMask := wrongMask or TBitOperations.Asr32(start, 31);
   Inc(start);
   wrongMask := wrongMask or (block[start] xor 1);
 

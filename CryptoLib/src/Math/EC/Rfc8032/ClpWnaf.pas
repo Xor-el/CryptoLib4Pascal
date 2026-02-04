@@ -22,7 +22,7 @@ unit ClpWnaf;
 interface
 
 uses
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type
@@ -77,22 +77,22 @@ begin
     while LJ < 16 do
     begin
       LWord16 := Int32(UInt32(LWord) shr (UInt32(LJ) and 31));
-      LSkip := TBitUtilities.NumberOfTrailingZeros32(UInt32((LSign xor LWord16) or (1 shl 16)));
+      LSkip := TBitOperations.NumberOfTrailingZeros32(UInt32((LSign xor LWord16) or (1 shl 16)));
       if LSkip > 0 then
       begin
         LJ := LJ + LSkip;
         continue;
       end;
       LDigit := (LWord16 or 1) shl LLead;
-      LSign := TBitUtilities.Asr32(LDigit, 31);
-      AWs[(LI shl 4) + LJ] := ShortInt(TBitUtilities.Asr32(LDigit, LLead));
+      LSign := TBitOperations.Asr32(LDigit, 31);
+      AWs[(LI shl 4) + LJ] := ShortInt(TBitOperations.Asr32(LDigit, LLead));
       LJ := LJ + AWidth;
     end;
     LJ := LJ - 16;
     System.Inc(LI);
   end;
   {$IFDEF DEBUG}
-  System.Assert(LSign = TBitUtilities.Asr32(Int32(AN[System.High(AN)]), 31));
+  System.Assert(LSign = TBitOperations.Asr32(Int32(AN[System.High(AN)]), 31));
   {$ENDIF}
 end;
 

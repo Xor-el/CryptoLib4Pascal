@@ -23,14 +23,14 @@ interface
 
 uses
   SysUtils,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCheck,
   ClpIStreamCipher,
   ClpISalsa20Engine,
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpIParametersWithIV,
-  ClpConverters,
+  ClpPack,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -174,8 +174,7 @@ end;
 procedure TSalsa20Engine.GenerateKeyStream(const output: TCryptoLibByteArray);
 begin
   SalsaCore(FRounds, FEngineState, Fx);
-  TConverters.le32_copy(PCardinal(Fx), 0, PByte(output), 0,
-    System.Length(Fx) * System.SizeOf(UInt32));
+  TPack.UInt32_To_LE(Fx, 0, System.Length(Fx), output, 0);
 end;
 
 function TSalsa20Engine.GetAlgorithmName: String;
@@ -329,7 +328,7 @@ end;
 
 class function TSalsa20Engine.R(x: UInt32; y: Int32): UInt32;
 begin
-  result := TBitUtilities.RotateLeft32(x, y);
+  result := TBitOperations.RotateLeft32(x, y);
 end;
 
 procedure TSalsa20Engine.ResetCounter;
@@ -491,16 +490,12 @@ begin
     FEngineState[15] := TAU_SIGMA[tsOff + 3];
 
     // Key
-    TConverters.le32_copy(PByte(keyBytes), 0, PCardinal(FEngineState),
-      1 * System.SizeOf(UInt32), 4 * System.SizeOf(UInt32));
-    TConverters.le32_copy(PByte(keyBytes), (System.Length(keyBytes) - 16) *
-      System.SizeOf(Byte), PCardinal(FEngineState), 11 * System.SizeOf(UInt32),
-      4 * System.SizeOf(UInt32));
+    TPack.LE_To_UInt32(keyBytes, 0, FEngineState, 1, 4);
+    TPack.LE_To_UInt32(keyBytes, System.Length(keyBytes) - 16, FEngineState, 11, 4);
   end;
 
   // IV
-  TConverters.le32_copy(PByte(ivBytes), 0, PCardinal(FEngineState),
-    6 * System.SizeOf(UInt32), 2 * System.SizeOf(UInt32));
+  TPack.LE_To_UInt32(ivBytes, 0, FEngineState, 6, 2);
 
   if (Self.ClassType = TSalsa20Engine) then
   begin

@@ -24,7 +24,7 @@ interface
 uses
   SyncObjs,
   ClpIDigest,
-  ClpConverters,
+  ClpPack,
   ClpCryptoLibTypes,
   ClpIDigestRandomGenerator,
   ClpIRandomGenerator;
@@ -76,8 +76,7 @@ procedure TDigestRandomGenerator.DigestAddCounter(ASeedVal: Int64);
 var
   LBytes: TCryptoLibByteArray;
 begin
-  System.SetLength(LBytes, 8);
-  LBytes := TConverters.ReadUInt64AsBytesLE(UInt64(ASeedVal));
+  LBytes := TPack.UInt64_To_LE(UInt64(ASeedVal));
   FDigest.BlockUpdate(LBytes, 0, System.Length(LBytes));
 end;
 

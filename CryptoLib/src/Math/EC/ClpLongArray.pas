@@ -25,7 +25,7 @@ uses
   SysUtils,
   Math,
   ClpCryptoLibTypes,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpNat,
   ClpInterleave,
   ClpArrayUtilities,
@@ -255,7 +255,7 @@ end;
 
 class function TLongArray.BitLength(AW: UInt64): Int32;
 begin
-  Result := 64 - TBitUtilities.NumberOfLeadingZeros64(AW);
+  Result := 64 - TBitOperations.NumberOfLeadingZeros64(AW);
 end;
 
 function TLongArray.Degree(): Int32;
@@ -658,7 +658,7 @@ var
   LVectorableWords: Int32;
   LVectorWiseWords: Int32;
 begin
-  LMLen := TBitUtilities.Asr32(AM + 63, 6);
+  LMLen := TBitOperations.Asr32(AM + 63, 6);
   if ALen < LMLen then
     Exit(ALen);
 
@@ -677,7 +677,7 @@ begin
   else
     LKNext := 0;
   LWordWiseLimit := Max(AM, LKMax + 64);
-  LVectorableWords := TBitUtilities.Asr32(LExcessBits + Min(LNumBits - LWordWiseLimit, AM - LKNext), 6);
+  LVectorableWords := TBitOperations.Asr32(LExcessBits + Min(LNumBits - LWordWiseLimit, AM - LKNext), 6);
   if LVectorableWords > 1 then
   begin
     LVectorWiseWords := ALen - LVectorableWords;
@@ -1082,7 +1082,7 @@ begin
   LLen := GetUsedLength();
   if LLen = 0 then
     Exit(Self);
-  LMLen := TBitUtilities.Asr32(AM + 63, 6);
+  LMLen := TBitOperations.Asr32(AM + 63, 6);
   System.SetLength(LR, LMLen shl 1);
   if LLen > 0 then
     System.Move(FData[0], LR[0], LLen * SizeOf(UInt64));
@@ -1128,7 +1128,7 @@ begin
     Exit(Self);
 
   LUz := Copy();
-  LT := TBitUtilities.Asr32(AM + 63, 6);
+  LT := TBitOperations.Asr32(AM + 63, 6);
 
   LVz := TLongArray.Create(LT);
   ReduceBit(LVz.FData, 0, AM, AM, AKs);

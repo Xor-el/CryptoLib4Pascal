@@ -26,7 +26,7 @@ uses
   StrUtils,
   SysUtils,
   ClpCryptoLibTypes,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpBitConverter;
 
 resourcestring
@@ -156,7 +156,7 @@ begin
     ldest := PCardinal(PByte(dest) + dest_index);
     while lsrc < lend do
     begin
-      ldest^ := TBitUtilities.ReverseBytesUInt32(lsrc^);
+      ldest^ := TBitOperations.ReverseBytesUInt32(lsrc^);
       System.Inc(ldest);
       System.Inc(lsrc);
     end;
@@ -195,7 +195,7 @@ begin
     ldest := PUInt64(PByte(dest) + dest_index);
     while lsrc < lend do
     begin
-      ldest^ := TBitUtilities.ReverseBytesUInt64(lsrc^);
+      ldest^ := TBitOperations.ReverseBytesUInt64(lsrc^);
       System.Inc(ldest);
       System.Inc(lsrc);
     end;
@@ -220,7 +220,7 @@ end;
 class function TConverters.be2me_32(x: UInt32): UInt32;
 begin
   if TBitConverter.IsLittleEndian then
-    result := TBitUtilities.ReverseBytesUInt32(x)
+    result := TBitOperations.ReverseBytesUInt32(x)
   else
     result := x;
 end;
@@ -228,7 +228,7 @@ end;
 class function TConverters.be2me_64(x: UInt64): UInt64;
 begin
   if TBitConverter.IsLittleEndian then
-    result := TBitUtilities.ReverseBytesUInt64(x)
+    result := TBitOperations.ReverseBytesUInt64(x)
   else
     result := x;
 end;
@@ -256,7 +256,7 @@ end;
 class function TConverters.le2me_32(x: UInt32): UInt32;
 begin
   if not TBitConverter.IsLittleEndian then
-    result := TBitUtilities.ReverseBytesUInt32(x)
+    result := TBitOperations.ReverseBytesUInt32(x)
   else
     result := x;
 end;
@@ -264,7 +264,7 @@ end;
 class function TConverters.le2me_64(x: UInt64): UInt64;
 begin
   if not TBitConverter.IsLittleEndian then
-    result := TBitUtilities.ReverseBytesUInt64(x)
+    result := TBitOperations.ReverseBytesUInt64(x)
   else
     result := x;
 end;

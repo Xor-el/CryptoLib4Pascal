@@ -22,7 +22,7 @@ unit ClpGenericPolynomialExtensionField;
 interface
 
 uses
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpBigInteger,
   ClpIFiniteField,
   ClpIPolynomial,
@@ -116,7 +116,7 @@ function TGenericPolynomialExtensionField.GetHashCode: {$IFDEF DELPHI}Int32;
 {$ELSE}PtrInt; {$ENDIF DELPHI}
 begin
   Result := (subfield as TObject).GetHashCode()
-    xor Int32(TBitUtilities.RotateLeft32((MinimalPolynomial as TObject)
+    xor Int32(TBitOperations.RotateLeft32((MinimalPolynomial as TObject)
     .GetHashCode(), 16));
 end;
 

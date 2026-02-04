@@ -15,14 +15,14 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBitUtilities;
+unit ClpBitOperations;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 type
-  TBitUtilities = class sealed(TObject)
+  TBitOperations = class sealed(TObject)
 
   public
 
@@ -138,7 +138,7 @@ implementation
 
 { TBitUtilities }
 
-class function TBitUtilities.ReverseBytesInt32(AValue: Int32): Int32;
+class function TBitOperations.ReverseBytesInt32(AValue: Int32): Int32;
 {$IFNDEF FPC}
 var
   LI1, LI2, LI3, LI4: Int32;
@@ -148,15 +148,15 @@ begin
   Result := SwapEndian(AValue);
 {$ELSE}
   LI1 := AValue and $FF;
-  LI2 := TBitUtilities.Asr32(AValue, 8) and $FF;
-  LI3 := TBitUtilities.Asr32(AValue, 16) and $FF;
-  LI4 := TBitUtilities.Asr32(AValue, 24) and $FF;
+  LI2 := TBitOperations.Asr32(AValue, 8) and $FF;
+  LI3 := TBitOperations.Asr32(AValue, 16) and $FF;
+  LI4 := TBitOperations.Asr32(AValue, 24) and $FF;
 
   Result := (LI1 shl 24) or (LI2 shl 16) or (LI3 shl 8) or (LI4 shl 0);
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.ReverseBitsUInt8(AValue: UInt8): UInt8;
+class function TBitOperations.ReverseBitsUInt8(AValue: UInt8): UInt8;
 begin
   AValue := ((AValue shr 1) and $55) or ((AValue shl 1) and $AA);
   AValue := ((AValue shr 2) and $33) or ((AValue shl 2) and $CC);
@@ -164,7 +164,7 @@ begin
   Result := AValue;
 end;
 
-class function TBitUtilities.ReverseBytesUInt16(AValue: UInt16): UInt16;
+class function TBitOperations.ReverseBytesUInt16(AValue: UInt16): UInt16;
 begin
 {$IFDEF FPC}
   Result := SwapEndian(AValue);
@@ -174,7 +174,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.ReverseBytesUInt32(AValue: UInt32): UInt32;
+class function TBitOperations.ReverseBytesUInt32(AValue: UInt32): UInt32;
 begin
 {$IFDEF FPC}
   Result := SwapEndian(AValue);
@@ -185,7 +185,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.ReverseBytesUInt64(AValue: UInt64): UInt64;
+class function TBitOperations.ReverseBytesUInt64(AValue: UInt64): UInt64;
 begin
 {$IFDEF FPC}
   Result := SwapEndian(AValue);
@@ -201,7 +201,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.Asr32(AValue: Int32; AShiftBits: Byte): Int32;
+class function TBitOperations.Asr32(AValue: Int32; AShiftBits: Byte): Int32;
 begin
 {$IFDEF FPC}
   Result := SarLongInt(AValue, AShiftBits);
@@ -213,7 +213,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.Asr64(AValue: Int64; AShiftBits: Byte): Int64;
+class function TBitOperations.Asr64(AValue: Int64; AShiftBits: Byte): Int64;
 begin
 {$IFDEF FPC}
   Result := SarInt64(AValue, AShiftBits);
@@ -225,7 +225,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NegativeLeftShift32(AValue: UInt32; AShiftBits: Int32): UInt32;
+class function TBitOperations.NegativeLeftShift32(AValue: UInt32; AShiftBits: Int32): UInt32;
 begin
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
@@ -233,7 +233,7 @@ begin
   Result := AValue shl (32 + AShiftBits);
 end;
 
-class function TBitUtilities.NegativeRightShift32(AValue: UInt32; AShiftBits: Int32): UInt32;
+class function TBitOperations.NegativeRightShift32(AValue: UInt32; AShiftBits: Int32): UInt32;
 begin
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
@@ -241,7 +241,7 @@ begin
   Result := AValue shr (32 + AShiftBits);
 end;
 
-class function TBitUtilities.NegativeLeftShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
+class function TBitOperations.NegativeLeftShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
 begin
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
@@ -249,7 +249,7 @@ begin
   Result := AValue shl (64 + AShiftBits);
 end;
 
-class function TBitUtilities.NegativeRightShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
+class function TBitOperations.NegativeRightShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
 begin
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
@@ -257,7 +257,7 @@ begin
   Result := AValue shr (64 + AShiftBits);
 end;
 
-class function TBitUtilities.RotateLeft8(AValue: Byte; AN: Int32): Byte;
+class function TBitOperations.RotateLeft8(AValue: Byte; AN: Int32): Byte;
 begin
 {$IFDEF DEBUG}
   System.Assert(AN >= 0);
@@ -272,7 +272,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.RotateLeft32(AValue: UInt32; AN: Int32): UInt32;
+class function TBitOperations.RotateLeft32(AValue: UInt32; AN: Int32): UInt32;
 begin
 {$IFDEF DEBUG}
   System.Assert(AN >= 0);
@@ -287,7 +287,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.RotateLeft64(AValue: UInt64; AN: Int32): UInt64;
+class function TBitOperations.RotateLeft64(AValue: UInt64; AN: Int32): UInt64;
 begin
 {$IFDEF DEBUG}
   System.Assert(AN >= 0);
@@ -302,7 +302,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.RotateRight8(AValue: Byte; AN: Int32): Byte;
+class function TBitOperations.RotateRight8(AValue: Byte; AN: Int32): Byte;
 begin
 {$IFDEF DEBUG}
   System.Assert(AN >= 0);
@@ -317,7 +317,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.RotateRight32(AValue: UInt32; AN: Int32): UInt32;
+class function TBitOperations.RotateRight32(AValue: UInt32; AN: Int32): UInt32;
 begin
 {$IFDEF DEBUG}
   System.Assert(AN >= 0);
@@ -332,7 +332,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.RotateRight64(AValue: UInt64; AN: Int32): UInt64;
+class function TBitOperations.RotateRight64(AValue: UInt64; AN: Int32): UInt64;
 begin
 {$IFDEF DEBUG}
   System.Assert(AN >= 0);
@@ -347,7 +347,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NumberOfLeadingZeros32(AValue: UInt32): Int32;
+class function TBitOperations.NumberOfLeadingZeros32(AValue: UInt32): Int32;
 {$IFNDEF FPC}
 var
   LN: UInt32;
@@ -394,7 +394,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NumberOfLeadingZeros64(AValue: UInt64): Int32;
+class function TBitOperations.NumberOfLeadingZeros64(AValue: UInt64): Int32;
 {$IFNDEF FPC}
 var
   LX: UInt32;
@@ -423,7 +423,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NumberOfTrailingZeros32(AValue: UInt32): Int32;
+class function TBitOperations.NumberOfTrailingZeros32(AValue: UInt32): Int32;
 {$IFNDEF FPC}
 var
   LN: UInt32;
@@ -467,7 +467,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NumberOfTrailingZeros64(AValue: UInt64): Int32;
+class function TBitOperations.NumberOfTrailingZeros64(AValue: UInt64): Int32;
 {$IFNDEF FPC}
 var
   LN: UInt32;
@@ -518,7 +518,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.PopCount32(AValue: UInt32): Int32;
+class function TBitOperations.PopCount32(AValue: UInt32): Int32;
 begin
 {$IFDEF FPC}
   Result := PopCnt(AValue);
@@ -533,7 +533,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.PopCount64(AValue: UInt64): Int32;
+class function TBitOperations.PopCount64(AValue: UInt64): Int32;
 begin
 {$IFDEF FPC}
   Result := PopCnt(AValue);

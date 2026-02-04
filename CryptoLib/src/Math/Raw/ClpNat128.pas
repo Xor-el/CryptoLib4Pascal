@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpArrayUtilities,
   ClpBigInteger,
   ClpPack,
@@ -325,7 +325,7 @@ begin
     Exit;
   end;
 
-  LW := TBitUtilities.Asr32(ABit, 5);
+  LW := TBitOperations.Asr32(ABit, 5);
 
   LB := ABit and 31;
   Result := (AX[LW] shr LB) and 1;
@@ -977,16 +977,16 @@ begin
   LC := 0;
   LC := LC + Int64(AX[0]) - AY[0];
   AZ[0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AX[1]) - AY[1];
   AZ[1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AX[2]) - AY[2];
   AZ[2] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AX[3]) - AY[3];
   AZ[3] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   Result := Int32(LC);
 end;
 
@@ -998,16 +998,16 @@ begin
   LC := 0;
   LC := LC + Int64(AX[AXOff + 0]) - AY[AYOff + 0];
   AZ[AZOff + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AX[AXOff + 1]) - AY[AYOff + 1];
   AZ[AZOff + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AX[AXOff + 2]) - AY[AYOff + 2];
   AZ[AZOff + 2] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AX[AXOff + 3]) - AY[AYOff + 3];
   AZ[AZOff + 3] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   Result := Int32(LC);
 end;
 
@@ -1018,16 +1018,16 @@ begin
   LC := 0;
   LC := LC + Int64(AZ[0]) - AX[0] - AY[0];
   AZ[0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[1]) - AX[1] - AY[1];
   AZ[1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[2]) - AX[2] - AY[2];
   AZ[2] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[3]) - AX[3] - AY[3];
   AZ[3] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   Result := Int32(LC);
 end;
 
@@ -1038,16 +1038,16 @@ begin
   LC := 0;
   LC := LC + Int64(AZ[0]) - AX[0];
   AZ[0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[1]) - AX[1];
   AZ[1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[2]) - AX[2];
   AZ[2] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[3]) - AX[3];
   AZ[3] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   Result := Int32(LC);
 end;
 
@@ -1058,16 +1058,16 @@ begin
   LC := 0;
   LC := LC + Int64(AZ[AZOff + 0]) - AX[AXOff + 0];
   AZ[AZOff + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[AZOff + 1]) - AX[AXOff + 1];
   AZ[AZOff + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[AZOff + 2]) - AX[AXOff + 2];
   AZ[AZOff + 2] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + Int64(AZ[AZOff + 3]) - AX[AXOff + 3];
   AZ[AZOff + 3] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   Result := Int32(LC);
 end;
 

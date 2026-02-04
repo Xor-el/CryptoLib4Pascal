@@ -28,7 +28,7 @@ uses
   SysUtils,
   ClpEncoders,
   ClpCryptoLibTypes,
-  ClpConverters,
+  ClpPack,
   ClpBigInteger,
   ClpIFixedSecureRandom,
   ClpISecureRandom,
@@ -329,8 +329,8 @@ begin
     begin
       if (bitLength mod 8 <> 0) then
       begin
-        i := TConverters.ReadBytesAsUInt32BE(PByte(tmp), 0);
-        tmp := TConverters.ReadUInt32AsBytesBE(i shl (8 - (bitLength mod 8)));
+        i := TPack.BE_To_UInt32(tmp, 0);
+        TPack.UInt32_To_BE(i shl (8 - (bitLength mod 8)), tmp, 0);
 
       end;
     end;
@@ -344,8 +344,8 @@ begin
     begin
       if (bitLength mod 8 <> 0) then
       begin
-        i := TConverters.ReadBytesAsUInt32BE(PByte(lv), 0);
-        lv := TConverters.ReadUInt32AsBytesBE(i shl (8 - (bitLength mod 8)));
+        i := TPack.BE_To_UInt32(lv, 0);
+        lv := TPack.UInt32_To_BE(i shl (8 - (bitLength mod 8)));
 
       end;
     end;

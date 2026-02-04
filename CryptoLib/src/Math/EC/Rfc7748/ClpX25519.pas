@@ -23,7 +23,7 @@ interface
 
 uses
   ClpArrayUtilities,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes,
   ClpEd25519,
   ClpISecureRandom,
@@ -190,7 +190,7 @@ begin
     TX25519Field.Sqr(LZ3, LZ3);
     TX25519Field.Mul(LZ3, LX1, LZ3);
     System.Dec(LBit);
-    LWord := TBitUtilities.Asr32(LBit, 5);
+    LWord := TBitOperations.Asr32(LBit, 5);
     LShift := LBit and $1F;
     LKt := Int32(LN[LWord] shr LShift) and 1;
     LSwap := LSwap xor LKt;

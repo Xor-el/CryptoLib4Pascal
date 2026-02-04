@@ -949,7 +949,7 @@ type
     constructor Create(const AGeneralizedTime: IAsn1GeneralizedTime); overload;
     constructor Create(const AUtcTime: IAsn1UtcTime); overload;
     constructor Create(const ADateTime: TDateTime); overload;
-    constructor CreateUtc(const AUtcDateTime: TDateTime);
+    constructor CreateFromUtc(const AUtcDateTime: TDateTime);
 
     function ToDateTime: TDateTime;
     function ToAsn1Object: IAsn1Object; override;
@@ -2730,10 +2730,10 @@ end;
 
 constructor TTime.Create(const ADateTime: TDateTime);
 begin
-  CreateUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
+  CreateFromUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
 end;
 
-constructor TTime.CreateUtc(const AUtcDateTime: TDateTime);
+constructor TTime.CreateFromUtc(const AUtcDateTime: TDateTime);
 var
   LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond: Word;
 begin

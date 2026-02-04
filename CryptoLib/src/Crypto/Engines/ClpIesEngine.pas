@@ -42,7 +42,7 @@ uses
   ClpKdfParameters,
   ClpIKdfParameters,
   ClpIIesWithCipherParameters,
-  ClpConverters,
+  ClpPack,
   ClpArrayUtilities,
   ClpBigInteger,
   ClpBigIntegers,
@@ -211,7 +211,7 @@ begin
   System.SetLength(Result, 8);
   if (AP2 <> nil) then
   begin
-    TConverters.ReadUInt64AsBytesBE(System.Length(AP2) * 8, Result, 0);
+    TPack.UInt64_To_BE(UInt64(System.Length(AP2) * 8), Result, 0);
   end;
 end;
 

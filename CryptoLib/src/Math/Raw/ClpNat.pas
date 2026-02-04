@@ -25,7 +25,7 @@ uses
   SysUtils,
   ClpArrayUtilities,
   ClpPack,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpBigInteger,
   ClpCryptoLibTypes;
 
@@ -683,7 +683,7 @@ begin
   begin
     LC := LC + (AX[LI] - (AY[LI] and LMASK));
     AZ[LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -700,7 +700,7 @@ begin
   begin
     LC := LC + (AX[AXOff + LI] - (AY[AYOff + LI] and LMASK));
     AZ[AZOff + LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -806,7 +806,7 @@ begin
     LD := LD or (AX[AXOff + LI]);
   end;
   LD := ((LD shr 1)) or (LD and 1);
-  Result := UInt32(TBitUtilities.Asr32(Int32(LD - 1), 31));
+  Result := UInt32(TBitOperations.Asr32(Int32(LD - 1), 31));
 end;
 
 class function TNat.EqualTo(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32): UInt32;
@@ -820,7 +820,7 @@ begin
     LD := LD or (AX[AXOff + LI] xor AY[AYOff + LI]);
   end;
   LD := ((LD shr 1)) or (LD and 1);
-  Result := UInt32(TBitUtilities.Asr32(Int32(LD - 1), 31));
+  Result := UInt32(TBitOperations.Asr32(Int32(LD - 1), 31));
 end;
 
 class function TNat.EqualToZero(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32): UInt32;
@@ -834,7 +834,7 @@ begin
     LD := LD or (AX[AXOff + LI]);
   end;
   LD := ((LD shr 1)) or (LD and 1);
-  Result := UInt32(TBitUtilities.Asr32(Int32(LD - 1), 31));
+  Result := UInt32(TBitOperations.Asr32(Int32(LD - 1), 31));
 end;
 
 class function TNat.FromBigInteger(ABits: Int32; AX: TBigInteger): TCryptoLibUInt32Array;
@@ -885,7 +885,7 @@ begin
     Result := AX[0] and 1;
     Exit;
   end;
-  LW := TBitUtilities.Asr32(ABit, 5);
+  LW := TBitOperations.Asr32(ABit, 5);
   LB := ABit and 31;
   if (LW < 0) or (LW >= System.Length(AX)) then
   begin
@@ -905,7 +905,7 @@ begin
     LXI := AX[LI];
     if LXI <> 0 then
     begin
-      Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(LXI);
+      Result := LI * 32 + 32 - TBitOperations.NumberOfLeadingZeros32(LXI);
       Exit;
     end;
   end;
@@ -922,7 +922,7 @@ begin
     LXI := AX[AXOff + LI];
     if LXI <> 0 then
     begin
-      Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(LXI);
+      Result := LI * 32 + 32 - TBitOperations.NumberOfLeadingZeros32(LXI);
       Exit;
     end;
   end;
@@ -1091,7 +1091,7 @@ begin
   for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AX[LI]) - AY[LI]);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   System.Assert((LC = Int64(0)) or (LC = -Int64(1)));
   Result := Int32(LC);
@@ -1106,7 +1106,7 @@ begin
   for LI := 0 to ALen - 1 do
   begin
     LC := LC + (Int64(AX[AXOff + LI]) - Int64(AY[AYOff + LI]));
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   {$IFDEF DEBUG}
   System.Assert((LC = Int64(0)) or (LC = -Int64(1)));
@@ -1291,7 +1291,7 @@ begin
   begin
     LC := LC - (AX[LI]);
     AZ[LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -1373,10 +1373,10 @@ begin
   begin
     System.Dec(LI);
     LNext := AZ[LI];
-    AZ[LI] := ((LNext shr ABits)) or (TBitUtilities.NegativeLeftShift32(AC, -ABits));
+    AZ[LI] := ((LNext shr ABits)) or (TBitOperations.NegativeLeftShift32(AC, -ABits));
     AC := LNext;
   end;
-  Result := TBitUtilities.NegativeLeftShift32(AC, -ABits);
+  Result := TBitOperations.NegativeLeftShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftDownBits(ALen: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32; ABits: Int32; AC: UInt32): UInt32;
@@ -1392,10 +1392,10 @@ begin
   begin
     System.Dec(LI);
     LNext := AZ[AZOff + LI];
-    AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitUtilities.NegativeLeftShift32(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitOperations.NegativeLeftShift32(AC, -ABits));
     AC := LNext;
   end;
-  Result := TBitUtilities.NegativeLeftShift32(AC, -ABits);
+  Result := TBitOperations.NegativeLeftShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftDownBits(ALen: Int32; const AX: TCryptoLibUInt32Array; ABits: Int32; AC: UInt32; AZ: TCryptoLibUInt32Array): UInt32;
@@ -1411,10 +1411,10 @@ begin
   begin
     System.Dec(LI);
     LNext := AX[LI];
-    AZ[LI] := ((LNext shr ABits)) or (TBitUtilities.NegativeLeftShift32(AC, -ABits));
+    AZ[LI] := ((LNext shr ABits)) or (TBitOperations.NegativeLeftShift32(AC, -ABits));
     AC := LNext;
   end;
-  Result := TBitUtilities.NegativeLeftShift32(AC, -ABits);
+  Result := TBitOperations.NegativeLeftShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftDownBits(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; ABits: Int32; AC: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32;
@@ -1430,10 +1430,10 @@ begin
   begin
     System.Dec(LI);
     LNext := AX[AXOff + LI];
-    AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitUtilities.NegativeLeftShift32(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitOperations.NegativeLeftShift32(AC, -ABits));
     AC := LNext;
   end;
-  Result := TBitUtilities.NegativeLeftShift32(AC, -ABits);
+  Result := TBitOperations.NegativeLeftShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftDownBits64(ALen: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32; ABits: Int32; AC: UInt64): UInt64;
@@ -1449,10 +1449,10 @@ begin
   begin
     System.Dec(LI);
     LNext := AZ[AZOff + LI];
-    AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitUtilities.NegativeLeftShift64(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shr ABits)) or (TBitOperations.NegativeLeftShift64(AC, -ABits));
     AC := LNext;
   end;
-  Result := TBitUtilities.NegativeLeftShift64(AC, -ABits);
+  Result := TBitOperations.NegativeLeftShift64(AC, -ABits);
 end;
 
 class function TNat.ShiftDownWord(ALen: Int32; AZ: TCryptoLibUInt32Array; AC: UInt32): UInt32;
@@ -1702,21 +1702,21 @@ begin
     LNext1 := AZ[LI + 1];
     LNext2 := AZ[LI + 2];
     LNext3 := AZ[LI + 3];
-    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
-    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
-    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
-    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
+    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
+    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext0, -ABits));
+    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext1, -ABits));
+    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AZ[LI];
-    AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
+    AZ[LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift32(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits(ALen: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32; ABits: Int32; AC: UInt32): UInt32;
@@ -1740,21 +1740,21 @@ begin
     LNext1 := AZ[AZOff + LI + 1];
     LNext2 := AZ[AZOff + LI + 2];
     LNext3 := AZ[AZOff + LI + 3];
-    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
-    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
-    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
-    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
+    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
+    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext0, -ABits));
+    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext1, -ABits));
+    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AZ[AZOff + LI];
-    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift32(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits(ALen: Int32; const AX: TCryptoLibUInt32Array; ABits: Int32; AC: UInt32; AZ: TCryptoLibUInt32Array): UInt32;
@@ -1778,21 +1778,21 @@ begin
     LNext1 := AX[LI + 1];
     LNext2 := AX[LI + 2];
     LNext3 := AX[LI + 3];
-    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
-    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
-    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
-    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
+    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
+    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext0, -ABits));
+    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext1, -ABits));
+    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AX[LI];
-    AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
+    AZ[LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift32(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; ABits: Int32; AC: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32;
@@ -1816,21 +1816,21 @@ begin
     LNext1 := AX[AXOff + LI + 1];
     LNext2 := AX[AXOff + LI + 2];
     LNext3 := AX[AXOff + LI + 3];
-    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
-    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext0, -ABits));
-    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext1, -ABits));
-    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift32(LNext2, -ABits));
+    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
+    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext0, -ABits));
+    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext1, -ABits));
+    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift32(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AX[AXOff + LI];
-    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift32(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift32(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift32(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift32(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits64(ALen: Int32; AZ: TCryptoLibUInt64Array; ABits: Int32; AC: UInt64): UInt64;
@@ -1854,21 +1854,21 @@ begin
     LNext1 := AZ[LI + 1];
     LNext2 := AZ[LI + 2];
     LNext3 := AZ[LI + 3];
-    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
-    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext0, -ABits));
-    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext1, -ABits));
-    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext2, -ABits));
+    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
+    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext0, -ABits));
+    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext1, -ABits));
+    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AZ[LI];
-    AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
+    AZ[LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift64(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift64(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits64(ALen: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32; ABits: Int32; AC: UInt64): UInt64;
@@ -1892,21 +1892,21 @@ begin
     LNext1 := AZ[AZOff + LI + 1];
     LNext2 := AZ[AZOff + LI + 2];
     LNext3 := AZ[AZOff + LI + 3];
-    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
-    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext0, -ABits));
-    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext1, -ABits));
-    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext2, -ABits));
+    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
+    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext0, -ABits));
+    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext1, -ABits));
+    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AZ[AZOff + LI];
-    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift64(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift64(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits64(ALen: Int32; const AX: TCryptoLibUInt64Array; ABits: Int32; AC: UInt64; AZ: TCryptoLibUInt64Array): UInt64;
@@ -1930,21 +1930,21 @@ begin
     LNext1 := AX[LI + 1];
     LNext2 := AX[LI + 2];
     LNext3 := AX[LI + 3];
-    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
-    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext0, -ABits));
-    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext1, -ABits));
-    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext2, -ABits));
+    AZ[LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
+    AZ[LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext0, -ABits));
+    AZ[LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext1, -ABits));
+    AZ[LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AX[LI];
-    AZ[LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
+    AZ[LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift64(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift64(AC, -ABits);
 end;
 
 class function TNat.ShiftUpBits64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32; ABits: Int32; AC: UInt64; AZ: TCryptoLibUInt64Array; AZOff: Int32): UInt64;
@@ -1968,21 +1968,21 @@ begin
     LNext1 := AX[AXOff + LI + 1];
     LNext2 := AX[AXOff + LI + 2];
     LNext3 := AX[AXOff + LI + 3];
-    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
-    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext0, -ABits));
-    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext1, -ABits));
-    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitUtilities.NegativeRightShift64(LNext2, -ABits));
+    AZ[AZOff + LI + 0] := ((LNext0 shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
+    AZ[AZOff + LI + 1] := ((LNext1 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext0, -ABits));
+    AZ[AZOff + LI + 2] := ((LNext2 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext1, -ABits));
+    AZ[AZOff + LI + 3] := ((LNext3 shl ABits)) or (TBitOperations.NegativeRightShift64(LNext2, -ABits));
     AC := LNext3;
     LI := LI + 4;
   end;
   while LI < ALen do
   begin
     LNext := AX[AXOff + LI];
-    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitUtilities.NegativeRightShift64(AC, -ABits));
+    AZ[AZOff + LI] := ((LNext shl ABits)) or (TBitOperations.NegativeRightShift64(AC, -ABits));
     AC := LNext;
     System.Inc(LI);
   end;
-  Result := TBitUtilities.NegativeRightShift64(AC, -ABits);
+  Result := TBitOperations.NegativeRightShift64(AC, -ABits);
 end;
 
 class procedure TNat.Square(ALen: Int32; const AX: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array);
@@ -2148,7 +2148,7 @@ begin
   begin
     LC := LC + (Int64(AX[LI]) - Int64(AY[LI]));
     AZ[LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -2163,7 +2163,7 @@ begin
   begin
     LC := LC + (Int64(AX[AXOff + LI]) - Int64(AY[AYOff + LI]));
     AZ[AZOff + LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -2177,10 +2177,10 @@ begin
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZPos + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (Int64(AZ[AZPos + 1] - 1));
   AZ[AZPos + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2200,10 +2200,10 @@ begin
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZOff + AZPos] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (Int64(AZ[AZOff + AZPos + 1] - 1));
   AZ[AZOff + AZPos + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2220,10 +2220,10 @@ var
 begin
   LC := Int64(AZ[0] - AX);
   AZ[0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (Int64(AZ[1] - 1));
   AZ[1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2240,10 +2240,10 @@ var
 begin
   LC := Int64(AZ[AZOff + 0] - AX);
   AZ[AZOff + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (Int64(AZ[AZOff + 1] - 1));
   AZ[AZOff + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2264,7 +2264,7 @@ begin
   begin
     LC := LC + (Int64(AZ[LI]) - Int64(AX[LI]) - Int64(AY[LI]));
     AZ[LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -2279,7 +2279,7 @@ begin
   begin
     LC := LC + (Int64(AZ[AZOff + LI]) - Int64(AX[AXOff + LI]) - Int64(AY[AYOff + LI]));
     AZ[AZOff + LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -2293,10 +2293,10 @@ begin
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZPos + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (AZ[AZPos + 1] - Int64(AX shr 32));
   AZ[AZPos + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2316,10 +2316,10 @@ begin
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZOff + AZPos] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (AZ[AZOff + AZPos + 1] - Int64(AX shr 32));
   AZ[AZOff + AZPos + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2336,10 +2336,10 @@ var
 begin
   LC := AZ[0] - Int64(AX and M);
   AZ[0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (AZ[1] - Int64(AX shr 32));
   AZ[1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2356,10 +2356,10 @@ var
 begin
   LC := AZ[AZOff + 0] - Int64(AX and M);
   AZ[AZOff + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   LC := LC + (AZ[AZOff + 1] - Int64(AX shr 32));
   AZ[AZOff + 1] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2380,7 +2380,7 @@ begin
   begin
     LC := LC + (Int64(AZ[LI]) - Int64(AX[LI]));
     AZ[LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -2395,7 +2395,7 @@ begin
   begin
     LC := LC + (Int64(AZ[AZOff + LI]) - Int64(AX[AXOff + LI]));
     AZ[AZOff + LI] := UInt32(LC);
-    LC := TBitUtilities.Asr64(LC, 32);
+    LC := TBitOperations.Asr64(LC, 32);
   end;
   Result := Int32(LC);
 end;
@@ -2409,7 +2409,7 @@ begin
   System.Assert(AZPos <= (ALen - 1));
   {$ENDIF}
   AZ[AZPos] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2429,7 +2429,7 @@ begin
   System.Assert(AZPos <= (ALen - 1));
   {$ENDIF}
   AZ[AZOff + AZPos] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2446,7 +2446,7 @@ var
 begin
   LC := Int64(AZ[0] - AX);
   AZ[0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;
@@ -2463,7 +2463,7 @@ var
 begin
   LC := Int64(AZ[AZOff + 0] - AX);
   AZ[AZOff + 0] := UInt32(LC);
-  LC := TBitUtilities.Asr64(LC, 32);
+  LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
   begin
     Result := 0;

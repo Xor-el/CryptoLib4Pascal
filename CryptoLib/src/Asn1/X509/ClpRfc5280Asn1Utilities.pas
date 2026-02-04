@@ -61,7 +61,7 @@ end;
 
 class function TRfc5280Asn1Utilities.CreateGeneralizedTimeFromUtc(const AUtcDateTime: TDateTime): IAsn1GeneralizedTime;
 begin
-  Result := TDerGeneralizedTime.CreateUtc(TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime));
+  Result := TDerGeneralizedTime.CreateFromUtc(TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime));
 end;
 
 class function TRfc5280Asn1Utilities.CreateUtcTime(const ADateTime: TDateTime): IAsn1UtcTime;
@@ -71,7 +71,7 @@ end;
 
 class function TRfc5280Asn1Utilities.CreateUtcTimeFromUtc(const AUtcDateTime: TDateTime): IAsn1UtcTime;
 begin
-  Result := TDerUtcTime.CreateUtc(AUtcDateTime, 2049);
+  Result := TDerUtcTime.CreateFromUtc(AUtcDateTime, 2049);
 end;
 
 end.

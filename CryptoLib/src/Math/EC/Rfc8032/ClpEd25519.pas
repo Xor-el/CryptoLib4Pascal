@@ -25,7 +25,7 @@ uses
   SyncObjs,
   ClpCodec,
   ClpDigestUtilities,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpIDigest,
   ClpISecureRandom,
   ClpNat256,
@@ -464,7 +464,7 @@ var
   LX0: Int32;
   LU, LV: TCryptoLibInt32Array;
 begin
-  LX0 := TBitUtilities.Asr32(Int32(AP[PointBytes - 1] and $80), 7);
+  LX0 := TBitOperations.Asr32(Int32(AP[PointBytes - 1] and $80), 7);
   TX25519Field.Decode(AP, AR.Y);
   LU := TX25519Field.Create;
   LV := TX25519Field.Create;
@@ -851,7 +851,7 @@ begin
   LI := 0;
   while LI < PrecompPoints do
   begin
-    LCond := TBitUtilities.Asr32((LI xor AIndex) - 1, 31);
+    LCond := TBitOperations.Asr32((LI xor AIndex) - 1, 31);
     TX25519Field.CMov(LCond, FPrecompBaseComb, LOff, AP.YmxH, 0);
     LOff := LOff + TX25519Field.Size;
     TX25519Field.CMov(LCond, FPrecompBaseComb, LOff, AP.YpxH, 0);
@@ -881,7 +881,7 @@ begin
   LI := 0;
   while LI < 8 do
   begin
-    LCond := TBitUtilities.Asr32((LI xor LAbs) - 1, 31);
+    LCond := TBitOperations.Asr32((LI xor LAbs) - 1, 31);
     TX25519Field.CMov(LCond, ATable, LOff, AR.YmxH, 0);
     LOff := LOff + TX25519Field.Size;
     TX25519Field.CMov(LCond, ATable, LOff, AR.YpxH, 0);
@@ -1042,7 +1042,7 @@ begin
     while LBlock < PrecompBlocks do
     begin
       LW := LN[LBlock] shr LCOff;
-      LSign := TBitUtilities.Asr32(Int32(LW), PrecompTeeth - 1) and 1;
+      LSign := TBitOperations.Asr32(Int32(LW), PrecompTeeth - 1) and 1;
       LAbs := (Int32(LW) xor -LSign) and PrecompMask;
       {$IFDEF DEBUG}
       System.Assert((LSign = 0) or (LSign = 1));
@@ -1109,7 +1109,7 @@ begin
     LWP := LWsP[LBit];
     if LWP <> 0 then
     begin
-      LIndex := TBitUtilities.Asr32(LWP, 1) xor TBitUtilities.Asr32(LWP, 31);
+      LIndex := TBitOperations.Asr32(LWP, 1) xor TBitOperations.Asr32(LWP, 31);
       PointAddVar(LWP < 0, LTp[LIndex], AR, LT);
     end;
     System.Dec(LBit);
@@ -1273,25 +1273,25 @@ begin
     LWB := LWsB[LBit];
     if LWB <> 0 then
     begin
-      LIndex := TBitUtilities.Asr32(LWB, 1) xor TBitUtilities.Asr32(LWB, 31);
+      LIndex := TBitOperations.Asr32(LWB, 1) xor TBitOperations.Asr32(LWB, 31);
       PointAddVar(LWB < 0, FPrecompBaseWnaf[LIndex], AR, LT);
     end;
     LWB128 := LWsB[128 + LBit];
     if LWB128 <> 0 then
     begin
-      LIndex := TBitUtilities.Asr32(LWB128, 1) xor TBitUtilities.Asr32(LWB128, 31);
+      LIndex := TBitOperations.Asr32(LWB128, 1) xor TBitOperations.Asr32(LWB128, 31);
       PointAddVar(LWB128 < 0, FPrecompBase128Wnaf[LIndex], AR, LT);
     end;
     LWP := LWsP[LBit];
     if LWP <> 0 then
     begin
-      LIndex := TBitUtilities.Asr32(LWP, 1) xor TBitUtilities.Asr32(LWP, 31);
+      LIndex := TBitOperations.Asr32(LWP, 1) xor TBitOperations.Asr32(LWP, 31);
       PointAddVar(LWP < 0, LTp[LIndex], AR, LT);
     end;
     LWQ := LWsQ[LBit];
     if LWQ <> 0 then
     begin
-      LIndex := TBitUtilities.Asr32(LWQ, 1) xor TBitUtilities.Asr32(LWQ, 31);
+      LIndex := TBitOperations.Asr32(LWQ, 1) xor TBitOperations.Asr32(LWQ, 31);
       PointAddVar(LWQ < 0, LTq[LIndex], AR, LT);
     end;
     PointDouble(AR);

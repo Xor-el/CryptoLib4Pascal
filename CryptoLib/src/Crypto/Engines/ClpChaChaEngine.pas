@@ -26,7 +26,7 @@ uses
   ClpIStreamCipher,
   ClpIChaChaEngine,
   ClpSalsa20Engine,
-  ClpConverters,
+  ClpPack,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -222,8 +222,7 @@ end;
 procedure TChaChaEngine.GenerateKeyStream(const output: TCryptoLibByteArray);
 begin
   ChaChaCore(FRounds, FEngineState, Fx);
-  TConverters.le32_copy(PCardinal(Fx), 0, PByte(output), 0,
-    System.Length(Fx) * System.SizeOf(UInt32));
+  TPack.UInt32_To_LE(Fx, 0, System.Length(Fx), output, 0);
 end;
 
 function TChaChaEngine.GetAlgorithmName: String;
@@ -252,16 +251,12 @@ begin
     PackTauOrSigma(System.Length(keyBytes), FEngineState, 0);
 
     // Key
-    TConverters.le32_copy(PByte(keyBytes), 0, PCardinal(FEngineState),
-      4 * System.SizeOf(UInt32), 4 * System.SizeOf(UInt32));
-    TConverters.le32_copy(PByte(keyBytes), (System.Length(keyBytes) - 16) *
-      System.SizeOf(Byte), PCardinal(FEngineState), 8 * System.SizeOf(UInt32),
-      4 * System.SizeOf(UInt32));
+    TPack.LE_To_UInt32(keyBytes, 0, FEngineState, 4, 4);
+    TPack.LE_To_UInt32(keyBytes, System.Length(keyBytes) - 16, FEngineState, 8, 4);
   end;
 
   // IV
-  TConverters.le32_copy(PByte(ivBytes), 0, PCardinal(FEngineState),
-    14 * System.SizeOf(UInt32), 2 * System.SizeOf(UInt32));
+  TPack.LE_To_UInt32(ivBytes, 0, FEngineState, 14, 2);
 
   TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
   TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));

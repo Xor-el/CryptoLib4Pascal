@@ -25,7 +25,7 @@ uses
   ClpMod,
   ClpEncoders,
   ClpNat,
-  ClpBitUtilities,
+  ClpBitOperations,
   ClpNat384,
   ClpECC,
   ClpBigInteger,
@@ -295,22 +295,22 @@ var
 begin
   c := Int64(z[0]) + 1;
   z[0] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   c := c + (Int64(z[1]) - 1);
   z[1] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   if (c <> 0) then
   begin
     c := c + Int64(z[2]);
     z[2] := UInt32(c);
-    c := TBitUtilities.Asr64(c, 32);
+    c := TBitOperations.Asr64(c, 32);
   end;
   c := c + (Int64(z[3]) + 1);
   z[3] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   c := c + (Int64(z[4]) + 1);
   z[4] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   if (c <> 0) then
   begin
     TNat.IncAt(12, z, 5);
@@ -339,22 +339,22 @@ var
 begin
   c := Int64(z[0]) - 1;
   z[0] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   c := c + (Int64(z[1]) + 1);
   z[1] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   if (c <> 0) then
   begin
     c := c + Int64(z[2]);
     z[2] := UInt32(c);
-    c := TBitUtilities.Asr64(c, 32);
+    c := TBitOperations.Asr64(c, 32);
   end;
   c := c + (Int64(z[3]) - 1);
   z[3] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   c := c + (Int64(z[4]) - 1);
   z[4] := UInt32(c);
-  c := TBitUtilities.Asr64(c, 32);
+  c := TBitOperations.Asr64(c, 32);
   if (c <> 0) then
   begin
     TNat.DecAt(12, z, 5);
@@ -438,22 +438,22 @@ begin
 
     cc := cc + (Int64(z[0]) + xx12);
     z[0] := UInt32(cc);
-    cc := TBitUtilities.Asr64(cc, 32);
+    cc := TBitOperations.Asr64(cc, 32);
     cc := cc + (Int64(z[1]) - xx12);
     z[1] := UInt32(cc);
-    cc := TBitUtilities.Asr64(cc, 32);
+    cc := TBitOperations.Asr64(cc, 32);
     if (cc <> 0) then
     begin
       cc := cc + Int64(z[2]);
       z[2] := UInt32(cc);
-      cc := TBitUtilities.Asr64(cc, 32);
+      cc := TBitOperations.Asr64(cc, 32);
     end;
     cc := cc + (Int64(z[3]) + xx12);
     z[3] := UInt32(cc);
-    cc := TBitUtilities.Asr64(cc, 32);
+    cc := TBitOperations.Asr64(cc, 32);
     cc := cc + (Int64(z[4]) + xx12);
     z[4] := UInt32(cc);
-    cc := TBitUtilities.Asr64(cc, 32);
+    cc := TBitOperations.Asr64(cc, 32);
 
 {$IFDEF DEBUG}
     System.Assert((cc = 0) or (cc = 1));
@@ -496,40 +496,40 @@ begin
   cc := 0;
   cc := cc + (Int64(xx[0]) + t7);
   z[0] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[1]) + xx23 - t0 + t1);
   z[1] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[2]) - xx21 - t1 + t2);
   z[2] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[3]) - t2 + t3 + t7);
   z[3] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[4]) + xx16 + xx21 + t1 - t3 + t7);
   z[4] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[5]) - xx16 + t1 + t2 + t4);
   z[5] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[6]) + xx18 - xx17 + t2 + t3);
   z[6] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[7]) + xx16 + xx19 - xx18 + t3);
   z[7] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[8]) + xx16 + xx17 + xx20 - xx19);
   z[8] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[9]) + xx18 - xx20 + t4);
   z[9] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[10]) + xx18 + xx19 - t5 + t6);
   z[10] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (Int64(xx[11]) + xx19 + xx20 - t6);
   z[11] := UInt32(cc);
-  cc := TBitUtilities.Asr64(cc, 32);
+  cc := TBitOperations.Asr64(cc, 32);
   cc := cc + (n);
 
 {$IFDEF DEBUG}
@@ -1312,7 +1312,7 @@ begin
 
   for i := 0 to System.Pred(Fm_size) do
   begin
-    MASK := UInt32(TBitUtilities.Asr32((i xor index) - 1, 31));
+    MASK := UInt32(TBitOperations.Asr32((i xor index) - 1, 31));
 
     for J := 0 to System.Pred(SECP384R1_FE_INTS) do
     begin
