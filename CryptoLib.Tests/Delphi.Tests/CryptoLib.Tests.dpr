@@ -533,8 +533,6 @@ uses
   ClpNat576 in '..\..\CryptoLib\src\Math\Raw\ClpNat576.pas',
   ClpNullable in '..\..\CryptoLib\src\Misc\ClpNullable.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
-  ClpIFixedSecureRandom in '..\src\Utils\ClpIFixedSecureRandom.pas',
-  ClpIShortenedDigest in '..\src\Utils\ClpIShortenedDigest.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
   AESTestVectors in '..\src\Crypto\AESTestVectors.pas',

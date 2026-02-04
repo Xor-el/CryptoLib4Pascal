@@ -32,7 +32,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIDigest,
-  ClpIShortenedDigest,
   ClpShortenedDigest,
   ClpDigestUtilities,
   ClpCryptoLibTypes,

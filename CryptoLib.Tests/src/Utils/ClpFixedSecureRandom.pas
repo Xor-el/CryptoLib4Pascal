@@ -30,7 +30,6 @@ uses
   ClpCryptoLibTypes,
   ClpPack,
   ClpBigInteger,
-  ClpIFixedSecureRandom,
   ClpISecureRandom,
   ClpSecureRandom;
 
@@ -40,6 +39,30 @@ resourcestring
   SUnRecognizedImplementation = 'Unrecognized BigIntegerSource Implementation';
 
 type
+  IFixedSecureRandom = interface(ISecureRandom)
+    ['{8D3C436D-1E93-487F-9C03-5E0EEFBCBBB4}']
+    function GetIsExhausted: Boolean;
+    property IsExhausted: Boolean read GetIsExhausted;
+  end;
+
+  IRandomChecker = interface(ISecureRandom)
+    ['{EFC0D597-00E4-4DAE-8529-E14C9FE50B41}']
+  end;
+
+  ISource = interface(IInterface)
+    ['{D4391E69-BA80-4245-BB94-52715BC6D043}']
+    function GetData: TCryptoLibByteArray;
+    property Data: TCryptoLibByteArray read GetData;
+  end;
+
+  IData = interface(ISource)
+    ['{CF4AB8B8-724D-4EEA-93F5-0732C81774F0}']
+  end;
+
+  IBigIntegerSource = interface(ISource)
+    ['{202BF4D8-D872-4757-8C0F-D76228CEDB92}']
+  end;
+
   TFixedSecureRandom = class(TSecureRandom, IFixedSecureRandom)
 
   strict private

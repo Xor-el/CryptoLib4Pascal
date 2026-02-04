@@ -81,7 +81,6 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpFixedSecureRandom,
-  ClpIFixedSecureRandom,
   ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

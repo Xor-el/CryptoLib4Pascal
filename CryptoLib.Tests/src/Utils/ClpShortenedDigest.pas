@@ -26,7 +26,6 @@ uses
   SysUtils,
   HlpIHash,
   ClpIDigest,
-  ClpIShortenedDigest,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -35,6 +34,9 @@ resourcestring
     'BaseDigest output not large enough to support length';
 
 type
+  IShortenedDigest = interface(IDigest)
+    ['{E19D250B-CAE0-4959-9211-80853FCF4ADD}']
+  end;
 
   /// <summary>
   /// Wrapper class that reduces the output length of a particular digest to
