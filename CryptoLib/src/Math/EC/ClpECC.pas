@@ -779,17 +779,17 @@ type
   strict private
   var
     Fm_outer: IF2mCurve;
-    Fm_table: TCryptoLibInt64Array;
+    Fm_table: TCryptoLibUInt64Array;
     Fm_size: Int32;
 
-    function CreatePoint(const x, y: TCryptoLibInt64Array): IECPoint;
+    function CreatePoint(const x, y: TCryptoLibUInt64Array): IECPoint;
 
   strict protected
     function GetSize: Int32; override;
 
   public
     constructor Create(const outer: IF2mCurve;
-      const table: TCryptoLibInt64Array; Size: Int32);
+      const table: TCryptoLibUInt64Array; Size: Int32);
 
     destructor Destroy; override;
 
@@ -1829,7 +1829,7 @@ begin
   xx := (x as IF2mFieldElement).x;
   yx := (y as IF2mFieldElement).x;
 
-  aa := ax.Square();
+  aa := ax.Square(Fm, FKs);
   xy := xx.Multiply(yx);
 
   if (aa.Equals(ax)) then
@@ -2502,7 +2502,7 @@ begin
   end;
 
   n := TBitUtilities.Asr32((m + 1), 1);
-  K := 31 - TBitUtilities.NumberOfLeadingZeros(n);
+  K := 31 - TBitUtilities.NumberOfLeadingZeros32(n);
   nk := 1;
 
   ht := Self as IECFieldElement;
@@ -2533,7 +2533,7 @@ var
 begin
   m := FieldSize;
 
-  K := 31 - TBitUtilities.NumberOfLeadingZeros(m);
+  K := 31 - TBitUtilities.NumberOfLeadingZeros32(m);
   mk := 1;
 
   tr := Self as IECFieldElement;
@@ -3457,8 +3457,11 @@ end;
 
 class function TAbstractF2mCurve.Inverse(m: Int32;
   const ks: TCryptoLibInt32Array; const x: TBigInteger): TBigInteger;
+var
+  LA: TLongArray;
 begin
-  result := TLongArray.Create(x).ModInverse(m, ks).ToBigInteger();
+  LA := TLongArray.Create(x);
+  result := LA.ModInverse(m, ks).ToBigInteger();
 end;
 
 function TAbstractF2mCurve.IsValidFieldElement(const x: TBigInteger): Boolean;
@@ -3651,7 +3654,7 @@ function TF2mCurve.CreateCacheSafeLookupTable(const points
   : TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
 var
   FE_LONGS, position, i: Int32;
-  table: TCryptoLibInt64Array;
+  table: TCryptoLibUInt64Array;
   P: IECPoint;
 begin
   FE_LONGS := (m + 63) div 64;
@@ -3809,7 +3812,7 @@ end;
 { TDefaultF2mLookupTable }
 
 constructor TDefaultF2mLookupTable.Create(const outer: IF2mCurve;
-  const table: TCryptoLibInt64Array; Size: Int32);
+  const table: TCryptoLibUInt64Array; Size: Int32);
 begin
   Inherited Create();
   Fm_outer := outer;
@@ -3817,12 +3820,13 @@ begin
   Fm_size := Size;
 end;
 
-function TDefaultF2mLookupTable.CreatePoint(const x, y: TCryptoLibInt64Array)
+function TDefaultF2mLookupTable.CreatePoint(const x, y: TCryptoLibUInt64Array)
   : IECPoint;
 var
   XFieldElement, YFieldElement: IECFieldElement;
   m: Int32;
   ks: TCryptoLibInt32Array;
+  LAx, LAy: TLongArray;
 begin
   m := Fm_outer.m;
   if Fm_outer.IsTrinomial() then
@@ -3834,8 +3838,10 @@ begin
     ks := TCryptoLibInt32Array.Create(Fm_outer.k1, Fm_outer.k2, Fm_outer.k3);
   end;
 
-  XFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(x));
-  YFieldElement := TF2mFieldElement.Create(m, ks, TLongArray.Create(y));
+  LAx := TLongArray.Create(x);
+  LAy := TLongArray.Create(y);
+  XFieldElement := TF2mFieldElement.Create(m, ks, LAx);
+  YFieldElement := TF2mFieldElement.Create(m, ks, LAy);
   result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement, false);
 end;
 
@@ -3855,8 +3861,8 @@ end;
 function TDefaultF2mLookupTable.Lookup(index: Int32): IECPoint;
 var
   FE_LONGS, position, i, j: Int32;
-  x, y: TCryptoLibInt64Array;
-  MASK: Int64;
+  x, y: TCryptoLibUInt64Array;
+  MASK: UInt64;
 begin
   FE_LONGS := (Fm_outer.m + 63) div 64;
   System.SetLength(x, FE_LONGS);
@@ -3867,7 +3873,7 @@ begin
   for i := 0 to System.Pred(Fm_size) do
   begin
 
-    MASK := TBitUtilities.Asr32((i xor index) - 1, 31);
+    MASK := UInt64(TBitUtilities.Asr32((i xor index) - 1, 31));
 
     for j := 0 to System.Pred(FE_LONGS) do
     begin
@@ -3883,7 +3889,7 @@ end;
 function TDefaultF2mLookupTable.LookupVar(index: Int32): IECPoint;
 var
   FE_LONGS, position, j: Int32;
-  x, y: TCryptoLibInt64Array;
+  x, y: TCryptoLibUInt64Array;
 begin
   FE_LONGS := (Fm_outer.m + 63) div 64;
   System.SetLength(x, FE_LONGS);

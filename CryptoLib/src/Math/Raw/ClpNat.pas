@@ -905,7 +905,7 @@ begin
     LXI := AX[LI];
     if LXI <> 0 then
     begin
-      Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros(LXI);
+      Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(LXI);
       Exit;
     end;
   end;
@@ -922,7 +922,7 @@ begin
     LXI := AX[AXOff + LI];
     if LXI <> 0 then
     begin
-      Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros(LXI);
+      Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(LXI);
       Exit;
     end;
   end;

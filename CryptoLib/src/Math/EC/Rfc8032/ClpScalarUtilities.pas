@@ -219,7 +219,7 @@ begin
   LSign := UInt32(TBitUtilities.Asr32(Int32(AX[LI]), 31));
   while (LI > 0) and (AX[LI] = LSign) do
     System.Dec(LI);
-  Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros(UInt32(Int32(AX[LI]) xor Int32(LSign)));
+  Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(UInt32(Int32(AX[LI]) xor Int32(LSign)));
 end;
 
 class function TScalarUtilities.GetBitLengthPositive(ALast: Int32; const AX: TCryptoLibUInt32Array): Int32;
@@ -229,7 +229,7 @@ begin
   LI := ALast;
   while (LI > 0) and (AX[LI] = 0) do
     System.Dec(LI);
-  Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros(UInt32(AX[LI]));
+  Result := LI * 32 + 32 - TBitUtilities.NumberOfLeadingZeros32(UInt32(AX[LI]));
 end;
 
 class function TScalarUtilities.LessThan(ALast: Int32; const AX: TCryptoLibUInt32Array;

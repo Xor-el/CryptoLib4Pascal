@@ -124,11 +124,14 @@ type
     class function RotateRight32(AValue: UInt32; AN: Int32): UInt32; static; inline;
     class function RotateRight64(AValue: UInt64; AN: Int32): UInt64; static; inline;
 
-    class function NumberOfLeadingZeros(AValue: UInt32): Int32; static;
+    class function NumberOfLeadingZeros32(AValue: UInt32): Int32; static;
+    class function NumberOfLeadingZeros64(AValue: UInt64): Int32; static;
 
-    class function NumberOfTrailingZeros(AValue: UInt32): Int32; static;
+    class function NumberOfTrailingZeros32(AValue: UInt32): Int32; static;
+    class function NumberOfTrailingZeros64(AValue: UInt64): Int32; static;
 
-    class function PopCount(AValue: UInt32): Int32; static;
+    class function PopCount32(AValue: UInt32): Int32; static;
+    class function PopCount64(AValue: UInt64): Int32; static;
   end;
 
 implementation
@@ -344,7 +347,7 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NumberOfLeadingZeros(AValue: UInt32): Int32;
+class function TBitUtilities.NumberOfLeadingZeros32(AValue: UInt32): Int32;
 {$IFNDEF FPC}
 var
   LN: UInt32;
@@ -391,7 +394,36 @@ begin
 {$ENDIF FPC}
 end;
 
-class function TBitUtilities.NumberOfTrailingZeros(AValue: UInt32): Int32;
+class function TBitUtilities.NumberOfLeadingZeros64(AValue: UInt64): Int32;
+{$IFNDEF FPC}
+var
+  LX: UInt32;
+  LN: Int32;
+{$ENDIF FPC}
+begin
+  if (AValue = 0) then
+  begin
+    Result := Int32(((not AValue) shr (63 - 6)) and (UInt64(1) shl 6));
+    Exit;
+  end;
+
+{$IFDEF FPC}
+  Result := Int32(BsrQWord(AValue) xor ((System.SizeOf(UInt64) * 8) - 1));
+  // also works:
+  // Result := Int32(((System.SizeOf(UInt64) * 8) - 1) - BsrQWord(AValue));
+{$ELSE}
+  LX := UInt32(AValue shr 32);
+  LN := 0;
+  if (LX = 0) then
+  begin
+    LN := 32;
+    LX := UInt32(AValue);
+  end;
+  Result := LN + NumberOfLeadingZeros32(LX);
+{$ENDIF FPC}
+end;
+
+class function TBitUtilities.NumberOfTrailingZeros32(AValue: UInt32): Int32;
 {$IFNDEF FPC}
 var
   LN: UInt32;
@@ -435,8 +467,58 @@ begin
 {$ENDIF FPC}
 end;
 
+class function TBitUtilities.NumberOfTrailingZeros64(AValue: UInt64): Int32;
+{$IFNDEF FPC}
+var
+  LN: UInt32;
+{$ENDIF FPC}
+begin
+  if (AValue = 0) then
+  begin
+    Result := Int32(((not AValue) shr (63 - 6)) and (UInt64(1) shl 6));
+    Exit;
+  end;
 
-class function TBitUtilities.PopCount(AValue: UInt32): Int32;
+{$IFDEF FPC}
+  Result := BsfQWord(AValue);
+{$ELSE}
+  LN := 0;
+
+  if ((AValue and UInt64($00000000FFFFFFFF)) = 0) then
+  begin
+    LN := LN + 32;
+    AValue := AValue shr 32;
+  end;
+
+  if ((AValue and UInt64($000000000000FFFF)) = 0) then
+  begin
+    LN := LN + 16;
+    AValue := AValue shr 16;
+  end;
+
+  if ((AValue and UInt64($00000000000000FF)) = 0) then
+  begin
+    LN := LN + 8;
+    AValue := AValue shr 8;
+  end;
+
+  if ((AValue and UInt64($000000000000000F)) = 0) then
+  begin
+    LN := LN + 4;
+    AValue := AValue shr 4;
+  end;
+
+  if ((AValue and UInt64($0000000000000003)) = 0) then
+  begin
+    LN := LN + 2;
+    AValue := AValue shr 2;
+  end;
+
+  Result := Int32(LN + (UInt32(AValue) and 1) xor 1);
+{$ENDIF FPC}
+end;
+
+class function TBitUtilities.PopCount32(AValue: UInt32): Int32;
 begin
 {$IFDEF FPC}
   Result := PopCnt(AValue);
@@ -447,6 +529,22 @@ begin
   AValue := AValue + (AValue shr 8);
   AValue := AValue + (AValue shr 16);
   AValue := AValue and UInt32($3F);
+  Result := Int32(AValue);
+{$ENDIF FPC}
+end;
+
+class function TBitUtilities.PopCount64(AValue: UInt64): Int32;
+begin
+{$IFDEF FPC}
+  Result := PopCnt(AValue);
+{$ELSE}
+  AValue := AValue - ((AValue shr 1) and UInt64($5555555555555555));
+  AValue := (AValue and UInt64($3333333333333333)) + ((AValue shr 2) and UInt64($3333333333333333));
+  AValue := (AValue + (AValue shr 4)) and UInt64($0F0F0F0F0F0F0F0F);
+  AValue := AValue + (AValue shr 8);
+  AValue := AValue + (AValue shr 16);
+  AValue := AValue + (AValue shr 32);
+  AValue := AValue and UInt64($7F);
   Result := Int32(AValue);
 {$ENDIF FPC}
 end;

@@ -423,7 +423,7 @@ begin
     // Optimization can only be used for values in the lower half of the table
     if ((n shl 2) < (1 shl width)) then
     begin
-      highest := 32 - TBitUtilities.NumberOfLeadingZeros(n);
+      highest := 32 - TBitUtilities.NumberOfLeadingZeros32(n);
 
       // TODO Get addition/doubling cost ratio from curve and compare to 'scale' to see if worth substituting?
       scale := width - highest;

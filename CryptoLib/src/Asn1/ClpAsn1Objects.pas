@@ -6594,7 +6594,7 @@ begin
     FContents[0] := 0;
     Exit;
   end;
-  LBits := 32 - TBitUtilities.NumberOfLeadingZeros(UInt32(ANamedBits));
+  LBits := 32 - TBitUtilities.NumberOfLeadingZeros32(UInt32(ANamedBits));
   LBytes := (LBits + 7) div 8;
   System.SetLength(LData, 1 + LBytes);
   for I := 1 to LBytes - 1 do

@@ -164,7 +164,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   SetLength(LT, 4);
@@ -223,7 +223,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   LClz := LBits - TNat.GetBitLength(LLen32, AX);
@@ -314,7 +314,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   SetLength(LT, 4);
@@ -356,7 +356,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros(AM[LLen32 - 1]);
+  LBits := (LLen32 shl 5) - TBitUtilities.NumberOfLeadingZeros32(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   LClz := LBits - TNat.GetBitLength(LLen32, AX);
@@ -584,7 +584,7 @@ begin
   begin
     // sentinel bit to count zeros only up to i.
     //LZeros := TBitUtilities.NumberOfTrailingZeros(UInt32(LG) or (-1 shl LI));
-    LZeros := TBitUtilities.NumberOfTrailingZeros(UInt32(LG) or (UInt32($FFFFFFFF) shl LI));
+    LZeros := TBitUtilities.NumberOfTrailingZeros32(UInt32(LG) or (UInt32($FFFFFFFF) shl LI));
 
     LG := TBitUtilities.Asr32(LG, LZeros);
     LU := LU shl LZeros;

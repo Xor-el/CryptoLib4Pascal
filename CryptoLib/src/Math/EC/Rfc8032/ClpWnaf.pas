@@ -77,7 +77,7 @@ begin
     while LJ < 16 do
     begin
       LWord16 := Int32(UInt32(LWord) shr (UInt32(LJ) and 31));
-      LSkip := TBitUtilities.NumberOfTrailingZeros(UInt32((LSign xor LWord16) or (1 shl 16)));
+      LSkip := TBitUtilities.NumberOfTrailingZeros32(UInt32((LSign xor LWord16) or (1 shl 16)));
       if LSkip > 0 then
       begin
         LJ := LJ + LSkip;

@@ -445,13 +445,13 @@ end;
 
 class function TBigInteger.PopCount(const AValue: UInt32): Int32;
 begin
-  Result := TBitUtilities.PopCount(AValue);
+  Result := TBitUtilities.PopCount32(AValue);
 end;
 
 class function TBigInteger.BitLen(const AValue: Byte): Int32;
 begin
   //Result := BitLengthTable[AValue];
-  Result := 32 - TBitUtilities.NumberOfLeadingZeros(AValue);
+  Result := 32 - TBitUtilities.NumberOfLeadingZeros32(AValue);
 end;
 
 class function TBigInteger.BitLen(const AValue: UInt32): Int32;
@@ -477,7 +477,7 @@ begin
     Exit;
   end;
   Result := BitLengthTable[AValue]; *)
-  Result := 32 - TBitUtilities.NumberOfLeadingZeros(AValue);
+  Result := 32 - TBitUtilities.NumberOfLeadingZeros32(AValue);
 end;
 
 class function TBigInteger.CreateUValueOf(const AValue: UInt32): TBigInteger;
@@ -2667,7 +2667,7 @@ begin
     LOffset := LOffset + 32;
   end;
 
-  LOffset := LOffset + TBitUtilities.NumberOfTrailingZeros(LWord);
+  LOffset := LOffset + TBitUtilities.NumberOfTrailingZeros32(LWord);
  (*
   while (LWord and $FF) = 0 do
   begin
@@ -2808,7 +2808,7 @@ begin
     LMult := LMult shr 1;
     System.Inc(LZeros);
   end; *)
-  LTZ := TBitUtilities.NumberOfTrailingZeros(LMult);
+  LTZ := TBitUtilities.NumberOfTrailingZeros32(LMult);
   LMult := LMult shr LTZ;
   LZeros := LZeros + UInt32(LTZ);
   // Combine multiplier and zeros: mult | (zeros << 8)
