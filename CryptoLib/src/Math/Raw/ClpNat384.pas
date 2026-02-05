@@ -22,12 +22,8 @@ unit ClpNat384;
 interface
 
 uses
-  SysUtils,
   ClpNat,
   ClpNat192,
-  ClpPack,
-  ClpBigInteger,
-  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type

@@ -22,7 +22,6 @@ unit ClpIX509Crl;
 interface
 
 uses
-  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIX509CrlEntry,
   ClpIX509Certificate,

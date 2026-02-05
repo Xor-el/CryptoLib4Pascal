@@ -22,8 +22,6 @@ unit ClpIX509V2AttributeCertificate;
 interface
 
 uses
-  SysUtils,
-  ClpIAsn1Core,
   ClpIX509Asn1Objects,
   ClpIX509Extension,
   ClpIAsymmetricKeyParameter,

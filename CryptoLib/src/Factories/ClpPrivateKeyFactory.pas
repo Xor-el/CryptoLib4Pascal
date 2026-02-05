@@ -46,7 +46,6 @@ uses
   ClpIDsaParameters,
   ClpIX509Asn1Objects,
   ClpIX509DsaAsn1Objects,
-  ClpX509Asn1Objects,
   ClpX509DsaAsn1Objects,
   ClpSecECAsn1Objects,
   ClpISecECAsn1Objects,

@@ -28,7 +28,6 @@ uses
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
-  ClpIX509Extension,
   ClpIX509Attribute,
   ClpIX509V2AttributeCertificate,
   ClpIAsymmetricKeyParameter,

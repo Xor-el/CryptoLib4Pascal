@@ -30,7 +30,6 @@ uses
   ClpGlvTypeBParameters,
   ClpIGlvTypeBEndomorphism,
   ClpSecObjectIdentifiers,
-  ClpCryptLibObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpECC,

@@ -24,7 +24,6 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpIBufferedBlockCipher,
   ClpICtsBlockCipher,
   ClpICbcBlockCipher,
   ClpICfbBlockCipher,

@@ -22,8 +22,7 @@ unit ClpIIesWithCipherParameters;
 interface
 
 uses
-  ClpIIESParameters,
-  ClpCryptoLibTypes;
+  ClpIIESParameters;
 
 type
 

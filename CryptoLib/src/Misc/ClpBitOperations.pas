@@ -361,7 +361,6 @@ begin
 {$IFDEF FPC}
   Result := BsrDWord(AValue) xor ((System.SizeOf(UInt32) * 8) - 1);
   // this also works
-  //Result := ((SizeOf(UInt32) * 8) - 1) - BsrDWord(AValue);
   // Result := ((System.SizeOf(UInt32) * 8) - 1) - BsrDWord(AValue);
 {$ELSE}
   LN := 1;

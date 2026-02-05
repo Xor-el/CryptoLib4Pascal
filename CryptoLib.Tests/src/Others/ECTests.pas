@@ -54,7 +54,6 @@ uses
   ClpIECKeyGenerationParameters,
   ClpECKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPair,
-  ClpCustomNamedCurves,
   ClpECC,
   ClpIECC,
   ClpBigInteger,

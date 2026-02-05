@@ -24,8 +24,7 @@ interface
 uses
   ClpBigInteger,
   ClpIDsaEncoding,
-  ClpIAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpIAsn1Objects;
 
 type
   IStandardDsaEncoding = interface(IDsaEncoding)

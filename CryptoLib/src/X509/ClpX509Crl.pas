@@ -42,7 +42,6 @@ uses
   ClpX509SignatureUtilities,
   ClpX509Utilities,
   ClpAsn1VerifierFactory,
-  ClpAsn1VerifierFactoryProvider,
   ClpAsn1Dumper,
   ClpAsn1Core,
   ClpAsn1Objects,

@@ -28,7 +28,6 @@ uses
   ClpStreams,
   ClpCryptoLibTypes,
   ClpIAsn1Core,
-  ClpIAsn1Objects,
   ClpIAsn1Encodings,
   ClpBitOperations,
   ClpAsn1Tags,

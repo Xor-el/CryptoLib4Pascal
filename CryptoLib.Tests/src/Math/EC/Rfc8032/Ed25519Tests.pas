@@ -35,10 +35,7 @@ uses
   ClpEd25519,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpEncoders,
-  ClpArrayUtilities,
   ClpConverters,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type

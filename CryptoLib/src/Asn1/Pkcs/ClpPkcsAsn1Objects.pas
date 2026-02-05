@@ -23,7 +23,6 @@ interface
 
 uses
   SysUtils,
-  ClpBigInteger,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Core,
@@ -33,7 +32,6 @@ uses
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
   ClpPkcsObjectIdentifiers,
-  ClpOiwObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpAsn1Utilities,
   ClpPlatformUtilities;

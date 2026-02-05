@@ -316,9 +316,6 @@ type
 
 implementation
 
-uses
-  ClpFiniteFields;
-
 { TX9FieldID }
 
 class function TX9FieldID.GetInstance(AObj: TObject): IX9FieldID;

@@ -23,10 +23,8 @@ interface
 
 uses
   SysUtils,
-  ClpNat,
   ClpPack,
   ClpBigInteger,
-  ClpBitOperations,
   ClpCryptoLibTypes;
 
 type

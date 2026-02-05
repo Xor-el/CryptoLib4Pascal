@@ -60,10 +60,7 @@ uses
   ClpISigner,
   ClpISecureRandom,
   ClpIAsn1Objects,
-  ClpStandardDsaEncoding,
   ClpPlainDsaEncoding,
-  ClpIDsaEncoding,
-  ClpIStandardDsaEncoding,
   ClpIPlainDsaEncoding,
   ClpRsaDigestSigner,
   ClpPssSigner,
@@ -76,7 +73,6 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpStringUtilities,
   ClpCryptoLibTypes,
-  ClpPkcsAsn1Objects,
   ClpPkcsRsaAsn1Objects,
   ClpX509Asn1Objects;
 

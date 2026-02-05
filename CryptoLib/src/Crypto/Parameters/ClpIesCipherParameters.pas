@@ -24,8 +24,7 @@ interface
 uses
   ClpICipherParameters,
   ClpIIESParameters,
-  ClpIIesCipherParameters,
-  ClpCryptoLibTypes;
+  ClpIIesCipherParameters;
 
 type
   TIesCipherParameters = class sealed(TInterfacedObject, IIesCipherParameters,

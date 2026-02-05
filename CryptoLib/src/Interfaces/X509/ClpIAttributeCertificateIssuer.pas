@@ -23,7 +23,6 @@ interface
 
 uses
   ClpIAsn1Core,
-  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIX509Certificate,
   ClpCryptoLibTypes;

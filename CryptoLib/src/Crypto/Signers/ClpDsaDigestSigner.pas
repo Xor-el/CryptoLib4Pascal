@@ -22,7 +22,6 @@ unit ClpDsaDigestSigner;
 interface
 
 uses
-
   SysUtils,
   ClpIDsa,
   ClpIDigest,
@@ -30,10 +29,8 @@ uses
   ClpCryptoLibTypes,
   ClpParameterUtilities,
   ClpStandardDsaEncoding,
-  ClpPlainDsaEncoding,
   ClpIDsaEncoding,
   ClpIStandardDsaEncoding,
-  ClpIPlainDsaEncoding,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpISigner,

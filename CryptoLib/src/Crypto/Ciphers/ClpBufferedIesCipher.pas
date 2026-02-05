@@ -24,8 +24,6 @@ interface
 uses
   Math,
   SysUtils,
-  ClpIBufferedCipher,
-  ClpIBufferedCipherBase,
   ClpICipherParameters,
   ClpIIESEngine,
   ClpIIESParameters,

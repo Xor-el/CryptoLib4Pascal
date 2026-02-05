@@ -26,8 +26,6 @@ uses
   SyncObjs,
   SysUtils,
   Generics.Collections,
-  ClpNat,
-  ClpMod,
   ClpArrayUtilities,
   ClpIPreCompCallback,
   ClpCryptoLibTypes,

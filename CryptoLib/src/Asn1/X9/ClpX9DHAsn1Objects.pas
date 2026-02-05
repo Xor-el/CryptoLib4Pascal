@@ -28,8 +28,6 @@ uses
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpIX9DHAsn1Objects,
-  ClpIX9ECAsn1Objects,
-  ClpX9ECAsn1Objects,
   ClpCryptoLibTypes,
   ClpAsn1Utilities;
 

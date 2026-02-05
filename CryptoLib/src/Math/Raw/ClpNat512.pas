@@ -22,7 +22,6 @@ unit ClpNat512;
 interface
 
 uses
-  SysUtils,
   ClpNat,
   ClpNat256,
   ClpCryptoLibTypes;

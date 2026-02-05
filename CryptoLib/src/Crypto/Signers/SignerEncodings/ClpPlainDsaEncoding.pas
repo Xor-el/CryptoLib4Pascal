@@ -26,7 +26,6 @@ uses
   ClpBigInteger,
   ClpIDsaEncoding,
   ClpIPlainDsaEncoding,
-  ClpIAsn1Objects,
   ClpArrayUtilities,
   ClpBigIntegers,
   ClpCryptoLibTypes;

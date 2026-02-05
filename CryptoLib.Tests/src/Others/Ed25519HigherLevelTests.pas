@@ -49,7 +49,6 @@ uses
   ClpISecureRandom,
   ClpICipherParameters,
   ClpArrayUtilities,
-  ClpEncoders,
   ClpStringUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

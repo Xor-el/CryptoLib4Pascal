@@ -26,7 +26,6 @@ uses
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpIAsn1Core,
-  ClpIAsn1Encodings,
   ClpIAsn1Parsers;
 
 type

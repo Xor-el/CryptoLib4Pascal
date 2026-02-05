@@ -22,10 +22,8 @@ unit ClpIX509DsaAsn1Objects;
 interface
 
 uses
-  ClpIAsn1Objects,
   ClpIAsn1Core,
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
   /// <summary>

@@ -32,10 +32,8 @@ uses
   ClpX509Asn1Objects,
   ClpIX509Extension,
   ClpX509Extension,
-  ClpRfc5280Asn1Utilities,
   ClpCryptoLibTypes,
   ClpAsn1Comparers,
-  ClpCryptoLibComparers,
   ClpIX509Asn1Generators;
 
 type

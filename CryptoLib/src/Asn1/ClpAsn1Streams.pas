@@ -29,7 +29,6 @@ uses
   ClpIAsn1Encodings,
   ClpIAsn1Objects,
   ClpIAsn1Parsers,
-  ClpAsn1Encodings,
   ClpAsn1Tags,
   ClpBitOperations,
   ClpPlatformUtilities,

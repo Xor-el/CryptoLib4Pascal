@@ -37,8 +37,6 @@ uses
   ClpIDsaParameters,
   ClpDsaParameters,
   ClpIECC,
-  ClpIX509Asn1Objects,
-  ClpX509Asn1Objects,
   ClpECC,
   ClpECDomainParameters,
   ClpIECDomainParameters,

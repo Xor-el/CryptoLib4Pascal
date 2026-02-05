@@ -25,8 +25,7 @@ uses
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpIX509Asn1Objects,
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
   /// <summary>

@@ -40,8 +40,6 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpArrayUtilities,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
