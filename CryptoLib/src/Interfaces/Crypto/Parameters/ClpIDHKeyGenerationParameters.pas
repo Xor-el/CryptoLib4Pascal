@@ -31,7 +31,7 @@ type
 
     function GetParameters: IDHParameters;
 
-    property parameters: IDHParameters read GetParameters;
+    property Parameters: IDHParameters read GetParameters;
 
   end;
 

@@ -34,7 +34,7 @@ type
     function GetAlgorithmOid: IDerObjectIdentifier;
 
     function Equals(const other: IDHKeyParameters): Boolean; overload;
-    property parameters: IDHParameters read GetParameters;
+    property Parameters: IDHParameters read GetParameters;
     property AlgorithmOid: IDerObjectIdentifier read GetAlgorithmOid;
 
   end;

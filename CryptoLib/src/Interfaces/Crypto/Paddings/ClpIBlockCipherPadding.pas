@@ -33,10 +33,10 @@ type
     /// <summary>
     /// Initialise the padder.
     /// </summary>
-    /// <param name="random">
+    /// <param name="ARandom">
     /// param parameters, if any required.
     /// </param>
-    procedure Init(const random: ISecureRandom);
+    procedure Init(const ARandom: ISecureRandom);
 
     /// <returns>
     /// return the name of the algorithm the cipher implements.
@@ -52,21 +52,21 @@ type
     /// add the pad bytes to the passed in block, returning the number of
     /// bytes added.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// input block to pad
     /// </param>
-    /// <param name="inOff">
+    /// <param name="AInOff">
     /// offset to start the padding from in the block
     /// </param>
     /// <returns>
     /// returns number of bytes added
     /// </returns>
-    function AddPadding(const input: TCryptoLibByteArray; inOff: Int32): Int32;
+    function AddPadding(const AInput: TCryptoLibByteArray; AInOff: Int32): Int32;
 
     /// <summary>
     /// return the number of pad bytes present in the block.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// block to count pad bytes in
     /// </param>
     /// <returns>
@@ -75,7 +75,7 @@ type
     /// <exception cref="EInvalidCipherTextCryptoLibException">
     /// if the padding is badly formed or invalid.
     /// </exception>
-    function PadCount(const input: TCryptoLibByteArray): Int32;
+    function PadCount(const AInput: TCryptoLibByteArray): Int32;
 
   end;
 

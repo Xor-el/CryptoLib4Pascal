@@ -29,11 +29,14 @@ uses
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpParameterUtilities,
-  ClpSignersEncodings,
+  ClpStandardDsaEncoding,
+  ClpPlainDsaEncoding,
+  ClpIDsaEncoding,
+  ClpIStandardDsaEncoding,
+  ClpIPlainDsaEncoding,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpISigner,
-  ClpISignersEncodings,
   ClpIDsaDigestSigner;
 
 resourcestring

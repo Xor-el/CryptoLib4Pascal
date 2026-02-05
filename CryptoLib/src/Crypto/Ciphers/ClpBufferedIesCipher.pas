@@ -83,7 +83,7 @@ const
 constructor TBufferedIesCipher.Create(const AEngine: IIesEngine);
 begin
   Inherited Create();
-  if AEngine = Nil then
+  if AEngine = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SEngineNil);
   FEngine := AEngine;
   FBufferLen := 0;
@@ -97,7 +97,7 @@ var
   LIesParams: IIesParameters;
 begin
   FForEncryption := AForEncryption;
-  if AParameters = Nil then
+  if AParameters = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SIesCipherParametersRequired);
   if not Supports(AParameters, IIesCipherParameters, LParams) then
     raise EArgumentCryptoLibException.CreateRes(@SIesCipherParametersRequired);
@@ -122,7 +122,7 @@ function TBufferedIesCipher.GetOutputSize(AInputLen: Int32): Int32;
 var
   LBaseLen: Int32;
 begin
-  if FEngine = Nil then
+  if FEngine = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SCipherNotInitialised);
   LBaseLen := AInputLen + FBufferLen;
   if FForEncryption then
@@ -144,7 +144,7 @@ begin
     System.SetLength(FBuffer, Math.Max(256, FBufferLen * 2));
   FBuffer[FBufferLen] := AInput;
   System.Inc(FBufferLen);
-  Result := Nil;
+  Result := nil;
 end;
 
 function TBufferedIesCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
@@ -152,14 +152,14 @@ function TBufferedIesCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
 var
   LNewLen: Int32;
 begin
-  if AInput = Nil then
+  if AInput = nil then
     raise EArgumentNilCryptoLibException.Create('input');
   if (AInOff < 0) or (ALength < 0) or
     (AInOff + ALength > System.Length(AInput)) then
     raise EArgumentCryptoLibException.Create('invalid offset/length');
   if ALength = 0 then
   begin
-    Result := Nil;
+    Result := nil;
     Exit;
   end;
   LNewLen := FBufferLen + ALength;
@@ -167,7 +167,7 @@ begin
     System.SetLength(FBuffer, LNewLen);
   System.Move(AInput[AInOff], FBuffer[FBufferLen], ALength * System.SizeOf(Byte));
   FBufferLen := LNewLen;
-  Result := Nil;
+  Result := nil;
 end;
 
 function TBufferedIesCipher.DoFinal: TCryptoLibByteArray;

@@ -64,7 +64,7 @@ end;
 procedure TX25519KeyPairGenerator.Init(const parameters
   : IKeyGenerationParameters);
 begin
-  FRandom := parameters.random;
+  FRandom := parameters.Random;
 end;
 
 end.

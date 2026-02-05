@@ -80,7 +80,7 @@ var
 begin
 
   helper := TDHKeyGeneratorHelper.Instance;
-  dhp := Fparam.parameters;
+  dhp := Fparam.Parameters;
 
   x := helper.CalculatePrivate(dhp, Fparam.Random);
   y := helper.CalculatePublic(dhp, x);

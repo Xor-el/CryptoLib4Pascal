@@ -97,8 +97,8 @@ var
   P, pubPoint: IECPoint;
 begin
   pub := pubKey as IECPublicKeyParameters;
-  params := FprivKey.parameters;
-  if (not(params.Equals(pub.parameters))) then
+  params := FprivKey.Parameters;
+  if (not(params.Equals(pub.Parameters))) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SWrongDomainParameter);
 
@@ -128,7 +128,7 @@ end;
 
 function TECDHCBasicAgreement.GetFieldSize: Int32;
 begin
-  result := (FprivKey.parameters.Curve.FieldSize + 7) div 8;
+  result := (FprivKey.Parameters.Curve.FieldSize + 7) div 8;
 end;
 
 procedure TECDHCBasicAgreement.Init(const parameters: ICipherParameters);
@@ -138,7 +138,7 @@ begin
   Lparameters := parameters;
   if Supports(Lparameters, IParametersWithRandom) then
   begin
-    Lparameters := (Lparameters as IParametersWithRandom).parameters;
+    Lparameters := (Lparameters as IParametersWithRandom).Parameters;
   end;
 
   FprivKey := Lparameters as IECPrivateKeyParameters;

@@ -40,13 +40,13 @@ type
     /// <summary>
     /// Initialise the cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// Initialise for encryption if true, for decryption if false.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// The key or other data required by the cipher.
     /// </param>
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
 
     /// <summary>
     /// The maximum size, in bytes, an input block may be.
@@ -61,12 +61,12 @@ type
     /// <summary>
     /// Process a block.
     /// </summary>
-    /// <param name="inBuf">The input buffer.</param>
-    /// <param name="inOff">The offset into inBuf that the input block begins.</param>
-    /// <param name="inLen">The length of the input block.</param>
+    /// <param name="AInBuf">The input buffer.</param>
+    /// <param name="AInOff">The offset into inBuf that the input block begins.</param>
+    /// <param name="AInLen">The length of the input block.</param>
     /// <returns>The processed block.</returns>
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;

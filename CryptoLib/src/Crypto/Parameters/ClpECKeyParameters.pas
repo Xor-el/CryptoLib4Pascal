@@ -138,7 +138,7 @@ begin
     result := false;
     Exit;
   end;
-  result := Fparameters.Equals(other.parameters) and (inherited Equals(other));
+  result := Fparameters.Equals(other.Parameters) and (inherited Equals(other));
 end;
 
 function TECKeyParameters.GetAlgorithmName: String;

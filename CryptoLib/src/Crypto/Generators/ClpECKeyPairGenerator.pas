@@ -165,7 +165,7 @@ var
   ec: IECDomainParameters;
   q: IECPoint;
 begin
-  ec := privKey.parameters;
+  ec := privKey.Parameters;
   q := (TFixedPointCombMultiplier.Create() as IFixedPointCombMultiplier)
     .Multiply(ec.G, privKey.d);
 
@@ -209,7 +209,7 @@ begin
       ecps.H, ecps.GetSeed());
   end;
 
-  Frandom := parameters.random;
+  Frandom := parameters.Random;
 
   if (Frandom = Nil) then
   begin

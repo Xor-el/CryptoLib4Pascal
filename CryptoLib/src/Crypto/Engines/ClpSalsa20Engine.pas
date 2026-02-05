@@ -220,7 +220,7 @@ begin
       [AlgorithmName, NonceSize]);
   end;
 
-  keyParam := ivParams.parameters;
+  keyParam := ivParams.Parameters;
   if (keyParam = Nil) then
   begin
     if (not FInitialised) then

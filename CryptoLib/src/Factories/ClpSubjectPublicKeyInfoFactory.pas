@@ -91,7 +91,7 @@ begin
 
   if Supports(APublicKey, IDsaPublicKeyParameters, LDsaKey) then
   begin
-    LKp := LDsaKey.parameters;
+    LKp := LDsaKey.Parameters;
     if LKp = nil then
       raise EArgumentCryptoLibException.Create('DSA public key requires parameters.');
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsa,

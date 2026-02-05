@@ -98,7 +98,7 @@ begin
     Exit;
   end;
 
-  result := parameters.Equals(other.parameters) and (Inherited Equals(other));
+  result := Parameters.Equals(other.Parameters) and (Inherited Equals(other));
 end;
 
 function TDHKeyParameters.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

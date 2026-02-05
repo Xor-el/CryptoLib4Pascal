@@ -117,7 +117,7 @@ begin
       (@SMessageNotInitialized);
   end;
 
-  if (not(pub.parameters.Equals(FdhParams))) then
+  if (not(pub.Parameters.Equals(FdhParams))) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWrongParameter);
   end;
@@ -167,7 +167,7 @@ begin
   if Supports(parameters, IParametersWithRandom, rParam) then
   begin
     Frandom := rParam.Random;
-    kParam := rParam.parameters as IAsymmetricKeyParameter;
+    kParam := rParam.Parameters as IAsymmetricKeyParameter;
   end
   else
   begin
@@ -181,7 +181,7 @@ begin
   end;
 
   Fkey := kParam as IDHPrivateKeyParameters;
-  FdhParams := Fkey.parameters;
+  FdhParams := Fkey.Parameters;
 end;
 
 end.

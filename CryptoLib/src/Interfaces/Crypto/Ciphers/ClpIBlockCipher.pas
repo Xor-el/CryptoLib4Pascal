@@ -35,9 +35,9 @@ type
     property AlgorithmName: String read GetAlgorithmName;
 
     /// <summary>Initialise the cipher.</summary>
-    /// <param name="forEncryption">Initialise for encryption if true, for decryption if false.</param>
-    /// <param name="parameters">The key or other data required by the cipher.</param>
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
+    /// <param name="AForEncryption">Initialise for encryption if true, for decryption if false.</param>
+    /// <param name="AParameters">The key or other data required by the cipher.</param>
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
 
     /// <returns>The block size for this cipher, in bytes.</returns>
     function GetBlockSize(): Int32;
@@ -47,14 +47,14 @@ type
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
     /// <summary>Process a block.</summary>
-    /// <param name="inBuf">The input buffer.</param>
-    /// <param name="inOff">The offset into <paramref>inBuf</paramref> that the input block begins.</param>
-    /// <param name="outBuf">The output buffer.</param>
-    /// <param name="outOff">The offset into <paramref>outBuf</paramref> to write the output block.</param>
+    /// <param name="AInBuf">The input buffer.</param>
+    /// <param name="AInOff">The offset into <paramref>inBuf</paramref> that the input block begins.</param>
+    /// <param name="AOutBuf">The output buffer.</param>
+    /// <param name="AOutOff">The offset into <paramref>outBuf</paramref> to write the output block.</param>
     /// <exception cref="DataLengthException">If input block is wrong size, or outBuf too small.</exception>
     /// <returns>The number of bytes processed and produced.</returns>
-    function ProcessBlock(const inBuf: TCryptoLibByteArray; inOff: Int32;
-      const outBuf: TCryptoLibByteArray; outOff: Int32): Int32;
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
     /// <summary>
     /// Reset the cipher to the same state as it was after the last init (if there was one).

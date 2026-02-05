@@ -33,9 +33,9 @@ type
     function GetRandom: ISecureRandom;
     function GetParameters: ICipherParameters;
 
-    property random: ISecureRandom read GetRandom;
+    property Random: ISecureRandom read GetRandom;
 
-    property parameters: ICipherParameters read GetParameters;
+    property Parameters: ICipherParameters read GetParameters;
 
   end;
 

@@ -611,7 +611,7 @@ begin
   FN := n;
   Fcertainty := params.certainty;
   Fiterations := Max(GetMinimumIterations(L), (Fcertainty + 1) div 2);
-  Frandom := params.random;
+  Frandom := params.Random;
   Fuse186_3 := True;
   FusageIndex := params.UsageIndex;
 end;

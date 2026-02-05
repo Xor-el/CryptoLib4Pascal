@@ -42,7 +42,7 @@ type
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
-    property parameters: IDsaParameters read GetParameters;
+    property Parameters: IDsaParameters read GetParameters;
 
   end;
 
@@ -71,7 +71,7 @@ begin
     Exit;
   end;
 
-  result := parameters.Equals(other.parameters) and (Inherited Equals(other));
+  result := Parameters.Equals(other.Parameters) and (Inherited Equals(other));
 end;
 
 function TDsaKeyParameters.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -79,9 +79,9 @@ function TDsaKeyParameters.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 begin
   result := Inherited GetHashCode();
 
-  if (parameters <> Nil) then
+  if (Parameters <> Nil) then
   begin
-    result := result xor parameters.GetHashCode();
+    result := result xor Parameters.GetHashCode();
   end;
 
 end;

@@ -91,9 +91,9 @@ var
   dsaParams: IDsaParameters;
   x, y: TBigInteger;
 begin
-  dsaParams := Fparam.parameters;
+  dsaParams := Fparam.Parameters;
 
-  x := GeneratePrivateKey(dsaParams.q, Fparam.random);
+  x := GeneratePrivateKey(dsaParams.q, Fparam.Random);
   y := CalculatePublicKey(dsaParams.p, dsaParams.g, x);
 
   result := TAsymmetricCipherKeyPair.Create(TDsaPublicKeyParameters.Create(y,

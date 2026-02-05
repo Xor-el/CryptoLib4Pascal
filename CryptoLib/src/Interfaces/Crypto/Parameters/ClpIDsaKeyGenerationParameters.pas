@@ -31,7 +31,7 @@ type
 
     function GetParameters: IDsaParameters;
 
-    property parameters: IDsaParameters read GetParameters;
+    property Parameters: IDsaParameters read GetParameters;
 
   end;
 

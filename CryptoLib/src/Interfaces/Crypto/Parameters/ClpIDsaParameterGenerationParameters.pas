@@ -41,7 +41,7 @@ type
     property certainty: Int32 read GetCertainty;
 
     function GetRandom: ISecureRandom;
-    property random: ISecureRandom read GetRandom;
+    property Random: ISecureRandom read GetRandom;
   end;
 
 implementation

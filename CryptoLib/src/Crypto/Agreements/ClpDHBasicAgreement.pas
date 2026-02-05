@@ -98,7 +98,7 @@ begin
 
   pub := pubKey as IDHPublicKeyParameters;
 
-  if (not(pub.parameters.Equals(FdhParams))) then
+  if (not(pub.Parameters.Equals(FdhParams))) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWrongParameter);
   end;
@@ -123,7 +123,7 @@ end;
 
 function TDHBasicAgreement.GetFieldSize: Int32;
 begin
-  result := (Fkey.parameters.p.BitLength + 7) div 8;
+  result := (Fkey.Parameters.p.BitLength + 7) div 8;
 end;
 
 procedure TDHBasicAgreement.Init(const parameters: ICipherParameters);
@@ -133,7 +133,7 @@ begin
   Lparameters := parameters;
   if Supports(Lparameters, IParametersWithRandom) then
   begin
-    Lparameters := (Lparameters as IParametersWithRandom).parameters;
+    Lparameters := (Lparameters as IParametersWithRandom).Parameters;
   end;
 
   if (not Supports(Lparameters, IDHPrivateKeyParameters)) then
@@ -142,7 +142,7 @@ begin
   end;
 
   Fkey := Lparameters as IDHPrivateKeyParameters;
-  FdhParams := Fkey.parameters;
+  FdhParams := Fkey.Parameters;
 end;
 
 end.
