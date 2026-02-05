@@ -22,119 +22,81 @@ unit ClpDHKeyGeneratorHelper;
 interface
 
 uses
-
   ClpISecureRandom,
   ClpBitOperations,
   ClpBigInteger,
   ClpBigIntegers,
   ClpECCompUtilities,
-  ClpIDHParameters,
-  ClpIDHKeyGeneratorHelper;
+  ClpIDHParameters;
 
 type
-  TDHKeyGeneratorHelper = class sealed(TInterfacedObject, IDHKeyGeneratorHelper)
-
-  strict private
-  class var
-
-    FIsBooted: Boolean;
-    FInstance: IDHKeyGeneratorHelper;
-
-    class function GetInstance: IDHKeyGeneratorHelper; static; inline;
-
-    class procedure Boot(); static;
-    class constructor DHKeyGeneratorHelper();
+  TDHKeyGeneratorHelper = class sealed(TObject)
   public
-
-    function CalculatePrivate(const dhParams: IDHParameters;
-      const random: ISecureRandom): TBigInteger;
-
-    function CalculatePublic(const dhParams: IDHParameters;
-      const x: TBigInteger): TBigInteger;
-
-    class property Instance: IDHKeyGeneratorHelper read GetInstance;
-
+    class function CalculatePrivate(const ADHParams: IDHParameters;
+      const ARandom: ISecureRandom): TBigInteger; static;
+    class function CalculatePublic(const ADHParams: IDHParameters;
+      const AX: TBigInteger): TBigInteger; static;
   end;
 
 implementation
 
 { TDHKeyGeneratorHelper }
 
-class procedure TDHKeyGeneratorHelper.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FInstance := TDHKeyGeneratorHelper.Create();
-
-    FIsBooted := True;
-  end;
-end;
-
-function TDHKeyGeneratorHelper.CalculatePrivate(const dhParams: IDHParameters;
-  const random: ISecureRandom): TBigInteger;
+class function TDHKeyGeneratorHelper.CalculatePrivate(const ADHParams: IDHParameters;
+  const ARandom: ISecureRandom): TBigInteger;
 var
-  limit, minWeight, m: Int32;
-  x, min, q, max: TBigInteger;
+  LLimit, LMinWeight, LM: Int32;
+  LX, LMin, LQ, LMax: TBigInteger;
 begin
   Result := TBigInteger.GetDefault;
-  limit := dhParams.L;
+  LLimit := ADHParams.L;
 
-  if (limit <> 0) then
+  if LLimit <> 0 then
   begin
-    minWeight := TBitOperations.Asr32(limit, 2);
+    LMinWeight := TBitOperations.Asr32(LLimit, 2);
 
     while True do
     begin
-      x := TBigInteger.Create(limit, random).SetBit(limit - 1);
-      if (TWNafUtilities.GetNafWeight(x) >= minWeight) then
+      LX := TBigInteger.Create(LLimit, ARandom).SetBit(LLimit - 1);
+      if TWNafUtilities.GetNafWeight(LX) >= LMinWeight then
       begin
-        Result := x;
+        Result := LX;
         Exit;
       end;
     end;
   end;
 
-  min := TBigInteger.Two;
-  m := dhParams.m;
-  if (m <> 0) then
+  LMin := TBigInteger.Two;
+  LM := ADHParams.M;
+  if LM <> 0 then
   begin
-    min := TBigInteger.One.ShiftLeft(m - 1);
+    LMin := TBigInteger.One.ShiftLeft(LM - 1);
   end;
 
-  q := dhParams.q;
-  if (not(q.IsInitialized)) then
+  LQ := ADHParams.Q;
+  if not LQ.IsInitialized then
   begin
-    q := dhParams.P;
+    LQ := ADHParams.P;
   end;
-  max := q.Subtract(TBigInteger.Two);
+  LMax := LQ.Subtract(TBigInteger.Two);
 
-  minWeight := TBitOperations.Asr32(max.BitLength, 2);
+  LMinWeight := TBitOperations.Asr32(LMax.BitLength, 2);
 
   while True do
   begin
-    x := TBigIntegers.CreateRandomInRange(min, max, random);
-    if (TWNafUtilities.GetNafWeight(x) >= minWeight) then
+    LX := TBigIntegers.CreateRandomInRange(LMin, LMax, ARandom);
+    if TWNafUtilities.GetNafWeight(LX) >= LMinWeight then
     begin
-      Result := x;
+      Result := LX;
       Exit;
     end;
   end;
 end;
 
-function TDHKeyGeneratorHelper.CalculatePublic(const dhParams: IDHParameters;
-  const x: TBigInteger): TBigInteger;
+class function TDHKeyGeneratorHelper.CalculatePublic(const ADHParams: IDHParameters;
+  const AX: TBigInteger): TBigInteger;
 begin
-  Result := dhParams.G.ModPow(x, dhParams.P);
-end;
-
-class constructor TDHKeyGeneratorHelper.DHKeyGeneratorHelper;
-begin
-  TDHKeyGeneratorHelper.Boot();
-end;
-
-class function TDHKeyGeneratorHelper.GetInstance: IDHKeyGeneratorHelper;
-begin
-  Result := FInstance;
+  Result := ADHParams.G.ModPow(AX, ADHParams.P);
 end;
 
 end.

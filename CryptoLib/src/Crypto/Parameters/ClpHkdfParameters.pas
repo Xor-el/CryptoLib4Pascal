@@ -39,11 +39,11 @@ type
 
   strict private
   var
-    Fikm, Fsalt, Finfo: TCryptoLibByteArray;
-    FskipExpand: Boolean;
+    FIkm, FSalt, FInfo: TCryptoLibByteArray;
+    FSkipExpand: Boolean;
 
-    constructor Create(const ikm: TCryptoLibByteArray; skip: Boolean;
-      const salt, info: TCryptoLibByteArray); overload;
+    constructor Create(const AIkm: TCryptoLibByteArray; ASkip: Boolean;
+      const ASalt, AInfo: TCryptoLibByteArray); overload;
 
   strict protected
 
@@ -70,7 +70,7 @@ type
     /// <param name="info">
     /// the info to use, may be null for an info field of zero bytes
     /// </param>
-    constructor Create(const ikm, salt, info: TCryptoLibByteArray); overload;
+    constructor Create(const AIkm, ASalt, AInfo: TCryptoLibByteArray); overload;
 
     /// <summary>
     /// Returns the input keying material or seed.
@@ -119,10 +119,10 @@ type
     /// <returns>
     /// that makes the implementation skip step 1
     /// </returns>
-    class function SkipExtractParameters(const ikm, info: TCryptoLibByteArray)
+    class function SkipExtractParameters(const AIkm, AInfo: TCryptoLibByteArray)
       : IHkdfParameters; static; inline;
 
-    class function DefaultParameters(const ikm: TCryptoLibByteArray)
+    class function DefaultParameters(const AIkm: TCryptoLibByteArray)
       : IHkdfParameters; static; inline;
 
   end;
@@ -131,69 +131,69 @@ implementation
 
 { THkdfParameters }
 
-constructor THkdfParameters.Create(const ikm: TCryptoLibByteArray;
-  skip: Boolean; const salt, info: TCryptoLibByteArray);
+constructor THkdfParameters.Create(const AIkm: TCryptoLibByteArray;
+  ASkip: Boolean; const ASalt, AInfo: TCryptoLibByteArray);
 begin
-  Inherited Create();
+  inherited Create();
 
-  if (ikm = Nil) then
+  if (AIkm = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SIKMNil);
   end;
 
-  Fikm := System.Copy(ikm);
-  FskipExpand := skip;
+  FIkm := System.Copy(AIkm);
+  FSkipExpand := ASkip;
 
-  if ((salt = Nil) or (System.Length(salt) = 0)) then
+  if ((ASalt = nil) or (System.Length(ASalt) = 0)) then
   begin
-    Fsalt := Nil;
+    FSalt := nil;
   end
   else
   begin
-    Fsalt := System.Copy(salt);
+    FSalt := System.Copy(ASalt);
   end;
 
-  if info <> Nil then
+  if AInfo <> nil then
   begin
-    Finfo := System.Copy(info);
+    FInfo := System.Copy(AInfo);
   end;
 end;
 
-constructor THkdfParameters.Create(const ikm, salt, info: TCryptoLibByteArray);
+constructor THkdfParameters.Create(const AIkm, ASalt, AInfo: TCryptoLibByteArray);
 begin
-  Create(ikm, false, salt, info);
+  Create(AIkm, False, ASalt, AInfo);
 end;
 
-class function THkdfParameters.DefaultParameters(const ikm: TCryptoLibByteArray)
+class function THkdfParameters.DefaultParameters(const AIkm: TCryptoLibByteArray)
   : IHkdfParameters;
 begin
-  result := THkdfParameters.Create(ikm, false, Nil, Nil);
+  Result := THkdfParameters.Create(AIkm, False, nil, nil);
 end;
 
 function THkdfParameters.GetIkm: TCryptoLibByteArray;
 begin
-  result := System.Copy(Fikm);
+  Result := System.Copy(FIkm);
 end;
 
 function THkdfParameters.GetInfo: TCryptoLibByteArray;
 begin
-  result := System.Copy(Finfo);
+  Result := System.Copy(FInfo);
 end;
 
 function THkdfParameters.GetSalt: TCryptoLibByteArray;
 begin
-  result := System.Copy(Fsalt);
+  Result := System.Copy(FSalt);
 end;
 
 function THkdfParameters.GetSkipExtract: Boolean;
 begin
-  result := FskipExpand;
+  Result := FSkipExpand;
 end;
 
-class function THkdfParameters.SkipExtractParameters(const ikm,
-  info: TCryptoLibByteArray): IHkdfParameters;
+class function THkdfParameters.SkipExtractParameters(const AIkm,
+  AInfo: TCryptoLibByteArray): IHkdfParameters;
 begin
-  result := THkdfParameters.Create(ikm, true, Nil, info);
+  Result := THkdfParameters.Create(AIkm, True, nil, AInfo);
 end;
 
 end.

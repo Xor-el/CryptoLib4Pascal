@@ -29,12 +29,9 @@ uses
   ClpICipherParameters,
   ClpIDHAgreement,
   ClpIDHParameters,
-  ClpDHKeyPairGenerator,
-  ClpIDHKeyPairGenerator,
-  ClpIDHPrivateKeyParameters,
-  ClpIDHPublicKeyParameters,
-  ClpDHKeyGenerationParameters,
-  ClpIDHKeyGenerationParameters,
+  ClpDHParameters,
+  ClpDHGenerators,
+  ClpIDHGenerators,
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricCipherKeyPair,
   ClpIParametersWithRandom,
@@ -122,7 +119,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWrongParameter);
   end;
 
-  p := FdhParams.p;
+  p := FdhParams.P;
 
   peerY := pub.Y;
 
@@ -132,14 +129,14 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWeak);
   end;
 
-  result := peerY.ModPow(FprivateValue, p);
+  Result := peerY.ModPow(FprivateValue, p);
 
-  if (result.Equals(TBigInteger.One)) then
+  if (Result.Equals(TBigInteger.One)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SSharedKeyInvalid);
   end;
 
-  result := &message.ModPow(Fkey.X, p).Multiply(result).&Mod(p);
+  Result := &message.ModPow(Fkey.X, p).Multiply(Result).&Mod(p);
 end;
 
 function TDHAgreement.CalculateMessage: TBigInteger;
@@ -156,7 +153,7 @@ begin
 
   FprivateValue := (dhPair.Private as IDHPrivateKeyParameters).X;
 
-  result := (dhPair.Public as IDHPublicKeyParameters).Y;
+  Result := (dhPair.Public as IDHPublicKeyParameters).Y;
 end;
 
 procedure TDHAgreement.Init(const parameters: ICipherParameters);

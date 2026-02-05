@@ -23,8 +23,8 @@ interface
 
 uses
   Classes,
-  ClpIECDomainParameters,
-  ClpECPublicKeyParameters,
+  ClpIECParameters,
+  ClpECParameters,
   ClpIKeyParser,
   ClpIAsymmetricKeyParameter,
   ClpIECIESPublicKeyParser,

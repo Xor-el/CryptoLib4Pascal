@@ -27,7 +27,7 @@ uses
   ClpIAsymmetricBlockCipher,
   ClpIDigest,
   ClpISigner,
-  ClpIRsaKeyParameters,
+  ClpIRsaParameters,
   ClpIsoTrailers,
   ClpParameterUtilities,
   ClpBigInteger,

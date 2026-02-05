@@ -26,16 +26,14 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsymmetricKeyParameter,
-  ClpIRsaKeyParameters,
-  ClpIDsaPublicKeyParameters,
-  ClpIECPublicKeyParameters,
-  ClpIECDomainParameters,
-  ClpIEd25519PublicKeyParameters,
-  ClpIX25519PublicKeyParameters,
+  ClpIRsaParameters,
+  ClpIDsaParameters,
+  ClpIECParameters,
+  ClpIEd25519Parameters,
+  ClpIX25519Parameters,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
-  ClpIDsaParameters,
   ClpIX509Asn1Objects,
   ClpIX509RsaAsn1Objects,
   ClpIX509DsaAsn1Objects,
@@ -94,8 +92,8 @@ begin
     if LKp = nil then
       raise EArgumentCryptoLibException.Create('DSA public key requires parameters.');
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsa,
-      TDsaParameter.Create(LKp.p, LKp.q, LKp.g) as IDsaParameter);
-    Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.y) as IDerInteger);
+      TDsaParameter.Create(LKp.P, LKp.Q, LKp.G) as IDsaParameter);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.Y) as IDerInteger);
     Exit;
   end;
 

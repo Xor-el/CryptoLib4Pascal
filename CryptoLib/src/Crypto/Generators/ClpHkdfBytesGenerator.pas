@@ -56,9 +56,9 @@ type
 
   strict private
   var
-    FhMacHash: IHMac;
-    FhashLen, FgeneratedBytes: Int32;
-    Finfo, FcurrentT: TCryptoLibByteArray;
+    FHMacHash: IHMac;
+    FHashLen, FGeneratedBytes: Int32;
+    FInfo, FCurrentT: TCryptoLibByteArray;
 
     /// <summary>
     /// Performs the extract part of the key derivation function.
@@ -72,7 +72,7 @@ type
     /// <returns>
     /// the PRK as KeyParameter
     /// </returns>
-    function Extract(const salt, ikm: TCryptoLibByteArray): IKeyParameter;
+    function Extract(const ASalt, AIkm: TCryptoLibByteArray): IKeyParameter;
 
     /// <summary>
     /// Performs the expand part of the key derivation function, using
@@ -95,12 +95,12 @@ type
     /// <param name="hash">
     /// the digest to be used as the source of generatedBytes bytes
     /// </param>
-    constructor Create(const hash: IDigest);
+    constructor Create(const AHash: IDigest);
 
-    procedure Init(const parameters: IDerivationParameters); virtual;
+    procedure Init(const AParameters: IDerivationParameters); virtual;
 
-    function GenerateBytes(const output: TCryptoLibByteArray;
-      outOff, len: Int32): Int32; virtual;
+    function GenerateBytes(const AOutput: TCryptoLibByteArray;
+      AOutOff, ALen: Int32): Int32; virtual;
 
     property Digest: IDigest read GetDigest;
 
@@ -110,122 +110,111 @@ implementation
 
 { THkdfBytesGenerator }
 
-constructor THkdfBytesGenerator.Create(const hash: IDigest);
+constructor THkdfBytesGenerator.Create(const AHash: IDigest);
 begin
-  Inherited Create();
-  FhMacHash := THMac.Create(hash);
-  FhashLen := hash.GetDigestSize();
+  inherited Create();
+  FHMacHash := THMac.Create(AHash);
+  FHashLen := AHash.GetDigestSize();
 end;
 
 procedure THkdfBytesGenerator.ExpandNext;
 var
-  n: Int32;
+  LN: Int32;
 begin
-  n := (FgeneratedBytes div FhashLen) + 1;
-  if (n >= 256) then
+  LN := (FGeneratedBytes div FHashLen) + 1;
+  if LN >= 256 then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SSizeTooBigHKDF);
   end;
   // special case for T(0): T(0) is empty, so no update
-  if (FgeneratedBytes <> 0) then
+  if (FGeneratedBytes <> 0) then
   begin
-    FhMacHash.BlockUpdate(FcurrentT, 0, FhashLen);
+    FHMacHash.BlockUpdate(FCurrentT, 0, FHashLen);
   end;
-  FhMacHash.BlockUpdate(Finfo, 0, System.Length(Finfo));
-  FhMacHash.Update(Byte(n));
-  FhMacHash.DoFinal(FcurrentT, 0);
+  FHMacHash.BlockUpdate(FInfo, 0, System.Length(FInfo));
+  FHMacHash.Update(Byte(LN));
+  FHMacHash.DoFinal(FCurrentT, 0);
 end;
 
-function THkdfBytesGenerator.Extract(const salt, ikm: TCryptoLibByteArray)
-  : IKeyParameter;
+function THkdfBytesGenerator.Extract(const ASalt, AIkm: TCryptoLibByteArray): IKeyParameter;
 var
-  temp, prk: TCryptoLibByteArray;
+  LTemp, LPrk: TCryptoLibByteArray;
 begin
-  if (salt = Nil) then
+  if ASalt = nil then
   begin
-    System.SetLength(temp, FhashLen);
-    // TODO check if hashLen is indeed same as HMAC size
-    FhMacHash.Init(TKeyParameter.Create(temp) as IKeyParameter);
+    System.SetLength(LTemp, FHashLen);
+    FHMacHash.Init(TKeyParameter.Create(LTemp) as IKeyParameter);
   end
   else
   begin
-    FhMacHash.Init(TKeyParameter.Create(salt) as IKeyParameter);
+    FHMacHash.Init(TKeyParameter.Create(ASalt) as IKeyParameter);
   end;
 
-  FhMacHash.BlockUpdate(ikm, 0, System.Length(ikm));
+  FHMacHash.BlockUpdate(AIkm, 0, System.Length(AIkm));
 
-  System.SetLength(prk, FhashLen);
-  FhMacHash.DoFinal(prk, 0);
-  result := TKeyParameter.Create(prk);
+  System.SetLength(LPrk, FHashLen);
+  FHMacHash.DoFinal(LPrk, 0);
+  Result := TKeyParameter.Create(LPrk);
 end;
 
-function THkdfBytesGenerator.GenerateBytes(const output: TCryptoLibByteArray;
-  outOff, len: Int32): Int32;
+function THkdfBytesGenerator.GenerateBytes(const AOutput: TCryptoLibByteArray;
+  AOutOff, ALen: Int32): Int32;
 var
-  toGenerate, posInT, leftInT, toCopy: Int32;
+  LToGenerate, LPosInT, LLeftInT, LToCopy, LOutOff: Int32;
 begin
-  if ((FgeneratedBytes + len) > (255 * FhashLen)) then
-  begin
+  if (FGeneratedBytes + ALen) > (255 * FHashLen) then
     raise EDataLengthCryptoLibException.CreateRes(@SSizeTooBigHKDF2);
-  end;
 
-  if (FgeneratedBytes mod FhashLen = 0) then
+  if FGeneratedBytes mod FHashLen = 0 then
+    ExpandNext();
+
+  LToGenerate := ALen;
+  LPosInT := FGeneratedBytes mod FHashLen;
+  LLeftInT := FHashLen - (FGeneratedBytes mod FHashLen);
+  LToCopy := Min(LLeftInT, LToGenerate);
+  System.Move(FCurrentT[LPosInT], AOutput[AOutOff], LToCopy);
+  FGeneratedBytes := FGeneratedBytes + LToCopy;
+  LToGenerate := LToGenerate - LToCopy;
+  LOutOff := AOutOff + LToCopy;
+
+  while LToGenerate > 0 do
   begin
     ExpandNext();
+    LToCopy := Min(FHashLen, LToGenerate);
+    System.Move(FCurrentT[0], AOutput[LOutOff], LToCopy);
+    FGeneratedBytes := FGeneratedBytes + LToCopy;
+    LToGenerate := LToGenerate - LToCopy;
+    LOutOff := LOutOff + LToCopy;
   end;
 
-  // copy what is left in the currentT (1..hash
-  toGenerate := len;
-  posInT := FgeneratedBytes mod FhashLen;
-  leftInT := FhashLen - (FgeneratedBytes mod FhashLen);
-  toCopy := Min(leftInT, toGenerate);
-  System.Move(FcurrentT[posInT], output[outOff], toCopy);
-  FgeneratedBytes := FgeneratedBytes + toCopy;
-  toGenerate := toGenerate - toCopy;
-  outOff := outOff + toCopy;
-
-  while (toGenerate > 0) do
-  begin
-    ExpandNext();
-    toCopy := Min(FhashLen, toGenerate);
-    System.Move(FcurrentT[0], output[outOff], toCopy);
-    FgeneratedBytes := FgeneratedBytes + toCopy;
-    toGenerate := toGenerate - toCopy;
-    outOff := outOff + toCopy;
-  end;
-
-  result := len;
+  Result := ALen;
 end;
 
 function THkdfBytesGenerator.GetDigest: IDigest;
 begin
-  result := FhMacHash.GetUnderlyingDigest();
+  Result := FHMacHash.GetUnderlyingDigest();
 end;
 
-procedure THkdfBytesGenerator.Init(const parameters: IDerivationParameters);
+procedure THkdfBytesGenerator.Init(const AParameters: IDerivationParameters);
 var
-  hkdfParameters: IHkdfParameters;
+  LHkdfParameters: IHkdfParameters;
 begin
-  if (not Supports(parameters, IHkdfParameters, hkdfParameters)) then
-  begin
+  if not Supports(AParameters, IHkdfParameters, LHkdfParameters) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParameterHKDF);
-  end;
 
-  if (hkdfParameters.SkipExtract) then
+  if LHkdfParameters.SkipExtract then
   begin
-    // use IKM directly as PRK
-    FhMacHash.Init(TKeyParameter.Create(hkdfParameters.GetIkm())
-      as IKeyParameter);
+    FHMacHash.Init(TKeyParameter.Create(LHkdfParameters.GetIkm()) as IKeyParameter);
   end
   else
   begin
-    FhMacHash.Init(Extract(hkdfParameters.GetSalt(), hkdfParameters.GetIkm()));
+    FHMacHash.Init(Extract(LHkdfParameters.GetSalt(), LHkdfParameters.GetIkm()));
   end;
 
-  Finfo := hkdfParameters.GetInfo();
+  FInfo := LHkdfParameters.GetInfo();
 
-  FgeneratedBytes := 0;
-  System.SetLength(FcurrentT, FhashLen);
+  FGeneratedBytes := 0;
+  System.SetLength(FCurrentT, FHashLen);
 end;
 
 end.

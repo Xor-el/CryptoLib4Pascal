@@ -28,8 +28,6 @@ uses
   ClpIBasicAgreement,
   ClpIDHBasicAgreement,
   ClpIDHParameters,
-  ClpIDHPrivateKeyParameters,
-  ClpIDHPublicKeyParameters,
   ClpIParametersWithRandom,
   ClpCryptoLibTypes;
 
@@ -103,7 +101,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWrongParameter);
   end;
 
-  p := FdhParams.p;
+  p := FdhParams.P;
 
   peerY := pub.Y;
 
@@ -113,9 +111,9 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWeak);
   end;
 
-  result := peerY.ModPow(Fkey.X, p);
+  Result := peerY.ModPow(Fkey.X, p);
 
-  if (result.Equals(TBigInteger.One)) then
+  if (Result.Equals(TBigInteger.One)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SSharedKeyInvalid);
   end;
@@ -123,7 +121,7 @@ end;
 
 function TDHBasicAgreement.GetFieldSize: Int32;
 begin
-  result := (Fkey.Parameters.p.BitLength + 7) div 8;
+  Result := (Fkey.Parameters.P.BitLength + 7) div 8;
 end;
 
 procedure TDHBasicAgreement.Init(const parameters: ICipherParameters);

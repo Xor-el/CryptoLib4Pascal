@@ -28,11 +28,9 @@ uses
   ClpICipherParameters,
   ClpIECC,
   ClpIBasicAgreement,
-  ClpIECDomainParameters,
+  ClpIECParameters,
   ClpIECDHCBasicAgreement,
-  ClpIECPrivateKeyParameters,
   ClpIParametersWithRandom,
-  ClpIECPublicKeyParameters,
   ClpCryptoLibTypes;
 
 resourcestring

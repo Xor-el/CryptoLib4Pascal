@@ -32,10 +32,8 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
-  ClpIRsaKeyParameters,
-  ClpRsaKeyParameters,
-  ClpIRsaPrivateCrtKeyParameters,
-  ClpRsaPrivateCrtKeyParameters,
+  ClpIRsaParameters,
+  ClpRsaParameters,
   ClpRsaEngine,
   ClpIRsaEngine,
   ClpX931Signer,

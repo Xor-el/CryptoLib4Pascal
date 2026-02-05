@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpICipherParameters,
   ClpParameterUtilities,
-  ClpIRsaKeyParameters,
+  ClpIRsaParameters,
   ClpIAsymmetricBlockCipher,
   ClpIISO9796d1Encoding,
   ClpCryptoLibTypes;

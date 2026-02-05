@@ -36,19 +36,19 @@ type
 
   strict private
   var
-    Fparameters: ICipherParameters;
-    Fiv: TCryptoLibByteArray;
+    FParameters: ICipherParameters;
+    FIv: TCryptoLibByteArray;
 
     function GetParameters: ICipherParameters; inline;
 
   public
-    constructor Create(const parameters: ICipherParameters;
-      const iv: TCryptoLibByteArray); overload;
-    constructor Create(const parameters: ICipherParameters;
-      const iv: TCryptoLibByteArray; ivOff, ivLen: Int32); overload;
+    constructor Create(const AParameters: ICipherParameters;
+      const AIv: TCryptoLibByteArray); overload;
+    constructor Create(const AParameters: ICipherParameters;
+      const AIv: TCryptoLibByteArray; AIvOff, AIvLen: Int32); overload;
     destructor Destroy; override;
     function GetIV(): TCryptoLibByteArray; inline;
-    property parameters: ICipherParameters read GetParameters;
+    property Parameters: ICipherParameters read GetParameters;
     procedure Clear(); inline;
 
   end;
@@ -57,30 +57,30 @@ implementation
 
 { TParametersWithIV }
 
-constructor TParametersWithIV.Create(const parameters: ICipherParameters;
-  const iv: TCryptoLibByteArray);
+constructor TParametersWithIV.Create(const AParameters: ICipherParameters;
+  const AIv: TCryptoLibByteArray);
 begin
-  Inherited Create();
-  Create(parameters, iv, 0, System.Length(iv))
+  inherited Create();
+  Create(AParameters, AIv, 0, System.Length(AIv))
 end;
 
 procedure TParametersWithIV.Clear;
 begin
-  TArrayUtilities.Fill<Byte>(Fiv, 0, System.Length(Fiv), Byte(0));
+  TArrayUtilities.Fill<Byte>(FIv, 0, System.Length(FIv), Byte(0));
 end;
 
-constructor TParametersWithIV.Create(const parameters: ICipherParameters;
-  const iv: TCryptoLibByteArray; ivOff, ivLen: Int32);
+constructor TParametersWithIV.Create(const AParameters: ICipherParameters;
+  const AIv: TCryptoLibByteArray; AIvOff, AIvLen: Int32);
 begin
-  Inherited Create();
+  inherited Create();
   // NOTE: 'parameters' may be null to imply key re-use
-  if (iv = Nil) then
+  if (AIv = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SIVNil);
   end;
 
-  Fparameters := parameters;
-  Fiv := TArrayUtilities.CopyOfRange<Byte>(iv, ivOff, ivOff + ivLen);
+  FParameters := AParameters;
+  FIv := TArrayUtilities.CopyOfRange<Byte>(AIv, AIvOff, AIvOff + AIvLen);
 end;
 
 destructor TParametersWithIV.Destroy;
@@ -91,12 +91,12 @@ end;
 
 function TParametersWithIV.GetIV: TCryptoLibByteArray;
 begin
-  result := System.Copy(Fiv);
+  Result := System.Copy(FIv);
 end;
 
 function TParametersWithIV.GetParameters: ICipherParameters;
 begin
-  result := Fparameters;
+  Result := FParameters;
 end;
 
 end.

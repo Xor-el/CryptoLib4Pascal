@@ -29,8 +29,8 @@ uses
   ClpRosstandartObjectIdentifiers,
   ClpECC,
   ClpIECC,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
+  ClpECParameters,
+  ClpIECParameters,
   ClpIAsn1Objects;
 
 type

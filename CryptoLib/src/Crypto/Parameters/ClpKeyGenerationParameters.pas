@@ -69,13 +69,13 @@ type
     /// initialise the generator with a source of randomness and a strength
     /// (in bits).
     /// </summary>
-    /// <param name="Random">
+    /// <param name="ARandom">
     /// the random byte source.
     /// </param>
-    /// <param name="Strength">
+    /// <param name="AStrength">
     /// the size, in bits, of the keys we want to produce.
     /// </param>
-    constructor Create(const Random: ISecureRandom; Strength: Int32);
+    constructor Create(const ARandom: ISecureRandom; AStrength: Int32);
 
   end;
 
@@ -83,18 +83,18 @@ implementation
 
 { TKeyGenerationParameters }
 
-constructor TKeyGenerationParameters.Create(const Random: ISecureRandom;
-  Strength: Int32);
+constructor TKeyGenerationParameters.Create(const ARandom: ISecureRandom;
+  AStrength: Int32);
 begin
-  if (Random = Nil) then
+  if (ARandom = nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
 
-  if (Strength < 1) then
+  if (AStrength < 1) then
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidStrength,
-      [Strength]);
+      [AStrength]);
 
-  FRandom := Random;
-  FStrength := Strength;
+  FRandom := ARandom;
+  FStrength := AStrength;
 end;
 
 function TKeyGenerationParameters.GetRandom: ISecureRandom;

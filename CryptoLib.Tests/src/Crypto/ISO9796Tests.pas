@@ -37,8 +37,8 @@ uses
   ClpIRsaEngine,
   ClpISO9796d1Encoding,
   ClpIISO9796d1Encoding,
-  ClpRsaKeyParameters,
-  ClpIRsaKeyParameters,
+  ClpRsaParameters,
+  ClpIRsaParameters,
   ClpIAsymmetricBlockCipher,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

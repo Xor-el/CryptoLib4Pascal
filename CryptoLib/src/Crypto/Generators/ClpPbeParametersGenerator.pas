@@ -41,48 +41,48 @@ type
     /// <summary>
     /// Generate derived parameters for a key of length keySize.
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String; keySize: Int32)
+    function GenerateDerivedParameters(const AAlgorithm: String; AKeySize: Int32)
       : ICipherParameters; overload; virtual; abstract;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize and iv
     /// of length ivSize.
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
-    /// <param name="ivSize">
+    /// <param name="AIvSize">
     /// the length, in bits, of the iv required.
     /// </param>
     /// <returns>
     /// a parameters object representing a key and an iv.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String;
-      keySize, ivSize: Int32): ICipherParameters; overload; virtual; abstract;
+    function GenerateDerivedParameters(const AAlgorithm: String;
+      AKeySize, AIvSize: Int32): ICipherParameters; overload; virtual; abstract;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize,
     /// specifically <br />for use with a MAC.
     /// </summary>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedMacParameters(keySize: Int32): ICipherParameters;
+    function GenerateDerivedMacParameters(AKeySize: Int32): ICipherParameters;
       virtual; abstract;
 
   end;

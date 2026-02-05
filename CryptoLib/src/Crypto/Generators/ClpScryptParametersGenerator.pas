@@ -49,7 +49,7 @@ type
     FPassword, FSalt: TCryptoLibByteArray;
     FPBKDF_Scrypt: HlpIHashInfo.IPBKDF_Scrypt;
 
-    function GenerateDerivedKey(dkLen: Int32): TCryptoLibByteArray; inline;
+    function GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray; inline;
 
   public
 
@@ -61,8 +61,8 @@ type
 
     destructor Destroy; override;
 
-    procedure Init(const password, salt: TCryptoLibByteArray;
-      cost, blockSize, parallelism: Int32);
+    procedure Init(const APassword, ASalt: TCryptoLibByteArray;
+      ACost, ABlockSize, AParallelism: Int32);
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt,
@@ -77,7 +77,7 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String; keySize: Int32)
+    function GenerateDerivedParameters(const AAlgorithm: String; AKeySize: Int32)
       : ICipherParameters; overload; override;
 
     /// <summary>
@@ -97,8 +97,8 @@ type
     /// <returns>
     /// a parameters object representing a key and an iv.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String;
-      keySize, ivSize: Int32): ICipherParameters; overload; override;
+    function GenerateDerivedParameters(const AAlgorithm: String;
+      AKeySize, AIvSize: Int32): ICipherParameters; overload; override;
 
     /// <summary>
     /// Generate a key parameter for use with a MAC derived from the
@@ -111,21 +111,21 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedMacParameters(keySize: Int32)
+    function GenerateDerivedMacParameters(AKeySize: Int32)
       : ICipherParameters; override;
 
   end;
 
 implementation
 
-{ TPkcs5S2ParametersGenerator }
+{ TScryptParametersGenerator }
 
 procedure TScryptParametersGenerator.Clear();
 begin
   TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
   TArrayUtilities.Fill<Byte>(FSalt, 0, System.Length(FSalt), Byte(0));
 
-  if FPBKDF_Scrypt <> Nil then
+  if FPBKDF_Scrypt <> nil then
   begin
     FPBKDF_Scrypt.Clear();
   end;
@@ -133,7 +133,7 @@ end;
 
 constructor TScryptParametersGenerator.Create();
 begin
-  Inherited Create();
+  inherited Create();
 end;
 
 destructor TScryptParametersGenerator.Destroy;
@@ -142,58 +142,53 @@ begin
   inherited Destroy;
 end;
 
-function TScryptParametersGenerator.GenerateDerivedKey(dkLen: Int32)
-  : TCryptoLibByteArray;
+function TScryptParametersGenerator.GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray;
 begin
-  result := FPBKDF_Scrypt.GetBytes(dkLen);
+  Result := FPBKDF_Scrypt.GetBytes(ADkLen);
 end;
 
-function TScryptParametersGenerator.GenerateDerivedMacParameters(keySize: Int32)
-  : ICipherParameters;
+function TScryptParametersGenerator.GenerateDerivedMacParameters(AKeySize: Int32): ICipherParameters;
 var
-  dKey: TCryptoLibByteArray;
+  LDKey: TCryptoLibByteArray;
+  LKeySize: Int32;
 begin
-  keySize := keySize div 8;
-
-  dKey := GenerateDerivedKey(keySize);
-
-  result := TKeyParameter.Create(dKey, 0, keySize);
+  LKeySize := AKeySize div 8;
+  LDKey := GenerateDerivedKey(LKeySize);
+  Result := TKeyParameter.Create(LDKey, 0, LKeySize);
 end;
 
-function TScryptParametersGenerator.GenerateDerivedParameters(const algorithm
-  : String; keySize: Int32): ICipherParameters;
+function TScryptParametersGenerator.GenerateDerivedParameters(const AAlgorithm: String;
+  AKeySize: Int32): ICipherParameters;
 var
-  dKey: TCryptoLibByteArray;
+  LDKey: TCryptoLibByteArray;
+  LKeySize: Int32;
 begin
-  keySize := keySize div 8;
-
-  dKey := GenerateDerivedKey(keySize);
-
-  result := TParameterUtilities.CreateKeyParameter(algorithm, dKey, 0, keySize);
+  LKeySize := AKeySize div 8;
+  LDKey := GenerateDerivedKey(LKeySize);
+  Result := TParameterUtilities.CreateKeyParameter(AAlgorithm, LDKey, 0, LKeySize);
 end;
 
-function TScryptParametersGenerator.GenerateDerivedParameters(const algorithm
-  : String; keySize, ivSize: Int32): ICipherParameters;
+function TScryptParametersGenerator.GenerateDerivedParameters(const AAlgorithm: String;
+  AKeySize, AIvSize: Int32): ICipherParameters;
 var
-  dKey: TCryptoLibByteArray;
-  key: IKeyParameter;
+  LDKey: TCryptoLibByteArray;
+  LKey: IKeyParameter;
+  LKeySize, LIvSize: Int32;
 begin
-  keySize := keySize div 8;
-  ivSize := ivSize div 8;
-
-  dKey := GenerateDerivedKey(keySize + ivSize);
-  key := TParameterUtilities.CreateKeyParameter(algorithm, dKey, 0, keySize);
-
-  result := TParametersWithIV.Create(key, dKey, keySize, ivSize);
+  LKeySize := AKeySize div 8;
+  LIvSize := AIvSize div 8;
+  LDKey := GenerateDerivedKey(LKeySize + LIvSize);
+  LKey := TParameterUtilities.CreateKeyParameter(AAlgorithm, LDKey, 0, LKeySize);
+  Result := TParametersWithIV.Create(LKey, LDKey, LKeySize, LIvSize);
 end;
 
-procedure TScryptParametersGenerator.Init(const password,
-  salt: TCryptoLibByteArray; cost, blockSize, parallelism: Int32);
+procedure TScryptParametersGenerator.Init(const APassword, ASalt: TCryptoLibByteArray;
+  ACost, ABlockSize, AParallelism: Int32);
 begin
-  FPassword := System.Copy(password);
-  FSalt := System.Copy(salt);
-  FPBKDF_Scrypt := TKDF.TPBKDF_Scrypt.CreatePBKDF_Scrypt(FPassword, FSalt, cost,
-    blockSize, parallelism);
+  FPassword := System.Copy(APassword);
+  FSalt := System.Copy(ASalt);
+  FPBKDF_Scrypt := TKDF.TPBKDF_Scrypt.CreatePBKDF_Scrypt(FPassword, FSalt, ACost,
+    ABlockSize, AParallelism);
 end;
 
 end.

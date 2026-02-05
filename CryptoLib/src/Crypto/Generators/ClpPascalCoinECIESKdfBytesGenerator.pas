@@ -54,9 +54,9 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
 
-    procedure Init(const parameters: IDerivationParameters); override;
+    procedure Init(const AParameters: IDerivationParameters); override;
 
     /// <summary>
     /// fill len bytes of the output buffer with bytes generated from the
@@ -68,8 +68,8 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the out buffer is too small.
     /// </exception>
-    function GenerateBytes(const output: TCryptoLibByteArray;
-      outOff, length: Int32): Int32; override;
+    function GenerateBytes(const AOutput: TCryptoLibByteArray;
+      AOutOff, ALength: Int32): Int32; override;
 
   end;
 
@@ -77,58 +77,47 @@ implementation
 
 { TPascalCoinECIESKdfBytesGenerator }
 
-constructor TPascalCoinECIESKdfBytesGenerator.Create(const digest: IDigest);
+constructor TPascalCoinECIESKdfBytesGenerator.Create(const ADigest: IDigest);
 begin
-  Inherited Create(0, digest);
+  inherited Create(0, ADigest);
 end;
 
-function TPascalCoinECIESKdfBytesGenerator.GenerateBytes
-  (const output: TCryptoLibByteArray; outOff, length: Int32): Int32;
+function TPascalCoinECIESKdfBytesGenerator.GenerateBytes(
+  const AOutput: TCryptoLibByteArray; AOutOff, ALength: Int32): Int32;
 var
-  outLen: Int32;
-  temp: TCryptoLibByteArray;
+  LOutLen: Int32;
+  LTemp: TCryptoLibByteArray;
 begin
-  if ((System.length(output) - length) < outOff) then
-  begin
+  if (System.Length(AOutput) - ALength) < AOutOff then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
-  end;
 
-  outLen := digest.GetDigestSize;
+  LOutLen := GetDigest().GetDigestSize();
 
-  if (length > outLen) then
-  begin
-    raise EDataLengthCryptoLibException.CreateRes
-      (@SHashCannotNotProduceSufficientData);
-  end;
+  if ALength > LOutLen then
+    raise EDataLengthCryptoLibException.CreateRes(@SHashCannotNotProduceSufficientData);
 
-  System.SetLength(temp, digest.GetDigestSize);
-  digest.BlockUpdate(Fshared, 0, System.length(Fshared));
-  digest.DoFinal(temp, 0);
+  System.SetLength(LTemp, GetDigest().GetDigestSize());
+  GetDigest().BlockUpdate(FShared, 0, System.Length(FShared));
+  GetDigest().DoFinal(LTemp, 0);
 
-  System.Move(temp[0], output[outOff], length * System.SizeOf(Byte));
+  System.Move(LTemp[0], AOutput[AOutOff], ALength * System.SizeOf(Byte));
 
-  digest.Reset();
+  GetDigest().Reset();
 
-  result := length;
-
+  Result := ALength;
 end;
 
-procedure TPascalCoinECIESKdfBytesGenerator.Init(const parameters
-  : IDerivationParameters);
+procedure TPascalCoinECIESKdfBytesGenerator.Init(const AParameters: IDerivationParameters);
 var
-  Lparameters: IDerivationParameters;
-  p1: IKdfParameters;
+  LParameters: IDerivationParameters;
+  LP1: IKdfParameters;
 begin
-  Lparameters := parameters;
+  LParameters := AParameters;
 
-  if Supports(Lparameters, IKdfParameters, p1) then
-  begin
-    Fshared := p1.GetSharedSecret();
-  end
+  if Supports(LParameters, IKdfParameters, LP1) then
+    FShared := LP1.GetSharedSecret()
   else
-  begin
     raise EArgumentCryptoLibException.CreateRes(@SKDFParameterNotFound);
-  end;
 end;
 
 end.

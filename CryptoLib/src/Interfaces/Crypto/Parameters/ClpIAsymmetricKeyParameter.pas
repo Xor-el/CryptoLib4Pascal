@@ -33,7 +33,7 @@ type
     function GetPrivateKey: Boolean;
     property IsPrivate: Boolean read GetIsPrivate;
     property PrivateKey: Boolean read GetPrivateKey;
-    function Equals(const other: IAsymmetricKeyParameter): Boolean;
+    function Equals(const AOther: IAsymmetricKeyParameter): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
   end;

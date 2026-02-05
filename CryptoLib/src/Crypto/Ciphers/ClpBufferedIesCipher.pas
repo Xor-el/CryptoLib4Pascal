@@ -26,8 +26,7 @@ uses
   SysUtils,
   ClpICipherParameters,
   ClpIIESEngine,
-  ClpIIESParameters,
-  ClpIIesCipherParameters,
+  ClpIIesParameters,
   ClpBufferedCipherBase,
   ClpCryptoLibTypes;
 

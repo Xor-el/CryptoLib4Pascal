@@ -25,8 +25,13 @@ uses
   Math,
   ClpICipherParameters,
   ClpIDHParameters,
-  ClpIDHValidationParameters,
+  ClpAsymmetricKeyParameter,
+  ClpPkcsObjectIdentifiers,
+  ClpIAsn1Objects,
+  ClpKeyGenerationParameters,
+  ClpISecureRandom,
   ClpBigInteger,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -39,8 +44,33 @@ resourcestring
   SLErrorOne = 'when L value specified, it must be less than bitlength(P), "L"';
   SLErrorTwo = 'when L value specified, it may not be less than m value, "L"';
   SInvalidSubGroupFactor = 'Subgroup factor must be >= 2, "j"';
+  SSeedNil = '"Seed" Cannot Be Nil';
+  SYUnInitialized = '"Y" Cannot Be Uninitialized';
+  SInvalidDHPublicKey = 'Invalid DH public key "Y"';
+  SInvalidYInCorrectGroup = '"Y" Value Does Not Appear To Be In Correct Group';
+  SXUnInitialized = '"X" Cannot Be Uninitialized';
 
 type
+  TDHValidationParameters = class(TInterfacedObject, IDHValidationParameters)
+  strict private
+  var
+    FSeed: TCryptoLibByteArray;
+    FCounter: Int32;
+
+    function GetCounter: Int32; virtual;
+    function GetSeed: TCryptoLibByteArray; virtual;
+
+  public
+    constructor Create(const ASeed: TCryptoLibByteArray; ACounter: Int32);
+
+    function Equals(const AOther: IDHValidationParameters): Boolean; reintroduce;
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}override;
+
+    property Counter: Int32 read GetCounter;
+    property Seed: TCryptoLibByteArray read GetSeed;
+  end;
+
   TDHParameters = class(TInterfacedObject, ICipherParameters, IDHParameters)
 
   strict private
@@ -49,9 +79,9 @@ type
     DefaultMinimumLength = Int32(160);
 
   var
-    Fp, Fq, Fg, Fj: TBigInteger;
-    Fm, Fl: Int32;
-    Fvalidation: IDHValidationParameters;
+    FP, FQ, FG, FJ: TBigInteger;
+    FM, FL: Int32;
+    FValidation: IDHValidationParameters;
 
     function GetG: TBigInteger; inline;
     function GetP: TBigInteger; inline;
@@ -61,206 +91,542 @@ type
     function GetL: Int32; inline;
     function GetValidationParameters: IDHValidationParameters; inline;
 
-    class function GetDefaultMParam(lParam: Int32): Int32; static; inline;
+    class function GetDefaultMParam(ALParam: Int32): Int32; static; inline;
 
   public
 
-    constructor Create(const p, g: TBigInteger); overload;
+    constructor Create(const AP, AG: TBigInteger); overload;
 
-    constructor Create(const p, g, q: TBigInteger); overload;
+    constructor Create(const AP, AG, AQ: TBigInteger); overload;
 
-    constructor Create(const p, g, q: TBigInteger; l: Int32); overload;
+    constructor Create(const AP, AG, AQ: TBigInteger; AL: Int32); overload;
 
-    constructor Create(const p, g, q: TBigInteger; m, l: Int32); overload;
+    constructor Create(const AP, AG, AQ: TBigInteger; AM, AL: Int32); overload;
 
-    constructor Create(const p, g, q, j: TBigInteger;
-      const validation: IDHValidationParameters); overload;
+    constructor Create(const AP, AG, AQ, AJ: TBigInteger;
+      const AValidation: IDHValidationParameters); overload;
 
-    constructor Create(const p, g, q: TBigInteger; m, l: Int32;
-      const j: TBigInteger; const validation: IDHValidationParameters);
+    constructor Create(const AP, AG, AQ: TBigInteger; AM, AL: Int32;
+      const AJ: TBigInteger; const AValidation: IDHValidationParameters);
       overload;
 
-    function Equals(const other: IDHParameters): Boolean; reintroduce;
+    function Equals(const AOther: IDHParameters): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
-    property p: TBigInteger read GetP;
-    property q: TBigInteger read GetQ;
-    property g: TBigInteger read GetG;
-    property j: TBigInteger read GetJ;
-    /// <summary>The minimum bitlength of the private value.</summary>
-    property m: Int32 read GetM;
-    /// <summary>The bitlength of the private value.</summary>
-    property l: Int32 read GetL;
+    property P: TBigInteger read GetP;
+    property Q: TBigInteger read GetQ;
+    property G: TBigInteger read GetG;
+    property J: TBigInteger read GetJ;
+    property M: Int32 read GetM;
+    property L: Int32 read GetL;
     property ValidationParameters: IDHValidationParameters
       read GetValidationParameters;
 
   end;
 
+  TDHKeyParameters = class abstract(TAsymmetricKeyParameter, IDHKeyParameters)
+
+  strict private
+  var
+    FParameters: IDHParameters;
+    FAlgorithmOid: IDerObjectIdentifier;
+  strict protected
+    function GetParameters: IDHParameters;
+    function GetAlgorithmOid: IDerObjectIdentifier;
+
+    constructor Create(AIsPrivate: Boolean;
+      const AParameters: IDHParameters); overload;
+
+    constructor Create(AIsPrivate: Boolean; const AParameters: IDHParameters;
+      const AAlgorithmOid: IDerObjectIdentifier); overload;
+
+  public
+    function Equals(const AOther: IDHKeyParameters): Boolean;
+      reintroduce; overload;
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}override;
+
+    property Parameters: IDHParameters read GetParameters;
+    property AlgorithmOid: IDerObjectIdentifier read GetAlgorithmOid;
+
+  end;
+
+  TDHPublicKeyParameters = class sealed(TDHKeyParameters,
+    IDHPublicKeyParameters)
+
+  strict private
+  var
+    FY: TBigInteger;
+
+    class function Validate(const AY: TBigInteger; const ADHParams: IDHParameters)
+      : TBigInteger; static; inline;
+
+    function GetY: TBigInteger; inline;
+
+  public
+    constructor Create(const AY: TBigInteger;
+      const AParameters: IDHParameters); overload;
+
+    constructor Create(const AY: TBigInteger; const AParameters: IDHParameters;
+      const AAlgorithmOid: IDerObjectIdentifier); overload;
+
+    function Equals(const AOther: IDHPublicKeyParameters): Boolean;
+      reintroduce; overload;
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}override;
+
+    property Y: TBigInteger read GetY;
+  end;
+
+  TDHPrivateKeyParameters = class sealed(TDHKeyParameters,
+    IDHPrivateKeyParameters)
+
+  strict private
+  var
+    FX: TBigInteger;
+
+    function GetX: TBigInteger; inline;
+
+    class function Validate(const AX: TBigInteger): TBigInteger; static; inline;
+
+  public
+    constructor Create(const AX: TBigInteger;
+      const AParameters: IDHParameters); overload;
+
+    constructor Create(const AX: TBigInteger; const AParameters: IDHParameters;
+      const AAlgorithmOid: IDerObjectIdentifier); overload;
+
+    function Equals(const AOther: IDHPrivateKeyParameters): Boolean;
+      reintroduce; overload;
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}override;
+
+    property X: TBigInteger read GetX;
+  end;
+
+  TDHKeyGenerationParameters = class sealed(TKeyGenerationParameters,
+    IDHKeyGenerationParameters)
+  strict private
+  var
+    FParameters: IDHParameters;
+
+    function GetParameters: IDHParameters; inline;
+
+    class function GetStrengthLocal(const AParameters: IDHParameters): Int32;
+      static; inline;
+
+  public
+    constructor Create(const ARandom: ISecureRandom;
+      const AParameters: IDHParameters);
+
+    property Parameters: IDHParameters read GetParameters;
+  end;
+
 implementation
+
+{ TDHValidationParameters }
+
+constructor TDHValidationParameters.Create(const ASeed: TCryptoLibByteArray;
+  ACounter: Int32);
+begin
+  inherited Create();
+  if (ASeed = nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SSeedNil);
+  end;
+
+  FSeed := System.Copy(ASeed);
+  FCounter := ACounter;
+end;
+
+function TDHValidationParameters.Equals(const AOther: IDHValidationParameters): Boolean;
+begin
+  if AOther = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+  if ((Self as IDHValidationParameters) = AOther) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Result := (Counter = AOther.Counter) and TArrayUtilities.AreEqual<Byte>(Seed,
+    AOther.Seed);
+end;
+
+function TDHValidationParameters.GetCounter: Int32;
+begin
+  Result := FCounter;
+end;
+
+function TDHValidationParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}
+begin
+  Result := Counter xor TArrayUtilities.GetArrayHashCode(Seed);
+end;
+
+function TDHValidationParameters.GetSeed: TCryptoLibByteArray;
+begin
+  Result := System.Copy(FSeed);
+end;
 
 { TDHParameters }
 
 function TDHParameters.GetL: Int32;
 begin
-  result := Fl;
+  Result := FL;
 end;
 
 function TDHParameters.GetM: Int32;
 begin
-  result := Fm;
+  Result := FM;
 end;
 
 function TDHParameters.GetJ: TBigInteger;
 begin
-  result := Fj;
+  Result := FJ;
 end;
 
 function TDHParameters.GetP: TBigInteger;
 begin
-  result := Fp;
+  Result := FP;
 end;
 
 function TDHParameters.GetQ: TBigInteger;
 begin
-  result := Fq;
+  Result := FQ;
 end;
 
 function TDHParameters.GetG: TBigInteger;
 begin
-  result := Fg;
+  Result := FG;
 end;
 
-class function TDHParameters.GetDefaultMParam(lParam: Int32): Int32;
+class function TDHParameters.GetDefaultMParam(ALParam: Int32): Int32;
 begin
-  if (lParam = 0) then
+  if (ALParam = 0) then
   begin
-    result := DefaultMinimumLength;
+    Result := DefaultMinimumLength;
     Exit;
   end;
 
-  result := Min(lParam, DefaultMinimumLength);
+  Result := Min(ALParam, DefaultMinimumLength);
 end;
 
-constructor TDHParameters.Create(const p, g: TBigInteger);
+constructor TDHParameters.Create(const AP, AG: TBigInteger);
 begin
-  Create(p, g, TBigInteger.GetDefault, 0);
+  Create(AP, AG, TBigInteger.GetDefault, 0);
 end;
 
-constructor TDHParameters.Create(const p, g, q: TBigInteger);
+constructor TDHParameters.Create(const AP, AG, AQ: TBigInteger);
 begin
-  Create(p, g, q, 0);
+  Create(AP, AG, AQ, 0);
 end;
 
-constructor TDHParameters.Create(const p, g, q: TBigInteger; l: Int32);
+constructor TDHParameters.Create(const AP, AG, AQ: TBigInteger; AL: Int32);
 begin
-  Create(p, g, q, GetDefaultMParam(l), l, TBigInteger.GetDefault, Nil);
+  Create(AP, AG, AQ, GetDefaultMParam(AL), AL, TBigInteger.GetDefault, nil);
 end;
 
-constructor TDHParameters.Create(const p, g, q: TBigInteger; m, l: Int32);
+constructor TDHParameters.Create(const AP, AG, AQ: TBigInteger; AM, AL: Int32);
 begin
-  Create(p, g, q, m, l, TBigInteger.GetDefault, Nil);
+  Create(AP, AG, AQ, AM, AL, TBigInteger.GetDefault, nil);
 end;
 
-constructor TDHParameters.Create(const p, g, q, j: TBigInteger;
-  const validation: IDHValidationParameters);
+constructor TDHParameters.Create(const AP, AG, AQ, AJ: TBigInteger;
+  const AValidation: IDHValidationParameters);
 begin
-  Create(p, g, q, DefaultMinimumLength, 0, j, validation)
+  Create(AP, AG, AQ, DefaultMinimumLength, 0, AJ, AValidation)
 end;
 
-constructor TDHParameters.Create(const p, g, q: TBigInteger; m, l: Int32;
-  const j: TBigInteger; const validation: IDHValidationParameters);
+constructor TDHParameters.Create(const AP, AG, AQ: TBigInteger; AM, AL: Int32;
+  const AJ: TBigInteger; const AValidation: IDHValidationParameters);
 begin
-  Inherited Create();
-  if (not(p.IsInitialized)) then
+  inherited Create();
+  if (not AP.IsInitialized) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SPUnInitialized);
   end;
 
-  if (not(g.IsInitialized)) then
+  if (not AG.IsInitialized) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SGUnInitialized);
   end;
 
-  if (not p.TestBit(0)) then
+  if (not AP.TestBit(0)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SMustBeOddPrime);
   end;
 
-  if ((g.CompareTo(TBigInteger.Two) < 0) or
-    (g.CompareTo(p.Subtract(TBigInteger.Two)) > 0)) then
+  if ((AG.CompareTo(TBigInteger.Two) < 0) or
+    (AG.CompareTo(AP.Subtract(TBigInteger.Two)) > 0)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidGeneratorRange);
   end;
 
-  if ((q.IsInitialized) and (q.BitLength >= p.BitLength)) then
+  if ((AQ.IsInitialized) and (AQ.BitLength >= AP.BitLength)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SQTooBigToBeAFactor);
   end;
 
-  if (m >= p.BitLength) then
+  if (AM >= AP.BitLength) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SMTooBig);
   end;
 
-  if (l <> 0) then
+  if (AL <> 0) then
   begin
 
-    if (l >= p.BitLength) then
+    if (AL >= AP.BitLength) then
     begin
       raise EArgumentCryptoLibException.CreateRes(@SLErrorOne);
     end;
-    if (l < m) then
+    if (AL < AM) then
     begin
       raise EArgumentCryptoLibException.CreateRes(@SLErrorTwo);
     end;
   end;
 
-  if ((j.IsInitialized) and (j.CompareTo(TBigInteger.Two) < 0)) then
+  if ((AJ.IsInitialized) and (AJ.CompareTo(TBigInteger.Two) < 0)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidSubGroupFactor);
   end;
 
-  // TODO If q, j both provided, validate p = jq + 1 ?
-
-  Fp := p;
-  Fg := g;
-  Fq := q;
-  Fm := m;
-  Fl := l;
-  Fj := j;
-  Fvalidation := validation;
+  FP := AP;
+  FG := AG;
+  FQ := AQ;
+  FM := AM;
+  FL := AL;
+  FJ := AJ;
+  FValidation := AValidation;
 end;
 
-function TDHParameters.Equals(const other: IDHParameters): Boolean;
+function TDHParameters.Equals(const AOther: IDHParameters): Boolean;
 begin
-  if other = Nil then
+  if AOther = nil then
   begin
-    result := False;
+    Result := False;
     Exit;
   end;
-  if ((Self as IDHParameters) = other) then
+  if ((Self as IDHParameters) = AOther) then
   begin
-    result := True;
+    Result := True;
     Exit;
   end;
-  result := p.Equals(other.p) and q.Equals(other.q) and g.Equals(other.g);
+  Result := P.Equals(AOther.P) and Q.Equals(AOther.Q) and G.Equals(AOther.G);
 end;
 
 function TDHParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := p.GetHashCode() xor g.GetHashCode();
+  Result := P.GetHashCode() xor G.GetHashCode();
 
-  if Fq.IsInitialized then
+  if FQ.IsInitialized then
   begin
-    result := result xor q.GetHashCode();
+    Result := Result xor Q.GetHashCode();
   end;
 end;
 
 function TDHParameters.GetValidationParameters: IDHValidationParameters;
 begin
-  result := Fvalidation;
+  Result := FValidation;
+end;
+
+{ TDHKeyParameters }
+
+function TDHKeyParameters.GetParameters: IDHParameters;
+begin
+  Result := FParameters;
+end;
+
+function TDHKeyParameters.GetAlgorithmOid: IDerObjectIdentifier;
+begin
+  Result := FAlgorithmOid;
+end;
+
+constructor TDHKeyParameters.Create(AIsPrivate: Boolean;
+  const AParameters: IDHParameters);
+begin
+  Create(AIsPrivate, AParameters, TPkcsObjectIdentifiers.DhKeyAgreement);
+end;
+
+constructor TDHKeyParameters.Create(AIsPrivate: Boolean;
+  const AParameters: IDHParameters; const AAlgorithmOid: IDerObjectIdentifier);
+begin
+  inherited Create(AIsPrivate);
+  FParameters := AParameters;
+  FAlgorithmOid := AAlgorithmOid;
+end;
+
+function TDHKeyParameters.Equals(const AOther: IDHKeyParameters): Boolean;
+begin
+  if AOther = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+  if ((Self as IDHKeyParameters) = AOther) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  Result := Parameters.Equals(AOther.Parameters) and (inherited Equals(AOther));
+end;
+
+function TDHKeyParameters.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}
+begin
+  Result := inherited GetHashCode();
+
+  if (Parameters <> nil) then
+  begin
+    Result := Result xor Parameters.GetHashCode();
+  end;
+end;
+
+{ TDHPublicKeyParameters }
+
+function TDHPublicKeyParameters.GetY: TBigInteger;
+begin
+  Result := FY;
+end;
+
+class function TDHPublicKeyParameters.Validate(const AY: TBigInteger;
+  const ADHParams: IDHParameters): TBigInteger;
+begin
+  if (not AY.IsInitialized) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SYUnInitialized);
+  end;
+
+  if ((AY.CompareTo(TBigInteger.Two) < 0) or
+    (AY.CompareTo(ADHParams.P.Subtract(TBigInteger.Two)) > 0)) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidDHPublicKey);
+  end;
+
+  if ((ADHParams.Q.IsInitialized) and
+    (not AY.ModPow(ADHParams.Q, ADHParams.P).Equals(TBigInteger.One))) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidYInCorrectGroup);
+  end;
+
+  Result := AY;
+end;
+
+constructor TDHPublicKeyParameters.Create(const AY: TBigInteger;
+  const AParameters: IDHParameters);
+begin
+  inherited Create(False, AParameters);
+  FY := Validate(AY, AParameters);
+end;
+
+constructor TDHPublicKeyParameters.Create(const AY: TBigInteger;
+  const AParameters: IDHParameters; const AAlgorithmOid: IDerObjectIdentifier);
+begin
+  inherited Create(False, AParameters, AAlgorithmOid);
+  FY := Validate(AY, AParameters);
+end;
+
+function TDHPublicKeyParameters.Equals(const AOther: IDHPublicKeyParameters): Boolean;
+begin
+  if AOther = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+  if ((Self as IDHPublicKeyParameters) = AOther) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Result := (Y.Equals(AOther.Y)) and (inherited Equals(AOther));
+end;
+
+function TDHPublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}
+begin
+  Result := Y.GetHashCode() xor (inherited GetHashCode());
+end;
+
+{ TDHPrivateKeyParameters }
+
+function TDHPrivateKeyParameters.GetX: TBigInteger;
+begin
+  Result := FX;
+end;
+
+class function TDHPrivateKeyParameters.Validate(const AX: TBigInteger): TBigInteger;
+begin
+  if (not AX.IsInitialized) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SXUnInitialized);
+  end;
+  Result := AX;
+end;
+
+constructor TDHPrivateKeyParameters.Create(const AX: TBigInteger;
+  const AParameters: IDHParameters);
+begin
+  inherited Create(True, AParameters);
+  FX := Validate(AX);
+end;
+
+constructor TDHPrivateKeyParameters.Create(const AX: TBigInteger;
+  const AParameters: IDHParameters; const AAlgorithmOid: IDerObjectIdentifier);
+begin
+  inherited Create(True, AParameters, AAlgorithmOid);
+  FX := Validate(AX);
+end;
+
+function TDHPrivateKeyParameters.Equals(const AOther: IDHPrivateKeyParameters): Boolean;
+begin
+  if AOther = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+  if ((Self as IDHPrivateKeyParameters) = AOther) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Result := (X.Equals(AOther.X)) and (inherited Equals(AOther));
+end;
+
+function TDHPrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
+{$ENDIF DELPHI}
+begin
+  Result := X.GetHashCode() xor (inherited GetHashCode());
+end;
+
+{ TDHKeyGenerationParameters }
+
+function TDHKeyGenerationParameters.GetParameters: IDHParameters;
+begin
+  Result := FParameters;
+end;
+
+class function TDHKeyGenerationParameters.GetStrengthLocal(const AParameters: IDHParameters): Int32;
+begin
+  if AParameters.L <> 0 then
+  begin
+    Result := AParameters.L;
+  end
+  else
+  begin
+    Result := AParameters.P.BitLength;
+  end;
+end;
+
+constructor TDHKeyGenerationParameters.Create(const ARandom: ISecureRandom;
+  const AParameters: IDHParameters);
+begin
+  inherited Create(ARandom, GetStrengthLocal(AParameters));
+  FParameters := AParameters;
 end;
 
 end.

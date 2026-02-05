@@ -41,7 +41,7 @@ type
     FBigPrimeProducts: TCryptoLibGenericArray<TBigInteger>;
     FIsBooted: Boolean;
 
-    class function ConstructBigPrimeProducts(const primeProducts
+    class function ConstructBigPrimeProducts(const APrimeProducts
       : TCryptoLibInt32Array): TCryptoLibGenericArray<TBigInteger>; static;
 
     class procedure Boot(); static;
@@ -58,8 +58,8 @@ type
     /// (see: Handbook of Applied Cryptography 4.86)
     /// </para>
     /// </summary>
-    class function GenerateSafePrimes(size, certainty: Int32;
-      const random: ISecureRandom): TCryptoLibGenericArray<TBigInteger>; static;
+    class function GenerateSafePrimes(ASize, ACertainty: Int32;
+      const ARandom: ISecureRandom): TCryptoLibGenericArray<TBigInteger>; static;
 
 {$IFNDEF _FIXINSIGHT_}
     /// <summary>
@@ -71,8 +71,8 @@ type
     /// generateSafePrimes)
     /// </para>
     /// </summary>
-    class function SelectGenerator(const p, q: TBigInteger;
-      const random: ISecureRandom): TBigInteger; static;
+    class function SelectGenerator(const AP, AQ: TBigInteger;
+      const ARandom: ISecureRandom): TBigInteger; static;
 {$ENDIF}
   end;
 
@@ -99,171 +99,134 @@ begin
   TDHParametersHelper.Boot;
 end;
 
-class function TDHParametersHelper.ConstructBigPrimeProducts(const primeProducts
+class function TDHParametersHelper.ConstructBigPrimeProducts(const APrimeProducts
   : TCryptoLibInt32Array): TCryptoLibGenericArray<TBigInteger>;
 var
-  bpp: TCryptoLibGenericArray<TBigInteger>;
-  i: Int32;
+  LBpp: TCryptoLibGenericArray<TBigInteger>;
+  LI: Int32;
 begin
-  System.SetLength(bpp, System.Length(FPrimeProducts));
+  System.SetLength(LBpp, System.Length(FPrimeProducts));
 
-  for i := 0 to System.Pred(System.Length(bpp)) do
+  for LI := 0 to System.Pred(System.Length(LBpp)) do
   begin
-    bpp[i] := TBigInteger.ValueOf(primeProducts[i]);
+    LBpp[LI] := TBigInteger.ValueOf(APrimeProducts[LI]);
   end;
 
-  result := bpp;
+  Result := LBpp;
 end;
 
-class function TDHParametersHelper.GenerateSafePrimes(size, certainty: Int32;
-  const random: ISecureRandom): TCryptoLibGenericArray<TBigInteger>;
+class function TDHParametersHelper.GenerateSafePrimes(ASize, ACertainty: Int32;
+  const ARandom: ISecureRandom): TCryptoLibGenericArray<TBigInteger>;
 var
-  p, q: TBigInteger;
-  qLength, minWeight, i, test, rem3, diff, j, prime, qRem: Int32;
-  retryFlag: Boolean;
+  LP, LQ: TBigInteger;
+  LQLength, LMinWeight, LI, LTest, LRem3, LDiff, LJ, LPrime, LQRem: Int32;
+  LRetryFlag: Boolean;
   LPrimeList: TCryptoLibInt32Array;
 begin
-  retryFlag := False;
-  qLength := size - 1;
-  minWeight := TBitOperations.Asr32(size, 2);
+  LRetryFlag := False;
+  LQLength := ASize - 1;
+  LMinWeight := TBitOperations.Asr32(ASize, 2);
 
-  if (size <= 32) then
+  if ASize <= 32 then
   begin
     while True do
-
     begin
-      q := TBigInteger.Create(qLength, 2, random);
+      LQ := TBigInteger.Create(LQLength, 2, ARandom);
 
-      p := q.ShiftLeft(1).Add(TBigInteger.One);
+      LP := LQ.ShiftLeft(1).Add(TBigInteger.One);
 
-      if (not p.IsProbablePrime(certainty, True)) then
-      begin
-        continue;
-      end;
+      if not LP.IsProbablePrime(ACertainty, True) then
+        Continue;
 
-      if ((certainty > 2) and (not(q.IsProbablePrime(certainty, True)))) then
-      begin
-        continue;
-      end;
+      if (ACertainty > 2) and (not LQ.IsProbablePrime(ACertainty, True)) then
+        Continue;
 
-      break;
+      Break;
     end;
   end
   else
   begin
     while True do
     begin
-      q := TBigInteger.Create(qLength, 0, random);
+      LQ := TBigInteger.Create(LQLength, 0, ARandom);
 
-      i := 0;
-      while i < System.Length(FPrimeLists) do
+      LI := 0;
+      while LI < System.Length(FPrimeLists) do
       begin
-        test := q.Remainder(FBigPrimeProducts[i]).Int32Value;
+        LTest := LQ.Remainder(FBigPrimeProducts[LI]).Int32Value;
 
-        if (i = 0) then
+        if LI = 0 then
         begin
-          rem3 := test mod 3;
-          if (rem3 <> 2) then
+          LRem3 := LTest mod 3;
+          if LRem3 <> 2 then
           begin
-            diff := (2 * rem3) + 2;
-            q := q.Add(TBigInteger.ValueOf(diff));
-            test := (test + diff) mod FPrimeProducts[i];
+            LDiff := (2 * LRem3) + 2;
+            LQ := LQ.Add(TBigInteger.ValueOf(LDiff));
+            LTest := (LTest + LDiff) mod FPrimeProducts[LI];
           end;
         end;
 
-        LPrimeList := FPrimeLists[i];
-        for j := 0 to System.Pred(System.Length(LPrimeList)) do
+        LPrimeList := FPrimeLists[LI];
+        for LJ := 0 to System.Pred(System.Length(LPrimeList)) do
         begin
-          prime := LPrimeList[j];
-          qRem := test mod prime;
-          if ((qRem = 0) or (qRem = TBitOperations.Asr32(prime, 1))) then
+          LPrime := LPrimeList[LJ];
+          LQRem := LTest mod LPrime;
+          if (LQRem = 0) or (LQRem = TBitOperations.Asr32(LPrime, 1)) then
           begin
-            q := q.Add(FSix);
-            retryFlag := True;
-            break;
+            LQ := LQ.Add(FSix);
+            LRetryFlag := True;
+            Break;
           end;
         end;
 
-        if retryFlag then
+        if LRetryFlag then
         begin
-          i := 0;
-          retryFlag := False;
+          LI := 0;
+          LRetryFlag := False;
         end
         else
-        begin
-          System.Inc(i);
-        end;
-
+          System.Inc(LI);
       end;
 
-      if (q.BitLength <> qLength) then
-      begin
-        continue;
-      end;
+      if LQ.BitLength <> LQLength then
+        Continue;
 
-      if (not(q.RabinMillerTest(2, random, True))) then
-      begin
-        continue;
-      end;
+      if not LQ.RabinMillerTest(2, ARandom, True) then
+        Continue;
 
-      p := q.ShiftLeft(1).Add(TBigInteger.One);
+      LP := LQ.ShiftLeft(1).Add(TBigInteger.One);
 
-      if (not(p.RabinMillerTest(certainty, random, True))) then
-      begin
-        continue;
-      end;
+      if not LP.RabinMillerTest(ACertainty, ARandom, True) then
+        Continue;
 
-      if ((certainty > 2) and (not q.RabinMillerTest(certainty - 2, random,
-        True))) then
-      begin
-        continue;
-      end;
+      if (ACertainty > 2) and (not LQ.RabinMillerTest(ACertainty - 2, ARandom, True)) then
+        Continue;
 
-      (*
-        * Require a minimum weight of the NAF representation, since low-weight primes may be
-        * weak against a version of the number-field-sieve for the discrete-logarithm-problem.
-        *
-        * See "The number field sieve for integers of low weight", Oliver Schirokauer.
-      *)
-      if (TWNafUtilities.GetNafWeight(p) < minWeight) then
-      begin
-        continue;
-      end;
+      if TWNafUtilities.GetNafWeight(LP) < LMinWeight then
+        Continue;
 
-      break;
+      Break;
     end;
   end;
 
-  result := TCryptoLibGenericArray<TBigInteger>.Create(p, q);
+  Result := TCryptoLibGenericArray<TBigInteger>.Create(LP, LQ);
 end;
 
 {$IFNDEF _FIXINSIGHT_}
 
-class function TDHParametersHelper.SelectGenerator(const p, q: TBigInteger;
-  const random: ISecureRandom): TBigInteger;
+class function TDHParametersHelper.SelectGenerator(const AP, AQ: TBigInteger;
+  const ARandom: ISecureRandom): TBigInteger;
 var
-  g, h, pMinusTwo: TBigInteger;
-  // CompareResOne, CompareResTwo: Boolean;
+  LG, LH, LPMinusTwo: TBigInteger;
 begin
-  pMinusTwo := p.Subtract(TBigInteger.Two);
-
-
-  // (see: Handbook of Applied Cryptography 4.80)
-  //
-  // repeat
-  // g := TBigIntegers.CreateRandomInRange(TBigInteger.Two, pMinusTwo, random);
-  // CompareResOne := g.ModPow(TBigInteger.Two, p).Equals(TBigInteger.One);
-  // CompareResTwo := g.ModPow(q, p).Equals(TBigInteger.One);
-  // until ((not CompareResOne) and (not CompareResTwo));
-
-  // RFC 2631 2.2.1.2 (and see: Handbook of Applied Cryptography 4.81)
+  LPMinusTwo := AP.Subtract(TBigInteger.Two);
 
   repeat
-    h := TBigIntegers.CreateRandomInRange(TBigInteger.Two, pMinusTwo, random);
-    g := h.ModPow(TBigInteger.Two, p);
-  until ((not g.Equals(TBigInteger.One)));
+    LH := TBigIntegers.CreateRandomInRange(TBigInteger.Two, LPMinusTwo, ARandom);
+    LG := LH.ModPow(TBigInteger.Two, AP);
+  until not LG.Equals(TBigInteger.One);
 
-  result := g;
+  Result := LG;
 end;
 {$ENDIF}
 

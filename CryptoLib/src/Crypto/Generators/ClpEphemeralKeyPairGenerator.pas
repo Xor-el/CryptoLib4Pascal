@@ -35,34 +35,33 @@ type
 
   strict private
   var
-    Fgen: IAsymmetricCipherKeyPairGenerator;
-    FkeyEncoder: IKeyEncoder;
+    FGen: IAsymmetricCipherKeyPairGenerator;
+    FKeyEncoder: IKeyEncoder;
 
   public
     function Generate(): IEphemeralKeyPair; inline;
-    constructor Create(const gen: IAsymmetricCipherKeyPairGenerator;
-      const keyEncoder: IKeyEncoder);
+    constructor Create(const AGen: IAsymmetricCipherKeyPairGenerator;
+      const AKeyEncoder: IKeyEncoder);
   end;
 
 implementation
 
 { TEphemeralKeyPairGenerator }
 
-constructor TEphemeralKeyPairGenerator.Create
-  (const gen: IAsymmetricCipherKeyPairGenerator; const keyEncoder: IKeyEncoder);
+constructor TEphemeralKeyPairGenerator.Create(
+  const AGen: IAsymmetricCipherKeyPairGenerator; const AKeyEncoder: IKeyEncoder);
 begin
-  Inherited Create();
-  Fgen := gen;
-  FkeyEncoder := keyEncoder;
+  inherited Create();
+  FGen := AGen;
+  FKeyEncoder := AKeyEncoder;
 end;
 
 function TEphemeralKeyPairGenerator.Generate: IEphemeralKeyPair;
 var
-  eph: IAsymmetricCipherKeyPair;
+  LEph: IAsymmetricCipherKeyPair;
 begin
-  eph := Fgen.generateKeyPair();
-  // Encode the ephemeral public key
-  result := TEphemeralKeyPair.Create(eph, FkeyEncoder);
+  LEph := FGen.GenerateKeyPair();
+  Result := TEphemeralKeyPair.Create(LEph, FKeyEncoder);
 end;
 
 end.

@@ -44,23 +44,23 @@ type
 
   strict private
   var
-    Funinitialised: Boolean;
-    FdefaultStrength: Int32;
+    FUninitialised: Boolean;
+    FDefaultStrength: Int32;
 
-    function GetdefaultStrength: Int32; inline;
+    function GetDefaultStrength: Int32; inline;
 
   strict protected
   var
-    Frandom: ISecureRandom;
-    Fstrength: Int32;
+    FRandom: ISecureRandom;
+    FStrength: Int32;
 
-    procedure EngineInit(const parameters: IKeyGenerationParameters); virtual;
+    procedure EngineInit(const AParameters: IKeyGenerationParameters); virtual;
     function EngineGenerateKey: TCryptoLibByteArray; virtual;
 
   public
 
     constructor Create(); overload;
-    constructor Create(defaultStrength: Int32); overload;
+    constructor Create(ADefaultStrength: Int32); overload;
 
     /// <summary>
     /// initialise the key generator.
@@ -68,7 +68,7 @@ type
     /// <param name="parameters">
     /// the parameters to be used for key generation
     /// </param>
-    procedure Init(const parameters: IKeyGenerationParameters);
+    procedure Init(const AParameters: IKeyGenerationParameters);
 
     /// <summary>
     /// Generate a secret key.
@@ -78,7 +78,7 @@ type
     /// </returns>
     function GenerateKey: TCryptoLibByteArray;
 
-    property defaultStrength: Int32 read GetdefaultStrength;
+    property DefaultStrength: Int32 read GetDefaultStrength;
   end;
 
 implementation
@@ -87,68 +87,63 @@ implementation
 
 constructor TCipherKeyGenerator.Create;
 begin
-  Inherited Create();
-  Funinitialised := true;
+  inherited Create();
+  FUninitialised := True;
 end;
 
-constructor TCipherKeyGenerator.Create(defaultStrength: Int32);
+constructor TCipherKeyGenerator.Create(ADefaultStrength: Int32);
 begin
-  Inherited Create();
-  Funinitialised := true;
-  if (defaultStrength < 1) then
+  inherited Create();
+  FUninitialised := True;
+  if ADefaultStrength < 1 then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidStrengthValue);
   end;
 
-  FdefaultStrength := defaultStrength;
+  FDefaultStrength := ADefaultStrength;
 end;
 
 function TCipherKeyGenerator.EngineGenerateKey: TCryptoLibByteArray;
 begin
-  result := TSecureRandom.GetNextBytes(Frandom, Fstrength);
+  Result := TSecureRandom.GetNextBytes(FRandom, FStrength);
 end;
 
-procedure TCipherKeyGenerator.EngineInit(const parameters
-  : IKeyGenerationParameters);
+procedure TCipherKeyGenerator.EngineInit(const AParameters: IKeyGenerationParameters);
 begin
-  Frandom := parameters.Random;
-  Fstrength := (parameters.Strength + 7) div 8;
+  FRandom := AParameters.Random;
+  FStrength := (AParameters.Strength + 7) div 8;
 end;
 
 function TCipherKeyGenerator.GenerateKey: TCryptoLibByteArray;
 begin
-  if (Funinitialised) then
+  if FUninitialised then
   begin
-    if (FdefaultStrength < 1) then
-    begin
-      raise EInvalidOperationCryptoLibException.CreateRes
-        (@SGeneratorNotInitialized);
-    end;
+    if FDefaultStrength < 1 then
+      raise EInvalidOperationCryptoLibException.CreateRes(@SGeneratorNotInitialized);
 
-    Funinitialised := false;
-
+    FUninitialised := False;
     EngineInit(TKeyGenerationParameters.Create(TSecureRandom.Create()
-      as ISecureRandom, FdefaultStrength) as IKeyGenerationParameters);
+      as ISecureRandom, FDefaultStrength) as IKeyGenerationParameters);
   end;
 
-  result := EngineGenerateKey();
+  Result := EngineGenerateKey();
 end;
 
-function TCipherKeyGenerator.GetdefaultStrength: Int32;
+function TCipherKeyGenerator.GetDefaultStrength: Int32;
 begin
-  result := FdefaultStrength;
+  Result := FDefaultStrength;
 end;
 
-procedure TCipherKeyGenerator.Init(const parameters: IKeyGenerationParameters);
+procedure TCipherKeyGenerator.Init(const AParameters: IKeyGenerationParameters);
 begin
-  if (parameters = Nil) then
+  if AParameters = nil then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersNil);
   end;
 
-  Funinitialised := false;
+  FUninitialised := False;
 
-  EngineInit(parameters);
+  EngineInit(AParameters);
 end;
 
 end.

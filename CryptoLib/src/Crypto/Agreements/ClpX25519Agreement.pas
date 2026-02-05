@@ -26,9 +26,8 @@ uses
   ClpIRawAgreement,
   ClpIX25519Agreement,
   ClpICipherParameters,
-  ClpX25519PrivateKeyParameters,
-  ClpIX25519PrivateKeyParameters,
-  ClpIX25519PublicKeyParameters,
+  ClpIX25519Parameters,
+  ClpX25519Parameters,
   ClpCryptoLibTypes;
 
 resourcestring

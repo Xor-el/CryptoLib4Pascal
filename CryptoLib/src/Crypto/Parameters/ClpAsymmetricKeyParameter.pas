@@ -31,18 +31,18 @@ type
 
   strict private
   var
-    FprivateKey: Boolean;
+    FPrivateKey: Boolean;
 
   strict protected
     function GetPrivateKey: Boolean; inline;
     function GetIsPrivate: Boolean; inline;
 
-    constructor Create(privateKey: Boolean);
+    constructor Create(APrivateKey: Boolean);
 
   public
     property IsPrivate: Boolean read GetIsPrivate;
-    property privateKey: Boolean read GetPrivateKey;
-    function Equals(const other: IAsymmetricKeyParameter): Boolean; reintroduce;
+    property PrivateKey: Boolean read GetPrivateKey;
+    function Equals(const AOther: IAsymmetricKeyParameter): Boolean; reintroduce;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -52,37 +52,37 @@ implementation
 
 { TAsymmetricKeyParameter }
 
-constructor TAsymmetricKeyParameter.Create(privateKey: Boolean);
+constructor TAsymmetricKeyParameter.Create(APrivateKey: Boolean);
 begin
   inherited Create();
-  FprivateKey := privateKey;
+  FPrivateKey := APrivateKey;
 end;
 
-function TAsymmetricKeyParameter.Equals(const other
+function TAsymmetricKeyParameter.Equals(const AOther
   : IAsymmetricKeyParameter): Boolean;
 begin
-  if (other = Nil) then
+  if (AOther = nil) then
   begin
-    Result := false;
+    Result := False;
     Exit;
   end;
-  Result := FprivateKey = other.privateKey;
+  Result := FPrivateKey = AOther.PrivateKey;
 end;
 
 function TAsymmetricKeyParameter.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  Result := Ord(FprivateKey);
+  Result := Ord(FPrivateKey);
 end;
 
 function TAsymmetricKeyParameter.GetIsPrivate: Boolean;
 begin
-  Result := FprivateKey;
+  Result := FPrivateKey;
 end;
 
 function TAsymmetricKeyParameter.GetPrivateKey: Boolean;
 begin
-  Result := FprivateKey;
+  Result := FPrivateKey;
 end;
 
 end.

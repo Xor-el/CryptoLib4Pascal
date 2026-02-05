@@ -37,10 +37,10 @@ type
 
     ['{0AC3D3A8-9422-405F-B0EE-6B7AE0F64F74}']
 
-    procedure Init(argon2Type: TCryptoLibArgon2Type;
-      argon2Version: TCryptoLibArgon2Version; const password, salt, secret,
-      additional: TCryptoLibByteArray; iterations, memory, parallelism: Int32;
-      memoryCostType: TCryptoLibArgon2MemoryCostType);
+    procedure Init(AArgon2Type: TCryptoLibArgon2Type;
+      AArgon2Version: TCryptoLibArgon2Version; const APassword, ASalt, ASecret,
+      AAdditional: TCryptoLibByteArray; AIterations, AMemory, AParallelism: Int32;
+      AMemoryCostType: TCryptoLibArgon2MemoryCostType);
 
   end;
 

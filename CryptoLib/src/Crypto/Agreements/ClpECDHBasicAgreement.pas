@@ -26,13 +26,11 @@ uses
   ClpBigInteger,
   ClpECAlgorithms,
   ClpICipherParameters,
-  ClpIECDomainParameters,
+  ClpIECParameters,
   ClpIECC,
   ClpIBasicAgreement,
   ClpIECDHBasicAgreement,
-  ClpIECPrivateKeyParameters,
   ClpIParametersWithRandom,
-  ClpIECPublicKeyParameters,
   ClpCryptoLibTypes;
 
 resourcestring

@@ -48,7 +48,7 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
 
   end;
 
@@ -56,9 +56,9 @@ implementation
 
 { TKdf2BytesGenerator }
 
-constructor TKdf2BytesGenerator.Create(const digest: IDigest);
+constructor TKdf2BytesGenerator.Create(const ADigest: IDigest);
 begin
-  Inherited Create(1, digest);
+  inherited Create(1, ADigest);
 end;
 
 end.

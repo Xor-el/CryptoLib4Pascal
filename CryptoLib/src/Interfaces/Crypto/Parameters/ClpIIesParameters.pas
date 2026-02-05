@@ -58,8 +58,35 @@ type
     /// <value>
     /// the key size in bits for the MAC used with the message
     /// </value>
-    property macKeySize: Int32 read GetMacKeySize;
+    property MacKeySize: Int32 read GetMacKeySize;
 
+  end;
+
+  /// <summary>
+  /// Parameters for BufferedIesCipher Init: bundles private key, public key,
+  /// and IES parameters for engine.Init(forEncryption, priv, pub, iesParams).
+  /// </summary>
+  IIesCipherParameters = interface(ICipherParameters)
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+
+    function GetPrivateKey: ICipherParameters;
+    function GetPublicKey: ICipherParameters;
+    function GetIesParameters: IIesParameters;
+
+    property PrivateKey: ICipherParameters read GetPrivateKey;
+    property PublicKey: ICipherParameters read GetPublicKey;
+    property IesParameters: IIesParameters read GetIesParameters;
+  end;
+
+  IIesWithCipherParameters = interface(IIesParameters)
+    ['{77F38EA8-08F2-4D0D-A8E9-F3796DCCCA54}']
+
+    function GetCipherKeySize: Int32;
+
+    /// <summary>
+    /// Return the key size in bits for the block cipher used with the message
+    /// </summary>
+    property CipherKeySize: Int32 read GetCipherKeySize;
   end;
 
 implementation

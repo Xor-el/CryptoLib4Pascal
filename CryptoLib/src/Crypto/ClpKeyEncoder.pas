@@ -23,7 +23,7 @@ interface
 
 uses
   ClpIAsymmetricKeyParameter,
-  ClpIECPublicKeyParameters,
+  ClpIECParameters,
   ClpIKeyEncoder,
   ClpCryptoLibTypes;
 

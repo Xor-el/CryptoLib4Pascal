@@ -38,21 +38,21 @@ type
 
   strict private
   var
-    Fparameters: ICipherParameters;
-    Frandom: ISecureRandom;
+    FParameters: ICipherParameters;
+    FRandom: ISecureRandom;
     function GetRandom: ISecureRandom; inline;
     function GetParameters: ICipherParameters; inline;
 
   public
 
-    constructor Create(const parameters: ICipherParameters); overload;
+    constructor Create(const AParameters: ICipherParameters); overload;
 
-    constructor Create(const parameters: ICipherParameters;
-      const random: ISecureRandom); overload;
+    constructor Create(const AParameters: ICipherParameters;
+      const ARandom: ISecureRandom); overload;
 
-    property random: ISecureRandom read GetRandom;
+    property Random: ISecureRandom read GetRandom;
 
-    property parameters: ICipherParameters read GetParameters;
+    property Parameters: ICipherParameters read GetParameters;
 
   end;
 
@@ -60,37 +60,37 @@ implementation
 
 { TParametersWithRandom }
 
-constructor TParametersWithRandom.Create(const parameters: ICipherParameters);
+constructor TParametersWithRandom.Create(const AParameters: ICipherParameters);
 begin
-  Create(parameters, TSecureRandom.Create() as ISecureRandom);
+  Create(AParameters, TSecureRandom.Create() as ISecureRandom);
 end;
 
-constructor TParametersWithRandom.Create(const parameters: ICipherParameters;
-  const random: ISecureRandom);
+constructor TParametersWithRandom.Create(const AParameters: ICipherParameters;
+  const ARandom: ISecureRandom);
 begin
   inherited Create();
-  if (parameters = Nil) then
+  if (AParameters = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SParameters);
   end;
 
-  if (random = Nil) then
+  if (ARandom = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SRandom);
   end;
 
-  Fparameters := parameters;
-  Frandom := random;
+  FParameters := AParameters;
+  FRandom := ARandom;
 end;
 
 function TParametersWithRandom.GetParameters: ICipherParameters;
 begin
-  Result := Fparameters;
+  Result := FParameters;
 end;
 
 function TParametersWithRandom.GetRandom: ISecureRandom;
 begin
-  Result := Frandom;
+  Result := FRandom;
 end;
 
 end.

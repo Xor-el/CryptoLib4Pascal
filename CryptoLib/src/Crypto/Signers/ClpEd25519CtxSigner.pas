@@ -28,9 +28,8 @@ uses
   ClpICipherParameters,
   ClpISigner,
   ClpIEd25519CtxSigner,
-  ClpIEd25519PrivateKeyParameters,
-  ClpIEd25519PublicKeyParameters,
-  ClpEd25519PrivateKeyParameters,
+  ClpIEd25519Parameters,
+  ClpEd25519Parameters,
   ClpCryptoLibTypes;
 
 resourcestring

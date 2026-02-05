@@ -53,9 +53,9 @@ type
 
   strict protected
   var
-    Fdigest: IDigest;
-    FcounterStart: Int32;
-    Fshared, Fiv: TCryptoLibByteArray;
+    FDigest: IDigest;
+    FCounterStart: Int32;
+    FShared, FIv: TCryptoLibByteArray;
 
     function GetDigest(): IDigest; virtual;
 
@@ -70,14 +70,14 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(counterStart: Int32; const digest: IDigest);
+    constructor Create(ACounterStart: Int32; const ADigest: IDigest);
 
-    procedure Init(const parameters: IDerivationParameters); virtual;
+    procedure Init(const AParameters: IDerivationParameters); virtual;
 
     /// <summary>
     /// return the underlying digest.
     /// </summary>
-    property digest: IDigest read GetDigest;
+    property Digest: IDigest read GetDigest;
 
     /// <summary>
     /// fill len bytes of the output buffer with bytes generated from the
@@ -89,8 +89,8 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the out buffer is too small.
     /// </exception>
-    function GenerateBytes(const output: TCryptoLibByteArray;
-      outOff, length: Int32): Int32; virtual;
+    function GenerateBytes(const AOutput: TCryptoLibByteArray;
+      AOutOff, ALength: Int32): Int32; virtual;
 
   end;
 
@@ -98,29 +98,31 @@ implementation
 
 { TBaseKdfBytesGenerator }
 
-constructor TBaseKdfBytesGenerator.Create(counterStart: Int32;
-  const digest: IDigest);
+constructor TBaseKdfBytesGenerator.Create(ACounterStart: Int32;
+  const ADigest: IDigest);
 begin
-  Inherited Create();
-  FcounterStart := counterStart;
-  Fdigest := digest;
+  inherited Create();
+  FCounterStart := ACounterStart;
+  FDigest := ADigest;
 end;
 
-function TBaseKdfBytesGenerator.GenerateBytes(const output: TCryptoLibByteArray;
-  outOff, length: Int32): Int32;
+function TBaseKdfBytesGenerator.GenerateBytes(const AOutput: TCryptoLibByteArray;
+  AOutOff, ALength: Int32): Int32;
 var
-  outLen, cThreshold, i: Int32;
-  oBytes: Int64;
-  counterBase: UInt32;
-  dig, C: TCryptoLibByteArray;
+  LOutLen, LCThreshold, LI, LOutOff, LLength: Int32;
+  LOBytes: Int64;
+  LCounterBase: UInt32;
+  LDig, LC: TCryptoLibByteArray;
 begin
-  if ((System.length(output) - length) < outOff) then
+  if (System.Length(AOutput) - ALength) < AOutOff then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
   end;
 
-  oBytes := length;
-  outLen := Fdigest.GetDigestSize;
+  LOBytes := ALength;
+  LOutLen := FDigest.GetDigestSize;
+  LOutOff := AOutOff;
+  LLength := ALength;
 
   //
   // this is at odds with the standard implementation, the
@@ -129,84 +131,82 @@ begin
   // array with a long index at the moment...
   //
 
-  if (oBytes > ((Int64(2) shl 32) - 1)) then
+  if LOBytes > ((Int64(2) shl 32) - 1) then
   begin
-
     raise EArgumentCryptoLibException.CreateRes(@SOutputLengthTooLarge);
   end;
 
-  cThreshold := Int32((oBytes + outLen - 1) div outLen);
+  LCThreshold := Int32((LOBytes + LOutLen - 1) div LOutLen);
 
-  System.SetLength(dig, Fdigest.GetDigestSize);
+  System.SetLength(LDig, FDigest.GetDigestSize);
 
-  System.SetLength(C, 4);
+  System.SetLength(LC, 4);
 
-  TPack.UInt32_To_BE(UInt32(FcounterStart), C, 0);
+  TPack.UInt32_To_BE(UInt32(FCounterStart), LC, 0);
 
-  counterBase := UInt32(FcounterStart and (not $FF));
+  LCounterBase := UInt32(FCounterStart and (not $FF));
 
-  i := 0;
-  while i < cThreshold do
+  LI := 0;
+  while LI < LCThreshold do
   begin
-    Fdigest.BlockUpdate(Fshared, 0, System.length(Fshared));
-    Fdigest.BlockUpdate(C, 0, 4);
+    FDigest.BlockUpdate(FShared, 0, System.Length(FShared));
+    FDigest.BlockUpdate(LC, 0, 4);
 
-    if (Fiv <> Nil) then
+    if FIv <> nil then
     begin
-      Fdigest.BlockUpdate(Fiv, 0, System.length(Fiv));
+      FDigest.BlockUpdate(FIv, 0, System.Length(FIv));
     end;
 
-    Fdigest.DoFinal(dig, 0);
+    FDigest.DoFinal(LDig, 0);
 
-    if (length > outLen) then
+    if LLength > LOutLen then
     begin
-      System.Move(dig[0], output[outOff], outLen * System.SizeOf(Byte));
-      outOff := outOff + outLen;
-      length := length - outLen;
+      System.Move(LDig[0], AOutput[LOutOff], LOutLen * System.SizeOf(Byte));
+      LOutOff := LOutOff + LOutLen;
+      LLength := LLength - LOutLen;
     end
     else
     begin
-      System.Move(dig[0], output[outOff], length * System.SizeOf(Byte));
+      System.Move(LDig[0], AOutput[LOutOff], LLength * System.SizeOf(Byte));
     end;
 
-    System.Inc(C[3]);
-    if (C[3] = 0) then
-
+    System.Inc(LC[3]);
+    if LC[3] = 0 then
     begin
-      counterBase := counterBase + $100;
-      TPack.UInt32_To_BE(counterBase, C, 0);
+      LCounterBase := LCounterBase + $100;
+      TPack.UInt32_To_BE(LCounterBase, LC, 0);
     end;
 
-    System.Inc(i);
+    System.Inc(LI);
   end;
 
-  Fdigest.Reset();
+  FDigest.Reset();
 
-  result := Int32(oBytes);
+  Result := Int32(LOBytes);
 end;
 
 function TBaseKdfBytesGenerator.GetDigest: IDigest;
 begin
-  result := Fdigest;
+  Result := FDigest;
 end;
 
-procedure TBaseKdfBytesGenerator.Init(const parameters: IDerivationParameters);
+procedure TBaseKdfBytesGenerator.Init(const AParameters: IDerivationParameters);
 var
-  Lparameters: IDerivationParameters;
-  p1: IKdfParameters;
-  p2: IIso18033KdfParameters;
+  LParameters: IDerivationParameters;
+  LP1: IKdfParameters;
+  LP2: IIso18033KdfParameters;
 begin
-  Lparameters := parameters;
+  LParameters := AParameters;
 
-  if Supports(Lparameters, IKdfParameters, p1) then
+  if Supports(LParameters, IKdfParameters, LP1) then
   begin
-    Fshared := p1.GetSharedSecret();
-    Fiv := p1.GetIV();
+    FShared := LP1.GetSharedSecret();
+    FIv := LP1.GetIV();
   end
-  else if Supports(Lparameters, IIso18033KdfParameters, p2) then
+  else if Supports(LParameters, IIso18033KdfParameters, LP2) then
   begin
-    Fshared := p2.GetSeed();
-    Fiv := Nil;
+    FShared := LP2.GetSeed();
+    FIv := nil;
   end
   else
   begin

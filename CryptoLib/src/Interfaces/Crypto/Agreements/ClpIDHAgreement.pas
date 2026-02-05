@@ -23,7 +23,7 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIDHPublicKeyParameters,
+  ClpIDHParameters,
   ClpICipherParameters;
 
 type

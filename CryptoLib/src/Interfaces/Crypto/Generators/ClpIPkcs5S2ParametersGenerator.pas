@@ -39,7 +39,7 @@ type
     /// <value>
     /// the underlying digest.
     /// </value>
-    property digest: IDigest read GetDigest;
+    property Digest: IDigest read GetDigest;
 
   end;
 

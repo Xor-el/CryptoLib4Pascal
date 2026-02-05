@@ -27,8 +27,7 @@ uses
   ClpBigIntegers,
   ClpICipherParameters,
   ClpParameterUtilities,
-  ClpIRsaKeyParameters,
-  ClpIRsaPrivateCrtKeyParameters,
+  ClpIRsaParameters,
   ClpIRsa,
   ClpIRsaCoreEngine,
   ClpCryptoLibTypes;

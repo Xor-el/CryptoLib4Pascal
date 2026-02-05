@@ -31,10 +31,10 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpX25519KeyPairGenerator,
-  ClpIX25519KeyPairGenerator,
-  ClpX25519KeyGenerationParameters,
-  ClpIX25519KeyGenerationParameters,
+  ClpX25519Generators,
+  ClpIX25519Generators,
+  ClpX25519Parameters,
+  ClpIX25519Parameters,
   ClpX25519Agreement,
   ClpIX25519Agreement,
   ClpIAsymmetricCipherKeyPair,
