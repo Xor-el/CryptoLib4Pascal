@@ -1,3 +1,20 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
 unit ClpEndoUtilities;
 
 {$I ..\..\..\Include\CryptoLib.inc}
@@ -5,6 +22,7 @@ unit ClpEndoUtilities;
 interface
 
 uses
+  SysUtils,
   ClpBigInteger,
   ClpIECCore,
   ClpIPreCompCallback,
@@ -16,6 +34,18 @@ uses
 
 type
   TEndoUtilities = class sealed(TObject)
+  strict private
+    type
+      TMapPointCallback = class sealed(TInterfacedObject, IPreCompCallback)
+      strict private
+        FEndomorphism: IECEndomorphism;
+        FPoint: IECPoint;
+        function CheckExisting(const AExistingEndo: IEndoPreCompInfo;
+          const AEndomorphism: IECEndomorphism): Boolean;
+      public
+        constructor Create(const AEndomorphism: IECEndomorphism; const APoint: IECPoint);
+        function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+      end;
   public
     const PRECOMP_NAME = 'bc_endo';
     class function DecomposeScalar(const AP: IScalarSplitParameters;
@@ -29,19 +59,7 @@ type
 
 implementation
 
-type
-  TMapPointCallback = class sealed(TInterfacedObject, IPreCompCallback)
-  strict private
-    FEndomorphism: IECEndomorphism;
-    FPoint: IECPoint;
-    function CheckExisting(const AExistingEndo: IEndoPreCompInfo;
-      const AEndomorphism: IECEndomorphism): Boolean;
-  public
-    constructor Create(const AEndomorphism: IECEndomorphism; const APoint: IECPoint);
-    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
-  end;
-
-constructor TMapPointCallback.Create(const AEndomorphism: IECEndomorphism;
+constructor TEndoUtilities.TMapPointCallback.Create(const AEndomorphism: IECEndomorphism;
   const APoint: IECPoint);
 begin
   inherited Create;
@@ -49,14 +67,14 @@ begin
   FPoint := APoint;
 end;
 
-function TMapPointCallback.CheckExisting(const AExistingEndo: IEndoPreCompInfo;
+function TEndoUtilities.TMapPointCallback.CheckExisting(const AExistingEndo: IEndoPreCompInfo;
   const AEndomorphism: IECEndomorphism): Boolean;
 begin
   Result := (AExistingEndo <> nil) and (AExistingEndo.Endomorphism = AEndomorphism) and
     (AExistingEndo.MappedPoint <> nil);
 end;
 
-function TMapPointCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+function TEndoUtilities.TMapPointCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
   LExistingEndo: IEndoPreCompInfo;
   LResult: TEndoPreCompInfo;
@@ -109,9 +127,10 @@ class function TEndoUtilities.MapPoint(const AEndomorphism: IECEndomorphism;
 var
   LPrecomp: IPreCompInfo;
   LEndo: IEndoPreCompInfo;
+  LPreCompCallback: IPreCompCallback;
 begin
-  LPrecomp := AP.Curve.Precompute(AP, PRECOMP_NAME,
-    TMapPointCallback.Create(AEndomorphism, AP) as IPreCompCallback);
+  LPreCompCallback := TEndoUtilities.TMapPointCallback.Create(AEndomorphism, AP);
+  LPrecomp := AP.Curve.Precompute(AP, PRECOMP_NAME, LPreCompCallback);
   if not Supports(LPrecomp, IEndoPreCompInfo, LEndo) then
     raise EInvalidCastCryptoLibException.Create('Expected EndoPreCompInfo');
   Result := LEndo.MappedPoint;

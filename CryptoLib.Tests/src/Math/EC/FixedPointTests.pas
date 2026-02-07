@@ -33,12 +33,11 @@ uses
   Generics.Collections,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIECC,
+  ClpIECCore,
   ClpBigInteger,
   ClpECNamedCurveTable,
   ClpCustomNamedCurves,
   ClpMultipliers,
-  ClpIMultipliers,
   ClpECAlgorithms,
   ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes,
@@ -86,7 +85,7 @@ var
   tempDict: TDictionary<String, String>;
   names: TCryptoLibStringArray;
   x9, X9A, X9B: IX9ECParameters;
-  M: IFixedPointCombMultiplier;
+  M: IECMultiplier;
   k: TBigInteger;
   pRef, pA, pB: IECPoint;
 

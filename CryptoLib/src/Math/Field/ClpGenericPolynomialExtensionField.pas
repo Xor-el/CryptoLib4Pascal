@@ -22,6 +22,7 @@ unit ClpGenericPolynomialExtensionField;
 interface
 
 uses
+  SysUtils,
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpBitOperations,
@@ -108,7 +109,7 @@ begin
     FMinimalPolynomial.Equals(LOther.MinimalPolynomial);
 end;
 
-function TGenericPolynomialExtensionField.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI};
+function TGenericPolynomialExtensionField.GetHashCode: {$IFDEF DELPHI}Int32 {$ELSE}PtrInt {$ENDIF DELPHI};
 begin
   Result := Int32(UInt32(FSubfield.GetHashCode) xor
     TBitOperations.RotateLeft32(UInt32(FMinimalPolynomial.GetHashCode), 16));

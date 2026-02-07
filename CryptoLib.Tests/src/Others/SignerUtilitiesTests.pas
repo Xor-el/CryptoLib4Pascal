@@ -33,7 +33,9 @@ uses
 {$ENDIF FPC}
   ClpBigInteger,
   ClpISigner,
-  ClpECC,
+  ClpECCurve,
+  ClpIECCore,
+  ClpIECFieldElement,
   ClpIRandom,
   ClpSignerUtilities,
   ClpSecureRandom,
@@ -41,7 +43,6 @@ uses
   ClpECParameters,
   ClpICipherParameters,
   ClpIECParameters,
-  ClpIECC,
   ClpIDsaParameters,
   ClpDsaParameters,
   ClpRsaParameters,

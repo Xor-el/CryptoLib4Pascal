@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpSimpleLookupTable;
+unit ClpECLookupTables;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -24,14 +24,22 @@ interface
 uses
   SysUtils,
   ClpIECCore,
-  ClpAbstractECLookupTable,
   ClpCryptoLibTypes;
 
 resourcestring
   SConstantTimeLookupNotSupported = 'Constant-time lookup not supported';
 
 type
-  TSimpleLookupTable = class(TAbstractECLookupTable, ISimpleLookupTable)
+  TAbstractECLookupTable = class abstract(TInterfacedObject, IECLookupTable)
+  public
+    function Lookup(AIndex: Int32): IECPoint; virtual; abstract;
+    function GetSize: Int32; virtual; abstract;
+    function LookupVar(AIndex: Int32): IECPoint; virtual;
+    property Size: Int32 read GetSize;
+  end;
+
+type
+  TSimpleLookupTable = class(TAbstractECLookupTable, IECLookupTable)
   strict private
     FPoints: TCryptoLibGenericArray<IECPoint>;
 
@@ -45,6 +53,13 @@ type
   end;
 
 implementation
+
+{ TAbstractECLookupTable }
+
+function TAbstractECLookupTable.LookupVar(AIndex: Int32): IECPoint;
+begin
+  Result := Lookup(AIndex);
+end;
 
 { TSimpleLookupTable }
 

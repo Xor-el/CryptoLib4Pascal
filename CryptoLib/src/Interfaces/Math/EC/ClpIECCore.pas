@@ -33,43 +33,11 @@ uses
 type
   IECCurve = interface;
   IECCurveConfig = interface;
-  IECMultiplier = interface;
   IECPoint = interface;
-  IECPointBase = interface;
-  IAbstractFpPoint = interface;
-  IFpPoint = interface;
-  IAbstractF2mPoint = interface;
-  IF2mPoint = interface;
 
-  IECPointMap = interface(IInterface)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567822}']
-    function Map(const AP: IECPoint): IECPoint;
-  end;
-
-  IECEndomorphism = interface(IInterface)
-    ['{E5F6A7B8-C9D0-1234-E5F6-A7B8C9D01235}']
-    function GetPointMap: IECPointMap;
-    function GetHasEfficientPointMap: Boolean;
-    property PointMap: IECPointMap read GetPointMap;
-    property HasEfficientPointMap: Boolean read GetHasEfficientPointMap;
-  end;
-
-  IGlvEndomorphism = interface(IECEndomorphism)
-    ['{F6A7B8C9-D0E1-2345-F6A7-B8C9D0E12346}']
-    function DecomposeScalar(const AK: TBigInteger): TCryptoLibGenericArray<TBigInteger>;
-  end;
-
-  IECLookupTable = interface(IInterface)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567821}']
-    function GetSize: Int32;
-    function Lookup(AIndex: Int32): IECPoint;
-    function LookupVar(AIndex: Int32): IECPoint;
-    property Size: Int32 read GetSize;
-  end;
-
-  ISimpleLookupTable = interface(IECLookupTable)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567835}']
-  end;
+  IECMultiplier = interface;
+  IECEndomorphism = interface;
+  IECLookupTable = interface;
 
   IECCurve = interface(IInterface)
     ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567819}']
@@ -113,7 +81,43 @@ type
     function Precompute(const APoint: IECPoint; const AName: String; const ACallback: IPreCompCallback): IPreCompInfo; overload;
     function Precompute(const AName: String; const ACallback: IPreCompCallback): IPreCompInfo; overload;
     function DecodePoint(const AEncoded: TCryptoLibByteArray): IECPoint;
+    function SupportsCoordinateSystem(ACoord: Int32): Boolean;
     function Configure: IECCurveConfig;
+    procedure ApplyConfig(ACoord: Int32; const AEndomorphism: IECEndomorphism; const AMultiplier: IECMultiplier);
+    function CloneCurve: IECCurve;
+    function ValidatePoint(const AX, AY: TBigInteger): IECPoint;
+  end;
+
+  IECCurveConfig = interface(IInterface)
+    ['{C5D6E7F8-A9B0-1234-C5D6-E7F8A9B01236}']
+
+    function SetCoordinateSystem(ACoord: Int32): IECCurveConfig;
+    function SetEndomorphism(const AEndomorphism: IECEndomorphism): IECCurveConfig;
+    function SetMultiplier(const AMultiplier: IECMultiplier): IECCurveConfig;
+    function CreateCurve: IECCurve;
+  end;
+
+  IAbstractFpCurve = interface(IECCurve)
+    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    function IsValidFieldElement(const AX: TBigInteger): Boolean;
+    function RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement;
+    function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement;
+    function DecompressPoint(AYTilde: Int32; const AX1: TBigInteger): IECPoint;
+  end;
+
+  IFpCurve = interface(IAbstractFpCurve)
+    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678902}']
+  end;
+
+  IAbstractF2mCurve = interface(IECCurve)
+    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    function GetIsKoblitz: Boolean;
+    function SolveQuadraticEquation(const ABeta: IECFieldElement): IECFieldElement;
+    property IsKoblitz: Boolean read GetIsKoblitz;
+  end;
+
+  IF2mCurve = interface(IAbstractF2mCurve)
+    ['{C3D4E5F6-A7B8-9012-CDEF-123456789013}']
   end;
 
   IECPoint = interface(IInterface)
@@ -171,6 +175,7 @@ type
     function TwicePlus(const AB: IECPoint): IECPoint;
     function ThreeTimes: IECPoint;
     function Equals(const AOther: IECPoint): Boolean;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
   end;
 
   IECPointBase = interface(IECPoint)
@@ -195,46 +200,36 @@ type
     ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567834}']
   end;
 
-  IECCurveConfig = interface(IInterface)
-    ['{C5D6E7F8-A9B0-1234-C5D6-E7F8A9B01236}']
-
-    function SetCoordinateSystem(ACoord: Int32): IECCurveConfig;
-    function SetEndomorphism(const AEndomorphism: IECEndomorphism): IECCurveConfig;
-    function SetMultiplier(const AMultiplier: IECMultiplier): IECCurveConfig;
-    function CreateCurve: IECCurve;
+  IECPointMap = interface(IInterface)
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567822}']
+    function Map(const AP: IECPoint): IECPoint;
   end;
 
-  IAbstractFpCurve = interface(IECCurve)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
-    function IsValidFieldElement(const AX: TBigInteger): Boolean; override;
-    function RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement; override;
-    function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement; override;
-    function DecompressPoint(AYTilde: Int32; const AX1: TBigInteger): IECPoint; override;
+  IECEndomorphism = interface(IInterface)
+    ['{E5F6A7B8-C9D0-1234-E5F6-A7B8C9D01235}']
+    function GetPointMap: IECPointMap;
+    function GetHasEfficientPointMap: Boolean;
+    property PointMap: IECPointMap read GetPointMap;
+    property HasEfficientPointMap: Boolean read GetHasEfficientPointMap;
   end;
 
-  IFpCurve = interface(IAbstractFpCurve)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678902}']
+  IGlvEndomorphism = interface(IECEndomorphism)
+    ['{F6A7B8C9-D0E1-2345-F6A7-B8C9D0E12346}']
+    function DecomposeScalar(const AK: TBigInteger): TCryptoLibGenericArray<TBigInteger>;
   end;
 
-  IAbstractF2mCurve = interface(IECCurve)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
-    function GetIsKoblitz: Boolean;
-    function SolveQuadraticEquation(const ABeta: IECFieldElement): IECFieldElement;
-    property IsKoblitz: Boolean read GetIsKoblitz;
-  end;
-
-  IF2mCurve = interface(IAbstractF2mCurve)
-    ['{C3D4E5F6-A7B8-9012-CDEF-123456789013}']
+  IECLookupTable = interface(IInterface)
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567821}']
+    function GetSize: Int32;
+    function Lookup(AIndex: Int32): IECPoint;
+    function LookupVar(AIndex: Int32): IECPoint;
+    property Size: Int32 read GetSize;
   end;
 
   IECMultiplier = interface(IInterface)
     ['{D4E5F6A7-B8C9-0123-D4E5-F6A7B8C90124}']
 
     function Multiply(const APoint: IECPoint; const AK: TBigInteger): IECPoint;
-  end;
-
-  IWNafL2RMultiplier = interface(IECMultiplier)
-    ['{E5F6A7B8-C9D0-2345-E5F6-A7B8C9D02346}']
   end;
 
 implementation

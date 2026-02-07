@@ -30,7 +30,7 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpECCompUtilities,
+  ClpWnafUtilities,
   ClpECCurve,
   ClpIECCore,
   ClpIAsn1Objects,

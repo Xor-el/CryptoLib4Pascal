@@ -6,7 +6,14 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
 { * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpECAlgorithms;
 
@@ -21,6 +28,7 @@ uses
   ClpIECFieldElement,
   ClpIFiniteField,
   ClpIPolynomialExtensionField,
+  ClpIWNafPreCompInfo,
   ClpCryptoLibTypes;
 
 type
@@ -75,7 +83,7 @@ type
 implementation
 
 uses
-  System.Math,
+  Math,
   ClpBitOperations,
   ClpECCurve,
   ClpFixedPointUtilities,
@@ -85,8 +93,7 @@ uses
   ClpWNafUtilities,
   ClpWNafPreCompInfo,
   ClpEndoUtilities,
-  ClpNat,
-  ClpCryptoLibTypes;
+  ClpNat;
 
 { TECAlgorithms }
 
@@ -525,7 +532,7 @@ begin
     LSmallR := LInfinity;
     if LWiP <> 0 then
     begin
-      LnP := System.Math.Abs(LWiP);
+      LnP := System.Abs(LWiP);
       if LWiP < 0 then
         LTableP := APreCompNegP
       else
@@ -534,7 +541,7 @@ begin
     end;
     if LWiQ <> 0 then
     begin
-      LnQ := System.Math.Abs(LWiQ);
+      LnQ := System.Abs(LWiQ);
       if LWiQ < 0 then
         LTableQ := APreCompNegQ
       else
@@ -596,13 +603,13 @@ begin
   J := 0;
   for I := 0 to LLen - 1 do
   begin
-    LAbPair := AGlvEndomorphism.DecomposeScalar(AKs[I].Mod(LN));
+    LAbPair := AGlvEndomorphism.DecomposeScalar(AKs[I].&Mod(LN));
     LAbs[J] := LAbPair[0];
     Inc(J);
     LAbs[J] := LAbPair[1];
     Inc(J);
   end;
-  if AGlvEndomorphism.HasEfficientPointMap then
+  if (AGlvEndomorphism.HasEfficientPointMap) then
     Result := ImplSumOfMultiplies(AGlvEndomorphism as IECEndomorphism, APs, LAbs)
   else
   begin
@@ -639,6 +646,7 @@ begin
   System.SetLength(LNegs, LFullCount);
   System.SetLength(LInfos, LFullCount);
   System.SetLength(LWnafs, LFullCount);
+  LPointMap := AEndomorphism.PointMap;
   for I := 0 to LHalfCount - 1 do
   begin
     J0 := I shl 1;
@@ -654,7 +662,6 @@ begin
     LP := APs[I];
     LInfoP := TWNafUtilities.Precompute(LP, LMinWidth, True);
     LQ := TEndoUtilities.MapPoint(AEndomorphism, LP);
-    LPointMap := AEndomorphism.PointMap;
     LInfoQ := TWNafUtilities.PrecomputeWithPointMap(LQ, LPointMap, LInfoP, True);
     LWidthP := System.Math.Min(8, LInfoP.Width);
     LWidthQ := System.Math.Min(8, LInfoQ.Width);
@@ -700,7 +707,7 @@ begin
         LWi := 0;
       if LWi <> 0 then
       begin
-        LN := System.Math.Abs(LWi);
+        LN := System.Abs(LWi);
         LInfo := AInfos[J];
         if (LWi < 0) = ANegs[J] then
           LTable := LInfo.PreComp

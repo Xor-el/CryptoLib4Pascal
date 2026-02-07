@@ -31,8 +31,8 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpECC,
-  ClpIECC,
+  ClpECCurve,
+  ClpIECCore,
   ClpIHMac,
   ClpHMac,
   ClpIESEngine,

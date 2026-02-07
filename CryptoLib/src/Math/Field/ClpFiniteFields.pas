@@ -26,6 +26,7 @@ uses
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpIFiniteField,
+  ClpIPolynomial,
   ClpIPolynomialExtensionField,
   ClpPrimeField,
   ClpGF2Polynomial,

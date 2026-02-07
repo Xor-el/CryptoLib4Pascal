@@ -70,7 +70,7 @@ begin
   Result := FCharacteristic.Equals(AOther.Characteristic);
 end;
 
-function TPrimeField.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI};
+function TPrimeField.GetHashCode: {$IFDEF DELPHI}Int32{$ELSE}PtrInt{$ENDIF};
 begin
   Result := FCharacteristic.GetHashCode();
 end;

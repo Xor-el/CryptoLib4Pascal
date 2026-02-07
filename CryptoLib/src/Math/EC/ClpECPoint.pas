@@ -6,7 +6,14 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
 { * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpECPoint;
 
@@ -18,6 +25,12 @@ uses
   SysUtils,
   SyncObjs,
   Generics.Collections,
+  ClpBitOperations,
+  ClpECAlgorithms,
+  ClpECFieldElement,
+  ClpECCurveConstants,
+  ClpIValidityPreCompInfo,
+  ClpValidityPreCompInfo,
   ClpBigInteger,
   ClpIECCore,
   ClpIECFieldElement,
@@ -27,9 +40,29 @@ uses
   ClpSecureRandom,
   ClpCryptoLibTypes;
 
+resourcestring
+  SPointNotInNormalForm = 'point not in normal form';
+  SUnknownCoordinateSystem = 'unknown coordinate system';
+  SUnsupportedCoordinateSystem = 'unsupported coordinate system';
+  SDetachedPointsMustBeInAffine = 'Detached points must be in affine coordinates';
+  SNotAProjectiveCoordinateSystem = 'not a projective coordinate system';
+  SInvalidTimesPow2Exponent = 'exponent cannot be negative';
+
 type
   TECPoint = class abstract(TInterfacedObject, IECPoint)
   strict private
+type
+  TValidityCallback = class sealed(TInterfacedObject, IPreCompCallback)
+  strict private
+    FOuter: IECPoint;
+    FDecompressed: Boolean;
+    FCheckOrder: Boolean;
+  public
+    constructor Create(const AOuter: IECPoint; ADecompressed, ACheckOrder: Boolean);
+    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+  end;
+
+  var
     FPreCompTable: TDictionary<String, IPreCompInfo>;
     FPointLock: TCriticalSection;
     FTableLock: TCriticalSection;
@@ -56,6 +89,8 @@ type
     function GetIsInfinity: Boolean; virtual;
     function GetXCoord: IECFieldElement; virtual;
     function GetYCoord: IECFieldElement; virtual;
+    property XCoord: IECFieldElement read GetXCoord;
+    property YCoord: IECFieldElement read GetYCoord;
     function GetRawXCoord: IECFieldElement; virtual;
     function GetRawYCoord: IECFieldElement; virtual;
     function GetZCoord(AIndex: Int32): IECFieldElement; virtual;
@@ -180,34 +215,11 @@ type
 implementation
 
 uses
-  ClpECAlgorithms,
-  ClpECFieldElement,
-  ClpECCurveConstants,
-  ClpIValidityPreCompInfo,
-  ClpValidityPreCompInfo,
   ClpECCurve;
 
-resourcestring
-  SPointNotInNormalForm = 'point not in normal form';
-  SUnknownCoordinateSystem = 'unknown coordinate system';
-  SDetachedPointsMustBeInAffine = 'Detached points must be in affine coordinates';
-  SNotAProjectiveCoordinateSystem = 'not a projective coordinate system';
-  SInvalidTimesPow2Exponent = 'exponent cannot be negative';
+{ TECPoint.TValidityCallback }
 
-{ TValidityCallback }
-
-type
-  TValidityCallback = class sealed(TInterfacedObject, IPreCompCallback)
-  strict private
-    FOuter: IECPoint;
-    FDecompressed: Boolean;
-    FCheckOrder: Boolean;
-  public
-    constructor Create(const AOuter: IECPoint; ADecompressed, ACheckOrder: Boolean);
-    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
-  end;
-
-constructor TValidityCallback.Create(const AOuter: IECPoint; ADecompressed,
+constructor TECPoint.TValidityCallback.Create(const AOuter: IECPoint; ADecompressed,
   ACheckOrder: Boolean);
 begin
   inherited Create;
@@ -216,7 +228,7 @@ begin
   FCheckOrder := ACheckOrder;
 end;
 
-function TValidityCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+function TECPoint.TValidityCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
   LValidity: IValidityPreCompInfo;
 begin
@@ -824,7 +836,7 @@ begin
         end;
       end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
   Rhs := X.Square().Add(A).Multiply(X).Add(B);
   Result := Lhs.Equals(Rhs);
@@ -967,7 +979,7 @@ var
   LVSquared, LVCubed, LVSquaredV2, LA: IECFieldElement;
   LZ1IsOne, LZ2IsOne: Boolean;
   LZ1Squared, LS2, LZ2Squared, LS1, LH, LR: IECFieldElement;
-  LHSquared, LG, LV2: IECFieldElement;
+  LHSquared, LG: IECFieldElement;
   LZ1Cubed, LZ2Cubed, LU2b, LS2b, LU1b, LS1b: IECFieldElement;
   LC, LW1, LW2b, LA1: IECFieldElement;
   LZ3Squared, LW3: IECFieldElement;
@@ -1157,7 +1169,7 @@ begin
       Result := TFpPoint.Create(LCurve, X3, Y3, LZs);
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1274,7 +1286,7 @@ begin
       Result := TwiceJacobianModified(True);
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1283,7 +1295,7 @@ var
   LCurve: IECCurve;
   LCoord: Int32;
   X1, Y1, X2, Y2, Dx, Dy: IECFieldElement;
-  LX, LY, Ld, LD, LI, LL1, LL2, X4, Y4: IECFieldElement;
+  LX, LY, Ld, LBigD, LI, LL1, LL2, X4, Y4: IECFieldElement;
 begin
   if (Self as IECPoint) = AB then
     Exit(ThreeTimes());
@@ -1322,8 +1334,8 @@ begin
       if Ld.GetIsZero then
         Exit(LCurve.Infinity);
 
-      LD := Ld.Multiply(Dx);
-      LI := LD.Invert();
+      LBigD := Ld.Multiply(Dx);
+      LI := LBigD.Invert();
       LL1 := Ld.Multiply(LI).Multiply(Dy);
       LL2 := Two(Y1).Multiply(LX).Multiply(Dx).Multiply(LI).Subtract(LL1);
       X4 := LL2.Subtract(LL1).Multiply(LL1.Add(LL2)).Add(X2);
@@ -1346,7 +1358,7 @@ var
   LCurve: IECCurve;
   LCoord: Int32;
   X1, Y1: IECFieldElement;
-  L2Y1, LX, LZ, LY, Ld, LD, LI, LL1, LL2, X4, Y4: IECFieldElement;
+  L2Y1, LX, LZ, LY, Ld, LBigD, LI, LL1, LL2, X4, Y4: IECFieldElement;
 begin
   if GetIsInfinity then
     Exit(Self as IECPoint);
@@ -1372,8 +1384,8 @@ begin
       if Ld.GetIsZero then
         Exit(LCurve.Infinity);
 
-      LD := Ld.Multiply(L2Y1);
-      LI := LD.Invert();
+      LBigD := Ld.Multiply(L2Y1);
+      LI := LBigD.Invert();
       LL1 := Ld.Multiply(LI).Multiply(LZ);
       LL2 := LX.Square().Multiply(LI).Subtract(LL1);
 
@@ -1494,7 +1506,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(Z1, W1));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1583,7 +1595,7 @@ begin
         end;
       end;
     else
-      raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+      raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
     end;
 
     Rhs := X.Add(A).Multiply(X.Square()).Add(B);
@@ -1750,7 +1762,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ1.Square())) as IAbstractF2mPoint;
     end
   else
-    raise EInvalidOperationCryptoLibException.Create('unsupported coordinate system');
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1784,7 +1796,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ1.SquarePow(APow))) as IAbstractF2mPoint;
     end
   else
-    raise EInvalidOperationCryptoLibException.Create('unsupported coordinate system');
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -2045,7 +2057,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(Z3));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -2145,7 +2157,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(Z3));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -2256,7 +2268,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnknownCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
   end;
 end;
 

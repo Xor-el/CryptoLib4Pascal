@@ -6,7 +6,14 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
 { * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpFixedPointUtilities;
 
@@ -15,15 +22,28 @@ unit ClpFixedPointUtilities;
 interface
 
 uses
+  SysUtils,
   ClpBigInteger,
   ClpIECCore,
   ClpIPreCompCallback,
   ClpIPreCompInfo,
   ClpIFixedPointPreCompInfo,
+  ClpFixedPointPreCompInfo,
   ClpCryptoLibTypes;
 
 type
   TFixedPointUtilities = class sealed(TObject)
+  strict private
+    type
+      TFixedPointCallback = class sealed(TInterfacedObject, IPreCompCallback)
+      strict private
+        FP: IECPoint;
+        function CheckExisting(const AExistingFP: IFixedPointPreCompInfo; AN: Int32): Boolean;
+        function CheckTable(const ATable: IECLookupTable; AN: Int32): Boolean;
+      public
+        constructor Create(const AP: IECPoint);
+        function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+      end;
   public
     const PRECOMP_NAME = 'bc_fixed_point';
     class function GetCombSize(const AC: IECCurve): Int32; static;
@@ -33,46 +53,32 @@ type
 
 implementation
 
-uses
-  ClpFixedPointPreCompInfo,
-  ClpECCurve,
-  ClpCryptoLibTypes;
+{ TFixedPointUtilities.TFixedPointCallback }
 
-type
-  TFixedPointCallback = class sealed(TInterfacedObject, IPreCompCallback)
-  strict private
-    FP: IECPoint;
-    function CheckExisting(const AExistingFP: IFixedPointPreCompInfo; AN: Int32): Boolean;
-    function CheckTable(const ATable: IECLookupTable; AN: Int32): Boolean;
-  public
-    constructor Create(const AP: IECPoint);
-    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
-  end;
-
-constructor TFixedPointCallback.Create(const AP: IECPoint);
+constructor TFixedPointUtilities.TFixedPointCallback.Create(const AP: IECPoint);
 begin
   Inherited Create;
   FP := AP;
 end;
 
-function TFixedPointCallback.CheckTable(const ATable: IECLookupTable; AN: Int32): Boolean;
+function TFixedPointUtilities.TFixedPointCallback.CheckTable(const ATable: IECLookupTable; AN: Int32): Boolean;
 begin
   Result := (ATable <> nil) and (ATable.Size >= AN);
 end;
 
-function TFixedPointCallback.CheckExisting(const AExistingFP: IFixedPointPreCompInfo; AN: Int32): Boolean;
+function TFixedPointUtilities.TFixedPointCallback.CheckExisting(const AExistingFP: IFixedPointPreCompInfo; AN: Int32): Boolean;
 begin
   Result := (AExistingFP <> nil) and CheckTable(AExistingFP.LookupTable, AN);
 end;
 
-function TFixedPointCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+function TFixedPointUtilities.TFixedPointCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
   LExistingFP: IFixedPointPreCompInfo;
   LC: IECCurve;
   LBits, LMinWidth, LN, LD, LBit, LStep, LI: Int32;
   LPow2Table, LLookupTable: TCryptoLibGenericArray<IECPoint>;
   LPow2: IECPoint;
-  LResult: TFixedPointPreCompInfo;
+  LResult: IFixedPointPreCompInfo;
 begin
   if not Supports(AExisting, IFixedPointPreCompInfo, LExistingFP) then
     LExistingFP := nil;
@@ -122,6 +128,8 @@ begin
   Result := LResult;
 end;
 
+{ TFixedPointUtilities }
+
 class function TFixedPointUtilities.GetCombSize(const AC: IECCurve): Int32;
 var
   LOrder: TBigInteger;
@@ -147,9 +155,10 @@ class function TFixedPointUtilities.Precompute(const AP: IECPoint): IFixedPointP
 var
   LPrecomp: IPreCompInfo;
   LFP: IFixedPointPreCompInfo;
+  LPrecompCallback: IPreCompCallback;
 begin
-  LPrecomp := AP.Curve.Precompute(AP, PRECOMP_NAME,
-    TFixedPointCallback.Create(AP) as IPreCompCallback);
+  LPrecompCallback := TFixedPointUtilities.TFixedPointCallback.Create(AP);
+  LPrecomp := AP.Curve.Precompute(AP, PRECOMP_NAME, LPrecompCallback);
   if Supports(LPrecomp, IFixedPointPreCompInfo, LFP) then
     Result := LFP
   else

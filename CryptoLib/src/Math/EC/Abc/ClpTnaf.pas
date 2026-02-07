@@ -6,7 +6,14 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
 { * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpTnaf;
 
@@ -20,10 +27,13 @@ uses
   ClpIZTauElement,
   ClpZTauElement,
   ClpSimpleBigDecimal,
+  ClpECPoint,
   ClpIECCore,
   ClpIECFieldElement,
   ClpIPreCompCallback,
   ClpIPreCompInfo,
+  ClpArrayUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -36,6 +46,39 @@ resourcestring
 type
   TTnaf = class sealed(TObject)
   strict private
+    type
+      IPartModPreCompInfo = interface(IPreCompInfo)
+        ['{B1C2D3E4-F5A6-7890-BCDE-F23456789012}']
+        function GetLucas: TBigInteger;
+        function GetS0: TBigInteger;
+        function GetS1: TBigInteger;
+        property Lucas: TBigInteger read GetLucas;
+        property S0: TBigInteger read GetS0;
+        property S1: TBigInteger read GetS1;
+      end;
+
+      TPartModPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo, IPartModPreCompInfo)
+      strict private
+        FLucas: TBigInteger;
+        FS0: TBigInteger;
+        FS1: TBigInteger;
+        function GetLucas: TBigInteger;
+        function GetS0: TBigInteger;
+        function GetS1: TBigInteger;
+      public
+        constructor Create(const ALucas, AS0, AS1: TBigInteger);
+      end;
+
+      TPartModPreCompCallback = class sealed(TInterfacedObject, IPreCompCallback)
+      strict private
+        FCurve: IAbstractF2mCurve;
+        FMu: ShortInt;
+        FDoV: Boolean;
+      public
+        constructor Create(const ACurve: IAbstractF2mCurve; AMu: ShortInt; ADoV: Boolean);
+        function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+      end;
+
     class var
       FMinusOne: TBigInteger;
       FMinusTwo: TBigInteger;
@@ -101,47 +144,9 @@ type
 
 implementation
 
-uses
-  ClpECPoint,
-  ClpArrayUtilities,
-  ClpBitOperations;
+{ TTnaf.TPartModPreCompInfo }
 
-type
-  IPartModPreCompInfo = interface(IPreCompInfo)
-    ['{B1C2D3E4-F5A6-7890-BCDE-F23456789012}']
-    function GetLucas: TBigInteger;
-    function GetS0: TBigInteger;
-    function GetS1: TBigInteger;
-    property Lucas: TBigInteger read GetLucas;
-    property S0: TBigInteger read GetS0;
-    property S1: TBigInteger read GetS1;
-  end;
-
-  TPartModPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo, IPartModPreCompInfo)
-  strict private
-    FLucas: TBigInteger;
-    FS0: TBigInteger;
-    FS1: TBigInteger;
-    function GetLucas: TBigInteger;
-    function GetS0: TBigInteger;
-    function GetS1: TBigInteger;
-  public
-    constructor Create(const ALucas, AS0, AS1: TBigInteger);
-  end;
-
-  TPartModPreCompCallback = class sealed(TInterfacedObject, IPreCompCallback)
-  strict private
-    FCurve: IAbstractF2mCurve;
-    FMu: ShortInt;
-    FDoV: Boolean;
-  public
-    constructor Create(const ACurve: IAbstractF2mCurve; AMu: ShortInt; ADoV: Boolean);
-    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
-  end;
-
-{ TPartModPreCompInfo }
-
-constructor TPartModPreCompInfo.Create(const ALucas, AS0, AS1: TBigInteger);
+constructor TTnaf.TPartModPreCompInfo.Create(const ALucas, AS0, AS1: TBigInteger);
 begin
   inherited Create;
   FLucas := ALucas;
@@ -149,24 +154,24 @@ begin
   FS1 := AS1;
 end;
 
-function TPartModPreCompInfo.GetLucas: TBigInteger;
+function TTnaf.TPartModPreCompInfo.GetLucas: TBigInteger;
 begin
   Result := FLucas;
 end;
 
-function TPartModPreCompInfo.GetS0: TBigInteger;
+function TTnaf.TPartModPreCompInfo.GetS0: TBigInteger;
 begin
   Result := FS0;
 end;
 
-function TPartModPreCompInfo.GetS1: TBigInteger;
+function TTnaf.TPartModPreCompInfo.GetS1: TBigInteger;
 begin
   Result := FS1;
 end;
 
-{ TPartModPreCompCallback }
+{ TTnaf.TPartModPreCompCallback }
 
-constructor TPartModPreCompCallback.Create(const ACurve: IAbstractF2mCurve;
+constructor TTnaf.TPartModPreCompCallback.Create(const ACurve: IAbstractF2mCurve;
   AMu: ShortInt; ADoV: Boolean);
 begin
   inherited Create;
@@ -175,7 +180,7 @@ begin
   FDoV := ADoV;
 end;
 
-function TPartModPreCompCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+function TTnaf.TPartModPreCompCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
   LPartMod: IPartModPreCompInfo;
   LLucas: TBigInteger;
@@ -198,7 +203,7 @@ begin
 
   LSi := TTnaf.GetSi(FCurve);
 
-  Result := TPartModPreCompInfo.Create(LLucas, LSi[0], LSi[1]);
+  Result := TTnaf.TPartModPreCompInfo.Create(LLucas, LSi[0], LSi[1]);
 end;
 
 { TTnaf }
@@ -596,7 +601,7 @@ class function TTnaf.GetShiftsForCofactor(const AH: TBigInteger): Int32;
 var
   LHi: Int32;
 begin
-  if (AH <> nil) and (AH.BitLength < 4) then
+  if (AH.IsInitialized) and (AH.BitLength < 4) then
   begin
     LHi := AH.Int32Value;
     if LHi = 2 then
@@ -619,7 +624,7 @@ var
   LQ: IZTauElement;
   LR0, LR1: TBigInteger;
 begin
-  LCallback := TPartModPreCompCallback.Create(ACurve, AMu, True);
+  LCallback := TTnaf.TPartModPreCompCallback.Create(ACurve, AMu, True);
   if not Supports(ACurve.Precompute(PRECOMP_NAME, LCallback), IPartModPreCompInfo, LPreCompInfo) then
     raise EInvalidOperationCryptoLibException.Create('PartMod precomp failed');
 

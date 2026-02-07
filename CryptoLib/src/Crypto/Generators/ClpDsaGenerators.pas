@@ -35,7 +35,7 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpBitOperations,
-  ClpECCompUtilities,
+  ClpWNafUtilities,
   ClpAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPair,
   ClpIKeyGenerationParameters,

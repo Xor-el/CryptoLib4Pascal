@@ -27,14 +27,13 @@ uses
   ClpBitOperations,
   ClpCryptoLibTypes,
   ClpECParameters,
-  ClpECCompUtilities,
   ClpIECGenerators,
   ClpIAsn1Objects,
+  ClpWNafUtilities,
   ClpIKeyGenerationParameters,
   ClpIECParameters,
   ClpIECCore,
   ClpMultipliers,
-  ClpIMultipliers,
   ClpSecObjectIdentifiers,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
@@ -126,7 +125,7 @@ var
   LQ: IECPoint;
 begin
   LEc := APrivKey.Parameters;
-  LQ := (TFixedPointCombMultiplier.Create() as IFixedPointCombMultiplier).Multiply(LEc.G, APrivKey.D);
+  LQ := (TFixedPointCombMultiplier.Create() as IECMultiplier).Multiply(LEc.G, APrivKey.D);
   Result := TECPublicKeyParameters.Create(APrivKey.AlgorithmName, LQ, LEc);
 end;
 

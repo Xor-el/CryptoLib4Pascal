@@ -34,7 +34,7 @@ uses
   ClpAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIRsaGenerators,
-  ClpECCompUtilities,
+  ClpWNafUtilities,
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpISecureRandom,

@@ -13,6 +13,8 @@
 
 { * ******************************************************************************* * }
 
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
 unit ClpECFieldElement;
 
 {$I ..\..\Include\CryptoLib.inc}
@@ -75,7 +77,7 @@ type
     property IsZero: Boolean read GetIsZero;
   end;
 
-  TAbstractFpFieldElement = class abstract(TECFieldElement)
+  TAbstractFpFieldElement = class abstract(TECFieldElement, IAbstractFpFieldElement)
   end;
 
   TFpFieldElement = class sealed(TAbstractFpFieldElement, IECFieldElement, IFpFieldElement)

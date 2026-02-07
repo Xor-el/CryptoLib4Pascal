@@ -33,8 +33,8 @@ uses
 {$ENDIF FPC}
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpIECC,
-  ClpECC,
+  ClpECCurve,
+  ClpIECCore,
   ClpIDigest,
   ClpECNRSigner,
   ClpIECNRSigner,

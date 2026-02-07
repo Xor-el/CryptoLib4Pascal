@@ -26,7 +26,7 @@ uses
   ClpBitOperations,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpECCompUtilities,
+  ClpWNafUtilities,
   ClpIDHParameters;
 
 type

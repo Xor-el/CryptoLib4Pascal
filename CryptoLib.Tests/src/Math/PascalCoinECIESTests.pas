@@ -15,7 +15,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpIECC,
+  ClpIECCore,
   ClpIESEngine,
   ClpIIESEngine,
   ClpIKeyParser,

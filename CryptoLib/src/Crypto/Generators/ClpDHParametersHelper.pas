@@ -25,7 +25,7 @@ uses
   ClpISecureRandom,
   ClpBigInteger,
   ClpBigIntegers,
-  ClpECCompUtilities,
+  ClpWNafUtilities,
   ClpBitOperations,
   ClpCryptoLibTypes;
 

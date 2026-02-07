@@ -6,7 +6,14 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
 { * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpECCurve;
 
@@ -22,6 +29,11 @@ uses
   ClpIFiniteField,
   ClpIECCore,
   ClpLongArray,
+  ClpECAlgorithms,
+  ClpFiniteFields,
+  ClpPrimes,
+  ClpSecureRandom,
+  ClpECFieldElement,
   ClpIECFieldElement,
   ClpIPreCompCallback,
   ClpIPreCompInfo,
@@ -29,6 +41,7 @@ uses
   ClpArrayUtilities,
   ClpBitOperations,
   ClpBigIntegers,
+  ClpECLookupTables,
   ClpECCurveConstants,
   ClpCryptoLibTypes;
 
@@ -51,6 +64,21 @@ resourcestring
 
 type
   TECCurve = class abstract(TInterfacedObject, IECCurve)
+  strict private
+type
+  TDefaultLookupTable = class sealed(TAbstractECLookupTable, IECLookupTable)
+  strict private
+    FOuter: IECCurve;
+    FTable: TBytes;
+    FSize: Int32;
+    function CreatePoint(const AX, AY: TCryptoLibByteArray): IECPoint;
+  public
+    constructor Create(const AOuter: IECCurve; const ATable: TCryptoLibByteArray; ASize: Int32);
+    function GetSize: Int32; override;
+    function Lookup(AIndex: Int32): IECPoint; override;
+    function LookupVar(AIndex: Int32): IECPoint; override;
+  end;
+
   strict protected
     FField: IFiniteField;
     FA, FB: IECFieldElement;
@@ -68,8 +96,24 @@ type
     procedure CheckPoints(const APoints: TCryptoLibGenericArray<IECPoint>;
       AOff, ALen: Int32); overload; virtual;
     function DecompressPoint(AYTilde: Int32; const AX1: TBigInteger): IECPoint; virtual;
-    function CloneCurve: TECCurve; virtual; abstract;
+    function CloneCurve: IECCurve; virtual; abstract;
   public
+type
+  TECCurveConfig = class sealed(TInterfacedObject, IECCurveConfig)
+  strict private
+    FOuter: IECCurve;
+    FCoord: Int32;
+    FEndomorphism: IECEndomorphism;
+    FMultiplier: IECMultiplier;
+  public
+    constructor Create(const AOuter: IECCurve; ACoord: Int32;
+      const AEndomorphism: IECEndomorphism; const AMultiplier: IECMultiplier);
+    function SetCoordinateSystem(ACoord: Int32): IECCurveConfig;
+    function SetEndomorphism(const AEndomorphism: IECEndomorphism): IECCurveConfig;
+    function SetMultiplier(const AMultiplier: IECMultiplier): IECCurveConfig;
+    function CreateCurve: IECCurve;
+  end;
+
     constructor Create(const AField: IFiniteField);
     destructor Destroy; override;
 
@@ -117,21 +161,6 @@ type
     function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
   end;
 
-  TECCurveConfig = class sealed(TInterfacedObject, IECCurveConfig)
-  strict private
-    FOuter: TECCurve;
-    FCoord: Int32;
-    FEndomorphism: IECEndomorphism;
-    FMultiplier: IECMultiplier;
-  public
-    constructor Create(const AOuter: TECCurve; ACoord: Int32;
-      const AEndomorphism: IECEndomorphism; const AMultiplier: IECMultiplier);
-    function SetCoordinateSystem(ACoord: Int32): IECCurveConfig;
-    function SetEndomorphism(const AEndomorphism: IECEndomorphism): IECCurveConfig;
-    function SetMultiplier(const AMultiplier: IECMultiplier): IECCurveConfig;
-    function CreateCurve: IECCurve;
-  end;
-
   TAbstractFpCurve = class abstract(TECCurve, IECCurve, IAbstractFpCurve)
   strict private
     class var
@@ -171,7 +200,7 @@ type
       AIsInternal: Boolean); overload;
     constructor Create(const AQ, AR: TBigInteger; const AA, AB: IECFieldElement;
       const AOrder, ACofactor: TBigInteger); overload;
-    function CloneCurve: TECCurve; override;
+    function CloneCurve: IECCurve; override;
     function GetFieldSize: Int32; override;
     function ImportPoint(const AP: IECPoint): IECPoint; override;
     function GetInfinity: IECPoint; override;
@@ -208,13 +237,28 @@ type
     FKs: TCryptoLibInt32Array;
     FInfinity: IECPoint;
     function CreateDefaultMultiplier: IECMultiplier; override;
+  strict private
+type
+  TDefaultF2mLookupTable = class sealed(TAbstractECLookupTable, IECLookupTable)
+  strict private
+    FOuter: TF2mCurve;
+    FTable: TCryptoLibUInt64Array;
+    FSize: Int32;
+    function CreatePoint(const AX, AY: TCryptoLibUInt64Array): IECPoint;
+  public
+    constructor Create(const AOuter: TF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
+    function GetSize: Int32; override;
+    function Lookup(AIndex: Int32): IECPoint; override;
+    function LookupVar(AIndex: Int32): IECPoint; override;
+  end;
+
   public
     const F2M_DEFAULT_COORDS = TECCurveConstants.COORD_LAMBDA_PROJECTIVE;
     constructor Create(AM, AK: Int32; const AA, AB, AOrder, ACofactor: TBigInteger); overload;
     constructor Create(AM, AK1, AK2, AK3: Int32; const AA, AB, AOrder, ACofactor: TBigInteger); overload;
     constructor Create(AM, AK1, AK2, AK3: Int32; const AA, AB: IECFieldElement;
       const AOrder, ACofactor: TBigInteger); overload;
-    function CloneCurve: TECCurve; override;
+    function CloneCurve: IECCurve; override;
     function GetFieldSize: Int32; override;
     function GetInfinity: IECPoint; override;
     function FromBigInteger(const AX: TBigInteger): IECFieldElement; override;
@@ -237,31 +281,11 @@ implementation
 
 uses
   ClpECPoint,
-  ClpECFieldElement,
-  ClpECAlgorithms,
-  ClpAbstractECLookupTable,
-  ClpFiniteFields,
-  ClpPrimes,
-  ClpSecureRandom,
   ClpMultipliers;
 
-type
-  TDefaultLookupTable = class sealed(TAbstractECLookupTable)
-  strict private
-    FOuter: IECCurve;
-    FTable: TBytes;
-    FSize: Int32;
-    function CreatePoint(const AX, AY: TCryptoLibByteArray): IECPoint;
-  public
-    constructor Create(const AOuter: IECCurve; const ATable: TCryptoLibByteArray; ASize: Int32);
-    function GetSize: Int32; override;
-    function Lookup(AIndex: Int32): IECPoint; override;
-    function LookupVar(AIndex: Int32): IECPoint; override;
-  end;
+{ TECCurve.TDefaultLookupTable }
 
-{ TDefaultLookupTable }
-
-constructor TDefaultLookupTable.Create(const AOuter: IECCurve; const ATable: TCryptoLibByteArray; ASize: Int32);
+constructor TECCurve.TDefaultLookupTable.Create(const AOuter: IECCurve; const ATable: TCryptoLibByteArray; ASize: Int32);
 begin
   Inherited Create();
   FOuter := AOuter;
@@ -269,12 +293,12 @@ begin
   FSize := ASize;
 end;
 
-function TDefaultLookupTable.GetSize: Int32;
+function TECCurve.TDefaultLookupTable.GetSize: Int32;
 begin
   Result := FSize;
 end;
 
-function TDefaultLookupTable.Lookup(AIndex: Int32): IECPoint;
+function TECCurve.TDefaultLookupTable.Lookup(AIndex: Int32): IECPoint;
 var
   LFeBytes, LPos, I, J: Int32;
   LMask: Byte;
@@ -297,7 +321,7 @@ begin
   Result := CreatePoint(LX, LY);
 end;
 
-function TDefaultLookupTable.LookupVar(AIndex: Int32): IECPoint;
+function TECCurve.TDefaultLookupTable.LookupVar(AIndex: Int32): IECPoint;
 var
   LFeBytes, LPos, J: Int32;
   LX, LY: TBytes;
@@ -314,7 +338,7 @@ begin
   Result := CreatePoint(LX, LY);
 end;
 
-function TDefaultLookupTable.CreatePoint(const AX, AY: TBytes): IECPoint;
+function TECCurve.TDefaultLookupTable.CreatePoint(const AX, AY: TBytes): IECPoint;
 var
   LX, LY: IECFieldElement;
 begin
@@ -323,22 +347,9 @@ begin
   Result := FOuter.CreateRawPoint(LX, LY);
 end;
 
-  TDefaultF2mLookupTable = class sealed(TAbstractECLookupTable)
-  strict private
-    FOuter: TF2mCurve;
-    FTable: TCryptoLibUInt64Array;
-    FSize: Int32;
-    function CreatePoint(const AX, AY: TCryptoLibUInt64Array): IECPoint;
-  public
-    constructor Create(const AOuter: TF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
-    function GetSize: Int32; override;
-    function Lookup(AIndex: Int32): IECPoint; override;
-    function LookupVar(AIndex: Int32): IECPoint; override;
-  end;
+{ TF2mCurve.TDefaultF2mLookupTable }
 
-{ TDefaultF2mLookupTable }
-
-constructor TDefaultF2mLookupTable.Create(const AOuter: TF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
+constructor TF2mCurve.TDefaultF2mLookupTable.Create(const AOuter: TF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
 begin
   Inherited Create();
   FOuter := AOuter;
@@ -346,18 +357,18 @@ begin
   FSize := ASize;
 end;
 
-function TDefaultF2mLookupTable.GetSize: Int32;
+function TF2mCurve.TDefaultF2mLookupTable.GetSize: Int32;
 begin
   Result := FSize;
 end;
 
-function TDefaultF2mLookupTable.Lookup(AIndex: Int32): IECPoint;
+function TF2mCurve.TDefaultF2mLookupTable.Lookup(AIndex: Int32): IECPoint;
 var
   LFeLongs, LPos, I, J: Int32;
   LMask: UInt64;
   LX, LY: TCryptoLibUInt64Array;
 begin
-  LFeLongs := (FOuter.FM + 63) div 64;
+  LFeLongs := (FOuter.M + 63) div 64;
   System.SetLength(LX, LFeLongs);
   System.SetLength(LY, LFeLongs);
   LPos := 0;
@@ -378,12 +389,12 @@ begin
   Result := CreatePoint(LX, LY);
 end;
 
-function TDefaultF2mLookupTable.LookupVar(AIndex: Int32): IECPoint;
+function TF2mCurve.TDefaultF2mLookupTable.LookupVar(AIndex: Int32): IECPoint;
 var
   LFeLongs, LPos, J: Int32;
   LX, LY: TCryptoLibUInt64Array;
 begin
-  LFeLongs := (FOuter.FM + 63) div 64;
+  LFeLongs := (FOuter.M + 63) div 64;
   System.SetLength(LX, LFeLongs);
   System.SetLength(LY, LFeLongs);
   LPos := AIndex * LFeLongs * 2;
@@ -397,17 +408,17 @@ begin
   Result := CreatePoint(LX, LY);
 end;
 
-function TDefaultF2mLookupTable.CreatePoint(const AX, AY: TCryptoLibUInt64Array): IECPoint;
+function TF2mCurve.TDefaultF2mLookupTable.CreatePoint(const AX, AY: TCryptoLibUInt64Array): IECPoint;
 var
   LKs: TCryptoLibInt32Array;
   LXfe, LYfe: IECFieldElement;
 begin
   if FOuter.IsTrinomial then
-    LKs := TCryptoLibInt32Array.Create(FOuter.FK1)
+    LKs := TCryptoLibInt32Array.Create(FOuter.K1)
   else
-    LKs := TCryptoLibInt32Array.Create(FOuter.FK1, FOuter.FK2, FOuter.FK3);
-  LXfe := TF2mFieldElement.Create(FOuter.FM, LKs, TLongArray.Create(AX));
-  LYfe := TF2mFieldElement.Create(FOuter.FM, LKs, TLongArray.Create(AY));
+    LKs := TCryptoLibInt32Array.Create(FOuter.K1, FOuter.K2, FOuter.K3);
+  LXfe := TF2mFieldElement.Create(FOuter.M, LKs, TLongArray.Create(AX));
+  LYfe := TF2mFieldElement.Create(FOuter.M, LKs, TLongArray.Create(AY));
   Result := FOuter.CreateRawPoint(LXfe, LYfe);
 end;
 
@@ -702,9 +713,9 @@ begin
   FMultiplier := AMultiplier;
 end;
 
-{ TECCurveConfig }
+{ TECCurve.TECCurveConfig }
 
-constructor TECCurveConfig.Create(const AOuter: TECCurve; ACoord: Int32;
+constructor TECCurve.TECCurveConfig.Create(const AOuter: IECCurve; ACoord: Int32;
   const AEndomorphism: IECEndomorphism; const AMultiplier: IECMultiplier);
 begin
   inherited Create();
@@ -714,27 +725,27 @@ begin
   FMultiplier := AMultiplier;
 end;
 
-function TECCurveConfig.SetCoordinateSystem(ACoord: Int32): IECCurveConfig;
+function TECCurve.TECCurveConfig.SetCoordinateSystem(ACoord: Int32): IECCurveConfig;
 begin
   FCoord := ACoord;
   Result := Self;
 end;
 
-function TECCurveConfig.SetEndomorphism(const AEndomorphism: IECEndomorphism): IECCurveConfig;
+function TECCurve.TECCurveConfig.SetEndomorphism(const AEndomorphism: IECEndomorphism): IECCurveConfig;
 begin
   FEndomorphism := AEndomorphism;
   Result := Self;
 end;
 
-function TECCurveConfig.SetMultiplier(const AMultiplier: IECMultiplier): IECCurveConfig;
+function TECCurve.TECCurveConfig.SetMultiplier(const AMultiplier: IECMultiplier): IECCurveConfig;
 begin
   FMultiplier := AMultiplier;
   Result := Self;
 end;
 
-function TECCurveConfig.CreateCurve: IECCurve;
+function TECCurve.TECCurveConfig.CreateCurve: IECCurve;
 var
-  LClone: TECCurve;
+  LClone: IECCurve;
 begin
   if not FOuter.SupportsCoordinateSystem(FCoord) then
     raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
@@ -951,7 +962,7 @@ function TAbstractFpCurve.IsValidFieldElement(const AX: TBigInteger): Boolean;
 var
   LP: TBigInteger;
 begin
-  if (AX = nil) or (AX.SignValue < 0) then
+  if (not AX.IsInitialized) or (AX.SignValue < 0) then
     Exit(False);
   LP := FField.Characteristic;
   Result := AX.CompareTo(LP) < 0;
@@ -1028,7 +1039,7 @@ begin
   FCoord := FP_DEFAULT_COORDS;
 end;
 
-function TFpCurve.CloneCurve: TECCurve;
+function TFpCurve.CloneCurve: IECCurve;
 begin
   Result := TFpCurve.Create(FQ, FR, FA, FB, FOrder, FCofactor);
 end;
@@ -1067,7 +1078,7 @@ end;
 
 function TFpCurve.FromBigInteger(const AX: TBigInteger): IECFieldElement;
 begin
-  if (AX = nil) or (AX.SignValue < 0) or (AX.CompareTo(FQ) >= 0) then
+  if (not AX.IsInitialized) or (AX.SignValue < 0) or (AX.CompareTo(FQ) >= 0) then
     raise EArgumentCryptoLibException.Create('value invalid for Fp field element');
   Result := TFpFieldElement.Create(FQ, FR, AX);
 end;
@@ -1161,7 +1172,7 @@ end;
 
 function TAbstractF2mCurve.IsValidFieldElement(const AX: TBigInteger): Boolean;
 begin
-  Result := (AX <> nil) and (AX.SignValue >= 0) and (AX.BitLength <= GetFieldSize());
+  Result := (AX.IsInitialized) and (AX.SignValue >= 0) and (AX.BitLength <= GetFieldSize());
 end;
 
 function TAbstractF2mCurve.RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement;
@@ -1234,13 +1245,13 @@ begin
   if (LM and 1) <> 0 then
   begin
     LR := LBetaF2m.HalfTrace();
-    if LFastTrace or LR.Square().Add(LR).Add(ABeta).GetIsZero then
+    if LFastTrace or LR.Square().Add(LR).Add(ABeta).IsZero then
       Exit(LR);
 
     Exit(nil);
   end;
 
-  if ABeta.GetIsZero then
+  if ABeta.IsZero then
     Exit(ABeta);
 
   LZeroElement := FromBigInteger(TBigInteger.Zero);
@@ -1255,10 +1266,10 @@ begin
       LZ := LZ.Square().Add(LW2.Multiply(LT));
       LW := LW2.Add(ABeta);
     end;
-    if not LW.GetIsZero then
+    if not LW.IsZero then
       Exit(nil);
     LGamma := LZ.Square().Add(LZ);
-  until not LGamma.GetIsZero;
+  until not LGamma.IsZero;
 
   Result := LZ;
 end;
@@ -1270,8 +1281,8 @@ end;
 
 function TAbstractF2mCurve.GetIsKoblitz: Boolean;
 begin
-  Result := (FOrder <> nil) and (FCofactor <> nil) and FB.IsOne
-    and (FA.GetIsZero or FA.IsOne);
+  Result := (FOrder.IsInitialized) and (FCofactor.IsInitialized) and FB.IsOne
+    and (FA.IsZero or FA.IsOne);
 end;
 
 { TF2mCurve }
@@ -1320,7 +1331,7 @@ begin
   FCoord := F2M_DEFAULT_COORDS;
 end;
 
-function TF2mCurve.CloneCurve: TECCurve;
+function TF2mCurve.CloneCurve: IECCurve;
 begin
   Result := TF2mCurve.Create(FM, FK1, FK2, FK3, FA, FB, FOrder, FCofactor);
 end;
@@ -1339,7 +1350,7 @@ function TF2mCurve.FromBigInteger(const AX: TBigInteger): IECFieldElement;
 var
   LX: TLongArray;
 begin
-  if (AX = nil) or (AX.SignValue < 0) or (AX.BitLength > FM) then
+  if (not AX.IsInitialized) or (AX.SignValue < 0) or (AX.BitLength > FM) then
     raise EArgumentCryptoLibException.Create('value invalid for F2m field element');
 
   LX := TLongArray.Create(AX);

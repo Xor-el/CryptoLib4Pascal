@@ -42,11 +42,12 @@ uses
   ClpBigInteger,
   ClpBigIntegers,
   ClpECAlgorithms,
-  ClpECCompUtilities,
+  ClpWNafUtilities,
   ClpIFiniteField,
   ClpIX9ECAsn1Objects,
-  ClpECC,
-  ClpIECC,
+  ClpIECCore,
+  ClpECCurve,
+  ClpIECFieldElement,
   ClpX9ECAsn1Objects,
   CryptoLibTestBase;
 

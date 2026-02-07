@@ -6,7 +6,14 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
 { * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpMultipliers;
 
@@ -15,6 +22,18 @@ unit ClpMultipliers;
 interface
 
 uses
+  SysUtils,
+  Math,
+  ClpECAlgorithms,
+  ClpECPoint,
+  ClpEndoUtilities,
+  ClpFixedPointUtilities,
+  ClpIFixedPointPreCompInfo,
+  ClpNat,
+  ClpBitOperations,
+  ClpTnaf,
+  ClpIWTauNafPreCompInfo,
+  ClpWTauNafPreCompInfo,
   ClpBigInteger,
   ClpIECCore,
   ClpIECFieldElement,
@@ -34,7 +53,7 @@ type
     function Multiply(const APoint: IECPoint; const AK: TBigInteger): IECPoint; virtual;
   end;
 
-  TWNafL2RMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier, IWNafL2RMultiplier)
+  TWNafL2RMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   end;
@@ -67,20 +86,6 @@ type
   end;
 
 implementation
-
-uses
-  System.Math,
-  ClpCryptoLibTypes,
-  ClpECAlgorithms,
-  ClpECPoint,
-  ClpEndoUtilities,
-  ClpFixedPointUtilities,
-  ClpIFixedPointPreCompInfo,
-  ClpNat,
-  ClpBitOperations,
-  ClpTnaf,
-  ClpIWTauNafPreCompInfo,
-  ClpWTauNafPreCompInfo;
 
 { TAbstractECMultiplier }
 
@@ -133,7 +138,7 @@ begin
     LDigit := TBitOperations.Asr32(LWi, 16);
     LZeroes := LWi and $FFFF;
 
-    LN := System.Math.Abs(LDigit);
+    LN := System.Abs(LDigit);
     if LDigit < 0 then
       LTable := LPreCompNeg
     else
@@ -162,7 +167,7 @@ begin
     LDigit := TBitOperations.Asr32(LWi, 16);
     LZeroes := LWi and $FFFF;
 
-    LN := System.Math.Abs(LDigit);
+    LN := System.Abs(LDigit);
     if LDigit < 0 then
       LTable := LPreCompNeg
     else
@@ -197,7 +202,7 @@ begin
   if not FCurve.Equals(AP.Curve) then
     raise EInvalidOperationCryptoLibException.Create('');
   LN := AP.Curve.Order;
-  LAB := FGlvEndomorphism.DecomposeScalar(AK.Mod(LN));
+  LAB := FGlvEndomorphism.DecomposeScalar(AK.&Mod(LN));
   LA := LAB[0];
   LB := LAB[1];
   if FGlvEndomorphism.HasEfficientPointMap then
@@ -231,7 +236,7 @@ end;
 function TWTauNafCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
   LExisting: IWTauNafPreCompInfo;
-  LResult: TWTauNafPreCompInfo;
+  LResult: IWTauNafPreCompInfo;
 begin
   if Supports(AExisting, IWTauNafPreCompInfo, LExisting) then
     Exit(AExisting);

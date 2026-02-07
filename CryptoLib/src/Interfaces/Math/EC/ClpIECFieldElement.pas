@@ -13,6 +13,8 @@
 
 { * ******************************************************************************* * }
 
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
 unit ClpIECFieldElement;
 
 {$I ..\..\..\Include\CryptoLib.inc}
@@ -42,6 +44,8 @@ type
     procedure EncodeTo(var ABuf: TCryptoLibByteArray; AOff: Int32);
     function GetIsOne: Boolean;
     function GetIsZero: Boolean;
+    property IsOne: Boolean read GetIsOne;
+    property IsZero: Boolean read GetIsZero;
     function GetBitLength: Int32;
     function TestBitZero: Boolean;
     function Equals(const AOther: IECFieldElement): Boolean;
@@ -59,6 +63,10 @@ type
     function SquareMinusProduct(const AX, AY: IECFieldElement): IECFieldElement;
     function SquarePlusProduct(const AX, AY: IECFieldElement): IECFieldElement;
     function SquarePow(APow: Int32): IECFieldElement;
+  end;
+
+  IAbstractFpFieldElement = interface(IECFieldElement)
+    ['{B4339FF2-E999-4AF2-BDD2-64F88DEAD1AA}']
   end;
 
   IFpFieldElement = interface(IECFieldElement)

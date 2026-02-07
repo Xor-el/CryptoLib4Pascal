@@ -50,7 +50,7 @@ implementation
 constructor TGF2Polynomial.Create(const AExponents: TCryptoLibInt32Array);
 begin
   Inherited Create();
-  FExponents := TArrayUtilities.CopyOf(AExponents, System.Length(AExponents));
+  FExponents := System.Copy(AExponents);
 end;
 
 function TGF2Polynomial.GetDegree: Int32;
@@ -60,18 +60,19 @@ end;
 
 function TGF2Polynomial.GetExponentsPresent: TCryptoLibInt32Array;
 begin
-  Result := TArrayUtilities.CopyOf(FExponents, System.Length(FExponents));
+  Result := System.Copy(FExponents);
 end;
 
 function TGF2Polynomial.Equals(const AOther: IPolynomial): Boolean;
 begin
   if AOther = nil then
     Exit(False);
-  Result := (Degree = AOther.Degree) and
-    TArrayUtilities.AreEqual<Int32>(FExponents, AOther.ExponentsPresent);
+  if (Self as IGF2Polynomial) = (AOther as IGF2Polynomial) then
+    Exit(True);
+  Result := TArrayUtilities.AreEqual<Int32>(FExponents, AOther.ExponentsPresent);
 end;
 
-function TGF2Polynomial.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI};
+function TGF2Polynomial.GetHashCode: {$IFDEF DELPHI}Int32 {$ELSE}PtrInt {$ENDIF DELPHI};
 begin
   Result := TArrayUtilities.GetArrayHashCode(FExponents);
 end;
