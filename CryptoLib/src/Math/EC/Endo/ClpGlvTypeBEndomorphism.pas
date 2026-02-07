@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpGlvTypeBEndomorphism;
 
@@ -22,70 +15,60 @@ unit ClpGlvTypeBEndomorphism;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpScaleXPointMap,
-  ClpIGlvTypeBEndomorphism,
-  ClpIECC,
+  ClpIECCore,
   ClpIGlvTypeBParameters,
-  ClpIGlvEndomorphism,
-  ClpECCompUtilities;
+  ClpIGlvTypeBEndomorphism,
+  ClpCryptoLibTypes;
 
 type
-  TGlvTypeBEndomorphism = class(TInterfacedObject, IECEndomorphism,
-    IGlvEndomorphism, IGlvTypeBEndomorphism)
-
+  TGlvTypeBEndomorphism = class(TInterfacedObject, IECEndomorphism, IGlvEndomorphism, IGlvTypeBEndomorphism)
   strict private
-    function GetHasEfficientPointMap: Boolean; virtual;
-    function GetPointMap: IECPointMap; virtual;
-
-  strict protected
-  var
     FParameters: IGlvTypeBParameters;
     FPointMap: IECPointMap;
-
   public
-    constructor Create(const curve: IECCurve;
-      const parameters: IGlvTypeBParameters);
-
-    function DecomposeScalar(const k: TBigInteger)
-      : TCryptoLibGenericArray<TBigInteger>; virtual;
-
+    constructor Create(const ACurve: IECCurve; const AParameters: IGlvTypeBParameters);
+    function DecomposeScalar(const AK: TBigInteger): TCryptoLibGenericArray<TBigInteger>;
+    function GetPointMap: IECPointMap;
+    function GetHasEfficientPointMap: Boolean;
     property PointMap: IECPointMap read GetPointMap;
     property HasEfficientPointMap: Boolean read GetHasEfficientPointMap;
   end;
 
 implementation
 
+uses
+  ClpEndoUtilities,
+  ClpScaleXPointMap;
+
 { TGlvTypeBEndomorphism }
 
-constructor TGlvTypeBEndomorphism.Create(const curve: IECCurve;
-  const parameters: IGlvTypeBParameters);
+constructor TGlvTypeBEndomorphism.Create(const ACurve: IECCurve;
+  const AParameters: IGlvTypeBParameters);
 begin
-  Inherited Create();
-  (*
-    * NOTE: 'curve' MUST only be used to create a suitable ECFieldElement. Due to the way
-    * ECCurve configuration works, 'curve' will not be the actual instance of ECCurve that the
-    * endomorphism is being used with.
-  *)
-  FParameters := parameters;
-  FPointMap := TScaleXPointMap.Create(curve.FromBigInteger(parameters.Beta));
+  inherited Create;
+  {
+    NOTE: 'curve' MUST only be used to create a suitable ECFieldElement. Due to the way
+    ECCurve configuration works, 'curve' will not be the actual instance of ECCurve that the
+    endomorphism is being used with.
+  }
+  FParameters := AParameters;
+  FPointMap := TScaleXPointMap.Create(ACurve.FromBigInteger(AParameters.Beta));
 end;
 
-function TGlvTypeBEndomorphism.DecomposeScalar(const k: TBigInteger)
-  : TCryptoLibGenericArray<TBigInteger>;
+function TGlvTypeBEndomorphism.DecomposeScalar(const AK: TBigInteger): TCryptoLibGenericArray<TBigInteger>;
 begin
-  Result := TEndoUtilities.DecomposeScalar(FParameters.SplitParams, k);
-end;
-
-function TGlvTypeBEndomorphism.GetHasEfficientPointMap: Boolean;
-begin
-  Result := true;
+  Result := TEndoUtilities.DecomposeScalar(FParameters.SplitParams, AK);
 end;
 
 function TGlvTypeBEndomorphism.GetPointMap: IECPointMap;
 begin
   Result := FPointMap;
+end;
+
+function TGlvTypeBEndomorphism.GetHasEfficientPointMap: Boolean;
+begin
+  Result := True;
 end;
 
 end.

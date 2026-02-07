@@ -27,8 +27,8 @@ uses
   ClpBigInteger,
   ClpCryptoProObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
-  ClpECC,
-  ClpIECC,
+  ClpECCurve,
+  ClpIECCore,
   ClpECParameters,
   ClpIECParameters,
   ClpIAsn1Objects;

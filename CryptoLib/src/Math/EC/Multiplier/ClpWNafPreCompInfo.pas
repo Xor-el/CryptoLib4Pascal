@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpWNafPreCompInfo;
 
@@ -22,84 +15,50 @@ unit ClpWNafPreCompInfo;
 interface
 
 uses
-  ClpCryptoLibTypes,
-  ClpIECC,
+  ClpIECCore,
+  ClpIPreCompInfo,
   ClpIWNafPreCompInfo,
-  ClpIPreCompInfo;
+  ClpCryptoLibTypes;
 
 type
-
-  /// <summary>
-  /// Class holding precomputation data for the WNAF (Window Non-Adjacent
-  /// Form) algorithm.
-  /// </summary>
-  TWNafPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,
-    IWNafPreCompInfo)
-
+  TWNafPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo, IWNafPreCompInfo)
   strict private
-  var
-    /// <summary>
-    /// Array holding the precomputed <c>ECPoint</c>s used for a Window NAF
-    /// multiplication.
-    /// </summary>
-    FPreComp: TCryptoLibGenericArray<IECPoint>;
-
-    /// <summary>
-    /// Array holding the negations of the precomputed <c>ECPoint</c>s used
-    /// for a Window NAF multiplication.
-    /// </summary>
-    FPreCompNeg: TCryptoLibGenericArray<IECPoint>;
-
-    /// <summary>
-    /// Holds an <c>ECPoint</c> representing Twice(this). Used for the Window
-    /// NAF multiplication to create or extend the precomputed values.
-    /// </summary>
-    FTwice: IECPoint;
-
-    FConfWidth, FWidth: Int32;
-
-{$IFNDEF FPC}
-{$IFDEF HAS_VOLATILE}[volatile]
-{$ENDIF}
-{$ENDIF}
     FPromotionCountdown: Int32;
-
-    function GetPreComp: TCryptoLibGenericArray<IECPoint>; inline;
-    procedure SetPreComp(const Value: TCryptoLibGenericArray<IECPoint>); inline;
-    function GetPreCompNeg: TCryptoLibGenericArray<IECPoint>; inline;
-    procedure SetPreCompNeg(const Value
-      : TCryptoLibGenericArray<IECPoint>); inline;
-    function GetTwice: IECPoint; inline;
-    procedure SetTwice(const Value: IECPoint); inline;
-
-    function GetConfWidth: Int32; inline;
-    procedure SetConfWidth(Value: Int32); inline;
-
-    function GetWidth: Int32; inline;
-    procedure SetWidth(Value: Int32); inline;
-
-    function GetPromotionCountdown: Int32; inline;
-    procedure SetPromotionCountdown(Value: Int32); inline;
-
-    function DecrementPromotionCountdown: Int32; inline;
-    function IsPromoted: Boolean; inline;
-
+    FConfWidth: Int32;
+    FPreComp: TCryptoLibGenericArray<IECPoint>;
+    FPreCompNeg: TCryptoLibGenericArray<IECPoint>;
+    FTwice: IECPoint;
+    FWidth: Int32;
   public
+    const
+      PRECOMP_NAME = 'bc_wnaf';
 
-    constructor Create();
-    destructor Destroy; override;
-    property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp
-      write SetPreComp;
-    property PreCompNeg: TCryptoLibGenericArray<IECPoint> read GetPreCompNeg
-      write SetPreCompNeg;
-    property Twice: IECPoint read GetTwice write SetTwice;
+    constructor Create;
+
+    function DecrementPromotionCountdown: Int32;
+    function GetConfWidth: Int32;
+    function GetPreComp: TCryptoLibGenericArray<IECPoint>;
+    function GetPreCompNeg: TCryptoLibGenericArray<IECPoint>;
+    function GetTwice: IECPoint;
+    function GetWidth: Int32;
+    function GetIsPromoted: Boolean;
+
+    procedure SetConfWidth(AValue: Int32);
+    procedure SetPreComp(const AValue: TCryptoLibGenericArray<IECPoint>);
+    procedure SetPreCompNeg(const AValue: TCryptoLibGenericArray<IECPoint>);
+    procedure SetTwice(const AValue: IECPoint);
+    procedure SetWidth(AValue: Int32);
+    procedure SetPromotionCountdown(AValue: Int32);
 
     property ConfWidth: Int32 read GetConfWidth write SetConfWidth;
+    property PreComp: TCryptoLibGenericArray<IECPoint> read GetPreComp write SetPreComp;
+    property PreCompNeg: TCryptoLibGenericArray<IECPoint> read GetPreCompNeg write SetPreCompNeg;
+    property Twice: IECPoint read GetTwice write SetTwice;
     property Width: Int32 read GetWidth write SetWidth;
+    function GetPromotionCountdown: Int32;
 
-    property PromotionCountdown: Int32 read GetPromotionCountdown
-      write SetPromotionCountdown;
-
+    property IsPromoted: Boolean read GetIsPromoted;
+    property PromotionCountdown: Int32 read GetPromotionCountdown write SetPromotionCountdown;
   end;
 
 implementation
@@ -108,122 +67,85 @@ implementation
 
 constructor TWNafPreCompInfo.Create;
 begin
-  inherited Create();
+  inherited Create;
+  FPromotionCountdown := 4;
   FConfWidth := -1;
   FWidth := -1;
-  FPromotionCountdown := 4;
 end;
 
 function TWNafPreCompInfo.DecrementPromotionCountdown: Int32;
-var
-  t: Int32;
 begin
-  t := PromotionCountdown;
-  if (t > 0) then
+  Result := FPromotionCountdown;
+  if Result > 0 then
   begin
-    System.Dec(t);
-    PromotionCountdown := t;
+    Dec(FPromotionCountdown);
+    Result := FPromotionCountdown;
   end;
-  result := t;
 end;
-
-destructor TWNafPreCompInfo.Destroy;
-var
-  i: Integer;
-begin
-  if Assigned(FPreComp) then
-  begin
-    for i := 0 to Length(FPreComp) - 1 do
-      FPreComp[i] := nil;
-    FPreComp := nil;
-  end;
-
-  if Assigned(FPreCompNeg) then
-  begin
-    for i := 0 to Length(FPreCompNeg) - 1 do
-      FPreCompNeg[i] := nil;
-    FPreCompNeg := nil;
-  end;
-
-  FTwice := nil;
-
-  inherited;
-end;
-
 
 function TWNafPreCompInfo.GetConfWidth: Int32;
 begin
-  result := FConfWidth;
+  Result := FConfWidth;
 end;
 
 function TWNafPreCompInfo.GetPreComp: TCryptoLibGenericArray<IECPoint>;
 begin
-  result := FPreComp;
+  Result := FPreComp;
 end;
 
 function TWNafPreCompInfo.GetPreCompNeg: TCryptoLibGenericArray<IECPoint>;
 begin
-  result := FPreCompNeg;
-end;
-
-function TWNafPreCompInfo.GetPromotionCountdown: Int32;
-begin
-{$IFDEF FPC}
-  result := {$IFDEF HAS_VOLATILE}volatile{$ENDIF}(FPromotionCountdown);
-{$ELSE}
-    result := FPromotionCountdown;
-{$ENDIF}
+  Result := FPreCompNeg;
 end;
 
 function TWNafPreCompInfo.GetTwice: IECPoint;
 begin
-  result := FTwice;
+  Result := FTwice;
 end;
 
 function TWNafPreCompInfo.GetWidth: Int32;
 begin
-  result := FWidth;
+  Result := FWidth;
 end;
 
-function TWNafPreCompInfo.IsPromoted: Boolean;
+function TWNafPreCompInfo.GetIsPromoted: Boolean;
 begin
-  result := PromotionCountdown <= 0;
+  Result := FPromotionCountdown <= 0;
 end;
 
-procedure TWNafPreCompInfo.SetConfWidth(Value: Int32);
+function TWNafPreCompInfo.GetPromotionCountdown: Int32;
 begin
-  FConfWidth := Value;
+  Result := FPromotionCountdown;
 end;
 
-procedure TWNafPreCompInfo.SetPreComp(const Value
-  : TCryptoLibGenericArray<IECPoint>);
+procedure TWNafPreCompInfo.SetConfWidth(AValue: Int32);
 begin
-  FPreComp := Value;
+  FConfWidth := AValue;
 end;
 
-procedure TWNafPreCompInfo.SetPreCompNeg(const Value
-  : TCryptoLibGenericArray<IECPoint>);
+procedure TWNafPreCompInfo.SetPreComp(const AValue: TCryptoLibGenericArray<IECPoint>);
 begin
-  FPreCompNeg := Value;
+  FPreComp := AValue;
 end;
 
-procedure TWNafPreCompInfo.SetPromotionCountdown(Value: Int32);
+procedure TWNafPreCompInfo.SetPreCompNeg(const AValue: TCryptoLibGenericArray<IECPoint>);
 begin
-{$IFDEF FPC}
-  FPromotionCountdown := {$IFDEF HAS_VOLATILE}volatile{$ENDIF}(Value);
-{$ELSE}
-    FPromotionCountdown := Value;
-{$ENDIF}
+  FPreCompNeg := AValue;
 end;
 
-procedure TWNafPreCompInfo.SetTwice(const Value: IECPoint);
+procedure TWNafPreCompInfo.SetTwice(const AValue: IECPoint);
 begin
-  FTwice := Value;
+  FTwice := AValue;
 end;
 
-procedure TWNafPreCompInfo.SetWidth(Value: Int32);
+procedure TWNafPreCompInfo.SetWidth(AValue: Int32);
 begin
-  FWidth := Value;
+  FWidth := AValue;
+end;
+
+procedure TWNafPreCompInfo.SetPromotionCountdown(AValue: Int32);
+begin
+  FPromotionCountdown := AValue;
 end;
 
 end.

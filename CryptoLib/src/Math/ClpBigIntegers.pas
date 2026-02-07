@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Classes,
+  Generics.Defaults,
   ClpBigInteger,
   ClpMod,
   ClpNat,
@@ -39,6 +40,16 @@ resourcestring
 
 type
   /// <summary>
+  /// Equality comparer for TBigInteger that uses value-based comparison
+  /// (Equals) instead of reference equality. Used with TDictionary.
+  /// </summary>
+  TBigIntegerEqualityComparer = class(TInterfacedObject, IEqualityComparer<TBigInteger>)
+  strict private
+    function Equals(const ALeft, ARight: TBigInteger): Boolean; reintroduce;
+    function GetHashCode(const AValue: TBigInteger): Integer; reintroduce;
+  end;
+
+  /// <summary>
   /// BigInteger utilities.
   /// </summary>
   TBigIntegers = class sealed(TObject)
@@ -46,12 +57,20 @@ type
     const
       MaxIterations = 1000;
 
+    class var
+      FBigIntegerEqualityComparer: IEqualityComparer<TBigInteger>;
+
     class constructor Create;
 
   public
     class var
       Zero: TBigInteger;
       One: TBigInteger;
+
+    /// <summary>
+    /// Gets the BigInteger equality comparer for use with TDictionary.
+    /// </summary>
+    class property BigIntegerEqualityComparer: IEqualityComparer<TBigInteger> read FBigIntegerEqualityComparer;
 
     /// <summary>
     /// Return the passed in value as an unsigned byte array.
@@ -168,12 +187,25 @@ type
 
 implementation
 
+{ TBigIntegerEqualityComparer }
+
+function TBigIntegerEqualityComparer.Equals(const ALeft, ARight: TBigInteger): Boolean;
+begin
+  Result := ALeft.Equals(ARight);
+end;
+
+function TBigIntegerEqualityComparer.GetHashCode(const AValue: TBigInteger): Integer;
+begin
+  Result := AValue.GetHashCode();
+end;
+
 { TBigIntegers }
 
 class constructor TBigIntegers.Create;
 begin
   Zero := TBigInteger.Zero;
   One := TBigInteger.One;
+  FBigIntegerEqualityComparer := TBigIntegerEqualityComparer.Create();
 end;
 
 class function TBigIntegers.AsUnsignedByteArray(const AN: TBigInteger): TCryptoLibByteArray;

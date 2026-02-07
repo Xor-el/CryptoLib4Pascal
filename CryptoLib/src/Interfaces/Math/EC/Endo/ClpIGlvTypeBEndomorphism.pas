@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpIGlvTypeBEndomorphism;
 
@@ -22,12 +15,11 @@ unit ClpIGlvTypeBEndomorphism;
 interface
 
 uses
-  ClpIGlvEndomorphism;
+  ClpIECCore;
 
 type
   IGlvTypeBEndomorphism = interface(IGlvEndomorphism)
-    ['{4F285F6A-F627-4873-9F4C-FBC7A7B83A9C}']
-
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}']
   end;
 
 implementation

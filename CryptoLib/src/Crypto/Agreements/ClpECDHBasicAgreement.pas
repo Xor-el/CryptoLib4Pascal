@@ -27,7 +27,7 @@ uses
   ClpECAlgorithms,
   ClpICipherParameters,
   ClpIECParameters,
-  ClpIECC,
+  ClpIECCore,
   ClpIBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIParametersWithRandom,
@@ -116,7 +116,7 @@ begin
     Q := TECAlgorithms.ReferenceMultiply(Q, h);
   end;
 
-  P := Q.Multiply(d).Normalize();
+  P := params.Curve.Multiplier.Multiply(Q, d).Normalize();
 
   if (P.IsInfinity) then
   begin
@@ -125,7 +125,7 @@ begin
 
   end;
 
-  result := P.AffineXCoord.ToBigInteger();
+  result := P.XCoord.ToBigInteger();
 end;
 
 function TECDHBasicAgreement.GetFieldSize: Int32;

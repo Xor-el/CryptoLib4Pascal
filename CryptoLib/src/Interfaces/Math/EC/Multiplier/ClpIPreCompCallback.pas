@@ -6,28 +6,22 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
 
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
-
-unit ClpIGlvTypeAEndomorphism;
+unit ClpIPreCompCallback;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIGlvEndomorphism;
+  ClpIPreCompInfo;
 
 type
-  IGlvTypeAEndomorphism = interface(IGlvEndomorphism)
-    ['{961A1588-7D37-46C5-BC67-F71063641B42}']
+  IPreCompCallback = interface(IInterface)
+    ['{C3D4E5F6-A7B8-9012-C3D4-E5F6A7B89013}']
 
+    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
   end;
 
 implementation

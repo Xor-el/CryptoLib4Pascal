@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpGlvTypeBParameters;
 
@@ -23,58 +16,51 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIGlvTypeBParameters,
-  ClpIScalarSplitParameters;
+  ClpIScalarSplitParameters,
+  ClpIGlvTypeBParameters;
 
 type
-  TGlvTypeBParameters = class sealed(TInterfacedObject, IGlvTypeBParameters)
-
+  TGlvTypeBParameters = class(TInterfacedObject, IGlvTypeBParameters)
   strict private
-  var
-    Fbeta, Flambda: TBigInteger;
-    FsplitParams: IScalarSplitParameters;
-
-    function GetLambda: TBigInteger; inline;
-    function GetBeta: TBigInteger; inline;
-    function GetSplitParams: IScalarSplitParameters; inline;
-
+    FBeta, FLambda: TBigInteger;
+    FSplitParams: IScalarSplitParameters;
+    function GetBeta: TBigInteger;
+    function GetLambda: TBigInteger;
+    function GetSplitParams: IScalarSplitParameters;
   public
-
-    constructor Create(const beta, lambda: TBigInteger;
-      const splitParams: IScalarSplitParameters);
-
-    property lambda: TBigInteger read GetLambda;
-    property beta: TBigInteger read GetBeta;
-    property splitParams: IScalarSplitParameters read GetSplitParams;
-
+    constructor Create(const ABeta, ALambda: TBigInteger;
+      const ASplitParams: IScalarSplitParameters);
+    property Beta: TBigInteger read GetBeta;
+    property Lambda: TBigInteger read GetLambda;
+    property SplitParams: IScalarSplitParameters read GetSplitParams;
   end;
 
 implementation
 
 { TGlvTypeBParameters }
 
-constructor TGlvTypeBParameters.Create(const beta, lambda: TBigInteger;
-  const splitParams: IScalarSplitParameters);
+constructor TGlvTypeBParameters.Create(const ABeta, ALambda: TBigInteger;
+  const ASplitParams: IScalarSplitParameters);
 begin
-  Inherited Create();
-  Fbeta := beta;
-  Flambda := lambda;
-  FsplitParams := splitParams;
+  inherited Create;
+  FBeta := ABeta;
+  FLambda := ALambda;
+  FSplitParams := ASplitParams;
 end;
 
 function TGlvTypeBParameters.GetBeta: TBigInteger;
 begin
-  Result := Fbeta;
+  Result := FBeta;
 end;
 
 function TGlvTypeBParameters.GetLambda: TBigInteger;
 begin
-  Result := Flambda;
+  Result := FLambda;
 end;
 
 function TGlvTypeBParameters.GetSplitParams: IScalarSplitParameters;
 begin
-  Result := FsplitParams;
+  Result := FSplitParams;
 end;
 
 end.

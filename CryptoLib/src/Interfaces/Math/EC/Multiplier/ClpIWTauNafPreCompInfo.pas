@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpIWTauNafPreCompInfo;
 
@@ -22,21 +15,18 @@ unit ClpIWTauNafPreCompInfo;
 interface
 
 uses
-  ClpIECC,
-  ClpCryptoLibTypes,
-  ClpIPreCompInfo;
+  ClpIECCore,
+  ClpIPreCompInfo,
+  ClpCryptoLibTypes;
 
 type
   IWTauNafPreCompInfo = interface(IPreCompInfo)
-    ['{E2E76FDB-8DD6-4DB5-9EC7-58C87DE8AD3D}']
+    ['{F7A8B9C0-D1E2-3456-F7A8-B9C0D1E23457}']
 
     function GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
-    procedure SetPreComp(const value
-      : TCryptoLibGenericArray<IAbstractF2mPoint>);
+    procedure SetPreComp(const AValue: TCryptoLibGenericArray<IAbstractF2mPoint>);
 
-    property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp
-      write SetPreComp;
-
+    property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp write SetPreComp;
   end;
 
 implementation

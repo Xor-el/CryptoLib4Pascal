@@ -29,7 +29,11 @@ uses
   ClpNat,
   ClpInterleave,
   ClpArrayUtilities,
-  ClpBigInteger;
+  ClpBigInteger,
+  ClpBigIntegers;
+
+resourcestring
+  SInvalidF2mFieldValue = 'invalid F2m field value';
 
 type
   TLongArray = record
@@ -92,13 +96,7 @@ type
     function ToString(): String;
   end;
 
-resourcestring
-  SInvalidF2mFieldValue = 'invalid F2m field value';
-
 implementation
-
-uses
-  ClpBigIntegers;
 
 { TLongArray }
 

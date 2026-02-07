@@ -15,22 +15,29 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIScaleYNegateXPointMap;
+unit ClpAbstractECLookupTable;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIECC;
+  ClpIECCore;
 
 type
-  IScaleYNegateXPointMap = interface(IECPointMap)
-
-    ['{6284EFA2-DE75-437F-86D3-DD93BCAF511B}']
-
+  TAbstractECLookupTable = class abstract(TInterfacedObject, IECLookupTable)
+  public
+    function Lookup(AIndex: Int32): IECPoint; virtual; abstract;
+    function GetSize: Int32; virtual; abstract;
+    function LookupVar(AIndex: Int32): IECPoint; virtual;
+    property Size: Int32 read GetSize;
   end;
 
 implementation
+
+function TAbstractECLookupTable.LookupVar(AIndex: Int32): IECPoint;
+begin
+  Result := Lookup(AIndex);
+end;
 
 end.

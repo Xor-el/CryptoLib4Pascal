@@ -22,112 +22,96 @@ unit ClpGenericPolynomialExtensionField;
 interface
 
 uses
-  ClpBitOperations,
   ClpBigInteger,
+  ClpCryptoLibTypes,
+  ClpBitOperations,
   ClpIFiniteField,
   ClpIPolynomial,
-  ClpIGenericPolynomialExtensionField,
-  ClpIPolynomialExtensionField;
+  ClpIExtensionField,
+  ClpIPolynomialExtensionField,
+  ClpIGenericPolynomialExtensionField;
 
 type
-  TGenericPolynomialExtensionField = class(TInterfacedObject,
-    IPolynomialExtensionField, IGenericPolynomialExtensionField)
-
+  TGenericPolynomialExtensionField = class sealed(TInterfacedObject,
+    IFiniteField, IExtensionField, IPolynomialExtensionField,
+    IGenericPolynomialExtensionField)
   strict private
-    function GetCharacteristic: TBigInteger; virtual;
-    function GetDegree: Int32; virtual;
-    function GetDimension: Int32; virtual;
-    function GetMinimalPolynomial: IPolynomial; virtual;
-    function GetSubField: IFiniteField; virtual;
-  strict protected
-  var
-    Fsubfield: IFiniteField;
-    FminimalPolynomial: IPolynomial;
+    FSubfield: IFiniteField;
+    FMinimalPolynomial: IPolynomial;
+
+    function GetCharacteristic: TBigInteger;
+    function GetDimension: Int32;
+    function GetSubfield: IFiniteField;
+    function GetDegree: Int32;
+    function GetMinimalPolynomial: IPolynomial;
+  public
+    constructor Create(const ASubfield: IFiniteField;
+      const APolynomial: IPolynomial);
+    function Equals(const AOther: IFiniteField): Boolean; reintroduce;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
 
     property Characteristic: TBigInteger read GetCharacteristic;
     property Dimension: Int32 read GetDimension;
-    property subfield: IFiniteField read GetSubField;
+    property Subfield: IFiniteField read GetSubfield;
     property Degree: Int32 read GetDegree;
     property MinimalPolynomial: IPolynomial read GetMinimalPolynomial;
-
-  public
-    constructor Create(const subfield: IFiniteField;
-      const polynomial: IPolynomial);
-
-    function Equals(other: TObject): Boolean; overload; override;
-    function Equals(const other: IGenericPolynomialExtensionField): Boolean;
-      reintroduce; overload;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}override;
-
   end;
 
 implementation
 
 { TGenericPolynomialExtensionField }
 
-constructor TGenericPolynomialExtensionField.Create(const subfield
-  : IFiniteField; const polynomial: IPolynomial);
+constructor TGenericPolynomialExtensionField.Create(const ASubfield: IFiniteField;
+  const APolynomial: IPolynomial);
 begin
-  Fsubfield := subfield;
-  FminimalPolynomial := polynomial;
-end;
-
-function TGenericPolynomialExtensionField.Equals(const other
-  : IGenericPolynomialExtensionField): Boolean;
-begin
-  if ((Self as IGenericPolynomialExtensionField) = other) then
-  begin
-    Result := true;
-    Exit;
-  end;
-
-  if (other = Nil) then
-  begin
-    Result := false;
-    Exit;
-  end;
-  Result := (subfield as TObject).Equals(other.subfield as TObject) and
-    (MinimalPolynomial as TObject).Equals(other.MinimalPolynomial as TObject);
-end;
-
-function TGenericPolynomialExtensionField.Equals(other: TObject): Boolean;
-begin
-  Result := Self.Equals((other as TGenericPolynomialExtensionField)
-    as IGenericPolynomialExtensionField);
+  Inherited Create();
+  FSubfield := ASubfield;
+  FMinimalPolynomial := APolynomial;
 end;
 
 function TGenericPolynomialExtensionField.GetCharacteristic: TBigInteger;
 begin
-  Result := Fsubfield.Characteristic;
-end;
-
-function TGenericPolynomialExtensionField.GetDegree: Int32;
-begin
-  Result := FminimalPolynomial.Degree;
+  Result := FSubfield.Characteristic;
 end;
 
 function TGenericPolynomialExtensionField.GetDimension: Int32;
 begin
-  Result := Fsubfield.Dimension * FminimalPolynomial.Degree;
+  Result := FSubfield.Dimension * FMinimalPolynomial.Degree;
 end;
 
-function TGenericPolynomialExtensionField.GetHashCode: {$IFDEF DELPHI}Int32;
-{$ELSE}PtrInt; {$ENDIF DELPHI}
+function TGenericPolynomialExtensionField.GetSubfield: IFiniteField;
 begin
-  Result := (subfield as TObject).GetHashCode()
-    xor Int32(TBitOperations.RotateLeft32((MinimalPolynomial as TObject)
-    .GetHashCode(), 16));
+  Result := FSubfield;
+end;
+
+function TGenericPolynomialExtensionField.GetDegree: Int32;
+begin
+  Result := FMinimalPolynomial.Degree;
 end;
 
 function TGenericPolynomialExtensionField.GetMinimalPolynomial: IPolynomial;
 begin
-  Result := FminimalPolynomial;
+  Result := FMinimalPolynomial;
 end;
 
-function TGenericPolynomialExtensionField.GetSubField: IFiniteField;
+function TGenericPolynomialExtensionField.Equals(const AOther: IFiniteField): Boolean;
+var
+  LOther: IGenericPolynomialExtensionField;
+  LExt: IExtensionField;
 begin
-  Result := Fsubfield;
+  if AOther = nil then
+    Exit(False);
+  if not Supports(AOther, IGenericPolynomialExtensionField, LOther) then
+    Exit(False);
+  LExt := AOther as IExtensionField;
+  Result := FSubfield.Equals(LExt.Subfield) and
+    FMinimalPolynomial.Equals(LOther.MinimalPolynomial);
+end;
+
+function TGenericPolynomialExtensionField.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI};
+begin
+  Result := Int32(UInt32(FSubfield.GetHashCode) xor
+    TBitOperations.RotateLeft32(UInt32(FMinimalPolynomial.GetHashCode), 16));
 end;
 
 end.

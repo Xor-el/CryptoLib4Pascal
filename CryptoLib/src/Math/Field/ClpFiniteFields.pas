@@ -22,111 +22,82 @@ unit ClpFiniteFields;
 interface
 
 uses
+  SysUtils,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpIFiniteField,
+  ClpIPolynomialExtensionField,
   ClpPrimeField,
   ClpGF2Polynomial,
-  ClpIGF2Polynomial,
-  ClpGenericPolynomialExtensionField,
-  ClpIPolynomialExtensionField,
-  ClpIFiniteField;
+  ClpGenericPolynomialExtensionField;
 
 resourcestring
-  SInvalidCharacteristic = 'Must be >= 2 , " characteristic "';
-  SUnConstantTerm =
-    'Irreducible polynomials in GF(2) must have constant term, "exponents"';
-  SPolynomialError =
-    'Polynomial Exponents must be montonically increasing", "exponents"';
+  SIrreduciblePolynomialsConstantTerm = 'Irreducible polynomials in GF(2) must have constant term';
+  SPolynomialExponentsMonotonic = 'Polynomial exponents must be monotonically increasing';
+  SCharacteristicMustBeAtLeast2 = 'Must be >= 2';
 
 type
-  TFiniteFields = class abstract(TObject)
-
+  TFiniteFields = class sealed(TObject)
   strict private
     class var
-
       FGF_2, FGF_3: IFiniteField;
-
-    class procedure Boot(); static;
-    class constructor FiniteFields();
-
+    class constructor Create;
   public
-    class function GetBinaryExtensionField(const exponents
-      : TCryptoLibInt32Array): IPolynomialExtensionField; static;
-
-    class function GetPrimeField(const characteristic: TBigInteger)
+    class function GetBinaryExtensionField(const AExponents: TCryptoLibInt32Array)
+      : IPolynomialExtensionField; static;
+    class function GetPrimeField(const ACharacteristic: TBigInteger)
       : IFiniteField; static;
+    class property GF_2: IFiniteField read FGF_2;
+    class property GF_3: IFiniteField read FGF_3;
   end;
 
 implementation
 
 { TFiniteFields }
 
-class procedure TFiniteFields.Boot;
+class constructor TFiniteFields.Create;
 begin
-
-  FGF_2 := TPrimeField.Create(TBigInteger.ValueOf(2));
-  FGF_3 := TPrimeField.Create(TBigInteger.ValueOf(3));
+  FGF_2 := TPrimeField.Create(TBigInteger.Two);
+  FGF_3 := TPrimeField.Create(TBigInteger.Three);
 end;
 
-class constructor TFiniteFields.FiniteFields;
-begin
-  TFiniteFields.Boot;
-end;
-
-class function TFiniteFields.GetBinaryExtensionField(const exponents
-  : TCryptoLibInt32Array): IPolynomialExtensionField;
+class function TFiniteFields.GetBinaryExtensionField
+  (const AExponents: TCryptoLibInt32Array): IPolynomialExtensionField;
 var
-  i: Int32;
+  LExponents: TCryptoLibInt32Array;
+  I: Int32;
 begin
-  if (exponents[0] <> 0) then
+  if System.Length(AExponents) = 0 then
+    raise EArgumentCryptoLibException.CreateRes(@SIrreduciblePolynomialsConstantTerm);
+  if AExponents[0] <> 0 then
+    raise EArgumentCryptoLibException.CreateRes(@SIrreduciblePolynomialsConstantTerm);
+  for I := 1 to System.High(AExponents) do
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SUnConstantTerm);
+    if AExponents[I] <= AExponents[I - 1] then
+      raise EArgumentCryptoLibException.CreateRes(@SPolynomialExponentsMonotonic);
   end;
-
-  for i := 1 to System.Pred(System.Length(exponents)) do
-
-  begin
-    if (exponents[i] <= exponents[i - 1]) then
-    begin
-      raise EArgumentCryptoLibException.CreateRes(@SPolynomialError);
-    end;
-  end;
-
   Result := TGenericPolynomialExtensionField.Create(FGF_2,
-    TGF2Polynomial.Create(exponents) as IGF2Polynomial);
+    TGF2Polynomial.Create(AExponents) as IPolynomial);
 end;
 
-class function TFiniteFields.GetPrimeField(const characteristic: TBigInteger)
+class function TFiniteFields.GetPrimeField(const ACharacteristic: TBigInteger)
   : IFiniteField;
 var
-  bitLength: Int32;
+  LBitLength: Int32;
 begin
-  bitLength := characteristic.bitLength;
-  if ((characteristic.SignValue <= 0) or (bitLength < 2)) then
+  LBitLength := ACharacteristic.BitLength;
+  if (ACharacteristic.SignValue <= 0) or (LBitLength < 2) then
+    raise EArgumentCryptoLibException.CreateRes(@SCharacteristicMustBeAtLeast2);
+  if LBitLength < 3 then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCharacteristic);
-  end;
-
-  if (bitLength < 3) then
-  begin
-    case characteristic.Int32Value of
+    case ACharacteristic.Int32Value of
       2:
-        begin
-          Result := FGF_2;
-          Exit;
-        end;
-
+        Exit(FGF_2);
       3:
-        begin
-          Result := FGF_3;
-          Exit;
-        end;
+        Exit(FGF_3);
     end;
-
   end;
-
-  Result := TPrimeField.Create(characteristic);
-
+  Result := TPrimeField.Create(ACharacteristic);
 end;
 
 end.

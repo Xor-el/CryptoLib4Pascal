@@ -13,33 +13,38 @@
 
 { * ******************************************************************************* * }
 
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+unit ClpScaleYPointMap;
 
-unit ClpIGlvTypeAParameters;
-
-{$I ..\..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpBigInteger,
-  ClpIScalarSplitParameters;
+  ClpIECCore,
+  ClpIECFieldElement;
 
 type
-
-  IGlvTypeAParameters = interface(IInterface)
-    ['{B5DDABB5-B51C-41F4-B2FD-6C8733300502}']
-
-    function GetI: TBigInteger;
-    function GetLambda: TBigInteger;
-    function GetSplitParams: IScalarSplitParameters;
-
-    property I: TBigInteger read GetI;
-    property lambda: TBigInteger read GetLambda;
-    property splitParams: IScalarSplitParameters read GetSplitParams;
-
+  TScaleYPointMap = class(TInterfacedObject, IECPointMap)
+  strict protected
+    FScale: IECFieldElement;
+  public
+    constructor Create(const AScale: IECFieldElement);
+    function Map(const AP: IECPoint): IECPoint; virtual;
   end;
 
 implementation
+
+{ TScaleYPointMap }
+
+constructor TScaleYPointMap.Create(const AScale: IECFieldElement);
+begin
+  Inherited Create;
+  FScale := AScale;
+end;
+
+function TScaleYPointMap.Map(const AP: IECPoint): IECPoint;
+begin
+  Result := AP.ScaleY(FScale);
+end;
 
 end.

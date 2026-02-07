@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpIDsa,
-  ClpIECC,
+  ClpIECCore,
   ClpIECNRSigner,
   ClpBigInteger,
   ClpBigIntegers,

@@ -97,7 +97,7 @@ uses
   ClpDsaSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpDsaSigner.pas',
   ClpEacObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Eac\ClpEacObjectIdentifiers.pas',
   ClpECAlgorithms in '..\..\CryptoLib\src\Math\EC\ClpECAlgorithms.pas',
-  ClpECC in '..\..\CryptoLib\src\Math\EC\ClpECC.pas',
+  ClpECCurve in '..\..\CryptoLib\src\Math\EC\ClpECCurve.pas',
   ClpECCompUtilities in '..\..\CryptoLib\src\Math\EC\ClpECCompUtilities.pas',
   ClpECCurveConstants in '..\..\CryptoLib\src\Math\EC\ClpECCurveConstants.pas',
   ClpECDHBasicAgreement in '..\..\CryptoLib\src\Crypto\Agreements\ClpECDHBasicAgreement.pas',
@@ -123,6 +123,7 @@ uses
   ClpEphemeralKeyPairGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpEphemeralKeyPairGenerator.pas',
   ClpFiniteFields in '..\..\CryptoLib\src\Math\Field\ClpFiniteFields.pas',
   ClpFixedPointPreCompInfo in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointPreCompInfo.pas',
+  ClpFixedPointUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointUtilities.pas',
   ClpGeneratorUtilities in '..\..\CryptoLib\src\Crypto\Generators\ClpGeneratorUtilities.pas',
   ClpGenericPolynomialExtensionField in '..\..\CryptoLib\src\Math\Field\ClpGenericPolynomialExtensionField.pas',
   ClpGenericSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpGenericSigner.pas',
@@ -179,7 +180,8 @@ uses
   ClpIDsaGenerators in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDsaGenerators.pas',
   ClpIDsaParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDsaParameters.pas',
   ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaSigner.pas',
-  ClpIECC in '..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECC.pas',
+  ClpIECCore in '..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECCore.pas',
+  ClpIECFieldElement in '..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECFieldElement.pas',
   ClpIECDHBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHBasicAgreement.pas',
   ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCBasicAgreement.pas',
   ClpIECParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIECParameters.pas',
@@ -591,7 +593,9 @@ uses
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
   X509CertGenTests in '..\src\X509\X509CertGenTests.pas',
   CertTests in '..\src\Others\CertTests.pas',
-  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
+  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas',
+  ClpECPoint in '..\..\CryptoLib\src\Math\EC\ClpECPoint.pas',
+  ClpECFieldElement in '..\..\CryptoLib\src\Math\EC\ClpECFieldElement.pas';
 
 begin
 

@@ -25,14 +25,17 @@ uses
   ClpCryptoLibTypes;
 
 type
-
   IPolynomial = interface(IInterface)
-    ['{955B9231-3DE9-42D9-9D3C-20B080C1D951}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567802}']
 
-    function GetExponentsPresent(): TCryptoLibInt32Array;
     function GetDegree: Int32;
-    property Degree: Int32 read GetDegree;
+    function GetExponentsPresent: TCryptoLibInt32Array;
 
+    property Degree: Int32 read GetDegree;
+    property ExponentsPresent: TCryptoLibInt32Array read GetExponentsPresent;
+
+    function Equals(const AOther: IPolynomial): Boolean;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
   end;
 
 implementation

@@ -22,17 +22,16 @@ unit ClpIPolynomialExtensionField;
 interface
 
 uses
-  ClpIPolynomial,
-  ClpIExtensionField;
+  ClpIExtensionField,
+  ClpIPolynomial;
 
 type
-
   IPolynomialExtensionField = interface(IExtensionField)
-    ['{40B4388E-7014-4E15-9E93-9F5173F7F7E0}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567804}']
 
     function GetMinimalPolynomial: IPolynomial;
-    property MinimalPolynomial: IPolynomial read GetMinimalPolynomial;
 
+    property MinimalPolynomial: IPolynomial read GetMinimalPolynomial;
   end;
 
 implementation

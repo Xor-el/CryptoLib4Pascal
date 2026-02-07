@@ -23,66 +23,39 @@ interface
 
 uses
   ClpBigInteger,
+  ClpCryptoLibTypes,
   ClpIFiniteField,
   ClpIPrimeField;
 
 type
-  TPrimeField = class(TInterfacedObject, IFiniteField, IPrimeField)
-
+  TPrimeField = class sealed(TInterfacedObject, IFiniteField, IPrimeField)
   strict private
-    function GetCharacteristic: TBigInteger; virtual;
-    function GetDimension: Int32; virtual;
+    FCharacteristic: TBigInteger;
 
-  strict protected
-  var
-    Fcharacteristic: TBigInteger;
-
+    function GetCharacteristic: TBigInteger;
+    function GetDimension: Int32;
   public
-    constructor Create(const characteristic: TBigInteger);
+    constructor Create(const ACharacteristic: TBigInteger);
+    function Equals(const AOther: IFiniteField): Boolean; reintroduce;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
 
-    function Equals(other: TObject): Boolean; overload; override;
-    function Equals(const other: IPrimeField): Boolean; reintroduce; overload;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}override;
-
-    property characteristic: TBigInteger read GetCharacteristic;
+    property Characteristic: TBigInteger read GetCharacteristic;
     property Dimension: Int32 read GetDimension;
-
   end;
 
 implementation
 
 { TPrimeField }
 
-constructor TPrimeField.Create(const characteristic: TBigInteger);
+constructor TPrimeField.Create(const ACharacteristic: TBigInteger);
 begin
-  Fcharacteristic := characteristic;
-end;
-
-function TPrimeField.Equals(const other: IPrimeField): Boolean;
-begin
-  if ((Self as IPrimeField) = other) then
-  begin
-    Result := true;
-    Exit;
-  end;
-
-  if (other = Nil) then
-  begin
-    Result := false;
-    Exit;
-  end;
-  Result := Fcharacteristic.Equals(other.characteristic);
-end;
-
-function TPrimeField.Equals(other: TObject): Boolean;
-begin
-  Result := Self.Equals((other as TPrimeField) as IPrimeField);
+  Inherited Create();
+  FCharacteristic := ACharacteristic;
 end;
 
 function TPrimeField.GetCharacteristic: TBigInteger;
 begin
-  Result := Fcharacteristic;
+  Result := FCharacteristic;
 end;
 
 function TPrimeField.GetDimension: Int32;
@@ -90,10 +63,16 @@ begin
   Result := 1;
 end;
 
-function TPrimeField.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
+function TPrimeField.Equals(const AOther: IFiniteField): Boolean;
 begin
-  Result := Fcharacteristic.GetHashCode();
+  if AOther = nil then
+    Exit(False);
+  Result := FCharacteristic.Equals(AOther.Characteristic);
+end;
+
+function TPrimeField.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI};
+begin
+  Result := FCharacteristic.GetHashCode();
 end;
 
 end.

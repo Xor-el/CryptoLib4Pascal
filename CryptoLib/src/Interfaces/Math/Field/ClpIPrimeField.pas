@@ -26,12 +26,7 @@ uses
 
 type
   IPrimeField = interface(IFiniteField)
-    ['{242D0BB8-1F38-4AC2-B7F7-D67AF94F7EEE}']
-
-    function Equals(other: TObject): Boolean; overload;
-    function Equals(const other: IPrimeField): Boolean; overload;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567811}']
   end;
 
 implementation

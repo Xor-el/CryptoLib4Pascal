@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpScaleXPointMap;
 
@@ -22,40 +15,29 @@ unit ClpScaleXPointMap;
 interface
 
 uses
-  ClpIECC,
-  ClpIScaleXPointMap;
+  ClpIECCore,
+  ClpIECFieldElement;
 
 type
-  TScaleXPointMap = class(TInterfacedObject, IECPointMap, IScaleXPointMap)
-
+  TScaleXPointMap = class(TInterfacedObject, IECPointMap)
   strict protected
-  var
-    Fscale: IECFieldElement;
-
+    FScale: IECFieldElement;
   public
-    constructor Create(const scale: IECFieldElement);
-    destructor Destroy(); override;
-    function Map(const p: IECPoint): IECPoint; virtual;
+    constructor Create(const AScale: IECFieldElement);
+    function Map(const AP: IECPoint): IECPoint; virtual;
   end;
 
 implementation
 
-{ TScaleXPointMap }
-
-constructor TScaleXPointMap.Create(const scale: IECFieldElement);
+constructor TScaleXPointMap.Create(const AScale: IECFieldElement);
 begin
-  Inherited Create();
-  Fscale := scale;
+  Inherited Create;
+  FScale := AScale;
 end;
 
-destructor TScaleXPointMap.Destroy;
+function TScaleXPointMap.Map(const AP: IECPoint): IECPoint;
 begin
-  inherited Destroy;
-end;
-
-function TScaleXPointMap.Map(const p: IECPoint): IECPoint;
-begin
-  Result := p.ScaleX(Fscale);
+  Result := AP.ScaleX(FScale);
 end;
 
 end.

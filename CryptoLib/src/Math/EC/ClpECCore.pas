@@ -14,27 +14,13 @@
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+(*  Base curve implementation is in ClpECCurve. Use ClpECCurve for TECCurve.       *)
 
-unit ClpIGlvEndomorphism;
+unit ClpECCore;
 
-{$I ..\..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
-
-uses
-  ClpCryptoLibTypes,
-  ClpBigInteger,
-  ClpIECC;
-
-type
-  IGlvEndomorphism = interface(IECEndomorphism)
-
-    ['{FC8EE19A-A707-438F-81CF-C6C6C7D7C36C}']
-
-    function DecomposeScalar(const k: TBigInteger)
-      : TCryptoLibGenericArray<TBigInteger>;
-
-  end;
 
 implementation
 

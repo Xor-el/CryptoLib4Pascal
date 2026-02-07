@@ -15,21 +15,16 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIScaleXNegateYPointMap;
+unit ClpIECPointMap;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIECC;
+  ClpIECCore;
 
-type
-  IScaleXNegateYPointMap = interface(IECPointMap)
-
-    ['{D4FF6900-B627-45AB-8066-00E763213CE5}']
-
-  end;
+  { IECPointMap is declared in ClpIECCore to avoid circular unit reference. }
 
 implementation
 

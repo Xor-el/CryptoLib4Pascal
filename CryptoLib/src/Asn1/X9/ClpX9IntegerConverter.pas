@@ -23,7 +23,8 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECC,
+  ClpIECCore,
+  ClpIECFieldElement,
   ClpCryptoLibTypes;
 
 type
@@ -59,7 +60,7 @@ end;
 
 class function TX9IntegerConverter.GetByteLength(const AC: IECCurve): Int32;
 begin
-  Result := AC.FieldElementEncodingLength;
+  Result := AC.GetFieldElementEncodingLength();
 end;
 
 class function TX9IntegerConverter.IntegerToBytes(const &AS: TBigInteger; AQLength: Int32): TCryptoLibByteArray;

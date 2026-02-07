@@ -25,15 +25,14 @@ uses
   ClpIFiniteField;
 
 type
-
   IExtensionField = interface(IFiniteField)
-    ['{262CB0BB-E070-4B0A-971B-33F4357BC4B5}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567803}']
 
-    function GetDegree: Int32;
     function GetSubfield: IFiniteField;
-    property Degree: Int32 read GetDegree;
-    property Subfield: IFiniteField read GetSubfield;
+    function GetDegree: Int32;
 
+    property Subfield: IFiniteField read GetSubfield;
+    property Degree: Int32 read GetDegree;
   end;
 
 implementation

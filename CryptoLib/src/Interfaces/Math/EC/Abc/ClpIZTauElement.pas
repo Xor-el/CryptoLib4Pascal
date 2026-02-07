@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpIZTauElement;
 
@@ -25,21 +18,17 @@ uses
   ClpBigInteger;
 
 type
+  /// <summary>
+  /// Interface for an element of Z[tau], where lambda = u + v*tau.
+  /// </summary>
   IZTauElement = interface(IInterface)
-    ['{607ABBF3-AE3E-45AC-B772-92423508528A}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
 
     function GetU: TBigInteger;
     function GetV: TBigInteger;
 
-    // /**
-    // * The &quot;real&quot; part of <code>&#955;</code>.
-    // */
     property U: TBigInteger read GetU;
-    // /**
-    // * The &quot;<code>&#964;</code>-adic&quot; part of <code>&#955;</code>.
-    // */
     property V: TBigInteger read GetV;
-
   end;
 
 implementation

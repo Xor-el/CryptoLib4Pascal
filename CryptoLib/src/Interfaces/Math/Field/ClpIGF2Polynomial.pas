@@ -22,20 +22,11 @@ unit ClpIGF2Polynomial;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpIPolynomial;
 
 type
   IGF2Polynomial = interface(IPolynomial)
-    ['{B60318B7-B459-4C09-9D0A-67C84DF794B3}']
-
-    function GetExponents: TCryptoLibInt32Array;
-
-    function Equals(const other: IGF2Polynomial): Boolean;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
-    property exponents: TCryptoLibInt32Array read GetExponents;
-
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567812}']
   end;
 
 implementation

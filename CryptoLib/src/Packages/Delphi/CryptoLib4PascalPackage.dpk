@@ -56,7 +56,7 @@ contains
   ClpBigInteger in '..\..\Math\ClpBigInteger.pas',
   ClpCurve25519Custom in '..\..\Math\EC\Custom\Djb\ClpCurve25519Custom.pas',
   ClpLongArray in '..\..\Math\EC\ClpLongArray.pas',
-  ClpECC in '..\..\Math\EC\ClpECC.pas',
+  ClpECCurve in '..\..\Math\EC\ClpECCurve.pas',
   ClpIX25519PublicKeyParameters in '..\..\Interfaces\ClpIX25519PublicKeyParameters.pas',
   ClpIXSalsa20Engine in '..\..\Interfaces\ClpIXSalsa20Engine.pas',
   ClpIX25519PrivateKeyParameters in '..\..\Interfaces\ClpIX25519PrivateKeyParameters.pas',

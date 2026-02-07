@@ -35,7 +35,7 @@ uses
   ClpIX9ECAsn1Objects,
   ClpX9ECAsn1Objects,
   ClpAsn1Objects,
-  ClpIECC,
+  ClpIECCore,
   ClpIDsaParameters,
   ClpIECParameters,
   ClpIX509Asn1Objects,

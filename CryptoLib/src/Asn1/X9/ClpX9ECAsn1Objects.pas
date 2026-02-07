@@ -30,7 +30,8 @@ uses
   ClpIAsn1Core,
   ClpIX9ECAsn1Objects,
   ClpBigInteger,
-  ClpIECC,
+  ClpIECCore,
+  ClpIECFieldElement,
   ClpECAlgorithms,
   ClpX9ObjectIdentifiers,
   ClpX9IntegerConverter,
@@ -38,7 +39,7 @@ uses
   ClpAsn1Utilities,
   ClpIFiniteField,
   ClpIPolynomialExtensionField,
-  ClpECC;
+  ClpECCurve;
 
 resourcestring
   SBadSequenceSize = 'Bad sequence size: %d';

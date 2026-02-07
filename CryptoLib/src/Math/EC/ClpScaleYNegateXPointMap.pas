@@ -13,8 +13,6 @@
 
 { * ******************************************************************************* * }
 
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
-
 unit ClpScaleYNegateXPointMap;
 
 {$I ..\..\Include\CryptoLib.inc}
@@ -22,35 +20,31 @@ unit ClpScaleYNegateXPointMap;
 interface
 
 uses
-  ClpIECC,
-  ClpIScaleYNegateXPointMap;
+  ClpIECCore,
+  ClpIECFieldElement;
 
 type
-  TScaleYNegateXPointMap = class(TInterfacedObject, IECPointMap,
-    IScaleYNegateXPointMap)
-
+  TScaleYNegateXPointMap = class(TInterfacedObject, IECPointMap)
   strict protected
-  var
-    Fscale: IECFieldElement;
-
+    FScale: IECFieldElement;
   public
-    constructor Create(const scale: IECFieldElement);
-    function Map(const p: IECPoint): IECPoint; virtual;
+    constructor Create(const AScale: IECFieldElement);
+    function Map(const AP: IECPoint): IECPoint; virtual;
   end;
 
 implementation
 
 { TScaleYNegateXPointMap }
 
-constructor TScaleYNegateXPointMap.Create(const scale: IECFieldElement);
+constructor TScaleYNegateXPointMap.Create(const AScale: IECFieldElement);
 begin
-  Inherited Create();
-  Fscale := scale;
+  Inherited Create;
+  FScale := AScale;
 end;
 
-function TScaleYNegateXPointMap.Map(const p: IECPoint): IECPoint;
+function TScaleYNegateXPointMap.Map(const AP: IECPoint): IECPoint;
 begin
-  Result := p.ScaleYNegateX(Fscale);
+  Result := AP.ScaleYNegateX(FScale);
 end;
 
 end.

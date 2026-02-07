@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpMultipliers;
 
@@ -22,596 +15,375 @@ unit ClpMultipliers;
 interface
 
 uses
-  SysUtils,
   ClpBigInteger,
-  ClpBitOperations,
-  ClpNat,
-  ClpTnaf,
-  ClpIECC,
-  ClpIGlvEndomorphism,
-  ClpIFixedPointPreCompInfo,
-  ClpIWTauNafPreCompInfo,
-  ClpWTauNafPreCompInfo,
+  ClpIECCore,
+  ClpIECFieldElement,
   ClpIZTauElement,
-  ClpIPreCompInfo,
-  ClpIPreCompCallBack,
-  ClpIMultipliers,
   ClpIWNafPreCompInfo,
-  ClpECCompUtilities,
-  ClpWeakRef,
+  ClpIPreCompCallback,
+  ClpIPreCompInfo,
+  ClpWNafUtilities,
   ClpCryptoLibTypes;
 
-resourcestring
-  SInvalidComputation =
-    'Fixed-Point Comb Doesn''t Support Scalars Larger Than The Curve Order';
-  SCurveUnknownGroupOrder = 'Need Curve With Known Group Order, "curve"';
-  SInCompatiblePoint = 'Only AbstractF2mPoint can be used in WTauNafMultiplier';
-
 type
-  TAbstractECMultiplier = class abstract(TInterfacedObject,
-    IAbstractECMultiplier, IECMultiplier)
-
+  TAbstractECMultiplier = class abstract(TInterfacedObject, IECMultiplier)
   strict protected
-
-    function CheckResult(const p: IECPoint): IECPoint; virtual;
-    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
-      : IECPoint; virtual; abstract;
-
+    function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; virtual; abstract;
+    function CheckResult(const AP: IECPoint): IECPoint; virtual;
   public
-
-    constructor Create();
-    function Multiply(const p: IECPoint; const k: TBigInteger)
-      : IECPoint; virtual;
-
+    function Multiply(const APoint: IECPoint; const AK: TBigInteger): IECPoint; virtual;
   end;
 
-type
-  TFixedPointCombMultiplier = class sealed(TAbstractECMultiplier,
-    IFixedPointCombMultiplier)
-
+  TWNafL2RMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier, IWNafL2RMultiplier)
   strict protected
-    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
-      : IECPoint; override;
-
-  public
-    constructor Create();
-
+    function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   end;
 
-type
-  TGlvMultiplier = class(TAbstractECMultiplier, IGlvMultiplier)
-
+  TGlvMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict protected
-  var
-    Fcurve: TWeakRef<IECCurve>;
-    FglvEndomorphism: IGlvEndomorphism;
-
-    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
-      : IECPoint; override;
-
+    FCurve: IECCurve;
+    FGlvEndomorphism: IGlvEndomorphism;
+    function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
-    constructor Create(const curve: IECCurve;
-      const glvEndomorphism: IGlvEndomorphism);
-    destructor Destroy; override;
-
+    constructor Create(const ACurve: IECCurve; const AGlvEndomorphism: IGlvEndomorphism);
   end;
 
-type
-
-  /// <summary>
-  /// Class implementing the WNAF (Window Non-Adjacent Form) multiplication
-  /// algorithm.
-  /// </summary>
-  TWNafL2RMultiplier = class(TAbstractECMultiplier, IWNafL2RMultiplier)
-
-  strict protected
-    // /**
-    // * Multiplies <code>this</code> by an integer <code>k</code> using the
-    // * Window NAF method.
-    // * @param k The integer by which <code>this</code> is multiplied.
-    // * @return A new <code>ECPoint</code> which equals <code>this</code>
-    // * multiplied by <code>k</code>.
-    // */
-    function MultiplyPositive(const p: IECPoint; const k: TBigInteger)
-      : IECPoint; override;
-
-  public
-
-    constructor Create();
-
-  end;
-
-type
-  /// **
-  // * Class implementing the WTNAF (Window
-  // * <code>&#964;</code>-adic Non-Adjacent Form) algorithm.
-  // */
-  TWTauNafMultiplier = class(TAbstractECMultiplier, IWTauNafMultiplier)
-
+  TWTauNafMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict private
-    // TODO Create WTauNafUtilities class and move various functionality into it
-
-  type
-    IWTauNafCallback = interface(IPreCompCallback)
-      ['{4D6F7B4A-B925-42C9-8D60-B7F24632EDC1}']
-
-    end;
-
-  type
-    TWTauNafCallback = class(TInterfacedObject, IPreCompCallback,
-      IWTauNafCallback)
-
-    strict private
-    var
-      Fm_p: IAbstractF2mPoint;
-      Fm_a: ShortInt;
-
-    public
-      constructor Create(const p: IAbstractF2mPoint; a: ShortInt);
-
-      function Precompute(const existing: IPreCompInfo): IPreCompInfo;
-
-    end;
-
-  const
-    PRECOMP_NAME: String = 'bc_wtnaf';
-
-    // /**
-    // * Multiplies an AbstractF2mPoint
-    // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code> using
-    // * the <code>&#964;</code>-adic NAF (TNAF) method.
-    // * @param p The AbstractF2mPoint to multiply.
-    // * @param lambda The element <code>&#955;</code> of
-    // * <code><b>Z</b>[&#964;]</code> of which to compute the
-    // * <code>[&#964;]</code>-adic NAF.
-    // * @return <code>p</code> multiplied by <code>&#955;</code>.
-    // */
-    function MultiplyWTnaf(const p: IAbstractF2mPoint;
-      const lambda: IZTauElement; a, mu: ShortInt): IAbstractF2mPoint; inline;
-
-    // /**
-    // * Multiplies an AbstractF2mPoint
-    // * by an element <code>&#955;</code> of <code><b>Z</b>[&#964;]</code>
-    // * using the window <code>&#964;</code>-adic NAF (TNAF) method, given the
-    // * WTNAF of <code>&#955;</code>.
-    // * @param p The AbstractF2mPoint to multiply.
-    // * @param u The the WTNAF of <code>&#955;</code>..
-    // * @return <code>&#955; * p</code>
-    // */
-    class function MultiplyFromWTnaf(const p: IAbstractF2mPoint;
-      const u: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
-
+    class var PRECOMP_NAME: String;
+    function MultiplyWTnaf(const AP: IAbstractF2mPoint; const ALambda: IZTauElement;
+      AA, AMu: ShortInt): IAbstractF2mPoint;
+    class function MultiplyFromWTnaf(const AP: IAbstractF2mPoint;
+      const AU: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
   strict protected
-    // /**
-    // * Multiplies an AbstractF2mPoint
-    // * by <code>k</code> using the reduced <code>&#964;</code>-adic NAF (RTNAF)
-    // * method.
-    // * @param p The AbstractF2mPoint to multiply.
-    // * @param k The integer by which to multiply <code>k</code>.
-    // * @return <code>p</code> multiplied by <code>k</code>.
-    // */
-    function MultiplyPositive(const point: IECPoint; const k: TBigInteger)
-      : IECPoint; override;
-
+    function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
-    constructor Create();
+    class constructor Create;
+  end;
 
+  TFixedPointCombMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
+  strict protected
+    function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   end;
 
 implementation
 
 uses
-  ClpECAlgorithms;
+  System.Math,
+  ClpCryptoLibTypes,
+  ClpECAlgorithms,
+  ClpECPoint,
+  ClpEndoUtilities,
+  ClpFixedPointUtilities,
+  ClpIFixedPointPreCompInfo,
+  ClpNat,
+  ClpBitOperations,
+  ClpTnaf,
+  ClpIWTauNafPreCompInfo,
+  ClpWTauNafPreCompInfo;
 
 { TAbstractECMultiplier }
 
-function TAbstractECMultiplier.CheckResult(const p: IECPoint): IECPoint;
+function TAbstractECMultiplier.CheckResult(const AP: IECPoint): IECPoint;
 begin
-  result := TECAlgorithms.ImplCheckResult(p);
+  Result := TECAlgorithms.ImplCheckResult(AP);
 end;
 
-constructor TAbstractECMultiplier.Create;
-begin
-  Inherited Create();
-end;
-
-function TAbstractECMultiplier.Multiply(const p: IECPoint; const k: TBigInteger)
-  : IECPoint;
+function TAbstractECMultiplier.Multiply(const APoint: IECPoint; const AK: TBigInteger): IECPoint;
 var
-  positive: IECPoint;
-  sign: Int32;
+  LSign: Int32;
+  LPositive, LResult: IECPoint;
 begin
-
-  sign := k.SignValue;
-  if ((sign = 0) or (p.IsInfinity)) then
-  begin
-    result := p.curve.Infinity;
-    Exit;
-  end;
-
-  positive := MultiplyPositive(p, k.Abs());
-
-  if sign > 0 then
-  begin
-    result := positive
-  end
+  LSign := AK.SignValue;
+  if (LSign = 0) or APoint.IsInfinity then
+    Exit(APoint.Curve.Infinity);
+  LPositive := MultiplyPositive(APoint, AK.Abs());
+  if LSign > 0 then
+    LResult := LPositive
   else
-  begin
-    result := positive.Negate();
-  end;
-
-  // /*
-  // * Although the various multipliers ought not to produce invalid output under normal
-  // * circumstances, a final check here is advised to guard against fault attacks.
-  // */
-  result := CheckResult(result);
-
-end;
-
-{ TFixedPointCombMultiplier }
-
-constructor TFixedPointCombMultiplier.Create;
-begin
-  Inherited Create();
-end;
-
-function TFixedPointCombMultiplier.MultiplyPositive(const p: IECPoint;
-  const k: TBigInteger): IECPoint;
-var
-  c: IECCurve;
-  R, add: IECPoint;
-  size, width, d, top, i, j, fullComb: Int32;
-  secretIndex, secretBit: UInt32;
-  info: IFixedPointPreCompInfo;
-  lookupTable: IECLookupTable;
-  LK: TCryptoLibUInt32Array;
-begin
-  c := p.curve;
-  size := TFixedPointUtilities.GetCombSize(c);
-  if (k.BitLength > size) then
-  begin
-    // /*
-    // * TODO The comb works best when the scalars are less than the (possibly unknown) order.
-    // * Still, if we want to handle larger scalars, we could allow customization of the comb
-    // * size, or alternatively we could deal with the 'extra' bits either by running the comb
-    // * multiple times as necessary, or by using an alternative multiplier as prelude.
-    // */
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidComputation);
-  end;
-
-  info := TFixedPointUtilities.Precompute(p);
-  lookupTable := info.lookupTable;
-  width := info.width;
-
-  d := (size + width - 1) div width;
-
-  R := c.Infinity;
-  fullComb := d * width;
-  LK := TNat.FromBigInteger(fullComb, k);
-
-  top := fullComb - 1;
-
-  for i := 0 to System.Pred(d) do
-  begin
-
-    secretIndex := 0;
-
-    j := (top - i);
-
-    while j >= 0 do
-    begin
-
-      secretBit := LK[TBitOperations.Asr32(j, 5)] shr (j and $1F);
-      secretIndex := secretIndex xor (secretBit shr 1);
-      secretIndex := secretIndex shl 1;
-      secretIndex := secretIndex xor secretBit;
-
-      System.Dec(j, d);
-    end;
-
-    add := lookupTable.Lookup(Int32(secretIndex));
-    R := R.TwicePlus(add);
-
-  end;
-
-  result := R.add(info.Offset);
-
-end;
-
-{ TGlvMultiplier }
-
-constructor TGlvMultiplier.Create(const curve: IECCurve;
-  const glvEndomorphism: IGlvEndomorphism);
-begin
-  inherited Create();
-  if ((curve = Nil) or (not(curve.Order.IsInitialized))) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SCurveUnknownGroupOrder);
-  end;
-
-  Fcurve := curve;
-  FglvEndomorphism := glvEndomorphism;
-end;
-
-destructor TGlvMultiplier.Destroy;
-begin
-  //TSetWeakRef.SetWeakReference(@Fcurve, Nil);
-  inherited Destroy;
-end;
-
-function TGlvMultiplier.MultiplyPositive(const p: IECPoint;
-  const k: TBigInteger): IECPoint;
-var
-  n, a, b: TBigInteger;
-  ab: TCryptoLibGenericArray<TBigInteger>;
-  q: IECPoint;
-  LCurve: IECCurve;
-begin
-  LCurve :=  Fcurve;
-  if (not(LCurve.Equals(p.curve))) then
-  begin
-    raise EInvalidOperationCryptoLibException.Create('');
-  end;
-
-  n := p.curve.Order;
-  ab := FglvEndomorphism.DecomposeScalar(k.&Mod(n));
-  a := ab[0];
-  b := ab[1];
-
-  if (FglvEndomorphism.HasEfficientPointMap) then
-  begin
-    result := TECAlgorithms.ImplShamirsTrickWNaf(FglvEndomorphism, p, a, b);
-    Exit;
-  end;
-
-  q := TEndoUtilities.MapPoint(FglvEndomorphism, p);
-
-  result := TECAlgorithms.ImplShamirsTrickWNaf(p, a, q, b);
+    LResult := LPositive.Negate();
+  Result := CheckResult(LResult);
 end;
 
 { TWNafL2RMultiplier }
 
-constructor TWNafL2RMultiplier.Create;
+function TWNafL2RMultiplier.MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint;
+var
+  LMinWidth, LWidth, LI, LWi, LDigit, LZeroes, LN, LHighest, LScale, LLowBits, LI1, LI2: Int32;
+  LInfo: IWNafPreCompInfo;
+  LPreComp, LPreCompNeg: TCryptoLibGenericArray<IECPoint>;
+  LWnaf: TCryptoLibInt32Array;
+  LTable: TCryptoLibGenericArray<IECPoint>;
+  LR, LSmallR: IECPoint;
 begin
-  Inherited Create();
+  LMinWidth := TWNafUtilities.GetWindowSize(AK.BitLength);
+  LInfo := TWNafUtilities.Precompute(AP, LMinWidth, True);
+  LPreComp := LInfo.PreComp;
+  LPreCompNeg := LInfo.PreCompNeg;
+  LWidth := LInfo.Width;
+
+  LWnaf := TWNafUtilities.GenerateCompactWindowNaf(LWidth, AK);
+  LR := AP.Curve.Infinity;
+  LI := System.Length(LWnaf);
+
+  if LI > 1 then
+  begin
+    Dec(LI);
+    LWi := LWnaf[LI];
+    LDigit := TBitOperations.Asr32(LWi, 16);
+    LZeroes := LWi and $FFFF;
+
+    LN := System.Math.Abs(LDigit);
+    if LDigit < 0 then
+      LTable := LPreCompNeg
+    else
+      LTable := LPreComp;
+
+    if (LN shl 2) < (1 shl LWidth) then
+    begin
+      LHighest := 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(LN));
+      LScale := LWidth - LHighest;
+      LLowBits := LN xor (1 shl (LHighest - 1));
+      LI1 := (1 shl (LWidth - 1)) - 1;
+      LI2 := (LLowBits shl LScale) + 1;
+      LR := LTable[TBitOperations.Asr32(LI1, 1)].Add(LTable[TBitOperations.Asr32(LI2, 1)]);
+      Dec(LZeroes, LScale);
+    end
+    else
+      LR := LTable[TBitOperations.Asr32(LN, 1)];
+
+    LR := LR.TimesPow2(LZeroes);
+  end;
+
+  while LI > 0 do
+  begin
+    Dec(LI);
+    LWi := LWnaf[LI];
+    LDigit := TBitOperations.Asr32(LWi, 16);
+    LZeroes := LWi and $FFFF;
+
+    LN := System.Math.Abs(LDigit);
+    if LDigit < 0 then
+      LTable := LPreCompNeg
+    else
+      LTable := LPreComp;
+    LSmallR := LTable[TBitOperations.Asr32(LN, 1)];
+
+    LR := LR.TwicePlus(LSmallR);
+    LR := LR.TimesPow2(LZeroes);
+  end;
+
+  Result := LR;
 end;
 
-function TWNafL2RMultiplier.MultiplyPositive(const p: IECPoint;
-  const k: TBigInteger): IECPoint;
-var
-  width, minWidth, i, wi, digit, zeroes, n, highest, scale, lowBits, i1,
-    i2: Int32;
-  info: IWNafPreCompInfo;
-  preComp, preCompNeg, table: TCryptoLibGenericArray<IECPoint>;
-  wnaf: TCryptoLibInt32Array;
-  R, lr: IECPoint;
+{ TGlvMultiplier }
+
+constructor TGlvMultiplier.Create(const ACurve: IECCurve; const AGlvEndomorphism: IGlvEndomorphism);
 begin
-  minWidth := TWNafUtilities.GetWindowSize(k.BitLength);
+  Inherited Create;
+  if (ACurve = nil) or (not ACurve.Order.IsInitialized) then
+    raise EArgumentCryptoLibException.Create('Need curve with known group order');
+  FCurve := ACurve;
+  FGlvEndomorphism := AGlvEndomorphism;
+end;
 
-  info := TWNafUtilities.Precompute(p, minWidth, true);
-  preComp := info.preComp;
-  preCompNeg := info.preCompNeg;
-  width := info.width;
-
-  wnaf := TWNafUtilities.GenerateCompactWindowNaf(width, k);
-
-  R := p.curve.Infinity;
-
-  i := System.Length(wnaf);
-
-  // /*
-  // * NOTE: We try to optimize the first window using the precomputed points to substitute an
-  // * addition for 2 or more doublings.
-  // */
-  if (i > 1) then
+function TGlvMultiplier.MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint;
+var
+  LN: TBigInteger;
+  LAB: TCryptoLibGenericArray<TBigInteger>;
+  LA, LB: TBigInteger;
+  LQ: IECPoint;
+begin
+  if not FCurve.Equals(AP.Curve) then
+    raise EInvalidOperationCryptoLibException.Create('');
+  LN := AP.Curve.Order;
+  LAB := FGlvEndomorphism.DecomposeScalar(AK.Mod(LN));
+  LA := LAB[0];
+  LB := LAB[1];
+  if FGlvEndomorphism.HasEfficientPointMap then
+    Result := TECAlgorithms.ImplShamirsTrickWNaf(FGlvEndomorphism as IECEndomorphism, AP, LA, LB)
+  else
   begin
-    System.Dec(i);
-    wi := wnaf[i];
-    digit := TBitOperations.Asr32(wi, 16);
-    zeroes := wi and $FFFF;
-
-    n := System.Abs(digit);
-    if digit < 0 then
-    begin
-      table := preCompNeg;
-    end
-    else
-    begin
-      table := preComp;
-    end;
-
-    // Optimization can only be used for values in the lower half of the table
-    if ((n shl 2) < (1 shl width)) then
-    begin
-      highest := 32 - TBitOperations.NumberOfLeadingZeros32(n);
-
-      // TODO Get addition/doubling cost ratio from curve and compare to 'scale' to see if worth substituting?
-      scale := width - highest;
-      lowBits := n xor (1 shl (highest - 1));
-
-      i1 := ((1 shl (width - 1)) - 1);
-      i2 := (lowBits shl scale) + 1;
-      R := table[TBitOperations.Asr32(i1, 1)].add(table[TBitOperations.Asr32(i2, 1)]);
-
-      zeroes := zeroes - scale;
-    end
-    else
-    begin
-      R := table[TBitOperations.Asr32(n, 1)];
-    end;
-
-    R := R.TimesPow2(zeroes);
+    LQ := TEndoUtilities.MapPoint(FGlvEndomorphism as IECEndomorphism, AP);
+    Result := TECAlgorithms.ImplShamirsTrickWNaf(AP, LA, LQ, LB);
   end;
-
-  while (i > 0) do
-  begin
-    System.Dec(i);
-    wi := wnaf[i];
-    digit := TBitOperations.Asr32(wi, 16);
-    zeroes := wi and $FFFF;
-
-    n := System.Abs(digit);
-    if digit < 0 then
-    begin
-      table := preCompNeg;
-    end
-    else
-    begin
-      table := preComp;
-    end;
-
-    lr := table[TBitOperations.Asr32(n, 1)];
-
-    R := R.TwicePlus(lr);
-    R := R.TimesPow2(zeroes);
-  end;
-
-  result := R;
-
 end;
 
 { TWTauNafMultiplier }
 
-constructor TWTauNafMultiplier.Create;
+type
+  TWTauNafCallback = class sealed(TInterfacedObject, IPreCompCallback)
+  strict private
+    FP: IAbstractF2mPoint;
+    FA: ShortInt;
+  public
+    constructor Create(const AP: IAbstractF2mPoint; AA: ShortInt);
+    function Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
+  end;
+
+constructor TWTauNafCallback.Create(const AP: IAbstractF2mPoint; AA: ShortInt);
 begin
-  Inherited Create();
+  inherited Create;
+  FP := AP;
+  FA := AA;
 end;
 
-class function TWTauNafMultiplier.MultiplyFromWTnaf(const p: IAbstractF2mPoint;
-  const u: TCryptoLibShortIntArray): IAbstractF2mPoint;
+function TWTauNafCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
-  curve: IAbstractF2mCurve;
-  a: ShortInt;
-  i, tauCount, ui: Int32;
-  pu, puNeg: TCryptoLibGenericArray<IAbstractF2mPoint>;
-  pre: IWTauNafPreCompInfo;
-  q: IAbstractF2mPoint;
-  x: IECPoint;
+  LExisting: IWTauNafPreCompInfo;
+  LResult: TWTauNafPreCompInfo;
 begin
-  curve := p.curve as IAbstractF2mCurve;
-  a := ShortInt(curve.a.ToBigInteger().Int32Value);
+  if Supports(AExisting, IWTauNafPreCompInfo, LExisting) then
+    Exit(AExisting);
 
-  pre := curve.Precompute(p, PRECOMP_NAME, TWTauNafCallback.Create(p, a)
-    as IWTauNafCallback) as IWTauNafPreCompInfo;
-
-  pu := pre.preComp;
-  // TODO Include negations in precomp (optionally) and use from here
-  System.SetLength(puNeg, System.Length(pu));
-  for i := 0 to System.Pred(System.Length(pu)) do
-  begin
-    puNeg[i] := pu[i].Negate() as IAbstractF2mPoint;
-  end;
-
-  q := p.curve.Infinity as IAbstractF2mPoint;
-  tauCount := 0;
-  i := System.Length(u) - 1;
-  while i >= 0 do
-  begin
-    System.Inc(tauCount);
-    ui := u[i];
-    if (ui <> 0) then
-    begin
-      q := q.TauPow(tauCount);
-      tauCount := 0;
-
-      if ui > 0 then
-      begin
-        x := pu[TBitOperations.Asr32(ui, 1)];
-      end
-      else
-      begin
-        x := puNeg[TBitOperations.Asr32(-ui, 1)];
-      end;
-
-      q := q.add(x) as IAbstractF2mPoint;
-    end;
-    System.Dec(i);
-  end;
-  if (tauCount > 0) then
-  begin
-    q := q.TauPow(tauCount);
-  end;
-  result := q;
-
+  LResult := TWTauNafPreCompInfo.Create;
+  LResult.PreComp := TTnaf.GetPreComp(FP, FA);
+  Result := LResult;
 end;
 
-function TWTauNafMultiplier.MultiplyWTnaf(const p: IAbstractF2mPoint;
-  const lambda: IZTauElement; a, mu: ShortInt): IAbstractF2mPoint;
-var
-  alpha: TCryptoLibGenericArray<IZTauElement>;
-  tw: TBigInteger;
-  u: TCryptoLibShortIntArray;
+class constructor TWTauNafMultiplier.Create;
 begin
-  if a = 0 then
-  begin
-    alpha := TTnaf.Alpha0;
-  end
+  PRECOMP_NAME := 'bc_wtnaf';
+end;
+
+function TWTauNafMultiplier.MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint;
+var
+  LP: IAbstractF2mPoint;
+  LCurve: IAbstractF2mCurve;
+  LA, LMu: ShortInt;
+  LRho: IZTauElement;
+begin
+  if not Supports(AP, IAbstractF2mPoint, LP) then
+    raise EArgumentCryptoLibException.Create('Only AbstractF2mPoint can be used in WTauNafMultiplier');
+
+  LCurve := LP.Curve as IAbstractF2mCurve;
+  LA := ShortInt(LCurve.A.ToBigInteger().Int32Value);
+  LMu := TTnaf.GetMu(LA);
+
+  LRho := TTnaf.PartModReduction(LCurve, AK, LA, LMu, ShortInt(10));
+
+  Result := MultiplyWTnaf(LP, LRho, LA, LMu);
+end;
+
+function TWTauNafMultiplier.MultiplyWTnaf(const AP: IAbstractF2mPoint;
+  const ALambda: IZTauElement; AA, AMu: ShortInt): IAbstractF2mPoint;
+var
+  LAlpha: TCryptoLibGenericArray<IZTauElement>;
+  LTw: TBigInteger;
+  LU: TCryptoLibShortIntArray;
+begin
+  if AA = 0 then
+    LAlpha := TTnaf.Alpha0
   else
+    LAlpha := TTnaf.Alpha1;
+
+  LTw := TTnaf.GetTw(AMu, TTnaf.Width);
+
+  LU := TTnaf.TauAdicWNaf(AMu, ALambda, TTnaf.Width, LTw.Int32Value, LAlpha);
+
+  Result := MultiplyFromWTnaf(AP, LU);
+end;
+
+class function TWTauNafMultiplier.MultiplyFromWTnaf(const AP: IAbstractF2mPoint;
+  const AU: TCryptoLibShortIntArray): IAbstractF2mPoint;
+var
+  LCurve: IAbstractF2mCurve;
+  LA: ShortInt;
+  LCallback: IPreCompCallback;
+  LPreCompInfo: IWTauNafPreCompInfo;
+  LPu, LPuNeg: TCryptoLibGenericArray<IAbstractF2mPoint>;
+  LQ: IAbstractF2mPoint;
+  LTauCount, LI, LUi: Int32;
+  LX: IECPoint;
+begin
+  LCurve := AP.Curve as IAbstractF2mCurve;
+  LA := ShortInt(LCurve.A.ToBigInteger().Int32Value);
+
+  LCallback := TWTauNafCallback.Create(AP, LA);
+  LPreCompInfo := LCurve.Precompute(AP, PRECOMP_NAME, LCallback) as IWTauNafPreCompInfo;
+  LPu := LPreCompInfo.PreComp;
+
+  // TODO Include negations in precomp (optionally) and use from here
+  SetLength(LPuNeg, System.Length(LPu));
+  for LI := 0 to System.Length(LPu) - 1 do
+    LPuNeg[LI] := LPu[LI].Negate() as IAbstractF2mPoint;
+
+  // q = infinity
+  LQ := AP.Curve.Infinity as IAbstractF2mPoint;
+
+  LTauCount := 0;
+  for LI := System.Length(AU) - 1 downto 0 do
   begin
-    alpha := TTnaf.Alpha1;
+    System.Inc(LTauCount);
+    LUi := AU[LI];
+    if LUi <> 0 then
+    begin
+      LQ := LQ.TauPow(LTauCount);
+      LTauCount := 0;
+
+      if LUi > 0 then
+        LX := LPu[TBitOperations.Asr32(LUi, 1)]
+      else
+        LX := LPuNeg[TBitOperations.Asr32(-LUi, 1)];
+      LQ := LQ.Add(LX) as IAbstractF2mPoint;
+    end;
+  end;
+  if LTauCount > 0 then
+    LQ := LQ.TauPow(LTauCount);
+
+  Result := LQ;
+end;
+
+{ TFixedPointCombMultiplier }
+
+function TFixedPointCombMultiplier.MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint;
+var
+  LC: IECCurve;
+  LSize, LWidth, LD, LFullComb, LI, LJ: Int32;
+  LInfo: IFixedPointPreCompInfo;
+  LLookupTable: IECLookupTable;
+  LK: TCryptoLibUInt32Array;
+  LSecretIndex: UInt32;
+  LSecretBit: UInt32;
+  LR, LAdd: IECPoint;
+begin
+  LC := AP.Curve;
+  LSize := TFixedPointUtilities.GetCombSize(LC);
+
+  if AK.BitLength > LSize then
+    raise EInvalidOperationCryptoLibException.Create(
+      'fixed-point comb doesn''t support scalars larger than the curve order');
+
+  LInfo := TFixedPointUtilities.Precompute(AP);
+  LLookupTable := LInfo.LookupTable;
+  LWidth := LInfo.Width;
+  LD := (LSize + LWidth - 1) div LWidth;
+  LFullComb := LD * LWidth;
+
+  LK := TNat.FromBigInteger(LFullComb, AK);
+
+  LR := LC.Infinity;
+
+  for LI := 1 to LD do
+  begin
+    LSecretIndex := 0;
+
+    LJ := LFullComb - LI;
+    while LJ >= 0 do
+    begin
+      LSecretBit := LK[TBitOperations.Asr32(LJ, 5)] shr (LJ and $1F);
+      LSecretIndex := LSecretIndex xor (LSecretBit shr 1);
+      LSecretIndex := LSecretIndex shl 1;
+      LSecretIndex := LSecretIndex xor LSecretBit;
+      LJ := LJ - LD;
+    end;
+
+    LAdd := LLookupTable.Lookup(Int32(LSecretIndex));
+
+    LR := LR.TwicePlus(LAdd);
   end;
 
-  tw := TTnaf.GetTw(mu, TTnaf.width);
-
-  u := TTnaf.TauAdicWNaf(mu, lambda, TTnaf.width,
-    TBigInteger.ValueOf(TTnaf.Pow2Width), tw, alpha);
-
-  result := MultiplyFromWTnaf(p, u);
-end;
-
-function TWTauNafMultiplier.MultiplyPositive(const point: IECPoint;
-  const k: TBigInteger): IECPoint;
-var
-  p: IAbstractF2mPoint;
-  curve: IAbstractF2mCurve;
-  m: Int32;
-  a, mu: ShortInt;
-  s: TCryptoLibGenericArray<TBigInteger>;
-  rho: IZTauElement;
-begin
-  if (not(Supports(point, IAbstractF2mPoint))) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SInCompatiblePoint);
-  end;
-
-  p := point as IAbstractF2mPoint;
-  curve := p.curve as IAbstractF2mCurve;
-  m := curve.FieldSize;
-  a := ShortInt(curve.a.ToBigInteger().Int32Value);
-  mu := TTnaf.GetMu(a);
-  s := curve.GetSi();
-
-  rho := TTnaf.PartModReduction(k, m, a, s, mu, ShortInt(10));
-
-  result := MultiplyWTnaf(p, rho, a, mu);
-
-end;
-
-{ TWTauNafMultiplier.TWTauNafCallback }
-
-constructor TWTauNafMultiplier.TWTauNafCallback.Create
-  (const p: IAbstractF2mPoint; a: ShortInt);
-begin
-  Inherited Create();
-  Fm_p := p;
-  Fm_a := a;
-end;
-
-function TWTauNafMultiplier.TWTauNafCallback.Precompute(const existing
-  : IPreCompInfo): IPreCompInfo;
-var
-  tempResult: IWTauNafPreCompInfo;
-begin
-
-   if (Supports(existing, IWTauNafPreCompInfo)) then
-   begin
-     result := existing;
-     Exit;
-   end;
-
-  tempResult := TWTauNafPreCompInfo.Create();
-  tempResult.preComp := TTnaf.GetPreComp(Fm_p, Fm_a);
-  result := tempResult;
+  Result := LR.Add(LInfo.Offset);
 end;
 
 end.

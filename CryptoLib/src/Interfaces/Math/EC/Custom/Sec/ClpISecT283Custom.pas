@@ -22,7 +22,7 @@ unit ClpISecT283Custom;
 interface
 
 uses
-  ClpIECC,
+  ClpIECCore,
   ClpCryptoLibTypes;
 
 type

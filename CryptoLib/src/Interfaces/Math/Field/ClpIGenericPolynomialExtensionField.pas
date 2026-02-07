@@ -26,13 +26,7 @@ uses
 
 type
   IGenericPolynomialExtensionField = interface(IPolynomialExtensionField)
-    ['{BB3A963B-38E1-4DF0-A0C6-86DF5CE830FA}']
-
-    function Equals(other: TObject): Boolean; overload;
-    function Equals(const other: IGenericPolynomialExtensionField)
-      : Boolean; overload;
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567813}']
   end;
 
 implementation

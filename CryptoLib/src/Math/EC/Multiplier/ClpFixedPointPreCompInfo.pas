@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpFixedPointPreCompInfo;
 
@@ -22,100 +15,68 @@ unit ClpFixedPointPreCompInfo;
 interface
 
 uses
-  ClpIECC,
+  ClpIECCore,
+  ClpIPreCompInfo,
   ClpIFixedPointPreCompInfo,
-  ClpIPreCompInfo;
+  ClpCryptoLibTypes;
 
 type
-
-  /// <summary>
-  /// Class holding precomputation data for fixed-point multiplications.
-  /// </summary>
-  TFixedPointPreCompInfo = class(TInterfacedObject, IPreCompInfo,
+  TFixedPointPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,
     IFixedPointPreCompInfo)
-
   strict private
-    function GetWidth: Int32;
-    procedure SetWidth(const Value: Int32);
-
+    FLookupTable: IECLookupTable;
+    FOffset: IECPoint;
+    FWidth: Int32;
     function GetLookupTable: IECLookupTable;
-    procedure SetLookupTable(const Value: IECLookupTable);
-
-    function GetOffset: IECPoint;
-    procedure SetOffset(const Value: IECPoint);
-
-  strict protected
-  var
-    Fm_offset: IECPoint;
-
-    /// <summary>
-    /// Array holding the precomputed <c>ECPoint</c>s used for a fixed point
-    /// multiplication.
-    /// </summary>
-    Fm_lookupTable: IECLookupTable;
-
-    /// <summary>
-    /// The width used for the precomputation. If a larger width
-    /// precomputation is already available this may be larger than was
-    /// requested, so calling code should refer to the actual width.
-    /// </summary>
-    Fm_width: Int32;
-
   public
-    constructor Create();
-    destructor Destroy; override;
+    constructor Create;
+    procedure SetLookupTable(const AValue: IECLookupTable);
+    function GetOffset: IECPoint;
+    procedure SetOffset(const AValue: IECPoint);
+    function GetWidth: Int32;
+    procedure SetWidth(AValue: Int32);
+  public
+    property LookupTable: IECLookupTable read GetLookupTable write SetLookupTable;
     property Offset: IECPoint read GetOffset write SetOffset;
-    property LookupTable: IECLookupTable read GetLookupTable
-      write SetLookupTable;
     property Width: Int32 read GetWidth write SetWidth;
-
   end;
 
 implementation
 
-{ TFixedPointPreCompInfo }
-
 constructor TFixedPointPreCompInfo.Create;
 begin
-  inherited Create();
-  Fm_width := -1;
-end;
-
-destructor TFixedPointPreCompInfo.Destroy;
-begin
-  Fm_offset := nil;
-  Fm_lookupTable := nil;
-  inherited;
+  Inherited Create;
+  FWidth := -1;
 end;
 
 function TFixedPointPreCompInfo.GetLookupTable: IECLookupTable;
 begin
-  Result := Fm_lookupTable;
+  Result := FLookupTable;
+end;
+
+procedure TFixedPointPreCompInfo.SetLookupTable(const AValue: IECLookupTable);
+begin
+  FLookupTable := AValue;
 end;
 
 function TFixedPointPreCompInfo.GetOffset: IECPoint;
 begin
-  Result := Fm_offset;
+  Result := FOffset;
+end;
+
+procedure TFixedPointPreCompInfo.SetOffset(const AValue: IECPoint);
+begin
+  FOffset := AValue;
 end;
 
 function TFixedPointPreCompInfo.GetWidth: Int32;
 begin
-  Result := Fm_width;
+  Result := FWidth;
 end;
 
-procedure TFixedPointPreCompInfo.SetLookupTable(const Value: IECLookupTable);
+procedure TFixedPointPreCompInfo.SetWidth(AValue: Int32);
 begin
-  Fm_lookupTable := Value;
-end;
-
-procedure TFixedPointPreCompInfo.SetOffset(const Value: IECPoint);
-begin
-  Fm_offset := Value;
-end;
-
-procedure TFixedPointPreCompInfo.SetWidth(const Value: Int32);
-begin
-  Fm_width := Value;
+  FWidth := AValue;
 end;
 
 end.

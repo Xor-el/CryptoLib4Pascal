@@ -32,7 +32,7 @@ uses
   ClpIAsn1Objects,
   ClpIKeyGenerationParameters,
   ClpIECParameters,
-  ClpIECC,
+  ClpIECCore,
   ClpMultipliers,
   ClpIMultipliers,
   ClpSecObjectIdentifiers,

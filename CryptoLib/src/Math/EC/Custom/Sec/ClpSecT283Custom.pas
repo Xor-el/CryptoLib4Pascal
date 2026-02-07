@@ -26,11 +26,12 @@ uses
   ClpEncoders,
   ClpNat,
   ClpNat320,
-  ClpECC,
+  ClpECCurve,
   ClpInterleave,
   ClpBigInteger,
   ClpArrayUtilities,
-  ClpIECC,
+  ClpIECCore,
+  ClpIECFieldElement,
   ClpMultipliers,
   ClpCryptoLibTypes,
   ClpECCurveConstants,
@@ -113,7 +114,7 @@ type
     function GetK2: Int32; inline;
     function GetK3: Int32; inline;
 
-    function Equals(const other: ISecT283FieldElement): Boolean;
+    function Equals(const AOther: ISecT283FieldElement): Boolean;
       reintroduce; overload;
 
   strict protected
@@ -169,7 +170,7 @@ type
     /// </summary>
     function Sqrt(): IECFieldElement; override;
 
-    function Equals(const other: IECFieldElement): Boolean; overload; override;
+    function Equals(const AOther: IECFieldElement): Boolean; overload; override;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -857,25 +858,25 @@ begin
   result := Multiply(b.Invert());
 end;
 
-function TSecT283FieldElement.Equals(const other: ISecT283FieldElement)
-  : Boolean;
+function TSecT283FieldElement.Equals(const AOther: ISecT283FieldElement): Boolean;
 begin
-  if ((Self as ISecT283FieldElement) = other) then
-  begin
-    result := true;
-    Exit;
-  end;
-  if (other = Nil) then
-  begin
-    result := false;
-    Exit;
-  end;
-  result := TNat320.Eq64(Fx, other.x);
+  if (Self as ISecT283FieldElement) = AOther then
+    Exit(True);
+  if AOther = nil then
+    Exit(False);
+  Result := TNat320.Eq64(Fx, AOther.x);
 end;
 
-function TSecT283FieldElement.Equals(const other: IECFieldElement): Boolean;
+function TSecT283FieldElement.Equals(const AOther: IECFieldElement): Boolean;
+var
+  LSec: ISecT283FieldElement;
 begin
-  result := Equals(other as ISecT283FieldElement);
+  if AOther = nil then
+    Exit(False);
+  if Supports(AOther, ISecT283FieldElement, LSec) then
+    Result := Equals(LSec)
+  else
+    Result := ToBigInteger.Equals(AOther.ToBigInteger);
 end;
 
 function TSecT283FieldElement.GetFieldName: string;

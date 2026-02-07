@@ -23,7 +23,7 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECC,
+  ClpIECCore,
   ClpCryptoLibTypes;
 
 type

@@ -22,18 +22,21 @@ unit ClpIFiniteField;
 interface
 
 uses
-  ClpBigInteger;
+  ClpBigInteger,
+  ClpCryptoLibTypes;
 
 type
-
   IFiniteField = interface(IInterface)
-    ['{54DEBFF8-A0DF-4406-8F0C-FB1D0BD2619B}']
+    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567801}']
 
     function GetCharacteristic: TBigInteger;
     function GetDimension: Int32;
+
     property Characteristic: TBigInteger read GetCharacteristic;
     property Dimension: Int32 read GetDimension;
 
+    function Equals(const AOther: IFiniteField): Boolean;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
   end;
 
 implementation

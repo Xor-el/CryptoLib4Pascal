@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpWTauNafPreCompInfo;
 
@@ -22,67 +15,34 @@ unit ClpWTauNafPreCompInfo;
 interface
 
 uses
+  ClpIECCore,
   ClpIPreCompInfo,
-  ClpIECC,
-  ClpCryptoLibTypes,
-  ClpIWTauNafPreCompInfo;
+  ClpIWTauNafPreCompInfo,
+  ClpCryptoLibTypes;
 
 type
-  /// **
-  // * Class holding precomputation data for the WTNAF (Window
-  // * <code>&#964;</code>-adic Non-Adjacent Form) algorithm.
-  // */
-  TWTauNafPreCompInfo = class(TInterfacedObject, IPreCompInfo,
+  TWTauNafPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,
     IWTauNafPreCompInfo)
-
   strict private
-    function GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>; virtual;
-    procedure SetPreComp(const value
-      : TCryptoLibGenericArray<IAbstractF2mPoint>); virtual;
-  strict protected
-  var
-    // /**
-    // * Array holding the precomputed <code>AbstractF2mPoint</code>s used for the
-    // * WTNAF multiplication in <code>
-    // * math.ec.multiplier.WTauNafMultiplier.multiply()
-    // * WTauNafMultiplier.multiply()</code>.
-    // */
-    Fm_preComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
-
+    FPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
+    function GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
+    procedure SetPreComp(const AValue: TCryptoLibGenericArray<IAbstractF2mPoint>);
   public
-    destructor Destroy; override;
-
-    property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp
-      write SetPreComp;
+    property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp write SetPreComp;
   end;
 
 implementation
 
 { TWTauNafPreCompInfo }
 
-destructor TWTauNafPreCompInfo.Destroy;
-var
-  i: Integer;
+function TWTauNafPreCompInfo.GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
 begin
-  if Assigned(Fm_preComp) then
-  begin
-    for i := 0 to Length(Fm_preComp) - 1 do
-      Fm_preComp[i] := nil;
-    Fm_preComp := nil;
-  end;
-  inherited;
+  Result := FPreComp;
 end;
 
-function TWTauNafPreCompInfo.GetPreComp
-  : TCryptoLibGenericArray<IAbstractF2mPoint>;
+procedure TWTauNafPreCompInfo.SetPreComp(const AValue: TCryptoLibGenericArray<IAbstractF2mPoint>);
 begin
-  Result := Fm_preComp;
-end;
-
-procedure TWTauNafPreCompInfo.SetPreComp(const value
-  : TCryptoLibGenericArray<IAbstractF2mPoint>);
-begin
-  Fm_preComp := value;
+  FPreComp := AValue;
 end;
 
 end.

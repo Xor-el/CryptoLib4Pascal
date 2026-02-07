@@ -27,10 +27,11 @@ uses
   ClpEncoders,
   ClpBitOperations,
   ClpNat512,
-  ClpECC,
+  ClpECCurve,
   ClpBigInteger,
   ClpArrayUtilities,
-  ClpIECC,
+  ClpIECCore,
+  ClpIECFieldElement,
   ClpCryptoLibTypes,
   ClpECCurveConstants,
   ClpISecP521R1Custom;
@@ -89,7 +90,7 @@ type
 
   strict private
 
-    function Equals(const other: ISecP521R1FieldElement): Boolean;
+    function Equals(const AOther: ISecP521R1FieldElement): Boolean;
       reintroduce; overload;
 
     class function GetQ: TBigInteger; static; inline;
@@ -131,7 +132,7 @@ type
     /// </summary>
     function Sqrt(): IECFieldElement; override;
 
-    function Equals(const other: IECFieldElement): Boolean; overload; override;
+    function Equals(const AOther: IECFieldElement): Boolean; overload; override;
 
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
@@ -645,25 +646,25 @@ begin
   result := TSecP521R1FieldElement.Create(z);
 end;
 
-function TSecP521R1FieldElement.Equals(const other
-  : ISecP521R1FieldElement): Boolean;
+function TSecP521R1FieldElement.Equals(const AOther: ISecP521R1FieldElement): Boolean;
 begin
-  if ((Self as ISecP521R1FieldElement) = other) then
-  begin
-    result := true;
-    Exit;
-  end;
-  if (other = Nil) then
-  begin
-    result := false;
-    Exit;
-  end;
-  result := TNat.Eq(17, Fx, other.x);
+  if (Self as ISecP521R1FieldElement) = AOther then
+    Exit(True);
+  if AOther = nil then
+    Exit(False);
+  Result := TNat.Eq(17, Fx, AOther.x);
 end;
 
-function TSecP521R1FieldElement.Equals(const other: IECFieldElement): Boolean;
+function TSecP521R1FieldElement.Equals(const AOther: IECFieldElement): Boolean;
+var
+  LSec: ISecP521R1FieldElement;
 begin
-  result := Equals(other as ISecP521R1FieldElement);
+  if AOther = nil then
+    Exit(False);
+  if Supports(AOther, ISecP521R1FieldElement, LSec) then
+    Result := Equals(LSec)
+  else
+    Result := ToBigInteger.Equals(AOther.ToBigInteger);
 end;
 
 { TSecP521R1Point }

@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpECAlgorithms,
   ClpICipherParameters,
-  ClpIECC,
+  ClpIECCore,
   ClpIBasicAgreement,
   ClpIECParameters,
   ClpIECDHCBasicAgreement,
@@ -112,7 +112,7 @@ begin
       (@SInfinityInvalidPublicKey);
   end;
 
-  P := pubPoint.Multiply(hd).Normalize();
+  P := params.Curve.Multiplier.Multiply(pubPoint, hd).Normalize();
 
   if (P.IsInfinity) then
   begin
@@ -121,7 +121,7 @@ begin
 
   end;
 
-  result := P.AffineXCoord.ToBigInteger();
+  result := P.XCoord.ToBigInteger();
 end;
 
 function TECDHCBasicAgreement.GetFieldSize: Int32;

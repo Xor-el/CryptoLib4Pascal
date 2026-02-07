@@ -6,14 +6,7 @@
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
 
-{ *                              Acknowledgements:                                  * }
-{ *                                                                                 * }
-{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
 { * ******************************************************************************* * }
-
-(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
 unit ClpScaleXNegateYPointMap;
 
@@ -22,35 +15,29 @@ unit ClpScaleXNegateYPointMap;
 interface
 
 uses
-  ClpIECC,
-  ClpIScaleXNegateYPointMap;
+  ClpIECCore,
+  ClpIECFieldElement;
 
 type
-  TScaleXNegateYPointMap = class(TInterfacedObject, IECPointMap,
-    IScaleXNegateYPointMap)
-
+  TScaleXNegateYPointMap = class(TInterfacedObject, IECPointMap)
   strict protected
-  var
-    Fscale: IECFieldElement;
-
+    FScale: IECFieldElement;
   public
-    constructor Create(const scale: IECFieldElement);
-    function Map(const p: IECPoint): IECPoint; virtual;
+    constructor Create(const AScale: IECFieldElement);
+    function Map(const AP: IECPoint): IECPoint; virtual;
   end;
 
 implementation
 
-{ TScaleXNegateYPointMap }
-
-constructor TScaleXNegateYPointMap.Create(const scale: IECFieldElement);
+constructor TScaleXNegateYPointMap.Create(const AScale: IECFieldElement);
 begin
-  Inherited Create();
-  Fscale := scale;
+  Inherited Create;
+  FScale := AScale;
 end;
 
-function TScaleXNegateYPointMap.Map(const p: IECPoint): IECPoint;
+function TScaleXNegateYPointMap.Map(const AP: IECPoint): IECPoint;
 begin
-  Result := p.ScaleXNegateY(Fscale);
+  Result := AP.ScaleXNegateY(FScale);
 end;
 
 end.
