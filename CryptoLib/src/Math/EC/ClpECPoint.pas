@@ -79,6 +79,9 @@ type
     function RawYCoord: IECFieldElement; inline;
     function RawZCoords: TCryptoLibGenericArray<IECFieldElement>; inline;
     procedure CheckNormalized; virtual;
+
+    function Detach: IECPoint; virtual; abstract;  // called from GetDetachedPoint on normalized point
+    function GetCompressionYTilde: Boolean; virtual; abstract;
   public
     constructor Create(const ACurve: IECCurve; const AX, AY: IECFieldElement); overload;
     constructor Create(const ACurve: IECCurve; const AX, AY: IECFieldElement;
@@ -86,7 +89,9 @@ type
     destructor Destroy; override;
 
     function GetCurve: IECCurve; virtual;
+    property Curve: IECCurve read GetCurve;
     function GetIsInfinity: Boolean; virtual;
+    property IsInfinity: Boolean read GetIsInfinity;
     function GetXCoord: IECFieldElement; virtual;
     function GetYCoord: IECFieldElement; virtual;
     property XCoord: IECFieldElement read GetXCoord;
@@ -116,6 +121,8 @@ type
 
     function GetAffineXCoord: IECFieldElement; virtual;
     function GetAffineYCoord: IECFieldElement; virtual;
+    property AffineXCoord: IECFieldElement read GetAffineXCoord;
+    property AffineYCoord: IECFieldElement read GetAffineYCoord;
     function Add(const AB: IECPoint): IECPoint; virtual; abstract;
     function Subtract(const AB: IECPoint): IECPoint; virtual; abstract;
     function Negate: IECPoint; virtual; abstract;
@@ -125,19 +132,15 @@ type
     function TwicePlus(const AB: IECPoint): IECPoint; virtual;
     function ThreeTimes: IECPoint; virtual;
 
-    function Equals(const AOther: IECPoint): Boolean;
-    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
-    function ToString: String; override;
-
-  strict protected
-    function Detach: IECPoint; virtual; abstract;  // called from GetDetachedPoint on normalized point
-    function GetCompressionYTilde: Boolean; virtual; abstract;
-  public
     function ImplIsValid(ADecompressed, ACheckOrder: Boolean): Boolean; virtual;
     function SatisfiesCurveEquation: Boolean; virtual; abstract;
     function SatisfiesOrder: Boolean; virtual;
     function IsValid: Boolean; virtual;
     function IsValidPartial: Boolean; virtual;
+
+    function Equals(const AOther: IECPoint): Boolean;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
+    function ToString: String; override;
   end;
 
   TECPointBase = class abstract(TECPoint, IECPointBase)

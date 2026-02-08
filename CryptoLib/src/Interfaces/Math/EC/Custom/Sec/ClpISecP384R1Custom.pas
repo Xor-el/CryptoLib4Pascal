@@ -24,6 +24,7 @@ interface
 uses
   ClpBigInteger,
   ClpIECCore,
+  ClpIECFieldElement,
   ClpCryptoLibTypes;
 
 type
@@ -44,13 +45,10 @@ type
   ISecP384R1Curve = Interface(IAbstractFpCurve)
     ['{50639F3D-E15C-4C3C-A7AA-7A8ACA243341}']
 
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
-
   end;
 
 type
-  ISecP384R1LookupTable = Interface(IAbstractECLookupTable)
+  ISecP384R1LookupTable = Interface(IECLookupTable)
     ['{F1354F0B-577F-402C-A363-7761CF82DA43}']
   end;
 

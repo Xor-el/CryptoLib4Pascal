@@ -22,1177 +22,1043 @@ unit ClpSecP256K1Custom;
 interface
 
 uses
-  ClpMod,
-  ClpEncoders,
-  ClpNat,
-  ClpBitOperations,
-  ClpNat256,
-  ClpECCurve,
+  SysUtils,
   ClpBigInteger,
+  ClpBigIntegers,
+  ClpNat256,
+  ClpNat,
+  ClpMod,
+  ClpPack,
+  ClpEncoders,
+  ClpSecureRandom,
+  ClpISecureRandom,
   ClpArrayUtilities,
-  ClpCryptoLibTypes,
+  ClpBitOperations,
+  ClpECCurve,
   ClpECCurveConstants,
+  ClpECFieldElement,
+  ClpECPoint,
+  ClpECLookupTables,
+  ClpFiniteFields,
   ClpIECCore,
   ClpIECFieldElement,
-  ClpISecP256K1Custom;
+  ClpISecP256K1Custom,
+  ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidValueForSecP256K1FieldElement =
-    'Value Invalid for SecP256K1FieldElement "%s"';
-  SOneOfECFieldElementIsNil = 'Exactly One of the Field Elements is Nil';
+  SInvalidSecP256K1FieldElement = 'value invalid for SecP256K1FieldElement';
 
 type
-  // 2^256 - 2^32 - 2^9 - 2^8 - 2^7 - 2^6 - 2^4 - 1
   TSecP256K1Field = class sealed(TObject)
-
   strict private
   const
     P7 = UInt32($FFFFFFFF);
     PExt15 = UInt32($FFFFFFFF);
     PInv33 = UInt32($3D1);
-
-    class var
-
-      FP, FPExt, FPExtInv: TCryptoLibUInt32Array;
-
-    class function GetP: TCryptoLibUInt32Array; static; inline;
-
-    class procedure Boot(); static;
-    class constructor SecP256K1Field();
-
+  class var
+    FP, FPExt, FPExtInv: TCryptoLibUInt32Array;
+  class procedure Boot; static;
+  class constructor Create;
   public
-    class procedure Add(const x, y, z: TCryptoLibUInt32Array); static; inline;
-    class procedure AddExt(const xx, yy, zz: TCryptoLibUInt32Array);
-      static; inline;
-    class procedure AddOne(const x, z: TCryptoLibUInt32Array); static; inline;
-    class function FromBigInteger(const x: TBigInteger): TCryptoLibUInt32Array;
-      static; inline;
-    class procedure Half(const x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Multiply(const x, y, z: TCryptoLibUInt32Array);
-      static; inline;
-    class procedure MultiplyAddToExt(const x, y, zz: TCryptoLibUInt32Array);
-      static; inline;
-    class procedure Negate(const x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Reduce(const xx, z: TCryptoLibUInt32Array); static; inline;
-    class procedure Reduce32(x: UInt32; const z: TCryptoLibUInt32Array);
-      static; inline;
-    class procedure Square(const x, z: TCryptoLibUInt32Array); static; inline;
-    class procedure SquareN(const x: TCryptoLibUInt32Array; n: Int32;
-      const z: TCryptoLibUInt32Array); static; inline;
-    class procedure Subtract(const x, y, z: TCryptoLibUInt32Array);
-      static; inline;
-    class procedure SubtractExt(const xx, yy, zz: TCryptoLibUInt32Array);
-      static; inline;
-    class procedure Twice(const x, z: TCryptoLibUInt32Array); static; inline;
+    class procedure Add(const AX, AY, AZ: TCryptoLibUInt32Array); static;
+    class procedure AddExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array); static;
+    class procedure AddOne(const AX, AZ: TCryptoLibUInt32Array); static;
+    class function FromBigInteger(const AX: TBigInteger): TCryptoLibUInt32Array; static;
+    class procedure Half(const AX, AZ: TCryptoLibUInt32Array); static;
+    class procedure Inv(const AX, AZ: TCryptoLibUInt32Array); static;
+    class function IsZero(const AX: TCryptoLibUInt32Array): Int32; static;
+    class procedure Multiply(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32Array); overload; static;
+    class procedure MultiplyAddToExt(const AX, AY, AZZ: TCryptoLibUInt32Array); static;
+    class procedure Negate(const AX, AZ: TCryptoLibUInt32Array); static;
+    class procedure Random(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array); static;
+    class procedure RandomMult(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array); static;
+    class procedure Reduce(const AXX, AZ: TCryptoLibUInt32Array); static;
+    class procedure Reduce32(AX: UInt32; const AZ: TCryptoLibUInt32Array); static;
+    class procedure Square(const AX, AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Square(const AX, AZ, ATT: TCryptoLibUInt32Array); overload; static;
+    class procedure SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
+      const AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
+      const AZ, ATT: TCryptoLibUInt32Array); overload; static;
+    class procedure Subtract(const AX, AY, AZ: TCryptoLibUInt32Array); static;
+    class procedure SubtractExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array); static;
+    class procedure Twice(const AX, AZ: TCryptoLibUInt32Array); static;
 
-    class property P: TCryptoLibUInt32Array read GetP;
+    class property P: TCryptoLibUInt32Array read FP;
   end;
 
 type
-  TSecP256K1FieldElement = class(TAbstractFpFieldElement,
-    ISecP256K1FieldElement)
-
+  TSecP256K1FieldElement = class sealed(TAbstractFpFieldElement,
+    IAbstractFpFieldElement, IECFieldElement, ISecP256K1FieldElement)
   strict private
-
-    function Equals(const AOther: ISecP256K1FieldElement): Boolean;
-      reintroduce; overload;
-
-    class function GetQ: TBigInteger; static; inline;
-
+  class var
+    FQ: TBigInteger;
+  class procedure Boot; static;
+  class constructor Create;
   strict protected
-  var
-    Fx: TCryptoLibUInt32Array;
+    FX: TCryptoLibUInt32Array;
+    function GetX: TCryptoLibUInt32Array; inline;
+  public
+    class function GetQ: TBigInteger; static;
+    class property Q: TBigInteger read GetQ;
+    constructor Create(const AX: TBigInteger); overload;
+    constructor Create(); overload;
+    constructor Create(const AX: TCryptoLibUInt32Array); overload;
 
-    function GetFieldName: string; override;
+    function GetFieldName: String; override;
     function GetFieldSize: Int32; override;
     function GetIsOne: Boolean; override;
     function GetIsZero: Boolean; override;
-
-    function GetX: TCryptoLibUInt32Array; inline;
-    property x: TCryptoLibUInt32Array read GetX;
-
-  public
-    constructor Create(); overload;
-    constructor Create(const x: TBigInteger); overload;
-    constructor Create(const x: TCryptoLibUInt32Array); overload;
-
+    function ToBigInteger: TBigInteger; override;
     function TestBitZero: Boolean; override;
-    function ToBigInteger(): TBigInteger; override;
 
-    function Add(const b: IECFieldElement): IECFieldElement; override;
-    function AddOne(): IECFieldElement; override;
-    function Subtract(const b: IECFieldElement): IECFieldElement; override;
+    function Add(const AB: IECFieldElement): IECFieldElement; override;
+    function AddOne: IECFieldElement; override;
+    function Subtract(const AB: IECFieldElement): IECFieldElement; override;
+    function Multiply(const AB: IECFieldElement): IECFieldElement; override;
+    function Divide(const AB: IECFieldElement): IECFieldElement; override;
+    function Negate: IECFieldElement; override;
+    function Square: IECFieldElement; override;
+    function Invert: IECFieldElement; override;
+    function Sqrt: IECFieldElement; override;
 
-    function Multiply(const b: IECFieldElement): IECFieldElement; override;
-    function Divide(const b: IECFieldElement): IECFieldElement; override;
-    function Negate(): IECFieldElement; override;
-    function Square(): IECFieldElement; override;
+    function Equals(const AOther: IECFieldElement): Boolean; override;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
 
-    function Invert(): IECFieldElement; override;
-
-    /// <summary>
-    /// return a sqrt root - the routine verifies that the calculation
-    /// returns the right value - if <br />none exists it returns null.
-    /// </summary>
-    function Sqrt(): IECFieldElement; override;
-
-    function Equals(const AOther: IECFieldElement): Boolean; overload; override;
-
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}override;
-
-    property IsZero: Boolean read GetIsZero;
-    property IsOne: Boolean read GetIsOne;
-    property FieldName: string read GetFieldName;
-    property FieldSize: Int32 read GetFieldSize;
-
-    class property Q: TBigInteger read GetQ;
+    property X: TCryptoLibUInt32Array read GetX;
   end;
 
 type
-  TSecP256K1Point = class sealed(TAbstractFpPoint, ISecP256K1Point)
-
+  TSecP256K1Point = class sealed(TAbstractFpPoint, IAbstractFpPoint, IECPoint,
+    ISecP256K1Point)
   strict protected
-    function Detach(): IECPoint; override;
-
+    function Detach: IECPoint; override;
   public
+    constructor Create(const ACurve: IECCurve; const AX, AY: IECFieldElement); overload;
+    constructor Create(const ACurve: IECCurve; const AX, AY: IECFieldElement;
+      const AZs: TCryptoLibGenericArray<IECFieldElement>); overload;
 
-    /// <summary>
-    /// Create a point which encodes without point compression.
-    /// </summary>
-    /// <param name="curve">
-    /// the curve to use
-    /// </param>
-    /// <param name="x">
-    /// affine x co-ordinate
-    /// </param>
-    /// <param name="y">
-    /// affine y co-ordinate
-    /// </param>
-    constructor Create(const curve: IECCurve; const x, y: IECFieldElement);
-      overload; deprecated 'Use ECCurve.createPoint to construct points';
-
-    /// <summary>
-    /// Create a point that encodes with or without point compresion.
-    /// </summary>
-    /// <param name="curve">
-    /// the curve to use
-    /// </param>
-    /// <param name="x">
-    /// affine x co-ordinate
-    /// </param>
-    /// <param name="y">
-    /// affine y co-ordinate
-    /// </param>
-    /// <param name="withCompression">
-    /// if true encode with point compression
-    /// </param>
-    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      withCompression: Boolean); overload;
-      deprecated
-      'Per-point compression property will be removed, see GetEncoded(boolean)';
-
-    constructor Create(const curve: IECCurve; const x, y: IECFieldElement;
-      const zs: TCryptoLibGenericArray<IECFieldElement>;
-      withCompression: Boolean); overload;
-
-    function Add(const b: IECPoint): IECPoint; override;
-    function Negate(): IECPoint; override;
-
-    function Twice(): IECPoint; override;
-    function TwicePlus(const b: IECPoint): IECPoint; override;
-
-    function ThreeTimes(): IECPoint; override;
-
+    function Add(const AB: IECPoint): IECPoint; override;
+    function Twice: IECPoint; override;
+    function TwicePlus(const AB: IECPoint): IECPoint; override;
+    function ThreeTimes: IECPoint; override;
+    function Negate: IECPoint; override;
   end;
 
 type
-  TSecP256K1Curve = class sealed(TAbstractFpCurve, ISecP256K1Curve)
-
+  TSecP256K1Curve = class sealed(TAbstractFpCurve, IAbstractFpCurve, IECCurve,
+    ISecP256K1Curve)
   strict private
-
-  type
-    TSecP256K1LookupTable = class sealed(TAbstractECLookupTable,
-      ISecP256K1LookupTable)
-
-    strict private
-    var
-      Fm_outer: ISecP256K1Curve;
-      Fm_table: TCryptoLibUInt32Array;
-      Fm_size: Int32;
-
-      function CreatePoint(const x, y: TCryptoLibUInt32Array): IECPoint;
-
-    strict protected
-
-      function GetSize: Int32; override;
-
-    public
-
-      constructor Create(const outer: ISecP256K1Curve;
-        const table: TCryptoLibUInt32Array; size: Int32);
-
-      function Lookup(index: Int32): IECPoint; override;
-      function LookupVar(index: Int32): IECPoint; override;
-
-    end;
-
   const
-    SECP256K1_DEFAULT_COORDS = Int32(TECCurveConstants.COORD_JACOBIAN);
-    SECP256K1_FE_INTS = Int32(8);
-
+    SECP256K1_DEFAULT_COORDS = TECCurveConstants.COORD_JACOBIAN;
+    SECP256K1_FE_INTS = 8;
+  strict private
+  type
+    TSecP256K1LookupTable = class sealed(TAbstractECLookupTable, IECLookupTable,
+      ISecP256K1LookupTable)
+    strict private
+      FOuter: ISecP256K1Curve;
+      FTable: TCryptoLibUInt32Array;
+      FSize: Int32;
+      function CreatePoint(const AX, AY: TCryptoLibUInt32Array): IECPoint;
+    public
+      constructor Create(const AOuter: ISecP256K1Curve;
+        const ATable: TCryptoLibUInt32Array; ASize: Int32);
+      function GetSize: Int32; override;
+      function Lookup(AIndex: Int32): IECPoint; override;
+      function LookupVar(AIndex: Int32): IECPoint; override;
+    end;
+  class var
+    FQ: TBigInteger;
+    FSecP256K1AffineZs: TCryptoLibGenericArray<IECFieldElement>;
+  class procedure Boot; static;
+  class constructor Create;
   var
-    Fq: TBigInteger;
-
+    FInfinity: TSecP256K1Point;
   strict protected
-  var
-    Fm_infinity: ISecP256K1Point;
+    function GetQ: TBigInteger;
+  public
+    constructor Create;
+    destructor Destroy; override;
 
-    function GetQ: TBigInteger; virtual;
+    function CloneCurve: IECCurve; override;
     function GetFieldSize: Int32; override;
     function GetInfinity: IECPoint; override;
+    function FromBigInteger(const AX: TBigInteger): IECFieldElement; override;
+    function CreateRawPoint(const AX, AY: IECFieldElement): IECPoint; override;
+    function CreateRawPoint(const AX, AY: IECFieldElement;
+      const AZs: TCryptoLibGenericArray<IECFieldElement>): IECPoint; override;
+    function CreateCacheSafeLookupTable(const APoints: TCryptoLibGenericArray<IECPoint>;
+      AOff, ALen: Int32): IECLookupTable; override;
+    function RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement; override;
+    function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement; override;
+    function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
 
-    function CloneCurve(): IECCurve; override;
-
-    function CreateRawPoint(const x, y: IECFieldElement;
-      withCompression: Boolean): IECPoint; overload; override;
-
-    function CreateRawPoint(const x, y: IECFieldElement;
-      const zs: TCryptoLibGenericArray<IECFieldElement>;
-      withCompression: Boolean): IECPoint; overload; override;
-
-  public
-    constructor Create();
-    function FromBigInteger(const x: TBigInteger): IECFieldElement; override;
-
-    function SupportsCoordinateSystem(coord: Int32): Boolean; override;
-
-    function CreateCacheSafeLookupTable(const points
-      : TCryptoLibGenericArray<IECPoint>; off, len: Int32)
-      : IECLookupTable; override;
-
-    property Q: TBigInteger read GetQ;
-    property Infinity: IECPoint read GetInfinity;
-    property FieldSize: Int32 read GetFieldSize;
-
+    class property Q: TBigInteger read FQ;
+    class property SecP256K1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP256K1AffineZs;
   end;
 
 implementation
 
 { TSecP256K1Field }
 
-class constructor TSecP256K1Field.SecP256K1Field;
-begin
-  TSecP256K1Field.Boot;
-end;
-
-class function TSecP256K1Field.GetP: TCryptoLibUInt32Array;
-begin
-  result := FP;
-end;
-
-class procedure TSecP256K1Field.Add(const x, y, z: TCryptoLibUInt32Array);
-var
-  c: UInt32;
-begin
-  c := TNat256.Add(x, y, z);
-  if ((c <> 0) or ((z[7] = P7) and (TNat256.Gte(z, FP)))) then
-  begin
-    TNat.Add33To(8, PInv33, z);
-  end;
-end;
-
-class procedure TSecP256K1Field.AddExt(const xx, yy, zz: TCryptoLibUInt32Array);
-var
-  c: UInt32;
-begin
-  c := TNat.Add(16, xx, yy, zz);
-  if ((c <> 0) or ((zz[15] = PExt15) and (TNat.Gte(16, zz, FPExt)))) then
-  begin
-    if (TNat.AddTo(System.Length(FPExtInv), FPExtInv, zz) <> 0) then
-    begin
-      TNat.IncAt(16, zz, System.Length(FPExtInv));
-    end;
-  end;
-end;
-
-class procedure TSecP256K1Field.AddOne(const x, z: TCryptoLibUInt32Array);
-var
-  c: UInt32;
-begin
-  c := TNat.Inc(8, x, z);
-  if ((c <> 0) or ((z[7] = P7) and (TNat256.Gte(z, FP)))) then
-  begin
-    TNat.Add33To(8, PInv33, z);
-  end;
-end;
-
 class procedure TSecP256K1Field.Boot;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFC2F, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF,
     $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
-  FPExt := TCryptoLibUInt32Array.Create($000E90A1, $000007A2, $00000001,
-    $00000000, $00000000, $00000000, $00000000, $00000000, $FFFFF85E, $FFFFFFFD,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
-  FPExtInv := TCryptoLibUInt32Array.Create($FFF16F5F, $FFFFF85D, $FFFFFFFE,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $000007A1,
-    $00000002);
+  FPExt := TCryptoLibUInt32Array.Create($000E90A1, $000007A2, $00000001, $00000000,
+    $00000000, $00000000, $00000000, $00000000, $FFFFF85E, $FFFFFFFD, $FFFFFFFF,
+    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
+  FPExtInv := TCryptoLibUInt32Array.Create($FFF16F5F, $FFFFF85D, $FFFFFFFE, $FFFFFFFF,
+    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $000007A1, $00000002);
 end;
 
-class function TSecP256K1Field.FromBigInteger(const x: TBigInteger)
-  : TCryptoLibUInt32Array;
-var
-  z: TCryptoLibUInt32Array;
+class constructor TSecP256K1Field.Create;
 begin
-  z := TNat.FromBigInteger(256, x);
-  if ((z[7] = P7) and (TNat256.Gte(z, FP))) then
-  begin
-    TNat256.SubFrom(FP, z, 0);
-  end;
-  result := z;
+  Boot;
 end;
 
-class procedure TSecP256K1Field.Half(const x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
 var
-  c: UInt32;
+  LC: UInt32;
 begin
-  if ((x[0] and 1) = 0) then
-  begin
-    TNat.ShiftDownBit(8, x, 0, z);
-  end
+  LC := TNat256.Add(AX, AY, AZ);
+  if (LC <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
+    TNat.Add33To(8, PInv33, AZ);
+end;
+
+class procedure TSecP256K1Field.AddExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array);
+var
+  LC: UInt32;
+begin
+  LC := TNat.Add(16, AXX, AYY, AZZ);
+  if (LC <> 0) or ((AZZ[15] = PExt15) and TNat.Gte(16, AZZ, FPExt)) then
+    if TNat.AddTo(System.Length(FPExtInv), FPExtInv, AZZ) <> 0 then
+      TNat.IncAt(16, AZZ, System.Length(FPExtInv));
+end;
+
+class procedure TSecP256K1Field.AddOne(const AX, AZ: TCryptoLibUInt32Array);
+var
+  LC: UInt32;
+begin
+  LC := TNat.Inc(8, AX, AZ);
+  if (LC <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
+    TNat.Add33To(8, PInv33, AZ);
+end;
+
+class function TSecP256K1Field.FromBigInteger(const AX: TBigInteger): TCryptoLibUInt32Array;
+var
+  LZ: TCryptoLibUInt32Array;
+begin
+  LZ := TNat.FromBigInteger(256, AX);
+  if (LZ[7] = P7) and TNat256.Gte(LZ, FP) then
+    TNat256.SubFrom(FP, LZ, 0);
+  Result := LZ;
+end;
+
+class procedure TSecP256K1Field.Half(const AX, AZ: TCryptoLibUInt32Array);
+var
+  LC: UInt32;
+begin
+  if (AX[0] and 1) = 0 then
+    TNat.ShiftDownBit(8, AX, 0, AZ)
   else
   begin
-    c := TNat256.Add(x, FP, z);
-    TNat.ShiftDownBit(8, z, c);
+    LC := TNat256.Add(AX, FP, AZ);
+    TNat.ShiftDownBit(8, AZ, LC);
   end;
 end;
 
-class procedure TSecP256K1Field.Reduce(const xx, z: TCryptoLibUInt32Array);
-var
-  cc: UInt64;
-  c: UInt32;
+class procedure TSecP256K1Field.Inv(const AX, AZ: TCryptoLibUInt32Array);
 begin
-  cc := TNat256.Mul33Add(PInv33, xx, 8, xx, 0, z, 0);
-  c := TNat256.Mul33DWordAdd(PInv33, cc, z, 0);
-{$IFDEF DEBUG}
-  System.Assert((c = 0) or (c = 1));
-{$ENDIF DEBUG}
-  if ((c <> 0) or ((z[7] = P7) and (TNat256.Gte(z, FP)))) then
-  begin
-    TNat.Add33To(8, PInv33, z);
-  end;
+  TMod.CheckedModOddInverse(FP, AX, AZ);
 end;
 
-class procedure TSecP256K1Field.Multiply(const x, y, z: TCryptoLibUInt32Array);
+class function TSecP256K1Field.IsZero(const AX: TCryptoLibUInt32Array): Int32;
 var
-  tt: TCryptoLibUInt32Array;
+  LD: UInt32;
+  LI: Int32;
 begin
-  tt := TNat256.CreateExt();
-  TNat256.Mul(x, y, tt);
-  Reduce(tt, z);
+  LD := 0;
+  for LI := 0 to 7 do
+    LD := LD or AX[LI];
+  LD := (LD shr 1) or (LD and 1);
+  Result := TBitOperations.Asr32(Int32(LD) - 1, 31);
 end;
 
-class procedure TSecP256K1Field.MultiplyAddToExt(const x, y,
-  zz: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Multiply(const AX, AY, AZ: TCryptoLibUInt32Array);
 var
-  c: UInt32;
+  LTT: TCryptoLibUInt32Array;
 begin
-  c := TNat256.MulAddTo(x, y, zz);
-  if ((c <> 0) or ((zz[15] = PExt15) and (TNat.Gte(16, zz, FPExt)))) then
-  begin
-    if (TNat.AddTo(System.Length(FPExtInv), FPExtInv, zz) <> 0) then
-    begin
-      TNat.IncAt(16, zz, System.Length(FPExtInv));
-    end;
-  end;
+  LTT := TNat256.CreateExt();
+  TNat256.Mul(AX, AY, LTT);
+  Reduce(LTT, AZ);
 end;
 
-class procedure TSecP256K1Field.Negate(const x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32Array);
 begin
-  if (TNat256.IsZero(x)) then
-  begin
-    TNat256.Zero(z);
-  end
+  TNat256.Mul(AX, AY, ATT);
+  Reduce(ATT, AZ);
+end;
+
+class procedure TSecP256K1Field.MultiplyAddToExt(const AX, AY, AZZ: TCryptoLibUInt32Array);
+var
+  LC: UInt32;
+begin
+  LC := TNat256.MulAddTo(AX, AY, AZZ);
+  if (LC <> 0) or ((AZZ[15] = PExt15) and TNat.Gte(16, AZZ, FPExt)) then
+    if TNat.AddTo(System.Length(FPExtInv), FPExtInv, AZZ) <> 0 then
+      TNat.IncAt(16, AZZ, System.Length(FPExtInv));
+end;
+
+class procedure TSecP256K1Field.Negate(const AX, AZ: TCryptoLibUInt32Array);
+begin
+  if IsZero(AX) <> 0 then
+    TNat256.Sub(FP, FP, AZ)
   else
-  begin
-    TNat256.Sub(FP, x, z);
-  end;
+    TNat256.Sub(FP, AX, AZ);
 end;
 
-class procedure TSecP256K1Field.Reduce32(x: UInt32;
-  const z: TCryptoLibUInt32Array);
-begin
-  if (((x <> 0) and (TNat256.Mul33WordAdd(PInv33, x, z, 0) <> 0)) or
-    ((z[7] = P7) and (TNat256.Gte(z, FP)))) then
-  begin
-    TNat.Add33To(8, PInv33, z);
-  end;
-end;
-
-class procedure TSecP256K1Field.Square(const x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Random(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array);
 var
-  tt: TCryptoLibUInt32Array;
+  LBB: TCryptoLibByteArray;
 begin
-  tt := TNat256.CreateExt();
-  TNat256.Square(x, tt);
-  Reduce(tt, z);
+  System.SetLength(LBB, 8 * 4);
+  repeat
+    AR.NextBytes(LBB);
+    TPack.LE_To_UInt32(LBB, 0, AZ, 0, 8);
+  until TNat.LessThan(8, AZ, FP) <> 0;
 end;
 
-class procedure TSecP256K1Field.SquareN(const x: TCryptoLibUInt32Array;
-  n: Int32; const z: TCryptoLibUInt32Array);
-var
-  tt: TCryptoLibUInt32Array;
+class procedure TSecP256K1Field.RandomMult(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array);
 begin
-{$IFDEF DEBUG}
-  System.Assert(n > 0);
-{$ENDIF DEBUG}
-  tt := TNat256.CreateExt();
-  TNat256.Square(x, tt);
-  Reduce(tt, z);
+  repeat
+    Random(AR, AZ);
+  until IsZero(AZ) <> 0;
+end;
 
-  System.Dec(n);
-  while (n > 0) do
+class procedure TSecP256K1Field.Reduce(const AXX, AZ: TCryptoLibUInt32Array);
+var
+  LCc: UInt64;
+  LC: UInt32;
+begin
+  LCc := TNat256.Mul33Add(PInv33, AXX, 8, AXX, 0, AZ, 0);
+  LC := TNat256.Mul33DWordAdd(PInv33, LCc, AZ, 0);
+  {$IFDEF DEBUG}
+  System.Assert((LC = 0) or (LC = 1));
+  {$ENDIF DEBUG}
+  if (LC <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
+    TNat.Add33To(8, PInv33, AZ);
+end;
+
+class procedure TSecP256K1Field.Reduce32(AX: UInt32; const AZ: TCryptoLibUInt32Array);
+begin
+  if ((AX <> 0) and (TNat256.Mul33WordAdd(PInv33, AX, AZ, 0) <> 0)) or
+    ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
+    TNat.Add33To(8, PInv33, AZ);
+end;
+
+class procedure TSecP256K1Field.Square(const AX, AZ: TCryptoLibUInt32Array);
+var
+  LTT: TCryptoLibUInt32Array;
+begin
+  LTT := TNat256.CreateExt();
+  TNat256.Square(AX, LTT);
+  Reduce(LTT, AZ);
+end;
+
+class procedure TSecP256K1Field.Square(const AX, AZ, ATT: TCryptoLibUInt32Array);
+begin
+  TNat256.Square(AX, ATT);
+  Reduce(ATT, AZ);
+end;
+
+class procedure TSecP256K1Field.SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
+  const AZ: TCryptoLibUInt32Array);
+var
+  LTT: TCryptoLibUInt32Array;
+begin
+  {$IFDEF DEBUG}
+  System.Assert(AN > 0);
+  {$ENDIF DEBUG}
+  LTT := TNat256.CreateExt();
+  TNat256.Square(AX, LTT);
+  Reduce(LTT, AZ);
+  Dec(AN);
+  while AN > 0 do
   begin
-    TNat256.Square(z, tt);
-    Reduce(tt, z);
-    System.Dec(n);
+    TNat256.Square(AZ, LTT);
+    Reduce(LTT, AZ);
+    Dec(AN);
   end;
 end;
 
-class procedure TSecP256K1Field.Subtract(const x, y, z: TCryptoLibUInt32Array);
-var
-  c: Int32;
+class procedure TSecP256K1Field.SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
+  const AZ, ATT: TCryptoLibUInt32Array);
 begin
-  c := TNat256.Sub(x, y, z);
-  if (c <> 0) then
+  {$IFDEF DEBUG}
+  System.Assert(AN > 0);
+  {$ENDIF DEBUG}
+  TNat256.Square(AX, ATT);
+  Reduce(ATT, AZ);
+  Dec(AN);
+  while AN > 0 do
   begin
-    TNat.Sub33From(8, PInv33, z);
+    TNat256.Square(AZ, ATT);
+    Reduce(ATT, AZ);
+    Dec(AN);
   end;
 end;
 
-class procedure TSecP256K1Field.SubtractExt(const xx, yy,
-  zz: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.Subtract(const AX, AY, AZ: TCryptoLibUInt32Array);
 var
-  c: Int32;
+  LC: Int32;
 begin
-  c := TNat.Sub(16, xx, yy, zz);
-  if (c <> 0) then
-  begin
-    if (TNat.SubFrom(System.Length(FPExtInv), FPExtInv, zz) <> 0) then
-    begin
-      TNat.DecAt(16, zz, System.Length(FPExtInv));
-    end;
-  end;
+  LC := TNat256.Sub(AX, AY, AZ);
+  if LC <> 0 then
+    TNat.Sub33From(8, PInv33, AZ);
 end;
 
-class procedure TSecP256K1Field.Twice(const x, z: TCryptoLibUInt32Array);
+class procedure TSecP256K1Field.SubtractExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array);
 var
-  c: UInt32;
+  LC: Int32;
 begin
-  c := TNat.ShiftUpBit(8, x, 0, z);
-  if ((c <> 0) or ((z[7] = P7) and (TNat256.Gte(z, FP)))) then
-  begin
-    TNat.Add33To(8, PInv33, z);
-  end;
+  LC := TNat.Sub(16, AXX, AYY, AZZ);
+  if LC <> 0 then
+    if TNat.SubFrom(System.Length(FPExtInv), FPExtInv, AZZ) <> 0 then
+      TNat.DecAt(16, AZZ, System.Length(FPExtInv));
+end;
+
+class procedure TSecP256K1Field.Twice(const AX, AZ: TCryptoLibUInt32Array);
+var
+  LC: UInt32;
+begin
+  LC := TNat.ShiftUpBit(8, AX, 0, AZ);
+  if (LC <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
+    TNat.Add33To(8, PInv33, AZ);
 end;
 
 { TSecP256K1FieldElement }
 
-class function TSecP256K1FieldElement.GetQ: TBigInteger;
+class procedure TSecP256K1FieldElement.Boot;
 begin
-  result := TBigInteger.Create(1,
-    THex.Decode
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'));
+  FQ := TBigInteger.Create(1, THex.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'));
+end;
+
+class constructor TSecP256K1FieldElement.Create;
+begin
+  Boot;
+end;
+
+constructor TSecP256K1FieldElement.Create(const AX: TBigInteger);
+begin
+  Inherited Create;
+  if (not AX.IsInitialized) or (AX.SignValue < 0) or (AX.CompareTo(FQ) >= 0) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidSecP256K1FieldElement);
+  FX := TSecP256K1Field.FromBigInteger(AX);
+end;
+
+constructor TSecP256K1FieldElement.Create();
+begin
+  Inherited Create;
+  FX := TNat256.Create();
+end;
+
+constructor TSecP256K1FieldElement.Create(const AX: TCryptoLibUInt32Array);
+begin
+  Inherited Create;
+  FX := AX;
 end;
 
 function TSecP256K1FieldElement.GetX: TCryptoLibUInt32Array;
 begin
-  result := Fx;
+  Result := FX;
 end;
 
-constructor TSecP256K1FieldElement.Create;
+function TSecP256K1FieldElement.GetFieldName: String;
 begin
-  Inherited Create();
-  Fx := TNat256.Create();
-end;
-
-constructor TSecP256K1FieldElement.Create(const x: TBigInteger);
-begin
-  if ((not(x.IsInitialized)) or (x.SignValue < 0) or (x.CompareTo(Q) >= 0)) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt
-      (@SInvalidValueForSecP256K1FieldElement, ['x']);
-  end;
-  Inherited Create();
-  Fx := TSecP256K1Field.FromBigInteger(x);
-end;
-
-constructor TSecP256K1FieldElement.Create(const x: TCryptoLibUInt32Array);
-begin
-  Inherited Create();
-  Fx := x;
-end;
-
-function TSecP256K1FieldElement.GetFieldName: string;
-begin
-  result := 'SecP256K1Field';
+  Result := 'SecP256K1Field';
 end;
 
 function TSecP256K1FieldElement.GetFieldSize: Int32;
 begin
-  result := Q.BitLength;
-end;
-
-function TSecP256K1FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
-{$ENDIF DELPHI}
-begin
-  result := Q.GetHashCode() xor TArrayUtilities.GetArrayHashCode(Fx, 0, 8);
+  Result := FQ.BitLength;
 end;
 
 function TSecP256K1FieldElement.GetIsOne: Boolean;
 begin
-  result := TNat256.IsOne(Fx);
+  Result := TNat256.IsOne(FX);
 end;
 
 function TSecP256K1FieldElement.GetIsZero: Boolean;
 begin
-  result := TNat256.IsZero(Fx);
-end;
-
-function TSecP256K1FieldElement.Invert: IECFieldElement;
-var
-  z: TCryptoLibUInt32Array;
-begin
-  z := TNat256.Create();
-  TMod.CheckedModOddInverse(TSecP256K1Field.P, Fx, z);
-  result := TSecP256K1FieldElement.Create(z);
-end;
-
-function TSecP256K1FieldElement.Multiply(const b: IECFieldElement)
-  : IECFieldElement;
-var
-  z: TCryptoLibUInt32Array;
-begin
-  z := TNat256.Create();
-  TSecP256K1Field.Multiply(Fx, (b as ISecP256K1FieldElement).x, z);
-  result := TSecP256K1FieldElement.Create(z);
-end;
-
-function TSecP256K1FieldElement.Negate: IECFieldElement;
-var
-  z: TCryptoLibUInt32Array;
-begin
-  z := TNat256.Create();
-  TSecP256K1Field.Negate(Fx, z);
-  result := TSecP256K1FieldElement.Create(z);
-end;
-
-function TSecP256K1FieldElement.Sqrt: IECFieldElement;
-var
-  x1, x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1,
-    t2: TCryptoLibUInt32Array;
-begin
-  { *
-    * Raise this element to the exponent 2^254 - 2^30 - 2^7 - 2^6 - 2^5 - 2^4 - 2^2
-    *
-    * Breaking up the exponent's binary representation into "repunits", we get:
-    * ( 223 1s ) ( 1 0s ) ( 22 1s ) ( 4 0s ) ( 2 1s ) ( 2 0s)
-    *
-    * Therefore we need an addition chain containing 2, 22, 223 (the lengths of the repunits)
-    * We use: 1, [2], 3, 6, 9, 11, [22], 44, 88, 176, 220, [223]
-    * }
-
-  x1 := Fx;
-  if ((TNat256.IsZero(x1)) or (TNat256.IsOne(x1))) then
-  begin
-    result := Self as IECFieldElement;
-    Exit;
-  end;
-
-  x2 := TNat256.Create();
-  TSecP256K1Field.Square(x1, x2);
-  TSecP256K1Field.Multiply(x2, x1, x2);
-  x3 := TNat256.Create();
-  TSecP256K1Field.Square(x2, x3);
-  TSecP256K1Field.Multiply(x3, x1, x3);
-  x6 := TNat256.Create();
-  TSecP256K1Field.SquareN(x3, 3, x6);
-  TSecP256K1Field.Multiply(x6, x3, x6);
-  x9 := x6;
-  TSecP256K1Field.SquareN(x6, 3, x9);
-  TSecP256K1Field.Multiply(x9, x3, x9);
-  x11 := x9;
-  TSecP256K1Field.SquareN(x9, 2, x11);
-  TSecP256K1Field.Multiply(x11, x2, x11);
-  x22 := TNat256.Create();
-  TSecP256K1Field.SquareN(x11, 11, x22);
-  TSecP256K1Field.Multiply(x22, x11, x22);
-  x44 := x11;
-  TSecP256K1Field.SquareN(x22, 22, x44);
-  TSecP256K1Field.Multiply(x44, x22, x44);
-  x88 := TNat256.Create();
-  TSecP256K1Field.SquareN(x44, 44, x88);
-  TSecP256K1Field.Multiply(x88, x44, x88);
-  x176 := TNat256.Create();
-  TSecP256K1Field.SquareN(x88, 88, x176);
-  TSecP256K1Field.Multiply(x176, x88, x176);
-  x220 := x88;
-  TSecP256K1Field.SquareN(x176, 44, x220);
-  TSecP256K1Field.Multiply(x220, x44, x220);
-  x223 := x44;
-  TSecP256K1Field.SquareN(x220, 3, x223);
-  TSecP256K1Field.Multiply(x223, x3, x223);
-
-  t1 := x223;
-  TSecP256K1Field.SquareN(t1, 23, t1);
-  TSecP256K1Field.Multiply(t1, x22, t1);
-  TSecP256K1Field.SquareN(t1, 6, t1);
-  TSecP256K1Field.Multiply(t1, x2, t1);
-  TSecP256K1Field.SquareN(t1, 2, t1);
-
-  t2 := x2;
-  TSecP256K1Field.Square(t1, t2);
-
-  if TNat256.Eq(x1, t2) then
-  begin
-    result := TSecP256K1FieldElement.Create(t1);
-  end
-  else
-  begin
-    result := Nil;
-  end;
-end;
-
-function TSecP256K1FieldElement.Square: IECFieldElement;
-var
-  z: TCryptoLibUInt32Array;
-begin
-  z := TNat256.Create();
-  TSecP256K1Field.Square(Fx, z);
-  result := TSecP256K1FieldElement.Create(z);
-end;
-
-function TSecP256K1FieldElement.Subtract(const b: IECFieldElement)
-  : IECFieldElement;
-var
-  z: TCryptoLibUInt32Array;
-begin
-  z := TNat256.Create();
-  TSecP256K1Field.Subtract(Fx, (b as ISecP256K1FieldElement).x, z);
-  result := TSecP256K1FieldElement.Create(z);
-end;
-
-function TSecP256K1FieldElement.TestBitZero: Boolean;
-begin
-  result := TNat256.GetBit(Fx, 0) = 1;
+  Result := TNat256.IsZero(FX);
 end;
 
 function TSecP256K1FieldElement.ToBigInteger: TBigInteger;
 begin
-  result := TNat256.ToBigInteger(Fx);
+  Result := TNat256.ToBigInteger(FX);
 end;
 
-function TSecP256K1FieldElement.Add(const b: IECFieldElement): IECFieldElement;
-var
-  z: TCryptoLibUInt32Array;
+function TSecP256K1FieldElement.TestBitZero: Boolean;
 begin
-  z := TNat256.Create();
-  TSecP256K1Field.Add(Fx, (b as ISecP256K1FieldElement).x, z);
-  result := TSecP256K1FieldElement.Create(z);
+  Result := TNat256.GetBit(FX, 0) = 1;
+end;
+
+function TSecP256K1FieldElement.Add(const AB: IECFieldElement): IECFieldElement;
+var
+  LZ: TCryptoLibUInt32Array;
+begin
+  LZ := TNat256.Create();
+  TSecP256K1Field.Add(FX, (AB as ISecP256K1FieldElement).X, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
 end;
 
 function TSecP256K1FieldElement.AddOne: IECFieldElement;
 var
-  z: TCryptoLibUInt32Array;
+  LZ: TCryptoLibUInt32Array;
 begin
-  z := TNat256.Create();
-  TSecP256K1Field.AddOne(Fx, z);
-  result := TSecP256K1FieldElement.Create(z);
+  LZ := TNat256.Create();
+  TSecP256K1Field.AddOne(FX, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
 end;
 
-function TSecP256K1FieldElement.Divide(const b: IECFieldElement)
-  : IECFieldElement;
+function TSecP256K1FieldElement.Subtract(const AB: IECFieldElement): IECFieldElement;
 var
-  z: TCryptoLibUInt32Array;
+  LZ: TCryptoLibUInt32Array;
 begin
-  z := TNat256.Create();
-  TMod.CheckedModOddInverse(TSecP256K1Field.P, (b as ISecP256K1FieldElement).x, z);
-  TSecP256K1Field.Multiply(z, Fx, z);
-  result := TSecP256K1FieldElement.Create(z);
+  LZ := TNat256.Create();
+  TSecP256K1Field.Subtract(FX, (AB as ISecP256K1FieldElement).X, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
 end;
 
-function TSecP256K1FieldElement.Equals(const AOther: ISecP256K1FieldElement): Boolean;
+function TSecP256K1FieldElement.Multiply(const AB: IECFieldElement): IECFieldElement;
+var
+  LZ: TCryptoLibUInt32Array;
 begin
-  if (Self as ISecP256K1FieldElement) = AOther then
-    Exit(True);
-  if AOther = nil then
-    Exit(False);
-  Result := TNat256.Eq(Fx, AOther.x);
+  LZ := TNat256.Create();
+  TSecP256K1Field.Multiply(FX, (AB as ISecP256K1FieldElement).X, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
+end;
+
+function TSecP256K1FieldElement.Divide(const AB: IECFieldElement): IECFieldElement;
+var
+  LZ: TCryptoLibUInt32Array;
+begin
+  LZ := TNat256.Create();
+  TSecP256K1Field.Inv((AB as ISecP256K1FieldElement).X, LZ);
+  TSecP256K1Field.Multiply(LZ, FX, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
+end;
+
+function TSecP256K1FieldElement.Negate: IECFieldElement;
+var
+  LZ: TCryptoLibUInt32Array;
+begin
+  LZ := TNat256.Create();
+  TSecP256K1Field.Negate(FX, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
+end;
+
+function TSecP256K1FieldElement.Square: IECFieldElement;
+var
+  LZ: TCryptoLibUInt32Array;
+begin
+  LZ := TNat256.Create();
+  TSecP256K1Field.Square(FX, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
+end;
+
+function TSecP256K1FieldElement.Invert: IECFieldElement;
+var
+  LZ: TCryptoLibUInt32Array;
+begin
+  LZ := TNat256.Create();
+  TSecP256K1Field.Inv(FX, LZ);
+  Result := TSecP256K1FieldElement.Create(LZ);
+end;
+
+function TSecP256K1FieldElement.Sqrt: IECFieldElement;
+var
+  LX1, LTT0, LX2, LX3, LX6, LX9, LX11, LX22, LX44, LX88, LX176, LX220, LX223: TCryptoLibUInt32Array;
+  LT1, LT2: TCryptoLibUInt32Array;
+begin
+  LX1 := FX;
+  if TNat256.IsZero(LX1) or TNat256.IsOne(LX1) then
+    Exit(Self as IECFieldElement);
+
+  LTT0 := TNat256.CreateExt();
+
+  LX2 := TNat256.Create();
+  TSecP256K1Field.Square(LX1, LX2, LTT0);
+  TSecP256K1Field.Multiply(LX2, LX1, LX2, LTT0);
+  LX3 := TNat256.Create();
+  TSecP256K1Field.Square(LX2, LX3, LTT0);
+  TSecP256K1Field.Multiply(LX3, LX1, LX3, LTT0);
+  LX6 := TNat256.Create();
+  TSecP256K1Field.SquareN(LX3, 3, LX6, LTT0);
+  TSecP256K1Field.Multiply(LX6, LX3, LX6, LTT0);
+  LX9 := LX6;
+  TSecP256K1Field.SquareN(LX6, 3, LX9, LTT0);
+  TSecP256K1Field.Multiply(LX9, LX3, LX9, LTT0);
+  LX11 := LX9;
+  TSecP256K1Field.SquareN(LX9, 2, LX11, LTT0);
+  TSecP256K1Field.Multiply(LX11, LX2, LX11, LTT0);
+  LX22 := TNat256.Create();
+  TSecP256K1Field.SquareN(LX11, 11, LX22, LTT0);
+  TSecP256K1Field.Multiply(LX22, LX11, LX22, LTT0);
+  LX44 := LX11;
+  TSecP256K1Field.SquareN(LX22, 22, LX44, LTT0);
+  TSecP256K1Field.Multiply(LX44, LX22, LX44, LTT0);
+  LX88 := TNat256.Create();
+  TSecP256K1Field.SquareN(LX44, 44, LX88, LTT0);
+  TSecP256K1Field.Multiply(LX88, LX44, LX88, LTT0);
+  LX176 := TNat256.Create();
+  TSecP256K1Field.SquareN(LX88, 88, LX176, LTT0);
+  TSecP256K1Field.Multiply(LX176, LX88, LX176, LTT0);
+  LX220 := LX88;
+  TSecP256K1Field.SquareN(LX176, 44, LX220, LTT0);
+  TSecP256K1Field.Multiply(LX220, LX44, LX220, LTT0);
+  LX223 := LX44;
+  TSecP256K1Field.SquareN(LX220, 3, LX223, LTT0);
+  TSecP256K1Field.Multiply(LX223, LX3, LX223, LTT0);
+
+  LT1 := LX223;
+  TSecP256K1Field.SquareN(LT1, 23, LT1, LTT0);
+  TSecP256K1Field.Multiply(LT1, LX22, LT1, LTT0);
+  TSecP256K1Field.SquareN(LT1, 6, LT1, LTT0);
+  TSecP256K1Field.Multiply(LT1, LX2, LT1, LTT0);
+  TSecP256K1Field.SquareN(LT1, 2, LT1, LTT0);
+
+  LT2 := LX2;
+  TSecP256K1Field.Square(LT1, LT2, LTT0);
+
+  if TNat256.Eq(LX1, LT2) then
+    Result := TSecP256K1FieldElement.Create(LT1)
+  else
+    Result := nil;
 end;
 
 function TSecP256K1FieldElement.Equals(const AOther: IECFieldElement): Boolean;
-var
-  LSec: ISecP256K1FieldElement;
 begin
+  if (Self as IECFieldElement) = AOther then
+    Exit(True);
   if AOther = nil then
     Exit(False);
-  if Supports(AOther, ISecP256K1FieldElement, LSec) then
-    Result := Equals(LSec)
-  else
-    Result := ToBigInteger.Equals(AOther.ToBigInteger);
+  Result := TNat256.Eq(FX, (AOther as ISecP256K1FieldElement).X);
+end;
+
+function TSecP256K1FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
+begin
+  Result := FQ.GetHashCode() xor TArrayUtilities.GetArrayHashCode(FX, 0, 8);
 end;
 
 { TSecP256K1Point }
 
-constructor TSecP256K1Point.Create(const curve: IECCurve;
-  const x, y: IECFieldElement);
+constructor TSecP256K1Point.Create(const ACurve: IECCurve; const AX, AY: IECFieldElement);
 begin
-  Create(curve, x, y, false);
+  Inherited Create(ACurve, AX, AY);
 end;
 
-constructor TSecP256K1Point.Create(const curve: IECCurve;
-  const x, y: IECFieldElement; withCompression: Boolean);
+constructor TSecP256K1Point.Create(const ACurve: IECCurve; const AX, AY: IECFieldElement;
+  const AZs: TCryptoLibGenericArray<IECFieldElement>);
 begin
-  Inherited Create(curve, x, y, withCompression);
-  if ((x = Nil) <> (y = Nil)) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SOneOfECFieldElementIsNil);
-  end;
-end;
-
-constructor TSecP256K1Point.Create(const curve: IECCurve;
-  const x, y: IECFieldElement;
-  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean);
-begin
-  Inherited Create(curve, x, y, zs, withCompression);
-end;
-
-function TSecP256K1Point.Add(const b: IECPoint): IECPoint;
-var
-  Lcurve: IECCurve;
-  x1, Y1, x2, Y2, Z1, Z2, x3, Y3, Z3: ISecP256K1FieldElement;
-  c: UInt32;
-  tt1, t2, t3, t4, U2, S2, U1, S1, H, R, HSquared, G, V: TCryptoLibUInt32Array;
-  Z1IsOne, Z2IsOne: Boolean;
-  zs: TCryptoLibGenericArray<IECFieldElement>;
-begin
-  if (IsInfinity) then
-  begin
-    result := b;
-    Exit;
-  end;
-  if (b.IsInfinity) then
-  begin
-    result := Self as IECPoint;
-    Exit;
-  end;
-  if ((Self as IECPoint) = b) then
-  begin
-    result := Twice();
-    Exit;
-  end;
-
-  Lcurve := curve;
-
-  x1 := RawXCoord as ISecP256K1FieldElement;
-  Y1 := RawYCoord as ISecP256K1FieldElement;
-  x2 := b.RawXCoord as ISecP256K1FieldElement;
-  Y2 := b.RawYCoord as ISecP256K1FieldElement;
-
-  Z1 := RawZCoords[0] as ISecP256K1FieldElement;
-  Z2 := b.RawZCoords[0] as ISecP256K1FieldElement;
-
-  tt1 := TNat256.CreateExt();
-  t2 := TNat256.Create();
-  t3 := TNat256.Create();
-  t4 := TNat256.Create();
-
-  Z1IsOne := Z1.IsOne;
-
-  if (Z1IsOne) then
-  begin
-    U2 := x2.x;
-    S2 := Y2.x;
-  end
-  else
-  begin
-    S2 := t3;
-    TSecP256K1Field.Square(Z1.x, S2);
-
-    U2 := t2;
-    TSecP256K1Field.Multiply(S2, x2.x, U2);
-
-    TSecP256K1Field.Multiply(S2, Z1.x, S2);
-    TSecP256K1Field.Multiply(S2, Y2.x, S2);
-  end;
-
-  Z2IsOne := Z2.IsOne;
-  if (Z2IsOne) then
-  begin
-    U1 := x1.x;
-    S1 := Y1.x;
-  end
-  else
-  begin
-    S1 := t4;
-    TSecP256K1Field.Square(Z2.x, S1);
-
-    U1 := tt1;
-    TSecP256K1Field.Multiply(S1, x1.x, U1);
-
-    TSecP256K1Field.Multiply(S1, Z2.x, S1);
-    TSecP256K1Field.Multiply(S1, Y1.x, S1);
-  end;
-
-  H := TNat256.Create();
-  TSecP256K1Field.Subtract(U1, U2, H);
-
-  R := t2;
-  TSecP256K1Field.Subtract(S1, S2, R);
-
-  // Check if b = Self or b = -Self
-  if (TNat256.IsZero(H)) then
-  begin
-    if (TNat256.IsZero(R)) then
-    begin
-      // Self = b, i.e. Self must be doubled
-      result := Twice();
-      Exit;
-    end;
-
-    // Self = -b, i.e. the result is the point at infinity
-    result := Lcurve.Infinity;
-    Exit;
-  end;
-
-  HSquared := t3;
-  TSecP256K1Field.Square(H, HSquared);
-
-  G := TNat256.Create();
-  TSecP256K1Field.Multiply(HSquared, H, G);
-
-  V := t3;
-  TSecP256K1Field.Multiply(HSquared, U1, V);
-
-  TSecP256K1Field.Negate(G, G);
-  TNat256.Mul(S1, G, tt1);
-
-  c := TNat256.AddBothTo(V, V, G);
-  TSecP256K1Field.Reduce32(c, G);
-
-  x3 := TSecP256K1FieldElement.Create(t4);
-  TSecP256K1Field.Square(R, x3.x);
-  TSecP256K1Field.Subtract(x3.x, G, x3.x);
-
-  Y3 := TSecP256K1FieldElement.Create(G);
-  TSecP256K1Field.Subtract(V, x3.x, Y3.x);
-  TSecP256K1Field.MultiplyAddToExt(Y3.x, R, tt1);
-  TSecP256K1Field.Reduce(tt1, Y3.x);
-
-  Z3 := TSecP256K1FieldElement.Create(H);
-  if (not(Z1IsOne)) then
-  begin
-    TSecP256K1Field.Multiply(Z3.x, Z1.x, Z3.x);
-  end;
-  if (not(Z2IsOne)) then
-  begin
-    TSecP256K1Field.Multiply(Z3.x, Z2.x, Z3.x);
-  end;
-
-  zs := TCryptoLibGenericArray<IECFieldElement>.Create(Z3);
-
-  result := TSecP256K1Point.Create(Lcurve, x3, Y3, zs, IsCompressed)
-    as IECPoint;
+  Inherited Create(ACurve, AX, AY, AZs);
 end;
 
 function TSecP256K1Point.Detach: IECPoint;
 begin
-  result := TSecP256K1Point.Create(Nil, AffineXCoord, AffineYCoord) as IECPoint;
+  Result := TSecP256K1Point.Create(nil, AffineXCoord, AffineYCoord);
 end;
 
-function TSecP256K1Point.Negate: IECPoint;
+function TSecP256K1Point.Add(const AB: IECPoint): IECPoint;
+var
+  LCurve: IECCurve;
+  LX1, LY1, LX2, LY2, LZ1, LZ2: ISecP256K1FieldElement;
+  LTT0, LTT1: TCryptoLibUInt32Array;
+  LT2, LT3, LT4: TCryptoLibUInt32Array;
+  LZ1IsOne, LZ2IsOne: Boolean;
+  LU2, LS2, LU1, LS1: TCryptoLibUInt32Array;
+  LH, LR, LHSquared, LG, LV: TCryptoLibUInt32Array;
+  LC: UInt32;
+  LX3, LY3, LZ3: ISecP256K1FieldElement;
+  LZs: TCryptoLibGenericArray<IECFieldElement>;
 begin
-  if (IsInfinity) then
+  if GetIsInfinity then
+    Exit(AB);
+  if AB.GetIsInfinity then
+    Exit(Self as IECPoint);
+  if (Self as IECPoint) = AB then
+    Exit(Twice());
+
+  LCurve := Curve;
+  LX1 := RawXCoord as ISecP256K1FieldElement;
+  LY1 := RawYCoord as ISecP256K1FieldElement;
+  LX2 := AB.RawXCoord as ISecP256K1FieldElement;
+  LY2 := AB.RawYCoord as ISecP256K1FieldElement;
+  LZ1 := RawZCoords[0] as ISecP256K1FieldElement;
+  LZ2 := AB.GetZCoord(0) as ISecP256K1FieldElement;
+
+  LTT0 := TNat256.CreateExt();
+  LTT1 := TNat256.CreateExt();
+  LT2 := TNat256.Create();
+  LT3 := TNat256.Create();
+  LT4 := TNat256.Create();
+
+  LZ1IsOne := LZ1.IsOne;
+  if LZ1IsOne then
   begin
-    result := Self as IECPoint;
-    Exit;
+    LU2 := LX2.X;
+    LS2 := LY2.X;
+  end
+  else
+  begin
+    LS2 := LT3;
+    TSecP256K1Field.Square(LZ1.X, LS2, LTT0);
+    LU2 := LT2;
+    TSecP256K1Field.Multiply(LS2, LX2.X, LU2, LTT0);
+    TSecP256K1Field.Multiply(LS2, LZ1.X, LS2, LTT0);
+    TSecP256K1Field.Multiply(LS2, LY2.X, LS2, LTT0);
   end;
 
-  result := TSecP256K1Point.Create(curve, RawXCoord, RawYCoord.Negate(),
-    RawZCoords, IsCompressed) as IECPoint;
-end;
-
-function TSecP256K1Point.ThreeTimes: IECPoint;
-begin
-  if ((IsInfinity) or (RawYCoord.IsZero)) then
+  LZ2IsOne := LZ2.IsOne;
+  if LZ2IsOne then
   begin
-    result := Self as IECPoint;
-    Exit;
+    LU1 := LX1.X;
+    LS1 := LY1.X;
+  end
+  else
+  begin
+    LS1 := LT4;
+    TSecP256K1Field.Square(LZ2.X, LS1, LTT0);
+    LU1 := LTT1;
+    TSecP256K1Field.Multiply(LS1, LX1.X, LU1, LTT0);
+    TSecP256K1Field.Multiply(LS1, LZ2.X, LS1, LTT0);
+    TSecP256K1Field.Multiply(LS1, LY1.X, LS1, LTT0);
   end;
 
-  // NOTE: Be careful about recursions between TwicePlus and ThreeTimes
-  result := Twice().Add(Self as IECPoint);
+  LH := TNat256.Create();
+  TSecP256K1Field.Subtract(LU1, LU2, LH);
+
+  LR := LT2;
+  TSecP256K1Field.Subtract(LS1, LS2, LR);
+
+  if TNat256.IsZero(LH) then
+  begin
+    if TNat256.IsZero(LR) then
+      Exit(Twice());
+    Exit(LCurve.Infinity);
+  end;
+
+  LHSquared := LT3;
+  TSecP256K1Field.Square(LH, LHSquared, LTT0);
+
+  LG := TNat256.Create();
+  TSecP256K1Field.Multiply(LHSquared, LH, LG, LTT0);
+
+  LV := LT3;
+  TSecP256K1Field.Multiply(LHSquared, LU1, LV, LTT0);
+
+  TSecP256K1Field.Negate(LG, LG);
+  TNat256.Mul(LS1, LG, LTT1);
+
+  LC := TNat256.AddBothTo(LV, LV, LG);
+  TSecP256K1Field.Reduce32(LC, LG);
+
+  LX3 := TSecP256K1FieldElement.Create(LT4);
+  TSecP256K1Field.Square(LR, LX3.X, LTT0);
+  TSecP256K1Field.Subtract(LX3.X, LG, LX3.X);
+
+  LY3 := TSecP256K1FieldElement.Create(LG);
+  TSecP256K1Field.Subtract(LV, LX3.X, LY3.X);
+  TSecP256K1Field.MultiplyAddToExt(LY3.X, LR, LTT1);
+  TSecP256K1Field.Reduce(LTT1, LY3.X);
+
+  LZ3 := TSecP256K1FieldElement.Create(LH);
+  if not LZ1IsOne then
+    TSecP256K1Field.Multiply(LZ3.X, LZ1.X, LZ3.X, LTT0);
+  if not LZ2IsOne then
+    TSecP256K1Field.Multiply(LZ3.X, LZ2.X, LZ3.X, LTT0);
+
+  LZs := TCryptoLibGenericArray<IECFieldElement>.Create(LZ3 as IECFieldElement);
+  Result := TSecP256K1Point.Create(LCurve, LX3 as IECFieldElement, LY3 as IECFieldElement, LZs);
 end;
 
 function TSecP256K1Point.Twice: IECPoint;
 var
-  Lcurve: IECCurve;
-  Y1, x1, Z1, x3, Y3, Z3: ISecP256K1FieldElement;
-  c: UInt32;
-  Y1Squared, T, M, S, t1: TCryptoLibUInt32Array;
+  LCurve: IECCurve;
+  LY1, LX1, LZ1: ISecP256K1FieldElement;
+  LTT0: TCryptoLibUInt32Array;
+  LY1Squared, LT, LM, LS: TCryptoLibUInt32Array;
+  LT1: TCryptoLibUInt32Array;
+  LC: UInt32;
+  LX3, LY3, LZ3: ISecP256K1FieldElement;
+  LZs: TCryptoLibGenericArray<IECFieldElement>;
 begin
+  if IsInfinity then
+    Exit(Self as IECPoint);
 
-  if (IsInfinity) then
-  begin
-    result := Self as IECPoint;
-    Exit;
-  end;
+  LCurve := Curve;
+  LY1 := RawYCoord as ISecP256K1FieldElement;
+  if LY1.IsZero then
+    Exit(LCurve.Infinity);
 
-  Lcurve := curve;
+  LX1 := RawXCoord as ISecP256K1FieldElement;
+  LZ1 := RawZCoords[0] as ISecP256K1FieldElement;
 
-  Y1 := RawYCoord as ISecP256K1FieldElement;
-  if (Y1.IsZero) then
-  begin
-    result := Lcurve.Infinity;
-    Exit;
-  end;
+  LTT0 := TNat256.CreateExt();
 
-  x1 := RawXCoord as ISecP256K1FieldElement;
-  Z1 := RawZCoords[0] as ISecP256K1FieldElement;
+  LY1Squared := TNat256.Create();
+  TSecP256K1Field.Square(LY1.X, LY1Squared, LTT0);
 
-  Y1Squared := TNat256.Create();
-  TSecP256K1Field.Square(Y1.x, Y1Squared);
+  LT := TNat256.Create();
+  TSecP256K1Field.Square(LY1Squared, LT, LTT0);
 
-  T := TNat256.Create();
-  TSecP256K1Field.Square(Y1Squared, T);
+  LM := TNat256.Create();
+  TSecP256K1Field.Square(LX1.X, LM, LTT0);
+  LC := TNat256.AddBothTo(LM, LM, LM);
+  TSecP256K1Field.Reduce32(LC, LM);
 
-  M := TNat256.Create();
-  TSecP256K1Field.Square(x1.x, M);
-  c := TNat256.AddBothTo(M, M, M);
-  TSecP256K1Field.Reduce32(c, M);
+  LS := LY1Squared;
+  TSecP256K1Field.Multiply(LY1Squared, LX1.X, LS, LTT0);
+  LC := TNat.ShiftUpBits(8, LS, 2, 0, LS);
+  TSecP256K1Field.Reduce32(LC, LS);
 
-  S := Y1Squared;
-  TSecP256K1Field.Multiply(Y1Squared, x1.x, S);
-  c := TNat.ShiftUpBits(8, S, 2, 0);
-  TSecP256K1Field.Reduce32(c, S);
+  LT1 := TNat256.Create();
+  LC := TNat.ShiftUpBits(8, LT, 3, 0, LT1);
+  TSecP256K1Field.Reduce32(LC, LT1);
 
-  t1 := TNat256.Create();
-  c := TNat.ShiftUpBits(8, T, 3, 0, t1);
-  TSecP256K1Field.Reduce32(c, t1);
+  LX3 := TSecP256K1FieldElement.Create(LT);
+  TSecP256K1Field.Square(LM, LX3.X, LTT0);
+  TSecP256K1Field.Subtract(LX3.X, LS, LX3.X);
+  TSecP256K1Field.Subtract(LX3.X, LS, LX3.X);
 
-  x3 := TSecP256K1FieldElement.Create(T);
-  TSecP256K1Field.Square(M, x3.x);
-  TSecP256K1Field.Subtract(x3.x, S, x3.x);
-  TSecP256K1Field.Subtract(x3.x, S, x3.x);
+  LY3 := TSecP256K1FieldElement.Create(LS);
+  TSecP256K1Field.Subtract(LS, LX3.X, LY3.X);
+  TSecP256K1Field.Multiply(LY3.X, LM, LY3.X, LTT0);
+  TSecP256K1Field.Subtract(LY3.X, LT1, LY3.X);
 
-  Y3 := TSecP256K1FieldElement.Create(S);
-  TSecP256K1Field.Subtract(S, x3.x, Y3.x);
-  TSecP256K1Field.Multiply(Y3.x, M, Y3.x);
-  TSecP256K1Field.Subtract(Y3.x, t1, Y3.x);
+  LZ3 := TSecP256K1FieldElement.Create(LM);
+  TSecP256K1Field.Twice(LY1.X, LZ3.X);
+  if not LZ1.IsOne then
+    TSecP256K1Field.Multiply(LZ3.X, LZ1.X, LZ3.X, LTT0);
 
-  Z3 := TSecP256K1FieldElement.Create(M);
-  TSecP256K1Field.Twice(Y1.x, Z3.x);
-  if (not(Z1.IsOne)) then
-  begin
-    TSecP256K1Field.Multiply(Z3.x, Z1.x, Z3.x);
-  end;
-
-  result := TSecP256K1Point.Create(Lcurve, x3, Y3,
-    TCryptoLibGenericArray<IECFieldElement>.Create(Z3), IsCompressed)
-    as IECPoint;
+  LZs := TCryptoLibGenericArray<IECFieldElement>.Create(LZ3 as IECFieldElement);
+  Result := TSecP256K1Point.Create(LCurve, LX3 as IECFieldElement, LY3 as IECFieldElement, LZs);
 end;
 
-function TSecP256K1Point.TwicePlus(const b: IECPoint): IECPoint;
-var
-  Y1: IECFieldElement;
+function TSecP256K1Point.TwicePlus(const AB: IECPoint): IECPoint;
 begin
-  if ((Self as IECPoint) = b) then
-  begin
-    result := ThreeTimes();
-    Exit;
-  end;
-  if (IsInfinity) then
-  begin
-    result := b;
-    Exit;
-  end;
-  if (b.IsInfinity) then
-  begin
-    result := Twice();
-    Exit;
-  end;
-
-  Y1 := RawYCoord;
-  if (Y1.IsZero) then
-  begin
-    result := b;
-    Exit;
-  end;
-
-  result := Twice().Add(b);
+  if (Self as IECPoint) = AB then
+    Exit(ThreeTimes());
+  if IsInfinity then
+    Exit(AB);
+  if AB.IsInfinity then
+    Exit(Twice());
+  if RawYCoord.IsZero then
+    Exit(AB);
+  Result := Twice().Add(AB);
 end;
 
-{ TSecP256K1Curve }
-
-constructor TSecP256K1Curve.Create;
+function TSecP256K1Point.ThreeTimes: IECPoint;
 begin
-  Fq := TSecP256K1FieldElement.Q;
-  Inherited Create(Fq);
-  Fm_infinity := TSecP256K1Point.Create(Self as IECCurve, Nil, Nil);
-  Fm_a := FromBigInteger(TBigInteger.Zero);
-  Fm_b := FromBigInteger(TBigInteger.ValueOf(7));
-  Fm_order := TBigInteger.Create(1,
-    THex.Decode
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'));
-  Fm_cofactor := TBigInteger.One;
-  Fm_coord := SECP256K1_DEFAULT_COORDS;
+  if IsInfinity or RawYCoord.IsZero then
+    Exit(Self as IECPoint);
+  Result := Twice().Add(Self as IECPoint);
 end;
 
-function TSecP256K1Curve.CloneCurve: IECCurve;
+function TSecP256K1Point.Negate: IECPoint;
 begin
-  result := TSecP256K1Curve.Create();
-end;
-
-function TSecP256K1Curve.CreateCacheSafeLookupTable(const points
-  : TCryptoLibGenericArray<IECPoint>; off, len: Int32): IECLookupTable;
-var
-  table: TCryptoLibUInt32Array;
-  pos, i: Int32;
-  P: IECPoint;
-begin
-  System.SetLength(table, len * SECP256K1_FE_INTS * 2);
-
-  pos := 0;
-  for i := 0 to System.Pred(len) do
-  begin
-    P := points[off + i];
-    TNat256.Copy((P.RawXCoord as ISecP256K1FieldElement).x, 0, table, pos);
-    pos := pos + SECP256K1_FE_INTS;
-    TNat256.Copy((P.RawYCoord as ISecP256K1FieldElement).x, 0, table, pos);
-    pos := pos + SECP256K1_FE_INTS;
-  end;
-
-  result := TSecP256K1LookupTable.Create(Self as ISecP256K1Curve, table, len);
-end;
-
-function TSecP256K1Curve.CreateRawPoint(const x, y: IECFieldElement;
-  withCompression: Boolean): IECPoint;
-begin
-  result := TSecP256K1Point.Create(Self as IECCurve, x, y, withCompression);
-end;
-
-function TSecP256K1Curve.CreateRawPoint(const x, y: IECFieldElement;
-  const zs: TCryptoLibGenericArray<IECFieldElement>; withCompression: Boolean)
-  : IECPoint;
-begin
-  result := TSecP256K1Point.Create(Self as IECCurve, x, y, zs, withCompression);
-end;
-
-function TSecP256K1Curve.FromBigInteger(const x: TBigInteger): IECFieldElement;
-begin
-  result := TSecP256K1FieldElement.Create(x);
-end;
-
-function TSecP256K1Curve.GetFieldSize: Int32;
-begin
-  result := Fq.BitLength;
-end;
-
-function TSecP256K1Curve.GetInfinity: IECPoint;
-begin
-  result := Fm_infinity;
-end;
-
-function TSecP256K1Curve.GetQ: TBigInteger;
-begin
-  result := Fq;
-end;
-
-function TSecP256K1Curve.SupportsCoordinateSystem(coord: Int32): Boolean;
-begin
-  case coord of
-    TECCurveConstants.COORD_JACOBIAN:
-      result := true
-  else
-    result := false;
-  end;
+  if IsInfinity then
+    Exit(Self as IECPoint);
+  Result := TSecP256K1Point.Create(Curve, RawXCoord, RawYCoord.Negate(), RawZCoords);
 end;
 
 { TSecP256K1Curve.TSecP256K1LookupTable }
 
-constructor TSecP256K1Curve.TSecP256K1LookupTable.Create
-  (const outer: ISecP256K1Curve; const table: TCryptoLibUInt32Array;
-  size: Int32);
+constructor TSecP256K1Curve.TSecP256K1LookupTable.Create(const AOuter: ISecP256K1Curve;
+  const ATable: TCryptoLibUInt32Array; ASize: Int32);
 begin
-  Inherited Create();
-  Fm_outer := outer;
-  Fm_table := table;
-  Fm_size := size;
-end;
-
-function TSecP256K1Curve.TSecP256K1LookupTable.CreatePoint(const x,
-  y: TCryptoLibUInt32Array): IECPoint;
-var
-  XFieldElement, YFieldElement: ISecP256K1FieldElement;
-  SECP256K1_AFFINE_ZS: TCryptoLibGenericArray<IECFieldElement>;
-begin
-  SECP256K1_AFFINE_ZS := TCryptoLibGenericArray<IECFieldElement>.Create
-    (TSecP256K1FieldElement.Create(TBigInteger.One) as ISecP256K1FieldElement);
-
-  XFieldElement := TSecP256K1FieldElement.Create(x);
-  YFieldElement := TSecP256K1FieldElement.Create(y);
-  result := Fm_outer.CreateRawPoint(XFieldElement, YFieldElement,
-    SECP256K1_AFFINE_ZS, false);
+  Inherited Create;
+  FOuter := AOuter;
+  FTable := ATable;
+  FSize := ASize;
 end;
 
 function TSecP256K1Curve.TSecP256K1LookupTable.GetSize: Int32;
 begin
-  result := Fm_size;
+  Result := FSize;
 end;
 
-function TSecP256K1Curve.TSecP256K1LookupTable.Lookup(index: Int32): IECPoint;
-var
-  x, y: TCryptoLibUInt32Array;
-  pos, i, J: Int32;
-  MASK: UInt32;
+function TSecP256K1Curve.TSecP256K1LookupTable.CreatePoint(const AX, AY: TCryptoLibUInt32Array): IECPoint;
 begin
-  x := TNat256.Create();
-  y := TNat256.Create();
-  pos := 0;
+  Result := FOuter.CreateRawPoint(TSecP256K1FieldElement.Create(AX) as IECFieldElement,
+    TSecP256K1FieldElement.Create(AY) as IECFieldElement, TSecP256K1Curve.SecP256K1AffineZs);
+end;
 
-  for i := 0 to System.Pred(Fm_size) do
+function TSecP256K1Curve.TSecP256K1LookupTable.Lookup(AIndex: Int32): IECPoint;
+var
+  LX, LY: TCryptoLibUInt32Array;
+  LPos, LI, LJ: Int32;
+  LMask: UInt32;
+begin
+  LX := TNat256.Create();
+  LY := TNat256.Create();
+  LPos := 0;
+
+  for LI := 0 to System.Pred(FSize) do
   begin
-    MASK := UInt32(TBitOperations.Asr32((i xor index) - 1, 31));
+    LMask := UInt32(TBitOperations.Asr32(((LI xor AIndex) - 1), 31));
 
-    for J := 0 to System.Pred(SECP256K1_FE_INTS) do
+    for LJ := 0 to System.Pred(SECP256K1_FE_INTS) do
     begin
-      x[J] := x[J] xor (Fm_table[pos + J] and MASK);
-      y[J] := y[J] xor (Fm_table[pos + SECP256K1_FE_INTS + J] and MASK);
+      LX[LJ] := LX[LJ] xor (FTable[LPos + LJ] and LMask);
+      LY[LJ] := LY[LJ] xor (FTable[LPos + SECP256K1_FE_INTS + LJ] and LMask);
     end;
 
-    pos := pos + (SECP256K1_FE_INTS * 2);
+    LPos := LPos + (SECP256K1_FE_INTS * 2);
   end;
 
-  result := CreatePoint(x, y);
+  Result := CreatePoint(LX, LY);
 end;
 
-function TSecP256K1Curve.TSecP256K1LookupTable.LookupVar(index: Int32)
-  : IECPoint;
+function TSecP256K1Curve.TSecP256K1LookupTable.LookupVar(AIndex: Int32): IECPoint;
 var
-  x, y: TCryptoLibUInt32Array;
-  pos, J: Int32;
+  LX, LY: TCryptoLibUInt32Array;
+  LPos, LJ: Int32;
 begin
-  x := TNat256.Create();
-  y := TNat256.Create();
-  pos := index * SECP256K1_FE_INTS * 2;
+  LX := TNat256.Create();
+  LY := TNat256.Create();
+  LPos := AIndex * SECP256K1_FE_INTS * 2;
 
-  for J := 0 to System.Pred(SECP256K1_FE_INTS) do
+  for LJ := 0 to System.Pred(SECP256K1_FE_INTS) do
   begin
-    x[J] := Fm_table[pos + J];
-    y[J] := Fm_table[pos + SECP256K1_FE_INTS + J];
+    LX[LJ] := FTable[LPos + LJ];
+    LY[LJ] := FTable[LPos + SECP256K1_FE_INTS + LJ];
   end;
 
-  result := CreatePoint(x, y);
+  Result := CreatePoint(LX, LY);
+end;
+
+{ TSecP256K1Curve }
+
+class procedure TSecP256K1Curve.Boot;
+begin
+  FQ := TSecP256K1FieldElement.Q;
+  FSecP256K1AffineZs := TCryptoLibGenericArray<IECFieldElement>.Create(
+    TSecP256K1FieldElement.Create(TBigInteger.One) as IECFieldElement);
+end;
+
+class constructor TSecP256K1Curve.Create;
+begin
+  Boot;
+end;
+
+constructor TSecP256K1Curve.Create;
+begin
+  Inherited Create(TSecP256K1Curve.Q, True);
+  FInfinity := TSecP256K1Point.Create(Self as IECCurve, nil, nil);
+  FA := FromBigInteger(TBigInteger.Zero);
+  FB := FromBigInteger(TBigInteger.Seven);
+  FOrder := TBigInteger.Create(1, THex.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'));
+  FCofactor := TBigInteger.One;
+  FCoord := SECP256K1_DEFAULT_COORDS;
+end;
+
+destructor TSecP256K1Curve.Destroy;
+begin
+  FInfinity := nil;
+  inherited Destroy;
+end;
+
+function TSecP256K1Curve.GetQ: TBigInteger;
+begin
+  Result := TSecP256K1Curve.Q;
+end;
+
+function TSecP256K1Curve.CloneCurve: IECCurve;
+begin
+  Result := TSecP256K1Curve.Create;
+end;
+
+function TSecP256K1Curve.GetFieldSize: Int32;
+begin
+  Result := TSecP256K1Curve.Q.BitLength;
+end;
+
+function TSecP256K1Curve.GetInfinity: IECPoint;
+begin
+  Result := FInfinity;
+end;
+
+function TSecP256K1Curve.FromBigInteger(const AX: TBigInteger): IECFieldElement;
+begin
+  Result := TSecP256K1FieldElement.Create(AX);
+end;
+
+function TSecP256K1Curve.CreateRawPoint(const AX, AY: IECFieldElement): IECPoint;
+begin
+  Result := TSecP256K1Point.Create(Self as IECCurve, AX, AY);
+end;
+
+function TSecP256K1Curve.CreateRawPoint(const AX, AY: IECFieldElement;
+  const AZs: TCryptoLibGenericArray<IECFieldElement>): IECPoint;
+begin
+  Result := TSecP256K1Point.Create(Self as IECCurve, AX, AY, AZs);
+end;
+
+function TSecP256K1Curve.CreateCacheSafeLookupTable(const APoints: TCryptoLibGenericArray<IECPoint>;
+  AOff, ALen: Int32): IECLookupTable;
+var
+  LTable: TCryptoLibUInt32Array;
+  LPos, LI: Int32;
+  LP: IECPoint;
+begin
+  System.SetLength(LTable, ALen * SECP256K1_FE_INTS * 2);
+  LPos := 0;
+  for LI := 0 to System.Pred(ALen) do
+  begin
+    LP := APoints[AOff + LI];
+    TNat256.Copy((LP.RawXCoord as ISecP256K1FieldElement).X, 0, LTable, LPos);
+    LPos := LPos + SECP256K1_FE_INTS;
+    TNat256.Copy((LP.RawYCoord as ISecP256K1FieldElement).X, 0, LTable, LPos);
+    LPos := LPos + SECP256K1_FE_INTS;
+  end;
+  Result := TSecP256K1LookupTable.Create(Self as ISecP256K1Curve, LTable, ALen);
+end;
+
+function TSecP256K1Curve.RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement;
+var
+  LX: TCryptoLibUInt32Array;
+begin
+  LX := TNat256.Create();
+  TSecP256K1Field.Random(ARandom, LX);
+  Result := TSecP256K1FieldElement.Create(LX);
+end;
+
+function TSecP256K1Curve.RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement;
+var
+  LX: TCryptoLibUInt32Array;
+begin
+  LX := TNat256.Create();
+  TSecP256K1Field.RandomMult(ARandom, LX);
+  Result := TSecP256K1FieldElement.Create(LX);
+end;
+
+function TSecP256K1Curve.SupportsCoordinateSystem(ACoord: Int32): Boolean;
+begin
+  case ACoord of
+    TECCurveConstants.COORD_JACOBIAN:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+class function TSecP256K1FieldElement.GetQ: TBigInteger;
+begin
+  Result := FQ;
 end;
 
 end.

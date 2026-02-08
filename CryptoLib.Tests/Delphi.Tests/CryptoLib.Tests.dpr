@@ -72,8 +72,6 @@ uses
   ClpCryptoLibComparers in '..\..\CryptoLib\src\Misc\ClpCryptoLibComparers.pas',
   ClpCryptoLibTypes in '..\..\CryptoLib\src\Misc\ClpCryptoLibTypes.pas',
   ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
-  ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
-  ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas',
   ClpDateTimeUtilities in '..\..\CryptoLib\src\GeneralUtilities\ClpDateTimeUtilities.pas',
   ClpDefaultDigestCalculator in '..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestCalculator.pas',
   ClpDefaultDigestResult in '..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestResult.pas',
@@ -270,7 +268,7 @@ uses
   ClpISecP256R1Custom in '..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP256R1Custom.pas',
   ClpISecP384R1Custom in '..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP384R1Custom.pas',
   ClpISecP521R1Custom in '..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP521R1Custom.pas',
-  ClpISecT283Custom in '..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecT283Custom.pas',
+  ClpISecT283K1Custom in '..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecT283K1Custom.pas',
   ClpISecureRandom in '..\..\CryptoLib\src\Interfaces\Crypto\Randoms\ClpISecureRandom.pas',
   ClpISignatureFactory in '..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpISignatureFactory.pas',
   ClpISigner in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpISigner.pas',
@@ -366,7 +364,7 @@ uses
   ClpSecP256R1Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Custom.pas',
   ClpSecP384R1Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP384R1Custom.pas',
   ClpSecP521R1Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP521R1Custom.pas',
-  ClpSecT283Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283Custom.pas',
+  ClpSecT283K1Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283K1Custom.pas',
   ClpSecureRandom in '..\..\CryptoLib\src\Crypto\Randoms\ClpSecureRandom.pas',
   ClpSetWeakRef in '..\..\CryptoLib\src\Misc\ClpSetWeakRef.pas',
   ClpWeakRef in '..\..\CryptoLib\src\Misc\ClpWeakRef.pas',
@@ -587,7 +585,9 @@ uses
   ClpECLookupTables in '..\..\CryptoLib\src\Math\EC\ClpECLookupTables.pas',
   ClpECCore in '..\..\CryptoLib\src\Math\EC\ClpECCore.pas',
   ClpEndoUtilities in '..\..\CryptoLib\src\Math\EC\Endo\ClpEndoUtilities.pas',
-  ClpWNafUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafUtilities.pas';
+  ClpWNafUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafUtilities.pas',
+  ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
+  ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas';
 
 begin
 

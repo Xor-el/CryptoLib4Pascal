@@ -24,6 +24,7 @@ interface
 uses
   ClpBigInteger,
   ClpIECCore,
+  ClpIECFieldElement,
   ClpCryptoLibTypes;
 
 type
@@ -44,13 +45,10 @@ type
   ISecP256R1Curve = Interface(IAbstractFpCurve)
     ['{D6B64687-91B2-4281-B099-3B3DCFB330DB}']
 
-    function GetQ: TBigInteger;
-    property Q: TBigInteger read GetQ;
-
   end;
 
 type
-  ISecP256R1LookupTable = Interface(IAbstractECLookupTable)
+  ISecP256R1LookupTable = Interface(IECLookupTable)
     ['{87BF97BA-18D2-4248-ABEB-8E429998E9D9}']
   end;
 

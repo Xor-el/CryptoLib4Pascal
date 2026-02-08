@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpISecT283Custom;
+unit ClpISecT283K1Custom;
 
 {$I ..\..\..\..\..\Include\CryptoLib.inc}
 
@@ -23,6 +23,7 @@ interface
 
 uses
   ClpIECCore,
+  ClpIECFieldElement,
   ClpCryptoLibTypes;
 
 type
@@ -36,11 +37,11 @@ type
     property Representation: Int32 read GetRepresentation;
 
     function GetK1: Int32;
-    property k1: Int32 read GetK1;
+    property K1: Int32 read GetK1;
     function GetK2: Int32;
-    property k2: Int32 read GetK2;
+    property K2: Int32 read GetK2;
     function GetK3: Int32;
-    property k3: Int32 read GetK3;
+    property K3: Int32 read GetK3;
 
     function GetX: TCryptoLibUInt64Array;
     property X: TCryptoLibUInt64Array read GetX;
@@ -60,21 +61,22 @@ type
     property M: Int32 read GetM;
 
     function GetK1: Int32;
-    property k1: Int32 read GetK1;
+      property K1: Int32 read GetK1;
 
     function GetK2: Int32;
-    property k2: Int32 read GetK2;
+    property K2: Int32 read GetK2;
 
     function GetK3: Int32;
-    property k3: Int32 read GetK3;
+    property K3: Int32 read GetK3;
 
     function GetIsTrinomial: Boolean;
+
     property IsTrinomial: Boolean read GetIsTrinomial;
 
   end;
 
 type
-  ISecT283K1LookupTable = Interface(IAbstractECLookupTable)
+  ISecT283K1LookupTable = Interface(IECLookupTable)
     ['{3AF41553-A108-46D6-9CCC-AB1814A0A247}']
   end;
 
