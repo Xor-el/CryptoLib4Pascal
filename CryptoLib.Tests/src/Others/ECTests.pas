@@ -94,12 +94,12 @@ type
     /// X9.62 - 1998, <br />J.2.1, Page 100, ECDSA over the field F2m <br />
     /// an example with 191 bit binary field
     /// </summary>
-    procedure TestECDsa239bitBinary();
+    procedure TestECDsa239BitBinary();
 
     /// <summary>
     /// General test for long digest.
     /// </summary>
-    procedure TestECDsa239bitBinaryAndLargeDigest();
+    procedure TestECDsa239BitBinaryAndLargeDigest();
 
     /// <summary>
     /// key generation test
@@ -342,7 +342,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsa239bitBinary;
+procedure TTestEC.TestECDsa239BitBinary;
 var
   sig: TCryptoLibGenericArray<TBigInteger>;
   k: ISecureRandom;
@@ -373,10 +373,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint
@@ -430,7 +428,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsa239bitBinaryAndLargeDigest;
+procedure TTestEC.TestECDsa239BitBinaryAndLargeDigest;
 var
   r, s: TBigInteger;
   kData, &message: TBytes;
@@ -460,10 +458,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint

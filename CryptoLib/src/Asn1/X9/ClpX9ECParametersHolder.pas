@@ -33,7 +33,7 @@ type
   strict private
   var
     FLock: TCriticalSection;
-    Fparameters: IX9ECParameters;
+    FParameters: IX9ECParameters;
 
   strict protected
 
@@ -67,15 +67,15 @@ function TX9ECParametersHolder.GetParameters: IX9ECParameters;
 begin
   FLock.Acquire;
   try
-    if (Fparameters = Nil) then
+    if (FParameters = Nil) then
     begin
-      Fparameters := CreateParameters();
+      FParameters := CreateParameters();
     end;
 
   finally
     FLock.Release;
   end;
-  Result := Fparameters;
+  Result := FParameters;
 end;
 
 end.

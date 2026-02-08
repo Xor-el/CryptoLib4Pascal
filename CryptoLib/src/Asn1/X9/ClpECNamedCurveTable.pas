@@ -24,11 +24,15 @@ interface
 uses
   Generics.Collections,
   ClpCryptoLibTypes,
+  ClpCollectionUtilities,
   ClpSecNamedCurves,
   ClpNistNamedCurves,
   ClpTeleTrusTNamedCurves,
+  ClpECGost3410NamedCurves,
+  ClpX962NamedCurves,
   ClpIAsn1Objects,
-  ClpIX9ECAsn1Objects;
+  ClpIX9ECAsn1Objects,
+  ClpIX9ECParametersHolder;
 
 type
   /// <summary>
@@ -41,39 +45,25 @@ type
     class function GetNames: TCryptoLibStringArray; static;
 
   public
-    // /**
-    // * return a X9ECParameters object representing the passed in named
-    // * curve. The routine returns null if the curve is not present.
-    // *
-    // * @param name the name of the curve requested
-    // * @return an X9ECParameters object or null if the curve is not available.
-    // */
-    class function GetByName(const name: String): IX9ECParameters; static;
+    /// <summary>Look up the X9ECParameters for the curve with the given name.</summary>
+    class function GetByName(const AName: String): IX9ECParameters; static;
 
-    // /**
-    // * return the object identifier signified by the passed in name. Null
-    // * if there is no object identifier associated with name.
-    // *
-    // * @return the object identifier associated with name, if present.
-    // */
-    class function GetOid(const name: String): IDerObjectIdentifier; static;
+    /// <summary>Look up an X9ECParametersHolder for the curve with the given name (lazy).</summary>
+    class function GetByNameLazy(const AName: String): IX9ECParametersHolder; static;
 
-    // /**
-    // * return a X9ECParameters object representing the passed in named
-    // * curve.
-    // *
-    // * @param oid the object id of the curve requested
-    // * @return an X9ECParameters object or null if the curve is not available.
-    // */
+    /// <summary>Look up the X9ECParameters for the curve with the given OID.</summary>
+    class function GetByOid(const AOid: IDerObjectIdentifier): IX9ECParameters; static;
 
-    class function GetByOid(const oid: IDerObjectIdentifier)
-      : IX9ECParameters; static;
+    /// <summary>Look up an X9ECParametersHolder for the curve with the given OID (lazy).</summary>
+    class function GetByOidLazy(const AOid: IDerObjectIdentifier): IX9ECParametersHolder; static;
 
-    // /**
-    // * return an enumeration of the names of the available curves.
-    // *
-    // * @return an enumeration of the names of the available curves.
-    // */
+    /// <summary>Look up the name of the curve with the given OID.</summary>
+    class function GetName(const AOid: IDerObjectIdentifier): String; static;
+
+    /// <summary>Look up the OID of the curve with the given name.</summary>
+    class function GetOid(const AName: String): IDerObjectIdentifier; static;
+
+    /// <summary>Enumerate the available curve names in all the registries.</summary>
     class property Names: TCryptoLibStringArray read GetNames;
 
   end;
@@ -82,77 +72,115 @@ implementation
 
 { TECNamedCurveTable }
 
-class function TECNamedCurveTable.GetByName(const name: String)
-  : IX9ECParameters;
+class function TECNamedCurveTable.GetByName(const AName: String): IX9ECParameters;
 var
-  ecP: IX9ECParameters;
+  LEcP: IX9ECParameters;
 begin
-  ecP := TSecNamedCurves.GetByName(name);
-
-  if (ecP = Nil) then
-  begin
-    ecP := TNistNamedCurves.GetByName(name);
-  end;
-
-  if (ecP = Nil) then
-  begin
-    ecP := TTeleTrusTNamedCurves.GetByName(name);
-  end;
-
-  result := ecP;
+  LEcP := TX962NamedCurves.GetByName(AName);
+  if LEcP = nil then
+    LEcP := TSecNamedCurves.GetByName(AName);
+  if LEcP = nil then
+    LEcP := TNistNamedCurves.GetByName(AName);
+  if LEcP = nil then
+    LEcP := TTeleTrusTNamedCurves.GetByName(AName);
+  if LEcP = nil then
+    LEcP := TECGost3410NamedCurves.GetByName(AName);
+  Result := LEcP;
 end;
 
-class function TECNamedCurveTable.GetByOid(const oid: IDerObjectIdentifier)
-  : IX9ECParameters;
+class function TECNamedCurveTable.GetByNameLazy(const AName: String): IX9ECParametersHolder;
 var
-  ecP: IX9ECParameters;
+  LHolder: IX9ECParametersHolder;
 begin
-  ecP := TSecNamedCurves.GetByOid(oid);
+  LHolder := TX962NamedCurves.GetByNameLazy(AName);
+  if LHolder = nil then
+    LHolder := TSecNamedCurves.GetByNameLazy(AName);
+  if LHolder = nil then
+    LHolder := TNistNamedCurves.GetByNameLazy(AName);
+  if LHolder = nil then
+    LHolder := TTeleTrusTNamedCurves.GetByNameLazy(AName);
+  if LHolder = nil then
+    LHolder := TECGost3410NamedCurves.GetByNameLazy(AName);
+  Result := LHolder;
+end;
+
+class function TECNamedCurveTable.GetByOid(const AOid: IDerObjectIdentifier): IX9ECParameters;
+var
+  LEcP: IX9ECParameters;
+begin
+  LEcP := TX962NamedCurves.GetByOid(AOid);
+  if LEcP = nil then
+    LEcP := TSecNamedCurves.GetByOid(AOid);
   // NOTE: All the NIST curves are currently from SEC, so no point in redundant OID lookup
-
-  if (ecP = Nil) then
-  begin
-    ecP := TTeleTrusTNamedCurves.GetByOid(oid);
-  end;
-
-  result := ecP;
+  if LEcP = nil then
+    LEcP := TTeleTrusTNamedCurves.GetByOid(AOid);
+  if LEcP = nil then
+    LEcP := TECGost3410NamedCurves.GetByOid(AOid);
+  Result := LEcP;
 end;
 
-class function TECNamedCurveTable.GetOid(const name: String)
-  : IDerObjectIdentifier;
+class function TECNamedCurveTable.GetByOidLazy(const AOid: IDerObjectIdentifier): IX9ECParametersHolder;
 var
-  oid: IDerObjectIdentifier;
+  LHolder: IX9ECParametersHolder;
 begin
+  LHolder := TX962NamedCurves.GetByOidLazy(AOid);
+  if LHolder = nil then
+    LHolder := TSecNamedCurves.GetByOidLazy(AOid);
+  // NOTE: All the NIST curves are currently from SEC, so no point in redundant OID lookup
+  if LHolder = nil then
+    LHolder := TTeleTrusTNamedCurves.GetByOidLazy(AOid);
+  if LHolder = nil then
+    LHolder := TECGost3410NamedCurves.GetByOidLazy(AOid);
+  Result := LHolder;
+end;
 
-  oid := TSecNamedCurves.GetOid(name);
+class function TECNamedCurveTable.GetName(const AOid: IDerObjectIdentifier): String;
+var
+  LName: String;
+begin
+  LName := TX962NamedCurves.GetName(AOid);
+  if LName = '' then
+    LName := TSecNamedCurves.GetName(AOid);
+  if LName = '' then
+    LName := TNistNamedCurves.GetName(AOid);
+  if LName = '' then
+    LName := TTeleTrusTNamedCurves.GetName(AOid);
+  if LName = '' then
+    LName := TECGost3410NamedCurves.GetName(AOid);
+  Result := LName;
+end;
 
-  if (oid = Nil) then
-  begin
-    oid := TNistNamedCurves.GetOid(name);
-  end;
-
-  if (oid = Nil) then
-  begin
-    oid := TTeleTrusTNamedCurves.GetOid(name);
-  end;
-
-  result := oid;
+class function TECNamedCurveTable.GetOid(const AName: String): IDerObjectIdentifier;
+var
+  LOid: IDerObjectIdentifier;
+begin
+  LOid := TX962NamedCurves.GetOid(AName);
+  if LOid = nil then
+    LOid := TSecNamedCurves.GetOid(AName);
+  if LOid = nil then
+    LOid := TNistNamedCurves.GetOid(AName);
+  if LOid = nil then
+    LOid := TTeleTrusTNamedCurves.GetOid(AName);
+  if LOid = nil then
+    LOid := TECGost3410NamedCurves.GetOid(AName);
+  Result := LOid;
 end;
 
 class function TECNamedCurveTable.GetNames: TCryptoLibStringArray;
 var
-  temp: TList<String>;
+  LTemp: TList<String>;
 begin
-  temp := TList<String>.Create();
+  LTemp := TList<String>.Create();
   try
-    temp.AddRange(TSecNamedCurves.Names);
-    temp.AddRange(TNistNamedCurves.Names);
-    temp.AddRange(TTeleTrusTNamedCurves.Names);
-    result := temp.ToArray;
+    LTemp.AddRange(TX962NamedCurves.Names);
+    LTemp.AddRange(TSecNamedCurves.Names);
+    LTemp.AddRange(TNistNamedCurves.Names);
+    LTemp.AddRange(TTeleTrusTNamedCurves.Names);
+    LTemp.AddRange(TECGost3410NamedCurves.Names);
+    Result := TCollectionUtilities.ToArray<String>(LTemp);
   finally
-    temp.Free;
+    LTemp.Free;
   end;
-
 end;
 
 end.

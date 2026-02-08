@@ -26,64 +26,43 @@ uses
   Generics.Collections,
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
-  ClpIX9ECAsn1Objects,
+  ClpCollectionUtilities,
   ClpSecNamedCurves,
+  ClpSecObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpIAsn1Objects,
-  ClpSecObjectIdentifiers;
+  ClpIX9ECAsn1Objects,
+  ClpIX9ECParametersHolder;
 
 type
-
-  /// <summary>
-  /// Utility class for fetching curves using their NIST names as published
-  /// in FIPS-PUB 186-3
-  /// </summary>
   TNistNamedCurves = class sealed(TObject)
 
   strict private
-
-  class var
-    FobjIds: TDictionary<String, IDerObjectIdentifier>;
-    Fnames: TDictionary<IDerObjectIdentifier, String>;
+    class var
+      FObjIds: TDictionary<String, IDerObjectIdentifier>;
+      FNames: TDictionary<IDerObjectIdentifier, String>;
 
     class function GetNames: TCryptoLibStringArray; static; inline;
-
-    class procedure DefineCurveAlias(const name: String;
-      const oid: IDerObjectIdentifier); static; inline;
+    class procedure DefineCurveAlias(const AName: String;
+      const AOid: IDerObjectIdentifier); static;
 
     class procedure Boot; static;
-    class constructor CreateNistNamedCurves();
-    class destructor DestroyNistNamedCurves();
+    class constructor CreateNistNamedCurves;
+    class destructor DestroyNistNamedCurves;
 
   public
-
-    class function GetByName(const name: String): IX9ECParameters;
+    class function GetByName(const AName: String): IX9ECParameters;
       static; inline;
-    // /**
-    // * return the X9ECParameters object for the named curve represented by
-    // * the passed in object identifier. Null if the curve isn't present.
-    // *
-    // * @param oid an object identifier representing a named curve, if present.
-    // */
-    class function GetByOid(const oid: IDerObjectIdentifier): IX9ECParameters;
+    class function GetByNameLazy(const AName: String): IX9ECParametersHolder;
       static; inline;
-    // /**
-    // * return the object identifier signified by the passed in name. Null
-    // * if there is no object identifier associated with name.
-    // *
-    // * @return the object identifier associated with name, if present.
-    // */
-    class function GetOid(const name: String): IDerObjectIdentifier;
+    class function GetByOid(const AOid: IDerObjectIdentifier): IX9ECParameters;
       static; inline;
-    // /**
-    // * return the named curve name represented by the given object identifier.
-    // */
-    class function GetName(const oid: IDerObjectIdentifier): String;
+    class function GetByOidLazy(const AOid: IDerObjectIdentifier)
+      : IX9ECParametersHolder; static; inline;
+    class function GetName(const AOid: IDerObjectIdentifier): String;
       static; inline;
-    // /**
-    // * returns an enumeration containing the name strings for curves
-    // * contained in this structure.
-    // */
+    class function GetOid(const AName: String): IDerObjectIdentifier;
+      static; inline;
     class property Names: TCryptoLibStringArray read GetNames;
 
   end;
@@ -92,62 +71,22 @@ implementation
 
 { TNistNamedCurves }
 
-class procedure TNistNamedCurves.DefineCurveAlias(const name: String;
-  const oid: IDerObjectIdentifier);
-begin
-  FobjIds.Add(UpperCase(name), oid);
-  Fnames.Add(oid, name);
-end;
-
-class function TNistNamedCurves.GetByOid(const oid: IDerObjectIdentifier)
-  : IX9ECParameters;
-begin
-  result := TSecNamedCurves.GetByOid(oid);
-end;
-
-class function TNistNamedCurves.GetOid(const name: String)
-  : IDerObjectIdentifier;
-begin
-  if not(FobjIds.TryGetValue(UpperCase(name), result)) then
-  begin
-    result := Nil;
-  end;
-end;
-
-class function TNistNamedCurves.GetByName(const name: String): IX9ECParameters;
+class procedure TNistNamedCurves.DefineCurveAlias(const AName: String;
+  const AOid: IDerObjectIdentifier);
 var
-  oid: IDerObjectIdentifier;
+  LName: String;
 begin
-  oid := GetOid(name);
-  if oid = Nil then
-  begin
-    result := Nil;
-  end
-  else
-  begin
-    result := GetByOid(oid);
-  end;
-
-end;
-
-class function TNistNamedCurves.GetName(const oid
-  : IDerObjectIdentifier): String;
-begin
-  if not(Fnames.TryGetValue(oid, result)) then
-  begin
-    result := '';
-  end;
-end;
-
-class function TNistNamedCurves.GetNames: TCryptoLibStringArray;
-begin
-  result := Fnames.Values.ToArray();
+  if TSecNamedCurves.GetByOidLazy(AOid) = nil then
+    raise EInvalidOperationCryptoLibException.Create('NIST alias OID not in SEC registry');
+  LName := AName;
+  FNames.Add(AOid, LName);
+  FObjIds.Add(LName, AOid);
 end;
 
 class procedure TNistNamedCurves.Boot;
 begin
-  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  Fnames := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+  FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FNames := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
 
   DefineCurveAlias('B-163', TSecObjectIdentifiers.SecT163r2);
   DefineCurveAlias('B-233', TSecObjectIdentifiers.SecT233r1);
@@ -170,13 +109,71 @@ end;
 
 class constructor TNistNamedCurves.CreateNistNamedCurves;
 begin
-  TNistNamedCurves.Boot;
+  Boot;
 end;
 
 class destructor TNistNamedCurves.DestroyNistNamedCurves;
 begin
-  FobjIds.Free;
-  Fnames.Free;
+  FObjIds.Free;
+  FNames.Free;
+end;
+
+class function TNistNamedCurves.GetNames: TCryptoLibStringArray;
+begin
+  Result := TCollectionUtilities.Keys<String, IDerObjectIdentifier>(FObjIds);
+end;
+
+class function TNistNamedCurves.GetByName(const AName: String): IX9ECParameters;
+var
+  LOid: IDerObjectIdentifier;
+begin
+  LOid := GetOid(AName);
+  if LOid = nil then
+    Result := nil
+  else
+    Result := GetByOid(LOid);
+end;
+
+class function TNistNamedCurves.GetByNameLazy(const AName: String)
+  : IX9ECParametersHolder;
+var
+  LOid: IDerObjectIdentifier;
+begin
+  LOid := GetOid(AName);
+  if LOid = nil then
+    Result := nil
+  else
+    Result := GetByOidLazy(LOid);
+end;
+
+class function TNistNamedCurves.GetByOid(const AOid: IDerObjectIdentifier)
+  : IX9ECParameters;
+begin
+  if FNames.ContainsKey(AOid) then
+    Result := TSecNamedCurves.GetByOid(AOid)
+  else
+    Result := nil;
+end;
+
+class function TNistNamedCurves.GetByOidLazy(const AOid: IDerObjectIdentifier)
+  : IX9ECParametersHolder;
+begin
+  if FNames.ContainsKey(AOid) then
+    Result := TSecNamedCurves.GetByOidLazy(AOid)
+  else
+    Result := nil;
+end;
+
+class function TNistNamedCurves.GetName(const AOid: IDerObjectIdentifier): String;
+begin
+  if not FNames.TryGetValue(AOid, Result) then
+    Result := '';
+end;
+
+class function TNistNamedCurves.GetOid(const AName: String): IDerObjectIdentifier;
+begin
+  if not FObjIds.TryGetValue(UpperCase(AName), Result) then
+    Result := nil;
 end;
 
 end.

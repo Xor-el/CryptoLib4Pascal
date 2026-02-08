@@ -22,66 +22,113 @@ unit ClpECGost3410NamedCurves;
 interface
 
 uses
+  SysUtils,
   Generics.Collections,
-  ClpCryptoLibTypes,
-  ClpBigInteger,
+  ClpAsn1Comparers,
+  ClpCryptoLibComparers,
+  ClpCollectionUtilities,
+  ClpEncoders,
   ClpCryptoProObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
+  ClpCryptoLibTypes,
+  ClpBigInteger,
   ClpECCurve,
+  ClpWnafUtilities,
   ClpIECCore,
-  ClpECParameters,
-  ClpIECParameters,
-  ClpIAsn1Objects;
+  ClpIAsn1Objects,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
+  ClpX9ECParametersHolder,
+  ClpIX9ECParametersHolder;
 
 type
-  /// <summary>
-  /// Table of the available named parameters for GOST 3410-2001 / 2012.
-  /// </summary>
+  /// <summary>Elliptic curve registry for GOST 3410-2001 / 2012.</summary>
   TECGost3410NamedCurves = class sealed(TObject)
 
   strict private
-  class var
-    Fparameters: TDictionary<IDerObjectIdentifier, IECDomainParameters>;
-    FobjIds: TDictionary<String, IDerObjectIdentifier>;
-    Fnames: TDictionary<IDerObjectIdentifier, String>;
-
-    class procedure Boot(); static;
-    class constructor CreateECGost3410NamedCurves();
-    class destructor DestroyECGost3410NamedCurves();
+    class var
+      FObjIds: TDictionary<String, IDerObjectIdentifier>;
+      FCurves: TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>;
+      FNames: TDictionary<IDerObjectIdentifier, String>;
 
     class function GetNames: TCryptoLibStringArray; static; inline;
+    class function FromHex(const AHex: String): TBigInteger; static;
+    class function ConfigureBasepoint(const ACurve: IECCurve; const AX,
+      AY: TBigInteger): IX9ECPoint; static;
+    class function ConfigureCurve(const ACurve: IECCurve): IECCurve;
+      static; inline;
+    class procedure DefineCurve(const AName: String;
+      const AOid: IDerObjectIdentifier;
+      const AHolder: IX9ECParametersHolder); static;
+
+    class procedure Boot; static;
+    class constructor CreateECGost3410NamedCurves;
+    class destructor DestroyECGost3410NamedCurves;
 
   public
-    // /**
-    // * return the ECDomainParameters object for the given OID, null if it
-    // * isn't present.
-    // *
-    // * @param oid an object identifier representing a named parameters, if present.
-    // */
-    class function GetByOid(const oid: IDerObjectIdentifier)
-      : IECDomainParameters; static; inline;
-    // /**
-    // * return the ECDomainParameters object for the given OID, null if it
-    // * isn't present.
-    // *
-    // * @param oid an object identifier representing a named parameters, if present.
-    // */
-    class function GetByName(const name: String): IECDomainParameters;
+    class function GetByName(const AName: String): IX9ECParameters;
       static; inline;
-    // /**
-    // * return the named curve name represented by the given object identifier.
-    // */
-    class function GetName(const oid: IDerObjectIdentifier): String;
+    class function GetByNameLazy(const AName: String): IX9ECParametersHolder;
       static; inline;
-
-    class function GetOid(const name: String): IDerObjectIdentifier;
+    class function GetByOid(const AOid: IDerObjectIdentifier): IX9ECParameters;
       static; inline;
-
-    // /**
-    // * returns an enumeration containing the name strings for curves
-    // * contained in this structure.
-    // */
+    class function GetByOidLazy(const AOid: IDerObjectIdentifier)
+      : IX9ECParametersHolder; static; inline;
+    class function GetName(const AOid: IDerObjectIdentifier): String;
+      static; inline;
+    class function GetOid(const AName: String): IDerObjectIdentifier;
+      static; inline;
     class property Names: TCryptoLibStringArray read GetNames;
+
+type
+  THolderGostR34102001CryptoProA = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
+
+  THolderGostR34102001CryptoProB = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
+
+  THolderGostR34102001CryptoProC = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
+
+  THolderIdTc26Gost341012256ParamSetA = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
+
+  THolderIdTc26Gost341012512ParamSetA = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
+
+  THolderIdTc26Gost341012512ParamSetB = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
+
+  THolderIdTc26Gost341012512ParamSetC = class sealed(TX9ECParametersHolder, IX9ECParametersHolder)
+  strict protected
+    function CreateParameters(): IX9ECParameters; override;
+  public
+    class function Instance(): IX9ECParametersHolder; static;
+  end;
 
   end;
 
@@ -89,321 +136,311 @@ implementation
 
 { TECGost3410NamedCurves }
 
-class procedure TECGost3410NamedCurves.Boot;
-var
-  mod_p, mod_q: TBigInteger;
-  curve: IFPCurve;
-  ecParams: IECDomainParameters;
+class function TECGost3410NamedCurves.FromHex(const AHex: String): TBigInteger;
 begin
+  Result := TBigInteger.Create(1, THex.Decode(AHex));
+end;
 
-  Fparameters := TDictionary<IDerObjectIdentifier,
-    IECDomainParameters>.Create();
-  FobjIds := TDictionary<String, IDerObjectIdentifier>.Create();
-  Fnames := TDictionary<IDerObjectIdentifier, String>.Create();
+class function TECGost3410NamedCurves.ConfigureBasepoint(const ACurve: IECCurve;
+  const AX, AY: TBigInteger): IX9ECPoint;
+var
+  LPoint: IECPoint;
+begin
+  LPoint := ACurve.CreatePoint(AX, AY);
+  TWnafUtilities.ConfigureBasepoint(LPoint);
+  Result := TX9ECPoint.Create(LPoint, False);
+end;
 
-  mod_p := TBigInteger.Create
-    ('115792089237316195423570985008687907853269984665640564039457584007913129639319');
-  mod_q := TBigInteger.Create
-    ('115792089237316195423570985008687907853073762908499243225378155805079068850323');
+class function TECGost3410NamedCurves.ConfigureCurve(const ACurve: IECCurve)
+  : IECCurve;
+begin
+  Result := ACurve;
+end;
 
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('115792089237316195423570985008687907853269984665640564039457584007913129639316'),
-    // a
-    TBigInteger.Create('166'), // b
-    mod_q, TBigInteger.One);
+class procedure TECGost3410NamedCurves.DefineCurve(const AName: String;
+  const AOid: IDerObjectIdentifier;
+  const AHolder: IX9ECParametersHolder);
+var
+  LName: String;
+begin
+  LName := AName;
+  FNames.Add(AOid, LName);
+  FCurves.Add(AOid, AHolder);
+  FObjIds.Add(LName, AOid);
+end;
 
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create('1'), // x
-    TBigInteger.Create
-    ('64033881142927202683649881450433473985931760268884941288852745803908878638612')
-    ), // y
-    mod_q);
+class procedure TECGost3410NamedCurves.Boot;
+begin
+  FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FCurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
+  FNames := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
 
-  Fparameters.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProA,
-    ecParams);
-
-  mod_p := TBigInteger.Create
-    ('115792089237316195423570985008687907853269984665640564039457584007913129639319');
-  mod_q := TBigInteger.Create
-    ('115792089237316195423570985008687907853073762908499243225378155805079068850323');
-
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('115792089237316195423570985008687907853269984665640564039457584007913129639316'),
-    TBigInteger.Create('166'), mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create('1'), // x
-    TBigInteger.Create
-    ('64033881142927202683649881450433473985931760268884941288852745803908878638612')
-    ), // y
-    mod_q);
-
-  Fparameters.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchA,
-    ecParams);
-
-  mod_p := TBigInteger.Create
-    ('57896044618658097711785492504343953926634992332820282019728792003956564823193');
-  // p
-  mod_q := TBigInteger.Create
-    ('57896044618658097711785492504343953927102133160255826820068844496087732066703');
-  // q
-
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('57896044618658097711785492504343953926634992332820282019728792003956564823190'),
-    // a
-    TBigInteger.Create
-    ('28091019353058090096996979000309560759124368558014865957655842872397301267595'),
-    // b
-    mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create('1'), // x
-    TBigInteger.Create
-    ('28792665814854611296992347458380284135028636778229113005756334730996303888124')
-    ), // y
-    mod_q); // q
-
-  Fparameters.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProB,
-    ecParams);
-
-  mod_p := TBigInteger.Create
-    ('70390085352083305199547718019018437841079516630045180471284346843705633502619');
-  mod_q := TBigInteger.Create
-    ('70390085352083305199547718019018437840920882647164081035322601458352298396601');
-
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('70390085352083305199547718019018437841079516630045180471284346843705633502616'),
-    TBigInteger.Create('32858'), mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create('0'),
-    TBigInteger.Create
-    ('29818893917731240733471273240314769927240550812383695689146495261604565990247')
-    ), mod_q);
-
-  Fparameters.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchB,
-    ecParams);
-
-  mod_p := TBigInteger.Create
-    ('70390085352083305199547718019018437841079516630045180471284346843705633502619');
-  // p
-  mod_q := TBigInteger.Create
-    ('70390085352083305199547718019018437840920882647164081035322601458352298396601');
-  // q
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('70390085352083305199547718019018437841079516630045180471284346843705633502616'),
-    // a
-    TBigInteger.Create('32858'), // b
-    mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create('0'), // x
-    TBigInteger.Create
-    ('29818893917731240733471273240314769927240550812383695689146495261604565990247')
-    ), // y
-    mod_q); // q
-
-  Fparameters.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProC,
-    ecParams);
-
-  // GOST34.10 2012
-  mod_p := TBigInteger.Create
-    ('115792089237316195423570985008687907853269984665640564039457584007913129639319');
-  // p
-  mod_q := TBigInteger.Create
-    ('115792089237316195423570985008687907853073762908499243225378155805079068850323');
-  // q
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('115792089237316195423570985008687907853269984665640564039457584007913129639316'),
-    // a
-    TBigInteger.Create('166'), // b
-    mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create('1'), // x
-    TBigInteger.Create
-    ('64033881142927202683649881450433473985931760268884941288852745803908878638612')
-    ), // y
-    mod_q); // q
-
-  Fparameters.Add(TRosstandartObjectIdentifiers.
-    IdTc26Gost3410_12_256ParamSetA, ecParams);
-
-  mod_p := TBigInteger.Create
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7',
-    16); // p
-  mod_q := TBigInteger.Create
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF27E69532F48D89116FF22B8D4E0560609B4B38ABFAD2B85DCACDB1411F10B275',
-    16); // q
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC4',
-    16), // a
-    TBigInteger.Create
-    ('E8C2505DEDFC86DDC1BD0B2B6667F1DA34B82574761CB0E879BD081CFD0B6265EE3CB090F30D27614CB4574010DA90DD862EF9D4EBEE4761503190785A71C760',
-    16), // b
-    mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create
-    ('00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003'),
-    // x
-    TBigInteger.Create
-    ('7503CFE87A836AE3A61B8816E25450E6CE5E1C93ACF1ABC1778064FDCBEFA921DF1626BE4FD036E93D75E6A50E3A41E98028FE5FC235F5B889A589CB5215F2A4',
-    16)), // y
-    mod_q); // q
-
-  Fparameters.Add(TRosstandartObjectIdentifiers.
-    IdTc26Gost3410_12_512ParamSetA, ecParams);
-
-  mod_p := TBigInteger.Create
-    ('8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006F',
-    16); // p
-  mod_q := TBigInteger.Create
-    ('800000000000000000000000000000000000000000000000000000000000000149A1EC142565A545ACFDB77BD9D40CFA8B996712101BEA0EC6346C54374F25BD',
-    16); // q
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006C',
-    16), // a
-    TBigInteger.Create
-    ('687D1B459DC841457E3E06CF6F5E2517B97C7D614AF138BCBF85DC806C4B289F3E965D2DB1416D217F8B276FAD1AB69C50F78BEE1FA3106EFB8CCBC7C5140116',
-    16), // b
-    mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create
-    ('00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002'),
-    // x
-    TBigInteger.Create
-    ('1A8F7EDA389B094C2C071E3647A8940F3C123B697578C213BE6DD9E6C8EC7335DCB228FD1EDF4A39152CBCAAF8C0398828041055F94CEEEC7E21340780FE41BD',
-    16)), // y
-    mod_q); // q
-
-  Fparameters.Add(TRosstandartObjectIdentifiers.
-    IdTc26Gost3410_12_512ParamSetB, ecParams);
-
-  mod_p := TBigInteger.Create
-    ('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7',
-    16); // p
-  mod_q := TBigInteger.Create
-    ('3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC98CDBA46506AB004C33A9FF5147502CC8EDA9E7A769A12694623CEF47F023ED',
-    16); // q
-  curve := TFpCurve.Create(mod_p, // p
-    TBigInteger.Create
-    ('DC9203E514A721875485A529D2C722FB187BC8980EB866644DE41C68E143064546E861C0E2C9EDD92ADE71F46FCF50FF2AD97F951FDA9F2A2EB6546F39689BD3',
-    16), // a
-    TBigInteger.Create
-    ('B4C4EE28CEBC6C2C8AC12952CF37F16AC7EFB6A9F69F4B57FFDA2E4F0DE5ADE038CBC2FFF719D2C18DE0284B8BFEF3B52B8CC7A5F5BF0A3C8D2319A5312557E1',
-    16), // b
-    mod_q, TBigInteger.One);
-
-  ecParams := TECDomainParameters.Create(curve,
-    curve.CreatePoint(TBigInteger.Create
-    ('E2E31EDFC23DE7BDEBE241CE593EF5DE2295B7A9CBAEF021D385F7074CEA043AA27272A7AE602BF2A7B9033DB9ED3610C6FB85487EAE97AAC5BC7928C1950148',
-    16), // x
-    TBigInteger.Create
-    ('F5CE40D95B5EB899ABBCCFF5911CB8577939804D6527378B8C108C3D2090FF9BE18E2D33E3021ED2EF32D85822423B6304F726AA854BAE07D0396E9A9ADDC40F',
-    16)), // y
-    mod_q); // q
-
-  Fparameters.Add(TRosstandartObjectIdentifiers.
-    IdTc26Gost3410_12_512ParamSetC, ecParams);
-
-  FobjIds.Add('GostR3410-2001-CryptoPro-A',
-    TCryptoProObjectIdentifiers.GostR3410x2001CryptoProA);
-  FobjIds.Add('GostR3410-2001-CryptoPro-B',
-    TCryptoProObjectIdentifiers.GostR3410x2001CryptoProB);
-  FobjIds.Add('GostR3410-2001-CryptoPro-C',
-    TCryptoProObjectIdentifiers.GostR3410x2001CryptoProC);
-  FobjIds.Add('GostR3410-2001-CryptoPro-XchA',
-    TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchA);
-  FobjIds.Add('GostR3410-2001-CryptoPro-XchB',
-    TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchB);
-  FobjIds.Add('Tc26-Gost-3410-12-256-paramSetA',
-    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetA);
-  FobjIds.Add('Tc26-Gost-3410-12-512-paramSetA',
-    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetA);
-  FobjIds.Add('Tc26-Gost-3410-12-512-paramSetB',
-    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetB);
-  FobjIds.Add('Tc26-Gost-3410-12-512-paramSetC',
-    TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetC);
-
-  Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProA,
-    'GostR3410-2001-CryptoPro-A');
-  Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProB,
-    'GostR3410-2001-CryptoPro-B');
-  Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProC,
-    'GostR3410-2001-CryptoPro-C');
-  Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchA,
-    'GostR3410-2001-CryptoPro-XchA');
-  Fnames.Add(TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchB,
-    'GostR3410-2001-CryptoPro-XchB');
-  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetA,
-    'Tc26-Gost-3410-12-256-paramSetA');
-  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetA,
-    'Tc26-Gost-3410-12-512-paramSetA');
-  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetB,
-    'Tc26-Gost-3410-12-512-paramSetB');
-  Fnames.Add(TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetC,
-    'Tc26-Gost-3410-12-512-paramSetC');
+  DefineCurve('GostR3410-2001-CryptoPro-A', TCryptoProObjectIdentifiers.GostR3410x2001CryptoProA, THolderGostR34102001CryptoProA.Instance);
+  DefineCurve('GostR3410-2001-CryptoPro-B', TCryptoProObjectIdentifiers.GostR3410x2001CryptoProB, THolderGostR34102001CryptoProB.Instance);
+  DefineCurve('GostR3410-2001-CryptoPro-C', TCryptoProObjectIdentifiers.GostR3410x2001CryptoProC, THolderGostR34102001CryptoProC.Instance);
+  DefineCurve('GostR3410-2001-CryptoPro-XchA', TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchA, THolderGostR34102001CryptoProA.Instance);
+  DefineCurve('GostR3410-2001-CryptoPro-XchB', TCryptoProObjectIdentifiers.GostR3410x2001CryptoProXchB, THolderGostR34102001CryptoProC.Instance);
+  DefineCurve('Tc26-Gost-3410-12-256-paramSetA', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetA, THolderIdTc26Gost341012256ParamSetA.Instance);
+  DefineCurve('Tc26-Gost-3410-12-256-paramSetB', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetB, THolderGostR34102001CryptoProA.Instance);
+  DefineCurve('Tc26-Gost-3410-12-256-paramSetC', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetC, THolderGostR34102001CryptoProB.Instance);
+  DefineCurve('Tc26-Gost-3410-12-256-paramSetD', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_256ParamSetD, THolderGostR34102001CryptoProC.Instance);
+  DefineCurve('Tc26-Gost-3410-12-512-paramSetA', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetA, THolderIdTc26Gost341012512ParamSetA.Instance);
+  DefineCurve('Tc26-Gost-3410-12-512-paramSetB', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetB, THolderIdTc26Gost341012512ParamSetB.Instance);
+  DefineCurve('Tc26-Gost-3410-12-512-paramSetC', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetC, THolderIdTc26Gost341012512ParamSetC.Instance);
 end;
 
 class constructor TECGost3410NamedCurves.CreateECGost3410NamedCurves;
 begin
-  TECGost3410NamedCurves.Boot;
+  Boot;
 end;
 
 class destructor TECGost3410NamedCurves.DestroyECGost3410NamedCurves;
 begin
-  Fparameters.Free;
-  FobjIds.Free;
-  Fnames.Free;
-end;
-
-class function TECGost3410NamedCurves.GetByName(const name: String)
-  : IECDomainParameters;
-var
-  oid: IDerObjectIdentifier;
-begin
-  if (FobjIds.TryGetValue(name, oid)) then
-  begin
-    Fparameters.TryGetValue(oid, Result);
-    Exit;
-  end;
-  Result := Nil;
-end;
-
-class function TECGost3410NamedCurves.GetByOid(const oid: IDerObjectIdentifier)
-  : IECDomainParameters;
-begin
-  Fparameters.TryGetValue(oid, Result);
-end;
-
-class function TECGost3410NamedCurves.GetName
-  (const oid: IDerObjectIdentifier): String;
-begin
-  Fnames.TryGetValue(oid, Result);
+  FObjIds.Free;
+  FCurves.Free;
+  FNames.Free;
 end;
 
 class function TECGost3410NamedCurves.GetNames: TCryptoLibStringArray;
 begin
-  Result := Fnames.Values.ToArray();
+  Result := TCollectionUtilities.Keys<String, IDerObjectIdentifier>(FObjIds);
 end;
 
-class function TECGost3410NamedCurves.GetOid(const name: String)
-  : IDerObjectIdentifier;
+class function TECGost3410NamedCurves.GetByName(const AName: String): IX9ECParameters;
+var
+  LOid: IDerObjectIdentifier;
 begin
-  if (not(FobjIds.TryGetValue(name, Result))) then
-  begin
-    Result := Nil;
-  end;
+  LOid := GetOid(AName);
+  if LOid = nil then
+    Result := nil
+  else
+    Result := GetByOid(LOid);
+end;
+
+class function TECGost3410NamedCurves.GetByNameLazy(const AName: String)
+  : IX9ECParametersHolder;
+var
+  LOid: IDerObjectIdentifier;
+begin
+  LOid := GetOid(AName);
+  if LOid = nil then
+    Result := nil
+  else
+    Result := GetByOidLazy(LOid);
+end;
+
+class function TECGost3410NamedCurves.GetByOid(const AOid: IDerObjectIdentifier)
+  : IX9ECParameters;
+var
+  LHolder: IX9ECParametersHolder;
+begin
+  LHolder := GetByOidLazy(AOid);
+  if LHolder = nil then
+    Result := nil
+  else
+    Result := LHolder.Parameters;
+end;
+
+class function TECGost3410NamedCurves.GetByOidLazy(const AOid: IDerObjectIdentifier)
+  : IX9ECParametersHolder;
+begin
+  Result := TCollectionUtilities.GetValueOrNull<IDerObjectIdentifier, IX9ECParametersHolder>(FCurves, AOid);
+end;
+
+class function TECGost3410NamedCurves.GetName(const AOid: IDerObjectIdentifier): String;
+begin
+  if not FNames.TryGetValue(AOid, Result) then
+    Result := '';
+end;
+
+class function TECGost3410NamedCurves.GetOid(const AName: String): IDerObjectIdentifier;
+begin
+  if not FObjIds.TryGetValue(UpperCase(AName), Result) then
+    Result := nil;
+end;
+
+{ TECGost3410NamedCurves.THolderGostR34102001CryptoProA }
+
+function TECGost3410NamedCurves.THolderGostR34102001CryptoProA.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97');
+  LModQ := TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6C611070995AD10045841B09B761B893');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD94'),
+    TECGost3410NamedCurves.FromHex('A6'),
+    LModQ, TBigInteger.One, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve, TBigInteger.One,
+    TECGost3410NamedCurves.FromHex('8D91E471E0989CDA27DF505A453F2B7635294F2DDF23E3B122ACC99C9E9F1E14'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderGostR34102001CryptoProA.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderGostR34102001CryptoProA.Create();
+end;
+
+{ TECGost3410NamedCurves.THolderGostR34102001CryptoProB }
+
+function TECGost3410NamedCurves.THolderGostR34102001CryptoProB.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('8000000000000000000000000000000000000000000000000000000000000C99');
+  LModQ := TECGost3410NamedCurves.FromHex('800000000000000000000000000000015F700CFFF1A624E5E497161BCC8A198F');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('8000000000000000000000000000000000000000000000000000000000000C96'),
+    TECGost3410NamedCurves.FromHex('3E1AF419A269A5F866A7D3C25C3DF80AE979259373FF2B182F49D4CE7E1BBC8B'),
+    LModQ, TBigInteger.One, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve, TBigInteger.One,
+    TECGost3410NamedCurves.FromHex('3FA8124359F96680B83D1C3EB2C070E5C545C9858D03ECFB744BF8D717717EFC'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderGostR34102001CryptoProB.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderGostR34102001CryptoProB.Create();
+end;
+
+{ TECGost3410NamedCurves.THolderGostR34102001CryptoProC }
+
+function TECGost3410NamedCurves.THolderGostR34102001CryptoProC.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('9B9F605F5A858107AB1EC85E6B41C8AACF846E86789051D37998F7B9022D759B');
+  LModQ := TECGost3410NamedCurves.FromHex('9B9F605F5A858107AB1EC85E6B41C8AA582CA3511EDDFB74F02F3A6598980BB9');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('9B9F605F5A858107AB1EC85E6B41C8AACF846E86789051D37998F7B9022D7598'),
+    TECGost3410NamedCurves.FromHex('805A'),
+    LModQ, TBigInteger.One, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve, TBigInteger.Zero,
+    TECGost3410NamedCurves.FromHex('41ECE55743711A8C3CBF3783CD08C0EE4D4DC440D4641A8F366E550DFDB3BB67'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderGostR34102001CryptoProC.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderGostR34102001CryptoProC.Create();
+end;
+
+{ TECGost3410NamedCurves.THolderIdTc26Gost341012256ParamSetA }
+
+function TECGost3410NamedCurves.THolderIdTc26Gost341012256ParamSetA.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD97');
+  LModQ := TECGost3410NamedCurves.FromHex('400000000000000000000000000000000FD8CDDFC87B6635C115AF556C360C67');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('C2173F1513981673AF4892C23035A27CE25E2013BF95AA33B22C656F277E7335'),
+    TECGost3410NamedCurves.FromHex('295F9BAE7428ED9CCC20E7C359A9D41A22FCCD9108E17BF7BA9337A6F8AE9513'),
+    LModQ, TBigInteger.Four, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve,
+    TECGost3410NamedCurves.FromHex('91E38443A5E82C0D880923425712B2BB658B9196932E02C78B2582FE742DAA28'),
+    TECGost3410NamedCurves.FromHex('32879423AB1A0375895786C4BB46E9565FDE0B5344766740AF268ADB32322E5C'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderIdTc26Gost341012256ParamSetA.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderIdTc26Gost341012256ParamSetA.Create();
+end;
+
+{ TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetA }
+
+function TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetA.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7');
+  LModQ := TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF27E69532F48D89116FF22B8D4E0560609B4B38ABFAD2B85DCACDB1411F10B275');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC4'),
+    TECGost3410NamedCurves.FromHex('E8C2505DEDFC86DDC1BD0B2B6667F1DA34B82574761CB0E879BD081CFD0B6265EE3CB090F30D27614CB4574010DA90DD862EF9D4EBEE4761503190785A71C760'),
+    LModQ, TBigInteger.One, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve, TBigInteger.Three,
+    TECGost3410NamedCurves.FromHex('7503CFE87A836AE3A61B8816E25450E6CE5E1C93ACF1ABC1778064FDCBEFA921DF1626BE4FD036E93D75E6A50E3A41E98028FE5FC235F5B889A589CB5215F2A4'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetA.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderIdTc26Gost341012512ParamSetA.Create();
+end;
+
+{ TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetB }
+
+function TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetB.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006F');
+  LModQ := TECGost3410NamedCurves.FromHex('800000000000000000000000000000000000000000000000000000000000000149A1EC142565A545ACFDB77BD9D40CFA8B996712101BEA0EC6346C54374F25BD');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006C'),
+    TECGost3410NamedCurves.FromHex('687D1B459DC841457E3E06CF6F5E2517B97C7D614AF138BCBF85DC806C4B289F3E965D2DB1416D217F8B276FAD1AB69C50F78BEE1FA3106EFB8CCBC7C5140116'),
+    LModQ, TBigInteger.One, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve, TBigInteger.Two,
+    TECGost3410NamedCurves.FromHex('1A8F7EDA389B094C2C071E3647A8940F3C123B697578C213BE6DD9E6C8EC7335DCB228FD1EDF4A39152CBCAAF8C0398828041055F94CEEEC7E21340780FE41BD'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetB.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderIdTc26Gost341012512ParamSetB.Create();
+end;
+
+{ TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetC }
+
+function TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetC.CreateParameters: IX9ECParameters;
+var
+  LBaseCurve: IECCurve;
+  LCurve: IECCurve;
+  LG: IX9ECPoint;
+  LModP, LModQ: TBigInteger;
+begin
+  LModP := TECGost3410NamedCurves.FromHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDC7');
+  LModQ := TECGost3410NamedCurves.FromHex('3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC98CDBA46506AB004C33A9FF5147502CC8EDA9E7A769A12694623CEF47F023ED');
+  LBaseCurve := TFpCurve.Create(LModP,
+    TECGost3410NamedCurves.FromHex('DC9203E514A721875485A529D2C722FB187BC8980EB866644DE41C68E143064546E861C0E2C9EDD92ADE71F46FCF50FF2AD97F951FDA9F2A2EB6546F39689BD3'),
+    TECGost3410NamedCurves.FromHex('B4C4EE28CEBC6C2C8AC12952CF37F16AC7EFB6A9F69F4B57FFDA2E4F0DE5ADE038CBC2FFF719D2C18DE0284B8BFEF3B52B8CC7A5F5BF0A3C8D2319A5312557E1'),
+    LModQ, TBigInteger.Four, True);
+  LCurve := TECGost3410NamedCurves.ConfigureCurve(LBaseCurve);
+  LG := TECGost3410NamedCurves.ConfigureBasepoint(LCurve,
+    TECGost3410NamedCurves.FromHex('E2E31EDFC23DE7BDEBE241CE593EF5DE2295B7A9CBAEF021D385F7074CEA043AA27272A7AE602BF2A7B9033DB9ED3610C6FB85487EAE97AAC5BC7928C1950148'),
+    TECGost3410NamedCurves.FromHex('F5CE40D95B5EB899ABBCCFF5911CB8577939804D6527378B8C108C3D2090FF9BE18E2D33E3021ED2EF32D85822423B6304F726AA854BAE07D0396E9A9ADDC40F'));
+  Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor);
+end;
+
+class function TECGost3410NamedCurves.THolderIdTc26Gost341012512ParamSetC.Instance: IX9ECParametersHolder;
+begin
+  Result := THolderIdTc26Gost341012512ParamSetC.Create();
 end;
 
 end.

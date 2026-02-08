@@ -44,7 +44,15 @@ type
     /// <summary>
     /// Create a proxy array from an enumerable collection (like TDictionary.Keys).
     /// </summary>
-    class function Proxy<T>(const AEnumerable: IEnumerable<T>): TCryptoLibGenericArray<T>; static;
+    class function Proxy<T>(const AEnumerable: TEnumerable<T>): TCryptoLibGenericArray<T>; static;
+    /// <summary>
+    /// Return all keys of the dictionary as an array.
+    /// </summary>
+    class function Keys<K, V>(const AD: TDictionary<K, V>): TCryptoLibGenericArray<K>; static;
+    /// <summary>
+    /// Return all values of the dictionary as an array.
+    /// </summary>
+    class function Values<K, V>(const AD: TDictionary<K, V>): TCryptoLibGenericArray<V>; static;
     /// <summary>
     /// Get the value for AKey if it exists, otherwise Default(V) (e.g. '' for string, nil for class/interface).
     /// </summary>
@@ -99,7 +107,7 @@ begin
   end;
 end;
 
-class function TCollectionUtilities.Proxy<T>(const AEnumerable: IEnumerable<T>): TCryptoLibGenericArray<T>;
+class function TCollectionUtilities.Proxy<T>(const AEnumerable: TEnumerable<T>): TCryptoLibGenericArray<T>;
 var
   LList: TList<T>;
   LItem: T;
@@ -110,10 +118,20 @@ begin
     begin
       LList.Add(LItem);
     end;
-    Result := LList.ToArray();
+    Result := ToArray<T>(LList);
   finally
     LList.Free;
   end;
+end;
+
+class function TCollectionUtilities.Keys<K, V>(const AD: TDictionary<K, V>): TCryptoLibGenericArray<K>;
+begin
+  Result := Proxy<K>(AD.Keys);
+end;
+
+class function TCollectionUtilities.Values<K, V>(const AD: TDictionary<K, V>): TCryptoLibGenericArray<V>;
+begin
+  Result := Proxy<V>(AD.Values);
 end;
 
 class function TCollectionUtilities.GetValueOrNull<K, V>(const D: TDictionary<K, V>;

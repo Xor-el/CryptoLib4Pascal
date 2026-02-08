@@ -587,7 +587,8 @@ uses
   ClpEndoUtilities in '..\..\CryptoLib\src\Math\EC\Endo\ClpEndoUtilities.pas',
   ClpWNafUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafUtilities.pas',
   ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
-  ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas';
+  ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas',
+  ClpX962NamedCurves in '..\..\CryptoLib\src\Asn1\X9\ClpX962NamedCurves.pas';
 
 begin
 

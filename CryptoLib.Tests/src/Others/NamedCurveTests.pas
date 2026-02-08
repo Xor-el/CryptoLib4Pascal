@@ -169,17 +169,8 @@ end;
 function TTestNamedCurve.GetCurveParameters(const name: String)
   : IECDomainParameters;
 var
-  ecdp: IECDomainParameters;
   ecP: IX9ECParameters;
 begin
-  ecdp := TECGost3410NamedCurves.GetByName(name);
-
-  if (ecdp <> Nil) then
-  begin
-    result := ecdp;
-    Exit;
-  end;
-
   ecP := TECNamedCurveTable.GetByName(name);
 
   if (ecP = Nil) then

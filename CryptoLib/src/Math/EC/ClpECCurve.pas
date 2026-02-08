@@ -254,6 +254,7 @@ type
 
   public
     const F2M_DEFAULT_COORDS = TECCurveConstants.COORD_LAMBDA_PROJECTIVE;
+    constructor Create(AM, AK: Int32; const AA, AB: TBigInteger); overload; deprecated;
     constructor Create(AM, AK: Int32; const AA, AB, AOrder, ACofactor: TBigInteger); overload;
     constructor Create(AM, AK1, AK2, AK3: Int32; const AA, AB, AOrder, ACofactor: TBigInteger); overload;
     constructor Create(AM, AK1, AK2, AK3: Int32; const AA, AB: IECFieldElement;
@@ -1286,6 +1287,11 @@ begin
 end;
 
 { TF2mCurve }
+
+constructor TF2mCurve.Create(AM, AK: Int32; const AA, AB: TBigInteger);
+begin
+  Create(AM, AK, 0, 0, AA, AB, TBigInteger.GetDefault(), TBigInteger.GetDefault());
+end;
 
 constructor TF2mCurve.Create(AM, AK: Int32; const AA, AB, AOrder, ACofactor: TBigInteger);
 begin
