@@ -1368,18 +1368,28 @@ var
   LKpg: IAsymmetricCipherKeyPairGenerator;
   LKp: IAsymmetricCipherKeyPair;
   LCrlGen: IX509V2CrlGenerator;
-  LCrl, LNewCrl: IX509Crl;
+  LCrl, LNewCrl, LReadCrl: IX509Crl;
   LEntry: IX509CrlEntry;
   LExtOids: TList<IDerObjectIdentifier>;
   LExtValues: TList<IX509Extension>;
   LEntryExts: IX509Extensions;
   LCrlReason: ICrlReason;
   LRevoked: TCryptoLibGenericArray<IX509CrlEntry>;
+  LExt: IAsn1OctetString;
+  LReasonCode: IDerEnumerated;
+  LReason: ICrlReason;
+  LAuthKeyId: IAuthorityKeyIdentifier;
+  LCol: TCryptoLibGenericArray<IX509Crl>;
   I: Int32;
+  LCount: Int32;
   LOneFound, LTwoFound: Boolean;
   LUtc: TDateTime;
 begin
+  LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
+  LKpg.Init(TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf($10001), FSecureRandom, 768, 25) as IRsaKeyGenerationParameters);
   LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LKp := LKpg.GenerateKeyPair();
+
   LExtOids := TList<IDerObjectIdentifier>.Create;
   LExtValues := TList<IX509Extension>.Create;
   try
@@ -1387,10 +1397,6 @@ begin
     LExtOids.Add(TX509Extensions.ReasonCode);
     LExtValues.Add(TX509Extension.Create(False, TDerOctetString.Create(LCrlReason.GetEncoded()) as IDerOctetString) as IX509Extension);
     LEntryExts := TX509Extensions.Create(LExtOids, LExtValues);
-
-    LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
-    LKpg.Init(TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf($10001), FSecureRandom, 768, 25) as IRsaKeyGenerationParameters);
-    LKp := LKpg.GenerateKeyPair();
 
     LCrlGen := TX509V2CrlGenerator.Create;
     LCrlGen.SetIssuerDN(TX509Name.Create('CN=Test CA') as IX509Name);
@@ -1401,6 +1407,32 @@ begin
       TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public)));
     LCrl := LCrlGen.Generate(TAsn1SignatureFactory.Create('SHA256WithRSAEncryption', LKp.Private, nil) as ISignatureFactory);
 
+    if not LCrl.IssuerDN.Equivalent(TX509Name.Create('CN=Test CA') as IX509Name, True) then
+      Fail('failed CRL issuer test');
+
+    LAuthKeyId := TX509ExtensionUtilities.GetAuthorityKeyIdentifier(LCrl.GetCertificateList.Extensions);
+    if LAuthKeyId = nil then
+      Fail('failed to find CRL extension');
+
+    LEntry := LCrl.GetRevokedCertificate(TBigInteger.One);
+    if LEntry = nil then
+      Fail('failed to find CRL entry');
+
+    if not LEntry.SerialNumber.Equals(TBigInteger.One) then
+      Fail('CRL cert serial number does not match');
+
+    if not LEntry.HasExtensions then
+      Fail('CRL entry extension not found');
+
+    LExt := LEntry.GetExtensionValue(TX509Extensions.ReasonCode);
+    if LExt = nil then
+      Fail('CRL entry reasonCode not found');
+    LReasonCode := TX509ExtensionUtilities.FromExtensionValue(LExt) as IDerEnumerated;
+    LReason := TCrlReason.Create(LReasonCode);
+    if not LReason.HasValue(TCrlReason.PrivilegeWithdrawn) then
+      Fail('CRL entry reasonCode wrong');
+
+    LUtc := TTimeZone.Local.ToUniversalTime(Now);
     LCrlGen := TX509V2CrlGenerator.Create;
     LCrlGen.SetIssuerDN(TX509Name.Create('CN=Test CA') as IX509Name);
     LCrlGen.SetThisUpdateUtc(LUtc);
@@ -1411,6 +1443,7 @@ begin
       TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public)));
     LNewCrl := LCrlGen.Generate(TAsn1SignatureFactory.Create('SHA256WithRSAEncryption', LKp.Private, nil) as ISignatureFactory);
 
+    LCount := 0;
     LOneFound := False;
     LTwoFound := False;
     LRevoked := LNewCrl.GetRevokedCertificates();
@@ -1418,12 +1451,34 @@ begin
       for I := 0 to System.High(LRevoked) do
       begin
         if LRevoked[I].SerialNumber.Equals(TBigInteger.One) then
-          LOneFound := True
+        begin
+          LOneFound := True;
+          LExt := LEntry.GetExtensionValue(TX509Extensions.ReasonCode);
+          if LExt = nil then
+            Fail('CRL entry reasonCode not found');
+          LReasonCode := TX509ExtensionUtilities.FromExtensionValue(LExt) as IDerEnumerated;
+          LReason := TCrlReason.Create(LReasonCode);
+          if not LReason.HasValue(TCrlReason.PrivilegeWithdrawn) then
+            Fail('CRL entry reasonCode wrong');
+        end
         else if LRevoked[I].SerialNumber.Equals(TBigInteger.Two) then
           LTwoFound := True;
+        Inc(LCount);
       end;
-    if not LOneFound or not LTwoFound then
-      Fail('CRL entry test failed');
+
+    if LCount <> 2 then
+      Fail('wrong number of CRLs found');
+
+    if not (LOneFound and LTwoFound) then
+      Fail('wrong CRLs found in copied list');
+
+    LReadCrl := TX509CrlParser.Create.ReadCrl(LNewCrl.GetEncoded());
+    if LReadCrl = nil then
+      Fail('crl not returned!');
+
+    LCol := TX509CrlParser.Create.ReadCrls(LNewCrl.GetEncoded());
+    if Length(LCol) <> 1 then
+      Fail('wrong number of CRLs found in collection');
   finally
     LExtOids.Free;
     LExtValues.Free;
@@ -1438,7 +1493,6 @@ var
   LCrl: IX509Crl;
   LCertList: TCryptoLibGenericArray<IX509Certificate>;
   LCrlList: TCryptoLibGenericArray<IX509Crl>;
-  LStream: TStringStream;
   LBytes: TBytes;
 begin
   LBytes := TEncoding.ASCII.GetBytes(CERTIFICATE_1_PEM);
@@ -2033,12 +2087,13 @@ begin
   LRootCrlBin := DecodeBase64(RootCrlB64);
   LAttrCert := DecodeBase64(AttrCertB64);
 
-  LDataOid := TDerObjectIdentifier.Create('1.2.840.113549.1.7.1');
+  LDataOid := TPkcsObjectIdentifiers.Data;
   LContentInfo := TContentInfo.Create(LDataOid, nil);
   LRootCertObj := TAsn1Object.FromByteArray(LRootCertBin) as IAsn1Encodable;
   LTaggedAttr := TDerTaggedObject.Create(False, 2, TAsn1Object.FromByteArray(LAttrCert) as IAsn1Encodable);
   LCertSet := TDerSet.Create([LRootCertObj, LTaggedAttr]);
-  LCrlSet := TDerSet.Create([TAsn1Object.FromByteArray(LRootCrlBin) as IAsn1Encodable]);
+  LRootCrlObj := TAsn1Object.FromByteArray(LRootCrlBin) as IAsn1Encodable;
+  LCrlSet := TDerSet.Create(LRootCrlObj);
   LSigData := TSignedData.Create(
     TDerInteger.One,
     TDerSet.Empty,
