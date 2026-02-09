@@ -876,7 +876,7 @@ end;
 
 constructor TFp.Create;
 begin
-  Fq := TBigInteger.Create('29');
+  Fq := TBigInteger.Create('1063');
 
   Fa := TBigInteger.Create('4');
 
@@ -890,7 +890,7 @@ begin
 
   FInfinity := Fcurve.infinity;
 
-  FpointSource := TCryptoLibInt32Array.Create(5, 22, 16, 27, 13, 6, 14, 6);
+  FpointSource := TCryptoLibInt32Array.Create(1, 5, 4, 10, 234, 1024, 817, 912);
 
   System.SetLength(Fp, System.Length(FpointSource) div 2);
 

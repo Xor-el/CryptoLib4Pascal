@@ -522,7 +522,7 @@ var
 begin
   if AK.SignValue = 0 then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
   L3k := AK.ShiftLeft(1).Add(AK);
@@ -552,7 +552,7 @@ class function TWNafUtilities.GenerateWindowNaf(AWidth: Int32;
 var
   LPow2, LMask, LSign, LLength, LPos: Int32;
   LK: TBigInteger;
-  LDigit: Int32;
+  LDigit, LResultLength: Int32;
   LCarry: Boolean;
 begin
   if AWidth = 2 then
@@ -564,10 +564,12 @@ begin
     raise EArgumentCryptoLibException.Create('must be in the range [2, 8]');
   if AK.SignValue = 0 then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
-  System.SetLength(Result, AK.BitLength + 1);
+  LResultLength := AK.BitLength + 1;
+  System.SetLength(Result, LResultLength);
+  TArrayUtilities.Fill<Byte>(Result, 0, LResultLength, Byte(0));
   LPow2 := 1 shl AWidth;
   LMask := LPow2 - 1;
   LSign := TBitOperations.Asr32(LPow2, 1);
@@ -609,6 +611,7 @@ var
 begin
   LDigits := Math.Max(AG.BitLength, AH.BitLength) + 1;
   System.SetLength(LJsf, LDigits);
+  TArrayUtilities.Fill<Byte>(LJsf, 0, LDigits, Byte(0));
   LK0 := AG;
   LK1 := AH;
   LJ := 0;
@@ -683,18 +686,20 @@ class function TWNafUtilities.GenerateCompactNaf(const AK: TBigInteger): TCrypto
 var
   L3k, LDiff: TBigInteger;
   LBits, LHighBit, LLength, LZeroes, LI: Int32;
-  LDigit: Int32;
+  LDigit, LResultLength: Int32;
 begin
   if TBitOperations.Asr32(AK.BitLength, 16) <> 0 then
     raise EArgumentCryptoLibException.Create('must have bitlength < 2^16');
   if AK.SignValue = 0 then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
   L3k := AK.ShiftLeft(1).Add(AK);
   LBits := L3k.BitLength;
-  System.SetLength(Result, TBitOperations.Asr32(LBits, 1));
+  LResultLength := TBitOperations.Asr32(LBits, 1);
+  System.SetLength(Result, LResultLength);
+  TArrayUtilities.Fill<Int32>(Result, 0, LResultLength, Int32(0));
   LDiff := L3k.&Xor(AK);
   LHighBit := LBits - 1;
   LLength := 0;
@@ -726,7 +731,7 @@ end;
 class function TWNafUtilities.GenerateCompactWindowNaf(AWidth: Int32;
   const AK: TBigInteger): TCryptoLibInt32Array;
 var
-  LPow2, LMask, LSign, LLength, LPos, LDigit, LZeroes: Int32;
+  LPow2, LMask, LSign, LLength, LPos, LDigit, LZeroes, LResultLength: Int32;
   LK: TBigInteger;
   LCarry: Boolean;
 begin
@@ -741,10 +746,12 @@ begin
     raise EArgumentCryptoLibException.Create('must have bitlength < 2^16');
   if AK.SignValue = 0 then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
-  System.SetLength(Result, AK.BitLength div AWidth + 1);
+  LResultLength := AK.BitLength div AWidth + 1;
+  System.SetLength(Result, LResultLength);
+  TArrayUtilities.Fill<Int32>(Result, 0, LResultLength, Int32(0));
   LPow2 := 1 shl AWidth;
   LMask := LPow2 - 1;
   LSign := TBitOperations.Asr32(LPow2, 1);

@@ -75,9 +75,14 @@ type
     function GetCurveCoordinateSystem: Int32; virtual;
     function CreateScaledPoint(const ASx, ASy: IECFieldElement): IECPoint; virtual;
 
-    function RawXCoord: IECFieldElement; inline;
-    function RawYCoord: IECFieldElement; inline;
-    function RawZCoords: TCryptoLibGenericArray<IECFieldElement>; inline;
+    function GetRawXCoord: IECFieldElement; inline;
+    function GetRawYCoord: IECFieldElement; inline;
+    function GetRawZCoords: TCryptoLibGenericArray<IECFieldElement>; inline;
+
+    property RawXCoord: IECFieldElement read GetRawXCoord;
+    property RawYCoord: IECFieldElement read GetRawYCoord;
+    property RawZCoords: TCryptoLibGenericArray<IECFieldElement> read GetRawZCoords;
+
     procedure CheckNormalized; virtual;
 
     function Detach: IECPoint; virtual; abstract;  // called from GetDetachedPoint on normalized point
@@ -96,8 +101,6 @@ type
     function GetYCoord: IECFieldElement; virtual;
     property XCoord: IECFieldElement read GetXCoord;
     property YCoord: IECFieldElement read GetYCoord;
-    function GetRawXCoord: IECFieldElement; virtual;
-    function GetRawYCoord: IECFieldElement; virtual;
     function GetZCoord(AIndex: Int32): IECFieldElement; virtual;
     function GetZCoords: TCryptoLibGenericArray<IECFieldElement>; virtual;
 
@@ -326,27 +329,17 @@ begin
     Result := FCurve.CoordinateSystem;
 end;
 
-function TECPoint.RawXCoord: IECFieldElement;
+function TECPoint.GetRawXCoord: IECFieldElement;
 begin
   Result := FX;
 end;
 
-function TECPoint.RawYCoord: IECFieldElement;
+function TECPoint.GetRawYCoord: IECFieldElement;
 begin
   Result := FY;
 end;
 
-function TECPoint.GetRawXCoord: IECFieldElement;
-begin
-  Result := RawXCoord;
-end;
-
-function TECPoint.GetRawYCoord: IECFieldElement;
-begin
-  Result := RawYCoord;
-end;
-
-function TECPoint.RawZCoords: TCryptoLibGenericArray<IECFieldElement>;
+function TECPoint.GetRawZCoords: TCryptoLibGenericArray<IECFieldElement>;
 begin
   Result := FZs;
 end;
@@ -454,7 +447,7 @@ var
   LZ: IECFieldElement;
   LB, LZInv: IECFieldElement;
 begin
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(Self as IECPoint);
 
   LCoord := GetCurveCoordinateSystem();
@@ -464,7 +457,7 @@ begin
   else
     begin
       LZ := RawZCoords[0];
-      if LZ.GetIsOne then
+      if LZ.IsOne then
         Exit(Self as IECPoint);
 
       if FCurve = nil then
@@ -537,13 +530,13 @@ end;
 function TECPoint.GetAffineXCoord: IECFieldElement;
 begin
   CheckNormalized();
-  Result := FX;
+  Result := XCoord;
 end;
 
 function TECPoint.GetAffineYCoord: IECFieldElement;
 begin
   CheckNormalized();
-  Result := FY;
+  Result := YCoord;
 end;
 
 function TECPoint.GetEncoded: TCryptoLibByteArray;
@@ -988,9 +981,9 @@ var
   LZ3Squared, LW3: IECFieldElement;
   LZs: TCryptoLibGenericArray<IECFieldElement>;
 begin
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(AB);
-  if AB.GetIsInfinity then
+  if AB.IsInfinity then
     Exit(Self as IECPoint);
   if (Self as IECPoint) = AB then
     Exit(Twice());
@@ -999,17 +992,17 @@ begin
   LCoord := GetCurveCoordinateSystem();
   X1 := RawXCoord;
   Y1 := RawYCoord;
-  X2 := AB.GetRawXCoord;
-  Y2 := AB.GetRawYCoord;
+  X2 := AB.RawXCoord;
+  Y2 := AB.RawYCoord;
 
   case LCoord of
     TECCurveConstants.COORD_AFFINE:
     begin
       Dx := X2.Subtract(X1);
       Dy := Y2.Subtract(Y1);
-      if Dx.GetIsZero then
+      if Dx.IsZero then
       begin
-        if Dy.GetIsZero then
+        if Dy.IsZero then
           Exit(Twice());
         Exit(LCurve.Infinity);
       end;
@@ -1035,9 +1028,9 @@ begin
       LV := LV1.Subtract(LV2);
 
       // Check if b == this or b == -this
-      if LV.GetIsZero then
+      if LV.IsZero then
       begin
-        if LU.GetIsZero then
+        if LU.IsZero then
           Exit(Twice());
         Exit(LCurve.Infinity);
       end;
@@ -1134,9 +1127,9 @@ begin
         LR := LS1b.Subtract(LS2b);
 
         // Check if b == this or b == -this
-        if LH.GetIsZero then
+        if LH.IsZero then
         begin
-          if LR.GetIsZero then
+          if LR.IsZero then
             Exit(Twice());
           Exit(LCurve.Infinity);
         end;
@@ -1187,11 +1180,11 @@ var
   LY1Squared, LT2, La4, La4Neg, LM: IECFieldElement;
   LZ1Squared, LZ1Pow4: IECFieldElement;
 begin
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(Self as IECPoint);
 
   Y1 := RawYCoord;
-  if Y1.GetIsZero then
+  if Y1.IsZero then
     Exit(FCurve.Infinity);
 
   LCurve := FCurve;
@@ -1215,7 +1208,7 @@ begin
 
       // TODO Optimize for small negative a4 and -3
       LW := LCurve.A;
-      if (not LW.GetIsZero) and (not LZ1IsOne) then
+      if (not LW.IsZero) and (not LZ1IsOne) then
         LW := LW.Multiply(Z1.Square());
       LW := LW.Add(Three(X1.Square()));
 
@@ -1261,7 +1254,7 @@ begin
         begin
           LM := LM.Add(La4);
         end
-        else if not La4.GetIsZero then
+        else if not La4.IsZero then
         begin
           if LZ1IsOne then LZ1Squared := Z1 else LZ1Squared := Z1.Square();
           LZ1Pow4 := LZ1Squared.Square();
@@ -1302,13 +1295,13 @@ var
 begin
   if (Self as IECPoint) = AB then
     Exit(ThreeTimes());
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(AB);
-  if AB.GetIsInfinity then
+  if AB.IsInfinity then
     Exit(Twice());
 
   Y1 := RawYCoord;
-  if Y1.GetIsZero then
+  if Y1.IsZero then
     Exit(AB);
 
   LCurve := FCurve;
@@ -1324,9 +1317,9 @@ begin
       Dx := X2.Subtract(X1);
       Dy := Y2.Subtract(Y1);
 
-      if Dx.GetIsZero then
+      if Dx.IsZero then
       begin
-        if Dy.GetIsZero then
+        if Dy.IsZero then
           Exit(ThreeTimes());
         Exit(Self as IECPoint);
       end;
@@ -1334,7 +1327,7 @@ begin
       LX := Dx.Square();
       LY := Dy.Square();
       Ld := LX.Multiply(Two(X1).Add(X2)).Subtract(LY);
-      if Ld.GetIsZero then
+      if Ld.IsZero then
         Exit(LCurve.Infinity);
 
       LBigD := Ld.Multiply(Dx);
@@ -1363,11 +1356,11 @@ var
   X1, Y1: IECFieldElement;
   L2Y1, LX, LZ, LY, Ld, LBigD, LI, LL1, LL2, X4, Y4: IECFieldElement;
 begin
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(Self as IECPoint);
 
   Y1 := RawYCoord;
-  if Y1.GetIsZero then
+  if Y1.IsZero then
     Exit(Self as IECPoint);
 
   LCurve := FCurve;
@@ -1384,7 +1377,7 @@ begin
       LY := LZ.Square();
 
       Ld := Three(X1).Multiply(LX).Subtract(LY);
-      if Ld.GetIsZero then
+      if Ld.IsZero then
         Exit(LCurve.Infinity);
 
       LBigD := Ld.Multiply(L2Y1);
@@ -1418,7 +1411,7 @@ var
 begin
   if AE < 0 then
     raise EArgumentCryptoLibException.Create('cannot be negative');
-  if (AE = 0) or GetIsInfinity then
+  if (AE = 0) or IsInfinity then
     Exit(Self as IECPoint);
   if AE = 1 then
     Exit(Twice());
@@ -1426,7 +1419,7 @@ begin
   LCurve := FCurve;
 
   Y1 := RawYCoord;
-  if Y1.GetIsZero then
+  if Y1.IsZero then
     Exit(LCurve.Infinity);
 
   LCoord := GetCurveCoordinateSystem();
@@ -1461,7 +1454,7 @@ begin
 
   for I := 0 to AE - 1 do
   begin
-    if Y1.GetIsZero then
+    if Y1.IsZero then
       Exit(LCurve.Infinity);
 
     X1Squared := X1.Square();
@@ -1472,7 +1465,7 @@ begin
     L4T := L2Y1Squared.Square();
     L8T := Two(L4T);
 
-    if not W1.GetIsZero then
+    if not W1.IsZero then
     begin
       LM := LM.Add(W1);
       W1 := Two(L8T.Multiply(W1));
@@ -1517,7 +1510,7 @@ function TFpPoint.Negate: IECPoint;
 var
   LCoord: Int32;
 begin
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(Self as IECPoint);
   LCoord := GetCurveCoordinateSystem();
   if LCoord <> TECCurveConstants.COORD_AFFINE then
@@ -1547,7 +1540,7 @@ begin
     Z := RawZCoords[0];
     LZIsOne := Z.IsOne;
 
-    if X.GetIsZero then
+    if X.IsZero then
     begin
       // NOTE: For x == 0, we expect the affine-y instead of the lambda-y
       Lhs := Y.Square();
