@@ -23,7 +23,7 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIAsymmetricKeyParameter,
   ClpIKeyGenerationParameters,
   ClpIAsn1Objects,

@@ -36,7 +36,7 @@ uses
   ClpECPoint,
   ClpECLookupTables,
   ClpMultipliers,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpISecT283K1Custom,
   ClpArrayUtilities,

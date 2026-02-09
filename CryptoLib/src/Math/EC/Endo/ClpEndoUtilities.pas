@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIPreCompCallback,
   ClpIPreCompInfo,
   ClpIEndoPreCompInfo,

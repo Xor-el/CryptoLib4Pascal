@@ -44,7 +44,7 @@ uses
   ClpISecP521R1Custom,
   ClpSecT283K1Custom,
   ClpISecT283K1Custom,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIAsn1Objects,
   ClpWnafUtilities,
   ClpScalarSplitParameters,

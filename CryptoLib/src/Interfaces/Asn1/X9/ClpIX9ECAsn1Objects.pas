@@ -25,7 +25,7 @@ uses
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpCryptoLibTypes;
 

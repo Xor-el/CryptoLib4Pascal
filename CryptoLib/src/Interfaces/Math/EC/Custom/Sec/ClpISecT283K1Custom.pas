@@ -22,7 +22,7 @@ unit ClpISecT283K1Custom;
 interface
 
 uses
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpCryptoLibTypes;
 

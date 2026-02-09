@@ -40,7 +40,7 @@ uses
   ClpECPoint,
   ClpECLookupTables,
   ClpFiniteFields,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpISecP256R1Custom,
   ClpCryptoLibTypes;

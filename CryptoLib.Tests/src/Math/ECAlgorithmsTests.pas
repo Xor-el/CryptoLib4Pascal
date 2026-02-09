@@ -38,7 +38,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpBigInteger,
   ClpECNamedCurveTable,
   ClpCustomNamedCurves,

@@ -27,7 +27,7 @@ uses
   ClpArrayUtilities,
   ClpBitOperations,
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpECCurve,
   ClpECCurveConstants,
   ClpECAlgorithms,

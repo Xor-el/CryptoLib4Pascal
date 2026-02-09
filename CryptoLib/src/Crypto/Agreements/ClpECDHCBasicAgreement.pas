@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpECAlgorithms,
   ClpICipherParameters,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIBasicAgreement,
   ClpIECParameters,
   ClpIECDHCBasicAgreement,

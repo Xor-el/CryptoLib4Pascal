@@ -34,7 +34,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIDigest,
   ClpECNRSigner,
   ClpIECNRSigner,

@@ -15,7 +15,7 @@ unit ClpECPointMaps;
 interface
 
 uses
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement;
 
 type

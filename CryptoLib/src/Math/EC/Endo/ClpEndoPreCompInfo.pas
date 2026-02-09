@@ -22,7 +22,7 @@ unit ClpEndoPreCompInfo;
 interface
 
 uses
-  ClpIECCore,
+  ClpIECCommon,
   ClpIPreCompInfo,
   ClpIEndoPreCompInfo;
 

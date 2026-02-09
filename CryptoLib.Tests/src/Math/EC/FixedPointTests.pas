@@ -33,7 +33,7 @@ uses
   Generics.Collections,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIECCore,
+  ClpIECCommon,
   ClpBigInteger,
   ClpECNamedCurveTable,
   ClpCustomNamedCurves,

@@ -23,7 +23,7 @@ interface
 
 uses
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIGlvTypeBParameters,
   ClpIGlvTypeBEndomorphism,
   ClpEndoUtilities,

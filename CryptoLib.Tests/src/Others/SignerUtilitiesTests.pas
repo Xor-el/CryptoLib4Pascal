@@ -34,7 +34,7 @@ uses
   ClpBigInteger,
   ClpISigner,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpIRandom,
   ClpSignerUtilities,

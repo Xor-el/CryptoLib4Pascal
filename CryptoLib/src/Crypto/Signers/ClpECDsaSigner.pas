@@ -26,7 +26,7 @@ uses
   ClpBigInteger,
   ClpSecureRandom,
   ClpECAlgorithms,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpIECParameters,
   ClpMultipliers,

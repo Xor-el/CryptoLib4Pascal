@@ -32,7 +32,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIHMac,
   ClpHMac,
   ClpIESEngine,

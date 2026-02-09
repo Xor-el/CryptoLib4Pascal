@@ -28,7 +28,7 @@ uses
   ClpZTauElement,
   ClpSimpleBigDecimal,
   ClpECPoint,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpIPreCompCallback,
   ClpIPreCompInfo,

@@ -27,7 +27,7 @@ uses
   Generics.Collections,
   ClpBigInteger,
   ClpIFiniteField,
-  ClpIECCore,
+  ClpIECCommon,
   ClpLongArray,
   ClpECAlgorithms,
   ClpFiniteFields,

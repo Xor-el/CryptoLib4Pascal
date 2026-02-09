@@ -26,7 +26,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpECAlgorithms,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECParameters,
   ClpIAsn1Objects,
   ClpIX9ECAsn1Objects,

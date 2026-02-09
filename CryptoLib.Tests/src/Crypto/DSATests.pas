@@ -37,7 +37,7 @@ uses
   ClpIDsaParameters,
   ClpDsaParameters,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpECParameters,
   ClpIECParameters,
   ClpIAsn1Objects,

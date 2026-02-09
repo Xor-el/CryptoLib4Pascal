@@ -38,7 +38,7 @@ uses
   ClpPack,
   ClpCustomNamedCurves,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpBigInteger,
   ClpCryptoLibTypes,

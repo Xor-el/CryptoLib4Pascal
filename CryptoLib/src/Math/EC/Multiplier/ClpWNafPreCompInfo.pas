@@ -22,7 +22,7 @@ unit ClpWNafPreCompInfo;
 interface
 
 uses
-  ClpIECCore,
+  ClpIECCommon,
   ClpIPreCompInfo,
   ClpIWNafPreCompInfo,
   ClpCryptoLibTypes;

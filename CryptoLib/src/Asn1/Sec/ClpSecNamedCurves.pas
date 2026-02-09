@@ -39,7 +39,7 @@ uses
   ClpIScalarSplitParameters,
   ClpIGlvTypeBParameters,
   ClpIGlvTypeBEndomorphism,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIAsn1Objects,
   ClpX9ECAsn1Objects,
   ClpIX9ECAsn1Objects,

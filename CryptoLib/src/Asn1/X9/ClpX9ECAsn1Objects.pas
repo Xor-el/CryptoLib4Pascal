@@ -30,7 +30,7 @@ uses
   ClpIAsn1Core,
   ClpIX9ECAsn1Objects,
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpECAlgorithms,
   ClpX9ObjectIdentifiers,

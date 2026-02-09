@@ -32,7 +32,7 @@ uses
   ClpIValidityPreCompInfo,
   ClpValidityPreCompInfo,
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpIPreCompCallback,
   ClpIPreCompInfo,

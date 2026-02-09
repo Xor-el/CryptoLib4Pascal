@@ -175,7 +175,7 @@ uses
   ClpIDsaGenerators in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDsaGenerators.pas',
   ClpIDsaParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDsaParameters.pas',
   ClpIDsaSigner in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaSigner.pas',
-  ClpIECCore in '..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECCore.pas',
+  ClpIECCommon in '..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECCommon.pas',
   ClpIECFieldElement in '..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECFieldElement.pas',
   ClpIECDHBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHBasicAgreement.pas',
   ClpIECDHCBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCBasicAgreement.pas',

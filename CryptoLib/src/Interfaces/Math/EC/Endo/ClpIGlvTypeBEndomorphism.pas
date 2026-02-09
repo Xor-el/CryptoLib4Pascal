@@ -22,7 +22,7 @@ unit ClpIGlvTypeBEndomorphism;
 interface
 
 uses
-  ClpIECCore;
+  ClpIECCommon;
 
 type
   IGlvTypeBEndomorphism = interface(IGlvEndomorphism)

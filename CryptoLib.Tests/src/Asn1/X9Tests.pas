@@ -46,7 +46,7 @@ uses
   ClpPkcsAsn1Objects,
   ClpISecECAsn1Objects,
   ClpSecECAsn1Objects,
-  ClpIECCore,
+  ClpIECCommon,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

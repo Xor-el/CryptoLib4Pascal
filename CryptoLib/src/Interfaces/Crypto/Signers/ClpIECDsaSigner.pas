@@ -26,7 +26,7 @@ uses
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement;
 
 type

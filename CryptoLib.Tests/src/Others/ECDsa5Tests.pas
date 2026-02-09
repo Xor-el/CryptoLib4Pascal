@@ -36,7 +36,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpIECParameters,
   ClpECParameters,

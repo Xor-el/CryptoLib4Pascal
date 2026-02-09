@@ -45,7 +45,7 @@ uses
   ClpWNafUtilities,
   ClpIFiniteField,
   ClpIX9ECAsn1Objects,
-  ClpIECCore,
+  ClpIECCommon,
   ClpECCurve,
   ClpIECFieldElement,
   ClpX9ECAsn1Objects,

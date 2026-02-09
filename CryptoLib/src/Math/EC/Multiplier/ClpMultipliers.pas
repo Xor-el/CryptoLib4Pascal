@@ -35,7 +35,7 @@ uses
   ClpIWTauNafPreCompInfo,
   ClpWTauNafPreCompInfo,
   ClpBigInteger,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpIZTauElement,
   ClpIWNafPreCompInfo,

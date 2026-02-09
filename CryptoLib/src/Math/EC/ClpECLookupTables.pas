@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  ClpIECCore,
+  ClpIECCommon,
   ClpCryptoLibTypes;
 
 resourcestring

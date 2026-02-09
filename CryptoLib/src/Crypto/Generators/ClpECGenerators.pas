@@ -32,7 +32,7 @@ uses
   ClpWNafUtilities,
   ClpIKeyGenerationParameters,
   ClpIECParameters,
-  ClpIECCore,
+  ClpIECCommon,
   ClpMultipliers,
   ClpSecObjectIdentifiers,
   ClpCustomNamedCurves,

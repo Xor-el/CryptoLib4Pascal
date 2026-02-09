@@ -49,7 +49,7 @@ uses
   ClpECGenerators,
   ClpIAsymmetricCipherKeyPair,
   ClpECCurve,
-  ClpIECCore,
+  ClpIECCommon,
   ClpIECFieldElement,
   ClpBigInteger,
   ClpBigIntegers,
