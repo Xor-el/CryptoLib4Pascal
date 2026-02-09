@@ -281,7 +281,7 @@ end;
 
 procedure TTestECPoint.AssertIFiniteFieldsEqual(const a, b: IFiniteField);
 begin
-  CheckEquals(True, (a as TObject).Equals(b as TObject));
+  CheckEquals(True, a.Equals(b));
 end;
 
 procedure TTestECPoint.AssertOptionalValuesAgree(const a, b: TBigInteger);

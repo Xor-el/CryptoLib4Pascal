@@ -67,6 +67,8 @@ function TPrimeField.Equals(const AOther: IFiniteField): Boolean;
 begin
   if AOther = nil then
     Exit(False);
+  if (Self as IFiniteField) = AOther then
+    Exit(True);
   Result := FCharacteristic.Equals(AOther.Characteristic);
 end;
 
