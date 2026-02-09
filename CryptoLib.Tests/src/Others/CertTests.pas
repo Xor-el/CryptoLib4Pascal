@@ -125,7 +125,6 @@ type
 
   protected
     procedure SetUp; override;
-    procedure TestCreation3; // Enable when we implement prime239v1 curve in TECNamedCurveTable
 
   published
     procedure TestCert1;
@@ -143,6 +142,7 @@ type
     procedure TestEmptyDNCert;
     procedure TestCreation1;
     procedure TestCreation2;
+    procedure TestCreation3;
     procedure TestCreation5;
     procedure TestCrlCreation1;
     procedure TestCrlCreation2;

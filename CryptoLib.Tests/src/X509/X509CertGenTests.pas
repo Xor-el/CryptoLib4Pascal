@@ -48,11 +48,13 @@ uses
   ClpDsaParameters,
   ClpIDsaParameters,
   ClpIECParameters,
+  ClpECParameters,
   ClpIX9ECAsn1Objects,
   ClpRsaDigestSigner,
   ClpIRsaDigestSigner,
   ClpDigestUtilities,
   ClpIAsn1Objects,
+  ClpECNamedCurveTable,
   ClpCryptoLibTypes,
   ClpAsn1Comparers,
   CryptoLibTestBase;
@@ -76,11 +78,11 @@ type
 
   protected
     procedure SetUp; override;
-    procedure TestCreationECDSA; // Enable when we implement prime239v1 curve in TECNamedCurveTable
   published
     procedure TestRsaDigestSigner;
     procedure TestCreationRSA;
     procedure TestCreationDSA;
+    procedure TestCreationECDSA;
     procedure TestCertLoading;
 
   end;
@@ -137,7 +139,7 @@ begin
   FDsaPriv := TDsaPrivateKeyParameters.Create(LDsaPrivateX, FDsaPara);
   FDsaPub := TDsaPublicKeyParameters.Create(LDSAPublicY, FDsaPara);
 
- (* // EC parameters (prime239v1)
+  // EC parameters (prime239v1)
   LX9 := TECNamedCurveTable.GetByName('prime239v1');
   LECParraGX := TBigInteger.Create(1, DecodeBase64('D/qWPNyogWzMM7hkK+35BcPTWFc9Pyf7vTs8uaqv'));
   LECParraGY := TBigInteger.Create(1, DecodeBase64('AhQXGxb1olGRv6s1LPRfuatMF+cx3ZTGgzSE/Q5R'));
@@ -151,7 +153,7 @@ begin
     LX9.Curve.ValidatePoint(LECParraGX, LECParraGY), LECParraN, LECParraH);
   FEcPub := TECPublicKeyParameters.Create('ECDSA',
     LX9.Curve.ValidatePoint(LECPubQX, LECPubQY), FEcDomain);
-  FEcPriv := TECPrivateKeyParameters.Create('ECDSA', LECPrivD, FEcDomain); *)
+  FEcPriv := TECPrivateKeyParameters.Create('ECDSA', LECPrivD, FEcDomain);
 end;
 
 function TX509CertGenTest.CreateX509Name: IX509Name;

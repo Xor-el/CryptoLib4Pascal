@@ -482,6 +482,15 @@ uses
   ClpNat512 in '..\..\CryptoLib\src\Math\Raw\ClpNat512.pas',
   ClpNat576 in '..\..\CryptoLib\src\Math\Raw\ClpNat576.pas',
   ClpNullable in '..\..\CryptoLib\src\Misc\ClpNullable.pas',
+  ClpECPoint in '..\..\CryptoLib\src\Math\EC\ClpECPoint.pas',
+  ClpECFieldElement in '..\..\CryptoLib\src\Math\EC\ClpECFieldElement.pas',
+  ClpECLookupTables in '..\..\CryptoLib\src\Math\EC\ClpECLookupTables.pas',
+  ClpECCore in '..\..\CryptoLib\src\Math\EC\ClpECCore.pas',
+  ClpEndoUtilities in '..\..\CryptoLib\src\Math\EC\Endo\ClpEndoUtilities.pas',
+  ClpWNafUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafUtilities.pas',
+  ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
+  ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas',
+  ClpX962NamedCurves in '..\..\CryptoLib\src\Asn1\X9\ClpX962NamedCurves.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
@@ -579,16 +588,7 @@ uses
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
   X509CertGenTests in '..\src\X509\X509CertGenTests.pas',
   CertTests in '..\src\Others\CertTests.pas',
-  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas',
-  ClpECPoint in '..\..\CryptoLib\src\Math\EC\ClpECPoint.pas',
-  ClpECFieldElement in '..\..\CryptoLib\src\Math\EC\ClpECFieldElement.pas',
-  ClpECLookupTables in '..\..\CryptoLib\src\Math\EC\ClpECLookupTables.pas',
-  ClpECCore in '..\..\CryptoLib\src\Math\EC\ClpECCore.pas',
-  ClpEndoUtilities in '..\..\CryptoLib\src\Math\EC\Endo\ClpEndoUtilities.pas',
-  ClpWNafUtilities in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafUtilities.pas',
-  ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
-  ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas',
-  ClpX962NamedCurves in '..\..\CryptoLib\src\Asn1\X9\ClpX962NamedCurves.pas';
+  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin
 
