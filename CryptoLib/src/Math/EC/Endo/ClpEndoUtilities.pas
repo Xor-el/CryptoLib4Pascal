@@ -77,7 +77,7 @@ end;
 function TEndoUtilities.TMapPointCallback.Precompute(const AExisting: IPreCompInfo): IPreCompInfo;
 var
   LExistingEndo: IEndoPreCompInfo;
-  LResult: TEndoPreCompInfo;
+  LResult: IEndoPreCompInfo;
 begin
   if Supports(AExisting, IEndoPreCompInfo, LExistingEndo) and
     CheckExisting(LExistingEndo, FEndomorphism) then

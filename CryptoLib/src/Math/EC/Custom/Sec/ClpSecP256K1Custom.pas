@@ -175,7 +175,7 @@ type
   class procedure Boot; static;
   class constructor Create;
   var
-    FInfinity: TSecP256K1Point;
+    FInfinity: ISecP256K1Point;
   strict protected
     function GetQ: TBigInteger;
   public
@@ -335,7 +335,7 @@ class procedure TSecP256K1Field.RandomMult(const AR: ISecureRandom; const AZ: TC
 begin
   repeat
     Random(AR, AZ);
-  until IsZero(AZ) <> 0;
+  until IsZero(AZ) = 0;
 end;
 
 class procedure TSecP256K1Field.Reduce(const AXX, AZ: TCryptoLibUInt32Array);

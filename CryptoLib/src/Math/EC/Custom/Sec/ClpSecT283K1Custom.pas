@@ -180,7 +180,7 @@ type
   class procedure Boot; static;
   class constructor Create;
   var
-    FInfinity: TSecT283K1Point;
+    FInfinity: ISecT283K1Point;
   strict protected
     function GetIsKoblitz: Boolean; override;
     function CreateDefaultMultiplier: IECMultiplier; override;
