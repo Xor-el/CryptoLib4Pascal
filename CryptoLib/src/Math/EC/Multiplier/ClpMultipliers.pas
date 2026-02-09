@@ -23,9 +23,7 @@ interface
 
 uses
   SysUtils,
-  Math,
   ClpECAlgorithms,
-  ClpECPoint,
   ClpEndoUtilities,
   ClpFixedPointUtilities,
   ClpIFixedPointPreCompInfo,

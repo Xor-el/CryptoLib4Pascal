@@ -23,8 +23,7 @@ interface
 
 uses
   ClpIAsn1Core,
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
   /// <summary>

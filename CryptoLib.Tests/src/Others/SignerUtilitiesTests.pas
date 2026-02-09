@@ -35,7 +35,6 @@ uses
   ClpISigner,
   ClpECCurve,
   ClpIECCommon,
-  ClpIECFieldElement,
   ClpIRandom,
   ClpSignerUtilities,
   ClpSecureRandom,

@@ -24,7 +24,6 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBigIntegers,
   ClpBitOperations,
   ClpNat,
   ClpNat320,

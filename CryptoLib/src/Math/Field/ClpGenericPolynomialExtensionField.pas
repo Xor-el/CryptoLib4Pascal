@@ -24,7 +24,6 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpCryptoLibTypes,
   ClpBitOperations,
   ClpIFiniteField,
   ClpIPolynomial,

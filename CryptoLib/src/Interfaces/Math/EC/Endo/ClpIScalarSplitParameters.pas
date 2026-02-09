@@ -22,8 +22,7 @@ unit ClpIScalarSplitParameters;
 interface
 
 uses
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
   IScalarSplitParameters = interface(IInterface)

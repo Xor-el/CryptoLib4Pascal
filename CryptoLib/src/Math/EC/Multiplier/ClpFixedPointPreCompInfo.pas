@@ -24,8 +24,7 @@ interface
 uses
   ClpIECCommon,
   ClpIPreCompInfo,
-  ClpIFixedPointPreCompInfo,
-  ClpCryptoLibTypes;
+  ClpIFixedPointPreCompInfo;
 
 type
   TFixedPointPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,

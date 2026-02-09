@@ -22,7 +22,6 @@ unit ClpISecP256K1Custom;
 interface
 
 uses
-  ClpBigInteger,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpCryptoLibTypes;

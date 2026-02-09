@@ -220,9 +220,6 @@ type
 
 implementation
 
-uses
-  ClpECCurve;
-
 { TECPoint.TValidityCallback }
 
 constructor TECPoint.TValidityCallback.Create(const AOuter: IECPoint; ADecompressed,

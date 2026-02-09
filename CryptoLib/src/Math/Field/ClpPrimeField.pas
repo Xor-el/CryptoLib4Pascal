@@ -23,7 +23,6 @@ interface
 
 uses
   ClpBigInteger,
-  ClpCryptoLibTypes,
   ClpIFiniteField,
   ClpIPrimeField;
 

@@ -22,7 +22,6 @@ unit ClpISecP521R1Custom;
 interface
 
 uses
-  ClpBigInteger,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpCryptoLibTypes;

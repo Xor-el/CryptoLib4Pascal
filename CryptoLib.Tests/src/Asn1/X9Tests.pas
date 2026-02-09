@@ -32,7 +32,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
-  ClpBigIntegers,
   ClpIAsn1Objects,
   ClpAsn1Objects,
   ClpIX9ECAsn1Objects,

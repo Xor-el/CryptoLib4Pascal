@@ -41,7 +41,6 @@ uses
   ClpIX9ECAsn1Objects,
   ClpECParameters,
   ClpECNamedCurveTable,
-  ClpECGost3410NamedCurves,
   ClpIECParameters,
   ClpSignerUtilities,
   ClpECGenerators,

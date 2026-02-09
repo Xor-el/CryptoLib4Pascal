@@ -37,7 +37,6 @@ uses
   ClpSecObjectIdentifiers,
   ClpPack,
   ClpCustomNamedCurves,
-  ClpECCurve,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpBigInteger,

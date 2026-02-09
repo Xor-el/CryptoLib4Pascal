@@ -22,8 +22,7 @@ unit ClpIFiniteField;
 interface
 
 uses
-  ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpBigInteger;
 
 type
   IFiniteField = interface(IInterface)

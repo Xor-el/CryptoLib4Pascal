@@ -22,6 +22,7 @@ unit ClpECAlgorithms;
 interface
 
 uses
+  Math,
   SysUtils,
   ClpBigInteger,
   ClpIECCommon,
@@ -29,6 +30,11 @@ uses
   ClpIFiniteField,
   ClpIPolynomialExtensionField,
   ClpIWNafPreCompInfo,
+  ClpBitOperations,
+  ClpFixedPointUtilities,
+  ClpIFixedPointPreCompInfo,
+  ClpEndoUtilities,
+  ClpNat,
   ClpCryptoLibTypes;
 
 type
@@ -83,17 +89,8 @@ type
 implementation
 
 uses
-  Math,
-  ClpBitOperations,
-  ClpECCurve,
-  ClpFixedPointUtilities,
-  ClpIFixedPointPreCompInfo,
-  ClpFixedPointPreCompInfo,
   ClpMultipliers,
-  ClpWNafUtilities,
-  ClpWNafPreCompInfo,
-  ClpEndoUtilities,
-  ClpNat;
+  ClpWNafUtilities;
 
 { TECAlgorithms }
 

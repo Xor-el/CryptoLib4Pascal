@@ -38,7 +38,6 @@ uses
   ClpIPreCompCallback,
   ClpIPreCompInfo,
   ClpISecureRandom,
-  ClpArrayUtilities,
   ClpBitOperations,
   ClpBigIntegers,
   ClpECLookupTables,

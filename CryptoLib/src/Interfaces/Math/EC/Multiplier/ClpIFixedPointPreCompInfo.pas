@@ -23,8 +23,7 @@ interface
 
 uses
   ClpIECCommon,
-  ClpIPreCompInfo,
-  ClpCryptoLibTypes;
+  ClpIPreCompInfo;
 
 type
   IFixedPointPreCompInfo = interface(IPreCompInfo)
