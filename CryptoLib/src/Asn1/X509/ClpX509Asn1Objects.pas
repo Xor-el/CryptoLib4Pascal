@@ -5124,20 +5124,8 @@ begin
 end;
 
 function TExtendedKeyUsage.GetAllUsages: TCryptoLibGenericArray<IDerObjectIdentifier>;
-var
-  LList: TList<IDerObjectIdentifier>;
-  LOid: IDerObjectIdentifier;
 begin
-  LList := TList<IDerObjectIdentifier>.Create();
-  try
-    for LOid in FUsageTable.Keys do
-    begin
-      LList.Add(LOid);
-    end;
-    Result := LList.ToArray();
-  finally
-    LList.Free;
-  end;
+  Result := TCollectionUtilities.Keys<IDerObjectIdentifier, Boolean>(FUsageTable);
 end;
 
 function TExtendedKeyUsage.GetCount: Int32;

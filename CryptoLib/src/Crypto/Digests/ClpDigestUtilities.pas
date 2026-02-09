@@ -159,7 +159,7 @@ var
 begin
   if AAlgorithm = '' then
     raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
-  LMechanism := GetMechanism(UpperCase(AAlgorithm));
+  LMechanism := GetMechanism(AAlgorithm);
   if LMechanism = '' then
     LMechanism := UpperCase(AAlgorithm);
   LDigest := GetDigestForMechanism(LMechanism);

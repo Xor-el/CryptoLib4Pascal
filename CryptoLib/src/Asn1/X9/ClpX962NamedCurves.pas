@@ -273,7 +273,7 @@ begin
   LName := AName;
   FNames.Add(AOid, LName);
   FCurves.Add(AOid, AHolder);
-  FObjIds.Add(UpperCase(LName), AOid);
+  FObjIds.Add(LName, AOid);
 end;
 
 class procedure TX962NamedCurves.Boot;
@@ -370,7 +370,7 @@ end;
 
 class function TX962NamedCurves.GetOid(const AName: String): IDerObjectIdentifier;
 begin
-  if not FObjIds.TryGetValue(UpperCase(AName), Result) then
+  if not FObjIds.TryGetValue(AName, Result) then
     Result := nil;
 end;
 

@@ -713,18 +713,8 @@ begin
 end;
 
 class function TSignerUtilities.GetAlgorithms: TCryptoLibStringArray;
-var
-  LList: TList<String>;
-  LKey: String;
 begin
-  LList := TList<String>.Create;
-  try
-    for LKey in FOids.Keys do
-      LList.Add(LKey);
-    Result := LList.ToArray;
-  finally
-    LList.Free;
-  end;
+  Result := TCollectionUtilities.Keys<String, IDerObjectIdentifier>(FOids);
 end;
 
 class function TSignerUtilities.GetEncodingName(const AOid: IDerObjectIdentifier): String;
@@ -738,8 +728,10 @@ var
 begin
   if AMechanism = '' then
     raise EArgumentNilCryptoLibException.CreateRes(@SMechanismNil);
-  LCanonical := TCollectionUtilities.GetValueOrKey<String>(FAlgorithmMap, UpperCase(AMechanism));
-  FOids.TryGetValue(LCanonical, Result);
+  LCanonical := GetMechanism(AMechanism);
+  if LCanonical = '' then
+    LCanonical := AMechanism;
+  Result := TCollectionUtilities.GetValueOrNull<String, IDerObjectIdentifier>(FOids, LCanonical);
 end;
 
 class function TSignerUtilities.GetSigner(const AOid: IDerObjectIdentifier): ISigner;

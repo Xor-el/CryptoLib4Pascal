@@ -44,6 +44,7 @@ uses
   ClpSignerUtilities,
   ClpX509Utilities,
   ClpAsn1Comparers,
+  ClpCollectionUtilities,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes;
 
@@ -374,8 +375,6 @@ begin
 end;
 
 class function TX509SignatureUtilities.GetSigOid(const ASigName: String): IDerObjectIdentifier;
-var
-  LUpperName: String;
 begin
   if ASigName = '' then
   begin
@@ -383,8 +382,7 @@ begin
     Exit;
   end;
 
-  LUpperName := UpperCase(ASigName);
-  if not FAlgorithms.TryGetValue(LUpperName, Result) then
+  if not FAlgorithms.TryGetValue(ASigName, Result) then
   begin
     // Try to parse as OID string
     try
@@ -428,20 +426,8 @@ begin
 end;
 
 class function TX509SignatureUtilities.GetSigNames: TCryptoLibStringArray;
-var
-  LList: TList<String>;
-  LName: String;
 begin
-  LList := TList<String>.Create();
-  try
-    for LName in FAlgorithms.Keys do
-    begin
-      LList.Add(LName);
-    end;
-    Result := LList.ToArray();
-  finally
-    LList.Free;
-  end;
+  Result := TCollectionUtilities.Keys<String, IDerObjectIdentifier>(FAlgorithms);
 end;
 
 class procedure TX509SignatureUtilities.AddAlgorithm(const AName: String;

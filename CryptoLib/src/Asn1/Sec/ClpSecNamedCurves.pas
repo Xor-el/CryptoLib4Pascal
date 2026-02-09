@@ -472,7 +472,7 @@ end;
 
 class function TSecNamedCurves.GetOid(const AName: String): IDerObjectIdentifier;
 begin
-  if not FObjIds.TryGetValue(UpperCase(AName), Result) then
+  if not FObjIds.TryGetValue(AName, Result) then
     Result := nil;
 end;
 

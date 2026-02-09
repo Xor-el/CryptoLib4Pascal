@@ -90,9 +90,12 @@ uses
   ClpIRsaBlindedEngine,
   ClpIAsymmetricBlockCipher,
   ClpBufferedIesCipher,
-  ClpIESEngine,
+  ClpIesEngine,
+  ClpDHBasicAgreement,
+  ClpIDHBasicAgreement,
   ClpECDHBasicAgreement,
   ClpIECDHBasicAgreement,
+  ClpIBasicAgreement,
   ClpKdf2BytesGenerator,
   ClpIKdf2BytesGenerator,
   ClpHMac,
@@ -287,13 +290,20 @@ var
   LAsymBlockCipher: IAsymmetricBlockCipher;
   LStreamCipher: IStreamCipher;
   LPadding: IBlockCipherPadding;
+  LAgreement: IBasicAgreement;
 begin
   Result := nil;
 
-  if UpperCase(AMechanism) = 'ECIES' then
+  LAgreement := nil;
+  if AMechanism = 'IES' then
+    LAgreement := TDHBasicAgreement.Create() as IDHBasicAgreement
+  else if AMechanism = 'ECIES' then
+    LAgreement := TECDHBasicAgreement.Create() as IECDHBasicAgreement;
+
+  if LAgreement <> nil then
   begin
     Result := TBufferedIesCipher.Create(TIesEngine.Create(
-      TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+      LAgreement,
       TKdf2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
         as IKdf2BytesGenerator,
       THMac.Create(TDigestUtilities.GetDigest('SHA-1')) as IHMac));

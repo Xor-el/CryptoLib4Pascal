@@ -48,6 +48,7 @@ uses
   ClpDefaultDigestCalculator,
   ClpIDigest,
   ClpIVerifier,
+  ClpCollectionUtilities,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
   ClpArrayUtilities;
@@ -351,20 +352,8 @@ begin
 end;
 
 class function TX509Utilities.GetAlgNames: TCryptoLibStringArray;
-var
-  LList: TList<String>;
-  LKey: String;
 begin
-  LList := TList<String>.Create();
-  try
-    for LKey in FAlgorithms.Keys do
-    begin
-      LList.Add(LKey);
-    end;
-    Result := LList.ToArray();
-  finally
-    LList.Free;
-  end;
+  Result := TCollectionUtilities.Keys<String, IDerObjectIdentifier>(FAlgorithms);
 end;
 
 class function TX509Utilities.HasAbsentParameters(const AAlgID: IAlgorithmIdentifier): Boolean;
