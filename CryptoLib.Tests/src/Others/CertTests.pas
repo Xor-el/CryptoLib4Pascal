@@ -1743,7 +1743,7 @@ const
     + 'A4GBAGiJSM48XsY90HlYxGmGVSmNR6ZW2As+bot3KAfiCIkUIOAqhcphBS23egTr'
     + '6asYwy151HshbPNYz+Cgeqs45KkVzh7bL/0e1r8sDVIaaGIkjHK3CqBABnfSayr3'
     + 'Rd1yBoDdEv8Qb+3eEPH6ab9021AsLEnJ6LWTmybbOpMNZ3tv';
-  { From CertTest.cs pkcs7CrlProblem (lines 656-942); full Base64 required for 4 certs / 0 CRLs }
+  { full Base64 required for 4 certs / 0 CRLs }
   PKCS7_CRL_PROBLEM_B64 =   'MIIwSAYJKoZIhvcNAQcCoIIwOTCCMDUCAQExCzAJBgUrDgMCGgUAMAsGCSqG'
     + 'SIb3DQEHAaCCEsAwggP4MIIC4KADAgECAgF1MA0GCSqGSIb3DQEBBQUAMEUx'
     + 'CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMR4wHAYDVQQD'

@@ -1005,7 +1005,7 @@ begin
   begin
     LNorm := Normalize();
     LX1 := LNorm.RawXCoord as ISecT283FieldElement;
-    LY1 := LNorm.GetYCoord;
+    LY1 := LNorm.YCoord;
     LY2 := LL2;
     LL := LY1.Add(LY2).Divide(LX1 as IECFieldElement);
     LX3Fe := LL.Square().Add(LL).Add(LX1 as IECFieldElement);

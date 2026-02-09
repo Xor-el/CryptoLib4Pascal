@@ -300,7 +300,7 @@ begin
           LIsoTwiceP := LPreComp[0].Twice();
           LTwiceP := LIsoTwiceP;
           { Fp quasi-isomorphism: affine twiceP and scale last for cheaper additions }
-          if (not LIsoTwiceP.GetIsInfinity) and TECAlgorithms.IsFpCurve(LC) and
+          if (not LIsoTwiceP.IsInfinity) and TECAlgorithms.IsFpCurve(LC) and
             (LC.FieldSize >= 64) then
             case LC.CoordinateSystem of
               TECCurveConstants.COORD_JACOBIAN, TECCurveConstants.COORD_JACOBIAN_CHUDNOVSKY,

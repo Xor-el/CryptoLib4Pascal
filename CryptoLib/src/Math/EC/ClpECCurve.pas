@@ -1155,7 +1155,7 @@ begin
     TECCurveConstants.COORD_LAMBDA_AFFINE,
     TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
     begin
-      if LX.GetIsZero then
+      if LX.IsZero then
       begin
         if not LY.Square().Equals(FB) then
           raise EArgumentCryptoLibException.Create('');
@@ -1196,7 +1196,7 @@ var
 begin
   LXp := FromBigInteger(AX1);
   LYp := nil;
-  if LXp.GetIsZero then
+  if LXp.IsZero then
   begin
     LYp := FB.Sqrt();
   end
@@ -1429,9 +1429,9 @@ begin
   for I := 0 to ALen - 1 do
   begin
     LP := APoints[AOff + I];
-    (LP.GetRawXCoord as IF2mFieldElement).X.CopyTo(LTable, LPos);
+    (LP.RawXCoord as IF2mFieldElement).X.CopyTo(LTable, LPos);
     Inc(LPos, LFeLongs);
-    (LP.GetRawYCoord as IF2mFieldElement).X.CopyTo(LTable, LPos);
+    (LP.RawYCoord as IF2mFieldElement).X.CopyTo(LTable, LPos);
     Inc(LPos, LFeLongs);
   end;
   Result := TDefaultF2mLookupTable.Create(Self, LTable, ALen);

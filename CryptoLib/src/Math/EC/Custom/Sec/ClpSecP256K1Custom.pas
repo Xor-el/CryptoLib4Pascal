@@ -685,9 +685,9 @@ var
   LX3, LY3, LZ3: ISecP256K1FieldElement;
   LZs: TCryptoLibGenericArray<IECFieldElement>;
 begin
-  if GetIsInfinity then
+  if IsInfinity then
     Exit(AB);
-  if AB.GetIsInfinity then
+  if AB.IsInfinity then
     Exit(Self as IECPoint);
   if (Self as IECPoint) = AB then
     Exit(Twice());

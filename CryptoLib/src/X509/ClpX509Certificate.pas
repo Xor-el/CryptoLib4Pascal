@@ -736,7 +736,7 @@ begin
     LBuf.Append('  Signature Algorithm: ').Append(GetSigAlgName()).AppendLine();
 
     LSig := GetSignature();
-    LLen := System.Math.Min(20, System.Length(LSig));
+    LLen := Math.Min(20, System.Length(LSig));
     LBuf.Append('            Signature: ').AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LLen)));
 
     I := 20;

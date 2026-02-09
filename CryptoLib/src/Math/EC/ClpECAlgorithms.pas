@@ -361,8 +361,8 @@ begin
   if (not LNegK) and (not LNegL) and (AK.BitLength <= LCombSize) and (AL.BitLength <= LCombSize)
     and LInfoP.IsPromoted and LInfoQ.IsPromoted then
     Exit(ImplShamirsTrickFixedPoint(AP, AK, AQ, AL));
-  LWidthP := System.Math.Min(8, LInfoP.Width);
-  LWidthQ := System.Math.Min(8, LInfoQ.Width);
+  LWidthP := Math.Min(8, LInfoP.Width);
+  LWidthQ := Math.Min(8, LInfoQ.Width);
   if LNegK then
   begin
     LPreCompP := LInfoP.PreCompNeg;
@@ -465,12 +465,12 @@ begin
   LNegL := AL.SignValue < 0;
   LK := AK.Abs();
   LL := AL.Abs();
-  LMinWidth := TWNafUtilities.GetWindowSize(System.Math.Max(LK.BitLength, LL.BitLength), 8);
+  LMinWidth := TWNafUtilities.GetWindowSize(Math.Max(LK.BitLength, LL.BitLength), 8);
   LInfoP := TWNafUtilities.Precompute(AP, LMinWidth, True);
   LQ := TEndoUtilities.MapPoint(AEndomorphism, AP);
   LInfoQ := TWNafUtilities.PrecomputeWithPointMap(LQ, AEndomorphism.PointMap, LInfoP, True);
-  LWidthP := System.Math.Min(8, LInfoP.Width);
-  LWidthQ := System.Math.Min(8, LInfoQ.Width);
+  LWidthP := Math.Min(8, LInfoP.Width);
+  LWidthQ := Math.Min(8, LInfoQ.Width);
   if LNegK then
   begin
     LPreCompP := LInfoP.PreCompNeg;
@@ -507,7 +507,7 @@ var
   LInfinity, LR, LSmallR: IECPoint;
   LTableP, LTableQ: TCryptoLibGenericArray<IECPoint>;
 begin
-  LLen := System.Math.Max(System.Length(AWnafP), System.Length(AWnafQ));
+  LLen := Math.Max(System.Length(AWnafP), System.Length(AWnafQ));
   LCurve := APreCompP[0].Curve;
   LInfinity := LCurve.Infinity;
   LR := LInfinity;
@@ -580,7 +580,7 @@ begin
     LKi := LKi.Abs();
     LMinWidth := TWNafUtilities.GetWindowSize(LKi.BitLength, 8);
     LInfos[I] := TWNafUtilities.Precompute(APs[I], LMinWidth, True);
-    LWidth := System.Math.Min(8, LInfos[I].Width);
+    LWidth := Math.Min(8, LInfos[I].Width);
     LWnafs[I] := TWNafUtilities.GenerateWindowNaf(LWidth, LKi);
   end;
   Result := ImplSumOfMultiplies(LNegs, LInfos, LWnafs);
@@ -658,13 +658,13 @@ begin
     LNegs[J1] := LKj1.SignValue < 0;
     LKj1 := LKj1.Abs();
     LMinWidth := TWNafUtilities.GetWindowSize(
-      System.Math.Max(LKj0.BitLength, LKj1.BitLength), 8);
+      Math.Max(LKj0.BitLength, LKj1.BitLength), 8);
     LP := APs[I];
     LInfoP := TWNafUtilities.Precompute(LP, LMinWidth, True);
     LQ := TEndoUtilities.MapPoint(AEndomorphism, LP);
     LInfoQ := TWNafUtilities.PrecomputeWithPointMap(LQ, LPointMap, LInfoP, True);
-    LWidthP := System.Math.Min(8, LInfoP.Width);
-    LWidthQ := System.Math.Min(8, LInfoQ.Width);
+    LWidthP := Math.Min(8, LInfoP.Width);
+    LWidthQ := Math.Min(8, LInfoQ.Width);
     LInfos[J0] := LInfoP;
     LInfos[J1] := LInfoQ;
     LWnafs[J0] := TWNafUtilities.GenerateWindowNaf(LWidthP, LKj0);
@@ -688,7 +688,7 @@ begin
   LLen := 0;
   LCount := System.Length(AWnafs);
   for I := 0 to LCount - 1 do
-    LLen := System.Math.Max(LLen, System.Length(AWnafs[I]));
+    LLen := Math.Max(LLen, System.Length(AWnafs[I]));
   LCurve := AInfos[0].PreComp[0].Curve;
   LInfinity := LCurve.Infinity;
   LR := LInfinity;
