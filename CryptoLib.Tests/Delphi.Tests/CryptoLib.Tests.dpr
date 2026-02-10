@@ -366,7 +366,6 @@ uses
   ClpSecP521R1Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP521R1Custom.pas',
   ClpSecT283K1Custom in '..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283K1Custom.pas',
   ClpSecureRandom in '..\..\CryptoLib\src\Crypto\Randoms\ClpSecureRandom.pas',
-  ClpSetWeakRef in '..\..\CryptoLib\src\Misc\ClpSetWeakRef.pas',
   ClpWeakRef in '..\..\CryptoLib\src\Misc\ClpWeakRef.pas',
   ClpStandardDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\SignerEncodings\ClpStandardDsaEncoding.pas',
   ClpPlainDsaEncoding in '..\..\CryptoLib\src\Crypto\Signers\SignerEncodings\ClpPlainDsaEncoding.pas',

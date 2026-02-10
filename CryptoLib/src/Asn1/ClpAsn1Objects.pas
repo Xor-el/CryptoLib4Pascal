@@ -6494,7 +6494,7 @@ var
   LStr: TCryptoLibByteArray;
 begin
   LStr := GetDerEncoded();
-  Result := Format('#%s', [UpperCase(TConverters.ConvertBytesToHexString(LStr, False))]);
+  Result := Format('#%s', [THex.Encode(LStr)]);
 end;
 
 function TDerBitString.GetOctets(): TCryptoLibByteArray;
