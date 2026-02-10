@@ -57,7 +57,7 @@ implementation
 procedure TParseTest.SetUp;
 begin
   inherited;
-  FLongTagged := THex.Decode('9f1f023330');
+  FLongTagged := THexEncoder.Decode('9f1f023330');
 end;
 
 procedure TParseTest.TearDown;

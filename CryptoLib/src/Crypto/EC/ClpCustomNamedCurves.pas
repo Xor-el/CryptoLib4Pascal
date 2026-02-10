@@ -127,7 +127,7 @@ implementation
 class function TCustomNamedCurves.ConfigureBasepoint(const ACurve: IECCurve;
   const AEncoding: String): IX9ECPoint;
 begin
-  Result := TX9ECPoint.Create(ACurve, THex.Decode(AEncoding));
+  Result := TX9ECPoint.Create(ACurve, THexEncoder.Decode(AEncoding));
   TWnafUtilities.ConfigureBasepoint(Result.Point);
 end;
 
@@ -290,7 +290,7 @@ var
   LG: IX9ECPoint;
   LS: TCryptoLibByteArray;
 begin
-  LS := THex.Decode('C49D360886E704936A6678E1139D26B7819F7E90');
+  LS := THexEncoder.Decode('C49D360886E704936A6678E1139D26B7819F7E90');
   LBaseCurve := TSecP256R1Curve.Create();
   LCurve := TCustomNamedCurves.ConfigureCurve(LBaseCurve);
   LG := TCustomNamedCurves.ConfigureBasepoint(LCurve,
@@ -312,7 +312,7 @@ var
   LG: IX9ECPoint;
   LS: TCryptoLibByteArray;
 begin
-  LS := THex.Decode('A335926AA319A27A1D00896A6773A4827ACDAC73');
+  LS := THexEncoder.Decode('A335926AA319A27A1D00896A6773A4827ACDAC73');
   LBaseCurve := TSecP384R1Curve.Create();
   LCurve := TCustomNamedCurves.ConfigureCurve(LBaseCurve);
   LG := TCustomNamedCurves.ConfigureBasepoint(LCurve,
@@ -335,7 +335,7 @@ var
   LG: IX9ECPoint;
   LS: TCryptoLibByteArray;
 begin
-  LS := THex.Decode('D09E8800291CB85396CC6717393284AAA0DA64BA');
+  LS := THexEncoder.Decode('D09E8800291CB85396CC6717393284AAA0DA64BA');
   LBaseCurve := TSecP521R1Curve.Create();
   LCurve := TCustomNamedCurves.ConfigureCurve(LBaseCurve);
   LG := TCustomNamedCurves.ConfigureBasepoint(LCurve,

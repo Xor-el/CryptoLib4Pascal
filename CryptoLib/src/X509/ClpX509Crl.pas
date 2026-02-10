@@ -554,12 +554,12 @@ begin
     LSig := GetSignature();
     LBuf.Append('            Signature: ');
     LCount := Math.Min(20, System.Length(LSig));
-    LBuf.AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LCount)));
+    LBuf.AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LCount)));
     I := 20;
     while I < System.Length(LSig) do
     begin
       LCount := Math.Min(20, System.Length(LSig) - I);
-      LBuf.Append('                       ').AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LCount)));
+      LBuf.Append('                       ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LCount)));
       System.Inc(I, 20);
     end;
 

@@ -62,8 +62,8 @@ implementation
 procedure TRelativeOidTest.SetUp;
 begin
   inherited;
-  FReq1 := THex.Decode('0D03813403');
-  FReq2 := THex.Decode('0D082A36FFFFFFDD6311');
+  FReq1 := THexEncoder.Decode('0D03813403');
+  FReq2 := THexEncoder.Decode('0D082A36FFFFFFDD6311');
 end;
 
 procedure TRelativeOidTest.TearDown;
@@ -137,7 +137,7 @@ begin
 
   if not AreEqual(LBytes, AEnc) then
   begin
-    Fail(Format('failed comparison test: expected %s but got %s', [THex.Encode(AEnc), THex.Encode(LBytes)]));
+    Fail(Format('failed comparison test: expected %s but got %s', [THexEncoder.Encode(AEnc), THexEncoder.Encode(LBytes)]));
   end;
 end;
 

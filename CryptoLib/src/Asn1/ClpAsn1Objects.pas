@@ -5953,7 +5953,7 @@ end;
 
 function TAsn1OctetString.ToString(): String;
 begin
-  Result := '#' + THex.Encode(FContents);
+  Result := '#' + THexEncoder.Encode(FContents);
 end;
 
 function TAsn1OctetString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
@@ -6494,7 +6494,7 @@ var
   LStr: TCryptoLibByteArray;
 begin
   LStr := GetDerEncoded();
-  Result := Format('#%s', [THex.Encode(LStr)]);
+  Result := Format('#%s', [THexEncoder.Encode(LStr)]);
 end;
 
 function TDerBitString.GetOctets(): TCryptoLibByteArray;

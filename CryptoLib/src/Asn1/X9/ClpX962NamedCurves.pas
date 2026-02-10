@@ -249,13 +249,13 @@ implementation
 
 class function TX962NamedCurves.FromHex(const AHex: String): TBigInteger;
 begin
-  Result := TBigInteger.Create(1, THex.Decode(AHex));
+  Result := TBigInteger.Create(1, THexEncoder.Decode(AHex));
 end;
 
 class function TX962NamedCurves.ConfigureBasepoint(const ACurve: IECCurve;
   const AEncoding: String): IX9ECPoint;
 begin
-  Result := TX9ECPoint.Create(ACurve, THex.Decode(AEncoding));
+  Result := TX9ECPoint.Create(ACurve, THexEncoder.Decode(AEncoding));
   TWnafUtilities.ConfigureBasepoint(Result.Point);
 end;
 
@@ -392,7 +392,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012');
-  LS := THex.Decode('3045AE6FC8422f64ED579528D38120EAE12196D5');
+  LS := THexEncoder.Decode('3045AE6FC8422f64ED579528D38120EAE12196D5');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -419,7 +419,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '03eea2bae7e1497842f2de7769cfe9c989c072ad696f48034a');
-  LS := THex.Decode('31a92ee2029fd10d901b113e990710f0d21ac6b6');
+  LS := THexEncoder.Decode('31a92ee2029fd10d901b113e990710f0d21ac6b6');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -446,7 +446,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '027d29778100c65a1da1783716588dce2b8b4aee8e228f1896');
-  LS := THex.Decode('c469684435deb378c4b65ca9591e2a5763059a2e');
+  LS := THexEncoder.Decode('c469684435deb378c4b65ca9591e2a5763059a2e');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -474,7 +474,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf');
-  LS := THex.Decode('e43bb460f0b80cc0c0b075798e948060f8321b7d');
+  LS := THexEncoder.Decode('e43bb460f0b80cc0c0b075798e948060f8321b7d');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -502,7 +502,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '0238af09d98727705120c921bb5e9e26296a3cdcf2f35757a0eafd87b830e7');
-  LS := THex.Decode('e8b4011604095303ca3b8099982be09fcb9ae616');
+  LS := THexEncoder.Decode('e8b4011604095303ca3b8099982be09fcb9ae616');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -530,7 +530,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '036768ae8e18bb92cfcf005c949aa2c6d94853d0e660bbf854b1c9505fe95a');
-  LS := THex.Decode('7d7374168ffe3471b60a857686a19475d3bfa2ff');
+  LS := THexEncoder.Decode('7d7374168ffe3471b60a857686a19475d3bfa2ff');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -558,7 +558,7 @@ begin
     LN, TBigInteger.One, True);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '036b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296');
-  LS := THex.Decode('c49d360886e704936a6678e1139d26b7819f7e90');
+  LS := THexEncoder.Decode('c49d360886e704936a6678e1139d26b7819f7e90');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -584,7 +584,7 @@ begin
     LN, TBigInteger.Two);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '0307AF69989546103D79329FCC3D74880F33BBE803CB');
-  LS := THex.Decode('D2C0FB15760860DEF1EEF4D696E6768756151754');
+  LS := THexEncoder.Decode('D2C0FB15760860DEF1EEF4D696E6768756151754');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 
@@ -684,7 +684,7 @@ begin
     LN, TBigInteger.Two);
   LCurve := TX962NamedCurves.ConfigureCurve(LBaseCurve);
   LG := TX962NamedCurves.ConfigureBasepoint(LCurve, '0236B3DAF8A23206F9C4F299D7B21A9C369137F2C84AE1AA0D');
-  LS := THex.Decode('4E13CA542744D696E67687561517552F279A8C84');
+  LS := THexEncoder.Decode('4E13CA542744D696E67687561517552F279A8C84');
   Result := TX9ECParameters.Create(LCurve, LG, LCurve.Order, LCurve.Cofactor, LS);
 end;
 

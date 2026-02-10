@@ -186,13 +186,13 @@ implementation
 
 class function TTeleTrusTNamedCurves.FromHex(const AHex: String): TBigInteger;
 begin
-  Result := TBigInteger.Create(1, THex.Decode(AHex));
+  Result := TBigInteger.Create(1, THexEncoder.Decode(AHex));
 end;
 
 class function TTeleTrusTNamedCurves.ConfigureBasepoint(const ACurve: IECCurve;
   const AEncoding: String): IX9ECPoint;
 begin
-  Result := TX9ECPoint.Create(ACurve, THex.Decode(AEncoding));
+  Result := TX9ECPoint.Create(ACurve, THexEncoder.Decode(AEncoding));
   TWnafUtilities.ConfigureBasepoint(Result.Point);
 end;
 

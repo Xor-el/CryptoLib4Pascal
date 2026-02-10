@@ -89,7 +89,7 @@ implementation
 procedure TAsn1IntegerTest.SetUp;
 begin
   inherited;
-  FSuspectKey := TBase64.Decode
+  FSuspectKey := TBase64Encoder.Decode
     ('MIGJAoGBAHNc+iExm94LUrJdPSJ4QJ9tDRuvaNmGVHpJ4X7a5zKI02v+2E7RotuiR2MHDJfVJkb9LUs2kb3XBlyENhtMLsbeH+3Muy3' +
     'hGDlh/mLJSh1s4c5jDKBRYOHom7Uc8wP0P2+zBCA+OEdikNDFBaP5PbR2Xq9okG2kPh35M2quAiMTAgMBAAE=');
 end;

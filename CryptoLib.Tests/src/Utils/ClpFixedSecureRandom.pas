@@ -451,7 +451,7 @@ end;
 constructor TFixedSecureRandom.TRandomChecker.Create;
 begin
   Inherited Create();
-  Fdata := THex.Decode('01020304ffffffff0506070811111111');
+  Fdata := THexEncoder.Decode('01020304ffffffff0506070811111111');
   Findex := 0;
 end;
 
@@ -503,12 +503,12 @@ end;
 constructor TFixedSecureRandom.TBigIntegerSource.Create(bitLength: Int32;
   const hexData: String);
 begin
-  Inherited Create(ExpandToBitLength(bitLength, THex.Decode(hexData)));
+  Inherited Create(ExpandToBitLength(bitLength, THexEncoder.Decode(hexData)));
 end;
 
 constructor TFixedSecureRandom.TBigIntegerSource.Create(const hexData: String);
 begin
-  Create(THex.Decode(hexData));
+  Create(THexEncoder.Decode(hexData));
 end;
 
 end.

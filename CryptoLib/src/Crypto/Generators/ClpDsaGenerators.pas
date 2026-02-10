@@ -1,4 +1,4 @@
-{ *********************************************************************************** }
+﻿{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -333,7 +333,7 @@ var
 begin
   // A.2.3 Verifiable Canonical Generation of the Generator g
   LE := AP.Subtract(TBigInteger.One).Divide(AQ);
-  LGgen := THex.Decode('6767656E');
+  LGgen := THexEncoder.Decode('6767656E');
 
   // 7. U = domain_parameter_seed || "ggen" || index || count.
   System.SetLength(LU, System.Length(ASeed) + System.Length(LGgen) + 1 + 2);

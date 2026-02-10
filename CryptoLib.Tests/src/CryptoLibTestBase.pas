@@ -45,17 +45,17 @@ implementation
 
 function TCryptoLibAlgorithmTestCase.DecodeBase64(const data: String): TBytes;
 begin
-  result := TBase64.Decode(data);
+  result := TBase64Encoder.Decode(data);
 end;
 
 function TCryptoLibAlgorithmTestCase.DecodeHex(const data: String): TBytes;
 begin
-  result := THex.Decode(data);
+  result := THexEncoder.Decode(data);
 end;
 
 function TCryptoLibAlgorithmTestCase.EncodeHex(const data: TBytes): String;
 begin
-  result := THex.Encode(data);
+  result := THexEncoder.Encode(data);
 end;
 
 function TCryptoLibAlgorithmTestCase.Prepend(const data: TBytes;

@@ -138,7 +138,7 @@ implementation
 
 class function TECGost3410NamedCurves.FromHex(const AHex: String): TBigInteger;
 begin
-  Result := TBigInteger.Create(1, THex.Decode(AHex));
+  Result := TBigInteger.Create(1, THexEncoder.Decode(AHex));
 end;
 
 class function TECGost3410NamedCurves.ConfigureBasepoint(const ACurve: IECCurve;

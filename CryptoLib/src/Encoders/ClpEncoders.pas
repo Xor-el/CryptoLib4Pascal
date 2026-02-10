@@ -25,78 +25,72 @@ uses
   SbpBase16,
   SbpBase58,
   SbpBase64,
-{$IFDEF DELPHI}
-  SbpIBase58,
-  SbpIBase64,
-{$ENDIF DELPHI}
   ClpCryptoLibTypes;
 
 type
-  TBase58 = class sealed(TObject)
+  TBase58Encoder = class sealed(TObject)
 
   public
-    class function Encode(const Input: TCryptoLibByteArray): String; static;
-    class function Decode(const Input: String): TCryptoLibByteArray; static;
+    class function Encode(const AInput: TCryptoLibByteArray): String; static;
+    class function Decode(const AInput: String): TCryptoLibByteArray; static;
   end;
 
 type
-  TBase64 = class sealed(TObject)
+  TBase64Encoder = class sealed(TObject)
 
   public
-    class function Encode(const Input: TCryptoLibByteArray): String; static;
-    class function Decode(const Input: String): TCryptoLibByteArray; static;
+    class function Encode(const AInput: TCryptoLibByteArray): String; static;
+    class function Decode(const AInput: String): TCryptoLibByteArray; static;
   end;
 
 type
-  THex = class sealed(TObject)
+  THexEncoder = class sealed(TObject)
 
   public
-    class function Decode(const Hex: String): TCryptoLibByteArray; static;
-    class function Encode(const Input: TCryptoLibByteArray;
-      UpperCase: Boolean = True): String; static;
+    class function Decode(const AInput: String): TCryptoLibByteArray; static;
+    class function Encode(const AInput: TCryptoLibByteArray; AUpperCase: Boolean = True): String; static;
   end;
 
 implementation
 
 { TBase58 }
 
-class function TBase58.Decode(const Input: String): TCryptoLibByteArray;
+class function TBase58Encoder.Decode(const AInput: String): TCryptoLibByteArray;
 begin
-  result := SbpBase58.TBase58.BitCoin.Decode(Input);
+  Result := TBase58.BitCoin.Decode(AInput);
 end;
 
-class function TBase58.Encode(const Input: TCryptoLibByteArray): String;
+class function TBase58Encoder.Encode(const AInput: TCryptoLibByteArray): String;
 begin
-  result := SbpBase58.TBase58.BitCoin.Encode(Input);
+  Result := TBase58.BitCoin.Encode(AInput);
 end;
 
 { TBase64 }
 
-class function TBase64.Decode(const Input: String): TCryptoLibByteArray;
+class function TBase64Encoder.Decode(const AInput: String): TCryptoLibByteArray;
 begin
-  result := SbpBase64.TBase64.Default.Decode(Input);
+  Result := TBase64.Default.Decode(AInput);
 end;
 
-class function TBase64.Encode(const Input: TCryptoLibByteArray): String;
+class function TBase64Encoder.Encode(const AInput: TCryptoLibByteArray): String;
 begin
-  result := SbpBase64.TBase64.Default.Encode(Input);
+  Result := TBase64.Default.Encode(AInput);
 end;
 
 { THex }
 
-class function THex.Decode(const Hex: String): TCryptoLibByteArray;
+class function THexEncoder.Decode(const AInput: String): TCryptoLibByteArray;
 begin
-  result := SbpBase16.TBase16.Decode(Hex);
+  Result := TBase16.Decode(AInput);
 end;
 
-class function THex.Encode(const Input: TCryptoLibByteArray;
-  UpperCase: Boolean): String;
+class function THexEncoder.Encode(const AInput: TCryptoLibByteArray; AUpperCase: Boolean): String;
 begin
-  case UpperCase of
+  case AUpperCase of
     True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
+      Result := TBase16.EncodeUpper(AInput);
     False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
+      Result := TBase16.EncodeLower(AInput);
   end;
 end;
 

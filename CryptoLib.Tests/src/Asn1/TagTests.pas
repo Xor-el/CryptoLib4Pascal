@@ -64,7 +64,7 @@ implementation
 procedure TTagTest.SetUp;
 begin
   inherited;
-  FLongTagged := TBase64.Decode(
+  FLongTagged := TBase64Encoder.Decode(
     'ZSRzIp8gEEZFRENCQTk4NzY1NDMyMTCfIQwyMDA2MDQwMTEyMzSUCCAFERVz' +
     'A4kCAHEXGBkalAggBRcYGRqUCCAFZS6QAkRFkQlURUNITklLRVKSBQECAwQF' +
     'kxAREhMUFRYXGBkalAggBREVcwOJAgBxFxgZGpQIIAUXGBkalAggBWUukAJE' +
@@ -72,8 +72,8 @@ begin
     'GRqUCCAFFxgZGpQIIAVlLpACREWRCVRFQ0hOSUtFUpIFAQIDBAWTEBESExQV' +
     'FhcYGRqUCCAFERVzA4kCAHEXGBkalAggBRcYGRqUCCAFFxgZGpQIIAUXGBka' +
     'lAg=');
-  FLongAppSpecificTag := THex.Decode('5F610101');
-  FTaggedInteger := THex.Decode('BF2203020101');
+  FLongAppSpecificTag := THexEncoder.Decode('5F610101');
+  FTaggedInteger := THexEncoder.Decode('BF2203020101');
 end;
 
 procedure TTagTest.TearDown;

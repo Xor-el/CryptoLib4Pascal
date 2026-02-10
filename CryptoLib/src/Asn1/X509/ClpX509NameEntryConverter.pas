@@ -68,7 +68,7 @@ var
   LHexSubstring: String;
 begin
   LHexSubstring := System.Copy(AHexString, AOffset + 1, System.Length(AHexString) - AOffset);
-  LBytes := THex.Decode(LHexSubstring);
+  LBytes := THexEncoder.Decode(LHexSubstring);
   Result := TAsn1Object.FromByteArray(LBytes);
 end;
 

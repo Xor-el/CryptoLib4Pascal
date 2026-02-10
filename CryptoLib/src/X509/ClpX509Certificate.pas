@@ -596,7 +596,7 @@ begin
   else
   begin
     // Unknown format, return hex
-    Result := THex.Encode(AAddrBytes);
+    Result := THexEncoder.Encode(AAddrBytes);
   end;
 end;
 
@@ -737,13 +737,13 @@ begin
 
     LSig := GetSignature();
     LLen := Math.Min(20, System.Length(LSig));
-    LBuf.Append('            Signature: ').AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LLen)));
+    LBuf.Append('            Signature: ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LLen)));
 
     I := 20;
     while I < System.Length(LSig) do
     begin
       LLen := Math.Min(20, System.Length(LSig) - I);
-      LBuf.Append('                       ').AppendLine(THex.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LLen)));
+      LBuf.Append('                       ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LLen)));
       System.Inc(I, 20);
     end;
 

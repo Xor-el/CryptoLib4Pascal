@@ -84,11 +84,11 @@ begin
   FPub1 := TBigInteger.Create('03', 16);
   FPri1 := TBigInteger.Create('2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac9f0783a49dd5f6c5af651f4c9d0dc9281c96a3f16a85f9572d7cc3f2d0f25a9dbf1149e4cdc32273faadd3fda5dcda7', 16);
 
-  FMsg1 := THex.Decode('0cbbaa99887766554433221100');
+  FMsg1 := THexEncoder.Decode('0cbbaa99887766554433221100');
   // sig1 = mod1.Subtract(BigInteger("309f873d8ded8379490f6097eaafdabc137d3ebfd8f25ab5f138d56a719cdc526bdd022ea65dabab920a81013a85d092e04d3e421caab717c90d89ea45a8d23a", 16)).ToByteArray()
   FSig1 := FMod1.Subtract(TBigInteger.Create('309f873d8ded8379490f6097eaafdabc137d3ebfd8f25ab5f138d56a719cdc526bdd022ea65dabab920a81013a85d092e04d3e421caab717c90d89ea45a8d23a', 16)).ToByteArray();
 
-  FMsg2 := THex.Decode('fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210');
+  FMsg2 := THexEncoder.Decode('fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210');
   FSig2 := TBigInteger.Create('319bb9becb49f3ed1bca26d0fcf09b0b0a508e4d0bd43b350f959b72cd25b3af47d608fdcd248eada74fbe19990dbeb9bf0da4b4e1200243a14e5cab3f7e610c', 16).ToByteArray();
 
   // ISO 9796-1 Test 3 parameters
@@ -96,7 +96,7 @@ begin
   FPub2 := TBigInteger.Create('03', 16);
   FPri2 := TBigInteger.Create('2aaaaa9545bd6bf5e51fc7940adcdca5550080524e18cfd88b96e8d1c19de6121b13fac0eb0495d47928e047724d91d1740f6968457ce53ec8e24c9362ce84b5', 16);
 
-  FMsg3 := THex.Decode('0112233445566778899aabbccd');
+  FMsg3 := THexEncoder.Decode('0112233445566778899aabbccd');
   FSig3 := FMod2.Subtract(TBigInteger.Create('58e59ffb4b1fb1bcdbf8d1fe9afa3730c78a318a1134f5791b7313d480ff07ac319b068edf8f212945cb09cf33df30ace54f4a063fcca0b732f4b662dc4e2454', 16)).ToByteArray();
 end;
 

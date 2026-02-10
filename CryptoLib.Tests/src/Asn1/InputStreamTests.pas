@@ -68,8 +68,8 @@ begin
   FOutOfBoundsLength := TCryptoLibByteArray.Create($30, $FF, $FF, $FF, $FF, $FF);
   FNegativeLength := TCryptoLibByteArray.Create($30, $84, $FF, $FF, $FF, $FF);
   FOutsideLimitLength := TCryptoLibByteArray.Create($30, $83, $0F, $FF, $FF);
-  FClassCast2 := TBase64.Decode('JICNbaBUTTq7uxj5mg==');
-  FClassCast3 := TBase64.Decode('JAKzADNCxhrrBSVS');
+  FClassCast2 := TBase64Encoder.Decode('JICNbaBUTTq7uxj5mg==');
+  FClassCast3 := TBase64Encoder.Decode('JAKzADNCxhrrBSVS');
 end;
 
 procedure TInputStreamTest.TearDown;

@@ -70,15 +70,15 @@ var
   LMsg, LSig: TCryptoLibByteArray;
   LSigner: IX931Signer;
 begin
-  LRsaPubMod := TBigInteger.Create(TBase64.Decode('AIASoe2PQb1IP7bTyC9usjHP7FvnUMVpKW49iuFtrw/dMpYlsMMoIU2jupfifDpdFxIktSB4P+6Ymg5WjvHKTIrvQ7SR4zV4jaPTu56Ys0pZ9EDA6gb3HLjtU+8Bb1mfWM+yjKxcPDuFjwEtjGlPHg1Vq+CA9HNcMSKNn2+tW6qt'));
-  LRsaPubExp := TBigInteger.Create(TBase64.Decode('EQ=='));
-  LRsaPrivMod := TBigInteger.Create(TBase64.Decode('AIASoe2PQb1IP7bTyC9usjHP7FvnUMVpKW49iuFtrw/dMpYlsMMoIU2jupfifDpdFxIktSB4P+6Ymg5WjvHKTIrvQ7SR4zV4jaPTu56Ys0pZ9EDA6gb3HLjtU+8Bb1mfWM+yjKxcPDuFjwEtjGlPHg1Vq+CA9HNcMSKNn2+tW6qt'));
-  LRsaPrivDP := TBigInteger.Create(TBase64.Decode('JXzfzG5v+HtLJIZqYMUefJfFLu8DPuJGaLD6lI3cZ0babWZ/oPGoJa5iHpX4Ul/7l3s1PFsuy1GhzCdOdlfRcQ=='));
-  LRsaPrivDQ := TBigInteger.Create(TBase64.Decode('YNdJhw3cn0gBoVmMIFRZzflPDNthBiWy/dUMSRfJCxoZjSnr1gysZHK01HteV1YYNGcwPdr3j4FbOfri5c6DUQ=='));
-  LRsaPrivExp := TBigInteger.Create(TBase64.Decode('DxFAOhDajr00rBjqX+7nyZ/9sHWRCCp9WEN5wCsFiWVRPtdB+NeLcou7mWXwf1Y+8xNgmmh//fPV45G2dsyBeZbXeJwB7bzx9NMEAfedchyOwjR8PYdjK3NpTLKtZlEJ6Jkh4QihrXpZMO4fKZWUm9bid3+lmiq43FwW+Hof8/E='));
-  LRsaPrivP := TBigInteger.Create(TBase64.Decode('AJ9StyTVW+AL/1s7RBtFwZGFBgd3zctBqzzwKPda6LbtIFDznmwDCqAlIQH9X14X7UPLokCDhuAa76OnDXb1OiE='));
-  LRsaPrivQ := TBigInteger.Create(TBase64.Decode('AM3JfD79dNJ5A3beScSzPtWxx/tSLi0QHFtkuhtSizeXdkv5FSba7lVzwEOGKHmW829bRoNxThDy4ds1IihW1w0='));
-  LRsaPrivQinv := TBigInteger.Create(TBase64.Decode('Lt0g7wrsNsQxuDdB8q/rH8fSFeBXMGLtCIqfOec1j7FEIuYA/ACiRDgXkHa0WgN7nLXSjHoy630wC5Toq8vvUg=='));
+  LRsaPubMod := TBigInteger.Create(TBase64Encoder.Decode('AIASoe2PQb1IP7bTyC9usjHP7FvnUMVpKW49iuFtrw/dMpYlsMMoIU2jupfifDpdFxIktSB4P+6Ymg5WjvHKTIrvQ7SR4zV4jaPTu56Ys0pZ9EDA6gb3HLjtU+8Bb1mfWM+yjKxcPDuFjwEtjGlPHg1Vq+CA9HNcMSKNn2+tW6qt'));
+  LRsaPubExp := TBigInteger.Create(TBase64Encoder.Decode('EQ=='));
+  LRsaPrivMod := TBigInteger.Create(TBase64Encoder.Decode('AIASoe2PQb1IP7bTyC9usjHP7FvnUMVpKW49iuFtrw/dMpYlsMMoIU2jupfifDpdFxIktSB4P+6Ymg5WjvHKTIrvQ7SR4zV4jaPTu56Ys0pZ9EDA6gb3HLjtU+8Bb1mfWM+yjKxcPDuFjwEtjGlPHg1Vq+CA9HNcMSKNn2+tW6qt'));
+  LRsaPrivDP := TBigInteger.Create(TBase64Encoder.Decode('JXzfzG5v+HtLJIZqYMUefJfFLu8DPuJGaLD6lI3cZ0babWZ/oPGoJa5iHpX4Ul/7l3s1PFsuy1GhzCdOdlfRcQ=='));
+  LRsaPrivDQ := TBigInteger.Create(TBase64Encoder.Decode('YNdJhw3cn0gBoVmMIFRZzflPDNthBiWy/dUMSRfJCxoZjSnr1gysZHK01HteV1YYNGcwPdr3j4FbOfri5c6DUQ=='));
+  LRsaPrivExp := TBigInteger.Create(TBase64Encoder.Decode('DxFAOhDajr00rBjqX+7nyZ/9sHWRCCp9WEN5wCsFiWVRPtdB+NeLcou7mWXwf1Y+8xNgmmh//fPV45G2dsyBeZbXeJwB7bzx9NMEAfedchyOwjR8PYdjK3NpTLKtZlEJ6Jkh4QihrXpZMO4fKZWUm9bid3+lmiq43FwW+Hof8/E='));
+  LRsaPrivP := TBigInteger.Create(TBase64Encoder.Decode('AJ9StyTVW+AL/1s7RBtFwZGFBgd3zctBqzzwKPda6LbtIFDznmwDCqAlIQH9X14X7UPLokCDhuAa76OnDXb1OiE='));
+  LRsaPrivQ := TBigInteger.Create(TBase64Encoder.Decode('AM3JfD79dNJ5A3beScSzPtWxx/tSLi0QHFtkuhtSizeXdkv5FSba7lVzwEOGKHmW829bRoNxThDy4ds1IihW1w0='));
+  LRsaPrivQinv := TBigInteger.Create(TBase64Encoder.Decode('Lt0g7wrsNsQxuDdB8q/rH8fSFeBXMGLtCIqfOec1j7FEIuYA/ACiRDgXkHa0WgN7nLXSjHoy630wC5Toq8vvUg=='));
 
   LRsaPublic := TRsaKeyParameters.Create(False, LRsaPubMod, LRsaPubExp);
   LRsaPrivate := TRsaPrivateCrtKeyParameters.Create(LRsaPrivMod, LRsaPubExp,
@@ -120,12 +120,12 @@ begin
 
   LE := TBigInteger.Create('e75b1b', 16);
 
-  LMsg := THex.Decode(
+  LMsg := THexEncoder.Decode(
   '5bb0d1c0ef9b5c7af2477fe08d45523d3842a4b2db943f7033126c2a7829bacb3d2cfc6497ec91688189e81b7f8742488224' +
   'ba320ce983ce9480722f2cc5bc42611f00bb6311884f660ccc244788378673532edb05284fd92e83f6f6dab406209032e6af' +
   '9a33c998677933e32d6fb95fd27408940d7728f9c9c40267ca1d20ce');
 
-  LSig := THex.Decode(
+  LSig := THexEncoder.Decode(
   '0fe8bb8e3109a1eb7489ef35bf4c1a0780071da789c8bd226a4170538eafefdd30b732d628f0e87a0b9450051feae9754d4f' +
   'b61f57862d10f0bacc4f660d13281d0cd1141c006ade5186ff7d961a4c6cd0a4b352fc1295c5afd088f80ac1f8e192ef116a' +
   '010a442655fe8ff5eeacea15807906fb0f0dfa86e680d4c005872357f7ece9aa4e20b15d5f709b30f08648ecaa34f2fbf54e' +
@@ -160,11 +160,11 @@ begin
   'e5759b4cc64f', 16);
 
   LE := TBigInteger.Create('dcbbdb', 16);
-  LMsg := THex.Decode('a5d3c8a060f897bbbc20ae0955052f37fbc70986b6e11c65075c9f457142bfa93856897c69020aa81a91b5e4f39e05cdeecc' +
+  LMsg := THexEncoder.Decode('a5d3c8a060f897bbbc20ae0955052f37fbc70986b6e11c65075c9f457142bfa93856897c69020aa81a91b5e4f39e05cdeecc' +
   '63395ab849c8262ca8bc5c96870aecb8edb0aba0024a9bdb71e06de6100344e5c318bc979ef32b8a49a8278ba99d4861bce4' +
   '2ebbc5c8c666aaa6cac39aff8779f2cae367620f9edd4cb1d80b6c8c');
 
-  LSig := THex.Decode(
+  LSig := THexEncoder.Decode(
   '39fbbd1804c689a533b0043f84da0f06081038c0fbf31e443e46a05e58f50de5198bbca40522afefaba3aed7082a6cb93b1d' +
   'a39f1f5a42246bf64930781948d300549bef0f8d554ecfca60a1b1ecba95a7014ee4545ad4f0c4e3a31942c6738b4ccd6244' +
   'b6a21267dadf0826a5f713f13b1f5a9ab8501d957a26d4948278ac67851071a315674bdab173bfef2c2690c8373da6bf3d69' +
@@ -206,11 +206,11 @@ begin
   '88c908d51af9de26977fe39719cc781df32216fa41b838f0c63803c3'
   , 16);
 
-  LMsg := THex.Decode('911475c6e210ef4ac65b6fe8d2bfe5e01b959771b137c4ef69b88716e0d2ff9ebc1fad0f358c1dd7d50cc99a7b893ac9a620' +
+  LMsg := THexEncoder.Decode('911475c6e210ef4ac65b6fe8d2bfe5e01b959771b137c4ef69b88716e0d2ff9ebc1fad0f358c1dd7d50cc99a7b893ac9a620' +
   '7076f08d8467d9e48c69c683bfe64a44dabaa3f7c243880f6ab7229bf7bb587822314fc5de5131983bfb2eef8b4bc1eac36f' +
   '353724b567cd1ae8cddd64ddb7057549d5c81ad5fa3b5e751f00abf5');
 
-  LSig := THex.Decode(
+  LSig := THexEncoder.Decode(
   '02c50ec0ac8a7f38ef5630c396964d6a6daaa7e3083ab5b57fa2a2632f3b70e2e85c8456cd774d45d7e44fcb063f0f04fff9' +
   'f1e3adfda11272535a92cb59320b190b5ee4261f23d6ceaa925df3a7bfa42e26bf61ea9645d9d64b3c90a820802768a6e209' +
   'c9f83705375a3867afccc037e8242a98fa4c3db6b2d9877754d47289');

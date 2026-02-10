@@ -5891,14 +5891,14 @@ begin
           else
           begin
             // DerUniversalString - hex encode
-            LValueStr := '#' + THex.Encode(LValue.GetEncoded(TAsn1Encodable.Der), False);
+            LValueStr := '#' + THexEncoder.Encode(LValue.GetEncoded(TAsn1Encodable.Der), False);
             LValueList.Add(LValueStr);
           end;
         end
         else
         begin
           // Hex-encode non-string values
-          LValueStr := '#' + THex.Encode(LValue.GetEncoded(TAsn1Encodable.Der), False);
+          LValueStr := '#' + THexEncoder.Encode(LValue.GetEncoded(TAsn1Encodable.Der), False);
           LValueList.Add(LValueStr);
         end;
 

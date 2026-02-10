@@ -98,11 +98,11 @@ begin
   FCrtCoef := TBigInteger.Create('dae7651ee69ad1d081ec5e7188ae126f6004ff39556bde90e0b870962fa7b926d070686d8244fe5a9aa709a95686a104614834b0ada4b10f53197a5cb4c97339', 16);
 
   // Test block data for PKCS1 padding validation
-  FOversizedSig := THex.Decode('01fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff004e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
-  FDudBlock := THex.Decode('000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff004e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
-  FTruncatedDataBlock := THex.Decode('0001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff004e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
-  FIncorrectPadding := THex.Decode('0001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
-  FMissingDataBlock := THex.Decode('0001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+  FOversizedSig := THexEncoder.Decode('01fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff004e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
+  FDudBlock := THexEncoder.Decode('000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff004e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
+  FTruncatedDataBlock := THexEncoder.Decode('0001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff004e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
+  FIncorrectPadding := THexEncoder.Decode('0001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
+  FMissingDataBlock := THexEncoder.Decode('0001fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' + 'fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
 end;
 
 function TTestRSABlinded.GetPubParameters: IRsaKeyParameters;
@@ -156,7 +156,7 @@ begin
   pubParams := GetPubParameters;
   privParams := GetPrivParameters;
 
-  data := THex.Decode(Input);
+  data := THexEncoder.Decode(Input);
 
   eng := TRsaBlindedEngine.Create();
   eng.Init(True, pubParams as ICipherParameters);
@@ -166,7 +166,7 @@ begin
   eng.Init(False, privParams as ICipherParameters);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(Input, THex.Encode(data, False), 'Raw RSA test failed');
+  CheckEquals(Input, THexEncoder.Encode(data, False), 'Raw RSA test failed');
 end;
 
 procedure TTestRSABlinded.TestRawRSAEdge;
@@ -179,7 +179,7 @@ begin
   pubParams := GetPubParameters;
   privParams := GetPrivParameters;
 
-  data := THex.Decode(EdgeInput);
+  data := THexEncoder.Decode(EdgeInput);
 
   eng := TRsaBlindedEngine.Create();
   eng.Init(True, pubParams as ICipherParameters);
@@ -189,7 +189,7 @@ begin
   eng.Init(False, privParams as ICipherParameters);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(EdgeInput, THex.Encode(data, False), 'Raw RSA edge test failed');
+  CheckEquals(EdgeInput, THexEncoder.Encode(data, False), 'Raw RSA edge test failed');
 end;
 
 procedure TTestRSABlinded.TestPkcs1PublicPrivate;
@@ -202,7 +202,7 @@ begin
   pubParams := GetPubParameters;
   privParams := GetPrivParameters;
 
-  data := THex.Decode(Input);
+  data := THexEncoder.Decode(Input);
 
   eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
   eng.Init(True, pubParams as ICipherParameters);
@@ -212,7 +212,7 @@ begin
   eng.Init(False, privParams as ICipherParameters);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(Input, THex.Encode(data, False), 'PKCS1 public/private test failed');
+  CheckEquals(Input, THexEncoder.Encode(data, False), 'PKCS1 public/private test failed');
 end;
 
 procedure TTestRSABlinded.TestPkcs1PrivatePublic;
@@ -225,7 +225,7 @@ begin
   pubParams := GetPubParameters;
   privParams := GetPrivParameters;
 
-  data := THex.Decode(Input);
+  data := THexEncoder.Decode(Input);
 
   eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
   eng.Init(True, privParams as ICipherParameters);
@@ -235,7 +235,7 @@ begin
   eng.Init(False, pubParams as ICipherParameters);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(Input, THex.Encode(data, False), 'PKCS1 private/public test failed');
+  CheckEquals(Input, THexEncoder.Encode(data, False), 'PKCS1 private/public test failed');
 end;
 
 procedure TTestRSABlinded.TestPkcs1OutputBlockSize;
@@ -259,7 +259,7 @@ var
   eng: IAsymmetricBlockCipher;
   data: TCryptoLibByteArray;
 begin
-  data := THex.Decode(Input);
+  data := THexEncoder.Decode(Input);
 
   eng := TOaepEncoding.Create(TRsaBlindedEngine.Create());
   eng.Init(True, pubParameters as ICipherParameters);
@@ -269,7 +269,7 @@ begin
   eng.Init(False, privParameters as ICipherParameters);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(Input, THex.Encode(data, False), 'OAEP test failed');
+  CheckEquals(Input, THexEncoder.Encode(data, False), 'OAEP test failed');
 end;
 
 procedure TTestRSABlinded.TestOaep;
@@ -296,7 +296,7 @@ begin
   pubKey := pair.Public as IRsaKeyParameters;
   Check(pubKey.Modulus.BitLength >= 768, 'Key generation (768) length test failed');
 
-  data := THex.Decode(Input);
+  data := THexEncoder.Decode(Input);
 
   eng := TRsaBlindedEngine.Create();
   eng.Init(True, pair.Public);
@@ -306,7 +306,7 @@ begin
   eng.Init(False, pair.Private);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(Input, THex.Encode(data, False), 'Key generation (768) test failed');
+  CheckEquals(Input, THexEncoder.Encode(data, False), 'Key generation (768) test failed');
 end;
 
 procedure TTestRSABlinded.TestKeyGeneration1024;
@@ -328,7 +328,7 @@ begin
   pubKey := pair.Public as IRsaKeyParameters;
   Check(pubKey.Modulus.BitLength >= 1024, 'Key generation (1024) length test failed');
 
-  data := THex.Decode(Input);
+  data := THexEncoder.Decode(Input);
 
   eng := TRsaBlindedEngine.Create();
   eng.Init(True, pair.Public);
@@ -338,7 +338,7 @@ begin
   eng.Init(False, pair.Private);
   data := eng.ProcessBlock(data, 0, System.Length(data));
 
-  CheckEquals(Input, THex.Encode(data, False), 'Key generation (1024) test failed');
+  CheckEquals(Input, THexEncoder.Encode(data, False), 'Key generation (1024) test failed');
 end;
 
 procedure TTestRSABlinded.TestStrictPkcs1Length;

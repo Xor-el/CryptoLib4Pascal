@@ -440,7 +440,7 @@ end;
 
 class procedure TSecP256K1FieldElement.Boot;
 begin
-  FQ := TBigInteger.Create(1, THex.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'));
+  FQ := TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'));
 end;
 
 class constructor TSecP256K1FieldElement.Create;
@@ -958,7 +958,7 @@ begin
   FInfinity := TSecP256K1Point.Create(Self as IECCurve, nil, nil);
   FA := FromBigInteger(TBigInteger.Zero);
   FB := FromBigInteger(TBigInteger.Seven);
-  FOrder := TBigInteger.Create(1, THex.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'));
+  FOrder := TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'));
   FCofactor := TBigInteger.One;
   FCoord := SECP256K1_DEFAULT_COORDS;
 end;

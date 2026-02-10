@@ -94,7 +94,7 @@ begin
   try
     LHexStr := System.Copy(AOValue, 2, System.Length(AOValue) - 1);
 
-    LBytes := THex.Decode(LHexStr);
+    LBytes := THexEncoder.Decode(LHexStr);
     Result := TAsn1Object.FromByteArray(LBytes);
   except
     on E: Exception do
@@ -228,7 +228,7 @@ begin
     begin
       try
         LVBuf.Append('#');
-        LVBuf.Append(THex.Encode(AValue.ToAsn1Object().GetEncoded(TAsn1Encodable.Der), False));
+        LVBuf.Append(THexEncoder.Encode(AValue.ToAsn1Object().GetEncoded(TAsn1Encodable.Der), False));
       except
         on E: Exception do
           raise EArgumentCryptoLibException.Create('Other value has no encoded form');

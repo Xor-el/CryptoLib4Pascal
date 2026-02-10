@@ -550,7 +550,7 @@ begin
     ConsumeDash();
 
     // Decode base64 payload
-    LDecodedContent := TBase64.Decode(LPayload);
+    LDecodedContent := TBase64Encoder.Decode(LPayload);
 
     // Convert headers list to array
     LHeadersArray := TCollectionUtilities.ToArray<IPemHeader>(LHeaders);
@@ -617,7 +617,7 @@ var
   LEncodedBytes: TCryptoLibByteArray;
   I, LIndex, LRemaining: Int32;
 begin
-  LEncoded := TBase64.Encode(ABytes);
+  LEncoded := TBase64Encoder.Encode(ABytes);
   LEncodedBytes := TConverters.ConvertStringToBytes(LEncoded, TEncoding.ASCII);
 
   I := 0;
@@ -778,7 +778,7 @@ begin
 
     if LPemBuf.Length > 0 then
     begin
-      LDecoded := TBase64.Decode(LPemBuf.ToString());
+      LDecoded := TBase64Encoder.Decode(LPemBuf.ToString());
       LAsn1Obj := TAsn1Object.FromByteArray(LDecoded);
 
       if not Supports(LAsn1Obj, IAsn1Sequence, Result) then

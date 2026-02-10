@@ -1226,7 +1226,7 @@ begin
   FInfinity := TSecT283K1Point.Create(Self as IECCurve, nil, nil);
   FA := FromBigInteger(TBigInteger.Zero);
   FB := FromBigInteger(TBigInteger.One);
-  FOrder := TBigInteger.Create(1, THex.Decode('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE9AE2ED07577265DFF7F94451E061E163C61'));
+  FOrder := TBigInteger.Create(1, THexEncoder.Decode('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE9AE2ED07577265DFF7F94451E061E163C61'));
   FCofactor := TBigInteger.Four;
   FCoord := SECT283K1_DEFAULT_COORDS;
 end;
