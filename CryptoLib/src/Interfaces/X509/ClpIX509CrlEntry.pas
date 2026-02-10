@@ -42,7 +42,7 @@ type
     function GetHasExtensions: Boolean;
     function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
     function Equals(const AOther: IX509CrlEntry): Boolean;
-    function GetHashCode: Int32;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
     function ToString: String;
 
     property CrlEntry: ICrlEntry read GetCrlEntry;

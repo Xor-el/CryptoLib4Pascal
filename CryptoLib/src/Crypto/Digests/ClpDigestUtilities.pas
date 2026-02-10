@@ -118,7 +118,7 @@ type
     /// <returns>A DerObjectIdentifier, null if the Oid is not available.</returns>
     class function GetObjectIdentifier(const AMechanism: String)
       : IDerObjectIdentifier; static;
-    class function GetDigest(const AOid: IDerObjectIdentifier): IDigest; overload; static; inline;
+    class function GetDigest(const AOid: IDerObjectIdentifier): IDigest; overload; static;
     class function GetDigest(const AAlgorithm: String): IDigest; overload; static;
 
     class function GetAlgorithmName(const AOid: IDerObjectIdentifier): String; static; inline;

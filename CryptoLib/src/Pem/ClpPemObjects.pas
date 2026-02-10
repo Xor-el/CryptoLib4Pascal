@@ -52,8 +52,8 @@ type
   public
     constructor Create(const AName, AValue: String);
 
-    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
-    function Equals(const AObj: IPemHeader): Boolean;
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
+    function Equals(const AObj: IPemHeader): Boolean; reintroduce;
     function ToString(): String; override;
 
     property Name: String read GetName;
@@ -340,7 +340,7 @@ function TPemReader.SeekColon(AUpTo: Int32): Boolean;
 var
   LC: Int32;
   LRead: TList<Int32>;
-  I, LReadPos: Int32;
+  LReadPos: Int32;
   LColonFound: Boolean;
 begin
   LC := 0;

@@ -65,7 +65,6 @@ end;
 class function TFiniteFields.GetBinaryExtensionField
   (const AExponents: TCryptoLibInt32Array): IPolynomialExtensionField;
 var
-  LExponents: TCryptoLibInt32Array;
   I: Int32;
 begin
   if System.Length(AExponents) = 0 then

@@ -195,7 +195,6 @@ begin
   end;
 
   while True do
-
   begin
     LI := NextInt32();
 
@@ -205,9 +204,6 @@ begin
       Exit;
     end;
   end;
-
-  Result := 0; // to make FixInsight Happy :)
-
 end;
 
 function TSecureRandom.Next: Int32;

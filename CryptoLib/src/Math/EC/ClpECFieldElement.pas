@@ -65,7 +65,7 @@ type
     function SquarePow(APow: Int32): IECFieldElement; virtual;
     function TestBitZero: Boolean; virtual;
 
-    function Equals(const AOther: IECFieldElement): Boolean; virtual;
+    function Equals(const AOther: IECFieldElement): Boolean; reintroduce; virtual;
     function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
     function ToString: String; override;
     function GetEncoded: TCryptoLibByteArray; virtual;

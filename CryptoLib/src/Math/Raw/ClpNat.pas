@@ -564,10 +564,10 @@ var
   LDiff: UInt32;
 begin
   LMASK := UInt32(-(AMask and 1));
-  LZI := AZ[AZOff + LI];
-  LDiff := LZI xor AX[AXOff + LI];
   for LI := 0 to ALen - 1 do
   begin
+    LZI := AZ[AZOff + LI];
+    LDiff := LZI xor AX[AXOff + LI];
     LZI := LZI xor (LDiff and LMASK);
     AZ[AZOff + LI] := LZI;
   end;

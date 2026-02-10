@@ -521,8 +521,6 @@ var
   LRepresentation: IDerObjectIdentifier;
   LK1, LK2, LK3: Int32;
   LPentanomial: IAsn1Sequence;
-  LPolynomialField: IPolynomialExtensionField;
-  LExponents: TCryptoLibInt32Array;
 begin
   inherited Create();
   if AFieldID = nil then

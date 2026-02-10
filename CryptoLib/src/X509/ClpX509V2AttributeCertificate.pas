@@ -98,8 +98,8 @@ type
     function GetAttributes: TCryptoLibGenericArray<IX509Attribute>; overload;
     function GetAttributes(const AOid: String): TCryptoLibGenericArray<IX509Attribute>; overload;
 
-    function Equals(const AOther: IX509V2AttributeCertificate): Boolean;
-    function GetHashCode: Int32; override;
+    function Equals(const AOther: IX509V2AttributeCertificate): Boolean; reintroduce;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
   end;
 
 implementation
@@ -376,7 +376,7 @@ begin
   Result := FCert.ToAsn1Object.Equals(AOther.AttributeCertificate.ToAsn1Object);
 end;
 
-function TX509V2AttributeCertificate.GetHashCode: Int32;
+function TX509V2AttributeCertificate.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 begin
   Result := FCert.ToAsn1Object.GetHashCode;
 end;

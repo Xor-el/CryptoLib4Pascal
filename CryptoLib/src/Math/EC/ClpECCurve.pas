@@ -156,7 +156,7 @@ type
     function Configure: IECCurveConfig; virtual;
     procedure ApplyConfig(ACoord: Int32; const AEndomorphism: IECEndomorphism;
       const AMultiplier: IECMultiplier); virtual;
-    function Equals(const AOther: IECCurve): Boolean; virtual;
+    function Equals(const AOther: IECCurve): Boolean; reintroduce; virtual;
     function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
   end;
 

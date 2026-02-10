@@ -59,26 +59,6 @@ type
     IMASK = Int64($FFFFFFFF);
     UIMASK = UInt64($FFFFFFFF);
 
-    BitLengthTable: array [0 .. 255] of Byte =
-    (
-      0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
-      5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-      6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-      6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-      7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-      7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-      7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-      7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
-    );
-
     /// <summary>
     /// These are the threshold bit-lengths (of an exponent) where we increase the window size.
     /// They are calculated according to the expected savings in multiplications.
@@ -112,7 +92,6 @@ type
     function GetBitLength: Int32;
     function GetBitCount: Int32;
     function ModInversePow2(const AM: TBigInteger): TBigInteger;
-    function ModPowSimple(const AB, AE, AM: TBigInteger): TBigInteger;
     class function ModPowBarrett(const AB, AE, AM: TBigInteger): TBigInteger; static;
     class function ReduceBarrett(const AX, AM, AMr, AYu: TBigInteger): TBigInteger; static;
     class function ModPowMonty(var AYAccum: TCryptoLibUInt32Array; const AB, AE, AM: TBigInteger; const AConvert: Boolean): TBigInteger; static;
@@ -311,8 +290,6 @@ var
   I, J, LProduct: Int32;
   LPrimeList: TCryptoLibInt32Array;
   LSmallConstant: TBigInteger;
-  LByteVal: UInt32;
-  LBitLen: Byte;
   LZeroMagnitude: TCryptoLibUInt32Array;
 begin
   TSecureRandom.Boot;
@@ -450,33 +427,11 @@ end;
 
 class function TBigInteger.BitLen(const AValue: Byte): Int32;
 begin
-  //Result := BitLengthTable[AValue];
   Result := 32 - TBitOperations.NumberOfLeadingZeros32(AValue);
 end;
 
 class function TBigInteger.BitLen(const AValue: UInt32): Int32;
-var
-  LT: UInt32;
 begin
- (* LT := AValue shr 24;
-  if LT <> 0 then
-  begin
-    Result := 24 + BitLengthTable[LT];
-    Exit;
-  end;
-  LT := AValue shr 16;
-  if LT <> 0 then
-  begin
-    Result := 16 + BitLengthTable[LT];
-    Exit;
-  end;
-  LT := AValue shr 8;
-  if LT <> 0 then
-  begin
-    Result := 8 + BitLengthTable[LT];
-    Exit;
-  end;
-  Result := BitLengthTable[AValue]; *)
   Result := 32 - TBitOperations.NumberOfLeadingZeros32(AValue);
 end;
 
@@ -626,7 +581,7 @@ end;
 
 class function TBigInteger.MakeMagnitudeBE(const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32): TCryptoLibUInt32Array;
 var
-  LEnd, LStart, LNBytes, LNInts, LFirst, I: Int32;
+  LEnd, LStart, LNBytes, LNInts, LFirst: Int32;
   LMagnitude: TCryptoLibUInt32Array;
 begin
   LEnd := AOffset + ALength;
@@ -786,7 +741,6 @@ var
   LTI, LVI: Int32;
   LM: UInt64;
   LResult: TCryptoLibUInt32Array;
-  I: Int32;
 begin
   LResult := AA;
   LTI := System.Length(LResult) - 1;
@@ -821,7 +775,7 @@ var
 begin
   LIT := System.Length(AX);
   LIV := System.Length(AY);
-  LM := 0;
+
   LBorrow := 0;
   repeat
     System.Dec(LIT);
@@ -1052,7 +1006,7 @@ class function TBigInteger.Divide(var AX: TCryptoLibUInt32Array; const AY: TCryp
 var
   LXStart, LYStart, LXYCmp, LYBitLength, LXBitLength, LShift: Int32;
   LCount, LICount: TCryptoLibUInt32Array;
-  LICountStart, LCStart, LCBitLength, I, J: Int32;
+  LICountStart, LCStart, LCBitLength: Int32;
   LC: TCryptoLibUInt32Array;
   LFirstC, LFirstX: UInt32;
 begin
@@ -1171,7 +1125,7 @@ end;
 class function TBigInteger.Remainder(var AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array): TCryptoLibUInt32Array;
 var
   LXStart, LYStart, LXYCmp, LYBitLength, LXBitLength, LShift: Int32;
-  LCStart, LCBitLength, I: Int32;
+  LCStart, LCBitLength: Int32;
   LC: TCryptoLibUInt32Array;
   LFirstC, LFirstX: UInt32;
 begin
@@ -1609,9 +1563,8 @@ end;
 
 constructor TBigInteger.Create(const ASizeInBits: Int32; const ARandom: IRandom);
 var
-  LNBytes, LXBits, I: Int32;
+  LNBytes, LXBits: Int32;
   LB: TCryptoLibByteArray;
-  LByte: Byte;
 begin
   if ASizeInBits < 0 then
     raise EArgumentCryptoLibException.Create(SSizeInBitsMustBeNonNegative);
@@ -1789,7 +1742,6 @@ var
   LLimit: UInt32;
   LPossibleOverflow: Boolean;
   LBigCopy: TCryptoLibUInt32Array;
-  I: Int32;
 begin
   if System.Length(FMagnitude) < System.Length(AMagToAdd) then
   begin
@@ -1888,7 +1840,6 @@ var
   LResLength: Int32;
   LRes: TCryptoLibUInt32Array;
   LResSign: Int32;
-  I: Int32;
 begin
   if Equals(AValue) then
   begin
@@ -1956,7 +1907,6 @@ end;
 function TBigInteger.Divide(const AValue: TBigInteger): TBigInteger;
 var
   LMag: TCryptoLibUInt32Array;
-  I: Int32;
 begin
   if AValue.FSign = 0 then
     raise EArithmeticCryptoLibException.Create('Division by zero error');
@@ -2237,8 +2187,6 @@ begin
 end;
 
 function TBigInteger.Negate(): TBigInteger;
-var
-  I: Int32;
 begin
   if FSign = 0 then
   begin
@@ -2629,7 +2577,6 @@ end;
 function TBigInteger.FlipExistingBit(const AN: Int32): TBigInteger;
 var
   LMag: TCryptoLibUInt32Array;
-  I: Int32;
 begin
   // Clone magnitude
   LMag := System.Copy(FMagnitude);
@@ -2668,18 +2615,6 @@ begin
   end;
 
   LOffset := LOffset + TBitOperations.NumberOfTrailingZeros32(LWord);
- (*
-  while (LWord and $FF) = 0 do
-  begin
-    LWord := LWord shr 8;
-    LOffset := LOffset + 8;
-  end;
-
-  while (LWord and 1) = 0 do
-  begin
-    LWord := LWord shr 1;
-    System.Inc(LOffset);
-  end;   *)
 
   Result := LOffset;
 
@@ -2740,7 +2675,6 @@ end;
 class function TBigInteger.UInt32ToBin(const AValue: UInt32): String;
 var
   LValue: UInt32;
-  I: Int32;
 begin
   if AValue = 0 then
   begin
@@ -3188,7 +3122,7 @@ end;
 
 function TBigInteger.ToByteArrayInternal(const AUnsigned: Boolean): TCryptoLibByteArray;
 var
-  LNBits, LNBytes, LMagIndex, LBytesIndex, J: Int32;
+  LNBits, LNBytes, LMagIndex, LBytesIndex: Int32;
   LLastMag: UInt32;
   LCarry: Boolean;
   LMag: UInt32;
@@ -3280,7 +3214,6 @@ var
   LSb: String;
   LU: TBigInteger;
   LBits: Int32;
-  LS: String;
   LQ: TBigInteger;
   LModuli: TCryptoLibGenericArray<TBigInteger>;
   LOctStrings: TCryptoLibStringArray;
@@ -3415,8 +3348,6 @@ begin
 end;
 
 function TBigInteger.IsProbablePrime(const ACertainty: Int32): Boolean;
-var
-  LN: TBigInteger;
 begin
   Result := IsProbablePrime(ACertainty, False);
 end;
@@ -3510,29 +3441,6 @@ begin
   if LX.FSign < 0 then
     LX := LX.Add(AM);
   Result := LX;
-end;
-
-function TBigInteger.ModPowSimple(const AB, AE, AM: TBigInteger): TBigInteger;
-var
-  LY, LZ: TBigInteger;
-  LExp: TBigInteger;
-begin
-  LY := FOne;
-  LZ := AB;
-  LExp := AE;
-  while LExp.FSign > 0 do
-  begin
-    if LExp.TestBit(0) then
-    begin
-      LY := LY.Multiply(LZ).&Mod(AM);
-    end;
-    LExp := LExp.ShiftRight(1);
-    if LExp.FSign > 0 then
-    begin
-      LZ := LZ.Multiply(LZ).&Mod(AM);
-    end;
-  end;
-  Result := LY;
 end;
 
 class function TBigInteger.ReduceBarrett(const AX, AM, AMr, AYu: TBigInteger): TBigInteger;

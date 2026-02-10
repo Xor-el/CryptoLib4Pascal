@@ -65,6 +65,7 @@ type
     function GetAttributes: TCryptoLibGenericArray<IX509Attribute>; overload;
     function GetAttributes(const AOid: String): TCryptoLibGenericArray<IX509Attribute>; overload;
     function Equals(const AOther: IX509V2AttributeCertificate): Boolean;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 
     property AttributeCertificate: IAttributeCertificate read GetAttributeCertificate;
     property Version: Int32 read GetVersion;

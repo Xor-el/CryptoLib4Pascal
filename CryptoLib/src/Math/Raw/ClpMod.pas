@@ -152,7 +152,7 @@ end;
 class function TMod.ModOddInverse(const AM: TCryptoLibUInt32Array; const AX: TCryptoLibUInt32Array;
   const AZ: TCryptoLibUInt32Array): UInt32;
 var
-  LLen32, LBits, LLen30, LAllocSize: Int32;
+  LLen32, LBits, LLen30: Int32;
   LT, LD, LE, LF, LG, LM: TCryptoLibInt32Array;
   LTheta, LM0Inv32, LMaxDivsteps, LSignF: Int32;
   LDivSteps: Int32;

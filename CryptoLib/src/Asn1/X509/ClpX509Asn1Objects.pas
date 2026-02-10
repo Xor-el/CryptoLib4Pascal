@@ -889,9 +889,9 @@ type
     function GetOidList: TCryptoLibGenericArray<IDerObjectIdentifier>;
     function GetValueList(const AOid: IDerObjectIdentifier = nil): TCryptoLibStringArray; overload;
     function Equivalent(const AOther: IX509Name; AInOrder: Boolean = False): Boolean;
-    function ToString(AReverse: Boolean; const AOidSymbols: TDictionary<IDerObjectIdentifier, String>): String; overload;
+    function ToString(AReverse: Boolean; const AOidSymbols: TDictionary<IDerObjectIdentifier, String>): String; reintroduce; overload;
     function ToString: String; overload; override;
-    function ToString(const AOid: IDerObjectIdentifier): String; overload;
+    function ToString(const AOid: IDerObjectIdentifier): String; reintroduce; overload;
 
     function ToAsn1Object: IAsn1Object; override;
 
@@ -5578,7 +5578,6 @@ begin
   FOrdering.AddRange(AOids);
   FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
 
-  I := 0;
   for I := 0 to FOrdering.Count - 1 do
   begin
     FExtensions.Add(FOrdering[I], AValues[I]);
@@ -6053,13 +6052,11 @@ constructor TX509Name.Create(const AReverse: Boolean; const ALookup: TDictionary
   const ADirName: String; const AConverter: IX509NameEntryConverter);
 var
   LNameTokenizer, LRdnTokenizer: IX509NameTokenizer;
-  LRdn, LTypeToken, LValueToken: String;
+  LRdn: String;
   LOidList: TList<IDerObjectIdentifier>;
   LValueList: TList<String>;
   LAddedList: TList<Boolean>;
   I, LCount: Int32;
-  LOid: IDerObjectIdentifier;
-  LUnescapedValue: String;
   LO: TList<IDerObjectIdentifier>;
   LV: TList<String>;
   LA: TList<Boolean>;

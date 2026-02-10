@@ -55,7 +55,7 @@ type
     constructor Create(const ACritical: IDerBoolean; const AValue: IAsn1OctetString); overload;
     constructor Create(ACritical: Boolean; const AValue: IAsn1OctetString); overload;
 
-    function GetHashCode: Int32;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
     function Equals(AObj: IX509Extension): Boolean; reintroduce;
 
     property IsCritical: Boolean read GetIsCritical;
@@ -112,7 +112,7 @@ begin
   Result := ConvertValueToObject(Self);
 end;
 
-function TX509Extension.GetHashCode: Int32;
+function TX509Extension.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 var
   LVH: Int32;
 begin

@@ -61,8 +61,8 @@ type
     function GetSerialNumber: TBigInteger;
     function GetRevocationDate: TDateTime;
     function GetHasExtensions: Boolean;
-    function Equals(const AOther: IX509CrlEntry): Boolean;
-    function GetHashCode: Int32; reintroduce;
+    function Equals(const AOther: IX509CrlEntry): Boolean; reintroduce;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
     function ToString: String; override;
 
     property CrlEntry: ICrlEntry read GetCrlEntry;
@@ -205,7 +205,7 @@ begin
   Result := FCrlEntry.Equals(AOther.CrlEntry);
 end;
 
-function TX509CrlEntry.GetHashCode: Int32;
+function TX509CrlEntry.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 begin
   if not FHashValueSet then
   begin

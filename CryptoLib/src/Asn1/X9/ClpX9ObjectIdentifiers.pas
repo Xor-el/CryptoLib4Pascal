@@ -187,8 +187,6 @@ begin
 end;
 
 class procedure TX9ObjectIdentifiers.Boot;
-var
-  LHashAlgs, LAes, FSigAlgs, FKems: IDerObjectIdentifier;
 begin
   if not FIsBooted then
   begin

@@ -33,7 +33,7 @@ type
   TOidEqualityComparer = class(TInterfacedObject, IEqualityComparer<IDerObjectIdentifier>)
   strict private
     function Equals(const ALeft, ARight: IDerObjectIdentifier): Boolean; reintroduce;
-    function GetHashCode(const AValue: IDerObjectIdentifier): Integer;
+    function GetHashCode(const AValue: IDerObjectIdentifier): Integer; reintroduce;
   end;
 
   /// <summary>

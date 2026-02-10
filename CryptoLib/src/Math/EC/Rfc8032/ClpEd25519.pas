@@ -898,7 +898,6 @@ end;
 
 class procedure TEd25519.PointPrecompute(const AP: TPointAffine; var APoints: TCryptoLibGenericArray<TPointExtended>; APointsOff, APointsLen: Int32; var AT: TPointTemp);
 var
-  LInit: TPointExtended;
   LD: TPointExtended;
   LI: Int32;
 begin

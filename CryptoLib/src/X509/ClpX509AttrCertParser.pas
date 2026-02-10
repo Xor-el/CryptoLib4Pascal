@@ -111,7 +111,6 @@ var
   LSeq: IAsn1Sequence;
   LContentType: IDerObjectIdentifier;
   LSignedData: ISignedData;
-  LAttributeCertificate: IAttributeCertificate;
 begin
   LSeq := ADIn.ReadObject() as IAsn1Sequence;
 
@@ -229,7 +228,6 @@ var
   LPushbackStream: TPushbackStream;
   LStreamToUse: TStream;
 begin
-  LPushbackStream := nil;
   if AInStream = nil then
     raise EArgumentNilCryptoLibException.Create('inStream');
 

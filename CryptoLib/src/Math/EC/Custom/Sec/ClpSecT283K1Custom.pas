@@ -932,8 +932,6 @@ var
   LTT0: TCryptoLibUInt64Array;
   LT1, LT2, LT3: TCryptoLibUInt64Array;
   LZ1IsOne, LZ2IsOne: Boolean;
-  LU2, LS2, LU1, LS1: TCryptoLibUInt64Array;
-  LA, LB: TCryptoLibUInt64Array;
   LX3Arr, LZ3Arr, LL3Arr: TCryptoLibUInt64Array;
   LX3, LL3, LZ3: ISecT283FieldElement;
   LZs: TCryptoLibGenericArray<IECFieldElement>;

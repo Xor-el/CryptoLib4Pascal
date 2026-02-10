@@ -142,7 +142,7 @@ begin
     Result := False;
     Exit;
   end;
-  if not (S[1] in ['A'..'Z', 'a'..'z']) then
+  if not CharInSet(S[1], ['A'..'Z', 'a'..'z']) then
   begin
     Result := False;
     Exit;

@@ -218,7 +218,6 @@ var
   LPushbackStream: TPushbackStream;
   LStreamToUse: TStream;
 begin
-  LPushbackStream := nil;
   if AInStream = nil then
     raise EArgumentNilCryptoLibException.Create('inStream');
 
@@ -282,7 +281,7 @@ begin
 
         Result := ReadDerCertificateFromStream(LStreamToUse);
       finally
-        LPushbackStream.Free();
+        LPushbackStream.Free;
       end;
       Exit;
     end;

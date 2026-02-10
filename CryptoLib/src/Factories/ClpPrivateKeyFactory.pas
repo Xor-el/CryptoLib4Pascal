@@ -92,7 +92,6 @@ var
   LDsaParams: IDsaParameters;
   LDsaPara: IDsaParameter;
   LX962Params: IX962Parameters;
-  LX9ECParams: IX9ECParameters;
   LECParams: IECDomainParameters;
   LECPrivateKeyObj: IAsn1Object;
   LECPrivateKeySeq: IECPrivateKeyStructure;

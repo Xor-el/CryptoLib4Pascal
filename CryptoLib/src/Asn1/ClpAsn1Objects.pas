@@ -9617,19 +9617,15 @@ begin
 end;
 
 constructor TAsn1UtcTime.CreateFromUtc(const AUtcDateTime: TDateTime);
-const
-  DefaultTwoDigitYearMax = 2049;
 var
   LUtc: TDateTime;
 begin
   inherited Create();
   // truncate to seconds precision
   LUtc := TDateTimeUtilities.WithPrecisionSecond(AUtcDateTime);
-  Validate(LUtc, DefaultTwoDigitYearMax);
   FDateTime := LUtc;
   FDateTimeLocked := True;
-  FTimeString := ToStringCanonical(LUtc);
-  FTwoDigitYearMax := DefaultTwoDigitYearMax;
+  FTimeString := ToStringCanonical(LUtc, FTwoDigitYearMax);
 end;
 
 constructor TAsn1UtcTime.CreateFromUtc(const AUtcDateTime: TDateTime; ATwoDigitYearMax: Int32);

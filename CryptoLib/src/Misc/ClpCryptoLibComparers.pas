@@ -34,7 +34,7 @@ type
   TOrdinalIgnoreCaseEqualityComparer = class(TInterfacedObject, IEqualityComparer<String>)
   strict private
     function Equals(const ALeft, ARight: String): Boolean; reintroduce;
-    function GetHashCode(const AValue: String): Integer;
+    function GetHashCode(const AValue: String): Integer; reintroduce;
   end;
 
   /// <summary>

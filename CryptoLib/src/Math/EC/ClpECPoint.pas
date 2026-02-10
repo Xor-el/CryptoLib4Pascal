@@ -87,6 +87,9 @@ type
 
     function Detach: IECPoint; virtual; abstract;  // called from GetDetachedPoint on normalized point
     function GetCompressionYTilde: Boolean; virtual; abstract;
+
+    function SatisfiesCurveEquation: Boolean; virtual; abstract;
+    function SatisfiesOrder: Boolean; virtual;
   public
     constructor Create(const ACurve: IECCurve; const AX, AY: IECFieldElement); overload;
     constructor Create(const ACurve: IECCurve; const AX, AY: IECFieldElement;
@@ -136,12 +139,10 @@ type
     function ThreeTimes: IECPoint; virtual;
 
     function ImplIsValid(ADecompressed, ACheckOrder: Boolean): Boolean; virtual;
-    function SatisfiesCurveEquation: Boolean; virtual; abstract;
-    function SatisfiesOrder: Boolean; virtual;
     function IsValid: Boolean; virtual;
     function IsValidPartial: Boolean; virtual;
 
-    function Equals(const AOther: IECPoint): Boolean;
+    function Equals(const AOther: IECPoint): Boolean; reintroduce;
     function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
     function ToString: String; override;
   end;
@@ -192,8 +193,8 @@ type
   TAbstractF2mPoint = class abstract(TECPointBase, IAbstractF2mPoint)
   strict protected
     function SatisfiesOrder: Boolean; override;
-  public
     function SatisfiesCurveEquation: Boolean; override;
+  public
     function ScaleX(const AScale: IECFieldElement): IECPoint; override;
     function ScaleXNegateY(const AScale: IECFieldElement): IECPoint; override;
     function ScaleY(const AScale: IECFieldElement): IECPoint; override;
@@ -971,7 +972,7 @@ var
   Z1, Z2, LU1, LU2, LV1, LV2, LU, LV, LW: IECFieldElement;
   LVSquared, LVCubed, LVSquaredV2, LA: IECFieldElement;
   LZ1IsOne, LZ2IsOne: Boolean;
-  LZ1Squared, LS2, LZ2Squared, LS1, LH, LR: IECFieldElement;
+  LZ1Squared, LZ2Squared, LH, LR: IECFieldElement;
   LHSquared, LG: IECFieldElement;
   LZ1Cubed, LZ2Cubed, LU2b, LS2b, LU1b, LS1b: IECFieldElement;
   LC, LW1, LW2b, LA1: IECFieldElement;

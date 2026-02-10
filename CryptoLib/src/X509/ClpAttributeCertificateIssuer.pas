@@ -61,7 +61,7 @@ type
     function GetPrincipals: TCryptoLibGenericArray<IX509Name>;
     function Clone: IAttributeCertificateIssuer;
     function Match(const AX509Cert: IX509Certificate): Boolean;
-    function Equals(const AOther: IAttributeCertificateIssuer): Boolean;
+    function Equals(const AOther: IAttributeCertificateIssuer): Boolean; reintroduce;
   end;
 
 implementation
