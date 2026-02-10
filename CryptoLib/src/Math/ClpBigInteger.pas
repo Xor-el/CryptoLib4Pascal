@@ -976,7 +976,7 @@ var
   LNBits2: Int32;
   LM, LNext: UInt32;
 begin
-  LNInts := (UInt32(AN) shr 5) + AStart;
+  LNInts := Int32(UInt32(AN) shr 5) + AStart;
   LNBits := AN and 31;
   LMagEnd := System.Length(AMag) - 1;
   if LNInts <> AStart then

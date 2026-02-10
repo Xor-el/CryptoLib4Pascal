@@ -490,6 +490,8 @@ uses
   ClpCustomNamedCurves in '..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas',
   ClpECUtilities in '..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas',
   ClpX962NamedCurves in '..\..\CryptoLib\src\Asn1\X9\ClpX962NamedCurves.pas',
+  ClpX509NameBuilder in '..\..\CryptoLib\src\X509\ClpX509NameBuilder.pas',
+  ClpIX509NameBuilder in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509NameBuilder.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',

@@ -368,7 +368,7 @@ begin
     Result := False;
     Exit;
   end;
-  if Self = (AOther as TX509V2AttributeCertificate) then
+  if (Self as IX509V2AttributeCertificate) = AOther then
   begin
     Result := True;
     Exit;

@@ -72,6 +72,8 @@ uses
   ClpAsn1Objects,
   ClpCryptoLibTypes,
   ClpAsn1Comparers,
+  ClpIX509NameBuilder,
+  ClpX509NameBuilder,
   ClpPkcsObjectIdentifiers,
   ClpPkcsAsn1Objects,
   ClpIPkcsAsn1Objects,
@@ -127,6 +129,7 @@ type
     procedure SetUp; override;
 
   published
+  procedure TestX509NameBuilderMatchesRegular;
     procedure TestCert1;
     procedure TestCert2;
     procedure TestCert3;
@@ -434,11 +437,11 @@ begin
   LAttrs := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   LOrd := TList<IDerObjectIdentifier>.Create;
   try
-    LAttrs.Add(TX509Name.C, 'AU');
-    LAttrs.Add(TX509Name.O, 'The Legion of the Bouncy Castle');
-    LAttrs.Add(TX509Name.L, 'Melbourne');
-    LAttrs.Add(TX509Name.ST, 'Victoria');
-    LAttrs.Add(TX509Name.E, 'feedback-crypto@bouncycastle.org');
+    LAttrs.Add(TX509Name.C, 'NG');
+    LAttrs.Add(TX509Name.O, 'CryptoLib4Pascal');
+    LAttrs.Add(TX509Name.L, 'Alausa');
+    LAttrs.Add(TX509Name.ST, 'Lagos');
+    LAttrs.Add(TX509Name.E, 'feedback-crypto@cryptolib4pascal.org');
 
     LOrd.Add(TX509Name.C);
     LOrd.Add(TX509Name.O);
@@ -532,6 +535,27 @@ begin
   FSecureRandom := TSecureRandom.Create;
   if FRsaPublic = nil then
     SetUpKeys;
+end;
+
+procedure TCertTest.TestX509NameBuilderMatchesRegular;
+var
+  LRegular: IX509Name;
+  LBuilder: IX509NameBuilder;
+  LViaBuilder: IX509Name;
+begin
+  LRegular := CreateX509Name;
+  LBuilder := TX509NameBuilder.Create;
+  LViaBuilder := LBuilder
+    .AddCountry('NG')
+    .AddOrganization('CryptoLib4Pascal')
+    .AddLocality('Alausa')
+    .AddState('Lagos')
+    .AddEmailAddress('feedback-crypto@cryptolib4pascal.org')
+    .Build();
+  if not LRegular.Equivalent(LViaBuilder, True) then
+    Fail('X509Name from builder did not match regular creation (Equivalent)');
+  if LRegular.ToString <> LViaBuilder.ToString then
+    Fail('X509Name from builder did not match regular creation (ToString)');
 end;
 
 procedure TCertTest.TestCert1;
