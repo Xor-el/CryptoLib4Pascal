@@ -40,6 +40,7 @@ uses
   ClpIPreCompCallback,
   ClpIPreCompInfo,
   ClpWNafUtilities,
+  ClpWeakRef,
   ClpCryptoLibTypes;
 
 type
@@ -58,7 +59,7 @@ type
 
   TGlvMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict protected
-    FCurve: IECCurve;
+    FCurve: TWeakRef<IECCurve>;
     FGlvEndomorphism: IGlvEndomorphism;
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
@@ -67,15 +68,15 @@ type
 
   TWTauNafMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict private
-    class var PRECOMP_NAME: String;
+    const
+     PRECOMP_NAME = 'bc_wtnaf';
     function MultiplyWTnaf(const AP: IAbstractF2mPoint; const ALambda: IZTauElement;
       AA, AMu: ShortInt): IAbstractF2mPoint;
     class function MultiplyFromWTnaf(const AP: IAbstractF2mPoint;
       const AU: TCryptoLibShortIntArray): IAbstractF2mPoint; static;
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
-  public
-    class constructor Create;
+
   end;
 
   TFixedPointCombMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
@@ -192,12 +193,14 @@ end;
 
 function TGlvMultiplier.MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint;
 var
+  LCurve: IECCurve;
   LN: TBigInteger;
   LAB: TCryptoLibGenericArray<TBigInteger>;
   LA, LB: TBigInteger;
   LQ: IECPoint;
 begin
-  if not FCurve.Equals(AP.Curve) then
+  LCurve := FCurve;
+  if not LCurve.Equals(AP.Curve) then
     raise EInvalidOperationCryptoLibException.Create('');
   LN := AP.Curve.Order;
   LAB := FGlvEndomorphism.DecomposeScalar(AK.&Mod(LN));
@@ -242,11 +245,6 @@ begin
   LResult := TWTauNafPreCompInfo.Create;
   LResult.PreComp := TTnaf.GetPreComp(FP, FA);
   Result := LResult;
-end;
-
-class constructor TWTauNafMultiplier.Create;
-begin
-  PRECOMP_NAME := 'bc_wtnaf';
 end;
 
 function TWTauNafMultiplier.MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint;

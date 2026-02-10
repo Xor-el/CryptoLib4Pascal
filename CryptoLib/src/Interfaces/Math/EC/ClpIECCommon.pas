@@ -118,6 +118,15 @@ type
 
   IF2mCurve = interface(IAbstractF2mCurve)
     ['{C3D4E5F6-A7B8-9012-CDEF-123456789013}']
+    function IsTrinomial: Boolean;
+    function GetM: Int32;
+    function GetK1: Int32;
+    function GetK2: Int32;
+    function GetK3: Int32;
+    property M: Int32 read GetM;
+    property K1: Int32 read GetK1;
+    property K2: Int32 read GetK2;
+    property K3: Int32 read GetK3;
   end;
 
   IECPoint = interface(IInterface)

@@ -33,6 +33,7 @@ uses
   ClpValidityPreCompInfo,
   ClpBigInteger,
   ClpIECCommon,
+  ClpWeakRef,
   ClpIECFieldElement,
   ClpIPreCompCallback,
   ClpIPreCompInfo,
@@ -68,7 +69,7 @@ type
     FTableLock: TCriticalSection;
     class function GetInitialZCoords(const ACurve: IECCurve): TCryptoLibGenericArray<IECFieldElement>; static;
   strict protected
-    FCurve: IECCurve;
+    FCurve: TWeakRef<IECCurve>;
     FX, FY: IECFieldElement;
     FZs: TCryptoLibGenericArray<IECFieldElement>;
 
@@ -320,11 +321,14 @@ begin
 end;
 
 function TECPoint.GetCurveCoordinateSystem: Int32;
+var
+  LCurve: IECCurve;
 begin
-  if FCurve = nil then
+  LCurve := FCurve;
+  if LCurve = nil then
     Result := TECCurveConstants.COORD_AFFINE
   else
-    Result := FCurve.CoordinateSystem;
+    Result := LCurve.CoordinateSystem;
 end;
 
 function TECPoint.GetRawXCoord: IECFieldElement;
@@ -404,10 +408,12 @@ function TECPoint.SatisfiesOrder: Boolean;
 var
   LOrder: TBigInteger;
   LMult: IECPoint;
+  LCurve: IECCurve;
 begin
-  if TBigInteger.One.Equals(FCurve.Cofactor) then
+  LCurve := FCurve;
+  if TBigInteger.One.Equals(LCurve.Cofactor) then
     Exit(True);
-  LOrder := FCurve.Order;
+  LOrder := LCurve.Order;
   if LOrder.Equals(TBigInteger.GetDefault()) then
     Exit(True);
   LMult := TECAlgorithms.ReferenceMultiply(Self as IECPoint, LOrder);
@@ -415,8 +421,11 @@ begin
 end;
 
 function TECPoint.CreateScaledPoint(const ASx, ASy: IECFieldElement): IECPoint;
+var
+  LCurve: IECCurve;
 begin
-  Result := FCurve.CreateRawPoint(RawXCoord.Multiply(ASx), RawYCoord.Multiply(ASy));
+  LCurve := FCurve;
+  Result := LCurve.CreateRawPoint(RawXCoord.Multiply(ASx), RawYCoord.Multiply(ASy));
 end;
 
 function TECPoint.Normalize(const AZInv: IECFieldElement): IECPoint;
@@ -444,7 +453,9 @@ var
   LCoord: Int32;
   LZ: IECFieldElement;
   LB, LZInv: IECFieldElement;
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Exit(Self as IECPoint);
 
@@ -458,10 +469,10 @@ begin
       if LZ.IsOne then
         Exit(Self as IECPoint);
 
-      if FCurve = nil then
+      if LCurve = nil then
         raise EInvalidOperationCryptoLibException.Create(SDetachedPointsMustBeInAffine);
 
-      LB := FCurve.RandomFieldElementMult(TSecureRandom.MasterRandom);
+      LB := LCurve.RandomFieldElementMult(TSecureRandom.MasterRandom);
       LZInv := LZ.Multiply(LB).Invert().Multiply(LB);
       Result := Normalize(LZInv);
     end;
@@ -622,8 +633,11 @@ begin
 end;
 
 function TECPointBase.Multiply(const AK: TBigInteger): IECPoint;
+var
+  LCurve: IECCurve;
 begin
-  Result := FCurve.Multiplier.Multiply(Self as IECPoint, AK);
+  LCurve := FCurve;
+  Result := LCurve.Multiplier.Multiply(Self as IECPoint, AK);
 end;
 
 function TECPoint.TimesPow2(AE: Int32): IECPoint;
@@ -656,11 +670,13 @@ var
   LCallback: IPreCompCallback;
   LValidity: IValidityPreCompInfo;
   LResult: IPreCompInfo;
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Exit(True);
   LCallback := TValidityCallback.Create(Self, ADecompressed, ACheckOrder);
-  LResult := FCurve.Precompute(Self as IECPoint, TValidityPreCompInfo.PRECOMP_NAME, LCallback);
+  LResult := LCurve.Precompute(Self as IECPoint, TValidityPreCompInfo.PRECOMP_NAME, LCallback);
   LValidity := LResult as IValidityPreCompInfo;
   Result := not LValidity.HasFailed;
 end;
@@ -676,35 +692,47 @@ begin
 end;
 
 function TECPoint.ScaleX(const AScale: IECFieldElement): IECPoint;
+var
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Result := Self as IECPoint
   else
-    Result := FCurve.CreateRawPoint(RawXCoord.Multiply(AScale), RawYCoord, RawZCoords);
+    Result := LCurve.CreateRawPoint(RawXCoord.Multiply(AScale), RawYCoord, RawZCoords);
 end;
 
 function TECPoint.ScaleXNegateY(const AScale: IECFieldElement): IECPoint;
+var
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Result := Self as IECPoint
   else
-    Result := FCurve.CreateRawPoint(RawXCoord.Multiply(AScale), RawYCoord.Negate(), RawZCoords);
+    Result := LCurve.CreateRawPoint(RawXCoord.Multiply(AScale), RawYCoord.Negate(), RawZCoords);
 end;
 
 function TECPoint.ScaleY(const AScale: IECFieldElement): IECPoint;
+var
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Result := Self as IECPoint
   else
-    Result := FCurve.CreateRawPoint(RawXCoord, RawYCoord.Multiply(AScale), RawZCoords);
+    Result := LCurve.CreateRawPoint(RawXCoord, RawYCoord.Multiply(AScale), RawZCoords);
 end;
 
 function TECPoint.ScaleYNegateX(const AScale: IECFieldElement): IECPoint;
+var
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Result := Self as IECPoint
   else
-    Result := FCurve.CreateRawPoint(RawXCoord.Negate(), RawYCoord.Multiply(AScale), RawZCoords);
+    Result := LCurve.CreateRawPoint(RawXCoord.Negate(), RawYCoord.Multiply(AScale), RawZCoords);
 end;
 
 function TECPoint.Equals(const AOther: IECPoint): Boolean;
@@ -795,11 +823,13 @@ var
   LCoord: Int32;
   X, Y, A, B, Lhs, Rhs: IECFieldElement;
   Z, Z2, Z3, Z4, Z6: IECFieldElement;
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   X := RawXCoord;
   Y := RawYCoord;
-  A := FCurve.A;
-  B := FCurve.B;
+  A := LCurve.A;
+  B := LCurve.B;
   Lhs := Y.Square();
   LCoord := GetCurveCoordinateSystem();
   case LCoord of
@@ -898,8 +928,10 @@ end;
 function TFpPoint.CalculateJacobianModifiedW(const AZ, AZSquared: IECFieldElement): IECFieldElement;
 var
   La4, La4Neg, LW, LZSq: IECFieldElement;
+  LCurve: IECCurve;
 begin
-  La4 := FCurve.A;
+  LCurve := FCurve;
+  La4 := LCurve.A;
   if La4.IsZero or AZ.IsOne then
     Exit(La4);
 
@@ -1178,14 +1210,14 @@ var
   LY1Squared, LT2, La4, La4Neg, LM: IECFieldElement;
   LZ1Squared, LZ1Pow4: IECFieldElement;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Exit(Self as IECPoint);
 
   Y1 := RawYCoord;
   if Y1.IsZero then
-    Exit(FCurve.Infinity);
+    Exit(LCurve.Infinity);
 
-  LCurve := FCurve;
   LCoord := GetCurveCoordinateSystem();
   X1 := RawXCoord;
 
@@ -1655,7 +1687,9 @@ end;
 function TAbstractF2mPoint.ScaleX(const AScale: IECFieldElement): IECPoint;
 var
   LX, LL, LX2, LL2, LZ, LZ2: IECFieldElement;
+  LCurve: IECCurve;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Exit(Self as IECPoint);
 
@@ -1667,7 +1701,7 @@ begin
       LL := RawYCoord;
       LX2 := LX.Multiply(AScale);
       LL2 := LL.Add(LX).Divide(AScale).Add(LX2);
-      Result := FCurve.CreateRawPoint(LX, LL2, RawZCoords);
+      Result := LCurve.CreateRawPoint(LX, LL2, RawZCoords);
     end;
     TECCurveConstants.COORD_LAMBDA_PROJECTIVE:
     begin
@@ -1679,7 +1713,7 @@ begin
       LX2 := LX.Multiply(AScale.Square());
       LL2 := LL.Add(LX).Add(LX2);
       LZ2 := LZ.Multiply(AScale);
-      Result := FCurve.CreateRawPoint(LX, LL2,
+      Result := LCurve.CreateRawPoint(LX, LL2,
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ2));
     end;
   else
@@ -1694,8 +1728,10 @@ end;
 
 function TAbstractF2mPoint.ScaleY(const AScale: IECFieldElement): IECPoint;
 var
+  LCurve: IECCurve;
   LX, LL, LL2: IECFieldElement;
 begin
+  LCurve := FCurve;
   if IsInfinity then
     Exit(Self as IECPoint);
 
@@ -1707,7 +1743,7 @@ begin
       LL := RawYCoord;
       // Y is actually Lambda (X + Y/X) here
       LL2 := LL.Add(LX).Multiply(AScale).Add(LX);
-      Result := FCurve.CreateRawPoint(LX, LL2, RawZCoords);
+      Result := LCurve.CreateRawPoint(LX, LL2, RawZCoords);
     end;
   else
     Result := inherited ScaleY(AScale);

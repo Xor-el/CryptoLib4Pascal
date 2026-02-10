@@ -240,12 +240,12 @@ type
 type
   TDefaultF2mLookupTable = class sealed(TAbstractECLookupTable, IECLookupTable)
   strict private
-    FOuter: TF2mCurve;
+    FOuter: IF2mCurve;
     FTable: TCryptoLibUInt64Array;
     FSize: Int32;
     function CreatePoint(const AX, AY: TCryptoLibUInt64Array): IECPoint;
   public
-    constructor Create(const AOuter: TF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
+    constructor Create(const AOuter: IF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
     function GetSize: Int32; override;
     function Lookup(AIndex: Int32): IECPoint; override;
     function LookupVar(AIndex: Int32): IECPoint; override;
@@ -349,7 +349,7 @@ end;
 
 { TF2mCurve.TDefaultF2mLookupTable }
 
-constructor TF2mCurve.TDefaultF2mLookupTable.Create(const AOuter: TF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
+constructor TF2mCurve.TDefaultF2mLookupTable.Create(const AOuter: IF2mCurve; const ATable: TCryptoLibUInt64Array; ASize: Int32);
 begin
   Inherited Create();
   FOuter := AOuter;

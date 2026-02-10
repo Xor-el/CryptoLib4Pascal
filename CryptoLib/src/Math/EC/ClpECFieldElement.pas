@@ -629,10 +629,10 @@ begin
     LT2 := ModMult(LT1, FX);
     LT3 := ModMult(LT2, LT1);
     if LT3.Equals(TBigInteger.One) then
-      Exit(CheckSqrt(TFpFieldElement.Create(FQ, FR, LT2)));
+      Exit(CheckSqrt(TFpFieldElement.Create(FQ, FR, LT2) as IFpFieldElement));
     LT4 := TBigInteger.Two.ModPow(FQ.ShiftRight(2), FQ);
     LY := ModMult(LT2, LT4);
-    Exit(CheckSqrt(TFpFieldElement.Create(FQ, FR, LY)));
+    Exit(CheckSqrt(TFpFieldElement.Create(FQ, FR, LY) as IFpFieldElement));
   end;
   LLegendreExponent := FQ.ShiftRight(1);
   if not FX.ModPow(LLegendreExponent, FQ).Equals(TBigInteger.One) then

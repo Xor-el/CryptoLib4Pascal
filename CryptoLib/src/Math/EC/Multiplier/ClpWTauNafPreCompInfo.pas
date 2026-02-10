@@ -48,7 +48,24 @@ begin
 end;
 
 procedure TWTauNafPreCompInfo.SetPreComp(const AValue: TCryptoLibGenericArray<IAbstractF2mPoint>);
+var
+  LCurve: IECCurve;
+  LPoint: IECPoint;
 begin
+  if (System.Length(AValue) > 0) and (AValue[0] <> nil) then
+  begin
+    LPoint := AValue[0];
+    LCurve := LPoint.Curve;
+    if LCurve <> nil then
+    begin
+      if not LPoint.IsNormalized then
+        LPoint := LPoint.Normalize;
+      FPreComp := System.Copy(AValue);
+      FPreComp[0] := LCurve.CreateRawPoint(LPoint.RawXCoord,
+        LPoint.RawYCoord) as IAbstractF2mPoint;
+      Exit;
+    end;
+  end;
   FPreComp := AValue;
 end;
 

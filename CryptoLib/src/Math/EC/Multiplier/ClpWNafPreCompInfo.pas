@@ -131,7 +131,23 @@ begin
 end;
 
 procedure TWNafPreCompInfo.SetPreComp(const AValue: TCryptoLibGenericArray<IECPoint>);
+var
+  LCurve: IECCurve;
+  LPoint: IECPoint;
 begin
+  if (System.Length(AValue) > 0) and (AValue[0] <> nil) then
+  begin
+    LPoint := AValue[0];
+    LCurve := LPoint.Curve;
+    if LCurve <> nil then
+    begin
+      if not LPoint.IsNormalized then
+        LPoint := LPoint.Normalize;
+      FPreComp := System.Copy(AValue);
+      FPreComp[0] := LCurve.CreateRawPoint(LPoint.RawXCoord, LPoint.RawYCoord);
+      Exit;
+    end;
+  end;
   FPreComp := AValue;
 end;
 
