@@ -1393,6 +1393,7 @@ var
   LKp: IAsymmetricCipherKeyPair;
   LCrlGen: IX509V2CrlGenerator;
   LCrl, LNewCrl, LReadCrl: IX509Crl;
+  LCrlParser: IX509CrlParser;
   LEntry: IX509CrlEntry;
   LExtOids: TList<IDerObjectIdentifier>;
   LExtValues: TList<IX509Extension>;
@@ -1496,11 +1497,12 @@ begin
     if not (LOneFound and LTwoFound) then
       Fail('wrong CRLs found in copied list');
 
-    LReadCrl := TX509CrlParser.Create.ReadCrl(LNewCrl.GetEncoded());
+    LCrlParser := TX509CrlParser.Create;
+    LReadCrl := LCrlParser.ReadCrl(LNewCrl.GetEncoded());
     if LReadCrl = nil then
       Fail('crl not returned!');
 
-    LCol := TX509CrlParser.Create.ReadCrls(LNewCrl.GetEncoded());
+    LCol := LCrlParser.ReadCrls(LNewCrl.GetEncoded());
     if Length(LCol) <> 1 then
       Fail('wrong number of CRLs found in collection');
   finally

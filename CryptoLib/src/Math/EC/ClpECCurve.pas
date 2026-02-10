@@ -68,7 +68,7 @@ type
   TDefaultLookupTable = class sealed(TAbstractECLookupTable, IECLookupTable)
   strict private
     FOuter: IECCurve;
-    FTable: TBytes;
+    FTable: TCryptoLibByteArray;
     FSize: Int32;
     function CreatePoint(const AX, AY: TCryptoLibByteArray): IECPoint;
   public
@@ -302,7 +302,7 @@ function TECCurve.TDefaultLookupTable.Lookup(AIndex: Int32): IECPoint;
 var
   LFeBytes, LPos, I, J: Int32;
   LMask: Byte;
-  LX, LY: TBytes;
+  LX, LY: TCryptoLibByteArray;
 begin
   LFeBytes := FOuter.GetFieldElementEncodingLength();
   SetLength(LX, LFeBytes);
@@ -324,7 +324,7 @@ end;
 function TECCurve.TDefaultLookupTable.LookupVar(AIndex: Int32): IECPoint;
 var
   LFeBytes, LPos, J: Int32;
-  LX, LY: TBytes;
+  LX, LY: TCryptoLibByteArray;
 begin
   LFeBytes := FOuter.GetFieldElementEncodingLength();
   SetLength(LX, LFeBytes);
@@ -338,7 +338,7 @@ begin
   Result := CreatePoint(LX, LY);
 end;
 
-function TECCurve.TDefaultLookupTable.CreatePoint(const AX, AY: TBytes): IECPoint;
+function TECCurve.TDefaultLookupTable.CreatePoint(const AX, AY: TCryptoLibByteArray): IECPoint;
 var
   LX, LY: IECFieldElement;
 begin
@@ -549,7 +549,7 @@ function TECCurve.CreateCacheSafeLookupTable(const APoints: TCryptoLibGenericArr
   AOff, ALen: Int32): IECLookupTable;
 var
   LFeBytes, LPos, I: Int32;
-  LTable: TBytes;
+  LTable: TCryptoLibByteArray;
   LP: IECPoint;
 begin
   LFeBytes := GetFieldElementEncodingLength();

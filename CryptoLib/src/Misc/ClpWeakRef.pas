@@ -29,7 +29,7 @@ type
   public
     procedure Assign(const AValue: T); inline;
     procedure Clear; inline;
-    function TryGetTarget(out target: T): Boolean; inline;
+    function TryGetTarget(out ATarget: T): Boolean; inline;
     function IsAlive: Boolean; inline;
 
     property Target: T read GetTarget;
@@ -57,13 +57,13 @@ begin
   Result := T(IInterface(FTarget));
 end;
 
-function TWeakRef<T>.TryGetTarget(out target: T): Boolean;
+function TWeakRef<T>.TryGetTarget(out ATarget: T): Boolean;
 begin
   Result := FTarget <> nil;
   if Result then
-    target := T(IInterface(FTarget))
+    ATarget := T(IInterface(FTarget))
   else
-    target := Default(T);
+    ATarget := Default(T);
 end;
 
 function TWeakRef<T>.IsAlive: Boolean;
@@ -73,7 +73,7 @@ end;
 
 class operator TWeakRef<T>.Implicit(const AValue: T): TWeakRef<T>;
 begin
-  Result.FTarget := Pointer(IInterface(AValue));
+  Result.Assign(AValue);
 end;
 
 class operator TWeakRef<T>.Implicit(const A: TWeakRef<T>): T;

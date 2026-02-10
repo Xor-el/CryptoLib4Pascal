@@ -117,7 +117,7 @@ end;
 
 class function TNat320.ToBigInteger64(const AX: TCryptoLibUInt64Array): TBigInteger;
 var
-  LBs: TBytes;
+  LBs: TCryptoLibByteArray;
   LX_i: UInt64;
   LI: Int32;
 begin

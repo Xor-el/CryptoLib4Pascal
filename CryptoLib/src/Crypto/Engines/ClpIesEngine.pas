@@ -554,21 +554,21 @@ end;
 function TIesEngine.ProcessBlock(const AIn: TCryptoLibByteArray;
   AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  ephKeyPair: IEphemeralKeyPair;
-  bIn: TBytesStream;
-  encLength: Int32;
-  z: TBigInteger;
+  LEphKeyPair: IEphemeralKeyPair;
+  LBIn: TBytesStream;
+  LEncLength: Int32;
+  LZ: TBigInteger;
   BigZ, VZ: TCryptoLibByteArray;
-  kdfParam: IKDFParameters;
+  LKdfParam: IKDFParameters;
 begin
   if (FForEncryption) then
   begin
     if (FKeyPairGenerator <> nil) then
     begin
-      ephKeyPair := FKeyPairGenerator.Generate;
+      LEphKeyPair := FKeyPairGenerator.Generate;
 
-      FPrivParam := ephKeyPair.GetKeyPair.Private;
-      FV := ephKeyPair.GetEncodedPublicKey;
+      FPrivParam := LEphKeyPair.GetKeyPair.Private;
+      FV := LEphKeyPair.GetEncodedPublicKey;
     end
   end
   else
@@ -576,13 +576,13 @@ begin
     if (FKeyParser <> nil) then
     begin
       // used TBytesStream here for one pass creation and population with byte array :)
-      bIn := TBytesStream.Create(System.Copy(AIn, AInOff, AInLen));
+      LBIn := TBytesStream.Create(System.Copy(AIn, AInOff, AInLen));
 
       try
-        bIn.Position := 0;
+        LBIn.Position := 0;
 
         try
-          FPubParam := FKeyParser.ReadKey(bIn);
+          FPubParam := FKeyParser.ReadKey(LBIn);
         except
           on e: EIOCryptoLibException do
           begin
@@ -598,19 +598,19 @@ begin
 
         end;
 
-        encLength := (AInLen - (bIn.Size - bIn.Position));
-        FV := TArrayUtilities.CopyOfRange<Byte>(AIn, AInOff, AInOff + encLength);
+        LEncLength := (AInLen - (LBIn.Size - LBIn.Position));
+        FV := TArrayUtilities.CopyOfRange<Byte>(AIn, AInOff, AInOff + LEncLength);
 
       finally
-        bIn.Free;
+        LBIn.Free;
       end;
     end;
   end;
 
   // Compute the common value and convert to byte array.
   FAgree.Init(FPrivParam);
-  z := FAgree.CalculateAgreement(FPubParam);
-  BigZ := TBigIntegers.AsUnsignedByteArray(FAgree.GetFieldSize, z);
+  LZ := FAgree.CalculateAgreement(FPubParam);
+  BigZ := TBigIntegers.AsUnsignedByteArray(FAgree.GetFieldSize, LZ);
 
   // Create input to KDF.
   if (System.Length(FV) <> 0) then
@@ -622,8 +622,8 @@ begin
 
   try
     // Initialise the KDF.
-    kdfParam := TKDFParameters.Create(BigZ, FParam.GetDerivationV);
-    FKdf.Init(kdfParam);
+    LKdfParam := TKDFParameters.Create(BigZ, FParam.GetDerivationV);
+    FKdf.Init(LKdfParam);
 
     if FForEncryption then
     begin

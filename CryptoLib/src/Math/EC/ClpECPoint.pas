@@ -784,7 +784,7 @@ var
   LC: IECCurve;
   LP: IECPoint;
 begin
-  LC := GetCurve();
+  LC := Curve;
   if LC = nil then
     Result := 0
   else
@@ -1771,7 +1771,7 @@ begin
   if IsInfinity then
     Exit(Self as IAbstractF2mPoint);
 
-  LCurve := GetCurve;
+  LCurve := Curve;
   LCoord := LCurve.CoordinateSystem;
 
   LX1 := RawXCoord;
@@ -1805,7 +1805,7 @@ begin
   if IsInfinity then
     Exit(Self as IAbstractF2mPoint);
 
-  LCurve := GetCurve;
+  LCurve := Curve;
   LCoord := LCurve.CoordinateSystem;
 
   LX1 := RawXCoord;

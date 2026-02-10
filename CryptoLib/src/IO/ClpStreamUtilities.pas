@@ -239,7 +239,7 @@ begin
 end;
 
 class function TStreamUtilities.WriteBufTo(const ABuf: TMemoryStream;
-  const AOutput: TBytes; AOffset: Integer): Integer;
+  const AOutput: TCryptoLibByteArray; AOffset: Integer): Integer;
 begin
   Result := ABuf.Size;
 
