@@ -40,11 +40,11 @@ type
 
   strict private
   var
-    FrndProv: IRandomNumberGenerator;
+    FRandomProvider: IRandomNumberGenerator;
 
   public
     /// <summary>
-    /// Uses TRandomNumberGenerator.Create() to Get randomness generator
+    /// Uses `TRandomNumberGenerator.Create()` to get randomness generator
     /// </summary>
     constructor Create(); overload;
     constructor Create(const ARng: IRandomNumberGenerator); overload;
@@ -89,7 +89,7 @@ end;
 constructor TCryptoApiRandomGenerator.Create(const ARng: IRandomNumberGenerator);
 begin
   inherited Create();
-  FRndProv := ARng;
+  FRandomProvider := ARng;
 end;
 
 constructor TCryptoApiRandomGenerator.Create;
@@ -99,13 +99,13 @@ end;
 
 procedure TCryptoApiRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray);
 begin
-  FRndProv.GetBytes(ABytes);
+  FRandomProvider.GetBytes(ABytes);
 end;
 
 procedure TCryptoApiRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray;
   AStart, ALen: Int32);
 var
-  LTmpBuf: TCryptoLibByteArray;
+  LTempBuffer: TCryptoLibByteArray;
 begin
   if (AStart < 0) then
   begin
@@ -123,10 +123,10 @@ begin
   end
   else
   begin
-    System.SetLength(LTmpBuf, ALen);
-    NextBytes(LTmpBuf);
+    System.SetLength(LTempBuffer, ALen);
+    NextBytes(LTempBuffer);
 
-    System.Move(LTmpBuf[0], ABytes[AStart], ALen * System.SizeOf(Byte));
+    System.Move(LTempBuffer[0], ABytes[AStart], ALen * System.SizeOf(Byte));
 
   end;
 end;

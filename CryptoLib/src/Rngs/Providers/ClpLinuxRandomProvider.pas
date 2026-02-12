@@ -21,19 +21,15 @@ unit ClpLinuxRandomProvider;
 
 interface
 
+{$IFDEF CRYPTOLIB_LINUX}
 uses
-{$IFDEF CRYPTOLIB_UNIX}
-  Classes,
 {$IFDEF FPC}
-  BaseUnix,
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   dl,
 {$ENDIF}
 {$ELSE}
-  Posix.Errno,
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   Posix.Dlfcn,
-{$ENDIF}
 {$ENDIF}
 {$ENDIF}
   SysUtils,
@@ -42,11 +38,10 @@ uses
 
 resourcestring
   SLinuxGetRandomError =
-    'An Error Occured while generating random data using getRandom API';
+    'An Error Occurred while generating random data using getRandom API';
 
 type
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-{$IFDEF CRYPTOLIB_LINUX}
 {$IFDEF CRYPTOLIB_ANDROID}
 const
   LIBC_SO = 'libc.so';
@@ -54,11 +49,14 @@ const
 const
   LIBC_SO = 'libc.so.6';
 {$ENDIF}
-{$ENDIF}
+
+const
+  GRND_NONBLOCK = $0001;  // Don't block; return EAGAIN if no entropy
+  GRND_RANDOM   = $0002;  // Use /dev/random pool instead of /dev/urandom
 
 type
-  TGetRandom = function(pbBuffer: PByte; buflen: LongWord; flags: UInt32)
-    : Int32; cdecl;
+  TGetRandom = function(ABuffer: PByte; ABufferLength: NativeUInt;
+    AFlags: UInt32): NativeInt; cdecl;
 {$ENDIF}
 
   /// <summary>
@@ -68,17 +66,9 @@ type
   TLinuxRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
 
   strict private
-{$IFDEF CRYPTOLIB_UNIX}
-  const
-    EINTR = {$IFDEF FPC}ESysEINTR {$ELSE}Posix.Errno.EINTR{$ENDIF};
-    GRND_DEFAULT: Int32 = $0000;
-
-    function ErrorNo: Int32;
-    function DevRandomDeviceRead(ALen: Int32; AData: PByte): Int32;
-{$ENDIF}
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   var
-    FIsGetRandomSupportedOnOS: Boolean;
+    FHasGetRandom: Boolean;
     FGetRandom: TGetRandom;
 
     function IsGetRandomAvailable(): Boolean;
@@ -95,10 +85,13 @@ type
 
   end;
 
+{$ENDIF}
+
 implementation
 
+{$IFDEF CRYPTOLIB_LINUX}
 uses
-  ClpArrayUtilities;
+  ClpDevRandomReader;
 
 { TLinuxRandomProvider }
 
@@ -106,85 +99,24 @@ constructor TLinuxRandomProvider.Create;
 begin
   inherited Create();
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  FIsGetRandomSupportedOnOS := IsGetRandomAvailable();
+  FHasGetRandom := IsGetRandomAvailable();
 {$ENDIF}
 end;
 
-{$IFDEF CRYPTOLIB_UNIX}
-
-function TLinuxRandomProvider.ErrorNo: Int32;
-begin
-  result := Errno;
-end;
-
-function TLinuxRandomProvider.DevRandomDeviceRead(ALen: Int32;
-  AData: PByte): Int32;
-var
-  LStream: TFileStream;
-  LRandGen: String;
-  LGot, LMaxChunkSize: Int32;
-begin
-  LMaxChunkSize := ALen;
-  LRandGen := '/dev/urandom';
-
-  if not FileExists(LRandGen) then
-  begin
-    LRandGen := '/dev/random';
-
-    if not FileExists(LRandGen) then
-    begin
-      result := -1;
-      Exit;
-    end;
-  end;
-
-  LStream := TFileStream.Create(LRandGen, fmOpenRead);
-
-  try
-    while (ALen > 0) do
-    begin
-      if ALen <= LMaxChunkSize then
-      begin
-        LMaxChunkSize := ALen;
-      end;
-
-      LGot := LStream.Read(AData^, LMaxChunkSize);
-
-      if (LGot = 0) then
-      begin
-        if ErrorNo = EINTR then
-        begin
-          continue;
-        end;
-
-        result := -1;
-        Exit;
-      end;
-
-      System.Inc(AData, LGot);
-      System.Dec(ALen, LGot);
-    end;
-    result := 0;
-  finally
-    LStream.Free;
-  end;
-end;
-
-{$ENDIF}
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
 
 function TLinuxRandomProvider.IsGetRandomAvailable(): Boolean;
 var
-  LLib: {$IFDEF FPC} PtrInt {$ELSE} NativeUInt {$ENDIF};
+  LLib: NativeUInt;
 begin
   FGetRandom := nil;
-  LLib := {$IFDEF FPC}PtrInt{$ENDIF}(dlopen(LIBC_SO, RTLD_NOW));
+  LLib := {$IFDEF FPC}NativeUInt{$ENDIF}(dlopen(LIBC_SO, RTLD_NOW));
   if LLib <> 0 then
   begin
     FGetRandom := dlsym(LLib, 'getrandom');
     dlclose(LLib);
   end;
-  result := System.Assigned(FGetRandom);
+  Result := System.Assigned(FGetRandom);
 end;
 
 {$ENDIF}
@@ -192,40 +124,36 @@ end;
 function TLinuxRandomProvider.GenRandomBytesLinux(ALen: Int32;
   AData: PByte): Int32;
 var
-  LGot: Int32;
+  LBytesRead: NativeInt;
 begin
-{$IFDEF CRYPTOLIB_LINUX}
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  if FIsGetRandomSupportedOnOS then
+  if FHasGetRandom then
   begin
     while (ALen > 0) do
     begin
-      LGot := FGetRandom(AData, LongWord(ALen), GRND_DEFAULT);
+      LBytesRead := FGetRandom(AData, NativeUInt(ALen), 0);
 
-      if (LGot < 0) then
+      if (LBytesRead < 0) then
       begin
-        if ErrorNo = EINTR then
+        if TDevRandomReader.GetErrNo = EINTR then
         begin
           continue;
         end;
-        result := -1;
+        Result := -1;
         Exit;
       end;
-      System.Inc(AData, LGot);
-      System.Dec(ALen, LGot);
+      System.Inc(AData, LBytesRead);
+      System.Dec(ALen, LBytesRead);
     end;
-    result := 0;
+    Result := 0;
   end
   else
   begin
     // fallback for when getrandom API is not available
-    result := DevRandomDeviceRead(ALen, AData);
+    Result := TDevRandomReader.Read(ALen, AData, ALen);
   end;
 {$ELSE}
-  result := DevRandomDeviceRead(ALen, AData);
-{$ENDIF}
-{$ELSE}
-  result := -1;
+  Result := TDevRandomReader.Read(ALen, AData, ALen);
 {$ENDIF}
 end;
 
@@ -240,35 +168,39 @@ begin
     Exit;
   end;
 
-{$IFDEF CRYPTOLIB_LINUX}
   if GenRandomBytesLinux(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SLinuxGetRandomError);
   end;
-{$ELSE}
-  raise EOSRandomCryptoLibException.Create('LinuxRandomProvider is only available on Linux');
-{$ENDIF}
 end;
 
 procedure TLinuxRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
+var
+  LI: Int32;
+  LTmp: TCryptoLibByteArray;
 begin
-  repeat
-    GetBytes(AData);
-  until (TArrayUtilities.NoZeroes(AData));
+  GetBytes(AData);
+  System.SetLength(LTmp, 1);
+  for LI := System.Low(AData) to System.High(AData) do
+  begin
+    while AData[LI] = 0 do
+    begin
+      GetBytes(LTmp);
+      AData[LI] := LTmp[0];
+    end;
+  end;
 end;
 
 function TLinuxRandomProvider.GetIsAvailable: Boolean;
 begin
-{$IFDEF CRYPTOLIB_LINUX}
-  result := True;
-{$ELSE}
-  result := False;
-{$ENDIF}
+  Result := True;
 end;
 
 function TLinuxRandomProvider.GetName: String;
 begin
-  result := 'Linux';
+  Result := 'Linux';
 end;
+
+{$ENDIF}
 
 end.

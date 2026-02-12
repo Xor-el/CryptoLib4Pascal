@@ -37,7 +37,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidAESRNGSeedLength =
+  SInvalidAesRngSeedLength =
     'AES RNG Seed Length must be either one of these "128/192/256 bits".';
 
 type
@@ -57,7 +57,7 @@ type
   var
     FInternalLock: TCriticalSection;
     FCounter: TCryptoLibByteArray;
-    FAESRNGSeedLength, FBytesSinceSeed, FReseedAfterBytes: Int32;
+    FAesRngSeedLength, FBytesSinceSeed, FReseedAfterBytes: Int32;
     FCipher: IBufferedCipher;
 
     class function GetInstance: IRandomSourceProvider; static;
@@ -69,13 +69,13 @@ type
     class constructor Create();
     class destructor Destroy();
 
-    class procedure ValidateAESRNGSeedLength(ASeedLength: Int32);
+    class procedure ValidateAesRngSeedLength(ASeedLength: Int32);
 
     constructor Create(const AAesRngSeed: TCryptoLibByteArray; AReseedAfterBytes: Int32); overload;
 
     procedure DoIncrementCounter();
 
-    procedure DoSeed(const AAESRNGSeed: TCryptoLibByteArray);
+    procedure DoSeed(const AAesRngSeed: TCryptoLibByteArray);
 
   public
     constructor Create(AAesRngSeedLength: Int32 = 32; AReseedAfterBytes: Int32 = 1024 * 1024); overload;
@@ -118,12 +118,12 @@ begin
   Result := TAesRandomProvider.Create();
 end;
 
-class procedure TAesRandomProvider.ValidateAESRNGSeedLength(ASeedLength: Int32);
+class procedure TAesRandomProvider.ValidateAesRngSeedLength(ASeedLength: Int32);
 begin
   if ((ASeedLength < 16) or (ASeedLength > 32) or ((ASeedLength and 7) <> 0))
   then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidAESRNGSeedLength);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidAesRngSeedLength);
   end;
 end;
 
@@ -156,24 +156,24 @@ end;
 
 procedure TAesRandomProvider.DoIncrementCounter;
 var
-  i: Int32;
+  LI: Int32;
 begin
-  for i := System.Low(FCounter) to System.High(FCounter) do
+  for LI := System.Low(FCounter) to System.High(FCounter) do
   begin
-    System.Inc(FCounter[i]);
+    System.Inc(FCounter[LI]);
     // Check whether we need to loop again to carry the one.
-    if (FCounter[i] <> 0) then
+    if (FCounter[LI] <> 0) then
     begin
       break;
     end;
   end;
 end;
 
-procedure TAesRandomProvider.DoSeed(const AAESRNGSeed: TCryptoLibByteArray);
+procedure TAesRandomProvider.DoSeed(const AAesRngSeed: TCryptoLibByteArray);
 var
   LKeyParameter: IKeyParameter;
 begin
-  LKeyParameter := TKeyParameter.Create(AAESRNGSeed);
+  LKeyParameter := TKeyParameter.Create(AAesRngSeed);
   FInternalLock.Acquire;
   try
     FCipher.Init(True, LKeyParameter);
@@ -187,21 +187,24 @@ constructor TAesRandomProvider.Create(const AAesRngSeed: TCryptoLibByteArray; AR
 var
   LAesEngine: IAesEngine;
   LBlockCipher: IBlockCipher;
-  LAESRNGSeed: TCryptoLibByteArray;
+  LAesRngSeed: TCryptoLibByteArray;
 begin
   inherited Create();
-  LAESRNGSeed := System.Copy(AAesRngSeed);
+  LAesRngSeed := System.Copy(AAesRngSeed);
   FInternalLock := TCriticalSection.Create;
   // Set up engine
   LAesEngine := TAesEngine.Create();
   LBlockCipher := LAesEngine as IBlockCipher; // ECB no padding
   FCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
   System.SetLength(FCounter, CounterSize);
-  FAESRNGSeedLength := System.Length(LAESRNGSeed);
+  FAesRngSeedLength := System.Length(LAesRngSeed);
   FReseedAfterBytes := AReseedAfterBytes;
-  ValidateAESRNGSeedLength(FAESRNGSeedLength);
-  DoSeed(LAESRNGSeed);
-  TArrayUtilities.Fill<Byte>(LAESRNGSeed, 0, System.Length(LAESRNGSeed), Byte(0)); // clear key from memory
+  ValidateAesRngSeedLength(FAesRngSeedLength);
+  try
+    DoSeed(LAesRngSeed);
+  finally
+    TArrayUtilities.Fill<Byte>(LAesRngSeed, 0, System.Length(LAesRngSeed), Byte(0)); // clear key from memory
+  end;
 end;
 
 constructor TAesRandomProvider.Create(AAesRngSeedLength, AReseedAfterBytes: Int32);
@@ -209,9 +212,12 @@ var
   LSeed: TCryptoLibByteArray;
 begin
   System.SetLength(LSeed, AAesRngSeedLength);
-  GetRawEntropy(LSeed); // pure entropy from OS
-  Create(LSeed, AReseedAfterBytes);
-  TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
+  try
+    GetRawEntropy(LSeed); // pure entropy from OS
+    Create(LSeed, AReseedAfterBytes);
+  finally
+    TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
+  end;
 end;
 
 destructor TAesRandomProvider.Destroy;
@@ -222,7 +228,7 @@ end;
 
 procedure TAesRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
-  LDataLength, LDatum, LResultLength: Int32;
+  LDataLength, LOffset, LResultLength: Int32;
   LSeed, LResult: TCryptoLibByteArray;
 begin
   LDataLength := System.Length(AData);
@@ -233,22 +239,25 @@ begin
 
   if (FBytesSinceSeed > FReseedAfterBytes) then
   begin
-    System.SetLength(LSeed, FAESRNGSeedLength);
-    GetRawEntropy(LSeed); // pure entropy from OS
-    DoSeed(LSeed);
-    TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
+    System.SetLength(LSeed, FAesRngSeedLength);
+    try
+      GetRawEntropy(LSeed); // pure entropy from OS
+      DoSeed(LSeed);
+    finally
+      TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
+    end;
   end;
 
-  LDatum := 0;
+  LOffset := 0;
 
   FInternalLock.Acquire;
   try
     while (LDataLength shr 4) > 0 do
     begin
       DoIncrementCounter;
-      LResultLength := FCipher.DoFinal(FCounter, AData, LDatum);
+      LResultLength := FCipher.DoFinal(FCounter, AData, LOffset);
 
-      System.Inc(LDatum, LResultLength);
+      System.Inc(LOffset, LResultLength);
       System.Inc(FBytesSinceSeed, LResultLength);
       System.Dec(LDataLength, LResultLength);
     end;
@@ -257,7 +266,7 @@ begin
     begin
       DoIncrementCounter;
       LResult := FCipher.DoFinal(FCounter);
-      System.Move(LResult[0], AData[LDatum], LDataLength * System.SizeOf(Byte));
+      System.Move(LResult[0], AData[LOffset], LDataLength * System.SizeOf(Byte));
       System.Inc(FBytesSinceSeed, LDataLength);
     end;
 
@@ -267,10 +276,20 @@ begin
 end;
 
 procedure TAesRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
+var
+  LI: Int32;
+  LTmp: TCryptoLibByteArray;
 begin
-  repeat
-    GetBytes(AData);
-  until (TArrayUtilities.NoZeroes(AData));
+  GetBytes(AData);
+  System.SetLength(LTmp, 1);
+  for LI := System.Low(AData) to System.High(AData) do
+  begin
+    while AData[LI] = 0 do
+    begin
+      GetBytes(LTmp);
+      AData[LI] := LTmp[0];
+    end;
+  end;
 end;
 
 function TAesRandomProvider.GetIsAvailable: Boolean;

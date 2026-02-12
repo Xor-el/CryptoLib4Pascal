@@ -21,22 +21,15 @@ unit ClpUnixRandomProvider;
 
 interface
 
-uses
 {$IFDEF CRYPTOLIB_UNIX}
-  Classes,
-{$IFDEF FPC}
-  BaseUnix,
-{$ELSE}
-  Posix.Errno,
-{$ENDIF}
-{$ENDIF}
+uses
   SysUtils,
   ClpCryptoLibTypes,
   ClpIRandomSourceProvider;
 
 resourcestring
   SRandomDeviceReadError =
-    'An Error Occured while reading random data from random device (file)';
+    'An Error Occurred while reading random data from random device (file)';
 
 type
   /// <summary>
@@ -46,13 +39,7 @@ type
   TUnixRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
 
   strict private
-{$IFDEF CRYPTOLIB_UNIX}
-  const
-    EINTR = {$IFDEF FPC}ESysEINTR {$ELSE}Posix.Errno.EINTR{$ENDIF};
-
-    function ErrorNo: Int32;
-    function DevRandomDeviceRead(ALen: Int32; AData: PByte): Int32;
-{$ENDIF}
+    function GenRandomBytesUnix(ALen: Int32; AData: PByte): Int32;
 
   public
     constructor Create();
@@ -64,10 +51,13 @@ type
 
   end;
 
+{$ENDIF}
+
 implementation
 
+{$IFDEF CRYPTOLIB_UNIX}
 uses
-  ClpArrayUtilities;
+  ClpDevRandomReader;
 
 { TUnixRandomProvider }
 
@@ -76,67 +66,11 @@ begin
   inherited Create();
 end;
 
-{$IFDEF CRYPTOLIB_UNIX}
-
-function TUnixRandomProvider.ErrorNo: Int32;
-begin
-  result := Errno;
-end;
-
-function TUnixRandomProvider.DevRandomDeviceRead(ALen: Int32;
+function TUnixRandomProvider.GenRandomBytesUnix(ALen: Int32;
   AData: PByte): Int32;
-var
-  LStream: TFileStream;
-  LRandGen: String;
-  LGot, LMaxChunkSize: Int32;
 begin
-  LMaxChunkSize := ALen;
-  LRandGen := '/dev/urandom';
-
-  if not FileExists(LRandGen) then
-  begin
-    LRandGen := '/dev/random';
-
-    if not FileExists(LRandGen) then
-    begin
-      result := -1;
-      Exit;
-    end;
-  end;
-
-  LStream := TFileStream.Create(LRandGen, fmOpenRead);
-
-  try
-    while (ALen > 0) do
-    begin
-      if ALen <= LMaxChunkSize then
-      begin
-        LMaxChunkSize := ALen;
-      end;
-
-      LGot := LStream.Read(AData^, LMaxChunkSize);
-
-      if (LGot = 0) then
-      begin
-        if ErrorNo = EINTR then
-        begin
-          continue;
-        end;
-
-        result := -1;
-        Exit;
-      end;
-
-      System.Inc(AData, LGot);
-      System.Dec(ALen, LGot);
-    end;
-    result := 0;
-  finally
-    LStream.Free;
-  end;
+  Result := TDevRandomReader.Read(ALen, AData, ALen);
 end;
-
-{$ENDIF}
 
 procedure TUnixRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
@@ -149,35 +83,39 @@ begin
     Exit;
   end;
 
-{$IFDEF CRYPTOLIB_UNIX}
-  if DevRandomDeviceRead(LCount, PByte(AData)) <> 0 then
+  if GenRandomBytesUnix(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SRandomDeviceReadError);
   end;
-{$ELSE}
-  raise EOSRandomCryptoLibException.Create('UnixRandomProvider is only available on Unix platforms');
-{$ENDIF}
 end;
 
 procedure TUnixRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
+var
+  LI: Int32;
+  LTmp: TCryptoLibByteArray;
 begin
-  repeat
-    GetBytes(AData);
-  until (TArrayUtilities.NoZeroes(AData));
+  GetBytes(AData);
+  System.SetLength(LTmp, 1);
+  for LI := System.Low(AData) to System.High(AData) do
+  begin
+    while AData[LI] = 0 do
+    begin
+      GetBytes(LTmp);
+      AData[LI] := LTmp[0];
+    end;
+  end;
 end;
 
 function TUnixRandomProvider.GetIsAvailable: Boolean;
 begin
-{$IFDEF CRYPTOLIB_UNIX}
-  result := True;
-{$ELSE}
-  result := False;
-{$ENDIF}
+  Result := True;
 end;
 
 function TUnixRandomProvider.GetName: String;
 begin
-  result := 'Unix';
+  Result := 'Unix';
 end;
+
+{$ENDIF}
 
 end.

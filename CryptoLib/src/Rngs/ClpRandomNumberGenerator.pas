@@ -86,7 +86,7 @@ end;
 
 class function TRandomNumberGenerator.CreateRng: IRandomNumberGenerator;
 begin
-  result := TDefaultRandomNumberGenerator.Create(TOSRandomProvider.Instance);
+  Result := TDefaultRandomNumberGenerator.Create(TOSRandomProvider.Instance);
 end;
 
 class function TRandomNumberGenerator.CreateRng(const ARandomSource
@@ -96,7 +96,7 @@ begin
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SRandomSourceProviderNil);
   end;
-  result := TDefaultRandomNumberGenerator.Create(ARandomSource);
+  Result := TDefaultRandomNumberGenerator.Create(ARandomSource);
 end;
 
 { TDefaultRandomNumberGenerator }

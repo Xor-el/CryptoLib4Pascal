@@ -21,6 +21,7 @@ unit ClpGenericBSDRandomProvider;
 
 interface
 
+{$IFDEF CRYPTOLIB_GENERIC_BSD}
 uses
   SysUtils,
   ClpCryptoLibTypes,
@@ -28,14 +29,12 @@ uses
 
 resourcestring
   SArc4RandomBufGenerationError =
-    'An Error Occured while generating random data using arc4random_buf API.';
+    'An Error Occurred while generating random data using arc4random_buf API.';
+
+procedure arc4random_buf(ABytes: PByte; ACount: NativeUInt); cdecl;
+  external 'c' name 'arc4random_buf';
 
 type
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
-procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl;
-  external 'c' name 'arc4random_buf';
-{$ENDIF}
-
   /// <summary>
   /// Generic BSD OS random source provider.
   /// Implements BSD variants using arc4random_buf
@@ -55,10 +54,11 @@ procedure arc4random_buf(bytes: PByte; count: LongWord); cdecl;
 
   end;
 
+{$ENDIF}
+
 implementation
 
-uses
-  ClpArrayUtilities;
+{$IFDEF CRYPTOLIB_GENERIC_BSD}
 
 { TGenericBSDRandomProvider }
 
@@ -70,12 +70,8 @@ end;
 function TGenericBSDRandomProvider.GenRandomBytesGenericBSD(ALen: Int32;
   AData: PByte): Int32;
 begin
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
-  arc4random_buf(AData, LongWord(ALen));
-  result := 0;
-{$ELSE}
-  result := -1;
-{$ENDIF}
+  arc4random_buf(AData, NativeUInt(ALen));
+  Result := 0;
 end;
 
 procedure TGenericBSDRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
@@ -89,35 +85,39 @@ begin
     Exit;
   end;
 
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
   if GenRandomBytesGenericBSD(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SArc4RandomBufGenerationError);
   end;
-{$ELSE}
-  raise EOSRandomCryptoLibException.Create('GenericBSDRandomProvider is only available on BSD platforms');
-{$ENDIF}
 end;
 
 procedure TGenericBSDRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
+var
+  LI: Int32;
+  LTmp: TCryptoLibByteArray;
 begin
-  repeat
-    GetBytes(AData);
-  until (TArrayUtilities.NoZeroes(AData));
+  GetBytes(AData);
+  System.SetLength(LTmp, 1);
+  for LI := System.Low(AData) to System.High(AData) do
+  begin
+    while AData[LI] = 0 do
+    begin
+      GetBytes(LTmp);
+      AData[LI] := LTmp[0];
+    end;
+  end;
 end;
 
 function TGenericBSDRandomProvider.GetIsAvailable: Boolean;
 begin
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
-  result := True;
-{$ELSE}
-  result := False;
-{$ENDIF}
+  Result := True;
 end;
 
 function TGenericBSDRandomProvider.GetName: String;
 begin
-  result := 'GenericBSD';
+  Result := 'GenericBSD';
 end;
+
+{$ENDIF}
 
 end.

@@ -21,8 +21,8 @@ unit ClpAppleRandomProvider;
 
 interface
 
-uses
 {$IFDEF CRYPTOLIB_APPLE}
+uses
 {$IFDEF FPC}
 {$LINKFRAMEWORK Security}
 {$IFDEF CRYPTOLIB_MACOS}
@@ -38,38 +38,20 @@ uses
   Macapi.Foundation,
 {$ENDIF}
 {$ENDIF}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_UNIX}
-  Classes,
-{$IFDEF FPC}
-  BaseUnix,
-{$ELSE}
-  Posix.Errno,
-{$ENDIF}
-{$ENDIF}
   SysUtils,
   ClpCryptoLibTypes,
   ClpIRandomSourceProvider;
 
 resourcestring
-  SAppleSecRandomCopyBytesGenerationError =
-    'An Error Occured while generating random data using SecRandomCopyBytes API.';
+  SAppleSecRandomError =
+    'An Error Occurred while generating random data using SecRandomCopyBytes API.';
 
 type
-{$IFDEF CRYPTOLIB_APPLE}
 {$IFDEF FPC}
-  // similar to a TOpaqueData already defined in newer FPC but not available in 3.0.4
-  // TODO when we upgrade to FPC 3.2.0, remove " __SecRandom = record end;" declaration
-  __SecRandom = record
-  end;
+  SecRandomRef = OpaquePointer;
 
-  // similar to POpaqueData (or an OpaquePointer) already defined in newer FPC but not available in 3.0.4
-  // TODO when we upgrade to FPC 3.2.0, use inbuilt OpaquePointer instead
-  // replace "SecRandomRef = ^__SecRandom;" with "SecRandomRef = OpaquePointer;"
-  SecRandomRef = ^__SecRandom;
-
-function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
-  : Int32; cdecl; external;
+function SecRandomCopyBytes(ARnd: SecRandomRef; ACount: NativeUInt;
+  ABytes: PByte): Int32; cdecl; external;
 
 {$ELSE}
 
@@ -79,10 +61,10 @@ type
 const
   libSecurity = '/System/Library/Frameworks/Security.framework/Security';
 
-function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
-  : Int32; cdecl; external libSecurity Name _PU + 'SecRandomCopyBytes';
+function SecRandomCopyBytes(ARnd: SecRandomRef; ACount: NativeUInt;
+  ABytes: PByte): Int32; cdecl;
+  external libSecurity Name _PU + 'SecRandomCopyBytes';
 
-{$ENDIF}
 {$ENDIF}
 
   /// <summary>
@@ -92,13 +74,9 @@ function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
   TAppleRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
 
   strict private
-{$IFDEF CRYPTOLIB_UNIX}
   const
-    EINTR = {$IFDEF FPC}ESysEINTR {$ELSE}Posix.Errno.EINTR{$ENDIF};
+    NSAppKitVersionNumber10_7 = 1138;
 
-    function ErrorNo: Int32;
-    function DevRandomDeviceRead(ALen: Int32; AData: PByte): Int32;
-{$ENDIF}
     function GenRandomBytesApple(ALen: Int32; AData: PByte): Int32;
 
   public
@@ -111,10 +89,13 @@ function SecRandomCopyBytes(rnd: SecRandomRef; count: LongWord; bytes: PByte)
 
   end;
 
+{$ENDIF}
+
 implementation
 
+{$IFDEF CRYPTOLIB_APPLE}
 uses
-  ClpArrayUtilities;
+  ClpDevRandomReader;
 
 { TAppleRandomProvider }
 
@@ -123,100 +104,33 @@ begin
   inherited Create();
 end;
 
-{$IFDEF CRYPTOLIB_UNIX}
-
-function TAppleRandomProvider.ErrorNo: Int32;
-begin
-  result := Errno;
-end;
-
-function TAppleRandomProvider.DevRandomDeviceRead(ALen: Int32;
-  AData: PByte): Int32;
-var
-  LStream: TFileStream;
-  LRandGen: String;
-  LGot, LMaxChunkSize: Int32;
-begin
-  LMaxChunkSize := ALen;
-  LRandGen := '/dev/urandom';
-
-  if not FileExists(LRandGen) then
-  begin
-    LRandGen := '/dev/random';
-
-    if not FileExists(LRandGen) then
-    begin
-      result := -1;
-      Exit;
-    end;
-  end;
-
-  LStream := TFileStream.Create(LRandGen, fmOpenRead);
-
-  try
-    while (ALen > 0) do
-    begin
-      if ALen <= LMaxChunkSize then
-      begin
-        LMaxChunkSize := ALen;
-      end;
-
-      LGot := LStream.Read(AData^, LMaxChunkSize);
-
-      if (LGot = 0) then
-      begin
-        if ErrorNo = EINTR then
-        begin
-          continue;
-        end;
-
-        result := -1;
-        Exit;
-      end;
-
-      System.Inc(AData, LGot);
-      System.Dec(ALen, LGot);
-    end;
-    result := 0;
-  finally
-    LStream.Free;
-  end;
-end;
-
-{$ENDIF}
-
 function TAppleRandomProvider.GenRandomBytesApple(ALen: Int32;
   AData: PByte): Int32;
-{$IFDEF CRYPTOLIB_APPLE}
+
   function kSecRandomDefault: SecRandomRef;
   begin
 {$IFDEF FPC}
-    result := nil;
+    Result := nil;
 {$ELSE}
-    result := CocoaPointerConst(libSecurity, 'kSecRandomDefault');
+    Result := CocoaPointerConst(libSecurity, 'kSecRandomDefault');
 {$ENDIF}
   end;
-{$ENDIF}
 
 begin
-{$IFDEF CRYPTOLIB_APPLE}
 {$IF DEFINED(CRYPTOLIB_MACOS)}
   // >= (Mac OS X 10.7+)
-  if NSAppKitVersionNumber >= 1138 then // NSAppKitVersionNumber10_7
+  if NSAppKitVersionNumber >= NSAppKitVersionNumber10_7 then
   begin
-    result := SecRandomCopyBytes(kSecRandomDefault, LongWord(ALen), AData);
+    Result := SecRandomCopyBytes(kSecRandomDefault, NativeUInt(ALen), AData);
   end
   else
   begin
     // fallback for when SecRandomCopyBytes API is not available
-    result := DevRandomDeviceRead(ALen, AData);
+    Result := TDevRandomReader.Read(ALen, AData, ALen);
   end;
 {$ELSE}
-  result := SecRandomCopyBytes(kSecRandomDefault, LongWord(ALen), AData);
+  Result := SecRandomCopyBytes(kSecRandomDefault, NativeUInt(ALen), AData);
 {$IFEND}
-{$ELSE}
-  result := -1;
-{$ENDIF}
 end;
 
 procedure TAppleRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
@@ -230,36 +144,39 @@ begin
     Exit;
   end;
 
-{$IFDEF CRYPTOLIB_APPLE}
   if GenRandomBytesApple(LCount, PByte(AData)) <> 0 then
   begin
-    raise EOSRandomCryptoLibException.CreateRes
-      (@SAppleSecRandomCopyBytesGenerationError);
+    raise EOSRandomCryptoLibException.CreateRes(@SAppleSecRandomError);
   end;
-{$ELSE}
-  raise EOSRandomCryptoLibException.Create('AppleRandomProvider is only available on Apple platforms');
-{$ENDIF}
 end;
 
 procedure TAppleRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
+var
+  LI: Int32;
+  LTmp: TCryptoLibByteArray;
 begin
-  repeat
-    GetBytes(AData);
-  until (TArrayUtilities.NoZeroes(AData));
+  GetBytes(AData);
+  System.SetLength(LTmp, 1);
+  for LI := System.Low(AData) to System.High(AData) do
+  begin
+    while AData[LI] = 0 do
+    begin
+      GetBytes(LTmp);
+      AData[LI] := LTmp[0];
+    end;
+  end;
 end;
 
 function TAppleRandomProvider.GetIsAvailable: Boolean;
 begin
-{$IFDEF CRYPTOLIB_APPLE}
-  result := True;
-{$ELSE}
-  result := False;
-{$ENDIF}
+  Result := True;
 end;
 
 function TAppleRandomProvider.GetName: String;
 begin
-  result := 'Apple';
+  Result := 'Apple';
 end;
+
+{$ENDIF}
 
 end.

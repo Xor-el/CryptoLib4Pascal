@@ -119,7 +119,7 @@ begin
       FLock.Leave;
     end;
   end;
-  result := FInstance;
+  Result := FInstance;
 end;
 
 class procedure TOSRandomProvider.Boot;
