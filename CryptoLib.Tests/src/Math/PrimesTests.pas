@@ -225,14 +225,14 @@ begin
         LSt2 := TPrimes.GenerateSTRandomPrime(LDigest, PRIME_BITS, LInputSeed);
         CheckTrue(LSt.Prime.Equals(LSt2.Prime), 'same seed -> same prime');
         CheckEquals(LSt.PrimeGenCounter, LSt2.PrimeGenCounter, 'same seed -> same counter');
-        CheckTrue(TArrayUtilities.AreEqual<Byte>(LSt.PrimeSeed, LSt2.PrimeSeed), 'same seed -> same PrimeSeed');
+        CheckTrue(AreEqual(LSt.PrimeSeed, LSt2.PrimeSeed), 'same seed -> same PrimeSeed');
 
         for LI := 0 to System.Length(LInputSeed) - 1 do
           LInputSeed[LI] := LInputSeed[LI] xor $FF;
 
         LSt3 := TPrimes.GenerateSTRandomPrime(LDigest, PRIME_BITS, LInputSeed);
         CheckTrue(not LSt.Prime.Equals(LSt3.Prime), 'different seed -> different prime');
-        CheckFalse(TArrayUtilities.AreEqual<Byte>(LSt.PrimeSeed, LSt3.PrimeSeed), 'different seed -> different PrimeSeed');
+        CheckFalse(AreEqual(LSt.PrimeSeed, LSt3.PrimeSeed), 'different seed -> different PrimeSeed');
 
         if LSt.PrimeGenCounter = LSt3.PrimeGenCounter then
           Inc(LCoincidenceCount);

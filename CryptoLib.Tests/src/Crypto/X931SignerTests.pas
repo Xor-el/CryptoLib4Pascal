@@ -227,7 +227,7 @@ begin
 
   LS := LSigner.GenerateSignature();
 
-  CheckTrue(TArrayUtilities.AreEqual<Byte>(LSig, LS), 'RSA X931 sig test 3 failed.');
+  CheckTrue(AreEqual(LSig, LS), 'RSA X931 sig test 3 failed.');
 
   LSigner.Init(False, LRsaPublic);
 

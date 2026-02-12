@@ -286,7 +286,7 @@ begin
   eng.BlockUpdate(msg, 0, System.Length(msg));
   s := eng.GenerateSignature();
 
-  CheckTrue(TArrayUtilities.AreEqual<Byte>(s, sig),
+  CheckTrue(AreEqual(s, sig),
     Format('Test %d: PSS signature generation failed', [id]));
 
   eng.Init(False, pub);

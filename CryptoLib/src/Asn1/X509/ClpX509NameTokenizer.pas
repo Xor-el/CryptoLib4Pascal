@@ -28,7 +28,7 @@ uses
 
 type
   /// <summary>
-  /// Class for breaking up an X500 Name into its component tokens, ala java.util.StringTokenizer.
+  /// Class for breaking up an X500 Name into its component tokens.
   /// </summary>
   TX509NameTokenizer = class sealed(TInterfacedObject, IX509NameTokenizer)
 

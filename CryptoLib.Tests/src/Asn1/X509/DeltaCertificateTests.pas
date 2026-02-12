@@ -187,7 +187,7 @@ begin
   Check(LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'base signed by ec_dsa_root');
   LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
   LExtCert := ReadCert(FDeltaEcDsaDualSigEe);
-  Check(TArrayUtilities.AreEqual<Byte>(LExtCert.GetEncoded, LDeltaCert.GetEncoded), 'delta equals ec_dsa_dual_sig_ee');
+  Check(AreEqual(LExtCert.GetEncoded, LDeltaCert.GetEncoded), 'delta equals ec_dsa_dual_sig_ee');
   Check(LDeltaCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'delta signed by ec_dsa_root');
 end;
 

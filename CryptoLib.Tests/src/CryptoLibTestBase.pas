@@ -36,6 +36,7 @@ type
     procedure ZeroFill(const data: TBytes);
     function Prepend(const data: TBytes; b: Byte): TBytes;
     function AreEqual(const A, b: TBytes): Boolean;
+    function CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;
 
   end;
 
@@ -72,6 +73,11 @@ end;
 function TCryptoLibAlgorithmTestCase.AreEqual(const A, b: TBytes): Boolean;
 begin
   result := TArrayUtilities.AreEqual<Byte>(A, b);
+end;
+
+function TCryptoLibAlgorithmTestCase.CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;
+begin
+  Result := TArrayUtilities.CopyOfRange<Byte>(AData, AFrom, ATo);
 end;
 
 end.

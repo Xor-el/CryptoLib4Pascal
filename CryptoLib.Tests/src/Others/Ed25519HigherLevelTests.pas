@@ -923,9 +923,9 @@ begin
       Fail('x509PubBytes too short');
     if System.Length(LX509PrivBytes) < 16 then
       Fail('x509PrivBytes too short');
-    LPubBytes := TArrayUtilities.CopyOfRange<Byte>(LX509PubBytes, 12,
+    LPubBytes := CopyOfRange(LX509PubBytes, 12,
       System.Length(LX509PubBytes));
-    LPrivBytes := TArrayUtilities.CopyOfRange<Byte>(LX509PrivBytes, 16,
+    LPrivBytes := CopyOfRange(LX509PrivBytes, 16,
       System.Length(LX509PrivBytes));
 
     LPub := TEd25519PublicKeyParameters.Create(LPubBytes);
