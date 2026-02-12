@@ -144,7 +144,7 @@ type
     function GetEncoded: TCryptoLibByteArray;
 
     function Equals(AObj: TObject): Boolean; reintroduce;
-    function GetHashCode: Int32; override;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
     function ToString: String; override;
 
     function IsSignatureValid(const AKey: IAsymmetricKeyParameter): Boolean; overload;
@@ -700,7 +700,7 @@ begin
     Result := False;
 end;
 
-function TX509Certificate.GetHashCode: Int32;
+function TX509Certificate.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 var
   LEncoding: TCryptoLibByteArray;
 begin

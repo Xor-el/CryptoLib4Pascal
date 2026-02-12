@@ -191,7 +191,7 @@ var
   LDigestAlg: TDigestAlgorithm;
 begin
   Result := nil;
-  if not TEnumUtilities.TryGetEnumValue<TDigestAlgorithm>(AMechanism, LDigestAlg) then
+  if not (TEnumUtilities.TryGetEnumValue<TDigestAlgorithm>(AMechanism, LDigestAlg)) then
     Exit;
   case LDigestAlg of
     TDigestAlgorithm.BLAKE2B_160:

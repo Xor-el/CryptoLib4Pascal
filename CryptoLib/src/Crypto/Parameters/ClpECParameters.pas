@@ -65,6 +65,8 @@ type
     FG: IECPoint;
     Fn, FH, FHInv: TBigInteger;
 
+  strict protected
+
     function GetCurve: IECCurve; inline;
     function GetG: IECPoint; inline;
     function GetH: TBigInteger; inline;

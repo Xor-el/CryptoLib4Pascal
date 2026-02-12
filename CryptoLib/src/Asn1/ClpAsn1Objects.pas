@@ -1708,13 +1708,14 @@ type
     var
       FContents: TCryptoLibByteArray;
       FStart: Int32;
-    function GetValue(): TBigInteger;
-    function GetIntValueExact(): Int32;
+
     /// <summary>
     /// Class constructor to initialize static fields.
     /// </summary>
     class constructor Create;
   strict protected
+    function GetValue(): TBigInteger;
+    function GetIntValueExact(): Int32;
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
   public

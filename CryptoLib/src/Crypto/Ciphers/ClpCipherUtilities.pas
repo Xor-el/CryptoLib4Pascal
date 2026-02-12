@@ -315,7 +315,7 @@ begin
     Exit;
 
   LAlgorithmName := UpperCase(TCollectionUtilities.GetValueOrKey<String>(FAlgorithmMap, LParts[0]));
-  if not TEnumUtilities.TryGetEnumValue<TCipherAlgorithm>(LAlgorithmName, LCipherAlgorithm) then
+  if not (TEnumUtilities.TryGetEnumValue<TCipherAlgorithm>(LAlgorithmName, LCipherAlgorithm)) then
     Exit;
 
   LBlockCipher := nil;
@@ -357,7 +357,7 @@ begin
       LCipherPadding := TCipherPadding.RAW
     else if LPaddingName = 'X9.23PADDING' then
       LCipherPadding := TCipherPadding.X923PADDING
-    else if not TEnumUtilities.TryGetEnumValue<TCipherPadding>(LPaddingName, LCipherPadding) then
+    else if not (TEnumUtilities.TryGetEnumValue<TCipherPadding>(LPaddingName, LCipherPadding)) then
       Exit;
 
     case LCipherPadding of
@@ -404,7 +404,7 @@ begin
 
     if LModeName = '' then
       LCipherMode := TCipherMode.NONE
-    else if not TEnumUtilities.TryGetEnumValue<TCipherMode>(LModeName, LCipherMode) then
+    else if not (TEnumUtilities.TryGetEnumValue<TCipherMode>(LModeName, LCipherMode)) then
       Exit;
 
     case LCipherMode of
