@@ -42,10 +42,7 @@ type
       const AComparer: IEqualityComparer<T> = nil): Boolean; static;
 
     class function Concatenate<T>(const A, B: TCryptoLibGenericArray<T>)
-      : TCryptoLibGenericArray<T>; overload; static;
-
-    class function Concatenate<T>(const AArrays: array of TCryptoLibGenericArray<T>)
-      : TCryptoLibGenericArray<T>; overload; static;
+      : TCryptoLibGenericArray<T>; static;
 
     class function AreAllZeroes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32)
       : Boolean; static;
@@ -162,29 +159,6 @@ begin
     Result[I] := A[I];
   for I := 0 to LLenB - 1 do
     Result[LLenA + I] := B[I];
-end;
-
-class function TArrayUtilities.Concatenate<T>(const AArrays: array of TCryptoLibGenericArray<T>)
-  : TCryptoLibGenericArray<T>;
-var
-  J, LIdx, LPos, LLen, LArrLen: Int32;
-  LArr: TCryptoLibGenericArray<T>;
-begin
-  LLen := 0;
-  for LIdx := System.Low(AArrays) to System.High(AArrays) do
-    LLen := LLen + System.Length(AArrays[LIdx]);
-  System.SetLength(Result, LLen);
-  LPos := 0;
-  for LIdx := System.Low(AArrays) to System.High(AArrays) do
-  begin
-    LArr := AArrays[LIdx];
-    LArrLen := System.Length(LArr);
-    for J := 0 to LArrLen - 1 do
-    begin
-      Result[LPos] := LArr[J];
-      System.Inc(LPos);
-    end;
-  end;
 end;
 
 class function TArrayUtilities.AreAllZeroes(const ABuf: TCryptoLibByteArray;
