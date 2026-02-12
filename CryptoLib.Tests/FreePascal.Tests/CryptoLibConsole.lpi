@@ -39,351 +39,411 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="86">
+    <Units Count="101">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="..\src\Others\ECSchnorrTests.pas"/>
+        <Filename Value="..\src\Asn1\Asn1SequenceParserTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="..\src\Asn1\Asn1SequenceParserTests.pas"/>
+        <Filename Value="..\src\Asn1\EqualsAndHashCodeTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="..\src\Asn1\EqualsAndHashCodeTests.pas"/>
+        <Filename Value="..\src\Asn1\OIDTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="..\src\Asn1\OIDTests.pas"/>
+        <Filename Value="..\src\Math\EC\Custom\Sec\SecP384R1FieldTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit4>
       <Unit5>
-        <Filename Value="..\src\Math\EC\Custom\Sec\SecP384R1FieldTests.pas"/>
+        <Filename Value="..\src\Math\BigIntegerTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit5>
       <Unit6>
-        <Filename Value="..\src\Math\BigIntegerTests.pas"/>
+        <Filename Value="..\src\Math\ECAlgorithmsTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit6>
       <Unit7>
-        <Filename Value="..\src\Math\ECAlgorithmsTests.pas"/>
+        <Filename Value="..\src\Math\ECPointTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit7>
       <Unit8>
-        <Filename Value="..\src\Math\ECPointTests.pas"/>
+        <Filename Value="..\src\Others\ECDsa5Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit8>
       <Unit9>
-        <Filename Value="..\src\Others\ECDsa5Tests.pas"/>
+        <Filename Value="..\src\Others\ECTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit9>
       <Unit10>
-        <Filename Value="..\src\Others\ECTests.pas"/>
+        <Filename Value="..\src\Others\NamedCurveTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit10>
       <Unit11>
-        <Filename Value="..\src\Others\NamedCurveTests.pas"/>
+        <Filename Value="..\src\Others\SignerUtilitiesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit11>
       <Unit12>
-        <Filename Value="..\src\Others\SignerUtilitiesTests.pas"/>
+        <Filename Value="..\src\Security\SecureRandomTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit12>
       <Unit13>
-        <Filename Value="..\src\Security\SecureRandomTests.pas"/>
+        <Filename Value="..\src\Utils\ClpFixedSecureRandom.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit13>
       <Unit14>
-        <Filename Value="..\src\Utils\ClpFixedSecureRandom.pas"/>
+        <Filename Value="..\src\Crypto\DigestRandomNumberTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit14>
       <Unit15>
-        <Filename Value="..\src\Utils\ClpIFixedSecureRandom.pas"/>
+        <Filename Value="..\src\Crypto\AESTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit15>
       <Unit16>
-        <Filename Value="..\src\Crypto\DigestRandomNumberTests.pas"/>
+        <Filename Value="..\src\Crypto\BlockCipherVectorTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit16>
       <Unit17>
-        <Filename Value="..\src\Crypto\AESTests.pas"/>
+        <Filename Value="..\src\Crypto\AESTestVectors.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit17>
       <Unit18>
-        <Filename Value="..\src\Crypto\BlockCipherVectorTests.pas"/>
+        <Filename Value="..\src\Math\EC\FixedPointTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit18>
       <Unit19>
-        <Filename Value="..\src\Crypto\AESTestVectors.pas"/>
+        <Filename Value="..\src\Crypto\AESSICTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit19>
       <Unit20>
-        <Filename Value="..\src\Math\EC\FixedPointTests.pas"/>
+        <Filename Value="..\src\Crypto\HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit20>
       <Unit21>
-        <Filename Value="..\src\Crypto\AESSICTests.pas"/>
+        <Filename Value="..\src\Crypto\MD5HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit21>
       <Unit22>
-        <Filename Value="..\src\Crypto\HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\Pkcs5Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit22>
       <Unit23>
-        <Filename Value="..\src\Crypto\MD5HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\HkdfGeneratorTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit23>
       <Unit24>
-        <Filename Value="..\src\Crypto\Pkcs5Tests.pas"/>
+        <Filename Value="..\src\Math\ECIESTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit24>
       <Unit25>
-        <Filename Value="..\src\Crypto\HkdfGeneratorTests.pas"/>
+        <Filename Value="..\src\Math\ECNRTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit25>
       <Unit26>
-        <Filename Value="..\src\Math\ECIESTests.pas"/>
+        <Filename Value="..\src\Math\IESCipherTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit26>
       <Unit27>
-        <Filename Value="..\src\Math\ECNRTests.pas"/>
+        <Filename Value="..\src\Crypto\PaddingTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit27>
       <Unit28>
-        <Filename Value="..\src\Math\IESCipherTests.pas"/>
+        <Filename Value="..\src\Crypto\DeterministicDsaTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit28>
       <Unit29>
-        <Filename Value="..\src\Crypto\PaddingTests.pas"/>
+        <Filename Value="..\src\Crypto\DSATests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit29>
       <Unit30>
-        <Filename Value="..\src\Crypto\DeterministicDsaTests.pas"/>
+        <Filename Value="..\src\Crypto\BlockCipherMonteCarloTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit30>
       <Unit31>
-        <Filename Value="..\src\Crypto\DSATests.pas"/>
+        <Filename Value="..\src\Crypto\SHA1HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit31>
       <Unit32>
-        <Filename Value="..\src\Crypto\BlockCipherMonteCarloTests.pas"/>
+        <Filename Value="..\src\Crypto\SHA224HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit32>
       <Unit33>
-        <Filename Value="..\src\Crypto\SHA1HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\SHA256HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit33>
       <Unit34>
-        <Filename Value="..\src\Crypto\SHA224HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\SHA384HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit34>
       <Unit35>
-        <Filename Value="..\src\Crypto\SHA256HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\SHA512HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit35>
       <Unit36>
-        <Filename Value="..\src\Crypto\SHA384HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\RIPEMD128HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit36>
       <Unit37>
-        <Filename Value="..\src\Crypto\SHA512HMacTests.pas"/>
+        <Filename Value="..\src\Crypto\RIPEMD160HMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit37>
       <Unit38>
-        <Filename Value="..\src\Crypto\RIPEMD128HMacTests.pas"/>
+        <Filename Value="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit38>
       <Unit39>
-        <Filename Value="..\src\Crypto\RIPEMD160HMacTests.pas"/>
+        <Filename Value="..\src\Asn1\EnumeratedTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit39>
       <Unit40>
-        <Filename Value="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
+        <Filename Value="..\src\Asn1\ParseTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit40>
       <Unit41>
-        <Filename Value="..\src\Asn1\EnumeratedTests.pas"/>
+        <Filename Value="..\src\Asn1\ParsingTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit41>
       <Unit42>
-        <Filename Value="..\src\Asn1\ParseTests.pas"/>
+        <Filename Value="..\src\Asn1\StringTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit42>
       <Unit43>
-        <Filename Value="..\src\Asn1\ParsingTests.pas"/>
+        <Filename Value="..\src\Asn1\TagTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit43>
       <Unit44>
-        <Filename Value="..\src\Asn1\StringTests.pas"/>
+        <Filename Value="..\src\Crypto\BlowfishTestVectors.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit44>
       <Unit45>
-        <Filename Value="..\src\Asn1\TagTests.pas"/>
+        <Filename Value="..\src\Crypto\SPECKTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit45>
       <Unit46>
-        <Filename Value="..\src\Crypto\BlowfishTestVectors.pas"/>
+        <Filename Value="..\src\Crypto\SpeckTestVectors.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit46>
       <Unit47>
-        <Filename Value="..\src\Crypto\SPECKTests.pas"/>
+        <Filename Value="..\src\Crypto\XSalsa20Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit47>
       <Unit48>
-        <Filename Value="..\src\Crypto\SpeckTestVectors.pas"/>
+        <Filename Value="..\src\Crypto\Salsa20Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit48>
       <Unit49>
-        <Filename Value="..\src\Crypto\XSalsa20Tests.pas"/>
+        <Filename Value="..\src\Crypto\StreamCipherResetTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit49>
       <Unit50>
-        <Filename Value="..\src\Crypto\Salsa20Tests.pas"/>
+        <Filename Value="..\src\Crypto\ChaChaTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit50>
       <Unit51>
-        <Filename Value="..\src\Crypto\StreamCipherResetTests.pas"/>
+        <Filename Value="..\src\Crypto\CTSTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit51>
       <Unit52>
-        <Filename Value="..\src\Crypto\ChaChaTests.pas"/>
+        <Filename Value="..\src\Crypto\RijndaelTestVectors.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit52>
       <Unit53>
-        <Filename Value="..\src\Crypto\CTSTests.pas"/>
+        <Filename Value="..\src\Math\PascalCoinECIESTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit53>
       <Unit54>
-        <Filename Value="..\src\Crypto\RijndaelTestVectors.pas"/>
+        <Filename Value="..\src\Math\EC\Rfc7748\X25519Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit54>
       <Unit55>
-        <Filename Value="..\src\Math\PascalCoinECIESTests.pas"/>
+        <Filename Value="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit55>
       <Unit56>
-        <Filename Value="..\src\Math\EC\Rfc7748\X25519Tests.pas"/>
+        <Filename Value="..\src\Others\Ed25519HigherLevelTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit56>
       <Unit57>
-        <Filename Value="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
+        <Filename Value="..\src\Others\X25519HigherLevelTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit57>
       <Unit58>
-        <Filename Value="..\src\Others\Ed25519HigherLevelTests.pas"/>
+        <Filename Value="..\src\Utils\ClpShortenedDigest.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit58>
       <Unit59>
-        <Filename Value="..\src\Others\X25519HigherLevelTests.pas"/>
+        <Filename Value="..\src\Others\ShortenedDigestTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit59>
       <Unit60>
-        <Filename Value="..\src\Utils\ClpShortenedDigest.pas"/>
+        <Filename Value="..\src\Crypto\Kdf1GeneratorTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit60>
       <Unit61>
-        <Filename Value="..\src\Utils\ClpIShortenedDigest.pas"/>
+        <Filename Value="..\src\Crypto\Kdf2GeneratorTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit61>
       <Unit62>
-        <Filename Value="..\src\Others\ShortenedDigestTests.pas"/>
+        <Filename Value="..\src\Crypto\Argon2Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit62>
       <Unit63>
-        <Filename Value="..\src\Crypto\Kdf1GeneratorTests.pas"/>
+        <Filename Value="..\src\Others\DigestTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit63>
       <Unit64>
-        <Filename Value="..\src\Crypto\Kdf2GeneratorTests.pas"/>
+        <Filename Value="..\src\Security\DigestUtilitiesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit64>
       <Unit65>
-        <Filename Value="..\src\Crypto\Argon2Tests.pas"/>
+        <Filename Value="..\src\Crypto\ScryptTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit65>
       <Unit66>
-        <Filename Value="..\src\Others\DigestTests.pas"/>
+        <Filename Value="..\src\Crypto\DHTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit66>
       <Unit67>
-        <Filename Value="..\src\Security\DigestUtilitiesTests.pas"/>
+        <Filename Value="..\src\CryptoLibTestBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit67>
       <Unit68>
-        <Filename Value="..\src\Crypto\ScryptTests.pas"/>
+        <Filename Value="..\src\Asn1\Asn1IntegerTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit68>
       <Unit69>
-        <Filename Value="..\src\Crypto\DHTests.pas"/>
+        <Filename Value="..\src\Crypto\KMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit69>
       <Unit70>
-        <Filename Value="..\src\CryptoLibTestBase.pas"/>
+        <Filename Value="..\src\Crypto\PssTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit70>
       <Unit71>
-        <Filename Value="..\src\Asn1\Asn1IntegerTests.pas"/>
+        <Filename Value="..\src\Crypto\ISO9796Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit71>
       <Unit72>
-        <Filename Value="..\src\Crypto\KMacTests.pas"/>
+        <Filename Value="..\src\Crypto\RSABlindedTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit72>
       <Unit73>
-        <Filename Value="..\src\Crypto\PssTests.pas"/>
+        <Filename Value="..\src\Crypto\RSADigestSignerTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit73>
       <Unit74>
-        <Filename Value="..\src\Crypto\ISO9796Tests.pas"/>
+        <Filename Value="..\src\Crypto\RSATests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit74>
       <Unit75>
-        <Filename Value="..\src\Crypto\RSABlindedTests.pas"/>
+        <Filename Value="..\src\Asn1\DerUtf8StringTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit75>
       <Unit76>
-        <Filename Value="..\src\Crypto\RSADigestSignerTests.pas"/>
+        <Filename Value="..\src\Asn1\GeneralizedTimeTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit76>
       <Unit77>
-        <Filename Value="..\src\Crypto\RSATests.pas"/>
+        <Filename Value="..\src\Asn1\BitStringTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit77>
       <Unit78>
-        <Filename Value="..\src\Asn1\DerUtf8StringTests.pas"/>
+        <Filename Value="..\src\Asn1\InputStreamTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit78>
       <Unit79>
-        <Filename Value="..\src\Asn1\GeneralizedTimeTests.pas"/>
+        <Filename Value="..\src\Asn1\UtcTimeTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit79>
       <Unit80>
-        <Filename Value="..\src\Asn1\BitStringTests.pas"/>
+        <Filename Value="..\src\Asn1\RelativeOidTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit80>
       <Unit81>
-        <Filename Value="..\src\Asn1\InputStreamTests.pas"/>
+        <Filename Value="..\src\Asn1\OctetStringTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit81>
       <Unit82>
-        <Filename Value="..\src\Asn1\UtcTimeTests.pas"/>
+        <Filename Value="..\src\Asn1\SetTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit82>
       <Unit83>
-        <Filename Value="..\src\Asn1\RelativeOidTests.pas"/>
+        <Filename Value="..\src\Math\PrimesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit83>
       <Unit84>
-        <Filename Value="..\src\Asn1\OctetStringTests.pas"/>
+        <Filename Value="..\src\Crypto\X931SignerTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit84>
       <Unit85>
-        <Filename Value="..\src\Asn1\SetTests.pas"/>
+        <Filename Value="..\src\Asn1\X509\DeltaCertificateTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit85>
+      <Unit86>
+        <Filename Value="..\src\X509\X509CertGenTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit86>
+      <Unit87>
+        <Filename Value="..\src\Others\CertTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit87>
+      <Unit88>
+        <Filename Value="..\src\Asn1\X509\CertificateTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit88>
+      <Unit89>
+        <Filename Value="..\src\Asn1\X9Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit89>
+      <Unit90>
+        <Filename Value="..\src\Asn1\X509\X509AltTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit90>
+      <Unit91>
+        <Filename Value="..\src\Asn1\X509\X509ExtensionsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit91>
+      <Unit92>
+        <Filename Value="..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit92>
+      <Unit93>
+        <Filename Value="..\src\Asn1\PrivateKeyInfoTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit93>
+      <Unit94>
+        <Filename Value="..\src\Asn1\X509\X509NameTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit94>
+      <Unit95>
+        <Filename Value="..\src\Asn1\X509\SubjectKeyIdentifierTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit95>
+      <Unit96>
+        <Filename Value="..\src\Asn1\X509\KeyUsageTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit96>
+      <Unit97>
+        <Filename Value="..\src\Asn1\X509\GeneralNameTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit97>
+      <Unit98>
+        <Filename Value="..\src\Utils\Pem\PemReaderTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit98>
+      <Unit99>
+        <Filename Value="..\src\Utils\Net\IPAddressUtilitiesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit99>
+      <Unit100>
+        <Filename Value="..\src\Asn1\backup\DerUtf8StringTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit100>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -394,7 +454,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\Asn1\backup"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
   </CompilerOptions>
