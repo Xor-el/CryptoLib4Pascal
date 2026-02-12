@@ -52,6 +52,7 @@ uses
   ClpIX509Extension,
   ClpCryptoLibTypes,
   ClpArrayUtilities,
+  ClpCollectionUtilities,
   ClpEncoders;
 
 type
@@ -100,7 +101,7 @@ type
   strict protected
     function GetX509Extensions: IX509Extensions; override;
     function GetAlternativeNameExtension(const AOid: IDerObjectIdentifier): IGeneralNames; virtual;
-    function GetAlternativeNames(const AOid: IDerObjectIdentifier): TCryptoLibGenericArray<TCryptoLibGenericArray<TValue>>; virtual;
+    function GetAlternativeNames(const AOid: IDerObjectIdentifier): TCryptoLibMatrixGenericArray<TValue>; virtual;
     procedure CheckSignature(const AVerifier: IVerifierFactory); virtual;
     function CheckSignatureValid(const AVerifier: IVerifierFactory): Boolean; virtual;
 
@@ -485,11 +486,13 @@ begin
     end);
 end;
 
-function TX509Certificate.GetAlternativeNames(const AOid: IDerObjectIdentifier): TCryptoLibGenericArray<TCryptoLibGenericArray<TValue>>;
+function TX509Certificate.GetAlternativeNames(const AOid: IDerObjectIdentifier): TCryptoLibMatrixGenericArray<TValue>;
+type
+  TCryptoLibTValueArray = TCryptoLibGenericArray<TValue>;
 var
   LGeneralNames: IGeneralNames;
   LGns: TCryptoLibGenericArray<IGeneralName>;
-  LResult: TList<TCryptoLibGenericArray<TValue>>;
+  LResult: TList<TCryptoLibTValueArray>;
   LEntry: TList<TValue>;
   LGn: IGeneralName;
   I: Int32;
@@ -508,7 +511,7 @@ begin
   end;
 
   LGns := LGeneralNames.GetNames();
-  LResult := TList<TCryptoLibGenericArray<TValue>>.Create();
+  LResult := TList<TCryptoLibTValueArray>.Create();
   try
     for I := 0 to System.Length(LGns) - 1 do
     begin
@@ -554,12 +557,12 @@ begin
           raise EIOCryptoLibException.CreateFmt('Bad tag number: %d', [LGn.TagNo]);
         end;
 
-        LResult.Add(LEntry.ToArray());
+        LResult.Add(TCollectionUtilities.ToArray<TValue>(LEntry));
       finally
         LEntry.Free;
       end;
     end;
-    Result := LResult.ToArray();
+    Result := TCollectionUtilities.ToArray<TCryptoLibTValueArray>(LResult);
   finally
     LResult.Free;
   end;

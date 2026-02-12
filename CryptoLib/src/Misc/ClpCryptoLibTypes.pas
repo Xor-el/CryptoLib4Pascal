@@ -25,10 +25,7 @@ uses
   SysUtils;
 
 type
-
-  PIInterface = ^IInterface;
 {$IFDEF FPC}
-  PUInt64 = ^UInt64;
 
   TProc = reference to procedure;
   TProc<T> = reference to procedure(Arg1: T);
@@ -93,148 +90,75 @@ type
   /// </summary>
   TCryptoLibMatrixGenericArray<T> = array of TCryptoLibGenericArray<T>;
 
-{$IFDEF DELPHIXE_UP}
   /// <summary>
   /// Represents a dynamic array of Boolean.
   /// </summary>
-  TCryptoLibBooleanArray = TArray<Boolean>;
+  TCryptoLibBooleanArray = TCryptoLibGenericArray<Boolean>;
 
   /// <summary>
   /// Represents a dynamic array of ShortInt.
   /// </summary>
-  TCryptoLibShortIntArray = TArray<ShortInt>;
+  TCryptoLibShortIntArray = TCryptoLibGenericArray<ShortInt>;
 
   /// <summary>
   /// Represents a dynamic array of Int32.
   /// </summary>
-  TCryptoLibInt32Array = TArray<Int32>;
+  TCryptoLibInt32Array = TCryptoLibGenericArray<Int32>;
 
   /// <summary>
   /// Represents a dynamic array of Int64.
   /// </summary>
-  TCryptoLibInt64Array = TArray<Int64>;
+  TCryptoLibInt64Array = TCryptoLibGenericArray<Int64>;
 
   /// <summary>
   /// Represents a dynamic array of UInt16.
   /// </summary>
-  TCryptoLibUInt16Array = TArray<UInt16>;
+  TCryptoLibUInt16Array = TCryptoLibGenericArray<UInt16>;
 
   /// <summary>
   /// Represents a dynamic array of UInt32.
   /// </summary>
-  TCryptoLibUInt32Array = TArray<UInt32>;
+  TCryptoLibUInt32Array = TCryptoLibGenericArray<UInt32>;
 
   /// <summary>
   /// Represents a dynamic array of UInt64.
   /// </summary>
-  TCryptoLibUInt64Array = TArray<UInt64>;
+  TCryptoLibUInt64Array = TCryptoLibGenericArray<UInt64>;
 
   /// <summary>
   /// Represents a dynamic array of String.
   /// </summary>
-  TCryptoLibStringArray = TArray<String>;
+  TCryptoLibStringArray = TCryptoLibGenericArray<String>;
 
   /// <summary>
   /// Represents a dynamic array of Char.
   /// </summary>
-  TCryptoLibCharArray = TArray<Char>;
+  TCryptoLibCharArray = TCryptoLibGenericArray<Char>;
 
   /// <summary>
   /// Represents a dynamic array of array of ShortInt.
   /// </summary>
-  TCryptoLibMatrixShortIntArray = TArray<TCryptoLibShortIntArray>;
+  TCryptoLibMatrixShortIntArray = TCryptoLibGenericArray<TCryptoLibShortIntArray>;
 
   /// <summary>
   /// Represents a dynamic array of array of byte.
   /// </summary>
-  TCryptoLibMatrixByteArray = TArray<TCryptoLibByteArray>;
+  TCryptoLibMatrixByteArray = TCryptoLibGenericArray<TCryptoLibByteArray>;
 
   /// <summary>
   /// Represents a dynamic array of array of Int32.
   /// </summary>
-  TCryptoLibMatrixInt32Array = TArray<TCryptoLibInt32Array>;
+  TCryptoLibMatrixInt32Array = TCryptoLibGenericArray<TCryptoLibInt32Array>;
 
   /// <summary>
   /// Represents a dynamic array of array of UInt32.
   /// </summary>
-  TCryptoLibMatrixUInt32Array = TArray<TCryptoLibUInt32Array>;
+  TCryptoLibMatrixUInt32Array = TCryptoLibGenericArray<TCryptoLibUInt32Array>;
 
   /// <summary>
   /// Represents a dynamic array of array of UInt64.
   /// </summary>
-  TCryptoLibMatrixUInt64Array = TArray<TCryptoLibUInt64Array>;
-
-{$ELSE}
-  /// <summary>
-  /// Represents a dynamic array of Boolean.
-  /// </summary>
-  TCryptoLibBooleanArray = array of Boolean;
-
-  /// <summary>
-  /// Represents a dynamic array of ShortInt.
-  /// </summary>
-  TCryptoLibShortIntArray = array of ShortInt;
-
-  /// <summary>
-  /// Represents a dynamic array of Int32.
-  /// </summary>
-  TCryptoLibInt32Array = array of Int32;
-
-  /// <summary>
-  /// Represents a dynamic array of Int64.
-  /// </summary>
-  TCryptoLibInt64Array = array of Int64;
-
-  /// <summary>
-  /// Represents a dynamic array of UInt16.
-  /// </summary>
-  TCryptoLibUInt16Array = array of UInt16;
-
-  /// <summary>
-  /// Represents a dynamic array of UInt32.
-  /// </summary>
-  TCryptoLibUInt32Array = array of UInt32;
-
-  /// <summary>
-  /// Represents a dynamic array of UInt64.
-  /// </summary>
-  TCryptoLibUInt64Array = array of UInt64;
-
-  /// <summary>
-  /// Represents a dynamic array of String.
-  /// </summary>
-  TCryptoLibStringArray = array of String;
-
-  /// <summary>
-  /// Represents a dynamic array of Char.
-  /// </summary>
-  TCryptoLibCharArray = array of Char;
-
-  /// <summary>
-  /// Represents a dynamic array of array of ShortInt.
-  /// </summary>
-  TCryptoLibMatrixShortIntArray = array of TCryptoLibShortIntArray;
-
-  /// <summary>
-  /// Represents a dynamic array of array of byte.
-  /// </summary>
-  TCryptoLibMatrixByteArray = array of TCryptoLibByteArray;
-
-  /// <summary>
-  /// Represents a dynamic array of array of Int32.
-  /// </summary>
-  TCryptoLibMatrixInt32Array = array of TCryptoLibInt32Array;
-
-  /// <summary>
-  /// Represents a dynamic array of array of UInt32.
-  /// </summary>
-  TCryptoLibMatrixUInt32Array = array of TCryptoLibUInt32Array;
-
-  /// <summary>
-  /// Represents a dynamic array of array of UInt64.
-  /// </summary>
-  TCryptoLibMatrixUInt64Array = array of TCryptoLibUInt64Array;
-{$ENDIF DELPHIXE_UP}
+  TCryptoLibMatrixUInt64Array = TCryptoLibGenericArray<TCryptoLibUInt64Array>;
 
 implementation
 
