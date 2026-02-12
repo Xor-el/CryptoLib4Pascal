@@ -67,18 +67,18 @@ implementation
 
 class procedure TNullable<T>.AssertSupported;
 var
-  K: TTypeKind;
+  LKind: TTypeKind;
 begin
-  K := PTypeInfo(TypeInfo(T)).Kind;
+  LKind := PTypeInfo(TypeInfo(T)).Kind;
 
-  case K of
+  case LKind of
     tkInteger, tkInt64, tkEnumeration, tkFloat, tkSet, tkChar, tkWChar, tkRecord:
       Exit; // OK
   else
     raise EInvalidOp.CreateFmt(
       'TNullable<%s> only supports value types (got %s). ' +
       'Disallowed: class/interface/string/dyn array/variant/etc.',
-      [GetTypeName(TypeInfo(T)), GetEnumName(TypeInfo(TTypeKind), Ord(K))]
+      [GetTypeName(TypeInfo(T)), GetEnumName(TypeInfo(TTypeKind), Ord(LKind))]
     );
   end;
 end;
@@ -147,19 +147,29 @@ end;
 
 class operator TNullable<T>.Equal(const A, B: TNullable<T>): Boolean;
 var
-  Cmp: IEqualityComparer<T>;
+  LComparer: IEqualityComparer<T>;
 begin
   if A.FHasValue <> B.FHasValue then
     Exit(False);
   if not A.FHasValue then
     Exit(True); // both null
-  Cmp := TEqualityComparer<T>.Default;
-  Result := Cmp.Equals(A.FValue, B.FValue);
+  LComparer := TEqualityComparer<T>.Default;
+  Result := LComparer.Equals(A.FValue, B.FValue);
 end;
 
 class operator TNullable<T>.NotEqual(const A, B: TNullable<T>): Boolean;
+var
+  LComparer: IEqualityComparer<T>;
 begin
-  Result := not (A = B);
+  //Result := not (A = B);
+  if A.FHasValue <> B.FHasValue then
+    Exit(True);
+
+  if not A.FHasValue then
+    Exit(False); // both null
+
+  LComparer := TEqualityComparer<T>.Default;
+  Result := not LComparer.Equals(A.FValue, B.FValue);
 end;
 
 class operator TNullable<T>.Equal(const A: TNullable<T>; const B: T): Boolean;
