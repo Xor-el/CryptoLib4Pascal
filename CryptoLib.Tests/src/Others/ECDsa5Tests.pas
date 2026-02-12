@@ -31,6 +31,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpBigInteger,
   ClpFixedSecureRandom,
   ClpISecureRandom,

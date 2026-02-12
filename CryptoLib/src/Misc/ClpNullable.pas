@@ -164,7 +164,7 @@ end;
 
 class operator TNullable<T>.Equal(const A: TNullable<T>; const B: T): Boolean;
 begin
-  Result := A.FHasValue and TEqualityComparer<T>.Default.Equals(A.FValue, B);
+  Result := A.FHasValue and (TEqualityComparer<T>.Default.Equals(A.FValue, B));
 end;
 
 class operator TNullable<T>.NotEqual(const A: TNullable<T>; const B: T): Boolean;

@@ -25,6 +25,7 @@ uses
   Classes,
   SysUtils,
   Generics.Collections,
+  ClpAsn1Core,
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,

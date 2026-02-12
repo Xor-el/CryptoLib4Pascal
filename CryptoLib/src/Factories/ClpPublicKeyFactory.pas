@@ -23,6 +23,7 @@ interface
 
 uses
   Classes,
+  ClpAsn1Core,
   ClpIAsn1Objects,
   ClpIAsymmetricKeyParameter,
   ClpRsaParameters,

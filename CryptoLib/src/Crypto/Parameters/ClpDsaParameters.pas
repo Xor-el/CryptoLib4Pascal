@@ -248,8 +248,8 @@ begin
     Result := True;
     Exit;
   end;
-  Result := (Counter = AOther.Counter) and TArrayUtilities.AreEqual<Byte>(Seed,
-    AOther.Seed);
+  Result := (Counter = AOther.Counter) and (TArrayUtilities.AreEqual<Byte>(Seed,
+    AOther.Seed));
 end;
 
 function TDsaValidationParameters.GetCounter: Int32;

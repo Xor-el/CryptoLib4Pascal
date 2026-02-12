@@ -25,6 +25,7 @@ uses
   SysUtils,
   TypInfo,
   ClpAsn1Tags,
+  ClpAsn1Core,
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpIAsn1Parsers,

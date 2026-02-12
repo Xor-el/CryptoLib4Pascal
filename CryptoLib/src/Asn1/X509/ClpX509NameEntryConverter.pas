@@ -23,6 +23,7 @@ interface
 
 uses
   SysUtils,
+  ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsn1Core,

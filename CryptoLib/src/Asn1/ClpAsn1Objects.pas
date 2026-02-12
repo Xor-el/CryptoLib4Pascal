@@ -107,12 +107,6 @@ type
     class function Get(ATagNo: Int32): IAsn1UniversalType; static;
   end;
 
-  // Moved to ClpAsn1Encodings.pas (kept here as a backward-compatibility alias)
-  TDerEncoding = ClpAsn1Encodings.TDerEncoding;
-
-  // Moved to ClpAsn1Core.pas (kept here as a backward-compatibility alias)
-  TAsn1Object = ClpAsn1Core.TAsn1Object;
-
   /// <summary>
   /// Abstract base class for ASN.1 octet strings.
   /// </summary>
@@ -8235,7 +8229,7 @@ begin
     System.SetLength(FCache, 1024);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents) then
+  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents)) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -8252,7 +8246,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents) then
+    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents)) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -8487,7 +8481,7 @@ begin
   LStemLength := System.Length(LStemContents);
   // Compare the first LStemLength bytes of both arrays
   Result := (System.Length(FContents) > LStemLength) and
-    TArrayUtilities.AreEqual<Byte>(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength));
+    (TArrayUtilities.AreEqual<Byte>(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength)));
 end;
 
 function TDerObjectIdentifier.ToString(): String;
@@ -9201,7 +9195,7 @@ begin
     System.SetLength(FCache, 64);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents) then
+  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents)) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -9219,7 +9213,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents) then
+    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents)) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -13211,4 +13205,3 @@ begin
 end;
 
 end.
-

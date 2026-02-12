@@ -31,6 +31,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Streams,

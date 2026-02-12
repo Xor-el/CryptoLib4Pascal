@@ -35,6 +35,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpBigInteger,
   ClpIECCommon,
   ClpX509Asn1Objects,

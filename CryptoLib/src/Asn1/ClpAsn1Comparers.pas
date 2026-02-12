@@ -33,7 +33,7 @@ type
   TOidEqualityComparer = class(TInterfacedObject, IEqualityComparer<IDerObjectIdentifier>)
   strict private
     function Equals(const ALeft, ARight: IDerObjectIdentifier): Boolean; reintroduce;
-    function GetHashCode(const AValue: IDerObjectIdentifier): Integer; reintroduce;
+    function GetHashCode(const AValue: IDerObjectIdentifier): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI} reintroduce;
   end;
 
   /// <summary>
@@ -88,7 +88,7 @@ begin
   Result := ALeft.Equals(ARight);
 end;
 
-function TOidEqualityComparer.GetHashCode(const AValue: IDerObjectIdentifier): Integer;
+function TOidEqualityComparer.GetHashCode(const AValue: IDerObjectIdentifier): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
 begin
   if AValue = nil then
   begin

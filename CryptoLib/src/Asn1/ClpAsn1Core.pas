@@ -223,6 +223,15 @@ type
     /// </summary>
     function Asn1GetHashCode(): Int32; virtual; abstract;
 
+    /// <summary>
+    /// Call Asn1Equals (internal method).
+    /// </summary>
+    function CallAsn1Equals(const AObj: IAsn1Object): Boolean;
+    /// <summary>
+    /// Call Asn1GetHashCode (internal method).
+    /// </summary>
+    function CallAsn1GetHashCode(): Int32;
+
   public
     /// <summary>
     /// Encode this object to a stream using BER encoding.
@@ -274,15 +283,6 @@ type
     /// Create an ASN.1 object from a fixed buffer stream.
     /// </summary>
     class function FromBufferStream(const ABufferStream: TFixedBufferStream): IAsn1Object; static;
-
-    /// <summary>
-    /// Call Asn1Equals (internal method).
-    /// </summary>
-    function CallAsn1Equals(const AObj: IAsn1Object): Boolean;
-    /// <summary>
-    /// Call Asn1GetHashCode (internal method).
-    /// </summary>
-    function CallAsn1GetHashCode(): Int32;
   end;
 
 implementation

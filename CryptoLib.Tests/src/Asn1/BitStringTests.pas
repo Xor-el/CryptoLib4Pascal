@@ -31,6 +31,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpX509Asn1Objects,
@@ -81,8 +82,7 @@ begin
 
   LS1.GetBytes();
 
-  LDerBit := TDerBitString.GetInstance
-    (TAsn1Object.FromByteArray(LS1.GetEncoded()));
+  LDerBit := TDerBitString.GetInstance(TAsn1Object.FromByteArray(LS1.GetEncoded()));
 
   if not AreEqual(LS1.GetEncoded(), DecodeHex('030100')) then
   begin

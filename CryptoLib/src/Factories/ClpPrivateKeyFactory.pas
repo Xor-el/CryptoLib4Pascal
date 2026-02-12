@@ -24,6 +24,7 @@ interface
 uses
   Classes,
   SysUtils,
+  ClpAsn1Core,
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,

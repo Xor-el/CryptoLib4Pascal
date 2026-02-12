@@ -34,7 +34,7 @@ type
   TOrdinalIgnoreCaseEqualityComparer = class(TInterfacedObject, IEqualityComparer<String>)
   strict private
     function Equals(const ALeft, ARight: String): Boolean; reintroduce;
-    function GetHashCode(const AValue: String): Integer; reintroduce;
+    function GetHashCode(const AValue: String): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI} reintroduce;
   end;
 
   /// <summary>
@@ -62,7 +62,7 @@ begin
   Result := TStringUtilities.EqualsIgnoreCase(ALeft, ARight);
 end;
 
-function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(const AValue: String): Integer;
+function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(const AValue: String): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
 var
   LLowerValue: String;
   I: Int32;

@@ -46,7 +46,7 @@ type
   TBigIntegerEqualityComparer = class(TInterfacedObject, IEqualityComparer<TBigInteger>)
   strict private
     function Equals(const ALeft, ARight: TBigInteger): Boolean; reintroduce;
-    function GetHashCode(const AValue: TBigInteger): Integer; reintroduce;
+    function GetHashCode(const AValue: TBigInteger): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI} reintroduce;
   end;
 
   /// <summary>
@@ -194,7 +194,7 @@ begin
   Result := ALeft.Equals(ARight);
 end;
 
-function TBigIntegerEqualityComparer.GetHashCode(const AValue: TBigInteger): Integer;
+function TBigIntegerEqualityComparer.GetHashCode(const AValue: TBigInteger): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
 begin
   Result := AValue.GetHashCode();
 end;
