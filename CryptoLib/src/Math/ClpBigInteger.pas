@@ -28,7 +28,6 @@ uses
   ClpPack,
   ClpBitOperations,
   ClpArrayUtilities,
-  ClpISecureRandom,
   ClpIRandom;
 
 resourcestring
@@ -3386,7 +3385,7 @@ begin
     Exit;
   end;
   LN := &Inc().SetBit(0);
-  while not LN.CheckProbablePrime(100, TSecureRandom.MasterRandom as IRandom, False) do
+  while not LN.CheckProbablePrime(100, TSecureRandom.MasterRandom, False) do
   begin
     LN := LN.Add(FTwo);
   end;
@@ -3844,8 +3843,7 @@ begin
     Exit;
   end;
 
-  Result := LN.CheckProbablePrime(ACertainty, TSecureRandom.MasterRandom as IRandom,
-    ARandomlySelected);
+  Result := LN.CheckProbablePrime(ACertainty, TSecureRandom.MasterRandom, ARandomlySelected);
 end;
 
 function TBigInteger.RabinMillerTest(const ACertainty: Int32;
