@@ -54,7 +54,7 @@ uses
   ClpFixedSecureRandom,
   ClpSignerUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
   ClpDigestUtilities,
@@ -530,7 +530,7 @@ begin
   order := (myPair.Public as IECPublicKeyParameters).parameters.n;
 
   signer.Init(true, myPair.Private);
-  msg := TBigIntegers.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
+  msg := TBigIntegerUtilities.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
   sig := signer.GenerateSignature(msg);
 
   signer.Init(false, myPair.getPublic());

@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpIRsaParameters,
@@ -163,11 +163,11 @@ begin
 
   if FForEncryption then
   begin
-    Result := TBigIntegers.AsUnsignedByteArray(GetOutputBlockSize, res);
+    Result := TBigIntegerUtilities.AsUnsignedByteArray(GetOutputBlockSize, res);
   end
   else
   begin
-    Result := TBigIntegers.AsUnsignedByteArray(res);
+    Result := TBigIntegerUtilities.AsUnsignedByteArray(res);
   end;
 end;
 

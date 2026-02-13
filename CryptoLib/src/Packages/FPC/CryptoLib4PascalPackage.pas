@@ -140,7 +140,7 @@ uses
   ClpStreams, ClpStreamUtilities, ClpPrimes, ClpECPoint, ClpSecT283K1Custom, 
   ClpWNafUtilities, ClpEndoUtilities, ClpECFieldElement, ClpECCurve, 
   ClpNat576, ClpFixedPointUtilities, ClpECLookupTables, ClpECPointMaps, 
-  ClpBigIntegers, ClpNat448, ClpNat224, ClpNat160, ClpNat128, ClpWnaf, 
+  ClpBigIntegerUtilities, ClpNat448, ClpNat224, ClpNat160, ClpNat128, ClpWnaf, 
   ClpScalarUtilities, ClpScalar25519, ClpBits, ClpCodec, ClpBinaryPrimitives, 
   ClpBitConverter, ClpBitOperations, ClpConverters, ClpCryptoLibComparers, 
   ClpCryptoLibTypes, ClpNullable, ClpPack, ClpWeakRef, ClpIPAddressUtilities, 

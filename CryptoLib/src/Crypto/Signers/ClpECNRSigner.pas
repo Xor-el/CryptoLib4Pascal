@@ -27,7 +27,7 @@ uses
   ClpIECCommon,
   ClpIECNRSigner,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpISecureRandom,
   ClpIECParameters,
   ClpICipherParameters,
@@ -338,7 +338,7 @@ begin
 
   if (LT.IsInitialized) then
   begin
-    Result := TBigIntegers.AsUnsignedByteArray(LT);
+    Result := TBigIntegerUtilities.AsUnsignedByteArray(LT);
     Exit;
   end;
 

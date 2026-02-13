@@ -33,7 +33,7 @@ uses
 {$ENDIF FPC}
   ClpPrimes,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpDigestUtilities,
@@ -102,7 +102,7 @@ begin
 
   for LI := 0 to ANumBases - 1 do
   begin
-    LB := TBigIntegers.CreateRandomInRange(TBigInteger.Two, LXSubTwo, FRandom);
+    LB := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two, LXSubTwo, FRandom);
     if not TPrimes.IsMRProbablePrimeToBase(AX, LB) then
       Exit(False);
   end;

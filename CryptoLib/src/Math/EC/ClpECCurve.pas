@@ -39,7 +39,7 @@ uses
   ClpIPreCompInfo,
   ClpISecureRandom,
   ClpBitOperations,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpECLookupTables,
   ClpECCurveConstants,
   ClpCryptoLibTypes;
@@ -849,7 +849,7 @@ end;
 
 class constructor TAbstractFpCurve.Create;
 begin
-  FKnownPrimes := TDictionary<TBigInteger, Boolean>.Create(TBigIntegers.BigIntegerEqualityComparer);
+  FKnownPrimes := TDictionary<TBigInteger, Boolean>.Create(TBigIntegerUtilities.BigIntegerEqualityComparer);
   FLockPrimes := TCriticalSection.Create;
   FMaxFieldSize := 1042; // 2 * 521
   FCertainty := 100;
@@ -942,7 +942,7 @@ var
   LX: TBigInteger;
 begin
   repeat
-    LX := TBigIntegers.CreateRandomBigInteger(AP.BitLength, ARandom);
+    LX := TBigIntegerUtilities.CreateRandomBigInteger(AP.BitLength, ARandom);
   until LX.CompareTo(AP) < 0;
   Result := LX;
 end;
@@ -953,7 +953,7 @@ var
   LX: TBigInteger;
 begin
   repeat
-    LX := TBigIntegers.CreateRandomBigInteger(AP.BitLength, ARandom);
+    LX := TBigIntegerUtilities.CreateRandomBigInteger(AP.BitLength, ARandom);
   until (LX.SignValue > 0) and (LX.CompareTo(AP) < 0);
   Result := LX;
 end;
@@ -1138,7 +1138,7 @@ var
   LX: TBigInteger;
 begin
   repeat
-    LX := TBigIntegers.CreateRandomBigInteger(AM, ARandom);
+    LX := TBigIntegerUtilities.CreateRandomBigInteger(AM, ARandom);
   until LX.SignValue > 0;
   Result := LX;
 end;
@@ -1177,7 +1177,7 @@ end;
 
 function TAbstractF2mCurve.RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement;
 begin
-  Result := FromBigInteger(TBigIntegers.CreateRandomBigInteger(GetFieldSize(), ARandom));
+  Result := FromBigInteger(TBigIntegerUtilities.CreateRandomBigInteger(GetFieldSize(), ARandom));
 end;
 
 function TAbstractF2mCurve.RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement;

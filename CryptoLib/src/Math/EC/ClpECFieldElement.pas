@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpIECFieldElement,
   ClpLongArray,
   ClpBitOperations,
@@ -267,7 +267,7 @@ end;
 
 function TECFieldElement.GetEncoded: TCryptoLibByteArray;
 begin
-  Result := TBigIntegers.AsUnsignedByteArray(GetEncodedLength(), ToBigInteger);
+  Result := TBigIntegerUtilities.AsUnsignedByteArray(GetEncodedLength(), ToBigInteger);
 end;
 
 function TECFieldElement.GetEncodedLength: Int32;
@@ -277,7 +277,7 @@ end;
 
 procedure TECFieldElement.EncodeTo(var ABuf: TCryptoLibByteArray; AOff: Int32);
 begin
-  TBigIntegers.AsUnsignedByteArray(ToBigInteger, ABuf, AOff, GetEncodedLength());
+  TBigIntegerUtilities.AsUnsignedByteArray(ToBigInteger, ABuf, AOff, GetEncodedLength());
 end;
 
 { TFpFieldElement }
@@ -355,7 +355,7 @@ end;
 
 function TFpFieldElement.ModInverse(const AX: TBigInteger): TBigInteger;
 begin
-  Result := TBigIntegers.ModOddInverse(FQ, AX);
+  Result := TBigIntegerUtilities.ModOddInverse(FQ, AX);
 end;
 
 function TFpFieldElement.ModMult(const AX1, AX2: TBigInteger): TBigInteger;

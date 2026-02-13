@@ -45,7 +45,7 @@ uses
   ClpAsymmetricKeyParameter in '..\..\CryptoLib\src\Crypto\Parameters\ClpAsymmetricKeyParameter.pas',
   ClpBaseKdfBytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpBaseKdfBytesGenerator.pas',
   ClpBigInteger in '..\..\CryptoLib\src\Math\ClpBigInteger.pas',
-  ClpBigIntegers in '..\..\CryptoLib\src\Math\ClpBigIntegers.pas',
+  ClpBigIntegerUtilities in '..\..\CryptoLib\src\Math\ClpBigIntegerUtilities.pas',
   ClpPrimes in '..\..\CryptoLib\src\Math\ClpPrimes.pas',
   ClpBitConverter in '..\..\CryptoLib\src\Misc\ClpBitConverter.pas',
   ClpCbcBlockCipher in '..\..\CryptoLib\src\Crypto\Ciphers\ClpCbcBlockCipher.pas',

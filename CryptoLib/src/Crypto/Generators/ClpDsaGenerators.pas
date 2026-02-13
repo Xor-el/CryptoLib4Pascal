@@ -33,7 +33,7 @@ uses
   ClpEncoders,
   ClpDigestUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpBitOperations,
   ClpWNafUtilities,
   ClpAsymmetricCipherKeyPair,
@@ -208,7 +208,7 @@ begin
   LMinWeight := TBitOperations.Asr32(AQ.BitLength, 2);
   while True do
   begin
-    LX := TBigIntegers.CreateRandomInRange(LOne, AQ.Subtract(LOne), ARandom);
+    LX := TBigIntegerUtilities.CreateRandomInRange(LOne, AQ.Subtract(LOne), ARandom);
     if TWNafUtilities.GetNafWeight(LX) >= LMinWeight then
     begin
       Result := LX;
@@ -307,7 +307,7 @@ begin
 
   while True do
   begin
-    LH := TBigIntegers.CreateRandomInRange(TBigInteger.Two, LPSub2, ARandom);
+    LH := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two, LPSub2, ARandom);
     LG := LH.ModPow(LE, AP);
     if (LG.BitLength > 1) then
     begin

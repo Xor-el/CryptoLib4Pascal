@@ -24,7 +24,7 @@ interface
 uses
   ClpISecureRandom,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpWNafUtilities,
   ClpBitOperations,
   ClpCryptoLibTypes;
@@ -222,7 +222,7 @@ begin
   LPMinusTwo := AP.Subtract(TBigInteger.Two);
 
   repeat
-    LH := TBigIntegers.CreateRandomInRange(TBigInteger.Two, LPMinusTwo, ARandom);
+    LH := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two, LPMinusTwo, ARandom);
     LG := LH.ModPow(TBigInteger.Two, AP);
   until not LG.Equals(TBigInteger.One);
 

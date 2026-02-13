@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBigIntegers;
+unit ClpBigIntegerUtilities;
 
 {$I ..\Include\CryptoLib.inc}
 
@@ -52,7 +52,7 @@ type
   /// <summary>
   /// BigInteger utilities.
   /// </summary>
-  TBigIntegers = class sealed(TObject)
+  TBigIntegerUtilities = class sealed(TObject)
   strict private
     const
       MaxIterations = 1000;
@@ -199,21 +199,21 @@ begin
   Result := AValue.GetHashCode();
 end;
 
-{ TBigIntegers }
+{ TBigIntegerUtilities }
 
-class constructor TBigIntegers.Create;
+class constructor TBigIntegerUtilities.Create;
 begin
   Zero := TBigInteger.Zero;
   One := TBigInteger.One;
   FBigIntegerEqualityComparer := TBigIntegerEqualityComparer.Create();
 end;
 
-class function TBigIntegers.AsUnsignedByteArray(const AN: TBigInteger): TCryptoLibByteArray;
+class function TBigIntegerUtilities.AsUnsignedByteArray(const AN: TBigInteger): TCryptoLibByteArray;
 begin
   Result := AN.ToByteArrayUnsigned();
 end;
 
-class function TBigIntegers.AsUnsignedByteArray(const ALength: Int32; const AN: TBigInteger): TCryptoLibByteArray;
+class function TBigIntegerUtilities.AsUnsignedByteArray(const ALength: Int32; const AN: TBigInteger): TCryptoLibByteArray;
 var
   LBytes: TCryptoLibByteArray;
   LBytesLength: Int32;
@@ -241,7 +241,7 @@ begin
   System.Move(LBytes[0], Result[ALength - LBytesLength], LBytesLength * System.SizeOf(Byte));
 end;
 
-class procedure TBigIntegers.AsUnsignedByteArray(const AN: TBigInteger; var ABuf: TCryptoLibByteArray; const AOff, ALen: Int32);
+class procedure TBigIntegerUtilities.AsUnsignedByteArray(const AN: TBigInteger; var ABuf: TCryptoLibByteArray; const AOff, ALen: Int32);
 var
   LBytes: TCryptoLibByteArray;
   LBytesLength: Int32;
@@ -264,12 +264,12 @@ begin
   System.Move(LBytes[0], ABuf[AOff + LPadLen], LBytesLength * System.SizeOf(Byte));
 end;
 
-class function TBigIntegers.CreateRandomBigInteger(const ABitLength: Int32; const ASecureRandom: ISecureRandom): TBigInteger;
+class function TBigIntegerUtilities.CreateRandomBigInteger(const ABitLength: Int32; const ASecureRandom: ISecureRandom): TBigInteger;
 begin
   Result := TBigInteger.Create(ABitLength, ASecureRandom);
 end;
 
-class function TBigIntegers.CreateRandomInRange(const AMin, AMax: TBigInteger; const ARandom: ISecureRandom): TBigInteger;
+class function TBigIntegerUtilities.CreateRandomInRange(const AMin, AMax: TBigInteger; const ARandom: ISecureRandom): TBigInteger;
 var
   LCmp: Int32;
   I: Int32;
@@ -305,27 +305,27 @@ begin
   Result := TBigInteger.Create(AMax.Subtract(AMin).BitLength - 1, ARandom).Add(AMin);
 end;
 
-class function TBigIntegers.FromUnsignedByteArray(const ABuf: TCryptoLibByteArray): TBigInteger;
+class function TBigIntegerUtilities.FromUnsignedByteArray(const ABuf: TCryptoLibByteArray): TBigInteger;
 begin
   Result := TBigInteger.Create(1, ABuf);
 end;
 
-class function TBigIntegers.FromUnsignedByteArray(const ABuf: TCryptoLibByteArray; const AOff, ALength: Int32): TBigInteger;
+class function TBigIntegerUtilities.FromUnsignedByteArray(const ABuf: TCryptoLibByteArray; const AOff, ALength: Int32): TBigInteger;
 begin
   Result := TBigInteger.Create(1, ABuf, AOff, ALength);
 end;
 
-class function TBigIntegers.GetByteLength(const AN: TBigInteger): Int32;
+class function TBigIntegerUtilities.GetByteLength(const AN: TBigInteger): Int32;
 begin
   Result := AN.GetLengthofByteArray();
 end;
 
-class function TBigIntegers.GetUnsignedByteLength(const AN: TBigInteger): Int32;
+class function TBigIntegerUtilities.GetUnsignedByteLength(const AN: TBigInteger): Int32;
 begin
   Result := AN.GetLengthofByteArrayUnsigned();
 end;
 
-class procedure TBigIntegers.WriteUnsignedByteArray(const AOutStr: TStream; const AN: TBigInteger);
+class procedure TBigIntegerUtilities.WriteUnsignedByteArray(const AOutStr: TStream; const AN: TBigInteger);
 var
   LBuffer: TCryptoLibByteArray;
 begin
@@ -333,7 +333,7 @@ begin
   AOutStr.Write(LBuffer, 0, System.Length(LBuffer));
 end;
 
-class function TBigIntegers.ModOddInverse(const AM, AX: TBigInteger): TBigInteger;
+class function TBigIntegerUtilities.ModOddInverse(const AM, AX: TBigInteger): TBigInteger;
 var
   LBits, LLen: Int32;
   LReducedX: TBigInteger;
@@ -361,7 +361,7 @@ begin
   Result := TNat.ToBigInteger(LLen, LZ);
 end;
 
-class function TBigIntegers.ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger;
+class function TBigIntegerUtilities.ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger;
 var
   LBits, LLen: Int32;
   LReducedX: TBigInteger;
@@ -401,7 +401,7 @@ begin
   Result := TNat.ToBigInteger(LLen, LZ);
 end;
 
-class function TBigIntegers.ModOddIsCoprime(const AM, AX: TBigInteger): Boolean;
+class function TBigIntegerUtilities.ModOddIsCoprime(const AM, AX: TBigInteger): Boolean;
 var
   LBits: Int32;
   LReducedX: TBigInteger;
@@ -424,7 +424,7 @@ begin
   Result := TMod.ModOddIsCoprime(LM, LX) <> 0;
 end;
 
-class function TBigIntegers.ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean;
+class function TBigIntegerUtilities.ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean;
 var
   LBits: Int32;
   LReducedX: TBigInteger;

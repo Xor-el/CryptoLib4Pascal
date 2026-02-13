@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Core,
@@ -193,7 +193,7 @@ begin
   if AOrderBitLength < AKey.BitLength then
     raise EArgumentCryptoLibException.Create(SOrderBitLengthTooSmall);
 
-  LPrivateKeyContents := TBigIntegers.AsUnsignedByteArray((AOrderBitLength + 7) div 8, AKey);
+  LPrivateKeyContents := TBigIntegerUtilities.AsUnsignedByteArray((AOrderBitLength + 7) div 8, AKey);
 
   FVersion := TDerInteger.One;
   FPrivateKey := TDerOctetString.Create(LPrivateKeyContents);

@@ -40,7 +40,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpECAlgorithms,
   ClpWNafUtilities,
   ClpIFiniteField,
@@ -408,7 +408,7 @@ begin
     count := 0;
     while (count < 10) do
     begin
-      nonSquare := TBigIntegers.CreateRandomInRange(TBigInteger.Two,
+      nonSquare := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two,
         pMinusOne, FRandom);
       if (not nonSquare.ModPow(legendreExponent, p).Equals(TBigInteger.One))
       then

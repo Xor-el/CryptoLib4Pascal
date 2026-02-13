@@ -31,7 +31,7 @@ uses
   ClpIsoTrailers,
   ClpParameterUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -172,7 +172,7 @@ end;
 
 function TX931Signer.GetMaxSignatureSize: Int32;
 begin
-  Result := TBigIntegers.GetUnsignedByteLength(FKParam.Modulus);
+  Result := TBigIntegerUtilities.GetUnsignedByteLength(FKParam.Modulus);
 end;
 
 function TX931Signer.GenerateSignature: TCryptoLibByteArray;
@@ -188,8 +188,8 @@ begin
 
   LT := LT.Min(FKParam.Modulus.Subtract(LT));
 
-  LSize := TBigIntegers.GetUnsignedByteLength(FKParam.Modulus);
-  Result := TBigIntegers.AsUnsignedByteArray(LSize, LT);
+  LSize := TBigIntegerUtilities.GetUnsignedByteLength(FKParam.Modulus);
+  Result := TBigIntegerUtilities.AsUnsignedByteArray(LSize, LT);
 end;
 
 function TX931Signer.VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
@@ -228,7 +228,7 @@ begin
   CreateSignatureBlock();
 
   System.SetLength(LFBlock, System.Length(FBlock));
-  LFBlock := TBigIntegers.AsUnsignedByteArray(System.Length(FBlock), LF);
+  LFBlock := TBigIntegerUtilities.AsUnsignedByteArray(System.Length(FBlock), LF);
 
   LRv := TArrayUtilities.FixedTimeEquals(FBlock, LFBlock);
 

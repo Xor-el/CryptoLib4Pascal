@@ -37,7 +37,7 @@ uses
   ClpIESEngine,
   ClpArrayUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -293,7 +293,7 @@ begin
   // Compute the common value and convert to byte array.
   FAgree.Init(FPrivParam);
   LZ := FAgree.CalculateAgreement(FPubParam);
-  LBigZ := TBigIntegers.AsUnsignedByteArray(FAgree.GetFieldSize, LZ);
+  LBigZ := TBigIntegerUtilities.AsUnsignedByteArray(FAgree.GetFieldSize, LZ);
 
   try
     // Initialise the KDF.

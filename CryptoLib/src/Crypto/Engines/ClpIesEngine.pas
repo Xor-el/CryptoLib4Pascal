@@ -44,7 +44,7 @@ uses
   ClpPack,
   ClpArrayUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -610,7 +610,7 @@ begin
   // Compute the common value and convert to byte array.
   FAgree.Init(FPrivParam);
   LZ := FAgree.CalculateAgreement(FPubParam);
-  BigZ := TBigIntegers.AsUnsignedByteArray(FAgree.GetFieldSize, LZ);
+  BigZ := TBigIntegerUtilities.AsUnsignedByteArray(FAgree.GetFieldSize, LZ);
 
   // Create input to KDF.
   if (System.Length(FV) <> 0) then

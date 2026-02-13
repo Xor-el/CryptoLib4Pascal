@@ -52,7 +52,7 @@ uses
   ClpIECCommon,
   ClpIECFieldElement,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -193,7 +193,7 @@ begin
   s := TBigInteger.Create
     ('308992691965804947361541664549085895292153777025772063598');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('1542725565216523985789236956265265265235675811949404040041'));
 
@@ -277,7 +277,7 @@ begin
   s := TBigInteger.Create
     ('5735822328888155254683894997897571951568553642892029982342');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('6140507067065001063065065565667405560006161556565665656654'));
 
@@ -361,7 +361,7 @@ begin
   s := TBigInteger.Create
     ('197030374000731686738334997654997227052849804072198819102649413465737174');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('171278725565216523967285789236956265265265235675811949404040041670216363')
     );
@@ -446,7 +446,7 @@ begin
   s := TBigInteger.Create
     ('144940322424411242416373536877786566515839911620497068645600824084578597');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('171278725565216523967285789236956265265265235675811949404040041670216363')
     );
@@ -532,7 +532,7 @@ begin
   s := TBigInteger.Create
     ('323813553209797357708078776831250505931891051755007842781978505179448783');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('700000017569056646655505781757157107570501575775705779575555657156756655')
     );

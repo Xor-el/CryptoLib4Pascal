@@ -1700,8 +1700,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpECPointMaps"/>
       </Item418>
       <Item419>
-        <Filename Value="..\..\Math\ClpBigIntegers.pas"/>
-        <UnitName Value="ClpBigIntegers"/>
+        <Filename Value="..\..\Math\ClpBigIntegerUtilities.pas"/>
+        <UnitName Value="ClpBigIntegerUtilities"/>
       </Item419>
       <Item420>
         <Filename Value="..\..\Math\Raw\ClpNat448.pas"/>

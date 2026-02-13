@@ -28,7 +28,7 @@ uses
   ClpIDigest,
   ClpISecureRandom,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpIDsaKCalculator,
@@ -130,10 +130,10 @@ begin
   TArrayUtilities.Fill<Byte>(FV, 0, System.Length(FV), Byte($01));
   TArrayUtilities.Fill<Byte>(FK, 0, System.Length(FK), Byte(0));
 
-  LSize := TBigIntegers.GetUnsignedByteLength(AN);
+  LSize := TBigIntegerUtilities.GetUnsignedByteLength(AN);
   System.SetLength(LX, LSize);
 
-  LDVal := TBigIntegers.AsUnsignedByteArray(AD);
+  LDVal := TBigIntegerUtilities.AsUnsignedByteArray(AD);
 
   System.Move(LDVal[0], LX[System.Length(LX) - System.Length(LDVal)],
     System.Length(LDVal));
@@ -147,7 +147,7 @@ begin
     LMInt := LMInt.Subtract(AN);
   end;
 
-  LMVal := TBigIntegers.AsUnsignedByteArray(LMInt);
+  LMVal := TBigIntegerUtilities.AsUnsignedByteArray(LMInt);
 
   System.Move(LMVal[0], LM[System.Length(LM) - System.Length(LMVal)],
     System.Length(LMVal));
@@ -187,7 +187,7 @@ var
   LTOff, LLength: Int32;
 begin
   Result := TBigInteger.GetDefault;
-  System.SetLength(LT, TBigIntegers.GetUnsignedByteLength(FN));
+  System.SetLength(LT, TBigIntegerUtilities.GetUnsignedByteLength(FN));
 
   while True do
 

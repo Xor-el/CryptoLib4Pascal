@@ -27,7 +27,7 @@ uses
   ClpIDsaEncoding,
   ClpIPlainDsaEncoding,
   ClpArrayUtilities,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -73,7 +73,7 @@ function TPlainDsaEncoding.Decode(const AN: TBigInteger;
 var
   LValueLength: Int32;
 begin
-  LValueLength := TBigIntegers.GetUnsignedByteLength(AN);
+  LValueLength := TBigIntegerUtilities.GetUnsignedByteLength(AN);
   if (System.Length(AEncoding) <> (LValueLength * 2)) then
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidEncodingLength,
       ['encoding']);
@@ -93,7 +93,7 @@ function TPlainDsaEncoding.Encode(const AN, AR, &AS: TBigInteger)
 var
   LValueLength: Int32;
 begin
-  LValueLength := TBigIntegers.GetUnsignedByteLength(AN);
+  LValueLength := TBigIntegerUtilities.GetUnsignedByteLength(AN);
   System.SetLength(Result, LValueLength * 2);
   EncodeValue(AN, AR, Result, 0, LValueLength);
   EncodeValue(AN, &AS, Result, LValueLength, LValueLength);
@@ -115,7 +115,7 @@ end;
 
 function TPlainDsaEncoding.GetMaxEncodingSize(const AN: TBigInteger): Int32;
 begin
-  Result := TBigIntegers.GetUnsignedByteLength(AN) * 2;
+  Result := TBigIntegerUtilities.GetUnsignedByteLength(AN) * 2;
 end;
 
 class function TPlainDsaEncoding.GetInstance: IPlainDsaEncoding;

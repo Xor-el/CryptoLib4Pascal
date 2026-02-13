@@ -25,7 +25,7 @@ uses
   ClpISecureRandom,
   ClpBitOperations,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpWNafUtilities,
   ClpIDHParameters;
 
@@ -84,7 +84,7 @@ begin
 
   while True do
   begin
-    LX := TBigIntegers.CreateRandomInRange(LMin, LMax, ARandom);
+    LX := TBigIntegerUtilities.CreateRandomInRange(LMin, LMax, ARandom);
     if TWNafUtilities.GetNafWeight(LX) >= LMinWeight then
     begin
       Result := LX;

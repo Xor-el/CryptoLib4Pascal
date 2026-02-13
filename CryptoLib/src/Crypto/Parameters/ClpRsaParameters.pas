@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpIRsaParameters,
   ClpAsymmetricKeyParameter,
   ClpKeyGenerationParameters,
@@ -210,7 +210,7 @@ begin
     LM := AModulus;
     LX := FSmallPrimesProduct;
   end;
-  Result := not TBigIntegers.ModOddIsCoprimeVar(LM, LX);
+  Result := not TBigIntegerUtilities.ModOddIsCoprimeVar(LM, LX);
 end;
 
 class function TRsaKeyParameters.Validate(

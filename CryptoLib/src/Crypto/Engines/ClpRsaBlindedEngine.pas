@@ -24,7 +24,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpICipherParameters,
   ClpIRsaParameters,
   ClpIRsa,
@@ -155,12 +155,12 @@ begin
     m := crtKey.Modulus;
 
     // Generate random r in range [1, m-1]
-    r := TBigIntegers.CreateRandomInRange(TBigInteger.One, m.Subtract(TBigInteger.One), FRandom);
+    r := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.One, m.Subtract(TBigInteger.One), FRandom);
 
     // blind = r^e mod m
     blind := r.ModPow(e, m);
     // unblind = r^(-1) mod m
-    unblind := TBigIntegers.ModOddInverse(m, r);
+    unblind := TBigIntegerUtilities.ModOddInverse(m, r);
 
     // Blind the input: blindedInput = blind * input mod m
     blindedInput := blind.Multiply(input).&Mod(m);

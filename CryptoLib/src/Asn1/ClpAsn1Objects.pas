@@ -29,7 +29,7 @@ uses
   ClpBitOperations,
   ClpCryptoLibTypes,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpAsn1Tags,
   ClpIAsn1Objects,
   ClpIAsn1Encodings,
@@ -12182,7 +12182,7 @@ class function TDerInteger.GetEncodingLength(const AX: TBigInteger): Int32;
 var
   LByteLength: Int32;
 begin
-  LByteLength := TBigIntegers.GetByteLength(AX);
+  LByteLength := TBigIntegerUtilities.GetByteLength(AX);
   Result := TAsn1OutputStream.GetLengthOfEncodingDL(TAsn1Tags.Integer, LByteLength);
 end;
 

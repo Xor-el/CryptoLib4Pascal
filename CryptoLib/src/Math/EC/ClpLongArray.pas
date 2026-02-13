@@ -30,7 +30,7 @@ uses
   ClpInterleave,
   ClpArrayUtilities,
   ClpBigInteger,
-  ClpBigIntegers;
+  ClpBigIntegerUtilities;
 
 resourcestring
   SInvalidF2mFieldValue = 'invalid F2m field value';
@@ -308,7 +308,7 @@ var
 begin
   LUsedLen := GetUsedLength();
   if LUsedLen = 0 then
-    Exit(TBigIntegers.Zero);
+    Exit(TBigIntegerUtilities.Zero);
 
   LHighestInt := FData[LUsedLen - 1];
   System.SetLength(LTemp, 8);

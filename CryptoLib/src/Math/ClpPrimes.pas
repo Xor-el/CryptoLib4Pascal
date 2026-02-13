@@ -25,7 +25,7 @@ uses
   SysUtils,
   Math,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpPack,
   ClpIDigest,
   ClpISecureRandom,
@@ -280,7 +280,7 @@ begin
 
   for LI := 0 to AIterations - 1 do
   begin
-    LB := TBigIntegers.CreateRandomInRange(FTwo, LWSubTwo, ARandom);
+    LB := TBigIntegerUtilities.CreateRandomInRange(FTwo, LWSubTwo, ARandom);
     LG := LB.Gcd(LW);
 
     if LG.CompareTo(FOne) > 0 then
@@ -366,7 +366,7 @@ begin
 
   for LI := 0 to AIterations - 1 do
   begin
-    LB := TBigIntegers.CreateRandomInRange(FTwo, LWSubTwo, ARandom);
+    LB := TBigIntegerUtilities.CreateRandomInRange(FTwo, LWSubTwo, ARandom);
 
     if not ImplMRProbablePrimeToBase(LW, LWSubOne, LM, LA, LB) then
       Exit(False);

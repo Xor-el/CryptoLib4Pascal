@@ -25,7 +25,7 @@ uses
   SysUtils,
   ClpArrayUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpBitOperations,
   ClpIKeyGenerationParameters,
   ClpIRsaParameters,
@@ -183,7 +183,7 @@ begin
       Continue;
     LDP := LD.Remainder(LPSub1);
     LDQ := LD.Remainder(LQSub1);
-    LQInv := TBigIntegers.ModOddInverse(LP, LQ);
+    LQInv := TBigIntegerUtilities.ModOddInverse(LP, LQ);
     LPubKey := TRsaKeyParameters.Create(False, LN, LE) as IRsaKeyParameters;
     LPrivKey := TRsaPrivateCrtKeyParameters.Create(LN, LE, LD, LP, LQ, LDP, LDQ, LQInv)
       as IRsaPrivateCrtKeyParameters;
@@ -230,7 +230,7 @@ begin
   repeat
     LFactor := TBigInteger.Create(LLen, FRandom);
   until (LFactor.CompareTo(TBigInteger.Two) >= 0) and
-    TBigIntegers.ModOddIsCoprimeVar(LM, LFactor);
+    TBigIntegerUtilities.ModOddIsCoprimeVar(LM, LFactor);
   Result := LFactor;
 end;
 
