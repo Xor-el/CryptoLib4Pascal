@@ -2152,7 +2152,7 @@ begin
   begin
     // This is a power of two
     // Check for overflow
-    if (Int64(AExponent) * Int64(BitLength - 1)) > Int32.MaxValue then
+    if (Int64(AExponent) * (Int64(BitLength) - 1)) > Int32.MaxValue then
       raise EArithmeticCryptoLibException.Create('Result too large');
     Result := FOne.ShiftLeft((AExponent * (BitLength - 1)));
     Exit;
@@ -2868,7 +2868,7 @@ begin
   for I := LN - 1 downto 0 do
   begin
     LX0 := AX[LN - 1];
-    LT := LX0 * AMDash;
+    LT := UInt32(UInt64(LX0) * AMDash);
     LCarry := (LT * AM[LN - 1]) + LX0;
 {$IFDEF DEBUG}
     System.Assert(UInt32(LCarry) = 0);
@@ -2908,7 +2908,7 @@ begin
   // First iteration
   LXI := UInt64(AX[LN - 1]);
   LCarry := LXI * LY0;
-  LT := UInt32(LCarry) * AMDash;
+  LT := UInt32(UInt64(UInt32(LCarry)) * AMDash);
   LProd2 := LT * AM[LN - 1];
   LCarry := LCarry + UInt32(LProd2);
 {$IFDEF DEBUG}
@@ -2932,7 +2932,7 @@ begin
     LXI := UInt64(AX[I]);
     LProd1 := LXI * UInt64(LY0);
     LCarry := (LProd1 and UIMASK) + LA0;
-    LT := UInt32(LCarry) * AMDash;
+    LT := UInt32(UInt64(UInt32(LCarry)) * AMDash);
     LProd2 := LT * UInt64(AM[LN - 1]);
     LCarry := LCarry + UInt32(LProd2);
 {$IFDEF DEBUG}
@@ -2977,7 +2977,7 @@ begin
   LX0 := AX[LN - 1];
   // First iteration
   LCarry := UInt64(LX0) * LX0;
-  LT := UInt32(LCarry) * AMDash;
+  LT := UInt32(UInt64(UInt32(LCarry)) * AMDash);
   LProd2 := LT * AM[LN - 1];
   LCarry := LCarry + UInt32(LProd2);
 {$IFDEF DEBUG}
@@ -2998,7 +2998,7 @@ begin
   for I := LN - 2 downto 0 do
   begin
     LA0 := AA[LN];
-    LT := LA0 * AMDash;
+    LT := UInt32(UInt64(LA0) * AMDash);
     LCarry := LT * AM[LN - 1] + LA0;
 {$IFDEF DEBUG}
     System.Assert(UInt32(LCarry) = 0);
