@@ -25,6 +25,7 @@ uses
   SysUtils,
   Classes,
   Generics.Defaults,
+  ClpArrayUtilities,
   ClpBigInteger,
   ClpMod,
   ClpNat,
@@ -217,7 +218,7 @@ class function TBigIntegerUtilities.AsUnsignedByteArray(const ALength: Int32; co
 var
   LBytes: TCryptoLibByteArray;
   LBytesLength: Int32;
-  I: Int32;
+  LPadLen: Int32;
 begin
   LBytes := AN.ToByteArrayUnsigned();
   LBytesLength := System.Length(LBytes);
@@ -231,14 +232,10 @@ begin
     Exit;
   end;
 
+  LPadLen := ALength - LBytesLength;
   System.SetLength(Result, ALength);
-  // Fill leading bytes with zeros
-  for I := 0 to System.Pred(ALength - LBytesLength) do
-  begin
-    Result[I] := 0;
-  end;
-  // Copy the actual bytes
-  System.Move(LBytes[0], Result[ALength - LBytesLength], LBytesLength * System.SizeOf(Byte));
+  TArrayUtilities.Fill<Byte>(Result, 0, LPadLen, Byte(0));
+  System.Move(LBytes[0], Result[LPadLen], LBytesLength * System.SizeOf(Byte));
 end;
 
 class procedure TBigIntegerUtilities.AsUnsignedByteArray(const AN: TBigInteger; var ABuf: TCryptoLibByteArray; const AOff, ALen: Int32);
@@ -246,7 +243,6 @@ var
   LBytes: TCryptoLibByteArray;
   LBytesLength: Int32;
   LPadLen: Int32;
-  I: Int32;
 begin
   LBytes := AN.ToByteArrayUnsigned();
   LBytesLength := System.Length(LBytes);
@@ -255,12 +251,7 @@ begin
     raise EArgumentCryptoLibException.Create(SStandardLengthExceeded);
 
   LPadLen := ALen - LBytesLength;
-  // Fill padding bytes with zeros
-  for I := 0 to System.Pred(LPadLen) do
-  begin
-    ABuf[AOff + I] := 0;
-  end;
-  // Copy the actual bytes
+  TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPadLen, Byte(0));
   System.Move(LBytes[0], ABuf[AOff + LPadLen], LBytesLength * System.SizeOf(Byte));
 end;
 
