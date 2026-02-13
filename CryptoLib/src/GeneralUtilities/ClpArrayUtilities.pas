@@ -38,8 +38,8 @@ type
 
   public
 
-    class function AreEqual<T>(const A, B: TCryptoLibGenericArray<T>;
-      const AComparer: IEqualityComparer<T> = nil): Boolean; overload; static;
+   (* class function AreEqual<T>(const A, B: TCryptoLibGenericArray<T>;
+      const AComparer: IEqualityComparer<T> = nil): Boolean; overload; static; *)
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean; overload; static;
     class function AreEqual(const A, B: TCryptoLibInt32Array): Boolean; overload; static;
@@ -89,8 +89,11 @@ type
 
     class function NoZeroes(const AData: TCryptoLibByteArray): Boolean; static;
 
-    class function Contains<T>(const AData: TCryptoLibGenericArray<T>;
-      const AValue: T; const AComparer: IEqualityComparer<T> = nil): Boolean; static;
+   (* class function Contains<T>(const AData: TCryptoLibGenericArray<T>;
+      const AValue: T; const AComparer: IEqualityComparer<T> = nil): Boolean; overload; static; *)
+
+    class function Contains(const AData: TCryptoLibInt32Array;
+      const AValue: Int32): Boolean; overload; static;
 
     class function Map<T, TResult>(const AData: TCryptoLibGenericArray<T>;
       const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>; static;
@@ -129,6 +132,7 @@ begin
   end;
 end;
 
+(*
 class function TArrayUtilities.AreEqual<T>(const A, B: TCryptoLibGenericArray<T>;
   const AComparer: IEqualityComparer<T>): Boolean;
 var
@@ -145,7 +149,7 @@ begin
     if not LComparer.Equals(A[I], B[I]) then
       Exit(False);
   Result := True;
-end;
+end; *)
 
 class function TArrayUtilities.AreEqual(const A, B: TCryptoLibByteArray): Boolean;
 var
@@ -413,6 +417,7 @@ begin
     Result[I] := ACloneFunc(AData[I]);
 end;
 
+(*
 class function TArrayUtilities.Contains<T>(const AData: TCryptoLibGenericArray<T>;
   const AValue: T; const AComparer: IEqualityComparer<T>): Boolean;
 var
@@ -427,6 +432,19 @@ begin
     LComparer := AComparer;
   for I := System.Low(AData) to System.High(AData) do
     if LComparer.Equals(AData[I], AValue) then
+      Exit(True);
+  Result := False;
+end; *)
+
+class function TArrayUtilities.Contains(const AData: TCryptoLibInt32Array;
+  const AValue: Int32): Boolean;
+var
+  I: Int32;
+begin
+  if (AData = nil) or (System.Length(AData) = 0) then
+    Exit(False);
+  for I := System.Low(AData) to System.High(AData) do
+    if AData[I] = AValue then
       Exit(True);
   Result := False;
 end;

@@ -110,7 +110,7 @@ var
   LEIsKnownOddPrime: Boolean;
 begin
   LEIsKnownOddPrime := (AE.BitLength <= FSpecialEBits) and
-    (TArrayUtilities.Contains<Int32>(FSpecialEValues, AE.Int32Value));
+    (TArrayUtilities.Contains(FSpecialEValues, AE.Int32Value));
   while True do
   begin
     LP := TBigInteger.Create(ABitLength, 1, FParam.Random);
