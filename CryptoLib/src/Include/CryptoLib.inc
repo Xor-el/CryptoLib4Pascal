@@ -48,12 +48,6 @@
   {$ENDIF}
 
   {$IFDEF IOS}
-    {$IFNDEF CPUARM}
-       {$DEFINE CRYPTOLIB_IOSSIM}
-    {$ENDIF}
-  {$ENDIF}
-
-  {$IFDEF IOS}
      {$DEFINE CRYPTOLIB_IOS}
   {$ENDIF}
 
