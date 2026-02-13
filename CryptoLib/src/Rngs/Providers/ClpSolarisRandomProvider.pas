@@ -34,7 +34,7 @@ uses
 {$ENDIF}
   SysUtils,
   ClpCryptoLibTypes,
-  ClpIRandomSourceProvider;
+  ClpBaseRandomProvider;
 
 resourcestring
   SSolarisGetRandomError =
@@ -61,7 +61,7 @@ type
   /// Solaris OS random source provider.
   /// Implements Solaris getrandom and /dev/urandom fallback
   /// </summary>
-  TSolarisRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TSolarisRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -76,10 +76,9 @@ type
   public
     constructor Create();
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
   end;
 
@@ -178,23 +177,6 @@ begin
   if GenRandomBytesSolaris(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SSolarisGetRandomError);
-  end;
-end;
-
-procedure TSolarisRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 

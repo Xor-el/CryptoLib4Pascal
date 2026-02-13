@@ -33,6 +33,7 @@ uses
   ClpBufferedBlockCipher,
   ClpArrayUtilities,
   ClpOSRandomProvider,
+  ClpBaseRandomProvider,
   ClpIRandomSourceProvider,
   ClpCryptoLibTypes;
 
@@ -45,7 +46,7 @@ type
   /// AES-based random source provider.
   /// Implements counter-based AES PRNG with automatic reseeding.
   /// </summary>
-  TAesRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TAesRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
   const
@@ -82,11 +83,10 @@ type
 
     destructor Destroy; override;
 
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
 
     class property Instance: IRandomSourceProvider read GetInstance;
 
@@ -272,23 +272,6 @@ begin
 
   finally
     FInternalLock.Release;
-  end;
-end;
-
-procedure TAesRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 

@@ -439,6 +439,7 @@ uses
   ClpIRandomNumberGenerator in '..\..\CryptoLib\src\Interfaces\Rngs\ClpIRandomNumberGenerator.pas',
   ClpAesRandomProvider in '..\..\CryptoLib\src\Rngs\Providers\ClpAesRandomProvider.pas',
   ClpDevRandomReader in '..\..\CryptoLib\src\Rngs\Providers\ClpDevRandomReader.pas',
+  ClpBaseRandomProvider in '..\..\CryptoLib\src\Rngs\Providers\ClpBaseRandomProvider.pas',
   ClpAsn1Parsers in '..\..\CryptoLib\src\Asn1\ClpAsn1Parsers.pas',
   ClpAsn1Core in '..\..\CryptoLib\src\Asn1\ClpAsn1Core.pas',
   ClpIAsn1Parsers in '..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Parsers.pas',

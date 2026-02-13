@@ -25,7 +25,7 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
-  ClpIRandomSourceProvider;
+  ClpBaseRandomProvider;
 
 resourcestring
   SRandomDeviceReadError =
@@ -36,7 +36,7 @@ type
   /// Unix OS random source provider (fallback for other Unix systems).
   /// Implements /dev/urandom fallback
   /// </summary>
-  TUnixRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TUnixRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
     function GenRandomBytesUnix(ALen: Int32; AData: PByte): Int32;
@@ -44,10 +44,9 @@ type
   public
     constructor Create();
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
   end;
 
@@ -86,23 +85,6 @@ begin
   if GenRandomBytesUnix(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SRandomDeviceReadError);
-  end;
-end;
-
-procedure TUnixRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 

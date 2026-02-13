@@ -40,7 +40,7 @@ uses
 {$ENDIF}
   SysUtils,
   ClpCryptoLibTypes,
-  ClpIRandomSourceProvider;
+  ClpBaseRandomProvider;
 
 resourcestring
   SAppleSecRandomError =
@@ -71,7 +71,7 @@ function SecRandomCopyBytes(ARnd: SecRandomRef; ACount: NativeUInt;
   /// Apple OS random source provider.
   /// Implements Apple SecRandomCopyBytes and /dev/urandom fallback
   /// </summary>
-  TAppleRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TAppleRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
   const
@@ -82,10 +82,9 @@ function SecRandomCopyBytes(ARnd: SecRandomRef; ACount: NativeUInt;
   public
     constructor Create();
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
   end;
 
@@ -147,23 +146,6 @@ begin
   if GenRandomBytesApple(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SAppleSecRandomError);
-  end;
-end;
-
-procedure TAppleRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 

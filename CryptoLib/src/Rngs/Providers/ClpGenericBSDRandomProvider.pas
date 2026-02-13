@@ -25,7 +25,7 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
-  ClpIRandomSourceProvider;
+  ClpBaseRandomProvider;
 
 resourcestring
   SArc4RandomBufGenerationError =
@@ -39,7 +39,7 @@ type
   /// Generic BSD OS random source provider.
   /// Implements BSD variants using arc4random_buf
   /// </summary>
-  TGenericBSDRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TGenericBSDRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
     function GenRandomBytesGenericBSD(ALen: Int32; AData: PByte): Int32;
@@ -47,10 +47,9 @@ type
   public
     constructor Create();
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
   end;
 
@@ -88,23 +87,6 @@ begin
   if GenRandomBytesGenericBSD(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SArc4RandomBufGenerationError);
-  end;
-end;
-
-procedure TGenericBSDRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 

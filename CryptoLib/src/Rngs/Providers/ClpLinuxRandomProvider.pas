@@ -34,7 +34,7 @@ uses
 {$ENDIF}
   SysUtils,
   ClpCryptoLibTypes,
-  ClpIRandomSourceProvider;
+  ClpBaseRandomProvider;
 
 resourcestring
   SLinuxGetRandomError =
@@ -63,7 +63,7 @@ type
   /// Linux OS random source provider.
   /// Implements Linux getrandom and /dev/urandom fallback
   /// </summary>
-  TLinuxRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TLinuxRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -78,10 +78,9 @@ type
   public
     constructor Create();
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
   end;
 
@@ -171,23 +170,6 @@ begin
   if GenRandomBytesLinux(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SLinuxGetRandomError);
-  end;
-end;
-
-procedure TLinuxRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 

@@ -26,7 +26,7 @@ uses
   Windows,
   SysUtils,
   ClpCryptoLibTypes,
-  ClpIRandomSourceProvider;
+  ClpBaseRandomProvider;
 
 resourcestring
   SWindowsCryptoApiGenerationError =
@@ -37,7 +37,7 @@ type
   /// Windows OS random source provider.
   /// Implements Windows random APIs in order: BCryptGenRandom -> RtlGenRandom -> CryptGenRandom
   /// </summary>
-  TWindowsRandomProvider = class sealed(TInterfacedObject, IRandomSourceProvider)
+  TWindowsRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
   const
@@ -93,10 +93,9 @@ type
     constructor Create();
     destructor Destroy; override;
 
-    procedure GetBytes(const AData: TCryptoLibByteArray);
-    procedure GetNonZeroBytes(const AData: TCryptoLibByteArray);
-    function GetIsAvailable: Boolean;
-    function GetName: String;
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
 
   end;
 
@@ -291,23 +290,6 @@ begin
   begin
     raise EOSRandomCryptoLibException.CreateRes
       (@SWindowsCryptoApiGenerationError);
-  end;
-end;
-
-procedure TWindowsRandomProvider.GetNonZeroBytes(const AData: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-begin
-  GetBytes(AData);
-  System.SetLength(LTmp, 1);
-  for LI := System.Low(AData) to System.High(AData) do
-  begin
-    while AData[LI] = 0 do
-    begin
-      GetBytes(LTmp);
-      AData[LI] := LTmp[0];
-    end;
   end;
 end;
 
