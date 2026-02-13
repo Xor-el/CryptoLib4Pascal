@@ -69,7 +69,7 @@ begin
     Exit(False);
   if (Self as IGF2Polynomial) = (AOther as IGF2Polynomial) then
     Exit(True);
-  Result := TArrayUtilities.AreEqual<Int32>(FExponents, AOther.ExponentsPresent);
+  Result := TArrayUtilities.AreEqual(FExponents, AOther.ExponentsPresent);
 end;
 
 function TGF2Polynomial.GetHashCode: {$IFDEF DELPHI}Int32 {$ELSE}PtrInt {$ENDIF DELPHI};

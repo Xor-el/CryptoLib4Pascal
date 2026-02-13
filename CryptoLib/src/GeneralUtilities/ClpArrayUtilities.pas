@@ -39,7 +39,10 @@ type
   public
 
     class function AreEqual<T>(const A, B: TCryptoLibGenericArray<T>;
-      const AComparer: IEqualityComparer<T> = nil): Boolean; static;
+      const AComparer: IEqualityComparer<T> = nil): Boolean; overload; static;
+
+    class function AreEqual(const A, B: TCryptoLibByteArray): Boolean; overload; static;
+    class function AreEqual(const A, B: TCryptoLibInt32Array): Boolean; overload; static;
 
     class function Concatenate<T>(const A, B: TCryptoLibGenericArray<T>)
       : TCryptoLibGenericArray<T>; static;
@@ -142,6 +145,30 @@ begin
     if not LComparer.Equals(A[I], B[I]) then
       Exit(False);
   Result := True;
+end;
+
+class function TArrayUtilities.AreEqual(const A, B: TCryptoLibByteArray): Boolean;
+var
+  LLen: Int32;
+begin
+  LLen := System.Length(A);
+  if LLen <> System.Length(B) then
+    Exit(False);
+  if LLen = 0 then
+    Exit(True);
+  Result := CompareMem(@A[0], @B[0], LLen * System.SizeOf(Byte));
+end;
+
+class function TArrayUtilities.AreEqual(const A, B: TCryptoLibInt32Array): Boolean;
+var
+  LLen: Int32;
+begin
+  LLen := System.Length(A);
+  if LLen <> System.Length(B) then
+    Exit(False);
+  if LLen = 0 then
+    Exit(True);
+  Result := CompareMem(@A[0], @B[0], LLen * System.SizeOf(Int32));
 end;
 
 class function TArrayUtilities.Concatenate<T>(const A, B: TCryptoLibGenericArray<T>)

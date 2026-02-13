@@ -82,7 +82,7 @@ begin
     LR := DecodeValue(AN, LSeq, 0);
     LS := DecodeValue(AN, LSeq, 1);
     LExpectedEncoding := Encode(AN, LR, LS);
-    if TArrayUtilities.AreEqual<Byte>(LExpectedEncoding, AEncoding) then
+    if TArrayUtilities.AreEqual(LExpectedEncoding, AEncoding) then
     begin
       Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
       Exit;

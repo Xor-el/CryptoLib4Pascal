@@ -248,7 +248,7 @@ begin
     Result := True;
     Exit;
   end;
-  Result := (Counter = AOther.Counter) and (TArrayUtilities.AreEqual<Byte>(Seed,
+  Result := (Counter = AOther.Counter) and (TArrayUtilities.AreEqual(Seed,
     AOther.Seed));
 end;
 

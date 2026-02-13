@@ -30,12 +30,12 @@ type
   TCryptoLibAlgorithmTestCase = class abstract(TCryptoLibTestCase)
   protected
 
-    function DecodeHex(const data: String): TBytes;
-    function EncodeHex(const data: TBytes): String;
-    function DecodeBase64(const data: String): TBytes;
-    procedure ZeroFill(const data: TBytes);
-    function Prepend(const data: TBytes; b: Byte): TBytes;
-    function AreEqual(const A, b: TBytes): Boolean;
+    function DecodeHex(const AData: String): TBytes;
+    function EncodeHex(const AData: TBytes): String;
+    function DecodeBase64(const AData: String): TBytes;
+    procedure ZeroFill(const AData: TBytes);
+    function Prepend(const AData: TBytes; AValue: Byte): TBytes;
+    function AreEqual(const AA, AB: TBytes): Boolean;
     function CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;
 
   end;
@@ -44,35 +44,35 @@ implementation
 
 { TCryptoLibAlgorithmTestCase }
 
-function TCryptoLibAlgorithmTestCase.DecodeBase64(const data: String): TBytes;
+function TCryptoLibAlgorithmTestCase.DecodeBase64(const AData: String): TBytes;
 begin
-  result := TBase64Encoder.Decode(data);
+  Result := TBase64Encoder.Decode(AData);
 end;
 
-function TCryptoLibAlgorithmTestCase.DecodeHex(const data: String): TBytes;
+function TCryptoLibAlgorithmTestCase.DecodeHex(const AData: String): TBytes;
 begin
-  result := THexEncoder.Decode(data);
+  Result := THexEncoder.Decode(AData);
 end;
 
-function TCryptoLibAlgorithmTestCase.EncodeHex(const data: TBytes): String;
+function TCryptoLibAlgorithmTestCase.EncodeHex(const AData: TBytes): String;
 begin
-  result := THexEncoder.Encode(data);
+  Result := THexEncoder.Encode(AData);
 end;
 
-function TCryptoLibAlgorithmTestCase.Prepend(const data: TBytes;
-  b: Byte): TBytes;
+function TCryptoLibAlgorithmTestCase.Prepend(const AData: TBytes;
+  AValue: Byte): TBytes;
 begin
-  result := TArrayUtilities.Prepend<Byte>(data, b);
+  Result := TArrayUtilities.Prepend<Byte>(AData, AValue);
 end;
 
-procedure TCryptoLibAlgorithmTestCase.ZeroFill(const data: TBytes);
+procedure TCryptoLibAlgorithmTestCase.ZeroFill(const AData: TBytes);
 begin
-  TArrayUtilities.Fill<Byte>(data, 0, System.Length(data), Byte(0));
+  TArrayUtilities.Fill<Byte>(AData, 0, System.Length(AData), Byte(0));
 end;
 
-function TCryptoLibAlgorithmTestCase.AreEqual(const A, b: TBytes): Boolean;
+function TCryptoLibAlgorithmTestCase.AreEqual(const AA, AB: TBytes): Boolean;
 begin
-  result := TArrayUtilities.AreEqual<Byte>(A, b);
+  Result := TArrayUtilities.AreEqual(AA, AB);
 end;
 
 function TCryptoLibAlgorithmTestCase.CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;

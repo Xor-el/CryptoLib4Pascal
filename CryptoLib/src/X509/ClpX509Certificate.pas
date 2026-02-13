@@ -698,7 +698,7 @@ begin
   LThatEncoding := LThat.GetCachedEncoding().GetEncoding();
 
   if (LThisEncoding <> nil) and (LThatEncoding <> nil) then
-    Result := TArrayUtilities.AreEqual<Byte>(LThisEncoding, LThatEncoding)
+    Result := TArrayUtilities.AreEqual(LThisEncoding, LThatEncoding)
   else
     Result := False;
 end;

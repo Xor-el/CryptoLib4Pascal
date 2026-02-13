@@ -3241,7 +3241,7 @@ begin
     try
       LD1 := GetEncoded();
       LD2 := AAsn1Object.GetEncoded();
-      Result := TArrayUtilities.AreEqual<Byte>(LD1, LD2);
+      Result := TArrayUtilities.AreEqual(LD1, LD2);
       Exit;
     except
       on E: Exception do
@@ -5960,7 +5960,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(GetOctets(), LThat.GetOctets());
+  Result := TArrayUtilities.AreEqual(GetOctets(), LThat.GetOctets());
 end;
 
 function TAsn1OctetString.Asn1GetHashCode(): Int32;
@@ -7971,7 +7971,7 @@ begin
     Exit;
   end;
   LThatContents := LThat.Bytes;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThatContents);
+  Result := TArrayUtilities.AreEqual(FContents, LThatContents);
 end;
 
 function TDerEnumerated.Asn1GetHashCode(): Int32;
@@ -8230,7 +8230,7 @@ begin
     System.SetLength(FCache, 1024);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents)) then
+  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -8247,7 +8247,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents)) then
+    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -8422,7 +8422,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerObjectIdentifier.Asn1GetHashCode(): Int32;
@@ -8482,7 +8482,7 @@ begin
   LStemLength := System.Length(LStemContents);
   // Compare the first LStemLength bytes of both arrays
   Result := (System.Length(FContents) > LStemLength) and
-    (TArrayUtilities.AreEqual<Byte>(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength)));
+    (TArrayUtilities.AreEqual(System.Copy(FContents, 0, LStemLength), System.Copy(LStemContents, 0, LStemLength)));
 end;
 
 function TDerObjectIdentifier.ToString(): String;
@@ -8737,7 +8737,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TAsn1RelativeOid.Asn1GetHashCode(): Int32;
@@ -9196,7 +9196,7 @@ begin
     System.SetLength(FCache, 64);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LOriginalEntry.Contents)) then
+  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -9214,7 +9214,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual<Byte>(AContents, LExchangedEntry.Contents)) then
+    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -9381,7 +9381,7 @@ begin
   // TODO Performance
   LThisContents := GetContents(TAsn1OutputStream.EncodingDer);
   LThatContents := LThat.GetContents(TAsn1OutputStream.EncodingDer);
-  Result := TArrayUtilities.AreEqual<Byte>(LThisContents, LThatContents);
+  Result := TArrayUtilities.AreEqual(LThisContents, LThatContents);
 end;
 
 function TAsn1GeneralizedTime.Asn1GetHashCode(): Int32;
@@ -9765,7 +9765,7 @@ begin
   // TODO Performance
   LThisContents := GetContents(TAsn1OutputStream.EncodingDer);
   LThatContents := LThat.GetContents(TAsn1OutputStream.EncodingDer);
-  Result := TArrayUtilities.AreEqual<Byte>(LThisContents, LThatContents);
+  Result := TArrayUtilities.AreEqual(LThisContents, LThatContents);
 end;
 
 function TAsn1UtcTime.Asn1GetHashCode(): Int32;
@@ -10325,7 +10325,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerUtf8String.Asn1GetHashCode(): Int32;
@@ -10492,7 +10492,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerGeneralString.Asn1GetHashCode(): Int32;
@@ -10651,7 +10651,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerGraphicString.Asn1GetHashCode(): Int32;
@@ -10842,7 +10842,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerIA5String.Asn1GetHashCode(): Int32;
@@ -11055,7 +11055,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerNumericString.Asn1GetHashCode(): Int32;
@@ -11222,7 +11222,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerPrintableString.Asn1GetHashCode(): Int32;
@@ -11434,7 +11434,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerT61String.Asn1GetHashCode(): Int32;
@@ -11609,7 +11609,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerUniversalString.Asn1GetHashCode(): Int32;
@@ -11802,7 +11802,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerVideotexString.Asn1GetHashCode(): Int32;
@@ -11969,7 +11969,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FContents, LThat.Contents);
+  Result := TArrayUtilities.AreEqual(FContents, LThat.Contents);
 end;
 
 function TDerVisibleString.Asn1GetHashCode(): Int32;
@@ -12082,7 +12082,7 @@ begin
     Result := False;
     Exit;
   end;
-  Result := TArrayUtilities.AreEqual<Byte>(FBytes, LThat.Bytes);
+  Result := TArrayUtilities.AreEqual(FBytes, LThat.Bytes);
 end;
 
 function TDerInteger.Asn1GetHashCode(): Int32;

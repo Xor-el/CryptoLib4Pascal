@@ -508,7 +508,7 @@ begin
 
   LThisEncoding := GetCachedEncoding().GetEncoding();
   LThatEncoding := LThatObj.GetCachedEncoding().GetEncoding();
-  Result := (LThisEncoding <> nil) and (LThatEncoding <> nil) and (TArrayUtilities.AreEqual<Byte>(LThisEncoding, LThatEncoding));
+  Result := (LThisEncoding <> nil) and (LThatEncoding <> nil) and (TArrayUtilities.AreEqual(LThisEncoding, LThatEncoding));
 end;
 
 function TX509Crl.GetHashCode: Int32;

@@ -300,7 +300,7 @@ begin
   // First read the magic text and the salt - if any
   Chopped := System.Copy(CipherText, 0, SALT_MAGIC_LEN);
   if (System.Length(CipherText) >= SALT_MAGIC_LEN) and
-    (TArrayUtilities.AreEqual<Byte>(Chopped, TConverters.ConvertStringToBytes(SALT_MAGIC,
+    (TArrayUtilities.AreEqual(Chopped, TConverters.ConvertStringToBytes(SALT_MAGIC,
     TEncoding.UTF8))) then
   begin
     System.Move(CipherText[SALT_MAGIC_LEN], SaltBytes[0], SALT_SIZE);
@@ -396,7 +396,7 @@ begin
   if TUsageExamples.AES256CBCPascalCoinDecrypt(CipherText, PasswordBytes,
     DecryptedCipherText) then
   begin
-    if TArrayUtilities.AreEqual<Byte>(PlainText, DecryptedCipherText) then
+    if TArrayUtilities.AreEqual(PlainText, DecryptedCipherText) then
     begin
       Writeln('AES_256_CBC PascalCoin Compatability Encrypt, Decrypt Was Successful '
         + sLineBreak);
@@ -553,7 +553,7 @@ begin
   if TUsageExamples.ECIESPascalCoinDecrypt(KeyPair.Private, CipherText,
     DecryptedCipherText) then
   begin
-    if TArrayUtilities.AreEqual<Byte>(PlainText, DecryptedCipherText) then
+    if TArrayUtilities.AreEqual(PlainText, DecryptedCipherText) then
     begin
       Writeln('ECIES PascalCoin Compatability Encrypt, Decrypt Was Successful '
         + sLineBreak);
