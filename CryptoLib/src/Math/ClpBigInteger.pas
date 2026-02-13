@@ -109,6 +109,13 @@ type
     function AddToMagnitude(const AMagToAdd: TCryptoLibUInt32Array): TBigInteger;
     constructor Create(const ASignum: Int32; const AMag: TCryptoLibUInt32Array; const ACheckMag: Boolean); overload;
 
+    // Private init procedures (workaround for FPC bug #33006 - overloaded record
+    // constructor chaining loses managed-type fields). These are called by the
+    // public constructors instead of chaining Create -> Create.
+    procedure InitFromString(const AValue: String; const ARadix: Int32);
+    procedure InitFromBytes(const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
+    procedure InitFromSignedBytes(const ASign: Int32; const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
+
     // Private class helper functions
     class function PopCount(const AValue: UInt32): Int32; static;
     class function BitLen(const AValue: Byte): Int32; overload; static;
@@ -1344,10 +1351,15 @@ end;
 
 constructor TBigInteger.Create(const AValue: String);
 begin
-  Create(AValue, 10);
+  InitFromString(AValue, 10);
 end;
 
 constructor TBigInteger.Create(const AValue: String; const ARadix: Int32);
+begin
+  InitFromString(AValue, ARadix);
+end;
+
+procedure TBigInteger.InitFromString(const AValue: String; const ARadix: Int32);
 var
   LStr: String;
   LIndex, LChunk, LNext: Int32;
@@ -1492,20 +1504,25 @@ end;
 
 constructor TBigInteger.Create(const ABytes: TCryptoLibByteArray);
 begin
-  Create(ABytes, 0, System.Length(ABytes), True);
+  InitFromBytes(ABytes, 0, System.Length(ABytes), True);
 end;
 
 constructor TBigInteger.Create(const ABytes: TCryptoLibByteArray; const ABigEndian: Boolean);
 begin
-  Create(ABytes, 0, System.Length(ABytes), ABigEndian);
+  InitFromBytes(ABytes, 0, System.Length(ABytes), ABigEndian);
 end;
 
 constructor TBigInteger.Create(const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32);
 begin
-  Create(ABytes, AOffset, ALength, True);
+  InitFromBytes(ABytes, AOffset, ALength, True);
 end;
 
 constructor TBigInteger.Create(const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
+begin
+  InitFromBytes(ABytes, AOffset, ALength, ABigEndian);
+end;
+
+procedure TBigInteger.InitFromBytes(const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
 var
   LSign: Int32;
 begin
@@ -1523,20 +1540,25 @@ end;
 
 constructor TBigInteger.Create(const ASign: Int32; const ABytes: TCryptoLibByteArray);
 begin
-  Create(ASign, ABytes, 0, System.Length(ABytes), True);
+  InitFromSignedBytes(ASign, ABytes, 0, System.Length(ABytes), True);
 end;
 
 constructor TBigInteger.Create(const ASign: Int32; const ABytes: TCryptoLibByteArray; const ABigEndian: Boolean);
 begin
-  Create(ASign, ABytes, 0, System.Length(ABytes), ABigEndian);
+  InitFromSignedBytes(ASign, ABytes, 0, System.Length(ABytes), ABigEndian);
 end;
 
 constructor TBigInteger.Create(const ASign: Int32; const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32);
 begin
-  Create(ASign, ABytes, AOffset, ALength, True);
+  InitFromSignedBytes(ASign, ABytes, AOffset, ALength, True);
 end;
 
 constructor TBigInteger.Create(const ASign: Int32; const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
+begin
+  InitFromSignedBytes(ASign, ABytes, AOffset, ALength, ABigEndian);
+end;
+
+procedure TBigInteger.InitFromSignedBytes(const ASign: Int32; const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
 begin
   if (ASign < -1) or (ASign > 1) then
     raise EFormatCryptoLibException.Create(SInvalidSignValue);
