@@ -75,9 +75,9 @@ uses
   ClpAsn1Comparers,
   ClpIX509NameBuilder,
   ClpX509NameBuilder,
-  ClpPkcsObjectIdentifiers,
-  ClpPkcsAsn1Objects,
-  ClpIPkcsAsn1Objects,
+  ClpCmsObjectIdentifiers,
+  ClpCmsAsn1Objects,
+  ClpICmsAsn1Objects,
   ClpX509Extension,
   ClpEncoders,
   ClpX9ObjectIdentifiers,
@@ -1762,9 +1762,8 @@ end;
 procedure TCertTest.Pkcs7Test;
 var
   LRootCertBin, LRootCrlBin, LAttrCert: TCryptoLibByteArray;
-  LDataOid: IDerObjectIdentifier;
-  LContentInfo: IContentInfo;
-  LSigData: IPkcsSignedData;
+  LContentInfo: ICmsContentInfo;
+  LSigData: ICmsSignedData;
   LCertSet, LCrlSet: IAsn1Set;
   LTaggedAttr: IAsn1Encodable;
   LInfoEnc: TCryptoLibByteArray;
@@ -2114,21 +2113,19 @@ begin
   LRootCrlBin := DecodeBase64(RootCrlB64);
   LAttrCert := DecodeBase64(AttrCertB64);
 
-  LDataOid := TPkcsObjectIdentifiers.Data;
-  LContentInfo := TContentInfo.Create(LDataOid, nil);
+  LContentInfo := TCmsContentInfo.Create(TCmsObjectIdentifiers.Data, nil);
   LRootCertObj := TAsn1Object.FromByteArray(LRootCertBin) as IAsn1Encodable;
   LTaggedAttr := TDerTaggedObject.Create(False, 2, TAsn1Object.FromByteArray(LAttrCert) as IAsn1Encodable);
   LCertSet := TDerSet.Create([LRootCertObj, LTaggedAttr]);
   LRootCrlObj := TAsn1Object.FromByteArray(LRootCrlBin) as IAsn1Encodable;
   LCrlSet := TDerSet.Create(LRootCrlObj);
-  LSigData := TPkcsSignedData.Create(
-    TDerInteger.One,
+  LSigData := TCmsSignedData.Create(
     TDerSet.Empty,
     LContentInfo,
     LCertSet,
     LCrlSet,
     TDerSet.Empty);
-  LContentInfo := TContentInfo.Create(TPkcsObjectIdentifiers.SignedData, LSigData);
+  LContentInfo := TCmsContentInfo.Create(TCmsObjectIdentifiers.SignedData, LSigData);
   LInfoEnc := LContentInfo.GetEncoded();
 
   LCertParser := TX509CertificateParser.Create;
@@ -2151,8 +2148,8 @@ begin
     Fail('PKCS7 crl collection not right');
 
   { empty certs and crls }
-  LSigData := TPkcsSignedData.Create(TDerInteger.One, TDerSet.Empty, LContentInfo, TDerSet.Empty, TDerSet.Empty, TDerSet.Empty);
-  LContentInfo := TContentInfo.Create(TPkcsObjectIdentifiers.SignedData, LSigData);
+  LSigData := TCmsSignedData.Create(TDerSet.Empty, LContentInfo, TDerSet.Empty, TDerSet.Empty, TDerSet.Empty);
+  LContentInfo := TCmsContentInfo.Create(TCmsObjectIdentifiers.SignedData, LSigData);
   LInfoEnc := LContentInfo.GetEncoded();
   LCert := LCertParser.ReadCertificate(LInfoEnc);
   if LCert <> nil then
@@ -2162,8 +2159,8 @@ begin
     Fail('PKCS7 crl present');
 
   { absent certs and crls - use nil for optional }
-  LSigData := TPkcsSignedData.Create(TDerInteger.One, TDerSet.Empty, TContentInfo.Create(LDataOid, nil), nil, nil, TDerSet.Empty);
-  LContentInfo := TContentInfo.Create(TPkcsObjectIdentifiers.SignedData, LSigData);
+  LSigData := TCmsSignedData.Create(TDerSet.Empty, TCmsContentInfo.Create(TCmsObjectIdentifiers.Data, nil) as ICmsContentInfo, nil, nil, TDerSet.Empty);
+  LContentInfo := TCmsContentInfo.Create(TCmsObjectIdentifiers.SignedData, LSigData);
   LInfoEnc := LContentInfo.GetEncoded();
   LCert := LCertParser.ReadCertificate(LInfoEnc);
   if LCert <> nil then
