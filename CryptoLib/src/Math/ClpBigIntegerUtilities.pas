@@ -62,16 +62,16 @@ type
       FBigIntegerEqualityComparer: IEqualityComparer<TBigInteger>;
 
     class constructor Create;
+    class function GetZero: TBigInteger; static;
+    class function GetOne: TBigInteger; static;
 
   public
-    class var
-      Zero: TBigInteger;
-      One: TBigInteger;
-
     /// <summary>
     /// Gets the BigInteger equality comparer for use with TDictionary.
     /// </summary>
     class property BigIntegerEqualityComparer: IEqualityComparer<TBigInteger> read FBigIntegerEqualityComparer;
+    class property Zero: TBigInteger read GetZero;
+    class property One: TBigInteger read GetOne;
 
     /// <summary>
     /// Return the passed in value as an unsigned byte array.
@@ -204,9 +204,17 @@ end;
 
 class constructor TBigIntegerUtilities.Create;
 begin
-  Zero := TBigInteger.Zero;
-  One := TBigInteger.One;
   FBigIntegerEqualityComparer := TBigIntegerEqualityComparer.Create();
+end;
+
+class function TBigIntegerUtilities.GetZero: TBigInteger;
+begin
+  Result := TBigInteger.Zero;
+end;
+
+class function TBigIntegerUtilities.GetOne: TBigInteger;
+begin
+  Result := TBigInteger.One;
 end;
 
 class function TBigIntegerUtilities.AsUnsignedByteArray(const AN: TBigInteger): TCryptoLibByteArray;
