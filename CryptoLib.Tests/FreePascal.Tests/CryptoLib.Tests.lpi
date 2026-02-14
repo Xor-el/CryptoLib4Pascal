@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="100">
+    <Units Count="101">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -481,6 +481,10 @@
         <Filename Value="..\src\Utils\Net\IPAddressUtilitiesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit99>
+      <Unit100>
+        <Filename Value="..\src\Others\Curve25519KeyUtilitiesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit100>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

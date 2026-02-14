@@ -498,6 +498,7 @@ uses
   ClpCmsParsers in '..\..\CryptoLib\src\Asn1\Cms\ClpCmsParsers.pas',
   ClpICmsAsn1Objects in '..\..\CryptoLib\src\Interfaces\Asn1\Cms\ClpICmsAsn1Objects.pas',
   ClpICmsParsers in '..\..\CryptoLib\src\Interfaces\Asn1\Cms\ClpICmsParsers.pas',
+  ClpCurve25519KeyUtilities in '..\..\CryptoLib\src\Crypto\Parameters\ClpCurve25519KeyUtilities.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
@@ -596,6 +597,7 @@ uses
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
   X509CertGenTests in '..\src\X509\X509CertGenTests.pas',
   CertTests in '..\src\Others\CertTests.pas',
+  Curve25519KeyUtilitiesTests in '..\src\Others\Curve25519KeyUtilitiesTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin
