@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="101">
+    <Units Count="100">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -440,10 +440,6 @@
         <Filename Value="..\src\Utils\Net\IPAddressUtilitiesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit99>
-      <Unit100>
-        <Filename Value="..\src\Asn1\backup\DerUtf8StringTests.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit100>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -454,7 +450,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\Asn1\backup"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
   </CompilerOptions>

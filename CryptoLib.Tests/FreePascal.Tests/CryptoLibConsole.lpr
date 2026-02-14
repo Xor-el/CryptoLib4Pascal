@@ -19,7 +19,7 @@ uses
   X25519HigherLevelTests, Ed25519HigherLevelTests, ShortenedDigestTests,
   Kdf1GeneratorTests, Kdf2GeneratorTests, Argon2Tests, ScryptTests, DigestTests,
   CertTests, DigestUtilitiesTests, DHTests, Asn1IntegerTests,
-  DerUtf8StringTests, GeneralizedTimeTests, BitStringTests, InputStreamTests,
+  GeneralizedTimeTests, BitStringTests, InputStreamTests,
   UtcTimeTests, RelativeOidTests, OctetStringTests, SetTests, X9Tests,
   PrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
   CertificateTests, X509AltTests, X509ExtensionsTests, X509NameTests,

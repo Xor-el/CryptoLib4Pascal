@@ -154,7 +154,9 @@ uses
   ClpX509AttrCertParser, ClpAttributeCertificateIssuer, 
   ClpAttributeCertificateHolder, ClpX509Utilities, ClpX509Generators, 
   ClpDeltaCertificateTool, ClpX509Attribute, ClpX509ExtensionBase, 
-  ClpX509ExtensionUtilities, ClpDevRandomReader, ClpBaseRandomProvider;
+  ClpX509ExtensionUtilities, ClpDevRandomReader, ClpBaseRandomProvider, 
+  ClpCmsAsn1Objects, ClpCmsObjectIdentifiers, ClpCmsParsers, 
+  ClpICmsAsn1Objects, ClpICmsParsers;
 
 implementation
 
