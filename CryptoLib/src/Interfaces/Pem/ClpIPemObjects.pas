@@ -35,7 +35,7 @@ type
   /// Interface for PEM header objects.
   /// </summary>
   IPemHeader = interface(IInterface)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{ED7A5DF3-5307-427B-8B47-63820438FEF1}']
 
     function GetName: String;
     function GetValue: String;
@@ -80,7 +80,7 @@ type
   /// Interface for PEM objects.
   /// </summary>
   IPemObject = interface(IPemObjectGenerator)
-    ['{C3D4E5F6-A7B8-9012-CDEF-0123456789AB}']
+    ['{9D65BB7D-721A-48B4-963B-13DBA970705A}']
 
     function GetType: String;
     function GetHeaders: TCryptoLibGenericArray<IPemHeader>;
@@ -104,7 +104,7 @@ type
   /// Interface for PEM reader.
   /// </summary>
   IPemReader = interface(IInterface)
-    ['{D4E5F6A7-B8C9-0123-DEF0-123456789ABC}']
+    ['{0139877B-ED23-46C7-BE39-E5010AC26507}']
 
     function GetReader: TStream;
 
@@ -124,7 +124,7 @@ type
   /// Interface for PEM writer.
   /// </summary>
   IPemWriter = interface(IInterface)
-    ['{E5F6A7B8-C9D0-1234-EF01-23456789ABCD}']
+    ['{E534B37C-C6B0-4066-9AB9-758BDAD3C3A0}']
 
     function GetWriter: TStream;
 
@@ -151,7 +151,7 @@ type
   /// Interface for PEM parser.
   /// </summary>
   IPemParser = interface(IInterface)
-    ['{F6A7B8C9-D0E1-2345-F012-3456789ABCDE}']
+    ['{8C91EC3F-A5D3-4714-8A3E-A68C381FF754}']
 
     /// <summary>
     /// Read a PEM object from the stream and return it as an ASN.1 sequence.

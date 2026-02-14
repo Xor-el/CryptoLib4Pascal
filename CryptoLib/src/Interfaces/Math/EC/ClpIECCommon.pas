@@ -110,7 +110,7 @@ type
   end;
 
   IAbstractF2mCurve = interface(IECCurve)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    ['{E8DC6D63-BA59-43E4-B3D5-5ACC8E26400B}']
     function GetIsKoblitz: Boolean;
     function SolveQuadraticEquation(const ABeta: IECFieldElement): IECFieldElement;
     property IsKoblitz: Boolean read GetIsKoblitz;

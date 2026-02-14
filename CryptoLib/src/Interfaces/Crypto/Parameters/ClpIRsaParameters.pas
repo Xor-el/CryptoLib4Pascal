@@ -29,7 +29,7 @@ uses
 
 type
   IRsaKeyParameters = interface(IAsymmetricKeyParameter)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{1660B435-4AB3-4475-97E0-4D1241C10900}']
 
     function GetModulus: TBigInteger;
     function GetExponent: TBigInteger;
@@ -42,7 +42,7 @@ type
   end;
 
   IRsaPrivateCrtKeyParameters = interface(IRsaKeyParameters)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    ['{F7678089-D9A1-4EBC-8A2E-3BA9FE8D36D0}']
 
     function GetPublicExponent: TBigInteger;
     function GetP: TBigInteger;
@@ -61,7 +61,7 @@ type
   end;
 
   IRsaKeyGenerationParameters = interface(IKeyGenerationParameters)
-    ['{C3D4E5F6-A7B8-9012-CDEF-123456789012}']
+    ['{0A123755-1AFA-439D-AF17-EF0520B5337A}']
 
     function GetPublicExponent: TBigInteger;
     function GetCertainty: Int32;

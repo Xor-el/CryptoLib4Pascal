@@ -30,7 +30,7 @@ type
   /// Interface for X509Extension (helper class, not ASN1Encodable).
   /// </summary>
   IX509Extension = interface
-    ['{E6F7A8B9-C0D1-E2F3-A4B5-C6D7E8F9A0B1}']
+    ['{3C3A86D2-15E7-4692-8386-01708589F045}']
 
     function GetIsCritical: Boolean;
     function GetValue: IAsn1OctetString;

@@ -374,7 +374,7 @@ type
   /// Interface for DL bit string objects.
   /// </summary>
   IDLBitString = interface(IDerBitString)
-    ['{8BC8ED8F-DE72-5E45-BF26-AF16A7F7E8C8}']
+    ['{2D83078F-0943-485B-AA57-67CB3A489EEA}']
   end;
 
   /// <summary>
@@ -463,7 +463,7 @@ type
   /// Interface for DL tagged object objects.
   /// </summary>
   IDLTaggedObject = interface(IDerTaggedObject)
-    ['{8BC8ED8F-DE72-5E45-BF26-AF16A7F7E8C8}']
+    ['{519A9202-31EE-45FE-82C4-52A9A9BDA498}']
   end;
 
 
@@ -497,7 +497,7 @@ type
   /// Interface for DER integer objects.
   /// </summary>
   IDerInteger = interface(IAsn1Object)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    ['{928B9400-2345-4345-B213-97899840AAFF}']
     /// <summary>
     /// Get the bytes.
     /// </summary>
@@ -640,7 +640,7 @@ type
   /// Interface for DER boolean objects.
   /// </summary>
   IDerBoolean = interface(IAsn1Object)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{3E4ECCDA-E93E-4312-8F9D-BFE00004F75C}']
     /// <summary>
     /// Get the boolean value.
     /// </summary>
@@ -722,7 +722,7 @@ type
   /// Interface for ASN.1 object descriptor objects.
   /// </summary>
   IAsn1ObjectDescriptor = interface(IAsn1Object)
-    ['{E5F6A7B8-C9D0-1234-EF01-345678901234}']
+    ['{9BF87213-86ED-4A88-A4C3-816B175C3522}']
     /// <summary>
     /// Get the graphic string.
     /// </summary>
@@ -811,7 +811,7 @@ type
   /// Interface for DL external objects.
   /// </summary>
   IDLExternal = interface(IDerExternal)
-    ['{8BC8ED8F-DE72-5E45-BF26-AF16A7F7E8C8}']
+    ['{A22F9146-3F69-4425-B68C-1EC2CB4D0354}']
   end;
 
   /// <summary>

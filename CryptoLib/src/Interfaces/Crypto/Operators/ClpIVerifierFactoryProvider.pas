@@ -30,7 +30,7 @@ type
   /// Base interface for a provider to support the dynamic creation of signature verifiers.
   /// </summary>
   IVerifierFactoryProvider = interface
-    ['{F6A7B8C9-D0E1-2345-F012-3456789ABCDE}']
+    ['{484B3126-A8AA-4512-91F2-1EFCAC0DAD4E}']
 
     /// <summary>
     /// Return a signature verifier for signature algorithm described in the passed in algorithm details object.

@@ -31,7 +31,7 @@ type
   /// Base interface for operators that serve as stream-based signature verifiers.
   /// </summary>
   IVerifierFactory = interface
-    ['{E5F6A7B8-C9D0-1234-EF01-23456789ABCD}']
+    ['{2212002D-33CE-488F-8510-9B22B216FD74}']
 
     /// <summary>
     /// The algorithm details object for this verifier.

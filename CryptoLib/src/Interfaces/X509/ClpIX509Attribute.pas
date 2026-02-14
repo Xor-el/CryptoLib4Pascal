@@ -30,7 +30,7 @@ type
   /// Class for carrying the values in an X.509 Attribute.
   /// </summary>
   IX509Attribute = interface
-    ['{B1C2D3E4-F5A6-7890-BCDE-F12345678901}']
+    ['{B43958A4-2E0A-4F18-A7AC-0DF88F32B6B3}']
 
     function GetOid: String;
     function GetValues: TCryptoLibGenericArray<IAsn1Encodable>;

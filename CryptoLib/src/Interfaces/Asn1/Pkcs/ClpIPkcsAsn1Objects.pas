@@ -41,7 +41,7 @@ type
   /// Interface for AttributePkcs.
   /// </summary>
   IAttributePkcs = interface(IAsn1Encodable)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}']
+    ['{6F46BA6D-376C-4DB9-A85F-88A443FA3666}']
 
     function GetAttrType: IDerObjectIdentifier;
     function GetAttrValues: IAsn1Set;
@@ -54,7 +54,7 @@ type
   /// Interface for CertificationRequest.
   /// </summary>
   ICertificationRequest = interface(IAsn1Encodable)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F0123456789A}']
+    ['{2FD51313-14E1-414E-A648-2AD4BCBA997F}']
 
     function GetCertificationRequestInfo: ICertificationRequestInfo;
     function GetSignatureAlgorithm: IAlgorithmIdentifier;
@@ -69,7 +69,7 @@ type
   /// Interface for CertificationRequestInfo.
   /// </summary>
   ICertificationRequestInfo = interface(IAsn1Encodable)
-    ['{C3D4E5F6-A7B8-9012-CDEF-0123456789AB}']
+    ['{4405808E-2B24-4F6A-BFC6-92212D567D29}']
 
     function GetVersion: IDerInteger;
     function GetSubject: IX509Name;
@@ -86,7 +86,7 @@ type
   /// Interface for PrivateKeyInfo.
   /// </summary>
   IPrivateKeyInfo = interface(IAsn1Encodable)
-    ['{E6F7A8B9-C0D1-E2F3-A4B5-C6D7E8F9A0B1}']
+    ['{B118BDBB-DDA9-446F-A2FC-E8350620E054}']
 
     function GetVersion: IDerInteger;
     function GetPrivateKeyAlgorithm: IAlgorithmIdentifier;
@@ -110,7 +110,7 @@ type
   /// Interface for RsaPrivateKeyStructure.
   /// </summary>
   IRsaPrivateKeyStructure = interface(IAsn1Encodable)
-    ['{F7A8B9C0-D1E2-F345-A6B7-C8D9E0F1A2B3}']
+    ['{2F80DE02-A5DF-4F82-8011-A6A658DF5473}']
 
     function GetModulus: TBigInteger;
     function GetPublicExponent: TBigInteger;

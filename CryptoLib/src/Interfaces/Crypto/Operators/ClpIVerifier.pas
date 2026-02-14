@@ -29,7 +29,7 @@ type
   /// Interface for operators that reduce their input to the validation of a signature.
   /// </summary>
   IVerifier = interface
-    ['{B2C3D4E5-F6A7-8901-BCDE-F0123456789A}']
+    ['{480DB7F4-646F-4E2D-A1B1-52C8491731A2}']
 
     /// <summary>
     /// Return true if the passed in data matches what is expected by the verification result.

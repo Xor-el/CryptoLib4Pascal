@@ -30,7 +30,7 @@ type
   /// Wraps IRsa with random blinding for side-channel protection.
   /// </summary>
   IRsaBlindedEngine = interface(IAsymmetricBlockCipher)
-    ['{F6A7B8C9-D0E1-2345-F012-3456789ABCDE}']
+    ['{14EA4B56-B8CF-4D6E-BE9C-1C6D522A06E8}']
   end;
 
 implementation

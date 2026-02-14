@@ -39,7 +39,7 @@ uses
 
 type
   IX509V1CertificateGenerator = interface
-    ['{C2D3E4F5-A6B7-8901-CDEF-234567890123}']
+    ['{8B7E875E-C0AE-4CB6-9F89-C86D1EA230BE}']
     procedure Reset;
     procedure SetSerialNumber(const ASerialNumber: TBigInteger);
     procedure SetIssuerDN(const AIssuer: IX509Name);
@@ -55,7 +55,7 @@ type
   end;
 
   IX509V3CertificateGenerator = interface
-    ['{D3E4F5A6-B7C8-9012-DEF0-345678901234}']
+    ['{0B5BDF63-032B-4348-BBD1-30E75BA32731}']
     procedure Reset;
     procedure SetSerialNumber(const ASerialNumber: TBigInteger);
     procedure SetIssuerDN(const AIssuer: IX509Name);

@@ -33,7 +33,7 @@ type
   /// Interface for Pkcs10CertificationRequest (PKCS#10 CSR with verify/get public key/extensions).
   /// </summary>
   IPkcs10CertificationRequest = interface(ICertificationRequest)
-    ['{D4E5F6A7-B8C9-0123-DEF0-123456789ABC}']
+    ['{3F108F81-6586-481E-A8CB-488D2AE5226F}']
 
     function GetPublicKey: IAsymmetricKeyParameter;
     function GetRequestedExtensions: IX509Extensions;

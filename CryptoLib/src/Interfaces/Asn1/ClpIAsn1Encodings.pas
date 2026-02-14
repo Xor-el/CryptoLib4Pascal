@@ -70,7 +70,7 @@ type
   /// Interface for constructed DER encoding.
   /// </summary>
   IConstructedDerEncoding = interface(IDerEncoding)
-    ['{E1F2A3B4-C5D6-E7F8-9A0B-1C2D3E4F5A6B}']
+    ['{24401A28-DFC0-40ED-99B0-8D4A7B0D8C1C}']
 
     /// <summary>
     /// Get the contents length.

@@ -28,7 +28,7 @@ uses
 
 type
   IRsaKeyPairGenerator = interface(IAsymmetricCipherKeyPairGenerator)
-    ['{A7B8C9D0-E1F2-3456-0123-456789ABCDEF}']
+    ['{2259ACEB-6CF5-4AC9-9255-9A7DD432B0D2}']
   end;
 
   IRsaBlindingFactorGenerator = interface(IInterface)

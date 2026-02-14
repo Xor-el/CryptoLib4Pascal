@@ -31,7 +31,7 @@ type
   /// Interface for ASN.1 generators.
   /// </summary>
   IAsn1Generator = interface(IInterface)
-    ['{B1C2D3E4-F5A6-B7C8-D9E0-F1A2B3C4D5E6}']
+    ['{28C758DF-6AAB-437E-9D54-5F70F200A216}']
     procedure AddObject(const AObj: IAsn1Encodable);
     function GetRawOutputStream(): TStream;
     procedure Close();
@@ -41,7 +41,7 @@ type
   /// Interface for BER generators.
   /// </summary>
   IBerGenerator = interface(IAsn1Generator)
-    ['{C2D3E4F5-A6B7-C8D9-E0F1-A2B3C4D5E6F7}']
+    ['{78361853-9B50-4B6B-AB16-A6F39FC44675}']
     procedure WriteHdr(ATag: Int32);
     procedure WriteBerHeader(ATag: Int32);
     procedure WriteBerBody(AContentStream: TStream);

@@ -30,7 +30,7 @@ type
   /// which reduce a stream of data to a single value.
   /// </summary>
   IStreamCalculator<TResult> = interface
-    ['{C3D4E5F6-A7B8-9012-CDEF-0123456789AB}']
+    ['{6323F6FD-A832-4190-85C7-8B7F26E961C3}']
 
     /// <summary>
     /// Return a "sink" stream which only exists to update the implementing object.

@@ -29,7 +29,7 @@ type
   /// Interface for random source providers.
   /// </summary>
   IRandomSourceProvider = interface(IInterface)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}']
+    ['{36D4B411-F510-418F-9ADB-DB8136DCFCA5}']
 
     /// <summary>Fill byte array with random bytes from implementing source.</summary>
     procedure GetBytes(const AData: TCryptoLibByteArray);

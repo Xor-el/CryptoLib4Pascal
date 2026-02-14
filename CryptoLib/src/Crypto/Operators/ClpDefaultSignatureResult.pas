@@ -31,7 +31,7 @@ type
   /// Interface for default signature result operations.
   /// </summary>
   IDefaultSignatureResult = interface(IBlockResult)
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    ['{A3964592-CB32-43F7-9857-D3BFD15FCF80}']
   end;
 
   /// <summary>

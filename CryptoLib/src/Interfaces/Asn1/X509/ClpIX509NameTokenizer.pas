@@ -26,7 +26,7 @@ type
   /// Interface for breaking up an X500 Name into its component tokens.
   /// </summary>
   IX509NameTokenizer = interface
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}']
+    ['{E3DBDADD-8F1F-4472-AED5-E617920024A0}']
 
     function HasMoreTokens: Boolean;
     function NextToken: String;

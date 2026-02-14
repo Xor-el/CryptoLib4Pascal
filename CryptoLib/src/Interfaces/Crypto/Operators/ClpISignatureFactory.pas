@@ -31,7 +31,7 @@ type
   /// Base interface for operators that serve as stream-based signature calculators.
   /// </summary>
   ISignatureFactory = interface
-    ['{D4E5F6A7-B8C9-0123-DEF0-123456789ABC}']
+    ['{891A7077-58D2-4CBF-B509-2C651C004932}']
 
     /// <summary>
     /// The algorithm details object for this calculator.

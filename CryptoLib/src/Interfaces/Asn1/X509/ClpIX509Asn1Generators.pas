@@ -33,7 +33,7 @@ type
   /// Interface for V1 TbsCertificate structure generator.
   /// </summary>
   IV1TbsCertificateGenerator = interface
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{26EA3114-5B47-49BE-9CD9-58E7A4E5C927}']
     procedure SetSerialNumber(const ASerialNumber: IDerInteger);
     procedure SetSignature(const ASignature: IAlgorithmIdentifier);
     procedure SetIssuer(const AIssuer: IX509Name);
@@ -51,7 +51,7 @@ type
   /// Interface for V3 TbsCertificate structure generator.
   /// </summary>
   IV3TbsCertificateGenerator = interface
-    ['{B2C3D4E5-F6A7-8901-BCDE-F12345678901}']
+    ['{B0863857-D467-4983-9BDA-A78DAA8D6784}']
     procedure SetSerialNumber(const ASerialNumber: IDerInteger);
     procedure SetSignature(const ASignature: IAlgorithmIdentifier);
     procedure SetIssuer(const AIssuer: IX509Name);
@@ -73,7 +73,7 @@ type
   /// Interface for V2 AttributeCertificateInfo generator.
   /// </summary>
   IV2AttributeCertificateInfoGenerator = interface
-    ['{C3D4E5F6-A7B8-9012-CDEF-012345678901}']
+    ['{50F936AE-95F8-4716-898E-7E01D0CBCE9A}']
     procedure SetHolder(const AHolder: IHolder);
     procedure AddAttribute(const AOid: String; const AValue: IAsn1Encodable); overload;
     procedure AddAttribute(const AAttribute: IAttributeX509); overload;
@@ -91,7 +91,7 @@ type
   /// Interface for V2 TbsCertList structure generator.
   /// </summary>
   IV2TbsCertListGenerator = interface
-    ['{D4E5F6A7-B8C9-0123-DEF0-123456789012}']
+    ['{AC77BA87-29B9-4BE8-A61F-E44F9A0B2FB6}']
     procedure SetSignature(const ASignature: IAlgorithmIdentifier);
     procedure SetIssuer(const AIssuer: IX509Name);
     procedure SetThisUpdate(const AThisUpdate: IAsn1UtcTime); overload;

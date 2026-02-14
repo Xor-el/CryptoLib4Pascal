@@ -29,7 +29,7 @@ type
   /// Interface for the core RSA engine.
   /// </summary>
   IRsaCoreEngine = interface(IRsa)
-    ['{E5F6A7B8-C9D0-1234-EF01-23456789ABCD}']
+    ['{F5EE4B7D-FD1B-41CE-9EFC-39DB87599C05}']
   end;
 
 implementation

@@ -32,7 +32,7 @@ type
   /// Interface for RsaPrivateKeyStructure.
   /// </summary>
   IRsaPrivateKeyStructure = interface(IAsn1Encodable)
-    ['{F7A8B9C0-D1E2-F345-A6B7-C8D9E0F1A2B3}']
+    ['{3E021F89-2107-4252-A60A-FA3C00149CFA}']
 
     function GetModulus: TBigInteger;
     function GetPublicExponent: TBigInteger;

@@ -391,7 +391,7 @@ type
   /// Interface for AttributeX509.
   /// </summary>
   IAttributeX509 = interface(IAsn1Encodable)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{8BE434FF-8DCC-4323-80E0-8DECC8B1B6A2}']
     function GetAttrType: IDerObjectIdentifier;
     function GetAttrValues: IAsn1Set;
     function GetAttributeValues: TCryptoLibGenericArray<IAsn1Encodable>;

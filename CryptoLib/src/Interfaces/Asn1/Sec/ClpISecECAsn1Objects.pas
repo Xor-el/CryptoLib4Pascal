@@ -31,7 +31,7 @@ type
   /// Interface for the elliptic curve private key object from SEC 1
   /// </summary>
   IECPrivateKeyStructure = interface(IAsn1Encodable)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{1F1024CF-E179-49F8-8B4D-906078407DB3}']
 
     function GetVersion: IDerInteger;
     function GetPrivateKey: IAsn1OctetString;

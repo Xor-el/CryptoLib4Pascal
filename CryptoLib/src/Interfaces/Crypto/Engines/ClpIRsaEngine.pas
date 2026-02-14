@@ -30,7 +30,7 @@ type
   /// This is a wrapper around IRsa that provides byte[] processing.
   /// </summary>
   IRsaEngine = interface(IAsymmetricBlockCipher)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{8EF00CAE-9F23-443A-B487-9AAE95039EAA}']
   end;
 
 implementation

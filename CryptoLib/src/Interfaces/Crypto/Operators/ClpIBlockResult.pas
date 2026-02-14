@@ -29,7 +29,7 @@ type
   /// Interface for operators that reduce their input to a single block.
   /// </summary>
   IBlockResult = interface
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}']
+    ['{24451130-411B-405A-8121-CAA0DD11B26D}']
 
     /// <summary>
     /// Return the final result of the operation.

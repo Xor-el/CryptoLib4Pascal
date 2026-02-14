@@ -76,7 +76,7 @@ type
   /// Interface for ASN.1 bit string parsers.
   /// </summary>
   IAsn1BitStringParser = interface(IAsn1Convertible)
-    ['{A2B3C4D5-E6F7-8901-2345-6789ABCDEF01}']
+    ['{3A41C418-5838-421C-8B61-2CA47A154EBA}']
 
     /// <summary>
     /// Return a stream representing the contents of the BIT STRING.

@@ -65,7 +65,7 @@ type
   strict private
   type
     ICachedEncoding = interface(IInterface)
-      ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+      ['{32BC4E66-D9CB-437A-8DE1-E074EDBDAAE6}']
       function GetEncoding: TCryptoLibByteArray;
       function GetEncoded: TCryptoLibByteArray;
     end;

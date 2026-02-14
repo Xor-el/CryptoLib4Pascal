@@ -30,7 +30,7 @@ type
   /// Base interface for a public/private key block cipher.
   /// </summary>
   IAsymmetricBlockCipher = interface(IInterface)
-    ['{D4E5F6A7-B8C9-0123-DEF0-123456789ABC}']
+    ['{88FB97DD-D496-4B3E-8A56-3111CECFC419}']
 
     /// <summary>
     /// The name of the algorithm this cipher implements.
