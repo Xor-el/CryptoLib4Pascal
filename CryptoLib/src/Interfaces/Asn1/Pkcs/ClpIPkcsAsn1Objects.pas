@@ -33,7 +33,7 @@ type
   IAttributePkcs = interface;
   ICertificationRequest = interface;
   ICertificationRequestInfo = interface;
-  IContentInfo = interface;
+  IPkcsContentInfo = interface;
   IPrivateKeyInfo = interface;
   IPkcsSignedData = interface;
 
@@ -134,7 +134,7 @@ type
   /// <summary>
   /// Interface for ContentInfo.
   /// </summary>
-  IContentInfo = interface(IAsn1Encodable)
+  IPkcsContentInfo = interface(IAsn1Encodable)
     ['{B9C0D1E2-F3A4-5678-9012-3456789ABCDE}']
 
     function GetContentType: IDerObjectIdentifier;
@@ -152,14 +152,14 @@ type
 
     function GetVersion: IDerInteger;
     function GetDigestAlgorithms: IAsn1Set;
-    function GetContentInfo: IContentInfo;
+    function GetContentInfo: IPkcsContentInfo;
     function GetCertificates: IAsn1Set;
     function GetCrls: IAsn1Set;
     function GetSignerInfos: IAsn1Set;
 
     property Version: IDerInteger read GetVersion;
     property DigestAlgorithms: IAsn1Set read GetDigestAlgorithms;
-    property ContentInfo: IContentInfo read GetContentInfo;
+    property ContentInfo: IPkcsContentInfo read GetContentInfo;
     property Certificates: IAsn1Set read GetCertificates;
     property Crls: IAsn1Set read GetCrls;
     property SignerInfos: IAsn1Set read GetSignerInfos;
