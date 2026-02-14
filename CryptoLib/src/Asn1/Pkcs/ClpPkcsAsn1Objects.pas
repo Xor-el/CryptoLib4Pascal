@@ -88,7 +88,7 @@ type
   /// <summary>
   /// The SignedData object (PKCS#7).
   /// </summary>
-  TSignedData = class(TAsn1Encodable, ISignedData)
+  TPkcsSignedData = class(TAsn1Encodable, IPkcsSignedData)
   strict private
   var
     FVersion: IDerInteger;
@@ -107,13 +107,13 @@ type
     function GetSignerInfos: IAsn1Set;
 
   public
-    class function GetInstance(AObj: TObject): ISignedData; overload; static;
-    class function GetInstance(const AObj: IAsn1Convertible): ISignedData; overload; static;
-    class function GetInstance(const AEncoded: TCryptoLibByteArray): ISignedData; overload; static;
+    class function GetInstance(AObj: TObject): IPkcsSignedData; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IPkcsSignedData; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IPkcsSignedData; overload; static;
     class function GetInstance(const AObj: IAsn1TaggedObject;
-      AExplicitly: Boolean): ISignedData; overload; static;
+      AExplicitly: Boolean): IPkcsSignedData; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
-      ADeclaredExplicit: Boolean): ISignedData; static;
+      ADeclaredExplicit: Boolean): IPkcsSignedData; static;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const AVersion: IDerInteger;
@@ -998,7 +998,7 @@ end;
 
 { TSignedData }
 
-class function TSignedData.GetInstance(AObj: TObject): ISignedData;
+class function TPkcsSignedData.GetInstance(AObj: TObject): IPkcsSignedData;
 begin
   if AObj = nil then
   begin
@@ -1006,13 +1006,13 @@ begin
     Exit;
   end;
 
-  if Supports(AObj, ISignedData, Result) then
+  if Supports(AObj, IPkcsSignedData, Result) then
     Exit;
 
   raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
-class function TSignedData.GetInstance(const AObj: IAsn1Convertible): ISignedData;
+class function TPkcsSignedData.GetInstance(const AObj: IAsn1Convertible): IPkcsSignedData;
 begin
   if AObj = nil then
   begin
@@ -1020,13 +1020,13 @@ begin
     Exit;
   end;
 
-  if Supports(AObj, ISignedData, Result) then
+  if Supports(AObj, IPkcsSignedData, Result) then
     Exit;
 
-  Result := TSignedData.Create(TAsn1Sequence.GetInstance(AObj));
+  Result := TPkcsSignedData.Create(TAsn1Sequence.GetInstance(AObj));
 end;
 
-class function TSignedData.GetInstance(const AEncoded: TCryptoLibByteArray): ISignedData;
+class function TPkcsSignedData.GetInstance(const AEncoded: TCryptoLibByteArray): IPkcsSignedData;
 begin
   if AEncoded = nil then
   begin
@@ -1034,22 +1034,22 @@ begin
     Exit;
   end;
 
-  Result := TSignedData.Create(TAsn1Sequence.GetInstance(AEncoded));
+  Result := TPkcsSignedData.Create(TAsn1Sequence.GetInstance(AEncoded));
 end;
 
-class function TSignedData.GetInstance(const AObj: IAsn1TaggedObject;
-  AExplicitly: Boolean): ISignedData;
+class function TPkcsSignedData.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IPkcsSignedData;
 begin
   Result := GetInstance(TAsn1Sequence.GetInstance(AObj, AExplicitly));
 end;
 
-class function TSignedData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
-  ADeclaredExplicit: Boolean): ISignedData;
+class function TPkcsSignedData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPkcsSignedData;
 begin
   Result := GetInstance(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-constructor TSignedData.Create(const ASeq: IAsn1Sequence);
+constructor TPkcsSignedData.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
 begin
@@ -1084,7 +1084,7 @@ begin
     raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
 end;
 
-constructor TSignedData.Create(const AVersion: IDerInteger;
+constructor TPkcsSignedData.Create(const AVersion: IDerInteger;
   const ADigestAlgorithms: IAsn1Set; const AContentInfo: IContentInfo;
   const ACertificates: IAsn1Set; const ACrls: IAsn1Set;
   const ASignerInfos: IAsn1Set);
@@ -1107,37 +1107,37 @@ begin
   FSignerInfos := ASignerInfos;
 end;
 
-function TSignedData.GetVersion: IDerInteger;
+function TPkcsSignedData.GetVersion: IDerInteger;
 begin
   Result := FVersion;
 end;
 
-function TSignedData.GetDigestAlgorithms: IAsn1Set;
+function TPkcsSignedData.GetDigestAlgorithms: IAsn1Set;
 begin
   Result := FDigestAlgorithms;
 end;
 
-function TSignedData.GetContentInfo: IContentInfo;
+function TPkcsSignedData.GetContentInfo: IContentInfo;
 begin
   Result := FContentInfo;
 end;
 
-function TSignedData.GetCertificates: IAsn1Set;
+function TPkcsSignedData.GetCertificates: IAsn1Set;
 begin
   Result := FCertificates;
 end;
 
-function TSignedData.GetCrls: IAsn1Set;
+function TPkcsSignedData.GetCrls: IAsn1Set;
 begin
   Result := FCrls;
 end;
 
-function TSignedData.GetSignerInfos: IAsn1Set;
+function TPkcsSignedData.GetSignerInfos: IAsn1Set;
 begin
   Result := FSignerInfos;
 end;
 
-function TSignedData.ToAsn1Object: IAsn1Object;
+function TPkcsSignedData.ToAsn1Object: IAsn1Object;
 var
   LV: IAsn1EncodableVector;
 begin

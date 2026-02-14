@@ -35,7 +35,7 @@ type
   ICertificationRequestInfo = interface;
   IContentInfo = interface;
   IPrivateKeyInfo = interface;
-  ISignedData = interface;
+  IPkcsSignedData = interface;
 
   /// <summary>
   /// Interface for AttributePkcs.
@@ -147,7 +147,7 @@ type
   /// <summary>
   /// Interface for SignedData (PKCS#7).
   /// </summary>
-  ISignedData = interface(IAsn1Encodable)
+  IPkcsSignedData = interface(IAsn1Encodable)
     ['{C0D1E2F3-A4B5-6789-0123-456789ABCDEF}']
 
     function GetVersion: IDerInteger;

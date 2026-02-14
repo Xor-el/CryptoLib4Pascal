@@ -109,7 +109,7 @@ function TX509CertificateParser.ReadDerCertificate(const ADIn: TAsn1InputStream)
 var
   LSeq: IAsn1Sequence;
   LContentType: IDerObjectIdentifier;
-  LSignedData: ISignedData;
+  LSignedData: IPkcsSignedData;
 begin
   LSeq := ADIn.ReadObject() as IAsn1Sequence;
 
@@ -117,11 +117,11 @@ begin
   begin
     if LContentType.Equals(TPkcsObjectIdentifiers.SignedData) then
     begin
-      if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, ISignedData>(
+      if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IPkcsSignedData>(
         LSeq[1], 0, True, LSignedData,
-        function(ATagged: IAsn1TaggedObject; AState: Boolean): ISignedData
+        function(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData
         begin
-          Result := TSignedData.GetTagged(ATagged, AState);
+          Result := TPkcsSignedData.GetTagged(ATagged, AState);
         end) then
       begin
         FSData := LSignedData.Certificates;
