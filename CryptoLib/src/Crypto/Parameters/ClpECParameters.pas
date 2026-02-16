@@ -24,6 +24,7 @@ interface
 uses
   SyncObjs,
   SysUtils,
+  Generics.Collections,
   ClpBigInteger,
   ClpECAlgorithms,
   ClpIECCommon,
@@ -35,6 +36,7 @@ uses
   ClpKeyGenerationParameters,
   ClpISecureRandom,
   ClpECUtilities,
+  ClpCryptoLibComparers,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -52,6 +54,7 @@ resourcestring
   SAlgorithmNil = 'Algorithm Cannot be Empty';
   SParameterNil = 'Parameter Cannot be Nil';
   SUnRecognizedAlgorithm = 'Unrecognised Algorithm: " %s, "Algorithm';
+  SNameNotValidParameterSet = 'Name is not a valid public key parameter set';
 
 type
   TECDomainParameters = class(TInterfacedObject, IECDomainParameters)
@@ -81,6 +84,16 @@ type
 
     class function FromX9ECParameters(const AX9ECParameters: IX9ECParameters): IECDomainParameters; static;
     class function FromX962Parameters(const AX962Parameters: IX962Parameters): IECDomainParameters; static;
+    /// <summary>
+    /// Look up domain parameters by curve name. When the curve has a known OID,
+    /// returns named domain parameters (so SubjectPublicKeyInfo uses the curve OID).
+    /// Otherwise returns parameters from X9ECParameters (explicit encoding).
+    /// </summary>
+    class function LookupName(const AName: String): IECDomainParameters; static;
+    /// <summary>
+    /// Copy domain parameters from another instance.
+    /// </summary>
+    class function FromDomainParameters(const AOther: IECDomainParameters): IECDomainParameters; static;
 
     constructor Create(const ACurve: IECCurve; const AG: IECPoint;
       const AN: TBigInteger); overload;
@@ -135,32 +148,38 @@ type
 
   strict private
 
-  const
-
-    FAlgorithms: array [0 .. 5] of String = ('EC', 'ECDSA', 'ECDH', 'ECDHC', 'ECGOST3410', 'ECMQV');
+  class var
+    FAlgorithms: TDictionary<String, String>;
 
   var
     FAlgorithm: String;
     FParameters: IECDomainParameters;
 
   strict protected
+    class constructor Create;
+    class destructor Destroy;
 
     constructor Create(const AAlgorithm: String; AIsPrivate: Boolean;
-      const AParameters: IECDomainParameters);
+      const AParameters: IECDomainParameters); overload;
 
     function CreateKeyGenerationParameters(const ARandom: ISecureRandom)
       : IECKeyGenerationParameters; inline;
 
     function GetAlgorithmName: String; inline;
     function GetParameters: IECDomainParameters; inline;
+    function GetPublicKeyParamSet: IDerObjectIdentifier;
 
     function Equals(const AOther: IECKeyParameters): Boolean;
       reintroduce; overload;
 
   public
+    constructor Create(const AAlgorithm: String; AIsPrivate: Boolean;
+      const APublicKeyParamSet: IDerObjectIdentifier); overload;
+
     class function VerifyAlgorithmName(const AAlgorithm: String): String; static;
     property AlgorithmName: String read GetAlgorithmName;
     property Parameters: IECDomainParameters read GetParameters;
+    property PublicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -181,6 +200,9 @@ type
 
     constructor Create(const AAlgorithm: String; const AQ: IECPoint;
       const AParameters: IECDomainParameters); overload;
+
+    constructor Create(const AAlgorithm: String; const AQ: IECPoint;
+      const APublicKeyParamSet: IDerObjectIdentifier); overload;
 
     property Q: IECPoint read GetQ;
 
@@ -207,6 +229,9 @@ type
     constructor Create(const AAlgorithm: String; const AD: TBigInteger;
       const AParameters: IECDomainParameters); overload;
 
+    constructor Create(const AAlgorithm: String; const AD: TBigInteger;
+      const APublicKeyParamSet: IDerObjectIdentifier); overload;
+
     property D: TBigInteger read GetD;
 
     function Equals(const AOther: IECPrivateKeyParameters): Boolean;
@@ -227,8 +252,15 @@ type
 
   public
     constructor Create(const ADomainParameters: IECDomainParameters;
-      const ARandom: ISecureRandom);
+      const ARandom: ISecureRandom); overload;
+
+    constructor Create(const APublicKeyParamSet: IDerObjectIdentifier;
+      const ARandom: ISecureRandom); overload;
+
+    function GetPublicKeyParamSet: IDerObjectIdentifier;
+
     property DomainParameters: IECDomainParameters read GetDomainParameters;
+    property PublicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
   end;
 
 implementation
@@ -273,6 +305,37 @@ begin
 
   LX9 := TX9ECParameters.GetInstance(AX962Parameters.GetParameters);
   Result := FromX9ECParameters(LX9);
+end;
+
+class function TECDomainParameters.LookupName(const AName: String): IECDomainParameters;
+var
+  LOid: IDerObjectIdentifier;
+  LX9: IX9ECParameters;
+begin
+  if AName = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SParameterNil);
+  LOid := TECUtilities.FindECCurveOid(AName);
+  if LOid <> nil then
+  begin
+    Result := TECNamedDomainParameters.LookupOid(LOid);
+    Exit;
+  end;
+  LX9 := TECUtilities.FindECCurveByName(AName);
+  if LX9 = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SNameNotValidParameterSet);
+  Result := FromX9ECParameters(LX9);
+end;
+
+class function TECDomainParameters.FromDomainParameters(const AOther: IECDomainParameters): IECDomainParameters;
+var
+  LNamed: IECNamedDomainParameters;
+begin
+  if AOther = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SParameterNil);
+  if Supports(AOther, IECNamedDomainParameters, LNamed) then
+    Result := TECNamedDomainParameters.Create(LNamed.Name, AOther)
+  else
+    Result := TECDomainParameters.Create(AOther.Curve, AOther.G, AOther.N, AOther.H, AOther.Seed);
 end;
 
 function TECDomainParameters.GetCurve: IECCurve;
@@ -393,11 +456,6 @@ begin
 
   Result := Curve.Equals(AOther.Curve) and G.Equals(AOther.G) and
     N.Equals(AOther.N);
-
-  if H.IsInitialized then
-  begin
-    Result := Result and H.Equals(AOther.H);
-  end;
 end;
 
 function TECDomainParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -410,12 +468,6 @@ begin
   Result := Result xor FG.GetHashCode();
   Result := Result * 257;
   Result := Result xor Fn.GetHashCode();
-
-  if H.IsInitialized then
-  begin
-    Result := Result * 257;
-    Result := Result xor FH.GetHashCode();
-  end;
 end;
 
 function TECDomainParameters.ToX962Parameters: IX962Parameters;
@@ -490,6 +542,22 @@ end;
 
 { TECKeyParameters }
 
+class constructor TECKeyParameters.Create;
+begin
+  FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FAlgorithms.Add('EC', 'EC');
+  FAlgorithms.Add('ECDSA', 'ECDSA');
+  FAlgorithms.Add('ECDH', 'ECDH');
+  FAlgorithms.Add('ECDHC', 'ECDHC');
+  FAlgorithms.Add('ECGOST3410', 'ECGOST3410');
+  FAlgorithms.Add('ECMQV', 'ECMQV');
+end;
+
+class destructor TECKeyParameters.Destroy;
+begin
+  FAlgorithms.Free;
+end;
+
 function TECKeyParameters.GetParameters: IECDomainParameters;
 begin
   Result := FParameters;
@@ -499,25 +567,10 @@ class function TECKeyParameters.VerifyAlgorithmName(const AAlgorithm
   : String): String;
 var
   LUpper: String;
-  LI: Int32;
-  LFound: Boolean;
 begin
-  LUpper := UpperCase(AAlgorithm);
-  LFound := False;
-  for LI := System.Low(FAlgorithms) to System.High(FAlgorithms) do
-  begin
-    if (FAlgorithms[LI] = AAlgorithm) then
-    begin
-      LFound := True;
-      break;
-    end;
-  end;
-
-  if (not LFound) then
-  begin
+  if (not FAlgorithms.TryGetValue(AAlgorithm, LUpper)) then
     raise EArgumentCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm,
       [AAlgorithm]);
-  end;
   Result := LUpper;
 end;
 
@@ -533,6 +586,22 @@ begin
 
   FAlgorithm := VerifyAlgorithmName(AAlgorithm);
   FParameters := AParameters;
+end;
+
+constructor TECKeyParameters.Create(const AAlgorithm: String; AIsPrivate: Boolean;
+  const APublicKeyParamSet: IDerObjectIdentifier);
+begin
+  Create(AAlgorithm, AIsPrivate, TECNamedDomainParameters.LookupOid(APublicKeyParamSet));
+end;
+
+function TECKeyParameters.GetPublicKeyParamSet: IDerObjectIdentifier;
+var
+  LNamed: IECNamedDomainParameters;
+begin
+  if Supports(FParameters, IECNamedDomainParameters, LNamed) then
+    Result := LNamed.Name
+  else
+    Result := nil;
 end;
 
 function TECKeyParameters.CreateKeyGenerationParameters
@@ -594,6 +663,15 @@ begin
   Create('EC', AQ, AParameters);
 end;
 
+constructor TECPublicKeyParameters.Create(const AAlgorithm: String;
+  const AQ: IECPoint; const APublicKeyParamSet: IDerObjectIdentifier);
+begin
+  inherited Create(AAlgorithm, False, APublicKeyParamSet);
+  if (AQ = nil) then
+    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
+  FQ := Parameters.ValidatePublicPoint(AQ);
+end;
+
 function TECPublicKeyParameters.Equals(const AOther
   : IECPublicKeyParameters): Boolean;
 begin
@@ -640,6 +718,16 @@ begin
   FD := AParameters.ValidatePrivateScalar(AD);
 end;
 
+constructor TECPrivateKeyParameters.Create(const AAlgorithm: String;
+  const AD: TBigInteger; const APublicKeyParamSet: IDerObjectIdentifier);
+begin
+  inherited Create(AAlgorithm, True, APublicKeyParamSet);
+  if (not(AD.IsInitialized)) then
+    raise EArgumentNilCryptoLibException.CreateResFmt
+      (@SBigIntegerNotInitialized, ['d']);
+  FD := Parameters.ValidatePrivateScalar(AD);
+end;
+
 function TECPrivateKeyParameters.Equals(const AOther
   : IECPrivateKeyParameters): Boolean;
 begin
@@ -672,9 +760,25 @@ begin
   FDomainParams := ADomainParameters;
 end;
 
+constructor TECKeyGenerationParameters.Create(const APublicKeyParamSet: IDerObjectIdentifier;
+  const ARandom: ISecureRandom);
+begin
+  Create(TECNamedDomainParameters.LookupOid(APublicKeyParamSet), ARandom);
+end;
+
 function TECKeyGenerationParameters.GetDomainParameters: IECDomainParameters;
 begin
   Result := FDomainParams;
+end;
+
+function TECKeyGenerationParameters.GetPublicKeyParamSet: IDerObjectIdentifier;
+var
+  LNamed: IECNamedDomainParameters;
+begin
+  if Supports(FDomainParams, IECNamedDomainParameters, LNamed) then
+    Result := LNamed.Name
+  else
+    Result := nil;
 end;
 
 end.

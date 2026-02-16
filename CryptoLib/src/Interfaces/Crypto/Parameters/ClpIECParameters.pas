@@ -71,11 +71,13 @@ type
 
     function GetAlgorithmName: String;
     function GetParameters: IECDomainParameters;
+    function GetPublicKeyParamSet: IDerObjectIdentifier;
 
     function Equals(const AOther: IECKeyParameters): Boolean; overload;
 
     property AlgorithmName: String read GetAlgorithmName;
     property Parameters: IECDomainParameters read GetParameters;
+    property PublicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
 
   end;
 
@@ -99,7 +101,10 @@ type
     ['{B9343CA3-9274-4812-9FFC-2CC27486261E}']
 
     function GetDomainParameters: IECDomainParameters;
+    function GetPublicKeyParamSet: IDerObjectIdentifier;
+
     property DomainParameters: IECDomainParameters read GetDomainParameters;
+    property PublicKeyParamSet: IDerObjectIdentifier read GetPublicKeyParamSet;
   end;
 
 implementation
