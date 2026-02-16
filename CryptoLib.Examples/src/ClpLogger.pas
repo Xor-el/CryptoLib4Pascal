@@ -1,12 +1,33 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                           development of this library                           * }
+
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
 unit ClpLogger;
 
 interface
+
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
 
 type
   TLogLevel = (Trace, Debug, Info, Warn, Error, Fatal);
 
   ILogger = interface(IInterface)
-    ['{E9BD7306-A6CD-49FA-88C6-8460FBB29E37}']
+    ['{730BF179-AC3E-4382-B810-315BC32A2F99}']
     procedure Log(ALevel: TLogLevel; const AMsg: string);
     procedure LogTrace(const AMsg: string);
     procedure LogDebug(const AMsg: string);
