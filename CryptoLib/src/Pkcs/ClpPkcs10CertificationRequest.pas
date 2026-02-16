@@ -307,7 +307,7 @@ constructor TPkcs10CertificationRequest.Create(const ASignatureAlgorithm: String
   const AAttributes: IAsn1Set; const ASigningKey: IAsymmetricKeyParameter);
 begin
   inherited Create();
-  Init(TAsn1SignatureFactory.Create(ASignatureAlgorithm, ASigningKey), ASubject, APublicKey, AAttributes);
+  Init(TAsn1SignatureFactory.Create(ASignatureAlgorithm, ASigningKey) as ISignatureFactory, ASubject, APublicKey, AAttributes);
 end;
 
 constructor TPkcs10CertificationRequest.Create(const ASignatureAlgorithm: String;
@@ -315,7 +315,7 @@ constructor TPkcs10CertificationRequest.Create(const ASignatureAlgorithm: String
   const AAttributes: IAsn1Set; const ASigningKey: IAsymmetricKeyParameter);
 begin
   inherited Create();
-  Init(TAsn1SignatureFactory.Create(ASignatureAlgorithm, ASigningKey), ASubject, APubInfo, AAttributes);
+  Init(TAsn1SignatureFactory.Create(ASignatureAlgorithm, ASigningKey) as ISignatureFactory, ASubject, APubInfo, AAttributes);
 end;
 
 constructor TPkcs10CertificationRequest.Create(const ASignatureFactory: ISignatureFactory;
@@ -379,7 +379,7 @@ end;
 
 function TPkcs10CertificationRequest.Verify(const APublicKey: IAsymmetricKeyParameter): Boolean;
 begin
-  Result := Verify(TAsn1VerifierFactoryProvider.Create(APublicKey));
+  Result := Verify(TAsn1VerifierFactoryProvider.Create(APublicKey) as IVerifierFactoryProvider);
 end;
 
 function TPkcs10CertificationRequest.Verify(const AVerifierProvider: IVerifierFactoryProvider): Boolean;

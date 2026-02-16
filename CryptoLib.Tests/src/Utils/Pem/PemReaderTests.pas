@@ -34,6 +34,10 @@ uses
 {$ENDIF FPC}
   ClpPemObjects,
   ClpIPemObjects,
+  ClpIPemReader,
+  ClpPemReader,
+  ClpIPemWriter,
+  ClpPemWriter,
   ClpAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpIPkcsAsn1Objects,
@@ -45,12 +49,17 @@ uses
 type
 
   TPemReaderTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+    procedure LengthTest(const AType: String;
+      const AHeaders: TCryptoLibGenericArray<IPemHeader>;
+      const AData: TCryptoLibByteArray);
   published
     procedure TestMalformedInput;
     procedure TestSaneInput;
     procedure TestWithHeaders;
     procedure TestNoWhiteSpace;
-
+    procedure TestPemLength;
+    procedure TestMalformed;
   end;
 
 implementation
@@ -259,6 +268,89 @@ begin
 
     CheckEquals('CERTIFICATE', LPemObject.&Type, 'PEM type should be CERTIFICATE');
     CheckEquals('CN=estExampleCA', LIssuer, 'Issuer should match');
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TPemReaderTest.LengthTest(const AType: String;
+  const AHeaders: TCryptoLibGenericArray<IPemHeader>;
+  const AData: TCryptoLibByteArray);
+var
+  LPemObj: IPemObject;
+  LStream: TStringStream;
+  LWriter: IPemWriter;
+  LOutputLen: Int32;
+begin
+  LPemObj := TPemObject.Create(AType, AHeaders, AData);
+  LStream := TStringStream.Create('', TEncoding.ASCII);
+  try
+    LWriter := TPemWriter.Create(LStream);
+    LWriter.WriteObject(LPemObj as IPemObjectGenerator);
+    LOutputLen := LWriter.GetOutputSize(LPemObj);
+    CheckEquals(LStream.Size, LOutputLen,
+      Format('PEM output length should match GetOutputSize for type %s', [AType]));
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TPemReaderTest.TestPemLength;
+var
+  I: Int32;
+  LEmptyHeaders: TCryptoLibGenericArray<IPemHeader>;
+  LHeaders: TCryptoLibGenericArray<IPemHeader>;
+  LData: TCryptoLibByteArray;
+begin
+  SetLength(LEmptyHeaders, 0);
+  for I := 1 to 59 do
+  begin
+    SetLength(LData, I);
+    LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  end;
+
+  SetLength(LData, 100);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  SetLength(LData, 101);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  SetLength(LData, 102);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  SetLength(LData, 103);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+
+  SetLength(LData, 1000);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  SetLength(LData, 1001);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  SetLength(LData, 1002);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+  SetLength(LData, 1003);
+  LengthTest('CERTIFICATE', LEmptyHeaders, LData);
+
+  SetLength(LHeaders, 2);
+  LHeaders[0] := TPemHeader.Create('Proc-Type', '4,ENCRYPTED');
+  LHeaders[1] := TPemHeader.Create('DEK-Info', 'DES3,0001020304050607');
+  SetLength(LData, 103);
+  LengthTest('RSA PRIVATE KEY', LHeaders, LData);
+end;
+
+procedure TPemReaderTest.TestMalformed;
+var
+  LStream: TStringStream;
+  LPemReader: IPemReader;
+begin
+  LStream := TStringStream.Create('-----BEGIN ' + sLineBreak, TEncoding.ASCII);
+  try
+    LPemReader := TPemReader.Create(LStream);
+    try
+      LPemReader.ReadPemObject();
+      Fail('must fail on malformed');
+    except
+      on E: EIOCryptoLibException do
+        CheckEquals('ran out of data before consuming type', E.Message, 'Exception message');
+      on E: Exception do
+        Fail('Expected EIOCryptoLibException, got ' + E.ClassName + ': ' + E.Message);
+    end;
   finally
     LStream.Free;
   end;

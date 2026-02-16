@@ -23,8 +23,7 @@ interface
 
 uses
   Classes,
-  ClpCryptoLibTypes,
-  ClpIAsn1Objects;
+  ClpCryptoLibTypes;
 
 type
   IPemHeader = interface;
@@ -100,67 +99,7 @@ type
     property Content: TCryptoLibByteArray read GetContent;
   end;
 
-  /// <summary>
-  /// Interface for PEM reader.
-  /// </summary>
-  IPemReader = interface(IInterface)
-    ['{0139877B-ED23-46C7-BE39-E5010AC26507}']
-
-    function GetReader: TStream;
-
-    /// <summary>
-    /// Get the underlying stream reader.
-    /// </summary>
-    property Reader: TStream read GetReader;
-
-    /// <summary>
-    /// Read a PEM object from the stream.
-    /// </summary>
-    /// <returns>A PEM object, or nil if end of stream</returns>
-    function ReadPemObject(): IPemObject;
-  end;
-
-  /// <summary>
-  /// Interface for PEM writer.
-  /// </summary>
-  IPemWriter = interface(IInterface)
-    ['{E534B37C-C6B0-4066-9AB9-758BDAD3C3A0}']
-
-    function GetWriter: TStream;
-
-    /// <summary>
-    /// Get the underlying stream writer.
-    /// </summary>
-    property Writer: TStream read GetWriter;
-
-    /// <summary>
-    /// Get the estimated output size for a PEM object.
-    /// </summary>
-    /// <param name="AObj">The PEM object</param>
-    /// <returns>Estimated size in bytes</returns>
-    function GetOutputSize(const AObj: IPemObject): Int32;
-
-    /// <summary>
-    /// Write a PEM object to the stream.
-    /// </summary>
-    /// <param name="AObjGen">The PEM object generator</param>
-    procedure WriteObject(const AObjGen: IPemObjectGenerator);
-  end;
-
-  /// <summary>
-  /// Interface for PEM parser.
-  /// </summary>
-  IPemParser = interface(IInterface)
-    ['{8C91EC3F-A5D3-4714-8A3E-A68C381FF754}']
-
-    /// <summary>
-    /// Read a PEM object from the stream and return it as an ASN.1 sequence.
-    /// </summary>
-    /// <param name="AInStream">The input stream to read from</param>
-    /// <returns>An ASN.1 sequence, or nil if no PEM object found</returns>
-    function ReadPemObject(const AInStream: TStream): IAsn1Sequence;
-  end;
-
 implementation
 
 end.
+

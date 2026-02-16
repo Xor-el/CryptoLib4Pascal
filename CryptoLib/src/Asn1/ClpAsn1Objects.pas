@@ -6755,9 +6755,10 @@ end;
 
 function TDerBitString.GetBufferStream(): TFixedBufferStream;
 begin
- if FBufferStream = nil then
-  FBufferStream := TFixedBufferStream.Create(FContents, 1, System.Length(FContents) - 1, False);
-
+  if FBufferStream = nil then
+    FBufferStream := TFixedBufferStream.Create(FContents, 1, System.Length(FContents) - 1, False)
+  else
+    FBufferStream.Position := 0;
   Result := FBufferStream;
 end;
 

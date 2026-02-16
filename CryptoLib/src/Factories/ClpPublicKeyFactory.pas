@@ -114,7 +114,7 @@ begin
     LDsaY := TDerInteger.GetInstance(AKeyInfo.ParsePublicKey());
     if LAlgID.Parameters <> nil then
     begin
-      LDsaPara := TDsaParameter.GetInstance(LAlgID.Parameters.ToAsn1Object());
+      LDsaPara := TDsaParameter.GetInstance(LAlgID.Parameters);
       LDsaParams := TDsaParameters.Create(LDsaPara.P, LDsaPara.Q, LDsaPara.G);
     end
     else

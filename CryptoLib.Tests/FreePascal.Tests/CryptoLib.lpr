@@ -26,8 +26,9 @@ uses
   X509ExtensionsTests, X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests,
   GeneralNameTests, KMacTests, RSATests, PssTests, ISO9796Tests,
   RSABlindedTests, RSADigestSignerTests, X931SignerTests, CryptoLibTestBase,
-  X509CertGenTests, ClpFixedSecureRandom, ClpShortenedDigest,
-  IPAddressUtilitiesTests, PemReaderTests;
+  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  ClpFixedSecureRandom, ClpShortenedDigest, IPAddressUtilitiesTests,
+  PemReaderTests;
 
 {$R *.res}
 

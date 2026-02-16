@@ -887,7 +887,7 @@ begin
   Result := TDerSequence.Create(LV);
 end;
 
-{ TContentInfo }
+{ TPkcsContentInfo }
 
 class function TPkcsContentInfo.GetInstance(AObj: TObject): IPkcsContentInfo;
 begin
@@ -996,7 +996,7 @@ begin
   Result := TBerSequence.Create(LV);
 end;
 
-{ TSignedData }
+{ TPkcsSignedData }
 
 class function TPkcsSignedData.GetInstance(AObj: TObject): IPkcsSignedData;
 begin

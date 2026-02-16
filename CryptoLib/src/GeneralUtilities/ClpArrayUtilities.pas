@@ -101,6 +101,16 @@ type
     class function ToString<T>(const AData: TCryptoLibGenericArray<T>;
       const AConverter: TFunc<T, String>): String; reintroduce; overload; static;
 
+    /// <summary>
+    /// Reverse array elements in place.
+    /// </summary>
+    class procedure ReverseInPlace<T>(var AArray: TCryptoLibGenericArray<T>); overload; static;
+    /// <summary>
+    /// Reverse the range [AFromIndex, AToIndex) in place.
+    /// </summary>
+    class procedure ReverseInPlace<T>(var AArray: TCryptoLibGenericArray<T>;
+      AFromIndex, AToIndex: Int32); overload; static;
+
   end;
 
 implementation
@@ -485,6 +495,32 @@ begin
     Result := LSB.ToString;
   finally
     LSB.Free;
+  end;
+end;
+
+class procedure TArrayUtilities.ReverseInPlace<T>(var AArray: TCryptoLibGenericArray<T>);
+begin
+  ReverseInPlace<T>(AArray, 0, System.Length(AArray));
+end;
+
+class procedure TArrayUtilities.ReverseInPlace<T>(var AArray: TCryptoLibGenericArray<T>;
+  AFromIndex, AToIndex: Int32);
+var
+  LLeft: Int32;
+  LRight: Int32;
+  LTemp: T;
+begin
+  if (AFromIndex < 0) or (AToIndex > System.Length(AArray)) or (AFromIndex > AToIndex) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidLength, [AFromIndex, AToIndex]);
+  LLeft := AFromIndex;
+  LRight := AToIndex - 1;
+  while LLeft < LRight do
+  begin
+    LTemp := AArray[LLeft];
+    AArray[LLeft] := AArray[LRight];
+    AArray[LRight] := LTemp;
+    System.Inc(LLeft);
+    System.Dec(LRight);
   end;
 end;
 

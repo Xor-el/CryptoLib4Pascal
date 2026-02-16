@@ -107,32 +107,7 @@ type
   end;
 
   /// <summary>
-  /// Interface for RsaPrivateKeyStructure.
-  /// </summary>
-  IRsaPrivateKeyStructure = interface(IAsn1Encodable)
-    ['{2F80DE02-A5DF-4F82-8011-A6A658DF5473}']
-
-    function GetModulus: TBigInteger;
-    function GetPublicExponent: TBigInteger;
-    function GetPrivateExponent: TBigInteger;
-    function GetPrime1: TBigInteger;
-    function GetPrime2: TBigInteger;
-    function GetExponent1: TBigInteger;
-    function GetExponent2: TBigInteger;
-    function GetCoefficient: TBigInteger;
-
-    property Modulus: TBigInteger read GetModulus;
-    property PublicExponent: TBigInteger read GetPublicExponent;
-    property PrivateExponent: TBigInteger read GetPrivateExponent;
-    property Prime1: TBigInteger read GetPrime1;
-    property Prime2: TBigInteger read GetPrime2;
-    property Exponent1: TBigInteger read GetExponent1;
-    property Exponent2: TBigInteger read GetExponent2;
-    property Coefficient: TBigInteger read GetCoefficient;
-  end;
-
-  /// <summary>
-  /// Interface for ContentInfo.
+  /// Interface for PkcsContentInfo.
   /// </summary>
   IPkcsContentInfo = interface(IAsn1Encodable)
     ['{B9C0D1E2-F3A4-5678-9012-3456789ABCDE}']
@@ -145,7 +120,7 @@ type
   end;
 
   /// <summary>
-  /// Interface for SignedData (PKCS#7).
+  /// Interface for PkcsSignedData (PKCS#7).
   /// </summary>
   IPkcsSignedData = interface(IAsn1Encodable)
     ['{C0D1E2F3-A4B5-6789-0123-456789ABCDEF}']

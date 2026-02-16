@@ -41,6 +41,8 @@ uses
   ClpDeltaCertificateTool,
   ClpPemObjects,
   ClpIPemObjects,
+  ClpIPemReader,
+  ClpPemReader,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpBigInteger,
