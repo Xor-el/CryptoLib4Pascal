@@ -212,11 +212,11 @@ begin
   LOrder[3] := TX509Name.ST;
   LOrder[4] := TX509Name.EmailAddress;
   SetLength(LValues, 5);
-  LValues[0] := 'AU';
-  LValues[1] := 'The Legion of the Bouncy Castle';
-  LValues[2] := 'Melbourne';
-  LValues[3] := 'Victoria';
-  LValues[4] := 'feedback-crypto@bouncycastle.org';
+  LValues[0] := 'NG';
+  LValues[1] := 'CryptoLib4Pascal';
+  LValues[2] := 'Alausa';
+  LValues[3] := 'Lagos';
+  LValues[4] := 'feedback-crypto@cryptolib4pascal.org';
   LSubject := TX509Name.Create(LOrder, LValues);
 
   LName1 := TGeneralName.Create(TGeneralName.DnsName, 'bc1.local');
