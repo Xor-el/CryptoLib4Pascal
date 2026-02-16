@@ -450,6 +450,8 @@ uses
   ClpAsn1Generators in '..\..\CryptoLib\src\Asn1\ClpAsn1Generators.pas',
   ClpIAsn1Generators in '..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Generators.pas',
   ClpPkcs10CertificationRequest in '..\..\CryptoLib\src\Pkcs\ClpPkcs10CertificationRequest.pas',
+  ClpPkcs10CertificationRequestBuilder in '..\..\CryptoLib\src\Pkcs\ClpPkcs10CertificationRequestBuilder.pas',
+  ClpIPkcs10CertificationRequestBuilder in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs10CertificationRequestBuilder.pas',
   ClpIX509Certificate in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509Certificate.pas',
   ClpIX509CertificateParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificateParser.pas',
   ClpIX509CrlEntry in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CrlEntry.pas',

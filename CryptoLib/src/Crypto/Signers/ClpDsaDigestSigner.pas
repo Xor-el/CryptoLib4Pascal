@@ -30,7 +30,6 @@ uses
   ClpParameterUtilities,
   ClpStandardDsaEncoding,
   ClpIDsaEncoding,
-  ClpIStandardDsaEncoding,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpISigner,

@@ -26,13 +26,10 @@ uses
   ClpAsn1Tags,
   ClpAsn1Objects,
   ClpAsn1Utilities,
-  ClpAsn1Parsers,
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpIAsn1Parsers,
   ClpICmsParsers,
-  ClpICmsAsn1Objects,
-  ClpCmsAsn1Objects,
   ClpPlatformUtilities,
   ClpCryptoLibTypes;
 

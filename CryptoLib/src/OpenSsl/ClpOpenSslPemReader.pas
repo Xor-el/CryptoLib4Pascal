@@ -62,7 +62,6 @@ uses
   ClpIDsaParameters,
   ClpX9ObjectIdentifiers,
   ClpECGenerators,
-  ClpIECGenerators,
   ClpIECParameters,
   ClpIX509Asn1Objects,
   ClpStringUtilities,

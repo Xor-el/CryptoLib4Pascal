@@ -155,12 +155,13 @@ uses
   ClpAttributeCertificateHolder, ClpX509Utilities, ClpX509Generators, 
   ClpDeltaCertificateTool, ClpX509Attribute, ClpX509ExtensionBase, 
   ClpX509ExtensionUtilities, ClpDevRandomReader, ClpBaseRandomProvider, 
-  ClpCmsAsn1Objects, ClpCmsObjectIdentifiers, ClpCmsParsers, 
-  ClpICmsAsn1Objects, ClpICmsParsers, ClpOpenSslMiscPemGenerator, 
-  ClpOpenSslPemReader, ClpOpenSslPemWriter, ClpIOpenSslPemReader, 
-  ClpIOpenSslPemWriter, ClpPkcsDHAsn1Objects, ClpIPkcsDHAsn1Objects, 
-  ClpIPemParser, ClpIPemReader, ClpIPemWriter, ClpPemParser, ClpPemReader, 
-  ClpPemWriter;
+  ClpCmsAsn1Objects, ClpCmsObjectIdentifiers, 
+  ClpPkcs10CertificationRequestBuilder, ClpCmsParsers, ClpICmsAsn1Objects, 
+  ClpICmsParsers, ClpOpenSslMiscPemGenerator, ClpOpenSslPemReader, 
+  ClpOpenSslPemWriter, ClpIOpenSslPemReader, ClpIOpenSslPemWriter, 
+  ClpPkcsDHAsn1Objects, ClpIPkcsDHAsn1Objects, ClpIPemParser, ClpIPemReader, 
+  ClpIPemWriter, ClpPemParser, ClpPemReader, ClpPemWriter, 
+  ClpIPkcs10CertificationRequestBuilder;
 
 implementation
 

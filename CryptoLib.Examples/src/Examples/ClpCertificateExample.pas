@@ -25,6 +25,8 @@ uses
   ClpX509Generators,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpIX509Asn1Generators,
+  ClpX509Asn1Generators,
   ClpAsn1SignatureFactory,
   ClpX509CrlParser,
   ClpIX509CrlParser,
@@ -32,7 +34,8 @@ uses
   ClpIX509Generators,
   ClpX509ExtensionUtilities,
   ClpSubjectPublicKeyInfoFactory,
-  ClpPkcs10CertificationRequest,
+  ClpPkcs10CertificationRequestBuilder,
+  ClpIPkcs10CertificationRequestBuilder,
   ClpIPkcs10CertificationRequest,
   ClpIOpenSslPemWriter,
   ClpOpenSslPemWriter,
@@ -187,13 +190,37 @@ end;
 function TCertificateExample.CreateCertRequestPem(const AKeyPair: IAsymmetricCipherKeyPair;
   const ASubject: IX509Name; const ASignatureAlgorithm: String): TCertRequestPem;
 var
-  LSignatureFactory: ISignatureFactory;
+  LBuilder: IPkcs10CertificationRequestBuilder;
   LReq: IPkcs10CertificationRequest;
+  LDnsName: IGeneralName;
+  LSanNames: IGeneralNames;
+  LExtGen: IX509ExtensionsGenerator;
+  LExtensions: IX509Extensions;
   LKeyStream, LReqStream: TStringStream;
   LWriter: IOpenSslPemWriter;
 begin
-  LSignatureFactory := TAsn1SignatureFactory.Create(ASignatureAlgorithm, AKeyPair.Private, nil);
-  LReq := TPkcs10CertificationRequest.Create(LSignatureFactory, ASubject, AKeyPair.Public, nil) as IPkcs10CertificationRequest;
+  LDnsName := TGeneralName.Create(TGeneralName.DnsName, 'cryptolib4pascal.example.com');
+  LSanNames := TGeneralNames.Create(LDnsName);
+
+  // Build some extensions via TX509ExtensionsGenerator for AddExtensions demo
+  LExtGen := TX509ExtensionsGenerator.Create();
+  LExtGen.AddExtension(TX509Extensions.BasicConstraints, True, TBasicConstraints.Create(False) as IBasicConstraints);
+  LExtGen.AddExtension(TX509Extensions.KeyUsage, True,
+    TKeyUsage.Create(TKeyUsage.DigitalSignature or TKeyUsage.KeyEncipherment) as IKeyUsage);
+  LExtensions := LExtGen.Generate();
+
+  LBuilder := TPkcs10CertificationRequestBuilder.Create();
+  LReq := LBuilder
+    .SetSubject(ASubject)
+    .SetKeyPair(AKeyPair)
+    .SetSignatureAlgorithm(ASignatureAlgorithm)
+    // Bulk: add BasicConstraints + KeyUsage from pre-built IX509Extensions
+    .AddExtensions(LExtensions)
+    // Generic: add SubjectAlternativeName via AddExtension(OID, critical, value)
+    .AddExtension(TX509Extensions.SubjectAlternativeName, False, LSanNames)
+    // Convenience: SubjectKeyIdentifier computed from public key
+    .AddSubjectKeyIdentifier(False)
+    .Build();
 
   LKeyStream := TStringStream.Create('', TEncoding.ASCII);
   try

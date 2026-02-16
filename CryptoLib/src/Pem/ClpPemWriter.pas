@@ -28,7 +28,6 @@ uses
   ClpIPemObjects,
   ClpCryptoLibTypes,
   ClpEncoders,
-  ClpStringUtilities,
   ClpConverters;
 
 type
