@@ -78,7 +78,6 @@ type
   TOpenSslWriterTest = class(TCryptoLibAlgorithmTestCase)
   strict private
     const
-      (* Base64 of EC P-256 private key (PKCS#8), from WriterTest.cs lines 41-45. *)
       TestEcDsaKeyBytesBase64 =
         'MIG/AgEAMBAGByqGSM49AgEGBSuBBAAiBIGnMIGkAgEBBDCSBU3vo7ieeKs0ABQamy/ynxlde7Ylr8HmyfLaNnMr' +
         'jAwPp9R+KMUEhB7zxSAXv9KgBwYFK4EEACKhZANiAQQyyolMpg+TyB4o9kPWqafHIOe8o9K1glus+w2sY8OIPQQWGb5i5LdAyi' +

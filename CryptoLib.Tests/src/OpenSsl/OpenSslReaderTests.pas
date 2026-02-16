@@ -70,7 +70,6 @@ type
   TOpenSslReaderTest = class(TCryptoLibAlgorithmTestCase)
   strict private
     const
-      (* PKCS7 ContentInfo with contentType id-envelopedData (from bc-reference openssl/pkcs7.pem). *)
       Pkcs7Pem =
         '-----BEGIN PKCS7-----' + sLineBreak +
         'MIIJogYJKoZIhvcNAQcDoIIJkzCCCY8CAQAxgfgwgfUCAQAwXjBZMQswCQYDVQQG' + sLineBreak +
@@ -126,7 +125,7 @@ type
         'fi4jy2nPNvVSpjWiAI6cpZsbdhdh9iayij4YdQg3HB20+1K9VcFnTmBqLKiBbG2o' + sLineBreak +
         '4oX2oNPE9Vr3H9Y8YaVoeUU+Kiqo5g==' + sLineBreak +
         '-----END PKCS7-----';
-      (* Unencrypted DSA private key (from bc-reference openssl/dsa/openssl_dsa_unencrypted.pem). *)
+
       DsaUnencryptedPem =
         '-----BEGIN DSA PRIVATE KEY-----' + sLineBreak +
         'MIIDPgIBAAKCAQEAyKItMopMK218pcmy6PkrMVXAv5dt07TdGBuNhVWpQ52ldK9X' + sLineBreak +
@@ -148,7 +147,7 @@ type
         'g2SYQK3PmIWwxiFhJQTzeiQtl5rKzEn76knAydOtPVRgjXWzHUoW6Az0qwIVAMvw' + sLineBreak +
         'thRrEZxNdxELdnwW3rpYBm6B' + sLineBreak +
         '-----END DSA PRIVATE KEY-----';
-      (* Unencrypted RSA private key (from bc-reference openssl/rsa/openssl_rsa_unencrypted.pem). *)
+
       RsaUnencryptedPem =
         '-----BEGIN RSA PRIVATE KEY-----' + sLineBreak +
         'MIIEpAIBAAKCAQEAyGOvloI+jKnRHWKuhYB+cTIEwZhagKJ0f3rIY8WNgujB7Plp' + sLineBreak +
