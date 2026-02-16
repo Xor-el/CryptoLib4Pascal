@@ -23,7 +23,7 @@ interface
 
 uses
   Classes,
-  ClpIPemObjects;
+  ClpIPemObject;
 
 type
   /// <summary>

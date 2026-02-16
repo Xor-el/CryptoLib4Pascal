@@ -25,7 +25,8 @@ uses
   SysUtils,
   Classes,
   ClpIPemWriter,
-  ClpIPemObjects,
+  ClpIPemHeader,
+  ClpIPemObject,
   ClpCryptoLibTypes,
   ClpEncoders,
   ClpConverters;

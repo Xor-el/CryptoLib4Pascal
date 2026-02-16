@@ -26,7 +26,7 @@ uses
   Rtti,
   SysUtils,
   ClpIOpenSslPemWriter,
-  ClpIPemObjects,
+  ClpIPemObject,
   ClpPemWriter,
   ClpOpenSslMiscPemGenerator,
   ClpCryptoLibTypes;

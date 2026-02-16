@@ -114,7 +114,7 @@ uses
   ClpIDsaKCalculator, ClpIDsaSigner, ClpISigner, ClpIECNRSigner, ClpIRandom, 
   ClpISecureRandom, ClpIRandomNumberGenerator, ClpIRandomSourceProvider, 
   ClpIX509CertificateParser, ClpIRandomGenerator, ClpIDigestRandomGenerator, 
-  ClpICryptoApiRandomGenerator, ClpIPemObjects, ClpIHMacDsaKCalculator, 
+  ClpICryptoApiRandomGenerator, ClpIPemHeader, ClpIHMacDsaKCalculator, 
   ClpIRsaDigestSigner, ClpIRsa, ClpIPssSigner, ClpIGenericSigner, 
   ClpIEd25519Signer, ClpIEd25519PhSigner, ClpIEd25519CtxSigner, 
   ClpIDsaDigestSigner, ClpIParametersWithIV, ClpIKeyParameter, 
@@ -144,7 +144,7 @@ uses
   ClpScalarUtilities, ClpScalar25519, ClpBits, ClpCodec, ClpBinaryPrimitives, 
   ClpBitConverter, ClpBitOperations, ClpConverters, ClpCryptoLibComparers, 
   ClpCryptoLibTypes, ClpNullable, ClpPack, ClpWeakRef, ClpIPAddressUtilities, 
-  ClpPemObjects, ClpPkcs10CertificationRequest, ClpDigestRandomGenerator, 
+  ClpPemHeader, ClpPkcs10CertificationRequest, ClpDigestRandomGenerator, 
   ClpRandomNumberGenerator, ClpAppleRandomProvider, 
   ClpGenericBSDRandomProvider, ClpLinuxRandomProvider, 
   ClpWindowsRandomProvider, ClpUnixRandomProvider, ClpSolarisRandomProvider, 
@@ -161,7 +161,7 @@ uses
   ClpOpenSslPemWriter, ClpIOpenSslPemReader, ClpIOpenSslPemWriter, 
   ClpPkcsDHAsn1Objects, ClpIPkcsDHAsn1Objects, ClpIPemParser, ClpIPemReader, 
   ClpIPemWriter, ClpPemParser, ClpPemReader, ClpPemWriter, 
-  ClpIPkcs10CertificationRequestBuilder;
+  ClpIPkcs10CertificationRequestBuilder, ClpIPemObject, ClpPemObject;
 
 implementation
 

@@ -33,8 +33,10 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpPemObjects,
-  ClpIPemObjects,
+  ClpPemHeader,
+  ClpPemObject,
+  ClpIPemHeader,
+  ClpIPemObject,
   ClpIPemWriter,
   ClpPemWriter,
   ClpIOpenSslPemWriter,

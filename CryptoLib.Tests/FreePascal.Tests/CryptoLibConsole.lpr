@@ -21,13 +21,13 @@ uses
   ScryptTests, DigestTests, CertTests, DigestUtilitiesTests, DHTests,
   Asn1IntegerTests, GeneralizedTimeTests, BitStringTests, InputStreamTests,
   UtcTimeTests, RelativeOidTests, OctetStringTests, SetTests, X9Tests,
-  PrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
-  CertificateTests, X509AltTests, X509ExtensionsTests, X509NameTests,
-  SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
-  PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests, RSATests,
-  X931SignerTests, CryptoLibTestBase, OpenSslReaderTests, OpenSslWriterTests,
-  X509CertGenTests, ClpFixedSecureRandom, ClpShortenedDigest,
-  IPAddressUtilitiesTests, PemReaderTests;
+  PrivateKeyInfoTests, DerUtf8StringTests, Pkcs10CertRequestTests,
+  DeltaCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests,
+  KMacTests, PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests,
+  RSATests, X931SignerTests, CryptoLibTestBase, OpenSslReaderTests,
+  OpenSslWriterTests, X509CertGenTests, ClpFixedSecureRandom,
+  ClpShortenedDigest, IPAddressUtilitiesTests, PemReaderTests;
 
 type
 

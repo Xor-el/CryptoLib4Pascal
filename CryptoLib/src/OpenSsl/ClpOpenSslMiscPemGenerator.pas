@@ -24,8 +24,8 @@ interface
 uses
   SysUtils,
   Rtti,
-  ClpIPemObjects,
-  ClpPemObjects,
+  ClpIPemObject,
+  ClpPemObject,
   ClpIAsymmetricKeyParameter,
   ClpPrivateKeyInfoFactory,
   ClpSubjectPublicKeyInfoFactory,

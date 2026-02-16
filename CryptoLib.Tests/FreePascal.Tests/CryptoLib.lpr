@@ -21,7 +21,7 @@ uses
   ScryptTests, DigestTests, CertTests, Curve25519KeyUtilitiesTests,
   DigestUtilitiesTests, DHTests, Asn1IntegerTests, BitStringTests,
   GeneralizedTimeTests, OctetStringTests, RelativeOidTests, UtcTimeTests,
-  InputStreamTests, SetTests, X9Tests, PrivateKeyInfoTests,
+  InputStreamTests, SetTests, X9Tests, PrivateKeyInfoTests, DerUtf8StringTests,
   Pkcs10CertRequestTests, DeltaCertificateTests, CertificateTests, X509AltTests,
   X509ExtensionsTests, X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests,
   GeneralNameTests, KMacTests, RSATests, PssTests, ISO9796Tests,

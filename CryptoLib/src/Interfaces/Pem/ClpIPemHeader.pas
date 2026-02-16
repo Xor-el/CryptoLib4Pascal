@@ -15,42 +15,43 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIPemWriter;
+unit ClpIPemHeader;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  Classes,
-  ClpIPemObject;
-
 type
   /// <summary>
-  /// Interface for PEM writer.
+  /// Interface for PEM header objects.
   /// </summary>
-  IPemWriter = interface(IInterface)
-    ['{E534B37C-C6B0-4066-9AB9-758BDAD3C3A0}']
+  IPemHeader = interface(IInterface)
+    ['{ED7A5DF3-5307-427B-8B47-63820438FEF1}']
 
-    function GetWriter: TStream;
-
-    /// <summary>
-    /// Get the underlying stream writer.
-    /// </summary>
-    property Writer: TStream read GetWriter;
+    function GetName: String;
+    function GetValue: String;
 
     /// <summary>
-    /// Get the estimated output size for a PEM object.
+    /// Get the header name.
     /// </summary>
-    /// <param name="AObj">The PEM object</param>
-    /// <returns>Estimated size in bytes</returns>
-    function GetOutputSize(const AObj: IPemObject): Int32;
+    property Name: String read GetName;
+    /// <summary>
+    /// Get the header value.
+    /// </summary>
+    property Value: String read GetValue;
 
     /// <summary>
-    /// Write a PEM object to the stream.
+    /// Get hash code for this header.
     /// </summary>
-    /// <param name="AObjGen">The PEM object generator</param>
-    procedure WriteObject(const AObjGen: IPemObjectGenerator);
+    function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
+    /// <summary>
+    /// Check if this header equals another object.
+    /// </summary>
+    function Equals(const AObj: IPemHeader): Boolean;
+    /// <summary>
+    /// Get string representation of this header.
+    /// </summary>
+    function ToString(): String;
   end;
 
 implementation
