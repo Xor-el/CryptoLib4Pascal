@@ -546,11 +546,8 @@ uses
   ClpGnuObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
-  BlowfishTestVectors in '..\src\Crypto\BlowfishTestVectors.pas',
-  AESTestVectors in '..\src\Crypto\AESTestVectors.pas',
-  SpeckTestVectors in '..\src\Crypto\SpeckTestVectors.pas',
-  RijndaelTestVectors in '..\src\Crypto\RijndaelTestVectors.pas',
-  BlockCipherVectorTests in '..\src\Crypto\BlockCipherVectorTests.pas',
+  BlowfishTests in '..\src\Crypto\BlowfishTests.pas',
+  RijndaelTests in '..\src\Crypto\RijndaelTests.pas',
   Asn1IntegerTests in '..\src\Asn1\Asn1IntegerTests.pas',
   Asn1SequenceParserTests in '..\src\Asn1\Asn1SequenceParserTests.pas',
   BitStringTests in '..\src\Asn1\BitStringTests.pas',
@@ -597,7 +594,6 @@ uses
   PaddingTests in '..\src\Crypto\PaddingTests.pas',
   DSATests in '..\src\Crypto\DSATests.pas',
   DeterministicDsaTests in '..\src\Crypto\DeterministicDsaTests.pas',
-  BlockCipherMonteCarloTests in '..\src\Crypto\BlockCipherMonteCarloTests.pas',
   HMacTests in '..\src\Crypto\HMacTests.pas',
   MD5HMacTests in '..\src\Crypto\MD5HMacTests.pas',
   SHA1HMacTests in '..\src\Crypto\SHA1HMacTests.pas',
@@ -649,7 +645,19 @@ uses
   CipherStreamTests in '..\src\Crypto\CipherStreamTests.pas',
   ParameterUtilitiesTests in '..\src\Security\ParameterUtilitiesTests.pas',
   OaepTests in '..\src\Crypto\OaepTests.pas',
-  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
+  CryptoLibTestBase in '..\src\CryptoLibTestBase.pas',
+  ClpIWrapper in '..\..\CryptoLib\src\Interfaces\Crypto\ClpIWrapper.pas',
+  ClpIRfc5649WrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc5649WrapEngine.pas',
+  ClpIAesWrapPadEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesWrapPadEngine.pas',
+  ClpIRfc3211WrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc3211WrapEngine.pas',
+  ClpIAesWrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesWrapEngine.pas',
+  ClpIRfc3394WrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc3394WrapEngine.pas',
+  ClpWrapperUtilities in '..\..\CryptoLib\src\Crypto\ClpWrapperUtilities.pas',
+  ClpAesWrapPadEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesWrapPadEngine.pas',
+  ClpRfc3211WrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRfc3211WrapEngine.pas',
+  ClpAesWrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesWrapEngine.pas',
+  ClpRfc5649WrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRfc5649WrapEngine.pas',
+  ClpRfc3394WrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRfc3394WrapEngine.pas';
 
 begin
 

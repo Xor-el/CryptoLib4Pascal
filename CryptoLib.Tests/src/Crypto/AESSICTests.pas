@@ -50,8 +50,8 @@ type
   private
 
   var
-    Fkeys, Fplain: TCryptoLibMatrixByteArray;
-    Fcipher: TCryptoLibGenericArray<TCryptoLibMatrixByteArray>;
+    FKeys, FPlain: TCryptoLibMatrixByteArray;
+    FCipher: TCryptoLibGenericArray<TCryptoLibMatrixByteArray>;
 
   protected
     procedure SetUp; override;
@@ -70,19 +70,19 @@ procedure TTestAESSIC.SetUp;
 begin
   inherited;
 
-  Fkeys := TCryptoLibMatrixByteArray.Create
+  FKeys := TCryptoLibMatrixByteArray.Create
     (DecodeHex('2B7E151628AED2A6ABF7158809CF4F3C'),
     DecodeHex('8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B'),
     DecodeHex(
     '603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4'));
 
-  Fplain := TCryptoLibMatrixByteArray.Create
+  FPlain := TCryptoLibMatrixByteArray.Create
     (DecodeHex('6BC1BEE22E409F96E93D7E117393172A'),
     DecodeHex('AE2D8A571E03AC9C9EB76FAC45AF8E51'),
     DecodeHex('30C81C46A35CE411E5FBC1191A0A52EF'),
     DecodeHex('F69F2445DF4F9B17AD2B417BE66C3710'));
 
-  Fcipher := TCryptoLibGenericArray<TCryptoLibMatrixByteArray>.Create
+  FCipher := TCryptoLibGenericArray<TCryptoLibMatrixByteArray>.Create
     (TCryptoLibMatrixByteArray.Create
     (DecodeHex('874D6191B620E3261BEF6864990DB6CE'),
     DecodeHex('9806F66B7970FDFF8617187BB9FFFDFF'),
@@ -103,97 +103,85 @@ end;
 procedure TTestAESSIC.TearDown;
 begin
   inherited;
-
 end;
 
 procedure TTestAESSIC.TestAESSIC;
 var
-  c: IBufferedCipher;
-  i, j: Int32;
-  skey, sk: IKeyParameter;
-  enc, crypt: TBytes;
+  LC: IBufferedCipher;
+  LI, LJ: Int32;
+  LSKey, LSk: IKeyParameter;
+  LEnc, LCrypt: TBytes;
 begin
 
-  c := TCipherUtilities.GetCipher('AES/SIC/NoPadding');
+  LC := TCipherUtilities.GetCipher('AES/SIC/NoPadding');
 
-  //
-  // NIST vectors
-  //
-
-  i := 0;
-  while i <> System.Length(Fkeys) do
+  LI := 0;
+  while LI <> System.Length(FKeys) do
   begin
-    skey := TParameterUtilities.CreateKeyParameter('AES', Fkeys[i]);
-    c.Init(true, TParametersWithIV.Create(skey,
+    LSKey := TParameterUtilities.CreateKeyParameter('AES', FKeys[LI]);
+    LC.Init(True, TParametersWithIV.Create(LSKey,
       DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF')) as IParametersWithIV);
 
-    j := 0;
-    while j <> System.Length(Fplain) do
+    LJ := 0;
+    while LJ <> System.Length(FPlain) do
     begin
-      enc := c.ProcessBytes(Fplain[j]);
-      if (not AreEqual(enc, Fcipher[i, j])) then
+      LEnc := LC.ProcessBytes(FPlain[LJ]);
+      if (not AreEqual(LEnc, FCipher[LI, LJ])) then
       begin
-        Fail('AESSIC encrypt failed: key ' + IntToStr(i) + ' block ' +
-          IntToStr(j));
+        Fail('AESSIC encrypt failed: key ' + IntToStr(LI) + ' block ' +
+          IntToStr(LJ));
       end;
-      System.Inc(j);
+      System.Inc(LJ);
     end;
 
-    c.Init(false, TParametersWithIV.Create(skey,
+    LC.Init(False, TParametersWithIV.Create(LSKey,
       DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF')) as IParametersWithIV);
 
-    j := 0;
-    while j <> System.Length(Fplain) do
+    LJ := 0;
+    while LJ <> System.Length(FPlain) do
     begin
-      enc := c.ProcessBytes(Fcipher[i, j]);
-      if (not AreEqual(enc, Fplain[j])) then
+      LEnc := LC.ProcessBytes(FCipher[LI, LJ]);
+      if (not AreEqual(LEnc, FPlain[LJ])) then
       begin
-        Fail('AESSIC decrypt failed: key ' + IntToStr(i) + ' block ' +
-          IntToStr(j));
+        Fail('AESSIC decrypt failed: key ' + IntToStr(LI) + ' block ' +
+          IntToStr(LJ));
       end;
-      System.Inc(j);
+      System.Inc(LJ);
     end;
-    System.Inc(i);
+    System.Inc(LI);
   end;
 
-  //
-  // check CTR also recognised.
-  //
+  LC := TCipherUtilities.GetCipher('AES/CTR/NoPadding');
 
-  c := TCipherUtilities.GetCipher('AES/CTR/NoPadding');
-
-  sk := TParameterUtilities.CreateKeyParameter('AES',
+  LSk := TParameterUtilities.CreateKeyParameter('AES',
     DecodeHex('2B7E151628AED2A6ABF7158809CF4F3C'));
 
-  c.Init(true, TParametersWithIV.Create(sk,
+  LC.Init(True, TParametersWithIV.Create(LSk,
     DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFD0001')) as IParametersWithIV);
 
-  crypt := c.DoFinal(DecodeHex('00000000000000000000000000000000'));
+  LCrypt := LC.DoFinal(DecodeHex('00000000000000000000000000000000'));
 
-  if (not AreEqual(crypt, DecodeHex('D23513162B02D0F72A43A2FE4A5F97AB'))) then
+  if (not AreEqual(LCrypt, DecodeHex('D23513162B02D0F72A43A2FE4A5F97AB'))) then
   begin
     Fail('AESSIC failed test 2');
   end;
 
-  //
-  // check partial block processing
-  //
-  c := TCipherUtilities.GetCipher('AES/CTR/NoPadding');
+  LC := TCipherUtilities.GetCipher('AES/CTR/NoPadding');
 
-  sk := TParameterUtilities.CreateKeyParameter('AES',
+  LSk := TParameterUtilities.CreateKeyParameter('AES',
     DecodeHex('2B7E151628AED2A6ABF7158809CF4F3C'));
 
-  c.Init(true, TParametersWithIV.Create(sk,
+  LC.Init(True, TParametersWithIV.Create(LSk,
     DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFD0001')) as IParametersWithIV);
 
-  crypt := c.DoFinal(DecodeHex('12345678'));
+  LCrypt := LC.DoFinal(DecodeHex('12345678'));
 
-  c.Init(false, TParametersWithIV.Create(sk,
+  LC.Init(False, TParametersWithIV.Create(LSk,
     DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFD0001')) as IParametersWithIV);
 
-  crypt := c.DoFinal(crypt);
+  LCrypt := LC.DoFinal(LCrypt);
 
-  if (not AreEqual(crypt, DecodeHex('12345678'))) then
+  if (not AreEqual(LCrypt, DecodeHex('12345678'))) then
   begin
     Fail('AESSIC failed partial test');
   end;
@@ -201,8 +189,6 @@ begin
 end;
 
 initialization
-
-// Register any test cases with the test runner
 
 {$IFDEF FPC}
   RegisterTest(TTestAESSIC);

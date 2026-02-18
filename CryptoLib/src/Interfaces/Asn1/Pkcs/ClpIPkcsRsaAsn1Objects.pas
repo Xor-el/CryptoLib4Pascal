@@ -70,6 +70,22 @@ type
     property TrailerField: IDerInteger read GetTrailerField;
   end;
 
+  /// <summary>
+  /// Interface for RsaesOaepParameters.
+  /// </summary>
+  IRsaesOaepParameters = interface(IAsn1Encodable)
+    ['{F957CDA2-9503-4573-9BB4-0FF0ACC97389}']
+
+    function GetHashAlgorithm: IAlgorithmIdentifier;
+    function GetMaskGenAlgorithm: IAlgorithmIdentifier;
+    function GetPSourceAlgorithm: IAlgorithmIdentifier;
+    function WithDefaultPSource: IRsaesOaepParameters;
+
+    property HashAlgorithm: IAlgorithmIdentifier read GetHashAlgorithm;
+    property MaskGenAlgorithm: IAlgorithmIdentifier read GetMaskGenAlgorithm;
+    property PSourceAlgorithm: IAlgorithmIdentifier read GetPSourceAlgorithm;
+  end;
+
 implementation
 
 end.

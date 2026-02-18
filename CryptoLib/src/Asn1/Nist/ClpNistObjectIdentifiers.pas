@@ -45,7 +45,9 @@ type
       FIdECDsaWithSha3_224, FIdECDsaWithSha3_256, FIdECDsaWithSha3_384,
       FIdECDsaWithSha3_512, FIdRsassaPkcs1V15WithSha3_224,
       FIdRsassaPkcs1V15WithSha3_256, FIdRsassaPkcs1V15WithSha3_384,
-      FIdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier;
+      FIdRsassaPkcs1V15WithSha3_512, FIdAes128Wrap, FIdAes128WrapPad,
+      FIdAes192Wrap, FIdAes192WrapPad, FIdAes256Wrap,
+      FIdAes256WrapPad: IDerObjectIdentifier;
 
     class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgs: IDerObjectIdentifier; static; inline;
@@ -83,6 +85,13 @@ type
     class function GetIdAes256Cbc: IDerObjectIdentifier; static; inline;
     class function GetIdAes256Ofb: IDerObjectIdentifier; static; inline;
     class function GetIdAes256Cfb: IDerObjectIdentifier; static; inline;
+
+    class function GetIdAes128Wrap: IDerObjectIdentifier; static; inline;
+    class function GetIdAes128WrapPad: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192Wrap: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192WrapPad: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256Wrap: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256WrapPad: IDerObjectIdentifier; static; inline;
 
     class function GetIdDsaWithSha2: IDerObjectIdentifier; static; inline;
     class function GetDsaWithSha224: IDerObjectIdentifier; static; inline;
@@ -155,6 +164,13 @@ type
     class property IdAes256Cbc: IDerObjectIdentifier read GetIdAes256Cbc;
     class property IdAes256Ofb: IDerObjectIdentifier read GetIdAes256Ofb;
     class property IdAes256Cfb: IDerObjectIdentifier read GetIdAes256Cfb;
+
+    class property IdAes128Wrap: IDerObjectIdentifier read GetIdAes128Wrap;
+    class property IdAes128WrapPad: IDerObjectIdentifier read GetIdAes128WrapPad;
+    class property IdAes192Wrap: IDerObjectIdentifier read GetIdAes192Wrap;
+    class property IdAes192WrapPad: IDerObjectIdentifier read GetIdAes192WrapPad;
+    class property IdAes256Wrap: IDerObjectIdentifier read GetIdAes256Wrap;
+    class property IdAes256WrapPad: IDerObjectIdentifier read GetIdAes256WrapPad;
 
     class property IdDsaWithSha2: IDerObjectIdentifier read GetIdDsaWithSha2;
     class property DsaWithSha224: IDerObjectIdentifier read GetDsaWithSha224;
@@ -289,6 +305,36 @@ end;
 class function TNistObjectIdentifiers.GetIdAes256Ofb: IDerObjectIdentifier;
 begin
   result := FIdAes256Ofb;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes128Wrap: IDerObjectIdentifier;
+begin
+  result := FIdAes128Wrap;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes128WrapPad: IDerObjectIdentifier;
+begin
+  result := FIdAes128WrapPad;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes192Wrap: IDerObjectIdentifier;
+begin
+  result := FIdAes192Wrap;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes192WrapPad: IDerObjectIdentifier;
+begin
+  result := FIdAes192WrapPad;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256Wrap: IDerObjectIdentifier;
+begin
+  result := FIdAes256Wrap;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256WrapPad: IDerObjectIdentifier;
+begin
+  result := FIdAes256WrapPad;
 end;
 
 class function TNistObjectIdentifiers.GetIdHMacWithSha3_224
@@ -486,20 +532,27 @@ begin
     FIdHMacWithSha3_384 := HashAlgs.Branch('15');
     FIdHMacWithSha3_512 := HashAlgs.Branch('16');
 
-    FAES := TDerObjectIdentifier.Create(NistAlgorithm.id + '.1');
+    FAES := TDerObjectIdentifier.Create(NistAlgorithm.ID + '.1');
 
-    FIdAES128Ecb := TDerObjectIdentifier.Create(AES.id + '.1');
-    FIdAes128Cbc := TDerObjectIdentifier.Create(AES.id + '.2');
-    FIdAes128Ofb := TDerObjectIdentifier.Create(AES.id + '.3');
-    FIdAes128Cfb := TDerObjectIdentifier.Create(AES.id + '.4');
+    FIdAES128Ecb := TDerObjectIdentifier.Create(AES.ID + '.1');
+    FIdAes128Cbc := TDerObjectIdentifier.Create(AES.ID + '.2');
+    FIdAes128Ofb := TDerObjectIdentifier.Create(AES.ID + '.3');
+    FIdAes128Cfb := TDerObjectIdentifier.Create(AES.ID + '.4');
     FIdAes192Ecb := TDerObjectIdentifier.Create(AES.ID + '.21');
-    FIdAes192Cbc := TDerObjectIdentifier.Create(AES.id + '.22');
-    FIdAes192Ofb := TDerObjectIdentifier.Create(AES.id + '.23');
-    FIdAes192Cfb := TDerObjectIdentifier.Create(AES.id + '.24');
-    FIdAes256Ecb := TDerObjectIdentifier.Create(AES.id + '.41');
-    FIdAes256Cbc := TDerObjectIdentifier.Create(AES.id + '.42');
-    FIdAes256Ofb := TDerObjectIdentifier.Create(AES.id + '.43');
-    FIdAes256Cfb := TDerObjectIdentifier.Create(AES.id + '.44');
+    FIdAes192Cbc := TDerObjectIdentifier.Create(AES.ID + '.22');
+    FIdAes192Ofb := TDerObjectIdentifier.Create(AES.ID + '.23');
+    FIdAes192Cfb := TDerObjectIdentifier.Create(AES.ID + '.24');
+    FIdAes256Ecb := TDerObjectIdentifier.Create(AES.ID + '.41');
+    FIdAes256Cbc := TDerObjectIdentifier.Create(AES.ID + '.42');
+    FIdAes256Ofb := TDerObjectIdentifier.Create(AES.ID + '.43');
+    FIdAes256Cfb := TDerObjectIdentifier.Create(AES.ID + '.44');
+
+    FIdAes128Wrap := TDerObjectIdentifier.Create(AES.ID + '.5');
+    FIdAes128WrapPad := TDerObjectIdentifier.Create(AES.ID + '.8');
+    FIdAes192Wrap := TDerObjectIdentifier.Create(AES.ID + '.25');
+    FIdAes192WrapPad := TDerObjectIdentifier.Create(AES.ID + '.28');
+    FIdAes256Wrap := TDerObjectIdentifier.Create(AES.ID + '.45');
+    FIdAes256WrapPad := TDerObjectIdentifier.Create(AES.ID + '.48');
 
     //
     // signatures

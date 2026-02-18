@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="5"/>
-    <Files Count="517">
+    <Files Count="529">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -2095,6 +2095,54 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Asn1\Gnu\ClpGnuObjectIdentifiers.pas"/>
         <UnitName Value="ClpGnuObjectIdentifiers"/>
       </Item517>
+      <Item518>
+        <Filename Value="..\..\Crypto\Engines\ClpAesWrapPadEngine.pas"/>
+        <UnitName Value="ClpAesWrapPadEngine"/>
+      </Item518>
+      <Item519>
+        <Filename Value="..\..\Crypto\Engines\ClpRfc3211WrapEngine.pas"/>
+        <UnitName Value="ClpRfc3211WrapEngine"/>
+      </Item519>
+      <Item520>
+        <Filename Value="..\..\Crypto\Engines\ClpAesWrapEngine.pas"/>
+        <UnitName Value="ClpAesWrapEngine"/>
+      </Item520>
+      <Item521>
+        <Filename Value="..\..\Crypto\Engines\ClpRfc5649WrapEngine.pas"/>
+        <UnitName Value="ClpRfc5649WrapEngine"/>
+      </Item521>
+      <Item522>
+        <Filename Value="..\..\Crypto\Engines\ClpRfc3394WrapEngine.pas"/>
+        <UnitName Value="ClpRfc3394WrapEngine"/>
+      </Item522>
+      <Item523>
+        <Filename Value="..\..\Crypto\ClpWrapperUtilities.pas"/>
+        <UnitName Value="ClpWrapperUtilities"/>
+      </Item523>
+      <Item524>
+        <Filename Value="..\..\Interfaces\Crypto\ClpIWrapper.pas"/>
+        <UnitName Value="ClpIWrapper"/>
+      </Item524>
+      <Item525>
+        <Filename Value="..\..\Interfaces\Crypto\Engines\ClpIRfc5649WrapEngine.pas"/>
+        <UnitName Value="ClpIRfc5649WrapEngine"/>
+      </Item525>
+      <Item526>
+        <Filename Value="..\..\Interfaces\Crypto\Engines\ClpIAesWrapPadEngine.pas"/>
+        <UnitName Value="ClpIAesWrapPadEngine"/>
+      </Item526>
+      <Item527>
+        <Filename Value="..\..\Interfaces\Crypto\Engines\ClpIRfc3211WrapEngine.pas"/>
+        <UnitName Value="ClpIRfc3211WrapEngine"/>
+      </Item527>
+      <Item528>
+        <Filename Value="..\..\Interfaces\Crypto\Engines\ClpIAesWrapEngine.pas"/>
+        <UnitName Value="ClpIAesWrapEngine"/>
+      </Item528>
+      <Item529>
+        <Filename Value="..\..\Interfaces\Crypto\Engines\ClpIRfc3394WrapEngine.pas"/>
+        <UnitName Value="ClpIRfc3394WrapEngine"/>
+      </Item529>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

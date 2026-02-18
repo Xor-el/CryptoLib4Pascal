@@ -32,7 +32,6 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpParameterUtilities,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type

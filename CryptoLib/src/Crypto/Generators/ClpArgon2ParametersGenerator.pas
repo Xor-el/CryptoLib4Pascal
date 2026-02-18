@@ -34,7 +34,6 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpParameterUtilities,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring

@@ -173,7 +173,11 @@ uses
   ClpCryptoServicesRegistrar, ClpEncryptedPrivateKeyInfoFactory, 
   ClpIDecryptorBuilderProvider, ClpICipherBuilderWithKey, ClpICipher, 
   ClpIBlockCipherMode, ClpIEcbBlockCipher, ClpEcbBlockCipher, 
-  ClpGnuObjectIdentifiers;
+  ClpGnuObjectIdentifiers, ClpAesWrapPadEngine, ClpRfc3211WrapEngine, 
+  ClpAesWrapEngine, ClpRfc5649WrapEngine, ClpRfc3394WrapEngine, 
+  ClpWrapperUtilities, ClpIWrapper, ClpIRfc5649WrapEngine, 
+  ClpIAesWrapPadEngine, ClpIRfc3211WrapEngine, ClpIAesWrapEngine, 
+  ClpIRfc3394WrapEngine;
 
 implementation
 

@@ -25,7 +25,6 @@ uses
   SysUtils,
   ClpBitOperations,
   ClpICipherParameters,
-  ClpIParametersWithRandom,
   ClpIDigest,
   ClpDigestUtilities,
   ClpIAsymmetricBlockCipher,

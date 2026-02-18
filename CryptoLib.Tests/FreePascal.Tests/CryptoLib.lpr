@@ -8,9 +8,7 @@ uses
   StringTests, TagTests, BigIntegerTests, ECAlgorithmsTests, ECPointTests,
   SecP256R1FieldTests, SecP384R1FieldTests, ECDsa5Tests, ECTests,
   NamedCurveTests, SignerUtilitiesTests, SecureRandomTests,
-  DigestRandomNumberTests, FixedPointTests, AESTests, BlockCipherVectorTests,
-  BlockCipherMonteCarloTests, AESTestVectors, BlowfishTestVectors,
-  SpeckTestVectors, RijndaelTestVectors, AESSICTests, SPECKTests,
+  DigestRandomNumberTests, FixedPointTests, AESTests, AESSICTests, SPECKTests,
   IESCipherTests, MD5HMacTests, SHA1HMacTests, SHA224HMacTests, SHA256HMacTests,
   SHA384HMacTests, SHA512HMacTests, RIPEMD128HMacTests, RIPEMD160HMacTests,
   HMacTests, Pkcs5Tests, HkdfGeneratorTests, ECIESTests, PascalCoinECIESTests,
@@ -27,9 +25,9 @@ uses
   X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests,
   KMacTests, RSATests, PssTests, ISO9796Tests, RSABlindedTests,
   RSADigestSignerTests, X931SignerTests, CipherStreamTests, OaepTests,
-  CryptoLibTestBase, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
-  ClpFixedSecureRandom, ClpShortenedDigest, IPAddressUtilitiesTests,
-  PemReaderTests;
+  RijndaelTests, BlowfishTests, CryptoLibTestBase, OpenSslReaderTests,
+  OpenSslWriterTests, X509CertGenTests, ClpFixedSecureRandom,
+  ClpShortenedDigest, IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

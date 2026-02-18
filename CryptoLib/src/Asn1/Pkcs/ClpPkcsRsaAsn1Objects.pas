@@ -155,6 +155,64 @@ type
 
   end;
 
+  /// <summary>
+  /// The RsaesOaepParameters object.
+  /// <pre>
+  /// RSAES-OAEP-params ::= SEQUENCE {
+  ///   hashAlgorithm      [0] OAEP-PSSDigestAlgorithms     DEFAULT sha1,
+  ///   maskGenAlgorithm   [1] PKCS1MGFAlgorithms  DEFAULT mgf1SHA1,
+  ///   pSourceAlgorithm   [2] PKCS1PSourceAlgorithms  DEFAULT pSpecifiedEmpty
+  /// }
+  /// </pre>
+  /// </summary>
+  TRsaesOaepParameters = class(TAsn1Encodable, IRsaesOaepParameters)
+
+  strict private
+    class var
+      FDefaultHashAlgorithm, FDefaultMaskGenAlgorithm,
+        FDefaultPSourceAlgorithm: IAlgorithmIdentifier;
+
+    class procedure Boot; static;
+    class constructor Create;
+
+  var
+    FHashAlgorithm: IAlgorithmIdentifier;
+    FMaskGenAlgorithm: IAlgorithmIdentifier;
+    FPSourceAlgorithm: IAlgorithmIdentifier;
+
+  strict protected
+    function GetHashAlgorithm: IAlgorithmIdentifier;
+    function GetMaskGenAlgorithm: IAlgorithmIdentifier;
+    function GetPSourceAlgorithm: IAlgorithmIdentifier;
+
+  public
+    class function GetInstance(AObj: TObject): IRsaesOaepParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IRsaesOaepParameters; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IRsaesOaepParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IRsaesOaepParameters; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IRsaesOaepParameters; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create; overload;
+    constructor Create(const AHashAlgorithm, AMaskGenAlgorithm: IAlgorithmIdentifier); overload;
+    constructor Create(const AHashAlgorithm, AMaskGenAlgorithm,
+      APSourceAlgorithm: IAlgorithmIdentifier); overload;
+
+    function WithDefaultPSource: IRsaesOaepParameters;
+    function ToAsn1Object: IAsn1Object; override;
+
+    property HashAlgorithm: IAlgorithmIdentifier read GetHashAlgorithm;
+    property MaskGenAlgorithm: IAlgorithmIdentifier read GetMaskGenAlgorithm;
+    property PSourceAlgorithm: IAlgorithmIdentifier read GetPSourceAlgorithm;
+
+    class property DefaultHashAlgorithm: IAlgorithmIdentifier read FDefaultHashAlgorithm;
+    class property DefaultMaskGenAlgorithm: IAlgorithmIdentifier read FDefaultMaskGenAlgorithm;
+    class property DefaultPSourceAlgorithm: IAlgorithmIdentifier read FDefaultPSourceAlgorithm;
+
+  end;
+
 implementation
 
 { TRsaPrivateKeyStructure }
@@ -517,6 +575,178 @@ begin
   if not DefaultTrailerField.Equals(FTrailerField) then
   begin
     LV.Add(TDerTaggedObject.Create(True, 3, FTrailerField));
+  end;
+
+  Result := TDerSequence.Create(LV);
+end;
+
+{ TRsaesOaepParameters }
+
+class constructor TRsaesOaepParameters.Create;
+begin
+  Boot;
+end;
+
+class procedure TRsaesOaepParameters.Boot;
+begin
+  FDefaultHashAlgorithm := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
+  FDefaultMaskGenAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, DefaultHashAlgorithm);
+  FDefaultPSourceAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdPSpecified, TDerOctetString.Empty);
+end;
+
+class function TRsaesOaepParameters.GetInstance(AObj: TObject): IRsaesOaepParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IRsaesOaepParameters, Result) then
+    Exit;
+
+  Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TRsaesOaepParameters.GetInstance(const AObj: IAsn1Convertible): IRsaesOaepParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IRsaesOaepParameters, Result) then
+    Exit;
+
+  Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TRsaesOaepParameters.GetInstance(const AEncoded: TCryptoLibByteArray): IRsaesOaepParameters;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TRsaesOaepParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IRsaesOaepParameters;
+begin
+  Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TRsaesOaepParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IRsaesOaepParameters;
+begin
+  Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TRsaesOaepParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 0) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
+    begin
+      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+    end);
+  if FHashAlgorithm = nil then
+    FHashAlgorithm := DefaultHashAlgorithm;
+
+  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
+    begin
+      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+    end);
+  if FMaskGenAlgorithm = nil then
+    FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
+
+  FPSourceAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 2, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
+    begin
+      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+    end);
+  if FPSourceAlgorithm = nil then
+    FPSourceAlgorithm := DefaultPSourceAlgorithm;
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+end;
+
+constructor TRsaesOaepParameters.Create;
+begin
+  Create(DefaultHashAlgorithm, DefaultMaskGenAlgorithm, DefaultPSourceAlgorithm);
+end;
+
+constructor TRsaesOaepParameters.Create(const AHashAlgorithm, AMaskGenAlgorithm: IAlgorithmIdentifier);
+begin
+  Create(AHashAlgorithm, AMaskGenAlgorithm, DefaultPSourceAlgorithm);
+end;
+
+constructor TRsaesOaepParameters.Create(const AHashAlgorithm, AMaskGenAlgorithm,
+  APSourceAlgorithm: IAlgorithmIdentifier);
+begin
+  inherited Create();
+  FHashAlgorithm := AHashAlgorithm;
+  FMaskGenAlgorithm := AMaskGenAlgorithm;
+  FPSourceAlgorithm := APSourceAlgorithm;
+end;
+
+function TRsaesOaepParameters.GetHashAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FHashAlgorithm;
+end;
+
+function TRsaesOaepParameters.GetMaskGenAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FMaskGenAlgorithm;
+end;
+
+function TRsaesOaepParameters.GetPSourceAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := FPSourceAlgorithm;
+end;
+
+function TRsaesOaepParameters.WithDefaultPSource: IRsaesOaepParameters;
+begin
+  if DefaultPSourceAlgorithm.Equals(FPSourceAlgorithm) then
+  begin
+    Result := Self;
+    Exit;
+  end;
+
+  Result := TRsaesOaepParameters.Create(FHashAlgorithm, FMaskGenAlgorithm, DefaultPSourceAlgorithm);
+end;
+
+function TRsaesOaepParameters.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(3);
+
+  if not DefaultHashAlgorithm.Equals(FHashAlgorithm) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 0, FHashAlgorithm) as IDerTaggedObject);
+  end;
+
+  if not DefaultMaskGenAlgorithm.Equals(FMaskGenAlgorithm) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 1, FMaskGenAlgorithm) as IDerTaggedObject);
+  end;
+
+  if not DefaultPSourceAlgorithm.Equals(FPSourceAlgorithm) then
+  begin
+    LV.Add(TDerTaggedObject.Create(True, 2, FPSourceAlgorithm) as IDerTaggedObject);
   end;
 
   Result := TDerSequence.Create(LV);

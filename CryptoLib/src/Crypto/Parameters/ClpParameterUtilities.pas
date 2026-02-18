@@ -149,21 +149,27 @@ begin
     TNistObjectIdentifiers.IdAes128Cbc.ID,
     TNistObjectIdentifiers.IdAes128Cfb.ID,
     TNistObjectIdentifiers.IdAes128Ecb.ID,
-    TNistObjectIdentifiers.IdAes128Ofb.ID
+    TNistObjectIdentifiers.IdAes128Ofb.ID,
+    TNistObjectIdentifiers.IdAes128Wrap.ID,
+    TNistObjectIdentifiers.IdAes128WrapPad.ID
     ]);
 
   AddAlgorithm('AES192', [
     TNistObjectIdentifiers.IdAes192Cbc.ID,
     TNistObjectIdentifiers.IdAes192Cfb.ID,
     TNistObjectIdentifiers.IdAes192Ecb.ID,
-    TNistObjectIdentifiers.IdAes192Ofb.ID
+    TNistObjectIdentifiers.IdAes192Ofb.ID,
+    TNistObjectIdentifiers.IdAes192Wrap.ID,
+    TNistObjectIdentifiers.IdAes192WrapPad.ID
     ]);
 
   AddAlgorithm('AES256', [
     TNistObjectIdentifiers.IdAes256Cbc.ID,
     TNistObjectIdentifiers.IdAes256Cfb.ID,
     TNistObjectIdentifiers.IdAes256Ecb.ID,
-    TNistObjectIdentifiers.IdAes256Ofb.ID
+    TNistObjectIdentifiers.IdAes256Ofb.ID,
+    TNistObjectIdentifiers.IdAes256Wrap.ID,
+    TNistObjectIdentifiers.IdAes256WrapPad.ID
     ]);
 
 
