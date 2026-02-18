@@ -75,7 +75,8 @@ begin
   System.SetLength(LHash, LDigest.GetDigestSize);
   LDigest.BlockUpdate(LInput, 0, System.Length(LInput));
   LDigest.DoFinal(LHash, 0);
-  Logger.LogInformation(Format('Hash %s: %s', [ADigestAlgorithm, THexEncoder.Encode(LHash, False)]));
+  Logger.LogInformation(Format('Hash %s:' + sLineBreak + '%s',
+    [ADigestAlgorithm, THexEncoder.Encode(LHash, False)]));
 end;
 
 procedure TDigestExample.RunHmac(const AHmacAlgorithm: string);
@@ -95,7 +96,8 @@ begin
   LMac.Init(TKeyParameter.Create(LKey) as IKeyParameter);
   LMac.BlockUpdate(LMsg, 0, System.Length(LMsg));
   LResult := LMac.DoFinal;
-  Logger.LogInformation(Format('%s: %s', [AHmacAlgorithm, THexEncoder.Encode(LResult, False)]));
+  Logger.LogInformation(Format('%s:' + sLineBreak + '%s',
+    [AHmacAlgorithm, THexEncoder.Encode(LResult, False)]));
 end;
 
 procedure TDigestExample.RunPbkdf2(const ADigestAlgorithm: string);
@@ -104,8 +106,6 @@ var
   LDigest: IDigest;
   LPassword, LSalt: TBytes;
   LParams: ICipherParameters;
-  LKey: IKeyParameter;
-  LDerived: TBytes;
   LIters: Int32;
 begin
   LIters := 10000;
@@ -121,13 +121,7 @@ begin
   LGen := TPkcs5S2ParametersGenerator.Create(LDigest) as IPkcs5S2ParametersGenerator;
   LGen.Init(LPassword, LSalt, LIters);
   LParams := LGen.GenerateDerivedParameters('AES', 256);
-  if Supports(LParams, IKeyParameter, LKey) then
-  begin
-    LDerived := LKey.GetKey();
-    Logger.LogInformation(Format('PBKDF2-HMAC-%s (%d iters) derived %d bytes: %s', [ADigestAlgorithm, LIters, System.Length(LDerived), THexEncoder.Encode(LDerived, False)]));
-  end
-  else
-    Logger.LogWarning('PBKDF2: could not get key parameter.');
+  LogDerivedKey(Format('PBKDF2-HMAC-%s (%d iters)', [ADigestAlgorithm, LIters]), LParams);
 end;
 
 procedure TDigestExample.RunArgon2D;
@@ -135,8 +129,6 @@ var
   LGen: IArgon2ParametersGenerator;
   LPassword, LSalt: TBytes;
   LParams: ICipherParameters;
-  LKey: IKeyParameter;
-  LDerived: TBytes;
 begin
   LPassword := TConverters.ConvertStringToBytes('password', TEncoding.UTF8);
   LSalt := TConverters.ConvertStringToBytes('salt', TEncoding.UTF8);
@@ -144,13 +136,7 @@ begin
   LGen.Init(TCryptoLibArgon2Type.Argon2D, TCryptoLibArgon2Version.Argon2Version13,
     LPassword, LSalt, nil, nil, 2, 65536, 1, TCryptoLibArgon2MemoryCostType.MemoryAsKB);
   LParams := LGen.GenerateDerivedParameters('AES', 256);
-  if Supports(LParams, IKeyParameter, LKey) then
-  begin
-    LDerived := LKey.GetKey();
-    Logger.LogInformation(Format('Argon2d (2 iters, 64 MiB, 1 lane) derived %d bytes: %s', [System.Length(LDerived), THexEncoder.Encode(LDerived, False)]));
-  end
-  else
-    Logger.LogWarning('Argon2d: could not get key parameter.');
+  LogDerivedKey('Argon2d (2 iters, 64 MiB, 1 lane)', LParams);
 end;
 
 procedure TDigestExample.RunArgon2I;
@@ -158,8 +144,6 @@ var
   LGen: IArgon2ParametersGenerator;
   LPassword, LSalt: TBytes;
   LParams: ICipherParameters;
-  LKey: IKeyParameter;
-  LDerived: TBytes;
 begin
   LPassword := TConverters.ConvertStringToBytes('password', TEncoding.UTF8);
   LSalt := TConverters.ConvertStringToBytes('salt', TEncoding.UTF8);
@@ -167,13 +151,7 @@ begin
   LGen.Init(TCryptoLibArgon2Type.Argon2I, TCryptoLibArgon2Version.Argon2Version13,
     LPassword, LSalt, nil, nil, 2, 65536, 1, TCryptoLibArgon2MemoryCostType.MemoryAsKB);
   LParams := LGen.GenerateDerivedParameters('AES', 256);
-  if Supports(LParams, IKeyParameter, LKey) then
-  begin
-    LDerived := LKey.GetKey();
-    Logger.LogInformation(Format('Argon2i (2 iters, 64 MiB, 1 lane) derived %d bytes: %s', [System.Length(LDerived), THexEncoder.Encode(LDerived, False)]));
-  end
-  else
-    Logger.LogWarning('Argon2i: could not get key parameter.');
+  LogDerivedKey('Argon2i (2 iters, 64 MiB, 1 lane)', LParams);
 end;
 
 procedure TDigestExample.RunArgon2Id;
@@ -181,8 +159,6 @@ var
   LGen: IArgon2ParametersGenerator;
   LPassword, LSalt: TBytes;
   LParams: ICipherParameters;
-  LKey: IKeyParameter;
-  LDerived: TBytes;
 begin
   LPassword := TConverters.ConvertStringToBytes('password', TEncoding.UTF8);
   LSalt := TConverters.ConvertStringToBytes('salt', TEncoding.UTF8);
@@ -190,13 +166,7 @@ begin
   LGen.Init(TCryptoLibArgon2Type.Argon2ID, TCryptoLibArgon2Version.Argon2Version13,
     LPassword, LSalt, nil, nil, 2, 65536, 1, TCryptoLibArgon2MemoryCostType.MemoryAsKB);
   LParams := LGen.GenerateDerivedParameters('AES', 256);
-  if Supports(LParams, IKeyParameter, LKey) then
-  begin
-    LDerived := LKey.GetKey();
-    Logger.LogInformation(Format('Argon2id (2 iters, 64 MiB, 1 lane) derived %d bytes: %s', [System.Length(LDerived), THexEncoder.Encode(LDerived, False)]));
-  end
-  else
-    Logger.LogWarning('Argon2id: could not get key parameter.');
+  LogDerivedKey('Argon2id (2 iters, 64 MiB, 1 lane)', LParams);
 end;
 
 procedure TDigestExample.RunScrypt;
@@ -204,38 +174,30 @@ var
   LGen: IScryptParametersGenerator;
   LPassword, LSalt: TBytes;
   LParams: ICipherParameters;
-  LKey: IKeyParameter;
-  LDerived: TBytes;
 begin
   LPassword := TConverters.ConvertStringToBytes('password', TEncoding.UTF8);
   LSalt := TConverters.ConvertStringToBytes('salt', TEncoding.UTF8);
   LGen := TScryptParametersGenerator.Create() as IScryptParametersGenerator;
   LGen.Init(LPassword, LSalt, 16384, 8, 1);
   LParams := LGen.GenerateDerivedParameters('AES', 256);
-  if Supports(LParams, IKeyParameter, LKey) then
-  begin
-    LDerived := LKey.GetKey();
-    Logger.LogInformation(Format('Scrypt (N=16384, r=8, p=1) derived %d bytes: %s', [System.Length(LDerived), THexEncoder.Encode(LDerived, False)]));
-  end
-  else
-    Logger.LogWarning('Scrypt: could not get key parameter.');
+  LogDerivedKey('Scrypt (N=16384, r=8, p=1)', LParams);
 end;
 
 procedure TDigestExample.Run;
 begin
-  Logger.LogInformation('--- Digest example: Hash ---');
+  LogWithLineBreak('--- Digest example: Hash ---');
   RunHash('SHA-256');
-  Logger.LogInformation('--- Digest example: HMAC ---');
+  LogWithLineBreak('--- Digest example: HMAC ---');
   RunHmac('HMAC-SHA256');
-  Logger.LogInformation('--- Digest example: Key derivation (PBKDF2) ---');
+  LogWithLineBreak('--- Digest example: Key derivation (PBKDF2) ---');
   RunPbkdf2('SHA-256');
-  Logger.LogInformation('--- Digest example: Key derivation (Argon2d) ---');
+  LogWithLineBreak('--- Digest example: Key derivation (Argon2d) ---');
   RunArgon2D;
-  Logger.LogInformation('--- Digest example: Key derivation (Argon2i) ---');
+  LogWithLineBreak('--- Digest example: Key derivation (Argon2i) ---');
   RunArgon2I;
-  Logger.LogInformation('--- Digest example: Key derivation (Argon2id) ---');
+  LogWithLineBreak('--- Digest example: Key derivation (Argon2id) ---');
   RunArgon2Id;
-  Logger.LogInformation('--- Digest example: Key derivation (Scrypt) ---');
+  LogWithLineBreak('--- Digest example: Key derivation (Scrypt) ---');
   RunScrypt;
 end;
 

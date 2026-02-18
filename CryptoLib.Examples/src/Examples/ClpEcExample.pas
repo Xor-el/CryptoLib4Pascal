@@ -28,63 +28,66 @@ uses
   ClpECUtilities,
   ClpIX9ECParametersHolder,
   ClpIAsn1Objects,
-  ClpSecureRandom,
   ClpBigInteger,
   ClpECParameters,
   ClpIECParameters,
-  ClpECGenerators,
-  ClpIECGenerators,
   ClpSignerUtilities,
   ClpEncoders,
   ClpConverters,
   ClpIAsymmetricCipherKeyPair,
+  ClpIAsymmetricKeyParameter,
   ClpIX9ECAsn1Objects,
   ClpIECCommon,
-  ClpISecureRandom,
   ClpISigner,
+  ClpPrivateKeyInfoFactory,
+  ClpPrivateKeyFactory,
+  ClpSubjectPublicKeyInfoFactory,
+  ClpPublicKeyFactory,
   ClpExampleBase;
 
 type
   TEcExample = class(TExampleBase)
   private
+    function LookupEcDomain(const ACurveName: string): IECDomainParameters;
     procedure RunEcdsaSignVerify(const ACurveName: string;
       const ASignatureAlgorithm: string);
-    procedure RunKeyRecreateFromBytes(const ACurveName: string);
+    procedure RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
     procedure RunPublicKeyFromXY(const ACurveName: string);
-
-    function GetCurveByName(const ACurveName: string): IX9ECParameters;
+    procedure RunEcPemExportImport(const ACurveName: string);
   public
     procedure Run; override;
   end;
 
 implementation
 
-function TEcExample.GetCurveByName(const ACurveName: string): IX9ECParameters;
-begin
-  Result := TECUtilities.FindECCurveByName(ACurveName);
-end;
-
-procedure TEcExample.RunEcdsaSignVerify(const ACurveName: string;
-  const ASignatureAlgorithm: string);
+function TEcExample.LookupEcDomain(const ACurveName: string): IECDomainParameters;
 var
   LCurve: IX9ECParameters;
-  LDomain: IECDomainParameters;
-  LGen: IECKeyPairGenerator;
-  LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
 begin
-  LCurve := GetCurveByName(ACurveName);
+  Result := nil;
+  LCurve := TECUtilities.FindECCurveByName(ACurveName);
   if LCurve = nil then
   begin
     Logger.LogWarning('Curve "' + ACurveName + '" not found.');
     Exit;
   end;
+  Result := TECDomainParameters.Create(LCurve.Curve, LCurve.G,
+    LCurve.N, LCurve.H, LCurve.GetSeed);
+end;
+
+procedure TEcExample.RunEcdsaSignVerify(const ACurveName: string;
+  const ASignatureAlgorithm: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
+  LSigner: ISigner;
+  LMsg, LSig: TBytes;
+begin
+  LDomain := LookupEcDomain(ACurveName);
+  if LDomain = nil then
+    Exit;
+  LKp := GenerateEcKeyPair(LDomain);
   Logger.LogInformation('Curve: ' + ACurveName + ', Algorithm: ' + ASignatureAlgorithm);
-  LDomain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N, LCurve.H, LCurve.GetSeed);
-  LGen := TECKeyPairGenerator.Create('ECDSA') as IECKeyPairGenerator;
-  LGen.Init(TECKeyGenerationParameters.Create(LDomain, TSecureRandom.Create() as ISecureRandom) as IECKeyGenerationParameters);
-  LKp := LGen.GenerateKeyPair();
   LSigner := TSignerUtilities.GetSigner(ASignatureAlgorithm);
   if LSigner = nil then
   begin
@@ -95,7 +98,8 @@ begin
   LSigner.Init(True, LKp.Private);
   LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
   LSig := LSigner.GenerateSignature();
-  Logger.LogInformation(ASignatureAlgorithm + ' signature (hex): ' + THexEncoder.Encode(LSig, False));
+  Logger.LogInformation(ASignatureAlgorithm + ' signature (hex):' + sLineBreak +
+    THexEncoder.Encode(LSig, False));
   LSigner.Init(False, LKp.Public);
   LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
   if LSigner.VerifySignature(LSig) then
@@ -104,100 +108,99 @@ begin
     Logger.LogWarning(ASignatureAlgorithm + ' verification failed.');
 end;
 
-procedure TEcExample.RunKeyRecreateFromBytes(const ACurveName: string);
+procedure TEcExample.RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
 var
-  LCurve: IX9ECParameters;
-  LDomain: IECDomainParameters;
-  LGen: IECKeyPairGenerator;
   LKp: IAsymmetricCipherKeyPair;
-  LPriv: IECPrivateKeyParameters;
-  LPub: IECPublicKeyParameters;
-  LPubBytes, LPrivBytes: TBytes;
-  LRegenPub: IECPublicKeyParameters;
-  LRegenPriv: IECPrivateKeyParameters;
-  LD: TBigInteger;
+  LDomain: IECDomainParameters;
+  LPrivBytes, LPubBytes: TBytes;
+  LRegenPriv, LRegenPub: IAsymmetricKeyParameter;
 begin
-  LCurve := GetCurveByName(ACurveName);
-  if LCurve = nil then
-  begin
-    Logger.LogWarning('Curve "' + ACurveName + '" not found.');
+  LDomain := LookupEcDomain(ACurveName);
+  if LDomain = nil then
     Exit;
-  end;
+  LKp := GenerateEcKeyPair(LDomain);
   Logger.LogInformation('Curve: ' + ACurveName);
-  LDomain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N, LCurve.H, LCurve.GetSeed);
-  LGen := TECKeyPairGenerator.Create('ECDSA') as IECKeyPairGenerator;
-  LGen.Init(TECKeyGenerationParameters.Create(LDomain, TSecureRandom.Create() as ISecureRandom) as IECKeyGenerationParameters);
-  LKp := LGen.GenerateKeyPair();
-  if not Supports(LKp.Private, IECPrivateKeyParameters, LPriv) or not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
-  begin
-    Logger.LogError('EC key pair type mismatch.');
-    Exit;
-  end;
-  LPubBytes := LPub.Q.GetEncoded();
-  LPrivBytes := LPriv.D.ToByteArray();
-  LRegenPub := TECPublicKeyParameters.Create('ECDSA', LCurve.Curve.DecodePoint(LPubBytes), LDomain) as IECPublicKeyParameters;
-  LD := TBigInteger.Create(1, LPrivBytes);
-  LRegenPriv := TECPrivateKeyParameters.Create('ECDSA', LD, LDomain) as IECPrivateKeyParameters;
-  if LPub.Equals(LRegenPub) then
-    Logger.LogInformation('Public key recreation: match.')
+
+  LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
+  Logger.LogInformation(Format('Private key DER encoded: %d bytes', [System.Length(LPrivBytes)]));
+
+  LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
+  Logger.LogInformation(Format('Public key DER encoded: %d bytes', [System.Length(LPubBytes)]));
+
+  LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
+  if LRegenPriv.Equals(LKp.Private) then
+    Logger.LogInformation('Private key roundtrip: match.')
   else
-    Logger.LogWarning('Public key recreation: mismatch.');
-  if LPriv.Equals(LRegenPriv) then
-    Logger.LogInformation('Private key recreation: match.')
+    Logger.LogWarning('Private key roundtrip: mismatch.');
+
+  LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
+  if LRegenPub.Equals(LKp.Public) then
+    Logger.LogInformation('Public key roundtrip: match.')
   else
-    Logger.LogWarning('Private key recreation: mismatch.');
+    Logger.LogWarning('Public key roundtrip: mismatch.');
 end;
 
 procedure TEcExample.RunPublicKeyFromXY(const ACurveName: string);
 var
-  LCurve: IX9ECParameters;
-  LDomain: IECDomainParameters;
-  LGen: IECKeyPairGenerator;
   LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
   LPub: IECPublicKeyParameters;
   LXBytes, LYBytes: TBytes;
   LBigX, LBigY: TBigInteger;
   LPoint: IECPoint;
   LRegenPub: IECPublicKeyParameters;
+  LCurve: IX9ECParameters;
 begin
-  LCurve := GetCurveByName(ACurveName);
-  if LCurve = nil then
-  begin
-    Logger.LogWarning('Curve "' + ACurveName + '" not found.');
+  LDomain := LookupEcDomain(ACurveName);
+  if LDomain = nil then
     Exit;
-  end;
+  LKp := GenerateEcKeyPair(LDomain);
   Logger.LogInformation('Curve: ' + ACurveName);
-  LDomain := TECDomainParameters.Create(LCurve.Curve, LCurve.G, LCurve.N, LCurve.H, LCurve.GetSeed);
-  LGen := TECKeyPairGenerator.Create('ECDSA') as IECKeyPairGenerator;
-  LGen.Init(TECKeyGenerationParameters.Create(LDomain, TSecureRandom.Create() as ISecureRandom) as IECKeyGenerationParameters);
-  LKp := LGen.GenerateKeyPair();
   if not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
   begin
     Logger.LogError('EC public key type mismatch.');
     Exit;
   end;
+  LCurve := TECUtilities.FindECCurveByName(ACurveName);
   LXBytes := LPub.Q.Normalize.AffineXCoord.ToBigInteger.ToByteArray();
   LYBytes := LPub.Q.Normalize.AffineYCoord.ToBigInteger.ToByteArray();
   LBigX := TBigInteger.Create(1, LXBytes);
   LBigY := TBigInteger.Create(1, LYBytes);
   LPoint := LCurve.Curve.CreatePoint(LBigX, LBigY);
-  LRegenPub := TECPublicKeyParameters.Create(LPoint, LDomain) as IECPublicKeyParameters;
+  LRegenPub := TECPublicKeyParameters.Create(LPoint, LDomain)
+    as IECPublicKeyParameters;
   if LPub.Equals(LRegenPub) then
     Logger.LogInformation('Public key from X/Y recreation: match.')
   else
     Logger.LogWarning('Public key from X/Y recreation: mismatch.');
 end;
 
+procedure TEcExample.RunEcPemExportImport(const ACurveName: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
+begin
+  LDomain := LookupEcDomain(ACurveName);
+  if LDomain = nil then
+    Exit;
+  LKp := GenerateEcKeyPair(LDomain);
+  Logger.LogInformation('Curve: ' + ACurveName);
+  VerifyPemRoundtrip(LKp, 'EC');
+end;
+
 procedure TEcExample.Run;
 begin
-  Logger.LogInformation('--- EC example: ECDSA sign/verify ---');
+  LogWithLineBreak('--- EC example: ECDSA sign/verify ---');
   RunEcdsaSignVerify('secp256k1', 'SHA-256withECDSA');
 
-  Logger.LogInformation('--- EC example: Key recreate from bytes ---');
-  RunKeyRecreateFromBytes('secp256k1');
+  LogWithLineBreak('--- EC example: Key recreate from bytes ---');
+  RunEcKeyRecreateFromDEREncodedBytes('secp256k1');
 
-  Logger.LogInformation('--- EC example: Public key from X/Y ---');
+  LogWithLineBreak('--- EC example: Public key from X/Y ---');
   RunPublicKeyFromXY('secp256k1');
+
+  LogWithLineBreak('--- EC example: PEM export/import ---');
+  RunEcPemExportImport('secp256k1');
 end;
 
 end.

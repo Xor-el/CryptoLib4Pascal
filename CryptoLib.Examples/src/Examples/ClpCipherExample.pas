@@ -25,6 +25,7 @@ interface
 
 uses
   SysUtils,
+  Math,
   ClpIBufferedCipher,
   ClpCipherUtilities,
   ClpParameterUtilities,
@@ -41,6 +42,9 @@ type
   TCipherExample = class(TExampleBase)
   private
     function GetKeyAlgorithmName(const ACipherAlgorithm: string): string;
+    function GetAesKeySizeLabel(AKeySizeBytes: Int32): string;
+    function ProcessIncrementally(const ACipher: IBufferedCipher;
+  const AInput: TBytes): TBytes;
     procedure RunCipherEncryptDecrypt(const ACipherAlgorithm: string;
       const AParams: ICipherParameters);
     procedure RunAesEncryptDecrypt(const ACipherAlgorithm: string;
@@ -62,12 +66,45 @@ begin
     Result := ACipherAlgorithm;
 end;
 
+function TCipherExample.GetAesKeySizeLabel(AKeySizeBytes: Int32): string;
+begin
+  case AKeySizeBytes of
+    16: Result := 'AES-128';
+    24: Result := 'AES-192';
+    32: Result := 'AES-256';
+  else
+    raise EArgumentException.Create(Format('Invalid AES key size: %d bytes. Valid sizes are 16, 24, 32.', [AKeySizeBytes]));
+  end;
+end;
+
+function TCipherExample.ProcessIncrementally(const ACipher: IBufferedCipher;
+  const AInput: TBytes): TBytes;
+const
+  BufferSize = 1024;
+var
+  LInOff, LOutOff, LChunk, LCount, LInputLen: Int32;
+begin
+  LInputLen := System.Length(AInput);
+  System.SetLength(Result, ACipher.GetOutputSize(LInputLen));
+  LInOff := 0;
+  LOutOff := 0;
+  while LInOff < LInputLen do
+  begin
+    LChunk := Min(BufferSize, LInputLen - LInOff);
+    LCount := ACipher.ProcessBytes(AInput, LInOff, LChunk, Result, LOutOff);
+    System.Inc(LOutOff, LCount);
+    System.Inc(LInOff, LChunk);
+  end;
+  LCount := ACipher.DoFinal(Result, LOutOff);
+  System.Inc(LOutOff, LCount);
+  System.SetLength(Result, LOutOff);
+end;
+
 procedure TCipherExample.RunCipherEncryptDecrypt(const ACipherAlgorithm: string;
   const AParams: ICipherParameters);
 var
   LCipher: IBufferedCipher;
   LPlain, LCipherText, LDecrypted: TBytes;
-  LBlockSize, LOutOff, LCount: Int32;
 begin
   Logger.LogInformation('Cipher: ' + ACipherAlgorithm);
   LCipher := TCipherUtilities.GetCipher(ACipherAlgorithm);
@@ -79,39 +116,16 @@ begin
   LPlain := TConverters.ConvertStringToBytes('Secret message', TEncoding.UTF8);
 
   LCipher.Init(True, AParams);
-  LBlockSize := LCipher.GetBlockSize();
-  System.SetLength(LCipherText, System.Length(LPlain) + LBlockSize);
-  LOutOff := 0;
-  LCount := LCipher.ProcessBytes(LPlain, 0, System.Length(LPlain), LCipherText, LOutOff);
-  System.Inc(LOutOff, LCount);
-  LCount := LCipher.DoFinal(LCipherText, LOutOff);
-  System.Inc(LOutOff, LCount);
-  System.SetLength(LCipherText, LOutOff);
+  LCipherText := ProcessIncrementally(LCipher, LPlain);
   Logger.LogInformation(Format('%s encrypted length: %d', [ACipherAlgorithm, System.Length(LCipherText)]));
 
   LCipher.Init(False, AParams);
-  System.SetLength(LDecrypted, System.Length(LCipherText));
-  LOutOff := 0;
-  LCount := LCipher.ProcessBytes(LCipherText, 0, System.Length(LCipherText), LDecrypted, LOutOff);
-  System.Inc(LOutOff, LCount);
-  LCount := LCipher.DoFinal(LDecrypted, LOutOff);
-  System.Inc(LOutOff, LCount);
-  System.SetLength(LDecrypted, LOutOff);
+  LDecrypted := ProcessIncrementally(LCipher, LCipherText);
+
   if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
     Logger.LogInformation(ACipherAlgorithm + ' decrypt match: success.')
   else
     Logger.LogWarning(ACipherAlgorithm + ' decrypt match: failed.');
-end;
-
-function GetAesKeySizeLabel(AKeySizeBytes: Int32): string;
-begin
-  case AKeySizeBytes of
-    16: Result := 'AES-128';
-    24: Result := 'AES-192';
-    32: Result := 'AES-256';
-  else
-    raise EArgumentException.Create(Format('Invalid AES key size: %d bytes. Valid sizes are 16, 24, 32.', [AKeySizeBytes]));
-  end;
 end;
 
 procedure TCipherExample.RunAesEncryptDecrypt(const ACipherAlgorithm: string;
@@ -135,7 +149,7 @@ end;
 
 procedure TCipherExample.Run;
 begin
-  Logger.LogInformation('--- Cipher example: encrypt/decrypt ---');
+  LogWithLineBreak('--- Cipher example: encrypt/decrypt ---');
   RunAesEncryptDecrypt('AES/CBC/PKCS7PADDING', 16);
   RunAesEncryptDecrypt('AES/CBC/PKCS7PADDING', 24);
   RunAesEncryptDecrypt('AES/CBC/PKCS7PADDING', 32);
