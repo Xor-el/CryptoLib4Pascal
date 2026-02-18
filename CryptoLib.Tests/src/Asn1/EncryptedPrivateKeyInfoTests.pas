@@ -31,7 +31,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpIAsn1Objects,
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpCryptoLibTypes,

@@ -37,7 +37,6 @@ uses
   ClpIX509Asn1Generators,
   ClpX509Asn1Generators,
   ClpAsn1Objects,
-  ClpIAsn1Objects,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

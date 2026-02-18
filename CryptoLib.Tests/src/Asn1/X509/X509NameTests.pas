@@ -25,7 +25,6 @@ interface
 
 uses
   SysUtils,
-  Generics.Collections,
 {$IFDEF FPC}
   fpcunit,
   testregistry,

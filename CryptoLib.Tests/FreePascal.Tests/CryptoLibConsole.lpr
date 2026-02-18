@@ -26,9 +26,10 @@ uses
   CertificateTests, X509AltTests, X509ExtensionsTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests, RSATests,
-  X931SignerTests, CipherStreamTests, CryptoLibTestBase, OpenSslReaderTests,
-  OpenSslWriterTests, X509CertGenTests, ClpFixedSecureRandom,
-  ClpShortenedDigest, IPAddressUtilitiesTests, PemReaderTests;
+  X931SignerTests, CipherStreamTests, OaepTests, CryptoLibTestBase,
+  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  ClpFixedSecureRandom, ClpShortenedDigest, IPAddressUtilitiesTests,
+  PemReaderTests;
 
 type
 

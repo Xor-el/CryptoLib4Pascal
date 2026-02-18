@@ -59,7 +59,7 @@ type
     constructor Create();
 
     procedure Init(const APassword, ASalt: TCryptoLibByteArray;
-      ACost, ABlockSize, AParallelism: Int32); overload;
+      ACost, ABlockSize, AParallelism: Int32); reintroduce; overload;
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt,

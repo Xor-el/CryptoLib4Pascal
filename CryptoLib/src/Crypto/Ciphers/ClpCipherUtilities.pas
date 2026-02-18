@@ -150,10 +150,21 @@ type
       ISO9796_1PADDING,
       OAEP,
       OAEPPADDING,
+      OAEPWITHMD5ANDMGF1PADDING,
       OAEPWITHSHA1ANDMGF1PADDING,
       OAEPWITHSHA_1ANDMGF1PADDING,
+      OAEPWITHSHA224ANDMGF1PADDING,
+      OAEPWITHSHA_224ANDMGF1PADDING,
       OAEPWITHSHA256ANDMGF1PADDING,
       OAEPWITHSHA_256ANDMGF1PADDING,
+      OAEPWITHSHA256ANDMGF1WITHSHA256PADDING,
+      OAEPWITHSHA_256ANDMGF1WITHSHA_256PADDING,
+      OAEPWITHSHA256ANDMGF1WITHSHA1PADDING,
+      OAEPWITHSHA_256ANDMGF1WITHSHA_1PADDING,
+      OAEPWITHSHA384ANDMGF1PADDING,
+      OAEPWITHSHA_384ANDMGF1PADDING,
+      OAEPWITHSHA512ANDMGF1PADDING,
+      OAEPWITHSHA_512ANDMGF1PADDING,
       PKCS1,
       PKCS1PADDING,
       PKCS5,
@@ -371,10 +382,21 @@ begin
         LAsymBlockCipher := TISO9796d1Encoding.Create(LAsymBlockCipher) as IISO9796d1Encoding;
       TCipherPadding.OAEP, TCipherPadding.OAEPPADDING:
         LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher) as IOaepEncoding;
+      TCipherPadding.OAEPWITHMD5ANDMGF1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('MD5')) as IOaepEncoding;
       TCipherPadding.OAEPWITHSHA1ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_1ANDMGF1PADDING:
         LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-1')) as IOaepEncoding;
-      TCipherPadding.OAEPWITHSHA256ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1PADDING:
+      TCipherPadding.OAEPWITHSHA224ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_224ANDMGF1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-224')) as IOaepEncoding;
+      TCipherPadding.OAEPWITHSHA256ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1PADDING,
+      TCipherPadding.OAEPWITHSHA256ANDMGF1WITHSHA256PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1WITHSHA_256PADDING:
         LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256')) as IOaepEncoding;
+      TCipherPadding.OAEPWITHSHA256ANDMGF1WITHSHA1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1WITHSHA_1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256'), TDigestUtilities.GetDigest('SHA-1'), nil) as IOaepEncoding;
+      TCipherPadding.OAEPWITHSHA384ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_384ANDMGF1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-384')) as IOaepEncoding;
+      TCipherPadding.OAEPWITHSHA512ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_512ANDMGF1PADDING:
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-512')) as IOaepEncoding;
       TCipherPadding.PKCS1, TCipherPadding.PKCS1PADDING:
         LAsymBlockCipher := TPkcs1Encoding.Create(LAsymBlockCipher) as IPkcs1Encoding;
       TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7, TCipherPadding.PKCS7PADDING:
@@ -397,7 +419,7 @@ begin
     LMode := LParts[1];
     LDi := GetDigitIndex(LMode);
     if LDi >= 1 then
-      LModeName := System.Copy(LMode, 1, LDi - 1)
+      LModeName := TStringUtilities.Substring(LMode, 1, LDi - 1)
     else
       LModeName := LMode;
 

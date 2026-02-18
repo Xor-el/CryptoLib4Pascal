@@ -648,6 +648,7 @@ uses
   EncryptedPrivateKeyInfoTests in '..\src\Asn1\EncryptedPrivateKeyInfoTests.pas',
   CipherStreamTests in '..\src\Crypto\CipherStreamTests.pas',
   ParameterUtilitiesTests in '..\src\Security\ParameterUtilitiesTests.pas',
+  OaepTests in '..\src\Crypto\OaepTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

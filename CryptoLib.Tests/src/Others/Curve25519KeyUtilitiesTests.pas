@@ -36,7 +36,6 @@ uses
   ClpIEd25519Parameters,
   ClpEd25519Generators,
   ClpIEd25519Generators,
-  ClpX25519Parameters,
   ClpIX25519Parameters,
   ClpX25519Agreement,
   ClpIX25519Agreement,

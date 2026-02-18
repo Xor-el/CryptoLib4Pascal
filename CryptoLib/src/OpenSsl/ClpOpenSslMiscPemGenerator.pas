@@ -247,8 +247,6 @@ var
   LIV: TCryptoLibByteArray;
   LEncData: TCryptoLibByteArray;
   LHeaders: TCryptoLibGenericArray<IPemHeader>;
-  LStr: String;
-  I: Int32;
 begin
   if AObj.IsEmpty then
     raise EArgumentNilCryptoLibException.Create('obj');

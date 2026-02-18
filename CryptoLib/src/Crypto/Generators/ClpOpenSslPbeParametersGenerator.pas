@@ -32,7 +32,6 @@ uses
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
   ClpDigestUtilities,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type
@@ -59,7 +58,7 @@ type
     /// <summary>
     /// Initialise - iteration count is fixed at 1 for this algorithm.
     /// </summary>
-    procedure Init(const APassword, ASalt: TCryptoLibByteArray); overload; virtual;
+    procedure Init(const APassword, ASalt: TCryptoLibByteArray); reintroduce; overload; virtual;
     procedure Init(const APassword, ASalt: TCryptoLibByteArray;
       AIterationCount: Int32); overload; override;
 

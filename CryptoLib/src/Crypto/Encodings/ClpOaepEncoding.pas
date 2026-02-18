@@ -31,6 +31,7 @@ uses
   ClpIAsymmetricBlockCipher,
   ClpIOaepEncoding,
   ClpISecureRandom,
+  ClpParameterUtilities,
   ClpCryptoServicesRegistrar,
   ClpCryptoLibTypes;
 
@@ -52,16 +53,16 @@ type
     FRandom: ISecureRandom;
     FForEncryption: Boolean;
 
-    function EncodeBlock(const inBytes: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
-    function DecodeBlock(const inBytes: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    function EncodeBlock(const AInBytes: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
+    function DecodeBlock(const AInBytes: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     procedure MaskGeneratorFunction(
-      const z: TCryptoLibByteArray; zOff, zLen: Int32;
-      const mask: TCryptoLibByteArray; maskOff, maskLen: Int32);
+      const AZ: TCryptoLibByteArray; AZOff, AZLen: Int32;
+      const AMask: TCryptoLibByteArray; AMaskOff, AMaskLen: Int32);
 
-    function GetReducedBlockSize(blockSize: Int32): Int32; inline;
+    function GetReducedBlockSize(ABlockSize: Int32): Int32; inline;
 
   strict protected
     function GetAlgorithmName: String;
@@ -70,19 +71,19 @@ type
     function GetUnderlyingCipher: IAsymmetricBlockCipher;
 
   public
-    constructor Create(const cipher: IAsymmetricBlockCipher); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const hash: IDigest); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const hash: IDigest;
-      const encodingParams: TCryptoLibByteArray); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const hash, mgf1Hash: IDigest;
-      const encodingParams: TCryptoLibByteArray); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AHash: IDigest); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AHash: IDigest;
+      const AEncodingParams: TCryptoLibByteArray); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AHash, AMgf1Hash: IDigest;
+      const AEncodingParams: TCryptoLibByteArray); overload;
 
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;
@@ -95,37 +96,37 @@ implementation
 
 { TOaepEncoding }
 
-constructor TOaepEncoding.Create(const cipher: IAsymmetricBlockCipher);
+constructor TOaepEncoding.Create(const ACipher: IAsymmetricBlockCipher);
 begin
-  Create(cipher, TDigestUtilities.GetDigest('SHA-1'), nil);
+  Create(ACipher, TDigestUtilities.GetDigest('SHA-1'), nil);
 end;
 
-constructor TOaepEncoding.Create(const cipher: IAsymmetricBlockCipher;
-  const hash: IDigest);
+constructor TOaepEncoding.Create(const ACipher: IAsymmetricBlockCipher;
+  const AHash: IDigest);
 begin
-  Create(cipher, hash, nil);
+  Create(ACipher, AHash, nil);
 end;
 
-constructor TOaepEncoding.Create(const cipher: IAsymmetricBlockCipher;
-  const hash: IDigest; const encodingParams: TCryptoLibByteArray);
+constructor TOaepEncoding.Create(const ACipher: IAsymmetricBlockCipher;
+  const AHash: IDigest; const AEncodingParams: TCryptoLibByteArray);
 begin
-  Create(cipher, hash, hash, encodingParams);
+  Create(ACipher, AHash, AHash, AEncodingParams);
 end;
 
-constructor TOaepEncoding.Create(const cipher: IAsymmetricBlockCipher;
-  const hash, mgf1Hash: IDigest; const encodingParams: TCryptoLibByteArray);
+constructor TOaepEncoding.Create(const ACipher: IAsymmetricBlockCipher;
+  const AHash, AMgf1Hash: IDigest; const AEncodingParams: TCryptoLibByteArray);
 begin
   inherited Create();
-  FEngine := cipher;
-  FMgf1Hash := mgf1Hash;
-  SetLength(FDefHash, hash.GetDigestSize);
+  FEngine := ACipher;
+  FMgf1Hash := AMgf1Hash;
+  SetLength(FDefHash, AHash.GetDigestSize);
 
-  hash.Reset();
-  if encodingParams <> nil then
+  AHash.Reset();
+  if AEncodingParams <> nil then
   begin
-    hash.BlockUpdate(encodingParams, 0, System.Length(encodingParams));
+    AHash.BlockUpdate(AEncodingParams, 0, System.Length(AEncodingParams));
   end;
-  hash.DoFinal(FDefHash, 0);
+  AHash.DoFinal(FDefHash, 0);
 end;
 
 function TOaepEncoding.GetAlgorithmName: String;
@@ -138,23 +139,25 @@ begin
   Result := FEngine;
 end;
 
-procedure TOaepEncoding.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TOaepEncoding.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  rndParam: IParametersWithRandom;
+  LInitRandom: ISecureRandom;
 begin
-  if Supports(parameters, IParametersWithRandom, rndParam) then
-    FRandom := rndParam.Random
-  else
-    FRandom := TCryptoServicesRegistrar.GetSecureRandom();
+  TParameterUtilities.GetRandom(AParameters, LInitRandom);
 
-  FForEncryption := forEncryption;
-  FEngine.Init(forEncryption, parameters);
+  if AForEncryption then
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom(LInitRandom)
+  else
+    FRandom := nil;
+
+  FForEncryption := AForEncryption;
+  FEngine.Init(AForEncryption, AParameters);
 end;
 
-function TOaepEncoding.GetReducedBlockSize(blockSize: Int32): Int32;
+function TOaepEncoding.GetReducedBlockSize(ABlockSize: Int32): Int32;
 begin
-  Result := blockSize - 1 - 2 * System.Length(FDefHash);
+  Result := ABlockSize - 1 - 2 * System.Length(FDefHash);
 end;
 
 function TOaepEncoding.GetInputBlockSize: Int32;
@@ -173,185 +176,167 @@ begin
     Result := GetReducedBlockSize(FEngine.OutputBlockSize);
 end;
 
-function TOaepEncoding.ProcessBlock(const inBuf: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TOaepEncoding.ProcessBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 begin
   if FForEncryption then
-    Result := EncodeBlock(inBuf, inOff, inLen)
+    Result := EncodeBlock(AInBuf, AInOff, AInLen)
   else
-    Result := DecodeBlock(inBuf, inOff, inLen);
+    Result := DecodeBlock(AInBuf, AInOff, AInLen);
 end;
 
-function TOaepEncoding.EncodeBlock(const inBytes: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TOaepEncoding.EncodeBlock(const AInBytes: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  inBlockSize, defHashLen: Int32;
-  block: TCryptoLibByteArray;
+  LInBlockSize, LDefHashLen: Int32;
+  LBlock: TCryptoLibByteArray;
 begin
-  inBlockSize := FEngine.InputBlockSize;
-  defHashLen := System.Length(FDefHash);
+  LInBlockSize := FEngine.InputBlockSize;
+  LDefHashLen := System.Length(FDefHash);
 
-  if inLen > GetReducedBlockSize(inBlockSize) then
+  if AInLen > GetReducedBlockSize(LInBlockSize) then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SInputDataTooLong);
   end;
 
-  SetLength(block, inBlockSize);
+  SetLength(LBlock, LInBlockSize);
 
-  // Copy in the message
-  System.Move(inBytes[inOff], block[System.Length(block) - inLen], inLen);
+  System.Move(AInBytes[AInOff], LBlock[System.Length(LBlock) - AInLen], AInLen);
 
-  // Add sentinel
-  block[System.Length(block) - inLen - 1] := $01;
+  LBlock[System.Length(LBlock) - AInLen - 1] := $01;
 
-  // Add the hash of the encoding params
-  System.Move(FDefHash[0], block[defHashLen], defHashLen);
+  System.Move(FDefHash[0], LBlock[LDefHashLen], LDefHashLen);
 
-  // Generate the seed (random bytes in first defHashLen bytes)
-  FRandom.NextBytes(block, 0, defHashLen);
+  FRandom.NextBytes(LBlock, 0, LDefHashLen);
 
   FMgf1Hash.Reset();
 
-  // Mask the message block (DB)
-  MaskGeneratorFunction(block, 0, defHashLen,
-    block, defHashLen, System.Length(block) - defHashLen);
+  MaskGeneratorFunction(LBlock, 0, LDefHashLen,
+    LBlock, LDefHashLen, System.Length(LBlock) - LDefHashLen);
 
-  // Mask the seed
-  MaskGeneratorFunction(block, defHashLen, System.Length(block) - defHashLen,
-    block, 0, defHashLen);
+  MaskGeneratorFunction(LBlock, LDefHashLen, System.Length(LBlock) - LDefHashLen,
+    LBlock, 0, LDefHashLen);
 
-  Result := FEngine.ProcessBlock(block, 0, System.Length(block));
+  Result := FEngine.ProcessBlock(LBlock, 0, System.Length(LBlock));
 end;
 
-function TOaepEncoding.DecodeBlock(const inBytes: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TOaepEncoding.DecodeBlock(const AInBytes: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  outBlockSize, defHashLen, wrongMask, copyLen: Int32;
-  block, data: TCryptoLibByteArray;
-  start, index, octet, shouldSetMask: Int32;
-  i: Int32;
+  LOutBlockSize, LDefHashLen, LWrongMask, LCopyLen: Int32;
+  LBlock, LData: TCryptoLibByteArray;
+  LStart, LIndex, LOctet, LShouldSetMask: Int32;
+  I: Int32;
 begin
-  outBlockSize := FEngine.OutputBlockSize;
-  defHashLen := System.Length(FDefHash);
+  LOutBlockSize := FEngine.OutputBlockSize;
+  LDefHashLen := System.Length(FDefHash);
 
-  // Check reduced block size is valid
-  wrongMask := TBitOperations.Asr32(GetReducedBlockSize(outBlockSize), 31);
+  LWrongMask := TBitOperations.Asr32(GetReducedBlockSize(LOutBlockSize), 31);
 
-  SetLength(block, outBlockSize);
-  data := FEngine.ProcessBlock(inBytes, inOff, inLen);
+  SetLength(LBlock, LOutBlockSize);
+  LData := FEngine.ProcessBlock(AInBytes, AInOff, AInLen);
 
-  wrongMask := wrongMask or TBitOperations.Asr32((System.Length(block) - System.Length(data)), 31);
+  LWrongMask := LWrongMask or TBitOperations.Asr32((System.Length(LBlock) - System.Length(LData)), 31);
 
-  copyLen := System.Length(data);
-  if copyLen > System.Length(block) then
-    copyLen := System.Length(block);
+  LCopyLen := System.Length(LData);
+  if LCopyLen > System.Length(LBlock) then
+    LCopyLen := System.Length(LBlock);
 
-  System.Move(data[0], block[System.Length(block) - copyLen], copyLen);
-  FillChar(data[0], System.Length(data), 0);
+  System.Move(LData[0], LBlock[System.Length(LBlock) - LCopyLen], LCopyLen);
+  FillChar(LData[0], System.Length(LData), 0);
 
   FMgf1Hash.Reset();
 
-  // Unmask the seed
-  MaskGeneratorFunction(block, defHashLen, System.Length(block) - defHashLen,
-    block, 0, defHashLen);
+  MaskGeneratorFunction(LBlock, LDefHashLen, System.Length(LBlock) - LDefHashLen,
+    LBlock, 0, LDefHashLen);
 
-  // Unmask the message block
-  MaskGeneratorFunction(block, 0, defHashLen,
-    block, defHashLen, System.Length(block) - defHashLen);
+  MaskGeneratorFunction(LBlock, 0, LDefHashLen,
+    LBlock, LDefHashLen, System.Length(LBlock) - LDefHashLen);
 
-  // Check the hash of the encoding params (constant time)
-  for i := 0 to defHashLen - 1 do
+  for I := 0 to LDefHashLen - 1 do
   begin
-    wrongMask := wrongMask or (FDefHash[i] xor block[defHashLen + i]);
+    LWrongMask := LWrongMask or (FDefHash[I] xor LBlock[LDefHashLen + I]);
   end;
 
-  // Find the data block
-  start := -1;
-  for index := 2 * defHashLen to System.Length(block) - 1 do
+  LStart := -1;
+  for LIndex := 2 * LDefHashLen to System.Length(LBlock) - 1 do
   begin
-    octet := block[index];
-    // Mask will be 0xFFFFFFFF if octet is non-zero and start is (still) negative
-    shouldSetMask := TBitOperations.Asr32((-octet) and start, 31);
-    start := start + (index and shouldSetMask);
+    LOctet := LBlock[LIndex];
+    LShouldSetMask := TBitOperations.Asr32((-LOctet) and LStart, 31);
+    LStart := LStart + (LIndex and LShouldSetMask);
   end;
 
-  wrongMask := wrongMask or TBitOperations.Asr32(start, 31);
-  Inc(start);
-  wrongMask := wrongMask or (block[start] xor 1);
+  LWrongMask := LWrongMask or TBitOperations.Asr32(LStart, 31);
+  Inc(LStart);
+  LWrongMask := LWrongMask or (LBlock[LStart] xor 1);
 
-  if wrongMask <> 0 then
+  if LWrongMask <> 0 then
   begin
-    FillChar(block[0], System.Length(block), 0);
+    FillChar(LBlock[0], System.Length(LBlock), 0);
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataWrong);
   end;
 
-  Inc(start);
+  Inc(LStart);
 
-  // Extract the data block
-  SetLength(Result, System.Length(block) - start);
-  System.Move(block[start], Result[0], System.Length(Result));
-  FillChar(block[0], System.Length(block), 0);
+  SetLength(Result, System.Length(LBlock) - LStart);
+  System.Move(LBlock[LStart], Result[0], System.Length(Result));
+  FillChar(LBlock[0], System.Length(LBlock), 0);
 end;
 
 procedure TOaepEncoding.MaskGeneratorFunction(
-  const z: TCryptoLibByteArray; zOff, zLen: Int32;
-  const mask: TCryptoLibByteArray; maskOff, maskLen: Int32);
+  const AZ: TCryptoLibByteArray; AZOff, AZLen: Int32;
+  const AMask: TCryptoLibByteArray; AMaskOff, AMaskLen: Int32);
 var
-  digestSize, counter, maskPos, maskEnd, maskLimit, xorLen: Int32;
-  hash, C: TCryptoLibByteArray;
-  i: Int32;
+  LDigestSize, LCounter, LMaskPos, LMaskEnd, LMaskLimit, LXorLen: Int32;
+  LHash, LC: TCryptoLibByteArray;
+  I: Int32;
 begin
-  digestSize := FMgf1Hash.GetDigestSize;
-  SetLength(hash, digestSize);
-  SetLength(C, 4);
-  counter := 0;
+  LDigestSize := FMgf1Hash.GetDigestSize;
+  SetLength(LHash, LDigestSize);
+  SetLength(LC, 4);
+  LCounter := 0;
 
-  maskEnd := maskOff + maskLen;
-  maskLimit := maskEnd - digestSize;
-  maskPos := maskOff;
+  LMaskEnd := AMaskOff + AMaskLen;
+  LMaskLimit := LMaskEnd - LDigestSize;
+  LMaskPos := AMaskOff;
 
-  // Note: we are re-hashing z on each iteration. Our approach recomputes Hash(z || counter) each time.
-
-  while maskPos < maskLimit do
+  while LMaskPos < LMaskLimit do
   begin
-    // C = I2OSP(counter, 4)
-    C[0] := Byte(counter shr 24);
-    C[1] := Byte(counter shr 16);
-    C[2] := Byte(counter shr 8);
-    C[3] := Byte(counter);
+    LC[0] := Byte(LCounter shr 24);
+    LC[1] := Byte(LCounter shr 16);
+    LC[2] := Byte(LCounter shr 8);
+    LC[3] := Byte(LCounter);
 
     FMgf1Hash.Reset();
-    FMgf1Hash.BlockUpdate(z, zOff, zLen);
-    FMgf1Hash.BlockUpdate(C, 0, 4);
-    FMgf1Hash.DoFinal(hash, 0);
+    FMgf1Hash.BlockUpdate(AZ, AZOff, AZLen);
+    FMgf1Hash.BlockUpdate(LC, 0, 4);
+    FMgf1Hash.DoFinal(LHash, 0);
 
-    // XOR hash with mask
-    for i := 0 to digestSize - 1 do
+    for I := 0 to LDigestSize - 1 do
     begin
-      mask[maskPos + i] := mask[maskPos + i] xor hash[i];
+      AMask[LMaskPos + I] := AMask[LMaskPos + I] xor LHash[I];
     end;
 
-    Inc(maskPos, digestSize);
-    Inc(counter);
+    Inc(LMaskPos, LDigestSize);
+    Inc(LCounter);
   end;
 
-  // Handle remaining bytes
-  if maskPos < maskEnd then
+  if LMaskPos < LMaskEnd then
   begin
-    C[0] := Byte(counter shr 24);
-    C[1] := Byte(counter shr 16);
-    C[2] := Byte(counter shr 8);
-    C[3] := Byte(counter);
+    LC[0] := Byte(LCounter shr 24);
+    LC[1] := Byte(LCounter shr 16);
+    LC[2] := Byte(LCounter shr 8);
+    LC[3] := Byte(LCounter);
 
     FMgf1Hash.Reset();
-    FMgf1Hash.BlockUpdate(z, zOff, zLen);
-    FMgf1Hash.BlockUpdate(C, 0, 4);
-    FMgf1Hash.DoFinal(hash, 0);
+    FMgf1Hash.BlockUpdate(AZ, AZOff, AZLen);
+    FMgf1Hash.BlockUpdate(LC, 0, 4);
+    FMgf1Hash.DoFinal(LHash, 0);
 
-    xorLen := maskEnd - maskPos;
-    for i := 0 to xorLen - 1 do
+    LXorLen := LMaskEnd - LMaskPos;
+    for I := 0 to LXorLen - 1 do
     begin
-      mask[maskPos + i] := mask[maskPos + i] xor hash[i];
+      AMask[LMaskPos + I] := AMask[LMaskPos + I] xor LHash[I];
     end;
   end;
 end;

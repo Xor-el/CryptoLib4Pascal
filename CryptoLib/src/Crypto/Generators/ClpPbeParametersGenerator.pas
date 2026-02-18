@@ -46,7 +46,7 @@ type
 
     procedure Clear(); virtual;
 
-    destructor Destroy; virtual;
+    destructor Destroy; override;
 
     /// <summary>
     /// Initialise the PBE generator.

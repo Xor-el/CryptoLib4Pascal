@@ -23,7 +23,6 @@ interface
 
 uses
   ClpIPbeParametersGenerator,
-  ClpICipherParameters,
   ClpCryptoLibTypes;
 
 type

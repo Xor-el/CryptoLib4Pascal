@@ -26,8 +26,8 @@ uses
   DeltaCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
   X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests,
   KMacTests, RSATests, PssTests, ISO9796Tests, RSABlindedTests,
-  RSADigestSignerTests, X931SignerTests, CipherStreamTests, CryptoLibTestBase,
-  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  RSADigestSignerTests, X931SignerTests, CipherStreamTests, OaepTests,
+  CryptoLibTestBase, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   ClpFixedSecureRandom, ClpShortenedDigest, IPAddressUtilitiesTests,
   PemReaderTests;
 

@@ -34,7 +34,6 @@ uses
   ClpIAsn1Objects,
   ClpNistObjectIdentifiers,
   ClpParameterUtilities,
-  ClpKeyParameter,
   ClpIKeyParameter,
   ClpCryptoServicesRegistrar,
   ClpSecureRandom,

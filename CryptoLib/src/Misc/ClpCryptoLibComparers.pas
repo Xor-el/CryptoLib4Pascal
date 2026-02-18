@@ -65,6 +65,7 @@ end;
 function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(const AValue: String): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
 var
   LLowerValue: String;
+  LHash: UInt32;
   I: Int32;
 begin
   if System.Length(AValue) = 0 then
@@ -72,17 +73,16 @@ begin
     Result := 0;
     Exit;
   end;
-  
-  // Convert to lowercase using invariant culture for consistent hashing
+
   LLowerValue := TStringUtilities.ToLowerInvariant(AValue);
-  
-  // Compute hash code from lowercase string
-  // Using a simple hash algorithm (FNV-1a style)
-  Result := 2166136261; // FNV offset basis
+
+  LHash := UInt32(2166136261);
   for I := 1 to System.Length(LLowerValue) do
   begin
-    Result := (Result xor Ord(LLowerValue[I])) * 16777619; // FNV prime
+    LHash := (LHash xor UInt32(Ord(LLowerValue[I]))) * UInt32(16777619);
   end;
+
+  Result := LHash;
 end;
 
 { TCryptoLibComparers }

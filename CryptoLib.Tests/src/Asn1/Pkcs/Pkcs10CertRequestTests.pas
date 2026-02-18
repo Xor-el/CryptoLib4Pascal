@@ -25,7 +25,6 @@ interface
 
 uses
   SysUtils,
-  Generics.Collections,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -41,7 +40,6 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpGeneratorUtilities,
   ClpSecureRandom,
-  ClpISecureRandom,
   ClpKeyGenerationParameters,
   ClpIKeyGenerationParameters,
   ClpRsaParameters,

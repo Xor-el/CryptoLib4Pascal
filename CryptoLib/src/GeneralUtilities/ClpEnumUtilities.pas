@@ -59,7 +59,7 @@ type
     /// Converts an enum ordinal to its declared name string.
     /// Returns the result of GetEnumName(ATypeInfo, AOrdinal). Empty string if no name.
     /// </summary>
-    class function ToString(ATypeInfo: PTypeInfo; AOrdinal: Int32): String; overload; static;
+    class function ToString(ATypeInfo: PTypeInfo; AOrdinal: Int32): String; reintroduce; overload; static;
 
     // Generic overloads (T must be an enum); delegate to PTypeInfo versions.
 
@@ -81,7 +81,7 @@ type
     /// <summary>
     /// Converts an enum value to its declared name string.
     /// </summary>
-    class function ToString<T>(const AValue: T): String; overload; static;
+    class function ToString<T>(const AValue: T): String; reintroduce; overload; static;
   end;
 
 implementation

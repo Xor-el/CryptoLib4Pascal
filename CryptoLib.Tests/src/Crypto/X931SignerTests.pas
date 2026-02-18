@@ -40,7 +40,6 @@ uses
   ClpDigestUtilities,
   ClpISigner,
   ClpEncoders,
-  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 

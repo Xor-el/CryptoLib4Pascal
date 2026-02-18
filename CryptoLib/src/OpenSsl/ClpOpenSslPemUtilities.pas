@@ -96,6 +96,7 @@ end;
 class function TOpenSslPemUtilities.TryGetCipherAlgorithm(ABaseAlg: TPemBaseAlg;
   out AAlgorithm: String; out AKeyBits: Int32): Boolean;
 begin
+  Result := True;
   case ABaseAlg of
     TPemBaseAlg.AES_128:
       begin
@@ -121,9 +122,7 @@ begin
     AAlgorithm := '';
     AKeyBits := -1;
     Result := False;
-    Exit;
   end;
-  Result := True;
 end;
 
 class function TOpenSslPemUtilities.GetCipherParameters(

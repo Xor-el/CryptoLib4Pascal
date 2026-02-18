@@ -62,9 +62,6 @@ type
 
 implementation
 
-uses
-  ClpStreams;
-
 { TPkcs8EncryptedPrivateKeyInfo }
 
 class function TPkcs8EncryptedPrivateKeyInfo.ParseBytes(

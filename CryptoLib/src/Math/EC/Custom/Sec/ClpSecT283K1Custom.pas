@@ -212,7 +212,7 @@ implementation
 class procedure TSecT283Field.Boot;
 begin
   FRootZ := TCryptoLibUInt64Array.Create($0C30C30C30C30808, $30C30C30C30C30C3,
-    $820820820820830C, $0820820820820820, $2082082);
+    UInt64($820820820820830C), $0820820820820820, $2082082);
 end;
 
 class constructor TSecT283Field.Create;

@@ -37,7 +37,6 @@ uses
   ClpIECFieldElement,
   ClpIPreCompCallback,
   ClpIPreCompInfo,
-  ClpISecureRandom,
   ClpSecureRandom,
   ClpCryptoLibTypes;
 

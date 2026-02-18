@@ -50,7 +50,6 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpConverters,
-  ClpArrayUtilities,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
