@@ -21,6 +21,8 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
+{$HINTS OFF}
+{$WARNINGS OFF}
 {$ENDIF FPC}
 
 type
@@ -33,81 +35,67 @@ implementation
 
 uses
   SysUtils,
-  Rtti,
-  TypInfo,
-  Generics.Collections,
-  ClpExampleBase;
+  ClpExampleBase,
+  ClpRsaExample,
+  ClpEcExample,
+  ClpDigestExample,
+  ClpCipherExample,
+  ClpCertificateExample;
+
+type
+  TExampleBaseClass = class of TExampleBase;
+
+const
+  KnownExamples: array[0..4] of TExampleBaseClass = (
+    TDigestExample,
+    TCipherExample,
+    TEcExample,
+    TRsaExample,
+    TCertificateExample
+  );
 
 class procedure TExampleExplorer.Execute;
 var
-  Ctx: TRttiContext;
-  LType: TRttiType;
-  LInst: TRttiInstanceType;
-  LCreate: TRttiMethod;
-  Examples: TList<TRttiInstanceType>;
   Option: string;
-  I, Idx: Integer;
+  I, Idx, N: Integer;
   LExample: IExample;
-  N: Integer;
 begin
-  Examples := TList<TRttiInstanceType>.Create;
-  try
-    Ctx := TRttiContext.Create;
-    for LType in Ctx.GetTypes do
+  if Length(KnownExamples) = 0 then
+  begin
+    Writeln('No example classes found.');
+    Exit;
+  end;
+
+  while True do
+  begin
+    Writeln('Choose an example to run (type exit/quit to leave):');
+    for N := Low(KnownExamples) to High(KnownExamples) do
+      Writeln(Format('  %d: %s', [N, KnownExamples[N].ClassName]));
+
+    Readln(Option);
+    if SameText(Trim(Option), 'exit') or SameText(Trim(Option), 'quit') then
+      Break;
+
+    if not TryStrToInt(Trim(Option), I) or (I < Low(KnownExamples)) or (I > High(KnownExamples)) then
     begin
-      if LType is TRttiInstanceType then
+      Writeln('Invalid option. Enter a number between 0 and ', High(KnownExamples), '.');
+      Continue;
+    end;
+
+    Idx := I;
+    try
+      if Supports(KnownExamples[Idx].Create, IExample, LExample) then
       begin
-        LInst := TRttiInstanceType(LType);
-        if (LInst.MetaclassType <> nil) and LInst.MetaclassType.InheritsFrom(TExampleBase)
-          and (LInst.MetaclassType <> TExampleBase) then
-        begin
-          LCreate := LInst.GetMethod('Create');
-          if (LCreate <> nil) and (Length(LCreate.GetParameters) = 0) then
-            Examples.Add(LInst);
+        try
+          LExample.Run;
+        finally
+          LExample := nil;
         end;
       end;
+    except
+      on E: Exception do
+        Writeln(E.ClassName, ': ', E.Message);
     end;
-
-    if Examples.Count = 0 then
-    begin
-      Writeln('No example classes found.');
-      Exit;
-    end;
-
-    while True do
-    begin
-      Writeln('Choose an example to run (type exit/quit to leave):');
-      for N := 0 to Examples.Count - 1 do
-        Writeln(Format('  %d: %s', [N, Examples[N].Name]));
-
-      Readln(Option);
-      if SameText(Trim(Option), 'exit') or SameText(Trim(Option), 'quit') then
-        Break;
-
-      if not TryStrToInt(Trim(Option), I) or (I < 0) or (I >= Examples.Count) then
-      begin
-        Writeln('Invalid option. Enter a number between 0 and ', Examples.Count - 1, '.');
-        Continue;
-      end;
-
-      Idx := I;
-      try
-        LCreate := Examples[Idx].GetMethod('Create');
-        if (LCreate <> nil) and Supports(LCreate.Invoke(Examples[Idx].MetaclassType, []).AsObject, IExample, LExample) then
-        begin
-          try
-            LExample.Run;
-          finally
-            LExample := nil;
-          end;
-        end;
-      except
-        on E: Exception do
-          Writeln(E.ClassName, ': ', E.Message);
-      end;
-    end;
-  finally
-    Examples.Free;
   end;
 end;
 

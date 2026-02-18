@@ -21,6 +21,8 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
+{$HINTS OFF}
+{$WARNINGS OFF}
 {$ENDIF FPC}
 
 uses
@@ -163,7 +165,7 @@ begin
   RunRsaSignVerify('SHA-256withRSA');
   RunRsaSignVerify('SHA256WITHRSAANDMGF1');
 
-  LogWithLineBreak('--- RSA example: Key recreate from bytes ---');
+  LogWithLineBreak('--- RSA example: Key recreate from DER bytes ---');
   RunRsaKeyRecreateFromDEREncodedBytes;
 
   LogWithLineBreak('--- RSA example: PEM export/import ---');

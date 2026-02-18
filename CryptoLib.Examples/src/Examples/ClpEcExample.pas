@@ -21,6 +21,8 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
+{$HINTS OFF}
+{$WARNINGS OFF}
 {$ENDIF FPC}
 
 uses
@@ -193,7 +195,7 @@ begin
   LogWithLineBreak('--- EC example: ECDSA sign/verify ---');
   RunEcdsaSignVerify('secp256k1', 'SHA-256withECDSA');
 
-  LogWithLineBreak('--- EC example: Key recreate from bytes ---');
+  LogWithLineBreak('--- EC example: Key recreate from DER bytes ---');
   RunEcKeyRecreateFromDEREncodedBytes('secp256k1');
 
   LogWithLineBreak('--- EC example: Public key from X/Y ---');

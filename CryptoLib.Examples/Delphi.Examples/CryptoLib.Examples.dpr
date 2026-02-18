@@ -1,7 +1,5 @@
 program CryptoLib.Examples;
 
-{$STRONGLINKTYPES ON}
-
 {$APPTYPE CONSOLE}
 {$R *.res}
 
