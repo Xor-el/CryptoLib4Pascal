@@ -532,7 +532,19 @@ uses
   ClpIBlockCipherMode in '..\..\CryptoLib\src\Interfaces\Crypto\Ciphers\ClpIBlockCipherMode.pas',
   ClpIEcbBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Ciphers\ClpIEcbBlockCipher.pas',
   ClpEcbBlockCipher in '..\..\CryptoLib\src\Crypto\Ciphers\ClpEcbBlockCipher.pas',
-  ClpGnuObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas';
+  ClpGnuObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas',
+  ClpIWrapper in '..\..\CryptoLib\src\Interfaces\Crypto\ClpIWrapper.pas',
+  ClpIRfc5649WrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc5649WrapEngine.pas',
+  ClpIAesWrapPadEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesWrapPadEngine.pas',
+  ClpIRfc3211WrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc3211WrapEngine.pas',
+  ClpIAesWrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesWrapEngine.pas',
+  ClpIRfc3394WrapEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc3394WrapEngine.pas',
+  ClpWrapperUtilities in '..\..\CryptoLib\src\Crypto\ClpWrapperUtilities.pas',
+  ClpAesWrapPadEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesWrapPadEngine.pas',
+  ClpRfc3211WrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRfc3211WrapEngine.pas',
+  ClpAesWrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesWrapEngine.pas',
+  ClpRfc5649WrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRfc5649WrapEngine.pas',
+  ClpRfc3394WrapEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpRfc3394WrapEngine.pas';
 
 begin
   TClpLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
