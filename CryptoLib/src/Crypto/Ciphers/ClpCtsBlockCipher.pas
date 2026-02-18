@@ -24,16 +24,16 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
   ClpICtsBlockCipher,
   ClpICbcBlockCipher,
-  ClpICfbBlockCipher,
-  ClpIOfbBlockCipher,
-  ClpISicBlockCipher,
+  ClpIEcbBlockCipher,
+  ClpEcbBlockCipher,
   ClpBufferedBlockCipher,
   ClpCryptoLibTypes;
 
 resourcestring
-  SUnsupportedCipher = 'CtsBlockCipher Can Only Accept ECB or CBC Ciphers';
+  SUnsupportedCipher = 'CtsBlockCipher can only accept ECB, or CBC ciphers';
   SNegativeInputLength = 'Can''t Have a Negative Input Length!';
   SCTSDoFinalError = 'Need at Least One Block of Input For CTS';
   SOutputBufferTooShort = 'Output Buffer too Short';
@@ -47,7 +47,8 @@ type
     FBlockSize: Int32;
 
   public
-    constructor Create(const ACipher: IBlockCipher);
+    constructor Create(const ACipher: IBlockCipher); overload;
+    constructor Create(const ACipherMode: IBlockCipherMode); overload;
     function GetOutputSize(AInputLen: Int32): Int32; override;
     function GetUpdateOutputSize(AInputLen: Int32): Int32; override;
     function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
@@ -64,13 +65,20 @@ implementation
 
 constructor TCtsBlockCipher.Create(const ACipher: IBlockCipher);
 begin
+  Create(TEcbBlockCipher.GetBlockCipherMode(ACipher));
+end;
+
+constructor TCtsBlockCipher.Create(const ACipherMode: IBlockCipherMode);
+begin
   Inherited Create();
-  if Supports(ACipher, ICfbBlockCipher) or Supports(ACipher, IOfbBlockCipher) or
-    Supports(ACipher, ISicBlockCipher) or Supports(ACipher, ICtsBlockCipher) then
+  if not (Supports(ACipherMode, ICbcBlockCipher) or
+    Supports(ACipherMode, IEcbBlockCipher)) then
     raise EArgumentCryptoLibException.CreateRes(@SUnsupportedCipher);
 
-  FCipher := ACipher;
-  FBlockSize := FCipher.GetBlockSize();
+  FCipherMode := ACipherMode;
+
+  FBlockSize := ACipherMode.GetBlockSize();
+
   System.SetLength(FBuf, FBlockSize * 2);
   FBufOff := 0;
 end;
@@ -80,13 +88,12 @@ function TCtsBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
 var
   LBlockSize, LLen, LI: Int32;
   LBlock, LLastBlock: TCryptoLibByteArray;
-  LCipher: IBlockCipher;
 begin
   if ((FBufOff + AOutOff) > System.Length(AOutput)) then
     raise EDataLengthCryptoLibException.CreateRes
       (@SOutputBufferTooSmallForDoFinal);
 
-  LBlockSize := FCipher.GetBlockSize();
+  LBlockSize := FCipherMode.GetBlockSize();
   LLen := FBufOff - LBlockSize;
   System.SetLength(LBlock, LBlockSize);
 
@@ -95,7 +102,7 @@ begin
     if (FBufOff < LBlockSize) then
       raise EDataLengthCryptoLibException.CreateRes(@SCTSDoFinalError);
 
-    FCipher.ProcessBlock(FBuf, 0, LBlock, 0);
+    FCipherMode.ProcessBlock(FBuf, 0, LBlock, 0);
 
     if (FBufOff > LBlockSize) then
     begin
@@ -113,13 +120,7 @@ begin
         System.Inc(LI);
       end;
 
-      if Supports(FCipher, ICbcBlockCipher) then
-      begin
-        LCipher := (FCipher as ICbcBlockCipher).GetUnderlyingCipher();
-        LCipher.ProcessBlock(FBuf, LBlockSize, AOutput, AOutOff);
-      end
-      else
-        FCipher.ProcessBlock(FBuf, LBlockSize, AOutput, AOutOff);
+      FCipherMode.UnderlyingCipher.ProcessBlock(FBuf, LBlockSize, AOutput, AOutOff);
 
       System.Move(LBlock[0], AOutput[AOutOff + LBlockSize],
         LLen * System.SizeOf(Byte));
@@ -136,13 +137,7 @@ begin
 
     if (FBufOff > LBlockSize) then
     begin
-      if Supports(FCipher, ICbcBlockCipher) then
-      begin
-        LCipher := (FCipher as ICbcBlockCipher).GetUnderlyingCipher();
-        LCipher.ProcessBlock(FBuf, 0, LBlock, 0);
-      end
-      else
-        FCipher.ProcessBlock(FBuf, 0, LBlock, 0);
+      FCipherMode.UnderlyingCipher.ProcessBlock(FBuf, 0, LBlock, 0);
 
       LI := LBlockSize;
       while LI <> FBufOff do
@@ -152,13 +147,13 @@ begin
       end;
 
       System.Move(FBuf[LBlockSize], LBlock[0], LLen * System.SizeOf(Byte));
-      FCipher.ProcessBlock(LBlock, 0, AOutput, AOutOff);
+      FCipherMode.ProcessBlock(LBlock, 0, AOutput, AOutOff);
       System.Move(LLastBlock[0], AOutput[AOutOff + LBlockSize],
         LLen * System.SizeOf(Byte));
     end
     else
     begin
-      FCipher.ProcessBlock(FBuf, 0, LBlock, 0);
+      FCipherMode.ProcessBlock(FBuf, 0, LBlock, 0);
       System.Move(LBlock[0], AOutput[AOutOff], LBlockSize * System.SizeOf(Byte));
     end;
   end;
@@ -194,7 +189,7 @@ begin
 
   if (FBufOff = System.Length(FBuf)) then
   begin
-    Result := FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    Result := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
     System.Move(FBuf[FBlockSize], FBuf[0], FBlockSize * System.SizeOf(Byte));
     FBufOff := FBlockSize;
   end;
@@ -227,7 +222,7 @@ begin
   begin
     System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
 
-    Result := Result + FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    Result := Result + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
     System.Move(FBuf[LBlockSize], FBuf[0], LBlockSize * System.SizeOf(Byte));
 
     FBufOff := LBlockSize;
@@ -238,7 +233,7 @@ begin
     while (ALen > LBlockSize) do
     begin
       System.Move(AInput[AInOff], FBuf[FBufOff], LBlockSize * System.SizeOf(Byte));
-      Result := Result + FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff + Result);
+      Result := Result + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff + Result);
       System.Move(FBuf[LBlockSize], FBuf[0], LBlockSize * System.SizeOf(Byte));
 
       ALen := ALen - LBlockSize;

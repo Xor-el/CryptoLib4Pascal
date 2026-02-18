@@ -161,7 +161,19 @@ uses
   ClpOpenSslPemWriter, ClpIOpenSslPemReader, ClpIOpenSslPemWriter, 
   ClpPkcsDHAsn1Objects, ClpIPkcsDHAsn1Objects, ClpIPemParser, ClpIPemReader, 
   ClpIPemWriter, ClpPemParser, ClpPemReader, ClpPemWriter, 
-  ClpIPkcs10CertificationRequestBuilder, ClpIPemObject, ClpPemObject;
+  ClpIPkcs10CertificationRequestBuilder, ClpIPemObject, ClpPemObject, 
+  ClpIOpenSslPasswordFinder, ClpOpenSslPemUtilities, 
+  ClpIOpenSslPbeParametersGenerator, ClpOpenSslPbeParametersGenerator, 
+  ClpIPkcs8EncryptedPrivateKeyInfo, ClpPkcs8EncryptedPrivateKeyInfo, 
+  ClpPbeUtilities, ClpPkcs12ParametersGenerator, 
+  ClpPkcs5S1ParametersGenerator, ClpIPkcs5S1ParametersGenerator, 
+  ClpIPkcs12ParametersGenerator, ClpBcObjectIdentifiers, ClpCipherStream, 
+  ClpAlgorithmIdentifierFactory, ClpCipherFactory, 
+  ClpCipherKeyGeneratorFactory, ClpAsn1CipherBuilderWithKey, 
+  ClpCryptoServicesRegistrar, ClpEncryptedPrivateKeyInfoFactory, 
+  ClpIDecryptorBuilderProvider, ClpICipherBuilderWithKey, ClpICipher, 
+  ClpIBlockCipherMode, ClpIEcbBlockCipher, ClpEcbBlockCipher, 
+  ClpGnuObjectIdentifiers;
 
 implementation
 

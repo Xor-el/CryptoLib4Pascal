@@ -37,7 +37,7 @@ type
   /// This implementation is based on IEEE P1363/ISO 18033.
   /// </para>
   /// </summary>
-  TKdf1BytesGenerator = class(TBaseKdfBytesGenerator, IKdf1BytesGenerator)
+  TKdf1BytesGenerator = class sealed(TBaseKdfBytesGenerator, IKdf1BytesGenerator)
 
   public
 

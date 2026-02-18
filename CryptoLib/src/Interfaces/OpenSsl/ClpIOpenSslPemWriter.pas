@@ -23,7 +23,9 @@ interface
 
 uses
   Rtti,
-  ClpIPemWriter;
+  ClpIPemWriter,
+  ClpISecureRandom,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
@@ -32,7 +34,9 @@ type
   /// </summary>
   IOpenSslPemWriter = interface(IPemWriter)
     ['{23403EC4-0046-4F52-8539-B5D49C0ED6E3}']
-    procedure WriteObject(const AObj: TValue);
+    procedure WriteObject(const AObj: TValue); overload;
+    procedure WriteObject(const AObj: TValue; const AAlgorithm: String;
+      const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom); overload;
   end;
 
 implementation

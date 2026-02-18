@@ -32,7 +32,7 @@ uses
   ClpIRsaBlindedEngine,
   ClpRsaCoreEngine,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
   ClpCryptoLibTypes;
 
@@ -98,12 +98,7 @@ function TRsaBlindedEngine.InitSecureRandom(needed: Boolean;
   const provided: ISecureRandom): ISecureRandom;
 begin
   if needed then
-  begin
-    if provided <> nil then
-      Result := provided
-    else
-      Result := TSecureRandom.Create();
-  end
+    Result := TCryptoServicesRegistrar.GetSecureRandom(provided)
   else
     Result := nil;
 end;

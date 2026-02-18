@@ -328,7 +328,7 @@ begin
       SkipWhiteSpace();
 
       LValue := TStringUtilities.Trim(BufferedString());
-      LHeaders.Add(TPemHeader.Create(LKey, LValue));
+      LHeaders.Add(TPemHeader.Create(LKey, LValue) as IPemHeader);
     end;
 
     // Consume payload, ignoring all white space until we encounter a '-'
@@ -363,7 +363,7 @@ begin
 
     Result := TPemObject.Create(LType, LHeadersArray, LDecodedContent);
   finally
-    LHeaders.Free();
+    LHeaders.Free;
   end;
 end;
 

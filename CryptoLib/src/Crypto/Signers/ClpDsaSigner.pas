@@ -31,7 +31,7 @@ uses
   ClpIDsaKCalculator,
   ClpICipherParameters,
   ClpParameterUtilities,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpRandomDsaKCalculator,
   ClpBitOperations,
   ClpBigInteger,
@@ -206,21 +206,9 @@ function TDsaSigner.InitSecureRandom(ANeeded: Boolean;
   const AProvided: ISecureRandom): ISecureRandom;
 begin
   if (not ANeeded) then
-  begin
-    Result := nil;
-  end
+    Result := nil
   else
-  begin
-    if AProvided <> nil then
-    begin
-      Result := AProvided;
-    end
-    else
-    begin
-      Result := TSecureRandom.Create();
-    end;
-  end;
-
+    Result := TCryptoServicesRegistrar.GetSecureRandom(AProvided);
 end;
 
 function TDsaSigner.VerifySignature(const AMessage: TCryptoLibByteArray;

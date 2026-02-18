@@ -25,8 +25,11 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpICipherKeyGenerator,
+  ClpIKeyParameter,
+  ClpKeyParameter,
   ClpKeyGenerationParameters,
   ClpIKeyGenerationParameters,
+  ClpCryptoServicesRegistrar,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -56,6 +59,8 @@ type
 
     procedure EngineInit(const AParameters: IKeyGenerationParameters); virtual;
     function EngineGenerateKey: TCryptoLibByteArray; virtual;
+    function EngineGenerateKeyParameter: IKeyParameter; virtual;
+    procedure EnsureInitialized; virtual;
 
   public
 
@@ -77,6 +82,11 @@ type
     /// a byte array containing the key value.
     /// </returns>
     function GenerateKey: TCryptoLibByteArray;
+
+    /// <summary>
+    /// Generate a secret key as a KeyParameter.
+    /// </summary>
+    function GenerateKeyParameter: IKeyParameter;
 
     property DefaultStrength: Int32 read GetDefaultStrength;
   end;
@@ -116,17 +126,33 @@ end;
 
 function TCipherKeyGenerator.GenerateKey: TCryptoLibByteArray;
 begin
+  EnsureInitialized();
+  Result := EngineGenerateKey();
+end;
+
+function TCipherKeyGenerator.GenerateKeyParameter: IKeyParameter;
+begin
+  EnsureInitialized();
+  Result := EngineGenerateKeyParameter();
+end;
+
+function TCipherKeyGenerator.EngineGenerateKeyParameter: IKeyParameter;
+begin
+  Result := TKeyParameter.Create(EngineGenerateKey());
+end;
+
+procedure TCipherKeyGenerator.EnsureInitialized;
+begin
   if FUninitialised then
   begin
     if FDefaultStrength < 1 then
       raise EInvalidOperationCryptoLibException.CreateRes(@SGeneratorNotInitialized);
 
     FUninitialised := False;
-    EngineInit(TKeyGenerationParameters.Create(TSecureRandom.Create()
-      as ISecureRandom, FDefaultStrength) as IKeyGenerationParameters);
+    EngineInit(TKeyGenerationParameters.Create(
+      TCryptoServicesRegistrar.GetSecureRandom(),
+      FDefaultStrength) as IKeyGenerationParameters);
   end;
-
-  Result := EngineGenerateKey();
 end;
 
 function TCipherKeyGenerator.GetDefaultStrength: Int32;

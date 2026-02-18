@@ -46,8 +46,7 @@ type
 
   strict private
   var
-    FPassword, FSalt: TCryptoLibByteArray;
-    FPBKDF_Scrypt: HlpIHashInfo.IPBKDF_Scrypt;
+    FPBKDF_Scrypt: IPBKDF_Scrypt;
 
     function GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray; inline;
 
@@ -59,10 +58,8 @@ type
     /// </summary>
     constructor Create();
 
-    destructor Destroy; override;
-
     procedure Init(const APassword, ASalt: TCryptoLibByteArray;
-      ACost, ABlockSize, AParallelism: Int32);
+      ACost, ABlockSize, AParallelism: Int32); overload;
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt,
@@ -122,8 +119,7 @@ implementation
 
 procedure TScryptParametersGenerator.Clear();
 begin
-  TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
-  TArrayUtilities.Fill<Byte>(FSalt, 0, System.Length(FSalt), Byte(0));
+  inherited Clear();
 
   if FPBKDF_Scrypt <> nil then
   begin
@@ -134,12 +130,6 @@ end;
 constructor TScryptParametersGenerator.Create();
 begin
   inherited Create();
-end;
-
-destructor TScryptParametersGenerator.Destroy;
-begin
-  Clear();
-  inherited Destroy;
 end;
 
 function TScryptParametersGenerator.GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray;
@@ -185,8 +175,7 @@ end;
 procedure TScryptParametersGenerator.Init(const APassword, ASalt: TCryptoLibByteArray;
   ACost, ABlockSize, AParallelism: Int32);
 begin
-  FPassword := System.Copy(APassword);
-  FSalt := System.Copy(ASalt);
+  inherited Init(APassword, ASalt, 0); // Scrypt has no `Iteration` in a sense so we pass `0`.
   FPBKDF_Scrypt := TKDF.TPBKDF_Scrypt.CreatePBKDF_Scrypt(FPassword, FSalt, ACost,
     ABlockSize, AParallelism);
 end;

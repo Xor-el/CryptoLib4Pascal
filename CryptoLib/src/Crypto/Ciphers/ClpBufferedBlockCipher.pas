@@ -26,6 +26,8 @@ uses
   ClpCheck,
   ClpBufferedCipherBase,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
+  ClpEcbBlockCipher,
   ClpIBufferedBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithRandom,
@@ -35,7 +37,8 @@ uses
 resourcestring
   SInvalidLength = 'Can''t Have a Negative Input Length!';
   SInputNil = 'Input Cannot be Nil';
-  SCipherNil = 'Cipher Cannot be Nil';
+  SCipherModeNil = 'CipherMode Cannot be Nil';
+  SCipherModeInvalidBlockSize = 'CipherMode Must Have a Positive Block Size';
   SOutputBufferTooSmall = 'Output Buffer too Short';
   SDataNotBlockSizeAligned = 'Data not Block Size Aligned';
   SOutputBufferTooSmallForDoFinal = 'Output Buffer too Short for DoFinal()';
@@ -62,7 +65,7 @@ type
     FBuf: TCryptoLibByteArray;
     FBufOff: Int32;
     FForEncryption: Boolean;
-    FCipher: IBlockCipher;
+    FCipherMode: IBlockCipherMode;
 
     /// <summary>
     /// constructor for subclasses
@@ -70,13 +73,15 @@ type
     constructor Create(); overload;
 
   public
+    constructor Create(const ACipher: IBlockCipher); overload;
+
     /// <summary>
     /// Create a buffered block cipher without padding.
     /// </summary>
-    /// <param name="ACipher">
-    /// the underlying block cipher this buffering object wraps.
+    /// <param name="ACipherMode">
+    /// the underlying block cipher mode this buffering object wraps.
     /// </param>
-    constructor Create(const ACipher: IBlockCipher); overload;
+    constructor Create(const ACipherMode: IBlockCipherMode); overload;
 
     /// <summary>
     /// initialise the cipher.
@@ -237,14 +242,23 @@ implementation
 
 constructor TBufferedBlockCipher.Create(const ACipher: IBlockCipher);
 begin
-  Inherited Create();
-  if (ACipher = nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SCipherNil);
-  end;
+  Create(TEcbBlockCipher.GetBlockCipherMode(ACipher));
+end;
 
-  FCipher := ACipher;
-  System.SetLength(FBuf, ACipher.GetBlockSize());
+constructor TBufferedBlockCipher.Create(const ACipherMode: IBlockCipherMode);
+var
+  LBlockSize: Int32;
+begin
+  Inherited Create();
+  if (ACipherMode = nil) then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCipherModeNil);
+
+  LBlockSize := ACipherMode.GetBlockSize();
+  if (LBlockSize < 1) then
+    raise EArgumentCryptoLibException.CreateRes(@SCipherModeInvalidBlockSize);
+
+  FCipherMode := ACipherMode;
+  System.SetLength(FBuf, LBlockSize);
   FBufOff := 0;
 end;
 
@@ -259,13 +273,13 @@ begin
   try
     if (FBufOff <> 0) then
     begin
-      TCheck.DataLength(not FCipher.IsPartialBlockOkay,
+      TCheck.DataLength(not FCipherMode.IsPartialBlockOkay,
         SDataNotBlockSizeAligned);
       TCheck.OutputLength(AOutput, AOutOff, FBufOff,
         SOutputBufferTooSmallForDoFinal);
 
       // NB: Can't copy directly, or we may write too much output
-      FCipher.ProcessBlock(FBuf, 0, FBuf, 0);
+      FCipherMode.ProcessBlock(FBuf, 0, FBuf, 0);
       System.Move(FBuf[0], AOutput[AOutOff], FBufOff * System.SizeOf(Byte));
     end;
 
@@ -351,12 +365,12 @@ end;
 
 function TBufferedBlockCipher.GetAlgorithmName: String;
 begin
-  Result := FCipher.AlgorithmName;
+  Result := FCipherMode.AlgorithmName;
 end;
 
 function TBufferedBlockCipher.GetBlockSize: Int32;
 begin
-  Result := FCipher.GetBlockSize();
+  Result := FCipherMode.GetBlockSize();
 end;
 
 function TBufferedBlockCipher.GetOutputSize(ALength: Int32): Int32;
@@ -390,7 +404,7 @@ begin
 
   Reset();
 
-  FCipher.Init(AForEncryption, LParameters);
+  FCipherMode.Init(AForEncryption, LParameters);
 
 end;
 
@@ -409,7 +423,7 @@ begin
     end;
 
     FBufOff := 0;
-    Result := FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    Result := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
     Exit;
   end;
 
@@ -474,13 +488,13 @@ begin
   if (ALength > LGapLen) then
   begin
     System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
-    LResultLen := LResultLen + FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
     FBufOff := 0;
     ALength := ALength - LGapLen;
     AInOff := AInOff + LGapLen;
     while (ALength > System.Length(FBuf)) do
     begin
-      LResultLen := LResultLen + FCipher.ProcessBlock(AInput, AInOff, AOutput,
+      LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff, AOutput,
         AOutOff + LResultLen);
       ALength := ALength - LBlockSize;
       AInOff := AInOff + LBlockSize;
@@ -490,7 +504,7 @@ begin
   FBufOff := FBufOff + ALength;
   if (FBufOff = System.Length(FBuf)) then
   begin
-    LResultLen := LResultLen + FCipher.ProcessBlock(FBuf, 0, AOutput,
+    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
       AOutOff + LResultLen);
     FBufOff := 0;
   end;
@@ -543,7 +557,7 @@ begin
   TArrayUtilities.Fill<Byte>(FBuf, 0, System.Length(FBuf), Byte(0));
   FBufOff := 0;
 
-  FCipher.Reset();
+  FCipherMode.Reset();
 end;
 
 end.

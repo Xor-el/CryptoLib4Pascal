@@ -38,7 +38,7 @@ uses
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -209,10 +209,7 @@ begin
   LParameters := TParameterUtilities.GetRandom(AParam, LProvidedRandom);
   if not Supports(LParameters, IRsaKeyParameters, FKey) then
     raise EArgumentCryptoLibException.CreateRes(@SRsaKeyParametersRequired);
-  if LProvidedRandom <> nil then
-    FRandom := LProvidedRandom
-  else
-    FRandom := TSecureRandom.Create();
+  FRandom := TCryptoServicesRegistrar.GetSecureRandom(LProvidedRandom);
   if FKey.IsPrivate then
     raise EArgumentCryptoLibException.CreateRes(@SPublicKeyRequired);
 end;

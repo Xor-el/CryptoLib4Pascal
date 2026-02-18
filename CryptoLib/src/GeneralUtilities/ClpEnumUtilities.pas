@@ -55,6 +55,11 @@ type
     /// Caller casts: TMyEnum(AResult).
     /// </summary>
     class function TryGetEnumValue(ATypeInfo: PTypeInfo; const S: String; out AResult: Int32): Boolean; overload; static;
+    /// <summary>
+    /// Converts an enum ordinal to its declared name string.
+    /// Returns the result of GetEnumName(ATypeInfo, AOrdinal). Empty string if no name.
+    /// </summary>
+    class function ToString(ATypeInfo: PTypeInfo; AOrdinal: Int32): String; overload; static;
 
     // Generic overloads (T must be an enum); delegate to PTypeInfo versions.
 
@@ -73,6 +78,10 @@ type
     /// TryGetEnumValue(PTypeInfo, S, out Int32). On failure, AResult is Default(T).
     /// </summary>
     class function TryGetEnumValue<T>(const S: String; out AResult: T): Boolean; overload; static;
+    /// <summary>
+    /// Converts an enum value to its declared name string.
+    /// </summary>
+    class function ToString<T>(const AValue: T): String; overload; static;
   end;
 
 implementation
@@ -188,6 +197,22 @@ begin
     Move(LOrd, AResult, SizeOf(T))
   else
     AResult := Default(T);
+end;
+
+class function TEnumUtilities.ToString(ATypeInfo: PTypeInfo; AOrdinal: Int32): String;
+begin
+  Result := '';
+  if (ATypeInfo = nil) or (ATypeInfo^.Kind <> tkEnumeration) then
+    Exit;
+  Result := GetEnumName(ATypeInfo, AOrdinal);
+end;
+
+class function TEnumUtilities.ToString<T>(const AValue: T): String;
+var
+  LOrd: Byte;
+begin
+  Move(AValue, LOrd, SizeOf(T));
+  Result := ToString(TypeInfo(T), LOrd);
 end;
 
 end.

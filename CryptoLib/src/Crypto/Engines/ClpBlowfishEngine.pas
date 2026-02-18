@@ -277,7 +277,6 @@ type
       const dst: TCryptoLibByteArray; dstIndex: Int32);
 
     function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
 
   public
 
@@ -299,12 +298,9 @@ type
     function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
       const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
 
-    procedure Reset(); virtual;
-
     function GetBlockSize(): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
   end;
 
@@ -478,11 +474,6 @@ begin
   result := BLOCK_SIZE;
 end;
 
-function TBlowfishEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := false;
-end;
-
 procedure TBlowfishEngine.Init(forEncryption: Boolean;
   const parameters: ICipherParameters);
 var
@@ -550,11 +541,6 @@ begin
     xl := table[s];
     System.Inc(s, 2);
   end;
-end;
-
-procedure TBlowfishEngine.Reset;
-begin
-  // nothing to do.
 end;
 
 end.

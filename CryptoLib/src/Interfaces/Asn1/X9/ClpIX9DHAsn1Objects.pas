@@ -40,6 +40,17 @@ type
   end;
 
   /// <summary>
+  /// Interface for DHPublicKey.
+  /// </summary>
+  IDHPublicKey = interface(IAsn1Encodable)
+    ['{58CCD3A4-111C-449C-AFE3-1B5012164739}']
+
+    function GetY: IDerInteger;
+
+    property Y: IDerInteger read GetY;
+  end;
+
+  /// <summary>
   /// Interface for DHDomainParameters.
   /// </summary>
   IDHDomainParameters = interface(IAsn1Encodable)

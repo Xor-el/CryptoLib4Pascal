@@ -53,7 +53,7 @@ type
     type
       /// <summary>Used to return the output from the Enhanced Miller-Rabin Probabilistic Primality Test.</summary>
       IMROutput = interface(IInterface)
-        ['{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}']
+        ['{BE5336B8-C5E3-49E4-BB94-9FB5DCC4768B}']
 
         function GetFactor: TBigInteger;
         function GetIsProvablyComposite: Boolean;
@@ -77,7 +77,7 @@ type
 
       /// <summary>Used to return the output from the Shawe-Taylor Random_Prime Routine.</summary>
       ISTOutput = interface(IInterface)
-        ['{B2C3D4E5-F6A7-5B6C-9D0E-1F2A3B4C5D6E}']
+        ['{26AD8EEE-8EE8-44B0-8204-8AA97A15A4D8}']
 
         function GetPrime: TBigInteger;
         function GetPrimeSeed: TCryptoLibByteArray;

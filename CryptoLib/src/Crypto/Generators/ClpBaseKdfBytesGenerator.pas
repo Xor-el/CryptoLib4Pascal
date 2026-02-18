@@ -48,7 +48,7 @@ type
   /// This implementation is based on ISO 18033/P1363a.
   /// </para>
   /// </summary>
-  TBaseKdfBytesGenerator = class(TInterfacedObject, IBaseKdfBytesGenerator,
+  TBaseKdfBytesGenerator = class abstract(TInterfacedObject, IBaseKdfBytesGenerator,
     IDerivationFunction)
 
   strict protected

@@ -35,7 +35,7 @@ uses
   ClpECGenerators,
   ClpECParameters,
   ClpIAsymmetricCipherKeyPair,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpECAlgorithms,
   ClpParameterUtilities,
   ClpCryptoLibTypes;
@@ -271,14 +271,7 @@ begin
     end;
 
     FKey := LParameters as IECPrivateKeyParameters;
-    if (LProvidedRandom <> nil) then
-    begin
-      FRandom := LProvidedRandom;
-    end
-    else
-    begin
-      FRandom := TSecureRandom.Create();
-    end;
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom(LProvidedRandom);
   end
   else
   begin

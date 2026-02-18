@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="103">
+    <Units Count="106">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -452,6 +452,18 @@
         <Filename Value="..\src\OpenSsl\OpenSslWriterTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit102>
+      <Unit103>
+        <Filename Value="..\src\Asn1\EncryptedPrivateKeyInfoTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit103>
+      <Unit104>
+        <Filename Value="..\src\Crypto\CipherStreamTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit104>
+      <Unit105>
+        <Filename Value="..\src\Security\ParameterUtilitiesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit105>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

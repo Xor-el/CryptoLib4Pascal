@@ -67,8 +67,6 @@ type
 
     Finitialised, FforEncryption: Boolean;
 
-    function GetIsPartialBlockOkay: Boolean; virtual;
-
     /// <summary>
     /// Internal method to Initialise this cipher instance.
     /// <code>true</code> for encryption, <code>false</code> for decryption.
@@ -180,10 +178,7 @@ type
     function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
       const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
 
-    procedure Reset(); virtual;
-
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
   end;
 
@@ -613,11 +608,6 @@ begin
   result := Format('Speck%d', [FblockSize * 8]);
 end;
 
-function TSpeckEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := false;
-end;
-
 procedure TSpeckEngine.Init(forEncryption: Boolean;
   const parameters: ICipherParameters);
 var
@@ -658,11 +648,6 @@ begin
   PackBlock(output, outOff);
 
   result := FblockSize;
-end;
-
-procedure TSpeckEngine.Reset;
-begin
-  // nothing to do.
 end;
 
 { TSpeckUInt32Engine }

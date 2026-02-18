@@ -67,6 +67,9 @@ uses
   ClpIX509Asn1Objects,
   ClpStringUtilities,
   ClpCollectionUtilities,
+  ClpEncoders,
+  ClpIOpenSslPasswordFinder,
+  ClpOpenSslPemUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -78,15 +81,20 @@ resourcestring
   SProblemCreatingPrivateKey = 'problem creating %s private key: %s';
   SUnknownKeyType = 'Unknown key type: %s';
   SEncryptedPrivateKeyNotSupported = 'Encrypted private key is not supported';
+  SNoPasswordFinderSpecified = 'No password finder specified, but a password is required';
+  SPasswordIsNull = 'Password is null, but a password is required';
+  SMissingDekInfo = 'missing DEK-info';
 
 type
   /// <summary>
   /// Reader for OpenSSL PEM encoded streams containing X509 certificates,
   /// PKCS#8 encoded keys and PKCS#7/CMS objects. Returns typed values as TValue.
-  /// Encrypted private keys are not supported.
+  /// Encrypted private keys (Proc-Type 4,ENCRYPTED with DEK-Info) supported when
+  /// IOpenSslPasswordFinder is provided.
   /// </summary>
   TOpenSslPemReader = class(TPemReader, IOpenSslPemReader)
   strict private
+    FPasswordFinder: IOpenSslPasswordFinder;
     function ReadRsaPublicKey(const APemObject: IPemObject): IAsymmetricKeyParameter;
     function ReadPublicKey(const APemObject: IPemObject): IAsymmetricKeyParameter;
     function ReadCertificate(const APemObject: IPemObject): IX509Certificate;
@@ -96,7 +104,8 @@ type
     function ReadPkcs7(const APemObject: IPemObject): ICmsContentInfo;
     function ReadPrivateKey(const APemObject: IPemObject): TValue;
   public
-    constructor Create(const AReader: TStream);
+    constructor Create(const AReader: TStream); overload;
+    constructor Create(const AReader: TStream; const APasswordFinder: IOpenSslPasswordFinder); overload;
     function ReadObject(): TValue;
   end;
 
@@ -106,7 +115,13 @@ implementation
 
 constructor TOpenSslPemReader.Create(const AReader: TStream);
 begin
+  Create(AReader, nil);
+end;
+
+constructor TOpenSslPemReader.Create(const AReader: TStream; const APasswordFinder: IOpenSslPasswordFinder);
+begin
   inherited Create(AReader);
+  FPasswordFinder := APasswordFinder;
 end;
 
 function TOpenSslPemReader.ReadObject(): TValue;
@@ -251,6 +266,11 @@ var
   LPubKey: IDerBitString;
   LPubInfo: ISubjectPublicKeyInfo;
   LECPriv: IECPrivateKeyParameters;
+  LPasswordChars: TCryptoLibCharArray;
+  LDekInfo: String;
+  LTokens: TCryptoLibStringArray;
+  LDekAlgName: String;
+  LIV: TCryptoLibByteArray;
 begin
   if not TStringUtilities.EndsWith(APemObject.&Type, 'PRIVATE KEY') then
     raise EArgumentCryptoLibException.Create('Expected type ending with PRIVATE KEY');
@@ -269,7 +289,26 @@ begin
 
     LProcType := TCollectionUtilities.GetValueOrNull<String, String>(LFields, 'Proc-Type');
     if LProcType = '4,ENCRYPTED' then
-      raise ENotSupportedCryptoLibException.Create(SEncryptedPrivateKeyNotSupported);
+    begin
+      if FPasswordFinder = nil then
+        raise EArgumentCryptoLibException.Create(SNoPasswordFinderSpecified);
+
+      LPasswordChars := FPasswordFinder.GetPassword();
+      if (LPasswordChars = nil) then
+        raise EArgumentCryptoLibException.Create(SPasswordIsNull);
+
+      if not LFields.TryGetValue('DEK-Info', LDekInfo) then
+        raise EPemCryptoLibException.Create(SMissingDekInfo);
+
+      LTokens := TStringUtilities.SplitString(LDekInfo, ',');
+      if System.Length(LTokens) < 2 then
+        raise EPemCryptoLibException.Create(SMissingDekInfo);
+
+      LDekAlgName := TStringUtilities.Trim(LTokens[0]);
+      LIV := THexEncoder.Decode(TStringUtilities.Trim(LTokens[1]));
+
+      LKeyBytes := TOpenSslPemUtilities.Crypt(False, LKeyBytes, LPasswordChars, LDekAlgName, LIV);
+    end;
 
     try
       LSeq := TAsn1Sequence.GetInstance(LKeyBytes);
@@ -277,7 +316,7 @@ begin
       if LType = 'RSA' then
       begin
         if LSeq.Count <> 9 then
-          raise EPemGenerationCryptoLibException.Create(SMalformedSequenceRsa);
+          raise EPemCryptoLibException.Create(SMalformedSequenceRsa);
 
         LRsa := TRsaPrivateKeyStructure.GetInstance(LSeq);
 
@@ -288,14 +327,14 @@ begin
           LRsa.Coefficient);
 
         Result := TValue.From<IAsymmetricCipherKeyPair>(
-          TAsymmetricCipherKeyPair.Create(LPubSpec, LPrivSpec));
+          TAsymmetricCipherKeyPair.Create(LPubSpec, LPrivSpec) as IAsymmetricCipherKeyPair);
         Exit;
       end;
 
       if LType = 'DSA' then
       begin
         if LSeq.Count <> 6 then
-          raise EPemGenerationCryptoLibException.Create(SMalformedSequenceDsa);
+          raise EPemCryptoLibException.Create(SMalformedSequenceDsa);
 
         LP := TDerInteger.GetInstance(LSeq[1]);
         LQ := TDerInteger.GetInstance(LSeq[2]);
@@ -309,7 +348,7 @@ begin
         LPubSpec := TDsaPublicKeyParameters.Create(LY.Value, LDsaParams);
 
         Result := TValue.From<IAsymmetricCipherKeyPair>(
-          TAsymmetricCipherKeyPair.Create(LPubSpec, LPrivSpec));
+          TAsymmetricCipherKeyPair.Create(LPubSpec, LPrivSpec) as IAsymmetricCipherKeyPair);
         Exit;
       end;
 
@@ -318,7 +357,7 @@ begin
         LPKey := TECPrivateKeyStructure.GetInstance(LSeq);
         LAlgId := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdECPublicKey, LPKey.Parameters);
 
-        LPrivInfo := TPrivateKeyInfo.Create(LAlgId, LPKey.ToAsn1Object);
+        LPrivInfo := TPrivateKeyInfo.Create(LAlgId, LPKey.ToAsn1Object());
         LPrivSpec := TPrivateKeyFactory.CreateKey(LPrivInfo);
 
         LPubKey := LPKey.PublicKey;
@@ -335,12 +374,21 @@ begin
         end;
 
         Result := TValue.From<IAsymmetricCipherKeyPair>(
-          TAsymmetricCipherKeyPair.Create(LPubSpec, LPrivSpec));
+          TAsymmetricCipherKeyPair.Create(LPubSpec, LPrivSpec) as IAsymmetricCipherKeyPair);
         Exit;
       end;
 
       if LType = 'ENCRYPTED' then
-        raise ENotSupportedCryptoLibException.Create(SEncryptedPrivateKeyNotSupported);
+      begin
+        if FPasswordFinder = nil then
+          raise EArgumentCryptoLibException.Create(SNoPasswordFinderSpecified);
+        LPasswordChars := FPasswordFinder.GetPassword();
+        if LPasswordChars = nil then
+          raise EArgumentCryptoLibException.Create(SPasswordIsNull);
+        Result := TValue.From<IAsymmetricKeyParameter>(
+          TPrivateKeyFactory.DecryptKey(LPasswordChars, TEncryptedPrivateKeyInfo.GetInstance(LSeq)));
+        Exit;
+      end;
 
       if LType = '' then
       begin
@@ -354,7 +402,7 @@ begin
       on EIOCryptoLibException do
         raise;
       on E: Exception do
-        raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemCreatingPrivateKey, [LType, E.Message]);
+        raise EPemCryptoLibException.CreateResFmt(@SProblemCreatingPrivateKey, [LType, E.Message]);
     end;
   finally
     LFields.Free;

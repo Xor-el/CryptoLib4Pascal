@@ -69,11 +69,14 @@ type
   EOSRandomCryptoLibException = class(ECryptoLibException);
   EDataLengthCryptoLibException = class(ECryptoLibException);
   EMaxBytesExceededCryptoLibException = class(ECryptoLibException);
-  EOutputLengthCryptoLibException = class(ECryptoLibException);
+  EOutputLengthCryptoLibException = class(EDataLengthCryptoLibException);
   EBadBlockCryptoLibException = class(ECryptoLibException);
+  EPemCryptoLibException = class(EIOCryptoLibException);
   EPemGenerationCryptoLibException = class(ECryptoLibException);
   ECertificateCryptoLibException = class(ECryptoLibException);
   ECrlCryptoLibException = class(ECryptoLibException);
+  EPkcsCryptoLibException = class(ECryptoLibException);
+  EPkcsIOCryptoLibException = class(EIOCryptoLibException);
 
   /// <summary>
   /// Represents a dynamic array of Byte.

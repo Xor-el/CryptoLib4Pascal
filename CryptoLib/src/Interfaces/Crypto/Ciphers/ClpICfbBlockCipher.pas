@@ -22,12 +22,11 @@ unit ClpICfbBlockCipher;
 interface
 
 uses
-  ClpIBlockCipher;
+  ClpIBlockCipherMode;
 
 type
-  ICfbBlockCipher = interface(IBlockCipher)
+  ICfbBlockCipher = interface(IBlockCipherMode)
     ['{A58FD8F1-EECF-402F-9007-4E884FF7D325}']
-    function GetUnderlyingCipher(): IBlockCipher;
   end;
 
 implementation

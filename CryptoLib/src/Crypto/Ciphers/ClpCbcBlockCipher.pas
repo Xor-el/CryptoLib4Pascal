@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
   ClpICbcBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -39,7 +40,7 @@ resourcestring
 
 type
   TCbcBlockCipher = class sealed(TInterfacedObject, ICbcBlockCipher,
-    IBlockCipher)
+    IBlockCipherMode, IBlockCipher)
 
   strict private
   var
@@ -117,7 +118,6 @@ procedure TCbcBlockCipher.Reset;
 begin
   System.Move(FIV[0], FCbcV[0], System.Length(FIV));
   TArrayUtilities.Fill<Byte>(FCbcNextV, 0, System.Length(FCbcNextV), Byte(0));
-  FCipher.Reset();
 end;
 
 function TCbcBlockCipher.GetAlgorithmName: String;

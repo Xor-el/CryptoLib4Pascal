@@ -23,6 +23,7 @@ interface
 
 uses
   ClpIKeyGenerationParameters,
+  ClpIKeyParameter,
   ClpCryptoLibTypes;
 
 type
@@ -46,9 +47,14 @@ type
     /// </returns>
     function GenerateKey: TCryptoLibByteArray;
 
-    function GetdefaultStrength: Int32;
+    /// <summary>
+    /// Generate a secret key as a KeyParameter.
+    /// </summary>
+    function GenerateKeyParameter: IKeyParameter;
 
-    property defaultStrength: Int32 read GetdefaultStrength;
+    function GetDefaultStrength: Int32;
+
+    property DefaultStrength: Int32 read GetDefaultStrength;
 
   end;
 

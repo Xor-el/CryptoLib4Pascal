@@ -24,7 +24,7 @@ interface
 uses
   ClpIBlockCipherPadding,
   ClpIISO10126d2Padding,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
@@ -68,10 +68,7 @@ end;
 
 procedure TISO10126d2Padding.Init(const ARandom: ISecureRandom);
 begin
-  if ARandom <> nil then
-    FRandom := ARandom
-  else
-    FRandom := TSecureRandom.Create();
+  FRandom := TCryptoServicesRegistrar.GetSecureRandom(ARandom);
 end;
 
 function TISO10126d2Padding.PadCount(const AInput: TCryptoLibByteArray): Int32;

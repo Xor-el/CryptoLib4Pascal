@@ -54,7 +54,6 @@ type
 
   strict private
   var
-    FPassword: TCryptoLibByteArray;
     FPBKDF_Argon2: IPBKDF_Argon2;
     FArgon2Parameters: IArgon2Parameters;
 
@@ -72,12 +71,10 @@ type
     /// </param>
     constructor Create();
 
-    destructor Destroy; override;
-
     procedure Init(AArgon2Type: TCryptoLibArgon2Type;
       AArgon2Version: TCryptoLibArgon2Version; const APassword, ASalt, ASecret,
       AAdditional: TCryptoLibByteArray; AIterations, AMemory, AParallelism: Int32;
-      AMemoryCostType: TCryptoLibArgon2MemoryCostType);
+      AMemoryCostType: TCryptoLibArgon2MemoryCostType); overload;
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt, and
@@ -119,7 +116,7 @@ implementation
 
 procedure TArgon2ParametersGenerator.Clear();
 begin
-  TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
+  inherited Clear();
 
   if FArgon2Parameters <> nil then
   begin
@@ -135,12 +132,6 @@ end;
 constructor TArgon2ParametersGenerator.Create();
 begin
   inherited Create();
-end;
-
-destructor TArgon2ParametersGenerator.Destroy();
-begin
-  Clear();
-  inherited Destroy;
 end;
 
 function TArgon2ParametersGenerator.GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray;
@@ -191,7 +182,7 @@ var
   LArgon2ParametersBuilder: IArgon2ParametersBuilder;
   LArgon2Version: TArgon2Version;
 begin
-  FPassword := System.Copy(APassword);
+  inherited Init(APassword, ASalt, AIterations);
 
   case AArgon2Type of
     TCryptoLibArgon2Type.Argon2D:

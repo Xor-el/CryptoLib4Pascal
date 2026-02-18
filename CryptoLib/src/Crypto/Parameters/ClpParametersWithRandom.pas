@@ -25,7 +25,7 @@ uses
   ClpCryptoLibTypes,
   ClpIParametersWithRandom,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpICipherParameters;
 
 resourcestring
@@ -62,7 +62,7 @@ implementation
 
 constructor TParametersWithRandom.Create(const AParameters: ICipherParameters);
 begin
-  Create(AParameters, TSecureRandom.Create() as ISecureRandom);
+  Create(AParameters, TCryptoServicesRegistrar.GetSecureRandom());
 end;
 
 constructor TParametersWithRandom.Create(const AParameters: ICipherParameters;

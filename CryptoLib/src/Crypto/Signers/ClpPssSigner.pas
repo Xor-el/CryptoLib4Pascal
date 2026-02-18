@@ -31,7 +31,7 @@ uses
   ClpIPssSigner,
   ClpIRsaParameters,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
   ClpBigInteger,
   ClpCryptoLibTypes;
@@ -266,12 +266,7 @@ begin
   LKParams := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
   if AForSigning then
-  begin
-    if LProvidedRandom <> nil then
-      FRandom := LProvidedRandom
-    else
-      FRandom := TSecureRandom.Create();
-  end
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom(LProvidedRandom)
   else
     FRandom := nil;
 

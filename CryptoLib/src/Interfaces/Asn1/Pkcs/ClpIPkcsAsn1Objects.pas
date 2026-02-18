@@ -25,6 +25,7 @@ uses
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpIX509Asn1Objects,
+  ClpBigInteger,
   ClpCryptoLibTypes;
 
 type
@@ -32,9 +33,113 @@ type
   IAttributePkcs = interface;
   ICertificationRequest = interface;
   ICertificationRequestInfo = interface;
+  IEncryptedPrivateKeyInfo = interface;
+  IEncryptionScheme = interface;
+  IPbeParameter = interface;
+  IPbeS2Parameters = interface;
+  IPkcs12PbeParams = interface;
   IPkcsContentInfo = interface;
+  IPbkdf2Params = interface;
+  IKeyDerivationFunc = interface;
   IPrivateKeyInfo = interface;
   IPkcsSignedData = interface;
+
+  /// <summary>
+  /// Interface for EncryptedPrivateKeyInfo (PKCS#8).
+  /// </summary>
+  IEncryptedPrivateKeyInfo = interface(IAsn1Encodable)
+    ['{85782A45-F11C-474E-A2FA-531969A7D577}']
+
+    function GetEncryptionAlgorithm: IAlgorithmIdentifier;
+    function GetEncryptedData: IAsn1OctetString;
+    function GetEncryptedDataBytes: TCryptoLibByteArray;
+
+    property EncryptionAlgorithm: IAlgorithmIdentifier read GetEncryptionAlgorithm;
+    property EncryptedData: IAsn1OctetString read GetEncryptedData;
+  end;
+
+  /// <summary>
+  /// Interface for KeyDerivationFunc (PKCS#5 Scheme 2).
+  /// </summary>
+  IKeyDerivationFunc = interface(IAlgorithmIdentifier)
+    ['{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}']
+
+  end;
+
+  /// <summary>
+  /// Interface for EncryptionScheme (PKCS#5 Scheme 2).
+  /// </summary>
+  IEncryptionScheme = interface(IAlgorithmIdentifier)
+    ['{B2C3D4E5-F6A7-5B6C-9D0E-1F2A3B4C5D6E}']
+
+    function GetParametersAsn1Object: IAsn1Object;
+    property ParametersAsn1Object: IAsn1Object read GetParametersAsn1Object;
+  end;
+
+  /// <summary>
+  /// Interface for PbeParameter (PKCS5 S1).
+  /// </summary>
+  IPbeParameter = interface(IAsn1Encodable)
+    ['{C3D4E5F6-A7B8-6C7D-0E1F-2A3B4C5D6E7F}']
+
+    function GetSalt: IAsn1OctetString;
+    function GetIterationCountObject: IDerInteger;
+    function GetSaltBytes: TCryptoLibByteArray;
+
+    property Salt: IAsn1OctetString read GetSalt;
+    property IterationCountObject: IDerInteger read GetIterationCountObject;
+  end;
+
+  /// <summary>
+  /// Interface for PbeS2Parameters (PKCS#5 Scheme 2).
+  /// </summary>
+  IPbeS2Parameters = interface(IAsn1Encodable)
+    ['{D4E5F6A7-B8C9-7D8E-1F2A-3B4C5D6E7F8A}']
+
+    function GetKeyDerivationFunc: IKeyDerivationFunc;
+    function GetEncryptionScheme: IEncryptionScheme;
+
+    property KeyDerivationFunc: IKeyDerivationFunc read GetKeyDerivationFunc;
+    property EncryptionScheme: IEncryptionScheme read GetEncryptionScheme;
+  end;
+
+  /// <summary>
+  /// Interface for Pbkdf2Params.
+  /// </summary>
+  IPbkdf2Params = interface(IAsn1Encodable)
+    ['{E5F6A7B8-C9D0-8E9F-2A3B-4C5D6E7F8A9B}']
+
+    function GetSalt: IAsn1OctetString;
+    function GetIterationCountObject: IDerInteger;
+    function GetKeyLengthObject: IDerInteger;
+    function GetPrf: IAlgorithmIdentifier;
+    function GetSaltBytes: TCryptoLibByteArray;
+    function GetIterationCount: TBigInteger;
+    function GetKeyLength: TBigInteger;
+    function GetIsDefaultPrf: Boolean;
+
+    property Salt: IAsn1OctetString read GetSalt;
+    property IterationCountObject: IDerInteger read GetIterationCountObject;
+    property IterationCount: TBigInteger read GetIterationCount;
+    property KeyLengthObject: IDerInteger read GetKeyLengthObject;
+    property Prf: IAlgorithmIdentifier read GetPrf;
+    property IsDefaultPrf: Boolean read GetIsDefaultPrf;
+  end;
+
+  /// <summary>
+  /// Interface for Pkcs12PbeParams.
+  /// </summary>
+  IPkcs12PbeParams = interface(IAsn1Encodable)
+    ['{F6A7B8C9-D0E1-9FA0-3B4C-5D6E7F8A9B0C}']
+
+    function GetIV: IAsn1OctetString;
+    function GetIterationsObject: IDerInteger;
+    function GetIVBytes: TCryptoLibByteArray;
+    function GetIterations: TBigInteger;
+
+    property IV: IAsn1OctetString read GetIV;
+    property IterationsObject: IDerInteger read GetIterationsObject;
+  end;
 
   /// <summary>
   /// Interface for AttributePkcs.

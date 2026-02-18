@@ -166,7 +166,6 @@ type
     FWorkingKey: TCryptoLibMatrixUInt64Array;
 
     function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
 
     /// <summary>
     /// multiply two elements of GF(2^m) needed for MixColumn and
@@ -266,12 +265,9 @@ type
     function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
       const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
 
-    procedure Reset(); virtual;
-
     function GetBlockSize(): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
   end;
 
@@ -858,11 +854,6 @@ begin
   result := FBC div 2;
 end;
 
-function TRijndaelEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := False;
-end;
-
 procedure TRijndaelEngine.Init(forEncryption: Boolean;
   const parameters: ICipherParameters);
 var
@@ -905,11 +896,6 @@ begin
   PackBlock(output, outOff);
 
   result := FBC div 2;
-end;
-
-procedure TRijndaelEngine.Reset;
-begin
-  // nothing to do.
 end;
 
 end.

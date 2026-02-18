@@ -25,7 +25,9 @@ uses
   SysUtils,
   Rtti,
   ClpIPemObject,
+  ClpIPemHeader,
   ClpPemObject,
+  ClpPemHeader,
   ClpIAsymmetricKeyParameter,
   ClpPrivateKeyInfoFactory,
   ClpSubjectPublicKeyInfoFactory,
@@ -53,7 +55,14 @@ uses
   ClpCmsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpConverters,
+  ClpOpenSslPemUtilities,
+  ClpStringUtilities,
+  ClpEncoders,
+  ClpSecureRandom,
+  ClpISecureRandom,
+  ClpCryptoLibTypes,
+  ClpIPkcs8EncryptedPrivateKeyInfo;
 
 type
   /// <summary>
@@ -62,8 +71,14 @@ type
   TOpenSslMiscPemGenerator = class sealed(TInterfacedObject, IPemObjectGenerator)
   strict private
     FObj: TValue;
+    FAlgorithm: String;
+    FPassword: TCryptoLibCharArray;
+    FRandom: ISecureRandom;
 
     class function CreatePemObject(const AObj: TValue): IPemObject; static;
+    class function CreatePemObjectEncrypted(const AObj: TValue;
+      const AAlgorithm: String; const APassword: TCryptoLibCharArray;
+      const ARandom: ISecureRandom): IPemObject; static;
     class function EncodePrivateKey(const AAkp: IAsymmetricKeyParameter;
       out AKeyType: String): TCryptoLibByteArray; static;
     class function EncodePrivateKeyInfo(const AInfo: IPrivateKeyInfo;
@@ -73,7 +88,9 @@ type
     class function EncodePublicKeyInfo(const AInfo: ISubjectPublicKeyInfo;
       out AKeyType: String): TCryptoLibByteArray; static;
   public
-    constructor Create(const AObj: TValue);
+    constructor Create(const AObj: TValue); overload;
+    constructor Create(const AObj: TValue; const AAlgorithm: String;
+      const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom); overload;
     function Generate(): IPemObject;
   end;
 
@@ -85,12 +102,28 @@ constructor TOpenSslMiscPemGenerator.Create(const AObj: TValue);
 begin
   inherited Create();
   FObj := AObj;
+  FAlgorithm := '';
+  FPassword := nil;
+  FRandom := nil;
+end;
+
+constructor TOpenSslMiscPemGenerator.Create(const AObj: TValue; const AAlgorithm: String;
+  const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom);
+begin
+  inherited Create();
+  FObj := AObj;
+  FAlgorithm := AAlgorithm;
+  FPassword := APassword;
+  FRandom := ARandom;
 end;
 
 function TOpenSslMiscPemGenerator.Generate: IPemObject;
 begin
   try
-    Result := CreatePemObject(FObj);
+    if (FAlgorithm <> '') then
+      Result := CreatePemObjectEncrypted(FObj, FAlgorithm, FPassword, FRandom)
+    else
+      Result := CreatePemObject(FObj);
   except
     on E: Exception do
       raise EPemGenerationCryptoLibException.Create('encoding exception');
@@ -111,6 +144,7 @@ var
   LCertReq: IPkcs10CertificationRequest;
   LCmsContent: ICmsContentInfo;
   LPkcsContent: IPkcsContentInfo;
+  LPkcs8Enc: IPkcs8EncryptedPrivateKeyInfo;
   LType: String;
   LEncoding: TCryptoLibByteArray;
 begin
@@ -193,7 +227,65 @@ begin
   if AObj.TryAsType<IPkcsContentInfo>(LPkcsContent) then
     Exit(TPemObject.Create('PKCS7', LPkcsContent.GetEncoded()));
 
+  // PKCS#8 EncryptedPrivateKeyInfo (ENCRYPTED PRIVATE KEY)
+  if AObj.TryAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
+    Exit(TPemObject.Create('ENCRYPTED PRIVATE KEY', LPkcs8Enc.GetEncoded()));
+
   raise EPemGenerationCryptoLibException.Create('Object type not supported');
+end;
+
+class function TOpenSslMiscPemGenerator.CreatePemObjectEncrypted(const AObj: TValue;
+  const AAlgorithm: String; const APassword: TCryptoLibCharArray;
+  const ARandom: ISecureRandom): IPemObject;
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LAkp: IAsymmetricKeyParameter;
+  LType: String;
+  LKeyData: TCryptoLibByteArray;
+  LDekAlgName: String;
+  LIVLength: Int32;
+  LIV: TCryptoLibByteArray;
+  LEncData: TCryptoLibByteArray;
+  LHeaders: TCryptoLibGenericArray<IPemHeader>;
+  LStr: String;
+  I: Int32;
+begin
+  if AObj.IsEmpty then
+    raise EArgumentNilCryptoLibException.Create('obj');
+  if AAlgorithm = '' then
+    raise EArgumentNilCryptoLibException.Create('algorithm');
+  if APassword = nil then
+    raise EArgumentNilCryptoLibException.Create('password');
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.Create('random');
+
+  if AObj.TryAsType<IAsymmetricCipherKeyPair>(LKp) then
+    Exit(CreatePemObjectEncrypted(TValue.From<IAsymmetricKeyParameter>(LKp.Private),
+      AAlgorithm, APassword, ARandom));
+
+  LType := '';
+  LKeyData := nil;
+  if (AObj.TryAsType<IAsymmetricKeyParameter>(LAkp)) and LAkp.IsPrivate then
+    LKeyData := EncodePrivateKey(LAkp, LType);
+
+  if (LType = '') or (LKeyData = nil) then
+    raise EPemGenerationCryptoLibException.Create('Object type not supported for encryption');
+
+  LDekAlgName := TStringUtilities.ToUpperInvariant(AAlgorithm);
+
+  if TStringUtilities.StartsWith(LDekAlgName, 'AES-') then
+    LIVLength := 16
+  else
+    LIVLength := 8;
+
+  LIV := TSecureRandom.GetNextBytes(ARandom, LIVLength);
+  LEncData := TOpenSslPemUtilities.Crypt(True, LKeyData, APassword, LDekAlgName, LIV);
+
+  System.SetLength(LHeaders, 2);
+  LHeaders[0] := TPemHeader.Create('Proc-Type', '4,ENCRYPTED');
+  LHeaders[1] := TPemHeader.Create('DEK-Info', LDekAlgName + ',' + THexEncoder.Encode(LIV, True));
+
+  Result := TPemObject.Create(LType, LHeaders, LEncData);
 end;
 
 class function TOpenSslMiscPemGenerator.EncodePrivateKey(const AAkp: IAsymmetricKeyParameter;

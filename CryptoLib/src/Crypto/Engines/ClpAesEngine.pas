@@ -221,7 +221,6 @@ type
     Fstate: array [0 .. 255] of Byte;
 
     function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
 
     /// <summary>
     /// <para>
@@ -282,12 +281,9 @@ type
     function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
       const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
 
-    procedure Reset(); virtual;
-
     function GetBlockSize(): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;
 
 implementation
@@ -712,11 +708,6 @@ begin
   result := BLOCK_SIZE;
 end;
 
-function TAesEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := false;
-end;
-
 procedure TAesEngine.Init(forEncryption: Boolean;
   const parameters: ICipherParameters);
 var
@@ -787,11 +778,6 @@ begin
   PackBlock(output, outOff);
 
   result := BLOCK_SIZE;
-end;
-
-procedure TAesEngine.Reset;
-begin
-  // nothing to do.
 end;
 
 end.

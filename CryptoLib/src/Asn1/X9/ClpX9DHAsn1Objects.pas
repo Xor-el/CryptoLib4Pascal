@@ -43,8 +43,38 @@ resourcestring
   SQNil = 'Q Cannot be Nil';
   SJNil = 'J Cannot be Nil';
   SInvalidDHDomainParameters = 'Invalid DHDomainParameters: %s';
+  SYNil = 'Y Cannot be Nil';
 
 type
+  /// <summary>
+  /// The DHPublicKey object (X9.42).
+  /// </summary>
+  TDHPublicKey = class(TAsn1Encodable, IDHPublicKey)
+
+  strict private
+  var
+    FY: IDerInteger;
+
+  strict protected
+    function GetY: IDerInteger;
+
+  public
+    class function GetInstance(AObj: TObject): IDHPublicKey; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IDHPublicKey; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IDHPublicKey; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IDHPublicKey; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IDHPublicKey; static;
+
+    constructor Create(const AY: IDerInteger);
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Y: IDerInteger read GetY;
+
+  end;
+
   /// <summary>
   /// The DHValidationParms object.
   /// </summary>
@@ -156,6 +186,71 @@ type
   end;
 
 implementation
+
+{ TDHPublicKey }
+
+class function TDHPublicKey.GetInstance(AObj: TObject): IDHPublicKey;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDHPublicKey, Result) then
+    Exit;
+
+  Result := TDHPublicKey.Create(TDerInteger.GetInstance(AObj));
+end;
+
+class function TDHPublicKey.GetInstance(const AObj: IAsn1Convertible): IDHPublicKey;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDHPublicKey, Result) then
+    Exit;
+
+  Result := TDHPublicKey.Create(TDerInteger.GetInstance(AObj));
+end;
+
+class function TDHPublicKey.GetInstance(const AEncoded: TCryptoLibByteArray): IDHPublicKey;
+begin
+  Result := TDHPublicKey.Create(TDerInteger.GetInstance(AEncoded));
+end;
+
+class function TDHPublicKey.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IDHPublicKey;
+begin
+  Result := TDHPublicKey.Create(TDerInteger.GetInstance(AObj, AExplicitly));
+end;
+
+class function TDHPublicKey.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IDHPublicKey;
+begin
+  Result := TDHPublicKey.Create(TDerInteger.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TDHPublicKey.Create(const AY: IDerInteger);
+begin
+  inherited Create();
+  if AY = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SYNil);
+  FY := AY;
+end;
+
+function TDHPublicKey.GetY: IDerInteger;
+begin
+  Result := FY;
+end;
+
+function TDHPublicKey.ToAsn1Object: IAsn1Object;
+begin
+  Result := FY;
+end;
 
 { TDHValidationParms }
 

@@ -25,7 +25,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpICipherParameters,
   ClpIDHAgreement,
   ClpIDHParameters,
@@ -168,7 +168,7 @@ begin
   end
   else
   begin
-    Frandom := TSecureRandom.Create();
+    Frandom := TCryptoServicesRegistrar.GetSecureRandom();
     kParam := parameters as IAsymmetricKeyParameter;
   end;
 

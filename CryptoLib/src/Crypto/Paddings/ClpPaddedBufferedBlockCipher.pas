@@ -23,9 +23,10 @@ interface
 
 uses
   SysUtils,
-  Math,
   ClpCheck,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
+  ClpEcbBlockCipher,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
   ClpBufferedBlockCipher,
@@ -63,25 +64,28 @@ type
 
   public
 
-    /// <summary>
-    /// Create a buffered block cipher with the desired padding.
-    /// </summary>
-    /// <param name="cipher">
-    /// the underlying block cipher this buffering object wraps.
-    /// </param>
-    /// <param name="padding">
-    /// the padding type.
-    /// </param>
     constructor Create(const ACipher: IBlockCipher;
       const APadding: IBlockCipherPadding); overload;
 
     /// <summary>
-    /// Create a buffered block cipher Pkcs7 padding
+    /// Create a buffered block cipher with the desired padding.
     /// </summary>
-    /// <param name="ACipher">
-    /// the underlying block cipher this buffering object wraps.
+    /// <param name="ACipherMode">
+    /// the underlying block cipher mode this buffering object wraps.
     /// </param>
-    constructor Create(const ACipher: IBlockCipher); overload;
+    /// <param name="APadding">
+    /// the padding type.
+    /// </param>
+    constructor Create(const ACipherMode: IBlockCipherMode;
+      const APadding: IBlockCipherPadding); overload;
+
+    /// <summary>
+    /// Create a buffered block cipher with Pkcs7 padding.
+    /// </summary>
+    /// <param name="ACipherMode">
+    /// the underlying block cipher mode this buffering object wraps.
+    /// </param>
+    constructor Create(const ACipherMode: IBlockCipherMode); overload;
 
     /// <summary>
     /// initialise the cipher.
@@ -216,117 +220,88 @@ implementation
 constructor TPaddedBufferedBlockCipher.Create(const ACipher: IBlockCipher;
   const APadding: IBlockCipherPadding);
 begin
-  Inherited Create();
-  FCipher := ACipher;
-  FPadding := APadding;
-
-  System.SetLength(FBuf, ACipher.GetBlockSize());
-  FBufOff := 0;
+  Create(TEcbBlockCipher.GetBlockCipherMode(ACipher), APadding);
 end;
 
-constructor TPaddedBufferedBlockCipher.Create(const ACipher: IBlockCipher);
+constructor TPaddedBufferedBlockCipher.Create(const ACipherMode: IBlockCipherMode;
+  const APadding: IBlockCipherPadding);
 begin
-  Create(ACipher, TPkcs7Padding.Create() as IPkcs7Padding);
+  Inherited Create(ACipherMode);
+  FPadding := APadding;
+end;
+
+constructor TPaddedBufferedBlockCipher.Create(const ACipherMode: IBlockCipherMode);
+begin
+  Create(ACipherMode, TPkcs7Padding.Create() as IPkcs7Padding);
 end;
 
 function TPaddedBufferedBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LBlockSize, LResultLen, LResultTotalLen: Int32;
+  LBlockSize, LResultLen: Int32;
 begin
-  LBlockSize := FCipher.GetBlockSize();
-  LResultLen := 0;
+  try
+    LResultLen := 0;
+    LBlockSize := System.Length(FBuf);
 
-  if (FForEncryption) then
-  begin
-    if (FBufOff = LBlockSize) then
+    if (FForEncryption) then
     begin
-      if ((AOutOff + 2 * LBlockSize) > System.Length(AOutput)) then
+      if (FBufOff = LBlockSize) then
       begin
-        Reset();
+        TCheck.OutputLength(AOutput, AOutOff, LBlockSize * 2,
+          SOutputBufferTooSmall);
 
-        raise EOutputLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
+        LResultLen := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+        FBufOff := 0;
+      end
+      else
+      begin
+        TCheck.OutputLength(AOutput, AOutOff, LBlockSize,
+          SOutputBufferTooSmall);
       end;
 
-      LResultLen := FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-      FBufOff := 0;
-    end;
+      FPadding.AddPadding(FBuf, FBufOff);
 
-    FPadding.AddPadding(FBuf, FBufOff);
-
-    LResultLen := LResultLen + FCipher.ProcessBlock(FBuf, 0, AOutput,
-      AOutOff + LResultLen);
-
-    Reset();
-  end
-  else
-  begin
-    if (FBufOff = LBlockSize) then
-    begin
-      LResultLen := FCipher.ProcessBlock(FBuf, 0, FBuf, 0);
-      FBufOff := 0;
+      LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+        AOutOff + LResultLen);
     end
     else
     begin
-      Reset();
+      TCheck.DataLength(FBufOff <> LBlockSize,
+        SIncompleteLastBlockInDecryption);
 
-      raise EDataLengthCryptoLibException.CreateRes
-        (@SIncompleteLastBlockInDecryption);
-    end;
+      LResultLen := FCipherMode.ProcessBlock(FBuf, 0, FBuf, 0);
 
-    try
       LResultLen := LResultLen - FPadding.PadCount(FBuf);
-      LResultTotalLen := LResultLen * System.SizeOf(Byte);
-      if LResultTotalLen > 0 then
-      begin
-        System.Move(FBuf[0], AOutput[AOutOff], LResultTotalLen);
-      end;
 
-    finally
-      Reset();
+      TCheck.OutputLength(AOutput, AOutOff, LResultLen,
+        SOutputBufferTooSmall);
+
+      System.Move(FBuf[0], AOutput[AOutOff], LResultLen * System.SizeOf(Byte));
     end;
 
+    Result := LResultLen;
+  finally
+    Reset();
   end;
-
-  Result := LResultLen;
 end;
 
 function TPaddedBufferedBlockCipher.GetOutputSize(ALength: Int32): Int32;
 var
-  LTotal, LLeftOver: Int32;
+  LTotalSize, LBlockSize: Int32;
 begin
-  LTotal := ALength + FBufOff;
-  LLeftOver := LTotal mod System.Length(FBuf);
+  LTotalSize := FBufOff + ALength;
+  LBlockSize := System.Length(FBuf);
 
-  if (LLeftOver = 0) then
-  begin
-    if (FForEncryption) then
-    begin
-      Result := LTotal + System.Length(FBuf);
-      Exit;
-    end;
-
-    Result := LTotal;
-    Exit;
-  end;
-
-  Result := LTotal - LLeftOver + System.Length(FBuf);
+  if FForEncryption then
+    Result := GetFullBlocksSize(LTotalSize, LBlockSize) + LBlockSize
+  else
+    Result := GetFullBlocksSize(LTotalSize + LBlockSize - 1, LBlockSize);
 end;
 
 function TPaddedBufferedBlockCipher.GetUpdateOutputSize(ALength: Int32): Int32;
-var
-  LTotal, LLeftOver: Int32;
 begin
-  LTotal := ALength + FBufOff;
-  LLeftOver := LTotal mod System.Length(FBuf);
-
-  if (LLeftOver = 0) then
-  begin
-    Result := Max(0, LTotal - System.Length(FBuf));
-    Exit;
-  end;
-
-  Result := LTotal - LLeftOver;
+  Result := GetFullBlocksSize(FBufOff + ALength - 1, System.Length(FBuf));
 end;
 
 procedure TPaddedBufferedBlockCipher.Init(AForEncryption: Boolean;
@@ -348,7 +323,7 @@ begin
 
   Reset();
   FPadding.Init(LInitRandom);
-  FCipher.Init(AForEncryption, LParameters);
+  FCipherMode.Init(AForEncryption, LParameters);
 end;
 
 function TPaddedBufferedBlockCipher.ProcessByte(AInput: Byte;
@@ -360,7 +335,10 @@ begin
 
   if (FBufOff = System.Length(FBuf)) then
   begin
-    LResultLen := FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    TCheck.OutputLength(AOutput, AOutOff, System.Length(FBuf),
+      SOutputBufferTooSmall);
+
+    LResultLen := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
     FBufOff := 0;
   end;
 
@@ -396,7 +374,7 @@ begin
   begin
     System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
 
-    LResultLen := LResultLen + FCipher.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
 
     FBufOff := 0;
     ALength := ALength - LGapLen;
@@ -404,7 +382,7 @@ begin
 
     while (ALength > System.Length(FBuf)) do
     begin
-      LResultLen := LResultLen + FCipher.ProcessBlock(AInput, AInOff, AOutput,
+      LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff, AOutput,
         AOutOff + LResultLen);
 
       ALength := ALength - LBlockSize;

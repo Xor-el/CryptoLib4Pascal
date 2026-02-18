@@ -34,9 +34,20 @@ uses
   ClpRsaParameters,
   ClpDsaParameters,
   ClpECParameters,
+  ClpDHParameters,
+  ClpIDHParameters,
+  ClpIPkcsDHAsn1Objects,
+  ClpPkcsDHAsn1Objects,
+  ClpEd25519Parameters,
+  ClpIEd25519Parameters,
+  ClpX25519Parameters,
+  ClpIX25519Parameters,
   ClpPkcsObjectIdentifiers,
   ClpX509ObjectIdentifiers,
   ClpX9ObjectIdentifiers,
+  ClpEdECObjectIdentifiers,
+  ClpGnuObjectIdentifiers,
+  ClpCryptLibObjectIdentifiers,
   ClpIX9ECAsn1Objects,
   ClpX9ECAsn1Objects,
   ClpPkcsAsn1Objects,
@@ -49,7 +60,8 @@ uses
   ClpSecECAsn1Objects,
   ClpISecECAsn1Objects,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpPrivateKeyInfoFactory;
 
 type
   /// <summary>
@@ -62,6 +74,22 @@ type
     class function CreateKey(const AInStr: TStream): IAsymmetricKeyParameter; overload; static;
     class function CreateKey(const AKeyInfo: IPrivateKeyInfo): IAsymmetricKeyParameter; overload; static;
 
+    /// <summary>
+    /// Decrypt encrypted private key info using the given password.
+    /// </summary>
+    class function DecryptKey(const APassPhrase: TCryptoLibCharArray;
+      const AEncInfo: IEncryptedPrivateKeyInfo): IAsymmetricKeyParameter; overload; static;
+    /// <summary>
+    /// Decrypt encoded EncryptedPrivateKeyInfo using the given password.
+    /// </summary>
+    class function DecryptKey(const APassPhrase: TCryptoLibCharArray;
+      const AEncryptedPrivateKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter; overload; static;
+
+    /// <summary>
+    /// Decrypt encoded Stream using the given password.
+    /// </summary>
+    class function DecryptKey(const APassPhrase: TCryptoLibCharArray;
+      const AEncryptedPrivateKeyInfoStream: TStream): IAsymmetricKeyParameter; overload; static;
   end;
 
 implementation
@@ -84,6 +112,30 @@ begin
   Result := CreateKey(TPrivateKeyInfo.GetInstance(LAsn1Obj));
 end;
 
+class function TPrivateKeyFactory.DecryptKey(const APassPhrase: TCryptoLibCharArray;
+  const AEncInfo: IEncryptedPrivateKeyInfo): IAsymmetricKeyParameter;
+begin
+  Result := CreateKey(TPrivateKeyInfoFactory.CreatePrivateKeyInfo(APassPhrase, False, AEncInfo));
+end;
+
+class function TPrivateKeyFactory.DecryptKey(const APassPhrase: TCryptoLibCharArray;
+  const AEncryptedPrivateKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter;
+var
+  LEncInfo: IEncryptedPrivateKeyInfo;
+begin
+  LEncInfo := TEncryptedPrivateKeyInfo.GetInstance(AEncryptedPrivateKeyInfoData);
+  Result := DecryptKey(APassPhrase, LEncInfo);
+end;
+
+class function TPrivateKeyFactory.DecryptKey(const APassPhrase: TCryptoLibCharArray;
+  const AEncryptedPrivateKeyInfoStream: TStream): IAsymmetricKeyParameter;
+var
+  LEncInfo: IEncryptedPrivateKeyInfo;
+begin
+  LEncInfo := TEncryptedPrivateKeyInfo.GetInstance(TAsn1Object.FromStream(AEncryptedPrivateKeyInfoStream));
+  Result := DecryptKey(APassPhrase, LEncInfo);
+end;
+
 class function TPrivateKeyFactory.CreateKey(const AKeyInfo: IPrivateKeyInfo): IAsymmetricKeyParameter;
 var
   LAlgID: IAlgorithmIdentifier;
@@ -96,6 +148,11 @@ var
   LECParams: IECDomainParameters;
   LECPrivateKeyObj: IAsn1Object;
   LECPrivateKeySeq: IECPrivateKeyStructure;
+  LDHPara: IDHParameter;
+  LDerInteger: IDerInteger;
+  LLVal: Int32;
+  LDHParams: IDHParameters;
+  LRawKey: TCryptoLibByteArray;
 begin
   if AKeyInfo = nil then
   begin
@@ -153,7 +210,43 @@ begin
     Exit;
   end;
 
-  // TODO: Add support for other key types (DH, ElGamal, GOST, EdDSA, etc.)
+  // DH keys
+  if LAlgOid.Equals(TPkcsObjectIdentifiers.DhKeyAgreement) then
+  begin
+    LDHPara := TDHParameter.GetInstance(LAlgID.Parameters);
+    LDerInteger := TDerInteger.GetInstance(AKeyInfo.ParsePrivateKey());
+    if LDHPara.L <> nil then
+      LLVal := LDHPara.L.Value.Int32Value
+    else
+      LLVal := 0;
+    LDHParams := TDHParameters.Create(LDHPara.P, LDHPara.G,
+      TBigInteger.GetDefault, LLVal);
+    Result := TDHPrivateKeyParameters.Create(LDerInteger.Value, LDHParams, LAlgOid);
+    Exit;
+  end;
+
+  // Ed25519 keys
+  if LAlgOid.Equals(TEdECObjectIdentifiers.IdEd25519) or
+    LAlgOid.Equals(TGnuObjectIdentifiers.Ed25519) then
+  begin
+    LRawKey := TAsn1OctetString.GetInstance(AKeyInfo.ParsePrivateKey()).GetOctets();
+    Result := TEd25519PrivateKeyParameters.Create(LRawKey);
+    Exit;
+  end;
+
+  // X25519 keys
+  if LAlgOid.Equals(TEdECObjectIdentifiers.IdX25519) or
+    LAlgOid.Equals(TCryptLibObjectIdentifiers.Curvey25519) then
+  begin
+    if TX25519PrivateKeyParameters.KeySize = AKeyInfo.PrivateKeyLength then
+      LRawKey := AKeyInfo.PrivateKey.GetOctets()
+    else
+      LRawKey := TAsn1OctetString.GetInstance(AKeyInfo.ParsePrivateKey()).GetOctets();
+    Result := TX25519PrivateKeyParameters.Create(LRawKey);
+    Exit;
+  end;
+
+  // TODO: Add support for other key types when implemented.
   raise ENotSupportedCryptoLibException.CreateFmt('Key type with OID %s not yet supported', [LAlgOid.Id]);
 end;
 

@@ -22,7 +22,8 @@ unit ClpIPbeParametersGenerator;
 interface
 
 uses
-  ClpICipherParameters;
+  ClpICipherParameters,
+  ClpCryptoLibTypes;
 
 type
   IPbeParametersGenerator = interface(IInterface)
@@ -30,6 +31,16 @@ type
     ['{8C530FB2-6B8F-4E22-8EA0-D538665471EF}']
 
     procedure Clear();
+
+    procedure Init(const APassword, ASalt: TCryptoLibByteArray; AIterationCount: Int32);
+
+    function GetPassword: TCryptoLibByteArray;
+    function GetSalt: TCryptoLibByteArray;
+    function GetIterationCount: Int32;
+
+    property Password: TCryptoLibByteArray read GetPassword;
+    property Salt: TCryptoLibByteArray read GetSalt;
+    property IterationCount: Int32 read GetIterationCount;
 
     /// <summary>
     /// Generate derived parameters for a key of length keySize.

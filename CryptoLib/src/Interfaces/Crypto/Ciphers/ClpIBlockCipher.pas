@@ -42,10 +42,6 @@ type
     /// <returns>The block size for this cipher, in bytes.</returns>
     function GetBlockSize(): Int32;
 
-    /// <summary>Indicates whether this cipher can handle partial blocks.</summary>
-    function GetIsPartialBlockOkay: Boolean;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
-
     /// <summary>Process a block.</summary>
     /// <param name="AInBuf">The input buffer.</param>
     /// <param name="AInOff">The offset into <paramref>inBuf</paramref> that the input block begins.</param>
@@ -55,11 +51,6 @@ type
     /// <returns>The number of bytes processed and produced.</returns>
     function ProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32): Int32;
-
-    /// <summary>
-    /// Reset the cipher to the same state as it was after the last init (if there was one).
-    /// </summary>
-    procedure Reset();
 
   end;
 

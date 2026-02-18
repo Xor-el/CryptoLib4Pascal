@@ -22,20 +22,11 @@ unit ClpIOfbBlockCipher;
 interface
 
 uses
-  ClpIBlockCipher;
+  ClpIBlockCipherMode;
 
 type
-  IOfbBlockCipher = interface(IBlockCipher)
+  IOfbBlockCipher = interface(IBlockCipherMode)
     ['{17D4977F-C9D8-466D-8E46-7E23A03471FC}']
-
-    /// <summary>
-    /// return the underlying block cipher that we are wrapping.
-    /// </summary>
-    /// <returns>
-    /// return the underlying block cipher that we are wrapping.
-    /// </returns>
-    function GetUnderlyingCipher(): IBlockCipher;
-
   end;
 
 implementation

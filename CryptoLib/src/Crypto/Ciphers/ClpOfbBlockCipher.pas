@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
   ClpIOfbBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -35,7 +36,7 @@ resourcestring
 
 type
   TOfbBlockCipher = class sealed(TInterfacedObject, IOfbBlockCipher,
-    IBlockCipher)
+    IBlockCipherMode, IBlockCipher)
 
   strict private
   var
@@ -78,7 +79,6 @@ end;
 procedure TOfbBlockCipher.Reset;
 begin
   System.Move(FIV[0], FOfbV[0], System.Length(FIV));
-  FCipher.Reset();
 end;
 
 function TOfbBlockCipher.GetAlgorithmName: String;

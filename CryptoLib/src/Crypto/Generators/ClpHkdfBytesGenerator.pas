@@ -38,6 +38,7 @@ uses
 resourcestring
   SSizeTooBigHKDF = 'HKDF Cannot Generate More Than 255 Blocks of HashLen Size';
   SSizeTooBigHKDF2 = 'HKDF May Only Be Used For 255 * HashLen Bytes of Output';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
   SInvalidParameterHKDF =
     'HKDF Parameters Required For "HkdfBytesGenerator", "parameters"';
 
@@ -51,7 +52,7 @@ type
   /// is likely to have better security properties <br />than KDF's based on
   /// just a hash function.
   /// </summary>
-  THkdfBytesGenerator = class(TInterfacedObject, IDerivationFunction,
+  THkdfBytesGenerator = class sealed(TInterfacedObject, IDerivationFunction,
     IHkdfBytesGenerator)
 
   strict private
@@ -162,6 +163,9 @@ function THkdfBytesGenerator.GenerateBytes(const AOutput: TCryptoLibByteArray;
 var
   LToGenerate, LPosInT, LLeftInT, LToCopy, LOutOff: Int32;
 begin
+  if (System.Length(AOutput) - ALen) < AOutOff then
+    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
+
   if (FGeneratedBytes + ALen) > (255 * FHashLen) then
     raise EDataLengthCryptoLibException.CreateRes(@SSizeTooBigHKDF2);
 

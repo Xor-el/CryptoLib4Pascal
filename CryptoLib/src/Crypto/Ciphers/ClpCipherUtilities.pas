@@ -52,14 +52,12 @@ uses
   ClpIX923Padding,
   ClpZeroBytePadding,
   ClpIZeroBytePadding,
+  ClpIBlockCipherMode,
+  ClpEcbBlockCipher,
   ClpCbcBlockCipher,
-  ClpICbcBlockCipher,
   ClpCfbBlockCipher,
-  ClpICfbBlockCipher,
   ClpOfbBlockCipher,
-  ClpIOfbBlockCipher,
   ClpSicBlockCipher,
-  ClpISicBlockCipher,
   ClpCtsBlockCipher,
   ClpICtsBlockCipher,
   ClpBufferedBlockCipher,
@@ -287,6 +285,7 @@ var
   LCipherPadding: TCipherPadding;
   LCipherMode: TCipherMode;
   LBlockCipher: IBlockCipher;
+  LBlockCipherMode: IBlockCipherMode;
   LAsymBlockCipher: IAsymmetricBlockCipher;
   LStreamCipher: IStreamCipher;
   LPadding: IBlockCipherPadding;
@@ -407,24 +406,25 @@ begin
     else if not (TEnumUtilities.TryGetEnumValue<TCipherMode>(LModeName, LCipherMode)) then
       Exit;
 
+    LBlockCipherMode := nil;
     case LCipherMode of
       TCipherMode.ECB, TCipherMode.NONE: ;
       TCipherMode.CBC:
-        LBlockCipher := TCbcBlockCipher.Create(LBlockCipher) as ICbcBlockCipher;
+        LBlockCipherMode := TCbcBlockCipher.Create(LBlockCipher);
       TCipherMode.CFB:
         begin
           if LDi < 1 then
             LBits := 8 * LBlockCipher.GetBlockSize()
           else
             LBits := StrToInt(System.Copy(LMode, LDi, System.Length(LMode) - LDi + 1));
-          LBlockCipher := TCfbBlockCipher.Create(LBlockCipher, LBits) as ICfbBlockCipher;
+          LBlockCipherMode := TCfbBlockCipher.Create(LBlockCipher, LBits);
         end;
       TCipherMode.CTR:
-        LBlockCipher := TSicBlockCipher.Create(LBlockCipher) as ISicBlockCipher;
+        LBlockCipherMode := TSicBlockCipher.Create(LBlockCipher);
       TCipherMode.CTS:
         begin
           LCTS := True;
-          LBlockCipher := TCbcBlockCipher.Create(LBlockCipher) as ICbcBlockCipher;
+          LBlockCipherMode := TCbcBlockCipher.Create(LBlockCipher);
         end;
       TCipherMode.OFB:
         begin
@@ -432,13 +432,13 @@ begin
             LBits := 8 * LBlockCipher.GetBlockSize()
           else
             LBits := StrToInt(System.Copy(LMode, LDi, System.Length(LMode) - LDi + 1));
-          LBlockCipher := TOfbBlockCipher.Create(LBlockCipher, LBits) as IOfbBlockCipher;
+          LBlockCipherMode := TOfbBlockCipher.Create(LBlockCipher, LBits);
         end;
       TCipherMode.SIC:
         begin
           if LBlockCipher.GetBlockSize() < 16 then
             Exit;
-          LBlockCipher := TSicBlockCipher.Create(LBlockCipher) as ISicBlockCipher;
+          LBlockCipherMode := TSicBlockCipher.Create(LBlockCipher);
         end;
     else
       Exit;
@@ -447,22 +447,25 @@ begin
 
   if LBlockCipher <> nil then
   begin
+    if LBlockCipherMode = nil then
+      LBlockCipherMode := TEcbBlockCipher.GetBlockCipherMode(LBlockCipher);
+
     if LCTS then
     begin
-      Result := TCtsBlockCipher.Create(LBlockCipher) as ICtsBlockCipher;
+      Result := TCtsBlockCipher.Create(LBlockCipherMode) as ICtsBlockCipher;
       Exit;
     end;
     if LPadding <> nil then
     begin
-      Result := TPaddedBufferedBlockCipher.Create(LBlockCipher, LPadding) as IPaddedBufferedBlockCipher;
+      Result := TPaddedBufferedBlockCipher.Create(LBlockCipherMode, LPadding) as IPaddedBufferedBlockCipher;
       Exit;
     end;
-    if (not LPadded) or LBlockCipher.IsPartialBlockOkay then
+    if (not LPadded) or LBlockCipherMode.IsPartialBlockOkay then
     begin
-      Result := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+      Result := TBufferedBlockCipher.Create(LBlockCipherMode) as IBufferedBlockCipher;
       Exit;
     end;
-    Result := TPaddedBufferedBlockCipher.Create(LBlockCipher) as IPaddedBufferedBlockCipher;
+    Result := TPaddedBufferedBlockCipher.Create(LBlockCipherMode) as IPaddedBufferedBlockCipher;
     Exit;
   end;
 

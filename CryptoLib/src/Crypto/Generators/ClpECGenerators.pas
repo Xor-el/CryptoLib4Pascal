@@ -41,7 +41,7 @@ uses
   ClpIX9ECAsn1Objects,
   ClpAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPair,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpISecureRandom,
   ClpIAsymmetricCipherKeyPairGenerator;
 
@@ -152,9 +152,7 @@ begin
     LEcps := FindECCurveByOid(LOid);
     FParameters := TECDomainParameters.Create(LEcps.Curve, LEcps.G, LEcps.N, LEcps.H, LEcps.GetSeed());
   end;
-  FRandom := AParameters.Random;
-  if FRandom = nil then
-    FRandom := TSecureRandom.Create();
+  FRandom := TCryptoServicesRegistrar.GetSecureRandom(AParameters.Random);
 end;
 
 end.

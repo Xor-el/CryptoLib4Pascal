@@ -23,6 +23,7 @@ interface
 
 uses
   SysUtils,
+  Rtti,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsymmetricKeyParameter,
@@ -30,6 +31,7 @@ uses
   ClpIDsaParameters,
   ClpIECParameters,
   ClpIDHParameters,
+  ClpICipherParameters,
   ClpIEd25519Parameters,
   ClpIX25519Parameters,
   ClpPkcsObjectIdentifiers,
@@ -51,7 +53,9 @@ uses
   ClpISecECAsn1Objects,
   ClpECGenerators,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpIBufferedCipher,
+  ClpPbeUtilities;
 
 type
   /// <summary>
@@ -62,6 +66,17 @@ type
     class function CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter): IPrivateKeyInfo; overload; static;
     class function CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter;
       const AAttributes: IAsn1Set): IPrivateKeyInfo; overload; static;
+    /// <summary>
+    /// Decrypt encrypted private key info using the given password (wrongPkcs12Zero = false).
+    /// </summary>
+    class function CreatePrivateKeyInfo(const APassPhrase: TCryptoLibCharArray;
+      const AEncInfo: IEncryptedPrivateKeyInfo): IPrivateKeyInfo; overload; static;
+    /// <summary>
+    /// Decrypt encrypted private key info using the given password.
+    /// </summary>
+    /// <param name="AWrongPkcs12Zero">If true, use wrong PKCS#12 zero padding for password (for compatibility).</param>
+    class function CreatePrivateKeyInfo(const APassPhrase: TCryptoLibCharArray;
+      AWrongPkcs12Zero: Boolean; const AEncInfo: IEncryptedPrivateKeyInfo): IPrivateKeyInfo; overload; static;
   end;
 
 implementation
@@ -71,6 +86,35 @@ implementation
 class function TPrivateKeyInfoFactory.CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter): IPrivateKeyInfo;
 begin
   Result := CreatePrivateKeyInfo(APrivateKey, nil);
+end;
+
+class function TPrivateKeyInfoFactory.CreatePrivateKeyInfo(const APassPhrase: TCryptoLibCharArray;
+  const AEncInfo: IEncryptedPrivateKeyInfo): IPrivateKeyInfo;
+begin
+  Result := CreatePrivateKeyInfo(APassPhrase, False, AEncInfo);
+end;
+
+class function TPrivateKeyInfoFactory.CreatePrivateKeyInfo(const APassPhrase: TCryptoLibCharArray;
+  AWrongPkcs12Zero: Boolean; const AEncInfo: IEncryptedPrivateKeyInfo): IPrivateKeyInfo;
+var
+  LAlgID: IAlgorithmIdentifier;
+  LEngine: TValue;
+  LCipher: IBufferedCipher;
+  LCipherParameters: ICipherParameters;
+  LKeyBytes: TCryptoLibByteArray;
+begin
+  if AEncInfo = nil then
+    raise EArgumentNilCryptoLibException.Create('AEncInfo');
+  LAlgID := AEncInfo.EncryptionAlgorithm;
+  if LAlgID = nil then
+    raise EArgumentCryptoLibException.Create('EncryptedPrivateKeyInfo has no encryption algorithm');
+  LEngine := TPbeUtilities.CreateEngine(LAlgID);
+  if not (LEngine.TryAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
+    raise EArgumentCryptoLibException.CreateFmt('Unknown encryption algorithm: %s', [LAlgID.Algorithm.ID]);
+  LCipherParameters := TPbeUtilities.GenerateCipherParameters(LAlgID, APassPhrase, AWrongPkcs12Zero);
+  LCipher.Init(False, LCipherParameters);
+  LKeyBytes := LCipher.DoFinal(AEncInfo.GetEncryptedDataBytes());
+  Result := TPrivateKeyInfo.GetInstance(LKeyBytes);
 end;
 
 class function TPrivateKeyInfoFactory.CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter;

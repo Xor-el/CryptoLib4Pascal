@@ -43,6 +43,7 @@ uses
   ClpOpenSslPemWriter,
   ClpIOpenSslPemReader,
   ClpOpenSslPemReader,
+  ClpIOpenSslPasswordFinder,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpAsymmetricCipherKeyPair,
@@ -53,6 +54,7 @@ uses
   ClpRsaParameters,
   ClpIKeyGenerationParameters,
   ClpKeyGenerationParameters,
+  ClpCryptoServicesRegistrar,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpDsaParameters,
@@ -77,6 +79,14 @@ uses
 
 type
 
+  TTestOpenSslWritePassword = class(TInterfacedObject, IOpenSslPasswordFinder)
+  strict private
+    FPassword: TCryptoLibCharArray;
+  public
+    constructor Create(const APassword: String);
+    function GetPassword(): TCryptoLibCharArray;
+  end;
+
   TOpenSslWriterTest = class(TCryptoLibAlgorithmTestCase)
   strict private
     const
@@ -84,19 +94,49 @@ type
         'MIG/AgEAMBAGByqGSM49AgEGBSuBBAAiBIGnMIGkAgEBBDCSBU3vo7ieeKs0ABQamy/ynxlde7Ylr8HmyfLaNnMr' +
         'jAwPp9R+KMUEhB7zxSAXv9KgBwYFK4EEACKhZANiAQQyyolMpg+TyB4o9kPWqafHIOe8o9K1glus+w2sY8OIPQQWGb5i5LdAyi' +
         '/SscwU24rZM0yiL3BHodp9ccwyhLrFYgXJUOQcCN2dno1GMols5497in5gL5+zn0yMsRtyv5o=';
+
+    const
+      EncryptedAlgorithms: array[0..15] of string = (
+        'AES-128-CBC', 'AES-128-CFB', 'AES-128-ECB', 'AES-128-OFB',
+        'AES-192-CBC', 'AES-192-CFB', 'AES-192-ECB', 'AES-192-OFB',
+        'AES-256-CBC', 'AES-256-CFB', 'AES-256-ECB', 'AES-256-OFB',
+        'BF-CBC', 'BF-CFB', 'BF-ECB', 'BF-OFB'
+      );
   strict private
     class function GetTestRsaKey: IRsaPrivateCrtKeyParameters; static;
     class function GetTestDsaParams: IDsaParameters; static;
-    procedure DoWriteReadTest(const APrivateKey: IAsymmetricKeyParameter);
+    procedure DoWriteReadTest(const APrivateKey: IAsymmetricKeyParameter); overload;
+    procedure DoWriteReadTest(const APrivateKey: IAsymmetricKeyParameter;
+      const AAlgorithm: String); overload;
+    procedure DoWriteReadTests(const APrivateKey: IAsymmetricKeyParameter;
+      const AAlgorithms: array of string);
   published
     procedure TestWriteReadDsaKey;
     procedure TestWriteReadRsaKey;
     procedure TestWriteReadEcKeyFromBytes;
     procedure TestWriteReadEcKeyGenerated;
     procedure TestWritePemObjectOverride;
+    procedure TestEncryptedWriteRead;
   end;
 
 implementation
+
+{ TTestOpenSslWritePassword }
+
+constructor TTestOpenSslWritePassword.Create(const APassword: String);
+var
+  I: Int32;
+begin
+  inherited Create();
+  System.SetLength(FPassword, Length(APassword));
+  for I := 1 to Length(APassword) do
+    FPassword[I - 1] := APassword[I];
+end;
+
+function TTestOpenSslWritePassword.GetPassword(): TCryptoLibCharArray;
+begin
+  Result := System.Copy(FPassword);
+end;
 
 { TOpenSslWriterTest }
 
@@ -151,6 +191,101 @@ begin
   end;
 end;
 
+procedure TOpenSslWriterTest.DoWriteReadTest(
+  const APrivateKey: IAsymmetricKeyParameter; const AAlgorithm: String);
+const
+  TestPassword = 'CryptoLib';
+var
+  LStream: TStringStream;
+  LWriter: IOpenSslPemWriter;
+  LReader: IOpenSslPemReader;
+  LReadVal: TValue;
+  LReadPair: IAsymmetricCipherKeyPair;
+  LPriv: IAsymmetricKeyParameter;
+  LPassword: TCryptoLibCharArray;
+  LRandom: ISecureRandom;
+  LPasswordFinder: IOpenSslPasswordFinder;
+begin
+  LPasswordFinder := TTestOpenSslWritePassword.Create(TestPassword);
+  LPassword := LPasswordFinder.GetPassword();
+  LRandom := TCryptoServicesRegistrar.GetSecureRandom();
+  LStream := TStringStream.Create('', TEncoding.ASCII);
+  try
+    LWriter := TOpenSslPemWriter.Create(LStream);
+    LWriter.WriteObject(TValue.From<IAsymmetricKeyParameter>(APrivateKey),
+      AAlgorithm, LPassword, LRandom);
+    LStream.Position := 0;
+    LPasswordFinder := TTestOpenSslWritePassword.Create(TestPassword);
+    LReader := TOpenSslPemReader.Create(LStream, LPasswordFinder);
+    LReadVal := LReader.ReadObject();
+    Check(not LReadVal.IsEmpty, 'ReadObject should return key for ' + AAlgorithm);
+    Check(LReadVal.TryAsType<IAsymmetricCipherKeyPair>(LReadPair),
+      'Should be key pair for ' + AAlgorithm);
+    Check(LReadPair <> nil, 'Key pair should not be nil for ' + AAlgorithm);
+    Check(Supports(LReadPair.Private, IAsymmetricKeyParameter, LPriv),
+      'Private should be IAsymmetricKeyParameter for ' + AAlgorithm);
+    Check(LPriv.Equals(APrivateKey),
+      'Failed to read back test key encoded with: ' + AAlgorithm);
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TOpenSslWriterTest.DoWriteReadTests(
+  const APrivateKey: IAsymmetricKeyParameter;
+  const AAlgorithms: array of string);
+var
+  I: Int32;
+begin
+  for I := Low(AAlgorithms) to High(AAlgorithms) do
+    DoWriteReadTest(APrivateKey, AAlgorithms[I]);
+end;
+
+procedure TOpenSslWriterTest.TestEncryptedWriteRead;
+var
+  LSecRandom: ISecureRandom;
+  LDsaGen: IAsymmetricCipherKeyPairGenerator;
+  LDsaKeyParams: IKeyGenerationParameters;
+  LDsaPair: IAsymmetricCipherKeyPair;
+  LDsaKey: IAsymmetricKeyParameter;
+  LRsaKey: IRsaPrivateCrtKeyParameters;
+  LEcKeyBytes: TCryptoLibByteArray;
+  LEcPrivInfo: IPrivateKeyInfo;
+  LEcPrivFromBytes: IAsymmetricKeyParameter;
+  LEcGen: IAsymmetricCipherKeyPairGenerator;
+  LEcPair: IAsymmetricCipherKeyPair;
+  LEcPrivGenerated: IAsymmetricKeyParameter;
+begin
+  LSecRandom := TCryptoServicesRegistrar.GetSecureRandom();
+
+  // DSA
+  LDsaKeyParams := TDsaKeyGenerationParameters.Create(LSecRandom,
+    GetTestDsaParams) as IKeyGenerationParameters;
+  LDsaGen := TDsaKeyPairGenerator.Create();
+  LDsaGen.Init(LDsaKeyParams);
+  LDsaPair := LDsaGen.GenerateKeyPair();
+  LDsaKey := LDsaPair.Private;
+  DoWriteReadTests(LDsaKey, EncryptedAlgorithms);
+
+  // RSA (static key)
+  LRsaKey := GetTestRsaKey();
+  DoWriteReadTests(LRsaKey, EncryptedAlgorithms);
+
+  // EC (from bytes)
+  LEcKeyBytes := DecodeBase64(TestEcDsaKeyBytesBase64);
+  LEcPrivInfo := TPrivateKeyInfo.GetInstance(LEcKeyBytes);
+  LEcPrivFromBytes := TPrivateKeyFactory.CreateKey(LEcPrivInfo);
+  DoWriteReadTests(LEcPrivFromBytes, EncryptedAlgorithms);
+
+  // EC (generated)
+  LEcGen := TECKeyPairGenerator.Create();
+  LEcGen.Init(TKeyGenerationParameters.Create(LSecRandom, 239)
+    as IKeyGenerationParameters);
+  LEcPair := LEcGen.GenerateKeyPair();
+  LEcPrivGenerated := LEcPair.Private;
+  DoWriteReadTests(LEcPrivGenerated, EncryptedAlgorithms);
+end;
+
 procedure TOpenSslWriterTest.TestWriteReadDsaKey;
 var
   LGen: IAsymmetricCipherKeyPairGenerator;
@@ -159,7 +294,7 @@ var
   LSecRandom: ISecureRandom;
 begin
   LSecRandom := TSecureRandom.Create();
-  LDsaKeyParams := TDsaKeyGenerationParameters.Create(LSecRandom, GetTestDsaParams) as IKeyGenerationParameters;
+  LDsaKeyParams := TDsaKeyGenerationParameters.Create(LSecRandom, GetTestDsaParams);
   LGen := TDsaKeyPairGenerator.Create();
   LGen.Init(LDsaKeyParams);
   LPair := LGen.GenerateKeyPair();

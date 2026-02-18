@@ -30,7 +30,7 @@ uses
   ClpIAsymmetricBlockCipher,
   ClpIPkcs1Encoding,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
   ClpCryptoLibTypes;
 
@@ -175,12 +175,7 @@ begin
     NeedsRandom := FForEncryption;
 
   if NeedsRandom then
-  begin
-    if providedRandom <> nil then
-      FRandom := providedRandom
-    else
-      FRandom := TSecureRandom.Create();
-  end
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom(providedRandom)
   else
     FRandom := nil;
 end;

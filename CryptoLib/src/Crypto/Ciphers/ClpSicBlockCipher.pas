@@ -25,6 +25,7 @@ uses
   Math,
   SysUtils,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
   ClpISicBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -43,7 +44,7 @@ resourcestring
 
 type
   TSicBlockCipher = class sealed(TInterfacedObject, ISicBlockCipher,
-    IBlockCipher)
+    IBlockCipherMode, IBlockCipher)
 
   strict private
   var
@@ -85,7 +86,6 @@ procedure TSicBlockCipher.Reset;
 begin
   TArrayUtilities.Fill<Byte>(FCounter, 0, System.Length(FCounter), Byte(0));
   System.Move(FIV[0], FCounter[0], System.Length(FIV) * System.SizeOf(Byte));
-  FCipher.Reset();
 end;
 
 function TSicBlockCipher.GetAlgorithmName: String;

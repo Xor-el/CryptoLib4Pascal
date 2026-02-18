@@ -175,6 +175,7 @@ begin
 
   AddKgAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2']);
 
+  AddKgAlgorithm('RIJNDAEL', []);
   AddKgAlgorithm('SALSA20', []);
 
   //
@@ -253,8 +254,6 @@ begin
 
   AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph', TEdECObjectIdentifiers.IdEd25519.ID]);
   AddKpgAlgorithm('GOST3410', ['GOST-3410', 'GOST-3410-94']);
-  AddKpgAlgorithm('RSA', [TPkcsObjectIdentifiers.RsaEncryption.ID]);
-  AddKpgAlgorithm('RSASSA-PSS', []);
   AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.IdX25519.ID]);
 
   AddDefaultKeySizeEntries(128, [
@@ -268,7 +267,7 @@ begin
     'SALSA20'
     ]);
   AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
-  AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER']);
+  AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER', 'RIJNDAEL']);
   AddDefaultKeySizeEntries(224,
     ['HMACSHA3-224',
     'HMACKECCAK224',

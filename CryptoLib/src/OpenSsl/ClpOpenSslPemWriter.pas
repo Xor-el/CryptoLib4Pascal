@@ -29,18 +29,21 @@ uses
   ClpIPemObject,
   ClpPemWriter,
   ClpOpenSslMiscPemGenerator,
+  ClpISecureRandom,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
   /// General-purpose writer for OpenSSL PEM objects. Inherits from
   /// TPemWriter; accepts any supported object and writes it as PEM by wrapping
-  /// it in TMiscPemGenerator.
+  /// it in TOpenSslMiscPemGenerator.
   /// </summary>
   TOpenSslPemWriter = class(TPemWriter, IOpenSslPemWriter)
   public
     constructor Create(const AWriter: TStream);
     procedure WriteObject(const AObj: TValue); overload;
+    procedure WriteObject(const AObj: TValue; const AAlgorithm: String;
+      const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom); overload;
   end;
 
 implementation
@@ -54,13 +57,18 @@ end;
 
 procedure TOpenSslPemWriter.WriteObject(const AObj: TValue);
 begin
+  WriteObject(AObj, '', nil, nil);
+end;
+
+procedure TOpenSslPemWriter.WriteObject(const AObj: TValue; const AAlgorithm: String;
+  const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom);
+begin
   try
-    inherited WriteObject(TOpenSslMiscPemGenerator.Create(AObj) as IPemObjectGenerator);
+    inherited WriteObject(TOpenSslMiscPemGenerator.Create(AObj, AAlgorithm, APassword, ARandom)
+      as IPemObjectGenerator);
   except
     on E: EPemGenerationCryptoLibException do
-    begin
       raise;
-    end;
   end;
 end;
 

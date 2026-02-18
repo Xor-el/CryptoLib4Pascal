@@ -31,7 +31,7 @@ uses
   ClpIAsymmetricBlockCipher,
   ClpIOaepEncoding,
   ClpISecureRandom,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -146,7 +146,7 @@ begin
   if Supports(parameters, IParametersWithRandom, rndParam) then
     FRandom := rndParam.Random
   else
-    FRandom := TSecureRandom.Create();
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom();
 
   FForEncryption := forEncryption;
   FEngine.Init(forEncryption, parameters);
