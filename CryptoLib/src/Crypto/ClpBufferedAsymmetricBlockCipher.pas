@@ -17,7 +17,7 @@
 
 unit ClpBufferedAsymmetricBlockCipher;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 

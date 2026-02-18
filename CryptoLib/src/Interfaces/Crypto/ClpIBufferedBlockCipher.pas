@@ -15,21 +15,20 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIBufferedAsymmetricBlockCipher;
+unit ClpIBufferedBlockCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIBufferedCipher;
+  ClpIBufferedCipherBase;
 
 type
-  /// <summary>
-  /// Interface for a buffer wrapper for an asymmetric block cipher.
-  /// </summary>
-  IBufferedAsymmetricBlockCipher = interface(IBufferedCipher)
-    ['{B2C4D6E8-F0A2-4B3C-9D5E-7F0A2B4C6D8E}']
+  IBufferedBlockCipher = interface(IBufferedCipherBase)
+
+    ['{A71190C5-154E-4C2B-B6B2-BC4460B201B5}']
+
   end;
 
 implementation

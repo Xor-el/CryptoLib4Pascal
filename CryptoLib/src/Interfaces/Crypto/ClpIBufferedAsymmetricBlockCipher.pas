@@ -15,20 +15,21 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIBufferedStreamCipher;
+unit ClpIBufferedAsymmetricBlockCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIBufferedCipherBase;
+  ClpIBufferedCipher;
 
 type
-  IBufferedStreamCipher = interface(IBufferedCipherBase)
-
-    ['{F20A1BF7-4AA6-445C-8218-9EA0DF7FC123}']
-
+  /// <summary>
+  /// Interface for a buffer wrapper for an asymmetric block cipher.
+  /// </summary>
+  IBufferedAsymmetricBlockCipher = interface(IBufferedCipher)
+    ['{B2C4D6E8-F0A2-4B3C-9D5E-7F0A2B4C6D8E}']
   end;
 
 implementation

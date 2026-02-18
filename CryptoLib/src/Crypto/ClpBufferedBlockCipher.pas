@@ -17,7 +17,7 @@
 
 unit ClpBufferedBlockCipher;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 

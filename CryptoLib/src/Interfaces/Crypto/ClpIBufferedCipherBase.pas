@@ -15,19 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIECSchnorrSipaSigner;
+unit ClpIBufferedCipherBase;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISchnorrExt;
+  ClpIBufferedCipher;
 
 type
-  IECSchnorrSipaSigner = interface(ISchnorrExt)
-    ['{8941641A-4EF7-4BC7-96FC-F6E98F418DC8}']
 
+  IBufferedCipherBase = interface(IBufferedCipher)
+    ['{3CA69950-0A10-4227-B536-BFB3151076F9}']
   end;
 
 implementation

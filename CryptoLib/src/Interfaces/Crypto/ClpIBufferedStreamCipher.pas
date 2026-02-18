@@ -15,19 +15,20 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIBufferedCipherBase;
+unit ClpIBufferedStreamCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIBufferedCipher;
+  ClpIBufferedCipherBase;
 
 type
+  IBufferedStreamCipher = interface(IBufferedCipherBase)
 
-  IBufferedCipherBase = interface(IBufferedCipher)
-    ['{3CA69950-0A10-4227-B536-BFB3151076F9}']
+    ['{F20A1BF7-4AA6-445C-8218-9EA0DF7FC123}']
+
   end;
 
 implementation
