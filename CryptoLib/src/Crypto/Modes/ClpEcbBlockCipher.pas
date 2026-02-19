@@ -37,8 +37,10 @@ type
   var
     FCipher: IBlockCipher;
 
-    function GetAlgorithmName: String;
-    function GetIsPartialBlockOkay: Boolean;
+  strict protected
+    function GetAlgorithmName: String; inline;
+    function GetIsPartialBlockOkay: Boolean; inline;
+    function GetUnderlyingCipher(): IBlockCipher; inline;
 
   public
     class function GetBlockCipherMode(const ABlockCipher: IBlockCipher)
@@ -47,8 +49,6 @@ type
     constructor Create(const ACipher: IBlockCipher);
 
     function GetBlockSize(): Int32;
-
-    function GetUnderlyingCipher: IBlockCipher;
 
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters);

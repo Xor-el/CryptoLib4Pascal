@@ -27,6 +27,7 @@ uses
 type
   ISicBlockCipher = interface(IBlockCipherMode)
     ['{85CC4B84-8E49-40E1-B2F9-6C271C1FB5E7}']
+
   end;
 
 implementation

@@ -46,21 +46,25 @@ type
     FCipher: IBlockCipher;
     FEncrypting: Boolean;
 
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
     function DecryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
+  strict protected
+    function GetAlgorithmName: String; inline;
+    function GetIsPartialBlockOkay: Boolean; inline;
+    function GetUnderlyingCipher(): IBlockCipher; inline;
+
   public
     constructor Create(const ACipher: IBlockCipher; ABitBlockSize: Int32);
-    function GetUnderlyingCipher(): IBlockCipher;
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
     function GetBlockSize(): Int32; inline;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
     procedure Reset(); inline;
+
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;

@@ -27,6 +27,7 @@ uses
 type
   ICbcBlockCipher = interface(IBlockCipherMode)
     ['{A95FD7C2-02FE-4600-B496-B7A757737BFF}']
+
   end;
 
 implementation

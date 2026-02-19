@@ -83,13 +83,11 @@ type
 
     FMacBlock: TCryptoLibByteArray;
 
-    function GetAlgorithmName: String;
-
     class function OCB_double(const ABlock: TCryptoLibByteArray): TCryptoLibByteArray; static;
     class procedure OCB_extend(const ABlock: TCryptoLibByteArray; APos: Int32); static;
     class function OCB_ntz(AX: Int64): Int32; static;
     class function ShiftLeft(const ABlock, AOutput: TCryptoLibByteArray): Int32; static;
-    class procedure Xor_(const ABlock, AVal: TCryptoLibByteArray); static;
+    class procedure &Xor(const ABlock, AVal: TCryptoLibByteArray); static;
 
   strict protected
     function ProcessNonce(const AN: TCryptoLibByteArray): Int32; virtual;
@@ -97,31 +95,34 @@ type
     function GetLSub(AN: Int32): TCryptoLibByteArray; virtual;
     procedure ProcessHashBlock(); virtual;
     procedure ProcessMainBlock(const AOutput: TCryptoLibByteArray; AOutOff: Int32); virtual;
-    procedure ResetInternal(AClearMac: Boolean); virtual;
+    procedure Reset(AClearMac: Boolean); overload; virtual;
     procedure UpdateHASH(const ALSub: TCryptoLibByteArray); virtual;
+
+    function GetAlgorithmName: String; virtual;
+    function GetUnderlyingCipher(): IBlockCipher; virtual;
 
   public
     constructor Create(const AHashCipher, AMainCipher: IBlockCipher);
     destructor Destroy; override;
 
-    function GetUnderlyingCipher(): IBlockCipher;
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    function GetBlockSize(): Int32;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
+    function GetBlockSize(): Int32; virtual;
 
-    procedure ProcessAadByte(AInput: Byte);
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
+    procedure ProcessAadByte(AInput: Byte); virtual;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function GetMac(): TCryptoLibByteArray;
-    function GetUpdateOutputSize(ALen: Int32): Int32;
-    function GetOutputSize(ALen: Int32): Int32;
-    procedure Reset();
+    function GetMac(): TCryptoLibByteArray; virtual;
+    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
+    function GetOutputSize(ALen: Int32): Int32; virtual;
+    procedure Reset(); overload; virtual;
 
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
   end;
 
@@ -207,10 +208,17 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersOCB);
 
   System.SetLength(FHashBlock, 16);
+  TArrayUtilities.Fill<Byte>(FHashBlock, 0, 16, Byte(0));
   if FForEncryption then
-    System.SetLength(FMainBlock, BLOCK_SIZE)
+  begin
+    System.SetLength(FMainBlock, BLOCK_SIZE);
+    TArrayUtilities.Fill<Byte>(FMainBlock, 0, BLOCK_SIZE, Byte(0));
+  end
   else
+  begin
     System.SetLength(FMainBlock, BLOCK_SIZE + FMacSize);
+    TArrayUtilities.Fill<Byte>(FMainBlock, 0, BLOCK_SIZE + FMacSize, Byte(0));
+  end;
 
   if (System.Length(LN) > 15) then
     raise EArgumentCryptoLibException.CreateRes(@SIVTooLong);
@@ -227,6 +235,7 @@ begin
   end;
 
   System.SetLength(FL_Asterisk, 16);
+  TArrayUtilities.Fill<Byte>(FL_Asterisk, 0, 16, Byte(0));
   FHashCipher.ProcessBlock(FL_Asterisk, 0, FL_Asterisk, 0);
 
   FL_Dollar := OCB_double(FL_Asterisk);
@@ -261,9 +270,12 @@ begin
   FMainBlockCount := 0;
 
   System.SetLength(FOffsetHASH, 16);
+  TArrayUtilities.Fill<Byte>(FOffsetHASH, 0, 16, Byte(0));
   System.SetLength(FSum, 16);
+  TArrayUtilities.Fill<Byte>(FSum, 0, 16, Byte(0));
   System.Move(FOffsetMAIN_0[0], FOffsetMAIN[0], 16);
   System.SetLength(FChecksum, 16);
+  TArrayUtilities.Fill<Byte>(FChecksum, 0, 16, Byte(0));
 
   if (FInitialAssociatedText <> nil) then
   begin
@@ -434,15 +446,15 @@ begin
     if FForEncryption then
     begin
       OCB_extend(FMainBlock, FMainBlockPos);
-      Xor_(FChecksum, FMainBlock);
+      &Xor(FChecksum, FMainBlock);
     end;
 
-    Xor_(FOffsetMAIN, FL_Asterisk);
+    &Xor(FOffsetMAIN, FL_Asterisk);
 
     System.SetLength(LPad, 16);
     FHashCipher.ProcessBlock(FOffsetMAIN, 0, LPad, 0);
 
-    Xor_(FMainBlock, LPad);
+    &Xor(FMainBlock, LPad);
 
     TCheck.OutputLength(AOutput, AOutOff, FMainBlockPos, SOutputBufferTooShort);
     System.Move(FMainBlock[0], AOutput[AOutOff], FMainBlockPos);
@@ -450,14 +462,14 @@ begin
     if (not FForEncryption) then
     begin
       OCB_extend(FMainBlock, FMainBlockPos);
-      Xor_(FChecksum, FMainBlock);
+      &Xor(FChecksum, FMainBlock);
     end;
   end;
 
-  Xor_(FChecksum, FOffsetMAIN);
-  Xor_(FChecksum, FL_Dollar);
+  &Xor(FChecksum, FOffsetMAIN);
+  &Xor(FChecksum, FL_Dollar);
   FHashCipher.ProcessBlock(FChecksum, 0, FChecksum, 0);
-  Xor_(FChecksum, FSum);
+  &Xor(FChecksum, FSum);
 
   System.SetLength(FMacBlock, FMacSize);
   System.Move(FChecksum[0], FMacBlock[0], FMacSize);
@@ -477,14 +489,14 @@ begin
       raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
   end;
 
-  ResetInternal(False);
+  Reset(False);
 
   Result := LResultLen;
 end;
 
 procedure TOcbBlockCipher.Reset;
 begin
-  ResetInternal(True);
+  Reset(True);
 end;
 
 procedure TOcbBlockCipher.Clear(const ABs: TCryptoLibByteArray);
@@ -518,28 +530,28 @@ begin
 
   if FForEncryption then
   begin
-    Xor_(FChecksum, FMainBlock);
+    &Xor(FChecksum, FMainBlock);
     FMainBlockPos := 0;
   end;
 
   System.Inc(FMainBlockCount);
-  Xor_(FOffsetMAIN, GetLSub(OCB_ntz(FMainBlockCount)));
+  &Xor(FOffsetMAIN, GetLSub(OCB_ntz(FMainBlockCount)));
 
-  Xor_(FMainBlock, FOffsetMAIN);
+  &Xor(FMainBlock, FOffsetMAIN);
   FMainCipher.ProcessBlock(FMainBlock, 0, FMainBlock, 0);
-  Xor_(FMainBlock, FOffsetMAIN);
+  &Xor(FMainBlock, FOffsetMAIN);
 
   System.Move(FMainBlock[0], AOutput[AOutOff], 16);
 
   if (not FForEncryption) then
   begin
-    Xor_(FChecksum, FMainBlock);
+    &Xor(FChecksum, FMainBlock);
     System.Move(FMainBlock[BLOCK_SIZE], FMainBlock[0], FMacSize);
     FMainBlockPos := FMacSize;
   end;
 end;
 
-procedure TOcbBlockCipher.ResetInternal(AClearMac: Boolean);
+procedure TOcbBlockCipher.Reset(AClearMac: Boolean);
 begin
   Clear(FHashBlock);
   Clear(FMainBlock);
@@ -568,10 +580,10 @@ end;
 
 procedure TOcbBlockCipher.UpdateHASH(const ALSub: TCryptoLibByteArray);
 begin
-  Xor_(FOffsetHASH, ALSub);
-  Xor_(FHashBlock, FOffsetHASH);
+  &Xor(FOffsetHASH, ALSub);
+  &Xor(FHashBlock, FOffsetHASH);
   FHashCipher.ProcessBlock(FHashBlock, 0, FHashBlock, 0);
-  Xor_(FSum, FHashBlock);
+  &Xor(FSum, FHashBlock);
 end;
 
 class function TOcbBlockCipher.OCB_double(
@@ -619,7 +631,7 @@ begin
   Result := Int32(LBit);
 end;
 
-class procedure TOcbBlockCipher.Xor_(const ABlock,
+class procedure TOcbBlockCipher.&Xor(const ABlock,
   AVal: TCryptoLibByteArray);
 var
   LI: Int32;

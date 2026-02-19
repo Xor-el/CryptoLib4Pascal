@@ -138,6 +138,12 @@ type
     procedure TestWrapRfc5649;
     procedure TestWrapOids;
     procedure TestWrapPadOids;
+    procedure TestAesEax;
+    procedure TestAesEaxBadPadding;
+    procedure TestAesCcm;
+    procedure TestAesCcmBadPadding;
+    procedure TestAesOcb;
+    procedure TestAesOcbBadPadding;
 
   end;
 
@@ -1084,6 +1090,159 @@ begin
     TNistObjectIdentifiers.IdAes256WrapPad.Id);
 
   DoWrapOidTest(LWrapPadOids, 'AESWrapPad');
+end;
+
+procedure TTestAES.TestAesEax;
+var
+  LK, LN, LP, LC: TBytes;
+  LKeyParam: IKeyParameter;
+  LInCipher, LOutCipher: IBufferedCipher;
+  LEnc, LDec: TBytes;
+begin
+  // AES/EAX single vector
+  LK := DecodeHex('233952DEE4D5ED5F9B9C6D6FF80FF478');
+  LN := DecodeHex('62EC67F9C3A4A407FCB2A8C49031A8B3');
+  LP := DecodeHex('68656c6c6f20776f726c642121');
+  LC := DecodeHex('2f9f76cb7659c70e4be11670a3e193ae1bc6b5762a');
+
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+
+  LInCipher := TCipherUtilities.GetCipher('AES/EAX/NoPadding');
+  LOutCipher := TCipherUtilities.GetCipher('AES/EAX/NoPadding');
+
+  LInCipher.Init(True, TParametersWithIV.Create(LKeyParam, LN) as ICipherParameters);
+  LEnc := LInCipher.DoFinal(LP);
+  if not AreEqual(LEnc, LC) then
+  begin
+    Fail('ciphertext does not match in AES/EAX');
+  end;
+
+  LOutCipher.Init(False, TParametersWithIV.Create(LKeyParam, LN) as ICipherParameters);
+  LDec := LOutCipher.DoFinal(LC);
+  if not AreEqual(LDec, LP) then
+  begin
+    Fail('plaintext does not match in AES/EAX');
+  end;
+end;
+
+procedure TTestAES.TestAesEaxBadPadding;
+var
+  LK: TBytes;
+  LKeyParam: IKeyParameter;
+begin
+  LK := DecodeHex('233952DEE4D5ED5F9B9C6D6FF80FF478');
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+  try
+    TCipherUtilities.GetCipher('AES/EAX/PKCS5Padding');
+    Fail('bad padding missed in AES/EAX');
+  except
+    on E: ESecurityUtilityCryptoLibException do
+    begin
+      // expected
+    end;
+  end;
+end;
+
+procedure TTestAES.TestAesCcm;
+var
+  LK, LN, LP, LC: TBytes;
+  LKeyParam: IKeyParameter;
+  LInCipher, LOutCipher: IBufferedCipher;
+  LEnc, LDec: TBytes;
+begin
+  // AES/CCM single vector
+  LK := DecodeHex('404142434445464748494A4B4C4D4E4F');
+  LN := DecodeHex('10111213141516');
+  LP := DecodeHex('68656c6c6f20776f726c642121');
+  LC := DecodeHex('39264f148b54c456035de0a531c8344f46db12b388');
+
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+
+  LInCipher := TCipherUtilities.GetCipher('AES/CCM/NoPadding');
+  LOutCipher := TCipherUtilities.GetCipher('AES/CCM/NoPadding');
+
+  LInCipher.Init(True, TParametersWithIV.Create(LKeyParam, LN) as ICipherParameters);
+  LEnc := LInCipher.DoFinal(LP);
+  if not AreEqual(LEnc, LC) then
+  begin
+    Fail('ciphertext does not match in AES/CCM');
+  end;
+
+  LOutCipher.Init(False, TParametersWithIV.Create(LKeyParam, LN) as ICipherParameters);
+  LDec := LOutCipher.DoFinal(LC);
+  if not AreEqual(LDec, LP) then
+  begin
+    Fail('plaintext does not match in AES/CCM');
+  end;
+end;
+
+procedure TTestAES.TestAesCcmBadPadding;
+var
+  LK: TBytes;
+  LKeyParam: IKeyParameter;
+begin
+  LK := DecodeHex('404142434445464748494A4B4C4D4E4F');
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+  try
+    TCipherUtilities.GetCipher('AES/CCM/PKCS5Padding');
+    Fail('bad padding missed in AES/CCM');
+  except
+    on E: ESecurityUtilityCryptoLibException do
+    begin
+      // expected
+    end;
+  end;
+end;
+
+procedure TTestAES.TestAesOcb;
+var
+  LK, LN, LP, LC: TBytes;
+  LKeyParam: IKeyParameter;
+  LInCipher, LOutCipher: IBufferedCipher;
+  LEnc, LDec: TBytes;
+begin
+  // AES/OCB single vector
+  LK := DecodeHex('000102030405060708090A0B0C0D0E0F');
+  LP := DecodeHex('000102030405060708090A0B0C0D0E0F');
+  LN := DecodeHex('000102030405060708090A0B');
+  LC := DecodeHex('BEA5E8798DBE7110031C144DA0B2612213CC8B747807121A4CBB3E4BD6B456AF');
+
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+
+  LInCipher := TCipherUtilities.GetCipher('AES/OCB/NoPadding');
+  LOutCipher := TCipherUtilities.GetCipher('AES/OCB/NoPadding');
+
+  LInCipher.Init(True, TParametersWithIV.Create(LKeyParam, LN) as ICipherParameters);
+  LEnc := LInCipher.DoFinal(LP);
+  if not AreEqual(LEnc, LC) then
+  begin
+    Fail('ciphertext does not match in AES/OCB');
+  end;
+
+  LOutCipher.Init(False, TParametersWithIV.Create(LKeyParam, LN) as ICipherParameters);
+  LDec := LOutCipher.DoFinal(LC);
+  if not AreEqual(LDec, LP) then
+  begin
+    Fail('plaintext does not match in AES/OCB');
+  end;
+end;
+
+procedure TTestAES.TestAesOcbBadPadding;
+var
+  LK: TBytes;
+  LKeyParam: IKeyParameter;
+begin
+  LK := DecodeHex('000102030405060708090A0B0C0D0E0F');
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+  try
+    TCipherUtilities.GetCipher('AES/OCB/PKCS5Padding');
+    Fail('bad padding missed in AES/OCB');
+  except
+    on E: ESecurityUtilityCryptoLibException do
+    begin
+      // expected
+    end;
+  end;
 end;
 
 initialization

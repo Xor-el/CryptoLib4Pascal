@@ -91,7 +91,7 @@ type
     DataLimit: UInt64 = ((UInt64(1) shl 32) - 1) * 64;
 
   var
-    FChaCha20: TChaCha7539Engine;
+    FChaCha20: IChaCha7539Engine;
     FPoly1305: IMac;
 
     FKey: TCryptoLibByteArray;
@@ -105,8 +105,6 @@ type
     FDataCount: UInt64;
     FState: TState;
     FBufPos: Int32;
-
-    function GetAlgorithmName: String;
 
     procedure CheckAad();
     procedure CheckData();
@@ -125,27 +123,30 @@ type
 
     class constructor Create; overload;
 
+  strict protected
+    function GetAlgorithmName: String; virtual;
+
   public
     constructor Create(); overload;
     constructor Create(const APoly1305: IMac); overload;
     destructor Destroy; override;
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
 
-    function GetOutputSize(ALen: Int32): Int32;
-    function GetUpdateOutputSize(ALen: Int32): Int32;
+    function GetOutputSize(ALen: Int32): Int32; virtual;
+    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
 
-    procedure ProcessAadByte(AInput: Byte);
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
+    procedure ProcessAadByte(AInput: Byte); virtual;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function GetMac(): TCryptoLibByteArray;
-    procedure Reset(); overload;
+    function GetMac(): TCryptoLibByteArray; virtual;
+    procedure Reset(); overload; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
   end;
@@ -186,7 +187,6 @@ end;
 
 destructor TChaCha20Poly1305.Destroy;
 begin
-  FChaCha20.Free;
   inherited Destroy;
 end;
 

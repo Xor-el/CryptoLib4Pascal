@@ -68,34 +68,37 @@ type
     FCipherInitialized: Boolean;
     FInitialAssociatedText: TCryptoLibByteArray;
 
-    function GetAlgorithmName: String;
     procedure InitCipher();
     procedure CalculateMac();
     procedure Reset(AClearMac: Boolean); overload;
     function Process(AB: Byte; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
     function VerifyMac(const AMac: TCryptoLibByteArray; AOff: Int32): Boolean;
 
+  strict protected
+    function GetAlgorithmName: String; virtual;
+    function GetUnderlyingCipher(): IBlockCipher; virtual;
+
   public
     constructor Create(const ACipher: IBlockCipher);
 
-    function GetUnderlyingCipher(): IBlockCipher;
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    function GetBlockSize(): Int32;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
+    function GetBlockSize(): Int32; virtual;
 
-    procedure ProcessAadByte(AInput: Byte);
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
+    procedure ProcessAadByte(AInput: Byte); virtual;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function GetMac(): TCryptoLibByteArray;
-    function GetUpdateOutputSize(ALen: Int32): Int32;
-    function GetOutputSize(ALen: Int32): Int32;
-    procedure Reset(); overload;
+    function GetMac(): TCryptoLibByteArray; virtual;
+    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
+    function GetOutputSize(ALen: Int32): Int32; virtual;
+    procedure Reset(); overload; virtual;
 
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
   end;
 

@@ -43,7 +43,7 @@ resourcestring
 {$ENDIF}
 
 type
-  TSicBlockCipher = class sealed(TInterfacedObject, ISicBlockCipher,
+  TSicBlockCipher = class(TInterfacedObject, ISicBlockCipher,
     IBlockCipherMode, IBlockCipher)
 
   strict private
@@ -52,17 +52,20 @@ type
     FBlockSize: Int32;
     FCipher: IBlockCipher;
 
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
+  strict protected
+    function GetAlgorithmName: String; virtual;
+    function GetIsPartialBlockOkay: Boolean; virtual;
+    function GetUnderlyingCipher(): IBlockCipher; inline;
 
   public
     constructor Create(const ACipher: IBlockCipher);
-    function GetUnderlyingCipher(): IBlockCipher;
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    function GetBlockSize(): Int32; inline;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
+    function GetBlockSize(): Int32; virtual;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-    procedure Reset(); inline;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    procedure Reset(); virtual;
+
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;

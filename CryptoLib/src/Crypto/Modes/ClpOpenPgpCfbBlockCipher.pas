@@ -48,9 +48,6 @@ type
     FCount: Int32;
     FForEncryption: Boolean;
 
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
-
     function EncryptByte(AData: Byte; ABlockOff: Int32): Byte; inline;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
@@ -58,15 +55,21 @@ type
     function DecryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
+  strict protected
+    function GetAlgorithmName: String; virtual;
+    function GetIsPartialBlockOkay: Boolean; virtual;
+    function GetUnderlyingCipher(): IBlockCipher; inline;
+
   public
     constructor Create(const ACipher: IBlockCipher);
-    function GetUnderlyingCipher(): IBlockCipher;
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters);
     function GetBlockSize(): Int32; inline;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
     procedure Reset(); inline;
+
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;

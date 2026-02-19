@@ -27,6 +27,7 @@ uses
 type
   IOpenPgpCfbBlockCipher = interface(IBlockCipherMode)
     ['{903E8B52-52CD-4B45-A1B6-2C19B00198A1}']
+
   end;
 
 implementation

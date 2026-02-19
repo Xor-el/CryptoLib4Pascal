@@ -74,40 +74,43 @@ type
     FAssociatedText: TMemoryStream;
     FData: TMemoryStream;
 
-    function GetAlgorithmName: String;
     function GetMacSize(AForEncryption: Boolean; ARequestedMacBits: Int32): Int32;
     function GetAssociatedTextLength(): Int32;
     function HasAssociatedText(): Boolean;
     function CalculateMac(const AData: TCryptoLibByteArray; ADataOff, ADataLen: Int32;
       const AMacBlock: TCryptoLibByteArray): Int32;
 
+  strict protected
+    function GetAlgorithmName: String; virtual;
+    function GetUnderlyingCipher(): IBlockCipher; virtual;
+
   public
     constructor Create(const ACipher: IBlockCipher);
     destructor Destroy; override;
 
-    function GetUnderlyingCipher(): IBlockCipher;
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    function GetBlockSize(): Int32;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
+    function GetBlockSize(): Int32; virtual;
 
-    procedure ProcessAadByte(AInput: Byte);
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
+    procedure ProcessAadByte(AInput: Byte); virtual;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
-    procedure Reset();
+    procedure Reset(); virtual;
 
-    function GetMac(): TCryptoLibByteArray;
-    function GetUpdateOutputSize(ALen: Int32): Int32;
-    function GetOutputSize(ALen: Int32): Int32;
+    function GetMac(): TCryptoLibByteArray; virtual;
+    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
+    function GetOutputSize(ALen: Int32): Int32; virtual;
 
-    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32): TCryptoLibByteArray; overload;
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32): TCryptoLibByteArray; overload; virtual;
     function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload; virtual;
 
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
   end;
 

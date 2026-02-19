@@ -31,6 +31,8 @@ type
 
     function GetBlockSize(): Int32;
     function GetUnderlyingCipher(): IBlockCipher;
+
+    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
   end;
 
 implementation

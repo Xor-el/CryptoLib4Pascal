@@ -340,6 +340,7 @@ end;
 procedure TPoly1305.Reset();
 begin
   FCurrentBlockOffset := 0;
+  TArrayUtilities.Fill<Byte>(FCurrentBlock, 0, System.Length(FCurrentBlock), Byte(0));
   FH0 := 0;
   FH1 := 0;
   FH2 := 0;
