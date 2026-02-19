@@ -74,13 +74,13 @@ type
       AMacSizeInBits: Int32); overload;
 
     function GetMacSize: Int32; override;
-    procedure Update(AInput: Byte);
+    procedure Update(AInput: Byte); override;
     procedure BlockUpdate(const AInput: TCryptoLibByteArray;
-      AInOff, ALen: Int32);
-    procedure Init(const AParameters: ICipherParameters);
+      AInOff, ALen: Int32); override;
+    procedure Init(const AParameters: ICipherParameters); override;
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload; override;
-    procedure Reset();
+    procedure Reset(); override;
 
     property AlgorithmName: String read GetAlgorithmName;
   end;
