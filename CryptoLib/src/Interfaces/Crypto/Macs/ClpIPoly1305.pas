@@ -15,29 +15,18 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpIPoly1305;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpIMac;
 
 type
-
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
-
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
-
-    property KeyLength: Int32 read GetKeyLength;
+  IPoly1305 = interface(IMac)
+    ['{A6351168-F89D-4530-AE7A-0ACC800C83AB}']
   end;
 
 implementation

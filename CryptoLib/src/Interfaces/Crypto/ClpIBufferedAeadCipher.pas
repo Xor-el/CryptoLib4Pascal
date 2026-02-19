@@ -15,29 +15,18 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpIBufferedAeadCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpIBufferedCipher;
 
 type
-
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
-
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
-
-    property KeyLength: Int32 read GetKeyLength;
+  IBufferedAeadCipher = interface(IBufferedCipher)
+    ['{BFA95764-BC50-49D7-BE3E-4F968555A06D}']
   end;
 
 implementation

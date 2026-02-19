@@ -23,7 +23,6 @@ interface
 
 uses
   SysUtils,
-  TypInfo,
   Generics.Collections,
   ClpAsn1Objects,
   ClpCollectionUtilities,
@@ -37,6 +36,8 @@ uses
   ClpIBlockCipher,
   ClpIBufferedCipher,
   ClpIStreamCipher,
+  ClpIAeadCipher,
+  ClpIAeadBlockCipher,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpStringUtilities,
@@ -60,6 +61,20 @@ uses
   ClpSicBlockCipher,
   ClpCtsBlockCipher,
   ClpICtsBlockCipher,
+  ClpCcmBlockCipher,
+  ClpICcmBlockCipher,
+  ClpEaxBlockCipher,
+  ClpIEaxBlockCipher,
+  ClpOcbBlockCipher,
+  ClpIOcbBlockCipher,
+  ClpOpenPgpCfbBlockCipher,
+  ClpIOpenPgpCfbBlockCipher,
+  ClpChaCha20Poly1305,
+  ClpIChaCha20Poly1305,
+  ClpBufferedAeadBlockCipher,
+  ClpIBufferedAeadBlockCipher,
+  ClpBufferedAeadCipher,
+  ClpIBufferedAeadCipher,
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
   ClpBufferedStreamCipher,
@@ -74,6 +89,8 @@ uses
   ClpIBlowfishEngine,
   ClpChaChaEngine,
   ClpIChaChaEngine,
+  ClpChaCha7539Engine,
+  ClpIChaCha7539Engine,
   ClpSalsa20Engine,
   ClpISalsa20Engine,
   ClpRijndaelEngine,
@@ -107,6 +124,12 @@ resourcestring
     'Warning: SIC-Mode Can Become a TwoTime-Pad if the Blocksize of the Cipher is Too Small. Use a Cipher With a Block Size of at Least 128 bits (e.g. AES)';
   SModeAndPaddingNotNeededStreamCipher =
     'Modes and Paddings Not Used for Stream Ciphers';
+  SModesAndPaddingsNotValidForAead =
+    'Modes and paddings cannot be applied to AEAD ciphers';
+  SBadPaddingForAead =
+    'Bad padding specified for AEAD cipher.';
+  SCTSNotValidForAead =
+    'CTS mode not valid for AEAD ciphers.';
   SOidNotRecognised = 'Cipher OID not recognised.';
   SOidNil = 'OID Cannot be Nil';
 
@@ -124,6 +147,8 @@ type
       AES,
       BLOWFISH,
       CHACHA,
+      CHACHA20_POLY1305,
+      CHACHA7539,
       SALSA20,
       RIJNDAEL,
       RSA);
@@ -131,11 +156,15 @@ type
     TCipherMode = (
       NONE,
       CBC,
+      CCM,
       CFB,
       CTR,
       CTS,
+      EAX,
       ECB,
+      OCB,
       OFB,
+      OPENPGPCFB,
       SIC);
 
     TCipherPadding = (
@@ -182,6 +211,7 @@ type
 
     class function GetMechanism(const AAlgorithm: String): String; static;
     class function GetCipherForMechanism(const AMechanism: String): IBufferedCipher; static;
+    class function CreateBlockCipher(ACipherAlgorithm: TCipherAlgorithm): IBlockCipher; static;
 
     class procedure Boot; static;
     class constructor Create;
@@ -233,7 +263,21 @@ begin
 
   FAlgorithmMap.AddOrSetValue('1.3.6.1.4.1.3029.1.2', 'BLOWFISH/CBC');
 
-  FAlgorithmMap.AddOrSetValue('CHACHA20', 'CHACHA');
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA1AND128BITAES-CBC-BC', 'PBEWITHSHAAND128BITAES-CBC-BC');
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA-1AND128BITAES-CBC-BC', 'PBEWITHSHAAND128BITAES-CBC-BC');
+
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA1AND192BITAES-CBC-BC', 'PBEWITHSHAAND192BITAES-CBC-BC');
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA-1AND192BITAES-CBC-BC', 'PBEWITHSHAAND192BITAES-CBC-BC');
+
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA1AND256BITAES-CBC-BC', 'PBEWITHSHAAND256BITAES-CBC-BC');
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA-1AND256BITAES-CBC-BC', 'PBEWITHSHAAND256BITAES-CBC-BC');
+
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA-256AND128BITAES-CBC-BC', 'PBEWITHSHA256AND128BITAES-CBC-BC');
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA-256AND192BITAES-CBC-BC', 'PBEWITHSHA256AND192BITAES-CBC-BC');
+  FAlgorithmMap.AddOrSetValue('PBEWITHSHA-256AND256BITAES-CBC-BC', 'PBEWITHSHA256AND256BITAES-CBC-BC');
+
+  FAlgorithmMap.AddOrSetValue('CHACHA20', 'CHACHA7539');
+  FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdAlgAeadChaCha20Poly1305, 'CHACHA20-POLY1305');
 end;
 
 class constructor TCipherUtilities.Create;
@@ -272,15 +316,15 @@ end;
 
 class function TCipherUtilities.GetCipherForMechanism(const AMechanism: String): IBufferedCipher;
 
-  function GetDigitIndex(const S: String): Int32;
+  function GetDigitIndex(const AMode: String): Int32;
   var
-    I: Int32;
+    LI: Int32;
   begin
-    for I := 1 to System.Length(S) do
+    for LI := 1 to System.Length(AMode) do
     begin
-      if CharInSet(S[I], ['0' .. '9']) then
+      if CharInSet(AMode[LI], ['0' .. '9']) then
       begin
-        Result := I;
+        Result := LI;
         Exit;
       end;
     end;
@@ -290,7 +334,7 @@ class function TCipherUtilities.GetCipherForMechanism(const AMechanism: String):
 var
   LAlgorithmName, LPaddingName, LMode, LModeName: String;
   LDi, LBits: Int32;
-  LPadded, LCTS: Boolean;
+  LPadded, LCts: Boolean;
   LParts: TCryptoLibStringArray;
   LCipherAlgorithm: TCipherAlgorithm;
   LCipherPadding: TCipherPadding;
@@ -299,6 +343,8 @@ var
   LBlockCipherMode: IBlockCipherMode;
   LAsymBlockCipher: IAsymmetricBlockCipher;
   LStreamCipher: IStreamCipher;
+  LAeadCipher: IAeadCipher;
+  LAeadBlockCipher: IAeadBlockCipher;
   LPadding: IBlockCipherPadding;
   LAgreement: IBasicAgreement;
 begin
@@ -320,6 +366,30 @@ begin
     Exit;
   end;
 
+  if TStringUtilities.StartsWith(AMechanism, 'PBE') then
+  begin
+    if TStringUtilities.EndsWith(AMechanism, '-BC') or
+      TStringUtilities.EndsWith(AMechanism, '-OPENSSL') then
+    begin
+      if TStringUtilities.IsOneOf(AMechanism, [
+        'PBEWITHSHAAND128BITAES-CBC-BC',
+        'PBEWITHSHAAND192BITAES-CBC-BC',
+        'PBEWITHSHAAND256BITAES-CBC-BC',
+        'PBEWITHSHA256AND128BITAES-CBC-BC',
+        'PBEWITHSHA256AND192BITAES-CBC-BC',
+        'PBEWITHSHA256AND256BITAES-CBC-BC',
+        'PBEWITHMD5AND128BITAES-CBC-OPENSSL',
+        'PBEWITHMD5AND192BITAES-CBC-OPENSSL',
+        'PBEWITHMD5AND256BITAES-CBC-OPENSSL']) then
+      begin
+        Result := TPaddedBufferedBlockCipher.Create(
+          TCbcBlockCipher.Create(TAesEngine.Create() as IAesEngine))
+          as IPaddedBufferedBlockCipher;
+        Exit;
+      end;
+    end;
+  end;
+
   LParts := TStringUtilities.SplitString(AMechanism, '/');
   if System.Length(LParts) < 1 then
     Exit;
@@ -328,6 +398,7 @@ begin
   if not (TEnumUtilities.TryGetEnumValue<TCipherAlgorithm>(LAlgorithmName, LCipherAlgorithm)) then
     Exit;
 
+  LAeadCipher := nil;
   LBlockCipher := nil;
   LAsymBlockCipher := nil;
   LStreamCipher := nil;
@@ -338,6 +409,10 @@ begin
       LBlockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
     TCipherAlgorithm.CHACHA:
       LStreamCipher := TChaChaEngine.Create() as IChaChaEngine;
+    TCipherAlgorithm.CHACHA20_POLY1305:
+      LAeadCipher := TChaCha20Poly1305.Create() as IChaCha20Poly1305;
+    TCipherAlgorithm.CHACHA7539:
+      LStreamCipher := TChaCha7539Engine.Create() as IChaCha7539Engine;
     TCipherAlgorithm.RIJNDAEL:
       LBlockCipher := TRijndaelEngine.Create() as IRijndaelEngine;
     TCipherAlgorithm.SALSA20:
@@ -345,6 +420,14 @@ begin
     TCipherAlgorithm.RSA:
       LAsymBlockCipher := TRsaBlindedEngine.Create() as IRsaBlindedEngine;
   else
+    Exit;
+  end;
+
+  if LAeadCipher <> nil then
+  begin
+    if System.Length(LParts) > 1 then
+      raise EArgumentCryptoLibException.CreateRes(@SModesAndPaddingsNotValidForAead);
+    Result := TBufferedAeadCipher.Create(LAeadCipher) as IBufferedAeadCipher;
     Exit;
   end;
 
@@ -356,7 +439,7 @@ begin
     Exit;
   end;
 
-  LCTS := False;
+  LCts := False;
   LPadded := True;
   LPadding := nil;
 
@@ -404,7 +487,7 @@ begin
       TCipherPadding.TBCPADDING:
         LPadding := TTBCPadding.Create() as ITBCPadding;
       TCipherPadding.WITHCTS:
-        LCTS := True;
+        LCts := True;
       TCipherPadding.X923PADDING:
         LPadding := TX923Padding.Create() as IX923Padding;
       TCipherPadding.ZEROBYTEPADDING:
@@ -429,10 +512,13 @@ begin
       Exit;
 
     LBlockCipherMode := nil;
+    LAeadBlockCipher := nil;
     case LCipherMode of
       TCipherMode.ECB, TCipherMode.NONE: ;
       TCipherMode.CBC:
         LBlockCipherMode := TCbcBlockCipher.Create(LBlockCipher);
+      TCipherMode.CCM:
+        LAeadBlockCipher := TCcmBlockCipher.Create(LBlockCipher);
       TCipherMode.CFB:
         begin
           if LDi < 1 then
@@ -445,9 +531,13 @@ begin
         LBlockCipherMode := TSicBlockCipher.Create(LBlockCipher);
       TCipherMode.CTS:
         begin
-          LCTS := True;
+          LCts := True;
           LBlockCipherMode := TCbcBlockCipher.Create(LBlockCipher);
         end;
+      TCipherMode.EAX:
+        LAeadBlockCipher := TEaxBlockCipher.Create(LBlockCipher);
+      TCipherMode.OCB:
+        LAeadBlockCipher := TOcbBlockCipher.Create(LBlockCipher, CreateBlockCipher(LCipherAlgorithm));
       TCipherMode.OFB:
         begin
           if LDi < 1 then
@@ -456,6 +546,8 @@ begin
             LBits := StrToInt(System.Copy(LMode, LDi, System.Length(LMode) - LDi + 1));
           LBlockCipherMode := TOfbBlockCipher.Create(LBlockCipher, LBits);
         end;
+      TCipherMode.OPENPGPCFB:
+        LBlockCipherMode := TOpenPgpCfbBlockCipher.Create(LBlockCipher);
       TCipherMode.SIC:
         begin
           if LBlockCipher.GetBlockSize() < 16 then
@@ -467,12 +559,23 @@ begin
     end;
   end;
 
+  if LAeadBlockCipher <> nil then
+  begin
+    if LCts then
+      raise ESecurityUtilityCryptoLibException.CreateRes(@SCTSNotValidForAead);
+    if LPadded and (System.Length(LParts) > 2) and (LParts[2] <> '') then
+      raise ESecurityUtilityCryptoLibException.CreateRes(@SBadPaddingForAead);
+
+    Result := TBufferedAeadBlockCipher.Create(LAeadBlockCipher) as IBufferedAeadBlockCipher;
+    Exit;
+  end;
+
   if LBlockCipher <> nil then
   begin
     if LBlockCipherMode = nil then
       LBlockCipherMode := TEcbBlockCipher.GetBlockCipherMode(LBlockCipher);
 
-    if LCTS then
+    if LCts then
     begin
       Result := TCtsBlockCipher.Create(LBlockCipherMode) as ICtsBlockCipher;
       Exit;
@@ -528,6 +631,22 @@ begin
   if LCipher = nil then
     raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognised);
   Result := LCipher;
+end;
+
+class function TCipherUtilities.CreateBlockCipher(
+  ACipherAlgorithm: TCipherAlgorithm): IBlockCipher;
+begin
+  case ACipherAlgorithm of
+    TCipherAlgorithm.AES:
+      Result := TAesEngine.Create() as IAesEngine;
+    TCipherAlgorithm.BLOWFISH:
+      Result := TBlowfishEngine.Create() as IBlowfishEngine;
+    TCipherAlgorithm.RIJNDAEL:
+      Result := TRijndaelEngine.Create() as IRijndaelEngine;
+  else
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedCipher,
+      [TEnumUtilities.ToString<TCipherAlgorithm>(ACipherAlgorithm)]);
+  end;
 end;
 
 end.

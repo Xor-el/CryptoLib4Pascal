@@ -15,29 +15,23 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpICcmBlockCipher;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
+  ClpIAeadBlockCipher,
   ClpCryptoLibTypes;
 
 type
+  ICcmBlockCipher = interface(IAeadBlockCipher)
+    ['{D63D0502-755E-4B00-B1DF-97DBB2F0FC3C}']
 
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
-
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
-
-    property KeyLength: Int32 read GetKeyLength;
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32): TCryptoLibByteArray; overload;
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
   end;
 
 implementation

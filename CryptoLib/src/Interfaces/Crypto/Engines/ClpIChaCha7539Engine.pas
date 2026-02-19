@@ -15,29 +15,30 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpIChaCha7539Engine;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
+  ClpISalsa20Engine,
   ClpCryptoLibTypes;
 
 type
 
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
+  IChaCha7539Engine = interface(ISalsa20Engine)
+    ['{3E8B7A2D-C4F1-4D9E-A6B0-7F2E5D8C1A94}']
 
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
+    procedure DoFinal(const AInBuf: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 
-    property KeyLength: Int32 read GetKeyLength;
+    procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+
+    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+
   end;
 
 implementation

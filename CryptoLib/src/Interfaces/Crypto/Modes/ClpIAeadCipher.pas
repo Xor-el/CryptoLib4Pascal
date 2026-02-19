@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpIAeadCipher;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -26,18 +26,29 @@ uses
   ClpCryptoLibTypes;
 
 type
+  IAeadCipher = interface(IInterface)
+    ['{0BAD818A-E363-4818-9FF9-75FDE537AE46}']
 
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
+    function GetAlgorithmName: String;
+    property AlgorithmName: String read GetAlgorithmName;
 
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
 
-    property KeyLength: Int32 read GetKeyLength;
+    procedure ProcessAadByte(AInput: Byte);
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
+
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+
+    function GetMac(): TCryptoLibByteArray;
+
+    function GetUpdateOutputSize(ALen: Int32): Int32;
+    function GetOutputSize(ALen: Int32): Int32;
+
+    procedure Reset();
   end;
 
 implementation

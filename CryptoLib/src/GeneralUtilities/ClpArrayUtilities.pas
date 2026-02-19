@@ -80,7 +80,11 @@ type
       AFrom, ATo: Int32): TCryptoLibGenericArray<T>; static;
 
     class function FixedTimeEquals(const AAr1, AAr2: TCryptoLibByteArray)
-      : Boolean; static;
+      : Boolean; overload; static;
+
+    class function FixedTimeEquals(ALen: Int32; const AA: TCryptoLibByteArray;
+      AOff1: Int32; const AB: TCryptoLibByteArray; AOff2: Int32)
+      : Boolean; overload; static;
 
     class procedure Fill<T>(ABuf: TCryptoLibGenericArray<T>; AFrom, ATo: Int32;
       const AFiller: T); static;
@@ -213,16 +217,26 @@ end;
 
 class function TArrayUtilities.FixedTimeEquals(const AAr1,
   AAr2: TCryptoLibByteArray): Boolean;
+begin
+  if System.Length(AAr1) <> System.Length(AAr2) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  Result := FixedTimeEquals(System.Length(AAr1), AAr1, 0, AAr2, 0);
+end;
+
+class function TArrayUtilities.FixedTimeEquals(ALen: Int32;
+  const AA: TCryptoLibByteArray; AOff1: Int32;
+  const AB: TCryptoLibByteArray; AOff2: Int32): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LDiff: UInt32;
 begin
-  LDiff := UInt32(System.Length(AAr1)) xor UInt32(System.Length(AAr2));
-  I := 0;
-  while (I <= System.High(AAr1)) and (I <= System.High(AAr2)) do
+  LDiff := 0;
+  for LI := 0 to System.Pred(ALen) do
   begin
-    LDiff := LDiff or (UInt32(AAr1[I] xor AAr2[I]));
-    System.Inc(I);
+    LDiff := LDiff or (UInt32(AA[AOff1 + LI] xor AB[AOff2 + LI]));
   end;
   Result := LDiff = 0;
 end;

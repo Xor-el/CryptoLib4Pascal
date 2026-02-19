@@ -116,6 +116,7 @@ type
     /// If ACount is less than or equal to 0, returns an empty string.
     /// </summary>
     class function Substring(const AStr: String; AStartIndex: Int32; ACount: Int32): String; overload; static;
+    class function IsOneOf(const AStr: String; const ACandidates: array of String): Boolean; static;
   end;
 
 implementation
@@ -385,6 +386,19 @@ begin
   if AStartIndex + LActualCount - 1 > LLen then
     LActualCount := LLen - AStartIndex + 1;
   Result := System.Copy(AStr, AStartIndex, LActualCount);
+end;
+
+class function TStringUtilities.IsOneOf(const AStr: String;
+  const ACandidates: array of String): Boolean;
+var
+  LI: Int32;
+begin
+  for LI := System.Low(ACandidates) to System.High(ACandidates) do
+  begin
+    if AStr = ACandidates[LI] then
+      Exit(True);
+  end;
+  Result := False;
 end;
 
 end.

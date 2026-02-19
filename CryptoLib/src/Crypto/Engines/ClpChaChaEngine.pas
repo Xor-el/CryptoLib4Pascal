@@ -35,25 +35,15 @@ type
   /// <summary>
   /// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
   /// </summary>
-  TChaChaEngine = class sealed(TSalsa20Engine, IChaChaEngine, IStreamCipher)
-
-  strict private
-    /// <summary>
-    /// ChaCha function.
-    /// </summary>
-    /// <param name="rounds">The number of ChaCha rounds to execute</param>
-    /// <param name="input">The input words.</param>
-    /// <param name="x">The ChaCha state to modify.</param>
-    class procedure ChaChaCore(rounds: Int32;
-      const input, x: TCryptoLibUInt32Array); static;
+  TChaChaEngine = class(TSalsa20Engine, IChaChaEngine, IStreamCipher)
 
   strict protected
     function GetAlgorithmName: String; override;
 
     procedure AdvanceCounter(); override;
     procedure ResetCounter(); override;
-    procedure SetKey(const keyBytes, ivBytes: TCryptoLibByteArray); override;
-    procedure GenerateKeyStream(const output: TCryptoLibByteArray); override;
+    procedure SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray); override;
+    procedure GenerateKeyStream(const AOutput: TCryptoLibByteArray); override;
 
   public
     /// <summary>
@@ -64,7 +54,11 @@ type
     /// Creates a ChaCha engine with a specific number of rounds.
     /// </summary>
     /// <param name="rounds">the number of rounds (must be an even number).</param>
-    constructor Create(rounds: Int32); overload;
+    constructor Create(ARounds: Int32); overload;
+
+    class procedure ChaChaCore(ARounds: Int32;
+      const AInput: TCryptoLibUInt32Array;
+      const AOutput: TCryptoLibByteArray); static;
 
   end;
 
@@ -81,131 +75,131 @@ begin
   end;
 end;
 
-class procedure TChaChaEngine.ChaChaCore(rounds: Int32;
-  const input, x: TCryptoLibUInt32Array);
+class procedure TChaChaEngine.ChaChaCore(ARounds: Int32;
+  const AInput: TCryptoLibUInt32Array; const AOutput: TCryptoLibByteArray);
 var
-  x00, x01, x02, x03, x04, x05, x06, x07, x08, x09, x10, x11, x12, x13, x14,
-    x15: UInt32;
-  Idx: Int32;
+  LX00, LX01, LX02, LX03, LX04, LX05, LX06, LX07, LX08, LX09, LX10, LX11, LX12, LX13, LX14,
+    LX15: UInt32;
+  LIdx: Int32;
 begin
-  if (System.Length(input) <> 16) then
+  if (System.Length(AInput) < 16) then
   begin
     raise EArgumentCryptoLibException.Create('');
   end;
-  if (System.Length(x) <> 16) then
+  if (System.Length(AOutput) < 64) then
   begin
     raise EArgumentCryptoLibException.Create('');
   end;
-  if ((rounds mod 2) <> 0) then
+  if ((ARounds mod 2) <> 0) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SRoundsMustbeEven);
   end;
 
-  x00 := input[0];
-  x01 := input[1];
-  x02 := input[2];
-  x03 := input[3];
-  x04 := input[4];
-  x05 := input[5];
-  x06 := input[6];
-  x07 := input[7];
-  x08 := input[8];
-  x09 := input[9];
-  x10 := input[10];
-  x11 := input[11];
-  x12 := input[12];
-  x13 := input[13];
-  x14 := input[14];
-  x15 := input[15];
+  LX00 := AInput[0];
+  LX01 := AInput[1];
+  LX02 := AInput[2];
+  LX03 := AInput[3];
+  LX04 := AInput[4];
+  LX05 := AInput[5];
+  LX06 := AInput[6];
+  LX07 := AInput[7];
+  LX08 := AInput[8];
+  LX09 := AInput[9];
+  LX10 := AInput[10];
+  LX11 := AInput[11];
+  LX12 := AInput[12];
+  LX13 := AInput[13];
+  LX14 := AInput[14];
+  LX15 := AInput[15];
 
-  Idx := rounds;
-  while Idx > 0 do
+  LIdx := ARounds;
+  while LIdx > 0 do
   begin
 
-    x00 := x00 + x04;
-    x12 := R(x12 xor x00, 16);
-    x08 := x08 + x12;
-    x04 := R(x04 xor x08, 12);
-    x00 := x00 + x04;
-    x12 := R(x12 xor x00, 8);
-    x08 := x08 + x12;
-    x04 := R(x04 xor x08, 7);
-    x01 := x01 + x05;
-    x13 := R(x13 xor x01, 16);
-    x09 := x09 + x13;
-    x05 := R(x05 xor x09, 12);
-    x01 := x01 + x05;
-    x13 := R(x13 xor x01, 8);
-    x09 := x09 + x13;
-    x05 := R(x05 xor x09, 7);
-    x02 := x02 + x06;
-    x14 := R(x14 xor x02, 16);
-    x10 := x10 + x14;
-    x06 := R(x06 xor x10, 12);
-    x02 := x02 + x06;
-    x14 := R(x14 xor x02, 8);
-    x10 := x10 + x14;
-    x06 := R(x06 xor x10, 7);
-    x03 := x03 + x07;
-    x15 := R(x15 xor x03, 16);
-    x11 := x11 + x15;
-    x07 := R(x07 xor x11, 12);
-    x03 := x03 + x07;
-    x15 := R(x15 xor x03, 8);
-    x11 := x11 + x15;
-    x07 := R(x07 xor x11, 7);
-    x00 := x00 + x05;
-    x15 := R(x15 xor x00, 16);
-    x10 := x10 + x15;
-    x05 := R(x05 xor x10, 12);
-    x00 := x00 + x05;
-    x15 := R(x15 xor x00, 8);
-    x10 := x10 + x15;
-    x05 := R(x05 xor x10, 7);
-    x01 := x01 + x06;
-    x12 := R(x12 xor x01, 16);
-    x11 := x11 + x12;
-    x06 := R(x06 xor x11, 12);
-    x01 := x01 + x06;
-    x12 := R(x12 xor x01, 8);
-    x11 := x11 + x12;
-    x06 := R(x06 xor x11, 7);
-    x02 := x02 + x07;
-    x13 := R(x13 xor x02, 16);
-    x08 := x08 + x13;
-    x07 := R(x07 xor x08, 12);
-    x02 := x02 + x07;
-    x13 := R(x13 xor x02, 8);
-    x08 := x08 + x13;
-    x07 := R(x07 xor x08, 7);
-    x03 := x03 + x04;
-    x14 := R(x14 xor x03, 16);
-    x09 := x09 + x14;
-    x04 := R(x04 xor x09, 12);
-    x03 := x03 + x04;
-    x14 := R(x14 xor x03, 8);
-    x09 := x09 + x14;
-    x04 := R(x04 xor x09, 7);
+    LX00 := LX00 + LX04;
+    LX12 := R(LX12 xor LX00, 16);
+    LX08 := LX08 + LX12;
+    LX04 := R(LX04 xor LX08, 12);
+    LX00 := LX00 + LX04;
+    LX12 := R(LX12 xor LX00, 8);
+    LX08 := LX08 + LX12;
+    LX04 := R(LX04 xor LX08, 7);
+    LX01 := LX01 + LX05;
+    LX13 := R(LX13 xor LX01, 16);
+    LX09 := LX09 + LX13;
+    LX05 := R(LX05 xor LX09, 12);
+    LX01 := LX01 + LX05;
+    LX13 := R(LX13 xor LX01, 8);
+    LX09 := LX09 + LX13;
+    LX05 := R(LX05 xor LX09, 7);
+    LX02 := LX02 + LX06;
+    LX14 := R(LX14 xor LX02, 16);
+    LX10 := LX10 + LX14;
+    LX06 := R(LX06 xor LX10, 12);
+    LX02 := LX02 + LX06;
+    LX14 := R(LX14 xor LX02, 8);
+    LX10 := LX10 + LX14;
+    LX06 := R(LX06 xor LX10, 7);
+    LX03 := LX03 + LX07;
+    LX15 := R(LX15 xor LX03, 16);
+    LX11 := LX11 + LX15;
+    LX07 := R(LX07 xor LX11, 12);
+    LX03 := LX03 + LX07;
+    LX15 := R(LX15 xor LX03, 8);
+    LX11 := LX11 + LX15;
+    LX07 := R(LX07 xor LX11, 7);
+    LX00 := LX00 + LX05;
+    LX15 := R(LX15 xor LX00, 16);
+    LX10 := LX10 + LX15;
+    LX05 := R(LX05 xor LX10, 12);
+    LX00 := LX00 + LX05;
+    LX15 := R(LX15 xor LX00, 8);
+    LX10 := LX10 + LX15;
+    LX05 := R(LX05 xor LX10, 7);
+    LX01 := LX01 + LX06;
+    LX12 := R(LX12 xor LX01, 16);
+    LX11 := LX11 + LX12;
+    LX06 := R(LX06 xor LX11, 12);
+    LX01 := LX01 + LX06;
+    LX12 := R(LX12 xor LX01, 8);
+    LX11 := LX11 + LX12;
+    LX06 := R(LX06 xor LX11, 7);
+    LX02 := LX02 + LX07;
+    LX13 := R(LX13 xor LX02, 16);
+    LX08 := LX08 + LX13;
+    LX07 := R(LX07 xor LX08, 12);
+    LX02 := LX02 + LX07;
+    LX13 := R(LX13 xor LX02, 8);
+    LX08 := LX08 + LX13;
+    LX07 := R(LX07 xor LX08, 7);
+    LX03 := LX03 + LX04;
+    LX14 := R(LX14 xor LX03, 16);
+    LX09 := LX09 + LX14;
+    LX04 := R(LX04 xor LX09, 12);
+    LX03 := LX03 + LX04;
+    LX14 := R(LX14 xor LX03, 8);
+    LX09 := LX09 + LX14;
+    LX04 := R(LX04 xor LX09, 7);
 
-    System.Dec(Idx, 2);
+    System.Dec(LIdx, 2);
   end;
 
-  x[0] := x00 + input[0];
-  x[1] := x01 + input[1];
-  x[2] := x02 + input[2];
-  x[3] := x03 + input[3];
-  x[4] := x04 + input[4];
-  x[5] := x05 + input[5];
-  x[6] := x06 + input[6];
-  x[7] := x07 + input[7];
-  x[8] := x08 + input[8];
-  x[9] := x09 + input[9];
-  x[10] := x10 + input[10];
-  x[11] := x11 + input[11];
-  x[12] := x12 + input[12];
-  x[13] := x13 + input[13];
-  x[14] := x14 + input[14];
-  x[15] := x15 + input[15];
+  TPack.UInt32_To_LE(LX00 + AInput[0], AOutput, 0);
+  TPack.UInt32_To_LE(LX01 + AInput[1], AOutput, 4);
+  TPack.UInt32_To_LE(LX02 + AInput[2], AOutput, 8);
+  TPack.UInt32_To_LE(LX03 + AInput[3], AOutput, 12);
+  TPack.UInt32_To_LE(LX04 + AInput[4], AOutput, 16);
+  TPack.UInt32_To_LE(LX05 + AInput[5], AOutput, 20);
+  TPack.UInt32_To_LE(LX06 + AInput[6], AOutput, 24);
+  TPack.UInt32_To_LE(LX07 + AInput[7], AOutput, 28);
+  TPack.UInt32_To_LE(LX08 + AInput[8], AOutput, 32);
+  TPack.UInt32_To_LE(LX09 + AInput[9], AOutput, 36);
+  TPack.UInt32_To_LE(LX10 + AInput[10], AOutput, 40);
+  TPack.UInt32_To_LE(LX11 + AInput[11], AOutput, 44);
+  TPack.UInt32_To_LE(LX12 + AInput[12], AOutput, 48);
+  TPack.UInt32_To_LE(LX13 + AInput[13], AOutput, 52);
+  TPack.UInt32_To_LE(LX14 + AInput[14], AOutput, 56);
+  TPack.UInt32_To_LE(LX15 + AInput[15], AOutput, 60);
 
 end;
 
@@ -214,20 +208,19 @@ begin
   Inherited Create();
 end;
 
-constructor TChaChaEngine.Create(rounds: Int32);
+constructor TChaChaEngine.Create(ARounds: Int32);
 begin
-  Inherited Create(rounds);
+  Inherited Create(ARounds);
 end;
 
-procedure TChaChaEngine.GenerateKeyStream(const output: TCryptoLibByteArray);
+procedure TChaChaEngine.GenerateKeyStream(const AOutput: TCryptoLibByteArray);
 begin
-  ChaChaCore(FRounds, FEngineState, Fx);
-  TPack.UInt32_To_LE(Fx, 0, System.Length(Fx), output, 0);
+  ChaChaCore(FRounds, FEngineState, AOutput);
 end;
 
 function TChaChaEngine.GetAlgorithmName: String;
 begin
-  result := Format('ChaCha%d', [FRounds]);
+  Result := Format('ChaCha%d', [FRounds]);
 end;
 
 procedure TChaChaEngine.ResetCounter;
@@ -236,30 +229,30 @@ begin
   FEngineState[13] := 0;
 end;
 
-procedure TChaChaEngine.SetKey(const keyBytes, ivBytes: TCryptoLibByteArray);
+procedure TChaChaEngine.SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray);
 begin
-  if (keyBytes <> Nil) then
+  if (AKeyBytes <> nil) then
   begin
-    if not(Byte(System.Length(keyBytes)) in [16, 32]) then
+    if not(System.Length(AKeyBytes) in [16, 32]) then
     begin
-      TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
-      TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));
+      TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
+      TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
         [AlgorithmName]);
     end;
 
-    PackTauOrSigma(System.Length(keyBytes), FEngineState, 0);
+    PackTauOrSigma(System.Length(AKeyBytes), FEngineState, 0);
 
     // Key
-    TPack.LE_To_UInt32(keyBytes, 0, FEngineState, 4, 4);
-    TPack.LE_To_UInt32(keyBytes, System.Length(keyBytes) - 16, FEngineState, 8, 4);
+    TPack.LE_To_UInt32(AKeyBytes, 0, FEngineState, 4, 4);
+    TPack.LE_To_UInt32(AKeyBytes, System.Length(AKeyBytes) - 16, FEngineState, 8, 4);
   end;
 
   // IV
-  TPack.LE_To_UInt32(ivBytes, 0, FEngineState, 14, 2);
+  TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 14, 2);
 
-  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
-  TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
 end;
 
 end.

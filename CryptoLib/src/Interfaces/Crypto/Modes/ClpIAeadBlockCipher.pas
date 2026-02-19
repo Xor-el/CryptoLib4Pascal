@@ -15,29 +15,22 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpIAeadBlockCipher;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpIBlockCipher,
+  ClpIAeadCipher;
 
 type
+  IAeadBlockCipher = interface(IAeadCipher)
+    ['{E85409BF-5446-4324-86A8-A70BF4067C11}']
 
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
-
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
-
-    property KeyLength: Int32 read GetKeyLength;
+    function GetBlockSize(): Int32;
+    function GetUnderlyingCipher(): IBlockCipher;
   end;
 
 implementation

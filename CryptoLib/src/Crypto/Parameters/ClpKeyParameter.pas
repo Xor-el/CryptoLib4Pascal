@@ -46,7 +46,11 @@ type
       AKeyOff, AKeyLen: Int32); overload;
     destructor Destroy; override;
     function GetKey(): TCryptoLibByteArray; inline;
+    function GetKeyLength(): Int32; inline;
     procedure Clear(); inline;
+    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
+    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
+    function Reverse(): IKeyParameter;
 
   end;
 
@@ -104,6 +108,35 @@ end;
 function TKeyParameter.GetKey: TCryptoLibByteArray;
 begin
   Result := System.Copy(FKey);
+end;
+
+function TKeyParameter.GetKeyLength: Int32;
+begin
+  Result := System.Length(FKey);
+end;
+
+function TKeyParameter.FixedTimeEquals(
+  const AOther: TCryptoLibByteArray): Boolean;
+begin
+  Result := TArrayUtilities.FixedTimeEquals(FKey, AOther);
+end;
+
+procedure TKeyParameter.CopyKeyTo(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32);
+begin
+  System.Move(FKey[0], ABuf[AOff], ALen);
+end;
+
+function TKeyParameter.Reverse: IKeyParameter;
+var
+  LReversed: TCryptoLibByteArray;
+  LI, LLen: Int32;
+begin
+  LLen := System.Length(FKey);
+  System.SetLength(LReversed, LLen);
+  for LI := 0 to System.Pred(LLen) do
+    LReversed[LI] := FKey[LLen - 1 - LI];
+  Result := TKeyParameter.Create(LReversed);
 end;
 
 end.

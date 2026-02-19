@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIKeyParameter;
+unit ClpIAeadParameters;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -23,21 +23,20 @@ interface
 
 uses
   ClpICipherParameters,
+  ClpIKeyParameter,
   ClpCryptoLibTypes;
 
 type
+  IAeadParameters = interface(ICipherParameters)
+    ['{B8E0DFD2-4055-4795-B3A1-AD539257C89A}']
 
-  IKeyParameter = interface(ICipherParameters)
-    ['{92E7D4F7-40E5-4DC1-8058-23BE60848CC3}']
+    function GetKey(): IKeyParameter;
+    function GetMacSize(): Int32;
+    function GetNonce(): TCryptoLibByteArray;
+    function GetAssociatedText(): TCryptoLibByteArray;
 
-    function GetKey(): TCryptoLibByteArray;
-    function GetKeyLength(): Int32;
-    procedure Clear();
-    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
-    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
-    function Reverse(): IKeyParameter;
-
-    property KeyLength: Int32 read GetKeyLength;
+    property Key: IKeyParameter read GetKey;
+    property MacSize: Int32 read GetMacSize;
   end;
 
 implementation
