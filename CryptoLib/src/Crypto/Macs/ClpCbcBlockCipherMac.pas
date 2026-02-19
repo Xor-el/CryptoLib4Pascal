@@ -25,6 +25,7 @@ uses
   ClpCbcBlockCipher,
   ClpICbcBlockCipherMac,
   ClpIMac,
+  ClpMac,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
   ClpIBlockCipherPadding,
@@ -37,7 +38,7 @@ resourcestring
   SNegativeInputLength = 'Can''t have a negative input length!';
 
 type
-  TCbcBlockCipherMac = class sealed(TInterfacedObject, ICbcBlockCipherMac, IMac)
+  TCbcBlockCipherMac = class sealed(TMac, ICbcBlockCipherMac, IMac)
 
   strict private
   var
@@ -58,15 +59,13 @@ type
     constructor Create(const ACipher: IBlockCipher; AMacSizeInBits: Int32;
       const APadding: IBlockCipherPadding); overload;
 
-    procedure Clear();
-    function GetMacSize: Int32; inline;
+    function GetMacSize: Int32; override;
     procedure Update(AInput: Byte);
     procedure BlockUpdate(const AInput: TCryptoLibByteArray;
       AInOff, ALen: Int32);
     procedure Init(const AParameters: ICipherParameters);
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
-      : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
+      : Int32; overload; override;
     procedure Reset();
 
     property AlgorithmName: String read GetAlgorithmName;
@@ -194,17 +193,6 @@ begin
   System.Move(FBuf[0], AOutput[AOutOff], FMacSize * System.SizeOf(Byte));
   Reset();
   Result := FMacSize;
-end;
-
-function TCbcBlockCipherMac.DoFinal: TCryptoLibByteArray;
-begin
-  System.SetLength(Result, FMacSize);
-  DoFinal(Result, 0);
-end;
-
-procedure TCbcBlockCipherMac.Clear();
-begin
-  // intentionally empty
 end;
 
 procedure TCbcBlockCipherMac.Reset();

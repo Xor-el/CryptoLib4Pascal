@@ -685,7 +685,10 @@ uses
   ClpIBufferedAeadBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedAeadBlockCipher.pas',
   ClpIBufferedAeadCipher in '..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedAeadCipher.pas',
   ClpPoly1305KeyGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpPoly1305KeyGenerator.pas',
-  ClpIPoly1305KeyGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPoly1305KeyGenerator.pas';
+  ClpIPoly1305KeyGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPoly1305KeyGenerator.pas',
+  ClpMac in '..\..\CryptoLib\src\Crypto\Macs\ClpMac.pas',
+  ClpSipHashMac in '..\..\CryptoLib\src\Crypto\Macs\ClpSipHashMac.pas',
+  ClpISipHashMac in '..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpISipHashMac.pas';
 
 begin
 

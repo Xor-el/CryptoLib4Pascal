@@ -25,6 +25,7 @@ uses
   SysUtils,
   ClpIPoly1305,
   ClpIMac,
+  ClpMac,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -49,7 +50,7 @@ resourcestring
     'Poly1305 requires a 128-bit IV when used with a cipher.';
 
 type
-  TPoly1305 = class sealed(TInterfacedObject, IPoly1305, IMac)
+  TPoly1305 = class sealed(TMac, IPoly1305, IMac)
 
   strict private
   const
@@ -73,17 +74,14 @@ type
     constructor Create(); overload;
     constructor Create(const ACipher: IBlockCipher); overload;
 
-    procedure Clear();
-
-    function GetMacSize: Int32; inline;
+    function GetMacSize: Int32; override;
 
     procedure Update(AInput: Byte);
     procedure BlockUpdate(const AInput: TCryptoLibByteArray;
       AInOff, ALen: Int32);
     procedure Init(const AParameters: ICipherParameters);
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
-      : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
+      : Int32; overload; override;
 
     procedure Reset();
 
@@ -337,17 +335,6 @@ begin
 
   Reset();
   Result := BlockSize;
-end;
-
-function TPoly1305.DoFinal: TCryptoLibByteArray;
-begin
-  System.SetLength(Result, BlockSize);
-  DoFinal(Result, 0);
-end;
-
-procedure TPoly1305.Clear();
-begin
-  // intentionally empty
 end;
 
 procedure TPoly1305.Reset();

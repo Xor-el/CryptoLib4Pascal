@@ -26,6 +26,7 @@ uses
   ClpCbcBlockCipher,
   ClpICMac,
   ClpIMac,
+  ClpMac,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
   ClpICipherParameters,
@@ -44,7 +45,7 @@ resourcestring
   SCMacKeyOnly = 'CMac mode only permits key to be set.';
 
 type
-  TCMac = class sealed(TInterfacedObject, ICMac, IMac)
+  TCMac = class sealed(TMac, ICMac, IMac)
 
   strict private
   const
@@ -72,15 +73,13 @@ type
     constructor Create(const ACipher: IBlockCipher;
       AMacSizeInBits: Int32); overload;
 
-    procedure Clear();
-    function GetMacSize: Int32; inline;
+    function GetMacSize: Int32; override;
     procedure Update(AInput: Byte);
     procedure BlockUpdate(const AInput: TCryptoLibByteArray;
       AInOff, ALen: Int32);
     procedure Init(const AParameters: ICipherParameters);
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
-      : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
+      : Int32; overload; override;
     procedure Reset();
 
     property AlgorithmName: String read GetAlgorithmName;
@@ -254,17 +253,6 @@ begin
   System.Move(FMac[0], AOutput[AOutOff], FMacSize * System.SizeOf(Byte));
   Reset();
   Result := FMacSize;
-end;
-
-function TCMac.DoFinal: TCryptoLibByteArray;
-begin
-  System.SetLength(Result, FMacSize);
-  DoFinal(Result, 0);
-end;
-
-procedure TCMac.Clear();
-begin
-  // intentionally empty
 end;
 
 procedure TCMac.Reset();

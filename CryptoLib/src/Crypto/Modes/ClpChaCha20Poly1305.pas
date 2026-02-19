@@ -121,9 +121,9 @@ type
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessData(const AInBytes: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-    procedure ResetInternal(AClearMac, AResetCipher: Boolean);
+    procedure Reset(AClearMac, AResetCipher: Boolean); overload;
 
-    class constructor CreateClass;
+    class constructor Create; overload;
 
   public
     constructor Create(); overload;
@@ -145,7 +145,7 @@ type
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
     function GetMac(): TCryptoLibByteArray;
-    procedure Reset();
+    procedure Reset(); overload;
 
     property AlgorithmName: String read GetAlgorithmName;
   end;
@@ -154,7 +154,7 @@ implementation
 
 { TChaCha20Poly1305 }
 
-class constructor TChaCha20Poly1305.CreateClass;
+class constructor TChaCha20Poly1305.Create;
 begin
   System.SetLength(FZeroes, MacSize - 1);
 end;
@@ -263,7 +263,7 @@ begin
   else
     FState := TState.DecInit;
 
-  ResetInternal(True, False);
+  Reset(True, False);
 end;
 
 function TChaCha20Poly1305.GetOutputSize(ALen: Int32): Int32;
@@ -556,7 +556,7 @@ begin
     raise EInvalidOperationCryptoLibException.Create('');
   end;
 
-  ResetInternal(False, True);
+  Reset(False, True);
 
   Result := LResultLen;
 end;
@@ -568,7 +568,7 @@ end;
 
 procedure TChaCha20Poly1305.Reset;
 begin
-  ResetInternal(True, True);
+  Reset(True, True);
 end;
 
 procedure TChaCha20Poly1305.CheckAad;
@@ -688,7 +688,7 @@ begin
   FDataCount := IncrementCount(FDataCount, UInt32(AInLen), DataLimit);
 end;
 
-procedure TChaCha20Poly1305.ResetInternal(AClearMac, AResetCipher: Boolean);
+procedure TChaCha20Poly1305.Reset(AClearMac, AResetCipher: Boolean);
 begin
   TArrayUtilities.Fill<Byte>(FBuf, 0, System.Length(FBuf), Byte(0));
 

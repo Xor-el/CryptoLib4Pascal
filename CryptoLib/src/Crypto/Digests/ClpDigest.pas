@@ -52,7 +52,7 @@ type
     class constructor Create;
     class destructor Destroy;
 
-    constructor Create(const hash: IHash; doInitialize: Boolean = True);
+    constructor Create(const AHash: IHash; ADoInitialize: Boolean = True);
 
     /// <summary>
     /// Gets the Underlying <b>IHash</b> Instance
@@ -72,21 +72,21 @@ type
     /// <summary>
     /// update the message digest with a single byte.
     /// </summary>
-    procedure Update(input: Byte);
+    procedure Update(AInput: Byte);
 
     /// <summary>
     /// update the message digest with a block of bytes.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the byte array containing the data.
     /// </param>
-    /// <param name="inOff">
+    /// <param name="AInOff">
     /// the offset into the byte array where the data starts.
     /// </param>
-    /// <param name="len">
+    /// <param name="ALen">
     /// the length of the data.
     /// </param>
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 
     function DoFinal: TCryptoLibByteArray; overload;
 
@@ -94,13 +94,13 @@ type
     /// Close the digest, producing the final digest value. The doFinal call
     /// leaves the digest reset.
     /// </summary>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the array the digest is to be copied into.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset into the out array the digest is to start at.
     /// </param>
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload;
 
     /// <summary>
@@ -240,61 +240,59 @@ begin
   FHash.Initialize;
 end;
 
-procedure TDigest.BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
+procedure TDigest.BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 begin
-  FHash.TransformBytes(input, inOff, len);
+  FHash.TransformBytes(AInput, AInOff, ALen);
 end;
 
-constructor TDigest.Create(const hash: IHash; doInitialize: Boolean);
+constructor TDigest.Create(const AHash: IHash; ADoInitialize: Boolean);
 begin
   inherited Create();
-  FHash := hash;
+  FHash := AHash;
 
-  if doInitialize then
+  if ADoInitialize then
   begin
     FHash.Initialize;
   end;
 end;
 
-function TDigest.DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TDigest.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  buf: TCryptoLibByteArray;
-  Limit, LXOFSizeInBits: Int32;
+  LBuf: TCryptoLibByteArray;
+  LLimit, LXOFSizeInBits: Int32;
+  LXOF: IXOF;
 begin
-
-  if Supports(FHash, IXOF) then
+  if Supports(FHash, IXOF, LXOF) then
   begin
-    LXOFSizeInBits := (System.Length(output) - outOff) * 8;
-    (FHash as IXOF).XOFSizeInBits := LXOFSizeInBits;
-    Limit := LXOFSizeInBits shr 3;
+    LXOFSizeInBits := (System.Length(AOutput) - AOutOff) * 8;
+    LXOF.XOFSizeInBits := LXOFSizeInBits;
+    LLimit := LXOFSizeInBits shr 3;
   end
   else
-  begin
-    Limit := GetDigestSize;
-  end;
+    LLimit := GetDigestSize;
 
-  if (System.Length(output) - outOff) < Limit then
-  begin
+  if (System.Length(AOutput) - AOutOff) < LLimit then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
-  end
-  else
-  begin
-    buf := DoFinal();
-    System.Move(buf[0], output[outOff], System.Length(buf) *
-      System.SizeOf(Byte));
-  end;
 
-  Result := System.Length(buf);
+  LBuf := FHash.TransformFinal.GetBytes();
+  System.Move(LBuf[0], AOutput[AOutOff], System.Length(LBuf) * System.SizeOf(Byte));
+  Result := System.Length(LBuf);
 end;
 
 function TDigest.DoFinal: TCryptoLibByteArray;
 begin
-  Result := FHash.TransformFinal.GetBytes();
+  if Supports(FHash, IXOF) then
+    Result := FHash.TransformFinal.GetBytes()
+  else
+  begin
+    System.SetLength(Result, GetDigestSize);
+    DoFinal(Result, 0);
+  end;
 end;
 
-procedure TDigest.Update(input: Byte);
+procedure TDigest.Update(AInput: Byte);
 begin
-  FHash.TransformUntyped(input, System.SizeOf(Byte));
+  FHash.TransformUntyped(AInput, System.SizeOf(Byte));
 end;
 
 function TDigest.Clone(): IDigest;

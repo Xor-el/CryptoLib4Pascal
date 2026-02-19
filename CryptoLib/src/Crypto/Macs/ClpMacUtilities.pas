@@ -39,7 +39,12 @@ uses
   ClpOiwObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
+  ClpCMac,
   ClpHMac,
+  ClpSipHashMac,
+  HlpHashFactory,
+  ClpAesEngine,
+  ClpIAesEngine,
   ClpStringUtilities;
 
 resourcestring
@@ -112,6 +117,7 @@ begin
   FAlgorithmOidMap.AddOrSetValue(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512, 'HMAC-GOST3411-2012-512');
 
   FAlgorithmMap.AddOrSetValue('PBEWITHHMACSHA', 'PBEWITHHMACSHA1');
+  FAlgorithmMap.AddOrSetValue('SIPHASH', 'SIPHASH-2-4');
   FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.IdSha1, 'PBEWITHHMACSHA1');
 end;
 
@@ -166,6 +172,17 @@ begin
       LDigestName := 'SHA-512/256';
     Result := THMac.Create(TDigestUtilities.GetDigest(LDigestName));
   end;
+
+  if LMechanism = 'AESCMAC' then
+  begin
+    Result := TCMac.Create(TAesEngine.Create() as IAesEngine);
+  end;
+
+  if LMechanism = 'SIPHASH-2-4' then
+  begin
+    Result := TSipHashMac.Create(THashFactory.THash64.CreateSipHash2_4());
+  end;
+
 end;
 
 class function TMacUtilities.GetAlgorithmName(const AOid: IDerObjectIdentifier): String;
