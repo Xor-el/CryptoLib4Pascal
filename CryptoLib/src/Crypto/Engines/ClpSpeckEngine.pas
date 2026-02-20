@@ -29,6 +29,7 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpArrayUtilities,
+  ClpPlatformUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -65,21 +66,21 @@ type
   strict private
   var
 
-    Finitialised, FforEncryption: Boolean;
+    FInitialised, FForEncryption: Boolean;
 
     /// <summary>
     /// Internal method to Initialise this cipher instance.
     /// <code>true</code> for encryption, <code>false</code> for decryption.
     /// the bytes of the key to use.
     /// </summary>
-    procedure EngineInit(forEncryption: Boolean;
-      const keyBytes: TCryptoLibByteArray); virtual;
+    procedure EngineInit(AForEncryption: Boolean;
+      const AKeyBytes: TCryptoLibByteArray); virtual;
 
   strict protected
 
   var
-    FblockSize, FwordSize, FwordSizeBits, Falpha, Fbeta, FbaseRounds,
-      Frounds: Int32;
+    FBlockSize, FWordSize, FWordSizeBits, FAlpha, FBeta, FBaseRounds,
+      FRounds: Int32;
 
     /// <summary>
     /// Gets the algorithm name of this Speck engine.
@@ -95,38 +96,38 @@ type
     /// Checks whether the key size provided to the <see cref="ClpSpeckEngine|TSpeckEngine.EngineInit(Boolean,TCryptoLibByteArray)" />
     /// method is valid.
     /// </summary>
-    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray);
+    procedure CheckKeySize(const AKeyBytes: TCryptoLibByteArray);
       virtual; abstract;
 
     /// <summary>
     /// Sets a key for this cipher instance, calculating the key schedule.
     /// </summary>
-    procedure SetKey(const keyBytes: TCryptoLibByteArray); virtual; abstract;
+    procedure SetKey(const AKeyBytes: TCryptoLibByteArray); virtual; abstract;
 
     /// <summary>
     /// Unpack a block of data into working state prior to an
     /// encrypt/decrypt operation.
     /// </summary>
-    /// <param name="bytes">
+    /// <param name="ABytes">
     /// the input data.
     /// </param>
-    /// <param name="off">
+    /// <param name="AOff">
     /// the offset to begin reading the input data at.
     /// </param>
-    procedure UnPackBlock(const bytes: TCryptoLibByteArray; off: Int32);
+    procedure UnPackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32);
       virtual; abstract;
 
     /// <summary>
     /// Packs the 2 word working state following an encrypt/decrypt into a
     /// byte sequence.
     /// </summary>
-    /// <param name="bytes">
+    /// <param name="ABytes">
     /// the output buffer.
     /// </param>
-    /// <param name="off">
+    /// <param name="AOff">
     /// the offset to begin writing the output data at.
     /// </param>
-    procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32);
+    procedure PackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32);
       virtual; abstract;
 
     /// <summary>
@@ -145,38 +146,38 @@ type
     /// <summary>
     /// Constructs a Speck engine.
     /// </summary>
-    /// <param name="wordSize">
+    /// <param name="AWordSize">
     /// the size of the word to use, in bytes.
     /// </param>
-    /// <param name="baseRounds">
+    /// <param name="ABaseRounds">
     /// the base number of rounds (for a 2 word key variant) for the
     /// specified word/block size.
     /// </param>
-    /// <param name="alpha">
+    /// <param name="AAlpha">
     /// the alpha rotation constant to use.
     /// </param>
-    /// <param name="beta">
+    /// <param name="ABeta">
     /// the beta rotation constant to use.
     /// </param>
-    constructor Create(wordSize, baseRounds, alpha, beta: Int32);
+    constructor Create(AWordSize, ABaseRounds, AAlpha, ABeta: Int32);
 
     /// <summary>
     /// initialise a Speck cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// whether or not we are for encryption.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the parameters required to set up the cipher.
     /// </param>
     /// <exception cref="EArgumentCryptoLibException">
     /// if the parameters argument is inappropriate.
     /// </exception>
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
-    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
+    function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
 
@@ -195,78 +196,78 @@ type
   var
 
     /// <summary>
-    /// The expanded key schedule for all <see cref="ClpSpeckEngine|TSpeckEngine.Frounds" />
+    /// The expanded key schedule for all <see cref="ClpSpeckEngine|TSpeckEngine.FRounds" />
     /// </summary>
-    Fk: TCryptoLibUInt32Array;
+    FK: TCryptoLibUInt32Array;
 
     /// <summary>
     /// The 2 words of the working state;
     /// </summary>
-    Fx, Fy: UInt32;
+    FX, FY: UInt32;
 
     /// <summary>
     /// Rotates a word left by the specified distance. <br />The rotation is
     /// on the word size of the cipher instance, not on the full 32 bits of
     /// the UInt32.
     /// </summary>
-    /// <param name="i">
+    /// <param name="AValue">
     /// the word to rotate.
     /// </param>
-    /// <param name="distance">
+    /// <param name="ADistance">
     /// the distance in bits to rotate.
     /// </param>
     /// <returns>
     /// the rotated word, which may have unmasked high (&gt; word size) bits.
     /// </returns>
-    function Rotl(i: UInt32; distance: Int32): UInt32; inline;
+    function Rotl(AValue: UInt32; ADistance: Int32): UInt32; inline;
 
     /// <summary>
     /// Rotates a word right by the specified distance. <br />The rotation is
     /// on the word size of the cipher instance, not on the full 32 bits of
     /// the UInt32.
     /// </summary>
-    /// <param name="i">
+    /// <param name="AValue">
     /// the word to rotate.
     /// </param>
-    /// <param name="distance">
+    /// <param name="ADistance">
     /// the distance in bits to rotate.
     /// </param>
     /// <returns>
     /// the rotated word, which may have unmasked high (&gt; word size) bits.
     /// </returns>
-    function Rotr(i: UInt32; distance: Int32): UInt32; inline;
+    function Rotr(AValue: UInt32; ADistance: Int32): UInt32; inline;
 
     /// <summary>
-    /// Read <see cref="ClpSpeckEngine|TSpeckEngine.FwordSize" /> bytes from
+    /// Read <see cref="ClpSpeckEngine|TSpeckEngine.FWordSize" /> bytes from
     /// the input data in <b>little-endian</b> order.
     /// </summary>
-    /// <param name="bytes">
+    /// <param name="ABytes">
     /// the data to read a word from.
     /// </param>
-    /// <param name="off">
+    /// <param name="AOff">
     /// the offset to read the word from.
     /// </param>
     /// <returns>
     /// the read word, with zeroes in any bits higher than the word size.
     /// </returns>
-    function BytesToWord(const bytes: TCryptoLibByteArray; off: Int32)
+    function BytesToWord(const ABytes: TCryptoLibByteArray; AOff: Int32)
       : UInt32; inline;
 
     /// <summary>
-    /// Writes <see cref="ClpSpeckEngine|TSpeckEngine.FwordSize" /> bytes
+    /// Writes <see cref="ClpSpeckEngine|TSpeckEngine.FWordSize" /> bytes
     /// into a buffer in <b>little-endian</b> order.
     /// </summary>
-    /// <param name="word">
+    /// <param name="AWord">
     /// the word to write.
     /// </param>
-    /// <param name="bytes">
+    /// <param name="ABytes">
     /// the buffer to write the word bytes to.
     /// </param>
-    /// <param name="off">
+    /// <param name="AOff">
     /// the offset to write the data at.
     /// </param>
-    procedure WordToBytes(word: UInt32; const bytes: TCryptoLibByteArray;
-      off: Int32); inline;
+    procedure WordToBytes(AWord: UInt32; const ABytes: TCryptoLibByteArray;
+      AOff: Int32); inline;
 
   strict protected
 
@@ -274,20 +275,20 @@ type
     /// Masks all bits higher than the word size of this cipher in the
     /// supplied value.
     /// </summary>
-    /// <param name="val">
+    /// <param name="AValue">
     /// the value to mask.
     /// </param>
     /// <returns>
     /// the masked value.
     /// </returns>
-    function Mask(val: UInt32): UInt32; virtual; abstract;
+    function Mask(AValue: UInt32): UInt32; virtual; abstract;
 
-    procedure SetKey(const keyBytes: TCryptoLibByteArray); override;
+    procedure SetKey(const AKeyBytes: TCryptoLibByteArray); override;
 
-    procedure UnPackBlock(const bytes: TCryptoLibByteArray;
-      off: Int32); override;
+    procedure UnPackBlock(const ABytes: TCryptoLibByteArray;
+      AOff: Int32); override;
 
-    procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32); override;
+    procedure PackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32); override;
 
     procedure EncryptBlock(); override;
 
@@ -297,31 +298,31 @@ type
     /// Constructs a Speck cipher with &lt;= 32 bit word size, using the
     /// standard 8,3 rotation constants.
     /// </summary>
-    /// <param name="wordSize">
+    /// <param name="AWordSize">
     /// the word size in bytes.
     /// </param>
-    /// <param name="baseRounds">
+    /// <param name="ABaseRounds">
     /// the base (for 2 word key) round count.
     /// </param>
-    constructor Create(wordSize, baseRounds: Int32); overload;
+    constructor Create(AWordSize, ABaseRounds: Int32); overload;
 
     /// <summary>
     /// Constructs a Speck cipher with &lt;= 32 bit word size, using custom
     /// rotation constants.
     /// </summary>
-    /// <param name="wordSize">
+    /// <param name="AWordSize">
     /// the word size in bytes.
     /// </param>
-    /// <param name="baseRounds">
+    /// <param name="ABaseRounds">
     /// the base (for 2 word key) round count.
     /// </param>
-    /// <param name="alpha">
+    /// <param name="AAlpha">
     /// the <em>alpha</em> rotation constant.
     /// </param>
-    /// <param name="beta">
+    /// <param name="ABeta">
     /// the <em>beta</em> rotation constant.
     /// </param>
-    constructor Create(wordSize, baseRounds, alpha, beta: Int32); overload;
+    constructor Create(AWordSize, ABaseRounds, AAlpha, ABeta: Int32); overload;
 
   end;
 
@@ -338,78 +339,78 @@ type
   var
 
     /// <summary>
-    /// The expanded key schedule for all <see cref="ClpSpeckEngine|TSpeckEngine.Frounds" />
+    /// The expanded key schedule for all <see cref="ClpSpeckEngine|TSpeckEngine.FRounds" />
     /// </summary>
-    Fk: TCryptoLibUInt64Array;
+    FK: TCryptoLibUInt64Array;
 
     /// <summary>
     /// The 2 words of the working state;
     /// </summary>
-    Fx, Fy: UInt64;
+    FX, FY: UInt64;
 
     /// <summary>
     /// Rotates a word left by the specified distance. <br />The rotation is
     /// on the word size of the cipher instance, not on the full 64 bits of
     /// the UInt64.
     /// </summary>
-    /// <param name="i">
+    /// <param name="AValue">
     /// the word to rotate.
     /// </param>
-    /// <param name="distance">
+    /// <param name="ADistance">
     /// the distance in bits to rotate.
     /// </param>
     /// <returns>
     /// the rotated word, which may have unmasked high (&gt; word size) bits.
     /// </returns>
-    function Rotl(i: UInt64; distance: Int32): UInt64; inline;
+    function Rotl(AValue: UInt64; ADistance: Int32): UInt64; inline;
 
     /// <summary>
     /// Rotates a word right by the specified distance. <br />The rotation is
     /// on the word size of the cipher instance, not on the full 64 bits of
     /// the UInt64.
     /// </summary>
-    /// <param name="i">
+    /// <param name="AValue">
     /// the word to rotate.
     /// </param>
-    /// <param name="distance">
+    /// <param name="ADistance">
     /// the distance in bits to rotate.
     /// </param>
     /// <returns>
     /// the rotated word, which may have unmasked high (&gt; word size) bits.
     /// </returns>
-    function Rotr(i: UInt64; distance: Int32): UInt64; inline;
+    function Rotr(AValue: UInt64; ADistance: Int32): UInt64; inline;
 
     /// <summary>
-    /// Read <see cref="ClpSpeckEngine|TSpeckEngine.FwordSize" /> bytes from
+    /// Read <see cref="ClpSpeckEngine|TSpeckEngine.FWordSize" /> bytes from
     /// the input data in little-endian order.
     /// </summary>
-    /// <param name="bytes">
+    /// <param name="ABytes">
     /// the data to read a word from.
     /// </param>
-    /// <param name="off">
+    /// <param name="AOff">
     /// the offset to read the word from.
     /// </param>
     /// <returns>
     /// the read word, with zeroes in any bits higher than the word size.
     /// </returns>
-    function BytesToWord(const bytes: TCryptoLibByteArray; off: Int32)
+    function BytesToWord(const ABytes: TCryptoLibByteArray; AOff: Int32)
       : UInt64; inline;
 
     /// <summary>
-    /// Writes <see cref="ClpSpeckEngine|TSpeckEngine.FwordSize" /> bytes
+    /// Writes <see cref="ClpSpeckEngine|TSpeckEngine.FWordSize" /> bytes
     /// into a buffer in little-endian order.
     /// </summary>
-    /// <param name="word">
+    /// <param name="AWord">
     /// the word to write.
     /// </param>
-    /// <param name="bytes">
+    /// <param name="ABytes">
     /// the buffer to write the word bytes to.
     /// </param>
-    /// <param name="off">
+    /// <param name="AOff">
     /// the offset to write the data at.
     /// </param>
-    procedure WordToBytes(word: UInt64; const bytes: TCryptoLibByteArray;
-      off: Int32); inline;
+    procedure WordToBytes(AWord: UInt64; const ABytes: TCryptoLibByteArray;
+      AOff: Int32); inline;
 
   strict protected
 
@@ -417,20 +418,20 @@ type
     /// Masks all bits higher than the word size of this cipher in the
     /// supplied value.
     /// </summary>
-    /// <param name="val">
+    /// <param name="AValue">
     /// the value to mask.
     /// </param>
     /// <returns>
     /// the masked value.
     /// </returns>
-    function Mask(val: UInt64): UInt64; virtual; abstract;
+    function Mask(AValue: UInt64): UInt64; virtual; abstract;
 
-    procedure SetKey(const keyBytes: TCryptoLibByteArray); override;
+    procedure SetKey(const AKeyBytes: TCryptoLibByteArray); override;
 
-    procedure UnPackBlock(const bytes: TCryptoLibByteArray;
-      off: Int32); override;
+    procedure UnPackBlock(const ABytes: TCryptoLibByteArray;
+      AOff: Int32); override;
 
-    procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32); override;
+    procedure PackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32); override;
 
     procedure EncryptBlock(); override;
 
@@ -440,31 +441,31 @@ type
     /// Constructs a Speck cipher with &lt;= 64 bit word size, using the
     /// standard 8,3 rotation constants.
     /// </summary>
-    /// <param name="wordSize">
+    /// <param name="AWordSize">
     /// the word size in bytes.
     /// </param>
-    /// <param name="baseRounds">
+    /// <param name="ABaseRounds">
     /// the base (for 2 word key) round count.
     /// </param>
-    constructor Create(wordSize, baseRounds: Int32); overload;
+    constructor Create(AWordSize, ABaseRounds: Int32); overload;
 
     /// <summary>
     /// Constructs a Speck cipher with &lt;= 64 bit word size, using custom
     /// rotation constants.
     /// </summary>
-    /// <param name="wordSize">
+    /// <param name="AWordSize">
     /// the word size in bytes.
     /// </param>
-    /// <param name="baseRounds">
+    /// <param name="ABaseRounds">
     /// the base (for 2 word key) round count.
     /// </param>
-    /// <param name="alpha">
+    /// <param name="AAlpha">
     /// the <em>alpha</em> rotation constant.
     /// </param>
-    /// <param name="beta">
+    /// <param name="ABeta">
     /// the <em>beta</em> rotation constant.
     /// </param>
-    constructor Create(wordSize, baseRounds, alpha, beta: Int32); overload;
+    constructor Create(AWordSize, ABaseRounds, AAlpha, ABeta: Int32); overload;
 
   end;
 
@@ -480,8 +481,8 @@ type
   TSpeck32Engine = class sealed(TSpeckUInt32Engine)
 
   strict protected
-    function Mask(val: UInt32): UInt32; override;
-    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
+    function Mask(AValue: UInt32): UInt32; override;
+    procedure CheckKeySize(const AKeyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -501,8 +502,8 @@ type
   TSpeck48Engine = class sealed(TSpeckUInt32Engine)
 
   strict protected
-    function Mask(val: UInt32): UInt32; override;
-    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
+    function Mask(AValue: UInt32): UInt32; override;
+    procedure CheckKeySize(const AKeyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -522,8 +523,8 @@ type
   TSpeck64Engine = class sealed(TSpeckUInt32Engine)
 
   strict protected
-    function Mask(val: UInt32): UInt32; override;
-    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
+    function Mask(AValue: UInt32): UInt32; override;
+    procedure CheckKeySize(const AKeyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -543,8 +544,8 @@ type
   TSpeck96Engine = class sealed(TSpeckUInt64Engine)
 
   strict protected
-    function Mask(val: UInt64): UInt64; override;
-    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
+    function Mask(AValue: UInt64): UInt64; override;
+    procedure CheckKeySize(const AKeyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -565,8 +566,8 @@ type
   TSpeck128Engine = class sealed(TSpeckUInt64Engine)
 
   strict protected
-    function Mask(val: UInt64): UInt64; override;
-    procedure CheckKeySize(const keyBytes: TCryptoLibByteArray); override;
+    function Mask(AValue: UInt64): UInt64; override;
+    procedure CheckKeySize(const AKeyBytes: TCryptoLibByteArray); override;
 
   public
     constructor Create();
@@ -577,67 +578,66 @@ implementation
 
 { TSpeckEngine }
 
-constructor TSpeckEngine.Create(wordSize, baseRounds, alpha, beta: Int32);
+constructor TSpeckEngine.Create(AWordSize, ABaseRounds, AAlpha, ABeta: Int32);
 begin
   Inherited Create();
-  FwordSize := wordSize;
-  FbaseRounds := baseRounds;
-  Frounds := baseRounds;
-  FblockSize := wordSize * 2;
-  FwordSizeBits := wordSize * 8;
-  Falpha := alpha;
-  Fbeta := beta;
+  FWordSize := AWordSize;
+  FBaseRounds := ABaseRounds;
+  FRounds := ABaseRounds;
+  FBlockSize := AWordSize * 2;
+  FWordSizeBits := AWordSize * 8;
+  FAlpha := AAlpha;
+  FBeta := ABeta;
 end;
 
 function TSpeckEngine.GetBlockSize: Int32;
 begin
-  result := FblockSize;
+  Result := FBlockSize;
 end;
 
-procedure TSpeckEngine.EngineInit(forEncryption: Boolean;
-  const keyBytes: TCryptoLibByteArray);
+procedure TSpeckEngine.EngineInit(AForEncryption: Boolean;
+  const AKeyBytes: TCryptoLibByteArray);
 begin
-  FforEncryption := forEncryption;
-  CheckKeySize(keyBytes);
-  SetKey(keyBytes);
-  Finitialised := true;
+  FForEncryption := AForEncryption;
+  CheckKeySize(AKeyBytes);
+  SetKey(AKeyBytes);
+  FInitialised := True;
 end;
 
 function TSpeckEngine.GetAlgorithmName: String;
 begin
-  result := Format('Speck%d', [FblockSize * 8]);
+  Result := Format('Speck%d', [FBlockSize * 8]);
 end;
 
-procedure TSpeckEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TSpeckEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  keyParameter: IKeyParameter;
+  LKeyParameter: IKeyParameter;
 begin
-
-  if not Supports(parameters, IKeyParameter, keyParameter) then
+  if not Supports(AParameters, IKeyParameter, LKeyParameter) then
   begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameterSpeckInit,
-      [(parameters as TObject).ToString]);
+      [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
-  EngineInit(forEncryption, keyParameter.GetKey());
+  EngineInit(AForEncryption, LKeyParameter.GetKey());
 end;
 
-function TSpeckEngine.ProcessBlock(const input: TCryptoLibByteArray;
-  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TSpeckEngine.ProcessBlock(const AInput: TCryptoLibByteArray;
+  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if (not Finitialised) then
+  if (not FInitialised) then
   begin
     raise EInvalidOperationCryptoLibException.CreateResFmt
       (@SSpeckEngineNotInitialised, [AlgorithmName]);
   end;
 
-  TCheck.DataLength((inOff + FblockSize) > System.Length(input),
+  TCheck.DataLength((AInOff + FBlockSize) > System.Length(AInput),
     SInputBuffertooShort);
-  TCheck.DataLength((outOff + FblockSize) > System.Length(output),
+  TCheck.DataLength((AOutOff + FBlockSize) > System.Length(AOutput),
     SOutputBuffertooShort);
 
-  UnPackBlock(input, inOff);
-  if (FforEncryption) then
+  UnPackBlock(AInput, AInOff);
+  if (FForEncryption) then
   begin
     EncryptBlock();
   end
@@ -645,352 +645,350 @@ begin
   begin
     DecryptBlock();
   end;
-  PackBlock(output, outOff);
+  PackBlock(AOutput, AOutOff);
 
-  result := FblockSize;
+  Result := FBlockSize;
 end;
 
 { TSpeckUInt32Engine }
 
-function TSpeckUInt32Engine.Rotl(i: UInt32; distance: Int32): UInt32;
+function TSpeckUInt32Engine.Rotl(AValue: UInt32; ADistance: Int32): UInt32;
 begin
-  result := ((i shl distance) or (i shr (FwordSizeBits - distance)));
+  Result := ((AValue shl ADistance) or (AValue shr (FWordSizeBits - ADistance)));
 end;
 
-function TSpeckUInt32Engine.Rotr(i: UInt32; distance: Int32): UInt32;
+function TSpeckUInt32Engine.Rotr(AValue: UInt32; ADistance: Int32): UInt32;
 begin
-  result := ((i shr distance) or (i shl (FwordSizeBits - distance)));
+  Result := ((AValue shr ADistance) or (AValue shl (FWordSizeBits - ADistance)));
 end;
 
-function TSpeckUInt32Engine.BytesToWord(const bytes: TCryptoLibByteArray;
-  off: Int32): UInt32;
+function TSpeckUInt32Engine.BytesToWord(const ABytes: TCryptoLibByteArray;
+  AOff: Int32): UInt32;
 var
-  index: Int32;
+  LIndex: Int32;
 begin
-  TCheck.DataLength((off + FwordSize) > System.Length(bytes),
+  TCheck.DataLength((AOff + FWordSize) > System.Length(ABytes),
     SInvalidArgumentEncountered);
 
-  index := off + FwordSize - 1;
-  result := (bytes[index]);
-  System.Dec(index);
-  result := (result shl 8) or (bytes[index]);
-  System.Dec(index);
-  if (FwordSize > 2) then
+  LIndex := AOff + FWordSize - 1;
+  Result := (ABytes[LIndex]);
+  System.Dec(LIndex);
+  Result := (Result shl 8) or (ABytes[LIndex]);
+  System.Dec(LIndex);
+  if (FWordSize > 2) then
   begin
-    result := (result shl 8) or (bytes[index]);
-    System.Dec(index);
-    if (FwordSize > 3) then
+    Result := (Result shl 8) or (ABytes[LIndex]);
+    System.Dec(LIndex);
+    if (FWordSize > 3) then
     begin
-      result := (result shl 8) or (bytes[index]);
+      Result := (Result shl 8) or (ABytes[LIndex]);
     end;
   end;
 
 end;
 
-procedure TSpeckUInt32Engine.WordToBytes(word: UInt32;
-  const bytes: TCryptoLibByteArray; off: Int32);
+procedure TSpeckUInt32Engine.WordToBytes(AWord: UInt32;
+  const ABytes: TCryptoLibByteArray; AOff: Int32);
 begin
-  TCheck.DataLength((off + FwordSize) > System.Length(bytes),
+  TCheck.DataLength((AOff + FWordSize) > System.Length(ABytes),
     SInvalidArgumentEncountered);
 
-  bytes[off] := Byte(word);
-  System.Inc(off);
-  bytes[off] := Byte(word shr 8);
-  System.Inc(off);
-  if (FwordSize > 2) then
+  ABytes[AOff] := Byte(AWord);
+  System.Inc(AOff);
+  ABytes[AOff] := Byte(AWord shr 8);
+  System.Inc(AOff);
+  if (FWordSize > 2) then
   begin
-    bytes[off] := Byte(word shr 16);
-    System.Inc(off);
-    if (FwordSize > 3) then
+    ABytes[AOff] := Byte(AWord shr 16);
+    System.Inc(AOff);
+    if (FWordSize > 3) then
     begin
-      bytes[off] := Byte(word shr 24);
+      ABytes[AOff] := Byte(AWord shr 24);
     end;
   end;
 
 end;
 
-constructor TSpeckUInt32Engine.Create(wordSize, baseRounds: Int32);
+constructor TSpeckUInt32Engine.Create(AWordSize, ABaseRounds: Int32);
 begin
-  Create(wordSize, baseRounds, 8, 3);
+  Create(AWordSize, ABaseRounds, 8, 3);
 end;
 
-constructor TSpeckUInt32Engine.Create(wordSize, baseRounds, alpha, beta: Int32);
+constructor TSpeckUInt32Engine.Create(AWordSize, ABaseRounds, AAlpha, ABeta: Int32);
 begin
-  Inherited Create(wordSize, baseRounds, alpha, beta);
+  inherited Create(AWordSize, ABaseRounds, AAlpha, ABeta);
 end;
 
 procedure TSpeckUInt32Engine.EncryptBlock;
 var
-  x, y: UInt32;
-  r: Int32;
+  LX, LY: UInt32;
+  LR: Int32;
 begin
-  x := Fx;
-  y := Fy;
+  LX := FX;
+  LY := FY;
 
-  for r := 0 to System.Pred(Frounds) do
+  for LR := 0 to System.Pred(FRounds) do
   begin
-    x := Mask((Rotr(x, Falpha) + y) xor Fk[r]);
-    y := Mask(Rotl(y, Fbeta) xor x);
+    LX := Mask((Rotr(LX, FAlpha) + LY) xor FK[LR]);
+    LY := Mask(Rotl(LY, FBeta) xor LX);
   end;
 
-  Fx := x;
-  Fy := y;
+  FX := LX;
+  FY := LY;
 end;
 
 procedure TSpeckUInt32Engine.DecryptBlock;
 var
-  x, y: UInt32;
-  r: Int32;
+  LX, LY: UInt32;
+  LR: Int32;
 begin
-  x := Fx;
-  y := Fy;
+  LX := FX;
+  LY := FY;
 
-  for r := System.Pred(Frounds) downto 0 do
+  for LR := System.Pred(FRounds) downto 0 do
   begin
-    y := Mask(Rotr(x xor y, Fbeta));
-    x := Mask(Rotl(Mask((x xor Fk[r]) - y), Falpha));
+    LY := Mask(Rotr(LX xor LY, FBeta));
+    LX := Mask(Rotl(Mask((LX xor FK[LR]) - LY), FAlpha));
   end;
 
-  Fx := x;
-  Fy := y;
-
+  FX := LX;
+  FY := LY;
 end;
 
-procedure TSpeckUInt32Engine.PackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TSpeckUInt32Engine.PackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 begin
-  WordToBytes(Fx, bytes, off + FwordSize);
-  WordToBytes(Fy, bytes, off);
+  WordToBytes(FX, ABytes, AOff + FWordSize);
+  WordToBytes(FY, ABytes, AOff);
 end;
 
-procedure TSpeckUInt32Engine.UnPackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TSpeckUInt32Engine.UnPackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 begin
-  Fx := BytesToWord(bytes, off + FwordSize);
-  Fy := BytesToWord(bytes, off);
+  FX := BytesToWord(ABytes, AOff + FWordSize);
+  FY := BytesToWord(ABytes, AOff);
 end;
 
-procedure TSpeckUInt32Engine.SetKey(const keyBytes: TCryptoLibByteArray);
+procedure TSpeckUInt32Engine.SetKey(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyWords, i, lw: Int32;
+  LKeyWords, LI, LLW: Int32;
   L: TCryptoLibUInt32Array;
 begin
   // Determine number of key words m
-  keyWords := System.Length(keyBytes) div FwordSize;
+  LKeyWords := System.Length(AKeyBytes) div FWordSize;
 
   // Number of rounds is increased by 1 for each key word > 2
-  Frounds := FbaseRounds + (keyWords - 2);
-  System.SetLength(Fk, Frounds);
+  FRounds := FBaseRounds + (LKeyWords - 2);
+  System.SetLength(FK, FRounds);
 
   // Load k[0]
-  Fk[0] := BytesToWord(keyBytes, 0);
+  FK[0] := BytesToWord(AKeyBytes, 0);
 
   // Load l[m-2]...l[0], leave space for l[m-1] in key expansion
-  System.SetLength(L, keyWords);
+  System.SetLength(L, LKeyWords);
 
-  for i := 0 to System.Pred(keyWords - 1) do
+  for LI := 0 to System.Pred(LKeyWords - 1) do
   begin
-    L[(keyWords - 2) - i] := BytesToWord(keyBytes, ((keyWords - 1) - i) *
-      FwordSize);
+    L[(LKeyWords - 2) - LI] := BytesToWord(AKeyBytes, ((LKeyWords - 1) - LI) *
+      FWordSize);
   end;
   // Key expansion using round function over l[m-2]...l[0],k[0] with round number as key
-  for i := 0 to System.Pred(Frounds - 1) do
+  for LI := 0 to System.Pred(FRounds - 1) do
   begin
-    lw := (i + keyWords - 1) mod keyWords;
-    L[lw] := Mask((Rotr(L[i mod keyWords], Falpha) + Fk[i]) xor UInt32(i));
-    Fk[i + 1] := Mask(Rotl(Fk[i], Fbeta) xor L[lw]);
+    LLW := (LI + LKeyWords - 1) mod LKeyWords;
+    L[LLW] := Mask((Rotr(L[LI mod LKeyWords], FAlpha) + FK[LI]) xor UInt32(LI));
+    FK[LI + 1] := Mask(Rotl(FK[LI], FBeta) xor L[LLW]);
 
   end;
 
-  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
 end;
 
 { TSpeckUInt64Engine }
 
-function TSpeckUInt64Engine.Rotl(i: UInt64; distance: Int32): UInt64;
+function TSpeckUInt64Engine.Rotl(AValue: UInt64; ADistance: Int32): UInt64;
 begin
-  result := ((i shl distance) or (i shr (FwordSizeBits - distance)));
+  Result := ((AValue shl ADistance) or (AValue shr (FWordSizeBits - ADistance)));
 end;
 
-function TSpeckUInt64Engine.Rotr(i: UInt64; distance: Int32): UInt64;
+function TSpeckUInt64Engine.Rotr(AValue: UInt64; ADistance: Int32): UInt64;
 begin
-  result := ((i shr distance) or (i shl (FwordSizeBits - distance)));
+  Result := ((AValue shr ADistance) or (AValue shl (FWordSizeBits - ADistance)));
 end;
 
-function TSpeckUInt64Engine.BytesToWord(const bytes: TCryptoLibByteArray;
-  off: Int32): UInt64;
+function TSpeckUInt64Engine.BytesToWord(const ABytes: TCryptoLibByteArray;
+  AOff: Int32): UInt64;
 var
-  index: Int32;
+  LIndex: Int32;
 begin
-  TCheck.DataLength((off + FwordSize) > System.Length(bytes),
+  TCheck.DataLength((AOff + FWordSize) > System.Length(ABytes),
     SInvalidArgumentEncountered);
 
-  index := off + FwordSize - 1;
-  result := (bytes[index]);
-  System.Dec(index);
-  result := (result shl 8) or (bytes[index]);
-  System.Dec(index);
-  result := (result shl 8) or (bytes[index]);
-  System.Dec(index);
-  result := (result shl 8) or (bytes[index]);
-  System.Dec(index);
-  result := (result shl 8) or (bytes[index]);
-  System.Dec(index);
-  result := (result shl 8) or (bytes[index]);
-  System.Dec(index);
-  if (FwordSize = 8) then
+  LIndex := AOff + FWordSize - 1;
+  Result := (ABytes[LIndex]);
+  System.Dec(LIndex);
+  Result := (Result shl 8) or (ABytes[LIndex]);
+  System.Dec(LIndex);
+  Result := (Result shl 8) or (ABytes[LIndex]);
+  System.Dec(LIndex);
+  Result := (Result shl 8) or (ABytes[LIndex]);
+  System.Dec(LIndex);
+  Result := (Result shl 8) or (ABytes[LIndex]);
+  System.Dec(LIndex);
+  Result := (Result shl 8) or (ABytes[LIndex]);
+  System.Dec(LIndex);
+  if (FWordSize = 8) then
   begin
-    result := (result shl 8) or (bytes[index]);
-    System.Dec(index);
-    result := (result shl 8) or (bytes[index]);
+    Result := (Result shl 8) or (ABytes[LIndex]);
+    System.Dec(LIndex);
+    Result := (Result shl 8) or (ABytes[LIndex]);
   end;
 end;
 
-procedure TSpeckUInt64Engine.WordToBytes(word: UInt64;
-  const bytes: TCryptoLibByteArray; off: Int32);
+procedure TSpeckUInt64Engine.WordToBytes(AWord: UInt64;
+  const ABytes: TCryptoLibByteArray; AOff: Int32);
 begin
-  TCheck.DataLength((off + FwordSize) > System.Length(bytes),
+  TCheck.DataLength((AOff + FWordSize) > System.Length(ABytes),
     SInvalidArgumentEncountered);
 
-  bytes[off] := Byte(word);
-  System.Inc(off);
-  bytes[off] := Byte(word shr 8);
-  System.Inc(off);
-  bytes[off] := Byte(word shr 16);
-  System.Inc(off);
-  bytes[off] := Byte(word shr 24);
-  System.Inc(off);
-  bytes[off] := Byte(word shr 32);
-  System.Inc(off);
-  bytes[off] := Byte(word shr 40);
-  System.Inc(off);
-  if (FwordSize = 8) then
+  ABytes[AOff] := Byte(AWord);
+  System.Inc(AOff);
+  ABytes[AOff] := Byte(AWord shr 8);
+  System.Inc(AOff);
+  ABytes[AOff] := Byte(AWord shr 16);
+  System.Inc(AOff);
+  ABytes[AOff] := Byte(AWord shr 24);
+  System.Inc(AOff);
+  ABytes[AOff] := Byte(AWord shr 32);
+  System.Inc(AOff);
+  ABytes[AOff] := Byte(AWord shr 40);
+  System.Inc(AOff);
+  if (FWordSize = 8) then
   begin
-    bytes[off] := Byte(word shr 48);
-    System.Inc(off);
-    bytes[off] := Byte(word shr 56);
+    ABytes[AOff] := Byte(AWord shr 48);
+    System.Inc(AOff);
+    ABytes[AOff] := Byte(AWord shr 56);
   end;
 
 end;
 
-constructor TSpeckUInt64Engine.Create(wordSize, baseRounds: Int32);
+constructor TSpeckUInt64Engine.Create(AWordSize, ABaseRounds: Int32);
 begin
-  Create(wordSize, baseRounds, 8, 3);
+  Create(AWordSize, ABaseRounds, 8, 3);
 end;
 
-constructor TSpeckUInt64Engine.Create(wordSize, baseRounds, alpha, beta: Int32);
+constructor TSpeckUInt64Engine.Create(AWordSize, ABaseRounds, AAlpha, ABeta: Int32);
 begin
-  Inherited Create(wordSize, baseRounds, alpha, beta);
+  inherited Create(AWordSize, ABaseRounds, AAlpha, ABeta);
 end;
 
 procedure TSpeckUInt64Engine.EncryptBlock;
 var
-  x, y: UInt64;
-  r: Int32;
+  LX, LY: UInt64;
+  LR: Int32;
 begin
-  x := Fx;
-  y := Fy;
+  LX := FX;
+  LY := FY;
 
-  for r := 0 to System.Pred(Frounds) do
+  for LR := 0 to System.Pred(FRounds) do
   begin
-    x := Mask((Rotr(x, Falpha) + y) xor Fk[r]);
-    y := Mask(Rotl(y, Fbeta) xor x);
+    LX := Mask((Rotr(LX, FAlpha) + LY) xor FK[LR]);
+    LY := Mask(Rotl(LY, FBeta) xor LX);
   end;
 
-  Fx := x;
-  Fy := y;
+  FX := LX;
+  FY := LY;
 end;
 
 procedure TSpeckUInt64Engine.DecryptBlock;
 var
-  x, y: UInt64;
-  r: Int32;
+  LX, LY: UInt64;
+  LR: Int32;
 begin
-  x := Fx;
-  y := Fy;
+  LX := FX;
+  LY := FY;
 
-  for r := System.Pred(Frounds) downto 0 do
+  for LR := System.Pred(FRounds) downto 0 do
   begin
-    y := Mask(Rotr(x xor y, Fbeta));
-    x := Mask(Rotl(Mask((x xor Fk[r]) - y), Falpha));
+    LY := Mask(Rotr(LX xor LY, FBeta));
+    LX := Mask(Rotl(Mask((LX xor FK[LR]) - LY), FAlpha));
   end;
 
-  Fx := x;
-  Fy := y;
-
+  FX := LX;
+  FY := LY;
 end;
 
-procedure TSpeckUInt64Engine.PackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TSpeckUInt64Engine.PackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 begin
-  WordToBytes(Fx, bytes, off + FwordSize);
-  WordToBytes(Fy, bytes, off);
+  WordToBytes(FX, ABytes, AOff + FWordSize);
+  WordToBytes(FY, ABytes, AOff);
 end;
 
-procedure TSpeckUInt64Engine.UnPackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TSpeckUInt64Engine.UnPackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 begin
-  Fx := BytesToWord(bytes, off + FwordSize);
-  Fy := BytesToWord(bytes, off);
+  FX := BytesToWord(ABytes, AOff + FWordSize);
+  FY := BytesToWord(ABytes, AOff);
 end;
 
-procedure TSpeckUInt64Engine.SetKey(const keyBytes: TCryptoLibByteArray);
+procedure TSpeckUInt64Engine.SetKey(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyWords, i, lw: Int32;
+  LKeyWords, LI, LLW: Int32;
   L: TCryptoLibUInt64Array;
 begin
   // Determine number of key words m
-  keyWords := System.Length(keyBytes) div FwordSize;
+  LKeyWords := System.Length(AKeyBytes) div FWordSize;
 
   // Number of rounds is increased by 1 for each key word > 2
-  Frounds := FbaseRounds + (keyWords - 2);
-  System.SetLength(Fk, Frounds);
+  FRounds := FBaseRounds + (LKeyWords - 2);
+  System.SetLength(FK, FRounds);
 
   // Load k[0]
-  Fk[0] := BytesToWord(keyBytes, 0);
+  FK[0] := BytesToWord(AKeyBytes, 0);
 
   // Load l[m-2]...l[0], leave space for l[m-1] in key expansion
-  System.SetLength(L, keyWords);
+  System.SetLength(L, LKeyWords);
 
-  for i := 0 to System.Pred(keyWords - 1) do
+  for LI := 0 to System.Pred(LKeyWords - 1) do
   begin
-    L[(keyWords - 2) - i] := BytesToWord(keyBytes, ((keyWords - 1) - i) *
-      FwordSize);
+    L[(LKeyWords - 2) - LI] := BytesToWord(AKeyBytes, ((LKeyWords - 1) - LI) *
+      FWordSize);
   end;
   // Key expansion using round function over l[m-2]...l[0],k[0] with round number as key
-  for i := 0 to System.Pred(Frounds - 1) do
+  for LI := 0 to System.Pred(FRounds - 1) do
   begin
-    lw := (i + keyWords - 1) mod keyWords;
-    L[lw] := Mask((Rotr(L[i mod keyWords], Falpha) + Fk[i]) xor UInt64(i));
-    Fk[i + 1] := Mask(Rotl(Fk[i], Fbeta) xor L[lw]);
+    LLW := (LI + LKeyWords - 1) mod LKeyWords;
+    L[LLW] := Mask((Rotr(L[LI mod LKeyWords], FAlpha) + FK[LI]) xor UInt64(LI));
+    FK[LI + 1] := Mask(Rotl(FK[LI], FBeta) xor L[LLW]);
 
   end;
 
-  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
 end;
 
 { TSpeck32Engine }
 
 constructor TSpeck32Engine.Create;
 begin
-  Inherited Create(2, 20, 7, 2);
+  inherited Create(2, 20, 7, 2);
 end;
 
-function TSpeck32Engine.Mask(val: UInt32): UInt32;
+function TSpeck32Engine.Mask(AValue: UInt32): UInt32;
 begin
-  result := (val and $FFFF);
+  Result := (AValue and $FFFF);
 end;
 
-procedure TSpeck32Engine.CheckKeySize(const keyBytes: TCryptoLibByteArray);
+procedure TSpeck32Engine.CheckKeySize(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyBytesSize: Int32;
+  LKeyBytesSize: Int32;
 begin
-  keyBytesSize := System.Length(keyBytes);
-  if (keyBytesSize <> 8) then
+  LKeyBytesSize := System.Length(AKeyBytes);
+  if (LKeyBytesSize <> 8) then
   begin
-    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SSpeck32InvalidKeySize,
-      [keyBytesSize * 8]);
+      [LKeyBytesSize * 8]);
   end;
 end;
 
@@ -998,24 +996,24 @@ end;
 
 constructor TSpeck48Engine.Create;
 begin
-  Inherited Create(3, 21);
+  inherited Create(3, 21);
 end;
 
-function TSpeck48Engine.Mask(val: UInt32): UInt32;
+function TSpeck48Engine.Mask(AValue: UInt32): UInt32;
 begin
-  result := (val and $FFFFFF);
+  Result := (AValue and $FFFFFF);
 end;
 
-procedure TSpeck48Engine.CheckKeySize(const keyBytes: TCryptoLibByteArray);
+procedure TSpeck48Engine.CheckKeySize(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyBytesSize: Int32;
+  LKeyBytesSize: Int32;
 begin
-  keyBytesSize := System.Length(keyBytes);
-  if not(keyBytesSize in [9, 12]) then
+  LKeyBytesSize := System.Length(AKeyBytes);
+  if not(LKeyBytesSize in [9, 12]) then
   begin
-    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SSpeck48InvalidKeySize,
-      [keyBytesSize * 8]);
+      [LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1023,24 +1021,24 @@ end;
 
 constructor TSpeck64Engine.Create;
 begin
-  Inherited Create(4, 25);
+  inherited Create(4, 25);
 end;
 
-function TSpeck64Engine.Mask(val: UInt32): UInt32;
+function TSpeck64Engine.Mask(AValue: UInt32): UInt32;
 begin
-  result := val;
+  Result := AValue;
 end;
 
-procedure TSpeck64Engine.CheckKeySize(const keyBytes: TCryptoLibByteArray);
+procedure TSpeck64Engine.CheckKeySize(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyBytesSize: Int32;
+  LKeyBytesSize: Int32;
 begin
-  keyBytesSize := System.Length(keyBytes);
-  if not(keyBytesSize in [12, 16]) then
+  LKeyBytesSize := System.Length(AKeyBytes);
+  if not(LKeyBytesSize in [12, 16]) then
   begin
-    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SSpeck64InvalidKeySize,
-      [keyBytesSize * 8]);
+      [LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1048,24 +1046,24 @@ end;
 
 constructor TSpeck96Engine.Create;
 begin
-  Inherited Create(6, 28);
+  inherited Create(6, 28);
 end;
 
-function TSpeck96Engine.Mask(val: UInt64): UInt64;
+function TSpeck96Engine.Mask(AValue: UInt64): UInt64;
 begin
-  result := (val and $0000FFFFFFFFFFFF);
+  Result := (AValue and $0000FFFFFFFFFFFF);
 end;
 
-procedure TSpeck96Engine.CheckKeySize(const keyBytes: TCryptoLibByteArray);
+procedure TSpeck96Engine.CheckKeySize(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyBytesSize: Int32;
+  LKeyBytesSize: Int32;
 begin
-  keyBytesSize := System.Length(keyBytes);
-  if not(keyBytesSize in [12, 18]) then
+  LKeyBytesSize := System.Length(AKeyBytes);
+  if not(LKeyBytesSize in [12, 18]) then
   begin
-    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SSpeck96InvalidKeySize,
-      [keyBytesSize * 8]);
+      [LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1073,24 +1071,24 @@ end;
 
 constructor TSpeck128Engine.Create;
 begin
-  Inherited Create(8, 32);
+  inherited Create(8, 32);
 end;
 
-function TSpeck128Engine.Mask(val: UInt64): UInt64;
+function TSpeck128Engine.Mask(AValue: UInt64): UInt64;
 begin
-  result := val;
+  Result := AValue;
 end;
 
-procedure TSpeck128Engine.CheckKeySize(const keyBytes: TCryptoLibByteArray);
+procedure TSpeck128Engine.CheckKeySize(const AKeyBytes: TCryptoLibByteArray);
 var
-  keyBytesSize: Int32;
+  LKeyBytesSize: Int32;
 begin
-  keyBytesSize := System.Length(keyBytes);
-  if not(keyBytesSize in [16, 24, 32]) then
+  LKeyBytesSize := System.Length(AKeyBytes);
+  if not(LKeyBytesSize in [16, 24, 32]) then
   begin
-    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SSpeck128InvalidKeySize,
-      [keyBytesSize * 8]);
+      [LKeyBytesSize * 8]);
   end;
 end;
 
