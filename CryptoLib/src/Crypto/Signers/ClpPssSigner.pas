@@ -34,6 +34,7 @@ uses
   ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
   ClpBigInteger,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -293,7 +294,7 @@ end;
 procedure TPssSigner.ClearBlock(const ABlock: TCryptoLibByteArray);
 begin
   if ABlock <> nil then
-    FillChar(ABlock[0], System.Length(ABlock), 0);
+    TArrayUtilities.Fill<Byte>(ABlock, 0, System.Length(ABlock), Byte(0));
 end;
 
 procedure TPssSigner.Update(AInput: Byte);
@@ -322,7 +323,7 @@ begin
   ClearBlock(FBlock);
 
   // PSS requires first 8 bytes of mDash to be zeros (padding1)
-  FillChar(FMDash[0], 8, 0);
+  TArrayUtilities.Fill<Byte>(FMDash, 0, 8, Byte(0));
 
   FContentDigest1.DoFinal(FMDash, System.Length(FMDash) - FHLen - FSLen);
 
@@ -380,13 +381,13 @@ begin
   end;
 
   // PSS requires first 8 bytes of mDash to be zeros (padding1)
-  FillChar(FMDash[0], 8, 0);
+  TArrayUtilities.Fill<Byte>(FMDash, 0, 8, Byte(0));
 
   FContentDigest1.DoFinal(FMDash, System.Length(FMDash) - FHLen - FSLen);
 
   LB := FCipher.ProcessBlock(ASignature, 0, System.Length(ASignature));
   
-  FillChar(FBlock[0], System.Length(FBlock) - System.Length(LB), 0);
+  TArrayUtilities.Fill<Byte>(FBlock, 0, System.Length(FBlock) - System.Length(LB), Byte(0));
   System.Move(LB[0], FBlock[System.Length(FBlock) - System.Length(LB)],
     System.Length(LB));
 

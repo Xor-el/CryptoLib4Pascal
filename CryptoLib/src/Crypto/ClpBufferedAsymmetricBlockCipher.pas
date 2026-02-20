@@ -27,6 +27,7 @@ uses
   ClpIAsymmetricBlockCipher,
   ClpIBufferedCipher,
   ClpIBufferedAsymmetricBlockCipher,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -228,7 +229,7 @@ procedure TBufferedAsymmetricBlockCipher.Reset;
 begin
   if FBuffer <> nil then
   begin
-    FillChar(FBuffer[0], System.Length(FBuffer), 0);
+    TArrayUtilities.Fill<Byte>(FBuffer, 0, System.Length(FBuffer), Byte(0));
     FBufOff := 0;
   end;
 end;
