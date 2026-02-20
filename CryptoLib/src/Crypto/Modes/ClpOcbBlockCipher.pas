@@ -152,6 +152,7 @@ begin
   System.SetLength(FStretch, 24);
   System.SetLength(FOffsetMAIN_0, 16);
   System.SetLength(FOffsetMAIN, 16);
+  FL := TList<TCryptoLibByteArray>.Create;
 end;
 
 destructor TOcbBlockCipher.Destroy;
@@ -184,6 +185,7 @@ begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
   FMacBlock := nil;
+  FL.Clear;
 
   if Supports(AParameters, IAeadParameters, LAeadParameters) then
   begin
@@ -240,8 +242,6 @@ begin
 
   FL_Dollar := OCB_double(FL_Asterisk);
 
-  FL.Free;
-  FL := TList<TCryptoLibByteArray>.Create;
   FL.Add(OCB_double(FL_Dollar));
 
   LBottom := ProcessNonce(LN);
@@ -570,6 +570,7 @@ begin
   if AClearMac then
   begin
     FMacBlock := nil;
+    FL.Clear;
   end;
 
   if (FInitialAssociatedText <> nil) then
