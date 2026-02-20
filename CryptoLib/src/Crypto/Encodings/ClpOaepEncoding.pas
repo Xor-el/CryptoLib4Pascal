@@ -23,6 +23,7 @@ interface
 
 uses
   SysUtils,
+  ClpArrayUtilities,
   ClpBitOperations,
   ClpICipherParameters,
   ClpIDigest,
@@ -225,7 +226,7 @@ var
   LOutBlockSize, LDefHashLen, LWrongMask, LCopyLen: Int32;
   LBlock, LData: TCryptoLibByteArray;
   LStart, LIndex, LOctet, LShouldSetMask: Int32;
-  I: Int32;
+  LI: Int32;
 begin
   LOutBlockSize := FEngine.OutputBlockSize;
   LDefHashLen := System.Length(FDefHash);
@@ -242,7 +243,7 @@ begin
     LCopyLen := System.Length(LBlock);
 
   System.Move(LData[0], LBlock[System.Length(LBlock) - LCopyLen], LCopyLen);
-  FillChar(LData[0], System.Length(LData), 0);
+  TArrayUtilities.Fill<Byte>(LData, 0, System.Length(LData), Byte(0));
 
   FMgf1Hash.Reset();
 
@@ -252,9 +253,9 @@ begin
   MaskGeneratorFunction(LBlock, 0, LDefHashLen,
     LBlock, LDefHashLen, System.Length(LBlock) - LDefHashLen);
 
-  for I := 0 to LDefHashLen - 1 do
+  for LI := 0 to LDefHashLen - 1 do
   begin
-    LWrongMask := LWrongMask or (FDefHash[I] xor LBlock[LDefHashLen + I]);
+    LWrongMask := LWrongMask or (FDefHash[LI] xor LBlock[LDefHashLen + LI]);
   end;
 
   LStart := -1;
@@ -271,7 +272,7 @@ begin
 
   if LWrongMask <> 0 then
   begin
-    FillChar(LBlock[0], System.Length(LBlock), 0);
+    TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataWrong);
   end;
 
@@ -279,7 +280,7 @@ begin
 
   SetLength(Result, System.Length(LBlock) - LStart);
   System.Move(LBlock[LStart], Result[0], System.Length(Result));
-  FillChar(LBlock[0], System.Length(LBlock), 0);
+  TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
 end;
 
 procedure TOaepEncoding.MaskGeneratorFunction(
@@ -288,7 +289,7 @@ procedure TOaepEncoding.MaskGeneratorFunction(
 var
   LDigestSize, LCounter, LMaskPos, LMaskEnd, LMaskLimit, LXorLen: Int32;
   LHash, LC: TCryptoLibByteArray;
-  I: Int32;
+  LI: Int32;
 begin
   LDigestSize := FMgf1Hash.GetDigestSize;
   SetLength(LHash, LDigestSize);
@@ -311,9 +312,9 @@ begin
     FMgf1Hash.BlockUpdate(LC, 0, 4);
     FMgf1Hash.DoFinal(LHash, 0);
 
-    for I := 0 to LDigestSize - 1 do
+    for LI := 0 to LDigestSize - 1 do
     begin
-      AMask[LMaskPos + I] := AMask[LMaskPos + I] xor LHash[I];
+      AMask[LMaskPos + LI] := AMask[LMaskPos + LI] xor LHash[LI];
     end;
 
     Inc(LMaskPos, LDigestSize);
@@ -333,9 +334,9 @@ begin
     FMgf1Hash.DoFinal(LHash, 0);
 
     LXorLen := LMaskEnd - LMaskPos;
-    for I := 0 to LXorLen - 1 do
+    for LI := 0 to LXorLen - 1 do
     begin
-      AMask[LMaskPos + I] := AMask[LMaskPos + I] xor LHash[I];
+      AMask[LMaskPos + LI] := AMask[LMaskPos + LI] xor LHash[LI];
     end;
   end;
 end;

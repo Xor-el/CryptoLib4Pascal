@@ -49,13 +49,13 @@ type
 
   public
     constructor Create(); overload;
-    constructor Create(const rsa: IRsa); overload;
+    constructor Create(const ARsa: IRsa); overload;
 
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters);
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters);
 
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;
@@ -72,10 +72,10 @@ begin
   Create(TRsaCoreEngine.Create() as IRsa);
 end;
 
-constructor TRsaEngine.Create(const rsa: IRsa);
+constructor TRsaEngine.Create(const ARsa: IRsa);
 begin
   inherited Create();
-  FCore := rsa;
+  FCore := ARsa;
 end;
 
 function TRsaEngine.GetAlgorithmName: String;
@@ -83,10 +83,10 @@ begin
   Result := 'RSA';
 end;
 
-procedure TRsaEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TRsaEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 begin
-  FCore.Init(forEncryption, parameters);
+  FCore.Init(AForEncryption, AParameters);
 end;
 
 function TRsaEngine.GetInputBlockSize: Int32;
@@ -99,14 +99,14 @@ begin
   Result := FCore.OutputBlockSize;
 end;
 
-function TRsaEngine.ProcessBlock(const inBuf: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TRsaEngine.ProcessBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  input, output: TBigInteger;
+  LInput, LOutput: TBigInteger;
 begin
-  input := FCore.ConvertInput(inBuf, inOff, inLen);
-  output := FCore.ProcessBlock(input);
-  Result := FCore.ConvertOutput(output);
+  LInput := FCore.ConvertInput(AInBuf, AInOff, AInLen);
+  LOutput := FCore.ProcessBlock(LInput);
+  Result := FCore.ConvertOutput(LOutput);
 end;
 
 end.

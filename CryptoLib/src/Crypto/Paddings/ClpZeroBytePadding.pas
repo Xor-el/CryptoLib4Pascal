@@ -64,12 +64,10 @@ begin
   Result := 'ZeroBytePadding';
 end;
 
-{$IFNDEF _FIXINSIGHT_}
 procedure TZeroBytePadding.Init(const ARandom: ISecureRandom);
 begin
   // nothing to do.
 end;
-{$ENDIF}
 
 function TZeroBytePadding.PadCount(const AInput: TCryptoLibByteArray): Int32;
 var

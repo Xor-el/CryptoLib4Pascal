@@ -40,7 +40,7 @@ type
 
   var
     FSeedArray: array [0 .. 55] of Int32;
-    Finext, Finextp: Int32;
+    FInext, FInextp: Int32;
 
     function InternalSample(): Int32; inline;
     function GetSampleForLargeRange(): Double;
@@ -139,16 +139,16 @@ begin
     System.Inc(LIndex1);
   end;
 
-  Finext := 0;
-  Finextp := 21;
+  FInext := 0;
+  FInextp := 21;
 end;
 
 function TRandom.InternalSample: Int32;
 var
   LInext, LInextp, LIndex1, LIndex2, LNum: Int32;
 begin
-  LInext := Finext;
-  LInextp := Finextp;
+  LInext := FInext;
+  LInextp := FInextp;
   LIndex1 := LInext + 1;
   if ((LIndex1) >= 56) then
     LIndex1 := 1;
@@ -160,8 +160,8 @@ begin
   if (LNum < 0) then
     LNum := LNum + System.High(Int32);
   FSeedArray[LIndex1] := LNum;
-  Finext := LIndex1;
-  Finextp := LIndex2;
+  FInext := LIndex1;
+  FInextp := LIndex2;
   Result := LNum;
 end;
 

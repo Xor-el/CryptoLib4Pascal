@@ -49,8 +49,8 @@ type
     FBlindingFactor: TBigInteger;
     FForEncryption: Boolean;
 
-    function BlindMessage(const msg: TBigInteger): TBigInteger;
-    function UnblindMessage(const blindedMsg: TBigInteger): TBigInteger;
+    function BlindMessage(const AMsg: TBigInteger): TBigInteger;
+    function UnblindMessage(const ABlindedMsg: TBigInteger): TBigInteger;
 
   strict protected
     function GetAlgorithmName: String;
@@ -59,11 +59,11 @@ type
 
   public
     constructor Create(); overload;
-    constructor Create(const rsa: IRsa); overload;
+    constructor Create(const ARsa: IRsa); overload;
 
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;
@@ -80,10 +80,10 @@ begin
   Create(TRsaCoreEngine.Create() as IRsa);
 end;
 
-constructor TRsaBlindingEngine.Create(const rsa: IRsa);
+constructor TRsaBlindingEngine.Create(const ARsa: IRsa);
 begin
   inherited Create();
-  FCore := rsa;
+  FCore := ARsa;
 end;
 
 function TRsaBlindingEngine.GetAlgorithmName: String;
@@ -91,22 +91,22 @@ begin
   Result := 'RSA';
 end;
 
-procedure TRsaBlindingEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TRsaBlindingEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  p: IRsaBlindingParameters;
-  rParam: IParametersWithRandom;
+  LP: IRsaBlindingParameters;
+  LRParam: IParametersWithRandom;
 begin
-  if Supports(parameters, IParametersWithRandom, rParam) then
-    p := rParam.Parameters as IRsaBlindingParameters
+  if Supports(AParameters, IParametersWithRandom, LRParam) then
+    LP := LRParam.Parameters as IRsaBlindingParameters
   else
-    p := parameters as IRsaBlindingParameters;
+    LP := AParameters as IRsaBlindingParameters;
 
-  FCore.Init(forEncryption, p.PublicKey);
+  FCore.Init(AForEncryption, LP.PublicKey);
 
-  FForEncryption := forEncryption;
-  FKey := p.PublicKey;
-  FBlindingFactor := p.BlindingFactor;
+  FForEncryption := AForEncryption;
+  FKey := LP.PublicKey;
+  FBlindingFactor := LP.BlindingFactor;
 end;
 
 function TRsaBlindingEngine.GetInputBlockSize: Int32;
@@ -119,39 +119,39 @@ begin
   Result := FCore.OutputBlockSize;
 end;
 
-function TRsaBlindingEngine.ProcessBlock(const inBuf: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TRsaBlindingEngine.ProcessBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  msg: TBigInteger;
+  LMsg: TBigInteger;
 begin
-  msg := FCore.ConvertInput(inBuf, inOff, inLen);
+  LMsg := FCore.ConvertInput(AInBuf, AInOff, AInLen);
 
   if FForEncryption then
-    msg := BlindMessage(msg)
+    LMsg := BlindMessage(LMsg)
   else
-    msg := UnblindMessage(msg);
+    LMsg := UnblindMessage(LMsg);
 
-  Result := FCore.ConvertOutput(msg);
+  Result := FCore.ConvertOutput(LMsg);
 end;
 
-function TRsaBlindingEngine.BlindMessage(const msg: TBigInteger): TBigInteger;
+function TRsaBlindingEngine.BlindMessage(const AMsg: TBigInteger): TBigInteger;
 var
-  blindMsg: TBigInteger;
+  LBlindMsg: TBigInteger;
 begin
   // msg * (blindingFactor ^ e) mod n
-  blindMsg := FBlindingFactor.ModPow(FKey.Exponent, FKey.Modulus);
-  blindMsg := msg.Multiply(blindMsg);
-  Result := blindMsg.&Mod(FKey.Modulus);
+  LBlindMsg := FBlindingFactor.ModPow(FKey.Exponent, FKey.Modulus);
+  LBlindMsg := AMsg.Multiply(LBlindMsg);
+  Result := LBlindMsg.&Mod(FKey.Modulus);
 end;
 
-function TRsaBlindingEngine.UnblindMessage(const blindedMsg: TBigInteger): TBigInteger;
+function TRsaBlindingEngine.UnblindMessage(const ABlindedMsg: TBigInteger): TBigInteger;
 var
-  m, blindFactorInverse, res: TBigInteger;
+  LM, LBlindFactorInverse, LRes: TBigInteger;
 begin
-  m := FKey.Modulus;
-  blindFactorInverse := TBigIntegerUtilities.ModOddInverse(m, FBlindingFactor);
-  res := blindedMsg.Multiply(blindFactorInverse);
-  Result := res.&Mod(m);
+  LM := FKey.Modulus;
+  LBlindFactorInverse := TBigIntegerUtilities.ModOddInverse(LM, FBlindingFactor);
+  LRes := ABlindedMsg.Multiply(LBlindFactorInverse);
+  Result := LRes.&Mod(LM);
 end;
 
 end.

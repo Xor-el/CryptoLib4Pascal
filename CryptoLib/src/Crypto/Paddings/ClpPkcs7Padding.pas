@@ -63,11 +63,9 @@ begin
   Result := 'PKCS7';
 end;
 
-{$IFNDEF _FIXINSIGHT_}
 procedure TPkcs7Padding.Init(const ARandom: ISecureRandom);
 begin
 end;
-{$ENDIF}
 
 function TPkcs7Padding.PadCount(const AInput: TCryptoLibByteArray): Int32;
 var

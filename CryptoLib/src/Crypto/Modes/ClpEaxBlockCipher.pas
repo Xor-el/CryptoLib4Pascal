@@ -33,7 +33,6 @@ uses
   ClpSicBlockCipher,
   ClpISicBlockCipher,
   ClpCMac,
-  ClpICMac,
   ClpIMac,
   ClpParametersWithIV,
   ClpCheck,

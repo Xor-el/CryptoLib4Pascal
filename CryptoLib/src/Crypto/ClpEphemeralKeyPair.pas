@@ -32,8 +32,8 @@ type
 
   strict private
   var
-    FkeyPair: IAsymmetricCipherKeyPair;
-    FpublicKeyEncoder: IKeyEncoder;
+    FKeyPair: IAsymmetricCipherKeyPair;
+    FPublicKeyEncoder: IKeyEncoder;
 
   public
 
@@ -41,8 +41,8 @@ type
 
     function GetEncodedPublicKey: TCryptoLibByteArray; inline;
 
-    constructor Create(const keyPair: IAsymmetricCipherKeyPair;
-      const publicKeyEncoder: IKeyEncoder);
+    constructor Create(const AKeyPair: IAsymmetricCipherKeyPair;
+      const APublicKeyEncoder: IKeyEncoder);
 
   end;
 
@@ -50,22 +50,22 @@ implementation
 
 { TEphemeralKeyPair }
 
-constructor TEphemeralKeyPair.Create(const keyPair: IAsymmetricCipherKeyPair;
-  const publicKeyEncoder: IKeyEncoder);
+constructor TEphemeralKeyPair.Create(const AKeyPair: IAsymmetricCipherKeyPair;
+  const APublicKeyEncoder: IKeyEncoder);
 begin
   Inherited Create();
-  FkeyPair := keyPair;
-  FpublicKeyEncoder := publicKeyEncoder;
+  FKeyPair := AKeyPair;
+  FPublicKeyEncoder := APublicKeyEncoder;
 end;
 
 function TEphemeralKeyPair.GetEncodedPublicKey: TCryptoLibByteArray;
 begin
-  result := FpublicKeyEncoder.GetEncoded(FkeyPair.Public);
+  Result := FPublicKeyEncoder.GetEncoded(FKeyPair.Public);
 end;
 
 function TEphemeralKeyPair.GetKeyPair: IAsymmetricCipherKeyPair;
 begin
-  result := FkeyPair;
+  Result := FKeyPair;
 end;
 
 end.

@@ -56,10 +56,10 @@ type
     FPadBits: Int32;
     FModulus: TBigInteger;
 
-    function EncodeBlock(const input: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
-    function DecodeBlock(const input: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    function EncodeBlock(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
+    function DecodeBlock(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
   strict protected
     function GetAlgorithmName: String;
@@ -67,14 +67,14 @@ type
     function GetOutputBlockSize: Int32;
     function GetUnderlyingCipher: IAsymmetricBlockCipher;
     function GetPadBits: Int32;
-    procedure SetPadBits(padBits: Int32);
+    procedure SetPadBits(APadBits: Int32);
 
   public
-    constructor Create(const cipher: IAsymmetricBlockCipher);
+    constructor Create(const ACipher: IAsymmetricBlockCipher);
 
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;
@@ -88,10 +88,10 @@ implementation
 
 { TISO9796d1Encoding }
 
-constructor TISO9796d1Encoding.Create(const cipher: IAsymmetricBlockCipher);
+constructor TISO9796d1Encoding.Create(const ACipher: IAsymmetricBlockCipher);
 begin
   inherited Create();
-  FCipher := cipher;
+  FCipher := ACipher;
   FPadBits := 0;
 end;
 
@@ -110,31 +110,32 @@ begin
   Result := FPadBits;
 end;
 
-procedure TISO9796d1Encoding.SetPadBits(padBits: Int32);
+procedure TISO9796d1Encoding.SetPadBits(APadBits: Int32);
 begin
-  if (padBits < 0) or (padBits > 7) then
+  if (APadBits < 0) or (APadBits > 7) then
   begin
     raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SPadBitsOutOfRange);
   end;
-  FPadBits := padBits;
+  FPadBits := APadBits;
 end;
 
-procedure TISO9796d1Encoding.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TISO9796d1Encoding.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  kParam: IRsaKeyParameters;
+  LKeyParam: IRsaKeyParameters;
   LParameters: ICipherParameters;
 begin
-  LParameters := parameters;
+  LParameters := AParameters;
 
-  FCipher.Init(forEncryption, LParameters);
+  FCipher.Init(AForEncryption, LParameters);
 
   LParameters := TParameterUtilities.IgnoreRandom(LParameters);
 
-  kParam := LParameters as IRsaKeyParameters;
-  FModulus := kParam.Modulus;
+  if not Supports(LParameters, IRsaKeyParameters, LKeyParam) then
+    raise EInvalidKeyCryptoLibException.Create('Expected RSA key parameter');
+  FModulus := LKeyParam.Modulus;
   FBitSize := FModulus.BitLength;
-  FForEncryption := forEncryption;
+  FForEncryption := AForEncryption;
 end;
 
 function TISO9796d1Encoding.GetInputBlockSize: Int32;
@@ -153,150 +154,150 @@ begin
     Result := (FCipher.OutputBlockSize + 1) div 2;
 end;
 
-function TISO9796d1Encoding.ProcessBlock(const inBuf: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TISO9796d1Encoding.ProcessBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 begin
   if FForEncryption then
-    Result := EncodeBlock(inBuf, inOff, inLen)
+    Result := EncodeBlock(AInBuf, AInOff, AInLen)
   else
-    Result := DecodeBlock(inBuf, inOff, inLen);
+    Result := DecodeBlock(AInBuf, AInOff, AInLen);
 end;
 
-function TISO9796d1Encoding.EncodeBlock(const input: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TISO9796d1Encoding.EncodeBlock(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  block: TCryptoLibByteArray;
-  r, z, t, i, maxBit, offset: Int32;
-  val: Byte;
+  LBlock: TCryptoLibByteArray;
+  LR, LZ, LT, LI, LMaxBit, LOffset: Int32;
+  LVal: Byte;
 begin
-  SetLength(block, (FBitSize + 7) div 8);
-  r := FPadBits + 1;
-  z := inLen;
-  t := (FBitSize + 13) div 16;
+  SetLength(LBlock, (FBitSize + 7) div 8);
+  LR := FPadBits + 1;
+  LZ := AInLen;
+  LT := (FBitSize + 13) div 16;
 
-  i := 0;
-  while i < t do
+  LI := 0;
+  while LI < LT do
   begin
-    if i > t - z then
+    if LI > LT - LZ then
     begin
-      Move(input[inOff + z - (t - i)],
-        block[Length(block) - t], t - i);
+      System.Move(AInput[AInOff + LZ - (LT - LI)],
+        LBlock[System.Length(LBlock) - LT], LT - LI);
     end
     else
     begin
-      Move(input[inOff],
-        block[Length(block) - (i + z)], z);
+      System.Move(AInput[AInOff],
+        LBlock[System.Length(LBlock) - (LI + LZ)], LZ);
     end;
-    Inc(i, z);
+    Inc(LI, LZ);
   end;
 
-  i := Length(block) - 2 * t;
-  while i < Length(block) do
+  LI := System.Length(LBlock) - 2 * LT;
+  while LI < System.Length(LBlock) do
   begin
-    val := block[Length(block) - t + i div 2];
-    block[i] := Byte((Shadows[val shr 4] shl 4) or Shadows[val and $0F]);
-    block[i + 1] := val;
-    Inc(i, 2);
+    LVal := LBlock[System.Length(LBlock) - LT + LI div 2];
+    LBlock[LI] := Byte((Shadows[LVal shr 4] shl 4) or Shadows[LVal and $0F]);
+    LBlock[LI + 1] := LVal;
+    Inc(LI, 2);
   end;
 
-  block[Length(block) - 2 * z] :=
-    block[Length(block) - 2 * z] xor Byte(r);
-  block[Length(block) - 1] :=
-    Byte((block[Length(block) - 1] shl 4) or $06);
+  LBlock[System.Length(LBlock) - 2 * LZ] :=
+    LBlock[System.Length(LBlock) - 2 * LZ] xor Byte(LR);
+  LBlock[System.Length(LBlock) - 1] :=
+    Byte((LBlock[System.Length(LBlock) - 1] shl 4) or $06);
 
-  maxBit := 8 - ((FBitSize - 1) mod 8);
-  offset := 0;
+  LMaxBit := 8 - ((FBitSize - 1) mod 8);
+  LOffset := 0;
 
-  if maxBit <> 8 then
+  if LMaxBit <> 8 then
   begin
-    block[0] := block[0] and Byte($FF shr maxBit);
-    block[0] := block[0] or Byte($80 shr maxBit);
+    LBlock[0] := LBlock[0] and Byte($FF shr LMaxBit);
+    LBlock[0] := LBlock[0] or Byte($80 shr LMaxBit);
   end
   else
   begin
-    block[0] := $00;
-    block[1] := block[1] or $80;
-    offset := 1;
+    LBlock[0] := $00;
+    LBlock[1] := LBlock[1] or $80;
+    LOffset := 1;
   end;
 
-  Result := FCipher.ProcessBlock(block, offset, Length(block) - offset);
+  Result := FCipher.ProcessBlock(LBlock, LOffset, System.Length(LBlock) - LOffset);
 end;
 
-function TISO9796d1Encoding.DecodeBlock(const input: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TISO9796d1Encoding.DecodeBlock(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  block, nblock: TCryptoLibByteArray;
-  r, t, i, val, x, boundary: Int32;
-  &iS, iR: TBigInteger;
-  boundaryFound: Boolean;
+  LBlock, LNBlock: TCryptoLibByteArray;
+  LR, LT, LI, LVal, LX, LBoundary: Int32;
+  LIS, LIR: TBigInteger;
+  LBoundaryFound: Boolean;
 begin
-  block := FCipher.ProcessBlock(input, inOff, inLen);
-  r := 1;
-  t := (FBitSize + 13) div 16;
+  LBlock := FCipher.ProcessBlock(AInput, AInOff, AInLen);
+  LR := 1;
+  LT := (FBitSize + 13) div 16;
 
-  &iS := TBigInteger.Create(1, block);
+  LIS := TBigInteger.Create(1, LBlock);
 
-  if (&iS.Int32Value and 15) = 6 then
+  if (LIS.Int32Value and 15) = 6 then
   begin
-    iR := &iS;
+    LIR := LIS;
   end
   else
   begin
-    iR := FModulus.Subtract(&iS);
-    if (iR.Int32Value and 15) <> 6 then
+    LIR := FModulus.Subtract(LIS);
+    if (LIR.Int32Value and 15) <> 6 then
     begin
       raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidCongruence);
     end;
   end;
 
-  block := iR.ToByteArrayUnsigned();
+  LBlock := LIR.ToByteArrayUnsigned();
 
-  if (block[Length(block) - 1] and $F) <> $6 then
+  if (LBlock[System.Length(LBlock) - 1] and $F) <> $6 then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidForcingByte);
   end;
 
-  block[Length(block) - 1] := Byte(
-    (block[Length(block) - 1] shr 4) or
-    (Inverse[block[Length(block) - 2] shr 4] shl 4));
+  LBlock[System.Length(LBlock) - 1] := Byte(
+    (LBlock[System.Length(LBlock) - 1] shr 4) or
+    (Inverse[LBlock[System.Length(LBlock) - 2] shr 4] shl 4));
 
-  block[0] := Byte(
-    (Shadows[block[1] shr 4] shl 4) or
-    Shadows[block[1] and $0F]);
+  LBlock[0] := Byte(
+    (Shadows[LBlock[1] shr 4] shl 4) or
+    Shadows[LBlock[1] and $0F]);
 
-  boundaryFound := False;
-  boundary := 0;
+  LBoundaryFound := False;
+  LBoundary := 0;
 
-  i := Length(block) - 1;
-  while i >= Length(block) - 2 * t do
+  LI := System.Length(LBlock) - 1;
+  while LI >= System.Length(LBlock) - 2 * LT do
   begin
-    val := (Shadows[block[i] shr 4] shl 4) or Shadows[block[i] and $0F];
-    x := val xor block[i - 1];
+    LVal := (Shadows[LBlock[LI] shr 4] shl 4) or Shadows[LBlock[LI] and $0F];
+    LX := LVal xor LBlock[LI - 1];
 
-    if x <> 0 then
+    if LX <> 0 then
     begin
-      if boundaryFound then
+      if LBoundaryFound then
       begin
         raise EInvalidCipherTextCryptoLibException.CreateRes(@SInvalidTsums);
       end;
-      boundaryFound := True;
-      r := x;
-      boundary := i - 1;
+      LBoundaryFound := True;
+      LR := LX;
+      LBoundary := LI - 1;
     end;
 
-    Dec(i, 2);
+    Dec(LI, 2);
   end;
 
-  block[boundary] := 0;
+  LBlock[LBoundary] := 0;
 
-  SetLength(nblock, (Length(block) - boundary) div 2);
-  for i := 0 to Length(nblock) - 1 do
+  SetLength(LNBlock, (System.Length(LBlock) - LBoundary) div 2);
+  for LI := 0 to System.Length(LNBlock) - 1 do
   begin
-    nblock[i] := block[2 * i + boundary + 1];
+    LNBlock[LI] := LBlock[2 * LI + LBoundary + 1];
   end;
 
-  FPadBits := r - 1;
-  Result := nblock;
+  FPadBits := LR - 1;
+  Result := LNBlock;
 end;
 
 end.

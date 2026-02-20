@@ -272,7 +272,7 @@ function TIesEngine.DecryptBlock(const AInEnc: TCryptoLibByteArray;
   AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
   LM, LK, LK1, LK2, LP2, LL2, LT1, LT2: TCryptoLibByteArray;
-  LLen, LI, LEndPoint: Int32;
+  LLen, LI, LEnd: Int32;
   LCp: ICipherParameters;
 begin
   LLen := 0;
@@ -358,8 +358,8 @@ begin
   end;
 
   // Verify the MAC.
-  LEndPoint := AInOff + AInLen;
-  LT1 := TArrayUtilities.CopyOfRange<Byte>(AInEnc, LEndPoint - FMac.GetMacSize, LEndPoint);
+  LEnd := AInOff + AInLen;
+  LT1 := TArrayUtilities.CopyOfRange<Byte>(AInEnc, LEnd - FMac.GetMacSize, LEnd);
   System.SetLength(LT2, System.Length(LT1));
 
   FMac.Init((TKeyParameter.Create(LK2) as IKeyParameter) as ICipherParameters);

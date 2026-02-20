@@ -65,11 +65,9 @@ begin
   Result := 'ISO7816-4';
 end;
 
-{$IFNDEF _FIXINSIGHT_}
 procedure TISO7816d4Padding.Init(const ARandom: ISecureRandom);
 begin
 end;
-{$ENDIF}
 
 function TISO7816d4Padding.PadCount(const AInput: TCryptoLibByteArray): Int32;
 var

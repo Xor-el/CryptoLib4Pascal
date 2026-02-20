@@ -56,17 +56,17 @@ type
     function GetAlgorithmName: String;
     function GetInputBlockSize: Int32;
     function GetOutputBlockSize: Int32;
-    function InitSecureRandom(needed: Boolean; const provided: ISecureRandom): ISecureRandom; virtual;
+    function InitSecureRandom(ANeeded: Boolean; const AProvided: ISecureRandom): ISecureRandom; virtual;
 
   public
     constructor Create(); overload;
-    constructor Create(const rsa: IRsa); overload;
+    constructor Create(const ARsa: IRsa); overload;
 
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters);
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters);
 
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;
@@ -83,10 +83,10 @@ begin
   Create(TRsaCoreEngine.Create() as IRsa);
 end;
 
-constructor TRsaBlindedEngine.Create(const rsa: IRsa);
+constructor TRsaBlindedEngine.Create(const ARsa: IRsa);
 begin
   inherited Create();
-  FCore := rsa;
+  FCore := ARsa;
 end;
 
 function TRsaBlindedEngine.GetAlgorithmName: String;
@@ -94,27 +94,27 @@ begin
   Result := 'RSA';
 end;
 
-function TRsaBlindedEngine.InitSecureRandom(needed: Boolean;
-  const provided: ISecureRandom): ISecureRandom;
+function TRsaBlindedEngine.InitSecureRandom(ANeeded: Boolean;
+  const AProvided: ISecureRandom): ISecureRandom;
 begin
-  if needed then
-    Result := TCryptoServicesRegistrar.GetSecureRandom(provided)
+  if ANeeded then
+    Result := TCryptoServicesRegistrar.GetSecureRandom(AProvided)
   else
     Result := nil;
 end;
 
-procedure TRsaBlindedEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TRsaBlindedEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
   LParameters: ICipherParameters;
-  providedRandom: ISecureRandom;
+  LProvidedRandom: ISecureRandom;
 begin
-  LParameters := TParameterUtilities.GetRandom(parameters, providedRandom);
+  LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-  FCore.Init(forEncryption, LParameters);
+  FCore.Init(AForEncryption, LParameters);
 
   FKey := LParameters as IRsaKeyParameters;
-  FRandom := InitSecureRandom(Supports(FKey, IRsaPrivateCrtKeyParameters), providedRandom);
+  FRandom := InitSecureRandom(Supports(FKey, IRsaPrivateCrtKeyParameters), LProvidedRandom);
 end;
 
 function TRsaBlindedEngine.GetInputBlockSize: Int32;
@@ -127,52 +127,52 @@ begin
   Result := FCore.OutputBlockSize;
 end;
 
-function TRsaBlindedEngine.ProcessBlock(const inBuf: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TRsaBlindedEngine.ProcessBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  input, output: TBigInteger;
-  crtKey: IRsaPrivateCrtKeyParameters;
-  e, m: TBigInteger;
-  r, blind, unblind: TBigInteger;
-  blindedInput, blindedResult: TBigInteger;
+  LInput, LOutput: TBigInteger;
+  LCrtKey: IRsaPrivateCrtKeyParameters;
+  LE, LM: TBigInteger;
+  LR, LBlind, LUnblind: TBigInteger;
+  LBlindedInput, LBlindedResult: TBigInteger;
 begin
   if FKey = nil then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SRsaEngineNotInitialised);
   end;
 
-  input := FCore.ConvertInput(inBuf, inOff, inLen);
+  LInput := FCore.ConvertInput(AInBuf, AInOff, AInLen);
 
   // Only apply blinding for private CRT key operations
-  if Supports(FKey, IRsaPrivateCrtKeyParameters, crtKey) then
+  if Supports(FKey, IRsaPrivateCrtKeyParameters, LCrtKey) then
   begin
-    e := crtKey.PublicExponent;
-    m := crtKey.Modulus;
+    LE := LCrtKey.PublicExponent;
+    LM := LCrtKey.Modulus;
 
     // Generate random r in range [1, m-1]
-    r := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.One, m.Subtract(TBigInteger.One), FRandom);
+    LR := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.One, LM.Subtract(TBigInteger.One), FRandom);
 
     // blind = r^e mod m
-    blind := r.ModPow(e, m);
+    LBlind := LR.ModPow(LE, LM);
     // unblind = r^(-1) mod m
-    unblind := TBigIntegerUtilities.ModOddInverse(m, r);
+    LUnblind := TBigIntegerUtilities.ModOddInverse(LM, LR);
 
     // Blind the input: blindedInput = blind * input mod m
-    blindedInput := blind.Multiply(input).&Mod(m);
+    LBlindedInput := LBlind.Multiply(LInput).&Mod(LM);
 
     // Process the blinded input through the core engine
-    blindedResult := FCore.ProcessBlock(blindedInput);
+    LBlindedResult := FCore.ProcessBlock(LBlindedInput);
 
     // Unblind: output = unblind * blindedResult mod m
-    output := unblind.Multiply(blindedResult).&Mod(m);
+    LOutput := LUnblind.Multiply(LBlindedResult).&Mod(LM);
   end
   else
   begin
     // Public key operation or non-CRT private key - no blinding
-    output := FCore.ProcessBlock(input);
+    LOutput := FCore.ProcessBlock(LInput);
   end;
 
-  Result := FCore.ConvertOutput(output);
+  Result := FCore.ConvertOutput(LOutput);
 end;
 
 end.

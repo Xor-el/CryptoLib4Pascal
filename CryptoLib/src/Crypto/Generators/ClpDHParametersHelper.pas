@@ -61,7 +61,6 @@ type
     class function GenerateSafePrimes(ASize, ACertainty: Int32;
       const ARandom: ISecureRandom): TCryptoLibGenericArray<TBigInteger>; static;
 
-{$IFNDEF _FIXINSIGHT_}
     /// <summary>
     /// <para>
     /// Select a high order element of the multiplicative group Zp*
@@ -73,7 +72,6 @@ type
     /// </summary>
     class function SelectGenerator(const AP, AQ: TBigInteger;
       const ARandom: ISecureRandom): TBigInteger; static;
-{$ENDIF}
   end;
 
 implementation

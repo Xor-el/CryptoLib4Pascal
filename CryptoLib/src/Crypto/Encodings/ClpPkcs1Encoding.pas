@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Math,
+  ClpArrayUtilities,
   ClpBitOperations,
   ClpICipherParameters,
   ClpIAsymmetricKeyParameter,
@@ -65,17 +66,17 @@ type
     FFallback: TCryptoLibByteArray;
     FBlockBuffer: TCryptoLibByteArray;
 
-    function EncodeBlock(const input: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
-    function DecodeBlock(const input: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
-    function DecodeBlockOrRandom(const input: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    function EncodeBlock(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
+    function DecodeBlock(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
+    function DecodeBlockOrRandom(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
-    class function CheckPkcs1Encoding1(const buf: TCryptoLibByteArray): Int32; static;
-    class function CheckPkcs1Encoding2(const buf: TCryptoLibByteArray): Int32; overload; static;
-    class function CheckPkcs1Encoding2(const buf: TCryptoLibByteArray;
-      plaintextLength: Int32): Int32; overload; static;
+    class function CheckPkcs1Encoding1(const ABuf: TCryptoLibByteArray): Int32; static;
+    class function CheckPkcs1Encoding2(const ABuf: TCryptoLibByteArray): Int32; overload; static;
+    class function CheckPkcs1Encoding2(const ABuf: TCryptoLibByteArray;
+      APlaintextLength: Int32): Int32; overload; static;
 
   strict protected
     function GetAlgorithmName: String;
@@ -86,14 +87,14 @@ type
   public
     class constructor CreatePkcs1Encoding;
 
-    constructor Create(const cipher: IAsymmetricBlockCipher); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher; pLen: Int32); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const fallback: TCryptoLibByteArray); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher; APLen: Int32); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AFallback: TCryptoLibByteArray); overload;
 
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
-    function ProcessBlock(const inBuf: TCryptoLibByteArray;
-      inOff, inLen: Int32): TCryptoLibByteArray;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    function ProcessBlock(const AInBuf: TCryptoLibByteArray;
+      AInOff, AInLen: Int32): TCryptoLibByteArray;
 
     class property StrictLengthEnabled: Boolean read FStrictLengthEnabled
       write FStrictLengthEnabled;
@@ -114,32 +115,32 @@ begin
   FStrictLengthEnabled := True;
 end;
 
-constructor TPkcs1Encoding.Create(const cipher: IAsymmetricBlockCipher);
+constructor TPkcs1Encoding.Create(const ACipher: IAsymmetricBlockCipher);
 begin
   inherited Create();
-  FEngine := cipher;
+  FEngine := ACipher;
   FUseStrictLength := FStrictLengthEnabled;
   FPLen := -1;
   FFallback := nil;
 end;
 
-constructor TPkcs1Encoding.Create(const cipher: IAsymmetricBlockCipher; pLen: Int32);
+constructor TPkcs1Encoding.Create(const ACipher: IAsymmetricBlockCipher; APLen: Int32);
 begin
   inherited Create();
-  FEngine := cipher;
+  FEngine := ACipher;
   FUseStrictLength := FStrictLengthEnabled;
-  FPLen := pLen;
+  FPLen := APLen;
   FFallback := nil;
 end;
 
-constructor TPkcs1Encoding.Create(const cipher: IAsymmetricBlockCipher;
-  const fallback: TCryptoLibByteArray);
+constructor TPkcs1Encoding.Create(const ACipher: IAsymmetricBlockCipher;
+  const AFallback: TCryptoLibByteArray);
 begin
   inherited Create();
-  FEngine := cipher;
+  FEngine := ACipher;
   FUseStrictLength := FStrictLengthEnabled;
-  FFallback := fallback;
-  FPLen := System.Length(fallback);
+  FFallback := AFallback;
+  FPLen := System.Length(AFallback);
 end;
 
 function TPkcs1Encoding.GetAlgorithmName: String;
@@ -152,30 +153,31 @@ begin
   Result := FEngine;
 end;
 
-procedure TPkcs1Encoding.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TPkcs1Encoding.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  kParam: IAsymmetricKeyParameter;
+  LKeyParam: IAsymmetricKeyParameter;
   LParameters: ICipherParameters;
-  providedRandom: ISecureRandom;
-  NeedsRandom: Boolean;
+  LProvidedRandom: ISecureRandom;
+  LNeedsRandom: Boolean;
 begin
-  FEngine.Init(forEncryption, parameters);
+  FEngine.Init(AForEncryption, AParameters);
 
-  LParameters := TParameterUtilities.GetRandom(parameters, providedRandom);
+  LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-  kParam := LParameters as IAsymmetricKeyParameter;
-  FForPrivateKey := kParam.IsPrivate;
-  FForEncryption := forEncryption;
+  if not Supports(LParameters, IAsymmetricKeyParameter, LKeyParam) then
+    raise EInvalidKeyCryptoLibException.Create('Expected asymmetric key parameter');
+  FForPrivateKey := LKeyParam.IsPrivate;
+  FForEncryption := AForEncryption;
   SetLength(FBlockBuffer, FEngine.OutputBlockSize);
 
   if FForPrivateKey then
-    NeedsRandom := (FPLen <> -1) and (FFallback = nil)
+    LNeedsRandom := (FPLen <> -1) and (FFallback = nil)
   else
-    NeedsRandom := FForEncryption;
+    LNeedsRandom := FForEncryption;
 
-  if NeedsRandom then
-    FRandom := TCryptoServicesRegistrar.GetSecureRandom(providedRandom)
+  if LNeedsRandom then
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom(LProvidedRandom)
   else
     FRandom := nil;
 end;
@@ -196,245 +198,245 @@ begin
     Result := FEngine.OutputBlockSize - HeaderLength;
 end;
 
-function TPkcs1Encoding.ProcessBlock(const inBuf: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPkcs1Encoding.ProcessBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 begin
   if FForEncryption then
-    Result := EncodeBlock(inBuf, inOff, inLen)
+    Result := EncodeBlock(AInBuf, AInOff, AInLen)
   else
-    Result := DecodeBlock(inBuf, inOff, inLen);
+    Result := DecodeBlock(AInBuf, AInOff, AInLen);
 end;
 
-function TPkcs1Encoding.EncodeBlock(const input: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPkcs1Encoding.EncodeBlock(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  blockSize, lastPadPos, i: Int32;
-  block: TCryptoLibByteArray;
+  LBlockSize, LLastPadPos, LI: Int32;
+  LBlock: TCryptoLibByteArray;
 begin
-  blockSize := FEngine.InputBlockSize;
+  LBlockSize := FEngine.InputBlockSize;
 
-  if inLen > (blockSize - HeaderLength) then
+  if AInLen > (LBlockSize - HeaderLength) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInputDataTooLarge);
   end;
 
-  SetLength(block, blockSize);
-  lastPadPos := blockSize - 1 - inLen;
+  SetLength(LBlock, LBlockSize);
+  LLastPadPos := LBlockSize - 1 - AInLen;
 
   if FForPrivateKey then
   begin
     // Type 1
-    block[0] := $01;
-    for i := 1 to lastPadPos - 1 do
+    LBlock[0] := $01;
+    for LI := 1 to LLastPadPos - 1 do
     begin
-      block[i] := $FF;
+      LBlock[LI] := $FF;
     end;
   end
   else
   begin
     // Type 2 - random fill
-    FRandom.NextBytes(block, 0, blockSize);
-    block[0] := $02;
+    FRandom.NextBytes(LBlock, 0, LBlockSize);
+    LBlock[0] := $02;
 
     // A zero byte marks the end of the padding, so all pad bytes must be non-zero
-    for i := 1 to lastPadPos - 1 do
+    for LI := 1 to LLastPadPos - 1 do
     begin
-      while block[i] = 0 do
+      while LBlock[LI] = 0 do
       begin
-        block[i] := Byte(FRandom.NextInt32);
+        LBlock[LI] := Byte(FRandom.NextInt32);
       end;
     end;
   end;
 
   // Mark the end of the padding
-  block[lastPadPos] := $00;
+  LBlock[LLastPadPos] := $00;
 
   // Copy the data
-  System.Move(input[inOff], block[blockSize - inLen], inLen);
+  System.Move(AInput[AInOff], LBlock[LBlockSize - AInLen], AInLen);
 
-  Result := FEngine.ProcessBlock(block, 0, blockSize);
+  Result := FEngine.ProcessBlock(LBlock, 0, LBlockSize);
 end;
 
 class function TPkcs1Encoding.CheckPkcs1Encoding1(
-  const buf: TCryptoLibByteArray): Int32;
+  const ABuf: TCryptoLibByteArray): Int32;
 var
-  i, foundZeroMask, lastPadPos, badPadSign: Int32;
-  padByte, is0x00Mask, is0xFFMask: Int32;
-  plaintextLength: Int32;
+  LI, LFoundZeroMask, LLastPadPos, LBadPadSign: Int32;
+  LPadByte, LIs0x00Mask, LIs0xFFMask: Int32;
+  LPlaintextLength: Int32;
 begin
-  foundZeroMask := 0;
-  lastPadPos := 0;
+  LFoundZeroMask := 0;
+  LLastPadPos := 0;
 
   // The first byte should be 0x01
-  badPadSign := -(buf[0] xor $01);
+  LBadPadSign := -(ABuf[0] xor $01);
 
   // There must be a zero terminator for the padding somewhere
-  for i := 1 to System.Length(buf) - 1 do
+  for LI := 1 to System.Length(ABuf) - 1 do
   begin
-    padByte := buf[i];
-    is0x00Mask := TBitOperations.Asr32((padByte xor $00) - 1, 31);
-    is0xFFMask := TBitOperations.Asr32((padByte xor $FF) - 1, 31);
-    lastPadPos := lastPadPos xor (i and (not foundZeroMask) and is0x00Mask);
-    foundZeroMask := foundZeroMask or is0x00Mask;
-    badPadSign := badPadSign or (not (foundZeroMask or is0xFFMask));
+    LPadByte := ABuf[LI];
+    LIs0x00Mask := TBitOperations.Asr32((LPadByte xor $00) - 1, 31);
+    LIs0xFFMask := TBitOperations.Asr32((LPadByte xor $FF) - 1, 31);
+    LLastPadPos := LLastPadPos xor (LI and (not LFoundZeroMask) and LIs0x00Mask);
+    LFoundZeroMask := LFoundZeroMask or LIs0x00Mask;
+    LBadPadSign := LBadPadSign or (not (LFoundZeroMask or LIs0xFFMask));
   end;
 
   // The header should be at least 10 bytes
-  badPadSign := badPadSign or (lastPadPos - 9);
+  LBadPadSign := LBadPadSign or (LLastPadPos - 9);
 
-  plaintextLength := System.Length(buf) - 1 - lastPadPos;
-  Result := plaintextLength or TBitOperations.Asr32(badPadSign, 31);
+  LPlaintextLength := System.Length(ABuf) - 1 - LLastPadPos;
+  Result := LPlaintextLength or TBitOperations.Asr32(LBadPadSign, 31);
 end;
 
 class function TPkcs1Encoding.CheckPkcs1Encoding2(
-  const buf: TCryptoLibByteArray): Int32;
+  const ABuf: TCryptoLibByteArray): Int32;
 var
-  i, foundZeroMask, lastPadPos, badPadSign: Int32;
-  padByte, is0x00Mask: Int32;
-  plaintextLength: Int32;
+  LI, LFoundZeroMask, LLastPadPos, LBadPadSign: Int32;
+  LPadByte, LIs0x00Mask: Int32;
+  LPlaintextLength: Int32;
 begin
-  foundZeroMask := 0;
-  lastPadPos := 0;
+  LFoundZeroMask := 0;
+  LLastPadPos := 0;
 
   // The first byte should be 0x02
-  badPadSign := -(buf[0] xor $02);
+  LBadPadSign := -(ABuf[0] xor $02);
 
   // There must be a zero terminator for the padding somewhere
-  for i := 1 to System.Length(buf) - 1 do
+  for LI := 1 to System.Length(ABuf) - 1 do
   begin
-    padByte := buf[i];
-    is0x00Mask := TBitOperations.Asr32((padByte xor $00) - 1, 31);
-    lastPadPos := lastPadPos xor (i and (not foundZeroMask) and is0x00Mask);
-    foundZeroMask := foundZeroMask or is0x00Mask;
+    LPadByte := ABuf[LI];
+    LIs0x00Mask := TBitOperations.Asr32((LPadByte xor $00) - 1, 31);
+    LLastPadPos := LLastPadPos xor (LI and (not LFoundZeroMask) and LIs0x00Mask);
+    LFoundZeroMask := LFoundZeroMask or LIs0x00Mask;
   end;
 
   // The header should be at least 10 bytes
-  badPadSign := badPadSign or (lastPadPos - 9);
+  LBadPadSign := LBadPadSign or (LLastPadPos - 9);
 
-  plaintextLength := System.Length(buf) - 1 - lastPadPos;
-  Result := plaintextLength or TBitOperations.Asr32(badPadSign, 31);
+  LPlaintextLength := System.Length(ABuf) - 1 - LLastPadPos;
+  Result := LPlaintextLength or TBitOperations.Asr32(LBadPadSign, 31);
 end;
 
 class function TPkcs1Encoding.CheckPkcs1Encoding2(
-  const buf: TCryptoLibByteArray; plaintextLength: Int32): Int32;
+  const ABuf: TCryptoLibByteArray; APlaintextLength: Int32): Int32;
 var
-  i, badPadSign, lastPadPos: Int32;
+  LI, LBadPadSign, LLastPadPos: Int32;
 begin
   // The first byte should be 0x02
-  badPadSign := -(buf[0] xor $02);
-  lastPadPos := System.Length(buf) - 1 - plaintextLength;
+  LBadPadSign := -(ABuf[0] xor $02);
+  LLastPadPos := System.Length(ABuf) - 1 - APlaintextLength;
 
   // The header should be at least 10 bytes
-  badPadSign := badPadSign or (lastPadPos - 9);
+  LBadPadSign := LBadPadSign or (LLastPadPos - 9);
 
   // All pad bytes before the last one should be non-zero
-  for i := 1 to lastPadPos - 1 do
+  for LI := 1 to LLastPadPos - 1 do
   begin
-    badPadSign := badPadSign or (buf[i] - 1);
+    LBadPadSign := LBadPadSign or (ABuf[LI] - 1);
   end;
 
   // Last pad byte should be zero
-  badPadSign := badPadSign or (-buf[lastPadPos]);
+  LBadPadSign := LBadPadSign or (-ABuf[LLastPadPos]);
 
-  Result := TBitOperations.Asr32(badPadSign, 31);
+  Result := TBitOperations.Asr32(LBadPadSign, 31);
 end;
 
-function TPkcs1Encoding.DecodeBlockOrRandom(const input: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPkcs1Encoding.DecodeBlockOrRandom(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  plaintextLength, strictBlockSize, badPadMask, dataOff, i: Int32;
-  randomBytes, block, data: TCryptoLibByteArray;
+  LPlaintextLength, LStrictBlockSize, LBadPadMask, LDataOff, LI: Int32;
+  LRandomBytes, LBlock, LData: TCryptoLibByteArray;
 begin
   if not FForPrivateKey then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SDecryptionOnly);
   end;
 
-  plaintextLength := FPLen;
+  LPlaintextLength := FPLen;
 
   if FFallback <> nil then
-    randomBytes := FFallback
+    LRandomBytes := FFallback
   else
   begin
-    SetLength(randomBytes, plaintextLength);
-    FRandom.NextBytes(randomBytes);
+    SetLength(LRandomBytes, LPlaintextLength);
+    FRandom.NextBytes(LRandomBytes);
   end;
 
-  badPadMask := 0;
-  strictBlockSize := FEngine.OutputBlockSize;
-  block := FEngine.ProcessBlock(input, inOff, inLen);
+  LBadPadMask := 0;
+  LStrictBlockSize := FEngine.OutputBlockSize;
+  LBlock := FEngine.ProcessBlock(AInput, AInOff, AInLen);
 
-  data := block;
-  if System.Length(block) <> strictBlockSize then
+  LData := LBlock;
+  if System.Length(LBlock) <> LStrictBlockSize then
   begin
-    if FUseStrictLength or (System.Length(block) < strictBlockSize) then
+    if FUseStrictLength or (System.Length(LBlock) < LStrictBlockSize) then
     begin
-      data := FBlockBuffer;
+      LData := FBlockBuffer;
     end;
   end;
 
-  badPadMask := badPadMask or CheckPkcs1Encoding2(data, plaintextLength);
+  LBadPadMask := LBadPadMask or CheckPkcs1Encoding2(LData, LPlaintextLength);
 
   // Constant time copy
-  dataOff := System.Length(data) - plaintextLength;
-  SetLength(Result, plaintextLength);
-  for i := 0 to plaintextLength - 1 do
+  LDataOff := System.Length(LData) - LPlaintextLength;
+  SetLength(Result, LPlaintextLength);
+  for LI := 0 to LPlaintextLength - 1 do
   begin
-    Result[i] := Byte((data[dataOff + i] and (not badPadMask)) or
-      (randomBytes[i] and badPadMask));
+    Result[LI] := Byte((LData[LDataOff + LI] and (not LBadPadMask)) or
+      (LRandomBytes[LI] and LBadPadMask));
   end;
 
   // Clear sensitive data
-  FillChar(block[0], System.Length(block), 0);
+  TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
 end;
 
-function TPkcs1Encoding.DecodeBlock(const input: TCryptoLibByteArray;
-  inOff, inLen: Int32): TCryptoLibByteArray;
+function TPkcs1Encoding.DecodeBlock(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
-  strictBlockSize, plaintextLength: Int32;
-  incorrectLength: Boolean;
-  block, data: TCryptoLibByteArray;
+  LStrictBlockSize, LPlaintextLength: Int32;
+  LIncorrectLength: Boolean;
+  LBlock, LData: TCryptoLibByteArray;
 begin
   // If expected plaintext length is known, use constant-time decryption
   if FForPrivateKey and (FPLen <> -1) then
   begin
-    Result := DecodeBlockOrRandom(input, inOff, inLen);
+    Result := DecodeBlockOrRandom(AInput, AInOff, AInLen);
     Exit;
   end;
 
-  strictBlockSize := FEngine.OutputBlockSize;
-  block := FEngine.ProcessBlock(input, inOff, inLen);
+  LStrictBlockSize := FEngine.OutputBlockSize;
+  LBlock := FEngine.ProcessBlock(AInput, AInOff, AInLen);
 
-  incorrectLength := FUseStrictLength and (System.Length(block) <> strictBlockSize);
+  LIncorrectLength := FUseStrictLength and (System.Length(LBlock) <> LStrictBlockSize);
 
-  data := block;
-  if System.Length(block) < strictBlockSize then
+  LData := LBlock;
+  if System.Length(LBlock) < LStrictBlockSize then
   begin
-    data := FBlockBuffer;
+    LData := FBlockBuffer;
   end;
 
   if FForPrivateKey then
-    plaintextLength := CheckPkcs1Encoding2(data)
+    LPlaintextLength := CheckPkcs1Encoding2(LData)
   else
-    plaintextLength := CheckPkcs1Encoding1(data);
+    LPlaintextLength := CheckPkcs1Encoding1(LData);
 
   try
-    if plaintextLength < 0 then
+    if LPlaintextLength < 0 then
     begin
       raise EInvalidCipherTextCryptoLibException.CreateRes(@SBlockIncorrect);
     end;
 
-    if incorrectLength then
+    if LIncorrectLength then
     begin
       raise EInvalidCipherTextCryptoLibException.CreateRes(@SBlockIncorrectSize);
     end;
 
-    SetLength(Result, plaintextLength);
-    System.Move(data[System.Length(data) - plaintextLength], Result[0], plaintextLength);
+    SetLength(Result, LPlaintextLength);
+    System.Move(LData[System.Length(LData) - LPlaintextLength], Result[0], LPlaintextLength);
   finally
     // Clear sensitive data
-    FillChar(block[0], System.Length(block), 0);
-    FillChar(FBlockBuffer[0], Math.Max(0, System.Length(FBlockBuffer) - System.Length(block)), 0);
+    TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
+    TArrayUtilities.Fill<Byte>(FBlockBuffer, 0, Math.Max(0, System.Length(FBlockBuffer) - System.Length(LBlock)), Byte(0));
   end;
 end;
 

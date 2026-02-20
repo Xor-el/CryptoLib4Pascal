@@ -53,7 +53,8 @@ type
 
     class function NormalizeHashLibName(const AName: string): string; static;
 
-    function GetAlgorithmName: string; inline;
+  strict protected
+    function GetAlgorithmName: String; override;
 
   public
     class constructor Create;

@@ -43,14 +43,12 @@ resourcestring
   SInputBuffertooShort = 'Input Buffer too Short';
   SOutputBuffertooShort = 'Output Buffer too Short';
   SRoundsMustbeEven = 'Number of Rounds Must be Even';
-{$IFNDEF _FIXINSIGHT_}
   SIVRequired = '%s Init Requires an IV, "parameters"';
   SInvalidIV = '%s Requires exactly %d bytes of IV';
   SInitError =
     '%s Init Parameters must Contain a KeyParameter (or null for Re-Init)';
   SKeyParameterNullForFirstInit =
     'KeyParameter can not be null for First Initialisation';
-{$ENDIF}
 
 type
 
@@ -121,10 +119,8 @@ type
     /// <param name="ARounds">the number of rounds (must be an even number).</param>
     constructor Create(ARounds: Int32); overload;
 
-{$IFNDEF _FIXINSIGHT_}
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters); virtual;
-{$ENDIF}
     function ReturnByte(AInput: Byte): Byte; virtual;
 
     procedure ProcessBytes(const AInBytes: TCryptoLibByteArray;
@@ -190,14 +186,13 @@ begin
   Result := 8;
 end;
 
-{$IFNDEF _FIXINSIGHT_}
-
 procedure TSalsa20Engine.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LIvParams: IParametersWithIV;
   LIv: TCryptoLibByteArray;
   LKeyParam: ICipherParameters;
+  LKeyParameter: IKeyParameter;
 begin
   (*
     * Salsa20 encryption and decryption is completely
@@ -230,9 +225,9 @@ begin
 
     SetKey(nil, LIv);
   end
-  else if Supports(LKeyParam, IKeyParameter) then
+  else if Supports(LKeyParam, IKeyParameter, LKeyParameter) then
   begin
-    SetKey((LKeyParam as IKeyParameter).GetKey(), LIv);
+    SetKey(LKeyParameter.GetKey(), LIv);
   end
   else
   begin
@@ -243,7 +238,6 @@ begin
   Reset();
   FInitialised := True;
 end;
-{$ENDIF}
 
 function TSalsa20Engine.LimitExceeded: Boolean;
 begin

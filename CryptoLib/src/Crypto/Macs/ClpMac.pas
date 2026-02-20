@@ -34,6 +34,10 @@ type
 
   strict protected
     function GetAlgorithmName: String; virtual; abstract;
+
+  public
+    constructor Create();
+
     function GetMacSize: Int32; virtual; abstract;
     procedure Update(AInput: Byte); virtual; abstract;
     procedure BlockUpdate(const AInput: TCryptoLibByteArray;
@@ -42,10 +46,6 @@ type
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload; virtual; abstract;
     procedure Reset(); virtual; abstract;
-
-  public
-    constructor Create();
-
     procedure Clear(); virtual;
     function DoFinal(): TCryptoLibByteArray; overload; virtual;
 

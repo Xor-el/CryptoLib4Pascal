@@ -28,11 +28,8 @@ uses
   ClpIDsaKCalculator,
   ClpIRandomDsaKCalculator;
 
-{$IFNDEF _FIXINSIGHT_}
-
 resourcestring
   SUnSupportedOperation = 'Operation not Supported';
-{$ENDIF}
 
 type
   TRandomDsaKCalculator = class(TInterfacedObject, IDsaKCalculator,

@@ -87,7 +87,8 @@ type
     FPadding: IBlockCipherPadding;
     FMacSize: Int32;
 
-    function GetAlgorithmName: String; inline;
+  strict protected
+    function GetAlgorithmName: String; override;
 
   public
     constructor Create(const ACipher: IBlockCipher); overload;

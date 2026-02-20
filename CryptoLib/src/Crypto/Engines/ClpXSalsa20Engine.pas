@@ -50,7 +50,7 @@ type
     /// using a core Salsa20 function without input addition to produce 256 bit working key
     /// and use that with the remaining 64 bits of nonce to initialize a standard Salsa20 engine state.
     /// </summary>
-    procedure SetKey(const keyBytes, ivBytes: TCryptoLibByteArray); override;
+    procedure SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray); override;
 
   end;
 
@@ -60,58 +60,58 @@ implementation
 
 function TXSalsa20Engine.GetAlgorithmName: String;
 begin
-  result := 'XSalsa20';
+  Result := 'XSalsa20';
 end;
 
 function TXSalsa20Engine.GetNonceSize: Int32;
 begin
-  result := 24;
+  Result := 24;
 end;
 
-procedure TXSalsa20Engine.SetKey(const keyBytes, ivBytes: TCryptoLibByteArray);
+procedure TXSalsa20Engine.SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray);
 var
-  hsalsa20Out: TCryptoLibUInt32Array;
+  LHsalsa20Out: TCryptoLibUInt32Array;
 begin
-  if (keyBytes = Nil) then
+  if (AKeyBytes = nil) then
   begin
     raise EArgumentCryptoLibException.CreateResFmt(@SNullKeyReInit,
       [AlgorithmName]);
   end;
 
-  if (System.Length(keyBytes) <> 32) then
+  if (System.Length(AKeyBytes) <> 32) then
   begin
-    TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
-    TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
+    TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
       [AlgorithmName]);
   end;
 
   // Set key for HSalsa20
-  Inherited SetKey(keyBytes, ivBytes);
+  Inherited SetKey(AKeyBytes, AIvBytes);
 
   // Pack next 64 bits of IV into engine state instead of counter
-  TPack.LE_To_UInt32(ivBytes, 8, FEngineState, 8, 2);
+  TPack.LE_To_UInt32(AIvBytes, 8, FEngineState, 8, 2);
 
   // Process engine state to generate Salsa20 key
-  System.SetLength(hsalsa20Out, System.Length(FEngineState));
-  SalsaCore(20, FEngineState, hsalsa20Out);
+  System.SetLength(LHsalsa20Out, System.Length(FEngineState));
+  SalsaCore(20, FEngineState, LHsalsa20Out);
 
   // Set new key, removing addition in last round of salsaCore
-  FEngineState[1] := hsalsa20Out[0] - FEngineState[0];
-  FEngineState[2] := hsalsa20Out[5] - FEngineState[5];
-  FEngineState[3] := hsalsa20Out[10] - FEngineState[10];
-  FEngineState[4] := hsalsa20Out[15] - FEngineState[15];
+  FEngineState[1] := LHsalsa20Out[0] - FEngineState[0];
+  FEngineState[2] := LHsalsa20Out[5] - FEngineState[5];
+  FEngineState[3] := LHsalsa20Out[10] - FEngineState[10];
+  FEngineState[4] := LHsalsa20Out[15] - FEngineState[15];
 
-  FEngineState[11] := hsalsa20Out[6] - FEngineState[6];
-  FEngineState[12] := hsalsa20Out[7] - FEngineState[7];
-  FEngineState[13] := hsalsa20Out[8] - FEngineState[8];
-  FEngineState[14] := hsalsa20Out[9] - FEngineState[9];
+  FEngineState[11] := LHsalsa20Out[6] - FEngineState[6];
+  FEngineState[12] := LHsalsa20Out[7] - FEngineState[7];
+  FEngineState[13] := LHsalsa20Out[8] - FEngineState[8];
+  FEngineState[14] := LHsalsa20Out[9] - FEngineState[9];
 
   // Last 64 bits of input IV
-  TPack.LE_To_UInt32(ivBytes, 16, FEngineState, 6, 2);
+  TPack.LE_To_UInt32(AIvBytes, 16, FEngineState, 6, 2);
 
-  TArrayUtilities.Fill<Byte>(keyBytes, 0, System.Length(keyBytes), Byte(0));
-  TArrayUtilities.Fill<Byte>(ivBytes, 0, System.Length(ivBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
+  TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
 end;
 
 end.

@@ -61,12 +61,13 @@ type
     FMacSize: Int32;
     FL, FLu, FLu2: TCryptoLibByteArray;
 
-    function GetAlgorithmName: String; inline;
-
     class function ShiftLeft(const ABlock: TCryptoLibByteArray;
       const AOutput: TCryptoLibByteArray): Int32; static;
     class function DoubleLu(const AInput: TCryptoLibByteArray)
       : TCryptoLibByteArray; static;
+
+  strict protected
+    function GetAlgorithmName: String; override;
 
   public
     constructor Create(const ACipher: IBlockCipher); overload;

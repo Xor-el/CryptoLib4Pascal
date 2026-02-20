@@ -55,7 +55,8 @@ type
     FDigest: IDigest;
     FHMAC: HlpIHashInfo.IHMac;
 
-    function GetAlgorithmName: string; inline;
+  strict protected
+    function GetAlgorithmName: String; override;
 
   public
     constructor Create(const ADigest: IDigest);

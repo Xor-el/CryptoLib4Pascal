@@ -59,12 +59,12 @@ type
   public
     constructor Create();
 
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
-    function ConvertInput(const buf: TCryptoLibByteArray; off, len: Int32): TBigInteger;
-    function ConvertOutput(const res: TBigInteger): TCryptoLibByteArray;
-    function ProcessBlock(const input: TBigInteger): TBigInteger;
+    function ConvertInput(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32): TBigInteger;
+    function ConvertOutput(const ARes: TBigInteger): TCryptoLibByteArray;
+    function ProcessBlock(const AInput: TBigInteger): TBigInteger;
 
     property InputBlockSize: Int32 read GetInputBlockSize;
     property OutputBlockSize: Int32 read GetOutputBlockSize;
@@ -89,16 +89,16 @@ begin
   end;
 end;
 
-procedure TRsaCoreEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TRsaCoreEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
   LParameters: ICipherParameters;
 begin
-  LParameters := parameters;
+  LParameters := AParameters;
   LParameters := TParameterUtilities.IgnoreRandom(LParameters);
 
   FKey := LParameters as IRsaKeyParameters;
-  FForEncryption := forEncryption;
+  FForEncryption := AForEncryption;
   FBitSize := FKey.Modulus.BitLength;
 end;
 
@@ -130,21 +130,21 @@ begin
   end;
 end;
 
-function TRsaCoreEngine.ConvertInput(const buf: TCryptoLibByteArray;
-  off, len: Int32): TBigInteger;
+function TRsaCoreEngine.ConvertInput(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32): TBigInteger;
 var
-  maxLength: Int32;
+  LMaxLength: Int32;
 begin
   CheckInitialised;
 
-  maxLength := (FBitSize + 7) div 8;
+  LMaxLength := (FBitSize + 7) div 8;
 
-  if len > maxLength then
+  if ALen > LMaxLength then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SInputTooLargeForRsa);
   end;
 
-  Result := TBigInteger.Create(1, buf, off, len);
+  Result := TBigInteger.Create(1, ABuf, AOff, ALen);
 
   if Result.CompareTo(TBigInteger.One) <= 0 then
   begin
@@ -157,62 +157,62 @@ begin
   end;
 end;
 
-function TRsaCoreEngine.ConvertOutput(const res: TBigInteger): TCryptoLibByteArray;
+function TRsaCoreEngine.ConvertOutput(const ARes: TBigInteger): TCryptoLibByteArray;
 begin
   CheckInitialised;
 
   if FForEncryption then
   begin
-    Result := TBigIntegerUtilities.AsUnsignedByteArray(GetOutputBlockSize, res);
+    Result := TBigIntegerUtilities.AsUnsignedByteArray(GetOutputBlockSize, ARes);
   end
   else
   begin
-    Result := TBigIntegerUtilities.AsUnsignedByteArray(res);
+    Result := TBigIntegerUtilities.AsUnsignedByteArray(ARes);
   end;
 end;
 
-function TRsaCoreEngine.ProcessBlock(const input: TBigInteger): TBigInteger;
+function TRsaCoreEngine.ProcessBlock(const AInput: TBigInteger): TBigInteger;
 var
-  crtKey: IRsaPrivateCrtKeyParameters;
-  p, q, dP, dQ, qInv: TBigInteger;
-  mP, mQ, h, m, check: TBigInteger;
+  LCrtKey: IRsaPrivateCrtKeyParameters;
+  LP, LQ, LDP, LDQ, LQInv: TBigInteger;
+  LMP, LMQ, LH, LM, LCheck: TBigInteger;
 begin
   CheckInitialised;
 
   // Check if we have CRT parameters for private key operations
-  if not Supports(FKey, IRsaPrivateCrtKeyParameters, crtKey) then
+  if not Supports(FKey, IRsaPrivateCrtKeyParameters, LCrtKey) then
   begin
-    Result := input.ModPow(FKey.Exponent, FKey.Modulus);
+    Result := AInput.ModPow(FKey.Exponent, FKey.Modulus);
     Exit;
   end;
 
   // Use Chinese Remainder Theorem for faster decryption
-  p := crtKey.P;
-  q := crtKey.Q;
-  dP := crtKey.DP;
-  dQ := crtKey.DQ;
-  qInv := crtKey.QInv;
+  LP := LCrtKey.P;
+  LQ := LCrtKey.Q;
+  LDP := LCrtKey.DP;
+  LDQ := LCrtKey.DQ;
+  LQInv := LCrtKey.QInv;
 
   // mP = ((input Mod p) ^ dP) Mod p
-  mP := input.Remainder(p).ModPow(dP, p);
+  LMP := AInput.Remainder(LP).ModPow(LDP, LP);
 
   // mQ = ((input Mod q) ^ dQ) Mod q
-  mQ := input.Remainder(q).ModPow(dQ, q);
+  LMQ := AInput.Remainder(LQ).ModPow(LDQ, LQ);
 
   // h = qInv * (mP - mQ) Mod p
-  h := mP.Subtract(mQ).Multiply(qInv).&Mod(p);
+  LH := LMP.Subtract(LMQ).Multiply(LQInv).&Mod(LP);
 
   // m = h * q + mQ
-  m := h.Multiply(q).Add(mQ);
+  LM := LH.Multiply(LQ).Add(LMQ);
 
   // Defence against Arjen Lenstra's CRT attack
-  check := m.ModPow(crtKey.PublicExponent, crtKey.Modulus);
-  if not check.Equals(input) then
+  LCheck := LM.ModPow(LCrtKey.PublicExponent, LCrtKey.Modulus);
+  if not LCheck.Equals(AInput) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SFaultyDecryption);
   end;
 
-  Result := m;
+  Result := LM;
 end;
 
 end.

@@ -29,7 +29,6 @@ uses
   ClpSalsa20Engine,
   ClpChaChaEngine,
   ClpPack,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring

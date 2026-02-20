@@ -65,10 +65,12 @@ type
     FCurrentBlockOffset: Int32;
     FH0, FH1, FH2, FH3, FH4: UInt32;
 
-    function GetAlgorithmName: String;
     procedure SetKey(const AKeyParameter: IKeyParameter;
       const ANonce: TCryptoLibByteArray);
     procedure ProcessBlock(const ABuf: TCryptoLibByteArray; AOff: Int32);
+
+  strict protected
+    function GetAlgorithmName: String; override;
 
   public
     constructor Create(); overload;
@@ -76,14 +78,14 @@ type
 
     function GetMacSize: Int32; override;
 
-    procedure Update(AInput: Byte);
+    procedure Update(AInput: Byte); override;
     procedure BlockUpdate(const AInput: TCryptoLibByteArray;
-      AInOff, ALen: Int32);
-    procedure Init(const AParameters: ICipherParameters);
+      AInOff, ALen: Int32); override;
+    procedure Init(const AParameters: ICipherParameters); override;
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload; override;
 
-    procedure Reset();
+    procedure Reset(); override;
 
     property AlgorithmName: String read GetAlgorithmName;
 

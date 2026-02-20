@@ -35,12 +35,10 @@ uses
 resourcestring
   SInputBufferTooShort = 'Input Buffer too Short';
   SOutputBufferTooShort = 'Output Buffer too Short';
-{$IFNDEF _FIXINSIGHT_}
   SInvalidParameterArgument = 'CTR/SIC Mode Requires ParametersWithIV';
   SInvalidTooLargeIVLength =
     'CTR/SIC mode requires IV no greater than: %u bytes';
   SInvalidTooSmallIVLength = 'CTR/SIC mode requires IV of at least: %u bytes';
-{$ENDIF}
 
 type
   TSicBlockCipher = class(TInterfacedObject, ISicBlockCipher,
@@ -111,7 +109,6 @@ begin
   Result := FCipher;
 end;
 
-{$IFNDEF _FIXINSIGHT_}
 procedure TSicBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
@@ -145,7 +142,6 @@ begin
 
   Reset();
 end;
-{$ENDIF}
 
 function TSicBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;

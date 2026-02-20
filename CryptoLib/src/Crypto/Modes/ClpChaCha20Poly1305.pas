@@ -33,7 +33,6 @@ uses
   ClpChaCha7539Engine,
   ClpIChaCha7539Engine,
   ClpPoly1305,
-  ClpIPoly1305,
   ClpIMac,
   ClpKeyParameter,
   ClpParametersWithIV,
@@ -512,8 +511,6 @@ begin
   CheckData();
 
   TArrayUtilities.Fill<Byte>(FMac, 0, MacSize, Byte(0));
-
-  LResultLen := 0;
 
   case FState of
     TState.DecData:

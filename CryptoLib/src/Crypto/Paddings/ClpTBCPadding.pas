@@ -75,11 +75,9 @@ begin
   Result := 'TBC';
 end;
 
-{$IFNDEF _FIXINSIGHT_}
 procedure TTBCPadding.Init(const ARandom: ISecureRandom);
 begin
 end;
-{$ENDIF}
 
 function TTBCPadding.PadCount(const AInput: TCryptoLibByteArray): Int32;
 var

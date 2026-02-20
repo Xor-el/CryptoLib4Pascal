@@ -42,11 +42,11 @@ type
 
   strict private
   var
-    FecParams: IECDomainParameters;
+    FEcParams: IECDomainParameters;
 
   public
-    function ReadKey(const Stream: TStream): IAsymmetricKeyParameter;
-    constructor Create(const ecParams: IECDomainParameters);
+    function ReadKey(const AStream: TStream): IAsymmetricKeyParameter;
+    constructor Create(const AEcParams: IECDomainParameters);
 
   end;
 
@@ -54,21 +54,21 @@ implementation
 
 { TECIESPublicKeyParser }
 
-constructor TECIESPublicKeyParser.Create(const ecParams: IECDomainParameters);
+constructor TECIESPublicKeyParser.Create(const AEcParams: IECDomainParameters);
 begin
   Inherited Create();
-  FecParams := ecParams;
+  FEcParams := AEcParams;
 end;
 
-function TECIESPublicKeyParser.ReadKey(const Stream: TStream)
+function TECIESPublicKeyParser.ReadKey(const AStream: TStream)
   : IAsymmetricKeyParameter;
 var
-  v: TCryptoLibByteArray;
-  first: Int32;
+  LV: TCryptoLibByteArray;
+  LFirst: Int32;
 begin
-  first := Stream.ReadByte;
+  LFirst := AStream.ReadByte;
   // Decode the public ephemeral key
-  case first of
+  case LFirst of
     $00: // infinity
       begin
         raise EIOCryptoLibException.CreateRes(@SSenderPublicKeyInvalid);
@@ -77,28 +77,28 @@ begin
     $02, // compressed
     $03: // Byte length calculated as in ECPoint.getEncoded();
       begin
-        System.SetLength(v, 1 + (FecParams.Curve.FieldSize + 7) div 8);
+        System.SetLength(LV, 1 + (FEcParams.Curve.FieldSize + 7) div 8);
       end;
 
     $04, // uncompressed or
     $06, // hybrid
     $07: // Byte length calculated as in ECPoint.getEncoded();
       begin
-        System.SetLength(v, 1 + (2 * ((FecParams.Curve.FieldSize + 7) div 8)));
+        System.SetLength(LV, 1 + (2 * ((FEcParams.Curve.FieldSize + 7) div 8)));
       end
   else
     begin
       raise EIOCryptoLibException.CreateResFmt
-        (@SSenderPublicKeyInvalidPointEncoding, [first]);
+        (@SSenderPublicKeyInvalidPointEncoding, [LFirst]);
     end;
 
   end;
 
-  v[0] := Byte(first);
-  TStreamUtilities.ReadFully(Stream, v, 1, System.length(v) - 1);
+  LV[0] := Byte(LFirst);
+  TStreamUtilities.ReadFully(AStream, LV, 1, System.length(LV) - 1);
 
-  result := TECPublicKeyParameters.Create(FecParams.Curve.DecodePoint(v),
-    FecParams);
+  result := TECPublicKeyParameters.Create(FEcParams.Curve.DecodePoint(LV),
+    FEcParams);
 end;
 
 end.

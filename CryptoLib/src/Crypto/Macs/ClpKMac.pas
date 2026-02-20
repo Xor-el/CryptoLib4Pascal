@@ -53,7 +53,7 @@ type
     FKMAC: HlpIHashInfo.IKMac;
     FOutputLengthInBits: UInt64;
 
-    function GetAlgorithmName: string; inline;
+    function GetAlgorithmName: string; override;
 
   public
 
@@ -125,7 +125,6 @@ end;
 function TKMac.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
   LBuf: TCryptoLibByteArray;
-  LKeyParam: IKeyParameter;
 begin
   if (System.Length(AOutput) - AOutOff) < GetMacSize then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);

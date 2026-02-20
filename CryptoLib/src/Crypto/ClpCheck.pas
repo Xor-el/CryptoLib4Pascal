@@ -28,12 +28,12 @@ type
   TCheck = class sealed(TObject)
 
   public
-    class procedure DataLength(condition: Boolean; const msg: String);
+    class procedure DataLength(ACondition: Boolean; const AMsg: String);
       overload; inline;
-    class procedure DataLength(const buf: TCryptoLibByteArray; off, len: Int32;
-      const msg: String); overload; inline;
-    class procedure OutputLength(const buf: TCryptoLibByteArray;
-      off, len: Int32; const msg: String); overload; inline;
+    class procedure DataLength(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32;
+      const AMsg: String); overload; inline;
+    class procedure OutputLength(const ABuf: TCryptoLibByteArray;
+      AOff, ALen: Int32; const AMsg: String); overload; inline;
 
   end;
 
@@ -41,29 +41,29 @@ implementation
 
 { TCheck }
 
-class procedure TCheck.DataLength(condition: Boolean; const msg: String);
+class procedure TCheck.DataLength(ACondition: Boolean; const AMsg: String);
 begin
-  if condition then
+  if ACondition then
   begin
-    raise EDataLengthCryptoLibException.Create(msg);
+    raise EDataLengthCryptoLibException.Create(AMsg);
   end;
 end;
 
-class procedure TCheck.DataLength(const buf: TCryptoLibByteArray;
-  off, len: Int32; const msg: String);
+class procedure TCheck.DataLength(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32; const AMsg: String);
 begin
-  if ((off + len) > System.Length(buf)) then
+  if ((AOff + ALen) > System.Length(ABuf)) then
   begin
-    raise EDataLengthCryptoLibException.Create(msg);
+    raise EDataLengthCryptoLibException.Create(AMsg);
   end;
 end;
 
-class procedure TCheck.OutputLength(const buf: TCryptoLibByteArray;
-  off, len: Int32; const msg: String);
+class procedure TCheck.OutputLength(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32; const AMsg: String);
 begin
-  if ((off + len) > System.Length(buf)) then
+  if ((AOff + ALen) > System.Length(ABuf)) then
   begin
-    raise EOutputLengthCryptoLibException.Create(msg);
+    raise EOutputLengthCryptoLibException.Create(AMsg);
   end;
 end;
 

@@ -36,11 +36,8 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
-{$IFNDEF _FIXINSIGHT_}
-
 resourcestring
   SUnSupportedOperation = 'Operation not Supported';
-{$ENDIF}
 
 type
 
@@ -110,14 +107,11 @@ begin
   System.SetLength(FK, FHmac.GetMacSize());
 end;
 
-{$IFNDEF _FIXINSIGHT_}
-
 procedure THMacDsaKCalculator.Init(const AN: TBigInteger;
   const ARandom: ISecureRandom);
 begin
   raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
 end;
-{$ENDIF}
 
 procedure THMacDsaKCalculator.Init(const AN, AD: TBigInteger;
   const AMessage: TCryptoLibByteArray);
