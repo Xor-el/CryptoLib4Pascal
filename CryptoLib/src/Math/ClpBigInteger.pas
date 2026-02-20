@@ -3892,8 +3892,8 @@ begin
 
   // let n = 1 + d . 2^s
   LN := Self;
-  LS := LN.GetLowestSetBitMaskFirst(UInt32(UInt32.MaxValue shl 1));
-  //LS := LN.GetLowestSetBitMaskFirst(UInt32(not UInt32(1)));
+  //LS := LN.GetLowestSetBitMaskFirst(UInt32(UInt32.MaxValue shl 1));
+  LS := LN.GetLowestSetBitMaskFirst(UInt32(not UInt32(1)));
 {$IFDEF DEBUG}
   System.Assert(LS >= 1);
 {$ENDIF DEBUG}

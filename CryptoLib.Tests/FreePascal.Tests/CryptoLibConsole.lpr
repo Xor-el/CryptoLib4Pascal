@@ -25,9 +25,11 @@ uses
   X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests,
   KMacTests, PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests,
   RSATests, X931SignerTests, CipherStreamTests, OaepTests, RijndaelTests,
-  BlowfishTests, CryptoLibTestBase, OpenSslReaderTests, OpenSslWriterTests,
-  X509CertGenTests, ClpFixedSecureRandom, ClpShortenedDigest,
-  IPAddressUtilitiesTests, PemReaderTests;
+  BlowfishTests, CcmTests, ChaCha20Poly1305Tests, CMacTests, EaxTests, OcbTests,
+  MacTests, Poly1305Tests, AeadTestUtilities, CryptoLibTestBase,
+  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  ClpFixedSecureRandom, ClpShortenedDigest, IPAddressUtilitiesTests,
+  PemReaderTests;
 
 type
 

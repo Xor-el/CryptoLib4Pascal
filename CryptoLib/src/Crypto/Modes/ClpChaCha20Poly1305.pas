@@ -270,13 +270,13 @@ function TChaCha20Poly1305.GetOutputSize(ALen: Int32): Int32;
 var
   LTotal: Int32;
 begin
-  LTotal := System.Math.Max(0, ALen);
+  LTotal := Math.Max(0, ALen);
 
   case FState of
     TState.DecInit, TState.DecAad:
-      Result := System.Math.Max(0, LTotal - MacSize);
+      Result := Math.Max(0, LTotal - MacSize);
     TState.DecData, TState.DecFinal:
-      Result := System.Math.Max(0, LTotal + FBufPos - MacSize);
+      Result := Math.Max(0, LTotal + FBufPos - MacSize);
     TState.EncData, TState.EncFinal:
       Result := LTotal + FBufPos + MacSize;
   else
@@ -288,13 +288,13 @@ function TChaCha20Poly1305.GetUpdateOutputSize(ALen: Int32): Int32;
 var
   LTotal: Int32;
 begin
-  LTotal := System.Math.Max(0, ALen);
+  LTotal := Math.Max(0, ALen);
 
   case FState of
     TState.DecInit, TState.DecAad:
-      LTotal := System.Math.Max(0, LTotal - MacSize);
+      LTotal := Math.Max(0, LTotal - MacSize);
     TState.DecData, TState.DecFinal:
-      LTotal := System.Math.Max(0, LTotal + FBufPos - MacSize);
+      LTotal := Math.Max(0, LTotal + FBufPos - MacSize);
     TState.EncData, TState.EncFinal:
       LTotal := LTotal + FBufPos;
   else

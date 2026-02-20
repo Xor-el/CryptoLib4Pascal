@@ -35,7 +35,6 @@ uses
   ClpIPoly1305,
   ClpPoly1305,
   ClpPoly1305KeyGenerator,
-  ClpIPoly1305KeyGenerator,
   ClpCipherKeyGenerator,
   ClpICipherKeyGenerator,
   ClpKeyGenerationParameters,
@@ -49,7 +48,6 @@ uses
   ClpIParametersWithIV,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpArrayUtilities,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

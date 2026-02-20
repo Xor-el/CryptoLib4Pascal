@@ -31,7 +31,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpIBlockCipher,
   ClpIAeadBlockCipher,
   ClpICipherParameters,
   ClpIAeadParameters,
@@ -44,7 +43,6 @@ uses
   ClpICcmBlockCipher,
   ClpAesEngine,
   ClpIAesEngine,
-  ClpArrayUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

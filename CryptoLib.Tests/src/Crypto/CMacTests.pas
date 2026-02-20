@@ -31,7 +31,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpIBlockCipher,
   ClpIMac,
   ClpICipherParameters,
   ClpAesEngine,

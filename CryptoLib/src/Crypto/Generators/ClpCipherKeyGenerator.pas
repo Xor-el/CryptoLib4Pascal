@@ -50,12 +50,12 @@ type
     FUninitialised: Boolean;
     FDefaultStrength: Int32;
 
-    function GetDefaultStrength: Int32; inline;
-
   strict protected
   var
     FRandom: ISecureRandom;
     FStrength: Int32;
+
+    function GetDefaultStrength: Int32; inline;
 
     procedure EngineInit(const AParameters: IKeyGenerationParameters); virtual;
     function EngineGenerateKey: TCryptoLibByteArray; virtual;

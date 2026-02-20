@@ -41,7 +41,6 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpDateTimeUtilities,
-  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpAesEngine,
   ClpIAesEngine,

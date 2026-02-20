@@ -174,7 +174,16 @@ uses
   ClpCipherUtilities, ClpIBufferedAsymmetricBlockCipher, 
   ClpIAsymmetricBlockCipher, ClpIBufferedStreamCipher, ClpIBufferedCipherBase, 
   ClpIBufferedBlockCipher, ClpIStreamCipher, ClpIBlockCipher, 
-  ClpIBufferedCipher;
+  ClpIBufferedCipher, ClpChaCha7539Engine, ClpMac, ClpCbcBlockCipherMac, 
+  ClpCMac, ClpSipHashMac, ClpCfbBlockCipherMac, ClpPoly1305, 
+  ClpChaCha20Poly1305, ClpOcbBlockCipher, ClpEaxBlockCipher, 
+  ClpCcmBlockCipher, ClpOpenPgpCfbBlockCipher, ClpPoly1305KeyGenerator, 
+  ClpIOpenPgpCfbBlockCipher, ClpIAeadBlockCipher, ClpIAeadCipher, 
+  ClpICcmBlockCipher, ClpIChaCha20Poly1305, ClpIEaxBlockCipher, 
+  ClpIOcbBlockCipher, ClpICfbBlockCipherMac, ClpISipHashMac, 
+  ClpICbcBlockCipherMac, ClpICMac, ClpIPoly1305, ClpIPoly1305KeyGenerator, 
+  ClpIChaCha7539Engine, ClpAeadParameters, ClpIBufferedAeadBlockCipher, 
+  ClpIBufferedAeadCipher, ClpIAeadParameters;
 
 implementation
 
