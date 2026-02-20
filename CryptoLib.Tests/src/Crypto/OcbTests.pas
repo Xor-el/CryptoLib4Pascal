@@ -109,8 +109,6 @@ implementation
 class constructor TTestOcb.CreateTestOcb;
 begin
   // RFC 7253 TEST_VECTORS_128: N, A, P, C
-  //SetLength(FTestVectors128, 0);
-
   FTestVectors128 := TCryptoLibGenericArray<TCryptoLibStringArray>.Create(
     TCryptoLibStringArray.Create(
     'BBAA99887766554433221100',
@@ -195,7 +193,6 @@ begin
     );
 
   // RFC 7253 TEST_VECTORS_96: N, A, P, C
-  //SetLength(FTestVectors96, 0);
   FTestVectors96 := TCryptoLibGenericArray<TCryptoLibStringArray>.Create(
     TCryptoLibStringArray.Create(
     'BBAA9988776655443322110D',
