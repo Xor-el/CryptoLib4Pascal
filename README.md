@@ -6,7 +6,7 @@
   <p align="center">
     <a href="https://github.com/Xor-el/CryptoLib4Pascal/actions/workflows/make.yml"><img src="https://github.com/Xor-el/CryptoLib4Pascal/actions/workflows/make.yml/badge.svg" alt="Build Status"></a>
     <a href="https://github.com/Xor-el/CryptoLib4Pascal/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-    <a href="https://www.embarcadero.com/products/delphi"><img src="https://img.shields.io/badge/Delphi-Tokyo%2B-red.svg" alt="Delphi Tokyo+"></a>
+    <a href="https://www.embarcadero.com/products/delphi"><img src="https://img.shields.io/badge/Delphi-Syndey%2B-red.svg" alt="Delphi Syndey+"></a>
     <a href="https://www.freepascal.org/"><img src="https://img.shields.io/badge/FreePascal-3.3.1%2B-blue.svg" alt="FreePascal 3.3.1+"></a>
   </p>
 </p>
