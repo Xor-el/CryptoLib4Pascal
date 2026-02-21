@@ -56,7 +56,6 @@ contains
   ClpBigInteger in '..\..\Math\ClpBigInteger.pas',
   ClpBigIntegerUtilities in '..\..\Math\ClpBigIntegerUtilities.pas',
   ClpPrimes in '..\..\Math\ClpPrimes.pas',
-  ClpBitConverter in '..\..\Misc\ClpBitConverter.pas',
   ClpCbcBlockCipher in '..\..\Crypto\Modes\ClpCbcBlockCipher.pas',
   ClpCfbBlockCipher in '..\..\Crypto\Modes\ClpCfbBlockCipher.pas',
   ClpCtsBlockCipher in '..\..\Crypto\Modes\ClpCtsBlockCipher.pas',

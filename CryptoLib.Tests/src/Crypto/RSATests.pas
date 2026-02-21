@@ -47,6 +47,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpConverters,
+  ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -194,7 +195,7 @@ begin
     FModulus, FPubExp, FPrivExp, FP, FQ, FPExp, FQExp, FCrtCoef);
 
   // Test input
-  input := TConverters.ConvertHexStringToBytes(
+  input := THexEncoder.Decode(
     '4e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
 
   // Encrypt with public key
@@ -222,7 +223,7 @@ begin
   privParams := TRsaPrivateCrtKeyParameters.Create(
     FModulus, FPubExp, FPrivExp, FP, FQ, FPExp, FQExp, FCrtCoef);
 
-  input := TConverters.ConvertHexStringToBytes(
+  input := THexEncoder.Decode(
     '4e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
 
   // Encrypt with PKCS1 padding
@@ -249,7 +250,7 @@ begin
     FModulus, FPubExp, FPrivExp, FP, FQ, FPExp, FQExp, FCrtCoef);
 
   // Shorter input for OAEP (needs room for padding)
-  input := TConverters.ConvertHexStringToBytes('48656c6c6f20576f726c6421'); // "Hello World!"
+  input := THexEncoder.Decode('48656c6c6f20576f726c6421'); // "Hello World!"
 
   // Encrypt with OAEP padding
   engine := TOaepEncoding.Create(TRsaBlindedEngine.Create());
@@ -292,7 +293,7 @@ begin
   CheckTrue(privKey.IsPrivate, 'Private key not marked as private');
 
   // Test encryption/decryption with generated keys
-  input := TConverters.ConvertHexStringToBytes('48656c6c6f'); // "Hello"
+  input := THexEncoder.Decode('48656c6c6f'); // "Hello"
 
   engine := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
   engine.Init(True, pubKey);

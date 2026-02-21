@@ -36,6 +36,7 @@ uses
   ClpKMac,
   ClpIMac,
   ClpConverters,
+  ClpEncoders,
   CryptoLibTestBase;
 
 type
@@ -79,7 +80,7 @@ begin
     LTemp[LIdx] := LIdx;
   end;
 
-  FData := TConverters.ConvertBytesToHexString(LTemp, False);
+  FData := THexEncoder.Encode(LTemp, False);
   FRawKeyInHex :=
     '404142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F';
   FCustomizationMessage := 'My Tagged Application';
@@ -99,10 +100,10 @@ var
   LIdx: Int32;
   LActualResult, LKey, LCustomization, LData: TBytes;
 begin
-  LKey := TConverters.ConvertHexStringToBytes(AKey);
+  LKey := THexEncoder.Decode(AKey);
   LCustomization := TConverters.ConvertStringToBytes(ACustomization,
     TEncoding.UTF8);
-  LData := TConverters.ConvertHexStringToBytes(AData);
+  LData := THexEncoder.Decode(AData);
 
   LMac := TKMAC128.Create(LCustomization, AOutputSizeInBits);
 
@@ -117,9 +118,9 @@ begin
   System.SetLength(LActualResult, LMac.GetMacSize());
   LMac.DoFinal(LActualResult, 0);
 
-  CheckEquals(AExpectedResult, TConverters.ConvertBytesToHexString
+  CheckEquals(AExpectedResult, THexEncoder.Encode
     (LActualResult, False), Format('Expected %s But got %s',
-    [AExpectedResult, TConverters.ConvertBytesToHexString(LActualResult,
+    [AExpectedResult, THexEncoder.Encode(LActualResult,
     False)]));
 
 end;
@@ -131,10 +132,10 @@ var
   LIdx: Int32;
   LActualResult, LKey, LCustomization, LData: TBytes;
 begin
-  LKey := TConverters.ConvertHexStringToBytes(AKey);
+  LKey := THexEncoder.Decode(AKey);
   LCustomization := TConverters.ConvertStringToBytes(ACustomization,
     TEncoding.UTF8);
-  LData := TConverters.ConvertHexStringToBytes(AData);
+  LData := THexEncoder.Decode(AData);
 
   LMac := TKMAC256.Create(LCustomization, AOutputSizeInBits);
 
@@ -149,9 +150,9 @@ begin
   System.SetLength(LActualResult, LMac.GetMacSize());
   LMac.DoFinal(LActualResult, 0);
 
-  CheckEquals(AExpectedResult, TConverters.ConvertBytesToHexString
+  CheckEquals(AExpectedResult, THexEncoder.Encode
     (LActualResult, False), Format('Expected %s But got %s',
-    [AExpectedResult, TConverters.ConvertBytesToHexString(LActualResult,
+    [AExpectedResult, THexEncoder.Encode(LActualResult,
     False)]));
 
 end;

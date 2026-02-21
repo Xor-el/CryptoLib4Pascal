@@ -32,7 +32,7 @@
 
 - **Symmetric encryption** -- AES, Rijndael, Blowfish, Speck, ChaCha, (X)Salsa20
 - **Authenticated encryption (AEAD)** -- GCM, GCM-SIV, CCM, EAX, OCB, ChaCha20-Poly1305
-- **Asymmetric cryptography** -- RSA, DSA, ECDSA, EdDSA (Ed25519), ECSchnorr, ECNR
+- **Asymmetric cryptography** -- RSA, DSA, ECDSA, EdDSA (Ed25519), ECNR
 - **Key exchange** -- DH, ECDH, X25519
 - **Hashing** -- SHA-2, SHA-3, Blake2, Keccak, RIPEMD, and more
 - **Password hashing** -- Argon2 (2i/2d/2id), Scrypt, PBKDF2
@@ -124,7 +124,7 @@
 | Blake2S | 128, 160, 224, 256 |
 | RIPEMD | 128, 160, 256, 320 |
 | GOST | 3411, 3411-2012 (256, 512) |
-| Other | Tiger, WhirlPool |
+| Others | Tiger, WhirlPool |
 
 </details>
 

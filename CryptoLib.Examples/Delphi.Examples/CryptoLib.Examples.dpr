@@ -34,7 +34,6 @@ uses
   ClpBigInteger in '..\..\CryptoLib\src\Math\ClpBigInteger.pas',
   ClpBigIntegerUtilities in '..\..\CryptoLib\src\Math\ClpBigIntegerUtilities.pas',
   ClpPrimes in '..\..\CryptoLib\src\Math\ClpPrimes.pas',
-  ClpBitConverter in '..\..\CryptoLib\src\Misc\ClpBitConverter.pas',
   ClpCbcBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCbcBlockCipher.pas',
   ClpCfbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCfbBlockCipher.pas',
   ClpCtsBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCtsBlockCipher.pas',
