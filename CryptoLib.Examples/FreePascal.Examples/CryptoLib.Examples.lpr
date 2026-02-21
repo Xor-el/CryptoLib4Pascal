@@ -18,7 +18,8 @@ uses
   ClpRsaExample in '..\src\Examples\ClpRsaExample.pas',
   ClpEcExample in '..\src\Examples\ClpEcExample.pas',
   ClpCertificateExample in '..\src\Examples\ClpCertificateExample.pas',
-  ClpCipherExample in '..\src\Examples\ClpCipherExample.pas';
+  ClpCipherExample in '..\src\Examples\ClpCipherExample.pas',
+  ClpHybridEncryption in '..\src\Examples\ClpHybridEncryption.pas';
 
 begin
   TClpLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

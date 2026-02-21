@@ -14,6 +14,7 @@ uses
   ClpEcExample in '..\src\Examples\ClpEcExample.pas',
   ClpCertificateExample in '..\src\Examples\ClpCertificateExample.pas',
   ClpCipherExample in '..\src\Examples\ClpCipherExample.pas',
+  ClpHybridEncryption in '..\src\Examples\ClpHybridEncryption.pas',
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
   ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
   ClpAgreementUtilities in '..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas',

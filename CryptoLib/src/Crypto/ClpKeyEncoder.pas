@@ -22,10 +22,14 @@ unit ClpKeyEncoder;
 interface
 
 uses
+  SysUtils,
   ClpIAsymmetricKeyParameter,
   ClpIECParameters,
   ClpIKeyEncoder,
   ClpCryptoLibTypes;
+
+resourcestring
+  SKeyParameterNotECPublicKey = 'AKeyParameter is not an IECPublicKeyParameters';
 
 type
   TKeyEncoder = class(TInterfacedObject, IKeyEncoder)
@@ -35,8 +39,8 @@ type
     FUsePointCompression: Boolean;
 
   public
-    constructor Create(usePointCompression: Boolean);
-    function GetEncoded(const keyParameter: IAsymmetricKeyParameter)
+    constructor Create(AUsePointCompression: Boolean);
+    function GetEncoded(const AKeyParameter: IAsymmetricKeyParameter)
       : TCryptoLibByteArray;
 
   end;
@@ -45,17 +49,20 @@ implementation
 
 { TKeyEncoder }
 
-constructor TKeyEncoder.Create(usePointCompression: Boolean);
+constructor TKeyEncoder.Create(AUsePointCompression: Boolean);
 begin
   Inherited Create();
-  FUsePointCompression := usePointCompression;
+  FUsePointCompression := AUsePointCompression;
 end;
 
-function TKeyEncoder.GetEncoded(const keyParameter: IAsymmetricKeyParameter)
+function TKeyEncoder.GetEncoded(const AKeyParameter: IAsymmetricKeyParameter)
   : TCryptoLibByteArray;
+var
+  LEcPub: IECPublicKeyParameters;
 begin
-  Result := (keyParameter as IECPublicKeyParameters)
-    .Q.GetEncoded(FUsePointCompression);
+  if not Supports(AKeyParameter, IECPublicKeyParameters, LEcPub) then
+    raise EArgumentCryptoLibException.CreateRes(@SKeyParameterNotECPublicKey);
+  Result := LEcPub.Q.GetEncoded(FUsePointCompression);
 end;
 
 end.

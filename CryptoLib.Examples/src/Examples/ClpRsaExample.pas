@@ -27,6 +27,7 @@ interface
 
 uses
   SysUtils,
+  Classes,
   ClpSignerUtilities,
   ClpEncoders,
   ClpConverters,
@@ -40,6 +41,7 @@ uses
   ClpPrivateKeyFactory,
   ClpSubjectPublicKeyInfoFactory,
   ClpPublicKeyFactory,
+  ClpHybridEncryption,
   ClpExampleBase;
 
 type
@@ -51,6 +53,8 @@ type
     procedure DoRsaEncryptDecrypt(const ACipherAlgorithm: string;
       const AKeyPair: IAsymmetricCipherKeyPair);
     procedure RunRsaEncryptDecrypt;
+    procedure RunRsaHybridEncryptDecrypt;
+    procedure RunRsaHybridStreamEncryptDecrypt;
   public
     procedure Run; override;
   end;
@@ -159,6 +163,62 @@ begin
   DoRsaEncryptDecrypt('RSA/NONE/OAEPWITHSHA-256ANDMGF1PADDING', LKp);
 end;
 
+procedure TRsaExample.RunRsaHybridEncryptDecrypt;
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LPlain, LAad, LEnvelope, LDecrypted: TBytes;
+begin
+  LKp := GenerateRsaKeyPair(3072);
+  LPlain := TConverters.ConvertStringToBytes('Hello RSA Hybrid Encryption!', TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes('RH01-example-context', TEncoding.UTF8);
+
+  LEnvelope := TRsaHybridEncryption.Encrypt(LKp.Public, LPlain, LAad);
+  Logger.LogInformation(Format('RSA hybrid envelope: %d bytes', [System.Length(LEnvelope)]));
+
+  LDecrypted := TRsaHybridEncryption.Decrypt(LKp.Private, LEnvelope, LAad);
+  if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
+    Logger.LogInformation('RSA hybrid encrypt/decrypt roundtrip: success.')
+  else
+    Logger.LogWarning('RSA hybrid encrypt/decrypt roundtrip: failed.');
+end;
+
+procedure TRsaExample.RunRsaHybridStreamEncryptDecrypt;
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LPlainStream, LEncStream, LDecStream: TBytesStream;
+  LPlain, LAad, LDecrypted: TBytes;
+begin
+  LKp := GenerateRsaKeyPair(3072);
+  LPlain := TConverters.ConvertStringToBytes('Hello RSA Hybrid Stream!', TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes('RH01-stream-context', TEncoding.UTF8);
+
+  LPlainStream := TBytesStream.Create(LPlain);
+  try
+    LEncStream := TBytesStream.Create(nil);
+    try
+      TRsaHybridEncryption.Encrypt(LKp.Public, LPlainStream, LEncStream, LAad);
+      Logger.LogInformation(Format('RSA hybrid stream envelope: %d bytes', [LEncStream.Size]));
+
+      LEncStream.Position := 0;
+      LDecStream := TBytesStream.Create(nil);
+      try
+        TRsaHybridEncryption.Decrypt(LKp.Private, LEncStream, LDecStream, LAad);
+        LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
+        if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
+          Logger.LogInformation('RSA hybrid stream roundtrip: success.')
+        else
+          Logger.LogWarning('RSA hybrid stream roundtrip: failed.');
+      finally
+        LDecStream.Free;
+      end;
+    finally
+      LEncStream.Free;
+    end;
+  finally
+    LPlainStream.Free;
+  end;
+end;
+
 procedure TRsaExample.Run;
 begin
   LogWithLineBreak('--- RSA example: Sign and verify ---');
@@ -173,6 +233,12 @@ begin
 
   LogWithLineBreak('--- RSA example: Encrypt/decrypt ---');
   RunRsaEncryptDecrypt;
+
+  LogWithLineBreak('--- RSA example: Hybrid encrypt/decrypt (RSA-OAEP + AES-256-GCM) ---');
+  RunRsaHybridEncryptDecrypt;
+
+  LogWithLineBreak('--- RSA example: Hybrid stream encrypt/decrypt ---');
+  RunRsaHybridStreamEncryptDecrypt;
 end;
 
 end.

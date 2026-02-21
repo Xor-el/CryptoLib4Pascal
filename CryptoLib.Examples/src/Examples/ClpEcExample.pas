@@ -27,6 +27,7 @@ interface
 
 uses
   SysUtils,
+  Classes,
   ClpECUtilities,
   ClpIX9ECParametersHolder,
   ClpIAsn1Objects,
@@ -36,6 +37,7 @@ uses
   ClpSignerUtilities,
   ClpEncoders,
   ClpConverters,
+  ClpArrayUtilities,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpIX9ECAsn1Objects,
@@ -45,6 +47,7 @@ uses
   ClpPrivateKeyFactory,
   ClpSubjectPublicKeyInfoFactory,
   ClpPublicKeyFactory,
+  ClpHybridEncryption,
   ClpExampleBase;
 
 type
@@ -56,6 +59,8 @@ type
     procedure RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
     procedure RunPublicKeyFromXY(const ACurveName: string);
     procedure RunEcPemExportImport(const ACurveName: string);
+    procedure RunEcHybridEncryptDecrypt(const ACurveName: string);
+    procedure RunEcHybridStreamEncryptDecrypt(const ACurveName: string);
   public
     procedure Run; override;
   end;
@@ -190,6 +195,74 @@ begin
   VerifyPemRoundtrip(LKp, 'EC');
 end;
 
+procedure TEcExample.RunEcHybridEncryptDecrypt(const ACurveName: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
+  LPlain, LAad, LEnvelope, LDecrypted: TBytes;
+begin
+  LDomain := LookupEcDomain(ACurveName);
+  if LDomain = nil then
+    Exit;
+  LKp := GenerateEcKeyPair(LDomain);
+  Logger.LogInformation('Curve: ' + ACurveName);
+
+  LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Encryption!', TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes('EH01-example-context', TEncoding.UTF8);
+
+  LEnvelope := TEcHybridEncryption.Encrypt(LKp.Public, LDomain, LPlain, LAad);
+  Logger.LogInformation(Format('EC hybrid envelope: %d bytes', [System.Length(LEnvelope)]));
+
+  LDecrypted := TEcHybridEncryption.Decrypt(LKp.Private, LDomain, LEnvelope, LAad);
+  if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
+    Logger.LogInformation('EC hybrid encrypt/decrypt roundtrip: success.')
+  else
+    Logger.LogWarning('EC hybrid encrypt/decrypt roundtrip: failed.');
+end;
+
+procedure TEcExample.RunEcHybridStreamEncryptDecrypt(const ACurveName: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
+  LPlainStream, LEncStream, LDecStream: TBytesStream;
+  LPlain, LAad, LDecrypted: TBytes;
+begin
+  LDomain := LookupEcDomain(ACurveName);
+  if LDomain = nil then
+    Exit;
+  LKp := GenerateEcKeyPair(LDomain);
+  Logger.LogInformation('Curve: ' + ACurveName);
+
+  LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Stream!', TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes('EH01-stream-context', TEncoding.UTF8);
+
+  LPlainStream := TBytesStream.Create(LPlain);
+  try
+    LEncStream := TBytesStream.Create(nil);
+    try
+      TEcHybridEncryption.Encrypt(LKp.Public, LDomain, LPlainStream, LEncStream, LAad);
+      Logger.LogInformation(Format('EC hybrid stream envelope: %d bytes', [LEncStream.Size]));
+
+      LEncStream.Position := 0;
+      LDecStream := TBytesStream.Create(nil);
+      try
+        TEcHybridEncryption.Decrypt(LKp.Private, LDomain, LEncStream, LDecStream, LAad);
+        LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
+        if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
+          Logger.LogInformation('EC hybrid stream roundtrip: success.')
+        else
+          Logger.LogWarning('EC hybrid stream roundtrip: failed.');
+      finally
+        LDecStream.Free;
+      end;
+    finally
+      LEncStream.Free;
+    end;
+  finally
+    LPlainStream.Free;
+  end;
+end;
+
 procedure TEcExample.Run;
 begin
   LogWithLineBreak('--- EC example: ECDSA sign/verify ---');
@@ -203,6 +276,12 @@ begin
 
   LogWithLineBreak('--- EC example: PEM export/import ---');
   RunEcPemExportImport('secp256k1');
+
+  LogWithLineBreak('--- EC example: Hybrid encrypt/decrypt (ECDH + HKDF + AES-256-GCM) ---');
+  RunEcHybridEncryptDecrypt('secp256r1');
+
+  LogWithLineBreak('--- EC example: Hybrid stream encrypt/decrypt ---');
+  RunEcHybridStreamEncryptDecrypt('secp256r1');
 end;
 
 end.

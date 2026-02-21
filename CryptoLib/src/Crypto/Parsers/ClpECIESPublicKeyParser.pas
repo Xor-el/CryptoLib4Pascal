@@ -42,11 +42,11 @@ type
 
   strict private
   var
-    FEcParams: IECDomainParameters;
+    FECParams: IECDomainParameters;
 
   public
     function ReadKey(const AStream: TStream): IAsymmetricKeyParameter;
-    constructor Create(const AEcParams: IECDomainParameters);
+    constructor Create(const AECParams: IECDomainParameters);
 
   end;
 
@@ -54,10 +54,10 @@ implementation
 
 { TECIESPublicKeyParser }
 
-constructor TECIESPublicKeyParser.Create(const AEcParams: IECDomainParameters);
+constructor TECIESPublicKeyParser.Create(const AECParams: IECDomainParameters);
 begin
   Inherited Create();
-  FEcParams := AEcParams;
+  FECParams := AECParams;
 end;
 
 function TECIESPublicKeyParser.ReadKey(const AStream: TStream)
@@ -77,14 +77,14 @@ begin
     $02, // compressed
     $03: // Byte length calculated as in ECPoint.getEncoded();
       begin
-        System.SetLength(LV, 1 + (FEcParams.Curve.FieldSize + 7) div 8);
+        System.SetLength(LV, 1 + FECParams.Curve.FieldElementEncodingLength);
       end;
 
     $04, // uncompressed or
     $06, // hybrid
     $07: // Byte length calculated as in ECPoint.getEncoded();
       begin
-        System.SetLength(LV, 1 + (2 * ((FEcParams.Curve.FieldSize + 7) div 8)));
+        System.SetLength(LV, 1 + (2 * FECParams.Curve.FieldElementEncodingLength));
       end
   else
     begin
@@ -95,10 +95,10 @@ begin
   end;
 
   LV[0] := Byte(LFirst);
-  TStreamUtilities.ReadFully(AStream, LV, 1, System.length(LV) - 1);
+  TStreamUtilities.ReadFully(AStream, LV, 1, System.Length(LV) - 1);
 
-  result := TECPublicKeyParameters.Create(FEcParams.Curve.DecodePoint(LV),
-    FEcParams);
+  Result := TECPublicKeyParameters.Create(FECParams.Curve.DecodePoint(LV),
+    FECParams);
 end;
 
 end.
