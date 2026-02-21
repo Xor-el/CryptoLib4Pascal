@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="111">
+    <Units Count="117">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -484,6 +484,30 @@
         <Filename Value="..\src\Crypto\AeadTestUtilities.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit110>
+      <Unit111>
+        <Filename Value="..\src\Utils\NumberUtilities\Int32Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit111>
+      <Unit112>
+        <Filename Value="..\src\Utils\NumberUtilities\Int64Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit112>
+      <Unit113>
+        <Filename Value="..\src\Crypto\GcmReorderTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit113>
+      <Unit114>
+        <Filename Value="..\src\Crypto\GCMTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit114>
+      <Unit115>
+        <Filename Value="..\src\Crypto\GcmSivTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit115>
+      <Unit116>
+        <Filename Value="..\src\Crypto\GMacTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit116>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -494,7 +518,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
   </CompilerOptions>

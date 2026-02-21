@@ -34,6 +34,7 @@ uses
   ClpIKeyParameter,
   ClpCheck,
   ClpBitOperations,
+  ClpByteUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -634,13 +635,8 @@ end;
 
 class procedure TOcbBlockCipher.&Xor(const ABlock,
   AVal: TCryptoLibByteArray);
-var
-  LI: Int32;
 begin
-  for LI := 0 to 15 do
-  begin
-    ABlock[LI] := ABlock[LI] xor AVal[LI];
-  end;
+  TByteUtilities.XorTo(16, AVal, ABlock);
 end;
 
 end.

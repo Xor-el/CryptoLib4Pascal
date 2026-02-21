@@ -118,9 +118,11 @@ type
     class function NegativeRightShift64(AValue: UInt64; AShiftBits: Int32): UInt64; static; inline;
 
     class function RotateLeft8(AValue: Byte; AN: Int32): Byte; static; inline;
+    class function RotateLeft16(AValue: UInt16; AN: Int32): UInt16; static; inline;
     class function RotateLeft32(AValue: UInt32; AN: Int32): UInt32; static; inline;
     class function RotateLeft64(AValue: UInt64; AN: Int32): UInt64; static; inline;
     class function RotateRight8(AValue: Byte; AN: Int32): Byte; static; inline;
+    class function RotateRight16(AValue: UInt16; AN: Int32): UInt16; static; inline;
     class function RotateRight32(AValue: UInt32; AN: Int32): UInt32; static; inline;
     class function RotateRight64(AValue: UInt64; AN: Int32): UInt64; static; inline;
 
@@ -272,6 +274,21 @@ begin
 {$ENDIF FPC}
 end;
 
+class function TBitOperations.RotateLeft16(AValue: UInt16; AN: Int32): UInt16;
+begin
+{$IFDEF DEBUG}
+  System.Assert(AN >= 0);
+{$ENDIF DEBUG}
+{$IFDEF FPC}
+  Result := RolWord(AValue, AN);
+{$ELSE}
+{$IFNDEF SHIFT_OVERFLOW_BUG_FIXED}
+  AN := AN and 15;
+{$ENDIF SHIFT_OVERFLOW_BUG_FIXED}
+  Result := UInt16((AValue shl AN) or (AValue shr (16 - AN)));
+{$ENDIF FPC}
+end;
+
 class function TBitOperations.RotateLeft32(AValue: UInt32; AN: Int32): UInt32;
 begin
 {$IFDEF DEBUG}
@@ -314,6 +331,21 @@ begin
   AN := AN and 7;
 {$ENDIF SHIFT_OVERFLOW_BUG_FIXED}
   Result := (AValue shr AN) or (AValue shl (8 - AN));
+{$ENDIF FPC}
+end;
+
+class function TBitOperations.RotateRight16(AValue: UInt16; AN: Int32): UInt16;
+begin
+{$IFDEF DEBUG}
+  System.Assert(AN >= 0);
+{$ENDIF DEBUG}
+{$IFDEF FPC}
+  Result := RorWord(AValue, AN);
+{$ELSE}
+{$IFNDEF SHIFT_OVERFLOW_BUG_FIXED}
+  AN := AN and 15;
+{$ENDIF SHIFT_OVERFLOW_BUG_FIXED}
+  Result := UInt16((AValue shr AN) or (AValue shl (16 - AN)));
 {$ENDIF FPC}
 end;
 

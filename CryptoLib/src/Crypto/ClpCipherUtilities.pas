@@ -63,6 +63,7 @@ uses
   ClpICtsBlockCipher,
   ClpCcmBlockCipher,
   ClpEaxBlockCipher,
+  ClpGcmBlockCipher,
   ClpOcbBlockCipher,
   ClpOpenPgpCfbBlockCipher,
   ClpChaCha20Poly1305,
@@ -157,6 +158,7 @@ type
       CTR,
       CTS,
       EAX,
+      GCM,
       ECB,
       OCB,
       OFB,
@@ -247,6 +249,10 @@ begin
   FAlgorithmMap.AddOrSetValue('AES//PKCS7PADDING', 'AES/ECB/PKCS7PADDING');
   FAlgorithmMap.AddOrSetValue('AES//PKCS5', 'AES/ECB/PKCS7PADDING');
   FAlgorithmMap.AddOrSetValue('AES//PKCS5PADDING', 'AES/ECB/PKCS7PADDING');
+
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Gcm, 'AES/GCM/NOPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Gcm, 'AES/GCM/NOPADDING');
+  FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes256Gcm, 'AES/GCM/NOPADDING');
 
   FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Ofb, 'AES/OFB/NOPADDING');
   FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Ofb, 'AES/OFB/NOPADDING');
@@ -532,6 +538,8 @@ begin
         end;
       TCipherMode.EAX:
         LAeadBlockCipher := TEaxBlockCipher.Create(LBlockCipher);
+      TCipherMode.GCM:
+        LAeadBlockCipher := TGcmBlockCipher.Create(LBlockCipher);
       TCipherMode.OCB:
         LAeadBlockCipher := TOcbBlockCipher.Create(LBlockCipher, CreateBlockCipher(LCipherAlgorithm));
       TCipherMode.OFB:

@@ -144,6 +144,8 @@ type
     procedure TestAesCcmBadPadding;
     procedure TestAesOcb;
     procedure TestAesOcbBadPadding;
+    procedure TestAesGcm;
+    procedure TestAesGcmBadPadding;
 
   end;
 
@@ -1237,6 +1239,64 @@ begin
   try
     TCipherUtilities.GetCipher('AES/OCB/PKCS5Padding');
     Fail('bad padding missed in AES/OCB');
+  except
+    on E: ESecurityUtilityCryptoLibException do
+    begin
+      // expected
+    end;
+  end;
+end;
+
+procedure TTestAES.TestAesGcm;
+var
+  LK, LP, LN, LC, LEnc, LDec: TBytes;
+  LKeyParam: IKeyParameter;
+  LInCipher, LOutCipher: IBufferedCipher;
+begin
+  // Test Case 15 from McGrew/Viega
+  LK := DecodeHex(
+    'feffe9928665731c6d6a8f9467308308' +
+    'feffe9928665731c6d6a8f9467308308');
+  LP := DecodeHex(
+    'd9313225f88406e5a55909c5aff5269a' +
+    '86a7a9531534f7da2e4c303d8a318a72' +
+    '1c3c0c95956809532fcf0e2449a6b525' +
+    'b16aedf5aa0de657ba637b391aafd255');
+  LN := DecodeHex('cafebabefacedbaddecaf888');
+  LC := DecodeHex(
+    '522dc1f099567d07f47f37a32a84427d' +
+    '643a8cdcbfe5c0c97598a2bd2555d1aa' +
+    '8cb08e48590dbb3da7b08b1056828838' +
+    'c5f61e6393ba7a0abcc9f662898015ad' +
+    'b094dac5d93471bdec1a502270e3cc6c');
+
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES', LK);
+
+  LInCipher := TCipherUtilities.GetCipher('AES/GCM/NoPadding');
+  LOutCipher := TCipherUtilities.GetCipher('AES/GCM/NoPadding');
+
+  LInCipher.Init(True, TParametersWithIV.Create(LKeyParam, LN)
+    as ICipherParameters);
+  LEnc := LInCipher.DoFinal(LP);
+  if not AreEqual(LEnc, LC) then
+  begin
+    Fail('ciphertext does not match in AES/GCM');
+  end;
+
+  LOutCipher.Init(False, TParametersWithIV.Create(LKeyParam, LN)
+    as ICipherParameters);
+  LDec := LOutCipher.DoFinal(LC);
+  if not AreEqual(LDec, LP) then
+  begin
+    Fail('plaintext does not match in AES/GCM');
+  end;
+end;
+
+procedure TTestAES.TestAesGcmBadPadding;
+begin
+  try
+    TCipherUtilities.GetCipher('AES/GCM/PKCS5Padding');
+    Fail('bad padding missed in AES/GCM');
   except
     on E: ESecurityUtilityCryptoLibException do
     begin

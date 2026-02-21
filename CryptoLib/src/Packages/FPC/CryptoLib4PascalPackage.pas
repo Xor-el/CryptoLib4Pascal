@@ -183,7 +183,13 @@ uses
   ClpIOcbBlockCipher, ClpICfbBlockCipherMac, ClpISipHashMac, 
   ClpICbcBlockCipherMac, ClpICMac, ClpIPoly1305, ClpIPoly1305KeyGenerator, 
   ClpIChaCha7539Engine, ClpAeadParameters, ClpIBufferedAeadBlockCipher, 
-  ClpIBufferedAeadCipher, ClpIAeadParameters;
+  ClpIBufferedAeadCipher, ClpIAeadParameters, ClpGMac, ClpGcmBlockCipher, 
+  ClpGcmSivBlockCipher, ClpBasicGcmExponentiator, ClpBasicGcmMultiplier, 
+  ClpGcmUtilities, ClpTables1kGcmExponentiator, ClpTables4kGcmMultiplier, 
+  ClpTables8kGcmMultiplier, ClpTables64kGcmMultiplier, ClpIGMac, 
+  ClpIGcmSivBlockCipher, ClpIGcmBlockCipher, ClpIGcmExponentiator, 
+  ClpIGcmMultiplier, ClpByteUtilities, ClpInt16Utilities, ClpInt32Utilities, 
+  ClpInt64Utilities;
 
 implementation
 

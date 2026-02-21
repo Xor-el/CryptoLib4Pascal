@@ -575,7 +575,26 @@ uses
   ClpSipHashMac in '..\..\CryptoLib\src\Crypto\Macs\ClpSipHashMac.pas',
   ClpISipHashMac in '..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpISipHashMac.pas',
   ClpCfbBlockCipherMac in '..\..\CryptoLib\src\Crypto\Macs\ClpCfbBlockCipherMac.pas',
-  ClpICfbBlockCipherMac in '..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas';
+  ClpICfbBlockCipherMac in '..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas',
+  ClpByteUtilities in '..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas',
+  ClpInt16Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas',
+  ClpInt32Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas',
+  ClpInt64Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas',
+  ClpGMac in '..\..\CryptoLib\src\Crypto\Macs\ClpGMac.pas',
+  ClpIGMac in '..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpIGMac.pas',
+  ClpGcmSivBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpGcmSivBlockCipher.pas',
+  ClpGcmBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpGcmBlockCipher.pas',
+  ClpBasicGcmExponentiator in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpBasicGcmExponentiator.pas',
+  ClpBasicGcmMultiplier in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpBasicGcmMultiplier.pas',
+  ClpGcmUtilities in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmUtilities.pas',
+  ClpTables1kGcmExponentiator in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables1kGcmExponentiator.pas',
+  ClpTables4kGcmMultiplier in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables4kGcmMultiplier.pas',
+  ClpTables8kGcmMultiplier in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables8kGcmMultiplier.pas',
+  ClpTables64kGcmMultiplier in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables64kGcmMultiplier.pas',
+  ClpIGcmSivBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIGcmSivBlockCipher.pas',
+  ClpIGcmBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIGcmBlockCipher.pas',
+  ClpIGcmExponentiator in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmExponentiator.pas',
+  ClpIGcmMultiplier in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmMultiplier.pas';
 
 begin
   TClpLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
