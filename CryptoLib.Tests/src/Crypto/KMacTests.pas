@@ -80,7 +80,7 @@ begin
     LTemp[LIdx] := LIdx;
   end;
 
-  FData := THexEncoder.Encode(LTemp, False);
+  FData := THexEncoder.Encode(LTemp);
   FRawKeyInHex :=
     '404142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F';
   FCustomizationMessage := 'My Tagged Application';
@@ -119,9 +119,8 @@ begin
   LMac.DoFinal(LActualResult, 0);
 
   CheckEquals(AExpectedResult, THexEncoder.Encode
-    (LActualResult, False), Format('Expected %s But got %s',
-    [AExpectedResult, THexEncoder.Encode(LActualResult,
-    False)]));
+    (LActualResult), Format('Expected %s But got %s',
+    [AExpectedResult, THexEncoder.Encode(LActualResult)]));
 
 end;
 
@@ -151,9 +150,8 @@ begin
   LMac.DoFinal(LActualResult, 0);
 
   CheckEquals(AExpectedResult, THexEncoder.Encode
-    (LActualResult, False), Format('Expected %s But got %s',
-    [AExpectedResult, THexEncoder.Encode(LActualResult,
-    False)]));
+    (LActualResult), Format('Expected %s But got %s',
+    [AExpectedResult, THexEncoder.Encode(LActualResult)]));
 
 end;
 

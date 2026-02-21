@@ -113,7 +113,7 @@ begin
   OutputBytes := (LScryptGenerator.GenerateDerivedMacParameters(AOutputSize)
     as IKeyParameter).GetKey();
   LScryptGenerator.Clear();
-  Result := THexEncoder.Encode(OutputBytes, False);
+  Result := THexEncoder.Encode(OutputBytes);
 end;
 
 procedure TTestScrypt.DoCheckIllegal(const AMsg: String;
