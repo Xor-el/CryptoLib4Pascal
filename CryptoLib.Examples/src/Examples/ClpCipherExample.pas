@@ -108,26 +108,26 @@ var
   LCipher: IBufferedCipher;
   LPlain, LCipherText, LDecrypted: TBytes;
 begin
-  Logger.LogInformation('Cipher: ' + ACipherAlgorithm);
+  Logger.LogInformation('Cipher: {0}', [ACipherAlgorithm]);
   LCipher := TCipherUtilities.GetCipher(ACipherAlgorithm);
   if LCipher = nil then
   begin
-    Logger.LogWarning('Cipher "' + ACipherAlgorithm + '" not available.');
+    Logger.LogWarning('Cipher "{0}" not available.', [ACipherAlgorithm]);
     Exit;
   end;
   LPlain := TConverters.ConvertStringToBytes('Secret message', TEncoding.UTF8);
 
   LCipher.Init(True, AParams);
   LCipherText := ProcessIncrementally(LCipher, LPlain);
-  Logger.LogInformation(Format('%s encrypted length: %d', [ACipherAlgorithm, System.Length(LCipherText)]));
+  Logger.LogInformation('{0} encrypted length: {1}', [ACipherAlgorithm, IntToStr(System.Length(LCipherText))]);
 
   LCipher.Init(False, AParams);
   LDecrypted := ProcessIncrementally(LCipher, LCipherText);
 
   if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-    Logger.LogInformation(ACipherAlgorithm + ' decrypt match: success.')
+    Logger.LogInformation('{0} decrypt match: success.', [ACipherAlgorithm])
   else
-    Logger.LogWarning(ACipherAlgorithm + ' decrypt match: failed.');
+    Logger.LogError('{0} decrypt match: failed.', [ACipherAlgorithm]);
 end;
 
 procedure TCipherExample.RunAesEncryptDecrypt(const ACipherAlgorithm: string;
@@ -138,7 +138,7 @@ var
   LParams: ICipherParameters;
   LKeyAlg: string;
 begin
-  Logger.LogInformation(Format('%s %s (%d-byte key)', [GetAesKeySizeLabel(AKeySizeBytes), ACipherAlgorithm, AKeySizeBytes]));
+  Logger.LogInformation('{0} {1} ({2}-byte key)', [GetAesKeySizeLabel(AKeySizeBytes), ACipherAlgorithm, IntToStr(AKeySizeBytes)]);
   LSecureRandom := TSecureRandom.Create();
   System.SetLength(LKey, AKeySizeBytes);
   System.SetLength(LIV, 16);

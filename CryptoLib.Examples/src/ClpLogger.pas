@@ -25,41 +25,90 @@ interface
 {$WARNINGS OFF}
 {$ENDIF FPC}
 
+uses
+  SysUtils;
+
 type
   TLogLevel = (Trace, Debug, Info, Warn, Error, Fatal);
 
-  ILogger = interface(IInterface)
-    ['{730BF179-AC3E-4382-B810-315BC32A2F99}']
-    procedure Log(ALevel: TLogLevel; const AMsg: string);
-    procedure LogTrace(const AMsg: string);
-    procedure LogDebug(const AMsg: string);
-    procedure LogInformation(const AMsg: string);
-    procedure LogWarning(const AMsg: string);
-    procedure LogError(const AMsg: string);
-    procedure LogCritical(const AMsg: string);
-    function IsEnabled(ALevel: TLogLevel): Boolean;
+  TEventId = record
+  private
+    FId: Integer;
+    FName: string;
+
+  public
+    constructor Create(AId: Integer; const AName: string = '');
+
+    function IsEmpty: Boolean;
+
+    property Id: Integer read FId;
+    property Name: string read FName;
+
+    class function Empty: TEventId; static;
   end;
 
-  TClpLogger = class
-  private
-    class var FDefaultLogger: ILogger;
-  public
-    class procedure SetDefaultLogger(const ALogger: ILogger);
-    class function GetDefaultLogger: ILogger;
+  /// ILogger interface
+  ILogger = interface
+    ['{A5F8F5E2-25B9-4C5A-9E78-AD52E3A7E8D9}']
+
+    // Core logging
+    procedure Log(ALevel: TLogLevel; const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+    procedure Log(ALevel: TLogLevel; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogException(ALevel: TLogLevel; const EventId: TEventId; const E: Exception; const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogException(ALevel: TLogLevel; const E: Exception; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogTrace(const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogTrace(const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogDebug(const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogDebug(const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogInformation(const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogInformation(const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogWarning(const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogWarning(const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogError(const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogError(const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+
+    procedure LogCritical(const MessageTemplate: string; const Args: array of const); overload;
+    procedure LogCritical(const EventId: TEventId; const MessageTemplate: string; const Args: array of const); overload;
+
+    function IsEnabled(ALevel: TLogLevel): Boolean;
+
+    function Category: string;
+  end;
+
+  /// ILoggerFactory interface
+  ILoggerFactory = interface
+    ['{34F7A5B1-9D0C-4DD8-8C6D-6B1E9E8A3A0F}']
+    function CreateLogger(const CategoryName: string): ILogger;
+    procedure SetMinimumLevel(ALevel: TLogLevel);
+    function GetMinimumLevel: TLogLevel;
   end;
 
 implementation
 
-{ TClpLogger }
+{ TEventId }
 
-class procedure TClpLogger.SetDefaultLogger(const ALogger: ILogger);
+constructor TEventId.Create(AId: Integer; const AName: string);
 begin
-  FDefaultLogger := ALogger;
+  FId := AId;
+  FName := AName;
 end;
 
-class function TClpLogger.GetDefaultLogger: ILogger;
+function TEventId.IsEmpty: Boolean;
 begin
-  Result := FDefaultLogger;
+  Result := (FId = 0) and (FName = '');
+end;
+
+class function TEventId.Empty: TEventId;
+begin
+  Result := Default(TEventId);
 end;
 
 end.
+
+

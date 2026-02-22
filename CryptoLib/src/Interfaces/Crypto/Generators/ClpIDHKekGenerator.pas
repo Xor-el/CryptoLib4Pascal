@@ -15,27 +15,18 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIRawAgreement;
+unit ClpIDHKekGenerator;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpIDerivationFunction;
 
 type
-  IRawAgreement = interface(IInterface)
-    ['{B3C55CE5-1F35-4C77-8CDB-757C07DBF4AA}']
-
-    procedure Init(const AParameters: ICipherParameters);
-
-    function GetAgreementSize(): Int32;
-    property AgreementSize: Int32 read GetAgreementSize;
-
-    procedure CalculateAgreement(const APublicKey: ICipherParameters;
-      const ABuf: TCryptoLibByteArray; AOff: Int32);
+  IDHKekGenerator = interface(IDerivationFunction)
+    ['{CFC3B5A4-EEB2-4D88-B4D5-EB46E35E71B8}']
   end;
 
 implementation

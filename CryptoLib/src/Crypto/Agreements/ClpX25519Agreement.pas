@@ -46,10 +46,10 @@ type
 
   public
 
-    procedure Init(const parameters: ICipherParameters);
+    procedure Init(const AParameters: ICipherParameters);
 
-    procedure CalculateAgreement(const publicKey: ICipherParameters;
-      const buf: TCryptoLibByteArray; off: Int32);
+    procedure CalculateAgreement(const APublicKey: ICipherParameters;
+      const ABuf: TCryptoLibByteArray; AOff: Int32);
 
     property AgreementSize: Int32 read GetAgreementSize;
 
@@ -61,26 +61,29 @@ implementation
 
 function TX25519Agreement.GetAgreementSize: Int32;
 begin
-  result := TX25519PrivateKeyParameters.SecretSize;
+  Result := TX25519PrivateKeyParameters.SecretSize;
 end;
 
-procedure TX25519Agreement.Init(const parameters: ICipherParameters);
+procedure TX25519Agreement.Init(const AParameters: ICipherParameters);
+var
+  LPriv: IX25519PrivateKeyParameters;
 begin
-  if Supports(parameters, IX25519PrivateKeyParameters) then
-  begin
-    FPrivateKey := parameters as IX25519PrivateKeyParameters;
-  end
-  else
-  begin
+  if not Supports(AParameters, IX25519PrivateKeyParameters, LPriv) then
     raise EInvalidParameterCryptoLibException.CreateRes
       (@SWrongInitCipherParameter);
-  end;
+
+  FPrivateKey := LPriv;
 end;
 
-procedure TX25519Agreement.CalculateAgreement(const publicKey
-  : ICipherParameters; const buf: TCryptoLibByteArray; off: Int32);
+procedure TX25519Agreement.CalculateAgreement(const APublicKey
+  : ICipherParameters; const ABuf: TCryptoLibByteArray; AOff: Int32);
+var
+  LPub: IX25519PublicKeyParameters;
 begin
-  FPrivateKey.GenerateSecret(publicKey as IX25519PublicKeyParameters, buf, off);
+  if not Supports(APublicKey, IX25519PublicKeyParameters, LPub) then
+    raise EInvalidCastCryptoLibException.Create('APublicKey');
+
+  FPrivateKey.GenerateSecret(LPub, ABuf, AOff);
 end;
 
 end.

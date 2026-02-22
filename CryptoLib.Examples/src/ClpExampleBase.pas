@@ -54,6 +54,14 @@ uses
   ClpEncoders;
 
 type
+  TExampleLogger = class
+  private
+    class var FDefaultLogger: ILogger;
+  public
+    class procedure SetDefaultLogger(const ALogger: ILogger);
+    class function GetDefaultLogger: ILogger;
+  end;
+
   IExample = interface(IInterface)
     ['{30D86CA2-0F19-4AA6-B106-0A13241BC5AA}']
     procedure Run;
@@ -81,9 +89,21 @@ type
 
 implementation
 
+{ TClpLogger }
+
+class procedure TExampleLogger.SetDefaultLogger(const ALogger: ILogger);
+begin
+  FDefaultLogger := ALogger;
+end;
+
+class function TExampleLogger.GetDefaultLogger: ILogger;
+begin
+  Result := FDefaultLogger;
+end;
+
 function TExampleBase.Logger: ILogger;
 begin
-  Result := TClpLogger.GetDefaultLogger;
+  Result := TExampleLogger.GetDefaultLogger;
 end;
 
 function TExampleBase.ExportToPem(const AValue: TValue): string;
@@ -180,44 +200,44 @@ var
   LReadPriv, LReadPub: IAsymmetricKeyParameter;
 begin
   LPrivPem := ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Private));
-  Logger.LogInformation(AKeyType + ' Private Key PEM:' + sLineBreak + LPrivPem);
+  Logger.LogInformation('{0} Private Key PEM:{1}{2}', [AKeyType, sLineBreak, LPrivPem]);
 
   LPubPem := ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Public));
-  Logger.LogInformation(AKeyType + ' Public Key PEM:' + sLineBreak + LPubPem);
+  Logger.LogInformation('{0} Public Key PEM:{1}{2}', [AKeyType, sLineBreak, LPubPem]);
 
   if ImportKeyPairFromPem(LPrivPem, LReadPair) then
   begin
     if LReadPair.Private.Equals(AKeyPair.Private) then
-      Logger.LogInformation('Private key roundtrip: match.')
+      Logger.LogInformation('Private key roundtrip: match.', [])
     else
-      Logger.LogWarning('Private key roundtrip: mismatch.');
+      Logger.LogWarning('Private key roundtrip: mismatch.', []);
     if LReadPair.Public.Equals(AKeyPair.Public) then
-      Logger.LogInformation('Public key (from private PEM) roundtrip: match.')
+      Logger.LogInformation('Public key (from private PEM) roundtrip: match.', [])
     else
-      Logger.LogWarning('Public key (from private PEM) roundtrip: mismatch.');
+      Logger.LogWarning('Public key (from private PEM) roundtrip: mismatch.', []);
   end
   else if ImportKeyFromPem(LPrivPem, LReadPriv) then
   begin
     if LReadPriv.Equals(AKeyPair.Private) then
-      Logger.LogInformation('Private key roundtrip: match.')
+      Logger.LogInformation('Private key roundtrip: match.', [])
     else
-      Logger.LogWarning('Private key roundtrip: mismatch.');
+      Logger.LogWarning('Private key roundtrip: mismatch.', []);
   end
   else
   begin
-    Logger.LogError('Failed to read back ' + AKeyType + ' private key from PEM.');
+    Logger.LogError('Failed to read back {0} private key from PEM.', [AKeyType]);
     Exit;
   end;
 
   if not ImportKeyFromPem(LPubPem, LReadPub) then
   begin
-    Logger.LogError('Failed to read back ' + AKeyType + ' public key from PEM.');
+    Logger.LogError('Failed to read back {0} public key from PEM.', [AKeyType]);
     Exit;
   end;
   if LReadPub.Equals(AKeyPair.Public) then
-    Logger.LogInformation('Public key roundtrip: match.')
+    Logger.LogInformation('Public key roundtrip: match.', [])
   else
-    Logger.LogWarning('Public key roundtrip: mismatch.');
+    Logger.LogWarning('Public key roundtrip: mismatch.', []);
 end;
 
 procedure TExampleBase.LogDerivedKey(const ALabel: string;
@@ -229,16 +249,15 @@ begin
   if Supports(AParams, IKeyParameter, LKey) then
   begin
     LDerived := LKey.GetKey();
-    Logger.LogInformation(Format('%s derived %d bytes:' + sLineBreak + '%s',
-      [ALabel, System.Length(LDerived), THexEncoder.Encode(LDerived, False)]));
+    Logger.LogInformation('{0} derived {1} bytes:{2}{3}', [ALabel, IntToStr(System.Length(LDerived)), sLineBreak, THexEncoder.Encode(LDerived, False)]);
   end
   else
-    Logger.LogWarning(ALabel + ': could not get key parameter.');
+    Logger.LogWarning('{0}: could not get key parameter.', [ALabel]);
 end;
 
 procedure TExampleBase.LogWithLineBreak(const AMessage: string);
 begin
-  Logger.LogInformation(AMessage + sLineBreak)
+  Logger.LogInformation('{0}{1}', [AMessage, sLineBreak])
 end;
 
 end.

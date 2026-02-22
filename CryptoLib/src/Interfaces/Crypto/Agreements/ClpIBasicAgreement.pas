@@ -38,7 +38,7 @@ type
     /// <summary>
     /// initialise the agreement engine.
     /// </summary>
-    procedure Init(const parameters: ICipherParameters);
+    procedure Init(const AParameters: ICipherParameters);
 
     /// <summary>
     /// return the field size for the agreement algorithm in bytes.
@@ -49,7 +49,7 @@ type
     /// given a public key from a given party calculate the next message
     /// in the agreement sequence.
     /// </summary>
-    function CalculateAgreement(const pubKey: ICipherParameters): TBigInteger;
+    function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger;
 
   end;
 

@@ -66,19 +66,18 @@ var
   LDigest: IDigest;
   LInput, LHash: TBytes;
 begin
-  Logger.LogInformation('Digest: ' + ADigestAlgorithm);
+  Logger.LogInformation('Digest: {0}', [ADigestAlgorithm]);
   LInput := TConverters.ConvertStringToBytes('Hello CryptoLib', TEncoding.UTF8);
   LDigest := TDigestUtilities.GetDigest(ADigestAlgorithm);
   if LDigest = nil then
   begin
-    Logger.LogWarning('Digest "' + ADigestAlgorithm + '" not available.');
+    Logger.LogWarning('Digest "{0}" not available.', [ADigestAlgorithm]);
     Exit;
   end;
   System.SetLength(LHash, LDigest.GetDigestSize);
   LDigest.BlockUpdate(LInput, 0, System.Length(LInput));
   LDigest.DoFinal(LHash, 0);
-  Logger.LogInformation(Format('Hash %s:' + sLineBreak + '%s',
-    [ADigestAlgorithm, THexEncoder.Encode(LHash, False)]));
+  Logger.LogInformation('Hash {0}:{1}{2}', [ADigestAlgorithm, sLineBreak, THexEncoder.Encode(LHash, False)]);
 end;
 
 procedure TDigestExample.RunHmac(const AHmacAlgorithm: string);
@@ -86,20 +85,19 @@ var
   LMac: IMac;
   LKey, LMsg, LResult: TBytes;
 begin
-  Logger.LogInformation('HMAC: ' + AHmacAlgorithm);
+  Logger.LogInformation('HMAC: {0}', [AHmacAlgorithm]);
   LKey := TConverters.ConvertStringToBytes('secret-key', TEncoding.UTF8);
   LMsg := TConverters.ConvertStringToBytes('message to authenticate', TEncoding.UTF8);
   LMac := TMacUtilities.GetMac(AHmacAlgorithm);
   if LMac = nil then
   begin
-    Logger.LogWarning('HMAC "' + AHmacAlgorithm + '" not available.');
+    Logger.LogWarning('HMAC "{0}" not available.', [AHmacAlgorithm]);
     Exit;
   end;
   LMac.Init(TKeyParameter.Create(LKey) as IKeyParameter);
   LMac.BlockUpdate(LMsg, 0, System.Length(LMsg));
   LResult := LMac.DoFinal;
-  Logger.LogInformation(Format('%s:' + sLineBreak + '%s',
-    [AHmacAlgorithm, THexEncoder.Encode(LResult, False)]));
+  Logger.LogInformation('{0}:{1}{2}', [AHmacAlgorithm, sLineBreak, THexEncoder.Encode(LResult, False)]);
 end;
 
 procedure TDigestExample.RunPbkdf2(const ADigestAlgorithm: string);
@@ -111,13 +109,13 @@ var
   LIters: Int32;
 begin
   LIters := 10000;
-  Logger.LogInformation(Format('PBKDF2: digest %s, %d iterations', [ADigestAlgorithm, LIters]));
+  Logger.LogInformation('PBKDF2: digest {0}, {1} iterations', [ADigestAlgorithm, IntToStr(LIters)]);
   LPassword := TConverters.ConvertStringToBytes('password', TEncoding.UTF8);
   LSalt := TConverters.ConvertStringToBytes('salt', TEncoding.UTF8);
   LDigest := TDigestUtilities.GetDigest(ADigestAlgorithm);
   if LDigest = nil then
   begin
-    Logger.LogWarning('Digest "' + ADigestAlgorithm + '" not available for PBKDF2.');
+    Logger.LogWarning('Digest "{0}" not available for PBKDF2.', [ADigestAlgorithm]);
     Exit;
   end;
   LGen := TPkcs5S2ParametersGenerator.Create(LDigest) as IPkcs5S2ParametersGenerator;

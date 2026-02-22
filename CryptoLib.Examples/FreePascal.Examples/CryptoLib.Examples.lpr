@@ -23,7 +23,7 @@ uses
   ClpHybridEncryption in '..\src\Examples\ClpHybridEncryption.pas';
 
 begin
-  TClpLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
+  TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
   try
     TExampleExplorer.Execute;
   except

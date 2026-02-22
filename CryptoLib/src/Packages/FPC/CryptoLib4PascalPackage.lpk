@@ -25,7 +25,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="5"/>
-    <Files Count="578">
+    <Files Count="592">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -2339,6 +2339,62 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\NumberUtilities\ClpInt64Utilities.pas"/>
         <UnitName Value="ClpInt64Utilities"/>
       </Item578>
+      <Item579>
+        <Filename Value="..\..\Crypto\Agreements\ClpECDHCWithKdfBasicAgreement.pas"/>
+        <UnitName Value="ClpECDHCWithKdfBasicAgreement"/>
+      </Item579>
+      <Item580>
+        <Filename Value="..\..\Crypto\Agreements\ClpECDHWithKdfBasicAgreement.pas"/>
+        <UnitName Value="ClpECDHWithKdfBasicAgreement"/>
+      </Item580>
+      <Item581>
+        <Filename Value="..\..\Crypto\Agreements\ClpDHStandardGroups.pas"/>
+        <UnitName Value="ClpDHStandardGroups"/>
+      </Item581>
+      <Item582>
+        <Filename Value="..\..\Crypto\Agreements\ClpBasicAgreementWithKdf.pas"/>
+        <UnitName Value="ClpBasicAgreementWithKdf"/>
+      </Item582>
+      <Item583>
+        <Filename Value="..\..\Crypto\Generators\ClpDHKekGenerator.pas"/>
+        <UnitName Value="ClpDHKekGenerator"/>
+      </Item583>
+      <Item584>
+        <Filename Value="..\..\Crypto\Generators\ClpECDHKekGenerator.pas"/>
+        <UnitName Value="ClpECDHKekGenerator"/>
+      </Item584>
+      <Item585>
+        <Filename Value="..\..\Crypto\Generators\ClpConcatenationKdfGenerator.pas"/>
+        <UnitName Value="ClpConcatenationKdfGenerator"/>
+      </Item585>
+      <Item586>
+        <Filename Value="..\..\Crypto\Parameters\ClpDHKdfParameters.pas"/>
+        <UnitName Value="ClpDHKdfParameters"/>
+      </Item586>
+      <Item587>
+        <Filename Value="..\..\Interfaces\Crypto\Generators\ClpIDHKekGenerator.pas"/>
+        <UnitName Value="ClpIDHKekGenerator"/>
+      </Item587>
+      <Item588>
+        <Filename Value="..\..\Interfaces\Crypto\Generators\ClpIConcatenationKdfGenerator.pas"/>
+        <UnitName Value="ClpIConcatenationKdfGenerator"/>
+      </Item588>
+      <Item589>
+        <Filename Value="..\..\Interfaces\Crypto\Generators\ClpIECDHKekGenerator.pas"/>
+        <UnitName Value="ClpIECDHKekGenerator"/>
+      </Item589>
+      <Item590>
+        <Filename Value="..\..\Interfaces\Crypto\Agreements\ClpIECDHCWithKdfBasicAgreement.pas"/>
+        <UnitName Value="ClpIECDHCWithKdfBasicAgreement"/>
+      </Item590>
+      <Item591>
+        <Filename Value="..\..\Interfaces\Crypto\Agreements\ClpIECDHWithKdfBasicAgreement.pas"/>
+        <UnitName Value="ClpIECDHWithKdfBasicAgreement"/>
+      </Item591>
+      <Item592>
+        <Filename Value="..\..\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas"/>
+        <UnitName Value="ClpIDHKdfParameters"/>
+      </Item592>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

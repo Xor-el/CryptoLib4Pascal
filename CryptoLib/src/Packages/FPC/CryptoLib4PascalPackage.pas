@@ -189,7 +189,12 @@ uses
   ClpTables8kGcmMultiplier, ClpTables64kGcmMultiplier, ClpIGMac, 
   ClpIGcmSivBlockCipher, ClpIGcmBlockCipher, ClpIGcmExponentiator, 
   ClpIGcmMultiplier, ClpByteUtilities, ClpInt16Utilities, ClpInt32Utilities, 
-  ClpInt64Utilities;
+  ClpInt64Utilities, ClpECDHCWithKdfBasicAgreement, 
+  ClpECDHWithKdfBasicAgreement, ClpDHStandardGroups, ClpBasicAgreementWithKdf, 
+  ClpDHKekGenerator, ClpECDHKekGenerator, ClpConcatenationKdfGenerator, 
+  ClpDHKdfParameters, ClpIDHKekGenerator, ClpIConcatenationKdfGenerator, 
+  ClpIECDHKekGenerator, ClpIECDHCWithKdfBasicAgreement, 
+  ClpIECDHWithKdfBasicAgreement, ClpIDHKdfParameters;
 
 implementation
 

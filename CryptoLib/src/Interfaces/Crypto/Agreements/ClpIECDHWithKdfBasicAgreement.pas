@@ -15,27 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIRawAgreement;
+unit ClpIECDHWithKdfBasicAgreement;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpIECDHBasicAgreement;
 
 type
-  IRawAgreement = interface(IInterface)
-    ['{B3C55CE5-1F35-4C77-8CDB-757C07DBF4AA}']
+  IECDHWithKdfBasicAgreement = interface(IECDHBasicAgreement)
+    ['{BA0836BD-CB1C-4443-877C-3159AAAA1170}']
 
-    procedure Init(const AParameters: ICipherParameters);
-
-    function GetAgreementSize(): Int32;
-    property AgreementSize: Int32 read GetAgreementSize;
-
-    procedure CalculateAgreement(const APublicKey: ICipherParameters;
-      const ABuf: TCryptoLibByteArray; AOff: Int32);
   end;
 
 implementation

@@ -595,10 +595,24 @@ uses
   ClpIGcmSivBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIGcmSivBlockCipher.pas',
   ClpIGcmBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIGcmBlockCipher.pas',
   ClpIGcmExponentiator in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmExponentiator.pas',
-  ClpIGcmMultiplier in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmMultiplier.pas';
+  ClpIGcmMultiplier in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmMultiplier.pas',
+  ClpDHStandardGroups in '..\..\CryptoLib\src\Crypto\Agreements\ClpDHStandardGroups.pas',
+  ClpECDHCWithKdfBasicAgreement in '..\..\CryptoLib\src\Crypto\Agreements\ClpECDHCWithKdfBasicAgreement.pas',
+  ClpECDHWithKdfBasicAgreement in '..\..\CryptoLib\src\Crypto\Agreements\ClpECDHWithKdfBasicAgreement.pas',
+  ClpBasicAgreementWithKdf in '..\..\CryptoLib\src\Crypto\Agreements\ClpBasicAgreementWithKdf.pas',
+  ClpConcatenationKdfGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpConcatenationKdfGenerator.pas',
+  ClpDHKekGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpDHKekGenerator.pas',
+  ClpECDHKekGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpECDHKekGenerator.pas',
+  ClpDHKdfParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpDHKdfParameters.pas',
+  ClpIDHKekGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDHKekGenerator.pas',
+  ClpIConcatenationKdfGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIConcatenationKdfGenerator.pas',
+  ClpIECDHKekGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIECDHKekGenerator.pas',
+  ClpIECDHCWithKdfBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCWithKdfBasicAgreement.pas',
+  ClpIECDHWithKdfBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHWithKdfBasicAgreement.pas',
+  ClpIDHKdfParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas';
 
 begin
-  TClpLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
+  TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
   try
     TExampleExplorer.Execute;
   except

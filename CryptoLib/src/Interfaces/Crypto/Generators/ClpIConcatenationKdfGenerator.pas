@@ -15,27 +15,18 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIRawAgreement;
+unit ClpIConcatenationKdfGenerator;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpIDerivationFunction;
 
 type
-  IRawAgreement = interface(IInterface)
-    ['{B3C55CE5-1F35-4C77-8CDB-757C07DBF4AA}']
-
-    procedure Init(const AParameters: ICipherParameters);
-
-    function GetAgreementSize(): Int32;
-    property AgreementSize: Int32 read GetAgreementSize;
-
-    procedure CalculateAgreement(const APublicKey: ICipherParameters;
-      const ABuf: TCryptoLibByteArray; AOff: Int32);
+  IConcatenationKdfGenerator = interface(IDerivationFunction)
+    ['{EDEFAAA2-8C0D-4D94-A690-9F51D76EAD81}']
   end;
 
 implementation

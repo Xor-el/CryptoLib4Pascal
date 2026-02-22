@@ -34,51 +34,27 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SWrongDomainParameter = 'ECDHC Public Key has Wrong Domain Parameters';
-  SInvalidAgreementValue = 'Infinity is not a Valid Agreement Value for ECDHC';
-  SInfinityInvalidPublicKey = 'Infinity is not a Valid Public Key for ECDHC';
+  SNotECPrivateKeyParameters =
+    'ECDHCBasicAgreement expects ECPrivateKeyParameters';
+  SWrongDomainParameter =
+    'ECDHC Public Key has Wrong Domain Parameters';
+  SInvalidAgreementValue =
+    'Infinity is not a Valid Agreement Value for ECDHC';
+  SInfinityInvalidPublicKey =
+    'Infinity is not a Valid Public Key for ECDHC';
 
 type
-  /// <summary>
-  /// P1363 7.2.2 ECSVDP-DHC <br /><br />ECSVDP-DHC is Elliptic Curve Secret
-  /// Value Derivation Primitive, <br />Diffie-Hellman version with cofactor
-  /// multiplication. It is based on <br />the work of [DH76], [Mil86],
-  /// [Kob87], [LMQ98] and [Kal98a]. This <br />primitive derives a shared
-  /// secret value from one party's private key <br />and another party's
-  /// public key, where both have the same set of EC <br />domain parameters.
-  /// If two parties correctly execute this primitive, <br />they will
-  /// produce the same output. This primitive can be invoked by a <br />
-  /// scheme to derive a shared secret key; specifically, it may be used <br />
-  /// with the schemes ECKAS-DH1 and DL/ECKAS-DH2. It does not assume the <br />
-  /// validity of the input public key (see also Section 7.2.1). <br /><br />
-  /// Note: As stated P1363 compatibility mode with ECDH can be preset, and <br />
-  /// in this case the implementation doesn't have a ECDH compatibility mode <br />
-  /// (if you want that just use ECDHBasicAgreement and note they both
-  /// implement <br />BasicAgreement!). <br />
-  /// </summary>
-  TECDHCBasicAgreement = class sealed(TInterfacedObject, IECDHCBasicAgreement,
+  TECDHCBasicAgreement = class(TInterfacedObject, IECDHCBasicAgreement,
     IBasicAgreement)
 
   strict private
   var
-    FprivKey: IECPrivateKeyParameters;
+    FPrivKey: IECPrivateKeyParameters;
 
   public
-    /// <summary>
-    /// initialise the agreement engine.
-    /// </summary>
-    procedure Init(const parameters: ICipherParameters);
-
-    /// <summary>
-    /// return the field size for the agreement algorithm in bytes.
-    /// </summary>
-    function GetFieldSize(): Int32;
-
-    /// <summary>
-    /// given a public key from a given party calculate the next message
-    /// in the agreement sequence.
-    /// </summary>
-    function CalculateAgreement(const pubKey: ICipherParameters): TBigInteger;
+    procedure Init(const AParameters: ICipherParameters); virtual;
+    function GetFieldSize(): Int32; virtual;
+    function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger; virtual;
 
   end;
 
@@ -86,60 +62,56 @@ implementation
 
 { TECDHCBasicAgreement }
 
-function TECDHCBasicAgreement.CalculateAgreement(const pubKey
+function TECDHCBasicAgreement.CalculateAgreement(const APubKey
   : ICipherParameters): TBigInteger;
 var
-  pub: IECPublicKeyParameters;
-  params: IECDomainParameters;
-  hd: TBigInteger;
-  P, pubPoint: IECPoint;
+  LPub: IECPublicKeyParameters;
+  LParams: IECDomainParameters;
+  LHd: TBigInteger;
+  LP, LPubPoint: IECPoint;
 begin
-  pub := pubKey as IECPublicKeyParameters;
-  params := FprivKey.Parameters;
-  if (not(params.Equals(pub.Parameters))) then
-  begin
+  if not Supports(APubKey, IECPublicKeyParameters, LPub) then
+    raise EInvalidCastCryptoLibException.CreateRes(@SWrongDomainParameter);
+
+  LParams := FPrivKey.Parameters;
+  if not LParams.Equals(LPub.Parameters) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SWrongDomainParameter);
 
-  end;
+  LHd := LParams.H.Multiply(FPrivKey.D).&Mod(LParams.N);
 
-  hd := params.H.Multiply(FprivKey.D).&Mod(params.N);
-
-  // Always perform calculations on the exact curve specified by our private key's parameters
-  pubPoint := TECAlgorithms.CleanPoint(params.Curve, pub.Q);
-  if (pubPoint.IsInfinity) then
-  begin
+  LPubPoint := TECAlgorithms.CleanPoint(LParams.Curve, LPub.Q);
+  if LPubPoint.IsInfinity then
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInfinityInvalidPublicKey);
-  end;
 
-  P := params.Curve.Multiplier.Multiply(pubPoint, hd).Normalize();
+  LP := LParams.Curve.Multiplier.Multiply(LPubPoint, LHd).Normalize();
 
-  if (P.IsInfinity) then
-  begin
+  if LP.IsInfinity then
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInvalidAgreementValue);
 
-  end;
-
-  result := P.XCoord.ToBigInteger();
+  Result := LP.XCoord.ToBigInteger();
 end;
 
 function TECDHCBasicAgreement.GetFieldSize: Int32;
 begin
-  result := (FprivKey.Parameters.Curve.FieldSize + 7) div 8;
+  Result := FPrivKey.Parameters.Curve.FieldElementEncodingLength;
 end;
 
-procedure TECDHCBasicAgreement.Init(const parameters: ICipherParameters);
+procedure TECDHCBasicAgreement.Init(const AParameters: ICipherParameters);
 var
-  Lparameters: ICipherParameters;
+  LParameters: ICipherParameters;
+  LWithRandom: IParametersWithRandom;
+  LECPriv: IECPrivateKeyParameters;
 begin
-  Lparameters := parameters;
-  if Supports(Lparameters, IParametersWithRandom) then
-  begin
-    Lparameters := (Lparameters as IParametersWithRandom).Parameters;
-  end;
+  LParameters := AParameters;
+  if Supports(LParameters, IParametersWithRandom, LWithRandom) then
+    LParameters := LWithRandom.Parameters;
 
-  FprivKey := Lparameters as IECPrivateKeyParameters;
+  if not Supports(LParameters, IECPrivateKeyParameters, LECPriv) then
+    raise EArgumentCryptoLibException.CreateRes(@SNotECPrivateKeyParameters);
+
+  FPrivKey := LECPriv;
 end;
 
 end.

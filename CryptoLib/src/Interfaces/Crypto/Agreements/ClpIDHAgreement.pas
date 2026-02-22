@@ -51,7 +51,7 @@ type
     /// <summary>
     /// initialise the agreement engine.
     /// </summary>
-    procedure Init(const parameters: ICipherParameters);
+    procedure Init(const AParameters: ICipherParameters);
 
     /// <summary>
     /// calculate our initial message.
@@ -63,8 +63,8 @@ type
     /// calculate the next message in the agreement sequence. In this case
     /// this will represent the shared secret.
     /// </summary>
-    function CalculateAgreement(const pub: IDHPublicKeyParameters;
-      const &message: TBigInteger): TBigInteger;
+    function CalculateAgreement(const APub: IDHPublicKeyParameters;
+      const AMessage: TBigInteger): TBigInteger;
 
   end;
 

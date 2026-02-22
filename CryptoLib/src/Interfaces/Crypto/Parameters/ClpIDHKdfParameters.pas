@@ -15,27 +15,28 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIRawAgreement;
+unit ClpIDHKdfParameters;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
+  ClpIAsn1Objects,
+  ClpIDerivationParameters,
   ClpCryptoLibTypes;
 
 type
-  IRawAgreement = interface(IInterface)
-    ['{B3C55CE5-1F35-4C77-8CDB-757C07DBF4AA}']
+  IDHKdfParameters = interface(IDerivationParameters)
+    ['{333F2D1B-44A6-49A9-A659-CBBC78484675}']
 
-    procedure Init(const AParameters: ICipherParameters);
+    function GetAlgorithm(): IDerObjectIdentifier;
+    function GetKeySize(): Int32;
+    function GetZ(): TCryptoLibByteArray;
+    function GetExtraInfo(): TCryptoLibByteArray;
 
-    function GetAgreementSize(): Int32;
-    property AgreementSize: Int32 read GetAgreementSize;
-
-    procedure CalculateAgreement(const APublicKey: ICipherParameters;
-      const ABuf: TCryptoLibByteArray; AOff: Int32);
+    property Algorithm: IDerObjectIdentifier read GetAlgorithm;
+    property KeySize: Int32 read GetKeySize;
   end;
 
 implementation

@@ -75,7 +75,7 @@ begin
   LCurve := TECUtilities.FindECCurveByName(ACurveName);
   if LCurve = nil then
   begin
-    Logger.LogWarning('Curve "' + ACurveName + '" not found.');
+    Logger.LogWarning('Curve "{0}" not found.', [ACurveName]);
     Exit;
   end;
   Result := TECDomainParameters.Create(LCurve.Curve, LCurve.G,
@@ -94,25 +94,24 @@ begin
   if LDomain = nil then
     Exit;
   LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: ' + ACurveName + ', Algorithm: ' + ASignatureAlgorithm);
+  Logger.LogInformation('Curve: {0}, Algorithm: {1}', [ACurveName, ASignatureAlgorithm]);
   LSigner := TSignerUtilities.GetSigner(ASignatureAlgorithm);
   if LSigner = nil then
   begin
-    Logger.LogWarning('Signer "' + ASignatureAlgorithm + '" not available.');
+    Logger.LogWarning('Signer "{0}" not available.', [ASignatureAlgorithm]);
     Exit;
   end;
   LMsg := TConverters.ConvertStringToBytes('PascalECDSA', TEncoding.UTF8);
   LSigner.Init(True, LKp.Private);
   LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
   LSig := LSigner.GenerateSignature();
-  Logger.LogInformation(ASignatureAlgorithm + ' signature (hex):' + sLineBreak +
-    THexEncoder.Encode(LSig, False));
+  Logger.LogInformation('{0} signature (hex):{1}{2}', [ASignatureAlgorithm, sLineBreak, THexEncoder.Encode(LSig, False)]);
   LSigner.Init(False, LKp.Public);
   LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
   if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation(ASignatureAlgorithm + ' verification passed.')
+    Logger.LogInformation('{0} verification passed.', [ASignatureAlgorithm])
   else
-    Logger.LogWarning(ASignatureAlgorithm + ' verification failed.');
+    Logger.LogError('{0} verification failed.', [ASignatureAlgorithm]);
 end;
 
 procedure TEcExample.RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
@@ -126,25 +125,25 @@ begin
   if LDomain = nil then
     Exit;
   LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: ' + ACurveName);
+  Logger.LogInformation('Curve: {0}', [ACurveName]);
 
   LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
-  Logger.LogInformation(Format('Private key DER encoded: %d bytes', [System.Length(LPrivBytes)]));
+  Logger.LogInformation('Private key DER encoded: {0} bytes', [IntToStr(System.Length(LPrivBytes))]);
 
   LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
-  Logger.LogInformation(Format('Public key DER encoded: %d bytes', [System.Length(LPubBytes)]));
+  Logger.LogInformation('Public key DER encoded: {0} bytes', [IntToStr(System.Length(LPubBytes))]);
 
   LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
   if LRegenPriv.Equals(LKp.Private) then
-    Logger.LogInformation('Private key roundtrip: match.')
+    Logger.LogInformation('Private key roundtrip: match.', [])
   else
-    Logger.LogWarning('Private key roundtrip: mismatch.');
+    Logger.LogError('Private key roundtrip: mismatch.', []);
 
   LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
   if LRegenPub.Equals(LKp.Public) then
-    Logger.LogInformation('Public key roundtrip: match.')
+    Logger.LogInformation('Public key roundtrip: match.', [])
   else
-    Logger.LogWarning('Public key roundtrip: mismatch.');
+    Logger.LogError('Public key roundtrip: mismatch.', []);
 end;
 
 procedure TEcExample.RunPublicKeyFromXY(const ACurveName: string);
@@ -162,10 +161,10 @@ begin
   if LDomain = nil then
     Exit;
   LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: ' + ACurveName);
+  Logger.LogInformation('Curve: {0}', [ACurveName]);
   if not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
   begin
-    Logger.LogError('EC public key type mismatch.');
+    Logger.LogError('EC public key type mismatch.', []);
     Exit;
   end;
   LCurve := TECUtilities.FindECCurveByName(ACurveName);
@@ -177,9 +176,9 @@ begin
   LRegenPub := TECPublicKeyParameters.Create(LPoint, LDomain)
     as IECPublicKeyParameters;
   if LPub.Equals(LRegenPub) then
-    Logger.LogInformation('Public key from X/Y recreation: match.')
+    Logger.LogInformation('Public key from X/Y recreation: match.', [])
   else
-    Logger.LogWarning('Public key from X/Y recreation: mismatch.');
+    Logger.LogError('Public key from X/Y recreation: mismatch.', []);
 end;
 
 procedure TEcExample.RunEcPemExportImport(const ACurveName: string);
@@ -191,7 +190,7 @@ begin
   if LDomain = nil then
     Exit;
   LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: ' + ACurveName);
+  Logger.LogInformation('Curve: {0}', [ACurveName]);
   VerifyPemRoundtrip(LKp, 'EC');
 end;
 
@@ -205,19 +204,19 @@ begin
   if LDomain = nil then
     Exit;
   LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: ' + ACurveName);
+  Logger.LogInformation('Curve: {0}', [ACurveName]);
 
   LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Encryption!', TEncoding.UTF8);
   LAad := TConverters.ConvertStringToBytes('EH01-example-context', TEncoding.UTF8);
 
   LEnvelope := TEcHybridEncryption.Encrypt(LKp.Public, LDomain, LPlain, LAad);
-  Logger.LogInformation(Format('EC hybrid envelope: %d bytes', [System.Length(LEnvelope)]));
+  Logger.LogInformation('EC hybrid envelope: {0} bytes', [IntToStr(System.Length(LEnvelope))]);
 
   LDecrypted := TEcHybridEncryption.Decrypt(LKp.Private, LDomain, LEnvelope, LAad);
   if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-    Logger.LogInformation('EC hybrid encrypt/decrypt roundtrip: success.')
+    Logger.LogInformation('EC hybrid encrypt/decrypt roundtrip: success.', [])
   else
-    Logger.LogWarning('EC hybrid encrypt/decrypt roundtrip: failed.');
+    Logger.LogError('EC hybrid encrypt/decrypt roundtrip: failed.', []);
 end;
 
 procedure TEcExample.RunEcHybridStreamEncryptDecrypt(const ACurveName: string);
@@ -231,7 +230,7 @@ begin
   if LDomain = nil then
     Exit;
   LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: ' + ACurveName);
+  Logger.LogInformation('Curve: {0}', [ACurveName]);
 
   LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Stream!', TEncoding.UTF8);
   LAad := TConverters.ConvertStringToBytes('EH01-stream-context', TEncoding.UTF8);
@@ -241,7 +240,7 @@ begin
     LEncStream := TBytesStream.Create(nil);
     try
       TEcHybridEncryption.Encrypt(LKp.Public, LDomain, LPlainStream, LEncStream, LAad);
-      Logger.LogInformation(Format('EC hybrid stream envelope: %d bytes', [LEncStream.Size]));
+      Logger.LogInformation('EC hybrid stream envelope: {0} bytes', [IntToStr(LEncStream.Size)]);
 
       LEncStream.Position := 0;
       LDecStream := TBytesStream.Create(nil);
@@ -249,9 +248,9 @@ begin
         TEcHybridEncryption.Decrypt(LKp.Private, LDomain, LEncStream, LDecStream, LAad);
         LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
         if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-          Logger.LogInformation('EC hybrid stream roundtrip: success.')
+          Logger.LogInformation('EC hybrid stream roundtrip: success.', [])
         else
-          Logger.LogWarning('EC hybrid stream roundtrip: failed.');
+          Logger.LogError('EC hybrid stream roundtrip: failed.', []);
       finally
         LDecStream.Free;
       end;

@@ -615,6 +615,20 @@ contains
   ClpIGcmSivBlockCipher in '..\..\Interfaces\Crypto\Modes\ClpIGcmSivBlockCipher.pas',
   ClpIGcmBlockCipher in '..\..\Interfaces\Crypto\Modes\ClpIGcmBlockCipher.pas',
   ClpIGcmExponentiator in '..\..\Interfaces\Crypto\Modes\Gcm\ClpIGcmExponentiator.pas',
-  ClpIGcmMultiplier in '..\..\Interfaces\Crypto\Modes\Gcm\ClpIGcmMultiplier.pas';
+  ClpIGcmMultiplier in '..\..\Interfaces\Crypto\Modes\Gcm\ClpIGcmMultiplier.pas',
+  ClpDHStandardGroups in '..\..\Crypto\Agreements\ClpDHStandardGroups.pas',
+  ClpECDHCWithKdfBasicAgreement in '..\..\Crypto\Agreements\ClpECDHCWithKdfBasicAgreement.pas',
+  ClpECDHWithKdfBasicAgreement in '..\..\Crypto\Agreements\ClpECDHWithKdfBasicAgreement.pas',
+  ClpBasicAgreementWithKdf in '..\..\Crypto\Agreements\ClpBasicAgreementWithKdf.pas',
+  ClpConcatenationKdfGenerator in '..\..\Crypto\Generators\ClpConcatenationKdfGenerator.pas',
+  ClpDHKekGenerator in '..\..\Crypto\Generators\ClpDHKekGenerator.pas',
+  ClpECDHKekGenerator in '..\..\Crypto\Generators\ClpECDHKekGenerator.pas',
+  ClpDHKdfParameters in '..\..\Crypto\Parameters\ClpDHKdfParameters.pas',
+  ClpIDHKekGenerator in '..\..\Interfaces\Crypto\Generators\ClpIDHKekGenerator.pas',
+  ClpIConcatenationKdfGenerator in '..\..\Interfaces\Crypto\Generators\ClpIConcatenationKdfGenerator.pas',
+  ClpIECDHKekGenerator in '..\..\Interfaces\Crypto\Generators\ClpIECDHKekGenerator.pas',
+  ClpIECDHCWithKdfBasicAgreement in '..\..\Interfaces\Crypto\Agreements\ClpIECDHCWithKdfBasicAgreement.pas',
+  ClpIECDHWithKdfBasicAgreement in '..\..\Interfaces\Crypto\Agreements\ClpIECDHWithKdfBasicAgreement.pas',
+  ClpIDHKdfParameters in '..\..\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas';
 
 end.

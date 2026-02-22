@@ -63,20 +63,20 @@ type
   /// the moment that is left as an exercise for the reader.
   /// </para>
   /// </summary>
-  TDHAgreement = class sealed(TInterfacedObject, IDHAgreement)
+  TDHAgreement = class(TInterfacedObject, IDHAgreement)
 
   strict private
   var
-    Fkey: IDHPrivateKeyParameters;
-    FdhParams: IDHParameters;
-    FprivateValue: TBigInteger;
-    Frandom: ISecureRandom;
+    FKey: IDHPrivateKeyParameters;
+    FDhParams: IDHParameters;
+    FPrivateValue: TBigInteger;
+    FRandom: ISecureRandom;
 
   public
     /// <summary>
     /// initialise the agreement engine.
     /// </summary>
-    procedure Init(const parameters: ICipherParameters);
+    procedure Init(const AParameters: ICipherParameters);
 
     /// <summary>
     /// calculate our initial message.
@@ -88,8 +88,8 @@ type
     /// calculate the next message in the agreement sequence. In this case
     /// this will represent the shared secret.
     /// </summary>
-    function CalculateAgreement(const pub: IDHPublicKeyParameters;
-      const &message: TBigInteger): TBigInteger;
+    function CalculateAgreement(const APub: IDHPublicKeyParameters;
+      const AMessage: TBigInteger): TBigInteger;
 
   end;
 
@@ -97,88 +97,85 @@ implementation
 
 { TDHAgreement }
 
-function TDHAgreement.CalculateAgreement(const pub: IDHPublicKeyParameters;
-  const &message: TBigInteger): TBigInteger;
+function TDHAgreement.CalculateAgreement(const APub: IDHPublicKeyParameters;
+  const AMessage: TBigInteger): TBigInteger;
 var
-  p, peerY: TBigInteger;
+  LP, LPeerY: TBigInteger;
 begin
-
-  if (pub = Nil) then
-  begin
+  if (APub = nil) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SDHPublicKeyNil);
-  end;
 
-  if (not &message.IsInitialized) then
-  begin
+  if not AMessage.IsInitialized then
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SMessageNotInitialized);
-  end;
 
-  if (not(pub.Parameters.Equals(FdhParams))) then
-  begin
+  if not APub.Parameters.Equals(FDhParams) then
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWrongParameter);
-  end;
 
-  p := FdhParams.P;
+  LP := FDhParams.P;
 
-  peerY := pub.Y;
+  LPeerY := APub.Y;
 
-  if ((not peerY.IsInitialized) or (peerY.CompareTo(TBigInteger.One) <= 0) or
-    (peerY.CompareTo(p.Subtract(TBigInteger.One)) >= 0)) then
-  begin
+  if ((not LPeerY.IsInitialized) or (LPeerY.CompareTo(TBigInteger.One) <= 0) or
+    (LPeerY.CompareTo(LP.Subtract(TBigInteger.One)) >= 0)) then
     raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWeak);
-  end;
 
-  Result := peerY.ModPow(FprivateValue, p);
+  Result := LPeerY.ModPow(FPrivateValue, LP);
 
-  if (Result.Equals(TBigInteger.One)) then
-  begin
+  if Result.Equals(TBigInteger.One) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SSharedKeyInvalid);
-  end;
 
-  Result := &message.ModPow(Fkey.X, p).Multiply(Result).&Mod(p);
+  Result := AMessage.ModPow(FKey.X, LP).Multiply(Result).&Mod(LP);
 end;
 
 function TDHAgreement.CalculateMessage: TBigInteger;
 var
-  dhGen: IDHKeyPairGenerator;
-  dhPair: IAsymmetricCipherKeyPair;
+  LDHGen: IDHKeyPairGenerator;
+  LGenParams: IDHKeyGenerationParameters;
+  LDHPair: IAsymmetricCipherKeyPair;
+  LDHPriv: IDHPrivateKeyParameters;
+  LDHPub: IDHPublicKeyParameters;
 begin
-  dhGen := TDHKeyPairGenerator.Create();
+  LDHGen := TDHKeyPairGenerator.Create();
 
-  dhGen.Init(TDHKeyGenerationParameters.Create(Frandom, FdhParams)
-    as IDHKeyGenerationParameters);
+  LGenParams := TDHKeyGenerationParameters.Create(FRandom, FDhParams);
+  LDHGen.Init(LGenParams);
 
-  dhPair := dhGen.GenerateKeyPair();
+  LDHPair := LDHGen.GenerateKeyPair();
 
-  FprivateValue := (dhPair.Private as IDHPrivateKeyParameters).X;
+  if not Supports(LDHPair.Private, IDHPrivateKeyParameters, LDHPriv) then
+    raise EInvalidCastCryptoLibException.CreateRes(@SNotDHPrivateKeyParameters);
+  FPrivateValue := LDHPriv.X;
 
-  Result := (dhPair.Public as IDHPublicKeyParameters).Y;
+  if not Supports(LDHPair.Public, IDHPublicKeyParameters, LDHPub) then
+    raise EInvalidCastCryptoLibException.CreateRes(@SDHPublicKeyWrongParameter);
+  Result := LDHPub.Y;
 end;
 
-procedure TDHAgreement.Init(const parameters: ICipherParameters);
+procedure TDHAgreement.Init(const AParameters: ICipherParameters);
 var
-  kParam: IAsymmetricKeyParameter;
-  rParam: IParametersWithRandom;
+  LKParam: IAsymmetricKeyParameter;
+  LRParam: IParametersWithRandom;
+  LDHPriv: IDHPrivateKeyParameters;
 begin
-  if Supports(parameters, IParametersWithRandom, rParam) then
+  if Supports(AParameters, IParametersWithRandom, LRParam) then
   begin
-    Frandom := rParam.Random;
-    kParam := rParam.Parameters as IAsymmetricKeyParameter;
+    FRandom := LRParam.Random;
+    if not Supports(LRParam.Parameters, IAsymmetricKeyParameter, LKParam) then
+      raise EArgumentCryptoLibException.CreateRes(@SNotDHPrivateKeyParameters);
   end
   else
   begin
-    Frandom := TCryptoServicesRegistrar.GetSecureRandom();
-    kParam := parameters as IAsymmetricKeyParameter;
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom();
+    if not Supports(AParameters, IAsymmetricKeyParameter, LKParam) then
+      raise EArgumentCryptoLibException.CreateRes(@SNotDHPrivateKeyParameters);
   end;
 
-  if (not Supports(kParam, IDHPrivateKeyParameters)) then
-  begin
+  if not Supports(LKParam, IDHPrivateKeyParameters, LDHPriv) then
     raise EArgumentCryptoLibException.CreateRes(@SNotDHPrivateKeyParameters);
-  end;
 
-  Fkey := kParam as IDHPrivateKeyParameters;
-  FdhParams := Fkey.Parameters;
+  FKey := LDHPriv;
+  FDhParams := FKey.Parameters;
 end;
 
 end.

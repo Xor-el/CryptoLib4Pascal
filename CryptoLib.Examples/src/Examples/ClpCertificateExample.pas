@@ -119,7 +119,7 @@ var
   LRevoked: TCryptoLibGenericArray<IX509CrlEntry>;
   LRevokedCount: Int32;
 begin
-  Logger.LogInformation('--- CRL: RSA ---');
+  Logger.LogInformation('--- CRL: RSA ---', []);
   LKp := GenerateRsaKeyPair;
   LIssuer := BuildX509NameSubject();
   LEncoded := CreateCrlEncoded(LKp, LIssuer, 'SHA256WithRSAEncryption');
@@ -132,17 +132,17 @@ begin
       LRevokedCount := System.Length(LRevoked)
     else
       LRevokedCount := 0;
-    Logger.LogInformation(Format('CRL created, common name %s, revoked count=%d, encoded length=%d',
-      [LCrl.GetIssuerDN().ToString(TX509Name.CN), LRevokedCount, System.Length(LEncoded)]));
+    Logger.LogInformation('CRL created, common name {0}, revoked count={1}, encoded length={2}',
+      [LCrl.GetIssuerDN().ToString(TX509Name.CN), IntToStr(LRevokedCount), IntToStr(System.Length(LEncoded))]);
   end
   else
-    Logger.LogInformation(Format('CRL created, encoded length=%d', [System.Length(LEncoded)]));
+    Logger.LogInformation('CRL created, encoded length={0}', [IntToStr(System.Length(LEncoded))]);
   RunCrlImportVerify(LEncoded, LKp.Public);
 end;
 
 procedure TCertificateExample.RunCrlCreateExport;
 begin
-  Logger.LogInformation('--- Certificate example: CRL create and export ---');
+  Logger.LogInformation('--- Certificate example: CRL create and export ---', []);
   RunCrlRsa;
 end;
 
@@ -153,36 +153,36 @@ var
   LCrl: IX509Crl;
   LRevoked: TCryptoLibGenericArray<IX509CrlEntry>;
 begin
-  Logger.LogInformation('--- Certificate example: CRL import and verify ---');
+  Logger.LogInformation('--- Certificate example: CRL import and verify ---', []);
   if (ACrlEncoded = nil) or (System.Length(ACrlEncoded) = 0) then
   begin
-    Logger.LogWarning('No CRL bytes to parse.');
+    Logger.LogWarning('No CRL bytes to parse.', []);
     Exit;
   end;
   LParser := TX509CrlParser.Create();
   LCrl := LParser.ReadCrl(ACrlEncoded);
   if LCrl = nil then
   begin
-    Logger.LogError('Failed to parse CRL.');
+    Logger.LogError('Failed to parse CRL.', []);
     Exit;
   end;
   try
     LCrl.Verify(AIssuerPublicKey);
-    Logger.LogInformation('CRL signature verification passed.');
+    Logger.LogInformation('CRL signature verification passed.', []);
   except
     on E: Exception do
     begin
-      Logger.LogError('CRL verify failed: ' + E.Message);
+      Logger.LogError('CRL verify failed: {0}', [E.Message]);
       Exit;
     end;
   end;
   LRevoked := LCrl.GetRevokedCertificates();
   if LRevoked <> nil then
-    Logger.LogInformation(Format('CRL revoked certificates count: %d', [System.Length(LRevoked)]))
+    Logger.LogInformation('CRL revoked certificates count: {0}', [IntToStr(System.Length(LRevoked))])
   else
-    Logger.LogInformation('CRL revoked certificates count: 0');
-  Logger.LogInformation(Format('CRL this update: %s',
-    [FormatDateTime('yyyy-mm-dd hh:nn:ss', LCrl.ThisUpdate)]));
+    Logger.LogInformation('CRL revoked certificates count: 0', []);
+  Logger.LogInformation('CRL this update: {0}',
+    [FormatDateTime('yyyy-mm-dd hh:nn:ss', LCrl.ThisUpdate)]);
 end;
 
 function TCertificateExample.BuildX509NameSubject: IX509Name;
@@ -241,14 +241,14 @@ var
   LKp: IAsymmetricCipherKeyPair;
   LPem: TCertRequestPem;
 begin
-  Logger.LogInformation('--- Certificate request: RSA ---');
-  Logger.LogInformation('Algorithm: ' + ASignatureAlgorithm);
+  Logger.LogInformation('--- Certificate request: RSA ---', []);
+  Logger.LogInformation('Algorithm: {0}', [ASignatureAlgorithm]);
   LKp := GenerateRsaKeyPair;
   LPem := CreateCertRequestPem(LKp, BuildX509NameSubject(), ASignatureAlgorithm);
-  Logger.LogInformation('Private key PEM (RSA ' + ASignatureAlgorithm + '):'
-    + sLineBreak + LPem.PrivateKeyPem);
-  Logger.LogInformation('Certificate request PEM (RSA ' + ASignatureAlgorithm + '):'
-    + sLineBreak + LPem.CertificateRequestPem);
+  Logger.LogInformation('Private key PEM (RSA {0}):{1}{2}',
+    [ASignatureAlgorithm, sLineBreak, LPem.PrivateKeyPem]);
+  Logger.LogInformation('Certificate request PEM (RSA {0}):{1}{2}',
+    [ASignatureAlgorithm, sLineBreak, LPem.CertificateRequestPem]);
 end;
 
 procedure TCertificateExample.RunCertRequestEc(const ACurveName: string;
@@ -258,28 +258,28 @@ var
   LDomainParams: IECDomainParameters;
   LPem: TCertRequestPem;
 begin
-  Logger.LogInformation('--- Certificate request: EC ---');
-  Logger.LogInformation('Curve: ' + ACurveName + ', algorithm: ' + ASignatureAlgorithm);
+  Logger.LogInformation('--- Certificate request: EC ---', []);
+  Logger.LogInformation('Curve: {0}, algorithm: {1}', [ACurveName, ASignatureAlgorithm]);
   try
     LDomainParams := TECDomainParameters.LookupName(ACurveName);
   except
     on E: EArgumentCryptoLibException do
     begin
-      Logger.LogWarning('Curve "' + ACurveName + '" not found: ' + E.Message);
+      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
       Exit;
     end;
     on E: EArgumentNilCryptoLibException do
     begin
-      Logger.LogWarning('Curve name empty.');
+      Logger.LogWarning('Curve name empty.', []);
       Exit;
     end;
   end;
   LKp := GenerateEcKeyPair(LDomainParams);
   LPem := CreateCertRequestPem(LKp, BuildX509NameSubject(), ASignatureAlgorithm);
-  Logger.LogInformation('Private key PEM (EC ' + ACurveName + ' ' + ASignatureAlgorithm + '):'
-    + sLineBreak + LPem.PrivateKeyPem);
-  Logger.LogInformation('Certificate request PEM (EC ' + ACurveName + ' ' + ASignatureAlgorithm + '):'
-    + sLineBreak + LPem.CertificateRequestPem);
+  Logger.LogInformation('Private key PEM (EC {0} {1}):{2}{3}',
+    [ACurveName, ASignatureAlgorithm, sLineBreak, LPem.PrivateKeyPem]);
+  Logger.LogInformation('Certificate request PEM (EC {0} {1}):{2}{3}',
+    [ACurveName, ASignatureAlgorithm, sLineBreak, LPem.CertificateRequestPem]);
 end;
 
 procedure TCertificateExample.RunCertRequestCreateExportPem;

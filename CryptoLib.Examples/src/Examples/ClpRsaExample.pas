@@ -67,26 +67,25 @@ var
   LSigner: ISigner;
   LMsg, LSig: TBytes;
 begin
-  Logger.LogInformation('Algorithm: ' + ASignatureAlgorithm);
+  Logger.LogInformation('Algorithm: {0}', [ASignatureAlgorithm]);
   LKp := GenerateRsaKeyPair;
   LSigner := TSignerUtilities.GetSigner(ASignatureAlgorithm);
   if LSigner = nil then
   begin
-    Logger.LogWarning('Signer "' + ASignatureAlgorithm + '" not available.');
+    Logger.LogWarning('Signer "{0}" not available.', [ASignatureAlgorithm]);
     Exit;
   end;
   LMsg := TConverters.ConvertStringToBytes('Message to sign', TEncoding.UTF8);
   LSigner.Init(True, LKp.Private);
   LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
   LSig := LSigner.GenerateSignature();
-  Logger.LogInformation(ASignatureAlgorithm + ' signature (hex):' + sLineBreak +
-    THexEncoder.Encode(LSig, False));
+  Logger.LogInformation('{0} signature (hex):{1}{2}', [ASignatureAlgorithm, sLineBreak, THexEncoder.Encode(LSig, False)]);
   LSigner.Init(False, LKp.Public);
   LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
   if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation(ASignatureAlgorithm + ' verification passed.')
+    Logger.LogInformation('{0} verification passed.', [ASignatureAlgorithm])
   else
-    Logger.LogWarning(ASignatureAlgorithm + ' verification failed.');
+    Logger.LogWarning('{0} verification failed.', [ASignatureAlgorithm]);
 end;
 
 procedure TRsaExample.RunRsaKeyRecreateFromDEREncodedBytes;
@@ -98,22 +97,22 @@ begin
   LKp := GenerateRsaKeyPair;
 
   LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
-  Logger.LogInformation(Format('Private key DER encoded: %d bytes', [System.Length(LPrivBytes)]));
+  Logger.LogInformation('Private key DER encoded: {0} bytes', [IntToStr(System.Length(LPrivBytes))]);
 
   LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
-  Logger.LogInformation(Format('Public key DER encoded: %d bytes', [System.Length(LPubBytes)]));
+  Logger.LogInformation('Public key DER encoded: {0} bytes', [IntToStr(System.Length(LPubBytes))]);
 
   LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
   if LRegenPriv.Equals(LKp.Private) then
-    Logger.LogInformation('Private key roundtrip: match.')
+    Logger.LogInformation('Private key roundtrip: match.', [])
   else
-    Logger.LogWarning('Private key roundtrip: mismatch.');
+    Logger.LogError('Private key roundtrip: mismatch.', []);
 
   LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
   if LRegenPub.Equals(LKp.Public) then
-    Logger.LogInformation('Public key roundtrip: match.')
+    Logger.LogInformation('Public key roundtrip: match.', [])
   else
-    Logger.LogWarning('Public key roundtrip: mismatch.');
+    Logger.LogError('Public key roundtrip: mismatch.', []);
 end;
 
 procedure TRsaExample.RunRsaPemExportImport;
@@ -130,27 +129,26 @@ var
   LCipher: IBufferedCipher;
   LPlain, LCipherText, LDecrypted: TBytes;
 begin
-  Logger.LogInformation('Cipher: ' + ACipherAlgorithm);
+  Logger.LogInformation('Cipher: {0}', [ACipherAlgorithm]);
   LCipher := TCipherUtilities.GetCipher(ACipherAlgorithm);
   if LCipher = nil then
   begin
-    Logger.LogWarning('Cipher "' + ACipherAlgorithm + '" not available.');
+    Logger.LogWarning('Cipher "{0}" not available.', [ACipherAlgorithm]);
     Exit;
   end;
   LPlain := TConverters.ConvertStringToBytes('Hello RSA encryption!', TEncoding.UTF8);
 
   LCipher.Init(True, AKeyPair.Public);
   LCipherText := LCipher.DoFinal(LPlain);
-  Logger.LogInformation(Format('Encrypted (%d bytes):' + sLineBreak + '%s',
-    [System.Length(LCipherText), THexEncoder.Encode(LCipherText, False)]));
+  Logger.LogInformation('Encrypted ({0} bytes):{1}{2}', [IntToStr(System.Length(LCipherText)), sLineBreak, THexEncoder.Encode(LCipherText, False)]);
 
   LCipher.Init(False, AKeyPair.Private);
   LDecrypted := LCipher.DoFinal(LCipherText);
 
   if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-    Logger.LogInformation('Decrypt roundtrip: success.')
+    Logger.LogInformation('Decrypt roundtrip: success.', [])
   else
-    Logger.LogWarning('Decrypt roundtrip: failed.');
+    Logger.LogError('Decrypt roundtrip: failed.', []);
 end;
 
 procedure TRsaExample.RunRsaEncryptDecrypt;
@@ -173,13 +171,13 @@ begin
   LAad := TConverters.ConvertStringToBytes('RH01-example-context', TEncoding.UTF8);
 
   LEnvelope := TRsaHybridEncryption.Encrypt(LKp.Public, LPlain, LAad);
-  Logger.LogInformation(Format('RSA hybrid envelope: %d bytes', [System.Length(LEnvelope)]));
+  Logger.LogInformation('RSA hybrid envelope: {0} bytes', [IntToStr(System.Length(LEnvelope))]);
 
   LDecrypted := TRsaHybridEncryption.Decrypt(LKp.Private, LEnvelope, LAad);
   if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-    Logger.LogInformation('RSA hybrid encrypt/decrypt roundtrip: success.')
+    Logger.LogInformation('RSA hybrid encrypt/decrypt roundtrip: success.', [])
   else
-    Logger.LogWarning('RSA hybrid encrypt/decrypt roundtrip: failed.');
+    Logger.LogError('RSA hybrid encrypt/decrypt roundtrip: failed.', []);
 end;
 
 procedure TRsaExample.RunRsaHybridStreamEncryptDecrypt;
@@ -197,7 +195,7 @@ begin
     LEncStream := TBytesStream.Create(nil);
     try
       TRsaHybridEncryption.Encrypt(LKp.Public, LPlainStream, LEncStream, LAad);
-      Logger.LogInformation(Format('RSA hybrid stream envelope: %d bytes', [LEncStream.Size]));
+      Logger.LogInformation('RSA hybrid stream envelope: {0} bytes', [IntToStr(LEncStream.Size)]);
 
       LEncStream.Position := 0;
       LDecStream := TBytesStream.Create(nil);
@@ -205,9 +203,9 @@ begin
         TRsaHybridEncryption.Decrypt(LKp.Private, LEncStream, LDecStream, LAad);
         LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
         if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-          Logger.LogInformation('RSA hybrid stream roundtrip: success.')
+          Logger.LogInformation('RSA hybrid stream roundtrip: success.', [])
         else
-          Logger.LogWarning('RSA hybrid stream roundtrip: failed.');
+          Logger.LogError('RSA hybrid stream roundtrip: failed.', []);
       finally
         LDecStream.Free;
       end;

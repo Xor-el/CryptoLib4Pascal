@@ -32,11 +32,21 @@ uses
   ClpDHBasicAgreement,
   ClpECDHBasicAgreement,
   ClpECDHCBasicAgreement,
+  ClpECDHWithKdfBasicAgreement,
+  ClpECDHCWithKdfBasicAgreement,
+  ClpECDHKekGenerator,
   ClpEdECObjectIdentifiers,
+  ClpX9ObjectIdentifiers,
+  ClpSecObjectIdentifiers,
+  ClpDigestUtilities,
   ClpIBasicAgreement,
   ClpIDHBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIECDHCBasicAgreement,
+  ClpIECDHWithKdfBasicAgreement,
+  ClpIECDHCWithKdfBasicAgreement,
+  ClpIECDHKekGenerator,
+  ClpIDerivationFunction,
   ClpIAsn1Objects,
   ClpIRawAgreement,
   ClpIX25519Agreement,
@@ -67,6 +77,7 @@ type
     class function GetBasicAgreementForMechanism(const AMechanism: String): IBasicAgreement; static;
     class function GetBasicAgreementWithKdfForMechanism(const AMechanism, AWrapAlgorithm: String): IBasicAgreement; static;
     class function GetRawAgreementForMechanism(const AMechanism: String): IRawAgreement; static;
+    class function CreateECDHKekGenerator(const ADigestName: String): IDerivationFunction; static;
     class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
@@ -90,8 +101,25 @@ begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmMap.Add('DIFFIEHELLMAN', 'DH');
   FAlgorithmMap.Add('ECCDH', 'ECDHC');
+  FAlgorithmMap.Add('DHWITHSHA1KDF', 'ECDHWITHSHA1KDF');
 
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
+
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.DHSinglePassStdDHSha1KdfScheme, 'ECDHWITHSHA1KDF');
+  FAlgorithmOidMap.AddOrSetValue(TX9ObjectIdentifiers.DHSinglePassCofactorDHSha1KdfScheme, 'ECCDHWITHSHA1KDF');
+
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassStdDHSha224KdfScheme, 'ECDHWITHSHA224KDF');
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassCofactorDHSha224KdfScheme, 'ECCDHWITHSHA224KDF');
+
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassStdDHSha256KdfScheme, 'ECDHWITHSHA256KDF');
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassCofactorDHSha256KdfScheme, 'ECCDHWITHSHA256KDF');
+
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassStdDHSha384KdfScheme, 'ECDHWITHSHA384KDF');
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassCofactorDHSha384KdfScheme, 'ECCDHWITHSHA384KDF');
+
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassStdDHSha512KdfScheme, 'ECDHWITHSHA512KDF');
+  FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassCofactorDHSha512KdfScheme, 'ECCDHWITHSHA512KDF');
+
   FAlgorithmOidMap.AddOrSetValue(TEdECObjectIdentifiers.IdX25519, 'X25519');
 end;
 
@@ -142,7 +170,33 @@ end;
 
 class function TAgreementUtilities.GetBasicAgreementWithKdfForMechanism(const AMechanism, AWrapAlgorithm: String): IBasicAgreement;
 begin
-  Result := nil;
+  if AMechanism = 'ECDHWITHSHA1KDF' then
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-1')) as IECDHWithKdfBasicAgreement
+  else if AMechanism = 'ECDHWITHSHA224KDF' then
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-224')) as IECDHWithKdfBasicAgreement
+  else if AMechanism = 'ECDHWITHSHA256KDF' then
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-256')) as IECDHWithKdfBasicAgreement
+  else if AMechanism = 'ECDHWITHSHA384KDF' then
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-384')) as IECDHWithKdfBasicAgreement
+  else if AMechanism = 'ECDHWITHSHA512KDF' then
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-512')) as IECDHWithKdfBasicAgreement
+  else if AMechanism = 'ECCDHWITHSHA1KDF' then
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-1')) as IECDHCWithKdfBasicAgreement
+  else if AMechanism = 'ECCDHWITHSHA224KDF' then
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-224')) as IECDHCWithKdfBasicAgreement
+  else if AMechanism = 'ECCDHWITHSHA256KDF' then
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-256')) as IECDHCWithKdfBasicAgreement
+  else if AMechanism = 'ECCDHWITHSHA384KDF' then
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-384')) as IECDHCWithKdfBasicAgreement
+  else if AMechanism = 'ECCDHWITHSHA512KDF' then
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-512')) as IECDHCWithKdfBasicAgreement
+  else
+    Result := nil;
+end;
+
+class function TAgreementUtilities.CreateECDHKekGenerator(const ADigestName: String): IDerivationFunction;
+begin
+  Result := TECDHKekGenerator.Create(TDigestUtilities.GetDigest(ADigestName));
 end;
 
 class function TAgreementUtilities.GetBasicAgreement(const AOid: IDerObjectIdentifier): IBasicAgreement;
