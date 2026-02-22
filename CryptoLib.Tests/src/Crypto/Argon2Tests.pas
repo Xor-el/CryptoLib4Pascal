@@ -105,7 +105,7 @@ begin
 
   LActual := THexEncoder.Encode
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
-    as IKeyParameter).GetKey(), False);
+    as IKeyParameter).GetKey());
 
   LArgon2Generator.Clear();
 
@@ -139,7 +139,7 @@ begin
 
   LActual := THexEncoder.Encode
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
-    as IKeyParameter).GetKey(), False);
+    as IKeyParameter).GetKey());
 
   LArgon2Generator.Clear();
 
