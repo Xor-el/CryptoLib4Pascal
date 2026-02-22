@@ -174,7 +174,7 @@ begin
 
     Result := LColonFound;
   finally
-    LRead.Free();
+    LRead.Free;
   end;
 end;
 

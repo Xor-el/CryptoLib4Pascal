@@ -147,7 +147,7 @@ begin
         raise EIOCryptoLibException.Create('malformed PEM data encountered');
     end;
   finally
-    LPemBuf.Free();
+    LPemBuf.Free;
   end;
 end;
 

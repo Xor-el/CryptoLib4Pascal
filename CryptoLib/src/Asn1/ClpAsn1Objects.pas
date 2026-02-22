@@ -8674,7 +8674,7 @@ begin
     LBOut.Read(LBytes[0], LBOut.Size);
     Result := LBytes;
   finally
-    LBOut.Free();
+    LBOut.Free;
   end;
 end;
 
@@ -9065,7 +9065,7 @@ begin
     LBOut.Read(LBytes[0], LBOut.Size);
     Result := LBytes;
   finally
-    LBOut.Free();
+    LBOut.Free;
   end;
 end;
 

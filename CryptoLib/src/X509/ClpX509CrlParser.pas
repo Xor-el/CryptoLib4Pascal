@@ -167,7 +167,8 @@ begin
     LInStream.Position := 0;
     Result := ReadCrl(LInStream);
   finally
-    LInStream.Free();
+    LInStream.Free;
+    FCurrentCrlStream := nil;
   end;
 end;
 
@@ -182,7 +183,8 @@ begin
     LInStream.Position := 0;
     Result := ReadCrls(LInStream);
   finally
-    LInStream.Free();
+    LInStream.Free;
+    FCurrentCrlStream := nil;
   end;
 end;
 
@@ -196,7 +198,7 @@ function TX509CrlParser.ReadCrl(const AInStream: TStream): IX509Crl;
     try
       Result := ReadDerCrl(LAsn1In);
     finally
-      LAsn1In.Free();
+      LAsn1In.Free;
     end;
   end;
 
@@ -268,7 +270,7 @@ begin
 
         Result := ReadDerCrlFromStream(LStreamToUse);
       finally
-        LPushbackStream.Free();
+        LPushbackStream.Free;
       end;
       Exit;
     end;
@@ -308,7 +310,7 @@ begin
     end;
     Result := LCrls.ToArray();
   finally
-    LCrls.Free();
+    LCrls.Free;
   end;
 end;
 

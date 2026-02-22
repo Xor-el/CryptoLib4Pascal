@@ -189,7 +189,8 @@ begin
     LInStream.Position := 0;
     Result := ReadAttrCert(LInStream);
   finally
-    LInStream.Free();
+    LInStream.Free;
+    FCurrentStream := nil;
   end;
 end;
 
@@ -204,7 +205,8 @@ begin
     LInStream.Position := 0;
     Result := ReadAttrCerts(LInStream);
   finally
-    LInStream.Free();
+    LInStream.Free;
+    FCurrentStream := nil;
   end;
 end;
 
@@ -218,7 +220,7 @@ function TX509AttrCertParser.ReadAttrCert(const AInStream: TStream): IX509V2Attr
     try
       Result := ReadDerCertificate(LAsn1In);
     finally
-      LAsn1In.Free();
+      LAsn1In.Free;
     end;
   end;
 
@@ -290,7 +292,7 @@ begin
 
         Result := ReadDerCertificateFromStream(LStreamToUse);
       finally
-        LPushbackStream.Free();
+        LPushbackStream.Free;
       end;
       Exit;
     end;
@@ -330,7 +332,7 @@ begin
     end;
     Result := LAttrCerts.ToArray();
   finally
-    LAttrCerts.Free();
+    LAttrCerts.Free;
   end;
 end;
 

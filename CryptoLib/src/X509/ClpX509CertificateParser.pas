@@ -179,7 +179,8 @@ begin
     LInStream.Position := 0;
     Result := ReadCertificate(LInStream);
   finally
-    LInStream.Free();
+    LInStream.Free;
+    FCurrentStream := nil;
   end;
 end;
 
@@ -194,7 +195,8 @@ begin
     LInStream.Position := 0;
     Result := ReadCertificates(LInStream);
   finally
-    LInStream.Free();
+    LInStream.Free;
+    FCurrentStream := nil;
   end;
 end;
 
@@ -208,7 +210,7 @@ function TX509CertificateParser.ReadCertificate(const AInStream: TStream): IX509
     try
       Result := ReadDerCertificate(LAsn1In);
     finally
-      LAsn1In.Free();
+      LAsn1In.Free;
     end;
   end;
 
@@ -316,7 +318,7 @@ begin
     end;
     Result := LCerts.ToArray();
   finally
-    LCerts.Free();
+    LCerts.Free;
   end;
 end;
 
