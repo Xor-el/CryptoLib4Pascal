@@ -25,6 +25,8 @@ uses
   SysUtils,
   Generics.Collections,
   ClpIWrapper,
+  ClpIBufferedCipher,
+  ClpICipherParameters,
   ClpIAsn1Objects,
   ClpCollectionUtilities,
   ClpCryptoLibComparers,
@@ -35,10 +37,13 @@ uses
   ClpAesWrapEngine,
   ClpAesWrapPadEngine,
   ClpRfc3211WrapEngine,
+  ClpCipherUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
   SWrapperNotRecognised = 'Wrapper "%s" not recognised.';
+  SNotInitialisedForWrapping = 'Not initialised for wrapping';
+  SNotInitialisedForUnwrapping = 'Not initialised for unwrapping';
 
 type
   TWrapperUtilities = class sealed(TObject)
@@ -49,6 +54,20 @@ type
       AESRFC3211WRAP,
       AESWRAP,
       AESWRAPPAD);
+
+    TBufferedCipherWrapper = class(TInterfacedObject, IWrapper)
+    strict private
+      FCipher: IBufferedCipher;
+      FForWrapping: Boolean;
+    strict protected
+     function GetAlgorithmName: String;
+    public
+      constructor Create(const ACipher: IBufferedCipher);
+      property AlgorithmName: String read GetAlgorithmName;
+      procedure Init(AForWrapping: Boolean; const AParameters: ICipherParameters);
+      function Wrap(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
+      function Unwrap(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
+    end;
 
   class var
     FAlgorithms: TDictionary<String, String>;
@@ -108,6 +127,7 @@ class function TWrapperUtilities.GetWrapper(const AAlgorithm: String): IWrapper;
 var
   LMechanism: String;
   LWrapAlgorithm: TWrapAlgorithm;
+  LBlockCipher: IBufferedCipher;
 begin
   LMechanism := UpperCase(TCollectionUtilities.GetValueOrKey<String>(
     FAlgorithms, AAlgorithm));
@@ -130,7 +150,16 @@ begin
           Result := TAesWrapPadEngine.Create();
           Exit;
         end;
+    else
+      raise ENotImplementedCryptoLibException.Create('');
     end;
+  end;
+
+  LBlockCipher := TCipherUtilities.GetCipher(AAlgorithm);
+  if LBlockCipher <> nil then
+  begin
+    Result := TBufferedCipherWrapper.Create(LBlockCipher);
+    Exit;
   end;
 
   raise ESecurityUtilityCryptoLibException.CreateResFmt(@SWrapperNotRecognised,
@@ -141,6 +170,43 @@ class function TWrapperUtilities.GetAlgorithmName(
   const AOid: IDerObjectIdentifier): String;
 begin
   Result := TCollectionUtilities.GetValueOrNull<String, String>(FAlgorithms, AOid.Id);
+end;
+
+{ TWrapperUtilities.TBufferedCipherWrapper }
+
+constructor TWrapperUtilities.TBufferedCipherWrapper.Create(
+  const ACipher: IBufferedCipher);
+begin
+  inherited Create;
+  FCipher := ACipher;
+end;
+
+function TWrapperUtilities.TBufferedCipherWrapper.GetAlgorithmName: String;
+begin
+  Result := FCipher.AlgorithmName;
+end;
+
+procedure TWrapperUtilities.TBufferedCipherWrapper.Init(AForWrapping: Boolean;
+  const AParameters: ICipherParameters);
+begin
+  FForWrapping := AForWrapping;
+  FCipher.Init(AForWrapping, AParameters);
+end;
+
+function TWrapperUtilities.TBufferedCipherWrapper.Wrap(
+  const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
+begin
+  if not FForWrapping then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitialisedForWrapping);
+  Result := FCipher.DoFinal(AInput, AInOff, ALength);
+end;
+
+function TWrapperUtilities.TBufferedCipherWrapper.Unwrap(
+  const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
+begin
+  if FForWrapping then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitialisedForUnwrapping);
+  Result := FCipher.DoFinal(AInput, AInOff, ALength);
 end;
 
 end.

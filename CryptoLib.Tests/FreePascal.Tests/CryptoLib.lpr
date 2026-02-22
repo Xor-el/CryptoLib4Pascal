@@ -27,10 +27,10 @@ uses
   RSADigestSignerTests, X931SignerTests, CipherStreamTests, OaepTests,
   RijndaelTests, BlowfishTests, Poly1305Tests, MacTests, ChaCha20Poly1305Tests,
   OcbTests, CcmTests, EaxTests, CMacTests, AeadTestUtilities, GcmReorderTests,
-  GCMTests, GcmSivTests, GMacTests, CryptoLibTestBase, OpenSslReaderTests,
-  OpenSslWriterTests, X509CertGenTests, ClpFixedSecureRandom,
-  ClpShortenedDigest, Int32Tests, Int64Tests, IPAddressUtilitiesTests,
-  PemReaderTests;
+  GCMTests, GcmSivTests, GMacTests, CryptoLibTestBase,
+  PkcsEncryptedPrivateKeyInfoTests, OpenSslReaderTests, OpenSslWriterTests,
+  X509CertGenTests, ClpFixedSecureRandom, ClpShortenedDigest, Int32Tests,
+  Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

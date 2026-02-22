@@ -719,6 +719,7 @@ uses
   OpenSslReaderTests in '..\src\OpenSsl\OpenSslReaderTests.pas',
   OpenSslWriterTests in '..\src\OpenSsl\OpenSslWriterTests.pas',
   EncryptedPrivateKeyInfoTests in '..\src\Asn1\EncryptedPrivateKeyInfoTests.pas',
+  PkcsEncryptedPrivateKeyInfoTests in '..\src\Pkcs\PkcsEncryptedPrivateKeyInfoTests.pas',
   CipherStreamTests in '..\src\Crypto\CipherStreamTests.pas',
   ParameterUtilitiesTests in '..\src\Security\ParameterUtilitiesTests.pas',
   OaepTests in '..\src\Crypto\OaepTests.pas',

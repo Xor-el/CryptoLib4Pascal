@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="117">
+    <Units Count="118">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -508,6 +508,10 @@
         <Filename Value="..\src\Crypto\GMacTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit116>
+      <Unit117>
+        <Filename Value="..\src\Pkcs\PkcsEncryptedPrivateKeyInfoTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit117>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -518,7 +522,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
   </CompilerOptions>

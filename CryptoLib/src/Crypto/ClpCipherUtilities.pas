@@ -40,6 +40,7 @@ uses
   ClpIAeadBlockCipher,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
+  ClpMiscObjectIdentifiers,
   ClpStringUtilities,
   ClpISO10126d2Padding,
   ClpIISO10126d2Padding,
@@ -263,8 +264,6 @@ begin
   FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.RsaEncryption, 'RSA//PKCS1PADDING');
   FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdRsaesOaep, 'RSA//OAEPPADDING');
 
-  FAlgorithmMap.AddOrSetValue('1.3.6.1.4.1.3029.1.2', 'BLOWFISH/CBC');
-
   FAlgorithmMap.AddOrSetValue('PBEWITHSHA1AND128BITAES-CBC-BC', 'PBEWITHSHAAND128BITAES-CBC-BC');
   FAlgorithmMap.AddOrSetValue('PBEWITHSHA-1AND128BITAES-CBC-BC', 'PBEWITHSHAAND128BITAES-CBC-BC');
 
@@ -277,6 +276,8 @@ begin
   FAlgorithmMap.AddOrSetValue('PBEWITHSHA-256AND128BITAES-CBC-BC', 'PBEWITHSHA256AND128BITAES-CBC-BC');
   FAlgorithmMap.AddOrSetValue('PBEWITHSHA-256AND192BITAES-CBC-BC', 'PBEWITHSHA256AND192BITAES-CBC-BC');
   FAlgorithmMap.AddOrSetValue('PBEWITHSHA-256AND256BITAES-CBC-BC', 'PBEWITHSHA256AND256BITAES-CBC-BC');
+
+  FAlgorithmOidMap.AddOrSetValue(TMiscObjectIdentifiers.CryptlibAlgorithmBlowfishCbc, 'BLOWFISH/CBC');
 
   FAlgorithmMap.AddOrSetValue('CHACHA20', 'CHACHA7539');
   FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdAlgAeadChaCha20Poly1305, 'CHACHA20-POLY1305');
