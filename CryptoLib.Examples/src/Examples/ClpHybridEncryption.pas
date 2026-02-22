@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -46,7 +46,12 @@ uses
   ClpIEphemeralKeyPair,
   ClpIEphemeralKeyPairGenerator,
   ClpIKeyEncoder,
+  ClpIRawAgreement,
+  ClpIX25519Parameters,
+  ClpIX25519Generators,
   ClpKeyParameter,
+  ClpX25519Parameters,
+  ClpX25519Generators,
   ClpIECCommon,
   ClpAeadParameters,
   ClpHkdfParameters,
@@ -276,6 +281,66 @@ type
 
     class procedure Decrypt(const AReceiverPrivateKey: IAsymmetricKeyParameter;
       const AReceiverDomain: IECDomainParameters;
+      const AInputStream, AOutputStream: TStream;
+      const AAad: TBytes); overload; static;
+  end;
+
+  /// <summary>
+  /// <para>X25519 Hybrid Encryption — envelope version <b>EX01</b>.</para>
+  /// <para>
+  /// Combines X25519 key agreement with HKDF-SHA-256 key derivation and
+  /// AES-256-GCM authenticated encryption. A fresh ephemeral X25519 key pair
+  /// is generated per message, providing forward secrecy.
+  /// </para>
+  /// <para><b>Encryption flow:</b></para>
+  /// <list type="number">
+  ///   <item>Generate a fresh ephemeral X25519 key pair.</item>
+  ///   <item>Perform X25519 key agreement between the ephemeral private key and
+  ///         the receiver's X25519 public key to produce a 32-byte shared secret.</item>
+  ///   <item>Generate a random 32-byte HKDF salt and 12-byte GCM nonce.</item>
+  ///   <item>Derive a 256-bit AES key via HKDF-SHA-256 with
+  ///         <c>ikm=sharedSecret</c>, the random salt, and
+  ///         <c>info="EX01-X25519-AESGCM"</c> for domain separation.</item>
+  ///   <item>Encrypt the plaintext with AES-256-GCM, producing ciphertext
+  ///         and a 128-bit authentication tag.</item>
+  ///   <item>Serialise the binary envelope:
+  ///         <c>"EX01" || ephPub(32) || nonce(12) || salt(32) ||
+  ///         u32BE(ctLen) || ciphertext||tag</c>.</item>
+  ///   <item>Zeroize the shared secret and AES key from memory.</item>
+  /// </list>
+  /// <para><b>Decryption flow:</b></para>
+  /// <list type="number">
+  ///   <item>Parse and validate the "EX01" envelope header.</item>
+  ///   <item>Read the fixed-size fields: ephPub(32), nonce(12), salt(32).</item>
+  ///   <item>Perform X25519 between the receiver's private key and the ephemeral
+  ///         public key to recover the shared secret.</item>
+  ///   <item>Derive the AES key via HKDF-SHA-256 with the same salt and info.</item>
+  ///   <item>Decrypt and verify the payload with AES-256-GCM.</item>
+  /// </list>
+  /// <para>
+  /// Both <c>TBytes</c> and <c>TStream</c> overloads are provided.
+  /// The <c>TBytes</c> overloads delegate to the <c>TStream</c> overloads
+  /// via <c>TBytesStream</c>.
+  /// </para>
+  /// </summary>
+  TX25519HybridEncryption = class(THybridEncryptionBase)
+  strict private
+    const
+      X25519_MAGIC = 'EX01';
+      X25519_HKDF_INFO = 'EX01-X25519-AESGCM';
+      X25519_PUBLIC_KEY_SIZE = 32;
+  public
+    class function Encrypt(const AReceiverPublicKey: IAsymmetricKeyParameter;
+      const APlaintext, AAad: TBytes): TBytes; overload; static;
+
+    class function Decrypt(const AReceiverPrivateKey: IAsymmetricKeyParameter;
+      const AEnvelope, AAad: TBytes): TBytes; overload; static;
+
+    class procedure Encrypt(const AReceiverPublicKey: IAsymmetricKeyParameter;
+      const AInputStream, AOutputStream: TStream;
+      const AAad: TBytes); overload; static;
+
+    class procedure Decrypt(const AReceiverPrivateKey: IAsymmetricKeyParameter;
       const AInputStream, AOutputStream: TStream;
       const AAad: TBytes); overload; static;
   end;
@@ -705,6 +770,160 @@ begin
     LAgree.GetFieldSize(), LZ);
 
   LInfo := TConverters.ConvertStringToBytes(EC_HKDF_INFO, TEncoding.UTF8);
+  System.SetLength(LAesKey, AES_KEY_SIZE);
+  try
+    LHkdf := THkdfBytesGenerator.Create(
+      TDigestUtilities.GetDigest('SHA-256'));
+    LHkdfParams := THkdfParameters.Create(LSharedSecret, LSalt, LInfo);
+    LHkdf.Init(LHkdfParams);
+    LHkdf.GenerateBytes(LAesKey, 0, AES_KEY_SIZE);
+
+    LGcmCipher := CreateAesGcmCipher(False, LAesKey, LNonce, AAad);
+    StreamCipherProcessCount(LGcmCipher, AInputStream, AOutputStream, LCtLen);
+  finally
+    ZeroBuffer(LSharedSecret);
+    ZeroBuffer(LAesKey);
+  end;
+end;
+
+{ TX25519HybridEncryption }
+
+class function TX25519HybridEncryption.Encrypt(
+  const AReceiverPublicKey: IAsymmetricKeyParameter;
+  const APlaintext, AAad: TBytes): TBytes;
+var
+  LInput, LOutput: TBytesStream;
+begin
+  LInput := TBytesStream.Create(APlaintext);
+  try
+    LOutput := TBytesStream.Create(nil);
+    try
+      Encrypt(AReceiverPublicKey, LInput, LOutput, AAad);
+      Result := Copy(LOutput.Bytes, 0, LOutput.Size);
+    finally
+      LOutput.Free;
+    end;
+  finally
+    LInput.Free;
+  end;
+end;
+
+class function TX25519HybridEncryption.Decrypt(
+  const AReceiverPrivateKey: IAsymmetricKeyParameter;
+  const AEnvelope, AAad: TBytes): TBytes;
+var
+  LInput, LOutput: TBytesStream;
+begin
+  LInput := TBytesStream.Create(AEnvelope);
+  try
+    LOutput := TBytesStream.Create(nil);
+    try
+      Decrypt(AReceiverPrivateKey, LInput, LOutput, AAad);
+      Result := Copy(LOutput.Bytes, 0, LOutput.Size);
+    finally
+      LOutput.Free;
+    end;
+  finally
+    LInput.Free;
+  end;
+end;
+
+class procedure TX25519HybridEncryption.Encrypt(
+  const AReceiverPublicKey: IAsymmetricKeyParameter;
+  const AInputStream, AOutputStream: TStream;
+  const AAad: TBytes);
+var
+  LAesKey, LNonce, LSalt, LSharedSecret, LEphPubBytes, LInfo: TBytes;
+  LSecureRandom: ISecureRandom;
+  LKpg: IX25519KeyPairGenerator;
+  LEphKp: IAsymmetricCipherKeyPair;
+  LEphPub: IX25519PublicKeyParameters;
+  LAgree: IRawAgreement;
+  LHkdf: IHkdfBytesGenerator;
+  LHkdfParams: IHkdfParameters;
+  LGcmCipher: IBufferedCipher;
+  LCtLen: UInt32;
+  LMagic: TBytes;
+begin
+  LSecureRandom := TSecureRandom.Create() as ISecureRandom;
+
+  LKpg := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
+  LKpg.Init(TX25519KeyGenerationParameters.Create(LSecureRandom)
+    as IX25519KeyGenerationParameters);
+  LEphKp := LKpg.GenerateKeyPair();
+
+  if not Supports(LEphKp.Public, IX25519PublicKeyParameters, LEphPub) then
+    raise EArgumentCryptoLibException.Create(
+      'Ephemeral key is not IX25519PublicKeyParameters');
+  LEphPubBytes := LEphPub.GetEncoded();
+
+  LAgree := TAgreementUtilities.GetRawAgreement('X25519');
+  LAgree.Init(LEphKp.Private as ICipherParameters);
+  System.SetLength(LSharedSecret, LAgree.AgreementSize);
+  LAgree.CalculateAgreement(AReceiverPublicKey as ICipherParameters,
+    LSharedSecret, 0);
+
+  System.SetLength(LSalt, HKDF_SALT_SIZE);
+  System.SetLength(LNonce, GCM_NONCE_SIZE);
+  LSecureRandom.NextBytes(LSalt);
+  LSecureRandom.NextBytes(LNonce);
+
+  LInfo := TConverters.ConvertStringToBytes(X25519_HKDF_INFO, TEncoding.UTF8);
+  System.SetLength(LAesKey, AES_KEY_SIZE);
+  try
+    LHkdf := THkdfBytesGenerator.Create(
+      TDigestUtilities.GetDigest('SHA-256'));
+    LHkdfParams := THkdfParameters.Create(LSharedSecret, LSalt, LInfo);
+    LHkdf.Init(LHkdfParams);
+    LHkdf.GenerateBytes(LAesKey, 0, AES_KEY_SIZE);
+
+    LMagic := TConverters.ConvertStringToBytes(X25519_MAGIC, TEncoding.ASCII);
+    WriteRawBytes(AOutputStream, LMagic);
+    WriteRawBytes(AOutputStream, LEphPubBytes);
+    WriteRawBytes(AOutputStream, LNonce);
+    WriteRawBytes(AOutputStream, LSalt);
+    LCtLen := UInt32(AInputStream.Size - AInputStream.Position) + (GCM_TAG_BITS div 8);
+    WriteU32BE(AOutputStream, LCtLen);
+
+    LGcmCipher := CreateAesGcmCipher(True, LAesKey, LNonce, AAad);
+    StreamCipherProcess(LGcmCipher, AInputStream, AOutputStream);
+  finally
+    ZeroBuffer(LSharedSecret);
+    ZeroBuffer(LAesKey);
+  end;
+end;
+
+class procedure TX25519HybridEncryption.Decrypt(
+  const AReceiverPrivateKey: IAsymmetricKeyParameter;
+  const AInputStream, AOutputStream: TStream;
+  const AAad: TBytes);
+var
+  LAesKey, LNonce, LSalt, LSharedSecret, LEphPubBytes, LInfo: TBytes;
+  LEphPub: IX25519PublicKeyParameters;
+  LAgree: IRawAgreement;
+  LHkdf: IHkdfBytesGenerator;
+  LHkdfParams: IHkdfParameters;
+  LGcmCipher: IBufferedCipher;
+  LCtLen: UInt32;
+  LMagic: TBytes;
+begin
+  LMagic := TConverters.ConvertStringToBytes(X25519_MAGIC, TEncoding.ASCII);
+  ValidateMagic(AInputStream, LMagic);
+
+  LEphPubBytes := ReadRawBytes(AInputStream, X25519_PUBLIC_KEY_SIZE);
+  LNonce := ReadRawBytes(AInputStream, GCM_NONCE_SIZE);
+  LSalt := ReadRawBytes(AInputStream, HKDF_SALT_SIZE);
+  LCtLen := ReadU32BE(AInputStream);
+
+  LEphPub := TX25519PublicKeyParameters.Create(LEphPubBytes);
+
+  LAgree := TAgreementUtilities.GetRawAgreement('X25519');
+  LAgree.Init(AReceiverPrivateKey as ICipherParameters);
+  System.SetLength(LSharedSecret, LAgree.AgreementSize);
+  LAgree.CalculateAgreement(LEphPub as ICipherParameters,
+    LSharedSecret, 0);
+
+  LInfo := TConverters.ConvertStringToBytes(X25519_HKDF_INFO, TEncoding.UTF8);
   System.SetLength(LAesKey, AES_KEY_SIZE);
   try
     LHkdf := THkdfBytesGenerator.Create(

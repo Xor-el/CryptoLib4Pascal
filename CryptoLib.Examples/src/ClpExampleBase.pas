@@ -40,6 +40,8 @@ uses
   ClpIRsaParameters,
   ClpECParameters,
   ClpIECParameters,
+  ClpEd25519Parameters,
+  ClpIEd25519Parameters,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpISecureRandom,
   ClpECGenerators,
@@ -62,10 +64,11 @@ type
     function ExportToPem(const AValue: TValue): string;
     function ImportKeyPairFromPem(const APem: string;
       out AKeyPair: IAsymmetricCipherKeyPair): Boolean;
-    function ImportPublicKeyFromPem(const APem: string;
+    function ImportKeyFromPem(const APem: string;
       out AKey: IAsymmetricKeyParameter): Boolean;
     function GenerateRsaKeyPair(AKeySize: Int32 = 2048): IAsymmetricCipherKeyPair;
     function GenerateEcKeyPair(const ADomain: IECDomainParameters): IAsymmetricCipherKeyPair;
+    function GenerateEd25519KeyPair: IAsymmetricCipherKeyPair;
     procedure VerifyPemRoundtrip(const AKeyPair: IAsymmetricCipherKeyPair;
       const AKeyType: string);
     procedure LogDerivedKey(const ALabel: string;
@@ -118,7 +121,7 @@ begin
   end;
 end;
 
-function TExampleBase.ImportPublicKeyFromPem(const APem: string;
+function TExampleBase.ImportKeyFromPem(const APem: string;
   out AKey: IAsymmetricKeyParameter): Boolean;
 var
   LStream: TStringStream;
@@ -159,12 +162,22 @@ begin
   Result := LKpg.GenerateKeyPair();
 end;
 
+function TExampleBase.GenerateEd25519KeyPair: IAsymmetricCipherKeyPair;
+var
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+begin
+  LKpg := TGeneratorUtilities.GetKeyPairGenerator('Ed25519');
+  LKpg.Init(TEd25519KeyGenerationParameters.Create(
+    TSecureRandom.Create() as ISecureRandom) as IEd25519KeyGenerationParameters);
+  Result := LKpg.GenerateKeyPair();
+end;
+
 procedure TExampleBase.VerifyPemRoundtrip(const AKeyPair: IAsymmetricCipherKeyPair;
   const AKeyType: string);
 var
   LPrivPem, LPubPem: string;
   LReadPair: IAsymmetricCipherKeyPair;
-  LReadPub: IAsymmetricKeyParameter;
+  LReadPriv, LReadPub: IAsymmetricKeyParameter;
 begin
   LPrivPem := ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Private));
   Logger.LogInformation(AKeyType + ' Private Key PEM:' + sLineBreak + LPrivPem);
@@ -172,21 +185,31 @@ begin
   LPubPem := ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Public));
   Logger.LogInformation(AKeyType + ' Public Key PEM:' + sLineBreak + LPubPem);
 
-  if not ImportKeyPairFromPem(LPrivPem, LReadPair) then
+  if ImportKeyPairFromPem(LPrivPem, LReadPair) then
+  begin
+    if LReadPair.Private.Equals(AKeyPair.Private) then
+      Logger.LogInformation('Private key roundtrip: match.')
+    else
+      Logger.LogWarning('Private key roundtrip: mismatch.');
+    if LReadPair.Public.Equals(AKeyPair.Public) then
+      Logger.LogInformation('Public key (from private PEM) roundtrip: match.')
+    else
+      Logger.LogWarning('Public key (from private PEM) roundtrip: mismatch.');
+  end
+  else if ImportKeyFromPem(LPrivPem, LReadPriv) then
+  begin
+    if LReadPriv.Equals(AKeyPair.Private) then
+      Logger.LogInformation('Private key roundtrip: match.')
+    else
+      Logger.LogWarning('Private key roundtrip: mismatch.');
+  end
+  else
   begin
     Logger.LogError('Failed to read back ' + AKeyType + ' private key from PEM.');
     Exit;
   end;
-  if LReadPair.Private.Equals(AKeyPair.Private) then
-    Logger.LogInformation('Private key roundtrip: match.')
-  else
-    Logger.LogWarning('Private key roundtrip: mismatch.');
-  if LReadPair.Public.Equals(AKeyPair.Public) then
-    Logger.LogInformation('Public key (from private PEM) roundtrip: match.')
-  else
-    Logger.LogWarning('Public key (from private PEM) roundtrip: mismatch.');
 
-  if not ImportPublicKeyFromPem(LPubPem, LReadPub) then
+  if not ImportKeyFromPem(LPubPem, LReadPub) then
   begin
     Logger.LogError('Failed to read back ' + AKeyType + ' public key from PEM.');
     Exit;

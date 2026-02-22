@@ -19,6 +19,7 @@ uses
   ClpEcExample in '..\src\Examples\ClpEcExample.pas',
   ClpCertificateExample in '..\src\Examples\ClpCertificateExample.pas',
   ClpCipherExample in '..\src\Examples\ClpCipherExample.pas',
+  ClpEdExample in '..\src\Examples\ClpEdExample.pas',
   ClpHybridEncryption in '..\src\Examples\ClpHybridEncryption.pas';
 
 begin

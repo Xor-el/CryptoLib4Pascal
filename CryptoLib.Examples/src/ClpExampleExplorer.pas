@@ -38,6 +38,7 @@ uses
   ClpExampleBase,
   ClpRsaExample,
   ClpEcExample,
+  ClpEdExample,
   ClpDigestExample,
   ClpCipherExample,
   ClpCertificateExample;
@@ -46,10 +47,11 @@ type
   TExampleBaseClass = class of TExampleBase;
 
 const
-  KnownExamples: array[0..4] of TExampleBaseClass = (
+  KnownExamples: array[0..5] of TExampleBaseClass = (
     TDigestExample,
     TCipherExample,
     TEcExample,
+    TEdExample,
     TRsaExample,
     TCertificateExample
   );
