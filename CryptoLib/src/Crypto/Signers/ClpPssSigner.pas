@@ -23,7 +23,7 @@ interface
 
 uses
   SysUtils,
-  HlpIHashInfo,
+  ClpIXof,
   ClpICipherParameters,
   ClpIAsymmetricBlockCipher,
   ClpIDigest,
@@ -479,16 +479,14 @@ function TPssSigner.MaskGeneratorFunction(const AZ: TCryptoLibByteArray;
   AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
 var
   LMask: TCryptoLibByteArray;
-  LXof: IXOF;
+  LXof: IXof;
 begin
-  // Check if mgfDigest wraps an XOF hash
-  if Supports(FMgfDigest.GetUnderlyingIHash, IXOF, LXof) then
+  // Check if FMgfDigest wraps an Xof hash
+  if Supports(FMgfDigest, IXof, LXof) then
   begin
     SetLength(LMask, ALength);
-    LXof.XOFSizeInBits := ALength * 8;
-    LXof.Initialize;
-    LXof.TransformBytes(AZ, AZOff, AZLen);
-    LMask := LXof.TransformFinal.GetBytes();
+    LXof.BlockUpdate(AZ, AZOff, AZLen);
+    LXof.OutputFinal(LMask, 0, System.Length(LMask));
     Result := LMask;
     Exit;
   end;

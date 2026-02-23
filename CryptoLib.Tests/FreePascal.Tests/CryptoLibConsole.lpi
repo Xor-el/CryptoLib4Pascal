@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="118">
+    <Units Count="122">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -512,6 +512,22 @@
         <Filename Value="..\src\Pkcs\PkcsEncryptedPrivateKeyInfoTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit117>
+      <Unit118>
+        <Filename Value="..\src\Math\EC\Rfc7748\X448Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit118>
+      <Unit119>
+        <Filename Value="..\src\Math\EC\Rfc8032\Ed448Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit119>
+      <Unit120>
+        <Filename Value="..\src\Others\Ed448HigherLevelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit120>
+      <Unit121>
+        <Filename Value="..\src\Others\X448HigherLevelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit121>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

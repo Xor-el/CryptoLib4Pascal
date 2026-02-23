@@ -629,6 +629,26 @@ contains
   ClpIECDHKekGenerator in '..\..\Interfaces\Crypto\Generators\ClpIECDHKekGenerator.pas',
   ClpIECDHCWithKdfBasicAgreement in '..\..\Interfaces\Crypto\Agreements\ClpIECDHCWithKdfBasicAgreement.pas',
   ClpIECDHWithKdfBasicAgreement in '..\..\Interfaces\Crypto\Agreements\ClpIECDHWithKdfBasicAgreement.pas',
-  ClpIDHKdfParameters in '..\..\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas';
+  ClpIDHKdfParameters in '..\..\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas',
+  ClpXof in '..\..\Crypto\Digests\ClpXof.pas',
+  ClpIXof in '..\..\Interfaces\Crypto\Digests\ClpIXof.pas',
+  ClpX448Agreement in '..\..\Crypto\Agreements\ClpX448Agreement.pas',
+  ClpEd448Generators in '..\..\Crypto\Generators\ClpEd448Generators.pas',
+  ClpX448Generators in '..\..\Crypto\Generators\ClpX448Generators.pas',
+  ClpEd448Parameters in '..\..\Crypto\Parameters\ClpEd448Parameters.pas',
+  ClpX448Parameters in '..\..\Crypto\Parameters\ClpX448Parameters.pas',
+  ClpEd448PhSigner in '..\..\Crypto\Signers\ClpEd448PhSigner.pas',
+  ClpEd448Signer in '..\..\Crypto\Signers\ClpEd448Signer.pas',
+  ClpIEd448PhSigner in '..\..\Interfaces\Crypto\Signers\ClpIEd448PhSigner.pas',
+  ClpIEd448Signer in '..\..\Interfaces\Crypto\Signers\ClpIEd448Signer.pas',
+  ClpIX448Agreement in '..\..\Interfaces\Crypto\Agreements\ClpIX448Agreement.pas',
+  ClpIEd448Generators in '..\..\Interfaces\Crypto\Generators\ClpIEd448Generators.pas',
+  ClpIX448Generators in '..\..\Interfaces\Crypto\Generators\ClpIX448Generators.pas',
+  ClpIEd448Parameters in '..\..\Interfaces\Crypto\Parameters\ClpIEd448Parameters.pas',
+  ClpIX448Parameters in '..\..\Interfaces\Crypto\Parameters\ClpIX448Parameters.pas',
+  ClpX448 in '..\..\Math\EC\Rfc7748\ClpX448.pas',
+  ClpX448Field in '..\..\Math\EC\Rfc7748\ClpX448Field.pas',
+  ClpEd448 in '..\..\Math\EC\Rfc8032\ClpEd448.pas',
+  ClpScalar448 in '..\..\Math\EC\Rfc8032\ClpScalar448.pas';
 
 end.

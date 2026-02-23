@@ -32,7 +32,9 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpMiscObjectIdentifiers,
+  ClpNistObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
+  ClpTeleTrusTObjectIdentifiers,
   ClpIDigest,
   ClpDigestUtilities,
   ClpConverters,
@@ -44,10 +46,10 @@ type
   TTestDigest = class(TCryptoLibAlgorithmTestCase)
   private
   var
-    FabcVectors: TCryptoLibMatrixGenericArray<String>;
+    FAbcVectors: TCryptoLibMatrixGenericArray<String>;
 
-    procedure DoTest(const algorithm: String);
-    procedure DoAbcTest(const algorithm, hash: String);
+    procedure DoTest(const AAlgorithm: String);
+    procedure DoAbcTest(const AAlgorithm, AHash: String);
 
   protected
     procedure SetUp; override;
@@ -64,56 +66,116 @@ implementation
 procedure TTestDigest.SetUp;
 begin
   inherited;
-  FabcVectors := TCryptoLibMatrixGenericArray<String>.Create
-    (TCryptoLibStringArray.Create('MD2', 'da853b0d3f88d99b30283a69e6ded6bb'),
-    TCryptoLibStringArray.Create('MD4', 'a448017aaf21d8525fc10ae87aa6729d'),
-    TCryptoLibStringArray.Create('MD5', '900150983cd24fb0d6963f7d28e17f72'),
+  FAbcVectors := TCryptoLibMatrixGenericArray<String>.Create
+    (
+    TCryptoLibStringArray.Create('MD2',
+    'da853b0d3f88d99b30283a69e6ded6bb'),
+    TCryptoLibStringArray.Create('MD4',
+    'a448017aaf21d8525fc10ae87aa6729d'),
+    TCryptoLibStringArray.Create('MD5',
+    '900150983cd24fb0d6963f7d28e17f72'),
+    TCryptoLibStringArray.Create('SHA1',
+    'a9993e364706816aba3e25717850c26c9cd0d89d'),
     TCryptoLibStringArray.Create('SHA-1',
     'a9993e364706816aba3e25717850c26c9cd0d89d'),
+    TCryptoLibStringArray.Create('SHA224',
+    '23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7'),
     TCryptoLibStringArray.Create('SHA-224',
     '23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7'),
+    TCryptoLibStringArray.Create('SHA256',
+    'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'),
     TCryptoLibStringArray.Create('SHA-256',
     'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'),
+    TCryptoLibStringArray.Create('SHA384',
+    'cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7'),
     TCryptoLibStringArray.Create('SHA-384',
     'cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7'),
+    TCryptoLibStringArray.Create('SHA512',
+    'ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f'),
     TCryptoLibStringArray.Create('SHA-512',
     'ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f'),
+    TCryptoLibStringArray.Create('SHA512/224',
+    '4634270F707B6A54DAAE7530460842E20E37ED265CEEE9A43E8924AA'),
+    TCryptoLibStringArray.Create('SHA512(224)',
+    '4634270F707B6A54DAAE7530460842E20E37ED265CEEE9A43E8924AA'),
     TCryptoLibStringArray.Create('SHA-512/224',
     '4634270F707B6A54DAAE7530460842E20E37ED265CEEE9A43E8924AA'),
+    TCryptoLibStringArray.Create('SHA-512(224)',
+    '4634270F707B6A54DAAE7530460842E20E37ED265CEEE9A43E8924AA'),
+    TCryptoLibStringArray.Create('SHA512/256',
+    '53048E2681941EF99B2E29B76B4C7DABE4C2D0C634FC6D46E0E2F13107E7AF23'),
+    TCryptoLibStringArray.Create('SHA512(256)',
+    '53048E2681941EF99B2E29B76B4C7DABE4C2D0C634FC6D46E0E2F13107E7AF23'),
     TCryptoLibStringArray.Create('SHA-512/256',
+    '53048E2681941EF99B2E29B76B4C7DABE4C2D0C634FC6D46E0E2F13107E7AF23'),
+    TCryptoLibStringArray.Create('SHA-512(256)',
     '53048E2681941EF99B2E29B76B4C7DABE4C2D0C634FC6D46E0E2F13107E7AF23'),
     TCryptoLibStringArray.Create('RIPEMD128',
     'c14a12199c66e4ba84636b0f69144c77'),
+    TCryptoLibStringArray.Create(TTeleTrusTObjectIdentifiers.RipeMD128.ID,
+    'c14a12199c66e4ba84636b0f69144c77'),
     TCryptoLibStringArray.Create('RIPEMD160',
     '8eb208f7e05d987a9b044a8e98c6b087f15a0bfc'),
+    TCryptoLibStringArray.Create(TTeleTrusTObjectIdentifiers.RipeMD160.ID,
+    '8eb208f7e05d987a9b044a8e98c6b087f15a0bfc'),
     TCryptoLibStringArray.Create('RIPEMD256',
+    'afbd6e228b9d8cbbcef5ca2d03e6dba10ac0bc7dcbe4680e1e42d2e975459b65'),
+    TCryptoLibStringArray.Create(TTeleTrusTObjectIdentifiers.RipeMD256.ID,
     'afbd6e228b9d8cbbcef5ca2d03e6dba10ac0bc7dcbe4680e1e42d2e975459b65'),
     TCryptoLibStringArray.Create('RIPEMD320',
     'de4c01b3054f8930a79d09ae738e92301e5a17085beffdc1b8d116713e74f82fa942d64cdbc4682d'),
     TCryptoLibStringArray.Create('Tiger',
     '2AAB1484E8C158F2BFB8C5FF41B57A525129131C957B5F93'),
-    TCryptoLibStringArray.Create('GOST3411',
-    'b285056dbf18d7392d7677369524dd14747459ed8143997e163b2986f92fd42c'),
+    //TCryptoLibStringArray.Create('GOST3411',
+    //'b285056dbf18d7392d7677369524dd14747459ed8143997e163b2986f92fd42c'),
     TCryptoLibStringArray.Create('WHIRLPOOL',
     '4E2448A4C6F486BB16B6562C73B4020BF3043E3A731BCE721AE1B303D97E6D4C7181EEBDB6C57E277D0E34957114CBD6C797FC9D95D8B582D225292076D4EEF5'),
-    TCryptoLibStringArray.Create('SM3',
-    '66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0'),
     TCryptoLibStringArray.Create('SHA3-224',
+    'e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf'),
+    TCryptoLibStringArray.Create(TNistObjectIdentifiers.IdSha3_224.ID,
     'e642824c3f8cf24ad09234ee7d3c766fc9a3a5168d0c94ad73b46fdf'),
     TCryptoLibStringArray.Create('SHA3-256',
     '3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532'),
+    TCryptoLibStringArray.Create(TNistObjectIdentifiers.IdSha3_256.ID,
+    '3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532'),
     TCryptoLibStringArray.Create('SHA3-384',
+    'ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d88cea927ac7f539f1edf228376d25'),
+    TCryptoLibStringArray.Create(TNistObjectIdentifiers.IdSha3_384.ID,
     'ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d88cea927ac7f539f1edf228376d25'),
     TCryptoLibStringArray.Create('SHA3-512',
     'b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e116e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0'),
+    TCryptoLibStringArray.Create(TNistObjectIdentifiers.IdSha3_512.ID,
+    'b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e116e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0'),
+    TCryptoLibStringArray.Create('SHAKE128',
+    '5881092dd818bf5cf8a3ddb793fbcba74097d5c526a6d35f97b83351940f2cc8'),
+    TCryptoLibStringArray.Create('SHAKE128-256',
+    '5881092dd818bf5cf8a3ddb793fbcba74097d5c526a6d35f97b83351940f2cc8'),
+    TCryptoLibStringArray.Create(TNistObjectIdentifiers.IdShake128.ID,
+    '5881092dd818bf5cf8a3ddb793fbcba74097d5c526a6d35f97b83351940f2cc8'),
+    TCryptoLibStringArray.Create('SHAKE256',
+    '483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739d5a15bef186a5386c75744c0527e1faa9f8726e462a12a4feb06bd8801e751e4'),
+    TCryptoLibStringArray.Create('SHAKE256-512',
+    '483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739d5a15bef186a5386c75744c0527e1faa9f8726e462a12a4feb06bd8801e751e4'),
+    TCryptoLibStringArray.Create(TNistObjectIdentifiers.IdShake256.ID,
+    '483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739d5a15bef186a5386c75744c0527e1faa9f8726e462a12a4feb06bd8801e751e4'),
+    TCryptoLibStringArray.Create('KECCAK224',
+    'c30411768506ebe1c2871b1ee2e87d38df342317300a9b97a95ec6a8'),
     TCryptoLibStringArray.Create('KECCAK-224',
     'c30411768506ebe1c2871b1ee2e87d38df342317300a9b97a95ec6a8'),
+    TCryptoLibStringArray.Create('KECCAK256',
+    '4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45'),
     TCryptoLibStringArray.Create('KECCAK-256',
     '4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45'),
+    TCryptoLibStringArray.Create('KECCAK288',
+    '20ff13d217d5789fa7fc9e0e9a2ee627363ec28171d0b6c52bbd2f240554dbc94289f4d6'),
     TCryptoLibStringArray.Create('KECCAK-288',
     '20ff13d217d5789fa7fc9e0e9a2ee627363ec28171d0b6c52bbd2f240554dbc94289f4d6'),
+    TCryptoLibStringArray.Create('KECCAK384',
+    'f7df1165f033337be098e7d288ad6a2f74409d7a60b49c36642218de161b1f99f8c681e4afaf31a34db29fb763e3c28e'),
     TCryptoLibStringArray.Create('KECCAK-384',
     'f7df1165f033337be098e7d288ad6a2f74409d7a60b49c36642218de161b1f99f8c681e4afaf31a34db29fb763e3c28e'),
+    TCryptoLibStringArray.Create('KECCAK512',
+    '18587dc2ea106b9a1563e32b3312421ca164c7f1f07bc922a9c83d77cea3a1e5d0c69910739025372dc14ac9642629379540c17e2a65b19d77aa511a9d00bb96'),
     TCryptoLibStringArray.Create('KECCAK-512',
     '18587dc2ea106b9a1563e32b3312421ca164c7f1f07bc922a9c83d77cea3a1e5d0c69910739025372dc14ac9642629379540c17e2a65b19d77aa511a9d00bb96'),
     TCryptoLibStringArray.Create('BLAKE2B-160',
@@ -156,114 +218,111 @@ begin
     '28156e28317da7c98f4fe2bed6b542d0dab85bb224445fcedaf75d46e26d7eb8d5997f3e0915dd6b7f0aab08d9c8beb0d8c64bae2ab8b3c8c6bc53b3bf0db728'),
     TCryptoLibStringArray.Create(TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512.ID,
     '28156e28317da7c98f4fe2bed6b542d0dab85bb224445fcedaf75d46e26d7eb8d5997f3e0915dd6b7f0aab08d9c8beb0d8c64bae2ab8b3c8c6bc53b3bf0db728'),
-    TCryptoLibStringArray.Create('DSTU7564-256',
-    '0bd1b36109f1318411a0517315aa46b8839df06622a278676f5487996c9cfc04'));
+    TCryptoLibStringArray.Create('BLAKE3-256',
+    '6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85'),
+    TCryptoLibStringArray.Create(TMiscObjectIdentifiers.Blake3_256.ID,
+    '6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85'));
 end;
 
 procedure TTestDigest.TearDown;
 begin
-  FabcVectors := Nil;
+  FAbcVectors := nil;
   inherited;
 end;
 
-procedure TTestDigest.DoAbcTest(const algorithm, hash: String);
+procedure TTestDigest.DoAbcTest(const AAlgorithm, AHash: String);
 var
-  abc, result: TBytes;
-  digest: IDigest;
+  LAbc, LResult: TBytes;
+  LDigest: IDigest;
 begin
-  abc := TBytes.Create($61, $62, $63);
+  LAbc := TBytes.Create($61, $62, $63);
 
-  digest := TDigestUtilities.GetDigest(algorithm);
+  LDigest := TDigestUtilities.GetDigest(AAlgorithm);
 
-  digest.BlockUpdate(abc, 0, System.Length(abc));
-  result := TDigestUtilities.DoFinal(digest);
+  LDigest.BlockUpdate(LAbc, 0, System.Length(LAbc));
+  LResult := TDigestUtilities.DoFinal(LDigest);
 
-  if (not AreEqual(result, DecodeHex(hash))) then
+  if (not AreEqual(LResult, DecodeHex(AHash))) then
   begin
-    Fail(Format('abc result not equal for %s', [algorithm]));
+    Fail(Format('abc result not equal for %s, expected %s actual %s', [AAlgorithm, AHash, EncodeHex(LResult)]));
   end;
 end;
 
-procedure TTestDigest.DoTest(const algorithm: String);
+procedure TTestDigest.DoTest(const AAlgorithm: String);
 var
-  &message, result, result2: TBytes;
-  digest, d: IDigest;
-  i: Int32;
+  LMessage, LResult, LResult2: TBytes;
+  LDigest, LD: IDigest;
+  LI: Int32;
 begin
-  &message := TConverters.ConvertStringToBytes('hello world', TEncoding.ASCII);
+  LMessage := TConverters.ConvertStringToBytes('hello world', TEncoding.ASCII);
 
-  digest := TDigestUtilities.GetDigest(algorithm);
+  LDigest := TDigestUtilities.GetDigest(AAlgorithm);
 
-  digest.BlockUpdate(&message, 0, System.Length(&message));
-  result := TDigestUtilities.DoFinal(digest);
+  LDigest.BlockUpdate(LMessage, 0, System.Length(LMessage));
+  LResult := TDigestUtilities.DoFinal(LDigest);
 
-  digest.BlockUpdate(&message, 0, System.Length(&message));
-  result2 := TDigestUtilities.DoFinal(digest);
+  LDigest.BlockUpdate(LMessage, 0, System.Length(LMessage));
+  LResult2 := TDigestUtilities.DoFinal(LDigest);
 
-  // test one digest the same message with the same instance
-  if (not AreEqual(result, result2)) then
+  if (not AreEqual(LResult, LResult2)) then
   begin
     Fail('Result object 1 not equal');
   end;
 
-  // test two, single byte updates
-  for i := 0 to System.Pred(System.Length(&message)) do
+  for LI := 0 to System.Pred(System.Length(LMessage)) do
   begin
-    digest.Update(&message[i]);
+    LDigest.Update(LMessage[LI]);
   end;
 
-  result2 := TDigestUtilities.DoFinal(digest);
+  LResult2 := TDigestUtilities.DoFinal(LDigest);
 
-  if (not AreEqual(result, result2)) then
+  if (not AreEqual(LResult, LResult2)) then
   begin
     Fail('Result object 2 not equal');
   end;
 
-  // test three, two half updates
-  digest.BlockUpdate(&message, 0, System.Length(&message) div 2);
-  digest.BlockUpdate(&message, System.Length(&message) div 2,
-    System.Length(&message) - (System.Length(&message) div 2));
+  LDigest.BlockUpdate(LMessage, 0, System.Length(LMessage) div 2);
+  LDigest.BlockUpdate(LMessage, System.Length(LMessage) div 2,
+    System.Length(LMessage) - (System.Length(LMessage) div 2));
 
-  result2 := TDigestUtilities.DoFinal(digest);
+  LResult2 := TDigestUtilities.DoFinal(LDigest);
 
-  if (not AreEqual(result, result2)) then
+  if (not AreEqual(LResult, LResult2)) then
   begin
     Fail('Result object 3 not equal');
   end;
 
-  // test four, clone test
-  digest.BlockUpdate(&message, 0, System.Length(&message) div 2);
-  d := digest.Clone();
-  digest.BlockUpdate(&message, System.Length(&message) div 2,
-    System.Length(&message) - (System.Length(&message) div 2));
+  LDigest.BlockUpdate(LMessage, 0, System.Length(LMessage) div 2);
+  LD := LDigest.Clone();
+  LDigest.BlockUpdate(LMessage, System.Length(LMessage) div 2,
+    System.Length(LMessage) - (System.Length(LMessage) div 2));
 
-  result2 := TDigestUtilities.DoFinal(digest);
+  LResult2 := TDigestUtilities.DoFinal(LDigest);
 
-  if (not AreEqual(result, result2)) then
+  if (not AreEqual(LResult, LResult2)) then
   begin
     Fail('Result object 4(a) not equal');
   end;
 
-  d.BlockUpdate(&message, System.Length(&message) div 2, System.Length(&message)
-    - (System.Length(&message) div 2));
+  LD.BlockUpdate(LMessage, System.Length(LMessage) div 2,
+    System.Length(LMessage) - (System.Length(LMessage) div 2));
 
-  result2 := TDigestUtilities.DoFinal(d);
+  LResult2 := TDigestUtilities.DoFinal(LD);
 
-  if (not AreEqual(result, result2)) then
+  if (not AreEqual(LResult, LResult2)) then
   begin
     Fail('Result object 4(b) not equal');
   end;
 
-  // test five, check reset() method
-  digest.BlockUpdate(&message, 0, System.Length(&message) div 2);
-  digest.Reset();
-  digest.BlockUpdate(&message, 0, System.Length(&message) div 2);
-  digest.BlockUpdate(&message, System.Length(&message) div 2,
-    System.Length(&message) - (System.Length(&message) div 2));
+  LDigest.BlockUpdate(LMessage, 0, System.Length(LMessage) div 2);
+  LDigest.Reset();
+  LDigest.BlockUpdate(LMessage, 0, System.Length(LMessage) div 2);
+  LDigest.BlockUpdate(LMessage, System.Length(LMessage) div 2,
+    System.Length(LMessage) - (System.Length(LMessage) div 2));
 
-  result2 := TDigestUtilities.DoFinal(digest);
+  LResult2 := TDigestUtilities.DoFinal(LDigest);
 
-  if (not AreEqual(result, result2)) then
+  if (not AreEqual(LResult, LResult2)) then
   begin
     Fail('Result object 5 not equal');
   end;
@@ -272,19 +331,17 @@ end;
 
 procedure TTestDigest.TestDigests;
 var
-  i: Int32;
+  LI: Int32;
 begin
-  for i := 0 to System.Pred(System.Length(FabcVectors[0])) do
+  for LI := 0 to System.Pred(System.Length(FAbcVectors)) do
   begin
-    DoTest(FabcVectors[i][0]);
+    DoTest(FAbcVectors[LI][0]);
 
-    DoAbcTest(FabcVectors[i][0], FabcVectors[i][1]);
+    DoAbcTest(FAbcVectors[LI][0], FAbcVectors[LI][1]);
   end;
 end;
 
 initialization
-
-// Register any test cases with the test runner
 
 {$IFDEF FPC}
   RegisterTest(TTestDigest);

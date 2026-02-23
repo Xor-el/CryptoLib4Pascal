@@ -609,7 +609,27 @@ uses
   ClpIECDHKekGenerator in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIECDHKekGenerator.pas',
   ClpIECDHCWithKdfBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCWithKdfBasicAgreement.pas',
   ClpIECDHWithKdfBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHWithKdfBasicAgreement.pas',
-  ClpIDHKdfParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas';
+  ClpIDHKdfParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas',
+  ClpXof in '..\..\CryptoLib\src\Crypto\Digests\ClpXof.pas',
+  ClpIXof in '..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIXof.pas',
+  ClpX448Agreement in '..\..\CryptoLib\src\Crypto\Agreements\ClpX448Agreement.pas',
+  ClpEd448Generators in '..\..\CryptoLib\src\Crypto\Generators\ClpEd448Generators.pas',
+  ClpX448Generators in '..\..\CryptoLib\src\Crypto\Generators\ClpX448Generators.pas',
+  ClpEd448Parameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpEd448Parameters.pas',
+  ClpX448Parameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpX448Parameters.pas',
+  ClpEd448PhSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd448PhSigner.pas',
+  ClpEd448Signer in '..\..\CryptoLib\src\Crypto\Signers\ClpEd448Signer.pas',
+  ClpIEd448PhSigner in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd448PhSigner.pas',
+  ClpIEd448Signer in '..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd448Signer.pas',
+  ClpIX448Agreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIX448Agreement.pas',
+  ClpIEd448Generators in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIEd448Generators.pas',
+  ClpIX448Generators in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIX448Generators.pas',
+  ClpIEd448Parameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIEd448Parameters.pas',
+  ClpIX448Parameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIX448Parameters.pas',
+  ClpX448 in '..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448.pas',
+  ClpX448Field in '..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448Field.pas',
+  ClpEd448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpEd448.pas',
+  ClpScalar448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar448.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

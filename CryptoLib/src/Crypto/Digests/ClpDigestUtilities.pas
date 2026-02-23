@@ -35,6 +35,7 @@ uses
   ClpCryptoLibTypes,
   ClpCryptoProObjectIdentifiers,
   ClpDigest,
+  ClpXof,
   ClpEnumUtilities,
   ClpIDigest,
   ClpIAsn1Objects,
@@ -267,9 +268,9 @@ begin
     TDigestAlgorithm.SHA3_512:
       Result := TDigest.Create(THashFactory.TCrypto.CreateSHA3_512());
     TDigestAlgorithm.SHAKE128_256:
-      Result := TDigest.Create(THashFactory.TXOF.CreateShake_128(256));
+      Result := TXof.Create(THashFactory.TXOF.CreateShake_128(256));
     TDigestAlgorithm.SHAKE256_512:
-      Result := TDigest.Create(THashFactory.TXOF.CreateShake_256(512));
+      Result := TXof.Create(THashFactory.TXOF.CreateShake_256(512));
     TDigestAlgorithm.TIGER:
       Result := TDigest.Create(THashFactory.TCrypto.CreateTiger_3_192);
     TDigestAlgorithm.WHIRLPOOL:

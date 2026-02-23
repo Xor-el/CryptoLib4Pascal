@@ -194,7 +194,12 @@ uses
   ClpDHKekGenerator, ClpECDHKekGenerator, ClpConcatenationKdfGenerator, 
   ClpDHKdfParameters, ClpIDHKekGenerator, ClpIConcatenationKdfGenerator, 
   ClpIECDHKekGenerator, ClpIECDHCWithKdfBasicAgreement, 
-  ClpIECDHWithKdfBasicAgreement, ClpIDHKdfParameters;
+  ClpIECDHWithKdfBasicAgreement, ClpIDHKdfParameters, ClpXof, ClpIXof, 
+  ClpX448Agreement, ClpX448Generators, ClpEd448Generators, ClpEd448Parameters, 
+  ClpX448Parameters, ClpEd448PhSigner, ClpEd448Signer, ClpX448, ClpX448Field, 
+  ClpEd448, ClpScalar448, ClpIX448Agreement, ClpIEd448Parameters, 
+  ClpIX448Parameters, ClpIEd448PhSigner, ClpIEd448Signer, ClpIEd448Generators, 
+  ClpIX448Generators;
 
 implementation
 

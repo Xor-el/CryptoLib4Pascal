@@ -376,8 +376,7 @@ begin
   LN := (FL - 1) div 160;
   System.SetLength(LW, FL div 8);
 
-  if (not {$IFDEF FPC} (Supports(FDigest.GetUnderlyingIHash, TSHA1))
-{$ELSE} (FDigest.GetUnderlyingIHash is TSHA1) {$ENDIF FPC}) then
+  if (not (FDigest.UnderlyingHasher is TSHA1)) then
   begin
     raise EInvalidParameterCryptoLibException.CreateRes(@SUnsupportedDigest);
   end;

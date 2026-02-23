@@ -31,6 +31,7 @@ uses
   ClpDsaGenerators,
   ClpECGenerators,
   ClpEd25519Generators,
+  ClpEd448Generators,
   ClpEdECObjectIdentifiers,
   ClpDHGenerators,
   ClpIAsn1Objects,
@@ -40,8 +41,10 @@ uses
   ClpIDHGenerators,
   ClpIECGenerators,
   ClpIEd25519Generators,
+  ClpIEd448Generators,
   ClpIRsaGenerators,
   ClpIX25519Generators,
+  ClpIX448Generators,
   ClpIanaObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
@@ -50,6 +53,7 @@ uses
   ClpSecObjectIdentifiers,
   ClpStringUtilities,
   ClpX25519Generators,
+  ClpX448Generators,
   ClpX9ObjectIdentifiers;
 
 resourcestring
@@ -259,8 +263,10 @@ begin
   TEdECObjectIdentifiers.Boot;
 
   AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph', TEdECObjectIdentifiers.IdEd25519.ID]);
+  AddKpgAlgorithm('Ed448', ['Ed448ph', TEdECObjectIdentifiers.IdEd448.ID]);
   AddKpgAlgorithm('GOST3410', ['GOST-3410', 'GOST-3410-94']);
   AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.IdX25519.ID]);
+  AddKpgAlgorithm('X448', [TEdECObjectIdentifiers.IdX448.ID]);
 
   AddDefaultKeySizeEntries(128, [
     'AES128',
@@ -394,6 +400,16 @@ begin
   if LCanonicalName = 'X25519' then
   begin
     Result := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'Ed448' then
+  begin
+    Result := TEd448KeyPairGenerator.Create() as IEd448KeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'X448' then
+  begin
+    Result := TX448KeyPairGenerator.Create() as IX448KeyPairGenerator;
     Exit;
   end;
 

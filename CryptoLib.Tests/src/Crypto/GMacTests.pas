@@ -33,16 +33,13 @@ uses
 {$ENDIF FPC}
   ClpIMac,
   ClpGMac,
-  ClpIGMac,
   ClpGcmBlockCipher,
   ClpIGcmBlockCipher,
   ClpAesEngine,
-  ClpIAesEngine,
   ClpIBlockCipher,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
-  ClpIParametersWithIV,
   ClpICipherParameters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

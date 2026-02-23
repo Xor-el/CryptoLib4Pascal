@@ -39,7 +39,9 @@ uses
   ClpIPkcsDHAsn1Objects,
   ClpPkcsDHAsn1Objects,
   ClpEd25519Parameters,
+  ClpEd448Parameters,
   ClpX25519Parameters,
+  ClpX448Parameters,
   ClpPkcsObjectIdentifiers,
   ClpX509ObjectIdentifiers,
   ClpX9ObjectIdentifiers,
@@ -244,7 +246,25 @@ begin
     Exit;
   end;
 
-  // TODO: Add support for other key types when implemented.
+  // Ed448 keys
+  if LAlgOid.Equals(TEdECObjectIdentifiers.IdEd448) then
+  begin
+    LRawKey := TAsn1OctetString.GetInstance(AKeyInfo.ParsePrivateKey()).GetOctets();
+    Result := TEd448PrivateKeyParameters.Create(LRawKey);
+    Exit;
+  end;
+
+  // X448 keys
+  if LAlgOid.Equals(TEdECObjectIdentifiers.IdX448) then
+  begin
+    if TX448PrivateKeyParameters.KeySize = AKeyInfo.PrivateKeyLength then
+      LRawKey := AKeyInfo.PrivateKey.GetOctets()
+    else
+      LRawKey := TAsn1OctetString.GetInstance(AKeyInfo.ParsePrivateKey()).GetOctets();
+    Result := TX448PrivateKeyParameters.Create(LRawKey);
+    Exit;
+  end;
+
   raise ENotSupportedCryptoLibException.CreateFmt('Key type with OID %s not yet supported', [LAlgOid.Id]);
 end;
 

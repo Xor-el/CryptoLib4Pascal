@@ -36,38 +36,41 @@ type
   /// <summary>
   /// Hash Wrapper For the Proper Implementation in HashLib4Pascal
   /// </summary>
-  TDigest = class sealed(TInterfacedObject, IDigest)
+  TDigest = class(TInterfacedObject, IDigest)
 
   strict private
-  var
-    FHash: IHash;
 
     class var FNameMap: TDictionary<string, string>;
 
     class function NormalizeHashLibName(const AName: string): string; static;
 
-    function GetAlgorithmName: string; inline;
+    constructor Create(); overload;
 
-  public
-    class constructor Create;
-    class destructor Destroy;
+  strict protected
+  var
+    FHash: IHash;
 
-    constructor Create(const AHash: IHash; ADoInitialize: Boolean = True);
-
+    function GetAlgorithmName: string; virtual;
     /// <summary>
     /// Gets the Underlying <b>IHash</b> Instance
     /// </summary>
-    function GetUnderlyingIHash: IHash; inline;
+    function GetUnderlyingHasher: IHash; virtual;
+
+  public
+    class constructor Create; overload;
+    class destructor Destroy;
+
+    constructor Create(const AHash: IHash); overload;
 
     /// <summary>
     /// the size, in bytes, of the digest produced by this message digest.
     /// </summary>
-    function GetDigestSize(): Int32; inline;
+    function GetDigestSize(): Int32; virtual;
 
     /// <summary>
     /// the size, in bytes, of the internal buffer used by this digest.
     /// </summary>
-    function GetByteLength(): Int32; inline;
+    function GetByteLength(): Int32; virtual;
 
     /// <summary>
     /// update the message digest with a single byte.
@@ -88,7 +91,7 @@ type
     /// </param>
     procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 
-    function DoFinal: TCryptoLibByteArray; overload;
+    function DoFinal: TCryptoLibByteArray; overload; virtual;
 
     /// <summary>
     /// Close the digest, producing the final digest value. The doFinal call
@@ -101,22 +104,24 @@ type
     /// the offset into the out array the digest is to start at.
     /// </param>
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
-      : Int32; overload;
+      : Int32; overload; virtual;
 
     /// <summary>
     /// Resets the digest back to it's initial state.
     /// </summary>
-    procedure Reset();
+    procedure Reset(); virtual;
 
     /// <summary>
     /// Clone the digest instance
     /// </summary>
-    function Clone(): IDigest;
+    function Clone(): IDigest; virtual;
 
     /// <summary>
     /// the algorithm name
     /// </summary>
     property AlgorithmName: String read GetAlgorithmName;
+
+    property UnderlyingHasher: IHash read GetUnderlyingHasher;
 
   end;
 
@@ -230,7 +235,7 @@ begin
   Result := FHash.HashSize;
 end;
 
-function TDigest.GetUnderlyingIHash: IHash;
+function TDigest.GetUnderlyingHasher: IHash;
 begin
   Result := FHash;
 end;
@@ -245,33 +250,23 @@ begin
   FHash.TransformBytes(AInput, AInOff, ALen);
 end;
 
-constructor TDigest.Create(const AHash: IHash; ADoInitialize: Boolean);
+constructor TDigest.Create;
+begin
+  inherited Create;
+end;
+
+constructor TDigest.Create(const AHash: IHash);
 begin
   inherited Create();
   FHash := AHash;
-
-  if ADoInitialize then
-  begin
-    FHash.Initialize;
-  end;
+  FHash.Initialize;
 end;
 
 function TDigest.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
   LBuf: TCryptoLibByteArray;
-  LLimit, LXOFSizeInBits: Int32;
-  LXOF: IXOF;
 begin
-  if Supports(FHash, IXOF, LXOF) then
-  begin
-    LXOFSizeInBits := (System.Length(AOutput) - AOutOff) * 8;
-    LXOF.XOFSizeInBits := LXOFSizeInBits;
-    LLimit := LXOFSizeInBits shr 3;
-  end
-  else
-    LLimit := GetDigestSize;
-
-  if (System.Length(AOutput) - AOutOff) < LLimit then
+  if (System.Length(AOutput) - AOutOff) < GetDigestSize() then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
 
   LBuf := FHash.TransformFinal.GetBytes();
@@ -281,13 +276,8 @@ end;
 
 function TDigest.DoFinal: TCryptoLibByteArray;
 begin
-  if Supports(FHash, IXOF) then
-    Result := FHash.TransformFinal.GetBytes()
-  else
-  begin
-    System.SetLength(Result, GetDigestSize);
-    DoFinal(Result, 0);
-  end;
+  System.SetLength(Result, GetDigestSize);
+  DoFinal(Result, 0);
 end;
 
 procedure TDigest.Update(AInput: Byte);
@@ -296,8 +286,12 @@ begin
 end;
 
 function TDigest.Clone(): IDigest;
+var
+ LDigest: TDigest;
 begin
-  Result := TDigest.Create(FHash.Clone(), False);
+  LDigest := TDigest.Create();
+  LDigest.FHash := FHash.Clone();
+  Result := LDigest;
 end;
 
 end.

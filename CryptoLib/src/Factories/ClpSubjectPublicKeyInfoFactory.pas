@@ -30,7 +30,9 @@ uses
   ClpIDsaParameters,
   ClpIECParameters,
   ClpIEd25519Parameters,
+  ClpIEd448Parameters,
   ClpIX25519Parameters,
+  ClpIX448Parameters,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
@@ -68,7 +70,9 @@ var
   LDsaKey: IDsaPublicKeyParameters;
   LECKey: IECPublicKeyParameters;
   LEd25519Key: IEd25519PublicKeyParameters;
+  LEd448Key: IEd448PublicKeyParameters;
   LX25519Key: IX25519PublicKeyParameters;
+  LX448Key: IX448PublicKeyParameters;
   LKp: IDsaParameters;
   LParams: IECDomainParameters;
   LX962: IX962Parameters;
@@ -121,6 +125,20 @@ begin
   begin
     LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdEd25519);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, LEd25519Key.GetEncoded());
+    Exit;
+  end;
+
+  if Supports(APublicKey, IX448PublicKeyParameters, LX448Key) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdX448);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, LX448Key.GetEncoded());
+    Exit;
+  end;
+
+  if Supports(APublicKey, IEd448PublicKeyParameters, LEd448Key) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdEd448);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, LEd448Key.GetEncoded());
     Exit;
   end;
 

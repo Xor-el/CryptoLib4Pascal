@@ -49,6 +49,8 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpEd25519Parameters,
   ClpIEd25519Parameters,
+  ClpEd448Parameters,
+  ClpIEd448Parameters,
   ClpIAsymmetricCipherKeyPair,
   ClpGeneratorUtilities,
   CryptoLibTestBase;
@@ -75,8 +77,8 @@ type
     FdsaPub: IDsaPublicKeyParameters;
     FRsaPublic: IRsaKeyParameters;
     FRsaPrivate: IRsaPrivateCrtKeyParameters;
-    Fed25519Kpg: IAsymmetricCipherKeyPairGenerator;
-    Fed25519Pair: IAsymmetricCipherKeyPair;
+    Fed25519Kpg, Fed448Kpg: IAsymmetricCipherKeyPairGenerator;
+    Fed25519Pair, Fed448Pair: IAsymmetricCipherKeyPair;
 
   protected
     procedure SetUp; override;
@@ -179,6 +181,11 @@ begin
     as ISecureRandom) as IEd25519KeyGenerationParameters);
   Fed25519Pair := Fed25519Kpg.GenerateKeyPair();
 
+  Fed448Kpg := TGeneratorUtilities.GetKeyPairGenerator('Ed448');
+  Fed448Kpg.Init(TEd448KeyGenerationParameters.Create(TSecureRandom.Create()
+    as ISecureRandom) as IEd448KeyGenerationParameters);
+  Fed448Pair := Fed448Kpg.GenerateKeyPair();
+
 end;
 
 procedure TTestSignerUtilities.TearDown;
@@ -248,6 +255,11 @@ begin
     begin
       signParams := Fed25519Pair.Private;
       verifyParams := Fed25519Pair.Public;
+    end
+    else if (cipherName = 'ED448') then
+    begin
+      signParams := Fed448Pair.Private;
+      verifyParams := Fed448Pair.Public;
     end
     else
     begin

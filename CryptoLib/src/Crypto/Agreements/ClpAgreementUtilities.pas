@@ -50,7 +50,9 @@ uses
   ClpIAsn1Objects,
   ClpIRawAgreement,
   ClpIX25519Agreement,
-  ClpX25519Agreement;
+  ClpX25519Agreement,
+  ClpIX448Agreement,
+  ClpX448Agreement;
 
 resourcestring
   SOidNil = 'OID Cannot be Nil';
@@ -121,6 +123,7 @@ begin
   FAlgorithmOidMap.AddOrSetValue(TSecObjectIdentifiers.DhSinglePassCofactorDHSha512KdfScheme, 'ECCDHWITHSHA512KDF');
 
   FAlgorithmOidMap.AddOrSetValue(TEdECObjectIdentifiers.IdX25519, 'X25519');
+  FAlgorithmOidMap.AddOrSetValue(TEdECObjectIdentifiers.IdX448, 'X448');
 end;
 
 class constructor TAgreementUtilities.Create;
@@ -294,7 +297,9 @@ class function TAgreementUtilities.GetRawAgreementForMechanism(const AMechanism:
 begin
   Result := nil;
   if AMechanism = 'X25519' then
-    Result := TX25519Agreement.Create() as IX25519Agreement;
+    Result := TX25519Agreement.Create() as IX25519Agreement
+  else if AMechanism = 'X448' then
+    Result := TX448Agreement.Create() as IX448Agreement;
 end;
 
 class function TAgreementUtilities.GetRawAgreement(const AOid: IDerObjectIdentifier): IRawAgreement;

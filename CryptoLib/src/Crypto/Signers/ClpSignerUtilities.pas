@@ -57,6 +57,10 @@ uses
   ClpIEd25519CtxSigner,
   ClpEd25519PhSigner,
   ClpIEd25519PhSigner,
+  ClpEd448Signer,
+  ClpIEd448Signer,
+  ClpEd448PhSigner,
+  ClpIEd448PhSigner,
   ClpISigner,
   ClpISecureRandom,
   ClpIAsn1Objects,
@@ -678,6 +682,8 @@ begin
   AddAlgorithm('Ed25519', TEdECObjectIdentifiers.IdEd25519, True);
   AddAlgorithm('Ed25519ctx', nil, True);
   AddAlgorithm('Ed25519ph', nil, True);
+  AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, True);
+  AddAlgorithm('Ed448ph', nil, True);
 end;
 
 class constructor TSignerUtilities.Create;
@@ -872,6 +878,16 @@ begin
     if AMechanism = 'Ed25519ph' then
     begin
       Result := TEd25519PhSigner.Create(nil) as IEd25519PhSigner;
+      Exit;
+    end;
+    if AMechanism = 'Ed448' then
+    begin
+      Result := TEd448Signer.Create(nil) as IEd448Signer;
+      Exit;
+    end;
+    if AMechanism = 'Ed448ph' then
+    begin
+      Result := TEd448PhSigner.Create(nil) as IEd448PhSigner;
       Exit;
     end;
   end;

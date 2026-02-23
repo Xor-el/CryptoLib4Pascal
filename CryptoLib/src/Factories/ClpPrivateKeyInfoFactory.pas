@@ -33,7 +33,9 @@ uses
   ClpIDHParameters,
   ClpICipherParameters,
   ClpIEd25519Parameters,
+  ClpIEd448Parameters,
   ClpIX25519Parameters,
+  ClpIX448Parameters,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
@@ -129,6 +131,8 @@ var
   LDhKey: IDHPrivateKeyParameters;
   LX25519Key: IX25519PrivateKeyParameters;
   LEd25519Key: IEd25519PrivateKeyParameters;
+  LX448Key: IX448PrivateKeyParameters;
+  LEd448Key: IEd448PrivateKeyParameters;
   LPub: IECPublicKeyParameters;
   LPubEnc: TCryptoLibByteArray;
   LDerPub: IDerBitString;
@@ -239,7 +243,27 @@ begin
     Exit;
   end;
 
-  raise ENotSupportedCryptoLibException.Create('Key type not supported for PrivateKeyInfo (supported: RSA, DSA, EC, DH, X25519, Ed25519).');
+  // X448
+  if Supports(APrivateKey, IX448PrivateKeyParameters, LX448Key) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdX448);
+    LPrivBytes := LX448Key.GetEncoded();
+    LPubBytes := LX448Key.GeneratePublicKey().GetEncoded();
+    Result := TPrivateKeyInfo.Create(LAlgID, TDerOctetString.Create(LPrivBytes) as IDerOctetString, AAttributes, LPubBytes);
+    Exit;
+  end;
+
+  // Ed448
+  if Supports(APrivateKey, IEd448PrivateKeyParameters, LEd448Key) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdEd448);
+    LPrivBytes := LEd448Key.GetEncoded();
+    LPubBytes := LEd448Key.GeneratePublicKey().GetEncoded();
+    Result := TPrivateKeyInfo.Create(LAlgID, TDerOctetString.Create(LPrivBytes) as IDerOctetString, AAttributes, LPubBytes);
+    Exit;
+  end;
+
+  raise ENotSupportedCryptoLibException.Create('Key type not supported for PrivateKeyInfo (supported: RSA, DSA, EC, DH, X25519, Ed25519, X448, Ed448).');
 end;
 
 end.

@@ -107,7 +107,7 @@ constructor THMac.Create(const ADigest: IDigest);
 begin
   Inherited Create();
   FDigest := ADigest;
-  FHMAC := THashFactory.THMac.CreateHMAC(FDigest.GetUnderlyingIHash);
+  FHMAC := THashFactory.THMac.CreateHMAC(FDigest.UnderlyingHasher);
 end;
 
 destructor THMac.Destroy;

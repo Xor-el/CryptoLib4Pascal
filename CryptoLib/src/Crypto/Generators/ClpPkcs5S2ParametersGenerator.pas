@@ -198,7 +198,7 @@ procedure TPkcs5S2ParametersGenerator.Init(const APassword, ASalt: TCryptoLibByt
   AIterationCount: Int32);
 begin
   inherited Init(APassword, ASalt, AIterationCount);
-  FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC(FDigest.GetUnderlyingIHash, FPassword, FSalt, AIterationCount);
+  FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC(FDigest.UnderlyingHasher, FPassword, FSalt, AIterationCount);
 end;
 
 end.

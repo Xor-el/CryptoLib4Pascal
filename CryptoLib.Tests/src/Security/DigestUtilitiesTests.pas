@@ -31,7 +31,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  HlpIHashInfo,
   HlpHashFactory,
   ClpIDigest,
   ClpDigest,
@@ -47,10 +46,6 @@ type
 
     function MakeTestPlainDigest(const digest: IDigest): TBytes;
     procedure CheckPlainDigestAlgorithm(const name: String;
-      const digest: IDigest);
-
-    function MakeTestXofDigest(const digest: IDigest; count: Int32): TBytes;
-    procedure CheckXofDigestAlgorithm(const name: String;
       const digest: IDigest);
 
   protected
@@ -77,14 +72,6 @@ begin
   inherited;
 end;
 
-function TTestDigestUtilities.MakeTestXofDigest(const digest: IDigest;
-  count: Int32): TBytes;
-begin
-  System.SetLength(Result, count);
-  digest.BlockUpdate(FTestBytes, 0, System.Length(FTestBytes));
-  digest.DoFinal(Result, 0);
-end;
-
 function TTestDigestUtilities.MakeTestPlainDigest(const digest
   : IDigest): TBytes;
 var
@@ -98,26 +85,6 @@ begin
   digest.BlockUpdate(FTestBytes, 0, System.Length(FTestBytes));
 
   Result := TDigestUtilities.DoFinal(digest);
-end;
-
-procedure TTestDigestUtilities.CheckXofDigestAlgorithm(const name: String;
-  const digest: IDigest);
-var
-  hash1, hash2: TBytes;
-  i: Int32;
-begin
-  for i := 1 to 100 do
-  begin
-    hash1 := MakeTestXofDigest(digest, i);
-    hash2 := MakeTestXofDigest(TDigestUtilities.GetDigest(name), i);
-
-    if not AreEqual(hash1, hash2) then
-    begin
-      Fail(Format
-        ('%s (%d) at Index %d CheckXofDigestAlgorithm Operation Failed',
-        [name, (digest as IXOF).XOFSizeInBits, i]));
-    end;
-  end;
 end;
 
 procedure TTestDigestUtilities.CheckPlainDigestAlgorithm(const name: String;
@@ -194,12 +161,6 @@ begin
   CheckPlainDigestAlgorithm('SHA3-512',
     TDigest.Create(THashFactory.TCrypto.CreateSHA3_512()) as IDigest);
 
-  CheckXofDigestAlgorithm('SHAKE128',
-    TDigest.Create(THashFactory.TXOF.CreateShake_128(128)) as IDigest);
-
-  CheckXofDigestAlgorithm('SHAKE256',
-    TDigest.Create(THashFactory.TXOF.CreateShake_256(256)) as IDigest);
-
   CheckPlainDigestAlgorithm('RIPEMD128',
     TDigest.Create(THashFactory.TCrypto.CreateRIPEMD128()) as IDigest);
 
@@ -250,13 +211,6 @@ begin
 
   CheckPlainDigestAlgorithm('Whirlpool',
     TDigest.Create(THashFactory.TCrypto.CreateWhirlPool()) as IDigest);
-
-  // Xof test
-  CheckXofDigestAlgorithm('SHAKE128',
-    TDigest.Create(THashFactory.TXOF.CreateShake_128(128)) as IDigest);
-
-  CheckXofDigestAlgorithm('SHAKE256',
-    TDigest.Create(THashFactory.TXOF.CreateShake_256(256)) as IDigest);
 end;
 
 initialization

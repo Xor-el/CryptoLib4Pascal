@@ -25,6 +25,7 @@ interface
 uses
   SysUtils,
   HlpIHash,
+  ClpDigest,
   ClpIDigest,
   ClpCryptoLibTypes;
 
@@ -42,21 +43,23 @@ type
   /// Wrapper class that reduces the output length of a particular digest to
   /// only the first n bytes of the digest function.
   /// </summary>
-  TShortenedDigest = class sealed(TInterfacedObject, IShortenedDigest)
+  TShortenedDigest = class sealed(TDigest, IDigest, IShortenedDigest)
 
   strict private
   var
     FBaseDigest: IDigest;
     FLength: Int32;
 
-    function GetAlgorithmName: String; inline;
+   strict protected
+    function GetAlgorithmName: string; override;
+    function GetUnderlyingHasher: IHash; override;
 
   public
 
     /// <summary>
     /// Base constructor.
     /// </summary>
-    /// <param name="baseDigest">
+    /// <param name="ABaseDigest">
     /// underlying digest to use.
     /// </param>
     /// <param name="length">
@@ -66,29 +69,27 @@ type
     /// if length is greater than baseDigest.GetDigestSize().
     /// </exception>
     /// <exception cref="ClpCryptoLibTypes|EArgumentNilCryptoLibException">
-    /// if baseDigest is null.
+    /// if ABaseDigest is null.
     /// </exception>
-    constructor Create(const baseDigest: IDigest; length: Int32);
+    constructor Create(const ABaseDigest: IDigest; ALength: Int32);
 
-    function GetDigestSize(): Int32;
+    function GetDigestSize(): Int32; override;
 
-    function GetByteLength(): Int32;
+    function GetByteLength(): Int32; override;
 
-    function GetUnderlyingIHash: IHash;
+    procedure Update(AInput: Byte);
 
-    procedure Update(input: Byte);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      : Int32; overload; override;
+    function DoFinal: TCryptoLibByteArray; overload; override;
 
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
-      : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
-
-    procedure Reset();
+    procedure Reset(); override;
 
     property AlgorithmName: String read GetAlgorithmName;
 
-    function Clone(): IDigest;
+    function Clone(): IDigest; override;
 
   end;
 
@@ -96,72 +97,72 @@ implementation
 
 { TShortenedDigest }
 
-constructor TShortenedDigest.Create(const baseDigest: IDigest; length: Int32);
+constructor TShortenedDigest.Create(const ABaseDigest: IDigest; ALength: Int32);
 begin
-  if (baseDigest = Nil) then
+  if (ABaseDigest = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SBaseDigestNil);
   end;
 
-  if (length > baseDigest.GetDigestSize()) then
+  if (ALength > ABaseDigest.GetDigestSize()) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SBaseDigestSizeInsufficient);
   end;
 
-  Inherited Create();
-  FBaseDigest := baseDigest;
-  FLength := length;
+  inherited Create();
+  FBaseDigest := ABaseDigest;
+  FLength := ALength;
 end;
 
 function TShortenedDigest.GetAlgorithmName: String;
 begin
-  result := Format('%s(%d)', [FBaseDigest.AlgorithmName, FLength * 8]);;
+  Result := Format('%s(%d)', [FBaseDigest.AlgorithmName, FLength * 8]);;
 end;
 
 function TShortenedDigest.GetByteLength: Int32;
 begin
-  result := FBaseDigest.GetByteLength();
+  Result := FBaseDigest.GetByteLength();
 end;
 
 function TShortenedDigest.GetDigestSize: Int32;
 begin
-  result := FLength;
+  Result := FLength;
 end;
 
-function TShortenedDigest.GetUnderlyingIHash: IHash;
+function TShortenedDigest.GetUnderlyingHasher: IHash;
 begin
-  result := FBaseDigest.GetUnderlyingIHash;
+  Result := FBaseDigest.UnderlyingHasher;
 end;
 
-procedure TShortenedDigest.Update(input: Byte);
+procedure TShortenedDigest.Update(AInput: Byte);
 begin
-  FBaseDigest.Update(input);
+  FBaseDigest.Update(AInput);
 end;
 
-procedure TShortenedDigest.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+procedure TShortenedDigest.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALen: Int32);
 begin
-  FBaseDigest.BlockUpdate(input, inOff, len);
+  FBaseDigest.BlockUpdate(AInput, AInOff, ALen);
 end;
 
-function TShortenedDigest.DoFinal(const output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+function TShortenedDigest.DoFinal(const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
 var
-  tmp: TCryptoLibByteArray;
+  LTmp: TCryptoLibByteArray;
 begin
-  System.SetLength(tmp, FBaseDigest.GetDigestSize());
+  System.SetLength(LTmp, FBaseDigest.GetDigestSize());
 
-  FBaseDigest.DoFinal(tmp, 0);
+  FBaseDigest.DoFinal(LTmp, 0);
 
-  System.Move(tmp[0], output[outOff], FLength * System.SizeOf(Byte));
+  System.Move(LTmp[0], AOutput[AOutOff], FLength * System.SizeOf(Byte));
 
-  result := FLength;
+  Result := FLength;
 end;
 
 function TShortenedDigest.DoFinal: TCryptoLibByteArray;
 begin
-  System.SetLength(result, FLength);
-  DoFinal(result, 0);
+  System.SetLength(Result, FLength);
+  DoFinal(Result, 0);
 end;
 
 procedure TShortenedDigest.Reset;
@@ -171,8 +172,7 @@ end;
 
 function TShortenedDigest.Clone(): IDigest;
 begin
-  result := (TShortenedDigest.Create(FBaseDigest.Clone(), FLength)
-    as IShortenedDigest) as IDigest;
+  Result := TShortenedDigest.Create(FBaseDigest.Clone(), FLength);
 end;
 
 end.

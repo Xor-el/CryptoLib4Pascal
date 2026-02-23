@@ -33,7 +33,6 @@ uses
 {$ENDIF FPC}
   ClpIBlockCipher,
   ClpIAeadCipher,
-  ClpIAeadBlockCipher,
   ClpICipherParameters,
   ClpIAeadParameters,
   ClpAeadParameters,
@@ -47,9 +46,7 @@ uses
   ClpTables8kGcmMultiplier,
   ClpTables64kGcmMultiplier,
   ClpAesEngine,
-  ClpIAesEngine,
   ClpBlowfishEngine,
-  ClpIBlowfishEngine,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpDateTimeUtilities,

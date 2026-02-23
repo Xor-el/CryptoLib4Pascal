@@ -25,6 +25,7 @@ uses
   SysUtils,
   Classes,
   HlpIHash,
+  ClpDigest,
   ClpIDigest,
   ClpIPrehash,
   ClpCryptoLibTypes;
@@ -38,7 +39,7 @@ type
   /// A digest that stores pre-hashed data.
   /// Used for "raw" signature operations where the data has already been hashed.
   /// </summary>
-  TPrehash = class sealed(TInterfacedObject, IDigest, IPrehash)
+  TPrehash = class sealed(TDigest, IDigest, IPrehash)
 
   strict private
   var
@@ -46,28 +47,33 @@ type
     FDigestSize: Int32;
     FBuffer: TMemoryStream;
 
-    function GetAlgorithmName: String;
+    strict protected
+    function GetAlgorithmName: String; override;
+    /// <summary>
+    /// Gets the Underlying <b>IHash</b> Instance
+    /// </summary>
+    function GetUnderlyingHasher: IHash; override;
 
   public
-    class function ForDigest(const digest: IDigest): IPrehash; static;
-    class function ForParameters(const digestName: String;
-      digestSize: Int32): IPrehash; static;
+    class function ForDigest(const ADigest: IDigest): IPrehash; static;
+    class function ForParameters(const ADigestName: String;
+      ADigestSize: Int32): IPrehash; static;
 
-    constructor Create(const algorithmName: String; digestSize: Int32);
+    constructor Create(const AAlgorithmName: String; ADigestSize: Int32);
     destructor Destroy; override;
 
-    function GetUnderlyingIHash: IHash;
-    function GetDigestSize: Int32;
-    function GetByteLength: Int32;
+    function GetDigestSize: Int32; override;
+    function GetByteLength: Int32; override;
 
-    procedure Update(input: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
-    function DoFinal: TCryptoLibByteArray; overload;
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
-    procedure Reset;
-    function Clone: IDigest;
+    procedure Update(AInput: Byte);
+    procedure BlockUpdate(const input: TCryptoLibByteArray; AInOff, ALen: Int32);
+    function DoFinal: TCryptoLibByteArray; overload; override;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload; override;
+    procedure Reset; override;
+    function Clone: IDigest; override;
 
     property AlgorithmName: String read GetAlgorithmName;
+    property UnderlyingHasher: IHash read GetUnderlyingHasher;
 
   end;
 
@@ -75,22 +81,22 @@ implementation
 
 { TPrehash }
 
-class function TPrehash.ForDigest(const digest: IDigest): IPrehash;
+class function TPrehash.ForDigest(const ADigest: IDigest): IPrehash;
 begin
-  Result := ForParameters(digest.AlgorithmName, digest.GetDigestSize());
+  Result := ForParameters(ADigest.AlgorithmName, ADigest.GetDigestSize());
 end;
 
-class function TPrehash.ForParameters(const digestName: String;
-  digestSize: Int32): IPrehash;
+class function TPrehash.ForParameters(const ADigestName: String;
+  ADigestSize: Int32): IPrehash;
 begin
-  Result := TPrehash.Create(digestName, digestSize);
+  Result := TPrehash.Create(ADigestName, ADigestSize);
 end;
 
-constructor TPrehash.Create(const algorithmName: String; digestSize: Int32);
+constructor TPrehash.Create(const AAlgorithmName: String; ADigestSize: Int32);
 begin
   inherited Create();
-  FAlgorithmName := algorithmName;
-  FDigestSize := digestSize;
+  FAlgorithmName := AAlgorithmName;
+  FDigestSize := ADigestSize;
   FBuffer := TMemoryStream.Create();
 end;
 
@@ -105,7 +111,7 @@ begin
   Result := FAlgorithmName;
 end;
 
-function TPrehash.GetUnderlyingIHash: IHash;
+function TPrehash.GetUnderlyingHasher: IHash;
 begin
   // Prehash doesn't have an underlying IHash
   Result := nil;
@@ -121,45 +127,38 @@ begin
   raise ENotSupportedCryptoLibException.CreateRes(@SNotSupported);
 end;
 
-procedure TPrehash.Update(input: Byte);
+procedure TPrehash.Update(AInput: Byte);
 begin
   if FBuffer.Size < FDigestSize then
-    FBuffer.Write(input, 1);
+    FBuffer.Write(AInput, 1);
 end;
 
 procedure TPrehash.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+  AInOff, ALen: Int32);
 var
-  writeLen: Int32;
+  LWriteLen: Int32;
 begin
-  writeLen := len;
-  if FBuffer.Size + writeLen > FDigestSize then
-    writeLen := FDigestSize - FBuffer.Size;
-  if writeLen > 0 then
-    FBuffer.Write(input[inOff], writeLen);
+  LWriteLen := ALen;
+  if FBuffer.Size + LWriteLen > FDigestSize then
+    LWriteLen := FDigestSize - FBuffer.Size;
+  if LWriteLen > 0 then
+    FBuffer.Write(input[AInOff], LWriteLen);
 end;
 
 function TPrehash.DoFinal: TCryptoLibByteArray;
 begin
-  try
-    if FBuffer.Size <> FDigestSize then
-      raise EInvalidOperationCryptoLibException.CreateRes(@SIncorrectPrehashSize);
-    SetLength(Result, FDigestSize);
-    FBuffer.Position := 0;
-    FBuffer.Read(Result[0], FDigestSize);
-  finally
-    Reset();
-  end;
+  System.SetLength(Result, FDigestSize);
+  DoFinal(Result, 0);
 end;
 
-function TPrehash.DoFinal(const output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+function TPrehash.DoFinal(const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
 begin
   try
     if FBuffer.Size <> FDigestSize then
       raise EInvalidOperationCryptoLibException.CreateRes(@SIncorrectPrehashSize);
     FBuffer.Position := 0;
-    FBuffer.Read(output[outOff], FDigestSize);
+    FBuffer.Read(AOutput[AOutOff], FDigestSize);
     Result := FDigestSize;
   finally
     Reset();
@@ -173,12 +172,12 @@ end;
 
 function TPrehash.Clone: IDigest;
 var
-  cloned: TPrehash;
+  LCloned: TPrehash;
 begin
-  cloned := TPrehash.Create(FAlgorithmName, FDigestSize);
+  LCloned := TPrehash.Create(FAlgorithmName, FDigestSize);
   FBuffer.Position := 0;
-  cloned.FBuffer.CopyFrom(FBuffer, FBuffer.Size);
-  Result := cloned;
+  LCloned.FBuffer.CopyFrom(FBuffer, FBuffer.Size);
+  Result := LCloned;
 end;
 
 end.

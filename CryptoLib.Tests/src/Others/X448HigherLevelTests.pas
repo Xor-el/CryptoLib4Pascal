@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit X25519HigherLevelTests;
+unit X448HigherLevelTests;
 
 interface
 
@@ -31,12 +31,12 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpX25519Generators,
-  ClpIX25519Generators,
-  ClpX25519Parameters,
-  ClpIX25519Parameters,
-  ClpX25519Agreement,
-  ClpIX25519Agreement,
+  ClpX448Generators,
+  ClpIX448Generators,
+  ClpX448Parameters,
+  ClpIX448Parameters,
+  ClpX448Agreement,
+  ClpIX448Agreement,
   ClpIAsymmetricCipherKeyPair,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -44,7 +44,7 @@ uses
 
 type
 
-  TTestX25519HigherLevel = class(TCryptoLibAlgorithmTestCase)
+  TTestX448HigherLevel = class(TCryptoLibAlgorithmTestCase)
   private
   var
     FRandom: ISecureRandom;
@@ -59,49 +59,49 @@ type
 
 implementation
 
-{ TTestX25519HigherLevel }
+{ TTestX448HigherLevel }
 
-procedure TTestX25519HigherLevel.DoTestAgreement();
+procedure TTestX448HigherLevel.DoTestAgreement();
 var
-  LKpGen: IX25519KeyPairGenerator;
+  LKpGen: IX448KeyPairGenerator;
   LKpA, LKpB: IAsymmetricCipherKeyPair;
-  LAgreeA, LAgreeB: IX25519Agreement;
+  LAgreeA, LAgreeB: IX448Agreement;
   LSecretA, LSecretB: TBytes;
 begin
-  LKpGen := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
-  LKpGen.Init(TX25519KeyGenerationParameters.Create(FRandom)
-    as IX25519KeyGenerationParameters);
+  LKpGen := TX448KeyPairGenerator.Create() as IX448KeyPairGenerator;
+  LKpGen.Init(TX448KeyGenerationParameters.Create(FRandom)
+    as IX448KeyGenerationParameters);
 
   LKpA := LKpGen.GenerateKeyPair();
   LKpB := LKpGen.GenerateKeyPair();
 
-  LAgreeA := TX25519Agreement.Create() as IX25519Agreement;
+  LAgreeA := TX448Agreement.Create() as IX448Agreement;
   LAgreeA.Init(LKpA.Private);
   System.SetLength(LSecretA, LAgreeA.AgreementSize);
   LAgreeA.CalculateAgreement(LKpB.Public, LSecretA, 0);
 
-  LAgreeB := TX25519Agreement.Create() as IX25519Agreement;
+  LAgreeB := TX448Agreement.Create() as IX448Agreement;
   LAgreeB.Init(LKpB.Private);
   System.SetLength(LSecretB, LAgreeB.AgreementSize);
   LAgreeB.CalculateAgreement(LKpA.Public, LSecretB, 0);
 
   if not AreEqual(LSecretA, LSecretB) then
-    Fail('X25519 agreement failed');
+    Fail('X448 agreement failed');
 end;
 
-procedure TTestX25519HigherLevel.SetUp;
+procedure TTestX448HigherLevel.SetUp;
 begin
   inherited SetUp();
   FRandom := TSecureRandom.Create();
 end;
 
-procedure TTestX25519HigherLevel.TearDown;
+procedure TTestX448HigherLevel.TearDown;
 begin
   FRandom := nil;
   inherited TearDown();
 end;
 
-procedure TTestX25519HigherLevel.TestKeyAgreement;
+procedure TTestX448HigherLevel.TestKeyAgreement;
 var
   LI: Int32;
 begin
@@ -112,9 +112,9 @@ end;
 initialization
 
 {$IFDEF FPC}
-  RegisterTest(TTestX25519HigherLevel);
+  RegisterTest(TTestX448HigherLevel);
 {$ELSE}
-  RegisterTest(TTestX25519HigherLevel.Suite);
+  RegisterTest(TTestX448HigherLevel.Suite);
 {$ENDIF FPC}
 
 end.
