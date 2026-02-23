@@ -214,7 +214,7 @@ begin
     TDigestAlgorithm.BLAKE3_256:
       Result := TDigest.Create(THashFactory.TCrypto.CreateBlake3_256(nil));
     TDigestAlgorithm.GOST3411:
-      Result := TDigest.Create(THashFactory.TCrypto.CreateGost());
+      Result := TDigest.Create(THashFactory.TCrypto.CreateGost_CryptoProParamSet());
     TDigestAlgorithm.GOST3411_2012_256:
       Result := TDigest.Create(THashFactory.TCrypto.CreateGOST3411_2012_256());
     TDigestAlgorithm.GOST3411_2012_512:
