@@ -34,6 +34,7 @@ uses
 resourcestring
   SCurve25519Ed25519PublicKeyNil = 'Ed25519 public key cannot be nil';
   SCurve25519Ed25519PrivateKeyNil = 'Ed25519 private key cannot be nil';
+  SCurve25519Ed25519PublicKeyInvalid = 'Ed25519 public key is invalid or point is not on the curve';
 
 type
   /// <summary>
@@ -107,6 +108,8 @@ begin
   TX25519Field.One(LOne);
   LOneMinusY := TX25519Field.Create();
   TX25519Field.Sub(LOne, LY, LOneMinusY);
+  if TX25519Field.IsZeroVar(LOneMinusY) then
+    raise EArgumentCryptoLibException.Create(SCurve25519Ed25519PublicKeyInvalid);
   LOnePlusY := TX25519Field.Create();
   TX25519Field.Add(LOne, LY, LOnePlusY);
   LInv := TX25519Field.Create();
