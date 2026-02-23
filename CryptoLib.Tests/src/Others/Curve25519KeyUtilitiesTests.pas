@@ -58,6 +58,7 @@ type
     procedure TestKeyPairConsistency;
     procedure TestKeyPairConsistencyFromRfc8032Vector1;
     procedure TestKnownAnswerFromLibsodiumSeed;
+    procedure TestMultipleKeyConversions;
     procedure TestToX25519PublicKeyRaisesWhenNil;
     procedure TestToX25519PrivateKeyRaisesWhenNil;
     procedure TestConvertedKeysAgreement;
@@ -153,6 +154,98 @@ begin
     Fail(SKeyPairConsistencyFailed);
   if not AreEqual(LX25519Sk.GetEncoded(), DecodeHex(LExpectedSkHex)) then
     Fail(SKeyPairConsistencyFailed);
+end;
+
+procedure TTestCurve25519KeyUtilities.TestMultipleKeyConversions;
+const
+  TestVectorCount = 10;
+
+  // Test seeds (32 bytes each, hex-encoded)
+  Seeds: array[0.. TestVectorCount - 1] of String = (
+    '0101010101010101010101010101010101010101010101010101010101010101',
+    '0202020202020202020202020202020202020202020202020202020202020202',
+    '0303030303030303030303030303030303030303030303030303030303030303',
+    '0404040404040404040404040404040404040404040404040404040404040404',
+    '0505050505050505050505050505050505050505050505050505050505050505',
+    '101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f',
+    '202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f',
+    '303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f',
+    '404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f',
+    '505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f'
+  );
+
+  // Expected X25519 private keys (32 bytes each, hex-encoded)
+  // Generated using Python cryptography library (OpenSSL backend)
+  ExpectedX25519PrivateKeys: array[0 .. TestVectorCount - 1] of String = (
+    '58e86efb75fa4e2c410f46e16de9f6acae1a1703528651b69bc176c088bef36e',
+    'a83c626bc9c38c8c201878ebb1d5b0b50ac40e8986c78793db1d4ef369fca14e',
+    '98aebbb178a551876bfaf8e1e530dac6aaf6c2ea1c8f8406a3ab37dfb40fbc65',
+    '483e3c145d7e680a16676925fc045183d2f510cb2f660a1fc517c73762185d43',
+    '48370d6146de919cc1ce472897775d9a6c2834c509e08e14efcb2b52188f946e',
+    '30dbf67498dbee33cb5d3bc53761476e5dc6f3a973875ab45bc2538aff29a945',
+    '887af58a36202e05c4c1cfec5bf6c61fad66bca851536004074b31f1b56e4a49',
+    'f0d4bac086ac1fe2d258231a414f0532370f0795d188d4da6302bddab906c677',
+    '6028d4276d036d787ba4df5803e7d15ae9165e486417ad3ae5e48b49290cd656',
+    'e84011319a84fe89c458c91bde3e134baa94041ef7c517860fd6e78cc6a1dc68'
+  );
+
+  // Expected X25519 public keys (32 bytes each, hex-encoded)
+  // Generated using Python cryptography library (OpenSSL backend)
+  ExpectedX25519PublicKeys: array[0 .. TestVectorCount - 1] of String = (
+    '1b1b58dd50ea14b60da17b790cd02754d970c9bab864ebb3c0f3016fe51d3f57',
+    '60346e7c911a5f6ba154129174cafe75b294ac3bbd5549632f48cec6266f8410',
+    '75e270df2952c57ba8367ba8618c178f9fe50db2799d304e74e918d985686146',
+    'edd03cade80d29de6ea313a74ab369f4732ecb36649066b78b5b2dd664cb0417',
+    'c44e429251771ec76197c7a1f8ea289a18ca3dd7a7e102ba7cc84df6b55cbe1a',
+    '0427a5d75c1471e72fc176011f82968caa76dbd2bd661cd736b6e8834ac58f0e',
+    '5730800ab340fcb18ce5111eda9d705f91388b41e4544cbd103ba5942db2233e',
+    'ea684d18e78b20cc4ecc6ffbf99f1e51a754a28814083dfe0acdc092ff7fa01d',
+    'f14b5173130a1b80687f273d49e8f4740a793a949b83b105837f2a61e8fee14f',
+    '1084f97dcc3125bdd2c3ccbe57dc872fe246539a43565830f47e6e78257b3a72'
+  );
+var
+  I: Integer;
+  LSeed: TBytes;
+  LEdPriv: IEd25519PrivateKeyParameters;
+  LEdPub: IEd25519PublicKeyParameters;
+  LX25519Sk: IX25519PrivateKeyParameters;
+  LX25519Pk: IX25519PublicKeyParameters;
+  LX25519PkFromSk: IX25519PublicKeyParameters;
+begin
+  (*
+    Test vectors generated using Python cryptography library (OpenSSL backend).
+
+    Conversion process verified:
+    1. Ed25519 seed (32 bytes) -> SHA-512 -> first 32 bytes -> X25519 clamping -> X25519 private key
+    2. Ed25519 public key -> birational map u = (1+y)/(1-y) -> X25519 public key
+
+    Both conversion paths must produce consistent X25519 key pairs.
+  *)
+  for I := 0 to TestVectorCount - 1 do
+  begin
+    LSeed := DecodeHex(Seeds[I]);
+
+    // Create Ed25519 key pair from seed
+    LEdPriv := TEd25519PrivateKeyParameters.Create(LSeed);
+    LEdPub := LEdPriv.GeneratePublicKey();
+
+    // Convert to X25519
+    LX25519Sk := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPriv);
+    LX25519Pk := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPub);
+    LX25519PkFromSk := LX25519Sk.GeneratePublicKey();
+
+    // Verify private key conversion matches expected
+    if not AreEqual(LX25519Sk.GetEncoded(), DecodeHex(ExpectedX25519PrivateKeys[I])) then
+      Fail(Format('Test vector %d: X25519 private key conversion failed', [I + 1]));
+
+    // Verify public key conversion matches expected
+    if not AreEqual(LX25519Pk.GetEncoded(), DecodeHex(ExpectedX25519PublicKeys[I])) then
+      Fail(Format('Test vector %d: X25519 public key conversion (birational) failed', [I + 1]));
+
+    // Verify public key derived from converted private matches birational conversion
+    if not AreEqual(LX25519PkFromSk.GetEncoded(), LX25519Pk.GetEncoded()) then
+      Fail(Format('Test vector %d: X25519 public key consistency failed', [I + 1]));
+  end;
 end;
 
 procedure TTestCurve25519KeyUtilities.TestToX25519PublicKeyRaisesWhenNil;

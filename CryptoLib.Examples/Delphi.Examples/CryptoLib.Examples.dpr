@@ -629,7 +629,8 @@ uses
   ClpX448 in '..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448.pas',
   ClpX448Field in '..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448Field.pas',
   ClpEd448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpEd448.pas',
-  ClpScalar448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar448.pas';
+  ClpScalar448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar448.pas',
+  ClpCurve448KeyUtilities in '..\..\CryptoLib\src\Crypto\Parameters\ClpCurve448KeyUtilities.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);
