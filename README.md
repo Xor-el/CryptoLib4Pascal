@@ -13,7 +13,7 @@
 
 ---
 
-**CryptoLib4Pascal** brings production-grade cryptography to Delphi and FreePascal. From AES-GCM and ChaCha20-Poly1305 to ECDSA, Ed25519, RSA, Argon2, and X.509 certificates -- everything you need to build secure applications in Object Pascal, released under the permissive [MIT License](LICENSE).
+**CryptoLib4Pascal** brings production-grade cryptography to Delphi and FreePascal. From AES-GCM and ChaCha20-Poly1305 to ECDSA, EdDSA, RSA, Argon2, and X.509 certificates -- everything you need to build secure applications in Object Pascal, released under the permissive [MIT License](LICENSE).
 
 ## Table of Contents
 
@@ -89,7 +89,7 @@
 <details>
 <summary><strong>Key Agreement / Exchange</strong></summary>
 
-`DH` | `ECDH` | `ECDHC` | `X25519`
+`DH` | `ECDH` | `ECDHC` | `X25519` | `X448`
 
 </details>
 
