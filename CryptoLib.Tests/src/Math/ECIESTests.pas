@@ -61,7 +61,7 @@ uses
   ClpIECIESPublicKeyParser,
   ClpCbcBlockCipher,
   ClpICbcBlockCipher,
-  ClpKeyEncoder,
+  ClpECKeyEncoder,
   ClpIKeyEncoder,
   ClpAesEngine,
   ClpIAesEngine,
@@ -151,7 +151,7 @@ begin
     as ISecureRandom) as IECKeyGenerationParameters);
 
   ephKeyGen := TEphemeralKeyPairGenerator.Create(gen,
-    TKeyEncoder.Create(usePointCompression) as IKeyEncoder);
+    TECKeyEncoder.Create(usePointCompression) as IKeyEncoder);
 
   //
   // stream test
@@ -334,7 +334,7 @@ begin
   gen.Init(TECKeyGenerationParameters.Create(params, TSecureRandom.Create()
     as ISecureRandom) as IECKeyGenerationParameters);
 
-  ephKeyGen := TEphemeralKeyPairGenerator.Create(gen, TKeyEncoder.Create(false)
+  ephKeyGen := TEphemeralKeyPairGenerator.Create(gen, TECKeyEncoder.Create(false)
     as IKeyEncoder);
 
   i1.Init(p2.Public, p, ephKeyGen);

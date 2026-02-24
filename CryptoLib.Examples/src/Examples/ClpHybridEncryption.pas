@@ -60,7 +60,7 @@ uses
   ClpECParameters,
   ClpECGenerators,
   ClpEphemeralKeyPairGenerator,
-  ClpKeyEncoder,
+  ClpECKeyEncoder,
   ClpGeneratorUtilities,
   ClpCipherUtilities,
   ClpDigestUtilities,
@@ -801,7 +801,7 @@ begin
   LKpg.Init(TECKeyGenerationParameters.Create(AReceiverDomain,
     LSecureRandom) as IECKeyGenerationParameters);
   LEphGen := TEphemeralKeyPairGenerator.Create(LKpg,
-    TKeyEncoder.Create(False) as IKeyEncoder);
+    TECKeyEncoder.Create(False) as IKeyEncoder);
   LEphPair := LEphGen.Generate();
   LEphPubBytes := LEphPair.GetEncodedPublicKey();
 

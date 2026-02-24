@@ -312,7 +312,7 @@ contains
   ClpKdf1BytesGenerator in '..\..\Crypto\Generators\ClpKdf1BytesGenerator.pas',
   ClpKdf2BytesGenerator in '..\..\Crypto\Generators\ClpKdf2BytesGenerator.pas',
   ClpKdfParameters in '..\..\Crypto\Parameters\ClpKdfParameters.pas',
-  ClpKeyEncoder in '..\..\Crypto\ClpKeyEncoder.pas',
+  ClpECKeyEncoder in '..\..\Crypto\ClpECKeyEncoder.pas',
   ClpKeyGenerationParameters in '..\..\Crypto\Parameters\ClpKeyGenerationParameters.pas',
   ClpKeyParameter in '..\..\Crypto\Parameters\ClpKeyParameter.pas',
   ClpKMac in '..\..\Crypto\Macs\ClpKMac.pas',

@@ -21,10 +21,9 @@ uses
   ClpParametersWithIV, ClpKeyParameter, ClpAesEngine, 
   ClpPascalCoinECIESKdfBytesGenerator, ClpPascalCoinIesEngine, 
   ClpBaseKdfBytesGenerator, ClpIesEngine, ClpECIESPublicKeyParser, 
-  ClpEphemeralKeyPair, ClpKeyEncoder, ClpIesParameters, 
-  ClpEphemeralKeyPairGenerator, ClpKdf2BytesGenerator, 
-  ClpIso18033KdfParameters, ClpKdfParameters, ClpIKeyParser, 
-  ClpCipherKeyGenerator, ClpPkcs5S2ParametersGenerator, 
+  ClpEphemeralKeyPair, ClpIesParameters, ClpEphemeralKeyPairGenerator, 
+  ClpKdf2BytesGenerator, ClpIso18033KdfParameters, ClpKdfParameters, 
+  ClpIKeyParser, ClpCipherKeyGenerator, ClpPkcs5S2ParametersGenerator, 
   ClpPbeParametersGenerator, ClpHMac, ClpMiscObjectIdentifiers, 
   ClpIanaObjectIdentifiers, ClpDsaSigner, ClpECNRSigner, ClpDsaParameters, 
   ClpDigest, ClpHkdfBytesGenerator, ClpHkdfParameters, ClpNistNamedCurves, 
@@ -199,7 +198,7 @@ uses
   ClpX448Parameters, ClpEd448PhSigner, ClpEd448Signer, ClpX448, ClpX448Field, 
   ClpEd448, ClpScalar448, ClpIX448Agreement, ClpIEd448Parameters, 
   ClpIX448Parameters, ClpIEd448PhSigner, ClpIEd448Signer, ClpIEd448Generators, 
-  ClpIX448Generators, ClpCurve448KeyUtilities;
+  ClpIX448Generators, ClpCurve448KeyUtilities, ClpECKeyEncoder;
 
 implementation
 

@@ -25,7 +25,7 @@ uses
   ClpIECGenerators,
   ClpECGenerators,
   ClpIKeyEncoder,
-  ClpKeyEncoder,
+  ClpECKeyEncoder,
   ClpIECDHBasicAgreement,
   ClpECDHBasicAgreement,
   ClpECParameters,
@@ -239,7 +239,7 @@ begin
     LCurve.H, LCurve.GetSeed);
   LGen := TECKeyPairGenerator.Create();
   LGen.Init(TECKeyGenerationParameters.Create(LDomain, FRandom));
-  LKeyGen := TEphemeralKeyPairGenerator.Create(LGen, TKeyEncoder.Create(True) as IKeyEncoder);
+  LKeyGen := TEphemeralKeyPairGenerator.Create(LGen, TECKeyEncoder.Create(True) as IKeyEncoder);
   LEngine.Init(RecreatePublicKeyFromAffineXandAffineYCoord(AKeyType,
     DecodeHex(RawAffineXCoord), DecodeHex(RawAffineYCoord)),
     GetPascalCoinIESParameters(), LKeyGen);

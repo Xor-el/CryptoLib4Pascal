@@ -303,7 +303,7 @@ uses
   ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
   ClpKdf2BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf2BytesGenerator.pas',
   ClpKdfParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpKdfParameters.pas',
-  ClpKeyEncoder in '..\..\CryptoLib\src\Crypto\ClpKeyEncoder.pas',
+  ClpECKeyEncoder in '..\..\CryptoLib\src\Crypto\ClpECKeyEncoder.pas',
   ClpKeyGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpKeyGenerationParameters.pas',
   ClpKeyParameter in '..\..\CryptoLib\src\Crypto\Parameters\ClpKeyParameter.pas',
   ClpKMac in '..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas',

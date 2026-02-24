@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpKeyEncoder;
+unit ClpECKeyEncoder;
 
 {$I ..\Include\CryptoLib.inc}
 
@@ -32,7 +32,7 @@ resourcestring
   SKeyParameterNotECPublicKey = 'AKeyParameter is not an IECPublicKeyParameters';
 
 type
-  TKeyEncoder = class(TInterfacedObject, IKeyEncoder)
+  TECKeyEncoder = class(TInterfacedObject, IKeyEncoder)
 
   strict private
   var
@@ -47,15 +47,15 @@ type
 
 implementation
 
-{ TKeyEncoder }
+{ TECKeyEncoder }
 
-constructor TKeyEncoder.Create(AUsePointCompression: Boolean);
+constructor TECKeyEncoder.Create(AUsePointCompression: Boolean);
 begin
   Inherited Create();
   FUsePointCompression := AUsePointCompression;
 end;
 
-function TKeyEncoder.GetEncoded(const AKeyParameter: IAsymmetricKeyParameter)
+function TECKeyEncoder.GetEncoded(const AKeyParameter: IAsymmetricKeyParameter)
   : TCryptoLibByteArray;
 var
   LEcPub: IECPublicKeyParameters;

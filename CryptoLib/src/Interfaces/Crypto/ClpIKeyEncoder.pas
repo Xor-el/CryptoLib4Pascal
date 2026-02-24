@@ -29,7 +29,7 @@ type
   IKeyEncoder = interface(IInterface)
     ['{CB751E36-F07C-46B7-B799-F20D0E7E888A}']
 
-    function GetEncoded(const keyParameter: IAsymmetricKeyParameter)
+    function GetEncoded(const AKeyParameter: IAsymmetricKeyParameter)
       : TCryptoLibByteArray;
   end;
 
