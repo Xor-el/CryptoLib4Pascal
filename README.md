@@ -26,6 +26,7 @@
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
+- [Tip Jar](#tip-jar)
 - [License](#license)
 
 ## Features
@@ -318,6 +319,16 @@ Contributions are welcome. Please open an [issue](https://github.com/Xor-el/Cryp
 ## Acknowledgements
 
 - Thanks to [Sphere 10 Software](http://www.sphere10.com/) for sponsoring the development of this library.
+
+## Tip Jar
+
+If you find this library useful and would like to support its continued development, tips are greatly appreciated! 🙏
+
+| Cryptocurrency | Wallet Address |
+|---|---|
+| <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/icon/btc.png" width="20" alt="Bitcoin" /> **Bitcoin (BTC)** | `bc1quqhe342vw4ml909g334w9ygade64szqupqulmu` |
+| <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/icon/eth.png" width="20" alt="Ethereum" /> **Ethereum (ETH)** | `0x53651185b7467c27facab542da5868bfebe2bb69` |
+| <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/icon/sol.png" width="20" alt="Solana" /> **Solana (SOL)** | `BPZHjY1eYCdQjLecumvrTJRi5TXj3Yz1vAWcmyEB9Miu` |
 
 ## License
 
