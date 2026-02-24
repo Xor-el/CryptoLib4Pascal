@@ -174,7 +174,7 @@ begin
     TDigest.Create(THashFactory.TCrypto.CreateRIPEMD320()) as IDigest);
 
   CheckPlainDigestAlgorithm('GOST3411',
-    TDigest.Create(THashFactory.TCrypto.CreateGost()) as IDigest);
+    TDigest.Create(THashFactory.TCrypto.CreateGost_CryptoProParamSet()) as IDigest);
 
   CheckPlainDigestAlgorithm('BLAKE2B-160',
     TDigest.Create(THashFactory.TCrypto.CreateBlake2B_160()) as IDigest);
