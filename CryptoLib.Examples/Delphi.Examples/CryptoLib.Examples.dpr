@@ -292,7 +292,7 @@ uses
   ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
   ClpKdf2BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf2BytesGenerator.pas',
   ClpKdfParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpKdfParameters.pas',
-  ClpKeyEncoder in '..\..\CryptoLib\src\Crypto\ClpKeyEncoder.pas',
+  ClpECKeyEncoder in '..\..\CryptoLib\src\Crypto\ClpECKeyEncoder.pas',
   ClpKeyGenerationParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpKeyGenerationParameters.pas',
   ClpKeyParameter in '..\..\CryptoLib\src\Crypto\Parameters\ClpKeyParameter.pas',
   ClpKMac in '..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas',
@@ -630,7 +630,11 @@ uses
   ClpX448Field in '..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448Field.pas',
   ClpEd448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpEd448.pas',
   ClpScalar448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar448.pas',
-  ClpCurve448KeyUtilities in '..\..\CryptoLib\src\Crypto\Parameters\ClpCurve448KeyUtilities.pas';
+  ClpCurve448KeyUtilities in '..\..\CryptoLib\src\Crypto\Parameters\ClpCurve448KeyUtilities.pas',
+  ClpPkcs12Entry in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Entry.pas',
+  ClpX509CertificateEntry in '..\..\CryptoLib\src\Pkcs\ClpX509CertificateEntry.pas',
+  ClpIPkcs12Entry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Entry.pas',
+  ClpIX509CertificateEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

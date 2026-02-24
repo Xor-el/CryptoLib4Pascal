@@ -39,6 +39,10 @@ type
     class function ConvertBytesToString(const AInput: TCryptoLibByteArray;
       const AEncoding: TEncoding): String; overload; static;
 
+    class function ConvertCharArrayToString(const AInput: TCryptoLibCharArray): String; static;
+
+    class function ConvertStringToCharArray(const AInput: String): TCryptoLibCharArray; static;
+
   end;
 
 implementation
@@ -73,6 +77,23 @@ begin
 {$ELSE}
   Result := AEncoding.GetString(AInput);
 {$ENDIF FPC}
+end;
+
+class function TConverters.ConvertCharArrayToString(const AInput: TCryptoLibCharArray): String;
+begin
+  if (AInput = nil) or (System.Length(AInput) = 0) then
+    Result := ''
+  else
+    System.SetString(Result, PChar(@AInput[0]), System.Length(AInput));
+end;
+
+class function TConverters.ConvertStringToCharArray(const AInput: String): TCryptoLibCharArray;
+var
+  LI: Int32;
+begin
+  System.SetLength(Result, System.Length(AInput));
+  for LI := 0 to System.Length(AInput) - 1 do
+    Result[LI] := AInput[LI + 1];
 end;
 
 end.

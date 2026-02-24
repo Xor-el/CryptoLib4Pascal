@@ -144,7 +144,7 @@ type
     function GetPublicKey: IAsymmetricKeyParameter;
     function GetEncoded: TCryptoLibByteArray;
 
-    function Equals(AObj: TObject): Boolean; reintroduce;
+    function Equals(AOther: IX509Certificate): Boolean; reintroduce;
     function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI} override;
     function ToString: String; override;
 
@@ -655,26 +655,26 @@ begin
   Result := TCachedEncoding.Create(LEncoding, LException);
 end;
 
-function TX509Certificate.Equals(AObj: TObject): Boolean;
+function TX509Certificate.Equals(AOther: IX509Certificate): Boolean;
 var
   LThatCert: IX509Certificate;
   LThat: TX509Certificate;
   LThisEncoding, LThatEncoding: TCryptoLibByteArray;
   LSignature: IDerBitString;
 begin
-  if Self = AObj then
+  if (Self AS IX509Certificate) = AOther then
   begin
     Result := True;
     Exit;
   end;
 
-  if not Supports(AObj, IX509Certificate, LThatCert) then
+  if not Supports(AOther, IX509Certificate, LThatCert) then
   begin
     Result := False;
     Exit;
   end;
 
-  LThat := AObj as TX509Certificate;
+  LThat := AOther as TX509Certificate;
 
   if FHashValueSet and LThat.FHashValueSet then
   begin

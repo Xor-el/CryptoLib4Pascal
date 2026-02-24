@@ -642,6 +642,10 @@ uses
   ClpEd448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpEd448.pas',
   ClpScalar448 in '..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar448.pas',
   ClpCurve448KeyUtilities in '..\..\CryptoLib\src\Crypto\Parameters\ClpCurve448KeyUtilities.pas',
+  ClpPkcs12Entry in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Entry.pas',
+  ClpX509CertificateEntry in '..\..\CryptoLib\src\Pkcs\ClpX509CertificateEntry.pas',
+  ClpIPkcs12Entry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Entry.pas',
+  ClpIX509CertificateEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTests in '..\src\Crypto\BlowfishTests.pas',
@@ -763,6 +767,7 @@ uses
   X448HigherLevelTests in '..\src\Others\X448HigherLevelTests.pas',
   Ed448HigherLevelTests in '..\src\Others\Ed448HigherLevelTests.pas',
   Curve448KeyUtilitiesTests in '..\src\Others\Curve448KeyUtilitiesTests.pas',
+  Pkcs12Tests in '..\src\Crypto\Pkcs12Tests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

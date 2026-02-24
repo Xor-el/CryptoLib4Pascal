@@ -650,6 +650,10 @@ contains
   ClpX448Field in '..\..\Math\EC\Rfc7748\ClpX448Field.pas',
   ClpEd448 in '..\..\Math\EC\Rfc8032\ClpEd448.pas',
   ClpScalar448 in '..\..\Math\EC\Rfc8032\ClpScalar448.pas',
-  ClpCurve448KeyUtilities in '..\..\Crypto\Parameters\ClpCurve448KeyUtilities.pas';
+  ClpCurve448KeyUtilities in '..\..\Crypto\Parameters\ClpCurve448KeyUtilities.pas',
+  ClpPkcs12Entry in '..\..\Pkcs\ClpPkcs12Entry.pas',
+  ClpX509CertificateEntry in '..\..\Pkcs\ClpX509CertificateEntry.pas',
+  ClpIPkcs12Entry in '..\..\Interfaces\Pkcs\ClpIPkcs12Entry.pas',
+  ClpIX509CertificateEntry in '..\..\Interfaces\Pkcs\ClpIX509CertificateEntry.pas';
 
 end.

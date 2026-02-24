@@ -52,6 +52,11 @@ resourcestring
   SPrivateKeyAlgorithmNil = 'privateKeyAlgorithm';
   SPrivateKeyNil = 'privateKey';
   SVersionNil = 'version';
+  SWrongVersionForPfxPdu = 'wrong version for PFX PDU';
+  SContentInfoNil = 'contentInfo';
+  SMacNil = 'mac';
+  SMacSaltNil = 'macSalt';
+  SIterationsNil = 'iterations';
 
 type
   /// <summary>
@@ -518,6 +523,78 @@ type
 
     property IV: IAsn1OctetString read GetIV;
     property IterationsObject: IDerInteger read GetIterationsObject;
+  end;
+
+  /// <summary>
+  /// MacData (PKCS#12).
+  /// </summary>
+  TMacData = class(TAsn1Encodable, IMacData)
+  strict private
+  var
+    FMac: IDigestInfo;
+    FMacSalt: IAsn1OctetString;
+    FIterations: IDerInteger;
+
+  strict protected
+    function GetMac: IDigestInfo;
+    function GetSalt: TCryptoLibByteArray;
+    function GetIterationCount: TBigInteger;
+    function GetIterations: IDerInteger;
+    function GetMacSalt: IAsn1OctetString;
+
+  public
+    class function GetInstance(AObj: TObject): IMacData; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IMacData; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IMacData; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IMacData; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IMacData; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ADigInfo: IDigestInfo;
+      const ASalt: TCryptoLibByteArray; AIterationCount: Int32); overload;
+    constructor Create(const AMac: IDigestInfo; const AMacSalt: IAsn1OctetString;
+      const AIterations: IDerInteger); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Mac: IDigestInfo read GetMac;
+    property IterationCount: TBigInteger read GetIterationCount;
+    property Iterations: IDerInteger read GetIterations;
+    property MacSalt: IAsn1OctetString read GetMacSalt;
+  end;
+
+  /// <summary>
+  /// The infamous Pfx from Pkcs12.
+  /// </summary>
+  TPfx = class(TAsn1Encodable, IPfx)
+  strict private
+  var
+    FContentInfo: IPkcsContentInfo;
+    FMacData: IMacData;
+
+  strict protected
+    function GetAuthSafe: IPkcsContentInfo;
+    function GetMacData: IMacData;
+
+  public
+    class function GetInstance(AObj: TObject): IPfx; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IPfx; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IPfx; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IPfx; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPfx; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AContentInfo: IPkcsContentInfo;
+      const AMacData: IMacData); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property AuthSafe: IPkcsContentInfo read GetAuthSafe;
+    property MacData: IMacData read GetMacData;
   end;
 
 implementation
@@ -2006,6 +2083,255 @@ begin
   LV.AddOptionalTagged(False, 1, FCrls);
   LV.Add(FSignerInfos);
   Result := TBerSequence.Create(LV);
+end;
+
+{ TMacData }
+
+class function TMacData.GetInstance(AObj: TObject): IMacData;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IMacData, Result) then
+    Exit;
+
+  Result := TMacData.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TMacData.GetInstance(const AObj: IAsn1Convertible): IMacData;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IMacData, Result) then
+    Exit;
+
+  Result := TMacData.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TMacData.GetInstance(const AEncoded: TCryptoLibByteArray): IMacData;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TMacData.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TMacData.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IMacData;
+begin
+  Result := TMacData.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TMacData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IMacData;
+begin
+  Result := TMacData.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TMacData.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 2) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FMac := TDigestInfo.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FMacSalt := TAsn1OctetString.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  FIterations := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos,
+    function(AEnc: IAsn1Encodable): IDerInteger
+    begin
+      Result := TDerInteger.GetOptional(AEnc);
+    end);
+  if FIterations = nil then
+    FIterations := TDerInteger.One;
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+constructor TMacData.Create(const ADigInfo: IDigestInfo;
+  const ASalt: TCryptoLibByteArray; AIterationCount: Int32);
+begin
+  inherited Create();
+
+  if ADigInfo = nil then
+    raise EArgumentNilCryptoLibException.Create(SMacNil);
+
+  FMac := ADigInfo;
+  FMacSalt := TDerOctetString.FromContents(ASalt);
+  FIterations := TDerInteger.ValueOf(AIterationCount);
+end;
+
+constructor TMacData.Create(const AMac: IDigestInfo; const AMacSalt: IAsn1OctetString;
+  const AIterations: IDerInteger);
+begin
+  inherited Create();
+
+  if AMac = nil then
+    raise EArgumentNilCryptoLibException.Create(SMacNil);
+  if AMacSalt = nil then
+    raise EArgumentNilCryptoLibException.Create(SMacSaltNil);
+  if AIterations = nil then
+    raise EArgumentNilCryptoLibException.Create(SIterationsNil);
+
+  FMac := AMac;
+  FMacSalt := AMacSalt;
+  FIterations := AIterations;
+end;
+
+function TMacData.GetMac: IDigestInfo;
+begin
+  Result := FMac;
+end;
+
+function TMacData.GetSalt: TCryptoLibByteArray;
+begin
+  Result := System.Copy(FMacSalt.GetOctets());
+end;
+
+function TMacData.GetIterationCount: TBigInteger;
+begin
+  Result := FIterations.Value;
+end;
+
+function TMacData.GetIterations: IDerInteger;
+begin
+  Result := FIterations;
+end;
+
+function TMacData.GetMacSalt: IAsn1OctetString;
+begin
+  Result := FMacSalt;
+end;
+
+function TMacData.ToAsn1Object: IAsn1Object;
+begin
+  if FIterations.HasValue(1) then
+    Result := TDerSequence.Create(FMac, FMacSalt)
+  else
+    Result := TDerSequence.Create([FMac, FMacSalt, FIterations]);
+end;
+
+{ TPfx }
+
+class function TPfx.GetInstance(AObj: TObject): IPfx;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPfx, Result) then
+    Exit;
+
+  Result := TPfx.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPfx.GetInstance(const AObj: IAsn1Convertible): IPfx;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPfx, Result) then
+    Exit;
+
+  Result := TPfx.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPfx.GetInstance(const AEncoded: TCryptoLibByteArray): IPfx;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TPfx.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TPfx.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IPfx;
+begin
+  Result := TPfx.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TPfx.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPfx;
+begin
+  Result := TPfx.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TPfx.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+  LVersion: IDerInteger;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if (LCount < 2) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  LVersion := TDerInteger.GetInstance(ASeq[0]);
+  if not LVersion.HasValue(3) then
+    raise EArgumentCryptoLibException.Create(SWrongVersionForPfxPdu);
+
+  FContentInfo := TPkcsContentInfo.GetInstance(ASeq[1]);
+
+  if LCount <= 2 then
+    FMacData := nil
+  else
+    FMacData := TMacData.GetInstance(ASeq[2]);
+end;
+
+constructor TPfx.Create(const AContentInfo: IPkcsContentInfo;
+  const AMacData: IMacData);
+begin
+  inherited Create();
+
+  if AContentInfo = nil then
+    raise EArgumentNilCryptoLibException.Create(SContentInfoNil);
+
+  FContentInfo := AContentInfo;
+  FMacData := AMacData;
+end;
+
+function TPfx.GetAuthSafe: IPkcsContentInfo;
+begin
+  Result := FContentInfo;
+end;
+
+function TPfx.GetMacData: IMacData;
+begin
+  Result := FMacData;
+end;
+
+function TPfx.ToAsn1Object: IAsn1Object;
+begin
+  if FMacData = nil then
+    Result := TBerSequence.Create(TDerInteger.Three, FContentInfo)
+  else
+    Result := TBerSequence.Create([TDerInteger.Three, FContentInfo, FMacData]);
 end;
 
 end.

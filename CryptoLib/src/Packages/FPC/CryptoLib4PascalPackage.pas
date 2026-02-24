@@ -198,7 +198,9 @@ uses
   ClpX448Parameters, ClpEd448PhSigner, ClpEd448Signer, ClpX448, ClpX448Field, 
   ClpEd448, ClpScalar448, ClpIX448Agreement, ClpIEd448Parameters, 
   ClpIX448Parameters, ClpIEd448PhSigner, ClpIEd448Signer, ClpIEd448Generators, 
-  ClpIX448Generators, ClpCurve448KeyUtilities, ClpECKeyEncoder;
+  ClpIX448Generators, ClpCurve448KeyUtilities, ClpECKeyEncoder, 
+  ClpPkcs12Entry, ClpX509CertificateEntry, ClpIPkcs12Entry, 
+  ClpIX509CertificateEntry;
 
 implementation
 

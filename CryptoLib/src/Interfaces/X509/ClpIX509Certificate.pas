@@ -73,6 +73,10 @@ type
     function GetCriticalExtensionOids: TCryptoLibStringArray;
     function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
 
+    function Equals(AOther: IX509Certificate): Boolean;
+    function GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
+    function ToString: String;
+
     function IsSignatureValid(const AKey: IAsymmetricKeyParameter): Boolean; overload;
     function IsSignatureValid(const AVerifierProvider: IVerifierFactoryProvider): Boolean; overload;
     function IsAlternativeSignatureValid(const APublicKey: IAsymmetricKeyParameter): Boolean; overload;

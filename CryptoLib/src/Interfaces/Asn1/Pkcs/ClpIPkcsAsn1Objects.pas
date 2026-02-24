@@ -43,6 +43,8 @@ type
   IKeyDerivationFunc = interface;
   IPrivateKeyInfo = interface;
   IPkcsSignedData = interface;
+  IMacData = interface;
+  IPfx = interface;
 
   /// <summary>
   /// Interface for EncryptedPrivateKeyInfo (PKCS#8).
@@ -242,6 +244,37 @@ type
     property Certificates: IAsn1Set read GetCertificates;
     property Crls: IAsn1Set read GetCrls;
     property SignerInfos: IAsn1Set read GetSignerInfos;
+  end;
+
+  /// <summary>
+  /// Interface for MacData (PKCS#12).
+  /// </summary>
+  IMacData = interface(IAsn1Encodable)
+    ['{1E2F3A4B-5C6D-7E8F-9A0B-1C2D3E4F5A6B}']
+
+    function GetMac: IDigestInfo;
+    function GetSalt: TCryptoLibByteArray;
+    function GetIterationCount: TBigInteger;
+    function GetIterations: IDerInteger;
+    function GetMacSalt: IAsn1OctetString;
+
+    property Mac: IDigestInfo read GetMac;
+    property IterationCount: TBigInteger read GetIterationCount;
+    property Iterations: IDerInteger read GetIterations;
+    property MacSalt: IAsn1OctetString read GetMacSalt;
+  end;
+
+  /// <summary>
+  /// Interface for Pfx (PKCS#12).
+  /// </summary>
+  IPfx = interface(IAsn1Encodable)
+    ['{2F3A4B5C-6D7E-8F9A-0B1C-2D3E4F5A6B7C}']
+
+    function GetAuthSafe: IPkcsContentInfo;
+    function GetMacData: IMacData;
+
+    property AuthSafe: IPkcsContentInfo read GetAuthSafe;
+    property MacData: IMacData read GetMacData;
   end;
 
 implementation
