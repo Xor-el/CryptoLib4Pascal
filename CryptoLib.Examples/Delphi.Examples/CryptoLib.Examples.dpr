@@ -634,7 +634,9 @@ uses
   ClpPkcs12Entry in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Entry.pas',
   ClpX509CertificateEntry in '..\..\CryptoLib\src\Pkcs\ClpX509CertificateEntry.pas',
   ClpIPkcs12Entry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Entry.pas',
-  ClpIX509CertificateEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas';
+  ClpIX509CertificateEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas',
+  ClpAsymmetricKeyEntry in '..\..\CryptoLib\src\Pkcs\ClpAsymmetricKeyEntry.pas',
+  ClpIAsymmetricKeyEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIAsymmetricKeyEntry.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

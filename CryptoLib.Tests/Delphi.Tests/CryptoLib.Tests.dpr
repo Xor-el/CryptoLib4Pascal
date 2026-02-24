@@ -646,6 +646,8 @@ uses
   ClpX509CertificateEntry in '..\..\CryptoLib\src\Pkcs\ClpX509CertificateEntry.pas',
   ClpIPkcs12Entry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Entry.pas',
   ClpIX509CertificateEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas',
+  ClpAsymmetricKeyEntry in '..\..\CryptoLib\src\Pkcs\ClpAsymmetricKeyEntry.pas',
+  ClpIAsymmetricKeyEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIAsymmetricKeyEntry.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTests in '..\src\Crypto\BlowfishTests.pas',

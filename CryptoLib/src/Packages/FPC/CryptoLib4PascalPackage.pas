@@ -200,7 +200,7 @@ uses
   ClpIX448Parameters, ClpIEd448PhSigner, ClpIEd448Signer, ClpIEd448Generators, 
   ClpIX448Generators, ClpCurve448KeyUtilities, ClpECKeyEncoder, 
   ClpPkcs12Entry, ClpX509CertificateEntry, ClpIPkcs12Entry, 
-  ClpIX509CertificateEntry;
+  ClpIX509CertificateEntry, ClpAsymmetricKeyEntry, ClpIAsymmetricKeyEntry;
 
 implementation
 
