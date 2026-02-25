@@ -35,7 +35,7 @@ type
     FIsBooted: Boolean;
     FNistAlgorithm, FHashAlgs, FSigAlgs, FIdSha256, FIdSha384, FIdSha512,
       FIdSha224, FIdSha512_224, FIdSha512_256, FIdSha3_224, FIdSha3_256,
-      FIdSha3_384, FIdSha3_512, FIdShake128, FIdShake256, FIdHMacWithSha3_224,
+      FIdSha3_384, FIdSha3_512, FIdShake128, FIdShake256, FIdShake128Len, FIdShake256Len, FIdHMacWithSha3_224,
       FIdHMacWithSha3_256, FIdHMacWithSha3_384, FIdHMacWithSha3_512, FAES,
       FIdAES128Ecb, FIdAes128Cbc, FIdAes128Ofb, FIdAes128Cfb, FIdAes192Ecb,
       FIdAes192Cbc, FIdAes192Ofb, FIdAes192Cfb, FIdAes256Ecb, FIdAes256Cbc,
@@ -62,6 +62,8 @@ type
     class function GetIdSha3_512: IDerObjectIdentifier; static; inline;
     class function GetIdShake128: IDerObjectIdentifier; static; inline;
     class function GetIdShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdShake128Len: IDerObjectIdentifier; static; inline;
+    class function GetIdShake256Len: IDerObjectIdentifier; static; inline;
     class function GetIdSha384: IDerObjectIdentifier; static; inline;
     class function GetIdSha512: IDerObjectIdentifier; static; inline;
     class function GetIdSha512_224: IDerObjectIdentifier; static; inline;
@@ -145,6 +147,8 @@ type
     class property IdSha3_512: IDerObjectIdentifier read GetIdSha3_512;
     class property IdShake128: IDerObjectIdentifier read GetIdShake128;
     class property IdShake256: IDerObjectIdentifier read GetIdShake256;
+    class property IdShake128Len: IDerObjectIdentifier read GetIdShake128Len;
+    class property IdShake256Len: IDerObjectIdentifier read GetIdShake256Len;
 
     class property IdHMacWithSha3_224: IDerObjectIdentifier
       read GetIdHMacWithSha3_224;
@@ -430,6 +434,16 @@ begin
   result := FIdShake256;
 end;
 
+class function TNistObjectIdentifiers.GetIdShake128Len: IDerObjectIdentifier;
+begin
+  Result := FIdShake128Len;
+end;
+
+class function TNistObjectIdentifiers.GetIdShake256Len: IDerObjectIdentifier;
+begin
+  Result := FIdShake256Len;
+end;
+
 class function TNistObjectIdentifiers.GetIdSha512: IDerObjectIdentifier;
 begin
   result := FIdSha512;
@@ -551,6 +565,8 @@ begin
     FIdSha3_512 := HashAlgs.Branch('10');
     FIdShake128 := HashAlgs.Branch('11');
     FIdShake256 := HashAlgs.Branch('12');
+    FIdShake128Len := HashAlgs.Branch('17');
+    FIdShake256Len := HashAlgs.Branch('18');
     FIdHMacWithSha3_224 := HashAlgs.Branch('13');
     FIdHMacWithSha3_256 := HashAlgs.Branch('14');
     FIdHMacWithSha3_384 := HashAlgs.Branch('15');

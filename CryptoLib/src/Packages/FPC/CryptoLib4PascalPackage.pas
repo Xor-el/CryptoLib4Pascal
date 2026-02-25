@@ -200,7 +200,10 @@ uses
   ClpIX448Parameters, ClpIEd448PhSigner, ClpIEd448Signer, ClpIEd448Generators, 
   ClpIX448Generators, ClpCurve448KeyUtilities, ClpECKeyEncoder, 
   ClpPkcs12Entry, ClpX509CertificateEntry, ClpIPkcs12Entry, 
-  ClpIX509CertificateEntry, ClpAsymmetricKeyEntry, ClpIAsymmetricKeyEntry;
+  ClpIX509CertificateEntry, ClpAsymmetricKeyEntry, ClpIAsymmetricKeyEntry, 
+  ClpIDigestAlgorithmFinder, ClpDefaultDigestAlgorithmFinder, ClpPkcs12Store, 
+  ClpPkcs12StoreBuilder, ClpPkcs12Utilities, ClpIPkcs12StoreBuilder, 
+  ClpIPkcs12Store;
 
 implementation
 

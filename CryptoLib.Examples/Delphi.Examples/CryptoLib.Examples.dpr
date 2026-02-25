@@ -636,7 +636,14 @@ uses
   ClpIPkcs12Entry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Entry.pas',
   ClpIX509CertificateEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas',
   ClpAsymmetricKeyEntry in '..\..\CryptoLib\src\Pkcs\ClpAsymmetricKeyEntry.pas',
-  ClpIAsymmetricKeyEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIAsymmetricKeyEntry.pas';
+  ClpIAsymmetricKeyEntry in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIAsymmetricKeyEntry.pas',
+  ClpDefaultDigestAlgorithmFinder in '..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestAlgorithmFinder.pas',
+  ClpIDigestAlgorithmFinder in '..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIDigestAlgorithmFinder.pas',
+  ClpPkcs12Utilities in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Utilities.pas',
+  ClpPkcs12StoreBuilder in '..\..\CryptoLib\src\Pkcs\ClpPkcs12StoreBuilder.pas',
+  ClpIPkcs12StoreBuilder in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12StoreBuilder.pas',
+  ClpPkcs12Store in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Store.pas',
+  ClpIPkcs12Store in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Store.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

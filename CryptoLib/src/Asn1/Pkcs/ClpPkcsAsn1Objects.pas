@@ -35,6 +35,7 @@ uses
   ClpBigInteger,
   ClpCryptoLibTypes,
   ClpAsn1Utilities,
+  ClpArrayUtilities,
   ClpPlatformUtilities;
 
 resourcestring
@@ -57,6 +58,7 @@ resourcestring
   SMacNil = 'mac';
   SMacSaltNil = 'macSalt';
   SIterationsNil = 'iterations';
+  SEncryptedDataVersionNotZero = 'sequence not version 0';
 
 type
   /// <summary>
@@ -563,6 +565,142 @@ type
     property IterationCount: TBigInteger read GetIterationCount;
     property Iterations: IDerInteger read GetIterations;
     property MacSalt: IAsn1OctetString read GetMacSalt;
+  end;
+
+  /// <summary>
+  /// SafeBag (PKCS#12).
+  /// </summary>
+  TSafeBag = class(TAsn1Encodable, ISafeBag)
+  strict private
+  var
+    FBagID: IDerObjectIdentifier;
+    FBagValue: IAsn1Encodable;
+    FBagAttributes: IAsn1Set;
+
+  strict protected
+    function GetBagID: IDerObjectIdentifier;
+    function GetBagValue: IAsn1Object;
+    function GetBagValueEncodable: IAsn1Encodable;
+    function GetBagAttributes: IAsn1Set;
+
+  public
+    class function GetInstance(AObj: TObject): ISafeBag; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ISafeBag; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ISafeBag; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ISafeBag; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ISafeBag; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ABagID: IDerObjectIdentifier;
+      const ABagValue: IAsn1Encodable); overload;
+    constructor Create(const ABagID: IDerObjectIdentifier;
+      const ABagValue: IAsn1Encodable; const ABagAttributes: IAsn1Set); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property BagID: IDerObjectIdentifier read GetBagID;
+    property BagValue: IAsn1Object read GetBagValue;
+    property BagValueEncodable: IAsn1Encodable read GetBagValueEncodable;
+    property BagAttributes: IAsn1Set read GetBagAttributes;
+  end;
+
+  /// <summary>
+  /// CertBag (PKCS#12).
+  /// </summary>
+  TCertBag = class(TAsn1Encodable, ICertBag)
+  strict private
+  var
+    FCertID: IDerObjectIdentifier;
+    FCertValue: IAsn1Encodable;
+
+  strict protected
+    function GetCertID: IDerObjectIdentifier;
+    function GetCertValue: IAsn1Object;
+    function GetCertValueEncodable: IAsn1Encodable;
+
+  public
+    class function GetInstance(AObj: TObject): ICertBag; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ICertBag; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ICertBag; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICertBag; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICertBag; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ACertID: IDerObjectIdentifier;
+      const ACertValue: IAsn1Encodable); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property CertID: IDerObjectIdentifier read GetCertID;
+    property CertValue: IAsn1Object read GetCertValue;
+    property CertValueEncodable: IAsn1Encodable read GetCertValueEncodable;
+  end;
+
+  /// <summary>
+  /// AuthenticatedSafe (PKCS#12).
+  /// </summary>
+  TAuthenticatedSafe = class(TAsn1Encodable, IAuthenticatedSafe)
+  strict private
+  var
+    FInfo: TCryptoLibGenericArray<IPkcsContentInfo>;
+    FIsBer: Boolean;
+
+  strict protected
+    function GetContentInfo: TCryptoLibGenericArray<IPkcsContentInfo>;
+
+  public
+    class function GetInstance(AObj: TObject): IAuthenticatedSafe; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IAuthenticatedSafe; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IAuthenticatedSafe; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAuthenticatedSafe; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAuthenticatedSafe; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AInfo: TCryptoLibGenericArray<IPkcsContentInfo>); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property ContentInfo: TCryptoLibGenericArray<IPkcsContentInfo> read GetContentInfo;
+  end;
+
+  /// <summary>
+  /// EncryptedData (PKCS#7).
+  /// </summary>
+  TPkcsEncryptedData = class(TAsn1Encodable, IPkcsEncryptedData)
+  strict private
+  var
+    FData: IAsn1Sequence;
+
+  strict protected
+    function GetContentType: IDerObjectIdentifier;
+    function GetEncryptionAlgorithm: IAlgorithmIdentifier;
+    function GetContent: IAsn1OctetString;
+
+  public
+    class function GetInstance(AObj: TObject): IPkcsEncryptedData; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IPkcsEncryptedData; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IPkcsEncryptedData; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPkcsEncryptedData; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPkcsEncryptedData; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AContentType: IDerObjectIdentifier;
+      const AEncryptionAlgorithm: IAlgorithmIdentifier;
+      const AContent: IAsn1Encodable); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property ContentType: IDerObjectIdentifier read GetContentType;
+    property EncryptionAlgorithm: IAlgorithmIdentifier read GetEncryptionAlgorithm;
+    property Content: IAsn1OctetString read GetContent;
   end;
 
   /// <summary>
@@ -2332,6 +2470,443 @@ begin
     Result := TBerSequence.Create(TDerInteger.Three, FContentInfo)
   else
     Result := TBerSequence.Create([TDerInteger.Three, FContentInfo, FMacData]);
+end;
+
+{ TSafeBag }
+
+class function TSafeBag.GetInstance(AObj: TObject): ISafeBag;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ISafeBag, Result) then
+    Exit;
+
+  Result := TSafeBag.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TSafeBag.GetInstance(const AObj: IAsn1Convertible): ISafeBag;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ISafeBag, Result) then
+    Exit;
+
+  Result := TSafeBag.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TSafeBag.GetInstance(const AEncoded: TCryptoLibByteArray): ISafeBag;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TSafeBag.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TSafeBag.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ISafeBag;
+begin
+  Result := TSafeBag.Create(TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TSafeBag.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ISafeBag;
+begin
+  Result := TSafeBag.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TSafeBag.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LTagged: IAsn1TaggedObject;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 2) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FBagID := TDerObjectIdentifier.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  LTagged := TAsn1TaggedObject.GetInstance(ASeq[LPos], TAsn1Tags.ContextSpecific, 0);
+  FBagValue := LTagged.GetExplicitBaseObject();
+  System.Inc(LPos);
+
+  FBagAttributes := TAsn1Utilities.ReadOptional<IAsn1Set>(ASeq, LPos,
+    function(A: IAsn1Encodable): IAsn1Set
+    begin
+      Result := TAsn1Set.GetOptional(A);
+    end);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+constructor TSafeBag.Create(const ABagID: IDerObjectIdentifier;
+  const ABagValue: IAsn1Encodable);
+begin
+  Create(ABagID, ABagValue, nil);
+end;
+
+constructor TSafeBag.Create(const ABagID: IDerObjectIdentifier;
+  const ABagValue: IAsn1Encodable; const ABagAttributes: IAsn1Set);
+begin
+  inherited Create();
+
+  if ABagID = nil then
+    raise EArgumentNilCryptoLibException.Create('bagID');
+  if ABagValue = nil then
+    raise EArgumentNilCryptoLibException.Create('bagValue');
+
+  FBagID := ABagID;
+  FBagValue := ABagValue;
+  FBagAttributes := ABagAttributes;
+end;
+
+function TSafeBag.GetBagID: IDerObjectIdentifier;
+begin
+  Result := FBagID;
+end;
+
+function TSafeBag.GetBagValue: IAsn1Object;
+begin
+  Result := FBagValue.ToAsn1Object();
+end;
+
+function TSafeBag.GetBagValueEncodable: IAsn1Encodable;
+begin
+  Result := FBagValue;
+end;
+
+function TSafeBag.GetBagAttributes: IAsn1Set;
+begin
+  Result := FBagAttributes;
+end;
+
+function TSafeBag.ToAsn1Object: IAsn1Object;
+var
+  LTaggedBagValue: IAsn1TaggedObject;
+begin
+  LTaggedBagValue := TDerTaggedObject.Create(True, 0, FBagValue);
+  if FBagAttributes = nil then
+    Result := TDerSequence.Create(FBagID, LTaggedBagValue)
+  else
+    Result := TDerSequence.Create([FBagID, LTaggedBagValue, FBagAttributes]);
+end;
+
+{ TCertBag }
+
+class function TCertBag.GetInstance(AObj: TObject): ICertBag;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertBag, Result) then
+    Exit;
+
+  Result := TCertBag.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertBag.GetInstance(const AObj: IAsn1Convertible): ICertBag;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertBag, Result) then
+    Exit;
+
+  Result := TCertBag.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertBag.GetInstance(const AEncoded: TCryptoLibByteArray): ICertBag;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TCertBag.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TCertBag.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICertBag;
+begin
+  Result := TCertBag.Create(TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TCertBag.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICertBag;
+begin
+  Result := TCertBag.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCertBag.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+  LTagged: IAsn1TaggedObject;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if LCount <> 2 then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FCertID := TDerObjectIdentifier.GetInstance(ASeq[0]);
+  LTagged := TAsn1TaggedObject.GetInstance(ASeq[1], TAsn1Tags.ContextSpecific, 0);
+  FCertValue := LTagged.GetExplicitBaseObject();
+end;
+
+constructor TCertBag.Create(const ACertID: IDerObjectIdentifier;
+  const ACertValue: IAsn1Encodable);
+begin
+  inherited Create();
+
+  if ACertID = nil then
+    raise EArgumentNilCryptoLibException.Create('certID');
+  if ACertValue = nil then
+    raise EArgumentNilCryptoLibException.Create('certValue');
+
+  FCertID := ACertID;
+  FCertValue := ACertValue;
+end;
+
+function TCertBag.GetCertID: IDerObjectIdentifier;
+begin
+  Result := FCertID;
+end;
+
+function TCertBag.GetCertValue: IAsn1Object;
+begin
+  Result := FCertValue.ToAsn1Object();
+end;
+
+function TCertBag.GetCertValueEncodable: IAsn1Encodable;
+begin
+  Result := FCertValue;
+end;
+
+function TCertBag.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create(FCertID, TDerTaggedObject.Create(0, FCertValue) as IDerTaggedObject);
+end;
+
+{ TAuthenticatedSafe }
+
+class function TAuthenticatedSafe.GetInstance(AObj: TObject): IAuthenticatedSafe;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAuthenticatedSafe, Result) then
+    Exit;
+
+  Result := TAuthenticatedSafe.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAuthenticatedSafe.GetInstance(const AObj: IAsn1Convertible): IAuthenticatedSafe;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAuthenticatedSafe, Result) then
+    Exit;
+
+  Result := TAuthenticatedSafe.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAuthenticatedSafe.GetInstance(const AEncoded: TCryptoLibByteArray): IAuthenticatedSafe;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TAuthenticatedSafe.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TAuthenticatedSafe.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAuthenticatedSafe;
+begin
+  Result := TAuthenticatedSafe.Create(TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TAuthenticatedSafe.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAuthenticatedSafe;
+begin
+  Result := TAuthenticatedSafe.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TAuthenticatedSafe.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+
+  FInfo := TArrayUtilities.Map<IAsn1Encodable, IPkcsContentInfo>(ASeq.Elements,
+    function(AElement: IAsn1Encodable): IPkcsContentInfo
+    begin
+      Result := TPkcsContentInfo.GetInstance(AElement);
+    end);
+  FIsBer := Supports(ASeq, IBerSequence);
+end;
+
+constructor TAuthenticatedSafe.Create(const AInfo: TCryptoLibGenericArray<IPkcsContentInfo>);
+begin
+  inherited Create();
+  FInfo := System.Copy(AInfo);
+  FIsBer := True;
+end;
+
+function TAuthenticatedSafe.GetContentInfo: TCryptoLibGenericArray<IPkcsContentInfo>;
+begin
+  Result := System.Copy(FInfo);
+end;
+
+function TAuthenticatedSafe.ToAsn1Object: IAsn1Object;
+var
+ LInfo: TCryptoLibGenericArray<IAsn1Encodable>;
+begin
+  LInfo := TArrayUtilities.Map<IPkcsContentInfo, IAsn1Encodable>(FInfo,
+    function(AElement: IPkcsContentInfo): IAsn1Encodable
+    begin
+      Result := AElement as IAsn1Encodable;
+    end);
+  if FIsBer then
+    Result := TBerSequence.Create(LInfo)
+  else
+    Result := TDLSequence.Create(LInfo);
+end;
+
+{ TEncryptedData }
+
+class function TPkcsEncryptedData.GetInstance(AObj: TObject): IPkcsEncryptedData;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPkcsEncryptedData, Result) then
+    Exit;
+
+  Result := TPkcsEncryptedData.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPkcsEncryptedData.GetInstance(const AObj: IAsn1Convertible): IPkcsEncryptedData;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPkcsEncryptedData, Result) then
+    Exit;
+
+  Result := TPkcsEncryptedData.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPkcsEncryptedData.GetInstance(const AEncoded: TCryptoLibByteArray): IPkcsEncryptedData;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TPkcsEncryptedData.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TPkcsEncryptedData.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPkcsEncryptedData;
+begin
+  Result := TPkcsEncryptedData.Create(TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TPkcsEncryptedData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPkcsEncryptedData;
+begin
+  Result := TPkcsEncryptedData.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TPkcsEncryptedData.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+  LVersion: IDerInteger;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if LCount <> 2 then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  LVersion := TDerInteger.GetInstance(ASeq[0]);
+  if not LVersion.HasValue(0) then
+    raise EArgumentCryptoLibException.Create(SEncryptedDataVersionNotZero);
+
+  FData := TAsn1Sequence.GetInstance(ASeq[1]);
+end;
+
+constructor TPkcsEncryptedData.Create(const AContentType: IDerObjectIdentifier;
+  const AEncryptionAlgorithm: IAlgorithmIdentifier;
+  const AContent: IAsn1Encodable);
+begin
+  inherited Create();
+
+  FData := TBerSequence.Create([AContentType, AEncryptionAlgorithm,
+    TBerTaggedObject.Create(False, 0, AContent) as IBerTaggedObject]);
+end;
+
+function TPkcsEncryptedData.GetContentType: IDerObjectIdentifier;
+begin
+  Result := TDerObjectIdentifier.GetInstance(FData[0]);
+end;
+
+function TPkcsEncryptedData.GetEncryptionAlgorithm: IAlgorithmIdentifier;
+begin
+  Result := TAlgorithmIdentifier.GetInstance(FData[1]);
+end;
+
+function TPkcsEncryptedData.GetContent: IAsn1OctetString;
+var
+  LTagged: IAsn1TaggedObject;
+begin
+  Result := nil;
+  if FData.Count <> 3 then
+    Exit;
+
+  LTagged := TAsn1TaggedObject.GetInstance(FData[2], TAsn1Tags.ContextSpecific, 0);
+  Result := TAsn1OctetString.GetTagged(LTagged, False);
+end;
+
+function TPkcsEncryptedData.ToAsn1Object: IAsn1Object;
+begin
+  Result := TBerSequence.Create(TDerInteger.Zero, FData);
 end;
 
 end.

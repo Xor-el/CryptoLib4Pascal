@@ -31,8 +31,10 @@ uses
 type
   // Forward declarations
   IAttributePkcs = interface;
+  ICertBag = interface;
   ICertificationRequest = interface;
   ICertificationRequestInfo = interface;
+  IPkcsEncryptedData = interface;
   IEncryptedPrivateKeyInfo = interface;
   IEncryptionScheme = interface;
   IPbeParameter = interface;
@@ -43,6 +45,8 @@ type
   IKeyDerivationFunc = interface;
   IPrivateKeyInfo = interface;
   IPkcsSignedData = interface;
+  IAuthenticatedSafe = interface;
+  ISafeBag = interface;
   IMacData = interface;
   IPfx = interface;
 
@@ -275,6 +279,62 @@ type
 
     property AuthSafe: IPkcsContentInfo read GetAuthSafe;
     property MacData: IMacData read GetMacData;
+  end;
+
+  /// <summary>
+  /// Interface for SafeBag (PKCS#12).
+  /// </summary>
+  ISafeBag = interface(IAsn1Encodable)
+    ['{A1B8C2D9-E4F5-4A6B-9C8D-7E0F1A2B3C4D}']
+
+    function GetBagID: IDerObjectIdentifier;
+    function GetBagValue: IAsn1Object;
+    function GetBagValueEncodable: IAsn1Encodable;
+    function GetBagAttributes: IAsn1Set;
+
+    property BagID: IDerObjectIdentifier read GetBagID;
+    property BagValue: IAsn1Object read GetBagValue;
+    property BagValueEncodable: IAsn1Encodable read GetBagValueEncodable;
+    property BagAttributes: IAsn1Set read GetBagAttributes;
+  end;
+
+  /// <summary>
+  /// Interface for CertBag (PKCS#12).
+  /// </summary>
+  ICertBag = interface(IAsn1Encodable)
+    ['{B2C9D3E0-F5A6-4B7C-0D9E-8F1A2B3C4D5E}']
+
+    function GetCertID: IDerObjectIdentifier;
+    function GetCertValue: IAsn1Object;
+    function GetCertValueEncodable: IAsn1Encodable;
+
+    property CertID: IDerObjectIdentifier read GetCertID;
+    property CertValue: IAsn1Object read GetCertValue;
+    property CertValueEncodable: IAsn1Encodable read GetCertValueEncodable;
+  end;
+
+  /// <summary>
+  /// Interface for AuthenticatedSafe (PKCS#12).
+  /// </summary>
+  IAuthenticatedSafe = interface(IAsn1Encodable)
+    ['{C3D0E4F1-A6B7-4C8D-1E0F-9A2B3C4D5E6F}']
+
+    function GetContentInfo: TCryptoLibGenericArray<IPkcsContentInfo>;
+  end;
+
+  /// <summary>
+  /// Interface for EncryptedData (PKCS#7).
+  /// </summary>
+  IPkcsEncryptedData = interface(IAsn1Encodable)
+    ['{D4E1F5A2-B7C8-4D9E-2F0A-1B3C4D5E6F7A}']
+
+    function GetContentType: IDerObjectIdentifier;
+    function GetEncryptionAlgorithm: IAlgorithmIdentifier;
+    function GetContent: IAsn1OctetString;
+
+    property ContentType: IDerObjectIdentifier read GetContentType;
+    property EncryptionAlgorithm: IAlgorithmIdentifier read GetEncryptionAlgorithm;
+    property Content: IAsn1OctetString read GetContent;
   end;
 
 implementation

@@ -62,9 +62,13 @@ type
     /// </summary>
     class function GetValueOrKey<T>(const D: TDictionary<T, T>; const AKey: T): T; static;
     /// <summary>
+    /// Try to remove the entry behind the AKey. Returns True if the key was found and removed.
+    /// </summary>
+    class function Remove<K, V>(const AD: TDictionary<K, V>; const AKey: K): Boolean; overload; static;
+    /// <summary>
     /// Try to get the value for AKey and remove the entry. Returns True if the key was found and removed.
     /// </summary>
-    class function Remove<K, V>(const AD: TDictionary<K, V>; const AKey: K; out AValue: V): Boolean; static;
+    class function Remove<K, V>(const AD: TDictionary<K, V>; const AKey: K; out AValue: V): Boolean; overload; static;
   end;
 
 implementation
@@ -154,6 +158,18 @@ begin
     { Result already set }
   else
     Result := AKey;
+end;
+
+class function TCollectionUtilities.Remove<K, V>(const AD: TDictionary<K, V>;
+  const AKey: K): Boolean;
+begin
+  if not AD.ContainsKey(AKey) then
+  begin
+    Result := False;
+    Exit;
+  end;
+  AD.Remove(AKey);
+  Result := True;
 end;
 
 class function TCollectionUtilities.Remove<K, V>(const AD: TDictionary<K, V>;

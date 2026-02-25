@@ -39,6 +39,9 @@ type
     procedure SetFriendlyName(const AName: String);
     function TryGetAttribute(const AOid: IDerObjectIdentifier;
       out AAttribute: IAsn1Encodable): Boolean;
+
+    property BagAttributeKeys: TCryptoLibGenericArray<IDerObjectIdentifier> read GetBagAttributeKeys;
+    property Item[const AOid: IDerObjectIdentifier]: IAsn1Encodable read GetItem; default;
   end;
 
 implementation
