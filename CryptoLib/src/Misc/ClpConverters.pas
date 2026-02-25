@@ -91,6 +91,11 @@ class function TConverters.ConvertStringToCharArray(const AInput: String): TCryp
 var
   LI: Int32;
 begin
+  if AInput = '' then
+  begin
+    Result := nil;
+  end;
+
   System.SetLength(Result, System.Length(AInput));
   for LI := 0 to System.Length(AInput) - 1 do
     Result[LI] := AInput[LI + 1];
