@@ -41,6 +41,7 @@ uses
   ClpPemWriter,
   ClpIOpenSslPemWriter,
   ClpOpenSslPemWriter,
+  ClpConverters,
   ClpIOpenSslPemReader,
   ClpOpenSslPemReader,
   ClpIOpenSslPasswordFinder,
@@ -1227,13 +1228,9 @@ implementation
 { TTestOpenSslPassword }
 
 constructor TTestOpenSslPassword.Create(const APassword: String);
-var
-  I: Int32;
 begin
   inherited Create();
-  System.SetLength(FPassword, Length(APassword));
-  for I := 1 to Length(APassword) do
-    FPassword[I - 1] := APassword[I];
+  FPassword := TConverters.ConvertStringToCharArray(APassword);
 end;
 
 function TTestOpenSslPassword.GetPassword(): TCryptoLibCharArray;

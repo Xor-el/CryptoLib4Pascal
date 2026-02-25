@@ -49,7 +49,6 @@ type
   /// </summary>
   TTestPkcs12 = class(TCryptoLibAlgorithmTestCase)
   private
-    function StringToCharArray(const AInput: String): TCryptoLibCharArray;
     procedure Run1(AId: Int32; const APassword: TCryptoLibCharArray;
       const ASalt: TBytes; AICount: Int32; const AResult: TBytes);
     procedure Run2(AId: Int32; const APassword: TCryptoLibCharArray;
@@ -62,15 +61,6 @@ type
   end;
 
 implementation
-
-function TTestPkcs12.StringToCharArray(const AInput: String): TCryptoLibCharArray;
-var
-  LI: Int32;
-begin
-  SetLength(Result, System.Length(AInput));
-  for LI := 0 to System.Length(AInput) - 1 do
-    Result[LI] := AInput[LI + 1];
-end;
 
 procedure TTestPkcs12.Run1(AId: Int32; const APassword: TCryptoLibCharArray;
   const ASalt: TBytes; AICount: Int32; const AResult: TBytes);

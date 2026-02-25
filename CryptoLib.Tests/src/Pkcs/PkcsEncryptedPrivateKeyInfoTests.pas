@@ -53,7 +53,6 @@ type
   TTestPkcsEncryptedPrivateKeyInfo = class(TCryptoLibAlgorithmTestCase)
 
   strict private
-    function StringToCharArray(const AStr: String): TCryptoLibCharArray;
     procedure DoTestOpensslKey(const AName: String;
       const AKeyData: TCryptoLibByteArray;
       const APassword: TCryptoLibCharArray);
@@ -84,16 +83,6 @@ end;
 procedure TTestPkcsEncryptedPrivateKeyInfo.TearDown;
 begin
   inherited;
-end;
-
-function TTestPkcsEncryptedPrivateKeyInfo.StringToCharArray(
-  const AStr: String): TCryptoLibCharArray;
-var
-  LI: Int32;
-begin
-  SetLength(Result, Length(AStr));
-  for LI := 1 to Length(AStr) do
-    Result[LI - 1] := AStr[LI];
 end;
 
 procedure TTestPkcsEncryptedPrivateKeyInfo.TestEncryptDecryptRoundTrip;

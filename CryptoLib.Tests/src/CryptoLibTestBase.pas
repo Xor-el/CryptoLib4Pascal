@@ -17,7 +17,9 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpEncoders,
-  ClpArrayUtilities;
+  ClpArrayUtilities,
+  ClpConverters,
+  ClpCryptoLibTypes;
 
 type
 
@@ -37,6 +39,7 @@ type
     function Prepend(const AData: TBytes; AValue: Byte): TBytes;
     function AreEqual(const AA, AB: TBytes): Boolean;
     function CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;
+    function StringToCharArray(const AInput: String): TCryptoLibCharArray;
 
   end;
 
@@ -78,6 +81,11 @@ end;
 function TCryptoLibAlgorithmTestCase.CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;
 begin
   Result := TArrayUtilities.CopyOfRange<Byte>(AData, AFrom, ATo);
+end;
+
+function TCryptoLibAlgorithmTestCase.StringToCharArray(const AInput: String): TCryptoLibCharArray;
+begin
+  Result := TConverters.ConvertStringToCharArray(AInput);
 end;
 
 end.

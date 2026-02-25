@@ -37,6 +37,7 @@ uses
   ClpPemObject,
   ClpIPemHeader,
   ClpIPemObject,
+  ClpConverters,
   ClpIPemWriter,
   ClpPemWriter,
   ClpIOpenSslPemWriter,
@@ -124,13 +125,9 @@ implementation
 { TTestOpenSslWritePassword }
 
 constructor TTestOpenSslWritePassword.Create(const APassword: String);
-var
-  I: Int32;
 begin
   inherited Create();
-  System.SetLength(FPassword, Length(APassword));
-  for I := 1 to Length(APassword) do
-    FPassword[I - 1] := APassword[I];
+  FPassword := TConverters.ConvertStringToCharArray(APassword);
 end;
 
 function TTestOpenSslWritePassword.GetPassword(): TCryptoLibCharArray;

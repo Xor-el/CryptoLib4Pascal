@@ -200,7 +200,7 @@ begin
   Result := nil;
   if (APassword = nil) or (System.Length(APassword) < 1) then
     Exit;
-  System.SetString(LStr, PChar(@APassword[0]), System.Length(APassword));
+  LStr := TConverters.ConvertCharArrayToString(APassword);
   Result := TConverters.ConvertStringToBytes(LStr, TEncoding.ANSI);
 end;
 
@@ -212,7 +212,7 @@ begin
   Result := nil;
   if (APassword = nil) or (System.Length(APassword) < 1) then
     Exit;
-  System.SetString(LStr, PChar(@APassword[0]), System.Length(APassword));
+  LStr := TConverters.ConvertCharArrayToString(APassword);
   Result := TConverters.ConvertStringToBytes(LStr, TEncoding.UTF8);
 end;
 
@@ -241,7 +241,7 @@ begin
       Result := nil;
     Exit;
   end;
-  System.SetString(LStr, PChar(@APassword[0]), System.Length(APassword));
+  LStr := TConverters.ConvertCharArrayToString(APassword);
   LBytes := TConverters.ConvertStringToBytes(LStr, TEncoding.BigEndianUnicode);
   LNumBytes := System.Length(LBytes);
   System.SetLength(Result, LNumBytes + 2);

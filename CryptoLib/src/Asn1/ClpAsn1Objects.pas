@@ -7328,7 +7328,7 @@ begin
   System.SetLength(LCs, LCharLen);
   for I := 0 to LCharLen - 1 do
     LCs[I] := Char((AStr[2 * I] shl 8) or (AStr[2 * I + 1] and $FF));
-  System.SetString(FStr, PChar(@LCs[0]), LCharLen);
+  FStr := TConverters.ConvertCharArrayToString(LCs);
 end;
 
 constructor TDerBmpString.Create(const AStr: String);
@@ -7390,7 +7390,7 @@ class function TDerBmpString.CreatePrimitive(const AStr: TCryptoLibCharArray): I
 var
   LStr: String;
 begin
-  System.SetString(LStr, PChar(@AStr[0]), System.Length(AStr));
+  LStr := TConverters.ConvertCharArrayToString(AStr);
   Result := TDerBmpString.Create(LStr);
 end;
 
