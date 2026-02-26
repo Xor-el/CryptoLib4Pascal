@@ -77,6 +77,7 @@ resourcestring
   SDeltaCertDescSpkiNil = 'subjectPublicKeyInfo';
   SDeltaCertDescSigValNil = 'signatureValue';
   SInvalidDsaParameter = 'Invalid DsaParameter: %s';
+  SCertificatePairAtLeastOnePresent = 'At least one of the pair shall be present';
 
 type
   /// <summary>
@@ -1392,6 +1393,44 @@ type
     property Extensions: IX509Extensions read GetExtensions;
     property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;
     property Signature: IDerBitString read GetSignature;
+
+  end;
+
+  /// <summary>
+  /// CertificatePair (crossCertificatePair, RFC 2587). At least one of forward/reverse shall be present.
+  /// </summary>
+  TCertificatePair = class(TAsn1Encodable, ICertificatePair)
+
+  strict private
+  var
+    FForward: IX509CertificateStructure;
+    FReverse: IX509CertificateStructure;
+
+    procedure Validate;
+
+  strict protected
+    function GetForward: IX509CertificateStructure;
+    function GetReverse: IX509CertificateStructure;
+
+  public
+    class function GetInstance(AObj: TObject): ICertificatePair; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): ICertificatePair; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ICertificatePair; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ICertificatePair; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICertificatePair; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AForward, AReverse: IX509CertificateStructure); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Forward: IX509CertificateStructure read GetForward;
+    property Reverse: IX509CertificateStructure read GetReverse;
 
   end;
 
@@ -4116,6 +4155,126 @@ end;
 function TX509CertificateStructure.ToAsn1Object: IAsn1Object;
 begin
   Result := TDerSequence.Create([FTbsCertificate, FSignatureAlgorithm, FSignature]);
+end;
+
+{ TCertificatePair }
+
+class function TCertificatePair.GetInstance(AObj: TObject): ICertificatePair;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificatePair, Result) then
+    Exit;
+
+  Result := TCertificatePair.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertificatePair.GetInstance(const AObj: IAsn1Convertible): ICertificatePair;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ICertificatePair, Result) then
+    Exit;
+
+  Result := TCertificatePair.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCertificatePair.GetInstance(const AEncoded: TCryptoLibByteArray): ICertificatePair;
+begin
+  if AEncoded = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TCertificatePair.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TCertificatePair.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ICertificatePair;
+begin
+  Result := TCertificatePair.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TCertificatePair.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICertificatePair;
+begin
+  Result := TCertificatePair.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCertificatePair.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 0) or (LCount > 2) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FForward := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(
+    ASeq, LPos, 0, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IX509CertificateStructure
+    begin
+      Result := TX509CertificateStructure.GetTagged(ATagged, AState);
+    end);
+
+  FReverse := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(
+    ASeq, LPos, 1, True,
+    function(ATagged: IAsn1TaggedObject; AState: Boolean): IX509CertificateStructure
+    begin
+      Result := TX509CertificateStructure.GetTagged(ATagged, AState);
+    end);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+
+  Validate();
+end;
+
+constructor TCertificatePair.Create(const AForward, AReverse: IX509CertificateStructure);
+begin
+  inherited Create();
+
+  FForward := AForward;
+  FReverse := AReverse;
+
+  Validate();
+end;
+
+procedure TCertificatePair.Validate;
+begin
+  if (FForward = nil) and (FReverse = nil) then
+    raise EArgumentCryptoLibException.CreateRes(@SCertificatePairAtLeastOnePresent);
+end;
+
+function TCertificatePair.GetForward: IX509CertificateStructure;
+begin
+  Result := FForward;
+end;
+
+function TCertificatePair.GetReverse: IX509CertificateStructure;
+begin
+  Result := FReverse;
+end;
+
+function TCertificatePair.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(2);
+  LV.AddOptionalTagged(True, 0, FForward);
+  LV.AddOptionalTagged(True, 1, FReverse);
+  Result := TDerSequence.Create(LV);
 end;
 
 { TGeneralName }

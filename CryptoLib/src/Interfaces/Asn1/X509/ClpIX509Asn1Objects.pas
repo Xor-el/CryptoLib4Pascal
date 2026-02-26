@@ -46,6 +46,7 @@ type
   ITbsCertificateStructure = interface;
   ITime = interface;
   IValidity = interface;
+  ICertificatePair = interface;
   IX509CertificateStructure = interface;
   IX509Extensions = interface;
   IX509Name = interface;
@@ -344,6 +345,20 @@ type
     property Extensions: IX509Extensions read GetExtensions;
     property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;
     property Signature: IDerBitString read GetSignature;
+  end;
+
+  /// <summary>
+  /// Interface for CertificatePair (crossCertificatePair, RFC 2587).
+  /// CertificatePair ::= SEQUENCE { forward [0] Certificate OPTIONAL, reverse [1] Certificate OPTIONAL }
+  /// </summary>
+  ICertificatePair = interface(IAsn1Encodable)
+    ['{F1A2B3C4-D5E6-47F8-90AB-CDEF12345678}']
+
+    function GetForward: IX509CertificateStructure;
+    function GetReverse: IX509CertificateStructure;
+
+    property Forward: IX509CertificateStructure read GetForward;
+    property Reverse: IX509CertificateStructure read GetReverse;
   end;
 
   /// <summary>

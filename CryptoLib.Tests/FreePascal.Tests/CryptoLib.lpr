@@ -31,9 +31,9 @@ uses
   OcbTests, CcmTests, EaxTests, CMacTests, AeadTestUtilities, GcmReorderTests,
   GCMTests, GcmSivTests, GMacTests, Pkcs12Tests, CryptoLibTestBase,
   PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests, OpenSslReaderTests,
-  OpenSslWriterTests, X509CertGenTests, ClpFixedSecureRandom,
-  ClpShortenedDigest, Int32Tests, Int64Tests, IPAddressUtilitiesTests,
-  PemReaderTests;
+  OpenSslWriterTests, X509CertGenTests, X509CertificatePairTests,
+  ClpFixedSecureRandom, ClpShortenedDigest, Int32Tests, Int64Tests,
+  IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

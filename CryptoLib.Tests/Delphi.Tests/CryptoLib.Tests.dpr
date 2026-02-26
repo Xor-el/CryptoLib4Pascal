@@ -653,6 +653,10 @@ uses
   ClpIPkcs12StoreBuilder in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12StoreBuilder.pas',
   ClpPkcs12Store in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Store.pas',
   ClpIPkcs12Store in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Store.pas',
+  ClpX509CertificatePairParser in '..\..\CryptoLib\src\X509\ClpX509CertificatePairParser.pas',
+  ClpX509CertificatePair in '..\..\CryptoLib\src\X509\ClpX509CertificatePair.pas',
+  ClpIX509CertificatePairParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePairParser.pas',
+  ClpIX509CertificatePair in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePair.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTests in '..\src\Crypto\BlowfishTests.pas',
@@ -775,8 +779,9 @@ uses
   Ed448HigherLevelTests in '..\src\Others\Ed448HigherLevelTests.pas',
   Curve448KeyUtilitiesTests in '..\src\Others\Curve448KeyUtilitiesTests.pas',
   ECEncodingTests in '..\src\Math\ECEncodingTests.pas',
-  Pkcs12StoreTests in '..\src\Pkcs\Pkcs12StoreTests.pas',
   Pkcs12Tests in '..\src\Crypto\Pkcs12Tests.pas',
+  Pkcs12StoreTests in '..\src\Pkcs\Pkcs12StoreTests.pas',
+  X509CertificatePairTests in '..\src\X509\X509CertificatePairTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

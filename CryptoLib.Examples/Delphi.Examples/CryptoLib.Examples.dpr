@@ -641,7 +641,11 @@ uses
   ClpPkcs12StoreBuilder in '..\..\CryptoLib\src\Pkcs\ClpPkcs12StoreBuilder.pas',
   ClpIPkcs12StoreBuilder in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12StoreBuilder.pas',
   ClpPkcs12Store in '..\..\CryptoLib\src\Pkcs\ClpPkcs12Store.pas',
-  ClpIPkcs12Store in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Store.pas';
+  ClpIPkcs12Store in '..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Store.pas',
+  ClpX509CertificatePairParser in '..\..\CryptoLib\src\X509\ClpX509CertificatePairParser.pas',
+  ClpX509CertificatePair in '..\..\CryptoLib\src\X509\ClpX509CertificatePair.pas',
+  ClpIX509CertificatePairParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePairParser.pas',
+  ClpIX509CertificatePair in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePair.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

@@ -202,7 +202,8 @@ uses
   ClpIX509CertificateEntry, ClpAsymmetricKeyEntry, ClpIAsymmetricKeyEntry, 
   ClpIDigestAlgorithmFinder, ClpDefaultDigestAlgorithmFinder, ClpPkcs12Store, 
   ClpPkcs12StoreBuilder, ClpPkcs12Utilities, ClpIPkcs12StoreBuilder, 
-  ClpIPkcs12Store;
+  ClpIPkcs12Store, ClpX509CertificatePairParser, ClpX509CertificatePair, 
+  ClpIX509CertificatePairParser, ClpIX509CertificatePair;
 
 implementation
 

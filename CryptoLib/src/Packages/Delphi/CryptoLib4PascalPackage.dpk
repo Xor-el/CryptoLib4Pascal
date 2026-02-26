@@ -661,6 +661,10 @@ contains
   ClpPkcs12StoreBuilder in '..\..\Pkcs\ClpPkcs12StoreBuilder.pas',
   ClpIPkcs12StoreBuilder in '..\..\Interfaces\Pkcs\ClpIPkcs12StoreBuilder.pas',
   ClpPkcs12Store in '..\..\Pkcs\ClpPkcs12Store.pas',
-  ClpIPkcs12Store in '..\..\Interfaces\Pkcs\ClpIPkcs12Store.pas';
+  ClpIPkcs12Store in '..\..\Interfaces\Pkcs\ClpIPkcs12Store.pas',
+  ClpX509CertificatePairParser in '..\..\X509\ClpX509CertificatePairParser.pas',
+  ClpX509CertificatePair in '..\..\X509\ClpX509CertificatePair.pas',
+  ClpIX509CertificatePairParser in '..\..\Interfaces\X509\ClpIX509CertificatePairParser.pas',
+  ClpIX509CertificatePair in '..\..\Interfaces\X509\ClpIX509CertificatePair.pas';
 
 end.
