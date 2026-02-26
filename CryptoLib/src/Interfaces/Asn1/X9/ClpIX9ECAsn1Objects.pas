@@ -108,6 +108,15 @@ type
     property BaseEntry: IX9ECPoint read GetBaseEntry;
   end;
 
+  IX9ECParametersHolder = interface(IInterface)
+    ['{F24A1BB5-8A39-45A4-9BEF-68DD0EE79E0D}']
+
+    function CreateParameters(): IX9ECParameters;
+    function GetParameters: IX9ECParameters;
+    property Parameters: IX9ECParameters read GetParameters;
+
+  end;
+
   /// <summary>
   /// Interface for X962Parameters.
   /// </summary>

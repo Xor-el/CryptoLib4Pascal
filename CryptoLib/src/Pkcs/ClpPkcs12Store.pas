@@ -25,6 +25,7 @@ uses
   Classes,
   SysUtils,
   Rtti,
+  TypInfo,
   Generics.Collections,
   Generics.Defaults,
   ClpIMac,
@@ -77,7 +78,6 @@ uses
 
 resourcestring
   SInputNil = 'input';
-  SPasswordNil = 'no password supplied when one expected';
   SMacInvalid = 'PKCS12 key store MAC invalid - wrong password or corrupted file.';
   SPasswordNotNeeded = 'password supplied for keystore that does not require one';
   SUnsupportedCertType = 'Unsupported certificate type: %s';
@@ -165,15 +165,19 @@ type
       const AData: TCryptoLibByteArray): TCryptoLibByteArray; static;
     class function VerifyPbeMac(const AMacData: IMacData; const APassword: TCryptoLibCharArray;
       AWrongPkcs12Zero: Boolean; const AData: TCryptoLibByteArray): Boolean; static;
-    procedure LoadKeyBag(const APrivKeyInfo: IPrivateKeyInfo; const ABagAttributes: IAsn1Set);
-    procedure LoadPkcs8ShroudedKeyBag(const AEncPrivKeyInfo: IEncryptedPrivateKeyInfo;
-      const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean);
     procedure DeleteCertsEntry(const AAlias: String);
     procedure DeleteKeysEntry(const AAlias: String);
     function CreateEntryFriendlyName(const AAlias: String; const AEntry: IPkcs12Entry): IAsn1Sequence;
     procedure AddLocalKeyID(const V: IAsn1EncodableVector; const ACertEntry: IX509CertificateEntry); overload;
     procedure AddLocalKeyID(const V: IAsn1EncodableVector; const AC: IX509Certificate); overload;
     function CreateCertBag(const AC: IX509Certificate): ICertBag;
+  strict protected
+    function GetCount: Int32;
+    function GetAliases: TCryptoLibStringArray;
+
+    procedure LoadKeyBag(const APrivKeyInfo: IPrivateKeyInfo; const ABagAttributes: IAsn1Set); virtual;
+    procedure LoadPkcs8ShroudedKeyBag(const AEncPrivKeyInfo: IEncryptedPrivateKeyInfo;
+      const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean); virtual;
   public
     /// <summary>When True, ignore useless password.</summary>
     class property IgnoreUselessPassword: Boolean read FIgnoreUselessPassword write FIgnoreUselessPassword;
@@ -190,7 +194,6 @@ type
     function GetKey(const AAlias: String): IAsymmetricKeyEntry;
     function IsCertificateEntry(const AAlias: String): Boolean;
     function IsKeyEntry(const AAlias: String): Boolean;
-    function GetAliases: TCryptoLibStringArray;
     function ContainsAlias(const AAlias: String): Boolean;
     function GetCertificate(const AAlias: String): IX509CertificateEntry;
     function GetCertificateAlias(const ACert: IX509Certificate): String;
@@ -200,8 +203,10 @@ type
     procedure SetKeyEntry(const AAlias: String; const AKeyEntry: IAsymmetricKeyEntry;
       const AChain: TCryptoLibGenericArray<IX509CertificateEntry>);
     procedure DeleteEntry(const AAlias: String);
-    function GetCount: Int32;
+    function IsEntryOfType(const AAlias: String; AEntryType: PTypeInfo): Boolean;
     procedure Save(const AStream: TStream; const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom);
+    property Count: Int32 read GetCount;
+    property Aliases: TCryptoLibStringArray read GetAliases;
   end;
 
 implementation
@@ -638,8 +643,7 @@ begin
   if LMacData <> nil then
   begin
     LPasswordNeeded := True;
-    if APassword = nil then
-      raise EArgumentNilCryptoLibException.Create(SPasswordNil);
+
     LContent := LInfo.Content;
     LData := TAsn1OctetString.GetInstance(LContent).GetOctets();
     if not VerifyPbeMac(LMacData, APassword, False, LData) then
@@ -1058,6 +1062,20 @@ begin
   DeleteKeysEntry(AAlias);
 end;
 
+function TPkcs12Store.IsEntryOfType(const AAlias: String; AEntryType: PTypeInfo): Boolean;
+begin
+  if AAlias = '' then
+    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+  if AEntryType = nil then
+    Result := False
+  else if AEntryType = TypeInfo(IX509CertificateEntry) then
+    Result := IsCertificateEntry(AAlias)
+  else if AEntryType = TypeInfo(IAsymmetricKeyEntry) then
+    Result := IsKeyEntry(AAlias) and (GetCertificate(AAlias) <> nil)
+  else
+    Result := False;
+end;
+
 function TPkcs12Store.GetCount: Int32;
 var
   LKey: String;
@@ -1257,7 +1275,7 @@ begin
           Continue;
         if TMiscObjectIdentifiers.IdOraclePkcs12TrustedKeyUsage.Equals(LOid) then
           Continue;
-        LBagAttrs.Add(TDerSequence.Create([LOid, TDerSet.Create(LCertEntry[LOid]) as IDerSet]) as IDerSequence);
+        LBagAttrs.Add(TDerSequence.Create(LOid, TDerSet.Create(LCertEntry[LOid]) as IDerSet) as IDerSequence);
       end;
       LBagAttrs.Add(CreateEntryFriendlyName(LName, LCertEntry));
       if FEnableOracleTrustedKeyUsage then

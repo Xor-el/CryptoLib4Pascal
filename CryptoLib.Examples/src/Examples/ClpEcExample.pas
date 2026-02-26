@@ -29,7 +29,6 @@ uses
   SysUtils,
   Classes,
   ClpECUtilities,
-  ClpIX9ECParametersHolder,
   ClpIAsn1Objects,
   ClpBigInteger,
   ClpECParameters,

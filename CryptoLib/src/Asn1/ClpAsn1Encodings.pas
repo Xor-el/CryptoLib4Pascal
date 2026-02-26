@@ -351,8 +351,6 @@ constructor TConstructedDerEncoding.Create(ATagClass, ATagNo: Int32;
   const AContentsElements: TCryptoLibGenericArray<IDerEncoding>);
 begin
   inherited Create(ATagClass, ATagNo);
-  if AContentsElements = nil then
-    raise EArgumentNilCryptoLibException.Create('contentsElements');
   FContentsElements := AContentsElements;
   FContentsLength := TAsn1OutputStream.GetLengthOfContents(TCryptoLibGenericArray<IAsn1Encoding>(AContentsElements));
 end;

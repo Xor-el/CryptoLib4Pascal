@@ -112,7 +112,7 @@ begin
     raise EArgumentCryptoLibException.Create('EncryptedPrivateKeyInfo has no encryption algorithm');
   LEngine := TPbeUtilities.CreateEngine(LAlgID);
   if not (LEngine.TryAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
-    raise EArgumentCryptoLibException.CreateFmt('Unknown encryption algorithm: %s', [LAlgID.Algorithm.ID]);
+    raise ECryptoLibException.CreateFmt('Unknown encryption algorithm: %s', [LAlgID.Algorithm.ID]);
   LCipherParameters := TPbeUtilities.GenerateCipherParameters(LAlgID, APassPhrase, AWrongPkcs12Zero);
   LCipher.Init(False, LCipherParameters);
   LKeyBytes := LCipher.DoFinal(AEncInfo.GetEncryptedDataBytes());

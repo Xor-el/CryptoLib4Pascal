@@ -93,6 +93,27 @@ type
   end;
 
 type
+  TX9ECParametersHolder = class abstract(TInterfacedObject,
+    IX9ECParametersHolder)
+
+  strict private
+  var
+    FLock: TCriticalSection;
+    FParameters: IX9ECParameters;
+
+  strict protected
+
+    function GetParameters: IX9ECParameters; inline;
+    function CreateParameters(): IX9ECParameters; virtual; abstract;
+
+  public
+    constructor Create();
+    destructor Destroy; override;
+    property Parameters: IX9ECParameters read GetParameters;
+
+  end;
+
+type
   /// <summary>
   /// ASN.1 def for Elliptic-Curve Field ID structure. See X9.62 for further details.
   /// </summary>
@@ -913,6 +934,35 @@ begin
   end;
 
   Result := TDerSequence.Create(LV);
+end;
+
+{ TX9ECParametersHolder }
+
+constructor TX9ECParametersHolder.Create;
+begin
+  Inherited Create();
+  FLock := TCriticalSection.Create;
+end;
+
+destructor TX9ECParametersHolder.Destroy;
+begin
+  FLock.Free;
+  inherited Destroy;
+end;
+
+function TX9ECParametersHolder.GetParameters: IX9ECParameters;
+begin
+  FLock.Acquire;
+  try
+    if (FParameters = nil) then
+    begin
+      FParameters := CreateParameters();
+    end;
+
+  finally
+    FLock.Release;
+  end;
+  Result := FParameters;
 end;
 
 { TX962Parameters }

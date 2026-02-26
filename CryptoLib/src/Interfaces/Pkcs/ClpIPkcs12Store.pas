@@ -23,6 +23,7 @@ interface
 
 uses
   Classes,
+  TypInfo,
   ClpIX509Certificate,
   ClpIX509CertificateEntry,
   ClpIAsymmetricKeyEntry,
@@ -50,8 +51,12 @@ type
     procedure SetKeyEntry(const AAlias: String; const AKeyEntry: IAsymmetricKeyEntry;
       const AChain: TCryptoLibGenericArray<IX509CertificateEntry>);
     procedure DeleteEntry(const AAlias: String);
+    function IsEntryOfType(const AAlias: String; AEntryType: PTypeInfo): Boolean;
     function GetCount: Int32;
     procedure Save(const AStream: TStream; const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom);
+
+    property Count: Int32 read GetCount;
+    property Aliases: TCryptoLibStringArray read GetAliases;
   end;
 
 implementation

@@ -297,7 +297,6 @@ uses
   ClpIX509NameTokenizer in '..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509NameTokenizer.pas',
   ClpIX9DHAsn1Objects in '..\..\CryptoLib\src\Interfaces\Asn1\X9\ClpIX9DHAsn1Objects.pas',
   ClpIX9ECAsn1Objects in '..\..\CryptoLib\src\Interfaces\Asn1\X9\ClpIX9ECAsn1Objects.pas',
-  ClpIX9ECParametersHolder in '..\..\CryptoLib\src\Interfaces\Asn1\X9\ClpIX9ECParametersHolder.pas',
   ClpIXSalsa20Engine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIXSalsa20Engine.pas',
   ClpIZTauElement in '..\..\CryptoLib\src\Interfaces\Math\EC\Abc\ClpIZTauElement.pas',
   ClpKdf1BytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas',
@@ -424,7 +423,6 @@ uses
   ClpX931Signer in '..\..\CryptoLib\src\Crypto\Signers\ClpX931Signer.pas',
   ClpX9DHAsn1Objects in '..\..\CryptoLib\src\Asn1\X9\ClpX9DHAsn1Objects.pas',
   ClpX9ECAsn1Objects in '..\..\CryptoLib\src\Asn1\X9\ClpX9ECAsn1Objects.pas',
-  ClpX9ECParametersHolder in '..\..\CryptoLib\src\Asn1\X9\ClpX9ECParametersHolder.pas',
   ClpX9ObjectIdentifiers in '..\..\CryptoLib\src\Asn1\X9\ClpX9ObjectIdentifiers.pas',
   ClpXSalsa20Engine in '..\..\CryptoLib\src\Crypto\Engines\ClpXSalsa20Engine.pas',
   ClpZTauElement in '..\..\CryptoLib\src\Math\EC\Abc\ClpZTauElement.pas',
@@ -776,6 +774,8 @@ uses
   X448HigherLevelTests in '..\src\Others\X448HigherLevelTests.pas',
   Ed448HigherLevelTests in '..\src\Others\Ed448HigherLevelTests.pas',
   Curve448KeyUtilitiesTests in '..\src\Others\Curve448KeyUtilitiesTests.pas',
+  ECEncodingTests in '..\src\Math\ECEncodingTests.pas',
+  Pkcs12StoreTests in '..\src\Pkcs\Pkcs12StoreTests.pas',
   Pkcs12Tests in '..\src\Crypto\Pkcs12Tests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 

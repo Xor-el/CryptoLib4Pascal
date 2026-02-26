@@ -31,7 +31,7 @@ type
     class var
       FIsBooted: Boolean;
       FMd4WithRsa, FMd5WithRsa, FMd4WithRsaEncryption, FDesEcb, FDesCbc, FDesOfb,
-      FDesCfb, FDesEde, FIdSha1, FDsaWithSha1, FSha1WithRsa, FElGamalAlgorithm: IDerObjectIdentifier;
+      FDesCfb, FDesEde, FIdSha1, FDsaWithSha1, FSha1WithRsa: IDerObjectIdentifier;
 
     class function GetMd4WithRsa: IDerObjectIdentifier; static; inline;
     class function GetMd5WithRsa: IDerObjectIdentifier; static; inline;
@@ -44,7 +44,6 @@ type
     class function GetIdSha1: IDerObjectIdentifier; static; inline;
     class function GetDsaWithSha1: IDerObjectIdentifier; static; inline;
     class function GetSha1WithRsa: IDerObjectIdentifier; static; inline;
-    class function GetElGamalAlgorithm: IDerObjectIdentifier; static; inline;
 
     class constructor Create;
   public
@@ -60,8 +59,6 @@ type
     class property IdSha1: IDerObjectIdentifier read GetIdSha1;
     class property DsaWithSha1: IDerObjectIdentifier read GetDsaWithSha1;
     class property Sha1WithRsa: IDerObjectIdentifier read GetSha1WithRsa;
-    /// <summary>ElGamal Algorithm OBJECT IDENTIFIER ::= { iso(1) identified-organization(3) oiw(14) dirservsig(7) algorithm(2) encryption(1) 1 }</summary>
-    class property ElGamalAlgorithm: IDerObjectIdentifier read GetElGamalAlgorithm;
 
     class procedure Boot; static;
   end;
@@ -90,7 +87,6 @@ begin
     FIdSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.26');
     FDsaWithSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.27');
     FSha1WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.29');
-    FElGamalAlgorithm := TDerObjectIdentifier.Create('1.3.14.7.2.1.1');
 
     FIsBooted := True;
   end;
@@ -124,11 +120,6 @@ end;
 class function TOiwObjectIdentifiers.GetDsaWithSha1: IDerObjectIdentifier;
 begin
   Result := FDsaWithSha1;
-end;
-
-class function TOiwObjectIdentifiers.GetElGamalAlgorithm: IDerObjectIdentifier;
-begin
-  Result := FElGamalAlgorithm;
 end;
 
 class function TOiwObjectIdentifiers.GetIdSha1: IDerObjectIdentifier;

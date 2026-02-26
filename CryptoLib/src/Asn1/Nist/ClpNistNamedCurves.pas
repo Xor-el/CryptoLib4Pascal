@@ -31,8 +31,7 @@ uses
   ClpSecObjectIdentifiers,
   ClpCryptoLibTypes,
   ClpIAsn1Objects,
-  ClpIX9ECAsn1Objects,
-  ClpIX9ECParametersHolder;
+  ClpIX9ECAsn1Objects;
 
 type
   TNistNamedCurves = class sealed(TObject)

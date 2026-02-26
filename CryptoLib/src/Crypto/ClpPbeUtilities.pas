@@ -39,6 +39,8 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpBcObjectIdentifiers,
+  ClpOiwObjectIdentifiers,
+  ClpTeleTrusTObjectIdentifiers,
   ClpCipherUtilities,
   ClpDigestUtilities,
   ClpMacUtilities,
@@ -206,35 +208,32 @@ begin
   FAlgorithms.AddOrSetValue('PBEWITHSHA256AND256BITAES-CBC-BC', 'PBEwithSHA-256and256bitAES-CBC-BC');
   FAlgorithms.AddOrSetValue('PBEWITHSHA-256AND256BITAES-CBC-BC', 'PBEwithSHA-256and256bitAES-CBC-BC');
 
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA1', 'PBEwithHmacSHA-1');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-1', 'PBEwithHmacSHA-1');
+  FAlgorithms.AddOrSetValue(TOiwObjectIdentifiers.IdSha1.Id, 'PBEwithHmacSHA-1');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA224', 'PBEwithHmacSHA-224');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-224', 'PBEwithHmacSHA-224');
+  FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdSha224.Id, 'PBEwithHmacSHA-224');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA256', 'PBEwithHmacSHA-256');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-256', 'PBEwithHmacSHA-256');
+  FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdSha256.Id, 'PBEwithHmacSHA-256');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA384', 'PBEwithHmacSHA-384');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-384', 'PBEwithHmacSHA-384');
+  FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdSha384.Id, 'PBEwithHmacSHA-384');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA512', 'PBEwithHmacSHA-512');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-512', 'PBEwithHmacSHA-512');
+  FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdSha512.Id, 'PBEwithHmacSHA-512');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACRIPEMD128', 'PBEwithHmacRipeMD128');
+  FAlgorithms.AddOrSetValue(TTeleTrusTObjectIdentifiers.RipeMD128.Id, 'PBEwithHmacRipeMD128');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACRIPEMD160', 'PBEwithHmacRipeMD160');
+  FAlgorithms.AddOrSetValue(TTeleTrusTObjectIdentifiers.RipeMD160.Id, 'PBEwithHmacRipeMD160');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACRIPEMD256', 'PBEwithHmacRipeMD256');
+  FAlgorithms.AddOrSetValue(TTeleTrusTObjectIdentifiers.RipeMD256.Id, 'PBEwithHmacRipeMD256');
+  FAlgorithms.AddOrSetValue('PBEWITHHMACTIGER', 'PBEwithHmacTiger');
+
   FAlgorithms.AddOrSetValue('PBEWITHMD5AND128BITAES-CBC-OPENSSL', 'PBEwithMD5and128bitAES-CBC-OpenSSL');
   FAlgorithms.AddOrSetValue('PBEWITHMD5AND192BITAES-CBC-OPENSSL', 'PBEwithMD5and192bitAES-CBC-OpenSSL');
   FAlgorithms.AddOrSetValue('PBEWITHMD5AND256BITAES-CBC-OPENSSL', 'PBEwithMD5and256bitAES-CBC-OpenSSL');
-
-  FAlgorithms.AddOrSetValue('PBEwithSHA-1and128bitAES-CBC-BC', 'PBEwithSHA-1and128bitAES-CBC-BC');
-  FAlgorithms.AddOrSetValue('PBEwithSHA-1and192bitAES-CBC-BC', 'PBEwithSHA-1and192bitAES-CBC-BC');
-  FAlgorithms.AddOrSetValue('PBEwithSHA-1and256bitAES-CBC-BC', 'PBEwithSHA-1and256bitAES-CBC-BC');
-  FAlgorithms.AddOrSetValue('PBEwithSHA-256and128bitAES-CBC-BC', 'PBEwithSHA-256and128bitAES-CBC-BC');
-  FAlgorithms.AddOrSetValue('PBEwithSHA-256and192bitAES-CBC-BC', 'PBEwithSHA-256and192bitAES-CBC-BC');
-  FAlgorithms.AddOrSetValue('PBEwithSHA-256and256bitAES-CBC-BC', 'PBEwithSHA-256and256bitAES-CBC-BC');
-  FAlgorithms.AddOrSetValue('PBEwithMD5and128bitAES-CBC-OpenSSL', 'PBEwithMD5and128bitAES-CBC-OpenSSL');
-  FAlgorithms.AddOrSetValue('PBEwithMD5and192bitAES-CBC-OpenSSL', 'PBEwithMD5and192bitAES-CBC-OpenSSL');
-  FAlgorithms.AddOrSetValue('PBEwithMD5and256bitAES-CBC-OpenSSL', 'PBEwithMD5and256bitAES-CBC-OpenSSL');
-
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA1', 'PBEwithHmacSHA-1');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-1', 'PBEwithHmacSHA-1');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA224', 'PBEwithHmacSHA-224');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-224', 'PBEwithHmacSHA-224');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA256', 'PBEwithHmacSHA-256');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-256', 'PBEwithHmacSHA-256');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA384', 'PBEwithHmacSHA-384');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-384', 'PBEwithHmacSHA-384');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA512', 'PBEwithHmacSHA-512');
-  FAlgorithms.AddOrSetValue('PBEWITHHMACSHA-512', 'PBEwithHmacSHA-512');
-  FAlgorithms.AddOrSetValue('PBEwithHmacSHA-1', 'PBEwithHmacSHA-1');
-  FAlgorithms.AddOrSetValue('PBEwithHmacSHA-224', 'PBEwithHmacSHA-224');
-  FAlgorithms.AddOrSetValue('PBEwithHmacSHA-256', 'PBEwithHmacSHA-256');
-  FAlgorithms.AddOrSetValue('PBEwithHmacSHA-384', 'PBEwithHmacSHA-384');
-  FAlgorithms.AddOrSetValue('PBEwithHmacSHA-512', 'PBEwithHmacSHA-512');
 
   FAlgorithmType.AddOrSetValue('Pkcs5scheme1', Pkcs5S1);
   FAlgorithmType.AddOrSetValue('Pkcs5scheme2', Pkcs5S2);
@@ -245,14 +244,19 @@ begin
   FAlgorithmType.AddOrSetValue('PBEwithSHA-256and128bitAES-CBC-BC', Pkcs12);
   FAlgorithmType.AddOrSetValue('PBEwithSHA-256and192bitAES-CBC-BC', Pkcs12);
   FAlgorithmType.AddOrSetValue('PBEwithSHA-256and256bitAES-CBC-BC', Pkcs12);
-  FAlgorithmType.AddOrSetValue('PBEwithMD5and128bitAES-CBC-OpenSSL', OpenSsl);
-  FAlgorithmType.AddOrSetValue('PBEwithMD5and192bitAES-CBC-OpenSSL', OpenSsl);
-  FAlgorithmType.AddOrSetValue('PBEwithMD5and256bitAES-CBC-OpenSSL', OpenSsl);
   FAlgorithmType.AddOrSetValue('PBEwithHmacSHA-1', Pkcs12);
   FAlgorithmType.AddOrSetValue('PBEwithHmacSHA-224', Pkcs12);
   FAlgorithmType.AddOrSetValue('PBEwithHmacSHA-256', Pkcs12);
   FAlgorithmType.AddOrSetValue('PBEwithHmacSHA-384', Pkcs12);
   FAlgorithmType.AddOrSetValue('PBEwithHmacSHA-512', Pkcs12);
+  FAlgorithmType.AddOrSetValue('PBEwithHmacRipeMD128', Pkcs12);
+  FAlgorithmType.AddOrSetValue('PBEwithHmacRipeMD160', Pkcs12);
+  FAlgorithmType.AddOrSetValue('PBEwithHmacRipeMD256', Pkcs12);
+  FAlgorithmType.AddOrSetValue('PBEwithHmacTiger', Pkcs12);
+
+  FAlgorithmType.AddOrSetValue('PBEwithMD5and128bitAES-CBC-OpenSSL', OpenSsl);
+  FAlgorithmType.AddOrSetValue('PBEwithMD5and192bitAES-CBC-OpenSSL', OpenSsl);
+  FAlgorithmType.AddOrSetValue('PBEwithMD5and256bitAES-CBC-OpenSSL', OpenSsl);
 
   FOids.AddOrSetValue('PBEwithSHA-1and128bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes128Cbc);
   FOids.AddOrSetValue('PBEwithSHA-1and192bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes192Cbc);
@@ -260,6 +264,15 @@ begin
   FOids.AddOrSetValue('PBEwithSHA-256and128bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha256Pkcs12Aes128Cbc);
   FOids.AddOrSetValue('PBEwithSHA-256and192bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha256Pkcs12Aes192Cbc);
   FOids.AddOrSetValue('PBEwithSHA-256and256bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha256Pkcs12Aes256Cbc);
+
+  FOids.AddOrSetValue('PBEwithHmacSHA-1', TOiwObjectIdentifiers.IdSha1);
+  FOids.AddOrSetValue('PBEwithHmacSHA-224', TNistObjectIdentifiers.IdSha224);
+  FOids.AddOrSetValue('PBEwithHmacSHA-256', TNistObjectIdentifiers.IdSha256);
+  FOids.AddOrSetValue('PBEwithHmacSHA-384', TNistObjectIdentifiers.IdSha384);
+  FOids.AddOrSetValue('PBEwithHmacSHA-512', TNistObjectIdentifiers.IdSha512);
+  FOids.AddOrSetValue('PBEwithHmacRipeMD128', TTeleTrusTObjectIdentifiers.RipeMD128);
+  FOids.AddOrSetValue('PBEwithHmacRipeMD160', TTeleTrusTObjectIdentifiers.RipeMD160);
+  FOids.AddOrSetValue('PBEwithHmacRipeMD256', TTeleTrusTObjectIdentifiers.RipeMD256);
   FOids.AddOrSetValue('Pkcs5scheme2', TPkcsObjectIdentifiers.IdPbeS2);
 
   FIsBooted := True;
@@ -522,8 +535,7 @@ class function TPbeUtilities.GenerateCipherParameters(const AAlgID: IAlgorithmId
 begin
   if AAlgID = nil then
     raise EArgumentNilCryptoLibException.Create('algID');
-  if APassword = nil then
-    raise EArgumentNilCryptoLibException.Create('password');
+
   Result := GenerateCipherParameters(AAlgID.Algorithm.Id, APassword, AWrongPkcs12Zero, AAlgID.Parameters);
 end;
 

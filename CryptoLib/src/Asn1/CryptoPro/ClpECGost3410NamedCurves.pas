@@ -37,9 +37,7 @@ uses
   ClpIECCommon,
   ClpIAsn1Objects,
   ClpX9ECAsn1Objects,
-  ClpIX9ECAsn1Objects,
-  ClpX9ECParametersHolder,
-  ClpIX9ECParametersHolder;
+  ClpIX9ECAsn1Objects;
 
 type
   /// <summary>Elliptic curve registry for GOST 3410-2001 / 2012.</summary>

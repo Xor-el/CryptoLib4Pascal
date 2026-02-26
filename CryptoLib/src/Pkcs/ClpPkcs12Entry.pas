@@ -53,6 +53,7 @@ type
     constructor Create(const AAttributes: TDictionary<IDerObjectIdentifier, IAsn1Encodable>;
       AOwnsAttributes: Boolean = False);
     destructor Destroy; override;
+    property HasFriendlyName: Boolean read GetHasFriendlyName;
   end;
 
 implementation

@@ -74,7 +74,7 @@ end;
 constructor TAsymmetricKeyEntry.Create(const AKey: IAsymmetricKeyParameter;
   const AAttributes: TDictionary<IDerObjectIdentifier, IAsn1Encodable>);
 begin
-  inherited Create(AAttributes, False);
+  inherited Create(AAttributes, True);
   if AKey = nil then
     raise EArgumentNilCryptoLibException.Create('key');
   FKey := AKey;

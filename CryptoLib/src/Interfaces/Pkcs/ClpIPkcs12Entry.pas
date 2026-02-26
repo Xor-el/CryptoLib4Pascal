@@ -42,6 +42,7 @@ type
 
     property BagAttributeKeys: TCryptoLibGenericArray<IDerObjectIdentifier> read GetBagAttributeKeys;
     property Item[const AOid: IDerObjectIdentifier]: IAsn1Encodable read GetItem; default;
+    property HasFriendlyName: Boolean read GetHasFriendlyName;
   end;
 
 implementation

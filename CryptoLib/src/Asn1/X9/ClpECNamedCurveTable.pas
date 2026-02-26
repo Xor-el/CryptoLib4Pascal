@@ -31,8 +31,7 @@ uses
   ClpECGost3410NamedCurves,
   ClpX962NamedCurves,
   ClpIAsn1Objects,
-  ClpIX9ECAsn1Objects,
-  ClpIX9ECParametersHolder;
+  ClpIX9ECAsn1Objects;
 
 type
   /// <summary>

@@ -47,8 +47,6 @@ uses
   ClpGlvTypeBEndomorphism,
   ClpX9ECAsn1Objects,
   ClpIX9ECAsn1Objects,
-  ClpX9ECParametersHolder,
-  ClpIX9ECParametersHolder,
   ClpIGlvTypeBParameters;
 
 type

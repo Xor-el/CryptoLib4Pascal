@@ -35,7 +35,6 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNoPasswordSupplied = 'no password supplied when one expected';
   SErrorConstructingMac = 'error constructing MAC: %s';
 
 type
@@ -109,8 +108,6 @@ begin
   LMacData := LPfx.MacData;
   if LMacData <> nil then
   begin
-    if APassword = nil then
-      raise EArgumentNilCryptoLibException.Create(SNoPasswordSupplied);
     try
       LMacDigestAlgorithm := LMacData.Mac.DigestAlgorithm;
       LSalt := LMacData.MacSalt.GetOctets();

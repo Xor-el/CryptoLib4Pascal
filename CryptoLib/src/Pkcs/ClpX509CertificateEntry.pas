@@ -76,7 +76,7 @@ end;
 constructor TX509CertificateEntry.Create(const ACert: IX509Certificate;
   const AAttributes: TDictionary<IDerObjectIdentifier, IAsn1Encodable>);
 begin
-  inherited Create(AAttributes, False);
+  inherited Create(AAttributes, True);
   if ACert = nil then
     raise EArgumentNilCryptoLibException.Create('cert');
   FCertificate := ACert;

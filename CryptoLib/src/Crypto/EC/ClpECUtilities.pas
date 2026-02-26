@@ -24,7 +24,6 @@ interface
 uses
   ClpIAsn1Objects,
   ClpIX9ECAsn1Objects,
-  ClpIX9ECParametersHolder,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable;
 

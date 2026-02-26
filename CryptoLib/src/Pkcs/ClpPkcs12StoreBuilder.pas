@@ -23,8 +23,7 @@ interface
 
 uses
   ClpIAsn1Objects,
-  //ClpPkcsObjectIdentifiers,
-  ClpNistObjectIdentifiers,
+  ClpBcObjectIdentifiers,
   ClpIPkcs12StoreBuilder,
   ClpIPkcs12Store,
   ClpPkcs12Store,
@@ -70,9 +69,9 @@ implementation
 constructor TPkcs12StoreBuilder.Create;
 begin
   inherited Create;
-  FCertAlgorithm := TNistObjectIdentifiers.IdAes256Cbc;//TPkcsObjectIdentifiers.PbewithShaAnd40BitRC2Cbc;
+  FCertAlgorithm := TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes128Cbc;
   FCertPrfAlgorithm := nil;
-  FKeyAlgorithm := TNistObjectIdentifiers.IdAes256Cbc;//TPkcsObjectIdentifiers.PbeWithShaAnd3KeyTripleDesCbc;
+  FKeyAlgorithm := TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes256Cbc;
   FKeyPrfAlgorithm := nil;
   FUseDerEncoding := False;
   FReverseCertificates := False;
