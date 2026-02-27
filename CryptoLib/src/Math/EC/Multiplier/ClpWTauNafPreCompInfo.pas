@@ -22,67 +22,51 @@ unit ClpWTauNafPreCompInfo;
 interface
 
 uses
+  ClpIECCommon,
   ClpIPreCompInfo,
-  ClpIECC,
-  ClpCryptoLibTypes,
-  ClpIWTauNafPreCompInfo;
+  ClpIWTauNafPreCompInfo,
+  ClpCryptoLibTypes;
 
 type
-  /// **
-  // * Class holding precomputation data for the WTNAF (Window
-  // * <code>&#964;</code>-adic Non-Adjacent Form) algorithm.
-  // */
-  TWTauNafPreCompInfo = class(TInterfacedObject, IPreCompInfo,
+  TWTauNafPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,
     IWTauNafPreCompInfo)
-
   strict private
-    function GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>; virtual;
-    procedure SetPreComp(const value
-      : TCryptoLibGenericArray<IAbstractF2mPoint>); virtual;
-  strict protected
-  var
-    // /**
-    // * Array holding the precomputed <code>AbstractF2mPoint</code>s used for the
-    // * WTNAF multiplication in <code>
-    // * math.ec.multiplier.WTauNafMultiplier.multiply()
-    // * WTauNafMultiplier.multiply()</code>.
-    // */
-    Fm_preComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
-
+    FPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
+    function GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
+    procedure SetPreComp(const AValue: TCryptoLibGenericArray<IAbstractF2mPoint>);
   public
-    destructor Destroy; override;
-
-    property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp
-      write SetPreComp;
+    property PreComp: TCryptoLibGenericArray<IAbstractF2mPoint> read GetPreComp write SetPreComp;
   end;
 
 implementation
 
 { TWTauNafPreCompInfo }
 
-destructor TWTauNafPreCompInfo.Destroy;
+function TWTauNafPreCompInfo.GetPreComp: TCryptoLibGenericArray<IAbstractF2mPoint>;
+begin
+  Result := FPreComp;
+end;
+
+procedure TWTauNafPreCompInfo.SetPreComp(const AValue: TCryptoLibGenericArray<IAbstractF2mPoint>);
 var
-  i: Integer;
+  LCurve: IECCurve;
+  LPoint: IECPoint;
 begin
-  if Assigned(Fm_preComp) then
+  if (System.Length(AValue) > 0) and (AValue[0] <> nil) then
   begin
-    for i := 0 to Length(Fm_preComp) - 1 do
-      Fm_preComp[i] := nil;
-    Fm_preComp := nil;
+    LPoint := AValue[0];
+    LCurve := LPoint.Curve;
+    if LCurve <> nil then
+    begin
+      if not LPoint.IsNormalized then
+        LPoint := LPoint.Normalize;
+      FPreComp := System.Copy(AValue);
+      FPreComp[0] := LCurve.CreateRawPoint(LPoint.RawXCoord,
+        LPoint.RawYCoord) as IAbstractF2mPoint;
+      Exit;
+    end;
   end;
-  inherited;
-end;
-
-function TWTauNafPreCompInfo.GetPreComp
-  : TCryptoLibGenericArray<IAbstractF2mPoint>;
-begin
-  Result := Fm_preComp;
-end;
-
-procedure TWTauNafPreCompInfo.SetPreComp(const value
-  : TCryptoLibGenericArray<IAbstractF2mPoint>);
-begin
-  Fm_preComp := value;
+  FPreComp := AValue;
 end;
 
 end.

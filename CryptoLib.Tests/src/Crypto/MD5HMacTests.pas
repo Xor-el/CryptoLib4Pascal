@@ -35,7 +35,7 @@ uses
   ClpHMac,
   ClpIMac,
   ClpDigestUtilities,
-  ClpStringUtils,
+  ClpStringUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -105,7 +105,7 @@ begin
   for i := 0 to System.Pred(System.Length(Fmessages)) do
   begin
     m := TConverters.ConvertStringToBytes(Fmessages[i], TEncoding.ASCII);
-    if (TStringUtils.BeginsWith(Fmessages[i], '0x', True)) then
+    if (TStringUtilities.StartsWith(Fmessages[i], '0x', True)) then
     begin
       m := DecodeHex(System.Copy(Fmessages[i], 3,
         System.Length(Fmessages[i]) - 2));
@@ -124,7 +124,7 @@ begin
   vector := 0; // vector used for test
   m2 := TConverters.ConvertStringToBytes(Fmessages[vector], TEncoding.ASCII);
 
-  if (TStringUtils.BeginsWith(Fmessages[vector], '0x', True)) then
+  if (TStringUtilities.StartsWith(Fmessages[vector], '0x', True)) then
   begin
     m2 := DecodeHex(System.Copy(Fmessages[vector], 3,
       System.Length(Fmessages[vector]) - 2));

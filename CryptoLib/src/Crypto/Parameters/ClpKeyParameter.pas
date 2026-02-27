@@ -24,7 +24,7 @@ interface
 uses
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -38,15 +38,19 @@ type
 
   strict private
   var
-    Fkey: TCryptoLibByteArray;
+    FKey: TCryptoLibByteArray;
 
   public
-    constructor Create(const key: TCryptoLibByteArray); overload;
-    constructor Create(const key: TCryptoLibByteArray;
-      keyOff, keyLen: Int32); overload;
+    constructor Create(const AKey: TCryptoLibByteArray); overload;
+    constructor Create(const AKey: TCryptoLibByteArray;
+      AKeyOff, AKeyLen: Int32); overload;
     destructor Destroy; override;
     function GetKey(): TCryptoLibByteArray; inline;
+    function GetKeyLength(): Int32; inline;
     procedure Clear(); inline;
+    function FixedTimeEquals(const AOther: TCryptoLibByteArray): Boolean;
+    procedure CopyKeyTo(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
+    function Reverse(): IKeyParameter;
 
   end;
 
@@ -54,44 +58,44 @@ implementation
 
 { TKeyParameter }
 
-constructor TKeyParameter.Create(const key: TCryptoLibByteArray);
+constructor TKeyParameter.Create(const AKey: TCryptoLibByteArray);
 begin
-  Inherited Create();
+  inherited Create();
 
-  if (key = Nil) then
+  if (AKey = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SKeyNil);
   end;
-  Fkey := System.Copy(key);
+  FKey := System.Copy(AKey);
 end;
 
 procedure TKeyParameter.Clear;
 begin
-  TArrayUtils.ZeroFill(Fkey);
+  TArrayUtilities.Fill<Byte>(FKey, 0, System.Length(FKey), Byte(0));
 end;
 
-constructor TKeyParameter.Create(const key: TCryptoLibByteArray;
-  keyOff, keyLen: Int32);
+constructor TKeyParameter.Create(const AKey: TCryptoLibByteArray;
+  AKeyOff, AKeyLen: Int32);
 begin
-  Inherited Create();
+  inherited Create();
 
-  if (key = Nil) then
+  if (AKey = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SKeyNil);
   end;
 
-  if ((keyOff < 0) or (keyOff > System.Length(key))) then
+  if ((AKeyOff < 0) or (AKeyOff > System.Length(AKey))) then
   begin
     raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidKeyOffSet);
   end;
 
-  if ((keyLen < 0) or (keyLen > (System.Length(key) - keyOff))) then
+  if ((AKeyLen < 0) or (AKeyLen > (System.Length(AKey) - AKeyOff))) then
   begin
     raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
-  System.SetLength(Fkey, keyLen);
-  System.Move(key[keyOff], Fkey[0], keyLen);
+  System.SetLength(FKey, AKeyLen);
+  System.Move(AKey[AKeyOff], FKey[0], AKeyLen);
 
 end;
 
@@ -103,7 +107,36 @@ end;
 
 function TKeyParameter.GetKey: TCryptoLibByteArray;
 begin
-  result := System.Copy(Fkey);
+  Result := System.Copy(FKey);
+end;
+
+function TKeyParameter.GetKeyLength: Int32;
+begin
+  Result := System.Length(FKey);
+end;
+
+function TKeyParameter.FixedTimeEquals(
+  const AOther: TCryptoLibByteArray): Boolean;
+begin
+  Result := TArrayUtilities.FixedTimeEquals(FKey, AOther);
+end;
+
+procedure TKeyParameter.CopyKeyTo(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32);
+begin
+  System.Move(FKey[0], ABuf[AOff], ALen);
+end;
+
+function TKeyParameter.Reverse: IKeyParameter;
+var
+  LReversed: TCryptoLibByteArray;
+  LI, LLen: Int32;
+begin
+  LLen := System.Length(FKey);
+  System.SetLength(LReversed, LLen);
+  for LI := 0 to System.Pred(LLen) do
+    LReversed[LI] := FKey[LLen - 1 - LI];
+  Result := TKeyParameter.Create(LReversed);
 end;
 
 end.

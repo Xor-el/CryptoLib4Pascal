@@ -28,9 +28,8 @@ uses
   SysUtils,
   ClpEncoders,
   ClpCryptoLibTypes,
-  ClpConverters,
+  ClpPack,
   ClpBigInteger,
-  ClpIFixedSecureRandom,
   ClpISecureRandom,
   ClpSecureRandom;
 
@@ -40,6 +39,30 @@ resourcestring
   SUnRecognizedImplementation = 'Unrecognized BigIntegerSource Implementation';
 
 type
+  IFixedSecureRandom = interface(ISecureRandom)
+    ['{8D3C436D-1E93-487F-9C03-5E0EEFBCBBB4}']
+    function GetIsExhausted: Boolean;
+    property IsExhausted: Boolean read GetIsExhausted;
+  end;
+
+  IRandomChecker = interface(ISecureRandom)
+    ['{EFC0D597-00E4-4DAE-8529-E14C9FE50B41}']
+  end;
+
+  ISource = interface(IInterface)
+    ['{D4391E69-BA80-4245-BB94-52715BC6D043}']
+    function GetData: TCryptoLibByteArray;
+    property Data: TCryptoLibByteArray read GetData;
+  end;
+
+  IData = interface(ISource)
+    ['{CF4AB8B8-724D-4EEA-93F5-0732C81774F0}']
+  end;
+
+  IBigIntegerSource = interface(ISource)
+    ['{202BF4D8-D872-4757-8C0F-D76228CEDB92}']
+  end;
+
   TFixedSecureRandom = class(TSecureRandom, IFixedSecureRandom)
 
   strict private
@@ -329,8 +352,8 @@ begin
     begin
       if (bitLength mod 8 <> 0) then
       begin
-        i := TConverters.ReadBytesAsUInt32BE(PByte(tmp), 0);
-        tmp := TConverters.ReadUInt32AsBytesBE(i shl (8 - (bitLength mod 8)));
+        i := TPack.BE_To_UInt32(tmp, 0);
+        TPack.UInt32_To_BE(i shl (8 - (bitLength mod 8)), tmp, 0);
 
       end;
     end;
@@ -344,8 +367,8 @@ begin
     begin
       if (bitLength mod 8 <> 0) then
       begin
-        i := TConverters.ReadBytesAsUInt32BE(PByte(lv), 0);
-        lv := TConverters.ReadUInt32AsBytesBE(i shl (8 - (bitLength mod 8)));
+        i := TPack.BE_To_UInt32(lv, 0);
+        lv := TPack.UInt32_To_BE(i shl (8 - (bitLength mod 8)));
 
       end;
     end;
@@ -428,7 +451,7 @@ end;
 constructor TFixedSecureRandom.TRandomChecker.Create;
 begin
   Inherited Create();
-  Fdata := THex.Decode('01020304ffffffff0506070811111111');
+  Fdata := THexEncoder.Decode('01020304ffffffff0506070811111111');
   Findex := 0;
 end;
 
@@ -480,12 +503,12 @@ end;
 constructor TFixedSecureRandom.TBigIntegerSource.Create(bitLength: Int32;
   const hexData: String);
 begin
-  Inherited Create(ExpandToBitLength(bitLength, THex.Decode(hexData)));
+  Inherited Create(ExpandToBitLength(bitLength, THexEncoder.Decode(hexData)));
 end;
 
 constructor TFixedSecureRandom.TBigIntegerSource.Create(const hexData: String);
 begin
-  Create(THex.Decode(hexData));
+  Create(THexEncoder.Decode(hexData));
 end;
 
 end.

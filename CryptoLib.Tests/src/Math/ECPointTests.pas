@@ -24,7 +24,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
   Math,
 {$IFDEF FPC}
@@ -34,23 +33,22 @@ uses
   TestFramework,
 {$ENDIF FPC}
   Generics.Collections,
-  ClpBits,
+  ClpBitOperations,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpECAlgorithms,
-  ClpECCompUtilities,
+  ClpWNafUtilities,
   ClpIFiniteField,
-  ClpIX9ECParameters,
-  ClpIX9ECC,
-  ClpX9ECC,
-  ClpECC,
-  ClpIECC,
-  ClpX9ECParameters,
+  ClpIX9ECAsn1Objects,
+  ClpIECCommon,
+  ClpECCurve,
+  ClpIECFieldElement,
+  ClpX9ECAsn1Objects,
   CryptoLibTestBase;
 
 type
@@ -283,7 +281,7 @@ end;
 
 procedure TTestECPoint.AssertIFiniteFieldsEqual(const a, b: IFiniteField);
 begin
-  CheckEquals(True, (a as TObject).Equals(b as TObject));
+  CheckEquals(True, a.Equals(b));
 end;
 
 procedure TTestECPoint.AssertOptionalValuesAgree(const a, b: TBigInteger);
@@ -339,7 +337,7 @@ begin
   ImplTestMultiply(q, n.BitLength);
   ImplTestMultiply(infinity, n.BitLength);
 
-  logSize := 32 - TBits.NumberOfLeadingZeros(curve.FieldSize - 1);
+  logSize := 32 - TBitOperations.NumberOfLeadingZeros32(curve.FieldSize - 1);
   rounds := Max(2, Min(10, 32 - 3 * logSize));
 
   p := q;
@@ -410,7 +408,7 @@ begin
     count := 0;
     while (count < 10) do
     begin
-      nonSquare := TBigIntegers.CreateRandomInRange(TBigInteger.Two,
+      nonSquare := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two,
         pMinusOne, FRandom);
       if (not nonSquare.ModPow(legendreExponent, p).Equals(TBigInteger.One))
       then
@@ -775,8 +773,7 @@ end;
 procedure TTestECPoint.TestPointCreationConsistency;
 begin
   try
-    FpInstance.Fcurve.CreatePoint(TBigInteger.ValueOf(12),
-      Default (TBigInteger));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.ValueOf(12), TBigInteger.GetDefault);
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -787,8 +784,7 @@ begin
   end;
 
   try
-    FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
-      TBigInteger.ValueOf(12));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.GetDefault, TBigInteger.ValueOf(12));
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -799,8 +795,7 @@ begin
   end;
 
   try
-    FpInstance.Fcurve.CreatePoint(TBigInteger.Create('1011'),
-      Default (TBigInteger));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.Create('1011'), TBigInteger.GetDefault);
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -811,8 +806,7 @@ begin
   end;
 
   try
-    FpInstance.Fcurve.CreatePoint(Default (TBigInteger),
-      TBigInteger.Create('1011'));
+    FpInstance.Fcurve.CreatePoint(TBigInteger.GetDefault, TBigInteger.Create('1011'));
     Fail('expected EArgumentCryptoLibException');
   except
     on e: EArgumentCryptoLibException do
@@ -882,7 +876,7 @@ end;
 
 constructor TFp.Create;
 begin
-  Fq := TBigInteger.Create('29');
+  Fq := TBigInteger.Create('1063');
 
   Fa := TBigInteger.Create('4');
 
@@ -896,7 +890,7 @@ begin
 
   FInfinity := Fcurve.infinity;
 
-  FpointSource := TCryptoLibInt32Array.Create(5, 22, 16, 27, 13, 6, 14, 6);
+  FpointSource := TCryptoLibInt32Array.Create(1, 5, 4, 10, 234, 1024, 817, 912);
 
   System.SetLength(Fp, System.Length(FpointSource) div 2);
 

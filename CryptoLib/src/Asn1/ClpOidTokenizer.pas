@@ -22,7 +22,7 @@ unit ClpOidTokenizer;
 interface
 
 uses
-  StrUtils,
+  ClpStringUtilities,
   ClpIOidTokenizer;
 
 type
@@ -34,13 +34,13 @@ type
 
   strict private
   var
-    Foid: String;
-    Findex: Int32;
+    FOid: String;
+    FIndex: Int32;
 
     function GetHasMoreTokens: Boolean; inline;
 
   public
-    constructor Create(const oid: String);
+    constructor Create(const AOid: String);
 
     function NextToken(): String; inline;
 
@@ -52,41 +52,38 @@ implementation
 
 { TOidTokenizer }
 
-constructor TOidTokenizer.Create(const oid: String);
+constructor TOidTokenizer.Create(const AOid: String);
 begin
-  Foid := oid;
-  Findex := 1;
+  FOid := AOid;
+  FIndex := 1;
 end;
 
 function TOidTokenizer.GetHasMoreTokens: Boolean;
 begin
-  result := Findex <> 0;
+  Result := FIndex <> 0;
 end;
 
 function TOidTokenizer.NextToken: String;
 var
-  endPoint: Int32;
-  LNextToken, lastToken: string;
+  LEnd: Int32;
 begin
-  if (Findex = 0) then
+  if (FIndex = 0) then
   begin
-    result := '';
+    Result := '';
     Exit;
   end;
 
-  endPoint := PosEx('.', Foid, Findex);
+  LEnd := TStringUtilities.IndexOf(FOid, '.', FIndex);
 
-  if (endPoint = 0) then
+  if (LEnd = 0) then
   begin
-    lastToken := System.Copy(Foid, Findex, System.Length(Foid) - (Findex - 1));
-    Findex := 0;
-    result := lastToken;
+    Result := TStringUtilities.Substring(FOid, FIndex);
+    FIndex := 0;
     Exit;
   end;
 
-  LNextToken := System.Copy(Foid, Findex, endPoint - Findex);
-  Findex := endPoint + 1;
-  result := LNextToken;
+  Result := TStringUtilities.Substring(FOid, FIndex, LEnd - FIndex);
+  FIndex := LEnd + 1;
 end;
 
 end.

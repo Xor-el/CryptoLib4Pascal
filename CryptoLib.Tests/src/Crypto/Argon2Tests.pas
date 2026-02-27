@@ -35,6 +35,7 @@ uses
   ClpArgon2ParametersGenerator,
   ClpIArgon2ParametersGenerator,
   ClpConverters,
+  ClpEncoders,
   CryptoLibTestBase;
 
 type
@@ -87,10 +88,10 @@ var
   LAdditional, LSecret, LSalt, LPassword: TBytes;
 begin
 
-  LAdditional := TConverters.ConvertHexStringToBytes(AAdditional);
-  LSecret := TConverters.ConvertHexStringToBytes(ASecret);
-  LSalt := TConverters.ConvertHexStringToBytes(ASalt);
-  LPassword := TConverters.ConvertHexStringToBytes(APassword);
+  LAdditional := THexEncoder.Decode(AAdditional);
+  LSecret := THexEncoder.Decode(ASecret);
+  LSalt := THexEncoder.Decode(ASalt);
+  LPassword := THexEncoder.Decode(APassword);
 
   LArgon2Generator := TArgon2ParametersGenerator.Create();
 
@@ -102,9 +103,9 @@ begin
     LAdditional, AIterations, AMemoryAsKB, AParallelism,
     TCryptoLibArgon2MemoryCostType.MemoryAsKB);
 
-  LActual := TConverters.ConvertBytesToHexString
+  LActual := THexEncoder.Encode
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
-    as IKeyParameter).GetKey(), False);
+    as IKeyParameter).GetKey());
 
   LArgon2Generator.Clear();
 
@@ -136,9 +137,9 @@ begin
     AIterations, AMemory, AParallelism,
     TCryptoLibArgon2MemoryCostType.MemoryPowOfTwo);
 
-  LActual := TConverters.ConvertBytesToHexString
+  LActual := THexEncoder.Encode
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
-    as IKeyParameter).GetKey(), False);
+    as IKeyParameter).GetKey());
 
   LArgon2Generator.Clear();
 

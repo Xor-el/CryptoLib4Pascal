@@ -37,7 +37,7 @@ type
   /// This implementation is based on IEEE P1363/ISO 18033.
   /// </para>
   /// </summary>
-  TKdf1BytesGenerator = class(TBaseKdfBytesGenerator, IKdf1BytesGenerator)
+  TKdf1BytesGenerator = class sealed(TBaseKdfBytesGenerator, IKdf1BytesGenerator)
 
   public
 
@@ -47,7 +47,7 @@ type
     /// <param name="digest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
 
   end;
 
@@ -55,9 +55,9 @@ implementation
 
 { TKdf1BytesGenerator }
 
-constructor TKdf1BytesGenerator.Create(const digest: IDigest);
+constructor TKdf1BytesGenerator.Create(const ADigest: IDigest);
 begin
-  Inherited Create(0, digest);
+  inherited Create(0, ADigest);
 end;
 
 end.

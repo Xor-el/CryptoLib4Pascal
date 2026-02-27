@@ -28,8 +28,8 @@ uses
   ClpICipherParameters,
   ClpIBlowfishEngine,
   ClpCheck,
-  ClpConverters,
-  ClpArrayUtils,
+  ClpPack,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -248,36 +248,35 @@ type
     FS0, FS1, FS2, FS3: array [0 .. (SBOX_SK - 1)] of UInt32; // the s-boxes
     FP: array [0 .. (P_SZ - 1)] of UInt32; // the p-array
 
-    FforEncryption: Boolean;
+    FForEncryption: Boolean;
 
     FWorkingKey: TCryptoLibByteArray;
 
-    function F(x: UInt32): UInt32; inline;
-    procedure SetKey(const key: TCryptoLibByteArray);
+    function F(AX: UInt32): UInt32; inline;
+    procedure SetKey(const AKey: TCryptoLibByteArray);
 
     /// <summary>
     /// apply the encryption cycle to each value pair in the table.
     /// </summary>
-    procedure ProcessTable(xl, xr: UInt32; var table: array of UInt32);
+    procedure ProcessTable(AXl, AXr: UInt32; var ATable: array of UInt32);
 
     /// <summary>
     /// Encrypt the given input starting at the given offset and place <br />
     /// the result in the provided buffer starting at the given offset. <br />
     /// The input will be an exact multiple of our blocksize.
     /// </summary>
-    procedure EncryptBlock(const src: TCryptoLibByteArray; srcIndex: Int32;
-      const dst: TCryptoLibByteArray; dstIndex: Int32);
+    procedure EncryptBlock(const ASrc: TCryptoLibByteArray; ASrcIndex: Int32;
+      const ADst: TCryptoLibByteArray; ADstIndex: Int32);
 
     /// <summary>
     /// Decrypt the given input starting at the given offset and place <br />
     /// the result in the provided buffer starting at the given offset. <br />
     /// The input will be an exact multiple of our blocksize.
     /// </summary>
-    procedure DecryptBlock(const src: TCryptoLibByteArray; srcIndex: Int32;
-      const dst: TCryptoLibByteArray; dstIndex: Int32);
+    procedure DecryptBlock(const ASrc: TCryptoLibByteArray; ASrcIndex: Int32;
+      const ADst: TCryptoLibByteArray; ADstIndex: Int32);
 
     function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
 
   public
 
@@ -293,18 +292,15 @@ type
     /// <exception cref="EArgumentCryptoLibException">
     /// if the parameters argument is inappropriate.
     /// </exception>
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
-    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
-
-    procedure Reset(); virtual;
+    function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
     function GetBlockSize(): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
   end;
 
@@ -312,22 +308,22 @@ implementation
 
 { TBlowfishEngine }
 
-function TBlowfishEngine.F(x: UInt32): UInt32;
+function TBlowfishEngine.F(AX: UInt32): UInt32;
 begin
-  result := (((FS0[x shr 24] + FS1[(x shr 16) and $FF]) xor FS2[(x shr 8) and
-    $FF]) + FS3[x and $FF]);
+  Result := (((FS0[AX shr 24] + FS1[(AX shr 16) and $FF]) xor FS2[(AX shr 8) and
+    $FF]) + FS3[AX and $FF]);
 end;
 
-procedure TBlowfishEngine.SetKey(const key: TCryptoLibByteArray);
+procedure TBlowfishEngine.SetKey(const AKey: TCryptoLibByteArray);
 var
-  keyLength, keyIndex, i, j: Int32;
-  data: UInt32;
+  LKeyLength, LKeyIndex, LI, LJ: Int32;
+  LData: UInt32;
 begin
-  keyLength := System.Length(key);
-  if ((keyLength < 4) or (keyLength > 56) or (((keyLength * 8) and 7) <> 0))
+  LKeyLength := System.Length(AKey);
+  if ((LKeyLength < 4) or (LKeyLength > 56) or (((LKeyLength * 8) and 7) <> 0))
   then
   begin
-    TArrayUtils.ZeroFill(key);
+    TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
@@ -359,31 +355,31 @@ begin
     * (up to P[17]).  Repeatedly cycle through the key bits until the
     * entire P-array has been XOR-ed with the key bits
   *)
-  keyIndex := 0;
+  LKeyIndex := 0;
 
-  i := 0;
-  while i < P_SZ do
+  LI := 0;
+  while LI < P_SZ do
   begin
     // Get the 32 bits of the key, in 4 * 8 bit chunks
-    data := $0000000;
-    j := 0;
-    while j < 4 do
+    LData := $0000000;
+    LJ := 0;
+    while LJ < 4 do
     begin
       // create a 32 bit block
-      data := (data shl 8) or UInt32(key[keyIndex]);
-      System.Inc(keyIndex);
+      LData := (LData shl 8) or UInt32(AKey[LKeyIndex]);
+      System.Inc(LKeyIndex);
 
       // wrap when we get to the end of the key
-      if (keyIndex >= keyLength) then
+      if (LKeyIndex >= LKeyLength) then
       begin
-        keyIndex := 0;
+        LKeyIndex := 0;
       end;
-      System.Inc(j);
+      System.Inc(LJ);
     end;
     // XOR the newly created 32 bit chunk onto the P-array
-    FP[i] := FP[i] xor data;
+    FP[LI] := FP[LI] xor LData;
 
-    System.Inc(i);
+    System.Inc(LI);
   end;
 
   (*
@@ -413,148 +409,138 @@ begin
   ProcessTable(FS1[SBOX_SK - 2], FS1[SBOX_SK - 1], FS2);
   ProcessTable(FS2[SBOX_SK - 2], FS2[SBOX_SK - 1], FS3);
 
-  TArrayUtils.ZeroFill(key);
+  TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
-procedure TBlowfishEngine.EncryptBlock(const src: TCryptoLibByteArray;
-  srcIndex: Int32; const dst: TCryptoLibByteArray; dstIndex: Int32);
+procedure TBlowfishEngine.EncryptBlock(const ASrc: TCryptoLibByteArray;
+  ASrcIndex: Int32; const ADst: TCryptoLibByteArray; ADstIndex: Int32);
 var
-  xl, xr: UInt32;
-  i: Int32;
+  LXl, LXr: UInt32;
+  LI: Int32;
 begin
-  xl := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex);
-  xr := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex + 4);
+  LXl := TPack.BE_To_UInt32(ASrc, ASrcIndex);
+  LXr := TPack.BE_To_UInt32(ASrc, ASrcIndex + 4);
 
-  xl := xl xor FP[0];
+  LXl := LXl xor FP[0];
 
-  i := 1;
-  while i < ROUNDS do
+  LI := 1;
+  while LI < ROUNDS do
 
   begin
-    xr := xr xor (F(xl) xor FP[i]);
-    xl := xl xor (F(xr) xor FP[i + 1]);
-    System.Inc(i, 2);
+    LXr := LXr xor (F(LXl) xor FP[LI]);
+    LXl := LXl xor (F(LXr) xor FP[LI + 1]);
+    System.Inc(LI, 2);
   end;
 
-  xr := xr xor FP[ROUNDS + 1];
+  LXr := LXr xor FP[ROUNDS + 1];
 
-  TConverters.ReadUInt32AsBytesBE(xr, dst, dstIndex);
-  TConverters.ReadUInt32AsBytesBE(xl, dst, dstIndex + 4);
+  TPack.UInt32_To_BE(LXr, ADst, ADstIndex);
+  TPack.UInt32_To_BE(LXl, ADst, ADstIndex + 4);
 end;
 
-procedure TBlowfishEngine.DecryptBlock(const src: TCryptoLibByteArray;
-  srcIndex: Int32; const dst: TCryptoLibByteArray; dstIndex: Int32);
+procedure TBlowfishEngine.DecryptBlock(const ASrc: TCryptoLibByteArray;
+  ASrcIndex: Int32; const ADst: TCryptoLibByteArray; ADstIndex: Int32);
 var
-  xl, xr: UInt32;
-  i: Int32;
+  LXl, LXr: UInt32;
+  LI: Int32;
 begin
-  xl := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex);
-  xr := TConverters.ReadBytesAsUInt32BE(PByte(src), srcIndex + 4);
+  LXl := TPack.BE_To_UInt32(ASrc, ASrcIndex);
+  LXr := TPack.BE_To_UInt32(ASrc, ASrcIndex + 4);
 
-  xl := xl xor FP[ROUNDS + 1];
+  LXl := LXl xor FP[ROUNDS + 1];
 
-  i := ROUNDS;
-  while i > 0 do
+  LI := ROUNDS;
+  while LI > 0 do
 
   begin
-    xr := xr xor (F(xl) xor FP[i]);
-    xl := xl xor (F(xr) xor FP[i - 1]);
-    System.Dec(i, 2);
+    LXr := LXr xor (F(LXl) xor FP[LI]);
+    LXl := LXl xor (F(LXr) xor FP[LI - 1]);
+    System.Dec(LI, 2);
   end;
 
-  xr := xr xor FP[0];
+  LXr := LXr xor FP[0];
 
-  TConverters.ReadUInt32AsBytesBE(xr, dst, dstIndex);
-  TConverters.ReadUInt32AsBytesBE(xl, dst, dstIndex + 4);
+  TPack.UInt32_To_BE(LXr, ADst, ADstIndex);
+  TPack.UInt32_To_BE(LXl, ADst, ADstIndex + 4);
 end;
 
 function TBlowfishEngine.GetAlgorithmName: String;
 begin
-  result := 'Blowfish';
+  Result := 'Blowfish';
 end;
 
 function TBlowfishEngine.GetBlockSize: Int32;
 begin
-  result := BLOCK_SIZE;
+  Result := BLOCK_SIZE;
 end;
 
-function TBlowfishEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := false;
-end;
-
-procedure TBlowfishEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TBlowfishEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  keyParameter: IKeyParameter;
+  LKeyParameter: IKeyParameter;
 begin
-  if not Supports(parameters, IKeyParameter, keyParameter) then
+  if not Supports(AParameters, IKeyParameter, LKeyParameter) then
   begin
     raise EArgumentCryptoLibException.CreateResFmt
-      (@SInvalidParameterBlowfishInit, [(parameters as TObject).ToString]);
+      (@SInvalidParameterBlowfishInit, [(AParameters as TObject).ToString]);
   end;
-  FforEncryption := forEncryption;
-  FWorkingKey := keyParameter.GetKey();
+  FForEncryption := AForEncryption;
+  FWorkingKey := LKeyParameter.GetKey();
   SetKey(FWorkingKey);
 end;
 
-function TBlowfishEngine.ProcessBlock(const input: TCryptoLibByteArray;
-  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBlowfishEngine.ProcessBlock(const AInput: TCryptoLibByteArray;
+  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
 
-  if (FWorkingKey = Nil) then
+  if (FWorkingKey = nil) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SBlowfishEngineNotInitialised);
   end;
 
-  TCheck.DataLength(input, inOff, BLOCK_SIZE, SInputBuffertooShort);
-  TCheck.OutputLength(output, outOff, BLOCK_SIZE, SOutputBuffertooShort);
+  TCheck.DataLength(AInput, AInOff, BLOCK_SIZE, SInputBuffertooShort);
+  TCheck.OutputLength(AOutput, AOutOff, BLOCK_SIZE, SOutputBuffertooShort);
 
-  if (FforEncryption) then
+  if (FForEncryption) then
   begin
-    EncryptBlock(input, inOff, output, outOff);
+    EncryptBlock(AInput, AInOff, AOutput, AOutOff);
   end
   else
   begin
-    DecryptBlock(input, inOff, output, outOff);
+    DecryptBlock(AInput, AInOff, AOutput, AOutOff);
   end;
 
-  result := BLOCK_SIZE;
+  Result := BLOCK_SIZE;
 end;
 
-procedure TBlowfishEngine.ProcessTable(xl, xr: UInt32;
-  var table: array of UInt32);
+procedure TBlowfishEngine.ProcessTable(AXl, AXr: UInt32;
+  var ATable: array of UInt32);
 var
-  size, s, i: Int32;
+  LSize, LS, LI: Int32;
 begin
-  size := System.Length(table);
-  s := 0;
-  while s < size do
+  LSize := System.Length(ATable);
+  LS := 0;
+  while LS < LSize do
   begin
-    xl := xl xor FP[0];
-    i := 1;
-    while i < ROUNDS do
+    AXl := AXl xor FP[0];
+    LI := 1;
+    while LI < ROUNDS do
     begin
-      xr := xr xor (F(xl) xor FP[i]);
-      xl := xl xor (F(xr) xor FP[i + 1]);
-      System.Inc(i, 2);
+      AXr := AXr xor (F(AXl) xor FP[LI]);
+      AXl := AXl xor (F(AXr) xor FP[LI + 1]);
+      System.Inc(LI, 2);
     end;
 
-    xr := xr xor FP[ROUNDS + 1];
+    AXr := AXr xor FP[ROUNDS + 1];
 
-    table[s] := xr;
-    table[s + 1] := xl;
+    ATable[LS] := AXr;
+    ATable[LS + 1] := AXl;
 
-    xr := xl; // end of cycle swap
-    xl := table[s];
-    System.Inc(s, 2);
+    AXr := AXl; // end of cycle swap
+    AXl := ATable[LS];
+    System.Inc(LS, 2);
   end;
-end;
-
-procedure TBlowfishEngine.Reset;
-begin
-  // nothing to do.
 end;
 
 end.

@@ -31,38 +31,22 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpISigner,
   ClpIDsaSigner,
   ClpDsaSigner,
   ClpIDsaParameters,
   ClpDsaParameters,
-  ClpIECC,
-  ClpDsaParameter,
-  ClpIDsaParameter,
-  ClpECC,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
+  ClpECCurve,
+  ClpIECCommon,
+  ClpECParameters,
+  ClpIECParameters,
   ClpIAsn1Objects,
-  ClpDsaParametersGenerator,
-  ClpIDsaParametersGenerator,
-  ClpIDsaValidationParameters,
-  ClpIDsaKeyPairGenerator,
-  ClpDsaKeyPairGenerator,
-  ClpIDsaPublicKeyParameters,
-  ClpDsaPublicKeyParameters,
-  ClpDsaPrivateKeyParameters,
-  ClpIDsaPrivateKeyParameters,
-  ClpIDsaKeyGenerationParameters,
-  ClpDsaKeyGenerationParameters,
-  ClpDsaParameterGenerationParameters,
-  ClpIDsaParameterGenerationParameters,
+  ClpDsaGenerators,
+  ClpIDsaGenerators,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
-  ClpECPrivateKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpECPublicKeyParameters,
-  ClpIECPublicKeyParameters,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
   ClpSignerUtilities,
@@ -70,16 +54,15 @@ uses
   ClpGeneratorUtilities,
   ClpTeleTrusTObjectIdentifiers,
   ClpX9ObjectIdentifiers,
-  ClpECKeyGenerationParameters,
-  ClpIECKeyGenerationParameters,
   ClpBigInteger,
   ClpAsn1Objects,
   ClpDSADigestSigner,
   ClpIDSADigestSigner,
+  ClpX509DsaAsn1Objects,
+  ClpIX509DsaAsn1Objects,
   ClpISecureRandom,
   ClpSecureRandom,
   ClpFixedSecureRandom,
-  ClpIFixedSecureRandom,
   ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -1334,11 +1317,11 @@ begin
     Fail('X value incorrect');
   end;
 
-  encodeParams := TDsaParameter.Create(dsaP.p, dsaP.Q, dsaP.G).GetDerEncoded();
+  encodeParams := (TDsaParameter.Create(dsaP.p, dsaP.Q, dsaP.G) as IDsaParameter).GetDerEncoded();
 
   p2 := TDSAParameters.Create(dsaP.p, dsaP.Q, dsaP.G);
 
-  encodeParams_2 := TDsaParameter.Create(p2.p, p2.Q, p2.G).GetDerEncoded();
+  encodeParams_2 := (TDsaParameter.Create(p2.p, p2.Q, p2.G) as IDsaParameter).GetDerEncoded();
 
   if (not AreEqual(encodeParams, encodeParams_2)) then
   begin
@@ -1900,14 +1883,13 @@ begin
 
   p := a.GenerateParameters();
 
-  encodeParams := TDsaParameter.Create(p.p, p.Q, p.G).GetDerEncoded();
+  encodeParams := (TDsaParameter.Create(p.p, p.Q, p.G) as IDsaParameter).GetDerEncoded();
 
-  dsaP := TDsaParameter.GetInstance(TAsn1Object.FromByteArray(encodeParams)
-    as TAsn1Object);
+  dsaP := TDsaParameter.GetInstance(TAsn1Object.FromByteArray(encodeParams));
   p2 := TDSAParameters.Create(dsaP.p, dsaP.Q, dsaP.G);
 
   // a and a2 should be equivalent!
-  encodeParams_2 := TDsaParameter.Create(p2.p, p2.Q, p2.G).GetDerEncoded();
+  encodeParams_2 := (TDsaParameter.Create(p2.p, p2.Q, p2.G) as IDsaParameter).GetDerEncoded();
 
   if (not AreEqual(encodeParams, encodeParams_2)) then
   begin

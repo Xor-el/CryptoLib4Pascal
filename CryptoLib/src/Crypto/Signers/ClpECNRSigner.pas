@@ -23,24 +23,21 @@ interface
 
 uses
   SysUtils,
-  ClpIDsaExt,
-  ClpIECC,
+  ClpIDsa,
+  ClpIECCommon,
   ClpIECNRSigner,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpISecureRandom,
-  ClpIECKeyParameters,
-  ClpIParametersWithRandom,
+  ClpIECParameters,
   ClpICipherParameters,
-  ClpIECKeyPairGenerator,
-  ClpECKeyPairGenerator,
-  ClpECKeyGenerationParameters,
-  ClpIECKeyGenerationParameters,
-  ClpIECPrivateKeyParameters,
-  ClpIECPublicKeyParameters,
+  ClpIECGenerators,
+  ClpECGenerators,
+  ClpECParameters,
   ClpIAsymmetricCipherKeyPair,
-  ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpECAlgorithms,
+  ClpParameterUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -58,7 +55,7 @@ type
   /// EC-NR as described in IEEE 1363-2000 - a signature algorithm for Elliptic Curve which
   /// also offers message recovery.
   /// </summary>
-  TECNRSigner = class sealed(TInterfacedObject, IDsaExt, IECNRSigner)
+  TECNRSigner = class sealed(TInterfacedObject, IDsa, IECNRSigner)
 
   strict private
   var
@@ -69,8 +66,8 @@ type
     function GetAlgorithmName: String;
     function GetOrder: TBigInteger;
 
-    function ExtractT(const pubKey: IECPublicKeyParameters;
-      const r, s: TBigInteger): TBigInteger;
+    function ExtractT(const APubKey: IECPublicKeyParameters;
+      const AR, &AS: TBigInteger): TBigInteger;
 
   public
 
@@ -87,8 +84,8 @@ type
     /// <param name="parameters">
     /// key parameters for signature generation.
     /// </param>
-    procedure Init(forSigning: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForSigning: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
     /// <summary>
     /// <para>
@@ -107,7 +104,7 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the digest is longer than the key allows
     /// </exception>
-    function GenerateSignature(const &message: TCryptoLibByteArray)
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
     /// <summary>
@@ -135,8 +132,8 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if the digest is longer than the key allows
     /// </exception>
-    function VerifySignature(const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger): Boolean;
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const AR, &AS: TBigInteger): Boolean;
 
     /// <summary>
     /// Returns the data used for the signature generation, assuming the
@@ -145,7 +142,7 @@ type
     /// <returns>
     /// null if r and s are not valid.
     /// </returns>
-    function GetRecoveredMessage(const r, s: TBigInteger): TCryptoLibByteArray;
+    function GetRecoveredMessage(const AR, &AS: TBigInteger): TCryptoLibByteArray;
 
   end;
 
@@ -153,55 +150,55 @@ implementation
 
 { TECNRSigner }
 
-function TECNRSigner.ExtractT(const pubKey: IECPublicKeyParameters;
-  const r, s: TBigInteger): TBigInteger;
+function TECNRSigner.ExtractT(const APubKey: IECPublicKeyParameters;
+  const AR, &AS: TBigInteger): TBigInteger;
 var
-  n, x: TBigInteger;
-  G, W, P: IECPoint;
+  LN, LX: TBigInteger;
+  LG, LW, LP: IECPoint;
 begin
-  n := pubKey.parameters.n;
+  LN := APubKey.Parameters.N;
 
   // r in the range [1,n-1]
-  if ((r.CompareTo(TBigInteger.ONE) < 0) or (r.CompareTo(n) >= 0)) then
+  if ((AR.CompareTo(TBigInteger.One) < 0) or (AR.CompareTo(LN) >= 0)) then
   begin
-    result := Default (TBigInteger);
+    Result := TBigInteger.GetDefault;
     Exit;
   end;
 
   // s in the range [0,n-1]           NB: ECNR spec says 0
-  if ((s.CompareTo(TBigInteger.ZERO) < 0) or (s.CompareTo(n) >= 0)) then
+  if ((&AS.CompareTo(TBigInteger.Zero) < 0) or (&AS.CompareTo(LN) >= 0)) then
   begin
-    result := Default (TBigInteger);
+    Result := TBigInteger.GetDefault;
     Exit;
   end;
 
   // compute P = sG + rW
 
-  G := pubKey.parameters.G;
-  W := pubKey.Q;
-  // calculate P using Bouncy math
-  P := TECAlgorithms.SumOfTwoMultiplies(G, s, W, r).Normalize();
+  LG := APubKey.Parameters.G;
+  LW := APubKey.Q;
+  // calculate P
+  LP := TECAlgorithms.SumOfTwoMultiplies(LG, &AS, LW, AR).Normalize();
 
   // components must be bogus.
-  if (P.IsInfinity) then
+  if (LP.IsInfinity) then
   begin
-    result := Default (TBigInteger);
+    Result := TBigInteger.GetDefault;
     Exit;
   end;
 
-  x := P.AffineXCoord.ToBigInteger();
+  LX := LP.AffineXCoord.ToBigInteger();
 
-  result := r.Subtract(x).&Mod(n);
+  Result := AR.Subtract(LX).&Mod(LN);
 end;
 
-function TECNRSigner.GenerateSignature(const &message: TCryptoLibByteArray)
+function TECNRSigner.GenerateSignature(const AMessage: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
-  n, e, r, s, Vx, x, u: TBigInteger;
-  privKey: IECPrivateKeyParameters;
-  tempPair: IAsymmetricCipherKeyPair;
-  keyGen: IECKeyPairGenerator;
-  V: IECPublicKeyParameters;
+  LN, LE, LR, LS, LVx, LX, LU: TBigInteger;
+  LPrivKey: IECPrivateKeyParameters;
+  LTempPair: IAsymmetricCipherKeyPair;
+  LKeyGen: IECKeyPairGenerator;
+  LV: IECPublicKeyParameters;
 begin
   if (not FForSigning) then
   begin
@@ -210,13 +207,13 @@ begin
       (@SNotInitializedForSigning);
   end;
 
-  n := Order;
+  LN := Order;
 
-  e := TBigInteger.Create(1, &message);
+  LE := TBigInteger.Create(1, AMessage);
 
-  privKey := FKey as IECPrivateKeyParameters;
+  LPrivKey := FKey as IECPrivateKeyParameters;
 
-  if (e.CompareTo(n) >= 0) then
+  if (LE.CompareTo(LN) >= 0) then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SInputTooLargeForECNRKey);
   end;
@@ -224,83 +221,76 @@ begin
   repeat // generate r
     // generate another, but very temporary, key pair using
     // the same EC parameters
-    keyGen := TECKeyPairGenerator.Create();
+    LKeyGen := TECKeyPairGenerator.Create();
 
-    keyGen.Init(TECKeyGenerationParameters.Create(privKey.parameters, FRandom)
+    LKeyGen.Init(TECKeyGenerationParameters.Create(LPrivKey.Parameters, FRandom)
       as IECKeyGenerationParameters);
 
-    tempPair := keyGen.GenerateKeyPair();
+    LTempPair := LKeyGen.GenerateKeyPair();
 
-    V := tempPair.Public as IECPublicKeyParameters; // get temp's public key
-    Vx := V.Q.AffineXCoord.ToBigInteger(); // get the point's x coordinate
+    LV := LTempPair.Public as IECPublicKeyParameters; // get temp's public key
+    LVx := LV.Q.AffineXCoord.ToBigInteger(); // get the point's x coordinate
 
-    r := Vx.Add(e).&Mod(n);
-  until (not(r.SignValue = 0));
+    LR := LVx.Add(LE).&Mod(LN);
+  until (not(LR.SignValue = 0));
 
   // generate s
-  x := privKey.D; // private key value
-  u := (tempPair.Private as IECPrivateKeyParameters).D;
+  LX := LPrivKey.D; // private key value
+  LU := (LTempPair.Private as IECPrivateKeyParameters).D;
   // temp's private key value
-  s := u.Subtract(r.Multiply(x)).&Mod(n);
+  LS := LU.Subtract(LR.Multiply(LX)).&Mod(LN);
 
-  result := TCryptoLibGenericArray<TBigInteger>.Create(r, s);
+  Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
 end;
 
 function TECNRSigner.GetAlgorithmName: String;
 begin
-  result := 'ECNR';
+  Result := 'ECNR';
 end;
 
 function TECNRSigner.GetOrder: TBigInteger;
 begin
-  result := FKey.parameters.n;
+  Result := FKey.Parameters.N;
 end;
 
-procedure TECNRSigner.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TECNRSigner.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 var
-  rParam: IParametersWithRandom;
-  Lparameters: ICipherParameters;
+  LProvidedRandom: ISecureRandom;
+  LParameters: ICipherParameters;
 begin
-  FForSigning := forSigning;
-  Lparameters := parameters;
-  if (forSigning) then
+  FForSigning := AForSigning;
+
+  if (AForSigning) then
   begin
+    LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
-    if (Supports(Lparameters, IParametersWithRandom, rParam)) then
-    begin
-      FRandom := rParam.random;
-      Lparameters := rParam.parameters;
-    end
-    else
-    begin
-      FRandom := TSecureRandom.Create();
-    end;
-
-    if (not(Supports(Lparameters, IECPrivateKeyParameters))) then
+    if (not(Supports(LParameters, IECPrivateKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPrivateKeyNotFound);
     end;
 
-    FKey := Lparameters as IECPrivateKeyParameters;
+    FKey := LParameters as IECPrivateKeyParameters;
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom(LProvidedRandom);
   end
   else
   begin
-    if (not(Supports(Lparameters, IECPublicKeyParameters))) then
+    if (not(Supports(AParameters, IECPublicKeyParameters))) then
     begin
       raise EInvalidKeyCryptoLibException.CreateRes(@SECPublicKeyNotFound);
     end;
 
-    FKey := Lparameters as IECPublicKeyParameters;
+    FKey := AParameters as IECPublicKeyParameters;
+    FRandom := nil;
   end;
 end;
 
-function TECNRSigner.VerifySignature(const &message: TCryptoLibByteArray;
-  const r, s: TBigInteger): Boolean;
+function TECNRSigner.VerifySignature(const AMessage: TCryptoLibByteArray;
+  const AR, &AS: TBigInteger): Boolean;
 var
-  pubKey: IECPublicKeyParameters;
-  n, e, t: TBigInteger;
-  nBitLength, eBitLength: Int32;
+  LPubKey: IECPublicKeyParameters;
+  LN, LE, LT: TBigInteger;
+  LNBitLength, LEBitLength: Int32;
 begin
   if (FForSigning) then
   begin
@@ -309,27 +299,27 @@ begin
       (@SNotInitializedForVerifying);
   end;
 
-  pubKey := FKey as IECPublicKeyParameters;
-  n := pubKey.parameters.n;
-  nBitLength := n.BitLength;
+  LPubKey := FKey as IECPublicKeyParameters;
+  LN := LPubKey.Parameters.N;
+  LNBitLength := LN.BitLength;
 
-  e := TBigInteger.Create(1, &message);
-  eBitLength := e.BitLength;
+  LE := TBigInteger.Create(1, AMessage);
+  LEBitLength := LE.BitLength;
 
-  if (eBitLength > nBitLength) then
+  if (LEBitLength > LNBitLength) then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SInputTooLargeForECNRKey);
   end;
 
-  t := ExtractT(pubKey, r, s);
+  LT := ExtractT(LPubKey, AR, &AS);
 
-  result := (t.IsInitialized) and (t.Equals(e.&Mod(n)));
+  Result := (LT.IsInitialized) and (LT.Equals(LE.&Mod(LN)));
 end;
 
-function TECNRSigner.GetRecoveredMessage(const r, s: TBigInteger)
+function TECNRSigner.GetRecoveredMessage(const AR, &AS: TBigInteger)
   : TCryptoLibByteArray;
 var
-  t: TBigInteger;
+  LT: TBigInteger;
 begin
   if (FForSigning) then
   begin
@@ -337,15 +327,15 @@ begin
       (@SNotInitializedForVerifyingRecovery);
   end;
 
-  t := ExtractT(FKey as IECPublicKeyParameters, r, s);
+  LT := ExtractT(FKey as IECPublicKeyParameters, AR, &AS);
 
-  if (t.IsInitialized) then
+  if (LT.IsInitialized) then
   begin
-    result := TBigIntegers.AsUnsignedByteArray(t);
+    Result := TBigIntegerUtilities.AsUnsignedByteArray(LT);
     Exit;
   end;
 
-  result := Nil;
+  Result := nil;
 end;
 
 end.

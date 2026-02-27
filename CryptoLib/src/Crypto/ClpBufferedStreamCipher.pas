@@ -44,29 +44,29 @@ type
     function GetAlgorithmName: String; override;
 
   public
-    constructor Create(const cipher: IStreamCipher);
+    constructor Create(const ACipher: IStreamCipher);
 
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); override;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); override;
 
     function GetBlockSize(): Int32; override;
 
-    function GetOutputSize(inputLen: Int32): Int32; override;
+    function GetOutputSize(AInputLen: Int32): Int32; override;
 
-    function GetUpdateOutputSize(inputLen: Int32): Int32; override;
+    function GetUpdateOutputSize(AInputLen: Int32): Int32; override;
 
-    function ProcessByte(input: Byte): TCryptoLibByteArray; overload; override;
-    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
-      outOff: Int32): Int32; overload; override;
+    function ProcessByte(AInput: Byte): TCryptoLibByteArray; overload; override;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; overload; override;
 
-    function ProcessBytes(const input: TCryptoLibByteArray;
-      inOff, Length: Int32): TCryptoLibByteArray; overload; override;
-    function ProcessBytes(const input: TCryptoLibByteArray;
-      inOff, Length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
+    function ProcessBytes(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32): TCryptoLibByteArray; overload; override;
+    function ProcessBytes(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload; override;
 
     function DoFinal(): TCryptoLibByteArray; overload; override;
-    function DoFinal(const input: TCryptoLibByteArray; inOff, Length: Int32)
+    function DoFinal(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32)
       : TCryptoLibByteArray; overload; override;
 
     procedure Reset(); override;
@@ -79,111 +79,111 @@ implementation
 
 { TBufferedStreamCipher }
 
-constructor TBufferedStreamCipher.Create(const cipher: IStreamCipher);
+constructor TBufferedStreamCipher.Create(const ACipher: IStreamCipher);
 begin
   Inherited Create();
-  if (cipher = Nil) then
+  if (ACipher = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SCipherNil);
   end;
 
-  FCipher := cipher;
+  FCipher := ACipher;
 end;
 
 function TBufferedStreamCipher.GetAlgorithmName: String;
 begin
-  result := FCipher.AlgorithmName;
+  Result := FCipher.AlgorithmName;
 end;
 
 function TBufferedStreamCipher.GetBlockSize: Int32;
 begin
-  result := 0;
+  Result := 0;
 end;
 
-function TBufferedStreamCipher.GetOutputSize(inputLen: Int32): Int32;
+function TBufferedStreamCipher.GetOutputSize(AInputLen: Int32): Int32;
 begin
-  result := inputLen;
+  Result := AInputLen;
 end;
 
-function TBufferedStreamCipher.GetUpdateOutputSize(inputLen: Int32): Int32;
+function TBufferedStreamCipher.GetUpdateOutputSize(AInputLen: Int32): Int32;
 begin
-  result := inputLen;
+  Result := AInputLen;
 end;
 
-procedure TBufferedStreamCipher.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TBufferedStreamCipher.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
   LParameters: ICipherParameters;
 begin
-  LParameters := parameters;
+  LParameters := AParameters;
   if Supports(LParameters, IParametersWithRandom) then
   begin
-    LParameters := (LParameters as IParametersWithRandom).parameters;
+    LParameters := (LParameters as IParametersWithRandom).Parameters;
   end;
-  FCipher.Init(forEncryption, LParameters);
+  FCipher.Init(AForEncryption, LParameters);
 end;
 
-function TBufferedStreamCipher.ProcessByte(input: Byte;
-  const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TBufferedStreamCipher.ProcessByte(AInput: Byte;
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if (outOff >= System.Length(output)) then
+  if (AOutOff >= System.Length(AOutput)) then
   begin
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
   end;
-  output[outOff] := FCipher.ReturnByte(input);
-  result := 1;
+  AOutput[AOutOff] := FCipher.ReturnByte(AInput);
+  Result := 1;
 end;
 
-function TBufferedStreamCipher.ProcessByte(input: Byte): TCryptoLibByteArray;
+function TBufferedStreamCipher.ProcessByte(AInput: Byte): TCryptoLibByteArray;
 begin
-  result := TCryptoLibByteArray.Create(FCipher.ReturnByte(input));
+  Result := TCryptoLibByteArray.Create(FCipher.ReturnByte(AInput));
 end;
 
-function TBufferedStreamCipher.ProcessBytes(const input: TCryptoLibByteArray;
-  inOff, Length: Int32; const output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+function TBufferedStreamCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
 begin
-  if (Length < 1) then
+  if (ALength < 1) then
   begin
-    result := 0;
+    Result := 0;
     Exit;
   end;
 
-  if (Length > 0) then
+  if (ALength > 0) then
   begin
-    FCipher.ProcessBytes(input, inOff, Length, output, outOff);
+    FCipher.ProcessBytes(AInput, AInOff, ALength, AOutput, AOutOff);
   end;
 
-  result := Length;
+  Result := ALength;
 end;
 
-function TBufferedStreamCipher.ProcessBytes(const input: TCryptoLibByteArray;
-  inOff, Length: Int32): TCryptoLibByteArray;
+function TBufferedStreamCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32): TCryptoLibByteArray;
 begin
-  if (Length < 1) then
+  if (ALength < 1) then
   begin
-    result := Nil;
+    Result := nil;
     Exit;
   end;
-  System.SetLength(result, Length);
-  FCipher.ProcessBytes(input, inOff, Length, result, 0);
+  System.SetLength(Result, ALength);
+  FCipher.ProcessBytes(AInput, AInOff, ALength, Result, 0);
 end;
 
 function TBufferedStreamCipher.DoFinal: TCryptoLibByteArray;
 begin
   Reset();
-  result := EmptyBuffer;
+  Result := EmptyBuffer;
 end;
 
-function TBufferedStreamCipher.DoFinal(const input: TCryptoLibByteArray;
-  inOff, Length: Int32): TCryptoLibByteArray;
+function TBufferedStreamCipher.DoFinal(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32): TCryptoLibByteArray;
 begin
-  if (Length < 1) then
+  if (ALength < 1) then
   begin
-    result := EmptyBuffer;
+    Result := EmptyBuffer;
     Exit;
   end;
-  result := ProcessBytes(input, inOff, Length);
+  Result := ProcessBytes(AInput, AInOff, ALength);
   Reset();
 end;
 

@@ -24,7 +24,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
 {$IFDEF FPC}
   fpcunit,
@@ -35,7 +34,8 @@ uses
   ClpFixedSecureRandom,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
+  ClpX9ECAsn1Objects,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpIBasicAgreement,
@@ -43,22 +43,16 @@ uses
   ClpECDHCBasicAgreement,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
-  ClpECPublicKeyParameters,
-  ClpIECPublicKeyParameters,
-  ClpECPrivateKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
-  ClpIECKeyPairGenerator,
-  ClpECKeyPairGenerator,
-  ClpIECKeyGenerationParameters,
-  ClpECKeyGenerationParameters,
+  ClpECParameters,
+  ClpIECParameters,
+  ClpIECGenerators,
+  ClpECGenerators,
   ClpIAsymmetricCipherKeyPair,
-  ClpCustomNamedCurves,
-  ClpECC,
-  ClpIECC,
+  ClpECCurve,
+  ClpIECCommon,
+  ClpIECFieldElement,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -100,12 +94,12 @@ type
     /// X9.62 - 1998, <br />J.2.1, Page 100, ECDSA over the field F2m <br />
     /// an example with 191 bit binary field
     /// </summary>
-    procedure TestECDsa239bitBinary();
+    procedure TestECDsa239BitBinary();
 
     /// <summary>
     /// General test for long digest.
     /// </summary>
-    procedure TestECDsa239bitBinaryAndLargeDigest();
+    procedure TestECDsa239BitBinaryAndLargeDigest();
 
     /// <summary>
     /// key generation test
@@ -199,7 +193,7 @@ begin
   s := TBigInteger.Create
     ('308992691965804947361541664549085895292153777025772063598');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('1542725565216523985789236956265265265235675811949404040041'));
 
@@ -283,7 +277,7 @@ begin
   s := TBigInteger.Create
     ('5735822328888155254683894997897571951568553642892029982342');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('6140507067065001063065065565667405560006161556565665656654'));
 
@@ -348,7 +342,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsa239bitBinary;
+procedure TTestEC.TestECDsa239BitBinary;
 var
   sig: TCryptoLibGenericArray<TBigInteger>;
   k: ISecureRandom;
@@ -367,7 +361,7 @@ begin
   s := TBigInteger.Create
     ('197030374000731686738334997654997227052849804072198819102649413465737174');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('171278725565216523967285789236956265265265235675811949404040041670216363')
     );
@@ -379,10 +373,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint
@@ -436,7 +428,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsa239bitBinaryAndLargeDigest;
+procedure TTestEC.TestECDsa239BitBinaryAndLargeDigest;
 var
   r, s: TBigInteger;
   kData, &message: TBytes;
@@ -454,7 +446,7 @@ begin
   s := TBigInteger.Create
     ('144940322424411242416373536877786566515839911620497068645600824084578597');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('171278725565216523967285789236956265265265235675811949404040041670216363')
     );
@@ -466,10 +458,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint
@@ -542,7 +532,7 @@ begin
   s := TBigInteger.Create
     ('323813553209797357708078776831250505931891051755007842781978505179448783');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('700000017569056646655505781757157107570501575775705779575555657156756655')
     );
@@ -748,6 +738,9 @@ end;
 procedure TTestEC.TestECDHBasicAgreementCofactor;
 var
   random: ISecureRandom;
+  q, a, b, n, h: TBigInteger;
+  curve: IFpCurve;
+  G: IX9ECPoint;
   x9: IX9ECParameters;
   ec: IECDomainParameters;
   kpg: IECKeyPairGenerator;
@@ -757,8 +750,17 @@ var
 begin
   random := TSecureRandom.Create();
 
-  x9 := TCustomNamedCurves.GetByName('curve25519');
-  ec := TECDomainParameters.Create(x9.curve, x9.G, x9.n, x9.H, x9.GetSeed());
+  // "curve25519" in short Weierstrass form
+  q := TBigInteger.One.ShiftLeft(255).Subtract(TBigInteger.ValueOf(19));
+  a := TBigInteger.Create(1, DecodeHex('2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA984914A144'));
+  b := TBigInteger.Create(1, DecodeHex('7B425ED097B425ED097B425ED097B425ED097B425ED097B4260B5E9C7710C864'));
+  n := TBigInteger.Create(1, DecodeHex('1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED'));
+  h := TBigInteger.ValueOf(8);
+
+  curve := TFpCurve.Create(q, a, b, n, h);
+  G := TX9ECPoint.Create(curve, DecodeHex('042AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD245A20AE19A1B8A086B4E01EDD2C7748D14C923D4D7E6D7C61B229E9C5A27ECED3D9'));
+  x9 := TX9ECParameters.Create(curve, G, n, h);
+  ec := TECDomainParameters.Create(x9.Curve, x9.G, x9.N, x9.H);
 
   kpg := TECKeyPairGenerator.Create();
   kpg.Init(TECKeyGenerationParameters.Create(ec, random)

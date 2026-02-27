@@ -41,16 +41,8 @@ uses
   ClpDHBasicAgreement,
   ClpIDHParameters,
   ClpDHParameters,
-  ClpIDHParametersGenerator,
-  ClpDHParametersGenerator,
-  ClpIDHKeyPairGenerator,
-  ClpDHKeyPairGenerator,
-  ClpIDHBasicKeyPairGenerator,
-  ClpDHBasicKeyPairGenerator,
-  ClpIDHPrivateKeyParameters,
-  ClpIDHPublicKeyParameters,
-  ClpIDHKeyGenerationParameters,
-  ClpDHKeyGenerationParameters,
+  ClpIDHGenerators,
+  ClpDHGenerators,
   ClpIAsymmetricCipherKeyPair,
   ClpBigInteger,
   ClpCryptoLibTypes,
@@ -116,7 +108,7 @@ var
   dhkgParams: IDHKeyGenerationParameters;
   kpGen: IDHBasicKeyPairGenerator;
 begin
-  dhParams := TDHParameters.Create(p, g, Default (TBigInteger),
+  dhParams := TDHParameters.Create(p, g, TBigInteger.GetDefault,
     privateValueSize);
 
   dhkgParams := TDHKeyGenerationParameters.Create(TSecureRandom.Create()

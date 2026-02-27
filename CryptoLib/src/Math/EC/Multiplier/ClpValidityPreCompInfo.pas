@@ -22,74 +22,58 @@ unit ClpValidityPreCompInfo;
 interface
 
 uses
-  ClpIPreCompInfo,
-  ClpIValidityPreCompInfo;
+  ClpIValidityPreCompInfo,
+  ClpIPreCompInfo;
 
 type
-  TValidityPreCompInfo = class(TInterfacedObject, IPreCompInfo,
+  TValidityPreCompInfo = class sealed(TInterfacedObject, IPreCompInfo,
     IValidityPreCompInfo)
-
   strict private
-
-  var
-    Ffailed, FcurveEquationPassed, ForderPassed: Boolean;
-
+    FFailed: Boolean;
+    FCurveEquationPassed: Boolean;
+    FOrderPassed: Boolean;
   public
-
     const
-    PRECOMP_NAME = 'bc_validity';
+      PRECOMP_NAME = 'bc_validity';
 
-    function HasFailed(): Boolean; inline;
-    procedure ReportFailed(); inline;
-    function HasCurveEquationPassed(): Boolean; inline;
-    procedure ReportCurveEquationPassed(); inline;
-    function HasOrderPassed(): Boolean; inline;
-    procedure ReportOrderPassed(); inline;
-
-    constructor Create();
-
+    function HasFailed: Boolean;
+    procedure ReportFailed;
+    function HasCurveEquationPassed: Boolean;
+    procedure ReportCurveEquationPassed;
+    function HasOrderPassed: Boolean;
+    procedure ReportOrderPassed;
   end;
 
 implementation
 
-{ TValidityPreCompInfo }
-
-constructor TValidityPreCompInfo.Create;
-begin
-  Inherited Create();
-  Ffailed := False;
-  FcurveEquationPassed := False;
-  ForderPassed := False;
-end;
-
-function TValidityPreCompInfo.HasCurveEquationPassed: Boolean;
-begin
-  result := FcurveEquationPassed;
-end;
-
 function TValidityPreCompInfo.HasFailed: Boolean;
 begin
-  result := Ffailed;
-end;
-
-function TValidityPreCompInfo.HasOrderPassed: Boolean;
-begin
-  result := ForderPassed;
-end;
-
-procedure TValidityPreCompInfo.ReportCurveEquationPassed;
-begin
-  FcurveEquationPassed := True;
+  Result := FFailed;
 end;
 
 procedure TValidityPreCompInfo.ReportFailed;
 begin
-  Ffailed := True;
+  FFailed := True;
+end;
+
+function TValidityPreCompInfo.HasCurveEquationPassed: Boolean;
+begin
+  Result := FCurveEquationPassed;
+end;
+
+procedure TValidityPreCompInfo.ReportCurveEquationPassed;
+begin
+  FCurveEquationPassed := True;
+end;
+
+function TValidityPreCompInfo.HasOrderPassed: Boolean;
+begin
+  Result := FOrderPassed;
 end;
 
 procedure TValidityPreCompInfo.ReportOrderPassed;
 begin
-  ForderPassed := True;
+  FOrderPassed := True;
 end;
 
 end.

@@ -28,9 +28,10 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCheck,
-  ClpBits,
-  ClpConverters,
-  ClpArrayUtils,
+  ClpBitOperations,
+  ClpPack,
+  ClpArrayUtilities,
+  ClpPlatformUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -72,11 +73,11 @@ type
   const
     // multiply four bytes in GF(2^8) by 'x' {02} in parallel //
 
-    m1 = UInt32($80808080);
-    m2 = UInt32($7F7F7F7F);
-    m3 = UInt32($0000001B);
-    m4 = UInt32($C0C0C0C0);
-    m5 = UInt32($3F3F3F3F);
+    M1 = UInt32($80808080);
+    M2 = UInt32($7F7F7F7F);
+    M3 = UInt32($0000001B);
+    M4 = UInt32($C0C0C0C0);
+    M5 = UInt32($3F3F3F3F);
     BLOCK_SIZE = Int32(16);
 
     // The S box
@@ -118,18 +119,15 @@ type
       105, 20, 99, 85, 33, 12, 125);
 
     // vector used in calculating key schedule (powers of x in GF(256))
-    Rcon: array [0 .. 29] of Byte = ($01, $02, $04, $08, $10, $20, $40, $80,
+    RCon: array [0 .. 29] of Byte = ($01, $02, $04, $08, $10, $20, $40, $80,
       $1B, $36, $6C, $D8, $AB, $4D, $9A, $2F, $5E, $BC, $63, $C6, $97, $35, $6A,
       $D4, $B3, $7D, $FA, $EF, $C5, $91);
 
   var
-    FROUNDS: Int32;
+    FRounds: Int32;
     FWorkingKey: TCryptoLibMatrixUInt32Array;
     FC0, FC1, FC2, FC3: UInt32;
-    FforEncryption: Boolean;
-
-    function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
+    FForEncryption: Boolean;
 
     /// <summary>
     /// <para>
@@ -146,56 +144,49 @@ type
     /// This code is written assuming those are the only possible values
     /// </para>
     /// </summary>
-    function GenerateWorkingKey(forEncryption: Boolean;
-      const key: TCryptoLibByteArray): TCryptoLibMatrixUInt32Array;
+    function GenerateWorkingKey(AForEncryption: Boolean;
+      const AKey: TCryptoLibByteArray): TCryptoLibMatrixUInt32Array;
 
-    procedure UnPackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
-    procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
+    procedure UnPackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32); inline;
+    procedure PackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32); inline;
 
-    procedure EncryptBlock(const KW: TCryptoLibMatrixUInt32Array);
+    procedure EncryptBlock(const AKw: TCryptoLibMatrixUInt32Array);
 
-    procedure DecryptBlock(const KW: TCryptoLibMatrixUInt32Array);
+    procedure DecryptBlock(const AKw: TCryptoLibMatrixUInt32Array);
 
-    class function Shift(r: UInt32; Shift: Int32): UInt32; static; inline;
-    class function FFmulX(x: UInt32): UInt32; static; inline;
-    class function FFmulX2(x: UInt32): UInt32; static; inline;
+    class function Shift(AR: UInt32; AShift: Int32): UInt32; static; inline;
+    class function FFmulX(AX: UInt32): UInt32; static; inline;
+    class function FFmulX2(AX: UInt32): UInt32; static; inline;
 
-    // The following defines provide alternative definitions of FFmulX that might
-    // give improved performance if a fast 32-bit multiply is not available.
-    //
-    // private int FFmulX(int x) { int u = x & m1; u |= (u >> 1); return ((x & m2) << 1) ^ ((u >>> 3) | (u >>> 6)); }
-    // private static final int  m4 = 0x1b1b1b1b;
-    // private int FFmulX(int x) { int u = x & m1; return ((x & m2) << 1) ^ ((u - (u >>> 7)) & m4); }
+    class function Mcol(AX: UInt32): UInt32; static; inline;
+    class function Inv_Mcol(AX: UInt32): UInt32; static; inline;
+    class function SubWord(AX: UInt32): UInt32; static; inline;
 
-    class function Mcol(x: UInt32): UInt32; static; inline;
-    class function Inv_Mcol(x: UInt32): UInt32; static; inline;
-    class function SubWord(x: UInt32): UInt32; static; inline;
+  strict protected
+    function GetAlgorithmName: String; virtual;
 
   public
     /// <summary>
     /// initialise an AES cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// whether or not we are for encryption.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the parameters required to set up the cipher.
     /// </param>
     /// <exception cref="EArgumentCryptoLibException">
     /// if the parameters argument is inappropriate.
     /// </exception>
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
-    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
-
-    procedure Reset(); virtual;
+    function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
     function GetBlockSize(): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
   end;
 
@@ -203,496 +194,491 @@ implementation
 
 { TAesLightEngine }
 
-class function TAesLightEngine.Shift(r: UInt32; Shift: Int32): UInt32;
+class function TAesLightEngine.Shift(AR: UInt32; AShift: Int32): UInt32;
 begin
-  result := TBits.RotateRight32(r, Shift);
+  Result := TBitOperations.RotateRight32(AR, AShift);
 end;
 
-class function TAesLightEngine.SubWord(x: UInt32): UInt32;
+class function TAesLightEngine.SubWord(AX: UInt32): UInt32;
 begin
-  result := UInt32(S[x and 255]) or (UInt32(S[(x shr 8) and 255]) shl 8) or
-    (UInt32(S[(x shr 16) and 255]) shl 16) or
-    (UInt32(S[(x shr 24) and 255]) shl 24);
+  Result := UInt32(S[AX and 255]) or (UInt32(S[(AX shr 8) and 255]) shl 8) or
+    (UInt32(S[(AX shr 16) and 255]) shl 16) or
+    (UInt32(S[(AX shr 24) and 255]) shl 24);
 end;
 
-class function TAesLightEngine.FFmulX(x: UInt32): UInt32;
+class function TAesLightEngine.FFmulX(AX: UInt32): UInt32;
 begin
-  result := ((x and m2) shl 1) xor (((x and m1) shr 7) * m3);
+  Result := ((AX and M2) shl 1) xor (((AX and M1) shr 7) * M3);
 end;
 
-class function TAesLightEngine.FFmulX2(x: UInt32): UInt32;
+class function TAesLightEngine.FFmulX2(AX: UInt32): UInt32;
 var
-  t0, t1: UInt32;
+  LT0, LT1: UInt32;
 begin
-  t0 := (x and m5) shl 2;
-  t1 := (x and m4);
-  t1 := t1 xor (t1 shr 1);
-  result := t0 xor (t1 shr 2) xor (t1 shr 5);
+  LT0 := (AX and M5) shl 2;
+  LT1 := (AX and M4);
+  LT1 := LT1 xor (LT1 shr 1);
+  Result := LT0 xor (LT1 shr 2) xor (LT1 shr 5);
 end;
 
-class function TAesLightEngine.Mcol(x: UInt32): UInt32;
+class function TAesLightEngine.Mcol(AX: UInt32): UInt32;
 var
-  t0, t1: UInt32;
+  LT0, LT1: UInt32;
 begin
-  t0 := Shift(x, 8);
-  t1 := x xor t0;
-  result := Shift(t1, 16) xor t0 xor FFmulX(t1);
+  LT0 := Shift(AX, 8);
+  LT1 := AX xor LT0;
+  Result := Shift(LT1, 16) xor LT0 xor FFmulX(LT1);
 end;
 
-class function TAesLightEngine.Inv_Mcol(x: UInt32): UInt32;
+class function TAesLightEngine.Inv_Mcol(AX: UInt32): UInt32;
 var
-  t0, t1: UInt32;
+  LT0, LT1: UInt32;
 begin
-  t0 := x;
-  t1 := t0 xor Shift(t0, 8);
-  t0 := t0 xor FFmulX(t1);
-  t1 := t1 xor FFmulX2(t0);
-  t0 := t0 xor (t1 xor Shift(t1, 16));
-  result := t0;
+  LT0 := AX;
+  LT1 := LT0 xor Shift(LT0, 8);
+  LT0 := LT0 xor FFmulX(LT1);
+  LT1 := LT1 xor FFmulX2(LT0);
+  LT0 := LT0 xor (LT1 xor Shift(LT1, 16));
+  Result := LT0;
 end;
 
-procedure TAesLightEngine.EncryptBlock(const KW: TCryptoLibMatrixUInt32Array);
+procedure TAesLightEngine.EncryptBlock(const AKw: TCryptoLibMatrixUInt32Array);
 var
-  lkw: TCryptoLibUInt32Array;
-  lt0, lt1, lt2, lr0, lr1, lr2, lr3: UInt32;
-  lr: Int32;
+  LKw: TCryptoLibUInt32Array;
+  LT0, LT1, LT2, LR0, LR1, LR2, LR3: UInt32;
+  LR: Int32;
 begin
-  lkw := KW[0];
-  lt0 := FC0 xor lkw[0];
-  lt1 := FC1 xor lkw[1];
-  lt2 := FC2 xor lkw[2];
+  LKw := AKw[0];
+  LT0 := FC0 xor LKw[0];
+  LT1 := FC1 xor LKw[1];
+  LT2 := FC2 xor LKw[2];
 
-  lr3 := FC3 xor lkw[3];
-  lr := 1;
+  LR3 := FC3 xor LKw[3];
+  LR := 1;
 
-  while (lr < FROUNDS - 1) do
+  while (LR < FRounds - 1) do
   begin
-    lkw := KW[lr];
-    System.Inc(lr);
-    lr0 := Mcol(UInt32(S[lt0 and 255]) xor ((UInt32(S[(lt1 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lt2 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lr3 shr 24) and 255])) shl 24)) xor lkw[0];
-    lr1 := Mcol(UInt32(S[lt1 and 255]) xor ((UInt32(S[(lt2 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lr3 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lt0 shr 24) and 255])) shl 24)) xor lkw[1];
-    lr2 := Mcol(UInt32(S[lt2 and 255]) xor ((UInt32(S[(lr3 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lt0 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lt1 shr 24) and 255])) shl 24)) xor lkw[2];
-    lr3 := Mcol(UInt32(S[lr3 and 255]) xor ((UInt32(S[(lt0 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lt1 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lt2 shr 24) and 255])) shl 24)) xor lkw[3];
-    lkw := KW[lr];
-    System.Inc(lr);
-    lt0 := Mcol(UInt32(S[lr0 and 255]) xor ((UInt32(S[(lr1 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lr2 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lr3 shr 24) and 255])) shl 24)) xor lkw[0];
-    lt1 := Mcol(UInt32(S[lr1 and 255]) xor ((UInt32(S[(lr2 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lr3 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lr0 shr 24) and 255])) shl 24)) xor lkw[1];
-    lt2 := Mcol(UInt32(S[lr2 and 255]) xor ((UInt32(S[(lr3 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lr0 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lr1 shr 24) and 255])) shl 24)) xor lkw[2];
-    lr3 := Mcol(UInt32(S[lr3 and 255]) xor ((UInt32(S[(lr0 shr 8) and 255]))
-      shl 8) xor ((UInt32(S[(lr1 shr 16) and 255])) shl 16)
-      xor ((UInt32(S[(lr2 shr 24) and 255])) shl 24)) xor lkw[3];
+    LKw := AKw[LR];
+    System.Inc(LR);
+    LR0 := Mcol(UInt32(S[LT0 and 255]) xor ((UInt32(S[(LT1 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LT2 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LR3 shr 24) and 255])) shl 24)) xor LKw[0];
+    LR1 := Mcol(UInt32(S[LT1 and 255]) xor ((UInt32(S[(LT2 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LR3 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LT0 shr 24) and 255])) shl 24)) xor LKw[1];
+    LR2 := Mcol(UInt32(S[LT2 and 255]) xor ((UInt32(S[(LR3 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LT0 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LT1 shr 24) and 255])) shl 24)) xor LKw[2];
+    LR3 := Mcol(UInt32(S[LR3 and 255]) xor ((UInt32(S[(LT0 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LT1 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LT2 shr 24) and 255])) shl 24)) xor LKw[3];
+    LKw := AKw[LR];
+    System.Inc(LR);
+    LT0 := Mcol(UInt32(S[LR0 and 255]) xor ((UInt32(S[(LR1 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LR2 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LR3 shr 24) and 255])) shl 24)) xor LKw[0];
+    LT1 := Mcol(UInt32(S[LR1 and 255]) xor ((UInt32(S[(LR2 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LR3 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LR0 shr 24) and 255])) shl 24)) xor LKw[1];
+    LT2 := Mcol(UInt32(S[LR2 and 255]) xor ((UInt32(S[(LR3 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LR0 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LR1 shr 24) and 255])) shl 24)) xor LKw[2];
+    LR3 := Mcol(UInt32(S[LR3 and 255]) xor ((UInt32(S[(LR0 shr 8) and 255]))
+      shl 8) xor ((UInt32(S[(LR1 shr 16) and 255])) shl 16)
+      xor ((UInt32(S[(LR2 shr 24) and 255])) shl 24)) xor LKw[3];
   end;
 
-  lkw := KW[lr];
-  System.Inc(lr);
-  lr0 := Mcol(UInt32(S[lt0 and 255]) xor ((UInt32(S[(lt1 shr 8) and 255]))
-    shl 8) xor ((UInt32(S[(lt2 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lr3 shr 24) and 255])) shl 24)) xor lkw[0];
-  lr1 := Mcol(UInt32(S[lt1 and 255]) xor ((UInt32(S[(lt2 shr 8) and 255]))
-    shl 8) xor ((UInt32(S[(lr3 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lt0 shr 24) and 255])) shl 24)) xor lkw[1];
-  lr2 := Mcol(UInt32(S[lt2 and 255]) xor ((UInt32(S[(lr3 shr 8) and 255]))
-    shl 8) xor ((UInt32(S[(lt0 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lt1 shr 24) and 255])) shl 24)) xor lkw[2];
-  lr3 := Mcol(UInt32(S[lr3 and 255]) xor ((UInt32(S[(lt0 shr 8) and 255]))
-    shl 8) xor ((UInt32(S[(lt1 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lt2 shr 24) and 255])) shl 24)) xor lkw[3];
+  LKw := AKw[LR];
+  System.Inc(LR);
+  LR0 := Mcol(UInt32(S[LT0 and 255]) xor ((UInt32(S[(LT1 shr 8) and 255]))
+    shl 8) xor ((UInt32(S[(LT2 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LR3 shr 24) and 255])) shl 24)) xor LKw[0];
+  LR1 := Mcol(UInt32(S[LT1 and 255]) xor ((UInt32(S[(LT2 shr 8) and 255]))
+    shl 8) xor ((UInt32(S[(LR3 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LT0 shr 24) and 255])) shl 24)) xor LKw[1];
+  LR2 := Mcol(UInt32(S[LT2 and 255]) xor ((UInt32(S[(LR3 shr 8) and 255]))
+    shl 8) xor ((UInt32(S[(LT0 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LT1 shr 24) and 255])) shl 24)) xor LKw[2];
+  LR3 := Mcol(UInt32(S[LR3 and 255]) xor ((UInt32(S[(LT0 shr 8) and 255]))
+    shl 8) xor ((UInt32(S[(LT1 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LT2 shr 24) and 255])) shl 24)) xor LKw[3];
 
   // the final round is a simple function of S
 
-  lkw := KW[lr];
-  FC0 := UInt32(S[lr0 and 255]) xor ((UInt32(S[(lr1 shr 8) and 255])) shl 8)
-    xor ((UInt32(S[(lr2 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lr3 shr 24) and 255])) shl 24) xor lkw[0];
-  FC1 := UInt32(S[lr1 and 255]) xor ((UInt32(S[(lr2 shr 8) and 255])) shl 8)
-    xor ((UInt32(S[(lr3 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lr0 shr 24) and 255])) shl 24) xor lkw[1];
-  FC2 := UInt32(S[lr2 and 255]) xor ((UInt32(S[(lr3 shr 8) and 255])) shl 8)
-    xor ((UInt32(S[(lr0 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lr1 shr 24) and 255])) shl 24) xor lkw[2];
-  FC3 := UInt32(S[lr3 and 255]) xor ((UInt32(S[(lr0 shr 8) and 255])) shl 8)
-    xor ((UInt32(S[(lr1 shr 16) and 255])) shl 16)
-    xor ((UInt32(S[(lr2 shr 24) and 255])) shl 24) xor lkw[3];
+  LKw := AKw[LR];
+  FC0 := UInt32(S[LR0 and 255]) xor ((UInt32(S[(LR1 shr 8) and 255])) shl 8)
+    xor ((UInt32(S[(LR2 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LR3 shr 24) and 255])) shl 24) xor LKw[0];
+  FC1 := UInt32(S[LR1 and 255]) xor ((UInt32(S[(LR2 shr 8) and 255])) shl 8)
+    xor ((UInt32(S[(LR3 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LR0 shr 24) and 255])) shl 24) xor LKw[1];
+  FC2 := UInt32(S[LR2 and 255]) xor ((UInt32(S[(LR3 shr 8) and 255])) shl 8)
+    xor ((UInt32(S[(LR0 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LR1 shr 24) and 255])) shl 24) xor LKw[2];
+  FC3 := UInt32(S[LR3 and 255]) xor ((UInt32(S[(LR0 shr 8) and 255])) shl 8)
+    xor ((UInt32(S[(LR1 shr 16) and 255])) shl 16)
+    xor ((UInt32(S[(LR2 shr 24) and 255])) shl 24) xor LKw[3];
 end;
 
-procedure TAesLightEngine.DecryptBlock(const KW: TCryptoLibMatrixUInt32Array);
+procedure TAesLightEngine.DecryptBlock(const AKw: TCryptoLibMatrixUInt32Array);
 var
-  lkw: TCryptoLibUInt32Array;
-  lt0, lt1, lt2, lr0, lr1, lr2, lr3: UInt32;
-  lr: Int32;
+  LKw: TCryptoLibUInt32Array;
+  LT0, LT1, LT2, LR0, LR1, LR2, LR3: UInt32;
+  LR: Int32;
 begin
-  lkw := KW[FROUNDS];
-  lt0 := FC0 xor lkw[0];
-  lt1 := FC1 xor lkw[1];
-  lt2 := FC2 xor lkw[2];
+  LKw := AKw[FRounds];
+  LT0 := FC0 xor LKw[0];
+  LT1 := FC1 xor LKw[1];
+  LT2 := FC2 xor LKw[2];
 
-  lr3 := FC3 xor lkw[3];
-  lr := FROUNDS - 1;
+  LR3 := FC3 xor LKw[3];
+  LR := FRounds - 1;
 
-  while (lr > 1) do
+  while (LR > 1) do
   begin
-    lkw := KW[lr];
-    System.Dec(lr);
-    lr0 := Inv_Mcol(UInt32(Si[lt0 and 255])
-      xor ((UInt32(Si[(lr3 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lt2 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lt1 shr 24) and 255]) shl 24)) xor lkw[0];
-    lr1 := Inv_Mcol(UInt32(Si[lt1 and 255])
-      xor ((UInt32(Si[(lt0 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lr3 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lt2 shr 24) and 255]) shl 24)) xor lkw[1];
-    lr2 := Inv_Mcol(UInt32(Si[lt2 and 255])
-      xor ((UInt32(Si[(lt1 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lt0 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lr3 shr 24) and 255]) shl 24)) xor lkw[2];
-    lr3 := Inv_Mcol(UInt32(Si[lr3 and 255])
-      xor ((UInt32(Si[(lt2 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lt1 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lt0 shr 24) and 255]) shl 24)) xor lkw[3];
-    lkw := KW[lr];
-    System.Dec(lr);
-    lt0 := Inv_Mcol(UInt32(Si[lr0 and 255])
-      xor ((UInt32(Si[(lr3 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lr2 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lr1 shr 24) and 255]) shl 24)) xor lkw[0];
-    lt1 := Inv_Mcol(UInt32(Si[lr1 and 255])
-      xor ((UInt32(Si[(lr0 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lr3 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lr2 shr 24) and 255]) shl 24)) xor lkw[1];
-    lt2 := Inv_Mcol(UInt32(Si[lr2 and 255])
-      xor ((UInt32(Si[(lr1 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lr0 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lr3 shr 24) and 255]) shl 24)) xor lkw[2];
-    lr3 := Inv_Mcol(UInt32(Si[lr3 and 255])
-      xor ((UInt32(Si[(lr2 shr 8) and 255])) shl 8)
-      xor ((UInt32(Si[(lr1 shr 16) and 255])) shl 16)
-      xor (UInt32(Si[(lr0 shr 24) and 255]) shl 24)) xor lkw[3];
+    LKw := AKw[LR];
+    System.Dec(LR);
+    LR0 := Inv_Mcol(UInt32(Si[LT0 and 255])
+      xor ((UInt32(Si[(LR3 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LT2 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LT1 shr 24) and 255]) shl 24)) xor LKw[0];
+    LR1 := Inv_Mcol(UInt32(Si[LT1 and 255])
+      xor ((UInt32(Si[(LT0 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LR3 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LT2 shr 24) and 255]) shl 24)) xor LKw[1];
+    LR2 := Inv_Mcol(UInt32(Si[LT2 and 255])
+      xor ((UInt32(Si[(LT1 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LT0 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LR3 shr 24) and 255]) shl 24)) xor LKw[2];
+    LR3 := Inv_Mcol(UInt32(Si[LR3 and 255])
+      xor ((UInt32(Si[(LT2 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LT1 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LT0 shr 24) and 255]) shl 24)) xor LKw[3];
+    LKw := AKw[LR];
+    System.Dec(LR);
+    LT0 := Inv_Mcol(UInt32(Si[LR0 and 255])
+      xor ((UInt32(Si[(LR3 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LR2 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LR1 shr 24) and 255]) shl 24)) xor LKw[0];
+    LT1 := Inv_Mcol(UInt32(Si[LR1 and 255])
+      xor ((UInt32(Si[(LR0 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LR3 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LR2 shr 24) and 255]) shl 24)) xor LKw[1];
+    LT2 := Inv_Mcol(UInt32(Si[LR2 and 255])
+      xor ((UInt32(Si[(LR1 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LR0 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LR3 shr 24) and 255]) shl 24)) xor LKw[2];
+    LR3 := Inv_Mcol(UInt32(Si[LR3 and 255])
+      xor ((UInt32(Si[(LR2 shr 8) and 255])) shl 8)
+      xor ((UInt32(Si[(LR1 shr 16) and 255])) shl 16)
+      xor (UInt32(Si[(LR0 shr 24) and 255]) shl 24)) xor LKw[3];
   end;
 
-  lkw := KW[1];
-  lr0 := Inv_Mcol(UInt32(Si[lt0 and 255]) xor ((UInt32(Si[(lr3 shr 8) and 255]))
-    shl 8) xor ((UInt32(Si[(lt2 shr 16) and 255])) shl 16)
-    xor (UInt32(Si[(lt1 shr 24) and 255]) shl 24)) xor lkw[0];
-  lr1 := Inv_Mcol(UInt32(Si[lt1 and 255]) xor ((UInt32(Si[(lt0 shr 8) and 255]))
-    shl 8) xor ((UInt32(Si[(lr3 shr 16) and 255])) shl 16)
-    xor (UInt32(Si[(lt2 shr 24) and 255]) shl 24)) xor lkw[1];
-  lr2 := Inv_Mcol(UInt32(Si[lt2 and 255]) xor ((UInt32(Si[(lt1 shr 8) and 255]))
-    shl 8) xor ((UInt32(Si[(lt0 shr 16) and 255])) shl 16)
-    xor (UInt32(Si[(lr3 shr 24) and 255]) shl 24)) xor lkw[2];
-  lr3 := Inv_Mcol(UInt32(Si[lr3 and 255]) xor ((UInt32(Si[(lt2 shr 8) and 255]))
-    shl 8) xor ((UInt32(Si[(lt1 shr 16) and 255])) shl 16)
-    xor (UInt32(Si[(lt0 shr 24) and 255]) shl 24)) xor lkw[3];
+  LKw := AKw[1];
+  LR0 := Inv_Mcol(UInt32(Si[LT0 and 255]) xor ((UInt32(Si[(LR3 shr 8) and 255]))
+    shl 8) xor ((UInt32(Si[(LT2 shr 16) and 255])) shl 16)
+    xor (UInt32(Si[(LT1 shr 24) and 255]) shl 24)) xor LKw[0];
+  LR1 := Inv_Mcol(UInt32(Si[LT1 and 255]) xor ((UInt32(Si[(LT0 shr 8) and 255]))
+    shl 8) xor ((UInt32(Si[(LR3 shr 16) and 255])) shl 16)
+    xor (UInt32(Si[(LT2 shr 24) and 255]) shl 24)) xor LKw[1];
+  LR2 := Inv_Mcol(UInt32(Si[LT2 and 255]) xor ((UInt32(Si[(LT1 shr 8) and 255]))
+    shl 8) xor ((UInt32(Si[(LT0 shr 16) and 255])) shl 16)
+    xor (UInt32(Si[(LR3 shr 24) and 255]) shl 24)) xor LKw[2];
+  LR3 := Inv_Mcol(UInt32(Si[LR3 and 255]) xor ((UInt32(Si[(LT2 shr 8) and 255]))
+    shl 8) xor ((UInt32(Si[(LT1 shr 16) and 255])) shl 16)
+    xor (UInt32(Si[(LT0 shr 24) and 255]) shl 24)) xor LKw[3];
 
   // the final round's table is a simple function of Si
 
-  lkw := KW[0];
-  FC0 := UInt32(Si[lr0 and 255]) xor ((UInt32(Si[(lr3 shr 8) and 255])) shl 8)
-    xor ((UInt32(Si[(lr2 shr 16) and 255])) shl 16)
-    xor ((UInt32(Si[(lr1 shr 24) and 255])) shl 24) xor lkw[0];
-  FC1 := UInt32(Si[lr1 and 255]) xor ((UInt32(Si[(lr0 shr 8) and 255])) shl 8)
-    xor ((UInt32(Si[(lr3 shr 16) and 255])) shl 16)
-    xor ((UInt32(Si[(lr2 shr 24) and 255])) shl 24) xor lkw[1];
-  FC2 := UInt32(Si[lr2 and 255]) xor ((UInt32(Si[(lr1 shr 8) and 255])) shl 8)
-    xor ((UInt32(Si[(lr0 shr 16) and 255])) shl 16)
-    xor ((UInt32(Si[(lr3 shr 24) and 255])) shl 24) xor lkw[2];
-  FC3 := UInt32(Si[lr3 and 255]) xor ((UInt32(Si[(lr2 shr 8) and 255])) shl 8)
-    xor ((UInt32(Si[(lr1 shr 16) and 255])) shl 16)
-    xor ((UInt32(Si[(lr0 shr 24) and 255])) shl 24) xor lkw[3];
+  LKw := AKw[0];
+  FC0 := UInt32(Si[LR0 and 255]) xor ((UInt32(Si[(LR3 shr 8) and 255])) shl 8)
+    xor ((UInt32(Si[(LR2 shr 16) and 255])) shl 16)
+    xor ((UInt32(Si[(LR1 shr 24) and 255])) shl 24) xor LKw[0];
+  FC1 := UInt32(Si[LR1 and 255]) xor ((UInt32(Si[(LR0 shr 8) and 255])) shl 8)
+    xor ((UInt32(Si[(LR3 shr 16) and 255])) shl 16)
+    xor ((UInt32(Si[(LR2 shr 24) and 255])) shl 24) xor LKw[1];
+  FC2 := UInt32(Si[LR2 and 255]) xor ((UInt32(Si[(LR1 shr 8) and 255])) shl 8)
+    xor ((UInt32(Si[(LR0 shr 16) and 255])) shl 16)
+    xor ((UInt32(Si[(LR3 shr 24) and 255])) shl 24) xor LKw[2];
+  FC3 := UInt32(Si[LR3 and 255]) xor ((UInt32(Si[(LR2 shr 8) and 255])) shl 8)
+    xor ((UInt32(Si[(LR1 shr 16) and 255])) shl 16)
+    xor ((UInt32(Si[(LR0 shr 24) and 255])) shl 24) xor LKw[3];
 end;
 
-function TAesLightEngine.GenerateWorkingKey(forEncryption: Boolean;
-  const key: TCryptoLibByteArray): TCryptoLibMatrixUInt32Array;
+function TAesLightEngine.GenerateWorkingKey(AForEncryption: Boolean;
+  const AKey: TCryptoLibByteArray): TCryptoLibMatrixUInt32Array;
 var
-  keyLen, KC, i, j: Int32;
-  smallw: TCryptoLibUInt32Array;
-  bigW: TCryptoLibMatrixUInt32Array;
-  u, lrcon, t0, t1, t2, t3, t4, t5, t6, t7: UInt32;
+  LKeyLen, LKc, LI, LJ: Int32;
+  LSmallW: TCryptoLibUInt32Array;
+  LBigW: TCryptoLibMatrixUInt32Array;
+  LU, LRCon, LT0, LT1, LT2, LT3, LT4, LT5, LT6, LT7: UInt32;
 
 begin
-  keyLen := System.Length(key);
-  if ((keyLen < 16) or (keyLen > 32) or ((keyLen and 7) <> 0)) then
+  LKeyLen := System.Length(AKey);
+  if ((LKeyLen < 16) or (LKeyLen > 32) or ((LKeyLen and 7) <> 0)) then
   begin
-    TArrayUtils.ZeroFill(key);
+    TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
-  KC := keyLen shr 2; // KC := keyLen div 4;
-  FROUNDS := KC + 6;
+  LKc := LKeyLen shr 2;
+  FRounds := LKc + 6;
   // This is not always true for the generalized Rijndael that allows larger block sizes
-  System.SetLength(bigW, FROUNDS + 1); // 4 words in a block
+  System.SetLength(LBigW, FRounds + 1); // 4 words in a block
 
-  for i := 0 to FROUNDS do
+  for LI := 0 to FRounds do
   begin
-    System.SetLength(bigW[i], 4);
+    System.SetLength(LBigW[LI], 4);
   end;
 
-  case KC of
+  case LKc of
     4:
       begin
-        t0 := TConverters.ReadBytesAsUInt32LE(PByte(key), 0);
-        bigW[0][0] := t0;
-        t1 := TConverters.ReadBytesAsUInt32LE(PByte(key), 4);
-        bigW[0][1] := t1;
-        t2 := TConverters.ReadBytesAsUInt32LE(PByte(key), 8);
-        bigW[0][2] := t2;
-        t3 := TConverters.ReadBytesAsUInt32LE(PByte(key), 12);
-        bigW[0][3] := t3;
+        LT0 := TPack.LE_To_UInt32(AKey, 0);
+        LBigW[0][0] := LT0;
+        LT1 := TPack.LE_To_UInt32(AKey, 4);
+        LBigW[0][1] := LT1;
+        LT2 := TPack.LE_To_UInt32(AKey, 8);
+        LBigW[0][2] := LT2;
+        LT3 := TPack.LE_To_UInt32(AKey, 12);
+        LBigW[0][3] := LT3;
 
-        for i := 1 to 10 do
+        for LI := 1 to 10 do
         begin
-          u := SubWord(Shift(t3, 8)) xor Rcon[i - 1];
-          t0 := t0 xor u;
-          bigW[i][0] := t0;
-          t1 := t1 xor t0;
-          bigW[i][1] := t1;
-          t2 := t2 xor t1;
-          bigW[i][2] := t2;
-          t3 := t3 xor t2;
-          bigW[i][3] := t3;
+          LU := SubWord(Shift(LT3, 8)) xor RCon[LI - 1];
+          LT0 := LT0 xor LU;
+          LBigW[LI][0] := LT0;
+          LT1 := LT1 xor LT0;
+          LBigW[LI][1] := LT1;
+          LT2 := LT2 xor LT1;
+          LBigW[LI][2] := LT2;
+          LT3 := LT3 xor LT2;
+          LBigW[LI][3] := LT3;
         end;
       end;
 
     6:
       begin
-        t0 := TConverters.ReadBytesAsUInt32LE(PByte(key), 0);
-        bigW[0][0] := t0;
-        t1 := TConverters.ReadBytesAsUInt32LE(PByte(key), 4);
-        bigW[0][1] := t1;
-        t2 := TConverters.ReadBytesAsUInt32LE(PByte(key), 8);
-        bigW[0][2] := t2;
-        t3 := TConverters.ReadBytesAsUInt32LE(PByte(key), 12);
-        bigW[0][3] := t3;
-        t4 := TConverters.ReadBytesAsUInt32LE(PByte(key), 16);
-        bigW[1][0] := t4;
-        t5 := TConverters.ReadBytesAsUInt32LE(PByte(key), 20);
-        bigW[1][1] := t5;
+        LT0 := TPack.LE_To_UInt32(AKey, 0);
+        LBigW[0][0] := LT0;
+        LT1 := TPack.LE_To_UInt32(AKey, 4);
+        LBigW[0][1] := LT1;
+        LT2 := TPack.LE_To_UInt32(AKey, 8);
+        LBigW[0][2] := LT2;
+        LT3 := TPack.LE_To_UInt32(AKey, 12);
+        LBigW[0][3] := LT3;
+        LT4 := TPack.LE_To_UInt32(AKey, 16);
+        LBigW[1][0] := LT4;
+        LT5 := TPack.LE_To_UInt32(AKey, 20);
+        LBigW[1][1] := LT5;
 
-        lrcon := 1;
-        u := SubWord(Shift(t5, 8)) xor lrcon;
-        lrcon := lrcon shl 1;
-        t0 := t0 xor u;
-        bigW[1][2] := t0;
-        t1 := t1 xor t0;
-        bigW[1][3] := t1;
-        t2 := t2 xor t1;
-        bigW[2][0] := t2;
-        t3 := t3 xor t2;
-        bigW[2][1] := t3;
-        t4 := t4 xor t3;
-        bigW[2][2] := t4;
-        t5 := t5 xor t4;
-        bigW[2][3] := t5;
+        LRCon := 1;
+        LU := SubWord(Shift(LT5, 8)) xor LRCon;
+        LRCon := LRCon shl 1;
+        LT0 := LT0 xor LU;
+        LBigW[1][2] := LT0;
+        LT1 := LT1 xor LT0;
+        LBigW[1][3] := LT1;
+        LT2 := LT2 xor LT1;
+        LBigW[2][0] := LT2;
+        LT3 := LT3 xor LT2;
+        LBigW[2][1] := LT3;
+        LT4 := LT4 xor LT3;
+        LBigW[2][2] := LT4;
+        LT5 := LT5 xor LT4;
+        LBigW[2][3] := LT5;
 
-        i := 3;
+        LI := 3;
 
-        while i < 12 do
+        while LI < 12 do
 
         begin
-          u := SubWord(Shift(t5, 8)) xor lrcon;
-          lrcon := lrcon shl 1;
-          t0 := t0 xor u;
-          bigW[i][0] := t0;
-          t1 := t1 xor t0;
-          bigW[i][1] := t1;
-          t2 := t2 xor t1;
-          bigW[i][2] := t2;
-          t3 := t3 xor t2;
-          bigW[i][3] := t3;
-          t4 := t4 xor t3;
-          bigW[i + 1][0] := t4;
-          t5 := t5 xor t4;
-          bigW[i + 1][1] := t5;
-          u := SubWord(Shift(t5, 8)) xor lrcon;
-          lrcon := lrcon shl 1;
-          t0 := t0 xor u;
-          bigW[i + 1][2] := t0;
-          t1 := t1 xor t0;
-          bigW[i + 1][3] := t1;
-          t2 := t2 xor t1;
-          bigW[i + 2][0] := t2;
-          t3 := t3 xor t2;
-          bigW[i + 2][1] := t3;
-          t4 := t4 xor t3;
-          bigW[i + 2][2] := t4;
-          t5 := t5 xor t4;
-          bigW[i + 2][3] := t5;
-          System.Inc(i, 3);
+          LU := SubWord(Shift(LT5, 8)) xor LRCon;
+          LRCon := LRCon shl 1;
+          LT0 := LT0 xor LU;
+          LBigW[LI][0] := LT0;
+          LT1 := LT1 xor LT0;
+          LBigW[LI][1] := LT1;
+          LT2 := LT2 xor LT1;
+          LBigW[LI][2] := LT2;
+          LT3 := LT3 xor LT2;
+          LBigW[LI][3] := LT3;
+          LT4 := LT4 xor LT3;
+          LBigW[LI + 1][0] := LT4;
+          LT5 := LT5 xor LT4;
+          LBigW[LI + 1][1] := LT5;
+          LU := SubWord(Shift(LT5, 8)) xor LRCon;
+          LRCon := LRCon shl 1;
+          LT0 := LT0 xor LU;
+          LBigW[LI + 1][2] := LT0;
+          LT1 := LT1 xor LT0;
+          LBigW[LI + 1][3] := LT1;
+          LT2 := LT2 xor LT1;
+          LBigW[LI + 2][0] := LT2;
+          LT3 := LT3 xor LT2;
+          LBigW[LI + 2][1] := LT3;
+          LT4 := LT4 xor LT3;
+          LBigW[LI + 2][2] := LT4;
+          LT5 := LT5 xor LT4;
+          LBigW[LI + 2][3] := LT5;
+          System.Inc(LI, 3);
         end;
 
-        u := SubWord(Shift(t5, 8)) xor lrcon;
-        t0 := t0 xor u;
-        bigW[12][0] := t0;
-        t1 := t1 xor t0;
-        bigW[12][1] := t1;
-        t2 := t2 xor t1;
-        bigW[12][2] := t2;
-        t3 := t3 xor t2;
-        bigW[12][3] := t3;
+        LU := SubWord(Shift(LT5, 8)) xor LRCon;
+        LT0 := LT0 xor LU;
+        LBigW[12][0] := LT0;
+        LT1 := LT1 xor LT0;
+        LBigW[12][1] := LT1;
+        LT2 := LT2 xor LT1;
+        LBigW[12][2] := LT2;
+        LT3 := LT3 xor LT2;
+        LBigW[12][3] := LT3;
       end;
 
     8:
       begin
-        t0 := TConverters.ReadBytesAsUInt32LE(PByte(key), 0);
-        bigW[0][0] := t0;
-        t1 := TConverters.ReadBytesAsUInt32LE(PByte(key), 4);
-        bigW[0][1] := t1;
-        t2 := TConverters.ReadBytesAsUInt32LE(PByte(key), 8);
-        bigW[0][2] := t2;
-        t3 := TConverters.ReadBytesAsUInt32LE(PByte(key), 12);
-        bigW[0][3] := t3;
-        t4 := TConverters.ReadBytesAsUInt32LE(PByte(key), 16);
-        bigW[1][0] := t4;
-        t5 := TConverters.ReadBytesAsUInt32LE(PByte(key), 20);
-        bigW[1][1] := t5;
-        t6 := TConverters.ReadBytesAsUInt32LE(PByte(key), 24);
-        bigW[1][2] := t6;
-        t7 := TConverters.ReadBytesAsUInt32LE(PByte(key), 28);
-        bigW[1][3] := t7;
+        LT0 := TPack.LE_To_UInt32(AKey, 0);
+        LBigW[0][0] := LT0;
+        LT1 := TPack.LE_To_UInt32(AKey, 4);
+        LBigW[0][1] := LT1;
+        LT2 := TPack.LE_To_UInt32(AKey, 8);
+        LBigW[0][2] := LT2;
+        LT3 := TPack.LE_To_UInt32(AKey, 12);
+        LBigW[0][3] := LT3;
+        LT4 := TPack.LE_To_UInt32(AKey, 16);
+        LBigW[1][0] := LT4;
+        LT5 := TPack.LE_To_UInt32(AKey, 20);
+        LBigW[1][1] := LT5;
+        LT6 := TPack.LE_To_UInt32(AKey, 24);
+        LBigW[1][2] := LT6;
+        LT7 := TPack.LE_To_UInt32(AKey, 28);
+        LBigW[1][3] := LT7;
 
-        lrcon := 1;
+        LRCon := 1;
 
-        i := 2;
+        LI := 2;
 
-        while i < 14 do
+        while LI < 14 do
 
         begin
-          u := SubWord(Shift(t7, 8)) xor lrcon;
-          lrcon := lrcon shl 1;
-          t0 := t0 xor u;
-          bigW[i][0] := t0;
-          t1 := t1 xor t0;
-          bigW[i][1] := t1;
-          t2 := t2 xor t1;
-          bigW[i][2] := t2;
-          t3 := t3 xor t2;;
-          bigW[i][3] := t3;
-          u := SubWord(t3);
-          t4 := t4 xor u;
-          bigW[i + 1][0] := t4;
-          t5 := t5 xor t4;
-          bigW[i + 1][1] := t5;
-          t6 := t6 xor t5;
-          bigW[i + 1][2] := t6;
-          t7 := t7 xor t6;
-          bigW[i + 1][3] := t7;
-          System.Inc(i, 2);
+          LU := SubWord(Shift(LT7, 8)) xor LRCon;
+          LRCon := LRCon shl 1;
+          LT0 := LT0 xor LU;
+          LBigW[LI][0] := LT0;
+          LT1 := LT1 xor LT0;
+          LBigW[LI][1] := LT1;
+          LT2 := LT2 xor LT1;
+          LBigW[LI][2] := LT2;
+          LT3 := LT3 xor LT2;;
+          LBigW[LI][3] := LT3;
+          LU := SubWord(LT3);
+          LT4 := LT4 xor LU;
+          LBigW[LI + 1][0] := LT4;
+          LT5 := LT5 xor LT4;
+          LBigW[LI + 1][1] := LT5;
+          LT6 := LT6 xor LT5;
+          LBigW[LI + 1][2] := LT6;
+          LT7 := LT7 xor LT6;
+          LBigW[LI + 1][3] := LT7;
+          System.Inc(LI, 2);
         end;
 
-        u := SubWord(Shift(t7, 8)) xor lrcon;
-        t0 := t0 xor u;
-        bigW[14][0] := t0;
-        t1 := t1 xor t0;
-        bigW[14][1] := t1;
-        t2 := t2 xor t1;
-        bigW[14][2] := t2;
-        t3 := t3 xor t2;;
-        bigW[14][3] := t3;
+        LU := SubWord(Shift(LT7, 8)) xor LRCon;
+        LT0 := LT0 xor LU;
+        LBigW[14][0] := LT0;
+        LT1 := LT1 xor LT0;
+        LBigW[14][1] := LT1;
+        LT2 := LT2 xor LT1;
+        LBigW[14][2] := LT2;
+        LT3 := LT3 xor LT2;;
+        LBigW[14][3] := LT3;
       end
   else
     begin
-      TArrayUtils.ZeroFill(key);
+      TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
       raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperation);
     end;
   end;
 
-  if (not forEncryption) then
+  if (not AForEncryption) then
   begin
-    for j := 1 to System.Pred(FROUNDS) do
+    for LJ := 1 to System.Pred(FRounds) do
 
     begin
-      smallw := bigW[j];
-      for i := 0 to System.Pred(4) do
+      LSmallW := LBigW[LJ];
+      for LI := 0 to System.Pred(4) do
 
       begin
-        smallw[i] := Inv_Mcol(smallw[i]);
+        LSmallW[LI] := Inv_Mcol(LSmallW[LI]);
       end;
     end;
   end;
 
-  result := bigW;
+  Result := LBigW;
 
-  TArrayUtils.ZeroFill(key);
+  TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
 function TAesLightEngine.GetAlgorithmName: String;
 begin
-  result := 'AES';
+  Result := 'AES';
 end;
 
 function TAesLightEngine.GetBlockSize: Int32;
 begin
-  result := BLOCK_SIZE;
+  Result := BLOCK_SIZE;
 end;
 
-function TAesLightEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := false;
-end;
-
-procedure TAesLightEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TAesLightEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  keyParameter: IKeyParameter;
+  LKeyParameter: IKeyParameter;
 begin
 
-  if not Supports(parameters, IKeyParameter, keyParameter) then
+  if not Supports(AParameters, IKeyParameter, LKeyParameter) then
   begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameterAESInit,
-      [(parameters as TObject).ToString]);
+      [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
-  FWorkingKey := GenerateWorkingKey(forEncryption, keyParameter.GetKey());
+  FWorkingKey := GenerateWorkingKey(AForEncryption, LKeyParameter.GetKey());
 
-  FforEncryption := forEncryption;
+  FForEncryption := AForEncryption;
 end;
 
-procedure TAesLightEngine.PackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TAesLightEngine.PackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 begin
-  TConverters.ReadUInt32AsBytesLE(FC0, bytes, off);
-  TConverters.ReadUInt32AsBytesLE(FC1, bytes, off + 4);
-  TConverters.ReadUInt32AsBytesLE(FC2, bytes, off + 8);
-  TConverters.ReadUInt32AsBytesLE(FC3, bytes, off + 12);
+  TPack.UInt32_To_LE(FC0, ABytes, AOff);
+  TPack.UInt32_To_LE(FC1, ABytes, AOff + 4);
+  TPack.UInt32_To_LE(FC2, ABytes, AOff + 8);
+  TPack.UInt32_To_LE(FC3, ABytes, AOff + 12);
 end;
 
-procedure TAesLightEngine.UnPackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TAesLightEngine.UnPackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 begin
-  FC0 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off);
-  FC1 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 4);
-  FC2 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 8);
-  FC3 := TConverters.ReadBytesAsUInt32LE(PByte(bytes), off + 12);
+  FC0 := TPack.LE_To_UInt32(ABytes, AOff);
+  FC1 := TPack.LE_To_UInt32(ABytes, AOff + 4);
+  FC2 := TPack.LE_To_UInt32(ABytes, AOff + 8);
+  FC3 := TPack.LE_To_UInt32(ABytes, AOff + 12);
 end;
 
-function TAesLightEngine.ProcessBlock(const input: TCryptoLibByteArray;
-  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TAesLightEngine.ProcessBlock(const AInput: TCryptoLibByteArray;
+  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if (FWorkingKey = Nil) then
+  if (FWorkingKey = nil) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SAESEngineNotInitialised);
   end;
 
-  TCheck.DataLength(input, inOff, 16, SInputBuffertooShort);
-  TCheck.OutputLength(output, outOff, 16, SOutputBuffertooShort);
+  TCheck.DataLength(AInput, AInOff, 16, SInputBuffertooShort);
+  TCheck.OutputLength(AOutput, AOutOff, 16, SOutputBuffertooShort);
 
-  UnPackBlock(input, inOff);
+  UnPackBlock(AInput, AInOff);
 
-  if (FforEncryption) then
+  if (FForEncryption) then
   begin
     EncryptBlock(FWorkingKey);
   end
@@ -701,14 +687,9 @@ begin
     DecryptBlock(FWorkingKey);
   end;
 
-  PackBlock(output, outOff);
+  PackBlock(AOutput, AOutOff);
 
-  result := BLOCK_SIZE;
-end;
-
-procedure TAesLightEngine.Reset;
-begin
-  // nothing to do.
+  Result := BLOCK_SIZE;
 end;
 
 end.

@@ -20,8 +20,8 @@
    {$MESSAGE FATAL 'This Library does not support "Big Endian" processors yet.'}
 {$ENDIF}
 
-{$IF FPC_FULLVERSION < 30004}
-   {$MESSAGE ERROR 'This Library requires FreePascal 3.0.4 or higher.'}
+{$IF FPC_FULLVERSION < 30301}
+   {$MESSAGE ERROR 'This Library requires FreePascal 3.3.1 or higher.'}
 {$IFEND}
 
 {$IF FPC_FULLVERSION >= 30301}
@@ -55,7 +55,7 @@
    {$IF DEFINED(BSD)}
       {$IF DEFINED(DARWIN)}
          {$DEFINE CRYPTOLIB_APPLE}
-         {$IF DEFINED(CRYPTOLIB_ARM) OR DEFINED(CRYPTOLIB_AARCH64)}
+         {$IF DEFINED(IOS) OR DEFINED(IPHONESIM)}
             {$DEFINE CRYPTOLIB_IOS}
          {$ELSE}
             {$DEFINE CRYPTOLIB_MACOS}

@@ -28,7 +28,8 @@ uses
   ClpIRijndaelEngine,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpArrayUtils,
+  ClpArrayUtilities,
+  ClpPlatformUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -60,7 +61,7 @@ type
     MAXROUNDS = Int32(14);
     MAXKC = Int32(256 div 4);
 
-    Logtable: array [0 .. 255] of Byte = (0, 0, 25, 1, 50, 2, 26, 198, 75, 199,
+    LogTable: array [0 .. 255] of Byte = (0, 0, 25, 1, 50, 2, 26, 198, 75, 199,
       27, 104, 51, 238, 223, 3, 100, 4, 224, 14, 52, 141, 129, 239, 76, 113, 8,
       200, 248, 105, 28, 193, 125, 194, 29, 181, 249, 185, 39, 106, 77, 228,
       166, 114, 154, 201, 9, 120, 101, 47, 138, 5, 33, 15, 225, 36, 18, 240,
@@ -78,7 +79,7 @@ type
       180, 124, 184, 38, 119, 153, 227, 165, 103, 74, 237, 222, 197, 49, 254,
       24, 13, 99, 140, 128, 192, 247, 112, 7);
 
-    Alogtable: array [0 .. 510] of Byte = (0, 3, 5, 15, 17, 51, 85, 255, 26, 46,
+    ALogTable: array [0 .. 510] of Byte = (0, 3, 5, 15, 17, 51, 85, 255, 26, 46,
       114, 150, 161, 248, 19, 53, 95, 225, 56, 72, 216, 115, 149, 164, 247, 2,
       6, 10, 30, 34, 102, 170, 229, 52, 92, 228, 55, 89, 235, 38, 106, 190, 217,
       112, 144, 171, 230, 49, 83, 245, 4, 12, 20, 60, 68, 204, 79, 209, 104,
@@ -148,14 +149,14 @@ type
       235, 187, 60, 131, 83, 153, 97, 23, 43, 4, 126, 186, 119, 214, 38, 225,
       105, 20, 99, 85, 33, 12, 125);
 
-    rcon: array [0 .. 29] of Byte = ($01, $02, $04, $08, $10, $20, $40, $80,
+    RCon: array [0 .. 29] of Byte = ($01, $02, $04, $08, $10, $20, $40, $80,
       $1B, $36, $6C, $D8, $AB, $4D, $9A, $2F, $5E, $BC, $63, $C6, $97, $35, $6A,
       $D4, $B3, $7D, $FA, $EF, $C5, $91);
 
-    shifts0: array [0 .. 4, 0 .. 3] of Byte = ((0, 8, 16, 24), (0, 8, 16, 24),
+    Shifts0: array [0 .. 4, 0 .. 3] of Byte = ((0, 8, 16, 24), (0, 8, 16, 24),
       (0, 8, 16, 24), (0, 8, 16, 32), (0, 8, 24, 32));
 
-    shifts1: array [0 .. 4, 0 .. 3] of Byte = ((0, 24, 16, 8), (0, 32, 24, 16),
+    Shifts1: array [0 .. 4, 0 .. 3] of Byte = ((0, 24, 16, 8), (0, 32, 24, 16),
       (0, 40, 32, 24), (0, 48, 40, 24), (0, 56, 40, 32));
 
   var
@@ -165,48 +166,45 @@ type
     FShifts0SC, FShifts1SC: TCryptoLibByteArray;
     FWorkingKey: TCryptoLibMatrixUInt64Array;
 
-    function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
-
     /// <summary>
     /// multiply two elements of GF(2^m) needed for MixColumn and
     /// InvMixColumn
     /// </summary>
-    function Mul0x2(b: Int32): Byte; inline;
+    function Mul0x2(AB: Int32): Byte; inline;
 
-    function Mul0x3(b: Int32): Byte; inline;
+    function Mul0x3(AB: Int32): Byte; inline;
 
-    function Mul0x9(b: Int32): Byte; inline;
+    function Mul0x9(AB: Int32): Byte; inline;
 
-    function Mul0xb(b: Int32): Byte; inline;
+    function Mul0xb(AB: Int32): Byte; inline;
 
-    function Mul0xd(b: Int32): Byte; inline;
+    function Mul0xd(AB: Int32): Byte; inline;
 
-    function Mul0xe(b: Int32): Byte; inline;
+    function Mul0xe(AB: Int32): Byte; inline;
 
     /// <summary>
     /// xor corresponding text input and round key input bytes
     /// </summary>
-    procedure KeyAddition(const rk: TCryptoLibUInt64Array); inline;
+    procedure KeyAddition(const ARk: TCryptoLibUInt64Array); inline;
 
     /// <summary>
     /// rotate right custom
     /// </summary>
-    function Shift(r: UInt64; Shift: Int32): UInt64; inline;
+    function Shift(AR: UInt64; AShift: Int32): UInt64; inline;
 
     /// <summary>
     /// Row 0 remains unchanged <br />The other three rows are shifted a
     /// variable amount
     /// </summary>
-    procedure ShiftRow(const shiftsSC: TCryptoLibByteArray); inline;
+    procedure ShiftRow(const AShiftsSC: TCryptoLibByteArray); inline;
 
-    function ApplyS(r: UInt64; box: PByte): UInt64; inline;
+    function ApplyS(AR: UInt64; ABox: PByte): UInt64; inline;
 
     /// <summary>
     /// Replace every byte of the input by the byte at that place <br />in
     /// the nonlinear S-box
     /// </summary>
-    procedure Substitution(box: PByte); inline;
+    procedure Substitution(ABox: PByte); inline;
 
     /// <summary>
     /// Mix the bytes of every column in a linear way
@@ -223,15 +221,18 @@ type
     /// Calculate the necessary round keys <br />The number of calculations
     /// depends on keyBits and blockBits
     /// </summary>
-    function GenerateWorkingKey(const key: TCryptoLibByteArray)
+    function GenerateWorkingKey(const AKey: TCryptoLibByteArray)
       : TCryptoLibMatrixUInt64Array;
 
-    procedure UnPackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
-    procedure PackBlock(const bytes: TCryptoLibByteArray; off: Int32); inline;
+    procedure UnPackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32); inline;
+    procedure PackBlock(const ABytes: TCryptoLibByteArray; AOff: Int32); inline;
 
-    procedure EncryptBlock(const rk: TCryptoLibMatrixUInt64Array);
+    procedure EncryptBlock(const ARk: TCryptoLibMatrixUInt64Array);
 
-    procedure DecryptBlock(const rk: TCryptoLibMatrixUInt64Array);
+    procedure DecryptBlock(const ARk: TCryptoLibMatrixUInt64Array);
+
+  strict protected
+    function GetAlgorithmName: String; virtual;
 
   public
 
@@ -246,32 +247,29 @@ type
     /// <param name="blockBits">
     /// the blocksize in bits, must be 128, 192, or 256.
     /// </param>
-    constructor Create(blockBits: Int32); overload;
+    constructor Create(ABlockBits: Int32); overload;
 
     /// <summary>
     /// initialise a Rijndael cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// whether or not we are for encryption.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the parameters required to set up the cipher.
     /// </param>
     /// <exception cref="ClpCryptoLibTypes|EArgumentCryptoLibException">
     /// if the parameters argument is inappropriate.
     /// </exception>
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); virtual;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); virtual;
 
-    function ProcessBlock(const input: TCryptoLibByteArray; inOff: Int32;
-      const output: TCryptoLibByteArray; outOff: Int32): Int32; virtual;
-
-    procedure Reset(); virtual;
+    function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
     function GetBlockSize(): Int32; virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
 
   end;
 
@@ -279,282 +277,282 @@ implementation
 
 { TRijndaelEngine }
 
-function TRijndaelEngine.Mul0x2(b: Int32): Byte;
+function TRijndaelEngine.Mul0x2(AB: Int32): Byte;
 begin
-  if (b <> 0) then
+  if (AB <> 0) then
   begin
-    result := Alogtable[25 + (Logtable[b] and $FF)];
+    Result := ALogTable[25 + (LogTable[AB] and $FF)];
   end
   else
   begin
-    result := 0;
+    Result := 0;
   end;
 end;
 
-function TRijndaelEngine.Mul0x3(b: Int32): Byte;
+function TRijndaelEngine.Mul0x3(AB: Int32): Byte;
 begin
-  if (b <> 0) then
+  if (AB <> 0) then
   begin
-    result := Alogtable[1 + (Logtable[b] and $FF)];
+    Result := ALogTable[1 + (LogTable[AB] and $FF)];
   end
   else
   begin
-    result := 0;
+    Result := 0;
   end;
 end;
 
-function TRijndaelEngine.Mul0x9(b: Int32): Byte;
+function TRijndaelEngine.Mul0x9(AB: Int32): Byte;
 begin
-  if (b >= 0) then
+  if (AB >= 0) then
   begin
-    result := Alogtable[199 + b];
+    Result := ALogTable[199 + AB];
   end
   else
   begin
-    result := 0;
+    Result := 0;
   end;
 end;
 
-function TRijndaelEngine.Mul0xb(b: Int32): Byte;
+function TRijndaelEngine.Mul0xb(AB: Int32): Byte;
 begin
-  if (b >= 0) then
+  if (AB >= 0) then
   begin
-    result := Alogtable[104 + b];
+    Result := ALogTable[104 + AB];
   end
   else
   begin
-    result := 0;
+    Result := 0;
   end;
 end;
 
-function TRijndaelEngine.Mul0xd(b: Int32): Byte;
+function TRijndaelEngine.Mul0xd(AB: Int32): Byte;
 begin
-  if (b >= 0) then
+  if (AB >= 0) then
   begin
-    result := Alogtable[238 + b];
+    Result := ALogTable[238 + AB];
   end
   else
   begin
-    result := 0;
+    Result := 0;
   end;
 end;
 
-function TRijndaelEngine.Mul0xe(b: Int32): Byte;
+function TRijndaelEngine.Mul0xe(AB: Int32): Byte;
 begin
-  if (b >= 0) then
+  if (AB >= 0) then
   begin
-    result := Alogtable[223 + b];
+    Result := ALogTable[223 + AB];
   end
   else
   begin
-    result := 0;
+    Result := 0;
   end;
 end;
 
-procedure TRijndaelEngine.KeyAddition(const rk: TCryptoLibUInt64Array);
+procedure TRijndaelEngine.KeyAddition(const ARk: TCryptoLibUInt64Array);
 begin
-  FA0 := FA0 xor rk[0];
-  FA1 := FA1 xor rk[1];
-  FA2 := FA2 xor rk[2];
-  FA3 := FA3 xor rk[3];
+  FA0 := FA0 xor ARk[0];
+  FA1 := FA1 xor ARk[1];
+  FA2 := FA2 xor ARk[2];
+  FA3 := FA3 xor ARk[3];
 end;
 
-function TRijndaelEngine.Shift(r: UInt64; Shift: Int32): UInt64;
+function TRijndaelEngine.Shift(AR: UInt64; AShift: Int32): UInt64;
 begin
-  result := (((r shr Shift) or (r shl (FBC - Shift)))) and FBC_MASK;
+  Result := (((AR shr AShift) or (AR shl (FBC - AShift)))) and FBC_MASK;
 end;
 
-procedure TRijndaelEngine.ShiftRow(const shiftsSC: TCryptoLibByteArray);
+procedure TRijndaelEngine.ShiftRow(const AShiftsSC: TCryptoLibByteArray);
 begin
-  FA1 := Shift(FA1, shiftsSC[1]);
-  FA2 := Shift(FA2, shiftsSC[2]);
-  FA3 := Shift(FA3, shiftsSC[3]);
+  FA1 := Shift(FA1, AShiftsSC[1]);
+  FA2 := Shift(FA2, AShiftsSC[2]);
+  FA3 := Shift(FA3, AShiftsSC[3]);
 end;
 
-function TRijndaelEngine.ApplyS(r: UInt64; box: PByte): UInt64;
+function TRijndaelEngine.ApplyS(AR: UInt64; ABox: PByte): UInt64;
 var
-  j: Int32;
+  LJ: Int32;
 begin
-  result := 0;
-  j := 0;
-  while j < FBC do
+  Result := 0;
+  LJ := 0;
+  while LJ < FBC do
   begin
-    result := result or (UInt64(box[((r shr j) and $FF)] and $FF) shl j);
-    System.Inc(j, 8);
+    Result := Result or (UInt64(ABox[((AR shr LJ) and $FF)] and $FF) shl LJ);
+    System.Inc(LJ, 8);
   end;
 end;
 
-procedure TRijndaelEngine.Substitution(box: PByte);
+procedure TRijndaelEngine.Substitution(ABox: PByte);
 begin
-  FA0 := ApplyS(FA0, box);
-  FA1 := ApplyS(FA1, box);
-  FA2 := ApplyS(FA2, box);
-  FA3 := ApplyS(FA3, box);
+  FA0 := ApplyS(FA0, ABox);
+  FA1 := ApplyS(FA1, ABox);
+  FA2 := ApplyS(FA2, ABox);
+  FA3 := ApplyS(FA3, ABox);
 end;
 
 procedure TRijndaelEngine.MixColumn;
 var
-  r0, r1, r2, r3: UInt64;
-  a0, a1, a2, a3, j: Int32;
+  LR0, LR1, LR2, LR3: UInt64;
+  LA0, LA1, LA2, LA3, LJ: Int32;
 begin
-  r0 := 0;
-  r1 := 0;
-  r2 := 0;
-  r3 := 0;
-  j := 0;
-  while j < FBC do
+  LR0 := 0;
+  LR1 := 0;
+  LR2 := 0;
+  LR3 := 0;
+  LJ := 0;
+  while LJ < FBC do
   begin
 
-    a0 := Int32((FA0 shr j) and $FF);
-    a1 := Int32((FA1 shr j) and $FF);
-    a2 := Int32((FA2 shr j) and $FF);
-    a3 := Int32((FA3 shr j) and $FF);
+    LA0 := Int32((FA0 shr LJ) and $FF);
+    LA1 := Int32((FA1 shr LJ) and $FF);
+    LA2 := Int32((FA2 shr LJ) and $FF);
+    LA3 := Int32((FA3 shr LJ) and $FF);
 
-    r0 := r0 or (UInt64(((Mul0x2(a0) xor Mul0x3(a1) xor a2 xor a3) and
-      $FF)) shl j);
+    LR0 := LR0 or (UInt64(((Mul0x2(LA0) xor Mul0x3(LA1) xor LA2 xor LA3) and
+      $FF)) shl LJ);
 
-    r1 := r1 or (UInt64(((Mul0x2(a1) xor Mul0x3(a2) xor a3 xor a0) and
-      $FF)) shl j);
+    LR1 := LR1 or (UInt64(((Mul0x2(LA1) xor Mul0x3(LA2) xor LA3 xor LA0) and
+      $FF)) shl LJ);
 
-    r2 := r2 or (UInt64(((Mul0x2(a2) xor Mul0x3(a3) xor a0 xor a1) and
-      $FF)) shl j);
+    LR2 := LR2 or (UInt64(((Mul0x2(LA2) xor Mul0x3(LA3) xor LA0 xor LA1) and
+      $FF)) shl LJ);
 
-    r3 := r3 or (UInt64(((Mul0x2(a3) xor Mul0x3(a0) xor a1 xor a2) and
-      $FF)) shl j);
+    LR3 := LR3 or (UInt64(((Mul0x2(LA3) xor Mul0x3(LA0) xor LA1 xor LA2) and
+      $FF)) shl LJ);
 
-    System.Inc(j, 8);
+    System.Inc(LJ, 8);
   end;
 
-  FA0 := r0;
-  FA1 := r1;
-  FA2 := r2;
-  FA3 := r3;
+  FA0 := LR0;
+  FA1 := LR1;
+  FA2 := LR2;
+  FA3 := LR3;
 end;
 
 procedure TRijndaelEngine.InvMixColumn;
 var
-  r0, r1, r2, r3: UInt64;
-  a0, a1, a2, a3, j: Int32;
+  LR0, LR1, LR2, LR3: UInt64;
+  LA0, LA1, LA2, LA3, LJ: Int32;
 begin
-  r0 := 0;
-  r1 := 0;
-  r2 := 0;
-  r3 := 0;
-  j := 0;
-  while j < FBC do
+  LR0 := 0;
+  LR1 := 0;
+  LR2 := 0;
+  LR3 := 0;
+  LJ := 0;
+  while LJ < FBC do
   begin
 
-    a0 := Int32((FA0 shr j) and $FF);
-    a1 := Int32((FA1 shr j) and $FF);
-    a2 := Int32((FA2 shr j) and $FF);
-    a3 := Int32((FA3 shr j) and $FF);
+    LA0 := Int32((FA0 shr LJ) and $FF);
+    LA1 := Int32((FA1 shr LJ) and $FF);
+    LA2 := Int32((FA2 shr LJ) and $FF);
+    LA3 := Int32((FA3 shr LJ) and $FF);
 
     //
     // pre-lookup the log table
     //
-    if (a0 <> 0) then
+    if (LA0 <> 0) then
     begin
-      a0 := (Logtable[a0 and $FF] and $FF);
+      LA0 := (LogTable[LA0 and $FF] and $FF);
     end
     else
     begin
-      a0 := -1;
+      LA0 := -1;
     end;
 
-    if (a1 <> 0) then
+    if (LA1 <> 0) then
     begin
-      a1 := (Logtable[a1 and $FF] and $FF);
+      LA1 := (LogTable[LA1 and $FF] and $FF);
     end
     else
     begin
-      a1 := -1;
+      LA1 := -1;
     end;
 
-    if (a2 <> 0) then
+    if (LA2 <> 0) then
     begin
-      a2 := (Logtable[a2 and $FF] and $FF);
+      LA2 := (LogTable[LA2 and $FF] and $FF);
     end
     else
     begin
-      a2 := -1;
+      LA2 := -1;
     end;
 
-    if (a3 <> 0) then
+    if (LA3 <> 0) then
     begin
-      a3 := (Logtable[a3 and $FF] and $FF);
+      LA3 := (LogTable[LA3 and $FF] and $FF);
     end
     else
     begin
-      a3 := -1;
+      LA3 := -1;
     end;
 
-    r0 := r0 or
-      (UInt64(((Mul0xe(a0) xor Mul0xb(a1) xor Mul0xd(a2) xor Mul0x9(a3)) and
-      $FF)) shl j);
+    LR0 := LR0 or
+      (UInt64(((Mul0xe(LA0) xor Mul0xb(LA1) xor Mul0xd(LA2) xor Mul0x9(LA3)) and
+      $FF)) shl LJ);
 
-    r1 := r1 or
-      (UInt64(((Mul0xe(a1) xor Mul0xb(a2) xor Mul0xd(a3) xor Mul0x9(a0)) and
-      $FF)) shl j);
+    LR1 := LR1 or
+      (UInt64(((Mul0xe(LA1) xor Mul0xb(LA2) xor Mul0xd(LA3) xor Mul0x9(LA0)) and
+      $FF)) shl LJ);
 
-    r2 := r2 or
-      (UInt64(((Mul0xe(a2) xor Mul0xb(a3) xor Mul0xd(a0) xor Mul0x9(a1)) and
-      $FF)) shl j);
+    LR2 := LR2 or
+      (UInt64(((Mul0xe(LA2) xor Mul0xb(LA3) xor Mul0xd(LA0) xor Mul0x9(LA1)) and
+      $FF)) shl LJ);
 
-    r3 := r3 or
-      (UInt64(((Mul0xe(a3) xor Mul0xb(a0) xor Mul0xd(a1) xor Mul0x9(a2)) and
-      $FF)) shl j);
+    LR3 := LR3 or
+      (UInt64(((Mul0xe(LA3) xor Mul0xb(LA0) xor Mul0xd(LA1) xor Mul0x9(LA2)) and
+      $FF)) shl LJ);
 
-    System.Inc(j, 8);
+    System.Inc(LJ, 8);
   end;
 
-  FA0 := r0;
-  FA1 := r1;
-  FA2 := r2;
-  FA3 := r3;
+  FA0 := LR0;
+  FA1 := LR1;
+  FA2 := LR2;
+  FA3 := LR3;
 end;
 
-function TRijndaelEngine.GenerateWorkingKey(const key: TCryptoLibByteArray)
+function TRijndaelEngine.GenerateWorkingKey(const AKey: TCryptoLibByteArray)
   : TCryptoLibMatrixUInt64Array;
 var
-  KC, t, rconpointer, keyBits, i, index, j: Int32;
-  tk: TCryptoLibMatrixByteArray;
-  W: TCryptoLibMatrixUInt64Array;
+  LKc, LT, LRConPointer, LKeyBits, LI, LIndex, LJ: Int32;
+  LTk: TCryptoLibMatrixByteArray;
+  LW: TCryptoLibMatrixUInt64Array;
 begin
-  rconpointer := 0;
-  keyBits := System.Length(key) * 8;
-  System.SetLength(tk, 4);
-  for i := System.Low(tk) to System.High(tk) do
+  LRConPointer := 0;
+  LKeyBits := System.Length(AKey) * 8;
+  System.SetLength(LTk, 4);
+  for LI := System.Low(LTk) to System.High(LTk) do
   begin
-    System.SetLength(tk[i], MAXKC);
+    System.SetLength(LTk[LI], MAXKC);
   end;
 
-  System.SetLength(W, MAXROUNDS + 1);
-  for i := System.Low(W) to System.High(W) do
+  System.SetLength(LW, MAXROUNDS + 1);
+  for LI := System.Low(LW) to System.High(LW) do
   begin
-    System.SetLength(W[i], 4);
+    System.SetLength(LW[LI], 4);
   end;
 
-  case keyBits of
+  case LKeyBits of
     128:
-      KC := 4;
+      LKc := 4;
     160:
-      KC := 5;
+      LKc := 5;
     192:
-      KC := 6;
+      LKc := 6;
     224:
-      KC := 7;
+      LKc := 7;
     256:
-      KC := 8
+      LKc := 8
   else
     begin
-      TArrayUtils.ZeroFill(key);
+      TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
       raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
     end;
   end;
 
-  if (keyBits >= FBlockBits) then
+  if (LKeyBits >= FBlockBits) then
   begin
-    FROUNDS := KC + 6;
+    FROUNDS := LKc + 6;
   end
   else
   begin
@@ -564,77 +562,77 @@ begin
   //
   // copy the key into the processing area
   //
-  index := 0;
+  LIndex := 0;
 
-  for i := 0 to System.Pred(System.Length(key)) do
+  for LI := 0 to System.Pred(System.Length(AKey)) do
   begin
-    tk[i mod 4][i div 4] := key[index];
-    System.Inc(index);
+    LTk[LI mod 4][LI div 4] := AKey[LIndex];
+    System.Inc(LIndex);
   end;
 
-  t := 0;
+  LT := 0;
   //
   // copy values into round key array
   //
-  j := 0;
+  LJ := 0;
 
-  while ((j < KC) and (t < ((FROUNDS + 1) * (FBC div 8)))) do
+  while ((LJ < LKc) and (LT < ((FROUNDS + 1) * (FBC div 8)))) do
   begin
-    for i := 0 to System.Pred(4) do
+    for LI := 0 to System.Pred(4) do
     begin
-      W[t div (FBC div 8)][i] := W[t div (FBC div 8)][i] or
-        (UInt64(tk[i][j] and $FF) shl ((t * 8) mod FBC));
+      LW[LT div (FBC div 8)][LI] := LW[LT div (FBC div 8)][LI] or
+        (UInt64(LTk[LI][LJ] and $FF) shl ((LT * 8) mod FBC));
     end;
-    System.Inc(j);
-    System.Inc(t);
+    System.Inc(LJ);
+    System.Inc(LT);
   end;
 
   //
   // while not enough round key material calculated
   // calculate new values
   //
-  while (t < ((FROUNDS + 1) * (FBC div 8))) do
+  while (LT < ((FROUNDS + 1) * (FBC div 8))) do
   begin
 
-    for i := 0 to System.Pred(4) do
+    for LI := 0 to System.Pred(4) do
     begin
-      tk[i][0] := tk[i][0] xor (S[tk[(i + 1) mod 4][KC - 1] and $FF]);
+      LTk[LI][0] := LTk[LI][0] xor (S[LTk[(LI + 1) mod 4][LKc - 1] and $FF]);
     end;
 
-    tk[0][0] := tk[0][0] xor Byte(rcon[rconpointer]);
-    System.Inc(rconpointer);
+    LTk[0][0] := LTk[0][0] xor Byte(RCon[LRConPointer]);
+    System.Inc(LRConPointer);
 
-    if (KC <= 6) then
+    if (LKc <= 6) then
     begin
-      for j := 1 to System.Pred(KC) do
+      for LJ := 1 to System.Pred(LKc) do
       begin
-        for i := 0 to System.Pred(4) do
+        for LI := 0 to System.Pred(4) do
         begin
-          tk[i][j] := tk[i][j] xor tk[i][j - 1];
+          LTk[LI][LJ] := LTk[LI][LJ] xor LTk[LI][LJ - 1];
         end;
       end;
     end
     else
     begin
 
-      for j := 1 to System.Pred(4) do
+      for LJ := 1 to System.Pred(4) do
       begin
-        for i := 0 to System.Pred(4) do
+        for LI := 0 to System.Pred(4) do
         begin
-          tk[i][j] := tk[i][j] xor tk[i][j - 1];
+          LTk[LI][LJ] := LTk[LI][LJ] xor LTk[LI][LJ - 1];
         end;
       end;
 
-      for i := 0 to System.Pred(4) do
+      for LI := 0 to System.Pred(4) do
       begin
-        tk[i][4] := tk[i][4] xor (S[tk[i][3] and $FF]);
+        LTk[LI][4] := LTk[LI][4] xor (S[LTk[LI][3] and $FF]);
       end;
 
-      for j := 5 to System.Pred(KC) do
+      for LJ := 5 to System.Pred(LKc) do
       begin
-        for i := 0 to System.Pred(4) do
+        for LI := 0 to System.Pred(4) do
         begin
-          tk[i][j] := tk[i][j] xor tk[i][j - 1];
+          LTk[LI][LJ] := LTk[LI][LJ] xor LTk[LI][LJ - 1];
         end;
       end;
     end;
@@ -642,96 +640,96 @@ begin
     //
     // copy values into round key array
     //
-    j := 0;
+    LJ := 0;
 
-    while ((j < KC) and (t < ((FROUNDS + 1) * (FBC div 8)))) do
+    while ((LJ < LKc) and (LT < ((FROUNDS + 1) * (FBC div 8)))) do
     begin
-      for i := 0 to System.Pred(4) do
+      for LI := 0 to System.Pred(4) do
       begin
-        W[t div (FBC div 8)][i] := W[t div (FBC div 8)][i] or
-          (UInt64(tk[i][j] and $FF) shl ((t * 8) mod FBC));
+        LW[LT div (FBC div 8)][LI] := LW[LT div (FBC div 8)][LI] or
+          (UInt64(LTk[LI][LJ] and $FF) shl ((LT * 8) mod FBC));
       end;
-      System.Inc(j);
-      System.Inc(t);
+      System.Inc(LJ);
+      System.Inc(LT);
     end;
   end;
-  result := W;
+  result := LW;
 
-  TArrayUtils.ZeroFill(key);
+  TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
-procedure TRijndaelEngine.PackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TRijndaelEngine.PackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 var
-  index, j: Int32;
+  LIndex, LJ: Int32;
 begin
-  index := off;
-  j := 0;
+  LIndex := AOff;
+  LJ := 0;
 
-  while j <> FBC do
+  while LJ <> FBC do
   begin
-    bytes[index] := Byte(FA0 shr j);
-    System.Inc(index);
-    bytes[index] := Byte(FA1 shr j);
-    System.Inc(index);
-    bytes[index] := Byte(FA2 shr j);
-    System.Inc(index);
-    bytes[index] := Byte(FA3 shr j);
-    System.Inc(index);
-    System.Inc(j, 8);
+    ABytes[LIndex] := Byte(FA0 shr LJ);
+    System.Inc(LIndex);
+    ABytes[LIndex] := Byte(FA1 shr LJ);
+    System.Inc(LIndex);
+    ABytes[LIndex] := Byte(FA2 shr LJ);
+    System.Inc(LIndex);
+    ABytes[LIndex] := Byte(FA3 shr LJ);
+    System.Inc(LIndex);
+    System.Inc(LJ, 8);
   end;
 end;
 
-procedure TRijndaelEngine.UnPackBlock(const bytes: TCryptoLibByteArray;
-  off: Int32);
+procedure TRijndaelEngine.UnPackBlock(const ABytes: TCryptoLibByteArray;
+  AOff: Int32);
 var
-  index, j: Int32;
+  LIndex, LJ: Int32;
 begin
-  index := off;
+  LIndex := AOff;
 
-  FA0 := UInt64(bytes[index] and $FF);
-  System.Inc(index);
-  FA1 := UInt64(bytes[index] and $FF);
-  System.Inc(index);
-  FA2 := UInt64(bytes[index] and $FF);
-  System.Inc(index);
-  FA3 := UInt64(bytes[index] and $FF);
-  System.Inc(index);
+  FA0 := UInt64(ABytes[LIndex] and $FF);
+  System.Inc(LIndex);
+  FA1 := UInt64(ABytes[LIndex] and $FF);
+  System.Inc(LIndex);
+  FA2 := UInt64(ABytes[LIndex] and $FF);
+  System.Inc(LIndex);
+  FA3 := UInt64(ABytes[LIndex] and $FF);
+  System.Inc(LIndex);
 
-  j := 8;
+  LJ := 8;
 
-  while j <> FBC do
+  while LJ <> FBC do
   begin
-    FA0 := FA0 or (UInt64(bytes[index] and $FF) shl j);
-    System.Inc(index);
-    FA1 := FA1 or (UInt64(bytes[index] and $FF) shl j);
-    System.Inc(index);
-    FA2 := FA2 or (UInt64(bytes[index] and $FF) shl j);
-    System.Inc(index);
-    FA3 := FA3 or (UInt64(bytes[index] and $FF) shl j);
-    System.Inc(index);
-    System.Inc(j, 8);
+    FA0 := FA0 or (UInt64(ABytes[LIndex] and $FF) shl LJ);
+    System.Inc(LIndex);
+    FA1 := FA1 or (UInt64(ABytes[LIndex] and $FF) shl LJ);
+    System.Inc(LIndex);
+    FA2 := FA2 or (UInt64(ABytes[LIndex] and $FF) shl LJ);
+    System.Inc(LIndex);
+    FA3 := FA3 or (UInt64(ABytes[LIndex] and $FF) shl LJ);
+    System.Inc(LIndex);
+    System.Inc(LJ, 8);
   end;
 end;
 
-procedure TRijndaelEngine.EncryptBlock(const rk: TCryptoLibMatrixUInt64Array);
+procedure TRijndaelEngine.EncryptBlock(const ARk: TCryptoLibMatrixUInt64Array);
 var
-  r: Int32;
+  LR: Int32;
 begin
   //
   // begin with a key addition
   //
-  KeyAddition(rk[0]);
+  KeyAddition(ARk[0]);
 
   //
   // ROUNDS-1 ordinary rounds
   //
-  for r := 1 to System.Pred(FROUNDS) do
+  for LR := 1 to System.Pred(FROUNDS) do
   begin
     Substitution(@(S[0]));
     ShiftRow(FShifts0SC);
     MixColumn();
-    KeyAddition(rk[r]);
+    KeyAddition(ARk[LR]);
   end;
 
   //
@@ -739,12 +737,12 @@ begin
   //
   Substitution(@(S[0]));
   ShiftRow(FShifts0SC);
-  KeyAddition(rk[FROUNDS]);
+  KeyAddition(ARk[FROUNDS]);
 end;
 
-procedure TRijndaelEngine.DecryptBlock(const rk: TCryptoLibMatrixUInt64Array);
+procedure TRijndaelEngine.DecryptBlock(const ARk: TCryptoLibMatrixUInt64Array);
 var
-  r: Int32;
+  LR: Int32;
 begin
   // To decrypt: apply the inverse operations of the encrypt routine,
   // in opposite order
@@ -758,16 +756,16 @@ begin
   // without InvMixColumn
   // with extra KeyAddition
   //
-  KeyAddition(rk[FROUNDS]);
+  KeyAddition(ARk[FROUNDS]);
   Substitution(@(Si[0]));
   ShiftRow(FShifts1SC);
 
   //
   // ROUNDS-1 ordinary rounds
   //
-  for r := System.Pred(FROUNDS) downto 1 do
+  for LR := System.Pred(FROUNDS) downto 1 do
   begin
-    KeyAddition(rk[r]);
+    KeyAddition(ARk[LR]);
     InvMixColumn();
     Substitution(@(Si[0]));
     ShiftRow(FShifts1SC);
@@ -776,7 +774,7 @@ begin
   //
   // End with the extra key addition
   //
-  KeyAddition(rk[0]);
+  KeyAddition(ARk[0]);
 end;
 
 constructor TRijndaelEngine.Create();
@@ -784,59 +782,59 @@ begin
   Create(128);
 end;
 
-constructor TRijndaelEngine.Create(blockBits: Int32);
+constructor TRijndaelEngine.Create(ABlockBits: Int32);
 begin
   Inherited Create();
-  case blockBits of
+  case ABlockBits of
 
     128:
       begin
         FBC := 32;
         FBC_MASK := $FFFFFFFF;
-        System.SetLength(FShifts0SC, System.SizeOf(shifts0[0]));
-        System.Move(shifts0[0], FShifts0SC[0], System.SizeOf(shifts0[0]));
-        System.SetLength(FShifts1SC, System.SizeOf(shifts1[0]));
-        System.Move(shifts1[0], FShifts1SC[0], System.SizeOf(shifts1[0]));
+        System.SetLength(FShifts0SC, System.SizeOf(Shifts0[0]));
+        System.Move(Shifts0[0], FShifts0SC[0], System.SizeOf(Shifts0[0]));
+        System.SetLength(FShifts1SC, System.SizeOf(Shifts1[0]));
+        System.Move(Shifts1[0], FShifts1SC[0], System.SizeOf(Shifts1[0]));
       end;
 
     160:
       begin
         FBC := 40;
         FBC_MASK := $FFFFFFFFFF;
-        System.SetLength(FShifts0SC, System.SizeOf(shifts0[1]));
-        System.Move(shifts0[1], FShifts0SC[0], System.SizeOf(shifts0[1]));
-        System.SetLength(FShifts1SC, System.SizeOf(shifts1[1]));
-        System.Move(shifts1[1], FShifts1SC[0], System.SizeOf(shifts1[1]));
+        System.SetLength(FShifts0SC, System.SizeOf(Shifts0[1]));
+        System.Move(Shifts0[1], FShifts0SC[0], System.SizeOf(Shifts0[1]));
+        System.SetLength(FShifts1SC, System.SizeOf(Shifts1[1]));
+        System.Move(Shifts1[1], FShifts1SC[0], System.SizeOf(Shifts1[1]));
       end;
 
     192:
       begin
         FBC := 48;
         FBC_MASK := $FFFFFFFFFFFF;
-        System.SetLength(FShifts0SC, System.SizeOf(shifts0[2]));
-        System.Move(shifts0[2], FShifts0SC[0], System.SizeOf(shifts0[2]));
-        System.SetLength(FShifts1SC, System.SizeOf(shifts1[2]));
-        System.Move(shifts1[2], FShifts1SC[0], System.SizeOf(shifts1[2]));
+        System.SetLength(FShifts0SC, System.SizeOf(Shifts0[2]));
+        System.Move(Shifts0[2], FShifts0SC[0], System.SizeOf(Shifts0[2]));
+        System.SetLength(FShifts1SC, System.SizeOf(Shifts1[2]));
+        System.Move(Shifts1[2], FShifts1SC[0], System.SizeOf(Shifts1[2]));
       end;
 
     224:
       begin
         FBC := 56;
         FBC_MASK := $FFFFFFFFFFFFFF;
-        System.SetLength(FShifts0SC, System.SizeOf(shifts0[3]));
-        System.Move(shifts0[3], FShifts0SC[0], System.SizeOf(shifts0[3]));
-        System.SetLength(FShifts1SC, System.SizeOf(shifts1[3]));
-        System.Move(shifts1[3], FShifts1SC[0], System.SizeOf(shifts1[3]));
+        System.SetLength(FShifts0SC, System.SizeOf(Shifts0[3]));
+        System.Move(Shifts0[3], FShifts0SC[0], System.SizeOf(Shifts0[3]));
+        System.SetLength(FShifts1SC, System.SizeOf(Shifts1[3]));
+        System.Move(Shifts1[3], FShifts1SC[0], System.SizeOf(Shifts1[3]));
       end;
 
     256:
       begin
         FBC := 64;
         FBC_MASK := UInt64($FFFFFFFFFFFFFFFF);
-        System.SetLength(FShifts0SC, System.SizeOf(shifts0[4]));
-        System.Move(shifts0[4], FShifts0SC[0], System.SizeOf(shifts0[4]));
-        System.SetLength(FShifts1SC, System.SizeOf(shifts1[4]));
-        System.Move(shifts1[4], FShifts1SC[0], System.SizeOf(shifts1[4]));
+        System.SetLength(FShifts0SC, System.SizeOf(Shifts0[4]));
+        System.Move(Shifts0[4], FShifts0SC[0], System.SizeOf(Shifts0[4]));
+        System.SetLength(FShifts1SC, System.SizeOf(Shifts1[4]));
+        System.Move(Shifts1[4], FShifts1SC[0], System.SizeOf(Shifts1[4]));
       end
   else
     begin
@@ -845,42 +843,37 @@ begin
 
   end;
 
-  FBlockBits := blockBits;
+  FBlockBits := ABlockBits;
 end;
 
 function TRijndaelEngine.GetAlgorithmName: String;
 begin
-  result := 'Rijndael';
+  Result := 'Rijndael';
 end;
 
 function TRijndaelEngine.GetBlockSize: Int32;
 begin
-  result := FBC div 2;
+  Result := FBC div 2;
 end;
 
-function TRijndaelEngine.GetIsPartialBlockOkay: Boolean;
-begin
-  result := False;
-end;
-
-procedure TRijndaelEngine.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TRijndaelEngine.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  keyParameter: IKeyParameter;
+  LKeyParameter: IKeyParameter;
 begin
-  if not Supports(parameters, IKeyParameter, keyParameter) then
+  if not Supports(AParameters, IKeyParameter, LKeyParameter) then
   begin
-    raise EArgumentCryptoLibException.CreateResFmt
-      (@SInvalidParameterRijndaelInit, [(parameters as TObject).ToString]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameterRijndaelInit,
+      [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
-  FWorkingKey := GenerateWorkingKey(keyParameter.GetKey());
+  FWorkingKey := GenerateWorkingKey(LKeyParameter.GetKey());
 
-  FForEncryption := forEncryption;
+  FForEncryption := AForEncryption;
 end;
 
-function TRijndaelEngine.ProcessBlock(const input: TCryptoLibByteArray;
-  inOff: Int32; const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TRijndaelEngine.ProcessBlock(const AInput: TCryptoLibByteArray;
+  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
   if (FWorkingKey = Nil) then
   begin
@@ -888,10 +881,10 @@ begin
       (@SRijndaelEngineNotInitialised);
   end;
 
-  TCheck.DataLength(input, inOff, (FBC div 2), SInputBuffertooShort);
-  TCheck.OutputLength(output, outOff, (FBC div 2), SOutputBuffertooShort);
+  TCheck.DataLength(AInput, AInOff, (FBC div 2), SInputBuffertooShort);
+  TCheck.OutputLength(AOutput, AOutOff, (FBC div 2), SOutputBuffertooShort);
 
-  UnPackBlock(input, inOff);
+  UnPackBlock(AInput, AInOff);
 
   if (FForEncryption) then
   begin
@@ -902,14 +895,9 @@ begin
     DecryptBlock(FWorkingKey);
   end;
 
-  PackBlock(output, outOff);
+  PackBlock(AOutput, AOutOff);
 
-  result := FBC div 2;
-end;
-
-procedure TRijndaelEngine.Reset;
-begin
-  // nothing to do.
+  Result := FBC div 2;
 end;
 
 end.

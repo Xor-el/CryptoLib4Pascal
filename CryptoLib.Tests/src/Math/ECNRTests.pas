@@ -31,25 +31,20 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpIECC,
-  ClpECC,
+  ClpECCurve,
+  ClpIECCommon,
   ClpIDigest,
   ClpECNRSigner,
   ClpIECNRSigner,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
-  ClpIECKeyGenerationParameters,
-  ClpECKeyGenerationParameters,
-  ClpECPrivateKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpECPublicKeyParameters,
-  ClpIECPublicKeyParameters,
-  ClpECKeyPairGenerator,
-  ClpIECKeyPairGenerator,
+  ClpECParameters,
+  ClpIECParameters,
+  ClpECGenerators,
+  ClpIECGenerators,
   ClpISigner,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIAsymmetricCipherKeyPair,
   ClpECNamedCurveTable,
   ClpParametersWithRandom,
@@ -59,7 +54,7 @@ uses
   ClpFixedSecureRandom,
   ClpSignerUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
   ClpDigestUtilities,
@@ -535,7 +530,7 @@ begin
   order := (myPair.Public as IECPublicKeyParameters).parameters.n;
 
   signer.Init(true, myPair.Private);
-  msg := TBigIntegers.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
+  msg := TBigIntegerUtilities.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
   sig := signer.GenerateSignature(msg);
 
   signer.Init(false, myPair.getPublic());

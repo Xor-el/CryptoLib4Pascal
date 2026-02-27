@@ -35,6 +35,7 @@ uses
   ClpScryptParametersGenerator,
   ClpIScryptParametersGenerator,
   ClpConverters,
+  ClpEncoders,
   HlpHashLibTypes,
   CryptoLibTestBase;
 
@@ -112,7 +113,7 @@ begin
   OutputBytes := (LScryptGenerator.GenerateDerivedMacParameters(AOutputSize)
     as IKeyParameter).GetKey();
   LScryptGenerator.Clear();
-  Result := TConverters.ConvertBytesToHexString(OutputBytes, False);
+  Result := THexEncoder.Encode(OutputBytes);
 end;
 
 procedure TTestScrypt.DoCheckIllegal(const AMsg: String;

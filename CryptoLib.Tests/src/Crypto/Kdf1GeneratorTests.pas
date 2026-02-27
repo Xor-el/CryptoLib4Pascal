@@ -33,7 +33,6 @@ uses
 {$ENDIF FPC}
   ClpDigestUtilities,
   ClpShortenedDigest,
-  ClpIShortenedDigest,
   ClpIDerivationFunction,
   ClpIIso18033KdfParameters,
   ClpIso18033KdfParameters,

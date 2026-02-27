@@ -21,10 +21,12 @@ unit ClpHMac;
 interface
 
 uses
+  SysUtils,
   HlpIHashInfo,
   HlpHashFactory,
   ClpIMac,
   ClpIHMac,
+  ClpMac,
   ClpIDigest,
   ClpIKeyParameter,
   ClpICipherParameters,
@@ -32,6 +34,7 @@ uses
 
 resourcestring
   SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInvalidParameterHMac = 'HMAC requires KeyParameter';
 
 type
 
@@ -45,36 +48,36 @@ type
   /// HashLib4Pascal
   /// </para>
   /// </summary>
-  THMac = class sealed(TInterfacedObject, IHMac, IMac)
+  THMac = class sealed(TMac, IHMac, IMac)
 
   strict private
   var
     FDigest: IDigest;
     FHMAC: HlpIHashInfo.IHMac;
 
-    function GetAlgorithmName: string; inline;
+  strict protected
+    function GetAlgorithmName: String; override;
 
   public
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
 
     destructor Destroy(); override;
 
-    procedure Clear();
+    procedure Clear(); override;
 
     function GetUnderlyingDigest: IDigest; inline;
-    function GetMacSize: Int32; inline;
+    function GetMacSize: Int32; override;
 
-    procedure Update(input: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
-    procedure Init(const parameters: ICipherParameters);
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
-      : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
+    procedure Update(AInput: Byte); override;
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
+    procedure Init(const AParameters: ICipherParameters); override;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      : Int32; overload; override;
 
     /// <summary>
     /// Reset the mac generator.
     /// </summary>
-    procedure Reset();
+    procedure Reset(); override;
 
     property AlgorithmName: String read GetAlgorithmName;
 
@@ -86,13 +89,13 @@ implementation
 
 function THMac.GetMacSize: Int32;
 begin
-  result := FHMAC.HashSize;
+  Result := FHMAC.HashSize;
 end;
 
-procedure THMac.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+procedure THMac.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALen: Int32);
 begin
-  FHMAC.TransformBytes(input, inOff, len);
+  FHMAC.TransformBytes(AInput, AInOff, ALen);
 end;
 
 procedure THMac.Clear();
@@ -100,11 +103,11 @@ begin
   FHMAC.Clear();
 end;
 
-constructor THMac.Create(const digest: IDigest);
+constructor THMac.Create(const ADigest: IDigest);
 begin
   Inherited Create();
-  FDigest := digest;
-  FHMAC := THashFactory.THMac.CreateHMAC(FDigest.GetUnderlyingIHash);
+  FDigest := ADigest;
+  FHMAC := THashFactory.THMac.CreateHMAC(FDigest.UnderlyingHasher);
 end;
 
 destructor THMac.Destroy;
@@ -113,42 +116,35 @@ begin
   inherited Destroy;
 end;
 
-function THMac.DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function THMac.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  buf: TCryptoLibByteArray;
+  LBuf: TCryptoLibByteArray;
 begin
-
-  if (System.Length(output) - outOff) < GetMacSize then
-  begin
+  if (System.Length(AOutput) - AOutOff) < GetMacSize then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
-  end
-  else
-  begin
-    buf := DoFinal();
-    System.Move(buf[0], output[outOff], System.Length(buf) *
-      System.SizeOf(Byte));
-  end;
-  result := System.Length(buf);
-end;
 
-function THMac.DoFinal: TCryptoLibByteArray;
-begin
-  result := FHMAC.TransformFinal.GetBytes();
+  LBuf := FHMAC.TransformFinal.GetBytes();
+  System.Move(LBuf[0], AOutput[AOutOff], System.Length(LBuf) * System.SizeOf(Byte));
+  Result := System.Length(LBuf);
 end;
 
 function THMac.GetAlgorithmName: string;
 begin
-  result := FDigest.AlgorithmName + '/HMAC';
+  Result := FDigest.AlgorithmName + '/HMAC';
 end;
 
 function THMac.GetUnderlyingDigest: IDigest;
 begin
-  result := FDigest;
+  Result := FDigest;
 end;
 
-procedure THMac.Init(const parameters: ICipherParameters);
+procedure THMac.Init(const AParameters: ICipherParameters);
+var
+  LKeyParam: IKeyParameter;
 begin
-  FHMAC.Key := (parameters as IKeyParameter).GetKey();
+  if not Supports(AParameters, IKeyParameter, LKeyParam) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidParameterHMac);
+  FHMAC.Key := LKeyParam.GetKey();
   FHMAC.Initialize;
 end;
 
@@ -157,9 +153,9 @@ begin
   FHMAC.Initialize;
 end;
 
-procedure THMac.Update(input: Byte);
+procedure THMac.Update(AInput: Byte);
 begin
-  FHMAC.TransformUntyped(input, System.SizeOf(Byte));
+  FHMAC.TransformUntyped(AInput, System.SizeOf(Byte));
 end;
 
 end.

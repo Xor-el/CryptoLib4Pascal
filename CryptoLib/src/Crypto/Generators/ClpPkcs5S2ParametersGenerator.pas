@@ -22,7 +22,6 @@ unit ClpPkcs5S2ParametersGenerator;
 interface
 
 uses
-
   HlpIHashInfo,
   HlpHashFactory,
   ClpIDigest,
@@ -33,30 +32,30 @@ uses
   ClpParametersWithIV,
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
-  ClpArrayUtils,
+  ClpDigestUtilities,
   ClpCryptoLibTypes;
 
 type
 
   /// <summary>
-  /// <see href="https://tools.ietf.org/html/rfc2898#section-5.2">
-  /// Pkcs5S2 Specification</see>
+  /// Generator for PBE derived keys and IVs as defined by PKCS #5 v2.0 Scheme 2.
+  /// This generator uses a SHA-1 HMAC as the calculation function.
   /// </summary>
+  /// <remarks>
+  /// The document this implementation is based on can be found at
+  /// <see href="http://www.rsasecurity.com/rsalabs/pkcs/pkcs-5/index.html">
+  /// RSA's PKCS #5 Page
+  /// </see>.
+  /// </remarks>
   TPkcs5S2ParametersGenerator = class sealed(TPbeParametersGenerator,
     IPkcs5S2ParametersGenerator)
 
   strict private
   var
-    FPassword, FSalt: TCryptoLibByteArray;
-    Fdigest: IDigest;
-    FPBKDF2_HMAC: HlpIHashInfo.IPBKDF2_HMAC;
+    FDigest: IDigest;
+    FPBKDF2_HMAC: IPBKDF2_HMAC;
 
-    /// <returns>
-    /// the underlying digest.
-    /// </returns>
-    function GetDigest: IDigest; inline;
-
-    function GenerateDerivedKey(dkLen: Int32): TCryptoLibByteArray; inline;
+    function GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray; inline;
 
   public
 
@@ -67,12 +66,17 @@ type
     /// <param name="digest">
     /// digest to use for constructing hmac
     /// </param>
-    constructor Create(const digest: IDigest);
+    constructor Create(); overload;
+    /// <summary>
+    /// construct a Pkcs5 Scheme 2 Parameters generator.
+    /// </summary>
+    /// <param name="digest">
+    /// digest to use for constructing hmac
+    /// </param>
+    constructor Create(const ADigest: IDigest); overload;
 
-    destructor Destroy; override;
-
-    procedure Init(const password, salt: TCryptoLibByteArray;
-      iterationCount: Int32);
+    procedure Init(const APassword, ASalt: TCryptoLibByteArray;
+      AIterationCount: Int32); override;
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt, and
@@ -87,7 +91,7 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String; keySize: Int32)
+    function GenerateDerivedParameters(const AAlgorithm: String; AKeySize: Int32)
       : ICipherParameters; overload; override;
 
     /// <summary>
@@ -107,8 +111,8 @@ type
     /// <returns>
     /// a parameters object representing a key and an iv.
     /// </returns>
-    function GenerateDerivedParameters(const algorithm: String;
-      keySize, ivSize: Int32): ICipherParameters; overload; override;
+    function GenerateDerivedParameters(const AAlgorithm: String;
+      AKeySize, AIvSize: Int32): ICipherParameters; overload; override;
 
     /// <summary>
     /// Generate a key parameter for use with a MAC derived from the
@@ -121,13 +125,8 @@ type
     /// <returns>
     /// a parameters object representing a key.
     /// </returns>
-    function GenerateDerivedMacParameters(keySize: Int32)
+    function GenerateDerivedMacParameters(AKeySize: Int32)
       : ICipherParameters; override;
-
-    /// <value>
-    /// the underlying digest.
-    /// </value>
-    property digest: IDigest read GetDigest;
   end;
 
 implementation
@@ -136,84 +135,70 @@ implementation
 
 procedure TPkcs5S2ParametersGenerator.Clear();
 begin
-  TArrayUtils.ZeroFill(FPassword);
-  TArrayUtils.ZeroFill(FSalt);
+  inherited Clear();
 
-  if FPBKDF2_HMAC <> Nil then
+  if FPBKDF2_HMAC <> nil then
   begin
     FPBKDF2_HMAC.Clear();
   end;
 end;
 
-constructor TPkcs5S2ParametersGenerator.Create(const digest: IDigest);
+constructor TPkcs5S2ParametersGenerator.Create;
 begin
-  Inherited Create();
-  Fdigest := digest;
+  Create(TDigestUtilities.GetDigest('SHA1'));
 end;
 
-destructor TPkcs5S2ParametersGenerator.Destroy;
+constructor TPkcs5S2ParametersGenerator.Create(const ADigest: IDigest);
 begin
-  Clear();
-  inherited Destroy;
+  inherited Create();
+  FDigest := ADigest;
 end;
 
-function TPkcs5S2ParametersGenerator.GenerateDerivedKey(dkLen: Int32)
-  : TCryptoLibByteArray;
+function TPkcs5S2ParametersGenerator.GenerateDerivedKey(ADkLen: Int32): TCryptoLibByteArray;
 begin
-  result := FPBKDF2_HMAC.GetBytes(dkLen);
+  Result := FPBKDF2_HMAC.GetBytes(ADkLen);
 end;
 
-function TPkcs5S2ParametersGenerator.GenerateDerivedMacParameters
-  (keySize: Int32): ICipherParameters;
+function TPkcs5S2ParametersGenerator.GenerateDerivedMacParameters(AKeySize: Int32): ICipherParameters;
 var
-  dKey: TCryptoLibByteArray;
+  LDKey: TCryptoLibByteArray;
+  LKeySize: Int32;
 begin
-  keySize := keySize div 8;
-
-  dKey := GenerateDerivedKey(keySize);
-
-  result := TKeyParameter.Create(dKey, 0, keySize);
+  LKeySize := AKeySize div 8;
+  LDKey := GenerateDerivedKey(LKeySize);
+  Result := TKeyParameter.Create(LDKey, 0, LKeySize);
 end;
 
-function TPkcs5S2ParametersGenerator.GenerateDerivedParameters(const algorithm
-  : String; keySize: Int32): ICipherParameters;
+function TPkcs5S2ParametersGenerator.GenerateDerivedParameters(const AAlgorithm: String;
+  AKeySize: Int32): ICipherParameters;
 var
-  dKey: TCryptoLibByteArray;
+  LDKey: TCryptoLibByteArray;
+  LKeySize: Int32;
 begin
-  keySize := keySize div 8;
-
-  dKey := GenerateDerivedKey(keySize);
-
-  result := TParameterUtilities.CreateKeyParameter(algorithm, dKey, 0, keySize);
+  LKeySize := AKeySize div 8;
+  LDKey := GenerateDerivedKey(LKeySize);
+  Result := TParameterUtilities.CreateKeyParameter(AAlgorithm, LDKey, 0, LKeySize);
 end;
 
-function TPkcs5S2ParametersGenerator.GenerateDerivedParameters(const algorithm
-  : String; keySize, ivSize: Int32): ICipherParameters;
+function TPkcs5S2ParametersGenerator.GenerateDerivedParameters(const AAlgorithm: String;
+  AKeySize, AIvSize: Int32): ICipherParameters;
 var
-  dKey: TCryptoLibByteArray;
-  key: IKeyParameter;
+  LDKey: TCryptoLibByteArray;
+  LKey: IKeyParameter;
+  LKeySize, LIvSize: Int32;
 begin
-  keySize := keySize div 8;
-  ivSize := ivSize div 8;
-
-  dKey := GenerateDerivedKey(keySize + ivSize);
-  key := TParameterUtilities.CreateKeyParameter(algorithm, dKey, 0, keySize);
-
-  result := TParametersWithIV.Create(key, dKey, keySize, ivSize);
+  LKeySize := AKeySize div 8;
+  LIvSize := AIvSize div 8;
+  LDKey := GenerateDerivedKey(LKeySize + LIvSize);
+  LKey := TParameterUtilities.CreateKeyParameter(AAlgorithm, LDKey, 0, LKeySize);
+  Result := TParametersWithIV.Create(LKey, LDKey, LKeySize, LIvSize);
 end;
 
-function TPkcs5S2ParametersGenerator.GetDigest: IDigest;
+procedure TPkcs5S2ParametersGenerator.Init(const APassword, ASalt: TCryptoLibByteArray;
+  AIterationCount: Int32);
 begin
-  result := Fdigest;
-end;
-
-procedure TPkcs5S2ParametersGenerator.Init(const password,
-  salt: TCryptoLibByteArray; iterationCount: Int32);
-begin
-  FPassword := System.Copy(password);
-  FSalt := System.Copy(salt);
-  FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC
-    (Fdigest.GetUnderlyingIHash, FPassword, FSalt, iterationCount);
+  inherited Init(APassword, ASalt, AIterationCount);
+  FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC(FDigest.UnderlyingHasher, FPassword, FSalt, AIterationCount);
 end;
 
 end.
