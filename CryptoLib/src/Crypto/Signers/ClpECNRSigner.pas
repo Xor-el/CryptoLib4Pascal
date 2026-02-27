@@ -176,7 +176,7 @@ begin
 
   LG := APubKey.Parameters.G;
   LW := APubKey.Q;
-  // calculate P using Bouncy math
+  // calculate P
   LP := TECAlgorithms.SumOfTwoMultiplies(LG, &AS, LW, AR).Normalize();
 
   // components must be bogus.

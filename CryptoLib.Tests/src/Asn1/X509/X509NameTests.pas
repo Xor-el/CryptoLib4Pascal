@@ -73,8 +73,8 @@ begin
   FSubjects[5] := 'O=Sun Microsystems Inc,CN=store.sun.com';
   FSubjects[6] := 'unstructuredAddress=192.168.1.33,unstructuredName=pixfirewall.ciscopix.com,CN=pixfirewall.ciscopix.com';
   FSubjects[7] := 'CN=*.canal-plus.com,OU=Provided by TBS INTERNET https://www.tbs-certificats.com/,OU=\ CANAL \+,O=CANAL\+DISTRIBUTION,L=issy les moulineaux,ST=Hauts de Seine,C=FR';
-  FSubjects[8] := 'O=Bouncy Castle,CN=www.bouncycastle.org\ ';
-  FSubjects[9] := 'O=Bouncy Castle,CN=c:\\fred\\bob';
+  FSubjects[8] := 'O=CryptoLib4Pascal,CN=www.cryptolib4pascal.org\ ';
+  FSubjects[9] := 'O=CryptoLib4Pascal,CN=c:\\fred\\bob';
   FSubjects[10] := 'C=0,O=1,OU=2,T=3,CN=4,SERIALNUMBER=5,STREET=6,SERIALNUMBER=7,L=8,ST=9,SURNAME=10,GIVENNAME=11,INITIALS=12,' +
     'GENERATION=13,UniqueIdentifier=14,BusinessCategory=15,PostalCode=16,DN=17,Pseudonym=18,PlaceOfBirth=19,' +
     'Gender=20,CountryOfCitizenship=21,CountryOfResidence=22,NameAtBirth=23,PostalAddress=24,2.5.4.54=25,' +

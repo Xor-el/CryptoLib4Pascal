@@ -30,7 +30,7 @@ uses
 
 type
   /// <summary>
-  /// Utility class for enum operations, ported from Bouncy Castle Enums.
+  /// Utility class for enum operations
   /// Works with ordinals; callers cast to their enum type e.g. TMyEnum(ordinal).
   /// </summary>
   TEnumUtilities = class sealed(TObject)

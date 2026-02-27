@@ -890,16 +890,16 @@ begin
   LSubjectAttrs := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   LOrder := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   try
-    LIssuerAttrs.Add(TX509Name.C, 'AU');
-    LIssuerAttrs.Add(TX509Name.O, 'The Legion of the Bouncy Castle');
-    LIssuerAttrs.Add(TX509Name.L, 'Melbourne');
-    LIssuerAttrs.Add(TX509Name.ST, 'Victoria');
+    LIssuerAttrs.Add(TX509Name.C, 'NG');
+    LIssuerAttrs.Add(TX509Name.O, 'CryptoLib4Pascal');
+    LIssuerAttrs.Add(TX509Name.L, 'Alausa');
+    LIssuerAttrs.Add(TX509Name.ST, 'Lagos');
     LIssuerAttrs.Add(TX509Name.EmailAddress, AIssuerEmail);
 
-    LSubjectAttrs.Add(TX509Name.C, 'AU');
-    LSubjectAttrs.Add(TX509Name.O, 'The Legion of the Bouncy Castle');
-    LSubjectAttrs.Add(TX509Name.L, 'Melbourne');
-    LSubjectAttrs.Add(TX509Name.ST, 'Victoria');
+    LSubjectAttrs.Add(TX509Name.C, 'NG');
+    LSubjectAttrs.Add(TX509Name.O, 'CryptoLib4Pascal');
+    LSubjectAttrs.Add(TX509Name.L, 'Alausa');
+    LSubjectAttrs.Add(TX509Name.ST, 'Lagos');
     LSubjectAttrs.Add(TX509Name.EmailAddress, ASubjectEmail);
 
     LOrder.Add(TX509Name.C);
@@ -961,7 +961,7 @@ begin
 
   SetLength(AChain, 1);
   AChain[0] := CreateCert(LPubKey as IAsymmetricKeyParameter, LPrivKeyParams as IAsymmetricKeyParameter,
-    'issuer@bouncycastle.org', 'subject@bouncycastle.org', LLocalKeyId);
+    'issuer@cryptolib4pascal.org', 'subject@cryptolib4pascal.org', LLocalKeyId);
 end;
 
 procedure TTestPkcs12Store.DoTestNoExtraLocalKeyID(const AStore1Data: TBytes);
@@ -991,7 +991,7 @@ begin
   for I := 0 to System.Length(LChain1) - 1 do
     LChain2Arr[I + 1] := LChain1[I];
   LChain2Arr[0] := CreateCert(LKeyPair.Public as IAsymmetricKeyParameter, LK1.Key,
-    'subject@bouncycastle.org', 'extra@bouncycaste.org', nil);
+    'subject@cryptolib4pascal.org', 'extra@cryptolib4pascal.org', nil);
 
   if not Supports(LChain1[0], IPkcs12Entry, LPkcs12Entry) then
     Fail('chain[0] is not IPkcs12Entry');

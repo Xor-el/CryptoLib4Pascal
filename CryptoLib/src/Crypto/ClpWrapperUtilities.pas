@@ -103,8 +103,6 @@ begin
 
   TNistObjectIdentifiers.Boot;
 
-  TEnumUtilities.GetArbitraryValue<TWrapAlgorithm>();
-
   FAlgorithms.AddOrSetValue('AESKW', 'AESWRAP');
   FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdAes128Wrap.Id, 'AESWRAP');
   FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdAes192Wrap.Id, 'AESWRAP');
