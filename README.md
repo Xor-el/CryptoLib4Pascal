@@ -38,7 +38,7 @@
 - **Hashing** -- SHA-2, SHA-3, Blake2, Keccak, RIPEMD, and more
 - **Password hashing** -- Argon2 (2i/2d/2id), Scrypt, PBKDF2
 - **MACs** -- HMAC, CMAC, KMAC, GMac, Poly1305, SipHash
-- **X.509 certificates** -- generation, parsing, and validation
+- **X.509 certificates** -- generation and parsing
 - **PEM encoding** -- OpenSSL-compatible import/export
 - **Cross-platform** -- Windows, Linux, macOS, iOS, Android, Solaris, and BSDs
 
