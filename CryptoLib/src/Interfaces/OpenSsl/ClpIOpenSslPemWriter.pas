@@ -30,7 +30,7 @@ uses
 type
   /// <summary>
   /// Interface for OpenSSL PEM writer. Write any supported object as PEM
-  /// (type and encoding determined by TMiscPemGenerator).
+  /// (type and encoding determined by TOpenSslMiscPemGenerator).
   /// </summary>
   IOpenSslPemWriter = interface(IPemWriter)
     ['{23403EC4-0046-4F52-8539-B5D49C0ED6E3}']
