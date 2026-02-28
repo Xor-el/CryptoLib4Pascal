@@ -40,7 +40,6 @@ resourcestring
   SSolarisGetRandomError =
     'An Error Occurred while generating random data using getRandom API';
 
-type
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
 const
   LIBC_SO = 'libc.so.1';
@@ -61,6 +60,7 @@ type
   /// Solaris OS random source provider.
   /// Implements Solaris getrandom and /dev/urandom fallback
   /// </summary>
+type
   TSolarisRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

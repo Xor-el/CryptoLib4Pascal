@@ -34,11 +34,11 @@ resourcestring
 procedure arc4random_buf(ABytes: PByte; ACount: NativeUInt); cdecl;
   external 'c' name 'arc4random_buf';
 
-type
   /// <summary>
   /// Generic BSD OS random source provider.
   /// Implements BSD variants using arc4random_buf
   /// </summary>
+type
   TGenericBSDRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

@@ -26,10 +26,11 @@
   {$IFEND}
 
   {$DEFINE DELPHI}
-
   {$DEFINITIONINFO ON} // Enable code browsing (Ctrl+Click)
   {$STRINGCHECKS OFF}
   {$WARN DUPLICATE_CTOR_DTOR OFF}
+
+  {========================= CPU Architecture =================================}
 
   {$IFDEF CPU386}
      {$DEFINE CRYPTOLIB_X86}
@@ -47,12 +48,14 @@
      {$DEFINE CRYPTOLIB_AARCH64}
   {$ENDIF}
 
-  {$IFDEF IOS}
-     {$DEFINE CRYPTOLIB_IOS}
-  {$ENDIF}
+  {========================= Target OS ========================================}
 
   {$IFDEF MSWINDOWS}
      {$DEFINE CRYPTOLIB_MSWINDOWS}
+  {$ENDIF}
+
+  {$IFDEF IOS}
+     {$DEFINE CRYPTOLIB_IOS}
   {$ENDIF}
 
   {$IFDEF MACOS}
@@ -61,25 +64,29 @@
      {$ENDIF}
   {$ENDIF}
 
-  {$IFDEF ANDROID}
-     {$DEFINE CRYPTOLIB_ANDROID}
-  {$ENDIF}
-
   {$IF DEFINED(CRYPTOLIB_IOS) OR DEFINED(CRYPTOLIB_MACOS)}
      {$DEFINE CRYPTOLIB_APPLE}
   {$IFEND}
+
+  {$IFDEF ANDROID}
+     {$DEFINE CRYPTOLIB_ANDROID}
+  {$ENDIF}
 
   {$IF DEFINED(LINUX) OR DEFINED(CRYPTOLIB_ANDROID)}
      {$DEFINE CRYPTOLIB_LINUX}
   {$IFEND}
 
+  {$IF DEFINED(CRYPTOLIB_APPLE) OR DEFINED(CRYPTOLIB_LINUX)}
+     {$DEFINE CRYPTOLIB_UNIX}
+  {$IFEND}
+
+  {========================= Feature Detection ================================}
+
   {$IFDEF CRYPTOLIB_LINUX}
      {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
   {$ENDIF}
 
-  {$IF DEFINED(CRYPTOLIB_APPLE) OR DEFINED(CRYPTOLIB_LINUX)}
-     {$DEFINE CRYPTOLIB_UNIX}
-  {$IFEND}
+  {========================= Delphi Version Features ==========================}
 
   // XE and Above
   {$IF CompilerVersion >= 22.0}

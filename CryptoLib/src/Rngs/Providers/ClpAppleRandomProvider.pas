@@ -20,7 +20,6 @@ unit ClpAppleRandomProvider;
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
-
 {$IFDEF CRYPTOLIB_APPLE}
 uses
 {$IFDEF FPC}
@@ -46,8 +45,9 @@ resourcestring
   SAppleSecRandomError =
     'An Error Occurred while generating random data using SecRandomCopyBytes API.';
 
-type
+
 {$IFDEF FPC}
+type
   SecRandomRef = OpaquePointer;
 
 function SecRandomCopyBytes(ARnd: SecRandomRef; ACount: NativeUInt;
@@ -66,11 +66,11 @@ function SecRandomCopyBytes(ARnd: SecRandomRef; ACount: NativeUInt;
   external libSecurity Name _PU + 'SecRandomCopyBytes';
 
 {$ENDIF}
-
   /// <summary>
   /// Apple OS random source provider.
   /// Implements Apple SecRandomCopyBytes and /dev/urandom fallback
   /// </summary>
+type
   TAppleRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

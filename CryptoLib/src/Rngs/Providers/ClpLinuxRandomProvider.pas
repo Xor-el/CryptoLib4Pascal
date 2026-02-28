@@ -40,7 +40,6 @@ resourcestring
   SLinuxGetRandomError =
     'An Error Occurred while generating random data using getRandom API';
 
-type
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
 {$IFDEF CRYPTOLIB_ANDROID}
 const
@@ -63,6 +62,7 @@ type
   /// Linux OS random source provider.
   /// Implements Linux getrandom and /dev/urandom fallback
   /// </summary>
+type
   TLinuxRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
