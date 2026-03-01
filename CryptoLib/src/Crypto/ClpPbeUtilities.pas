@@ -550,7 +550,7 @@ class function TPbeUtilities.GenerateCipherParameters(const AAlgorithm: String;
   const APbeParameters: IAsn1Encodable): ICipherParameters;
 var
   LMechanism, LDigestName: String;
-  LKeyBytes, LSalt, LIv, LZeroIv: TCryptoLibByteArray;
+  LKeyBytes, LSalt, LIv: TCryptoLibByteArray;
   LIterationCount, LKeyLength, LBitLen: Int32;
   LPkcs12PbeParams: IPkcs12PbeParams;
   LPbeParam: IPbeParameter;
@@ -624,8 +624,7 @@ begin
 
     if LIv <> nil then
     begin
-      System.SetLength(LZeroIv, System.Length(LIv));
-      if TArrayUtilities.AreEqual(LIv, LZeroIv) then
+      if TArrayUtilities.AreAllZeroes(LIv, 0, System.Length(LIv)) then
       begin
         // FIXME? OpenSSL weirdness with IV of zeros (for ECB keys?)
       end
