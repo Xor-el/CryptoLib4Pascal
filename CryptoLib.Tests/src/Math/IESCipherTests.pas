@@ -223,7 +223,7 @@ begin
   I := 0;
   while I <= 10 do
   begin
-    System.SetLength(RandomBytes, Byte(RandomInstance.NextInt32));
+    System.SetLength(RandomBytes, RandomInstance.Next(1, 255));
     RandomInstance.NextBytes(RandomBytes);
     PlainText := EncodeHex(RandomBytes);
 
