@@ -69,6 +69,9 @@ uses
   ClpCmsAsn1Objects,
   ClpCmsObjectIdentifiers,
   ClpIAsn1Objects,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
+  ClpX9ObjectIdentifiers,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -191,6 +194,16 @@ type
         'mGP2AFt3mbblKbsRM8hDW/X9taeG9s2KGe5wlKOE5lV8YAo4hFoJYN2/0d8Y0K9X' + sLineBreak +
         'QAAYU3iPG1zL+a/7TFLJ0u/biqsBg9hnNbMnN/tOeSuKnH2Rx9F1rg==' + sLineBreak +
         '-----END RSA PRIVATE KEY-----';
+
+      EcParametersWithPrivateKeyPem =
+        '-----BEGIN EC PARAMETERS-----' + sLineBreak +
+        'BggqhkjOPQMBBw==' + sLineBreak +
+        '-----END EC PARAMETERS-----' + sLineBreak +
+        '-----BEGIN EC PRIVATE KEY-----' + sLineBreak +
+        'MHcCAQEEIA+81An0qk7oztXp+tagHCSaZumqwn9CtutCv4OTS+M9oAoGCCqGSM49' + sLineBreak +
+        'AwEHoUQDQgAEkzJDRhblkCRl1m4hchBjV2o6cqqOT2k3IdUU0/LhYLuzV+gvlgDD' + sLineBreak +
+        'BwPl8QSucQXgPoLdj3yhX9Audpcoe+WkvA==' + sLineBreak +
+        '-----END EC PRIVATE KEY-----';
 
       DsaAes128CbcPem =
         '-----BEGIN DSA PRIVATE KEY-----' + sLineBreak +
@@ -1213,6 +1226,7 @@ type
     procedure TestKeyPairRsaRoundTrip;
     procedure TestKeyPairDsaRoundTrip;
     procedure TestPkcs7RoundTrip;
+    procedure TestEcParametersRoundTrip;
     procedure TestOpenSslDsaUnencrypted;
     procedure TestOpenSslRsaUnencrypted;
     procedure TestOpenSslAes128;
@@ -1409,6 +1423,65 @@ begin
       Check(LVal2.TryAsType<ICmsContentInfo>(LCmsContent2), 'Read back should be CmsContentInfo');
       Check(LCmsContent2.ContentType.Equals(TCmsObjectIdentifiers.EnvelopedData),
         'failed envelopedData recode check');
+    finally
+      LOutStream.Free;
+    end;
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TOpenSslReaderTest.TestEcParametersRoundTrip;
+var
+  LStream: TStringStream;
+  LReader: IOpenSslPemReader;
+  LVal: TValue;
+  LOid: IDerObjectIdentifier;
+  LVal2: TValue;
+  LKp: IAsymmetricCipherKeyPair;
+  LWriter: IOpenSslPemWriter;
+  LOutStream: TStringStream;
+  LInStream: TStringStream;
+  LReader2: IOpenSslPemReader;
+  LVal3: TValue;
+  LOid2: IDerObjectIdentifier;
+  LVal4: TValue;
+  LKp2: IAsymmetricCipherKeyPair;
+begin
+  LStream := TStringStream.Create(EcParametersWithPrivateKeyPem, TEncoding.ASCII);
+  try
+    LReader := CreatePemReader(LStream);
+    LVal := LReader.ReadObject();
+    Check(not LVal.IsEmpty, 'First ReadObject should return EC PARAMETERS');
+    Check(LVal.TryAsType<IDerObjectIdentifier>(LOid), 'First should be IDerObjectIdentifier');
+    Check(LOid <> nil, 'EC PARAMETERS OID should not be nil');
+    Check(LOid.Equals(TX9ObjectIdentifiers.Prime256v1), 'EC PARAMETERS should be prime256v1');
+
+    LVal2 := LReader.ReadObject();
+    Check(not LVal2.IsEmpty, 'Second ReadObject should return EC PRIVATE KEY');
+    Check(LVal2.TryAsType<IAsymmetricCipherKeyPair>(LKp), 'Second should be IAsymmetricCipherKeyPair');
+    Check(LKp <> nil, 'EC key pair should not be nil');
+
+    LOutStream := TStringStream.Create('', TEncoding.ASCII);
+    try
+      LWriter := CreatePemWriter(LOutStream);
+      LWriter.WriteObject(TValue.From<IDerObjectIdentifier>(LOid));
+      LWriter.WriteObject(TValue.From<IAsymmetricCipherKeyPair>(LKp));
+      LInStream := TStringStream.Create(LOutStream.DataString, TEncoding.ASCII);
+      try
+        LReader2 := CreatePemReader(LInStream);
+        LVal3 := LReader2.ReadObject();
+        Check(not LVal3.IsEmpty, 'Roundtrip first ReadObject should return EC PARAMETERS');
+        Check(LVal3.TryAsType<IDerObjectIdentifier>(LOid2), 'Roundtrip first should be IDerObjectIdentifier');
+        Check(LOid2.Equals(TX9ObjectIdentifiers.Prime256v1), 'Roundtrip EC PARAMETERS should be prime256v1');
+        LVal4 := LReader2.ReadObject();
+        Check(not LVal4.IsEmpty, 'Roundtrip second ReadObject should return EC PRIVATE KEY');
+        Check(LVal4.TryAsType<IAsymmetricCipherKeyPair>(LKp2), 'Roundtrip second should be IAsymmetricCipherKeyPair');
+        Check(LKp2.Private.Equals(LKp.Private), 'Roundtrip EC private key should match');
+        Check(LKp2.Public.Equals(LKp.Public), 'Roundtrip EC public key should match');
+      finally
+        LInStream.Free;
+      end;
     finally
       LOutStream.Free;
     end;

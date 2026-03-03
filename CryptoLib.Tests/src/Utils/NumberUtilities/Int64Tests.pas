@@ -97,18 +97,18 @@ end;
 procedure TTestInt64Utilities.TestPopCount;
 var
   LRound, LPos: Int32;
-  LRand, LI, LPattern, LInput: Int64;
-  LInit, LExpected: Int32;
+  LRand, LPattern, LInput: Int64;
+  LI, LInit, LExpected: Int32;
 begin
   for LRound := 0 to 9 do
   begin
     LRand := (Int64(Random(MaxInt)) shl 36) xor (Int64(Random(MaxInt)) shl 8);
     LInit := SimpleBitCount(LRand, 8, 64);
 
-    for LI := 0 to Int64($FF) do
+    for LI := 0 to 255 do
     begin
-      LPattern := LRand or LI;
-      LExpected := LInit + SimpleBitCount(LI, 0, 8);
+      LPattern := LRand or Int64(LI);
+      LExpected := LInit + SimpleBitCount(Int64(LI), 0, 8);
 
       for LPos := 0 to 63 do
       begin
