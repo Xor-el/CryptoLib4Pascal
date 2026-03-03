@@ -57,6 +57,8 @@ uses
   ClpIPkcsAsn1Objects,
   ClpSecECAsn1Objects,
   ClpISecECAsn1Objects,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
   ClpX509Asn1Objects,
   ClpRsaParameters,
   ClpDsaParameters,
@@ -84,6 +86,7 @@ resourcestring
   SNoPasswordFinderSpecified = 'No password finder specified, but a password is required';
   SPasswordIsNull = 'Password is null, but a password is required';
   SMissingDekInfo = 'missing DEK-info';
+  SProblemExtractingECParams = 'exception extracting EC named curve: %s';
 
 type
   /// <summary>
@@ -103,6 +106,7 @@ type
     function ReadAttributeCertificate(const APemObject: IPemObject): IX509V2AttributeCertificate;
     function ReadPkcs7(const APemObject: IPemObject): ICmsContentInfo;
     function ReadPrivateKey(const APemObject: IPemObject): TValue;
+    function ReadECParameters(const APemObject: IPemObject): TValue;
   public
     constructor Create(const AReader: TStream); overload;
     constructor Create(const AReader: TStream; const APasswordFinder: IOpenSslPasswordFinder); overload;
@@ -186,7 +190,43 @@ begin
     Exit;
   end;
 
+  if LType = 'EC PARAMETERS' then
+  begin
+    Result := ReadECParameters(LObj);
+    Exit;
+  end;
+
   raise EIOCryptoLibException.CreateResFmt(@SUnrecognisedObject, [LType]);
+end;
+
+function TOpenSslPemReader.ReadECParameters(const APemObject: IPemObject): TValue;
+var
+  LAsn1Obj: IAsn1Object;
+  LOid: IDerObjectIdentifier;
+  LSeq: IAsn1Sequence;
+begin
+  try
+    LAsn1Obj := TAsn1Object.FromByteArray(APemObject.Content);
+
+    if Supports(LAsn1Obj, IDerObjectIdentifier, LOid) then
+    begin
+      Result := TValue.From<IDerObjectIdentifier>(LOid);
+      Exit;
+    end;
+
+    if Supports(LAsn1Obj, IAsn1Sequence, LSeq) then
+    begin
+      Result := TValue.From<IX9ECParameters>(TX9ECParameters.GetInstance(LSeq));
+      Exit;
+    end;
+
+    Result := TValue.Empty;
+  except
+    on EIOCryptoLibException do
+      raise;
+    on E: Exception do
+      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemExtractingECParams, [E.Message]);
+  end;
 end;
 
 function TOpenSslPemReader.ReadRsaPublicKey(const APemObject: IPemObject): IAsymmetricKeyParameter;

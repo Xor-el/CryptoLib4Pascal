@@ -54,6 +54,8 @@ uses
   ClpPkcs10CertificationRequest,
   ClpCmsAsn1Objects,
   ClpPkcsAsn1Objects,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
   ClpBigInteger,
   ClpConverters,
   ClpOpenSslPemUtilities,
@@ -145,6 +147,8 @@ var
   LCmsContent: ICmsContentInfo;
   LPkcsContent: IPkcsContentInfo;
   LPkcs8Enc: IPkcs8EncryptedPrivateKeyInfo;
+  LOid: IDerObjectIdentifier;
+  LParams: IX9ECParameters;
   LType: String;
   LEncoding: TCryptoLibByteArray;
 begin
@@ -230,6 +234,14 @@ begin
   // PKCS#8 EncryptedPrivateKeyInfo (ENCRYPTED PRIVATE KEY)
   if AObj.TryAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
     Exit(TPemObject.Create('ENCRYPTED PRIVATE KEY', LPkcs8Enc.GetEncoded()));
+
+  // EC PARAMETERS (named curve OID)
+  if AObj.TryAsType<IDerObjectIdentifier>(LOid) then
+    Exit(TPemObject.Create('EC PARAMETERS', LOid.GetEncoded()));
+
+  // EC PARAMETERS (explicit X9 parameters)
+  if AObj.TryAsType<IX9ECParameters>(LParams) then
+    Exit(TPemObject.Create('EC PARAMETERS', LParams.GetEncoded()));
 
   raise EPemGenerationCryptoLibException.Create('Object type not supported');
 end;
