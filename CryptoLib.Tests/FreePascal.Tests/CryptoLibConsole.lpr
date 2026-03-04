@@ -48,6 +48,8 @@ var
   Application: TCryptoLibConsoleTestRunner;
 
 begin
+  DefaultRunAllTests:= True;
+  DefaultFormat:= TFormat.fPlain;
   Application := TCryptoLibConsoleTestRunner.Create(nil);
   Application.Initialize;
   Application.Run;
