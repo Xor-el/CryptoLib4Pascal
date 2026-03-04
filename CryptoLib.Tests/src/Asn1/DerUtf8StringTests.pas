@@ -195,12 +195,12 @@ begin
 
       if not AreEqual(B1, B2) then
       begin
-        Fail('failed UTF-8 encoding and decoding');
+        Fail('failed UTF-8 encoding and decoding - Check 1');
       end;
 
       if not AreEqual(Temp, LGlyphsUtf8[I]) then
       begin
-        Fail('failed UTF-8 encoding and decoding');
+        Fail('failed UTF-8 encoding and decoding - Check 2');
       end;
     end;
   except
