@@ -3,6 +3,7 @@ program CryptoLibConsole;
 {$mode objfpc}{$H+}
 
 uses
+  {$IFDEF UNIX}cwstring,{$ENDIF}
   consoletestrunner, Asn1SequenceParserTests, EqualsAndHashCodeTests, OIDTests,
   EnumeratedTests, ParsingTests, ParseTests, StringTests, TagTests,
   BigIntegerTests, ECAlgorithmsTests, ECPointTests, SecP256R1FieldTests,
