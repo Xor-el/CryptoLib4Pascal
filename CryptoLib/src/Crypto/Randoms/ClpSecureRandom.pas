@@ -55,6 +55,7 @@ type
     FMasterRandom: ISecureRandom;
     FDoubleScale: Double;
     FLock: TCriticalSection;
+    FIsBooted: Boolean;
 
     class function GetMasterRandom: ISecureRandom; static; inline;
 
@@ -214,7 +215,6 @@ end;
 procedure TSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray);
 begin
   FGenerator.NextBytes(ABuf);
-
 end;
 
 procedure TSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
@@ -231,12 +231,6 @@ begin
   finally
     FLock.Release;
   end;
-  // TODO when we upgrade to FPC 3.2.0 enable and remove locks above
-  // {$IFDEF FPC}
-  // Result := InterLockedIncrement64(FCounter);
-  // {$ELSE}
-  // Result := TInterlocked.Increment(FCounter);
-  // {$ENDIF}
 end;
 
 function TSecureRandom.NextDouble: Double;
@@ -313,7 +307,7 @@ end;
 
 class procedure TSecureRandom.Boot;
 begin
-  if FLock = nil then
+  if not FIsBooted then
   begin
     FLock := TCriticalSection.Create;
     FCounter := TDateTimeUtilities.DateTimeToTicks(TTimeZone.Local.ToUniversalTime(Now));
@@ -321,6 +315,7 @@ begin
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);
     TOSRandomProvider.Boot;
+    FIsBooted := True;
   end;
 end;
 
@@ -359,7 +354,6 @@ begin
 
   raise EArgumentCryptoLibException.CreateResFmt(@SUnRecognisedPRNGAlgorithm,
     [AAlgorithm]);
-
 end;
 
 class function TSecureRandom.GetInstance(const AAlgorithm: String) : ISecureRandom;

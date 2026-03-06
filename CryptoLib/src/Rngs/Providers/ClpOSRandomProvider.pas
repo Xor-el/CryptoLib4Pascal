@@ -55,6 +55,7 @@ type
   class var
     FInstance: IRandomSourceProvider;
     FLock: TCriticalSection;
+    FIsBooted: Boolean;
 
     class function GetInstance: IRandomSourceProvider; static;
     class function CreateProvider: IRandomSourceProvider; static;
@@ -107,29 +108,22 @@ end;
 
 class function TOSRandomProvider.GetInstance: IRandomSourceProvider;
 begin
-  if FInstance = nil then
-  begin
-    FLock.Enter;
-    try
-      if FInstance = nil then
-      begin
-        FInstance := CreateProvider();
-      end;
-    finally
-      FLock.Leave;
-    end;
-  end;
   Result := FInstance;
 end;
 
 class procedure TOSRandomProvider.Boot;
 begin
-  if FLock = nil then
+  if not FIsBooted then
   begin
     FLock := TCriticalSection.Create;
+    FLock.Enter;
+    try
+      FInstance := CreateProvider();
+    finally
+      FLock.Leave;
+    end;
+    FIsBooted := True;
   end;
-  // Trigger instance creation
-  GetInstance;
 end;
 
 end.
