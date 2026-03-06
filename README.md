@@ -283,7 +283,7 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 
 ## Supported Platforms
 
-| OS | Status |
+| OS | Tested |
 |---|---|
 | Windows (XP and later) | ✅ |
 | Linux (incl. Android, Raspberry Pi) | ✅ |
