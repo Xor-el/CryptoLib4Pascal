@@ -286,7 +286,7 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 | OS | Delphi | FreePascal |
 |---|:---:|:---:|
 | Windows (XP and later) | ✅ | ✅ |
-| Linux | ➖ | ✅ |
+| Linux | ❓ | ✅ |
 | macOS | ❓ | ❓ |
 | Oracle Solaris | ➖ | ❓ |
 | BSD | ➖ | ❓ |
