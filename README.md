@@ -283,14 +283,17 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 
 ## Supported Platforms
 
-| OS | Tested |
-|---|---|
-| Windows (XP and later) | ✅ |
-| Linux (incl. Android, Raspberry Pi) | ✅ |
-| macOS | ❓ |
-| iOS 2.0+ | ❓ |
-| Oracle Solaris | ❓ |
-| OpenBSD / FreeBSD / NetBSD / DragonFlyBSD | ❓ |
+| OS | Delphi | FreePascal |
+|---|:---:|:---:|
+| Windows (XP and later) | ✅ | ✅ |
+| Linux | ➖ | ✅ |
+| macOS | ❓ | ❓ |
+| Oracle Solaris | ➖ | ❓ |
+| BSD | ➖ | ❓ |
+| Android | ❓ | ❓ |
+| iOS 2.0+ | ❓ | ❓ |
+
+> ✅ Tested and passing · ❓ Untested · ➖ Not applicable
 
 **Architectures:** x86, x86_64, ARM32, AArch64
 
