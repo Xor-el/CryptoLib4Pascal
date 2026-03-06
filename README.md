@@ -285,13 +285,12 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 
 | OS | Status |
 |---|---|
-| Windows (XP and later) | Tested |
-| Linux (incl. Android, Raspberry Pi) | Tested |
-| macOS | Tested |
-| iOS 2.0+ | Tested |
-| Oracle Solaris | Tested |
-| OpenBSD | Tested |
-| FreeBSD / NetBSD / DragonFlyBSD | Untested (should work) |
+| Windows (XP and later) | ✅ |
+| Linux (incl. Android, Raspberry Pi) | ✅ |
+| macOS | ❓ |
+| iOS 2.0+ | ❓ |
+| Oracle Solaris | ❓ |
+| OpenBSD / FreeBSD / NetBSD / DragonFlyBSD | ❓ |
 
 **Architectures:** x86, x86_64, ARM32, AArch64
 
