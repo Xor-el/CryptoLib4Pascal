@@ -55,13 +55,6 @@ resourcestring
 type
   TBip340SchnorrSigner = class(TInterfacedObject, ISigner, IBip340SchnorrSigner)
   strict private
-  const
-    /// <summary>Tag for BIP-340 auxiliary randomness (encoded as UTF-8 bytes).</summary>
-    BIP0340_AUX_TAG_STR = 'BIP0340/aux';
-    /// <summary>Tag for BIP-340 nonce derivation (encoded as UTF-8 bytes).</summary>
-    BIP0340_NONCE_TAG_STR = 'BIP0340/nonce';
-    /// <summary>Tag for BIP-340 challenge hash (encoded as UTF-8 bytes).</summary>
-    BIP0340_CHALLENGE_TAG_STR = 'BIP0340/challenge';
   type
     TBuffer = class
     strict private
@@ -217,14 +210,14 @@ begin
       LD := LN.Subtract(LD);
     LPPubBytes := TBip340SchnorrUtilities.BytesFromPoint(LP);
 
-    LAuxTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrSigner.BIP0340_AUX_TAG_STR, TEncoding.UTF8);
+    LAuxTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrUtilities.BIP0340_AUX_TAG_STR, TEncoding.UTF8);
     LAuxHash := TBip340SchnorrUtilities.TaggedHash(LAuxTagBytes, LAuxRand);
     System.SetLength(LDBytes, TBip340SchnorrUtilities.BIP340_SECKEY_SIZE);
     TBigIntegerUtilities.AsUnsignedByteArray(LD, LDBytes, 0, TBip340SchnorrUtilities.BIP340_SECKEY_SIZE);
     System.SetLength(LT, TBip340SchnorrUtilities.BIP340_SECKEY_SIZE);
     TBip340SchnorrUtilities.XorBytes(LDBytes, 0, LAuxHash, 0, LT, 0, TBip340SchnorrUtilities.BIP340_SECKEY_SIZE);
 
-    LNonceTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrSigner.BIP0340_NONCE_TAG_STR, TEncoding.UTF8);
+    LNonceTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrUtilities.BIP0340_NONCE_TAG_STR, TEncoding.UTF8);
     LChallengeLen := 32 + 32 + System.Length(LMsg);
     System.SetLength(LNonceMsg, LChallengeLen);
     System.Move(LT[0], LNonceMsg[0], 32);
@@ -248,7 +241,7 @@ begin
     System.Move(LPPubBytes[0], LChallenge[32], 32);
     if System.Length(LMsg) > 0 then
       System.Move(LMsg[0], LChallenge[64], System.Length(LMsg));
-    LChallengeTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrSigner.BIP0340_CHALLENGE_TAG_STR, TEncoding.UTF8);
+    LChallengeTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrUtilities.BIP0340_CHALLENGE_TAG_STR, TEncoding.UTF8);
     LE := TBigInteger.Create(1,
       TBip340SchnorrUtilities.TaggedHash(LChallengeTagBytes, LChallenge)).&Mod(LN);
     LS := LK.Add(LE.Multiply(LD)).&Mod(LN);
@@ -329,7 +322,7 @@ begin
     System.Move(APublicKey.GetEncoded()[0], LChallenge[32], 32);
     if System.Length(LMsg) > 0 then
       System.Move(LMsg[0], LChallenge[64], System.Length(LMsg));
-    LChallengeTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrSigner.BIP0340_CHALLENGE_TAG_STR, TEncoding.UTF8);
+    LChallengeTagBytes := TConverters.ConvertStringToBytes(TBip340SchnorrUtilities.BIP0340_CHALLENGE_TAG_STR, TEncoding.UTF8);
     LE := TBigInteger.Create(1, TBip340SchnorrUtilities.TaggedHash(LChallengeTagBytes, LChallenge)).&Mod(LDomain.N);
 
     LRGen := TECAlgorithms.SumOfTwoMultiplies(LDomain.G, LS, LP.Negate(), LE);

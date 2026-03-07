@@ -42,6 +42,12 @@ type
     BIP340_PUBKEY_SIZE = 32;
     BIP340_SIG_SIZE = 64;
     BIP340_SECKEY_SIZE = 32;
+    /// <summary>Tag for BIP-340 auxiliary randomness (UTF-8).</summary>
+    BIP0340_AUX_TAG_STR = 'BIP0340/aux';
+    /// <summary>Tag for BIP-340 nonce derivation (UTF-8).</summary>
+    BIP0340_NONCE_TAG_STR = 'BIP0340/nonce';
+    /// <summary>Tag for BIP-340 challenge hash (UTF-8).</summary>
+    BIP0340_CHALLENGE_TAG_STR = 'BIP0340/challenge';
 
     class function TaggedHash(const ATag, AMsg: TCryptoLibByteArray): TCryptoLibByteArray; static;
     class function LiftX(const ADomain: IECDomainParameters; const AXBytes: TCryptoLibByteArray): IECPoint; static;

@@ -124,6 +124,7 @@ contains
   ClpEd25519PhSigner in '..\..\Crypto\Signers\ClpEd25519PhSigner.pas',
   ClpEd25519Signer in '..\..\Crypto\Signers\ClpEd25519Signer.pas',
   ClpBip340SchnorrSigner in '..\..\Crypto\Signers\ClpBip340SchnorrSigner.pas',
+  ClpBip340SchnorrBatchVerifier in '..\..\Crypto\ClpBip340SchnorrBatchVerifier.pas',
   ClpEdECObjectIdentifiers in '..\..\Asn1\Edec\ClpEdECObjectIdentifiers.pas',
   ClpEncoders in '..\..\Encoders\ClpEncoders.pas',
   ClpEndoPreCompInfo in '..\..\Math\EC\Endo\ClpEndoPreCompInfo.pas',

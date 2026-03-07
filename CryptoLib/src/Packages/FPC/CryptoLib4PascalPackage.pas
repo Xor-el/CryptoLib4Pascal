@@ -207,7 +207,7 @@ uses
   ClpIBip340SchnorrSigner, ClpIBip340SchnorrGenerators, 
   ClpIBip340SchnorrParameters, ClpBip340SchnorrUtilities, 
   ClpBip340SchnorrSigner, ClpBip340SchnorrGenerators, 
-  ClpBip340SchnorrParameters;
+  ClpBip340SchnorrParameters, ClpBip340SchnorrBatchVerifier;
 
 implementation
 

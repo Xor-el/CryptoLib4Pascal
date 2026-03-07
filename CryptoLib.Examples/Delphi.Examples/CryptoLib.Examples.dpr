@@ -104,6 +104,7 @@ uses
   ClpEd25519PhSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhSigner.pas',
   ClpEd25519Signer in '..\..\CryptoLib\src\Crypto\Signers\ClpEd25519Signer.pas',
   ClpBip340SchnorrSigner in '..\..\CryptoLib\src\Crypto\Signers\ClpBip340SchnorrSigner.pas',
+  ClpBip340SchnorrBatchVerifier in '..\..\CryptoLib\src\Crypto\ClpBip340SchnorrBatchVerifier.pas',
   ClpEdECObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Edec\ClpEdECObjectIdentifiers.pas',
   ClpEncoders in '..\..\CryptoLib\src\Encoders\ClpEncoders.pas',
   ClpEndoPreCompInfo in '..\..\CryptoLib\src\Math\EC\Endo\ClpEndoPreCompInfo.pas',
