@@ -33,7 +33,7 @@
 
 - **Symmetric encryption** -- AES, Rijndael, Blowfish, Speck, ChaCha, (X)Salsa20
 - **Authenticated encryption (AEAD)** -- GCM, GCM-SIV, CCM, EAX, OCB, ChaCha20-Poly1305
-- **Asymmetric cryptography** -- RSA, DSA, ECDSA, EdDSA (Ed25519, Ed448), ECNR, Schnorr (Bip340)
+- **Asymmetric cryptography** -- RSA, DSA, ECDSA, EdDSA (Ed25519, Ed448), ECNR, Schnorr (Bip340), MuSig2 (Bip327)
 - **Key exchange** -- DH, ECDH, X25519, X448
 - **Hashing** -- SHA-2, SHA-3, Blake2, Keccak, RIPEMD, and more
 - **Password hashing** -- Argon2 (2i/2d/2id), Scrypt, PBKDF2
@@ -85,6 +85,7 @@
 - **ECNR**
 - **EdDSA** -- Ed25519, Ed448
 - **Schnorr** -- Bip340
+- **MuSig2** -- Bip327
 
 </details>
 
