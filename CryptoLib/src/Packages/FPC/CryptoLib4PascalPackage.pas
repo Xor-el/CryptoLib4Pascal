@@ -205,9 +205,10 @@ uses
   ClpIPkcs12Store, ClpX509CertificatePairParser, ClpX509CertificatePair, 
   ClpIX509CertificatePairParser, ClpIX509CertificatePair, ClpIX931Signer, 
   ClpIBip340SchnorrSigner, ClpIBip340SchnorrGenerators, 
-  ClpIBip340SchnorrParameters, ClpBip340SchnorrUtilities, 
-  ClpBip340SchnorrSigner, ClpBip340SchnorrGenerators, 
-  ClpBip340SchnorrParameters, ClpBip340SchnorrBatchVerifier;
+  ClpIBip340SchnorrParameters, ClpBip340SchnorrSigner, 
+  ClpBip340SchnorrGenerators, ClpBip340SchnorrParameters, ClpBip327MuSig2, 
+  ClpBip327MuSig2KeyAggregation, ClpBip327MuSig2Utilities, 
+  ClpBip340SchnorrBatchVerifier, ClpBip340SchnorrUtilities;
 
 implementation
 
