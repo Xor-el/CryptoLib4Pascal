@@ -173,7 +173,7 @@ begin
   if LAllZero then
   begin
     LCurve := ADomain.Curve;
-    Result := LCurve.GetInfinity;
+    Result := LCurve.Infinity;
     Exit;
   end;
   Result := CPoint(ADomain, ABytes);

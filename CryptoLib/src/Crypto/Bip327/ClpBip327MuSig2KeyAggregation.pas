@@ -68,21 +68,21 @@ type
   TBip327MuSig2KeyAggregation = class sealed(TObject)
   public
     /// <summary>Sort pubkeys lexicographically (33 bytes each). Returns new sorted array.</summary>
-    class function KeySort(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>):
+    class function KeySort(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>):
       TCryptoLibGenericArray<TCryptoLibByteArray>; static;
     /// <summary>KeyAgg with MuSig2* (second distinct key gets coefficient 1).</summary>
     class function KeyAgg(const ADomain: IECDomainParameters;
-      const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>): IBip327KeyAggContext; static;
+      const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>): IBip327KeyAggContext; static;
     /// <summary>Apply tweak. is_xonly_t: true for BIP341 Taproot, false for BIP32 plain.</summary>
     class function ApplyTweak(const AKeyAggCtx: IBip327KeyAggContext;
       const ATweak: TCryptoLibByteArray; AIsXOnlyT: Boolean): IBip327KeyAggContext; static;
     /// <summary>Key aggregation coefficient for a given pk in the pubkey list (for session/signing).</summary>
-    class function KeyAggCoeff(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
+    class function KeyAggCoeff(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
       const APk: TCryptoLibByteArray): TBigInteger; static;
   private
-    class function HashKeys(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray; static;
-    class function GetSecondKey(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray; static;
-    class function KeyAggCoeffInternal(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
+    class function HashKeys(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray; static;
+    class function GetSecondKey(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray; static;
+    class function KeyAggCoeffInternal(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
       const APk, APk2: TCryptoLibByteArray; const AN: TBigInteger): TBigInteger; static;
   end;
 
@@ -154,7 +154,7 @@ begin
 end;
 
 class function TBip327MuSig2KeyAggregation.KeySort(
-  const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>):
+  const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>):
   TCryptoLibGenericArray<TCryptoLibByteArray>;
 var
   LResult: TCryptoLibGenericArray<TCryptoLibByteArray>;
@@ -162,19 +162,19 @@ var
   LKey: TCryptoLibByteArray;
   LMin: Int32;
 begin
-  if (APubkeys = nil) or (System.Length(APubkeys) = 0) then
+  if System.Length(APubKeys) = 0 then
   begin
     Result := nil;
     Exit;
   end;
-  LLen := System.Length(APubkeys);
+  LLen := System.Length(APubKeys);
   System.SetLength(LResult, LLen);
   for LI := 0 to LLen - 1 do
   begin
-    if (APubkeys[LI] = nil) or (System.Length(APubkeys[LI]) <> TBip327MuSig2Utilities.BIP327_PLAIN_PUBKEY_SIZE) then
+    if (APubKeys[LI] = nil) or (System.Length(APubKeys[LI]) <> TBip327MuSig2Utilities.BIP327_PLAIN_PUBKEY_SIZE) then
       raise EArgumentCryptoLibException.Create('KeySort: each key must be 33 bytes');
-    System.SetLength(LResult[LI], System.Length(APubkeys[LI]));
-    System.Move(APubkeys[LI][0], LResult[LI][0], System.Length(APubkeys[LI]) * System.SizeOf(Byte));
+    System.SetLength(LResult[LI], System.Length(APubKeys[LI]));
+    System.Move(APubKeys[LI][0], LResult[LI][0], System.Length(APubKeys[LI]) * System.SizeOf(Byte));
   end;
   for LI := 0 to LLen - 2 do
   begin
@@ -193,7 +193,7 @@ begin
 end;
 
 class function TBip327MuSig2KeyAggregation.KeyAgg(const ADomain: IECDomainParameters;
-  const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>): IBip327KeyAggContext;
+  const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>): IBip327KeyAggContext;
 var
   LCurve: IECCurve;
   LN: TBigInteger;
@@ -205,17 +205,17 @@ var
   LConcat: TCryptoLibByteArray;
   LOff: Int32;
 begin
-  if (APubkeys = nil) or (System.Length(APubkeys) = 0) then
+  if System.Length(APubKeys) = 0 then
     raise EArgumentCryptoLibException.Create('KeyAgg: at least one pubkey required');
   LCurve := ADomain.Curve;
   LN := ADomain.N;
-  LU := System.Length(APubkeys);
-  LPk2 := GetSecondKey(APubkeys);
-  LSum := LCurve.GetInfinity();
+  LU := System.Length(APubKeys);
+  LPk2 := GetSecondKey(APubKeys);
+  LSum := LCurve.Infinity;
   for LI := 0 to LU - 1 do
   begin
-    LP := TBip327MuSig2Utilities.CPoint(ADomain, APubkeys[LI], LI);
-    LA := KeyAggCoeffInternal(APubkeys, APubkeys[LI], LPk2, LN);
+    LP := TBip327MuSig2Utilities.CPoint(ADomain, APubKeys[LI], LI);
+    LA := KeyAggCoeffInternal(APubKeys, APubKeys[LI], LPk2, LN);
     if LSum.IsInfinity then
       LSum := TECAlgorithms.ReferenceMultiply(LP, LA)
     else
@@ -260,59 +260,59 @@ begin
 end;
 
 class function TBip327MuSig2KeyAggregation.KeyAggCoeff(
-  const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
+  const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
   const APk: TCryptoLibByteArray): TBigInteger;
 var
   LX9: IX9ECParameters;
   LPk2: TCryptoLibByteArray;
   LN: TBigInteger;
 begin
-  if (APubkeys = nil) or (System.Length(APubkeys) = 0) then
+  if System.Length(APubKeys) = 0 then
     raise EArgumentCryptoLibException.Create('KeyAggCoeff: pubkeys required');
   LX9 := TECUtilities.FindECCurveByName('secp256k1');
   if LX9 = nil then
     raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
   LN := LX9.N;
-  LPk2 := GetSecondKey(APubkeys);
-  Result := KeyAggCoeffInternal(APubkeys, APk, LPk2, LN);
+  LPk2 := GetSecondKey(APubKeys);
+  Result := KeyAggCoeffInternal(APubKeys, APk, LPk2, LN);
 end;
 
-class function TBip327MuSig2KeyAggregation.HashKeys(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray;
+class function TBip327MuSig2KeyAggregation.HashKeys(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray;
 var
   LTotalLen, LOff, LI: Int32;
   LTagBytes: TCryptoLibByteArray;
 begin
   LTotalLen := 0;
-  for LI := 0 to System.Length(APubkeys) - 1 do
-    LTotalLen := LTotalLen + System.Length(APubkeys[LI]);
+  for LI := 0 to System.Length(APubKeys) - 1 do
+    LTotalLen := LTotalLen + System.Length(APubKeys[LI]);
   System.SetLength(Result, LTotalLen);
   LOff := 0;
-  for LI := 0 to System.Length(APubkeys) - 1 do
+  for LI := 0 to System.Length(APubKeys) - 1 do
   begin
-    System.Move(APubkeys[LI][0], Result[LOff], System.Length(APubkeys[LI]) * System.SizeOf(Byte));
-    LOff := LOff + System.Length(APubkeys[LI]);
+    System.Move(APubKeys[LI][0], Result[LOff], System.Length(APubKeys[LI]) * System.SizeOf(Byte));
+    LOff := LOff + System.Length(APubKeys[LI]);
   end;
   LTagBytes := TConverters.ConvertStringToBytes(
     TBip327MuSig2Utilities.KEYAGG_LIST_TAG_STR, TEncoding.UTF8);
   Result := TBip340SchnorrUtilities.TaggedHash(LTagBytes, Result);
 end;
 
-class function TBip327MuSig2KeyAggregation.GetSecondKey(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray;
+class function TBip327MuSig2KeyAggregation.GetSecondKey(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray;
 var
   LJ, LU: Int32;
 begin
-  LU := System.Length(APubkeys);
+  LU := System.Length(APubKeys);
   for LJ := 1 to LU - 1 do
-    if not TArrayUtilities.FixedTimeEquals(APubkeys[LJ], APubkeys[0]) then
+    if not TArrayUtilities.FixedTimeEquals(APubKeys[LJ], APubKeys[0]) then
     begin
-      Result := System.Copy(APubkeys[LJ]);
+      Result := System.Copy(APubKeys[LJ]);
       Exit;
     end;
   System.SetLength(Result, TBip327MuSig2Utilities.BIP327_PLAIN_PUBKEY_SIZE);
   TArrayUtilities.Fill<Byte>(Result, 0, System.Length(Result), Byte(0));
 end;
 
-class function TBip327MuSig2KeyAggregation.KeyAggCoeffInternal(const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
+class function TBip327MuSig2KeyAggregation.KeyAggCoeffInternal(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
   const APk, APk2: TCryptoLibByteArray; const AN: TBigInteger): TBigInteger;
 var
   LL: TCryptoLibByteArray;
@@ -324,7 +324,7 @@ begin
     Result := TBigInteger.One;
     Exit;
   end;
-  LL := HashKeys(APubkeys);
+  LL := HashKeys(APubKeys);
   LTagBytes := TConverters.ConvertStringToBytes(
     TBip327MuSig2Utilities.KEYAGG_COEFFICIENT_TAG_STR, TEncoding.UTF8);
   System.SetLength(LHashInput, System.Length(LL) + System.Length(APk));

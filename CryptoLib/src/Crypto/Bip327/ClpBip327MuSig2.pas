@@ -60,13 +60,17 @@ type
   TBip327MuSig2 = class sealed(TObject)
   private
     class function KeyAggAndTweak(const ADomain: IECDomainParameters;
-      const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
+      const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
       const ATweaks: TCryptoLibGenericArray<TCryptoLibByteArray>;
-      const AIsXonlyT: TCryptoLibBooleanArray): IBip327KeyAggContext; static;
+      const AIsXOnlyT: TCryptoLibBooleanArray): IBip327KeyAggContext; static;
     class function GetSessionValues(const ADomain: IECDomainParameters;
       const ASessionCtx: TBip327SessionContext; out AValues: TBip327SessionValues): Boolean; static;
+    class function NonceHash(const ARand: TCryptoLibByteArray; const APk: TCryptoLibByteArray;
+      const AAggPk: TCryptoLibByteArray; const AMsgPrefixed: TCryptoLibByteArray;
+      const AExtraIn: TCryptoLibByteArray; const ATagBytes: TCryptoLibByteArray;
+      const AN: TBigInteger; AIndex: Int32): TBigInteger; static;
     class function DetNonceHash(const ADomain: IECDomainParameters;
-      const ASkPrime, AAggOtherNonce, LAggpk, AMsg: TCryptoLibByteArray;
+      const ASkPrime, AAggOtherNonce, AAggPk, AMsg: TCryptoLibByteArray;
       AIndex: Int32): TBigInteger; static;
     class function PartialSigVerifyInternal(const ADomain: IECDomainParameters;
       const APsig: TCryptoLibByteArray; const APubnonce: TCryptoLibByteArray;
@@ -75,16 +79,16 @@ type
   public
     class function NonceGen(const ADomain: IECDomainParameters;
       const ASk: TCryptoLibByteArray; const APk: TCryptoLibByteArray;
-      const AAggpk: TCryptoLibByteArray; const AMsg: TCryptoLibByteArray;
+      const AAggPk: TCryptoLibByteArray; const AMsg: TCryptoLibByteArray;
       AMsgProvided: Boolean; const AExtraIn: TCryptoLibByteArray; const ARandom: ISecureRandom;
-      out ASecnonce: TCryptoLibByteArray; out APubnonce: TCryptoLibByteArray): Boolean; static;
+      out ASecNonce: TCryptoLibByteArray; out APubNonce: TCryptoLibByteArray): Boolean; static;
     class function NonceAgg(const ADomain: IECDomainParameters;
-      const APubnonces: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray; static;
+      const APubNonces: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray; static;
     class function GetSessionKeyAggCoeff(const ASessionCtx: TBip327SessionContext;
       const ADomain: IECDomainParameters; const AP: IECPoint): TBigInteger; static;
     class function Sign(const ADomain: IECDomainParameters;
-      var ASecnonce: TCryptoLibByteArray; const ASk: TCryptoLibByteArray;
-      const ASessionCtx: TBip327SessionContext; out APsig: TCryptoLibByteArray): Boolean; static;
+      var ASecNonce: TCryptoLibByteArray; const ASk: TCryptoLibByteArray;
+      const ASessionCtx: TBip327SessionContext; out APSig: TCryptoLibByteArray): Boolean; static;
     class function PartialSigVerify(const ADomain: IECDomainParameters;
       const APSig: TCryptoLibByteArray;
       const APubNonces: TCryptoLibGenericArray<TCryptoLibByteArray>;
@@ -110,30 +114,28 @@ implementation
 
 class function TBip327MuSig2.NonceGen(const ADomain: IECDomainParameters;
   const ASk: TCryptoLibByteArray; const APk: TCryptoLibByteArray;
-  const AAggpk: TCryptoLibByteArray; const AMsg: TCryptoLibByteArray;
+  const AAggPk: TCryptoLibByteArray; const AMsg: TCryptoLibByteArray;
   AMsgProvided: Boolean; const AExtraIn: TCryptoLibByteArray; const ARandom: ISecureRandom;
-  out ASecnonce: TCryptoLibByteArray; out APubnonce: TCryptoLibByteArray): Boolean;
+  out ASecNonce: TCryptoLibByteArray; out APubNonce: TCryptoLibByteArray): Boolean;
 var
   LN: TBigInteger;
   LRandPrime, LRand, LAuxHash: TCryptoLibByteArray;
   LMsgPrefixed: TCryptoLibByteArray;
   LTagBytes: TCryptoLibByteArray;
-  LHashInput: TCryptoLibByteArray;
-  LOff: Int32;
   LK1, LK2: TBigInteger;
   LR1, LR2: IECPoint;
   LLenMsg: Int32;
-  I: Int32;
-  LAggpkLen, LExtraInLen: Int32;
 begin
   Result := False;
   if (APk = nil) or (System.Length(APk) <> TBip327MuSig2Utilities.BIP327_PLAIN_PUBKEY_SIZE) then
     Exit;
   if (ASk <> nil) and (System.Length(ASk) <> 32) then
     Exit;
-  if (AAggpk <> nil) and (System.Length(AAggpk) <> 32) then
+  if (AAggPk <> nil) and (System.Length(AAggPk) <> 32) then
     Exit;
+
   LN := ADomain.N;
+
   if ARandom = nil then
     raise EArgumentCryptoLibException.Create('NonceGen requires a secure random generator (BIP-327)');
 
@@ -153,10 +155,7 @@ begin
     LMsgPrefixed := TCryptoLibByteArray.Create(0)
   else
   begin
-    if (AMsg = nil) or (System.Length(AMsg) = 0) then
-      LLenMsg := 0
-    else
-      LLenMsg := System.Length(AMsg);
+    LLenMsg := System.Length(AMsg);
     System.SetLength(LMsgPrefixed, 1 + 8 + LLenMsg);
     LMsgPrefixed[0] := 1;
     TPack.UInt64_To_BE(UInt64(LLenMsg), LMsgPrefixed, 1);
@@ -165,85 +164,89 @@ begin
   end;
   LTagBytes := TConverters.ConvertStringToBytes(
     TBip327MuSig2Utilities.MUSIG_NONCE_TAG_STR, TEncoding.UTF8);
-  if (AAggpk = nil) or (System.Length(AAggpk) = 0) then
-    LAggpkLen := 0
-  else
-    LAggpkLen := System.Length(AAggpk);
-  LExtraInLen := System.Length(AExtraIn);
 
-  for I := 0 to 1 do
-  begin
-    LOff := 0;
-    System.SetLength(LHashInput,
-      32 + 1 + System.Length(APk) + 1 + LAggpkLen +
-      System.Length(LMsgPrefixed) + 4 + LExtraInLen + 1);
-    System.Move(LRand[0], LHashInput[LOff], 32); Inc(LOff, 32);
-    LHashInput[LOff] := Byte(System.Length(APk)); Inc(LOff, 1);
-    System.Move(APk[0], LHashInput[LOff], System.Length(APk)); Inc(LOff, System.Length(APk));
-    if (AAggpk = nil) or (System.Length(AAggpk) = 0) then
-    begin
-      LHashInput[LOff] := 0;
-      Inc(LOff, 1);
-    end
-    else
-    begin
-      LHashInput[LOff] := 32; Inc(LOff, 1);
-      System.Move(AAggpk[0], LHashInput[LOff], 32); Inc(LOff, 32);
-    end;
-    if LOff + 1 + System.Length(LMsgPrefixed) + 4 + LExtraInLen + 1 > System.Length(LHashInput) then
-      System.SetLength(LHashInput, LOff + 1 + System.Length(LMsgPrefixed) + 4 + LExtraInLen + 1);
-    System.Move(LMsgPrefixed[0], LHashInput[LOff], System.Length(LMsgPrefixed)); Inc(LOff, System.Length(LMsgPrefixed));
-    TPack.UInt32_To_BE(UInt32(System.Length(AExtraIn)), LHashInput, LOff); Inc(LOff, 4);
-    if (AExtraIn <> nil) and (System.Length(AExtraIn) > 0) then
-    begin
-      System.Move(AExtraIn[0], LHashInput[LOff], System.Length(AExtraIn)); Inc(LOff, System.Length(AExtraIn));
-    end;
-    LHashInput[LOff] := Byte(I);
-    System.SetLength(LHashInput, LOff + 1);
-    if I = 0 then
-      LK1 := TBigInteger.Create(1, TBip340SchnorrUtilities.TaggedHash(LTagBytes, LHashInput)).&Mod(LN)
-    else
-      LK2 := TBigInteger.Create(1, TBip340SchnorrUtilities.TaggedHash(LTagBytes, LHashInput)).&Mod(LN);
-  end;
+  LK1 := NonceHash(LRand, APk, AAggPk, LMsgPrefixed, AExtraIn, LTagBytes, LN, 0);
+  LK2 := NonceHash(LRand, APk, AAggPk, LMsgPrefixed, AExtraIn, LTagBytes, LN, 1);
 
   if (LK1.SignValue = 0) or (LK2.SignValue = 0) then
     Exit;
   LR1 := TECAlgorithms.ReferenceMultiply(ADomain.G, LK1).Normalize();
   LR2 := TECAlgorithms.ReferenceMultiply(ADomain.G, LK2).Normalize();
-  APubnonce := TBip327MuSig2Utilities.CBytes(ADomain, LR1);
-  System.SetLength(APubnonce, TBip327MuSig2Utilities.BIP327_PUBNONCE_SIZE);
-  System.Move(TBip327MuSig2Utilities.CBytes(ADomain, LR2)[0], APubnonce[33], 33);
-  System.SetLength(ASecnonce, TBip327MuSig2Utilities.BIP327_SECNONCE_SIZE);
-  TBigIntegerUtilities.AsUnsignedByteArray(LK1, ASecnonce, 0, 32);
-  TBigIntegerUtilities.AsUnsignedByteArray(LK2, ASecnonce, 32, 32);
-  System.Move(APk[0], ASecnonce[64], System.Length(APk));
+  APubNonce := TBip327MuSig2Utilities.CBytes(ADomain, LR1);
+  System.SetLength(APubNonce, TBip327MuSig2Utilities.BIP327_PUBNONCE_SIZE);
+  System.Move(TBip327MuSig2Utilities.CBytes(ADomain, LR2)[0], APubNonce[33], 33);
+  System.SetLength(ASecNonce, TBip327MuSig2Utilities.BIP327_SECNONCE_SIZE);
+  TBigIntegerUtilities.AsUnsignedByteArray(LK1, ASecNonce, 0, 32);
+  TBigIntegerUtilities.AsUnsignedByteArray(LK2, ASecNonce, 32, 32);
+  System.Move(APk[0], ASecNonce[64], System.Length(APk));
   Result := True;
 end;
 
+class function TBip327MuSig2.NonceHash(const ARand: TCryptoLibByteArray; const APk: TCryptoLibByteArray;
+  const AAggPk: TCryptoLibByteArray; const AMsgPrefixed: TCryptoLibByteArray;
+  const AExtraIn: TCryptoLibByteArray; const ATagBytes: TCryptoLibByteArray;
+  const AN: TBigInteger; AIndex: Int32): TBigInteger;
+var
+  LHashInput: TCryptoLibByteArray;
+  LOff: Int32;
+  LAggPkLen, LExtraInLen: Int32;
+begin
+  LAggPkLen := System.Length(AAggPk);
+  LExtraInLen := System.Length(AExtraIn);
+  LOff := 0;
+  System.SetLength(LHashInput,
+    32 + 1 + System.Length(APk) + 1 + LAggPkLen +
+    System.Length(AMsgPrefixed) + 4 + LExtraInLen + 1);
+  System.Move(ARand[0], LHashInput[LOff], 32); Inc(LOff, 32);
+  LHashInput[LOff] := Byte(System.Length(APk)); Inc(LOff, 1);
+  System.Move(APk[0], LHashInput[LOff], System.Length(APk)); Inc(LOff, System.Length(APk));
+  if System.Length(AAggPk) = 0 then
+  begin
+    LHashInput[LOff] := 0;
+    Inc(LOff, 1);
+  end
+  else
+  begin
+    LHashInput[LOff] := 32; Inc(LOff, 1);
+    System.Move(AAggPk[0], LHashInput[LOff], 32); Inc(LOff, 32);
+  end;
+  if LOff + 1 + System.Length(AMsgPrefixed) + 4 + LExtraInLen + 1 > System.Length(LHashInput) then
+    System.SetLength(LHashInput, LOff + 1 + System.Length(AMsgPrefixed) + 4 + LExtraInLen + 1);
+  System.Move(AMsgPrefixed[0], LHashInput[LOff], System.Length(AMsgPrefixed)); Inc(LOff, System.Length(AMsgPrefixed));
+  TPack.UInt32_To_BE(UInt32(System.Length(AExtraIn)), LHashInput, LOff); Inc(LOff, 4);
+  if (AExtraIn <> nil) and (System.Length(AExtraIn) > 0) then
+  begin
+    System.Move(AExtraIn[0], LHashInput[LOff], System.Length(AExtraIn)); Inc(LOff, System.Length(AExtraIn));
+  end;
+  LHashInput[LOff] := Byte(AIndex);
+  System.SetLength(LHashInput, LOff + 1);
+  Result := TBigInteger.Create(1, TBip340SchnorrUtilities.TaggedHash(ATagBytes, LHashInput)).&Mod(AN);
+end;
+
 class function TBip327MuSig2.NonceAgg(const ADomain: IECDomainParameters;
-  const APubnonces: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray;
+  const APubNonces: TCryptoLibGenericArray<TCryptoLibByteArray>): TCryptoLibByteArray;
 var
   LU, LI, LJ: Int32;
   LR1, LR2, LRJ: IECPoint;
   LCurve: IECCurve;
   LPt: IECPoint;
 begin
-  if (APubnonces = nil) or (System.Length(APubnonces) = 0) then
+  if (APubNonces = nil) or (System.Length(APubNonces) = 0) then
     raise EArgumentCryptoLibException.Create('NonceAgg: at least one pubnonce required');
-  LU := System.Length(APubnonces);
+  LU := System.Length(APubNonces);
   LCurve := ADomain.Curve;
   for LJ := 0 to 1 do
   begin
-    LRJ := LCurve.GetInfinity();
+    LRJ := LCurve.Infinity;
     for LI := 0 to LU - 1 do
     begin
-      if (APubnonces[LI] = nil) or (System.Length(APubnonces[LI]) <> TBip327MuSig2Utilities.BIP327_PUBNONCE_SIZE) then
+      if (APubNonces[LI] = nil) or (System.Length(APubNonces[LI]) <> TBip327MuSig2Utilities.BIP327_PUBNONCE_SIZE) then
         raise EBip327InvalidContributionException.Create('Invalid pubnonce length', LI, 'pubnonce');
       try
         if LJ = 0 then
-          LPt := TBip327MuSig2Utilities.CPoint(ADomain, System.Copy(APubnonces[LI], 0, 33), LI)
+          LPt := TBip327MuSig2Utilities.CPoint(ADomain, System.Copy(APubNonces[LI], 0, 33), LI)
         else
-          LPt := TBip327MuSig2Utilities.CPoint(ADomain, System.Copy(APubnonces[LI], 33, 33), LI);
+          LPt := TBip327MuSig2Utilities.CPoint(ADomain, System.Copy(APubNonces[LI], 33, 33), LI);
       except
         on E: EBip327InvalidContributionException do
           raise EBip327InvalidContributionException.Create(E.Message, E.SignerIndex, 'pubnonce');
@@ -378,8 +381,8 @@ begin
 end;
 
 class function TBip327MuSig2.Sign(const ADomain: IECDomainParameters;
-  var ASecnonce: TCryptoLibByteArray; const ASk: TCryptoLibByteArray;
-  const ASessionCtx: TBip327SessionContext; out APsig: TCryptoLibByteArray): Boolean;
+  var ASecNonce: TCryptoLibByteArray; const ASk: TCryptoLibByteArray;
+  const ASessionCtx: TBip327SessionContext; out APSig: TCryptoLibByteArray): Boolean;
 var
   LValues: TBip327SessionValues;
   LK1Orig, LK2Orig, LK1, LK2, LD, LA, LG, LEffectiveD, LS: TBigInteger;
@@ -390,18 +393,18 @@ var
   LR1, LR2: IECPoint;
 begin
   Result := False;
-  if (ASecnonce = nil) or (System.Length(ASecnonce) <> TBip327MuSig2Utilities.BIP327_SECNONCE_SIZE) then
+  if (ASecNonce = nil) or (System.Length(ASecNonce) <> TBip327MuSig2Utilities.BIP327_SECNONCE_SIZE) then
     Exit;
   if (ASk = nil) or (System.Length(ASk) <> 32) then
     Exit;
   if not GetSessionValues(ADomain, ASessionCtx, LValues) then
     Exit;
   LN := ADomain.N;
-  LK1Orig := TBigInteger.Create(1, System.Copy(ASecnonce, 0, 32));
-  LK2Orig := TBigInteger.Create(1, System.Copy(ASecnonce, 32, 32));
+  LK1Orig := TBigInteger.Create(1, System.Copy(ASecNonce, 0, 32));
+  LK2Orig := TBigInteger.Create(1, System.Copy(ASecNonce, 32, 32));
   LK1 := LK1Orig;
   LK2 := LK2Orig;
-  TArrayUtilities.Fill<Byte>(ASecnonce, 0, 64, Byte(0));
+  TArrayUtilities.Fill<Byte>(ASecNonce, 0, 64, Byte(0));
   if (LK1.SignValue <= 0) or (LK1.CompareTo(LN) >= 0) then
     Exit;
   if (LK2.SignValue <= 0) or (LK2.CompareTo(LN) >= 0) then
@@ -416,7 +419,7 @@ begin
     Exit;
   LP := TECAlgorithms.ReferenceMultiply(ADomain.G, LD).Normalize();
   LPk := TBip327MuSig2Utilities.CBytes(ADomain, LP);
-  if not TArrayUtilities.FixedTimeEquals(System.Copy(ASecnonce, 64, 33), LPk) then
+  if not TArrayUtilities.FixedTimeEquals(System.Copy(ASecNonce, 64, 33), LPk) then
     Exit;
   LA := GetSessionKeyAggCoeff(ASessionCtx, ADomain, LP);
   if TBip340SchnorrUtilities.HasEvenY(LValues.Q) then
@@ -425,15 +428,15 @@ begin
     LG := LN.Subtract(TBigInteger.One);
   LEffectiveD := LG.Multiply(LValues.GAcc).Multiply(LD).&Mod(LN);
   LS := LK1.Add(LValues.B.Multiply(LK2)).Add(LValues.E.Multiply(LA).Multiply(LEffectiveD)).&Mod(LN);
-  System.SetLength(APsig, TBip327MuSig2Utilities.BIP327_PSIG_SIZE);
-  TBigIntegerUtilities.AsUnsignedByteArray(LS, APsig, 0, 32);
+  System.SetLength(APSig, TBip327MuSig2Utilities.BIP327_PSIG_SIZE);
+  TBigIntegerUtilities.AsUnsignedByteArray(LS, APSig, 0, 32);
   // Optional correctness check (BIP-327): internal partial sig verify before returning.
   LR1 := TECAlgorithms.ReferenceMultiply(ADomain.G, LK1Orig).Normalize();
   LR2 := TECAlgorithms.ReferenceMultiply(ADomain.G, LK2Orig).Normalize();
   System.SetLength(LPubnonce, TBip327MuSig2Utilities.BIP327_PUBNONCE_SIZE);
   System.Move(TBip327MuSig2Utilities.CBytes(ADomain, LR1)[0], LPubnonce[0], 33);
   System.Move(TBip327MuSig2Utilities.CBytes(ADomain, LR2)[0], LPubnonce[33], 33);
-  if not PartialSigVerifyInternal(ADomain, APsig, LPubnonce, LPk, ASessionCtx, LValues) then
+  if not PartialSigVerifyInternal(ADomain, APSig, LPubnonce, LPk, ASessionCtx, LValues) then
     Exit;
   Result := True;
 end;
@@ -521,7 +524,7 @@ begin
 end;
 
 class function TBip327MuSig2.DetNonceHash(const ADomain: IECDomainParameters;
-  const ASkPrime, AAggOtherNonce, LAggpk, AMsg: TCryptoLibByteArray;
+  const ASkPrime, AAggOtherNonce, AAggPk, AMsg: TCryptoLibByteArray;
   AIndex: Int32): TBigInteger;
 var
   LTagBytes, LHashInput: TCryptoLibByteArray;
@@ -536,7 +539,7 @@ begin
   LOff := 0;
   System.Move(ASkPrime[0], LHashInput[LOff], 32); Inc(LOff, 32);
   System.Move(AAggOtherNonce[0], LHashInput[LOff], 66); Inc(LOff, 66);
-  System.Move(LAggpk[0], LHashInput[LOff], 32); Inc(LOff, 32);
+  System.Move(AAggPk[0], LHashInput[LOff], 32); Inc(LOff, 32);
   TPack.UInt64_To_BE(UInt64(LLenMsg), LHashInput, LOff); Inc(LOff, 8);
   if (AMsg <> nil) and (LLenMsg > 0) then
     System.Move(AMsg[0], LHashInput[LOff], LLenMsg);
@@ -546,18 +549,18 @@ begin
 end;
 
 class function TBip327MuSig2.KeyAggAndTweak(const ADomain: IECDomainParameters;
-  const APubkeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
+  const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;
   const ATweaks: TCryptoLibGenericArray<TCryptoLibByteArray>;
-  const AIsXonlyT: TCryptoLibBooleanArray): IBip327KeyAggContext;
+  const AIsXOnlyT: TCryptoLibBooleanArray): IBip327KeyAggContext;
 var
   LCtx: IBip327KeyAggContext;
   LI: Int32;
 begin
-  if System.Length(ATweaks) <> System.Length(AIsXonlyT) then
+  if System.Length(ATweaks) <> System.Length(AIsXOnlyT) then
     raise EArgumentCryptoLibException.Create('tweaks and is_xonly_t length mismatch');
-  LCtx := TBip327MuSig2KeyAggregation.KeyAgg(ADomain, APubkeys);
+  LCtx := TBip327MuSig2KeyAggregation.KeyAgg(ADomain, APubKeys);
   for LI := 0 to System.Length(ATweaks) - 1 do
-    LCtx := TBip327MuSig2KeyAggregation.ApplyTweak(LCtx, ATweaks[LI], AIsXonlyT[LI]);
+    LCtx := TBip327MuSig2KeyAggregation.ApplyTweak(LCtx, ATweaks[LI], AIsXOnlyT[LI]);
   Result := LCtx;
 end;
 
