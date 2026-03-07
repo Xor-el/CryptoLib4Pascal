@@ -1,4 +1,5 @@
-﻿{ *                              CryptoLib Library                                  * }
+﻿{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
 { *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
