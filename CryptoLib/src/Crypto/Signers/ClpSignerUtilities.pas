@@ -61,6 +61,8 @@ uses
   ClpIEd448Signer,
   ClpEd448PhSigner,
   ClpIEd448PhSigner,
+  ClpBip340SchnorrSigner,
+  ClpIBip340SchnorrSigner,
   ClpISigner,
   ClpISecureRandom,
   ClpIAsn1Objects,
@@ -684,6 +686,8 @@ begin
   AddAlgorithm('Ed25519ph', nil, True);
   AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, True);
   AddAlgorithm('Ed448ph', nil, True);
+
+  AddAlgorithm('BIP340Schnorr', nil, True);
 end;
 
 class constructor TSignerUtilities.Create;
@@ -890,6 +894,12 @@ begin
       Result := TEd448PhSigner.Create(nil) as IEd448PhSigner;
       Exit;
     end;
+  end;
+
+  if AMechanism = 'BIP340Schnorr' then
+  begin
+    Result := TBip340SchnorrSigner.Create() as IBip340SchnorrSigner;
+    Exit;
   end;
 
   if AMechanism = 'RSA' then

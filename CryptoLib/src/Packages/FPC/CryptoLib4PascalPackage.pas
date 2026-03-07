@@ -203,7 +203,11 @@ uses
   ClpIDigestAlgorithmFinder, ClpDefaultDigestAlgorithmFinder, ClpPkcs12Store, 
   ClpPkcs12StoreBuilder, ClpPkcs12Utilities, ClpIPkcs12StoreBuilder, 
   ClpIPkcs12Store, ClpX509CertificatePairParser, ClpX509CertificatePair, 
-  ClpIX509CertificatePairParser, ClpIX509CertificatePair;
+  ClpIX509CertificatePairParser, ClpIX509CertificatePair, ClpIX931Signer, 
+  ClpIBip340SchnorrSigner, ClpIBip340SchnorrGenerators, 
+  ClpIBip340SchnorrParameters, ClpBip340SchnorrUtilities, 
+  ClpBip340SchnorrSigner, ClpBip340SchnorrGenerators, 
+  ClpBip340SchnorrParameters, ClpBip340SchnorrBatchVerifier;
 
 implementation
 

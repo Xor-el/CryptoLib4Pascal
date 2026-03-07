@@ -32,6 +32,7 @@ uses
   ClpECGenerators,
   ClpEd25519Generators,
   ClpEd448Generators,
+  ClpBip340SchnorrGenerators,
   ClpEdECObjectIdentifiers,
   ClpDHGenerators,
   ClpIAsn1Objects,
@@ -42,6 +43,7 @@ uses
   ClpIECGenerators,
   ClpIEd25519Generators,
   ClpIEd448Generators,
+  ClpIBip340SchnorrGenerators,
   ClpIRsaGenerators,
   ClpIX25519Generators,
   ClpIX448Generators,
@@ -264,6 +266,7 @@ begin
 
   AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph', TEdECObjectIdentifiers.IdEd25519.ID]);
   AddKpgAlgorithm('Ed448', ['Ed448ph', TEdECObjectIdentifiers.IdEd448.ID]);
+  AddKpgAlgorithm('BIP340Schnorr', []);
   AddKpgAlgorithm('GOST3410', ['GOST-3410', 'GOST-3410-94']);
   AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.IdX25519.ID]);
   AddKpgAlgorithm('X448', [TEdECObjectIdentifiers.IdX448.ID]);
@@ -410,6 +413,11 @@ begin
   if LCanonicalName = 'X448' then
   begin
     Result := TX448KeyPairGenerator.Create() as IX448KeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'BIP340Schnorr' then
+  begin
+    Result := TBip340SchnorrKeyPairGenerator.Create() as IBip340SchnorrKeyPairGenerator;
     Exit;
   end;
 

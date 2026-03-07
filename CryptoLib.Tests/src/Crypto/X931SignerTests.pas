@@ -36,6 +36,7 @@ uses
   ClpRsaParameters,
   ClpRsaEngine,
   ClpIRsaEngine,
+  ClpIX931Signer,
   ClpX931Signer,
   ClpDigestUtilities,
   ClpISigner,
