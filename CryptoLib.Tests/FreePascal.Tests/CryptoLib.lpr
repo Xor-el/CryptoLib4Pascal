@@ -30,8 +30,8 @@ uses
   RijndaelTests, BlowfishTests, Poly1305Tests, MacTests, ChaCha20Poly1305Tests,
   OcbTests, CcmTests, EaxTests, CMacTests, AeadTestUtilities, GcmReorderTests,
   GCMTests, GcmSivTests, GMacTests, Pkcs12Tests, ClpBip340SchnorrTests,
-  CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests,
-  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  ClpBip327MuSig2Tests, CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests,
+  Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, ClpFixedSecureRandom, ClpShortenedDigest,
   Int32Tests, Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
 
