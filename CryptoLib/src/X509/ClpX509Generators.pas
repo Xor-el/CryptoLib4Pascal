@@ -672,39 +672,39 @@ end;
 procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
   const ARevocationDate: TDateTime; AReason: Int32);
 begin
-  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AReason);
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate) as IDerInteger, TTime.Create(ARevocationDate) as ITime, AReason);
 end;
 
 procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
   const ARevocationDate: TDateTime; AReason: Int32; const AInvalidityDate: TDateTime);
 begin
-  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AReason,
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate) as IDerInteger, TTime.Create(ARevocationDate) as ITime, AReason,
     TRfc5280Asn1Utilities.CreateGeneralizedTime(AInvalidityDate));
 end;
 
 procedure TX509V2CrlGenerator.AddCrlEntry(const AUserCertificate: TBigInteger;
   const ARevocationDate: TDateTime; const AExtensions: IX509Extensions);
 begin
-  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.Create(ARevocationDate) as ITime, AExtensions);
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate) as IDerInteger, TTime.Create(ARevocationDate) as ITime, AExtensions);
 end;
 
 procedure TX509V2CrlGenerator.AddCrlEntryUtc(const AUserCertificate: TBigInteger;
   const ARevocationDateUtc: TDateTime; AReason: Int32);
 begin
-  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.CreateFromUtc(ARevocationDateUtc) as ITime, AReason);
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate) as IDerInteger, TTime.CreateFromUtc(ARevocationDateUtc) as ITime, AReason);
 end;
 
 procedure TX509V2CrlGenerator.AddCrlEntryUtc(const AUserCertificate: TBigInteger;
   const ARevocationDateUtc: TDateTime; AReason: Int32; const AInvalidityDateUtc: TDateTime);
 begin
-  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.CreateFromUtc(ARevocationDateUtc) as ITime, AReason,
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate) as IDerInteger, TTime.CreateFromUtc(ARevocationDateUtc) as ITime, AReason,
     TRfc5280Asn1Utilities.CreateGeneralizedTime(AInvalidityDateUtc));
 end;
 
 procedure TX509V2CrlGenerator.AddCrlEntryUtc(const AUserCertificate: TBigInteger;
   const ARevocationDateUtc: TDateTime; const AExtensions: IX509Extensions);
 begin
-  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate), TTime.CreateFromUtc(ARevocationDateUtc) as ITime, AExtensions);
+  FTbsGen.AddCrlEntry(TDerInteger.Create(AUserCertificate) as IDerInteger, TTime.CreateFromUtc(ARevocationDateUtc) as ITime, AExtensions);
 end;
 
 procedure TX509V2CrlGenerator.AddCrl(const AOther: IX509Crl);

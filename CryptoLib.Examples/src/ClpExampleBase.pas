@@ -70,6 +70,7 @@ type
   TExampleBase = class(TInterfacedObject, IExample)
   protected
     function ExportToPem(const AValue: TValue): string;
+    function ImportFromPem(const APem: string): TValue;
     function ImportKeyPairFromPem(const APem: string;
       out AKeyPair: IAsymmetricCipherKeyPair): Boolean;
     function ImportKeyFromPem(const APem: string;
@@ -116,6 +117,23 @@ begin
     LWriter := TOpenSslPemWriter.Create(LStream);
     LWriter.WriteObject(AValue);
     Result := LStream.DataString;
+  finally
+    LStream.Free;
+  end;
+end;
+
+function TExampleBase.ImportFromPem(const APem: string): TValue;
+var
+  LStream: TStringStream;
+  LReader: IOpenSslPemReader;
+begin
+  Result := TValue.Empty;
+  if (APem = '') then
+    Exit;
+  LStream := TStringStream.Create(APem, TEncoding.ASCII);
+  try
+    LReader := TOpenSslPemReader.Create(LStream);
+    Result := LReader.ReadObject();
   finally
     LStream.Free;
   end;

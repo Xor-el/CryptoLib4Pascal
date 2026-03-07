@@ -46,8 +46,10 @@ uses
   ClpAsn1SignatureFactory,
   ClpX509CrlParser,
   ClpIX509CrlParser,
+  ClpIX509Certificate,
   ClpIX509Crl,
   ClpIX509Generators,
+  ClpX509Certificate,
   ClpX509ExtensionUtilities,
   ClpSubjectPublicKeyInfoFactory,
   ClpPkcs10CertificationRequestBuilder,
@@ -62,88 +64,94 @@ uses
   ClpExampleBase;
 
 type
-  TCertRequestPem = record
+  TCertificateArtifactsPem = record
     PrivateKeyPem: string;
     CertificateRequestPem: string;
+    CertificatePem: string;
+    CrlPem: string;
   end;
 
   TCertificateExample = class(TExampleBase)
   public
     procedure Run; override;
   private
-    procedure RunCrlCreateExport;
-    procedure RunCrlRsa;
+    procedure GetValidityUtc(AValidDays: Integer; out ANotBefore, ANotAfter: TDateTime);
+    function BuildBasicEndEntityExtensions(const APublicKey: IAsymmetricKeyParameter): IX509Extensions;
+    procedure LogCrlSummary(const ACrl: IX509Crl);
     procedure RunCrlImportVerify(const ACrlEncoded: TBytes;
       const AIssuerPublicKey: IAsymmetricKeyParameter);
-    procedure RunCertRequestCreateExportPem;
-    procedure RunCertRequestRsa(const ASignatureAlgorithm: string);
-    procedure RunCertRequestEc(const ACurveName: string;
+    procedure RunCrlCreateExportVerifyRsa(const ASignatureAlgorithm: string);
+    procedure RunCrlCreateExportVerifyEc(const ACurveName: string;
+      const ASignatureAlgorithm: string);
+    procedure RunCertificateArtifactsRsa(const ASignatureAlgorithm: string);
+    procedure RunCertificateArtifactsEc(const ACurveName: string;
       const ASignatureAlgorithm: string);
     function BuildX509NameSubject: IX509Name;
-    function CreateCrlEncoded(const AKeyPair: IAsymmetricCipherKeyPair;
-      const AIssuer: IX509Name; const ASignatureAlgorithm: String): TBytes;
-    function CreateCertRequestPem(const AKeyPair: IAsymmetricCipherKeyPair;
-      const ASubject: IX509Name; const ASignatureAlgorithm: String): TCertRequestPem;
+    function CreateCrl(const AKeyPair: IAsymmetricCipherKeyPair;
+      const AIssuer: IX509Name; const ASignatureAlgorithm: String): IX509Crl;
+    function CreateCertificationRequest(const AKeyPair: IAsymmetricCipherKeyPair;
+      const ASubject: IX509Name; const ASignatureAlgorithm: String): IPkcs10CertificationRequest;
+    function CreateSelfSignedCertificate(const AKeyPair: IAsymmetricCipherKeyPair;
+      const ASubject: IX509Name; const ASignatureAlgorithm: String;
+      AValidDays: Integer): IX509Certificate;
+    function CreateCertificateArtifacts(const AKeyPair: IAsymmetricCipherKeyPair;
+      const ASubject: IX509Name; const ASignatureAlgorithm: String;
+      AValidDaysCert: Integer): TCertificateArtifactsPem;
   end;
 
 implementation
 
-function TCertificateExample.CreateCrlEncoded(const AKeyPair: IAsymmetricCipherKeyPair;
-  const AIssuer: IX509Name; const ASignatureAlgorithm: String): TBytes;
+procedure TCertificateExample.GetValidityUtc(AValidDays: Integer; out ANotBefore, ANotAfter: TDateTime);
+begin
+  ANotBefore := TTimeZone.Local.ToUniversalTime(Now);
+  ANotAfter := IncSecond(ANotBefore, AValidDays * 86400);
+end;
+
+function TCertificateExample.BuildBasicEndEntityExtensions(const APublicKey: IAsymmetricKeyParameter): IX509Extensions;
+var
+  LExtGen: IX509ExtensionsGenerator;
+begin
+  LExtGen := TX509ExtensionsGenerator.Create();
+  LExtGen.AddExtension(TX509Extensions.BasicConstraints, True,
+    TBasicConstraints.Create(False) as IBasicConstraints);
+  LExtGen.AddExtension(TX509Extensions.KeyUsage, True,
+    TKeyUsage.Create(TKeyUsage.DigitalSignature or TKeyUsage.KeyEncipherment) as IKeyUsage);
+  Result := LExtGen.Generate();
+end;
+
+function TCertificateExample.CreateCrl(const AKeyPair: IAsymmetricCipherKeyPair;
+  const AIssuer: IX509Name; const ASignatureAlgorithm: String): IX509Crl;
 var
   LCrlGen: IX509V2CrlGenerator;
-  LCrl: IX509Crl;
-  LUtc: TDateTime;
+  LThisUpdate, LNextUpdate: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  GetValidityUtc(1, LThisUpdate, LNextUpdate);
   LCrlGen := TX509V2CrlGenerator.Create();
   LCrlGen.SetIssuerDN(AIssuer);
-  LCrlGen.SetThisUpdateUtc(LUtc);
-  LCrlGen.SetNextUpdateUtc(IncSecond(LUtc, 86400));
-  LCrlGen.AddCrlEntryUtc(TBigInteger.One, LUtc, 0);
+  LCrlGen.SetThisUpdateUtc(LThisUpdate);
+  LCrlGen.SetNextUpdateUtc(LNextUpdate);
+  LCrlGen.AddCrlEntryUtc(TBigInteger.One, LThisUpdate, 0);
   LCrlGen.AddExtension(TX509Extensions.AuthorityKeyIdentifier, False,
     TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(
       TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(AKeyPair.Public)));
-  LCrl := LCrlGen.Generate(TAsn1SignatureFactory.Create(ASignatureAlgorithm,
+  Result := LCrlGen.Generate(TAsn1SignatureFactory.Create(ASignatureAlgorithm,
     AKeyPair.Private, nil) as ISignatureFactory);
-  Result := LCrl.GetEncoded();
 end;
 
-procedure TCertificateExample.RunCrlRsa;
+procedure TCertificateExample.LogCrlSummary(const ACrl: IX509Crl);
 var
-  LKp: IAsymmetricCipherKeyPair;
-  LIssuer: IX509Name;
-  LEncoded: TBytes;
-  LParser: IX509CrlParser;
-  LCrl: IX509Crl;
   LRevoked: TCryptoLibGenericArray<IX509CrlEntry>;
   LRevokedCount: Int32;
 begin
-  Logger.LogInformation('--- CRL: RSA ---', []);
-  LKp := GenerateRsaKeyPair;
-  LIssuer := BuildX509NameSubject();
-  LEncoded := CreateCrlEncoded(LKp, LIssuer, 'SHA256WithRSAEncryption');
-  LParser := TX509CrlParser.Create();
-  LCrl := LParser.ReadCrl(LEncoded);
-  if LCrl <> nil then
-  begin
-    LRevoked := LCrl.GetRevokedCertificates();
-    if LRevoked <> nil then
-      LRevokedCount := System.Length(LRevoked)
-    else
-      LRevokedCount := 0;
-    Logger.LogInformation('CRL created, common name {0}, revoked count={1}, encoded length={2}',
-      [LCrl.GetIssuerDN().ToString(TX509Name.CN), IntToStr(LRevokedCount), IntToStr(System.Length(LEncoded))]);
-  end
+  if ACrl = nil then
+    Exit;
+  LRevoked := ACrl.GetRevokedCertificates();
+  if LRevoked <> nil then
+    LRevokedCount := System.Length(LRevoked)
   else
-    Logger.LogInformation('CRL created, encoded length={0}', [IntToStr(System.Length(LEncoded))]);
-  RunCrlImportVerify(LEncoded, LKp.Public);
-end;
-
-procedure TCertificateExample.RunCrlCreateExport;
-begin
-  Logger.LogInformation('--- Certificate example: CRL create and export ---', []);
-  RunCrlRsa;
+    LRevokedCount := 0;
+  Logger.LogInformation('CRL issuer CN: {0}, revoked count: {1}',
+    [ACrl.GetIssuerDN().ToString(TX509Name.CN), IntToStr(LRevokedCount)]);
 end;
 
 procedure TCertificateExample.RunCrlImportVerify(const ACrlEncoded: TBytes;
@@ -151,7 +159,6 @@ procedure TCertificateExample.RunCrlImportVerify(const ACrlEncoded: TBytes;
 var
   LParser: IX509CrlParser;
   LCrl: IX509Crl;
-  LRevoked: TCryptoLibGenericArray<IX509CrlEntry>;
 begin
   Logger.LogInformation('--- Certificate example: CRL import and verify ---', []);
   if (ACrlEncoded = nil) or (System.Length(ACrlEncoded) = 0) then
@@ -176,13 +183,9 @@ begin
       Exit;
     end;
   end;
-  LRevoked := LCrl.GetRevokedCertificates();
-  if LRevoked <> nil then
-    Logger.LogInformation('CRL revoked certificates count: {0}', [IntToStr(System.Length(LRevoked))])
-  else
-    Logger.LogInformation('CRL revoked certificates count: 0', []);
-  Logger.LogInformation('CRL this update: {0}',
-    [FormatDateTime('yyyy-mm-dd hh:nn:ss', LCrl.ThisUpdate)]);
+  LogCrlSummary(LCrl);
+  Logger.LogInformation('CRL this update: {0}{1}',
+    [FormatDateTime('yyyy-mm-dd hh:nn:ss', LCrl.ThisUpdate), sLineBreak]);
 end;
 
 function TCertificateExample.BuildX509NameSubject: IX509Name;
@@ -200,28 +203,20 @@ begin
     .Build();
 end;
 
-function TCertificateExample.CreateCertRequestPem(const AKeyPair: IAsymmetricCipherKeyPair;
-  const ASubject: IX509Name; const ASignatureAlgorithm: String): TCertRequestPem;
+function TCertificateExample.CreateCertificationRequest(const AKeyPair: IAsymmetricCipherKeyPair;
+  const ASubject: IX509Name; const ASignatureAlgorithm: String): IPkcs10CertificationRequest;
 var
   LBuilder: IPkcs10CertificationRequestBuilder;
-  LReq: IPkcs10CertificationRequest;
   LDnsName: IGeneralName;
   LSanNames: IGeneralNames;
-  LExtGen: IX509ExtensionsGenerator;
   LExtensions: IX509Extensions;
 begin
+  LExtensions := BuildBasicEndEntityExtensions(AKeyPair.Public);
   LDnsName := TGeneralName.Create(TGeneralName.DnsName, 'cryptolib4pascal.example.com');
   LSanNames := TGeneralNames.Create(LDnsName);
 
-  LExtGen := TX509ExtensionsGenerator.Create();
-  LExtGen.AddExtension(TX509Extensions.BasicConstraints, True,
-    TBasicConstraints.Create(False) as IBasicConstraints);
-  LExtGen.AddExtension(TX509Extensions.KeyUsage, True,
-    TKeyUsage.Create(TKeyUsage.DigitalSignature or TKeyUsage.KeyEncipherment) as IKeyUsage);
-  LExtensions := LExtGen.Generate();
-
   LBuilder := TPkcs10CertificationRequestBuilder.Create();
-  LReq := LBuilder
+  Result := LBuilder
     .SetSubject(ASubject)
     .SetKeyPair(AKeyPair)
     .SetSignatureAlgorithm(ASignatureAlgorithm)
@@ -229,37 +224,85 @@ begin
     .AddExtension(TX509Extensions.SubjectAlternativeName, False, LSanNames)
     .AddSubjectKeyIdentifier(False)
     .Build();
-
-  Result.PrivateKeyPem := ExportToPem(
-    TValue.From<IAsymmetricKeyParameter>(AKeyPair.Private));
-  Result.CertificateRequestPem := ExportToPem(
-    TValue.From<IPkcs10CertificationRequest>(LReq));
 end;
 
-procedure TCertificateExample.RunCertRequestRsa(const ASignatureAlgorithm: string);
+function TCertificateExample.CreateSelfSignedCertificate(const AKeyPair: IAsymmetricCipherKeyPair;
+  const ASubject: IX509Name; const ASignatureAlgorithm: String;
+  AValidDays: Integer): IX509Certificate;
+var
+  LCertGen: IX509V3CertificateGenerator;
+  LNotBefore, LNotAfter: TDateTime;
+  LExtensions: IX509Extensions;
+begin
+  GetValidityUtc(AValidDays, LNotBefore, LNotAfter);
+  LCertGen := TX509V3CertificateGenerator.Create();
+  LCertGen.SetSerialNumber(TBigInteger.One);
+  LCertGen.SetIssuerDN(ASubject);
+  LCertGen.SetSubjectDN(ASubject);
+  LCertGen.SetNotBeforeUtc(LNotBefore);
+  LCertGen.SetNotAfterUtc(LNotAfter);
+  LCertGen.SetPublicKey(AKeyPair.Public);
+
+  LExtensions := BuildBasicEndEntityExtensions(AKeyPair.Public);
+  LCertGen.AddExtensions(LExtensions);
+  LCertGen.AddExtension(TX509Extensions.SubjectKeyIdentifier, False,
+    TX509ExtensionUtilities.CreateSubjectKeyIdentifier(AKeyPair.Public));
+  LCertGen.AddExtension(TX509Extensions.AuthorityKeyIdentifier, False,
+    TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(AKeyPair.Public));
+
+  Result := LCertGen.Generate(TAsn1SignatureFactory.Create(ASignatureAlgorithm,
+    AKeyPair.Private, nil) as ISignatureFactory);
+end;
+
+function TCertificateExample.CreateCertificateArtifacts(const AKeyPair: IAsymmetricCipherKeyPair;
+  const ASubject: IX509Name; const ASignatureAlgorithm: String;
+  AValidDaysCert: Integer): TCertificateArtifactsPem;
+var
+  LCrl: IX509Crl;
+  LReq: IPkcs10CertificationRequest;
+  LCert: IX509Certificate;
+begin
+  Result.PrivateKeyPem := ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Private));
+  Result.CertificateRequestPem := '';
+  Result.CertificatePem := '';
+  Result.CrlPem := '';
+
+  LCrl := CreateCrl(AKeyPair, ASubject, ASignatureAlgorithm);
+  Result.CrlPem := ExportToPem(TValue.From<IX509Crl>(LCrl));
+
+  LReq := CreateCertificationRequest(AKeyPair, ASubject, ASignatureAlgorithm);
+  Result.CertificateRequestPem := ExportToPem(TValue.From<IPkcs10CertificationRequest>(LReq));
+
+  LCert := CreateSelfSignedCertificate(AKeyPair, ASubject, ASignatureAlgorithm, AValidDaysCert);
+  Result.CertificatePem := ExportToPem(TValue.From<IX509Certificate>(LCert));
+end;
+
+procedure TCertificateExample.RunCrlCreateExportVerifyRsa(const ASignatureAlgorithm: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LPem: TCertRequestPem;
+  LSubject: IX509Name;
+  LCrl: IX509Crl;
+  LCrlPem: string;
 begin
-  Logger.LogInformation('--- Certificate request: RSA ---', []);
-  Logger.LogInformation('Algorithm: {0}', [ASignatureAlgorithm]);
-  LKp := GenerateRsaKeyPair;
-  LPem := CreateCertRequestPem(LKp, BuildX509NameSubject(), ASignatureAlgorithm);
-  Logger.LogInformation('Private key PEM (RSA {0}):{1}{2}',
-    [ASignatureAlgorithm, sLineBreak, LPem.PrivateKeyPem]);
-  Logger.LogInformation('Certificate request PEM (RSA {0}):{1}{2}',
-    [ASignatureAlgorithm, sLineBreak, LPem.CertificateRequestPem]);
+  Logger.LogInformation('--- CRL: create, export to PEM, import and verify (RSA {0}) ---', [ASignatureAlgorithm]);
+  LKp := GenerateRsaKeyPair();
+  LSubject := BuildX509NameSubject();
+  LCrl := CreateCrl(LKp, LSubject, ASignatureAlgorithm);
+  LCrlPem := ExportToPem(TValue.From<IX509Crl>(LCrl));
+  Logger.LogInformation('CRL PEM:{0}{1}', [sLineBreak, LCrlPem]);
+  RunCrlImportVerify(LCrl.GetEncoded(), LKp.Public);
 end;
 
-procedure TCertificateExample.RunCertRequestEc(const ACurveName: string;
+procedure TCertificateExample.RunCrlCreateExportVerifyEc(const ACurveName: string;
   const ASignatureAlgorithm: string);
 var
   LKp: IAsymmetricCipherKeyPair;
   LDomainParams: IECDomainParameters;
-  LPem: TCertRequestPem;
+  LSubject: IX509Name;
+  LCrl: IX509Crl;
+  LCrlPem: string;
 begin
-  Logger.LogInformation('--- Certificate request: EC ---', []);
-  Logger.LogInformation('Curve: {0}, algorithm: {1}', [ACurveName, ASignatureAlgorithm]);
+  Logger.LogInformation('--- CRL: create, export to PEM, import and verify (EC {0} {1}) ---', [ACurveName, ASignatureAlgorithm]);
   try
     LDomainParams := TECDomainParameters.LookupName(ACurveName);
   except
@@ -275,27 +318,74 @@ begin
     end;
   end;
   LKp := GenerateEcKeyPair(LDomainParams);
-  LPem := CreateCertRequestPem(LKp, BuildX509NameSubject(), ASignatureAlgorithm);
-  Logger.LogInformation('Private key PEM (EC {0} {1}):{2}{3}',
-    [ACurveName, ASignatureAlgorithm, sLineBreak, LPem.PrivateKeyPem]);
-  Logger.LogInformation('Certificate request PEM (EC {0} {1}):{2}{3}',
-    [ACurveName, ASignatureAlgorithm, sLineBreak, LPem.CertificateRequestPem]);
+  LSubject := BuildX509NameSubject();
+  LCrl := CreateCrl(LKp, LSubject, ASignatureAlgorithm);
+  LCrlPem := ExportToPem(TValue.From<IX509Crl>(LCrl));
+  Logger.LogInformation('CRL PEM:{0}{1}', [sLineBreak, LCrlPem]);
+  RunCrlImportVerify(LCrl.GetEncoded(), LKp.Public);
 end;
 
-procedure TCertificateExample.RunCertRequestCreateExportPem;
+procedure TCertificateExample.RunCertificateArtifactsRsa(const ASignatureAlgorithm: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LSubject: IX509Name;
+  LArtifacts: TCertificateArtifactsPem;
 begin
-  LogWithLineBreak('--- Certificate example: Create and export certificate request as PEM ---');
-  RunCertRequestRsa('SHA-256withRSA');
-  RunCertRequestRsa('SHA256WITHRSAANDMGF1');
+  Logger.LogInformation('--- Certificate artifacts: RSA ({0}) ---', [ASignatureAlgorithm]);
+  LKp := GenerateRsaKeyPair();
+  LSubject := BuildX509NameSubject();
+  LArtifacts := CreateCertificateArtifacts(LKp, LSubject, ASignatureAlgorithm, 365);
 
-  RunCertRequestEc('P-256', 'SHA256withECDSA');
-  RunCertRequestEc('secp256k1', 'SHA256withECDSA');
+  Logger.LogInformation('Private key PEM:{0}{1}', [sLineBreak, LArtifacts.PrivateKeyPem]);
+  Logger.LogInformation('Certificate request PEM:{0}{1}', [sLineBreak, LArtifacts.CertificateRequestPem]);
+  Logger.LogInformation('Certificate PEM:{0}{1}', [sLineBreak, LArtifacts.CertificatePem]);
+  Logger.LogInformation('CRL PEM:{0}{1}', [sLineBreak, LArtifacts.CrlPem]);
+end;
+
+procedure TCertificateExample.RunCertificateArtifactsEc(const ACurveName: string;
+  const ASignatureAlgorithm: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomainParams: IECDomainParameters;
+  LSubject: IX509Name;
+  LArtifacts: TCertificateArtifactsPem;
+begin
+  Logger.LogInformation('--- Certificate artifacts: EC {0} ({1}) ---', [ACurveName, ASignatureAlgorithm]);
+  try
+    LDomainParams := TECDomainParameters.LookupName(ACurveName);
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
+      Exit;
+    end;
+    on E: EArgumentNilCryptoLibException do
+    begin
+      Logger.LogWarning('Curve name empty.', []);
+      Exit;
+    end;
+  end;
+  LKp := GenerateEcKeyPair(LDomainParams);
+  LSubject := BuildX509NameSubject();
+  LArtifacts := CreateCertificateArtifacts(LKp, LSubject, ASignatureAlgorithm, 365);
+
+  Logger.LogInformation('Private key PEM:{0}{1}', [sLineBreak, LArtifacts.PrivateKeyPem]);
+  Logger.LogInformation('Certificate request PEM:{0}{1}', [sLineBreak, LArtifacts.CertificateRequestPem]);
+  Logger.LogInformation('Certificate PEM:{0}{1}', [sLineBreak, LArtifacts.CertificatePem]);
+  Logger.LogInformation('CRL PEM:{0}{1}', [sLineBreak, LArtifacts.CrlPem]);
 end;
 
 procedure TCertificateExample.Run;
 begin
-  RunCrlCreateExport;
-  RunCertRequestCreateExportPem;
+  LogWithLineBreak('--- Certificate example: CRL, CSR, self-signed cert (all to PEM) ---');
+
+  RunCertificateArtifactsRsa('SHA256WithRSAEncryption');
+  RunCertificateArtifactsEc('P-256', 'SHA256withECDSA');
+  RunCertificateArtifactsEc('secp256k1', 'SHA256withECDSA');
+
+  RunCrlCreateExportVerifyRsa('SHA256WithRSAEncryption');
+  RunCrlCreateExportVerifyEc('P-256', 'SHA256withECDSA');
+  RunCrlCreateExportVerifyEc('secp256k1', 'SHA256withECDSA');
 end;
 
 end.
