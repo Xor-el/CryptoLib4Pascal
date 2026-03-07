@@ -30,7 +30,7 @@ uses
   RSATests, X931SignerTests, CipherStreamTests, OaepTests, RijndaelTests,
   BlowfishTests, CcmTests, ChaCha20Poly1305Tests, CMacTests, EaxTests, OcbTests,
   MacTests, Poly1305Tests, AeadTestUtilities, GcmReorderTests, GCMTests,
-  GcmSivTests, GMacTests, Pkcs12Tests, CryptoLibTestBase,
+  GcmSivTests, GMacTests, Pkcs12Tests, ClpBip340SchnorrTests, CryptoLibTestBase,
   PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests, OpenSslReaderTests,
   OpenSslWriterTests, X509CertGenTests, X509CertificatePairTests,
   ClpFixedSecureRandom, ClpShortenedDigest, Int32Tests, Int64Tests,

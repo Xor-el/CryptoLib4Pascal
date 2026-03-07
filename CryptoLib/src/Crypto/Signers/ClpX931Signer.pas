@@ -27,6 +27,7 @@ uses
   ClpIAsymmetricBlockCipher,
   ClpIDigest,
   ClpISigner,
+  ClpIX931Signer,
   ClpIRsaParameters,
   ClpIsoTrailers,
   ClpParameterUtilities,
@@ -39,13 +40,6 @@ resourcestring
   SNoValidTrailer = 'no valid trailer';
 
 type
-  /// <summary>
-  /// Interface for X9.31 signer.
-  /// </summary>
-  IX931Signer = interface(ISigner)
-    ['{B3C4D5E6-F7A8-9B0C-1D2E-3F4A5B6C7D8E}']
-  end;
-
   /// <summary>
   /// X9.31-1998 - signing using a hash.
   /// <para>
