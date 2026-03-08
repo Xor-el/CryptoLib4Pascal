@@ -45,7 +45,7 @@ type
       FIdECDsaWithSha3_224, FIdECDsaWithSha3_256, FIdECDsaWithSha3_384,
       FIdECDsaWithSha3_512, FIdRsassaPkcs1V15WithSha3_224,
       FIdRsassaPkcs1V15WithSha3_256, FIdRsassaPkcs1V15WithSha3_384,
-      FIdRsassaPkcs1V15WithSha3_512,     FIdAes128Gcm, FIdAes192Gcm, FIdAes256Gcm,
+      FIdRsassaPkcs1V15WithSha3_512, FIdAes128Gcm, FIdAes192Gcm, FIdAes256Gcm,
       FIdAes128Wrap, FIdAes128WrapPad,
       FIdAes192Wrap, FIdAes192WrapPad, FIdAes256Wrap,
       FIdAes256WrapPad: IDerObjectIdentifier;

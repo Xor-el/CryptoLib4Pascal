@@ -208,7 +208,9 @@ uses
   ClpIBip340SchnorrParameters, ClpBip340SchnorrSigner, 
   ClpBip340SchnorrGenerators, ClpBip340SchnorrParameters, ClpBip327MuSig2, 
   ClpBip327MuSig2KeyAggregation, ClpBip327MuSig2Utilities, 
-  ClpBip340SchnorrBatchVerifier, ClpBip340SchnorrUtilities;
+  ClpBip340SchnorrBatchVerifier, ClpBip340SchnorrUtilities, 
+  ClpPkcs8EncryptedPrivateKeyInfoBuilder, ClpOpenSslPkcs8Generator, 
+  ClpIOpenSslPkcs8Generator;
 
 implementation
 
