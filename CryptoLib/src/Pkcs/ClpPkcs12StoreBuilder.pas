@@ -23,7 +23,8 @@ interface
 
 uses
   ClpIAsn1Objects,
-  ClpBcObjectIdentifiers,
+  ClpNistObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
   ClpIPkcs12StoreBuilder,
   ClpIPkcs12Store,
   ClpPkcs12Store,
@@ -39,10 +40,17 @@ type
     FCertPrfAlgorithm: IDerObjectIdentifier;
     FKeyAlgorithm: IDerObjectIdentifier;
     FKeyPrfAlgorithm: IDerObjectIdentifier;
+    FMacDigestAlgorithm: IDerObjectIdentifier;
     FUseDerEncoding: Boolean;
     FReverseCertificates: Boolean;
     FOverwriteFriendlyName: Boolean;
     FEnableOracleTrustedKeyUsage: Boolean;
+    FKeyIterations: Int32;
+    FCertIterations: Int32;
+    FMacIterations: Int32;
+    FKeySaltSize: Int32;
+    FCertSaltSize: Int32;
+    FMacSaltSize: Int32;
   public
     constructor Create;
     function Build: IPkcs12Store;
@@ -57,9 +65,16 @@ type
     function SetEnableOracleTrustedKeyUsage(AEnableOracleTrustedKeyUsage: Boolean): IPkcs12StoreBuilder;
     function SetKeyAlgorithm(const AKeyAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder; overload;
     function SetKeyAlgorithm(const AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder; overload;
+    function SetMacDigestAlgorithm(const AMacDigestAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder;
     function SetOverwriteFriendlyName(AOverwriteFriendlyName: Boolean): IPkcs12StoreBuilder;
     function SetReverseCertificates(AReverseCertificates: Boolean): IPkcs12StoreBuilder;
     function SetUseDerEncoding(AUseDerEncoding: Boolean): IPkcs12StoreBuilder;
+    function SetKeyIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+    function SetCertIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+    function SetMacIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+    function SetKeySaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+    function SetCertSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+    function SetMacSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
   end;
 
 implementation
@@ -69,20 +84,28 @@ implementation
 constructor TPkcs12StoreBuilder.Create;
 begin
   inherited Create;
-  FCertAlgorithm := TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes128Cbc;
+  FCertAlgorithm := TNistObjectIdentifiers.IdAes256Cbc;
   FCertPrfAlgorithm := nil;
-  FKeyAlgorithm := TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes256Cbc;
+  FKeyAlgorithm := TNistObjectIdentifiers.IdAes256Cbc;
   FKeyPrfAlgorithm := nil;
+  FMacDigestAlgorithm := nil;
   FUseDerEncoding := False;
   FReverseCertificates := False;
   FOverwriteFriendlyName := True;
   FEnableOracleTrustedKeyUsage := True;
+  FKeyIterations := TPkcs12Store.DefaultIterations;
+  FCertIterations := TPkcs12Store.DefaultIterations;
+  FMacIterations := TPkcs12Store.DefaultIterations;
+  FKeySaltSize := TPkcs12Store.DefaultSaltSize;
+  FCertSaltSize := TPkcs12Store.DefaultSaltSize;
+  FMacSaltSize := TPkcs12Store.DefaultSaltSize;
 end;
 
 function TPkcs12StoreBuilder.Build: IPkcs12Store;
 begin
-  Result := TPkcs12Store.Create(FCertAlgorithm, FCertPrfAlgorithm, FKeyAlgorithm, FKeyPrfAlgorithm,
-    FUseDerEncoding, FReverseCertificates, FOverwriteFriendlyName, FEnableOracleTrustedKeyUsage);
+  Result := TPkcs12Store.Create(FCertAlgorithm, FCertPrfAlgorithm, FKeyAlgorithm, FKeyPrfAlgorithm, FMacDigestAlgorithm,
+    FUseDerEncoding, FReverseCertificates, FOverwriteFriendlyName, FEnableOracleTrustedKeyUsage,
+    FKeyIterations, FCertIterations, FMacIterations, FKeySaltSize, FCertSaltSize, FMacSaltSize);
 end;
 
 function TPkcs12StoreBuilder.SetCertAlgorithm(const ACertAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder;
@@ -119,6 +142,12 @@ begin
   Result := Self;
 end;
 
+function TPkcs12StoreBuilder.SetMacDigestAlgorithm(const AMacDigestAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder;
+begin
+  FMacDigestAlgorithm := AMacDigestAlgorithm;
+  Result := Self;
+end;
+
 function TPkcs12StoreBuilder.SetOverwriteFriendlyName(AOverwriteFriendlyName: Boolean): IPkcs12StoreBuilder;
 begin
   FOverwriteFriendlyName := AOverwriteFriendlyName;
@@ -134,6 +163,42 @@ end;
 function TPkcs12StoreBuilder.SetUseDerEncoding(AUseDerEncoding: Boolean): IPkcs12StoreBuilder;
 begin
   FUseDerEncoding := AUseDerEncoding;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetKeyIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+begin
+  FKeyIterations := AIterations;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetCertIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+begin
+  FCertIterations := AIterations;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetMacIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+begin
+  FMacIterations := AIterations;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetKeySaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+begin
+  FKeySaltSize := ASaltSize;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetCertSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+begin
+  FCertSaltSize := ASaltSize;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetMacSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+begin
+  FMacSaltSize := ASaltSize;
   Result := Self;
 end;
 

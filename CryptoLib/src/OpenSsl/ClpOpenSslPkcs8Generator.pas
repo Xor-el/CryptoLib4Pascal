@@ -41,6 +41,9 @@ type
   /// </summary>
   TOpenSslPkcs8Generator = class sealed(TInterfacedObject, IPemObjectGenerator, IOpenSslPkcs8Generator)
   strict private
+    const
+      DefaultIterations = 2048;
+     var
     FPassword: TCryptoLibCharArray;
     FAlgorithm: String;
     FIterationCount: Int32;
@@ -78,7 +81,7 @@ begin
   FPrivKey := APrivKey;
   FAlgorithm := '';
   FPassword := nil;
-  FIterationCount := 2048;
+  FIterationCount := DefaultIterations;
   FRandom := nil;
 end;
 
@@ -88,7 +91,7 @@ begin
   FPrivKey := APrivKey;
   FAlgorithm := AAlgorithm;
   FPassword := nil;
-  FIterationCount := 2048;
+  FIterationCount := DefaultIterations;
   FRandom := nil;
 end;
 
