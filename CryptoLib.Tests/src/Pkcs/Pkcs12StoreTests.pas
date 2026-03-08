@@ -105,7 +105,7 @@ type
     procedure CheckPKCS12(const AStore: IPkcs12Store);
     procedure BasicStoreTest(const APrivKey: IAsymmetricKeyEntry;
       const AChain: TCryptoLibGenericArray<IX509CertificateEntry>;
-      ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier);
+      ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier);
     procedure CheckEncryptionAlgorithm(const AType: String; const AEncAlgID: IAlgorithmIdentifier;
       AExpectedEncAlgorithm, AExpectedPrfAlgorithm: IDerObjectIdentifier);
     function GetFirst(const AAliases: TCryptoLibStringArray): String;
@@ -1075,7 +1075,7 @@ end;
 
 procedure TTestPkcs12Store.BasicStoreTest(const APrivKey: IAsymmetricKeyEntry;
   const AChain: TCryptoLibGenericArray<IX509CertificateEntry>;
-  ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier);
+  ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier);
 var
   LBuilder: IPkcs12StoreBuilder;
   LStore: IPkcs12Store;
@@ -1097,6 +1097,7 @@ begin
   LBuilder := TPkcs12StoreBuilder.Create;
   LBuilder.SetCertAlgorithm(ACertAlgorithm, ACertPrfAlgorithm);
   LBuilder.SetKeyAlgorithm(AKeyAlgorithm, AKeyPrfAlgorithm);
+  LBuilder.SetMacDigestAlgorithm(AMacDigestAlgorithm);
   LStore := LBuilder.Build;
 
   LStore.SetKeyEntry('key', APrivKey, AChain);
@@ -1458,30 +1459,30 @@ var
 begin
   CreateTestCertificateAndKey(LPrivKey, LChain);
   BasicStoreTest(LPrivKey, LChain, nil, nil,
-    TNistObjectIdentifiers.IdAes256Cbc, nil);
+    TNistObjectIdentifiers.IdAes256Cbc, nil, nil);
   BasicStoreTest(LPrivKey, LChain,
     TNistObjectIdentifiers.IdAes256Cbc, nil,
-    nil, nil);
+    nil, nil, nil);
   BasicStoreTest(LPrivKey, LChain,
     TNistObjectIdentifiers.IdAes128Cbc, nil,
-    TNistObjectIdentifiers.IdAes128Cbc, nil);
+    TNistObjectIdentifiers.IdAes128Cbc, nil, nil);
   BasicStoreTest(LPrivKey, LChain,
     TNistObjectIdentifiers.IdAes256Cbc, nil,
-    TNistObjectIdentifiers.IdAes256Cbc, nil);
+    TNistObjectIdentifiers.IdAes256Cbc, nil, nil);
   BasicStoreTest(LPrivKey, LChain, nil, nil,
-    TNistObjectIdentifiers.IdAes128Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256);
+    TNistObjectIdentifiers.IdAes128Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256, nil);
   BasicStoreTest(LPrivKey, LChain,
     TNistObjectIdentifiers.IdAes128Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256,
-    nil, nil);
+    nil, nil, nil);
   BasicStoreTest(LPrivKey, LChain,
    TNistObjectIdentifiers.IdAes256Cbc, nil,
-    TNistObjectIdentifiers.IdAes128Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256);
+    TNistObjectIdentifiers.IdAes128Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256, nil);
   BasicStoreTest(LPrivKey, LChain,
     TNistObjectIdentifiers.IdAes128Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256,
-    TNistObjectIdentifiers.IdAes256Cbc, nil);
+    TNistObjectIdentifiers.IdAes256Cbc, nil, nil);
   BasicStoreTest(LPrivKey, LChain,
     TNistObjectIdentifiers.IdAes256Cbc, TPkcsObjectIdentifiers.IdHmacWithSha512,
-    TNistObjectIdentifiers.IdAes256Cbc, TPkcsObjectIdentifiers.IdHmacWithSha512);
+    TNistObjectIdentifiers.IdAes256Cbc, TPkcsObjectIdentifiers.IdHmacWithSha512, TNistObjectIdentifiers.IdSha256);
 end;
 
 procedure TTestPkcs12Store.TestNoDuplicateOracleTrustedCertAttribute;

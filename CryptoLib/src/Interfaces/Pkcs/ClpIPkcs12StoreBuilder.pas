@@ -45,6 +45,7 @@ type
     function SetEnableOracleTrustedKeyUsage(AEnableOracleTrustedKeyUsage: Boolean): IPkcs12StoreBuilder;
     function SetKeyAlgorithm(const AKeyAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder; overload;
     function SetKeyAlgorithm(const AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder; overload;
+    function SetMacDigestAlgorithm(const AMacDigestAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder;
     function SetOverwriteFriendlyName(AOverwriteFriendlyName: Boolean): IPkcs12StoreBuilder;
     function SetReverseCertificates(AReverseCertificates: Boolean): IPkcs12StoreBuilder;
     function SetUseDerEncoding(AUseDerEncoding: Boolean): IPkcs12StoreBuilder;
@@ -53,6 +54,7 @@ type
     function SetMacIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
     function SetKeySaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
     function SetCertSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+    function SetMacSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
   end;
 
 implementation

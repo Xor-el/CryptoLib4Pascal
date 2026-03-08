@@ -40,6 +40,7 @@ type
     FCertPrfAlgorithm: IDerObjectIdentifier;
     FKeyAlgorithm: IDerObjectIdentifier;
     FKeyPrfAlgorithm: IDerObjectIdentifier;
+    FMacDigestAlgorithm: IDerObjectIdentifier;
     FUseDerEncoding: Boolean;
     FReverseCertificates: Boolean;
     FOverwriteFriendlyName: Boolean;
@@ -64,6 +65,7 @@ type
     function SetEnableOracleTrustedKeyUsage(AEnableOracleTrustedKeyUsage: Boolean): IPkcs12StoreBuilder;
     function SetKeyAlgorithm(const AKeyAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder; overload;
     function SetKeyAlgorithm(const AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder; overload;
+    function SetMacDigestAlgorithm(const AMacDigestAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder;
     function SetOverwriteFriendlyName(AOverwriteFriendlyName: Boolean): IPkcs12StoreBuilder;
     function SetReverseCertificates(AReverseCertificates: Boolean): IPkcs12StoreBuilder;
     function SetUseDerEncoding(AUseDerEncoding: Boolean): IPkcs12StoreBuilder;
@@ -86,6 +88,7 @@ begin
   FCertPrfAlgorithm := nil;
   FKeyAlgorithm := TNistObjectIdentifiers.IdAes256Cbc;
   FKeyPrfAlgorithm := nil;
+  FMacDigestAlgorithm := nil;
   FUseDerEncoding := False;
   FReverseCertificates := False;
   FOverwriteFriendlyName := True;
@@ -100,7 +103,7 @@ end;
 
 function TPkcs12StoreBuilder.Build: IPkcs12Store;
 begin
-  Result := TPkcs12Store.Create(FCertAlgorithm, FCertPrfAlgorithm, FKeyAlgorithm, FKeyPrfAlgorithm,
+  Result := TPkcs12Store.Create(FCertAlgorithm, FCertPrfAlgorithm, FKeyAlgorithm, FKeyPrfAlgorithm, FMacDigestAlgorithm,
     FUseDerEncoding, FReverseCertificates, FOverwriteFriendlyName, FEnableOracleTrustedKeyUsage,
     FKeyIterations, FCertIterations, FMacIterations, FKeySaltSize, FCertSaltSize, FMacSaltSize);
 end;
@@ -136,6 +139,12 @@ function TPkcs12StoreBuilder.SetKeyAlgorithm(const AKeyAlgorithm, AKeyPrfAlgorit
 begin
   FKeyAlgorithm := AKeyAlgorithm;
   FKeyPrfAlgorithm := AKeyPrfAlgorithm;
+  Result := Self;
+end;
+
+function TPkcs12StoreBuilder.SetMacDigestAlgorithm(const AMacDigestAlgorithm: IDerObjectIdentifier): IPkcs12StoreBuilder;
+begin
+  FMacDigestAlgorithm := AMacDigestAlgorithm;
   Result := Self;
 end;
 

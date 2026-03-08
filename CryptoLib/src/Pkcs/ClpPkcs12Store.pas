@@ -134,6 +134,7 @@ type
     FCertPrfAlgorithm: IDerObjectIdentifier;
     FKeyAlgorithm: IDerObjectIdentifier;
     FKeyPrfAlgorithm: IDerObjectIdentifier;
+    FMacDigestAlgorithm: IDerObjectIdentifier;
     FUseDerEncoding: Boolean;
     FReverseCertificates: Boolean;
     FOverwriteFriendlyName: Boolean;
@@ -195,13 +196,13 @@ type
     /// <summary>
     /// Create store with algorithm and behaviour flags only; iterations and salt sizes use defaults.
     /// </summary>
-    constructor Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
+    constructor Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier;
       AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
       AEnableOracleTrustedKeyUsage: Boolean); overload;
     /// <summary>
     /// Create store with all parameters; iteration and salt params default when omitted.
     /// </summary>
-    constructor Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
+    constructor Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier;
       AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
       AEnableOracleTrustedKeyUsage: Boolean;
       AKeyIterations: Int32; ACertIterations: Int32;
@@ -349,16 +350,16 @@ begin
   FCertIDComparer := TCertIDComparer.Create;
 end;
 
-constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
+constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier;
   AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
   AEnableOracleTrustedKeyUsage: Boolean);
 begin
-  Create(ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm,
+  Create(ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm,
     AUseDerEncoding, AReverseCertificates, AOverwriteFriendlyName, AEnableOracleTrustedKeyUsage,
     DefaultIterations, DefaultIterations, DefaultIterations, DefaultSaltSize, DefaultSaltSize, DefaultSaltSize);
 end;
 
-constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
+constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier;
   AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
   AEnableOracleTrustedKeyUsage: Boolean;
   AKeyIterations: Int32; ACertIterations: Int32;
@@ -378,6 +379,7 @@ begin
   FCertPrfAlgorithm := ACertPrfAlgorithm;
   FKeyAlgorithm := AKeyAlgorithm;
   FKeyPrfAlgorithm := AKeyPrfAlgorithm;
+  FMacDigestAlgorithm := AMacDigestAlgorithm;
   FUseDerEncoding := AUseDerEncoding;
   FReverseCertificates := AReverseCertificates;
   FOverwriteFriendlyName := AOverwriteFriendlyName;
@@ -1195,7 +1197,7 @@ var
   LAttrValue: IAsn1Set;
   LIdx: Int32;
   LCertEnc: TCryptoLibByteArray;
-  LEffectiveKeyPrfAlgorithm, LEffectiveCertPrfAlgorithm: IDerObjectIdentifier;
+  LEffectiveKeyPrfAlgorithm, LEffectiveCertPrfAlgorithm, LEffectiveMacDigestAlgorithm: IDerObjectIdentifier;
 begin
   if AStream = nil then
     raise EArgumentNilCryptoLibException.Create(SStreamNil);
@@ -1433,9 +1435,11 @@ begin
 
     if APassword <> nil then
     begin
-      // TODO Support other HMAC digest algorithms (SHA-224, SHA-256, SHA384, SHA-512, SHA-512/224,
-      // or SHA-512/256).
-      LMacDigestAlgorithm := TDefaultDigestAlgorithmFinder.Instance.Find(TOiwObjectIdentifiers.IdSha1);
+      LEffectiveMacDigestAlgorithm := FMacDigestAlgorithm;
+      if LEffectiveMacDigestAlgorithm = nil then
+       LEffectiveMacDigestAlgorithm := TOiwObjectIdentifiers.IdSha1;
+
+      LMacDigestAlgorithm := TDefaultDigestAlgorithmFinder.Instance.Find(LEffectiveMacDigestAlgorithm);
       LSalt := TSecureRandom.GetNextBytes(ARandom, FMacSaltSize);
       LItCount := FMacIterations;
       LMacResult := CalculatePbeMac(LMacDigestAlgorithm, LSalt, LItCount, APassword, False, LData);
