@@ -93,6 +93,7 @@ type
     class function IsPkcs5Scheme1(const AAlgorithm: String): Boolean; static;
     class function IsPkcs5Scheme2(const AAlgorithm: String): Boolean; static;
     class function IsOpenSsl(const AAlgorithm: String): Boolean; static;
+    class function IsPbes2Cipher(const AAlgorithm: String): Boolean; static;
     class function IsPbeAlgorithm(const AAlgorithm: String): Boolean; static;
     class function GetObjectIdentifier(const AMechanism: String): IDerObjectIdentifier; static;
     class function GetEncodingName(const AOid: IDerObjectIdentifier): String; static;
@@ -258,13 +259,6 @@ begin
   FAlgorithmType.AddOrSetValue('PBEwithMD5and192bitAES-CBC-OpenSSL', OpenSsl);
   FAlgorithmType.AddOrSetValue('PBEwithMD5and256bitAES-CBC-OpenSSL', OpenSsl);
 
-  FOids.AddOrSetValue('PBEwithSHA-1and128bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes128Cbc);
-  FOids.AddOrSetValue('PBEwithSHA-1and192bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes192Cbc);
-  FOids.AddOrSetValue('PBEwithSHA-1and256bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes256Cbc);
-  FOids.AddOrSetValue('PBEwithSHA-256and128bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha256Pkcs12Aes128Cbc);
-  FOids.AddOrSetValue('PBEwithSHA-256and192bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha256Pkcs12Aes192Cbc);
-  FOids.AddOrSetValue('PBEwithSHA-256and256bitAES-CBC-BC', TBcObjectIdentifiers.BcPbeSha256Pkcs12Aes256Cbc);
-
   FOids.AddOrSetValue('PBEwithHmacSHA-1', TOiwObjectIdentifiers.IdSha1);
   FOids.AddOrSetValue('PBEwithHmacSHA-224', TNistObjectIdentifiers.IdSha224);
   FOids.AddOrSetValue('PBEwithHmacSHA-256', TNistObjectIdentifiers.IdSha256);
@@ -351,6 +345,18 @@ begin
   if not FAlgorithmType.TryGetValue(LMechanism, LAlgType) then
     Exit;
   Result := OpenSsl = LAlgType;
+end;
+
+class function TPbeUtilities.IsPbes2Cipher(const AAlgorithm: String): Boolean;
+var
+  LOidAlgorithm: IDerObjectIdentifier;
+begin
+  if not TDerObjectIdentifier.TryFromID(AAlgorithm, LOidAlgorithm) then
+   raise EArgumentCryptoLibException.Create('Invalid Object Identifier ' + AAlgorithm);
+
+  Result := LOidAlgorithm.Equals(TNistObjectIdentifiers.IdAes128Cbc)
+   or LOidAlgorithm.Equals(TNistObjectIdentifiers.IdAes192Cbc)
+   or LOidAlgorithm.Equals(TNistObjectIdentifiers.IdAes256Cbc);
 end;
 
 class function TPbeUtilities.IsPbeAlgorithm(const AAlgorithm: String): Boolean;

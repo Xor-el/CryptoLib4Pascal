@@ -48,6 +48,11 @@ type
     function SetOverwriteFriendlyName(AOverwriteFriendlyName: Boolean): IPkcs12StoreBuilder;
     function SetReverseCertificates(AReverseCertificates: Boolean): IPkcs12StoreBuilder;
     function SetUseDerEncoding(AUseDerEncoding: Boolean): IPkcs12StoreBuilder;
+    function SetKeyIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+    function SetCertIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+    function SetMacIterationCount(AIterations: Int32): IPkcs12StoreBuilder;
+    function SetKeySaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
+    function SetCertSaltSize(ASaltSize: Int32): IPkcs12StoreBuilder;
   end;
 
 implementation

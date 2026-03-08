@@ -32,7 +32,8 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
-  ClpBcObjectIdentifiers,
+  ClpNistObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
   ClpIRsaParameters,
   ClpRsaParameters,
   ClpGeneratorUtilities,
@@ -87,7 +88,6 @@ end;
 
 procedure TTestPkcsEncryptedPrivateKeyInfo.TestEncryptDecryptRoundTrip;
 var
-  LAlg: String;
   LPGen: IAsymmetricCipherKeyPairGenerator;
   LGenParam: IRsaKeyGenerationParameters;
   LPair: IAsymmetricCipherKeyPair;
@@ -98,8 +98,6 @@ var
   LPassword: TCryptoLibCharArray;
   LIterationCount: Int32;
 begin
-  LAlg := TBcObjectIdentifiers.BcPbeSha1Pkcs12Aes256Cbc.Id;
-
   LPGen := TGeneratorUtilities.GetKeyPairGenerator('RSA');
   LGenParam := TRsaKeyGenerationParameters.Create(
     TBigInteger.ValueOf($10001), TSecureRandom.Create() as ISecureRandom,
@@ -115,7 +113,8 @@ begin
   LPlain := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LPair.Private);
 
   LEncInfo := TEncryptedPrivateKeyInfoFactory.CreateEncryptedPrivateKeyInfo(
-    LAlg, LPassword, LSalt, LIterationCount, LPlain);
+    TNistObjectIdentifiers.IdAes256Cbc, TPkcsObjectIdentifiers.IdHmacWithSha512,
+    LPassword, LSalt, LIterationCount, TSecureRandom.Create() as ISecureRandom, LPlain);
 
   LDecrypted := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LPassword, LEncInfo);
 

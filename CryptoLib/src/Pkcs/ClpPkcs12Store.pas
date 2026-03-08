@@ -116,9 +116,6 @@ type
         property Id: TCryptoLibByteArray read FId;
       end;
   strict private
-    const
-    MinIterations = 1024;
-    SaltSize = 20;
     class var
       FIgnoreUselessPassword: Boolean;
       FCertIDEqualityComparer: IEqualityComparer<TCertID>;
@@ -141,6 +138,12 @@ type
     FReverseCertificates: Boolean;
     FOverwriteFriendlyName: Boolean;
     FEnableOracleTrustedKeyUsage: Boolean;
+    FKeyIterations: Int32;
+    FCertIterations: Int32;
+    FMacIterations: Int32;
+    FKeySaltSize: Int32;
+    FCertSaltSize: Int32;
+    FMacSaltSize: Int32;
     FUnmarkedKeyEntry: IAsymmetricKeyEntry;
   strict private
     procedure ClearKeys;
@@ -179,6 +182,9 @@ type
     procedure LoadPkcs8ShroudedKeyBag(const AEncPrivKeyInfo: IEncryptedPrivateKeyInfo;
       const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean); virtual;
   public
+    const
+      DefaultIterations = 1024;
+      DefaultSaltSize = 20;
     /// <summary>When True, ignore useless password.</summary>
     class property IgnoreUselessPassword: Boolean read FIgnoreUselessPassword write FIgnoreUselessPassword;
     /// <summary>Calculate PBE MAC for PKCS#12 (exposed for Pkcs12Utilities).</summary>
@@ -186,9 +192,21 @@ type
       const ASalt: TCryptoLibByteArray; AIterations: Int32;
       const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
       const AData: TCryptoLibByteArray): TCryptoLibByteArray; static;
+    /// <summary>
+    /// Create store with algorithm and behaviour flags only; iterations and salt sizes use defaults.
+    /// </summary>
     constructor Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
       AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
-      AEnableOracleTrustedKeyUsage: Boolean);
+      AEnableOracleTrustedKeyUsage: Boolean); overload;
+    /// <summary>
+    /// Create store with all parameters; iteration and salt params default when omitted.
+    /// </summary>
+    constructor Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
+      AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
+      AEnableOracleTrustedKeyUsage: Boolean;
+      AKeyIterations: Int32; ACertIterations: Int32;
+      AMacIterations: Int32; AKeySaltSize: Int32;
+      ACertSaltSize: Int32; AMacSaltSize: Int32); overload;
     destructor Destroy; override;
     procedure Load(const AInput: TStream; const APassword: TCryptoLibCharArray);
     function GetKey(const AAlias: String): IAsymmetricKeyEntry;
@@ -335,6 +353,18 @@ constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlg
   AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
   AEnableOracleTrustedKeyUsage: Boolean);
 begin
+  Create(ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm,
+    AUseDerEncoding, AReverseCertificates, AOverwriteFriendlyName, AEnableOracleTrustedKeyUsage,
+    DefaultIterations, DefaultIterations, DefaultIterations, DefaultSaltSize, DefaultSaltSize, DefaultSaltSize);
+end;
+
+constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm: IDerObjectIdentifier;
+  AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
+  AEnableOracleTrustedKeyUsage: Boolean;
+  AKeyIterations: Int32; ACertIterations: Int32;
+  AMacIterations: Int32; AKeySaltSize: Int32;
+  ACertSaltSize: Int32; AMacSaltSize: Int32);
+begin
   inherited Create;
   FKeys := TDictionary<String, IAsymmetricKeyEntry>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FKeysOrder := TList<String>.Create;
@@ -352,6 +382,12 @@ begin
   FReverseCertificates := AReverseCertificates;
   FOverwriteFriendlyName := AOverwriteFriendlyName;
   FEnableOracleTrustedKeyUsage := AEnableOracleTrustedKeyUsage;
+  FKeyIterations := AKeyIterations;
+  FCertIterations := ACertIterations;
+  FMacIterations := AMacIterations;
+  FKeySaltSize := AKeySaltSize;
+  FCertSaltSize := ACertSaltSize;
+  FMacSaltSize := AMacSaltSize;
 end;
 
 destructor TPkcs12Store.Destroy;
@@ -1159,11 +1195,29 @@ var
   LAttrValue: IAsn1Set;
   LIdx: Int32;
   LCertEnc: TCryptoLibByteArray;
+  LEffectiveKeyPrfAlgorithm, LEffectiveCertPrfAlgorithm: IDerObjectIdentifier;
 begin
   if AStream = nil then
     raise EArgumentNilCryptoLibException.Create(SStreamNil);
   if ARandom = nil then
     raise EArgumentNilCryptoLibException.Create(SRandomNil);
+
+  LEffectiveKeyPrfAlgorithm := FKeyPrfAlgorithm;
+  LEffectiveCertPrfAlgorithm := FCertPrfAlgorithm;
+
+  if (LEffectiveKeyPrfAlgorithm = nil) and (FKeyAlgorithm <> nil) and
+    TPbeUtilities.IsPbes2Cipher(FKeyAlgorithm.ID) then
+  begin
+    // Default PRF for PBES2 ciphers per RFC 8018 Section A.2
+    LEffectiveKeyPrfAlgorithm := TPkcsObjectIdentifiers.IdHmacWithSha1;
+  end;
+
+  if (LEffectiveCertPrfAlgorithm = nil) and (FCertAlgorithm <> nil) and
+    TPbeUtilities.IsPbes2Cipher(FCertAlgorithm.ID) then
+  begin
+    // Default PRF for PBES2 ciphers per RFC 8018 Section A.2
+    LEffectiveCertPrfAlgorithm := TPkcsObjectIdentifiers.IdHmacWithSha1;
+  end;
 
   LReverseCertificates := FReverseCertificates;
   if FUseDerEncoding then
@@ -1180,7 +1234,7 @@ begin
   begin
     LName := FKeysOrder[LI];
     LPrivKey := FKeys[LName];
-    LKSalt := TSecureRandom.GetNextBytes(ARandom, SaltSize);
+    LKSalt := TSecureRandom.GetNextBytes(ARandom, FKeySaltSize);
 
     if (APassword = nil) or (FKeyAlgorithm = nil) then
     begin
@@ -1190,12 +1244,12 @@ begin
     else
     begin
       LBagOid := TPkcsObjectIdentifiers.Pkcs8ShroudedKeyBag;
-      if FKeyPrfAlgorithm <> nil then
+      if LEffectiveKeyPrfAlgorithm <> nil then
         LBagData := TEncryptedPrivateKeyInfoFactory.CreateEncryptedPrivateKeyInfo(
-          FKeyAlgorithm, FKeyPrfAlgorithm, APassword, LKSalt, MinIterations, ARandom, LPrivKey.Key)
+          FKeyAlgorithm, LEffectiveKeyPrfAlgorithm, APassword, LKSalt, FKeyIterations, ARandom, LPrivKey.Key)
       else
         LBagData := TEncryptedPrivateKeyInfoFactory.CreateEncryptedPrivateKeyInfo(
-          FKeyAlgorithm, APassword, LKSalt, MinIterations, LPrivKey.Key);
+          FKeyAlgorithm, APassword, LKSalt, FKeyIterations, LPrivKey.Key);
     end;
 
     LKeyNames := TAsn1EncodableVector.Create();
@@ -1353,11 +1407,11 @@ begin
       LCertsInfo := TPkcsContentInfo.Create(TPkcsObjectIdentifiers.Data, TBerOctetString.FromContents(LCertBagsEncoding))
     else
     begin
-      LCSalt := TSecureRandom.GetNextBytes(ARandom, SaltSize);
-      LCIterations := MinIterations;
-      if FCertPrfAlgorithm <> nil then
+      LCSalt := TSecureRandom.GetNextBytes(ARandom, FCertSaltSize);
+      LCIterations := FCertIterations;
+      if LEffectiveCertPrfAlgorithm <> nil then
       begin
-        LEncParams := TPbeUtilities.GenerateAlgorithmParameters(FCertAlgorithm, FCertPrfAlgorithm, LCSalt, LCIterations, ARandom);
+        LEncParams := TPbeUtilities.GenerateAlgorithmParameters(FCertAlgorithm, LEffectiveCertPrfAlgorithm, LCSalt, LCIterations, ARandom);
         LEncAlgID := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdPbeS2, LEncParams);
       end
       else
@@ -1379,9 +1433,11 @@ begin
 
     if APassword <> nil then
     begin
+      // TODO Support other HMAC digest algorithms (SHA-224, SHA-256, SHA384, SHA-512, SHA-512/224,
+      // or SHA-512/256).
       LMacDigestAlgorithm := TDefaultDigestAlgorithmFinder.Instance.Find(TOiwObjectIdentifiers.IdSha1);
-      LSalt := TSecureRandom.GetNextBytes(ARandom, 20);
-      LItCount := MinIterations;
+      LSalt := TSecureRandom.GetNextBytes(ARandom, FMacSaltSize);
+      LItCount := FMacIterations;
       LMacResult := CalculatePbeMac(LMacDigestAlgorithm, LSalt, LItCount, APassword, False, LData);
       LMac := TDigestInfo.Create(LMacDigestAlgorithm, TDerOctetString.Create(LMacResult) as IDerOctetString);
       LMacData := TMacData.Create(LMac, LSalt, LItCount);
