@@ -34,6 +34,8 @@ type
   /// Works with ordinals; callers cast to their enum type e.g. TMyEnum(ordinal).
   /// </summary>
   TEnumUtilities = class sealed(TObject)
+  strict private
+    class function DefaultReplacer(const AInput: String): String; static;
   public
     /// <summary>
     /// Returns an array of ordinals for all defined values of the enum.
@@ -49,12 +51,15 @@ type
     class function GetArbitraryValue(ATypeInfo: PTypeInfo): Int32; overload; static;
     /// <summary>
     /// Tries to parse a string as an enum ordinal. Only parses single named
-    /// constants: non-empty, first character a letter, no comma. Replaces
-    /// '-' and '/' with '_' before parsing. Returns True and the ordinal
-    /// in AResult when successful; otherwise False and AResult is undefined.
-    /// Caller casts: TMyEnum(AResult).
+    /// constants: non-empty, first character a letter, no comma. When AReplacer
+    /// is nil, the input is normalized by replacing '-' and '/' with '_'
+    /// before parsing; when AReplacer is assigned, it is applied to the input and the
+    /// result is used. Returns True and the ordinal in AResult when successful;
+    /// otherwise False and AResult is undefined. Caller casts: TMyEnum(AResult).
     /// </summary>
-    class function TryGetEnumValue(ATypeInfo: PTypeInfo; const S: String; out AResult: Int32): Boolean; overload; static;
+    /// <param name="AReplacer">Optional. When nil, default normalization is used; when assigned, AReplacer(AInput) is used as the string to parse.</param>
+    class function TryGetEnumValue(ATypeInfo: PTypeInfo; const AInput: String; out AResult: Int32;
+      const AReplacer: TFunc<String, String> = nil): Boolean; overload; static;
     /// <summary>
     /// Converts an enum ordinal to its declared name string.
     /// Returns the result of GetEnumName(ATypeInfo, AOrdinal). Empty string if no name.
@@ -74,10 +79,21 @@ type
     /// </summary>
     class function GetArbitraryValue<T>: T; overload; static;
     /// <summary>
-    /// Tries to parse a string as an enum value. Delegates to
-    /// TryGetEnumValue(PTypeInfo, S, out Int32). On failure, AResult is Default(T).
+    /// Tries to parse a string as an enum value. When AReplacer is nil, default
+    /// normalization ( '-' and '/' to '_' ) is used; when assigned,
+    /// AReplacer(AInput) is used. Delegates to TryGetEnumValue(PTypeInfo, AInput, out Int32, AReplacer).
+    /// On failure, AResult is Default(T).
     /// </summary>
-    class function TryGetEnumValue<T>(const S: String; out AResult: T): Boolean; overload; static;
+    /// <param name="AReplacer">Optional. When nil, default normalization is used; when assigned, AReplacer(AInput) is used as the string to parse.</param>
+    class function TryGetEnumValue<T>(const AInput: String; out AResult: T;
+      const AReplacer: TFunc<string, string> = nil): Boolean; overload; static;
+    /// <summary>
+    /// Tries to interpret an ordinal as a valid named value of the enum.
+    /// Uses the same validity rule as ToString (ordinal has a name). On success
+    /// sets AResult to T(AOrdinal) and returns True; otherwise AResult is
+    /// Default(T) and returns False.
+    /// </summary>
+    class function TryGetEnumFromOrdinal<T>(AOrdinal: Int32; out AResult: T): Boolean; static;
     /// <summary>
     /// Converts an enum value to its declared name string.
     /// </summary>
@@ -87,6 +103,12 @@ type
 implementation
 
 { TEnumUtilities }
+
+class function TEnumUtilities.DefaultReplacer(const AInput: String): String;
+begin
+  Result := StringReplace(AInput, '-', '_', [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, '/', '_', [rfReplaceAll, rfIgnoreCase]);
+end;
 
 class function TEnumUtilities.GetEnumValues(ATypeInfo: PTypeInfo): TCryptoLibInt32Array;
 var
@@ -133,11 +155,11 @@ begin
   Result := LValues[LPos];
 end;
 
-class function TEnumUtilities.TryGetEnumValue(ATypeInfo: PTypeInfo; const S: String;
-  out AResult: Int32): Boolean;
+class function TEnumUtilities.TryGetEnumValue(ATypeInfo: PTypeInfo; const AInput: String;
+  out AResult: Int32; const AReplacer: TFunc<String, String>): Boolean;
 var
   LProcessed: String;
-  LOrd: LongInt;
+  LOrd: Int32;
 begin
   AResult := 0;
   if (ATypeInfo = nil) or (ATypeInfo^.Kind <> tkEnumeration) then
@@ -146,18 +168,20 @@ begin
     Exit;
   end;
   // Only parse single named constants: non-empty, first char a letter, no comma
-  if (System.Length(S) = 0) or (TStringUtilities.IndexOf(S, ',') > 0) then
+  if (System.Length(AInput) = 0) or (TStringUtilities.IndexOf(AInput, ',') > 0) then
   begin
     Result := False;
     Exit;
   end;
-  if not CharInSet(S[1], ['A'..'Z', 'a'..'z']) then
+  if not CharInSet(AInput[1], ['A'..'Z', 'a'..'z']) then
   begin
     Result := False;
     Exit;
   end;
-  LProcessed := StringReplace(S, '-', '_', [rfReplaceAll, rfIgnoreCase]);
-  LProcessed := StringReplace(LProcessed, '/', '_', [rfReplaceAll, rfIgnoreCase]);
+  if Assigned(AReplacer) then
+    LProcessed := AReplacer(AInput)
+  else
+    LProcessed := DefaultReplacer(AInput);
   LOrd := GetEnumValue(ATypeInfo, LProcessed);
   if LOrd >= 0 then
   begin
@@ -187,14 +211,28 @@ begin
   Move(LOrd, Result, SizeOf(T));
 end;
 
-class function TEnumUtilities.TryGetEnumValue<T>(const S: String;
-  out AResult: T): Boolean;
+class function TEnumUtilities.TryGetEnumValue<T>(const AInput: String;
+  out AResult: T; const AReplacer: TFunc<string, string>): Boolean;
 var
   LOrd: Int32;
 begin
-  Result := TryGetEnumValue(TypeInfo(T), S, LOrd);
+  Result := TryGetEnumValue(TypeInfo(T), AInput, LOrd, AReplacer);
   if Result then
     Move(LOrd, AResult, SizeOf(T))
+  else
+    AResult := Default(T);
+end;
+
+class function TEnumUtilities.TryGetEnumFromOrdinal<T>(AOrdinal: Int32;
+  out AResult: T): Boolean;
+begin
+  // We use `ToString` (which calls `GetEnumName`) to validate the ordinal rather than a simple Min/Max Value
+  // range check because Delphi supports non-contiguous enums (e.g., A = 0, B = 5, C = 10).
+  // GetEnumName returns an empty string for ordinals that fall in gaps between valid values,
+  // correctly rejecting them, whereas a range check would incorrectly accept them.
+  Result := ToString(TypeInfo(T), AOrdinal) <> '';
+  if Result then
+    Move(AOrdinal, AResult, SizeOf(T))
   else
     AResult := Default(T);
 end;
