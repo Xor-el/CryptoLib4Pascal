@@ -147,8 +147,7 @@ var
   LCmsContent: ICmsContentInfo;
   LPkcsContent: IPkcsContentInfo;
   LPkcs8Enc: IPkcs8EncryptedPrivateKeyInfo;
-  LOid: IDerObjectIdentifier;
-  LParams: IX9ECParameters;
+  LX962Params: IX962Parameters;
   LType: String;
   LEncoding: TCryptoLibByteArray;
 begin
@@ -235,13 +234,9 @@ begin
   if AObj.TryAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
     Exit(TPemObject.Create('ENCRYPTED PRIVATE KEY', LPkcs8Enc.GetEncoded()));
 
-  // EC PARAMETERS (named curve OID)
-  if AObj.TryAsType<IDerObjectIdentifier>(LOid) then
-    Exit(TPemObject.Create('EC PARAMETERS', LOid.GetEncoded()));
-
-  // EC PARAMETERS (explicit X9 parameters)
-  if AObj.TryAsType<IX9ECParameters>(LParams) then
-    Exit(TPemObject.Create('EC PARAMETERS', LParams.GetEncoded()));
+  // EC PARAMETERS (X962Parameters)
+  if AObj.TryAsType<IX962Parameters>(LX962Params) then
+    Exit(TPemObject.Create('EC PARAMETERS', LX962Params.GetEncoded()));
 
   raise EPemGenerationCryptoLibException.Create('Object type not supported');
 end;

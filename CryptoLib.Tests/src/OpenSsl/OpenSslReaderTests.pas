@@ -1436,6 +1436,7 @@ var
   LStream: TStringStream;
   LReader: IOpenSslPemReader;
   LVal: TValue;
+  LX962Params: IX962Parameters;
   LOid: IDerObjectIdentifier;
   LVal2: TValue;
   LKp: IAsymmetricCipherKeyPair;
@@ -1444,6 +1445,7 @@ var
   LInStream: TStringStream;
   LReader2: IOpenSslPemReader;
   LVal3: TValue;
+  LX962Params2: IX962Parameters;
   LOid2: IDerObjectIdentifier;
   LVal4: TValue;
   LKp2: IAsymmetricCipherKeyPair;
@@ -1451,29 +1453,41 @@ begin
   LStream := TStringStream.Create(EcParametersWithPrivateKeyPem, TEncoding.ASCII);
   try
     LReader := CreatePemReader(LStream);
+
+    // First object: EC PARAMETERS
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'First ReadObject should return EC PARAMETERS');
-    Check(LVal.TryAsType<IDerObjectIdentifier>(LOid), 'First should be IDerObjectIdentifier');
-    Check(LOid <> nil, 'EC PARAMETERS OID should not be nil');
+    Check(LVal.TryAsType<IX962Parameters>(LX962Params), 'First should be IX962Parameters');
+    Check(LX962Params <> nil, 'EC PARAMETERS (X962Parameters) should not be nil');
+    Check(LX962Params.IsNamedCurve, 'EC PARAMETERS should be a named curve');
+    LOid := LX962Params.Parameters as IDerObjectIdentifier;
     Check(LOid.Equals(TX9ObjectIdentifiers.Prime256v1), 'EC PARAMETERS should be prime256v1');
 
+    // Second object: EC PRIVATE KEY
     LVal2 := LReader.ReadObject();
     Check(not LVal2.IsEmpty, 'Second ReadObject should return EC PRIVATE KEY');
     Check(LVal2.TryAsType<IAsymmetricCipherKeyPair>(LKp), 'Second should be IAsymmetricCipherKeyPair');
     Check(LKp <> nil, 'EC key pair should not be nil');
 
+    // Write roundtrip
     LOutStream := TStringStream.Create('', TEncoding.ASCII);
     try
       LWriter := CreatePemWriter(LOutStream);
-      LWriter.WriteObject(TValue.From<IDerObjectIdentifier>(LOid));
+      LWriter.WriteObject(TValue.From<IX962Parameters>(LX962Params));
       LWriter.WriteObject(TValue.From<IAsymmetricCipherKeyPair>(LKp));
+
+      // Read back
       LInStream := TStringStream.Create(LOutStream.DataString, TEncoding.ASCII);
       try
         LReader2 := CreatePemReader(LInStream);
+
         LVal3 := LReader2.ReadObject();
         Check(not LVal3.IsEmpty, 'Roundtrip first ReadObject should return EC PARAMETERS');
-        Check(LVal3.TryAsType<IDerObjectIdentifier>(LOid2), 'Roundtrip first should be IDerObjectIdentifier');
+        Check(LVal3.TryAsType<IX962Parameters>(LX962Params2), 'Roundtrip first should be IX962Parameters');
+        Check(LX962Params2.IsNamedCurve, 'Roundtrip EC PARAMETERS should be a named curve');
+        LOid2 := LX962Params2.Parameters as IDerObjectIdentifier;
         Check(LOid2.Equals(TX9ObjectIdentifiers.Prime256v1), 'Roundtrip EC PARAMETERS should be prime256v1');
+
         LVal4 := LReader2.ReadObject();
         Check(not LVal4.IsEmpty, 'Roundtrip second ReadObject should return EC PRIVATE KEY');
         Check(LVal4.TryAsType<IAsymmetricCipherKeyPair>(LKp2), 'Roundtrip second should be IAsymmetricCipherKeyPair');

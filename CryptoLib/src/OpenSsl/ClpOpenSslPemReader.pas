@@ -106,7 +106,7 @@ type
     function ReadAttributeCertificate(const APemObject: IPemObject): IX509V2AttributeCertificate;
     function ReadPkcs7(const APemObject: IPemObject): ICmsContentInfo;
     function ReadPrivateKey(const APemObject: IPemObject): TValue;
-    function ReadECParameters(const APemObject: IPemObject): TValue;
+    function ReadECParameters(const APemObject: IPemObject): IX962Parameters;
   public
     constructor Create(const AReader: TStream); overload;
     constructor Create(const AReader: TStream; const APasswordFinder: IOpenSslPasswordFinder); overload;
@@ -192,38 +192,18 @@ begin
 
   if LType = 'EC PARAMETERS' then
   begin
-    Result := ReadECParameters(LObj);
+    Result := TValue.From<IX962Parameters>(ReadECParameters(LObj));
     Exit;
   end;
 
   raise EIOCryptoLibException.CreateResFmt(@SUnrecognisedObject, [LType]);
 end;
 
-function TOpenSslPemReader.ReadECParameters(const APemObject: IPemObject): TValue;
-var
-  LAsn1Obj: IAsn1Object;
-  LOid: IDerObjectIdentifier;
-  LSeq: IAsn1Sequence;
+function TOpenSslPemReader.ReadECParameters(const APemObject: IPemObject): IX962Parameters;
 begin
   try
-    LAsn1Obj := TAsn1Object.FromByteArray(APemObject.Content);
-
-    if Supports(LAsn1Obj, IDerObjectIdentifier, LOid) then
-    begin
-      Result := TValue.From<IDerObjectIdentifier>(LOid);
-      Exit;
-    end;
-
-    if Supports(LAsn1Obj, IAsn1Sequence, LSeq) then
-    begin
-      Result := TValue.From<IX9ECParameters>(TX9ECParameters.GetInstance(LSeq));
-      Exit;
-    end;
-
-    Result := TValue.Empty;
+    Result := TX962Parameters.GetInstance(APemObject.Content);
   except
-    on EIOCryptoLibException do
-      raise;
     on E: Exception do
       raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemExtractingECParams, [E.Message]);
   end;
