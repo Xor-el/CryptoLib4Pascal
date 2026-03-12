@@ -308,7 +308,7 @@ type
     /// No heuristic or culture-dependent parsing is performed.
     /// </para>
     /// </remarks>
-    /// <param name="AStr">The input string to parse.</param>
+    /// <param name="AInput">The input string to parse.</param>
     /// <param name="AFormat">
     /// The exact expected format string (Delphi-safe; <c>\Z</c> is normalized to literal <c>Z</c>).
     /// </param>
@@ -328,7 +328,7 @@ type
     /// Raised when the input does not exactly match the specified format.
     /// </exception>
     class function ParseExact(
-      const AStr, AFormat: String;
+      const AInput, AFormat: String;
       const AStyles: TDateTimeParseStyle;
       const AFormatSettings: TFormatSettings): TDateTime; overload; static;
 
@@ -710,11 +710,11 @@ begin
 end;
 
 class function TDateTimeUtilities.ParseExact(
-  const AStr, AFormat: String;
+  const AInput, AFormat: String;
   const AStyles: TDateTimeParseStyle;
   const AFormatSettings: TFormatSettings): TDateTime;
 begin
-  Result := ParseExact(AStr, AFormat, AStyles, AFormatSettings, TwoDigitYearMax);
+  Result := ParseExact(AInput, AFormat, AStyles, AFormatSettings, TwoDigitYearMax);
 end;
 
 class function TDateTimeUtilities.ParseExact(

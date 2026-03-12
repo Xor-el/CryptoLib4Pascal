@@ -61,7 +61,7 @@ uses
   ClpCryptoLibTypes,
   ClpIX509CrlEntry,
   ClpIX9ECAsn1Objects,
-  ClpDateTimeUtilities,
+  ClpDateTimeHelper,
   ClpExampleBase;
 
 type
@@ -104,7 +104,7 @@ implementation
 
 procedure TCertificateExample.GetValidityUtc(AValidDays: Integer; out ANotBefore, ANotAfter: TDateTime);
 begin
-  ANotBefore := TDateTimeUtilities.ToUniversalTime(Now);
+  ANotBefore := Now.ToUniversalTime();
   ANotAfter := IncSecond(ANotBefore, AValidDays * 86400);
 end;
 

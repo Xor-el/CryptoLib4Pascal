@@ -34,6 +34,8 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Core,
+  ClpDateTimeHelper,
+  ClpFormatSettingsHelper,
   ClpDateTimeUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -159,7 +161,7 @@ var
   LFormatted: String;
   LFormatSettings: TFormatSettings;
 begin
-  LFormatSettings := TFormatSettings.Invariant;
+  LFormatSettings := TFormatSettings.InvariantCulture;
 
   for I := 0 to System.Length(FInput) - 1 do
   begin
@@ -298,8 +300,8 @@ begin
     Fail('failed UTC equivalence test');
   end;
 
-  LU1 := TDateTimeUtilities.ToUniversalTime(LT1);
-  LU2 := TDateTimeUtilities.ToUniversalTime(LT2);
+  LU1 := LT1.ToUniversalTime();
+  LU2 := LT2.ToUniversalTime();
 
   if LU1 <> LU2 then
   begin

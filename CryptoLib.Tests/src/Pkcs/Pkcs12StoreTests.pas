@@ -71,7 +71,7 @@ uses
   ClpNistObjectIdentifiers,
   ClpAsn1Comparers,
   TypInfo,
-  ClpDateTimeUtilities,
+  ClpDateTimeHelper,
   CryptoLibTestBase;
 
 type
@@ -914,7 +914,7 @@ begin
     LCertGen := TX509V3CertificateGenerator.Create;
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(TX509Name.Create(LOrder, LIssuerAttrs) as IX509Name);
-    LUtc := TDateTimeUtilities.ToUniversalTime(Now);
+    LUtc := Now.ToUniversalTime();
     LCertGen.SetNotBeforeUtc(IncDay(LUtc, -30));
     LCertGen.SetNotAfterUtc(IncDay(LUtc, 30));
     LCertGen.SetSubjectDN(TX509Name.Create(LOrder, LSubjectAttrs) as IX509Name);
@@ -1515,8 +1515,8 @@ begin
   LV1Gen := TX509V1CertificateGenerator.Create;
   LV1Gen.SetSerialNumber(TBigInteger.One);
   LV1Gen.SetIssuerDN(LRootName);
-  LV1Gen.SetNotBeforeUtc(IncDay(TDateTimeUtilities.ToUniversalTime(Now), -1));
-  LV1Gen.SetNotAfterUtc(IncDay(TDateTimeUtilities.ToUniversalTime(Now), 365));
+  LV1Gen.SetNotBeforeUtc(IncDay(Now.ToUniversalTime(), -1));
+  LV1Gen.SetNotAfterUtc(IncDay(Now.ToUniversalTime(), 365));
   LV1Gen.SetSubjectDN(LRootName);
   LV1Gen.SetPublicKey(LKp1.Public as IAsymmetricKeyParameter);
   LRootCert := LV1Gen.Generate(TAsn1SignatureFactory.Create('SHA256withRSA', LKp1.Private as IAsymmetricKeyParameter, LRandom) as ISignatureFactory);
@@ -1525,8 +1525,8 @@ begin
   LV3Gen := TX509V3CertificateGenerator.Create;
   LV3Gen.SetSerialNumber(TBigInteger.One);
   LV3Gen.SetIssuerDN(LRootName);
-  LV3Gen.SetNotBeforeUtc(IncDay(TDateTimeUtilities.ToUniversalTime(Now), -1));
-  LV3Gen.SetNotAfterUtc(IncDay(TDateTimeUtilities.ToUniversalTime(Now), 365));
+  LV3Gen.SetNotBeforeUtc(IncDay(Now.ToUniversalTime(), -1));
+  LV3Gen.SetNotAfterUtc(IncDay(Now.ToUniversalTime(), 365));
   LV3Gen.SetSubjectDN(LSubjectName);
   LV3Gen.SetPublicKey(LKp2.Public as IAsymmetricKeyParameter);
   LOriginalCert := LV3Gen.Generate(TAsn1SignatureFactory.Create('SHA256withRSA', LKp1.Private as IAsymmetricKeyParameter, LRandom) as ISignatureFactory);

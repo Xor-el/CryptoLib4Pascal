@@ -49,6 +49,8 @@ uses
   ClpIPAddressUtilities,
   ClpRfc5280Asn1Utilities,
   ClpDateTimeUtilities,
+  ClpDateTimeHelper,
+  ClpFormatSettingsHelper,
   ClpIetfUtilities,
   ClpEncoders,
   ClpAsn1Comparers,
@@ -2828,7 +2830,7 @@ end;
 
 constructor TTime.Create(const ADateTime: TDateTime);
 begin
-  CreateFromUtc(TDateTimeUtilities.ToUniversalTime(ADateTime));
+  CreateFromUtc(ADateTime.ToUniversalTime());
 end;
 
 constructor TTime.CreateFromUtc(const AUtcDateTime: TDateTime);
@@ -2902,7 +2904,7 @@ begin
     Result := TDateTimeUtilities.FormatCanonical(
       LDateTime,
       'yyyyMMddHHmmssK',
-      TFormatSettings.Invariant,
+      TFormatSettings.InvariantCulture,
       False
     );
     Exit;
@@ -2914,7 +2916,7 @@ begin
     Result := TDateTimeUtilities.FormatCanonical(
       LDateTime,
       'yyyyMMddHHmmss.FFFFFFFK',
-      TFormatSettings.Invariant,
+      TFormatSettings.InvariantCulture,
       False
     );
     Exit;

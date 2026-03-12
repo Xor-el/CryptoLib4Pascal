@@ -47,6 +47,8 @@ uses
   ClpEncoders,
   ClpConverters,
   ClpDateTimeUtilities,
+  ClpDateTimeHelper,
+  ClpFormatSettingsHelper,
   ClpOidTokenizer,
   ClpIOidTokenizer;
 
@@ -9265,7 +9267,7 @@ end;
 
 constructor TAsn1GeneralizedTime.Create(const ADateTime: TDateTime);
 begin
-  CreateFromUtc(TDateTimeUtilities.ToUniversalTime(ADateTime));
+  CreateFromUtc(ADateTime.ToUniversalTime());
 end;
 
 constructor TAsn1GeneralizedTime.CreateFromUtc(const AUtcDateTime: TDateTime);
@@ -9550,7 +9552,7 @@ begin
     AStr,
     AFormat,
     [TDateTimeParseFlag.AssumeLocal],
-    TFormatSettings.Invariant
+    TFormatSettings.InvariantCulture
   );
 end;
 
@@ -9560,7 +9562,7 @@ begin
     AStr,
     AFormat,
     [TDateTimeParseFlag.AdjustToUniversal],
-    TFormatSettings.Invariant
+    TFormatSettings.InvariantCulture
   );
 end;
 
@@ -9570,7 +9572,7 @@ begin
     AStr,
     AFormat,
     [TDateTimeParseFlag.AdjustToUniversal, TDateTimeParseFlag.AssumeUniversal],
-    TFormatSettings.Invariant
+    TFormatSettings.InvariantCulture
   );
 end;
 
@@ -9579,7 +9581,7 @@ begin
   Result := TDateTimeUtilities.FormatCanonical(
     ADateTime,
     'yyyyMMddHHmmss.FFFFFFFK',
-    TFormatSettings.Invariant,
+    TFormatSettings.InvariantCulture,
     False
   );
 end;
@@ -9613,12 +9615,12 @@ end;
 
 constructor TAsn1UtcTime.Create(const ADateTime: TDateTime);
 begin
-  CreateFromUtc(TDateTimeUtilities.ToUniversalTime(ADateTime));
+  CreateFromUtc(ADateTime.ToUniversalTime());
 end;
 
 constructor TAsn1UtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
 begin
-  CreateFromUtc(TDateTimeUtilities.ToUniversalTime(ADateTime), ATwoDigitYearMax);
+  CreateFromUtc(ADateTime.ToUniversalTime(), ATwoDigitYearMax);
 end;
 
 constructor TAsn1UtcTime.CreateFromUtc(const AUtcDateTime: TDateTime);
@@ -9945,7 +9947,7 @@ class function TAsn1UtcTime.FromString(const AStr: String; out ATwoDigitYearMax:
 var
   LFormatSettings: TFormatSettings;
 begin
-  LFormatSettings := TFormatSettings.Invariant;
+  LFormatSettings := TFormatSettings.InvariantCulture;
 
   ATwoDigitYearMax := TDateTimeUtilities.TwoDigitYearMax;
 
@@ -10007,7 +10009,7 @@ begin
   Result := TDateTimeUtilities.FormatCanonical(
     ADateTime,
     'yyMMddHHmmss"Z"',
-    TFormatSettings.Invariant,
+    TFormatSettings.InvariantCulture,
     False
   );
 end;
@@ -10018,7 +10020,7 @@ begin
   Result := TDateTimeUtilities.FormatCanonical(
     ADateTime,
     'yyMMddHHmmss"Z"',
-    TFormatSettings.Invariant,
+    TFormatSettings.InvariantCulture,
     False
   );
 end;

@@ -51,7 +51,7 @@ uses
   ClpBigInteger,
   ClpIX509Extension,
   ClpCryptoLibTypes,
-  ClpDateTimeUtilities,
+  ClpDateTimeHelper,
   ClpArrayUtilities,
   ClpCollectionUtilities,
   ClpEncoders;
@@ -308,7 +308,7 @@ end;
 
 function TX509Certificate.IsValidNow: Boolean;
 begin
-  Result := IsValid(TDateTimeUtilities.ToUniversalTime(Now));
+  Result := IsValid(Now.ToUniversalTime());
 end;
 
 function TX509Certificate.IsValid(const ATime: TDateTime): Boolean;
@@ -318,7 +318,7 @@ end;
 
 procedure TX509Certificate.CheckValidity();
 begin
-  CheckValidity(TDateTimeUtilities.ToUniversalTime(Now));
+  CheckValidity(Now.ToUniversalTime());
 end;
 
 procedure TX509Certificate.CheckValidity(const ATime: TDateTime);

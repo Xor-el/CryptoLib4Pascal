@@ -28,6 +28,7 @@ uses
   ClpBitOperations,
   ClpCryptoLibTypes,
   ClpDateTimeUtilities,
+  ClpDateTimeHelper,
   ClpIDigest,
   ClpIRandomGenerator,
   ClpRandom,
@@ -309,7 +310,7 @@ begin
   if not FIsBooted then
   begin
     FLock := TCriticalSection.Create;
-    FCounter := TDateTimeUtilities.DateTimeToTicks(TDateTimeUtilities.ToUniversalTime(Now));
+    FCounter := TDateTimeUtilities.DateTimeToTicks(Now.ToUniversalTime());
     FMasterRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);

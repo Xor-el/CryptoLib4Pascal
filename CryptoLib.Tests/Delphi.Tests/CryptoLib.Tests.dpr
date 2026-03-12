@@ -19,15 +19,14 @@ program CryptoLib.Tests;
 {$ENDIF}
 
 uses
-
-{$IFDEF TESTINSIGHT}
+  {$IFDEF TESTINSIGHT}
   TestInsight.DUnit,
-{$ELSE}
+  {$ELSE}
   Forms,
   TestFramework,
   GUITestRunner,
   TextTestRunner,
-{$ENDIF}
+  {$ENDIF }
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
   ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
   ClpAgreementUtilities in '..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas',
@@ -673,6 +672,8 @@ uses
   ClpX509CertificatePair in '..\..\CryptoLib\src\X509\ClpX509CertificatePair.pas',
   ClpIX509CertificatePairParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePairParser.pas',
   ClpIX509CertificatePair in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePair.pas',
+  ClpFormatSettingsHelper in '..\..\CryptoLib\src\Helpers\ClpFormatSettingsHelper.pas',
+  ClpDateTimeHelper in '..\..\CryptoLib\src\Helpers\ClpDateTimeHelper.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTests in '..\src\Crypto\BlowfishTests.pas',
