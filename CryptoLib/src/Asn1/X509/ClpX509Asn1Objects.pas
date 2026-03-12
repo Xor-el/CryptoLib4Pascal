@@ -9225,7 +9225,7 @@ begin
     LDps := GetDistributionPoints();
     for I := 0 to System.Length(LDps) - 1 do
     begin
-      LBuf.Append('    ').Append((LDps[I] as TDistributionPoint).ToString()).AppendLine();
+      LBuf.Append('    ').Append(LDps[I].ToString()).AppendLine();
     end;
     Result := LBuf.ToString();
   finally

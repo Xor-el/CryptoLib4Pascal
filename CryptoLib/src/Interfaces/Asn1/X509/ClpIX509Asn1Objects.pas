@@ -586,6 +586,7 @@ type
     function GetDistributionPointName: IDistributionPointName;
     function GetReasons: IReasonFlags;
     function GetCrlIssuer: IGeneralNames;
+    function ToString: String;
     property DistributionPointName: IDistributionPointName read GetDistributionPointName;
     property Reasons: IReasonFlags read GetReasons;
     property CrlIssuer: IGeneralNames read GetCrlIssuer;
