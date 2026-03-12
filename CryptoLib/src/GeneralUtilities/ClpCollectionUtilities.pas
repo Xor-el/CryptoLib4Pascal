@@ -40,7 +40,7 @@ type
     /// Convert a list to a string representation using a converter function.
     /// </summary>
     class function ToString<T>(const AC: TList<T>;
-      const AConverter: TFunc<T, String>): String; reintroduce; overload; static;
+      const AConverter: TCryptoLibFunc<T, String>): String; overload; static;
     /// <summary>
     /// Create a proxy array from an enumerable collection (like TDictionary.Keys).
     /// </summary>
@@ -88,7 +88,7 @@ begin
 end;
 
 class function TCollectionUtilities.ToString<T>(const AC: TList<T>;
-  const AConverter: TFunc<T, String>): String;
+  const AConverter: TCryptoLibFunc<T, String>): String;
 var
   I, LCount: Int32;
   LSB: TStringBuilder;

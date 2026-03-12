@@ -85,6 +85,7 @@ uses
   ClpIX9ECAsn1Objects,
   ClpECParameters,
   ClpIECParameters,
+  ClpDateTimeUtilities,
   CryptoLibTestBase;
 
 type
@@ -908,7 +909,7 @@ var
   LUtc: TDateTime;
 begin
   LName := CreateX509Name;
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
 
   LCertGen := TX509V3CertificateGenerator.Create;
   LCertGen.SetSerialNumber(TBigInteger.One);
@@ -1011,7 +1012,7 @@ var
   LSigner: ISignatureFactory;
   LUtc: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LDpg := TDsaParametersGenerator.Create;
   LDpg.Init(512, 25, FSecureRandom);
   LKpg := TGeneratorUtilities.GetKeyPairGenerator('DSA');
@@ -1091,7 +1092,7 @@ begin
     LCertGen := TX509V3CertificateGenerator.Create;
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
-    LUtc := TTimeZone.Local.ToUniversalTime(Now);
+    LUtc := TDateTimeUtilities.ToUniversalTime(Now);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
     LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
     LCertGen.SetSubjectDN(LName);
@@ -1154,7 +1155,7 @@ var
   LDudKey: IAsymmetricKeyParameter;
   LUtc: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LPubMod := TBigInteger.Create('b4a7e46170574f16a97082b22be58b6a2a629798419be12872a4bdba626cfae9900f76abfb12139dce5de56564fab2b6543165a040c606887420e33d91ed7ed7', 16);
   LPubExp := TBigInteger.Create('11', 16);
   LPrivMod := LPubMod;
@@ -1267,7 +1268,7 @@ var
   LRsaParams: IRsaKeyGenerationParameters;
   LUtc: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LRsaParams := TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf($10001), FSecureRandom, 768, 25);
   LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
   LKpg.Init(LRsaParams);
@@ -1330,7 +1331,7 @@ var
   LCrlReason: ICrlReason;
   LUtc: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LRsaParams := TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf($10001), FSecureRandom, 768, 25);
   LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
   LKpg.Init(LRsaParams);
@@ -1413,7 +1414,7 @@ var
 begin
   LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
   LKpg.Init(TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf($10001), FSecureRandom, 768, 25) as IRsaKeyGenerationParameters);
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LKp := LKpg.GenerateKeyPair();
 
   LExtOids := TList<IDerObjectIdentifier>.Create;
@@ -1458,7 +1459,7 @@ begin
     if not LReason.HasValue(TCrlReason.PrivilegeWithdrawn) then
       Fail('CRL entry reasonCode wrong');
 
-    LUtc := TTimeZone.Local.ToUniversalTime(Now);
+    LUtc := TDateTimeUtilities.ToUniversalTime(Now);
     LCrlGen := TX509V2CrlGenerator.Create;
     LCrlGen.SetIssuerDN(TX509Name.Create('CN=Test CA') as IX509Name);
     LCrlGen.SetThisUpdateUtc(LUtc);
@@ -1585,7 +1586,7 @@ var
   LParser: IX509CertificateParser;
   LUtc: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LKp := GenerateLongFixedKeys();
   LCertGen := TX509V3CertificateGenerator.Create;
   LCertGen.SetSerialNumber(TBigInteger.One);
@@ -2190,7 +2191,7 @@ var
   LSigner: ISignatureFactory;
   LUtc: TDateTime;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := TDateTimeUtilities.ToUniversalTime(Now);
   LKp := GenerateLongFixedKeys();
   LOrd := TList<IDerObjectIdentifier>.Create;
   LValues := TList<String>.Create;
@@ -2278,7 +2279,7 @@ begin
     LCertGen := TX509V3CertificateGenerator.Create;
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
-    LUtc := TTimeZone.Local.ToUniversalTime(Now);
+    LUtc := TDateTimeUtilities.ToUniversalTime(Now);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
     LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
     LCertGen.SetSubjectDN(LName);

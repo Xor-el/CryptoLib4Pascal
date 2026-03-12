@@ -576,7 +576,7 @@ begin
   end;
 
   LToRead := Min(ACount, FRemaining);
-  LNumRead := FIn.Read(ABuffer, AOffset, LToRead);
+  LNumRead := FIn.Read(ABuffer[AOffset], LToRead);
 
   if LNumRead < 1 then
     raise EEndOfStreamCryptoLibException.CreateFmt
@@ -713,7 +713,7 @@ begin
     Exit;
   end;
 
-  LNumRead := FIn.Read(ABuffer, AOffset + 1, ACount - 1);
+  LNumRead := FIn.Read(ABuffer[AOffset + 1], ACount - 1);
   if LNumRead <= 0 then
     raise EEndOfStreamCryptoLibException.Create('');
 
@@ -852,7 +852,7 @@ begin
   System.Dec(LPos);
   LStack[LPos] := Byte($80 or LCount);
 
-  Write(LStack, LPos, LCount + 1);
+  Write(LStack[LPos], LCount + 1);
 end;
 
 procedure TAsn1OutputStream.WriteIdentifier(AFlags, ATagNo: Int32);
@@ -881,7 +881,7 @@ begin
   System.Dec(LPos);
   LStack[LPos] := Byte(AFlags or $1F);
 
-  Write(LStack, LPos, System.Length(LStack) - LPos);
+  Write(LStack[LPos], System.Length(LStack) - LPos);
 end;
 
 class function TAsn1OutputStream.GetEncodingType(const AEncoding: String): Int32;
@@ -1203,8 +1203,7 @@ begin
 
   while True do
   begin
-    LNumRead := FCurrentStream.Read(ABuffer, AOffset + LTotalRead,
-      ACount - LTotalRead);
+    LNumRead := FCurrentStream.Read(ABuffer[AOffset + LTotalRead], ACount - LTotalRead);
 
     if LNumRead > 0 then
     begin
@@ -1357,8 +1356,7 @@ begin
 
   while True do
   begin
-    LNumRead := FCurrentStream.Read(ABuffer, AOffset + LTotalRead,
-      ACount - LTotalRead);
+    LNumRead := FCurrentStream.Read(ABuffer[AOffset + LTotalRead], ACount - LTotalRead);
 
     if LNumRead > 0 then
     begin

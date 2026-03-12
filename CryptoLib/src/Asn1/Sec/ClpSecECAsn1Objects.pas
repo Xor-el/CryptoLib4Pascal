@@ -52,6 +52,9 @@ type
     FParameters: IAsn1Encodable;
     FPublicKey: IDerBitString;
 
+    class function GetTaggedExplicitBaseObject(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable; static;
+    class function GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString; static;
+
   strict protected
     function GetVersion: IDerInteger;
     function GetPrivateKey: IAsn1OctetString;
@@ -137,6 +140,16 @@ begin
   Result := TECPrivateKeyStructure.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
+class function TECPrivateKeyStructure.GetTaggedExplicitBaseObject(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable;
+begin
+  Result := ATagged.GetExplicitBaseObject();
+end;
+
+class function TECPrivateKeyStructure.GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString;
+begin
+  Result := TDerBitString.GetTagged(ATagged, AState);
+end;
+
 constructor TECPrivateKeyStructure.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
@@ -155,16 +168,10 @@ begin
   System.Inc(LPos);
   
   FParameters := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable
-    begin
-      Result := ATagged.GetExplicitBaseObject();
-    end);
+    GetTaggedExplicitBaseObject);
   
   FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString
-    begin
-      Result := TDerBitString.GetTagged(ATagged, AState);
-    end);
+    GetTaggedDerBitString);
   
   if LPos <> LCount then
     raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);

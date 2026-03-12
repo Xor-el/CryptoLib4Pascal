@@ -111,7 +111,7 @@ type
     /// If ACloneFunc raises mid-way, already-cloned objects are freed to prevent leaks.
     /// </summary>
     class function Clone<T>(const AData: TCryptoLibGenericArray<T>;
-      const ACloneFunc: TFunc<T, T>): TCryptoLibGenericArray<T>; static;
+      const ACloneFunc: TCryptoLibFunc<T, T>): TCryptoLibGenericArray<T>; static;
 
     class function NoZeroes(const AData: TCryptoLibByteArray): Boolean; static;
 
@@ -119,10 +119,10 @@ type
       const AValue: Int32): Boolean; static;
 
     class function Map<T, TResult>(const AData: TCryptoLibGenericArray<T>;
-      const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>; static;
+      const AFunc: TCryptoLibFunc<T, TResult>): TCryptoLibGenericArray<TResult>; static;
 
     class function ToString<T>(const AData: TCryptoLibGenericArray<T>;
-      const AConverter: TFunc<T, String>): String; reintroduce; overload; static;
+      const AConverter: TCryptoLibFunc<T, String>): String; overload; static;
 
     /// <summary>Reverse array elements in place.</summary>
     class procedure ReverseInPlace<T>(var AArray: TCryptoLibGenericArray<T>); overload; static;
@@ -368,7 +368,7 @@ begin
 end;
 
 class function TArrayUtilities.Clone<T>(const AData: TCryptoLibGenericArray<T>;
-  const ACloneFunc: TFunc<T, T>): TCryptoLibGenericArray<T>;
+  const ACloneFunc: TCryptoLibFunc<T, T>): TCryptoLibGenericArray<T>;
 var
   LI, LLen, LDone: Int32;
   LObj: TObject;
@@ -411,7 +411,7 @@ begin
 end;
 
 class function TArrayUtilities.Map<T, TResult>(const AData: TCryptoLibGenericArray<T>;
-  const AFunc: TFunc<T, TResult>): TCryptoLibGenericArray<TResult>;
+  const AFunc: TCryptoLibFunc<T, TResult>): TCryptoLibGenericArray<TResult>;
 var
   LI, LCount: Int32;
 begin
@@ -422,7 +422,7 @@ begin
 end;
 
 class function TArrayUtilities.ToString<T>(const AData: TCryptoLibGenericArray<T>;
-  const AConverter: TFunc<T, String>): String;
+  const AConverter: TCryptoLibFunc<T, String>): String;
 var
   LI, LCount: Int32;
   LSB: TStringBuilder;

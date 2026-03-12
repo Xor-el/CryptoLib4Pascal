@@ -19,14 +19,15 @@ program CryptoLib.Tests;
 {$ENDIF}
 
 uses
-  {$IFDEF TESTINSIGHT}
+
+{$IFDEF TESTINSIGHT}
   TestInsight.DUnit,
-  {$ELSE}
+{$ELSE}
   Forms,
   TestFramework,
   GUITestRunner,
   TextTestRunner,
-  {$ENDIF }
+{$ENDIF}
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
   ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
   ClpAgreementUtilities in '..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas',

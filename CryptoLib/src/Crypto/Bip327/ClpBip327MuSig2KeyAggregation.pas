@@ -202,8 +202,6 @@ var
   LP: IECPoint;
   LA: TBigInteger;
   LSum: IECPoint;
-  LConcat: TCryptoLibByteArray;
-  LOff: Int32;
 begin
   if System.Length(APubKeys) = 0 then
     raise EArgumentCryptoLibException.Create('KeyAgg: at least one pubkey required');

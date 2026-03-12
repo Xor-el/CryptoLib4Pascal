@@ -8,7 +8,6 @@ interface
 
 uses
   SysUtils,
-  TypInfo,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -53,6 +52,7 @@ uses
   ClpIZeroBytePadding,
   ClpIMac,
   ClpMacUtilities,
+  ClpEnumUtilities,
   ClpIX9ECAsn1Objects,
   ClpConverters,
   CryptoLibTestBase;
@@ -134,7 +134,7 @@ function TTestPascalCoinECIES.GetCurveFromKeyType(AKeyType: TKeyType)
 var
   LCurveName: String;
 begin
-  LCurveName := GetEnumName(TypeInfo(TKeyType), Ord(AKeyType));
+  LCurveName := TEnumUtilities.ToString<TKeyType>(AKeyType);
   Result := TCustomNamedCurves.GetByName(LCurveName);
 end;
 

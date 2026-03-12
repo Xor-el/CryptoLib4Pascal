@@ -84,6 +84,8 @@ type
       FMinusThree: TBigInteger;
       FFour: TBigInteger;
 
+    class function PointToAbstractF2m(APoint: IECPoint): IAbstractF2mPoint; static;
+
     class function GetShiftsForCofactor(const AH: TBigInteger): Int32; static;
   public
     const
@@ -206,6 +208,11 @@ begin
 end;
 
 { TTnaf }
+
+class function TTnaf.PointToAbstractF2m(APoint: IECPoint): IAbstractF2mPoint;
+begin
+  Result := APoint as IAbstractF2mPoint;
+end;
 
 class constructor TTnaf.Create;
 begin
@@ -851,11 +858,7 @@ begin
 
   AP.Curve.NormalizeAll(LPu);
 
-  Result := TArrayUtilities.Map<IECPoint, IAbstractF2mPoint>(LPu,
-    function(APoint: IECPoint): IAbstractF2mPoint
-    begin
-      Result := APoint as IAbstractF2mPoint;
-    end);
+  Result := TArrayUtilities.Map<IECPoint, IAbstractF2mPoint>(LPu, PointToAbstractF2m);
 end;
 
 end.

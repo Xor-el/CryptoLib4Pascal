@@ -56,6 +56,7 @@ type
 
   class constructor Create();
   class procedure Boot();
+  class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
 
   function ReadDerCrl(const ADIn: TAsn1InputStream): IX509Crl;
   function ReadPemCrl(const AInStream: TStream): IX509Crl;
@@ -86,6 +87,11 @@ begin
   FPemCrlParser := TPemParser.Create('CRL');
 end;
 
+class function TX509CrlParser.GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData;
+begin
+  Result := TPkcsSignedData.GetTagged(ATagged, AState);
+end;
+
 constructor TX509CrlParser.Create();
 begin
   inherited Create();
@@ -113,10 +119,7 @@ begin
     begin
       if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IPkcsSignedData>(
         LSeq[1], 0, True, LSignedData,
-        function(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData
-        begin
-          Result := TPkcsSignedData.GetTagged(ATagged, AState);
-        end) then
+        GetTaggedPkcsSignedData) then
       begin
         FSCrlData := LSignedData.Crls;
         FSCrlDataObjectCount := 0;

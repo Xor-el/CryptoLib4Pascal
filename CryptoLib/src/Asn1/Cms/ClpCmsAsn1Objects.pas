@@ -122,6 +122,10 @@ type
   var
     FId: IAsn1Encodable;
 
+    class function ChoiceGetOptional(AElement: IAsn1Encodable): ICmsSignerIdentifier; static;
+    class function ChoiceGetInstance(AElement: IAsn1Encodable): ICmsSignerIdentifier; static;
+    class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable; static;
+
   strict protected
     function GetIsTagged: Boolean;
     function GetID: IAsn1Encodable;
@@ -157,6 +161,8 @@ type
     FSignatureAlgorithm: IAlgorithmIdentifier;
     FSignature: IAsn1OctetString;
     FUnsignedAttrs: IAsn1Set;
+
+    class function GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set; static;
 
   strict protected
     function GetVersion: IDerInteger;
@@ -500,13 +506,24 @@ end;
 
 { TCmsSignerIdentifier }
 
+class function TCmsSignerIdentifier.ChoiceGetOptional(AElement: IAsn1Encodable): ICmsSignerIdentifier;
+begin
+  Result := GetOptional(AElement);
+end;
+
+class function TCmsSignerIdentifier.ChoiceGetInstance(AElement: IAsn1Encodable): ICmsSignerIdentifier;
+begin
+  Result := GetInstance(AElement);
+end;
+
+class function TCmsSignerIdentifier.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable;
+begin
+  Result := TAsn1OctetString.GetTagged(ATagged, AState);
+end;
+
 class function TCmsSignerIdentifier.GetInstance(AObj: TObject): ICmsSignerIdentifier;
 begin
-  Result := TAsn1Utilities.GetInstanceChoice<ICmsSignerIdentifier>(AObj,
-    function(AElement: IAsn1Encodable): ICmsSignerIdentifier
-    begin
-      Result := GetOptional(AElement);
-    end);
+  Result := TAsn1Utilities.GetInstanceChoice<ICmsSignerIdentifier>(AObj, ChoiceGetOptional);
 end;
 
 class function TCmsSignerIdentifier.GetInstance(const AObj: IAsn1Convertible): ICmsSignerIdentifier;
@@ -519,21 +536,13 @@ begin
     Exit;
   end;
   LObj := AObj.ToAsn1Object();
-  Result := TAsn1Utilities.GetInstanceChoice<ICmsSignerIdentifier>(LObj,
-    function(AElement: IAsn1Encodable): ICmsSignerIdentifier
-    begin
-      Result := GetOptional(AElement);
-    end);
+  Result := TAsn1Utilities.GetInstanceChoice<ICmsSignerIdentifier>(LObj, ChoiceGetOptional);
 end;
 
 class function TCmsSignerIdentifier.GetInstance(const AObj: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): ICmsSignerIdentifier;
 begin
-  Result := TAsn1Utilities.GetInstanceChoice<ICmsSignerIdentifier>(AObj, ADeclaredExplicit,
-    function(AElement: IAsn1Encodable): ICmsSignerIdentifier
-    begin
-      Result := GetOptional(AElement);
-    end);
+  Result := TAsn1Utilities.GetInstanceChoice<ICmsSignerIdentifier>(AObj, ADeclaredExplicit, ChoiceGetOptional);
 end;
 
 class function TCmsSignerIdentifier.GetOptional(const AElement: IAsn1Encodable): ICmsSignerIdentifier;
@@ -563,11 +572,7 @@ end;
 class function TCmsSignerIdentifier.GetTagged(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): ICmsSignerIdentifier;
 begin
-  Result := TAsn1Utilities.GetTaggedChoice<ICmsSignerIdentifier>(ATaggedObject, ADeclaredExplicit,
-    function(AElement: IAsn1Encodable): ICmsSignerIdentifier
-    begin
-      Result := GetInstance(AElement);
-    end);
+  Result := TAsn1Utilities.GetTaggedChoice<ICmsSignerIdentifier>(ATaggedObject, ADeclaredExplicit, ChoiceGetInstance);
 end;
 
 constructor TCmsSignerIdentifier.Create(const AIssuerAndSerialNumber: ICmsIssuerAndSerialNumber);
@@ -596,10 +601,7 @@ var
   LResult: IAsn1Encodable;
 begin
   if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IAsn1Encodable>(FId, 0, False, LResult,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable
-    begin
-      Result := TAsn1OctetString.GetTagged(ATagged, AState);
-    end) then
+    GetTaggedAsn1OctetString) then
     Result := LResult
   else
     Result := TCmsIssuerAndSerialNumber.GetInstance(FId);
@@ -664,21 +666,20 @@ begin
   FDigestAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   FSignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set
-    begin
-      Result := TAsn1Set.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAsn1Set);
   FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   FSignature := TAsn1OctetString.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   FUnsignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 1, False,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set
-    begin
-      Result := TAsn1Set.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAsn1Set);
   if LPos <> LCount then
     raise EArgumentCryptoLibException.Create(SCmsUnexpectedElementsInSequence);
+end;
+
+class function TCmsSignerInfo.GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set;
+begin
+  Result := TAsn1Set.GetTagged(ATagged, AState);
 end;
 
 constructor TCmsSignerInfo.Create(const ASignerID: ICmsSignerIdentifier;

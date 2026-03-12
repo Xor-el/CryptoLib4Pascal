@@ -67,6 +67,9 @@ type
   var
     FParameters: IAsn1Object;
 
+    class function ChoiceGetOptional(AElement: IAsn1Encodable): IX962Parameters; static;
+    class function ChoiceGetInstance(AElement: IAsn1Encodable): IX962Parameters; static;
+
   strict protected
     function GetParameters: IAsn1Object;
     function GetNamedCurve: IDerObjectIdentifier;
@@ -275,6 +278,8 @@ type
     FG: IX9ECPoint;
     FN: TBigInteger;
     FH: TBigInteger;
+
+    class function ReadOptionalCofactor(AElement: IAsn1Encodable): TBigInteger; static;
 
   strict protected
     function GetCurve: IECCurve;
@@ -767,6 +772,17 @@ begin
   Result := TX9ECParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
+class function TX9ECParameters.ReadOptionalCofactor(AElement: IAsn1Encodable): TBigInteger;
+var
+  LDerInt: IDerInteger;
+begin
+  LDerInt := TDerInteger.GetOptional(AElement);
+  if LDerInt <> nil then
+    Result := LDerInt.Value
+  else
+    Result := TBigInteger.GetDefault;
+end;
+
 constructor TX9ECParameters.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
@@ -791,16 +807,7 @@ begin
   System.Inc(LPos);
   FN := (TDerInteger.GetInstance(ASeq[LPos]) as IDerInteger).Value;
   System.Inc(LPos);
-  FH := TAsn1Utilities.ReadOptional<TBigInteger>(ASeq, LPos, function(AElement: IAsn1Encodable): TBigInteger
-    var
-      LDerInt: IDerInteger;
-    begin
-      LDerInt := TDerInteger.GetOptional(AElement);
-      if LDerInt <> nil then
-        Result := LDerInt.Value
-      else
-        Result := TBigInteger.GetDefault;
-    end);
+  FH := TAsn1Utilities.ReadOptional<TBigInteger>(ASeq, LPos, ReadOptionalCofactor);
 
   if LPos <> LCount then
     raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
@@ -967,13 +974,19 @@ end;
 
 { TX962Parameters }
 
+class function TX962Parameters.ChoiceGetOptional(AElement: IAsn1Encodable): IX962Parameters;
+begin
+  Result := GetOptional(AElement);
+end;
+
+class function TX962Parameters.ChoiceGetInstance(AElement: IAsn1Encodable): IX962Parameters;
+begin
+  Result := GetInstance(AElement);
+end;
+
 class function TX962Parameters.GetInstance(AObj: TObject): IX962Parameters;
 begin
-  Result := TAsn1Utilities.GetInstanceChoice<IX962Parameters>(AObj,
-    function(AElement: IAsn1Encodable): IX962Parameters
-    begin
-      Result := GetOptional(AElement);
-    end);
+  Result := TAsn1Utilities.GetInstanceChoice<IX962Parameters>(AObj, ChoiceGetOptional);
 end;
 
 class function TX962Parameters.GetOptional(const AElement: IAsn1Encodable): IX962Parameters;
@@ -1061,11 +1074,7 @@ end;
 class function TX962Parameters.GetInstance(const AObj: IAsn1TaggedObject;
   AExplicitly: Boolean): IX962Parameters;
 begin
-  Result := TAsn1Utilities.GetInstanceChoice<IX962Parameters>(AObj, AExplicitly,
-    function(AElement: IAsn1Encodable): IX962Parameters
-    begin
-      Result := GetInstance(AElement);
-    end);
+  Result := TAsn1Utilities.GetInstanceChoice<IX962Parameters>(AObj, AExplicitly, ChoiceGetInstance);
 end;
 
 constructor TX962Parameters.Create(const AParameters: IX9ECParameters);

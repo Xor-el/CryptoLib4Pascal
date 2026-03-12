@@ -117,23 +117,23 @@ type
   TDateTimeParseStyle = set of TDateTimeParseFlag;
 
   /// <summary>
-  /// Function type for format string transformations.
-  /// </summary>
-  TTokenTransformFunc = reference to function(const AFormat: String): String;
-
-  /// <summary>
   /// Transforms .NET-style format strings to Delphi FormatDateTime-compatible forms.
   /// </summary>
   TDateTimeFormatTransformer = class sealed
   strict private
-    class var FTransforms: TCryptoLibGenericArray<TTokenTransformFunc>;
+    class var FTransforms: TCryptoLibGenericArray<TCryptoLibFunc<String, String>>;
     class constructor Create;
+
+    class function StripUnsupportedTokens(AFormat: String): String; static;
+    class function MapMilliseconds(AFormat: String): String; static;
+    class function MapMonthMinute(AFormat: String): String; static;
+    class function Map24Hour(AFormat: String): String; static;
 
   public
     /// <summary>
     /// Register a new transform function (appended to the chain).
     /// </summary>
-    class procedure Register(const ATransform: TTokenTransformFunc);
+    class procedure Register(const ATransform: TCryptoLibFunc<String, String>);
 
     /// <summary>
     /// Apply all registered transforms in order.
@@ -346,7 +346,7 @@ type
     /// </list>
     /// <para>
     /// If <paramref name="AConvertToUtc"/> is <c>True</c>, the value is first converted from
-    /// local time to UTC using <see cref="TTimeZone.Local.ToUniversalTime"/>.
+    /// local time to UTC.
     /// </para>
     /// <para>
     /// Due to <see cref="TDateTime"/> precision limits, fractional seconds beyond milliseconds
@@ -373,6 +373,8 @@ type
       const AFormatSettings: TFormatSettings;
       const AConvertToUtc: Boolean): String;
 
+    class function ToUniversalTime(const ALocalDateTime: TDateTime): TDateTime; static;
+
     /// <summary>
     /// Unix epoch: January 1, 1970 00:00:00 UTC
     /// </summary>
@@ -397,46 +399,46 @@ implementation
 
 { TDateTimeFormatTransformer }
 
-class constructor TDateTimeFormatTransformer.Create;
+class function TDateTimeFormatTransformer.StripUnsupportedTokens(AFormat: String): String;
+begin
+  Result := StringReplace(AFormat, '.FFFFFFF', '', [rfReplaceAll]);
+  Result := StringReplace(Result, 'K', '', [rfReplaceAll]);
+  Result := StringReplace(Result, '"Z"', '', [rfReplaceAll]);
+  Result := StringReplace(Result, '''Z''', '', [rfReplaceAll]);
+  Result := StringReplace(Result, '\Z', '', [rfReplaceAll]);
+end;
+
+class function TDateTimeFormatTransformer.MapMilliseconds(AFormat: String): String;
+begin
+  Result := StringReplace(AFormat, 'fff', 'zzz', [rfReplaceAll]);
+  Result := StringReplace(Result, 'ff', 'zz', [rfReplaceAll]);
+  Result := StringReplace(Result, 'f', 'z', [rfReplaceAll]);
+end;
+
+class function TDateTimeFormatTransformer.MapMonthMinute(AFormat: String): String;
 const
   MonthPlaceholder = #1; // Control char as placeholder
 begin
-  // Register built-in transforms in order of precedence
-
-  // Strip unsupported tokens
-  Register(function(const F: String): String
-  begin
-    Result := StringReplace(F, '.FFFFFFF', '', [rfReplaceAll]);
-    Result := StringReplace(Result, 'K', '', [rfReplaceAll]);
-    Result := StringReplace(Result, '"Z"', '', [rfReplaceAll]);
-    Result := StringReplace(Result, '''Z''', '', [rfReplaceAll]);
-    Result := StringReplace(Result, '\Z', '', [rfReplaceAll]);
-  end);
-
-  // Map milliseconds (process longest first)
-  Register(function(const F: String): String
-  begin
-    Result := StringReplace(F, 'fff', 'zzz', [rfReplaceAll]);
-    Result := StringReplace(Result, 'ff', 'zz', [rfReplaceAll]);
-    Result := StringReplace(Result, 'f', 'z', [rfReplaceAll]);
-  end);
-
-  // Map month/minute (protect month first)
-  Register(function(const F: String): String
-  begin
-    Result := StringReplace(F, 'MM', MonthPlaceholder, [rfReplaceAll]);
-    Result := StringReplace(Result, 'mm', 'nn', [rfReplaceAll]);
-    Result := StringReplace(Result, MonthPlaceholder, 'mm', [rfReplaceAll]);
-  end);
-
-  // Map 24-hour format
-  Register(function(const F: String): String
-  begin
-    Result := StringReplace(F, 'HH', 'hh', [rfReplaceAll]);
-  end);
+  Result := StringReplace(AFormat, 'MM', MonthPlaceholder, [rfReplaceAll]);
+  Result := StringReplace(Result, 'mm', 'nn', [rfReplaceAll]);
+  Result := StringReplace(Result, MonthPlaceholder, 'mm', [rfReplaceAll]);
 end;
 
-class procedure TDateTimeFormatTransformer.Register(const ATransform: TTokenTransformFunc);
+class function TDateTimeFormatTransformer.Map24Hour(AFormat: String): String;
+begin
+  Result := StringReplace(AFormat, 'HH', 'hh', [rfReplaceAll]);
+end;
+
+class constructor TDateTimeFormatTransformer.Create;
+begin
+  // Register built-in transforms in order of precedence
+  Register(StripUnsupportedTokens);
+  Register(MapMilliseconds);
+  Register(MapMonthMinute);
+  Register(Map24Hour);
+end;
+
+class procedure TDateTimeFormatTransformer.Register(const ATransform: TCryptoLibFunc<String, String>);
 begin
   SetLength(FTransforms, System.Length(FTransforms) + 1);
   FTransforms[High(FTransforms)] := ATransform;
@@ -572,7 +574,7 @@ var
   LUtc: TDateTime;
   LMsSinceEpoch: Int64;
 begin
-  LUtc := TTimeZone.Local.ToUniversalTime(ADateTime);
+  LUtc := ToUniversalTime(ADateTime);
   if LUtc < UnixEpoch then
     raise EArgumentOutOfRangeCryptoLibException.Create('DateTime value may not be before the epoch');
 
@@ -594,7 +596,7 @@ end;
 
 class function TDateTimeUtilities.CurrentUnixMs(): Int64;
 begin
-  Result := DateTimeToUnixMs(TTimeZone.Local.ToUniversalTime(Now));
+  Result := DateTimeToUnixMs(ToUniversalTime(Now));
 end;
 
 class function TDateTimeUtilities.DateTimeToTicks(const ADateTime: TDateTime): Int64;
@@ -678,7 +680,7 @@ var
 begin
   LDT := ADateTime;
   if AConvertToUtc then
-    LDT := TTimeZone.Local.ToUniversalTime(LDT);
+    LDT := ToUniversalTime(LDT);
 
   // Transform .NET format to Delphi format
   LDelphiFmt := TDateTimeFormatTransformer.Apply(AFormat);
@@ -915,7 +917,7 @@ begin
       if TDateTimeParseFlag.AssumeLocal in AStyles then
       begin
         // interpret as local then convert to UTC
-        Result := TTimeZone.Local.ToUniversalTime(Result);
+        Result := ToUniversalTime(Result);
       end
       else if TDateTimeParseFlag.AssumeUniversal in AStyles then
       begin
@@ -923,6 +925,15 @@ begin
       end;
     end;
   end;
+end;
+
+class function TDateTimeUtilities.ToUniversalTime(const ALocalDateTime: TDateTime): TDateTime;
+begin
+{$IFDEF FPC}
+  Result := LocalTimeToUniversal(ALocalDateTime);
+{$ELSE}
+  Result := TTimeZone.Local.ToUniversalTime(ALocalDateTime);
+{$ENDIF}
 end;
 
 end.

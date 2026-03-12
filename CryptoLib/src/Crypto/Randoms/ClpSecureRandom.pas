@@ -25,7 +25,6 @@ uses
   Math,
   SyncObjs,
   SysUtils,
-  DateUtils,
   ClpBitOperations,
   ClpCryptoLibTypes,
   ClpDateTimeUtilities,
@@ -310,7 +309,7 @@ begin
   if not FIsBooted then
   begin
     FLock := TCriticalSection.Create;
-    FCounter := TDateTimeUtilities.DateTimeToTicks(TTimeZone.Local.ToUniversalTime(Now));
+    FCounter := TDateTimeUtilities.DateTimeToTicks(TDateTimeUtilities.ToUniversalTime(Now));
     FMasterRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
     FDoubleScale := Power(2.0, 64.0);

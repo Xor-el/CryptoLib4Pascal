@@ -25,7 +25,6 @@ interface
 
 uses
   SysUtils,
-  DateUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -299,8 +298,8 @@ begin
     Fail('failed UTC equivalence test');
   end;
 
-  LU1 := TTimeZone.Local.ToUniversalTime(LT1);
-  LU2 := TTimeZone.Local.ToUniversalTime(LT2);
+  LU1 := TDateTimeUtilities.ToUniversalTime(LT1);
+  LU2 := TDateTimeUtilities.ToUniversalTime(LT2);
 
   if LU1 <> LU2 then
   begin

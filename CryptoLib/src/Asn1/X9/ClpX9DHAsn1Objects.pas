@@ -139,6 +139,9 @@ type
     FP, FG, FQ, FJ: IDerInteger;
     FValidationParms: IDHValidationParms;
 
+    class function ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger; static;
+    class function ReadOptionalValidationParms(AElement: IAsn1Encodable): IDHValidationParms; static;
+
   strict protected
     function GetP: IDerInteger;
     function GetG: IDerInteger;
@@ -403,6 +406,16 @@ begin
   Result := TDHDomainParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
+class function TDHDomainParameters.ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AElement);
+end;
+
+class function TDHDomainParameters.ReadOptionalValidationParms(AElement: IAsn1Encodable): IDHValidationParms;
+begin
+  Result := TDHValidationParms.GetOptional(AElement);
+end;
+
 constructor TDHDomainParameters.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
@@ -422,15 +435,9 @@ begin
   FQ := TDerInteger.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
 
-  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, function(AElement: IAsn1Encodable): IDerInteger
-    begin
-      Result := TDerInteger.GetOptional(AElement);
-    end);
+  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalSubgroupFactor);
 
-  FValidationParms := TAsn1Utilities.ReadOptional<IDHValidationParms>(ASeq, LPos, function(AElement: IAsn1Encodable): IDHValidationParms
-    begin
-      Result := TDHValidationParms.GetOptional(AElement);
-    end);
+  FValidationParms := TAsn1Utilities.ReadOptional<IDHValidationParms>(ASeq, LPos, ReadOptionalValidationParms);
 
   if LPos <> LCount then
     raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);

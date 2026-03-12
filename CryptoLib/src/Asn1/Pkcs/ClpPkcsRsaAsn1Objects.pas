@@ -114,6 +114,8 @@ type
 
     class procedure Boot; static;
     class constructor Create;
+    class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
+    class function GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger; static;
 
   var
     FHashAlgorithm: IAlgorithmIdentifier;
@@ -174,6 +176,7 @@ type
 
     class procedure Boot; static;
     class constructor Create;
+    class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
 
   var
     FHashAlgorithm: IAlgorithmIdentifier;
@@ -451,6 +454,16 @@ begin
   Result := TRsassaPssParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
+class function TRsassaPssParameters.GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier;
+begin
+  Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+end;
+
+class function TRsassaPssParameters.GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger;
+begin
+  Result := TDerInteger.GetTagged(ATagged, AState);
+end;
+
 constructor TRsassaPssParameters.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
@@ -462,34 +475,22 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
-    begin
-      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAlgorithmIdentifier);
   if FHashAlgorithm = nil then
     FHashAlgorithm := DefaultHashAlgorithm;
 
   FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
-    begin
-      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAlgorithmIdentifier);
   if FMaskGenAlgorithm = nil then
     FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
 
   FSaltLength := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger
-    begin
-      Result := TDerInteger.GetTagged(ATagged, AState);
-    end);
+    GetTaggedDerInteger);
   if FSaltLength = nil then
     FSaltLength := DefaultSaltLength;
 
   FTrailerField := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 3, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger
-    begin
-      Result := TDerInteger.GetTagged(ATagged, AState);
-    end);
+    GetTaggedDerInteger);
   if FTrailerField = nil then
     FTrailerField := DefaultTrailerField;
 
@@ -645,6 +646,11 @@ begin
   Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
+class function TRsaesOaepParameters.GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier;
+begin
+  Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
+end;
+
 constructor TRsaesOaepParameters.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
@@ -656,26 +662,17 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
-    begin
-      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAlgorithmIdentifier);
   if FHashAlgorithm = nil then
     FHashAlgorithm := DefaultHashAlgorithm;
 
   FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
-    begin
-      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAlgorithmIdentifier);
   if FMaskGenAlgorithm = nil then
     FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
 
   FPSourceAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 2, True,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier
-    begin
-      Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAlgorithmIdentifier);
   if FPSourceAlgorithm = nil then
     FPSourceAlgorithm := DefaultPSourceAlgorithm;
 

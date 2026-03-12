@@ -63,6 +63,8 @@ type
 
     class constructor Create();
     class procedure Boot();
+    class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
+    class function GetTaggedAttributeCertificate(ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate; static;
 
     function ReadDerCertificate(const ADIn: TAsn1InputStream): IX509V2AttributeCertificate;
     function ReadPemCertificate(const AInStream: TStream): IX509V2AttributeCertificate;
@@ -93,6 +95,16 @@ begin
   FPemAttrCertParser := TPemParser.Create('ATTRIBUTE CERTIFICATE');
 end;
 
+class function TX509AttrCertParser.GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData;
+begin
+  Result := TPkcsSignedData.GetTagged(ATagged, AState);
+end;
+
+class function TX509AttrCertParser.GetTaggedAttributeCertificate(ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate;
+begin
+  Result := TAttributeCertificate.GetTagged(ATagged, AState);
+end;
+
 constructor TX509AttrCertParser.Create();
 begin
   inherited Create();
@@ -120,10 +132,7 @@ begin
     begin
       if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IPkcsSignedData>(
         LSeq[1], 0, True, LSignedData,
-        function(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData
-        begin
-          Result := TPkcsSignedData.GetTagged(ATagged, AState);
-        end) then
+        GetTaggedPkcsSignedData) then
       begin
         FSData := LSignedData.Certificates;
         if FSData <> nil then
@@ -164,10 +173,7 @@ begin
       System.Inc(FSDataObjectCount);
       if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IAttributeCertificate>(
         LElement, 2, False, LAttributeCertificate,
-        function(ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate
-        begin
-          Result := TAttributeCertificate.GetTagged(ATagged, AState);
-        end) then
+        GetTaggedAttributeCertificate) then
       begin
         Result := TX509V2AttributeCertificate.Create(LAttributeCertificate);
         Exit;
