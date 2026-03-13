@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="129">
+    <Units Count="130">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -556,6 +556,10 @@
         <Filename Value="..\src\Crypto\ClpBip327MuSig2Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit128>
+      <Unit129>
+        <Filename Value="..\src\Utils\ClpCertTestUtilities.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit129>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
