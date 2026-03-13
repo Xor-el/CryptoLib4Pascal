@@ -7,7 +7,7 @@
     <a href="https://github.com/Xor-el/CryptoLib4Pascal/actions/workflows/make.yml"><img src="https://github.com/Xor-el/CryptoLib4Pascal/actions/workflows/make.yml/badge.svg" alt="Build Status"></a>
     <a href="https://github.com/Xor-el/CryptoLib4Pascal/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
     <a href="https://www.embarcadero.com/products/delphi"><img src="https://img.shields.io/badge/Delphi-Syndey%2B-red.svg" alt="Delphi Syndey+"></a>
-    <a href="https://www.freepascal.org/"><img src="https://img.shields.io/badge/FreePascal-3.3.1%2B-blue.svg" alt="FreePascal 3.3.1+"></a>
+    <a href="https://www.freepascal.org/"><img src="https://img.shields.io/badge/FreePascal-3.2.4%2B-blue.svg" alt="FreePascal 3.2.4+"></a>
   </p>
 </p>
 
@@ -156,7 +156,7 @@
 | Compiler | Minimum Version |
 |---|---|
 | Delphi | Sydney (10.4) or later |
-| FreePascal | 3.3.1 or later |
+| FreePascal | 3.2.4 or later |
 
 ### Installation
 
