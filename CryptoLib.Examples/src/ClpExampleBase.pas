@@ -91,7 +91,7 @@ type
 
 implementation
 
-{ TClpLogger }
+{ TExampleLogger }
 
 class procedure TExampleLogger.SetDefaultLogger(const ALogger: ILogger);
 begin
