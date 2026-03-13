@@ -33,9 +33,7 @@ uses
   ClpCryptoLibTypes,
   ClpEncoders,
   ClpStringUtilities,
-  ClpStreamUtilities,
   ClpAsn1Objects,
-  ClpIAsn1Objects,
   ClpCollectionUtilities;
 
 type

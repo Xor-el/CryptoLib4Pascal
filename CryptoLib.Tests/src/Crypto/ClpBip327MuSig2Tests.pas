@@ -427,7 +427,7 @@ var
   LMsg: TCryptoLibByteArray;
   LExpected: String;
   LSessionCtx: TBip327SessionContext;
-  LPsig: TCryptoLibByteArray;
+  LPsig, LComputedAggNonce, LAggNonceFromVector: TCryptoLibByteArray;
 begin
   LDomain := Secp256k1Domain();
   LSk := DecodeHex('7FB9E0E687ADA1EEBF7ECFE2F21E73EBDB51A7D450948DFE8D76D7F2D1007671');
@@ -447,8 +447,12 @@ begin
     DecodeHex('1969AD73CC177FA0B4FCED6DF1F7BF9907E665FDE9BA196A74FED0A3CF5AEF9D'),
     DecodeHex('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'));
   LMsg := DecodeHex('F95466D086770E689964664219266FE5ED215C92AE20BAB5C9D79ADDDDF3C0CF');
+
+  LAggNonceFromVector := DecodeHex('028465FCF0BBDBCF443AABCCE533D42B4B5A10966AC09A49655E8C42DAAB8FCD61037496A3CC86926D452CAFCFD55D25972CA1675D549310DE296BFF42F72EEEA8C9');
+  LComputedAggNonce := TBip327MuSig2.NonceAgg(LDomain, LPnonces);
+  Check(AreEqual(LAggNonceFromVector, LComputedAggNonce), 'Computed Agg Nonce does not match that from vector');
   // valid: key_indices [1,2,0], nonce [1,2,0], tweak [0], is_xonly [true], signer 2 -> expected
-  LSessionCtx.AggNonce := DecodeHex('028465FCF0BBDBCF443AABCCE533D42B4B5A10966AC09A49655E8C42DAAB8FCD61037496A3CC86926D452CAFCFD55D25972CA1675D549310DE296BFF42F72EEEA8C9');
+  LSessionCtx.AggNonce := LAggNonceFromVector;
   LSessionCtx.PubKeys := TCryptoLibGenericArray<TCryptoLibByteArray>.Create(LPubkeys[1], LPubkeys[2], LPubkeys[0]);
   LSessionCtx.Tweaks := TCryptoLibGenericArray<TCryptoLibByteArray>.Create(LTweaks[0]);
   LSessionCtx.IsXOnlyT := TCryptoLibBooleanArray.Create(True);

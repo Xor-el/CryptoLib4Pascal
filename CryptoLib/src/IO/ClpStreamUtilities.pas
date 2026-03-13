@@ -110,11 +110,11 @@ var
   LBuffer: TCryptoLibByteArray;
 begin
   System.SetLength(LBuffer, ABufferSize);
-  LBytesRead := ASource.Read(LBuffer, 0, ABufferSize);
+  LBytesRead := ASource.Read(LBuffer[0], ABufferSize);
   while LBytesRead <> 0 do
   begin
-    ADestination.Write(LBuffer, 0, LBytesRead);
-    LBytesRead := ASource.Read(LBuffer, 0, ABufferSize);
+    ADestination.Write(LBuffer[0], LBytesRead);
+    LBytesRead := ASource.Read(LBuffer[0], ABufferSize);
   end;
 end;
 
@@ -130,11 +130,11 @@ var
   LBytesRead: Int32;
 begin
   System.SetLength(LBuffer, DefaultBufferSize);
-  LBytesRead := AInStr.Read(LBuffer, 0, DefaultBufferSize);
+  LBytesRead := AInStr.Read(LBuffer[0], DefaultBufferSize);
   while LBytesRead > 0 do
   begin
     // Discard the data
-    LBytesRead := AInStr.Read(LBuffer, 0, DefaultBufferSize);
+    LBytesRead := AInStr.Read(LBuffer[0], DefaultBufferSize);
   end;
 end;
 
@@ -179,7 +179,7 @@ begin
     PipeAll(AInStr, LBuf);
     System.SetLength(Result, LBuf.Size);
     LBuf.Position := 0;
-    LBuf.Read(Result, 0, LBuf.Size);
+    LBuf.Read(Result[0], LBuf.Size);
   finally
     LBuf.Free;
   end;
@@ -195,7 +195,7 @@ begin
     PipeAllLimited(AInStr, ALimit, LBuf);
     System.SetLength(Result, LBuf.Size);
     LBuf.Position := 0;
-    LBuf.Read(Result, 0, LBuf.Size);
+    LBuf.Read(Result[0], LBuf.Size);
   finally
     LBuf.Free;
   end;
@@ -209,7 +209,7 @@ begin
   LTotalRead := 0;
   while LTotalRead < ALen do
   begin
-    LNumRead := AInStr.Read(ABuf, AOff + LTotalRead, ALen - LTotalRead);
+    LNumRead := AInStr.Read(ABuf[AOff + LTotalRead], ALen - LTotalRead);
     if LNumRead < 1 then
       break;
     LTotalRead := LTotalRead + LNumRead;
@@ -262,7 +262,7 @@ begin
   else
   begin
     System.SetLength(LBuffer, 1);
-    if Self.Read(LBuffer, 0, 1) = 0 then
+    if Self.Read(LBuffer[0], 1) = 0 then
       Result := -1
     else
       Result := Int32(LBuffer[0]);
@@ -279,7 +279,7 @@ begin
   begin
     System.SetLength(LOneByteArray, 1);
     LOneByteArray[0] := AValue;
-    Self.Write(LOneByteArray, 0, 1);
+    Self.Write(LOneByteArray[0], 1);
   end;
 end;
 

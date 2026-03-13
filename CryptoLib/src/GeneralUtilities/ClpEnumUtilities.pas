@@ -55,6 +55,16 @@ type
 
     /// <summary>
     /// Tries to parse a string as an enum ordinal. Only parses single named
+    /// constants: non-empty, first character a letter, no comma.
+    /// the input is normalized by replacing '-' and '/' with '_'.
+    /// Returns True and the ordinal in AResult when successful; otherwise
+    /// False and AResult is 0.
+    /// </summary>
+    class function TryGetEnumValue(ATypeInfo: PTypeInfo; const AInput: String;
+      out AResult: Int32): Boolean; overload; static;
+
+    /// <summary>
+    /// Tries to parse a string as an enum ordinal. Only parses single named
     /// constants: non-empty, first character a letter, no comma. When AReplacer
     /// is nil, the input is normalized by replacing '-' and '/' with '_'
     /// before parsing; when AReplacer is assigned, it is applied to the input.
@@ -63,14 +73,13 @@ type
     /// </summary>
     class function TryGetEnumValue(ATypeInfo: PTypeInfo; const AInput: String;
       out AResult: Int32;
-      const AReplacer: TFunc<String, String> = nil): Boolean; overload; static;
+      const AReplacer: TCryptoLibFunc<String, String>): Boolean; overload; static;
 
     /// <summary>
     /// Converts an enum ordinal to its declared name string.
     /// Returns empty string if ATypeInfo is nil, not an enum, or ordinal has no name.
     /// </summary>
-    class function ToString(ATypeInfo: PTypeInfo; AOrdinal: Int32): String;
-      reintroduce; overload; static;
+    class function ToString(ATypeInfo: PTypeInfo; AOrdinal: Int32): String; overload; static;
 
     // Generic overloads (T must be an enum); delegate to PTypeInfo versions.
 
@@ -86,12 +95,18 @@ type
     class function GetArbitraryValue<T>: T; overload; static;
 
     /// <summary>
+    /// Tries to parse a string as an enum value. Default normalization ('-', '/' to '_') is used.
+    /// On failure, AResult is Default(T).
+    /// </summary>
+    class function TryGetEnumValue<T>(const AInput: String; out AResult: T): Boolean; overload; static;
+
+    /// <summary>
     /// Tries to parse a string as an enum value. When AReplacer is nil, default
     /// normalization ('-', '/' to '_') is used.
     /// On failure, AResult is Default(T).
     /// </summary>
     class function TryGetEnumValue<T>(const AInput: String; out AResult: T;
-      const AReplacer: TFunc<String, String> = nil): Boolean; overload; static;
+      const AReplacer: TCryptoLibFunc<String, String>): Boolean; overload; static;
 
     /// <summary>
     /// Tries to interpret an ordinal as a valid named value of the enum.
@@ -103,7 +118,7 @@ type
     /// <summary>
     /// Converts an enum value to its declared name string.
     /// </summary>
-    class function ToString<T>(const AValue: T): String; reintroduce; overload; static;
+    class function ToString<T>(const AValue: T): String; overload; static;
   end;
 
 implementation
@@ -152,8 +167,14 @@ begin
 end;
 
 class function TEnumUtilities.TryGetEnumValue(ATypeInfo: PTypeInfo;
+  const AInput: String; out AResult: Int32): Boolean;
+begin
+  Result := TryGetEnumValue(ATypeInfo, AInput, AResult, nil);
+end;
+
+class function TEnumUtilities.TryGetEnumValue(ATypeInfo: PTypeInfo;
   const AInput: String; out AResult: Int32;
-  const AReplacer: TFunc<String, String>): Boolean;
+  const AReplacer: TCryptoLibFunc<String, String>): Boolean;
 var
   LProcessed: String;
   LOrd: Int32;
@@ -209,8 +230,21 @@ begin
   Move(LOrd, Result, SizeOf(T));
 end;
 
+class function TEnumUtilities.TryGetEnumValue<T>(const AInput: String; out AResult: T): Boolean;
+var
+  LOrd: Int32;
+begin
+  // TODO: FPC 3.2.x fails when compiling TryGetEnumValue<T>(...), when upgrading minimum FPC to a version
+  // that compiles it, remove this inlined implementation and forward to TryGetEnumValue<T>(AInput, AResult, nil).
+  Result := TryGetEnumValue(TypeInfo(T), AInput, LOrd, nil);
+  if Result then
+    Move(LOrd, AResult, SizeOf(T))
+  else
+    AResult := Default(T);
+end;
+
 class function TEnumUtilities.TryGetEnumValue<T>(const AInput: String;
-  out AResult: T; const AReplacer: TFunc<String, String>): Boolean;
+  out AResult: T; const AReplacer: TCryptoLibFunc<String, String>): Boolean;
 var
   LOrd: Int32;
 begin

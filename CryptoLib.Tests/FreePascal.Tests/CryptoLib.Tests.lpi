@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="129">
+    <Units Count="130">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -597,6 +597,10 @@
         <Filename Value="..\src\Crypto\ClpBip327MuSig2Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit128>
+      <Unit129>
+        <Filename Value="..\src\Utils\ClpCertTestUtilities.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit129>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -616,15 +620,18 @@
       </Optimizations>
     </CodeGeneration>
     <Linking>
-      <Debugging>
-        <UseHeaptrc Value="True"/>
-      </Debugging>
       <Options>
         <Win32>
           <GraphicApplication Value="True"/>
         </Win32>
       </Options>
     </Linking>
+    <Other>
+      <ConfigFile>
+        <CustomConfigFile Value="True"/>
+        <ConfigFilePath Value="..\..\BuildConfig\FPC\CryptoLibFPCMessages.cfg"/>
+      </ConfigFile>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

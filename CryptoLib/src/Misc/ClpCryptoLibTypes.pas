@@ -25,23 +25,38 @@ uses
   SysUtils;
 
 type
-{$IFDEF FPC}
+  // Plain procedure pointer overloads
+  TCryptoLibProc = procedure;
+  TCryptoLibProc<T1> = procedure(Arg1: T1);
+  TCryptoLibProc<T1, T2> = procedure(Arg1: T1; Arg2: T2);
+  TCryptoLibProc<T1, T2, T3> = procedure(Arg1: T1; Arg2: T2; Arg3: T3);
+  TCryptoLibProc<T1, T2, T3, T4> = procedure(Arg1: T1; Arg2: T2; Arg3: T3; Arg4: T4);
 
-  TProc = reference to procedure;
-  TProc<T> = reference to procedure(Arg1: T);
-  TProc<T1, T2> = reference to procedure(Arg1: T1; Arg2: T2);
-  TProc<T1, T2, T3> = reference to procedure(Arg1: T1; Arg2: T2; Arg3: T3);
-  TProc<T1, T2, T3, T4> = reference to procedure(Arg1: T1; Arg2: T2; Arg3: T3; Arg4: T4);
+  // Plain function pointer overloads
+  TCryptoLibFunc<TResult> = function: TResult;
+  TCryptoLibFunc<T1, TResult> = function(Arg1: T1): TResult;
+  TCryptoLibFunc<T1, T2, TResult> = function(Arg1: T1; Arg2: T2): TResult;
+  TCryptoLibFunc<T1, T2, T3, TResult> = function(Arg1: T1; Arg2: T2; Arg3: T3): TResult;
+  TCryptoLibFunc<T1, T2, T3, T4, TResult> = function(Arg1: T1; Arg2: T2; Arg3: T3; Arg4: T4): TResult;
 
-  TFunc<TResult> = reference to function: TResult;
-  TFunc<T, TResult> = reference to function(Arg1: T): TResult;
-  TFunc<T1, T2, TResult> = reference to function(Arg1: T1; Arg2: T2): TResult;
-  TFunc<T1, T2, T3, TResult> = reference to function(Arg1: T1; Arg2: T2; Arg3: T3): TResult;
-  TFunc<T1, T2, T3, T4, TResult> = reference to function(Arg1: T1; Arg2: T2; Arg3: T3; Arg4: T4): TResult;
+  TCryptoLibPredicate<T> = function(Arg1: T): Boolean;
 
-  TPredicate<T> = reference to function(Arg1: T): Boolean;
+  // Method-of-object procedure overloads
+  TCryptoLibMethodProc = procedure of object;
+  TCryptoLibMethodProc<T1> = procedure(Arg1: T1) of object;
+  TCryptoLibMethodProc<T1, T2> = procedure(Arg1: T1; Arg2: T2) of object;
+  TCryptoLibMethodProc<T1, T2, T3> = procedure(Arg1: T1; Arg2: T2; Arg3: T3) of object;
+  TCryptoLibMethodProc<T1, T2, T3, T4> = procedure(Arg1: T1; Arg2: T2; Arg3: T3; Arg4: T4) of object;
 
-{$ENDIF FPC}
+  // Method-of-object function overloads
+  TCryptoLibMethodFunc<TResult> = function: TResult of object;
+  TCryptoLibMethodFunc<T1, TResult> = function(Arg1: T1): TResult of object;
+  TCryptoLibMethodFunc<T1, T2, TResult> = function(Arg1: T1; Arg2: T2): TResult of object;
+  TCryptoLibMethodFunc<T1, T2, T3, TResult> = function(Arg1: T1; Arg2: T2; Arg3: T3): TResult of object;
+  TCryptoLibMethodFunc<T1, T2, T3, T4, TResult> = function(Arg1: T1; Arg2: T2; Arg3: T3; Arg4: T4): TResult of object;
+
+  TCryptoLibMethodPredicate<T> = function(Arg1: T): Boolean of object;
+
   ECryptoLibException = class(Exception);
   EInvalidCastCryptoLibException = class(EInvalidCast);
   EArithmeticCryptoLibException = class(ECryptoLibException);

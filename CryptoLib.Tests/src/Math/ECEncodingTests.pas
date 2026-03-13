@@ -62,6 +62,7 @@ uses
   ClpIX509Asn1Objects,
   ClpIX509Generators,
   ClpX509Generators,
+  ClpDateTimeHelper,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -227,7 +228,7 @@ begin
     LPubECKey := SetPublicUncompressed(LPubECKey);
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(TX509Name.Create('CN=Software emul (EC Cert)') as IX509Name);
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := Now.ToUniversalTime();
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
   LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50000));
   LCertGen.SetSubjectDN(TX509Name.Create('CN=Software emul (EC Cert)') as IX509Name);

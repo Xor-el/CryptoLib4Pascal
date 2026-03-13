@@ -27,7 +27,6 @@ uses
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpIPkcs12Entry,
   ClpIAsymmetricKeyEntry,
   ClpIAsymmetricKeyParameter,
   ClpPkcs12Entry,

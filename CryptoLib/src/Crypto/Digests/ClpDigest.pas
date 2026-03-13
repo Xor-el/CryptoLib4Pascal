@@ -24,7 +24,6 @@ uses
   SysUtils,
   Generics.Collections,
   HlpIHash,
-  HlpIHashInfo,
   ClpIDigest,
   ClpCryptoLibTypes;
 

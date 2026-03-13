@@ -34,7 +34,8 @@ uses
   ClpBip327MuSig2Tests, CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests,
   Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, ClpFixedSecureRandom, ClpShortenedDigest,
-  Int32Tests, Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
+  ClpCertTestUtilities, Int32Tests, Int64Tests, IPAddressUtilitiesTests,
+  PemReaderTests;
 
 type
 

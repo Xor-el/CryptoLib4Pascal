@@ -27,18 +27,13 @@ uses
   SysUtils,
   Classes,
   Rtti,
+  ClpValueHelper,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpPemHeader,
-  ClpPemObject,
-  ClpIPemHeader,
-  ClpIPemObject,
-  ClpIPemWriter,
-  ClpPemWriter,
   ClpIOpenSslPemWriter,
   ClpOpenSslPemWriter,
   ClpConverters,
@@ -46,15 +41,12 @@ uses
   ClpOpenSslPemReader,
   ClpIOpenSslPasswordFinder,
   ClpIAsymmetricCipherKeyPair,
-  ClpAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpBigInteger,
   ClpRsaGenerators,
-  ClpIRsaGenerators,
   ClpIRsaParameters,
   ClpRsaParameters,
   ClpIKeyGenerationParameters,
-  ClpKeyGenerationParameters,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpDsaParameters,
@@ -62,14 +54,10 @@ uses
   ClpDsaGenerators,
   ClpIDsaGenerators,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpPrivateKeyFactory,
-  ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpICmsAsn1Objects,
-  ClpCmsAsn1Objects,
   ClpCmsObjectIdentifiers,
   ClpIAsn1Objects,
-  ClpX9ECAsn1Objects,
   ClpIX9ECAsn1Objects,
   ClpX9ObjectIdentifiers,
   ClpCryptoLibTypes,
@@ -1286,7 +1274,7 @@ begin
       LReader := CreatePemReader(LReadStream);
       LReadVal := LReader.ReadObject();
       Check(not LReadVal.IsEmpty, 'Public key should read back');
-      Check(LReadVal.TryAsType<IAsymmetricKeyParameter>(LPubK), 'Should be public key');
+      Check(LReadVal.TryGetAsType<IAsymmetricKeyParameter>(LPubK), 'Should be public key');
       Check(LPubK.Equals(APair.Public), 'Failed public key read: ' + AName);
     finally
       LReadStream.Free;
@@ -1304,7 +1292,7 @@ begin
     try
       LReader := CreatePemReader(LReadStream);
       LReadVal := LReader.ReadObject();
-      Check(LReadVal.TryAsType<IAsymmetricCipherKeyPair>(LReadPair), 'Should be key pair');
+      Check(LReadVal.TryGetAsType<IAsymmetricCipherKeyPair>(LReadPair), 'Should be key pair');
       Check(LReadPair.Private.Equals(APair.Private), 'Failed private key read: ' + AName);
       Check(LReadPair.Public.Equals(APair.Public), 'Failed private key public read: ' + AName);
     finally
@@ -1329,7 +1317,7 @@ begin
     LReader := CreatePemReader(LStream);
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'ReadObject should return key');
-    Check(LVal.TryAsType<IAsymmetricCipherKeyPair>(LKp), 'Should be key pair');
+    Check(LVal.TryGetAsType<IAsymmetricCipherKeyPair>(LKp), 'Should be key pair');
     Check(LKp <> nil, 'Didn''t find OpenSSL key');
     if AExpectDsa then
       Check(Supports(LKp.Private, IDsaPrivateKeyParameters, LDummy), 'Returned key not DSA private')
@@ -1352,7 +1340,7 @@ begin
     LReader := CreatePemReader(LStream);
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'ReadObject should return PKCS7');
-    Check(LVal.TryAsType<ICmsContentInfo>(LCmsContent), 'Should be CmsContentInfo');
+    Check(LVal.TryGetAsType<ICmsContentInfo>(LCmsContent), 'Should be CmsContentInfo');
     Check(LCmsContent <> nil, 'ContentInfo should not be nil');
     Check(LCmsContent.ContentType.Equals(TCmsObjectIdentifiers.EnvelopedData),
       'ContentType should be EnvelopedData');
@@ -1411,7 +1399,7 @@ begin
   try
     LReader := CreatePemReader(LStream);
     LVal := LReader.ReadObject();
-    Check(LVal.TryAsType<ICmsContentInfo>(LCmsContent), 'Should be CmsContentInfo');
+    Check(LVal.TryGetAsType<ICmsContentInfo>(LCmsContent), 'Should be CmsContentInfo');
     Check(LCmsContent <> nil, 'ContentInfo should not be nil');
 
     LOutStream := TStringStream.Create('', TEncoding.ASCII);
@@ -1420,7 +1408,7 @@ begin
       LWriter.WriteObject(TValue.From<ICmsContentInfo>(LCmsContent));
       LReader2 := CreatePemReader(LOutStream);
       LVal2 := LReader2.ReadObject();
-      Check(LVal2.TryAsType<ICmsContentInfo>(LCmsContent2), 'Read back should be CmsContentInfo');
+      Check(LVal2.TryGetAsType<ICmsContentInfo>(LCmsContent2), 'Read back should be CmsContentInfo');
       Check(LCmsContent2.ContentType.Equals(TCmsObjectIdentifiers.EnvelopedData),
         'failed envelopedData recode check');
     finally
@@ -1457,7 +1445,7 @@ begin
     // First object: EC PARAMETERS
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'First ReadObject should return EC PARAMETERS');
-    Check(LVal.TryAsType<IX962Parameters>(LX962Params), 'First should be IX962Parameters');
+    Check(LVal.TryGetAsType<IX962Parameters>(LX962Params), 'First should be IX962Parameters');
     Check(LX962Params <> nil, 'EC PARAMETERS (X962Parameters) should not be nil');
     Check(LX962Params.IsNamedCurve, 'EC PARAMETERS should be a named curve');
     LOid := LX962Params.Parameters as IDerObjectIdentifier;
@@ -1466,7 +1454,7 @@ begin
     // Second object: EC PRIVATE KEY
     LVal2 := LReader.ReadObject();
     Check(not LVal2.IsEmpty, 'Second ReadObject should return EC PRIVATE KEY');
-    Check(LVal2.TryAsType<IAsymmetricCipherKeyPair>(LKp), 'Second should be IAsymmetricCipherKeyPair');
+    Check(LVal2.TryGetAsType<IAsymmetricCipherKeyPair>(LKp), 'Second should be IAsymmetricCipherKeyPair');
     Check(LKp <> nil, 'EC key pair should not be nil');
 
     // Write roundtrip
@@ -1483,14 +1471,14 @@ begin
 
         LVal3 := LReader2.ReadObject();
         Check(not LVal3.IsEmpty, 'Roundtrip first ReadObject should return EC PARAMETERS');
-        Check(LVal3.TryAsType<IX962Parameters>(LX962Params2), 'Roundtrip first should be IX962Parameters');
+        Check(LVal3.TryGetAsType<IX962Parameters>(LX962Params2), 'Roundtrip first should be IX962Parameters');
         Check(LX962Params2.IsNamedCurve, 'Roundtrip EC PARAMETERS should be a named curve');
         LOid2 := LX962Params2.Parameters as IDerObjectIdentifier;
         Check(LOid2.Equals(TX9ObjectIdentifiers.Prime256v1), 'Roundtrip EC PARAMETERS should be prime256v1');
 
         LVal4 := LReader2.ReadObject();
         Check(not LVal4.IsEmpty, 'Roundtrip second ReadObject should return EC PRIVATE KEY');
-        Check(LVal4.TryAsType<IAsymmetricCipherKeyPair>(LKp2), 'Roundtrip second should be IAsymmetricCipherKeyPair');
+        Check(LVal4.TryGetAsType<IAsymmetricCipherKeyPair>(LKp2), 'Roundtrip second should be IAsymmetricCipherKeyPair');
         Check(LKp2.Private.Equals(LKp.Private), 'Roundtrip EC private key should match');
         Check(LKp2.Public.Equals(LKp.Public), 'Roundtrip EC public key should match');
       finally
@@ -1528,7 +1516,7 @@ begin
     LReader := TOpenSslPemReader.Create(LStream, TTestOpenSslPassword.Create(APassword) as IOpenSslPasswordFinder);
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'ReadObject should return key');
-    Check(LVal.TryAsType<IAsymmetricCipherKeyPair>(LKp), 'Should be key pair');
+    Check(LVal.TryGetAsType<IAsymmetricCipherKeyPair>(LKp), 'Should be key pair');
     Check(LKp <> nil, 'Didn''t find OpenSSL key');
     if AExpectDsa then
       Check(Supports(LKp.Private, IDsaPrivateKeyParameters, LDummy), 'Returned key not DSA private')
@@ -1656,7 +1644,7 @@ begin
     LReader := TOpenSslPemReader.Create(LStream, TTestOpenSslPassword.Create('password') as IOpenSslPasswordFinder);
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'ReadObject should return key');
-    Check(LVal.TryAsType<IAsymmetricKeyParameter>(LPrivKey), 'Should be IAsymmetricKeyParameter');
+    Check(LVal.TryGetAsType<IAsymmetricKeyParameter>(LPrivKey), 'Should be IAsymmetricKeyParameter');
     Check(Supports(LPrivKey, IRsaPrivateCrtKeyParameters, LRsaKey),
       'Should be RSA private CRT key');
     Check(LRsaKey.PublicExponent.Equals(TBigInteger.Create('10001', 16)),
@@ -1682,7 +1670,7 @@ begin
 
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'First ReadObject should return key');
-    Check(LVal.TryAsType<IAsymmetricKeyParameter>(LPrivKey), 'First should be IAsymmetricKeyParameter');
+    Check(LVal.TryGetAsType<IAsymmetricKeyParameter>(LPrivKey), 'First should be IAsymmetricKeyParameter');
     Check(Supports(LPrivKey, IRsaPrivateCrtKeyParameters, LRsaKey),
       'First should be RSA private CRT key');
     Check(LRsaKey.PublicExponent.Equals(TBigInteger.Create('10001', 16)),
@@ -1692,7 +1680,7 @@ begin
 
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'Second ReadObject should return key');
-    Check(LVal.TryAsType<IAsymmetricKeyParameter>(LPrivKey), 'Second should be IAsymmetricKeyParameter');
+    Check(LVal.TryGetAsType<IAsymmetricKeyParameter>(LPrivKey), 'Second should be IAsymmetricKeyParameter');
     Check(Supports(LPrivKey, IRsaPrivateCrtKeyParameters, LRsaKey),
       'Second should be RSA private CRT key');
     Check(LRsaKey.PublicExponent.Equals(TBigInteger.Create('10001', 16)),

@@ -680,6 +680,9 @@ contains
   ClpX509CertificatePairParser in '..\..\X509\ClpX509CertificatePairParser.pas',
   ClpX509CertificatePair in '..\..\X509\ClpX509CertificatePair.pas',
   ClpIX509CertificatePairParser in '..\..\Interfaces\X509\ClpIX509CertificatePairParser.pas',
-  ClpIX509CertificatePair in '..\..\Interfaces\X509\ClpIX509CertificatePair.pas';
+  ClpIX509CertificatePair in '..\..\Interfaces\X509\ClpIX509CertificatePair.pas',
+  ClpFormatSettingsHelper in '..\..\Helpers\ClpFormatSettingsHelper.pas',
+  ClpDateTimeHelper in '..\..\Helpers\ClpDateTimeHelper.pas',
+  ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas';
 
 end.

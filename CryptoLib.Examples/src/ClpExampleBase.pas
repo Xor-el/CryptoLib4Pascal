@@ -29,6 +29,7 @@ uses
   SysUtils,
   Classes,
   Rtti,
+  ClpValueHelper,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
@@ -153,7 +154,7 @@ begin
     LReadVal := LReader.ReadObject();
     if LReadVal.IsEmpty then
       Exit;
-    Result := LReadVal.TryAsType<IAsymmetricCipherKeyPair>(AKeyPair);
+    Result := LReadVal.TryGetAsType<IAsymmetricCipherKeyPair>(AKeyPair);
   finally
     LStream.Free;
   end;
@@ -173,7 +174,7 @@ begin
     LReadVal := LReader.ReadObject();
     if LReadVal.IsEmpty then
       Exit;
-    Result := LReadVal.TryAsType<IAsymmetricKeyParameter>(AKey);
+    Result := LReadVal.TryGetAsType<IAsymmetricKeyParameter>(AKey);
   finally
     LStream.Free;
   end;

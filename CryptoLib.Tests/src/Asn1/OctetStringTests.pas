@@ -69,8 +69,8 @@ begin
     LOctGen := TBerOctetStringGenerator.Create(LBOut);
     LOutStream := LOctGen.GetOctetOutputStream();
     try
-      LOutStream.Write(TCryptoLibByteArray.Create(1, 2, 3, 4), 0, 4);
-      LOutStream.Write(TCryptoLibByteArray.Create(0, 0, 0, 0), 0, 4);
+      LOutStream.Write(TCryptoLibByteArray.Create(1, 2, 3, 4)[0], 4);
+      LOutStream.Write(TCryptoLibByteArray.Create(0, 0, 0, 0)[0], 4);
     finally
       LOutStream.Free;
     end;
@@ -80,7 +80,7 @@ begin
     LBOut.Position := 0;
     System.SetLength(LBOutBytes, LBOut.Size);
 
-    LBOut.Read(LBOutBytes, 0, System.Length(LBOutBytes));
+    LBOut.Read(LBOutBytes[0], System.Length(LBOutBytes));
 
     LAIn := TAsn1StreamParser.Create(LBOutBytes);
     LS := LAIn.ReadObject() as IBerOctetStringParser;
@@ -134,8 +134,8 @@ begin
       LInOctGen := TBerOctetStringGenerator.Create(LInSGen.GetRawOutputStream());
       LInOut := LInOctGen.GetOctetOutputStream();
       try
-        LInOut.Write(TCryptoLibByteArray.Create(1, 2, 3, 4), 0, 4);
-        LInOut.Write(TCryptoLibByteArray.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 0, 10);
+        LInOut.Write(TCryptoLibByteArray.Create(1, 2, 3, 4)[0], 4);
+        LInOut.Write(TCryptoLibByteArray.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)[0], 10);
       finally
         LInOut.Free;
       end;
@@ -152,7 +152,7 @@ begin
     LBOut.Position := 0;
     System.SetLength(LBOutBytes, LBOut.Size);
 
-    LBOut.Read(LBOutBytes, 0, System.Length(LBOutBytes));
+    LBOut.Read(LBOutBytes[0], System.Length(LBOutBytes));
 
     LAIn := TAsn1StreamParser.Create(LBOutBytes);
     LSq := LAIn.ReadObject() as IBerSequenceParser;
@@ -202,8 +202,8 @@ begin
     LOctGen := TBerOctetStringGenerator.Create(LBOut);
     LOutStream := LOctGen.GetOctetOutputStream();
     try
-      LOutStream.Write(TCryptoLibByteArray.Create(1, 2, 3, 4), 0, 4);
-      LOutStream.Write(LZeroBytes, 0, 512);  // forces a zero to appear in length
+      LOutStream.Write(TCryptoLibByteArray.Create(1, 2, 3, 4)[0], 4);
+      LOutStream.Write(LZeroBytes[0], 512);  // forces a zero to appear in length
     finally
       LOutStream.Free;
     end;
@@ -214,7 +214,7 @@ begin
     LBOut.Position := 0;
     System.SetLength(LBOutBytes, LBOut.Size);
 
-    LBOut.Read(LBOutBytes, 0, System.Length(LBOutBytes));
+    LBOut.Read(LBOutBytes[0], System.Length(LBOutBytes));
 
     LAIn := TAsn1StreamParser.Create(LBOutBytes);
     LS := LAIn.ReadObject() as IBerOctetStringParser;

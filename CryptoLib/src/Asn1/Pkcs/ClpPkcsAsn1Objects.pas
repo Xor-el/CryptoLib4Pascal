@@ -106,6 +106,8 @@ type
     FCrls: IAsn1Set;
     FSignerInfos: IAsn1Set;
 
+    class function GetTaggedAsn1SetFromSeq(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set; static;
+
   strict protected
     function GetVersion: IDerInteger;
     function GetDigestAlgorithms: IAsn1Set;
@@ -184,6 +186,8 @@ type
     FSubject: IX509Name;
     FSubjectPKInfo: ISubjectPublicKeyInfo;
     FAttributes: IAsn1Set;
+
+    class function GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set; static;
 
   strict protected
     function GetVersion: IDerInteger;
@@ -267,6 +271,9 @@ type
     FPrivateKey: IAsn1OctetString;
     FAttributes: IAsn1Set;
     FPublicKey: IDerBitString;
+
+    class function GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set; static;
+    class function GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString; static;
 
   strict protected
     function GetVersion: IDerInteger;
@@ -455,6 +462,8 @@ type
     FDefaultPrf: IAlgorithmIdentifier;
 
    class constructor Create(); overload;
+    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
+    class function ReadOptionalAlgorithmIdentifier(AEnc: IAsn1Encodable): IAlgorithmIdentifier; static;
 
   strict protected
     function GetSalt: IAsn1OctetString;
@@ -537,6 +546,8 @@ type
     FMacSalt: IAsn1OctetString;
     FIterations: IDerInteger;
 
+    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
+
   strict protected
     function GetMac: IDigestInfo;
     function GetSalt: TCryptoLibByteArray;
@@ -576,6 +587,8 @@ type
     FBagID: IDerObjectIdentifier;
     FBagValue: IAsn1Encodable;
     FBagAttributes: IAsn1Set;
+
+    class function ReadOptionalAsn1Set(AElement: IAsn1Encodable): IAsn1Set; static;
 
   strict protected
     function GetBagID: IDerObjectIdentifier;
@@ -648,6 +661,9 @@ type
   var
     FInfo: TCryptoLibGenericArray<IPkcsContentInfo>;
     FIsBer: Boolean;
+
+    class function ElementToPkcsContentInfo(AElement: IAsn1Encodable): IPkcsContentInfo; static;
+    class function PkcsContentInfoToAsn1Encodable(AElement: IPkcsContentInfo): IAsn1Encodable; static;
 
   strict protected
     function GetContentInfo: TCryptoLibGenericArray<IPkcsContentInfo>;
@@ -910,10 +926,7 @@ begin
 
   // NOTE: some CertificationRequestInfo objects seem to treat this field as optional.
   FAttributes := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set
-    begin
-      Result := TAsn1Set.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAsn1Set);
 
   if LPos <> LCount then
   begin
@@ -921,6 +934,11 @@ begin
   end;
 
   ValidateAttributes(FAttributes);
+end;
+
+class function TCertificationRequestInfo.GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set;
+begin
+  Result := TAsn1Set.GetTagged(ATagged, AState);
 end;
 
 constructor TCertificationRequestInfo.Create(const ASubject: IX509Name;
@@ -1199,16 +1217,10 @@ begin
   System.Inc(LPos);
 
   FAttributes := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set
-    begin
-      Result := TAsn1Set.GetTagged(ATagged, AState);
-    end);
+    GetTaggedAsn1Set);
 
   FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, False,
-    function(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString
-    begin
-      Result := TDerBitString.GetTagged(ATagged, AState);
-    end);
+    GetTaggedDerBitString);
 
   if LPos <> LCount then
   begin
@@ -1220,6 +1232,16 @@ begin
   begin
     raise EArgumentCryptoLibException.Create('''publicKey'' requires version v2(1) or later');
   end;
+end;
+
+class function TPrivateKeyInfo.GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set;
+begin
+  Result := TAsn1Set.GetTagged(ATagged, AState);
+end;
+
+class function TPrivateKeyInfo.GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString;
+begin
+  Result := TDerBitString.GetTagged(ATagged, AState);
 end;
 
 constructor TPrivateKeyInfo.Create(const APrivateKeyAlgorithm: IAlgorithmIdentifier;
@@ -1761,20 +1783,22 @@ begin
   System.Inc(LPos);
   FIterationCount := TDerInteger.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
-  FKeyLength := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos,
-    function(AEnc: IAsn1Encodable): IDerInteger
-    begin
-      Result := TDerInteger.GetOptional(AEnc);
-    end);
-  FPrf := TAsn1Utilities.ReadOptional<IAlgorithmIdentifier>(ASeq, LPos,
-    function(AEnc: IAsn1Encodable): IAlgorithmIdentifier
-    begin
-      Result := TAlgorithmIdentifier.GetOptional(AEnc);
-    end);
+  FKeyLength := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  FPrf := TAsn1Utilities.ReadOptional<IAlgorithmIdentifier>(ASeq, LPos, ReadOptionalAlgorithmIdentifier);
   if FPrf = nil then
     FPrf := DefaultPrf;
   if LPos <> LCount then
     raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+class function TPbkdf2Params.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AEnc);
+end;
+
+class function TPbkdf2Params.ReadOptionalAlgorithmIdentifier(AEnc: IAsn1Encodable): IAlgorithmIdentifier;
+begin
+  Result := TAlgorithmIdentifier.GetOptional(AEnc);
 end;
 
 constructor TPbkdf2Params.Create(const ASalt: TCryptoLibByteArray; AIterationCount: Int32);
@@ -2141,21 +2165,20 @@ begin
   System.Inc(LPos);
   FCertificates := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Sequence, IAsn1Set>(
     ASeq, LPos, 0, ASeq,
-    function(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set
-    begin
-      Result := TAsn1Set.GetTagged(ATagged, False);
-    end);
+    GetTaggedAsn1SetFromSeq);
   FCrls := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Sequence, IAsn1Set>(
     ASeq, LPos, 1, ASeq,
-    function(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set
-    begin
-      Result := TAsn1Set.GetTagged(ATagged, False);
-    end);
+    GetTaggedAsn1SetFromSeq);
   FSignerInfos := TAsn1Set.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
 
   if LPos <> LCount then
     raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+class function TPkcsSignedData.GetTaggedAsn1SetFromSeq(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set;
+begin
+  Result := TAsn1Set.GetTagged(ATagged, False);
 end;
 
 constructor TPkcsSignedData.Create(const AVersion: IDerInteger;
@@ -2291,16 +2314,17 @@ begin
   System.Inc(LPos);
   FMacSalt := TAsn1OctetString.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
-  FIterations := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos,
-    function(AEnc: IAsn1Encodable): IDerInteger
-    begin
-      Result := TDerInteger.GetOptional(AEnc);
-    end);
+  FIterations := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
   if FIterations = nil then
     FIterations := TDerInteger.One;
 
   if LPos <> LCount then
     raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+class function TMacData.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AEnc);
 end;
 
 constructor TMacData.Create(const ADigInfo: IDigestInfo;
@@ -2544,14 +2568,15 @@ begin
   FBagValue := LTagged.GetExplicitBaseObject();
   System.Inc(LPos);
 
-  FBagAttributes := TAsn1Utilities.ReadOptional<IAsn1Set>(ASeq, LPos,
-    function(A: IAsn1Encodable): IAsn1Set
-    begin
-      Result := TAsn1Set.GetOptional(A);
-    end);
+  FBagAttributes := TAsn1Utilities.ReadOptional<IAsn1Set>(ASeq, LPos, ReadOptionalAsn1Set);
 
   if LPos <> LCount then
     raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+end;
+
+class function TSafeBag.ReadOptionalAsn1Set(AElement: IAsn1Encodable): IAsn1Set;
+begin
+  Result := TAsn1Set.GetOptional(AElement);
 end;
 
 constructor TSafeBag.Create(const ABagID: IDerObjectIdentifier;
@@ -2766,12 +2791,18 @@ constructor TAuthenticatedSafe.Create(const ASeq: IAsn1Sequence);
 begin
   inherited Create();
 
-  FInfo := TArrayUtilities.Map<IAsn1Encodable, IPkcsContentInfo>(ASeq.Elements,
-    function(AElement: IAsn1Encodable): IPkcsContentInfo
-    begin
-      Result := TPkcsContentInfo.GetInstance(AElement);
-    end);
+  FInfo := TArrayUtilities.Map<IAsn1Encodable, IPkcsContentInfo>(ASeq.Elements, ElementToPkcsContentInfo);
   FIsBer := Supports(ASeq, IBerSequence);
+end;
+
+class function TAuthenticatedSafe.ElementToPkcsContentInfo(AElement: IAsn1Encodable): IPkcsContentInfo;
+begin
+  Result := TPkcsContentInfo.GetInstance(AElement);
+end;
+
+class function TAuthenticatedSafe.PkcsContentInfoToAsn1Encodable(AElement: IPkcsContentInfo): IAsn1Encodable;
+begin
+  Result := AElement as IAsn1Encodable;
 end;
 
 constructor TAuthenticatedSafe.Create(const AInfo: TCryptoLibGenericArray<IPkcsContentInfo>);
@@ -2790,11 +2821,7 @@ function TAuthenticatedSafe.ToAsn1Object: IAsn1Object;
 var
  LInfo: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
-  LInfo := TArrayUtilities.Map<IPkcsContentInfo, IAsn1Encodable>(FInfo,
-    function(AElement: IPkcsContentInfo): IAsn1Encodable
-    begin
-      Result := AElement as IAsn1Encodable;
-    end);
+  LInfo := TArrayUtilities.Map<IPkcsContentInfo, IAsn1Encodable>(FInfo, PkcsContentInfoToAsn1Encodable);
   if FIsBer then
     Result := TBerSequence.Create(LInfo)
   else

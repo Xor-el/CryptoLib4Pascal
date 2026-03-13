@@ -27,10 +27,8 @@ uses
   ClpIECCommon,
   ClpIECParameters,
   ClpBip340SchnorrUtilities,
-  ClpECUtilities,
   ClpECAlgorithms,
   ClpBigIntegerUtilities,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type

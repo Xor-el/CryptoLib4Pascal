@@ -30,14 +30,11 @@ uses
   Generics.Defaults,
   ClpIMac,
   ClpPkcsRsaAsn1Objects,
-  ClpIPkcsRsaAsn1Objects,
-  ClpX509Extension,
   ClpDigestUtilities,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Core,
   ClpIAsn1Core,
-  ClpAsn1Tags,
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpPkcsObjectIdentifiers,
@@ -56,8 +53,6 @@ uses
   ClpPrivateKeyFactory,
   ClpPrivateKeyInfoFactory,
   ClpEncryptedPrivateKeyInfoFactory,
-  ClpIPkcs8EncryptedPrivateKeyInfo,
-  ClpPkcs12Entry,
   ClpIPkcs12Entry,
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
@@ -66,6 +61,7 @@ uses
   ClpCryptoLibTypes,
   ClpEncoders,
   ClpPbeUtilities,
+  ClpValueHelper,
   ClpMacUtilities,
   ClpCipherUtilities,
   ClpIBufferedCipher,
@@ -519,7 +515,7 @@ begin
   LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(LHmacDigestOid, ASalt, AIterations);
   LCipherParameters := TPbeUtilities.GenerateCipherParameters(LHmacDigestOid, APassword, AWrongPkcs12Zero, LPbeParameters);
   LEngine := TPbeUtilities.CreateEngine(LHmacDigestOid);
-  if not (LEngine.TryAsType<IMac>(LMac)) or (LMac = nil) then
+  if not (LEngine.TryGetAsType<IMac>(LMac)) or (LMac = nil) then
     raise ECryptoLibException.Create('PBE engine for MAC not found for ' + LHmacDigestOid.Id);
   LMac.Init(LCipherParameters);
   Result := TMacUtilities.DoFinal(LMac, AData);
@@ -547,7 +543,7 @@ var
   LCipherParameters: ICipherParameters;
 begin
   LEngine := TPbeUtilities.CreateEngine(AAlgID);
-  if not (LEngine.TryAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
+  if not (LEngine.TryGetAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
     raise ECryptoLibException.Create(Format(SUnknownEncryption, [AAlgID.Algorithm.Id]));
   if TPkcsObjectIdentifiers.IdPbeS2.Equals(AAlgID.Algorithm) then
   begin

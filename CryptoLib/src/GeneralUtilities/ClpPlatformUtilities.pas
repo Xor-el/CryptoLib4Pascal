@@ -22,7 +22,8 @@ unit ClpPlatformUtilities;
 interface
 
 uses
-  SysUtils;
+  SysUtils,
+  TypInfo;
 
 type
   /// <summary>
@@ -35,6 +36,7 @@ type
     /// </summary>
     class function GetTypeName(AObj: TObject): String; overload; static;
     class function GetTypeName(AClass: TClass): String; overload; static;
+    class function GetTypeName(ATypeInfo: PTypeInfo): String; overload; static;
     /// <summary>
     /// Get an environment variable value.
     /// </summary>
@@ -63,6 +65,15 @@ begin
     Result := 'nil'
   else
     Result := AClass.ClassName;
+end;
+
+class function TPlatformUtilities.GetTypeName(ATypeInfo: PTypeInfo): String;
+begin
+{$IFDEF FPC}
+  Result := ATypeInfo^.Name;
+{$ELSE}
+  Result := TypInfo.GetTypeName(ATypeInfo);
+{$ENDIF}
 end;
 
 class function TPlatformUtilities.GetEnvironmentVariable(const AVariable: String): String;

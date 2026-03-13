@@ -57,6 +57,7 @@ uses
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
   ClpAsn1Comparers,
+  ClpDateTimeHelper,
   CryptoLibTestBase;
 
 type
@@ -217,7 +218,7 @@ var
 begin
   LCertGen := TX509V3CertificateGenerator.Create;
   LName := CreateX509Name;
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := Now.ToUniversalTime();
 
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
@@ -243,7 +244,7 @@ var
 begin
   LCertGen := TX509V3CertificateGenerator.Create;
   LName := CreateX509Name;
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := Now.ToUniversalTime();
 
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
@@ -270,7 +271,7 @@ var
 begin
   LCertGen := TX509V3CertificateGenerator.Create;
   LName := CreateX509Name;
-  LUtc := TTimeZone.Local.ToUniversalTime(Now);
+  LUtc := Now.ToUniversalTime();
 
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);

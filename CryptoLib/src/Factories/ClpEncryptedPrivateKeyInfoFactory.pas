@@ -24,6 +24,7 @@ interface
 uses
   Rtti,
   SysUtils,
+  ClpValueHelper,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsn1Core,
@@ -152,7 +153,7 @@ var
   LEncryptedData: IDerOctetString;
 begin
   LEngine := TPbeUtilities.CreateEngine(AAlgorithm);
-  if not (LEngine.TryAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
+  if not (LEngine.TryGetAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
     raise ECryptoLibException.Create('Unknown encryption algorithm: ' + AAlgorithm);
 
   LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(

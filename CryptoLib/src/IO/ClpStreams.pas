@@ -266,7 +266,7 @@ var
   LBytesRead: Int32;
 begin
   System.SetLength(LBuffer, 1);
-  LBytesRead := Read(LBuffer, 0, 1);
+  LBytesRead := Read(LBuffer[0], 1);
   if LBytesRead = 0 then
   begin
     Result := -1;

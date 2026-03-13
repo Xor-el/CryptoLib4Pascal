@@ -32,7 +32,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpDateTimeUtilities,
-
+  ClpFormatSettingsHelper,
   CryptoLibTestBase;
 
 type
@@ -117,7 +117,7 @@ var
   LFormatSettings: TFormatSettings;
   LExpectedDefault: String;
 begin
-  LFormatSettings := TFormatSettings.Invariant;
+  LFormatSettings := TFormatSettings.InvariantCulture;
 
   LPre2040 := TDateTimeUtilities.TwoDigitYearMax < 2040;
 

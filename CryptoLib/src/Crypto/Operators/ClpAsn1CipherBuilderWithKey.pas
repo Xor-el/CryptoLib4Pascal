@@ -24,6 +24,7 @@ interface
 uses
   Classes,
   Rtti,
+  ClpValueHelper,
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpICipher,
@@ -33,7 +34,6 @@ uses
   ClpIKeyParameter,
   ClpIBufferedCipher,
   ClpIStreamCipher,
-  ClpIBufferedStreamCipher,
   ClpBufferedStreamCipher,
   ClpCipherStream,
   ClpCipherFactory,
@@ -130,11 +130,11 @@ var
 begin
   LCipherValue := TCipherFactory.CreateContentCipher(True, FEncKey, FAlgorithmIdentifier);
 
-  if LCipherValue.TryAsType<IBufferedCipher>(LBufferedCipher) then
+  if LCipherValue.TryGetAsType<IBufferedCipher>(LBufferedCipher) then
   begin
     // Already a buffered cipher, use directly
   end
-  else if LCipherValue.TryAsType<IStreamCipher>(LStreamCipher) then
+  else if LCipherValue.TryGetAsType<IStreamCipher>(LStreamCipher) then
   begin
     LBufferedCipher := TBufferedStreamCipher.Create(LStreamCipher) as IBufferedCipher;
   end

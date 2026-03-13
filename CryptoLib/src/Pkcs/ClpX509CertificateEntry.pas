@@ -27,12 +27,9 @@ uses
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpIPkcs12Entry,
   ClpIX509CertificateEntry,
   ClpIX509Certificate,
   ClpPkcs12Entry,
-  ClpX509Certificate,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 type

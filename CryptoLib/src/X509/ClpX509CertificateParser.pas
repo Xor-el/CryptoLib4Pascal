@@ -62,6 +62,7 @@ type
 
     class constructor Create();
     class procedure Boot();
+    class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
 
     function ReadDerCertificate(const ADIn: TAsn1InputStream): IX509Certificate;
     function ReadPemCertificate(const AInStream: TStream): IX509Certificate;
@@ -92,6 +93,11 @@ begin
   FPemCertParser := TPemParser.Create('CERTIFICATE');
 end;
 
+class function TX509CertificateParser.GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData;
+begin
+  Result := TPkcsSignedData.GetTagged(ATagged, AState);
+end;
+
 constructor TX509CertificateParser.Create();
 begin
   Inherited Create();
@@ -119,10 +125,7 @@ begin
     begin
       if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IPkcsSignedData>(
         LSeq[1], 0, True, LSignedData,
-        function(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData
-        begin
-          Result := TPkcsSignedData.GetTagged(ATagged, AState);
-        end) then
+        GetTaggedPkcsSignedData) then
       begin
         FSData := LSignedData.Certificates;
         FSDataObjectCount := 0;

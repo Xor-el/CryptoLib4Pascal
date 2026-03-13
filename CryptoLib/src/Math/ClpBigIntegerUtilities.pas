@@ -329,7 +329,7 @@ var
   LBuffer: TCryptoLibByteArray;
 begin
   LBuffer := AN.ToByteArrayUnsigned();
-  AOutStr.Write(LBuffer, 0, System.Length(LBuffer));
+  AOutStr.Write(LBuffer[0], System.Length(LBuffer));
 end;
 
 class function TBigIntegerUtilities.ModOddInverse(const AM, AX: TBigInteger): TBigInteger;

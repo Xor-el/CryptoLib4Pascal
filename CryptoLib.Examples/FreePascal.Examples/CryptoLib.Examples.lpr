@@ -2,8 +2,6 @@ program CryptoLib.Examples;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$HINTS OFF}
-{$WARNINGS OFF}
 {$ENDIF FPC}
 
 {$APPTYPE CONSOLE}

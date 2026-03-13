@@ -32,8 +32,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpBip340SchnorrSigner,
-  ClpIBip340SchnorrSigner,
   ClpBip340SchnorrBatchVerifier,
   ClpBip340SchnorrParameters,
   ClpIBip340SchnorrParameters,

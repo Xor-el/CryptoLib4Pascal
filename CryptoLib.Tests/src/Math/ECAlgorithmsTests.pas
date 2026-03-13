@@ -21,9 +21,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
-{$NOTES OFF}
-{$HINTS OFF}
 {$ENDIF FPC}
 
 uses

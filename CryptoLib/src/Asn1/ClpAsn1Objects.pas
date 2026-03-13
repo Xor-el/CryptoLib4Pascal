@@ -47,6 +47,8 @@ uses
   ClpEncoders,
   ClpConverters,
   ClpDateTimeUtilities,
+  ClpDateTimeHelper,
+  ClpFormatSettingsHelper,
   ClpOidTokenizer,
   ClpIOidTokenizer;
 
@@ -289,6 +291,7 @@ type
   strict private
     FElements: TCryptoLibGenericArray<IAsn1OctetString>;
     class function GetEmpty(): IBerOctetString; static;
+    class function ElementToAsn1OctetString(AElement: IAsn1Encodable): IAsn1OctetString; static;
 
   public
     /// <summary>
@@ -521,6 +524,7 @@ type
   TBerBitString = class(TDerBitString, IBerBitString)
   strict private
     FElements: TCryptoLibGenericArray<IDerBitString>;
+    class function ElementToDerBitString(AElement: IAsn1Encodable): IDerBitString; static;
 
   public
     /// <summary>
@@ -972,6 +976,8 @@ type
         function ToAsn1Object(): IAsn1Object;
       end;
 
+    class function ElementToString(AElement: IAsn1Encodable): String; static;
+
   strict protected
     function GetCount(): Int32; virtual;
     function GetParser(): IAsn1SequenceParser; virtual;
@@ -1013,7 +1019,7 @@ type
     /// <summary>
     /// Map elements using a function.
     /// </summary>
-    function MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+    function MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
     /// <summary>
     /// Get a cloned array of elements.
     /// </summary>
@@ -1089,8 +1095,8 @@ type
     class function FromElementsOptional(const AElements: array of IAsn1Encodable): IDerSequence; static;
     class function FromSequence(const ASequence: IAsn1Sequence): IDerSequence; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDerSequence; static;
-    class function Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence; overload; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSequence; overload; static;
+    class function Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence; overload; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSequence; overload; static;
     class function Concatenate(const ASequences: array of IAsn1Sequence): IDerSequence; static;
     /// <summary>
     /// Get encoding length for a given contents length.
@@ -1125,8 +1131,8 @@ type
     class function FromElementsOptional(const AElements: array of IAsn1Encodable): IDLSequence; static;
     class function FromSequence(const ASequence: IAsn1Sequence): IDLSequence; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDLSequence; static;
-    class function Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence; overload; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSequence; overload; static;
+    class function Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence; overload; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSequence; overload; static;
     class function Concatenate(const ASequences: array of IAsn1Sequence): IDLSequence; static;
 
     constructor Create(); overload;
@@ -1182,6 +1188,7 @@ type
     /// Returns the sorted DER encodings array.
     /// </summary>
     class function SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>; static;
+    class function ElementToString(AElement: IAsn1Encodable): String; static;
 
   strict protected
     FSortedDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
@@ -1211,7 +1218,7 @@ type
     /// <summary>
     /// Map elements using a function.
     /// </summary>
-    function MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+    function MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
     /// <summary>
     /// Get a cloned array of elements.
     /// </summary>
@@ -1278,7 +1285,7 @@ type
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSet; static;
     class function FromElement(const AElement: IAsn1Encodable): IDerSet; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDerSet; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSet; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSet; static;
 
     constructor Create(); overload;
     constructor Create(const AElement: IAsn1Encodable); overload;
@@ -1307,7 +1314,7 @@ type
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSet; static;
     class function FromElement(const AElement: IAsn1Encodable): IDLSet; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDLSet; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSet; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSet; static;
 
     constructor Create(); overload;
     constructor Create(const AElement: IAsn1Encodable); overload;
@@ -1340,8 +1347,8 @@ type
     class function FromElementsOptional(const AElements: array of IAsn1Encodable): IBerSequence; static;
     class function FromSequence(const ASequence: IAsn1Sequence): IBerSequence; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IBerSequence; static;
-    class function Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence; overload; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSequence; overload; static;
+    class function Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence; overload; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSequence; overload; static;
     class function Concatenate(const ASequences: array of IAsn1Sequence): IBerSequence; static;
 
     constructor Create(); overload;
@@ -1375,7 +1382,7 @@ type
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSet; static;
     class function FromElement(const AElement: IAsn1Encodable): IBerSet; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IBerSet; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSet; static;
+    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSet; static;
 
     constructor Create(); overload;
     constructor Create(const AElement: IAsn1Encodable); overload;
@@ -4124,21 +4131,22 @@ begin
   Result := TAsn1EncodableVector.CloneElements(FElements);
 end;
 
+class function TAsn1Sequence.ElementToString(AElement: IAsn1Encodable): String;
+var
+  LObj: IAsn1Object;
+begin
+  if AElement <> nil then
+  begin
+    LObj := AElement.ToAsn1Object();
+    Result := LObj.ToString();
+  end
+  else
+    Result := '[null]';
+end;
+
 function TAsn1Sequence.ToString(): String;
 begin
-  Result := TArrayUtilities.ToString<IAsn1Encodable>(FElements,
-    function(AElement: IAsn1Encodable): String
-    var
-      LObj: IAsn1Object;
-    begin
-      if AElement <> nil then
-      begin
-        LObj := AElement.ToAsn1Object();
-        Result := LObj.ToString();
-      end
-      else
-        Result := '[null]';
-    end);
+  Result := TArrayUtilities.ToString<IAsn1Encodable>(FElements, ElementToString);
 end;
 
 class function TAsn1Sequence.ConcatenateElements(const ASequences: TCryptoLibGenericArray<IAsn1Sequence>): TCryptoLibGenericArray<IAsn1Encodable>;
@@ -4169,7 +4177,7 @@ begin
   end;
 end;
 
-function TAsn1Sequence.MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+function TAsn1Sequence.MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
 begin
   Result := TArrayUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
 end;
@@ -4409,7 +4417,7 @@ begin
   Result := WithElements(ASequence.Elements);
 end;
 
-class function TDerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence;
+class function TDerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -4422,7 +4430,7 @@ begin
   Result := WithElements(LMapped);
 end;
 
-class function TDerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSequence;
+class function TDerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSequence;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -4624,7 +4632,7 @@ begin
   Result := WithElements(ASequence.Elements);
 end;
 
-class function TDLSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence;
+class function TDLSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -4637,7 +4645,7 @@ begin
   Result := WithElements(LMapped);
 end;
 
-class function TDLSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSequence;
+class function TDLSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSequence;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -4893,7 +4901,7 @@ begin
     TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
 end;
 
-function TAsn1Set.MapElements<TResult>(const AFunc: TFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
+function TAsn1Set.MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
 begin
   Result := TArrayUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
 end;
@@ -4903,21 +4911,22 @@ begin
   Result := TAsn1EncodableVector.CloneElements(FElements);
 end;
 
+class function TAsn1Set.ElementToString(AElement: IAsn1Encodable): String;
+var
+  LObj: IAsn1Object;
+begin
+  if AElement <> nil then
+  begin
+    LObj := AElement.ToAsn1Object();
+    Result := LObj.ToString();
+  end
+  else
+    Result := '[null]';
+end;
+
 function TAsn1Set.ToString(): String;
 begin
-  Result := TArrayUtilities.ToString<IAsn1Encodable>(FElements,
-    function(AElement: IAsn1Encodable): String
-    var
-      LObj: IAsn1Object;
-    begin
-      if AElement <> nil then
-      begin
-        LObj := AElement.ToAsn1Object();
-        Result := LObj.ToString();
-      end
-      else
-        Result := '[null]';
-    end);
+  Result := TArrayUtilities.ToString<IAsn1Encodable>(FElements, ElementToString);
 end;
 
 class function TAsn1Set.GetInstance(const AObj: TObject): IAsn1Set;
@@ -5111,7 +5120,7 @@ begin
     Result := TDerSet.Create(AElementVector);
 end;
 
-class function TDerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDerSet;
+class function TDerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSet;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -5235,7 +5244,7 @@ begin
     Result := TDLSet.Create(AElementVector);
 end;
 
-class function TDLSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IDLSet;
+class function TDLSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSet;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -5403,7 +5412,7 @@ begin
     Result := TBerSequence.Create(AElementVector);
 end;
 
-class function TBerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence;
+class function TBerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -5416,7 +5425,7 @@ begin
   Result := WithElements(LMapped);
 end;
 
-class function TBerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSequence;
+class function TBerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSequence;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -5561,7 +5570,7 @@ begin
     Result := TBerSet.Create(AElementVector);
 end;
 
-class function TBerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TFunc<T, IAsn1Encodable>): IBerSet;
+class function TBerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSet;
 var
   LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -6156,7 +6165,7 @@ class procedure TDerOctetString.Encode(const AAsn1Out: TAsn1OutputStream;
 begin
   AAsn1Out.WriteIdentifier(TAsn1Tags.Universal, TAsn1Tags.OctetString);
   AAsn1Out.WriteDL(ALength);
-  AAsn1Out.Write(ABuffer, AOffset, ALength);
+  AAsn1Out.Write(ABuffer[AOffset], ALength);
 end;
 
 { TBerOctetString }
@@ -6216,15 +6225,16 @@ begin
     Exit;
   end;
   LElements := ASequence.GetElements();
-  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1OctetString>(LElements,
-    function(AElement: IAsn1Encodable): IAsn1OctetString
-    var
-      LObj: IAsn1Object;
-    begin
-      LObj := AElement.ToAsn1Object();
-      Result := TAsn1OctetString.GetInstance(LObj);
-    end);
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1OctetString>(LElements, ElementToAsn1OctetString);
   Result := TBerOctetString.Create(LMapped);
+end;
+
+class function TBerOctetString.ElementToAsn1OctetString(AElement: IAsn1Encodable): IAsn1OctetString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := AElement.ToAsn1Object();
+  Result := TAsn1OctetString.GetInstance(LObj);
 end;
 
 class function TBerOctetString.WithContents(const AContents: TCryptoLibByteArray): IBerOctetString;
@@ -6912,15 +6922,16 @@ begin
     Exit;
   end;
   LElements := ASequence.GetElements();
-  LMapped := TArrayUtilities.Map<IAsn1Encodable, IDerBitString>(LElements,
-    function(AElement: IAsn1Encodable): IDerBitString
-    var
-      LObj: IAsn1Object;
-    begin
-      LObj := AElement.ToAsn1Object();
-      Result := TDerBitString.GetInstance(LObj);
-    end);
+  LMapped := TArrayUtilities.Map<IAsn1Encodable, IDerBitString>(LElements, ElementToDerBitString);
   Result := TBerBitString.Create(LMapped);
+end;
+
+class function TBerBitString.ElementToDerBitString(AElement: IAsn1Encodable): IDerBitString;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := AElement.ToAsn1Object();
+  Result := TDerBitString.GetInstance(LObj);
 end;
 
 constructor TBerBitString.Create(const ABitStrings: TCryptoLibGenericArray<IDerBitString>);
@@ -9256,7 +9267,7 @@ end;
 
 constructor TAsn1GeneralizedTime.Create(const ADateTime: TDateTime);
 begin
-  CreateFromUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
+  CreateFromUtc(ADateTime.ToUniversalTime());
 end;
 
 constructor TAsn1GeneralizedTime.CreateFromUtc(const AUtcDateTime: TDateTime);
@@ -9541,7 +9552,7 @@ begin
     AStr,
     AFormat,
     [TDateTimeParseFlag.AssumeLocal],
-    TFormatSettings.Invariant
+    TFormatSettings.InvariantCulture
   );
 end;
 
@@ -9551,7 +9562,7 @@ begin
     AStr,
     AFormat,
     [TDateTimeParseFlag.AdjustToUniversal],
-    TFormatSettings.Invariant
+    TFormatSettings.InvariantCulture
   );
 end;
 
@@ -9561,7 +9572,7 @@ begin
     AStr,
     AFormat,
     [TDateTimeParseFlag.AdjustToUniversal, TDateTimeParseFlag.AssumeUniversal],
-    TFormatSettings.Invariant
+    TFormatSettings.InvariantCulture
   );
 end;
 
@@ -9570,7 +9581,7 @@ begin
   Result := TDateTimeUtilities.FormatCanonical(
     ADateTime,
     'yyyyMMddHHmmss.FFFFFFFK',
-    TFormatSettings.Invariant,
+    TFormatSettings.InvariantCulture,
     False
   );
 end;
@@ -9604,12 +9615,12 @@ end;
 
 constructor TAsn1UtcTime.Create(const ADateTime: TDateTime);
 begin
-  CreateFromUtc(TTimeZone.Local.ToUniversalTime(ADateTime));
+  CreateFromUtc(ADateTime.ToUniversalTime());
 end;
 
 constructor TAsn1UtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
 begin
-  CreateFromUtc(TTimeZone.Local.ToUniversalTime(ADateTime), ATwoDigitYearMax);
+  CreateFromUtc(ADateTime.ToUniversalTime(), ATwoDigitYearMax);
 end;
 
 constructor TAsn1UtcTime.CreateFromUtc(const AUtcDateTime: TDateTime);
@@ -9936,7 +9947,7 @@ class function TAsn1UtcTime.FromString(const AStr: String; out ATwoDigitYearMax:
 var
   LFormatSettings: TFormatSettings;
 begin
-  LFormatSettings := TFormatSettings.Invariant;
+  LFormatSettings := TFormatSettings.InvariantCulture;
 
   ATwoDigitYearMax := TDateTimeUtilities.TwoDigitYearMax;
 
@@ -9998,7 +10009,7 @@ begin
   Result := TDateTimeUtilities.FormatCanonical(
     ADateTime,
     'yyMMddHHmmss"Z"',
-    TFormatSettings.Invariant,
+    TFormatSettings.InvariantCulture,
     False
   );
 end;
@@ -10009,7 +10020,7 @@ begin
   Result := TDateTimeUtilities.FormatCanonical(
     ADateTime,
     'yyMMddHHmmss"Z"',
-    TFormatSettings.Invariant,
+    TFormatSettings.InvariantCulture,
     False
   );
 end;

@@ -50,7 +50,6 @@ uses
   ClpIPkcsAsn1Objects,
   ClpIAsn1Core,
   ClpPkcsObjectIdentifiers,
-  ClpEncoders,
   ClpCryptoLibTypes,
   ClpAsn1Objects,
   ClpAsn1Core,
@@ -71,6 +70,8 @@ uses
   ClpNistObjectIdentifiers,
   ClpAsn1Comparers,
   TypInfo,
+  ClpDateTimeHelper,
+  ClpCertTestUtilities,
   CryptoLibTestBase;
 
 type
@@ -913,7 +914,7 @@ begin
     LCertGen := TX509V3CertificateGenerator.Create;
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(TX509Name.Create(LOrder, LIssuerAttrs) as IX509Name);
-    LUtc := TTimeZone.Local.ToUniversalTime(Now);
+    LUtc := Now.ToUniversalTime();
     LCertGen.SetNotBeforeUtc(IncDay(LUtc, -30));
     LCertGen.SetNotAfterUtc(IncDay(LUtc, 30));
     LCertGen.SetSubjectDN(TX509Name.Create(LOrder, LSubjectAttrs) as IX509Name);
@@ -1487,48 +1488,24 @@ end;
 
 procedure TTestPkcs12Store.TestNoDuplicateOracleTrustedCertAttribute;
 var
-  LRandom: ISecureRandom;
   LCertificateAlias, LKeystorePassword: String;
   LKp1, LKp2: IAsymmetricCipherKeyPair;
-  LKpg: IAsymmetricCipherKeyPairGenerator;
   LRootCert, LOriginalCert: IX509Certificate;
-  LV1Gen: IX509V1CertificateGenerator;
-  LV3Gen: IX509V3CertificateGenerator;
-  LRootName, LSubjectName: IX509Name;
   LFirstTrustStore, LFirstTrustStoreReadAgain, LSecondTrustStore: IPkcs12Store;
   LBytes: TBytes;
   LCertRead: IX509CertificateEntry;
   LPasswd: TCryptoLibCharArray;
 begin
-  LRandom := TSecureRandom.Create;
   LCertificateAlias := 'myAlias';
   LKeystorePassword := 'myPassword';
   LPasswd := StringToCharArray(LKeystorePassword);
 
-  LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
-  LKpg.Init(TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf(Int64($10001)), LRandom, 1024, 25) as IRsaKeyGenerationParameters);
-  LKp1 := LKpg.GenerateKeyPair;
-  LKp2 := LKpg.GenerateKeyPair;
+  LKp1 := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LKp2 := TCertTestUtilities.GenerateRsaKeyPair(1024);
 
-  LRootName := TX509Name.Create('CN=KP1 ROOT');
-  LV1Gen := TX509V1CertificateGenerator.Create;
-  LV1Gen.SetSerialNumber(TBigInteger.One);
-  LV1Gen.SetIssuerDN(LRootName);
-  LV1Gen.SetNotBeforeUtc(IncDay(TTimeZone.Local.ToUniversalTime(Now), -1));
-  LV1Gen.SetNotAfterUtc(IncDay(TTimeZone.Local.ToUniversalTime(Now), 365));
-  LV1Gen.SetSubjectDN(LRootName);
-  LV1Gen.SetPublicKey(LKp1.Public as IAsymmetricKeyParameter);
-  LRootCert := LV1Gen.Generate(TAsn1SignatureFactory.Create('SHA256withRSA', LKp1.Private as IAsymmetricKeyParameter, LRandom) as ISignatureFactory);
-
-  LSubjectName := TX509Name.Create('CN=KP3 EE');
-  LV3Gen := TX509V3CertificateGenerator.Create;
-  LV3Gen.SetSerialNumber(TBigInteger.One);
-  LV3Gen.SetIssuerDN(LRootName);
-  LV3Gen.SetNotBeforeUtc(IncDay(TTimeZone.Local.ToUniversalTime(Now), -1));
-  LV3Gen.SetNotAfterUtc(IncDay(TTimeZone.Local.ToUniversalTime(Now), 365));
-  LV3Gen.SetSubjectDN(LSubjectName);
-  LV3Gen.SetPublicKey(LKp2.Public as IAsymmetricKeyParameter);
-  LOriginalCert := LV3Gen.Generate(TAsn1SignatureFactory.Create('SHA256withRSA', LKp1.Private as IAsymmetricKeyParameter, LRandom) as ISignatureFactory);
+  LRootCert := TCertTestUtilities.GenerateRootCert(LKp1, TX509Name.Create('CN=KP1 ROOT') as IX509Name);
+  LOriginalCert := TCertTestUtilities.GenerateEndEntityCert(LKp2.Public, TX509Name.Create('CN=KP3 EE') as IX509Name,
+    TKeyPurposeId.IdKpCapwapAc, TKeyPurposeId.IdKpCapwapWtp, LKp1.Private, LRootCert);
 
   LFirstTrustStore := BuildPkcs12Store;
   LFirstTrustStore.SetCertificateEntry(LCertificateAlias, TX509CertificateEntry.Create(LOriginalCert) as IX509CertificateEntry);
