@@ -4,8 +4,6 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
-{$NOTES OFF}
 {$ENDIF FPC}
 
 uses

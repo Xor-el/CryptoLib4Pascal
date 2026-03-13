@@ -629,6 +629,12 @@
         </Win32>
       </Options>
     </Linking>
+    <Other>
+      <ConfigFile>
+        <CustomConfigFile Value="True"/>
+        <ConfigFilePath Value="..\..\BuildConfig\FPC\CryptoLibFPCMessages.cfg"/>
+      </ConfigFile>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">
