@@ -33,7 +33,6 @@ uses
   ClpSubjectPublicKeyInfoFactory,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpIDsaParameters,
   ClpIPkcsAsn1Objects,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
@@ -48,21 +47,17 @@ uses
   ClpIX509V2AttributeCertificate,
   ClpIPkcs10CertificationRequest,
   ClpICmsAsn1Objects,
-  ClpX509Certificate,
   ClpX509Crl,
-  ClpX509V2AttributeCertificate,
   ClpPkcs10CertificationRequest,
-  ClpCmsAsn1Objects,
   ClpPkcsAsn1Objects,
-  ClpX9ECAsn1Objects,
   ClpIX9ECAsn1Objects,
   ClpBigInteger,
-  ClpConverters,
   ClpOpenSslPemUtilities,
   ClpStringUtilities,
   ClpEncoders,
   ClpSecureRandom,
   ClpISecureRandom,
+  ClpValueHelper,
   ClpCryptoLibTypes,
   ClpIPkcs8EncryptedPrivateKeyInfo;
 
@@ -155,19 +150,19 @@ begin
     raise EArgumentNilCryptoLibException.Create('obj');
 
   // Key pair -> recurse with private key
-  if AObj.TryAsType<IAsymmetricCipherKeyPair>(LKp) then
+  if AObj.TryGetAsType<IAsymmetricCipherKeyPair>(LKp) then
     Exit(CreatePemObject(TValue.From<IAsymmetricKeyParameter>(LKp.Private)));
 
   // PEM object identity
-  if AObj.TryAsType<IPemObject>(LPemObj) then
+  if AObj.TryGetAsType<IPemObject>(LPemObj) then
     Exit(LPemObj);
 
   // PEM object generator
-  if AObj.TryAsType<IPemObjectGenerator>(LPemGen) then
+  if AObj.TryGetAsType<IPemObjectGenerator>(LPemGen) then
     Exit(LPemGen.Generate());
 
   // X509 Certificate
-  if AObj.TryAsType<IX509Certificate>(LCert) then
+  if AObj.TryGetAsType<IX509Certificate>(LCert) then
   begin
     try
       LEncoding := LCert.GetEncoded();
@@ -179,7 +174,7 @@ begin
   end;
 
   // X509 CRL
-  if AObj.TryAsType<IX509Crl>(LCrl) then
+  if AObj.TryGetAsType<IX509Crl>(LCrl) then
   begin
     try
       LEncoding := LCrl.GetEncoded();
@@ -191,7 +186,7 @@ begin
   end;
 
   // Asymmetric key (private or public)
-  if AObj.TryAsType<IAsymmetricKeyParameter>(LAkp) then
+  if AObj.TryGetAsType<IAsymmetricKeyParameter>(LAkp) then
   begin
     if LAkp.IsPrivate then
       LEncoding := EncodePrivateKey(LAkp, LType)
@@ -201,41 +196,41 @@ begin
   end;
 
   // PrivateKeyInfo
-  if AObj.TryAsType<IPrivateKeyInfo>(LPrivInfo) then
+  if AObj.TryGetAsType<IPrivateKeyInfo>(LPrivInfo) then
   begin
     LEncoding := EncodePrivateKeyInfo(LPrivInfo, LType);
     Exit(TPemObject.Create(LType, LEncoding));
   end;
 
   // SubjectPublicKeyInfo
-  if AObj.TryAsType<ISubjectPublicKeyInfo>(LPubInfo) then
+  if AObj.TryGetAsType<ISubjectPublicKeyInfo>(LPubInfo) then
   begin
     LEncoding := EncodePublicKeyInfo(LPubInfo, LType);
     Exit(TPemObject.Create(LType, LEncoding));
   end;
 
   // X509V2 Attribute Certificate
-  if AObj.TryAsType<IX509V2AttributeCertificate>(LAttrCert) then
+  if AObj.TryGetAsType<IX509V2AttributeCertificate>(LAttrCert) then
     Exit(TPemObject.Create('ATTRIBUTE CERTIFICATE', LAttrCert.GetEncoded()));
 
   // PKCS#10 Certification Request
-  if AObj.TryAsType<IPkcs10CertificationRequest>(LCertReq) then
+  if AObj.TryGetAsType<IPkcs10CertificationRequest>(LCertReq) then
     Exit(TPemObject.Create('CERTIFICATE REQUEST', LCertReq.GetEncoded()));
 
   // CMS ContentInfo
-  if AObj.TryAsType<ICmsContentInfo>(LCmsContent) then
+  if AObj.TryGetAsType<ICmsContentInfo>(LCmsContent) then
     Exit(TPemObject.Create('PKCS7', LCmsContent.GetEncoded()));
 
   // PKCS ContentInfo
-  if AObj.TryAsType<IPkcsContentInfo>(LPkcsContent) then
+  if AObj.TryGetAsType<IPkcsContentInfo>(LPkcsContent) then
     Exit(TPemObject.Create('PKCS7', LPkcsContent.GetEncoded()));
 
   // PKCS#8 EncryptedPrivateKeyInfo (ENCRYPTED PRIVATE KEY)
-  if AObj.TryAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
+  if AObj.TryGetAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
     Exit(TPemObject.Create('ENCRYPTED PRIVATE KEY', LPkcs8Enc.GetEncoded()));
 
   // EC PARAMETERS (X962Parameters)
-  if AObj.TryAsType<IX962Parameters>(LX962Params) then
+  if AObj.TryGetAsType<IX962Parameters>(LX962Params) then
     Exit(TPemObject.Create('EC PARAMETERS', LX962Params.GetEncoded()));
 
   raise EPemGenerationCryptoLibException.Create('Object type not supported');
@@ -264,13 +259,13 @@ begin
   if ARandom = nil then
     raise EArgumentNilCryptoLibException.Create('random');
 
-  if AObj.TryAsType<IAsymmetricCipherKeyPair>(LKp) then
+  if AObj.TryGetAsType<IAsymmetricCipherKeyPair>(LKp) then
     Exit(CreatePemObjectEncrypted(TValue.From<IAsymmetricKeyParameter>(LKp.Private),
       AAlgorithm, APassword, ARandom));
 
   LType := '';
   LKeyData := nil;
-  if (AObj.TryAsType<IAsymmetricKeyParameter>(LAkp)) and LAkp.IsPrivate then
+  if (AObj.TryGetAsType<IAsymmetricKeyParameter>(LAkp)) and LAkp.IsPrivate then
     LKeyData := EncodePrivateKey(LAkp, LType);
 
   if (LType = '') or (LKeyData = nil) then

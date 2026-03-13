@@ -231,8 +231,16 @@ begin
 end;
 
 class function TEnumUtilities.TryGetEnumValue<T>(const AInput: String; out AResult: T): Boolean;
+var
+  LOrd: Int32;
 begin
-  Result := TryGetEnumValue<T>(AInput, AResult, nil);
+  // TODO: FPC 3.2.x fails when compiling TryGetEnumValue<T>(...), when upgrading minimum FPC to a version
+  // that compiles it, remove this inlined implementation and forward to TryGetEnumValue<T>(AInput, AResult, nil).
+  Result := TryGetEnumValue(TypeInfo(T), AInput, LOrd, nil);
+  if Result then
+    Move(LOrd, AResult, SizeOf(T))
+  else
+    AResult := Default(T);
 end;
 
 class function TEnumUtilities.TryGetEnumValue<T>(const AInput: String;

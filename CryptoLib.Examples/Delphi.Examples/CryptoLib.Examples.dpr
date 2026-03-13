@@ -659,7 +659,8 @@ uses
   ClpIX509CertificatePairParser in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePairParser.pas',
   ClpIX509CertificatePair in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePair.pas',
   ClpFormatSettingsHelper in '..\..\CryptoLib\src\Helpers\ClpFormatSettingsHelper.pas',
-  ClpDateTimeHelper in '..\..\CryptoLib\src\Helpers\ClpDateTimeHelper.pas';
+  ClpDateTimeHelper in '..\..\CryptoLib\src\Helpers\ClpDateTimeHelper.pas',
+  ClpValueHelper in '..\..\CryptoLib\src\Helpers\ClpValueHelper.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

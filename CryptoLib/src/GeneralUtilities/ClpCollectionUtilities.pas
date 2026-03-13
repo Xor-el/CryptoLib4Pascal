@@ -40,7 +40,7 @@ type
     /// Convert a list to a string representation using a converter function.
     /// </summary>
     class function ToString<T>(const AC: TList<T>;
-      const AConverter: TCryptoLibFunc<T, String>): String; overload; static;
+      const AConverter: TCryptoLibFunc<T, String>): String; static;
     /// <summary>
     /// Create a proxy array from an enumerable collection (like TDictionary.Keys).
     /// </summary>

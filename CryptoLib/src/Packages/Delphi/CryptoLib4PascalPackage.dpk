@@ -682,6 +682,7 @@ contains
   ClpIX509CertificatePairParser in '..\..\Interfaces\X509\ClpIX509CertificatePairParser.pas',
   ClpIX509CertificatePair in '..\..\Interfaces\X509\ClpIX509CertificatePair.pas',
   ClpFormatSettingsHelper in '..\..\Helpers\ClpFormatSettingsHelper.pas',
-  ClpDateTimeHelper in '..\..\Helpers\ClpDateTimeHelper.pas';
+  ClpDateTimeHelper in '..\..\Helpers\ClpDateTimeHelper.pas',
+  ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas';
 
 end.

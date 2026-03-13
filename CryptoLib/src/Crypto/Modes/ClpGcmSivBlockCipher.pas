@@ -37,7 +37,6 @@ uses
   ClpGcmBlockCipher,
   ClpKeyParameter,
   ClpAesEngine,
-  ClpIAesEngine,
   ClpInt64Utilities,
   ClpByteUtilities,
   ClpPack,

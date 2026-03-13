@@ -98,7 +98,7 @@ type
     /// <summary>
     /// Create a cipher or MAC engine for the given PBE algorithm (string).
     /// Returns TValue containing IMac for PBEwithHmac*, IBufferedCipher for ciphers, or TValue.Empty.
-    /// Caller should use Result.TryAsType&lt;IBufferedCipher&gt;(LCipher) or Result.TryAsType&lt;IMac&gt;(LMac).
+    /// Caller should use Result.TryGetAsType&lt;IBufferedCipher&gt;(LCipher) or Result.TryGetAsType&lt;IMac&gt;(LMac).
     /// </summary>
     class function CreateEngine(const AAlgorithm: String): TValue; overload; static;
     /// <summary>

@@ -122,7 +122,7 @@ type
       const AFunc: TCryptoLibFunc<T, TResult>): TCryptoLibGenericArray<TResult>; static;
 
     class function ToString<T>(const AData: TCryptoLibGenericArray<T>;
-      const AConverter: TCryptoLibFunc<T, String>): String; overload; static;
+      const AConverter: TCryptoLibFunc<T, String>): String; static;
 
     /// <summary>Reverse array elements in place.</summary>
     class procedure ReverseInPlace<T>(var AArray: TCryptoLibGenericArray<T>); overload; static;
@@ -393,8 +393,11 @@ begin
         if Assigned(LObj) then
           LObj.Free;
       end;
+    // TODO: FPC 3.2.x fails when compiling Fill<T>(...), when upgrading minimum FPC to a version
+    // that compiles it, remove this loop and use Fill<T>(Result, 0, LDone, Default(T)) instead.
     if LDone > 0 then
-      Fill<T>(Result, 0, LDone, Default(T));
+      for LI := 0 to LDone - 1 do
+        Result[LI] := Default(T);
     raise;
   end;
 end;

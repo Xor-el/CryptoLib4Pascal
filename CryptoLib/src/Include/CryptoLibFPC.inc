@@ -19,8 +19,8 @@
    {$MESSAGE FATAL 'This Library does not support "Big Endian" processors yet.'}
 {$ENDIF}
 
-{$IF FPC_FULLVERSION < 30301}
-   {$MESSAGE ERROR 'This Library requires FreePascal 3.3.1 or higher.'}
+{$IF NOT (FPC_FULLVERSION > 30202)}
+   {$MESSAGE ERROR 'This Library requires FreePascal version greater than 3.2.2.'}
 {$IFEND}
 
 {========================= FPC Version Features ===============================}

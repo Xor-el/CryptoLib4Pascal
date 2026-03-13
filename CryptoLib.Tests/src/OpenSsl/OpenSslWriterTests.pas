@@ -27,19 +27,16 @@ uses
   SysUtils,
   Classes,
   Rtti,
+  ClpValueHelper,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpPemHeader,
   ClpPemObject,
-  ClpIPemHeader,
   ClpIPemObject,
   ClpConverters,
-  ClpIPemWriter,
-  ClpPemWriter,
   ClpIOpenSslPemWriter,
   ClpOpenSslPemWriter,
   ClpIOpenSslPemReader,
@@ -47,10 +44,8 @@ uses
   ClpIOpenSslPasswordFinder,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
-  ClpAsymmetricCipherKeyPair,
   ClpBigInteger,
   ClpRsaGenerators,
-  ClpIRsaGenerators,
   ClpIRsaParameters,
   ClpRsaParameters,
   ClpIKeyGenerationParameters,
@@ -61,21 +56,15 @@ uses
   ClpDsaParameters,
   ClpIDsaParameters,
   ClpDsaGenerators,
-  ClpIDsaGenerators,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpECGenerators,
-  ClpIECGenerators,
   ClpSecObjectIdentifiers,
   ClpPrivateKeyFactory,
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
-  ClpIX9ECAsn1Objects,
   ClpAsn1Objects,
-  ClpIAsn1Objects,
   ClpECParameters,
-  ClpIECParameters,
   ClpCryptoLibTypes,
-  ClpEncoders,
   CryptoLibTestBase;
 
 type
@@ -179,7 +168,7 @@ begin
     LReader := TOpenSslPemReader.Create(LStream);
     LReadVal := LReader.ReadObject();
     Check(not LReadVal.IsEmpty, 'ReadObject should return key');
-    Check(LReadVal.TryAsType<IAsymmetricCipherKeyPair>(LReadPair), 'Should be key pair');
+    Check(LReadVal.TryGetAsType<IAsymmetricCipherKeyPair>(LReadPair), 'Should be key pair');
     Check(LReadPair <> nil, 'Key pair should not be nil');
     Check(Supports(LReadPair.Private, IAsymmetricKeyParameter, LPriv), 'Private should be IAsymmetricKeyParameter');
     Check(LPriv.Equals(APrivateKey), 'Failed to read back test key');
@@ -216,7 +205,7 @@ begin
     LReader := TOpenSslPemReader.Create(LStream, LPasswordFinder);
     LReadVal := LReader.ReadObject();
     Check(not LReadVal.IsEmpty, 'ReadObject should return key for ' + AAlgorithm);
-    Check(LReadVal.TryAsType<IAsymmetricCipherKeyPair>(LReadPair),
+    Check(LReadVal.TryGetAsType<IAsymmetricCipherKeyPair>(LReadPair),
       'Should be key pair for ' + AAlgorithm);
     Check(LReadPair <> nil, 'Key pair should not be nil for ' + AAlgorithm);
     Check(Supports(LReadPair.Private, IAsymmetricKeyParameter, LPriv),

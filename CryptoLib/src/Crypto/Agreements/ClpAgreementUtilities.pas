@@ -45,7 +45,6 @@ uses
   ClpIECDHCBasicAgreement,
   ClpIECDHWithKdfBasicAgreement,
   ClpIECDHCWithKdfBasicAgreement,
-  ClpIECDHKekGenerator,
   ClpIDerivationFunction,
   ClpIAsn1Objects,
   ClpIRawAgreement,

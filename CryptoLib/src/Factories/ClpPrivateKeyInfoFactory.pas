@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   Rtti,
+  ClpValueHelper,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsymmetricKeyParameter,
@@ -48,7 +49,6 @@ uses
   ClpSecECAsn1Objects,
   ClpIX509DsaAsn1Objects,
   ClpX509DsaAsn1Objects,
-  ClpX9ECAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpIX9ECAsn1Objects,
@@ -111,7 +111,7 @@ begin
   if LAlgID = nil then
     raise EArgumentCryptoLibException.Create('EncryptedPrivateKeyInfo has no encryption algorithm');
   LEngine := TPbeUtilities.CreateEngine(LAlgID);
-  if not (LEngine.TryAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
+  if not (LEngine.TryGetAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
     raise ECryptoLibException.CreateFmt('Unknown encryption algorithm: %s', [LAlgID.Algorithm.ID]);
   LCipherParameters := TPbeUtilities.GenerateCipherParameters(LAlgID, APassPhrase, AWrongPkcs12Zero);
   LCipher.Init(False, LCipherParameters);

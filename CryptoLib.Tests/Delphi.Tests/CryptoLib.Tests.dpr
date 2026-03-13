@@ -674,6 +674,7 @@ uses
   ClpIX509CertificatePair in '..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePair.pas',
   ClpFormatSettingsHelper in '..\..\CryptoLib\src\Helpers\ClpFormatSettingsHelper.pas',
   ClpDateTimeHelper in '..\..\CryptoLib\src\Helpers\ClpDateTimeHelper.pas',
+  ClpValueHelper in '..\..\CryptoLib\src\Helpers\ClpValueHelper.pas',
   ClpFixedSecureRandom in '..\src\Utils\ClpFixedSecureRandom.pas',
   ClpShortenedDigest in '..\src\Utils\ClpShortenedDigest.pas',
   BlowfishTests in '..\src\Crypto\BlowfishTests.pas',
