@@ -85,7 +85,6 @@ begin
   FPri1 := TBigInteger.Create('2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac9f0783a49dd5f6c5af651f4c9d0dc9281c96a3f16a85f9572d7cc3f2d0f25a9dbf1149e4cdc32273faadd3fda5dcda7', 16);
 
   FMsg1 := THexEncoder.Decode('0cbbaa99887766554433221100');
-  // sig1 = mod1.Subtract(BigInteger("309f873d8ded8379490f6097eaafdabc137d3ebfd8f25ab5f138d56a719cdc526bdd022ea65dabab920a81013a85d092e04d3e421caab717c90d89ea45a8d23a", 16)).ToByteArray()
   FSig1 := FMod1.Subtract(TBigInteger.Create('309f873d8ded8379490f6097eaafdabc137d3ebfd8f25ab5f138d56a719cdc526bdd022ea65dabab920a81013a85d092e04d3e421caab717c90d89ea45a8d23a', 16)).ToByteArray();
 
   FMsg2 := THexEncoder.Decode('fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210');
