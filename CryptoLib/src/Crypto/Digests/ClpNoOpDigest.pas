@@ -77,8 +77,8 @@ begin
   LHashInstance := TNoOpDigest.Create();
   FOut.Position := 0;
   LHashInstance.FOut.CopyFrom(FOut, FOut.Size);
-  result := LHashInstance as IHash;
-  result.BufferSize := BufferSize;
+  Result := LHashInstance as IHash;
+  Result.BufferSize := BufferSize;
 end;
 
 constructor TNoOpDigest.Create;
@@ -101,7 +101,7 @@ end;
 procedure TNoOpDigest.TransformBytes(const AData: TCryptoLibByteArray;
   AIndex, ALength: Int32);
 begin
-  if AData <> Nil then
+  if AData <> nil then
   begin
     FOut.Write(AData[AIndex], ALength);
   end;
@@ -118,7 +118,7 @@ begin
       System.SetLength(LResult, FOut.Size);
       FOut.Read(LResult[0], FOut.Size);
     end;
-    result := THashResult.Create(LResult);
+    Result := THashResult.Create(LResult);
   finally
     Initialize();
   end;

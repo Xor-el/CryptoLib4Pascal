@@ -90,11 +90,11 @@ type
     /// <summary>
     /// initialise the cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// if true the cipher is initialised for encryption, if false for
     /// decryption.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the key and other data required by the cipher.
     /// </param>
     /// <exception cref="EArgumentCryptoLibException">
@@ -107,7 +107,7 @@ type
     /// return the minimum size of the output buffer required for an update
     /// plus a doFinal with an input of len bytes.
     /// </summary>
-    /// <param name="length">
+    /// <param name="ALength">
     /// the length of the input.
     /// </param>
     /// <returns>
@@ -120,7 +120,7 @@ type
     /// return the size of the output buffer required for an update an input
     /// of len bytes.
     /// </summary>
-    /// <param name="length">
+    /// <param name="ALength">
     /// the length of the input.
     /// </param>
     /// <returns>
@@ -132,13 +132,13 @@ type
     /// <summary>
     /// process a single byte, producing an output block if necessary.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the input byte.
     /// </param>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the space for any output that might be produced.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset from which the output will be copied.
     /// </param>
     /// <returns>
@@ -156,19 +156,19 @@ type
     /// <summary>
     /// process an array of bytes, producing output if necessary.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the input byte array.
     /// </param>
-    /// <param name="inOff">
+    /// <param name="AInOff">
     /// the offset at which the input data starts.
     /// </param>
-    /// <param name="length">
+    /// <param name="ALength">
     /// the number of bytes to be copied out of the input array.
     /// </param>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the space for any output that might be produced.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset from which the output will be copied.
     /// </param>
     /// <returns>
@@ -189,10 +189,10 @@ type
     /// and padding needs to be added a call to doFinal will produce 2 *
     /// GetBlockSize() bytes.
     /// </summary>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the array the block currently being held is copied into.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset at which the copying starts.
     /// </param>
     /// <returns>

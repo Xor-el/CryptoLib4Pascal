@@ -223,7 +223,7 @@ begin
     LSig := FEncoding.Decode(GetOrder(), ASignature);
     Result := FDsa.VerifySignature(LHash, LSig[0], LSig[1]);
   except
-    Result := false;
+    Result := False;
   end;
 
 end;

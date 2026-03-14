@@ -64,10 +64,10 @@ type
     /// <summary>
     /// Performs the extract part of the key derivation function.
     /// </summary>
-    /// <param name="salt">
+    /// <param name="ASalt">
     /// the salt to use
     /// </param>
-    /// <param name="ikm">
+    /// <param name="AIkm">
     /// the input keying material
     /// </param>
     /// <returns>
@@ -93,7 +93,7 @@ type
     /// <summary>
     /// Creates a HKDFBytesGenerator based on the given hash function.
     /// </summary>
-    /// <param name="hash">
+    /// <param name="AHash">
     /// the digest to be used as the source of generatedBytes bytes
     /// </param>
     constructor Create(const AHash: IDigest);

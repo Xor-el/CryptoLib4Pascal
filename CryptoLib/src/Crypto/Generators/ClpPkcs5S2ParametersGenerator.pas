@@ -63,14 +63,14 @@ type
     /// <summary>
     /// construct a Pkcs5 Scheme 2 Parameters generator.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// digest to use for constructing hmac
     /// </param>
     constructor Create(); overload;
     /// <summary>
     /// construct a Pkcs5 Scheme 2 Parameters generator.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// digest to use for constructing hmac
     /// </param>
     constructor Create(const ADigest: IDigest); overload;
@@ -82,10 +82,10 @@ type
     /// Generate a key parameter derived from the password, salt, and
     /// iteration count we are currently initialised with.
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>
@@ -99,13 +99,13 @@ type
     /// the password, salt, and iteration count we are currently initialised
     /// with.
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
-    /// <param name="ivSize">
+    /// <param name="AIvSize">
     /// the length, in bits, of the iv required.
     /// </param>
     /// <returns>
@@ -119,7 +119,7 @@ type
     /// password, salt, and iteration count we are currently initialised
     /// with.
     /// </summary>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>

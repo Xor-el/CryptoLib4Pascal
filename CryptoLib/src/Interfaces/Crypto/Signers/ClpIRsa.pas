@@ -33,12 +33,12 @@ type
   IRsa = interface(IInterface)
     ['{D4E5F6A7-B8C9-0123-4567-89ABCDEF0123}']
 
-    procedure Init(forEncryption: Boolean; const parameters: ICipherParameters);
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
     function GetInputBlockSize: Int32;
     function GetOutputBlockSize: Int32;
-    function ConvertInput(const buf: TCryptoLibByteArray; off, len: Int32): TBigInteger;
-    function ProcessBlock(const input: TBigInteger): TBigInteger;
-    function ConvertOutput(const result: TBigInteger): TCryptoLibByteArray;
+    function ConvertInput(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32): TBigInteger;
+    function ProcessBlock(const AInput: TBigInteger): TBigInteger;
+    function ConvertOutput(const AOutput: TBigInteger): TCryptoLibByteArray;
 
     property InputBlockSize: Int32 read GetInputBlockSize;
     property OutputBlockSize: Int32 read GetOutputBlockSize;

@@ -30,23 +30,23 @@ type
     ['{1CC92157-EEC8-4300-8254-655AF791E4CA}']
 
     /// <summary>Add more seed material to the generator.</summary>
-    /// <param name="seed">A byte array to be mixed into the generator's state.</param>
-    procedure AddSeedMaterial(const seed: TCryptoLibByteArray); overload;
+    /// <param name="ASeed">A byte array to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(const ASeed: TCryptoLibByteArray); overload;
 
     /// <summary>Add more seed material to the generator.</summary>
-    /// <param name="seed">A long value to be mixed into the generator's state.</param>
-    procedure AddSeedMaterial(seed: Int64); overload;
+    /// <param name="ASeed">A long value to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(ASeed: Int64); overload;
 
     /// <summary>Fill byte array with random values.</summary>
-    /// <param name="bytes">Array to be filled.</param>
-    procedure NextBytes(const bytes: TCryptoLibByteArray); overload;
+    /// <param name="ABytes">Array to be filled.</param>
+    procedure NextBytes(const ABytes: TCryptoLibByteArray); overload;
 
     /// <summary>Fill byte array with random values.</summary>
-    /// <param name="bytes">Array to receive bytes.</param>
-    /// <param name="start">Index to start filling at.</param>
-    /// <param name="len">Length of segment to fill.</param>
-    procedure NextBytes(const bytes: TCryptoLibByteArray;
-      start, len: Int32); overload;
+    /// <param name="ABytes">Array to receive bytes.</param>
+    /// <param name="AStart">Index to start filling at.</param>
+    /// <param name="ALen">Length of segment to fill.</param>
+    procedure NextBytes(const ABytes: TCryptoLibByteArray;
+      AStart, ALen: Int32); overload;
   end;
 
 implementation

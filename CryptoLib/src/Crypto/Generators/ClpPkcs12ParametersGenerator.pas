@@ -86,21 +86,21 @@ procedure TPkcs12ParametersGenerator.Adjust(var AA: TCryptoLibByteArray;
   AOff: Int32; const AB: TCryptoLibByteArray);
 var
   LX: UInt32;
-  I, LBLen: Int32;
+  LI, LBLen: Int32;
 begin
   LBLen := System.Length(AB);
   if LBLen = 0 then
     Exit;
 
-  LX := UInt32(AB[LBlen - 1]) + UInt32(AA[AOff + LBlen - 1]) + 1;
+  LX := UInt32(AB[LBLen - 1]) + UInt32(AA[AOff + LBLen - 1]) + 1;
 
-  AA[AOff + LBlen - 1] := Byte(LX);
+  AA[AOff + LBLen - 1] := Byte(LX);
   LX := LX shr 8;
 
-  for I := LBlen - 2 downto 0 do
+  for LI := LBLen - 2 downto 0 do
   begin
-    LX := LX + UInt32(AB[I]) + UInt32(AA[AOff + I]);
-    AA[AOff + I] := Byte(LX);
+    LX := LX + UInt32(AB[LI]) + UInt32(AA[AOff + LI]);
+    AA[AOff + LI] := Byte(LX);
     LX := LX shr 8;
   end;
 end;
@@ -117,7 +117,7 @@ procedure TPkcs12ParametersGenerator.GenerateDerivedKey(AIdByte: Byte;
   const ADKey: TCryptoLibByteArray);
 var
   LD, LS, LP, LI, LA, LB: TCryptoLibByteArray;
-  LC, I, J, JV, LCopyLen: Int32;
+  LC, LIdx, LJ, JV, LCopyLen: Int32;
   LSaltEmpty, LPasswordEmpty: Boolean;
 begin
   System.SetLength(LD, FV);
@@ -145,13 +145,13 @@ begin
   System.SetLength(LB, FV);
   LC := (System.Length(ADKey) + FU - 1) div FU;
 
-  for I := 1 to LC do
+  for LIdx := 1 to LC do
   begin
     FDigest.BlockUpdate(LD, 0, System.Length(LD));
     FDigest.BlockUpdate(LI, 0, System.Length(LI));
     FDigest.DoFinal(LA, 0);
 
-    for J := 1 to FIterationCount - 1 do
+    for LJ := 1 to FIterationCount - 1 do
     begin
       FDigest.BlockUpdate(LA, 0, System.Length(LA));
       FDigest.DoFinal(LA, 0);
@@ -166,14 +166,14 @@ begin
       JV := JV + FV;
     end;
 
-    if I = LC then
+    if LIdx = LC then
     begin
-      LCopyLen := System.Length(ADKey) - ((I - 1) * FU);
+      LCopyLen := System.Length(ADKey) - ((LIdx - 1) * FU);
       if LCopyLen > 0 then
-        System.Move(LA[0], ADKey[(I - 1) * FU], LCopyLen * System.SizeOf(Byte));
+        System.Move(LA[0], ADKey[(LIdx - 1) * FU], LCopyLen * System.SizeOf(Byte));
     end
     else
-      System.Move(LA[0], ADKey[(I - 1) * FU], System.Length(LA) * System.SizeOf(Byte));
+      System.Move(LA[0], ADKey[(LIdx - 1) * FU], System.Length(LA) * System.SizeOf(Byte));
   end;
 end;
 

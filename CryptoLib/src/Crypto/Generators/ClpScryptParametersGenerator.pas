@@ -64,10 +64,10 @@ type
     /// Generate a key parameter derived from the password, salt,
     /// cost, blockSize, parallelism we are currently initialised with.
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>
@@ -81,13 +81,13 @@ type
     /// the password, salt, cost, blockSize, parallelism we are currently initialised with.
     /// </summary>
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
-    /// <param name="ivSize">
+    /// <param name="AIvSize">
     /// the length, in bits, of the iv required.
     /// </param>
     /// <returns>
@@ -101,7 +101,7 @@ type
     /// the password, salt, cost, blockSize, parallelism we are currently initialised with.
     /// with.
     /// </summary>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>

@@ -53,7 +53,7 @@ type
     /// <summary>
     /// Creates a ChaCha engine with a specific number of rounds.
     /// </summary>
-    /// <param name="rounds">the number of rounds (must be an even number).</param>
+    /// <param name="ARounds">the number of rounds (must be an even number).</param>
     constructor Create(ARounds: Int32); overload;
 
     class procedure ChaChaCore(ARounds: Int32;

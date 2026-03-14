@@ -295,7 +295,7 @@ end;
 function TCertIDComparer.Compare(const ALeft, ARight: TPkcs12Store.TCertID): Integer;
 var
   LIdL, LIdR: TCryptoLibByteArray;
-  LLen, I: Int32;
+  LLen, LI: Int32;
 begin
   LIdL := ALeft.Id;
   LIdR := ARight.Id;
@@ -323,11 +323,11 @@ begin
       Result := 1;
     Exit;
   end;
-  for I := 0 to LLen - 1 do
+  for LI := 0 to LLen - 1 do
   begin
-    if LIdL[I] <> LIdR[I] then
+    if LIdL[LI] <> LIdR[LI] then
     begin
-      if LIdL[I] < LIdR[I] then
+      if LIdL[LI] < LIdR[LI] then
         Result := -1
       else
         Result := 1;
@@ -418,24 +418,24 @@ end;
 
 procedure TPkcs12Store.RemoveOrdering<T>(const AOrder: TList<T>; const AKey: T; const AComparer: IEqualityComparer<T>);
 var
-  I: Int32;
+  LI: Int32;
 begin
-  for I := AOrder.Count - 1 downto 0 do
-    if AComparer.Equals(AOrder[I], AKey) then
+  for LI := AOrder.Count - 1 downto 0 do
+    if AComparer.Equals(AOrder[LI], AKey) then
     begin
-      AOrder.Delete(I);
+      AOrder.Delete(LI);
       Exit;
     end;
 end;
 
 procedure TPkcs12Store.ReplaceOrdering<T>(const AOrder: TList<T>; const AOldKey, ANewKey: T; const AComparer: IEqualityComparer<T>);
 var
-  I: Int32;
+  LI: Int32;
 begin
-  for I := 0 to AOrder.Count - 1 do
-    if AComparer.Equals(AOrder[I], AOldKey) then
+  for LI := 0 to AOrder.Count - 1 do
+    if AComparer.Equals(AOrder[LI], AOldKey) then
     begin
-      AOrder[I] := ANewKey;
+      AOrder[LI] := ANewKey;
       Exit;
     end;
 end;
@@ -564,7 +564,7 @@ var
   LKeyEntry: IAsymmetricKeyEntry;
   LAlias: String;
   LLocalID: IAsn1OctetString;
-  I: Int32;
+  LI: Int32;
   LSq: IAsn1Sequence;
   LAOid: IDerObjectIdentifier;
   LAttrSet: IAsn1Set;
@@ -579,9 +579,9 @@ begin
   LLocalID := nil;
   if ABagAttributes <> nil then
   begin
-    for I := 0 to ABagAttributes.Count - 1 do
+    for LI := 0 to ABagAttributes.Count - 1 do
     begin
-      LSq := TAsn1Sequence.GetInstance(ABagAttributes[I]);
+      LSq := TAsn1Sequence.GetInstance(ABagAttributes[LI]);
       LAOid := TDerObjectIdentifier.GetInstance(LSq[0]);
       LAttrSet := TAsn1Set.GetInstance(LSq[1]);
       if LAttrSet.Count < 1 then
@@ -642,7 +642,7 @@ var
   LOid: IDerObjectIdentifier;
   LEncryptedData: IPkcsEncryptedData;
   LSeq: IAsn1Sequence;
-  J: Int32;
+  LJ: Int32;
   LSafeBag: ISafeBag;
   LSafeBagID: IDerObjectIdentifier;
   LCertBag: ICertBag;
@@ -651,7 +651,7 @@ var
   LAttributes: TDictionary<IDerObjectIdentifier, IAsn1Encodable>;
   LLocalID: IAsn1OctetString;
   LAlias: String;
-  I: Int32;
+  LI: Int32;
   LSq: IAsn1Sequence;
   LAOid: IDerObjectIdentifier;
   LAttrSet: IAsn1Set;
@@ -699,9 +699,9 @@ begin
       LOctets := TAsn1OctetString.GetInstance(LContent).GetOctets();
       LAuthSafe := TAuthenticatedSafe.GetInstance(LOctets);
       LCis := LAuthSafe.GetContentInfo();
-      for J := 0 to System.Length(LCis) - 1 do
+      for LJ := 0 to System.Length(LCis) - 1 do
       begin
-        LCi := LCis[J];
+        LCi := LCis[LJ];
         LOid := LCi.ContentType;
         LOctets := nil;
         if TPkcsObjectIdentifiers.Data.Equals(LOid) then
@@ -716,9 +716,9 @@ begin
         if LOctets = nil then
           Continue;
         LSeq := TAsn1Sequence.GetInstance(LOctets);
-        for I := 0 to LSeq.Count - 1 do
+        for LI := 0 to LSeq.Count - 1 do
         begin
-          LSafeBag := TSafeBag.GetInstance(LSeq[I]);
+          LSafeBag := TSafeBag.GetInstance(LSeq[LI]);
           LSafeBagID := LSafeBag.BagID;
           if TPkcsObjectIdentifiers.CertBag.Equals(LSafeBagID) then
             LCertBags.Add(LSafeBag)
@@ -734,9 +734,9 @@ begin
       end;
     end;
     ClearCerts;
-    for I := 0 to LCertBags.Count - 1 do
+    for LI := 0 to LCertBags.Count - 1 do
     begin
-      LSafeBag := LCertBags[I];
+      LSafeBag := LCertBags[LI];
       LCertBag := TCertBag.GetInstance(LSafeBag.BagValueEncodable);
       if not TPkcsObjectIdentifiers.X509Certificate.Equals(LCertBag.CertID) then
         raise ECryptoLibException.Create(Format(SUnsupportedCertType, [LCertBag.CertID.Id]));
@@ -747,9 +747,9 @@ begin
       LAlias := '';
       if LSafeBag.BagAttributes <> nil then
       begin
-        for J := 0 to LSafeBag.BagAttributes.Count - 1 do
+        for LJ := 0 to LSafeBag.BagAttributes.Count - 1 do
         begin
-          LSq := TAsn1Sequence.GetInstance(LSafeBag.BagAttributes[J]);
+          LSq := TAsn1Sequence.GetInstance(LSafeBag.BagAttributes[LJ]);
           LAOid := TDerObjectIdentifier.GetInstance(LSq[0]);
           LAttrSet := TAsn1Set.GetInstance(LSq[1]);
           if LAttrSet.Count < 1 then
@@ -1032,7 +1032,7 @@ procedure TPkcs12Store.SetKeyEntry(const AAlias: String; const AKeyEntry: IAsymm
   const AChain: TCryptoLibGenericArray<IX509CertificateEntry>);
 var
   LChainProvided: Boolean;
-  I: Int32;
+  LI: Int32;
   LCertID: TCertID;
 begin
   if AAlias = '' then
@@ -1048,10 +1048,10 @@ begin
   if LChainProvided then
   begin
     MapCert(AAlias, AChain[0]);
-    for I := 0 to System.Length(AChain) - 1 do
+    for LI := 0 to System.Length(AChain) - 1 do
     begin
-      LCertID := TCertID.Create(AChain[I]);
-      MapChainCert(LCertID, AChain[I]);
+      LCertID := TCertID.Create(AChain[LI]);
+      MapChainCert(LCertID, AChain[LI]);
     end;
   end;
 end;

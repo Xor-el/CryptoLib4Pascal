@@ -781,7 +781,7 @@ end;
 class function TCmsSignedData.CalculateVersionField(const AContentOid: IDerObjectIdentifier;
   const ACerts, ACrls, ASignerInfs: IAsn1Set): IDerInteger;
 var
-  I: Int32;
+  LI: Int32;
   LTagged: IAsn1TaggedObject;
   LAnyV1AttrCerts, LAnyV2AttrCerts: Boolean;
   LElement: IAsn1Encodable;
@@ -808,9 +808,9 @@ begin
 
   if ACrls <> nil then
   begin
-    for I := 0 to ACrls.Count - 1 do
+    for LI := 0 to ACrls.Count - 1 do
     begin
-      LElement := ACrls.Items[I];
+      LElement := ACrls.Items[LI];
       LTagged := TAsn1TaggedObject.GetOptional(LElement);
       if LTagged <> nil then
       begin
@@ -824,9 +824,9 @@ begin
   if ACerts <> nil then
   begin
     LAnyV2AttrCerts := False;
-    for I := 0 to ACerts.Count - 1 do
+    for LI := 0 to ACerts.Count - 1 do
     begin
-      LElement := ACerts.Items[I];
+      LElement := ACerts.Items[LI];
       LTagged := TAsn1TaggedObject.GetOptional(LElement);
       if LTagged <> nil then
       begin
@@ -848,7 +848,7 @@ end;
 
 class function TCmsSignedData.HasV3SignerInfos(const ASignerInfs: IAsn1Set): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LSignerInfo: ICmsSignerInfo;
   LElement: IAsn1Encodable;
 begin
@@ -857,9 +857,9 @@ begin
     Result := False;
     Exit;
   end;
-  for I := 0 to ASignerInfs.Count - 1 do
+  for LI := 0 to ASignerInfs.Count - 1 do
   begin
-    LElement := ASignerInfs.Items[I];
+    LElement := ASignerInfs.Items[LI];
     LSignerInfo := TCmsSignerInfo.GetInstance(LElement);
     if (LSignerInfo <> nil) and LSignerInfo.Version.HasValue(3) then
       Exit(True);

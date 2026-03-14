@@ -29,96 +29,23 @@ uses
 type
 
   /// <summary>
-  /// DateTime parse behavior flags, mirroring .NET DateTimeStyles semantics.
+  /// Parse flags mirroring .NET DateTimeStyles (time zone interpretation and conversion).
   /// </summary>
   TDateTimeParseFlag = (
-    /// <summary>
-    /// Interprets the parsed value as local time when no explicit time zone
-    /// designator (<c>Z</c>, <c>zz</c>, <c>zzz</c>) is present in the input.
-    /// </summary>
-    /// <remarks>
-    /// This flag does not perform any time zone conversion by itself.
-    /// Conversion to UTC occurs only when combined with
-    /// <see cref="AdjustToUniversal"/>.
-    /// </remarks>
+    /// <summary>No zone in input: treat as local. UTC conversion only with AdjustToUniversal.</summary>
     AssumeLocal,
-
-    /// <summary>
-    /// Interprets the parsed value as Coordinated Universal Time (UTC)
-    /// when no explicit time zone designator is present in the input.
-    /// </summary>
-    /// <remarks>
-    /// This flag affects interpretation only; no conversion is performed
-    /// unless <see cref="AdjustToUniversal"/> is also specified.
-    /// </remarks>
+    /// <summary>No zone in input: treat as UTC. Conversion only with AdjustToUniversal.</summary>
     AssumeUniversal,
-
-    /// <summary>
-    /// Converts the parsed value to Coordinated Universal Time (UTC)
-    /// after applying any explicit or assumed time zone offset.
-    /// </summary>
-    /// <remarks>
-    /// When combined with <see cref="AssumeLocal"/>, the value is treated as
-    /// local time and converted to UTC. When combined with
-    /// <see cref="AssumeUniversal"/>, the value is treated as already in UTC.
-    /// If an explicit offset (<c>zz</c> or <c>zzz</c>) is present, that offset
-    /// is applied before conversion.
-    /// </remarks>
+    /// <summary>Convert result to UTC using explicit or assumed offset.</summary>
     AdjustToUniversal
   );
 
   /// <summary>
-  /// Set of flags that control how date/time strings are interpreted and
-  /// optionally converted during parsing.
+  /// Flags for time zone interpretation and optional UTC conversion; mirrors .NET DateTimeStyles.
   /// </summary>
-  /// <remarks>
-  /// This set mirrors the behavior of .NET <c>DateTimeStyles</c> for
-  /// <c>DateTime.ParseExact</c>, adapted to Delphi's <c>TDateTime</c>
-  /// representation (which has no intrinsic time-zone kind).
-  ///
-  /// Interpretation flags (<see cref="AssumeLocal"/>, <see cref="AssumeUniversal"/>)
-  /// define how values without an explicit time-zone designator are treated.
-  /// Conversion occurs only when combined with <see cref="AdjustToUniversal"/>.
-  /// </remarks>
-  /// <example>
-  /// <code>
-  /// // Equivalent to:
-  /// // DateTime.ParseExact(s, format, provider,
-  /// //   DateTimeStyles.AssumeLocal);
-  /// Dt := TDateTimeUtilities.ParseExact(
-  ///   S,
-  ///   Format,
-  ///   [TDateTimeParseFlag.AssumeLocal],
-  ///   TFormatSettings.Invariant
-  /// );
-  ///
-  /// // Equivalent to:
-  /// // DateTime.ParseExact(s, format, provider,
-  /// //   DateTimeStyles.AdjustToUniversal);
-  /// Dt := TDateTimeUtilities.ParseExact(
-  ///   S,
-  ///   Format,
-  ///   [TDateTimeParseFlag.AdjustToUniversal],
-  ///   TFormatSettings.Invariant
-  /// );
-  ///
-  /// // Equivalent to:
-  /// // DateTime.ParseExact(s, format, provider,
-  /// //   DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
-  /// Dt := TDateTimeUtilities.ParseExact(
-  ///   S,
-  ///   Format,
-  ///   [TDateTimeParseFlag.AssumeUniversal,
-  ///    TDateTimeParseFlag.AdjustToUniversal],
-  ///   TFormatSettings.Invariant
-  /// );
-  /// </code>
-  /// </example>
   TDateTimeParseStyle = set of TDateTimeParseFlag;
 
-  /// <summary>
-  /// Transforms .NET-style format strings to Delphi FormatDateTime-compatible forms.
-  /// </summary>
+  /// <summary>Converts .NET-style date/time format strings to Delphi FormatDateTime form.</summary>
   TDateTimeFormatTransformer = class sealed
   strict private
     class var FTransforms: TCryptoLibGenericArray<TCryptoLibFunc<String, String>>;
@@ -130,80 +57,38 @@ type
     class function Map24Hour(AFormat: String): String; static;
 
   public
-    /// <summary>
-    /// Register a new transform function (appended to the chain).
-    /// </summary>
+    /// <summary>Append a transform to the chain.</summary>
     class procedure Register(const ATransform: TCryptoLibFunc<String, String>);
-
-    /// <summary>
-    /// Apply all registered transforms in order.
-    /// </summary>
+    /// <summary>Run all registered transforms on the format string.</summary>
     class function Apply(const AFormat: String): String;
-
-    /// <summary>
-    /// Normalize literal Z variants (\\Z, "Z", 'Z') to plain Z.
-    /// </summary>
+    /// <summary>Normalize \Z, "Z", 'Z' to plain Z.</summary>
     class function NormalizeLiteralZ(const AFormat: String): String;
-
-    /// <summary>
-    /// Check if format contains any of the specified tokens.
-    /// </summary>
+    /// <summary>True if format contains any of the given tokens.</summary>
     class function HasAnyToken(const AFormat: String; const ATokens: array of String): Boolean;
   end;
 
-  /// <summary>
-  /// Reusable parsing utilities for strict date/time string parsing.
-  /// </summary>
+  /// <summary>Helpers for strict date/time substring parsing.</summary>
   TDateTimeParseHelper = class sealed
   public
-    /// <summary>
-    /// Read an integer from a substring with strict validation.
-    /// </summary>
+    /// <summary>Read integer from substring; returns False if invalid.</summary>
     class function ReadInt(const S: String; AIndex, ACount: Int32; out AValue: Int32): Boolean;
-
-    /// <summary>
-    /// Read a Word from a substring with strict validation.
-    /// </summary>
+    /// <summary>Read Word from substring; returns False if invalid.</summary>
     class function ReadWord(const S: String; AIndex, ACount: Int32; out AValue: Word): Boolean;
-
-    /// <summary>
-    /// Count fractional digits (f characters) after the dot in format.
-    /// </summary>
+    /// <summary>Number of 'f' characters after the dot in the format.</summary>
     class function CountFracDigits(const AFormat: String): Int32;
-
-    /// <summary>
-    /// Check if format uses two-digit year (yy but not yyyy).
-    /// </summary>
+    /// <summary>True if format is yy (two-digit year) but not yyyy.</summary>
     class function IsTwoDigitYearFormat(const AFormat: String): Boolean;
-
-    /// <summary>
-    /// Expand two-digit year using .NET Calendar.TwoDigitYearMax rollover logic.
-    /// </summary>
+    /// <summary>Expand two-digit year using .NET TwoDigitYearMax rollover.</summary>
     class function ExpandTwoDigitYear(ATwoDigitYear, ATwoDigitMax: Int32): Word;
   end;
 
-  /// <summary>
-  /// DateTime utility class with static methods.
-  /// </summary>
+  /// <summary>Static date/time helpers (Unix ms, ticks, parse/format for ASN.1 time).</summary>
   TDateTimeUtilities = class sealed(TObject)
   strict private
-
     class var
-      /// <summary>
-      /// Unix epoch: January 1, 1970 00:00:00 UTC
-      /// </summary>
       FUnixEpoch: TDateTime;
-      /// <summary>
-      /// Maximum Unix milliseconds value.
-      /// </summary>
       FMaxUnixMs: Int64;
-      /// <summary>
-      /// Minimum Unix milliseconds value.
-      /// </summary>
       FMinUnixMs: Int64;
-      /// <summary>
-      /// GregorianCalendar TwoDigitYearMax value (2049).
-      /// </summary>
       FTwoDigitYearMax: Int32;
 
     class function ParseExact(
@@ -213,183 +98,63 @@ type
       const ATwoDigitYearMax: Int32): TDateTime; overload; static;
 
   public
-    /// <summary>
-    /// Return the number of milliseconds since the Unix epoch (1 Jan., 1970 UTC) for a given DateTime value.
-    /// </summary>
-    /// <remarks>The DateTime value will be converted to UTC before conversion.</remarks>
-    /// <param name="ADateTime">A DateTime value not before the epoch.</param>
-    /// <returns>Number of whole milliseconds after epoch.</returns>
-    /// <exception cref="EArgumentOutOfRangeCryptoLibException">'ADateTime' is before the epoch.</exception>
+    /// <summary>Milliseconds since Unix epoch (1 Jan 1970 UTC); converts to UTC first.</summary>
+    /// <exception cref="EArgumentOutOfRangeCryptoLibException">ADateTime before epoch.</exception>
     class function DateTimeToUnixMs(const ADateTime: TDateTime): Int64; static;
 
-    /// <summary>
-    /// Create a UTC DateTime value from the number of milliseconds since the Unix epoch (1 Jan., 1970 UTC).
-    /// </summary>
-    /// <param name="AUnixMs">Number of milliseconds since the epoch.</param>
-    /// <returns>A UTC DateTime value</returns>
-    /// <exception cref="EArgumentOutOfRangeCryptoLibException">'AUnixMs' is before 'MinUnixMs' or after 'MaxUnixMs'.</exception>
+    /// <summary>DateTime from milliseconds since Unix epoch.</summary>
+    /// <exception cref="EArgumentOutOfRangeCryptoLibException">AUnixMs outside MinUnixMs..MaxUnixMs.</exception>
     class function UnixMsToDateTime(const AUnixMs: Int64): TDateTime; static;
 
-    /// <summary>
-    /// Return the current number of milliseconds since the Unix epoch (1 Jan., 1970 UTC).
-    /// </summary>
+    /// <summary>Current time as milliseconds since Unix epoch.</summary>
     class function CurrentUnixMs(): Int64; static;
 
-    /// <summary>
-    /// Return the number of ticks (100-nanosecond intervals) since January 1, 0001 12:00am for a given DateTime value.
-    /// </summary>
-    /// <param name="ADateTime">A DateTime value.</param>
-    /// <returns>Number of 100-nanosecond intervals since January 1, 0001 12:00am.</returns>
+    /// <summary>Ticks (100-ns) since 1 Jan 0001 00:00:00.</summary>
     class function DateTimeToTicks(const ADateTime: TDateTime): Int64; static;
 
-    /// <summary>
-    /// Create a DateTime value from the number of ticks (100-nanosecond intervals) since January 1, 0001 12:00am.
-    /// </summary>
-    /// <param name="ATicks">Number of 100-nanosecond intervals since January 1, 0001 12:00am.</param>
-    /// <returns>A DateTime value</returns>
+    /// <summary>DateTime from ticks since 1 Jan 0001 00:00:00.</summary>
     class function TicksToDateTime(const ATicks: Int64): TDateTime; static;
 
-    /// <summary>
-    /// Round DateTime to centisecond precision (10 milliseconds).
-    /// </summary>
+    /// <summary>Round to 10 ms (centisecond).</summary>
     class function WithPrecisionCentisecond(const ADateTime: TDateTime): TDateTime; static;
-
-    /// <summary>
-    /// Round DateTime to decisecond precision (100 milliseconds).
-    /// </summary>
+    /// <summary>Round to 100 ms (decisecond).</summary>
     class function WithPrecisionDecisecond(const ADateTime: TDateTime): TDateTime; static;
-
-    /// <summary>
-    /// Round DateTime to millisecond precision.
-    /// </summary>
+    /// <summary>Round to millisecond.</summary>
     class function WithPrecisionMillisecond(const ADateTime: TDateTime): TDateTime; static;
-
-    /// <summary>
-    /// Round DateTime to second precision.
-    /// </summary>
+    /// <summary>Round to second (fraction discarded).</summary>
     class function WithPrecisionSecond(const ADateTime: TDateTime): TDateTime; static;
 
     /// <summary>
-    /// Parses a date/time string using exact, invariant rules equivalent to
-    /// .NET DateTime.ParseExact for ASN.1 UTCTime and GeneralizedTime values.
+    /// Strict parse equivalent to .NET DateTime.ParseExact for ASN.1 UTCTime/GeneralizedTime.
+    /// Input must match <paramref name="AFormat"/> exactly (length, literals, fraction).
+    /// Supports yy(yy)MMddHH[mm][ss][.f...] with Z, zz, or zzz; two-digit year uses default TwoDigitYearMax; <paramref name="AStyles"/> control time zone (AssumeLocal, AssumeUniversal, AdjustToUniversal).
     /// </summary>
-    /// <remarks>
-    /// This method is a strict parser: the input string must match the supplied
-    /// <paramref name="AFormat"/> exactly in length, numeric placement, literals,
-    /// and fractional precision.
-    /// <para>
-    /// The following format families are supported:
-    /// </para>
-    /// <list type="bullet">
-    ///   <item><description>
-    ///     UTCTime formats (<c>yyMMddHHmm[ss]</c> with <c>Z</c> or <c>zzz</c>)
-    ///   </description></item>
-    ///   <item><description>
-    ///     GeneralizedTime formats (<c>yyyyMMddHH[mm][ss][.f..fffffff]</c>
-    ///     with optional <c>Z</c>, <c>zz</c>, or <c>zzz</c>)
-    ///   </description></item>
-    /// </list>
-    /// <para>
-    /// When parsing two-digit years (<c>yy</c>), the value is expanded using
-    /// <paramref name="ATwoDigitYearMax"/>, matching .NET Calendar.TwoDigitYearMax
-    /// rollover behavior.
-    /// </para>
-    /// <para>
-    /// Time zone behavior is controlled via <paramref name="AStyles"/> and mirrors
-    /// .NET DateTimeStyles:
-    /// </para>
-    /// <list type="bullet">
-    ///   <item><description><c>AssumeLocal</c></description></item>
-    ///   <item><description><c>AssumeUniversal</c></description></item>
-    ///   <item><description><c>AdjustToUniversal</c></description></item>
-    /// </list>
-    /// <para>
-    /// Any mismatch in format, length, or required literals results in a format exception.
-    /// No heuristic or culture-dependent parsing is performed.
-    /// </para>
-    /// </remarks>
-    /// <param name="AInput">The input string to parse.</param>
-    /// <param name="AFormat">
-    /// The exact expected format string (Delphi-safe; <c>\Z</c> is normalized to literal <c>Z</c>).
-    /// </param>
-    /// <param name="AStyles">
-    /// A set of parse-style flags controlling time zone interpretation and conversion.
-    /// </param>
-    /// <param name="AFormatSettings">
-    /// The format settings to use; typically <see cref="TFormatSettings.Invariant"/>.
-    /// </param>
-    /// <param name="ATwoDigitYearMax">
-    /// The maximum year used when expanding two-digit years; ignored for four-digit formats.
-    /// </param>
-    /// <returns>
-    /// The parsed <see cref="TDateTime"/> value.
-    /// </returns>
-    /// <exception cref="EFormatCryptoLibException">
-    /// Raised when the input does not exactly match the specified format.
-    /// </exception>
+    /// <exception cref="EFormatCryptoLibException">Input does not match format.</exception>
     class function ParseExact(
       const AInput, AFormat: String;
       const AStyles: TDateTimeParseStyle;
       const AFormatSettings: TFormatSettings): TDateTime; overload; static;
 
     /// <summary>
-    /// Formats a <see cref="TDateTime"/> into a canonical, invariant string representation,
-    /// emulating .NET DateTime.ToString(format, InvariantInfo) semantics for ASN.1 time values.
+    /// Format TDateTime for ASN.1 UTCTime/GeneralizedTime (yyyy/yy, MM, dd, HH, mm, ss, .FFFFFFF, Z/K).
+    /// If <paramref name="AConvertToUtc"/> is True, value is converted to UTC first.
     /// </summary>
-    /// <remarks>
-    /// This method supports a restricted, explicit subset of .NET-style format tokens:
-    /// <list type="bullet">
-    ///   <item><description><c>yyyy</c> or <c>yy</c> year fields</description></item>
-    ///   <item><description><c>MM</c>, <c>dd</c>, <c>HH</c>, <c>mm</c>, <c>ss</c> numeric fields</description></item>
-    ///   <item><description><c>.FFFFFFF</c> fractional seconds (validated and trimmed to available precision)</description></item>
-    ///   <item><description><c>Z</c> or <c>K</c> UTC designator (emitted as literal <c>Z</c>)</description></item>
-    /// </list>
-    /// <para>
-    /// If <paramref name="AConvertToUtc"/> is <c>True</c>, the value is first converted from
-    /// local time to UTC.
-    /// </para>
-    /// <para>
-    /// Due to <see cref="TDateTime"/> precision limits, fractional seconds beyond milliseconds
-    /// are validated and emitted as zeroes where applicable.
-    /// </para>
-    /// </remarks>
-    /// <param name="ADateTime">The date and time value to format.</param>
-    /// <param name="AFormat">
-    /// The canonical format string (Delphi-safe), e.g.
-    /// <c>yyyyMMddHHmmss.FFFFFFFK</c> or <c>yyMMddHHmmssZ</c>.
-    /// </param>
-    /// <param name="AFormatSettings">
-    /// The format settings to use; typically <see cref="TFormatSettings.Invariant"/>.
-    /// </param>
-    /// <param name="AConvertToUtc">
-    /// If <c>True</c>, converts <paramref name="ADateTime"/> to UTC before formatting.
-    /// </param>
-    /// <returns>
-    /// A canonical string representation suitable for ASN.1 UTCTime or GeneralizedTime.
-    /// </returns>
     class function FormatCanonical(
       const ADateTime: TDateTime;
       const AFormat: String;
       const AFormatSettings: TFormatSettings;
       const AConvertToUtc: Boolean): String;
 
+    /// <summary>Convert local DateTime to UTC.</summary>
     class function ToUniversalTime(const ALocalDateTime: TDateTime): TDateTime; static;
 
-    /// <summary>
-    /// Unix epoch: January 1, 1970 00:00:00 UTC
-    /// </summary>
+    /// <summary>1 Jan 1970 00:00:00 UTC.</summary>
     class property UnixEpoch: TDateTime read FUnixEpoch;
-    /// <summary>
-    /// Maximum Unix milliseconds value.
-    /// </summary>
+    /// <summary>Maximum allowed Unix milliseconds.</summary>
     class property MaxUnixMs: Int64 read FMaxUnixMs;
-    /// <summary>
-    /// Minimum Unix milliseconds value.
-    /// </summary>
+    /// <summary>Minimum allowed Unix milliseconds (0).</summary>
     class property MinUnixMs: Int64 read FMinUnixMs;
-    /// <summary>
-    /// GregorianCalendar TwoDigitYearMax value (2049).
-    /// </summary>
+    /// <summary>TwoDigitYearMax for yy expansion (2049).</summary>
     class property TwoDigitYearMax: Int32 read FTwoDigitYearMax;
 
     class constructor Create;
@@ -446,11 +211,11 @@ end;
 
 class function TDateTimeFormatTransformer.Apply(const AFormat: String): String;
 var
-  I: Integer;
+  LI: Integer;
 begin
   Result := AFormat;
-  for I := Low(FTransforms) to High(FTransforms) do
-    Result := FTransforms[I](Result);
+  for LI := Low(FTransforms) to High(FTransforms) do
+    Result := FTransforms[LI](Result);
 end;
 
 class function TDateTimeFormatTransformer.NormalizeLiteralZ(const AFormat: String): String;
@@ -471,12 +236,12 @@ end;
 class function TDateTimeFormatTransformer.HasAnyToken(
   const AFormat: String; const ATokens: array of String): Boolean;
 var
-  I: Integer;
+  LI: Integer;
 begin
   Result := False;
-  for I := Low(ATokens) to High(ATokens) do
+  for LI := Low(ATokens) to High(ATokens) do
   begin
-    if Pos(ATokens[I], AFormat) > 0 then
+    if Pos(ATokens[LI], AFormat) > 0 then
       Exit(True);
   end;
 end;
@@ -510,18 +275,18 @@ end;
 
 class function TDateTimeParseHelper.CountFracDigits(const AFormat: String): Int32;
 var
-  P, I: Int32;
+  LP, LI: Int32;
 begin
   Result := 0;
-  P := Pos('.', AFormat);
-  if P = 0 then
+  LP := Pos('.', AFormat);
+  if LP = 0 then
     Exit;
 
-  I := P + 1;
-  while (I <= System.Length(AFormat)) and (AFormat[I] = 'f') do
+  LI := LP + 1;
+  while (LI <= System.Length(AFormat)) and (AFormat[LI] = 'f') do
   begin
     Inc(Result);
-    Inc(I);
+    Inc(LI);
   end;
 
   if Result = 0 then

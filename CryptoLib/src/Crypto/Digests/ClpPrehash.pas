@@ -66,7 +66,7 @@ type
     function GetByteLength: Int32; override;
 
     procedure Update(AInput: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray; AInOff, ALen: Int32);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
     function DoFinal: TCryptoLibByteArray; overload; override;
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload; override;
     procedure Reset; override;
@@ -133,7 +133,7 @@ begin
     FBuffer.Write(AInput, 1);
 end;
 
-procedure TPrehash.BlockUpdate(const input: TCryptoLibByteArray;
+procedure TPrehash.BlockUpdate(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32);
 var
   LWriteLen: Int32;
@@ -142,7 +142,7 @@ begin
   if FBuffer.Size + LWriteLen > FDigestSize then
     LWriteLen := FDigestSize - FBuffer.Size;
   if LWriteLen > 0 then
-    FBuffer.Write(input[AInOff], LWriteLen);
+    FBuffer.Write(AInput[AInOff], LWriteLen);
 end;
 
 function TPrehash.DoFinal: TCryptoLibByteArray;

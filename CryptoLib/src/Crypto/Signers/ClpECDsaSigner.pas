@@ -95,7 +95,7 @@ type
     /// Configuration with an alternate, possibly deterministic calculator of
     /// K.
     /// </summary>
-    /// <param name="kCalculator">
+    /// <param name="AKCalculator">
     /// kCalculator a K value calculator.
     /// </param>
     constructor Create(const AKCalculator: IDsaKCalculator); overload;
@@ -310,7 +310,7 @@ begin
   if ((LSmallR.SignValue < 1) or (&AS.SignValue < 1) or (LSmallR.CompareTo(LN) >= 0)
     or (&AS.CompareTo(LN) >= 0)) then
   begin
-    Result := false;
+    Result := False;
     Exit;
   end;
 
@@ -328,7 +328,7 @@ begin
 
   if (LPoint.IsInfinity) then
   begin
-    Result := false;
+    Result := False;
     Exit;
   end;
 
@@ -365,7 +365,7 @@ begin
           end;
           LSmallR := LSmallR.Add(LN);
         end;
-        Result := false;
+        Result := False;
         Exit;
       end;
     end;

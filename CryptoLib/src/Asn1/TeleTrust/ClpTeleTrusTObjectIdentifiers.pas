@@ -148,182 +148,182 @@ implementation
 
 class function TTeleTrusTObjectIdentifiers.GetTeleTrusT: IDerObjectIdentifier;
 begin
-  result := FTeleTrusT;
+  Result := FTeleTrusT;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetAlgorithm: IDerObjectIdentifier;
 begin
-  result := FAlgorithm;
+  Result := FAlgorithm;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetEncryptionAlgorithm: IDerObjectIdentifier;
 begin
-  result := FEncryptionAlgorithm;
+  Result := FEncryptionAlgorithm;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetHashAlgorithm: IDerObjectIdentifier;
 begin
-  result := FHashAlgorithm;
+  Result := FHashAlgorithm;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetSignatureAlgorithm: IDerObjectIdentifier;
 begin
-  result := FSignatureAlgorithm;
+  Result := FSignatureAlgorithm;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetSignatureScheme: IDerObjectIdentifier;
 begin
-  result := FSignatureScheme;
+  Result := FSignatureScheme;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRipeMD128: IDerObjectIdentifier;
 begin
-  result := FRipeMD128;
+  Result := FRipeMD128;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRipeMD160: IDerObjectIdentifier;
 begin
-  result := FRipeMD160;
+  Result := FRipeMD160;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRipeMD256: IDerObjectIdentifier;
 begin
-  result := FRipeMD256;
+  Result := FRipeMD256;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRsaSignature: IDerObjectIdentifier;
 begin
-  result := FRsaSignature;
+  Result := FRsaSignature;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRsaSignatureWithRipeMD160: IDerObjectIdentifier;
 begin
-  result := FRsaSignatureWithRipeMD160;
+  Result := FRsaSignatureWithRipeMD160;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRsaSignatureWithRipeMD128: IDerObjectIdentifier;
 begin
-  result := FRsaSignatureWithRipeMD128;
+  Result := FRsaSignatureWithRipeMD128;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetRsaSignatureWithRipeMD256: IDerObjectIdentifier;
 begin
-  result := FRsaSignatureWithRipeMD256;
+  Result := FRsaSignatureWithRipeMD256;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetECSign: IDerObjectIdentifier;
 begin
-  result := FECSign;
+  Result := FECSign;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetECSignWithSha1: IDerObjectIdentifier;
 begin
-  result := FECSignWithSha1;
+  Result := FECSignWithSha1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetECSignWithRipeMD160: IDerObjectIdentifier;
 begin
-  result := FECSignWithRipeMD160;
+  Result := FECSignWithRipeMD160;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetECSignWithMD2: IDerObjectIdentifier;
 begin
-  result := FECSignWithMD2;
+  Result := FECSignWithMD2;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetECSignWithMD5: IDerObjectIdentifier;
 begin
-  result := FECSignWithMD5;
+  Result := FECSignWithMD5;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetTttEcg: IDerObjectIdentifier;
 begin
-  result := FTttEcg;
+  Result := FTttEcg;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetEcStdCurvesAndGeneration: IDerObjectIdentifier;
 begin
-  result := FEcStdCurvesAndGeneration;
+  Result := FEcStdCurvesAndGeneration;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetVersionOne: IDerObjectIdentifier;
 begin
-  result := FVersionOne;
+  Result := FVersionOne;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetEllipticCurve: IDerObjectIdentifier;
 begin
-  result := FEllipticCurve;
+  Result := FEllipticCurve;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP160R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP160R1;
+  Result := FBrainpoolP160R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP160T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP160T1;
+  Result := FBrainpoolP160T1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP192R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP192R1;
+  Result := FBrainpoolP192R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP192T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP192T1;
+  Result := FBrainpoolP192T1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP224R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP224R1;
+  Result := FBrainpoolP224R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP224T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP224T1;
+  Result := FBrainpoolP224T1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP256R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP256R1;
+  Result := FBrainpoolP256R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP256T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP256T1;
+  Result := FBrainpoolP256T1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP320R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP320R1;
+  Result := FBrainpoolP320R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP320T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP320T1;
+  Result := FBrainpoolP320T1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP384R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP384R1;
+  Result := FBrainpoolP384R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP384T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP384T1;
+  Result := FBrainpoolP384T1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP512R1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP512R1;
+  Result := FBrainpoolP512R1;
 end;
 
 class function TTeleTrusTObjectIdentifiers.GetBrainpoolP512T1: IDerObjectIdentifier;
 begin
-  result := FBrainpoolP512T1;
+  Result := FBrainpoolP512T1;
 end;
 
 class procedure TTeleTrusTObjectIdentifiers.Boot;

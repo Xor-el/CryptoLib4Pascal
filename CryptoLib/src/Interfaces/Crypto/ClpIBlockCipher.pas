@@ -44,9 +44,9 @@ type
 
     /// <summary>Process a block.</summary>
     /// <param name="AInBuf">The input buffer.</param>
-    /// <param name="AInOff">The offset into <paramref>inBuf</paramref> that the input block begins.</param>
+    /// <param name="AInOff">The offset into <paramref name="AInBuf"/> that the input block begins.</param>
     /// <param name="AOutBuf">The output buffer.</param>
-    /// <param name="AOutOff">The offset into <paramref>outBuf</paramref> to write the output block.</param>
+    /// <param name="AOutOff">The offset into <paramref name="AOutBuf"/> to write the output block.</param>
     /// <exception cref="DataLengthException">If input block is wrong size, or outBuf too small.</exception>
     /// <returns>The number of bytes processed and produced.</returns>
     function ProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;

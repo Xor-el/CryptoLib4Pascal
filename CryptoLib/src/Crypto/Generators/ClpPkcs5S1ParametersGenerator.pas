@@ -89,7 +89,7 @@ end;
 
 function TPkcs5S1ParametersGenerator.GenerateDerivedKey: TCryptoLibByteArray;
 var
-  LDigestSize, I: Int32;
+  LDigestSize, LI: Int32;
 begin
   LDigestSize := FDigest.GetDigestSize();
   System.SetLength(Result, LDigestSize);
@@ -98,7 +98,7 @@ begin
   FDigest.BlockUpdate(FSalt, 0, System.Length(FSalt));
   FDigest.DoFinal(Result, 0);
 
-  for I := 1 to FIterationCount - 1 do
+  for LI := 1 to FIterationCount - 1 do
   begin
     FDigest.BlockUpdate(Result, 0, System.Length(Result));
     FDigest.DoFinal(Result, 0);

@@ -71,7 +71,7 @@ class function TBip340SchnorrBatchVerifier.BuildBatchSeed(const APublicKeys,
 var
   LDigest: IDigest;
   LConcat: TCryptoLibByteArray;
-  LU, I, LOffset: Int32;
+  LU, LI, LOffset: Int32;
 begin
   if (APublicKeys = nil) or (AMessages = nil) or (ASignatures = nil) then
     raise EArgumentCryptoLibException.Create('BuildBatchSeed: arrays cannot be nil');
@@ -81,37 +81,37 @@ begin
     raise EArgumentCryptoLibException.Create('BuildBatchSeed: arrays must have same length (at least 1)');
 
   LOffset := 0;
-  for I := 0 to System.Pred(LU) do
-    LOffset := LOffset + System.Length(APublicKeys[I]) + System.Length(AMessages[I]) +
-      System.Length(ASignatures[I]);
+  for LI := 0 to System.Pred(LU) do
+    LOffset := LOffset + System.Length(APublicKeys[LI]) + System.Length(AMessages[LI]) +
+      System.Length(ASignatures[LI]);
 
   System.SetLength(LConcat, LOffset);
   LOffset := 0;
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    if System.Length(APublicKeys[I]) > 0 then
+    if System.Length(APublicKeys[LI]) > 0 then
     begin
-      System.Move(APublicKeys[I][0], LConcat[LOffset], System.Length(APublicKeys[I]));
-      LOffset := LOffset + System.Length(APublicKeys[I]);
+      System.Move(APublicKeys[LI][0], LConcat[LOffset], System.Length(APublicKeys[LI]));
+      LOffset := LOffset + System.Length(APublicKeys[LI]);
     end;
   end;
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    if System.Length(AMessages[I]) > 0 then
+    if System.Length(AMessages[LI]) > 0 then
     begin
-      System.Move(AMessages[I][0], LConcat[LOffset], System.Length(AMessages[I]));
-      LOffset := LOffset + System.Length(AMessages[I]);
+      System.Move(AMessages[LI][0], LConcat[LOffset], System.Length(AMessages[LI]));
+      LOffset := LOffset + System.Length(AMessages[LI]);
     end;
   end;
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    if System.Length(ASignatures[I]) > 0 then
+    if System.Length(ASignatures[LI]) > 0 then
     begin
-      System.Move(ASignatures[I][0], LConcat[LOffset], System.Length(ASignatures[I]));
-      LOffset := LOffset + System.Length(ASignatures[I]);
+      System.Move(ASignatures[LI][0], LConcat[LOffset], System.Length(ASignatures[LI]));
+      LOffset := LOffset + System.Length(ASignatures[LI]);
     end;
   end;
 
@@ -128,7 +128,7 @@ var
   LDomain: IECDomainParameters;
   LCurve: IECCurve;
   LN, LSumS: TBigInteger;
-  LU, I, J: Int32;
+  LU, LI, LJ: Int32;
   LSeed, LChallengeTagBytes, LChallenge, LBlock, LRBytes, LSBytes: TCryptoLibByteArray;
   LPubs, LMsgs, LSigs: TCryptoLibGenericArray<TCryptoLibByteArray>;
   LCipher: IBufferedCipher;
@@ -149,12 +149,12 @@ begin
 
   LU := System.Length(AItems);
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    if (System.Length(AItems[I].PublicKey) <> TBip340SchnorrUtilities.BIP340_PUBKEY_SIZE) then
+    if (System.Length(AItems[LI].PublicKey) <> TBip340SchnorrUtilities.BIP340_PUBKEY_SIZE) then
       raise EArgumentCryptoLibException.Create('PublicKey must be 32 bytes');
 
-    if (System.Length(AItems[I].Signature) <> TBip340SchnorrUtilities.BIP340_SIG_SIZE) then
+    if (System.Length(AItems[LI].Signature) <> TBip340SchnorrUtilities.BIP340_SIG_SIZE) then
       raise EArgumentCryptoLibException.Create('Signature must be 64 bytes');
   end;
 
@@ -172,11 +172,11 @@ begin
   System.SetLength(LMsgs, LU);
   System.SetLength(LSigs, LU);
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    LPubs[I] := AItems[I].PublicKey;
-    LMsgs[I] := AItems[I].Message;
-    LSigs[I] := AItems[I].Signature;
+    LPubs[LI] := AItems[LI].PublicKey;
+    LMsgs[LI] := AItems[LI].Message;
+    LSigs[LI] := AItems[LI].Signature;
   end;
 
   // Seed = SHA256(pk_1..pk_u || m_1..m_u || sig_1..sig_u)
@@ -196,15 +196,15 @@ begin
     System.SetLength(LZeros, 32);
     TArrayUtilities.Fill<Byte>(LZeros, 0, 32, Byte(0));
     System.SetLength(LBlock, 32);
-    J := 0;
-    while J < (LU - 1) do
+    LJ := 0;
+    while LJ < (LU - 1) do
     begin
       LCipher.ProcessBytes(LZeros, 0, 32, LBlock, 0);
       LVal := TBigInteger.Create(1, LBlock);
       if (LVal.CompareTo(TBigInteger.One) >= 0) and (LVal.CompareTo(LN) < 0) then
       begin
-        LCoefs[J + 1] := LVal;
-        Inc(J);
+        LCoefs[LJ + 1] := LVal;
+        Inc(LJ);
       end;
     end;
   end;
@@ -216,21 +216,21 @@ begin
   LChallengeTagBytes := TConverters.ConvertStringToBytes
     (TBip340SchnorrUtilities.BIP0340_CHALLENGE_TAG_STR, TEncoding.UTF8);
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
     try
-      LP := TBip340SchnorrUtilities.LiftX(LDomain, AItems[I].PublicKey);
+      LP := TBip340SchnorrUtilities.LiftX(LDomain, AItems[LI].PublicKey);
     except
       Result := False;
       Exit;
     end;
 
-    LPs[I] := LP;
+    LPs[LI] := LP;
 
     System.SetLength(LRBytes, 32);
     System.SetLength(LSBytes, 32);
-    System.Move(AItems[I].Signature[0], LRBytes[0], 32);
-    System.Move(AItems[I].Signature[32], LSBytes[0], 32);
+    System.Move(AItems[LI].Signature[0], LRBytes[0], 32);
+    System.Move(AItems[LI].Signature[32], LSBytes[0], 32);
     LR := TBigInteger.Create(1, LRBytes);
     LS := TBigInteger.Create(1, LSBytes);
 
@@ -240,19 +240,19 @@ begin
       Exit;
     end;
 
-    System.SetLength(LChallenge, 32 + 32 + System.Length(AItems[I].Message));
+    System.SetLength(LChallenge, 32 + 32 + System.Length(AItems[LI].Message));
     System.Move(LRBytes[0], LChallenge[0], 32);
     System.Move(TBip340SchnorrUtilities.BytesFromPoint(LP)[0], LChallenge[32], 32);
 
-    if System.Length(AItems[I].Message) > 0 then
-      System.Move(AItems[I].Message[0], LChallenge[64], System.Length(AItems[I].Message));
+    if System.Length(AItems[LI].Message) > 0 then
+      System.Move(AItems[LI].Message[0], LChallenge[64], System.Length(AItems[LI].Message));
 
     LE := TBigInteger.Create(1, TBip340SchnorrUtilities.TaggedHash(LChallengeTagBytes, LChallenge))
       .&Mod(LN);
-    LEs[I] := LE;
+    LEs[LI] := LE;
 
     try
-      LRs[I] := TBip340SchnorrUtilities.LiftX(LDomain, LRBytes);
+      LRs[LI] := TBip340SchnorrUtilities.LiftX(LDomain, LRBytes);
     except
       Result := False;
       Exit;
@@ -261,10 +261,10 @@ begin
 
   // sumS = s_1 + a_2*s_2 + ... + a_u*s_u (mod n)
   LSumS := TBigInteger.Create(1, System.Copy(AItems[0].Signature, 32, 32)).&Mod(LN);
-  for I := 1 to System.Pred(LU) do
+  for LI := 1 to System.Pred(LU) do
   begin
-    LS := TBigInteger.Create(1, System.Copy(AItems[I].Signature, 32, 32));
-    LSumS := LSumS.Add(LCoefs[I].Multiply(LS)).&Mod(LN);
+    LS := TBigInteger.Create(1, System.Copy(AItems[LI].Signature, 32, 32));
+    LSumS := LSumS.Add(LCoefs[LI].Multiply(LS)).&Mod(LN);
   end;
 
   // LHS = G * sumS
@@ -274,16 +274,16 @@ begin
   System.SetLength(LPoints, LU * 2);
   System.SetLength(LScalars, LU * 2);
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    LPoints[I] := LRs[I];
-    LScalars[I] := LCoefs[I];
+    LPoints[LI] := LRs[LI];
+    LScalars[LI] := LCoefs[LI];
   end;
 
-  for I := 0 to System.Pred(LU) do
+  for LI := 0 to System.Pred(LU) do
   begin
-    LPoints[LU + I] := LPs[I];
-    LScalars[LU + I] := LCoefs[I].Multiply(LEs[I]).&Mod(LN);
+    LPoints[LU + LI] := LPs[LI];
+    LScalars[LU + LI] := LCoefs[LI].Multiply(LEs[LI]).&Mod(LN);
   end;
 
   LRhs := TECAlgorithms.SumOfMultiplies(LPoints, LScalars);

@@ -49,22 +49,22 @@ type
     /// <summary>
     /// add a single byte to the mac for processing.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the byte to be processed.
     /// </param>
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the MAC is not initialised.
     /// </exception>
-    procedure Update(input: Byte);
+    procedure Update(AInput: Byte);
 
-    /// <param name="input">
+    /// <param name="AInput">
     /// the array containing the input.
     /// </param>
-    /// <param name="inOff">
+    /// <param name="AInOff">
     /// the index in the array the data begins at.
     /// </param>
-    /// <param name="len">
-    /// the length of the input starting at inOff.
+    /// <param name="ALen">
+    /// the length of the input starting at AInOff.
     /// </param>
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the MAC is not initialised.
@@ -72,27 +72,27 @@ type
     /// <exception cref="EDataLengthCryptoLibException">
     /// if there isn't enough data in in.
     /// </exception>
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 
     /// <summary>
     /// Initialise the MAC.
     /// </summary>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the key and other data required by the MAC.
     /// </param>
     /// <exception cref="EArgumentCryptoLibException">
     /// if the parameters argument is inappropriate.
     /// </exception>
-    procedure Init(const parameters: ICipherParameters);
+    procedure Init(const AParameters: ICipherParameters);
 
     /// <summary>
     /// Compute the final stage of the MAC writing the output to the output
-    /// parameter starting from the outOff parameter
+    /// parameter starting from the AOutOff parameter
     /// </summary>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the array the MAC is to be written to.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset into the output buffer the output is to start at.
     /// </param>
     /// <exception cref="EDataLengthCryptoLibException">
@@ -101,7 +101,7 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the MAC is not initialised.
     /// </exception>
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload;
 
     /// <summary>

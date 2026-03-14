@@ -77,20 +77,20 @@ implementation
 
 class function TCollectionUtilities.ToArray<T>(const AC: TList<T>): TCryptoLibGenericArray<T>;
 var
-  LCount, I: Int32;
+  LCount, LI: Int32;
 begin
   LCount := AC.Count;
   System.SetLength(Result, LCount);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    Result[I] := AC[I];
+    Result[LI] := AC[LI];
   end;
 end;
 
 class function TCollectionUtilities.ToString<T>(const AC: TList<T>;
   const AConverter: TCryptoLibFunc<T, String>): String;
 var
-  I, LCount: Int32;
+  LI, LCount: Int32;
   LSB: TStringBuilder;
 begin
   LCount := AC.Count;
@@ -103,10 +103,10 @@ begin
   try
     LSB.Append('[');
     LSB.Append(AConverter(AC[0]));
-    for I := 1 to LCount - 1 do
+    for LI := 1 to LCount - 1 do
     begin
       LSB.Append(', ');
-      LSB.Append(AConverter(AC[I]));
+      LSB.Append(AConverter(AC[LI]));
     end;
     LSB.Append(']');
     Result := LSB.ToString;

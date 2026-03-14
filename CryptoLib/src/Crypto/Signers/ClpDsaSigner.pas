@@ -75,7 +75,7 @@ type
     /// Configuration with an alternate, possibly deterministic calculator of
     /// K.
     /// </summary>
-    /// <param name="kCalculator">
+    /// <param name="AKCalculator">
     /// a K value calculator.
     /// </param>
     constructor Create(const AKCalculator: IDsaKCalculator); overload;
@@ -87,7 +87,7 @@ type
     /// initialised with. For conventional DSA the message should be a SHA-1 <br />
     /// hash of the message of interest.
     /// </summary>
-    /// <param name="&amp;message">
+    /// <param name="AMessage">
     /// the message that will be verified later.
     /// </param>
     function GenerateSignature(const AMessage: TCryptoLibByteArray)
@@ -223,13 +223,13 @@ begin
 
   if ((AR.SignValue <= 0) or (LQ.CompareTo(AR) <= 0)) then
   begin
-    Result := false;
+    Result := False;
     Exit;
   end;
 
   if ((&AS.SignValue <= 0) or (LQ.CompareTo(&AS) <= 0)) then
   begin
-    Result := false;
+    Result := False;
     Exit;
   end;
 

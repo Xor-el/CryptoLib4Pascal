@@ -230,7 +230,8 @@ begin
     LNewNonce := LParametersWithIV.GetIV();
     FInitialAssociatedText := nil;
     FMacSize := 16;
-    LKeyParam := LParametersWithIV.Parameters as IKeyParameter;
+    if not Supports(LParametersWithIV.Parameters, IKeyParameter, LKeyParam) then
+      LKeyParam := nil;
   end
   else
   begin

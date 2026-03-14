@@ -543,11 +543,11 @@ end;
 constructor TAsn1StreamParser.Create(const AInput: TStream; ALimit: Int32);
 var
   LTmpBuffers: TCryptoLibMatrixByteArray;
-  I: Int32;
+  LI: Int32;
 begin
   System.SetLength(LTmpBuffers, 16);
-  for I := 0 to System.Length(LTmpBuffers) - 1 do
-    System.SetLength(LTmpBuffers[I], 0);
+  for LI := 0 to System.Length(LTmpBuffers) - 1 do
+    System.SetLength(LTmpBuffers[LI], 0);
   Create(AInput, ALimit, LTmpBuffers);
 end;
 

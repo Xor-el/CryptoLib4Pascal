@@ -69,14 +69,14 @@ constructor TPemObject.Create(const AType: String;
   const AHeaders: TCryptoLibGenericArray<IPemHeader>;
   const AContent: TCryptoLibByteArray);
 var
-  I: Int32;
+  LI: Int32;
 begin
   Inherited Create();
   FType := AType;
   System.SetLength(FHeaders, System.Length(AHeaders));
-  for I := 0 to System.Length(AHeaders) - 1 do
+  for LI := 0 to System.Length(AHeaders) - 1 do
   begin
-    FHeaders[I] := AHeaders[I];
+    FHeaders[LI] := AHeaders[LI];
   end;
   FContent := AContent;
 end;

@@ -3986,16 +3986,16 @@ end;
 
 constructor TAsn1Sequence.Create(const AElements: array of IAsn1Encodable);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create;
   // Check for null elements
-  for I := 0 to System.Length(AElements) - 1 do
-    if AElements[I] = nil then
+  for LI := 0 to System.Length(AElements) - 1 do
+    if AElements[LI] = nil then
       raise ENullReferenceCryptoLibException.Create('elements cannot contain null');
   System.SetLength(FElements, System.Length(AElements));
-  for I := 0 to System.Length(AElements) - 1 do
-    FElements[I] := AElements[I];
+  for LI := 0 to System.Length(AElements) - 1 do
+    FElements[LI] := AElements[LI];
 end;
 
 constructor TAsn1Sequence.Create(const AElementVector: IAsn1EncodableVector);
@@ -4008,14 +4008,14 @@ end;
 
 constructor TAsn1Sequence.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create;
   if AC = nil then
     raise EArgumentNilCryptoLibException.Create('elements');
   System.SetLength(FElements, System.Length(AC));
-  for I := 0 to System.Length(AC) - 1 do
-    FElements[I] := AC[I];
+  for LI := 0 to System.Length(AC) - 1 do
+    FElements[LI] := AC[LI];
 end;
 
 destructor TAsn1Sequence.Destroy;
@@ -4048,7 +4048,7 @@ end;
 function TAsn1Sequence.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
 var
   LThat: IAsn1Sequence;
-  I: Int32;
+  LI: Int32;
 begin
   if not Supports(AAsn1Object, IAsn1Sequence, LThat) then
   begin
@@ -4062,9 +4062,9 @@ begin
     Exit;
   end;
 
-  for I := 0 to GetCount() - 1 do
+  for LI := 0 to GetCount() - 1 do
   begin
-    if not FElements[I].ToAsn1Object().Equals(LThat[I].ToAsn1Object()) then
+    if not FElements[LI].ToAsn1Object().Equals(LThat[LI].ToAsn1Object()) then
     begin
       Result := False;
       Exit;
@@ -4076,41 +4076,41 @@ end;
 
 function TAsn1Sequence.Asn1GetHashCode(): Int32;
 var
-  I: Int32;
+  LI: Int32;
 begin
-  I := GetCount();
-  Result := I + 1;
-  while I > 0 do
+  LI := GetCount();
+  Result := LI + 1;
+  while LI > 0 do
   begin
-    Dec(I);
+    Dec(LI);
     Result := Result * 257;
-    Result := Result xor FElements[I].ToAsn1Object().CallAsn1GetHashCode();
+    Result := Result xor FElements[LI].ToAsn1Object().CallAsn1GetHashCode();
   end;
 end;
 
 function TAsn1Sequence.GetConstructedBitStrings(): TCryptoLibGenericArray<IDerBitString>;
 var
-  I: Int32;
+  LI: Int32;
   LObj: IAsn1Object;
 begin
   System.SetLength(Result, GetCount());
-  for I := 0 to GetCount() - 1 do
+  for LI := 0 to GetCount() - 1 do
   begin
-    LObj := FElements[I].ToAsn1Object();
-    Result[I] := TDerBitString.GetInstance(LObj);
+    LObj := FElements[LI].ToAsn1Object();
+    Result[LI] := TDerBitString.GetInstance(LObj);
   end;
 end;
 
 function TAsn1Sequence.GetConstructedOctetStrings(): TCryptoLibGenericArray<IAsn1OctetString>;
 var
-  I: Int32;
+  LI: Int32;
   LObj: IAsn1Object;
 begin
   System.SetLength(Result, GetCount());
-  for I := 0 to GetCount() - 1 do
+  for LI := 0 to GetCount() - 1 do
   begin
-    LObj := FElements[I].ToAsn1Object();
-    Result[I] := TAsn1OctetString.GetInstance(LObj);
+    LObj := FElements[LI].ToAsn1Object();
+    Result[LI] := TAsn1OctetString.GetInstance(LObj);
   end;
 end;
 
@@ -4151,27 +4151,27 @@ end;
 
 class function TAsn1Sequence.ConcatenateElements(const ASequences: TCryptoLibGenericArray<IAsn1Sequence>): TCryptoLibGenericArray<IAsn1Encodable>;
 var
-  LCount, I, J, LPos, LTotalElements, LElementCount: Int32;
+  LCount, LI, LJ, LPos, LTotalElements, LElementCount: Int32;
   LSequence: IAsn1Sequence;
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   LCount := System.Length(ASequences);
   LTotalElements := 0;
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    LTotalElements := LTotalElements + ASequences[I].Count;
+    LTotalElements := LTotalElements + ASequences[LI].Count;
   end;
 
   System.SetLength(Result, LTotalElements);
   LPos := 0;
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    LSequence := ASequences[I];
+    LSequence := ASequences[LI];
     LElements := LSequence.Elements;
     LElementCount := System.Length(LElements);
-    for J := 0 to LElementCount - 1 do
+    for LJ := 0 to LElementCount - 1 do
     begin
-      Result[LPos] := LElements[J];
+      Result[LPos] := LElements[LJ];
       System.Inc(LPos);
     end;
   end;
@@ -4446,7 +4446,7 @@ end;
 class function TDerSequence.Concatenate(const ASequences: array of IAsn1Sequence): IDerSequence;
 var
   LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(ASequences) = 0 then
   begin
@@ -4455,8 +4455,8 @@ begin
   end;
   
   System.SetLength(LSequences, System.Length(ASequences));
-  for I := 0 to System.Length(ASequences) - 1 do
-    LSequences[I] := ASequences[I];
+  for LI := 0 to System.Length(ASequences) - 1 do
+    LSequences[LI] := ASequences[LI];
   
   case System.Length(LSequences) of
     0:
@@ -4661,7 +4661,7 @@ end;
 class function TDLSequence.Concatenate(const ASequences: array of IAsn1Sequence): IDLSequence;
 var
   LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(ASequences) = 0 then
   begin
@@ -4670,8 +4670,8 @@ begin
   end;
   
   System.SetLength(LSequences, System.Length(ASequences));
-  for I := 0 to System.Length(ASequences) - 1 do
-    LSequences[I] := ASequences[I];
+  for LI := 0 to System.Length(ASequences) - 1 do
+    LSequences[LI] := ASequences[LI];
   
   case System.Length(LSequences) of
     0:
@@ -4732,16 +4732,16 @@ end;
 
 constructor TAsn1Set.Create(const AElements: array of IAsn1Encodable; ADoSort: Boolean);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create;
   // Check for null elements
-  for I := 0 to System.Length(AElements) - 1 do
-    if AElements[I] = nil then
+  for LI := 0 to System.Length(AElements) - 1 do
+    if AElements[LI] = nil then
       raise ENullReferenceCryptoLibException.Create('elements cannot contain null');
   System.SetLength(FElements, System.Length(AElements));
-  for I := 0 to System.Length(AElements) - 1 do
-    FElements[I] := AElements[I];
+  for LI := 0 to System.Length(AElements) - 1 do
+    FElements[LI] := AElements[LI];
   if ADoSort and (System.Length(FElements) > 1) then
     FSortedDerEncodings := SortElements(FElements)
   else
@@ -4767,14 +4767,14 @@ end;
 
 constructor TAsn1Set.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>; ADoSort: Boolean);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create;
   if AC = nil then
     raise EArgumentNilCryptoLibException.Create('elements');
   System.SetLength(FElements, System.Length(AC));
-  for I := 0 to System.Length(AC) - 1 do
-    FElements[I] := AC[I];
+  for LI := 0 to System.Length(AC) - 1 do
+    FElements[LI] := AC[LI];
   if ADoSort and (System.Length(FElements) > 1) then
     FSortedDerEncodings := SortElements(FElements)
   else
@@ -4783,7 +4783,7 @@ end;
 
 constructor TAsn1Set.Create(const ASequence: IAsn1Sequence);
 var
-  I: Int32;
+  LI: Int32;
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   inherited Create;
@@ -4791,14 +4791,14 @@ begin
     raise EArgumentNilCryptoLibException.Create('sequence');
   LElements := ASequence.Elements;
   System.SetLength(FElements, System.Length(LElements));
-  for I := 0 to System.Length(LElements) - 1 do
-    FElements[I] := LElements[I];
+  for LI := 0 to System.Length(LElements) - 1 do
+    FElements[LI] := LElements[LI];
   FSortedDerEncodings := nil;
 end;
 
 constructor TAsn1Set.Create(const ASet: IAsn1Set);
 var
-  I: Int32;
+  LI: Int32;
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   inherited Create;
@@ -4806,8 +4806,8 @@ begin
     raise EArgumentNilCryptoLibException.Create('set');
   LElements := ASet.Elements;
   System.SetLength(FElements, System.Length(LElements));
-  for I := 0 to System.Length(LElements) - 1 do
-    FElements[I] := LElements[I];
+  for LI := 0 to System.Length(LElements) - 1 do
+    FElements[LI] := LElements[LI];
   FSortedDerEncodings := nil;
 end;
 
@@ -4849,7 +4849,7 @@ end;
 function TAsn1Set.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
 var
   LThat: IAsn1Set;
-  I: Int32;
+  LI: Int32;
 begin
   if not Supports(AAsn1Object, IAsn1Set, LThat) then
   begin
@@ -4863,9 +4863,9 @@ begin
     Exit;
   end;
 
-  for I := 0 to GetCount() - 1 do
+  for LI := 0 to GetCount() - 1 do
   begin
-    if not FElements[I].ToAsn1Object().Equals(LThat[I].ToAsn1Object()) then
+    if not FElements[LI].ToAsn1Object().Equals(LThat[LI].ToAsn1Object()) then
     begin
       Result := False;
       Exit;
@@ -4877,15 +4877,15 @@ end;
 
 function TAsn1Set.Asn1GetHashCode(): Int32;
 var
-  I: Int32;
+  LI: Int32;
 begin
-  I := GetCount();
-  Result := I + 1;
-  while I > 0 do
+  LI := GetCount();
+  Result := LI + 1;
+  while LI > 0 do
   begin
-    Dec(I);
+    Dec(LI);
     Result := Result * 257;
-    Result := Result xor FElements[I].ToAsn1Object().CallAsn1GetHashCode();
+    Result := Result xor FElements[LI].ToAsn1Object().CallAsn1GetHashCode();
   end;
 end;
 
@@ -5026,7 +5026,7 @@ end;
 
 class function TAsn1Set.SortElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>;
 var
-  LCount, I, J: Int32;
+  LCount, LI, LJ: Int32;
   LDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
   LTemp: IAsn1Encodable;
   LTempEncoding: IDerEncoding;
@@ -5037,20 +5037,20 @@ begin
 
   // Sort elements based on DER encodings using insertion sort
   // (handles 0 or 1 elements gracefully - loop simply doesn't execute)
-  for I := 1 to LCount - 1 do
+  for LI := 1 to LCount - 1 do
   begin
-    J := I;
-    while (J > 0) and (LDerEncodings[J].CompareTo(LDerEncodings[J - 1]) < 0) do
+    LJ := LI;
+    while (LJ > 0) and (LDerEncodings[LJ].CompareTo(LDerEncodings[LJ - 1]) < 0) do
     begin
       // Swap encodings
-      LTempEncoding := LDerEncodings[J];
-      LDerEncodings[J] := LDerEncodings[J - 1];
-      LDerEncodings[J - 1] := LTempEncoding;
+      LTempEncoding := LDerEncodings[LJ];
+      LDerEncodings[LJ] := LDerEncodings[LJ - 1];
+      LDerEncodings[LJ - 1] := LTempEncoding;
       // Swap elements
-      LTemp := AElements[J];
-      AElements[J] := AElements[J - 1];
-      AElements[J - 1] := LTemp;
-      System.Dec(J);
+      LTemp := AElements[LJ];
+      AElements[LJ] := AElements[LJ - 1];
+      AElements[LJ - 1] := LTemp;
+      System.Dec(LJ);
     end;
   end;
 
@@ -5146,7 +5146,7 @@ end;
 class function TDerSet.CreateSortedDerEncodings(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>;
 var
   LDerEncodings: TCryptoLibGenericArray<IDerEncoding>;
-  LCount, I, J: Int32;
+  LCount, LI, LJ: Int32;
   LTemp: IDerEncoding;
 begin
   LDerEncodings := TAsn1OutputStream.GetContentsEncodingsDer(AElements);
@@ -5155,15 +5155,15 @@ begin
   if LCount > 1 then
   begin
     // Sort using insertion sort
-    for I := 1 to LCount - 1 do
+    for LI := 1 to LCount - 1 do
     begin
-      J := I;
-      while (J > 0) and (LDerEncodings[J].CompareTo(LDerEncodings[J - 1]) < 0) do
+      LJ := LI;
+      while (LJ > 0) and (LDerEncodings[LJ].CompareTo(LDerEncodings[LJ - 1]) < 0) do
       begin
-        LTemp := LDerEncodings[J];
-        LDerEncodings[J] := LDerEncodings[J - 1];
-        LDerEncodings[J - 1] := LTemp;
-        System.Dec(J);
+        LTemp := LDerEncodings[LJ];
+        LDerEncodings[LJ] := LDerEncodings[LJ - 1];
+        LDerEncodings[LJ - 1] := LTemp;
+        System.Dec(LJ);
       end;
     end;
   end;
@@ -5441,7 +5441,7 @@ end;
 class function TBerSequence.Concatenate(const ASequences: array of IAsn1Sequence): IBerSequence;
 var
   LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(ASequences) = 0 then
   begin
@@ -5450,8 +5450,8 @@ begin
   end;
   
   System.SetLength(LSequences, System.Length(ASequences));
-  for I := 0 to System.Length(ASequences) - 1 do
-    LSequences[I] := ASequences[I];
+  for LI := 0 to System.Length(ASequences) - 1 do
+    LSequences[LI] := ASequences[LI];
   
   case System.Length(LSequences) of
     0:
@@ -6254,7 +6254,7 @@ end;
 function TBerOctetString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
 var
   LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
+  LI: Int32;
 begin
   if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
@@ -6267,8 +6267,8 @@ begin
   else
   begin
     System.SetLength(LEncodableElements, System.Length(FElements));
-    for I := 0 to System.Length(FElements) - 1 do
-      LEncodableElements[I] := FElements[I];
+    for LI := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[LI] := FElements[LI];
     Result := TConstructedILEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.OctetString,
       TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
   end;
@@ -6277,7 +6277,7 @@ end;
 function TBerOctetString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
 var
   LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
+  LI: Int32;
 begin
   if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
@@ -6290,8 +6290,8 @@ begin
   else
   begin
     System.SetLength(LEncodableElements, System.Length(FElements));
-    for I := 0 to System.Length(FElements) - 1 do
-      LEncodableElements[I] := FElements[I];
+    for LI := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[LI] := FElements[LI];
     Result := TConstructedILEncoding.Create(ATagClass, ATagNo,
       TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
   end;
@@ -6299,7 +6299,7 @@ end;
 
 class function TBerOctetString.FlattenOctetStrings(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>): TCryptoLibByteArray;
 var
-  LCount, I, LTotalOctets, LPos: Int32;
+  LCount, LI, LTotalOctets, LPos: Int32;
   LOctets: TCryptoLibByteArray;
 begin
   LCount := System.Length(AOctetStrings);
@@ -6311,14 +6311,14 @@ begin
   else
     begin
       LTotalOctets := 0;
-      for I := 0 to LCount - 1 do
-        LTotalOctets := LTotalOctets + System.Length(AOctetStrings[I].GetOctets());
+      for LI := 0 to LCount - 1 do
+        LTotalOctets := LTotalOctets + System.Length(AOctetStrings[LI].GetOctets());
 
       System.SetLength(Result, LTotalOctets);
       LPos := 0;
-      for I := 0 to LCount - 1 do
+      for LI := 0 to LCount - 1 do
       begin
-        LOctets := AOctetStrings[I].GetOctets();
+        LOctets := AOctetStrings[LI].GetOctets();
         System.Move(LOctets[0], Result[LPos], System.Length(LOctets) * SizeOf(Byte));
         LPos := LPos + System.Length(LOctets);
       end;
@@ -6412,7 +6412,7 @@ function TDerBitString.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
 var
   LThat: IDerBitString;
   LThisContents, LThatContents: TCryptoLibByteArray;
-  LLength, I, LLast, LPadBits: Int32;
+  LLength, LI, LLast, LPadBits: Int32;
   LThisLastDer, LThatLastDer: Byte;
 begin
   if not Supports(AAsn1Object, IDerBitString, LThat) then
@@ -6439,9 +6439,9 @@ begin
 
   LLast := LLength - 1;
   // Compare all bytes except the last one
-  for I := 0 to LLast - 1 do
+  for LI := 0 to LLast - 1 do
   begin
-    if LThisContents[I] <> LThatContents[I] then
+    if LThisContents[LI] <> LThatContents[LI] then
     begin
       Result := False;
       Exit;
@@ -6527,16 +6527,16 @@ end;
 
 function TDerBitString.GetInt32Value(): Int32;
 var
-  LEnd, I, LPadBits: Int32;
+  LEnd, LI, LPadBits: Int32;
   LDer: Byte;
 begin
   LEnd := Math.Min(5, System.Length(FContents) - 1);
   Result := 0;
   
   // Process bytes 1 to end-1 (excluding pad bits byte and last byte)
-  for I := 1 to LEnd - 1 do
+  for LI := 1 to LEnd - 1 do
   begin
-    Result := Result or (Int32(FContents[I]) shl (8 * (I - 1)));
+    Result := Result or (Int32(FContents[LI]) shl (8 * (LI - 1)));
   end;
   
   // Handle the last byte with pad bits masking (if end < 5)
@@ -6589,7 +6589,7 @@ end;
 
 constructor TDerBitString.Create(ANamedBits: Int32);
 var
-  LBits, LBytes, I, LPadBits: Int32;
+  LBits, LBytes, LI, LPadBits: Int32;
   LData: TCryptoLibByteArray;
 begin
   inherited Create();
@@ -6602,9 +6602,9 @@ begin
   LBits := 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(ANamedBits));
   LBytes := (LBits + 7) div 8;
   System.SetLength(LData, 1 + LBytes);
-  for I := 1 to LBytes - 1 do
+  for LI := 1 to LBytes - 1 do
   begin
-    LData[I] := Byte(ANamedBits);
+    LData[LI] := Byte(ANamedBits);
     ANamedBits := TBitOperations.Asr32(ANamedBits, 8);
   end;
   LData[LBytes] := Byte(ANamedBits);
@@ -6943,7 +6943,7 @@ end;
 function TBerBitString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
 var
   LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
+  LI: Int32;
 begin
   if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
@@ -6956,8 +6956,8 @@ begin
   else
   begin
     System.SetLength(LEncodableElements, System.Length(FElements));
-    for I := 0 to System.Length(FElements) - 1 do
-      LEncodableElements[I] := FElements[I];
+    for LI := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[LI] := FElements[LI];
     Result := TConstructedILEncoding.Create(TAsn1Tags.Universal, TAsn1Tags.BitString,
       TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
   end;
@@ -6966,7 +6966,7 @@ end;
 function TBerBitString.GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding;
 var
   LEncodableElements: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
+  LI: Int32;
 begin
   if AEncoding <> TAsn1OutputStream.EncodingBer then
   begin
@@ -6979,8 +6979,8 @@ begin
   else
   begin
     System.SetLength(LEncodableElements, System.Length(FElements));
-    for I := 0 to System.Length(FElements) - 1 do
-      LEncodableElements[I] := FElements[I];
+    for LI := 0 to System.Length(FElements) - 1 do
+      LEncodableElements[LI] := FElements[LI];
     Result := TConstructedILEncoding.Create(ATagClass, ATagNo,
       TAsn1OutputStream.GetContentsEncodings(AEncoding, LEncodableElements));
   end;
@@ -6988,7 +6988,7 @@ end;
 
 class function TBerBitString.FlattenBitStrings(const ABitStrings: TCryptoLibGenericArray<IDerBitString>): TCryptoLibByteArray;
 var
-  LCount, I, LLast, LTotalLength, LPos, LLength: Int32;
+  LCount, LI, LLast, LTotalLength, LPos, LLength: Int32;
   LElementContents, LLastElementContents: TCryptoLibByteArray;
   LPadBits: Byte;
 begin
@@ -7002,9 +7002,9 @@ begin
     begin
       LLast := LCount - 1;
       LTotalLength := 0;
-      for I := 0 to LLast - 1 do
+      for LI := 0 to LLast - 1 do
       begin
-        LElementContents := ABitStrings[I].Contents;
+        LElementContents := ABitStrings[LI].Contents;
         if LElementContents[0] <> 0 then
           raise EArgumentCryptoLibException.Create('only the last nested bitstring can have padding');
         LTotalLength := LTotalLength + System.Length(LElementContents) - 1;
@@ -7017,9 +7017,9 @@ begin
       System.SetLength(Result, LTotalLength);
       Result[0] := LPadBits;
       LPos := 1;
-      for I := 0 to LCount - 1 do
+      for LI := 0 to LCount - 1 do
       begin
-        LElementContents := ABitStrings[I].Contents;
+        LElementContents := ABitStrings[LI].Contents;
         LLength := System.Length(LElementContents) - 1;
         System.Move(LElementContents[1], Result[LPos], LLength * SizeOf(Byte));
         LPos := LPos + LLength;
@@ -7326,7 +7326,7 @@ end;
 
 constructor TDerBmpString.Create(const AStr: TCryptoLibByteArray);
 var
-  LByteLen, LCharLen, I: Int32;
+  LByteLen, LCharLen, LI: Int32;
   LCs: TCryptoLibCharArray;
 begin
   inherited Create();
@@ -7337,8 +7337,8 @@ begin
     raise EArgumentCryptoLibException.Create('malformed BMPString encoding encountered');
   LCharLen := TBitOperations.Asr32(LByteLen, 1);
   System.SetLength(LCs, LCharLen);
-  for I := 0 to LCharLen - 1 do
-    LCs[I] := Char((AStr[2 * I] shl 8) or (AStr[2 * I + 1] and $FF));
+  for LI := 0 to LCharLen - 1 do
+    LCs[LI] := Char((AStr[2 * LI] shl 8) or (AStr[2 * LI + 1] and $FF));
   FStr := TConverters.ConvertCharArrayToString(LCs);
 end;
 
@@ -7357,16 +7357,16 @@ end;
 
 function TDerBmpString.GetContents(): TCryptoLibByteArray;
 var
-  LCount, I: Int32;
+  LCount, LI: Int32;
   LChar: Char;
 begin
   LCount := System.Length(FStr);
   System.SetLength(Result, LCount * 2); // BMP string uses 2 bytes per character
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    LChar := FStr[I + 1]; // Pascal strings are 1-indexed
-    Result[I * 2] := Byte((Ord(LChar) shr 8) and $FF); // High byte
-    Result[I * 2 + 1] := Byte(Ord(LChar) and $FF); // Low byte
+    LChar := FStr[LI + 1]; // Pascal strings are 1-indexed
+    Result[LI * 2] := Byte((Ord(LChar) shr 8) and $FF); // High byte
+    Result[LI * 2 + 1] := Byte(Ord(LChar) and $FF); // Low byte
   end;
 end;
 
@@ -8581,7 +8581,7 @@ var
   LObjId: String;
   LValue: Int64;
   LBigValue: TBigInteger;
-  I, LB: Int32;
+  LI, LB: Int32;
   LFirst: Boolean;
 begin
   LObjId := '';
@@ -8589,9 +8589,9 @@ begin
   LBigValue := TBigInteger.GetDefault;
   LFirst := True;
 
-  for I := 0 to System.Length(AContents) - 1 do
+  for LI := 0 to System.Length(AContents) - 1 do
   begin
-    LB := AContents[I];
+    LB := AContents[LI];
 
     if LValue <= LongLimit then
     begin
@@ -8708,7 +8708,7 @@ end;
 
 class procedure TDerObjectIdentifier.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
 var
-  LByteCount, I: Int32;
+  LByteCount, LI: Int32;
   LTmp: TCryptoLibByteArray;
   LTmpValue: TBigInteger;
 begin
@@ -8721,9 +8721,9 @@ begin
   begin
     LTmpValue := AFieldValue;
     System.SetLength(LTmp, LByteCount);
-    for I := LByteCount - 1 downto 0 do
+    for LI := LByteCount - 1 downto 0 do
     begin
-      LTmp[I] := Byte(LTmpValue.Int32Value or $80);
+      LTmp[LI] := Byte(LTmpValue.Int32Value or $80);
       LTmpValue := LTmpValue.ShiftRight(7);
     end;
     LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
@@ -8957,7 +8957,7 @@ end;
 
 class function TAsn1RelativeOid.IsValidContents(const AContents: TCryptoLibByteArray): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LSubIDStart: Boolean;
 begin
   if System.Length(AContents) < 1 then
@@ -8967,14 +8967,14 @@ begin
   end;
 
   LSubIDStart := True;
-  for I := 0 to System.Length(AContents) - 1 do
+  for LI := 0 to System.Length(AContents) - 1 do
   begin
-    if LSubIDStart and (AContents[I] = $80) then
+    if LSubIDStart and (AContents[LI] = $80) then
     begin
       Result := False;
       Exit;
     end;
-    LSubIDStart := (AContents[I] and $80) = 0;
+    LSubIDStart := (AContents[LI] and $80) = 0;
   end;
 
   Result := LSubIDStart;
@@ -8985,7 +8985,7 @@ var
   LObjId: String;
   LValue: Int64;
   LBigValue: TBigInteger;
-  I, LB: Int32;
+  LI, LB: Int32;
   LFirst: Boolean;
 begin
   LObjId := '';
@@ -8993,9 +8993,9 @@ begin
   LBigValue := TBigInteger.GetDefault;
   LFirst := True;
 
-  for I := 0 to System.Length(AContents) - 1 do
+  for LI := 0 to System.Length(AContents) - 1 do
   begin
-    LB := AContents[I];
+    LB := AContents[LI];
 
     if LValue <= LongLimit then
     begin
@@ -9099,7 +9099,7 @@ end;
 
 class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
 var
-  LByteCount, I: Int32;
+  LByteCount, LI: Int32;
   LTmp: TCryptoLibByteArray;
   LTmpValue: TBigInteger;
 begin
@@ -9112,9 +9112,9 @@ begin
   begin
     LTmpValue := AFieldValue;
     System.SetLength(LTmp, LByteCount);
-    for I := LByteCount - 1 downto 0 do
+    for LI := LByteCount - 1 downto 0 do
     begin
-      LTmp[I] := Byte(LTmpValue.Int32Value or $80);
+      LTmp[LI] := Byte(LTmpValue.Int32Value or $80);
       LTmpValue := LTmpValue.ShiftRight(7);
     end;
     LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
@@ -10709,12 +10709,12 @@ end;
 
 class function TDerIA5String.IsIA5String(const AStr: String): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LCh: Char;
 begin
-  for I := 1 to System.Length(AStr) do
+  for LI := 1 to System.Length(AStr) do
   begin
-    LCh := AStr[I];
+    LCh := AStr[LI];
     if Ord(LCh) > $007F then
     begin
       Result := False;
@@ -10900,13 +10900,13 @@ end;
 
 class function TDerNumericString.IsNumericString(const AStr: String): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LCh: Char;
   LOrd: Int32;
 begin
-  for I := 1 to System.Length(AStr) do
+  for LI := 1 to System.Length(AStr) do
   begin
-    LCh := AStr[I];
+    LCh := AStr[LI];
     LOrd := Ord(LCh);
     if (LOrd > $007F) or ((LCh <> ' ') and ((LOrd < Ord('0')) or (LOrd > Ord('9')))) then
     begin
@@ -10919,12 +10919,12 @@ end;
 
 class function TDerNumericString.IsNumericString(const AContents: TCryptoLibByteArray): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LB: Byte;
 begin
-  for I := 0 to System.Length(AContents) - 1 do
+  for LI := 0 to System.Length(AContents) - 1 do
   begin
-    LB := AContents[I];
+    LB := AContents[LI];
     case LB of
       $20, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39:
         // Valid character
@@ -11249,13 +11249,13 @@ end;
 
 class function TDerPrintableString.IsPrintableString(const AStr: String): Boolean;
 var
-  I: Int32;
+  LI: Int32;
   LCh: Char;
   LOrd: Int32;
 begin
-  for I := 1 to System.Length(AStr) do
+  for LI := 1 to System.Length(AStr) do
   begin
-    LCh := AStr[I];
+    LCh := AStr[LI];
     LOrd := Ord(LCh);
     if LOrd > $007F then
     begin
@@ -11581,7 +11581,7 @@ const
   LTable: array[0..15] of Char = ('0', '1', '2', '3', '4', '5', '6', '7',
     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
 var
-  LDl, LCapacity, I: Int32;
+  LDl, LCapacity, LI: Int32;
   LBuf: TStringBuilder;
 begin
   LDl := System.Length(FContents);
@@ -11589,8 +11589,8 @@ begin
   LBuf := TStringBuilder.Create('#1C', LCapacity);
   try
     EncodeHexDL(LBuf, LDl, LTable);
-    for I := 0 to LDl - 1 do
-      EncodeHexByte(LBuf, FContents[I], LTable);
+    for LI := 0 to LDl - 1 do
+      EncodeHexByte(LBuf, FContents[LI], LTable);
     Result := LBuf.ToString();
   finally
     LBuf.Free;
@@ -11998,12 +11998,12 @@ end;
 
 class constructor TDerInteger.Create;
 var
-  I: Int32;
+  LI: Int32;
 begin
   System.SetLength(FSmallConstants, 17);
-  for I := 0 to System.Length(FSmallConstants) - 1 do
+  for LI := 0 to System.Length(FSmallConstants) - 1 do
   begin
-    FSmallConstants[I] := TDerInteger.Create(I);
+    FSmallConstants[LI] := TDerInteger.Create(LI);
   end;
   
   FZero := FSmallConstants[0];

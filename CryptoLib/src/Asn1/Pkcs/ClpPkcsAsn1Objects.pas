@@ -959,14 +959,14 @@ end;
 
 class function TCertificationRequestInfo.ValidateAttributes(const AAttributes: IAsn1Set): IAsn1Set;
 var
-  I: Int32;
+  LI: Int32;
   LAttr: IAttributePkcs;
 begin
   if AAttributes <> nil then
   begin
-    for I := 0 to AAttributes.Count - 1 do
+    for LI := 0 to AAttributes.Count - 1 do
     begin
-      LAttr := TAttributePkcs.GetInstance(AAttributes[I]);
+      LAttr := TAttributePkcs.GetInstance(AAttributes[LI]);
       if TPkcsObjectIdentifiers.Pkcs9AtChallengePassword.Equals(LAttr.AttrType) then
       begin
         if LAttr.AttrValues.Count <> 1 then

@@ -105,31 +105,31 @@ class procedure TECAlgorithms.MontgomeryTrick(
   const AScale: IECFieldElement);
 var
   LC: TCryptoLibGenericArray<IECFieldElement>;
-  I, J: Int32;
+  LI, LJ: Int32;
   LU: IECFieldElement;
   LTmp: IECFieldElement;
 begin
   System.SetLength(LC, ALen);
   LC[0] := AZs[AOff];
 
-  I := 0;
-  while I + 1 < ALen do
+  LI := 0;
+  while LI + 1 < ALen do
   begin
-    Inc(I);
-    LC[I] := LC[I - 1].Multiply(AZs[AOff + I]);
+    Inc(LI);
+    LC[LI] := LC[LI - 1].Multiply(AZs[AOff + LI]);
   end;
 
   if AScale <> nil then
-    LC[I] := LC[I].Multiply(AScale);
+    LC[LI] := LC[LI].Multiply(AScale);
 
-  LU := LC[I].Invert();
+  LU := LC[LI].Invert();
 
-  while I > 0 do
+  while LI > 0 do
   begin
-    J := AOff + I;
-    Dec(I);
-    LTmp := AZs[J];
-    AZs[J] := LC[I].Multiply(LU);
+    LJ := AOff + LI;
+    Dec(LI);
+    LTmp := AZs[LJ];
+    AZs[LJ] := LC[LI].Multiply(LU);
     LU := LU.Multiply(LTmp);
   end;
 
@@ -198,7 +198,7 @@ end;
 class function TECAlgorithms.SumOfMultiplies(const APs: TCryptoLibGenericArray<IECPoint>;
   const AKs: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
-  LCount, I: Int32;
+  LCount, LI: Int32;
   LP: IECPoint;
   LC: IECCurve;
   LImported: TCryptoLibGenericArray<IECPoint>;
@@ -221,11 +221,11 @@ begin
   LC := LP.Curve;
   System.SetLength(LImported, LCount);
   LImported[0] := LP;
-  I := 1;
-  while I < LCount do
+  LI := 1;
+  while LI < LCount do
   begin
-    LImported[I] := ImportPoint(LC, APs[I]);
-    Inc(I);
+    LImported[LI] := ImportPoint(LC, APs[LI]);
+    Inc(LI);
   end;
   if Supports(LC.GetEndomorphism(), IGlvEndomorphism, LGlv) then
     Result := ImplCheckResult(ImplSumOfMultipliesGlv(LImported, AKs, LGlv))
@@ -560,7 +560,7 @@ end;
 class function TECAlgorithms.ImplSumOfMultiplies(const APs: TCryptoLibGenericArray<IECPoint>;
   const AKs: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
-  LCount, I, LMinWidth, LWidth: Int32;
+  LCount, LI, LMinWidth, LWidth: Int32;
   LKi: TBigInteger;
   LNegs: TCryptoLibBooleanArray;
   LInfos: TCryptoLibGenericArray<IWNafPreCompInfo>;
@@ -570,15 +570,15 @@ begin
   System.SetLength(LNegs, LCount);
   System.SetLength(LInfos, LCount);
   System.SetLength(LWnafs, LCount);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    LKi := AKs[I];
-    LNegs[I] := LKi.SignValue < 0;
+    LKi := AKs[LI];
+    LNegs[LI] := LKi.SignValue < 0;
     LKi := LKi.Abs();
     LMinWidth := TWNafUtilities.GetWindowSize(LKi.BitLength, 8);
-    LInfos[I] := TWNafUtilities.Precompute(APs[I], LMinWidth, True);
-    LWidth := Math.Min(8, LInfos[I].Width);
-    LWnafs[I] := TWNafUtilities.GenerateWindowNaf(LWidth, LKi);
+    LInfos[LI] := TWNafUtilities.Precompute(APs[LI], LMinWidth, True);
+    LWidth := Math.Min(8, LInfos[LI].Width);
+    LWnafs[LI] := TWNafUtilities.GenerateWindowNaf(LWidth, LKi);
   end;
   Result := ImplSumOfMultiplies(LNegs, LInfos, LWnafs);
 end;
@@ -588,7 +588,7 @@ class function TECAlgorithms.ImplSumOfMultipliesGlv(const APs: TCryptoLibGeneric
   const AGlvEndomorphism: IGlvEndomorphism): IECPoint;
 var
   LN: TBigInteger;
-  LLen, I, J: Int32;
+  LLen, LI, LJ: Int32;
   LAbs: TCryptoLibGenericArray<TBigInteger>;
   LAbPair: TCryptoLibGenericArray<TBigInteger>;
   LPqs: TCryptoLibGenericArray<IECPoint>;
@@ -597,28 +597,28 @@ begin
   LN := APs[0].Curve.Order;
   LLen := System.Length(APs);
   System.SetLength(LAbs, LLen shl 1);
-  J := 0;
-  for I := 0 to LLen - 1 do
+  LJ := 0;
+  for LI := 0 to LLen - 1 do
   begin
-    LAbPair := AGlvEndomorphism.DecomposeScalar(AKs[I].&Mod(LN));
-    LAbs[J] := LAbPair[0];
-    Inc(J);
-    LAbs[J] := LAbPair[1];
-    Inc(J);
+    LAbPair := AGlvEndomorphism.DecomposeScalar(AKs[LI].&Mod(LN));
+    LAbs[LJ] := LAbPair[0];
+    Inc(LJ);
+    LAbs[LJ] := LAbPair[1];
+    Inc(LJ);
   end;
   if (AGlvEndomorphism.HasEfficientPointMap) then
     Result := ImplSumOfMultiplies(AGlvEndomorphism as IECEndomorphism, APs, LAbs)
   else
   begin
     System.SetLength(LPqs, LLen shl 1);
-    J := 0;
-    for I := 0 to LLen - 1 do
+    LJ := 0;
+    for LI := 0 to LLen - 1 do
     begin
-      LP := APs[I];
-      LPqs[J] := LP;
-      Inc(J);
-      LPqs[J] := TEndoUtilities.MapPoint(AGlvEndomorphism as IECEndomorphism, LP);
-      Inc(J);
+      LP := APs[LI];
+      LPqs[LJ] := LP;
+      Inc(LJ);
+      LPqs[LJ] := TEndoUtilities.MapPoint(AGlvEndomorphism as IECEndomorphism, LP);
+      Inc(LJ);
     end;
     Result := ImplSumOfMultiplies(LPqs, LAbs);
   end;
@@ -628,7 +628,7 @@ class function TECAlgorithms.ImplSumOfMultiplies(const AEndomorphism: IECEndomor
   const APs: TCryptoLibGenericArray<IECPoint>;
   const AKs: TCryptoLibGenericArray<TBigInteger>): IECPoint;
 var
-  LHalfCount, LFullCount, I, J0, J1: Int32;
+  LHalfCount, LFullCount, LI, J0, J1: Int32;
   LKj0, LKj1: TBigInteger;
   LNegs: TCryptoLibBooleanArray;
   LInfos: TCryptoLibGenericArray<IWNafPreCompInfo>;
@@ -644,9 +644,9 @@ begin
   System.SetLength(LInfos, LFullCount);
   System.SetLength(LWnafs, LFullCount);
   LPointMap := AEndomorphism.PointMap;
-  for I := 0 to LHalfCount - 1 do
+  for LI := 0 to LHalfCount - 1 do
   begin
-    J0 := I shl 1;
+    J0 := LI shl 1;
     J1 := J0 + 1;
     LKj0 := AKs[J0];
     LNegs[J0] := LKj0.SignValue < 0;
@@ -656,7 +656,7 @@ begin
     LKj1 := LKj1.Abs();
     LMinWidth := TWNafUtilities.GetWindowSize(
       Math.Max(LKj0.BitLength, LKj1.BitLength), 8);
-    LP := APs[I];
+    LP := APs[LI];
     LInfoP := TWNafUtilities.Precompute(LP, LMinWidth, True);
     LQ := TEndoUtilities.MapPoint(AEndomorphism, LP);
     LInfoQ := TWNafUtilities.PrecomputeWithPointMap(LQ, LPointMap, LInfoP, True);
@@ -675,7 +675,7 @@ class function TECAlgorithms.ImplSumOfMultiplies(
   const AInfos: TCryptoLibGenericArray<IWNafPreCompInfo>;
   const AWnafs: TCryptoLibGenericArray<TCryptoLibByteArray>): IECPoint;
 var
-  LLen, LCount, I, J, LWi, LN, LZeroes: Int32;
+  LLen, LCount, LI, LJ, LWi, LN, LZeroes: Int32;
   LCurve: IECCurve;
   LInfinity, LR, LSmallR: IECPoint;
   LWnaf: TCryptoLibByteArray;
@@ -684,29 +684,29 @@ var
 begin
   LLen := 0;
   LCount := System.Length(AWnafs);
-  for I := 0 to LCount - 1 do
-    LLen := Math.Max(LLen, System.Length(AWnafs[I]));
+  for LI := 0 to LCount - 1 do
+    LLen := Math.Max(LLen, System.Length(AWnafs[LI]));
   LCurve := AInfos[0].PreComp[0].Curve;
   LInfinity := LCurve.Infinity;
   LR := LInfinity;
   LZeroes := 0;
-  I := LLen;
-  while I > 0 do
+  LI := LLen;
+  while LI > 0 do
   begin
-    Dec(I);
+    Dec(LI);
     LSmallR := LInfinity;
-    for J := 0 to LCount - 1 do
+    for LJ := 0 to LCount - 1 do
     begin
-      LWnaf := AWnafs[J];
-      if I < System.Length(LWnaf) then
-        LWi := Int32(ShortInt(LWnaf[I]))
+      LWnaf := AWnafs[LJ];
+      if LI < System.Length(LWnaf) then
+        LWi := Int32(ShortInt(LWnaf[LI]))
       else
         LWi := 0;
       if LWi <> 0 then
       begin
         LN := System.Abs(LWi);
-        LInfo := AInfos[J];
-        if (LWi < 0) = ANegs[J] then
+        LInfo := AInfos[LJ];
+        if (LWi < 0) = ANegs[LJ] then
           LTable := LInfo.PreComp
         else
           LTable := LInfo.PreCompNeg;

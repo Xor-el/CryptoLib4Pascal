@@ -274,7 +274,7 @@ var
   LFields: TDictionary<String, String>;
   LProcType: String;
   LHeader: IPemHeader;
-  I: Int32;
+  LI: Int32;
   LSeq: IAsn1Sequence;
   LRsa: IRsaPrivateKeyStructure;
   LPubSpec, LPrivSpec: IAsymmetricKeyParameter;
@@ -301,9 +301,9 @@ begin
 
   LFields := TDictionary<String, String>.Create();
   try
-    for I := 0 to Length(APemObject.Headers) - 1 do
+    for LI := 0 to Length(APemObject.Headers) - 1 do
     begin
-      LHeader := APemObject.Headers[I];
+      LHeader := APemObject.Headers[LI];
       LFields.AddOrSetValue(LHeader.Name, LHeader.Value);
     end;
 

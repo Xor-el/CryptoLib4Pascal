@@ -117,34 +117,34 @@ procedure TPemWriter.WriteEncoded(const ABytes: TCryptoLibByteArray);
 var
   LEncoded: String;
   LEncodedBytes: TCryptoLibByteArray;
-  I, LIndex, LRemaining: Int32;
+  LI, LIndex, LRemaining: Int32;
 begin
   LEncoded := TBase64Encoder.Encode(ABytes);
   LEncodedBytes := TConverters.ConvertStringToBytes(LEncoded, TEncoding.ASCII);
 
-  I := 0;
-  while I < System.Length(LEncodedBytes) do
+  LI := 0;
+  while LI < System.Length(LEncodedBytes) do
   begin
     LIndex := 0;
-    LRemaining := System.Length(LEncodedBytes) - I;
+    LRemaining := System.Length(LEncodedBytes) - LI;
     if LRemaining > LineLength then
       LRemaining := LineLength;
 
     while LIndex < LRemaining do
     begin
-      FBuffer[LIndex] := LEncodedBytes[I + LIndex];
+      FBuffer[LIndex] := LEncodedBytes[LI + LIndex];
       System.Inc(LIndex);
     end;
 
     FWriter.Write(FBuffer[0], LIndex);
     WriteLine();
-    System.Inc(I, LineLength);
+    System.Inc(LI, LineLength);
   end;
 end;
 
 function TPemWriter.GetOutputSize(const AObj: IPemObject): Int32;
 var
-  LDataLen, I: Int32;
+  LDataLen, LI: Int32;
   LHeader: IPemHeader;
 begin
   // BEGIN and END boundaries.
@@ -152,9 +152,9 @@ begin
 
   if System.Length(AObj.Headers) > 0 then
   begin
-    for I := 0 to System.Length(AObj.Headers) - 1 do
+    for LI := 0 to System.Length(AObj.Headers) - 1 do
     begin
-      LHeader := AObj.Headers[I];
+      LHeader := AObj.Headers[LI];
       Result := Result + System.Length(LHeader.Name) + 2 + System.Length(LHeader.Value) + FNlLength;
     end;
 
@@ -170,7 +170,7 @@ end;
 procedure TPemWriter.WriteObject(const AObjGen: IPemObjectGenerator);
 var
   LObj: IPemObject;
-  I: Int32;
+  LI: Int32;
   LHeader: IPemHeader;
 begin
   LObj := AObjGen.Generate();
@@ -179,9 +179,9 @@ begin
 
   if System.Length(LObj.Headers) > 0 then
   begin
-    for I := 0 to System.Length(LObj.Headers) - 1 do
+    for LI := 0 to System.Length(LObj.Headers) - 1 do
     begin
-      LHeader := LObj.Headers[I];
+      LHeader := LObj.Headers[LI];
       WriteString(LHeader.Name);
       WriteString(': ');
       WriteString(LHeader.Value);

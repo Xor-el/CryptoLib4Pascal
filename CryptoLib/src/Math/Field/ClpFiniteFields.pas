@@ -65,15 +65,15 @@ end;
 class function TFiniteFields.GetBinaryExtensionField
   (const AExponents: TCryptoLibInt32Array): IPolynomialExtensionField;
 var
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(AExponents) = 0 then
     raise EArgumentCryptoLibException.CreateRes(@SIrreduciblePolynomialsConstantTerm);
   if AExponents[0] <> 0 then
     raise EArgumentCryptoLibException.CreateRes(@SIrreduciblePolynomialsConstantTerm);
-  for I := 1 to System.High(AExponents) do
+  for LI := 1 to System.High(AExponents) do
   begin
-    if AExponents[I] <= AExponents[I - 1] then
+    if AExponents[LI] <= AExponents[LI - 1] then
       raise EArgumentCryptoLibException.CreateRes(@SPolynomialExponentsMonotonic);
   end;
   Result := TGenericPolynomialExtensionField.Create(FGF_2,

@@ -57,21 +57,21 @@ type
     /// <summary>
     /// update the message digest with a single byte.
     /// </summary>
-    procedure Update(input: Byte);
+    procedure Update(AInput: Byte);
 
     /// <summary>
     /// update the message digest with a block of bytes.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the byte array containing the data.
     /// </param>
-    /// <param name="inOff">
+    /// <param name="AInOff">
     /// the offset into the byte array where the data starts.
     /// </param>
-    /// <param name="len">
+    /// <param name="ALen">
     /// the length of the data.
     /// </param>
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 
     function DoFinal: TCryptoLibByteArray; overload;
 
@@ -79,13 +79,13 @@ type
     /// Close the digest, producing the final digest value. The doFinal call
     /// leaves the digest reset.
     /// </summary>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the array the digest is to be copied into.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset into the out array the digest is to start at.
     /// </param>
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32; overload;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
 
     /// <summary>
     /// Resets the digest back to it's initial state.

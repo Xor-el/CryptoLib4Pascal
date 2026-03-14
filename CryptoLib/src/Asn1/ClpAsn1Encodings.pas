@@ -358,7 +358,7 @@ end;
 function TConstructedDerEncoding.CompareLengthAndContents(const AOther: IDerEncoding): Int32;
 var
   LThat: IConstructedDerEncoding;
-  I, LLength: Int32;
+  LI, LLength: Int32;
 begin
   if not Supports(AOther, IConstructedDerEncoding, LThat) then
     raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
@@ -370,9 +370,9 @@ begin
   end;
 
   LLength := Math.Min(System.Length(FContentsElements), System.Length(LThat.ContentsElements));
-  for I := 0 to LLength - 1 do
+  for LI := 0 to LLength - 1 do
   begin
-    Result := FContentsElements[I].CompareTo(LThat.ContentsElements[I]);
+    Result := FContentsElements[LI].CompareTo(LThat.ContentsElements[LI]);
     if Result <> 0 then
       Exit;
   end;
@@ -554,7 +554,7 @@ function TPrimitiveDerEncoding.CompareLengthAndContents(const AOther: IDerEncodi
 var
   LThat: IPrimitiveDerEncoding;
   LSuffixed: IPrimitiveDerEncodingSuffixed;
-  I, LLength: Int32;
+  LI, LLength: Int32;
   LThatOctets: TCryptoLibByteArray;
 begin
   if Supports(AOther, IPrimitiveDerEncodingSuffixed, LSuffixed) then
@@ -575,11 +575,11 @@ begin
     Exit;
   end;
 
-  for I := 0 to LLength - 1 do
+  for LI := 0 to LLength - 1 do
   begin
-    if FContentsOctets[I] <> LThatOctets[I] then
+    if FContentsOctets[LI] <> LThatOctets[LI] then
     begin
-      Result := Int32(FContentsOctets[I]) - Int32(LThatOctets[I]);
+      Result := Int32(FContentsOctets[LI]) - Int32(LThatOctets[LI]);
       Exit;
     end;
   end;
@@ -684,7 +684,7 @@ end;
 class function TPrimitiveDerEncodingSuffixed.CompareSuffixed(const AOctetsA: TCryptoLibByteArray;
   ASuffixA: Byte; const AOctetsB: TCryptoLibByteArray; ASuffixB: Byte): Int32;
 var
-  LLength, I, LLast: Int32;
+  LLength, LI, LLast: Int32;
 begin
   if (System.Length(AOctetsA) = 0) or (System.Length(AOctetsB) = 0) then
     raise EArgumentCryptoLibException.Create('Octets length must be > 0');
@@ -697,11 +697,11 @@ begin
   end;
 
   LLast := LLength - 1;
-  for I := 0 to LLast - 1 do
+  for LI := 0 to LLast - 1 do
   begin
-    if AOctetsA[I] <> AOctetsB[I] then
+    if AOctetsA[LI] <> AOctetsB[LI] then
     begin
-      Result := Int32(AOctetsA[I]) - Int32(AOctetsB[I]);
+      Result := Int32(AOctetsA[LI]) - Int32(AOctetsB[LI]);
       Exit;
     end;
   end;

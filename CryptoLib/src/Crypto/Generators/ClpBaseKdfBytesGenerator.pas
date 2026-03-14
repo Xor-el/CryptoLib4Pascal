@@ -64,10 +64,10 @@ type
     /// <summary>
     /// Construct a KDF Parameters generator.
     /// </summary>
-    /// <param name="counterStart">
+    /// <param name="ACounterStart">
     /// value of counter.
     /// </param>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// the digest to be used as the source of derived keys.
     /// </param>
     constructor Create(ACounterStart: Int32; const ADigest: IDigest);

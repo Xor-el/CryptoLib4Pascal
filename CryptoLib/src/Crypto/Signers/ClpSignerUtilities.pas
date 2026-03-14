@@ -117,7 +117,7 @@ type
    /// <summary>
    /// Returns an ObjectIdentifier for a given signature mechanism.
    /// </summary>
-   /// <param name="mechanism">A string representation of the signature mechanism.</param>
+   /// <param name="AMechanism">A string representation of the signature mechanism.</param>
    /// <returns>A DerObjectIdentifier, null if the OID is not available.</returns>
     class function GetObjectIdentifier(const AMechanism: String): IDerObjectIdentifier;
       static; inline;

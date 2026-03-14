@@ -403,7 +403,7 @@ end;
 function TPkcs10CertificationRequest.GetRequestedExtensions: IX509Extensions;
 var
   LAttrs: IAsn1Set;
-  I, J, LCount: Int32;
+  LI, LJ, LCount: Int32;
   LAttr: IAttributePkcs;
   LAttrValues: IAsn1Set;
   LExtSeq: IAsn1Sequence;
@@ -416,10 +416,10 @@ begin
   if LAttrs = nil then
     Exit;
 
-  for I := 0 to LAttrs.Count - 1 do
+  for LI := 0 to LAttrs.Count - 1 do
   begin
     try
-      LAttr := TAttributePkcs.GetInstance(LAttrs[I]);
+      LAttr := TAttributePkcs.GetInstance(LAttrs[LI]);
     except
       on E: Exception do
         raise EArgumentCryptoLibException.Create('encountered non PKCS attribute in extensions block: ' + E.Message);
@@ -434,9 +434,9 @@ begin
 
       LExtSeq := TAsn1Sequence.GetInstance(LAttrValues[0]);
       try
-        for J := 0 to LExtSeq.Count - 1 do
+        for LJ := 0 to LExtSeq.Count - 1 do
         begin
-          LItemSeq := TAsn1Sequence.GetInstance(LExtSeq[J]);
+          LItemSeq := TAsn1Sequence.GetInstance(LExtSeq[LJ]);
           LCount := LItemSeq.Count;
           if LCount = 2 then
             LGen.AddExtension(TDerObjectIdentifier.GetInstance(LItemSeq[0]), False,

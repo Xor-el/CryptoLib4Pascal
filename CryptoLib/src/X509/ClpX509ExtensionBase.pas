@@ -87,7 +87,7 @@ var
   LOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
   LExt: IX509Extension;
   LList: TList<String>;
-  I: Int32;
+  LI: Int32;
 begin
   LExtensions := GetX509Extensions();
   if LExtensions = nil then
@@ -99,12 +99,12 @@ begin
   LList := TList<String>.Create();
   try
     LOids := LExtensions.GetExtensionOids;
-    for I := 0 to System.Length(LOids) - 1 do
+    for LI := 0 to System.Length(LOids) - 1 do
     begin
-      LExt := LExtensions.GetExtension(LOids[I]);
+      LExt := LExtensions.GetExtension(LOids[LI]);
       if (LExt <> nil) and (LExt.IsCritical = ACritical) then
       begin
-        LList.Add(LOids[I].Id);
+        LList.Add(LOids[LI].Id);
       end;
     end;
     Result := LList.ToArray();

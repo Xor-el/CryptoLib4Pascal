@@ -271,7 +271,7 @@ end;
 class function TBigIntegerUtilities.CreateRandomInRange(const AMin, AMax: TBigInteger; const ARandom: ISecureRandom): TBigInteger;
 var
   LCmp: Int32;
-  I: Int32;
+  LI: Int32;
   LX: TBigInteger;
 begin
   LCmp := AMin.CompareTo(AMax);
@@ -290,7 +290,7 @@ begin
     Exit;
   end;
 
-  for I := 0 to System.Pred(MaxIterations) do
+  for LI := 0 to System.Pred(MaxIterations) do
   begin
     LX := TBigInteger.Create(AMax.BitLength, ARandom);
     if (LX.CompareTo(AMin) >= 0) and (LX.CompareTo(AMax) <= 0) then

@@ -205,7 +205,8 @@ begin
     LN := LParametersWithIV.GetIV();
     FInitialAssociatedText := nil;
     FMacSize := 16;
-    LKeyParameter := LParametersWithIV.Parameters as IKeyParameter;
+    if not Supports(LParametersWithIV.Parameters, IKeyParameter, LKeyParameter) then
+      LKeyParameter := nil;
   end
   else
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersOCB);

@@ -578,7 +578,7 @@ function TV2TbsCertListGenerator.GenerateTbsCertificateStructure: IAsn1Sequence;
 var
   LV: IAsn1EncodableVector;
   LCrlEntriesArray: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
+  LI: Int32;
 begin
   LV := TAsn1EncodableVector.Create(7);
   LV.Add(FVersion);
@@ -590,8 +590,8 @@ begin
   if (FCrlEntries <> nil) and (FCrlEntries.Count > 0) then
   begin
     SetLength(LCrlEntriesArray, FCrlEntries.Count);
-    for I := 0 to FCrlEntries.Count - 1 do
-      LCrlEntriesArray[I] := FCrlEntries[I];
+    for LI := 0 to FCrlEntries.Count - 1 do
+      LCrlEntriesArray[LI] := FCrlEntries[LI];
     LV.Add(TDerSequence.Create(LCrlEntriesArray));
   end;
 

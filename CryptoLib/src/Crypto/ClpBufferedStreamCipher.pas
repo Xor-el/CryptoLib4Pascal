@@ -114,11 +114,12 @@ procedure TBufferedStreamCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LParameters: ICipherParameters;
+  LParamsWithRandom: IParametersWithRandom;
 begin
   LParameters := AParameters;
-  if Supports(LParameters, IParametersWithRandom) then
+  if Supports(LParameters, IParametersWithRandom, LParamsWithRandom) then
   begin
-    LParameters := (LParameters as IParametersWithRandom).Parameters;
+    LParameters := LParamsWithRandom.Parameters;
   end;
   FCipher.Init(AForEncryption, LParameters);
 end;

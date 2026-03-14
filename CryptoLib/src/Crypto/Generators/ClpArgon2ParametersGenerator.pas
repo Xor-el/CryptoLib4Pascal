@@ -65,7 +65,7 @@ type
     /// <summary>
     /// construct an Argon2 Parameters generator.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// digest to use for constructing hmac
     /// </param>
     constructor Create();
@@ -79,10 +79,10 @@ type
     /// Generate a key parameter derived from the password, salt, and
     /// iteration count we are currently initialised with.
     /// </summary>
-    /// <param name="algorithm">
+    /// <param name="AAlgorithm">
     /// a parameters object representing a key.
     /// </param>
-    /// <param name="keySize">
+    /// <param name="AKeySize">
     /// the length, in bits, of the key required.
     /// </param>
     /// <returns>
