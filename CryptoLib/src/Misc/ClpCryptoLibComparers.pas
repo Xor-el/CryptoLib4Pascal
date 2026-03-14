@@ -66,7 +66,7 @@ function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(const AValue: String): {
 var
   LLowerValue: String;
   LHash: UInt32;
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(AValue) = 0 then
   begin
@@ -77,9 +77,9 @@ begin
   LLowerValue := TStringUtilities.ToLowerInvariant(AValue);
 
   LHash := UInt32(2166136261);
-  for I := 1 to System.Length(LLowerValue) do
+  for LI := 1 to System.Length(LLowerValue) do
   begin
-    LHash := (LHash xor UInt32(Ord(LLowerValue[I]))) * UInt32(16777619);
+    LHash := (LHash xor UInt32(Ord(LLowerValue[LI]))) * UInt32(16777619);
   end;
 
   Result := LHash;

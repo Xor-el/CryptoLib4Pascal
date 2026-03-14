@@ -77,11 +77,11 @@ type
     /// <summary>
     /// Initialise the signer.
     /// </summary>
-    /// <param name="forSigning">
+    /// <param name="AForSigning">
     /// forSigning true if we are generating a signature, false for
     /// verification or if we want to use the signer for message recovery.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// key parameters for signature generation.
     /// </param>
     procedure Init(AForSigning: Boolean;
@@ -98,7 +98,7 @@ type
     /// ECNR it *must* be at least as long.
     /// </para>
     /// </summary>
-    /// <param name="&amp;message">
+    /// <param name="AMessage">
     /// the digest to be signed.
     /// </param>
     /// <exception cref="EDataLengthCryptoLibException">
@@ -120,13 +120,13 @@ type
     /// implementation will <br />apply mod(n) during verification.
     /// </para>
     /// </summary>
-    /// <param name="&amp;message">
+    /// <param name="AMessage">
     /// the digest to be verified.
     /// </param>
-    /// <param name="r">
+    /// <param name="AR">
     /// the r value of the signature.
     /// </param>
-    /// <param name="s">
+    /// <param name="AS">
     /// the s value of the signature.
     /// </param>
     /// <exception cref="EDataLengthCryptoLibException">

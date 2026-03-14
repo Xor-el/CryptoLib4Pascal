@@ -142,7 +142,7 @@ type
     /// <summary>
     /// Initialise the encryptor/decryptor.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// whether or not this is encryption/decryption.
     /// </param>
     /// <param name="APrivParam">

@@ -221,7 +221,7 @@ function TX509V2AttributeCertificate.GetIssuerUniqueID: TCryptoLibBooleanArray;
 var
   LId: IDerBitString;
   LBytes: TCryptoLibByteArray;
-  LLen, I: Int32;
+  LLen, LI: Int32;
 begin
   LId := FCert.ACInfo.IssuerUniqueID;
   if LId = nil then
@@ -232,8 +232,8 @@ begin
   LBytes := LId.GetOctets;
   LLen := System.Length(LBytes) * 8 - LId.PadBits;
   SetLength(Result, LLen);
-  for I := 0 to LLen - 1 do
-    Result[I] := (LBytes[I shr 3] and ($80 shr (I and 7))) <> 0;
+  for LI := 0 to LLen - 1 do
+    Result[LI] := (LBytes[LI shr 3] and ($80 shr (LI and 7))) <> 0;
 end;
 
 function TX509V2AttributeCertificate.IsValidNow: Boolean;
@@ -323,13 +323,13 @@ function TX509V2AttributeCertificate.GetAttributes
 var
   LSeq: IAsn1Sequence;
   LList: TList<IX509Attribute>;
-  I: Int32;
+  LI: Int32;
 begin
   LSeq := FCert.ACInfo.Attributes;
   LList := TList<IX509Attribute>.Create;
   try
-    for I := 0 to LSeq.Count - 1 do
-      LList.Add(TX509Attribute.Create(LSeq[I]) as IX509Attribute);
+    for LI := 0 to LSeq.Count - 1 do
+      LList.Add(TX509Attribute.Create(LSeq[LI]) as IX509Attribute);
     Result := LList.ToArray;
   finally
     LList.Free;
@@ -341,15 +341,15 @@ function TX509V2AttributeCertificate.GetAttributes(const AOid: String)
 var
   LSeq: IAsn1Sequence;
   LList: TList<IX509Attribute>;
-  I: Int32;
+  LI: Int32;
   LAttr: IX509Attribute;
 begin
   LSeq := FCert.ACInfo.Attributes;
   LList := TList<IX509Attribute>.Create;
   try
-    for I := 0 to LSeq.Count - 1 do
+    for LI := 0 to LSeq.Count - 1 do
     begin
-      LAttr := TX509Attribute.Create(LSeq[I]);
+      LAttr := TX509Attribute.Create(LSeq[LI]);
       if LAttr.Oid = AOid then
         LList.Add(LAttr);
     end;

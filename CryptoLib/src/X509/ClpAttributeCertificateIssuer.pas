@@ -85,7 +85,7 @@ function TAttributeCertificateIssuer.GetNames
 var
   LName: IGeneralNames;
   LNames: TCryptoLibGenericArray<IGeneralName>;
-  I: Int32;
+  LI: Int32;
   LList: TList<IX509Name>;
   LV2: IV2Form;
 begin
@@ -97,9 +97,9 @@ begin
   LNames := LName.GetNames;
   LList := TList<IX509Name>.Create;
   try
-    for I := 0 to System.High(LNames) do
-      if LNames[I].TagNo = TGeneralName.DirectoryName then
-        LList.Add(TX509Name.GetInstance(LNames[I].Name));
+    for LI := 0 to System.High(LNames) do
+      if LNames[LI].TagNo = TGeneralName.DirectoryName then
+        LList.Add(TX509Name.GetInstance(LNames[LI].Name));
     Result := LList.ToArray;
   finally
     LList.Free;
@@ -134,7 +134,7 @@ function TAttributeCertificateIssuer.MatchesDN(const ASubject: IX509Name;
   const ATargets: IGeneralNames): Boolean;
 var
   LNames: TCryptoLibGenericArray<IGeneralName>;
-  I: Int32;
+  LI: Int32;
   LGn: IGeneralName;
   LName: IX509Name;
 begin
@@ -144,9 +144,9 @@ begin
     Exit;
   end;
   LNames := ATargets.GetNames;
-  for I := 0 to System.High(LNames) do
+  for LI := 0 to System.High(LNames) do
   begin
-    LGn := LNames[I];
+    LGn := LNames[LI];
     if LGn.TagNo = TGeneralName.DirectoryName then
     begin
       try

@@ -51,7 +51,7 @@ type
     /// <summary>
     /// Construct a PascalCoin compatible bytes generator.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// the digest to be used as the source of derived keys.
     /// </param>
     constructor Create(const ADigest: IDigest);

@@ -328,7 +328,8 @@ begin
   else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
   begin
     LMyNonce := LParametersWithIV.GetIV();
-    LMyKey := LParametersWithIV.Parameters as IKeyParameter;
+    if not Supports(LParametersWithIV.Parameters, IKeyParameter, LMyKey) then
+      LMyKey := nil;
   end
   else
   begin

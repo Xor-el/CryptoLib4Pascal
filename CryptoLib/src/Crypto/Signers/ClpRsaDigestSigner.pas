@@ -83,18 +83,18 @@ type
     function GetAlgorithmName: String;
 
   public
-    constructor Create(const digest: IDigest); overload;
-    constructor Create(const digest: IDigest;
-      const digestOid: IDerObjectIdentifier); overload;
-    constructor Create(const digest: IDigest;
-      const algId: IAlgorithmIdentifier); overload;
-    constructor Create(const rsa: IRsa; const digest: IDigest;
-      const digestOid: IDerObjectIdentifier); overload;
-    constructor Create(const rsa: IRsa; const digest: IDigest;
-      const algId: IAlgorithmIdentifier); overload;
-    constructor Create(const rsaEngine: IAsymmetricBlockCipher;
-      const digest: IDigest;
-      const algId: IAlgorithmIdentifier); overload;
+    constructor Create(const ADigest: IDigest); overload;
+    constructor Create(const ADigest: IDigest;
+      const ADigestOid: IDerObjectIdentifier); overload;
+    constructor Create(const ADigest: IDigest;
+      const AAlgId: IAlgorithmIdentifier); overload;
+    constructor Create(const ARsa: IRsa; const ADigest: IDigest;
+      const ADigestOid: IDerObjectIdentifier); overload;
+    constructor Create(const ARsa: IRsa; const ADigest: IDigest;
+      const AAlgId: IAlgorithmIdentifier); overload;
+    constructor Create(const ARsaEngine: IAsymmetricBlockCipher;
+      const ADigest: IDigest;
+      const AAlgId: IAlgorithmIdentifier); overload;
 
     procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
     procedure Update(AInput: Byte);
@@ -143,64 +143,64 @@ begin
   FOidMap.Free;
 end;
 
-constructor TRsaDigestSigner.Create(const digest: IDigest);
+constructor TRsaDigestSigner.Create(const ADigest: IDigest);
 var
-  oid: IDerObjectIdentifier;
+  LOid: IDerObjectIdentifier;
 begin
-  if FOidMap.TryGetValue(digest.AlgorithmName, oid) then
-    Create(digest, oid)
+  if FOidMap.TryGetValue(ADigest.AlgorithmName, LOid) then
+    Create(ADigest, LOid)
   else
   begin
-    oid := nil;
-    Create(digest, oid);
+    LOid := nil;
+    Create(ADigest, LOid);
   end;
 end;
 
-constructor TRsaDigestSigner.Create(const digest: IDigest;
-  const digestOid: IDerObjectIdentifier);
+constructor TRsaDigestSigner.Create(const ADigest: IDigest;
+  const ADigestOid: IDerObjectIdentifier);
 var
-  algId: IAlgorithmIdentifier;
+  LAlgId: IAlgorithmIdentifier;
 begin
-  if digestOid <> nil then
-    algId := TAlgorithmIdentifier.Create(digestOid, TDerNull.Instance)
+  if ADigestOid <> nil then
+    LAlgId := TAlgorithmIdentifier.Create(ADigestOid, TDerNull.Instance)
   else
-    algId := nil;
+    LAlgId := nil;
 
-  Create(digest, algId);
+  Create(ADigest, LAlgId);
 end;
 
-constructor TRsaDigestSigner.Create(const digest: IDigest;
-  const algId: IAlgorithmIdentifier);
+constructor TRsaDigestSigner.Create(const ADigest: IDigest;
+  const AAlgId: IAlgorithmIdentifier);
 begin
-  Create(TRsaCoreEngine.Create() as IRsa, digest, algId);
+  Create(TRsaCoreEngine.Create() as IRsa, ADigest, AAlgId);
 end;
 
-constructor TRsaDigestSigner.Create(const rsa: IRsa; const digest: IDigest;
-  const digestOid: IDerObjectIdentifier);
+constructor TRsaDigestSigner.Create(const ARsa: IRsa; const ADigest: IDigest;
+  const ADigestOid: IDerObjectIdentifier);
 var
-  algId: IAlgorithmIdentifier;
+  LAlgId: IAlgorithmIdentifier;
 begin
-  if digestOid <> nil then
-    algId := TAlgorithmIdentifier.Create(digestOid, TDerNull.Instance)
+  if ADigestOid <> nil then
+    LAlgId := TAlgorithmIdentifier.Create(ADigestOid, TDerNull.Instance)
   else
-    algId := nil;
+    LAlgId := nil;
 
-  Create(rsa, digest, algId);
+  Create(ARsa, ADigest, LAlgId);
 end;
 
-constructor TRsaDigestSigner.Create(const rsa: IRsa; const digest: IDigest;
-  const algId: IAlgorithmIdentifier);
+constructor TRsaDigestSigner.Create(const ARsa: IRsa; const ADigest: IDigest;
+  const AAlgId: IAlgorithmIdentifier);
 begin
-  Create(TRsaBlindedEngine.Create(rsa) as IAsymmetricBlockCipher, digest, algId);
+  Create(TRsaBlindedEngine.Create(ARsa) as IAsymmetricBlockCipher, ADigest, AAlgId);
 end;
 
-constructor TRsaDigestSigner.Create(const rsaEngine: IAsymmetricBlockCipher;
-  const digest: IDigest; const algId: IAlgorithmIdentifier);
+constructor TRsaDigestSigner.Create(const ARsaEngine: IAsymmetricBlockCipher;
+  const ADigest: IDigest; const AAlgId: IAlgorithmIdentifier);
 begin
   inherited Create();
-  FEngine := TPkcs1Encoding.Create(rsaEngine) as IAsymmetricBlockCipher;
-  FDigest := digest;
-  FDigestAlgID := algId;
+  FEngine := TPkcs1Encoding.Create(ARsaEngine) as IAsymmetricBlockCipher;
+  FDigest := ADigest;
+  FDigestAlgID := AAlgId;
 end;
 
 function TRsaDigestSigner.GetAlgorithmName: String;
@@ -259,20 +259,20 @@ end;
 
 function TRsaDigestSigner.GenerateSignature: TCryptoLibByteArray;
 var
-  hash, data: TCryptoLibByteArray;
+  LHash, LData: TCryptoLibByteArray;
 begin
   if not FForSigning then
     raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForSignature);
 
-  hash := FDigest.DoFinal();
+  LHash := FDigest.DoFinal();
 
   try
     if FDigestAlgID = nil then
-      data := CheckDerEncoded(hash)
+      LData := CheckDerEncoded(LHash)
     else
-      data := DerEncode(FDigestAlgID, hash);
+      LData := DerEncode(FDigestAlgID, LHash);
 
-    Result := FEngine.ProcessBlock(data, 0, System.Length(data));
+    Result := FEngine.ProcessBlock(LData, 0, System.Length(LData));
   except
     on E: EIOCryptoLibException do
     begin

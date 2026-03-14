@@ -131,7 +131,7 @@ end;
 constructor TLongArray.Create(const ABigInt: TBigInteger);
 var
   LBarr: TCryptoLibByteArray;
-  LBarrLen, LBarrStart, LIntLen, LIarrJ, LRem, LBarrI, I: Int32;
+  LBarrLen, LBarrStart, LIntLen, LIarrJ, LRem, LBarrI, LI: Int32;
   LTemp: UInt64;
 begin
   if (not ABigInt.IsInitialized) or (ABigInt.SignValue < 0) then
@@ -173,7 +173,7 @@ begin
   while LIarrJ >= 0 do
   begin
     LTemp := 0;
-    for I := 0 to 7 do
+    for LI := 0 to 7 do
     begin
       LTemp := (LTemp shl 8) or UInt64(LBarr[LBarrI]);
       System.Inc(LBarrI);
@@ -195,14 +195,14 @@ end;
 function TLongArray.IsOne(): Boolean;
 var
   LA: TCryptoLibUInt64Array;
-  LALen, I: Int32;
+  LALen, LI: Int32;
 begin
   LA := FData;
   LALen := System.Length(LA);
   if (LALen < 1) or (LA[0] <> 1) then
     Exit(False);
-  for I := 1 to LALen - 1 do
-    if LA[I] <> 0 then
+  for LI := 1 to LALen - 1 do
+    if LA[LI] <> 0 then
       Exit(False);
   Result := True;
 end;
@@ -210,11 +210,11 @@ end;
 function TLongArray.IsZero(): Boolean;
 var
   LA: TCryptoLibUInt64Array;
-  I: Int32;
+  LI: Int32;
 begin
   LA := FData;
-  for I := 0 to System.Length(LA) - 1 do
-    if LA[I] <> 0 then
+  for LI := 0 to System.Length(LA) - 1 do
+    if LA[LI] <> 0 then
       Exit(False);
   Result := True;
 end;
@@ -258,32 +258,32 @@ end;
 
 function TLongArray.Degree(): Int32;
 var
-  I: Int32;
+  LI: Int32;
   LW: UInt64;
 begin
-  I := System.Length(FData);
+  LI := System.Length(FData);
   repeat
-    if I = 0 then
+    if LI = 0 then
       Exit(0);
-    System.Dec(I);
-    LW := FData[I];
+    System.Dec(LI);
+    LW := FData[LI];
   until LW <> 0;
-  Result := (I shl 6) + BitLength(LW);
+  Result := (LI shl 6) + BitLength(LW);
 end;
 
 function TLongArray.DegreeFrom(ALimit: Int32): Int32;
 var
-  I: Int32;
+  LI: Int32;
   LW: UInt64;
 begin
-  I := Int32((UInt32(ALimit) + 62) shr 6);
+  LI := Int32((UInt32(ALimit) + 62) shr 6);
   repeat
-    if I = 0 then
+    if LI = 0 then
       Exit(0);
-    System.Dec(I);
-    LW := FData[I];
+    System.Dec(LI);
+    LW := FData[LI];
   until LW <> 0;
-  Result := (I shl 6) + BitLength(LW);
+  Result := (LI shl 6) + BitLength(LW);
 end;
 
 function TLongArray.ResizedData(ANewLen: Int32): TCryptoLibUInt64Array;
@@ -346,15 +346,15 @@ class function TLongArray.ShiftUp(const AX: TCryptoLibUInt64Array; AXOff, ACount
 var
   LShiftInv: Int32;
   LPrev: UInt64;
-  I: Int32;
+  LI: Int32;
   LNext: UInt64;
 begin
   LShiftInv := 64 - AShift;
   LPrev := 0;
-  for I := 0 to ACount - 1 do
+  for LI := 0 to ACount - 1 do
   begin
-    LNext := AX[AXOff + I];
-    AX[AXOff + I] := (LNext shl AShift) or LPrev;
+    LNext := AX[AXOff + LI];
+    AX[AXOff + LI] := (LNext shl AShift) or LPrev;
     LPrev := LNext shr LShiftInv;
   end;
   Result := LPrev;
@@ -364,15 +364,15 @@ class function TLongArray.ShiftUp(const AX: TCryptoLibUInt64Array; AXOff: Int32;
 var
   LShiftInv: Int32;
   LPrev: UInt64;
-  I: Int32;
+  LI: Int32;
   LNext: UInt64;
 begin
   LShiftInv := 64 - AShift;
   LPrev := 0;
-  for I := 0 to ACount - 1 do
+  for LI := 0 to ACount - 1 do
   begin
-    LNext := AX[AXOff + I];
-    AZ[AZOff + I] := (LNext shl AShift) or LPrev;
+    LNext := AX[AXOff + LI];
+    AZ[AZOff + LI] := (LNext shl AShift) or LPrev;
     LPrev := LNext shr LShiftInv;
   end;
   Result := LPrev;
@@ -382,15 +382,15 @@ class function TLongArray.AddShiftedUp(const AX: TCryptoLibUInt64Array; AXOff: I
 var
   LShiftInv: Int32;
   LPrev: UInt64;
-  I: Int32;
+  LI: Int32;
   LNext: UInt64;
 begin
   LShiftInv := 64 - AShift;
   LPrev := 0;
-  for I := 0 to ACount - 1 do
+  for LI := 0 to ACount - 1 do
   begin
-    LNext := AY[AYOff + I];
-    AX[AXOff + I] := AX[AXOff + I] xor ((LNext shl AShift) or LPrev);
+    LNext := AY[AYOff + LI];
+    AX[AXOff + LI] := AX[AXOff + LI] xor ((LNext shl AShift) or LPrev);
     LPrev := LNext shr LShiftInv;
   end;
   Result := LPrev;
@@ -400,19 +400,19 @@ class function TLongArray.AddShiftedDown(const AX: TCryptoLibUInt64Array; AXOff:
 var
   LShiftInv: Int32;
   LPrev: UInt64;
-  I: Int32;
+  LI: Int32;
   LNext: UInt64;
 begin
   LShiftInv := 64 - AShift;
   LPrev := 0;
-  I := ACount;
+  LI := ACount;
   while True do
   begin
-    System.Dec(I);
-    if I < 0 then
+    System.Dec(LI);
+    if LI < 0 then
       Break;
-    LNext := AY[AYOff + I];
-    AX[AXOff + I] := AX[AXOff + I] xor ((LNext shr AShift) or LPrev);
+    LNext := AY[AYOff + LI];
+    AX[AXOff + LI] := AX[AXOff + LI] xor ((LNext shr AShift) or LPrev);
     LPrev := LNext shl LShiftInv;
   end;
   Result := LPrev;
@@ -430,10 +430,10 @@ end;
 
 class procedure TLongArray.AddBoth(const AX: TCryptoLibUInt64Array; AXOff: Int32; const AY1: TCryptoLibUInt64Array; AY1Off: Int32; const AY2: TCryptoLibUInt64Array; AY2Off, ACount: Int32);
 var
-  I: Int32;
+  LI: Int32;
 begin
-  for I := 0 to ACount - 1 do
-    AX[AXOff + I] := AX[AXOff + I] xor (AY1[AY1Off + I] xor AY2[AY2Off + I]);
+  for LI := 0 to ACount - 1 do
+    AX[AXOff + LI] := AX[AXOff + LI] xor (AY1[AY1Off + LI] xor AY2[AY2Off + LI]);
 end;
 
 procedure TLongArray.AddShiftedByBitsSafe(const AOther: TLongArray; AOtherDegree, ABits: Int32);
@@ -727,7 +727,7 @@ var
   LA, LB: TLongArray;
   LA0: UInt64;
   LC0: TCryptoLibUInt64Array;
-  LBMax, LTOff, I: Int32;
+  LBMax, LTOff, LI: Int32;
   LTi: TCryptoLibInt32Array;
   LT0, LT1: TCryptoLibUInt64Array;
   LAArr: TCryptoLibUInt64Array;
@@ -774,13 +774,13 @@ begin
   System.SetLength(LT0, LBMax shl 4);
   LTOff := LBMax;
   LTi[1] := LTOff;
-  for I := 0 to LBLen - 1 do
-    LT0[LTOff + I] := LB.FData[I];
-  for I := 2 to 15 do
+  for LI := 0 to LBLen - 1 do
+    LT0[LTOff + LI] := LB.FData[LI];
+  for LI := 2 to 15 do
   begin
     LTOff := LTOff + LBMax;
-    LTi[I] := LTOff;
-    if (I and 1) = 0 then
+    LTi[LI] := LTOff;
+    if (LI and 1) = 0 then
       ShiftUp(LT0, Int32(UInt32(LTOff) shr 1), LT0, LTOff, LBMax, 1)
     else
       Add(LT0, LBMax, LT0, LTOff - LBMax, LT0, LTOff, LBMax);
@@ -835,7 +835,7 @@ var
   LA, LB: TLongArray;
   LA0: UInt64;
   LC0: TCryptoLibUInt64Array;
-  LBMax, LTOff, I: Int32;
+  LBMax, LTOff, LI: Int32;
   LTi: TCryptoLibInt32Array;
   LT0, LT1: TCryptoLibUInt64Array;
   LAArr: TCryptoLibUInt64Array;
@@ -883,13 +883,13 @@ begin
   System.SetLength(LT0, LBMax shl 4);
   LTOff := LBMax;
   LTi[1] := LTOff;
-  for I := 0 to LBLen - 1 do
-    LT0[LTOff + I] := LB.FData[I];
-  for I := 2 to 15 do
+  for LI := 0 to LBLen - 1 do
+    LT0[LTOff + LI] := LB.FData[LI];
+  for LI := 2 to 15 do
   begin
     LTOff := LTOff + LBMax;
-    LTi[I] := LTOff;
-    if (I and 1) = 0 then
+    LTi[LI] := LTOff;
+    if (LI and 1) = 0 then
       ShiftUp(LT0, Int32(UInt32(LTOff) shr 1), LT0, LTOff, LBMax, 1)
     else
       Add(LT0, LBMax, LT0, LTOff - LBMax, LT0, LTOff, LBMax);
@@ -942,7 +942,7 @@ var
   LA, LB: TLongArray;
   LA0: UInt64;
   LC0: TCryptoLibUInt64Array;
-  LBMax, LTOff, I: Int32;
+  LBMax, LTOff, LI: Int32;
   LTi: TCryptoLibInt32Array;
   LT0, LT1: TCryptoLibUInt64Array;
   LAArr: TCryptoLibUInt64Array;
@@ -990,13 +990,13 @@ begin
   System.SetLength(LT0, LBMax shl 4);
   LTOff := LBMax;
   LTi[1] := LTOff;
-  for I := 0 to LBLen - 1 do
-    LT0[LTOff + I] := LB.FData[I];
-  for I := 2 to 15 do
+  for LI := 0 to LBLen - 1 do
+    LT0[LTOff + LI] := LB.FData[LI];
+  for LI := 2 to 15 do
   begin
     LTOff := LTOff + LBMax;
-    LTi[I] := LTOff;
-    if (I and 1) = 0 then
+    LTi[LI] := LTOff;
+    if (LI and 1) = 0 then
       ShiftUp(LT0, Int32(UInt32(LTOff) shr 1), LT0, LTOff, LBMax, 1)
     else
       Add(LT0, LBMax, LT0, LTOff - LBMax, LT0, LTOff, LBMax);
@@ -1075,7 +1075,7 @@ var
   LLen: Int32;
   LMLen: Int32;
   LR: TCryptoLibUInt64Array;
-  I: Int32;
+  LI: Int32;
 begin
   LLen := GetUsedLength();
   if LLen = 0 then
@@ -1084,7 +1084,7 @@ begin
   System.SetLength(LR, LMLen shl 1);
   if LLen > 0 then
     System.Move(FData[0], LR[0], LLen * SizeOf(UInt64));
-  for I := AN - 1 downto 0 do
+  for LI := AN - 1 downto 0 do
   begin
     TInterleave.Expand64To128(LR, 0, LLen, LR, 0);
     LLen := ReduceInPlace(LR, 0, System.Length(LR), AM, AKs);
@@ -1190,15 +1190,15 @@ end;
 
 function TLongArray.Equals(const AOther: TLongArray): Boolean;
 var
-  LUsedLen, I: Int32;
+  LUsedLen, LI: Int32;
 begin
   if AreAliased(Self, AOther) then
     Exit(True);
   LUsedLen := GetUsedLength();
   if AOther.GetUsedLength() <> LUsedLen then
     Exit(False);
-  for I := 0 to LUsedLen - 1 do
-    if FData[I] <> AOther.FData[I] then
+  for LI := 0 to LUsedLen - 1 do
+    if FData[LI] <> AOther.FData[LI] then
       Exit(False);
   Result := True;
 end;
@@ -1210,16 +1210,16 @@ end;
 
 function TLongArray.ToString(): String;
 var
-  I: Int32;
+  LI: Int32;
   LS: String;
   LW: UInt64;
   LB: Int32;
 begin
-  I := GetUsedLength();
-  if I = 0 then
+  LI := GetUsedLength();
+  if LI = 0 then
     Exit('0');
-  System.Dec(I);
-  LW := FData[I];
+  System.Dec(LI);
+  LW := FData[LI];
   Result := '';
   for LB := 63 downto 0 do
     if (LW shr LB) and 1 <> 0 then
@@ -1228,10 +1228,10 @@ begin
       Result := Result + '0';
   if Result = '' then
     Result := '0';
-  while I > 0 do
+  while LI > 0 do
   begin
-    System.Dec(I);
-    LW := FData[I];
+    System.Dec(LI);
+    LW := FData[LI];
     LS := '';
     for LB := 63 downto 0 do
       if (LW shr LB) and 1 <> 0 then
@@ -1244,17 +1244,17 @@ end;
 
 function TLongArray.BitLength(): Int32;
 var
-  I: Int32;
+  LI: Int32;
   LW: UInt64;
 begin
-  I := System.Length(FData);
+  LI := System.Length(FData);
   repeat
-    if I = 0 then
+    if LI = 0 then
       Exit(0);
-    System.Dec(I);
-    LW := FData[I];
+    System.Dec(LI);
+    LW := FData[LI];
   until LW <> 0;
-  Result := (I shl 6) + BitLength(LW);
+  Result := (LI shl 6) + BitLength(LW);
 end;
 
 end.

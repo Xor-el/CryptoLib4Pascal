@@ -151,7 +151,7 @@ end;
 class function TStringUtilities.SplitString(const AInput: string; ADelimiter: Char;
   AMaxCount: Int32): TCryptoLibStringArray;
 var
-  LPosStart, LPosDel, LSplitPoints, I, J, K, LLowPoint, LHighPoint: Int32;
+  LPosStart, LPosDel, LSplitPoints, LI, LJ, LK, LLowPoint, LHighPoint: Int32;
 begin
   Result := nil;
   if AMaxCount <= 0 then
@@ -162,23 +162,23 @@ begin
       LLowPoint := 1;
       LHighPoint := System.Length(AInput);
       LSplitPoints := 0;
-      for I := LLowPoint to LHighPoint do
+      for LI := LLowPoint to LHighPoint do
       begin
-        if (ADelimiter = AInput[I]) then
+        if (ADelimiter = AInput[LI]) then
           System.Inc(LSplitPoints);
       end;
       System.SetLength(Result, LSplitPoints + 1);
-      I := 0;
+      LI := 0;
       LPosStart := 1;
       LPosDel := System.Pos(ADelimiter, AInput);
       while LPosDel > 0 do
       begin
-        Result[I] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
+        Result[LI] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
         LPosStart := LPosDel + 1;
         LPosDel := PosEx(ADelimiter, AInput, LPosStart);
-        System.Inc(I);
+        System.Inc(LI);
       end;
-      Result[I] := System.Copy(AInput, LPosStart, System.Length(AInput));
+      Result[LI] := System.Copy(AInput, LPosStart, System.Length(AInput));
     end;
     Exit;
   end;
@@ -190,18 +190,18 @@ begin
   end;
   System.SetLength(Result, AMaxCount);
   LPosStart := 1;
-  for J := 0 to AMaxCount - 2 do
+  for LJ := 0 to AMaxCount - 2 do
   begin
     LPosDel := PosEx(ADelimiter, AInput, LPosStart);
     if LPosDel < 1 then
     begin
-      Result[J] := System.Copy(AInput, LPosStart, System.Length(AInput));
-      for K := J + 1 to AMaxCount - 1 do
-        Result[K] := '';
-      System.SetLength(Result, J + 1);
+      Result[LJ] := System.Copy(AInput, LPosStart, System.Length(AInput));
+      for LK := LJ + 1 to AMaxCount - 1 do
+        Result[LK] := '';
+      System.SetLength(Result, LJ + 1);
       Exit;
     end;
-    Result[J] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
+    Result[LJ] := System.Copy(AInput, LPosStart, LPosDel - LPosStart);
     LPosStart := LPosDel + 1;
   end;
   Result[AMaxCount - 1] := System.Copy(AInput, LPosStart, System.Length(AInput));
@@ -329,7 +329,7 @@ end;
 
 class function TStringUtilities.LastIndexOf(const ASource: String; const AValue: String): Int32;
 var
-  I, LSourceLen, LValueLen: Int32;
+  LI, LSourceLen, LValueLen: Int32;
   LSubStr: String;
 begin
   LSourceLen := System.Length(ASource);
@@ -342,12 +342,12 @@ begin
   end;
   
   // Search backwards from the end
-  for I := LSourceLen - LValueLen + 1 downto 1 do
+  for LI := LSourceLen - LValueLen + 1 downto 1 do
   begin
-    LSubStr := System.Copy(ASource, I, LValueLen);
+    LSubStr := System.Copy(ASource, LI, LValueLen);
     if LSubStr = AValue then
     begin
-      Result := I;  // 1-based position
+      Result := LI;  // 1-based position
       Exit;
     end;
   end;

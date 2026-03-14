@@ -227,211 +227,211 @@ implementation
 
 class function TNistObjectIdentifiers.GetAES: IDerObjectIdentifier;
 begin
-  result := FAES;
+  Result := FAES;
 end;
 
 class function TNistObjectIdentifiers.GetDsaWithSha224: IDerObjectIdentifier;
 begin
-  result := FDsaWithSha224;
+  Result := FDsaWithSha224;
 end;
 
 class function TNistObjectIdentifiers.GetDsaWithSha256: IDerObjectIdentifier;
 begin
-  result := FDsaWithSha256;
+  Result := FDsaWithSha256;
 end;
 
 class function TNistObjectIdentifiers.GetDsaWithSha384: IDerObjectIdentifier;
 begin
-  result := FDsaWithSha384;
+  Result := FDsaWithSha384;
 end;
 
 class function TNistObjectIdentifiers.GetDsaWithSha512: IDerObjectIdentifier;
 begin
-  result := FDsaWithSha512;
+  Result := FDsaWithSha512;
 end;
 
 class function TNistObjectIdentifiers.GetHashAlgs: IDerObjectIdentifier;
 begin
-  result := FHashAlgs;
+  Result := FHashAlgs;
 end;
 
 class function TNistObjectIdentifiers.GetIdDsaWithSha2: IDerObjectIdentifier;
 begin
-  result := FIdDsaWithSha2;
+  Result := FIdDsaWithSha2;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Cbc: IDerObjectIdentifier;
 begin
-  result := FIdAes128Cbc;
+  Result := FIdAes128Cbc;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Cfb: IDerObjectIdentifier;
 begin
-  result := FIdAes128Cfb;
+  Result := FIdAes128Cfb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Ecb: IDerObjectIdentifier;
 begin
-  result := FIdAES128Ecb;
+  Result := FIdAES128Ecb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Ofb: IDerObjectIdentifier;
 begin
-  result := FIdAes128Ofb;
+  Result := FIdAes128Ofb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Cbc: IDerObjectIdentifier;
 begin
-  result := FIdAes192Cbc;
+  Result := FIdAes192Cbc;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Cfb: IDerObjectIdentifier;
 begin
-  result := FIdAes192Cfb;
+  Result := FIdAes192Cfb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Ecb: IDerObjectIdentifier;
 begin
-  result := FIdAes192Ecb;
+  Result := FIdAes192Ecb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Ofb: IDerObjectIdentifier;
 begin
-  result := FIdAes192Ofb;
+  Result := FIdAes192Ofb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256Cbc: IDerObjectIdentifier;
 begin
-  result := FIdAes256Cbc;
+  Result := FIdAes256Cbc;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256Cfb: IDerObjectIdentifier;
 begin
-  result := FIdAes256Cfb;
+  Result := FIdAes256Cfb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256Ecb: IDerObjectIdentifier;
 begin
-  result := FIdAes256Ecb;
+  Result := FIdAes256Ecb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256Ofb: IDerObjectIdentifier;
 begin
-  result := FIdAes256Ofb;
+  Result := FIdAes256Ofb;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Gcm: IDerObjectIdentifier;
 begin
-  result := FIdAes128Gcm;
+  Result := FIdAes128Gcm;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Gcm: IDerObjectIdentifier;
 begin
-  result := FIdAes192Gcm;
+  Result := FIdAes192Gcm;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256Gcm: IDerObjectIdentifier;
 begin
-  result := FIdAes256Gcm;
+  Result := FIdAes256Gcm;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Wrap: IDerObjectIdentifier;
 begin
-  result := FIdAes128Wrap;
+  Result := FIdAes128Wrap;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128WrapPad: IDerObjectIdentifier;
 begin
-  result := FIdAes128WrapPad;
+  Result := FIdAes128WrapPad;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192Wrap: IDerObjectIdentifier;
 begin
-  result := FIdAes192Wrap;
+  Result := FIdAes192Wrap;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes192WrapPad: IDerObjectIdentifier;
 begin
-  result := FIdAes192WrapPad;
+  Result := FIdAes192WrapPad;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256Wrap: IDerObjectIdentifier;
 begin
-  result := FIdAes256Wrap;
+  Result := FIdAes256Wrap;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes256WrapPad: IDerObjectIdentifier;
 begin
-  result := FIdAes256WrapPad;
+  Result := FIdAes256WrapPad;
 end;
 
 class function TNistObjectIdentifiers.GetIdHMacWithSha3_224
   : IDerObjectIdentifier;
 begin
-  result := FIdHMacWithSha3_224;
+  Result := FIdHMacWithSha3_224;
 end;
 
 class function TNistObjectIdentifiers.GetIdHMacWithSha3_256
   : IDerObjectIdentifier;
 begin
-  result := FIdHMacWithSha3_256;
+  Result := FIdHMacWithSha3_256;
 end;
 
 class function TNistObjectIdentifiers.GetIdHMacWithSha3_384
   : IDerObjectIdentifier;
 begin
-  result := FIdHMacWithSha3_384;
+  Result := FIdHMacWithSha3_384;
 end;
 
 class function TNistObjectIdentifiers.GetIdHMacWithSha3_512
   : IDerObjectIdentifier;
 begin
-  result := FIdHMacWithSha3_512;
+  Result := FIdHMacWithSha3_512;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha224: IDerObjectIdentifier;
 begin
-  result := FIdSha224;
+  Result := FIdSha224;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha256: IDerObjectIdentifier;
 begin
-  result := FIdSha256;
+  Result := FIdSha256;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha384: IDerObjectIdentifier;
 begin
-  result := FIdSha384;
+  Result := FIdSha384;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha3_224: IDerObjectIdentifier;
 begin
-  result := FIdSha3_224;
+  Result := FIdSha3_224;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha3_256: IDerObjectIdentifier;
 begin
-  result := FIdSha3_256;
+  Result := FIdSha3_256;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha3_384: IDerObjectIdentifier;
 begin
-  result := FIdSha3_384;
+  Result := FIdSha3_384;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha3_512: IDerObjectIdentifier;
 begin
-  result := FIdSha3_512;
+  Result := FIdSha3_512;
 end;
 
 class function TNistObjectIdentifiers.GetIdShake128: IDerObjectIdentifier;
 begin
-  result := FIdShake128;
+  Result := FIdShake128;
 end;
 
 class function TNistObjectIdentifiers.GetIdShake256: IDerObjectIdentifier;
 begin
-  result := FIdShake256;
+  Result := FIdShake256;
 end;
 
 class function TNistObjectIdentifiers.GetIdShake128Len: IDerObjectIdentifier;
@@ -446,99 +446,99 @@ end;
 
 class function TNistObjectIdentifiers.GetIdSha512: IDerObjectIdentifier;
 begin
-  result := FIdSha512;
+  Result := FIdSha512;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha512_224: IDerObjectIdentifier;
 begin
-  result := FIdSha512_224;
+  Result := FIdSha512_224;
 end;
 
 class function TNistObjectIdentifiers.GetIdSha512_256: IDerObjectIdentifier;
 begin
-  result := FIdSha512_256;
+  Result := FIdSha512_256;
 end;
 
 class function TNistObjectIdentifiers.GetIdDsaWithSha3_224
   : IDerObjectIdentifier;
 begin
-  result := FIdDsaWithSha3_224;
+  Result := FIdDsaWithSha3_224;
 end;
 
 class function TNistObjectIdentifiers.GetIdDsaWithSha3_256
   : IDerObjectIdentifier;
 begin
-  result := FIdDsaWithSha3_256;
+  Result := FIdDsaWithSha3_256;
 end;
 
 class function TNistObjectIdentifiers.GetIdDsaWithSha3_384
   : IDerObjectIdentifier;
 begin
-  result := FIdDsaWithSha3_384;
+  Result := FIdDsaWithSha3_384;
 end;
 
 class function TNistObjectIdentifiers.GetIdDsaWithSha3_512
   : IDerObjectIdentifier;
 begin
-  result := FIdDsaWithSha3_512;
+  Result := FIdDsaWithSha3_512;
 end;
 
 class function TNistObjectIdentifiers.GetIdECDsaWithSha3_224
   : IDerObjectIdentifier;
 begin
-  result := FIdECDsaWithSha3_224;
+  Result := FIdECDsaWithSha3_224;
 end;
 
 class function TNistObjectIdentifiers.GetIdECDsaWithSha3_256
   : IDerObjectIdentifier;
 begin
-  result := FIdECDsaWithSha3_256;
+  Result := FIdECDsaWithSha3_256;
 end;
 
 class function TNistObjectIdentifiers.GetIdECDsaWithSha3_384
   : IDerObjectIdentifier;
 begin
-  result := FIdECDsaWithSha3_384;
+  Result := FIdECDsaWithSha3_384;
 end;
 
 class function TNistObjectIdentifiers.GetIdECDsaWithSha3_512
   : IDerObjectIdentifier;
 begin
-  result := FIdECDsaWithSha3_512;
+  Result := FIdECDsaWithSha3_512;
 end;
 
 class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_224
   : IDerObjectIdentifier;
 begin
-  result := FIdRsassaPkcs1V15WithSha3_224;
+  Result := FIdRsassaPkcs1V15WithSha3_224;
 end;
 
 class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_256
   : IDerObjectIdentifier;
 begin
-  result := FIdRsassaPkcs1V15WithSha3_256;
+  Result := FIdRsassaPkcs1V15WithSha3_256;
 end;
 
 class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_384
   : IDerObjectIdentifier;
 begin
-  result := FIdRsassaPkcs1V15WithSha3_384;
+  Result := FIdRsassaPkcs1V15WithSha3_384;
 end;
 
 class function TNistObjectIdentifiers.GetIdRsassaPkcs1V15WithSha3_512
   : IDerObjectIdentifier;
 begin
-  result := FIdRsassaPkcs1V15WithSha3_512;
+  Result := FIdRsassaPkcs1V15WithSha3_512;
 end;
 
 class function TNistObjectIdentifiers.GetNistAlgorithm: IDerObjectIdentifier;
 begin
-  result := FNistAlgorithm;
+  Result := FNistAlgorithm;
 end;
 
 class function TNistObjectIdentifiers.GetSigAlgs: IDerObjectIdentifier;
 begin
-  result := FSigAlgs;
+  Result := FSigAlgs;
 end;
 
 class constructor TNistObjectIdentifiers.NistObjectIdentifiers;

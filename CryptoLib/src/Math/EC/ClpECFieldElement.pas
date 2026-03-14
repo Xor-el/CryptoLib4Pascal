@@ -229,14 +229,14 @@ end;
 function TECFieldElement.SquarePow(APow: Int32): IECFieldElement;
 var
   LR: IECFieldElement;
-  I: Int32;
+  LI: Int32;
 begin
   LR := Self as IECFieldElement;
-  I := 0;
-  while I < APow do
+  LI := 0;
+  while LI < APow do
   begin
     LR := LR.Square();
-    System.Inc(I);
+    System.Inc(LI);
   end;
   Result := LR;
 end;

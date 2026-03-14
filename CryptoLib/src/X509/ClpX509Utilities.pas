@@ -294,14 +294,14 @@ end;
 
 class function TX509Utilities.BooleanToBitString(const AId: TCryptoLibBooleanArray): IDerBitString;
 var
-  LByteLen, LPad, I: Int32;
+  LByteLen, LPad, LI: Int32;
   LBytes: TCryptoLibByteArray;
 begin
   LByteLen := (System.Length(AId) + 7) div 8;
   SetLength(LBytes, LByteLen);
-  for I := 0 to System.High(AId) do
-    if AId[I] then
-      LBytes[TBitOperations.Asr32(I, 3)] := LBytes[TBitOperations.Asr32(I, 3)] or Byte(TBitOperations.Asr32($80, (I and 7)));
+  for LI := 0 to System.High(AId) do
+    if AId[LI] then
+      LBytes[TBitOperations.Asr32(LI, 3)] := LBytes[TBitOperations.Asr32(LI, 3)] or Byte(TBitOperations.Asr32($80, (LI and 7)));
   LPad := (8 - System.Length(AId)) and 7;
   Result := TDerBitString.Create(LBytes, LPad);
 end;

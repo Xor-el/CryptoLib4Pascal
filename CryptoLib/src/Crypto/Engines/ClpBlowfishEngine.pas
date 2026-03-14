@@ -283,10 +283,10 @@ type
     /// <summary>
     /// initialise a Blowfish cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// whether or not we are for encryption.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the parameters required to set up the cipher.
     /// </param>
     /// <exception cref="EArgumentCryptoLibException">

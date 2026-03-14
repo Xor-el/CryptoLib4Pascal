@@ -84,49 +84,49 @@ type
     /// <summary>
     /// Create a raw signer for pre-hashed data with default salt length.
     /// </summary>
-    class function CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-      const digest: IDigest): IPssSigner; overload; static;
+    class function CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+      const ADigest: IDigest): IPssSigner; overload; static;
 
     /// <summary>
     /// Create a raw signer for pre-hashed data with specified salt length.
     /// </summary>
-    class function CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-      const digest: IDigest; saltLen: Int32): IPssSigner; overload; static;
+    class function CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+      const ADigest: IDigest; ASaltLen: Int32): IPssSigner; overload; static;
 
     /// <summary>
     /// Create a raw signer for pre-hashed data with separate content/MGF digests.
     /// </summary>
-    class function CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-      const contentDigest, mgfDigest: IDigest; saltLen: Int32;
-      trailer: Byte): IPssSigner; overload; static;
+    class function CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+      const AContentDigest, AMgfDigest: IDigest; ASaltLen: Int32;
+      ATrailer: Byte): IPssSigner; overload; static;
 
     /// <summary>
     /// Create a raw signer for pre-hashed data with fixed salt.
     /// </summary>
-    class function CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-      const contentDigest, mgfDigest: IDigest;
-      const salt: TCryptoLibByteArray; trailer: Byte): IPssSigner; overload; static;
+    class function CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+      const AContentDigest, AMgfDigest: IDigest;
+      const ASalt: TCryptoLibByteArray; ATrailer: Byte): IPssSigner; overload; static;
 
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const digest: IDigest); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const digest: IDigest; saltLen: Int32); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const digest: IDigest; const salt: TCryptoLibByteArray); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const contentDigest, mgfDigest: IDigest; saltLen: Int32); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const contentDigest, mgfDigest: IDigest;
-      const salt: TCryptoLibByteArray); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const digest: IDigest; saltLen: Int32; trailer: Byte); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const contentDigest, mgfDigest: IDigest; saltLen: Int32;
-      trailer: Byte); overload;
-    constructor Create(const cipher: IAsymmetricBlockCipher;
-      const contentDigest1, contentDigest2, mgfDigest: IDigest;
-      saltLen: Int32; const salt: TCryptoLibByteArray;
-      trailer: Byte); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const ADigest: IDigest); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const ADigest: IDigest; ASaltLen: Int32); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const ADigest: IDigest; const ASalt: TCryptoLibByteArray); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AContentDigest, AMgfDigest: IDigest; ASaltLen: Int32); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AContentDigest, AMgfDigest: IDigest;
+      const ASalt: TCryptoLibByteArray); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const ADigest: IDigest; ASaltLen: Int32; ATrailer: Byte); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AContentDigest, AMgfDigest: IDigest; ASaltLen: Int32;
+      ATrailer: Byte); overload;
+    constructor Create(const ACipher: IAsymmetricBlockCipher;
+      const AContentDigest1, AContentDigest2, AMgfDigest: IDigest;
+      ASaltLen: Int32; const ASalt: TCryptoLibByteArray;
+      ATrailer: Byte); overload;
 
     procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
     procedure Update(AInput: Byte);
@@ -148,105 +148,105 @@ uses
 
 { TPssSigner }
 
-class function TPssSigner.CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-  const digest: IDigest): IPssSigner;
+class function TPssSigner.CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+  const ADigest: IDigest): IPssSigner;
 begin
-  Result := TPssSigner.Create(cipher, TPrehash.ForDigest(digest), digest, digest,
-    digest.GetDigestSize(), nil, TrailerImplicit);
+  Result := TPssSigner.Create(ACipher, TPrehash.ForDigest(ADigest), ADigest, ADigest,
+    ADigest.GetDigestSize(), nil, TrailerImplicit);
 end;
 
-class function TPssSigner.CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-  const digest: IDigest; saltLen: Int32): IPssSigner;
+class function TPssSigner.CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+  const ADigest: IDigest; ASaltLen: Int32): IPssSigner;
 begin
-  Result := TPssSigner.Create(cipher, TPrehash.ForDigest(digest), digest, digest,
-    saltLen, nil, TrailerImplicit);
+  Result := TPssSigner.Create(ACipher, TPrehash.ForDigest(ADigest), ADigest, ADigest,
+    ASaltLen, nil, TrailerImplicit);
 end;
 
-class function TPssSigner.CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-  const contentDigest, mgfDigest: IDigest; saltLen: Int32;
-  trailer: Byte): IPssSigner;
+class function TPssSigner.CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+  const AContentDigest, AMgfDigest: IDigest; ASaltLen: Int32;
+  ATrailer: Byte): IPssSigner;
 begin
-  Result := TPssSigner.Create(cipher, TPrehash.ForDigest(contentDigest),
-    contentDigest, mgfDigest, saltLen, nil, trailer);
+  Result := TPssSigner.Create(ACipher, TPrehash.ForDigest(AContentDigest),
+    AContentDigest, AMgfDigest, ASaltLen, nil, ATrailer);
 end;
 
-class function TPssSigner.CreateRawSigner(const cipher: IAsymmetricBlockCipher;
-  const contentDigest, mgfDigest: IDigest; const salt: TCryptoLibByteArray;
-  trailer: Byte): IPssSigner;
+class function TPssSigner.CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
+  const AContentDigest, AMgfDigest: IDigest; const ASalt: TCryptoLibByteArray;
+  ATrailer: Byte): IPssSigner;
 begin
-  Result := TPssSigner.Create(cipher, TPrehash.ForDigest(contentDigest),
-    contentDigest, mgfDigest, System.Length(salt), salt, trailer);
+  Result := TPssSigner.Create(ACipher, TPrehash.ForDigest(AContentDigest),
+    AContentDigest, AMgfDigest, System.Length(ASalt), ASalt, ATrailer);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const digest: IDigest);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const ADigest: IDigest);
 begin
-  Create(cipher, digest, digest.GetDigestSize());
+  Create(ACipher, ADigest, ADigest.GetDigestSize());
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const digest: IDigest; saltLen: Int32);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const ADigest: IDigest; ASaltLen: Int32);
 begin
-  Create(cipher, digest, saltLen, TrailerImplicit);
+  Create(ACipher, ADigest, ASaltLen, TrailerImplicit);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const digest: IDigest; const salt: TCryptoLibByteArray);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const ADigest: IDigest; const ASalt: TCryptoLibByteArray);
 begin
-  Create(cipher, digest, digest, digest, System.Length(salt), salt, TrailerImplicit);
-  //Create(cipher, digest.Clone, digest.Clone, digest.Clone, System.Length(salt), salt, TrailerImplicit);
+  Create(ACipher, ADigest, ADigest, ADigest, System.Length(ASalt), ASalt, TrailerImplicit);
+  //Create(ACipher, ADigest.Clone, ADigest.Clone, ADigest.Clone, System.Length(ASalt), ASalt, TrailerImplicit);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const contentDigest, mgfDigest: IDigest; saltLen: Int32);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const AContentDigest, AMgfDigest: IDigest; ASaltLen: Int32);
 begin
-  Create(cipher, contentDigest, mgfDigest, saltLen, TrailerImplicit);
+  Create(ACipher, AContentDigest, AMgfDigest, ASaltLen, TrailerImplicit);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const contentDigest, mgfDigest: IDigest;
-  const salt: TCryptoLibByteArray);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const AContentDigest, AMgfDigest: IDigest;
+  const ASalt: TCryptoLibByteArray);
 begin
-  Create(cipher, contentDigest, contentDigest, mgfDigest, System.Length(salt),
-    salt, TrailerImplicit);
+  Create(ACipher, AContentDigest, AContentDigest, AMgfDigest, System.Length(ASalt),
+    ASalt, TrailerImplicit);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const digest: IDigest; saltLen: Int32; trailer: Byte);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const ADigest: IDigest; ASaltLen: Int32; ATrailer: Byte);
 begin
-  Create(cipher, digest, digest, saltLen, trailer);
+  Create(ACipher, ADigest, ADigest, ASaltLen, ATrailer);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const contentDigest, mgfDigest: IDigest; saltLen: Int32; trailer: Byte);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const AContentDigest, AMgfDigest: IDigest; ASaltLen: Int32; ATrailer: Byte);
 begin
-  Create(cipher, contentDigest, contentDigest, mgfDigest, saltLen, nil, trailer);
+  Create(ACipher, AContentDigest, AContentDigest, AMgfDigest, ASaltLen, nil, ATrailer);
 end;
 
-constructor TPssSigner.Create(const cipher: IAsymmetricBlockCipher;
-  const contentDigest1, contentDigest2, mgfDigest: IDigest;
-  saltLen: Int32; const salt: TCryptoLibByteArray; trailer: Byte);
+constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
+  const AContentDigest1, AContentDigest2, AMgfDigest: IDigest;
+  ASaltLen: Int32; const ASalt: TCryptoLibByteArray; ATrailer: Byte);
 begin
   inherited Create();
 
-  FCipher := cipher;
-  FContentDigest1 := contentDigest1;
-  FContentDigest2 := contentDigest2;
-  FMgfDigest := mgfDigest;
-  FHLen := contentDigest2.GetDigestSize();
-  FMgfhLen := mgfDigest.GetDigestSize();
-  FSLen := saltLen;
-  FSSet := salt <> nil;
+  FCipher := ACipher;
+  FContentDigest1 := AContentDigest1;
+  FContentDigest2 := AContentDigest2;
+  FMgfDigest := AMgfDigest;
+  FHLen := AContentDigest2.GetDigestSize();
+  FMgfhLen := AMgfDigest.GetDigestSize();
+  FSLen := ASaltLen;
+  FSSet := ASalt <> nil;
   if FSSet then
   begin
-    FSalt := System.Copy(salt);
+    FSalt := System.Copy(ASalt);
   end
   else
   begin
-    SetLength(FSalt, saltLen);
+    SetLength(FSalt, ASaltLen);
   end;
-  SetLength(FMDash, 8 + saltLen + FHLen);
-  FTrailer := trailer;
+  SetLength(FMDash, 8 + ASaltLen + FHLen);
+  FTrailer := ATrailer;
 end;
 
 function TPssSigner.GetAlgorithmName: String;

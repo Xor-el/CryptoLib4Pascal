@@ -88,22 +88,22 @@ implementation
 
 function TDsaParameter.GetP: TBigInteger;
 begin
-  result := FP.PositiveValue;
+  Result := FP.PositiveValue;
 end;
 
 function TDsaParameter.GetQ: TBigInteger;
 begin
-  result := FQ.PositiveValue;
+  Result := FQ.PositiveValue;
 end;
 
 function TDsaParameter.GetG: TBigInteger;
 begin
-  result := FG.PositiveValue;
+  Result := FG.PositiveValue;
 end;
 
 function TDsaParameter.ToAsn1Object: IAsn1Object;
 begin
-  result := TDerSequence.Create([FP, FQ, FG]);
+  Result := TDerSequence.Create([FP, FQ, FG]);
 end;
 
 constructor TDsaParameter.Create(const ASeq: IAsn1Sequence);

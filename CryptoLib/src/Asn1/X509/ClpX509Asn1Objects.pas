@@ -4621,27 +4621,27 @@ end;
 
 class procedure TGeneralName.CopyInts(const AParsedIp: TCryptoLibInt32Array; var AAddr: TCryptoLibByteArray; AOffset: Int32);
 var
-  I: Int32;
+  LI: Int32;
 begin
-  for I := 0 to System.Length(AParsedIp) - 1 do
+  for LI := 0 to System.Length(AParsedIp) - 1 do
   begin
-    AAddr[(I * 2) + AOffset] := Byte((AParsedIp[I] shr 8) and $FF);
-    AAddr[(I * 2 + 1) + AOffset] := Byte(AParsedIp[I] and $FF);
+    AAddr[(LI * 2) + AOffset] := Byte((AParsedIp[LI] shr 8) and $FF);
+    AAddr[(LI * 2 + 1) + AOffset] := Byte(AParsedIp[LI] and $FF);
   end;
 end;
 
 class procedure TGeneralName.ParseIPv4(const AIp: String; var AAddr: TCryptoLibByteArray; AOffset: Int32);
 var
   LTokens: TCryptoLibStringArray;
-  I: Int32;
+  LI: Int32;
   LToken: String;
 begin
   // Split by '.' and '/'
   System.SetLength(LTokens, 0);
   LToken := '';
-  for I := 1 to System.Length(AIp) do
+  for LI := 1 to System.Length(AIp) do
   begin
-    if (AIp[I] = '.') or (AIp[I] = '/') then
+    if (AIp[LI] = '.') or (AIp[LI] = '/') then
     begin
       if LToken <> '' then
       begin
@@ -4652,7 +4652,7 @@ begin
     end
     else
     begin
-      LToken := LToken + AIp[I];
+      LToken := LToken + AIp[LI];
     end;
   end;
   if LToken <> '' then
@@ -4662,9 +4662,9 @@ begin
   end;
 
   // Parse each token as byte
-  for I := 0 to System.Length(LTokens) - 1 do
+  for LI := 0 to System.Length(LTokens) - 1 do
   begin
-    AAddr[AOffset] := Byte(StrToInt(LTokens[I]));
+    AAddr[AOffset] := Byte(StrToInt(LTokens[LI]));
     System.Inc(AOffset);
   end;
 end;
@@ -4693,7 +4693,7 @@ var
   LVal: TCryptoLibInt32Array;
   LDoubleColon: Int32;
   LSegments: TCryptoLibStringArray;
-  I, J: Int32;
+  LI, LJ: Int32;
   LSegment: String;
   LTokens: TCryptoLibStringArray;
 begin
@@ -4714,9 +4714,9 @@ begin
   // Split by ':'
   System.SetLength(LSegments, 0);
   LSegment := '';
-  for I := 1 to System.Length(LProcessedIp) do
+  for LI := 1 to System.Length(LProcessedIp) do
   begin
-    if LProcessedIp[I] = ':' then
+    if LProcessedIp[LI] = ':' then
     begin
       System.SetLength(LSegments, System.Length(LSegments) + 1);
       LSegments[System.Length(LSegments) - 1] := LSegment;
@@ -4724,7 +4724,7 @@ begin
     end
     else
     begin
-      LSegment := LSegment + LProcessedIp[I];
+      LSegment := LSegment + LProcessedIp[LI];
     end;
   end;
   if LSegment <> '' then
@@ -4733,9 +4733,9 @@ begin
     LSegments[System.Length(LSegments) - 1] := LSegment;
   end;
 
-  for I := 0 to System.Length(LSegments) - 1 do
+  for LI := 0 to System.Length(LSegments) - 1 do
   begin
-    LSegment := LSegments[I];
+    LSegment := LSegments[LI];
     if System.Length(LSegment) = 0 then
     begin
       LDoubleColon := LIndex;
@@ -4754,9 +4754,9 @@ begin
       begin
         // IPv4 embedded in IPv6 - split by '.'
         System.SetLength(LTokens, 0);
-        for J := 1 to System.Length(LSegment) do
+        for LJ := 1 to System.Length(LSegment) do
         begin
-          if LSegment[J] = '.' then
+          if LSegment[LJ] = '.' then
           begin
             System.SetLength(LTokens, System.Length(LTokens) + 1);
             LTokens[System.Length(LTokens) - 1] := '';
@@ -4768,14 +4768,14 @@ begin
               System.SetLength(LTokens, 1);
               LTokens[0] := '';
             end;
-            LTokens[System.Length(LTokens) - 1] := LTokens[System.Length(LTokens) - 1] + LSegment[J];
+            LTokens[System.Length(LTokens) - 1] := LTokens[System.Length(LTokens) - 1] + LSegment[LJ];
           end;
         end;
         if System.Length(LTokens) < 4 then
         begin
           System.SetLength(LTokens, 4);
-          for J := System.Length(LTokens) to 3 do
-            LTokens[J] := '';
+          for LJ := System.Length(LTokens) to 3 do
+            LTokens[LJ] := '';
         end;
 
         LVal[LIndex] := (StrToInt(LTokens[0]) shl 8) or StrToInt(LTokens[1]);
@@ -4797,9 +4797,9 @@ begin
       System.Move(LVal[LDoubleColon], LVal[System.Length(LVal) - (LIndex - LDoubleColon)],
         (LIndex - LDoubleColon) * SizeOf(Int32));
       // Zero out the middle section
-      for I := LDoubleColon to System.Length(LVal) - (LIndex - LDoubleColon) - 1 do
+      for LI := LDoubleColon to System.Length(LVal) - (LIndex - LDoubleColon) - 1 do
       begin
-        LVal[I] := 0;
+        LVal[LI] := 0;
       end;
     end;
   end;
@@ -4914,14 +4914,14 @@ end;
 
 constructor TGeneralNames.Create(const ANames: TCryptoLibGenericArray<IGeneralName>);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create();
   if (ANames = nil) or (System.Length(ANames) = 0) then
     raise EArgumentNilCryptoLibException.Create('names cannot be null or empty');
-  for I := 0 to System.Length(ANames) - 1 do
+  for LI := 0 to System.Length(ANames) - 1 do
   begin
-    if ANames[I] = nil then
+    if ANames[LI] = nil then
       raise EArgumentNilCryptoLibException.Create('names cannot contain null');
   end;
   FNames := TArrayUtilities.Clone<IGeneralName>(ANames, IdentityGeneralName);
@@ -4946,12 +4946,12 @@ end;
 function TGeneralNames.ToAsn1Object: IAsn1Object;
 var
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
-  I: Int32;
+  LI: Int32;
 begin
   System.SetLength(LElements, System.Length(FNames));
-  for I := 0 to System.Length(FNames) - 1 do
+  for LI := 0 to System.Length(FNames) - 1 do
   begin
-    LElements[I] := FNames[I];
+    LElements[LI] := FNames[LI];
   end;
   Result := TDerSequence.FromElements(LElements);
 end;
@@ -4959,15 +4959,15 @@ end;
 function TGeneralNames.ToString: String;
 var
   SB: TStringBuilder;
-  I: Int32;
+  LI: Int32;
 begin
   SB := TStringBuilder.Create;
   try
     SB.AppendLine('GeneralNames:');
-    for I := 0 to System.Length(FNames) - 1 do
+    for LI := 0 to System.Length(FNames) - 1 do
     begin
       SB.Append('    ');
-      SB.AppendLine(FNames[I].ToString);
+      SB.AppendLine(FNames[LI].ToString);
     end;
     Result := SB.ToString();
   finally
@@ -5277,23 +5277,23 @@ end;
 
 constructor TExtendedKeyUsage.Create(const ASeq: IAsn1Sequence);
 var
-  I: Int32;
+  LI: Int32;
   LOid: IDerObjectIdentifier;
 begin
   inherited Create();
   FSeq := ASeq;
   FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
 
-  for I := 0 to ASeq.Count - 1 do
+  for LI := 0 to ASeq.Count - 1 do
   begin
-    LOid := TDerObjectIdentifier.GetInstance(ASeq[I]);
+    LOid := TDerObjectIdentifier.GetInstance(ASeq[LI]);
     FUsageTable.Add(LOid, True);
   end;
 end;
 
 constructor TExtendedKeyUsage.Create(const AUsages: TCryptoLibGenericArray<IDerObjectIdentifier>);
 var
-  I: Int32;
+  LI: Int32;
   LV: IAsn1EncodableVector;
   LOid: IDerObjectIdentifier;
 begin
@@ -5301,9 +5301,9 @@ begin
   FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
   LV := TAsn1EncodableVector.Create();
 
-  for I := 0 to System.Length(AUsages) - 1 do
+  for LI := 0 to System.Length(AUsages) - 1 do
   begin
-    LOid := AUsages[I];
+    LOid := AUsages[LI];
     LV.Add(LOid);
     FUsageTable.Add(LOid, True);
   end;
@@ -5313,7 +5313,7 @@ end;
 
 constructor TExtendedKeyUsage.Create(const AUsages: array of IKeyPurposeId);
 var
-  I: Int32;
+  LI: Int32;
   LCount: Int32;
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -5322,14 +5322,14 @@ begin
 
   LCount := High(AUsages) - Low(AUsages) + 1;
   System.SetLength(LElements, LCount);
-  for I := 0 to LCount - 1 do
-    LElements[I] := AUsages[Low(AUsages) + I];
+  for LI := 0 to LCount - 1 do
+    LElements[LI] := AUsages[Low(AUsages) + LI];
 
   FSeq := TDerSequence.Create(LElements);
 
-  for I := Low(AUsages) to High(AUsages) do
+  for LI := Low(AUsages) to High(AUsages) do
   begin
-    FUsageTable.Add(AUsages[I], True);
+    FUsageTable.Add(AUsages[LI], True);
   end;
 end;
 
@@ -5720,7 +5720,7 @@ end;
 
 constructor TX509Extensions.Create(const ASeq: IAsn1Sequence);
 var
-  I: Int32;
+  LI: Int32;
   LS: IAsn1Sequence;
   LOid: IDerObjectIdentifier;
   LIsCritical: Boolean;
@@ -5733,9 +5733,9 @@ begin
   FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
 
   // Don't require non-empty sequence; we see empty extension blocks in the wild
-  for I := 0 to ASeq.Count - 1 do
+  for LI := 0 to ASeq.Count - 1 do
   begin
-    LS := TAsn1Sequence.GetInstance(ASeq[I]);
+    LS := TAsn1Sequence.GetInstance(ASeq[LI]);
 
     if (LS.Count < 2) or (LS.Count > 3) then
       raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LS.Count]);
@@ -5791,7 +5791,7 @@ end;
 constructor TX509Extensions.Create(const AOids: TList<IDerObjectIdentifier>;
   const AValues: TList<IX509Extension>);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create();
 
@@ -5799,9 +5799,9 @@ begin
   FOrdering.AddRange(AOids);
   FExtensions := TDictionary<IDerObjectIdentifier, IX509Extension>.Create(TAsn1Comparers.OidEqualityComparer);
 
-  for I := 0 to FOrdering.Count - 1 do
+  for LI := 0 to FOrdering.Count - 1 do
   begin
-    FExtensions.Add(FOrdering[I], AValues[I]);
+    FExtensions.Add(FOrdering[LI], AValues[LI]);
   end;
 end;
 
@@ -6055,7 +6055,7 @@ end;
 
 constructor TX509Name.Create(const ASeq: IAsn1Sequence);
 var
-  I, J: Int32;
+  LI, LJ: Int32;
   LNotZero: Boolean;
   LRdn: IAsn1Set;
   LAttrTypeAndValue: IAsn1Sequence;
@@ -6075,15 +6075,15 @@ begin
   LAddedList := TList<Boolean>.Create();
   try
     // RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
-    for I := 0 to ASeq.Count - 1 do
+    for LI := 0 to ASeq.Count - 1 do
     begin
       // RelativeDistinguishedName ::= SET SIZE(1..MAX) OF AttributeTypeAndValue
-      LRdn := TAsn1Set.GetInstance(ASeq[I]);
+      LRdn := TAsn1Set.GetInstance(ASeq[LI]);
 
-      for J := 0 to LRdn.Count - 1 do
+      for LJ := 0 to LRdn.Count - 1 do
       begin
         // AttributeTypeAndValue ::= SEQUENCE { type OID, value ANY }
-        LAttrTypeAndValue := TAsn1Sequence.GetInstance(LRdn[J]);
+        LAttrTypeAndValue := TAsn1Sequence.GetInstance(LRdn[LJ]);
         if LAttrTypeAndValue.Count <> 2 then
           raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LAttrTypeAndValue.Count]);
 
@@ -6120,7 +6120,7 @@ begin
         end;
 
         // true if not first attribute in RDN
-        LNotZero := J <> 0;
+        LNotZero := LJ <> 0;
         LAddedList.Add(LNotZero);
       end;
     end;
@@ -6203,7 +6203,7 @@ constructor TX509Name.Create(const AOrdering: TList<IDerObjectIdentifier>;
 var
   LOid: IDerObjectIdentifier;
   LAttribute: String;
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create();
   FConverter := AConverter;
@@ -6212,14 +6212,14 @@ begin
   System.SetLength(FValues, AOrdering.Count);
   System.SetLength(FAdded, AOrdering.Count);
 
-  for I := 0 to AOrdering.Count - 1 do
+  for LI := 0 to AOrdering.Count - 1 do
   begin
-    LOid := AOrdering[I];
+    LOid := AOrdering[LI];
     if not AAttributes.TryGetValue(LOid, LAttribute) then
       raise EArgumentCryptoLibException.CreateFmt('No attribute for object id - %s - passed to distinguished name', [LOid.Id]);
 
-    FValues[I] := LAttribute;
-    FAdded[I] := False;
+    FValues[LI] := LAttribute;
+    FAdded[LI] := False;
   end;
 end;
 
@@ -6232,7 +6232,7 @@ end;
 constructor TX509Name.Create(const AOids: TList<IDerObjectIdentifier>;
   const AValues: TList<String>; const AConverter: IX509NameEntryConverter);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create();
   FConverter := AConverter;
@@ -6243,9 +6243,9 @@ begin
   FOids := TCollectionUtilities.ToArray<IDerObjectIdentifier>(AOids);
   FValues := TCollectionUtilities.ToArray<String>(AValues);
   System.SetLength(FAdded, AOids.Count);
-  for I := 0 to AOids.Count - 1 do
+  for LI := 0 to AOids.Count - 1 do
   begin
-    FAdded[I] := False;
+    FAdded[LI] := False;
   end;
 end;
 
@@ -6274,7 +6274,7 @@ var
   LOidList: TList<IDerObjectIdentifier>;
   LValueList: TList<String>;
   LAddedList: TList<Boolean>;
-  I, LCount: Int32;
+  LI, LCount: Int32;
   LO: TList<IDerObjectIdentifier>;
   LV: TList<String>;
   LA: TList<Boolean>;
@@ -6308,15 +6308,15 @@ begin
       LA := TList<Boolean>.Create();
       try
         LCount := 1;
-        for I := 0 to LOidList.Count - 1 do
+        for LI := 0 to LOidList.Count - 1 do
         begin
-          if LAddedList[I] then
+          if LAddedList[LI] then
             LCount := LCount and Int32(-1)
           else
             LCount := LCount and 0;  // Set to 0 (all bits clear)
-          LO.Insert(LCount, LOidList[I]);
-          LV.Insert(LCount, LValueList[I]);
-          LA.Insert(LCount, LAddedList[I]);
+          LO.Insert(LCount, LOidList[LI]);
+          LV.Insert(LCount, LValueList[LI]);
+          LA.Insert(LCount, LAddedList[LI]);
           System.Inc(LCount);
         end;
         LOidList.Clear;
@@ -6346,7 +6346,7 @@ end;
 constructor TX509Name.Create(const AOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
   const AValues: TCryptoLibStringArray);
 var
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create();
   FConverter := CreateDefaultConverter();
@@ -6355,9 +6355,9 @@ begin
   FValueList := System.Copy(AValues);
   // Initialize FAdded array - all false for direct constructor
   System.SetLength(FAdded, System.Length(FOids));
-  for I := 0 to System.Length(FAdded) - 1 do
+  for LI := 0 to System.Length(FAdded) - 1 do
   begin
-    FAdded[I] := False;
+    FAdded[LI] := False;
   end;
 end;
 
@@ -6378,13 +6378,13 @@ end;
 
 function TX509Name.GetValue(const AOid: IDerObjectIdentifier): String;
 var
-  I: Int32;
+  LI: Int32;
 begin
-  for I := 0 to System.Length(FOids) - 1 do
+  for LI := 0 to System.Length(FOids) - 1 do
   begin
-    if FOids[I].Equals(AOid) then
+    if FOids[LI].Equals(AOid) then
     begin
-      Result := FValues[I];
+      Result := FValues[LI];
       Exit;
     end;
   end;
@@ -6394,15 +6394,15 @@ end;
 function TX509Name.GetValues(const AOid: IDerObjectIdentifier): TCryptoLibStringArray;
 var
   LValues: TList<String>;
-  I: Int32;
+  LI: Int32;
 begin
   LValues := TList<String>.Create();
   try
-    for I := 0 to System.Length(FOids) - 1 do
+    for LI := 0 to System.Length(FOids) - 1 do
     begin
-      if FOids[I].Equals(AOid) then
+      if FOids[LI].Equals(AOid) then
       begin
-        LValues.Add(FValues[I]);
+        LValues.Add(FValues[LI]);
       end;
     end;
     Result := LValues.ToArray();
@@ -6420,24 +6420,24 @@ function TX509Name.ToString(AReverse: Boolean; const AOidSymbols: TDictionary<ID
 var
   LComponents: TList<TStringBuilder>;
   LAva: TStringBuilder;
-  I: Int32;
+  LI: Int32;
   LBuf: TStringBuilder;
 begin
   LComponents := TList<TStringBuilder>.Create();
   try
     LAva := nil;
 
-    for I := 0 to System.Length(FOids) - 1 do
+    for LI := 0 to System.Length(FOids) - 1 do
     begin
-      if FAdded[I] then
+      if FAdded[LI] then
       begin
         LAva.Append('+');
-        AppendValue(LAva, AOidSymbols, FOids[I], FValues[I]);
+        AppendValue(LAva, AOidSymbols, FOids[LI], FValues[LI]);
       end
       else
       begin
         LAva := TStringBuilder.Create();
-        AppendValue(LAva, AOidSymbols, FOids[I], FValues[I]);
+        AppendValue(LAva, AOidSymbols, FOids[LI], FValues[LI]);
         LComponents.Add(LAva);
       end;
     end;
@@ -6445,9 +6445,9 @@ begin
     if AReverse then
     begin
       // Reverse components list
-      for I := 0 to (LComponents.Count div 2) - 1 do
+      for LI := 0 to (LComponents.Count div 2) - 1 do
       begin
-        LComponents.Exchange(I, LComponents.Count - 1 - I);
+        LComponents.Exchange(LI, LComponents.Count - 1 - LI);
       end;
     end;
 
@@ -6457,10 +6457,10 @@ begin
       begin
         LBuf.Append(LComponents[0].ToString());
 
-        for I := 1 to LComponents.Count - 1 do
+        for LI := 1 to LComponents.Count - 1 do
         begin
           LBuf.Append(',');
-          LBuf.Append(LComponents[I].ToString());
+          LBuf.Append(LComponents[LI].ToString());
         end;
       end;
 
@@ -6469,8 +6469,8 @@ begin
       LBuf.Free;
     end;
   finally
-    for I := 0 to LComponents.Count - 1 do
-      LComponents[I].Free;
+    for LI := 0 to LComponents.Count - 1 do
+      LComponents[LI].Free;
     LComponents.Free;
   end;
 end;
@@ -6484,7 +6484,7 @@ function TX509Name.ToAsn1Object: IAsn1Object;
 var
   LVec, LSVec: IAsn1EncodableVector;
   LOid: IDerObjectIdentifier;
-  I: Int32;
+  LI: Int32;
   LConvertedValue: IAsn1Object;
 begin
   if FSeq <> nil then
@@ -6503,17 +6503,17 @@ begin
   LSVec := TAsn1EncodableVector.Create();
   LOid := nil;
 
-  for I := 0 to System.Length(FOids) - 1 do
+  for LI := 0 to System.Length(FOids) - 1 do
   begin
     // If previous OID exists and current is not added to current RDN, finalize RDN
-    if (LOid <> nil) and (not FAdded[I]) then
+    if (LOid <> nil) and (not FAdded[LI]) then
     begin
       LVec.Add(TDerSet.FromVector(LSVec));
       LSVec := TAsn1EncodableVector.Create();
     end;
 
-    LOid := FOids[I];
-    LConvertedValue := FConverter.GetConvertedValue(LOid, FValues[I]);
+    LOid := FOids[LI];
+    LConvertedValue := FConverter.GetConvertedValue(LOid, FValues[LI]);
     LSVec.Add(TDerSequence.Create([LOid, LConvertedValue]));
   end;
 
@@ -6883,16 +6883,16 @@ end;
 function TX509Name.GetValueList(const AOid: IDerObjectIdentifier): TCryptoLibStringArray;
 var
   LV: TList<String>;
-  I: Int32;
+  LI: Int32;
   LValue: String;
 begin
   LV := TList<String>.Create();
   try
-    for I := 0 to System.Length(FValues) - 1 do
+    for LI := 0 to System.Length(FValues) - 1 do
     begin
-      if (AOid = nil) or AOid.Equals(FOids[I]) then
+      if (AOid = nil) or AOid.Equals(FOids[LI]) then
       begin
-        LValue := FValues[I];
+        LValue := FValues[LI];
         if TStringUtilities.StartsWith(LValue, '\#') then
         begin
           // Skip '\' at position 1, copy rest of string
@@ -6911,7 +6911,7 @@ function TX509Name.Equivalent(const AOther: IX509Name; AInOrder: Boolean): Boole
 var
   LOtherOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
   LOtherValues: TCryptoLibStringArray;
-  I, LOrderingSize, LStart, LEnd, LDelta, J: Int32;
+  LI, LOrderingSize, LStart, LEnd, LDelta, LJ: Int32;
   LIndexes: TCryptoLibBooleanArray;
   LOid: IDerObjectIdentifier;
   LValue: String;
@@ -6948,15 +6948,15 @@ begin
   if AInOrder then
   begin
     // In-order comparison
-    for I := 0 to LOrderingSize - 1 do
+    for LI := 0 to LOrderingSize - 1 do
     begin
-      if not FOids[I].Equals(LOtherOids[I]) then
+      if not FOids[LI].Equals(LOtherOids[LI]) then
       begin
         Result := False;
         Exit;
       end;
 
-      if not EquivalentStrings(FValues[I], LOtherValues[I]) then
+      if not EquivalentStrings(FValues[LI], LOtherValues[LI]) then
       begin
         Result := False;
         Exit;
@@ -6984,23 +6984,23 @@ begin
       LDelta := -1;
     end;
 
-    I := LStart;
-    while I <> LEnd do
+    LI := LStart;
+    while LI <> LEnd do
     begin
-      LOid := FOids[I];
-      LValue := FValues[I];
+      LOid := FOids[LI];
+      LValue := FValues[LI];
       LFound := False;
 
-      for J := 0 to LOrderingSize - 1 do
+      for LJ := 0 to LOrderingSize - 1 do
       begin
-        if LIndexes[J] then
+        if LIndexes[LJ] then
           Continue;
 
-        if LOid.Equals(LOtherOids[J]) then
+        if LOid.Equals(LOtherOids[LJ]) then
         begin
-          if EquivalentStrings(LValue, LOtherValues[J]) then
+          if EquivalentStrings(LValue, LOtherValues[LJ]) then
           begin
-            LIndexes[J] := True;
+            LIndexes[LJ] := True;
             LFound := True;
             Break;
           end;
@@ -7013,7 +7013,7 @@ begin
         Exit;
       end;
 
-      System.Inc(I, LDelta);
+      System.Inc(LI, LDelta);
     end;
 
     Result := True;
@@ -9180,13 +9180,13 @@ end;
 constructor TCrlDistPoint.Create(const APoints: TCryptoLibGenericArray<IDistributionPoint>);
 var
   LV: IAsn1EncodableVector;
-  I: Int32;
+  LI: Int32;
 begin
   inherited Create();
   LV := TAsn1EncodableVector.Create();
-  for I := 0 to System.Length(APoints) - 1 do
+  for LI := 0 to System.Length(APoints) - 1 do
   begin
-    LV.Add(APoints[I]);
+    LV.Add(APoints[LI]);
   end;
   FSeq := TDerSequence.Create(LV);
 end;
@@ -9195,14 +9195,14 @@ function TCrlDistPoint.GetDistributionPoints: TCryptoLibGenericArray<IDistributi
 var
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
   LResult: TList<IDistributionPoint>;
-  I: Int32;
+  LI: Int32;
 begin
   LElements := FSeq.GetElements();
   LResult := TList<IDistributionPoint>.Create();
   try
-    for I := 0 to System.Length(LElements) - 1 do
+    for LI := 0 to System.Length(LElements) - 1 do
     begin
-      LResult.Add(TDistributionPoint.GetInstance(LElements[I]));
+      LResult.Add(TDistributionPoint.GetInstance(LElements[LI]));
     end;
     Result := LResult.ToArray();
   finally
@@ -9219,15 +9219,15 @@ function TCrlDistPoint.ToString: String;
 var
   LBuf: TStringBuilder;
   LDps: TCryptoLibGenericArray<IDistributionPoint>;
-  I: Int32;
+  LI: Int32;
 begin
   LBuf := TStringBuilder.Create();
   try
     LBuf.AppendLine('CRLDistPoint:');
     LDps := GetDistributionPoints();
-    for I := 0 to System.Length(LDps) - 1 do
+    for LI := 0 to System.Length(LDps) - 1 do
     begin
-      LBuf.Append('    ').Append(LDps[I].ToString()).AppendLine();
+      LBuf.Append('    ').Append(LDps[LI].ToString()).AppendLine();
     end;
     Result := LBuf.ToString();
   finally

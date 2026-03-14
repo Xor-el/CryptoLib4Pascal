@@ -218,7 +218,8 @@ begin
   end
   else if Supports(AParameters, IParametersWithIV, LIvParams) then
   begin
-    LInitKeyParam := LIvParams.Parameters as IKeyParameter;
+    if not Supports(LIvParams.Parameters, IKeyParameter, LInitKeyParam) then
+      LInitKeyParam := nil;
     LInitNonce := LIvParams.GetIV();
     LChaCha20Params := LIvParams;
 

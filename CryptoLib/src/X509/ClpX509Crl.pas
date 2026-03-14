@@ -265,7 +265,7 @@ function TX509Crl.LoadCrlEntries: TCryptoLibGenericArray<IX509CrlEntry>;
 var
   LRevoked: TCryptoLibGenericArray<ICrlEntry>;
   LList: TList<IX509CrlEntry>;
-  I: Int32;
+  LI: Int32;
   LPreviousIssuer: IX509Name;
   LEntry: IX509CrlEntry;
 begin
@@ -279,9 +279,9 @@ begin
   LList := TList<IX509CrlEntry>.Create();
   try
     LPreviousIssuer := GetIssuerDN();
-    for I := 0 to System.High(LRevoked) do
+    for LI := 0 to System.High(LRevoked) do
     begin
-      LEntry := TX509CrlEntry.Create(LRevoked[I], FIsIndirect, LPreviousIssuer);
+      LEntry := TX509CrlEntry.Create(LRevoked[LI], FIsIndirect, LPreviousIssuer);
       LList.Add(LEntry);
       LPreviousIssuer := LEntry.GetCertificateIssuer();
     end;
@@ -295,7 +295,7 @@ function TX509Crl.GetRevokedCertificate(const ASerialNumber: TBigInteger): IX509
 var
   LRevoked: TCryptoLibGenericArray<ICrlEntry>;
   LPreviousIssuer: IX509Name;
-  I: Int32;
+  LI: Int32;
   LEntry: IX509CrlEntry;
 begin
   LRevoked := FCertificateList.GetRevokedCertificates();
@@ -306,10 +306,10 @@ begin
   end;
 
   LPreviousIssuer := GetIssuerDN();
-  for I := 0 to System.High(LRevoked) do
+  for LI := 0 to System.High(LRevoked) do
   begin
-    LEntry := TX509CrlEntry.Create(LRevoked[I], FIsIndirect, LPreviousIssuer);
-    if LRevoked[I].UserCertificate.Value.Equals(ASerialNumber) then
+    LEntry := TX509CrlEntry.Create(LRevoked[LI], FIsIndirect, LPreviousIssuer);
+    if LRevoked[LI].UserCertificate.Value.Equals(ASerialNumber) then
     begin
       Result := LEntry;
       Exit;
@@ -394,7 +394,7 @@ var
   LVerifier: IVerifierFactory;
   LTbsSeq: IAsn1Sequence;
   LV: IAsn1EncodableVector;
-  LStart, I: Int32;
+  LStart, LI: Int32;
   LVersion: IDerInteger;
   LTagged: IDerTaggedObject;
 begin
@@ -408,11 +408,11 @@ begin
   LStart := 1;
   if (LTbsSeq.Count > 0) and Supports(LTbsSeq[0], IDerInteger, LVersion) then
   begin
-    LV.Add(LTbsSeq[0] as IAsn1Encodable);
+    LV.Add(LTbsSeq[0]);
     LStart := 2;
   end;
-  for I := LStart to LTbsSeq.Count - 2 do
-    LV.Add(LTbsSeq[I] as IAsn1Encodable);
+  for LI := LStart to LTbsSeq.Count - 2 do
+    LV.Add(LTbsSeq[LI]);
   LTagged := TDerTaggedObject.Create(True, 0, LExtensions.ToAsn1ObjectTrimmed() as IAsn1Encodable);
   LV.Add(LTagged as IAsn1Encodable);
   Result := TX509Utilities.VerifySignature(LVerifier, TDerSequence.Create(LV) as IAsn1Encodable, LAltSigValue.Signature);
@@ -454,14 +454,14 @@ function TX509Crl.IsRevoked(const ACert: IX509Certificate): Boolean;
 var
   LRevoked: TCryptoLibGenericArray<ICrlEntry>;
   LSerial: TBigInteger;
-  I: Int32;
+  LI: Int32;
 begin
   LRevoked := FCertificateList.GetRevokedCertificates();
   if LRevoked <> nil then
   begin
     LSerial := ACert.GetSerialNumber();
-    for I := 0 to System.High(LRevoked) do
-      if LRevoked[I].UserCertificate.Value.Equals(LSerial) then
+    for LI := 0 to System.High(LRevoked) do
+      if LRevoked[LI].UserCertificate.Value.Equals(LSerial) then
       begin
         Result := True;
         Exit;
@@ -528,7 +528,7 @@ function TX509Crl.ToString: String;
 var
   LBuf: TStringBuilder;
   LSig: TCryptoLibByteArray;
-  I, LCount: Int32;
+  LI, LCount: Int32;
   LNext: TNullable<TDateTime>;
   LExtensions: IX509Extensions;
   LOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
@@ -555,12 +555,12 @@ begin
     LBuf.Append('            Signature: ');
     LCount := Math.Min(20, System.Length(LSig));
     LBuf.AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LCount)));
-    I := 20;
-    while I < System.Length(LSig) do
+    LI := 20;
+    while LI < System.Length(LSig) do
     begin
-      LCount := Math.Min(20, System.Length(LSig) - I);
-      LBuf.Append('                       ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LCount)));
-      System.Inc(I, 20);
+      LCount := Math.Min(20, System.Length(LSig) - LI);
+      LBuf.Append('                       ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, LI, LI + LCount)));
+      System.Inc(LI, 20);
     end;
 
     LExtensions := FCertificateList.TbsCertList.Extensions;

@@ -244,7 +244,7 @@ type
     /// <summary>
     /// basic constructor - set the cipher up for a given blocksize
     /// </summary>
-    /// <param name="blockBits">
+    /// <param name="ABlockBits">
     /// the blocksize in bits, must be 128, 192, or 256.
     /// </param>
     constructor Create(ABlockBits: Int32); overload;
@@ -653,7 +653,7 @@ begin
       System.Inc(LT);
     end;
   end;
-  result := LW;
+  Result := LW;
 
   TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
 end;
@@ -875,7 +875,7 @@ end;
 function TRijndaelEngine.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if (FWorkingKey = Nil) then
+  if (FWorkingKey = nil) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SRijndaelEngineNotInitialised);

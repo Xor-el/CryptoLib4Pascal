@@ -300,7 +300,7 @@ end;
 
 function TECCurve.TDefaultLookupTable.Lookup(AIndex: Int32): IECPoint;
 var
-  LFeBytes, LPos, I, J: Int32;
+  LFeBytes, LPos, LI, LJ: Int32;
   LMask: Byte;
   LX, LY: TCryptoLibByteArray;
 begin
@@ -308,13 +308,13 @@ begin
   SetLength(LX, LFeBytes);
   SetLength(LY, LFeBytes);
   LPos := 0;
-  for I := 0 to FSize - 1 do
+  for LI := 0 to FSize - 1 do
   begin
-    LMask := Byte(TBitOperations.Asr32((I xor AIndex) - 1, 31));
-    for J := 0 to LFeBytes - 1 do
+    LMask := Byte(TBitOperations.Asr32((LI xor AIndex) - 1, 31));
+    for LJ := 0 to LFeBytes - 1 do
     begin
-      LX[J] := Byte(LX[J] xor (FTable[LPos + J] and LMask));
-      LY[J] := Byte(LY[J] xor (FTable[LPos + LFeBytes + J] and LMask));
+      LX[LJ] := Byte(LX[LJ] xor (FTable[LPos + LJ] and LMask));
+      LY[LJ] := Byte(LY[LJ] xor (FTable[LPos + LFeBytes + LJ] and LMask));
     end;
     Inc(LPos, LFeBytes * 2);
   end;
@@ -323,17 +323,17 @@ end;
 
 function TECCurve.TDefaultLookupTable.LookupVar(AIndex: Int32): IECPoint;
 var
-  LFeBytes, LPos, J: Int32;
+  LFeBytes, LPos, LJ: Int32;
   LX, LY: TCryptoLibByteArray;
 begin
   LFeBytes := FOuter.GetFieldElementEncodingLength();
   SetLength(LX, LFeBytes);
   SetLength(LY, LFeBytes);
   LPos := AIndex * LFeBytes * 2;
-  for J := 0 to LFeBytes - 1 do
+  for LJ := 0 to LFeBytes - 1 do
   begin
-    LX[J] := FTable[LPos + J];
-    LY[J] := FTable[LPos + LFeBytes + J];
+    LX[LJ] := FTable[LPos + LJ];
+    LY[LJ] := FTable[LPos + LFeBytes + LJ];
   end;
   Result := CreatePoint(LX, LY);
 end;
@@ -364,7 +364,7 @@ end;
 
 function TF2mCurve.TDefaultF2mLookupTable.Lookup(AIndex: Int32): IECPoint;
 var
-  LFeLongs, LPos, I, J: Int32;
+  LFeLongs, LPos, LI, LJ: Int32;
   LMask: UInt64;
   LX, LY: TCryptoLibUInt64Array;
 begin
@@ -373,14 +373,14 @@ begin
   System.SetLength(LY, LFeLongs);
   LPos := 0;
 
-  for I := 0 to FSize - 1 do
+  for LI := 0 to FSize - 1 do
   begin
-    LMask := UInt64(Int64(TBitOperations.Asr32((I xor AIndex) - 1, 31)));
+    LMask := UInt64(Int64(TBitOperations.Asr32((LI xor AIndex) - 1, 31)));
 
-    for J := 0 to LFeLongs - 1 do
+    for LJ := 0 to LFeLongs - 1 do
     begin
-      LX[J] := LX[J] xor (FTable[LPos + J] and LMask);
-      LY[J] := LY[J] xor (FTable[LPos + LFeLongs + J] and LMask);
+      LX[LJ] := LX[LJ] xor (FTable[LPos + LJ] and LMask);
+      LY[LJ] := LY[LJ] xor (FTable[LPos + LFeLongs + LJ] and LMask);
     end;
 
     Inc(LPos, LFeLongs * 2);
@@ -391,7 +391,7 @@ end;
 
 function TF2mCurve.TDefaultF2mLookupTable.LookupVar(AIndex: Int32): IECPoint;
 var
-  LFeLongs, LPos, J: Int32;
+  LFeLongs, LPos, LJ: Int32;
   LX, LY: TCryptoLibUInt64Array;
 begin
   LFeLongs := (FOuter.M + 63) div 64;
@@ -399,10 +399,10 @@ begin
   System.SetLength(LY, LFeLongs);
   LPos := AIndex * LFeLongs * 2;
 
-  for J := 0 to LFeLongs - 1 do
+  for LJ := 0 to LFeLongs - 1 do
   begin
-    LX[J] := FTable[LPos + J];
-    LY[J] := FTable[LPos + LFeLongs + J];
+    LX[LJ] := FTable[LPos + LJ];
+    LY[LJ] := FTable[LPos + LFeLongs + LJ];
   end;
 
   Result := CreatePoint(LX, LY);
@@ -477,16 +477,16 @@ end;
 procedure TECCurve.CheckPoints(const APoints: TCryptoLibGenericArray<IECPoint>;
   AOff, ALen: Int32);
 var
-  I: Int32;
+  LI: Int32;
   LPoint: IECPoint;
 begin
   if APoints = nil then
     raise EArgumentNilCryptoLibException.Create('points');
   if (AOff < 0) or (ALen < 0) or (AOff > (System.Length(APoints) - ALen)) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidRangeSpecified);
-  for I := 0 to ALen - 1 do
+  for LI := 0 to ALen - 1 do
   begin
-    LPoint := APoints[AOff + I];
+    LPoint := APoints[AOff + LI];
     if (LPoint <> nil) and (Self as IECCurve <> LPoint.Curve) then
       raise EArgumentCryptoLibException.CreateRes(@SEntriesMustBeNullOrOnThisCurve);
   end;
@@ -548,16 +548,16 @@ end;
 function TECCurve.CreateCacheSafeLookupTable(const APoints: TCryptoLibGenericArray<IECPoint>;
   AOff, ALen: Int32): IECLookupTable;
 var
-  LFeBytes, LPos, I: Int32;
+  LFeBytes, LPos, LI: Int32;
   LTable: TCryptoLibByteArray;
   LP: IECPoint;
 begin
   LFeBytes := GetFieldElementEncodingLength();
   System.SetLength(LTable, ALen * LFeBytes * 2);
   LPos := 0;
-  for I := 0 to System.Pred(ALen) do
+  for LI := 0 to System.Pred(ALen) do
   begin
-    LP := APoints[AOff + I];
+    LP := APoints[AOff + LI];
     LP.RawXCoord.EncodeTo(LTable, LPos);
     LPos := LPos + LFeBytes;
     LP.RawYCoord.EncodeTo(LTable, LPos);
@@ -623,7 +623,7 @@ procedure TECCurve.NormalizeAll(const APoints: TCryptoLibGenericArray<IECPoint>;
 var
   LZs: TCryptoLibGenericArray<IECFieldElement>;
   LIndices: TCryptoLibInt32Array;
-  LCount, I, LCoord: Int32;
+  LCount, LI, LCoord: Int32;
   LP: IECPoint;
 begin
   CheckPoints(APoints, AOff, ALen);
@@ -641,13 +641,13 @@ begin
   System.SetLength(LZs, ALen);
   System.SetLength(LIndices, ALen);
   LCount := 0;
-  for I := 0 to ALen - 1 do
+  for LI := 0 to ALen - 1 do
   begin
-    LP := APoints[AOff + I];
+    LP := APoints[AOff + LI];
     if (LP <> nil) and ((AIso <> nil) or not LP.IsNormalized) then
     begin
       LZs[LCount] := LP.GetZCoord(0);
-      LIndices[LCount] := AOff + I;
+      LIndices[LCount] := AOff + LI;
       Inc(LCount);
     end;
   end;
@@ -657,8 +657,8 @@ begin
 
   TECAlgorithms.MontgomeryTrick(LZs, 0, LCount, AIso);
 
-  for I := 0 to LCount - 1 do
-    APoints[LIndices[I]] := APoints[LIndices[I]].Normalize(LZs[I]);
+  for LI := 0 to LCount - 1 do
+    APoints[LIndices[LI]] := APoints[LIndices[LI]].Normalize(LZs[LI]);
 end;
 
 function TECCurve.ImportPoint(const AP: IECPoint): IECPoint;
@@ -1418,16 +1418,16 @@ end;
 function TF2mCurve.CreateCacheSafeLookupTable(const APoints: TCryptoLibGenericArray<IECPoint>;
   AOff, ALen: Int32): IECLookupTable;
 var
-  LFeLongs, LPos, I: Int32;
+  LFeLongs, LPos, LI: Int32;
   LTable: TCryptoLibUInt64Array;
   LP: IECPoint;
 begin
   LFeLongs := (FM + 63) div 64;
   System.SetLength(LTable, ALen * LFeLongs * 2);
   LPos := 0;
-  for I := 0 to ALen - 1 do
+  for LI := 0 to ALen - 1 do
   begin
-    LP := APoints[AOff + I];
+    LP := APoints[AOff + LI];
     (LP.RawXCoord as IF2mFieldElement).X.CopyTo(LTable, LPos);
     Inc(LPos, LFeLongs);
     (LP.RawYCoord as IF2mFieldElement).X.CopyTo(LTable, LPos);

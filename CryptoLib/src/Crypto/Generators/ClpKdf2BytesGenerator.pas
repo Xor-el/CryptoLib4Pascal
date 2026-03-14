@@ -45,7 +45,7 @@ type
     /// Construct a KDF2 bytes generator. Generates key material according to
     /// IEEE P1363 or ISO 18033 depending on the initialisation.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// the digest to be used as the source of derived keys.
     /// </param>
     constructor Create(const ADigest: IDigest);

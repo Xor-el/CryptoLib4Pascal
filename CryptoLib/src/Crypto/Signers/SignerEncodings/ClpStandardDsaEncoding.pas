@@ -103,8 +103,7 @@ function TStandardDsaEncoding.Encode(const AN, AR, &AS: TBigInteger)
 var
   LTemp: IDerSequence;
 begin
-  LTemp := TDerSequence.Create([EncodeValue(AN, AR), EncodeValue(AN, &AS)])
-    as IDerSequence;
+  LTemp := TDerSequence.Create([EncodeValue(AN, AR), EncodeValue(AN, &AS)]);
   Result := LTemp.GetEncoded(TAsn1Encodable.Der);
 end;
 

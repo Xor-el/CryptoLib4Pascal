@@ -105,7 +105,7 @@ end;
 class function TIetfUtilities.Unescape(const AElt: String): String;
 var
   LSb: TStringBuilder;
-  LStart, I, LLastEscaped: Int32;
+  LStart, LI, LLastEscaped: Int32;
   LEscaped, LQuoted, LNonWhiteSpaceEncountered: Boolean;
   LC: Char;
   LHex1: Int32;
@@ -141,9 +141,9 @@ begin
     LLastEscaped := 0;
     LHex1 := 0; // Store as Int32 (0 = no hex digit waiting)
 
-    for I := LStart to System.Length(AElt) do
+    for LI := LStart to System.Length(AElt) do
     begin
-      LC := AElt[I];
+      LC := AElt[LI];
 
       // nonWhiteSpaceEncountered = true;
       if LC <> ' ' then
@@ -330,7 +330,7 @@ end;
 class function TIetfUtilities.StripInternalSpaces(const AStr: String): String;
 var
   LSb: TStringBuilder;
-  I: Int32;
+  LI: Int32;
   LC1, LC2: Char;
 begin
   if System.Length(AStr) = 0 then
@@ -344,9 +344,9 @@ begin
     LC1 := AStr[1];
     LSb.Append(LC1);
 
-    for I := 2 to System.Length(AStr) do
+    for LI := 2 to System.Length(AStr) do
     begin
-      LC2 := AStr[I];
+      LC2 := AStr[LI];
       if not ((LC1 = ' ') and (LC2 = ' ')) then
       begin
         LSb.Append(LC2);

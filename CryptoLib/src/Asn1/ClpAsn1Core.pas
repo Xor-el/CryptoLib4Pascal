@@ -358,7 +358,7 @@ end;
 class function TAsn1EncodableVector.CopyElements(const AElements: TCryptoLibGenericArray<IAsn1Encodable>;
   AElementCount: Int32): TCryptoLibGenericArray<IAsn1Encodable>;
 var
-  I: Int32;
+  LI: Int32;
 begin
   if AElementCount < 1 then
   begin
@@ -367,8 +367,8 @@ begin
   end;
 
   System.SetLength(Result, AElementCount);
-  for I := 0 to AElementCount - 1 do
-    Result[I] := AElements[I];
+  for LI := 0 to AElementCount - 1 do
+    Result[LI] := AElements[LI];
 end;
 
 constructor TAsn1EncodableVector.Create();
@@ -405,11 +405,11 @@ end;
 
 constructor TAsn1EncodableVector.Create(const AElements: array of IAsn1Encodable);
 var
-  I: Int32;
+  LI: Int32;
 begin
   Create();
-  for I := 0 to System.Length(AElements) - 1 do
-    Add(AElements[I]);
+  for LI := 0 to System.Length(AElements) - 1 do
+    Add(AElements[LI]);
 end;
 
 procedure TAsn1EncodableVector.Add(const AElement: IAsn1Encodable);
@@ -430,10 +430,10 @@ end;
 
 procedure TAsn1EncodableVector.Add(const AObjs: array of IAsn1Encodable);
 var
-  I: Int32;
+  LI: Int32;
 begin
-  for I := 0 to System.Length(AObjs) - 1 do
-    Add(AObjs[I]);
+  for LI := 0 to System.Length(AObjs) - 1 do
+    Add(AObjs[LI]);
 end;
 
 procedure TAsn1EncodableVector.AddOptional(const AElement: IAsn1Encodable);
@@ -450,12 +450,12 @@ end;
 
 procedure TAsn1EncodableVector.AddOptional(const AElements: array of IAsn1Encodable);
 var
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(AElements) > 0 then
   begin
-    for I := 0 to System.Length(AElements) - 1 do
-      AddOptional(AElements[I]);
+    for LI := 0 to System.Length(AElements) - 1 do
+      AddOptional(AElements[LI]);
   end;
 end;
 
@@ -491,18 +491,18 @@ end;
 
 procedure TAsn1EncodableVector.AddAll(const AE: TCryptoLibGenericArray<IAsn1Encodable>);
 var
-  I: Int32;
+  LI: Int32;
 begin
   if AE = nil then
     raise EArgumentNilCryptoLibException.Create('e');
 
-  for I := 0 to System.Length(AE) - 1 do
-    Add(AE[I]);
+  for LI := 0 to System.Length(AE) - 1 do
+    Add(AE[LI]);
 end;
 
 procedure TAsn1EncodableVector.AddAll(const AOther: IAsn1EncodableVector);
 var
-  I: Int32;
+  LI: Int32;
   LOtherElementCount: Int32;
 begin
   if AOther = nil then
@@ -513,9 +513,9 @@ begin
     Exit;
 
   PrepareCapacity(LOtherElementCount);
-  for I := 0 to LOtherElementCount - 1 do
+  for LI := 0 to LOtherElementCount - 1 do
   begin
-    FElements[FElementCount] := AOther[I];
+    FElements[FElementCount] := AOther[LI];
     System.Inc(FElementCount);
   end;
 end;
@@ -540,7 +540,7 @@ end;
 
 function TAsn1EncodableVector.TakeElements(): TCryptoLibGenericArray<IAsn1Encodable>;
 var
-  I: Int32;
+  LI: Int32;
 begin
   if FElementCount = 0 then
   begin
@@ -557,8 +557,8 @@ begin
 
   System.SetLength(Result, FElementCount);
 
-  for I := 0 to FElementCount - 1 do
-    Result[I] := FElements[I];
+  for LI := 0 to FElementCount - 1 do
+    Result[LI] := FElements[LI];
 end;
 
 function TAsn1EncodableVector.PrepareCapacity(ARequiredCapacity: Int32): Int32;
@@ -574,7 +574,7 @@ end;
 
 procedure TAsn1EncodableVector.Reallocate(AMinCapacity: Int32);
 var
-  I: Int32;
+  LI: Int32;
   LOldCapacity, LNewCapacity: Int32;
   LCopy: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
@@ -582,8 +582,8 @@ begin
   LNewCapacity := Math.Max(LOldCapacity, AMinCapacity + (TBitOperations.Asr32(AMinCapacity, 1)));
 
   System.SetLength(LCopy, LNewCapacity);
-  for I := 0 to FElementCount - 1 do
-    LCopy[I] := FElements[I];
+  for LI := 0 to FElementCount - 1 do
+    LCopy[LI] := FElements[LI];
 
   FElements := LCopy;
   FCopyOnWrite := False;

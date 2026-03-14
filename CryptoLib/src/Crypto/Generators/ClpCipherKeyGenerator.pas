@@ -70,7 +70,7 @@ type
     /// <summary>
     /// initialise the key generator.
     /// </summary>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the parameters to be used for key generation
     /// </param>
     procedure Init(const AParameters: IKeyGenerationParameters);

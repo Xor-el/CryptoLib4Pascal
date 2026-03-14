@@ -113,14 +113,14 @@ type
     /// <summary>
     /// initialise the key generator.
     /// </summary>
-    /// <param name="size">
+    /// <param name="ASize">
     /// size of the key (range 2^512 -&amp;gt; 2^1024 - 64 bit increments)
     /// </param>
-    /// <param name="certainty">
+    /// <param name="ACertainty">
     /// measure of robustness of prime (for FIPS 186-2 compliance this should
     /// be at least 80).
     /// </param>
-    /// <param name="random">
+    /// <param name="ARandom">
     /// random byte source.
     /// </param>
     procedure Init(ASize, ACertainty: Int32;
@@ -129,17 +129,17 @@ type
     /// <summary>
     /// initialise the key generator.
     /// </summary>
-    /// <param name="size">
+    /// <param name="ASize">
     /// size of the key (range 2^512 -&amp;gt; 2^1024 - 64 bit increments)
     /// </param>
-    /// <param name="certainty">
+    /// <param name="ACertainty">
     /// measure of robustness of prime (for FIPS 186-2 compliance this should
     /// be at least 80).
     /// </param>
-    /// <param name="iterations">
+    /// <param name="AIterations">
     /// iterations
     /// </param>
-    /// <param name="random">
+    /// <param name="ARandom">
     /// random byte source.
     /// </param>
     procedure Init(ASize, ACertainty, AIterations: Int32;
@@ -154,7 +154,7 @@ type
     /// keys.
     /// </para>
     /// </summary>
-    /// <param name="params">
+    /// <param name="AParams">
     /// DSA 2 key generation parameters.
     /// </param>
     procedure Init(const AParams: IDsaParameterGenerationParameters); overload;
@@ -235,7 +235,7 @@ end;
 class function TDsaParametersGenerator.IsValidDsaStrength
   (AStrength: Int32): Boolean;
 begin
-  // result := (AStrength >= 512) and (AStrength <= 1024) and ((AStrength mod 64) = 0);
+  // Result := (AStrength >= 512) and (AStrength <= 1024) and ((AStrength mod 64) = 0);
   Result := (AStrength >= 512) and (AStrength <= 1024) and
     ((AStrength and 63) = 0);
 end;

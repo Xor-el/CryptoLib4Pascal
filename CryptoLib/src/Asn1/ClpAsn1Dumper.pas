@@ -77,18 +77,18 @@ implementation
 class procedure TAsn1Dumper.AppendAscString(const ABuf: TStringBuilder;
   const ABytes: TCryptoLibByteArray; AOff, ALen: Int32);
 var
-  I: Int32;
+  LI: Int32;
   C: Char;
 begin
-  I := AOff;
-  while I <> AOff + ALen do
+  LI := AOff;
+  while LI <> AOff + ALen do
   begin
-    C := Char(ABytes[I]);
+    C := Char(ABytes[LI]);
     if (C >= ' ') and (C <= '~') then
     begin
       ABuf.Append(C);
     end;
-    System.Inc(I);
+    System.Inc(LI);
   end;
 end;
 
@@ -125,7 +125,7 @@ var
   LDLSet: IDLSet;
   LDLTaggedObject: IDLTaggedObject;
   LDLBitString: IDLBitString;
-  I, LCount: Int32;
+  LI, LCount: Int32;
   LElementsIndent, LBaseIndent, LTab: String;
 begin
   ABuf.Append(AIndent);
@@ -151,9 +151,9 @@ begin
 
     LElementsIndent := AIndent + Tab;
     LCount := LSequence.Count;
-    for I := 0 to LCount - 1 do
+    for LI := 0 to LCount - 1 do
     begin
-      AsString(LElementsIndent, AVerbose, LSequence[I].ToAsn1Object(), ABuf);
+      AsString(LElementsIndent, AVerbose, LSequence[LI].ToAsn1Object(), ABuf);
     end;
   end
   else if Supports(AObj, IAsn1Set, LSet) then
@@ -173,9 +173,9 @@ begin
 
     LElementsIndent := AIndent + Tab;
     LCount := LSet.Count;
-    for I := 0 to LCount - 1 do
+    for LI := 0 to LCount - 1 do
     begin
-      AsString(LElementsIndent, AVerbose, LSet[I].ToAsn1Object(), ABuf);
+      AsString(LElementsIndent, AVerbose, LSet[LI].ToAsn1Object(), ABuf);
     end;
   end
   else if Supports(AObj, IAsn1TaggedObject, LTaggedObject) then
@@ -338,7 +338,7 @@ end;
 class procedure TAsn1Dumper.DumpBinaryDataAsString(const ABuf: TStringBuilder;
   const AIndent: String; const ABytes: TCryptoLibByteArray);
 var
-  I, LRemaining, LChunk, J: Int32;
+  LI, LRemaining, LChunk, LJ: Int32;
   LIndent: String;
 begin
   if System.Length(ABytes) < 1 then
@@ -346,24 +346,24 @@ begin
 
   LIndent := AIndent + Tab;
 
-  I := 0;
-  while I < System.Length(ABytes) do
+  LI := 0;
+  while LI < System.Length(ABytes) do
   begin
-    LRemaining := System.Length(ABytes) - I;
+    LRemaining := System.Length(ABytes) - LI;
     LChunk := Math.Min(LRemaining, SampleSize);
 
     ABuf.Append(LIndent);
-    ABuf.Append(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(ABytes, I, I + LChunk)));
-    J := LChunk;
-    while J < SampleSize do
+    ABuf.Append(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(ABytes, LI, LI + LChunk)));
+    LJ := LChunk;
+    while LJ < SampleSize do
     begin
       ABuf.Append('  ');
-      System.Inc(J);
+      System.Inc(LJ);
     end;
     ABuf.Append(Tab);
-    AppendAscString(ABuf, ABytes, I, LChunk);
+    AppendAscString(ABuf, ABytes, LI, LChunk);
     ABuf.AppendLine();
-    System.Inc(I, SampleSize);
+    System.Inc(LI, SampleSize);
   end;
 end;
 

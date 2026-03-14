@@ -61,13 +61,13 @@ type
     /// Generates parameters for HKDF, specifying both the optional salt and <br />
     /// optional info. Step 1: Extract won't be skipped.
     /// </summary>
-    /// <param name="ikm">
+    /// <param name="AIkm">
     /// the input keying material or seed
     /// </param>
-    /// <param name="salt">
+    /// <param name="ASalt">
     /// the salt to use, may be null for a salt for hashLen zeros
     /// </param>
-    /// <param name="info">
+    /// <param name="AInfo">
     /// the info to use, may be null for an info field of zero bytes
     /// </param>
     constructor Create(const AIkm, ASalt, AInfo: TCryptoLibByteArray); overload;
@@ -110,10 +110,10 @@ type
     /// Factory method that makes the HKDF skip the extract part of the key <br />
     /// derivation function.
     /// </summary>
-    /// <param name="ikm">
+    /// <param name="AIkm">
     /// the input keying material or seed, directly used for step 2: Expand
     /// </param>
-    /// <param name="info">
+    /// <param name="AInfo">
     /// the info to use, may be null for an info field of zero bytes
     /// </param>
     /// <returns>

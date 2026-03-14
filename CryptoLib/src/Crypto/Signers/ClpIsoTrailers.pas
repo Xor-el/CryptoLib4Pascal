@@ -60,17 +60,17 @@ type
     /// <summary>
     /// Get the trailer value for the specified digest.
     /// </summary>
-    /// <param name="digest">The digest to get the trailer for.</param>
+    /// <param name="ADigest">The digest to get the trailer for.</param>
     /// <returns>The trailer value.</returns>
     /// <exception cref="EInvalidOperationCryptoLibException">If no trailer is available for the digest.</exception>
-    class function GetTrailer(const digest: IDigest): Int32; static;
+    class function GetTrailer(const ADigest: IDigest): Int32; static;
 
     /// <summary>
     /// Check if a trailer is available for the specified digest.
     /// </summary>
-    /// <param name="digest">The digest to check.</param>
+    /// <param name="ADigest">The digest to check.</param>
     /// <returns>True if no trailer is available, False otherwise.</returns>
-    class function NoTrailerAvailable(const digest: IDigest): Boolean; static;
+    class function NoTrailerAvailable(const ADigest: IDigest): Boolean; static;
 
   end;
 
@@ -106,11 +106,11 @@ begin
   FTrailerMap.Free;
 end;
 
-class function TIsoTrailers.GetTrailer(const digest: IDigest): Int32;
+class function TIsoTrailers.GetTrailer(const ADigest: IDigest): Int32;
 var
   LTrailer: Int32;
 begin
-  if FTrailerMap.TryGetValue(digest.AlgorithmName, LTrailer) then
+  if FTrailerMap.TryGetValue(ADigest.AlgorithmName, LTrailer) then
   begin
     Result := LTrailer;
   end
@@ -120,9 +120,9 @@ begin
   end;
 end;
 
-class function TIsoTrailers.NoTrailerAvailable(const digest: IDigest): Boolean;
+class function TIsoTrailers.NoTrailerAvailable(const ADigest: IDigest): Boolean;
 begin
-  Result := not FTrailerMap.ContainsKey(digest.AlgorithmName);
+  Result := not FTrailerMap.ContainsKey(ADigest.AlgorithmName);
 end;
 
 end.

@@ -361,7 +361,7 @@ end;
 
 class procedure TDerGenerator.WriteLength(const AOutStr: TStream; ALength: Int32);
 var
-  LSize, LVal, I: Int32;
+  LSize, LVal, LI: Int32;
 begin
   if ALength > 127 then
   begin
@@ -374,11 +374,11 @@ begin
       LVal := TBitOperations.Asr32(LVal, 8);
     end;
     AOutStr.WriteByte(Byte(LSize or $80));
-    I := (LSize - 1) * 8;
-    while I >= 0 do
+    LI := (LSize - 1) * 8;
+    while LI >= 0 do
     begin
-      AOutStr.WriteByte(Byte(TBitOperations.Asr32(ALength, I)));
-      System.Dec(I, 8);
+      AOutStr.WriteByte(Byte(TBitOperations.Asr32(ALength, LI)));
+      System.Dec(LI, 8);
     end;
   end
   else

@@ -518,11 +518,11 @@ end;
 
 function TBaseOutputStream.Write(const ABuffer; ACount: LongInt): LongInt;
 var
-  I: Int32;
+  LI: Int32;
   LBuffer: PByte;
 begin
   LBuffer := PByte(@ABuffer);
-  for I := 0 to ACount - 1 do
+  for LI := 0 to ACount - 1 do
   begin
     WriteByte(LBuffer^);
     System.Inc(LBuffer);

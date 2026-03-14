@@ -238,7 +238,7 @@ var
   LParameters: IAsn1Encodable;
   LKeyUsageBits: IDerBitString;
   LKeyUsageBytes: TCryptoLibByteArray;
-  LLength, I: Int32;
+  LLength, LI: Int32;
 begin
   inherited Create();
   if ACertificate = nil then
@@ -278,9 +278,9 @@ begin
       if LLength < 9 then
         LLength := 9;
       System.SetLength(FKeyUsage, LLength);
-      for I := 0 to LLength - 1 do
+      for LI := 0 to LLength - 1 do
       begin
-        FKeyUsage[I] := (LKeyUsageBytes[I div 8] and ($80 shr (I mod 8))) <> 0;
+        FKeyUsage[LI] := (LKeyUsageBytes[LI div 8] and ($80 shr (LI mod 8))) <> 0;
       end;
     end
     else
@@ -432,7 +432,7 @@ function TX509Certificate.GetExtendedKeyUsage: TCryptoLibGenericArray<IDerObject
 var
   LSeq: IAsn1Sequence;
   LResult: TList<IDerObjectIdentifier>;
-  I: Int32;
+  LI: Int32;
 begin
   try
     LSeq := TX509ExtensionUtilities.GetExtension<IAsn1Sequence>(GetX509Extensions(),
@@ -446,9 +446,9 @@ begin
 
     LResult := TList<IDerObjectIdentifier>.Create();
     try
-      for I := 0 to LSeq.Count - 1 do
+      for LI := 0 to LSeq.Count - 1 do
       begin
-        LResult.Add(TDerObjectIdentifier.GetInstance(LSeq[I]));
+        LResult.Add(TDerObjectIdentifier.GetInstance(LSeq[LI]));
       end;
       Result := LResult.ToArray();
     finally
@@ -509,7 +509,7 @@ var
   LResult: TList<TCryptoLibTValueArray>;
   LEntry: TList<TValue>;
   LGn: IGeneralName;
-  I: Int32;
+  LI: Int32;
   LName: IAsn1Encodable;
   LAsn1String: IAsn1String;
   LNameObj: IX509Name;
@@ -527,9 +527,9 @@ begin
   LGns := LGeneralNames.GetNames();
   LResult := TList<TCryptoLibTValueArray>.Create();
   try
-    for I := 0 to System.Length(LGns) - 1 do
+    for LI := 0 to System.Length(LGns) - 1 do
     begin
-      LGn := LGns[I];
+      LGn := LGns[LI];
       LEntry := TList<TValue>.Create();
       try
         LEntry.Add(TValue.From<Int32>(LGn.TagNo));
@@ -584,7 +584,7 @@ end;
 
 function TX509Certificate.IPAddressToString(const AAddrBytes: TCryptoLibByteArray): String;
 var
-  I: Int32;
+  LI: Int32;
   LAddr: String;
   LWord: Word;
 begin
@@ -592,9 +592,9 @@ begin
   begin
     // IPv4
     LAddr := IntToStr(AAddrBytes[0] and $FF);
-    for I := 1 to 3 do
+    for LI := 1 to 3 do
     begin
-      LAddr := LAddr + '.' + IntToStr(AAddrBytes[I] and $FF);
+      LAddr := LAddr + '.' + IntToStr(AAddrBytes[LI] and $FF);
     end;
     Result := LAddr;
   end
@@ -603,9 +603,9 @@ begin
     // IPv6 - format as 8 groups of 4 hex digits
     LWord := (AAddrBytes[0] shl 8) or AAddrBytes[1];
     LAddr := IntToHex(LWord, 4);
-    for I := 1 to 7 do
+    for LI := 1 to 7 do
     begin
-      LWord := (AAddrBytes[I * 2] shl 8) or AAddrBytes[I * 2 + 1];
+      LWord := (AAddrBytes[LI * 2] shl 8) or AAddrBytes[LI * 2 + 1];
       LAddr := LAddr + ':' + IntToHex(LWord, 4);
     end;
     Result := LAddr;
@@ -734,7 +734,7 @@ function TX509Certificate.ToString: String;
 var
   LBuf: TStringBuilder;
   LSig: TCryptoLibByteArray;
-  I, LLen: Int32;
+  LI, LLen: Int32;
   LExtensions: IX509Extensions;
   LOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
   LExt: IX509Extension;
@@ -756,12 +756,12 @@ begin
     LLen := Math.Min(20, System.Length(LSig));
     LBuf.Append('            Signature: ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, 0, LLen)));
 
-    I := 20;
-    while I < System.Length(LSig) do
+    LI := 20;
+    while LI < System.Length(LSig) do
     begin
-      LLen := Math.Min(20, System.Length(LSig) - I);
-      LBuf.Append('                       ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, I, I + LLen)));
-      System.Inc(I, 20);
+      LLen := Math.Min(20, System.Length(LSig) - LI);
+      LBuf.Append('                       ').AppendLine(THexEncoder.Encode(TArrayUtilities.CopyOfRange<Byte>(LSig, LI, LI + LLen)));
+      System.Inc(LI, 20);
     end;
 
     LExtensions := FCertificateStructure.Extensions;
@@ -839,7 +839,7 @@ var
   LVerifier: IVerifierFactory;
   LTbsSeq: IAsn1Sequence;
   LV: IAsn1EncodableVector;
-  I: Int32;
+  LI: Int32;
   LTagged: IDerTaggedObject;
 begin
   LTbsCertificate := FCertificateStructure.TbsCertificate;
@@ -853,11 +853,11 @@ begin
   LTbsSeq := TAsn1Sequence.GetInstance(LTbsCertificate.ToAsn1Object());
   LV := TAsn1EncodableVector.Create();
 
-  for I := 0 to LTbsSeq.Count - 2 do
+  for LI := 0 to LTbsSeq.Count - 2 do
   begin
-    if I <> 2 then // signature field - must be ver 3 so version always present
+    if LI <> 2 then // signature field - must be ver 3 so version always present
     begin
-      LV.Add(LTbsSeq[I]);
+      LV.Add(LTbsSeq[LI]);
     end;
   end;
 

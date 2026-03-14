@@ -98,9 +98,15 @@ var
   LRParam: IParametersWithRandom;
 begin
   if Supports(AParameters, IParametersWithRandom, LRParam) then
-    LP := LRParam.Parameters as IRsaBlindingParameters
+  begin
+    if not Supports(LRParam.Parameters, IRsaBlindingParameters, LP) then
+      raise EArgumentCryptoLibException.Create('Parameters must support IRsaBlindingParameters');
+  end
   else
-    LP := AParameters as IRsaBlindingParameters;
+  begin
+    if not Supports(AParameters, IRsaBlindingParameters, LP) then
+      raise EArgumentCryptoLibException.Create('Parameters must support IRsaBlindingParameters');
+  end;
 
   FCore.Init(AForEncryption, LP.PublicKey);
 

@@ -34,7 +34,7 @@ type
   IDerivationFunction = interface(IInterface)
     ['{A9DA624C-A58E-4588-9EA0-81BA5B13E47E}']
 
-    procedure Init(const parameters: IDerivationParameters);
+    procedure Init(const AParameters: IDerivationParameters);
 
     function GetDigest(): IDigest;
 
@@ -45,8 +45,8 @@ type
 
     /// <exception cref="EDataLengthCryptoLibException" />
     /// <exception cref="EArgumentCryptoLibException" />
-    function GenerateBytes(const output: TCryptoLibByteArray;
-      outOff, length: Int32): Int32;
+    function GenerateBytes(const AOutput: TCryptoLibByteArray;
+      AOutOff, ALength: Int32): Int32;
 
   end;
 

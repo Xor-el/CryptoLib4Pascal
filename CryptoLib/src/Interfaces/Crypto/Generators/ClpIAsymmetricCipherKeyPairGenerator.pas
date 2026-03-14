@@ -34,7 +34,7 @@ type
     // *
     // * @param the parameters the key pair is to be initialised with.
     // */
-    procedure Init(const parameters: IKeyGenerationParameters);
+    procedure Init(const AParameters: IKeyGenerationParameters);
 
     // /**
     // * return an AsymmetricCipherKeyPair containing the Generated keys.

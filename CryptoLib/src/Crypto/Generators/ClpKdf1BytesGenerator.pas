@@ -44,7 +44,7 @@ type
     /// <summary>
     /// Construct a KDF1 bytes generator.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// the digest to be used as the source of derived keys.
     /// </param>
     constructor Create(const ADigest: IDigest);

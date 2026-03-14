@@ -375,7 +375,7 @@ end;
 
 function TECPoint.GetZCoords: TCryptoLibGenericArray<IECFieldElement>;
 var
-  LZsLen, I: Int32;
+  LZsLen, LI: Int32;
 begin
   LZsLen := System.Length(FZs);
   if LZsLen = 0 then
@@ -383,8 +383,8 @@ begin
   else
   begin
     SetLength(Result, LZsLen);
-    for I := 0 to System.Pred(LZsLen) do
-      Result[I] := FZs[I];
+    for LI := 0 to System.Pred(LZsLen) do
+      Result[LI] := FZs[LI];
   end;
 end;
 
@@ -799,14 +799,14 @@ end;
 
 function TECPoint.ToString: String;
 var
-  I: Int32;
+  LI: Int32;
 begin
   if IsInfinity then
     Exit('INF');
 
   Result := '(' + RawXCoord.ToString() + ',' + RawYCoord.ToString();
-  for I := 0 to System.High(FZs) do
-    Result := Result + ',' + FZs[I].ToString();
+  for LI := 0 to System.High(FZs) do
+    Result := Result + ',' + FZs[LI].ToString();
   Result := Result + ')';
 end;
 
@@ -1432,7 +1432,7 @@ end;
 function TFpPoint.TimesPow2(AE: Int32): IECPoint;
 var
   LCurve: IECCurve;
-  LCoord, I: Int32;
+  LCoord, LI: Int32;
   Y1, X1, Z1, W1: IECFieldElement;
   LZ1Sq: IECFieldElement;
   X1Squared, LM, L2Y1, L2Y1Squared, LS, L4T, L8T: IECFieldElement;
@@ -1481,7 +1481,7 @@ begin
     end;
   end;
 
-  for I := 0 to AE - 1 do
+  for LI := 0 to AE - 1 do
   begin
     if Y1.IsZero then
       Exit(LCurve.Infinity);

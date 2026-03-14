@@ -103,7 +103,7 @@ function TX509CrlEntry.LoadCertificateIssuer: IX509Name;
 var
   LCertificateIssuer: IGeneralNames;
   LNames: TCryptoLibGenericArray<IGeneralName>;
-  I: Int32;
+  LI: Int32;
   LObj: IAsn1Object;
 begin
   if not FIsIndirect then
@@ -124,10 +124,10 @@ begin
     if LCertificateIssuer <> nil then
     begin
       LNames := LCertificateIssuer.GetNames;
-      for I := 0 to System.High(LNames) do
-        if LNames[I].TagNo = TGeneralName.DirectoryName then
+      for LI := 0 to System.High(LNames) do
+        if LNames[LI].TagNo = TGeneralName.DirectoryName then
         begin
-          Result := TX509Name.GetInstance(LNames[I].Name);
+          Result := TX509Name.GetInstance(LNames[LI].Name);
           Exit;
         end;
     end;
@@ -220,7 +220,7 @@ var
   LBuf: TStringBuilder;
   LExtensions: IX509Extensions;
   LOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
-  I: Int32;
+  LI: Int32;
   LOid: IDerObjectIdentifier;
   LExt: IX509Extension;
   LObj: IAsn1Object;
@@ -243,9 +243,9 @@ begin
       if System.Length(LOids) > 0 then
       begin
         LBuf.AppendLine('   crlEntryExtensions:');
-        for I := 0 to System.High(LOids) do
+        for LI := 0 to System.High(LOids) do
         begin
-          LOid := LOids[I];
+          LOid := LOids[LI];
           LExt := LExtensions.GetExtension(LOid);
           if (LExt <> nil) and (LExt.Value <> nil) then
           begin

@@ -293,7 +293,7 @@ uses
 
 class procedure TBigInteger.Boot;
 var
-  I, J, LProduct: Int32;
+  LI, LJ, LProduct: Int32;
   LPrimeList: TCryptoLibInt32Array;
   LSmallConstant: TBigInteger;
   LZeroMagnitude: TCryptoLibUInt32Array;
@@ -310,12 +310,12 @@ begin
   FSmallConstants[0] := FZero;
 
   // Initialize small constants 1-16
-  for I := 1 to 16 do
+  for LI := 1 to 16 do
   begin
-    LSmallConstant := CreateUValueOf(UInt32(I));
-    LSmallConstant.FNBits := PopCount(UInt32(I));
-    LSmallConstant.FNBitLength := BitLen(UInt32(I));
-    FSmallConstants[I] := LSmallConstant;
+    LSmallConstant := CreateUValueOf(UInt32(LI));
+    LSmallConstant.FNBits := PopCount(UInt32(LI));
+    LSmallConstant.FNBitLength := BitLen(UInt32(LI));
+    FSmallConstants[LI] := LSmallConstant;
   end;
 
   // Set named constants
@@ -409,15 +409,15 @@ begin
 
   // Initialize PrimeProducts
   System.SetLength(FPrimeProducts, System.Length(FPrimeLists));
-  for I := 0 to System.Pred(System.Length(FPrimeLists)) do
+  for LI := 0 to System.Pred(System.Length(FPrimeLists)) do
   begin
-    LPrimeList := FPrimeLists[I];
+    LPrimeList := FPrimeLists[LI];
     LProduct := LPrimeList[0];
-    for J := 1 to System.Pred(System.Length(LPrimeList)) do
+    for LJ := 1 to System.Pred(System.Length(LPrimeList)) do
     begin
-      LProduct := LProduct * LPrimeList[J];
+      LProduct := LProduct * LPrimeList[LJ];
     end;
-    FPrimeProducts[I] := LProduct;
+    FPrimeProducts[LI] := LProduct;
   end;
 end;
 
@@ -567,16 +567,16 @@ end;
 
 class function TBigInteger.IsEqualMagnitude(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array): Boolean;
 var
-  I: Int32;
+  LI: Int32;
 begin
   if System.Length(AX) <> System.Length(AY) then
   begin
     Result := False;
     Exit;
   end;
-  for I := 0 to System.Pred(System.Length(AX)) do
+  for LI := 0 to System.Pred(System.Length(AX)) do
   begin
-    if AX[I] <> AY[I] then
+    if AX[LI] <> AY[LI] then
     begin
       Result := False;
       Exit;
@@ -614,7 +614,7 @@ end;
 
 class function TBigInteger.MakeMagnitudeLE(const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32): TCryptoLibUInt32Array;
 var
-  LLast, LNInts, LPartial, LFirst, LPos, I: Int32;
+  LLast, LNInts, LPartial, LFirst, LPos, LI: Int32;
   LMagnitude: TCryptoLibUInt32Array;
 begin
   // strip leading zeros (from the end in little-endian)
@@ -637,10 +637,10 @@ begin
 
   LMagnitude[0] := TPack.LE_To_UInt32_Low(ABytes, LPos, LFirst);
 
-  for I := 1 to System.Pred(LNInts) do
+  for LI := 1 to System.Pred(LNInts) do
   begin
     LPos := LPos - BytesPerInt;
-    LMagnitude[I] := TPack.LE_To_UInt32(ABytes, LPos);
+    LMagnitude[LI] := TPack.LE_To_UInt32(ABytes, LPos);
   end;
   Result := LMagnitude;
 end;
@@ -813,7 +813,7 @@ end;
 
 class function TBigInteger.ShiftLeft(const AMag: TCryptoLibUInt32Array; const AN: Int32): TCryptoLibUInt32Array;
 var
-  LNInts, LNBits, LNBits2, LMagLen, I, J: Int32;
+  LNInts, LNBits, LNBits2, LMagLen, LI, LJ: Int32;
   LNewMag: TCryptoLibUInt32Array;
   LM, LNext, LHighBits: UInt32;
 begin
@@ -829,55 +829,55 @@ begin
   end
   else
   begin
-    I := 0;
+    LI := 0;
     LNBits2 := 32 - LNBits;
     LHighBits := AMag[0] shr LNBits2;
     if LHighBits <> 0 then
     begin
       System.SetLength(LNewMag, LMagLen + LNInts + 1);
-      LNewMag[I] := LHighBits;
-      System.Inc(I);
+      LNewMag[LI] := LHighBits;
+      System.Inc(LI);
     end
     else
     begin
       System.SetLength(LNewMag, LMagLen + LNInts);
     end;
     LM := AMag[0];
-    for J := 0 to System.Pred(LMagLen - 1) do
+    for LJ := 0 to System.Pred(LMagLen - 1) do
     begin
-      LNext := AMag[J + 1];
-      LNewMag[I] := (LM shl LNBits) or (LNext shr LNBits2);
+      LNext := AMag[LJ + 1];
+      LNewMag[LI] := (LM shl LNBits) or (LNext shr LNBits2);
       LM := LNext;
-      System.Inc(I);
+      System.Inc(LI);
     end;
-    LNewMag[I] := AMag[LMagLen - 1] shl LNBits;
+    LNewMag[LI] := AMag[LMagLen - 1] shl LNBits;
   end;
   Result := LNewMag;
 end;
 
 class function TBigInteger.Multiply(var AX: TCryptoLibUInt32Array; const AY, AZ: TCryptoLibUInt32Array): TCryptoLibUInt32Array;
 var
-  I, J, LXBase: Int32;
+  LI, LJ, LXBase: Int32;
   LA: Int64;
   LVal: Int64;
 begin
-  I := System.Length(AZ);
-  if I < 1 then
+  LI := System.Length(AZ);
+  if LI < 1 then
   begin
     Result := AX;
     Exit;
   end;
   LXBase := System.Length(AX) - System.Length(AY);
   repeat
-    System.Dec(I);
-    LA := Int64(AZ[I]) and IMASK;
+    System.Dec(LI);
+    LA := Int64(AZ[LI]) and IMASK;
     LVal := 0;
     if LA <> 0 then
     begin
-      for J := System.Length(AY) - 1 downto 0 do
+      for LJ := System.Length(AY) - 1 downto 0 do
       begin
-        LVal := LVal + LA * Int64(AY[J] and UIMASK) + Int64(AX[LXBase + J] and UIMASK);
-        AX[LXBase + J] := UInt32(LVal);
+        LVal := LVal + LA * Int64(AY[LJ] and UIMASK) + Int64(AX[LXBase + LJ] and UIMASK);
+        AX[LXBase + LJ] := UInt32(LVal);
         LVal := Int64(UInt64(LVal) shr 32);
       end;
     end;
@@ -892,26 +892,26 @@ begin
       System.Assert(LVal = 0);
 {$ENDIF DEBUG}
     end;
-  until I <= 0;
+  until LI <= 0;
   Result := AX;
 end;
 
 class function TBigInteger.Square(var AW: TCryptoLibUInt32Array; const AX: TCryptoLibUInt32Array): TCryptoLibUInt32Array;
 var
-  I, J, LWBase: Int32;
+  LI, LJ, LWBase: Int32;
   LC: UInt64;
   LV, LProd: UInt64;
 begin
   LWBase := System.Length(AW) - 1;
-  for I := System.Length(AX) - 1 downto 1 do
+  for LI := System.Length(AX) - 1 downto 1 do
   begin
-    LV := AX[I];
+    LV := AX[LI];
     LC := LV * LV + AW[LWBase];
     AW[LWBase] := UInt32(LC);
     LC := LC shr 32;
-    for J := I - 1 downto 0 do
+    for LJ := LI - 1 downto 0 do
     begin
-      LProd := LV * AX[J];
+      LProd := LV * AX[LJ];
       System.Dec(LWBase);
       LC := LC + (AW[LWBase] and UIMASK) + (UInt32(LProd) shl 1);
       AW[LWBase] := UInt32(LC);
@@ -933,7 +933,7 @@ begin
       System.Assert((LC shr 32) = 0);
 {$ENDIF DEBUG}
     end;
-    LWBase := LWBase + I;
+    LWBase := LWBase + LI;
   end;
   LV := AX[0];
   LC := LV * LV + AW[LWBase];
@@ -960,25 +960,25 @@ end;
 
 class procedure TBigInteger.ShiftRightOneInPlace(const AStart: Int32; var AMag: TCryptoLibUInt32Array);
 var
-  I: Int32;
+  LI: Int32;
   LM, LNext: UInt32;
 begin
-  I := System.Length(AMag);
-  LM := AMag[I - 1];
-  System.Dec(I);
-  while I > AStart do
+  LI := System.Length(AMag);
+  LM := AMag[LI - 1];
+  System.Dec(LI);
+  while LI > AStart do
   begin
-    LNext := AMag[I - 1];
-    AMag[I] := (LM shr 1) or (LNext shl 31);
+    LNext := AMag[LI - 1];
+    AMag[LI] := (LM shr 1) or (LNext shl 31);
     LM := LNext;
-    System.Dec(I);
+    System.Dec(LI);
   end;
   AMag[AStart] := AMag[AStart] shr 1;
 end;
 
 class procedure TBigInteger.ShiftRightInPlace(const AStart: Int32; var AMag: TCryptoLibUInt32Array; const AN: Int32);
 var
-  LNInts, LNBits, LMagEnd, LDelta, I: Int32;
+  LNInts, LNBits, LMagEnd, LDelta, LI: Int32;
   LNBits2: Int32;
   LM, LNext: UInt32;
 begin
@@ -988,9 +988,9 @@ begin
   if LNInts <> AStart then
   begin
     LDelta := LNInts - AStart;
-    for I := LMagEnd downto LNInts do
+    for LI := LMagEnd downto LNInts do
     begin
-      AMag[I] := AMag[I - LDelta];
+      AMag[LI] := AMag[LI - LDelta];
     end;
     TArrayUtilities.Fill<UInt32>(AMag, AStart, LNInts, UInt32(0));
   end;
@@ -998,10 +998,10 @@ begin
   begin
     LNBits2 := 32 - LNBits;
     LM := AMag[LMagEnd];
-    for I := LMagEnd downto LNInts + 1 do
+    for LI := LMagEnd downto LNInts + 1 do
     begin
-      LNext := AMag[I - 1];
-      AMag[I] := (LM shr LNBits) or (LNext shl LNBits2);
+      LNext := AMag[LI - 1];
+      AMag[LI] := (LM shr LNBits) or (LNext shl LNBits2);
       LM := LNext;
     end;
     AMag[LNInts] := AMag[LNInts] shr LNBits;
@@ -1325,7 +1325,7 @@ end;
 
 function TBigInteger.GetBitCount: Int32;
 var
-  I: Int32;
+  LI: Int32;
   LSum: Int32;
 begin
   if FNBits = -1 then
@@ -1338,9 +1338,9 @@ begin
     else
     begin
       LSum := 0;
-      for I := 0 to System.Pred(System.Length(FMagnitude)) do
+      for LI := 0 to System.Pred(System.Length(FMagnitude)) do
       begin
-        LSum := LSum + PopCount(FMagnitude[I]);
+        LSum := LSum + PopCount(FMagnitude[LI]);
       end;
       FNBits := LSum;
     end;
@@ -1614,7 +1614,7 @@ end;
 
 constructor TBigInteger.Create(const ABitLength, ACertainty: Int32; const ARandom: IRandom);
 var
-  LNBytes, LXBits, J: Int32;
+  LNBytes, LXBits, LJ: Int32;
   LMask, LLead: Byte;
   LB: TCryptoLibByteArray;
 begin
@@ -1661,9 +1661,9 @@ begin
       Break;
 
     // If failed, try to perturb the internal words
-    for J := 1 to System.Pred(System.Length(FMagnitude) - 1) do
+    for LJ := 1 to System.Pred(System.Length(FMagnitude) - 1) do
     begin
-      FMagnitude[J] := FMagnitude[J] xor UInt32(ARandom.Next());
+      FMagnitude[LJ] := FMagnitude[LJ] xor UInt32(ARandom.Next());
       if CheckProbablePrime(ACertainty, ARandom, True) then
         Exit;
     end;
@@ -1672,7 +1672,7 @@ end;
 
 constructor TBigInteger.Create(const ASignum: Int32; const AMag: TCryptoLibUInt32Array; const ACheckMag: Boolean);
 var
-  I: Int32;
+  LI: Int32;
   LZeroMagnitude: TCryptoLibUInt32Array;
 begin
   if not ACheckMag then
@@ -1684,12 +1684,12 @@ begin
     FIsInitialized := True;
     Exit;
   end;
-  I := 0;
-  while (I < System.Length(AMag)) and (AMag[I] = 0) do
+  LI := 0;
+  while (LI < System.Length(AMag)) and (AMag[LI] = 0) do
   begin
-    System.Inc(I);
+    System.Inc(LI);
   end;
-  if I = System.Length(AMag) then
+  if LI = System.Length(AMag) then
   begin
     FSign := 0;
     System.SetLength(LZeroMagnitude, 0);
@@ -1698,15 +1698,15 @@ begin
   else
   begin
     FSign := ASignum;
-    if I = 0 then
+    if LI = 0 then
     begin
       FMagnitude := AMag;
     end
     else
     begin
       // strip leading 0 words
-      System.SetLength(FMagnitude, System.Length(AMag) - I);
-      System.Move(AMag[I], FMagnitude[0], System.Length(FMagnitude) * System.SizeOf(UInt32));
+      System.SetLength(FMagnitude, System.Length(AMag) - LI);
+      System.Move(AMag[LI], FMagnitude[0], System.Length(FMagnitude) * System.SizeOf(UInt32));
     end;
   end;
   FNBits := -1;
@@ -2291,7 +2291,7 @@ end;
 
 function TBigInteger.ShiftRight(const AN: Int32): TBigInteger;
 var
-  LResultLength, LNInts, LNBits, LNBits2, LMagPos, I: Int32;
+  LResultLength, LNInts, LNBits, LNBits2, LMagPos, LI: Int32;
   LRes: TCryptoLibUInt32Array;
 begin
   if AN = 0 then
@@ -2324,13 +2324,13 @@ begin
   begin
     LNBits2 := 32 - LNBits;
     LMagPos := System.Length(FMagnitude) - 1 - LNInts;
-    for I := LResultLength - 1 downto 0 do
+    for LI := LResultLength - 1 downto 0 do
     begin
-      LRes[I] := FMagnitude[LMagPos] shr LNBits;
+      LRes[LI] := FMagnitude[LMagPos] shr LNBits;
       System.Dec(LMagPos);
       if LMagPos >= 0 then
       begin
-        LRes[I] := LRes[I] or (FMagnitude[LMagPos] shl LNBits2);
+        LRes[LI] := LRes[LI] or (FMagnitude[LMagPos] shl LNBits2);
       end;
     end;
   end;
@@ -2344,7 +2344,7 @@ function TBigInteger.&And(const AValue: TBigInteger): TBigInteger;
 var
   LAMag, LBMag: TCryptoLibUInt32Array;
   LResultNeg: Boolean;
-  LResultLength, LAStart, LBStart, I: Int32;
+  LResultLength, LAStart, LBStart, LI: Int32;
   LAWord, LBWord: UInt32;
   LResultMag: TCryptoLibUInt32Array;
 begin
@@ -2366,23 +2366,23 @@ begin
   System.SetLength(LResultMag, LResultLength);
   LAStart := LResultLength - System.Length(LAMag);
   LBStart := LResultLength - System.Length(LBMag);
-  for I := 0 to System.Pred(LResultLength) do
+  for LI := 0 to System.Pred(LResultLength) do
   begin
-    if I >= LAStart then
-      LAWord := LAMag[I - LAStart]
+    if LI >= LAStart then
+      LAWord := LAMag[LI - LAStart]
     else
       LAWord := 0;
-    if I >= LBStart then
-      LBWord := LBMag[I - LBStart]
+    if LI >= LBStart then
+      LBWord := LBMag[LI - LBStart]
     else
       LBWord := 0;
     if FSign < 0 then
       LAWord := not LAWord;
     if AValue.FSign < 0 then
       LBWord := not LBWord;
-    LResultMag[I] := LAWord and LBWord;
+    LResultMag[LI] := LAWord and LBWord;
     if LResultNeg then
-      LResultMag[I] := not LResultMag[I];
+      LResultMag[LI] := not LResultMag[LI];
   end;
   Result := TBigInteger.Create(1, LResultMag, True);
   if LResultNeg then
@@ -2393,7 +2393,7 @@ function TBigInteger.&Or(const AValue: TBigInteger): TBigInteger;
 var
   LAMag, LBMag: TCryptoLibUInt32Array;
   LResultNeg: Boolean;
-  LResultLength, LAStart, LBStart, I: Int32;
+  LResultLength, LAStart, LBStart, LI: Int32;
   LAWord, LBWord: UInt32;
   LResultMag: TCryptoLibUInt32Array;
 begin
@@ -2420,23 +2420,23 @@ begin
   System.SetLength(LResultMag, LResultLength);
   LAStart := LResultLength - System.Length(LAMag);
   LBStart := LResultLength - System.Length(LBMag);
-  for I := 0 to System.Pred(LResultLength) do
+  for LI := 0 to System.Pred(LResultLength) do
   begin
-    if I >= LAStart then
-      LAWord := LAMag[I - LAStart]
+    if LI >= LAStart then
+      LAWord := LAMag[LI - LAStart]
     else
       LAWord := 0;
-    if I >= LBStart then
-      LBWord := LBMag[I - LBStart]
+    if LI >= LBStart then
+      LBWord := LBMag[LI - LBStart]
     else
       LBWord := 0;
     if FSign < 0 then
       LAWord := not LAWord;
     if AValue.FSign < 0 then
       LBWord := not LBWord;
-    LResultMag[I] := LAWord or LBWord;
+    LResultMag[LI] := LAWord or LBWord;
     if LResultNeg then
-      LResultMag[I] := not LResultMag[I];
+      LResultMag[LI] := not LResultMag[LI];
   end;
   Result := TBigInteger.Create(1, LResultMag, True);
   if LResultNeg then
@@ -2447,7 +2447,7 @@ function TBigInteger.&Xor(const AValue: TBigInteger): TBigInteger;
 var
   LAMag, LBMag: TCryptoLibUInt32Array;
   LResultNeg: Boolean;
-  LResultLength, LAStart, LBStart, I: Int32;
+  LResultLength, LAStart, LBStart, LI: Int32;
   LAWord, LBWord: UInt32;
   LResultMag: TCryptoLibUInt32Array;
 begin
@@ -2474,23 +2474,23 @@ begin
   System.SetLength(LResultMag, LResultLength);
   LAStart := LResultLength - System.Length(LAMag);
   LBStart := LResultLength - System.Length(LBMag);
-  for I := 0 to System.Pred(LResultLength) do
+  for LI := 0 to System.Pred(LResultLength) do
   begin
-    if I >= LAStart then
-      LAWord := LAMag[I - LAStart]
+    if LI >= LAStart then
+      LAWord := LAMag[LI - LAStart]
     else
       LAWord := 0;
-    if I >= LBStart then
-      LBWord := LBMag[I - LBStart]
+    if LI >= LBStart then
+      LBWord := LBMag[LI - LBStart]
     else
       LBWord := 0;
     if FSign < 0 then
       LAWord := not LAWord;
     if AValue.FSign < 0 then
       LBWord := not LBWord;
-    LResultMag[I] := LAWord xor LBWord;
+    LResultMag[LI] := LAWord xor LBWord;
     if LResultNeg then
-      LResultMag[I] := not LResultMag[I];
+      LResultMag[LI] := not LResultMag[LI];
   end;
   Result := TBigInteger.Create(1, LResultMag, True);
   if LResultNeg then
@@ -2773,7 +2773,7 @@ end;
 class function TBigInteger.GetWindowList(const AMag: TCryptoLibUInt32Array; const AExtraBits: Int32): TCryptoLibUInt32Array;
 var
   LV: UInt32;
-  LLeadingBits, LTotalBits, LResultSize, LResultPos, LBitPos, I: Int32;
+  LLeadingBits, LTotalBits, LResultSize, LResultPos, LBitPos, LI: Int32;
   LMult, LMultLimit, LZeros: UInt32;
 begin
   LV := AMag[0];
@@ -2790,7 +2790,7 @@ begin
   LMult := 1;
   LMultLimit := UInt32(1) shl AExtraBits;
   LZeros := 0;
-  I := 0;
+  LI := 0;
   while True do
   begin
     while LBitPos < 32 do
@@ -2813,14 +2813,14 @@ begin
       LV := LV shl 1;
       System.Inc(LBitPos);
     end;
-    System.Inc(I);
-    if I = System.Length(AMag) then
+    System.Inc(LI);
+    if LI = System.Length(AMag) then
     begin
       Result[LResultPos] := CreateWindowEntry(LMult, LZeros);
       System.Inc(LResultPos);
       Break;
     end;
-    LV := AMag[I];
+    LV := AMag[LI];
     LBitPos := 0;
   end;
   Result[LResultPos] := UInt32.MaxValue; // Sentinel value
@@ -2854,7 +2854,7 @@ end;
 
 class procedure TBigInteger.MontgomeryReduce(var AX: TCryptoLibUInt32Array; const AM: TCryptoLibUInt32Array; const AMDash: UInt32);
 var
-  LN, I, J: Int32;
+  LN, LI, LJ: Int32;
   LX0: UInt32;
   LT: UInt64;
   LCarry: UInt64;
@@ -2864,7 +2864,7 @@ begin
   System.Assert(System.Length(AX) = System.Length(AM));
 {$ENDIF DEBUG}
   LN := System.Length(AM);
-  for I := LN - 1 downto 0 do
+  for LI := LN - 1 downto 0 do
   begin
     LX0 := AX[LN - 1];
     LT := UInt32(UInt64(LX0) * AMDash);
@@ -2873,10 +2873,10 @@ begin
     System.Assert(UInt32(LCarry) = 0);
 {$ENDIF DEBUG}
     LCarry := LCarry shr 32;
-    for J := LN - 2 downto 0 do
+    for LJ := LN - 2 downto 0 do
     begin
-      LCarry := LCarry + ((LT * UInt64(AM[J])) + UInt64(AX[J]));
-      AX[J + 1] := UInt32(LCarry);
+      LCarry := LCarry + ((LT * UInt64(AM[LJ])) + UInt64(AX[LJ]));
+      AX[LJ + 1] := UInt32(LCarry);
       LCarry := LCarry shr 32;
     end;
     AX[0] := UInt32(LCarry);
@@ -2892,7 +2892,7 @@ end;
 
 class procedure TBigInteger.MultiplyMonty(var AA: TCryptoLibUInt32Array; var AX: TCryptoLibUInt32Array; const AY, AM: TCryptoLibUInt32Array; const AMDash: UInt32; const ASmallMontyModulus: Boolean);
 var
-  LN, I, J: Int32;
+  LN, LI, LJ: Int32;
   LY0, LA0, LAMax: UInt32;
   LXI, LCarry, LT, LProd1, LProd2: UInt64;
 begin
@@ -2914,21 +2914,21 @@ begin
   System.Assert(UInt32(LCarry) = 0);
 {$ENDIF DEBUG}
   LCarry := (LCarry shr 32) + (LProd2 shr 32);
-  for J := LN - 2 downto 0 do
+  for LJ := LN - 2 downto 0 do
   begin
-    LProd1 := LXI * UInt64(AY[J]);
-    LProd2 := LT * UInt64(AM[J]);
+    LProd1 := LXI * UInt64(AY[LJ]);
+    LProd2 := LT * UInt64(AM[LJ]);
     LCarry := LCarry + (LProd1 and UIMASK) + UInt32(LProd2);
-    AA[J + 2] := UInt32(LCarry);
+    AA[LJ + 2] := UInt32(LCarry);
     LCarry := (LCarry shr 32) + (LProd1 shr 32) + (LProd2 shr 32);
   end;
   AA[1] := UInt32(LCarry);
   LAMax := UInt32(LCarry shr 32);
   // Remaining iterations
-  for I := LN - 2 downto 0 do
+  for LI := LN - 2 downto 0 do
   begin
     LA0 := AA[LN];
-    LXI := UInt64(AX[I]);
+    LXI := UInt64(AX[LI]);
     LProd1 := LXI * UInt64(LY0);
     LCarry := (LProd1 and UIMASK) + LA0;
     LT := UInt32(UInt64(UInt32(LCarry)) * AMDash);
@@ -2938,12 +2938,12 @@ begin
     System.Assert(UInt32(LCarry) = 0);
 {$ENDIF DEBUG}
     LCarry := (LCarry shr 32) + (LProd1 shr 32) + (LProd2 shr 32);
-    for J := LN - 2 downto 0 do
+    for LJ := LN - 2 downto 0 do
     begin
-      LProd1 := LXI * UInt64(AY[J]);
-      LProd2 := LT * UInt64(AM[J]);
-      LCarry := LCarry + (LProd1 and UIMASK) + UInt32(LProd2) + UInt64(AA[J + 1]);
-      AA[J + 2] := UInt32(LCarry);
+      LProd1 := LXI * UInt64(AY[LJ]);
+      LProd2 := LT * UInt64(AM[LJ]);
+      LCarry := LCarry + (LProd1 and UIMASK) + UInt32(LProd2) + UInt64(AA[LJ + 1]);
+      AA[LJ + 2] := UInt32(LCarry);
       LCarry := (LCarry shr 32) + (LProd1 shr 32) + (LProd2 shr 32);
     end;
     LCarry := LCarry + UInt64(LAMax);
@@ -2961,7 +2961,7 @@ end;
 
 class procedure TBigInteger.SquareMonty(var AA: TCryptoLibUInt32Array; var AX: TCryptoLibUInt32Array; const AM: TCryptoLibUInt32Array; const AMDash: UInt32; const ASmallMontyModulus: Boolean);
 var
-  LN, I, J: Int32;
+  LN, LI, LJ: Int32;
   LX0, LA0, LAMax: UInt32;
   LXI, LCarry, LT, LProd1, LProd2: UInt64;
 begin
@@ -2983,18 +2983,18 @@ begin
   System.Assert(UInt32(LCarry) = 0);
 {$ENDIF DEBUG}
   LCarry := (LCarry shr 32) + (LProd2 shr 32);
-  for J := LN - 2 downto 0 do
+  for LJ := LN - 2 downto 0 do
   begin
-    LProd1 := UInt64(LX0) * AX[J];
-    LProd2 := LT * AM[J];
+    LProd1 := UInt64(LX0) * AX[LJ];
+    LProd2 := LT * AM[LJ];
     LCarry := LCarry + (LProd2 and UIMASK) + (UInt32(LProd1) shl 1);
-    AA[J + 2] := UInt32(LCarry);
+    AA[LJ + 2] := UInt32(LCarry);
     LCarry := (LCarry shr 32) + (LProd1 shr 31) + (LProd2 shr 32);
   end;
   AA[1] := UInt32(LCarry);
   LAMax := UInt32(LCarry shr 32);
   // Remaining iterations
-  for I := LN - 2 downto 0 do
+  for LI := LN - 2 downto 0 do
   begin
     LA0 := AA[LN];
     LT := UInt32(UInt64(LA0) * AMDash);
@@ -3003,26 +3003,26 @@ begin
     System.Assert(UInt32(LCarry) = 0);
 {$ENDIF DEBUG}
     LCarry := LCarry shr 32;
-    for J := LN - 2 downto I + 1 do
+    for LJ := LN - 2 downto LI + 1 do
     begin
-      LCarry := LCarry + LT * UInt64(AM[J]) + UInt64(AA[J + 1]);
-      AA[J + 2] := UInt32(LCarry);
+      LCarry := LCarry + LT * UInt64(AM[LJ]) + UInt64(AA[LJ + 1]);
+      AA[LJ + 2] := UInt32(LCarry);
       LCarry := LCarry shr 32;
     end;
-    LXI := UInt64(AX[I]);
+    LXI := UInt64(AX[LI]);
     // Square term
     LProd1 := LXI * LXI;
-    LProd2 := LT * UInt64(AM[I]);
-    LCarry := LCarry + (LProd1 and UIMASK) + UInt32(LProd2) + UInt64(AA[I + 1]);
-    AA[I + 2] := UInt32(LCarry);
+    LProd2 := LT * UInt64(AM[LI]);
+    LCarry := LCarry + (LProd1 and UIMASK) + UInt32(LProd2) + UInt64(AA[LI + 1]);
+    AA[LI + 2] := UInt32(LCarry);
     LCarry := (LCarry shr 32) + (LProd1 shr 32) + (LProd2 shr 32);
     // Cross terms
-    for J := I - 1 downto 0 do
+    for LJ := LI - 1 downto 0 do
     begin
-      LProd1 := LXI * UInt64(AX[J]);
-      LProd2 := LT * UInt64(AM[J]);
-      LCarry := LCarry + (LProd2 and UIMASK) + (UInt32(LProd1) shl 1) + UInt64(AA[J + 1]);
-      AA[J + 2] := UInt32(LCarry);
+      LProd1 := LXI * UInt64(AX[LJ]);
+      LProd2 := LT * UInt64(AM[LJ]);
+      LCarry := LCarry + (LProd2 and UIMASK) + (UInt32(LProd1) shl 1) + UInt64(AA[LJ + 1]);
+      AA[LJ + 2] := UInt32(LCarry);
       LCarry := (LCarry shr 32) + (LProd1 shr 31) + (LProd2 shr 32);
     end;
     LCarry := LCarry + UInt64(LAMax);
@@ -3040,14 +3040,14 @@ end;
 
 class function TBigInteger.ParseChunkToUInt64(const AChunk: String; const ARadix: Int32): UInt64;
 var
-  I: Int32;
+  LI: Int32;
   LChar: Char;
   LDigit: UInt64;
 begin
   Result := 0;
-  for I := 1 to System.Length(AChunk) do
+  for LI := 1 to System.Length(AChunk) do
   begin
-    LChar := AChunk[I];
+    LChar := AChunk[LI];
     case ARadix of
       2:
       begin
@@ -3231,7 +3231,7 @@ end;
 
 function TBigInteger.ToString(const ARadix: Int32): String;
 var
-  LFirstNonZero, LPos, I: Int32;
+  LFirstNonZero, LPos, LI: Int32;
   LSb: String;
   LU: TBigInteger;
   LBits: Int32;
@@ -3299,9 +3299,9 @@ begin
       // Convert remaining bits
       LSb := LSb + Int32ToOct(LQ.Int32Value);
       // Append stored chunks in reverse order with zero padding
-      for I := System.High(LOctStrings) downto 0 do
+      for LI := System.High(LOctStrings) downto 0 do
       begin
-        AppendZeroExtendedString(LSb, LOctStrings[I], 10);
+        AppendZeroExtendedString(LSb, LOctStrings[LI], 10);
       end;
       Result := LSb;
     end;
@@ -3503,7 +3503,7 @@ end;
 
 class function TBigInteger.ModPowBarrett(const AB, AE, AM: TBigInteger): TBigInteger;
 var
-  LK, LExtraBits, LExpLength, LNumPowers, I, J, LWindowPos, LBits: Int32;
+  LK, LExtraBits, LExpLength, LNumPowers, LI, LJ, LWindowPos, LBits: Int32;
   LMr, LYu: TBigInteger;
   LOddPowers: TCryptoLibGenericArray<TBigInteger>;
   LB2, LY: TBigInteger;
@@ -3524,9 +3524,9 @@ begin
   System.SetLength(LOddPowers, LNumPowers);
   LOddPowers[0] := AB;
   LB2 := ReduceBarrett(AB.Square(), AM, LMr, LYu);
-  for I := 1 to System.Pred(LNumPowers) do
+  for LI := 1 to System.Pred(LNumPowers) do
   begin
-    LOddPowers[I] := ReduceBarrett(LOddPowers[I - 1].Multiply(LB2), AM, LMr, LYu);
+    LOddPowers[LI] := ReduceBarrett(LOddPowers[LI - 1].Multiply(LB2), AM, LMr, LYu);
   end;
   LWindowList := GetWindowList(AE.FMagnitude, LExtraBits);
 {$IFDEF DEBUG}
@@ -3551,7 +3551,7 @@ begin
   begin
     LMult := LWindow and $FF;
     LBits := Int32(LLastZeros) + BitLen(Byte(LMult));
-    for J := 0 to System.Pred(LBits) do
+    for LJ := 0 to System.Pred(LBits) do
     begin
       LY := ReduceBarrett(LY.Square(), AM, LMr, LYu);
     end;
@@ -3560,7 +3560,7 @@ begin
     LWindow := LWindowList[LWindowPos];
     System.Inc(LWindowPos);
   end;
-  for I := 0 to System.Pred(Int32(LLastZeros)) do
+  for LI := 0 to System.Pred(Int32(LLastZeros)) do
   begin
     LY := ReduceBarrett(LY.Square(), AM, LMr, LYu);
   end;
@@ -3569,7 +3569,7 @@ end;
 
 class function TBigInteger.ModPowMonty(var AYAccum: TCryptoLibUInt32Array; const AB, AE, AM: TBigInteger; const AConvert: Boolean): TBigInteger;
 var
-  LN, LPowR, LExtraBits, LExpLength, LNumPowers, I, J, LWindowPos, LBits: Int32;
+  LN, LPowR, LExtraBits, LExpLength, LNumPowers, LI, LJ, LWindowPos, LBits: Int32;
   LSmallMontyModulus: Boolean;
   LMDash: UInt32;
   LB: TBigInteger;
@@ -3621,11 +3621,11 @@ begin
   LZSquared := System.Copy(LZVal);
   SquareMonty(AYAccum, LZSquared, AM.FMagnitude, LMDash, LSmallMontyModulus);
 
-  for I := 1 to System.Pred(LNumPowers) do
+  for LI := 1 to System.Pred(LNumPowers) do
   begin
-    LOddPowers[I] := System.Copy(LOddPowers[I - 1]);
+    LOddPowers[LI] := System.Copy(LOddPowers[LI - 1]);
 
-    MultiplyMonty(AYAccum, LOddPowers[I], LZSquared, AM.FMagnitude, LMDash, LSmallMontyModulus);
+    MultiplyMonty(AYAccum, LOddPowers[LI], LZSquared, AM.FMagnitude, LMDash, LSmallMontyModulus);
   end;
 
   LWindowList := GetWindowList(AE.FMagnitude, LExtraBits);
@@ -3652,7 +3652,7 @@ begin
   begin
     LMult := LWindow and $FF;
     LBits := Int32(LLastZeros) + BitLen(Byte(LMult));
-    for J := 0 to System.Pred(LBits) do
+    for LJ := 0 to System.Pred(LBits) do
     begin
       SquareMonty(AYAccum, LYVal, AM.FMagnitude, LMDash, LSmallMontyModulus);
     end;
@@ -3662,7 +3662,7 @@ begin
     LWindow := LWindowList[LWindowPos];
     System.Inc(LWindowPos);
   end;
-  for I := 0 to System.Pred(Int32(LLastZeros)) do
+  for LI := 0 to System.Pred(Int32(LLastZeros)) do
   begin
     SquareMonty(AYAccum, LYVal, AM.FMagnitude, LMDash, LSmallMontyModulus);
   end;
@@ -3785,7 +3785,7 @@ end;
 function TBigInteger.CheckProbablePrime(const ACertainty: Int32;
   const ARandom: IRandom; const ARandomlySelected: Boolean): Boolean;
 var
-  LNumLists, I, J, LTest, LPrime, LQRem: Int32;
+  LNumLists, LI, LJ, LTest, LPrime, LQRem: Int32;
   LPrimeList: TCryptoLibInt32Array;
 begin
 {$IFDEF DEBUG}
@@ -3797,14 +3797,14 @@ begin
   // Try to reduce the penalty for really small numbers
   LNumLists := Math.Min(BitLength - 1, System.Length(FPrimeLists));
 
-  for I := 0 to System.Pred(LNumLists) do
+  for LI := 0 to System.Pred(LNumLists) do
   begin
-    LTest := Remainder(FPrimeProducts[I]);
-    LPrimeList := FPrimeLists[I];
+    LTest := Remainder(FPrimeProducts[LI]);
+    LPrimeList := FPrimeLists[LI];
 
-    for J := 0 to System.Pred(System.Length(LPrimeList)) do
+    for LJ := 0 to System.Pred(System.Length(LPrimeList)) do
     begin
-      LPrime := LPrimeList[J];
+      LPrime := LPrimeList[LJ];
       LQRem := LTest mod LPrime;
       if LQRem = 0 then
       begin

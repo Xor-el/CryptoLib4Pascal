@@ -63,7 +63,7 @@ type
     /// <summary>
     /// Base constructor.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// digest to build the HMAC on.
     /// </param>
     constructor Create(const ADigest: IDigest);

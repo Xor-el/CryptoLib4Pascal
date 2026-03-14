@@ -209,18 +209,18 @@ end;
 
 function TPemReader.Expect(const AValue: String): Boolean;
 var
-  I, LPos: Int32;
+  LI, LPos: Int32;
   LC: Int32;
 begin
-  for I := 1 to System.Length(AValue) do
+  for LI := 1 to System.Length(AValue) do
   begin
     LC := ReadChar();
-    if LC <> Ord(AValue[I]) then
+    if LC <> Ord(AValue[LI]) then
     begin
       // Push back the character we just read
       PushBack(LC);
       // Push back all previously read characters
-      LPos := I - 1;
+      LPos := LI - 1;
       while LPos > 0 do
       begin
         PushBack(Ord(AValue[LPos]));

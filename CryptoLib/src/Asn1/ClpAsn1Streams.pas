@@ -819,12 +819,12 @@ end;
 procedure TAsn1OutputStream.EncodeContents(const AContentsEncodings
   : TCryptoLibGenericArray<IAsn1Encoding>);
 var
-  I, LCount: Int32;
+  LI, LCount: Int32;
 begin
   LCount := System.Length(AContentsEncodings);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    AContentsEncodings[I].Encode(Self);
+    AContentsEncodings[LI].Encode(Self);
   end;
 end;
 
@@ -948,29 +948,29 @@ end;
 
 class function TAsn1OutputStream.GetContentsEncodings(AEncoding: Int32; const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IAsn1Encoding>;
 var
-  I, LCount: Int32;
+  LI, LCount: Int32;
   LObj: IAsn1Object;
 begin
   LCount := System.Length(AElements);
   System.SetLength(Result, LCount);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    LObj := AElements[I].ToAsn1Object();
-    Result[I] := LObj.GetEncoding(AEncoding);
+    LObj := AElements[LI].ToAsn1Object();
+    Result[LI] := LObj.GetEncoding(AEncoding);
   end;
 end;
 
 class function TAsn1OutputStream.GetContentsEncodingsDer(const AElements: TCryptoLibGenericArray<IAsn1Encodable>): TCryptoLibGenericArray<IDerEncoding>;
 var
-  I, LCount: Int32;
+  LI, LCount: Int32;
   LObj: IAsn1Object;
 begin
   LCount := System.Length(AElements);
   System.SetLength(Result, LCount);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    LObj := AElements[I].ToAsn1Object();
-    Result[I] := LObj.GetEncodingDer();
+    LObj := AElements[LI].ToAsn1Object();
+    Result[LI] := LObj.GetEncodingDer();
   end;
 end;
 
@@ -988,13 +988,13 @@ end;
 class function TAsn1OutputStream.GetLengthOfContents(const AContentsEncodings
   : TCryptoLibGenericArray<IAsn1Encoding>): Int32;
 var
-  I, LCount: Int32;
+  LI, LCount: Int32;
 begin
   Result := 0;
   LCount := System.Length(AContentsEncodings);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    Result := Result + AContentsEncodings[I].GetLength();
+    Result := Result + AContentsEncodings[LI].GetLength();
   end;
 end;
 
@@ -1451,11 +1451,11 @@ constructor TAsn1InputStream.Create(const AInput: TStream; ALimit: Int32;
   ALeaveOpen: Boolean);
 var
   LTmpBuffers: TCryptoLibMatrixByteArray;
-  I: Int32;
+  LI: Int32;
 begin
   System.SetLength(LTmpBuffers, 16);
-  for I := 0 to System.Length(LTmpBuffers) - 1 do
-    LTmpBuffers[I] := nil;
+  for LI := 0 to System.Length(LTmpBuffers) - 1 do
+    LTmpBuffers[LI] := nil;
   Create(AInput, ALimit, ALeaveOpen, LTmpBuffers);
 end;
 
@@ -1802,17 +1802,17 @@ function TAsn1InputStream.BuildConstructedBitString(const AContentsElements
   : IAsn1EncodableVector): IAsn1Object;
 var
   LBitStrings: TCryptoLibGenericArray<IDerBitString>;
-  LCount, I: Int32;
+  LCount, LI: Int32;
   LBitString: IDerBitString;
 begin
   LCount := AContentsElements.Count;
   System.SetLength(LBitStrings, LCount);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    if not Supports(AContentsElements[I], IDerBitString, LBitString) then
+    if not Supports(AContentsElements[LI], IDerBitString, LBitString) then
       raise EAsn1CryptoLibException.CreateFmt('unknown object encountered in constructed BIT STRING: %s',
-        [TPlatformUtilities.GetTypeName(AContentsElements[I] as TObject)]);
-    LBitStrings[I] := LBitString;
+        [TPlatformUtilities.GetTypeName(AContentsElements[LI] as TObject)]);
+    LBitStrings[LI] := LBitString;
   end;
 
   Result := TDLBitString.Create(TBerBitString.FlattenBitStrings(LBitStrings), False);
@@ -1822,17 +1822,17 @@ class function TAsn1InputStream.BuildConstructedOctetString(const AContentsEleme
   : IAsn1EncodableVector): IAsn1Object;
 var
   LOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>;
-  LCount, I: Int32;
+  LCount, LI: Int32;
   LOctetString: IAsn1OctetString;
 begin
   LCount := AContentsElements.Count;
   System.SetLength(LOctetStrings, LCount);
-  for I := 0 to LCount - 1 do
+  for LI := 0 to LCount - 1 do
   begin
-    if not Supports(AContentsElements[I], IAsn1OctetString, LOctetString) then
+    if not Supports(AContentsElements[LI], IAsn1OctetString, LOctetString) then
       raise EAsn1CryptoLibException.CreateFmt('unknown object encountered in constructed OCTET STRING: %s',
-        [TPlatformUtilities.GetTypeName(AContentsElements[I] as TObject)]);
-    LOctetStrings[I] := LOctetString;
+        [TPlatformUtilities.GetTypeName(AContentsElements[LI] as TObject)]);
+    LOctetStrings[LI] := LOctetString;
   end;
 
   // Note: No DLOctetString available, use TDerOctetString.WithContents
