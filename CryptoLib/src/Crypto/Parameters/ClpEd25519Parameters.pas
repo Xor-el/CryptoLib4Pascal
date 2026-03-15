@@ -244,12 +244,18 @@ end;
 
 function TEd25519PrivateKeyParameters.GeneratePublicKey: IEd25519PublicKeyParameters;
 var
+  LEd25519: TEd25519;
   LPoint: TEd25519.IPublicPoint;
 begin
   if FCachedPublicKey = nil then
   begin
-    LPoint := TEd25519.GeneratePublicKey(FData, 0);
-    FCachedPublicKey := TEd25519PublicKeyParameters.Create(LPoint);
+    LEd25519 := TEd25519.Create();
+    try
+      LPoint := LEd25519.GeneratePublicKey(FData, 0);
+      FCachedPublicKey := TEd25519PublicKeyParameters.Create(LPoint);
+    finally
+      LEd25519.Free;
+    end;
   end;
   Result := FCachedPublicKey;
 end;

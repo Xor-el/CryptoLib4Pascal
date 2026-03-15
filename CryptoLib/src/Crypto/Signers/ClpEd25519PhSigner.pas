@@ -82,10 +82,17 @@ begin
 end;
 
 constructor TEd25519PhSigner.Create(const AContext: TCryptoLibByteArray);
+var
+  LEd25519: TEd25519;
 begin
   Inherited Create();
   FContext := System.Copy(AContext);
-  FPreHash := TEd25519.CreatePreHash();
+  LEd25519 := TEd25519.Create();
+  try
+    FPreHash := LEd25519.CreatePreHash();
+  finally
+    LEd25519.Free;
+  end;
 end;
 
 destructor TEd25519PhSigner.Destroy;

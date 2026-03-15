@@ -82,10 +82,17 @@ begin
 end;
 
 constructor TEd448PhSigner.Create(const AContext: TCryptoLibByteArray);
+var
+  LEd448: TEd448;
 begin
   Inherited Create();
   FContext := System.Copy(AContext);
-  FPreHash := TEd448.CreatePrehash();
+  LEd448 := TEd448.Create();
+  try
+    FPreHash := LEd448.CreatePrehash();
+  finally
+    LEd448.Free;
+  end;
 end;
 
 destructor TEd448PhSigner.Destroy;

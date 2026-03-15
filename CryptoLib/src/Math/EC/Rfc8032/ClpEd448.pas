@@ -127,28 +127,28 @@ type
   class function CheckPointFullVar(const AP: TCryptoLibByteArray): Boolean; static;
   class function CheckPointVar(const AP: TCryptoLibByteArray): Boolean; static;
   class function CopyBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32): TCryptoLibByteArray; static;
-  class function CreateXof(): IXof; static;
   class function DecodePointVar(const AP: TCryptoLibByteArray; ANegate: Boolean; var AR: TPointAffine): Boolean; static;
   class procedure Dom4(const AD: IXof; APhflag: Byte; const ACtx: TCryptoLibByteArray); static;
   class procedure EncodePoint(var AP: TPointAffine; const AR: TCryptoLibByteArray; AROff: Int32); static;
   class function EncodeResult(var AP: TPointProjective; const AR: TCryptoLibByteArray; AROff: Int32): Int32; static;
   class function ExportPoint(var AP: TPointAffine): IPublicPoint; static;
   class function GetWindow4(const AX: TCryptoLibUInt32Array; AN: Int32): UInt32; static;
-  class procedure ImplSign(const AD: IXof; AH, &AS, APk: TCryptoLibByteArray; APkOff: Int32;
+  function CreateAndValidateXof(): IXof;
+  procedure ImplSign(const AD: IXof; AH, &AS, APk: TCryptoLibByteArray; APkOff: Int32;
     const ACtx: TCryptoLibByteArray; APhflag: Byte; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
-    ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
-  class procedure ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
+    ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+  procedure ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
     APhflag: Byte; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
-    ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
-  class procedure ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray; APkOff: Int32;
+    ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+  procedure ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray; APkOff: Int32;
     const ACtx: TCryptoLibByteArray; APhflag: Byte; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
-    ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
-  class function ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
+    ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+  function ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
     APkOff: Int32; const ACtx: TCryptoLibByteArray; APhflag: Byte;
-    const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload; static;
-  class function ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
+    const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload;
+  function ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
     const ACtx: TCryptoLibByteArray; APhflag: Byte;
-    const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload; static;
+    const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload;
   class procedure InitPointAffine(var AR: TPointAffine); static;
   class procedure InitPointProjective(var AR: TPointProjective); static;
   class procedure InitPointTemp(var AR: TPointTemp); static;
@@ -176,6 +176,8 @@ type
   class procedure ScalarMultOrderVar(var AP: TPointAffine; var AR: TPointProjective); static;
   class procedure ScalarMultStraus225Var(const ANb: TCryptoLibUInt32Array; const ANp: TCryptoLibUInt32Array;
     var AP: TPointAffine; const ANq: TCryptoLibUInt32Array; var AQ: TPointAffine; var AR: TPointProjective); static;
+  strict protected
+    function CreateXof(): IXof; virtual;
   public
   class var
     PrehashSize: Int32;
@@ -184,40 +186,41 @@ type
     SignatureSize: Int32;
 
     class procedure EncodePublicPoint(const APublicPoint: IPublicPoint; const APk: TCryptoLibByteArray; APkOff: Int32); static;
-    class function CreatePrehash(): IXof; static;
 
-    class procedure GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray); static;
+    function CreatePrehash(): IXof;
 
-    class procedure GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
-      APk: TCryptoLibByteArray; APkOff: Int32); overload; static;
+    procedure GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
 
-    class function GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint; overload; static;
+    procedure GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+      APk: TCryptoLibByteArray; APkOff: Int32); overload;
+
+    function GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint; overload;
 
     class procedure Precompute; static;
 
     class procedure ScalarMultBaseXY(const AK: TCryptoLibByteArray; AKOff: Int32;
       const AX, AY: TCryptoLibUInt32Array); static;
 
-    class procedure Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
-      const AM: TCryptoLibByteArray; AMOff, AMLen: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
+    procedure Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
+      const AM: TCryptoLibByteArray; AMOff, AMLen: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
 
-    class procedure Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray; APkOff: Int32;
+    procedure Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray; APkOff: Int32;
       const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
-      ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
+      ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
 
-    class procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
-      const APh: TCryptoLibByteArray; APhOff: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
+    procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
+      const APh: TCryptoLibByteArray; APhOff: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
 
-    class procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
+    procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
       APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: TCryptoLibByteArray; APhOff: Int32;
-      ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
+      ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
 
-    class procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
-      const APh: IXof; ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
+    procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
+      const APh: IXof; ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
 
-    class procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
+    procedure SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
       APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: IXof;
-      ASig: TCryptoLibByteArray; ASigOff: Int32); overload; static;
+      ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
 
     class function ValidatePublicKeyFull(const APk: TCryptoLibByteArray; APkOff: Int32): Boolean; static;
 
@@ -227,23 +230,23 @@ type
 
     class function ValidatePublicKeyPartialExport(const APk: TCryptoLibByteArray; APkOff: Int32): IPublicPoint; static;
 
-    class function Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
-      APkOff: Int32; const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload; static;
+    function Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
+      APkOff: Int32; const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload;
 
-    class function Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
-      const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload; static;
+    function Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
+      const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean; overload;
 
-    class function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
-      APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: TCryptoLibByteArray; APhOff: Int32): Boolean; overload; static;
+    function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
+      APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: TCryptoLibByteArray; APhOff: Int32): Boolean; overload;
 
-    class function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
-      const ACtx: TCryptoLibByteArray; const APh: TCryptoLibByteArray; APhOff: Int32): Boolean; overload; static;
+    function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
+      const ACtx: TCryptoLibByteArray; const APh: TCryptoLibByteArray; APhOff: Int32): Boolean; overload;
 
-    class function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
-      APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: IXof): Boolean; overload; static;
+    function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
+      APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: IXof): Boolean; overload;
 
-    class function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
-      const ACtx: TCryptoLibByteArray; const APh: IXof): Boolean; overload; static;
+    function VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
+      const ACtx: TCryptoLibByteArray; const APh: IXof): Boolean; overload;
   end;
 
 implementation
@@ -462,12 +465,17 @@ begin
   System.Move(ABuf[AOff], Result[0], ALen);
 end;
 
-class function TEd448.CreatePrehash(): IXof;
+function TEd448.CreateAndValidateXof(): IXof;
 begin
   Result := CreateXof();
 end;
 
-class function TEd448.CreateXof(): IXof;
+function TEd448.CreatePrehash(): IXof;
+begin
+  Result := CreateAndValidateXof();
+end;
+
+function TEd448.CreateXof(): IXof;
 begin
   Result := TDigestUtilities.GetDigest('SHAKE256-512') as IXof;
 end;
@@ -1286,7 +1294,7 @@ begin
   PointDouble(AR, LT);
 end;
 
-class procedure TEd448.ImplSign(const AD: IXof; AH, &AS, APk: TCryptoLibByteArray; APkOff: Int32;
+procedure TEd448.ImplSign(const AD: IXof; AH, &AS, APk: TCryptoLibByteArray; APkOff: Int32;
   const ACtx: TCryptoLibByteArray; APhflag: Byte; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
   ASig: TCryptoLibByteArray; ASigOff: Int32);
 var
@@ -1314,7 +1322,7 @@ begin
   System.Move(LSS[0], ASig[ASigOff + PointBytes], ScalarBytes);
 end;
 
-class procedure TEd448.ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
+procedure TEd448.ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
   APhflag: Byte; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
   ASig: TCryptoLibByteArray; ASigOff: Int32);
 var
@@ -1324,7 +1332,7 @@ begin
   if not CheckContextVar(ACtx) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
 
-  LD := CreateXof();
+  LD := CreateAndValidateXof();
   System.SetLength(LH, ScalarBytes * 2);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
@@ -1338,7 +1346,7 @@ begin
   ImplSign(LD, LH, LS, LPk, 0, ACtx, APhflag, AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
-class procedure TEd448.ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
+procedure TEd448.ImplSign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
   APkOff: Int32; const ACtx: TCryptoLibByteArray; APhflag: Byte;
   const AM: TCryptoLibByteArray; AMOff, AMLen: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32);
 var
@@ -1348,7 +1356,7 @@ begin
   if not CheckContextVar(ACtx) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
 
-  LD := CreateXof();
+  LD := CreateAndValidateXof();
   System.SetLength(LH, ScalarBytes * 2);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
@@ -1359,7 +1367,7 @@ begin
   ImplSign(LD, LH, LS, APk, APkOff, ACtx, APhflag, AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
-class function TEd448.ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32;
+function TEd448.ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APk: TCryptoLibByteArray; APkOff: Int32; const ACtx: TCryptoLibByteArray;
   APhflag: Byte; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 var
@@ -1411,7 +1419,7 @@ begin
     Exit;
   end;
 
-  LD := CreateXof();
+  LD := CreateAndValidateXof();
   System.SetLength(LH, ScalarBytes * 2);
 
   Dom4(LD, APhflag, ACtx);
@@ -1438,7 +1446,7 @@ begin
   Result := NormalizeToNeutralElementVar(LPZ);
 end;
 
-class function TEd448.ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32;
+function TEd448.ImplVerify(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APublicPoint: IPublicPoint; const ACtx: TCryptoLibByteArray; APhflag: Byte;
   const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 var
@@ -1483,7 +1491,7 @@ begin
   System.SetLength(LA, PublicKeySize);
   EncodePublicPoint(APublicPoint, LA, 0);
 
-  LD := CreateXof();
+  LD := CreateAndValidateXof();
   System.SetLength(LH, ScalarBytes * 2);
 
   Dom4(LD, APhflag, ACtx);
@@ -1510,20 +1518,20 @@ begin
   Result := NormalizeToNeutralElementVar(LPZ);
 end;
 
-class procedure TEd448.GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
+procedure TEd448.GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
 begin
   if System.Length(AK) <> SecretKeySize then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
   ARandom.NextBytes(AK);
 end;
 
-class procedure TEd448.GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+procedure TEd448.GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
   APk: TCryptoLibByteArray; APkOff: Int32);
 var
   LD: IXof;
   LH, LS: TCryptoLibByteArray;
 begin
-  LD := CreateXof();
+  LD := CreateAndValidateXof();
   System.SetLength(LH, ScalarBytes * 2);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
@@ -1533,14 +1541,14 @@ begin
   ScalarMultBaseEncoded(LS, APk, APkOff);
 end;
 
-class function TEd448.GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint;
+function TEd448.GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint;
 var
   LD: IXof;
   LH, LS: TCryptoLibByteArray;
   LP: TPointProjective;
   LQ: TPointAffine;
 begin
-  LD := CreateXof();
+  LD := CreateAndValidateXof();
   System.SetLength(LH, ScalarBytes * 2);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
@@ -1560,34 +1568,34 @@ begin
   Result := ExportPoint(LQ);
 end;
 
-class procedure TEd448.Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
+procedure TEd448.Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
   const AM: TCryptoLibByteArray; AMOff, AMLen: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   ImplSign(ASk, ASkOff, ACtx, $00, AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
-class procedure TEd448.Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
+procedure TEd448.Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const APk: TCryptoLibByteArray;
   APkOff: Int32; const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
   ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   ImplSign(ASk, ASkOff, APk, APkOff, ACtx, $00, AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
-class procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
   const ACtx: TCryptoLibByteArray; const APh: TCryptoLibByteArray; APhOff: Int32;
   ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   ImplSign(ASk, ASkOff, ACtx, $01, APh, APhOff, PrehashSize, ASig, ASigOff);
 end;
 
-class procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
   const APk: TCryptoLibByteArray; APkOff: Int32; const ACtx: TCryptoLibByteArray;
   const APh: TCryptoLibByteArray; APhOff: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   ImplSign(ASk, ASkOff, APk, APkOff, ACtx, $01, APh, APhOff, PrehashSize, ASig, ASigOff);
 end;
 
-class procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
   const ACtx: TCryptoLibByteArray; const APh: IXof; ASig: TCryptoLibByteArray; ASigOff: Int32);
 var
   LM: TCryptoLibByteArray;
@@ -1598,7 +1606,7 @@ begin
   ImplSign(ASk, ASkOff, ACtx, $01, LM, 0, System.Length(LM), ASig, ASigOff);
 end;
 
-class procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+procedure TEd448.SignPrehash(const ASk: TCryptoLibByteArray; ASkOff: Int32;
   const APk: TCryptoLibByteArray; APkOff: Int32; const ACtx: TCryptoLibByteArray;
   const APh: IXof; ASig: TCryptoLibByteArray; ASigOff: Int32);
 var
@@ -1702,33 +1710,33 @@ begin
   Result := ExportPoint(LPA);
 end;
 
-class function TEd448.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
+function TEd448.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APk: TCryptoLibByteArray;
   APkOff: Int32; const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
   Result := ImplVerify(ASig, ASigOff, APk, APkOff, ACtx, $00, AM, AMOff, AMLen);
 end;
 
-class function TEd448.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
+function TEd448.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
   const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $00, AM, AMOff, AMLen);
 end;
 
-class function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
+function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APk: TCryptoLibByteArray; APkOff: Int32; const ACtx: TCryptoLibByteArray;
   const APh: TCryptoLibByteArray; APhOff: Int32): Boolean;
 begin
   Result := ImplVerify(ASig, ASigOff, APk, APkOff, ACtx, $01, APh, APhOff, PrehashSize);
 end;
 
-class function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
+function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APublicPoint: IPublicPoint; const ACtx: TCryptoLibByteArray;
   const APh: TCryptoLibByteArray; APhOff: Int32): Boolean;
 begin
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $01, APh, APhOff, PrehashSize);
 end;
 
-class function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
+function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APk: TCryptoLibByteArray; APkOff: Int32; const ACtx: TCryptoLibByteArray; const APh: IXof): Boolean;
 var
   LM: TCryptoLibByteArray;
@@ -1739,7 +1747,7 @@ begin
   Result := ImplVerify(ASig, ASigOff, APk, APkOff, ACtx, $01, LM, 0, System.Length(LM));
 end;
 
-class function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
+function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APublicPoint: IPublicPoint; const ACtx: TCryptoLibByteArray; const APh: IXof): Boolean;
 var
   LM: TCryptoLibByteArray;
