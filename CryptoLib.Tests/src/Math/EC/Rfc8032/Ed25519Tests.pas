@@ -32,6 +32,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIDigest,
+  ClpDigestUtilities,
   ClpEd25519,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -45,8 +46,11 @@ type
   var
     FRandom: ISecureRandom;
     FEd25519: TEd25519;
+    FEd25519Blake2b: TEd25519;
 
+    procedure ImplCheckEd25519Vector(AEd25519: TEd25519; const ASK, APK, AM, ASig, AText: String);
     procedure CheckEd25519Vector(const ASK, APK, AM, ASig, AText: String);
+    procedure CheckEd25519VectorBlake2b(const ASK, APK, AM, ASig, AText: String);
     procedure CheckEd25519ctxVector(const ASK, APK, AM, ACTX, ASig, AText: String);
     procedure CheckEd25519phVector(const ASK, APK, AM, ACTX, ASig, AText: String);
     procedure ImplTamingVector(ANumber: Int32; AExpected: Boolean; const AMsgHex, APubHex, ASigHex: String); overload;
@@ -56,6 +60,7 @@ type
     procedure TearDown; override;
   published
     procedure TestEd25519Consistency();
+    procedure TestEd25519ConsistencyDefaultMatchesSHA512Digest();
     procedure TestEd25519ctxConsistency();
     procedure TestEd25519phConsistency();
     procedure TestEd25519Vector1();
@@ -69,6 +74,17 @@ type
     procedure TestEd25519ctxVector3();
     procedure TestEd25519ctxVector4();
     procedure TestEd25519phVector1();
+
+    procedure TestEd25519WithCustomDigestSHA512Vector1();
+    procedure TestEd25519WithCustomDigestSHA512Vector2();
+    procedure TestEd25519WithCustomDigestSHA512Vector3();
+    procedure TestEd25519WithCustomDigestSHA512Vector4();
+    procedure TestEd25519WithCustomDigestSHA512Vector5();
+    procedure TestEd25519WithCustomDigestBlake2bVector1();
+    procedure TestEd25519WithCustomDigestBlake2bVector2();
+    procedure TestEd25519WithCustomDigestBlake2bVector3();
+    procedure TestEd25519WithCustomDigestBlake2bVector4();
+    procedure TestEd25519WithCustomDigestBlake2bVector5();
 
     procedure TestPublicKeyValidationFull();
     procedure TestPublicKeyValidationPartial();
@@ -89,9 +105,34 @@ type
 
 implementation
 
+type
+  TEd25519Blake2b = class(TEd25519)
+  strict protected
+    function CreateDigest(): IDigest; override;
+  end;
+
+  TEd25519Sha512 = class(TEd25519)
+  strict protected
+    function CreateDigest(): IDigest; override;
+  end;
+
+{ TEd25519Blake2b }
+
+function TEd25519Blake2b.CreateDigest(): IDigest;
+begin
+  Result := TDigestUtilities.GetDigest('BLAKE2B-512');
+end;
+
+{ TEd25519Sha512 }
+
+function TEd25519Sha512.CreateDigest: IDigest;
+begin
+  Result := TDigestUtilities.GetDigest('SHA-512');
+end;
+
 { TTestEd25519 }
 
-procedure TTestEd25519.CheckEd25519Vector(const ASK, APK, AM, ASig, AText: String);
+procedure TTestEd25519.ImplCheckEd25519Vector(AEd25519: TEd25519; const ASK, APK, AM, ASig, AText: String);
 var
   LSk, LPk, LM, LSig, LPkGen, LBadSig, LSigGen: TBytes;
   LShouldVerify, LShouldNotVerify: Boolean;
@@ -100,7 +141,7 @@ begin
   LPk := DecodeHex(APK);
 
   System.SetLength(LPkGen, TEd25519.PublicKeySize);
-  FEd25519.GeneratePublicKey(LSk, 0, LPkGen, 0);
+  AEd25519.GeneratePublicKey(LSk, 0, LPkGen, 0);
   CheckTrue(AreEqual(LPk, LPkGen), AText);
 
   LM := DecodeHex(AM);
@@ -111,17 +152,27 @@ begin
     xor $80);
 
   System.SetLength(LSigGen, TEd25519.SignatureSize);
-  FEd25519.Sign(LSk, 0, LM, 0, System.Length(LM), LSigGen, 0);
+  AEd25519.Sign(LSk, 0, LM, 0, System.Length(LM), LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  FEd25519.Sign(LSk, 0, LPk, 0, LM, 0, System.Length(LM), LSigGen, 0);
+  AEd25519.Sign(LSk, 0, LPk, 0, LM, 0, System.Length(LM), LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LShouldVerify := FEd25519.Verify(LSig, 0, LPk, 0, LM, 0, System.Length(LM));
+  LShouldVerify := AEd25519.Verify(LSig, 0, LPk, 0, LM, 0, System.Length(LM));
   CheckTrue(LShouldVerify, AText);
 
-  LShouldNotVerify := FEd25519.Verify(LBadSig, 0, LPk, 0, LM, 0, System.Length(LM));
+  LShouldNotVerify := AEd25519.Verify(LBadSig, 0, LPk, 0, LM, 0, System.Length(LM));
   CheckFalse(LShouldNotVerify, AText);
+end;
+
+procedure TTestEd25519.CheckEd25519Vector(const ASK, APK, AM, ASig, AText: String);
+begin
+  ImplCheckEd25519Vector(FEd25519, ASK, APK, AM, ASig, AText);
+end;
+
+procedure TTestEd25519.CheckEd25519VectorBlake2b(const ASK, APK, AM, ASig, AText: String);
+begin
+  ImplCheckEd25519Vector(FEd25519Blake2b, ASK, APK, AM, ASig, AText);
 end;
 
 procedure TTestEd25519.CheckEd25519ctxVector(const ASK, APK, AM, ACTX, ASig,
@@ -184,7 +235,7 @@ begin
 
   System.SetLength(LSigGen, TEd25519.SignatureSize);
 
-  LPrehash := TEd25519.CreatePreHash();
+  LPrehash := FEd25519.CreatePreHash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
   System.SetLength(LPh, TEd25519.PrehashSize);
   LPrehash.DoFinal(LPh, 0);
@@ -201,22 +252,22 @@ begin
   LShouldNotVerify := FEd25519.VerifyPreHash(LBadSig, 0, LPk, 0, LCtx, LPh, 0);
   CheckFalse(LShouldNotVerify, AText);
 
-  LPrehash := TEd25519.CreatePreHash();
+  LPrehash := FEd25519.CreatePreHash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
   FEd25519.SignPreHash(LSk, 0, LCtx, LPrehash, LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LPrehash := TEd25519.CreatePreHash();
+  LPrehash := FEd25519.CreatePreHash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
   FEd25519.SignPreHash(LSk, 0, LPk, 0, LCtx, LPrehash, LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LPrehash := TEd25519.CreatePreHash();
+  LPrehash := FEd25519.CreatePreHash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
   LShouldVerify := FEd25519.VerifyPreHash(LSig, 0, LPk, 0, LCtx, LPrehash);
   CheckTrue(LShouldVerify, AText);
 
-  LPrehash := TEd25519.CreatePreHash();
+  LPrehash := FEd25519.CreatePreHash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
   LShouldNotVerify := FEd25519.VerifyPreHash(LBadSig, 0, LPk, 0, LCtx, LPrehash);
   CheckFalse(LShouldNotVerify, AText);
@@ -259,12 +310,15 @@ begin
   TEd25519.Precompute();
   FRandom := TSecureRandom.Create();
   FEd25519 := TEd25519.Create();
+  FEd25519Blake2b := TEd25519Blake2b.Create();
 end;
 
 procedure TTestEd25519.TearDown;
 begin
   FEd25519.Free;
   FEd25519 := nil;
+  FEd25519Blake2b.Free;
+  FEd25519Blake2b := nil;
   inherited;
 end;
 
@@ -287,7 +341,7 @@ begin
   for I := 0 to 9 do
   begin
     FEd25519.GeneratePrivateKey(FRandom, LSk);
-    LPublicPoint := TEd25519.GeneratePublicKey(LSk, 0);
+    LPublicPoint := FEd25519.GeneratePublicKey(LSk, 0);
     TEd25519.EncodePublicPoint(LPublicPoint, LPk, 0);
 
     FEd25519.GeneratePublicKey(LSk, 0, LPk2, 0);
@@ -340,7 +394,7 @@ begin
   for I := 0 to 9 do
   begin
     FEd25519.GeneratePrivateKey(FRandom, LSk);
-    LPublicPoint := TEd25519.GeneratePublicKey(LSk, 0);
+    LPublicPoint := FEd25519.GeneratePublicKey(LSk, 0);
     TEd25519.EncodePublicPoint(LPublicPoint, LPk, 0);
 
     FEd25519.GeneratePublicKey(LSk, 0, LPk2, 0);
@@ -396,7 +450,7 @@ begin
   for I := 0 to 9 do
   begin
     FEd25519.GeneratePrivateKey(FRandom, LSk);
-    LPublicPoint := TEd25519.GeneratePublicKey(LSk, 0);
+    LPublicPoint := FEd25519.GeneratePublicKey(LSk, 0);
     TEd25519.EncodePublicPoint(LPublicPoint, LPk, 0);
 
     FEd25519.GeneratePublicKey(LSk, 0, LPk2, 0);
@@ -404,7 +458,7 @@ begin
 
     LMLen := FRandom.NextInt32() and 255;
 
-    LPrehash := TEd25519.CreatePreHash();
+    LPrehash := FEd25519.CreatePreHash();
     LPrehash.BlockUpdate(LM, 0, LMLen);
     LPrehash.DoFinal(LPh, 0);
 
@@ -430,6 +484,82 @@ begin
     LShouldNotVerify := FEd25519.VerifyPreHash(LSig1, 0, LPublicPoint, LCtx, LPh, 0);
     CheckFalse(LShouldNotVerify,
       Format('Ed25519ph consistent verification failure #%d', [I]));
+  end;
+end;
+
+procedure TTestEd25519.TestEd25519ConsistencyDefaultMatchesSHA512Digest;
+var
+  LEdDefault, LEdSha512: TEd25519;
+  LSk, LPkDefault, LPkSha512, LM, LCtx, LPh, LSigDefault, LSigSha512: TBytes;
+  LPublicPoint: TEd25519.IPublicPoint;
+  I, LMLen: Int32;
+  LPrehash: IDigest;
+begin
+  LEdDefault := TEd25519.Create();
+  LEdSha512 := TEd25519Sha512.Create();
+  try
+    System.SetLength(LSk, TEd25519.SecretKeySize);
+    System.SetLength(LPkDefault, TEd25519.PublicKeySize);
+    System.SetLength(LPkSha512, TEd25519.PublicKeySize);
+    System.SetLength(LM, 255);
+    System.SetLength(LCtx, FRandom.NextInt32() and 7);
+    System.SetLength(LPh, TEd25519.PrehashSize);
+    System.SetLength(LSigDefault, TEd25519.SignatureSize);
+    System.SetLength(LSigSha512, TEd25519.SignatureSize);
+    FRandom.NextBytes(LM);
+    FRandom.NextBytes(LCtx);
+
+    for I := 0 to 9 do
+    begin
+      FEd25519.GeneratePrivateKey(FRandom, LSk);
+      LEdDefault.GeneratePublicKey(LSk, 0, LPkDefault, 0);
+      LEdSha512.GeneratePublicKey(LSk, 0, LPkSha512, 0);
+      CheckTrue(AreEqual(LPkDefault, LPkSha512), Format('Default SHA-512 key gen consistent #%d', [I]));
+      LPublicPoint := LEdDefault.GeneratePublicKey(LSk, 0);
+
+      LMLen := FRandom.NextInt32() and 255;
+      LEdDefault.Sign(LSk, 0, LM, 0, LMLen, LSigDefault, 0);
+      LEdSha512.Sign(LSk, 0, LM, 0, LMLen, LSigSha512, 0);
+      CheckTrue(AreEqual(LSigDefault, LSigSha512), Format('Default SHA-512 sign consistent #%d', [I]));
+
+      LEdDefault.Sign(LSk, 0, LPkDefault, 0, LM, 0, LMLen, LSigDefault, 0);
+      LEdSha512.Sign(LSk, 0, LPkSha512, 0, LM, 0, LMLen, LSigSha512, 0);
+      CheckTrue(AreEqual(LSigDefault, LSigSha512), Format('Default SHA-512 sign with Pk consistent #%d', [I]));
+
+      CheckTrue(LEdDefault.Verify(LSigDefault, 0, LPkDefault, 0, LM, 0, LMLen), Format('Default verify own sig #%d', [I]));
+      CheckTrue(LEdSha512.Verify(LSigSha512, 0, LPkSha512, 0, LM, 0, LMLen), Format('SHA-512 verify own sig #%d', [I]));
+      CheckTrue(LEdDefault.Verify(LSigDefault, 0, LPkSha512, 0, LM, 0, LMLen), Format('Default sig with SHA-512 pubkey #%d', [I]));
+      CheckTrue(LEdSha512.Verify(LSigSha512, 0, LPkDefault, 0, LM, 0, LMLen), Format('SHA-512 sig with default pubkey #%d', [I]));
+
+      CheckTrue(LEdDefault.Verify(LSigDefault, 0, LPublicPoint, LM, 0, LMLen), Format('Default verify PublicPoint own sig #%d', [I]));
+      CheckTrue(LEdSha512.Verify(LSigSha512, 0, LPublicPoint, LM, 0, LMLen), Format('SHA-512 verify PublicPoint own sig #%d', [I]));
+      CheckTrue(LEdSha512.Verify(LSigDefault, 0, LPublicPoint, LM, 0, LMLen), Format('Default sig with SHA-512 pubkey Verify PublicPoint #%d', [I]));
+      CheckTrue(LEdDefault.Verify(LSigSha512, 0, LPublicPoint, LM, 0, LMLen), Format('SHA-512 sig with default pubkey Verify PublicPoint #%d', [I]));
+
+      LPrehash := LEdDefault.CreatePreHash();
+      LPrehash.BlockUpdate(LM, 0, LMLen);
+      LPrehash.DoFinal(LPh, 0);
+      LEdDefault.SignPreHash(LSk, 0, LCtx, LPh, 0, LSigDefault, 0);
+      LEdSha512.SignPreHash(LSk, 0, LCtx, LPh, 0, LSigSha512, 0);
+      CheckTrue(AreEqual(LSigDefault, LSigSha512), Format('Default SHA-512 SignPrehash consistent #%d', [I]));
+
+      LEdDefault.SignPreHash(LSk, 0, LPkDefault, 0, LCtx, LPh, 0, LSigDefault, 0);
+      LEdSha512.SignPreHash(LSk, 0, LPkSha512, 0, LCtx, LPh, 0, LSigSha512, 0);
+      CheckTrue(AreEqual(LSigDefault, LSigSha512), Format('Default SHA-512 SignPrehash with Pk consistent #%d', [I]));
+
+      CheckTrue(LEdDefault.VerifyPreHash(LSigDefault, 0, LPkDefault, 0, LCtx, LPh, 0), Format('Default VerifyPreHash own sig #%d', [I]));
+      CheckTrue(LEdSha512.VerifyPreHash(LSigSha512, 0, LPkSha512, 0, LCtx, LPh, 0), Format('SHA-512 VerifyPreHash own sig #%d', [I]));
+      CheckTrue(LEdDefault.VerifyPreHash(LSigDefault, 0, LPkSha512, 0, LCtx, LPh, 0), Format('Default sig with SHA-512 pubkey VerifyPreHash #%d', [I]));
+      CheckTrue(LEdSha512.VerifyPreHash(LSigSha512, 0, LPkDefault, 0, LCtx, LPh, 0), Format('SHA-512 sig with default pubkey VerifyPreHash #%d', [I]));
+
+      CheckTrue(LEdDefault.VerifyPreHash(LSigDefault, 0, LPublicPoint, LCtx, LPh, 0), Format('Default VerifyPreHash PublicPoint own sig #%d', [I]));
+      CheckTrue(LEdSha512.VerifyPreHash(LSigSha512, 0, LPublicPoint, LCtx, LPh, 0), Format('SHA-512 VerifyPreHash PublicPoint own sig #%d', [I]));
+      CheckTrue(LEdSha512.VerifyPreHash(LSigDefault, 0, LPublicPoint, LCtx, LPh, 0), Format('Default sig with SHA-512 pubkey VerifyPreHash PublicPoint #%d', [I]));
+      CheckTrue(LEdDefault.VerifyPreHash(LSigSha512, 0, LPublicPoint, LCtx, LPh, 0), Format('SHA-512 sig with default pubkey VerifyPreHash PublicPoint #%d', [I]));
+    end;
+  finally
+    LEdDefault.Free;
+    LEdSha512.Free;
   end;
 end;
 
@@ -560,6 +690,106 @@ begin
     '',
     '98a70222f0b8121aa9d30f813d683f809e462b469c7ff87639499bb94e6dae4131f85042463c2a355a2003d062adf5aaa10b8c61e636062aaad11c2a26083406',
     'Ed25519ph Vector #1');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestSHA512Vector1;
+begin
+  CheckEd25519Vector(
+    '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+    'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a',
+    '',
+    'e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b',
+    'Ed25519 with custom digest SHA-512 Vector #1');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestSHA512Vector2;
+begin
+  CheckEd25519Vector(
+    '4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb',
+    '3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c',
+    '72',
+    '92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00',
+    'Ed25519 with custom digest SHA-512 Vector #2');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestSHA512Vector3;
+begin
+  CheckEd25519Vector(
+    'c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7',
+    'fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025',
+    'af82',
+    '6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a',
+    'Ed25519 with custom digest SHA-512 Vector #3');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestSHA512Vector4;
+begin
+  CheckEd25519Vector(
+    '0d4a05b07352a5436e180356da0ae6efa0345ff7fb1572575772e8005ed978e9',
+    'e61a185bcef2613a6c7cb79763ce945d3b245d76114dd440bcf5f2dc1aa57057',
+    'cbc77b',
+    'd9868d52c2bebce5f3fa5a79891970f309cb6591e3e1702a70276fa97c24b3a8e58606c38c9758529da50ee31b8219cba45271c689afa60b0ea26c99db19b00c',
+    'Ed25519 with custom digest SHA-512 Vector #4');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestSHA512Vector5;
+begin
+  CheckEd25519Vector(
+    '6df9340c138cc188b5fe4464ebaa3f7fc206a2d55c3434707e74c9fc04e20ebb',
+    'c0dac102c4533186e25dc43128472353eaabdb878b152aeb8e001f92d90233a7',
+    '5f4c8989',
+    '124f6fc6b0d100842769e71bd530664d888df8507df6c56dedfdb509aeb93416e26b918d38aa06305df3095697c18b2aa832eaa52edc0ae49fbae5a85e150c07',
+    'Ed25519 with custom digest SHA-512 Vector #5');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestBlake2bVector1;
+begin
+  CheckEd25519VectorBlake2b(
+    '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60',
+    '78e65bf30f893d32fc57ef051c341bdede242544fc2a2112f0fa2c7afdebc02f',
+    '',
+    '99a523bd4616c8161144d6a99d3c32400cb4a326f4d79e307340f6afa11750a0085d7d84626bc9e4b153fc0e396d15ce44c39bae4533804db1fe5b52f2b1b805',
+    'Ed25519-Blake2b Vector #1');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestBlake2bVector2;
+begin
+  CheckEd25519VectorBlake2b(
+    '4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb',
+    '5e71392d91e6a58fedeb0850364f56cd158a60447557d7890389c9b3d4576d4d',
+    '72',
+    '6da75e15b5707f4de5a153c48a5d839fb85074c38aeb6285977f03a13977597f976069fdb903f183474aaa5ed0cfe878ba8ef868c5e47ca3f96ccfb3a89b2a06',
+    'Ed25519-Blake2b Vector #2');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestBlake2bVector3;
+begin
+  CheckEd25519VectorBlake2b(
+    'c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7',
+    '8d53ca70f0eab23b9178345785fcdb69ed6723f8148f7e339e88653700b718da',
+    'af82',
+    '7cc3c13852bd12abf3ce4ca8ca2836cbf86da96c4634c50df3fb80dc809e29db0e109c361353407c1236a904f636868aa33977a99d3f844598db1538b4295203',
+    'Ed25519-Blake2b Vector #3');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestBlake2bVector4;
+begin
+  CheckEd25519VectorBlake2b(
+    '0d4a05b07352a5436e180356da0ae6efa0345ff7fb1572575772e8005ed978e9',
+    '0c6989f1abebe219db9d1e2cb8b0c602b191828ef7238f8e6dbff8a506802c09',
+    'cbc77b',
+    '7fb2c11db736d16ebd07a653463dc8739d3315f89f61a66715e41528cb32b7689393f5af8a66c9c7336e209e6b187259fe266f7941a435fecb8cd7a7fc759400',
+    'Ed25519-Blake2b Vector #4');
+end;
+
+procedure TTestEd25519.TestEd25519WithCustomDigestBlake2bVector5;
+begin
+  CheckEd25519VectorBlake2b(
+    '6df9340c138cc188b5fe4464ebaa3f7fc206a2d55c3434707e74c9fc04e20ebb',
+    'ce99a0d41b2c1bdf593cfe41b0bf38f40ab77a804a71138188cc879b59869d90',
+    '5f4c8989',
+    'e09625735d184975409020659f3c0b07f036a19a7e7aa2100964cef577806e26125d1437577d2d3286c29df871797cac3fc0cdecbbeca616030cfcc6711db606',
+    'Ed25519-Blake2b Vector #5');
 end;
 
 procedure TTestEd25519.TestPublicKeyValidationFull;

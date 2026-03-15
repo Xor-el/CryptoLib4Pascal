@@ -168,25 +168,32 @@ end;
 function TEd448PublicKeyParameters.Verify(AAlgorithm: TEd448.TAlgorithm;
   const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
   const ASig: TCryptoLibByteArray; ASigOff: Int32): Boolean;
+var
+  LEd448: TEd448;
 begin
-  case AAlgorithm of
-    TEd448.TAlgorithm.Ed448:
-      begin
-        if System.Length(ACtx) > 255 then
-          raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
-        Result := TEd448.Verify(ASig, ASigOff, FPublicPoint, ACtx, AMsg,
-          AMsgOff, AMsgLen);
-      end;
-    TEd448.TAlgorithm.Ed448ph:
-      begin
-        if System.Length(ACtx) > 255 then
-          raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
-        if AMsgLen <> TEd448.PrehashSize then
-          raise EArgumentCryptoLibException.CreateRes(@SMsgLen);
-        Result := TEd448.VerifyPrehash(ASig, ASigOff, FPublicPoint, ACtx, AMsg, AMsgOff);
-      end;
-  else
-    raise EArgumentCryptoLibException.CreateRes(@SUnsupportedAlgorithm);
+  LEd448 := TEd448.Create();
+  try
+    case AAlgorithm of
+      TEd448.TAlgorithm.Ed448:
+        begin
+          if System.Length(ACtx) > 255 then
+            raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
+          Result := LEd448.Verify(ASig, ASigOff, FPublicPoint, ACtx, AMsg,
+            AMsgOff, AMsgLen);
+        end;
+      TEd448.TAlgorithm.Ed448ph:
+        begin
+          if System.Length(ACtx) > 255 then
+            raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
+          if AMsgLen <> TEd448.PrehashSize then
+            raise EArgumentCryptoLibException.CreateRes(@SMsgLen);
+          Result := LEd448.VerifyPrehash(ASig, ASigOff, FPublicPoint, ACtx, AMsg, AMsgOff);
+        end;
+    else
+      raise EArgumentCryptoLibException.CreateRes(@SUnsupportedAlgorithm);
+    end;
+  finally
+    LEd448.Free;
   end;
 end;
 
@@ -219,10 +226,17 @@ end;
 { TEd448PrivateKeyParameters }
 
 constructor TEd448PrivateKeyParameters.Create(const ARandom: ISecureRandom);
+var
+  LEd448: TEd448;
 begin
   inherited Create(True);
   System.SetLength(FData, KeySize);
-  TEd448.GeneratePrivateKey(ARandom, FData);
+  LEd448 := TEd448.Create();
+  try
+    LEd448.GeneratePrivateKey(ARandom, FData);
+  finally
+    LEd448.Free;
+  end;
 end;
 
 constructor TEd448PrivateKeyParameters.Create(const ABuf: TCryptoLibByteArray);
@@ -261,12 +275,18 @@ end;
 
 function TEd448PrivateKeyParameters.GeneratePublicKey: IEd448PublicKeyParameters;
 var
+  LEd448: TEd448;
   LPublicPoint: TEd448.IPublicPoint;
 begin
   if FCachedPublicKey = nil then
   begin
-    LPublicPoint := TEd448.GeneratePublicKey(FData, 0);
-    FCachedPublicKey := TEd448PublicKeyParameters.Create(LPublicPoint);
+    LEd448 := TEd448.Create();
+    try
+      LPublicPoint := LEd448.GeneratePublicKey(FData, 0);
+      FCachedPublicKey := TEd448PublicKeyParameters.Create(LPublicPoint);
+    finally
+      LEd448.Free;
+    end;
   end;
   Result := FCachedPublicKey;
 end;
@@ -275,26 +295,32 @@ procedure TEd448PrivateKeyParameters.Sign(AAlgorithm: TEd448.TAlgorithm;
   const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
   const ASig: TCryptoLibByteArray; ASigOff: Int32);
 var
+  LEd448: TEd448;
   LPk: TCryptoLibByteArray;
 begin
   LPk := GeneratePublicKey().GetEncoded();
-  case AAlgorithm of
-    TEd448.TAlgorithm.Ed448:
-      begin
-        if System.Length(ACtx) > 255 then
-          raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
-        TEd448.Sign(FData, 0, LPk, 0, ACtx, AMsg, AMsgOff, AMsgLen, ASig, ASigOff);
-      end;
-    TEd448.TAlgorithm.Ed448ph:
-      begin
-        if System.Length(ACtx) > 255 then
-          raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
-        if AMsgLen <> TEd448.PrehashSize then
-          raise EArgumentCryptoLibException.CreateRes(@SMsgLen);
-        TEd448.SignPrehash(FData, 0, LPk, 0, ACtx, AMsg, AMsgOff, ASig, ASigOff);
-      end;
-  else
-    raise EArgumentCryptoLibException.CreateRes(@SUnsupportedAlgorithm);
+  LEd448 := TEd448.Create();
+  try
+    case AAlgorithm of
+      TEd448.TAlgorithm.Ed448:
+        begin
+          if System.Length(ACtx) > 255 then
+            raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
+          LEd448.Sign(FData, 0, LPk, 0, ACtx, AMsg, AMsgOff, AMsgLen, ASig, ASigOff);
+        end;
+      TEd448.TAlgorithm.Ed448ph:
+        begin
+          if System.Length(ACtx) > 255 then
+            raise EArgumentCryptoLibException.CreateRes(@SCtxLength);
+          if AMsgLen <> TEd448.PrehashSize then
+            raise EArgumentCryptoLibException.CreateRes(@SMsgLen);
+          LEd448.SignPrehash(FData, 0, LPk, 0, ACtx, AMsg, AMsgOff, ASig, ASigOff);
+        end;
+    else
+      raise EArgumentCryptoLibException.CreateRes(@SUnsupportedAlgorithm);
+    end;
+  finally
+    LEd448.Free;
   end;
 end;
 

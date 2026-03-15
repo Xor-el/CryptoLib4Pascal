@@ -32,6 +32,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIXof,
+  ClpDigestUtilities,
   ClpEd448,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -43,6 +44,8 @@ type
   private
   var
     FRandom: ISecureRandom;
+    FEd448: TEd448;
+    FEd448Xof: TEd448;
 
     procedure CheckEd448Vector(const ASK, APK, AM, ACTX, ASig, AText: String);
     procedure CheckEd448phVector(const ASK, APK, AM, ACTX, ASig, AText: String);
@@ -51,6 +54,7 @@ type
     procedure TearDown; override;
   published
     procedure TestEd448Consistency();
+    procedure TestEd448ConsistencyDefaultMatchesXof();
     procedure TestEd448phConsistency();
     procedure TestEd448Vector1();
     procedure TestEd448Vector2();
@@ -69,6 +73,17 @@ type
 
 implementation
 
+type
+  TEd448Shake256 = class(TEd448)
+  strict protected
+    function CreateXof(): IXof; override;
+  end;
+
+function TEd448Shake256.CreateXof(): IXof;
+begin
+  Result := TDigestUtilities.GetDigest('SHAKE256-512') as IXof;
+end;
+
 { TTestEd448 }
 
 procedure TTestEd448.CheckEd448Vector(const ASK, APK, AM, ACTX, ASig, AText: String);
@@ -80,7 +95,7 @@ begin
   LPk := DecodeHex(APK);
 
   System.SetLength(LPkGen, TEd448.PublicKeySize);
-  TEd448.GeneratePublicKey(LSk, 0, LPkGen, 0);
+  FEd448.GeneratePublicKey(LSk, 0, LPkGen, 0);
   CheckTrue(AreEqual(LPk, LPkGen), AText);
 
   LM := DecodeHex(AM);
@@ -91,16 +106,16 @@ begin
   LBadSig[TEd448.SignatureSize - 1] := Byte(LBadSig[TEd448.SignatureSize - 1] xor $80);
 
   System.SetLength(LSigGen, TEd448.SignatureSize);
-  TEd448.Sign(LSk, 0, LCtx, LM, 0, System.Length(LM), LSigGen, 0);
+  FEd448.Sign(LSk, 0, LCtx, LM, 0, System.Length(LM), LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  TEd448.Sign(LSk, 0, LPk, 0, LCtx, LM, 0, System.Length(LM), LSigGen, 0);
+  FEd448.Sign(LSk, 0, LPk, 0, LCtx, LM, 0, System.Length(LM), LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LShouldVerify := TEd448.Verify(LSig, 0, LPk, 0, LCtx, LM, 0, System.Length(LM));
+  LShouldVerify := FEd448.Verify(LSig, 0, LPk, 0, LCtx, LM, 0, System.Length(LM));
   CheckTrue(LShouldVerify, AText);
 
-  LShouldNotVerify := TEd448.Verify(LBadSig, 0, LPk, 0, LCtx, LM, 0, System.Length(LM));
+  LShouldNotVerify := FEd448.Verify(LBadSig, 0, LPk, 0, LCtx, LM, 0, System.Length(LM));
   CheckFalse(LShouldNotVerify, AText);
 end;
 
@@ -114,7 +129,7 @@ begin
   LPk := DecodeHex(APK);
 
   System.SetLength(LPkGen, TEd448.PublicKeySize);
-  TEd448.GeneratePublicKey(LSk, 0, LPkGen, 0);
+  FEd448.GeneratePublicKey(LSk, 0, LPkGen, 0);
   CheckTrue(AreEqual(LPk, LPkGen), AText);
 
   LM := DecodeHex(AM);
@@ -126,41 +141,41 @@ begin
 
   System.SetLength(LSigGen, TEd448.SignatureSize);
 
-  LPrehash := TEd448.CreatePrehash();
+  LPrehash := FEd448.CreatePrehash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
   System.SetLength(LPh, TEd448.PrehashSize);
   LPrehash.OutputFinal(LPh, 0, System.Length(LPh));
 
-  TEd448.SignPrehash(LSk, 0, LCtx, LPh, 0, LSigGen, 0);
+  FEd448.SignPrehash(LSk, 0, LCtx, LPh, 0, LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  TEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPh, 0, LSigGen, 0);
+  FEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPh, 0, LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LShouldVerify := TEd448.VerifyPrehash(LSig, 0, LPk, 0, LCtx, LPh, 0);
+  LShouldVerify := FEd448.VerifyPrehash(LSig, 0, LPk, 0, LCtx, LPh, 0);
   CheckTrue(LShouldVerify, AText);
 
-  LShouldNotVerify := TEd448.VerifyPrehash(LBadSig, 0, LPk, 0, LCtx, LPh, 0);
+  LShouldNotVerify := FEd448.VerifyPrehash(LBadSig, 0, LPk, 0, LCtx, LPh, 0);
   CheckFalse(LShouldNotVerify, AText);
 
-  LPrehash := TEd448.CreatePrehash();
+  LPrehash := FEd448.CreatePrehash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
-  TEd448.SignPrehash(LSk, 0, LCtx, LPrehash, LSigGen, 0);
+  FEd448.SignPrehash(LSk, 0, LCtx, LPrehash, LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LPrehash := TEd448.CreatePrehash();
+  LPrehash := FEd448.CreatePrehash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
-  TEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPrehash, LSigGen, 0);
+  FEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPrehash, LSigGen, 0);
   CheckTrue(AreEqual(LSig, LSigGen), AText);
 
-  LPrehash := TEd448.CreatePrehash();
+  LPrehash := FEd448.CreatePrehash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
-  LShouldVerify := TEd448.VerifyPrehash(LSig, 0, LPk, 0, LCtx, LPrehash);
+  LShouldVerify := FEd448.VerifyPrehash(LSig, 0, LPk, 0, LCtx, LPrehash);
   CheckTrue(LShouldVerify, AText);
 
-  LPrehash := TEd448.CreatePrehash();
+  LPrehash := FEd448.CreatePrehash();
   LPrehash.BlockUpdate(LM, 0, System.Length(LM));
-  LShouldNotVerify := TEd448.VerifyPrehash(LBadSig, 0, LPk, 0, LCtx, LPrehash);
+  LShouldNotVerify := FEd448.VerifyPrehash(LBadSig, 0, LPk, 0, LCtx, LPrehash);
   CheckFalse(LShouldNotVerify, AText);
 end;
 
@@ -169,10 +184,14 @@ begin
   inherited;
   TEd448.Precompute();
   FRandom := TSecureRandom.Create();
+  FEd448 := TEd448.Create();
+  FEd448Xof := TEd448Shake256.Create();
 end;
 
 procedure TTestEd448.TearDown;
 begin
+  FEd448Xof.Free;
+  FEd448.Free;
   inherited;
 end;
 
@@ -196,33 +215,107 @@ begin
 
   for I := 0 to 9 do
   begin
-    TEd448.GeneratePrivateKey(FRandom, LSk);
-    LPublicPoint := TEd448.GeneratePublicKey(LSk, 0);
+    FEd448.GeneratePrivateKey(FRandom, LSk);
+    LPublicPoint := FEd448.GeneratePublicKey(LSk, 0);
     TEd448.EncodePublicPoint(LPublicPoint, LPk, 0);
 
-    TEd448.GeneratePublicKey(LSk, 0, LPk2, 0);
+    FEd448.GeneratePublicKey(LSk, 0, LPk2, 0);
     CheckTrue(AreEqual(LPk, LPk2), Format('Ed448 consistent generation #%d', [I]));
 
     LMLen := FRandom.NextInt32() and 255;
 
-    TEd448.Sign(LSk, 0, LCtx, LM, 0, LMLen, LSig1, 0);
-    TEd448.Sign(LSk, 0, LPk, 0, LCtx, LM, 0, LMLen, LSig2, 0);
+    FEd448.Sign(LSk, 0, LCtx, LM, 0, LMLen, LSig1, 0);
+    FEd448.Sign(LSk, 0, LPk, 0, LCtx, LM, 0, LMLen, LSig2, 0);
 
     CheckTrue(AreEqual(LSig1, LSig2), Format('Ed448 consistent signatures #%d', [I]));
 
-    LShouldVerify := TEd448.Verify(LSig1, 0, LPk, 0, LCtx, LM, 0, LMLen);
+    LShouldVerify := FEd448.Verify(LSig1, 0, LPk, 0, LCtx, LM, 0, LMLen);
     CheckTrue(LShouldVerify, Format('Ed448 consistent sign/verify #%d', [I]));
 
-    LShouldVerify := TEd448.Verify(LSig1, 0, LPublicPoint, LCtx, LM, 0, LMLen);
+    LShouldVerify := FEd448.Verify(LSig1, 0, LPublicPoint, LCtx, LM, 0, LMLen);
     CheckTrue(LShouldVerify, Format('Ed448 consistent sign/verify #%d', [I]));
 
     LSig1[TEd448.PublicKeySize - 1] := Byte(LSig1[TEd448.PublicKeySize - 1] xor $80);
 
-    LShouldNotVerify := TEd448.Verify(LSig1, 0, LPk, 0, LCtx, LM, 0, LMLen);
+    LShouldNotVerify := FEd448.Verify(LSig1, 0, LPk, 0, LCtx, LM, 0, LMLen);
     CheckFalse(LShouldNotVerify, Format('Ed448 consistent verification failure #%d', [I]));
 
-    LShouldNotVerify := TEd448.Verify(LSig1, 0, LPublicPoint, LCtx, LM, 0, LMLen);
+    LShouldNotVerify := FEd448.Verify(LSig1, 0, LPublicPoint, LCtx, LM, 0, LMLen);
     CheckFalse(LShouldNotVerify, Format('Ed448 consistent verification failure #%d', [I]));
+  end;
+end;
+
+procedure TTestEd448.TestEd448ConsistencyDefaultMatchesXof;
+var
+  LSk, LPk, LPkDefault, LPkXof, LCtx, LM, LPh, LSig1, LSig2: TBytes;
+  LPublicPoint: TEd448.IPublicPoint;
+  I, LMLen: Int32;
+  LPrehash: IXof;
+begin
+  System.SetLength(LSk, TEd448.SecretKeySize);
+  System.SetLength(LPk, TEd448.PublicKeySize);
+  System.SetLength(LPkDefault, TEd448.PublicKeySize);
+  System.SetLength(LPkXof, TEd448.PublicKeySize);
+  System.SetLength(LCtx, FRandom.NextInt32() and 7);
+  System.SetLength(LM, 255);
+  System.SetLength(LPh, TEd448.PrehashSize);
+  System.SetLength(LSig1, TEd448.SignatureSize);
+  System.SetLength(LSig2, TEd448.SignatureSize);
+
+  FRandom.NextBytes(LCtx);
+  FRandom.NextBytes(LM);
+
+  for I := 0 to 9 do
+  begin
+    FEd448.GeneratePrivateKey(FRandom, LSk);
+
+    FEd448.GeneratePublicKey(LSk, 0, LPkDefault, 0);
+    FEd448Xof.GeneratePublicKey(LSk, 0, LPkXof, 0);
+    CheckTrue(AreEqual(LPkDefault, LPkXof), Format('Default vs XOF key gen #%d', [I]));
+    LPk := LPkDefault;
+    LPublicPoint := FEd448.GeneratePublicKey(LSk, 0);
+
+    LMLen := FRandom.NextInt32() and 255;
+
+    FEd448.Sign(LSk, 0, LCtx, LM, 0, LMLen, LSig1, 0);
+    FEd448Xof.Sign(LSk, 0, LCtx, LM, 0, LMLen, LSig2, 0);
+    CheckTrue(AreEqual(LSig1, LSig2), Format('Default vs XOF Sign #%d', [I]));
+
+    FEd448.Sign(LSk, 0, LPk, 0, LCtx, LM, 0, LMLen, LSig1, 0);
+    FEd448Xof.Sign(LSk, 0, LPk, 0, LCtx, LM, 0, LMLen, LSig2, 0);
+    CheckTrue(AreEqual(LSig1, LSig2), Format('Default vs XOF Sign with Pk #%d', [I]));
+
+    CheckTrue(FEd448.Verify(LSig1, 0, LPk, 0, LCtx, LM, 0, LMLen), Format('Default verify own sig #%d', [I]));
+    CheckTrue(FEd448Xof.Verify(LSig2, 0, LPk, 0, LCtx, LM, 0, LMLen), Format('XOF verify own sig #%d', [I]));
+    CheckTrue(FEd448Xof.Verify(LSig1, 0, LPk, 0, LCtx, LM, 0, LMLen), Format('Default sig with XOF pubkey Verify #%d', [I]));
+    CheckTrue(FEd448.Verify(LSig2, 0, LPk, 0, LCtx, LM, 0, LMLen), Format('XOF sig with default pubkey Verify #%d', [I]));
+
+    CheckTrue(FEd448.Verify(LSig1, 0, LPublicPoint, LCtx, LM, 0, LMLen), Format('Default verify PublicPoint own sig #%d', [I]));
+    CheckTrue(FEd448Xof.Verify(LSig2, 0, LPublicPoint, LCtx, LM, 0, LMLen), Format('XOF verify PublicPoint own sig #%d', [I]));
+    CheckTrue(FEd448Xof.Verify(LSig1, 0, LPublicPoint, LCtx, LM, 0, LMLen), Format('Default sig with XOF pubkey Verify PublicPoint #%d', [I]));
+    CheckTrue(FEd448.Verify(LSig2, 0, LPublicPoint, LCtx, LM, 0, LMLen), Format('XOF sig with default pubkey Verify PublicPoint #%d', [I]));
+
+    LPrehash := FEd448.CreatePrehash();
+    LPrehash.BlockUpdate(LM, 0, LMLen);
+    LPrehash.OutputFinal(LPh, 0, System.Length(LPh));
+
+    FEd448.SignPrehash(LSk, 0, LCtx, LPh, 0, LSig1, 0);
+    FEd448Xof.SignPrehash(LSk, 0, LCtx, LPh, 0, LSig2, 0);
+    CheckTrue(AreEqual(LSig1, LSig2), Format('Default vs XOF SignPrehash #%d', [I]));
+
+    FEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPh, 0, LSig1, 0);
+    FEd448Xof.SignPrehash(LSk, 0, LPk, 0, LCtx, LPh, 0, LSig2, 0);
+    CheckTrue(AreEqual(LSig1, LSig2), Format('Default vs XOF SignPrehash with Pk #%d', [I]));
+
+    CheckTrue(FEd448.VerifyPrehash(LSig1, 0, LPk, 0, LCtx, LPh, 0), Format('Default VerifyPrehash own sig #%d', [I]));
+    CheckTrue(FEd448Xof.VerifyPrehash(LSig2, 0, LPk, 0, LCtx, LPh, 0), Format('XOF VerifyPrehash own sig #%d', [I]));
+    CheckTrue(FEd448Xof.VerifyPrehash(LSig1, 0, LPk, 0, LCtx, LPh, 0), Format('Default sig with XOF pubkey VerifyPrehash #%d', [I]));
+    CheckTrue(FEd448.VerifyPrehash(LSig2, 0, LPk, 0, LCtx, LPh, 0), Format('XOF sig with default pubkey VerifyPrehash #%d', [I]));
+
+    CheckTrue(FEd448.VerifyPrehash(LSig1, 0, LPublicPoint, LCtx, LPh, 0), Format('Default VerifyPrehash PublicPoint own sig #%d', [I]));
+    CheckTrue(FEd448Xof.VerifyPrehash(LSig2, 0, LPublicPoint, LCtx, LPh, 0), Format('XOF VerifyPrehash PublicPoint own sig #%d', [I]));
+    CheckTrue(FEd448Xof.VerifyPrehash(LSig1, 0, LPublicPoint, LCtx, LPh, 0), Format('Default sig with XOF pubkey VerifyPrehash PublicPoint #%d', [I]));
+    CheckTrue(FEd448.VerifyPrehash(LSig2, 0, LPublicPoint, LCtx, LPh, 0), Format('XOF sig with default pubkey VerifyPrehash PublicPoint #%d', [I]));
   end;
 end;
 
@@ -248,36 +341,36 @@ begin
 
   for I := 0 to 9 do
   begin
-    TEd448.GeneratePrivateKey(FRandom, LSk);
-    LPublicPoint := TEd448.GeneratePublicKey(LSk, 0);
+    FEd448.GeneratePrivateKey(FRandom, LSk);
+    LPublicPoint := FEd448.GeneratePublicKey(LSk, 0);
     TEd448.EncodePublicPoint(LPublicPoint, LPk, 0);
 
-    TEd448.GeneratePublicKey(LSk, 0, LPk2, 0);
+    FEd448.GeneratePublicKey(LSk, 0, LPk2, 0);
     CheckTrue(AreEqual(LPk, LPk2), Format('Ed448 consistent generation #%d', [I]));
 
     LMLen := FRandom.NextInt32() and 255;
 
-    LPrehash := TEd448.CreatePrehash();
+    LPrehash := FEd448.CreatePrehash();
     LPrehash.BlockUpdate(LM, 0, LMLen);
     LPrehash.OutputFinal(LPh, 0, System.Length(LPh));
 
-    TEd448.SignPrehash(LSk, 0, LCtx, LPh, 0, LSig1, 0);
-    TEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPh, 0, LSig2, 0);
+    FEd448.SignPrehash(LSk, 0, LCtx, LPh, 0, LSig1, 0);
+    FEd448.SignPrehash(LSk, 0, LPk, 0, LCtx, LPh, 0, LSig2, 0);
 
     CheckTrue(AreEqual(LSig1, LSig2), Format('Ed448ph consistent signatures #%d', [I]));
 
-    LShouldVerify := TEd448.VerifyPrehash(LSig1, 0, LPk, 0, LCtx, LPh, 0);
+    LShouldVerify := FEd448.VerifyPrehash(LSig1, 0, LPk, 0, LCtx, LPh, 0);
     CheckTrue(LShouldVerify, Format('Ed448ph consistent sign/verify #%d', [I]));
 
-    LShouldVerify := TEd448.VerifyPrehash(LSig1, 0, LPublicPoint, LCtx, LPh, 0);
+    LShouldVerify := FEd448.VerifyPrehash(LSig1, 0, LPublicPoint, LCtx, LPh, 0);
     CheckTrue(LShouldVerify, Format('Ed448ph consistent sign/verify #%d', [I]));
 
     LSig1[TEd448.PublicKeySize - 1] := Byte(LSig1[TEd448.PublicKeySize - 1] xor $80);
 
-    LShouldNotVerify := TEd448.VerifyPrehash(LSig1, 0, LPk, 0, LCtx, LPh, 0);
+    LShouldNotVerify := FEd448.VerifyPrehash(LSig1, 0, LPk, 0, LCtx, LPh, 0);
     CheckFalse(LShouldNotVerify, Format('Ed448ph consistent verification failure #%d', [I]));
 
-    LShouldNotVerify := TEd448.VerifyPrehash(LSig1, 0, LPublicPoint, LCtx, LPh, 0);
+    LShouldNotVerify := FEd448.VerifyPrehash(LSig1, 0, LPublicPoint, LCtx, LPh, 0);
     CheckFalse(LShouldNotVerify, Format('Ed448ph consistent verification failure #%d', [I]));
   end;
 end;
@@ -436,8 +529,8 @@ begin
 
   for I := 0 to 9 do
   begin
-    TEd448.GeneratePrivateKey(FRandom, LSk);
-    TEd448.GeneratePublicKey(LSk, 0, LPk, 0);
+    FEd448.GeneratePrivateKey(FRandom, LSk);
+    FEd448.GeneratePublicKey(LSk, 0, LPk, 0);
     CheckTrue(TEd448.ValidatePublicKeyFull(LPk, 0));
   end;
 
@@ -487,8 +580,8 @@ begin
 
   for I := 0 to 9 do
   begin
-    TEd448.GeneratePrivateKey(FRandom, LSk);
-    TEd448.GeneratePublicKey(LSk, 0, LPk, 0);
+    FEd448.GeneratePrivateKey(FRandom, LSk);
+    FEd448.GeneratePublicKey(LSk, 0, LPk, 0);
     CheckTrue(TEd448.ValidatePublicKeyPartial(LPk, 0));
   end;
 
