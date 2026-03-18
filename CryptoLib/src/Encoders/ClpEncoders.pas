@@ -57,12 +57,12 @@ implementation
 
 class function TBase58Encoder.Decode(const AInput: String): TCryptoLibByteArray;
 begin
-  Result := TBase58.BitCoin.Decode(AInput);
+  Result := TBase58.Bitcoin.Decode(AInput);
 end;
 
 class function TBase58Encoder.Encode(const AInput: TCryptoLibByteArray): String;
 begin
-  Result := TBase58.BitCoin.Encode(AInput);
+  Result := TBase58.Bitcoin.Encode(AInput);
 end;
 
 { TBase64 }
@@ -81,16 +81,16 @@ end;
 
 class function THexEncoder.Decode(const AInput: String): TCryptoLibByteArray;
 begin
-  Result := TBase16.Decode(AInput);
+  Result := TBase16.UpperCase.Decode(AInput);
 end;
 
 class function THexEncoder.Encode(const AInput: TCryptoLibByteArray; AUpperCase: Boolean): String;
 begin
   case AUpperCase of
     True:
-      Result := TBase16.EncodeUpper(AInput);
+      Result := TBase16.UpperCase.Encode(AInput);
     False:
-      Result := TBase16.EncodeLower(AInput);
+      Result := TBase16.LowerCase.Encode(AInput);
   end;
 end;
 
