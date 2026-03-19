@@ -31,7 +31,8 @@ type
     ['{1EB9E081-1F90-409F-A5B9-3A999EB6CC70}']
 
     procedure Init(const APassword, ASalt: TCryptoLibByteArray;
-      ACost, ABlockSize, AParallelism: Int32);
+      ACost, ABlockSize, AParallelism: Int32;
+      ARelaxCostRestriction: Boolean = False);
 
   end;
 

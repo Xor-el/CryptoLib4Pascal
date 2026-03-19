@@ -58,7 +58,8 @@ type
     constructor Create();
 
     procedure Init(const APassword, ASalt: TCryptoLibByteArray;
-      ACost, ABlockSize, AParallelism: Int32); reintroduce; overload;
+      ACost, ABlockSize, AParallelism: Int32;
+      ARelaxCostRestriction: Boolean = False); reintroduce; overload;
 
     /// <summary>
     /// Generate a key parameter derived from the password, salt,
@@ -172,11 +173,11 @@ begin
 end;
 
 procedure TScryptParametersGenerator.Init(const APassword, ASalt: TCryptoLibByteArray;
-  ACost, ABlockSize, AParallelism: Int32);
+  ACost, ABlockSize, AParallelism: Int32; ARelaxCostRestriction: Boolean);
 begin
   inherited Init(APassword, ASalt, 0); // Scrypt has no `Iteration` in a sense so we pass `0`.
   FPBKDF_Scrypt := TKDF.TPBKDF_Scrypt.CreatePBKDF_Scrypt(FPassword, FSalt, ACost,
-    ABlockSize, AParallelism);
+    ABlockSize, AParallelism, ARelaxCostRestriction);
 end;
 
 end.
