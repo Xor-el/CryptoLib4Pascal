@@ -549,15 +549,15 @@
         <IsPartOfProject Value="True"/>
       </Unit126>
       <Unit127>
-        <Filename Value="..\src\Crypto\ClpBip340SchnorrTests.pas"/>
+        <Filename Value="..\src\Utils\ClpCertTestUtilities.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit127>
       <Unit128>
-        <Filename Value="..\src\Crypto\ClpBip327MuSig2Tests.pas"/>
+        <Filename Value="..\src\Crypto\Bip327MuSig2Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit128>
       <Unit129>
-        <Filename Value="..\src\Utils\ClpCertTestUtilities.pas"/>
+        <Filename Value="..\src\Crypto\Bip340SchnorrTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit129>
     </Units>

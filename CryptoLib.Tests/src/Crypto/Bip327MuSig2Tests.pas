@@ -17,7 +17,7 @@
 
 (* BIP-327 MuSig2 tests with embedded vectors from https://github.com/bitcoin/bips/tree/master/bip-0327 *)
 
-unit ClpBip327MuSig2Tests;
+unit Bip327MuSig2Tests;
 
 interface
 
@@ -1072,7 +1072,7 @@ begin
   // Real-world MuSig2 in a server/client model: clients hold secrets and send only
   // public data; server coordinates key agg, nonce agg, session broadcast, partial sig agg, verify.
   LDomain := Secp256k1Domain();
-  LRandom := TSecureRandom.Create() as ISecureRandom;
+  LRandom := TSecureRandom.Create();
   LKpg := TGeneratorUtilities.GetKeyPairGenerator('BIP340Schnorr');
   LKpg.Init(TKeyGenerationParameters.Create(LRandom, 256) as IKeyGenerationParameters);
 

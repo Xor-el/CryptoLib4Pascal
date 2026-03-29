@@ -801,8 +801,8 @@ uses
   Pkcs12Tests in '..\src\Crypto\Pkcs12Tests.pas',
   Pkcs12StoreTests in '..\src\Pkcs\Pkcs12StoreTests.pas',
   X509CertificatePairTests in '..\src\X509\X509CertificatePairTests.pas',
-  ClpBip340SchnorrTests in '..\src\Crypto\ClpBip340SchnorrTests.pas',
-  ClpBip327MuSig2Tests in '..\src\Crypto\ClpBip327MuSig2Tests.pas',
+  Bip340SchnorrTests in '..\src\Crypto\Bip340SchnorrTests.pas',
+  Bip327MuSig2Tests in '..\src\Crypto\Bip327MuSig2Tests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

@@ -189,8 +189,8 @@ begin
   begin
     System.SetLength(LZeroIV, 12);
     TArrayUtilities.Fill<Byte>(LZeroIV, 0, 12, Byte(0));
-    LKeyParam := TKeyParameter.Create(LSeed) as IKeyParameter;
-    LParams := TParametersWithIV.Create(LKeyParam, LZeroIV) as IParametersWithIV;
+    LKeyParam := TKeyParameter.Create(LSeed);
+    LParams := TParametersWithIV.Create(LKeyParam, LZeroIV);
     LCipher := TCipherUtilities.GetCipher('CHACHA7539');
     LCipher.Init(True, LParams);
     System.SetLength(LZeros, 32);
