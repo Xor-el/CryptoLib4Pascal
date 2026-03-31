@@ -32,7 +32,7 @@
 {========================= CPU Architecture ===================================}
 
 {$IFDEF CPU386}
-   {$DEFINE CRYPTOLIB_X86}
+   {$DEFINE CRYPTOLIB_I386}
 {$ENDIF}
 
 {$IFDEF CPUX64}
