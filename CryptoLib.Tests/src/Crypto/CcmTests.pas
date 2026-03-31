@@ -262,8 +262,8 @@ end;
 procedure TTestCcm.TestNistVectorsAndLongData;
 var
   LCcm: ICcmBlockCipher;
-  LA4, LInBuf, LOutBuf, LOutput: TBytes;
-  LLen, LInLen: Int32;
+  LA4: TBytes;
+  LLen: Int32;
 begin
   LCcm := CreateCcmCipher;
 
@@ -285,44 +285,6 @@ begin
 
   // long data case: AAD = A4, plaintext = A4, expected C5/T5
   CheckVectors(4, LCcm, FK4, 112, FN4, FA4, FA4, FT5, FC5);
-
-  // decryption with output specified, non-zero offset
-  LCcm.Init(False,
-    TAeadParameters.Create(TKeyParameter.Create(FK2) as IKeyParameter,
-    48, FN2, FA2) as ICipherParameters);
-
-  SetLength(LInBuf, Length(FC2) + 10);
-  SetLength(LOutBuf, LCcm.GetOutputSize(Length(FC2)) + 10);
-
-  if Length(FC2) > 0 then
-  begin
-    System.Move(FC2[0], LInBuf[10], Length(FC2));
-  end;
-
-  LLen := LCcm.ProcessPacket(LInBuf, 10, Length(FC2), LOutBuf, 10);
-  LOutput := LCcm.ProcessPacket(FC2, 0, Length(FC2));
-
-  if (LLen <> Length(LOutput)) or (not IsEqual(LOutput, LOutBuf, 10)) then
-  begin
-    Fail('decryption output incorrect');
-  end;
-
-  // encryption with output specified, non-zero offset
-  LCcm.Init(True,
-    TAeadParameters.Create(TKeyParameter.Create(FK2) as IKeyParameter,
-    48, FN2, FA2) as ICipherParameters);
-
-  LInLen := LLen;
-  LInBuf := LOutBuf;
-  SetLength(LOutBuf, LCcm.GetOutputSize(LInLen) + 10);
-
-  LLen := LCcm.ProcessPacket(LInBuf, 10, LInLen, LOutBuf, 10);
-  LOutput := LCcm.ProcessPacket(LInBuf, 10, LInLen);
-
-  if (LLen <> Length(LOutput)) or (not IsEqual(LOutput, LOutBuf, 10)) then
-  begin
-    Fail('encryption output incorrect');
-  end;
 end;
 
 procedure TTestCcm.TestCcmIvParameters;
@@ -363,9 +325,50 @@ begin
 end;
 
 procedure TTestCcm.TestOffsets;
+var
+  LCcm: ICcmBlockCipher;
+  LInBuf, LOutBuf, LOutput: TBytes;
+  LLen, LInLen: Int32;
 begin
-  // offset behaviour is already covered in TestNistVectorsAndLongData
-  // via ProcessPacket with non-zero input/output offsets.
+  LCcm := CreateCcmCipher;
+
+  // decryption with output specified, non-zero offset
+  LCcm.Init(False,
+    TAeadParameters.Create(TKeyParameter.Create(FK2) as IKeyParameter,
+    48, FN2, FA2) as ICipherParameters);
+
+  SetLength(LInBuf, Length(FC2) + 10);
+  SetLength(LOutBuf, LCcm.GetOutputSize(Length(FC2)) + 10);
+
+  if Length(FC2) > 0 then
+  begin
+    System.Move(FC2[0], LInBuf[10], Length(FC2));
+  end;
+
+  LLen := LCcm.ProcessPacket(LInBuf, 10, Length(FC2), LOutBuf, 10);
+  LOutput := LCcm.ProcessPacket(FC2, 0, Length(FC2));
+
+  if (LLen <> Length(LOutput)) or (not IsEqual(LOutput, LOutBuf, 10)) then
+  begin
+    Fail('decryption output incorrect');
+  end;
+
+  // encryption with output specified, non-zero offset
+  LCcm.Init(True,
+    TAeadParameters.Create(TKeyParameter.Create(FK2) as IKeyParameter,
+    48, FN2, FA2) as ICipherParameters);
+
+  LInLen := LLen;
+  LInBuf := LOutBuf;
+  SetLength(LOutBuf, LCcm.GetOutputSize(LInLen) + 10);
+
+  LLen := LCcm.ProcessPacket(LInBuf, 10, LInLen, LOutBuf, 10);
+  LOutput := LCcm.ProcessPacket(LInBuf, 10, LInLen);
+
+  if (LLen <> Length(LOutput)) or (not IsEqual(LOutput, LOutBuf, 10)) then
+  begin
+    Fail('encryption output incorrect');
+  end;
 end;
 
 procedure TTestCcm.TestExceptions;
