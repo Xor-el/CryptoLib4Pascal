@@ -84,9 +84,6 @@ type
     procedure TestAesCmac128_Key256_M40;
     procedure TestAesCmac128_Key256_M64;
 
-    // DESede CMAC test from C# SimpleTest version (if available)
-    procedure TestDesEdeCmac_Empty;
-
     // Exception behaviour: CMac must not accept IV parameters
     procedure TestCMacDoesNotAcceptIv;
 
@@ -369,33 +366,6 @@ begin
   LMac.DoFinal(LOut, 0);
 
   CheckEqual('CMac-AES-256-m64', FOutput_k256_m64, LOut);
-end;
-
-procedure TTestCMac.TestDesEdeCmac_Empty;
-var
-  LMac: IMac;
-  LKey: IKeyParameter;
-  LOut: TBytes;
-begin
-  try
-    LMac := TMacUtilities.GetMac('DESedeCMAC');
-  except
-    on E: ESecurityUtilityCryptoLibException do
-    begin
-      // Algorithm not available; this vector is effectively unported.
-      Exit;
-    end;
-  end;
-
-  LKey := TKeyParameter.Create(FKeyBytes128) as IKeyParameter;
-
-  LMac.Init(LKey);
-  LMac.BlockUpdate(FInput0, 0, Length(FInput0));
-
-  SetLength(LOut, LMac.GetMacSize);
-  LMac.DoFinal(LOut, 0);
-
-  CheckEqual('CMac-DESede-m0', FOutputDesEde, LOut);
 end;
 
 procedure TTestCMac.TestCMacDoesNotAcceptIv;

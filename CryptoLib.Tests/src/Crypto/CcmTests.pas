@@ -201,7 +201,7 @@ end;
 procedure TTestCcm.SetUp;
 begin
   inherited;
-  // K1..K4, N1..N4, A1..A4, P1..P4, C1..C4, T1..T4, C5/T5 from C# CCMTest
+
   FK1 := DecodeHex('404142434445464748494a4b4c4d4e4f');
   FN1 := DecodeHex('10111213141516');
   FA1 := DecodeHex('0001020304050607');
