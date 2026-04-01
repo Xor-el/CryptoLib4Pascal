@@ -41,6 +41,8 @@ uses
   ClpIKeyParameter,
   ClpCcmBlockCipher,
   ClpICcmBlockCipher,
+  ClpBlowfishEngine,
+  ClpIBlowfishEngine,
   ClpAesEngine,
   ClpIAesEngine,
   ClpConverters,
@@ -393,17 +395,17 @@ begin
       // expected
     end;
   end;
-  (*
+
   // Wrong block cipher (wrong block size) – constructor should fail
   try
-    LCcm := TCcmBlockCipher.Create(nil);
+    LCcm := TCcmBlockCipher.Create(TBlowfishEngine.Create() as IBlowfishEngine);
     Fail('incorrect block size not picked up');
   except
     on E: EArgumentCryptoLibException do
     begin
       // expected
     end;
-  end; *)
+  end;
 
   // Wrong parameter type (KeyParameter instead of AEAD)
   SetLength(LBad, Length(FK1));

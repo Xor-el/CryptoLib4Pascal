@@ -59,7 +59,7 @@ type
 
   strict private
   const
-    FBlockSize: Int32 = 16;
+    BlockSize: Int32 = 16;
 
   var
     FCipher: IBlockCipher;
@@ -120,12 +120,12 @@ constructor TCcmBlockCipher.Create(const ACipher: IBlockCipher);
 begin
   inherited Create();
   FCipher := ACipher;
-  System.SetLength(FMacBlock, FBlockSize);
+  System.SetLength(FMacBlock, BlockSize);
   FAssociatedText := TMemoryStream.Create;
   FData := TMemoryStream.Create;
 
-  if (ACipher.GetBlockSize() <> FBlockSize) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCipherRequired, [FBlockSize]);
+  if (ACipher.GetBlockSize() <> BlockSize) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCipherRequired, [BlockSize]);
 end;
 
 destructor TCcmBlockCipher.Destroy;
@@ -317,7 +317,7 @@ begin
       raise EInvalidOperationCryptoLibException.CreateRes(@SCcmPacketTooLarge);
   end;
 
-  System.SetLength(LIV, FBlockSize);
+  System.SetLength(LIV, BlockSize);
   LIV[0] := Byte((LQ - 1) and $7);
   System.Move(FNonce[0], LIV[1], LN);
 
@@ -334,17 +334,17 @@ begin
 
     CalculateMac(AInput, AInOff, AInLen, FMacBlock);
 
-    System.SetLength(LEncMac, FBlockSize);
+    System.SetLength(LEncMac, BlockSize);
     LCtrCipher.ProcessBlock(FMacBlock, 0, LEncMac, 0);
 
-    while (LInIndex < (AInOff + AInLen - FBlockSize)) do
+    while (LInIndex < (AInOff + AInLen - BlockSize)) do
     begin
       LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
-      LOutIndex := LOutIndex + FBlockSize;
-      LInIndex := LInIndex + FBlockSize;
+      LOutIndex := LOutIndex + BlockSize;
+      LInIndex := LInIndex + BlockSize;
     end;
 
-    System.SetLength(LBlock, FBlockSize);
+    System.SetLength(LBlock, BlockSize);
 
     System.Move(AInput[LInIndex], LBlock[0], AInLen + AInOff - LInIndex);
 
@@ -371,14 +371,14 @@ begin
       FMacBlock[LI] := 0;
     end;
 
-    while (LInIndex < (AInOff + LOutputLen - FBlockSize)) do
+    while (LInIndex < (AInOff + LOutputLen - BlockSize)) do
     begin
       LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
-      LOutIndex := LOutIndex + FBlockSize;
-      LInIndex := LInIndex + FBlockSize;
+      LOutIndex := LOutIndex + BlockSize;
+      LInIndex := LInIndex + BlockSize;
     end;
 
-    System.SetLength(LBlock, FBlockSize);
+    System.SetLength(LBlock, BlockSize);
 
     System.Move(AInput[LInIndex], LBlock[0], LOutputLen - (LInIndex - AInOff));
 
@@ -386,7 +386,7 @@ begin
 
     System.Move(LBlock[0], AOutput[LOutIndex], LOutputLen - (LInIndex - AInOff));
 
-    System.SetLength(LCalculatedMacBlock, FBlockSize);
+    System.SetLength(LCalculatedMacBlock, BlockSize);
 
     CalculateMac(AOutput, AOutOff, LOutputLen, LCalculatedMacBlock);
 
