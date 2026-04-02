@@ -297,7 +297,7 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 
 > ✅ Tested and passing · ❓ Untested · ➖ Not applicable
 
-**Architectures:** x86, x86_64, ARM32, AArch64
+**Architectures:** I386, X86_64, ARM32, AArch64
 
 ## Running Tests
 
