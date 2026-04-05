@@ -1,4 +1,4 @@
-﻿program CryptoLib.BenchmarkConsole;
+program CryptoLib.BenchmarkConsole;
 
 {$APPTYPE CONSOLE}
 {$R *.res}
@@ -461,6 +461,7 @@ uses
   ClpX509RsaAsn1Objects in '..\..\CryptoLib\src\Asn1\X509\ClpX509RsaAsn1Objects.pas',
   ClpBinaryPrimitives in '..\..\CryptoLib\src\Misc\ClpBinaryPrimitives.pas',
   ClpBitOperations in '..\..\CryptoLib\src\Misc\ClpBitOperations.pas',
+  ClpCpuFeatures in '..\..\CryptoLib\src\Misc\ClpCpuFeatures.pas',
   ClpPack in '..\..\CryptoLib\src\Misc\ClpPack.pas',
   ClpBits in '..\..\CryptoLib\src\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\CryptoLib\src\Math\Raw\ClpMod.pas',

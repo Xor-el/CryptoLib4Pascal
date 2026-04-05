@@ -34,10 +34,16 @@
 
   {$IFDEF CPU386}
      {$DEFINE CRYPTOLIB_I386}
+     {$IFDEF MSWINDOWS}
+        {$DEFINE CRYPTOLIB_I386_ASM}
+     {$ENDIF}
   {$ENDIF}
 
   {$IFDEF CPUX64}
      {$DEFINE CRYPTOLIB_X86_64}
+     {$IFDEF MSWINDOWS}
+        {$DEFINE CRYPTOLIB_X86_64_ASM}
+     {$ENDIF}
   {$ENDIF}
 
   {$IFDEF CPUARM32}
@@ -119,5 +125,27 @@
 {$OVERFLOWCHECKS OFF}
 {$SCOPEDENUMS ON}
 {$POINTERMATH ON}
+
+{============================== SIMD / CPU features ===========================}
+
+// Uncomment to force scalar dispatch (available on all platforms):
+// {$DEFINE CRYPTOLIB_FORCE_SCALAR}
+
+{$IF DEFINED(CRYPTOLIB_I386_ASM) OR DEFINED(CRYPTOLIB_X86_64_ASM)}
+   {$DEFINE CRYPTOLIB_X86_SIMD}
+{$IFEND}
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+// Uncomment ONE to force a specific x86/x86-64 SIMD dispatch level:
+// {$DEFINE CRYPTOLIB_FORCE_SSE2}
+// {$DEFINE CRYPTOLIB_FORCE_SSSE3}
+
+{$IF (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SSE2))
+   OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))
+   OR (DEFINED(CRYPTOLIB_FORCE_SSE2) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))}
+   {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
+{$IFEND}
+
+{$ENDIF}
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
