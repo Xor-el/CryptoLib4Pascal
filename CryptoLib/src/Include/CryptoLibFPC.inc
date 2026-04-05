@@ -33,10 +33,12 @@
 
 {$IFDEF CPU386}
    {$DEFINE CRYPTOLIB_I386}
+   {$DEFINE CRYPTOLIB_I386_ASM}
 {$ENDIF}
 
 {$IFDEF CPUX64}
    {$DEFINE CRYPTOLIB_X86_64}
+   {$DEFINE CRYPTOLIB_X86_64_ASM}
 {$ENDIF}
 
 {$IFDEF CPUARM}
@@ -111,6 +113,9 @@
 {========================= Compiler Mode & Optimizations ======================}
 
 {$MODE DELPHI}
+{$IF DEFINED(CPU386) OR DEFINED(CPUX64)}
+   {$ASMMODE INTEL}
+{$IFEND}
 {$MACRO ON}
 {$NOTES OFF}
 
