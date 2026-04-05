@@ -41,47 +41,47 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpCertificateExample.pas"/>
+        <Filename Value="..\src\Examples\CertificateExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpCipherExample.pas"/>
+        <Filename Value="..\src\Examples\CipherExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpDigestExample.pas"/>
+        <Filename Value="..\src\Examples\DigestExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpEcExample.pas"/>
+        <Filename Value="..\src\Examples\EcExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpRsaExample.pas"/>
+        <Filename Value="..\src\Examples\RsaExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\ClpConsoleLogger.pas"/>
+        <Filename Value="..\src\ConsoleLogger.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\ClpExampleBase.pas"/>
+        <Filename Value="..\src\ExampleBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\ClpExampleExplorer.pas"/>
+        <Filename Value="..\src\ExampleExplorer.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\ClpLogger.pas"/>
+        <Filename Value="..\src\ExampleLogger.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpHybridEncryption.pas"/>
+        <Filename Value="..\src\Examples\HybridEncryption.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\ClpEdExample.pas"/>
+        <Filename Value="..\src\Examples\EdExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>

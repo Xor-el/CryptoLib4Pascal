@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpDigestExample;
+unit DigestExample;
 
 interface
 
@@ -43,7 +43,7 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCryptoLibTypes,
-  ClpExampleBase;
+  ExampleBase;
 
 type
   TDigestExample = class(TExampleBase)

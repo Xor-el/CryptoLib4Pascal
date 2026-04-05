@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpCipherExample;
+unit CipherExample;
 
 interface
 
@@ -38,7 +38,7 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpICipherParameters,
-  ClpExampleBase;
+  ExampleBase;
 
 type
   TCipherExample = class(TExampleBase)

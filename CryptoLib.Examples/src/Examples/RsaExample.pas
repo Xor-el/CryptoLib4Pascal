@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpRsaExample;
+unit RsaExample;
 
 interface
 
@@ -41,8 +41,8 @@ uses
   ClpPrivateKeyFactory,
   ClpSubjectPublicKeyInfoFactory,
   ClpPublicKeyFactory,
-  ClpHybridEncryption,
-  ClpExampleBase;
+  HybridEncryption,
+  ExampleBase;
 
 type
   TRsaExample = class(TExampleBase)

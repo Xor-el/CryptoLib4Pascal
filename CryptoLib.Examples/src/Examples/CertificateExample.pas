@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpCertificateExample;
+unit CertificateExample;
 
 interface
 
@@ -62,7 +62,7 @@ uses
   ClpIX509CrlEntry,
   ClpIX9ECAsn1Objects,
   ClpDateTimeHelper,
-  ClpExampleBase;
+  ExampleBase;
 
 type
   TCertificateArtifactsPem = record

@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpEdExample;
+unit EdExample;
 
 interface
 
@@ -39,13 +39,13 @@ uses
   ClpIX25519Agreement,
   ClpX25519Agreement,
   ClpCurve25519KeyUtilities,
-  ClpHybridEncryption,
+  HybridEncryption,
   ClpISigner,
   ClpPrivateKeyInfoFactory,
   ClpPrivateKeyFactory,
   ClpSubjectPublicKeyInfoFactory,
   ClpPublicKeyFactory,
-  ClpExampleBase;
+  ExampleBase;
 
 type
   TEdExample = class(TExampleBase)

@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpExampleBase;
+unit ExampleBase;
 
 interface
 
@@ -33,7 +33,7 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
-  ClpLogger,
+  ExampleLogger,
   ClpGeneratorUtilities,
   ClpSecureRandom,
   ClpBigInteger,

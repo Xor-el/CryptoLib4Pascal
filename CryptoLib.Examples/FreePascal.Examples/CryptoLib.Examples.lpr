@@ -8,17 +8,17 @@ program CryptoLib.Examples;
 
 uses
   SysUtils,
-  ClpLogger in '..\src\ClpLogger.pas',
-  ClpConsoleLogger in '..\src\ClpConsoleLogger.pas',
-  ClpExampleBase in '..\src\ClpExampleBase.pas',
-  ClpExampleExplorer in '..\src\ClpExampleExplorer.pas',
-  ClpDigestExample in '..\src\Examples\ClpDigestExample.pas',
-  ClpRsaExample in '..\src\Examples\ClpRsaExample.pas',
-  ClpEcExample in '..\src\Examples\ClpEcExample.pas',
-  ClpCertificateExample in '..\src\Examples\ClpCertificateExample.pas',
-  ClpCipherExample in '..\src\Examples\ClpCipherExample.pas',
-  ClpEdExample in '..\src\Examples\ClpEdExample.pas',
-  ClpHybridEncryption in '..\src\Examples\ClpHybridEncryption.pas';
+  ExampleLogger in '..\src\ExampleLogger.pas',
+  ConsoleLogger in '..\src\ConsoleLogger.pas',
+  ExampleBase in '..\src\ExampleBase.pas',
+  ExampleExplorer in '..\src\ExampleExplorer.pas',
+  DigestExample in '..\src\Examples\DigestExample.pas',
+  RsaExample in '..\src\Examples\RsaExample.pas',
+  EcExample in '..\src\Examples\EcExample.pas',
+  CertificateExample in '..\src\Examples\CertificateExample.pas',
+  CipherExample in '..\src\Examples\CipherExample.pas',
+  EdExample in '..\src\Examples\EdExample.pas',
+  HybridEncryption in '..\src\Examples\HybridEncryption.pas';
 
 begin
   TExampleLogger.SetDefaultLogger(TConsoleLogger.Create('Examples', TLogLevel.Info) as ILogger);

@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpExampleExplorer;
+unit ExampleExplorer;
 
 interface
 
@@ -35,13 +35,13 @@ implementation
 
 uses
   SysUtils,
-  ClpExampleBase,
-  ClpRsaExample,
-  ClpEcExample,
-  ClpEdExample,
-  ClpDigestExample,
-  ClpCipherExample,
-  ClpCertificateExample;
+  ExampleBase,
+  RsaExample,
+  EcExample,
+  EdExample,
+  DigestExample,
+  CipherExample,
+  CertificateExample;
 
 type
   TExampleBaseClass = class of TExampleBase;

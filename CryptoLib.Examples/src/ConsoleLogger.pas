@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpConsoleLogger;
+unit ConsoleLogger;
 
 interface
 
@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils,
-  ClpLogger;
+  ExampleLogger;
 
 type
   TConsoleLogger = class(TInterfacedObject, ILogger)

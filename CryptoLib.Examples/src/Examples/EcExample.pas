@@ -15,7 +15,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpEcExample;
+unit EcExample;
 
 interface
 
@@ -46,8 +46,8 @@ uses
   ClpPrivateKeyFactory,
   ClpSubjectPublicKeyInfoFactory,
   ClpPublicKeyFactory,
-  ClpHybridEncryption,
-  ClpExampleBase;
+  HybridEncryption,
+  ExampleBase;
 
 type
   TEcExample = class(TExampleBase)
