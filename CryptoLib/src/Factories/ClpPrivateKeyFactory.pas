@@ -202,6 +202,8 @@ begin
   // EC keys
   if LAlgOid.Equals(TX9ObjectIdentifiers.IdECPublicKey) then
   begin
+    // TODO: Consistency checks in case parameters and/or public key are specified at both the
+    // PrivateKeyInfo and ECPrivateKey levels?
     LECPrivateKeyObj := AKeyInfo.ParsePrivateKey();
     LECPrivateKeySeq := TECPrivateKeyStructure.GetInstance(LECPrivateKeyObj);
     LX962Params := TX962Parameters.GetInstance(LAlgID.Parameters);

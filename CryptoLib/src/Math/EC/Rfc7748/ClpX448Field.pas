@@ -23,6 +23,7 @@ interface
 
 uses
   ClpMod,
+  ClpNat,
   ClpBitOperations,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
@@ -42,7 +43,6 @@ type
   class procedure Decode224(const AX: TCryptoLibUInt32Array; AXOff: Int32;
     const AZ: TCryptoLibUInt32Array; AZOff: Int32); static;
   class function Decode24(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
-  class function Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
   class procedure Decode56(const ABs: TCryptoLibByteArray; AOff: Int32;
     const AZ: TCryptoLibUInt32Array; AZOff: Int32); static;
   class procedure Encode224(const AX: TCryptoLibUInt32Array; AXOff: Int32;
@@ -68,14 +68,25 @@ type
     class function Create: TCryptoLibUInt32Array; static;
     class function CreateTable(AN: Int32): TCryptoLibUInt32Array; static;
     class procedure CSwap(ASwap: Int32; AA, AB: TCryptoLibUInt32Array); static;
-    class procedure Decode(const AX: TCryptoLibUInt32Array; AXOff: Int32;
-      const AZ: TCryptoLibUInt32Array); overload; static;
-    class procedure Decode(const AX: TCryptoLibByteArray;
-      const AZ: TCryptoLibUInt32Array); overload; static;
-    class procedure Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
-      const AZ: TCryptoLibUInt32Array); overload; static;
-    class procedure Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
+    class function Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
+    class procedure Decode448(const AX: TCryptoLibUInt32Array; AXOff: Int32;
       const AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure Decode448(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+      const AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Decode448(const AX: TCryptoLibByteArray;
+      const AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Decode448(const AX: TCryptoLibByteArray; AXOff: Int32;
+      const AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Decode448(const AX: TCryptoLibByteArray; AXOff: Int32;
+      const AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure Decode(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+      const AZ: TCryptoLibUInt32Array); overload; static; deprecated 'Use Decode448 instead';
+    class procedure Decode(const AX: TCryptoLibByteArray;
+      const AZ: TCryptoLibUInt32Array); overload; static; deprecated 'Use Decode448 instead';
+    class procedure Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
+      const AZ: TCryptoLibUInt32Array); overload; static; deprecated 'Use Decode448 instead';
+    class procedure Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
+      const AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static; deprecated 'Use Decode448 instead';
     class procedure Encode(const AX: TCryptoLibUInt32Array;
       const AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
     class procedure Encode(const AX: TCryptoLibUInt32Array;
@@ -149,9 +160,7 @@ begin
   begin
     LD := LD or (AX[LI] xor AY[LI]);
   end;
-  LD := LD or (LD shr 16);
-  LD := LD and $FFFF;
-  Result := TBitOperations.Asr32(Int32(LD) - 1, 31);
+  Result := Int32(TNat.CZero(LD));
 end;
 
 class function TX448Field.AreEqualVar(const AX, AY: TCryptoLibUInt32Array): Boolean;
@@ -261,40 +270,7 @@ begin
   end;
 end;
 
-class procedure TX448Field.Decode(const AX: TCryptoLibUInt32Array; AXOff: Int32;
-  const AZ: TCryptoLibUInt32Array);
-begin
-  Decode224(AX, AXOff, AZ, 0);
-  Decode224(AX, AXOff + 7, AZ, 8);
-end;
-
-class procedure TX448Field.Decode(const AX: TCryptoLibByteArray;
-  const AZ: TCryptoLibUInt32Array);
-begin
-  Decode56(AX, 0, AZ, 0);
-  Decode56(AX, 7, AZ, 2);
-  Decode56(AX, 14, AZ, 4);
-  Decode56(AX, 21, AZ, 6);
-  Decode56(AX, 28, AZ, 8);
-  Decode56(AX, 35, AZ, 10);
-  Decode56(AX, 42, AZ, 12);
-  Decode56(AX, 49, AZ, 14);
-end;
-
-class procedure TX448Field.Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
-  const AZ: TCryptoLibUInt32Array);
-begin
-  Decode56(AX, AXOff, AZ, 0);
-  Decode56(AX, AXOff + 7, AZ, 2);
-  Decode56(AX, AXOff + 14, AZ, 4);
-  Decode56(AX, AXOff + 21, AZ, 6);
-  Decode56(AX, AXOff + 28, AZ, 8);
-  Decode56(AX, AXOff + 35, AZ, 10);
-  Decode56(AX, AXOff + 42, AZ, 12);
-  Decode56(AX, AXOff + 49, AZ, 14);
-end;
-
-class procedure TX448Field.Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
+class procedure TX448Field.Decode448(const AX: TCryptoLibByteArray; AXOff: Int32;
   const AZ: TCryptoLibUInt32Array; AZOff: Int32);
 begin
   Decode56(AX, AXOff, AZ, AZOff);
@@ -305,6 +281,55 @@ begin
   Decode56(AX, AXOff + 35, AZ, AZOff + 10);
   Decode56(AX, AXOff + 42, AZ, AZOff + 12);
   Decode56(AX, AXOff + 49, AZ, AZOff + 14);
+end;
+
+class procedure TX448Field.Decode448(const AX: TCryptoLibByteArray;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  Decode448(AX, 0, AZ, 0);
+end;
+
+class procedure TX448Field.Decode448(const AX: TCryptoLibByteArray; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  Decode448(AX, AXOff, AZ, 0);
+end;
+
+class procedure TX448Field.Decode448(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array; AZOff: Int32);
+begin
+  Decode224(AX, AXOff, AZ, AZOff);
+  Decode224(AX, AXOff + 7, AZ, AZOff + 8);
+end;
+
+class procedure TX448Field.Decode448(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  Decode448(AX, AXOff, AZ, 0);
+end;
+
+class procedure TX448Field.Decode(const AX: TCryptoLibUInt32Array; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  Decode448(AX, AXOff, AZ);
+end;
+
+class procedure TX448Field.Decode(const AX: TCryptoLibByteArray;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  Decode448(AX, AZ);
+end;
+
+class procedure TX448Field.Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  Decode448(AX, AXOff, AZ);
+end;
+
+class procedure TX448Field.Decode(const AX: TCryptoLibByteArray; AXOff: Int32;
+  const AZ: TCryptoLibUInt32Array; AZOff: Int32);
+begin
+  Decode448(AX, AXOff, AZ, AZOff);
 end;
 
 class procedure TX448Field.Decode224(const AX: TCryptoLibUInt32Array; AXOff: Int32;
@@ -470,7 +495,7 @@ begin
 
   TMod.ModOddInverse(FP32, LU, LU);
 
-  Decode(LU, 0, AZ);
+  Decode448(LU, 0, AZ);
 end;
 
 class procedure TX448Field.InvVar(const AX, AZ: TCryptoLibUInt32Array);
@@ -487,7 +512,7 @@ begin
 
   TMod.ModOddInverseVar(FP32, LU, LU);
 
-  Decode(LU, 0, AZ);
+  Decode448(LU, 0, AZ);
 end;
 
 class function TX448Field.IsOne(const AX: TCryptoLibUInt32Array): Int32;
@@ -500,9 +525,7 @@ begin
   begin
     LD := LD or AX[LI];
   end;
-  LD := LD or (LD shr 16);
-  LD := LD and $FFFF;
-  Result := TBitOperations.Asr32(Int32(LD) - 1, 31);
+  Result := Int32(TNat.CZero(LD));
 end;
 
 class function TX448Field.IsOneVar(const AX: TCryptoLibUInt32Array): Boolean;
@@ -520,9 +543,7 @@ begin
   begin
     LD := LD or AX[LI];
   end;
-  LD := LD or (LD shr 16);
-  LD := LD and $FFFF;
-  Result := TBitOperations.Asr32(Int32(LD) - 1, 31);
+  Result := Int32(TNat.CZero(LD));
 end;
 
 class function TX448Field.IsZeroVar(const AX: TCryptoLibUInt32Array): Boolean;

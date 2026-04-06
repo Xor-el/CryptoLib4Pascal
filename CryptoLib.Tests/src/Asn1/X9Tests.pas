@@ -62,6 +62,7 @@ type
     procedure SetUpTestData;
     procedure EncodePublicKey;
     procedure EncodePrivateKey;
+    procedure EcPrivateKeyStructureFromComponents;
 
   protected
     procedure SetUp; override;
@@ -69,6 +70,7 @@ type
   published
     procedure TestEncodePublicKey;
     procedure TestEncodePrivateKey;
+    procedure TestEcPrivateKeyStructureFromComponents;
 
   end;
 
@@ -196,6 +198,18 @@ begin
     Fail('failed private explicit equality');
 end;
 
+procedure TX9Test.EcPrivateKeyStructureFromComponents;
+var
+  LEcP: IX9ECParameters;
+  LFromInt, LFromParts: IECPrivateKeyStructure;
+begin
+  LEcP := TX962NamedCurves.GetByOid(TX9ObjectIdentifiers.Prime192v1);
+  LFromInt := TECPrivateKeyStructure.Create(LEcP.N.BitLength, TBigInteger.Ten);
+  LFromParts := TECPrivateKeyStructure.Create(LFromInt.PrivateKey, nil, nil);
+  if not AreEqual(LFromInt.ToAsn1Object.GetEncoded(), LFromParts.ToAsn1Object.GetEncoded()) then
+    Fail('ECPrivateKeyStructure from components mismatch');
+end;
+
 procedure TX9Test.TestEncodePublicKey;
 begin
   EncodePublicKey;
@@ -204,6 +218,11 @@ end;
 procedure TX9Test.TestEncodePrivateKey;
 begin
   EncodePrivateKey;
+end;
+
+procedure TX9Test.TestEcPrivateKeyStructureFromComponents;
+begin
+  EcPrivateKeyStructureFromComponents;
 end;
 
 initialization

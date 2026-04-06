@@ -45,6 +45,9 @@ type
     class function NumberOfLeadingZeros(AValue: Int64): Int32; static;
     class function NumberOfTrailingZeros(AValue: Int64): Int32; static;
 
+    class function BitLength(AValue: Int64): Int32; overload; static;
+    class function BitLength(AValue: UInt64): Int32; overload; static;
+
     class function PopCount(AValue: Int64): Int32; overload; static;
     class function PopCount(AValue: UInt64): Int32; overload; static;
 
@@ -124,6 +127,16 @@ end;
 class function TInt64Utilities.NumberOfTrailingZeros(AValue: Int64): Int32;
 begin
   Result := TBitOperations.NumberOfTrailingZeros64(UInt64(AValue));
+end;
+
+class function TInt64Utilities.BitLength(AValue: UInt64): Int32;
+begin
+  Result := NumBits - TBitOperations.NumberOfLeadingZeros64(AValue);
+end;
+
+class function TInt64Utilities.BitLength(AValue: Int64): Int32;
+begin
+  Result := BitLength(UInt64(AValue));
 end;
 
 class function TInt64Utilities.PopCount(AValue: Int64): Int32;

@@ -29,6 +29,7 @@ uses
   ClpIFixedPointPreCompInfo,
   ClpNat,
   ClpBitOperations,
+  ClpInt32Utilities,
   ClpTnaf,
   ClpIWTauNafPreCompInfo,
   ClpWTauNafPreCompInfo,
@@ -145,7 +146,7 @@ begin
 
     if (LN shl 2) < (1 shl LWidth) then
     begin
-      LHighest := 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(LN));
+      LHighest := TInt32Utilities.BitLength(UInt32(LN));
       LScale := LWidth - LHighest;
       LLowBits := LN xor (1 shl (LHighest - 1));
       LI1 := (1 shl (LWidth - 1)) - 1;

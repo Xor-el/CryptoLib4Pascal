@@ -28,6 +28,7 @@ uses
   ClpPack,
   ClpNat,
   ClpBitOperations,
+  ClpInt32Utilities,
   ClpCryptoLibTypes;
 
 type
@@ -164,7 +165,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 - 1) * 32 + TInt32Utilities.BitLength(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   SetLength(LT, 4);
@@ -223,7 +224,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 - 1) * 32 + TInt32Utilities.BitLength(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   LClz := LBits - TNat.GetBitLength(LLen32, AX);
@@ -314,7 +315,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 - 1) * 32 + TInt32Utilities.BitLength(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   SetLength(LT, 4);
@@ -356,7 +357,7 @@ begin
   System.Assert(AM[LLen32 - 1] <> 0);
   {$ENDIF}
 
-  LBits := (LLen32 shl 5) - TBitOperations.NumberOfLeadingZeros32(AM[LLen32 - 1]);
+  LBits := (LLen32 - 1) * 32 + TInt32Utilities.BitLength(AM[LLen32 - 1]);
   LLen30 := (LBits + 29) div 30;
 
   LClz := LBits - TNat.GetBitLength(LLen32, AX);
@@ -681,8 +682,7 @@ begin
     LD := LD or AX[LI];
   end;
 
-  LD := Int32(UInt32(LD) shr 1) or (LD and 1);
-  Result := TBitOperations.Asr32(LD - 1, 31);
+  Result := Int32(TNat.CZero(UInt32(LD)));
 end;
 
 class function TMod.EqualToVar(ALen: Int32; const AX: TCryptoLibInt32Array; AY: Int32): Boolean;

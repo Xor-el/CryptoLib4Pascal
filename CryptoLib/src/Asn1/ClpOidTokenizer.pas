@@ -28,7 +28,8 @@ uses
 type
 
   /// <summary>
-  /// class for breaking up an Oid into it's component tokens
+  /// Legacy OID string tokenizer.
+  /// Prefer TDerObjectIdentifier / TAsn1RelativeOid string constructors; this type may be removed later.
   /// </summary>
   TOidTokenizer = class sealed(TInterfacedObject, IOidTokenizer)
 

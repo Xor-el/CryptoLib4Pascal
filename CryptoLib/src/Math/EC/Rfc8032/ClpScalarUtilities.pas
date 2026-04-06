@@ -23,6 +23,7 @@ interface
 
 uses
   ClpBitOperations,
+  ClpInt32Utilities,
   ClpCryptoLibTypes;
 
 type
@@ -219,7 +220,7 @@ begin
   LSign := UInt32(TBitOperations.Asr32(Int32(AX[LI]), 31));
   while (LI > 0) and (AX[LI] = LSign) do
     System.Dec(LI);
-  Result := LI * 32 + 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(Int32(AX[LI]) xor Int32(LSign)));
+  Result := LI * TInt32Utilities.NumBits + TInt32Utilities.BitLength(UInt32(Int32(AX[LI]) xor Int32(LSign)));
 end;
 
 class function TScalarUtilities.GetBitLengthPositive(ALast: Int32; const AX: TCryptoLibUInt32Array): Int32;
@@ -229,7 +230,7 @@ begin
   LI := ALast;
   while (LI > 0) and (AX[LI] = 0) do
     System.Dec(LI);
-  Result := LI * 32 + 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(AX[LI]));
+  Result := LI * TInt32Utilities.NumBits + TInt32Utilities.BitLength(AX[LI]);
 end;
 
 class function TScalarUtilities.LessThan(ALast: Int32; const AX: TCryptoLibUInt32Array;

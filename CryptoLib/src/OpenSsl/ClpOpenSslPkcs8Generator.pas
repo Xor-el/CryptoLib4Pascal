@@ -123,6 +123,7 @@ begin
     Exit;
   end;
 
+  // TODO: The amount of salt needed depends on the algorithm?
   SetLength(LSalt, 20);
   FRandom := TCryptoServicesRegistrar.GetSecureRandom(FRandom);
   FRandom.NextBytes(LSalt);

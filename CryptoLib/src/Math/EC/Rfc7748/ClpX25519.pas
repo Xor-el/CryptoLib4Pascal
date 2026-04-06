@@ -39,7 +39,6 @@ type
   const
     C_A = 486662;
     C_A24 = (C_A + 2) div 4;
-  class function Decode32(const Abs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
   class procedure DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
     AN: TCryptoLibUInt32Array); static;
   class procedure PointDouble(AX, AZ: TCryptoLibInt32Array); static;
@@ -87,17 +86,6 @@ begin
   AK[ScalarSize - 1] := AK[ScalarSize - 1] or $40;
 end;
 
-class function TX25519.Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32;
-var
-  LN: UInt32;
-begin
-  LN := ABs[AOff];
-  LN := LN or (UInt32(ABs[AOff + 1]) shl 8);
-  LN := LN or (UInt32(ABs[AOff + 2]) shl 16);
-  LN := LN or (UInt32(ABs[AOff + 3]) shl 24);
-  Result := LN;
-end;
-
 class procedure TX25519.DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
   AN: TCryptoLibUInt32Array);
 var
@@ -106,7 +94,7 @@ begin
   LI := 0;
   while LI < 8 do
   begin
-    AN[LI] := Decode32(AK, AKOff + LI * 4);
+    AN[LI] := TX25519Field.Decode32(AK, AKOff + LI * 4);
     System.Inc(LI);
   end;
   AN[0] := AN[0] and $FFFFFFF8;
@@ -161,7 +149,7 @@ begin
   System.SetLength(LN, 8);
   DecodeScalar(AK, AKOff, LN);
   LX1 := TX25519Field.Create();
-  TX25519Field.Decode(AU, AUOff, LX1);
+  TX25519Field.Decode255(AU, AUOff, LX1);
   LX2 := TX25519Field.Create();
   TX25519Field.Copy(LX1, 0, LX2, 0);
   LZ2 := TX25519Field.Create();

@@ -160,6 +160,15 @@ begin
   CheckValid('3.1');
   CheckValid('37.196556539987194312349856245628873852187.100');
   CheckValid('192.168.1.1');
+  CheckValid('9');
+  CheckValid('99');
+  CheckValid('999');
+  CheckValid('9999');
+  CheckValid('99999');
+  CheckValid('999999');
+  CheckValid('999999999999999999');
+  CheckValid('9999999999999999999');
+  CheckValid('99999999999999999999');
 
   CheckInvalid('00');
   CheckInvalid('0.01');

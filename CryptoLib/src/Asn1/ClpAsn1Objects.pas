@@ -41,7 +41,6 @@ uses
   ClpAsn1Utilities,
   ClpPlatformUtilities,
   ClpStreams,
-  ClpStreamUtilities,
   ClpArrayUtilities,
   ClpStringUtilities,
   ClpEncoders,
@@ -49,8 +48,8 @@ uses
   ClpDateTimeUtilities,
   ClpDateTimeHelper,
   ClpFormatSettingsHelper,
-  ClpOidTokenizer,
-  ClpIOidTokenizer;
+  ClpInt32Utilities,
+  ClpInt64Utilities;
 
 type
   /// <summary>
@@ -227,6 +226,9 @@ type
     /// </summary>
     constructor CreateEmpty();
 
+    class function InternalFromContents(const AContents: TCryptoLibByteArray): IDerOctetString; static;
+    class function InternalWithContents(const AContents: TCryptoLibByteArray): IDerOctetString; static;
+
   public
     /// <summary>
     /// Create a DER octet string from contents.
@@ -253,6 +255,10 @@ type
     /// Create from contents (does not copy, uses the array directly).
     /// </summary>
     class function WithContents(const AContents: TCryptoLibByteArray): IDerOctetString; static;
+    /// <summary>
+    /// Create from contents optional (does not copy; nil returns nil).
+    /// </summary>
+    class function WithContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString; static;
     /// <summary>
     /// Get encoding for the specified encoding type with implicit tagging.
     /// </summary>
@@ -292,6 +298,8 @@ type
     FElements: TCryptoLibGenericArray<IAsn1OctetString>;
     class function GetEmpty(): IBerOctetString; static;
     class function ElementToAsn1OctetString(AElement: IAsn1Encodable): IAsn1OctetString; static;
+    class function InternalFromContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
+    class function InternalWithContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
 
   public
     /// <summary>
@@ -314,8 +322,14 @@ type
     /// Create a BER octet string from a sequence.
     /// </summary>
     class function FromSequence(const ASequence: IAsn1Sequence): IBerOctetString; static;
-
+    /// <summary>
+    /// Create from contents (does not copy, uses the array directly).
+    /// </summary>
     class function WithContents(const AContents: TCryptoLibByteArray): IBerOctetString; static;
+    /// <summary>
+    /// Create from contents optional (does not copy; nil returns nil).
+    /// </summary>
+    class function WithContentsOptional(const AContents: TCryptoLibByteArray): IBerOctetString; static;
     /// <summary>
     /// Create a BER octet string from an array of octet strings.
     /// </summary>
@@ -762,6 +776,38 @@ type
     /// </summary>
     class function GetOptional(const AElement: IAsn1Encodable;
       ATagClass, ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get context-tagged instance (tag class must be context-specific).
+    /// </summary>
+    class function GetContextInstance(const AObj: TObject): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get context-tagged instance (tag class must be context-specific).
+    /// </summary>
+    class function GetContextInstance(const AObj: IAsn1Object): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get context-tagged instance (tag class must be context-specific).
+    /// </summary>
+    class function GetContextInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get context-tagged instance with expected tag number.
+    /// </summary>
+    class function GetContextInstance(const AObj: TObject; ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get context-tagged instance with expected tag number.
+    /// </summary>
+    class function GetContextInstance(const AObj: IAsn1Object; ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get context-tagged instance with expected tag number.
+    /// </summary>
+    class function GetContextInstance(const AObj: IAsn1Convertible; ATagNo: Int32): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get optional element only if it is context-tagged.
+    /// </summary>
+    class function GetContextOptional(const AElement: IAsn1Encodable): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Get optional element only if it is context-tagged with the given tag number.
+    /// </summary>
+    class function GetContextOptional(const AElement: IAsn1Encodable; ATagNo: Int32): IAsn1TaggedObject; overload; static;
     /// <summary>
     /// Get tagged object.
     /// </summary>
@@ -1842,8 +1888,6 @@ type
     class function ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray; static;
     class function ParseContents(const AContents: TCryptoLibByteArray): String; static;
     class procedure CheckIdentifier(const AIdentifier: String); static;
-    class procedure WriteField(const AOutputStream: TStream; AFieldValue: Int64); overload; static;
-    class procedure WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger); overload; static;
     constructor Create(const AContents: TCryptoLibByteArray; const AIdentifier: String); overload;
     function GetID(): String;
     class constructor Create;
@@ -1913,7 +1957,7 @@ type
     class function IsValidContents(const AContents: TCryptoLibByteArray): Boolean; static;
     class function ParseContents(const AContents: TCryptoLibByteArray): String; static;
     class function ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray; static;
-    class procedure WriteField(const AOutputStream: TStream; AFieldValue: Int64); overload; static;
+    class procedure WriteField(const AOutputStream: TStream; AFieldValue: UInt64); overload; static;
     class procedure WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger); overload; static;
     class procedure CheckIdentifier(const AIdentifier: String); static;
   strict protected
@@ -1952,6 +1996,7 @@ type
     class function GetOptional(const AElement: IAsn1Encodable): IAsn1RelativeOid; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1RelativeOid; static;
     class function TryFromID(const AIdentifier: String; out AOid: IAsn1RelativeOid): Boolean; static;
+    class procedure WriteEncodedFieldFromDecimal(const AOutputStream: TStream; const AToken: String; AExtra: UInt32); static;
     class procedure CheckContentsLength(AContentsLength: Int32); static;
     class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
     function Branch(const ABranchID: String): IAsn1RelativeOid;
@@ -2499,9 +2544,13 @@ type
     /// </summary>
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerInteger; static;
     /// <summary>
+    /// Get or create integer from Int32 value (uses cached small constants).
+    /// </summary>
+    class function ValueOf(AValue: Int32): IDerInteger; overload; static;
+    /// <summary>
     /// Get or create integer from value (uses cached small constants).
     /// </summary>
-    class function ValueOf(AValue: Int64): IDerInteger; static;
+    class function ValueOf(AValue: Int64): IDerInteger; overload; static;
     /// <summary>
     /// Get encoding length for a BigInteger.
     /// </summary>
@@ -3731,6 +3780,46 @@ begin
   if (Result <> nil) and Result.HasTag(ATagClass, ATagNo) then
     Exit;
   Result := nil;
+end;
+
+class function TAsn1TaggedObject.GetContextInstance(const AObj: TObject): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckContextTagClass(GetInstance(AObj));
+end;
+
+class function TAsn1TaggedObject.GetContextInstance(const AObj: IAsn1Object): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckContextTagClass(GetInstance(AObj));
+end;
+
+class function TAsn1TaggedObject.GetContextInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckContextTagClass(GetInstance(AObj));
+end;
+
+class function TAsn1TaggedObject.GetContextInstance(const AObj: TObject; ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckContextTag(GetInstance(AObj), ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetContextInstance(const AObj: IAsn1Object; ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckContextTag(GetInstance(AObj), ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetContextInstance(const AObj: IAsn1Convertible; ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := TAsn1Utilities.CheckContextTag(GetInstance(AObj), ATagNo);
+end;
+
+class function TAsn1TaggedObject.GetContextOptional(const AElement: IAsn1Encodable): IAsn1TaggedObject;
+begin
+  Result := GetOptional(AElement, TAsn1Tags.ContextSpecific);
+end;
+
+class function TAsn1TaggedObject.GetContextOptional(const AElement: IAsn1Encodable; ATagNo: Int32): IAsn1TaggedObject;
+begin
+  Result := GetOptional(AElement, TAsn1Tags.ContextSpecific, ATagNo);
 end;
 
 class function TAsn1TaggedObject.GetTagged(const ATaggedObject: IAsn1TaggedObject;
@@ -6109,35 +6198,50 @@ begin
   inherited Create(AObj.GetEncoded(TAsn1Encodable.Der));
 end;
 
-class function TDerOctetString.FromContents(const AContents: TCryptoLibByteArray): IDerOctetString;
+class function TDerOctetString.InternalFromContents(const AContents: TCryptoLibByteArray): IDerOctetString;
 begin
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if System.Length(AContents) < 1 then
     Result := FEmpty
   else
     Result := TDerOctetString.Create(TArrayUtilities.CopyOf<Byte>(AContents, System.Length(AContents)));
 end;
 
-class function TDerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString;
-begin
-  if AContents = nil then
-  begin
-    Result := nil;
-    Exit;
-  end;
-  if System.Length(AContents) < 1 then
-    Result := FEmpty
-  else
-    Result := TDerOctetString.Create(TArrayUtilities.CopyOf<Byte>(AContents, System.Length(AContents)));
-end;
-
-class function TDerOctetString.WithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
+class function TDerOctetString.InternalWithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
 begin
   if System.Length(AContents) < 1 then
     Result := FEmpty
   else
     Result := TDerOctetString.Create(AContents);
+end;
+
+class function TDerOctetString.FromContents(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  Result := InternalFromContents(AContents);
+end;
+
+class function TDerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if AContents = nil then
+    Result := nil
+  else
+    Result := InternalFromContents(AContents);
+end;
+
+class function TDerOctetString.WithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  Result := InternalWithContents(AContents);
+end;
+
+class function TDerOctetString.WithContentsOptional(const AContents: TCryptoLibByteArray): IDerOctetString;
+begin
+  if AContents = nil then
+    Result := nil
+  else
+    Result := InternalWithContents(AContents);
 end;
 
 function TDerOctetString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
@@ -6191,27 +6295,35 @@ begin
   Result := TBerOctetString.Create(TAsn1OctetString.EmptyOctets);
 end;
 
-class function TBerOctetString.FromContents(const AContents: TCryptoLibByteArray): IBerOctetString;
+class function TBerOctetString.InternalFromContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
   if System.Length(AContents) < 1 then
     Result := GetEmpty()
   else
     Result := TBerOctetString.Create(System.Copy(AContents));
 end;
 
-class function TBerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IBerOctetString;
+class function TBerOctetString.InternalWithContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
-  if AContents = nil then
-  begin
-    Result := nil;
-    Exit;
-  end;
   if System.Length(AContents) < 1 then
     Result := GetEmpty()
   else
-    Result := TBerOctetString.Create(System.Copy(AContents));
+    Result := TBerOctetString.Create(AContents);
+end;
+
+class function TBerOctetString.FromContents(const AContents: TCryptoLibByteArray): IBerOctetString;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  Result := InternalFromContents(AContents);
+end;
+
+class function TBerOctetString.FromContentsOptional(const AContents: TCryptoLibByteArray): IBerOctetString;
+begin
+  if AContents = nil then
+    Result := nil
+  else
+    Result := InternalFromContents(AContents);
 end;
 
 class function TBerOctetString.FromSequence(const ASequence: IAsn1Sequence): IBerOctetString;
@@ -6239,10 +6351,17 @@ end;
 
 class function TBerOctetString.WithContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
-  if System.Length(AContents) < 1 then
-    Result := GetEmpty()
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  Result := InternalWithContents(AContents);
+end;
+
+class function TBerOctetString.WithContentsOptional(const AContents: TCryptoLibByteArray): IBerOctetString;
+begin
+  if AContents = nil then
+    Result := nil
   else
-    Result := TBerOctetString.Create(AContents);
+    Result := InternalWithContents(AContents);
 end;
 
 constructor TBerOctetString.Create(const AOctetStrings: TCryptoLibGenericArray<IAsn1OctetString>);
@@ -6599,7 +6718,7 @@ begin
     FContents[0] := 0;
     Exit;
   end;
-  LBits := 32 - TBitOperations.NumberOfLeadingZeros32(UInt32(ANamedBits));
+  LBits := TInt32Utilities.BitLength(ANamedBits);
   LBytes := (LBits + 7) div 8;
   System.SetLength(LData, 1 + LBytes);
   for LI := 1 to LBytes - 1 do
@@ -6608,9 +6727,7 @@ begin
     ANamedBits := TBitOperations.Asr32(ANamedBits, 8);
   end;
   LData[LBytes] := Byte(ANamedBits);
-  LPadBits := 0;
-  while ((ANamedBits and (1 shl LPadBits)) = 0) do
-    System.Inc(LPadBits);
+  LPadBits := TInt32Utilities.NumberOfTrailingZeros(ANamedBits);
   LData[0] := Byte(LPadBits);
   FContents := LData;
 end;
@@ -8651,83 +8768,107 @@ begin
   Result := LObjId;
 end;
 
+class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; AFieldValue: UInt64);
+var
+  LResult: TCryptoLibByteArray;
+  LPos, LByteCount, LBitLength: Int32;
+  LV: UInt64;
+begin
+  LBitLength := TInt64Utilities.BitLength(AFieldValue or UInt64(1));
+  LByteCount := (LBitLength + 6) div 7;
+  System.SetLength(LResult, LByteCount);
+  LPos := LByteCount - 1;
+  LV := AFieldValue;
+  LResult[LPos] := Byte(LV and $7F);
+  while LPos > 0 do
+  begin
+    LV := LV shr 7;
+    System.Dec(LPos);
+    LResult[LPos] := Byte((LV and $7F) or $80);
+  end;
+  AOutputStream.Write(LResult[0], LByteCount);
+end;
+
+class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
+var
+  LByteCount, LI: Int32;
+  LTmp: TCryptoLibByteArray;
+  LTmpValue: TBigInteger;
+begin
+  {$IFDEF DEBUG}
+  System.Assert(AFieldValue.SignValue > 0);
+  {$ENDIF DEBUG}
+  LByteCount := (AFieldValue.BitLength + 6) div 7;
+  if LByteCount < 1 then
+    raise EArgumentCryptoLibException.Create('OID BigInteger field requires a positive value');
+  LTmpValue := AFieldValue;
+  System.SetLength(LTmp, LByteCount);
+  for LI := LByteCount - 1 downto 0 do
+  begin
+    LTmp[LI] := Byte(LTmpValue.Int32Value or $80);
+    LTmpValue := LTmpValue.ShiftRight(7);
+  end;
+  LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
+  AOutputStream.Write(LTmp[0], LByteCount);
+end;
+
+class procedure TAsn1RelativeOid.WriteEncodedFieldFromDecimal(const AOutputStream: TStream; const AToken: String; AExtra: UInt32);
+
+  function TokenToUInt64: UInt64;
+  var
+    LI: Int32;
+    LCh: Char;
+  begin
+    if AToken = '' then
+      raise EFormatCryptoLibException.Create('empty OID decimal component');
+    Result := 0;
+    for LI := 1 to System.Length(AToken) do
+    begin
+      LCh := AToken[LI];
+      if (LCh < '0') or (LCh > '9') then
+        raise EFormatCryptoLibException.Create('invalid OID decimal component');
+      Result := (Result * 10) + UInt32(Ord(LCh) - Ord('0'));
+    end;
+  end;
+
+begin
+  if System.Length(AToken) <= 19 then
+    WriteField(AOutputStream, TokenToUInt64 + UInt64(AExtra))
+  else
+    WriteField(AOutputStream, TBigInteger.Create(AToken).Add(TBigInteger.ValueOf(Int64(AExtra))));
+end;
+
 class function TDerObjectIdentifier.ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray;
 var
   LBOut: TMemoryStream;
-  LTok: IOidTokenizer;
-  LToken: String;
-  LFirst: Int32;
   LBytes: TCryptoLibByteArray;
+  LExtra: UInt32;
+  LI, LJ, LLen: Int32;
 begin
+  LLen := System.Length(AIdentifier);
   LBOut := TMemoryStream.Create();
   try
-    LTok := TOidTokenizer.Create(AIdentifier);
-    LToken := LTok.NextToken();
-    LFirst := StrToInt(LToken) * 40;
-
-    LToken := LTok.NextToken();
-    if System.Length(LToken) <= 18 then
-      WriteField(LBOut, Int64(LFirst + StrToInt64(LToken)))
-    else
-      WriteField(LBOut, TBigInteger.Create(LToken).Add(TBigInteger.ValueOf(LFirst)));
-
-    while LTok.HasMoreTokens do
+    LExtra := UInt32(Ord(AIdentifier[1]) - Ord('0')) * 40;
+    LI := 3;
+    LJ := 3;
+    while LJ < LLen do
     begin
-      LToken := LTok.NextToken();
-      if System.Length(LToken) <= 18 then
-        WriteField(LBOut, StrToInt64(LToken))
-      else
-        WriteField(LBOut, TBigInteger.Create(LToken));
+      System.Inc(LJ);
+      if AIdentifier[LJ] = '.' then
+      begin
+        TAsn1RelativeOid.WriteEncodedFieldFromDecimal(LBOut, TStringUtilities.Substring(AIdentifier, LI, LJ - LI), LExtra);
+        LExtra := 0;
+        LI := LJ + 1;
+        LJ := LI;
+      end;
     end;
-
+    TAsn1RelativeOid.WriteEncodedFieldFromDecimal(LBOut, TStringUtilities.Substring(AIdentifier, LI, LLen - LI + 1), LExtra);
     System.SetLength(LBytes, LBOut.Size);
     LBOut.Position := 0;
     LBOut.Read(LBytes[0], LBOut.Size);
     Result := LBytes;
   finally
     LBOut.Free;
-  end;
-end;
-
-class procedure TDerObjectIdentifier.WriteField(const AOutputStream: TStream; AFieldValue: Int64);
-var
-  LResult: TCryptoLibByteArray;
-  LPos: Int32;
-begin
-  System.SetLength(LResult, 9);
-  LPos := 8;
-  LResult[LPos] := Byte(AFieldValue and $7F);
-  while AFieldValue >= (Int64(1) shl 7) do
-  begin
-    AFieldValue := AFieldValue shr 7;
-    System.Dec(LPos);
-    LResult[LPos] := Byte(AFieldValue or $80);
-  end;
-  AOutputStream.Write(LResult[LPos], 9 - LPos);
-end;
-
-class procedure TDerObjectIdentifier.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
-var
-  LByteCount, LI: Int32;
-  LTmp: TCryptoLibByteArray;
-  LTmpValue: TBigInteger;
-begin
-  LByteCount := (AFieldValue.BitLength + 6) div 7;
-  if LByteCount = 0 then
-  begin
-    AOutputStream.WriteByte(0);
-  end
-  else
-  begin
-    LTmpValue := AFieldValue;
-    System.SetLength(LTmp, LByteCount);
-    for LI := LByteCount - 1 downto 0 do
-    begin
-      LTmp[LI] := Byte(LTmpValue.Int32Value or $80);
-      LTmpValue := LTmpValue.ShiftRight(7);
-    end;
-    LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
-    AOutputStream.Write(LTmp[0], System.Length(LTmp));
   end;
 end;
 
@@ -9052,73 +9193,31 @@ end;
 class function TAsn1RelativeOid.ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray;
 var
   LBOut: TMemoryStream;
-  LTok: IOidTokenizer;
-  LToken: String;
   LBytes: TCryptoLibByteArray;
+  LI, LJ, LLen: Int32;
 begin
+  LLen := System.Length(AIdentifier);
   LBOut := TMemoryStream.Create();
   try
-    LTok := TOidTokenizer.Create(AIdentifier);
-    while LTok.HasMoreTokens do
+    LI := 1;
+    LJ := 1;
+    while LJ < LLen do
     begin
-      LToken := LTok.NextToken();
-      if System.Length(LToken) <= 18 then
+      System.Inc(LJ);
+      if AIdentifier[LJ] = '.' then
       begin
-        WriteField(LBOut, StrToInt64(LToken));
-      end
-      else
-      begin
-        WriteField(LBOut, TBigInteger.Create(LToken));
+        WriteEncodedFieldFromDecimal(LBOut, TStringUtilities.Substring(AIdentifier, LI, LJ - LI), 0);
+        LI := LJ + 1;
+        LJ := LI;
       end;
     end;
+    WriteEncodedFieldFromDecimal(LBOut, TStringUtilities.Substring(AIdentifier, LI, LLen - LI + 1), 0);
     System.SetLength(LBytes, LBOut.Size);
     LBOut.Position := 0;
     LBOut.Read(LBytes[0], LBOut.Size);
     Result := LBytes;
   finally
     LBOut.Free;
-  end;
-end;
-
-class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; AFieldValue: Int64);
-var
-  LResult: TCryptoLibByteArray;
-  LPos: Int32;
-begin
-  System.SetLength(LResult, 9);
-  LPos := 8;
-  LResult[LPos] := Byte(AFieldValue and $7F);
-  while AFieldValue >= (Int64(1) shl 7) do
-  begin
-    AFieldValue := AFieldValue shr 7;
-    System.Dec(LPos);
-    LResult[LPos] := Byte(AFieldValue or $80);
-  end;
-  AOutputStream.Write(LResult[LPos], 9 - LPos);
-end;
-
-class procedure TAsn1RelativeOid.WriteField(const AOutputStream: TStream; const AFieldValue: TBigInteger);
-var
-  LByteCount, LI: Int32;
-  LTmp: TCryptoLibByteArray;
-  LTmpValue: TBigInteger;
-begin
-  LByteCount := (AFieldValue.BitLength + 6) div 7;
-  if LByteCount = 0 then
-  begin
-    AOutputStream.WriteByte(0);
-  end
-  else
-  begin
-    LTmpValue := AFieldValue;
-    System.SetLength(LTmp, LByteCount);
-    for LI := LByteCount - 1 downto 0 do
-    begin
-      LTmp[LI] := Byte(LTmpValue.Int32Value or $80);
-      LTmpValue := LTmpValue.ShiftRight(7);
-    end;
-    LTmp[LByteCount - 1] := LTmp[LByteCount - 1] and $7F;
-    AOutputStream.Write(LTmp[0], System.Length(LTmp));
   end;
 end;
 
@@ -12196,6 +12295,14 @@ var
 begin
   LByteLength := TBigIntegerUtilities.GetByteLength(AX);
   Result := TAsn1OutputStream.GetLengthOfEncodingDL(TAsn1Tags.Integer, LByteLength);
+end;
+
+class function TDerInteger.ValueOf(AValue: Int32): IDerInteger;
+begin
+  if (AValue >= 0) and (AValue < System.Length(FSmallConstants)) then
+    Result := FSmallConstants[AValue]
+  else
+    Result := TDerInteger.Create(AValue);
 end;
 
 class function TDerInteger.ValueOf(AValue: Int64): IDerInteger;

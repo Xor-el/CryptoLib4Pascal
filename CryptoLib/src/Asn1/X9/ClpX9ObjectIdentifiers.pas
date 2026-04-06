@@ -238,6 +238,7 @@ begin
     FPrime256v1 := FPrimeCurve.Branch('7');
     FIdDsa := TDerObjectIdentifier.Create('1.2.840.10040.4.1');
     FIdDsaWithSha1 := TDerObjectIdentifier.Create('1.2.840.10040.4.3');
+    // TODO Seems this ought to be 1.3.133.16.840.9.63.0, but may be in common use
     FX9x63Scheme := TDerObjectIdentifier.Create('1.3.133.16.840.63.0');
     FDHSinglePassStdDHSha1KdfScheme := FX9x63Scheme.Branch('2');
     FDHSinglePassCofactorDHSha1KdfScheme := FX9x63Scheme.Branch('3');

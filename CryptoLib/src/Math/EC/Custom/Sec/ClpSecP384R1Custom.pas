@@ -327,15 +327,8 @@ begin
 end;
 
 class function TSecP384R1Field.IsZero(const AX: TCryptoLibUInt32Array): Int32;
-var
-  LD: UInt32;
-  LI: Int32;
 begin
-  LD := 0;
-  for LI := 0 to 11 do
-    LD := LD or AX[LI];
-  LD := (LD shr 1) or (LD and 1);
-  Result := TBitOperations.Asr32(Int32(LD) - 1, 31);
+  Result := Int32(TNat.EqualToZero(12, AX, 0));
 end;
 
 class procedure TSecP384R1Field.Multiply(const AX, AY, AZ: TCryptoLibUInt32Array);

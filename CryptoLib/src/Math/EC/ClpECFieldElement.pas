@@ -28,6 +28,7 @@ uses
   ClpIECFieldElement,
   ClpLongArray,
   ClpBitOperations,
+  ClpInt32Utilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -688,7 +689,7 @@ begin
   if (LM and 1) = 0 then
     raise EInvalidOperationCryptoLibException.Create(SHalfTraceOnlyDefinedForOddM);
   LN := TBitOperations.Asr32(LM + 1, 1);
-  LK := 31 - TBitOperations.NumberOfLeadingZeros32(UInt32(LN));
+  LK := TInt32Utilities.BitLength(UInt32(LN)) - 1;
   LNk := 1;
   LHt := Self as IECFieldElement;
   while LK > 0 do
@@ -713,7 +714,7 @@ var
   LTr: IECFieldElement;
 begin
   LM := GetFieldSize;
-  LK := 31 - TBitOperations.NumberOfLeadingZeros32(UInt32(LM));
+  LK := TInt32Utilities.BitLength(UInt32(LM)) - 1;
   LMk := 1;
   LTr := Self as IECFieldElement;
   while LK > 0 do
