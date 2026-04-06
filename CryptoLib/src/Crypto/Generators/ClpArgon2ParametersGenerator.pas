@@ -239,12 +239,12 @@ begin
   case argon2Version of
     TCryptoLibArgon2Version.Argon2Version10:
       begin
-        LArgon2Version := TArgon2Version.a2vARGON2_VERSION_10;
+        LArgon2Version := TArgon2Version.VERSION10;
       end;
 
     TCryptoLibArgon2Version.Argon2Version13:
       begin
-        LArgon2Version := TArgon2Version.a2vARGON2_VERSION_13;
+        LArgon2Version := TArgon2Version.VERSION13;
       end
   else
     begin

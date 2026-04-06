@@ -58,6 +58,8 @@ type
 
 implementation
 
+uses SbpBase16Alphabet, {SbpIBase16,} SbpICodingAlphabet;
+
 { TBase58 }
 
 class function TBase58.Decode(const Input: String): TCryptoLibByteArray;
@@ -86,17 +88,27 @@ end;
 
 class function THex.Decode(const Hex: String): TCryptoLibByteArray;
 begin
-  result := SbpBase16.TBase16.Decode(Hex);
+  with SbpBase16.TBase16.Create(TBase16Alphabet.Create('0123456789ABCDEF') as ICodingAlphabet) do
+    try;
+      result := Decode(Hex);
+    finally
+      Free;
+    end;
 end;
 
 class function THex.Encode(const Input: TCryptoLibByteArray;
   UpperCase: Boolean): String;
+var
+  Base16: SbpBase16.TBase16;
 begin
-  case UpperCase of
-    True:
-      result := SbpBase16.TBase16.EncodeUpper(Input);
-    False:
-      result := SbpBase16.TBase16.EncodeLower(Input);
+  if UpperCase then
+    Base16 := SbpBase16.TBase16.Create(TBase16Alphabet.Create('0123456789ABCDEF') as ICodingAlphabet)
+  else
+    Base16 := SbpBase16.TBase16.Create(TBase16Alphabet.Create('0123456789abcdef') as ICodingAlphabet);
+  try
+    result := Base16.Encode(Input)
+  finally
+    Base16.Free;
   end;
 end;
 
