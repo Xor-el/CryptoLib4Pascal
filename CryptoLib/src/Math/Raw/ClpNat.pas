@@ -1273,7 +1273,7 @@ begin
   LC := 0;
   for LI := 0 to ALen - 1 do
   begin
-    LC := LC + (Int64(AX[LI]) - AY[LI]);
+    LC := LC + (Int64(AX[LI]) - Int64(AY[LI]));
     LC := TBitOperations.Asr64(LC, 32);
   end;
   System.Assert((LC = Int64(0)) or (LC = -Int64(1)));
@@ -2443,13 +2443,13 @@ class function TNat.SubDWordAt(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Arra
 var
   LC: Int64;
 begin
-  LC := AZ[AZPos + 0] - Int64(AX and M);
+  LC := Int64(AZ[AZPos + 0]) - Int64(AX and M);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZPos + 0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (AZ[AZPos + 1] - Int64(AX shr 32));
+  LC := LC + (Int64(AZ[AZPos + 1]) - Int64(AX shr 32));
   AZ[AZPos + 1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2466,13 +2466,13 @@ class function TNat.SubDWordAt(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Arra
 var
   LC: Int64;
 begin
-  LC := AZ[AZOff + AZPos] - Int64(AX and M);
+  LC := Int64(AZ[AZOff + AZPos]) - Int64(AX and M);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZOff + AZPos] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (AZ[AZOff + AZPos + 1] - Int64(AX shr 32));
+  LC := LC + (Int64(AZ[AZOff + AZPos + 1]) - Int64(AX shr 32));
   AZ[AZOff + AZPos + 1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2489,10 +2489,10 @@ class function TNat.SubDWordFrom(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Ar
 var
   LC: Int64;
 begin
-  LC := AZ[0] - Int64(AX and M);
+  LC := Int64(AZ[0]) - Int64(AX and M);
   AZ[0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (AZ[1] - Int64(AX shr 32));
+  LC := LC + (Int64(AZ[1]) - Int64(AX shr 32));
   AZ[1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2509,10 +2509,10 @@ class function TNat.SubDWordFrom(ALen: Int32; AX: UInt64; AZ: TCryptoLibUInt32Ar
 var
   LC: Int64;
 begin
-  LC := AZ[AZOff + 0] - Int64(AX and M);
+  LC := Int64(AZ[AZOff + 0]) - Int64(AX and M);
   AZ[AZOff + 0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (AZ[AZOff + 1] - Int64(AX shr 32));
+  LC := LC + (Int64(AZ[AZOff + 1]) - Int64(AX shr 32));
   AZ[AZOff + 1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
