@@ -27,6 +27,7 @@ uses
   ClpCryptoLibTypes,
   ClpPack,
   ClpBitOperations,
+  ClpInt32Utilities,
   ClpArrayUtilities,
   ClpIRandom;
 
@@ -433,12 +434,12 @@ end;
 
 class function TBigInteger.BitLen(const AValue: Byte): Int32;
 begin
-  Result := 32 - TBitOperations.NumberOfLeadingZeros32(AValue);
+  Result := TInt32Utilities.BitLength(UInt32(AValue));
 end;
 
 class function TBigInteger.BitLen(const AValue: UInt32): Int32;
 begin
-  Result := 32 - TBitOperations.NumberOfLeadingZeros32(AValue);
+  Result := TInt32Utilities.BitLength(AValue);
 end;
 
 class function TBigInteger.CreateUValueOf(const AValue: UInt32): TBigInteger;

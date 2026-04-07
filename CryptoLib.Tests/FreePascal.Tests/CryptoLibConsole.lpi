@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="130">
+    <Units Count="132">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -560,6 +560,14 @@
         <Filename Value="..\src\Crypto\Bip340SchnorrTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit129>
+      <Unit130>
+        <Filename Value="..\src\Crypto\DHKekGeneratorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit130>
+      <Unit131>
+        <Filename Value="..\src\Crypto\ECDHKekGeneratorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit131>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

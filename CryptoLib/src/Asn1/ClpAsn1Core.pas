@@ -28,9 +28,9 @@ uses
   ClpStreams,
   ClpCryptoLibTypes,
   ClpIAsn1Core,
+  ClpIAsn1Objects,
   ClpIAsn1Encodings,
   ClpBitOperations,
-  ClpAsn1Tags,
   ClpAsn1Streams;
 
 type
@@ -148,15 +148,25 @@ type
     /// </summary>
     procedure AddOptional(const AElements: array of IAsn1Encodable); overload;
     /// <summary>
-    /// Add an optional tagged element.
+    /// Add a context-specific tagged element (DER).
     /// </summary>
-    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagNo: Int32;
-      const AObj: IAsn1Encodable); overload;
+    procedure AddTagged(ADeclaredExplicit: Boolean; ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add a tagged element with explicit tag class (DER).
+    /// </summary>
+    procedure AddTagged(ADeclaredExplicit: Boolean; ATagClass, ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
+    /// <summary>
+    /// Add an optional tagged element (context-specific).
+    /// </summary>
+    procedure AddOptionalTagged(ADeclaredExplicit: Boolean; ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
     /// <summary>
     /// Add an optional tagged element with tag class.
     /// </summary>
-    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
-      const AObj: IAsn1Encodable); overload;
+    procedure AddOptionalTagged(ADeclaredExplicit: Boolean; ATagClass, ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
     /// <summary>
     /// Add all elements from an enumerable.
     /// </summary>
@@ -288,7 +298,7 @@ type
 implementation
 
 uses
-  ClpAsn1Objects; // For TDerTaggedObject in AddOptionalTagged
+  ClpAsn1Objects;
 
 { TAsn1Encodable }
 
@@ -459,34 +469,30 @@ begin
   end;
 end;
 
-procedure TAsn1EncodableVector.AddOptionalTagged(AIsExplicit: Boolean; ATagNo: Int32;
-  const AObj: IAsn1Encodable);
-var
-  LExplicitness: Int32;
+procedure TAsn1EncodableVector.AddTagged(ADeclaredExplicit: Boolean; ATagNo: Int32;
+  const AElement: IAsn1Encodable);
 begin
-  if AObj <> nil then
-  begin
-    if AIsExplicit then
-      LExplicitness := 1  // DeclaredExplicit
-    else
-      LExplicitness := 2; // DeclaredImplicit
-    Add(TDerTaggedObject.Create(LExplicitness, TAsn1Tags.ContextSpecific, ATagNo, AObj));
-  end;
+  Add(TDerTaggedObject.Create(ADeclaredExplicit, ATagNo, AElement) as IDerTaggedObject);
 end;
 
-procedure TAsn1EncodableVector.AddOptionalTagged(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
-  const AObj: IAsn1Encodable);
-var
-  LExplicitness: Int32;
+procedure TAsn1EncodableVector.AddTagged(ADeclaredExplicit: Boolean; ATagClass, ATagNo: Int32;
+  const AElement: IAsn1Encodable);
 begin
-  if AObj <> nil then
-  begin
-    if AIsExplicit then
-      LExplicitness := 1  // DeclaredExplicit
-    else
-      LExplicitness := 2; // DeclaredImplicit
-    Add(TDerTaggedObject.Create(LExplicitness, ATagClass, ATagNo, AObj));
-  end;
+  Add(TDerTaggedObject.Create(ADeclaredExplicit, ATagClass, ATagNo, AElement) as IDerTaggedObject);
+end;
+
+procedure TAsn1EncodableVector.AddOptionalTagged(ADeclaredExplicit: Boolean; ATagNo: Int32;
+  const AElement: IAsn1Encodable);
+begin
+  if AElement <> nil then
+    AddTagged(ADeclaredExplicit, ATagNo, AElement);
+end;
+
+procedure TAsn1EncodableVector.AddOptionalTagged(ADeclaredExplicit: Boolean; ATagClass, ATagNo: Int32;
+  const AElement: IAsn1Encodable);
+begin
+  if AElement <> nil then
+    AddTagged(ADeclaredExplicit, ATagClass, ATagNo, AElement);
 end;
 
 procedure TAsn1EncodableVector.AddAll(const AE: TCryptoLibGenericArray<IAsn1Encodable>);

@@ -104,10 +104,14 @@ type
     procedure AddOptional(const AElement: IAsn1Encodable); overload;
     procedure AddOptional(const AElement1, AElement2: IAsn1Encodable); overload;
     procedure AddOptional(const AElements: array of IAsn1Encodable); overload;
-    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagNo: Int32;
-      const AObj: IAsn1Encodable); overload;
-    procedure AddOptionalTagged(AIsExplicit: Boolean; ATagClass, ATagNo: Int32;
-      const AObj: IAsn1Encodable); overload;
+    procedure AddTagged(ADeclaredExplicit: Boolean; ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
+    procedure AddTagged(ADeclaredExplicit: Boolean; ATagClass, ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
+    procedure AddOptionalTagged(ADeclaredExplicit: Boolean; ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
+    procedure AddOptionalTagged(ADeclaredExplicit: Boolean; ATagClass, ATagNo: Int32;
+      const AElement: IAsn1Encodable); overload;
     procedure AddAll(const AE: TCryptoLibGenericArray<IAsn1Encodable>); overload;
     procedure AddAll(const AOther: IAsn1EncodableVector); overload;
 

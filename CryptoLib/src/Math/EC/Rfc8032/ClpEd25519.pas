@@ -472,7 +472,7 @@ var
   LU, LV: TCryptoLibInt32Array;
 begin
   LX0 := TBitOperations.Asr32(Int32(AP[PointBytes - 1] and $80), 7);
-  TX25519Field.Decode(AP, AR.Y);
+  TX25519Field.Decode255(AP, AR.Y);
   LU := TX25519Field.Create;
   LV := TX25519Field.Create;
   TX25519Field.Sqr(AR.Y, LU);

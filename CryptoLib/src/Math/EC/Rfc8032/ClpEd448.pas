@@ -487,7 +487,7 @@ var
 begin
   LX0 := (AP[PointBytes - 1] and $80) shr 7;
 
-  TX448Field.Decode(AP, AR.Y);
+  TX448Field.Decode448(AP, AR.Y);
 
   LU := TX448Field.Create;
   LV := TX448Field.Create;

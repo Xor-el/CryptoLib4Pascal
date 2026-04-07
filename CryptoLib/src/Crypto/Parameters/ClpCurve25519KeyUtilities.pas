@@ -103,7 +103,7 @@ begin
     raise EArgumentNilCryptoLibException.Create(SCurve25519Ed25519PublicKeyNil);
   LPk := AEd25519PublicKey.GetEncoded();
   LY := TX25519Field.Create();
-  TX25519Field.Decode(LPk, LY);
+  TX25519Field.Decode255(LPk, LY);
   LOne := TX25519Field.Create();
   TX25519Field.One(LOne);
   LOneMinusY := TX25519Field.Create();

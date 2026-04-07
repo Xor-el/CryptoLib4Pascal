@@ -45,6 +45,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    procedure TestBitLength;
     procedure TestNumberOfLeadingZeros;
     procedure TestNumberOfTrailingZeros;
     procedure TestPopCount;
@@ -64,6 +65,19 @@ end;
 procedure TTestInt32Utilities.TearDown;
 begin
   inherited;
+end;
+
+procedure TTestInt32Utilities.TestBitLength;
+var
+  LI: Int32;
+begin
+  CheckEquals(0, TInt32Utilities.BitLength(Int32(0)));
+  CheckEquals(1, TInt32Utilities.BitLength(Int32(1)));
+  CheckEquals(32, TInt32Utilities.BitLength(Int32(-1)));
+  CheckEquals(7, TInt32Utilities.BitLength(Int32($7F)));
+  CheckEquals(8, TInt32Utilities.BitLength(Int32($80)));
+  for LI := 0 to 30 do
+    CheckEquals(32 - LI, TInt32Utilities.BitLength(Int32(UInt32($80000000) shr LI)));
 end;
 
 procedure TTestInt32Utilities.TestNumberOfLeadingZeros;

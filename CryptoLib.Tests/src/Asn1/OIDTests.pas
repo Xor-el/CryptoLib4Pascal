@@ -162,11 +162,8 @@ begin
   RecodeCheck('2.100.3', FReq1);
   RecodeCheck('1.2.54.34359733987.17', FReq2);
 
+  CheckValid('1.2.840.113549.1.9.3');
   CheckValid('0.1');
-  CheckValid('1.0');
-  CheckValid('1.0.2');
-  CheckValid('1.0.20');
-  CheckValid('1.0.200');
   CheckValid('1.1.127.32512.8323072.2130706432.545460846592.139637976727552.35747322042253312.9151314442816847872');
   CheckValid('1.2.123.12345678901.1.1.1');
   CheckValid('2.25.196556539987194312349856245628873852187.1');
@@ -180,8 +177,20 @@ begin
   CheckValid('1.39.1');
   CheckValid('2.0');
   CheckValid('2.0.1');
+  CheckValid('2.39');
+  CheckValid('2.39.1');
   CheckValid('2.40');
   CheckValid('2.40.1');
+  CheckValid('2.48');
+  CheckValid('2.48.1');
+  CheckValid('2.99');
+  CheckValid('2.99.1');
+  CheckValid('2.100');
+  CheckValid('2.100.1');
+  CheckValid('2.99999999999999999');
+  CheckValid('2.999999999999999999');
+  CheckValid('2.9999999999999999999');
+  CheckValid('2.99999999999999999999');
 
   CheckInvalid('0');
   CheckInvalid('1');

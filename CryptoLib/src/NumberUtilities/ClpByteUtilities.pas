@@ -22,6 +22,7 @@ unit ClpByteUtilities;
 interface
 
 uses
+  ClpNat,
   ClpCryptoLibTypes;
 
 type
@@ -38,6 +39,10 @@ type
 
     class procedure XorTo(ALen: Int32; const AX, AZ: TCryptoLibByteArray); overload; static;
     class procedure XorTo(ALen: Int32; const AX: TCryptoLibByteArray; AXOff: Int32;
+      const AZ: TCryptoLibByteArray; AZOff: Int32); overload; static;
+
+    class procedure CMov(ALen: Int32; ACond: Int32; const AX, AZ: TCryptoLibByteArray); overload; static;
+    class procedure CMov(ALen: Int32; ACond: Int32; const AX: TCryptoLibByteArray; AXOff: Int32;
       const AZ: TCryptoLibByteArray; AZOff: Int32); overload; static;
   end;
 
@@ -85,6 +90,37 @@ begin
   for LI := 0 to ALen - 1 do
   begin
     AZ[AZOff + LI] := AZ[AZOff + LI] xor AX[AXOff + LI];
+  end;
+end;
+
+class procedure TByteUtilities.CMov(ALen: Int32; ACond: Int32; const AX, AZ: TCryptoLibByteArray);
+var
+  LM0, LM1, LXI, LZI: UInt32;
+  LI: Int32;
+begin
+  LM0 := TNat.CZero(UInt32(ACond));
+  LM1 := not LM0;
+  for LI := 0 to ALen - 1 do
+  begin
+    LXI := AX[LI];
+    LZI := AZ[LI];
+    AZ[LI] := Byte((LZI and LM0) or (LXI and LM1));
+  end;
+end;
+
+class procedure TByteUtilities.CMov(ALen: Int32; ACond: Int32; const AX: TCryptoLibByteArray; AXOff: Int32;
+  const AZ: TCryptoLibByteArray; AZOff: Int32);
+var
+  LM0, LM1, LXI, LZI: UInt32;
+  LI: Int32;
+begin
+  LM0 := TNat.CZero(UInt32(ACond));
+  LM1 := not LM0;
+  for LI := 0 to ALen - 1 do
+  begin
+    LXI := AX[AXOff + LI];
+    LZI := AZ[AZOff + LI];
+    AZ[AZOff + LI] := Byte((LZI and LM0) or (LXI and LM1));
   end;
 end;
 

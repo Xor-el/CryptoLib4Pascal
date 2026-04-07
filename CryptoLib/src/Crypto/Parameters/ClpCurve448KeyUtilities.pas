@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -118,7 +118,7 @@ begin
     raise EArgumentNilCryptoLibException.Create(SCurve448Ed448PublicKeyNil);
   LPk := AEd448PublicKey.GetEncoded();
   LY := TX448Field.Create();
-  TX448Field.Decode(LPk, 0, LY);
+  TX448Field.Decode448(LPk, 0, LY);
   LU := TX448Field.Create();
   LV := TX448Field.Create();
   LY2 := TX448Field.Create();

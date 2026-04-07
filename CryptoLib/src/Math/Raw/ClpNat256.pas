@@ -82,8 +82,30 @@ type
     class function SubFrom(const AX: TCryptoLibUInt32Array; AXOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32; ACIn: Int32): Int32; overload; static;
     class function ToBigInteger(const AX: TCryptoLibUInt32Array): TBigInteger; static;
     class function ToBigInteger64(const AX: TCryptoLibUInt64Array): TBigInteger; static;
-    class procedure &Xor(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32); static;
-    class procedure Zero(AZ: TCryptoLibUInt32Array); static;
+    class procedure &Xor(const AX: TCryptoLibUInt32Array; AY: UInt32; AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure &Xor(const AX: TCryptoLibUInt32Array; AXOff: Int32; AY: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure &Xor(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure &Xor(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure Xor64(const AX: TCryptoLibUInt64Array; AY: UInt64; AZ: TCryptoLibUInt64Array); overload; static;
+    class procedure Xor64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AY: UInt64; AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
+    class procedure Xor64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array); overload; static;
+    class procedure Xor64(const AX: TCryptoLibUInt64Array; AXOff: Int32; const AY: TCryptoLibUInt64Array; AYOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
+    class procedure XorBothTo(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure XorBothTo(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure XorBothTo64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array); overload; static;
+    class procedure XorBothTo64(const AX: TCryptoLibUInt64Array; AXOff: Int32; const AY: TCryptoLibUInt64Array; AYOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
+    class procedure XorTo(const AX: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure XorTo(const AX: TCryptoLibUInt32Array; AXOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure XorTo64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array); overload; static;
+    class procedure XorTo64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
+    class procedure XorToEachOther(AU: TCryptoLibUInt32Array; AV: TCryptoLibUInt32Array); overload; static;
+    class procedure XorToEachOther(AU: TCryptoLibUInt32Array; AUOff: Int32; AV: TCryptoLibUInt32Array; AVOff: Int32); overload; static;
+    class procedure XorToEachOther64(AU: TCryptoLibUInt64Array; AV: TCryptoLibUInt64Array); overload; static;
+    class procedure XorToEachOther64(AU: TCryptoLibUInt64Array; AUOff: Int32; AV: TCryptoLibUInt64Array; AVOff: Int32); overload; static;
+    class procedure Zero(AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Zero(AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
+    class procedure Zero64(AZ: TCryptoLibUInt64Array); overload; static;
+    class procedure Zero64(AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
   end;
 
 implementation
@@ -1731,24 +1753,209 @@ begin
   Result := TBigInteger.Create(1, LBs);
 end;
 
+class procedure TNat256.&Xor(const AX: TCryptoLibUInt32Array; AY: UInt32; AZ: TCryptoLibUInt32Array);
+var
+  LI: Int32;
+begin
+  for LI := 0 to 7 do
+  begin
+    AZ[LI] := AX[LI] xor AY;
+  end;
+end;
+
+class procedure TNat256.&Xor(const AX: TCryptoLibUInt32Array; AXOff: Int32; AY: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32);
+var
+  LI: Int32;
+begin
+  for LI := 0 to 7 do
+  begin
+    AZ[AZOff + LI] := AX[AXOff + LI] xor AY;
+  end;
+end;
+
+class procedure TNat256.&Xor(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array);
+begin
+  TNat256.&Xor(AX, 0, AY, 0, AZ, 0);
+end;
+
 class procedure TNat256.&Xor(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32);
+var
+  LI: Int32;
+begin
+  for LI := 0 to 7 do
+  begin
+    AZ[AZOff + LI] := AX[AXOff + LI] xor AY[AYOff + LI];
+  end;
+end;
+
+class procedure TNat256.Xor64(const AX: TCryptoLibUInt64Array; AY: UInt64; AZ: TCryptoLibUInt64Array);
+begin
+  AZ[0] := AX[0] xor AY;
+  AZ[1] := AX[1] xor AY;
+  AZ[2] := AX[2] xor AY;
+  AZ[3] := AX[3] xor AY;
+end;
+
+class procedure TNat256.Xor64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AY: UInt64; AZ: TCryptoLibUInt64Array; AZOff: Int32);
+begin
+  AZ[AZOff + 0] := AX[AXOff + 0] xor AY;
+  AZ[AZOff + 1] := AX[AXOff + 1] xor AY;
+  AZ[AZOff + 2] := AX[AXOff + 2] xor AY;
+  AZ[AZOff + 3] := AX[AXOff + 3] xor AY;
+end;
+
+class procedure TNat256.Xor64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
+begin
+  AZ[0] := AX[0] xor AY[0];
+  AZ[1] := AX[1] xor AY[1];
+  AZ[2] := AX[2] xor AY[2];
+  AZ[3] := AX[3] xor AY[3];
+end;
+
+class procedure TNat256.Xor64(const AX: TCryptoLibUInt64Array; AXOff: Int32; const AY: TCryptoLibUInt64Array; AYOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
+begin
+  AZ[AZOff + 0] := AX[AXOff + 0] xor AY[AYOff + 0];
+  AZ[AZOff + 1] := AX[AXOff + 1] xor AY[AYOff + 1];
+  AZ[AZOff + 2] := AX[AXOff + 2] xor AY[AYOff + 2];
+  AZ[AZOff + 3] := AX[AXOff + 3] xor AY[AYOff + 3];
+end;
+
+class procedure TNat256.XorBothTo(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array);
 var
   LI: Int32;
 begin
   LI := 0;
   while LI < 8 do
   begin
-    AZ[AZOff + LI + 0] := AX[AXOff + LI + 0] xor AY[AYOff + LI + 0];
-    AZ[AZOff + LI + 1] := AX[AXOff + LI + 1] xor AY[AYOff + LI + 1];
-    AZ[AZOff + LI + 2] := AX[AXOff + LI + 2] xor AY[AYOff + LI + 2];
-    AZ[AZOff + LI + 3] := AX[AXOff + LI + 3] xor AY[AYOff + LI + 3];
-    Inc(LI, 4);
+    AZ[LI + 0] := AZ[LI + 0] xor AX[LI + 0] xor AY[LI + 0];
+    AZ[LI + 1] := AZ[LI + 1] xor AX[LI + 1] xor AY[LI + 1];
+    AZ[LI + 2] := AZ[LI + 2] xor AX[LI + 2] xor AY[LI + 2];
+    AZ[LI + 3] := AZ[LI + 3] xor AX[LI + 3] xor AY[LI + 3];
+    System.Inc(LI, 4);
+  end;
+end;
+
+class procedure TNat256.XorBothTo(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32);
+var
+  LI: Int32;
+begin
+  LI := 0;
+  while LI < 8 do
+  begin
+    AZ[AZOff + LI + 0] := AZ[AZOff + LI + 0] xor AX[AXOff + LI + 0] xor AY[AYOff + LI + 0];
+    AZ[AZOff + LI + 1] := AZ[AZOff + LI + 1] xor AX[AXOff + LI + 1] xor AY[AYOff + LI + 1];
+    AZ[AZOff + LI + 2] := AZ[AZOff + LI + 2] xor AX[AXOff + LI + 2] xor AY[AYOff + LI + 2];
+    AZ[AZOff + LI + 3] := AZ[AZOff + LI + 3] xor AX[AXOff + LI + 3] xor AY[AYOff + LI + 3];
+    System.Inc(LI, 4);
+  end;
+end;
+
+class procedure TNat256.XorBothTo64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
+begin
+  AZ[0] := AZ[0] xor AX[0] xor AY[0];
+  AZ[1] := AZ[1] xor AX[1] xor AY[1];
+  AZ[2] := AZ[2] xor AX[2] xor AY[2];
+  AZ[3] := AZ[3] xor AX[3] xor AY[3];
+end;
+
+class procedure TNat256.XorBothTo64(const AX: TCryptoLibUInt64Array; AXOff: Int32; const AY: TCryptoLibUInt64Array; AYOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
+begin
+  AZ[AZOff + 0] := AZ[AZOff + 0] xor AX[AXOff + 0] xor AY[AYOff + 0];
+  AZ[AZOff + 1] := AZ[AZOff + 1] xor AX[AXOff + 1] xor AY[AYOff + 1];
+  AZ[AZOff + 2] := AZ[AZOff + 2] xor AX[AXOff + 2] xor AY[AYOff + 2];
+  AZ[AZOff + 3] := AZ[AZOff + 3] xor AX[AXOff + 3] xor AY[AYOff + 3];
+end;
+
+class procedure TNat256.XorTo(const AX: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array);
+var
+  LI: Int32;
+begin
+  for LI := 0 to 7 do
+  begin
+    AZ[LI] := AZ[LI] xor AX[LI];
+  end;
+end;
+
+class procedure TNat256.XorTo(const AX: TCryptoLibUInt32Array; AXOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32);
+var
+  LI: Int32;
+begin
+  for LI := 0 to 7 do
+  begin
+    AZ[AZOff + LI] := AZ[AZOff + LI] xor AX[AXOff + LI];
+  end;
+end;
+
+class procedure TNat256.XorTo64(const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
+begin
+  AZ[0] := AZ[0] xor AX[0];
+  AZ[1] := AZ[1] xor AX[1];
+  AZ[2] := AZ[2] xor AX[2];
+  AZ[3] := AZ[3] xor AX[3];
+end;
+
+class procedure TNat256.XorTo64(const AX: TCryptoLibUInt64Array; AXOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32);
+begin
+  AZ[AZOff + 0] := AZ[AZOff + 0] xor AX[AXOff + 0];
+  AZ[AZOff + 1] := AZ[AZOff + 1] xor AX[AXOff + 1];
+  AZ[AZOff + 2] := AZ[AZOff + 2] xor AX[AXOff + 2];
+  AZ[AZOff + 3] := AZ[AZOff + 3] xor AX[AXOff + 3];
+end;
+
+class procedure TNat256.XorToEachOther(AU: TCryptoLibUInt32Array; AV: TCryptoLibUInt32Array);
+begin
+  TNat256.XorToEachOther(AU, 0, AV, 0);
+end;
+
+class procedure TNat256.XorToEachOther(AU: TCryptoLibUInt32Array; AUOff: Int32; AV: TCryptoLibUInt32Array; AVOff: Int32);
+var
+  LI: Int32;
+  LT: UInt32;
+begin
+  for LI := 0 to 7 do
+  begin
+    LT := AU[AUOff + LI] xor AV[AVOff + LI];
+    AU[AUOff + LI] := LT;
+    AV[AVOff + LI] := LT;
+  end;
+end;
+
+class procedure TNat256.XorToEachOther64(AU: TCryptoLibUInt64Array; AV: TCryptoLibUInt64Array);
+begin
+  TNat256.XorToEachOther64(AU, 0, AV, 0);
+end;
+
+class procedure TNat256.XorToEachOther64(AU: TCryptoLibUInt64Array; AUOff: Int32; AV: TCryptoLibUInt64Array; AVOff: Int32);
+var
+  LI: Int32;
+  LT: UInt64;
+begin
+  for LI := 0 to 3 do
+  begin
+    LT := AU[AUOff + LI] xor AV[AVOff + LI];
+    AU[AUOff + LI] := LT;
+    AV[AVOff + LI] := LT;
   end;
 end;
 
 class procedure TNat256.Zero(AZ: TCryptoLibUInt32Array);
 begin
   TArrayUtilities.Fill<UInt32>(AZ, 0, 8, UInt32(0));
+end;
+
+class procedure TNat256.Zero(AZ: TCryptoLibUInt32Array; AZOff: Int32);
+begin
+  TArrayUtilities.Fill<UInt32>(AZ, AZOff, AZOff + 8, UInt32(0));
+end;
+
+class procedure TNat256.Zero64(AZ: TCryptoLibUInt64Array);
+begin
+  TArrayUtilities.Fill<UInt64>(AZ, 0, 4, UInt64(0));
+end;
+
+class procedure TNat256.Zero64(AZ: TCryptoLibUInt64Array; AZOff: Int32);
+begin
+  TArrayUtilities.Fill<UInt64>(AZ, AZOff, AZOff + 4, UInt64(0));
 end;
 
 end.

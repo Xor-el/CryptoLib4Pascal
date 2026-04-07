@@ -32,27 +32,33 @@ uses
   ClpAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpICmsECAsn1Objects,
+  ClpCmsECAsn1Objects,
   ClpKdf2BytesGenerator,
   ClpKdfParameters,
   ClpIKdfParameters,
+  ClpCheck,
   ClpPack,
   ClpCryptoLibTypes;
 
 resourcestring
   SOutputBufferTooShort = 'Output buffer too short';
+  SECDHKekNotInitialized = 'ECDH KEK generator not initialized';
 
 type
+  /// <summary>
+  /// X9.63-based key derivation for ECDH CMS (ECC-CMS-SharedInfo, RFC 5753).
+  /// </summary>
   TECDHKekGenerator = class sealed(TInterfacedObject, IECDHKekGenerator,
     IDerivationFunction)
 
   strict private
   var
     FKdf: IDerivationFunction;
-    FAlgorithm: IDerObjectIdentifier;
-    FKeySize: Int32;
-    FZ: TCryptoLibByteArray;
+    FParams: IDHKdfParameters;
 
     function GetDigest(): IDigest;
+    procedure InitKdf;
 
   public
     constructor Create(const ADigest: IDigest);
@@ -72,6 +78,8 @@ implementation
 constructor TECDHKekGenerator.Create(const ADigest: IDigest);
 begin
   inherited Create();
+  if ADigest = nil then
+    raise EArgumentNilCryptoLibException.Create('digest');
   FKdf := TKdf2BytesGenerator.Create(ADigest);
 end;
 
@@ -80,36 +88,44 @@ begin
   Result := FKdf.Digest;
 end;
 
+procedure TECDHKekGenerator.InitKdf;
+var
+  LKeyInfo: IAlgorithmIdentifier;
+  LSuppPub: IAsn1OctetString;
+  LEcc: IEccCmsSharedInfo;
+  LKdfParams: IKdfParameters;
+  LZ: TCryptoLibByteArray;
+begin
+  if FParams = nil then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SECDHKekNotInitialized);
+
+  LKeyInfo := TAlgorithmIdentifier.Create(FParams.Algorithm, TDerNull.Instance);
+  LSuppPub := TDerOctetString.WithContents(
+    TPack.UInt32_To_BE(UInt32(FParams.KeySize)));
+  LEcc := TEccCmsSharedInfo.Create(LKeyInfo, LSuppPub);
+  LZ := FParams.Z;
+  LKdfParams := TKdfParameters.Create(LZ, LEcc.GetDerEncoded());
+  FKdf.Init(LKdfParams);
+end;
+
 procedure TECDHKekGenerator.Init(const AParameters: IDerivationParameters);
 var
   LParams: IDHKdfParameters;
 begin
+  if AParameters = nil then
+    raise EArgumentNilCryptoLibException.Create('AParameters');
+
   if not Supports(AParameters, IDHKdfParameters, LParams) then
     raise EInvalidCastCryptoLibException.Create('AParameters');
 
-  FAlgorithm := LParams.Algorithm;
-  FKeySize := LParams.KeySize;
-  FZ := LParams.GetZ();
+  FParams := LParams;
 end;
 
 function TECDHKekGenerator.GenerateBytes(const AOutput: TCryptoLibByteArray;
   AOutOff, ALength: Int32): Int32;
-var
-  LS: IDerSequence;
-  LKdfParams: IKdfParameters;
 begin
-  if (AOutOff + ALength) > System.Length(AOutput) then
-    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
-
-  LS := TDerSequence.Create(
-    TAlgorithmIdentifier.Create(FAlgorithm, TDerNull.Instance) as IAlgorithmIdentifier,
-    TDerTaggedObject.Create(True, 2,
-      TDerOctetString.Create(
-        TPack.UInt32_To_BE(UInt32(FKeySize))) as IDerOctetString) as IDerTaggedObject);
-
-  LKdfParams := TKdfParameters.Create(FZ, LS.GetDerEncoded());
-  FKdf.Init(LKdfParams);
-
+  TCheck.OutputLength(AOutput, AOutOff, ALength, SOutputBufferTooShort);
+  InitKdf();
   Result := FKdf.GenerateBytes(AOutput, AOutOff, ALength);
 end;
 

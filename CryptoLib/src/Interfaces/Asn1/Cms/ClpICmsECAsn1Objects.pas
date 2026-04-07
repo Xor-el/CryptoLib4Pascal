@@ -15,30 +15,31 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIDHKdfParameters;
+unit ClpICmsECAsn1Objects;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
+  ClpIAsn1Core,
   ClpIAsn1Objects,
-  ClpIDerivationParameters,
-  ClpCryptoLibTypes;
+  ClpIX509Asn1Objects;
 
 type
-  IDHKdfParameters = interface(IDerivationParameters)
-    ['{333F2D1B-44A6-49A9-A659-CBBC78484675}']
+  /// <summary>
+  /// ECC-CMS-SharedInfo (RFC 5753 / CMS ECC).
+  /// </summary>
+  IEccCmsSharedInfo = interface(IAsn1Encodable)
+    ['{F67A1928-A907-4EA8-90C3-0130C8C1F636}']
 
-    function GetAlgorithm(): IDerObjectIdentifier;
-    function GetKeySize(): Int32;
-    function GetZ(): TCryptoLibByteArray;
-    function GetExtraInfo(): TCryptoLibByteArray;
+    function GetKeyInfo: IAlgorithmIdentifier;
+    function GetEntityUInfo: IAsn1OctetString;
+    function GetSuppPubInfo: IAsn1OctetString;
 
-    property Algorithm: IDerObjectIdentifier read GetAlgorithm;
-    property KeySize: Int32 read GetKeySize;
-    property Z: TCryptoLibByteArray read GetZ;
-    property ExtraInfo: TCryptoLibByteArray read GetExtraInfo;
+    property KeyInfo: IAlgorithmIdentifier read GetKeyInfo;
+    property EntityUInfo: IAsn1OctetString read GetEntityUInfo;
+    property SuppPubInfo: IAsn1OctetString read GetSuppPubInfo;
   end;
 
 implementation

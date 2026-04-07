@@ -522,12 +522,13 @@ begin
     nil,
     DecodeHex('2626262626262626262626262626262626262626262626262626262626262626262626262626'));
   // valid [0,1,2] nonce [0,1,2] aggnonce 0 msg 0 signer 0
+  LPks := nil;
   System.SetLength(LPks, 3);
   LPks[0] := LPubkeys[0]; LPks[1] := LPubkeys[1]; LPks[2] := LPubkeys[2];
   LSessionCtx.AggNonce := LAggnonces[0];
   LSessionCtx.PubKeys := LPks;
   LSessionCtx.Tweaks := nil;
-  System.SetLength(LSessionCtx.IsXOnlyT, 0);
+  LSessionCtx.IsXOnlyT := nil;
   LSessionCtx.Msg := LMsgs[0];
   LSecnonces[0] := DecodeHex('508B81A611F100A6B2B6B29656590898AF488BCF2E1F55CF22E5CFB84421FE61FA27FD49B1D50085B481285E1CA205D55C82CC1B31FF5CD54A489829355901F703935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9');
   Check(TBip327MuSig2.Sign(LDomain, LSecnonces[0], LSk, LSessionCtx, LPsig), 'SignVerify sign 0');
@@ -933,11 +934,14 @@ begin
     AggPk := LCtx.GetXOnlyPubKey();
 
     // Random message (variable length)
+    LMsg := nil;
     System.SetLength(LMsg, 20 + (LI mod 40));
     LRandom.NextBytes(LMsg);
     LMsgProvided := True;
 
     // NonceGen for all three
+    LSecnonces := nil;
+    LPubnonces := nil;
     System.SetLength(LSecnonces, 3);
     System.SetLength(LPubnonces, 3);
     Check(TBip327MuSig2.NonceGen(LDomain, LSk1, LPk1, AggPk, LMsg, LMsgProvided, nil, LRandom, LSecnonces[0], LPubnonces[0]), 'NonceGen 1');
@@ -951,6 +955,7 @@ begin
     LSessionCtx.Msg := LMsg;
 
     // Partial sign
+    LPsigs := nil;
     System.SetLength(LPsigs, 3);
     Check(TBip327MuSig2.Sign(LDomain, LSecnonces[0], LSk1, LSessionCtx, LPsigs[0]), 'Sign 1');
     Check(TBip327MuSig2.Sign(LDomain, LSecnonces[1], LSk2, LSessionCtx, LPsigs[1]), 'Sign 2');
@@ -974,13 +979,17 @@ begin
   LPubkeys := TCryptoLibGenericArray<TCryptoLibByteArray>.Create(LPk1, LPk2, LPk3);
   LCtx := TBip327MuSig2KeyAggregation.KeyAgg(LDomain, LPubkeys);
   AggPk := LCtx.GetXOnlyPubKey();
+  LMsg := nil;
   System.SetLength(LMsg, 32);
   LRandom.NextBytes(LMsg);
+  LSecnonces := nil;
+  LPubnonces := nil;
   System.SetLength(LSecnonces, 2);
   System.SetLength(LPubnonces, 3);
   Check(TBip327MuSig2.NonceGen(LDomain, LSk1, LPk1, AggPk, LMsg, True, nil, LRandom, LSecnonces[0], LPubnonces[0]), 'DetSign NonceGen 1');
   Check(TBip327MuSig2.NonceGen(LDomain, LSk2, LPk2, AggPk, LMsg, True, nil, LRandom, LSecnonces[1], LPubnonces[1]), 'DetSign NonceGen 2');
   LAggOtherNonce := TBip327MuSig2.NonceAgg(LDomain, TCryptoLibGenericArray<TCryptoLibByteArray>.Create(LPubnonces[0], LPubnonces[1]));
+  LPsigs := nil;
   System.SetLength(LPsigs, 3);
   Check(TBip327MuSig2.DeterministicSign(LDomain, LSk3, LAggOtherNonce, LPubkeys, nil, nil, LMsg, nil, LPubnonces[2], LPsigs[2]), 'DeterministicSign last');
   LSessionCtx.AggNonce := TBip327MuSig2.NonceAgg(LDomain, LPubnonces);
@@ -1003,8 +1012,11 @@ begin
   LPubkeys := TCryptoLibGenericArray<TCryptoLibByteArray>.Create(LPk1, LPk2);
   LCtx := TBip327MuSig2KeyAggregation.KeyAgg(LDomain, LPubkeys);
   AggPk := LCtx.GetXOnlyPubKey();
+  LMsg := nil;
   System.SetLength(LMsg, 32);
   LRandom.NextBytes(LMsg);
+  LSecnonces := nil;
+  LPubnonces := nil;
   System.SetLength(LSecnonces, 2);
   System.SetLength(LPubnonces, 2);
   Check(TBip327MuSig2.NonceGen(LDomain, LSk1, LPk1, AggPk, LMsg, True, nil, LRandom, LSecnonces[0], LPubnonces[0]), 'Reuse NonceGen 1');
@@ -1014,6 +1026,7 @@ begin
   LSessionCtx.Tweaks := nil;
   LSessionCtx.IsXOnlyT := nil;
   LSessionCtx.Msg := LMsg;
+  LPsigs := nil;
   System.SetLength(LPsigs, 2);
   Check(TBip327MuSig2.Sign(LDomain, LSecnonces[0], LSk1, LSessionCtx, LPsigs[0]), 'Reuse first Sign');
   Check(not TBip327MuSig2.Sign(LDomain, LSecnonces[0], LSk1, LSessionCtx, LPsigs[1]), 'Secnonce reuse must return False');
@@ -1029,6 +1042,8 @@ begin
   LCtx := TBip327MuSig2KeyAggregation.KeyAgg(LDomain, LPubkeys);
   AggPk := LCtx.GetXOnlyPubKey();
   LMsg := TConverters.ConvertStringToBytes('correct message', TEncoding.UTF8);
+  LSecnonces := nil;
+  LPubnonces := nil;
   System.SetLength(LSecnonces, 2);
   System.SetLength(LPubnonces, 2);
   Check(TBip327MuSig2.NonceGen(LDomain, LSk1, LPk1, AggPk, LMsg, True, nil, LRandom, LSecnonces[0], LPubnonces[0]), 'WrongMsg NonceGen 1');
@@ -1038,6 +1053,7 @@ begin
   LSessionCtx.Tweaks := nil;
   LSessionCtx.IsXOnlyT := nil;
   LSessionCtx.Msg := LMsg;
+  LPsigs := nil;
   System.SetLength(LPsigs, 2);
   Check(TBip327MuSig2.Sign(LDomain, LSecnonces[0], LSk1, LSessionCtx, LPsigs[0]), 'WrongMsg Sign 1');
   Check(TBip327MuSig2.Sign(LDomain, LSecnonces[1], LSk2, LSessionCtx, LPsigs[1]), 'WrongMsg Sign 2');

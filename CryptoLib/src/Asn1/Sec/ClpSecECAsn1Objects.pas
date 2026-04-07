@@ -76,6 +76,11 @@ type
       const AParameters: IAsn1Encodable); overload;
     constructor Create(AOrderBitLength: Int32; const AKey: TBigInteger;
       const APublicKey: IDerBitString; const AParameters: IAsn1Encodable); overload;
+    /// <summary>
+    /// Create from explicit SEC 1 ASN.1 components (version 1).
+    /// </summary>
+    constructor Create(const APrivateKey: IAsn1OctetString; const AParameters: IAsn1Encodable;
+      const APublicKey: IDerBitString); overload;
 
     function GetKey: TBigInteger;
 
@@ -204,6 +209,20 @@ begin
 
   FVersion := TDerInteger.One;
   FPrivateKey := TDerOctetString.Create(LPrivateKeyContents);
+  FParameters := AParameters;
+  FPublicKey := APublicKey;
+end;
+
+constructor TECPrivateKeyStructure.Create(const APrivateKey: IAsn1OctetString;
+  const AParameters: IAsn1Encodable; const APublicKey: IDerBitString);
+begin
+  inherited Create();
+
+  if APrivateKey = nil then
+    raise EArgumentNilCryptoLibException.Create('privateKey');
+
+  FVersion := TDerInteger.One;
+  FPrivateKey := APrivateKey;
   FParameters := AParameters;
   FPublicKey := APublicKey;
 end;

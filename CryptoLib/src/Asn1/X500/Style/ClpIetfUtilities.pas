@@ -330,8 +330,9 @@ end;
 class function TIetfUtilities.StripInternalSpaces(const AStr: String): String;
 var
   LSb: TStringBuilder;
-  LI: Int32;
-  LC1, LC2: Char;
+  LI, LFirst: Int32;
+  LC2: Char;
+  LB1, LB2: Boolean;
 begin
   if System.Length(AStr) = 0 then
   begin
@@ -339,19 +340,26 @@ begin
     Exit;
   end;
 
-  LSb := TStringBuilder.Create();
-  try
-    LC1 := AStr[1];
-    LSb.Append(LC1);
+  LFirst := TStringUtilities.IndexOf(AStr, ' ');
+  if LFirst = 0 then
+  begin
+    Result := AStr;
+    Exit;
+  end;
 
-    for LI := 2 to System.Length(AStr) do
+  LSb := TStringBuilder.Create(System.Copy(AStr, 1, LFirst),
+    System.Length(AStr) - 1);
+  try
+    LB1 := False;
+    for LI := LFirst + 1 to System.Length(AStr) do
     begin
       LC2 := AStr[LI];
-      if not ((LC1 = ' ') and (LC2 = ' ')) then
+      LB2 := LC2 <> ' ';
+      if LB1 or LB2 then
       begin
         LSb.Append(LC2);
+        LB1 := LB2;
       end;
-      LC1 := LC2;
     end;
 
     Result := LSb.ToString();

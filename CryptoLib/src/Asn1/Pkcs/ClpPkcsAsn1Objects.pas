@@ -2052,7 +2052,7 @@ begin
 
   if ASeq.Count > 1 then
   begin
-    LTagged := TAsn1TaggedObject.GetInstance(ASeq[1], TAsn1Tags.ContextSpecific, 0);
+    LTagged := TAsn1TaggedObject.GetContextInstance(ASeq[1], 0);
     FContent := LTagged.GetExplicitBaseObject();
   end
   else
@@ -2564,7 +2564,7 @@ begin
   FBagID := TDerObjectIdentifier.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
 
-  LTagged := TAsn1TaggedObject.GetInstance(ASeq[LPos], TAsn1Tags.ContextSpecific, 0);
+  LTagged := TAsn1TaggedObject.GetContextInstance(ASeq[LPos], 0);
   FBagValue := LTagged.GetExplicitBaseObject();
   System.Inc(LPos);
 
@@ -2696,7 +2696,7 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FCertID := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  LTagged := TAsn1TaggedObject.GetInstance(ASeq[1], TAsn1Tags.ContextSpecific, 0);
+  LTagged := TAsn1TaggedObject.GetContextInstance(ASeq[1], 0);
   FCertValue := LTagged.GetExplicitBaseObject();
 end;
 
@@ -2927,7 +2927,7 @@ begin
   if FData.Count <> 3 then
     Exit;
 
-  LTagged := TAsn1TaggedObject.GetInstance(FData[2], TAsn1Tags.ContextSpecific, 0);
+  LTagged := TAsn1TaggedObject.GetContextInstance(FData[2], 0);
   Result := TAsn1OctetString.GetTagged(LTagged, False);
 end;
 

@@ -44,6 +44,10 @@ resourcestring
   SJNil = 'J Cannot be Nil';
   SInvalidDHDomainParameters = 'Invalid DHDomainParameters: %s';
   SYNil = 'Y Cannot be Nil';
+  SAlgorithmNil = 'Algorithm cannot be Nil';
+  SCounterNil = 'Counter cannot be Nil';
+  SKeyInfoNil = 'KeyInfo cannot be Nil';
+  SSuppPubInfoNil = 'SuppPubInfo cannot be Nil';
 
 type
   /// <summary>
@@ -185,6 +189,81 @@ type
     property Q: IDerInteger read GetQ;
     property J: IDerInteger read GetJ;
     property ValidationParms: IDHValidationParms read GetValidationParms;
+
+  end;
+
+  /// <summary>
+  /// ASN.1 KeySpecificInfo structure (RFC 2631 / X9.42).
+  /// </summary>
+  TKeySpecificInfo = class(TAsn1Encodable, IKeySpecificInfo)
+
+  strict private
+  var
+    FAlgorithm: IDerObjectIdentifier;
+    FCounter: IAsn1OctetString;
+
+  strict protected
+    function GetAlgorithm: IDerObjectIdentifier;
+    function GetCounter: IAsn1OctetString;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): IKeySpecificInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IKeySpecificInfo; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IKeySpecificInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IKeySpecificInfo; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IKeySpecificInfo; static;
+
+    constructor Create(const AAlgorithm: IDerObjectIdentifier;
+      const ACounter: IAsn1OctetString); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Algorithm: IDerObjectIdentifier read GetAlgorithm;
+    property Counter: IAsn1OctetString read GetCounter;
+
+  end;
+
+  /// <summary>
+  /// ASN.1 OtherInfo structure (RFC 2631 / X9.42).
+  /// </summary>
+  TOtherInfo = class(TAsn1Encodable, IOtherInfo)
+
+  strict private
+  var
+    FKeyInfo: IKeySpecificInfo;
+    FPartyAInfo: IAsn1OctetString;
+    FSuppPubInfo: IAsn1OctetString;
+
+    class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString; static;
+
+  strict protected
+    function GetKeyInfo: IKeySpecificInfo;
+    function GetPartyAInfo: IAsn1OctetString;
+    function GetSuppPubInfo: IAsn1OctetString;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): IOtherInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IOtherInfo; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IOtherInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IOtherInfo; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IOtherInfo; static;
+
+    constructor Create(const AKeyInfo: IKeySpecificInfo;
+      const APartyAInfo: IAsn1OctetString; const ASuppPubInfo: IAsn1OctetString); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property KeyInfo: IKeySpecificInfo read GetKeyInfo;
+    property PartyAInfo: IAsn1OctetString read GetPartyAInfo;
+    property SuppPubInfo: IAsn1OctetString read GetSuppPubInfo;
 
   end;
 
@@ -498,6 +577,210 @@ begin
     LV.Add([FJ]);
   if FValidationParms <> nil then
     LV.Add([FValidationParms]);
+  Result := TDerSequence.Create(LV);
+end;
+
+{ TKeySpecificInfo }
+
+class function TKeySpecificInfo.GetInstance(AObj: TObject): IKeySpecificInfo;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IKeySpecificInfo, Result) then
+    Exit;
+
+  Result := TKeySpecificInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TKeySpecificInfo.GetInstance(const AObj: IAsn1Convertible): IKeySpecificInfo;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IKeySpecificInfo, Result) then
+    Exit;
+
+  Result := TKeySpecificInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TKeySpecificInfo.GetInstance(const AEncoded: TCryptoLibByteArray): IKeySpecificInfo;
+begin
+  Result := TKeySpecificInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TKeySpecificInfo.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IKeySpecificInfo;
+begin
+  Result := TKeySpecificInfo.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TKeySpecificInfo.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IKeySpecificInfo;
+begin
+  Result := TKeySpecificInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TKeySpecificInfo.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+  if ASeq.Count <> 2 then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [ASeq.Count]);
+
+  FAlgorithm := TDerObjectIdentifier.GetInstance(ASeq[0]);
+  FCounter := TAsn1OctetString.GetInstance(ASeq[1]);
+end;
+
+constructor TKeySpecificInfo.Create(const AAlgorithm: IDerObjectIdentifier;
+  const ACounter: IAsn1OctetString);
+begin
+  inherited Create();
+
+  if AAlgorithm = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  if ACounter = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCounterNil);
+
+  FAlgorithm := AAlgorithm;
+  FCounter := ACounter;
+end;
+
+function TKeySpecificInfo.GetAlgorithm: IDerObjectIdentifier;
+begin
+  Result := FAlgorithm;
+end;
+
+function TKeySpecificInfo.GetCounter: IAsn1OctetString;
+begin
+  Result := FCounter;
+end;
+
+function TKeySpecificInfo.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create(FAlgorithm, FCounter);
+end;
+
+{ TOtherInfo }
+
+class function TOtherInfo.GetInstance(AObj: TObject): IOtherInfo;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IOtherInfo, Result) then
+    Exit;
+
+  Result := TOtherInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TOtherInfo.GetInstance(const AObj: IAsn1Convertible): IOtherInfo;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IOtherInfo, Result) then
+    Exit;
+
+  Result := TOtherInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TOtherInfo.GetInstance(const AEncoded: TCryptoLibByteArray): IOtherInfo;
+begin
+  Result := TOtherInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TOtherInfo.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IOtherInfo;
+begin
+  Result := TOtherInfo.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TOtherInfo.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IOtherInfo;
+begin
+  Result := TOtherInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TOtherInfo.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString;
+begin
+  Result := TAsn1OctetString.GetTagged(ATagged, AState);
+end;
+
+constructor TOtherInfo.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 2) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FKeyInfo := TKeySpecificInfo.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  FPartyAInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, True,
+    GetTaggedAsn1OctetString);
+
+  FSuppPubInfo := TAsn1Utilities.ReadContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 2, True,
+    GetTaggedAsn1OctetString);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+end;
+
+constructor TOtherInfo.Create(const AKeyInfo: IKeySpecificInfo;
+  const APartyAInfo: IAsn1OctetString; const ASuppPubInfo: IAsn1OctetString);
+begin
+  inherited Create();
+
+  if AKeyInfo = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SKeyInfoNil);
+
+  if ASuppPubInfo = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SSuppPubInfoNil);
+
+  FKeyInfo := AKeyInfo;
+  FPartyAInfo := APartyAInfo;
+  FSuppPubInfo := ASuppPubInfo;
+end;
+
+function TOtherInfo.GetKeyInfo: IKeySpecificInfo;
+begin
+  Result := FKeyInfo;
+end;
+
+function TOtherInfo.GetPartyAInfo: IAsn1OctetString;
+begin
+  Result := FPartyAInfo;
+end;
+
+function TOtherInfo.GetSuppPubInfo: IAsn1OctetString;
+begin
+  Result := FSuppPubInfo;
+end;
+
+function TOtherInfo.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(3);
+  LV.Add(FKeyInfo);
+  LV.AddOptionalTagged(True, 0, FPartyAInfo);
+  LV.AddTagged(True, 2, FSuppPubInfo);
   Result := TDerSequence.Create(LV);
 end;
 

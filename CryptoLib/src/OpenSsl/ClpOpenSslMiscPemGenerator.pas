@@ -213,6 +213,10 @@ begin
   if AObj.TryGetAsType<IX509V2AttributeCertificate>(LAttrCert) then
     Exit(TPemObject.Create('ATTRIBUTE CERTIFICATE', LAttrCert.GetEncoded()));
 
+  // PKCS#8 EncryptedPrivateKeyInfo (ENCRYPTED PRIVATE KEY)
+  if AObj.TryGetAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
+    Exit(TPemObject.Create('ENCRYPTED PRIVATE KEY', LPkcs8Enc.GetEncoded()));
+
   // PKCS#10 Certification Request
   if AObj.TryGetAsType<IPkcs10CertificationRequest>(LCertReq) then
     Exit(TPemObject.Create('CERTIFICATE REQUEST', LCertReq.GetEncoded()));
@@ -224,10 +228,6 @@ begin
   // PKCS ContentInfo
   if AObj.TryGetAsType<IPkcsContentInfo>(LPkcsContent) then
     Exit(TPemObject.Create('PKCS7', LPkcsContent.GetEncoded()));
-
-  // PKCS#8 EncryptedPrivateKeyInfo (ENCRYPTED PRIVATE KEY)
-  if AObj.TryGetAsType<IPkcs8EncryptedPrivateKeyInfo>(LPkcs8Enc) then
-    Exit(TPemObject.Create('ENCRYPTED PRIVATE KEY', LPkcs8Enc.GetEncoded()));
 
   // EC PARAMETERS (X962Parameters)
   if AObj.TryGetAsType<IX962Parameters>(LX962Params) then

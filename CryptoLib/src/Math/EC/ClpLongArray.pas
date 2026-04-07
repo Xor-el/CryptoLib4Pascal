@@ -26,6 +26,7 @@ uses
   Math,
   ClpCryptoLibTypes,
   ClpBitOperations,
+  ClpInt64Utilities,
   ClpNat,
   ClpInterleave,
   ClpArrayUtilities,
@@ -194,29 +195,15 @@ end;
 
 function TLongArray.IsOne(): Boolean;
 var
-  LA: TCryptoLibUInt64Array;
-  LALen, LI: Int32;
+  LLen: Int32;
 begin
-  LA := FData;
-  LALen := System.Length(LA);
-  if (LALen < 1) or (LA[0] <> 1) then
-    Exit(False);
-  for LI := 1 to LALen - 1 do
-    if LA[LI] <> 0 then
-      Exit(False);
-  Result := True;
+  LLen := System.Length(FData);
+  Result := (LLen > 0) and (TNat.EqualToOne64(LLen, FData) <> 0);
 end;
 
 function TLongArray.IsZero(): Boolean;
-var
-  LA: TCryptoLibUInt64Array;
-  LI: Int32;
 begin
-  LA := FData;
-  for LI := 0 to System.Length(LA) - 1 do
-    if LA[LI] <> 0 then
-      Exit(False);
-  Result := True;
+  Result := TNat.EqualToZero64(System.Length(FData), FData) <> 0;
 end;
 
 function TLongArray.GetUsedLength(): Int32;
@@ -253,7 +240,7 @@ end;
 
 class function TLongArray.BitLength(AW: UInt64): Int32;
 begin
-  Result := 64 - TBitOperations.NumberOfLeadingZeros64(AW);
+  Result := TInt64Utilities.BitLength(AW);
 end;
 
 function TLongArray.Degree(): Int32;
@@ -1190,17 +1177,12 @@ end;
 
 function TLongArray.Equals(const AOther: TLongArray): Boolean;
 var
-  LUsedLen, LI: Int32;
+  LUsedLen: Int32;
 begin
   if AreAliased(Self, AOther) then
     Exit(True);
   LUsedLen := GetUsedLength();
-  if AOther.GetUsedLength() <> LUsedLen then
-    Exit(False);
-  for LI := 0 to LUsedLen - 1 do
-    if FData[LI] <> AOther.FData[LI] then
-      Exit(False);
-  Result := True;
+  Result := (AOther.GetUsedLength() = LUsedLen) and (TNat.EqualTo64(LUsedLen, FData, AOther.FData) <> 0);
 end;
 
 function TLongArray.GetHashCode(): Int32;

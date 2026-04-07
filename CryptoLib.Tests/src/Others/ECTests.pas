@@ -54,6 +54,18 @@ uses
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
+  ClpICipherParameters,
+  ClpIAsymmetricKeyParameter,
+  ClpIAsymmetricCipherKeyPairGenerator,
+  ClpIKeyGenerationParameters,
+  ClpGeneratorUtilities,
+  ClpAgreementUtilities,
+  ClpECNamedCurveTable,
+  ClpSecObjectIdentifiers,
+  ClpPublicKeyFactory,
+  ClpPrivateKeyFactory,
+  ClpSubjectPublicKeyInfoFactory,
+  ClpPrivateKeyInfoFactory,
   CryptoLibTestBase;
 
 type
@@ -63,9 +75,7 @@ type
   /// </summary>
   TTestEC = class(TCryptoLibAlgorithmTestCase)
   private
-
-  var
-
+    procedure DoImplTestECDH(const AAlgorithm: string);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -112,6 +122,10 @@ type
     procedure TestECBasicAgreement();
 
     procedure TestECDHBasicAgreementCofactor();
+
+    procedure TestECDHPrime239v1;
+    procedure TestECDHCPrime239v1;
+    procedure TestECDHMismatchedCurves;
 
   end;
 
@@ -782,6 +796,107 @@ begin
   begin
     Fail('calculated agreement test failed');
   end;
+end;
+
+procedure TTestEC.DoImplTestECDH(const AAlgorithm: string);
+var
+  random: ISecureRandom;
+  x9: IX9ECParameters;
+  ecSpec: IECDomainParameters;
+  g: IAsymmetricCipherKeyPairGenerator;
+  aKeyPair, bKeyPair: IAsymmetricCipherKeyPair;
+  aAgree, bAgree: IBasicAgreement;
+  k1, k2: TBigInteger;
+  pubEnc, privEnc: TBytes;
+  pubKey: IECPublicKeyParameters;
+  privKey: IECPrivateKeyParameters;
+  pq1, pq2: IECPoint;
+begin
+  random := TSecureRandom.Create();
+  x9 := TECNamedCurveTable.GetByName('prime239v1');
+  if x9 = nil then
+    Fail('prime239v1 not found');
+  ecSpec := TECDomainParameters.FromX9ECParameters(x9);
+
+  g := TGeneratorUtilities.GetKeyPairGenerator(AAlgorithm);
+  g.Init(TECKeyGenerationParameters.Create(ecSpec, random) as IKeyGenerationParameters);
+
+  aKeyPair := g.GenerateKeyPair;
+  bKeyPair := g.GenerateKeyPair;
+
+  aAgree := TAgreementUtilities.GetBasicAgreement(AAlgorithm);
+  bAgree := TAgreementUtilities.GetBasicAgreement(AAlgorithm);
+  aAgree.Init(aKeyPair.Private as ICipherParameters);
+  bAgree.Init(bKeyPair.Private as ICipherParameters);
+
+  k1 := aAgree.CalculateAgreement(bKeyPair.Public as ICipherParameters);
+  k2 := bAgree.CalculateAgreement(aKeyPair.Public as ICipherParameters);
+  if not k1.Equals(k2) then
+    Fail(AAlgorithm + ' 2-way test failed');
+
+  pubEnc := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(
+    aKeyPair.Public as IAsymmetricKeyParameter).GetDerEncoded;
+  pubKey := TPublicKeyFactory.CreateKey(pubEnc) as IECPublicKeyParameters;
+
+  pq1 := pubKey.Q.Normalize;
+  pq2 := (aKeyPair.Public as IECPublicKeyParameters).Q.Normalize;
+  if not pq1.Equals(pq2) then
+    Fail(AAlgorithm + ' public key encoding (Q test) failed');
+
+  if not pubKey.Parameters.G.Equals((aKeyPair.Public as IECPublicKeyParameters).Parameters.G) then
+    Fail(AAlgorithm + ' public key encoding (G test) failed');
+
+  privEnc := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(
+    aKeyPair.Private as IAsymmetricKeyParameter).GetDerEncoded;
+  privKey := TPrivateKeyFactory.CreateKey(privEnc) as IECPrivateKeyParameters;
+
+  if not privKey.D.Equals((aKeyPair.Private as IECPrivateKeyParameters).D) then
+    Fail(AAlgorithm + ' private key encoding (D test) failed');
+
+  if not privKey.Parameters.G.Equals((aKeyPair.Private as IECPrivateKeyParameters).Parameters.G) then
+    Fail(AAlgorithm + ' private key encoding (G test) failed');
+end;
+
+procedure TTestEC.TestECDHPrime239v1;
+begin
+  DoImplTestECDH('ECDH');
+end;
+
+procedure TTestEC.TestECDHCPrime239v1;
+begin
+  DoImplTestECDH('ECDHC');
+end;
+
+procedure TTestEC.TestECDHMismatchedCurves;
+var
+  random: ISecureRandom;
+  kpg256, kpg384: IAsymmetricCipherKeyPairGenerator;
+  kp256, kp384: IAsymmetricCipherKeyPair;
+  ka: IBasicAgreement;
+  caught: Boolean;
+begin
+  random := TSecureRandom.Create();
+  kpg256 := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  kpg256.Init(TECKeyGenerationParameters.Create(TSecObjectIdentifiers.SecP256r1, random)
+    as IKeyGenerationParameters);
+  kp256 := kpg256.GenerateKeyPair;
+
+  kpg384 := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  kpg384.Init(TECKeyGenerationParameters.Create(TSecObjectIdentifiers.SecP384r1, random)
+    as IKeyGenerationParameters);
+  kp384 := kpg384.GenerateKeyPair;
+
+  ka := TAgreementUtilities.GetBasicAgreement('ECDH');
+  ka.Init(kp256.Private as ICipherParameters);
+  caught := False;
+  try
+    ka.CalculateAgreement(kp384.Public as ICipherParameters);
+  except
+    on EInvalidOperationCryptoLibException do
+      caught := True;
+  end;
+  if not caught then
+    Fail('Expected EInvalidOperationCryptoLibException for mismatched EC domain parameters');
 end;
 
 initialization

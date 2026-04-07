@@ -69,6 +69,34 @@ type
     property ValidationParms: IDHValidationParms read GetValidationParms;
   end;
 
+  /// <summary>
+  /// ASN.1 KeySpecificInfo (RFC 2631 / X9.42).
+  /// </summary>
+  IKeySpecificInfo = interface(IAsn1Encodable)
+    ['{E8B7D4C2-91A3-4F8E-B205-1C9A8E7D6F5A}']
+
+    function GetAlgorithm: IDerObjectIdentifier;
+    function GetCounter: IAsn1OctetString;
+
+    property Algorithm: IDerObjectIdentifier read GetAlgorithm;
+    property Counter: IAsn1OctetString read GetCounter;
+  end;
+
+  /// <summary>
+  /// ASN.1 OtherInfo (RFC 2631 / X9.42).
+  /// </summary>
+  IOtherInfo = interface(IAsn1Encodable)
+    ['{F9C8E5D3-A2B4-5F9F-C306-2DB0F8E7A94B}']
+
+    function GetKeyInfo: IKeySpecificInfo;
+    function GetPartyAInfo: IAsn1OctetString;
+    function GetSuppPubInfo: IAsn1OctetString;
+
+    property KeyInfo: IKeySpecificInfo read GetKeyInfo;
+    property PartyAInfo: IAsn1OctetString read GetPartyAInfo;
+    property SuppPubInfo: IAsn1OctetString read GetSuppPubInfo;
+  end;
+
 implementation
 
 end.

@@ -38,7 +38,6 @@ type
   const
     C_A = UInt32(156326);
     C_A24 = UInt32((156326 + 2) div 4);
-  class function Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; static;
   class procedure DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
     AN: TCryptoLibUInt32Array); static;
   class procedure PointDouble(AX, AZ: TCryptoLibUInt32Array); static;
@@ -89,20 +88,6 @@ begin
   AK[ScalarSize - 1] := AK[ScalarSize - 1] or $80;
 end;
 
-class function TX448.Decode32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32;
-var
-  LN: UInt32;
-begin
-  LN := ABs[AOff];
-  Inc(AOff);
-  LN := LN or (UInt32(ABs[AOff]) shl 8);
-  Inc(AOff);
-  LN := LN or (UInt32(ABs[AOff]) shl 16);
-  Inc(AOff);
-  LN := LN or (UInt32(ABs[AOff]) shl 24);
-  Result := LN;
-end;
-
 class procedure TX448.DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
   AN: TCryptoLibUInt32Array);
 var
@@ -110,7 +95,7 @@ var
 begin
   for LI := 0 to 13 do
   begin
-    AN[LI] := Decode32(AK, AKOff + LI * 4);
+    AN[LI] := TX448Field.Decode32(AK, AKOff + LI * 4);
   end;
   AN[0] := AN[0] and $FFFFFFFC;
   AN[13] := AN[13] or $80000000;
@@ -166,7 +151,7 @@ begin
   System.SetLength(LN, 14);
   DecodeScalar(AK, AKOff, LN);
 
-  LX1 := TX448Field.Create; TX448Field.Decode(AU, AUOff, LX1);
+  LX1 := TX448Field.Create; TX448Field.Decode448(AU, AUOff, LX1);
   LX2 := TX448Field.Create; TX448Field.Copy(LX1, 0, LX2, 0);
   LZ2 := TX448Field.Create; LZ2[0] := 1;
   LX3 := TX448Field.Create; LX3[0] := 1;
