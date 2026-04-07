@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="132">
+    <Units Count="139">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -246,7 +246,7 @@
         <IsPartOfProject Value="True"/>
       </Unit40>
       <Unit41>
-        <Filename Value="..\src\Crypto\SPECKTests.pas"/>
+        <Filename Value="..\src\Crypto\SpeckTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit41>
       <Unit42>
@@ -609,6 +609,34 @@
         <Filename Value="..\src\Crypto\ECDHKekGeneratorTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit131>
+      <Unit132>
+        <Filename Value="..\src\Crypto\AesBlockCipherTestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit132>
+      <Unit133>
+        <Filename Value="..\src\Crypto\AesLightTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit133>
+      <Unit134>
+        <Filename Value="..\src\Crypto\AesX86Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit134>
+      <Unit135>
+        <Filename Value="..\src\Crypto\NistSp80038aAesTestData.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit135>
+      <Unit136>
+        <Filename Value="..\src\Crypto\SpeckBlockCipherTestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit136>
+      <Unit137>
+        <Filename Value="..\src\Crypto\SpeckCryptoPPTestData.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit137>
+      <Unit138>
+        <Filename Value="..\src\Crypto\SpeckLegacyTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit138>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

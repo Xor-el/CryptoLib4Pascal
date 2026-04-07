@@ -15,36 +15,64 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesWrapPadEngine;
-
-{$I ..\..\Include\CryptoLib.inc}
+unit AesLightTests;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
-  ClpIAesWrapPadEngine,
-  ClpIWrapper,
-  ClpAesUtilities,
-  ClpRfc5649WrapEngine;
+{$IFDEF FPC}
+  fpcunit,
+  testregistry,
+{$ELSE}
+  TestFramework,
+{$ENDIF FPC}
+  ClpAesLightEngine,
+  ClpIBlockCipher,
+  AesBlockCipherTestBase;
 
 type
-  /// <summary>
-  /// An implementation of the AES Key Wrap with Padding as described in RFC 5649.
-  /// </summary>
-  TAesWrapPadEngine = class sealed(TRfc5649WrapEngine, IAesWrapPadEngine, IWrapper)
 
-  public
-    constructor Create();
-
+  TTestAesLight = class(TAesBlockCipherTestBase)
+  published
+    procedure TestBlockCipherVector;
+    procedure TestMonteCarloAES;
+    procedure TestBadParameters;
   end;
 
 implementation
 
-{ TAesWrapPadEngine }
-
-constructor TAesWrapPadEngine.Create();
+function CreateAesLightEngine: IBlockCipher;
 begin
-  inherited Create(TAesUtilities.CreateEngine());
+  Result := TAesLightEngine.Create();
 end;
+
+{ TTestAesLight }
+
+procedure TTestAesLight.TestBlockCipherVector;
+begin
+  RunBlockCipherVectorTests(@CreateAesLightEngine, 'TAesLightEngine');
+end;
+
+procedure TTestAesLight.TestMonteCarloAES;
+begin
+  RunBlockCipherMonteCarloTests(@CreateAesLightEngine, 'TAesLightEngine');
+end;
+
+procedure TTestAesLight.TestBadParameters;
+begin
+  AssertEngineRejectsBadParameters(@CreateAesLightEngine, 'TAesLightEngine');
+end;
+
+initialization
+
+{$IFDEF FPC}
+  RegisterTest(TTestAesLight);
+{$ELSE}
+  RegisterTest(TTestAesLight.Suite);
+{$ENDIF FPC}
 
 end.

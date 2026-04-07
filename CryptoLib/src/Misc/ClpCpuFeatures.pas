@@ -45,6 +45,9 @@ type
     class function HasPCLMULQDQ(): Boolean; static;
     class function HasVPCLMULQDQ(): Boolean; static;
     class function HasAESNI(): Boolean; static;
+    class function HasSSE2(): Boolean; static;
+    class function HasSSSE3(): Boolean; static;
+    class function HasAVX2(): Boolean; static;
   end;
 
 implementation
@@ -267,6 +270,21 @@ end;
 class function TCpuFeatures.HasAESNI(): Boolean;
 begin
   Result := FHasAESNI;
+end;
+
+class function TCpuFeatures.HasSSE2(): Boolean;
+begin
+  Result := Ord(FDetectedLevel) >= Ord(TCpuSimdLevel.SSE2);
+end;
+
+class function TCpuFeatures.HasSSSE3(): Boolean;
+begin
+  Result := Ord(FDetectedLevel) >= Ord(TCpuSimdLevel.SSSE3);
+end;
+
+class function TCpuFeatures.HasAVX2(): Boolean;
+begin
+  Result := FDetectedLevel = TCpuSimdLevel.AVX2;
 end;
 
 initialization

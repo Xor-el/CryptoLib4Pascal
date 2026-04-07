@@ -42,8 +42,7 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpSecureRandom,
@@ -290,7 +289,7 @@ begin
   end
   else
   begin
-    LMac := TPoly1305.Create(TAesEngine.Create() as IAesEngine) as IPoly1305;
+    LMac := TPoly1305.Create(TAesUtilities.CreateEngine()) as IPoly1305;
     LParamsWithIv := TParametersWithIV.Create
       (TKeyParameter.Create(LCase.Key) as IKeyParameter, LCase.Nonce);
     LMac.Init(LParamsWithIv as ICipherParameters);
@@ -364,7 +363,7 @@ begin
   LGen.Init(LParams);
   LKey := LGen.GenerateKey;
 
-  LMac := TPoly1305.Create(TAesEngine.Create() as IAesEngine) as IPoly1305;
+  LMac := TPoly1305.Create(TAesUtilities.CreateEngine()) as IPoly1305;
 
   // correct IV size
   LMac.Init(TParametersWithIV.Create(TKeyParameter.Create(LKey) as IKeyParameter,
@@ -420,7 +419,7 @@ begin
   SetLength(LOutput, 16);
 
   LC := 0;
-  LMac := TPoly1305.Create(TAesEngine.Create() as IAesEngine) as IPoly1305;
+  LMac := TPoly1305.Create(TAesUtilities.CreateEngine()) as IPoly1305;
 
   for LLoop := 0 to 12 do
   begin
@@ -490,7 +489,7 @@ begin
   SetLength(LCheck, 16);
   SetLength(LOutput, 16);
 
-  LPoly := TPoly1305.Create(TAesEngine.Create() as IAesEngine) as IPoly1305;
+  LPoly := TPoly1305.Create(TAesUtilities.CreateEngine()) as IPoly1305;
   LPoly.Init(TParametersWithIV.Create(TKeyParameter.Create(LKey) as IKeyParameter,
     TBytes.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) as ICipherParameters);
 

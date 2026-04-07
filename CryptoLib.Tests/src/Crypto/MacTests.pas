@@ -32,7 +32,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIBlockCipher,
-  ClpAesEngine,
+  ClpAesUtilities,
   ClpIMac,
   ClpICipherParameters,
   ClpCbcBlockCipherMac,
@@ -82,7 +82,7 @@ implementation
 
 function TTestMac.CreateCipherEngine: IBlockCipher;
 begin
-  Result := TAesEngine.Create();
+  Result := TAesUtilities.CreateEngine();
 end;
 
 class constructor TTestMac.CreateTestMac;

@@ -32,8 +32,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIMac,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpGeneratorUtilities,
   ClpICipherParameters,
@@ -129,7 +128,6 @@ end;
 function TTestIESCipher.GetECIESAES256CBCEngine: IIesEngine;
 var
   Cipher: IBufferedBlockCipher;
-  AesEngine: IAesEngine;
   blockCipher: ICbcBlockCipher;
   ECDHBasicAgreementInstance: IECDHBasicAgreement;
   KDFInstance: IKdf2BytesGenerator;
@@ -149,9 +147,7 @@ begin
   // Cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING') as IBufferedBlockCipher;
 
   // Method 2: Set Up Block Cipher
-  AesEngine := TAesEngine.Create(); // AES Engine
-
-  blockCipher := TCbcBlockCipher.Create(AesEngine); // CBC
+  blockCipher := TCbcBlockCipher.Create(TAesUtilities.CreateEngine()); // CBC
 
   Cipher := TPaddedBufferedBlockCipher.Create(blockCipher,
     TPkcs7Padding.Create() as IPkcs7Padding); // Pkcs7Padding

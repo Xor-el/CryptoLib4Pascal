@@ -42,8 +42,7 @@ uses
   ClpIKeyParameter,
   ClpEaxBlockCipher,
   ClpIEaxBlockCipher,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
@@ -190,7 +189,7 @@ end;
 
 function TTestEax.CreateEngine: IBlockCipher;
 begin
-  Result := TAesEngine.Create() as IAesEngine;
+  Result := TAesUtilities.CreateEngine();
 end;
 
 function TTestEax.CreateEaxCipher: IEaxBlockCipher;

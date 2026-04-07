@@ -81,8 +81,7 @@ uses
   ClpIBufferedAsymmetricBlockCipher,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpBlowfishEngine,
   ClpIBlowfishEngine,
   ClpChaChaEngine,
@@ -386,7 +385,7 @@ begin
         'PBEWITHMD5AND256BITAES-CBC-OPENSSL']) then
       begin
         Result := TPaddedBufferedBlockCipher.Create(
-          TCbcBlockCipher.Create(TAesEngine.Create() as IAesEngine))
+          TCbcBlockCipher.Create(TAesUtilities.CreateEngine()))
           as IPaddedBufferedBlockCipher;
         Exit;
       end;
@@ -407,7 +406,7 @@ begin
   LStreamCipher := nil;
   case LCipherAlgorithm of
     TCipherAlgorithm.AES:
-      LBlockCipher := TAesEngine.Create() as IAesEngine;
+      LBlockCipher := TAesUtilities.CreateEngine();
     TCipherAlgorithm.BLOWFISH:
       LBlockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
     TCipherAlgorithm.CHACHA:
@@ -643,7 +642,7 @@ class function TCipherUtilities.CreateBlockCipher(
 begin
   case ACipherAlgorithm of
     TCipherAlgorithm.AES:
-      Result := TAesEngine.Create() as IAesEngine;
+      Result := TAesUtilities.CreateEngine();
     TCipherAlgorithm.BLOWFISH:
       Result := TBlowfishEngine.Create() as IBlowfishEngine;
     TCipherAlgorithm.RIJNDAEL:

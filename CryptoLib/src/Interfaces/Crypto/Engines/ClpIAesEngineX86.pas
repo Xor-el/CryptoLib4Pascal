@@ -15,36 +15,27 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesWrapPadEngine;
+unit ClpIAesEngineX86;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAesWrapPadEngine,
-  ClpIWrapper,
-  ClpAesUtilities,
-  ClpRfc5649WrapEngine;
+  ClpIBlockCipher,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// An implementation of the AES Key Wrap with Padding as described in RFC 5649.
+  /// X86 AES-NI Engine. Adds a four-block API for GCM CTR batching.
   /// </summary>
-  TAesWrapPadEngine = class sealed(TRfc5649WrapEngine, IAesWrapPadEngine, IWrapper)
+  IAesEngineX86 = interface(IBlockCipher)
+    ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
 
-  public
-    constructor Create();
-
+    function ProcessFourBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
   end;
 
 implementation
-
-{ TAesWrapPadEngine }
-
-constructor TAesWrapPadEngine.Create();
-begin
-  inherited Create(TAesUtilities.CreateEngine());
-end;
 
 end.

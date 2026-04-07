@@ -39,7 +39,7 @@ uses
   ClpCfbBlockCipher,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
-  ClpAesEngine,
+  ClpAesUtilities,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -296,7 +296,7 @@ var
   LKeyBytes, LIv: TCryptoLibByteArray;
   LKey: IKeyParameter;
 begin
-  LBlockCipher := TAesEngine.Create();
+  LBlockCipher := TAesUtilities.CreateEngine();
   LBits := 8 * LBlockCipher.GetBlockSize();
   LBlockCipherMode := TCfbBlockCipher.Create(LBlockCipher, LBits);
   Result := TBufferedBlockCipher.Create(LBlockCipherMode);

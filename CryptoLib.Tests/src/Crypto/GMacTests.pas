@@ -35,8 +35,7 @@ uses
   ClpGMac,
   ClpGcmBlockCipher,
   ClpIGcmBlockCipher,
-  ClpAesEngine,
-  ClpIBlockCipher,
+  ClpAesUtilities,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
@@ -208,7 +207,7 @@ var
 begin
   try
     LMac := TGMac.Create(
-      TGcmBlockCipher.Create(TAesEngine.Create() as IBlockCipher)
+      TGcmBlockCipher.Create(TAesUtilities.CreateEngine())
         as IGcmBlockCipher,
       ASize) as IMac;
     LMac.Init(
@@ -246,14 +245,14 @@ begin
     LKeyParam := TKeyParameter.Create(LKey) as IKeyParameter;
 
     LMac := TGMac.Create(
-      TGcmBlockCipher.Create(TAesEngine.Create() as IBlockCipher)
+      TGcmBlockCipher.Create(TAesUtilities.CreateEngine())
         as IGcmBlockCipher,
       System.Length(LTag) * 8) as IMac;
     LMac.Init(TParametersWithIV.Create(LKeyParam, LIv) as ICipherParameters);
     TestSingleByte(LMac, LName, LAd, LTag);
 
     LMac := TGMac.Create(
-      TGcmBlockCipher.Create(TAesEngine.Create() as IBlockCipher)
+      TGcmBlockCipher.Create(TAesUtilities.CreateEngine())
         as IGcmBlockCipher,
       System.Length(LTag) * 8) as IMac;
     LMac.Init(TParametersWithIV.Create(LKeyParam, LIv) as ICipherParameters);

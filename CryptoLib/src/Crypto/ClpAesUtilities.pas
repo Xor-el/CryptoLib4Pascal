@@ -15,36 +15,56 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesWrapPadEngine;
+unit ClpAesUtilities;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAesWrapPadEngine,
-  ClpIWrapper,
-  ClpAesUtilities,
-  ClpRfc5649WrapEngine;
+  ClpIBlockCipher,
+  ClpAesEngine
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  , ClpAesEngineX86
+{$ENDIF}
+  ;
 
 type
   /// <summary>
-  /// An implementation of the AES Key Wrap with Padding as described in RFC 5649.
+  /// Factory for the default AES block cipher.
+  /// When CRYPTOLIB_X86_SIMD is defined, CreateEngine may return TAesEngineX86 when
+  /// TAesEngineX86.IsSupported is True.
   /// </summary>
-  TAesWrapPadEngine = class sealed(TRfc5649WrapEngine, IAesWrapPadEngine, IWrapper)
-
+  TAesUtilities = class sealed(TObject)
   public
-    constructor Create();
-
+    class function CreateEngine(): IBlockCipher; static;
+    /// <summary>
+    /// True when the library is built with CRYPTOLIB_X86_SIMD and AES-NI is available
+    /// at runtime (TAesEngineX86.IsSupported). Otherwise False.
+    /// </summary>
+    class function IsHardwareAccelerated(): Boolean; static;
   end;
 
 implementation
 
-{ TAesWrapPadEngine }
+{ TAesUtilities }
 
-constructor TAesWrapPadEngine.Create();
+class function TAesUtilities.CreateEngine(): IBlockCipher;
 begin
-  inherited Create(TAesUtilities.CreateEngine());
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TAesEngineX86.IsSupported then
+    Exit(TAesEngineX86.Create());
+{$ENDIF}
+  Result := TAesEngine.Create();
+end;
+
+class function TAesUtilities.IsHardwareAccelerated(): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  Result := TAesEngineX86.IsSupported;
+{$ELSE}
+  Result := False;
+{$ENDIF}
 end;
 
 end.

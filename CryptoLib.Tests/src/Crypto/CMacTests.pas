@@ -33,8 +33,7 @@ uses
 {$ENDIF FPC}
   ClpIMac,
   ClpICipherParameters,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpCMac,
   ClpICMac,
   ClpMacUtilities,
@@ -370,12 +369,10 @@ end;
 
 procedure TTestCMac.TestCMacDoesNotAcceptIv;
 var
-  LEngine: IAesEngine;
   LMac: ICMac;
   LParamsWithIv: IParametersWithIV;
 begin
-  LEngine := TAesEngine.Create();
-  LMac := TCMac.Create(LEngine) as ICMac;
+  LMac := TCMac.Create(TAesUtilities.CreateEngine());
 
   LParamsWithIv := TParametersWithIV.Create(TKeyParameter.Create
     (TBytes.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) as IKeyParameter,

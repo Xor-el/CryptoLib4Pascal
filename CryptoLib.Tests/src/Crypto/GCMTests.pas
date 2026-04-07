@@ -45,7 +45,7 @@ uses
   ClpTables4kGcmMultiplier,
   ClpTables8kGcmMultiplier,
   ClpTables64kGcmMultiplier,
-  ClpAesEngine,
+  ClpAesUtilities,
   ClpBlowfishEngine,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -351,7 +351,7 @@ end;
 
 function TTestGcm.CreateAesEngine: IBlockCipher;
 begin
-  Result := TAesEngine.Create() as IBlockCipher;
+  Result := TAesUtilities.CreateEngine();
 end;
 
 function TTestGcm.InitCipher(const AM: IGcmMultiplier;

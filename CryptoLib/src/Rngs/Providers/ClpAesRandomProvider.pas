@@ -23,8 +23,7 @@ interface
 
 uses
   SyncObjs,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpIBlockCipher,
   ClpIKeyParameter,
   ClpKeyParameter,
@@ -185,7 +184,6 @@ end;
 
 constructor TAesRandomProvider.Create(const AAesRngSeed: TCryptoLibByteArray; AReseedAfterBytes: Int32);
 var
-  LAesEngine: IAesEngine;
   LBlockCipher: IBlockCipher;
   LAesRngSeed: TCryptoLibByteArray;
 begin
@@ -193,9 +191,7 @@ begin
   LAesRngSeed := System.Copy(AAesRngSeed);
   FInternalLock := TCriticalSection.Create;
   // Set up engine
-  LAesEngine := TAesEngine.Create();
-  LBlockCipher := LAesEngine as IBlockCipher; // ECB no padding
-  FCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  FCipher := TBufferedBlockCipher.Create(TAesUtilities.CreateEngine());
   System.SetLength(FCounter, CounterSize);
   FAesRngSeedLength := System.Length(LAesRngSeed);
   FReseedAfterBytes := AReseedAfterBytes;

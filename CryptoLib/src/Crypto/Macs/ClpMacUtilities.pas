@@ -43,8 +43,7 @@ uses
   ClpHMac,
   ClpSipHashMac,
   HlpHashFactory,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpStringUtilities;
 
 resourcestring
@@ -175,7 +174,7 @@ begin
 
   if LMechanism = 'AESCMAC' then
   begin
-    Result := TCMac.Create(TAesEngine.Create() as IAesEngine);
+    Result := TCMac.Create(TAesUtilities.CreateEngine());
   end;
 
   if LMechanism = 'SIPHASH-2-4' then

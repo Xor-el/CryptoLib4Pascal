@@ -36,7 +36,7 @@ uses
   ClpIGcmMultiplier,
   ClpGcmBlockCipher,
   ClpKeyParameter,
-  ClpAesEngine,
+  ClpAesUtilities,
   ClpInt64Utilities,
   ClpByteUtilities,
   ClpPack,
@@ -254,7 +254,7 @@ end;
 
 constructor TGcmSivBlockCipher.Create;
 begin
-  Create(TAesEngine.Create() as IBlockCipher);
+  Create(TAesUtilities.CreateEngine());
 end;
 
 constructor TGcmSivBlockCipher.Create(const ACipher: IBlockCipher);

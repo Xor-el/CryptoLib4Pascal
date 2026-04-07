@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -43,8 +43,7 @@ uses
   ClpICcmBlockCipher,
   ClpBlowfishEngine,
   ClpIBlowfishEngine,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -89,7 +88,7 @@ implementation
 
 function TTestCcm.CreateCcmCipher: ICcmBlockCipher;
 begin
-  Result := TCcmBlockCipher.Create(TAesEngine.Create() as IAesEngine);
+  Result := TCcmBlockCipher.Create(TAesUtilities.CreateEngine());
 end;
 
 procedure TTestCcm.CheckVectors(ACount: Int32; const ACcm: ICcmBlockCipher;
