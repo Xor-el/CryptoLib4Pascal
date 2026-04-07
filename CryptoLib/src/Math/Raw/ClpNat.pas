@@ -2327,13 +2327,13 @@ class function TNat.Sub33At(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array; 
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[AZPos + 0] - AX);
+  LC := Int64(AZ[AZPos + 0]) - Int64(AX);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZPos + 0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AZ[AZPos + 1] - 1));
+  LC := LC + (Int64(AZ[AZPos + 1]) - 1);
   AZ[AZPos + 1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2350,13 +2350,13 @@ class function TNat.Sub33At(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array; 
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[AZOff + AZPos] - AX);
+  LC := Int64(AZ[AZOff + AZPos]) - Int64(AX);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 2));
   {$ENDIF}
   AZ[AZOff + AZPos] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AZ[AZOff + AZPos + 1] - 1));
+  LC := LC + (Int64(AZ[AZOff + AZPos + 1]) - 1);
   AZ[AZOff + AZPos + 1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2373,10 +2373,10 @@ class function TNat.Sub33From(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[0] - AX);
+  LC := Int64(AZ[0]) - Int64(AX);
   AZ[0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AZ[1] - 1));
+  LC := LC + (Int64(AZ[1]) - 1);
   AZ[1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2393,10 +2393,10 @@ class function TNat.Sub33From(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[AZOff + 0] - AX);
+  LC := Int64(AZ[AZOff + 0]) - Int64(AX);
   AZ[AZOff + 0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AZ[AZOff + 1] - 1));
+  LC := LC + (Int64(AZ[AZOff + 1]) - 1);
   AZ[AZOff + 1] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2559,7 +2559,7 @@ class function TNat.SubWordAt(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[AZPos] - AX);
+  LC := Int64(AZ[AZPos]) - Int64(AX);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 1));
   {$ENDIF}
@@ -2579,7 +2579,7 @@ class function TNat.SubWordAt(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[AZOff + AZPos] - AX);
+  LC := Int64(AZ[AZOff + AZPos]) - Int64(AX);
   {$IFDEF DEBUG}
   System.Assert(AZPos <= (ALen - 1));
   {$ENDIF}
@@ -2599,7 +2599,7 @@ class function TNat.SubWordFrom(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Arr
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[0] - AX);
+  LC := Int64(AZ[0]) - Int64(AX);
   AZ[0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
@@ -2616,7 +2616,7 @@ class function TNat.SubWordFrom(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Arr
 var
   LC: Int64;
 begin
-  LC := Int64(AZ[AZOff + 0] - AX);
+  LC := Int64(AZ[AZOff + 0]) - Int64(AX);
   AZ[AZOff + 0] := UInt32(LC);
   LC := TBitOperations.Asr64(LC, 32);
   if (LC = 0) then
