@@ -31,6 +31,8 @@ uses
   ClpKeyGenerationParameters,
   ClpISecureRandom,
   ClpBigInteger,
+  ClpNat,
+  ClpBitOperations,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -159,8 +161,10 @@ type
   var
     FY: TBigInteger;
 
+    class function Legendre(const AA, AB: TBigInteger): Int32; static;
+
     class function Validate(const AY: TBigInteger; const ADHParams: IDHParameters)
-      : TBigInteger; static; inline;
+      : TBigInteger; static;
 
     function GetY: TBigInteger; inline;
 
@@ -494,22 +498,107 @@ begin
   Result := FY;
 end;
 
+class function TDHPublicKeyParameters.Legendre(const AA, AB: TBigInteger): Int32;
+var
+  LBitLength: Int32;
+  LLen: Int32;
+  LA, LB, LT: TCryptoLibUInt32Array;
+  LR: Int32;
+  LShift: Int32;
+  LBits: Int32;
+  LCmp: Int32;
+begin
+  LBitLength := AB.BitLength;
+  LLen := TNat.GetLengthForBits(LBitLength);
+  LA := TNat.FromBigInteger(LBitLength, AA);
+  LB := TNat.FromBigInteger(LBitLength, AB);
+  LR := 0;
+
+  while True do
+  begin
+    while LA[0] = 0 do
+    begin
+      TNat.ShiftDownWord(LLen, LA, 0);
+    end;
+
+    LShift := TBitOperations.NumberOfTrailingZeros32(LA[0]);
+    if LShift > 0 then
+    begin
+      TNat.ShiftDownBits(LLen, LA, LShift, 0);
+      LBits := Int32(LB[0]);
+      LR := LR xor ((LBits xor (TBitOperations.Asr32(LBits, 1))) and (LShift shl 1));
+    end;
+
+    LCmp := TNat.Compare(LLen, LA, LB);
+    if LCmp = 0 then
+    begin
+      Break;
+    end;
+
+    if LCmp < 0 then
+    begin
+      LR := LR xor Int32(UInt32(LA[0]) and UInt32(LB[0]));
+      LT := LA;
+      LA := LB;
+      LB := LT;
+    end;
+
+    while (LLen > 0) and (LA[LLen - 1] = 0) do
+    begin
+      System.Dec(LLen);
+    end;
+
+    TNat.Sub(LLen, LA, LB, LA);
+  end;
+
+  if TNat.IsOne(LLen, LB) then
+  begin
+    Result := 1 - (LR and 2);
+  end
+  else
+  begin
+    Result := 0;
+  end;
+end;
+
 class function TDHPublicKeyParameters.Validate(const AY: TBigInteger;
   const ADHParams: IDHParameters): TBigInteger;
+var
+  LP, LQ: TBigInteger;
 begin
   if (not AY.IsInitialized) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SYUnInitialized);
   end;
 
+  LP := ADHParams.P;
+
   if ((AY.CompareTo(TBigInteger.Two) < 0) or
-    (AY.CompareTo(ADHParams.P.Subtract(TBigInteger.Two)) > 0)) then
+    (AY.CompareTo(LP.Subtract(TBigInteger.Two)) > 0)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidDHPublicKey);
   end;
 
-  if ((ADHParams.Q.IsInitialized) and
-    (not AY.ModPow(ADHParams.Q, ADHParams.P).Equals(TBigInteger.One))) then
+  if (not ADHParams.Q.IsInitialized) then
+  begin
+    Result := AY;
+    Exit;
+  end;
+
+  LQ := ADHParams.Q;
+
+  if LP.TestBit(0) and ((LP.BitLength - 1) = LQ.BitLength) and
+    LP.ShiftRight(1).Equals(LQ) then
+  begin
+    if Legendre(AY, LP) <> 1 then
+    begin
+      raise EArgumentCryptoLibException.CreateRes(@SInvalidYInCorrectGroup);
+    end;
+    Result := AY;
+    Exit;
+  end;
+
+  if (not AY.ModPow(LQ, LP).Equals(TBigInteger.One)) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidYInCorrectGroup);
   end;
