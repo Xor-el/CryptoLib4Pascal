@@ -154,7 +154,7 @@ type
 
   end;
 
-  TDHPublicKeyParameters = class sealed(TDHKeyParameters,
+  TDHPublicKeyParameters = class(TDHKeyParameters,
     IDHPublicKeyParameters)
 
   strict private
@@ -166,7 +166,9 @@ type
     class function Validate(const AY: TBigInteger; const ADHParams: IDHParameters)
       : TBigInteger; static;
 
-    function GetY: TBigInteger; inline;
+  strict protected
+
+    function GetY: TBigInteger; virtual;
 
   public
     constructor Create(const AY: TBigInteger;
@@ -183,16 +185,18 @@ type
     property Y: TBigInteger read GetY;
   end;
 
-  TDHPrivateKeyParameters = class sealed(TDHKeyParameters,
+  TDHPrivateKeyParameters = class(TDHKeyParameters,
     IDHPrivateKeyParameters)
 
   strict private
   var
     FX: TBigInteger;
 
-    function GetX: TBigInteger; inline;
-
     class function Validate(const AX: TBigInteger): TBigInteger; static; inline;
+
+  strict protected
+
+    function GetX: TBigInteger; virtual;
 
   public
     constructor Create(const AX: TBigInteger;

@@ -146,15 +146,15 @@ begin
       TPack.UInt32_To_BE(LCounter32, LCounterOctets);
 
       LKeyInfo := TKeySpecificInfo.Create(FParams.Algorithm,
-        TDerOctetString.Create(LCounterOctets) as IAsn1OctetString);
+        TDerOctetString.Create(LCounterOctets) as IDerOctetString);
 
       if LPartyAInfo <> nil then
-        LPartyAOctet := TDerOctetString.Create(LPartyAInfo) as IAsn1OctetString
+        LPartyAOctet := TDerOctetString.Create(LPartyAInfo)
       else
         LPartyAOctet := nil;
 
       LSuppPubOctet := TDerOctetString.Create(
-        TPack.UInt32_To_BE(UInt32(FParams.KeySize))) as IAsn1OctetString;
+        TPack.UInt32_To_BE(UInt32(FParams.KeySize)));
 
       LOtherInfo := TOtherInfo.Create(LKeyInfo, LPartyAOctet, LSuppPubOctet);
 

@@ -86,15 +86,15 @@ begin
   LKdf := TECDHKekGenerator.Create(TDigestUtilities.GetDigest('SHA-1'));
 
   LDhParams := TDHKdfParameters.Create(TNistObjectIdentifiers.IdAes256Wrap, 256,
-    FSeed1) as IDHKdfParameters;
+    FSeed1);
   CheckMask('Aes256Wrap', LKdf, LDhParams, FExpected1);
 
   LDhParams := TDHKdfParameters.Create(TNistObjectIdentifiers.IdAes128Wrap, 128,
-    FSeed2) as IDHKdfParameters;
+    FSeed2);
   CheckMask('Aes128Wrap', LKdf, LDhParams, FExpected2);
 
   LDhParams := TDHKdfParameters.Create(TNistObjectIdentifiers.IdAes192Wrap, 192,
-    FSeed3) as IDHKdfParameters;
+    FSeed3);
   CheckMask('Aes192Wrap', LKdf, LDhParams, FExpected3);
 end;
 

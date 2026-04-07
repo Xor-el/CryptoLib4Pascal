@@ -28,6 +28,7 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpIRsaParameters,
   ClpIDsaParameters,
+  ClpIDHParameters,
   ClpIECParameters,
   ClpIEd25519Parameters,
   ClpIEd448Parameters,
@@ -43,6 +44,8 @@ uses
   ClpX509RsaAsn1Objects,
   ClpX509DsaAsn1Objects,
   ClpIX9ECAsn1Objects,
+  ClpIPkcsDHAsn1Objects,
+  ClpPkcsDHAsn1Objects,
   ClpCryptoLibTypes;
 
 type
@@ -53,8 +56,8 @@ type
   public
     /// <summary>
     /// Create a SubjectPublicKeyInfo for a given public key.
-    /// Supports: RsaKeyParameters, DsaPublicKeyParameters, ECPublicKeyParameters,
-    /// Ed25519PublicKeyParameters, X25519PublicKeyParameters.
+    /// Supports: RsaKeyParameters, DsaPublicKeyParameters, DHPublicKeyParameters,
+    /// ECPublicKeyParameters, Ed25519PublicKeyParameters, X25519PublicKeyParameters.
     /// </summary>
     class function CreateSubjectPublicKeyInfo(const APublicKey: IAsymmetricKeyParameter): ISubjectPublicKeyInfo; static;
   end;
@@ -69,6 +72,9 @@ var
   LRsaKey: IRsaKeyParameters;
   LDsaKey: IDsaPublicKeyParameters;
   LECKey: IECPublicKeyParameters;
+  LDHPub: IDHPublicKeyParameters;
+  LDhParams: IDHParameters;
+  LAlgParams: IDHParameter;
   LEd25519Key: IEd25519PublicKeyParameters;
   LEd448Key: IEd448PublicKeyParameters;
   LX25519Key: IX25519PublicKeyParameters;
@@ -98,6 +104,17 @@ begin
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsa,
       TDsaParameter.Create(LKp.P, LKp.Q, LKp.G) as IDsaParameter);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.Y) as IDerInteger);
+    Exit;
+  end;
+
+  if Supports(APublicKey, IDHPublicKeyParameters, LDHPub) then
+  begin
+    LDhParams := LDHPub.Parameters;
+    if LDhParams = nil then
+      raise EArgumentCryptoLibException.Create('DH public key requires parameters.');
+    LAlgParams := TDHParameter.Create(LDhParams.P, LDhParams.G, LDhParams.L);
+    LAlgID := TAlgorithmIdentifier.Create(LDHPub.AlgorithmOid, LAlgParams);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDHPub.Y) as IDerInteger);
     Exit;
   end;
 
