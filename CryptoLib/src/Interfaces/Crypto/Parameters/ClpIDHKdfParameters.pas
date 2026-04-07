@@ -37,6 +37,8 @@ type
 
     property Algorithm: IDerObjectIdentifier read GetAlgorithm;
     property KeySize: Int32 read GetKeySize;
+    property Z: TCryptoLibByteArray read GetZ;
+    property ExtraInfo: TCryptoLibByteArray read GetExtraInfo;
   end;
 
 implementation

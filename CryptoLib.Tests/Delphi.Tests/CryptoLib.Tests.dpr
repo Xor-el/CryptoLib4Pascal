@@ -748,6 +748,8 @@ uses
   PascalCoinECIESTests in '..\src\Math\PascalCoinECIESTests.pas',
   Kdf1GeneratorTests in '..\src\Crypto\Kdf1GeneratorTests.pas',
   Kdf2GeneratorTests in '..\src\Crypto\Kdf2GeneratorTests.pas',
+  DHKekGeneratorTests in '..\src\Crypto\DHKekGeneratorTests.pas',
+  ECDHKekGeneratorTests in '..\src\Crypto\ECDHKekGeneratorTests.pas',
   Argon2Tests in '..\src\Crypto\Argon2Tests.pas',
   DigestUtilitiesTests in '..\src\Security\DigestUtilitiesTests.pas',
   ScryptTests in '..\src\Crypto\ScryptTests.pas',

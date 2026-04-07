@@ -23,6 +23,7 @@ interface
 
 uses
   SysUtils,
+  Classes,
   ClpIDigest,
   ClpIDerivationFunction,
   ClpIDerivationParameters,
@@ -32,6 +33,9 @@ uses
   ClpAsn1Objects,
   ClpAsn1Core,
   ClpIAsn1Core,
+  ClpIX9DHAsn1Objects,
+  ClpX9DHAsn1Objects,
+  ClpDigestSink,
   ClpCheck,
   ClpPack,
   ClpCryptoLibTypes;
@@ -39,6 +43,7 @@ uses
 resourcestring
   SOutputBufferTooShort = 'Output buffer too short';
   SOutputLengthTooLarge = 'Output length too large';
+  SDHKekNotInitialized = 'DH KEK generator not initialized';
 
 type
   /// <summary>
@@ -50,10 +55,7 @@ type
   strict private
   var
     FDigest: IDigest;
-    FAlgorithm: IDerObjectIdentifier;
-    FKeySize: Int32;
-    FZ: TCryptoLibByteArray;
-    FPartyAInfo: TCryptoLibByteArray;
+    FParams: IDHKdfParameters;
 
     function GetDigest(): IDigest;
 
@@ -75,6 +77,8 @@ implementation
 constructor TDHKekGenerator.Create(const ADigest: IDigest);
 begin
   inherited Create();
+  if ADigest = nil then
+    raise EArgumentNilCryptoLibException.Create('digest');
   FDigest := ADigest;
 end;
 
@@ -87,88 +91,92 @@ procedure TDHKekGenerator.Init(const AParameters: IDerivationParameters);
 var
   LParams: IDHKdfParameters;
 begin
+  if AParameters = nil then
+    raise EArgumentNilCryptoLibException.Create('AParameters');
+
   if not Supports(AParameters, IDHKdfParameters, LParams) then
     raise EInvalidCastCryptoLibException.Create('AParameters');
 
-  FAlgorithm := LParams.Algorithm;
-  FKeySize := LParams.KeySize;
-  FZ := LParams.GetZ();
-  FPartyAInfo := LParams.GetExtraInfo();
+  FParams := LParams;
 end;
 
 function TDHKekGenerator.GenerateBytes(const AOutput: TCryptoLibByteArray;
   AOutOff, ALength: Int32): Int32;
 var
-  LOBytes: Int64;
-  LDigestSize, LCThreshold, LI, LOutOff, LLength: Int32;
-  LDig, LOther: TCryptoLibByteArray;
-  LCounter: UInt32;
-  LKeyInfo, LV1DerSequence: IDerSequence;
-  LV1: IAsn1EncodableVector;
+  LOutputLength, LDigestSize, LOutOff, LLength: Int32;
+  LMaxOut: UInt64;
+  LCounter32: UInt32;
+  LCounterOctets: TCryptoLibByteArray;
+  LZ, LPartyAInfo: TCryptoLibByteArray;
+  LKeyInfo: IKeySpecificInfo;
+  LPartyAOctet, LSuppPubOctet: IAsn1OctetString;
+  LOtherInfo: IOtherInfo;
+  LDigestSink: TDigestSink;
+  LTmp: TCryptoLibByteArray;
 begin
   TCheck.OutputLength(AOutput, AOutOff, ALength, SOutputBufferTooShort);
 
-  LOBytes := ALength;
+  if FParams = nil then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDHKekNotInitialized);
+
+  LOutputLength := ALength;
   LDigestSize := FDigest.GetDigestSize();
   LOutOff := AOutOff;
   LLength := ALength;
 
-  if LOBytes > ((Int64(2) shl 32) - 1) then
+  LMaxOut := UInt64(UInt32($FFFFFFFF)) * UInt64(LDigestSize);
+  if UInt64(LLength) > LMaxOut then
     raise EArgumentCryptoLibException.CreateRes(@SOutputLengthTooLarge);
 
-  LCThreshold := Int32((LOBytes + LDigestSize - 1) div LDigestSize);
-
-  System.SetLength(LDig, LDigestSize);
-
-  LCounter := 1;
-
-  for LI := 0 to LCThreshold - 1 do
-  begin
-    LKeyInfo := TDerSequence.Create(
-      FAlgorithm,
-      TDerOctetString.Create(
-        TPack.UInt32_To_BE(LCounter)) as IDerOctetString);
-
-    LV1 := TAsn1EncodableVector.Create(LKeyInfo);
-
-    if FPartyAInfo <> nil then
-    begin
-      LV1.Add(TDerTaggedObject.Create(True, 0,
-        TDerOctetString.Create(FPartyAInfo) as IDerOctetString)
-        as IDerTaggedObject);
-    end;
-
-    LV1.Add(TDerTaggedObject.Create(True, 2,
-      TDerOctetString.Create(
-        TPack.UInt32_To_BE(UInt32(FKeySize))) as IDerOctetString)
-      as IDerTaggedObject);
-
-    LV1DerSequence := TDerSequence.Create(LV1);
-    LOther := LV1DerSequence.GetDerEncoded();
-
-    FDigest.BlockUpdate(FZ, 0, System.Length(FZ));
-    FDigest.BlockUpdate(LOther, 0, System.Length(LOther));
-    FDigest.DoFinal(LDig, 0);
-
-    if LLength > LDigestSize then
-    begin
-      System.Move(LDig[0], AOutput[LOutOff],
-        LDigestSize * System.SizeOf(Byte));
-      LOutOff := LOutOff + LDigestSize;
-      LLength := LLength - LDigestSize;
-    end
-    else
-    begin
-      System.Move(LDig[0], AOutput[LOutOff],
-        LLength * System.SizeOf(Byte));
-    end;
-
-    Inc(LCounter);
-  end;
+  LZ := FParams.Z;
+  LPartyAInfo := FParams.ExtraInfo;
 
   FDigest.Reset();
 
-  Result := Int32(LOBytes);
+  LDigestSink := TDigestSink.Create(FDigest);
+  try
+    System.SetLength(LCounterOctets, 4);
+    LCounter32 := 0;
+
+    while LLength > 0 do
+    begin
+      FDigest.BlockUpdate(LZ, 0, System.Length(LZ));
+
+      System.Inc(LCounter32);
+      TPack.UInt32_To_BE(LCounter32, LCounterOctets);
+
+      LKeyInfo := TKeySpecificInfo.Create(FParams.Algorithm,
+        TDerOctetString.Create(LCounterOctets) as IAsn1OctetString);
+
+      if LPartyAInfo <> nil then
+        LPartyAOctet := TDerOctetString.Create(LPartyAInfo) as IAsn1OctetString
+      else
+        LPartyAOctet := nil;
+
+      LSuppPubOctet := TDerOctetString.Create(
+        TPack.UInt32_To_BE(UInt32(FParams.KeySize))) as IAsn1OctetString;
+
+      LOtherInfo := TOtherInfo.Create(LKeyInfo, LPartyAOctet, LSuppPubOctet);
+
+      LOtherInfo.EncodeTo(LDigestSink, TAsn1Encodable.Der);
+
+      if LLength < LDigestSize then
+      begin
+        System.SetLength(LTmp, LDigestSize);
+        FDigest.DoFinal(LTmp, 0);
+        System.Move(LTmp[0], AOutput[LOutOff], LLength * System.SizeOf(Byte));
+        Break;
+      end;
+
+      FDigest.DoFinal(AOutput, LOutOff);
+      LOutOff := LOutOff + LDigestSize;
+      LLength := LLength - LDigestSize;
+    end;
+  finally
+    LDigestSink.Free;
+  end;
+
+  Result := LOutputLength;
 end;
 
 end.

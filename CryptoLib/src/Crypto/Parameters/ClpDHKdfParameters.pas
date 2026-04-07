@@ -38,8 +38,11 @@ type
     FZ: TCryptoLibByteArray;
     FExtraInfo: TCryptoLibByteArray;
 
+  strict protected
     function GetAlgorithm(): IDerObjectIdentifier;
     function GetKeySize(): Int32;
+    function GetZ(): TCryptoLibByteArray;
+    function GetExtraInfo(): TCryptoLibByteArray;
 
   public
     constructor Create(const AAlgorithm: IDerObjectIdentifier;
@@ -47,11 +50,10 @@ type
     constructor Create(const AAlgorithm: IDerObjectIdentifier;
       AKeySize: Int32; const AZ, AExtraInfo: TCryptoLibByteArray); overload;
 
-    function GetZ(): TCryptoLibByteArray;
-    function GetExtraInfo(): TCryptoLibByteArray;
-
     property Algorithm: IDerObjectIdentifier read GetAlgorithm;
     property KeySize: Int32 read GetKeySize;
+    property Z: TCryptoLibByteArray read GetZ;
+    property ExtraInfo: TCryptoLibByteArray read GetExtraInfo;
   end;
 
 implementation
@@ -70,8 +72,14 @@ begin
   inherited Create();
   FAlgorithm := AAlgorithm;
   FKeySize := AKeySize;
-  FZ := AZ;
-  FExtraInfo := AExtraInfo;
+  if AZ <> nil then
+    FZ := System.Copy(AZ)
+  else
+    FZ := nil;
+  if AExtraInfo <> nil then
+    FExtraInfo := System.Copy(AExtraInfo)
+  else
+    FExtraInfo := nil;
 end;
 
 function TDHKdfParameters.GetAlgorithm: IDerObjectIdentifier;
@@ -86,12 +94,18 @@ end;
 
 function TDHKdfParameters.GetZ: TCryptoLibByteArray;
 begin
-  Result := FZ;
+  if FZ <> nil then
+    Result := System.Copy(FZ)
+  else
+    Result := nil;
 end;
 
 function TDHKdfParameters.GetExtraInfo: TCryptoLibByteArray;
 begin
-  Result := FExtraInfo;
+  if FExtraInfo <> nil then
+    Result := System.Copy(FExtraInfo)
+  else
+    Result := nil;
 end;
 
 end.
