@@ -32,8 +32,9 @@ uses
 type
   /// <summary>
   /// Factory for the default AES block cipher.
-  /// When CRYPTOLIB_X86_SIMD is defined, CreateEngine may return TAesEngineX86 when
-  /// TAesEngineX86.IsSupported is True.
+  /// When CRYPTOLIB_X86_SIMD is defined and AES-NI is available at runtime,
+  /// <see cref="CreateEngine" /> returns <c>TAesEngineX86</c> (hardware AES);
+  /// otherwise <c>TAesEngine</c>.
   /// </summary>
   TAesUtilities = class sealed(TObject)
   public
@@ -52,7 +53,7 @@ implementation
 class function TAesUtilities.CreateEngine(): IBlockCipher;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TAesEngineX86.IsSupported then
+  if IsHardwareAccelerated then
     Exit(TAesEngineX86.Create());
 {$ENDIF}
   Result := TAesEngine.Create();

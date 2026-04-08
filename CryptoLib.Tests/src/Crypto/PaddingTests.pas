@@ -37,7 +37,6 @@ uses
   ClpIKeyParameter,
   ClpIBlockCipherPadding,
   ClpAesUtilities,
-  ClpIAesEngine,
   ClpISO10126d2Padding,
   ClpISO7816d4Padding,
   ClpPkcs7Padding,
@@ -143,7 +142,7 @@ var
   key: IKeyParameter;
   i: Int32;
 begin
-  bc := TPaddedBufferedBlockCipher.Create(TAesUtilities.CreateEngine() as IAesEngine,
+  bc := TPaddedBufferedBlockCipher.Create(TAesUtilities.CreateEngine(),
     TPKCS7Padding.Create() as IPKCS7Padding);
   key := TKeyParameter.Create(DecodeHex('001122334455667788990A0B0C0D0E0F'));
 
