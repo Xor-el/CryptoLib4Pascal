@@ -38,7 +38,6 @@ uses
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpIBufferedCipher,
-  ClpIBufferedBlockCipher,
   ClpBufferedBlockCipher,
   ClpICipherParameters,
   ClpICipherKeyGenerator,
