@@ -117,6 +117,8 @@ type
     FAtLengthPre: UInt64;
     /// <summary>HPow limbs H^4..H^1 (64 bytes) for fused four-block GHASH; nil if path off.</summary>
     FHPow: TCryptoLibByteArray;
+    /// <summary>Reused 64-byte buffer for four CTR blocks (avoids heap alloc per fused step).</summary>
+    FWorkCtr64: TCryptoLibByteArray;
 
     procedure GcmReverse16(const ASrc, ADst: PByte);
     procedure GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
@@ -373,11 +375,17 @@ begin
       FHPow := nil;
       System.SetLength(FHPow, 64);
       TGcmUtilities.InitFourWayHPowFromH(FH, FHPow);
+      FWorkCtr64 := nil;
+      System.SetLength(FWorkCtr64, 64);
     end
     else
+    begin
       FHPow := nil;
+      FWorkCtr64 := nil;
+    end;
 {$ELSE}
     FHPow := nil;
+    FWorkCtr64 := nil;
 {$ENDIF}
   end
   else if FH = nil then
@@ -1052,12 +1060,7 @@ begin
       for LI := 0 to 15 do
         LDblk[LI] := LDblk[LI] xor LSRev[LI];
     TGcmUtilities.MultiplyExt(@LDblk[0], @FHPow[LB * 16], @LBuf48[0]);
-    for LI := 0 to 15 do
-    begin
-      LU0[LI] := LU0[LI] xor LBuf48[LI];
-      LU1[LI] := LU1[LI] xor LBuf48[16 + LI];
-      LU2[LI] := LU2[LI] xor LBuf48[32 + LI];
-    end;
+    TGcmUtilities.XorMultiplyExtLimbs48(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
   end;
   TGcmUtilities.Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
   GcmReverse16(@LSRev[0], @FS[0]);
@@ -1066,51 +1069,37 @@ end;
 procedure TGcmBlockCipher.EncryptBlocks4Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
   const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 var
-  LCtr: TCryptoLibByteArray;
-  LI: Int32;
-  LC0, LC1, LC2, LC3: array[0..15] of Byte;
+  LI, LBase: Int32;
 begin
-  LCtr := nil;
-  System.SetLength(LCtr, 64);
-  GetNextCtrBlocks4(LCtr);
-  for LI := 0 to 15 do
-    LC0[LI] := Byte(AInBuf[AInOff + LI] xor LCtr[LI]);
-  for LI := 0 to 15 do
-    LC1[LI] := Byte(AInBuf[AInOff + 16 + LI] xor LCtr[16 + LI]);
-  for LI := 0 to 15 do
-    LC2[LI] := Byte(AInBuf[AInOff + 32 + LI] xor LCtr[32 + LI]);
-  for LI := 0 to 15 do
-    LC3[LI] := Byte(AInBuf[AInOff + 48 + LI] xor LCtr[48 + LI]);
-  System.Move(LC0[0], AOutBuf[AOutOff], 16);
-  System.Move(LC1[0], AOutBuf[AOutOff + 16], 16);
-  System.Move(LC2[0], AOutBuf[AOutOff + 32], 16);
-  System.Move(LC3[0], AOutBuf[AOutOff + 48], 16);
-  GhashFourShuffledBlocks(@LC0[0], @LC1[0], @LC2[0], @LC3[0]);
+  GetNextCtrBlocks4(FWorkCtr64);
+  for LBase := 0 to 3 do
+  begin
+    LI := LBase * 16;
+    PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
+      PUInt64(@FWorkCtr64[LI])^;
+    PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
+      PUInt64(@FWorkCtr64[LI + 8])^;
+  end;
+  GhashFourShuffledBlocks(@AOutBuf[AOutOff], @AOutBuf[AOutOff + 16], @AOutBuf[AOutOff + 32],
+    @AOutBuf[AOutOff + 48]);
 end;
 
 procedure TGcmBlockCipher.DecryptBlocks4Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
   const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 var
-  LCtr: TCryptoLibByteArray;
-  LI: Int32;
-  LC0, LC1, LC2, LC3: array[0..15] of Byte;
+  LI, LBase: Int32;
 begin
-  LCtr := nil;
-  System.SetLength(LCtr, 64);
-  GetNextCtrBlocks4(LCtr);
-  System.Move(AInBuf[AInOff], LC0[0], 16);
-  System.Move(AInBuf[AInOff + 16], LC1[0], 16);
-  System.Move(AInBuf[AInOff + 32], LC2[0], 16);
-  System.Move(AInBuf[AInOff + 48], LC3[0], 16);
-  for LI := 0 to 15 do
-    AOutBuf[AOutOff + LI] := Byte(LC0[LI] xor LCtr[LI]);
-  for LI := 0 to 15 do
-    AOutBuf[AOutOff + 16 + LI] := Byte(LC1[LI] xor LCtr[16 + LI]);
-  for LI := 0 to 15 do
-    AOutBuf[AOutOff + 32 + LI] := Byte(LC2[LI] xor LCtr[32 + LI]);
-  for LI := 0 to 15 do
-    AOutBuf[AOutOff + 48 + LI] := Byte(LC3[LI] xor LCtr[48 + LI]);
-  GhashFourShuffledBlocks(@LC0[0], @LC1[0], @LC2[0], @LC3[0]);
+  GetNextCtrBlocks4(FWorkCtr64);
+  for LBase := 0 to 3 do
+  begin
+    LI := LBase * 16;
+    PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
+      PUInt64(@FWorkCtr64[LI])^;
+    PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
+      PUInt64(@FWorkCtr64[LI + 8])^;
+  end;
+  GhashFourShuffledBlocks(@AInBuf[AInOff], @AInBuf[AInOff + 16], @AInBuf[AInOff + 32],
+    @AInBuf[AInOff + 48]);
 end;
 
 procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;

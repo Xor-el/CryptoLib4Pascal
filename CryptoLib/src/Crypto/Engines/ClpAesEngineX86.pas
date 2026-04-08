@@ -100,6 +100,11 @@ procedure AesNiCipherOneBlock(State, Keys: PByte; Mode: Int32);
 {$I ..\..\Include\Simd\Aes\AesNiImplRounds_x86_64.inc}
 end;
 
+procedure AesNiCipherFourBlocks(State, Keys: PByte; Mode: Int32);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiImplFourBlocks_x86_64.inc}
+end;
+
 procedure AesNiPrepareDecryptRoundKeys(Keys: PByte; NRounds: Int32);
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Aes\AesNiPrepareDecryptRoundKeys_x86_64.inc}
@@ -127,6 +132,11 @@ end;
 procedure AesNiCipherOneBlock(State, Keys: PByte; Mode: Int32);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\Include\Simd\Aes\AesNiImplRounds_i386.inc}
+end;
+
+procedure AesNiCipherFourBlocks(State, Keys: PByte; Mode: Int32);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiImplFourBlocks_i386.inc}
 end;
 
 procedure AesNiPrepareDecryptRoundKeys(Keys: PByte; NRounds: Int32);
@@ -342,17 +352,24 @@ end;
 
 function TAesEngineX86.ProcessFourBlocks(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+{$IFDEF CRYPTOLIB_X86_SIMD}
 var
-  LI: Int32;
+  LWork: array [0 .. 63] of Byte;
+{$ENDIF}
 begin
 {$IFNDEF CRYPTOLIB_X86_SIMD}
   raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotSupported);
 {$ELSE}
+  if FKeys = nil then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
+
   TCheck.DataLength(AInput, AInOff, 64, SInputBuffertooShort);
   TCheck.OutputLength(AOutput, AOutOff, 64, SOutputBufferTooShort);
 
-  for LI := 0 to 3 do
-    ProcessBlock(AInput, AInOff + LI * 16, AOutput, AOutOff + LI * 16);
+  System.Move(AInput[AInOff], LWork[0], 64);
+  AesNiCipherFourBlocks(@LWork[0], FKeys, Ord(FMode));
+  System.Move(LWork[0], AOutput[AOutOff], 64);
+  FillChar(LWork, SizeOf(LWork), 0);
   Result := 64;
 {$ENDIF}
 end;

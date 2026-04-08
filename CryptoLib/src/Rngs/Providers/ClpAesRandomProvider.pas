@@ -28,7 +28,6 @@ uses
   ClpIKeyParameter,
   ClpKeyParameter,
   ClpIBufferedCipher,
-  ClpIBufferedBlockCipher,
   ClpBufferedBlockCipher,
   ClpArrayUtilities,
   ClpOSRandomProvider,
