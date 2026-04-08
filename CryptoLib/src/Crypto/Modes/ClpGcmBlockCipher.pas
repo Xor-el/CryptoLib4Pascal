@@ -43,6 +43,7 @@ uses
   ClpCheck,
   ClpBasicGcmMultiplier,
   ClpCpuFeatures,
+  ClpIntrinsicsVector,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -181,33 +182,17 @@ type
 
 implementation
 
-type
-  TGcmSimdU128Bytes = array[0..15] of Byte;
-
 {$IFDEF CRYPTOLIB_X86_SIMD}
-{$IF SizeOf(TGcmSimdU128Bytes) <> 16}
-  {$MESSAGE FATAL 'TGcmSimdU128Bytes must be 16 bytes for XMM GHASH helpers.'}
-{$IFEND}
-
 const
   ReverseBytesMask: packed array[0..15] of Byte = (
     $0F, $0E, $0D, $0C, $0B, $0A, $09, $08, $07, $06, $05, $04, $03, $02, $01, $00);
 {$ENDIF}
 
-function GcmSimd128PackedLayoutOk: Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := SizeOf(TGcmSimdU128Bytes) = 16;
-{$ELSE}
-  Result := False;
-{$ENDIF}
-end;
-
 class function TGcmBlockCipher.IsFourWaySupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.HasPCLMULQDQ and TCpuFeatures.HasSSSE3 and
-    GcmSimd128PackedLayoutOk;
+    TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -216,7 +201,7 @@ end;
 class function TGcmBlockCipher.IsSse2PackedVectorXorSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.HasSSE2 and GcmSimd128PackedLayoutOk;
+  Result := TCpuFeatures.HasSSE2 and TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
 {$ENDIF}

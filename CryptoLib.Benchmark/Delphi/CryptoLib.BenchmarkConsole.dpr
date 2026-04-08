@@ -465,6 +465,7 @@ uses
   ClpBinaryPrimitives in '..\..\CryptoLib\src\Misc\ClpBinaryPrimitives.pas',
   ClpBitOperations in '..\..\CryptoLib\src\Misc\ClpBitOperations.pas',
   ClpCpuFeatures in '..\..\CryptoLib\src\Misc\ClpCpuFeatures.pas',
+  ClpIntrinsicsVector in '..\..\CryptoLib\src\Misc\ClpIntrinsicsVector.pas',
   ClpPack in '..\..\CryptoLib\src\Misc\ClpPack.pas',
   ClpBits in '..\..\CryptoLib\src\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\CryptoLib\src\Math\Raw\ClpMod.pas',

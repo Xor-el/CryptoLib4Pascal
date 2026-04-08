@@ -493,6 +493,7 @@ contains
   ClpBinaryPrimitives in '..\..\Misc\ClpBinaryPrimitives.pas',
   ClpBitOperations in '..\..\Misc\ClpBitOperations.pas',
   ClpCpuFeatures in '..\..\Misc\ClpCpuFeatures.pas',
+  ClpIntrinsicsVector in '..\..\Misc\ClpIntrinsicsVector.pas',
   ClpPack in '..\..\Misc\ClpPack.pas',
   ClpBits in '..\..\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\Math\Raw\ClpMod.pas',

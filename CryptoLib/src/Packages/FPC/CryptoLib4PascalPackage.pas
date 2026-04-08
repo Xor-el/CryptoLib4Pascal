@@ -212,7 +212,7 @@ uses
   ClpPkcs8EncryptedPrivateKeyInfoBuilder, ClpOpenSslPkcs8Generator, 
   ClpIOpenSslPkcs8Generator, ClpDateTimeHelper, ClpFormatSettingsHelper, 
   ClpValueHelper, ClpCpuFeatures, ClpCmsECAsn1Objects, ClpICmsECAsn1Objects, 
-  ClpIAesEngineX86, ClpAesEngineX86, ClpAesUtilities;
+  ClpIAesEngineX86, ClpAesEngineX86, ClpAesUtilities, ClpIntrinsicsVector;
 
 implementation
 
