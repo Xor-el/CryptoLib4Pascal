@@ -134,7 +134,7 @@ begin
   if ASpec.AeadMacBitLength > 0 then
   begin
     if ASpec.KeyParameterAlgorithm = '' then
-      LKeyParam := TKeyParameter.Create(AKey) as IKeyParameter
+      LKeyParam := TKeyParameter.Create(AKey)
     else
       LKeyParam := TParameterUtilities.CreateKeyParameter(
         ASpec.KeyParameterAlgorithm, AKey);
