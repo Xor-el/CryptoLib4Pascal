@@ -43,8 +43,6 @@ uses
   ClpIDHBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIECDHCBasicAgreement,
-  ClpIECDHWithKdfBasicAgreement,
-  ClpIECDHCWithKdfBasicAgreement,
   ClpIDerivationFunction,
   ClpIAsn1Objects,
   ClpIRawAgreement,
@@ -173,25 +171,25 @@ end;
 class function TAgreementUtilities.GetBasicAgreementWithKdfForMechanism(const AMechanism, AWrapAlgorithm: String): IBasicAgreement;
 begin
   if AMechanism = 'ECDHWITHSHA1KDF' then
-    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-1')) as IECDHWithKdfBasicAgreement
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-1'))
   else if AMechanism = 'ECDHWITHSHA224KDF' then
-    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-224')) as IECDHWithKdfBasicAgreement
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-224'))
   else if AMechanism = 'ECDHWITHSHA256KDF' then
-    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-256')) as IECDHWithKdfBasicAgreement
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-256'))
   else if AMechanism = 'ECDHWITHSHA384KDF' then
-    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-384')) as IECDHWithKdfBasicAgreement
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-384'))
   else if AMechanism = 'ECDHWITHSHA512KDF' then
-    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-512')) as IECDHWithKdfBasicAgreement
+    Result := TECDHWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-512'))
   else if AMechanism = 'ECCDHWITHSHA1KDF' then
-    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-1')) as IECDHCWithKdfBasicAgreement
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-1'))
   else if AMechanism = 'ECCDHWITHSHA224KDF' then
-    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-224')) as IECDHCWithKdfBasicAgreement
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-224'))
   else if AMechanism = 'ECCDHWITHSHA256KDF' then
-    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-256')) as IECDHCWithKdfBasicAgreement
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-256'))
   else if AMechanism = 'ECCDHWITHSHA384KDF' then
-    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-384')) as IECDHCWithKdfBasicAgreement
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-384'))
   else if AMechanism = 'ECCDHWITHSHA512KDF' then
-    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-512')) as IECDHCWithKdfBasicAgreement
+    Result := TECDHCWithKdfBasicAgreement.Create(AWrapAlgorithm, CreateECDHKekGenerator('SHA-512'))
   else
     Result := nil;
 end;

@@ -52,17 +52,11 @@ uses
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpEd25519Signer,
-  ClpIEd25519Signer,
   ClpEd25519CtxSigner,
-  ClpIEd25519CtxSigner,
   ClpEd25519PhSigner,
-  ClpIEd25519PhSigner,
   ClpEd448Signer,
-  ClpIEd448Signer,
   ClpEd448PhSigner,
-  ClpIEd448PhSigner,
   ClpBip340SchnorrSigner,
-  ClpIBip340SchnorrSigner,
   ClpISigner,
   ClpISecureRandom,
   ClpIAsn1Objects,
@@ -819,8 +813,7 @@ var
 begin
   if AMechanism = 'PSSwithRSA' then
   begin
-    // TODO The Sha1Digest here is a default. In JCE version, the actual digest
-    // to be used can be overridden by subsequent parameter settings.
+    // TODO The Sha1Digest here is a default.
     Result := GetPssX509Parameters('SHA-1');
     Exit;
   end;
@@ -871,34 +864,34 @@ begin
   begin
     if AMechanism = 'Ed25519' then
     begin
-      Result := TEd25519Signer.Create() as IEd25519Signer;
+      Result := TEd25519Signer.Create();
       Exit;
     end;
     if AMechanism = 'Ed25519ctx' then
     begin
-      Result := TEd25519CtxSigner.Create(nil) as IEd25519CtxSigner;
+      Result := TEd25519CtxSigner.Create(nil);
       Exit;
     end;
     if AMechanism = 'Ed25519ph' then
     begin
-      Result := TEd25519PhSigner.Create(nil) as IEd25519PhSigner;
+      Result := TEd25519PhSigner.Create(nil);
       Exit;
     end;
     if AMechanism = 'Ed448' then
     begin
-      Result := TEd448Signer.Create(nil) as IEd448Signer;
+      Result := TEd448Signer.Create(nil);
       Exit;
     end;
     if AMechanism = 'Ed448ph' then
     begin
-      Result := TEd448PhSigner.Create(nil) as IEd448PhSigner;
+      Result := TEd448PhSigner.Create(nil);
       Exit;
     end;
   end;
 
   if AMechanism = 'BIP340Schnorr' then
   begin
-    Result := TBip340SchnorrSigner.Create() as IBip340SchnorrSigner;
+    Result := TBip340SchnorrSigner.Create();
     Exit;
   end;
 
@@ -917,8 +910,7 @@ begin
 
   if AMechanism = 'PSSwithRSA' then
   begin
-    // TODO The Sha1Digest here is a default. In JCE version, the actual digest
-    // to be used can be overridden by subsequent parameter settings.
+    // TODO The Sha1Digest here is a default.
     Result := TPssSigner.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine, TDigestUtilities.GetDigest('SHA-1'));
     Exit;
   end;

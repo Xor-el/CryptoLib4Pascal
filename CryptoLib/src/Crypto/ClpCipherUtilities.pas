@@ -43,17 +43,11 @@ uses
   ClpMiscObjectIdentifiers,
   ClpStringUtilities,
   ClpISO10126d2Padding,
-  ClpIISO10126d2Padding,
   ClpISO7816d4Padding,
-  ClpIISO7816d4Padding,
   ClpPkcs7Padding,
-  ClpIPkcs7Padding,
   ClpTBCPadding,
-  ClpITBCPadding,
   ClpX923Padding,
-  ClpIX923Padding,
   ClpZeroBytePadding,
-  ClpIZeroBytePadding,
   ClpIBlockCipherMode,
   ClpEcbBlockCipher,
   ClpCbcBlockCipher,
@@ -61,52 +55,33 @@ uses
   ClpOfbBlockCipher,
   ClpSicBlockCipher,
   ClpCtsBlockCipher,
-  ClpICtsBlockCipher,
   ClpCcmBlockCipher,
   ClpEaxBlockCipher,
   ClpGcmBlockCipher,
   ClpOcbBlockCipher,
   ClpOpenPgpCfbBlockCipher,
   ClpChaCha20Poly1305,
-  ClpIChaCha20Poly1305,
   ClpBufferedAeadBlockCipher,
-  ClpIBufferedAeadBlockCipher,
   ClpBufferedAeadCipher,
-  ClpIBufferedAeadCipher,
   ClpBufferedBlockCipher,
-  ClpIBufferedBlockCipher,
   ClpBufferedStreamCipher,
-  ClpIBufferedStreamCipher,
   ClpBufferedAsymmetricBlockCipher,
-  ClpIBufferedAsymmetricBlockCipher,
   ClpPaddedBufferedBlockCipher,
-  ClpIPaddedBufferedBlockCipher,
   ClpAesUtilities,
   ClpBlowfishEngine,
-  ClpIBlowfishEngine,
   ClpChaChaEngine,
-  ClpIChaChaEngine,
   ClpChaCha7539Engine,
-  ClpIChaCha7539Engine,
   ClpSalsa20Engine,
-  ClpISalsa20Engine,
   ClpRijndaelEngine,
-  ClpIRijndaelEngine,
   ClpPkcs1Encoding,
-  ClpIPkcs1Encoding,
   ClpOaepEncoding,
-  ClpIOaepEncoding,
   ClpISO9796d1Encoding,
-  ClpIISO9796d1Encoding,
   ClpRsaBlindedEngine,
-  ClpIRsaBlindedEngine,
   ClpIAsymmetricBlockCipher,
   ClpBufferedIesCipher,
   ClpIesEngine,
   ClpDHBasicAgreement,
-  ClpIDHBasicAgreement,
   ClpECDHBasicAgreement,
-  ClpIECDHBasicAgreement,
   ClpIBasicAgreement,
   ClpKdf2BytesGenerator,
   ClpIKdf2BytesGenerator,
@@ -354,9 +329,9 @@ begin
 
   LAgreement := nil;
   if AMechanism = 'IES' then
-    LAgreement := TDHBasicAgreement.Create() as IDHBasicAgreement
+    LAgreement := TDHBasicAgreement.Create()
   else if AMechanism = 'ECIES' then
-    LAgreement := TECDHBasicAgreement.Create() as IECDHBasicAgreement;
+    LAgreement := TECDHBasicAgreement.Create();
 
   if LAgreement <> nil then
   begin
@@ -385,8 +360,7 @@ begin
         'PBEWITHMD5AND256BITAES-CBC-OPENSSL']) then
       begin
         Result := TPaddedBufferedBlockCipher.Create(
-          TCbcBlockCipher.Create(TAesUtilities.CreateEngine()))
-          as IPaddedBufferedBlockCipher;
+          TCbcBlockCipher.Create(TAesUtilities.CreateEngine()));
         Exit;
       end;
     end;
@@ -408,19 +382,19 @@ begin
     TCipherAlgorithm.AES:
       LBlockCipher := TAesUtilities.CreateEngine();
     TCipherAlgorithm.BLOWFISH:
-      LBlockCipher := TBlowfishEngine.Create() as IBlowfishEngine;
+      LBlockCipher := TBlowfishEngine.Create();
     TCipherAlgorithm.CHACHA:
-      LStreamCipher := TChaChaEngine.Create() as IChaChaEngine;
+      LStreamCipher := TChaChaEngine.Create();
     TCipherAlgorithm.CHACHA20_POLY1305:
-      LAeadCipher := TChaCha20Poly1305.Create() as IChaCha20Poly1305;
+      LAeadCipher := TChaCha20Poly1305.Create();
     TCipherAlgorithm.CHACHA7539:
-      LStreamCipher := TChaCha7539Engine.Create() as IChaCha7539Engine;
+      LStreamCipher := TChaCha7539Engine.Create();
     TCipherAlgorithm.RIJNDAEL:
-      LBlockCipher := TRijndaelEngine.Create() as IRijndaelEngine;
+      LBlockCipher := TRijndaelEngine.Create();
     TCipherAlgorithm.SALSA20:
-      LStreamCipher := TSalsa20Engine.Create() as ISalsa20Engine;
+      LStreamCipher := TSalsa20Engine.Create();
     TCipherAlgorithm.RSA:
-      LAsymBlockCipher := TRsaBlindedEngine.Create() as IRsaBlindedEngine;
+      LAsymBlockCipher := TRsaBlindedEngine.Create();
   else
     Exit;
   end;
@@ -429,7 +403,7 @@ begin
   begin
     if System.Length(LParts) > 1 then
       raise EArgumentCryptoLibException.CreateRes(@SModesAndPaddingsNotValidForAead);
-    Result := TBufferedAeadCipher.Create(LAeadCipher) as IBufferedAeadCipher;
+    Result := TBufferedAeadCipher.Create(LAeadCipher);
     Exit;
   end;
 
@@ -437,7 +411,7 @@ begin
   begin
     if System.Length(LParts) > 1 then
       raise EArgumentCryptoLibException.CreateRes(@SModeAndPaddingNotNeededStreamCipher);
-    Result := TBufferedStreamCipher.Create(LStreamCipher) as IBufferedStreamCipher;
+    Result := TBufferedStreamCipher.Create(LStreamCipher);
     Exit;
   end;
 
@@ -460,40 +434,40 @@ begin
         LPadded := False;
       TCipherPadding.RAW: ;
       TCipherPadding.ISO10126PADDING, TCipherPadding.ISO10126D2PADDING, TCipherPadding.ISO10126_2PADDING:
-        LPadding := TISO10126d2Padding.Create() as IISO10126d2Padding;
+        LPadding := TISO10126d2Padding.Create();
       TCipherPadding.ISO7816_4PADDING, TCipherPadding.ISO9797_1PADDING:
-        LPadding := TISO7816d4Padding.Create() as IISO7816d4Padding;
+        LPadding := TISO7816d4Padding.Create();
       TCipherPadding.ISO9796_1, TCipherPadding.ISO9796_1PADDING:
-        LAsymBlockCipher := TISO9796d1Encoding.Create(LAsymBlockCipher) as IISO9796d1Encoding;
+        LAsymBlockCipher := TISO9796d1Encoding.Create(LAsymBlockCipher);
       TCipherPadding.OAEP, TCipherPadding.OAEPPADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher);
       TCipherPadding.OAEPWITHMD5ANDMGF1PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('MD5')) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('MD5'));
       TCipherPadding.OAEPWITHSHA1ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_1ANDMGF1PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-1')) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-1'));
       TCipherPadding.OAEPWITHSHA224ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_224ANDMGF1PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-224')) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-224'));
       TCipherPadding.OAEPWITHSHA256ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1PADDING,
       TCipherPadding.OAEPWITHSHA256ANDMGF1WITHSHA256PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1WITHSHA_256PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256')) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256'));
       TCipherPadding.OAEPWITHSHA256ANDMGF1WITHSHA1PADDING, TCipherPadding.OAEPWITHSHA_256ANDMGF1WITHSHA_1PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256'), TDigestUtilities.GetDigest('SHA-1'), nil) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-256'), TDigestUtilities.GetDigest('SHA-1'), nil);
       TCipherPadding.OAEPWITHSHA384ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_384ANDMGF1PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-384')) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-384'));
       TCipherPadding.OAEPWITHSHA512ANDMGF1PADDING, TCipherPadding.OAEPWITHSHA_512ANDMGF1PADDING:
-        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-512')) as IOaepEncoding;
+        LAsymBlockCipher := TOaepEncoding.Create(LAsymBlockCipher, TDigestUtilities.GetDigest('SHA-512'));
       TCipherPadding.PKCS1, TCipherPadding.PKCS1PADDING:
-        LAsymBlockCipher := TPkcs1Encoding.Create(LAsymBlockCipher) as IPkcs1Encoding;
+        LAsymBlockCipher := TPkcs1Encoding.Create(LAsymBlockCipher);
       TCipherPadding.PKCS5, TCipherPadding.PKCS5PADDING, TCipherPadding.PKCS7, TCipherPadding.PKCS7PADDING:
-        LPadding := TPkcs7Padding.Create() as IPkcs7Padding;
+        LPadding := TPkcs7Padding.Create();
       TCipherPadding.TBCPADDING:
-        LPadding := TTBCPadding.Create() as ITBCPadding;
+        LPadding := TTBCPadding.Create();
       TCipherPadding.WITHCTS:
         LCts := True;
       TCipherPadding.X923PADDING:
-        LPadding := TX923Padding.Create() as IX923Padding;
+        LPadding := TX923Padding.Create();
       TCipherPadding.ZEROBYTEPADDING:
-        LPadding := TZeroBytePadding.Create() as IZeroBytePadding;
+        LPadding := TZeroBytePadding.Create();
     else
       Exit;
     end;
@@ -570,7 +544,7 @@ begin
     if LPadded and (System.Length(LParts) > 2) and (LParts[2] <> '') then
       raise ESecurityUtilityCryptoLibException.CreateRes(@SBadPaddingForAead);
 
-    Result := TBufferedAeadBlockCipher.Create(LAeadBlockCipher) as IBufferedAeadBlockCipher;
+    Result := TBufferedAeadBlockCipher.Create(LAeadBlockCipher);
     Exit;
   end;
 
@@ -581,26 +555,26 @@ begin
 
     if LCts then
     begin
-      Result := TCtsBlockCipher.Create(LBlockCipherMode) as ICtsBlockCipher;
+      Result := TCtsBlockCipher.Create(LBlockCipherMode);
       Exit;
     end;
     if LPadding <> nil then
     begin
-      Result := TPaddedBufferedBlockCipher.Create(LBlockCipherMode, LPadding) as IPaddedBufferedBlockCipher;
+      Result := TPaddedBufferedBlockCipher.Create(LBlockCipherMode, LPadding);
       Exit;
     end;
     if (not LPadded) or LBlockCipherMode.IsPartialBlockOkay then
     begin
-      Result := TBufferedBlockCipher.Create(LBlockCipherMode) as IBufferedBlockCipher;
+      Result := TBufferedBlockCipher.Create(LBlockCipherMode);
       Exit;
     end;
-    Result := TPaddedBufferedBlockCipher.Create(LBlockCipherMode) as IPaddedBufferedBlockCipher;
+    Result := TPaddedBufferedBlockCipher.Create(LBlockCipherMode);
     Exit;
   end;
 
   if LAsymBlockCipher <> nil then
   begin
-    Result := TBufferedAsymmetricBlockCipher.Create(LAsymBlockCipher) as IBufferedAsymmetricBlockCipher;
+    Result := TBufferedAsymmetricBlockCipher.Create(LAsymBlockCipher);
     Exit;
   end;
 end;
@@ -644,9 +618,9 @@ begin
     TCipherAlgorithm.AES:
       Result := TAesUtilities.CreateEngine();
     TCipherAlgorithm.BLOWFISH:
-      Result := TBlowfishEngine.Create() as IBlowfishEngine;
+      Result := TBlowfishEngine.Create();
     TCipherAlgorithm.RIJNDAEL:
-      Result := TRijndaelEngine.Create() as IRijndaelEngine;
+      Result := TRijndaelEngine.Create();
   else
     raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedCipher,
       [TEnumUtilities.ToString<TCipherAlgorithm>(ACipherAlgorithm)]);
