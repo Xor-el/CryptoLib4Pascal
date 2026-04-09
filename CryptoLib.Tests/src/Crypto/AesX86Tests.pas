@@ -124,7 +124,7 @@ begin
   LRnd := TSecureRandom.Create();
   System.SetLength(LKey, 16);
   LRnd.NextBytes(LKey);
-  RunCipherEngineChecks(TAesEngineX86.Create(),
+  RunCipherEngineChecks(TAesEngineX86.Create() as IBlockCipher,
     TKeyParameter.Create(LKey) as IKeyParameter, 'TAesEngineX86 128-bit');
 end;
 
@@ -138,7 +138,7 @@ begin
   LRnd := TSecureRandom.Create();
   System.SetLength(LKey, 24);
   LRnd.NextBytes(LKey);
-  RunCipherEngineChecks(TAesEngineX86.Create(),
+  RunCipherEngineChecks(TAesEngineX86.Create() as IBlockCipher,
     TKeyParameter.Create(LKey) as IKeyParameter, 'TAesEngineX86 192-bit');
 end;
 
@@ -152,7 +152,7 @@ begin
   LRnd := TSecureRandom.Create();
   System.SetLength(LKey, 32);
   LRnd.NextBytes(LKey);
-  RunCipherEngineChecks(TAesEngineX86.Create(),
+  RunCipherEngineChecks(TAesEngineX86.Create() as IBlockCipher,
     TKeyParameter.Create(LKey) as IKeyParameter, 'TAesEngineX86 256-bit');
 end;
 
