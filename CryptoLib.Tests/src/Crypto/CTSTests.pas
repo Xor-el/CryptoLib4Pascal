@@ -31,8 +31,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpIKeyParameter,
   ClpKeyParameter,
   ClpParametersWithIV,
@@ -134,13 +133,13 @@ end;
 
 procedure TTestCTS.TestCTS;
 begin
-  DoCTSTest(1, TCBCBlockCipher.Create(TAESEngine.Create() as IAESEngine)
+  DoCTSTest(1, TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher, TParametersWithIV.Create(TKeyParameter.Create(FAes128)
     as IKeyParameter, FZeroIV) as IParametersWithIV, FAesIn1, FAesOut1);
-  DoCTSTest(2, TCBCBlockCipher.Create(TAESEngine.Create() as IAESEngine)
+  DoCTSTest(2, TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher, TParametersWithIV.Create(TKeyParameter.Create(FAes128)
     as IKeyParameter, FZeroIV) as IParametersWithIV, FAesIn2, FAesOut2);
-  DoCTSTest(3, TCBCBlockCipher.Create(TAESEngine.Create() as IAESEngine)
+  DoCTSTest(3, TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher, TParametersWithIV.Create(TKeyParameter.Create(FAes128)
     as IKeyParameter, FZeroIV) as IParametersWithIV, FAesIn3, FAesOut3);
 end;
@@ -148,8 +147,7 @@ end;
 procedure TTestCTS.TestExceptions;
 begin
   try
-    TCTSBlockCipher.Create(TSICBlockCipher.Create(TAESEngine.Create()
-      as IAESEngine) as ISICBlockCipher);
+    TCTSBlockCipher.Create(TSicBlockCipher.Create(TAesUtilities.CreateEngine()) as ISicBlockCipher);
     Fail('Expected CTS construction error - only ECB/CBC supported.');
   except
     on e: EArgumentCryptoLibException do

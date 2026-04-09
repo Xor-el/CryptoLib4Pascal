@@ -32,8 +32,7 @@ uses
   ClpCryptoLibComparers,
   ClpEnumUtilities,
   ClpNistObjectIdentifiers,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpAesWrapEngine,
   ClpAesWrapPadEngine,
   ClpRfc3211WrapEngine,
@@ -135,7 +134,7 @@ begin
     case LWrapAlgorithm of
       TWrapAlgorithm.AESRFC3211WRAP:
         begin
-          Result := TRfc3211WrapEngine.Create(TAesEngine.Create() as IAesEngine);
+          Result := TRfc3211WrapEngine.Create(TAesUtilities.CreateEngine());
           Exit;
         end;
       TWrapAlgorithm.AESWRAP:

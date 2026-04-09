@@ -1,8 +1,6 @@
-// CPUID query: executes CPUID with leaf=ALeaf, subleaf=ASubLeaf,
-// stores EAX/EBX/ECX/EDX into the TCpuIdResult record at AResult.
-// IA-32 (CRYPTOLIB_I386_ASM): preserves EBX; ESI = AResult, ECX = ASubLeaf, EAX = ALeaf.
-// x86-64: preserves RBX; MS ABI ecx=ALeaf, edx=ASubLeaf, r8=AResult;
-//   FPC non-Windows remaps edi, esi, rdx -> leaf, subleaf, result.
+// CPUID: leaf in eax, subleaf in edx, TCpuIdResult pointer in ecx (i386 register convention).
+// Preserves ebx; esi holds the result pointer while CPUID runs.
+// x86-64: MS ABI ecx=leaf, edx=subleaf, r8=result; preserves rbx. FPC Unix: rdi, rsi, rdx remapped.
 {$IFDEF FPC}
   assembler; nostackframe;
 {$ENDIF}

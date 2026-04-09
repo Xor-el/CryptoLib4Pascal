@@ -37,6 +37,9 @@ requires
 
 contains
   ClpAesEngine in '..\..\Crypto\Engines\ClpAesEngine.pas',
+  ClpIAesEngineX86 in '..\..\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas',
+  ClpAesEngineX86 in '..\..\Crypto\Engines\ClpAesEngineX86.pas',
+  ClpAesUtilities in '..\..\Crypto\ClpAesUtilities.pas',
   ClpAesLightEngine in '..\..\Crypto\Engines\ClpAesLightEngine.pas',
   ClpAgreementUtilities in '..\..\Crypto\Agreements\ClpAgreementUtilities.pas',
   ClpArgon2ParametersGenerator in '..\..\Crypto\Generators\ClpArgon2ParametersGenerator.pas',
@@ -490,6 +493,7 @@ contains
   ClpBinaryPrimitives in '..\..\Misc\ClpBinaryPrimitives.pas',
   ClpBitOperations in '..\..\Misc\ClpBitOperations.pas',
   ClpCpuFeatures in '..\..\Misc\ClpCpuFeatures.pas',
+  ClpIntrinsicsVector in '..\..\Misc\ClpIntrinsicsVector.pas',
   ClpPack in '..\..\Misc\ClpPack.pas',
   ClpBits in '..\..\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\Math\Raw\ClpMod.pas',

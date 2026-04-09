@@ -78,11 +78,14 @@ uses
   ClpAeadParameters;
 
 const
-  CIPHER_BENCH_ROWS: array [0 .. 4] of TCipherBenchRowSpec = (
+  CIPHER_BENCH_ROWS: array [0 .. 5] of TCipherBenchRowSpec = (
     (Algorithm: 'AES/GCM/NOPADDING'; RowLabel: 'AES-256-GCM';
     KeyByteCount: 32; IvOrNonceByteCount: 12; AeadMacBitLength: 128;
     KeyParameterAlgorithm: ''),
     (Algorithm: 'AES/CBC/PKCS7PADDING'; RowLabel: 'AES-256-CBC + PKCS7';
+    KeyByteCount: 32; IvOrNonceByteCount: 16; AeadMacBitLength: 0;
+    KeyParameterAlgorithm: 'AES256'),
+    (Algorithm: 'AES/CTR/NOPADDING'; RowLabel: 'AES-256-CTR';
     KeyByteCount: 32; IvOrNonceByteCount: 16; AeadMacBitLength: 0;
     KeyParameterAlgorithm: 'AES256'),
     (Algorithm: 'CHACHA20-POLY1305'; RowLabel: 'ChaCha20-Poly1305';
@@ -131,7 +134,7 @@ begin
   if ASpec.AeadMacBitLength > 0 then
   begin
     if ASpec.KeyParameterAlgorithm = '' then
-      LKeyParam := TKeyParameter.Create(AKey) as IKeyParameter
+      LKeyParam := TKeyParameter.Create(AKey)
     else
       LKeyParam := TParameterUtilities.CreateKeyParameter(
         ASpec.KeyParameterAlgorithm, AKey);

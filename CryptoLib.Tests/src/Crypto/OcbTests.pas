@@ -42,8 +42,7 @@ uses
   ClpISecureRandom,
   ClpDateTimeUtilities,
   ClpCryptoLibTypes,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpOcbBlockCipher,
   CryptoLibTestBase,
   AeadTestUtilities;
@@ -204,7 +203,7 @@ end;
 
 function TTestOcb.CreateUnderlyingCipher: IBlockCipher;
 begin
-  Result := TAesEngine.Create() as IAesEngine;
+  Result := TAesUtilities.CreateEngine();
 end;
 
 function TTestOcb.CreateOcbCipher: IAeadBlockCipher;

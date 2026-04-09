@@ -23,9 +23,8 @@ interface
 
 uses
   ClpIAesWrapPadEngine,
-  ClpIAesEngine,
   ClpIWrapper,
-  ClpAesEngine,
+  ClpAesUtilities,
   ClpRfc5649WrapEngine;
 
 type
@@ -45,7 +44,7 @@ implementation
 
 constructor TAesWrapPadEngine.Create();
 begin
-  inherited Create(TAesEngine.Create() as IAesEngine);
+  inherited Create(TAesUtilities.CreateEngine());
 end;
 
 end.

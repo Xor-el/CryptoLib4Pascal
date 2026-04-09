@@ -211,7 +211,8 @@ uses
   ClpBip340SchnorrBatchVerifier, ClpBip340SchnorrUtilities, 
   ClpPkcs8EncryptedPrivateKeyInfoBuilder, ClpOpenSslPkcs8Generator, 
   ClpIOpenSslPkcs8Generator, ClpDateTimeHelper, ClpFormatSettingsHelper, 
-  ClpValueHelper, ClpCpuFeatures, ClpCmsECAsn1Objects, ClpICmsECAsn1Objects;
+  ClpValueHelper, ClpCpuFeatures, ClpCmsECAsn1Objects, ClpICmsECAsn1Objects, 
+  ClpIAesEngineX86, ClpAesEngineX86, ClpAesUtilities, ClpIntrinsicsVector;
 
 implementation
 

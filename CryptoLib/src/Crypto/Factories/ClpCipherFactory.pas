@@ -35,8 +35,7 @@ uses
   ClpIBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpIPkcs7Padding,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpCbcBlockCipher,
   ClpPaddedBufferedBlockCipher,
   ClpPkcs7Padding,
@@ -109,7 +108,7 @@ begin
     or TNistObjectIdentifiers.IdAes192Cbc.Equals(AAlgorithm)
     or TNistObjectIdentifiers.IdAes256Cbc.Equals(AAlgorithm) then
   begin
-    LCipherMode := TCbcBlockCipher.Create(TAesEngine.Create() as IAesEngine);
+    LCipherMode := TCbcBlockCipher.Create(TAesUtilities.CreateEngine());
   end
   else
   begin

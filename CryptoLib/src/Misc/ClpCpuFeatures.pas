@@ -45,6 +45,9 @@ type
     class function HasPCLMULQDQ(): Boolean; static;
     class function HasVPCLMULQDQ(): Boolean; static;
     class function HasAESNI(): Boolean; static;
+    class function HasSSE2(): Boolean; static;
+    class function HasSSSE3(): Boolean; static;
+    class function HasAVX2(): Boolean; static;
   end;
 
 implementation
@@ -104,12 +107,7 @@ var
   LXcr0: UInt64;
 {$ENDIF}
 begin
-{$IFNDEF CRYPTOLIB_X86_SIMD}
-  Result := False;
-{$ELSE}
-  {$IFDEF CRYPTOLIB_I386_ASM}
-  Result := False;
-  {$ELSE}
+{$IFDEF CRYPTOLIB_X86_SIMD}
   CpuIdQuery(1, 0, @LCpuId);
 
   // OSXSAVE: ECX bit 27 (required for OS AVX state saving)
@@ -126,7 +124,8 @@ begin
 
   // AVX2: EBX bit 5
   Result := (LCpuId.RegEBX and (1 shl 5)) <> 0;
-  {$ENDIF}
+{$ELSE}
+  Result := False;
 {$ENDIF}
 end;
 
@@ -136,16 +135,12 @@ var
   LCpuId: TCpuIdResult;
 {$ENDIF}
 begin
-{$IFNDEF CRYPTOLIB_X86_SIMD}
-  Result := False;
-{$ELSE}
-  {$IFDEF CRYPTOLIB_I386_ASM}
-  Result := False;
-  {$ELSE}
+{$IFDEF CRYPTOLIB_X86_SIMD}
   CpuIdQuery(7, 0, @LCpuId);
   // SHA-NI: EBX bit 29
   Result := (LCpuId.RegEBX and (1 shl 29)) <> 0;
-  {$ENDIF}
+{$ELSE}
+  Result := False;
 {$ENDIF}
 end;
 
@@ -267,6 +262,21 @@ end;
 class function TCpuFeatures.HasAESNI(): Boolean;
 begin
   Result := FHasAESNI;
+end;
+
+class function TCpuFeatures.HasSSE2(): Boolean;
+begin
+  Result := Ord(FDetectedLevel) >= Ord(TCpuSimdLevel.SSE2);
+end;
+
+class function TCpuFeatures.HasSSSE3(): Boolean;
+begin
+  Result := Ord(FDetectedLevel) >= Ord(TCpuSimdLevel.SSSE3);
+end;
+
+class function TCpuFeatures.HasAVX2(): Boolean;
+begin
+  Result := FDetectedLevel = TCpuSimdLevel.AVX2;
 end;
 
 initialization

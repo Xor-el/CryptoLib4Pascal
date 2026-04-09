@@ -23,9 +23,8 @@ interface
 
 uses
   ClpIAesWrapEngine,
-  ClpIAesEngine,
   ClpIWrapper,
-  ClpAesEngine,
+  ClpAesUtilities,
   ClpRfc3394WrapEngine;
 
 type
@@ -47,12 +46,12 @@ implementation
 
 constructor TAesWrapEngine.Create();
 begin
-  inherited Create(TAesEngine.Create() as IAesEngine);
+  inherited Create(TAesUtilities.CreateEngine());
 end;
 
 constructor TAesWrapEngine.Create(AUseReverseDirection: Boolean);
 begin
-  inherited Create(TAesEngine.Create() as IAesEngine, AUseReverseDirection);
+  inherited Create(TAesUtilities.CreateEngine(), AUseReverseDirection);
 end;
 
 end.

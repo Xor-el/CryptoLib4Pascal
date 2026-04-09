@@ -63,8 +63,7 @@ uses
   ClpICbcBlockCipher,
   ClpECKeyEncoder,
   ClpIKeyEncoder,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpBigInteger,
   ClpDigestUtilities,
   ClpCryptoLibTypes,
@@ -189,11 +188,11 @@ begin
   //
 
   c1 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   c2 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
@@ -454,11 +453,11 @@ begin
   //
 
   c1 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   c2 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
@@ -557,11 +556,11 @@ begin
   //
 
   c1 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   c2 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,

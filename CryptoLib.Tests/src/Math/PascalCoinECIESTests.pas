@@ -35,8 +35,7 @@ uses
   ClpPaddedBufferedBlockCipher,
   ClpCbcBlockCipher,
   ClpICbcBlockCipher,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpBigInteger,
   ClpCustomNamedCurves,
   ClpDigestUtilities,
@@ -159,7 +158,6 @@ function TTestPascalCoinECIES.GetECIESPascalCoinCompatibilityEngine
   : IPascalCoinIesEngine;
 var
   LCipher: IBufferedBlockCipher;
-  LAesEngine: IAesEngine;
   LBlockCipher: ICbcBlockCipher;
   LECDHBasicAgreementInstance: IECDHBasicAgreement;
   LKDFInstance: IPascalCoinECIESKdfBytesGenerator;
@@ -175,9 +173,7 @@ begin
   LDigestMACInstance := TMacUtilities.GetMac('HMAC-MD5');
 
   // Set Up Block Cipher
-  LAesEngine := TAesEngine.Create(); // AES Engine
-
-  LBlockCipher := TCbcBlockCipher.Create(LAesEngine); // CBC
+  LBlockCipher := TCbcBlockCipher.Create(TAesUtilities.CreateEngine()); // CBC
 
   LCipher := TPaddedBufferedBlockCipher.Create(LBlockCipher,
     TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
