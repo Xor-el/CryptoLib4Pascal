@@ -1,11 +1,11 @@
 program Make;
 {$mode objfpc}{$H+}
-{$unitpath /usr/lib64/lazarus/components/lazutils}
+{$SCOPEDENUMS ON}
+
 uses
   Classes,
   SysUtils,
   StrUtils,
-  FileUtil,
   Zipper,
   fphttpclient,
   RegExpr,
@@ -15,169 +15,541 @@ uses
 
 const
   Target: string = 'CryptoLib.Tests';
-  Dependencies: array of string = ('HashLib', 'SimpleBaseLib');
+
+  // ANSI color codes
+  CSI_Reset   = #27'[0m';
+  CSI_Red     = #27'[31m';
+  CSI_Green   = #27'[32m';
+  CSI_Yellow  = #27'[33m';
+  CSI_Cyan    = #27'[36m';
+
+  // Package path filter — skip platform-incompatible and template packages
+  PackageExcludePattern =
+  {$IF DEFINED(MSWINDOWS)}
+    '(cocoa|x11|_template)'
+  {$ELSEIF DEFINED(DARWIN)}
+    '(gdi|x11|_template)'
+  {$ELSE}
+    '(cocoa|gdi|_template)'
+  {$IFEND}
+  ;
+
+  OPMBaseUrl = 'https://packages.lazarus-ide.org/';
+  GitHubArchiveBaseUrl = 'https://github.com/';
+
+// ---------------------------------------------------------------------------
+// Dependency configuration
+// ---------------------------------------------------------------------------
 
 type
-  TLog = (audit, info, error);
+  TDependencyKind = (OPM, GitHub);
 
-  Output = record
-    Success: boolean;
-    Output: string;
+  TDependency = record
+    Kind: TDependencyKind;
+    Name: string;  // OPM: package name | GitHub: 'owner/repo'
+    Ref: string;   // GitHub: branch, tag or commit (ignored for OPM)
   end;
 
-  procedure OutLog(const Knd: TLog; const Msg: string);
-  begin
-    case Knd of
-      error: Writeln(stderr, #27'[31m', Msg, #27'[0m');
-      info: Writeln(stderr, #27'[32m', Msg, #27'[0m');
-      audit: Writeln(stderr, #27'[33m', Msg, #27'[0m');
-    end;
-  end;
+const
+  Dependencies: array of TDependency = (
+    // Examples:
+    // (Kind: TDependencyKind.OPM;    Name: 'HashLib';               Ref: ''),
+     (Kind: TDependencyKind.GitHub; Name: 'Xor-el/SimpleBaseLib4Pascal';  Ref: 'master'),
+     (Kind: TDependencyKind.GitHub; Name: 'Xor-el/HashLib4Pascal';  Ref: 'master')
+  );
 
-  function CheckModules: string;
-  begin
-    if FileExists('.gitmodules') then
-      if RunCommand('git', ['submodule', 'update', '--init', '--recursive',
-        '--force', '--remote'], Result) then
-        OutLog(info, Result)
-      else
-        OutLog(error, Result);
-  end;
+// ---------------------------------------------------------------------------
+// Helpers for building TDependency records (optional convenience)
+// ---------------------------------------------------------------------------
 
-  function AddPackage(const Path: string): string;
-  begin
-    if RunCommand('lazbuild', ['--add-package-link', Path], Result) then
-       OutLog(audit, 'Add package:'#9 + Path);
-  end;
+function OPM(const AName: string): TDependency;
+begin
+  Result.Kind := TDependencyKind.OPM;
+  Result.Name := AName;
+  Result.Ref  := '';
+end;
 
-  function SelectString(const Input, Reg: string): string;
-  var
-    Line: string;
-  begin
-    Result := ' ';
-    for Line in Input.Split(LineEnding) do
-      with TRegExpr.Create do
-      begin
-        Expression := Reg;
-        if Exec(Line) then
-          Result += Line + LineEnding;
-        Free;
-      end;
-  end;
+function GitHub(const AOwnerRepo, ARef: string): TDependency;
+begin
+  Result.Kind := TDependencyKind.GitHub;
+  Result.Name := AOwnerRepo;
+  Result.Ref  := ARef;
+end;
 
-  function RunTest(const Path: String): string;
-  begin
-    OutLog(audit, #9'run:'#9 + Path);
-    if RunCommand(Path, ['--all', '--format=plain'], Result) then
-      OutLog(info, #9'success!')
-    else
-      ExitCode += 1;
-    OutLog(audit, Result);
-  end;
+var
+  ErrorCount: Integer = 0;
 
-  function BuildProject(const Path: string): Output;
-  begin
-    OutLog(audit, 'Build from:'#9 + Path);
-    Result.Success := RunCommand('lazbuild',
-      ['--build-all', '--recursive', '--no-write-project', Path], Result.Output);
-    Result.Output := SelectString(Result.Output, '(Fatal:|Error:|Linking)');
-    if Result.Success then
+// ---------------------------------------------------------------------------
+// FCL/RTL-only helpers (replace FileUtil usage)
+// ---------------------------------------------------------------------------
+
+function ReadFileToString(const AFileName: string): string;
+var
+  Stream: TFileStream;
+  Size: Int64;
+begin
+  Result := '';
+  Stream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
+  try
+    Size := Stream.Size;
+    if Size <= 0 then
+      Exit;
+    SetLength(Result, Size);
+    Stream.Position := 0;
+    Stream.ReadBuffer(Pointer(Result)^, Size);
+  finally
+    Stream.Free;
+  end;
+end;
+
+function MatchesMaskSimple(const AFileName, AMask: string): Boolean;
+var
+  LExt: string;
+begin
+  LExt := LowerCase(ExtractFileExt(AFileName));
+
+  if AMask = '*.lpk' then
+    Exit(LExt = '.lpk');
+
+  if AMask = '*.lpi' then
+    Exit(LExt = '.lpi');
+
+  Result := False;
+end;
+
+procedure FindAllFilesRecursive(const ADir, AMask: string; AList: TStrings);
+var
+  Search: TSearchRec;
+  DirPath: string;
+  EntryPath: string;
+begin
+  DirPath := IncludeTrailingPathDelimiter(ExpandFileName(ADir));
+
+  if FindFirst(DirPath + '*', faAnyFile, Search) = 0 then
+  try
+    repeat
+      if (Search.Name = '.') or (Search.Name = '..') then
+        Continue;
+
+      EntryPath := DirPath + Search.Name;
+
+      if (Search.Attr and faDirectory) <> 0 then
+        FindAllFilesRecursive(EntryPath, AMask, AList)
+      else if MatchesMaskSimple(Search.Name, AMask) then
+        AList.Add(EntryPath);
+    until FindNext(Search) <> 0;
+  finally
+    FindClose(Search);
+  end;
+end;
+
+function FindAllFilesList(const ASearchDir, AMask: string): TStringList;
+begin
+  Result := TStringList.Create;
+  FindAllFilesRecursive(ASearchDir, AMask, Result);
+end;
+
+// ---------------------------------------------------------------------------
+// Logging helpers
+// ---------------------------------------------------------------------------
+
+procedure Log(const AColor, AMessage: string);
+begin
+  WriteLn(stderr, AColor, AMessage, CSI_Reset);
+end;
+
+procedure LogInline(const AColor, AMessage: string);
+begin
+  Write(stderr, AColor, AMessage, CSI_Reset);
+end;
+
+// ---------------------------------------------------------------------------
+// Git submodules
+// ---------------------------------------------------------------------------
+
+procedure UpdateSubmodules;
+var
+  CommandOutput: ansistring;
+begin
+  if not FileExists('.gitmodules') then
+    Exit;
+  if RunCommand('git', ['submodule', 'update', '--init', '--recursive',
+    '--force', '--remote'], CommandOutput) then
+    Log(CSI_Yellow, Trim(CommandOutput));
+end;
+
+// ---------------------------------------------------------------------------
+// Package registration
+// ---------------------------------------------------------------------------
+
+procedure RegisterPackage(const APath: string);
+var
+  Filter: TRegExpr;
+  CommandOutput: ansistring;
+begin
+  Filter := TRegExpr.Create(PackageExcludePattern);
+  try
+    if Filter.Exec(APath) then
+      Exit;
+    if RunCommand('lazbuild', ['--add-package-link', APath], CommandOutput) then
+      Log(CSI_Yellow, 'added ' + APath);
+  finally
+    Filter.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Extract linked binary path from lazbuild output
+// ---------------------------------------------------------------------------
+
+function ExtractLinkedBinary(const ABuildOutput: string): string;
+var
+  Line: string;
+  Parts: TStringArray;
+begin
+  Result := '';
+  for Line in SplitString(ABuildOutput, LineEnding) do
+    if ContainsStr(Line, 'Linking') then
     begin
-      Result.Output := Result.Output.Split(' ')[3].Replace(LineEnding, '');
-      OutLog(info, #9'to:'#9 + Result.Output);
-      if ContainsStr(ReadFileToString(Path.Replace('.lpi', '.lpr')), 'consoletestrunner') then
-        RunTest(Result.Output.Replace(#10, ''));
+      Parts := SplitString(Line, ' ');
+      if Length(Parts) >= 3 then
+        Result := Parts[2];
+      Exit;
+    end;
+end;
+
+// ---------------------------------------------------------------------------
+// Report build errors from lazbuild output
+// ---------------------------------------------------------------------------
+
+procedure ReportBuildErrors(const ABuildOutput: string);
+var
+  Line: string;
+  ErrorFilter: TRegExpr;
+begin
+  ErrorFilter := TRegExpr.Create('(Fatal|Error):');
+  try
+    for Line in SplitString(ABuildOutput, LineEnding) do
+      if ErrorFilter.Exec(Line) then
+        Log(CSI_Red, Line);
+  finally
+    ErrorFilter.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Build a single .lpi project
+// Returns the path to the linked binary on success, empty string on failure
+// ---------------------------------------------------------------------------
+
+function BuildProject(const APath: string): string;
+var
+  BuildOutput: string;
+  Success: Boolean;
+begin
+  Result := '';
+  LogInline(CSI_Yellow, 'build from ' + APath);
+  try
+    Success := RunCommand('lazbuild', ['--build-all', '--recursive',
+      '--no-write-project', APath], BuildOutput);
+    if Success then
+    begin
+      Result := ExtractLinkedBinary(BuildOutput);
+      if Result <> '' then
+        Log(CSI_Green, ' -> ' + Result)
+      else
+        WriteLn(stderr);
     end
     else
     begin
-      ExitCode += 1;
-      OutLog(error, Result.Output);
+      WriteLn(stderr);
+      Inc(ErrorCount);
+      ReportBuildErrors(BuildOutput);
     end;
-  end;
-
-  function DownloadFile(const Uri: string): string;
-  var
-    OutFile: TStream;
-  begin
-    InitSSLInterface;
-    Result := GetTempFileName;
-    OutFile := TFileStream.Create(Result, fmCreate or fmOpenWrite);
-    with TFPHttpClient.Create(nil) do
-    begin
-      try
-        AddHeader('User-Agent', 'Mozilla/5.0 (compatible; fpweb)');
-        AllowRedirect := True;
-        Get(Uri, OutFile);
-        OutLog(audit, 'Download from ' + Uri + ' to ' + Result);
-      finally
-        Free;
-        OutFile.Free;
-      end;
-    end;
-  end;
-
-  procedure UnZip(const ZipFile, ZipPath: string);
-  begin
-    with TUnZipper.Create do
-    begin
-      try
-        FileName := ZipFile;
-        OutputPath := ZipPath;
-        Examine;
-        UnZipAllFiles;
-        OutLog(audit, 'Unzip from'#9 + ZipFile + #9'to'#9 + ZipPath);
-        DeleteFile(ZipFile);
-      finally
-        Free;
-      end;
-    end;
-  end;
-
-  function InstallOPM(const Path: string): string;
-  begin
-    Result :=
-      {$IFDEF MSWINDOWS}
-      GetEnvironmentVariable('APPDATA') + '\.lazarus\onlinepackagemanager\packages\'
-      {$ELSE}
-      GetEnvironmentVariable('HOME') + '/.lazarus/onlinepackagemanager/packages/'
-      {$ENDIF}
-      + Path;
-    if not DirectoryExists(Result) then
-    begin
-      CreateDir(Result);
-      UnZip(DownloadFile('https://packages.lazarus-ide.org/' + Path + '.zip'), Result);
-    end;
-  end;
-
-  function BuildAll: string;
-  var
-    List: TStringList;
-  begin
-    CheckModules;
-    List := FindAllFiles(GetCurrentDir, '*.lpk', True);
-    try
-      for Result in Dependencies do
-        List.AddStrings(FindAllFiles(InstallOPM(Result), '*.lpk', True));
-      for Result in List do
-        AddPackage(Result);
-      List := FindAllFiles(Target, '*.lpi', True);
-      for Result in List do
-        BuildProject(Result);
-    finally
-      List.Free;
-    end;
-    case ExitCode of
-      0: OutLog(info, 'Errors:'#9 + IntToStr(ExitCode));
-      else
-        OutLog(error, 'Errors:'#9 + IntToStr(ExitCode));
-    end;
-  end;
-
-begin
-  try
-    BuildAll
   except
     on E: Exception do
-      Writeln(E.ClassName, #9, E.Message);
+    begin
+      WriteLn(stderr);
+      Inc(ErrorCount);
+      Log(CSI_Red, E.ClassName + ': ' + E.Message);
+    end;
   end;
+end;
+
+// ---------------------------------------------------------------------------
+// Build and run a test project
+// ---------------------------------------------------------------------------
+
+procedure RunTestProject(const APath: string);
+var
+  BinaryPath, TestOutput: string;
+begin
+  BinaryPath := BuildProject(APath);
+  if BinaryPath = '' then
+    Exit;
+  try
+    if RunCommand(BinaryPath, ['--all', '--format=plain', '--progress'],
+      TestOutput) then
+      WriteLn(stderr, TestOutput)
+    else
+    begin
+      Inc(ErrorCount);
+      WriteLn(stderr, TestOutput);
+    end;
+  except
+    on E: Exception do
+    begin
+      Inc(ErrorCount);
+      Log(CSI_Red, E.ClassName + ': ' + E.Message);
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Build and run a sample (non-test) project
+// ---------------------------------------------------------------------------
+
+procedure RunSampleProject(const APath: string);
+var
+  BinaryPath, SampleOutput: string;
+begin
+  BinaryPath := BuildProject(APath);
+  if BinaryPath = '' then
+    Exit;
+  try
+    Log(CSI_Yellow, 'run ' + BinaryPath);
+    if RunCommand(BinaryPath, [], SampleOutput) then
+      WriteLn(SampleOutput)
+    else
+    begin
+      Inc(ErrorCount);
+      Log(CSI_Red, 'sample execution failed: ' + BinaryPath);
+      WriteLn(stderr, SampleOutput);
+    end;
+  except
+    on E: Exception do
+    begin
+      Inc(ErrorCount);
+      Log(CSI_Red, E.ClassName + ': ' + E.Message);
+    end;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Shared download + extract
+// ---------------------------------------------------------------------------
+
+procedure DownloadAndExtract(const AUrl, ADestDir: string);
+var
+  TempFile: string;
+  Stream: TFileStream;
+  Client: TFPHttpClient;
+  Unzipper: TUnZipper;
+begin
+  TempFile := GetTempFileName;
+  Stream := TFileStream.Create(TempFile, fmCreate or fmOpenWrite);
+  try
+    Client := TFPHttpClient.Create(nil);
+    try
+      Client.AddHeader('User-Agent', 'Mozilla/5.0 (compatible; fpweb)');
+      Client.AllowRedirect := True;
+      Client.Get(AUrl, Stream);
+      Log(CSI_Cyan, 'downloaded ' + AUrl);
+    finally
+      Client.Free;
+    end;
+  finally
+    Stream.Free;
+  end;
+
+  CreateDir(ADestDir);
+  Unzipper := TUnZipper.Create;
+  try
+    Unzipper.FileName := TempFile;
+    Unzipper.OutputPath := ADestDir;
+    Unzipper.Examine;
+    Unzipper.UnZipAllFiles;
+    Log(CSI_Cyan, 'extracted to ' + ADestDir);
+  finally
+    Unzipper.Free;
+    DeleteFile(TempFile);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Dependency providers
+// ---------------------------------------------------------------------------
+
+function GetDepsBaseDir(const ASubDir: string): string;
+var
+  BaseDir: string;
+begin
+  {$IFDEF MSWINDOWS}
+  BaseDir := GetEnvironmentVariable('APPDATA');
+  {$ELSE}
+  BaseDir := GetEnvironmentVariable('HOME');
+  {$ENDIF}
+  Result := IncludeTrailingPathDelimiter(
+    ConcatPaths([BaseDir, '.lazarus', ASubDir]));
+end;
+
+function InstallOPMPackage(const APackageName: string): string;
+begin
+  Result := GetDepsBaseDir(ConcatPaths(['onlinepackagemanager', 'packages']))
+    + APackageName;
+  if DirectoryExists(Result) then
+    Exit;
+  DownloadAndExtract(OPMBaseUrl + APackageName + '.zip', Result);
+end;
+
+function InstallGitHubPackage(const AOwnerRepo, ARef: string): string;
+var
+  SafeName, EffectiveRef: string;
+begin
+  // Flatten 'owner/repo' to 'owner--repo' for a safe directory name
+  SafeName := StringReplace(AOwnerRepo, '/', '--', [rfReplaceAll]);
+  EffectiveRef := ARef;
+  if EffectiveRef = '' then
+    EffectiveRef := 'main';
+
+  Result := GetDepsBaseDir('github-packages') + SafeName;
+  if DirectoryExists(Result) then
+    Exit;
+
+  // https://github.com/{owner}/{repo}/archive/refs/heads/{branch}.zip
+  // also works for tags: refs/tags/{tag}.zip  and commits: {sha}.zip
+  DownloadAndExtract(
+    GitHubArchiveBaseUrl + AOwnerRepo + '/archive/' + EffectiveRef + '.zip',
+    Result);
+end;
+
+function ResolveDependency(const ADep: TDependency): string;
+begin
+  case ADep.Kind of
+    TDependencyKind.OPM:    Result := InstallOPMPackage(ADep.Name);
+    TDependencyKind.GitHub: Result := InstallGitHubPackage(ADep.Name, ADep.Ref);
+  else
+    raise Exception.CreateFmt('Unknown dependency kind for "%s"', [ADep.Name]);
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Project classification helpers
+// ---------------------------------------------------------------------------
+
+// A project is considered GUI if its .lpi lists LCL as a required package.
+// GUI projects cannot run headless in CI, so we skip them entirely.
+function IsGUIProject(const ALpiPath: string): Boolean;
+var
+  Content: string;
+  Filter: TRegExpr;
+begin
+  Result := False;
+  if not FileExists(ALpiPath) then
+    Exit;
+  Content := ReadFileToString(ALpiPath);
+  Filter := TRegExpr.Create('<PackageName\s+Value="LCL"\s*/>');
+  try
+    Result := Filter.Exec(Content);
+  finally
+    Filter.Free;
+  end;
+end;
+
+// A console project is a test runner if its .lpr uses consoletestrunner.
+function IsTestProject(const ALpiPath: string): Boolean;
+var
+  LprPath, Content: string;
+begin
+  Result := False;
+  LprPath := ChangeFileExt(ALpiPath, '.lpr');
+  if not FileExists(LprPath) then
+    Exit;
+  Content := ReadFileToString(LprPath);
+  Result := ContainsStr(Content, 'consoletestrunner');
+end;
+
+// ---------------------------------------------------------------------------
+// Register all .lpk packages found under a directory
+// ---------------------------------------------------------------------------
+
+procedure RegisterAllPackages(const ASearchDir: string);
+var
+  List: TStringList;
+  Each: string;
+begin
+  List := FindAllFilesList(ASearchDir, '*.lpk');
+  try
+    for Each in List do
+      RegisterPackage(Each);
+  finally
+    List.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Build (and optionally test/run) all .lpi projects found under Target
+// ---------------------------------------------------------------------------
+
+procedure BuildAllProjects;
+var
+  List: TStringList;
+  Each: string;
+begin
+  List := FindAllFilesList(Target, '*.lpi');
+  try
+    for Each in List do
+    begin
+      if IsGUIProject(Each) then
+      begin
+        Log(CSI_Yellow, 'skip GUI project ' + Each);
+        Continue;
+      end;
+
+      if IsTestProject(Each) then
+        RunTestProject(Each)
+      else
+        RunSampleProject(Each);
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+
+procedure Main;
+var
+  I: Integer;
+begin
+  UpdateSubmodules;
+
+  // Install and register dependencies (safe when array is empty)
+  if Length(Dependencies) > 0 then
+  begin
+    InitSSLInterface;
+    for I := 0 to High(Dependencies) do
+      RegisterAllPackages(ResolveDependency(Dependencies[I]));
+  end;
+
+  // Register all local packages
+  RegisterAllPackages(GetCurrentDir);
+
+  // Build and test
+  BuildAllProjects;
+
+  // Summary
+  WriteLn(stderr);
+  if ErrorCount > 0 then
+    Log(CSI_Red, 'Errors: ' + IntToStr(ErrorCount))
+  else
+    Log(CSI_Green, 'Errors: 0');
+
+  ExitCode := ErrorCount;
+end;
+
+begin
+  Main;
 end.
