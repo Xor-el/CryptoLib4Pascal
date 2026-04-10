@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="assets/branding/logo.svg" width="160" alt="CryptoLib4Pascal logo" />
   <h1 align="center">CryptoLib4Pascal</h1>
   <p align="center">
     <strong>Comprehensive cryptographic library for modern Object Pascal</strong>
@@ -28,6 +29,7 @@
 - [Acknowledgements](#acknowledgements)
 - [Tip Jar](#tip-jar)
 - [License](#license)
+- [Branding](assets/branding/README.md)
 
 ## Features
 

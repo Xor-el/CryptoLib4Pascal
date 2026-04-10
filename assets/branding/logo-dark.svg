@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dark UI: higher-contrast encrypt flow on near-black teal -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title2 desc2">
+  <title id="title2">CryptoLib4Pascal</title>
+  <desc id="desc2">Plaintext to ciphertext flow for dark backgrounds.</desc>
+  <defs>
+    <linearGradient id="bgd" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a1624"/>
+      <stop offset="100%" stop-color="#050c14"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="26" fill="url(#bgd)"/>
+  <rect x="18" y="44" width="38" height="40" rx="8" fill="#155e75" opacity="0.95"/>
+  <line x1="26" y1="56" x2="48" y2="56" stroke="#cffafe" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="64" x2="44" y2="64" stroke="#cffafe" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="72" x2="50" y2="72" stroke="#cffafe" stroke-width="3" stroke-linecap="round"/>
+  <path fill="#22d3ee" d="M 58 58 L 68 64 L 58 70 L 60 70 L 70 64 L 60 58 Z"/>
+  <rect x="72" y="40" width="38" height="48" rx="8" fill="#020617"/>
+  <g fill="#334155">
+    <rect x="80" y="52" width="8" height="8" rx="2"/>
+    <rect x="92" y="48" width="8" height="8" rx="2"/>
+    <rect x="88" y="60" width="8" height="8" rx="2"/>
+    <rect x="80" y="68" width="8" height="8" rx="2"/>
+    <rect x="96" y="68" width="8" height="8" rx="2"/>
+  </g>
+</svg>
