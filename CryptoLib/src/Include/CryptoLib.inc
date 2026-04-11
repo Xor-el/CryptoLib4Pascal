@@ -30,7 +30,7 @@
   {$STRINGCHECKS OFF}
   {$WARN DUPLICATE_CTOR_DTOR OFF}
 
-  {========================= CPU Architecture =================================}
+  {============================= CPU Architecture =============================}
 
   {$IFDEF CPU386}
      {$DEFINE CRYPTOLIB_I386}
@@ -54,7 +54,7 @@
      {$DEFINE CRYPTOLIB_AARCH64}
   {$ENDIF}
 
-  {========================= Target OS ========================================}
+  {================================= Target OS ================================}
 
   {$IFDEF MSWINDOWS}
      {$DEFINE CRYPTOLIB_MSWINDOWS}
@@ -70,29 +70,36 @@
      {$ENDIF}
   {$ENDIF}
 
-  {$IF DEFINED(CRYPTOLIB_IOS) OR DEFINED(CRYPTOLIB_MACOS)}
-     {$DEFINE CRYPTOLIB_APPLE}
-  {$IFEND}
-
   {$IFDEF ANDROID}
      {$DEFINE CRYPTOLIB_ANDROID}
   {$ENDIF}
 
-  {$IF DEFINED(LINUX) OR DEFINED(CRYPTOLIB_ANDROID)}
+  {$IFDEF LINUX}
      {$DEFINE CRYPTOLIB_LINUX}
-  {$IFEND}
-
-  {$IF DEFINED(CRYPTOLIB_APPLE) OR DEFINED(CRYPTOLIB_LINUX)}
-     {$DEFINE CRYPTOLIB_UNIX}
-  {$IFEND}
-
-  {========================= Feature Detection ================================}
-
-  {$IFDEF CRYPTOLIB_LINUX}
-     {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
   {$ENDIF}
 
-  {========================= Delphi Version Features ==========================}
+  {$IF DEFINED(CRYPTOLIB_ANDROID)
+     OR DEFINED(CRYPTOLIB_LINUX)
+     OR DEFINED(CRYPTOLIB_IOS)
+     OR DEFINED(CRYPTOLIB_MACOS)}
+     {$DEFINE CRYPTOLIB_UNIXLIKE}
+  {$IFEND}
+
+  {============================ Feature Detection =============================}
+
+  {$IF DEFINED(CRYPTOLIB_ANDROID) OR DEFINED(CRYPTOLIB_LINUX)}
+     {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
+  {$IFEND}
+
+  {$IF DEFINED(CRYPTOLIB_IOS) OR DEFINED(CRYPTOLIB_MACOS)}
+     {$DEFINE CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
+  {$IFEND}
+
+  {$IFDEF CRYPTOLIB_UNIXLIKE}
+    {$DEFINE CRYPTOLIB_HAS_DEVRANDOM}
+  {$ENDIF}
+
+  {========================== Delphi Version Features =========================}
 
   // XE and Above
   {$IF CompilerVersion >= 22.0}
@@ -126,7 +133,7 @@
 {$SCOPEDENUMS ON}
 {$POINTERMATH ON}
 
-{============================== SIMD / CPU features ===========================}
+{============================= SIMD / CPU features ============================}
 
 // Uncomment to force scalar dispatch (available on all platforms):
 // {$DEFINE CRYPTOLIB_FORCE_SCALAR}
@@ -135,8 +142,12 @@
    {$DEFINE CRYPTOLIB_X86_SIMD}
 {$IFEND}
 
+{$IF DEFINED(CRYPTOLIB_ARM_ASM) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$DEFINE CRYPTOLIB_ARM_SIMD}
+{$IFEND}
+
 {$IFDEF CRYPTOLIB_X86_SIMD}
-// Uncomment ONE to force a specific x86/x86-64 SIMD dispatch level:
+// Uncomment ONE to force a specific X86 SIMD dispatch level:
 // {$DEFINE CRYPTOLIB_FORCE_SSE2}
 // {$DEFINE CRYPTOLIB_FORCE_SSSE3}
 
@@ -144,6 +155,19 @@
    OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))
    OR (DEFINED(CRYPTOLIB_FORCE_SSE2) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))}
    {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
+{$IFEND}
+
+{$ENDIF}
+
+{$IFDEF CRYPTOLIB_ARM_SIMD}
+// Uncomment ONE to force a specific Arm SIMD dispatch level:
+// {$DEFINE CRYPTOLIB_FORCE_NEON}
+// {$DEFINE CRYPTOLIB_FORCE_SVE}
+
+{$IF (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_NEON))
+  OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SVE))
+  OR (DEFINED(CRYPTOLIB_FORCE_NEON) AND DEFINED(CRYPTOLIB_FORCE_SVE))}
+  {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
 {$IFEND}
 
 {$ENDIF}

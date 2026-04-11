@@ -1279,6 +1279,7 @@ begin
   Lc4 := Lc0 + UInt32(4);
   FCounter32 := Lc4;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
   if TAesEngineX86.IsSupported and Supports(FCipher, IAesEngineX86, LAesX86) then
   begin
     System.Move(FCounter[0], ABlocks[0], 16);
@@ -1292,6 +1293,7 @@ begin
     LAesX86.ProcessFourBlocks(ABlocks, 0, ABlocks, 0);
     Exit;
   end;
+{$ENDIF}
 
   TPack.UInt32_To_BE(Lc1, FCounter, 12);
   FCipher.ProcessBlock(FCounter, 0, ABlocks, 0);

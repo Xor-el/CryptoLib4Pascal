@@ -15,40 +15,41 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpLinuxRandomProvider;
+unit ClpIOSRandomProvider;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IFDEF CRYPTOLIB_LINUX}
+{$IFDEF CRYPTOLIB_IOS}
 uses
   SysUtils,
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  ClpGetRandomReader,
+{$IFDEF CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
+  ClpSecRandomCopyBytesReader,
 {$ENDIF}
   ClpCryptoLibTypes,
   ClpBaseRandomProvider;
 
 resourcestring
-  SLinuxGetRandomError =
-    'An Error Occurred while generating random data using getRandom API';
+  SiOSRandomError =
+    'An Error Occurred while generating random data using iOS random APIs.';
 
   /// <summary>
-  /// Linux OS random source provider.
-  /// Implements Linux getrandom and /dev/urandom fallback
+  /// iOS random source provider.
+  /// Implements SecRandomCopyBytes when available, else /dev/urandom.
   /// </summary>
 type
-  TLinuxRandomProvider = class sealed(TBaseRandomProvider)
+  TIOSRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
+{$IFDEF CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
   var
-    FHasGetRandom: Boolean;
-    FGetRandom: TGetRandomFunc;
+    FHasSecRandomCopyBytes: Boolean;
+    FSecRandomCopyBytes: TSecRandomCopyBytesFunc;
+    FSecRandomDefault: SecRandomRef;
 
 {$ENDIF}
-    function GenRandomBytesLinux(ALen: Int32; AData: PByte): Int32;
+    function GenRandomBytesIOS(ALen: Int32; AData: PByte): Int32;
 
   public
     constructor Create();
@@ -63,34 +64,33 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_LINUX}
+{$IFDEF CRYPTOLIB_IOS}
 uses
   ClpDevRandomReader;
 
 const
-  // https://man7.org/linux/man-pages/man2/getrandom.2.html
-  GetRandomMaxChunk = (32 * 1024 * 1024) - 1;
   // https://man7.org/linux/man-pages/man4/random.4.html
   DevRandomMaxChunk = 32 * 1024 * 1024;
 
-{ TLinuxRandomProvider }
+{ TIOSRandomProvider }
 
-constructor TLinuxRandomProvider.Create;
+constructor TIOSRandomProvider.Create;
 begin
   inherited Create();
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  FHasGetRandom := TGetRandomReader.TryResolve(FGetRandom);
+{$IFDEF CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
+  FHasSecRandomCopyBytes := TSecRandomCopyBytesReader.TryResolve(
+    FSecRandomCopyBytes, FSecRandomDefault);
 {$ENDIF}
 end;
 
-function TLinuxRandomProvider.GenRandomBytesLinux(ALen: Int32;
+function TIOSRandomProvider.GenRandomBytesIOS(ALen: Int32;
   AData: PByte): Int32;
 begin
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  if FHasGetRandom then
+{$IFDEF CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
+  if FHasSecRandomCopyBytes then
   begin
-    Result := TGetRandomReader.Read(FGetRandom, GetRandomMaxChunk, GRND_NONBLOCK,
-      ALen, AData, False);
+    Result := TSecRandomCopyBytesReader.Read(FSecRandomCopyBytes,
+      FSecRandomDefault, ALen, AData);
   end
   else
   begin
@@ -101,7 +101,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TLinuxRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
+procedure TIOSRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
   LCount: Int32;
 begin
@@ -112,20 +112,20 @@ begin
     Exit;
   end;
 
-  if GenRandomBytesLinux(LCount, PByte(AData)) <> 0 then
+  if GenRandomBytesIOS(LCount, PByte(AData)) <> 0 then
   begin
-    raise EOSRandomCryptoLibException.CreateRes(@SLinuxGetRandomError);
+    raise EOSRandomCryptoLibException.CreateRes(@SiOSRandomError);
   end;
 end;
 
-function TLinuxRandomProvider.GetIsAvailable: Boolean;
+function TIOSRandomProvider.GetIsAvailable: Boolean;
 begin
   Result := True;
 end;
 
-function TLinuxRandomProvider.GetName: String;
+function TIOSRandomProvider.GetName: String;
 begin
-  Result := 'Linux';
+  Result := 'iOS';
 end;
 
 {$ENDIF}

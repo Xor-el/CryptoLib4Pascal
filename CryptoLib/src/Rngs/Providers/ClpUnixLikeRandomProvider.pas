@@ -15,13 +15,13 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpUnixRandomProvider;
+unit ClpUnixLikeRandomProvider;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IFDEF CRYPTOLIB_UNIX}
+{$IFDEF CRYPTOLIB_UNIXLIKE}
 uses
   SysUtils,
   ClpCryptoLibTypes,
@@ -33,13 +33,13 @@ resourcestring
 
 type
   /// <summary>
-  /// Unix OS random source provider (fallback for other Unix systems).
+  /// Unix-like OS random source provider (fallback for other Unix-like systems).
   /// Implements /dev/urandom fallback
   /// </summary>
-  TUnixRandomProvider = class sealed(TBaseRandomProvider)
+  TUnixLikeRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
-    function GenRandomBytesUnix(ALen: Int32; AData: PByte): Int32;
+    function GenRandomBytesUnixLike(ALen: Int32; AData: PByte): Int32;
 
   public
     constructor Create();
@@ -54,24 +54,28 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_UNIX}
+{$IFDEF CRYPTOLIB_UNIXLIKE}
 uses
   ClpDevRandomReader;
 
-{ TUnixRandomProvider }
+const
+  // https://man7.org/linux/man-pages/man4/random.4.html
+  DevRandomMaxChunk = 32 * 1024 * 1024;
 
-constructor TUnixRandomProvider.Create;
+{ TUnixLikeRandomProvider }
+
+constructor TUnixLikeRandomProvider.Create;
 begin
   inherited Create();
 end;
 
-function TUnixRandomProvider.GenRandomBytesUnix(ALen: Int32;
+function TUnixLikeRandomProvider.GenRandomBytesUnixLike(ALen: Int32;
   AData: PByte): Int32;
 begin
-  Result := TDevRandomReader.Read(ALen, AData, ALen);
+  Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
 end;
 
-procedure TUnixRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
+procedure TUnixLikeRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
   LCount: Int32;
 begin
@@ -82,20 +86,20 @@ begin
     Exit;
   end;
 
-  if GenRandomBytesUnix(LCount, PByte(AData)) <> 0 then
+  if GenRandomBytesUnixLike(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SRandomDeviceReadError);
   end;
 end;
 
-function TUnixRandomProvider.GetIsAvailable: Boolean;
+function TUnixLikeRandomProvider.GetIsAvailable: Boolean;
 begin
   Result := True;
 end;
 
-function TUnixRandomProvider.GetName: String;
+function TUnixLikeRandomProvider.GetName: String;
 begin
-  Result := 'Unix';
+  Result := 'Unix-Like';
 end;
 
 {$ENDIF}

@@ -21,18 +21,12 @@ unit ClpDevRandomReader;
 
 interface
 
-{$IFDEF CRYPTOLIB_UNIX}
+{$IFDEF CRYPTOLIB_HAS_DEVRANDOM}
 uses
   Classes,
-{$IFDEF FPC}
-  BaseUnix,
-{$ELSE}
-  Posix.Errno,
-{$ENDIF}
-  SysUtils;
-
-const
-  EINTR = {$IFDEF FPC}ESysEINTR{$ELSE}Posix.Errno.EINTR{$ENDIF};
+  Math,
+  SysUtils,
+  ClpUnixLikeRngCommon;
 
 type
   /// <summary>
@@ -42,15 +36,12 @@ type
   /// </summary>
   TDevRandomReader = class sealed
   public
-    /// <summary>
-    /// Returns the current errno value from the OS.
-    /// </summary>
-    class function GetErrNo: Int32; static; inline;
 
     /// <summary>
     /// Reads ALength random bytes into AData from /dev/urandom or /dev/random.
-    /// AMaxChunkSize controls the maximum number of bytes read per iteration.
-    /// Pass ALength to read in a single chunk.
+    /// AMaxChunkSize is the maximum bytes per TStream.Read; must be &gt; 0 when
+    /// ALength &gt; 0 (same contract as TGetRandomReader.Read&apos;s AMaxChunk).
+    /// ALength &lt; 0 returns -1; ALength = 0 succeeds without opening devices.
     /// Returns 0 on success, -1 on failure.
     /// </summary>
     class function Read(ALength: Int32; AData: PByte;
@@ -61,14 +52,9 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_UNIX}
+{$IFDEF CRYPTOLIB_HAS_DEVRANDOM}
 
 { TDevRandomReader }
-
-class function TDevRandomReader.GetErrNo: Int32;
-begin
-  Result := Errno;
-end;
 
 class function TDevRandomReader.Read(ALength: Int32; AData: PByte;
   AMaxChunkSize: Int32): Int32;
@@ -76,7 +62,25 @@ var
   LStream: TFileStream;
   LDevicePath: String;
   LBytesRead: Int32;
+  LChunk: Int32;
 begin
+  if ALength < 0 then
+  begin
+    Result := -1;
+    Exit;
+  end;
+  if ALength = 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if AMaxChunkSize <= 0 then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
   LDevicePath := '/dev/urandom';
 
   if not FileExists(LDevicePath) then
@@ -93,18 +97,15 @@ begin
   LStream := TFileStream.Create(LDevicePath, fmOpenRead);
 
   try
-    while (ALength > 0) do
+    while ALength > 0 do
     begin
-      if ALength <= AMaxChunkSize then
-      begin
-        AMaxChunkSize := ALength;
-      end;
+      LChunk := Math.Min(ALength, AMaxChunkSize);
 
-      LBytesRead := LStream.Read(AData^, AMaxChunkSize);
+      LBytesRead := LStream.Read(AData^, LChunk);
 
       if (LBytesRead = 0) then
       begin
-        if GetErrNo = EINTR then
+        if TUnixLikeRngCommon.GetErrNo = EINTR then
         begin
           continue;
         end;
