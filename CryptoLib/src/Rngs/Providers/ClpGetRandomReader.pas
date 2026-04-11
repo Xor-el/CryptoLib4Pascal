@@ -78,24 +78,36 @@ implementation
 
 class function TGetRandomReader.TryResolve(out AFn: TGetRandomFunc): Boolean;
 var
-  H: Pointer;
-  P: Pointer;
+  LHandle: Pointer;
+  LSymbol: Pointer;
 begin
   AFn := nil;
 {$IFDEF FPC}
-  H := dlopen(PChar(nil), RTLD_NOW);
-  P := dlsym(H, 'getrandom');
+  LHandle := dlopen(PChar(nil), RTLD_NOW);
 {$ELSE}
-  H := dlopen(nil, RTLD_NOW);
-  P := dlsym(H, PAnsiChar('getrandom'));
+  LHandle := dlopen(nil, RTLD_NOW);
 {$ENDIF}
-  if P = nil then
+  if LHandle = nil then
   begin
     Result := False;
     Exit;
   end;
-  AFn := TGetRandomFunc(P);
-  Result := True;
+  try
+{$IFDEF FPC}
+    LSymbol := dlsym(LHandle, 'getrandom');
+{$ELSE}
+    LSymbol := dlsym(LHandle, PAnsiChar('getrandom'));
+{$ENDIF}
+    if LSymbol = nil then
+    begin
+      Result := False;
+      Exit;
+    end;
+    AFn := TGetRandomFunc(LSymbol);
+    Result := True;
+  finally
+    dlclose(LHandle);
+  end;
 end;
 
 class function TGetRandomReader.Read(const AFn: TGetRandomFunc; AMaxChunkSize: Int32;

@@ -63,24 +63,36 @@ implementation
 
 class function TArc4RandomBufReader.TryResolve(out AFn: TArc4RandomBufProc): Boolean;
 var
-  H: Pointer;
-  P: Pointer;
+  LHandle: Pointer;
+  LSymbol: Pointer;
 begin
   AFn := nil;
 {$IFDEF FPC}
-  H := dlopen(PChar(nil), RTLD_NOW);
-  P := dlsym(H, 'arc4random_buf');
+  LHandle := dlopen(PChar(nil), RTLD_NOW);
 {$ELSE}
-  H := dlopen(nil, RTLD_NOW);
-  P := dlsym(H, PAnsiChar('arc4random_buf'));
+  LHandle := dlopen(nil, RTLD_NOW);
 {$ENDIF}
-  if P = nil then
+  if LHandle = nil then
   begin
     Result := False;
     Exit;
   end;
-  AFn := TArc4RandomBufProc(P);
-  Result := True;
+  try
+{$IFDEF FPC}
+    LSymbol := dlsym(LHandle, 'arc4random_buf');
+{$ELSE}
+    LSymbol := dlsym(LHandle, PAnsiChar('arc4random_buf'));
+{$ENDIF}
+    if LSymbol = nil then
+    begin
+      Result := False;
+      Exit;
+    end;
+    AFn := TArc4RandomBufProc(LSymbol);
+    Result := True;
+  finally
+    dlclose(LHandle);
+  end;
 end;
 
 class function TArc4RandomBufReader.Read(const AFn: TArc4RandomBufProc;
