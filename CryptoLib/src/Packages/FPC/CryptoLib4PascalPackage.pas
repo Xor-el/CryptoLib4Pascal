@@ -132,11 +132,11 @@ uses
   ClpBitOperations, ClpConverters, ClpCryptoLibComparers, ClpCryptoLibTypes, 
   ClpNullable, ClpPack, ClpWeakRef, ClpIPAddressUtilities, ClpPemHeader, 
   ClpPkcs10CertificationRequest, ClpDigestRandomGenerator, 
-  ClpRandomNumberGenerator, ClpAppleRandomProvider, ClpLinuxRandomProvider, 
-  ClpWindowsRandomProvider, ClpSolarisRandomProvider, ClpAesRandomProvider, 
-  ClpCryptoApiRandomGenerator, ClpOSRandomProvider, ClpX509CrlParser, 
-  ClpX509V2AttributeCertificate, ClpX509CertificateParser, ClpX509Certificate, 
-  ClpX509Crl, ClpX509NameBuilder, ClpX509CrlEntry, ClpX509AttrCertParser, 
+  ClpRandomNumberGenerator, ClpLinuxRandomProvider, ClpWindowsRandomProvider, 
+  ClpSolarisRandomProvider, ClpAesRandomProvider, ClpCryptoApiRandomGenerator, 
+  ClpOSRandomProvider, ClpX509CrlParser, ClpX509V2AttributeCertificate, 
+  ClpX509CertificateParser, ClpX509Certificate, ClpX509Crl, 
+  ClpX509NameBuilder, ClpX509CrlEntry, ClpX509AttrCertParser, 
   ClpAttributeCertificateIssuer, ClpAttributeCertificateHolder, 
   ClpX509Utilities, ClpX509Generators, ClpDeltaCertificateTool, 
   ClpX509Attribute, ClpX509ExtensionBase, ClpX509ExtensionUtilities, 
@@ -213,7 +213,8 @@ uses
   ClpValueHelper, ClpCpuFeatures, ClpCmsECAsn1Objects, ClpICmsECAsn1Objects, 
   ClpIAesEngineX86, ClpAesEngineX86, ClpAesUtilities, ClpIntrinsicsVector, 
   ClpBsdRandomProvider, ClpUnixLikeRandomProvider, ClpGetRandomReader, 
-  ClpArc4RandomBufReader, ClpUnixLikeRngCommon, ClpAndroidRandomProvider;
+  ClpArc4RandomBufReader, ClpUnixLikeRngCommon, ClpAndroidRandomProvider, 
+  ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader;
 
 implementation
 

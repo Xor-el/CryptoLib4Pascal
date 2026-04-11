@@ -27,8 +27,11 @@ uses
 {$IFDEF CRYPTOLIB_MSWINDOWS}
   , ClpWindowsRandomProvider
 {$ENDIF}
-{$IFDEF CRYPTOLIB_APPLE}
-  , ClpAppleRandomProvider
+{$IFDEF CRYPTOLIB_IOS}
+  , ClpIOSRandomProvider
+{$ENDIF}
+{$IFDEF CRYPTOLIB_MACOS}
+  , ClpMacOSRandomProvider
 {$ENDIF}
 {$IFDEF CRYPTOLIB_ANDROID}
   , ClpAndroidRandomProvider
@@ -93,8 +96,10 @@ class function TOSRandomProvider.CreateProvider: IRandomSourceProvider;
 begin
 {$IF DEFINED(CRYPTOLIB_MSWINDOWS)}
   Result := TWindowsRandomProvider.Create();
-{$ELSEIF DEFINED(CRYPTOLIB_APPLE)}
-  Result := TAppleRandomProvider.Create();
+{$ELSEIF DEFINED(CRYPTOLIB_IOS)}
+  Result := TIOSRandomProvider.Create();
+{$ELSEIF DEFINED(CRYPTOLIB_MACOS)}
+  Result := TMacOSRandomProvider.Create();
 {$ELSEIF DEFINED(CRYPTOLIB_ANDROID)}
   Result := TAndroidRandomProvider.Create();
 {$ELSEIF DEFINED(CRYPTOLIB_LINUX)}
