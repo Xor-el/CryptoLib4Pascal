@@ -133,7 +133,7 @@
 {$SCOPEDENUMS ON}
 {$POINTERMATH ON}
 
-{============================== SIMD / CPU features ===========================}
+{============================= SIMD / CPU features ============================}
 
 // Uncomment to force scalar dispatch (available on all platforms):
 // {$DEFINE CRYPTOLIB_FORCE_SCALAR}
@@ -142,8 +142,12 @@
    {$DEFINE CRYPTOLIB_X86_SIMD}
 {$IFEND}
 
+{$IF DEFINED(CRYPTOLIB_ARM_ASM) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$DEFINE CRYPTOLIB_ARM_SIMD}
+{$IFEND}
+
 {$IFDEF CRYPTOLIB_X86_SIMD}
-// Uncomment ONE to force a specific x86/x86-64 SIMD dispatch level:
+// Uncomment ONE to force a specific X86 SIMD dispatch level:
 // {$DEFINE CRYPTOLIB_FORCE_SSE2}
 // {$DEFINE CRYPTOLIB_FORCE_SSSE3}
 
@@ -151,6 +155,19 @@
    OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))
    OR (DEFINED(CRYPTOLIB_FORCE_SSE2) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))}
    {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
+{$IFEND}
+
+{$ENDIF}
+
+{$IFDEF CRYPTOLIB_ARM_SIMD}
+// Uncomment ONE to force a specific Arm SIMD dispatch level:
+// {$DEFINE CRYPTOLIB_FORCE_NEON}
+// {$DEFINE CRYPTOLIB_FORCE_SVE}
+
+{$IF (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_NEON))
+  OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SVE))
+  OR (DEFINED(CRYPTOLIB_FORCE_NEON) AND DEFINED(CRYPTOLIB_FORCE_SVE))}
+  {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
 {$IFEND}
 
 {$ENDIF}
