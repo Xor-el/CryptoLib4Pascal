@@ -15,34 +15,40 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpGenericBSDRandomProvider;
+unit ClpBsdRandomProvider;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
+{$IFDEF CRYPTOLIB_BSD}
 uses
   SysUtils,
+{$IFDEF CRYPTOLIB_HAS_ARC4RANDOM_BUF}
+  ClpArc4RandomBufReader,
+{$ENDIF}
   ClpCryptoLibTypes,
   ClpBaseRandomProvider;
 
 resourcestring
   SArc4RandomBufGenerationError =
-    'An Error Occurred while generating random data using arc4random_buf API.';
-
-procedure arc4random_buf(ABytes: PByte; ACount: NativeUInt); cdecl;
-  external 'c' name 'arc4random_buf';
+    'An Error Occurred while generating random data from the OS random source.';
 
   /// <summary>
-  /// Generic BSD OS random source provider.
-  /// Implements BSD variants using arc4random_buf
+  /// Bsd OS random source provider.
+  /// Implements Bsd variants using arc4random_buf when available, else /dev/urandom.
   /// </summary>
 type
-  TGenericBSDRandomProvider = class sealed(TBaseRandomProvider)
+  TBsdRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
-    function GenRandomBytesGenericBSD(ALen: Int32; AData: PByte): Int32;
+{$IFDEF CRYPTOLIB_HAS_ARC4RANDOM_BUF}
+  var
+    FHasArc4RandomBuf: Boolean;
+    FArc4RandomBuf: TArc4RandomBufProc;
+
+{$ENDIF}
+    function GenRandomBytesBsd(ALen: Int32; AData: PByte): Int32;
 
   public
     constructor Create();
@@ -57,23 +63,42 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
+{$IFDEF CRYPTOLIB_BSD}
+uses
+  ClpDevRandomReader;
 
-{ TGenericBSDRandomProvider }
+const
+  // https://man7.org/linux/man-pages/man4/random.4.html
+  DevRandomMaxChunk = 32 * 1024 * 1024;
 
-constructor TGenericBSDRandomProvider.Create;
+{ TBsdRandomProvider }
+
+constructor TBsdRandomProvider.Create;
 begin
   inherited Create();
+{$IFDEF CRYPTOLIB_HAS_ARC4RANDOM_BUF}
+  FHasArc4RandomBuf := TArc4RandomBufReader.TryResolve(FArc4RandomBuf);
+{$ENDIF}
 end;
 
-function TGenericBSDRandomProvider.GenRandomBytesGenericBSD(ALen: Int32;
+function TBsdRandomProvider.GenRandomBytesBsd(ALen: Int32;
   AData: PByte): Int32;
 begin
-  arc4random_buf(AData, NativeUInt(ALen));
-  Result := 0;
+{$IFDEF CRYPTOLIB_HAS_ARC4RANDOM_BUF}
+  if FHasArc4RandomBuf then
+  begin
+    Result := TArc4RandomBufReader.Read(FArc4RandomBuf, ALen, AData);
+  end
+  else
+  begin
+    Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
+  end;
+{$ELSE}
+  Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
+{$ENDIF}
 end;
 
-procedure TGenericBSDRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
+procedure TBsdRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
   LCount: Int32;
 begin
@@ -84,20 +109,20 @@ begin
     Exit;
   end;
 
-  if GenRandomBytesGenericBSD(LCount, PByte(AData)) <> 0 then
+  if GenRandomBytesBsd(LCount, PByte(AData)) <> 0 then
   begin
     raise EOSRandomCryptoLibException.CreateRes(@SArc4RandomBufGenerationError);
   end;
 end;
 
-function TGenericBSDRandomProvider.GetIsAvailable: Boolean;
+function TBsdRandomProvider.GetIsAvailable: Boolean;
 begin
   Result := True;
 end;
 
-function TGenericBSDRandomProvider.GetName: String;
+function TBsdRandomProvider.GetName: String;
 begin
-  Result := 'GenericBSD';
+  Result := 'Bsd';
 end;
 
 {$ENDIF}

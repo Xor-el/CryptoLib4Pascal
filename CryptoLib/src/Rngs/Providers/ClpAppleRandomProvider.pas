@@ -96,6 +96,10 @@ implementation
 uses
   ClpDevRandomReader;
 
+const
+  // https://man7.org/linux/man-pages/man4/random.4.html
+  DevRandomMaxChunk = 32 * 1024 * 1024;
+
 { TAppleRandomProvider }
 
 constructor TAppleRandomProvider.Create;
@@ -125,7 +129,7 @@ begin
   else
   begin
     // fallback for when SecRandomCopyBytes API is not available
-    Result := TDevRandomReader.Read(ALen, AData, ALen);
+    Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
   end;
 {$ELSE}
   Result := SecRandomCopyBytes(kSecRandomDefault, NativeUInt(ALen), AData);

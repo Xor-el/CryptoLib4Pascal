@@ -30,17 +30,20 @@ uses
 {$IFDEF CRYPTOLIB_APPLE}
   , ClpAppleRandomProvider
 {$ENDIF}
+{$IFDEF CRYPTOLIB_ANDROID}
+  , ClpAndroidRandomProvider
+{$ENDIF}
 {$IFDEF CRYPTOLIB_LINUX}
   , ClpLinuxRandomProvider
 {$ENDIF}
 {$IFDEF CRYPTOLIB_SOLARIS}
   , ClpSolarisRandomProvider
 {$ENDIF}
-{$IFDEF CRYPTOLIB_GENERIC_BSD}
-  , ClpGenericBSDRandomProvider
+{$IFDEF CRYPTOLIB_BSD}
+  , ClpBsdRandomProvider
 {$ENDIF}
 {$IFDEF CRYPTOLIB_UNIX}
-  , ClpUnixRandomProvider
+  , ClpUnixLikeRandomProvider
 {$ENDIF}
   ;
 
@@ -92,14 +95,16 @@ begin
   Result := TWindowsRandomProvider.Create();
 {$ELSEIF DEFINED(CRYPTOLIB_APPLE)}
   Result := TAppleRandomProvider.Create();
+{$ELSEIF DEFINED(CRYPTOLIB_ANDROID)}
+  Result := TAndroidRandomProvider.Create();
 {$ELSEIF DEFINED(CRYPTOLIB_LINUX)}
   Result := TLinuxRandomProvider.Create();
 {$ELSEIF DEFINED(CRYPTOLIB_SOLARIS)}
   Result := TSolarisRandomProvider.Create();
-{$ELSEIF DEFINED(CRYPTOLIB_GENERIC_BSD)}
-  Result := TGenericBSDRandomProvider.Create();
+{$ELSEIF DEFINED(CRYPTOLIB_BSD)}
+  Result := TBsdRandomProvider.Create();
 {$ELSEIF DEFINED(CRYPTOLIB_UNIX)}
-  Result := TUnixRandomProvider.Create();
+  Result := TUnixLikeRandomProvider.Create();
 {$ELSE}
 {$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
   Result := nil;

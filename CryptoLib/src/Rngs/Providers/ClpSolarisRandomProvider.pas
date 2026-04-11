@@ -23,38 +23,16 @@ interface
 
 {$IFDEF CRYPTOLIB_SOLARIS}
 uses
-{$IFDEF FPC}
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  dl,
-{$ENDIF}
-{$ELSE}
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  Posix.Dlfcn,
-{$ENDIF}
-{$ENDIF}
   SysUtils,
+{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
+  ClpGetRandomReader,
+{$ENDIF}
   ClpCryptoLibTypes,
   ClpBaseRandomProvider;
 
 resourcestring
   SSolarisGetRandomError =
     'An Error Occurred while generating random data using getRandom API';
-
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-const
-  LIBC_SO = 'libc.so.1';
-
-  // Solaris getrandom flags (from sys/random.h)
-  GRND_NONBLOCK = $0001;  // Don't block; return EAGAIN if no entropy
-  GRND_RANDOM   = $0002;  // Use /dev/random pool instead of /dev/urandom
-
-  // Maximum buffer size supported by Solaris getrandom (EINVAL if exceeded)
-  SolarisGetRandomMaxBuffer = 1024;
-
-type
-  TGetRandom = function(ABuffer: PByte; ABufferLength: NativeUInt;
-    AFlags: UInt32): NativeInt; cdecl;
-{$ENDIF}
 
   /// <summary>
   /// Solaris OS random source provider.
@@ -67,9 +45,8 @@ type
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   var
     FHasGetRandom: Boolean;
-    FGetRandom: TGetRandom;
+    FGetRandom: TGetRandomFunc;
 
-    function IsGetRandomAvailable(): Boolean;
 {$ENDIF}
     function GenRandomBytesSolaris(ALen: Int32; AData: PByte): Int32;
 
@@ -90,76 +67,38 @@ implementation
 uses
   ClpDevRandomReader;
 
+const
+  // Oracle getrandom(2): EINVAL if GRND_RANDOM is not set and bufsize > 133120.
+  // https://docs.oracle.com/cd/E88353_01/html/E37841/getrandom-2.html
+  GetRandomMaxChunk = 133120;
+  // https://docs.oracle.com/cd/E88353_01/html/E37851/urandom-4d.html
+  DevRandomMaxChunk = 128 * 1040;
+
 { TSolarisRandomProvider }
 
 constructor TSolarisRandomProvider.Create;
 begin
   inherited Create();
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-  FHasGetRandom := IsGetRandomAvailable();
+  FHasGetRandom := TGetRandomReader.TryResolve(FGetRandom);
 {$ENDIF}
 end;
-
-{$IFDEF CRYPTOLIB_HAS_GETRANDOM}
-
-function TSolarisRandomProvider.IsGetRandomAvailable(): Boolean;
-var
-  LLib: NativeUInt;
-begin
-  FGetRandom := nil;
-  LLib := {$IFDEF FPC}NativeUInt{$ENDIF}(dlopen(LIBC_SO, RTLD_NOW));
-  if LLib <> 0 then
-  begin
-    FGetRandom := dlsym(LLib, 'getrandom');
-    dlclose(LLib);
-  end;
-  Result := System.Assigned(FGetRandom);
-end;
-
-{$ENDIF}
 
 function TSolarisRandomProvider.GenRandomBytesSolaris(ALen: Int32;
   AData: PByte): Int32;
-var
-  LBytesRead: NativeInt;
-  LMaxChunkSize: Int32;
 begin
-  LMaxChunkSize := SolarisGetRandomMaxBuffer;
-
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
   if FHasGetRandom then
   begin
-    while (ALen > 0) do
-    begin
-      if ALen <= LMaxChunkSize then
-      begin
-        LMaxChunkSize := ALen;
-      end;
-
-      LBytesRead := FGetRandom(AData, NativeUInt(LMaxChunkSize), 0);
-
-      // Hardened: covers 0 (error per Solaris docs) and -1 (EAGAIN defensive)
-      if (LBytesRead <= 0) then
-      begin
-        if TDevRandomReader.GetErrNo = EINTR then
-        begin
-          continue;
-        end;
-        Result := -1;
-        Exit;
-      end;
-      System.Inc(AData, LBytesRead);
-      System.Dec(ALen, LBytesRead);
-    end;
-    Result := 0;
+    Result := TGetRandomReader.Read(FGetRandom, GetRandomMaxChunk, GRND_NONBLOCK,
+      ALen, AData, True);
   end
   else
   begin
-    // fallback for when getrandom API is not available
-    Result := TDevRandomReader.Read(ALen, AData, SolarisGetRandomMaxBuffer);
+    Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
   end;
 {$ELSE}
-  Result := TDevRandomReader.Read(ALen, AData, SolarisGetRandomMaxBuffer);
+  Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
 {$ENDIF}
 end;
 

@@ -30,7 +30,7 @@
   {$STRINGCHECKS OFF}
   {$WARN DUPLICATE_CTOR_DTOR OFF}
 
-  {========================= CPU Architecture =================================}
+  {============================= CPU Architecture =============================}
 
   {$IFDEF CPU386}
      {$DEFINE CRYPTOLIB_I386}
@@ -54,7 +54,7 @@
      {$DEFINE CRYPTOLIB_AARCH64}
   {$ENDIF}
 
-  {========================= Target OS ========================================}
+  {================================= Target OS ================================}
 
   {$IFDEF MSWINDOWS}
      {$DEFINE CRYPTOLIB_MSWINDOWS}
@@ -78,21 +78,25 @@
      {$DEFINE CRYPTOLIB_ANDROID}
   {$ENDIF}
 
-  {$IF DEFINED(LINUX) OR DEFINED(CRYPTOLIB_ANDROID)}
+  {$IFDEF LINUX}
      {$DEFINE CRYPTOLIB_LINUX}
-  {$IFEND}
-
-  {$IF DEFINED(CRYPTOLIB_APPLE) OR DEFINED(CRYPTOLIB_LINUX)}
-     {$DEFINE CRYPTOLIB_UNIX}
-  {$IFEND}
-
-  {========================= Feature Detection ================================}
-
-  {$IFDEF CRYPTOLIB_LINUX}
-     {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
   {$ENDIF}
 
-  {========================= Delphi Version Features ==========================}
+  {$IF DEFINED(CRYPTOLIB_ANDROID) OR DEFINED(CRYPTOLIB_LINUX) OR DEFINED(CRYPTOLIB_APPLE)}
+     {$DEFINE CRYPTOLIB_UNIXLIKE}
+  {$IFEND}
+
+  {============================ Feature Detection =============================}
+
+  {$IF DEFINED(CRYPTOLIB_ANDROID) OR DEFINED(CRYPTOLIB_LINUX)}
+     {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
+  {$IFEND}
+
+  {$IFDEF CRYPTOLIB_UNIXLIKE}
+    {$DEFINE CRYPTOLIB_HAS_DEVRANDOM}
+  {$ENDIF}
+
+  {========================== Delphi Version Features =========================}
 
   // XE and Above
   {$IF CompilerVersion >= 22.0}

@@ -15,13 +15,13 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpLinuxRandomProvider;
+unit ClpAndroidRandomProvider;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IFDEF CRYPTOLIB_LINUX}
+{$IFDEF CRYPTOLIB_ANDROID}
 uses
   SysUtils,
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -31,15 +31,15 @@ uses
   ClpBaseRandomProvider;
 
 resourcestring
-  SLinuxGetRandomError =
+  SAndroidGetRandomError =
     'An Error Occurred while generating random data using getRandom API';
 
   /// <summary>
-  /// Linux OS random source provider.
-  /// Implements Linux getrandom and /dev/urandom fallback
+  /// Android OS random source provider.
+  /// Implements Android getrandom and /dev/urandom fallback
   /// </summary>
 type
-  TLinuxRandomProvider = class sealed(TBaseRandomProvider)
+  TAndroidRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -48,7 +48,7 @@ type
     FGetRandom: TGetRandomFunc;
 
 {$ENDIF}
-    function GenRandomBytesLinux(ALen: Int32; AData: PByte): Int32;
+    function GenRandomBytesAndroid(ALen: Int32; AData: PByte): Int32;
 
   public
     constructor Create();
@@ -63,7 +63,7 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_LINUX}
+{$IFDEF CRYPTOLIB_ANDROID}
 uses
   ClpDevRandomReader;
 
@@ -73,9 +73,9 @@ const
   // https://man7.org/linux/man-pages/man4/random.4.html
   DevRandomMaxChunk = 32 * 1024 * 1024;
 
-{ TLinuxRandomProvider }
+{ TAndroidRandomProvider }
 
-constructor TLinuxRandomProvider.Create;
+constructor TAndroidRandomProvider.Create;
 begin
   inherited Create();
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -83,7 +83,7 @@ begin
 {$ENDIF}
 end;
 
-function TLinuxRandomProvider.GenRandomBytesLinux(ALen: Int32;
+function TAndroidRandomProvider.GenRandomBytesAndroid(ALen: Int32;
   AData: PByte): Int32;
 begin
 {$IFDEF CRYPTOLIB_HAS_GETRANDOM}
@@ -101,7 +101,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TLinuxRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
+procedure TAndroidRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
   LCount: Int32;
 begin
@@ -112,20 +112,20 @@ begin
     Exit;
   end;
 
-  if GenRandomBytesLinux(LCount, PByte(AData)) <> 0 then
+  if GenRandomBytesAndroid(LCount, PByte(AData)) <> 0 then
   begin
-    raise EOSRandomCryptoLibException.CreateRes(@SLinuxGetRandomError);
+    raise EOSRandomCryptoLibException.CreateRes(@SAndroidGetRandomError);
   end;
 end;
 
-function TLinuxRandomProvider.GetIsAvailable: Boolean;
+function TAndroidRandomProvider.GetIsAvailable: Boolean;
 begin
   Result := True;
 end;
 
-function TLinuxRandomProvider.GetName: String;
+function TAndroidRandomProvider.GetName: String;
 begin
-  Result := 'Linux';
+  Result := 'Android';
 end;
 
 {$ENDIF}

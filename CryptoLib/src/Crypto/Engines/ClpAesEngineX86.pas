@@ -21,6 +21,8 @@ unit ClpAesEngineX86;
 
 interface
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+
 uses
   SysUtils,
   ClpIAesEngineX86,
@@ -73,6 +75,8 @@ type
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
     property AlgorithmName: String read GetAlgorithmName;
   end;
+
+{$ENDIF}
 
 implementation
 
@@ -146,17 +150,11 @@ end;
 
 {$ENDIF CRYPTOLIB_I386_ASM}
 
-{$ENDIF CRYPTOLIB_X86_SIMD}
-
 { TAesEngineX86 }
 
 class function TAesEngineX86.IsSupported: Boolean;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.HasAESNI();
-{$ELSE}
-  Result := False;
-{$ENDIF}
 end;
 
 constructor TAesEngineX86.Create();
@@ -219,8 +217,6 @@ begin
   Result := 16;
 end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-
 procedure TAesEngineX86.PrepareDecryptRoundKeys;
 begin
   AesNiPrepareDecryptRoundKeys(FKeys, FNRounds);
@@ -277,8 +273,6 @@ begin
   end;
 end;
 
-{$ENDIF CRYPTOLIB_X86_SIMD}
-
 procedure TAesEngineX86.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
@@ -286,9 +280,6 @@ var
   LKeyCopy: TCryptoLibByteArray;
   LKeyLen: Int32;
 begin
-{$IFNDEF CRYPTOLIB_X86_SIMD}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotSupported);
-{$ELSE}
   if not Supports(AParameters, IKeyParameter, LKeyParameter) then
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameterAESX86Init,
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
@@ -323,19 +314,13 @@ begin
   finally
     TArrayUtilities.Fill<Byte>(LKeyCopy, 0, System.Length(LKeyCopy), Byte(0));
   end;
-{$ENDIF}
 end;
 
 function TAesEngineX86.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-{$IFDEF CRYPTOLIB_X86_SIMD}
 var
   LBuf: array [0 .. 15] of Byte;
-{$ENDIF}
 begin
-{$IFNDEF CRYPTOLIB_X86_SIMD}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotSupported);
-{$ELSE}
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
 
@@ -347,19 +332,13 @@ begin
   System.Move(LBuf[0], AOutput[AOutOff], 16);
   FillChar(LBuf, SizeOf(LBuf), 0);
   Result := 16;
-{$ENDIF}
 end;
 
 function TAesEngineX86.ProcessFourBlocks(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-{$IFDEF CRYPTOLIB_X86_SIMD}
 var
   LWork: array [0 .. 63] of Byte;
-{$ENDIF}
 begin
-{$IFNDEF CRYPTOLIB_X86_SIMD}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotSupported);
-{$ELSE}
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
 
@@ -371,7 +350,8 @@ begin
   System.Move(LWork[0], AOutput[AOutOff], 64);
   FillChar(LWork, SizeOf(LWork), 0);
   Result := 64;
-{$ENDIF}
 end;
+
+{$ENDIF}
 
 end.
