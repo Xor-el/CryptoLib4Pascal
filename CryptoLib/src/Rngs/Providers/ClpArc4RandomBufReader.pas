@@ -41,7 +41,6 @@ type
   public
     /// <summary>
     /// Resolves arc4random_buf; returns True and sets AFn when the symbol is found.
-    /// Does not dlclose the handle from dlopen(nil).
     /// </summary>
     class function TryResolve(out AFn: TArc4RandomBufProc): Boolean; static;
 
@@ -67,22 +66,16 @@ var
   LSymbol: Pointer;
 begin
   AFn := nil;
-{$IFDEF FPC}
-  LHandle := dlopen(PChar(nil), RTLD_NOW);
-{$ELSE}
   LHandle := dlopen(nil, RTLD_NOW);
-{$ENDIF}
+
   if LHandle = nil then
   begin
     Result := False;
     Exit;
   end;
   try
-{$IFDEF FPC}
     LSymbol := dlsym(LHandle, 'arc4random_buf');
-{$ELSE}
-    LSymbol := dlsym(LHandle, PAnsiChar('arc4random_buf'));
-{$ENDIF}
+
     if LSymbol = nil then
     begin
       Result := False;

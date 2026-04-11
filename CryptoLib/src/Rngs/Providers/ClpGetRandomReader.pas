@@ -51,7 +51,6 @@ type
   public
     /// <summary>
     /// Resolves getrandom; returns True and sets AFn when the symbol is found.
-    /// Does not dlclose the handle from dlopen(nil).
     /// </summary>
     class function TryResolve(out AFn: TGetRandomFunc): Boolean; static;
 
@@ -82,22 +81,16 @@ var
   LSymbol: Pointer;
 begin
   AFn := nil;
-{$IFDEF FPC}
-  LHandle := dlopen(PChar(nil), RTLD_NOW);
-{$ELSE}
   LHandle := dlopen(nil, RTLD_NOW);
-{$ENDIF}
+
   if LHandle = nil then
   begin
     Result := False;
     Exit;
   end;
   try
-{$IFDEF FPC}
     LSymbol := dlsym(LHandle, 'getrandom');
-{$ELSE}
-    LSymbol := dlsym(LHandle, PAnsiChar('getrandom'));
-{$ENDIF}
+
     if LSymbol = nil then
     begin
       Result := False;
