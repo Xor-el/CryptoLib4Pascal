@@ -193,7 +193,7 @@ const
 class function TGcmBlockCipher.IsFourWaySupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.HasPCLMULQDQ and TCpuFeatures.HasSSSE3 and
+  Result := TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
     TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
@@ -203,7 +203,7 @@ end;
 class function TGcmBlockCipher.IsSse2PackedVectorXorSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.HasSSE2 and TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasSSE2 and TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -242,7 +242,7 @@ end;
 class function TGcmBlockCipher.CreateGcmMultiplier: IGcmMultiplier;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.HasPCLMULQDQ then
+  if TCpuFeatures.X86.HasPCLMULQDQ then
   begin
     Result := TBasicGcmMultiplier.Create();
     Exit;
@@ -1014,7 +1014,7 @@ var
   LI: Int32;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.HasSSSE3 then
+  if TCpuFeatures.X86.HasSSSE3 then
   begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
     GcmBlockSsse3Reverse128Mem(ADst, ASrc, @ReverseBytesMask[0]);

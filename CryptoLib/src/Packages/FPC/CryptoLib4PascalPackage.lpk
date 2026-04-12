@@ -26,7 +26,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="2"/>
-    <Files Count="659">
+    <Files Count="662">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -2664,6 +2664,18 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Rngs\Providers\ClpSecRandomCopyBytesReader.pas"/>
         <UnitName Value="ClpSecRandomCopyBytesReader"/>
       </Item659>
+      <Item660>
+        <Filename Value="..\..\Misc\ClpArmSimdFeatures.pas"/>
+        <UnitName Value="ClpArmSimdFeatures"/>
+      </Item660>
+      <Item661>
+        <Filename Value="..\..\Misc\ClpSimdLevels.pas"/>
+        <UnitName Value="ClpSimdLevels"/>
+      </Item661>
+      <Item662>
+        <Filename Value="..\..\Misc\ClpX86SimdFeatures.pas"/>
+        <UnitName Value="ClpX86SimdFeatures"/>
+      </Item662>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

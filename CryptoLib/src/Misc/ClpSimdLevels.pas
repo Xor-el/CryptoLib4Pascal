@@ -15,43 +15,16 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpCpuFeatures;
+unit ClpSimdLevels;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  ClpSimdLevels,
-  ClpX86SimdFeatures,
-  ClpArmSimdFeatures;
-
 type
-  TCpuFeaturesX86 = class of TX86SimdFeatures;
-  TCpuFeaturesArm = class of TArmSimdFeatures;
-
-  TCpuFeatures = class sealed(TObject)
-  strict private
-    class function GetX86(): TCpuFeaturesX86; static;
-    class function GetArm(): TCpuFeaturesArm; static;
-
-  public
-    class property X86: TCpuFeaturesX86 read GetX86;
-    class property Arm: TCpuFeaturesArm read GetArm;
-  end;
+  TX86SimdLevel = (Scalar, SSE2, SSSE3, AVX2);
+  TArmSimdLevel = (Scalar, NEON, SVE, SVE2);
 
 implementation
-
-{ TCpuFeatures }
-
-class function TCpuFeatures.GetX86(): TCpuFeaturesX86;
-begin
-  Result := TX86SimdFeatures;
-end;
-
-class function TCpuFeatures.GetArm(): TCpuFeaturesArm;
-begin
-  Result := TArmSimdFeatures;
-end;
 
 end.
