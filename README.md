@@ -324,9 +324,9 @@ CryptoLib4Pascal requires two companion libraries that must be installed separat
 
 Contributions are welcome. Please open an [issue](https://github.com/Xor-el/CryptoLib4Pascal/issues) for bug reports or feature requests, and submit pull requests.
 
-## Acknowledgements
+## Sponsors
 
-- Thanks to [Sphere 10 Software](http://www.sphere10.com/) for sponsoring the development of this library.
+- [Sphere 10 Software](http://www.sphere10.com/)
 
 ## Tip Jar
 
