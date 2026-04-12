@@ -154,7 +154,7 @@ end;
 
 class function TAesEngineX86.IsSupported: Boolean;
 begin
-  Result := TCpuFeatures.HasAESNI();
+  Result := TCpuFeatures.X86.HasAESNI();
 end;
 
 constructor TAesEngineX86.Create();

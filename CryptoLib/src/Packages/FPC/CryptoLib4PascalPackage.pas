@@ -214,7 +214,8 @@ uses
   ClpIAesEngineX86, ClpAesEngineX86, ClpAesUtilities, ClpIntrinsicsVector, 
   ClpBsdRandomProvider, ClpUnixLikeRandomProvider, ClpGetRandomReader, 
   ClpArc4RandomBufReader, ClpUnixLikeRngCommon, ClpAndroidRandomProvider, 
-  ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader;
+  ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader, 
+  ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures;
 
 implementation
 

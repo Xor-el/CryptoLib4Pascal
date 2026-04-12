@@ -213,7 +213,7 @@ var
   {$ENDIF}
 begin
   {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.HasPCLMULQDQ then
+  if TCpuFeatures.X86.HasPCLMULQDQ then
   begin
     {$IFDEF CRYPTOLIB_X86_64_ASM}
     GcmX64PclmulFieldPartial(@AX, @AY, @LPartial);
@@ -409,14 +409,14 @@ class function TGcmUtilities.PclmulFieldMultiplyAvailable: Boolean;
 begin
   Result := False;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.HasPCLMULQDQ;
+  Result := TCpuFeatures.X86.HasPCLMULQDQ;
 {$ENDIF}
 end;
 
 class procedure TGcmUtilities.MultiplyExt(PX, PY, POut48: PByte);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.HasPCLMULQDQ then
+  if TCpuFeatures.X86.HasPCLMULQDQ then
   begin
     {$IFDEF CRYPTOLIB_X86_64_ASM}
     GcmX64PclmulMultiplyExtBytes(PX, PY, POut48);
@@ -437,7 +437,7 @@ var
   LK: Int32;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.HasSSE2 then
+  if TCpuFeatures.X86.HasSSE2 then
   begin
     {$IFDEF CRYPTOLIB_X86_64_ASM}
     GcmX64XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
@@ -465,7 +465,7 @@ var
   LT3, LT2, LT1, LT0, LZ0, LZ1, LZ2: UInt64;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.HasSSE2 then
+  if TCpuFeatures.X86.HasSSE2 then
   begin
     {$IFDEF CRYPTOLIB_X86_64_ASM}
     GcmX64Reduce3Fold(PZ0, PZ1, PZ2);
