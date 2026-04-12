@@ -19,9 +19,9 @@
 {$IFDEF FPC}
   {$I CryptoLibFPC.inc}
 {$ELSE}
-   // Delphi Tokyo and Above
+  // Delphi Tokyo and Above
   {$IF CompilerVersion < 32.0}
-     {$MESSAGE ERROR 'This Library requires Delphi Tokyo or higher.'}
+    {$MESSAGE ERROR 'This Library requires Delphi Tokyo or higher.'}
   {$IFEND}
 
   {$DEFINE DELPHI}
@@ -29,98 +29,102 @@
   {$STRINGCHECKS OFF}
   {$WARN DUPLICATE_CTOR_DTOR OFF}
 
-  {============================= CPU Architecture =============================}
+  {========================== Delphi Version Features =========================}
 
-  {$IFDEF CPU386}
-     {$DEFINE CRYPTOLIB_I386}
-     {$IFDEF MSWINDOWS}
-        {$DEFINE CRYPTOLIB_I386_ASM}
-     {$ENDIF}
-  {$ENDIF}
+  // XE and Above
+  {$IF CompilerVersion >= 22.0}
+    {$DEFINE DELPHIXE_UP}
+  {$IFEND}
 
-  {$IFDEF CPUX64}
-     {$DEFINE CRYPTOLIB_X86_64}
-     {$IFDEF MSWINDOWS}
-        {$DEFINE CRYPTOLIB_X86_64_ASM}
-     {$ENDIF}
-  {$ENDIF}
+  // XE3 and Above
+  {$IF CompilerVersion >= 24.0}
+    {$DEFINE TSTREAM_HAS_VIRTUAL_READ_BYTES}
+    {$DEFINE TSTREAM_HAS_VIRTUAL_WRITE_BYTES}
+  {$IFEND}
+
+  // XE4 and Above
+  {$IF CompilerVersion >= 25.0}
+    {$DEFINE SHIFT_OVERFLOW_BUG_FIXED}
+  {$IFEND}
+
+  // 10.1 Berlin and Above
+  {$IF CompilerVersion >= 31.0}
+    {$DEFINE HAS_VOLATILE}
+  {$IFEND}
+
+  {============================== CPU Architecture ==============================}
+
+  {$IF DEFINED(CPU386)}
+    {$DEFINE CRYPTOLIB_I386}
+    {$IFDEF MSWINDOWS}
+      {$DEFINE CRYPTOLIB_I386_ASM}
+    {$ENDIF}
+  {$IFEND}
+
+  {$IF DEFINED(CPUX64)}
+    {$DEFINE CRYPTOLIB_X86_64}
+    {$IFDEF MSWINDOWS}
+      {$DEFINE CRYPTOLIB_X86_64_ASM}
+    {$ENDIF}
+  {$IFEND}
 
   {$IFDEF CPUARM32}
-     {$DEFINE CRYPTOLIB_ARM}
+    {$DEFINE CRYPTOLIB_ARM32}
   {$ENDIF}
 
   {$IFDEF CPUARM64}
-     {$DEFINE CRYPTOLIB_AARCH64}
+    {$DEFINE CRYPTOLIB_AARCH64}
   {$ENDIF}
 
-  {================================= Target OS ================================}
+  {================================= Target OS ==================================}
 
   {$IFDEF MSWINDOWS}
-     {$DEFINE CRYPTOLIB_MSWINDOWS}
+    {$DEFINE CRYPTOLIB_MSWINDOWS}
   {$ENDIF}
 
   {$IFDEF IOS}
-     {$DEFINE CRYPTOLIB_IOS}
+    {$DEFINE CRYPTOLIB_IOS}
   {$ENDIF}
 
   {$IFDEF MACOS}
-     {$IFNDEF IOS}
-        {$DEFINE CRYPTOLIB_MACOS}
-     {$ENDIF}
+    {$IFNDEF IOS}
+      {$DEFINE CRYPTOLIB_MACOS}
+    {$ENDIF}
   {$ENDIF}
 
   {$IFDEF ANDROID}
-     {$DEFINE CRYPTOLIB_ANDROID}
+    {$DEFINE CRYPTOLIB_ANDROID}
   {$ENDIF}
 
   {$IFDEF LINUX}
-     {$DEFINE CRYPTOLIB_LINUX}
+    {$DEFINE CRYPTOLIB_LINUX}
   {$ENDIF}
 
   {$IF DEFINED(CRYPTOLIB_ANDROID)
      OR DEFINED(CRYPTOLIB_LINUX)
      OR DEFINED(CRYPTOLIB_IOS)
      OR DEFINED(CRYPTOLIB_MACOS)}
-     {$DEFINE CRYPTOLIB_UNIXLIKE}
+    {$DEFINE CRYPTOLIB_UNIXLIKE}
   {$IFEND}
 
-  {============================ Feature Detection =============================}
+{$ENDIF}
 
-  {$IF DEFINED(CRYPTOLIB_ANDROID) OR DEFINED(CRYPTOLIB_LINUX)}
-     {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
-  {$IFEND}
+{========================== Common Feature Detection ===========================}
 
-  {$IF DEFINED(CRYPTOLIB_IOS) OR DEFINED(CRYPTOLIB_MACOS)}
-     {$DEFINE CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
-  {$IFEND}
+{$IF DEFINED(CRYPTOLIB_ANDROID) OR DEFINED(CRYPTOLIB_LINUX) OR DEFINED(CRYPTOLIB_SOLARIS)}
+  {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
+{$IFEND}
 
-  {$IFDEF CRYPTOLIB_UNIXLIKE}
-    {$DEFINE CRYPTOLIB_HAS_DEVRANDOM}
-  {$ENDIF}
+{$IF DEFINED(CRYPTOLIB_IOS) OR DEFINED(CRYPTOLIB_MACOS)}
+  {$DEFINE CRYPTOLIB_HAS_SECRANDOMCOPYBYTES}
+{$IFEND}
 
-  {========================== Delphi Version Features =========================}
+{$IF DEFINED(CRYPTOLIB_BSD)}
+  {$DEFINE CRYPTOLIB_HAS_ARC4RANDOM_BUF}
+{$IFEND}
 
-  // XE and Above
-  {$IF CompilerVersion >= 22.0}
-     {$DEFINE DELPHIXE_UP}
-  {$IFEND}
-
-  // XE3 and Above
-  {$IF CompilerVersion >= 24.0}
-     {$DEFINE TSTREAM_HAS_VIRTUAL_READ_BYTES}
-     {$DEFINE TSTREAM_HAS_VIRTUAL_WRITE_BYTES}
-  {$IFEND}
-
-   // XE4 and Above
-  {$IF CompilerVersion >= 25.0}
-     {$DEFINE SHIFT_OVERFLOW_BUG_FIXED}
-  {$IFEND}
-
-  // 10.1 Berlin and Above
-  {$IF CompilerVersion >= 31.0}
-     {$DEFINE HAS_VOLATILE}
-  {$IFEND}
-
+{$IFDEF CRYPTOLIB_UNIXLIKE}
+  {$DEFINE CRYPTOLIB_HAS_DEVRANDOM}
 {$ENDIF}
 
 {========================== Common Compiler Settings ==========================}
@@ -132,16 +136,26 @@
 {$SCOPEDENUMS ON}
 {$POINTERMATH ON}
 
-{============================= SIMD / CPU features ============================}
+{========================== Common Defines Settings ===========================}
+
+{$IF DEFINED(CRYPTOLIB_I386) OR DEFINED(CRYPTOLIB_X86_64)}
+  {$DEFINE CRYPTOLIB_X86}
+{$IFEND}
+
+{$IF DEFINED(CRYPTOLIB_ARM32) OR DEFINED(CRYPTOLIB_AARCH64)}
+  {$DEFINE CRYPTOLIB_ARM}
+{$IFEND}
+
+{============================ Common SIMD Settings ============================}
 
 // Uncomment to force scalar dispatch (available on all platforms):
 // {$DEFINE CRYPTOLIB_FORCE_SCALAR}
 
 {$IF DEFINED(CRYPTOLIB_I386_ASM) OR DEFINED(CRYPTOLIB_X86_64_ASM)}
-   {$DEFINE CRYPTOLIB_X86_SIMD}
+  {$DEFINE CRYPTOLIB_X86_SIMD}
 {$IFEND}
 
-{$IF DEFINED(CRYPTOLIB_ARM_ASM) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+{$IF DEFINED(CRYPTOLIB_ARM32_ASM) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
   {$DEFINE CRYPTOLIB_ARM_SIMD}
 {$IFEND}
 
@@ -153,7 +167,7 @@
 {$IF (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SSE2))
    OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))
    OR (DEFINED(CRYPTOLIB_FORCE_SSE2) AND DEFINED(CRYPTOLIB_FORCE_SSSE3))}
-   {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
+  {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
 {$IFEND}
 
 {$ENDIF}

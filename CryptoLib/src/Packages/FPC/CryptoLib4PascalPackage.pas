@@ -215,7 +215,8 @@ uses
   ClpBsdRandomProvider, ClpUnixLikeRandomProvider, ClpGetRandomReader, 
   ClpArc4RandomBufReader, ClpUnixLikeRngCommon, ClpAndroidRandomProvider, 
   ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader, 
-  ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures;
+  ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
+  ClpDarwinSysCtl;
 
 implementation
 

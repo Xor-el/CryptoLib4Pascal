@@ -502,6 +502,8 @@ contains
   ClpArmSimdFeatures in '..\..\Misc\ClpArmSimdFeatures.pas',
   ClpSimdLevels in '..\..\Misc\ClpSimdLevels.pas',
   ClpX86SimdFeatures in '..\..\Misc\ClpX86SimdFeatures.pas',
+  ClpArmHwCapProvider in '..\..\Misc\ClpArmHwCapProvider.pas',
+  ClpDarwinSysCtl in '..\..\Misc\ClpDarwinSysCtl.pas',
   ClpIntrinsicsVector in '..\..\Misc\ClpIntrinsicsVector.pas',
   ClpPack in '..\..\Misc\ClpPack.pas',
   ClpBits in '..\..\Math\Raw\ClpBits.pas',
