@@ -379,7 +379,7 @@ procedure TAesEngineX86.BindCipherPointers;
 begin
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
-  // Bind once per Init to straight-line ASM. i386: args in eax/edx at entry; bodies use ebx/esi after SimdProc2Begin. x86_64: rcx/rdx throughout.
+
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   case FMode of
     TAesX86Mode.Enc128:
