@@ -44,6 +44,7 @@ type
   TTestAesX86 = class(TAesBlockCipherTestBase)
   strict private
     procedure ImplTestFourBlocks(AForEncryption: Boolean; AKeySizeBytes: Int32);
+    procedure ImplTestPByteOverloadParity(AKeySizeBytes: Int32);
   published
     procedure TestBlockCipherVectors;
     procedure TestMonteCarloAES;
@@ -56,6 +57,9 @@ type
     procedure TestFourBlocksDecrypt128;
     procedure TestFourBlocksDecrypt192;
     procedure TestFourBlocksDecrypt256;
+    procedure TestPByteOverloadParity128;
+    procedure TestPByteOverloadParity192;
+    procedure TestPByteOverloadParity256;
   end;
 
 implementation
@@ -95,6 +99,64 @@ begin
       Fail(Format(
         'ProcessFourBlocks vs ProcessBlock mismatch (key %d bytes, iteration %d)',
         [AKeySizeBytes, LI]));
+    end;
+  end;
+end;
+
+procedure TTestAesX86.ImplTestPByteOverloadParity(AKeySizeBytes: Int32);
+var
+  LRnd: ISecureRandom;
+  LKey, LIn16, LOutArr, LOutPtr, LIn64, LFourArr, LFourPtr: TBytes;
+  LI: Int32;
+  LObj: TAesEngineX86;
+begin
+  LRnd := TSecureRandom.Create();
+  System.SetLength(LKey, AKeySizeBytes);
+  System.SetLength(LIn16, 16);
+  System.SetLength(LOutArr, 16);
+  System.SetLength(LOutPtr, 16);
+  System.SetLength(LIn64, 64);
+  System.SetLength(LFourArr, 64);
+  System.SetLength(LFourPtr, 64);
+
+  for LI := 0 to 49 do
+  begin
+    LRnd.NextBytes(LKey);
+    LRnd.NextBytes(LIn16);
+    LObj := TAesEngineX86.Create();
+    try
+      LObj.Init(True, TKeyParameter.Create(LKey) as IKeyParameter);
+
+      LOutArr := System.Copy(LIn16);
+      LOutPtr := System.Copy(LIn16);
+      LObj.ProcessBlock(LIn16, 0, LOutArr, 0);
+      LObj.ProcessBlock(@LIn16[0], @LOutPtr[0]);
+      if not AreEqual(LOutArr, LOutPtr) then
+        Fail(Format('ProcessBlock PByte disjoint mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LOutPtr := System.Copy(LIn16);
+      LObj.ProcessBlock(@LOutPtr[0], @LOutPtr[0]);
+      if not AreEqual(LOutArr, LOutPtr) then
+        Fail(Format('ProcessBlock PByte in-place mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LRnd.NextBytes(LIn64);
+      LFourArr := System.Copy(LIn64);
+      LFourPtr := System.Copy(LIn64);
+      LObj.ProcessFourBlocks(LIn64, 0, LFourArr, 0);
+      LObj.ProcessFourBlocks(@LIn64[0], @LFourPtr[0]);
+      if not AreEqual(LFourArr, LFourPtr) then
+        Fail(Format('ProcessFourBlocks PByte disjoint mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LFourPtr := System.Copy(LIn64);
+      LObj.ProcessFourBlocks(@LFourPtr[0], @LFourPtr[0]);
+      if not AreEqual(LFourArr, LFourPtr) then
+        Fail(Format('ProcessFourBlocks PByte in-place mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+    finally
+      LObj.Free;
     end;
   end;
 end;
@@ -195,6 +257,27 @@ begin
   if not TAesEngineX86.IsSupported then
     Exit;
   ImplTestFourBlocks(False, 32);
+end;
+
+procedure TTestAesX86.TestPByteOverloadParity128;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestPByteOverloadParity(16);
+end;
+
+procedure TTestAesX86.TestPByteOverloadParity192;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestPByteOverloadParity(24);
+end;
+
+procedure TTestAesX86.TestPByteOverloadParity256;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestPByteOverloadParity(32);
 end;
 
 initialization

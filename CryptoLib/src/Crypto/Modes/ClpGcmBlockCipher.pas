@@ -1275,7 +1275,7 @@ begin
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
     System.Move(FCounter[0], ABlocks[48], 16);
-    LAesX86.ProcessFourBlocks(ABlocks, 0, ABlocks, 0);
+    LAesX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
     Exit;
   end;
 {$ENDIF}
