@@ -65,7 +65,6 @@ type
     procedure CreateRoundKeys(AForEncryption: Boolean; const AKey: TCryptoLibByteArray);
     procedure PrepareDecryptRoundKeys;
     procedure BindCipherPointers;
-    procedure ImplRounds(AState: PByte);
   strict protected
     function GetAlgorithmName: String;
   public
@@ -79,8 +78,7 @@ type
     function ProcessFourBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
     /// <summary>
-    /// One 16-byte block via pointers (not on IAesEngineX86 — IBlockCipher has no overload slot without
-    /// touching every cipher). Same semantics as the PByte path used internally for four blocks.
+    /// One 16-byte block via pointers. Same semantics as the PByte path used internally for four blocks.
     /// </summary>
     function ProcessBlock(AInput, AOutput: PByte): Int32; overload;
     function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
@@ -420,15 +418,6 @@ begin
 {$IFEND}
 end;
 
-procedure TAesEngineX86.ImplRounds(AState: PByte);
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  if not Assigned(FAesNiCipherOne) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-  FAesNiCipherOne(AState, FKeys);
-{$IFEND}
-end;
-
 procedure TAesEngineX86.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
@@ -475,8 +464,6 @@ end;
 
 function TAesEngineX86.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-var
-  LBuf: array [0 .. 15] of Byte;
 begin
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
@@ -484,35 +471,19 @@ begin
   TCheck.DataLength(AInput, AInOff, 16, SInputBuffertooShort);
   TCheck.OutputLength(AOutput, AOutOff, 16, SOutputBufferTooShort);
 
-  System.Move(AInput[AInOff], LBuf[0], 16);
-  ImplRounds(@LBuf[0]);
-  System.Move(LBuf[0], AOutput[AOutOff], 16);
-  FillChar(LBuf, SizeOf(LBuf), 0);
-  Result := 16;
+  Result := ProcessBlock(@AInput[AInOff], @AOutput[AOutOff]);
 end;
 
 function TAesEngineX86.ProcessFourBlocks(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-var
-  LWork: array [0 .. 63] of Byte;
 begin
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  if not Assigned(FAesNiCipherFour) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-{$IFEND}
 
   TCheck.DataLength(AInput, AInOff, 64, SInputBuffertooShort);
   TCheck.OutputLength(AOutput, AOutOff, 64, SOutputBufferTooShort);
 
-  System.Move(AInput[AInOff], LWork[0], 64);
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  FAesNiCipherFour(@LWork[0], FKeys);
-{$IFEND}
-  System.Move(LWork[0], AOutput[AOutOff], 64);
-  FillChar(LWork, SizeOf(LWork), 0);
-  Result := 64;
+  Result := ProcessFourBlocks(@AInput[AInOff], @AOutput[AOutOff]);
 end;
 
 function TAesEngineX86.ProcessBlock(AInput, AOutput: PByte): Int32;
