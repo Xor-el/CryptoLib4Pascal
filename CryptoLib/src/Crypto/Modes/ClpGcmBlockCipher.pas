@@ -80,7 +80,7 @@ type
     /// </summary>
     class function IsFourWaySupported: Boolean; static;
     /// <summary>
-    /// True when the 128-bit SSE2 XOR fast path may run for one- and two-block steps (with packed layout).
+    /// True when the 128-bit SSE2 XOR fast path may run for one and two-block steps (with packed layout).
     /// </summary>
     class function IsSse2PackedVectorXorSupported: Boolean; static;
 
@@ -210,28 +210,28 @@ end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-procedure GcmBlockSse2Xor128Mem(PDst, PSrc: PByte);
+procedure GcmBlockXor128Sse2(PDst, PSrc: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmSse2Xor128_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_x86_64.inc}
 end;
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmBlockSse2Xor128Mem(PDst, PSrc: PByte);
+procedure GcmBlockXor128Sse2(PDst, PSrc: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmSse2Xor128_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_i386.inc}
 end;
 {$ENDIF}
 
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-procedure GcmBlockSsse3Reverse128Mem(PDst, PSrc, PMask: PByte);
+procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmSsse3Reverse128_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
 end;
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmBlockSsse3Reverse128Mem(PDst, PSrc, PMask: PByte);
+procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmSsse3Reverse128_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
 end;
 {$ENDIF}
 {$ENDIF}
@@ -368,23 +368,15 @@ begin
 
     FMultiplier.Init(FH);
     FExp := nil;
+    FHPow := nil;
+    FWorkCtr64 := nil;
 {$IFDEF CRYPTOLIB_X86_SIMD}
     if TGcmBlockCipher.IsFourWaySupported then
     begin
-      FHPow := nil;
       System.SetLength(FHPow, 64);
       TGcmUtilities.InitFourWayHPowFromH(FH, FHPow);
-      FWorkCtr64 := nil;
       System.SetLength(FWorkCtr64, 64);
-    end
-    else
-    begin
-      FHPow := nil;
-      FWorkCtr64 := nil;
     end;
-{$ELSE}
-    FHPow := nil;
-    FWorkCtr64 := nil;
 {$ENDIF}
   end
   else if FH = nil then
@@ -908,8 +900,8 @@ begin
   if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
   begin
     System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    GcmBlockSse2Xor128Mem(@AOutBuf[AOutOff], @LCtrBlock[0]);
-    GcmBlockSse2Xor128Mem(@FS[0], @AInBuf[AInOff]);
+    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
+    GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
     FMultiplier.MultiplyH(FS);
     Exit;
   end;
@@ -950,15 +942,15 @@ begin
   begin
     GetNextCtrBlock(LCtrBlock);
     System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    GcmBlockSse2Xor128Mem(@AOutBuf[AOutOff], @LCtrBlock[0]);
-    GcmBlockSse2Xor128Mem(@FS[0], @AInBuf[AInOff]);
+    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
+    GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
     FMultiplier.MultiplyH(FS);
     AInOff := AInOff + BlockSize;
     AOutOff := AOutOff + BlockSize;
     GetNextCtrBlock(LCtrBlock);
     System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    GcmBlockSse2Xor128Mem(@AOutBuf[AOutOff], @LCtrBlock[0]);
-    GcmBlockSse2Xor128Mem(@FS[0], @AInBuf[AInOff]);
+    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
+    GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
     FMultiplier.MultiplyH(FS);
     Exit;
   end;
@@ -1015,14 +1007,8 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasSSSE3 then
   begin
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-    GcmBlockSsse3Reverse128Mem(ADst, ASrc, @ReverseBytesMask[0]);
+    GcmBlockReverse128Ssse3(ADst, ASrc, @ReverseBytesMask[0]);
     Exit;
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-    GcmBlockSsse3Reverse128Mem(ADst, ASrc, @ReverseBytesMask[0]);
-    Exit;
-{$ENDIF}
   end;
 {$ENDIF}
   for LI := 0 to 15 do
@@ -1136,8 +1122,8 @@ begin
   if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
   begin
     System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    GcmBlockSse2Xor128Mem(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-    GcmBlockSse2Xor128Mem(@FS[0], @AOutBuf[AOutOff]);
+    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+    GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
     FMultiplier.MultiplyH(FS);
     Exit;
   end;
@@ -1201,15 +1187,15 @@ begin
   begin
     GetNextCtrBlock(LCtrBlock);
     System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    GcmBlockSse2Xor128Mem(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-    GcmBlockSse2Xor128Mem(@FS[0], @AOutBuf[AOutOff]);
+    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+    GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
     FMultiplier.MultiplyH(FS);
     AInOff := AInOff + BlockSize;
     AOutOff := AOutOff + BlockSize;
     GetNextCtrBlock(LCtrBlock);
     System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    GcmBlockSse2Xor128Mem(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-    GcmBlockSse2Xor128Mem(@FS[0], @AOutBuf[AOutOff]);
+    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+    GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
     FMultiplier.MultiplyH(FS);
     Exit;
   end;

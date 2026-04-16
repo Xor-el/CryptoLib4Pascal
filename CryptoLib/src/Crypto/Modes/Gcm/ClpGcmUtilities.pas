@@ -90,46 +90,46 @@ type
   end;
 
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-procedure GcmX64PclmulFieldPartial(PX, PY, POut: Pointer);
+procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_x86_64.inc}
 end;
 
-procedure GcmX64PclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
+procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
 end;
 
-procedure GcmX64Reduce3Fold(PZ0, PZ1, PZ2: Pointer);
+procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3Fold_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
 end;
 
-procedure GcmX64XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: Pointer);
+procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
 end;
 {$ENDIF CRYPTOLIB_X86_64_ASM}
 
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmI386PclmulFieldPartial(PX, PY, POut: Pointer);
+procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_i386.inc}
 end;
 
-procedure GcmI386PclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
+procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_i386.inc}
 end;
 
-procedure GcmI386Reduce3Fold(PZ0, PZ1, PZ2: Pointer);
+procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3Fold_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_i386.inc}
 end;
 
-procedure GcmI386XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: Pointer);
+procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_i386.inc}
 end;
 {$ENDIF CRYPTOLIB_I386_ASM}
 
@@ -214,16 +214,9 @@ begin
   {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasPCLMULQDQ then
   begin
-    {$IFDEF CRYPTOLIB_X86_64_ASM}
-    GcmX64PclmulFieldPartial(@AX, @AY, @LPartial);
+    GcmPclmulFieldPartial(@AX, @AY, @LPartial);
     GcmPclmulReducePartial(LPartial, AX);
     Exit;
-    {$ENDIF}
-    {$IFDEF CRYPTOLIB_I386_ASM}
-    GcmI386PclmulFieldPartial(@AX, @AY, @LPartial);
-    GcmPclmulReducePartial(LPartial, AX);
-    Exit;
-    {$ENDIF}
   end;
   {$ENDIF}
   LX0 := AX.N0;
@@ -417,14 +410,8 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasPCLMULQDQ then
   begin
-    {$IFDEF CRYPTOLIB_X86_64_ASM}
-    GcmX64PclmulMultiplyExtBytes(PX, PY, POut48);
+    GcmPclmulMultiplyExtBytes(PX, PY, POut48);
     Exit;
-    {$ENDIF}
-    {$IFDEF CRYPTOLIB_I386_ASM}
-    GcmI386PclmulMultiplyExtBytes(PX, PY, POut48);
-    Exit;
-    {$ENDIF}
   end;
 {$ENDIF}
   raise EInvalidOperationCryptoLibException.Create(
@@ -438,14 +425,8 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasSSE2 then
   begin
-    {$IFDEF CRYPTOLIB_X86_64_ASM}
-    GcmX64XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
+    GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48);
     Exit;
-    {$ENDIF}
-    {$IFDEF CRYPTOLIB_I386_ASM}
-    GcmI386XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
-    Exit;
-    {$ENDIF}
   end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
   for LK := 0 to 1 do
@@ -466,12 +447,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasSSE2 then
   begin
-    {$IFDEF CRYPTOLIB_X86_64_ASM}
-    GcmX64Reduce3Fold(PZ0, PZ1, PZ2);
-    {$ENDIF}
-    {$IFDEF CRYPTOLIB_I386_ASM}
-    GcmI386Reduce3Fold(PZ0, PZ1, PZ2);
-    {$ENDIF}
+    GcmReduce3FoldSse2(PZ0, PZ1, PZ2);
     LT3 := PUInt64(PZ0)^;
     LT2 := PUInt64(PZ0 + 8)^;
     LT1 := PUInt64(PZ2)^;

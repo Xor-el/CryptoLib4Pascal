@@ -31,6 +31,7 @@ uses
   ClpCpuFeatures,
   ClpCheck,
   ClpArrayUtilities,
+  ClpBitOperations,
   ClpCryptoLibTypes,
   ClpPlatformUtilities;
 
@@ -289,7 +290,7 @@ begin
     if not (LKeyLen in [16, 24, 32]) then
       raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
 
-    AllocAlignedKeys(((LKeyLen shr 2) + 6 + 1) * 16);
+    AllocAlignedKeys((TBitOperations.Asr32(LKeyLen, 2) + 6 + 1) * 16);
 
     case LKeyLen of
       16:
