@@ -1,16 +1,16 @@
 // AES-256 encryption round-key expansion, i386.
-// Expects: eax = 32-byte key, edx = KeysOut (15 * 16 bytes); register calling convention.
-// Stack: s1,s2,t1,t2,w; edi = KeysOut. Saves edi, ebx.
+// After SimdProc2Begin_i386: ebx = 32-byte key, esi = KeysOut (15 * 16 bytes).
+// Stack: s1,s2,t1,t2,w; edi = KeysOut. Saves edi, ebx (key ptr on stack).
 // Db-encoded AES-NI / SSE2 (broad assembler support).
 //
   push edi
   push ebx
   sub esp, 80
-  mov edi, edx
-  movdqu xmm0, [eax]
+  mov edi, esi
+  movdqu xmm0, [ebx]
   movdqu [esp], xmm0
   movdqu [edi], xmm0
-  movdqu xmm0, [eax + 16]
+  movdqu xmm0, [ebx + 16]
   movdqu [esp + 16], xmm0
   movdqu [edi + 16], xmm0
 
@@ -485,3 +485,5 @@
   add esp, 80
   pop ebx
   pop edi
+  pop esi
+  pop ebx

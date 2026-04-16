@@ -1,12 +1,10 @@
 // AES decrypt key schedule: aesimc middle rounds + reverse round-key order, i386.
-// Expects: eax = round keys, edx = FNRounds (10, 12, or 14); register calling convention.
+// After SimdProc2Begin_i386: ebx = round keys, esi = FNRounds (10, 12, or 14).
 // Db-encoded AES-NI / SSE2 (broad assembler support).
 //
-  push ebx
-  push esi
   push edi
-  mov ecx, eax
-  mov ebx, edx
+  mov ecx, ebx
+  mov ebx, esi
   mov esi, 1
   mov edi, ebx
   dec edi

@@ -51,15 +51,19 @@ type
   strict private
   type
     TAesX86Mode = (Uninitialized, Dec128, Dec192, Dec256, Enc128, Enc192, Enc256);
+    TAesNiCipherProc = procedure(State, Keys: PByte);
   strict private
     FMode: TAesX86Mode;
     FNRounds: Int32;
     FRawAlloc: Pointer;
     FKeys: PByte;
+    FAesNiCipherOne: TAesNiCipherProc;
+    FAesNiCipherFour: TAesNiCipherProc;
     procedure FreeAlignedKeys;
     procedure AllocAlignedKeys(AKeyBytes: Int32);
     procedure CreateRoundKeys(AForEncryption: Boolean; const AKey: TCryptoLibByteArray);
     procedure PrepareDecryptRoundKeys;
+    procedure BindCipherPointers;
     procedure ImplRounds(AState: PByte);
   strict protected
     function GetAlgorithmName: String;
@@ -99,19 +103,69 @@ procedure AesNiExpandRoundKeys256(Key, KeysOut: PByte);
 {$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys256_x86_64.inc}
 end;
 
-procedure AesNiCipherOneBlock(State, Keys: PByte; Mode: Int32);
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiImplRounds_x86_64.inc}
-end;
-
-procedure AesNiCipherFourBlocks(State, Keys: PByte; Mode: Int32);
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiImplFourBlocks_x86_64.inc}
-end;
-
 procedure AesNiPrepareDecryptRoundKeys(Keys: PByte; NRounds: Int32);
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Aes\AesNiPrepareDecryptRoundKeys_x86_64.inc}
+end;
+
+procedure AesNiOneEnc128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneEnc128_x86_64.inc}
+end;
+
+procedure AesNiOneEnc192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneEnc192_x86_64.inc}
+end;
+
+procedure AesNiOneEnc256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneEnc256_x86_64.inc}
+end;
+
+procedure AesNiOneDec128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneDec128_x86_64.inc}
+end;
+
+procedure AesNiOneDec192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneDec192_x86_64.inc}
+end;
+
+procedure AesNiOneDec256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneDec256_x86_64.inc}
+end;
+
+procedure AesNiFourEnc128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourEnc128_x86_64.inc}
+end;
+
+procedure AesNiFourEnc192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourEnc192_x86_64.inc}
+end;
+
+procedure AesNiFourEnc256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourEnc256_x86_64.inc}
+end;
+
+procedure AesNiFourDec128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourDec128_x86_64.inc}
+end;
+
+procedure AesNiFourDec192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourDec192_x86_64.inc}
+end;
+
+procedure AesNiFourDec256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourDec256_x86_64.inc}
 end;
 
 {$ENDIF CRYPTOLIB_X86_64_ASM}
@@ -133,19 +187,69 @@ procedure AesNiExpandRoundKeys256(Key, KeysOut: PByte);
 {$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys256_i386.inc}
 end;
 
-procedure AesNiCipherOneBlock(State, Keys: PByte; Mode: Int32);
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiImplRounds_i386.inc}
-end;
-
-procedure AesNiCipherFourBlocks(State, Keys: PByte; Mode: Int32);
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiImplFourBlocks_i386.inc}
-end;
-
 procedure AesNiPrepareDecryptRoundKeys(Keys: PByte; NRounds: Int32);
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
 {$I ..\..\Include\Simd\Aes\AesNiPrepareDecryptRoundKeys_i386.inc}
+end;
+
+procedure AesNiOneEnc128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneEnc128_i386.inc}
+end;
+
+procedure AesNiOneEnc192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneEnc192_i386.inc}
+end;
+
+procedure AesNiOneEnc256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneEnc256_i386.inc}
+end;
+
+procedure AesNiOneDec128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneDec128_i386.inc}
+end;
+
+procedure AesNiOneDec192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneDec192_i386.inc}
+end;
+
+procedure AesNiOneDec256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiOneDec256_i386.inc}
+end;
+
+procedure AesNiFourEnc128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourEnc128_i386.inc}
+end;
+
+procedure AesNiFourEnc192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourEnc192_i386.inc}
+end;
+
+procedure AesNiFourEnc256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourEnc256_i386.inc}
+end;
+
+procedure AesNiFourDec128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourDec128_i386.inc}
+end;
+
+procedure AesNiFourDec192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourDec192_i386.inc}
+end;
+
+procedure AesNiFourDec256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiFourDec256_i386.inc}
 end;
 
 {$ENDIF CRYPTOLIB_I386_ASM}
@@ -166,6 +270,8 @@ begin
   FKeys := nil;
   FNRounds := 0;
   FMode := TAesX86Mode.Uninitialized;
+  FAesNiCipherOne := nil;
+  FAesNiCipherFour := nil;
 end;
 
 destructor TAesEngineX86.Destroy();
@@ -191,6 +297,8 @@ begin
   FKeys := nil;
   FNRounds := 0;
   FMode := TAesX86Mode.Uninitialized;
+  FAesNiCipherOne := nil;
+  FAesNiCipherFour := nil;
 end;
 
 procedure TAesEngineX86.AllocAlignedKeys(AKeyBytes: Int32);
@@ -262,15 +370,56 @@ begin
     PrepareDecryptRoundKeys;
 end;
 
+procedure TAesEngineX86.BindCipherPointers;
+begin
+  FAesNiCipherOne := nil;
+  FAesNiCipherFour := nil;
+  // Bind once per Init to straight-line ASM. i386: args in eax/edx at entry; bodies use ebx/esi after SimdProc2Begin. x86_64: rcx/rdx throughout.
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  case FMode of
+    TAesX86Mode.Enc128:
+      begin
+        FAesNiCipherOne := @AesNiOneEnc128;
+        FAesNiCipherFour := @AesNiFourEnc128;
+      end;
+    TAesX86Mode.Enc192:
+      begin
+        FAesNiCipherOne := @AesNiOneEnc192;
+        FAesNiCipherFour := @AesNiFourEnc192;
+      end;
+    TAesX86Mode.Enc256:
+      begin
+        FAesNiCipherOne := @AesNiOneEnc256;
+        FAesNiCipherFour := @AesNiFourEnc256;
+      end;
+    TAesX86Mode.Dec128:
+      begin
+        FAesNiCipherOne := @AesNiOneDec128;
+        FAesNiCipherFour := @AesNiFourDec128;
+      end;
+    TAesX86Mode.Dec192:
+      begin
+        FAesNiCipherOne := @AesNiOneDec192;
+        FAesNiCipherFour := @AesNiFourDec192;
+      end;
+    TAesX86Mode.Dec256:
+      begin
+        FAesNiCipherOne := @AesNiOneDec256;
+        FAesNiCipherFour := @AesNiFourDec256;
+      end;
+  else
+    // stay nil
+  end;
+{$IFEND}
+end;
+
 procedure TAesEngineX86.ImplRounds(AState: PByte);
 begin
-  case FMode of
-    TAesX86Mode.Dec128, TAesX86Mode.Dec192, TAesX86Mode.Dec256, TAesX86Mode.Enc128,
-    TAesX86Mode.Enc192, TAesX86Mode.Enc256:
-      AesNiCipherOneBlock(AState, FKeys, Ord(FMode));
-  else
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  if not Assigned(FAesNiCipherOne) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-  end;
+  FAesNiCipherOne(AState, FKeys);
+{$IFEND}
 end;
 
 procedure TAesEngineX86.Init(AForEncryption: Boolean;
@@ -311,6 +460,7 @@ begin
     end;
 
     CreateRoundKeys(AForEncryption, LKeyCopy);
+    BindCipherPointers;
   finally
     TArrayUtilities.Fill<Byte>(LKeyCopy, 0, System.Length(LKeyCopy), Byte(0));
   end;
@@ -341,12 +491,18 @@ var
 begin
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  if not Assigned(FAesNiCipherFour) then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
+{$IFEND}
 
   TCheck.DataLength(AInput, AInOff, 64, SInputBuffertooShort);
   TCheck.OutputLength(AOutput, AOutOff, 64, SOutputBufferTooShort);
 
   System.Move(AInput[AInOff], LWork[0], 64);
-  AesNiCipherFourBlocks(@LWork[0], FKeys, Ord(FMode));
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  FAesNiCipherFour(@LWork[0], FKeys);
+{$IFEND}
   System.Move(LWork[0], AOutput[AOutOff], 64);
   FillChar(LWork, SizeOf(LWork), 0);
   Result := 64;

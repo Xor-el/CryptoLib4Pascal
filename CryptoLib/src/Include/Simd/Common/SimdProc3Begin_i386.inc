@@ -1,11 +1,10 @@
-// Shared SIMD/asm procedure prologue (3 parameters, i386).
-// After inclusion: ebx = param1, esi = param2, edi = param3 (copied from EAX, EDX, ECX at entry).
-// Copy params into callee-saved registers so EAX/EDX/ECX stay free for inner-loop temporaries.
+// Shared SIMD procedure prologue for 3-parameter assembly functions.
+// After inclusion: ebx = param1, esi = param2, edi = param3 (EAX, EDX, ECX at entry).
 // FPC: Windows and Unix i386 use the same parameter entry layout.
 // Usage:
-//   procedure MyProc(P1, P2: Pointer; N: Int32);
+//   procedure MyProc(P1, P2, P3: Pointer);
 //     {$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-//     // ... body using ebx, esi, edi ...
+//     // ... SIMD instructions using ebx, esi, edi ...
 //   end;
 {$IFDEF FPC}
   assembler; nostackframe;

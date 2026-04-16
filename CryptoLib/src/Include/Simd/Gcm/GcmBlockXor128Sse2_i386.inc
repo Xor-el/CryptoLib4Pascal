@@ -1,7 +1,8 @@
-// 16-byte XOR (i386): [ebx] ^= [esi] after SimdProc2Begin_i386 (eax=dst, edx=src)
-// SimdProc2Begin leaves eax, edx as params — use them directly.
+// 16-byte XOR (i386): [ebx] ^= [esi] after SimdProc2Begin_i386 (ebx = dst, esi = src).
 //
-  movdqu    xmm0, [eax]
-  movdqu    xmm1, [edx]
+  movdqu    xmm0, [ebx]
+  movdqu    xmm1, [esi]
   pxor      xmm0, xmm1
-  movdqu    [eax], xmm0
+  movdqu    [ebx], xmm0
+  pop esi
+  pop ebx
