@@ -63,6 +63,9 @@ resourcestring
   SGcmFourWayNotSupported = 'GCM four-block path is not available on this platform.';
   SGcmFourWayHStateMissing = 'GCM fused four-block multiplier state is not initialized.';
   SGcmDecryptFourWayBadLimit = 'Invalid limit for GCM four-block decrypt.';
+  SGcmEightWayNotSupported = 'GCM eight-block path is not available on this platform.';
+  SGcmEightWayHStateMissing = 'GCM fused eight-block multiplier state is not initialized.';
+  SGcmDecryptEightWayBadLimit = 'Invalid limit for GCM eight-block decrypt.';
 
 type
   TGcmBlockCipher = class(TInterfacedObject, IGcmBlockCipher,
@@ -79,6 +82,10 @@ type
     /// batched counter AES, and a packed 16-byte XMM layout.
     /// </summary>
     class function IsFourWaySupported: Boolean; static;
+    /// <summary>
+    /// True when the fused eight-block SIMD path may run (128-byte CTR batch + wider GHASH).
+    /// </summary>
+    class function IsEightWaySupported: Boolean; static;
     /// <summary>
     /// True when the 128-bit SSE2 XOR fast path may run for one and two-block steps (with packed layout).
     /// </summary>
@@ -114,16 +121,21 @@ type
     FAtBlockPos: Int32;
     FAtLength: UInt64;
     FAtLengthPre: UInt64;
-    /// <summary>HPow limbs H^4..H^1 (64 bytes) for fused four-block GHASH; nil if path off.</summary>
+    /// <summary>HPow limbs H^8..H^1 (128 bytes) for fused GHASH; indices 64..112 hold H^4..H^1 for the four-block path; nil if path off.</summary>
     FHPow: TCryptoLibByteArray;
-    /// <summary>Reused 64-byte buffer for four CTR blocks (avoids heap alloc per fused step).</summary>
-    FWorkCtr64: TCryptoLibByteArray;
+    /// <summary>Reused 128-byte buffer for batched CTR keystream (first 64 bytes used by four-block fused path).</summary>
+    FWorkCtr: TCryptoLibByteArray;
 
     procedure GcmReverse16(const ASrc, ADst: PByte);
     procedure GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
+    procedure GhashEightShuffledBlocks(PBase: PByte);
     procedure EncryptBlocks4Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
     procedure DecryptBlocks4Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+    procedure EncryptBlocks8Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+    procedure DecryptBlocks8Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 
     procedure InitCipher();
@@ -135,13 +147,19 @@ type
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
     procedure EncryptBlocks4(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
+    procedure EncryptBlocks8(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
     procedure DecryptBlocks2(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
     procedure DecryptBlocks4(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32);
+    procedure DecryptBlocks8(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
+      ALimit: Int32);
     procedure GetNextCtrBlock(const ABlock: TCryptoLibByteArray);
     procedure GetNextCtrBlocks4(const ABlocks: TCryptoLibByteArray);
+    procedure GetNextCtrBlocks8(const ABlocks: TCryptoLibByteArray);
     procedure ProcessPartial(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32);
     procedure GHASH(const AY, AB: TCryptoLibByteArray; ALen: Int32);
@@ -194,6 +212,15 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
     TIntrinsicsVector.IsPacked;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TGcmBlockCipher.IsEightWaySupported: Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  Result := TGcmBlockCipher.IsFourWaySupported;
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -369,13 +396,14 @@ begin
     FMultiplier.Init(FH);
     FExp := nil;
     FHPow := nil;
-    FWorkCtr64 := nil;
+    FWorkCtr := nil;
 {$IFDEF CRYPTOLIB_X86_SIMD}
     if TGcmBlockCipher.IsFourWaySupported then
     begin
-      System.SetLength(FHPow, 64);
-      TGcmUtilities.InitFourWayHPowFromH(FH, FHPow);
-      System.SetLength(FWorkCtr64, 64);
+      System.SetLength(FHPow, 128);
+      TGcmUtilities.InitEightWayHPowFromH(FH, FHPow);
+      System.SetLength(FWorkCtr, 128);
+      TArrayUtilities.Fill<Byte>(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
     end;
 {$ENDIF}
   end
@@ -573,7 +601,7 @@ function TGcmBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
   LResultLen, LAvailable: Int32;
-  LBufLen, LThresh2, LThresh4: Int32;
+  LBufLen, LThresh2, LThresh4, LThresh8: Int32;
   LBlocksNeeded: UInt32;
 begin
   CheckStatus();
@@ -619,7 +647,29 @@ begin
     end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    if TGcmBlockCipher.IsFourWaySupported and (ALen >= BlockSize * 4) then
+    if TGcmBlockCipher.IsEightWaySupported and (ALen >= BlockSize * 8) then
+    begin
+      EncryptBlocks8(AInput, AInOff, ALen, AOutput, AOutOff);
+      if ALen >= BlockSize * 4 then
+      begin
+        EncryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff);
+        if ALen >= BlockSize * 2 then
+        begin
+          EncryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+          AInOff := AInOff + (BlockSize * 2);
+          ALen := ALen - (BlockSize * 2);
+          AOutOff := AOutOff + (BlockSize * 2);
+        end;
+      end
+      else if ALen >= BlockSize * 2 then
+      begin
+        EncryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        AInOff := AInOff + (BlockSize * 2);
+        ALen := ALen - (BlockSize * 2);
+        AOutOff := AOutOff + (BlockSize * 2);
+      end;
+    end
+    else if TGcmBlockCipher.IsFourWaySupported and (ALen >= BlockSize * 4) then
     begin
       EncryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff);
       if ALen >= BlockSize * 2 then
@@ -710,9 +760,32 @@ begin
     LBufLen := System.Length(FBufBlock);
     LThresh2 := LBufLen + BlockSize;
     LThresh4 := LBufLen + (BlockSize * 3);
+    LThresh8 := LBufLen + (BlockSize * 7);
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    if TGcmBlockCipher.IsFourWaySupported and (ALen >= LThresh4) then
+    if TGcmBlockCipher.IsEightWaySupported and (ALen >= LThresh8) then
+    begin
+      DecryptBlocks8(AInput, AInOff, ALen, AOutput, AOutOff, LThresh8);
+      if ALen >= LThresh4 then
+      begin
+        DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
+        if ALen >= LThresh2 then
+        begin
+          DecryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+          AInOff := AInOff + (BlockSize * 2);
+          ALen := ALen - (BlockSize * 2);
+          AOutOff := AOutOff + (BlockSize * 2);
+        end;
+      end
+      else if ALen >= LThresh2 then
+      begin
+        DecryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        AInOff := AInOff + (BlockSize * 2);
+        ALen := ALen - (BlockSize * 2);
+        AOutOff := AOutOff + (BlockSize * 2);
+      end;
+    end
+    else if TGcmBlockCipher.IsFourWaySupported and (ALen >= LThresh4) then
     begin
       DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
       if ALen >= LThresh2 then
@@ -1044,7 +1117,7 @@ begin
     if LB = 0 then
       for LI := 0 to 15 do
         LDblk[LI] := LDblk[LI] xor LSRev[LI];
-    TGcmUtilities.MultiplyExt(@LDblk[0], @FHPow[LB * 16], @LBuf48[0]);
+    TGcmUtilities.MultiplyExt(@LDblk[0], @FHPow[64 + (LB * 16)], @LBuf48[0]);
     TGcmUtilities.XorMultiplyExtLimbs48(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
   end;
   TGcmUtilities.Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
@@ -1056,14 +1129,14 @@ procedure TGcmBlockCipher.EncryptBlocks4Fused(const AInBuf: TCryptoLibByteArray;
 var
   LI, LBase: Int32;
 begin
-  GetNextCtrBlocks4(FWorkCtr64);
+  GetNextCtrBlocks4(FWorkCtr);
   for LBase := 0 to 3 do
   begin
     LI := LBase * 16;
     PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
-      PUInt64(@FWorkCtr64[LI])^;
+      PUInt64(@FWorkCtr[LI])^;
     PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
-      PUInt64(@FWorkCtr64[LI + 8])^;
+      PUInt64(@FWorkCtr[LI + 8])^;
   end;
   GhashFourShuffledBlocks(@AOutBuf[AOutOff], @AOutBuf[AOutOff + 16], @AOutBuf[AOutOff + 32],
     @AOutBuf[AOutOff + 48]);
@@ -1074,17 +1147,78 @@ procedure TGcmBlockCipher.DecryptBlocks4Fused(const AInBuf: TCryptoLibByteArray;
 var
   LI, LBase: Int32;
 begin
-  GetNextCtrBlocks4(FWorkCtr64);
+  GetNextCtrBlocks4(FWorkCtr);
   for LBase := 0 to 3 do
   begin
     LI := LBase * 16;
     PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
-      PUInt64(@FWorkCtr64[LI])^;
+      PUInt64(@FWorkCtr[LI])^;
     PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
-      PUInt64(@FWorkCtr64[LI + 8])^;
+      PUInt64(@FWorkCtr[LI + 8])^;
   end;
   GhashFourShuffledBlocks(@AInBuf[AInOff], @AInBuf[AInOff + 16], @AInBuf[AInOff + 32],
     @AInBuf[AInOff + 48]);
+end;
+
+procedure TGcmBlockCipher.GhashEightShuffledBlocks(PBase: PByte);
+var
+  LB, LI: Int32;
+  LDblk: array [0 .. 15] of Byte;
+  LBuf48: array [0 .. 47] of Byte;
+  LU0, LU1, LU2: array [0 .. 15] of Byte;
+  LSRev: array [0 .. 15] of Byte;
+  LPCiph: PByte;
+begin
+  GcmReverse16(@FS[0], @LSRev[0]);
+  System.FillChar(LU0[0], 16, 0);
+  System.FillChar(LU1[0], 16, 0);
+  System.FillChar(LU2[0], 16, 0);
+  for LB := 0 to 7 do
+  begin
+    LPCiph := PBase + (LB * 16);
+    GcmReverse16(LPCiph, @LDblk[0]);
+    if LB = 0 then
+      for LI := 0 to 15 do
+        LDblk[LI] := LDblk[LI] xor LSRev[LI];
+    TGcmUtilities.MultiplyExt(@LDblk[0], @FHPow[LB * 16], @LBuf48[0]);
+    TGcmUtilities.XorMultiplyExtLimbs48(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
+  end;
+  TGcmUtilities.Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
+  GcmReverse16(@LSRev[0], @FS[0]);
+end;
+
+procedure TGcmBlockCipher.EncryptBlocks8Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+  const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LI, LBase: Int32;
+begin
+  GetNextCtrBlocks8(FWorkCtr);
+  for LBase := 0 to 7 do
+  begin
+    LI := LBase * 16;
+    PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
+      PUInt64(@FWorkCtr[LI])^;
+    PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
+      PUInt64(@FWorkCtr[LI + 8])^;
+  end;
+  GhashEightShuffledBlocks(@AOutBuf[AOutOff]);
+end;
+
+procedure TGcmBlockCipher.DecryptBlocks8Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+  const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LI, LBase: Int32;
+begin
+  GetNextCtrBlocks8(FWorkCtr);
+  for LBase := 0 to 7 do
+  begin
+    LI := LBase * 16;
+    PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
+      PUInt64(@FWorkCtr[LI])^;
+    PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
+      PUInt64(@FWorkCtr[LI + 8])^;
+  end;
+  GhashEightShuffledBlocks(@AInBuf[AInOff]);
 end;
 
 procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;
@@ -1105,6 +1239,27 @@ begin
   end;
 {$ELSE}
   raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
+{$ENDIF}
+end;
+
+procedure TGcmBlockCipher.EncryptBlocks8(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32);
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TGcmBlockCipher.IsEightWaySupported then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
+  if (FHPow = nil) or (System.Length(FHPow) < 128) then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
+  while ALen >= BlockSize * 8 do
+  begin
+    EncryptBlocks8Fused(AInBuf, AInOff, AOutBuf, AOutOff);
+    AInOff := AInOff + (BlockSize * 8);
+    ALen := ALen - (BlockSize * 8);
+    AOutOff := AOutOff + (BlockSize * 8);
+  end;
+{$ELSE}
+  raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
 {$ENDIF}
 end;
 
@@ -1169,6 +1324,29 @@ begin
   end;
 {$ELSE}
   raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
+{$ENDIF}
+end;
+
+procedure TGcmBlockCipher.DecryptBlocks8(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32; ALimit: Int32);
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TGcmBlockCipher.IsEightWaySupported then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
+  if ALimit < BlockSize * 8 then
+    raise EArgumentCryptoLibException.CreateRes(@SGcmDecryptEightWayBadLimit);
+  if (FHPow = nil) or (System.Length(FHPow) < 128) then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
+  while ALen >= ALimit do
+  begin
+    DecryptBlocks8Fused(AInBuf, AInOff, AOutBuf, AOutOff);
+    AInOff := AInOff + (BlockSize * 8);
+    ALen := ALen - (BlockSize * 8);
+    AOutOff := AOutOff + (BlockSize * 8);
+  end;
+{$ELSE}
+  raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
 {$ENDIF}
 end;
 
@@ -1288,6 +1466,66 @@ begin
   FCipher.ProcessBlock(FCounter, 0, ABlocks, 32);
   TPack.UInt32_To_BE(Lc4, FCounter, 12);
   FCipher.ProcessBlock(FCounter, 0, ABlocks, 48);
+end;
+
+procedure TGcmBlockCipher.GetNextCtrBlocks8(const ABlocks: TCryptoLibByteArray);
+var
+  Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
+  LAesX86: IAesEngineX86;
+begin
+  Lc0 := FCounter32;
+  Lc1 := Lc0 + UInt32(1);
+  Lc2 := Lc0 + UInt32(2);
+  Lc3 := Lc0 + UInt32(3);
+  Lc4 := Lc0 + UInt32(4);
+  Lc5 := Lc0 + UInt32(5);
+  Lc6 := Lc0 + UInt32(6);
+  Lc7 := Lc0 + UInt32(7);
+  Lc8 := Lc0 + UInt32(8);
+  FCounter32 := Lc8;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TAesEngineX86.IsSupported and Supports(FCipher, IAesEngineX86, LAesX86) then
+  begin
+    System.Move(FCounter[0], ABlocks[0], 16);
+    System.Move(FCounter[0], ABlocks[16], 16);
+    System.Move(FCounter[0], ABlocks[32], 16);
+    TPack.UInt32_To_BE(Lc4, FCounter, 12);
+    TPack.UInt32_To_BE(Lc1, ABlocks, 12);
+    TPack.UInt32_To_BE(Lc2, ABlocks, 28);
+    TPack.UInt32_To_BE(Lc3, ABlocks, 44);
+    System.Move(FCounter[0], ABlocks[48], 16);
+    LAesX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
+
+    System.Move(FCounter[0], ABlocks[64], 16);
+    System.Move(FCounter[0], ABlocks[80], 16);
+    System.Move(FCounter[0], ABlocks[96], 16);
+    TPack.UInt32_To_BE(Lc8, FCounter, 12);
+    TPack.UInt32_To_BE(Lc5, ABlocks, 76);
+    TPack.UInt32_To_BE(Lc6, ABlocks, 92);
+    TPack.UInt32_To_BE(Lc7, ABlocks, 108);
+    System.Move(FCounter[0], ABlocks[112], 16);
+    LAesX86.ProcessFourBlocks(@ABlocks[64], @ABlocks[64]);
+    Exit;
+  end;
+{$ENDIF}
+
+  TPack.UInt32_To_BE(Lc1, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 0);
+  TPack.UInt32_To_BE(Lc2, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 16);
+  TPack.UInt32_To_BE(Lc3, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 32);
+  TPack.UInt32_To_BE(Lc4, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 48);
+  TPack.UInt32_To_BE(Lc5, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 64);
+  TPack.UInt32_To_BE(Lc6, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 80);
+  TPack.UInt32_To_BE(Lc7, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 96);
+  TPack.UInt32_To_BE(Lc8, FCounter, 12);
+  FCipher.ProcessBlock(FCounter, 0, ABlocks, 112);
 end;
 
 procedure TGcmBlockCipher.ProcessPartial(const ABuf: TCryptoLibByteArray;

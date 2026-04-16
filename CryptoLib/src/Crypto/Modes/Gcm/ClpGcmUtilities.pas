@@ -70,6 +70,8 @@ type
     class procedure XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte); static;
     /// <summary>HPow[0..3] = H^4..H^1 as 16-byte limbs for fused four-block GHASH (index 0 = H^4, index 3 = H^1).</summary>
     class procedure InitFourWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow64: TCryptoLibByteArray); static;
+    /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8). Four-way fused GHASH uses offsets 64..112 (H^4..H^1).</summary>
+    class procedure InitEightWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow128: TCryptoLibByteArray); static;
 
     class procedure &Xor(const AX, AY: TCryptoLibByteArray); overload; static;
     class procedure &Xor(const AX, AY: TCryptoLibByteArray; AYOff: Int32); overload; static;
@@ -517,6 +519,56 @@ begin
   PUInt64(@AHPow64[40])^ := LF2.N0;
   PUInt64(@AHPow64[48])^ := LF1.N1;
   PUInt64(@AHPow64[56])^ := LF1.N0;
+end;
+
+class procedure TGcmUtilities.InitEightWayHPowFromH(const AH: TCryptoLibByteArray;
+  const AHPow128: TCryptoLibByteArray);
+var
+  LF1, LF2, LF3, LF4, LF5, LF6, LF7, LF8: TFieldElement;
+  LAcc, LY: TFieldElement;
+begin
+  if (System.Length(AH) < 16) or (System.Length(AHPow128) < 128) then
+    Exit;
+  AsFieldElement(AH, LF1);
+  LAcc := LF1;
+  LY := LF1;
+  Multiply(LAcc, LY);
+  LF2 := LAcc;
+  LF3 := LF1;
+  Multiply(LF3, LF2);
+  LAcc := LF2;
+  LY := LF2;
+  Multiply(LAcc, LY);
+  LF4 := LAcc;
+  LF5 := LF4;
+  LY := LF1;
+  Multiply(LF5, LY);
+  LF6 := LF4;
+  LY := LF2;
+  Multiply(LF6, LY);
+  LF7 := LF4;
+  LY := LF3;
+  Multiply(LF7, LY);
+  LAcc := LF4;
+  LY := LF4;
+  Multiply(LAcc, LY);
+  LF8 := LAcc;
+  PUInt64(@AHPow128[0])^ := LF8.N1;
+  PUInt64(@AHPow128[8])^ := LF8.N0;
+  PUInt64(@AHPow128[16])^ := LF7.N1;
+  PUInt64(@AHPow128[24])^ := LF7.N0;
+  PUInt64(@AHPow128[32])^ := LF6.N1;
+  PUInt64(@AHPow128[40])^ := LF6.N0;
+  PUInt64(@AHPow128[48])^ := LF5.N1;
+  PUInt64(@AHPow128[56])^ := LF5.N0;
+  PUInt64(@AHPow128[64])^ := LF4.N1;
+  PUInt64(@AHPow128[72])^ := LF4.N0;
+  PUInt64(@AHPow128[80])^ := LF3.N1;
+  PUInt64(@AHPow128[88])^ := LF3.N0;
+  PUInt64(@AHPow128[96])^ := LF2.N1;
+  PUInt64(@AHPow128[104])^ := LF2.N0;
+  PUInt64(@AHPow128[112])^ := LF1.N1;
+  PUInt64(@AHPow128[120])^ := LF1.N0;
 end;
 
 end.
