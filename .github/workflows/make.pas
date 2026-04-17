@@ -123,9 +123,6 @@ var FileStream: TStream;
 begin
   Result := '%s_%s'.Format([GetTempFileName, Package]);
   OutLog(etDebug, 'GetPackage from'#9 + Uri + #10#9'to:'#9 + Result);
-  {$IFDEF MSWINDOWS}
-    RunShell('Invoke-WebRequest -Uri %s -OutFile %s'.Format([Uri + Package + '.zip', Result]));
-  {$ELSE}
     InitSSLInterface;
     FileStream := TFileStream.Create(Result, fmCreate or fmOpenWrite);
     with TFPHttpClient.Create(nil) do begin
@@ -138,7 +135,6 @@ begin
         FileStream.Free;
       end;
     end;
-  {$ENDIF}
 end;
 
 function BuildAll(const OutDep: array of string): string;
