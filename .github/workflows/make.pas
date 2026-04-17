@@ -1,172 +1,182 @@
+//castle-engine.io/modern_pascal
+
 program Make;
 {$mode objfpc}{$H+}
-{$unitpath /usr/lib64/lazarus/components/lazutils}
+
 uses
   Classes,
   SysUtils,
   StrUtils,
   FileUtil,
+  LazFileUtils,
   Zipper,
   fphttpclient,
   RegExpr,
   openssl,
+  LazUTF8,
   opensslsockets,
+  eventlog,
   Process;
 
-const
-  Target: string = 'CryptoLib.Tests';
-  Dependencies: array of string = ('HashLib', 'SimpleBaseLib');
-
-type
-  TLog = (audit, info, error);
-
-  Output = record
-    Success: boolean;
-    Output: string;
+function OutLog(const Knd: TEventType; const Msg: string): string; cdecl;
+begin
+  case Knd of
+    etError: Result := #27'[31m%s'#27'[0m';
+    etInfo:  Result := #27'[32m%s'#27'[0m';
+    etDebug: Result := #27'[33m%s'#27'[0m';
   end;
+  if Knd = etError then ExitCode += 1;
+  Writeln(stderr, UTF8ToConsole(Result.Format([Msg])));
+end;
 
-  procedure OutLog(const Knd: TLog; const Msg: string);
-  begin
-    case Knd of
-      error: Writeln(stderr, #27'[31m', Msg, #27'[0m');
-      info: Writeln(stderr, #27'[32m', Msg, #27'[0m');
-      audit: Writeln(stderr, #27'[33m', Msg, #27'[0m');
-    end;
-  end;
-
-  function AddPackage(const Path: string): string;
-  begin
-    if RunCommand('lazbuild', ['--build-all', Path], Result) then
-       OutLog(audit, 'Add package:'#9 + Path);
-  end;
-
-  function SelectString(const Input, Reg: string): string;
-  var
-    Line: string;
-  begin
-    Result := ' ';
+function SelectString(const Input, Reg: string): string; cdecl;
+var Line: string;
+begin
+  Result := EmptyStr;
+  with TRegExpr.Create do begin
+    Expression := Reg;
     for Line in Input.Split(LineEnding) do
-      with TRegExpr.Create do
-      begin
-        Expression := Reg;
-        if Exec(Line) then
-          Result += Line + LineEnding;
-        Free;
-      end;
+      if Exec(Line) then Result += Line + LineEnding;
+    Free;
   end;
+end;
 
-  function RunTest(const Path: String): string;
-  begin
-    OutLog(audit, #9'run:'#9 + Path);
-    if RunCommand(Path, ['--all', '--format=plain'], Result) then
-      OutLog(info, #9'success!')
-    else
-      ExitCode += 1;
-    OutLog(audit, Result);
+function RunShell(const Command: String): string; cdecl;
+begin
+  OutLog(etDebug, '-- RunShell:'#9 + Command);
+  if not RunCommand(
+  {$IFDEF MSWINDOWS}
+  'pwsh', [
+      '-NoExit',
+      '-NonInteractive',
+      '-Command',
+      '$ErrorActionPreference = "stop"; Set-PSDebug -Strict; ' + Command + '; exit'
+    ]
+  {$ELSE}
+  'bash', ['-c', 'set -euo pipefail; ' + Command]
+  {$ENDIF}
+  , Result, [poStderrToOutPut, poWaitOnExit]) then
+    OutLog(etError, Result);
+end;
+
+function AddPackage(const Path: string; const Link: boolean): string;
+var Line: string;
+begin
+  if Link then Line := '--add-package-link'
+  else Line := '--build-all'; 
+  Result := {$IFDEF MSWINDOWS}
+    '(cocoa|x11|_template)' {$ELSE}
+    '(cocoa|gdi|_template)' {$ENDIF};
+  OutLog(etDebug, 'AddPackage:'#9 + Path);
+  if SelectString(Path, Result) = EmptyStr then
+    RunShell('lazbuild --recursive %s %s'.Format([Line, Path]));
+end;
+
+function AddLibrary(const Path: String): string; cdecl;
+begin
+  Result := '/usr/lib/';
+  OutLog(etDebug, 'AddLibrary:'#9 + Path);
+  if not FileExists(Result + ExtractFileName(Path)) then
+    RunShell('sudo cp %s %s; ldconfig'.Format([Path, Result]));
+end;
+
+function BuildProject(const Path: string): string; cdecl;
+var Text: string;
+begin
+  OutLog(etDebug, 'BuildProject from:'#9 + Path);
+  if not RunCommand('lazbuild',
+    ['--build-all', '--recursive', '--no-write-project', Path], Result, [poStderrToOutPut, poWaitOnExit])
+  then OutLog(etError, SelectString(Result, '(Fatal|Error):'))
+  else begin
+    Result := SelectString(Result, 'Linking').Split(' ')[2].Replace(LineEnding, EmptyStr);
+    OutLog(etInfo, #10#9'to:'#9 + Result);
+    Text := ReadFileToString(Path.Replace('.lpi', '.lpr'));
+    if Text.Contains('program') and Text.Contains('consoletestrunner') then
+      RunShell('%s --all --format=plain'.Format([Result]))
+    else if Text.Contains('library') and Text.Contains('exports') then
+      AddLibrary(Result);
   end;
+end;
 
-  function BuildProject(const Path: string): Output;
-  begin
-    OutLog(audit, 'Build from:'#9 + Path);
-    Result.Success := RunCommand('lazbuild',
-      ['--build-all', '--recursive', '--no-write-project', Path], Result.Output);
-    Result.Output := SelectString(Result.Output, '(Fatal:|Error:|Linking)');
-    if Result.Success then
-    begin
-      Result.Output := Result.Output.Split(' ')[3].Replace(LineEnding, '');
-      OutLog(info, #9'to:'#9 + Result.Output);
-      if ContainsStr(ReadFileToString(Path.Replace('.lpi', '.lpr')), 'consoletestrunner') then
-        RunTest(Result.Output.Replace(#10, ''));
-    end
-    else
-    begin
-      ExitCode += 1;
-      OutLog(error, Result.Output);
+function ExtractPackage(const ZipFile: string): string; cdecl;
+begin
+  Result := GetEnvironmentVariable({$IFDEF MSWINDOWS}'APPDATA'{$ELSE}'HOME'{$ENDIF})
+    + '/.lazarus/onlinepackagemanager/packages/'.Replace('/', DirectorySeparator)
+    + ZipFile.Split('_')[1];
+  OutLog(etDebug, 'ExtPackage from:'#9 + ZipFile + #10#9'to:'#9 + Result);
+  if not DirectoryExists(Result) and ForceDirectories(Result) then
+  with TUnZipper.Create do begin
+    try
+      FileName := ZipFile;
+      OutputPath := Result;
+      Examine;
+      UnZipAllFiles;
+      DeleteFile(ZipFile);
+    finally
+      Free;
     end;
   end;
+end;
 
-  function DownloadFile(const Uri: string): string;
-  var
-    OutFile: TStream;
-  begin
+function GetPackage(const Uri, Package: string): string; cdecl;
+var FileStream: TStream;
+begin
+  Result := '%s_%s'.Format([GetTempFileName, Package]);
+  OutLog(etDebug, 'GetPackage from'#9 + Uri + #10#9'to:'#9 + Result);
+  {$IFDEF MSWINDOWS}
+    RunShell('Invoke-WebRequest -Uri %s -OutFile %s'.Format([Uri + Package + '.zip', Result]));
+  {$ELSE}
     InitSSLInterface;
-    Result := GetTempFileName;
-    OutFile := TFileStream.Create(Result, fmCreate or fmOpenWrite);
-    with TFPHttpClient.Create(nil) do
-    begin
+    FileStream := TFileStream.Create(Result, fmCreate or fmOpenWrite);
+    with TFPHttpClient.Create(nil) do begin
       try
         AddHeader('User-Agent', 'Mozilla/5.0 (compatible; fpweb)');
         AllowRedirect := True;
-        Get(Uri, OutFile);
-        OutLog(audit, 'Download from ' + Uri + ' to ' + Result);
+        Get(Uri + Package + '.zip', FileStream);
       finally
         Free;
-        OutFile.Free;
+        FileStream.Free;
       end;
     end;
-  end;
+  {$ENDIF}
+end;
 
-  procedure UnZip(const ZipFile, ZipPath: string);
-  begin
-    with TUnZipper.Create do
-    begin
-      try
-        FileName := ZipFile;
-        OutputPath := ZipPath;
-        Examine;
-        UnZipAllFiles;
-        OutLog(audit, 'Unzip from'#9 + ZipFile + #9'to'#9 + ZipPath);
-        DeleteFile(ZipFile);
-      finally
-        Free;
-      end;
-    end;
+function BuildAll(const OutDep: array of string): string;
+var
+  Item: string;
+  DT: TDateTime;
+begin
+  DT := Time;
+  OutLog(etDebug, #10'#----------------------------------[GET OUT DEPENDENS]----------------------------------#'#10);
+  for Item in OutDep do
+    for Result in FindAllFiles(ExtractPackage(
+      GetPackage('https://packages.lazarus-ide.org/', Item)
+    ), '*.lpk') do
+      AddPackage(Result, true);
+  OutLog(etDebug, #10'#----------------------------------[GET IN  DEPENDENS]----------------------------------#'#10);
+  for Result in FindAllFiles(GetCurrentDir, '*.lpk') do
+    AddPackage(Result, false);
+  OutLog(etDebug, #10'#----------------------------------[BUILD     PROECTS]----------------------------------#'#10);
+  for Result in FindAllFiles(GetCurrentDir, '*.lpi') do
+    if not Result.Contains(DirectorySeparator + 'use' + DirectorySeparator) then
+      BuildProject(Result);
+  OutLog(etDebug, #10'#----------------------------------[      RESULT      ]----------------------------------#'#10);
+  OutLog(etDebug, 'Duration:'#9 + FormatDateTime('hh:nn:ss', Time - DT));
+  case ExitCode of
+    0: OutLog(etInfo,    #9'Errors:'#9 + ExitCode.ToString);
+    else OutLog(etError, #9'Errors:'#9 + ExitCode.ToString);
   end;
-
-  function InstallOPM(const Path: string): string;
-  begin
-    Result :=
-      {$IFDEF MSWINDOWS}
-      GetEnvironmentVariable('APPDATA') + '\.lazarus\onlinepackagemanager\packages\'
-      {$ELSE}
-      GetEnvironmentVariable('HOME') + '/.lazarus/onlinepackagemanager/packages/'
-      {$ENDIF}
-      + Path;
-    if not DirectoryExists(Result) then
-    begin
-      CreateDir(Result);
-      UnZip(DownloadFile('https://packages.lazarus-ide.org/' + Path + '.zip'), Result);
-    end;
-  end;
-
-  function BuildAll: string;
-  var
-    List: TStringList;
-  begin
-    List := FindAllFiles(GetCurrentDir, '*.lpk', True);
-    try
-      for Result in Dependencies do
-        List.AddStrings(FindAllFiles(InstallOPM(Result), '*.lpk', True));
-      for Result in List do
-        AddPackage(Result);
-      List := FindAllFiles(Target, '*.lpi', True);
-      for Result in List do
-        BuildProject(Result);
-    finally
-      List.Free;
-    end;
-    case ExitCode of
-      0: OutLog(info, 'Errors:'#9 + IntToStr(ExitCode));
-      else
-        OutLog(error, 'Errors:'#9 + IntToStr(ExitCode));
-    end;
-  end;
+end;
 
 begin
   try
-    BuildAll
+    if ParamCount > 0 then
+      case ParamStr(1) of
+        'build': BuildAll(['HashLib', 'SimpleBaseLib']);
+        else OutLog(etError, ParamStr(1));
+      end;
   except
     on E: Exception do
-      Writeln(E.ClassName, #9, E.Message);
+      OutLog(etError, E.ClassName + #9 + E.Message);
   end;
 end.
