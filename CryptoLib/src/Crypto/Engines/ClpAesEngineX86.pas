@@ -106,6 +106,21 @@ type
     /// identical (in-place) or fully disjoint.
     /// </summary>
     function ProcessEightBlocksFast(AInput, AOutput: PByte): Int32; inline;
+    /// <summary>
+    /// Internal fast-path accessor for the AES-NI encrypt round-key schedule
+    /// used by the fused GCM + AES-NI pipeline kernel. Returns True (and sets
+    /// AKeysPtr to the aligned key-schedule buffer plus ANumRounds to the AES
+    /// round count) only when the engine is currently initialized for AES
+    /// encryption in any supported key size (AForEncryption=True; ANumRounds
+    /// in {10, 12, 14} for AES-128 / AES-192 / AES-256 respectively). Returns
+    /// False in every other state (including all decrypt-direction inits).
+    /// Note: GCM always uses AES in encrypt mode for CTR keystream generation,
+    /// regardless of whether the GCM caller is encrypting or decrypting; this
+    /// accessor therefore deliberately rejects only AES-side decrypt inits.
+    /// Callers MUST NOT retain the pointer beyond the lifetime of the current
+    /// engine init; reinit / free invalidates it.
+    /// </summary>
+    function TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
     property AlgorithmName: String read GetAlgorithmName;
   end;
 
@@ -1034,6 +1049,31 @@ begin
   else
     FAesNiCipherEightInOut(AInput, AOutput, FKeys);
   Result := 128;
+end;
+
+function TAesEngineX86.TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
+begin
+  AKeysPtr := nil;
+  ANumRounds := 0;
+  if FKeys = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+  case FMode of
+    TAesX86Mode.Enc128:
+      if FNRounds <> 10 then begin Result := False; Exit; end;
+    TAesX86Mode.Enc192:
+      if FNRounds <> 12 then begin Result := False; Exit; end;
+    TAesX86Mode.Enc256:
+      if FNRounds <> 14 then begin Result := False; Exit; end;
+  else
+    Result := False;
+    Exit;
+  end;
+  AKeysPtr := FKeys;
+  ANumRounds := FNRounds;
+  Result := True;
 end;
 
 {$ENDIF}

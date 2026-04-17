@@ -34,6 +34,49 @@ type
     N0, N1: UInt64;
   end;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  /// <summary>
+  /// Context block passed to the Gueron-style fused AES-NI keystream + 8-way
+  /// GHASH kernel (x86-64). The same record shape and the same kernel are
+  /// used for AES-128 / AES-192 / AES-256 (only the round-key schedule length
+  /// differs, see PRoundKeys below) and for BOTH GCM encrypt and GCM decrypt
+  /// directions: AES inside GCM is always run in encrypt mode for CTR
+  /// keystream generation regardless of the GCM payload direction; what
+  /// differs per direction is which buffers the Pascal wrapper hands in as
+  /// PXorIn / POut / PPrevCipher.
+  /// All fields MUST point to valid, aligned buffers for the duration of the
+  /// kernel call. Pointer layout (natural 8-byte alignment, no padding)
+  /// matches the ASM kernel's [rcx+offset] accesses.
+  /// </summary>
+  TGcmFusedBatchCtx = record
+    /// 128-byte input XOR'd with keystream (plaintext on GCM encrypt,
+    /// ciphertext on GCM decrypt).
+    PXorIn: Pointer;
+    /// 128-byte output buffer (ciphertext on GCM encrypt, plaintext on GCM
+    /// decrypt).
+    POut: Pointer;
+    /// 8 counter blocks (128 bytes) consumed by AES (encrypt mode) to produce
+    /// the keystream for this batch.
+    PCtrCurr: Pointer;
+    /// 128-byte previous batch's ciphertext to be folded into the running
+    /// GHASH state. On GCM encrypt this points into the OUTPUT buffer (the
+    /// just-produced ciphertext); on GCM decrypt it points into the INPUT
+    /// buffer (the incoming ciphertext).
+    PPrevCipher: Pointer;
+    /// AES encrypt round-key schedule. Size depends on AES key size:
+    /// 176 bytes (AES-128, 11 x 16), 208 bytes (AES-192, 13 x 16), or
+    /// 240 bytes (AES-256, 15 x 16). The kernel variant must match.
+    PRoundKeys: Pointer;
+    /// H^8..H^1 as eight contiguous 16-byte limbs in GHASH field form.
+    PHPow128: Pointer;
+    /// 16-byte running GHASH state (canonical/byte-reversed form, in/out).
+    PFS: Pointer;
+    /// 16-byte PSHUFB byte-reverse mask.
+    PMask: Pointer;
+  end;
+  PGcmFusedBatchCtx = ^TGcmFusedBatchCtx;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
   TGcmUtilities = class sealed(TObject)
   strict private
     const
@@ -79,6 +122,14 @@ type
     class procedure FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte); static;
     /// <summary>Fused GHASH for eight 16-byte ciphertext blocks. PHPow128 = H^8..H^1 (128 bytes at FHPow[0]).</summary>
     class procedure FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask: PByte); static;
+    /// <summary>True when the Gueron-style fused AES-NI keystream + 8-way GHASH kernel family is available on this build / CPU. Key-size independent CPU-feature gate (AES-NI + PCLMULQDQ + SSSE3, x86-64 only). The caller selects a specific AES-128 / AES-192 / AES-256 variant via the matching FusedAesEncN_GhashEight entry point.</summary>
+    class function FusedAesEncGhashEightAvailable: Boolean; static;
+    /// <summary>Gueron-style fused AES-128 keystream + 8-way GHASH of the previous batch (x86-64). Used by BOTH GCM encrypt and GCM decrypt directions; the AES engine is always in encrypt mode (CTR keystream construction). PRoundKeys must point to a valid 176-byte AES-128 encrypt schedule (11 x 16). Caller is responsible for pipeline priming (first batch must be processed without GHASH input) and post-loop tail GHASH.</summary>
+    class procedure FusedAesEnc128GhashEight(const ACtx: TGcmFusedBatchCtx); static;
+    /// <summary>Gueron-style fused AES-192 keystream + 8-way GHASH of the previous batch (x86-64). Used by BOTH GCM encrypt and GCM decrypt directions; the AES engine is always in encrypt mode (CTR keystream construction). PRoundKeys must point to a valid 208-byte AES-192 encrypt schedule (13 x 16). Caller is responsible for pipeline priming (first batch must be processed without GHASH input) and post-loop tail GHASH.</summary>
+    class procedure FusedAesEnc192GhashEight(const ACtx: TGcmFusedBatchCtx); static;
+    /// <summary>Gueron-style fused AES-256 keystream + 8-way GHASH of the previous batch (x86-64). Used by BOTH GCM encrypt and GCM decrypt directions; the AES engine is always in encrypt mode (CTR keystream construction). PRoundKeys must point to a valid 240-byte AES-256 encrypt schedule (15 x 16). Caller is responsible for pipeline priming (first batch must be processed without GHASH input) and post-loop tail GHASH.</summary>
+    class procedure FusedAesEnc256GhashEight(const ACtx: TGcmFusedBatchCtx); static;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
     class procedure &Xor(const AX, AY: TCryptoLibByteArray); overload; static;
@@ -143,6 +194,27 @@ end;
 procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashEightFull_x86_64.inc}
+end;
+
+procedure GcmFusedAesEnc128GhashEight(PCtx: Pointer);
+{$DEFINE GCM_FUSED_AES_ROUNDS_10}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmFusedAesEncGhashEight_x86_64.inc}
+{$UNDEF GCM_FUSED_AES_ROUNDS_10}
+end;
+
+procedure GcmFusedAesEnc192GhashEight(PCtx: Pointer);
+{$DEFINE GCM_FUSED_AES_ROUNDS_12}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmFusedAesEncGhashEight_x86_64.inc}
+{$UNDEF GCM_FUSED_AES_ROUNDS_12}
+end;
+
+procedure GcmFusedAesEnc256GhashEight(PCtx: Pointer);
+{$DEFINE GCM_FUSED_AES_ROUNDS_14}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmFusedAesEncGhashEight_x86_64.inc}
+{$UNDEF GCM_FUSED_AES_ROUNDS_14}
 end;
 {$ENDIF CRYPTOLIB_X86_64_ASM}
 
@@ -560,6 +632,57 @@ begin
   // Monolithic kernel: byte-reverse + state fold + 8-way multiply-accumulate +
   // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
   GcmGhashEightFull(PFS, PC0, PHPow128, PMask);
+end;
+
+class function TGcmUtilities.FusedAesEncGhashEightAvailable: Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  Result := TCpuFeatures.X86.HasAESNI and TCpuFeatures.X86.HasPCLMULQDQ and
+    TCpuFeatures.X86.HasSSSE3 and TIntrinsicsVector.IsPacked;
+{$ELSE}
+  // i386 port of the Gueron-style interleaved kernel is not implemented
+  // yet; only the x86-64 path enables this fused kernel family.
+  Result := False;
+{$ENDIF}
+end;
+
+class procedure TGcmUtilities.FusedAesEnc128GhashEight(const ACtx: TGcmFusedBatchCtx);
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if not FusedAesEncGhashEightAvailable then
+    raise EInvalidOperationCryptoLibException.Create(
+      'Fused AES-NI keystream + 8-way GHASH kernel requires AES-NI, PCLMULQDQ, SSSE3, and packed XMM layout.');
+  GcmFusedAesEnc128GhashEight(@ACtx);
+{$ELSE}
+  raise EInvalidOperationCryptoLibException.Create(
+    'Fused AES-NI keystream + 8-way GHASH kernel is available only on x86-64.');
+{$ENDIF}
+end;
+
+class procedure TGcmUtilities.FusedAesEnc192GhashEight(const ACtx: TGcmFusedBatchCtx);
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if not FusedAesEncGhashEightAvailable then
+    raise EInvalidOperationCryptoLibException.Create(
+      'Fused AES-NI keystream + 8-way GHASH kernel requires AES-NI, PCLMULQDQ, SSSE3, and packed XMM layout.');
+  GcmFusedAesEnc192GhashEight(@ACtx);
+{$ELSE}
+  raise EInvalidOperationCryptoLibException.Create(
+    'Fused AES-NI keystream + 8-way GHASH kernel is available only on x86-64.');
+{$ENDIF}
+end;
+
+class procedure TGcmUtilities.FusedAesEnc256GhashEight(const ACtx: TGcmFusedBatchCtx);
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if not FusedAesEncGhashEightAvailable then
+    raise EInvalidOperationCryptoLibException.Create(
+      'Fused AES-NI keystream + 8-way GHASH kernel requires AES-NI, PCLMULQDQ, SSSE3, and packed XMM layout.');
+  GcmFusedAesEnc256GhashEight(@ACtx);
+{$ELSE}
+  raise EInvalidOperationCryptoLibException.Create(
+    'Fused AES-NI keystream + 8-way GHASH kernel is available only on x86-64.');
+{$ENDIF}
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 

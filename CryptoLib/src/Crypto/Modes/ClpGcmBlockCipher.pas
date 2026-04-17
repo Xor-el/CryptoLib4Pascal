@@ -153,6 +153,33 @@ type
     procedure DecryptBlocks8Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+    /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-AES form). Used by the FusedILP pipeline where AES is performed inside the fused assembly kernel.</summary>
+    procedure FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
+    /// <summary>
+    /// Gueron-style pipelined GCM-encrypt path (x86-64). Calls into the fused
+    /// AES-NI keystream + 8-way GHASH assembly kernel in a single body; the
+    /// AES engine is always run in encrypt mode here regardless of GCM
+    /// direction (CTR keystream construction). Activated when
+    /// FusedAesEncGhashEightAvailable is true and the underlying engine is
+    /// initialized for AES encryption (currently dispatched only for AES-256
+    /// schedules; the kernel itself supports 128/192/256 via the matching
+    /// FusedAesEncN_GhashEight wrapper). Falls back to EncryptBlocks8Pipelined
+    /// for any unsupported configuration or short tail.
+    /// </summary>
+    procedure EncryptBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
+    /// <summary>
+    /// Gueron-style pipelined GCM-decrypt path (x86-64). Uses the same fused
+    /// AES-NI keystream + 8-way GHASH assembly kernel as EncryptBlocks8FusedILP;
+    /// the only per-direction difference is that GHASH consumes the prior-
+    /// iteration INPUT buffer (incoming ciphertext) rather than the output
+    /// buffer.
+    /// </summary>
+    procedure DecryptBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
+      ALimit: Int32);
+{$ENDIF CRYPTOLIB_X86_64_ASM}
 
     procedure InitCipher();
     procedure EncryptBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
@@ -1468,6 +1495,222 @@ begin
   ALen := ALen - (BlockSize * 8);
 end;
 
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+procedure TGcmBlockCipher.FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
+var
+  Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
+begin
+  Lc0 := FCounter32;
+  Lc1 := Lc0 + UInt32(1);
+  Lc2 := Lc0 + UInt32(2);
+  Lc3 := Lc0 + UInt32(3);
+  Lc4 := Lc0 + UInt32(4);
+  Lc5 := Lc0 + UInt32(5);
+  Lc6 := Lc0 + UInt32(6);
+  Lc7 := Lc0 + UInt32(7);
+  Lc8 := Lc0 + UInt32(8);
+  FCounter32 := Lc8;
+
+  System.Move(FCounter[0], ABlocks[0], 16);
+  System.Move(FCounter[0], ABlocks[16], 16);
+  System.Move(FCounter[0], ABlocks[32], 16);
+  TPack.UInt32_To_BE(Lc4, FCounter, 12);
+  TPack.UInt32_To_BE(Lc1, ABlocks, 12);
+  TPack.UInt32_To_BE(Lc2, ABlocks, 28);
+  TPack.UInt32_To_BE(Lc3, ABlocks, 44);
+  System.Move(FCounter[0], ABlocks[48], 16);
+
+  System.Move(FCounter[0], ABlocks[64], 16);
+  System.Move(FCounter[0], ABlocks[80], 16);
+  System.Move(FCounter[0], ABlocks[96], 16);
+  TPack.UInt32_To_BE(Lc8, FCounter, 12);
+  TPack.UInt32_To_BE(Lc5, ABlocks, 76);
+  TPack.UInt32_To_BE(Lc6, ABlocks, 92);
+  TPack.UInt32_To_BE(Lc7, ABlocks, 108);
+  System.Move(FCounter[0], ABlocks[112], 16);
+end;
+
+// Gueron-style fused AES-NI keystream + 8-way GHASH pipeline (x86-64), GCM
+// encrypt direction. Note: AES is always run in encrypt mode for CTR keystream
+// generation -- this path is the GCM-encrypt user, not an "AES-encrypt only"
+// kernel; see DecryptBlocks8FusedILP for the GCM-decrypt user of the same
+// kernel. Dispatches to the AES-128 / AES-192 / AES-256 fused wrapper based
+// on the engine's current round-key schedule length (10 / 12 / 14 rounds).
+// Prime: batch 0 is produced via the regular AES-NI 8-wide kernel + Pascal XOR,
+// leaving its ciphertext at LPrevCipher awaiting GHASH in the next iteration.
+// Body: each loop iteration invokes the interleaved assembly kernel which
+//   (a) AES-encrypts eight fresh counter blocks to keystream,
+//   (b) XORs the keystream with the current plaintext to produce ciphertext,
+//   (c) GHASHes the previous iteration's ciphertext into the running state.
+// Tail: the last pending ciphertext is GHASH'd, then the final batch is
+// produced with the regular 8-wide path and also GHASH'd, exactly mirroring
+// the tail shape of EncryptBlocks8Pipelined.
+procedure TGcmBlockCipher.EncryptBlocks8FusedILP(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32);
+var
+  LCurrCtrs, LNextCtrs: TCryptoLibByteArray;
+  LCtx: TGcmFusedBatchCtx;
+  LKeys: PByte;
+  LPrevCipher, LPOut, LPIn: PByte;
+  LI, LRounds: Int32;
+begin
+  if not FAesEngineX86.TryGetEncKeysPtr(LKeys, LRounds) then
+    Exit;
+  if not (LRounds in [10, 12, 14]) then
+    Exit;
+  if ALen < (BlockSize * 16) then
+    Exit;
+
+  LCurrCtrs := FWorkCtr;
+  LNextCtrs := FWorkCtrAhead;
+
+  // Prime batch 0: regular 8-wide AES-NI into LCurrCtrs (now holds keystream),
+  // XOR with plaintext to produce ciphertext at LPOut, defer GHASH.
+  GetNextCtrBlocks8(LCurrCtrs);
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  for LI := 0 to 15 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+
+  LPrevCipher := LPOut;
+  AInOff := AInOff + (BlockSize * 8);
+  AOutOff := AOutOff + (BlockSize * 8);
+  ALen := ALen - (BlockSize * 8);
+
+  while ALen >= (BlockSize * 16) do
+  begin
+    // Fill raw (pre-AES) counter blocks; the kernel AES-encrypts them in-place.
+    FillNextCtrBlocks8Raw(LNextCtrs);
+
+    LPIn := @AInBuf[AInOff];
+    LPOut := @AOutBuf[AOutOff];
+
+    LCtx.PXorIn := LPIn;
+    LCtx.POut := LPOut;
+    LCtx.PCtrCurr := @LNextCtrs[0];
+    LCtx.PPrevCipher := LPrevCipher;
+    LCtx.PRoundKeys := LKeys;
+    LCtx.PHPow128 := @FHPow[0];
+    LCtx.PFS := @FS[0];
+    LCtx.PMask := @ReverseBytesMask[0];
+
+    case LRounds of
+      10: TGcmUtilities.FusedAesEnc128GhashEight(LCtx);
+      12: TGcmUtilities.FusedAesEnc192GhashEight(LCtx);
+    else  // 14
+      TGcmUtilities.FusedAesEnc256GhashEight(LCtx);
+    end;
+
+    LPrevCipher := LPOut;
+    AInOff := AInOff + (BlockSize * 8);
+    AOutOff := AOutOff + (BlockSize * 8);
+    ALen := ALen - (BlockSize * 8);
+  end;
+
+  // Tail: GHASH the last pending ciphertext, then produce and GHASH the final batch.
+  GhashEightShuffledBlocks(LPrevCipher);
+
+  GetNextCtrBlocks8(LCurrCtrs);
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  for LI := 0 to 15 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+
+  GhashEightShuffledBlocks(LPOut);
+
+  AInOff := AInOff + (BlockSize * 8);
+  AOutOff := AOutOff + (BlockSize * 8);
+  ALen := ALen - (BlockSize * 8);
+end;
+
+// Gueron-style fused AES-NI keystream + 8-way GHASH pipeline (x86-64), GCM
+// decrypt direction. Same kernel as EncryptBlocks8FusedILP -- the AES engine
+// is in encrypt mode for CTR keystream generation regardless of GCM direction.
+// ALimit is the tail hold-back threshold (see DecryptBlocks4Pipelined for
+// semantics); the loop leaves at least ALimit bytes for the caller to process
+// after the pipelined block. Differs from the encrypt path only in that GHASH
+// consumes the prior iteration's INPUT ciphertext (from AInBuf) rather than
+// the output buffer. Dispatches to the matching AES-128 / AES-192 / AES-256
+// fused wrapper based on the engine's current round-key schedule length.
+procedure TGcmBlockCipher.DecryptBlocks8FusedILP(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32; ALimit: Int32);
+var
+  LCurrCtrs, LNextCtrs: TCryptoLibByteArray;
+  LCtx: TGcmFusedBatchCtx;
+  LKeys: PByte;
+  LPrevCipher, LPOut, LPIn: PByte;
+  LI, LRounds: Int32;
+begin
+  if not FAesEngineX86.TryGetEncKeysPtr(LKeys, LRounds) then
+    Exit;
+  if not (LRounds in [10, 12, 14]) then
+    Exit;
+  if ALen < ALimit + (BlockSize * 8) * 2 then
+    Exit;
+
+  LCurrCtrs := FWorkCtr;
+  LNextCtrs := FWorkCtrAhead;
+
+  // Prime batch 0: regular 8-wide AES-NI keystream into LCurrCtrs; GHASH defer.
+  GetNextCtrBlocks8(LCurrCtrs);
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  // Remember the INPUT ciphertext pointer for later GHASH.
+  LPrevCipher := LPIn;
+  for LI := 0 to 15 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+
+  AInOff := AInOff + (BlockSize * 8);
+  AOutOff := AOutOff + (BlockSize * 8);
+  ALen := ALen - (BlockSize * 8);
+
+  while ALen >= ALimit + (BlockSize * 8) * 2 do
+  begin
+    FillNextCtrBlocks8Raw(LNextCtrs);
+
+    LPIn := @AInBuf[AInOff];
+    LPOut := @AOutBuf[AOutOff];
+
+    LCtx.PXorIn := LPIn;
+    LCtx.POut := LPOut;
+    LCtx.PCtrCurr := @LNextCtrs[0];
+    LCtx.PPrevCipher := LPrevCipher;
+    LCtx.PRoundKeys := LKeys;
+    LCtx.PHPow128 := @FHPow[0];
+    LCtx.PFS := @FS[0];
+    LCtx.PMask := @ReverseBytesMask[0];
+
+    case LRounds of
+      10: TGcmUtilities.FusedAesEnc128GhashEight(LCtx);
+      12: TGcmUtilities.FusedAesEnc192GhashEight(LCtx);
+    else  // 14
+      TGcmUtilities.FusedAesEnc256GhashEight(LCtx);
+    end;
+
+    LPrevCipher := LPIn;
+    AInOff := AInOff + (BlockSize * 8);
+    AOutOff := AOutOff + (BlockSize * 8);
+    ALen := ALen - (BlockSize * 8);
+  end;
+
+  // Tail: GHASH the prior input ciphertext, then produce and GHASH the final batch.
+  GhashEightShuffledBlocks(LPrevCipher);
+
+  GetNextCtrBlocks8(LCurrCtrs);
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  GhashEightShuffledBlocks(LPIn);
+  for LI := 0 to 15 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+
+  AInOff := AInOff + (BlockSize * 8);
+  AOutOff := AOutOff + (BlockSize * 8);
+  ALen := ALen - (BlockSize * 8);
+end;
+{$ENDIF CRYPTOLIB_X86_64_ASM}
+
 procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32);
@@ -1501,7 +1744,14 @@ begin
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
   if ALen >= BlockSize * 16 then
-    EncryptBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff);
+  begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+    if TGcmUtilities.FusedAesEncGhashEightAvailable and (FAesEngineX86 <> nil) then
+      EncryptBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff);
+{$ENDIF}
+    if ALen >= BlockSize * 16 then
+      EncryptBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff);
+  end;
   while ALen >= BlockSize * 8 do
   begin
     EncryptBlocks8Fused(AInBuf, AInOff, AOutBuf, AOutOff);
@@ -1592,7 +1842,14 @@ begin
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
   if ALen >= ALimit + (BlockSize * 8) * 2 then
-    DecryptBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit);
+  begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+    if TGcmUtilities.FusedAesEncGhashEightAvailable and (FAesEngineX86 <> nil) then
+      DecryptBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit);
+{$ENDIF}
+    if ALen >= ALimit + (BlockSize * 8) * 2 then
+      DecryptBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit);
+  end;
   while ALen >= ALimit do
   begin
     DecryptBlocks8Fused(AInBuf, AInOff, AOutBuf, AOutOff);
