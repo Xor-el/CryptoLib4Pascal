@@ -95,6 +95,10 @@ type
 
   var
     FCipher: IBlockCipher;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // Cached once per key Init; avoids Supports(FCipher, IAesEngineX86) on every 4/8 CTR batch.
+    FAesEngineX86: IAesEngineX86;
+{$ENDIF CRYPTOLIB_X86_SIMD}
     FMultiplier: IGcmMultiplier;
     FExp: IGcmExponentiator;
 
@@ -388,6 +392,11 @@ begin
   if LKeyParam <> nil then
   begin
     FCipher.Init(True, LKeyParam as ICipherParameters);
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    FAesEngineX86 := nil;
+    if TAesEngineX86.IsSupported then
+      Supports(FCipher, IAesEngineX86, FAesEngineX86);
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
     FH := nil;
     System.SetLength(FH, BlockSize);
@@ -1097,10 +1106,20 @@ var
   LSRev: array[0..15] of Byte;
   LPCiph: PByte;
 begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TGcmBlockCipher.IsFourWaySupported then
+  begin
+    TGcmUtilities.FusedFourShuffledGhash(@FS[0], PC0, @FHPow[64], @ReverseBytesMask[0]);
+    Exit;
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
   GcmReverse16(@FS[0], @LSRev[0]);
-  System.FillChar(LU0[0], 16, 0);
-  System.FillChar(LU1[0], 16, 0);
-  System.FillChar(LU2[0], 16, 0);
+  PUInt64(@LU0[0])^ := 0;
+  PUInt64(@LU0[8])^ := 0;
+  PUInt64(@LU1[0])^ := 0;
+  PUInt64(@LU1[8])^ := 0;
+  PUInt64(@LU2[0])^ := 0;
+  PUInt64(@LU2[8])^ := 0;
   for LB := 0 to 3 do
   begin
     case LB of
@@ -1169,10 +1188,20 @@ var
   LSRev: array [0 .. 15] of Byte;
   LPCiph: PByte;
 begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TGcmBlockCipher.IsEightWaySupported then
+  begin
+    TGcmUtilities.FusedEightShuffledGhash(@FS[0], PBase, @FHPow[0], @ReverseBytesMask[0]);
+    Exit;
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
   GcmReverse16(@FS[0], @LSRev[0]);
-  System.FillChar(LU0[0], 16, 0);
-  System.FillChar(LU1[0], 16, 0);
-  System.FillChar(LU2[0], 16, 0);
+  PUInt64(@LU0[0])^ := 0;
+  PUInt64(@LU0[8])^ := 0;
+  PUInt64(@LU1[0])^ := 0;
+  PUInt64(@LU1[8])^ := 0;
+  PUInt64(@LU2[0])^ := 0;
+  PUInt64(@LU2[8])^ := 0;
   for LB := 0 to 7 do
   begin
     LPCiph := PBase + (LB * 16);
@@ -1433,7 +1462,6 @@ end;
 procedure TGcmBlockCipher.GetNextCtrBlocks4(const ABlocks: TCryptoLibByteArray);
 var
   Lc0, Lc1, Lc2, Lc3, Lc4: UInt32;
-  LAesX86: IAesEngineX86;
 begin
   Lc0 := FCounter32;
   Lc1 := Lc0 + UInt32(1);
@@ -1443,7 +1471,7 @@ begin
   FCounter32 := Lc4;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TAesEngineX86.IsSupported and Supports(FCipher, IAesEngineX86, LAesX86) then
+  if Assigned(FAesEngineX86) then
   begin
     System.Move(FCounter[0], ABlocks[0], 16);
     System.Move(FCounter[0], ABlocks[16], 16);
@@ -1453,7 +1481,7 @@ begin
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
     System.Move(FCounter[0], ABlocks[48], 16);
-    LAesX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
+    FAesEngineX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
     Exit;
   end;
 {$ENDIF}
@@ -1471,7 +1499,6 @@ end;
 procedure TGcmBlockCipher.GetNextCtrBlocks8(const ABlocks: TCryptoLibByteArray);
 var
   Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
-  LAesX86: IAesEngineX86;
 begin
   Lc0 := FCounter32;
   Lc1 := Lc0 + UInt32(1);
@@ -1485,7 +1512,7 @@ begin
   FCounter32 := Lc8;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TAesEngineX86.IsSupported and Supports(FCipher, IAesEngineX86, LAesX86) then
+  if Assigned(FAesEngineX86) then
   begin
     System.Move(FCounter[0], ABlocks[0], 16);
     System.Move(FCounter[0], ABlocks[16], 16);
@@ -1495,7 +1522,7 @@ begin
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
     System.Move(FCounter[0], ABlocks[48], 16);
-    LAesX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
+    FAesEngineX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
 
     System.Move(FCounter[0], ABlocks[64], 16);
     System.Move(FCounter[0], ABlocks[80], 16);
@@ -1505,7 +1532,7 @@ begin
     TPack.UInt32_To_BE(Lc6, ABlocks, 92);
     TPack.UInt32_To_BE(Lc7, ABlocks, 108);
     System.Move(FCounter[0], ABlocks[112], 16);
-    LAesX86.ProcessFourBlocks(@ABlocks[64], @ABlocks[64]);
+    FAesEngineX86.ProcessFourBlocks(@ABlocks[64], @ABlocks[64]);
     Exit;
   end;
 {$ENDIF}
