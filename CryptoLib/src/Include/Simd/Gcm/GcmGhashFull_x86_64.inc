@@ -1,21 +1,35 @@
-// Fused full 8-way GHASH batch kernel (x86-64).
-// One monolithic ASM body replaces the previous chain of 11 Pascal->ASM calls
-// (one byte-reverse for the running state, eight byte-reverses for the
-// ciphertext blocks, one Pascal XOR fold, one multiply-accumulate, one
-// Reduce3, one byte-reverse back).
+// Fused full N-way GHASH batch kernel (x86-64).
+// One monolithic ASM body that handles either a 4-block (64-byte) or 8-block
+// (128-byte) GHASH batch, selected by the caller via exactly one of the
+// mutually-exclusive defines GCM_GHASH_FULL_BLOCKS_4 / GCM_GHASH_FULL_BLOCKS_8.
+//
+// The 8-way form replaces the previous chain of 11 Pascal->ASM calls (one
+// byte-reverse for the running state, eight byte-reverses for the ciphertext
+// blocks, one Pascal XOR fold, one multiply-accumulate, one 3-limb GHASH
+// reduction, one byte-reverse back) with a single ASM body; the 4-way form
+// is its half-width sibling. The PCLMULQDQ / PSHUFB / SSE2 shapes are
+// identical.
 //
 // After SimdProc4Begin_x86_64.inc: rcx = PFS (16-byte running GHASH state,
-// canonical/byte-reversed form; in + out), rdx = PC0 (128 bytes ciphertext,
-// canonical form), r8 = PHPow128 (H^8..H^1 as eight 16-byte limbs,
-// GHASH-field little-endian form), r9 = PMask (16-byte PSHUFB control).
+// canonical/byte-reversed form; in + out), rdx = PC0 (64 or 128 bytes
+// ciphertext, canonical form), r8 = PHPow (H^4..H^1 for 4-way or H^8..H^1 for
+// 8-way as 16-byte limbs, GHASH-field little-endian form), r9 = PMask
+// (16-byte PSHUFB control).
 //
 // Algorithm:
 //   1) Load PSHUFB mask into xmm8 (held through the whole kernel).
-//   2) Clear Z0/Z1/Z2 accumulators (xmm0/xmm1/xmm2).
+//   2) Clear Z0/Z1/Z2 accumulators (xmm0/xmm1/xmm2). Each PCLMULQDQ-based
+//      GHASH step produces a 256-bit (2 x 128-bit) Karatsuba product, which
+//      is accumulated across blocks as three 128-bit limbs (Z0 = low,
+//      Z1 = middle/cross, Z2 = high) so all blocks in the batch can fold
+//      before a single final reduction.
 //   3) Block 0: load, byte-reverse, XOR the running state (also byte-reversed)
 //      into block 0, then 4 x PCLMULQDQ + XOR-accumulate into Z0/Z1/Z2.
-//   4) Blocks 1..7: load, byte-reverse, 4 x PCLMULQDQ + XOR-accumulate.
-//   5) Inline Reduce3: fold Z1 into Z0/Z2, reduce to a 16-byte result.
+//   4) Blocks 1..3 (and, when BLOCKS_8, 4..7): load, byte-reverse,
+//      4 x PCLMULQDQ + XOR-accumulate.
+//   5) Inline 3-limb GHASH reduction: fold Z1 into (Z0, Z2), then reduce the
+//      (Z0, Z2) pair modulo the GCM polynomial x^128 + x^7 + x^2 + x + 1 to
+//      a single 16-byte field element.
 //   6) Pack result into one xmm, byte-reverse (pshufb with xmm8), store to PFS.
 //
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
@@ -96,6 +110,7 @@
   pxor      xmm1, xmm6
   pxor      xmm2, xmm7
 
+{$IFDEF GCM_GHASH_FULL_BLOCKS_8}
   // Block 4
   movdqu    xmm3, [rdx + 64]
   pshufb    xmm3, xmm8
@@ -163,9 +178,11 @@
   pxor      xmm0, xmm5
   pxor      xmm1, xmm6
   pxor      xmm2, xmm7
+{$ENDIF GCM_GHASH_FULL_BLOCKS_8}
 
-  // Inline Reduce3: Z0=xmm0, Z1=xmm1, Z2=xmm2
-  // Fold Z1 into Z0/Z2.
+  // Inline 3-limb GHASH reduction (Z0=xmm0, Z1=xmm1, Z2=xmm2): fold Z1 into
+  // (Z0, Z2), then reduce modulo x^128 + x^7 + x^2 + x + 1.
+  // Step 1 -- fold Z1 into Z0/Z2.
   movdqa    xmm4, xmm1
   movdqa    xmm5, xmm1
   pslldq    xmm4, 8

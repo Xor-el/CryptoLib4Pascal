@@ -22,8 +22,9 @@
 //   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (12 rounds, schedule = 13 x 16 bytes)
 //   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (14 rounds, schedule = 15 x 16 bytes)
 // Common code (rounds 0..8 with all 8 GHASH iters, post-AES XOR/store, inline
-// Reduce3, epilogue) is shared verbatim. Only rounds 9..N-1 (extra aesenc)
-// and round N (aesenclast on rk[N]) are conditional on the round count.
+// 3-limb GHASH reduction, epilogue) is shared verbatim. Only rounds 9..N-1
+// (extra aesenc) and round N (aesenclast on rk[N]) are conditional on the
+// round count.
 //
 // After SimdProc1Begin_x86_64.inc: rcx = PCtx (TGcmFusedBatchCtx pointer).
 // Ctx layout (all Pointer, natural 8-byte alignment, no padding):
@@ -65,7 +66,9 @@
 //   Rounds 9..N-1 (variant): aesenc only (no GHASH work remaining).
 //   Round N     : aesenclast (final AES round; N = 10 / 12 / 14).
 //   Post-AES    : XOR keystream with PXorIn, store to POut.
-//   Finalize    : inline Reduce3 on Z0/Z1/Z2, byte-reverse, store to PFS.
+//   Finalize    : inline 3-limb GHASH reduction on Z0/Z1/Z2 (fold Z1 into
+//                 Z0/Z2, then reduce modulo x^128 + x^7 + x^2 + x + 1),
+//                 byte-reverse, store to PFS.
 //
 // AES-NI (aesenc/aesenclast) and PCLMULQDQ instructions whose operands
 // reference extended XMM registers (xmm8..xmm15) are db-encoded for broad
@@ -478,7 +481,8 @@
   db $66, $41, $0F, $EF, $F8                   // pxor xmm7, xmm8
   movdqu    [rdx + 112], xmm7
 
-  // --- Inline Reduce3 on Z0 (xmm9), Z1 (xmm10), Z2 (xmm11) -------------
+  // --- Inline 3-limb GHASH reduction on Z0 (xmm9), Z1 (xmm10), Z2 (xmm11):
+  // fold Z1 into (Z0, Z2), then reduce modulo x^128 + x^7 + x^2 + x + 1. ---
   // Migrate to xmm0/xmm1/xmm2 to mirror GcmReduce3FoldSse2 layout so the
   // scalar shift/XOR sequence below reuses xmm0..xmm7 as scratch freely.
   movdqa    xmm0, xmm9                         // xmm0 = Z0

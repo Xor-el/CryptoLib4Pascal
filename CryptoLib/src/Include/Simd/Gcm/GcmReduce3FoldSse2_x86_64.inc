@@ -1,4 +1,7 @@
-// Fold Z1 into Z0/Z2, then full GHASH Reduce3 into 16 bytes at POut.
+// 3-limb GHASH reduction (SSE2): fold Z1 into (Z0, Z2), then reduce the
+// (Z0, Z2) pair modulo the GCM polynomial x^128 + x^7 + x^2 + x + 1, writing
+// the resulting 16-byte field element to POut. Z0/Z1/Z2 are the three 128-bit
+// limbs carried across a batch of Karatsuba-style PCLMULQDQ GHASH products.
 // rcx=PZ0, rdx=PZ1, r8=PZ2, r9=POut (MS x64 ABI / FPC remapped SysV).
 //
   movdqu    xmm0, [rcx]

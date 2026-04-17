@@ -1,11 +1,15 @@
-// Fused full 8-way GHASH batch kernel (i386).
-// Monolithic ASM body replacing the previous chain of 11 Pascal->ASM calls
-// for one 128-byte GHASH batch.
+// Fused full N-way GHASH batch kernel (i386).
+// One monolithic ASM body that handles either a 4-block (64-byte) or 8-block
+// (128-byte) GHASH batch, selected by the caller via exactly one of the
+// mutually-exclusive defines GCM_GHASH_FULL_BLOCKS_4 / GCM_GHASH_FULL_BLOCKS_8.
+// The ASM shape (PCLMULQDQ / PSHUFB / SSE2 with mask reloaded from [eax])
+// is identical between the two widths.
 //
 // After SimdProc4Begin_i386.inc: ebx = PFS (16-byte running GHASH state,
-// canonical/byte-reversed form; in + out), esi = PC0 (128 bytes ciphertext,
-// canonical form), edi = PHPow128 (H^8..H^1 as eight 16-byte limbs,
-// GHASH-field little-endian form), eax = PMask (16-byte PSHUFB control).
+// canonical/byte-reversed form; in + out), esi = PC0 (64 or 128 bytes
+// ciphertext, canonical form), edi = PHPow (H^4..H^1 for 4-way or H^8..H^1
+// for 8-way as 16-byte limbs, GHASH-field little-endian form), eax = PMask
+// (16-byte PSHUFB control).
 //
 // i386 has only 8 XMM registers, so the mask cannot be held across the
 // whole kernel; it is reloaded from [eax] for each PSHUFB use.
@@ -91,6 +95,7 @@
   pxor      xmm1, xmm6
   pxor      xmm2, xmm7
 
+{$IFDEF GCM_GHASH_FULL_BLOCKS_8}
   // Block 4
   movdqu    xmm3, [esi + 64]
   movdqu    xmm7, [eax]
@@ -162,8 +167,10 @@
   pxor      xmm0, xmm5
   pxor      xmm1, xmm6
   pxor      xmm2, xmm7
+{$ENDIF GCM_GHASH_FULL_BLOCKS_8}
 
-  // Inline Reduce3: Z0=xmm0, Z1=xmm1, Z2=xmm2
+  // Inline 3-limb GHASH reduction (Z0=xmm0, Z1=xmm1, Z2=xmm2): fold Z1 into
+  // (Z0, Z2), then reduce modulo x^128 + x^7 + x^2 + x + 1.
   movdqa    xmm4, xmm1
   movdqa    xmm5, xmm1
   pslldq    xmm4, 8

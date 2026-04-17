@@ -38,6 +38,13 @@ type
     /// to output then transform. Overlapping non-identical ranges use a 64-byte stack buffer.
     /// </summary>
     function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
+
+    function ProcessEightBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
+    /// <summary>
+    /// Eight consecutive 16-byte blocks (128 bytes). Same overlap rules as <see cref="ProcessFourBlocks"/>.
+    /// </summary>
+    function ProcessEightBlocks(AInput, AOutput: PByte): Int32; overload;
   end;
 
 implementation
