@@ -45,6 +45,8 @@ type
   strict private
     procedure ImplTestFourBlocks(AForEncryption: Boolean; AKeySizeBytes: Int32);
     procedure ImplTestPByteOverloadParity(AKeySizeBytes: Int32);
+    procedure ImplTestProcessBlockMemoryLayouts(AKeySizeBytes: Int32);
+    procedure ImplTestProcessFourBlocksMemoryLayouts(AKeySizeBytes: Int32);
   published
     procedure TestBlockCipherVectors;
     procedure TestMonteCarloAES;
@@ -60,6 +62,12 @@ type
     procedure TestPByteOverloadParity128;
     procedure TestPByteOverloadParity192;
     procedure TestPByteOverloadParity256;
+    procedure TestProcessBlockMemoryLayouts128;
+    procedure TestProcessBlockMemoryLayouts192;
+    procedure TestProcessBlockMemoryLayouts256;
+    procedure TestProcessFourBlocksMemoryLayouts128;
+    procedure TestProcessFourBlocksMemoryLayouts192;
+    procedure TestProcessFourBlocksMemoryLayouts256;
   end;
 
 implementation
@@ -154,6 +162,206 @@ begin
       LObj.ProcessFourBlocks(@LFourPtr[0], @LFourPtr[0]);
       if not AreEqual(LFourArr, LFourPtr) then
         Fail(Format('ProcessFourBlocks PByte in-place mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+    finally
+      LObj.Free;
+    end;
+  end;
+end;
+
+procedure TTestAesX86.ImplTestProcessBlockMemoryLayouts(AKeySizeBytes: Int32);
+var
+  LRnd: ISecureRandom;
+  LKey, LPlain, LCipher, LExpectedPt, LScratch: TBytes;
+  LI: Int32;
+  LObj: TAesEngineX86;
+
+  function MemEq(const A: TBytes; AOff: Int32; const B: TBytes; BOff, ALen: Int32): Boolean;
+  begin
+    Result := CompareMem(@A[AOff], @B[BOff], ALen);
+  end;
+
+begin
+  LRnd := TSecureRandom.Create();
+  System.SetLength(LKey, AKeySizeBytes);
+  System.SetLength(LPlain, 16);
+  System.SetLength(LCipher, 16);
+  System.SetLength(LExpectedPt, 16);
+
+  for LI := 0 to 39 do
+  begin
+    LRnd.NextBytes(LKey);
+    LRnd.NextBytes(LPlain);
+    LObj := TAesEngineX86.Create();
+    try
+      LObj.Init(True, TKeyParameter.Create(LKey) as IKeyParameter);
+      LObj.ProcessBlock(LPlain, 0, LCipher, 0);
+
+      LScratch := System.Copy(LPlain);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[0]);
+      if not AreEqual(LCipher, LScratch) then
+        Fail(Format('ProcessBlock enc in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 48);
+      System.Move(LPlain[0], LScratch[0], 16);
+      System.FillChar(LScratch[16], 32, $7D);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[16]);
+      if not MemEq(LCipher, 0, LScratch, 16, 16) then
+        Fail(Format('ProcessBlock enc disjoint same allocation (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 40);
+      System.Move(LPlain[0], LScratch[0], 16);
+      System.FillChar(LScratch[16], 24, 0);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[8]);
+      if not MemEq(LCipher, 0, LScratch, 8, 16) then
+        Fail(Format('ProcessBlock enc overlap dst=src+8 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.FillChar(LScratch[0], 32, 0);
+      System.Move(LPlain[0], LScratch[8], 16);
+      LObj.ProcessBlock(@LScratch[8], @LScratch[0]);
+      if not MemEq(LCipher, 0, LScratch, 0, 16) then
+        Fail(Format('ProcessBlock enc overlap dst=src-8 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 32);
+      System.Move(LPlain[0], LScratch[0], 16);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[15]);
+      if not MemEq(LCipher, 0, LScratch, 15, 16) then
+        Fail(Format('ProcessBlock enc overlap dst=src+15 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LObj.Init(False, TKeyParameter.Create(LKey) as IKeyParameter);
+      LObj.ProcessBlock(LCipher, 0, LExpectedPt, 0);
+      if not AreEqual(LPlain, LExpectedPt) then
+        Fail(Format('ProcessBlock dec reference sanity (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LScratch := System.Copy(LCipher);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[0]);
+      if not AreEqual(LPlain, LScratch) then
+        Fail(Format('ProcessBlock dec in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 48);
+      System.Move(LCipher[0], LScratch[0], 16);
+      System.FillChar(LScratch[16], 32, $3C);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[16]);
+      if not MemEq(LPlain, 0, LScratch, 16, 16) then
+        Fail(Format('ProcessBlock dec disjoint same allocation (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 40);
+      System.Move(LCipher[0], LScratch[0], 16);
+      System.FillChar(LScratch[16], 24, $11);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[8]);
+      if not MemEq(LPlain, 0, LScratch, 8, 16) then
+        Fail(Format('ProcessBlock dec overlap dst=src+8 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.FillChar(LScratch[0], 32, $22);
+      System.Move(LCipher[0], LScratch[8], 16);
+      LObj.ProcessBlock(@LScratch[8], @LScratch[0]);
+      if not MemEq(LPlain, 0, LScratch, 0, 16) then
+        Fail(Format('ProcessBlock dec overlap dst=src-8 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 32);
+      System.Move(LCipher[0], LScratch[0], 16);
+      LObj.ProcessBlock(@LScratch[0], @LScratch[15]);
+      if not MemEq(LPlain, 0, LScratch, 15, 16) then
+        Fail(Format('ProcessBlock dec overlap dst=src+15 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+    finally
+      LObj.Free;
+    end;
+  end;
+end;
+
+procedure TTestAesX86.ImplTestProcessFourBlocksMemoryLayouts(AKeySizeBytes: Int32);
+var
+  LRnd: ISecureRandom;
+  LKey, LPlain, LCipher, LScratch: TBytes;
+  LI: Int32;
+  LObj: TAesEngineX86;
+
+  function MemEq(const A: TBytes; AOff: Int32; const B: TBytes; BOff, ALen: Int32): Boolean;
+  begin
+    Result := CompareMem(@A[AOff], @B[BOff], ALen);
+  end;
+
+begin
+  LRnd := TSecureRandom.Create();
+  System.SetLength(LKey, AKeySizeBytes);
+  System.SetLength(LPlain, 64);
+  System.SetLength(LCipher, 64);
+
+  for LI := 0 to 24 do
+  begin
+    LRnd.NextBytes(LKey);
+    LRnd.NextBytes(LPlain);
+    LObj := TAesEngineX86.Create();
+    try
+      LObj.Init(True, TKeyParameter.Create(LKey) as IKeyParameter);
+      LObj.ProcessFourBlocks(LPlain, 0, LCipher, 0);
+
+      LScratch := System.Copy(LPlain);
+      LObj.ProcessFourBlocks(@LScratch[0], @LScratch[0]);
+      if not AreEqual(LCipher, LScratch) then
+        Fail(Format('ProcessFourBlocks enc in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 192);
+      System.Move(LPlain[0], LScratch[0], 64);
+      System.FillChar(LScratch[64], 128, $5A);
+      LObj.ProcessFourBlocks(@LScratch[0], @LScratch[64]);
+      if not MemEq(LCipher, 0, LScratch, 64, 64) then
+        Fail(Format('ProcessFourBlocks enc disjoint same allocation (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 128);
+      System.Move(LPlain[0], LScratch[0], 64);
+      System.FillChar(LScratch[64], 64, 0);
+      LObj.ProcessFourBlocks(@LScratch[0], @LScratch[32]);
+      if not MemEq(LCipher, 0, LScratch, 32, 64) then
+        Fail(Format('ProcessFourBlocks enc overlap dst=src+32 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.FillChar(LScratch[0], 128, 0);
+      System.Move(LPlain[0], LScratch[32], 64);
+      LObj.ProcessFourBlocks(@LScratch[32], @LScratch[0]);
+      if not MemEq(LCipher, 0, LScratch, 0, 64) then
+        Fail(Format('ProcessFourBlocks enc overlap dst=src-32 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LObj.Init(False, TKeyParameter.Create(LKey) as IKeyParameter);
+      LObj.ProcessFourBlocks(LCipher, 0, LPlain, 0);
+
+      LScratch := System.Copy(LCipher);
+      LObj.ProcessFourBlocks(@LScratch[0], @LScratch[0]);
+      if not AreEqual(LPlain, LScratch) then
+        Fail(Format('ProcessFourBlocks dec in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 192);
+      System.Move(LCipher[0], LScratch[0], 64);
+      System.FillChar(LScratch[64], 128, $4B);
+      LObj.ProcessFourBlocks(@LScratch[0], @LScratch[64]);
+      if not MemEq(LPlain, 0, LScratch, 64, 64) then
+        Fail(Format('ProcessFourBlocks dec disjoint same allocation (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 128);
+      System.Move(LCipher[0], LScratch[0], 64);
+      System.FillChar(LScratch[64], 64, $33);
+      LObj.ProcessFourBlocks(@LScratch[0], @LScratch[32]);
+      if not MemEq(LPlain, 0, LScratch, 32, 64) then
+        Fail(Format('ProcessFourBlocks dec overlap dst=src+32 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.FillChar(LScratch[0], 128, $44);
+      System.Move(LCipher[0], LScratch[32], 64);
+      LObj.ProcessFourBlocks(@LScratch[32], @LScratch[0]);
+      if not MemEq(LPlain, 0, LScratch, 0, 64) then
+        Fail(Format('ProcessFourBlocks dec overlap dst=src-32 (key %d, iter %d)',
           [AKeySizeBytes, LI]));
     finally
       LObj.Free;
@@ -278,6 +486,48 @@ begin
   if not TAesEngineX86.IsSupported then
     Exit;
   ImplTestPByteOverloadParity(32);
+end;
+
+procedure TTestAesX86.TestProcessBlockMemoryLayouts128;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessBlockMemoryLayouts(16);
+end;
+
+procedure TTestAesX86.TestProcessBlockMemoryLayouts192;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessBlockMemoryLayouts(24);
+end;
+
+procedure TTestAesX86.TestProcessBlockMemoryLayouts256;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessBlockMemoryLayouts(32);
+end;
+
+procedure TTestAesX86.TestProcessFourBlocksMemoryLayouts128;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessFourBlocksMemoryLayouts(16);
+end;
+
+procedure TTestAesX86.TestProcessFourBlocksMemoryLayouts192;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessFourBlocksMemoryLayouts(24);
+end;
+
+procedure TTestAesX86.TestProcessFourBlocksMemoryLayouts256;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessFourBlocksMemoryLayouts(32);
 end;
 
 initialization
