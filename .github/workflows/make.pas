@@ -34,19 +34,9 @@ type
     end;
   end;
 
-  function CheckModules: string;
-  begin
-    if FileExists('.gitmodules') then
-      if RunCommand('git', ['submodule', 'update', '--init', '--recursive',
-        '--force', '--remote'], Result) then
-        OutLog(info, Result)
-      else
-        OutLog(error, Result);
-  end;
-
   function AddPackage(const Path: string): string;
   begin
-    if RunCommand('lazbuild', ['--add-package-link', Path], Result) then
+    if RunCommand('lazbuild', ['--build-all', Path], Result) then
        OutLog(audit, 'Add package:'#9 + Path);
   end;
 
@@ -153,7 +143,6 @@ type
   var
     List: TStringList;
   begin
-    CheckModules;
     List := FindAllFiles(GetCurrentDir, '*.lpk', True);
     try
       for Result in Dependencies do
