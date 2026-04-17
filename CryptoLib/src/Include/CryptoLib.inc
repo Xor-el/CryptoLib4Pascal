@@ -54,6 +54,12 @@
 
   {============================== CPU Architecture ==============================}
 
+  {$DEFINE CRYPTOLIB_LITTLE_ENDIAN}
+
+  {$IFDEF CPUARM}
+    {$DEFINE CRYPTOLIB_REQUIRES_PROPER_ALIGNMENT}
+  {$ENDIF}
+
   {$IF DEFINED(CPU386)}
     {$DEFINE CRYPTOLIB_I386}
     {$IFDEF MSWINDOWS}

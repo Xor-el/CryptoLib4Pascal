@@ -97,7 +97,7 @@ type
     FCipher: IBlockCipher;
 {$IFDEF CRYPTOLIB_X86_SIMD}
     // Cached once per key Init; avoids Supports(FCipher, IAesEngineX86) on every 4/8 CTR batch.
-    FAesEngineX86: IAesEngineX86;
+    FAesEngineX86: TAesEngineX86;
 {$ENDIF CRYPTOLIB_X86_SIMD}
     FMultiplier: IGcmMultiplier;
     FExp: IGcmExponentiator;
@@ -129,6 +129,8 @@ type
     FHPow: TCryptoLibByteArray;
     /// <summary>Reused 128-byte buffer for batched CTR keystream (first 64 bytes used by four-block fused path).</summary>
     FWorkCtr: TCryptoLibByteArray;
+    /// <summary>Second 128-byte keystream buffer for the pipeline-by-one path (look-ahead batch). nil if fused paths are off.</summary>
+    FWorkCtrAhead: TCryptoLibByteArray;
 
     procedure GcmReverse16(const ASrc, ADst: PByte);
     procedure GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
@@ -141,6 +143,16 @@ type
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
     procedure DecryptBlocks8Fused(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+    procedure EncryptBlocks4Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
+    procedure DecryptBlocks4Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
+      ALimit: Int32);
+    procedure EncryptBlocks8Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
+    procedure DecryptBlocks8Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
+      ALimit: Int32);
 
     procedure InitCipher();
     procedure EncryptBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
@@ -325,6 +337,9 @@ var
   LNewNonce: TCryptoLibByteArray;
   LMacSizeBits, LBufLength: Int32;
   LX: TCryptoLibByteArray;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  LAesX86Engine: IAesEngineX86;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
   FForEncryption := AForEncryption;
   FMacBlock := nil;
@@ -394,8 +409,9 @@ begin
     FCipher.Init(True, LKeyParam as ICipherParameters);
 {$IFDEF CRYPTOLIB_X86_SIMD}
     FAesEngineX86 := nil;
-    if TAesEngineX86.IsSupported then
-      Supports(FCipher, IAesEngineX86, FAesEngineX86);
+    if TAesEngineX86.IsSupported and
+      Supports(FCipher, IAesEngineX86, LAesX86Engine) then
+      FAesEngineX86 := LAesX86Engine as TAesEngineX86;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
     FH := nil;
@@ -406,6 +422,7 @@ begin
     FExp := nil;
     FHPow := nil;
     FWorkCtr := nil;
+    FWorkCtrAhead := nil;
 {$IFDEF CRYPTOLIB_X86_SIMD}
     if TGcmBlockCipher.IsFourWaySupported then
     begin
@@ -413,6 +430,8 @@ begin
       TGcmUtilities.InitEightWayHPowFromH(FH, FHPow);
       System.SetLength(FWorkCtr, 128);
       TArrayUtilities.Fill<Byte>(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
+      System.SetLength(FWorkCtrAhead, 128);
+      TArrayUtilities.Fill<Byte>(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
     end;
 {$ENDIF}
   end
@@ -1250,6 +1269,205 @@ begin
   GhashEightShuffledBlocks(@AInBuf[AInOff]);
 end;
 
+// Pipeline-by-one fused four-block encrypt. Requires ALen >= BlockSize * 8 (i.e. at least two 4-block
+// batches) so we can overlap each batch's GHASH with the next batch's CTR-keystream generation via
+// CPU OoO scheduling (AES-NI uses port 0 / GHASH PCLMULQDQ uses port 5 on Intel). After this method
+// returns, 0 or 1 full four-block batches remain; the caller's non-pipelined loop handles the tail.
+procedure TGcmBlockCipher.EncryptBlocks4Pipelined(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32);
+var
+  LCurr, LNext, LTmp: TCryptoLibByteArray;
+  LI: Int32;
+  LPIn, LPOut, LPKey: PByte;
+begin
+  if ALen < (BlockSize * 8) then
+    Exit;
+
+  LCurr := FWorkCtr;
+  LNext := FWorkCtrAhead;
+
+  GetNextCtrBlocks4(LCurr);
+
+  while ALen >= (BlockSize * 8) do
+  begin
+    LPIn := @AInBuf[AInOff];
+    LPOut := @AOutBuf[AOutOff];
+    LPKey := @LCurr[0];
+
+    GetNextCtrBlocks4(LNext);
+
+    for LI := 0 to 7 do
+      PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+
+    GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
+
+    LTmp := LCurr; LCurr := LNext; LNext := LTmp;
+    AInOff := AInOff + (BlockSize * 4);
+    AOutOff := AOutOff + (BlockSize * 4);
+    ALen := ALen - (BlockSize * 4);
+  end;
+
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  LPKey := @LCurr[0];
+  for LI := 0 to 7 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+  GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
+
+  AInOff := AInOff + (BlockSize * 4);
+  AOutOff := AOutOff + (BlockSize * 4);
+  ALen := ALen - (BlockSize * 4);
+end;
+
+// Pipeline-by-one fused four-block decrypt. Differs from the encrypt variant only in that GHASH
+// consumes the ciphertext input (AInBuf) rather than the plaintext output (AOutBuf). ALimit is the
+// caller-supplied tail hold-back threshold: we only process a batch if ALen >= ALimit + BlockSize*4
+// so at least ALimit bytes remain after processing (preserving the trailing MAC + partial block).
+procedure TGcmBlockCipher.DecryptBlocks4Pipelined(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32; ALimit: Int32);
+var
+  LCurr, LNext, LTmp: TCryptoLibByteArray;
+  LI: Int32;
+  LPIn, LPOut, LPKey: PByte;
+begin
+  if ALen < ALimit + (BlockSize * 4) * 2 then
+    Exit;
+
+  LCurr := FWorkCtr;
+  LNext := FWorkCtrAhead;
+
+  GetNextCtrBlocks4(LCurr);
+
+  while ALen >= ALimit + (BlockSize * 4) * 2 do
+  begin
+    LPIn := @AInBuf[AInOff];
+    LPOut := @AOutBuf[AOutOff];
+    LPKey := @LCurr[0];
+
+    GetNextCtrBlocks4(LNext);
+
+    GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
+
+    for LI := 0 to 7 do
+      PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+
+    LTmp := LCurr; LCurr := LNext; LNext := LTmp;
+    AInOff := AInOff + (BlockSize * 4);
+    AOutOff := AOutOff + (BlockSize * 4);
+    ALen := ALen - (BlockSize * 4);
+  end;
+
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  LPKey := @LCurr[0];
+  GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
+  for LI := 0 to 7 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+
+  AInOff := AInOff + (BlockSize * 4);
+  AOutOff := AOutOff + (BlockSize * 4);
+  ALen := ALen - (BlockSize * 4);
+end;
+
+// Pipeline-by-one fused eight-block encrypt. Same ordering strategy as the four-block variant.
+procedure TGcmBlockCipher.EncryptBlocks8Pipelined(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32);
+var
+  LCurr, LNext, LTmp: TCryptoLibByteArray;
+  LI: Int32;
+  LPIn, LPOut, LPKey: PByte;
+begin
+  if ALen < (BlockSize * 16) then
+    Exit;
+
+  LCurr := FWorkCtr;
+  LNext := FWorkCtrAhead;
+
+  GetNextCtrBlocks8(LCurr);
+
+  while ALen >= (BlockSize * 16) do
+  begin
+    LPIn := @AInBuf[AInOff];
+    LPOut := @AOutBuf[AOutOff];
+    LPKey := @LCurr[0];
+
+    GetNextCtrBlocks8(LNext);
+
+    for LI := 0 to 15 do
+      PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+
+    GhashEightShuffledBlocks(LPOut);
+
+    LTmp := LCurr; LCurr := LNext; LNext := LTmp;
+    AInOff := AInOff + (BlockSize * 8);
+    AOutOff := AOutOff + (BlockSize * 8);
+    ALen := ALen - (BlockSize * 8);
+  end;
+
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  LPKey := @LCurr[0];
+  for LI := 0 to 15 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+  GhashEightShuffledBlocks(LPOut);
+
+  AInOff := AInOff + (BlockSize * 8);
+  AOutOff := AOutOff + (BlockSize * 8);
+  ALen := ALen - (BlockSize * 8);
+end;
+
+// Pipeline-by-one fused eight-block decrypt. GHASH consumes ciphertext input. ALimit is the
+// caller-supplied tail hold-back threshold: see DecryptBlocks4Pipelined for semantics.
+procedure TGcmBlockCipher.DecryptBlocks8Pipelined(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32; ALimit: Int32);
+var
+  LCurr, LNext, LTmp: TCryptoLibByteArray;
+  LI: Int32;
+  LPIn, LPOut, LPKey: PByte;
+begin
+  if ALen < ALimit + (BlockSize * 8) * 2 then
+    Exit;
+
+  LCurr := FWorkCtr;
+  LNext := FWorkCtrAhead;
+
+  GetNextCtrBlocks8(LCurr);
+
+  while ALen >= ALimit + (BlockSize * 8) * 2 do
+  begin
+    LPIn := @AInBuf[AInOff];
+    LPOut := @AOutBuf[AOutOff];
+    LPKey := @LCurr[0];
+
+    GetNextCtrBlocks8(LNext);
+
+    GhashEightShuffledBlocks(LPIn);
+
+    for LI := 0 to 15 do
+      PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+
+    LTmp := LCurr; LCurr := LNext; LNext := LTmp;
+    AInOff := AInOff + (BlockSize * 8);
+    AOutOff := AOutOff + (BlockSize * 8);
+    ALen := ALen - (BlockSize * 8);
+  end;
+
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  LPKey := @LCurr[0];
+  GhashEightShuffledBlocks(LPIn);
+  for LI := 0 to 15 do
+    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(LPKey + LI * 8)^;
+
+  AInOff := AInOff + (BlockSize * 8);
+  AOutOff := AOutOff + (BlockSize * 8);
+  ALen := ALen - (BlockSize * 8);
+end;
+
 procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32);
@@ -1259,6 +1477,8 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
   if FHPow = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayHStateMissing);
+  if ALen >= BlockSize * 8 then
+    EncryptBlocks4Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff);
   while ALen >= BlockSize * 4 do
   begin
     EncryptBlocks4Fused(AInBuf, AInOff, AOutBuf, AOutOff);
@@ -1280,6 +1500,8 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
+  if ALen >= BlockSize * 16 then
+    EncryptBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff);
   while ALen >= BlockSize * 8 do
   begin
     EncryptBlocks8Fused(AInBuf, AInOff, AOutBuf, AOutOff);
@@ -1344,6 +1566,8 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SGcmDecryptFourWayBadLimit);
   if FHPow = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayHStateMissing);
+  if ALen >= ALimit + (BlockSize * 4) * 2 then
+    DecryptBlocks4Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit);
   while ALen >= ALimit do
   begin
     DecryptBlocks4Fused(AInBuf, AInOff, AOutBuf, AOutOff);
@@ -1367,6 +1591,8 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SGcmDecryptEightWayBadLimit);
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
+  if ALen >= ALimit + (BlockSize * 8) * 2 then
+    DecryptBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit);
   while ALen >= ALimit do
   begin
     DecryptBlocks8Fused(AInBuf, AInOff, AOutBuf, AOutOff);
@@ -1471,7 +1697,7 @@ begin
   FCounter32 := Lc4;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if Assigned(FAesEngineX86) then
+  if FAesEngineX86 <> nil then
   begin
     System.Move(FCounter[0], ABlocks[0], 16);
     System.Move(FCounter[0], ABlocks[16], 16);
@@ -1481,7 +1707,7 @@ begin
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
     System.Move(FCounter[0], ABlocks[48], 16);
-    FAesEngineX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
+    FAesEngineX86.ProcessFourBlocksFast(@ABlocks[0], @ABlocks[0]);
     Exit;
   end;
 {$ENDIF}
@@ -1512,7 +1738,7 @@ begin
   FCounter32 := Lc8;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if Assigned(FAesEngineX86) then
+  if FAesEngineX86 <> nil then
   begin
     System.Move(FCounter[0], ABlocks[0], 16);
     System.Move(FCounter[0], ABlocks[16], 16);
@@ -1522,7 +1748,6 @@ begin
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
     System.Move(FCounter[0], ABlocks[48], 16);
-    FAesEngineX86.ProcessFourBlocks(@ABlocks[0], @ABlocks[0]);
 
     System.Move(FCounter[0], ABlocks[64], 16);
     System.Move(FCounter[0], ABlocks[80], 16);
@@ -1532,7 +1757,8 @@ begin
     TPack.UInt32_To_BE(Lc6, ABlocks, 92);
     TPack.UInt32_To_BE(Lc7, ABlocks, 108);
     System.Move(FCounter[0], ABlocks[112], 16);
-    FAesEngineX86.ProcessFourBlocks(@ABlocks[64], @ABlocks[64]);
+
+    FAesEngineX86.ProcessEightBlocksFast(@ABlocks[0], @ABlocks[0]);
     Exit;
   end;
 {$ENDIF}

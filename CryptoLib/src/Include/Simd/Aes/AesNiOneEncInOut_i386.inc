@@ -1,6 +1,7 @@
 // AesNiOneEncInOut i386 (merged key sizes)
 // Define exactly one of: CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256
 // before including this file (see ClpAesEngineX86).
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
 // Straight-line one-block AES-NI (@aes_e128), i386 register convention. ebx=RIn, esi=ROut, edi=Keys (after SimdProc2Begin_i386).

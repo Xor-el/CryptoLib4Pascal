@@ -61,8 +61,10 @@ type
     FKeys: PByte;
     FAesNiCipherOne: TAesNiCipherProc;
     FAesNiCipherFour: TAesNiCipherProc;
+    FAesNiCipherEight: TAesNiCipherProc;
     FAesNiCipherOneInOut: TAesNiCipherInOutProc;
     FAesNiCipherFourInOut: TAesNiCipherInOutProc;
+    FAesNiCipherEightInOut: TAesNiCipherInOutProc;
     procedure FreeAlignedKeys;
     procedure AllocAlignedKeys(AKeyBytes: Int32);
     procedure CreateRoundKeys(AForEncryption: Boolean; const AKey: TCryptoLibByteArray);
@@ -85,6 +87,25 @@ type
     /// </summary>
     function ProcessBlock(AInput, AOutput: PByte): Int32; overload;
     function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
+    /// <summary>
+    /// Internal fast path: one 16-byte block via pointers. Skips nil/overlap safety checks
+    /// and the stack-buffer copy used by <see cref="ProcessBlock"/>. Callers MUST pass valid
+    /// 16-byte buffers that are either identical (in-place) or fully disjoint.
+    /// </summary>
+    function ProcessBlockFast(AInput, AOutput: PByte): Int32; inline;
+    /// <summary>
+    /// Internal fast path: four consecutive 16-byte blocks (64 bytes) via pointers. Skips
+    /// nil/overlap safety checks and the stack-buffer copy used by <see cref="ProcessFourBlocks"/>.
+    /// Callers MUST pass valid 64-byte buffers that are either identical (in-place) or fully disjoint.
+    /// </summary>
+    function ProcessFourBlocksFast(AInput, AOutput: PByte): Int32; inline;
+    /// <summary>
+    /// Internal fast path: eight consecutive 16-byte blocks (128 bytes) via pointers. Implemented
+    /// as two sequential <see cref="ProcessFourBlocksFast"/> calls on the two 64-byte halves.
+    /// Skips nil/overlap safety checks. Callers MUST pass valid 128-byte buffers that are either
+    /// identical (in-place) or fully disjoint.
+    /// </summary>
+    function ProcessEightBlocksFast(AInput, AOutput: PByte): Int32; inline;
     property AlgorithmName: String read GetAlgorithmName;
   end;
 
@@ -206,6 +227,48 @@ procedure AesNiFourDec256(State, Keys: PByte);
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 
+procedure AesNiEightEnc128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightEnc_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightEnc192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightEnc_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightEnc256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightEnc_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
+procedure AesNiEightDec128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightDec_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightDec192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightDec_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightDec256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightDec_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
 procedure AesNiOneEnc128_InOut(RIn, ROut, Keys: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
@@ -287,6 +350,48 @@ procedure AesNiFourDec256_InOut(RIn, ROut, Keys: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$I ..\..\Include\Simd\Aes\AesNiFourDecInOut_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
+procedure AesNiEightEnc128_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightEncInOut_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightEnc192_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightEncInOut_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightEnc256_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightEncInOut_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
+procedure AesNiEightDec128_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightDecInOut_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightDec192_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightDecInOut_x86_64.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightDec256_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightDecInOut_x86_64.inc}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 
@@ -404,6 +509,48 @@ procedure AesNiFourDec256(State, Keys: PByte);
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 
+procedure AesNiEightEnc128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightEnc_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightEnc192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightEnc_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightEnc256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightEnc_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
+procedure AesNiEightDec128(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightDec_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightDec192(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightDec_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightDec256(State, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightDec_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
 procedure AesNiOneEnc128_InOut(RIn, ROut, Keys: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
@@ -488,6 +635,48 @@ procedure AesNiFourDec256_InOut(RIn, ROut, Keys: PByte);
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 
+procedure AesNiEightEnc128_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightEncInOut_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightEnc192_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightEncInOut_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightEnc256_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightEncInOut_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
+procedure AesNiEightDec128_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$I ..\..\Include\Simd\Aes\AesNiEightDecInOut_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY128}
+end;
+
+procedure AesNiEightDec192_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$I ..\..\Include\Simd\Aes\AesNiEightDecInOut_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY192}
+end;
+
+procedure AesNiEightDec256_InOut(RIn, ROut, Keys: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$I ..\..\Include\Simd\Aes\AesNiEightDecInOut_i386.inc}
+{$UNDEF CRYPTOLIB_AESNI_KEY256}
+end;
+
 {$ENDIF CRYPTOLIB_I386_ASM}
 
 { TAesEngineX86 }
@@ -508,8 +697,10 @@ begin
   FMode := TAesX86Mode.Uninitialized;
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
+  FAesNiCipherEight := nil;
   FAesNiCipherOneInOut := nil;
   FAesNiCipherFourInOut := nil;
+  FAesNiCipherEightInOut := nil;
 end;
 
 destructor TAesEngineX86.Destroy();
@@ -537,8 +728,10 @@ begin
   FMode := TAesX86Mode.Uninitialized;
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
+  FAesNiCipherEight := nil;
   FAesNiCipherOneInOut := nil;
   FAesNiCipherFourInOut := nil;
+  FAesNiCipherEightInOut := nil;
 end;
 
 procedure TAesEngineX86.AllocAlignedKeys(AKeyBytes: Int32);
@@ -614,8 +807,10 @@ procedure TAesEngineX86.BindCipherPointers;
 begin
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
+  FAesNiCipherEight := nil;
   FAesNiCipherOneInOut := nil;
   FAesNiCipherFourInOut := nil;
+  FAesNiCipherEightInOut := nil;
 
   case FMode of
     TAesX86Mode.Enc128:
@@ -624,6 +819,8 @@ begin
         FAesNiCipherFour := @AesNiFourEnc128;
         FAesNiCipherOneInOut := @AesNiOneEnc128_InOut;
         FAesNiCipherFourInOut := @AesNiFourEnc128_InOut;
+        FAesNiCipherEight := @AesNiEightEnc128;
+        FAesNiCipherEightInOut := @AesNiEightEnc128_InOut;
       end;
     TAesX86Mode.Enc192:
       begin
@@ -631,6 +828,8 @@ begin
         FAesNiCipherFour := @AesNiFourEnc192;
         FAesNiCipherOneInOut := @AesNiOneEnc192_InOut;
         FAesNiCipherFourInOut := @AesNiFourEnc192_InOut;
+        FAesNiCipherEight := @AesNiEightEnc192;
+        FAesNiCipherEightInOut := @AesNiEightEnc192_InOut;
       end;
     TAesX86Mode.Enc256:
       begin
@@ -638,6 +837,8 @@ begin
         FAesNiCipherFour := @AesNiFourEnc256;
         FAesNiCipherOneInOut := @AesNiOneEnc256_InOut;
         FAesNiCipherFourInOut := @AesNiFourEnc256_InOut;
+        FAesNiCipherEight := @AesNiEightEnc256;
+        FAesNiCipherEightInOut := @AesNiEightEnc256_InOut;
       end;
     TAesX86Mode.Dec128:
       begin
@@ -645,6 +846,8 @@ begin
         FAesNiCipherFour := @AesNiFourDec128;
         FAesNiCipherOneInOut := @AesNiOneDec128_InOut;
         FAesNiCipherFourInOut := @AesNiFourDec128_InOut;
+        FAesNiCipherEight := @AesNiEightDec128;
+        FAesNiCipherEightInOut := @AesNiEightDec128_InOut;
       end;
     TAesX86Mode.Dec192:
       begin
@@ -652,6 +855,8 @@ begin
         FAesNiCipherFour := @AesNiFourDec192;
         FAesNiCipherOneInOut := @AesNiOneDec192_InOut;
         FAesNiCipherFourInOut := @AesNiFourDec192_InOut;
+        FAesNiCipherEight := @AesNiEightDec192;
+        FAesNiCipherEightInOut := @AesNiEightDec192_InOut;
       end;
     TAesX86Mode.Dec256:
       begin
@@ -659,6 +864,8 @@ begin
         FAesNiCipherFour := @AesNiFourDec256;
         FAesNiCipherOneInOut := @AesNiOneDec256_InOut;
         FAesNiCipherFourInOut := @AesNiFourDec256_InOut;
+        FAesNiCipherEight := @AesNiEightDec256;
+        FAesNiCipherEightInOut := @AesNiEightDec256_InOut;
       end;
   else
     // stay nil
@@ -800,6 +1007,33 @@ begin
   else
     FAesNiCipherFourInOut(AInput, AOutput, FKeys);
   Result := 64;
+end;
+
+function TAesEngineX86.ProcessBlockFast(AInput, AOutput: PByte): Int32;
+begin
+  if AInput = AOutput then
+    FAesNiCipherOne(AOutput, FKeys)
+  else
+    FAesNiCipherOneInOut(AInput, AOutput, FKeys);
+  Result := 16;
+end;
+
+function TAesEngineX86.ProcessFourBlocksFast(AInput, AOutput: PByte): Int32;
+begin
+  if AInput = AOutput then
+    FAesNiCipherFour(AOutput, FKeys)
+  else
+    FAesNiCipherFourInOut(AInput, AOutput, FKeys);
+  Result := 64;
+end;
+
+function TAesEngineX86.ProcessEightBlocksFast(AInput, AOutput: PByte): Int32;
+begin
+  if AInput = AOutput then
+    FAesNiCipherEight(AOutput, FKeys)
+  else
+    FAesNiCipherEightInOut(AInput, AOutput, FKeys);
+  Result := 128;
 end;
 
 {$ENDIF}

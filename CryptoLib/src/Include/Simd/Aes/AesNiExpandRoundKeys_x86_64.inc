@@ -6,7 +6,7 @@
 // AES-128 encryption round-key expansion, x86-64.
 // Expects MS x64 ABI: rcx = 16-byte key, rdx = KeysOut (11 * 16 bytes).
 // Stack: Ls1, Lt1, Lw; r12 = KeysOut. Saves r12, rbx.
-// Db-encoded AES-NI / SSE2 (broad assembler support).
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 //
   push r12
   push rbx
@@ -384,7 +384,7 @@
   // AES-192 encryption round-key expansion, x86-64.
   // Expects MS x64 ABI: rcx = 24-byte key, rdx = KeysOut (13 * 16 bytes).
   // Stack: S1,S2,S3,T1,T2,W; r12 = KeysOut. Saves r12, rbx.
-  // Db-encoded AES-NI / SSE2 (broad assembler support).
+  // AES-NI instructions are db-encoded for broad assembler compatibility.
   //
     push r12
     push rbx
@@ -951,7 +951,7 @@
     // AES-256 encryption round-key expansion, x86-64.
     // Expects MS x64 ABI: rcx = 32-byte key, rdx = KeysOut (15 * 16 bytes).
     // Stack: s1,s2,t1,t2,w; r12 = KeysOut. Saves r12, rbx.
-    // Db-encoded AES-NI / SSE2 (broad assembler support).
+    // AES-NI instructions are db-encoded for broad assembler compatibility.
     //
       push r12
       push rbx

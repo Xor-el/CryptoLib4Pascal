@@ -6,7 +6,7 @@
 // AES-128 encryption round-key expansion, i386.
 // After SimdProc2Begin_i386: ebx = 16-byte key, esi = KeysOut (11 * 16 bytes).
 // Stack: Ls1, Lt1, Lw; edi = KeysOut. Saves edi, ebx (key ptr on stack).
-// Db-encoded AES-NI / SSE2 (broad assembler support).
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 //
   push edi
   push ebx
@@ -386,7 +386,7 @@
   // AES-192 encryption round-key expansion, i386.
   // After SimdProc2Begin_i386: ebx = 24-byte key, esi = KeysOut (13 * 16 bytes).
   // Stack: S1,S2,S3,T1,T2,W; edi = KeysOut. Saves edi, ebx (key ptr on stack).
-  // Db-encoded AES-NI / SSE2 (broad assembler support).
+  // AES-NI instructions are db-encoded for broad assembler compatibility.
   //
     push edi
     push ebx
@@ -958,7 +958,7 @@
     // AES-256 encryption round-key expansion, i386.
     // After SimdProc2Begin_i386: ebx = 32-byte key, esi = KeysOut (15 * 16 bytes).
     // Stack: s1,s2,t1,t2,w; edi = KeysOut. Saves edi, ebx (key ptr on stack).
-    // Db-encoded AES-NI / SSE2 (broad assembler support).
+    // AES-NI instructions are db-encoded for broad assembler compatibility.
     //
       push edi
       push ebx

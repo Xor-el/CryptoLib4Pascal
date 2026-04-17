@@ -2,6 +2,7 @@
 // After SimdProc3Begin_x86_64.inc: rcx = @X (TFieldElement), rdx = @Y, r8 = @TGcmPartial128 output.
 // X.N0,X.N1 and Y.N0,Y.N1 are UInt64 GHASH field limbs (TFieldElement).
 // Pack each limb into xmm as high qword then low (movq + punpcklqdq); little-endian 128-bit layout.
+// PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
   movq      xmm0, qword ptr [rcx + 8]
   movq      xmm4, qword ptr [rcx]

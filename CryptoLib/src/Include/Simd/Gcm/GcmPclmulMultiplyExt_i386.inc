@@ -1,4 +1,5 @@
 // MultiplyExt (i386): ebx = PX, esi = PY, edi = POut48.
+// PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
   movdqu    xmm0, [ebx]
   movdqu    xmm1, [esi]

@@ -106,6 +106,7 @@ type
     FPlain: TBytes;
     FPlainLen: Int32;
     FOut: TBytes;
+    FCipher: IBufferedCipher;
   public
     constructor Create(const ASpec: TCipherBenchRowSpec; const AKey: TBytes;
       const APlain: TBytes; APlainLen: Int32);
@@ -119,6 +120,7 @@ type
     FCipherText: TBytes;
     FCipherLen: Int32;
     FOut: TBytes;
+    FCipher: IBufferedCipher;
   public
     constructor Create(const AAlgorithm: String; const AParams: ICipherParameters;
       const ACipherText: TBytes; ACipherLen: Int32);
@@ -165,6 +167,9 @@ end;
 
 constructor TCipherEncryptRunner.Create(const ASpec: TCipherBenchRowSpec;
   const AKey: TBytes; const APlain: TBytes; APlainLen: Int32);
+var
+  LProbeParams: ICipherParameters;
+  LIvProbe: TBytes;
 begin
   inherited Create;
   FSpec := ASpec;
@@ -172,6 +177,15 @@ begin
   FPlain := APlain;
   FPlainLen := APlainLen;
   System.SetLength(FIv, ASpec.IvOrNonceByteCount);
+  // Hoist cipher acquisition and output-buffer sizing out of the timed loop. The cipher
+  // is looked up once via the registry; Init is called once here to size the output buffer
+  // (re-Init happens per-iteration with a fresh nonce). For AEAD modes (e.g. GCM) the
+  // per-iteration Init swaps in the new nonce, so no AEAD nonce reuse occurs at the boundary.
+  FCipher := TCipherUtilities.GetCipher(FSpec.Algorithm);
+  System.SetLength(LIvProbe, ASpec.IvOrNonceByteCount);
+  LProbeParams := BuildBenchCipherParams(FSpec, FKey, LIvProbe);
+  FCipher.Init(True, LProbeParams);
+  System.SetLength(FOut, FCipher.GetOutputSize(FPlainLen));
 end;
 
 procedure TCipherEncryptRunner.RunOnce;
@@ -182,8 +196,9 @@ begin
   for Ln := 0 to System.High(FIv) do
     FIv[Ln] := Byte(Random(256));
   LParams := BuildBenchCipherParams(FSpec, FKey, FIv);
-  FOut := BufferedEncryptPlainToBytes(FSpec.Algorithm, LParams, FPlain,
-    FPlainLen);
+  FCipher.Init(True, LParams);
+  Ln := FCipher.ProcessBytes(FPlain, 0, FPlainLen, FOut, 0);
+  FCipher.DoFinal(FOut, Ln);
 end;
 
 { TCipherDecryptRunner }
@@ -197,22 +212,18 @@ begin
   FParams := AParams;
   FCipherText := ACipherText;
   FCipherLen := ACipherLen;
-  FOut := nil;
+  FCipher := TCipherUtilities.GetCipher(FAlgorithm);
+  FCipher.Init(False, FParams);
+  System.SetLength(FOut, FCipher.GetOutputSize(FCipherLen));
 end;
 
 procedure TCipherDecryptRunner.RunOnce;
 var
-  LCipher: IBufferedCipher;
-  Ln, LNeed: Int32;
+  Ln: Int32;
 begin
-  LCipher := TCipherUtilities.GetCipher(FAlgorithm);
-  LCipher.Init(False, FParams);
-  LNeed := LCipher.GetOutputSize(FCipherLen);
-  System.SetLength(FOut, LNeed);
-  Ln := LCipher.ProcessBytes(FCipherText, 0, FCipherLen, FOut, 0);
-  Ln := Ln + LCipher.DoFinal(FOut, Ln);
-  if Ln <> System.Length(FOut) then
-    System.SetLength(FOut, Ln);
+  FCipher.Init(False, FParams);
+  Ln := FCipher.ProcessBytes(FCipherText, 0, FCipherLen, FOut, 0);
+  FCipher.DoFinal(FOut, Ln);
 end;
 
 { TCipherPerformanceBenchmark }

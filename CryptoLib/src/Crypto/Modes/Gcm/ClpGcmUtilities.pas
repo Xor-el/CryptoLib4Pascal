@@ -124,6 +124,26 @@ procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
 end;
+
+procedure GcmPclmulFusedMulAccumFour(PC0FoldedRev, PHPow64, POut48: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmPclmulFusedMulAccumFour_x86_64.inc}
+end;
+
+procedure GcmPclmulFusedMulAccumEight(PC0FoldedRev, PHPow128, POut48: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmPclmulFusedMulAccumEight_x86_64.inc}
+end;
+
+procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashFourFull_x86_64.inc}
+end;
+
+procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashEightFull_x86_64.inc}
+end;
 {$ENDIF CRYPTOLIB_X86_64_ASM}
 
 {$IFDEF CRYPTOLIB_I386_ASM}
@@ -150,6 +170,26 @@ end;
 procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
+end;
+
+procedure GcmPclmulFusedMulAccumFour(PC0FoldedRev, PHPow64, POut48: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmPclmulFusedMulAccumFour_i386.inc}
+end;
+
+procedure GcmPclmulFusedMulAccumEight(PC0FoldedRev, PHPow128, POut48: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmPclmulFusedMulAccumEight_i386.inc}
+end;
+
+procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashFourFull_i386.inc}
+end;
+
+procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer);
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashEightFull_i386.inc}
 end;
 {$ENDIF CRYPTOLIB_I386_ASM}
 
@@ -499,81 +539,27 @@ end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 class procedure TGcmUtilities.FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte);
-var
-  LB, LI: Int32;
-  LDblk: array [0 .. 15] of Byte;
-  LBuf48: array [0 .. 47] of Byte;
-  LU0, LU1, LU2: array [0 .. 15] of Byte;
-  LSRev: array [0 .. 15] of Byte;
-  LPCiph: PByte;
-  LPH: PByte;
 begin
   if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
     (not TIntrinsicsVector.IsPacked) then
     raise EInvalidOperationCryptoLibException.Create(
       'Fused four-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout.');
 
-  GcmBlockReverse128Ssse3(@LSRev[0], PFS, PMask);
-  PUInt64(@LU0[0])^ := 0;
-  PUInt64(@LU0[8])^ := 0;
-  PUInt64(@LU1[0])^ := 0;
-  PUInt64(@LU1[8])^ := 0;
-  PUInt64(@LU2[0])^ := 0;
-  PUInt64(@LU2[8])^ := 0;
-
-  for LB := 0 to 3 do
-  begin
-    LPCiph := PByte(NativeUInt(PC0) + UInt32(LB) shl 4);
-    GcmBlockReverse128Ssse3(@LDblk[0], LPCiph, PMask);
-    if LB = 0 then
-      for LI := 0 to 15 do
-        LDblk[LI] := LDblk[LI] xor LSRev[LI];
-    LPH := PByte(NativeUInt(PHPow64) + UInt32(LB) shl 4);
-    GcmPclmulMultiplyExtBytes(@LDblk[0], LPH, @LBuf48[0]);
-    GcmXorMultiplyExtLimbs48Sse2(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
-  end;
-
-  Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
-  GcmBlockReverse128Ssse3(PFS, @LSRev[0], PMask);
+  // Monolithic kernel: byte-reverse + state fold + 4-way multiply-accumulate +
+  // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
+  GcmGhashFourFull(PFS, PC0, PHPow64, PMask);
 end;
 
 class procedure TGcmUtilities.FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask: PByte);
-var
-  LB, LI: Int32;
-  LDblk: array [0 .. 15] of Byte;
-  LBuf48: array [0 .. 47] of Byte;
-  LU0, LU1, LU2: array [0 .. 15] of Byte;
-  LSRev: array [0 .. 15] of Byte;
-  LPCiph: PByte;
-  LPH: PByte;
 begin
   if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
     (not TIntrinsicsVector.IsPacked) then
     raise EInvalidOperationCryptoLibException.Create(
       'Fused eight-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout.');
 
-  GcmBlockReverse128Ssse3(@LSRev[0], PFS, PMask);
-  PUInt64(@LU0[0])^ := 0;
-  PUInt64(@LU0[8])^ := 0;
-  PUInt64(@LU1[0])^ := 0;
-  PUInt64(@LU1[8])^ := 0;
-  PUInt64(@LU2[0])^ := 0;
-  PUInt64(@LU2[8])^ := 0;
-
-  for LB := 0 to 7 do
-  begin
-    LPCiph := PByte(NativeUInt(PC0) + UInt32(LB) shl 4);
-    GcmBlockReverse128Ssse3(@LDblk[0], LPCiph, PMask);
-    if LB = 0 then
-      for LI := 0 to 15 do
-        LDblk[LI] := LDblk[LI] xor LSRev[LI];
-    LPH := PByte(NativeUInt(PHPow128) + UInt32(LB) shl 4);
-    GcmPclmulMultiplyExtBytes(@LDblk[0], LPH, @LBuf48[0]);
-    GcmXorMultiplyExtLimbs48Sse2(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
-  end;
-
-  Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
-  GcmBlockReverse128Ssse3(PFS, @LSRev[0], PMask);
+  // Monolithic kernel: byte-reverse + state fold + 8-way multiply-accumulate +
+  // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
+  GcmGhashEightFull(PFS, PC0, PHPow128, PMask);
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 

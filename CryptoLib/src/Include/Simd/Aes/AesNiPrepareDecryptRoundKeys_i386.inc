@@ -1,6 +1,6 @@
 // AES decrypt key schedule: aesimc middle rounds + reverse round-key order, i386.
 // After SimdProc2Begin_i386: ebx = round keys, esi = FNRounds (10, 12, or 14).
-// Db-encoded AES-NI / SSE2 (broad assembler support).
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 //
   push edi
   mov ecx, ebx

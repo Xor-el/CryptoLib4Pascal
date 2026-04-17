@@ -1,6 +1,7 @@
 // GHASH field multiply: partial 256-bit carryless product (i386).
 // After SimdProc3Begin_i386.inc: ebx = @X, esi = @Y, edi = @TGcmPartial128 output.
 // Epilogue: pop edi, esi, ebx (matches SimdProc3Begin pushes).
+// PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
   movq      xmm0, qword ptr [ebx + 8]
   movq      xmm4, qword ptr [ebx]
