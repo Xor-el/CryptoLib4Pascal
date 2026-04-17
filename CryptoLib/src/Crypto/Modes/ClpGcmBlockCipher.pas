@@ -154,6 +154,18 @@ type
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
+    // The FusedILP path below is intentionally x86-64-only. The underlying
+    // Gueron-style kernel keeps 15 of 16 XMM registers simultaneously live
+    // (8 AES state + 3 GHASH accumulators + 1 round key + 1 GHASH block +
+    // 1 H-power + 1 PCLMUL scratch + 1 byte-reverse mask). i386 legacy SSE
+    // only exposes xmm0..xmm7, so a direct port would require continuous
+    // memory spills between every AES round and every GHASH iteration,
+    // which destroys the port-0 / port-5 ILP overlap that motivates this
+    // kernel. The i386 build instead uses the standalone monolithic 8-way
+    // GHASH assembly kernel (TGcmUtilities.FusedEightShuffledGhash) driven
+    // from the regular 8-wide AES pipeline -- AES and GHASH run
+    // back-to-back per batch rather than interleaved, which is the
+    // practical ceiling under the 8-XMM register budget.
     /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-AES form). Used by the FusedILP pipeline where AES is performed inside the fused assembly kernel.</summary>
     procedure FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
     /// <summary>
@@ -162,10 +174,11 @@ type
     /// AES engine is always run in encrypt mode here regardless of GCM
     /// direction (CTR keystream construction). Activated when
     /// FusedAesEncGhashEightAvailable is true and the underlying engine is
-    /// initialized for AES encryption (currently dispatched only for AES-256
-    /// schedules; the kernel itself supports 128/192/256 via the matching
-    /// FusedAesEncN_GhashEight wrapper). Falls back to EncryptBlocks8Pipelined
-    /// for any unsupported configuration or short tail.
+    /// initialized for AES encryption. Dispatches to the AES-128 / AES-192 /
+    /// AES-256 wrapper based on the engine's round-key schedule length
+    /// (10 / 12 / 14 rounds respectively). Falls back to
+    /// EncryptBlocks8Pipelined for any unsupported configuration or short
+    /// tail.
     /// </summary>
     procedure EncryptBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
@@ -174,7 +187,8 @@ type
     /// AES-NI keystream + 8-way GHASH assembly kernel as EncryptBlocks8FusedILP;
     /// the only per-direction difference is that GHASH consumes the prior-
     /// iteration INPUT buffer (incoming ciphertext) rather than the output
-    /// buffer.
+    /// buffer. Dispatches to the AES-128 / AES-192 / AES-256 wrapper based
+    /// on the engine's round-key schedule length (10 / 12 / 14 rounds).
     /// </summary>
     procedure DecryptBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
