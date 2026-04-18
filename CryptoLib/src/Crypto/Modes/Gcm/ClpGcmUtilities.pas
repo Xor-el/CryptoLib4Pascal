@@ -98,8 +98,7 @@ type
     class procedure Multiply(var AX: TFieldElement; var AY: TFieldElement); overload; static;
 
     class procedure MultiplyP7(var AX: TFieldElement); static;
-    class procedure MultiplyP8(var AX: TFieldElement); overload; static;
-    class procedure MultiplyP8(var AX: TFieldElement; out AY: TFieldElement); overload; static;
+    class procedure MultiplyP8(var AX: TFieldElement; out AY: TFieldElement); static;
 
     class procedure Square(var AX: TFieldElement); static;
 
@@ -364,17 +363,6 @@ begin
   LC := LX1 shl 57;
   AX.N0 := (LX0 shr 7) xor LC xor (LC shr 1) xor (LC shr 2) xor (LC shr 7);
   AX.N1 := (LX1 shr 7) or (LX0 shl 57);
-end;
-
-class procedure TGcmUtilities.MultiplyP8(var AX: TFieldElement);
-var
-  LX0, LX1, LC: UInt64;
-begin
-  LX0 := AX.N0;
-  LX1 := AX.N1;
-  LC := LX1 shl 56;
-  AX.N0 := (LX0 shr 8) xor LC xor (LC shr 1) xor (LC shr 2) xor (LC shr 7);
-  AX.N1 := (LX1 shr 8) or (LX0 shl 56);
 end;
 
 class procedure TGcmUtilities.MultiplyP8(var AX: TFieldElement; out AY: TFieldElement);

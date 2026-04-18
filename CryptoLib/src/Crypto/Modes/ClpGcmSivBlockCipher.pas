@@ -65,8 +65,6 @@ type
   strict private
   type
     TGcmSivCache = class(TMemoryStream)
-    public
-      constructor Create;
     end;
 
     TGcmSivHasher = class(TObject)
@@ -163,13 +161,6 @@ type
   end;
 
 implementation
-
-{ TGcmSivBlockCipher.TGcmSivCache }
-
-constructor TGcmSivBlockCipher.TGcmSivCache.Create;
-begin
-  inherited Create;
-end;
 
 { TGcmSivBlockCipher.TGcmSivHasher }
 

@@ -135,7 +135,7 @@ type
     // ---------------------------------------------------------------------
     // GHASH primitives and scalar triple-XOR helpers.
     // ---------------------------------------------------------------------
-    procedure GcmReverse16(const ASrc, ADst: PByte);
+    class procedure GcmReverse16(const ASrc, ADst: PByte); static;
     procedure GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
     procedure GhashEightShuffledBlocks(PBase: PByte);
     /// <summary>Scalar triple-XOR of 64 bytes (8 x UInt64):
@@ -152,6 +152,15 @@ type
     /// used by ProcessBlocks8Pipelined. See GcmXor64BytesScalar for why this
     /// must remain a real (non-inline) call.</summary>
     class procedure GcmXor128BytesScalar(PDst, PSrcA, PSrcB: PByte); static;
+    /// <summary>
+    /// Shared big-endian counter-word packing used by both `FillNextCtrBlocks8Raw`
+    /// and `GetNextCtrBlocks8`'s SIMD fast path. Advances `ACounter32` by 8 and
+    /// writes the eight 16-byte counter blocks (pre-AES form) into `ABlocks[0..127]`.
+    /// Also mutates `ACounter[12..15]` in place (the block-index tail) as a side
+    /// effect of the byte-packing strategy.
+    /// </summary>
+    class procedure FillCtr8BlocksRaw(const ACounter: TCryptoLibByteArray;
+      var ACounter32: UInt32; const ABlocks: TCryptoLibByteArray); static;
 
     // ---------------------------------------------------------------------
     // Fused / pipelined batch routines (the GCM performance core).
@@ -224,25 +233,49 @@ type
     procedure InitCipher();
 
     // ---------------------------------------------------------------------
-    // Single-block AES wrappers (encrypt and decrypt direction).
+    // Init() sub-steps (strict private). Init() is kept small by delegating
+    // to these helpers in a fixed order. Each helper owns exactly one
+    // concern so the GCM reinit contract remains easy to audit.
     // ---------------------------------------------------------------------
-    procedure EncryptBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
-    procedure DecryptBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+    /// <summary>Parse AParameters (IAeadParameters or IParametersWithIV), populate
+    /// FInitialAssociatedText and FMacSize, and return the new nonce and key parameter.
+    /// Raises on unsupported parameter types or invalid MAC sizes.</summary>
+    procedure ResolveInitParameters(const AParameters: ICipherParameters;
+      out ANewNonce: TCryptoLibByteArray; out AKeyParam: IKeyParameter);
+    /// <summary>Encrypt-only guard that forbids reusing the same (nonce, key) pair.
+    /// No-op on decrypt. Must be called before FNonce/FLastKey are updated.</summary>
+    procedure CheckNonceReuse(AForEncryption: Boolean;
+      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+    /// <summary>Rekey path: initialize the underlying block cipher, compute the hash
+    /// subkey H, cache the AES-NI engine (when available), and (re)allocate the
+    /// 8-way SIMD buffers (FHPow / FWorkCtr / FWorkCtrAhead) on capable hardware.
+    /// Called only when a new key is supplied.</summary>
+    procedure InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
+    /// <summary>Compute the pre-counter J0 from FNonce per NIST SP 800-38D
+    /// (fast path for 96-bit IV, GHASH fallback otherwise).</summary>
+    procedure ComputeJ0();
+    /// <summary>Zero and (re)allocate all per-message transient state:
+    /// FS, FS_at, FS_atPre, FAtBlock, counters, positions, totals.</summary>
+    procedure ResetTransientState();
+
+    // ---------------------------------------------------------------------
+    // Single-block AES wrapper. AForEncrypt selects GHASH ordering:
+    //   * encrypt: emit ciphertext, then GHASH-absorb the output.
+    //   * decrypt: GHASH-absorb the input ciphertext, then emit plaintext.
+    // ---------------------------------------------------------------------
+    procedure CipherBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32; AForEncrypt: Boolean);
 
     // ---------------------------------------------------------------------
     // Batch dispatchers: select the fastest available fused / pipelined
     // routine for the current CPU feature set and operation direction.
     // ---------------------------------------------------------------------
-    procedure EncryptBlocks2(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+    procedure CipherBlocks2(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32; AForEncrypt: Boolean);
     procedure EncryptBlocks4(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
     procedure EncryptBlocks8(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32);
-    procedure DecryptBlocks2(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
     procedure DecryptBlocks4(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32);
@@ -424,33 +457,16 @@ begin
   Result := BlockSize;
 end;
 
-procedure TGcmBlockCipher.Init(AForEncryption: Boolean;
-  const AParameters: ICipherParameters);
+procedure TGcmBlockCipher.ResolveInitParameters(const AParameters: ICipherParameters;
+  out ANewNonce: TCryptoLibByteArray; out AKeyParam: IKeyParameter);
 var
   LAeadParameters: IAeadParameters;
   LParametersWithIV: IParametersWithIV;
-  LKeyParam: IKeyParameter;
-  LNewNonce: TCryptoLibByteArray;
-  LMacSizeBits, LBufLength: Int32;
-  LX: TCryptoLibByteArray;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  LAesX86Engine: IAesEngineX86;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  LMacSizeBits: Int32;
 begin
-  FForEncryption := AForEncryption;
-  FMacBlock := nil;
-  FBufBlock := nil;
-  FJ0 := nil;
-
-  FS := nil;
-  FS_at := nil;
-  FS_atPre := nil;
-  FAtBlock := nil;
-  FInitialised := True;
-
   if Supports(AParameters, IAeadParameters, LAeadParameters) then
   begin
-    LNewNonce := LAeadParameters.GetNonce();
+    ANewNonce := LAeadParameters.GetNonce();
     FInitialAssociatedText := LAeadParameters.GetAssociatedText();
 
     LMacSizeBits := LAeadParameters.MacSize;
@@ -458,84 +474,78 @@ begin
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
 
     FMacSize := LMacSizeBits div 8;
-    LKeyParam := LAeadParameters.Key;
+    AKeyParam := LAeadParameters.Key;
   end
   else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
   begin
-    LNewNonce := LParametersWithIV.GetIV();
+    ANewNonce := LParametersWithIV.GetIV();
     FInitialAssociatedText := nil;
     FMacSize := 16;
-    if not Supports(LParametersWithIV.Parameters, IKeyParameter, LKeyParam) then
-      LKeyParam := nil;
+    if not Supports(LParametersWithIV.Parameters, IKeyParameter, AKeyParam) then
+      AKeyParam := nil;
   end
   else
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersGCM);
   end;
+end;
 
-  if FForEncryption then
-    LBufLength := BlockSize
-  else
-    LBufLength := BlockSize + FMacSize;
+procedure TGcmBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
+  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+begin
+  if not AForEncryption then
+    Exit;
 
-  System.SetLength(FBufBlock, LBufLength);
+  if (FNonce = nil) or (not TArrayUtilities.AreEqual(FNonce, ANewNonce)) then
+    Exit;
 
-  if System.Length(LNewNonce) < 1 then
-    raise EArgumentCryptoLibException.CreateRes(@SIVMustBeAtLeast1Byte);
+  if AKeyParam = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
 
-  if FForEncryption then
-  begin
-    if (FNonce <> nil) and TArrayUtilities.AreEqual(FNonce, LNewNonce) then
-    begin
-      if LKeyParam = nil then
-        raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
+  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
+    raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
+end;
 
-      if (FLastKey <> nil) and LKeyParam.FixedTimeEquals(FLastKey) then
-        raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
-    end;
-  end;
-
-  FNonce := LNewNonce;
-
-  if LKeyParam <> nil then
-    FLastKey := LKeyParam.GetKey();
-
-  if LKeyParam <> nil then
-  begin
-    FCipher.Init(True, LKeyParam as ICipherParameters);
+procedure TGcmBlockCipher.InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    FAesEngineX86 := nil;
-    if TAesEngineX86.IsSupported and
-      Supports(FCipher, IAesEngineX86, LAesX86Engine) then
-      FAesEngineX86 := LAesX86Engine as TAesEngineX86;
+var
+  LAesX86Engine: IAesEngineX86;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+begin
+  FCipher.Init(True, AKeyParam as ICipherParameters);
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  FAesEngineX86 := nil;
+  if TAesEngineX86.IsSupported and
+    Supports(FCipher, IAesEngineX86, LAesX86Engine) then
+    FAesEngineX86 := LAesX86Engine as TAesEngineX86;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
-    FH := nil;
-    System.SetLength(FH, BlockSize);
-    FCipher.ProcessBlock(FH, 0, FH, 0);
+  FH := nil;
+  System.SetLength(FH, BlockSize);
+  FCipher.ProcessBlock(FH, 0, FH, 0);
 
-    FMultiplier.Init(FH);
-    FExp := nil;
-    FHPow := nil;
-    FWorkCtr := nil;
-    FWorkCtrAhead := nil;
+  FMultiplier.Init(FH);
+  FExp := nil;
+  FHPow := nil;
+  FWorkCtr := nil;
+  FWorkCtrAhead := nil;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    if TGcmBlockCipher.IsFourWaySupported then
-    begin
-      System.SetLength(FHPow, 128);
-      TGcmUtilities.InitEightWayHPowFromH(FH, FHPow);
-      System.SetLength(FWorkCtr, 128);
-      TArrayUtilities.Fill<Byte>(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
-      System.SetLength(FWorkCtrAhead, 128);
-      TArrayUtilities.Fill<Byte>(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
-    end;
-{$ENDIF}
-  end
-  else if FH = nil then
+  if TGcmBlockCipher.IsFourWaySupported then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+    System.SetLength(FHPow, 128);
+    TGcmUtilities.InitEightWayHPowFromH(FH, FHPow);
+    System.SetLength(FWorkCtr, 128);
+    TArrayUtilities.Fill<Byte>(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
+    System.SetLength(FWorkCtrAhead, 128);
+    TArrayUtilities.Fill<Byte>(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
   end;
+{$ENDIF}
+end;
 
+procedure TGcmBlockCipher.ComputeJ0();
+var
+  LX: TCryptoLibByteArray;
+begin
   System.SetLength(FJ0, BlockSize);
 
   if System.Length(FNonce) = 12 then
@@ -550,7 +560,10 @@ begin
     TPack.UInt64_To_BE(UInt64(System.Length(FNonce)) * UInt64(8), LX, 8);
     GHASHBlock(FJ0, LX);
   end;
+end;
 
+procedure TGcmBlockCipher.ResetTransientState();
+begin
   System.SetLength(FS, BlockSize);
   System.SetLength(FS_at, BlockSize);
   System.SetLength(FS_atPre, BlockSize);
@@ -563,6 +576,53 @@ begin
   FBlocksRemaining := UInt32($FFFFFFFF) - 1;
   FBufOff := 0;
   FTotalLength := 0;
+end;
+
+procedure TGcmBlockCipher.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
+var
+  LKeyParam: IKeyParameter;
+  LNewNonce: TCryptoLibByteArray;
+  LBufLength: Int32;
+begin
+  FForEncryption := AForEncryption;
+  FMacBlock := nil;
+  FBufBlock := nil;
+  FJ0 := nil;
+
+  FS := nil;
+  FS_at := nil;
+  FS_atPre := nil;
+  FAtBlock := nil;
+  FInitialised := True;
+
+  ResolveInitParameters(AParameters, LNewNonce, LKeyParam);
+
+  if FForEncryption then
+    LBufLength := BlockSize
+  else
+    LBufLength := BlockSize + FMacSize;
+  System.SetLength(FBufBlock, LBufLength);
+
+  if System.Length(LNewNonce) < 1 then
+    raise EArgumentCryptoLibException.CreateRes(@SIVMustBeAtLeast1Byte);
+
+  CheckNonceReuse(FForEncryption, LNewNonce, LKeyParam);
+
+  FNonce := LNewNonce;
+
+  if LKeyParam <> nil then
+  begin
+    FLastKey := LKeyParam.GetKey();
+    InitCipherAndHashSubKey(LKeyParam);
+  end
+  else if FH = nil then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+  end;
+
+  ComputeJ0();
+  ResetTransientState();
 
   if FInitialAssociatedText <> nil then
     ProcessAadBytes(FInitialAssociatedText, 0, System.Length(FInitialAssociatedText));
@@ -704,12 +764,12 @@ begin
 
     if FForEncryption then
     begin
-      EncryptBlock(FBufBlock, 0, AOutput, AOutOff);
+      CipherBlock(FBufBlock, 0, AOutput, AOutOff, True);
       FBufOff := 0;
     end
     else
     begin
-      DecryptBlock(FBufBlock, 0, AOutput, AOutOff);
+      CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
       System.Move(FBufBlock[BlockSize], FBufBlock[0], FMacSize);
       FBufOff := FMacSize;
     end;
@@ -766,7 +826,7 @@ begin
       AInOff := AInOff + LAvailable;
       ALen := ALen - LAvailable;
 
-      EncryptBlock(FBufBlock, 0, AOutput, AOutOff);
+      CipherBlock(FBufBlock, 0, AOutput, AOutOff, True);
       AOutOff := AOutOff + BlockSize;
     end;
 
@@ -779,7 +839,7 @@ begin
         EncryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff);
         if ALen >= BlockSize * 2 then
         begin
-          EncryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+          CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
           AInOff := AInOff + (BlockSize * 2);
           ALen := ALen - (BlockSize * 2);
           AOutOff := AOutOff + (BlockSize * 2);
@@ -787,7 +847,7 @@ begin
       end
       else if ALen >= BlockSize * 2 then
       begin
-        EncryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
         AInOff := AInOff + (BlockSize * 2);
         ALen := ALen - (BlockSize * 2);
         AOutOff := AOutOff + (BlockSize * 2);
@@ -798,7 +858,7 @@ begin
       EncryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff);
       if ALen >= BlockSize * 2 then
       begin
-        EncryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
         AInOff := AInOff + (BlockSize * 2);
         ALen := ALen - (BlockSize * 2);
         AOutOff := AOutOff + (BlockSize * 2);
@@ -809,7 +869,7 @@ begin
     begin
       while ALen >= BlockSize * 2 do
       begin
-        EncryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
         AInOff := AInOff + (BlockSize * 2);
         ALen := ALen - (BlockSize * 2);
         AOutOff := AOutOff + (BlockSize * 2);
@@ -818,7 +878,7 @@ begin
 
     if ALen >= BlockSize then
     begin
-      EncryptBlock(AInput, AInOff, AOutput, AOutOff);
+      CipherBlock(AInput, AInOff, AOutput, AOutOff, True);
       AInOff := AInOff + BlockSize;
       ALen := ALen - BlockSize;
     end;
@@ -855,7 +915,7 @@ begin
 
     if FBufOff >= BlockSize then
     begin
-      DecryptBlock(FBufBlock, 0, AOutput, AOutOff);
+      CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
       AOutOff := AOutOff + BlockSize;
 
       FBufOff := FBufOff - BlockSize;
@@ -878,7 +938,7 @@ begin
     AInOff := AInOff + LAvailable;
     ALen := ALen - LAvailable;
 
-    DecryptBlock(FBufBlock, 0, AOutput, AOutOff);
+    CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
     AOutOff := AOutOff + BlockSize;
 
     LBufLen := System.Length(FBufBlock);
@@ -895,7 +955,7 @@ begin
         DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
         if ALen >= LThresh2 then
         begin
-          DecryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+          CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
           AInOff := AInOff + (BlockSize * 2);
           ALen := ALen - (BlockSize * 2);
           AOutOff := AOutOff + (BlockSize * 2);
@@ -903,7 +963,7 @@ begin
       end
       else if ALen >= LThresh2 then
       begin
-        DecryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
         AInOff := AInOff + (BlockSize * 2);
         ALen := ALen - (BlockSize * 2);
         AOutOff := AOutOff + (BlockSize * 2);
@@ -914,7 +974,7 @@ begin
       DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
       if ALen >= LThresh2 then
       begin
-        DecryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
         AInOff := AInOff + (BlockSize * 2);
         ALen := ALen - (BlockSize * 2);
         AOutOff := AOutOff + (BlockSize * 2);
@@ -925,7 +985,7 @@ begin
     begin
       while ALen >= LThresh2 do
       begin
-        DecryptBlocks2(AInput, AInOff, AOutput, AOutOff);
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
         AInOff := AInOff + (BlockSize * 2);
         ALen := ALen - (BlockSize * 2);
         AOutOff := AOutOff + (BlockSize * 2);
@@ -934,7 +994,7 @@ begin
 
     if ALen >= LBufLen then
     begin
-      DecryptBlock(AInput, AInOff, AOutput, AOutOff);
+      CipherBlock(AInput, AInOff, AOutput, AOutOff, False);
       AInOff := AInOff + BlockSize;
       ALen := ALen - BlockSize;
     end;
@@ -1088,120 +1148,6 @@ end;
 // path: scalar-friendly layout usable on every CPU target).
 // =======================================================================
 
-procedure TGcmBlockCipher.DecryptBlock(const AInBuf: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LCtrBlock: TCryptoLibByteArray;
-  LI: Int32;
-  LC0, LC1, LC2, LC3: Byte;
-begin
-  LCtrBlock := nil;
-  System.SetLength(LCtrBlock, BlockSize);
-  GetNextCtrBlock(LCtrBlock);
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
-  begin
-    System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
-    GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
-    FMultiplier.MultiplyH(FS);
-    Exit;
-  end;
-{$ENDIF}
-
-  for LI := 0 to (BlockSize - 1) div 4 do
-  begin
-    LC0 := AInBuf[AInOff + (LI * 4) + 0];
-    LC1 := AInBuf[AInOff + (LI * 4) + 1];
-    LC2 := AInBuf[AInOff + (LI * 4) + 2];
-    LC3 := AInBuf[AInOff + (LI * 4) + 3];
-
-    FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-    FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-    FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-    FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-    AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
-    AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
-    AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
-    AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
-  end;
-  FMultiplier.MultiplyH(FS);
-end;
-
-procedure TGcmBlockCipher.DecryptBlocks2(const AInBuf: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LCtrBlock: TCryptoLibByteArray;
-  LI: Int32;
-  LC0, LC1, LC2, LC3: Byte;
-begin
-  LCtrBlock := nil;
-  System.SetLength(LCtrBlock, BlockSize);
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
-  begin
-    GetNextCtrBlock(LCtrBlock);
-    System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
-    GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
-    FMultiplier.MultiplyH(FS);
-    AInOff := AInOff + BlockSize;
-    AOutOff := AOutOff + BlockSize;
-    GetNextCtrBlock(LCtrBlock);
-    System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
-    GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
-    FMultiplier.MultiplyH(FS);
-    Exit;
-  end;
-{$ENDIF}
-
-  GetNextCtrBlock(LCtrBlock);
-  for LI := 0 to (BlockSize - 1) div 4 do
-  begin
-    LC0 := AInBuf[AInOff + (LI * 4) + 0];
-    LC1 := AInBuf[AInOff + (LI * 4) + 1];
-    LC2 := AInBuf[AInOff + (LI * 4) + 2];
-    LC3 := AInBuf[AInOff + (LI * 4) + 3];
-
-    FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-    FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-    FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-    FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-    AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
-    AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
-    AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
-    AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
-  end;
-  FMultiplier.MultiplyH(FS);
-
-  AInOff := AInOff + BlockSize;
-  AOutOff := AOutOff + BlockSize;
-
-  GetNextCtrBlock(LCtrBlock);
-  for LI := 0 to (BlockSize - 1) div 4 do
-  begin
-    LC0 := AInBuf[AInOff + (LI * 4) + 0];
-    LC1 := AInBuf[AInOff + (LI * 4) + 1];
-    LC2 := AInBuf[AInOff + (LI * 4) + 2];
-    LC3 := AInBuf[AInOff + (LI * 4) + 3];
-
-    FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-    FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-    FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-    FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-    AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
-    AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
-    AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
-    AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
-  end;
-  FMultiplier.MultiplyH(FS);
-end;
-
 // =======================================================================
 // Scalar XOR helpers, byte-reverse primitive, and shuffled-block
 // GHASH kernels used by the fused / pipelined batch routines below.
@@ -1223,7 +1169,7 @@ begin
     PUInt64(PDst + LI * 8)^ := PUInt64(PSrcA + LI * 8)^ xor PUInt64(PSrcB + LI * 8)^;
 end;
 
-procedure TGcmBlockCipher.GcmReverse16(const ASrc, ADst: PByte);
+class procedure TGcmBlockCipher.GcmReverse16(const ASrc, ADst: PByte);
 var
   LI: Int32;
 begin
@@ -1515,6 +1461,42 @@ begin
   ALen := ALen - (BlockSize * 8);
 end;
 
+class procedure TGcmBlockCipher.FillCtr8BlocksRaw(
+  const ACounter: TCryptoLibByteArray; var ACounter32: UInt32;
+  const ABlocks: TCryptoLibByteArray);
+var
+  Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
+begin
+  Lc0 := ACounter32;
+  Lc1 := Lc0 + UInt32(1);
+  Lc2 := Lc0 + UInt32(2);
+  Lc3 := Lc0 + UInt32(3);
+  Lc4 := Lc0 + UInt32(4);
+  Lc5 := Lc0 + UInt32(5);
+  Lc6 := Lc0 + UInt32(6);
+  Lc7 := Lc0 + UInt32(7);
+  Lc8 := Lc0 + UInt32(8);
+  ACounter32 := Lc8;
+
+  System.Move(ACounter[0], ABlocks[0], 16);
+  System.Move(ACounter[0], ABlocks[16], 16);
+  System.Move(ACounter[0], ABlocks[32], 16);
+  TPack.UInt32_To_BE(Lc4, ACounter, 12);
+  TPack.UInt32_To_BE(Lc1, ABlocks, 12);
+  TPack.UInt32_To_BE(Lc2, ABlocks, 28);
+  TPack.UInt32_To_BE(Lc3, ABlocks, 44);
+  System.Move(ACounter[0], ABlocks[48], 16);
+
+  System.Move(ACounter[0], ABlocks[64], 16);
+  System.Move(ACounter[0], ABlocks[80], 16);
+  System.Move(ACounter[0], ABlocks[96], 16);
+  TPack.UInt32_To_BE(Lc8, ACounter, 12);
+  TPack.UInt32_To_BE(Lc5, ABlocks, 76);
+  TPack.UInt32_To_BE(Lc6, ABlocks, 92);
+  TPack.UInt32_To_BE(Lc7, ABlocks, 108);
+  System.Move(ACounter[0], ABlocks[112], 16);
+end;
+
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 // =======================================================================
 // Gueron-style fused AES-NI + 8-way GHASH pipeline (x86-64 only).
@@ -1524,37 +1506,8 @@ end;
 // =======================================================================
 
 procedure TGcmBlockCipher.FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
-var
-  Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
 begin
-  Lc0 := FCounter32;
-  Lc1 := Lc0 + UInt32(1);
-  Lc2 := Lc0 + UInt32(2);
-  Lc3 := Lc0 + UInt32(3);
-  Lc4 := Lc0 + UInt32(4);
-  Lc5 := Lc0 + UInt32(5);
-  Lc6 := Lc0 + UInt32(6);
-  Lc7 := Lc0 + UInt32(7);
-  Lc8 := Lc0 + UInt32(8);
-  FCounter32 := Lc8;
-
-  System.Move(FCounter[0], ABlocks[0], 16);
-  System.Move(FCounter[0], ABlocks[16], 16);
-  System.Move(FCounter[0], ABlocks[32], 16);
-  TPack.UInt32_To_BE(Lc4, FCounter, 12);
-  TPack.UInt32_To_BE(Lc1, ABlocks, 12);
-  TPack.UInt32_To_BE(Lc2, ABlocks, 28);
-  TPack.UInt32_To_BE(Lc3, ABlocks, 44);
-  System.Move(FCounter[0], ABlocks[48], 16);
-
-  System.Move(FCounter[0], ABlocks[64], 16);
-  System.Move(FCounter[0], ABlocks[80], 16);
-  System.Move(FCounter[0], ABlocks[96], 16);
-  TPack.UInt32_To_BE(Lc8, FCounter, 12);
-  TPack.UInt32_To_BE(Lc5, ABlocks, 76);
-  TPack.UInt32_To_BE(Lc6, ABlocks, 92);
-  TPack.UInt32_To_BE(Lc7, ABlocks, 108);
-  System.Move(FCounter[0], ABlocks[112], 16);
+  FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
 end;
 
 // Gueron-style fused AES-NI keystream + 8-way GHASH pipeline (x86-64). The
@@ -1731,8 +1684,9 @@ begin
 {$ENDIF}
 end;
 
-procedure TGcmBlockCipher.EncryptBlock(const AInBuf: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+procedure TGcmBlockCipher.CipherBlock(const AInBuf: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
+  AForEncrypt: Boolean);
 var
   LCtrBlock: TCryptoLibByteArray;
   LI: Int32;
@@ -1744,30 +1698,62 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
   begin
-    System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-    GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
+    if AForEncrypt then
+    begin
+      System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
+      GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+      GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
+    end
+    else
+    begin
+      System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
+      GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
+      GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
+    end;
     FMultiplier.MultiplyH(FS);
     Exit;
   end;
 {$ENDIF}
 
-  for LI := 0 to (BlockSize - 1) div 4 do
+  if AForEncrypt then
   begin
-    LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
-    LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
-    LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
-    LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
+    for LI := 0 to (BlockSize - 1) div 4 do
+    begin
+      LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
+      LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
+      LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
+      LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
 
-    FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-    FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-    FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-    FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
+      FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
+      FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
+      FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
+      FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
 
-    AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
-    AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
-    AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
-    AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
+      AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
+      AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
+      AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
+      AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
+    end;
+  end
+  else
+  begin
+    for LI := 0 to (BlockSize - 1) div 4 do
+    begin
+      LC0 := AInBuf[AInOff + (LI * 4) + 0];
+      LC1 := AInBuf[AInOff + (LI * 4) + 1];
+      LC2 := AInBuf[AInOff + (LI * 4) + 2];
+      LC3 := AInBuf[AInOff + (LI * 4) + 3];
+
+      FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
+      FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
+      FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
+      FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
+
+      AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
+      AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
+      AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
+      AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
+    end;
   end;
   FMultiplier.MultiplyH(FS);
 end;
@@ -1829,11 +1815,12 @@ begin
 {$ENDIF}
 end;
 
-procedure TGcmBlockCipher.EncryptBlocks2(const AInBuf: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+procedure TGcmBlockCipher.CipherBlocks2(const AInBuf: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
+  AForEncrypt: Boolean);
 var
   LCtrBlock: TCryptoLibByteArray;
-  LI: Int32;
+  LI, LB: Int32;
   LC0, LC1, LC2, LC3: Byte;
 begin
   LCtrBlock := nil;
@@ -1842,64 +1829,76 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
   begin
-    GetNextCtrBlock(LCtrBlock);
-    System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-    GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
-    FMultiplier.MultiplyH(FS);
-    AInOff := AInOff + BlockSize;
-    AOutOff := AOutOff + BlockSize;
-    GetNextCtrBlock(LCtrBlock);
-    System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-    GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
-    FMultiplier.MultiplyH(FS);
+    for LB := 0 to 1 do
+    begin
+      GetNextCtrBlock(LCtrBlock);
+      if AForEncrypt then
+      begin
+        System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
+        GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+        GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
+      end
+      else
+      begin
+        System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
+        GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
+        GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
+      end;
+      FMultiplier.MultiplyH(FS);
+      AInOff := AInOff + BlockSize;
+      AOutOff := AOutOff + BlockSize;
+    end;
     Exit;
   end;
 {$ENDIF}
 
-  GetNextCtrBlock(LCtrBlock);
-  for LI := 0 to (BlockSize - 1) div 4 do
+  for LB := 0 to 1 do
   begin
-    LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
-    LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
-    LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
-    LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
+    GetNextCtrBlock(LCtrBlock);
+    if AForEncrypt then
+    begin
+      for LI := 0 to (BlockSize - 1) div 4 do
+      begin
+        LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
+        LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
+        LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
+        LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
 
-    FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-    FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-    FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-    FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
+        FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
+        FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
+        FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
+        FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
 
-    AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
-    AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
-    AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
-    AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
+        AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
+        AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
+        AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
+        AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
+      end;
+    end
+    else
+    begin
+      for LI := 0 to (BlockSize - 1) div 4 do
+      begin
+        LC0 := AInBuf[AInOff + (LI * 4) + 0];
+        LC1 := AInBuf[AInOff + (LI * 4) + 1];
+        LC2 := AInBuf[AInOff + (LI * 4) + 2];
+        LC3 := AInBuf[AInOff + (LI * 4) + 3];
+
+        FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
+        FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
+        FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
+        FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
+
+        AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
+        AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
+        AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
+        AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
+      end;
+    end;
+    FMultiplier.MultiplyH(FS);
+    AInOff := AInOff + BlockSize;
+    AOutOff := AOutOff + BlockSize;
   end;
-  FMultiplier.MultiplyH(FS);
-
-  AInOff := AInOff + BlockSize;
-  AOutOff := AOutOff + BlockSize;
-
-  GetNextCtrBlock(LCtrBlock);
-  for LI := 0 to (BlockSize - 1) div 4 do
-  begin
-    LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
-    LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
-    LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
-    LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
-
-    FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-    FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-    FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-    FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-    AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
-    AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
-    AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
-    AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
-  end;
-  FMultiplier.MultiplyH(FS);
 end;
 
 // =======================================================================
@@ -1954,6 +1953,15 @@ procedure TGcmBlockCipher.GetNextCtrBlocks8(const ABlocks: TCryptoLibByteArray);
 var
   Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
 begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if FAesEngineX86 <> nil then
+  begin
+    FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
+    FAesEngineX86.ProcessEightBlocksFast(@ABlocks[0], @ABlocks[0]);
+    Exit;
+  end;
+{$ENDIF}
+
   Lc0 := FCounter32;
   Lc1 := Lc0 + UInt32(1);
   Lc2 := Lc0 + UInt32(2);
@@ -1964,32 +1972,6 @@ begin
   Lc7 := Lc0 + UInt32(7);
   Lc8 := Lc0 + UInt32(8);
   FCounter32 := Lc8;
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if FAesEngineX86 <> nil then
-  begin
-    System.Move(FCounter[0], ABlocks[0], 16);
-    System.Move(FCounter[0], ABlocks[16], 16);
-    System.Move(FCounter[0], ABlocks[32], 16);
-    TPack.UInt32_To_BE(Lc4, FCounter, 12);
-    TPack.UInt32_To_BE(Lc1, ABlocks, 12);
-    TPack.UInt32_To_BE(Lc2, ABlocks, 28);
-    TPack.UInt32_To_BE(Lc3, ABlocks, 44);
-    System.Move(FCounter[0], ABlocks[48], 16);
-
-    System.Move(FCounter[0], ABlocks[64], 16);
-    System.Move(FCounter[0], ABlocks[80], 16);
-    System.Move(FCounter[0], ABlocks[96], 16);
-    TPack.UInt32_To_BE(Lc8, FCounter, 12);
-    TPack.UInt32_To_BE(Lc5, ABlocks, 76);
-    TPack.UInt32_To_BE(Lc6, ABlocks, 92);
-    TPack.UInt32_To_BE(Lc7, ABlocks, 108);
-    System.Move(FCounter[0], ABlocks[112], 16);
-
-    FAesEngineX86.ProcessEightBlocksFast(@ABlocks[0], @ABlocks[0]);
-    Exit;
-  end;
-{$ENDIF}
 
   TPack.UInt32_To_BE(Lc1, FCounter, 12);
   FCipher.ProcessBlock(FCounter, 0, ABlocks, 0);
