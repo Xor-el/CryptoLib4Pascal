@@ -24,14 +24,11 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
+  ClpIBulkBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpICbcBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  ClpIAesEngineX86,
-  ClpAesEngineX86,
-{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -52,35 +49,34 @@ type
     FBlockSize: Int32;
     FCipher: IBlockCipher;
     FEncrypting: Boolean;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-    // Cached on Init; non-nil only when the underlying block cipher is
-    // TAesEngineX86. Lets the bulk path call the engine's concrete
-    // ProcessBlock / ProcessFourBlocks / ProcessEightBlocks without a
-    // per-call virtual dispatch or Supports() probe. CBC decrypt is the
-    // big win here (independent block decrypts pipelined 8-way); CBC
-    // encrypt stays serial but saves roughly one interface call per block.
-    FAesEngineX86: TAesEngineX86;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+    // Cached on Init. Non-nil only when the underlying engine implements
+    // IBulkBlockCipher. CBC decrypt exposes 8 independent inverse
+    // transforms per call, which a parallel-capable engine can pipeline;
+    // CBC encrypt stays serial (C[i] depends on C[i-1]) but still saves
+    // one interface dispatch per block. Any bulk-capable block cipher
+    // lights up both paths automatically by implementing the interface.
+    FBulkCipher: IBulkBlockCipher;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
     function DecryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-    // Bulk encrypt via cached AES-NI engine. Serial by definition (each
-    // ciphertext block feeds the next XOR), but we skip the IBlockCipher
-    // interface call and the polymorphic AlgorithmName lookup.
-    procedure CbcEncryptBulkX86(const AInBuf: TCryptoLibByteArray;
+    // Bulk encrypt via cached bulk engine. Serial by definition (each
+    // ciphertext block feeds the next XOR), but dispatches through the
+    // engine's IBlockCipher.ProcessBlock, inherited from the same vtable
+    // as IBulkBlockCipher so there's no extra probe.
+    procedure CbcEncryptBulk(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32);
-    // Bulk decrypt via cached AES-NI engine. Decrypts in 8- then 4-block
-    // batches with alias-safe ciphertext staging, then chain-XORs against
-    // FCbcV + staged ciphertext so output matches sequential DecryptBlock.
-    procedure CbcDecryptBulkX86(const AInBuf: TCryptoLibByteArray;
+    // Bulk decrypt via cached bulk engine. Decrypts in 8-block batches
+    // with ciphertext staging (so in-place aliasing cannot corrupt the
+    // chain XOR), then applies FCbcV + staged ciphertext. 1..7 block
+    // residue goes through per-block DecryptBlock -- engine-owned
+    // batch ladder handles anything smaller internally if needed.
+    procedure CbcDecryptBulk(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32);
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   strict protected
     function GetAlgorithmName: String; inline;
@@ -99,9 +95,10 @@ type
     /// Output is byte-identical to ABlockCount sequential ProcessBlock
     /// calls and the chaining state (FCbcV) is left exactly as if those
     /// calls had been made. When the underlying engine exposes an
-    /// accelerated multi-block path, batches are dispatched through it;
-    /// otherwise the implementation falls back to the per-block
-    /// ProcessBlock loop with no change in semantics.
+    /// accelerated IBulkBlockCipher path and the block size is 16 bytes,
+    /// batches are dispatched through it; otherwise the implementation
+    /// falls back to the per-block ProcessBlock loop with no change in
+    /// semantics.
     /// </summary>
     function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
@@ -126,9 +123,7 @@ begin
   System.SetLength(FIV, FBlockSize);
   System.SetLength(FCbcV, FBlockSize);
   System.SetLength(FCbcNextV, FBlockSize);
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  FAesEngineX86 := nil;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  FBulkCipher := nil;
 end;
 
 function TCbcBlockCipher.DecryptBlock(const AInput: TCryptoLibByteArray;
@@ -163,17 +158,19 @@ begin
   Result := LLen;
 end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-procedure TCbcBlockCipher.CbcEncryptBulkX86(const AInBuf: TCryptoLibByteArray;
+procedure TCbcBlockCipher.CbcEncryptBulk(const AInBuf: TCryptoLibByteArray;
   AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
   AOutOff: Int32);
 var
   LPCbcV, LPIn, LPOut: PByte;
   LI: Int32;
 begin
-  // 16-byte CBC encryption: C[i] = AES_ENC(P[i] XOR C[i-1]). Serial chain.
+  // 16-byte CBC encryption: C[i] = ENC(P[i] XOR C[i-1]). Serial chain.
   // We mutate FCbcV in place across the batch; the final value equals the
   // last produced ciphertext block, exactly matching sequential EncryptBlock.
+  // Dispatches via FBulkCipher.ProcessBlock (inherited from IBlockCipher);
+  // this is the same vtable entry the engine already services for single-
+  // block calls, so no extra probe per iteration.
   LPCbcV := @FCbcV[0];
   while ABlockCount > 0 do
   begin
@@ -181,7 +178,7 @@ begin
     LPOut := @AOutBuf[AOutOff];
     for LI := 0 to 15 do
       LPCbcV[LI] := LPCbcV[LI] xor LPIn[LI];
-    FAesEngineX86.ProcessBlock(FCbcV, 0, AOutBuf, AOutOff);
+    FBulkCipher.ProcessBlock(FCbcV, 0, AOutBuf, AOutOff);
     System.Move(LPOut^, LPCbcV^, 16);
     System.Inc(AInOff, 16);
     System.Inc(AOutOff, 16);
@@ -189,7 +186,7 @@ begin
   end;
 end;
 
-procedure TCbcBlockCipher.CbcDecryptBulkX86(const AInBuf: TCryptoLibByteArray;
+procedure TCbcBlockCipher.CbcDecryptBulk(const AInBuf: TCryptoLibByteArray;
   AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
   AOutOff: Int32);
 var
@@ -197,17 +194,21 @@ var
   LPOut, LPStage, LPCbcV: PByte;
   LI, LJ: Int32;
 begin
-  // 16-byte CBC decryption: P[i] = AES_DEC(C[i]) XOR C[i-1] (with C[-1] = IV
-  // carried in FCbcV). AES_DEC calls across i are independent, so we batch
-  // 8 (and then 4) through the AES-NI pipelined kernels, stage the raw
-  // ciphertext up front (so in-place aliasing cannot corrupt the XOR feed),
-  // and then apply the chain XOR.
+  // 16-byte CBC decryption: P[i] = DEC(C[i]) XOR C[i-1] (with C[-1] = IV
+  // carried in FCbcV). The inverse calls across i are independent, so we
+  // batch 8 through the engine's bulk path, stage the raw ciphertext up
+  // front (so in-place aliasing cannot corrupt the XOR feed), then apply
+  // the chain XOR. 1..7 block residue goes per-block below -- the
+  // engine's internal 4/1 ladder would kick in if we routed residue
+  // through it too, but per-block is already engine-fast and the residue
+  // is <= 112 bytes per message so the lost 4-wide parallelism is sub-
+  // noise.
   while ABlockCount >= 8 do
   begin
-    // Snapshot ciphertext so the engine can safely run in-place, then the
-    // chain XOR has guaranteed access to the original bytes.
+    // Snapshot ciphertext so the engine can safely run in-place; the
+    // chain XOR then has guaranteed access to the original bytes.
     System.Move(AInBuf[AInOff], LCtStage[0], 128);
-    FAesEngineX86.ProcessEightBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff]);
+    FBulkCipher.ProcessBlocks(AInBuf, AInOff, 8, AOutBuf, AOutOff);
 
     LPOut := @AOutBuf[AOutOff];
     LPCbcV := @FCbcV[0];
@@ -230,28 +231,7 @@ begin
     System.Dec(ABlockCount, 8);
   end;
 
-  if ABlockCount >= 4 then
-  begin
-    System.Move(AInBuf[AInOff], LCtStage[0], 64);
-    FAesEngineX86.ProcessFourBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff]);
-
-    LPOut := @AOutBuf[AOutOff];
-    LPCbcV := @FCbcV[0];
-    for LI := 0 to 15 do
-      LPOut[LI] := LPOut[LI] xor LPCbcV[LI];
-    LPStage := @LCtStage[0];
-    for LJ := 1 to 3 do
-      for LI := 0 to 15 do
-        LPOut[LJ * 16 + LI] := LPOut[LJ * 16 + LI] xor
-          LPStage[(LJ - 1) * 16 + LI];
-
-    System.Move(LCtStage[3 * 16], FCbcV[0], 16);
-    System.Inc(AInOff, 64);
-    System.Inc(AOutOff, 64);
-    System.Dec(ABlockCount, 4);
-  end;
-
-  // Tail 1..3 blocks fall through to per-block DecryptBlock below.
+  // Tail 1..7 blocks fall through to per-block DecryptBlock.
   while ABlockCount > 0 do
   begin
     DecryptBlock(AInBuf, AInOff, AOutBuf, AOutOff);
@@ -260,7 +240,6 @@ begin
     System.Dec(ABlockCount);
   end;
 end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
 procedure TCbcBlockCipher.Reset;
 begin
@@ -295,9 +274,6 @@ var
   LIvParam: IParametersWithIV;
   LIv: TCryptoLibByteArray;
   LParameters: ICipherParameters;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  LAesEngineX86: IAesEngineX86;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
   LOldEncrypting := FEncrypting;
   FEncrypting := AForEncryption;
@@ -316,14 +292,12 @@ begin
   else if (LOldEncrypting <> FEncrypting) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidChangeState);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
   // Re-probe every Init: a user can re-key the same TCbcBlockCipher with a
-  // different underlying cipher reference (rare but allowed).
-  if (FBlockSize = 16) and Supports(FCipher, IAesEngineX86, LAesEngineX86) then
-    FAesEngineX86 := LAesEngineX86 as TAesEngineX86
-  else
-    FAesEngineX86 := nil;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  // different underlying cipher reference. The runtime (FBlockSize = 16)
+  // guard in ProcessBlocks keeps us correct if a future non-16-byte bulk
+  // engine ever surfaces.
+  FBulkCipher := nil;
+  Supports(FCipher, IBulkBlockCipher, FBulkCipher);
 end;
 
 function TCbcBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;
@@ -355,21 +329,21 @@ begin
   if ((AOutOff < 0) or ((AOutOff + LTotalBytes) > System.Length(AOutBuf))) then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if FAesEngineX86 <> nil then
+  // Fast path: bulk engine available AND classic 16-byte block size. The
+  // block-size guard matches the 16-byte-specific strides inside CbcEncryptBulk
+  // (per-byte XOR over 0..15) and CbcDecryptBulk (128-byte stage buffer).
+  if (FBulkCipher <> nil) and (FBlockSize = 16) then
   begin
     if FEncrypting then
-      CbcEncryptBulkX86(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff)
+      CbcEncryptBulk(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff)
     else
-      CbcDecryptBulkX86(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
+      CbcDecryptBulk(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
     Result := LTotalBytes;
     Exit;
   end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
-  // Fallback: whenever no accelerated multi-block path is wired up, we
-  // go through the existing per-block logic, which is byte-identical to
-  // the pre-bulk implementation by construction.
+  // Fallback: no bulk capability wired up (or non-16-byte block). Byte-
+  // identical to the pre-bulk implementation by construction.
   while ABlockCount > 0 do
   begin
     if FEncrypting then

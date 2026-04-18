@@ -31,7 +31,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpAesEngineX86,
-  ClpIAesEngineX86,
   ClpIBlockCipher,
   ClpIKeyParameter,
   ClpKeyParameter,
@@ -44,9 +43,11 @@ type
   TTestAesX86 = class(TAesBlockCipherTestBase)
   strict private
     procedure ImplTestFourBlocks(AForEncryption: Boolean; AKeySizeBytes: Int32);
+    procedure ImplTestEightBlocks(AForEncryption: Boolean; AKeySizeBytes: Int32);
     procedure ImplTestPByteOverloadParity(AKeySizeBytes: Int32);
     procedure ImplTestProcessBlockMemoryLayouts(AKeySizeBytes: Int32);
     procedure ImplTestProcessFourBlocksMemoryLayouts(AKeySizeBytes: Int32);
+    procedure ImplTestProcessEightBlocksMemoryLayouts(AKeySizeBytes: Int32);
   published
     procedure TestBlockCipherVectors;
     procedure TestMonteCarloAES;
@@ -59,6 +60,12 @@ type
     procedure TestFourBlocksDecrypt128;
     procedure TestFourBlocksDecrypt192;
     procedure TestFourBlocksDecrypt256;
+    procedure TestEightBlocksEncrypt128;
+    procedure TestEightBlocksEncrypt192;
+    procedure TestEightBlocksEncrypt256;
+    procedure TestEightBlocksDecrypt128;
+    procedure TestEightBlocksDecrypt192;
+    procedure TestEightBlocksDecrypt256;
     procedure TestPByteOverloadParity128;
     procedure TestPByteOverloadParity192;
     procedure TestPByteOverloadParity256;
@@ -68,6 +75,9 @@ type
     procedure TestProcessFourBlocksMemoryLayouts128;
     procedure TestProcessFourBlocksMemoryLayouts192;
     procedure TestProcessFourBlocksMemoryLayouts256;
+    procedure TestProcessEightBlocksMemoryLayouts128;
+    procedure TestProcessEightBlocksMemoryLayouts192;
+    procedure TestProcessEightBlocksMemoryLayouts256;
   end;
 
 implementation
@@ -85,7 +95,7 @@ var
   LRnd: ISecureRandom;
   LData, LFourOut, LSingleOut, LKey: TBytes;
   LI, LJ: Int32;
-  LX86: IAesEngineX86;
+  LX86: TAesEngineX86;
 begin
   LRnd := TSecureRandom.Create();
   System.SetLength(LData, 64);
@@ -98,15 +108,55 @@ begin
     LRnd.NextBytes(LData);
     LRnd.NextBytes(LKey);
     LX86 := TAesEngineX86.Create();
-    LX86.Init(AForEncryption, TKeyParameter.Create(LKey) as IKeyParameter);
-    LX86.ProcessFourBlocks(LData, 0, LFourOut, 0);
-    for LJ := 0 to 3 do
-      LX86.ProcessBlock(LData, LJ * 16, LSingleOut, LJ * 16);
-    if not AreEqual(LFourOut, LSingleOut) then
-    begin
-      Fail(Format(
-        'ProcessFourBlocks vs ProcessBlock mismatch (key %d bytes, iteration %d)',
-        [AKeySizeBytes, LI]));
+    try
+      LX86.Init(AForEncryption, TKeyParameter.Create(LKey) as IKeyParameter);
+      LX86.ProcessFourBlocks(LData, 0, LFourOut, 0);
+      for LJ := 0 to 3 do
+        LX86.ProcessBlock(LData, LJ * 16, LSingleOut, LJ * 16);
+      if not AreEqual(LFourOut, LSingleOut) then
+      begin
+        Fail(Format(
+          'ProcessFourBlocks vs ProcessBlock mismatch (key %d bytes, iteration %d)',
+          [AKeySizeBytes, LI]));
+      end;
+    finally
+      LX86.Free;
+    end;
+  end;
+end;
+
+procedure TTestAesX86.ImplTestEightBlocks(AForEncryption: Boolean;
+  AKeySizeBytes: Int32);
+var
+  LRnd: ISecureRandom;
+  LData, LEightOut, LSingleOut, LKey: TBytes;
+  LI, LJ: Int32;
+  LX86: TAesEngineX86;
+begin
+  LRnd := TSecureRandom.Create();
+  System.SetLength(LData, 128);
+  System.SetLength(LEightOut, 128);
+  System.SetLength(LSingleOut, 128);
+  System.SetLength(LKey, AKeySizeBytes);
+
+  for LI := 0 to 49 do
+  begin
+    LRnd.NextBytes(LData);
+    LRnd.NextBytes(LKey);
+    LX86 := TAesEngineX86.Create();
+    try
+      LX86.Init(AForEncryption, TKeyParameter.Create(LKey) as IKeyParameter);
+      LX86.ProcessEightBlocks(LData, 0, LEightOut, 0);
+      for LJ := 0 to 7 do
+        LX86.ProcessBlock(LData, LJ * 16, LSingleOut, LJ * 16);
+      if not AreEqual(LEightOut, LSingleOut) then
+      begin
+        Fail(Format(
+          'ProcessEightBlocks vs ProcessBlock mismatch (key %d bytes, iteration %d)',
+          [AKeySizeBytes, LI]));
+      end;
+    finally
+      LX86.Free;
     end;
   end;
 end;
@@ -114,7 +164,8 @@ end;
 procedure TTestAesX86.ImplTestPByteOverloadParity(AKeySizeBytes: Int32);
 var
   LRnd: ISecureRandom;
-  LKey, LIn16, LOutArr, LOutPtr, LIn64, LFourArr, LFourPtr: TBytes;
+  LKey, LIn16, LOutArr, LOutPtr, LIn64, LFourArr, LFourPtr,
+    LIn128, LEightArr, LEightPtr: TBytes;
   LI: Int32;
   LObj: TAesEngineX86;
 begin
@@ -126,6 +177,9 @@ begin
   System.SetLength(LIn64, 64);
   System.SetLength(LFourArr, 64);
   System.SetLength(LFourPtr, 64);
+  System.SetLength(LIn128, 128);
+  System.SetLength(LEightArr, 128);
+  System.SetLength(LEightPtr, 128);
 
   for LI := 0 to 49 do
   begin
@@ -162,6 +216,21 @@ begin
       LObj.ProcessFourBlocks(@LFourPtr[0], @LFourPtr[0]);
       if not AreEqual(LFourArr, LFourPtr) then
         Fail(Format('ProcessFourBlocks PByte in-place mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LRnd.NextBytes(LIn128);
+      LEightArr := System.Copy(LIn128);
+      LEightPtr := System.Copy(LIn128);
+      LObj.ProcessEightBlocks(LIn128, 0, LEightArr, 0);
+      LObj.ProcessEightBlocks(@LIn128[0], @LEightPtr[0]);
+      if not AreEqual(LEightArr, LEightPtr) then
+        Fail(Format('ProcessEightBlocks PByte disjoint mismatch (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LEightPtr := System.Copy(LIn128);
+      LObj.ProcessEightBlocks(@LEightPtr[0], @LEightPtr[0]);
+      if not AreEqual(LEightArr, LEightPtr) then
+        Fail(Format('ProcessEightBlocks PByte in-place mismatch (key %d, iter %d)',
           [AKeySizeBytes, LI]));
     finally
       LObj.Free;
@@ -369,6 +438,97 @@ begin
   end;
 end;
 
+procedure TTestAesX86.ImplTestProcessEightBlocksMemoryLayouts(AKeySizeBytes: Int32);
+var
+  LRnd: ISecureRandom;
+  LKey, LPlain, LCipher, LScratch: TBytes;
+  LI: Int32;
+  LObj: TAesEngineX86;
+
+  function MemEq(const A: TBytes; AOff: Int32; const B: TBytes; BOff, ALen: Int32): Boolean;
+  begin
+    Result := CompareMem(@A[AOff], @B[BOff], ALen);
+  end;
+
+begin
+  LRnd := TSecureRandom.Create();
+  System.SetLength(LKey, AKeySizeBytes);
+  System.SetLength(LPlain, 128);
+  System.SetLength(LCipher, 128);
+
+  for LI := 0 to 14 do
+  begin
+    LRnd.NextBytes(LKey);
+    LRnd.NextBytes(LPlain);
+    LObj := TAesEngineX86.Create();
+    try
+      LObj.Init(True, TKeyParameter.Create(LKey) as IKeyParameter);
+      LObj.ProcessEightBlocks(LPlain, 0, LCipher, 0);
+
+      LScratch := System.Copy(LPlain);
+      LObj.ProcessEightBlocks(@LScratch[0], @LScratch[0]);
+      if not AreEqual(LCipher, LScratch) then
+        Fail(Format('ProcessEightBlocks enc in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 384);
+      System.Move(LPlain[0], LScratch[0], 128);
+      System.FillChar(LScratch[128], 256, $5A);
+      LObj.ProcessEightBlocks(@LScratch[0], @LScratch[128]);
+      if not MemEq(LCipher, 0, LScratch, 128, 128) then
+        Fail(Format('ProcessEightBlocks enc disjoint same allocation (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 256);
+      System.Move(LPlain[0], LScratch[0], 128);
+      System.FillChar(LScratch[128], 128, 0);
+      LObj.ProcessEightBlocks(@LScratch[0], @LScratch[64]);
+      if not MemEq(LCipher, 0, LScratch, 64, 128) then
+        Fail(Format('ProcessEightBlocks enc overlap dst=src+64 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.FillChar(LScratch[0], 256, 0);
+      System.Move(LPlain[0], LScratch[64], 128);
+      LObj.ProcessEightBlocks(@LScratch[64], @LScratch[0]);
+      if not MemEq(LCipher, 0, LScratch, 0, 128) then
+        Fail(Format('ProcessEightBlocks enc overlap dst=src-64 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      LObj.Init(False, TKeyParameter.Create(LKey) as IKeyParameter);
+      LObj.ProcessEightBlocks(LCipher, 0, LPlain, 0);
+
+      LScratch := System.Copy(LCipher);
+      LObj.ProcessEightBlocks(@LScratch[0], @LScratch[0]);
+      if not AreEqual(LPlain, LScratch) then
+        Fail(Format('ProcessEightBlocks dec in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 384);
+      System.Move(LCipher[0], LScratch[0], 128);
+      System.FillChar(LScratch[128], 256, $4B);
+      LObj.ProcessEightBlocks(@LScratch[0], @LScratch[128]);
+      if not MemEq(LPlain, 0, LScratch, 128, 128) then
+        Fail(Format('ProcessEightBlocks dec disjoint same allocation (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.SetLength(LScratch, 256);
+      System.Move(LCipher[0], LScratch[0], 128);
+      System.FillChar(LScratch[128], 128, $33);
+      LObj.ProcessEightBlocks(@LScratch[0], @LScratch[64]);
+      if not MemEq(LPlain, 0, LScratch, 64, 128) then
+        Fail(Format('ProcessEightBlocks dec overlap dst=src+64 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+
+      System.FillChar(LScratch[0], 256, $44);
+      System.Move(LCipher[0], LScratch[64], 128);
+      LObj.ProcessEightBlocks(@LScratch[64], @LScratch[0]);
+      if not MemEq(LPlain, 0, LScratch, 0, 128) then
+        Fail(Format('ProcessEightBlocks dec overlap dst=src-64 (key %d, iter %d)',
+          [AKeySizeBytes, LI]));
+    finally
+      LObj.Free;
+    end;
+  end;
+end;
+
 procedure TTestAesX86.TestBlockCipherVectors;
 begin
   if not TAesEngineX86.IsSupported then
@@ -467,6 +627,48 @@ begin
   ImplTestFourBlocks(False, 32);
 end;
 
+procedure TTestAesX86.TestEightBlocksEncrypt128;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestEightBlocks(True, 16);
+end;
+
+procedure TTestAesX86.TestEightBlocksEncrypt192;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestEightBlocks(True, 24);
+end;
+
+procedure TTestAesX86.TestEightBlocksEncrypt256;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestEightBlocks(True, 32);
+end;
+
+procedure TTestAesX86.TestEightBlocksDecrypt128;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestEightBlocks(False, 16);
+end;
+
+procedure TTestAesX86.TestEightBlocksDecrypt192;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestEightBlocks(False, 24);
+end;
+
+procedure TTestAesX86.TestEightBlocksDecrypt256;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestEightBlocks(False, 32);
+end;
+
 procedure TTestAesX86.TestPByteOverloadParity128;
 begin
   if not TAesEngineX86.IsSupported then
@@ -528,6 +730,27 @@ begin
   if not TAesEngineX86.IsSupported then
     Exit;
   ImplTestProcessFourBlocksMemoryLayouts(32);
+end;
+
+procedure TTestAesX86.TestProcessEightBlocksMemoryLayouts128;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessEightBlocksMemoryLayouts(16);
+end;
+
+procedure TTestAesX86.TestProcessEightBlocksMemoryLayouts192;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessEightBlocksMemoryLayouts(24);
+end;
+
+procedure TTestAesX86.TestProcessEightBlocksMemoryLayouts256;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  ImplTestProcessEightBlocksMemoryLayouts(32);
 end;
 
 initialization

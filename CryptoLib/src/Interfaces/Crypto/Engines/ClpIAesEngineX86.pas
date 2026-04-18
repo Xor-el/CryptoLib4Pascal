@@ -21,30 +21,19 @@ unit ClpIAesEngineX86;
 interface
 
 uses
-  ClpIBlockCipher,
-  ClpCryptoLibTypes;
+  ClpIBulkBlockCipher;
 
 type
   /// <summary>
-  /// X86 AES-NI Engine. Adds a four-block API for GCM CTR batching.
+  /// AES-NI engine interface. Extends IBulkBlockCipher (which itself extends
+  /// IBlockCipher) with AES-specific capability hooks needed by the fused
+  /// GCM + AES-NI pipeline kernel. Generic multi-block batching is inherited
+  /// from IBulkBlockCipher.ProcessBlocks; modes that only want the fast
+  /// bulk path should query IBulkBlockCipher, not IAesEngineX86, to stay
+  /// cipher-agnostic.
   /// </summary>
-  IAesEngineX86 = interface(IBlockCipher)
+  IAesEngineX86 = interface(IBulkBlockCipher)
     ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
-
-    function ProcessFourBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
-    /// <summary>
-    /// Four consecutive 16-byte blocks (64 bytes). Identical pointers: in-place AES-NI. Disjoint: one Move
-    /// to output then transform. Overlapping non-identical ranges use a 64-byte stack buffer.
-    /// </summary>
-    function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
-
-    function ProcessEightBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
-    /// <summary>
-    /// Eight consecutive 16-byte blocks (128 bytes). Same overlap rules as <see cref="ProcessFourBlocks"/>.
-    /// </summary>
-    function ProcessEightBlocks(AInput, AOutput: PByte): Int32; overload;
   end;
 
 implementation

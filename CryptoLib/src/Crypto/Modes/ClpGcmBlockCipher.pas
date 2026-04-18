@@ -36,6 +36,7 @@ uses
   ClpGcmUtilities,
   ClpBasicGcmExponentiator,
   ClpTables4kGcmMultiplier,
+  ClpIBulkBlockCipher,
   ClpIAesEngineX86,
   ClpAesEngineX86,
   ClpPack,
@@ -95,8 +96,22 @@ type
 
   var
     FCipher: IBlockCipher;
+    // Cached once per key Init; non-nil when the underlying engine
+    // exposes the generic IBulkBlockCipher capability. Drives the
+    // non-fused 4/8-block CTR dispatchers (GetNextCtrBlocks4/8). This
+    // field is always present and cipher-agnostic; a non-AES bulk
+    // engine (today none, theoretically possible) would plug in here
+    // automatically. Kept separate from FAesEngineX86 because the
+    // fused AES+GHASH kernel below is legitimately AES-only.
+    FBulkCipher: IBulkBlockCipher;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    // Cached once per key Init; avoids Supports(FCipher, IAesEngineX86) on every 4/8 CTR batch.
+    // Cached once per key Init; used solely by the fused AES+GHASH
+    // x86-64 kernel (FusedAesEnc{128,192,256}GhashEight). That kernel
+    // hard-codes AESENC interleaved with PCLMULQDQ and dispatches by
+    // AES round count (10/12/14), so it is and will remain AES-specific
+    // -- GCM is defined by NIST SP 800-38D only over AES. Abstracting
+    // it behind an interface would add per-batch dispatch cost without
+    // unlocking any real consumer. See ProcessBlocks8FusedILP below.
     FAesEngineX86: TAesEngineX86;
 {$ENDIF CRYPTOLIB_X86_SIMD}
     FMultiplier: IGcmMultiplier;
@@ -513,6 +528,14 @@ var
 {$ENDIF CRYPTOLIB_X86_SIMD}
 begin
   FCipher.Init(True, AKeyParam as ICipherParameters);
+
+  // Two independent capability probes: one cipher-agnostic, one AES-only.
+  // FBulkCipher drives the non-fused 4/8-block CTR dispatchers below;
+  // FAesEngineX86 is the handle for the fused AES+GHASH kernel. They are
+  // orthogonal and must not be derived from each other.
+  FBulkCipher := nil;
+  Supports(FCipher, IBulkBlockCipher, FBulkCipher);
+
 {$IFDEF CRYPTOLIB_X86_SIMD}
   FAesEngineX86 := nil;
   if TAesEngineX86.IsSupported and
@@ -1144,11 +1167,6 @@ begin
 end;
 
 // =======================================================================
-// Single-block decrypt path + 2-way batch (small-input / non-SIMD hot
-// path: scalar-friendly layout usable on every CPU target).
-// =======================================================================
-
-// =======================================================================
 // Scalar XOR helpers, byte-reverse primitive, and shuffled-block
 // GHASH kernels used by the fused / pipelined batch routines below.
 // =======================================================================
@@ -1500,9 +1518,8 @@ end;
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 // =======================================================================
 // Gueron-style fused AES-NI + 8-way GHASH pipeline (x86-64 only).
-// =======================================================================
-// See the note at the declaration of ProcessBlocks8FusedILP for the
-// register-budget rationale for excluding i386 from this path.
+// Register-budget rationale (why this path excludes i386) is documented
+// on the matching banner in the class declaration.
 // =======================================================================
 
 procedure TGcmBlockCipher.FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
@@ -1923,8 +1940,7 @@ begin
   Lc4 := Lc0 + UInt32(4);
   FCounter32 := Lc4;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if FAesEngineX86 <> nil then
+  if FBulkCipher <> nil then
   begin
     System.Move(FCounter[0], ABlocks[0], 16);
     System.Move(FCounter[0], ABlocks[16], 16);
@@ -1934,10 +1950,9 @@ begin
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
     System.Move(FCounter[0], ABlocks[48], 16);
-    FAesEngineX86.ProcessFourBlocksFast(@ABlocks[0], @ABlocks[0]);
+    FBulkCipher.ProcessBlocks(@ABlocks[0], @ABlocks[0], 4);
     Exit;
   end;
-{$ENDIF}
 
   TPack.UInt32_To_BE(Lc1, FCounter, 12);
   FCipher.ProcessBlock(FCounter, 0, ABlocks, 0);
@@ -1953,14 +1968,12 @@ procedure TGcmBlockCipher.GetNextCtrBlocks8(const ABlocks: TCryptoLibByteArray);
 var
   Lc0, Lc1, Lc2, Lc3, Lc4, Lc5, Lc6, Lc7, Lc8: UInt32;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if FAesEngineX86 <> nil then
+  if FBulkCipher <> nil then
   begin
     FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
-    FAesEngineX86.ProcessEightBlocksFast(@ABlocks[0], @ABlocks[0]);
+    FBulkCipher.ProcessBlocks(@ABlocks[0], @ABlocks[0], 8);
     Exit;
   end;
-{$ENDIF}
 
   Lc0 := FCounter32;
   Lc1 := Lc0 + UInt32(1);

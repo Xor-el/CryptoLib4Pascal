@@ -581,6 +581,7 @@ contains
   ClpICipher in '..\..\Interfaces\Crypto\ClpICipher.pas',
   ClpIBlockCipherMode in '..\..\Interfaces\Crypto\Modes\ClpIBlockCipherMode.pas',
   ClpIBulkBlockCipherMode in '..\..\Interfaces\Crypto\Modes\ClpIBulkBlockCipherMode.pas',
+  ClpIBulkBlockCipher in '..\..\Interfaces\Crypto\ClpIBulkBlockCipher.pas',
   ClpIEcbBlockCipher in '..\..\Interfaces\Crypto\Modes\ClpIEcbBlockCipher.pas',
   ClpEcbBlockCipher in '..\..\Crypto\Modes\ClpEcbBlockCipher.pas',
   ClpGnuObjectIdentifiers in '..\..\Asn1\Gnu\ClpGnuObjectIdentifiers.pas',

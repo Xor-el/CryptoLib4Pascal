@@ -25,6 +25,7 @@ interface
 uses
   SysUtils,
   ClpIAesEngineX86,
+  ClpIBulkBlockCipher,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
@@ -48,7 +49,7 @@ type
   /// <summary>
   /// AES using AES-NI when supported (see <see cref="IsSupported" />).
   /// </summary>
-  TAesEngineX86 = class sealed(TInterfacedObject, IAesEngineX86, IBlockCipher)
+  TAesEngineX86 = class sealed(TInterfacedObject, IAesEngineX86, IBulkBlockCipher, IBlockCipher)
   strict private
   type
     TAesX86Mode = (Uninitialized, Dec128, Dec192, Dec256, Enc128, Enc192, Enc256);
@@ -71,6 +72,31 @@ type
     procedure PrepareDecryptRoundKeys;
     procedure BindCipherPointers;
     function GetAlgorithmName: String;
+
+    // ===== Internal fast-path helpers (engine's own ProcessBlocks ladder) =====
+    // Bypass the nil-pointer / overlap safety checks and the stack-buffer
+    // staging used by the public ProcessBlock / ProcessFourBlocks /
+    // ProcessEightBlocks variants. Only ProcessBlocks (PByte overload) drives
+    // these: it has already honoured the IBulkBlockCipher aliasing contract
+    // (identical-or-fully-disjoint) for the whole batch, so each 4/8-wide
+    // slice inherits that same contract for free. Hidden behind strict private
+    // so no external caller can reach them and accidentally skip safety.
+    /// <summary>
+    /// Four consecutive 16-byte blocks (64 bytes) via pointers. Skips
+    /// nil/overlap safety checks and the stack-buffer copy used by
+    /// <see cref="ProcessFourBlocks"/>. Callers MUST pass valid 64-byte
+    /// buffers that are either identical (in-place) or fully disjoint.
+    /// </summary>
+    function ProcessFourBlocksFast(AInput, AOutput: PByte): Int32; inline;
+    /// <summary>
+    /// Eight consecutive 16-byte blocks (128 bytes) via pointers. Skips the
+    /// nil/overlap safety checks and stack-buffer copy used by the safe
+    /// <see cref="ProcessBlock"/> / <see cref="ProcessFourBlocks"/> /
+    /// <see cref="ProcessEightBlocks"/> variants. Callers MUST pass valid
+    /// 128-byte buffers that are either identical (in-place) or fully
+    /// disjoint.
+    /// </summary>
+    function ProcessEightBlocksFast(AInput, AOutput: PByte): Int32; inline;
   public
     class function IsSupported: Boolean; static;
     constructor Create();
@@ -92,24 +118,21 @@ type
     function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
     function ProcessEightBlocks(AInput, AOutput: PByte): Int32; overload;
 
-    // ===== Internal fast-path hooks (GCM batch pipeline) =====
-    // These bypass nil/overlap safety checks and the stack-buffer copy used by
-    // the matching safe variants above. Callers MUST pass valid buffers that
-    // are either identical (in-place) or fully disjoint. They exist to amortise
-    // per-batch bookkeeping across the GCM CTR pipeline.
-    /// <summary>
-    /// Internal fast path: four consecutive 16-byte blocks (64 bytes) via pointers. Skips
-    /// nil/overlap safety checks and the stack-buffer copy used by <see cref="ProcessFourBlocks"/>.
-    /// Callers MUST pass valid 64-byte buffers that are either identical (in-place) or fully disjoint.
-    /// </summary>
-    function ProcessFourBlocksFast(AInput, AOutput: PByte): Int32; inline;
-    /// <summary>
-    /// Internal fast path: eight consecutive 16-byte blocks (128 bytes) via pointers. Skips the
-    /// nil/overlap safety checks and stack-buffer copy used by the safe
-    /// <see cref="ProcessBlock"/> / <see cref="ProcessFourBlocks"/> / <see cref="ProcessEightBlocks"/> variants.
-    /// Callers MUST pass valid 128-byte buffers that are either identical (in-place) or fully disjoint.
-    /// </summary>
-    function ProcessEightBlocksFast(AInput, AOutput: PByte): Int32; inline;
+    // ===== IBulkBlockCipher =====
+    // Generic multi-block fast path exposed as a cipher-agnostic capability
+    // to upstream block-cipher modes (CBC / CTR / ECB / GCM non-fused path).
+    // The engine owns the 8-then-4-then-1 batch ladder internally; modes no
+    // longer need to know about specific batch sizes. Aliasing contract per
+    // IBulkBlockCipher: AInput and AOutput MUST be either identical pointers
+    // (in-place) or reference fully disjoint ranges. Partial overlap is NOT
+    // supported; this is the same contract as the *Fast inner helpers these
+    // overloads delegate to.
+    function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+      AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; overload;
+    function ProcessBlocks(AInput, AOutput: PByte;
+      ABlockCount: Int32): Int32; overload;
+
     /// <summary>
     /// Internal fast-path accessor for the AES-NI encrypt round-key schedule
     /// used by the fused GCM + AES-NI pipeline kernel. Returns True (and sets
@@ -1207,6 +1230,72 @@ begin
   else
     FAesNiCipherEightInOut(AInput, AOutput, FKeys);
   Result := 128;
+end;
+
+// =====================================================================
+// IBulkBlockCipher implementation. Engine-owned 8-then-4-then-1 ladder
+// over the existing *Fast inner helpers. Array overload validates then
+// delegates to the PByte overload. The aliasing contract is the same as
+// the *Fast helpers: AInput / AOutput MUST be identical or fully
+// disjoint. The checks on FKeys / FAesNiCipher* assignment live in
+// ProcessBlock for the 1-wide tail and are paid once per batch at most.
+// =====================================================================
+
+function TAesEngineX86.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+  AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LBytes: Int32;
+begin
+  if ABlockCount <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if FKeys = nil then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
+
+  LBytes := ABlockCount * 16;
+  TCheck.DataLength(AInBuf, AInOff, LBytes, SInputBufferTooShort);
+  TCheck.OutputLength(AOutBuf, AOutOff, LBytes, SOutputBufferTooShort);
+
+  Result := ProcessBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff], ABlockCount);
+end;
+
+function TAesEngineX86.ProcessBlocks(AInput, AOutput: PByte;
+  ABlockCount: Int32): Int32;
+var
+  LBytes: Int32;
+begin
+  if ABlockCount <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+  LBytes := ABlockCount * 16;
+  while ABlockCount >= 8 do
+  begin
+    ProcessEightBlocksFast(AInput, AOutput);
+    System.Inc(AInput, 128);
+    System.Inc(AOutput, 128);
+    System.Dec(ABlockCount, 8);
+  end;
+  if ABlockCount >= 4 then
+  begin
+    ProcessFourBlocksFast(AInput, AOutput);
+    System.Inc(AInput, 64);
+    System.Inc(AOutput, 64);
+    System.Dec(ABlockCount, 4);
+  end;
+  while ABlockCount > 0 do
+  begin
+    ProcessBlock(AInput, AOutput);
+    System.Inc(AInput, 16);
+    System.Inc(AOutput, 16);
+    System.Dec(ABlockCount);
+  end;
+  Result := LBytes;
 end;
 
 // =====================================================================
