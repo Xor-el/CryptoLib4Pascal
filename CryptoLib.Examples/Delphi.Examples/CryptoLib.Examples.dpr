@@ -560,6 +560,7 @@ uses
   ClpICipherBuilder in '..\..\CryptoLib\src\Interfaces\Crypto\ClpICipherBuilder.pas',
   ClpICipher in '..\..\CryptoLib\src\Interfaces\Crypto\ClpICipher.pas',
   ClpIBlockCipherMode in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBlockCipherMode.pas',
+  ClpIBulkBlockCipherMode in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBulkBlockCipherMode.pas',
   ClpIEcbBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIEcbBlockCipher.pas',
   ClpEcbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpEcbBlockCipher.pas',
   ClpGnuObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas',

@@ -216,7 +216,7 @@ uses
   ClpArc4RandomBufReader, ClpUnixLikeRngCommon, ClpAndroidRandomProvider, 
   ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader, 
   ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
-  ClpDarwinSysCtl;
+  ClpDarwinSysCtl, ClpIBulkBlockCipherMode;
 
 implementation
 

@@ -25,6 +25,7 @@ uses
   ClpCheck,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
+  ClpIBulkBlockCipherMode,
   ClpEcbBlockCipher,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
@@ -323,6 +324,10 @@ begin
   Reset();
   FPadding.Init(LInitRandom);
   FCipherMode.Init(AForEncryption, LParameters);
+
+  // Cache the bulk-capable view of FCipherMode (see base-class comment).
+  FBulkCipherMode := nil;
+  Supports(FCipherMode, IBulkBlockCipherMode, FBulkCipherMode);
 end;
 
 function TPaddedBufferedBlockCipher.ProcessByte(AInput: Byte;
@@ -351,7 +356,8 @@ function TPaddedBufferedBlockCipher.ProcessBytes(const AInput
   : TCryptoLibByteArray; AInOff, ALength: Int32;
   const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LBlockSize, LOutLength, LResultLen, LGapLen: Int32;
+  LBlockSize, LOutLength, LResultLen, LGapLen, LBulkBlocks,
+    LBulkBytes: Int32;
 begin
   if (ALength < 0) then
   begin
@@ -379,13 +385,30 @@ begin
     ALength := ALength - LGapLen;
     AInOff := AInOff + LGapLen;
 
-    while (ALength > System.Length(FBuf)) do
+    // Bulk fast path. Padded variant MUST retain at least one trailing
+    // block in FBuf for DoFinal (that is why the original loop uses a
+    // strict `>` -- when ALength == LBlockSize the loop exits, keeping
+    // that last block for padding / unpadding at finalisation time).
+    // The block-count math matches: floor((ALength - 1) / LBlockSize).
+    if (FBulkCipherMode <> nil) and (ALength > LBlockSize) then
     begin
-      LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff, AOutput,
-        AOutOff + LResultLen);
+      LBulkBlocks := (ALength - 1) div LBlockSize;
+      LBulkBytes := LBulkBlocks * LBlockSize;
+      LResultLen := LResultLen + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
+        LBulkBlocks, AOutput, AOutOff + LResultLen);
+      ALength := ALength - LBulkBytes;
+      AInOff := AInOff + LBulkBytes;
+    end
+    else
+    begin
+      while (ALength > System.Length(FBuf)) do
+      begin
+        LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff,
+          AOutput, AOutOff + LResultLen);
 
-      ALength := ALength - LBlockSize;
-      AInOff := AInOff + LBlockSize;
+        ALength := ALength - LBlockSize;
+        AInOff := AInOff + LBlockSize;
+      end;
     end;
   end;
 

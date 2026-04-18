@@ -26,6 +26,7 @@ uses
   ClpBufferedCipherBase,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
+  ClpIBulkBlockCipherMode,
   ClpEcbBlockCipher,
   ClpIBufferedBlockCipher,
   ClpICipherParameters,
@@ -65,6 +66,12 @@ type
     FBufOff: Int32;
     FForEncryption: Boolean;
     FCipherMode: IBlockCipherMode;
+    // Cached on Init when FCipherMode also implements IBulkBlockCipherMode.
+    // Non-nil lets ProcessBytes collapse its aligned inner loop into a
+    // single ProcessBlocks call, which the mode is free to forward to an
+    // accelerated multi-block backend. Modes that only implement
+    // IBlockCipherMode leave this nil and keep using the per-block loop.
+    FBulkCipherMode: IBulkBlockCipherMode;
 
     /// <summary>
     /// constructor for subclasses
@@ -405,6 +412,12 @@ begin
 
   FCipherMode.Init(AForEncryption, LParameters);
 
+  // Probe after the inner Init so modes that only decide their fast-path
+  // wiring at Init time are observed in their post-Init state. The result
+  // is held for the lifetime of this wrapper to keep ProcessBytes free of
+  // per-call QueryInterface overhead.
+  FBulkCipherMode := nil;
+  Supports(FCipherMode, IBulkBlockCipherMode, FBulkCipherMode);
 end;
 
 function TBufferedBlockCipher.ProcessByte(AInput: Byte;
@@ -462,7 +475,7 @@ function TBufferedBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LBlockSize, LOutLength, LResultLen, LGapLen: Int32;
+  LBlockSize, LOutLength, LResultLen, LGapLen, LBulkBlocks, LBulkBytes: Int32;
 begin
   if (ALength < 1) then
   begin
@@ -491,12 +504,30 @@ begin
     FBufOff := 0;
     ALength := ALength - LGapLen;
     AInOff := AInOff + LGapLen;
-    while (ALength > System.Length(FBuf)) do
+
+    // Bulk fast path: dispatch every full aligned block that would have
+    // been fed to FCipherMode.ProcessBlock in the original loop. Matches
+    // the loop's semantics exactly: it ran while ALength > LBlockSize,
+    // which consumes floor((ALength - 1) / LBlockSize) blocks before the
+    // trailing bytes go into FBuf.
+    if (FBulkCipherMode <> nil) and (ALength > LBlockSize) then
     begin
-      LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff, AOutput,
-        AOutOff + LResultLen);
-      ALength := ALength - LBlockSize;
-      AInOff := AInOff + LBlockSize;
+      LBulkBlocks := (ALength - 1) div LBlockSize;
+      LBulkBytes := LBulkBlocks * LBlockSize;
+      LResultLen := LResultLen + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
+        LBulkBlocks, AOutput, AOutOff + LResultLen);
+      ALength := ALength - LBulkBytes;
+      AInOff := AInOff + LBulkBytes;
+    end
+    else
+    begin
+      while (ALength > System.Length(FBuf)) do
+      begin
+        LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff,
+          AOutput, AOutOff + LResultLen);
+        ALength := ALength - LBlockSize;
+        AInOff := AInOff + LBlockSize;
+      end;
     end;
   end;
   System.Move(AInput[AInOff], FBuf[FBufOff], ALength * System.SizeOf(Byte));
