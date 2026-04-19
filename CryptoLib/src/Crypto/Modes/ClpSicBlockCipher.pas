@@ -27,6 +27,7 @@ uses
   ClpIBlockCipherMode,
   ClpIBulkBlockCipher,
   ClpIBulkBlockCipherMode,
+  ClpBlockCipherBulkUtilities,
   ClpISicBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -34,8 +35,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
   SInvalidParameterArgument = 'CTR/SIC Mode Requires ParametersWithIV';
   SInvalidTooLargeIVLength =
     'CTR/SIC mode requires IV no greater than: %u bytes';
@@ -65,13 +66,6 @@ type
     /// ProcessBlock calls would.
     /// </summary>
     procedure FillNextCounterBlocks(ABlockCount: Int32; APlainCounters: PByte);
-    /// <summary>
-    /// Scalar 128-byte (16 x UInt64) XOR factored out as a static class
-    /// procedure: the CALL boundary forces a fresh register allocation and
-    /// dodges an FPC 3.2 i386 -O3 miscompile that aliases the loop counter
-    /// with a caller-side temporary. The same shape appears in TGcmBlockCipher.
-    /// </summary>
-    class procedure Xor128BytesScalar(PDst, PSrcA, PSrcB: PByte); static;
     /// <summary>
     /// Single eight-block bulk step: build eight pre-encrypt counter
     /// blocks, run them through the engine's IBulkBlockCipher in-place
@@ -188,8 +182,7 @@ begin
   // Probe once per Init. When the underlying cipher implements the bulk
   // interface the batched path dispatches straight through FBulkCipher;
   // otherwise we stay on the per-block path.
-  FBulkCipher := nil;
-  Supports(FCipher, IBulkBlockCipher, FBulkCipher);
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
 
   Reset();
 end;
@@ -292,14 +285,6 @@ begin
   end;
 end;
 
-class procedure TSicBlockCipher.Xor128BytesScalar(PDst, PSrcA, PSrcB: PByte);
-var
-  LI: Int32;
-begin
-  for LI := 0 to 15 do
-    PUInt64(PDst + LI * 8)^ := PUInt64(PSrcA + LI * 8)^ xor PUInt64(PSrcB + LI * 8)^;
-end;
-
 procedure TSicBlockCipher.ProcessEightBlocksBulk(
   const AInBuf: TCryptoLibByteArray; AInOff: Int32;
   const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
@@ -311,7 +296,8 @@ begin
   // IBulkBlockCipher aliasing contract) turns LKs from raw counter
   // blocks into keystream.
   FBulkCipher.ProcessBlocks(@LKs[0], @LKs[0], 8);
-  Xor128BytesScalar(@AOutBuf[AOutOff], @AInBuf[AInOff], @LKs[0]);
+  TBlockCipherBulkUtilities.Xor128Bytes(@AOutBuf[AOutOff], @AInBuf[AInOff],
+    @LKs[0]);
 end;
 
 end.

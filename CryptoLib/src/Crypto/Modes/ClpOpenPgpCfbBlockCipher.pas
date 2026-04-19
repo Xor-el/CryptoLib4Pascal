@@ -26,14 +26,13 @@ uses
   ClpIBlockCipherMode,
   ClpIOpenPgpCfbBlockCipher,
   ClpICipherParameters,
-  ClpIParametersWithIV,
+  ClpCipherModeParameterUtilities,
   ClpCheck,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
   TOpenPgpCfbBlockCipher = class sealed(TInterfacedObject,
@@ -254,29 +253,10 @@ end;
 procedure TOpenPgpCfbBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LIvParam: IParametersWithIV;
-  LIv: TCryptoLibByteArray;
   LParameters: ICipherParameters;
 begin
   FForEncryption := AForEncryption;
-  LParameters := AParameters;
-
-  if Supports(LParameters, IParametersWithIV, LIvParam) then
-  begin
-    LIv := LIvParam.GetIV();
-    if (System.Length(LIv) < System.Length(FIV)) then
-    begin
-      System.Move(LIv[0], FIV[System.Length(FIV) - System.Length(LIv)],
-        System.Length(LIv) * System.SizeOf(Byte));
-      TArrayUtilities.Fill<Byte>(FIV, 0,
-        System.Length(FIV) - System.Length(LIv), Byte(0));
-    end
-    else
-    begin
-      System.Move(LIv[0], FIV[0], System.Length(FIV) * System.SizeOf(Byte));
-    end;
-    LParameters := LIvParam.Parameters;
-  end;
+  TCipherModeParameterUtilities.TryUnwrapIv(AParameters, FIV, LParameters);
 
   Reset();
   FCipher.Init(True, LParameters);

@@ -31,36 +31,36 @@ type
       NumBits: Int32 = 32;
       NumBytes: Int32 = 4;
 
-    class function Compare(AX, AY: Int32): Int32; overload; static;
-    class function Compare(AX, AY: UInt32): Int32; overload; static;
-    class function CompareUnsigned(AX, AY: Int32): Int32; static;
+    class function Compare(AX, AY: Int32): Int32; overload; static; inline;
+    class function Compare(AX, AY: UInt32): Int32; overload; static; inline;
+    class function CompareUnsigned(AX, AY: Int32): Int32; static; inline;
 
-    class function HighestOneBit(AValue: Int32): Int32; overload; static;
-    class function HighestOneBit(AValue: UInt32): UInt32; overload; static;
+    class function HighestOneBit(AValue: Int32): Int32; overload; static; inline;
+    class function HighestOneBit(AValue: UInt32): UInt32; overload; static; inline;
 
-    class function LowestOneBit(AValue: Int32): Int32; overload; static;
-    class function LowestOneBit(AValue: UInt32): UInt32; overload; static;
+    class function LowestOneBit(AValue: Int32): Int32; overload; static; inline;
+    class function LowestOneBit(AValue: UInt32): UInt32; overload; static; inline;
 
-    class function NumberOfLeadingZeros(AValue: Int32): Int32; static;
-    class function NumberOfTrailingZeros(AValue: Int32): Int32; static;
+    class function NumberOfLeadingZeros(AValue: Int32): Int32; static; inline;
+    class function NumberOfTrailingZeros(AValue: Int32): Int32; static; inline;
 
-    class function BitLength(AValue: Int32): Int32; overload; static;
-    class function BitLength(AValue: UInt32): Int32; overload; static;
+    class function BitLength(AValue: Int32): Int32; overload; static; inline;
+    class function BitLength(AValue: UInt32): Int32; overload; static; inline;
 
-    class function PopCount(AValue: Int32): Int32; overload; static;
-    class function PopCount(AValue: UInt32): Int32; overload; static;
+    class function PopCount(AValue: Int32): Int32; overload; static; inline;
+    class function PopCount(AValue: UInt32): Int32; overload; static; inline;
 
-    class function Reverse(AValue: Int32): Int32; overload; static;
-    class function Reverse(AValue: UInt32): UInt32; overload; static;
+    class function Reverse(AValue: Int32): Int32; overload; static; inline;
+    class function Reverse(AValue: UInt32): UInt32; overload; static; inline;
 
-    class function ReverseBytes(AValue: Int32): Int32; overload; static;
-    class function ReverseBytes(AValue: UInt32): UInt32; overload; static;
+    class function ReverseBytes(AValue: Int32): Int32; overload; static; inline;
+    class function ReverseBytes(AValue: UInt32): UInt32; overload; static; inline;
 
-    class function RotateLeft(AValue: Int32; ADistance: Int32): Int32; overload; static;
-    class function RotateLeft(AValue: UInt32; ADistance: Int32): UInt32; overload; static;
+    class function RotateLeft(AValue: Int32; ADistance: Int32): Int32; overload; static; inline;
+    class function RotateLeft(AValue: UInt32; ADistance: Int32): UInt32; overload; static; inline;
 
-    class function RotateRight(AValue: Int32; ADistance: Int32): Int32; overload; static;
-    class function RotateRight(AValue: UInt32; ADistance: Int32): UInt32; overload; static;
+    class function RotateRight(AValue: Int32; ADistance: Int32): Int32; overload; static; inline;
+    class function RotateRight(AValue: UInt32; ADistance: Int32): UInt32; overload; static; inline;
   end;
 
 implementation

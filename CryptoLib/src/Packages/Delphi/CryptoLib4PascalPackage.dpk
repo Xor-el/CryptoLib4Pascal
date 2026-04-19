@@ -64,6 +64,8 @@ contains
   ClpCtsBlockCipher in '..\..\Crypto\Modes\ClpCtsBlockCipher.pas',
   ClpOfbBlockCipher in '..\..\Crypto\Modes\ClpOfbBlockCipher.pas',
   ClpSicBlockCipher in '..\..\Crypto\Modes\ClpSicBlockCipher.pas',
+  ClpBlockCipherBulkUtilities in '..\..\Crypto\Modes\ClpBlockCipherBulkUtilities.pas',
+  ClpCipherModeParameterUtilities in '..\..\Crypto\Modes\ClpCipherModeParameterUtilities.pas',
   ClpBlowfishEngine in '..\..\Crypto\Engines\ClpBlowfishEngine.pas',
   ClpBip340SchnorrUtilities in '..\..\Crypto\Bip340\ClpBip340SchnorrUtilities.pas',
   ClpBip327MuSig2Utilities in '..\..\Crypto\Bip327\ClpBip327MuSig2Utilities.pas',

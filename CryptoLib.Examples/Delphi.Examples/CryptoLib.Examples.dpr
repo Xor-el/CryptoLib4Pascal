@@ -44,6 +44,8 @@ uses
   ClpCtsBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCtsBlockCipher.pas',
   ClpOfbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpOfbBlockCipher.pas',
   ClpSicBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpSicBlockCipher.pas',
+  ClpBlockCipherBulkUtilities in '..\..\CryptoLib\src\Crypto\Modes\ClpBlockCipherBulkUtilities.pas',
+  ClpCipherModeParameterUtilities in '..\..\CryptoLib\src\Crypto\Modes\ClpCipherModeParameterUtilities.pas',
   ClpBlowfishEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpBlowfishEngine.pas',
   ClpBip340SchnorrUtilities in '..\..\CryptoLib\src\Crypto\Bip340\ClpBip340SchnorrUtilities.pas',
   ClpBip327MuSig2Utilities in '..\..\CryptoLib\src\Crypto\Bip327\ClpBip327MuSig2Utilities.pas',

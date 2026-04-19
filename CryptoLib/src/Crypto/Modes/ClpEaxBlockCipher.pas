@@ -23,14 +23,17 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
   ClpIEaxBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
   ClpICipherParameters,
-  ClpIAeadParameters,
   ClpIParametersWithIV,
   ClpSicBlockCipher,
   ClpISicBlockCipher,
+  ClpIBulkBlockCipherMode,
+  ClpBlockCipherBulkUtilities,
+  ClpCipherModeParameterUtilities,
   ClpCMac,
   ClpIMac,
   ClpParametersWithIV,
@@ -40,7 +43,7 @@ uses
 
 resourcestring
   SInvalidParametersEAX = 'invalid parameters passed to EAX';
-  SOutputBufferTooShort = 'output buffer too short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in EAX failed';
   SAadAfterProcessing = 'AAD data cannot be added after encryption/decryption processing has begun.';
@@ -54,6 +57,11 @@ type
     TTag = (TagN = 0, TagH = 1, TagC = 2);
   var
     FCipher: ISicBlockCipher;
+    // Cached IBulkBlockCipherMode view of FCipher. TSicBlockCipher always
+    // implements IBulkBlockCipherMode so this is non-nil in practice; the
+    // Supports() call in the constructor keeps us robust against future
+    // variants that might opt out.
+    FBulkCipher: IBulkBlockCipherMode;
     FForEncryption: Boolean;
     FBlockSize: Int32;
     FMac: IMac;
@@ -113,6 +121,7 @@ begin
   System.SetLength(FAssociatedTextMac, FMac.GetMacSize());
   System.SetLength(FNonceMac, FMac.GetMacSize());
   FCipher := TSicBlockCipher.Create(ACipher);
+  TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipher, FBulkCipher);
 end;
 
 function TEaxBlockCipher.GetAlgorithmName: String;
@@ -133,30 +142,20 @@ end;
 procedure TEaxBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LAeadParameters: IAeadParameters;
-  LParametersWithIV: IParametersWithIV;
-  LNonce: TCryptoLibByteArray;
-  LKeyParam: ICipherParameters;
+  LChoice: TCipherAeadChoice;
   LTag: TCryptoLibByteArray;
 begin
   FForEncryption := AForEncryption;
 
-  if Supports(AParameters, IAeadParameters, LAeadParameters) then
-  begin
-    LNonce := LAeadParameters.GetNonce();
-    FInitialAssociatedText := LAeadParameters.GetAssociatedText();
-    FMacSize := LAeadParameters.MacSize div 8;
-    LKeyParam := LAeadParameters.Key;
-  end
-  else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
-  begin
-    LNonce := LParametersWithIV.GetIV();
-    FInitialAssociatedText := nil;
-    FMacSize := FMac.GetMacSize() div 2;
-    LKeyParam := LParametersWithIV.Parameters;
-  end
-  else
+  if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
+  then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersEAX);
+
+  FInitialAssociatedText := LChoice.AssociatedText;
+  if LChoice.IsAead then
+    FMacSize := LChoice.MacSizeBits div 8
+  else
+    FMacSize := FMac.GetMacSize() div 2;
 
   if FForEncryption then
     System.SetLength(FBufBlock, FBlockSize)
@@ -165,11 +164,11 @@ begin
 
   System.SetLength(LTag, FBlockSize);
 
-  FMac.Init(LKeyParam);
+  FMac.Init(LChoice.CipherKey);
 
   LTag[FBlockSize - 1] := Byte(Ord(TTag.TagN));
   FMac.BlockUpdate(LTag, 0, FBlockSize);
-  FMac.BlockUpdate(LNonce, 0, System.Length(LNonce));
+  FMac.BlockUpdate(LChoice.Nonce, 0, System.Length(LChoice.Nonce));
   FMac.DoFinal(FNonceMac, 0);
 
   FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
@@ -266,11 +265,158 @@ end;
 function TEaxBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LResultLen: Int32;
+  LI, LResultLen, LToFill, LBulkBlocks, LBulkBytes: Int32;
+  LScratch: TCryptoLibByteArray;
 begin
   InitCipher();
 
   LResultLen := 0;
+
+  // Bulk fast path: only activates when the underlying CTR cipher exposes
+  // the generic multi-block capability. The scalar per-byte loop below
+  // remains as the fallback and preserves byte-for-byte semantics with the
+  // pre-bulk code; the bulk path reproduces the exact same state transitions
+  // (MAC update order, FBufBlock lookahead shifts, FBufOff invariants) via
+  // a direct buffer-drain + aligned-run + tail-repack sequence.
+  if (FBulkCipher <> nil) and (ALen > 0) then
+  begin
+    if FForEncryption then
+    begin
+      // Drain any partial block accumulated from previous ProcessBytes
+      // calls. If we can complete FBufBlock, flush it exactly as
+      // Process() would.
+      if FBufOff > 0 then
+      begin
+        LToFill := FBlockSize - FBufOff;
+        if LToFill > ALen then
+          LToFill := ALen;
+        System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
+        FBufOff := FBufOff + LToFill;
+        AInOff := AInOff + LToFill;
+        ALen := ALen - LToFill;
+        if FBufOff = FBlockSize then
+        begin
+          TCheck.OutputLength(AOutput, AOutOff + LResultLen, FBlockSize,
+            SOutputBufferTooShort);
+          FCipher.ProcessBlock(FBufBlock, 0, AOutput, AOutOff + LResultLen);
+          FMac.BlockUpdate(AOutput, AOutOff + LResultLen, FBlockSize);
+          LResultLen := LResultLen + FBlockSize;
+          FBufOff := 0;
+        end;
+      end;
+
+      // Aligned full-block run directly from AInput -> AOutput. CTR
+      // encrypts in place via the bulk cipher, then ciphertext is handed
+      // to CMAC in one BlockUpdate call.
+      if (FBufOff = 0) and (ALen >= FBlockSize) then
+      begin
+        LBulkBlocks := ALen div FBlockSize;
+        LBulkBytes := LBulkBlocks * FBlockSize;
+        TCheck.OutputLength(AOutput, AOutOff + LResultLen, LBulkBytes,
+          SOutputBufferTooShort);
+        FBulkCipher.ProcessBlocks(AInput, AInOff, LBulkBlocks, AOutput,
+          AOutOff + LResultLen);
+        FMac.BlockUpdate(AOutput, AOutOff + LResultLen, LBulkBytes);
+        LResultLen := LResultLen + LBulkBytes;
+        AInOff := AInOff + LBulkBytes;
+        ALen := ALen - LBulkBytes;
+      end;
+
+      // Residue (< FBlockSize bytes) goes into FBufBlock; DoFinal will
+      // consume it.
+      if ALen > 0 then
+      begin
+        System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
+        FBufOff := FBufOff + ALen;
+      end;
+
+      Result := LResultLen;
+      Exit;
+    end
+    else
+    begin
+      // Decrypt path. FBufBlock is (FBlockSize + FMacSize) bytes; the last
+      // FMacSize bytes are a look-ahead that we do not MAC / decrypt until
+      // we are certain they are payload and not the trailing tag. The
+      // scalar Process() keeps this invariant by shifting the trailing
+      // FMacSize bytes down after every flush.
+      //
+      // Drain the buffer to its canonical post-first-flush state
+      // (FBufOff = FMacSize). If the first flush has not yet happened,
+      // this step may trigger it. After this step either FBufOff equals
+      // FMacSize and ALen may still be > 0, or we ran out of input while
+      // filling.
+      LToFill := (FBlockSize + FMacSize) - FBufOff;
+      if LToFill > ALen then
+        LToFill := ALen;
+      System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
+      FBufOff := FBufOff + LToFill;
+      AInOff := AInOff + LToFill;
+      ALen := ALen - LToFill;
+      if FBufOff = FBlockSize + FMacSize then
+      begin
+        TCheck.OutputLength(AOutput, AOutOff + LResultLen, FBlockSize,
+          SOutputBufferTooShort);
+        FMac.BlockUpdate(FBufBlock, 0, FBlockSize);
+        FCipher.ProcessBlock(FBufBlock, 0, AOutput, AOutOff + LResultLen);
+        LResultLen := LResultLen + FBlockSize;
+        System.Move(FBufBlock[FBlockSize], FBufBlock[0], FMacSize);
+        FBufOff := FMacSize;
+      end;
+
+      // Aligned bulk run: once FBufOff = FMacSize, each subsequent flush
+      // consumes exactly FBlockSize bytes of AInput. For N flushes the
+      // MAC / decrypt stream is:
+      //   chunk 0     = FBufBlock[0..FMacSize-1] || AInput[0..FBlockSize-FMacSize-1]
+      //   chunk 1..N-1= AInput[FBlockSize-FMacSize..N*FBlockSize-FMacSize-1] (contiguous)
+      //   new FBufBlock[0..FMacSize-1] = AInput[N*FBlockSize-FMacSize..N*FBlockSize-1]
+      // Block 0 needs a small FBlockSize-byte scratch to stitch the
+      // look-ahead to the first AInput bytes; blocks 1..N-1 reference
+      // AInput directly.
+      if (FBufOff = FMacSize) and (ALen >= FBlockSize) then
+      begin
+        LBulkBlocks := ALen div FBlockSize;
+        LBulkBytes := LBulkBlocks * FBlockSize;
+        TCheck.OutputLength(AOutput, AOutOff + LResultLen, LBulkBytes,
+          SOutputBufferTooShort);
+
+        System.SetLength(LScratch, FBlockSize);
+        System.Move(FBufBlock[0], LScratch[0], FMacSize);
+        if FBlockSize > FMacSize then
+          System.Move(AInput[AInOff], LScratch[FMacSize],
+            FBlockSize - FMacSize);
+        FMac.BlockUpdate(LScratch, 0, FBlockSize);
+        FCipher.ProcessBlock(LScratch, 0, AOutput, AOutOff + LResultLen);
+
+        if LBulkBlocks > 1 then
+        begin
+          FMac.BlockUpdate(AInput, AInOff + FBlockSize - FMacSize,
+            (LBulkBlocks - 1) * FBlockSize);
+          FBulkCipher.ProcessBlocks(AInput, AInOff + FBlockSize - FMacSize,
+            LBulkBlocks - 1, AOutput, AOutOff + LResultLen + FBlockSize);
+        end;
+
+        System.Move(AInput[AInOff + LBulkBytes - FMacSize], FBufBlock[0],
+          FMacSize);
+
+        LResultLen := LResultLen + LBulkBytes;
+        AInOff := AInOff + LBulkBytes;
+        ALen := ALen - LBulkBytes;
+      end;
+
+      // Pack remaining bytes (strictly less than FBlockSize on this
+      // branch) into FBufBlock. No flush is possible with < FBlockSize
+      // new bytes: we would not reach FBlockSize + FMacSize total.
+      if ALen > 0 then
+      begin
+        System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
+        FBufOff := FBufOff + ALen;
+      end;
+
+      Result := LResultLen;
+      Exit;
+    end;
+  end;
 
   for LI := 0 to System.Pred(ALen) do
   begin

@@ -37,6 +37,7 @@ uses
   ClpBasicGcmExponentiator,
   ClpTables4kGcmMultiplier,
   ClpIBulkBlockCipher,
+  ClpBlockCipherBulkUtilities,
   ClpIAesEngineX86,
   ClpAesEngineX86,
   ClpPack,
@@ -57,8 +58,8 @@ resourcestring
   STooManyBlocks = 'Attempt to process too many blocks';
   SGcmCannotReuse = 'GCM cipher cannot be reused for encryption';
   SGcmNeedsInit = 'GCM cipher needs to be initialized';
-  SOutputBufferTooShort = 'output buffer too short';
-  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in GCM failed';
   SGcmFourWayNotSupported = 'GCM four-block path is not available on this platform.';
@@ -153,20 +154,6 @@ type
     class procedure GcmReverse16(const ASrc, ADst: PByte); static;
     procedure GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
     procedure GhashEightShuffledBlocks(PBase: PByte);
-    /// <summary>Scalar triple-XOR of 64 bytes (8 x UInt64):
-    /// PDst^ := PSrcA^ xor PSrcB^. Declared as a static class procedure -- and
-    /// deliberately NOT inline -- so that each call establishes a fresh stack
-    /// frame with its own register allocation. FPC 3.2 for i386 miscompiles the
-    /// equivalent inline loop inside the pipelined GCM steps at -O3, rewriting
-    /// `LI := LI + 1` to `addl $1, LI_mem` and then using a stale `%edx` (left
-    /// over from an earlier AOutOff load) as if it held LI. The CALL boundary
-    /// forces the caller to spill and dodges the bug. Also dedups four
-    /// identical patterns in ProcessBlocks4Pipelined.</summary>
-    class procedure GcmXor64BytesScalar(PDst, PSrcA, PSrcB: PByte); static;
-    /// <summary>128-byte (16 x UInt64) counterpart of GcmXor64BytesScalar,
-    /// used by ProcessBlocks8Pipelined. See GcmXor64BytesScalar for why this
-    /// must remain a real (non-inline) call.</summary>
-    class procedure GcmXor128BytesScalar(PDst, PSrcA, PSrcB: PByte); static;
     /// <summary>
     /// Shared big-endian counter-word packing used by both `FillNextCtrBlocks8Raw`
     /// and `GetNextCtrBlocks8`'s SIMD fast path. Advances `ACounter32` by 8 and
@@ -533,8 +520,7 @@ begin
   // FBulkCipher drives the non-fused 4/8-block CTR dispatchers below;
   // FAesEngineX86 is the handle for the fused AES+GHASH kernel. They are
   // orthogonal and must not be derived from each other.
-  FBulkCipher := nil;
-  Supports(FCipher, IBulkBlockCipher, FBulkCipher);
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
   FAesEngineX86 := nil;
@@ -1167,25 +1153,11 @@ begin
 end;
 
 // =======================================================================
-// Scalar XOR helpers, byte-reverse primitive, and shuffled-block
-// GHASH kernels used by the fused / pipelined batch routines below.
+// Byte-reverse primitive and shuffled-block GHASH kernels used by the
+// fused / pipelined batch routines below. The 64-byte / 128-byte triple-
+// XOR helpers live in TBlockCipherBulkUtilities and are shared with the
+// other bulk-capable modes (SIC, GCM-SIV, OCB, ...).
 // =======================================================================
-
-class procedure TGcmBlockCipher.GcmXor64BytesScalar(PDst, PSrcA, PSrcB: PByte);
-var
-  LI: Int32;
-begin
-  for LI := 0 to 7 do
-    PUInt64(PDst + LI * 8)^ := PUInt64(PSrcA + LI * 8)^ xor PUInt64(PSrcB + LI * 8)^;
-end;
-
-class procedure TGcmBlockCipher.GcmXor128BytesScalar(PDst, PSrcA, PSrcB: PByte);
-var
-  LI: Int32;
-begin
-  for LI := 0 to 15 do
-    PUInt64(PDst + LI * 8)^ := PUInt64(PSrcA + LI * 8)^ xor PUInt64(PSrcB + LI * 8)^;
-end;
 
 class procedure TGcmBlockCipher.GcmReverse16(const ASrc, ADst: PByte);
 var
@@ -1383,13 +1355,13 @@ begin
 
     if AForEncrypt then
     begin
-      GcmXor64BytesScalar(LPOut, LPIn, LPKey);
+      TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
       GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
     end
     else
     begin
       GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
-      GcmXor64BytesScalar(LPOut, LPIn, LPKey);
+      TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
     end;
 
     LTmp := LCurr; LCurr := LNext; LNext := LTmp;
@@ -1403,13 +1375,13 @@ begin
   LPKey := @LCurr[0];
   if AForEncrypt then
   begin
-    GcmXor64BytesScalar(LPOut, LPIn, LPKey);
+    TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
     GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
   end
   else
   begin
     GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
-    GcmXor64BytesScalar(LPOut, LPIn, LPKey);
+    TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
   end;
 
   AInOff := AInOff + (BlockSize * 4);
@@ -1445,13 +1417,13 @@ begin
 
     if AForEncrypt then
     begin
-      GcmXor128BytesScalar(LPOut, LPIn, LPKey);
+      TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
       GhashEightShuffledBlocks(LPOut);
     end
     else
     begin
       GhashEightShuffledBlocks(LPIn);
-      GcmXor128BytesScalar(LPOut, LPIn, LPKey);
+      TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
     end;
 
     LTmp := LCurr; LCurr := LNext; LNext := LTmp;
@@ -1465,13 +1437,13 @@ begin
   LPKey := @LCurr[0];
   if AForEncrypt then
   begin
-    GcmXor128BytesScalar(LPOut, LPIn, LPKey);
+    TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
     GhashEightShuffledBlocks(LPOut);
   end
   else
   begin
     GhashEightShuffledBlocks(LPIn);
-    GcmXor128BytesScalar(LPOut, LPIn, LPKey);
+    TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
   end;
 
   AInOff := AInOff + (BlockSize * 8);

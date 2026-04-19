@@ -24,14 +24,17 @@ uses
   Classes,
   SysUtils,
   ClpIBlockCipher,
+  ClpIBlockCipherMode,
   ClpICcmBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
   ClpICipherParameters,
-  ClpIAeadParameters,
   ClpIParametersWithIV,
   ClpSicBlockCipher,
   ClpISicBlockCipher,
+  ClpIBulkBlockCipherMode,
+  ClpBlockCipherBulkUtilities,
+  ClpCipherModeParameterUtilities,
   ClpCbcBlockCipherMac,
   ClpIMac,
   ClpParametersWithIV,
@@ -49,8 +52,8 @@ resourcestring
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in CCM failed';
   STagLengthOctets = 'tag length in octets must be one of {4,6,8,10,12,14,16}';
-  SInputBufferTooShort = 'input buffer too short';
-  SOutputBufferTooShort = 'output buffer too short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
   TCcmBlockCipher = class(TInterfacedObject, ICcmBlockCipher,
@@ -147,31 +150,25 @@ end;
 procedure TCcmBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LAeadParameters: IAeadParameters;
-  LParametersWithIV: IParametersWithIV;
-  LCipherParameters: ICipherParameters;
+  LChoice: TCipherAeadChoice;
+  LRequestedMacSizeBits: Int32;
 begin
   FForEncryption := AForEncryption;
 
-  if Supports(AParameters, IAeadParameters, LAeadParameters) then
-  begin
-    FNonce := LAeadParameters.GetNonce();
-    FInitialAssociatedText := LAeadParameters.GetAssociatedText();
-    FMacSize := GetMacSize(AForEncryption, LAeadParameters.MacSize);
-    LCipherParameters := LAeadParameters.Key;
-  end
-  else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
-  begin
-    FNonce := LParametersWithIV.GetIV();
-    FInitialAssociatedText := nil;
-    FMacSize := GetMacSize(AForEncryption, 64);
-    LCipherParameters := LParametersWithIV.Parameters;
-  end
-  else
+  if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
+  then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersCCM);
 
-  if (LCipherParameters <> nil) then
-    FKeyParam := LCipherParameters;
+  FNonce := LChoice.Nonce;
+  FInitialAssociatedText := LChoice.AssociatedText;
+  if LChoice.IsAead then
+    LRequestedMacSizeBits := LChoice.MacSizeBits
+  else
+    LRequestedMacSizeBits := 64;
+  FMacSize := GetMacSize(AForEncryption, LRequestedMacSizeBits);
+
+  if (LChoice.CipherKey <> nil) then
+    FKeyParam := LChoice.CipherKey;
 
   if (System.Length(FNonce) < 7) or (System.Length(FNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
@@ -290,9 +287,14 @@ function TCcmBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
   AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LN, LQ, LLimitLen, LInputAdjustment, LOutputLen, LInIndex, LOutIndex, LI: Int32;
+  LN, LQ, LLimitLen, LInputAdjustment, LOutputLen, LInIndex, LOutIndex, LI,
+    LBulkBlocks, LBulkBytes: Int32;
   LIV, LEncMac, LBlock, LCalculatedMacBlock: TCryptoLibByteArray;
   LCtrCipher: ISicBlockCipher;
+  // Cached IBulkBlockCipherMode view of LCtrCipher. TSicBlockCipher always
+  // implements IBulkBlockCipherMode, so this is non-nil in practice; the
+  // Supports() guard keeps us robust to a future SIC variant that opts out.
+  LBulkCtr: IBulkBlockCipherMode;
 begin
   TCheck.DataLength(AInput, AInOff, AInLen, SInputBufferTooShort);
 
@@ -322,6 +324,7 @@ begin
 
   LCtrCipher := TSicBlockCipher.Create(FCipher);
   LCtrCipher.Init(FForEncryption, TParametersWithIV.Create(FKeyParam, LIV) as IParametersWithIV);
+  TBlockCipherBulkUtilities.TryResolveBulkCipherMode(LCtrCipher, LBulkCtr);
 
   LInIndex := AInOff;
   LOutIndex := AOutOff;
@@ -336,11 +339,27 @@ begin
     System.SetLength(LEncMac, BlockSize);
     LCtrCipher.ProcessBlock(FMacBlock, 0, LEncMac, 0);
 
-    while (LInIndex < (AInOff + AInLen - BlockSize)) do
+    // Number of whole 16-byte blocks that the classic loop would have
+    // consumed. The tail (1..BlockSize bytes) is always handled via the
+    // LBlock scratch path below, so we intentionally hold back the last
+    // (possibly full) block and let the per-block tail finish it. This
+    // preserves byte-identical behaviour with the pre-bulk code.
+    LBulkBlocks := (AInLen - 1) div BlockSize;
+    if (LBulkCtr <> nil) and (LBulkBlocks > 0) then
     begin
-      LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
-      LOutIndex := LOutIndex + BlockSize;
-      LInIndex := LInIndex + BlockSize;
+      LBulkBytes := LBulkCtr.ProcessBlocks(AInput, LInIndex, LBulkBlocks,
+        AOutput, LOutIndex);
+      LInIndex := LInIndex + LBulkBytes;
+      LOutIndex := LOutIndex + LBulkBytes;
+    end
+    else
+    begin
+      while (LInIndex < (AInOff + AInLen - BlockSize)) do
+      begin
+        LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
+        LOutIndex := LOutIndex + BlockSize;
+        LInIndex := LInIndex + BlockSize;
+      end;
     end;
 
     System.SetLength(LBlock, BlockSize);
@@ -370,11 +389,26 @@ begin
       FMacBlock[LI] := 0;
     end;
 
-    while (LInIndex < (AInOff + LOutputLen - BlockSize)) do
+    // Same LBulkBlocks / tail split as encrypt, but over LOutputLen
+    // (ciphertext minus trailing tag) rather than AInLen. The last
+    // (possibly full) 16-byte block is held back for the LBlock scratch
+    // path so behaviour matches the pre-bulk loop byte-for-byte.
+    LBulkBlocks := (LOutputLen - 1) div BlockSize;
+    if (LBulkCtr <> nil) and (LBulkBlocks > 0) then
     begin
-      LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
-      LOutIndex := LOutIndex + BlockSize;
-      LInIndex := LInIndex + BlockSize;
+      LBulkBytes := LBulkCtr.ProcessBlocks(AInput, LInIndex, LBulkBlocks,
+        AOutput, LOutIndex);
+      LInIndex := LInIndex + LBulkBytes;
+      LOutIndex := LOutIndex + LBulkBytes;
+    end
+    else
+    begin
+      while (LInIndex < (AInOff + LOutputLen - BlockSize)) do
+      begin
+        LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
+        LOutIndex := LOutIndex + BlockSize;
+        LInIndex := LInIndex + BlockSize;
+      end;
     end;
 
     System.SetLength(LBlock, BlockSize);

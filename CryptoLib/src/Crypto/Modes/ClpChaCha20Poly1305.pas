@@ -26,9 +26,9 @@ uses
   ClpIChaCha20Poly1305,
   ClpIAeadCipher,
   ClpICipherParameters,
-  ClpIAeadParameters,
   ClpIParametersWithIV,
   ClpIKeyParameter,
+  ClpCipherModeParameterUtilities,
   ClpChaCha7539Engine,
   ClpIChaCha7539Engine,
   ClpPoly1305,
@@ -50,8 +50,8 @@ resourcestring
   SCannotReuseNonce = 'cannot reuse nonce for ChaCha20Poly1305 encryption';
   SInvalidMacSize = 'Invalid value for MAC size: %d';
   SCannotBeNegative = 'cannot be negative';
-  SInputBufferTooShort = 'input buffer too short';
-  SOutputBufferTooShort = 'output buffer too short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in ChaCha20Poly1305 failed';
   SCannotReuseEncryption = ' cannot be reused for encryption';
@@ -127,7 +127,6 @@ type
   public
     constructor Create(); overload;
     constructor Create(const APoly1305: IMac); overload;
-    destructor Destroy; override;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
 
@@ -183,11 +182,6 @@ begin
   FState := TState.Uninitialized;
 end;
 
-destructor TChaCha20Poly1305.Destroy;
-begin
-  inherited Destroy;
-end;
-
 function TChaCha20Poly1305.GetAlgorithmName: String;
 begin
   Result := 'ChaCha20Poly1305';
@@ -196,36 +190,29 @@ end;
 procedure TChaCha20Poly1305.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LAeadParams: IAeadParameters;
-  LIvParams: IParametersWithIV;
+  LChoice: TCipherAeadChoice;
   LInitKeyParam: IKeyParameter;
   LInitNonce: TCryptoLibByteArray;
   LChaCha20Params: ICipherParameters;
   LMacSizeBits: Int32;
 begin
-  if Supports(AParameters, IAeadParameters, LAeadParams) then
+  if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
+  then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidParameters);
+
+  LInitKeyParam := LChoice.KeyParameter;
+  LInitNonce := LChoice.Nonce;
+  FInitialAad := LChoice.AssociatedText;
+
+  if LChoice.IsAead then
   begin
-    LMacSizeBits := LAeadParams.MacSize;
+    LMacSizeBits := LChoice.MacSizeBits;
     if ((MacSize * 8) <> LMacSizeBits) then
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
-
-    LInitKeyParam := LAeadParams.Key;
-    LInitNonce := LAeadParams.GetNonce();
     LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce) as IParametersWithIV;
-
-    FInitialAad := LAeadParams.GetAssociatedText();
-  end
-  else if Supports(AParameters, IParametersWithIV, LIvParams) then
-  begin
-    if not Supports(LIvParams.Parameters, IKeyParameter, LInitKeyParam) then
-      LInitKeyParam := nil;
-    LInitNonce := LIvParams.GetIV();
-    LChaCha20Params := LIvParams;
-
-    FInitialAad := nil;
   end
   else
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParameters);
+    LChaCha20Params := AParameters;
 
   if (LInitKeyParam = nil) then
   begin

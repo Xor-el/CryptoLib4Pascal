@@ -29,6 +29,7 @@ uses
   ClpICbcBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
+  ClpBlockCipherBulkUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -36,8 +37,8 @@ resourcestring
   SInvalidIVLength =
     'Initialisation Vector Must be the Same Length as Block Size';
   SInvalidChangeState = 'Cannot Change Encrypting State Without Providing Key.';
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
   TCbcBlockCipher = class sealed(TInterfacedObject, ICbcBlockCipher,
@@ -296,8 +297,7 @@ begin
   // different underlying cipher reference. The runtime (FBlockSize = 16)
   // guard in ProcessBlocks keeps us correct if a future non-16-byte bulk
   // engine ever surfaces.
-  FBulkCipher := nil;
-  Supports(FCipher, IBulkBlockCipher, FBulkCipher);
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
 end;
 
 function TCbcBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;

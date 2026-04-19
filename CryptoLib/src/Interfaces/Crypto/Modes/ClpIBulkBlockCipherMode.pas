@@ -21,6 +21,7 @@ unit ClpIBulkBlockCipherMode;
 interface
 
 uses
+  ClpIBlockCipherMode,
   ClpCryptoLibTypes;
 
 type
@@ -28,9 +29,12 @@ type
   /// Optional capability interface implemented by block-cipher modes that
   /// can process multiple consecutive blocks per call, typically by
   /// delegating to a SIMD-accelerated underlying engine (e.g. AES-NI via
-  /// TAesEngineX86). This interface is a sibling of IBlockCipherMode (it
-  /// does NOT extend it) so existing mode clients that only know about
-  /// IBlockCipher / IBlockCipherMode keep working unchanged. Callers that
+  /// TAesEngineX86). Extends IBlockCipherMode to document the true
+  /// semantic relationship (a bulk mode IS a mode) and to let callers
+  /// holding only an IBulkBlockCipherMode reference reach Reset,
+  /// GetBlockSize, UnderlyingCipher and other mode members without a
+  /// second QueryInterface. Existing clients that only know about
+  /// IBlockCipher / IBlockCipherMode keep working unchanged; callers that
   /// want to exploit the fast path opt in via Supports(FCipherMode,
   /// IBulkBlockCipherMode, FBulkMode).
   /// </summary>
@@ -41,7 +45,7 @@ type
   /// such a per-block loop so the behaviour is stable across engines and
   /// build configurations (e.g. NOSIMD).
   /// </remarks>
-  IBulkBlockCipherMode = interface(IInterface)
+  IBulkBlockCipherMode = interface(IBlockCipherMode)
     ['{E2B4D6C9-1F8A-4A6E-93D1-7C5B2F3E8A4D}']
 
     /// <summary>

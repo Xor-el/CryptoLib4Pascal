@@ -28,11 +28,12 @@ uses
   ClpIBulkBlockCipherMode,
   ClpIEcbBlockCipher,
   ClpICipherParameters,
+  ClpBlockCipherBulkUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
   TEcbBlockCipher = class(TInterfacedObject, IEcbBlockCipher,
@@ -140,8 +141,7 @@ begin
   // Re-probe every Init: a user can re-key the same TEcbBlockCipher with a
   // different underlying cipher reference (rare, but well within the
   // public contract).
-  FBulkCipher := nil;
-  Supports(FCipher, IBulkBlockCipher, FBulkCipher);
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
 end;
 
 function TEcbBlockCipher.ProcessBlock(const AInBuf: TCryptoLibByteArray;

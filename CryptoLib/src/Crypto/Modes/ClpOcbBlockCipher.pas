@@ -24,13 +24,14 @@ uses
   SysUtils,
   Generics.Collections,
   ClpIBlockCipher,
+  ClpIBulkBlockCipher,
   ClpIOcbBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
   ClpICipherParameters,
-  ClpIAeadParameters,
-  ClpIParametersWithIV,
   ClpIKeyParameter,
+  ClpBlockCipherBulkUtilities,
+  ClpCipherModeParameterUtilities,
   ClpCheck,
   ClpBitOperations,
   ClpByteUtilities,
@@ -48,7 +49,7 @@ resourcestring
   SInvalidMacSize = 'Invalid value for MAC size: %d';
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in OCB failed';
-  SOutputBufferTooShort = 'output buffer too short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
   TOcbBlockCipher = class(TInterfacedObject, IOcbBlockCipher,
@@ -83,11 +84,19 @@ type
 
     FMacBlock: TCryptoLibByteArray;
 
+    // Tier 4: cached bulk-capable view of FMainCipher. When the main cipher
+    // exposes IBulkBlockCipher, ProcessBytes folds 8 consecutive blocks
+    // through a single ProcessBlocks call inside ProcessEightBlocksBulk
+    // instead of the per-byte FMainBlock fill path. Nil -> scalar fallback.
+    FMainBulk: IBulkBlockCipher;
+
+    procedure ProcessEightBlocksBulk(const AInput: TCryptoLibByteArray;
+      AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32);
+
     class function OCB_double(const ABlock: TCryptoLibByteArray): TCryptoLibByteArray; static;
     class procedure OCB_extend(const ABlock: TCryptoLibByteArray; APos: Int32); static;
     class function OCB_ntz(AX: Int64): Int32; static;
     class function ShiftLeft(const ABlock, AOutput: TCryptoLibByteArray): Int32; static;
-    class procedure &Xor(const ABlock, AVal: TCryptoLibByteArray); static;
 
   strict protected
     function ProcessNonce(const AN: TCryptoLibByteArray): Int32; virtual;
@@ -176,8 +185,7 @@ procedure TOcbBlockCipher.Init(AForEncryption: Boolean;
 var
   LOldForEncryption: Boolean;
   LKeyParameter: IKeyParameter;
-  LAeadParameters: IAeadParameters;
-  LParametersWithIV: IParametersWithIV;
+  LChoice: TCipherAeadChoice;
   LN: TCryptoLibByteArray;
   LMacSizeBits, LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
@@ -187,28 +195,23 @@ begin
   FMacBlock := nil;
   FL.Clear;
 
-  if Supports(AParameters, IAeadParameters, LAeadParameters) then
-  begin
-    LN := LAeadParameters.GetNonce();
-    FInitialAssociatedText := LAeadParameters.GetAssociatedText();
+  if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
+  then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersOCB);
 
-    LMacSizeBits := LAeadParameters.MacSize;
+  LN := LChoice.Nonce;
+  FInitialAssociatedText := LChoice.AssociatedText;
+  LKeyParameter := LChoice.KeyParameter;
+
+  if LChoice.IsAead then
+  begin
+    LMacSizeBits := LChoice.MacSizeBits;
     if (LMacSizeBits < 64) or (LMacSizeBits > 128) or (LMacSizeBits mod 8 <> 0) then
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
-
     FMacSize := LMacSizeBits div 8;
-    LKeyParameter := LAeadParameters.Key;
-  end
-  else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
-  begin
-    LN := LParametersWithIV.GetIV();
-    FInitialAssociatedText := nil;
-    FMacSize := 16;
-    if not Supports(LParametersWithIV.Parameters, IKeyParameter, LKeyParameter) then
-      LKeyParameter := nil;
   end
   else
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersOCB);
+    FMacSize := 16;
 
   System.SetLength(FHashBlock, 16);
   TArrayUtilities.Fill<Byte>(FHashBlock, 0, 16, Byte(0));
@@ -236,6 +239,13 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SCannotChangeEncState);
   end;
+
+  // Re-probe IBulkBlockCipher on every Init because the same FMainCipher
+  // instance can be re-keyed with different engines that may not share the
+  // same capability set. Kept as a plain interface QI (no algorithm-name
+  // assumption); any engine that advertises the contract in ClpIBulkBlockCipher
+  // is eligible for the 8-wide path in ProcessEightBlocksBulk.
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FMainCipher, FMainBulk);
 
   System.SetLength(FL_Asterisk, 16);
   TArrayUtilities.Fill<Byte>(FL_Asterisk, 0, 16, Byte(0));
@@ -401,12 +411,33 @@ end;
 function TOcbBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LResultLen: Int32;
+  LI, LResultLen, LSteadyPos: Int32;
 begin
   LResultLen := 0;
+  LI := 0;
 
-  for LI := 0 to System.Pred(ALen) do
+  // FMainBlockPos after a successful ProcessMainBlock is 0 for encrypt and
+  // FMacSize for decrypt (the decrypt-side FMainBlock is 16 + FMacSize bytes
+  // wide, holding a FMacSize-byte ciphertext lookahead). Bulk only kicks in
+  // from that steady state so the 128-byte batch aligns cleanly with the
+  // per-byte fill contract that feeds FChecksum and the offset ladder.
+  if FForEncryption then
+    LSteadyPos := 0
+  else
+    LSteadyPos := FMacSize;
+
+  while (LI < ALen) do
   begin
+    if (FMainBulk <> nil) and (FMainBlockPos = LSteadyPos) and
+      ((ALen - LI) >= 8 * BLOCK_SIZE) then
+    begin
+      ProcessEightBlocksBulk(AInput, AInOff + LI, AOutput,
+        AOutOff + LResultLen);
+      LResultLen := LResultLen + 8 * BLOCK_SIZE;
+      LI := LI + 8 * BLOCK_SIZE;
+      Continue;
+    end;
+
     FMainBlock[FMainBlockPos] := AInput[AInOff + LI];
     System.Inc(FMainBlockPos);
     if (FMainBlockPos = System.Length(FMainBlock)) then
@@ -414,9 +445,85 @@ begin
       ProcessMainBlock(AOutput, AOutOff + LResultLen);
       LResultLen := LResultLen + BLOCK_SIZE;
     end;
+    System.Inc(LI);
   end;
 
   Result := LResultLen;
+end;
+
+procedure TOcbBlockCipher.ProcessEightBlocksBulk(
+  const AInput: TCryptoLibByteArray; AInOff: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LOffsets: array [0 .. 127] of Byte;
+  LScratch: array [0 .. 127] of Byte;
+  LI: Int32;
+  LLSub: TCryptoLibByteArray;
+begin
+  // Evolve the per-block offset ladder the exact same way ProcessMainBlock
+  // would: FOffsetMAIN_{k+1} = FOffsetMAIN_k XOR L[ntz(count+1)]. Materialise
+  // all 8 offsets consecutively in LOffsets[0..127] so the downstream XORs
+  // run as a single 128-byte sweep via Xor128Bytes.
+  for LI := 0 to 7 do
+  begin
+    System.Inc(FMainBlockCount);
+    LLSub := GetLSub(OCB_ntz(FMainBlockCount));
+    TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
+      @LLSub[0]);
+    System.Move(FOffsetMAIN[0], LOffsets[LI * BLOCK_SIZE], BLOCK_SIZE);
+  end;
+
+  if FForEncryption then
+  begin
+    // FChecksum folds every plaintext block (order does not matter; XOR is
+    // commutative). Eight 16-byte folds keep us on the existing XorTo path.
+    for LI := 0 to 7 do
+      TByteUtilities.XorTo(BLOCK_SIZE, AInput, AInOff + LI * BLOCK_SIZE,
+        FChecksum, 0);
+
+    // LScratch := AInput XOR LOffsets (one 128-byte XOR)
+    TBlockCipherBulkUtilities.Xor128Bytes(@LScratch[0], @AInput[AInOff],
+      @LOffsets[0]);
+
+    // In-place bulk encrypt (aliasing-safe per IBulkBlockCipher contract).
+    FMainBulk.ProcessBlocks(@LScratch[0], @LScratch[0], 8);
+
+    // AOutput := LScratch XOR LOffsets (one 128-byte XOR)
+    TBlockCipherBulkUtilities.Xor128Bytes(@AOutput[AOutOff], @LScratch[0],
+      @LOffsets[0]);
+  end
+  else
+  begin
+    // Decrypt-side ciphertext stream = FMacSize-byte lookahead held in
+    // FMainBlock[0..FMacSize-1] followed by (128 - FMacSize) fresh AInput
+    // bytes. This mirrors the sliding-window the per-byte path walks; the
+    // 8-block batch leaves the lookahead slot refreshed from the tail of
+    // the consumed AInput range.
+    System.Move(FMainBlock[0], LScratch[0], FMacSize);
+    System.Move(AInput[AInOff], LScratch[FMacSize], 128 - FMacSize);
+
+    TBlockCipherBulkUtilities.Xor128Bytes(@LScratch[0], @LScratch[0],
+      @LOffsets[0]);
+
+    FMainBulk.ProcessBlocks(@LScratch[0], @LScratch[0], 8);
+
+    TBlockCipherBulkUtilities.Xor128Bytes(@LScratch[0], @LScratch[0],
+      @LOffsets[0]);
+
+    System.Move(LScratch[0], AOutput[AOutOff], 128);
+
+    // Fold the freshly recovered plaintext blocks into FChecksum directly
+    // from AOutput; folding from LScratch would need a PByte-aware XOR
+    // helper. XorTo over TCryptoLibByteArray is enough here.
+    for LI := 0 to 7 do
+      TByteUtilities.XorTo(BLOCK_SIZE, AOutput, AOutOff + LI * BLOCK_SIZE,
+        FChecksum, 0);
+
+    // Refresh the FMacSize lookahead from the tail of the AInput window so
+    // subsequent calls (bulk or scalar) see identical state to the per-byte
+    // loop after 128 consumed bytes.
+    System.Move(AInput[AInOff + 128 - FMacSize], FMainBlock[0], FMacSize);
+  end;
 end;
 
 function TOcbBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
@@ -447,15 +554,18 @@ begin
     if FForEncryption then
     begin
       OCB_extend(FMainBlock, FMainBlockPos);
-      &Xor(FChecksum, FMainBlock);
+      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+        @FMainBlock[0]);
     end;
 
-    &Xor(FOffsetMAIN, FL_Asterisk);
+    TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
+      @FL_Asterisk[0]);
 
     System.SetLength(LPad, 16);
     FHashCipher.ProcessBlock(FOffsetMAIN, 0, LPad, 0);
 
-    &Xor(FMainBlock, LPad);
+    TBlockCipherBulkUtilities.Xor16Bytes(@FMainBlock[0], @FMainBlock[0],
+      @LPad[0]);
 
     TCheck.OutputLength(AOutput, AOutOff, FMainBlockPos, SOutputBufferTooShort);
     System.Move(FMainBlock[0], AOutput[AOutOff], FMainBlockPos);
@@ -463,14 +573,18 @@ begin
     if (not FForEncryption) then
     begin
       OCB_extend(FMainBlock, FMainBlockPos);
-      &Xor(FChecksum, FMainBlock);
+      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+        @FMainBlock[0]);
     end;
   end;
 
-  &Xor(FChecksum, FOffsetMAIN);
-  &Xor(FChecksum, FL_Dollar);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+    @FOffsetMAIN[0]);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+    @FL_Dollar[0]);
   FHashCipher.ProcessBlock(FChecksum, 0, FChecksum, 0);
-  &Xor(FChecksum, FSum);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+    @FSum[0]);
 
   System.SetLength(FMacBlock, FMacSize);
   System.Move(FChecksum[0], FMacBlock[0], FMacSize);
@@ -526,27 +640,35 @@ end;
 
 procedure TOcbBlockCipher.ProcessMainBlock(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32);
+var
+  LLSub: TCryptoLibByteArray;
 begin
   TCheck.OutputLength(AOutput, AOutOff, BLOCK_SIZE, SOutputBufferTooShort);
 
   if FForEncryption then
   begin
-    &Xor(FChecksum, FMainBlock);
+    TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+      @FMainBlock[0]);
     FMainBlockPos := 0;
   end;
 
   System.Inc(FMainBlockCount);
-  &Xor(FOffsetMAIN, GetLSub(OCB_ntz(FMainBlockCount)));
+  LLSub := GetLSub(OCB_ntz(FMainBlockCount));
+  TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
+    @LLSub[0]);
 
-  &Xor(FMainBlock, FOffsetMAIN);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FMainBlock[0], @FMainBlock[0],
+    @FOffsetMAIN[0]);
   FMainCipher.ProcessBlock(FMainBlock, 0, FMainBlock, 0);
-  &Xor(FMainBlock, FOffsetMAIN);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FMainBlock[0], @FMainBlock[0],
+    @FOffsetMAIN[0]);
 
   System.Move(FMainBlock[0], AOutput[AOutOff], 16);
 
   if (not FForEncryption) then
   begin
-    &Xor(FChecksum, FMainBlock);
+    TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+      @FMainBlock[0]);
     System.Move(FMainBlock[BLOCK_SIZE], FMainBlock[0], FMacSize);
     FMainBlockPos := FMacSize;
   end;
@@ -582,10 +704,12 @@ end;
 
 procedure TOcbBlockCipher.UpdateHASH(const ALSub: TCryptoLibByteArray);
 begin
-  &Xor(FOffsetHASH, ALSub);
-  &Xor(FHashBlock, FOffsetHASH);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetHASH[0], @FOffsetHASH[0],
+    @ALSub[0]);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FHashBlock[0], @FHashBlock[0],
+    @FOffsetHASH[0]);
   FHashCipher.ProcessBlock(FHashBlock, 0, FHashBlock, 0);
-  &Xor(FSum, FHashBlock);
+  TBlockCipherBulkUtilities.Xor16Bytes(@FSum[0], @FSum[0], @FHashBlock[0]);
 end;
 
 class function TOcbBlockCipher.OCB_double(
@@ -631,12 +755,6 @@ begin
     LBit := (LB shr 7) and 1;
   end;
   Result := Int32(LBit);
-end;
-
-class procedure TOcbBlockCipher.&Xor(const ABlock,
-  AVal: TCryptoLibByteArray);
-begin
-  TByteUtilities.XorTo(16, AVal, ABlock);
 end;
 
 end.
