@@ -201,8 +201,8 @@ var
   LBlockCipher: IBlockCipher;
 begin
   LEngine := TSpeck64Engine.Create();
-  LBlockCipher := LEngine as IBlockCipher;
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  LBlockCipher := LEngine;
+  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   for LI := System.Low(TSpeckCryptoPPTestData.Keys64Ecb)
     to System.High(TSpeckCryptoPPTestData.Keys64Ecb) do
@@ -229,8 +229,8 @@ var
   LBlockCipher: IBlockCipher;
 begin
   LEngine := TSpeck128Engine.Create();
-  LBlockCipher := LEngine as IBlockCipher;
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  LBlockCipher := LEngine;
+  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   for LI := System.Low(TSpeckCryptoPPTestData.Keys128Ecb)
     to System.High(TSpeckCryptoPPTestData.Keys128Ecb) do
@@ -258,7 +258,7 @@ var
 begin
   LEngine := TSpeck64Engine.Create();
   LBlockCipher := TCbcBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   for LI := System.Low(TSpeckCryptoPPTestData.Keys64Cbc)
     to System.High(TSpeckCryptoPPTestData.Keys64Cbc) do
@@ -288,7 +288,7 @@ var
 begin
   LEngine := TSpeck128Engine.Create();
   LBlockCipher := TCbcBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   for LI := System.Low(TSpeckCryptoPPTestData.Keys128Cbc)
     to System.High(TSpeckCryptoPPTestData.Keys128Cbc) do
@@ -318,7 +318,7 @@ var
 begin
   LEngine := TSpeck64Engine.Create();
   LBlockCipher := TSicBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   for LI := System.Low(TSpeckCryptoPPTestData.Keys64Ctr)
     to System.High(TSpeckCryptoPPTestData.Keys64Ctr) do
@@ -348,7 +348,7 @@ var
 begin
   LEngine := TSpeck128Engine.Create();
   LBlockCipher := TSicBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher) as IBufferedBlockCipher;
+  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   for LI := System.Low(TSpeckCryptoPPTestData.Keys128Ctr)
     to System.High(TSpeckCryptoPPTestData.Keys128Ctr) do

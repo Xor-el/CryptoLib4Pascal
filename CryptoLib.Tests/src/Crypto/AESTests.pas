@@ -573,7 +573,7 @@ var
   LBlockCipher: IBlockCipher;
 begin
   LEngine := TAesEngine.Create();
-  LBlockCipher := LEngine as IBlockCipher;
+  LBlockCipher := LEngine;
   LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
   RunNist80038A_Vectors(LCipher, nil, TNistSp80038aAesTestData.OfficialCT_ECB,

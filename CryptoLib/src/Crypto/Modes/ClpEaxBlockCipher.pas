@@ -122,12 +122,12 @@ end;
 
 function TEaxBlockCipher.GetUnderlyingCipher: IBlockCipher;
 begin
-  Result := FCipher as IBlockCipher;
+  Result := FCipher;
 end;
 
 function TEaxBlockCipher.GetBlockSize: Int32;
 begin
-  Result := (FCipher as IBlockCipher).GetBlockSize();
+  Result := FCipher.GetBlockSize();
 end;
 
 procedure TEaxBlockCipher.Init(AForEncryption: Boolean;
@@ -172,7 +172,7 @@ begin
   FMac.BlockUpdate(LNonce, 0, System.Length(LNonce));
   FMac.DoFinal(FNonceMac, 0);
 
-  (FCipher as IBlockCipher).Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
+  FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
 
   Reset(True);
 end;
@@ -297,7 +297,7 @@ begin
   begin
     TCheck.OutputLength(AOutput, AOutOff, LExtra + FMacSize, SOutputBufferTooShort);
 
-    (FCipher as IBlockCipher).ProcessBlock(FBufBlock, 0, LTmp, 0);
+    FCipher.ProcessBlock(FBufBlock, 0, LTmp, 0);
 
     System.Move(LTmp[0], AOutput[AOutOff], LExtra);
 
@@ -322,7 +322,7 @@ begin
     begin
       FMac.BlockUpdate(FBufBlock, 0, LExtra - FMacSize);
 
-      (FCipher as IBlockCipher).ProcessBlock(FBufBlock, 0, LTmp, 0);
+      FCipher.ProcessBlock(FBufBlock, 0, LTmp, 0);
 
       System.Move(LTmp[0], AOutput[AOutOff], LExtra - FMacSize);
     end;
@@ -393,13 +393,13 @@ begin
 
     if FForEncryption then
     begin
-      LSize := (FCipher as IBlockCipher).ProcessBlock(FBufBlock, 0, AOutBytes, AOutOff);
+      LSize := FCipher.ProcessBlock(FBufBlock, 0, AOutBytes, AOutOff);
       FMac.BlockUpdate(AOutBytes, AOutOff, FBlockSize);
     end
     else
     begin
       FMac.BlockUpdate(FBufBlock, 0, FBlockSize);
-      LSize := (FCipher as IBlockCipher).ProcessBlock(FBufBlock, 0, AOutBytes, AOutOff);
+      LSize := FCipher.ProcessBlock(FBufBlock, 0, AOutBytes, AOutOff);
     end;
 
     FBufOff := 0;
