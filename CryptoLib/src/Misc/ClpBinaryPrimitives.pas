@@ -21,6 +21,9 @@ unit ClpBinaryPrimitives;
 interface
 
 uses
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  ClpBitOperations,
+{$ENDIF}
   SysUtils,
   ClpCryptoLibTypes;
 
@@ -48,49 +51,49 @@ type
     class function ReadUInt64BEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64; static; inline;
 
   public
-    class procedure WriteUInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt16); static;
-    class procedure WriteUInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt32); static;
-    class procedure WriteUInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt64); static;
+    class procedure WriteUInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt16); static; inline;
+    class procedure WriteUInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt32); static; inline;
+    class procedure WriteUInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt64); static; inline;
 
-    class procedure WriteInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int16); static;
-    class procedure WriteInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int32); static;
-    class procedure WriteInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int64); static;
+    class procedure WriteInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int16); static; inline;
+    class procedure WriteInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int32); static; inline;
+    class procedure WriteInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int64); static; inline;
 
-    class procedure WriteSingleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Single); static;
-    class procedure WriteDoubleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Double); static;
+    class procedure WriteSingleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Single); static; inline;
+    class procedure WriteDoubleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Double); static; inline;
 
-    class procedure WriteUInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt16); static;
-    class procedure WriteUInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt32); static;
-    class procedure WriteUInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt64); static;
+    class procedure WriteUInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt16); static; inline;
+    class procedure WriteUInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt32); static; inline;
+    class procedure WriteUInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt64); static; inline;
 
-    class procedure WriteInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int16); static;
-    class procedure WriteInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int32); static;
-    class procedure WriteInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int64); static;
+    class procedure WriteInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int16); static; inline;
+    class procedure WriteInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int32); static; inline;
+    class procedure WriteInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int64); static; inline;
 
-    class procedure WriteSingleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Single); static;
-    class procedure WriteDoubleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Double); static;
+    class procedure WriteSingleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Single); static; inline;
+    class procedure WriteDoubleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Double); static; inline;
 
-    class function ReadUInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16; static;
-    class function ReadUInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32; static;
-    class function ReadUInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64; static;
+    class function ReadUInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16; static; inline;
+    class function ReadUInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32; static; inline;
+    class function ReadUInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64; static; inline;
 
-    class function ReadInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int16; static;
-    class function ReadInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int32; static;
-    class function ReadInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int64; static;
+    class function ReadInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int16; static; inline;
+    class function ReadInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int32; static; inline;
+    class function ReadInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int64; static; inline;
 
-    class function ReadSingleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Single; static;
-    class function ReadDoubleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Double; static;
+    class function ReadSingleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Single; static; inline;
+    class function ReadDoubleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Double; static; inline;
 
-    class function ReadUInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16; static;
-    class function ReadUInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32; static;
-    class function ReadUInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64; static;
+    class function ReadUInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16; static; inline;
+    class function ReadUInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32; static; inline;
+    class function ReadUInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64; static; inline;
 
-    class function ReadInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int16; static;
-    class function ReadInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int32; static;
-    class function ReadInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int64; static;
+    class function ReadInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int16; static; inline;
+    class function ReadInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int32; static; inline;
+    class function ReadInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int64; static; inline;
 
-    class function ReadSingleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Single; static;
-    class function ReadDoubleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Double; static;
+    class function ReadSingleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Single; static; inline;
+    class function ReadDoubleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Double; static; inline;
   end;
 
 implementation
@@ -109,24 +112,40 @@ end;
 
 class procedure TBinaryPrimitives.WriteUInt16LEInternal(AValue: UInt16; const AData: TCryptoLibByteArray; AOffset: Integer);
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  PWord(@AData[AOffset])^ := AValue;
+{$ELSE}
   AData[AOffset]     := Byte(AValue);
   AData[AOffset + 1] := Byte(AValue shr 8);
+{$ENDIF}
 end;
 
 class procedure TBinaryPrimitives.WriteUInt16BEInternal(AValue: UInt16; const AData: TCryptoLibByteArray; AOffset: Integer);
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  PWord(@AData[AOffset])^ := TBitOperations.ReverseBytesUInt16(AValue);
+{$ELSE}
   AData[AOffset]     := Byte(AValue shr 8);
   AData[AOffset + 1] := Byte(AValue);
+{$ENDIF}
 end;
 
 class function TBinaryPrimitives.ReadUInt16LEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16;
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  Result := PWord(@AData[AOffset])^;
+{$ELSE}
   Result := UInt16(AData[AOffset]) or (UInt16(AData[AOffset + 1]) shl 8);
+{$ENDIF}
 end;
 
 class function TBinaryPrimitives.ReadUInt16BEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16;
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  Result := TBitOperations.ReverseBytesUInt16(PWord(@AData[AOffset])^);
+{$ELSE}
   Result := (UInt16(AData[AOffset]) shl 8) or UInt16(AData[AOffset + 1]);
+{$ENDIF}
 end;
 
 // ============================================================================
@@ -135,34 +154,50 @@ end;
 
 class procedure TBinaryPrimitives.WriteUInt32LEInternal(AValue: UInt32; const AData: TCryptoLibByteArray; AOffset: Integer);
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  PUInt32(@AData[AOffset])^ := AValue;
+{$ELSE}
   AData[AOffset]     := Byte(AValue);
   AData[AOffset + 1] := Byte(AValue shr 8);
   AData[AOffset + 2] := Byte(AValue shr 16);
   AData[AOffset + 3] := Byte(AValue shr 24);
+{$ENDIF}
 end;
 
 class procedure TBinaryPrimitives.WriteUInt32BEInternal(AValue: UInt32; const AData: TCryptoLibByteArray; AOffset: Integer);
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  PUInt32(@AData[AOffset])^ := TBitOperations.ReverseBytesUInt32(AValue);
+{$ELSE}
   AData[AOffset]     := Byte(AValue shr 24);
   AData[AOffset + 1] := Byte(AValue shr 16);
   AData[AOffset + 2] := Byte(AValue shr 8);
   AData[AOffset + 3] := Byte(AValue);
+{$ENDIF}
 end;
 
 class function TBinaryPrimitives.ReadUInt32LEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32;
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  Result := PUInt32(@AData[AOffset])^;
+{$ELSE}
   Result := UInt32(AData[AOffset]) or
             (UInt32(AData[AOffset + 1]) shl 8) or
             (UInt32(AData[AOffset + 2]) shl 16) or
             (UInt32(AData[AOffset + 3]) shl 24);
+{$ENDIF}
 end;
 
 class function TBinaryPrimitives.ReadUInt32BEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32;
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  Result := TBitOperations.ReverseBytesUInt32(PUInt32(@AData[AOffset])^);
+{$ELSE}
   Result := (UInt32(AData[AOffset]) shl 24) or
             (UInt32(AData[AOffset + 1]) shl 16) or
             (UInt32(AData[AOffset + 2]) shl 8) or
             UInt32(AData[AOffset + 3]);
+{$ENDIF}
 end;
 
 // ============================================================================
@@ -171,6 +206,9 @@ end;
 
 class procedure TBinaryPrimitives.WriteUInt64LEInternal(AValue: UInt64; const AData: TCryptoLibByteArray; AOffset: Integer);
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  PUInt64(@AData[AOffset])^ := AValue;
+{$ELSE}
   AData[AOffset]     := Byte(AValue);
   AData[AOffset + 1] := Byte(AValue shr 8);
   AData[AOffset + 2] := Byte(AValue shr 16);
@@ -179,10 +217,14 @@ begin
   AData[AOffset + 5] := Byte(AValue shr 40);
   AData[AOffset + 6] := Byte(AValue shr 48);
   AData[AOffset + 7] := Byte(AValue shr 56);
+{$ENDIF}
 end;
 
 class procedure TBinaryPrimitives.WriteUInt64BEInternal(AValue: UInt64; const AData: TCryptoLibByteArray; AOffset: Integer);
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  PUInt64(@AData[AOffset])^ := TBitOperations.ReverseBytesUInt64(AValue);
+{$ELSE}
   AData[AOffset]     := Byte(AValue shr 56);
   AData[AOffset + 1] := Byte(AValue shr 48);
   AData[AOffset + 2] := Byte(AValue shr 40);
@@ -191,10 +233,14 @@ begin
   AData[AOffset + 5] := Byte(AValue shr 16);
   AData[AOffset + 6] := Byte(AValue shr 8);
   AData[AOffset + 7] := Byte(AValue);
+{$ENDIF}
 end;
 
 class function TBinaryPrimitives.ReadUInt64LEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64;
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  Result := PUInt64(@AData[AOffset])^;
+{$ELSE}
   Result := UInt64(AData[AOffset]) or
             (UInt64(AData[AOffset + 1]) shl 8) or
             (UInt64(AData[AOffset + 2]) shl 16) or
@@ -203,10 +249,14 @@ begin
             (UInt64(AData[AOffset + 5]) shl 40) or
             (UInt64(AData[AOffset + 6]) shl 48) or
             (UInt64(AData[AOffset + 7]) shl 56);
+{$ENDIF}
 end;
 
 class function TBinaryPrimitives.ReadUInt64BEInternal(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64;
 begin
+{$IFDEF CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+  Result := TBitOperations.ReverseBytesUInt64(PUInt64(@AData[AOffset])^);
+{$ELSE}
   Result := (UInt64(AData[AOffset]) shl 56) or
             (UInt64(AData[AOffset + 1]) shl 48) or
             (UInt64(AData[AOffset + 2]) shl 40) or
@@ -215,6 +265,7 @@ begin
             (UInt64(AData[AOffset + 5]) shl 16) or
             (UInt64(AData[AOffset + 6]) shl 8) or
             UInt64(AData[AOffset + 7]);
+{$ENDIF}
 end;
 
 // ============================================================================
