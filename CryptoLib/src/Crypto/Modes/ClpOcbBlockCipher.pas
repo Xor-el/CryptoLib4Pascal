@@ -626,7 +626,7 @@ begin
     //
     // The `InPtr - BLOCK_SIZE` pointer is never dereferenced at
     // offset 0 by the kernel (verified phase-by-phase in
-    // OcbFusedWide_x86_64.inc / OcbFusedWide_i386.inc); the address
+    // AesOcbFusedWide_x86_64.inc / AesOcbFusedWide_i386.inc); the address
     // itself only feeds register arithmetic and the `[InPtr + 16..]`
     // loads, all of which resolve inside AInput.
     LBlock0Ptr := @FMainBlock[0];

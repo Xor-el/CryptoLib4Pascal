@@ -1,6 +1,6 @@
 // Fused AES-NI CTR keystream + 8-way GHASH kernel (i386).
 //
-// i386 sibling to GcmFusedCtrGhashEight_x86_64.inc. Algorithm identity is
+// i386 sibling to AesGcmFusedCtrGhashEight_x86_64.inc. Algorithm identity is
 // byte-for-byte the same: AES-CTR keystream over 8 counter blocks XORed
 // with PXorIn (plaintext on GCM encrypt, ciphertext on GCM decrypt) to
 // produce POut, CONCURRENTLY with GHASHing the PREVIOUS batch's 8
@@ -72,7 +72,7 @@
 //                      folded into iter 0 of half 1 only)
 //
 // Encoding: aesenc / aesenclast / pclmulqdq are db-encoded for broad
-// assembler compatibility (matches OcbFusedWide_i386.inc style). SSE1/2/3
+// assembler compatibility (matches AesOcbFusedWide_i386.inc style). SSE1/2/3
 // instructions use mnemonics. pxor against aligned round-key memory
 // ([edi + disp]) uses the m128 form; pxor against unaligned stack scratch
 // uses reg-reg only.

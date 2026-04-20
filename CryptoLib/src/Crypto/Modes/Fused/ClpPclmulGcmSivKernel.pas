@@ -66,19 +66,18 @@ type
 
 implementation
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-procedure GcmSivPolyvalHornerEight_x86_64(PFS, PC0, PHPow128, PMask: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_x86_64.inc}
-end;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
-
+{$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmSivPolyvalHornerEight_i386(PFS, PC0, PHPow128, PMask: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
 {$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_i386.inc}
+{$ENDIF}
 end;
-{$ENDIF CRYPTOLIB_I386_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 const
   // PSHUFB full-reverse control used by the POLYVAL Horner batch.
@@ -106,13 +105,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if ABlockCount <> FUSED_POLYVAL_MIN_BLOCKS then
     Exit;
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-  GcmSivPolyvalHornerEight_x86_64(AAccumulator, AInPtr, FHPow128, FMask);
-{$ELSE}
-{$IFDEF CRYPTOLIB_I386_ASM}
-  GcmSivPolyvalHornerEight_i386(AAccumulator, AInPtr, FHPow128, FMask);
-{$ENDIF CRYPTOLIB_I386_ASM}
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+  GcmSivPolyvalHornerEight(AAccumulator, AInPtr, FHPow128, FMask);
 {$ENDIF CRYPTOLIB_X86_SIMD}
 end;
 

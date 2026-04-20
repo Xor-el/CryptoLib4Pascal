@@ -371,31 +371,27 @@ begin
 end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
 procedure GcmBlockXor128Sse2(PDst, PSrc: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_x86_64.inc}
-end;
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmBlockXor128Sse2(PDst, PSrc: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
 {$I ..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_i386.inc}
-end;
 {$ENDIF}
+end;
 
-{$IFDEF CRYPTOLIB_X86_64_ASM}
 procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
-end;
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
-end;
 {$ENDIF}
+end;
 {$ENDIF}
 
 { TGcmBlockCipher }

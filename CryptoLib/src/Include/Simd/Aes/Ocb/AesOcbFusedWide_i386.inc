@@ -8,7 +8,7 @@
 // 4 is the widest fused lane count reachable on i386 once the OCB
 // bookkeeping (offset accumulator + checksum accumulator) moves into
 // the kernel and lives across the batch. The x86_64 companion
-// (OcbFusedWide_x86_64.inc) is 8-wide; mode-level batch sizing is LCM
+// (AesOcbFusedWide_x86_64.inc) is 8-wide; mode-level batch sizing is LCM
 // of the two so either kernel can consume a full aligned batch.
 //
 // Algorithm identity matches the x86_64 variant (see that file for
@@ -221,195 +221,195 @@
 
   // Round 1 (disp8 = 16)
   db $66, $0F, $38, $DE, $47, $10                 // aesdec xmm0, [edi+0x10]
-  db $66, $0F, $38, $DE, $4F, $10
-  db $66, $0F, $38, $DE, $57, $10
-  db $66, $0F, $38, $DE, $5F, $10
+  db $66, $0F, $38, $DE, $4F, $10                  // aesdec xmm1, [edi+16]
+  db $66, $0F, $38, $DE, $57, $10                  // aesdec xmm2, [edi+16]
+  db $66, $0F, $38, $DE, $5F, $10                  // aesdec xmm3, [edi+16]
   // Round 2 (disp8 = 32)
-  db $66, $0F, $38, $DE, $47, $20
-  db $66, $0F, $38, $DE, $4F, $20
-  db $66, $0F, $38, $DE, $57, $20
-  db $66, $0F, $38, $DE, $5F, $20
+  db $66, $0F, $38, $DE, $47, $20                  // aesdec xmm0, [edi+32]
+  db $66, $0F, $38, $DE, $4F, $20                  // aesdec xmm1, [edi+32]
+  db $66, $0F, $38, $DE, $57, $20                  // aesdec xmm2, [edi+32]
+  db $66, $0F, $38, $DE, $5F, $20                  // aesdec xmm3, [edi+32]
   // Round 3 (disp8 = 48)
-  db $66, $0F, $38, $DE, $47, $30
-  db $66, $0F, $38, $DE, $4F, $30
-  db $66, $0F, $38, $DE, $57, $30
-  db $66, $0F, $38, $DE, $5F, $30
+  db $66, $0F, $38, $DE, $47, $30                  // aesdec xmm0, [edi+48]
+  db $66, $0F, $38, $DE, $4F, $30                  // aesdec xmm1, [edi+48]
+  db $66, $0F, $38, $DE, $57, $30                  // aesdec xmm2, [edi+48]
+  db $66, $0F, $38, $DE, $5F, $30                  // aesdec xmm3, [edi+48]
   // Round 4 (disp8 = 64)
-  db $66, $0F, $38, $DE, $47, $40
-  db $66, $0F, $38, $DE, $4F, $40
-  db $66, $0F, $38, $DE, $57, $40
-  db $66, $0F, $38, $DE, $5F, $40
+  db $66, $0F, $38, $DE, $47, $40                  // aesdec xmm0, [edi+64]
+  db $66, $0F, $38, $DE, $4F, $40                  // aesdec xmm1, [edi+64]
+  db $66, $0F, $38, $DE, $57, $40                  // aesdec xmm2, [edi+64]
+  db $66, $0F, $38, $DE, $5F, $40                  // aesdec xmm3, [edi+64]
   // Round 5 (disp8 = 80)
-  db $66, $0F, $38, $DE, $47, $50
-  db $66, $0F, $38, $DE, $4F, $50
-  db $66, $0F, $38, $DE, $57, $50
-  db $66, $0F, $38, $DE, $5F, $50
+  db $66, $0F, $38, $DE, $47, $50                  // aesdec xmm0, [edi+80]
+  db $66, $0F, $38, $DE, $4F, $50                  // aesdec xmm1, [edi+80]
+  db $66, $0F, $38, $DE, $57, $50                  // aesdec xmm2, [edi+80]
+  db $66, $0F, $38, $DE, $5F, $50                  // aesdec xmm3, [edi+80]
   // Round 6 (disp8 = 96)
-  db $66, $0F, $38, $DE, $47, $60
-  db $66, $0F, $38, $DE, $4F, $60
-  db $66, $0F, $38, $DE, $57, $60
-  db $66, $0F, $38, $DE, $5F, $60
+  db $66, $0F, $38, $DE, $47, $60                  // aesdec xmm0, [edi+96]
+  db $66, $0F, $38, $DE, $4F, $60                  // aesdec xmm1, [edi+96]
+  db $66, $0F, $38, $DE, $57, $60                  // aesdec xmm2, [edi+96]
+  db $66, $0F, $38, $DE, $5F, $60                  // aesdec xmm3, [edi+96]
   // Round 7 (disp8 = 112)
-  db $66, $0F, $38, $DE, $47, $70
-  db $66, $0F, $38, $DE, $4F, $70
-  db $66, $0F, $38, $DE, $57, $70
-  db $66, $0F, $38, $DE, $5F, $70
+  db $66, $0F, $38, $DE, $47, $70                  // aesdec xmm0, [edi+112]
+  db $66, $0F, $38, $DE, $4F, $70                  // aesdec xmm1, [edi+112]
+  db $66, $0F, $38, $DE, $57, $70                  // aesdec xmm2, [edi+112]
+  db $66, $0F, $38, $DE, $5F, $70                  // aesdec xmm3, [edi+112]
   // Round 8 (disp32 = 128)
-  db $66, $0F, $38, $DE, $87, $80, $00, $00, $00
-  db $66, $0F, $38, $DE, $8F, $80, $00, $00, $00
-  db $66, $0F, $38, $DE, $97, $80, $00, $00, $00
-  db $66, $0F, $38, $DE, $9F, $80, $00, $00, $00
+  db $66, $0F, $38, $DE, $87, $80, $00, $00, $00   // aesdec xmm0, [edi+128]
+  db $66, $0F, $38, $DE, $8F, $80, $00, $00, $00   // aesdec xmm1, [edi+128]
+  db $66, $0F, $38, $DE, $97, $80, $00, $00, $00   // aesdec xmm2, [edi+128]
+  db $66, $0F, $38, $DE, $9F, $80, $00, $00, $00   // aesdec xmm3, [edi+128]
   // Round 9 (disp32 = 144)
-  db $66, $0F, $38, $DE, $87, $90, $00, $00, $00
-  db $66, $0F, $38, $DE, $8F, $90, $00, $00, $00
-  db $66, $0F, $38, $DE, $97, $90, $00, $00, $00
-  db $66, $0F, $38, $DE, $9F, $90, $00, $00, $00
+  db $66, $0F, $38, $DE, $87, $90, $00, $00, $00   // aesdec xmm0, [edi+144]
+  db $66, $0F, $38, $DE, $8F, $90, $00, $00, $00   // aesdec xmm1, [edi+144]
+  db $66, $0F, $38, $DE, $97, $90, $00, $00, $00   // aesdec xmm2, [edi+144]
+  db $66, $0F, $38, $DE, $9F, $90, $00, $00, $00   // aesdec xmm3, [edi+144]
 
 {$IF DEFINED(CRYPTOLIB_AESNI_KEY192) OR DEFINED(CRYPTOLIB_AESNI_KEY256)}
   // Round 10 (disp32 = 160)
-  db $66, $0F, $38, $DE, $87, $A0, $00, $00, $00
-  db $66, $0F, $38, $DE, $8F, $A0, $00, $00, $00
-  db $66, $0F, $38, $DE, $97, $A0, $00, $00, $00
-  db $66, $0F, $38, $DE, $9F, $A0, $00, $00, $00
+  db $66, $0F, $38, $DE, $87, $A0, $00, $00, $00   // aesdec xmm0, [edi+160]
+  db $66, $0F, $38, $DE, $8F, $A0, $00, $00, $00   // aesdec xmm1, [edi+160]
+  db $66, $0F, $38, $DE, $97, $A0, $00, $00, $00   // aesdec xmm2, [edi+160]
+  db $66, $0F, $38, $DE, $9F, $A0, $00, $00, $00   // aesdec xmm3, [edi+160]
   // Round 11 (disp32 = 176)
-  db $66, $0F, $38, $DE, $87, $B0, $00, $00, $00
-  db $66, $0F, $38, $DE, $8F, $B0, $00, $00, $00
-  db $66, $0F, $38, $DE, $97, $B0, $00, $00, $00
-  db $66, $0F, $38, $DE, $9F, $B0, $00, $00, $00
+  db $66, $0F, $38, $DE, $87, $B0, $00, $00, $00   // aesdec xmm0, [edi+176]
+  db $66, $0F, $38, $DE, $8F, $B0, $00, $00, $00   // aesdec xmm1, [edi+176]
+  db $66, $0F, $38, $DE, $97, $B0, $00, $00, $00   // aesdec xmm2, [edi+176]
+  db $66, $0F, $38, $DE, $9F, $B0, $00, $00, $00   // aesdec xmm3, [edi+176]
 {$IFEND}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   // Round 12 (disp32 = 192)
-  db $66, $0F, $38, $DE, $87, $C0, $00, $00, $00
-  db $66, $0F, $38, $DE, $8F, $C0, $00, $00, $00
-  db $66, $0F, $38, $DE, $97, $C0, $00, $00, $00
-  db $66, $0F, $38, $DE, $9F, $C0, $00, $00, $00
+  db $66, $0F, $38, $DE, $87, $C0, $00, $00, $00   // aesdec xmm0, [edi+192]
+  db $66, $0F, $38, $DE, $8F, $C0, $00, $00, $00   // aesdec xmm1, [edi+192]
+  db $66, $0F, $38, $DE, $97, $C0, $00, $00, $00   // aesdec xmm2, [edi+192]
+  db $66, $0F, $38, $DE, $9F, $C0, $00, $00, $00   // aesdec xmm3, [edi+192]
   // Round 13 (disp32 = 208)
-  db $66, $0F, $38, $DE, $87, $D0, $00, $00, $00
-  db $66, $0F, $38, $DE, $8F, $D0, $00, $00, $00
-  db $66, $0F, $38, $DE, $97, $D0, $00, $00, $00
-  db $66, $0F, $38, $DE, $9F, $D0, $00, $00, $00
+  db $66, $0F, $38, $DE, $87, $D0, $00, $00, $00   // aesdec xmm0, [edi+208]
+  db $66, $0F, $38, $DE, $8F, $D0, $00, $00, $00   // aesdec xmm1, [edi+208]
+  db $66, $0F, $38, $DE, $97, $D0, $00, $00, $00   // aesdec xmm2, [edi+208]
+  db $66, $0F, $38, $DE, $9F, $D0, $00, $00, $00   // aesdec xmm3, [edi+208]
 {$ENDIF}
 
   // --- Phase 7: final round (aesdeclast). ---
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   // AES-128 final at disp32 = 160
-  db $66, $0F, $38, $DF, $87, $A0, $00, $00, $00
-  db $66, $0F, $38, $DF, $8F, $A0, $00, $00, $00
-  db $66, $0F, $38, $DF, $97, $A0, $00, $00, $00
-  db $66, $0F, $38, $DF, $9F, $A0, $00, $00, $00
+  db $66, $0F, $38, $DF, $87, $A0, $00, $00, $00   // aesdeclast xmm0, [edi+160]
+  db $66, $0F, $38, $DF, $8F, $A0, $00, $00, $00   // aesdeclast xmm1, [edi+160]
+  db $66, $0F, $38, $DF, $97, $A0, $00, $00, $00   // aesdeclast xmm2, [edi+160]
+  db $66, $0F, $38, $DF, $9F, $A0, $00, $00, $00   // aesdeclast xmm3, [edi+160]
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   // AES-192 final at disp32 = 192
-  db $66, $0F, $38, $DF, $87, $C0, $00, $00, $00
-  db $66, $0F, $38, $DF, $8F, $C0, $00, $00, $00
-  db $66, $0F, $38, $DF, $97, $C0, $00, $00, $00
-  db $66, $0F, $38, $DF, $9F, $C0, $00, $00, $00
+  db $66, $0F, $38, $DF, $87, $C0, $00, $00, $00   // aesdeclast xmm0, [edi+192]
+  db $66, $0F, $38, $DF, $8F, $C0, $00, $00, $00   // aesdeclast xmm1, [edi+192]
+  db $66, $0F, $38, $DF, $97, $C0, $00, $00, $00   // aesdeclast xmm2, [edi+192]
+  db $66, $0F, $38, $DF, $9F, $C0, $00, $00, $00   // aesdeclast xmm3, [edi+192]
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   // AES-256 final at disp32 = 224
-  db $66, $0F, $38, $DF, $87, $E0, $00, $00, $00
-  db $66, $0F, $38, $DF, $8F, $E0, $00, $00, $00
-  db $66, $0F, $38, $DF, $97, $E0, $00, $00, $00
-  db $66, $0F, $38, $DF, $9F, $E0, $00, $00, $00
+  db $66, $0F, $38, $DF, $87, $E0, $00, $00, $00   // aesdeclast xmm0, [edi+224]
+  db $66, $0F, $38, $DF, $8F, $E0, $00, $00, $00   // aesdeclast xmm1, [edi+224]
+  db $66, $0F, $38, $DF, $97, $E0, $00, $00, $00   // aesdeclast xmm2, [edi+224]
+  db $66, $0F, $38, $DF, $9F, $E0, $00, $00, $00   // aesdeclast xmm3, [edi+224]
 {$ENDIF}
 
 {$ELSE} // ====================== ENCRYPT variant ======================
 
   // Rounds 1..9 : aesenc xmm_i, [edi + 16*r]  (opcode $DC)
   // Round 1 (disp8 = 16)
-  db $66, $0F, $38, $DC, $47, $10
-  db $66, $0F, $38, $DC, $4F, $10
-  db $66, $0F, $38, $DC, $57, $10
-  db $66, $0F, $38, $DC, $5F, $10
+  db $66, $0F, $38, $DC, $47, $10                  // aesenc xmm0, [edi+16]
+  db $66, $0F, $38, $DC, $4F, $10                  // aesenc xmm1, [edi+16]
+  db $66, $0F, $38, $DC, $57, $10                  // aesenc xmm2, [edi+16]
+  db $66, $0F, $38, $DC, $5F, $10                  // aesenc xmm3, [edi+16]
   // Round 2 (disp8 = 32)
-  db $66, $0F, $38, $DC, $47, $20
-  db $66, $0F, $38, $DC, $4F, $20
-  db $66, $0F, $38, $DC, $57, $20
-  db $66, $0F, $38, $DC, $5F, $20
+  db $66, $0F, $38, $DC, $47, $20                  // aesenc xmm0, [edi+32]
+  db $66, $0F, $38, $DC, $4F, $20                  // aesenc xmm1, [edi+32]
+  db $66, $0F, $38, $DC, $57, $20                  // aesenc xmm2, [edi+32]
+  db $66, $0F, $38, $DC, $5F, $20                  // aesenc xmm3, [edi+32]
   // Round 3 (disp8 = 48)
-  db $66, $0F, $38, $DC, $47, $30
-  db $66, $0F, $38, $DC, $4F, $30
-  db $66, $0F, $38, $DC, $57, $30
-  db $66, $0F, $38, $DC, $5F, $30
+  db $66, $0F, $38, $DC, $47, $30                  // aesenc xmm0, [edi+48]
+  db $66, $0F, $38, $DC, $4F, $30                  // aesenc xmm1, [edi+48]
+  db $66, $0F, $38, $DC, $57, $30                  // aesenc xmm2, [edi+48]
+  db $66, $0F, $38, $DC, $5F, $30                  // aesenc xmm3, [edi+48]
   // Round 4 (disp8 = 64)
-  db $66, $0F, $38, $DC, $47, $40
-  db $66, $0F, $38, $DC, $4F, $40
-  db $66, $0F, $38, $DC, $57, $40
-  db $66, $0F, $38, $DC, $5F, $40
+  db $66, $0F, $38, $DC, $47, $40                  // aesenc xmm0, [edi+64]
+  db $66, $0F, $38, $DC, $4F, $40                  // aesenc xmm1, [edi+64]
+  db $66, $0F, $38, $DC, $57, $40                  // aesenc xmm2, [edi+64]
+  db $66, $0F, $38, $DC, $5F, $40                  // aesenc xmm3, [edi+64]
   // Round 5 (disp8 = 80)
-  db $66, $0F, $38, $DC, $47, $50
-  db $66, $0F, $38, $DC, $4F, $50
-  db $66, $0F, $38, $DC, $57, $50
-  db $66, $0F, $38, $DC, $5F, $50
+  db $66, $0F, $38, $DC, $47, $50                  // aesenc xmm0, [edi+80]
+  db $66, $0F, $38, $DC, $4F, $50                  // aesenc xmm1, [edi+80]
+  db $66, $0F, $38, $DC, $57, $50                  // aesenc xmm2, [edi+80]
+  db $66, $0F, $38, $DC, $5F, $50                  // aesenc xmm3, [edi+80]
   // Round 6 (disp8 = 96)
-  db $66, $0F, $38, $DC, $47, $60
-  db $66, $0F, $38, $DC, $4F, $60
-  db $66, $0F, $38, $DC, $57, $60
-  db $66, $0F, $38, $DC, $5F, $60
+  db $66, $0F, $38, $DC, $47, $60                  // aesenc xmm0, [edi+96]
+  db $66, $0F, $38, $DC, $4F, $60                  // aesenc xmm1, [edi+96]
+  db $66, $0F, $38, $DC, $57, $60                  // aesenc xmm2, [edi+96]
+  db $66, $0F, $38, $DC, $5F, $60                  // aesenc xmm3, [edi+96]
   // Round 7 (disp8 = 112)
-  db $66, $0F, $38, $DC, $47, $70
-  db $66, $0F, $38, $DC, $4F, $70
-  db $66, $0F, $38, $DC, $57, $70
-  db $66, $0F, $38, $DC, $5F, $70
+  db $66, $0F, $38, $DC, $47, $70                  // aesenc xmm0, [edi+112]
+  db $66, $0F, $38, $DC, $4F, $70                  // aesenc xmm1, [edi+112]
+  db $66, $0F, $38, $DC, $57, $70                  // aesenc xmm2, [edi+112]
+  db $66, $0F, $38, $DC, $5F, $70                  // aesenc xmm3, [edi+112]
   // Round 8 (disp32 = 128)
-  db $66, $0F, $38, $DC, $87, $80, $00, $00, $00
-  db $66, $0F, $38, $DC, $8F, $80, $00, $00, $00
-  db $66, $0F, $38, $DC, $97, $80, $00, $00, $00
-  db $66, $0F, $38, $DC, $9F, $80, $00, $00, $00
+  db $66, $0F, $38, $DC, $87, $80, $00, $00, $00   // aesenc xmm0, [edi+128]
+  db $66, $0F, $38, $DC, $8F, $80, $00, $00, $00   // aesenc xmm1, [edi+128]
+  db $66, $0F, $38, $DC, $97, $80, $00, $00, $00   // aesenc xmm2, [edi+128]
+  db $66, $0F, $38, $DC, $9F, $80, $00, $00, $00   // aesenc xmm3, [edi+128]
   // Round 9 (disp32 = 144)
-  db $66, $0F, $38, $DC, $87, $90, $00, $00, $00
-  db $66, $0F, $38, $DC, $8F, $90, $00, $00, $00
-  db $66, $0F, $38, $DC, $97, $90, $00, $00, $00
-  db $66, $0F, $38, $DC, $9F, $90, $00, $00, $00
+  db $66, $0F, $38, $DC, $87, $90, $00, $00, $00   // aesenc xmm0, [edi+144]
+  db $66, $0F, $38, $DC, $8F, $90, $00, $00, $00   // aesenc xmm1, [edi+144]
+  db $66, $0F, $38, $DC, $97, $90, $00, $00, $00   // aesenc xmm2, [edi+144]
+  db $66, $0F, $38, $DC, $9F, $90, $00, $00, $00   // aesenc xmm3, [edi+144]
 
 {$IF DEFINED(CRYPTOLIB_AESNI_KEY192) OR DEFINED(CRYPTOLIB_AESNI_KEY256)}
   // Round 10 (disp32 = 160)
-  db $66, $0F, $38, $DC, $87, $A0, $00, $00, $00
-  db $66, $0F, $38, $DC, $8F, $A0, $00, $00, $00
-  db $66, $0F, $38, $DC, $97, $A0, $00, $00, $00
-  db $66, $0F, $38, $DC, $9F, $A0, $00, $00, $00
+  db $66, $0F, $38, $DC, $87, $A0, $00, $00, $00   // aesenc xmm0, [edi+160]
+  db $66, $0F, $38, $DC, $8F, $A0, $00, $00, $00   // aesenc xmm1, [edi+160]
+  db $66, $0F, $38, $DC, $97, $A0, $00, $00, $00   // aesenc xmm2, [edi+160]
+  db $66, $0F, $38, $DC, $9F, $A0, $00, $00, $00   // aesenc xmm3, [edi+160]
   // Round 11 (disp32 = 176)
-  db $66, $0F, $38, $DC, $87, $B0, $00, $00, $00
-  db $66, $0F, $38, $DC, $8F, $B0, $00, $00, $00
-  db $66, $0F, $38, $DC, $97, $B0, $00, $00, $00
-  db $66, $0F, $38, $DC, $9F, $B0, $00, $00, $00
+  db $66, $0F, $38, $DC, $87, $B0, $00, $00, $00   // aesenc xmm0, [edi+176]
+  db $66, $0F, $38, $DC, $8F, $B0, $00, $00, $00   // aesenc xmm1, [edi+176]
+  db $66, $0F, $38, $DC, $97, $B0, $00, $00, $00   // aesenc xmm2, [edi+176]
+  db $66, $0F, $38, $DC, $9F, $B0, $00, $00, $00   // aesenc xmm3, [edi+176]
 {$IFEND}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   // Round 12 (disp32 = 192)
-  db $66, $0F, $38, $DC, $87, $C0, $00, $00, $00
-  db $66, $0F, $38, $DC, $8F, $C0, $00, $00, $00
-  db $66, $0F, $38, $DC, $97, $C0, $00, $00, $00
-  db $66, $0F, $38, $DC, $9F, $C0, $00, $00, $00
+  db $66, $0F, $38, $DC, $87, $C0, $00, $00, $00   // aesenc xmm0, [edi+192]
+  db $66, $0F, $38, $DC, $8F, $C0, $00, $00, $00   // aesenc xmm1, [edi+192]
+  db $66, $0F, $38, $DC, $97, $C0, $00, $00, $00   // aesenc xmm2, [edi+192]
+  db $66, $0F, $38, $DC, $9F, $C0, $00, $00, $00   // aesenc xmm3, [edi+192]
   // Round 13 (disp32 = 208)
-  db $66, $0F, $38, $DC, $87, $D0, $00, $00, $00
-  db $66, $0F, $38, $DC, $8F, $D0, $00, $00, $00
-  db $66, $0F, $38, $DC, $97, $D0, $00, $00, $00
-  db $66, $0F, $38, $DC, $9F, $D0, $00, $00, $00
+  db $66, $0F, $38, $DC, $87, $D0, $00, $00, $00   // aesenc xmm0, [edi+208]
+  db $66, $0F, $38, $DC, $8F, $D0, $00, $00, $00   // aesenc xmm1, [edi+208]
+  db $66, $0F, $38, $DC, $97, $D0, $00, $00, $00   // aesenc xmm2, [edi+208]
+  db $66, $0F, $38, $DC, $9F, $D0, $00, $00, $00   // aesenc xmm3, [edi+208]
 {$ENDIF}
 
   // --- Phase 7: final round (aesenclast). ---
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   // AES-128 final at disp32 = 160
-  db $66, $0F, $38, $DD, $87, $A0, $00, $00, $00
-  db $66, $0F, $38, $DD, $8F, $A0, $00, $00, $00
-  db $66, $0F, $38, $DD, $97, $A0, $00, $00, $00
-  db $66, $0F, $38, $DD, $9F, $A0, $00, $00, $00
+  db $66, $0F, $38, $DD, $87, $A0, $00, $00, $00   // aesenclast xmm0, [edi+160]
+  db $66, $0F, $38, $DD, $8F, $A0, $00, $00, $00   // aesenclast xmm1, [edi+160]
+  db $66, $0F, $38, $DD, $97, $A0, $00, $00, $00   // aesenclast xmm2, [edi+160]
+  db $66, $0F, $38, $DD, $9F, $A0, $00, $00, $00   // aesenclast xmm3, [edi+160]
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   // AES-192 final at disp32 = 192
-  db $66, $0F, $38, $DD, $87, $C0, $00, $00, $00
-  db $66, $0F, $38, $DD, $8F, $C0, $00, $00, $00
-  db $66, $0F, $38, $DD, $97, $C0, $00, $00, $00
-  db $66, $0F, $38, $DD, $9F, $C0, $00, $00, $00
+  db $66, $0F, $38, $DD, $87, $C0, $00, $00, $00   // aesenclast xmm0, [edi+192]
+  db $66, $0F, $38, $DD, $8F, $C0, $00, $00, $00   // aesenclast xmm1, [edi+192]
+  db $66, $0F, $38, $DD, $97, $C0, $00, $00, $00   // aesenclast xmm2, [edi+192]
+  db $66, $0F, $38, $DD, $9F, $C0, $00, $00, $00   // aesenclast xmm3, [edi+192]
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   // AES-256 final at disp32 = 224
-  db $66, $0F, $38, $DD, $87, $E0, $00, $00, $00
-  db $66, $0F, $38, $DD, $8F, $E0, $00, $00, $00
-  db $66, $0F, $38, $DD, $97, $E0, $00, $00, $00
-  db $66, $0F, $38, $DD, $9F, $E0, $00, $00, $00
+  db $66, $0F, $38, $DD, $87, $E0, $00, $00, $00   // aesenclast xmm0, [edi+224]
+  db $66, $0F, $38, $DD, $8F, $E0, $00, $00, $00   // aesenclast xmm1, [edi+224]
+  db $66, $0F, $38, $DD, $97, $E0, $00, $00, $00   // aesenclast xmm2, [edi+224]
+  db $66, $0F, $38, $DD, $9F, $E0, $00, $00, $00   // aesenclast xmm3, [edi+224]
 {$ENDIF}
 
 {$ENDIF} // CRYPTOLIB_AESNI_DECRYPT
@@ -460,3 +460,4 @@
   pop       esi
   pop       edi
   pop       ebx
+

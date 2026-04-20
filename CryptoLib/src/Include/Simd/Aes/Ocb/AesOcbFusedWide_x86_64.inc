@@ -210,43 +210,43 @@
   movzx     eax, byte [r11 + 1]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $10              // movdqa [rsp+16], xmm8
   // Block 2
   movzx     eax, byte [r11 + 2]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $20              // movdqa [rsp+32], xmm8
   // Block 3
   movzx     eax, byte [r11 + 3]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $30              // movdqa [rsp+48], xmm8
   // Block 4
   movzx     eax, byte [r11 + 4]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $40              // movdqa [rsp+64], xmm8
   // Block 5
   movzx     eax, byte [r11 + 5]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $50              // movdqa [rsp+80], xmm8
   // Block 6
   movzx     eax, byte [r11 + 6]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $60              // movdqa [rsp+96], xmm8
   // Block 7
   movzx     eax, byte [r11 + 7]
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
-  db $66, $45, $0F, $EF, $C3
+  db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $70              // movdqa [rsp+112], xmm8
 
 {$IFNDEF CRYPTOLIB_AESNI_DECRYPT}
@@ -312,149 +312,149 @@
   db $66, $41, $0F, $38, $DE, $FA                   // aesdec xmm7, xmm10
   // Round 2
   movdqa    xmm10, [rdx + 32]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 3
   movdqa    xmm10, [rdx + 48]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 4
   movdqa    xmm10, [rdx + 64]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 5
   movdqa    xmm10, [rdx + 80]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 6
   movdqa    xmm10, [rdx + 96]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 7
   movdqa    xmm10, [rdx + 112]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 8
   movdqa    xmm10, [rdx + 128]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 9
   movdqa    xmm10, [rdx + 144]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
 
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   // Round 10
   movdqa    xmm10, [rdx + 160]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 11
   movdqa    xmm10, [rdx + 176]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
 {$ENDIF}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   // Round 10
   movdqa    xmm10, [rdx + 160]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 11
   movdqa    xmm10, [rdx + 176]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 12
   movdqa    xmm10, [rdx + 192]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
   // Round 13
   movdqa    xmm10, [rdx + 208]
-  db $66, $41, $0F, $38, $DE, $C2
-  db $66, $41, $0F, $38, $DE, $CA
-  db $66, $41, $0F, $38, $DE, $D2
-  db $66, $41, $0F, $38, $DE, $DA
-  db $66, $41, $0F, $38, $DE, $E2
-  db $66, $41, $0F, $38, $DE, $EA
-  db $66, $41, $0F, $38, $DE, $F2
-  db $66, $41, $0F, $38, $DE, $FA
+  db $66, $41, $0F, $38, $DE, $C2                  // aesdec xmm0, xmm10
+  db $66, $41, $0F, $38, $DE, $CA                  // aesdec xmm1, xmm10
+  db $66, $41, $0F, $38, $DE, $D2                  // aesdec xmm2, xmm10
+  db $66, $41, $0F, $38, $DE, $DA                  // aesdec xmm3, xmm10
+  db $66, $41, $0F, $38, $DE, $E2                  // aesdec xmm4, xmm10
+  db $66, $41, $0F, $38, $DE, $EA                  // aesdec xmm5, xmm10
+  db $66, $41, $0F, $38, $DE, $F2                  // aesdec xmm6, xmm10
+  db $66, $41, $0F, $38, $DE, $FA                  // aesdec xmm7, xmm10
 {$ENDIF}
 
   // --- Phase 7: final round. Opcode $DF = aesdeclast. ---
@@ -481,158 +481,158 @@
   // Round 1
   movdqa    xmm10, [rdx + 16]
   db $66, $41, $0F, $38, $DC, $C2                   // aesenc xmm0, xmm10
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 2
   movdqa    xmm10, [rdx + 32]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 3
   movdqa    xmm10, [rdx + 48]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 4
   movdqa    xmm10, [rdx + 64]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 5
   movdqa    xmm10, [rdx + 80]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 6
   movdqa    xmm10, [rdx + 96]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 7
   movdqa    xmm10, [rdx + 112]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 8
   movdqa    xmm10, [rdx + 128]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 9
   movdqa    xmm10, [rdx + 144]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
 
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   // Round 10
   movdqa    xmm10, [rdx + 160]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 11
   movdqa    xmm10, [rdx + 176]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
 {$ENDIF}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   // Round 10
   movdqa    xmm10, [rdx + 160]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 11
   movdqa    xmm10, [rdx + 176]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 12
   movdqa    xmm10, [rdx + 192]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
   // Round 13
   movdqa    xmm10, [rdx + 208]
-  db $66, $41, $0F, $38, $DC, $C2
-  db $66, $41, $0F, $38, $DC, $CA
-  db $66, $41, $0F, $38, $DC, $D2
-  db $66, $41, $0F, $38, $DC, $DA
-  db $66, $41, $0F, $38, $DC, $E2
-  db $66, $41, $0F, $38, $DC, $EA
-  db $66, $41, $0F, $38, $DC, $F2
-  db $66, $41, $0F, $38, $DC, $FA
+  db $66, $41, $0F, $38, $DC, $C2                  // aesenc xmm0, xmm10
+  db $66, $41, $0F, $38, $DC, $CA                  // aesenc xmm1, xmm10
+  db $66, $41, $0F, $38, $DC, $D2                  // aesenc xmm2, xmm10
+  db $66, $41, $0F, $38, $DC, $DA                  // aesenc xmm3, xmm10
+  db $66, $41, $0F, $38, $DC, $E2                  // aesenc xmm4, xmm10
+  db $66, $41, $0F, $38, $DC, $EA                  // aesenc xmm5, xmm10
+  db $66, $41, $0F, $38, $DC, $F2                  // aesenc xmm6, xmm10
+  db $66, $41, $0F, $38, $DC, $FA                  // aesenc xmm7, xmm10
 {$ENDIF}
 
   // --- Phase 7: final round. Opcode $DD = aesenclast. ---
@@ -707,3 +707,4 @@
 
   add       rsp, 128
   pop       rbx
+
