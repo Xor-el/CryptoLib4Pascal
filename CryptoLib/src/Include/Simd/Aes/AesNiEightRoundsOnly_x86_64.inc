@@ -1,4 +1,4 @@
-// AesNiEightRoundsOnly x86_64 (reusable 8-wide AES-NI round chain)
+// AES-NI 8-wide round chain, reusable kernel, merged Enc + Dec, merged key sizes (x86-64).
 // -----------------------------------------------------------------
 // Consumed by the in-place / out-of-place AES-NI aggregators (this
 // file's original parent AesNiEightCipher[InOut]_x86_64.inc) AND by

@@ -47,7 +47,7 @@
 //   xmm14       : pclmul scratch destination (reused every product)
 //   xmm15       : byte-reverse mask (held for the entire kernel)
 //
-// GPR usage (all MS x64 / SysV-volatile regs; no non-volatile saves needed):
+// GPR usage (all MS x64 / Unix-volatile regs; no non-volatile saves needed):
 //   rcx : PCtx (preserved across the whole kernel)
 //   rax : scratch (pointer loads / byte-reverse state fold)
 //   rdx : PRoundKeys (during AES phase), then POut (post-AES)

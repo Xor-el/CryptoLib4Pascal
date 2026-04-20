@@ -1,5 +1,4 @@
-// AesNiEightCipher x86_64 aggregator (in-place, merged Enc + Dec,
-// merged key sizes).
+// AES-NI 8-wide cipher aggregator, in-place, merged Enc + Dec, merged key sizes (x86-64).
 // -------------------------------------------------------------------
 // Thin wrapper over AesNiEightRoundsOnly_x86_64.inc. This file is
 // included from procedures prologue'd by SimdProc2Begin_x86_64.inc, so
@@ -8,7 +7,7 @@
 //   rdx = keys  pointer (expanded round-key schedule)
 // The rounds-only include expects the keys pointer in r8 (its canonical
 // register, shared with every fused AEAD kernel in Phase 1-4). r8 is a
-// volatile scratch on both Win64 and Linux SysV, so a single `mov r8, rdx`
+// volatile scratch on both Win64 and Unix, so a single `mov r8, rdx`
 // is enough -- no push/pop needed.
 // Direction is selected by CRYPTOLIB_AESNI_DECRYPT; key size by exactly
 // one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256. Both defines are

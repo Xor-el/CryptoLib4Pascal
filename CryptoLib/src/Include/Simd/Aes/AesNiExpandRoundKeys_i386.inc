@@ -1,6 +1,18 @@
-// AesNiExpandRoundKeys i386 (merged key sizes)
-// Define exactly one of: CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256
-// before including this file (see ClpAesEngineX86).
+// AES-NI key-expansion kernel, merged key sizes (i386).
+// Expands a single user key into N_R + 1 round keys, each 16 bytes, using
+// aeskeygenassist + pshufd + pxor / pslldq per the standard AES-128 / 192 / 256
+// schedules. N_R = 10 / 12 / 14 rounds, producing 11 / 13 / 15 round keys.
+//
+// Variant selection:
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects the
+//   schedule width (see ClpAesEngineX86 for the allocation site).
+//
+// Entry (after SimdProc2Begin_i386): ebx = user key (16 / 24 / 32 bytes),
+// esi = KeysOut (16 * (N_R + 1) bytes).
+// Saves edi and ebx on the stack; uses 48 bytes of scratch at
+// esp + 0 / +16 / +32 (Ls1 / Lt1 / Lw).
+// Uses xmm0..xmm2 (scratch).
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
 // AES-128 encryption round-key expansion, i386.

@@ -1,5 +1,4 @@
-// AesNiEightCipher i386 aggregator (in-place, merged Enc + Dec,
-// merged key sizes).
+// AES-NI 8-wide cipher aggregator, in-place, merged Enc + Dec, merged key sizes (i386).
 // -------------------------------------------------------------------
 // Thin wrapper over AesNiEightRoundsOnly_i386.inc. This file is
 // included from procedures prologue'd by SimdProc2Begin_i386.inc, so

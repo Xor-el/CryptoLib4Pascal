@@ -1,5 +1,4 @@
-// AesNiEightCipherInOut x86_64 aggregator (out-of-place, merged Enc +
-// Dec, merged key sizes).
+// AES-NI 8-wide cipher aggregator, out-of-place, merged Enc + Dec, merged key sizes (x86-64).
 // -------------------------------------------------------------------
 // Thin wrapper over AesNiEightRoundsOnly_x86_64.inc. This file is
 // included from procedures prologue'd by SimdProc3Begin_x86_64.inc,

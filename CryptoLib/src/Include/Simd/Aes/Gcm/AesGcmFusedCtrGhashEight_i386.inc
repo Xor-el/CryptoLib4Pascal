@@ -1,22 +1,28 @@
 // Fused AES-NI CTR keystream + 8-way GHASH kernel (i386).
 //
-// i386 sibling to AesGcmFusedCtrGhashEight_x86_64.inc. Algorithm identity is
-// byte-for-byte the same: AES-CTR keystream over 8 counter blocks XORed
-// with PXorIn (plaintext on GCM encrypt, ciphertext on GCM decrypt) to
-// produce POut, CONCURRENTLY with GHASHing the PREVIOUS batch's 8
-// ciphertext blocks into the running authentication state. The kernel
-// never branches on encrypt vs decrypt; the Pascal wrapper supplies the
-// correct PXorIn / POut / PPrevCipher triple.
+// Processes one pipelined batch: AES encrypts eight counter blocks to produce
+// a keystream, XORs it with PXorIn (plaintext on GCM encrypt, ciphertext on
+// GCM decrypt) to produce the current batch's POut, and CONCURRENTLY GHASHes
+// the PREVIOUS batch's 8 ciphertext blocks into the running authentication
+// state. AES inside GCM is always CTR keystream construction regardless of
+// GCM direction -- nothing in the kernel branches on encrypt vs decrypt; the
+// Pascal wrapper just picks which buffers become PXorIn / POut / PPrevCipher.
 //
-// i386 register budget is exactly half of x86_64 (xmm0..xmm7, 6 usable
-// GPRs) so the x86_64 "8-wide single-pass with per-round GHASH interleave"
-// does not fit. This kernel preserves the AES-port / PCLMUL-port
-// concurrency by processing the 8-block batch in TWO back-to-back 4-block
-// halves sharing the same running Z0/Z1/Z2 accumulators. Each half runs
-// one full AES encrypt chain (4 lanes) plus 4 GHASH iters packed into AES
-// rounds 1..4 so both execution ports stay busy during the GHASH phase;
-// rounds 5..Nr-1 are AES-only. The final 3-limb reduction runs exactly
-// once after half 2.
+// This is a Gueron-style interleaved kernel (Shay Gueron, "Intel AES New
+// Instructions" Rev 3.01): aesenc instructions (which run on port 0 on
+// Skylake+/Zen+) are issued alternating with pclmulqdq instructions (which
+// run on port 5) so the two execution ports operate in parallel, hiding
+// most of the GHASH latency inside the AES critical path.
+//
+// The i386 register budget is exactly half of the 64-bit one (xmm0..xmm7
+// and 6 usable GPRs), so a single-pass "8-wide with per-round GHASH
+// interleave" layout does not fit. This kernel preserves the AES-port /
+// PCLMUL-port concurrency by processing the 8-block batch in TWO
+// back-to-back 4-block halves that share the same running Z0/Z1/Z2
+// accumulators. Each half runs one full AES encrypt chain (4 lanes) plus
+// 4 GHASH iters packed into AES rounds 1..4 so both execution ports stay
+// busy during the GHASH phase; rounds 5..Nr - 1 are AES-only. The final
+// 3-limb reduction runs exactly once after half 2.
 //
 // Variant selection (set EXACTLY ONE of these defines before {$I}-including):
 //   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (10 rounds, schedule = 11 x 16 bytes)

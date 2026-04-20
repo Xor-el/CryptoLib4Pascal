@@ -1,6 +1,15 @@
-// CPUID: leaf in eax, subleaf in edx, TCpuIdResult pointer in ecx (i386 register convention).
-// Preserves ebx; esi holds the result pointer while CPUID runs.
-// x86-64: MS ABI ecx=leaf, edx=subleaf, r8=result; preserves rbx. FPC Unix: rdi, rsi, rdx remapped.
+// CPUID query helper (i386 + x86-64).
+// Issues `cpuid` with the caller-supplied leaf / subleaf and writes the
+// returned eax, ebx, ecx, edx quad into a TCpuIdResult record at the
+// supplied pointer.
+//
+// Entry contract (register convention varies by ABI):
+//   i386:             eax = leaf, edx = subleaf, ecx = @TCpuIdResult.
+//   x86-64 MS ABI:    ecx = leaf, edx = subleaf, r8 = @TCpuIdResult.
+//   x86-64 FPC Unix:  rdi = leaf, rsi = subleaf, rdx = @TCpuIdResult
+//                     (remapped internally to eax, ecx, r8).
+// Preserves ebx / rbx around `cpuid` (required by all supported ABIs); on
+// i386 also preserves esi (used to hold the result pointer during `cpuid`).
 {$IFDEF FPC}
   assembler; nostackframe;
 {$ENDIF}

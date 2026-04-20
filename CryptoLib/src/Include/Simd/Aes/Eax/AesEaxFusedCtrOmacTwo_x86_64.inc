@@ -85,7 +85,7 @@
 //                 C_{i+1}. On decrypt xmm8 is transient per-iteration.
 //                 Always db-encoded for Delphi-assembler compatibility.
 //
-// GPR usage (all MS x64 / SysV-volatile; no non-volatile saves needed):
+// GPR usage (all MS x64 / Unix-volatile; no non-volatile saves needed):
 //   rcx : PCtx (preserved across the kernel)
 //   rax : InPtr (advancing; +16 in tail, +32 in pair)
 //   rdx : OutPtr (advancing)

@@ -7,14 +7,38 @@
 //
 // 4 is the widest fused lane count reachable on i386 once the OCB
 // bookkeeping (offset accumulator + checksum accumulator) moves into
-// the kernel and lives across the batch. The x86_64 companion
-// (AesOcbFusedWide_x86_64.inc) is 8-wide; mode-level batch sizing is LCM
-// of the two so either kernel can consume a full aligned batch.
+// the kernel and lives across the batch. The 8-xmm budget is exhausted
+// by 4 data lanes + xmm_offset + xmm_checksum + scratch; memory-form
+// aesenc / aesdec is therefore used throughout (round keys are aligned
+// so [edi + disp] operands are safe) and no spare xmm can hold a
+// cached round key across the batch.
 //
-// Algorithm identity matches the x86_64 variant (see that file for
-// prose); the only difference is lane count and that i386 uses
-// memory-form aesenc/aesdec since round keys are aligned and we have
-// no spare xmm to keep one live.
+// This kernel owns the OCB bookkeeping across the whole batch. On entry
+// it loads xmm_offset from OffsetPtr and xmm_checksum from ChecksumPtr;
+// inside the loop it walks a pre-computed byte array of ntz values,
+// loads L-table entries, XORs them into xmm_offset to produce each
+// per-block Delta, and folds plaintext into xmm_checksum. On exit it
+// writes xmm_offset and xmm_checksum back to memory. The mode layer
+// therefore never touches any per-block OCB state for the batch.
+//
+// Algorithm identity (AES-256 shape; same for 128/192 with fewer rounds):
+//   // entry-only, once per batch
+//   xmm_offset   <- [OffsetPtr]           // FOffsetMAIN
+//   xmm_checksum <- [ChecksumPtr]         // FChecksum
+//
+//   // per block i in 0..BlockCount-1:
+//   xmm_offset  ^= L[NtzPtr[i]]           // offset ladder step
+//   delta_i      = xmm_offset             // current Delta value
+//   if encrypt: xmm_checksum ^= P_i       // fold plaintext pre-AES
+//   state        = P_i ^ delta_i ^ K_0
+//   state        = aesenc^(N-1)(state)
+//   state        = aesenclast(state, K_N)
+//   C_i          = state ^ delta_i
+//   if decrypt: xmm_checksum ^= P_i       // fold recovered plaintext
+//
+//   // exit-only, once per batch
+//   [OffsetPtr]    <- xmm_offset
+//   [ChecksumPtr]  <- xmm_checksum
 //
 // On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
 //

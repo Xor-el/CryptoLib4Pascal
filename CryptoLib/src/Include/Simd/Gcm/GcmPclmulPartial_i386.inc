@@ -1,6 +1,12 @@
-// GHASH field multiply: partial 256-bit carryless product (i386).
-// After SimdProc3Begin_i386.inc: ebx = @X, esi = @Y, edi = @TGcmPartial128 output.
-// Epilogue: pop edi, esi, ebx (matches SimdProc3Begin pushes).
+// SSE2 + PCLMULQDQ GHASH field multiply, partial carryless product (i386).
+// Produces the 256-bit Karatsuba partial product (Z0, Z1, Z2) for two GHASH
+// field elements before degree reduction.
+// After SimdProc3Begin_i386: ebx = @X (TFieldElement), esi = @Y,
+// edi = @TGcmPartial128 output.
+// X.N0, X.N1 and Y.N0, Y.N1 are UInt64 GHASH field limbs (TFieldElement).
+// Pack each limb into xmm as high qword then low (movq + punpcklqdq);
+// little-endian 128-bit layout.
+// Epilogue: pop edi, esi, ebx (matches SimdProc3Begin_i386 pushes).
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
   movq      xmm0, qword ptr [ebx + 8]

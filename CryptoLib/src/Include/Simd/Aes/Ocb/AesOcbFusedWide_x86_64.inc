@@ -91,7 +91,7 @@
 //         Phase 2 (input load) now runs BEFORE Phase 1 and consumes
 //         the block-0 pointer while it is still live.
 //   rbx : InPtr (advancing; +128 per iter). Callee-save on both MS x64
-//         and SysV -> pushed at prologue, popped at epilogue.
+//         and Unix -> pushed at prologue, popped at epilogue.
 //   rcx : PCtx. Kept alive so the epilogue can dereference
 //         OffsetPtr / ChecksumPtr without a second stash.
 //   rdx : Keys base (pinned; rdx + 16*r is the round-key address).

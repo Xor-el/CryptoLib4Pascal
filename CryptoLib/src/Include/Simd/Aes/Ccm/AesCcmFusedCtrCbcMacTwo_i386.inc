@@ -1,10 +1,25 @@
 // CCM fused AES-NI CTR+CBC-MAC kernel (i386).
 // -------------------------------------------------------------------
-// 32-bit sibling of AesCcmFusedCtrCbcMacTwo_x86_64.inc. See that file for
-// the full rationale (two-lane AES-NI pipelining, counter hoist, 2x
-// unroll). The algorithm, context layout (field-for-field), and
-// semantics are identical; only the pointer width, register budget
-// (xmm0..xmm7), and 2x-unroll scope differ.
+// Inspired by OpenSSL aesni_ccm64_{encrypt,decrypt}_blocks
+// (crypto/aes/asm/aesni-x86_64.pl, Andy Polyakov / @dot-asm).
+// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01.
+//
+// Two lanes (CTR / MAC) share each round-key broadcast. Issuing a
+// second aesenc on the same round key uses the pipeline slot that
+// would otherwise idle (aesenc on modern Intel/Zen: ~4c latency,
+// 1/cycle throughput). That is the structural source of the CCM
+// speed-up. Going wider than 2 lanes cannot beat the CBC-MAC serial
+// chain (M_i depends on M_{i-1} via aesenclast): CCM is MAC-bound.
+//
+// This i386 path carries the full algorithm and context layout of the
+// kernel (field-for-field identical to the 64-bit layout, modulo
+// pointer width) with the following adaptations dictated by the
+// 32-bit register budget:
+//   * 8 xmm registers instead of 16 (xmm0..xmm7 only).
+//   * No r8..r15 / rbp spill room -> callee-saved esi / edi pushed
+//     alongside ebx and the prologue loads PCtx once into ebx.
+//   * 2x unroll is applied to encrypt only; see the "Phase-2
+//     optimisations" section below for the trade-off on decrypt.
 //
 // Pointer-width differences (32-bit field offsets):
 //   [ebx +  0]  InPtr

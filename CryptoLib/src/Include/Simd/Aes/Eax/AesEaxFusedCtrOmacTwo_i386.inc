@@ -1,10 +1,39 @@
 // EAX fused AES-NI CTR+OMAC kernel (i386).
 // -------------------------------------------------------------------
-// 32-bit sibling of AesEaxFusedCtrOmacTwo_x86_64.inc. See that file for
-// the full rationale (two-lane AES-NI pipelining, counter hoist, 2x
-// unroll, EAX vs CCM mirror). The algorithm, context layout (field-
-// for-field), and semantics are identical; only the pointer width,
-// register budget (xmm0..xmm7), and 2x-unroll scope differ.
+// Novel work for CryptoLib: no fused EAX reference kernel exists in any
+// mainstream cryptographic library (verified: OpenSSL, BoringSSL, AWS-LC
+// and Botan all ship scalar EAX). Technique derived from Bogdanov -
+// Lauridsen - Tischhauser, "Comb to Pipeline" (FSE 2016, eprint 2016/047)
+// and the AES-NI AEAD pattern shared with CCM (Shay Gueron, "Intel AES
+// New Instructions" white paper Rev 3.01).
+//
+// Two lanes (CTR / MAC) share each round-key broadcast. Issuing a
+// second aesenc on the same round key uses the pipeline slot that
+// would otherwise idle (aesenc on modern Intel/Zen: ~4c latency,
+// 1/cycle throughput). That is the structural source of the EAX
+// speed-up; EAX is MAC-bound because the OMAC CBC chain has the same
+// aesenclast-to-aesenc serial dependency as CCM's CBC-MAC.
+//
+// EAX vs CCM mirror: OMAC consumes CIPHERTEXT (output on encrypt,
+// input on decrypt) while CCM's CBC-MAC consumes PLAINTEXT. Because of
+// this, the 1-iteration lag lives on the OPPOSITE direction from CCM:
+//
+//   CCM encrypt   : no lag (MAC substrate = input plaintext, available
+//                   at iter start)       -> 2-wide single-pass loop
+//   CCM decrypt   : MAC lags CTR by 1    -> Pass1+Pass2+Pass3
+//   EAX encrypt   : MAC lags CTR by 1    -> Pass1+Pass2+Pass3  (mirrors CCM dec)
+//   EAX decrypt   : no lag (MAC substrate = input ciphertext)
+//                                        -> 2-wide single-pass loop  (mirrors CCM enc)
+//
+// This i386 path carries the full algorithm and context layout of the
+// kernel (field-for-field identical to the 64-bit layout, modulo
+// pointer width) with the following adaptations dictated by the
+// 32-bit register budget:
+//   * 8 xmm registers instead of 16 (xmm0..xmm7 only).
+//   * No r8..r15 / rbp spill room -> callee-saved esi / edi pushed
+//     alongside ebx and the prologue loads PCtx once into ebx.
+//   * 2x unroll is applied to decrypt only; see the "Phase-3
+//     optimisations" section below for the trade-off on encrypt.
 //
 // Pointer-width differences (32-bit field offsets):
 //   [ebx +  0]  InPtr

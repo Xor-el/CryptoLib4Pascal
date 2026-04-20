@@ -1,4 +1,4 @@
-// POLYVAL Horner-by-8 body (RFC 8452 section 3 / section 6), x86-64.
+// SSE2 + PCLMULQDQ POLYVAL Horner-by-8 body, RFC 8452 section 3 / section 6 (x86-64).
 //
 // Implementation: RFC 8452 Appendix A identity
 //

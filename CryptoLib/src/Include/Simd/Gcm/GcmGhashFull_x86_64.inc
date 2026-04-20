@@ -1,4 +1,4 @@
-// Fused full N-way GHASH batch kernel (x86-64).
+// SSE2 + PCLMULQDQ fused full N-way GHASH batch kernel (x86-64).
 // One monolithic ASM body that handles either a 4-block (64-byte) or 8-block
 // (128-byte) GHASH batch, selected by the caller via exactly one of the
 // mutually-exclusive defines GCM_GHASH_FULL_BLOCKS_4 / GCM_GHASH_FULL_BLOCKS_8.
