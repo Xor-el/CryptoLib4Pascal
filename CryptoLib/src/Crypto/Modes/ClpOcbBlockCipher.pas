@@ -28,11 +28,7 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedOcbKernel,
   ClpFusedKernelRegistry,
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  // Link the built-in AES-NI OCB accelerator so its initialization
-  // section registers with TFusedKernelRegistry.
-  ClpAesNiOcbKernel,
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpIOcbBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,

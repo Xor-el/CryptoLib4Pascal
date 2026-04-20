@@ -36,11 +36,7 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedEaxKernel,
   ClpFusedKernelRegistry,
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  // Link the built-in AES-NI EAX accelerator so its initialization
-  // section registers with TFusedKernelRegistry.
-  ClpAesNiEaxKernel,
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
   ClpCMac,
   ClpIMac,

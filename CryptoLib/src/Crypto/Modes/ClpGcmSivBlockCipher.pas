@@ -40,11 +40,7 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedGcmSivKernel,
   ClpFusedKernelRegistry,
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  // Link the built-in PCLMULQDQ GCM-SIV accelerator so its initialization
-  // section registers with TFusedKernelRegistry.
-  ClpPclmulGcmSivKernel,
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpKeyParameter,
   ClpAesUtilities,
   ClpInt64Utilities,

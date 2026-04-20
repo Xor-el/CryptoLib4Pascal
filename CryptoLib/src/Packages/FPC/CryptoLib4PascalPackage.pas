@@ -218,11 +218,11 @@ uses
   ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
   ClpDarwinSysCtl, ClpIBulkBlockCipherMode, ClpIBulkBlockCipher, 
   ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities, 
-  ClpGcmSivUtilities, ClpFusedKernelTypes, 
-  ClpIFusedGcmKernel, ClpIFusedOcbKernel, ClpIFusedCcmKernel, 
-  ClpIFusedEaxKernel, ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, 
-  ClpAesNiAeadResolver, ClpAesNiOcbKernel, ClpAesNiCcmKernel, 
-  ClpAesNiEaxKernel, ClpAesNiGcmKernel, ClpPclmulGcmSivKernel;
+  ClpGcmSivUtilities, ClpFusedKernelTypes, ClpIFusedGcmKernel, 
+  ClpIFusedOcbKernel, ClpIFusedCcmKernel, ClpIFusedEaxKernel, 
+  ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesNiAeadResolver, 
+  ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
+  ClpPclmulGcmSivKernel, ClpFusedKernelDefaults;
 
 implementation
 

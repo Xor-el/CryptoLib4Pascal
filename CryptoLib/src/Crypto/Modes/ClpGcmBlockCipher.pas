@@ -41,11 +41,7 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedGcmKernel,
   ClpFusedKernelRegistry,
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  // Link the built-in AES-NI GCM accelerator so its initialization
-  // section registers with TFusedKernelRegistry.
-  ClpAesNiGcmKernel,
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpPack,
   ClpCheck,
   ClpBasicGcmMultiplier,
@@ -191,28 +187,30 @@ type
     procedure ProcessBlocks8Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32; AForEncrypt: Boolean);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
     // =====================================================================
-    // Gueron-style fused AES-NI + 8-way GHASH pipeline (x86-64 only).
+    // Fused AES-NI + 8-way GHASH pipeline (x86-64 and i386).
     // =====================================================================
-    // The FusedILP path below is intentionally x86-64-only. The underlying
-    // Gueron-style kernel keeps 15 of 16 XMM registers simultaneously live
-    // (8 AES state + 3 GHASH accumulators + 1 round key + 1 GHASH block +
-    // 1 H-power + 1 PCLMUL scratch + 1 byte-reverse mask). i386 legacy SSE
-    // only exposes xmm0..xmm7, so a direct port would require continuous
-    // memory spills between every AES round and every GHASH iteration,
-    // which destroys the port-0 / port-5 ILP overlap that motivates this
-    // kernel. The i386 build instead uses the standalone monolithic 8-way
-    // GHASH assembly kernel (TGcmUtilities.FusedEightShuffledGhash) driven
-    // from the regular 8-wide AES pipeline -- AES and GHASH run
-    // back-to-back per batch rather than interleaved, which is the
-    // practical ceiling under the 8-XMM register budget.
+    // This outer driver is arch-agnostic: pure Pascal batch orchestration
+    // plus one call into an IFusedGcmKernel per 8-block stride. The
+    // underlying assembly kernel has two variants keyed on register
+    // budget:
+    //   * x86-64: Gueron-style single-pass 8-wide interleave that keeps
+    //     15 of 16 XMM registers simultaneously live (8 AES state +
+    //     3 GHASH accumulators + 1 round key + 1 GHASH block +
+    //     1 H-power + 1 PCLMUL scratch + 1 byte-reverse mask).
+    //   * i386: two back-to-back 4-wide halves sharing running Z0/Z1/Z2
+    //     accumulators, sized to fit in xmm0..xmm7. AES rounds 1..4 in
+    //     each half carry the 4 pclmul iters so port-0 / port-5 ILP
+    //     overlap is preserved within the 8-register budget.
+    // Both variants expose the same IFusedGcmKernel surface so this
+    // driver only sees the kernel interface.
     /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-AES form). Used by the FusedILP pipeline where AES is performed inside the fused assembly kernel.</summary>
     procedure FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
     /// <summary>
-    /// Pipelined GCM path driven by FGcmKernel (x86-64). Active when a
-    /// fused CTR+GHASH kernel was acquired at Init; otherwise the caller
-    /// falls back to ProcessBlocks8Pipelined. AForEncrypt selects
+    /// Pipelined GCM path driven by FGcmKernel (x86-64 and i386). Active
+    /// when a fused CTR+GHASH kernel was acquired at Init; otherwise the
+    /// caller falls back to ProcessBlocks8Pipelined. AForEncrypt selects
     /// direction: encrypt GHASHes the prior iteration's OUTPUT
     /// ciphertext, decrypt GHASHes the prior iteration's INPUT
     /// ciphertext. For encrypt pass ALimit=0; for decrypt pass the
@@ -221,7 +219,7 @@ type
     procedure ProcessBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32; AForEncrypt: Boolean);
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
     // ---------------------------------------------------------------------
     // Cipher-state setup / per-call initialization.
@@ -1222,9 +1220,10 @@ end;
 // plaintext / ciphertext per iteration. The "fused" variants run AES
 // counter-keystream generation then GHASH back-to-back. The
 // "pipelined" variants overlap current-batch AES with previous-batch
-// GHASH to reclaim port-0 / port-5 ILP. The x86-64-only FusedILP
-// variant (further below, under CRYPTOLIB_X86_64_ASM) interleaves
-// both at the instruction level inside a single assembly kernel.
+// GHASH to reclaim port-0 / port-5 ILP. The FusedILP variant (further
+// below, under CRYPTOLIB_X86_SIMD) pushes this further by interleaving
+// both at the instruction level inside a single assembly kernel,
+// selected per arch (Gueron 8-wide on x86-64, 2x4-wide halves on i386).
 // AForEncrypt selects which buffer feeds GHASH: output ciphertext on
 // encrypt, input ciphertext on decrypt.
 // =======================================================================
@@ -1482,11 +1481,14 @@ begin
   System.Move(ACounter[0], ABlocks[112], 16);
 end;
 
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
 // =======================================================================
-// Gueron-style fused AES-NI + 8-way GHASH pipeline (x86-64 only).
-// Register-budget rationale (why this path excludes i386) is documented
-// on the matching banner in the class declaration.
+// Fused AES-NI + 8-way GHASH pipeline (x86-64 and i386).
+// The driver is arch-agnostic: it drives the outer 8-block stride loop
+// and delegates the fused work to whichever IFusedGcmKernel variant the
+// registry resolved (Gueron 8-wide on x86-64, 2x4-wide halves on i386).
+// Register-budget rationale for each variant lives on the matching
+// banner in the class declaration.
 // =======================================================================
 
 procedure TGcmBlockCipher.FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
@@ -1494,7 +1496,7 @@ begin
   FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
 end;
 
-// Gueron-style fused AES-NI keystream + 8-way GHASH pipeline (x86-64). The
+// Fused AES-NI keystream + 8-way GHASH pipeline (x86-64 and i386). The
 // AES engine is always in encrypt mode (CTR keystream) regardless of GCM
 // direction. AForEncrypt selects the per-direction bookkeeping only:
 //   * encrypt: GHASH consumes the prior iteration's OUTPUT ciphertext.
@@ -1589,7 +1591,7 @@ begin
   AOutOff := AOutOff + (BlockSize * 8);
   ALen := ALen - (BlockSize * 8);
 end;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 // =======================================================================
 // Batch dispatchers: route each N-block call to the fastest available
@@ -1632,8 +1634,13 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
   if ALen >= BlockSize * 16 then
   begin
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-    if FGcmKernel <> nil then
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // FusedILP is worthwhile only when the inner loop actually
+    // iterates: prime batch + >=1 kernel iter + tail batch = 3 strides
+    // of 128 B. Below that the fused asm is bypassed (prime + tail
+    // only) and the driver's entry cost regresses small payloads,
+    // notably on i386 where register pressure amplifies the overhead.
+    if (FGcmKernel <> nil) and (ALen >= BlockSize * 24) then
       ProcessBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, 0, True);
 {$ENDIF}
     if ALen >= BlockSize * 16 then
@@ -1763,8 +1770,10 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
   if ALen >= ALimit + (BlockSize * 8) * 2 then
   begin
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-    if FGcmKernel <> nil then
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // See EncryptBlocks8: require prime + >=1 kernel iter + tail
+    // (3 strides of 128 B above ALimit) before entering FusedILP.
+    if (FGcmKernel <> nil) and (ALen >= ALimit + (BlockSize * 8) * 3) then
       ProcessBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit, False);
 {$ENDIF}
     if ALen >= ALimit + (BlockSize * 8) * 2 then

@@ -31,10 +31,19 @@ uses
 
 type
   /// <summary>
-  ///   AES-NI / SSSE3 implementation of IFusedEaxKernel. The inner loop
-  ///   is a 2-wide CTR + OMAC (CBC-MAC variant) interleave. Novel work
-  ///   in CryptoLib: no mainstream cryptographic library ships a fused
-  ///   EAX kernel (OpenSSL, BoringSSL, AWS-LC, Botan all scalar).
+  ///   AES-NI + SSSE3 implementation of IFusedEaxKernel.
+  ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
+  ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
+  ///   CRYPTOLIB_X86_SIMD.
+  ///   Direction-bound at construction: an encrypt kernel captures the
+  ///   forward AES schedule, a decrypt kernel the inverse-MixColumns
+  ///   schedule.
+  ///   The kernel loops internally over ABlockCount body blocks in a
+  ///   2-wide CTR + OMAC (CBC-MAC variant) interleave; the mode invokes
+  ///   ProcessBody once per Init cycle.
+  ///   Novel work in CryptoLib: no mainstream cryptographic library
+  ///   ships a fused EAX kernel (OpenSSL, BoringSSL, AWS-LC, Botan all
+  ///   scalar).
   /// </summary>
   TAesNiEaxKernel = class sealed(TInterfacedObject, IFusedEaxKernel)
   strict private

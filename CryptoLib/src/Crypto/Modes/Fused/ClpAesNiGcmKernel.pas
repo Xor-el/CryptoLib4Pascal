@@ -32,7 +32,14 @@ uses
 type
   /// <summary>
   ///   AES-NI + PCLMULQDQ + SSSE3 implementation of IFusedGcmKernel.
-  ///   x86_64 only (gated behind CRYPTOLIB_X86_64_ASM).
+  ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
+  ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
+  ///   CRYPTOLIB_X86_SIMD.
+  ///   Direction-independent: the fused AES-CTR keystream is identical
+  ///   for GCM encrypt and decrypt; the Pascal wrapper supplies the
+  ///   correct PXorIn / POut / PPrevCipher triple per call.
+  ///   The kernel processes exactly one stride (8 blocks = 128 bytes)
+  ///   per call; the mode layer drives the outer loop.
   /// </summary>
   TAesNiGcmKernel = class sealed(TInterfacedObject, IFusedGcmKernel)
   strict private
@@ -64,11 +71,13 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
+
 type
   // Context handed to the fused AES-NI keystream + 8-way GHASH kernel.
-  // Natural 8-byte alignment, no padding: matches the [rcx+offset]
-  // accesses in GcmFusedCtrGhashEight_x86_64.inc.
+  // Natural pointer-sized alignment, no padding: matches the
+  // [rcx / ebx + offset] accesses in GcmFusedCtrGhashEight_x86_64.inc and
+  // GcmFusedCtrGhashEight_i386.inc.
   TGcmFusedBatchCtx = record
     PXorIn: Pointer;
     POut: Pointer;
@@ -79,6 +88,8 @@ type
     PFS: Pointer;
     PMask: Pointer;
   end;
+
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 
 procedure GcmFusedAesEnc128GhashEight(PCtx: Pointer);
 {$DEFINE GCM_FUSED_AES_ROUNDS_10}
@@ -100,7 +111,35 @@ procedure GcmFusedAesEnc256GhashEight(PCtx: Pointer);
 {$I ..\..\..\Include\Simd\Aes\Gcm\GcmFusedCtrGhashEight_x86_64.inc}
 {$UNDEF GCM_FUSED_AES_ROUNDS_14}
 end;
+
 {$ENDIF CRYPTOLIB_X86_64_ASM}
+
+{$IFDEF CRYPTOLIB_I386_ASM}
+
+procedure GcmFusedAesEnc128GhashEight(PCtx: Pointer);
+{$DEFINE GCM_FUSED_AES_ROUNDS_10}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Aes\Gcm\GcmFusedCtrGhashEight_i386.inc}
+{$UNDEF GCM_FUSED_AES_ROUNDS_10}
+end;
+
+procedure GcmFusedAesEnc192GhashEight(PCtx: Pointer);
+{$DEFINE GCM_FUSED_AES_ROUNDS_12}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Aes\Gcm\GcmFusedCtrGhashEight_i386.inc}
+{$UNDEF GCM_FUSED_AES_ROUNDS_12}
+end;
+
+procedure GcmFusedAesEnc256GhashEight(PCtx: Pointer);
+{$DEFINE GCM_FUSED_AES_ROUNDS_14}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Aes\Gcm\GcmFusedCtrGhashEight_i386.inc}
+{$UNDEF GCM_FUSED_AES_ROUNDS_14}
+end;
+
+{$ENDIF CRYPTOLIB_I386_ASM}
+
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 const
   // PSHUFB full-reverse control.
@@ -128,12 +167,12 @@ end;
 
 procedure TAesNiGcmKernel.ProcessCtrGhashBatch(AInPtr, AOutPtr, ARawCtrs,
   APrevCipher, AGhashState: Pointer; ABlockCount: Int32);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
 var
   LCtx: TGcmFusedBatchCtx;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
   if ABlockCount <> FUSED_GCM_MIN_BLOCKS then
     Exit;
   LCtx.PXorIn := AInPtr;
@@ -150,7 +189,7 @@ begin
   else
     GcmFusedAesEnc256GhashEight(@LCtx);
   end;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 end;
 
 { TAesNiGcmKernelFactory }
@@ -178,7 +217,7 @@ begin
   try
     if AHPowers = nil then
       Exit;
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesNiAeadResolver.CpuSupports then
       Exit;
     if not TAesNiAeadResolver.TryResolveEngine(ACipher, LEngine) then
@@ -190,7 +229,7 @@ begin
     AKernel := TAesNiGcmKernel.Create(LEngine, LKeys, LRounds, AHPowers,
       @GcmKernelReverseMask[0]);
     Result := True;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
   except
     AKernel := nil;
     Result := False;

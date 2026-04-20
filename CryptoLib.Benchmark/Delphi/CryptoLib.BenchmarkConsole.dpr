@@ -597,6 +597,7 @@ uses
   ClpAesNiEaxKernel in '..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas',
   ClpAesNiGcmKernel in '..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiGcmKernel.pas',
   ClpPclmulGcmSivKernel in '..\..\CryptoLib\src\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas',
+  ClpFusedKernelDefaults in '..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelDefaults.pas',
   ClpAeadParameters in '..\..\CryptoLib\src\Crypto\Parameters\ClpAeadParameters.pas',
   ClpBufferedAeadCipher in '..\..\CryptoLib\src\Crypto\ClpBufferedAeadCipher.pas',
   ClpBufferedAeadBlockCipher in '..\..\CryptoLib\src\Crypto\ClpBufferedAeadBlockCipher.pas',

@@ -31,13 +31,17 @@ uses
 
 type
   /// <summary>
-  ///   AES-NI / SSSE3 implementation of <see cref="IFusedOcbKernel"/>.
+  ///   AES-NI + SSSE3 implementation of IFusedOcbKernel.
+  ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
+  ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
+  ///   CRYPTOLIB_X86_SIMD.
   ///   Direction-bound at construction: an encrypt kernel captures the
   ///   forward AES schedule, a decrypt kernel the inverse-MixColumns
-  ///   schedule. The kernel processes ABlockCount blocks in a single
-  ///   invocation, looping internally over a fixed stride
-  ///   (8 blocks on x86_64, 6 blocks on i386) so the mode layer can
-  ///   amortise call-site overhead across large batches.
+  ///   schedule.
+  ///   The kernel processes ABlockCount blocks in a single invocation,
+  ///   looping internally over a fixed stride (8 blocks on x86_64,
+  ///   4 blocks on i386) so the mode layer can amortise call-site
+  ///   overhead across large batches.
   /// </summary>
   TAesNiOcbKernel = class sealed(TInterfacedObject, IFusedOcbKernel)
   strict private

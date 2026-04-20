@@ -31,24 +31,37 @@ uses
 
 type
   /// <summary>
-  ///   AES-NI / SSSE3 implementation of IFusedCcmKernel. Loops
-  ///   internally over ABlockCount body blocks; the mode invokes
-  ///   ProcessBody once per Init cycle.
+  ///   AES-NI + SSSE3 implementation of IFusedCcmKernel.
+  ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
+  ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
+  ///   CRYPTOLIB_X86_SIMD.
+  ///   Direction-bound at construction: an encrypt kernel captures the
+  ///   forward AES schedule, a decrypt kernel the inverse-MixColumns
+  ///   schedule.
+  ///   The kernel loops internally over ABlockCount body blocks; the
+  ///   mode invokes ProcessBody once per Init cycle.
   /// </summary>
   TAesNiCcmKernel = class sealed(TInterfacedObject, IFusedCcmKernel)
   strict private
   const
     FUSED_CCM_MIN_BLOCKS = 1;
   strict private
+    // Strong ref pins the engine (and therefore the round-key buffer's
+    // owner) for the kernel's lifetime. The round-key pointer itself is
+    // NOT cached here: TAesEngineX86.Init free-and-reallocates the
+    // aligned key-schedule buffer, so a pointer captured at TryCreate
+    // time can dangle after any subsequent re-Init (e.g. CCM's
+    // per-packet SIC wrapper re-keying). ProcessBody re-resolves it on
+    // every call; cost is one virtual dispatch amortised over a
+    // multi-block SIMD loop.
     FEngine: IAesEngineX86;
-    FKeys: Pointer;
     FRounds: Int32;
     FDirection: TFusedModeDirection;
     FMask: Pointer;
     FIncrement: Pointer;
   public
-    constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
-      ARounds: Int32; ADirection: TFusedModeDirection; AMask, AIncrement: Pointer);
+    constructor Create(const AEngine: IAesEngineX86; ARounds: Int32;
+      ADirection: TFusedModeDirection; AMask, AIncrement: Pointer);
     function MinimumBlockCount: Int32;
     procedure ProcessBody(AInPtr, AOutPtr, ACtrState, ACbcMacState: Pointer;
       ABlockCount: Int32);
@@ -202,12 +215,11 @@ const
 { TAesNiCcmKernel }
 
 constructor TAesNiCcmKernel.Create(const AEngine: IAesEngineX86;
-  AKeys: Pointer; ARounds: Int32; ADirection: TFusedModeDirection;
+  ARounds: Int32; ADirection: TFusedModeDirection;
   AMask, AIncrement: Pointer);
 begin
   inherited Create;
   FEngine := AEngine;
-  FKeys := AKeys;
   FRounds := ARounds;
   FDirection := ADirection;
   FMask := AMask;
@@ -224,14 +236,25 @@ procedure TAesNiCcmKernel.ProcessBody(AInPtr, AOutPtr, ACtrState,
 {$IFDEF CRYPTOLIB_X86_SIMD}
 var
   LCtx: TCcmFusedTwoCtx;
+  LKeys: PByte;
+  LRounds: Int32;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if ABlockCount < FUSED_CCM_MIN_BLOCKS then
     Exit;
+  // Resolve the live key-schedule pointer on every call: the engine
+  // may re-key (and therefore move its aligned key buffer) between
+  // TryCreate and ProcessBody, notably via CCM's per-packet SIC
+  // wrapper. Round count is revalidated against the snapshot taken
+  // at TryCreate to catch any direction/key-size change.
+  if not FEngine.TryGetEncKeysPtr(LKeys, LRounds) then
+    Exit;
+  if LRounds <> FRounds then
+    Exit;
   LCtx.InPtr := AInPtr;
   LCtx.OutPtr := AOutPtr;
-  LCtx.Keys := FKeys;
+  LCtx.Keys := LKeys;
   LCtx.CtrState := ACtrState;
   LCtx.MacState := ACbcMacState;
   LCtx.PMask := FMask;
@@ -285,12 +308,16 @@ begin
     if not TAesNiAeadResolver.TryResolveEngine(ACipher, LEngine) then
       Exit;
     // CCM drives CTR and CBC-MAC lanes from the same forward-encrypt
-    // schedule for both directions.
+    // schedule for both directions. LKeys is consumed only to probe
+    // that the engine currently holds a usable encrypt schedule and to
+    // read the round count; the pointer itself is intentionally not
+    // handed to the kernel -- ProcessBody re-resolves it per call to
+    // stay correct across engine re-keys.
     if not LEngine.TryGetEncKeysPtr(LKeys, LRounds) then
       Exit;
     if not (LRounds in [10, 12, 14]) then
       Exit;
-    AKernel := TAesNiCcmKernel.Create(LEngine, LKeys, LRounds, ADirection,
+    AKernel := TAesNiCcmKernel.Create(LEngine, LRounds, ADirection,
       @CcmKernelReverseMask[0], @CcmKernelCtrIncrement[0]);
     Result := True;
   except

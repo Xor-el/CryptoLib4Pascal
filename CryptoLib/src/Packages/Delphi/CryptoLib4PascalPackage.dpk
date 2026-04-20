@@ -719,6 +719,7 @@ contains
   ClpAesNiCcmKernel in '..\..\Crypto\Modes\Fused\ClpAesNiCcmKernel.pas',
   ClpAesNiEaxKernel in '..\..\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas',
   ClpAesNiGcmKernel in '..\..\Crypto\Modes\Fused\ClpAesNiGcmKernel.pas',
-  ClpPclmulGcmSivKernel in '..\..\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas';
+  ClpPclmulGcmSivKernel in '..\..\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas',
+  ClpFusedKernelDefaults in '..\..\Crypto\Modes\Fused\ClpFusedKernelDefaults.pas';
 
 end.
