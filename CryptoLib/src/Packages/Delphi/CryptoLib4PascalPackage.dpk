@@ -707,7 +707,7 @@ contains
   ClpFormatSettingsHelper in '..\..\Helpers\ClpFormatSettingsHelper.pas',
   ClpDateTimeHelper in '..\..\Helpers\ClpDateTimeHelper.pas',
   ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas',
-  ClpFusedModeDirection in '..\..\Interfaces\Crypto\Modes\Fused\ClpFusedModeDirection.pas',
+  ClpFusedKernelTypes in '..\..\Interfaces\Crypto\Modes\Fused\ClpFusedKernelTypes.pas',
   ClpIFusedGcmKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmKernel.pas',
   ClpIFusedOcbKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedOcbKernel.pas',
   ClpIFusedCcmKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCcmKernel.pas',

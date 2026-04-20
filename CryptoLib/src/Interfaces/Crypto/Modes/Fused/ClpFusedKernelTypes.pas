@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpFusedModeDirection;
+unit ClpFusedKernelTypes;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -29,9 +29,9 @@ type
   TFusedModeDirection = (Encrypt, Decrypt);
 
   /// <summary>
-  ///   Quality-of-service tier used to order factories in the fused
-  ///   AEAD kernel registry. Higher ordinal wins; equal priorities
-  ///   retain registration order.
+  ///   Priority class used to order factories in the fused AEAD kernel
+  ///   registry. Higher ordinal wins; equal priorities retain
+  ///   registration order.
   ///     Fallback     - opt-in experimental / diagnostic kernel; loses
   ///                    to anything else.
   ///     Baseline     - in-tree built-in accelerators.

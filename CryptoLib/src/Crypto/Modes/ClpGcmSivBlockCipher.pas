@@ -37,7 +37,7 @@ uses
   ClpGcmBlockCipher,
   ClpGcmUtilities,
   ClpGcmSivUtilities,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedGcmSivKernel,
   ClpFusedKernelRegistry,
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -711,7 +711,7 @@ begin
   // scratch and makes ONE UpdateHash call per batch. That collapses the
   // per-batch PolyVal bookkeeping (FNumActive tests, FillReverse inner
   // loops, GHASH calls) into a single cold path and is the main win of
-  // this tier on large payloads.
+  // this bulk path on large payloads.
   if (FBulkCipher <> nil) and (LMyRemaining >= 128) then
   begin
     System.SetLength(LMyCounters, 8 * BUFLEN);

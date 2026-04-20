@@ -24,7 +24,7 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedOcbKernel,
   ClpFusedKernelRegistry,
   ClpAesNiAeadResolver;
@@ -45,7 +45,7 @@ type
 {$IFDEF CRYPTOLIB_X86_64_ASM}
     FUSED_OCB_MIN_BLOCKS = 8;
 {$ELSE}
-    FUSED_OCB_MIN_BLOCKS = 6;
+    FUSED_OCB_MIN_BLOCKS = 4;
 {$ENDIF}
   strict private
     FEngine: IAesEngineX86;
@@ -56,8 +56,8 @@ type
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
       ARounds: Int32; ADirection: TFusedModeDirection);
     function MinimumBlockCount: Int32;
-    procedure ProcessBlocks(AInPtr, AOutPtr, AOffsets: Pointer;
-      ABlockCount: Int32);
+    procedure ProcessBlocks(AInPtr, AOutPtr, AOffsetPtr, AChecksumPtr,
+      ALTablePtr, ANtzPtr, ABlock0Ptr: Pointer; ABlockCount: Int32);
   end;
 
   TAesNiOcbKernelFactory = class sealed(TInterfacedObject,
@@ -76,17 +76,25 @@ implementation
 
 type
   /// <summary>
-  ///   Context record shared with the assembly body. Layout (4 pointers
-  ///   + 1 NativeUInt BlockCount) matches the kernel's field-offset
-  ///   accesses documented in OcbFusedWide_x86_64.inc and
-  ///   OcbFusedWide_i386.inc.
+  ///   Context record shared with the assembly body. All live OCB state
+  ///   the kernel touches is addressed through this record: seven
+  ///   pointers (Keys, In, Out, OffsetState, ChecksumState, LTable,
+  ///   NtzArray, Block0) plus the NativeUInt BlockCount. Field offsets
+  ///   match the kernel's displacement accesses documented in
+  ///   OcbFusedWide_x86_64.inc and OcbFusedWide_i386.inc.
   /// </summary>
-  TOcbFusedWideCtx = record
-    Keys: Pointer;
-    InPtr: Pointer;
-    OutPtr: Pointer;
-    Offsets: Pointer;
-    BlockCount: NativeUInt;
+  TOcbFusedKernelCtx = record
+    Keys: Pointer;         // AES expanded schedule (enc / dec+invMC)
+    InPtr: Pointer;        // ABlockCount * 16 bytes (advances per-iter)
+    OutPtr: Pointer;       // ABlockCount * 16 bytes (advances per-iter)
+    OffsetPtr: Pointer;    // 16-byte live FOffsetMAIN state (r/w)
+    ChecksumPtr: Pointer;  // 16-byte live FChecksum state (r/w)
+    LTablePtr: Pointer;    // flat L[0..LMax] * 16 bytes (read-only)
+    NtzPtr: Pointer;       // ABlockCount bytes of pre-computed ntz
+    Block0Ptr: Pointer;    // 16-byte source of iter-0 block 0 (may
+                           // alias InPtr or point at an unrelated
+                           // 16-byte buffer such as FMainBlock)
+    BlockCount: NativeUInt; // positive multiple of MinimumBlockCount
   end;
 
 {$IFDEF CRYPTOLIB_X86_64_ASM}
@@ -212,11 +220,11 @@ begin
   Result := FUSED_OCB_MIN_BLOCKS;
 end;
 
-procedure TAesNiOcbKernel.ProcessBlocks(AInPtr, AOutPtr, AOffsets: Pointer;
-  ABlockCount: Int32);
+procedure TAesNiOcbKernel.ProcessBlocks(AInPtr, AOutPtr, AOffsetPtr,
+  AChecksumPtr, ALTablePtr, ANtzPtr, ABlock0Ptr: Pointer; ABlockCount: Int32);
 {$IFDEF CRYPTOLIB_X86_SIMD}
 var
-  LCtx: TOcbFusedWideCtx;
+  LCtx: TOcbFusedKernelCtx;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -226,7 +234,11 @@ begin
   LCtx.Keys := FKeys;
   LCtx.InPtr := AInPtr;
   LCtx.OutPtr := AOutPtr;
-  LCtx.Offsets := AOffsets;
+  LCtx.OffsetPtr := AOffsetPtr;
+  LCtx.ChecksumPtr := AChecksumPtr;
+  LCtx.LTablePtr := ALTablePtr;
+  LCtx.NtzPtr := ANtzPtr;
+  LCtx.Block0Ptr := ABlock0Ptr;
   LCtx.BlockCount := NativeUInt(ABlockCount);
   if FDirection = TFusedModeDirection.Encrypt then
   begin

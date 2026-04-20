@@ -218,7 +218,7 @@ uses
   ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
   ClpDarwinSysCtl, ClpIBulkBlockCipherMode, ClpIBulkBlockCipher, 
   ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities, 
-  ClpGcmSivUtilities, ClpFusedModeDirection, 
+  ClpGcmSivUtilities, ClpFusedKernelTypes, 
   ClpIFusedGcmKernel, ClpIFusedOcbKernel, ClpIFusedCcmKernel, 
   ClpIFusedEaxKernel, ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, 
   ClpAesNiAeadResolver, ClpAesNiOcbKernel, ClpAesNiCcmKernel, 

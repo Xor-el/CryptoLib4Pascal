@@ -24,7 +24,7 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedEaxKernel,
   ClpFusedKernelRegistry,
   ClpAesNiAeadResolver;

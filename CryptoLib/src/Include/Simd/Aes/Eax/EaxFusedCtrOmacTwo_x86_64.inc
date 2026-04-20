@@ -1,4 +1,4 @@
-// EAX fused 2-wide AES-NI CTR+OMAC kernel (x86_64).
+// EAX fused AES-NI CTR+OMAC kernel (x86_64).
 // -------------------------------------------------------------------
 // Novel work for CryptoLib: no fused EAX reference kernel exists in any
 // mainstream cryptographic library (verified: OpenSSL, BoringSSL, AWS-LC
@@ -7,24 +7,36 @@
 // and the AES-NI AEAD pattern shared with CCM (Shay Gueron, "Intel AES
 // New Instructions" white paper Rev 3.01).
 //
-// Shape is a mirror of the CCM 2-wide CTR + CBC-MAC kernel: two AES lanes
-// issued per round-key broadcast, sharing the key load. The difference
-// is that EAX's OMAC consumes ciphertext (output on encrypt, input on
-// decrypt) while CCM's CBC-MAC consumes plaintext. Because of this, the
-// 1-iteration lag lives on the opposite direction from CCM:
+// Two lanes (CTR / MAC) share each round-key broadcast. Issuing a
+// second aesenc on the same round key uses the pipeline slot that
+// would otherwise idle (aesenc on modern Intel/Zen: ~4c latency,
+// 1/cycle throughput). That is the structural source of the EAX
+// speed-up; EAX is MAC-bound because the OMAC CBC chain has the same
+// aesenclast-to-aesenc serial dependency as CCM's CBC-MAC.
 //
-//   EAX encrypt -> MAC lags CTR by one block (C_i only known after the
-//                  CTR lane's aesenclast). Uses xmm8 = prev_C.
-//   EAX decrypt -> no lag: C_i is the input, fold it into MAC at
-//                  iteration start, CTR lane runs in parallel.
+// EAX vs CCM mirror: OMAC consumes CIPHERTEXT (output on encrypt,
+// input on decrypt) while CCM's CBC-MAC consumes PLAINTEXT. Because of
+// this, the 1-iteration lag lives on the OPPOSITE direction from CCM:
 //
-//   xmm0 = CTR lane   (counter -> keystream)
-//   xmm1 = MAC lane   (OMAC state; fed (M_prev XOR C_lag_or_input) on each block)
+//   CCM encrypt   : no lag (MAC substrate = input plaintext, available
+//                   at iter start)       -> 2-wide single-pass loop
+//   CCM decrypt   : MAC lags CTR by 1    -> Pass1+Pass2+Pass3
+//   EAX encrypt   : MAC lags CTR by 1    -> Pass1+Pass2+Pass3  (mirrors CCM dec)
+//   EAX decrypt   : no lag (MAC substrate = input ciphertext)
+//                                        -> 2-wide single-pass loop  (mirrors CCM enc)
 //
-// AES-NI aesenc has ~6-cycle latency but 1/cycle throughput, so the second
-// aesenc issued on the same round key uses the pipeline slot that would
-// otherwise idle. This is the only source of the EAX speedup; the inner
-// body is intentionally NOT delegated to AesNiEightRoundsOnly.
+// Phase-3 optimisations (mirror of CCM Phase 2):
+//   * Counter hoist - the EAX counter is kept in LE canonical form in
+//     xmm6 for the full body; each block pulls a BE view via one
+//     pshufb and increments the LE canonical counter via paddq. The
+//     baseline kernel paid one pshufb at the start AND one at the end
+//     of every block (BE -> LE -> BE); this variant pays one pshufb
+//     per block total.
+//   * 2x unroll - the steady-state loop processes blocks in pairs.
+//     Each pair issues three aesenc lanes per round-key broadcast
+//     (CTR_i, CTR_{i+1}, MAC_i) followed by a single-lane MAC chain
+//     for the second block of the pair. A trailing single-block body
+//     (structurally the 2-wide baseline) handles odd BlockCount.
 //
 // On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
@@ -42,69 +54,58 @@
 //                             (post-TagC-prefix, in/out; overwritten with
 //                             post-body state).
 //   [rcx + 40]  PMask       : 16-byte PSHUFB full-reverse control
-//                             (readonly): [15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0].
-//                             Used to flip the BE counter to LE for paddq.
-//   [rcx + 48]  PIncrement  : 16-byte CTR increment constant (readonly).
-//                             LE layout [$01,$00,$00,$00,$00,$00,$00,$00,
-//                             $00,$00,$00,$00,$00,$00,$00,$00] = 1 in the
-//                             low qword slot after byte-reverse; added via
-//                             paddq and byte-reversed back to BE.
+//                             (readonly): [15,14,...,0]. Maps BE <-> LE.
+//   [rcx + 48]  PIncrement  : 16-byte CTR increment = 1 in the low qword
+//                             (LE layout). Added via paddq to the LE
+//                             canonical counter.
 //   [rcx + 56]  BlockCount  : NativeUInt; number of full 16-byte body blocks
 //                             (MUST be >= MinimumBlockCount = 2; caller
 //                             guarantees).
 //
-// XMM register allocation (x86_64; 9 of 16 registers used, no Win64 save):
-//   xmm0        : CTR lane per-block (counter -> aesenc chain -> keystream)
-//   xmm1        : MAC lane per-block. At iter start holds
-//                 (M_prev XOR <ciphertext>) XOR K_0 ready for the AES
-//                 chain; at iter end holds the new running OMAC state M_i.
-//                 Across iterations xmm1 IS the running OMAC state.
+// XMM register allocation (x86_64; low regs + xmm8):
+//   xmm0        : CTR A lane - counter_i -> aesenc chain -> keystream_i
+//   xmm1        : MAC lane. Running OMAC state across iterations. On
+//                 encrypt's pair: M_{i-1} XOR prev_C XOR K_0 -> aesenc ->
+//                 M_i, then M_i XOR C_i XOR K_0 -> aesenc -> M_{i+1}.
+//                 On decrypt: M_{i-1} XOR C_i XOR K_0 -> aesenc -> M_i,
+//                 then M_i XOR C_{i+1} -> aesenc -> M_{i+1}.
 //   xmm2        : round-key scratch (reloaded per round via movdqa)
-//   xmm3        : data-block cache. Encrypt: holds P_i for the keystream XOR.
-//                 Decrypt: holds C_i (input) for the keystream XOR and
-//                 simultaneously for the MAC fold at iter start.
+//   xmm3        : data-block cache block i (P_i on enc, C_i on dec)
 //   xmm4        : CTR increment constant (loaded once from [rcx+48])
-//   xmm5        : CTR-counter-LE scratch (transient during counter increment)
-//   xmm6        : CTR counter in BE form. Loaded from [rcx+24] at entry,
-//                 stored back at exit.
-//   xmm7        : PSHUFB byte-reverse mask (loaded once from [rcx+40]).
-//   xmm8        : (encrypt only) prev_C slot: C_{i-1} carried across iter
-//                 boundaries so the next iteration can fold it into the
-//                 MAC lane as (M_prev XOR C_{i-1}). Encoded with explicit
-//                 REX bytes for Delphi-assembler compatibility.
+//   xmm5        : data-block cache block i+1 (P_{i+1}/C_{i+1}); also reused
+//                 as a scratch in single-block tail paths
+//   xmm6        : CTR counter in LE canonical form (persistent). Entered
+//                 as BE, pshufb'd once to LE at prologue; pshufb'd back
+//                 to BE at epilogue before storeback.
+//   xmm7        : PSHUFB full-reverse mask (loaded once from [rcx+40])
+//   xmm8        : DUAL ROLE. Inside the pair loop: CTR B lane
+//                 (counter_{i+1} -> aesenc -> keystream_{i+1}). Across
+//                 encrypt iterations (pair loop boundary, single-block
+//                 tail, and Pass 3 trailing MAC): carries prev_C =
+//                 C_{i+1}. On decrypt xmm8 is transient per-iteration.
+//                 Always db-encoded for Delphi-assembler compatibility.
 //
 // GPR usage (all MS x64 / SysV-volatile; no non-volatile saves needed):
 //   rcx : PCtx (preserved across the kernel)
-//   rax : InPtr (advancing)
+//   rax : InPtr (advancing; +16 in tail, +32 in pair)
 //   rdx : OutPtr (advancing)
 //   r8  : Keys base (alive across all rounds as the base of [r8 + 16*r])
 //   r9  : scratch / CtrState pointer / OmacState pointer at epilogue
 //   r11 : BlockCount / loop counter (decrementing)
 //
-// Win64 ABI: xmm6..xmm15 are callee-save. This kernel is compiled as a
-// leaf asm procedure (SimdProc1Begin_x86_64.inc emits nostackframe) and is
-// only called from Pascal. Consistent with existing AEAD kernels in this
-// tree, which already treat xmm6..xmm15 as scratch in the same leaf-asm
-// context.
-//
-// Direction : define CRYPTOLIB_EAX_DECRYPT for the decrypt variant (MAC
-//             absorbs input ciphertext at iter start; no lag). Otherwise
-//             the encrypt variant is emitted (MAC lags CTR by one block
-//             via xmm8 = prev_C; trailing single-lane AES fold of C_last).
+// Direction : define CRYPTOLIB_EAX_DECRYPT for the decrypt variant.
 // Key size  : define exactly ONE of CRYPTOLIB_AESNI_KEY128 /
 //             CRYPTOLIB_AESNI_KEY192 / CRYPTOLIB_AESNI_KEY256.
 //
 // Encoding: AES-NI instructions (aesenc / aesenclast) and instructions
-// touching xmm8..xmm15 are db-encoded for broad assembler compatibility.
-// The rest uses normal FPC mnemonics. REX prefix encoding used below:
-//   $41 = REX.B=1            (source register in r/m field is xmm8..xmm15)
-//   $44 = REX.R=1            (destination register is xmm8..xmm15)
-//   $45 = REX.RB=1           (both dest and src are xmm8..xmm15)
-// ModRM byte $C0+d*8+s where d, s are the low-3-bits of the register
-// numbers (xmm8 encodes as 0 because REX.B/R supplies the top bit).
+// touching xmm8 are db-encoded. Standard SSE2 uses FPC mnemonics.
+//   REX prefixes used below:
+//     $41 = REX.B=1  (source register in r/m is xmm8..xmm15)
+//     $44 = REX.R=1  (destination register is xmm8..xmm15)
 //
 // -------------------------------------------------------------------
 // Prologue: load pointers, persistent state, and entry counter.
+// Counter hoist: BE -> LE once here, LE -> BE once at epilogue.
 // -------------------------------------------------------------------
 
   mov       rax, [rcx +  0]                         // rax = InPtr
@@ -112,9 +113,8 @@
   mov       r8,  [rcx + 16]                         // r8  = Keys (base)
   mov       r11, [rcx + 56]                         // r11 = BlockCount
 
-  // Persistent xmm state ------------------------------------------------
   mov       r9,  [rcx + 24]
-  movdqu    xmm6, [r9]                              // xmm6 = CTR counter (BE)
+  movdqu    xmm6, [r9]                              // xmm6 = CTR counter (BE, from CtrState)
   mov       r9,  [rcx + 32]
   movdqu    xmm1, [r9]                              // xmm1 = OMAC state (running)
   mov       r9,  [rcx + 40]
@@ -122,175 +122,67 @@
   mov       r9,  [rcx + 48]
   movdqu    xmm4, [r9]                              // xmm4 = CTR increment constant
 
-{$IFDEF CRYPTOLIB_EAX_DECRYPT}
+  pshufb    xmm6, xmm7                              // xmm6 = LE canonical counter
+
+{$IFNDEF CRYPTOLIB_EAX_DECRYPT}
 
 // -------------------------------------------------------------------
-// DECRYPT direction: per-block interleaved CTR + MAC-on-input-ciphertext.
-// Mirrors the CCM encrypt shape because the MAC substrate (ciphertext)
-// is the input, available at iteration start -> no lag.
+// ENCRYPT direction (MAC lags CTR by one block; mirrors CCM decrypt).
 //
-// Loop invariant at .eax_dec_loop head:
-//   xmm1   = running OMAC state M_{i-1}
-//   xmm6   = EAX counter value for block i (BE form; will be encrypted)
-//   rax    = &InPtr[i*16]
-//   rdx    = &OutPtr[i*16]
-//   r11    = remaining blocks (>= 1)
-// -------------------------------------------------------------------
-
-@@eax_dec_loop:
-
-  // Load C_i and fold into MAC lane. xmm3 keeps C_i for the post-AES
-  // XOR with keystream to produce P_i.
-  movdqu    xmm3, [rax]                             // xmm3 = C_i
-  pxor      xmm1, xmm3                              // xmm1 = M_{i-1} XOR C_i
-
-  // CTR lane starts from the BE counter.
-  movdqa    xmm0, xmm6                              // xmm0 = counter_i (BE)
-
-  // Pre-whiten both lanes with K_0.
-  movdqa    xmm2, [r8]                              // xmm2 = K_0
-  pxor      xmm0, xmm2
-  pxor      xmm1, xmm2
-
-  // -------------------- Middle rounds 1..N-1 -----------------------
-  // Two aesenc per round, same round key, maximising AES-NI pipeline.
-  movdqa    xmm2, [r8 + 16]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 32]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 48]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 64]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 80]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 96]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 112]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 128]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 144]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-{$IFDEF CRYPTOLIB_AESNI_KEY192}
-  movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-{$ENDIF}
-{$IFDEF CRYPTOLIB_AESNI_KEY256}
-  movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 192]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-  movdqa    xmm2, [r8 + 208]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
-{$ENDIF}
-
-  // -------------------- Final round (aesenclast) -------------------
-{$IFDEF CRYPTOLIB_AESNI_KEY128}
-  movdqa    xmm2, [r8 + 160]
-{$ENDIF}
-{$IFDEF CRYPTOLIB_AESNI_KEY192}
-  movdqa    xmm2, [r8 + 192]
-{$ENDIF}
-{$IFDEF CRYPTOLIB_AESNI_KEY256}
-  movdqa    xmm2, [r8 + 224]
-{$ENDIF}
-  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0, xmm2  -> xmm0 = keystream_i
-  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1, xmm2  -> xmm1 = M_i (new OMAC state)
-
-  // -------------------- Produce plaintext P_i ----------------------
-  pxor      xmm0, xmm3                              // xmm0 = P_i = C_i XOR keystream
-  movdqu    [rdx], xmm0                             // store P_i
-
-  // -------------------- Advance counter, pointers ------------------
-  pshufb    xmm6, xmm7                              // BE -> LE for paddq
-  paddq     xmm6, xmm4                              // counter_LE += 1
-  pshufb    xmm6, xmm7                              // LE -> BE
-
-  add       rax, 16
-  add       rdx, 16
-  dec       r11
-  jnz       @@eax_dec_loop
-
-{$ELSE} // !CRYPTOLIB_EAX_DECRYPT  (encrypt path)
-
-// -------------------------------------------------------------------
-// ENCRYPT direction: MAC lags CTR by one block because the ciphertext
-// substrate only exists after the CTR lane's aesenclast. Trailing
-// single-lane AES fold of C_{last} closes the OMAC chain.
+// Structure:
+//   Pass 1 : block 0 CTR-only (cold start; MAC idle until C_0 exists).
+//            Stashes C_0 in xmm8 as prev_C.
+//   Pass 2 : steady-state pair loop (3-wide aesenc: CTR_i, CTR_{i+1},
+//            MAC(prev_C)) plus serial MAC chain for C_i; if an odd
+//            tail remains, one baseline 2-wide iteration runs.
+//   Pass 3 : trailing scalar MAC AES folding in the final C_{last}
+//            (carried in xmm8).
 //
-// Pass 1  : CTR-only on block 0 (cold start; MAC lane idle). Produces
-//           C_0 and stashes it into xmm8 = prev_C.
-// Pass 2  : if BlockCount > 1, BlockCount-1 interleaved iterations
-//           where MAC-lane folds C_{i-1} while CTR-lane generates
-//           keystream_i; at iter end stash new C_i into xmm8.
-// Pass 3  : scalar MAC AES folding in the final C_{BlockCount-1}.
-//
-// Across passes: xmm8 carries prev_C = C_{i-1}; xmm1 carries the
-// running OMAC state.
+// Across the whole encrypt path xmm8 carries prev_C and xmm1 carries
+// the running OMAC state.
 // -------------------------------------------------------------------
 
-  // -------------------- Pass 1: block 0 CTR-only -------------------
-  // Encrypt counter_0 on the CTR lane (single-lane AES), XOR to get C_0,
-  // stash C_0 into xmm8 as prev_C. MAC lane is idle because we don't
-  // yet have ciphertext to fold.
+  // ----- Pass 1: block 0 CTR-only, 1-wide -------------------------
+  movdqa    xmm0, xmm6                              // xmm0 = counter_0 (LE)
+  pshufb    xmm0, xmm7                              // xmm0 = counter_0 (BE)
+  paddq     xmm6, xmm4                              // xmm6 = counter_1 (LE)
 
-  movdqa    xmm0, xmm6                              // xmm0 = counter_0 (BE)
   movdqa    xmm2, [r8]
   pxor      xmm0, xmm2
 
   movdqa    xmm2, [r8 + 16]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 32]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 48]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 64]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 80]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 96]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 112]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 128]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 144]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 192]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
   movdqa    xmm2, [r8 + 208]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
+  db $66, $0F, $38, $DC, $C2
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   movdqa    xmm2, [r8 + 160]
@@ -301,98 +193,126 @@
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   movdqa    xmm2, [r8 + 224]
 {$ENDIF}
-  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0, xmm2  -> xmm0 = keystream_0
+  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0 -> keystream_0
 
   movdqu    xmm3, [rax]                             // xmm3 = P_0
-  pxor      xmm0, xmm3                              // xmm0 = C_0 = P_0 XOR keystream
+  pxor      xmm0, xmm3                              // xmm0 = C_0
   movdqu    [rdx], xmm0                             // store C_0
 
-  // Stash C_0 into xmm8 = prev_C (db-encoded movdqa xmm8, xmm0).
-  //   movdqa xmm8, xmm0  =>  66 44 0F 6F C0
-  db $66, $44, $0F, $6F, $C0
-
-  // Advance counter and pointers for the next pass.
-  pshufb    xmm6, xmm7
-  paddq     xmm6, xmm4
-  pshufb    xmm6, xmm7
+  // Stash xmm8 = prev_C = C_0.
+  db $66, $44, $0F, $6F, $C0                        // movdqa xmm8, xmm0
 
   add       rax, 16
   add       rdx, 16
   dec       r11
-  jz        @@eax_enc_trailing                      // BlockCount == 1: no interleaved loop
+  jz        @@eax_enc_trailing                      // BlockCount == 1
 
-  // -------------------- Pass 2: interleaved iters 1..N-1 -----------
-  // Loop invariant at .eax_enc_loop head:
-  //   xmm1  = running OMAC state M_{i-1} (= M_0 at first entry)
-  //   xmm8  = prev_C = C_{i-1}
-  //   xmm6  = counter_i (BE)
-  //   rax   = &InPtr[i*16]
-  //   rdx   = &OutPtr[i*16]
-  //   r11   = remaining blocks to process in this pass (>= 1)
-@@eax_enc_loop:
+  // ----- Pass 2 dispatch ------------------------------------------
+  cmp       r11, 2
+  jb        @@eax_enc_single_tail                   // exactly 1 body block left
 
+  // Pair loop invariant at .eax_enc_pair_loop head:
+  //   xmm1 = M_{i-1}                                (running OMAC state)
+  //   xmm8 = prev_C = C_{i-1}                       (from Pass 1 or prev pair)
+  //   xmm6 = LE canonical counter_i
+  //   rax  = &InPtr[i*16]
+  //   rdx  = &OutPtr[i*16]
+  //   r11  = remaining blocks in Pass 2 (>= 2 on entry)
+  // Per pair: produce C_i, C_{i+1}; fold C_{i-1} (in xmm8) and C_i
+  // into MAC in order; prev_C update happens in-place via CTR B lane.
+
+@@eax_enc_pair_loop:
+
+  // Load P_i, P_{i+1}.
   movdqu    xmm3, [rax]                             // xmm3 = P_i
+  movdqu    xmm5, [rax + 16]                        // xmm5 = P_{i+1}
 
-  // MAC lane input = M_{i-1} XOR prev_C, then pre-whiten with K_0.
-  //   pxor xmm1, xmm8  =>  66 41 0F EF C8
-  db $66, $41, $0F, $EF, $C8
+  // MAC input for block i: M_{i-1} XOR prev_C (= C_{i-1}).
+  db $66, $41, $0F, $EF, $C8                        // pxor xmm1, xmm8
 
-  movdqa    xmm0, xmm6                              // xmm0 = counter_i
+  // CTR A = BE(counter_i); CTR B = BE(counter_{i+1}); advance xmm6.
+  // xmm8 is consumed above and re-used as CTR B lane here; at end of
+  // pair it will hold C_{i+1}, becoming the new prev_C naturally.
+  movdqa    xmm0, xmm6                              // LE counter_i
+  pshufb    xmm0, xmm7                              // BE counter_i
+  paddq     xmm6, xmm4                              // LE counter_{i+1}
+  db $66, $44, $0F, $6F, $C6                        // movdqa xmm8, xmm6  (LE counter_{i+1})
+  db $66, $44, $0F, $38, $00, $C7                   // pshufb xmm8, xmm7  (BE counter_{i+1})
+  paddq     xmm6, xmm4                              // LE counter_{i+2}
 
+  // Pre-whiten 3 lanes with K_0.
   movdqa    xmm2, [r8]
   pxor      xmm0, xmm2
+  db $66, $44, $0F, $EF, $C2                        // pxor xmm8, xmm2
   pxor      xmm1, xmm2
 
+  // Middle rounds, 3-wide.
   movdqa    xmm2, [r8 + 16]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 32]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 48]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 64]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 80]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 96]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 112]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 128]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 144]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 192]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 208]
-  db $66, $0F, $38, $DC, $C2                        // aesenc xmm0, xmm2
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
 {$ENDIF}
 
+  // aesenclast, 3-wide.
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   movdqa    xmm2, [r8 + 160]
 {$ENDIF}
@@ -402,70 +322,59 @@
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   movdqa    xmm2, [r8 + 224]
 {$ENDIF}
-  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0, xmm2  -> xmm0 = keystream_i
-  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1, xmm2  -> xmm1 = M_i (OMAC now
-                                                    //          folded C_{i-1})
+  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0 -> keystream_i
+  db $66, $44, $0F, $38, $DD, $C2                   // aesenclast xmm8 -> keystream_{i+1}
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> M_i (MAC just folded C_{i-1})
 
-  // C_i = P_i XOR keystream_i.
+  // Produce C_i = keystream_i XOR P_i. xmm0 is now C_i; we need it for
+  // the MAC fold (must survive to the serial-MAC phase below).
   pxor      xmm0, xmm3                              // xmm0 = C_i
   movdqu    [rdx], xmm0                             // store C_i
 
-  // Update prev_C = xmm8 <- C_i (xmm0). movdqa xmm8, xmm0 = 66 44 0F 6F C0
-  db $66, $44, $0F, $6F, $C0
+  // Produce C_{i+1} = keystream_{i+1} XOR P_{i+1}. After the store,
+  // xmm8 holds C_{i+1} in-place, which becomes prev_C for the next
+  // pair iteration automatically.
+  db $66, $44, $0F, $EF, $C5                        // pxor xmm8, xmm5
+  db $F3, $44, $0F, $7F, $42, $10                   // movdqu [rdx+16], xmm8  -> store C_{i+1}
 
-  // Advance counter, pointers.
-  pshufb    xmm6, xmm7
-  paddq     xmm6, xmm4
-  pshufb    xmm6, xmm7
-
-  add       rax, 16
-  add       rdx, 16
-  dec       r11
-  jnz       @@eax_enc_loop
-
-@@eax_enc_trailing:
-  // -------------------- Pass 3: trailing OMAC fold -----------------
-  // Fold C_{last} (= xmm8 = prev_C) into the OMAC state and run a
-  // single-lane AES to produce the final OMAC.
-  //   pxor xmm1, xmm8  =>  66 41 0F EF C8
-  db $66, $41, $0F, $EF, $C8
+  // Serial MAC chain: fold C_i (= xmm0) into M_i -> M_{i+1}.
+  pxor      xmm1, xmm0                              // xmm1 = M_i XOR C_i
 
   movdqa    xmm2, [r8]
   pxor      xmm1, xmm2
-
   movdqa    xmm2, [r8 + 16]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 32]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 48]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 64]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 80]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 96]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 112]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 128]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 144]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
 {$IFDEF CRYPTOLIB_AESNI_KEY192}
   movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   movdqa    xmm2, [r8 + 160]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 176]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 192]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
   movdqa    xmm2, [r8 + 208]
-  db $66, $0F, $38, $DC, $CA                        // aesenc xmm1, xmm2
+  db $66, $0F, $38, $DC, $CA
 {$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   movdqa    xmm2, [r8 + 160]
@@ -476,14 +385,430 @@
 {$IFDEF CRYPTOLIB_AESNI_KEY256}
   movdqa    xmm2, [r8 + 224]
 {$ENDIF}
-  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1, xmm2  -> xmm1 = final OMAC state
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> M_{i+1}
+
+  // Advance pointers, close pair.
+  add       rax, 32
+  add       rdx, 32
+  sub       r11, 2
+  cmp       r11, 2
+  jae       @@eax_enc_pair_loop
+
+@@eax_enc_single_tail:
+  // One body block left (Pass 2 tail), baseline 2-wide body. xmm8 =
+  // prev_C entering; xmm8 updated to this block's C at the end so
+  // Pass 3 can fold it.
+  test      r11, r11
+  jz        @@eax_enc_trailing
+
+  movdqu    xmm3, [rax]                             // xmm3 = P_i
+  db $66, $41, $0F, $EF, $C8                        // pxor xmm1, xmm8  (MAC input = M_{i-1} XOR prev_C)
+
+  movdqa    xmm0, xmm6                              // LE
+  pshufb    xmm0, xmm7                              // BE
+  paddq     xmm6, xmm4                              // advance LE
+
+  movdqa    xmm2, [r8]
+  pxor      xmm0, xmm2
+  pxor      xmm1, xmm2
+
+  movdqa    xmm2, [r8 + 16]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 32]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 48]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 64]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 80]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 96]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 112]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 128]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 144]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 192]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 208]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm2, [r8 + 160]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 192]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 224]
+{$ENDIF}
+  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0 -> keystream_i
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> M_i
+
+  pxor      xmm0, xmm3                              // xmm0 = C_i
+  movdqu    [rdx], xmm0
+
+  // Update prev_C = C_i.
+  db $66, $44, $0F, $6F, $C0                        // movdqa xmm8, xmm0
+
+@@eax_enc_trailing:
+  // ----- Pass 3: trailing OMAC fold --------------------------------
+  // Fold C_{last} (= xmm8) into the OMAC state and run a single-lane
+  // AES chain to produce the final OMAC.
+  db $66, $41, $0F, $EF, $C8                        // pxor xmm1, xmm8
+
+  movdqa    xmm2, [r8]
+  pxor      xmm1, xmm2
+
+  movdqa    xmm2, [r8 + 16]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 32]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 48]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 64]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 80]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 96]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 112]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 128]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 144]
+  db $66, $0F, $38, $DC, $CA
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 192]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 208]
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm2, [r8 + 160]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 192]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 224]
+{$ENDIF}
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> final OMAC state
+
+{$ELSE} // CRYPTOLIB_EAX_DECRYPT
+
+// -------------------------------------------------------------------
+// DECRYPT direction (no lag; MAC substrate = input ciphertext;
+// mirrors CCM encrypt).
+//
+// Pair loop invariant at .eax_dec_pair_loop head:
+//   xmm1 = running OMAC state M_{i-1}
+//   xmm6 = LE canonical counter for block i
+//   rax  = &InPtr[i*16]
+//   rdx  = &OutPtr[i*16]
+//   r11  = remaining blocks (>= 2; loop entry requires r11 >= 2)
+// Per pair: produce P_i, P_{i+1}; fold C_i and C_{i+1} into MAC in
+// order; advance pointers +32 and counter by 2.
+// -------------------------------------------------------------------
+
+  cmp       r11, 2
+  jb        @@eax_dec_tail
+
+@@eax_dec_pair_loop:
+
+  // CTR A = BE(counter_i); CTR B = BE(counter_{i+1}); xmm6 <- LE(counter_{i+2}).
+  movdqa    xmm0, xmm6                              // counter_i (LE)
+  pshufb    xmm0, xmm7                              // counter_i (BE)
+  paddq     xmm6, xmm4                              // counter_{i+1} (LE)
+  db $66, $44, $0F, $6F, $C6                        // movdqa xmm8, xmm6  (counter_{i+1} LE)
+  db $66, $44, $0F, $38, $00, $C7                   // pshufb xmm8, xmm7  (counter_{i+1} BE)
+  paddq     xmm6, xmm4                              // counter_{i+2} (LE)
+
+  // Load C_i, fold into MAC lane. xmm3 keeps C_i for the post-AES
+  // keystream XOR.
+  movdqu    xmm3, [rax]                             // xmm3 = C_i
+  pxor      xmm1, xmm3                              // xmm1 = M_{i-1} XOR C_i
+
+  // Pre-whiten 3 lanes with K_0.
+  movdqa    xmm2, [r8]
+  pxor      xmm0, xmm2
+  db $66, $44, $0F, $EF, $C2                        // pxor xmm8, xmm2
+  pxor      xmm1, xmm2
+
+  // Middle rounds, 3-wide.
+  movdqa    xmm2, [r8 + 16]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 32]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 48]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 64]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 80]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 96]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 112]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 128]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 144]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 192]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 208]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $44, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+
+  // aesenclast, 3-wide.
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm2, [r8 + 160]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 192]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 224]
+{$ENDIF}
+  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0 -> keystream_i
+  db $66, $44, $0F, $38, $DD, $C2                   // aesenclast xmm8 -> keystream_{i+1}
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> M_i
+
+  // Produce P_i = keystream_i XOR C_i; store.
+  pxor      xmm0, xmm3
+  movdqu    [rdx], xmm0
+
+  // Reload xmm3 = C_{i+1}; produce P_{i+1} and store.
+  movdqu    xmm3, [rax + 16]                        // xmm3 = C_{i+1}
+  db $66, $44, $0F, $EF, $C3                        // pxor xmm8, xmm3
+  db $F3, $44, $0F, $7F, $42, $10                   // movdqu [rdx+16], xmm8  -> store P_{i+1}
+
+  // Serial MAC chain: fold C_{i+1} (= xmm3) into M_i -> M_{i+1}.
+  pxor      xmm1, xmm3                              // xmm1 = M_i XOR C_{i+1}
+
+  movdqa    xmm2, [r8]
+  pxor      xmm1, xmm2
+  movdqa    xmm2, [r8 + 16]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 32]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 48]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 64]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 80]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 96]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 112]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 128]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 144]
+  db $66, $0F, $38, $DC, $CA
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 192]
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 208]
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm2, [r8 + 160]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 192]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 224]
+{$ENDIF}
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> M_{i+1}
+
+  add       rax, 32
+  add       rdx, 32
+  sub       r11, 2
+  cmp       r11, 2
+  jae       @@eax_dec_pair_loop
+
+@@eax_dec_tail:
+  // Single-block 2-wide tail. Entered when 0 or 1 blocks remain after
+  // the pair loop. Structurally identical to the baseline 2-wide body,
+  // just operating on xmm6 in LE canonical form.
+  test      r11, r11
+  jz        @@eax_dec_done
+
+  movdqu    xmm3, [rax]                             // xmm3 = C_i
+  pxor      xmm1, xmm3                              // xmm1 = M_{i-1} XOR C_i
+
+  movdqa    xmm0, xmm6                              // LE
+  pshufb    xmm0, xmm7                              // BE
+  paddq     xmm6, xmm4                              // advance LE
+
+  movdqa    xmm2, [r8]
+  pxor      xmm0, xmm2
+  pxor      xmm1, xmm2
+
+  movdqa    xmm2, [r8 + 16]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 32]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 48]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 64]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 80]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 96]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 112]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 128]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 144]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 160]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 176]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 192]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+  movdqa    xmm2, [r8 + 208]
+  db $66, $0F, $38, $DC, $C2
+  db $66, $0F, $38, $DC, $CA
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm2, [r8 + 160]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm2, [r8 + 192]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm2, [r8 + 224]
+{$ENDIF}
+  db $66, $0F, $38, $DD, $C2                        // aesenclast xmm0 -> keystream_i
+  db $66, $0F, $38, $DD, $CA                        // aesenclast xmm1 -> M_i
+
+  pxor      xmm0, xmm3                              // xmm0 = P_i
+  movdqu    [rdx], xmm0
+
+@@eax_dec_done:
 
 {$ENDIF} // CRYPTOLIB_EAX_DECRYPT
 
 // -------------------------------------------------------------------
-// Epilogue: write back CtrState and OmacState.
+// Epilogue: convert xmm6 LE -> BE, write back CtrState and OmacState.
 // -------------------------------------------------------------------
 
+  pshufb    xmm6, xmm7                              // xmm6 = counter (BE) for storage
   mov       r9,  [rcx + 24]
   movdqu    [r9], xmm6                              // CtrState <- updated counter
   mov       r9,  [rcx + 32]

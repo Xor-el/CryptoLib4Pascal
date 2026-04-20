@@ -33,7 +33,7 @@ uses
   ClpISicBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedEaxKernel,
   ClpFusedKernelRegistry,
 {$IFDEF CRYPTOLIB_X86_SIMD}

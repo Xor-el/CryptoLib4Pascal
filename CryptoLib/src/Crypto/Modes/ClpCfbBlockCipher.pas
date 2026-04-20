@@ -256,8 +256,8 @@ begin
   // on previously-seen ciphertext, never on the not-yet-produced plaintext,
   // so we can stage them contiguously and let the bulk engine encrypt
   // them all in one SIMD-accelerated call. Plaintext is then
-  // P_k = E_K(FCfbV_k) xor C_k, done via the Tier 0 128/64-byte
-  // triple-XOR primitives.
+  // P_k = E_K(FCfbV_k) xor C_k, done via the 128 / 64-byte triple-XOR
+  // primitives in TBlockCipherBulkUtilities.
   System.SetLength(LScratch, LTotalBytes);
   System.Move(FCfbV[0], LScratch[0], LBS);
   if ABlockCount > 1 then

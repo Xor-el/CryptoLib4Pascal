@@ -34,7 +34,7 @@ uses
   ClpISicBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedCcmKernel,
   ClpFusedKernelRegistry,
 {$IFDEF CRYPTOLIB_X86_SIMD}

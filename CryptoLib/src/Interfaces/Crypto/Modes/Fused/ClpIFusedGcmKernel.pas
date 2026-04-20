@@ -22,7 +22,7 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedModeDirection;
+  ClpFusedKernelTypes;
 
 type
   /// <summary>
@@ -77,7 +77,7 @@ type
     /// diagnostics, benchmark labelling, and test assertions).</summary>
     function ProviderName: String;
 
-    /// <summary>QoS tier controlling factory order inside the
+    /// <summary>Priority class controlling factory order inside the
     /// registry; see TFusedKernelPriority.</summary>
     function Priority: TFusedKernelPriority;
 

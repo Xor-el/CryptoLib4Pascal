@@ -23,7 +23,7 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedGcmSivKernel,
   ClpFusedKernelRegistry
 {$IFDEF CRYPTOLIB_X86_SIMD}

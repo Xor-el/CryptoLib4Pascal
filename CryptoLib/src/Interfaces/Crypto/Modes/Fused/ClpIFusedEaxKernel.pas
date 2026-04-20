@@ -22,7 +22,7 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedModeDirection;
+  ClpFusedKernelTypes;
 
 type
   /// <summary>

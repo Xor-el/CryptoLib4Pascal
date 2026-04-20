@@ -26,7 +26,7 @@ uses
   Generics.Collections,
   ClpIBlockCipher,
   ClpCryptoLibTypes,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedGcmKernel,
   ClpIFusedOcbKernel,
   ClpIFusedCcmKernel,

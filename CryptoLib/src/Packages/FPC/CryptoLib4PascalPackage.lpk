@@ -2710,8 +2710,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpGcmSivUtilities"/>
       </Item669>
       <Item670>
-        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpFusedModeDirection.pas"/>
-        <UnitName Value="ClpFusedModeDirection"/>
+        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpFusedKernelTypes.pas"/>
+        <UnitName Value="ClpFusedKernelTypes"/>
       </Item670>
       <Item671>
         <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmKernel.pas"/>

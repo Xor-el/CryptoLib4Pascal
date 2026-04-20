@@ -38,7 +38,7 @@ uses
   ClpTables4kGcmMultiplier,
   ClpIBulkBlockCipher,
   ClpBlockCipherBulkUtilities,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedGcmKernel,
   ClpFusedKernelRegistry,
 {$IFDEF CRYPTOLIB_X86_SIMD}

@@ -25,7 +25,7 @@ uses
   Generics.Collections,
   ClpIBlockCipher,
   ClpIBulkBlockCipher,
-  ClpFusedModeDirection,
+  ClpFusedKernelTypes,
   ClpIFusedOcbKernel,
   ClpFusedKernelRegistry,
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -46,14 +46,6 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
-const
-  // Maximum blocks staged per fused-kernel dispatch. LCM(6, 8) = 24,
-  // scaled by 4 to give a 96-block (1.5 KiB) offset batch that feeds
-  // either the 8-wide (x86_64) or 6-wide (i386) internal kernel loop
-  // without a remainder; stack footprint is 1.5 KiB for LOffsets plus
-  // 1.5 KiB for LScratch on the decrypt path.
-  FUSED_BATCH_BLOCKS = 96;
-
 resourcestring
   SHashCipherNil = 'hashCipher';
   SMainCipherNil = 'mainCipher';
@@ -73,7 +65,24 @@ type
 
   strict private
   const
-    BLOCK_SIZE: Int32 = 16;
+    BLOCK_SIZE = 16;
+
+    // Maximum blocks staged per fused-kernel dispatch. LCM(4, 8) = 8,
+    // kept at 96 to match the previous batch cadence (96 is a multiple
+    // of both the i386 4-wide kernel stride and the x86_64 8-wide
+    // stride). The fused kernel now owns the offset ladder, L-table
+    // lookup and checksum fold internally, so this batch only governs
+    // how many pre-computed ntz bytes (and scratch lookahead bytes on
+    // the decrypt path) the mode stages on the stack per dispatch.
+    FUSED_BATCH_BLOCKS = 96;
+
+    // Number of 16-byte L-table entries the mode materialises
+    // contiguously for the kernel per call. An OCB session is bounded
+    // by the security proof to well under 2^48 blocks per nonce, and
+    // OCB_ntz of any Int64 block count is at most 63, so 64 entries
+    // covers every practically reachable max ntz. At BLOCK_SIZE bytes
+    // each the stack footprint is 1 KiB.
+    FUSED_LTABLE_ENTRIES = 64;
 
   var
     FHashCipher: IBlockCipher;
@@ -100,20 +109,21 @@ type
 
     FMacBlock: TCryptoLibByteArray;
 
-    // Tier 4: cached bulk-capable view of FMainCipher. When the main cipher
-    // exposes IBulkBlockCipher, ProcessBytes folds 8 consecutive blocks
-    // through a single ProcessBlocks call inside ProcessEightBlocksBulk
-    // instead of the per-byte FMainBlock fill path. Nil -> scalar fallback.
+    // 8-wide bulk-cipher fast path: cached bulk-capable view of
+    // FMainCipher. When the main cipher exposes IBulkBlockCipher,
+    // ProcessBytes folds 8 consecutive blocks through a single
+    // ProcessBlocks call inside ProcessEightBlocksBulk instead of the
+    // per-byte FMainBlock fill path. Nil -> scalar fallback.
     FMainBulk: IBulkBlockCipher;
 
-    // Tier 5: cipher-agnostic fused OCB kernel resolved via
-    // TFusedKernelRegistry on every Init. Nil when no registered
-    // factory accepts the cipher / direction pair or the registry-wide
-    // kill switch is on; ProcessBytes then falls through to the 8-wide
-    // bulk / scalar paths unchanged. FOcbKernelMinBlocks is also the
-    // batch alignment: the kernel loops internally in MinimumBlockCount
-    // chunks so the mode stages up to FUSED_BATCH_BLOCKS worth of
-    // offsets per dispatch.
+    // Fused-kernel fast path: cipher-agnostic fused OCB kernel
+    // resolved via TFusedKernelRegistry on every Init. Nil when no
+    // registered factory accepts the cipher / direction pair or the
+    // registry-wide kill switch is on; ProcessBytes then falls through
+    // to the 8-wide bulk / scalar paths unchanged.
+    // FOcbKernelMinBlocks is also the batch alignment: the kernel
+    // loops internally in MinimumBlockCount chunks so the mode stages
+    // up to FUSED_BATCH_BLOCKS worth of offsets per dispatch.
     FOcbKernel: IFusedOcbKernel;
     FOcbKernelMinBlocks: Int32;
 
@@ -487,10 +497,12 @@ begin
   while (LI < ALen) do
   begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    // Tier 5: accelerator-provided fused kernel. Takes priority over
-    // the 8-wide Tier 4 bulk path whenever at least one kernel-stride
-    // batch fits the steady-state window. A single dispatch stages up
-    // to FUSED_BATCH_BLOCKS worth of offsets and lets the kernel loop
+    // Fused-kernel fast path: accelerator-provided AEAD kernel
+    // (AES-NI today; ARM / other accelerators pluggable via the
+    // registry). Takes priority over the 8-wide bulk-cipher path
+    // below whenever at least one kernel-stride batch fits the
+    // steady-state window. A single dispatch stages up to
+    // FUSED_BATCH_BLOCKS worth of offsets and lets the kernel loop
     // internally in MinimumBlockCount strides, amortising per-call
     // overhead across the whole batch.
     if (FOcbKernel <> nil) and (FMainBlockPos = LSteadyPos) and
@@ -512,6 +524,11 @@ begin
     end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
+    // 8-wide bulk-cipher fast path. Entered only when no fused kernel
+    // accepted this cipher / direction (FOcbKernel = nil) or the
+    // remaining data is too small for a fused batch but still >= 8
+    // blocks. The offset ladder and checksum fold stay in Pascal here;
+    // only the AES calls are bulked through FMainBulk.
     if (FMainBulk <> nil) and (FMainBlockPos = LSteadyPos) and
       ((ALen - LI) >= 8 * BLOCK_SIZE) then
     begin
@@ -540,59 +557,112 @@ procedure TOcbBlockCipher.ProcessFusedBulk(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
   ABlockCount: Int32);
 var
-  LOffsets: array [0 .. FUSED_BATCH_BLOCKS * 16 - 1] of Byte;
-  LScratch: array [0 .. FUSED_BATCH_BLOCKS * 16 - 1] of Byte;
-  LI, LBatchBytes: Int32;
-  LLSub: TCryptoLibByteArray;
+  // One byte per block holding ntz(FMainBlockCount+1..+ABlockCount).
+  // The kernel consumes these directly (movzx + shl 4) to index
+  // LTableFlat for the per-block L-XOR ladder update.
+  LNtz: array [0 .. FUSED_BATCH_BLOCKS - 1] of Byte;
+  // Contiguous snapshot of FL[0..FUSED_LTABLE_ENTRIES-1]. GetLSub grows
+  // FL on demand up through LMaxNtz before the Move loop copies the
+  // live entries in; bytes past LMaxNtz remain undefined but the kernel
+  // never addresses them (ntz value bounds the index by construction).
+  LTableFlat: array [0 .. FUSED_LTABLE_ENTRIES * BLOCK_SIZE - 1] of Byte;
+  // Decrypt fallback (FMacSize < BLOCK_SIZE): FMacSize-byte lookahead
+  // followed by fresh AInput bytes. The fast path (FMacSize = BLOCK_SIZE,
+  // the common case) bypasses this buffer entirely and hands the kernel
+  // two pointers -- one at FMainBlock for iter-0 block 0 and one at
+  // AInput - BLOCK_SIZE for the main stream -- saving a full batch
+  // memcpy per decrypt call.
+  LScratch: array [0 .. FUSED_BATCH_BLOCKS * BLOCK_SIZE - 1] of Byte;
+  LI, LBatchBytes, LNtzVal, LMaxNtz: Int32;
+  LInPtr, LBlock0Ptr: Pointer;
 begin
-  // Evolve the per-block offset ladder identically to ProcessMainBlock:
-  // FOffsetMAIN_{k+1} = FOffsetMAIN_k XOR L[ntz(count+1)]. All
-  // ABlockCount offsets are staged consecutively in LOffsets; the
-  // kernel consumes them directly and folds them through its internal
-  // pre/post-whitening loop.
   LBatchBytes := ABlockCount * BLOCK_SIZE;
+
+  // Pre-compute ntz for every block in the batch and track the largest
+  // index so we can grow FL exactly once before materialising LTableFlat.
+  // Moving ntz out of the kernel keeps i386 GPR pressure sane and lets
+  // both kernels share a single byte-indexed lookup path.
+  LMaxNtz := 0;
   for LI := 0 to ABlockCount - 1 do
   begin
     System.Inc(FMainBlockCount);
-    LLSub := GetLSub(OCB_ntz(FMainBlockCount));
-    TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
-      @LLSub[0]);
-    System.Move(FOffsetMAIN[0], LOffsets[LI * BLOCK_SIZE], BLOCK_SIZE);
+    LNtzVal := OCB_ntz(FMainBlockCount);
+    LNtz[LI] := Byte(LNtzVal);
+    if LNtzVal > LMaxNtz then
+      LMaxNtz := LNtzVal;
   end;
+
+  // Grow FL to cover LMaxNtz (side effect of GetLSub) then flatten the
+  // live L entries into a contiguous kernel-friendly buffer. FL entries
+  // are themselves 16-byte arrays; a tight Move loop is cheaper than a
+  // per-block pointer chase from the kernel would be.
+  GetLSub(LMaxNtz);
+  for LI := 0 to LMaxNtz do
+    System.Move(FL[LI][0], LTableFlat[LI * BLOCK_SIZE], BLOCK_SIZE);
 
   if FForEncryption then
   begin
-    // Fold plaintext blocks into FChecksum up front; the kernel then
-    // only sees offsets + plaintext -> ciphertext and checksum state
-    // never leaves Pascal, matching the 8-wide scalar-bulk semantics.
-    for LI := 0 to ABlockCount - 1 do
-      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-        @AInput[AInOff + LI * BLOCK_SIZE]);
-
-    FOcbKernel.ProcessBlocks(@AInput[AInOff], @AOutput[AOutOff],
-      @LOffsets[0], ABlockCount);
+    // Encrypt: block 0 of iteration 0 is the first block of AInput --
+    // identical to the main-stream base -- so Block0Ptr and InPtr
+    // alias. The fused kernel owns the offset ladder, the L-XOR step
+    // and the plaintext-into-FChecksum fold; Pascal only supplies the
+    // state pointers it reads/writes in-place.
+    LInPtr := @AInput[AInOff];
+    LBlock0Ptr := LInPtr;
+    FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
+      @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
+      LBlock0Ptr, ABlockCount);
   end
-  else
+  else if FMacSize = BLOCK_SIZE then
   begin
-    // Decrypt-side ciphertext stream = FMacSize-byte lookahead held in
-    // FMainBlock[0..FMacSize-1] followed by (LBatchBytes - FMacSize)
-    // fresh AInput bytes. Identical sliding-window contract to the
-    // 8-wide scalar bulk path.
-    System.Move(FMainBlock[0], LScratch[0], FMacSize);
-    System.Move(AInput[AInOff], LScratch[FMacSize], LBatchBytes - FMacSize);
+    // Decrypt fast path (full-width MAC): the ciphertext stream S is
+    // S[0..15]   = FMainBlock[0..15]   (the BLOCK_SIZE-byte lookahead
+    //                                  produced by the previous call)
+    // S[16..*]   = AInput[AInOff..]    (fresh ciphertext)
+    // so block 0 reads from FMainBlock and blocks 1.. read from
+    // AInput with no copy. We hand the kernel Block0Ptr = FMainBlock
+    // and InPtr = AInput - BLOCK_SIZE: on iter 0 the kernel sources
+    // block 0 from Block0Ptr (never dereferencing InPtr + 0), and on
+    // iter >= 1 it refreshes its block-0 source from the advanced
+    // InPtr so [InPtr + k*stride] reads straight from AInput. This
+    // eliminates the LBatchBytes - BLOCK_SIZE byte memcpy the old
+    // LScratch reshape had to do on every fused decrypt batch.
+    //
+    // The `InPtr - BLOCK_SIZE` pointer is never dereferenced at
+    // offset 0 by the kernel (verified phase-by-phase in
+    // OcbFusedWide_x86_64.inc / OcbFusedWide_i386.inc); the address
+    // itself only feeds register arithmetic and the `[InPtr + 16..]`
+    // loads, all of which resolve inside AInput.
+    LBlock0Ptr := @FMainBlock[0];
+    LInPtr := Pointer(NativeInt(@AInput[AInOff]) - BLOCK_SIZE);
+    FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
+      @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
+      LBlock0Ptr, ABlockCount);
 
-    FOcbKernel.ProcessBlocks(@LScratch[0], @AOutput[AOutOff],
-      @LOffsets[0], ABlockCount);
-
-    // Fold the freshly recovered plaintext (now in AOutput) into FChecksum.
-    for LI := 0 to ABlockCount - 1 do
-      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-        @AOutput[AOutOff + LI * BLOCK_SIZE]);
-
-    // Refresh the FMacSize lookahead from the tail of the consumed
+    // Refresh the BLOCK_SIZE lookahead from the tail of the consumed
     // AInput window so subsequent calls (fused, 8-wide, or scalar)
     // observe the identical FMainBlock prefix the per-byte loop would
     // have produced after consuming LBatchBytes bytes.
+    System.Move(AInput[AInOff + LBatchBytes - BLOCK_SIZE], FMainBlock[0],
+      BLOCK_SIZE);
+  end
+  else
+  begin
+    // Decrypt fallback (FMacSize < BLOCK_SIZE): the lookahead straddles
+    // a block boundary so we can't splice two pointers; stage the same
+    // sliding-window buffer the 8-wide scalar path uses and feed the
+    // kernel a single contiguous source. Block0Ptr aliases InPtr here
+    // (kernel reads iter-0 block 0 from LScratch[0..15] just like any
+    // later iteration).
+    System.Move(FMainBlock[0], LScratch[0], FMacSize);
+    System.Move(AInput[AInOff], LScratch[FMacSize], LBatchBytes - FMacSize);
+
+    LInPtr := @LScratch[0];
+    LBlock0Ptr := LInPtr;
+    FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
+      @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
+      LBlock0Ptr, ABlockCount);
+
     System.Move(AInput[AInOff + LBatchBytes - FMacSize], FMainBlock[0],
       FMacSize);
   end;

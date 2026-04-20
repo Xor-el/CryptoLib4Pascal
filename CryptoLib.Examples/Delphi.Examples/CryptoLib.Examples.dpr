@@ -589,7 +589,7 @@ uses
   ClpEaxBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpEaxBlockCipher.pas',
   ClpOcbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpOcbBlockCipher.pas',
   ClpGcmSivUtilities in '..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmSivUtilities.pas',
-  ClpFusedModeDirection in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpFusedModeDirection.pas',
+  ClpFusedKernelTypes in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpFusedKernelTypes.pas',
   ClpIFusedGcmKernel in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmKernel.pas',
   ClpIFusedOcbKernel in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedOcbKernel.pas',
   ClpIFusedCcmKernel in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCcmKernel.pas',
