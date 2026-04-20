@@ -1,16 +1,12 @@
-// Fused AES-NI keystream generation + 8-way GHASH kernel (x86-64).
-//
-// Note on naming: AES inside GCM is ALWAYS used in encrypt mode (CTR keystream
-// construction), whether the caller is performing GCM encryption OR GCM
-// decryption. This kernel therefore serves both GCM directions; what differs
-// per call is which buffer the Pascal wrapper hands in as PXorIn / POut /
-// PPrevCipher (see the layout below). Nothing inside the kernel branches on
-// "encrypt vs decrypt" -- it XORs whatever 128-byte input the caller passed.
+// Fused AES-NI CTR keystream + 8-way GHASH kernel (x86-64).
 //
 // Processes one pipelined batch: AES encrypts eight counter blocks to produce
 // a keystream, XORs it with PXorIn (plaintext on GCM encrypt, ciphertext on
 // GCM decrypt) to produce the current batch's POut, and CONCURRENTLY GHASHes
 // the PREVIOUS batch's ciphertext into the running authentication state.
+// AES inside GCM is always CTR keystream construction regardless of GCM
+// direction -- nothing in the kernel branches on encrypt vs decrypt; the
+// Pascal wrapper just picks which buffers become PXorIn / POut / PPrevCipher.
 //
 // This is the Gueron-style interleaved kernel: aesenc instructions (which run
 // on port 0 on Skylake+/Zen+) are issued alternating with pclmulqdq

@@ -25,6 +25,14 @@ uses
   Generics.Collections,
   ClpIBlockCipher,
   ClpIBulkBlockCipher,
+  ClpFusedModeDirection,
+  ClpIFusedOcbKernel,
+  ClpFusedKernelRegistry,
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Link the built-in AES-NI OCB accelerator so its initialization
+  // section registers with TFusedKernelRegistry.
+  ClpAesNiOcbKernel,
+{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpIOcbBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
@@ -37,6 +45,14 @@ uses
   ClpByteUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
+
+const
+  // Maximum blocks staged per fused-kernel dispatch. LCM(6, 8) = 24,
+  // scaled by 4 to give a 96-block (1.5 KiB) offset batch that feeds
+  // either the 8-wide (x86_64) or 6-wide (i386) internal kernel loop
+  // without a remainder; stack footprint is 1.5 KiB for LOffsets plus
+  // 1.5 KiB for LScratch on the decrypt path.
+  FUSED_BATCH_BLOCKS = 96;
 
 resourcestring
   SHashCipherNil = 'hashCipher';
@@ -89,6 +105,23 @@ type
     // through a single ProcessBlocks call inside ProcessEightBlocksBulk
     // instead of the per-byte FMainBlock fill path. Nil -> scalar fallback.
     FMainBulk: IBulkBlockCipher;
+
+    // Tier 5: cipher-agnostic fused OCB kernel resolved via
+    // TFusedKernelRegistry on every Init. Nil when no registered
+    // factory accepts the cipher / direction pair or the registry-wide
+    // kill switch is on; ProcessBytes then falls through to the 8-wide
+    // bulk / scalar paths unchanged. FOcbKernelMinBlocks is also the
+    // batch alignment: the kernel loops internally in MinimumBlockCount
+    // chunks so the mode stages up to FUSED_BATCH_BLOCKS worth of
+    // offsets per dispatch.
+    FOcbKernel: IFusedOcbKernel;
+    FOcbKernelMinBlocks: Int32;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    procedure ProcessFusedBulk(const AInput: TCryptoLibByteArray;
+      AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
+      ABlockCount: Int32);
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
     procedure ProcessEightBlocksBulk(const AInput: TCryptoLibByteArray;
       AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32);
@@ -189,6 +222,7 @@ var
   LN: TCryptoLibByteArray;
   LMacSizeBits, LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
+  LFusedDirection: TFusedModeDirection;
 begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
@@ -246,6 +280,30 @@ begin
   // assumption); any engine that advertises the contract in ClpIBulkBlockCipher
   // is eligible for the 8-wide path in ProcessEightBlocksBulk.
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FMainCipher, FMainBulk);
+
+  // Resolve a fused OCB kernel via the open factory registry; the
+  // first factory whose TryCreate accepts the cipher / direction pair
+  // wins, and the result is cached for the whole Init cycle.
+  FOcbKernel := nil;
+  FOcbKernelMinBlocks := 0;
+  if FForEncryption then
+    LFusedDirection := TFusedModeDirection.Encrypt
+  else
+    LFusedDirection := TFusedModeDirection.Decrypt;
+  if TFusedKernelRegistry.TryAcquireOcb(FMainCipher, LFusedDirection,
+    FOcbKernel) and (FOcbKernel <> nil) then
+  begin
+    FOcbKernelMinBlocks := FOcbKernel.MinimumBlockCount;
+    // The fused batch buffer holds FUSED_BATCH_BLOCKS offsets; reject
+    // kernels whose stride does not divide that capacity so the mode
+    // can always present a full-stride batch.
+    if (FOcbKernelMinBlocks <= 0) or
+      (FUSED_BATCH_BLOCKS mod FOcbKernelMinBlocks <> 0) then
+    begin
+      FOcbKernel := nil;
+      FOcbKernelMinBlocks := 0;
+    end;
+  end;
 
   System.SetLength(FL_Asterisk, 16);
   TArrayUtilities.Fill<Byte>(FL_Asterisk, 0, 16, Byte(0));
@@ -411,7 +469,7 @@ end;
 function TOcbBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LResultLen, LSteadyPos: Int32;
+  LI, LResultLen, LSteadyPos, LRemaining, LBatchBlocks, LBatchBytes: Int32;
 begin
   LResultLen := 0;
   LI := 0;
@@ -419,8 +477,8 @@ begin
   // FMainBlockPos after a successful ProcessMainBlock is 0 for encrypt and
   // FMacSize for decrypt (the decrypt-side FMainBlock is 16 + FMacSize bytes
   // wide, holding a FMacSize-byte ciphertext lookahead). Bulk only kicks in
-  // from that steady state so the 128-byte batch aligns cleanly with the
-  // per-byte fill contract that feeds FChecksum and the offset ladder.
+  // from that steady state so the batch aligns cleanly with the per-byte
+  // fill contract that feeds FChecksum and the offset ladder.
   if FForEncryption then
     LSteadyPos := 0
   else
@@ -428,6 +486,32 @@ begin
 
   while (LI < ALen) do
   begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // Tier 5: accelerator-provided fused kernel. Takes priority over
+    // the 8-wide Tier 4 bulk path whenever at least one kernel-stride
+    // batch fits the steady-state window. A single dispatch stages up
+    // to FUSED_BATCH_BLOCKS worth of offsets and lets the kernel loop
+    // internally in MinimumBlockCount strides, amortising per-call
+    // overhead across the whole batch.
+    if (FOcbKernel <> nil) and (FMainBlockPos = LSteadyPos) and
+      ((ALen - LI) >= FOcbKernelMinBlocks * BLOCK_SIZE) then
+    begin
+      LRemaining := (ALen - LI) div BLOCK_SIZE;
+      if LRemaining > FUSED_BATCH_BLOCKS then
+        LBatchBlocks := FUSED_BATCH_BLOCKS
+      else
+        LBatchBlocks := LRemaining;
+      LBatchBlocks := (LBatchBlocks div FOcbKernelMinBlocks) *
+        FOcbKernelMinBlocks;
+      LBatchBytes := LBatchBlocks * BLOCK_SIZE;
+      ProcessFusedBulk(AInput, AInOff + LI, AOutput,
+        AOutOff + LResultLen, LBatchBlocks);
+      LResultLen := LResultLen + LBatchBytes;
+      LI := LI + LBatchBytes;
+      Continue;
+    end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
     if (FMainBulk <> nil) and (FMainBlockPos = LSteadyPos) and
       ((ALen - LI) >= 8 * BLOCK_SIZE) then
     begin
@@ -450,6 +534,70 @@ begin
 
   Result := LResultLen;
 end;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+procedure TOcbBlockCipher.ProcessFusedBulk(const AInput: TCryptoLibByteArray;
+  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
+  ABlockCount: Int32);
+var
+  LOffsets: array [0 .. FUSED_BATCH_BLOCKS * 16 - 1] of Byte;
+  LScratch: array [0 .. FUSED_BATCH_BLOCKS * 16 - 1] of Byte;
+  LI, LBatchBytes: Int32;
+  LLSub: TCryptoLibByteArray;
+begin
+  // Evolve the per-block offset ladder identically to ProcessMainBlock:
+  // FOffsetMAIN_{k+1} = FOffsetMAIN_k XOR L[ntz(count+1)]. All
+  // ABlockCount offsets are staged consecutively in LOffsets; the
+  // kernel consumes them directly and folds them through its internal
+  // pre/post-whitening loop.
+  LBatchBytes := ABlockCount * BLOCK_SIZE;
+  for LI := 0 to ABlockCount - 1 do
+  begin
+    System.Inc(FMainBlockCount);
+    LLSub := GetLSub(OCB_ntz(FMainBlockCount));
+    TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
+      @LLSub[0]);
+    System.Move(FOffsetMAIN[0], LOffsets[LI * BLOCK_SIZE], BLOCK_SIZE);
+  end;
+
+  if FForEncryption then
+  begin
+    // Fold plaintext blocks into FChecksum up front; the kernel then
+    // only sees offsets + plaintext -> ciphertext and checksum state
+    // never leaves Pascal, matching the 8-wide scalar-bulk semantics.
+    for LI := 0 to ABlockCount - 1 do
+      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+        @AInput[AInOff + LI * BLOCK_SIZE]);
+
+    FOcbKernel.ProcessBlocks(@AInput[AInOff], @AOutput[AOutOff],
+      @LOffsets[0], ABlockCount);
+  end
+  else
+  begin
+    // Decrypt-side ciphertext stream = FMacSize-byte lookahead held in
+    // FMainBlock[0..FMacSize-1] followed by (LBatchBytes - FMacSize)
+    // fresh AInput bytes. Identical sliding-window contract to the
+    // 8-wide scalar bulk path.
+    System.Move(FMainBlock[0], LScratch[0], FMacSize);
+    System.Move(AInput[AInOff], LScratch[FMacSize], LBatchBytes - FMacSize);
+
+    FOcbKernel.ProcessBlocks(@LScratch[0], @AOutput[AOutOff],
+      @LOffsets[0], ABlockCount);
+
+    // Fold the freshly recovered plaintext (now in AOutput) into FChecksum.
+    for LI := 0 to ABlockCount - 1 do
+      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
+        @AOutput[AOutOff + LI * BLOCK_SIZE]);
+
+    // Refresh the FMacSize lookahead from the tail of the consumed
+    // AInput window so subsequent calls (fused, 8-wide, or scalar)
+    // observe the identical FMainBlock prefix the per-byte loop would
+    // have produced after consuming LBatchBytes bytes.
+    System.Move(AInput[AInOff + LBatchBytes - FMacSize], FMainBlock[0],
+      FMacSize);
+  end;
+end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 procedure TOcbBlockCipher.ProcessEightBlocksBulk(
   const AInput: TCryptoLibByteArray; AInOff: Int32;

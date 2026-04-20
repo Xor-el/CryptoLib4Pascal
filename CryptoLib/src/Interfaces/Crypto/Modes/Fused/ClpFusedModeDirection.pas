@@ -14,41 +14,33 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAesEngineX86;
+unit ClpFusedModeDirection;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\..\..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  ClpIBulkBlockCipher;
-
 type
   /// <summary>
-  /// AES-NI engine interface. Surfaces the AES round-key schedule pointers
-  /// required by the concrete fused AES-NI AEAD kernels. Internal-use: only
-  /// TAesEngineX86 implements it in-tree. Modes wanting plain multi-block
-  /// batching should query IBulkBlockCipher instead to stay cipher-agnostic.
+  ///   Direction a fused AEAD kernel is being constructed for. Modes
+  ///   whose hot path is direction-agnostic may pass Encrypt for both
+  ///   cases.
   /// </summary>
-  IAesEngineX86 = interface(IBulkBlockCipher)
-    ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
+  TFusedModeDirection = (Encrypt, Decrypt);
 
-    /// <summary>
-    /// Returns the AES-NI encrypt round-key schedule pointer and round
-    /// count when the engine is currently initialized for encryption
-    /// (round count in {10,12,14}); False otherwise. The pointer MUST NOT
-    /// be retained past the current engine init.
-    /// </summary>
-    function TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
-
-    /// <summary>
-    /// Returns the AES-NI decrypt round-key schedule (inverse MixColumns
-    /// already applied) when the engine is currently initialized for
-    /// decryption; False otherwise. Same lifetime contract as
-    /// TryGetEncKeysPtr.
-    /// </summary>
-    function TryGetDecKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
-  end;
+  /// <summary>
+  ///   Quality-of-service tier used to order factories in the fused
+  ///   AEAD kernel registry. Higher ordinal wins; equal priorities
+  ///   retain registration order.
+  ///     Fallback     - opt-in experimental / diagnostic kernel; loses
+  ///                    to anything else.
+  ///     Baseline     - in-tree built-in accelerators.
+  ///     Accelerated  - external plug-in targeting a newer ISA
+  ///                    extension than the in-tree baseline.
+  ///     UserOverride - last-resort explicit override wired in by the
+  ///                    consumer (application or test harness).
+  /// </summary>
+  TFusedKernelPriority = (Fallback, Baseline, Accelerated, UserOverride);
 
 implementation
 

@@ -608,6 +608,7 @@ contains
   ClpChaCha20Poly1305 in '..\..\Crypto\Modes\ClpChaCha20Poly1305.pas',
   ClpEaxBlockCipher in '..\..\Crypto\Modes\ClpEaxBlockCipher.pas',
   ClpOcbBlockCipher in '..\..\Crypto\Modes\ClpOcbBlockCipher.pas',
+  ClpGcmSivUtilities in '..\..\Crypto\Modes\Gcm\ClpGcmSivUtilities.pas',
   ClpAeadParameters in '..\..\Crypto\Parameters\ClpAeadParameters.pas',
   ClpBufferedAeadCipher in '..\..\Crypto\ClpBufferedAeadCipher.pas',
   ClpBufferedAeadBlockCipher in '..\..\Crypto\ClpBufferedAeadBlockCipher.pas',
@@ -705,6 +706,19 @@ contains
   ClpIX509CertificatePair in '..\..\Interfaces\X509\ClpIX509CertificatePair.pas',
   ClpFormatSettingsHelper in '..\..\Helpers\ClpFormatSettingsHelper.pas',
   ClpDateTimeHelper in '..\..\Helpers\ClpDateTimeHelper.pas',
-  ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas';
+  ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas',
+  ClpFusedModeDirection in '..\..\Interfaces\Crypto\Modes\Fused\ClpFusedModeDirection.pas',
+  ClpIFusedGcmKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmKernel.pas',
+  ClpIFusedOcbKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedOcbKernel.pas',
+  ClpIFusedCcmKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCcmKernel.pas',
+  ClpIFusedEaxKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedEaxKernel.pas',
+  ClpIFusedGcmSivKernel in '..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmSivKernel.pas',
+  ClpFusedKernelRegistry in '..\..\Crypto\Modes\Fused\ClpFusedKernelRegistry.pas',
+  ClpAesNiAeadResolver in '..\..\Crypto\Modes\Fused\Internal\ClpAesNiAeadResolver.pas',
+  ClpAesNiOcbKernel in '..\..\Crypto\Modes\Fused\ClpAesNiOcbKernel.pas',
+  ClpAesNiCcmKernel in '..\..\Crypto\Modes\Fused\ClpAesNiCcmKernel.pas',
+  ClpAesNiEaxKernel in '..\..\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas',
+  ClpAesNiGcmKernel in '..\..\Crypto\Modes\Fused\ClpAesNiGcmKernel.pas',
+  ClpPclmulGcmSivKernel in '..\..\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas';
 
 end.

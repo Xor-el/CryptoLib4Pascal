@@ -29,53 +29,38 @@ uses
 
 type
   /// <summary>
-  /// Shared scalar helpers for bulk block-cipher mode implementations.
-  /// Hosts the 16/64/128-byte triple-XOR primitives used by the fused /
-  /// pipelined batch routines in SIC, GCM, GCM-SIV, OCB, CFB and CTS,
-  /// plus the IBulkBlockCipher / IBulkBlockCipherMode capability probes
-  /// that every bulk-aware mode re-runs on Init.
+  ///   Shared scalar helpers for bulk block-cipher mode
+  ///   implementations: 16 / 64 / 128-byte triple-XOR primitives plus
+  ///   the IBulkBlockCipher / IBulkBlockCipherMode capability probes.
   /// </summary>
   TBlockCipherBulkUtilities = class sealed(TObject)
   public
-    /// <summary>Scalar triple-XOR of 16 bytes (2 x UInt64):
-    /// PDst^ := PSrcA^ xor PSrcB^. Declared as a static class procedure --
-    /// and deliberately NOT inline -- so that each call establishes a fresh
-    /// stack frame with its own register allocation, matching the 64- and
-    /// 128-byte siblings. Used by OCB for its 16-byte offset / checksum /
-    /// HASH folds.</summary>
+    /// <summary>Scalar triple-XOR of 16 bytes:
+    /// PDst^ := PSrcA^ xor PSrcB^.</summary>
     class procedure Xor16Bytes(PDst, PSrcA, PSrcB: PByte); static;
 
-    /// <summary>Scalar triple-XOR of 64 bytes (8 x UInt64):
-    /// PDst^ := PSrcA^ xor PSrcB^. Declared as a static class procedure --
-    /// and deliberately NOT inline -- so that each call establishes a fresh
-    /// stack frame with its own register allocation. FPC 3.2 for i386
-    /// miscompiles the equivalent inline loop inside the pipelined GCM
-    /// steps at -O3, rewriting `LI := LI + 1` to `addl $1, LI_mem` and then
-    /// using a stale `%edx` (left over from an earlier caller-side load)
-    /// as if it held LI. The CALL boundary forces the caller to spill and
-    /// dodges the bug.</summary>
+    /// <summary>
+    ///   Scalar triple-XOR of 64 bytes. Intentionally NOT inline: FPC
+    ///   3.2 for i386 miscompiles the equivalent inline loop inside
+    ///   the pipelined GCM steps at -O3 (stale %edx reused as the loop
+    ///   index), so the CALL boundary is load-bearing.
+    /// </summary>
     class procedure Xor64Bytes(PDst, PSrcA, PSrcB: PByte); static;
 
-    /// <summary>128-byte (16 x UInt64) counterpart of Xor64Bytes, used by
-    /// the 8-block pipelines in GCM and the CTR bulk step in SIC. See
-    /// Xor64Bytes for why this must remain a real (non-inline) call.</summary>
+    /// <summary>128-byte counterpart of Xor64Bytes. Same non-inline
+    /// constraint applies.</summary>
     class procedure Xor128Bytes(PDst, PSrcA, PSrcB: PByte); static;
 
     /// <summary>
-    /// Probe ACipher for the IBulkBlockCipher capability. On True,
-    /// ABulk points at the resolved interface; on False, ABulk is
-    /// guaranteed nil so the caller can store the result back into a
-    /// field that was populated on a previous Init.
-    /// Centralises the ~4-line "re-probe on Init" ritual used by every
-    /// bulk-aware mode (SIC, CBC, ECB, CFB, OCB, GCM, GCM-SIV, EAX, CCM).
+    ///   Probe ACipher for IBulkBlockCipher. ABulk is nil on False so
+    ///   the caller can blindly assign into an existing field.
     /// </summary>
     class function TryResolveBulkCipher(const ACipher: IBlockCipher;
       out ABulk: IBulkBlockCipher): Boolean; static;
 
     /// <summary>
-    /// Mode-side sibling of TryResolveBulkCipher: probe AMode for the
-    /// IBulkBlockCipherMode capability. Clears ABulkMode on False so the
-    /// caller can blindly assign without a preceding nil-out.
+    ///   Mode-side sibling of TryResolveBulkCipher; probes AMode for
+    ///   IBulkBlockCipherMode. ABulkMode is nil on False.
     /// </summary>
     class function TryResolveBulkCipherMode(const AMode: IBlockCipherMode;
       out ABulkMode: IBulkBlockCipherMode): Boolean; static;

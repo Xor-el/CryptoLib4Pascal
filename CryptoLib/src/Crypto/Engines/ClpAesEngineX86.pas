@@ -148,6 +148,14 @@ type
     /// engine init; reinit / free invalidates it.
     /// </summary>
     function TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
+
+    /// <summary>
+    /// Decrypt-direction counterpart of TryGetEncKeysPtr. Returns the
+    /// inverse-MixColumns schedule when the engine is initialized for
+    /// decryption; False otherwise. Same lifetime contract as
+    /// TryGetEncKeysPtr.
+    /// </summary>
+    function TryGetDecKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
     property AlgorithmName: String read GetAlgorithmName;
   end;
 
@@ -1319,6 +1327,31 @@ begin
     TAesX86Mode.Enc192:
       if FNRounds <> 12 then begin Result := False; Exit; end;
     TAesX86Mode.Enc256:
+      if FNRounds <> 14 then begin Result := False; Exit; end;
+  else
+    Result := False;
+    Exit;
+  end;
+  AKeysPtr := FKeys;
+  ANumRounds := FNRounds;
+  Result := True;
+end;
+
+function TAesEngineX86.TryGetDecKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
+begin
+  AKeysPtr := nil;
+  ANumRounds := 0;
+  if FKeys = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+  case FMode of
+    TAesX86Mode.Dec128:
+      if FNRounds <> 10 then begin Result := False; Exit; end;
+    TAesX86Mode.Dec192:
+      if FNRounds <> 12 then begin Result := False; Exit; end;
+    TAesX86Mode.Dec256:
       if FNRounds <> 14 then begin Result := False; Exit; end;
   else
     Result := False;

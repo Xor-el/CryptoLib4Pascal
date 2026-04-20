@@ -34,6 +34,14 @@ uses
   ClpISicBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
+  ClpFusedModeDirection,
+  ClpIFusedCcmKernel,
+  ClpFusedKernelRegistry,
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Link the built-in AES-NI CCM accelerator so its initialization
+  // section registers with TFusedKernelRegistry.
+  ClpAesNiCcmKernel,
+{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpCipherModeParameterUtilities,
   ClpCbcBlockCipherMac,
   ClpIMac,
@@ -73,12 +81,36 @@ type
     FKeyParam: ICipherParameters;
     FAssociatedText: TMemoryStream;
     FData: TMemoryStream;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // Cached once per Init; non-nil when the registry resolved a fused
+    // CCM kernel for the underlying cipher and current direction.
+    FCcmKernel: IFusedCcmKernel;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
     function GetMacSize(AForEncryption: Boolean; ARequestedMacBits: Int32): Int32;
     function GetAssociatedTextLength(): Int32;
     function HasAssociatedText(): Boolean;
     function CalculateMac(const AData: TCryptoLibByteArray; ADataOff, ADataLen: Int32;
       const AMacBlock: TCryptoLibByteArray): Int32;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // Runs AES CBC-MAC over the CCM header (B_0 || AAD length-prefix ||
+    // AAD || zero-pad) and writes the post-header 16-byte state into
+    // AMacState. Matches the scalar CalculateMac contract.
+    procedure ComputePostHeaderMacState(AInLen: Int32;
+      const AMacState: TCryptoLibByteArray);
+    // Fused 2-wide CTR + CBC-MAC body path. Returns False if the fused
+    // kernel cannot be invoked. On success, writes the ciphertext,
+    // scalar tail, tag, and FMacBlock (raw pre-encryption MAC).
+    function ProcessPacketEncryptFused(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32; const AIV: TCryptoLibByteArray): Boolean;
+    // Fused decrypt twin. Raises on tag mismatch, matching the scalar
+    // path. On success FMacBlock holds the zero-padded received MAC.
+    function ProcessPacketDecryptFused(const AInput: TCryptoLibByteArray;
+      AInOff, AInLen, AOutputLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32;
+      const AIV: TCryptoLibByteArray): Boolean;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -152,6 +184,9 @@ procedure TCcmBlockCipher.Init(AForEncryption: Boolean;
 var
   LChoice: TCipherAeadChoice;
   LRequestedMacSizeBits: Int32;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  LDirection: TFusedModeDirection;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
   FForEncryption := AForEncryption;
 
@@ -172,6 +207,22 @@ begin
 
   if (System.Length(FNonce) < 7) or (System.Length(FNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  FCcmKernel := nil;
+  if FKeyParam <> nil then
+  begin
+    // Key FCipher now so the factory can read the finalised AES
+    // schedule. ProcessPacket re-keys through the SIC wrapper later; the
+    // schedule contents are identical across those re-keys.
+    FCipher.Init(True, FKeyParam);
+    if AForEncryption then
+      LDirection := TFusedModeDirection.Encrypt
+    else
+      LDirection := TFusedModeDirection.Decrypt;
+    TFusedKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
   Reset();
 end;
@@ -334,6 +385,19 @@ begin
     LOutputLen := AInLen + FMacSize;
     TCheck.OutputLength(AOutput, AOutOff, LOutputLen, SOutputBufferTooShort);
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // Fused fast path folds CTR and CBC-MAC into one sweep; the scalar
+    // path handles the 1..16-byte tail and the tag encryption.
+    if (FCcmKernel <> nil)
+      and ((AInLen - 1) div BlockSize > 0)
+      and ProcessPacketEncryptFused(AInput, AInOff, AInLen, AOutput,
+        AOutOff, LIV) then
+    begin
+      Result := LOutputLen;
+      Exit;
+    end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
     CalculateMac(AInput, AInOff, AInLen, FMacBlock);
 
     System.SetLength(LEncMac, BlockSize);
@@ -379,6 +443,19 @@ begin
 
     LOutputLen := AInLen - FMacSize;
     TCheck.OutputLength(AOutput, AOutOff, LOutputLen, SOutputBufferTooShort);
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // Fused decrypt twin. Scalar tail handles the trailing 1..16-byte
+    // block plus the FixedTime tag compare.
+    if (FCcmKernel <> nil)
+      and ((LOutputLen - 1) div BlockSize > 0)
+      and ProcessPacketDecryptFused(AInput, AInOff, AInLen, LOutputLen,
+        AOutput, AOutOff, LIV) then
+    begin
+      Result := LOutputLen;
+      Exit;
+    end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
     System.Move(AInput[AInOff + LOutputLen], FMacBlock[0], FMacSize);
 
@@ -536,5 +613,216 @@ function TCcmBlockCipher.HasAssociatedText: Boolean;
 begin
   Result := GetAssociatedTextLength() > 0;
 end;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+
+procedure TCcmBlockCipher.ComputePostHeaderMacState(AInLen: Int32;
+  const AMacState: TCryptoLibByteArray);
+var
+  LHeader, LBlock: TCryptoLibByteArray;
+  LOffset, LI, LTextLength, LExtra, LNonceLen, LQ, LTmp, LHeaderLen,
+    LInitLen, LRuntimeLen: Int32;
+begin
+  LNonceLen := System.Length(FNonce);
+  LQ := 15 - LNonceLen;
+
+  if HasAssociatedText() then
+  begin
+    LTextLength := GetAssociatedTextLength();
+    if LTextLength < ((1 shl 16) - (1 shl 8)) then
+      LExtra := 2
+    else
+      LExtra := 6;
+    LHeaderLen := 16 + LExtra + LTextLength;
+    LHeaderLen := ((LHeaderLen + 15) div 16) * 16;
+  end
+  else
+  begin
+    LExtra := 0;
+    LTextLength := 0;
+    LHeaderLen := 16;
+  end;
+
+  System.SetLength(LHeader, LHeaderLen);
+
+  // B_0: flags byte [reserved:1][adata:1][(t-2)/2:3][q-1:3] per RFC 3610 2.2.
+  if HasAssociatedText() then
+    LHeader[0] := LHeader[0] or $40;
+  LHeader[0] := LHeader[0] or Byte((((FMacSize - 2) div 2) and $7) shl 3);
+  LHeader[0] := LHeader[0] or Byte((LQ - 1) and $7);
+  System.Move(FNonce[0], LHeader[1], LNonceLen);
+  LTmp := AInLen;
+  LI := 1;
+  while LTmp > 0 do
+  begin
+    LHeader[16 - LI] := Byte(LTmp and $FF);
+    LTmp := LTmp shr 8;
+    System.Inc(LI);
+  end;
+
+  if HasAssociatedText() then
+  begin
+    if LExtra = 2 then
+    begin
+      LHeader[16] := Byte(LTextLength shr 8);
+      LHeader[17] := Byte(LTextLength);
+    end
+    else
+    begin
+      LHeader[16] := $FF;
+      LHeader[17] := $FE;
+      LHeader[18] := Byte(LTextLength shr 24);
+      LHeader[19] := Byte(LTextLength shr 16);
+      LHeader[20] := Byte(LTextLength shr 8);
+      LHeader[21] := Byte(LTextLength);
+    end;
+    LOffset := 16 + LExtra;
+    LInitLen := 0;
+    if FInitialAssociatedText <> nil then
+    begin
+      LInitLen := System.Length(FInitialAssociatedText);
+      System.Move(FInitialAssociatedText[0], LHeader[LOffset], LInitLen);
+    end;
+    LRuntimeLen := Int32(FAssociatedText.Size);
+    if LRuntimeLen > 0 then
+    begin
+      FAssociatedText.Position := 0;
+      FAssociatedText.ReadBuffer(LHeader[LOffset + LInitLen], LRuntimeLen);
+    end;
+  end;
+
+  System.FillChar(AMacState[0], BlockSize, 0);
+  System.SetLength(LBlock, BlockSize);
+  LOffset := 0;
+  while LOffset < LHeaderLen do
+  begin
+    for LI := 0 to BlockSize - 1 do
+      LBlock[LI] := AMacState[LI] xor LHeader[LOffset + LI];
+    FCipher.ProcessBlock(LBlock, 0, AMacState, 0);
+    System.Inc(LOffset, BlockSize);
+  end;
+end;
+
+function TCcmBlockCipher.ProcessPacketEncryptFused(
+  const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32;
+  const AIV: TCryptoLibByteArray): Boolean;
+var
+  LBulkBlocks, LTailLen, LI, LTailStart: Int32;
+  LS0, LMacState, LCtrBlock, LTailBlock: TCryptoLibByteArray;
+begin
+  Result := False;
+  if FCcmKernel = nil then
+    Exit;
+
+  LBulkBlocks := (AInLen - 1) div BlockSize;
+  if LBulkBlocks < FCcmKernel.MinimumBlockCount then
+    Exit;
+
+  // S_0 = E_K(J_0); XOR with the final MAC to emit the tag.
+  System.SetLength(LS0, BlockSize);
+  FCipher.ProcessBlock(AIV, 0, LS0, 0);
+
+  System.SetLength(LMacState, BlockSize);
+  ComputePostHeaderMacState(AInLen, LMacState);
+
+  // Body counter block (counter = 1).
+  System.SetLength(LCtrBlock, BlockSize);
+  System.Move(AIV[0], LCtrBlock[0], BlockSize);
+  LCtrBlock[BlockSize - 1] := LCtrBlock[BlockSize - 1] or 1;
+
+  FCcmKernel.ProcessBody(@AInput[AInOff], @AOutput[AOutOff],
+    @LCtrBlock[0], @LMacState[0], LBulkBlocks);
+
+  // Scalar tail: kernel held back the last 1..16 bytes. LCtrBlock now
+  // carries counter_{1 + LBulkBlocks}.
+  LTailLen := AInLen - LBulkBlocks * BlockSize;
+  LTailStart := AInOff + LBulkBlocks * BlockSize;
+
+  System.SetLength(LTailBlock, BlockSize);
+  System.Move(AInput[LTailStart], LTailBlock[0], LTailLen);
+  for LI := 0 to BlockSize - 1 do
+    LMacState[LI] := LMacState[LI] xor LTailBlock[LI];
+  FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
+
+  FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
+  for LI := 0 to LTailLen - 1 do
+    AOutput[AOutOff + LBulkBlocks * BlockSize + LI] :=
+      AInput[LTailStart + LI] xor LTailBlock[LI];
+
+  // FMacBlock holds the raw pre-encryption MAC (GetMac contract).
+  System.Move(LMacState[0], FMacBlock[0], BlockSize);
+  for LI := 0 to FMacSize - 1 do
+    AOutput[AOutOff + AInLen + LI] := LMacState[LI] xor LS0[LI];
+
+  Result := True;
+end;
+
+function TCcmBlockCipher.ProcessPacketDecryptFused(
+  const AInput: TCryptoLibByteArray; AInOff, AInLen, AOutputLen: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32;
+  const AIV: TCryptoLibByteArray): Boolean;
+var
+  LBulkBlocks, LTailLen, LI, LTailStart: Int32;
+  LS0, LMacState, LCtrBlock, LTailBlock, LReceivedRawMac,
+    LComputedMac: TCryptoLibByteArray;
+begin
+  Result := False;
+  if FCcmKernel = nil then
+    Exit;
+
+  LBulkBlocks := (AOutputLen - 1) div BlockSize;
+  if LBulkBlocks < FCcmKernel.MinimumBlockCount then
+    Exit;
+
+  System.SetLength(LS0, BlockSize);
+  FCipher.ProcessBlock(AIV, 0, LS0, 0);
+
+  // Decrypt the received MAC: R = (enc_tag || 0..) XOR S_0 truncated.
+  System.SetLength(LReceivedRawMac, BlockSize);
+  System.Move(AInput[AInOff + AOutputLen], LReceivedRawMac[0], FMacSize);
+  for LI := 0 to FMacSize - 1 do
+    LReceivedRawMac[LI] := LReceivedRawMac[LI] xor LS0[LI];
+  System.Move(LReceivedRawMac[0], FMacBlock[0], BlockSize);
+
+  System.SetLength(LMacState, BlockSize);
+  ComputePostHeaderMacState(AOutputLen, LMacState);
+
+  // Body counter block (counter = 1).
+  System.SetLength(LCtrBlock, BlockSize);
+  System.Move(AIV[0], LCtrBlock[0], BlockSize);
+  LCtrBlock[BlockSize - 1] := LCtrBlock[BlockSize - 1] or 1;
+
+  FCcmKernel.ProcessBody(@AInput[AInOff], @AOutput[AOutOff],
+    @LCtrBlock[0], @LMacState[0], LBulkBlocks);
+
+  // Scalar tail: decrypt via keystream XOR, then fold into the MAC.
+  LTailLen := AOutputLen - LBulkBlocks * BlockSize;
+  LTailStart := AInOff + LBulkBlocks * BlockSize;
+
+  System.SetLength(LTailBlock, BlockSize);
+  FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
+  for LI := 0 to LTailLen - 1 do
+    AOutput[AOutOff + LBulkBlocks * BlockSize + LI] :=
+      AInput[LTailStart + LI] xor LTailBlock[LI];
+
+  // Zero-pad plaintext tail and fold one last CBC step.
+  System.FillChar(LTailBlock[0], BlockSize, 0);
+  for LI := 0 to LTailLen - 1 do
+    LTailBlock[LI] := AOutput[AOutOff + LBulkBlocks * BlockSize + LI];
+  for LI := 0 to BlockSize - 1 do
+    LMacState[LI] := LMacState[LI] xor LTailBlock[LI];
+  FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
+
+  System.SetLength(LComputedMac, BlockSize);
+  System.Move(LMacState[0], LComputedMac[0], FMacSize);
+
+  if not TArrayUtilities.FixedTimeEquals(LReceivedRawMac, LComputedMac) then
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+
+  Result := True;
+end;
+
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 end.

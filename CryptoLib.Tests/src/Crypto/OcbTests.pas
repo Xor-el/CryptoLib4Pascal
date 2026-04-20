@@ -43,6 +43,7 @@ uses
   ClpCryptoLibTypes,
   ClpAesUtilities,
   ClpOcbBlockCipher,
+  ClpFusedKernelToggle,
   CryptoLibTestBase,
   AeadTestUtilities;
 
@@ -89,6 +90,13 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    // Workers run twice via RunWithFusedToggle (fused on / off) so any
+    // drift between the two code paths surfaces as a test failure.
+    procedure DoTestRfcVectors128;
+    procedure DoTestRfcVectors96;
+    procedure DoTestOcbLongForm;
+    procedure DoTestRandomised;
 
   published
     procedure TestRfcVectors128;
@@ -563,6 +571,26 @@ begin
 end;
 
 procedure TTestOcb.TestRfcVectors128;
+begin
+  RunWithFusedToggle(DoTestRfcVectors128);
+end;
+
+procedure TTestOcb.TestRfcVectors96;
+begin
+  RunWithFusedToggle(DoTestRfcVectors96);
+end;
+
+procedure TTestOcb.TestOcbLongForm;
+begin
+  RunWithFusedToggle(DoTestOcbLongForm);
+end;
+
+procedure TTestOcb.TestRandomised;
+begin
+  RunWithFusedToggle(DoTestRandomised);
+end;
+
+procedure TTestOcb.DoTestRfcVectors128;
 var
   LK: TBytes;
   LI: Int32;
@@ -574,7 +602,7 @@ begin
   end;
 end;
 
-procedure TTestOcb.TestRfcVectors96;
+procedure TTestOcb.DoTestRfcVectors96;
 var
   LK: TBytes;
   LI: Int32;
@@ -586,7 +614,7 @@ begin
   end;
 end;
 
-procedure TTestOcb.TestOcbLongForm;
+procedure TTestOcb.DoTestOcbLongForm;
 begin
   RunLongerTestCase(128, 128, '67E944D23256C5E0B6C61FA22FDF1EA2');
   RunLongerTestCase(192, 128, 'F673F2C3E7174AAE7BAE986CA9F29E17');
@@ -599,7 +627,7 @@ begin
   RunLongerTestCase(256, 64, '7D4EA5D445501CBE');
 end;
 
-procedure TTestOcb.TestRandomised;
+procedure TTestOcb.DoTestRandomised;
 var
   LRandom: ISecureRandom;
   LI: Int32;

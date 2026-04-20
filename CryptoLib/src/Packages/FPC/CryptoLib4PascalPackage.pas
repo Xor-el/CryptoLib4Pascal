@@ -217,7 +217,12 @@ uses
   ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader, 
   ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
   ClpDarwinSysCtl, ClpIBulkBlockCipherMode, ClpIBulkBlockCipher, 
-  ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities;
+  ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities, 
+  ClpGcmSivUtilities, ClpFusedModeDirection, 
+  ClpIFusedGcmKernel, ClpIFusedOcbKernel, ClpIFusedCcmKernel, 
+  ClpIFusedEaxKernel, ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, 
+  ClpAesNiAeadResolver, ClpAesNiOcbKernel, ClpAesNiCcmKernel, 
+  ClpAesNiEaxKernel, ClpAesNiGcmKernel, ClpPclmulGcmSivKernel;
 
 implementation
 

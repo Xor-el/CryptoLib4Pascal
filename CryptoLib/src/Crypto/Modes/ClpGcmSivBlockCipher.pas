@@ -35,6 +35,16 @@ uses
   ClpIBulkBlockCipher,
   ClpBlockCipherBulkUtilities,
   ClpGcmBlockCipher,
+  ClpGcmUtilities,
+  ClpGcmSivUtilities,
+  ClpFusedModeDirection,
+  ClpIFusedGcmSivKernel,
+  ClpFusedKernelRegistry,
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Link the built-in PCLMULQDQ GCM-SIV accelerator so its initialization
+  // section registers with TFusedKernelRegistry.
+  ClpPclmulGcmSivKernel,
+{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpKeyParameter,
   ClpAesUtilities,
   ClpInt64Utilities,
@@ -114,6 +124,19 @@ type
     FTheNonce: TCryptoLibByteArray;
     FTheFlags: Int32;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // POLYVAL H-power table (H^8..H^1 as 16-byte limbs in GHASH
+    // canonical form, 128 bytes). Populated once per key in DeriveKeys
+    // when the fused kernel is available; captured by reference by the
+    // kernel and consumed read-only by TGcmSivHasher.UpdateHash.
+    FHPow128: TCryptoLibByteArray;
+    // Fused POLYVAL kernel resolved via TFusedKernelRegistry. Non-nil
+    // only when the registry produced a kernel whose MinimumBlockCount
+    // matches the mode's 8-block batch contract.
+    FGcmSivKernel: IFusedGcmSivKernel;
+    FGcmSivKernelBatchBytes: Int32;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
     procedure DeriveKeys(const AKey: IKeyParameter);
@@ -147,7 +170,6 @@ type
     class procedure XorBlock(const ALeft, ARight: TCryptoLibByteArray;
       AOffset, ALength: Int32); overload; static;
     class procedure IncrementCounter(const ACounter: TCryptoLibByteArray); static;
-    class procedure MulX(const AValue: TCryptoLibByteArray); static;
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -231,6 +253,23 @@ begin
     LMyRemaining := LMyRemaining - LMySpace;
     FNumActive := 0;
   end;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Fused POLYVAL Horner-by-8 fast path for full 128-byte batches.
+  if (FParent.FGcmSivKernel <> nil) and
+    (LMyRemaining >= FParent.FGcmSivKernelBatchBytes) then
+  begin
+    while LMyRemaining >= FParent.FGcmSivKernelBatchBytes do
+    begin
+      FParent.FGcmSivKernel.ProcessPolyvalBatch(
+        @ABuffer[AOffset + LNumProcessed],
+        @FParent.FTheGHash[0],
+        FParent.FGcmSivKernel.MinimumBlockCount);
+      LNumProcessed := LNumProcessed + FParent.FGcmSivKernelBatchBytes;
+      LMyRemaining := LMyRemaining - FParent.FGcmSivKernelBatchBytes;
+    end;
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
   while LMyRemaining >= 16 do
   begin
@@ -801,27 +840,6 @@ begin
   end;
 end;
 
-class procedure TGcmSivBlockCipher.MulX(const AValue: TCryptoLibByteArray);
-var
-  LMyMask: Byte;
-  LI: Int32;
-  LMyValue: Byte;
-begin
-  LMyMask := Byte(0);
-  for LI := 0 to 15 do
-  begin
-    LMyValue := AValue[LI];
-    AValue[LI] := Byte(((LMyValue shr 1) and (not Byte($80))) or LMyMask);
-    if (LMyValue and 1) = 0 then
-      LMyMask := Byte(0)
-    else
-      LMyMask := Byte($80);
-  end;
-
-  if LMyMask <> 0 then
-    AValue[0] := AValue[0] xor Byte($E1);
-end;
-
 procedure TGcmSivBlockCipher.DeriveKeys(const AKey: IKeyParameter);
 var
   LMyIn, LMyOut, LMyResult, LMyEncKey: TCryptoLibByteArray;
@@ -867,8 +885,30 @@ begin
   FTheCipher.Init(True, TKeyParameter.Create(LMyEncKey) as ICipherParameters);
 
   FillReverse(LMyResult, 0, BUFLEN, LMyOut);
-  MulX(LMyOut);
+  TGcmSivUtilities.MulX(LMyOut);
   FTheMultiplier.Init(LMyOut);
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Precompute the POLYVAL H-power table and resolve the fused kernel
+  // for this key. LMyOut is already conditioned for GHASH. The H-power
+  // table is captured by reference by the kernel and must outlive it;
+  // it is owned by this cipher instance.
+  FGcmSivKernel := nil;
+  FGcmSivKernelBatchBytes := 0;
+  if System.Length(FHPow128) < 128 then
+    System.SetLength(FHPow128, 128);
+  TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
+  if TFusedKernelRegistry.TryAcquireGcmSiv(FTheCipher,
+    TFusedModeDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
+    (FGcmSivKernel <> nil) then
+  begin
+    if FGcmSivKernel.MinimumBlockCount = 8 then
+      FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
+    else
+      FGcmSivKernel := nil;
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
   FTheFlags := FTheFlags or INITIAL;
 end;
 

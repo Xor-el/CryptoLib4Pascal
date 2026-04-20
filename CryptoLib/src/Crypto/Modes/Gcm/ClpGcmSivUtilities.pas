@@ -14,42 +14,47 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAesEngineX86;
+unit ClpGcmSivUtilities;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIBulkBlockCipher;
+  ClpCryptoLibTypes;
 
 type
-  /// <summary>
-  /// AES-NI engine interface. Surfaces the AES round-key schedule pointers
-  /// required by the concrete fused AES-NI AEAD kernels. Internal-use: only
-  /// TAesEngineX86 implements it in-tree. Modes wanting plain multi-block
-  /// batching should query IBulkBlockCipher instead to stay cipher-agnostic.
-  /// </summary>
-  IAesEngineX86 = interface(IBulkBlockCipher)
-    ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
-
+  TGcmSivUtilities = class sealed(TObject)
+  public
     /// <summary>
-    /// Returns the AES-NI encrypt round-key schedule pointer and round
-    /// count when the engine is currently initialized for encryption
-    /// (round count in {10,12,14}); False otherwise. The pointer MUST NOT
-    /// be retained past the current engine init.
+    ///   In-place GHASH-variant MulX over GF(2^128) with the GCM
+    ///   irreducible polynomial x^128 + x^7 + x^2 + x + 1, on a
+    ///   16-byte buffer in GCM canonical (big-endian) byte order.
     /// </summary>
-    function TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
-
-    /// <summary>
-    /// Returns the AES-NI decrypt round-key schedule (inverse MixColumns
-    /// already applied) when the engine is currently initialized for
-    /// decryption; False otherwise. Same lifetime contract as
-    /// TryGetEncKeysPtr.
-    /// </summary>
-    function TryGetDecKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
+    class procedure MulX(const AValue: TCryptoLibByteArray); static;
   end;
 
 implementation
+
+{ TGcmSivUtilities }
+
+class procedure TGcmSivUtilities.MulX(const AValue: TCryptoLibByteArray);
+var
+  LMask, LValue: Byte;
+  LI: Int32;
+begin
+  LMask := 0;
+  for LI := 0 to 15 do
+  begin
+    LValue := AValue[LI];
+    AValue[LI] := Byte(((LValue shr 1) and (not Byte($80))) or LMask);
+    if (LValue and 1) = 0 then
+      LMask := 0
+    else
+      LMask := $80;
+  end;
+  if LMask <> 0 then
+    AValue[0] := AValue[0] xor Byte($E1);
+end;
 
 end.

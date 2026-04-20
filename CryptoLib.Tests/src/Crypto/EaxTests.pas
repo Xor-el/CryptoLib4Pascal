@@ -46,6 +46,7 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes,
   ClpConverters,
+  ClpFusedKernelToggle,
   CryptoLibTestBase;
 
 type
@@ -87,6 +88,11 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    // Workers run twice via RunWithFusedToggle (fused on / off).
+    procedure DoTestVectors;
+    procedure DoTestIvParameters;
+    procedure DoTestExceptionsAndRandomised;
 
   published
     procedure TestVectors;
@@ -391,7 +397,7 @@ begin
   end;
 end;
 
-procedure TTestEax.TestVectors;
+procedure TTestEax.DoTestVectors;
 begin
   CheckVectors(1, FK1, 128, FN1, FA1, FP1, FT1, FC1);
   CheckVectors(2, FK2, 128, FN2, FA2, FP2, FT2, FC2);
@@ -406,7 +412,7 @@ begin
   CheckVectors(11, FK11, 32, FN11, FA11, FP11, FT11, FC11);
 end;
 
-procedure TTestEax.TestIvParameters;
+procedure TTestEax.DoTestIvParameters;
 var
   LEax: IAeadBlockCipher;
 begin
@@ -414,7 +420,7 @@ begin
   IvParamTest(1, LEax, FK1, FN1);
 end;
 
-procedure TTestEax.TestExceptionsAndRandomised;
+procedure TTestEax.DoTestExceptionsAndRandomised;
 var
   LEax: IEaxBlockCipher;
   LEnc, LBadKey: TBytes;
@@ -456,6 +462,21 @@ begin
 
   // Randomised round-trip tests
   RandomTests;
+end;
+
+procedure TTestEax.TestVectors;
+begin
+  RunWithFusedToggle(DoTestVectors);
+end;
+
+procedure TTestEax.TestIvParameters;
+begin
+  RunWithFusedToggle(DoTestIvParameters);
+end;
+
+procedure TTestEax.TestExceptionsAndRandomised;
+begin
+  RunWithFusedToggle(DoTestExceptionsAndRandomised);
 end;
 
 initialization

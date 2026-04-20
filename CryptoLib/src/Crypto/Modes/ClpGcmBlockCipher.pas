@@ -38,8 +38,14 @@ uses
   ClpTables4kGcmMultiplier,
   ClpIBulkBlockCipher,
   ClpBlockCipherBulkUtilities,
-  ClpIAesEngineX86,
-  ClpAesEngineX86,
+  ClpFusedModeDirection,
+  ClpIFusedGcmKernel,
+  ClpFusedKernelRegistry,
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Link the built-in AES-NI GCM accelerator so its initialization
+  // section registers with TFusedKernelRegistry.
+  ClpAesNiGcmKernel,
+{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpPack,
   ClpCheck,
   ClpBasicGcmMultiplier,
@@ -99,21 +105,14 @@ type
     FCipher: IBlockCipher;
     // Cached once per key Init; non-nil when the underlying engine
     // exposes the generic IBulkBlockCipher capability. Drives the
-    // non-fused 4/8-block CTR dispatchers (GetNextCtrBlocks4/8). This
-    // field is always present and cipher-agnostic; a non-AES bulk
-    // engine (today none, theoretically possible) would plug in here
-    // automatically. Kept separate from FAesEngineX86 because the
-    // fused AES+GHASH kernel below is legitimately AES-only.
+    // non-fused 4/8-block CTR dispatchers (GetNextCtrBlocks4/8).
     FBulkCipher: IBulkBlockCipher;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    // Cached once per key Init; used solely by the fused AES+GHASH
-    // x86-64 kernel (FusedAesEnc{128,192,256}GhashEight). That kernel
-    // hard-codes AESENC interleaved with PCLMULQDQ and dispatches by
-    // AES round count (10/12/14), so it is and will remain AES-specific
-    // -- GCM is defined by NIST SP 800-38D only over AES. Abstracting
-    // it behind an interface would add per-batch dispatch cost without
-    // unlocking any real consumer. See ProcessBlocks8FusedILP below.
-    FAesEngineX86: TAesEngineX86;
+    // Fused CTR+GHASH kernel resolved via TFusedKernelRegistry at Init
+    // time. Non-nil only when an accelerator factory accepts the
+    // underlying cipher + direction and the fused gate is open.
+    FGcmKernel: IFusedGcmKernel;
+    FGcmKernelMinBlocks: Int32;
 {$ENDIF CRYPTOLIB_X86_SIMD}
     FMultiplier: IGcmMultiplier;
     FExp: IGcmExponentiator;
@@ -211,17 +210,12 @@ type
     /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-AES form). Used by the FusedILP pipeline where AES is performed inside the fused assembly kernel.</summary>
     procedure FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
     /// <summary>
-    /// Gueron-style pipelined GCM path (x86-64). Calls into the fused AES-NI
-    /// keystream + 8-way GHASH assembly kernel in a single body; the AES engine
-    /// is always run in encrypt mode here regardless of GCM direction (CTR
-    /// keystream construction). Activated when FusedAesEncGhashEightAvailable
-    /// is true and the underlying engine is initialized for AES encryption.
-    /// Dispatches to the AES-128 / AES-192 / AES-256 wrapper based on the
-    /// engine's round-key schedule length (10 / 12 / 14 rounds respectively).
-    /// Falls back to ProcessBlocks8Pipelined for any unsupported configuration
-    /// or short tail. AForEncrypt selects direction: encrypt GHASHes the prior
-    /// iteration's OUTPUT ciphertext, decrypt GHASHes the prior iteration's
-    /// INPUT ciphertext. For encrypt pass ALimit=0; for decrypt pass the
+    /// Pipelined GCM path driven by FGcmKernel (x86-64). Active when a
+    /// fused CTR+GHASH kernel was acquired at Init; otherwise the caller
+    /// falls back to ProcessBlocks8Pipelined. AForEncrypt selects
+    /// direction: encrypt GHASHes the prior iteration's OUTPUT
+    /// ciphertext, decrypt GHASHes the prior iteration's INPUT
+    /// ciphertext. For encrypt pass ALimit=0; for decrypt pass the
     /// caller's tail hold-back threshold.
     /// </summary>
     procedure ProcessBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
@@ -509,24 +503,14 @@ begin
 end;
 
 procedure TGcmBlockCipher.InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
-{$IFDEF CRYPTOLIB_X86_SIMD}
-var
-  LAesX86Engine: IAesEngineX86;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
   FCipher.Init(True, AKeyParam as ICipherParameters);
 
-  // Two independent capability probes: one cipher-agnostic, one AES-only.
-  // FBulkCipher drives the non-fused 4/8-block CTR dispatchers below;
-  // FAesEngineX86 is the handle for the fused AES+GHASH kernel. They are
-  // orthogonal and must not be derived from each other.
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  FAesEngineX86 := nil;
-  if TAesEngineX86.IsSupported and
-    Supports(FCipher, IAesEngineX86, LAesX86Engine) then
-    FAesEngineX86 := LAesX86Engine as TAesEngineX86;
+  FGcmKernel := nil;
+  FGcmKernelMinBlocks := 0;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
   FH := nil;
@@ -547,6 +531,17 @@ begin
     TArrayUtilities.Fill<Byte>(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
     System.SetLength(FWorkCtrAhead, 128);
     TArrayUtilities.Fill<Byte>(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
+
+    if TFusedKernelRegistry.TryAcquireGcm(FCipher, TFusedModeDirection.Encrypt,
+      @FHPow[0], FGcmKernel) and (FGcmKernel <> nil) then
+    begin
+      FGcmKernelMinBlocks := FGcmKernel.MinimumBlockCount;
+      if FGcmKernelMinBlocks <> 8 then
+      begin
+        FGcmKernel := nil;
+        FGcmKernelMinBlocks := 0;
+      end;
+    end;
   end;
 {$ENDIF}
 end;
@@ -1524,14 +1519,10 @@ procedure TGcmBlockCipher.ProcessBlocks8FusedILP(const AInBuf: TCryptoLibByteArr
   var AOutOff: Int32; ALimit: Int32; AForEncrypt: Boolean);
 var
   LCurrCtrs, LNextCtrs: TCryptoLibByteArray;
-  LCtx: TGcmFusedBatchCtx;
-  LKeys: PByte;
   LPrevCipher, LPOut, LPIn: PByte;
-  LI, LRounds: Int32;
+  LI: Int32;
 begin
-  if not FAesEngineX86.TryGetEncKeysPtr(LKeys, LRounds) then
-    Exit;
-  if not (LRounds in [10, 12, 14]) then
+  if FGcmKernel = nil then
     Exit;
   if ALen < ALimit + (BlockSize * 8) * 2 then
     Exit;
@@ -1563,21 +1554,8 @@ begin
     LPIn := @AInBuf[AInOff];
     LPOut := @AOutBuf[AOutOff];
 
-    LCtx.PXorIn := LPIn;
-    LCtx.POut := LPOut;
-    LCtx.PCtrCurr := @LNextCtrs[0];
-    LCtx.PPrevCipher := LPrevCipher;
-    LCtx.PRoundKeys := LKeys;
-    LCtx.PHPow128 := @FHPow[0];
-    LCtx.PFS := @FS[0];
-    LCtx.PMask := @ReverseBytesMask[0];
-
-    case LRounds of
-      10: TGcmUtilities.FusedAesEnc128GhashEight(LCtx);
-      12: TGcmUtilities.FusedAesEnc192GhashEight(LCtx);
-    else  // 14
-      TGcmUtilities.FusedAesEnc256GhashEight(LCtx);
-    end;
+    FGcmKernel.ProcessCtrGhashBatch(LPIn, LPOut, @LNextCtrs[0], LPrevCipher,
+      @FS[0], FGcmKernelMinBlocks);
 
     if AForEncrypt then
       LPrevCipher := LPOut
@@ -1655,7 +1633,7 @@ begin
   if ALen >= BlockSize * 16 then
   begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-    if TGcmUtilities.FusedAesEncGhashEightAvailable and (FAesEngineX86 <> nil) then
+    if FGcmKernel <> nil then
       ProcessBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, 0, True);
 {$ENDIF}
     if ALen >= BlockSize * 16 then
@@ -1786,7 +1764,7 @@ begin
   if ALen >= ALimit + (BlockSize * 8) * 2 then
   begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-    if TGcmUtilities.FusedAesEncGhashEightAvailable and (FAesEngineX86 <> nil) then
+    if FGcmKernel <> nil then
       ProcessBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit, False);
 {$ENDIF}
     if ALen >= ALimit + (BlockSize * 8) * 2 then

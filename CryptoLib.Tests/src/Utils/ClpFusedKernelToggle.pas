@@ -14,42 +14,47 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAesEngineX86;
-
-{$I ..\..\..\Include\CryptoLib.inc}
+unit ClpFusedKernelToggle;
 
 interface
 
+{$IFDEF FPC}
+{$MODE DELPHI}
+{$ENDIF FPC}
+
 uses
-  ClpIBulkBlockCipher;
+  SysUtils,
+  ClpFusedKernelRegistry;
 
 type
-  /// <summary>
-  /// AES-NI engine interface. Surfaces the AES round-key schedule pointers
-  /// required by the concrete fused AES-NI AEAD kernels. Internal-use: only
-  /// TAesEngineX86 implements it in-tree. Modes wanting plain multi-block
-  /// batching should query IBulkBlockCipher instead to stay cipher-agnostic.
-  /// </summary>
-  IAesEngineX86 = interface(IBulkBlockCipher)
-    ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
+  TFusedToggleTestProc = procedure of object;
 
-    /// <summary>
-    /// Returns the AES-NI encrypt round-key schedule pointer and round
-    /// count when the engine is currently initialized for encryption
-    /// (round count in {10,12,14}); False otherwise. The pointer MUST NOT
-    /// be retained past the current engine init.
-    /// </summary>
-    function TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
-
-    /// <summary>
-    /// Returns the AES-NI decrypt round-key schedule (inverse MixColumns
-    /// already applied) when the engine is currently initialized for
-    /// decryption; False otherwise. Same lifetime contract as
-    /// TryGetEncKeysPtr.
-    /// </summary>
-    function TryGetDecKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
-  end;
+/// <summary>
+///   Runs AProc twice: once with fused kernels enabled (production
+///   default) and once with them forcibly disabled so the scalar /
+///   generic-bulk fallbacks are exercised. Both passes must produce
+///   byte-identical outputs. The previous kill-switch state is saved
+///   and restored on return (including on exceptions).
+/// </summary>
+procedure RunWithFusedToggle(AProc: TFusedToggleTestProc);
 
 implementation
+
+procedure RunWithFusedToggle(AProc: TFusedToggleTestProc);
+var
+  LSaved: Boolean;
+begin
+  if not Assigned(AProc) then
+    Exit;
+  LSaved := TFusedKernelGate.ForceDisabled;
+  try
+    TFusedKernelGate.ForceDisabled := False;
+    AProc();
+    TFusedKernelGate.ForceDisabled := True;
+    AProc();
+  finally
+    TFusedKernelGate.ForceDisabled := LSaved;
+  end;
+end;
 
 end.

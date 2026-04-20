@@ -38,8 +38,8 @@ uses
   Bip340SchnorrTests, CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests,
   Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, ClpFixedSecureRandom, ClpShortenedDigest,
-  ClpCertTestUtilities, Int32Tests, Int64Tests, IPAddressUtilitiesTests,
-  PemReaderTests;
+  ClpCertTestUtilities, ClpFusedKernelToggle, Int32Tests, Int64Tests,
+  IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

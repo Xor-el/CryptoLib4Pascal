@@ -51,6 +51,7 @@ uses
   ClpDateTimeUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpFusedKernelToggle,
   AeadTestUtilities,
   CryptoLibTestBase;
 
@@ -85,6 +86,14 @@ type
     procedure OutputSizeTests;
     procedure DoTestExceptions;
     function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
+
+    // Workers run twice via RunWithFusedToggle (fused on / off).
+    procedure DoTestRfcVectors;
+    procedure DoTestRandomised;
+    procedure DoTestOutputSizes;
+    procedure DoTestExceptionsWrapper;
+    procedure DoTestFourBlockFusedGcmPath;
+    procedure DoTestEightBlockFusedGcmPath;
 
   protected
     procedure SetUp; override;
@@ -816,6 +825,36 @@ begin
 end;
 
 procedure TTestGcm.TestRfcVectors;
+begin
+  RunWithFusedToggle(DoTestRfcVectors);
+end;
+
+procedure TTestGcm.TestRandomised;
+begin
+  RunWithFusedToggle(DoTestRandomised);
+end;
+
+procedure TTestGcm.TestOutputSizes;
+begin
+  RunWithFusedToggle(DoTestOutputSizes);
+end;
+
+procedure TTestGcm.TestExceptions;
+begin
+  RunWithFusedToggle(DoTestExceptionsWrapper);
+end;
+
+procedure TTestGcm.TestFourBlockFusedGcmPath;
+begin
+  RunWithFusedToggle(DoTestFourBlockFusedGcmPath);
+end;
+
+procedure TTestGcm.TestEightBlockFusedGcmPath;
+begin
+  RunWithFusedToggle(DoTestEightBlockFusedGcmPath);
+end;
+
+procedure TTestGcm.DoTestRfcVectors;
 var
   LI: Int32;
 begin
@@ -825,22 +864,22 @@ begin
   end;
 end;
 
-procedure TTestGcm.TestRandomised;
+procedure TTestGcm.DoTestRandomised;
 begin
   RandomTests;
 end;
 
-procedure TTestGcm.TestOutputSizes;
+procedure TTestGcm.DoTestOutputSizes;
 begin
   OutputSizeTests;
 end;
 
-procedure TTestGcm.TestExceptions;
+procedure TTestGcm.DoTestExceptionsWrapper;
 begin
   DoTestExceptions;
 end;
 
-procedure TTestGcm.TestFourBlockFusedGcmPath;
+procedure TTestGcm.DoTestFourBlockFusedGcmPath;
 var
   LRnd: ISecureRandom;
   LI, LJ, LKeyLen, LPLen, LLen, LDecLen: Int32;
@@ -890,7 +929,7 @@ begin
   end;
 end;
 
-procedure TTestGcm.TestEightBlockFusedGcmPath;
+procedure TTestGcm.DoTestEightBlockFusedGcmPath;
 var
   LRnd: ISecureRandom;
   LI, LJ, LKeyLen, LPLen, LLen, LDecLen: Int32;
