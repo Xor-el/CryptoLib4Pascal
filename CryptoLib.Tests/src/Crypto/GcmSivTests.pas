@@ -37,7 +37,11 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpICipherParameters,
+  ClpConverters,
+  ClpSecureRandom,
+  ClpISecureRandom,
   ClpCryptoLibTypes,
+  ClpFusedKernelToggle,
   CryptoLibTestBase;
 
 type
@@ -47,9 +51,22 @@ type
     procedure TestSivCipher(const AKey, ANonce, AAEAD, AData,
       AExpected: string);
 
+    function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
+    procedure RandomisedRoundTrip(const ARandom: ISecureRandom);
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    // Workers run twice via RunWithFusedToggle (fused on / off).
+    procedure DoTestAesGcmSiv128Set1;
+    procedure DoTestAesGcmSiv128Set2;
+    procedure DoTestAesGcmSiv128Set3;
+    procedure DoTestAesGcmSiv256Set1;
+    procedure DoTestAesGcmSiv256Set2;
+    procedure DoTestAesGcmSiv256Set3;
+    procedure DoTestAesGcmSiv256Set4;
+    procedure DoTestRandomised;
 
   published
     procedure TestAesGcmSiv128Set1;
@@ -59,6 +76,7 @@ type
     procedure TestAesGcmSiv256Set2;
     procedure TestAesGcmSiv256Set3;
     procedure TestAesGcmSiv256Set4;
+    procedure TestRandomised;
 
   end;
 
@@ -148,7 +166,7 @@ begin
 end;
 
 // AES-GCM-SIV-128 Set 1
-procedure TTestGcmSiv.TestAesGcmSiv128Set1;
+procedure TTestGcmSiv.DoTestAesGcmSiv128Set1;
 const
   CKey1 = '01000000000000000000000000000000';
   CNonce1 = '030000000000000000000000';
@@ -195,7 +213,7 @@ begin
 end;
 
 // AES-GCM-SIV-128 Set 2
-procedure TTestGcmSiv.TestAesGcmSiv128Set2;
+procedure TTestGcmSiv.DoTestAesGcmSiv128Set2;
 const
   CKey1 = '01000000000000000000000000000000';
   CNonce1 = '030000000000000000000000';
@@ -257,7 +275,7 @@ begin
 end;
 
 // AES-GCM-SIV-128 Set 3
-procedure TTestGcmSiv.TestAesGcmSiv128Set3;
+procedure TTestGcmSiv.DoTestAesGcmSiv128Set3;
 const
   CEmpty = '';
   CKey1 = 'e66021d5eb8e4f4066d4adb9c33560e4';
@@ -314,7 +332,7 @@ begin
 end;
 
 // AES-GCM-SIV-256 Set 1
-procedure TTestGcmSiv.TestAesGcmSiv256Set1;
+procedure TTestGcmSiv.DoTestAesGcmSiv256Set1;
 const
   CEmpty = '';
   CKey1 = '01000000000000000000000000000000' +
@@ -362,7 +380,7 @@ begin
 end;
 
 // AES-GCM-SIV-256 Set 2
-procedure TTestGcmSiv.TestAesGcmSiv256Set2;
+procedure TTestGcmSiv.DoTestAesGcmSiv256Set2;
 const
   CKey1 = '01000000000000000000000000000000' +
     '00000000000000000000000000000000';
@@ -421,7 +439,7 @@ begin
 end;
 
 // AES-GCM-SIV-256 Set 3
-procedure TTestGcmSiv.TestAesGcmSiv256Set3;
+procedure TTestGcmSiv.DoTestAesGcmSiv256Set3;
 const
   CEmpty = '';
   CKey1 = 'e66021d5eb8e4f4066d4adb9c33560e4' +
@@ -487,7 +505,7 @@ begin
 end;
 
 // AES-GCM-SIV-256 Set 4
-procedure TTestGcmSiv.TestAesGcmSiv256Set4;
+procedure TTestGcmSiv.DoTestAesGcmSiv256Set4;
 const
   CEmpty = '';
   CKey1 = '00000000000000000000000000000000' +
@@ -506,6 +524,125 @@ const
 begin
   TestSivCipher(CKey1, CNonce1, CEmpty, CData1, CExpected1);
   TestSivCipher(CKey1, CNonce1, CEmpty, CData2, CExpected2);
+end;
+
+function TTestGcmSiv.NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
+begin
+  if AN <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+  Result := Int32(UInt32(ARandom.NextInt32) and $7FFFFFFF) mod AN;
+end;
+
+procedure TTestGcmSiv.RandomisedRoundTrip(const ARandom: ISecureRandom);
+var
+  LKey, LNonce, LAad, LPlain, LEnc, LDec, LTmp: TBytes;
+  LKeyBits, LKeyBytes, LAadLen, LPlainLen, LIdx, LLen: Int32;
+  LCipher: IGcmSivBlockCipher;
+  LParams: IAeadParameters;
+begin
+  // Sweep key sizes and plaintext lengths covering both the fused
+  // POLYVAL kernel (>=128 bytes) and the 16-byte scalar tail fold.
+  for LIdx := 0 to 31 do
+  begin
+    if (LIdx and 1) = 0 then
+      LKeyBits := 128
+    else
+      LKeyBits := 256;
+    LKeyBytes := LKeyBits div 8;
+    SetLength(LKey, LKeyBytes);
+    ARandom.NextBytes(LKey);
+
+    SetLength(LNonce, 12);
+    ARandom.NextBytes(LNonce);
+
+    LAadLen := NextInt32(ARandom, 4097);
+    SetLength(LAad, LAadLen);
+    if LAadLen > 0 then
+      ARandom.NextBytes(LAad);
+
+    LPlainLen := NextInt32(ARandom, 4097);
+    SetLength(LPlain, LPlainLen);
+    if LPlainLen > 0 then
+      ARandom.NextBytes(LPlain);
+
+    LParams := TAeadParameters.Create(TKeyParameter.Create(LKey)
+      as IKeyParameter, 128, LNonce, LAad);
+
+    LCipher := TGcmSivBlockCipher.Create() as IGcmSivBlockCipher;
+    LCipher.Init(True, LParams as ICipherParameters);
+    SetLength(LEnc, LCipher.GetOutputSize(LPlainLen));
+    LLen := LCipher.ProcessBytes(LPlain, 0, LPlainLen, nil, 0);
+    LLen := LLen + LCipher.DoFinal(LEnc, 0);
+    if LLen <> Length(LEnc) then
+      Fail(Format('encrypt output length mismatch at iter %d (got %d, want %d)',
+        [LIdx, LLen, Length(LEnc)]));
+
+    LCipher.Init(False, LParams as ICipherParameters);
+    SetLength(LTmp, LCipher.GetOutputSize(Length(LEnc)));
+    LLen := LCipher.ProcessBytes(LEnc, 0, Length(LEnc), nil, 0);
+    LLen := LLen + LCipher.DoFinal(LTmp, 0);
+    SetLength(LDec, LLen);
+    if LLen > 0 then
+      System.Move(LTmp[0], LDec[0], LLen);
+
+    if not AreEqual(LPlain, LDec) then
+      Fail(Format('round-trip plaintext mismatch at iter %d ' +
+        '(keybits=%d aad=%d plain=%d)',
+        [LIdx, LKeyBits, LAadLen, LPlainLen]));
+  end;
+end;
+
+procedure TTestGcmSiv.DoTestRandomised;
+var
+  LRandom: ISecureRandom;
+begin
+  LRandom := TSecureRandom.GetInstance('SHA256PRNG');
+  LRandom.SetSeed(TConverters.ConvertStringToBytes('GcmSivDualModeRandomSeed-v1',
+    TEncoding.ASCII));
+  RandomisedRoundTrip(LRandom);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv128Set1;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv128Set1);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv128Set2;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv128Set2);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv128Set3;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv128Set3);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv256Set1;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv256Set1);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv256Set2;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv256Set2);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv256Set3;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv256Set3);
+end;
+
+procedure TTestGcmSiv.TestAesGcmSiv256Set4;
+begin
+  RunWithFusedToggle(DoTestAesGcmSiv256Set4);
+end;
+
+procedure TTestGcmSiv.TestRandomised;
+begin
+  RunWithFusedToggle(DoTestRandomised);
 end;
 
 initialization

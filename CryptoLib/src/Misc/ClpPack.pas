@@ -31,8 +31,8 @@ type
   /// </summary>
   TPack = class sealed
   public
-    class procedure UInt16_To_BE(AN: UInt16; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt16_To_BE(AN: UInt16; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+    class procedure UInt16_To_BE(AN: UInt16; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt16_To_BE(AN: UInt16; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
     class procedure UInt16_To_BE(const ANs: TCryptoLibUInt16Array; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
     class procedure UInt16_To_BE(const ANs: TCryptoLibUInt16Array; ANsOff: Int32; ANsLen: Int32;
       const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
@@ -40,21 +40,21 @@ type
     class function UInt16_To_BE(const ANs: TCryptoLibUInt16Array): TCryptoLibByteArray; overload; static;
     class function UInt16_To_BE(const ANs: TCryptoLibUInt16Array; ANsOff: Int32; ANsLen: Int32): TCryptoLibByteArray; overload; static;
 
-    class function BE_To_UInt16(const ABs: TCryptoLibByteArray): UInt16; overload; static;
-    class function BE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32): UInt16; overload; static;
-    class procedure BE_To_UInt16(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt16Array; ANsOff: Int32); overload; static;
-    class procedure BE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt16Array); overload; static;
+    class function BE_To_UInt16(const ABs: TCryptoLibByteArray): UInt16; overload; static; inline;
+    class function BE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32): UInt16; overload; static; inline;
+    class procedure BE_To_UInt16(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt16Array; ANsOff: Int32); overload; static; inline;
+    class procedure BE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt16Array); overload; static; inline;
     class procedure BE_To_UInt16(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt16Array;
       ANsOff: Int32; ANsLen: Int32); overload; static;
     class function BE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32; ACount: Int32): TCryptoLibUInt16Array; overload; static;
 
-    class procedure UInt24_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt24_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
-    class function BE_To_UInt24(const ABs: TCryptoLibByteArray): UInt32; overload; static;
-    class function BE_To_UInt24(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static;
+    class procedure UInt24_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt24_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
+    class function BE_To_UInt24(const ABs: TCryptoLibByteArray): UInt32; overload; static; inline;
+    class function BE_To_UInt24(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static; inline;
 
-    class procedure UInt32_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt32_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+    class procedure UInt32_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt32_To_BE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
     class procedure UInt32_To_BE(const ANs: TCryptoLibUInt32Array; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
     class procedure UInt32_To_BE(const ANs: TCryptoLibUInt32Array; ANsOff: Int32; ANsLen: Int32;
       const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
@@ -65,10 +65,10 @@ type
     class procedure UInt32_To_BE_High(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
     class procedure UInt32_To_BE_Low(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
 
-    class function BE_To_UInt32(const ABs: TCryptoLibByteArray): UInt32; overload; static;
-    class function BE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static;
-    class procedure BE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt32Array); overload; static;
-    class procedure BE_To_UInt32(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt32Array; ANsOff: Int32); overload; static;
+    class function BE_To_UInt32(const ABs: TCryptoLibByteArray): UInt32; overload; static; inline;
+    class function BE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static; inline;
+    class procedure BE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt32Array); overload; static; inline;
+    class procedure BE_To_UInt32(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt32Array; ANsOff: Int32); overload; static; inline;
     class procedure BE_To_UInt32(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt32Array;
       ANsOff: Int32; ANsLen: Int32); overload; static;
     class function BE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32; ACount: Int32): TCryptoLibUInt32Array; overload; static;
@@ -76,8 +76,8 @@ type
     class function BE_To_UInt32_High(const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32): UInt32; static;
     class function BE_To_UInt32_Low(const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32): UInt32; static;
 
-    class procedure UInt64_To_BE(AN: UInt64; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt64_To_BE(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+    class procedure UInt64_To_BE(AN: UInt64; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt64_To_BE(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
     class procedure UInt64_To_BE(const ANs: TCryptoLibUInt64Array; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
     class procedure UInt64_To_BE(const ANs: TCryptoLibUInt64Array; ANsOff: Int32; ANsLen: Int32;
       const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
@@ -88,10 +88,10 @@ type
     class procedure UInt64_To_BE_High(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
     class procedure UInt64_To_BE_Low(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
 
-    class function BE_To_UInt64(const ABs: TCryptoLibByteArray): UInt64; overload; static;
-    class function BE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32): UInt64; overload; static;
-    class procedure BE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt64Array); overload; static;
-    class procedure BE_To_UInt64(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt64Array; ANsOff: Int32); overload; static;
+    class function BE_To_UInt64(const ABs: TCryptoLibByteArray): UInt64; overload; static; inline;
+    class function BE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32): UInt64; overload; static; inline;
+    class procedure BE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt64Array); overload; static; inline;
+    class procedure BE_To_UInt64(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt64Array; ANsOff: Int32); overload; static; inline;
     class procedure BE_To_UInt64(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt64Array;
       ANsOff: Int32; ANsLen: Int32); overload; static;
     class function BE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32; ACount: Int32): TCryptoLibUInt64Array; overload; static;
@@ -100,8 +100,8 @@ type
     class function BE_To_UInt64_Low(const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32): UInt64; static;
 
     // Little-endian variants
-    class procedure UInt16_To_LE(AN: UInt16; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt16_To_LE(AN: UInt16; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+    class procedure UInt16_To_LE(AN: UInt16; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt16_To_LE(AN: UInt16; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
     class procedure UInt16_To_LE(const ANs: TCryptoLibUInt16Array; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
     class procedure UInt16_To_LE(const ANs: TCryptoLibUInt16Array; ANsOff: Int32; ANsLen: Int32;
       const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
@@ -109,21 +109,21 @@ type
     class function UInt16_To_LE(const ANs: TCryptoLibUInt16Array): TCryptoLibByteArray; overload; static;
     class function UInt16_To_LE(const ANs: TCryptoLibUInt16Array; ANsOff: Int32; ANsLen: Int32): TCryptoLibByteArray; overload; static;
 
-    class function LE_To_UInt16(const ABs: TCryptoLibByteArray): UInt16; overload; static;
-    class function LE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32): UInt16; overload; static;
-    class procedure LE_To_UInt16(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt16Array; ANsOff: Int32); overload; static;
-    class procedure LE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt16Array); overload; static;
+    class function LE_To_UInt16(const ABs: TCryptoLibByteArray): UInt16; overload; static; inline;
+    class function LE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32): UInt16; overload; static; inline;
+    class procedure LE_To_UInt16(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt16Array; ANsOff: Int32); overload; static; inline;
+    class procedure LE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt16Array); overload; static; inline;
     class procedure LE_To_UInt16(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt16Array;
       ANsOff: Int32; ANsLen: Int32); overload; static;
     class function LE_To_UInt16(const ABs: TCryptoLibByteArray; AOff: Int32; ACount: Int32): TCryptoLibUInt16Array; overload; static;
 
-    class procedure UInt24_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt24_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
-    class function LE_To_UInt24(const ABs: TCryptoLibByteArray): UInt32; overload; static;
-    class function LE_To_UInt24(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static;
+    class procedure UInt24_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt24_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
+    class function LE_To_UInt24(const ABs: TCryptoLibByteArray): UInt32; overload; static; inline;
+    class function LE_To_UInt24(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static; inline;
 
-    class procedure UInt32_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt32_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+    class procedure UInt32_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt32_To_LE(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
     class procedure UInt32_To_LE(const ANs: TCryptoLibUInt32Array; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
     class procedure UInt32_To_LE(const ANs: TCryptoLibUInt32Array; ANsOff: Int32; ANsLen: Int32;
       const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
@@ -134,10 +134,10 @@ type
     class procedure UInt32_To_LE_High(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
     class procedure UInt32_To_LE_Low(AN: UInt32; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
 
-    class function LE_To_UInt32(const ABs: TCryptoLibByteArray): UInt32; overload; static;
-    class function LE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static;
-    class procedure LE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt32Array); overload; static;
-    class procedure LE_To_UInt32(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt32Array; ANsOff: Int32); overload; static;
+    class function LE_To_UInt32(const ABs: TCryptoLibByteArray): UInt32; overload; static; inline;
+    class function LE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32): UInt32; overload; static; inline;
+    class procedure LE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt32Array); overload; static; inline;
+    class procedure LE_To_UInt32(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt32Array; ANsOff: Int32); overload; static; inline;
     class procedure LE_To_UInt32(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt32Array;
       ANsOff: Int32; ANsLen: Int32); overload; static;
     class function LE_To_UInt32(const ABs: TCryptoLibByteArray; AOff: Int32; ACount: Int32): TCryptoLibUInt32Array; overload; static;
@@ -145,8 +145,8 @@ type
     class function LE_To_UInt32_High(const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32): UInt32; static;
     class function LE_To_UInt32_Low(const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32): UInt32; static;
 
-    class procedure UInt64_To_LE(AN: UInt64; const ABs: TCryptoLibByteArray); overload; static;
-    class procedure UInt64_To_LE(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
+    class procedure UInt64_To_LE(AN: UInt64; const ABs: TCryptoLibByteArray); overload; static; inline;
+    class procedure UInt64_To_LE(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static; inline;
     class procedure UInt64_To_LE(const ANs: TCryptoLibUInt64Array; const ABs: TCryptoLibByteArray; AOff: Int32); overload; static;
     class procedure UInt64_To_LE(const ANs: TCryptoLibUInt64Array; ANsOff: Int32; ANsLen: Int32;
       const ABs: TCryptoLibByteArray; ABsOff: Int32); overload; static;
@@ -157,10 +157,10 @@ type
     class procedure UInt64_To_LE_High(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
     class procedure UInt64_To_LE_Low(AN: UInt64; const ABs: TCryptoLibByteArray; AOff: Int32; ALen: Int32); static;
 
-    class function LE_To_UInt64(const ABs: TCryptoLibByteArray): UInt64; overload; static;
-    class function LE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32): UInt64; overload; static;
-    class procedure LE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt64Array); overload; static;
-    class procedure LE_To_UInt64(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt64Array; ANsOff: Int32); overload; static;
+    class function LE_To_UInt64(const ABs: TCryptoLibByteArray): UInt64; overload; static; inline;
+    class function LE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32): UInt64; overload; static; inline;
+    class procedure LE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32; const ANs: TCryptoLibUInt64Array); overload; static; inline;
+    class procedure LE_To_UInt64(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt64Array; ANsOff: Int32); overload; static; inline;
     class procedure LE_To_UInt64(const ABs: TCryptoLibByteArray; ABsOff: Int32; const ANs: TCryptoLibUInt64Array;
       ANsOff: Int32; ANsLen: Int32); overload; static;
     class function LE_To_UInt64(const ABs: TCryptoLibByteArray; AOff: Int32; ACount: Int32): TCryptoLibUInt64Array; overload; static;

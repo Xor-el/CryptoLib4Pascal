@@ -29,11 +29,18 @@ uses
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
   ClpICipherParameters,
-  ClpIAeadParameters,
-  ClpIParametersWithIV,
   ClpIKeyParameter,
+  ClpCipherModeParameterUtilities,
   ClpIGcmMultiplier,
+  ClpIBulkBlockCipher,
+  ClpBlockCipherBulkUtilities,
   ClpGcmBlockCipher,
+  ClpGcmUtilities,
+  ClpGcmSivUtilities,
+  ClpFusedKernelTypes,
+  ClpIFusedGcmSivKernel,
+  ClpFusedKernelRegistry,
+  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpKeyParameter,
   ClpAesUtilities,
   ClpInt64Utilities,
@@ -53,8 +60,8 @@ resourcestring
   SAeadAfterData = 'AEAD data cannot be processed after ordinary data';
   SAeadByteCountExceeded = 'AEAD byte count exceeded';
   SByteCountExceeded = 'byte count exceeded';
-  SOutputBufferTooShortSiv = 'output buffer too short';
-  SInputBufferTooShortSiv = 'input buffer too short';
+  SOutputBufferTooShortSiv = 'Output Buffer Too Short';
+  SInputBufferTooShortSiv = 'Input Buffer Too Short';
   SDataTooShortSiv = 'Data too short';
   SMacCheckFailedSiv = 'mac check failed';
 
@@ -65,8 +72,6 @@ type
   strict private
   type
     TGcmSivCache = class(TMemoryStream)
-    public
-      constructor Create;
     end;
 
     TGcmSivHasher = class(TObject)
@@ -87,17 +92,22 @@ type
 
   strict private
   const
-    FBUFLEN: Int32 = 16;
-    FHALFBUFLEN: Int32 = 8;
-    FNONCELEN: Int32 = 12;
-    FMAX_DATALEN: Int32 = Int32($7FFFFFF8) - 16;
-    FMASK: Byte = $80;
-    FADD: Byte = $E1;
-    FINIT: Int32 = 1;
-    FAEAD_COMPLETE: Int32 = 2;
+    BUFLEN: Int32 = 16;
+    HALFBUFLEN: Int32 = 8;
+    NONCELEN: Int32 = 12;
+    MAX_DATALEN: Int32 = Int32($7FFFFFF8) - 16;
+    MASK: Byte = $80;
+    ADD: Byte = $E1;
+    INITIAL: Int32 = 1;
+    AEAD_COMPLETE: Int32 = 2;
 
   var
     FTheCipher: IBlockCipher;
+    // Cached bulk-capable view of FTheCipher. Populated once in the
+    // constructor via TBlockCipherBulkUtilities.TryResolveBulkCipher;
+    // stays nil when the underlying engine cannot beat per-block dispatch.
+    // Drives the 8-wide EncryptPlain / DecryptPlain pipeline below.
+    FBulkCipher: IBulkBlockCipher;
     FTheMultiplier: IGcmMultiplier;
     FTheGHash: TCryptoLibByteArray;
     FTheReverse: TCryptoLibByteArray;
@@ -110,6 +120,19 @@ type
     FTheNonce: TCryptoLibByteArray;
     FTheFlags: Int32;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    // POLYVAL H-power table (H^8..H^1 as 16-byte limbs in GHASH
+    // canonical form, 128 bytes). Populated once per key in DeriveKeys
+    // when the fused kernel is available; captured by reference by the
+    // kernel and consumed read-only by TGcmSivHasher.UpdateHash.
+    FHPow128: TCryptoLibByteArray;
+    // Fused POLYVAL kernel resolved via TFusedKernelRegistry. Non-nil
+    // only when the registry produced a kernel whose MinimumBlockCount
+    // matches the mode's 8-block batch contract.
+    FGcmSivKernel: IFusedGcmSivKernel;
+    FGcmSivKernelBatchBytes: Int32;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
     procedure DeriveKeys(const AKey: IKeyParameter);
@@ -117,6 +140,21 @@ type
     function EncryptPlain(const ACounter: TCryptoLibByteArray;
       const ATarget: TCryptoLibByteArray; AOffset: Int32): Int32;
     procedure DecryptPlain();
+    /// <summary>
+    /// Fill ACounters (8 x 16 bytes) with the next 8 consecutive GCM-SIV
+    /// CTR blocks derived from ACounter, advance ACounter's LE-32 counter
+    /// field by 8, and run one 8-wide AES call on the bulk engine in
+    /// place. Caller then XORs the 128 encrypted counter bytes against
+    /// 128 bytes of plaintext/ciphertext to drive the stream.
+    ///
+    /// Only the first four bytes of ACounter are treated as the counter
+    /// (little-endian 32-bit); the trailing 12 bytes are held fixed and
+    /// copied into each of the 8 produced blocks. This matches the
+    /// scalar IncrementCounter contract exactly, so byte-for-byte output
+    /// is preserved between the bulk and scalar paths.
+    /// </summary>
+    procedure ProcessEightBlocksSivCtr(const ACounter: TCryptoLibByteArray;
+      const ACounters: TCryptoLibByteArray);
     function CompletePolyVal(): TCryptoLibByteArray;
     procedure GHashLengths();
     procedure GHASH(const ANext: TCryptoLibByteArray);
@@ -128,7 +166,6 @@ type
     class procedure XorBlock(const ALeft, ARight: TCryptoLibByteArray;
       AOffset, ALength: Int32); overload; static;
     class procedure IncrementCounter(const ACounter: TCryptoLibByteArray); static;
-    class procedure MulX(const AValue: TCryptoLibByteArray); static;
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -163,13 +200,6 @@ type
   end;
 
 implementation
-
-{ TGcmSivBlockCipher.TGcmSivCache }
-
-constructor TGcmSivBlockCipher.TGcmSivCache.Create;
-begin
-  inherited Create;
-end;
 
 { TGcmSivBlockCipher.TGcmSivHasher }
 
@@ -220,6 +250,23 @@ begin
     FNumActive := 0;
   end;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Fused POLYVAL Horner-by-8 fast path for full 128-byte batches.
+  if (FParent.FGcmSivKernel <> nil) and
+    (LMyRemaining >= FParent.FGcmSivKernelBatchBytes) then
+  begin
+    while LMyRemaining >= FParent.FGcmSivKernelBatchBytes do
+    begin
+      FParent.FGcmSivKernel.ProcessPolyvalBatch(
+        @ABuffer[AOffset + LNumProcessed],
+        @FParent.FTheGHash[0],
+        FParent.FGcmSivKernel.MinimumBlockCount);
+      LNumProcessed := LNumProcessed + FParent.FGcmSivKernelBatchBytes;
+      LMyRemaining := LMyRemaining - FParent.FGcmSivKernelBatchBytes;
+    end;
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
   while LMyRemaining >= 16 do
   begin
     TGcmSivBlockCipher.FillReverse(ABuffer, AOffset + LNumProcessed, 16, FParent.FTheReverse);
@@ -265,8 +312,8 @@ constructor TGcmSivBlockCipher.Create(const ACipher: IBlockCipher;
   const AMultiplier: IGcmMultiplier);
 begin
   inherited Create;
-  if ACipher.GetBlockSize() <> FBUFLEN then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCipherBlockSizeRequiredSiv, [FBUFLEN]);
+  if ACipher.GetBlockSize() <> BUFLEN then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCipherBlockSizeRequiredSiv, [BUFLEN]);
 
   if AMultiplier <> nil then
     FTheMultiplier := AMultiplier
@@ -274,9 +321,15 @@ begin
     FTheMultiplier := TGcmBlockCipher.CreateGcmMultiplier();
 
   FTheCipher := ACipher;
+  // Cache the bulk-capable view of the underlying AES engine so the
+  // 8-wide EncryptPlain / DecryptPlain pipeline can dispatch to a single
+  // SIMD call per 128-byte batch. Left nil when the engine only exposes
+  // scalar IBlockCipher, in which case both hot loops stay on the
+  // pre-existing per-block path.
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FTheCipher, FBulkCipher);
 
-  System.SetLength(FTheGHash, FBUFLEN);
-  System.SetLength(FTheReverse, FBUFLEN);
+  System.SetLength(FTheGHash, BUFLEN);
+  System.SetLength(FTheReverse, BUFLEN);
 
   FTheAEADHasher := TGcmSivHasher.Create(Self);
   FTheDataHasher := TGcmSivHasher.Create(Self);
@@ -309,40 +362,28 @@ end;
 procedure TGcmSivBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LAeadParameters: IAeadParameters;
-  LParametersWithIV: IParametersWithIV;
+  LChoice: TCipherAeadChoice;
   LMyKey: IKeyParameter;
   LMyNonce: TCryptoLibByteArray;
   LMyInitialAEAD: TCryptoLibByteArray;
   LKeyLength: Int32;
 begin
-  LMyInitialAEAD := nil;
-
-  if Supports(AParameters, IAeadParameters, LAeadParameters) then
-  begin
-    LMyInitialAEAD := LAeadParameters.GetAssociatedText();
-    LMyNonce := LAeadParameters.GetNonce();
-    LMyKey := LAeadParameters.Key;
-  end
-  else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
-  begin
-    LMyNonce := LParametersWithIV.GetIV();
-    if not Supports(LParametersWithIV.Parameters, IKeyParameter, LMyKey) then
-      LMyKey := nil;
-  end
-  else
-  begin
+  if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
+  then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersGcmSiv);
-  end;
 
-  if System.Length(LMyNonce) <> FNONCELEN then
+  LMyInitialAEAD := LChoice.AssociatedText;
+  LMyNonce := LChoice.Nonce;
+  LMyKey := LChoice.KeyParameter;
+
+  if System.Length(LMyNonce) <> NONCELEN then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidNonce);
 
   if LMyKey = nil then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKey);
 
   LKeyLength := LMyKey.GetKeyLength();
-  if (LKeyLength <> FBUFLEN) and (LKeyLength <> (FBUFLEN shl 1)) then
+  if (LKeyLength <> BUFLEN) and (LKeyLength <> (BUFLEN shl 1)) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKey);
 
   FForEncryption := AForEncryption;
@@ -355,13 +396,13 @@ end;
 
 procedure TGcmSivBlockCipher.CheckAeadStatus(ALen: Int32);
 begin
-  if (FTheFlags and FINIT) = 0 then
+  if (FTheFlags and INITIAL) = 0 then
     raise EInvalidOperationCryptoLibException.CreateRes(@SCipherNotInitialised);
 
-  if (FTheFlags and FAEAD_COMPLETE) <> 0 then
+  if (FTheFlags and AEAD_COMPLETE) <> 0 then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAeadAfterData);
 
-  if FTheAEADHasher.GetBytesProcessed() > UInt64(FMAX_DATALEN - ALen) then
+  if FTheAEADHasher.GetBytesProcessed() > UInt64(MAX_DATALEN - ALen) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAeadByteCountExceeded);
 end;
 
@@ -370,20 +411,20 @@ var
   LDataLimit: Int64;
   LCurrBytes: Int64;
 begin
-  if (FTheFlags and FINIT) = 0 then
+  if (FTheFlags and INITIAL) = 0 then
     raise EInvalidOperationCryptoLibException.CreateRes(@SCipherNotInitialised);
 
-  if (FTheFlags and FAEAD_COMPLETE) = 0 then
+  if (FTheFlags and AEAD_COMPLETE) = 0 then
   begin
     FTheAEADHasher.CompleteHash();
-    FTheFlags := FTheFlags or FAEAD_COMPLETE;
+    FTheFlags := FTheFlags or AEAD_COMPLETE;
   end;
 
-  LDataLimit := FMAX_DATALEN;
+  LDataLimit := MAX_DATALEN;
   LCurrBytes := FThePlain.Size;
   if not FForEncryption then
   begin
-    LDataLimit := LDataLimit + FBUFLEN;
+    LDataLimit := LDataLimit + BUFLEN;
     LCurrBytes := FTheEncData.Size;
   end;
 
@@ -455,9 +496,9 @@ begin
   begin
     LMyTag := CalculateTag();
 
-    LMyDataLen := FBUFLEN + EncryptPlain(LMyTag, AOutput, AOutOff);
+    LMyDataLen := BUFLEN + EncryptPlain(LMyTag, AOutput, AOutOff);
 
-    System.Move(LMyTag[0], AOutput[AOutOff + FThePlain.Size], FBUFLEN);
+    System.Move(LMyTag[0], AOutput[AOutOff + FThePlain.Size], BUFLEN);
 
     ResetStreams();
     Result := LMyDataLen;
@@ -489,13 +530,13 @@ var
 begin
   if FForEncryption then
   begin
-    Result := ALen + Int32(FThePlain.Size) + FBUFLEN;
+    Result := ALen + Int32(FThePlain.Size) + BUFLEN;
   end
   else
   begin
     LMyCurr := ALen + Int32(FTheEncData.Size);
-    if LMyCurr > FBUFLEN then
-      Result := LMyCurr - FBUFLEN
+    if LMyCurr > BUFLEN then
+      Result := LMyCurr - BUFLEN
     else
       Result := 0;
   end;
@@ -530,11 +571,51 @@ begin
   else
     FTheEncData := TGcmSivCache.Create();
 
-  FTheFlags := FTheFlags and (not FAEAD_COMPLETE);
+  FTheFlags := FTheFlags and (not AEAD_COMPLETE);
   TArrayUtilities.Fill<Byte>(FTheGHash, 0, System.Length(FTheGHash), Byte(0));
 
   if FTheInitialAEAD <> nil then
     FTheAEADHasher.UpdateHash(FTheInitialAEAD, 0, System.Length(FTheInitialAEAD));
+end;
+
+procedure TGcmSivBlockCipher.ProcessEightBlocksSivCtr(
+  const ACounter: TCryptoLibByteArray;
+  const ACounters: TCryptoLibByteArray);
+var
+  LC0, LCk: UInt32;
+  LI, LBase: Int32;
+begin
+  LC0 := UInt32(ACounter[0]) or (UInt32(ACounter[1]) shl 8) or
+    (UInt32(ACounter[2]) shl 16) or (UInt32(ACounter[3]) shl 24);
+
+  // Fill 8 consecutive counter blocks in ACounters. For each block k we
+  // copy the fixed trailing 12 bytes from ACounter[4..15] (these never
+  // change during a GCM-SIV stream; RFC 8452 only varies the first four)
+  // and pack LE-32 (LC0 + k) into bytes [0..3]. We intentionally read
+  // ACounter[4..15] BEFORE touching ACounter[0..3] so that the LE-32
+  // update below does not race the fill.
+  for LI := 0 to 7 do
+  begin
+    LBase := LI * BUFLEN;
+    System.Move(ACounter[4], ACounters[LBase + 4], BUFLEN - 4);
+    LCk := LC0 + UInt32(LI);
+    ACounters[LBase + 0] := Byte(LCk);
+    ACounters[LBase + 1] := Byte(LCk shr 8);
+    ACounters[LBase + 2] := Byte(LCk shr 16);
+    ACounters[LBase + 3] := Byte(LCk shr 24);
+  end;
+
+  // Advance ACounter's LE-32 field by 8 so the caller's subsequent bulk
+  // or scalar iteration picks up at LC0 + 8. UInt32 arithmetic wraps
+  // naturally, matching the scalar IncrementCounter behaviour.
+  LCk := LC0 + UInt32(8);
+  ACounter[0] := Byte(LCk);
+  ACounter[1] := Byte(LCk shr 8);
+  ACounter[2] := Byte(LCk shr 16);
+  ACounter[3] := Byte(LCk shr 24);
+
+  // One SIMD-backed call encrypts all 8 counter blocks in place.
+  FBulkCipher.ProcessBlocks(@ACounters[0], @ACounters[0], 8);
 end;
 
 function TGcmSivBlockCipher.EncryptPlain(const ACounter: TCryptoLibByteArray;
@@ -542,7 +623,7 @@ function TGcmSivBlockCipher.EncryptPlain(const ACounter: TCryptoLibByteArray;
 var
   LThePlainBuf: TCryptoLibByteArray;
   LThePlainLen: Int32;
-  LMySrc, LMyCounter, LMyMask: TCryptoLibByteArray;
+  LMySrc, LMyCounter, LMyMask, LMyCounters: TCryptoLibByteArray;
   LMyRemaining: Int64;
   LMyOff, LMyLen: Int32;
 begin
@@ -553,16 +634,36 @@ begin
 
   LMySrc := LThePlainBuf;
   LMyCounter := System.Copy(ACounter);
-  LMyCounter[FBUFLEN - 1] := LMyCounter[FBUFLEN - 1] or FMASK;
-  System.SetLength(LMyMask, FBUFLEN);
+  LMyCounter[BUFLEN - 1] := LMyCounter[BUFLEN - 1] or MASK;
+  System.SetLength(LMyMask, BUFLEN);
   LMyRemaining := LThePlainLen;
   LMyOff := 0;
+
+  // Bulk 8-wide CTR path. Each iteration derives 128 bytes of AES keystream
+  // in one SIMD call and XORs it directly into the destination via the
+  // shared 128-byte triple-XOR primitive. Counter bookkeeping (including
+  // the LE-32 wrap) is handled inside ProcessEightBlocksSivCtr, so the
+  // scalar tail below resumes exactly where the last batch left off.
+  if (FBulkCipher <> nil) and (LMyRemaining >= 128) then
+  begin
+    System.SetLength(LMyCounters, 8 * BUFLEN);
+    while LMyRemaining >= 128 do
+    begin
+      ProcessEightBlocksSivCtr(LMyCounter, LMyCounters);
+      TBlockCipherBulkUtilities.Xor128Bytes(
+        PByte(@ATarget[AOffset + LMyOff]),
+        PByte(@LMyCounters[0]),
+        PByte(@LMySrc[LMyOff]));
+      LMyRemaining := LMyRemaining - 128;
+      LMyOff := LMyOff + 128;
+    end;
+  end;
 
   while LMyRemaining > 0 do
   begin
     FTheCipher.ProcessBlock(LMyCounter, 0, LMyMask, 0);
 
-    LMyLen := Int32(Math.Min(FBUFLEN, LMyRemaining));
+    LMyLen := Int32(Math.Min(BUFLEN, LMyRemaining));
     XorBlock(LMyMask, LMySrc, LMyOff, LMyLen);
 
     System.Move(LMyMask[0], ATarget[AOffset + LMyOff], LMyLen);
@@ -579,7 +680,8 @@ procedure TGcmSivBlockCipher.DecryptPlain;
 var
   LTheEncDataBuf: TCryptoLibByteArray;
   LTheEncDataLen: Int32;
-  LMySrc, LMyExpected, LMyCounter, LMyMask, LMyTag: TCryptoLibByteArray;
+  LMySrc, LMyExpected, LMyCounter, LMyMask, LMyTag, LMyCounters,
+    LMyScratch128: TCryptoLibByteArray;
   LMyRemaining, LMyOff, LMyLen: Int32;
 begin
   System.SetLength(LTheEncDataBuf, FTheEncData.Size);
@@ -588,22 +690,47 @@ begin
   LTheEncDataLen := System.Length(LTheEncDataBuf);
 
   LMySrc := LTheEncDataBuf;
-  LMyRemaining := LTheEncDataLen - FBUFLEN;
+  LMyRemaining := LTheEncDataLen - BUFLEN;
 
   if LMyRemaining < 0 then
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataTooShortSiv);
 
-  LMyExpected := TArrayUtilities.CopyOfRange<Byte>(LMySrc, LMyRemaining, LMyRemaining + FBUFLEN);
+  LMyExpected := TArrayUtilities.CopyOfRange<Byte>(LMySrc, LMyRemaining, LMyRemaining + BUFLEN);
   LMyCounter := System.Copy(LMyExpected);
-  LMyCounter[FBUFLEN - 1] := LMyCounter[FBUFLEN - 1] or FMASK;
-  System.SetLength(LMyMask, FBUFLEN);
+  LMyCounter[BUFLEN - 1] := LMyCounter[BUFLEN - 1] or MASK;
+  System.SetLength(LMyMask, BUFLEN);
   LMyOff := 0;
+
+  // Bulk 8-wide CTR path. In contrast with the scalar loop (which called
+  // FThePlain.Write + FTheDataHasher.UpdateHash eight times per 128-byte
+  // batch), the bulk variant materialises the plaintext into a 128-byte
+  // scratch and makes ONE UpdateHash call per batch. That collapses the
+  // per-batch PolyVal bookkeeping (FNumActive tests, FillReverse inner
+  // loops, GHASH calls) into a single cold path and is the main win of
+  // this bulk path on large payloads.
+  if (FBulkCipher <> nil) and (LMyRemaining >= 128) then
+  begin
+    System.SetLength(LMyCounters, 8 * BUFLEN);
+    System.SetLength(LMyScratch128, 128);
+    while LMyRemaining >= 128 do
+    begin
+      ProcessEightBlocksSivCtr(LMyCounter, LMyCounters);
+      TBlockCipherBulkUtilities.Xor128Bytes(
+        PByte(@LMyScratch128[0]),
+        PByte(@LMyCounters[0]),
+        PByte(@LMySrc[LMyOff]));
+      FThePlain.Write(LMyScratch128[0], 128);
+      FTheDataHasher.UpdateHash(LMyScratch128, 0, 128);
+      LMyRemaining := LMyRemaining - 128;
+      LMyOff := LMyOff + 128;
+    end;
+  end;
 
   while LMyRemaining > 0 do
   begin
     FTheCipher.ProcessBlock(LMyCounter, 0, LMyMask, 0);
 
-    LMyLen := Math.Min(FBUFLEN, LMyRemaining);
+    LMyLen := Math.Min(BUFLEN, LMyRemaining);
     XorBlock(LMyMask, LMySrc, LMyOff, LMyLen);
 
     FThePlain.Write(LMyMask[0], LMyLen);
@@ -630,12 +757,12 @@ begin
   FTheDataHasher.CompleteHash();
   LMyPolyVal := CompletePolyVal();
 
-  System.SetLength(LMyResult, FBUFLEN);
+  System.SetLength(LMyResult, BUFLEN);
 
-  for LI := 0 to FNONCELEN - 1 do
+  for LI := 0 to NONCELEN - 1 do
     LMyPolyVal[LI] := LMyPolyVal[LI] xor FTheNonce[LI];
 
-  LMyPolyVal[FBUFLEN - 1] := LMyPolyVal[FBUFLEN - 1] and Byte(FMASK - 1);
+  LMyPolyVal[BUFLEN - 1] := LMyPolyVal[BUFLEN - 1] and Byte(MASK - 1);
 
   FTheCipher.ProcessBlock(LMyPolyVal, 0, LMyResult, 0);
   Result := LMyResult;
@@ -645,9 +772,9 @@ function TGcmSivBlockCipher.CompletePolyVal: TCryptoLibByteArray;
 var
   LMyResult: TCryptoLibByteArray;
 begin
-  System.SetLength(LMyResult, FBUFLEN);
+  System.SetLength(LMyResult, BUFLEN);
   GHashLengths();
-  FillReverse(FTheGHash, 0, FBUFLEN, LMyResult);
+  FillReverse(FTheGHash, 0, BUFLEN, LMyResult);
   Result := LMyResult;
 end;
 
@@ -655,7 +782,7 @@ procedure TGcmSivBlockCipher.GHashLengths;
 var
   LMyIn: TCryptoLibByteArray;
 begin
-  System.SetLength(LMyIn, FBUFLEN);
+  System.SetLength(LMyIn, BUFLEN);
   TPack.UInt64_To_BE(UInt64(TByteUtilities.NumBits) * FTheDataHasher.GetBytesProcessed(), LMyIn, 0);
   TPack.UInt64_To_BE(UInt64(TByteUtilities.NumBits) * FTheAEADHasher.GetBytesProcessed(), LMyIn, TInt64Utilities.NumBytes);
   GHASH(LMyIn);
@@ -709,75 +836,76 @@ begin
   end;
 end;
 
-class procedure TGcmSivBlockCipher.MulX(const AValue: TCryptoLibByteArray);
-var
-  LMyMask: Byte;
-  LI: Int32;
-  LMyValue: Byte;
-begin
-  LMyMask := Byte(0);
-  for LI := 0 to 15 do
-  begin
-    LMyValue := AValue[LI];
-    AValue[LI] := Byte(((LMyValue shr 1) and (not Byte($80))) or LMyMask);
-    if (LMyValue and 1) = 0 then
-      LMyMask := Byte(0)
-    else
-      LMyMask := Byte($80);
-  end;
-
-  if LMyMask <> 0 then
-    AValue[0] := AValue[0] xor Byte($E1);
-end;
-
 procedure TGcmSivBlockCipher.DeriveKeys(const AKey: IKeyParameter);
 var
   LMyIn, LMyOut, LMyResult, LMyEncKey: TCryptoLibByteArray;
   LMyOff: Int32;
 begin
-  System.SetLength(LMyIn, FBUFLEN);
-  System.SetLength(LMyOut, FBUFLEN);
-  System.SetLength(LMyResult, FBUFLEN);
+  System.SetLength(LMyIn, BUFLEN);
+  System.SetLength(LMyOut, BUFLEN);
+  System.SetLength(LMyResult, BUFLEN);
   System.SetLength(LMyEncKey, AKey.GetKeyLength());
 
-  System.Move(FTheNonce[0], LMyIn[FBUFLEN - FNONCELEN], FNONCELEN);
+  System.Move(FTheNonce[0], LMyIn[BUFLEN - NONCELEN], NONCELEN);
   FTheCipher.Init(True, AKey as ICipherParameters);
 
   LMyOff := 0;
   FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyResult[LMyOff], FHALFBUFLEN);
+  System.Move(LMyOut[0], LMyResult[LMyOff], HALFBUFLEN);
   LMyIn[0] := Byte(LMyIn[0] + 1);
-  LMyOff := LMyOff + FHALFBUFLEN;
+  LMyOff := LMyOff + HALFBUFLEN;
   FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyResult[LMyOff], FHALFBUFLEN);
+  System.Move(LMyOut[0], LMyResult[LMyOff], HALFBUFLEN);
 
   LMyIn[0] := Byte(LMyIn[0] + 1);
   LMyOff := 0;
   FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyEncKey[LMyOff], FHALFBUFLEN);
+  System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
   LMyIn[0] := Byte(LMyIn[0] + 1);
-  LMyOff := LMyOff + FHALFBUFLEN;
+  LMyOff := LMyOff + HALFBUFLEN;
   FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyEncKey[LMyOff], FHALFBUFLEN);
+  System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
 
-  if System.Length(LMyEncKey) = (FBUFLEN shl 1) then
+  if System.Length(LMyEncKey) = (BUFLEN shl 1) then
   begin
     LMyIn[0] := Byte(LMyIn[0] + 1);
-    LMyOff := LMyOff + FHALFBUFLEN;
+    LMyOff := LMyOff + HALFBUFLEN;
     FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-    System.Move(LMyOut[0], LMyEncKey[LMyOff], FHALFBUFLEN);
+    System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
     LMyIn[0] := Byte(LMyIn[0] + 1);
-    LMyOff := LMyOff + FHALFBUFLEN;
+    LMyOff := LMyOff + HALFBUFLEN;
     FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-    System.Move(LMyOut[0], LMyEncKey[LMyOff], FHALFBUFLEN);
+    System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
   end;
 
   FTheCipher.Init(True, TKeyParameter.Create(LMyEncKey) as ICipherParameters);
 
-  FillReverse(LMyResult, 0, FBUFLEN, LMyOut);
-  MulX(LMyOut);
+  FillReverse(LMyResult, 0, BUFLEN, LMyOut);
+  TGcmSivUtilities.MulX(LMyOut);
   FTheMultiplier.Init(LMyOut);
-  FTheFlags := FTheFlags or FINIT;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Precompute the POLYVAL H-power table and resolve the fused kernel
+  // for this key. LMyOut is already conditioned for GHASH. The H-power
+  // table is captured by reference by the kernel and must outlive it;
+  // it is owned by this cipher instance.
+  FGcmSivKernel := nil;
+  FGcmSivKernelBatchBytes := 0;
+  if System.Length(FHPow128) < 128 then
+    System.SetLength(FHPow128, 128);
+  TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
+  if TFusedKernelRegistry.TryAcquireGcmSiv(FTheCipher,
+    TFusedModeDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
+    (FGcmSivKernel <> nil) then
+  begin
+    if FGcmSivKernel.MinimumBlockCount = 8 then
+      FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
+    else
+      FGcmSivKernel := nil;
+  end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
+  FTheFlags := FTheFlags or INITIAL;
 end;
 
 end.

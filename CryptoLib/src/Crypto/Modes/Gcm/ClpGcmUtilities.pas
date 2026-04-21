@@ -26,7 +26,8 @@ uses
   ClpPack,
   ClpInterleave,
   ClpCpuFeatures,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpIntrinsicsVector;
 
 type
   TFieldElement = record
@@ -54,22 +55,25 @@ type
     class procedure Multiply(var AX: TFieldElement; var AY: TFieldElement); overload; static;
 
     class procedure MultiplyP7(var AX: TFieldElement); static;
-    class procedure MultiplyP8(var AX: TFieldElement); overload; static;
-    class procedure MultiplyP8(var AX: TFieldElement; out AY: TFieldElement); overload; static;
-    class procedure MultiplyP16(var AX: TFieldElement); static;
+    class procedure MultiplyP8(var AX: TFieldElement; out AY: TFieldElement); static;
 
     class procedure Square(var AX: TFieldElement); static;
 
-    /// <summary>True when this build includes the PCLMULQDQ GHASH asm path and the CPU supports it.</summary>
-    class function PclmulFieldMultiplyAvailable: Boolean; static;
     /// <summary>Carryless multiply: three 128-bit limbs (48 bytes). Operands 16 bytes each as two little-endian UInt64 halves.</summary>
     class procedure MultiplyExt(PX, PY, POut48: PByte); static;
     /// <summary>Fold middle limb Z1 into Z0 and Z2, then reduce to one 128-bit block.</summary>
     class procedure Reduce3(PZ0, PZ1, PZ2, PSVector16: PByte); static;
     /// <summary>Xor three 16-byte limbs with three 16-byte slices from a 48-byte MultiplyExt output.</summary>
     class procedure XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte); static;
-    /// <summary>HPow[0..3] = H^4..H^1 as 16-byte limbs for fused four-block GHASH (index 0 = H^4, index 3 = H^1).</summary>
-    class procedure InitFourWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow64: TCryptoLibByteArray); static;
+    /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8). Four-way fused GHASH uses offsets 64..112 (H^4..H^1).</summary>
+    class procedure InitEightWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow128: TCryptoLibByteArray); static;
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+    /// <summary>Fused GHASH for four 16-byte ciphertext blocks. PFS 16-byte in/out (canonical); PC0 points to 64 contiguous ciphertext bytes; PHPow64 = H^4..H^1 (64 bytes); PMask = 16-byte SSSE3 PSHUFB control.</summary>
+    class procedure FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte); static;
+    /// <summary>Fused GHASH for eight 16-byte ciphertext blocks. PHPow128 = H^8..H^1 (128 bytes at FHPow[0]).</summary>
+    class procedure FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask: PByte); static;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
     class procedure &Xor(const AX, AY: TCryptoLibByteArray); overload; static;
     class procedure &Xor(const AX, AY: TCryptoLibByteArray; AYOff: Int32); overload; static;
@@ -89,49 +93,75 @@ type
     T3, T2, T1, T0: UInt64;
   end;
 
-{$IFDEF CRYPTOLIB_X86_64_ASM}
 procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_x86_64.inc}
-end;
-
-procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
-end;
-
-procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2: Pointer);
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
-end;
-
-procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
-end;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
-
+{$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_i386.inc}
+{$ENDIF}
 end;
 
 procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_i386.inc}
+{$ENDIF}
 end;
 
-procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2: Pointer);
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2, POut: Pointer);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_i386.inc}
+{$ENDIF}
 end;
 
 procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_i386.inc}
+{$ENDIF}
 end;
-{$ENDIF CRYPTOLIB_I386_ASM}
+
+procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer);
+{$DEFINE GCM_GHASH_FULL_BLOCKS_4}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
+{$ENDIF}
+{$UNDEF GCM_GHASH_FULL_BLOCKS_4}
+end;
+
+procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer);
+{$DEFINE GCM_GHASH_FULL_BLOCKS_8}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
+{$ENDIF}
+{$UNDEF GCM_GHASH_FULL_BLOCKS_8}
+end;
 
 procedure GcmPclmulReducePartial(const APartial: TGcmPartial128; var AZ: TFieldElement);
 var
@@ -261,17 +291,6 @@ begin
   AX.N1 := (LX1 shr 7) or (LX0 shl 57);
 end;
 
-class procedure TGcmUtilities.MultiplyP8(var AX: TFieldElement);
-var
-  LX0, LX1, LC: UInt64;
-begin
-  LX0 := AX.N0;
-  LX1 := AX.N1;
-  LC := LX1 shl 56;
-  AX.N0 := (LX0 shr 8) xor LC xor (LC shr 1) xor (LC shr 2) xor (LC shr 7);
-  AX.N1 := (LX1 shr 8) or (LX0 shl 56);
-end;
-
 class procedure TGcmUtilities.MultiplyP8(var AX: TFieldElement; out AY: TFieldElement);
 var
   LX0, LX1, LC: UInt64;
@@ -281,17 +300,6 @@ begin
   LC := LX1 shl 56;
   AY.N0 := (LX0 shr 8) xor LC xor (LC shr 1) xor (LC shr 2) xor (LC shr 7);
   AY.N1 := (LX1 shr 8) or (LX0 shl 56);
-end;
-
-class procedure TGcmUtilities.MultiplyP16(var AX: TFieldElement);
-var
-  LX0, LX1, LC: UInt64;
-begin
-  LX0 := AX.N0;
-  LX1 := AX.N1;
-  LC := LX1 shl 48;
-  AX.N0 := (LX0 shr 16) xor LC xor (LC shr 1) xor (LC shr 2) xor (LC shr 7);
-  AX.N1 := (LX1 shr 16) or (LX0 shl 48);
 end;
 
 class procedure TGcmUtilities.Square(var AX: TFieldElement);
@@ -397,14 +405,6 @@ begin
   Result := LZ0 or LZ1 or LZ2 or LZ3;
 end;
 
-class function TGcmUtilities.PclmulFieldMultiplyAvailable: Boolean;
-begin
-  Result := False;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ;
-{$ENDIF}
-end;
-
 class procedure TGcmUtilities.MultiplyExt(PX, PY, POut48: PByte);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -447,20 +447,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasSSE2 then
   begin
-    GcmReduce3FoldSse2(PZ0, PZ1, PZ2);
-    LT3 := PUInt64(PZ0)^;
-    LT2 := PUInt64(PZ0 + 8)^;
-    LT1 := PUInt64(PZ2)^;
-    LT0 := PUInt64(PZ2 + 8)^;
-    LT1 := LT1 xor LT3 xor (LT3 shr 1) xor (LT3 shr 2) xor (LT3 shr 7);
-    LT2 := LT2 xor (LT3 shl 63) xor (LT3 shl 62) xor (LT3 shl 57);
-    LZ0 := (LT0 shl 1) or (LT1 shr 63);
-    LZ1 := (LT1 shl 1) or (LT2 shr 63);
-    LZ2 := LT2 shl 1;
-    LZ0 := LZ0 xor LZ2 xor (LZ2 shr 1) xor (LZ2 shr 2) xor (LZ2 shr 7);
-    LZ1 := LZ1 xor (LT2 shl 63) xor (LT2 shl 58);
-    PUInt64(PSVector16)^ := LZ1;
-    PUInt64(PSVector16 + 8)^ := LZ0;
+    GcmReduce3FoldSse2(PZ0, PZ1, PZ2, PSVector16);
     Exit;
   end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
@@ -490,13 +477,40 @@ begin
   PUInt64(PSVector16 + 8)^ := LZ0;
 end;
 
-class procedure TGcmUtilities.InitFourWayHPowFromH(const AH: TCryptoLibByteArray;
-  const AHPow64: TCryptoLibByteArray);
+{$IFDEF CRYPTOLIB_X86_SIMD}
+class procedure TGcmUtilities.FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte);
+begin
+  if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
+    (not TIntrinsicsVector.IsPacked) then
+    raise EInvalidOperationCryptoLibException.Create(
+      'Fused four-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout.');
+
+  // Monolithic kernel: byte-reverse + state fold + 4-way multiply-accumulate +
+  // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
+  GcmGhashFourFull(PFS, PC0, PHPow64, PMask);
+end;
+
+class procedure TGcmUtilities.FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask: PByte);
+begin
+  if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
+    (not TIntrinsicsVector.IsPacked) then
+    raise EInvalidOperationCryptoLibException.Create(
+      'Fused eight-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout.');
+
+  // Monolithic kernel: byte-reverse + state fold + 8-way multiply-accumulate +
+  // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
+  GcmGhashEightFull(PFS, PC0, PHPow128, PMask);
+end;
+
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
+class procedure TGcmUtilities.InitEightWayHPowFromH(const AH: TCryptoLibByteArray;
+  const AHPow128: TCryptoLibByteArray);
 var
-  LF1, LF2, LF3, LF4: TFieldElement;
+  LF1, LF2, LF3, LF4, LF5, LF6, LF7, LF8: TFieldElement;
   LAcc, LY: TFieldElement;
 begin
-  if (System.Length(AH) < 16) or (System.Length(AHPow64) < 64) then
+  if (System.Length(AH) < 16) or (System.Length(AHPow128) < 128) then
     Exit;
   AsFieldElement(AH, LF1);
   LAcc := LF1;
@@ -509,14 +523,35 @@ begin
   LY := LF2;
   Multiply(LAcc, LY);
   LF4 := LAcc;
-  PUInt64(@AHPow64[0])^ := LF4.N1;
-  PUInt64(@AHPow64[8])^ := LF4.N0;
-  PUInt64(@AHPow64[16])^ := LF3.N1;
-  PUInt64(@AHPow64[24])^ := LF3.N0;
-  PUInt64(@AHPow64[32])^ := LF2.N1;
-  PUInt64(@AHPow64[40])^ := LF2.N0;
-  PUInt64(@AHPow64[48])^ := LF1.N1;
-  PUInt64(@AHPow64[56])^ := LF1.N0;
+  LF5 := LF4;
+  LY := LF1;
+  Multiply(LF5, LY);
+  LF6 := LF4;
+  LY := LF2;
+  Multiply(LF6, LY);
+  LF7 := LF4;
+  LY := LF3;
+  Multiply(LF7, LY);
+  LAcc := LF4;
+  LY := LF4;
+  Multiply(LAcc, LY);
+  LF8 := LAcc;
+  PUInt64(@AHPow128[0])^ := LF8.N1;
+  PUInt64(@AHPow128[8])^ := LF8.N0;
+  PUInt64(@AHPow128[16])^ := LF7.N1;
+  PUInt64(@AHPow128[24])^ := LF7.N0;
+  PUInt64(@AHPow128[32])^ := LF6.N1;
+  PUInt64(@AHPow128[40])^ := LF6.N0;
+  PUInt64(@AHPow128[48])^ := LF5.N1;
+  PUInt64(@AHPow128[56])^ := LF5.N0;
+  PUInt64(@AHPow128[64])^ := LF4.N1;
+  PUInt64(@AHPow128[72])^ := LF4.N0;
+  PUInt64(@AHPow128[80])^ := LF3.N1;
+  PUInt64(@AHPow128[88])^ := LF3.N0;
+  PUInt64(@AHPow128[96])^ := LF2.N1;
+  PUInt64(@AHPow128[104])^ := LF2.N0;
+  PUInt64(@AHPow128[112])^ := LF1.N1;
+  PUInt64(@AHPow128[120])^ := LF1.N0;
 end;
 
 end.

@@ -1,5 +1,13 @@
-// XGETBV with ECX=0; writes EAX:EDX to the UInt64 at AResult.
-// i386: AResult in eax. x86-64: MS rcx=AResult; FPC Unix rdi -> r8.
+// XGETBV query helper, ECX = 0 (i386 + x86-64).
+// Issues `xgetbv` with ECX = 0 (reads XCR0) and writes the returned
+// EAX:EDX 64-bit value to the UInt64 at the supplied pointer.
+//
+// Entry contract (register convention varies by ABI):
+//   i386:             eax = @AResult.
+//   x86-64 MS ABI:    rcx = @AResult (remapped internally to r8).
+//   x86-64 FPC Unix:  rdi = @AResult (remapped internally to r8).
+// Preserves ebx on i386. XGETBV is db-encoded for broad assembler
+// compatibility.
 {$IFDEF FPC}
   assembler; nostackframe;
 {$ENDIF}

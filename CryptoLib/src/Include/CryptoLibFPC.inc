@@ -22,7 +22,7 @@
   {$MESSAGE ERROR 'This Library requires FreePascal 3.2.4 or higher.'}
 {$IFEND}
 
-{========================= FPC Version Features ===============================}
+{============================ FPC Version Features ============================}
 
 {$IF FPC_FULLVERSION >= 30301}
   {$DEFINE HAS_VOLATILE}
@@ -30,15 +30,23 @@
 
 {============================== CPU Architecture ==============================}
 
-{$IF DEFINED(CPU386)}
+{$IFDEF FPC_LITTLE_ENDIAN}
+  {$DEFINE CRYPTOLIB_LITTLE_ENDIAN}
+{$ENDIF}
+
+{$IFDEF FPC_REQUIRES_PROPER_ALIGNMENT}
+  {$DEFINE CRYPTOLIB_REQUIRES_PROPER_ALIGNMENT}
+{$ENDIF}
+
+{$IFDEF CPU386}
   {$DEFINE CRYPTOLIB_I386}
   {$DEFINE CRYPTOLIB_I386_ASM}
-{$IFEND}
+{$ENDIF}
 
-{$IF DEFINED(CPUX64)}
+{$IFDEF CPUX64}
   {$DEFINE CRYPTOLIB_X86_64}
   {$DEFINE CRYPTOLIB_X86_64_ASM}
-{$IFEND}
+{$ENDIF}
 
 {$IFDEF CPUARM}
   {$DEFINE CRYPTOLIB_ARM32}
@@ -111,7 +119,7 @@
   {$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
 {$IFEND}
 
-{========================= Compiler Mode & Optimizations ======================}
+{======================= Compiler Mode & Optimizations ========================}
 
 {$MODE DELPHI}
 {$IF DEFINED(CPU386) OR DEFINED(CPUX64)}
@@ -126,7 +134,6 @@
 {$OPTIMIZATION NOUSELOADMODIFYSTORE}
 {$OPTIMIZATION ORDERFIELDS}
 {$OPTIMIZATION DEADVALUES}
-{$IFDEF CPUI386}  {$OPTIMIZATION USEEBP} {$ENDIF}
+{$IFDEF CPUI386} {$OPTIMIZATION USEEBP} {$ENDIF}
 {$IFDEF CPUX86_64} {$OPTIMIZATION USERBP} {$ENDIF}
 *)
-

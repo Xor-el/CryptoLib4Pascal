@@ -216,7 +216,13 @@ uses
   ClpArc4RandomBufReader, ClpUnixLikeRngCommon, ClpAndroidRandomProvider, 
   ClpMacOSRandomProvider, ClpIOSRandomProvider, ClpSecRandomCopyBytesReader, 
   ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
-  ClpDarwinSysCtl;
+  ClpDarwinSysCtl, ClpIBulkBlockCipherMode, ClpIBulkBlockCipher, 
+  ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities, 
+  ClpGcmSivUtilities, ClpFusedKernelTypes, ClpIFusedGcmKernel, 
+  ClpIFusedOcbKernel, ClpIFusedCcmKernel, ClpIFusedEaxKernel, 
+  ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesNiAeadResolver, 
+  ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
+  ClpPclmulGcmSivKernel, ClpFusedKernelDefaults;
 
 implementation
 

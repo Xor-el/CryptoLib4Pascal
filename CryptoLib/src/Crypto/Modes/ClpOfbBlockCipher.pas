@@ -26,12 +26,12 @@ uses
   ClpIBlockCipherMode,
   ClpIOfbBlockCipher,
   ClpICipherParameters,
-  ClpIParametersWithIV,
+  ClpCipherModeParameterUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
   TOfbBlockCipher = class sealed(TInterfacedObject, IOfbBlockCipher,
@@ -42,7 +42,6 @@ type
     FIV, FOfbV, FOfbOutV: TCryptoLibByteArray;
     FBlockSize: Int32;
     FCipher: IBlockCipher;
-    FEncrypting: Boolean;
 
   strict protected
     function GetAlgorithmName: String; inline;
@@ -106,28 +105,9 @@ end;
 procedure TOfbBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LIvParam: IParametersWithIV;
-  LIv: TCryptoLibByteArray;
   LParameters: ICipherParameters;
-  LI: Int32;
 begin
-  FEncrypting := AForEncryption;
-  LParameters := AParameters;
-
-  if Supports(LParameters, IParametersWithIV, LIvParam) then
-  begin
-    LIv := LIvParam.GetIV();
-    if (System.Length(LIv) < System.Length(FIV)) then
-    begin
-      System.Move(LIv[0], FIV[System.Length(FIV) - System.Length(LIv)],
-        System.Length(LIv) * System.SizeOf(Byte));
-      for LI := 0 to System.Pred(System.Length(FIV) - System.Length(LIv)) do
-        FIV[LI] := 0;
-    end
-    else
-      System.Move(LIv[0], FIV[0], System.Length(FIV) * System.SizeOf(Byte));
-    LParameters := LIvParam.Parameters;
-  end;
+  TCipherModeParameterUtilities.TryUnwrapIv(AParameters, FIV, LParameters);
 
   Reset();
   if (LParameters <> nil) then

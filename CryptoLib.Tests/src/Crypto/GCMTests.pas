@@ -51,6 +51,7 @@ uses
   ClpDateTimeUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpFusedKernelToggle,
   AeadTestUtilities,
   CryptoLibTestBase;
 
@@ -86,6 +87,14 @@ type
     procedure DoTestExceptions;
     function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
 
+    // Workers run twice via RunWithFusedToggle (fused on / off).
+    procedure DoTestRfcVectors;
+    procedure DoTestRandomised;
+    procedure DoTestOutputSizes;
+    procedure DoTestExceptionsWrapper;
+    procedure DoTestFourBlockFusedGcmPath;
+    procedure DoTestEightBlockFusedGcmPath;
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -95,6 +104,8 @@ type
     procedure TestRandomised;
     procedure TestOutputSizes;
     procedure TestExceptions;
+    procedure TestFourBlockFusedGcmPath;
+    procedure TestEightBlockFusedGcmPath;
 
   end;
 
@@ -357,7 +368,7 @@ function TTestGcm.InitCipher(const AM: IGcmMultiplier;
   AForEncryption: Boolean;
   const AParameters: IAeadParameters): IGcmBlockCipher;
 begin
-  Result := TGcmBlockCipher.Create(CreateAesEngine(), AM) as IGcmBlockCipher;
+  Result := TGcmBlockCipher.Create(CreateAesEngine(), AM);
   Result.Init(AForEncryption, AParameters as ICipherParameters);
 end;
 
@@ -741,12 +752,11 @@ var
   LC: IGcmBlockCipher;
   LAeadParams: IAeadParameters;
 begin
-  LGcm := TGcmBlockCipher.Create(CreateAesEngine()) as IGcmBlockCipher;
+  LGcm := TGcmBlockCipher.Create(CreateAesEngine());
 
   // Incorrect block size
   try
-    LGcm := TGcmBlockCipher.Create(
-      TBlowfishEngine.Create() as IBlockCipher) as IGcmBlockCipher;
+    LGcm := TGcmBlockCipher.Create(TBlowfishEngine.Create() as IBlockCipher);
     Fail('incorrect block size not picked up');
   except
     on E: EArgumentCryptoLibException do
@@ -780,7 +790,7 @@ begin
   LP := TConverters.ConvertStringToBytes('Hello world!', TEncoding.ANSI);
   System.SetLength(LBuf, 100);
 
-  LC := TGcmBlockCipher.Create(CreateAesEngine()) as IGcmBlockCipher;
+  LC := TGcmBlockCipher.Create(CreateAesEngine());
   LAeadParams := TAeadParameters.Create(
     TKeyParameter.Create(TBytes.Create(
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
@@ -815,6 +825,36 @@ begin
 end;
 
 procedure TTestGcm.TestRfcVectors;
+begin
+  RunWithFusedToggle(DoTestRfcVectors);
+end;
+
+procedure TTestGcm.TestRandomised;
+begin
+  RunWithFusedToggle(DoTestRandomised);
+end;
+
+procedure TTestGcm.TestOutputSizes;
+begin
+  RunWithFusedToggle(DoTestOutputSizes);
+end;
+
+procedure TTestGcm.TestExceptions;
+begin
+  RunWithFusedToggle(DoTestExceptionsWrapper);
+end;
+
+procedure TTestGcm.TestFourBlockFusedGcmPath;
+begin
+  RunWithFusedToggle(DoTestFourBlockFusedGcmPath);
+end;
+
+procedure TTestGcm.TestEightBlockFusedGcmPath;
+begin
+  RunWithFusedToggle(DoTestEightBlockFusedGcmPath);
+end;
+
+procedure TTestGcm.DoTestRfcVectors;
 var
   LI: Int32;
 begin
@@ -824,19 +864,119 @@ begin
   end;
 end;
 
-procedure TTestGcm.TestRandomised;
+procedure TTestGcm.DoTestRandomised;
 begin
   RandomTests;
 end;
 
-procedure TTestGcm.TestOutputSizes;
+procedure TTestGcm.DoTestOutputSizes;
 begin
   OutputSizeTests;
 end;
 
-procedure TTestGcm.TestExceptions;
+procedure TTestGcm.DoTestExceptionsWrapper;
 begin
   DoTestExceptions;
+end;
+
+procedure TTestGcm.DoTestFourBlockFusedGcmPath;
+var
+  LRnd: ISecureRandom;
+  LI, LJ, LKeyLen, LPLen, LLen, LDecLen: Int32;
+  LK, LIV, LP, LEnc, LDec: TBytes;
+  LParams: IAeadParameters;
+  LEncCipher, LDecCipher: IGcmBlockCipher;
+begin
+  if not TGcmBlockCipher.IsFourWaySupported then
+    Exit;
+
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(TDateTimeUtilities.CurrentUnixMs);
+
+  for LI := 0 to 39 do
+  begin
+    LKeyLen := 16 + 8 * NextInt32(LRnd, 3);
+    System.SetLength(LK, LKeyLen);
+    LRnd.NextBytes(LK);
+    System.SetLength(LIV, 12);
+    LRnd.NextBytes(LIV);
+    LPLen := 64 + NextInt32(LRnd, 16) * 64;
+    System.SetLength(LP, LPLen);
+    LRnd.NextBytes(LP);
+
+    LParams := TAeadParameters.Create(
+      TKeyParameter.Create(LK) as IKeyParameter, 16 * 8, LIV, nil);
+
+    LEncCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+      TBasicGcmMultiplier.Create() as IGcmMultiplier);
+    LEncCipher.Init(True, LParams as ICipherParameters);
+    System.SetLength(LEnc, LEncCipher.GetOutputSize(LPLen));
+    LLen := LEncCipher.ProcessBytes(LP, 0, LPLen, LEnc, 0);
+    LLen := LLen + LEncCipher.DoFinal(LEnc, LLen);
+
+    LDecCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+      TBasicGcmMultiplier.Create() as IGcmMultiplier);
+    LDecCipher.Init(False, LParams as ICipherParameters);
+    System.SetLength(LDec, LDecCipher.GetOutputSize(LLen));
+    LDecLen := LDecCipher.ProcessBytes(LEnc, 0, LLen, LDec, 0);
+    LDecLen := LDecLen + LDecCipher.DoFinal(LDec, LDecLen);
+
+    if LDecLen <> LPLen then
+      Fail('four-block GCM decrypt length mismatch');
+    for LJ := 0 to LPLen - 1 do
+      if LP[LJ] <> LDec[LJ] then
+        Fail('four-block GCM round-trip mismatch');
+  end;
+end;
+
+procedure TTestGcm.DoTestEightBlockFusedGcmPath;
+var
+  LRnd: ISecureRandom;
+  LI, LJ, LKeyLen, LPLen, LLen, LDecLen: Int32;
+  LK, LIV, LP, LEnc, LDec: TBytes;
+  LParams: IAeadParameters;
+  LEncCipher, LDecCipher: IGcmBlockCipher;
+begin
+  if not TGcmBlockCipher.IsEightWaySupported then
+    Exit;
+
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(TDateTimeUtilities.CurrentUnixMs);
+
+  for LI := 0 to 39 do
+  begin
+    LKeyLen := 16 + 8 * NextInt32(LRnd, 3);
+    System.SetLength(LK, LKeyLen);
+    LRnd.NextBytes(LK);
+    System.SetLength(LIV, 12);
+    LRnd.NextBytes(LIV);
+    LPLen := 128 + NextInt32(LRnd, 8) * 128;
+    System.SetLength(LP, LPLen);
+    LRnd.NextBytes(LP);
+
+    LParams := TAeadParameters.Create(
+      TKeyParameter.Create(LK) as IKeyParameter, 16 * 8, LIV, nil);
+
+    LEncCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+      TBasicGcmMultiplier.Create() as IGcmMultiplier);
+    LEncCipher.Init(True, LParams as ICipherParameters);
+    System.SetLength(LEnc, LEncCipher.GetOutputSize(LPLen));
+    LLen := LEncCipher.ProcessBytes(LP, 0, LPLen, LEnc, 0);
+    LLen := LLen + LEncCipher.DoFinal(LEnc, LLen);
+
+    LDecCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+      TBasicGcmMultiplier.Create() as IGcmMultiplier);
+    LDecCipher.Init(False, LParams as ICipherParameters);
+    System.SetLength(LDec, LDecCipher.GetOutputSize(LLen));
+    LDecLen := LDecCipher.ProcessBytes(LEnc, 0, LLen, LDec, 0);
+    LDecLen := LDecLen + LDecCipher.DoFinal(LDec, LDecLen);
+
+    if LDecLen <> LPLen then
+      Fail('eight-block GCM decrypt length mismatch');
+    for LJ := 0 to LPLen - 1 do
+      if LP[LJ] <> LDec[LJ] then
+        Fail('eight-block GCM round-trip mismatch');
+  end;
 end;
 
 initialization

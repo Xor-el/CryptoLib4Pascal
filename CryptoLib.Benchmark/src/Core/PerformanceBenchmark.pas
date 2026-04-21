@@ -58,16 +58,16 @@ var
   WD, WC, WS, WK, LMax: Int32;
 begin
   Randomize;
-  //WD := TDigestPerformanceBenchmark.Run(ALogProc, ADigestSizes);
-  //ALogProc('');
+  WD := TDigestPerformanceBenchmark.Run(ALogProc, ADigestSizes);
+  ALogProc('');
   WC := TCipherPerformanceBenchmark.Run(ALogProc, AEncryptSizes, ADecryptSizes);
   ALogProc('');
-  //WS := TSignerPerformanceBenchmark.Run(ALogProc);
-  //ALogProc('');
-  //WK := TKdfPerformanceBenchmark.Run(ALogProc);
+  WS := TSignerPerformanceBenchmark.Run(ALogProc);
+  ALogProc('');
+  WK := TKdfPerformanceBenchmark.Run(ALogProc);
   LMax := Math.Max(WD, WC);
-  //LMax := Math.Max(LMax, WS);
-  //LMax := Math.Max(LMax, WK);
+  LMax := Math.Max(LMax, WS);
+  LMax := Math.Max(LMax, WK);
   TBenchmarkReport.WriteStandardFooter(ALogProc, LMax);
 end;
 

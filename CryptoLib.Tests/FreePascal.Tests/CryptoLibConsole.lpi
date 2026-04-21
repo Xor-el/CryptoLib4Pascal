@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="139">
+    <Units Count="144">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -596,6 +596,26 @@
         <Filename Value="..\src\Crypto\SpeckLegacyTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit138>
+      <Unit139>
+        <Filename Value="..\src\Crypto\SicBulkParityTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit139>
+      <Unit140>
+        <Filename Value="..\src\Crypto\EcbBulkParityTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit140>
+      <Unit141>
+        <Filename Value="..\src\Crypto\CbcBulkParityTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit141>
+      <Unit142>
+        <Filename Value="..\src\Utils\ClpFusedKernelToggle.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit142>
+      <Unit143>
+        <Filename Value="..\src\Crypto\FusedExternalRegistrationTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit143>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

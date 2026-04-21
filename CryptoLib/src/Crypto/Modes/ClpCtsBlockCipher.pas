@@ -33,10 +33,8 @@ uses
 
 resourcestring
   SUnsupportedCipher = 'CtsBlockCipher can only accept ECB, or CBC ciphers';
-  SNegativeInputLength = 'Can''t Have a Negative Input Length!';
   SCTSDoFinalError = 'Need at Least One Block of Input For CTS';
-  SOutputBufferTooShort = 'Output Buffer too Short';
-  SOutputBufferTooSmallForDoFinal = 'Output Buffer too Short for DoFinal()';
+  SOutputBufferTooSmallForDoFinal = 'Output Buffer Too Short for DoFinal()';
 
 type
   TCtsBlockCipher = class sealed(TBufferedBlockCipher, ICtsBlockCipher)
@@ -45,6 +43,30 @@ type
   var
     FBlockSize: Int32;
 
+  strict protected
+    /// <summary>
+    /// CTS holds the last two FBuf blocks back for DoFinal, so we walk
+    /// the aligned middle differently from the default: the first post
+    /// gap-fill block always comes from the FBuf lookahead (staging one
+    /// AInput block into FBuf, processing the lookahead, shifting the
+    /// staged block into the lookahead slot), then any remaining N-1
+    /// blocks run through FBulkCipherMode.ProcessBlocks directly on
+    /// AInput. After the bulk call we refresh FBuf[0..LBlockSize-1] with
+    /// the last AInput block the bulk call consumed so DoFinal and any
+    /// follow-up ProcessBytes observe the same lookahead state the
+    /// scalar path would have produced.
+    /// </summary>
+    function ProcessBytesBulkMiddle(const AInput: TCryptoLibByteArray;
+      var AInOff: Int32; var ALen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
+
+    /// <summary>
+    /// CTS never flushes on tail-store: the last two blocks must remain
+    /// in FBuf for DoFinal's ciphertext-stealing finalisation.
+    /// </summary>
+    function AfterTailStored(const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; override;
+
   public
     constructor Create(const ACipher: IBlockCipher); overload;
     constructor Create(const ACipherMode: IBlockCipherMode); overload;
@@ -52,8 +74,6 @@ type
     function GetUpdateOutputSize(AInputLen: Int32): Int32; override;
     function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
       AOutOff: Int32): Int32; override;
-    function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
       override;
   end;
@@ -197,38 +217,51 @@ begin
   System.Inc(FBufOff);
 end;
 
-function TCtsBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
-  AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+function TCtsBlockCipher.ProcessBytesBulkMiddle(
+  const AInput: TCryptoLibByteArray; var AInOff: Int32; var ALen: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LBlockSize, LLength, LGapLen: Int32;
+  LBlockSize, LN, LBulkBlocks, LBulkBytes: Int32;
 begin
-  if (ALen < 0) then
-    raise EArgumentCryptoLibException.CreateRes(@SNegativeInputLength);
-
-  LBlockSize := GetBlockSize();
-  LLength := GetUpdateOutputSize(ALen);
-
-  if (LLength > 0) then
-  begin
-    if ((AOutOff + LLength) > System.Length(AOutput)) then
-      raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
-  end;
-
   Result := 0;
-  LGapLen := System.Length(FBuf) - FBufOff;
+  LBlockSize := GetBlockSize();
 
-  if (ALen > LGapLen) then
+  // FBuf[0..LBlockSize-1] holds the lookahead from gap-fill and FBufOff
+  // equals LBlockSize (single-slot staging area at FBuf[LBlockSize..]).
+  // The scalar loop below stages one AInput block into FBuf[LBlockSize],
+  // processes FBuf[0] (the lookahead), and shifts. The first iteration
+  // MUST stay scalar because its input is the FBuf lookahead, not
+  // AInput; iterations 1..N-1 are pure contiguous-AInput transforms and
+  // can be routed through one ProcessBlocks call. N = (ALen - 1) div BS
+  // is the total iteration count the scalar loop would perform, so we
+  // need N >= 2 (i.e. ALen > 2*BS) to get at least one bulk block.
+  if (FBulkCipherMode <> nil) and (ALen > 2 * LBlockSize) then
   begin
-    System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
+    LN := (ALen - 1) div LBlockSize;
 
+    System.Move(AInput[AInOff], FBuf[FBufOff], LBlockSize * System.SizeOf(Byte));
     Result := Result + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
     System.Move(FBuf[LBlockSize], FBuf[0], LBlockSize * System.SizeOf(Byte));
+    ALen := ALen - LBlockSize;
+    AInOff := AInOff + LBlockSize;
 
-    FBufOff := LBlockSize;
+    LBulkBlocks := LN - 1;
+    LBulkBytes := LBulkBlocks * LBlockSize;
+    Result := Result + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
+      LBulkBlocks, AOutput, AOutOff + Result);
 
-    ALen := ALen - LGapLen;
-    AInOff := AInOff + LGapLen;
+    // Refresh FBuf[0..LBlockSize-1] with the last AInput block the bulk
+    // call consumed. That block would have been the post-shift lookahead
+    // after the scalar loop's final iteration, so DoFinal and subsequent
+    // ProcessBytes observe the same FBuf state either way.
+    System.Move(AInput[AInOff + LBulkBytes - LBlockSize], FBuf[0],
+      LBlockSize * System.SizeOf(Byte));
 
+    ALen := ALen - LBulkBytes;
+    AInOff := AInOff + LBulkBytes;
+  end
+  else
+  begin
     while (ALen > LBlockSize) do
     begin
       System.Move(AInput[AInOff], FBuf[FBufOff], LBlockSize * System.SizeOf(Byte));
@@ -239,10 +272,12 @@ begin
       AInOff := AInOff + LBlockSize;
     end;
   end;
+end;
 
-  System.Move(AInput[AInOff], FBuf[FBufOff], ALen * System.SizeOf(Byte));
-
-  FBufOff := FBufOff + ALen;
+function TCtsBlockCipher.AfterTailStored(const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+begin
+  Result := 0;
 end;
 
 end.

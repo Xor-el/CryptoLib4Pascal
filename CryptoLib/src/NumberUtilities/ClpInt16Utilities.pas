@@ -30,14 +30,14 @@ type
       NumBits: Int32 = 16;
       NumBytes: Int32 = 2;
 
-    class function ReverseBytes(AValue: Int16): Int16; overload; static;
-    class function ReverseBytes(AValue: UInt16): UInt16; overload; static;
+    class function ReverseBytes(AValue: Int16): Int16; overload; static; inline;
+    class function ReverseBytes(AValue: UInt16): UInt16; overload; static; inline;
 
-    class function RotateLeft(AValue: Int16; ADistance: Int32): Int16; overload; static;
-    class function RotateLeft(AValue: UInt16; ADistance: Int32): UInt16; overload; static;
+    class function RotateLeft(AValue: Int16; ADistance: Int32): Int16; overload; static; inline;
+    class function RotateLeft(AValue: UInt16; ADistance: Int32): UInt16; overload; static; inline;
 
-    class function RotateRight(AValue: Int16; ADistance: Int32): Int16; overload; static;
-    class function RotateRight(AValue: UInt16; ADistance: Int32): UInt16; overload; static;
+    class function RotateRight(AValue: Int16; ADistance: Int32): Int16; overload; static; inline;
+    class function RotateRight(AValue: UInt16; ADistance: Int32): UInt16; overload; static; inline;
   end;
 
 implementation

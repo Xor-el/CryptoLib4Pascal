@@ -21,18 +21,33 @@ unit ClpIAesEngineX86;
 interface
 
 uses
-  ClpIBlockCipher,
-  ClpCryptoLibTypes;
+  ClpIBulkBlockCipher;
 
 type
   /// <summary>
-  /// X86 AES-NI Engine. Adds a four-block API for GCM CTR batching.
+  /// AES-NI engine interface. Surfaces the AES round-key schedule pointers
+  /// required by the concrete fused AES-NI AEAD kernels. Internal-use: only
+  /// TAesEngineX86 implements it in-tree. Modes wanting plain multi-block
+  /// batching should query IBulkBlockCipher instead to stay cipher-agnostic.
   /// </summary>
-  IAesEngineX86 = interface(IBlockCipher)
+  IAesEngineX86 = interface(IBulkBlockCipher)
     ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
 
-    function ProcessFourBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    /// <summary>
+    /// Returns the AES-NI encrypt round-key schedule pointer and round
+    /// count when the engine is currently initialized for encryption
+    /// (round count in {10,12,14}); False otherwise. The pointer MUST NOT
+    /// be retained past the current engine init.
+    /// </summary>
+    function TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
+
+    /// <summary>
+    /// Returns the AES-NI decrypt round-key schedule (inverse MixColumns
+    /// already applied) when the engine is currently initialized for
+    /// decryption; False otherwise. Same lifetime contract as
+    /// TryGetEncKeysPtr.
+    /// </summary>
+    function TryGetDecKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
   end;
 
 implementation

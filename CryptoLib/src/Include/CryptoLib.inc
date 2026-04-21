@@ -29,7 +29,7 @@
   {$STRINGCHECKS OFF}
   {$WARN DUPLICATE_CTOR_DTOR OFF}
 
-  {========================== Delphi Version Features =========================}
+  {========================= Delphi Version Features ==========================}
 
   // XE and Above
   {$IF CompilerVersion >= 22.0}
@@ -52,21 +52,27 @@
     {$DEFINE HAS_VOLATILE}
   {$IFEND}
 
-  {============================== CPU Architecture ==============================}
+  {============================= CPU Architecture =============================}
 
-  {$IF DEFINED(CPU386)}
+  {$DEFINE CRYPTOLIB_LITTLE_ENDIAN}
+
+  {$IFDEF CPUARM}
+    {$DEFINE CRYPTOLIB_REQUIRES_PROPER_ALIGNMENT}
+  {$ENDIF}
+
+  {$IFDEF CPU386}
     {$DEFINE CRYPTOLIB_I386}
     {$IFDEF MSWINDOWS}
       {$DEFINE CRYPTOLIB_I386_ASM}
     {$ENDIF}
-  {$IFEND}
+  {$ENDIF}
 
-  {$IF DEFINED(CPUX64)}
+  {$IFDEF CPUX64}
     {$DEFINE CRYPTOLIB_X86_64}
     {$IFDEF MSWINDOWS}
       {$DEFINE CRYPTOLIB_X86_64_ASM}
     {$ENDIF}
-  {$IFEND}
+  {$ENDIF}
 
   {$IFDEF CPUARM32}
     {$DEFINE CRYPTOLIB_ARM32}
@@ -76,7 +82,7 @@
     {$DEFINE CRYPTOLIB_AARCH64}
   {$ENDIF}
 
-  {================================= Target OS ==================================}
+  {================================ Target OS =================================}
 
   {$IFDEF MSWINDOWS}
     {$DEFINE CRYPTOLIB_MSWINDOWS}
@@ -109,7 +115,7 @@
 
 {$ENDIF}
 
-{========================== Common Feature Detection ===========================}
+{========================== Common Feature Detection ==========================}
 
 {$IF DEFINED(CRYPTOLIB_ANDROID) OR DEFINED(CRYPTOLIB_LINUX) OR DEFINED(CRYPTOLIB_SOLARIS)}
   {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
@@ -126,6 +132,10 @@
 {$IFDEF CRYPTOLIB_UNIXLIKE}
   {$DEFINE CRYPTOLIB_HAS_DEVRANDOM}
 {$ENDIF}
+
+{$IF DEFINED(CRYPTOLIB_LITTLE_ENDIAN) AND NOT DEFINED(CRYPTOLIB_REQUIRES_PROPER_ALIGNMENT)}
+  {$DEFINE CRYPTOLIB_HAS_FAST_UNALIGNED_ACCESS_LE}
+{$IFEND}
 
 {========================== Common Compiler Settings ==========================}
 
@@ -178,8 +188,8 @@
 // {$DEFINE CRYPTOLIB_FORCE_SVE}
 
 {$IF (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_NEON))
-  OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SVE))
-  OR (DEFINED(CRYPTOLIB_FORCE_NEON) AND DEFINED(CRYPTOLIB_FORCE_SVE))}
+   OR (DEFINED(CRYPTOLIB_FORCE_SCALAR) AND DEFINED(CRYPTOLIB_FORCE_SVE))
+   OR (DEFINED(CRYPTOLIB_FORCE_NEON) AND DEFINED(CRYPTOLIB_FORCE_SVE))}
   {$MESSAGE ERROR 'Only one CRYPTOLIB_FORCE_* define may be enabled at a time.'}
 {$IFEND}
 

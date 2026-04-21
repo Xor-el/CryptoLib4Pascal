@@ -44,7 +44,10 @@ uses
   ClpIBlowfishEngine,
   ClpAesUtilities,
   ClpConverters,
+  ClpSecureRandom,
+  ClpISecureRandom,
   ClpCryptoLibTypes,
+  ClpFusedKernelToggle,
   CryptoLibTestBase;
 
 type
@@ -69,14 +72,24 @@ type
     function IsEqual(const AExpected, AOther: TBytes; AOffset: Int32): Boolean;
     function CreateCcmCipher: ICcmBlockCipher;
 
+    function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
+    procedure RandomisedRoundTrip(const ARandom: ISecureRandom);
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
+    // Workers run twice via RunWithFusedToggle (fused on / off).
+    procedure DoTestNistVectorsAndLongData;
+    procedure DoTestCcmIvParameters;
+    procedure DoTestOffsets;
+    procedure DoTestRandomised;
 
   published
     procedure TestNistVectorsAndLongData;
     procedure TestCcmIvParameters;
     procedure TestOffsets;
+    procedure TestRandomised;
     procedure TestExceptions;
 
   end;
@@ -259,7 +272,7 @@ begin
   inherited;
 end;
 
-procedure TTestCcm.TestNistVectorsAndLongData;
+procedure TTestCcm.DoTestNistVectorsAndLongData;
 var
   LCcm: ICcmBlockCipher;
   LA4: TBytes;
@@ -287,7 +300,7 @@ begin
   CheckVectors(4, LCcm, FK4, 112, FN4, FA4, FA4, FT5, FC5);
 end;
 
-procedure TTestCcm.TestCcmIvParameters;
+procedure TTestCcm.DoTestCcmIvParameters;
 var
   LCcm: IAeadBlockCipher;
   LPlain, LEnc, LTmp, LDec: TBytes;
@@ -324,7 +337,7 @@ begin
   end;
 end;
 
-procedure TTestCcm.TestOffsets;
+procedure TTestCcm.DoTestOffsets;
 var
   LCcm: ICcmBlockCipher;
   LInBuf, LOutBuf, LOutput: TBytes;
@@ -369,6 +382,115 @@ begin
   begin
     Fail('encryption output incorrect');
   end;
+end;
+
+function TTestCcm.NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
+begin
+  if AN <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+  Result := Int32(UInt32(ARandom.NextInt32) and $7FFFFFFF) mod AN;
+end;
+
+procedure TTestCcm.RandomisedRoundTrip(const ARandom: ISecureRandom);
+var
+  LKey, LNonce, LAad, LPlain, LEnc, LDec, LTmp: TBytes;
+  LKeyBits, LKeyBytes, LNonceLen, LAadLen, LPlainLen, LMacBytes,
+    LMacBits, LIdx, LLen: Int32;
+  LCcm: ICcmBlockCipher;
+  LParams: IAeadParameters;
+begin
+  // Sweep key sizes, nonce / AAD / plaintext lengths covering every
+  // branch of the fused vs scalar CCM body paths.
+  for LIdx := 0 to 31 do
+  begin
+    case LIdx mod 3 of
+      0:
+        LKeyBits := 128;
+      1:
+        LKeyBits := 192;
+      else
+        LKeyBits := 256;
+    end;
+    LKeyBytes := LKeyBits div 8;
+    SetLength(LKey, LKeyBytes);
+    ARandom.NextBytes(LKey);
+
+    LNonceLen := 7 + NextInt32(ARandom, 7); // 7..13
+    SetLength(LNonce, LNonceLen);
+    ARandom.NextBytes(LNonce);
+
+    LAadLen := NextInt32(ARandom, 4097);
+    SetLength(LAad, LAadLen);
+    if LAadLen > 0 then
+      ARandom.NextBytes(LAad);
+
+    LPlainLen := NextInt32(ARandom, 4097);
+    SetLength(LPlain, LPlainLen);
+    if LPlainLen > 0 then
+      ARandom.NextBytes(LPlain);
+
+    // CCM allowed MAC lengths: 4, 6, 8, 10, 12, 14, 16 bytes.
+    LMacBytes := 4 + 2 * NextInt32(ARandom, 7);
+    LMacBits := LMacBytes * 8;
+
+    LParams := TAeadParameters.Create(TKeyParameter.Create(LKey)
+      as IKeyParameter, LMacBits, LNonce, LAad);
+
+    LCcm := CreateCcmCipher;
+    LCcm.Init(True, LParams as ICipherParameters);
+    SetLength(LEnc, LCcm.GetOutputSize(LPlainLen));
+    LLen := LCcm.ProcessBytes(LPlain, 0, LPlainLen, LEnc, 0);
+    LLen := LLen + LCcm.DoFinal(LEnc, LLen);
+    if LLen <> Length(LEnc) then
+      Fail(Format('encrypt output length mismatch at iter %d (got %d, want %d)',
+        [LIdx, LLen, Length(LEnc)]));
+
+    LCcm.Init(False, LParams as ICipherParameters);
+    SetLength(LTmp, LCcm.GetOutputSize(Length(LEnc)));
+    LLen := LCcm.ProcessBytes(LEnc, 0, Length(LEnc), LTmp, 0);
+    LLen := LLen + LCcm.DoFinal(LTmp, LLen);
+    SetLength(LDec, LLen);
+    if LLen > 0 then
+      System.Move(LTmp[0], LDec[0], LLen);
+
+    if not AreEqual(LPlain, LDec) then
+      Fail(Format('round-trip plaintext mismatch at iter %d ' +
+        '(keybits=%d nonce=%d aad=%d plain=%d mac=%d)',
+        [LIdx, LKeyBits, LNonceLen, LAadLen, LPlainLen, LMacBytes]));
+  end;
+end;
+
+procedure TTestCcm.DoTestRandomised;
+var
+  LRandom: ISecureRandom;
+begin
+  LRandom := TSecureRandom.GetInstance('SHA256PRNG');
+  LRandom.SetSeed(TConverters.ConvertStringToBytes('CcmDualModeRandomSeed-v1',
+    TEncoding.ASCII));
+  RandomisedRoundTrip(LRandom);
+end;
+
+procedure TTestCcm.TestNistVectorsAndLongData;
+begin
+  RunWithFusedToggle(DoTestNistVectorsAndLongData);
+end;
+
+procedure TTestCcm.TestCcmIvParameters;
+begin
+  RunWithFusedToggle(DoTestCcmIvParameters);
+end;
+
+procedure TTestCcm.TestOffsets;
+begin
+  RunWithFusedToggle(DoTestOffsets);
+end;
+
+procedure TTestCcm.TestRandomised;
+begin
+  RunWithFusedToggle(DoTestRandomised);
 end;
 
 procedure TTestCcm.TestExceptions;

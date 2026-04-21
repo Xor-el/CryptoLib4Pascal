@@ -1,6 +1,13 @@
-// AES decrypt key schedule: aesimc middle rounds + reverse round-key order, x86-64.
-// Expects: rcx = round keys, edx = FNRounds (10, 12, or 14).
-// Db-encoded AES-NI / SSE2 (broad assembler support).
+// AES-NI decrypt-schedule preparation (x86-64).
+// Runs aesimc on the middle round keys (rounds 1..N_R - 1) in place and then
+// reverses the order of the N_R + 1 round keys to produce a schedule suitable
+// for aesdec / aesdeclast during decrypt.
+//
+// Entry (after SimdProc2Begin_x86_64.inc): rcx = round keys
+// (16 * (N_R + 1) bytes, in place), edx = NRounds in {10, 12, 14}.
+// Uses r8..r11 / eax as loop counters and scratch, xmm0 / xmm1 for aesimc /
+// swap.
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 //
   mov r10d, edx
   mov r9d, 1

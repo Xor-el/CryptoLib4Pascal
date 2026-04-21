@@ -25,6 +25,9 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
+  ClpIBulkBlockCipher,
+  ClpIBulkBlockCipherMode,
+  ClpBlockCipherBulkUtilities,
   ClpISicBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -32,8 +35,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'Output Buffer Too Short';
   SInvalidParameterArgument = 'CTR/SIC Mode Requires ParametersWithIV';
   SInvalidTooLargeIVLength =
     'CTR/SIC mode requires IV no greater than: %u bytes';
@@ -41,13 +44,37 @@ resourcestring
 
 type
   TSicBlockCipher = class(TInterfacedObject, ISicBlockCipher,
-    IBlockCipherMode, IBlockCipher)
+    IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
 
   strict private
   var
     FIV, FCounter, FCounterOut: TCryptoLibByteArray;
     FBlockSize: Int32;
     FCipher: IBlockCipher;
+    // Cached on Init; non-nil when the underlying engine implements the
+    // generic multi-block capability (IBulkBlockCipher). The engine owns
+    // the 8/4/1 batch ladder internally, so the mode here only ever asks
+    // for "8 blocks at a time" and lets the residue go per-block. Any
+    // bulk-capable engine plugs in unchanged by implementing the
+    // interface -- the mode does not care which cipher is underneath.
+    FBulkCipher: IBulkBlockCipher;
+
+    /// <summary>
+    /// Snapshot FCounter into APlainCounters and advance FCounter by ABlockCount
+    /// using the same byte-wise big-endian increment as ProcessBlock, so that
+    /// the bulk path produces the exact same counter sequence as N sequential
+    /// ProcessBlock calls would.
+    /// </summary>
+    procedure FillNextCounterBlocks(ABlockCount: Int32; APlainCounters: PByte);
+    /// <summary>
+    /// Single eight-block bulk step: build eight pre-encrypt counter
+    /// blocks, run them through the engine's IBulkBlockCipher in-place
+    /// path to turn them into keystream, then XOR 128 bytes of keystream
+    /// with input into output. Advances FCounter by 8 via
+    /// FillNextCounterBlocks.
+    /// </summary>
+    procedure ProcessEightBlocksBulk(const AInBuf: TCryptoLibByteArray;
+      AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -60,6 +87,18 @@ type
     function GetBlockSize(): Int32; virtual;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    /// <summary>
+    /// IBulkBlockCipherMode: process ABlockCount consecutive FBlockSize-byte
+    /// blocks. Output is byte-identical to ABlockCount sequential
+    /// ProcessBlock calls, including the advance of the internal counter.
+    /// When the underlying engine exposes IBulkBlockCipher, 8-block batches
+    /// of counter blocks are run through it in one shot and XORed with the
+    /// input in a single pass; 1..7 residue goes per-block. Without a bulk
+    /// capability, the whole request loops ProcessBlock.
+    /// </summary>
+    function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+      AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; virtual;
     procedure Reset(); virtual;
 
     property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
@@ -80,6 +119,7 @@ begin
   System.SetLength(FCounter, FBlockSize);
   System.SetLength(FCounterOut, FBlockSize);
   System.SetLength(FIV, FBlockSize);
+  FBulkCipher := nil;
 end;
 
 procedure TSicBlockCipher.Reset;
@@ -139,6 +179,11 @@ begin
   if (LParameters <> nil) then
     FCipher.Init(True, LParameters);
 
+  // Probe once per Init. When the underlying cipher implements the bulk
+  // interface the batched path dispatches straight through FBulkCipher;
+  // otherwise we stay on the per-block path.
+  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
+
   Reset();
 end;
 
@@ -168,6 +213,91 @@ begin
   end;
 
   Result := System.Length(FCounter);
+end;
+
+function TSicBlockCipher.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+  AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LTotalBytes: Int32;
+begin
+  if ABlockCount <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  LTotalBytes := ABlockCount * FBlockSize;
+
+  if ((AInOff < 0) or ((AInOff + LTotalBytes) > System.Length(AInBuf))) then
+    raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
+
+  if ((AOutOff < 0) or ((AOutOff + LTotalBytes) > System.Length(AOutBuf))) then
+    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
+
+  // Fast path: 128-byte (8-block) batches through the bulk engine.
+  // FBulkCipher is only assigned in Init when the underlying cipher
+  // implements IBulkBlockCipher. The ProcessEightBlocksBulk helper
+  // hard-codes a 128-byte XOR/counter layout, so we additionally gate on
+  // FBlockSize = 16 to stay correct if a future bulk engine advertises a
+  // different block size. 1..7 block residue falls through to the per-
+  // block path.
+  if (FBulkCipher <> nil) and (FBlockSize = 16) then
+  begin
+    while ABlockCount >= 8 do
+    begin
+      ProcessEightBlocksBulk(AInBuf, AInOff, AOutBuf, AOutOff);
+      System.Inc(AInOff, 128);
+      System.Inc(AOutOff, 128);
+      System.Dec(ABlockCount, 8);
+    end;
+  end;
+
+  // Tail / scalar fallback: identical semantics to repeated ProcessBlock.
+  while ABlockCount > 0 do
+  begin
+    ProcessBlock(AInBuf, AInOff, AOutBuf, AOutOff);
+    System.Inc(AInOff, FBlockSize);
+    System.Inc(AOutOff, FBlockSize);
+    System.Dec(ABlockCount);
+  end;
+
+  Result := LTotalBytes;
+end;
+
+procedure TSicBlockCipher.FillNextCounterBlocks(ABlockCount: Int32;
+  APlainCounters: PByte);
+var
+  LI, LJ: Int32;
+begin
+  for LI := 0 to ABlockCount - 1 do
+  begin
+    System.Move(FCounter[0], APlainCounters[LI * FBlockSize], FBlockSize);
+
+    LJ := System.Length(FCounter);
+    System.Dec(LJ);
+    System.Inc(FCounter[LJ]);
+    while ((LJ >= 0) and (FCounter[LJ] = 0)) do
+    begin
+      System.Dec(LJ);
+      System.Inc(FCounter[LJ]);
+    end;
+  end;
+end;
+
+procedure TSicBlockCipher.ProcessEightBlocksBulk(
+  const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+  const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LKs: array [0 .. 127] of Byte;
+begin
+  FillNextCounterBlocks(8, @LKs[0]);
+  // In-place bulk transform (identical pointers satisfy the
+  // IBulkBlockCipher aliasing contract) turns LKs from raw counter
+  // blocks into keystream.
+  FBulkCipher.ProcessBlocks(@LKs[0], @LKs[0], 8);
+  TBlockCipherBulkUtilities.Xor128Bytes(@AOutBuf[AOutOff], @AInBuf[AInOff],
+    @LKs[0]);
 end;
 
 end.

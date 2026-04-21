@@ -10,7 +10,9 @@ uses
   SecP384R1FieldTests, ECDsa5Tests, ECTests, NamedCurveTests,
   SignerUtilitiesTests, SecureRandomTests, DigestRandomNumberTests,
   FixedPointTests, NistSp80038aAesTestData, AESTests, AesLightTests,
-  AesX86Tests, AESSICTests, SpeckCryptoPPTestData, SpeckBlockCipherTestBase,
+  FusedExternalRegistrationTests,
+  AesX86Tests, AESSICTests, SicBulkParityTests, EcbBulkParityTests,
+  CbcBulkParityTests, SpeckCryptoPPTestData, SpeckBlockCipherTestBase,
   SpeckLegacyTests, SpeckTests, IESCipherTests,
   MD5HMacTests, SHA1HMacTests, SHA224HMacTests, SHA256HMacTests,
   SHA384HMacTests, SHA512HMacTests, RIPEMD128HMacTests, RIPEMD160HMacTests,
@@ -38,8 +40,8 @@ uses
   CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests,
   Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, ClpFixedSecureRandom, ClpShortenedDigest,
-  ClpCertTestUtilities, Int32Tests, Int64Tests, IPAddressUtilitiesTests,
-  PemReaderTests;
+  ClpCertTestUtilities, ClpFusedKernelToggle, Int32Tests, Int64Tests,
+  IPAddressUtilitiesTests, PemReaderTests;
 
 type
 

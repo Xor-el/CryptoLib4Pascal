@@ -1,5 +1,9 @@
-// MultiplyExt: Z0,Z1,Z2 only (no Z1 merge / reduction). Operands are 16-byte limbs, LE UInt64 pair each.
-// After SimdProc3Begin: rcx = PX, rdx = PY, r8 = POut (48 bytes: Z0, Z1, Z2).
+// SSE2 + PCLMULQDQ Karatsuba-style carryless multiply without reduction (x86-64).
+// MultiplyExt: Z0, Z1, Z2 only (no Z1 merge / reduction). Operands are 16-byte
+// limbs, LE UInt64 pair each.
+// After SimdProc3Begin_x86_64.inc: rcx = PX, rdx = PY, r8 = POut
+// (48 bytes: Z0, Z1, Z2).
+// PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
   movdqu    xmm0, [rcx]
   movdqu    xmm1, [rdx]

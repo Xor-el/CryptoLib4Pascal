@@ -25,6 +25,8 @@ uses
   ClpCheck,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
+  ClpIBulkBlockCipherMode,
+  ClpBlockCipherBulkUtilities,
   ClpEcbBlockCipher,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
@@ -37,10 +39,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooSmall = 'Output Buffer too Short';
+  SOutputBufferTooSmall = 'Output Buffer Too Short';
   SIncompleteLastBlockInDecryption = 'Last Block Incomplete in Decryption';
-  SNegativeInputLength = 'Can''t Have a Negative Input Length!';
-
 type
 
   /// <summary>
@@ -60,6 +60,14 @@ type
 
   strict private
     FPadding: IBlockCipherPadding;
+
+  strict protected
+    /// <summary>
+    /// Padded cipher must retain the last block in FBuf so DoFinal can
+    /// apply (or strip) padding - never flush on tail-store.
+    /// </summary>
+    function AfterTailStored(const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; override;
 
   public
 
@@ -179,10 +187,6 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessBytes(const AInput: TCryptoLibByteArray;
-      AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
-      : Int32; override;
-
     /// <summary>
     /// Process the last block in the buffer. If the buffer is currently full
     /// and padding needs to be added a call to doFinal will produce 2 *
@@ -323,6 +327,10 @@ begin
   Reset();
   FPadding.Init(LInitRandom);
   FCipherMode.Init(AForEncryption, LParameters);
+
+  // Cache the bulk-capable view of FCipherMode (see base-class comment).
+  TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipherMode,
+    FBulkCipherMode);
 end;
 
 function TPaddedBufferedBlockCipher.ProcessByte(AInput: Byte;
@@ -347,53 +355,10 @@ begin
   Result := LResultLen;
 end;
 
-function TPaddedBufferedBlockCipher.ProcessBytes(const AInput
-  : TCryptoLibByteArray; AInOff, ALength: Int32;
+function TPaddedBufferedBlockCipher.AfterTailStored(
   const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-var
-  LBlockSize, LOutLength, LResultLen, LGapLen: Int32;
 begin
-  if (ALength < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SNegativeInputLength);
-  end;
-
-  LBlockSize := GetBlockSize();
-  LOutLength := GetUpdateOutputSize(ALength);
-
-  if (LOutLength > 0) then
-  begin
-    TCheck.OutputLength(AOutput, AOutOff, LOutLength, SOutputBufferTooSmall);
-  end;
-
-  LResultLen := 0;
-  LGapLen := System.Length(FBuf) - FBufOff;
-
-  if (ALength > LGapLen) then
-  begin
-    System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
-
-    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-
-    FBufOff := 0;
-    ALength := ALength - LGapLen;
-    AInOff := AInOff + LGapLen;
-
-    while (ALength > System.Length(FBuf)) do
-    begin
-      LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff, AOutput,
-        AOutOff + LResultLen);
-
-      ALength := ALength - LBlockSize;
-      AInOff := AInOff + LBlockSize;
-    end;
-  end;
-
-  System.Move(AInput[AInOff], FBuf[FBufOff], ALength * System.SizeOf(Byte));
-
-  FBufOff := FBufOff + ALength;
-
-  Result := LResultLen;
+  Result := 0;
 end;
 
 end.
