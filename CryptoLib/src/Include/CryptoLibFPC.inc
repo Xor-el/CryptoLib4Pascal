@@ -18,11 +18,20 @@
   {$MESSAGE FATAL 'This Library does not support "Big Endian" processors yet.'}
 {$ENDIF}
 
-{$IF FPC_FULLVERSION < 30204}
-  {$MESSAGE ERROR 'This Library requires FreePascal 3.2.4 or higher.'}
+{$IF FPC_FULLVERSION < 30202}
+  {$MESSAGE ERROR 'This Library requires FreePascal 3.2.2 or higher.'}
 {$IFEND}
 
 {============================ FPC Version Features ============================}
+
+(*
+  Generics.Defaults IEqualityComparer<T> / IComparer<T> used constref through
+  FPC 3.2.2; 3.2.3+ switched to const (Delphi compatibility).
+  https://gitlab.com/freepascal.org/fpc/source/-/commit/693491048bf2c6f9122a0d8b044ad0e55382354d
+*)
+{$IF FPC_FULLVERSION < 30203}
+  {$DEFINE CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+{$IFEND}
 
 {$IF FPC_FULLVERSION >= 30301}
   {$DEFINE HAS_VOLATILE}

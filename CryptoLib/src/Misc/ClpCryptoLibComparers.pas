@@ -32,8 +32,13 @@ type
   /// </summary>
   TOrdinalIgnoreCaseEqualityComparer = class(TInterfacedObject, IEqualityComparer<String>)
   strict private
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+    function Equals(constref ALeft, ARight: String): Boolean; reintroduce;
+    function GetHashCode(constref AValue: String): UInt32; reintroduce;
+{$ELSE}
     function Equals(const ALeft, ARight: String): Boolean; reintroduce;
     function GetHashCode(const AValue: String): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI} reintroduce;
+{$ENDIF}
   end;
 
   /// <summary>
@@ -55,13 +60,21 @@ implementation
 
 { TOrdinalIgnoreCaseEqualityComparer }
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TOrdinalIgnoreCaseEqualityComparer.Equals(constref ALeft, ARight: String): Boolean;
+{$ELSE}
 function TOrdinalIgnoreCaseEqualityComparer.Equals(const ALeft, ARight: String): Boolean;
+{$ENDIF}
 begin
   // Use ordinal case-insensitive comparison (invariant culture)
   Result := TStringUtilities.EqualsIgnoreCase(ALeft, ARight);
 end;
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(constref AValue: String): UInt32;
+{$ELSE}
 function TOrdinalIgnoreCaseEqualityComparer.GetHashCode(const AValue: String): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
+{$ENDIF}
 var
   LLowerValue: String;
   LHash: UInt32;

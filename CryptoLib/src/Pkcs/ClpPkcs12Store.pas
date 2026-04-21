@@ -228,13 +228,22 @@ implementation
 type
   TCertIDEqualityComparer = class(TInterfacedObject, IEqualityComparer<TPkcs12Store.TCertID>)
   public
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+    function Equals(constref ALeft, ARight: TPkcs12Store.TCertID): Boolean; reintroduce;
+    function GetHashCode(constref AValue: TPkcs12Store.TCertID): UInt32; reintroduce;
+{$ELSE}
     function Equals(const ALeft, ARight: TPkcs12Store.TCertID): Boolean; reintroduce;
     function GetHashCode(const AValue: TPkcs12Store.TCertID): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF} reintroduce;
+{$ENDIF}
   end;
 
   TCertIDComparer = class(TInterfacedObject, IComparer<TPkcs12Store.TCertID>)
   public
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+    function Compare(constref ALeft, ARight: TPkcs12Store.TCertID): Integer;
+{$ELSE}
     function Compare(const ALeft, ARight: TPkcs12Store.TCertID): Integer;
+{$ENDIF}
   end;
 
 { TPkcs12Store.TCertID }
@@ -279,19 +288,31 @@ end;
 
 { TCertIDEqualityComparer }
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TCertIDEqualityComparer.Equals(constref ALeft, ARight: TPkcs12Store.TCertID): Boolean;
+{$ELSE}
 function TCertIDEqualityComparer.Equals(const ALeft, ARight: TPkcs12Store.TCertID): Boolean;
+{$ENDIF}
 begin
   Result := ALeft.Equals(ARight);
 end;
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TCertIDEqualityComparer.GetHashCode(constref AValue: TPkcs12Store.TCertID): UInt32;
+{$ELSE}
 function TCertIDEqualityComparer.GetHashCode(const AValue: TPkcs12Store.TCertID): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF}
+{$ENDIF}
 begin
   Result := AValue.GetHashCode;
 end;
 
 { TCertIDComparer }
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TCertIDComparer.Compare(constref ALeft, ARight: TPkcs12Store.TCertID): Integer;
+{$ELSE}
 function TCertIDComparer.Compare(const ALeft, ARight: TPkcs12Store.TCertID): Integer;
+{$ENDIF}
 var
   LIdL, LIdR: TCryptoLibByteArray;
   LLen, LI: Int32;
