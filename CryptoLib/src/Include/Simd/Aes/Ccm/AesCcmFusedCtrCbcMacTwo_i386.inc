@@ -1,96 +1,46 @@
 // CCM fused AES-NI CTR+CBC-MAC kernel (i386).
 // -------------------------------------------------------------------
+// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01.
 // Inspired by OpenSSL aesni_ccm64_{encrypt,decrypt}_blocks
 // (crypto/aes/asm/aesni-x86_64.pl, Andy Polyakov / @dot-asm).
-// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01.
 //
-// Two lanes (CTR / MAC) share each round-key broadcast. Issuing a
-// second aesenc on the same round key uses the pipeline slot that
-// would otherwise idle (aesenc on modern Intel/Zen: ~4c latency,
-// 1/cycle throughput). That is the structural source of the CCM
-// speed-up. Going wider than 2 lanes cannot beat the CBC-MAC serial
-// chain (M_i depends on M_{i-1} via aesenclast): CCM is MAC-bound.
+// Two lanes (CTR / MAC) share each round-key broadcast: the second
+// aesenc fills a pipeline slot that would otherwise idle, which is the
+// structural source of the CCM speed-up. CCM is MAC-bound (CBC-MAC
+// serial chain M_i <- aesenclast(M_{i-1} XOR ...)), so going wider
+// than 2 lanes cannot help. Optimisations: counter hoist (canonical
+// counter kept LE in xmm6, one pshufb per block instead of two) and a
+// 2x pair unroll on encrypt only (xmm4 is free there and doubles as
+// CTR B; on decrypt xmm4 is pinned as prev_P).
 //
-// This i386 path carries the full algorithm and context layout of the
-// kernel (field-for-field identical to the 64-bit layout, modulo
-// pointer width) with the following adaptations dictated by the
-// 32-bit register budget:
-//   * 8 xmm registers instead of 16 (xmm0..xmm7 only).
-//   * No r8..r15 / rbp spill room -> callee-saved esi / edi pushed
-//     alongside ebx and the prologue loads PCtx once into ebx.
-//   * 2x unroll is applied to encrypt only; see the "Phase-2
-//     optimisations" section below for the trade-off on decrypt.
-//
-// Pointer-width differences (32-bit field offsets):
-//   [ebx +  0]  InPtr
-//   [ebx +  4]  OutPtr
-//   [ebx +  8]  Keys
-//   [ebx + 12]  CtrState
-//   [ebx + 16]  MacState
-//   [ebx + 20]  PMask
-//   [ebx + 24]  PIncrement
-//   [ebx + 28]  BlockCount (NativeUInt = 4 bytes on i386)
-//
-// Phase-2 optimisations present on this 8-xmm-budget path:
-//   * Counter hoist - applied to BOTH encrypt and decrypt. The canonical
-//     counter in xmm6 is kept in LE form across the whole body. The
-//     baseline kernel paid pshufb BE->LE and pshufb LE->BE around each
-//     paddq; this variant pays one pshufb per block total (LE->BE at
-//     each use).
-//   * 2x unroll - applied to ENCRYPT ONLY. On the encrypt side xmm4
-//     (the decrypt-only prev_P slot) is free and doubles as CTR B,
-//     allowing a 3-wide aesenc pair loop with a single-block tail.
-//     The decrypt side leaves xmm4 pinned as prev_P; fitting a 2x
-//     unroll there would cost a stack-spill slot for prev_P and two
-//     extra movdqu per pair, which on the MAC-bound CCM chain eats
-//     roughly half of the loop-overhead saving. The i386-dec path
-//     therefore stays at baseline 2-wide width plus counter hoist.
+// Variant selection:
+//   CRYPTOLIB_CCM_DECRYPT  -> decrypt variant (MAC lags CTR by 1).
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
 // On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
-// The wrapping Pascal procedure must terminate with:
-//   pop edi
-//   pop esi
-//   pop ebx
-// before the final 'end;' that emits RET. This kernel emits those
-// pops itself in the epilogue; the SimdProc1Begin prologue already
-// pushed ebx.
 //
-// XMM register allocation (8 of 8 xmm registers used on i386):
-//   xmm0 : CTR A lane (transient; counter_i -> aesenc chain -> keystream_i)
-//   xmm1 : MAC lane - running CBC-MAC state. Per-iter becomes
-//          M_{i-1} XOR P_i XOR K_0 before rounds; M_i after rounds.
-//   xmm2 : round-key scratch (reloaded per round via movdqa)
-//   xmm3 : data-block cache (P_i/C_i; reloaded to P_{i+1}/C_{i+1} in
-//          the encrypt pair loop between the 3-wide aesenclast and
-//          the serial MAC chain for block i+1)
-//   xmm4 : ENCRYPT: CTR B lane (transient per pair; counter_{i+1}
-//                    -> aesenc chain -> keystream_{i+1}).
-//          DECRYPT: prev_P slot - P_{i-1} carried across iteration
-//                    boundaries. Unused on encrypt's tail/singleton
-//                    paths.
+// Context layout (7 pointers + 1 NativeUInt = 32 bytes, 4-byte aligned).
+// See TCcmFusedTwoCtx in ClpAesNiCcmKernel.pas.
+//   [ebx +  0]  InPtr       : body blocks (plaintext on enc, ciphertext on dec)
+//   [ebx +  4]  OutPtr      : body output buffer (may alias InPtr)
+//   [ebx +  8]  Keys        : AES encrypt schedule (176/208/240 bytes, 16-byte aligned)
+//   [ebx + 12]  CtrState    : 16-byte CCM counter (BE; in/out)
+//   [ebx + 16]  MacState    : 16-byte running CBC-MAC state (in/out)
+//   [ebx + 20]  PMask       : 16-byte PSHUFB full-reverse control
+//   [ebx + 24]  PIncrement  : 16-byte CTR increment = 1 in low qword (LE)
+//   [ebx + 28]  BlockCount  : NativeUInt; full body blocks (>= 1)
+//
+// XMM (8/8 used; i386 has only xmm0..xmm7):
+//   xmm0 : CTR A lane (transient per block)
+//   xmm1 : MAC lane (running CBC-MAC state)
+//   xmm2 : round-key scratch
+//   xmm3 : data-block cache (P_i / C_i)
+//   xmm4 : ENC: CTR B lane (pair loop) / DEC: prev_P across iterations
 //   xmm5 : CTR increment constant (loaded once from [ebx + 24])
-//   xmm6 : CTR counter in LE canonical form (persistent). Entered as
-//          BE, pshufb'd to LE at prologue; pshufb'd back to BE at
-//          epilogue before storeback.
+//   xmm6 : canonical LE counter (BE -> LE at prologue, LE -> BE at epilogue)
 //   xmm7 : PSHUFB full-reverse mask (loaded once from [ebx + 20])
 //
-// GPR usage (i386 fastcall / nostackframe):
-//   ebx : PCtx                              (preserved; prologue pushed)
-//   eax : InPtr (advancing)                 (scratch)
-//   esi : OutPtr (advancing)                (callee-saved; pushed here)
-//   edx : Keys base                         (scratch)
-//   ecx : BlockCount / loop counter         (scratch; decrementing)
-//   edi : scratch (CtrState / MacState ptrs (callee-saved; pushed here)
-//         at prologue / epilogue)
-//
-// Direction : define CRYPTOLIB_CCM_DECRYPT for the decrypt variant.
-// Key size  : define exactly ONE of CRYPTOLIB_AESNI_KEY128 /
-//             CRYPTOLIB_AESNI_KEY192 / CRYPTOLIB_AESNI_KEY256.
-//
-// -------------------------------------------------------------------
-// Prologue: save callee-saved, load pointers and persistent state.
-// Counter hoist converts xmm6 BE -> LE once.
-// -------------------------------------------------------------------
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 
   push      esi
   push      edi

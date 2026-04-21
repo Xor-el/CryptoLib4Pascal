@@ -11,7 +11,7 @@
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
-// After SimdProc2Begin_i386: ebx = state (64 bytes = 4 x 16, in/out),
+// After SimdProc2Begin_i386.inc: ebx = state (64 bytes = 4 x 16, in/out),
 // esi = keys.
 // Schedule layout: 11 / 13 / 15 consecutive 16-byte round keys
 // (see ClpAesEngineX86 for the allocation / key-expansion site).
@@ -19,7 +19,6 @@
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line four-block AES-NI (@4_d128), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
   movdqu    xmm0, [ebx]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]
@@ -87,7 +86,6 @@
   pop ebx
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line four-block AES-NI (@4_d192), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
     movdqu    xmm0, [ebx]
     movdqu    xmm1, [ebx + 16]
     movdqu    xmm2, [ebx + 32]
@@ -165,7 +163,6 @@
     pop ebx
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line four-block AES-NI (@4_d256), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
       movdqu    xmm0, [ebx]
       movdqu    xmm1, [ebx + 16]
       movdqu    xmm2, [ebx + 32]
@@ -249,7 +246,6 @@
       movdqu    [ebx + 16], xmm1
       movdqu    [ebx + 32], xmm2
       movdqu    [ebx + 48], xmm3
-    @4_done:
       pop esi
       pop ebx
     {$ELSE}
@@ -259,13 +255,8 @@
 {$ENDIF}
 
 {$ELSE}
-// AesNiFourEnc i386 (merged key sizes)
-// Define exactly one of: CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256
-// before including this file (see ClpAesEngineX86).
-// AES-NI instructions are db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line four-block AES-NI (@4_e128), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
   movdqu    xmm0, [ebx]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]
@@ -333,7 +324,6 @@
   pop ebx
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line four-block AES-NI (@4_e192), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
     movdqu    xmm0, [ebx]
     movdqu    xmm1, [ebx + 16]
     movdqu    xmm2, [ebx + 32]
@@ -411,7 +401,6 @@
     pop ebx
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line four-block AES-NI (@4_e256), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
       movdqu    xmm0, [ebx]
       movdqu    xmm1, [ebx + 16]
       movdqu    xmm2, [ebx + 32]

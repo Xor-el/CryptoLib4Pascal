@@ -1,4 +1,4 @@
-// Shared SIMD procedure prologue for 3-parameter assembly functions.
+// Shared SIMD procedure prologue for 3-parameter assembly functions (i386).
 // After inclusion: ebx = param1, esi = param2, edi = param3 (EAX, EDX, ECX at entry).
 // FPC: Windows and Unix i386 use the same parameter entry layout.
 // Usage:

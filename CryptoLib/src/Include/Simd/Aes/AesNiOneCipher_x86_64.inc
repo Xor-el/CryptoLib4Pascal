@@ -15,7 +15,6 @@
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line one-block AES-NI (@aes_d128), x86-64. rcx=state, rdx=keys.
   movdqu    xmm0, [rcx]
   movdqa    xmm1, [rdx]
   db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -42,7 +41,6 @@
   movdqu    [rcx], xmm0
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line one-block AES-NI (@aes_d192), x86-64. rcx=state, rdx=keys.
     movdqu    xmm0, [rcx]
     movdqa    xmm1, [rdx]
     db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -73,7 +71,6 @@
     movdqu    [rcx], xmm0
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line one-block AES-NI (@aes_d256), x86-64. rcx=state, rdx=keys.
       movdqu    xmm0, [rcx]
       movdqa    xmm1, [rdx]
       db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -106,7 +103,6 @@
       movdqa    xmm1, [rdx + 224]
       db $66, $0F, $38, $DF, $C1              // aesdeclast xmm0, xmm1
       movdqu    [rcx], xmm0
-    @aes_ir_done:
     {$ELSE}
     {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
     {$ENDIF}
@@ -114,13 +110,8 @@
 {$ENDIF}
 
 {$ELSE}
-// AesNiOneEnc x86 64 (merged key sizes)
-// Define exactly one of: CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256
-// before including this file (see ClpAesEngineX86).
-// AES-NI instructions are db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line one-block AES-NI (@aes_e128), x86-64. rcx=state, rdx=keys.
   movdqu    xmm0, [rcx]
   movdqa    xmm1, [rdx]
   db $66, $0F, $EF, $C1              // pxor xmm0, xmm1
@@ -147,7 +138,6 @@
   movdqu    [rcx], xmm0
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line one-block AES-NI (@aes_e192), x86-64. rcx=state, rdx=keys.
     movdqu    xmm0, [rcx]
     movdqa    xmm1, [rdx]
     db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -178,7 +168,6 @@
     movdqu    [rcx], xmm0
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line one-block AES-NI (@aes_e256), x86-64. rcx=state, rdx=keys.
       movdqu    xmm0, [rcx]
       movdqa    xmm1, [rdx]
       db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1

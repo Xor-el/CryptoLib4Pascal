@@ -1,78 +1,52 @@
 // Fused AES-NI CTR keystream + 8-way GHASH kernel (x86-64).
+// -------------------------------------------------------------------
+// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01 - AES
+// and PCLMULQDQ instructions are interleaved so the AES port (p0 on
+// Skylake+/Zen+) and the PCLMUL port (p5) operate in parallel, hiding
+// GHASH latency inside the AES critical path.
 //
-// Processes one pipelined batch: AES encrypts eight counter blocks to produce
-// a keystream, XORs it with PXorIn (plaintext on GCM encrypt, ciphertext on
-// GCM decrypt) to produce the current batch's POut, and CONCURRENTLY GHASHes
-// the PREVIOUS batch's ciphertext into the running authentication state.
-// AES inside GCM is always CTR keystream construction regardless of GCM
-// direction -- nothing in the kernel branches on encrypt vs decrypt; the
-// Pascal wrapper just picks which buffers become PXorIn / POut / PPrevCipher.
+// Processes one pipelined batch: AES encrypts eight counter blocks to
+// produce a keystream, XORs it with PXorIn to produce POut, and
+// concurrently GHASHes the PREVIOUS batch's 8 ciphertext blocks into
+// the running authentication state. AES inside GCM is always CTR
+// keystream construction; the Pascal wrapper picks which buffers
+// become PXorIn / POut / PPrevCipher for encrypt vs decrypt. Rounds
+// 0..8 (with all 8 GHASH iters) are shared across key sizes; only
+// rounds 9..N-1 (extra aesenc) and round N (aesenclast) depend on N.
 //
-// This is the Gueron-style interleaved kernel: aesenc instructions (which run
-// on port 0 on Skylake+/Zen+) are issued alternating with pclmulqdq
-// instructions (which run on port 5) so the two execution ports operate in
-// parallel, hiding most of the GHASH latency inside the AES critical path.
+// Variant selection (set EXACTLY ONE):
+//   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (schedule = 11 x 16 bytes).
+//   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (schedule = 13 x 16 bytes).
+//   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (schedule = 15 x 16 bytes).
 //
-// Variant selection (set EXACTLY ONE of these defines before {$I}-including):
-//   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (10 rounds, schedule = 11 x 16 bytes)
-//   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (12 rounds, schedule = 13 x 16 bytes)
-//   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (14 rounds, schedule = 15 x 16 bytes)
-// Common code (rounds 0..8 with all 8 GHASH iters, post-AES XOR/store, inline
-// 3-limb GHASH reduction, epilogue) is shared verbatim. Only rounds 9..N-1
-// (extra aesenc) and round N (aesenclast on rk[N]) are conditional on the
-// round count.
+// On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
-// After SimdProc1Begin_x86_64.inc: rcx = PCtx (TGcmFusedBatchCtx pointer).
-// Ctx layout (all Pointer, natural 8-byte alignment, no padding):
-//   [rcx+  0] PXorIn      : 128-byte input to XOR with keystream
-//                           (plaintext on GCM encrypt, ciphertext on GCM decrypt)
-//   [rcx+  8] POut        : 128-byte output buffer
-//                           (ciphertext on GCM encrypt, plaintext on GCM decrypt)
-//   [rcx+ 16] PCtrCurr    : 8 counter blocks (128 bytes) to AES-encrypt
-//   [rcx+ 24] PPrevCipher : 128 bytes previous batch's ciphertext for GHASH
-//                           (taken from the OUTPUT buffer on GCM encrypt, from
-//                            the INPUT buffer on GCM decrypt)
-//   [rcx+ 32] PRoundKeys  : AES encrypt round-key schedule
-//                           (176 / 208 / 240 bytes for AES-128 / 192 / 256)
-//   [rcx+ 40] PHPow128    : H^8..H^1 as eight 16-byte limbs, field form
-//   [rcx+ 48] PFS         : 16-byte running GHASH state (in/out, canonical)
-//   [rcx+ 56] PMask       : 16-byte PSHUFB byte-reverse mask
+// Context layout (8 pointers = 64 bytes, 8-byte aligned). See
+// TGcmFusedBatchCtx in ClpAesNiGcmKernel.pas.
+//   [rcx +  0]  PXorIn      : 128-byte input to XOR with keystream
+//   [rcx +  8]  POut        : 128-byte output buffer (may alias PXorIn)
+//   [rcx + 16]  PCtrCurr    : 8 counter blocks (128 bytes) to encrypt
+//   [rcx + 24]  PPrevCipher : 128 bytes prev-batch ciphertext for GHASH
+//   [rcx + 32]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
+//   [rcx + 40]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
+//   [rcx + 48]  PFS         : 16-byte running GHASH state (in/out, canonical)
+//   [rcx + 56]  PMask       : 16-byte PSHUFB byte-reverse mask
 //
-// XMM register allocation (15 of 16 XMM registers used):
-//   xmm0..xmm7  : 8 AES counter -> keystream blocks (persist across rounds)
+// XMM (16/16 used):
+//   xmm0..xmm7  : 8 AES keystream lanes (persistent across rounds)
 //   xmm8        : current AES round key (reloaded per round)
-//   xmm9..xmm11 : Z0, Z1, Z2 GHASH accumulators (persist across all 8 iters)
-//   xmm12       : GHASH input block (byte-reversed, loaded per iter)
-//   xmm13       : current H-power limb  (loaded per iter)
-//   xmm14       : pclmul scratch destination (reused every product)
-//   xmm15       : byte-reverse mask (held for the entire kernel)
+//   xmm9..xmm11 : Z0 / Z1 / Z2 GHASH accumulators (across all 8 iters)
+//   xmm12       : GHASH input block (byte-reversed, per iter)
+//   xmm13       : current H-power limb (per iter)
+//   xmm14       : pclmul scratch destination
+//   xmm15       : byte-reverse mask (held for the whole kernel)
 //
-// GPR usage (all MS x64 / Unix-volatile regs; no non-volatile saves needed):
-//   rcx : PCtx (preserved across the whole kernel)
-//   rax : scratch (pointer loads / byte-reverse state fold)
-//   rdx : PRoundKeys (during AES phase), then POut (post-AES)
-//   r10 : PPrevCipher
-//   r11 : PHPow128
-//
-// Interleave schedule:
-//   Round 0     : AddRoundKey + init Z0/Z1/Z2
-//   Rounds 1..8 : one aesenc combined with one full GHASH iteration
-//                 (block i = r-1, using H^(8-i) from the H-power table).
-//                 Round 1 additionally folds the running state into block 0.
-//   Rounds 9..N-1 (variant): aesenc only (no GHASH work remaining).
-//   Round N     : aesenclast (final AES round; N = 10 / 12 / 14).
-//   Post-AES    : XOR keystream with PXorIn, store to POut.
-//   Finalize    : inline 3-limb GHASH reduction on Z0/Z1/Z2 (fold Z1 into
-//                 Z0/Z2, then reduce modulo x^128 + x^7 + x^2 + x + 1),
-//                 byte-reverse, store to PFS.
-//
-// AES-NI (aesenc/aesenclast) and PCLMULQDQ instructions whose operands
-// reference extended XMM registers (xmm8..xmm15) are db-encoded for broad
-// assembler compatibility; a trailing comment shows the mnemonic.
-//
-// -------------------------------------------------------------------------
+// AES-NI and PCLMULQDQ instructions, plus selected forms touching
+// xmm8..xmm15 (pxor, movdqa), are db-encoded for broad assembler
+// compatibility.
+// -------------------------------------------------------------------
 
-  // --- Prologue: load pointers and initial state -----------------------
+  // --- Prologue: load pointers and initial state ---------------------
   mov       rax, [rcx + 16]                    // rax = PCtrCurr
   movdqu    xmm0, [rax]
   movdqu    xmm1, [rax + 16]

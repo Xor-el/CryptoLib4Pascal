@@ -3,11 +3,11 @@
 // reverses the order of the N_R + 1 round keys to produce a schedule suitable
 // for aesdec / aesdeclast during decrypt.
 //
-// Entry (after SimdProc2Begin_i386): ebx = round keys
-// (16 * (N_R + 1) bytes, in place), esi = FNRounds in {10, 12, 14}.
+// Entry (after SimdProc2Begin_i386.inc): ebx = round keys
+// (16 * (N_R + 1) bytes, in place), esi = NRounds in {10, 12, 14}.
 // Pushes/pops edi; remaps internally to ecx = keys, ebx = nrounds.
-// Uses esi / edi / eax as loop counters and scratch, xmm0..xmm2 for aesimc /
-// swap.
+// Uses esi / edi / eax / edx as loop counters and scratch, xmm0 / xmm1 for
+// aesimc / swap.
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 //
   push edi

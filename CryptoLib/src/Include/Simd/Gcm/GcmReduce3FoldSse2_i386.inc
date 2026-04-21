@@ -3,7 +3,7 @@
 // polynomial x^128 + x^7 + x^2 + x + 1, writing the resulting 16-byte field
 // element to POut. Z0/Z1/Z2 are the three 128-bit limbs carried across a batch
 // of Karatsuba-style PCLMULQDQ GHASH products.
-// After SimdProc4Begin_i386: ebx = PZ0, esi = PZ1, edi = PZ2, eax = POut.
+// After SimdProc4Begin_i386.inc: ebx = PZ0, esi = PZ1, edi = PZ2, eax = POut.
 //
   movdqu    xmm0, [ebx]
   movdqu    xmm2, [edi]

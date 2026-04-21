@@ -1,18 +1,32 @@
-// SSE2 + PCLMULQDQ fused full N-way GHASH batch kernel (i386).
-// One monolithic ASM body that handles either a 4-block (64-byte) or 8-block
-// (128-byte) GHASH batch, selected by the caller via exactly one of the
-// mutually-exclusive defines GCM_GHASH_FULL_BLOCKS_4 / GCM_GHASH_FULL_BLOCKS_8.
-// The ASM shape (PCLMULQDQ / PSHUFB / SSE2 with mask reloaded from [eax])
-// is identical between the two widths.
+// SSE2 + PCLMULQDQ fused N-way GHASH batch kernel (i386).
+// -------------------------------------------------------------------
+// One monolithic body that performs a full GHASH batch fold: for each
+// block loads the (byte-reversed) ciphertext, XORs the running state
+// into block 0, multiplies by the matching H power via four PCLMULQDQ
+// products (Karatsuba), accumulates across blocks into three 128-bit
+// limbs Z0/Z1/Z2, then folds Z1 and reduces (Z0, Z2) modulo the GCM
+// polynomial x^128 + x^7 + x^2 + x + 1 to a single field element,
+// byte-reverses, and stores back to PFS. i386 has only 8 XMM
+// registers so the PSHUFB mask cannot stay pinned; it is reloaded
+// from [eax] on every use.
 //
-// After SimdProc4Begin_i386.inc: ebx = PFS (16-byte running GHASH state,
-// canonical/byte-reversed form; in + out), esi = PC0 (64 or 128 bytes
-// ciphertext, canonical form), edi = PHPow (H^4..H^1 for 4-way or H^8..H^1
-// for 8-way as 16-byte limbs, GHASH-field little-endian form), eax = PMask
-// (16-byte PSHUFB control).
+// Variant selection (set EXACTLY ONE):
+//   GCM_GHASH_FULL_BLOCKS_4  -> 4-block (64-byte) batch, H^4..H^1.
+//   GCM_GHASH_FULL_BLOCKS_8  -> 8-block (128-byte) batch, H^8..H^1.
 //
-// i386 has only 8 XMM registers, so the mask cannot be held across the
-// whole kernel; it is reloaded from [eax] for each PSHUFB use.
+// On entry (after SimdProc4Begin_i386.inc):
+//   ebx = PFS    (16-byte running GHASH state, canonical; in/out)
+//   esi = PC0    (64 or 128 bytes ciphertext, canonical form)
+//   edi = PHPow  (H^N..H^1 as 16-byte limbs, field form)
+//   eax = PMask  (16-byte PSHUFB byte-reverse control)
+//
+// XMM (8/8 used):
+//   xmm0..xmm2 : Z0 / Z1 / Z2 accumulators (persistent across blocks)
+//   xmm3       : current byte-reversed data block
+//   xmm4       : current H-power limb
+//   xmm5..xmm7 : pclmul product destinations (per-block); xmm7 is also
+//                reused as the byte-reverse mask (reloaded from [eax]
+//                before each PSHUFB)
 //
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //

@@ -1,106 +1,50 @@
-// CCM fused AES-NI CTR+CBC-MAC kernel (x86_64).
+// CCM fused AES-NI CTR+CBC-MAC kernel (x86-64).
 // -------------------------------------------------------------------
+// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01.
 // Inspired by OpenSSL aesni_ccm64_{encrypt,decrypt}_blocks
 // (crypto/aes/asm/aesni-x86_64.pl, Andy Polyakov / @dot-asm).
-// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01.
 //
-// Two lanes (CTR / MAC) share each round-key broadcast. Issuing a
-// second aesenc on the same round key uses the pipeline slot that
-// would otherwise idle (aesenc on modern Intel/Zen: ~4c latency,
-// 1/cycle throughput). That is the structural source of the CCM
-// speed-up. Going wider than 2 lanes cannot beat the CBC-MAC serial
-// chain (M_i depends on M_{i-1} via aesenclast): CCM is MAC-bound.
+// Two lanes (CTR / MAC) share each round-key broadcast: the second
+// aesenc fills a pipeline slot that would otherwise idle, which is the
+// structural source of the CCM speed-up. CCM is MAC-bound (CBC-MAC
+// serial chain M_i <- aesenclast(M_{i-1} XOR ...)), so going wider
+// than 2 lanes cannot help. Optimisations: counter hoist (canonical
+// counter kept LE in xmm6, one pshufb per block instead of two) and a
+// 2x pair unroll that issues three aesenc lanes per round-key
+// broadcast (CTR_i, CTR_{i+1}, MAC lane) followed by a single-lane MAC
+// chain for the second block; a single-block tail handles odd counts.
 //
-// Phase-2 optimisations layered on top of the baseline 2-wide kernel:
-//   * Counter hoist - the CCM counter is kept in LE canonical form
-//     in xmm6 for the full body; each block pulls a BE view via one
-//     pshufb and increments the LE canonical counter via paddq. The
-//     baseline kernel paid one pshufb at the start AND one at the end
-//     of every block (BE -> LE -> BE); this variant pays one pshufb
-//     per block total.
-//   * 2x unroll - the steady-state loop processes blocks in pairs.
-//     Each pair issues three aesenc lanes per round-key broadcast
-//     (CTR_i, CTR_{i+1}, MAC_i on encrypt; CTR_i, CTR_{i+1},
-//     MAC(prev_P) on decrypt) followed by a single-lane MAC chain for
-//     the second block of the pair. MAC-bound throughput is unchanged
-//     but loop-overhead per block halves and the OoO window sees more
-//     in-flight work per iteration. A trailing single-block body
-//     (structurally the 2-wide baseline) handles odd BlockCount.
+// Variant selection:
+//   CRYPTOLIB_CCM_DECRYPT  -> decrypt variant (MAC lags CTR by 1;
+//                              Pass 1 cold start + Pass 3 trailing MAC).
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
 // On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
-// Context layout (7 pointers + 1 count, natural 8-byte alignment, no
-// padding). See TCcmFusedTwoCtx in ClpAesNiCcmKernel.pas.
+// Context layout (7 pointers + 1 NativeUInt = 64 bytes, 8-byte aligned).
+// See TCcmFusedTwoCtx in ClpAesNiCcmKernel.pas.
 //   [rcx +  0]  InPtr       : body blocks (plaintext on enc, ciphertext on dec)
 //   [rcx +  8]  OutPtr      : body output buffer (may alias InPtr)
-//   [rcx + 16]  Keys        : AES encrypt schedule (176/208/240 bytes for
-//                             AES-128/192/256, 16-byte aligned)
-//   [rcx + 24]  CtrState    : 16-byte CCM counter block in big-endian form
-//                             (flags || nonce || counter_BE); read then
-//                             overwritten with the post-body counter (BE).
-//   [rcx + 32]  MacState    : 16-byte running CBC-MAC state (post-header,
-//                             in/out; overwritten with post-body state).
-//   [rcx + 40]  PMask       : 16-byte PSHUFB full-reverse control
-//                             (readonly): [15,14,...,0]. Maps BE <-> LE.
-//   [rcx + 48]  PIncrement  : 16-byte CTR increment = 1 in the low qword
-//                             (when viewed LE). Added via paddq to the LE
-//                             canonical counter; sufficient for CCM's
-//                             <= 8-byte counter field.
-//   [rcx + 56]  BlockCount  : NativeUInt; number of full 16-byte body blocks
-//                             (MUST be >= 1; caller guarantees).
+//   [rcx + 16]  Keys        : AES encrypt schedule (176/208/240 bytes, 16-byte aligned)
+//   [rcx + 24]  CtrState    : 16-byte CCM counter (BE; in/out)
+//   [rcx + 32]  MacState    : 16-byte running CBC-MAC state (in/out)
+//   [rcx + 40]  PMask       : 16-byte PSHUFB full-reverse control (BE <-> LE)
+//   [rcx + 48]  PIncrement  : 16-byte CTR increment = 1 in low qword (LE)
+//   [rcx + 56]  BlockCount  : NativeUInt; full body blocks (>= 1)
 //
-// XMM register allocation (x86_64; low regs + xmm8 used):
-//   xmm0        : CTR A lane - counter_i -> aesenc chain -> keystream_i
-//   xmm1        : MAC lane. Running CBC-MAC state across iterations.
-//                 Inside a pair: M_{i-1} XOR P_i XOR K_0 -> aesenc ->
-//                 M_i, then M_i XOR P_{i+1} XOR K_0 -> aesenc -> M_{i+1}.
-//                 On decrypt the first XOR is with prev_P = P_{i-1}.
-//   xmm2        : round-key scratch (reloaded per round via movdqa)
-//   xmm3        : data-block cache block i (P_i on enc, C_i on dec)
-//   xmm4        : CTR increment constant (loaded once from [rcx+48])
-//   xmm5        : data-block cache block i+1 (P_{i+1}/C_{i+1}); also reused
-//                 as a scratch in single-block tail paths
-//   xmm6        : CTR counter in LE canonical form (persistent). Entered
-//                 as BE, pshufb'd once to LE at prologue; pshufb'd back
-//                 to BE at epilogue before storeback.
-//   xmm7        : PSHUFB full-reverse mask (loaded once from [rcx+40])
-//   xmm8        : DUAL ROLE. Inside the encrypt/decrypt pair loop:
-//                 CTR B lane (counter_{i+1} -> aesenc -> keystream_{i+1}).
-//                 Across decrypt iterations (pair loop boundary, single-
-//                 block tail, and Pass 3 trailing MAC): carries prev_P =
-//                 P_{i+1}. On encrypt xmm8 is transient per-iteration.
-//                 Always db-encoded for Delphi-assembler compatibility.
+// XMM (9/16 used):
+//   xmm0 : CTR A lane (transient per block)
+//   xmm1 : MAC lane (running CBC-MAC state)
+//   xmm2 : round-key scratch
+//   xmm3 : data-block cache block i (P_i / C_i)
+//   xmm4 : CTR increment constant (loaded once from [rcx + 48])
+//   xmm5 : data-block cache block i+1 (also scratch on single-block tail)
+//   xmm6 : canonical LE counter (BE -> LE at prologue, LE -> BE at epilogue)
+//   xmm7 : PSHUFB full-reverse mask (loaded once from [rcx + 40])
+//   xmm8 : ENC: CTR B lane (pair loop) / DEC: prev_P across iterations
 //
-// GPR usage (all MS x64 / Unix-volatile; no non-volatile saves needed):
-//   rcx : PCtx (preserved across the kernel)
-//   rax : InPtr (advancing; +16 in tail, +32 in pair)
-//   rdx : OutPtr (advancing)
-//   r8  : Keys base (alive across all rounds as the base of [r8 + 16*r])
-//   r9  : scratch / CtrState pointer / MacState pointer at epilogue
-//   r11 : BlockCount / loop counter (decrementing)
-//
-// Win64 ABI: xmm6..xmm15 are callee-save in general but this leaf-asm
-// kernel is only called from Pascal (nostackframe via SimdProc1Begin),
-// matching the OCB/GCM utility kernels in this tree.
-//
-// Direction : define CRYPTOLIB_CCM_DECRYPT for the decrypt variant
-//             (MAC lags CTR by one block; Pass 1 cold start on block 0;
-//             Pass 3 trailing scalar MAC AES on P_{last}).
-// Key size  : define exactly ONE of CRYPTOLIB_AESNI_KEY128 /
-//             CRYPTOLIB_AESNI_KEY192 / CRYPTOLIB_AESNI_KEY256.
-//
-// Encoding: AES-NI instructions (aesenc / aesenclast) and instructions
-// touching xmm8 are db-encoded. Standard SSE2 uses FPC mnemonics.
-//   REX prefixes used below:
-//     $41 = REX.B=1  (source register in r/m is xmm8..xmm15)
-//     $44 = REX.R=1  (destination register is xmm8..xmm15)
-//     $45 = REX.RB=1 (both dest and src are xmm8..xmm15; unused here)
-//
-// -------------------------------------------------------------------
-// Prologue: load pointers, persistent state, and entry counter.
-// Counter hoist: the canonical counter in xmm6 is kept in LE form for
-// the body. We convert BE -> LE once here, LE -> BE once at epilogue.
-// -------------------------------------------------------------------
+// AES-NI instructions and xmm8-touching forms are db-encoded for broad
+// assembler compatibility.
 
   mov       rax, [rcx +  0]                         // rax = InPtr
   mov       rdx, [rcx +  8]                         // rdx = OutPtr

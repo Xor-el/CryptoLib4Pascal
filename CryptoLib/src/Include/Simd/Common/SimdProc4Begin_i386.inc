@@ -1,4 +1,4 @@
-// Shared SIMD procedure prologue for 4-parameter assembly functions.
+// Shared SIMD procedure prologue for 4-parameter assembly functions (i386).
 // After inclusion: ebx = param1, esi = param2, edi = param3, eax = param4
 //   (first three in EAX, EDX, ECX at entry; param4 from stack after callee saves).
 // FPC: Windows and Unix i386 use the same stack tail layout; see asm for ESP offsets.

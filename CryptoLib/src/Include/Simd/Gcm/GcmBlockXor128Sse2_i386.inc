@@ -1,5 +1,5 @@
 // SSE2 16-byte XOR utility (i386).
-// After SimdProc2Begin_i386: ebx = PDst, esi = PSrc.
+// After SimdProc2Begin_i386.inc: ebx = PDst, esi = PSrc.
 // Computes [ebx] ^= [esi].
 // Uses xmm0, xmm1.
 //

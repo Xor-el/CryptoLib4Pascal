@@ -19,7 +19,6 @@
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line four-block AES-NI (@4_d128), x86-64. rcx=state, rdx=keys.
   movdqu    xmm0, [rcx]
   movdqu    xmm1, [rcx + 16]
   movdqu    xmm2, [rcx + 32]
@@ -85,7 +84,6 @@
   movdqu    [rcx + 48], xmm3
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line four-block AES-NI (@4_d192), x86-64. rcx=state, rdx=keys.
     movdqu    xmm0, [rcx]
     movdqu    xmm1, [rcx + 16]
     movdqu    xmm2, [rcx + 32]
@@ -161,7 +159,6 @@
     movdqu    [rcx + 48], xmm3
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line four-block AES-NI (@4_d256), x86-64. rcx=state, rdx=keys.
       movdqu    xmm0, [rcx]
       movdqu    xmm1, [rcx + 16]
       movdqu    xmm2, [rcx + 32]
@@ -245,7 +242,6 @@
       movdqu    [rcx + 16], xmm1
       movdqu    [rcx + 32], xmm2
       movdqu    [rcx + 48], xmm3
-    @4_done:
     {$ELSE}
     {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
     {$ENDIF}
@@ -253,13 +249,8 @@
 {$ENDIF}
 
 {$ELSE}
-// AesNiFourEnc x86 64 (merged key sizes)
-// Define exactly one of: CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256
-// before including this file (see ClpAesEngineX86).
-// AES-NI instructions are db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line four-block AES-NI (@4_e128), x86-64. rcx=state, rdx=keys.
   movdqu    xmm0, [rcx]
   movdqu    xmm1, [rcx + 16]
   movdqu    xmm2, [rcx + 32]
@@ -325,7 +316,6 @@
   movdqu    [rcx + 48], xmm3
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line four-block AES-NI (@4_e192), x86-64. rcx=state, rdx=keys.
     movdqu    xmm0, [rcx]
     movdqu    xmm1, [rcx + 16]
     movdqu    xmm2, [rcx + 32]
@@ -401,7 +391,6 @@
     movdqu    [rcx + 48], xmm3
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line four-block AES-NI (@4_e256), x86-64. rcx=state, rdx=keys.
       movdqu    xmm0, [rcx]
       movdqu    xmm1, [rcx + 16]
       movdqu    xmm2, [rcx + 32]

@@ -1,25 +1,18 @@
 // AES-NI 8-wide cipher aggregator, in-place, merged Enc + Dec, merged key sizes (i386).
 // -------------------------------------------------------------------
-// Thin wrapper over AesNiEightRoundsOnly_i386.inc. This file is
-// included from procedures prologue'd by SimdProc2Begin_i386.inc, so
-// on entry (after the prologue has pushed ebx/esi and remapped):
-//   ebx = state pointer (8 consecutive 16-byte blocks)
-//   esi = keys  pointer (expanded round-key schedule)
-// The rounds-only include expects the keys pointer in edi (its
-// canonical register, shared with every fused AEAD kernel in Phase
-// 1-4). edi is callee-saved on FPC i386 and the shared 2-param
-// prologue does NOT push it, so we push/pop it here locally.
-// Direction is selected by CRYPTOLIB_AESNI_DECRYPT; key size by
-// exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256. Both
-// defines are forwarded verbatim to the rounds-only include.
-// Epilogue mirrors the prologue: pop esi then pop ebx before return.
+// Thin wrapper over AesNiEightRoundsOnly_i386.inc. Entry (after
+// SimdProc2Begin_i386.inc has pushed ebx/esi and remapped):
+//   ebx = state (8 consecutive 16-byte blocks)
+//   esi = keys (expanded round-key schedule)
+// The rounds-only include takes its keys pointer in edi (its canonical
+// register, shared with every fused AEAD kernel). edi is callee-saved
+// and the shared 2-param prologue does NOT push it, so we push/pop it
+// here locally. Epilogue pops esi then ebx before return.
 //
-// Nested {$I} path: Delphi resolves nested includes relative to the
-// top-level .pas (ClpAesEngineX86.pas in Crypto\Engines\), not to the
-// enclosing .inc, so a bare 'AesNiEightRoundsOnly_i386.inc' raises
-// F1026 under dcc. Using '..\..\Include\Simd\Aes\' keeps both Delphi
-// and FPC happy (FPC also accepts the path and resolves to the same
-// absolute file).
+// Variant selection:
+//   CRYPTOLIB_AESNI_DECRYPT  -> decrypt; else encrypt.
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
+// Both defines are forwarded verbatim to the rounds-only include.
   movdqu    xmm0, [ebx + 0]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]

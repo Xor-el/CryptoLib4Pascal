@@ -1,25 +1,20 @@
 // AES-NI key-expansion kernel, merged key sizes (x86-64).
-// Expands a single user key into N_R + 1 round keys, each 16 bytes, using
-// aeskeygenassist + pshufd + pxor / pslldq per the standard AES-128 / 192 / 256
+// -------------------------------------------------------------------
+// Expands a single user key into N_R + 1 round keys (16 bytes each) using
+// aeskeygenassist + pshufd + pxor / pslldq per the AES-128 / 192 / 256
 // schedules. N_R = 10 / 12 / 14 rounds, producing 11 / 13 / 15 round keys.
 //
 // Variant selection:
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects the
-//   schedule width (see ClpAesEngineX86 for the allocation site).
+//   schedule (see ClpAesEngineX86 for the allocation site).
 //
-// Entry (MS x64 ABI / FPC remapped Unix): rcx = user key
+// Entry (after SimdProc2Begin_x86_64.inc): rcx = user key
 // (16 / 24 / 32 bytes), rdx = KeysOut (16 * (N_R + 1) bytes).
-// Saves r12 and rbx on the stack; uses 48 bytes of scratch at
-// rsp + 0 / +16 / +32 (Ls1 / Lt1 / Lw).
-// Uses xmm0..xmm2 (scratch).
-// AES-NI instructions are db-encoded for broad assembler compatibility.
+// Saves r12 and rbx; uses 48 / 96 / 80 bytes of stack scratch (KEY128
+// / 192 / 256). Uses xmm0..xmm2 as scratch. AES-NI instructions are
+// db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// AES-128 encryption round-key expansion, x86-64.
-// Expects MS x64 ABI: rcx = 16-byte key, rdx = KeysOut (11 * 16 bytes).
-// Stack: Ls1, Lt1, Lw; r12 = KeysOut. Saves r12, rbx.
-// AES-NI instructions are db-encoded for broad assembler compatibility.
-//
   push r12
   push rbx
   sub rsp, 48
@@ -393,11 +388,6 @@
   pop r12
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // AES-192 encryption round-key expansion, x86-64.
-  // Expects MS x64 ABI: rcx = 24-byte key, rdx = KeysOut (13 * 16 bytes).
-  // Stack: S1,S2,S3,T1,T2,W; r12 = KeysOut. Saves r12, rbx.
-  // AES-NI instructions are db-encoded for broad assembler compatibility.
-  //
     push r12
     push rbx
     sub rsp, 96
@@ -960,11 +950,6 @@
     pop r12
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // AES-256 encryption round-key expansion, x86-64.
-    // Expects MS x64 ABI: rcx = 32-byte key, rdx = KeysOut (15 * 16 bytes).
-    // Stack: s1,s2,t1,t2,w; r12 = KeysOut. Saves r12, rbx.
-    // AES-NI instructions are db-encoded for broad assembler compatibility.
-    //
       push r12
       push rbx
       sub rsp, 80

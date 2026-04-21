@@ -1,100 +1,58 @@
 // Fused AES-NI CTR keystream + 8-way GHASH kernel (i386).
+// -------------------------------------------------------------------
+// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01 - AES
+// and PCLMULQDQ instructions are interleaved so the AES port (p0 on
+// Skylake+/Zen+) and the PCLMUL port (p5) operate in parallel, hiding
+// GHASH latency inside the AES critical path.
 //
-// Processes one pipelined batch: AES encrypts eight counter blocks to produce
-// a keystream, XORs it with PXorIn (plaintext on GCM encrypt, ciphertext on
-// GCM decrypt) to produce the current batch's POut, and CONCURRENTLY GHASHes
-// the PREVIOUS batch's 8 ciphertext blocks into the running authentication
-// state. AES inside GCM is always CTR keystream construction regardless of
-// GCM direction -- nothing in the kernel branches on encrypt vs decrypt; the
-// Pascal wrapper just picks which buffers become PXorIn / POut / PPrevCipher.
+// Processes one pipelined batch: AES encrypts eight counter blocks to
+// produce a keystream, XORs it with PXorIn to produce POut, and
+// concurrently GHASHes the PREVIOUS batch's 8 ciphertext blocks into
+// the running authentication state. AES inside GCM is always CTR
+// keystream construction; the Pascal wrapper picks which buffers
+// become PXorIn / POut / PPrevCipher for encrypt vs decrypt. The 8-xmm
+// budget does not fit a single-pass 8-wide layout, so the kernel
+// processes the batch as two back-to-back 4-block halves sharing the
+// same running Z0/Z1/Z2 accumulators; each half packs 4 GHASH iters
+// into AES rounds 1..4 to keep both ports busy, rounds 5..N-1 are
+// AES-only, and the 3-limb reduction runs once after half 2.
 //
-// This is a Gueron-style interleaved kernel (Shay Gueron, "Intel AES New
-// Instructions" Rev 3.01): aesenc instructions (which run on port 0 on
-// Skylake+/Zen+) are issued alternating with pclmulqdq instructions (which
-// run on port 5) so the two execution ports operate in parallel, hiding
-// most of the GHASH latency inside the AES critical path.
+// Variant selection (set EXACTLY ONE):
+//   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (schedule = 11 x 16 bytes).
+//   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (schedule = 13 x 16 bytes).
+//   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (schedule = 15 x 16 bytes).
 //
-// The i386 register budget is exactly half of the 64-bit one (xmm0..xmm7
-// and 6 usable GPRs), so a single-pass "8-wide with per-round GHASH
-// interleave" layout does not fit. This kernel preserves the AES-port /
-// PCLMUL-port concurrency by processing the 8-block batch in TWO
-// back-to-back 4-block halves that share the same running Z0/Z1/Z2
-// accumulators. Each half runs one full AES encrypt chain (4 lanes) plus
-// 4 GHASH iters packed into AES rounds 1..4 so both execution ports stay
-// busy during the GHASH phase; rounds 5..Nr - 1 are AES-only. The final
-// 3-limb reduction runs exactly once after half 2.
+// On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
 //
-// Variant selection (set EXACTLY ONE of these defines before {$I}-including):
-//   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (10 rounds, schedule = 11 x 16 bytes)
-//   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (12 rounds, schedule = 13 x 16 bytes)
-//   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (14 rounds, schedule = 15 x 16 bytes)
+// Context layout (8 pointers = 32 bytes, 4-byte aligned). See
+// TGcmFusedBatchCtx in ClpAesNiGcmKernel.pas.
+//   [ebx +  0]  PXorIn      : 128-byte input to XOR with keystream
+//   [ebx +  4]  POut        : 128-byte output buffer (may alias PXorIn)
+//   [ebx +  8]  PCtrCurr    : 8 counter blocks (128 bytes) to encrypt
+//   [ebx + 12]  PPrevCipher : 128 bytes prev-batch ciphertext for GHASH
+//   [ebx + 16]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
+//   [ebx + 20]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
+//   [ebx + 24]  PFS         : 16-byte running GHASH state (in/out, canonical)
+//   [ebx + 28]  PMask       : 16-byte PSHUFB byte-reverse mask
 //
-// After SimdProc1Begin_i386.inc: ebx = PCtx (TGcmFusedBatchCtx pointer).
-// Context layout (all Pointer, 4-byte native; 32 bytes total on i386):
-//   [ebx +  0] PXorIn      : 128-byte input to XOR with keystream
-//   [ebx +  4] POut        : 128-byte output buffer
-//   [ebx +  8] PCtrCurr    : 8 counter blocks (128 bytes) to AES-encrypt
-//   [ebx + 12] PPrevCipher : 128 bytes previous batch's ciphertext for GHASH
-//   [ebx + 16] PRoundKeys  : AES encrypt round-key schedule (aligned)
-//   [ebx + 20] PHPow128    : H^8..H^1 as eight 16-byte limbs, field form
-//   [ebx + 24] PFS         : 16-byte running GHASH state (in/out, canonical)
-//   [ebx + 28] PMask       : 16-byte PSHUFB byte-reverse mask
+// XMM (8/8 used; i386 has only xmm0..xmm7):
+//   xmm0..xmm3 : 4 AES keystream lanes (per half; reloaded between halves)
+//   xmm4       : GHASH block cache (byte-reversed prev-cipher block, per iter)
+//   xmm5       : current H-power limb (per iter)
+//   xmm6       : pclmul product destination (re-inited from xmm4 per imm)
+//   xmm7       : transient scratch (byte-reverse mask, then Z-reload fold)
 //
-// XMM register allocation (all 8 XMM registers; no scratch left unused):
-//   xmm0..xmm3 : 4 AES keystream lanes (persistent across all rounds of
-//                the current half; reloaded between halves)
-//   xmm4       : GHASH block cache (per-iter; byte-reversed prev_cipher
-//                block, held across the 4 pclmul of the iter)
-//   xmm5       : current H-power limb (per-iter; H^(8-j) for global iter j)
-//   xmm6       : pclmul product destination (re-initialised from xmm4
-//                before each of the 4 pclmul imm variants)
-//   xmm7       : multi-use transient scratch - holds the byte-reverse
-//                mask during pshufb, then the Z accumulator reload for
-//                the stack-resident Z0/Z1/Z2 add-in fold
+// Stack scratch (64 bytes, base unaligned - movdqu only):
+//   [esp +  0..15]  Z0 accumulator  (updated 8x per batch)
+//   [esp + 16..31]  Z1 accumulator  (updated 16x per batch; imm=1 + imm=16)
+//   [esp + 32..47]  Z2 accumulator  (updated 8x per batch)
+//   [esp + 48..63]  byte-reversed PFS (computed once, folded into iter 0)
 //
-// GPR usage:
-//   ebx : PCtx (pinned; pushed by SimdProc1Begin_i386 at entry, popped by
-//         this file's epilogue last)
-//   edi : PRoundKeys (pinned; every memory-form aesenc/aesenclast reads
-//         [edi + disp]). Callee-save; pushed/popped here.
-//   esi : PPrevCipher (pinned at base; half 1 uses [esi + 0..48], half 2
-//         uses [esi + 64..112] with disp8-friendly offsets). Callee-save.
-//   ebp : PHPow128 (pinned at base; same half-split offset pattern).
-//         Callee-save.
-//   ecx : PMask (pinned; every pshufb source is [ecx] into xmm7 first,
-//         then reg-reg pshufb; mask reload is 1 movdqu per byte-reverse).
-//   eax : scratch (prologue pointer loads, PFS load+store, PCtrCurr load,
-//         PXorIn, POut)
-//   edx : scratch (pairs with eax during post-AES store)
-//
-// Stack scratch (64 bytes; base is NOT 16-byte aligned so every access
-// uses movdqu; Z accumulators are accessed via movdqu + reg-reg pxor to
-// side-step the pxor-m128 alignment requirement):
-//   [esp +  0 .. 15] : Z0 accumulator (updated 8 times per batch)
-//   [esp + 16 .. 31] : Z1 accumulator (updated 16 times per batch;
-//                      imm=1 and imm=16 each contribute per iter)
-//   [esp + 32 .. 47] : Z2 accumulator (updated 8 times per batch)
-//   [esp + 48 .. 63] : byte-reversed PFS (computed once at prologue,
-//                      folded into iter 0 of half 1 only)
-//
-// Encoding: aesenc / aesenclast / pclmulqdq are db-encoded for broad
-// assembler compatibility (matches AesOcbFusedWide_i386.inc style). SSE1/2/3
-// instructions use mnemonics. pxor against aligned round-key memory
-// ([edi + disp]) uses the m128 form; pxor against unaligned stack scratch
-// uses reg-reg only.
-// AES-NI opcode reference (66 0F 38 .. /r):
-//   $DC = AESENC     $DD = AESENCLAST
-// ModR/M with rm=7 (edi base) for xmm0..xmm3 aesenc/aesenclast lanes:
-//   disp8  : $47 $4F $57 $5F
-//   disp32 : $87 $8F $97 $9F
-// PCLMULQDQ reference (66 0F 3A 44 /r ib):
-//   reg-reg form, xmm6 destination, xmm5 source -> ModR/M = $F5
-//   imm8 selects the 64-bit halves to multiply:
-//     $00 = lo(xmm6) * lo(xmm5)   $01 = lo(xmm6) * hi(xmm5)
-//     $10 = hi(xmm6) * lo(xmm5)   $11 = hi(xmm6) * hi(xmm5)
+// AES-NI (aesenc / aesenclast) and PCLMULQDQ instructions are db-encoded
+// for broad assembler compatibility.
 // -------------------------------------------------------------------
 
-  // --- Callee-save prologue. SimdProc1Begin_i386 already pushed ebx
+  // --- Callee-save prologue. SimdProc1Begin_i386.inc already pushed ebx
   //     and moved PCtx into ebx, so this block only pushes the other
   //     three callee-saved GPRs and reserves the Z / br(PFS) scratch. ---
   push      edi
@@ -709,7 +667,7 @@
   movdqu    [eax], xmm0
 
   // --- Epilogue: unwind stack scratch and pop callee-saved GPRs. ebx
-  //     is popped last because SimdProc1Begin_i386 pushed it first. ---
+  //     is popped last because SimdProc1Begin_i386.inc pushed it first. ---
   add       esp, 64
   pop       ebp
   pop       esi

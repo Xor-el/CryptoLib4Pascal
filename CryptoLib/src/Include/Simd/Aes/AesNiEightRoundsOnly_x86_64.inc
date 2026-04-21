@@ -1,43 +1,30 @@
 // AES-NI 8-wide round chain, reusable kernel, merged Enc + Dec, merged key sizes (x86-64).
-// -----------------------------------------------------------------
-// Consumed by the in-place / out-of-place AES-NI aggregators (this
-// file's original parent AesNiEightCipher[InOut]_x86_64.inc) AND by
-// every fused AEAD kernel in Phase 1-4 (OCB, CCM, GCM-SIV, EAX).
-// Keeping the round chain in a single file guarantees that any future
-// micro-optimisation (e.g. xmm8/xmm9 ping-pong to hide round-key load
-// latency, or EVEX promotion) lands in every consumer at once.
+// -------------------------------------------------------------------
+// Shared round chain consumed by every 8-wide AES-NI aggregator and
+// fused AEAD kernel in this tree (AesNiEightCipher[InOut], OCB, CCM,
+// GCM, GCM-SIV, EAX). Keeping the round loop in one file guarantees
+// that any future micro-optimisation lands everywhere at once.
 //
-// Contract on entry:
-//   xmm0..xmm7 = 8 data blocks (little-endian, NOT pre-pxor-ed with the
-//                 whitening key -- that happens in round 0 inside this
-//                 file, matching the existing aggregator semantics)
-//   r8         = pointer to the expanded round-key schedule for the
-//                 current direction / key size. MUST be a round-count-
-//                 consistent schedule (i.e. decrypt consumers pass the
-//                 inverse-MixColumns-applied schedule; encrypt consumers
-//                 pass the forward schedule). Lifetime is the current
-//                 AES engine init -- see IAesEngineX86.TryGet{Enc,Dec}
-//                 KeysPtr in ClpIAesEngineX86.
+// Variant selection:
+//   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R
+//                              (10 / 12 / 14 rounds).
 //
-// Contract on exit:
-//   xmm0..xmm7 = 8 post-AES blocks (ready for the caller to store,
-//                 XOR with counters / offsets / masks, etc.)
-//   r8         = unchanged (callee-read-only; aggregators rely on this)
-//   xmm8       = CLOBBERED (used as the shared round-key broadcast
-//                 register; encoded via REX.B=1 so the data registers
-//                 xmm0..xmm7 do not need to be spilled)
+// On entry:
+//   xmm0..xmm7 = 8 data blocks (LE, NOT pre-XORed with the whitening key;
+//                  K_0 XOR happens in round 0 inside this file).
+//   r8         = expanded round-key schedule pointer; must match the
+//                  direction (decrypt consumers pass the inverse-
+//                  MixColumns schedule). See IAesEngineX86 in
+//                  ClpIAesEngineX86.
 //
-// Direction: define CRYPTOLIB_AESNI_DECRYPT to select aesdec/aesdeclast,
-//            otherwise aesenc/aesenclast is emitted.
-// Key size : define exactly ONE of CRYPTOLIB_AESNI_KEY128 /
-//            CRYPTOLIB_AESNI_KEY192 / CRYPTOLIB_AESNI_KEY256 before the
-//            {$I} include so the right number of rounds (10 / 12 / 14)
-//            is emitted.
+// On exit:
+//   xmm0..xmm7 = 8 post-AES blocks, ready for caller storeback / XOR.
+//   r8         = unchanged (aggregators rely on this).
+//   xmm8       = clobbered (shared round-key broadcast register).
 //
-// Encoding notes: AES-NI instructions are db-encoded for broad assembler
-// compatibility. REX.B = 1 (prefix $41) because the source register is
-// xmm8. ModRM for "xmmN, xmm8": $C0 + N*8 -> C0/C8/D0/D8/E0/E8/F0/F8
-// for N=0..7.
+// AES-NI instructions, plus pxor forms touching xmm8, are db-encoded
+// for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
@@ -403,9 +390,6 @@
 {$ENDIF}
 
 {$ELSE}
-// Encrypt variant (aesenc / aesenclast). See the top-of-file contract
-// comment for the full register / lifetime / direction specification.
-// Round count: KEY128 -> 10, KEY192 -> 12, KEY256 -> 14.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   movdqa    xmm8, [r8]

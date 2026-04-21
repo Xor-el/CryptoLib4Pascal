@@ -1,41 +1,30 @@
 // AES-NI 8-wide round chain, reusable kernel, merged Enc + Dec, merged key sizes (i386).
-// --------------------------------------------------------------
-// Consumed by the in-place / out-of-place AES-NI aggregators (this
-// file's original parent AesNiEightCipher[InOut]_i386.inc) AND by
-// every fused AEAD kernel in Phase 1-4 (OCB, CCM, GCM-SIV, EAX).
-// Single source of truth for the 10/12/14-round AES-NI chain.
+// -------------------------------------------------------------------
+// Shared round chain consumed by every 8-wide AES-NI aggregator and
+// fused AEAD kernel in this tree (AesNiEightCipher[InOut], OCB, CCM,
+// GCM, GCM-SIV, EAX). i386 has no xmm8..xmm15, so round keys are
+// consumed as memory operands on every aesenc/aesdec/aesenclast/pxor;
+// modern CPUs coalesce the redundant cache-line loads.
 //
-// Contract on entry:
-//   xmm0..xmm7 = 8 data blocks (NOT pre-pxor-ed with the whitening
-//                 key -- that happens in round 0 inside this file,
-//                 matching the existing aggregator semantics)
-//   edi        = pointer to the expanded round-key schedule for the
-//                 current direction / key size. Caller MUST ensure
-//                 edi is saved/restored across this include because
-//                 edi is callee-saved on FPC i386 and the i386
-//                 SimdProc2Begin prologue does NOT push it.
+// Variant selection:
+//   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R
+//                              (10 / 12 / 14 rounds).
 //
-// Contract on exit:
-//   xmm0..xmm7 = 8 post-AES blocks
-//   edi        = unchanged (the rounds only READ from [edi+K])
-//   No xmm scratch is used: i386 has no xmm8-15, so the round key
-//   stays in memory and is consumed directly as a memory operand on
-//   every aesenc/aesdec/aesenclast/aesdeclast/pxor. Modern CPUs
-//   coalesce the redundant loads on the same cache line.
+// On entry:
+//   xmm0..xmm7 = 8 data blocks (NOT pre-XORed with the whitening key;
+//                  K_0 XOR happens in round 0 inside this file).
+//   edi        = expanded round-key schedule pointer; must match the
+//                  direction. Caller is responsible for saving/restoring
+//                  edi around the include (the SimdProc*Begin_i386.inc
+//                  prologues do NOT push edi).
 //
-// Direction: define CRYPTOLIB_AESNI_DECRYPT to select aesdec/aesdeclast,
-//            otherwise aesenc/aesenclast is emitted.
-// Key size : define exactly ONE of CRYPTOLIB_AESNI_KEY128 /
-//            CRYPTOLIB_AESNI_KEY192 / CRYPTOLIB_AESNI_KEY256 before the
-//            {$I} include so the right number of rounds (10 / 12 / 14)
-//            is emitted.
+// On exit:
+//   xmm0..xmm7 = 8 post-AES blocks, ready for caller storeback / XOR.
+//   edi        = unchanged (rounds only READ from [edi + K]).
 //
-// Encoding note: AES-NI instructions are db-encoded for broad assembler
-// compatibility. ModR/M bytes use base=edi (rm=111) rather than the
-// base=esi (rm=110) encoding of the original aggregator, so every
-// disp8 byte of the form $46/$4E/../$7E is bumped to $47/$4F/../$7F,
-// every disp0 byte $06/$0E/../$3E to $07/$0F/../$3F, and every disp32
-// byte $86/$8E/../$BE to $87/$8F/../$BF.
+// AES-NI instructions and memory-form pxor against [edi + K] are
+// db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
@@ -362,9 +351,6 @@
 {$ENDIF}
 
 {$ELSE}
-// Encrypt variant (aesenc / aesenclast). See the top-of-file contract
-// comment for the full register / lifetime / direction specification.
-// Round count: KEY128 -> 10, KEY192 -> 12, KEY256 -> 14.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
   db $66, $0F, $EF, $07   // pxor xmm0, [edi+0]

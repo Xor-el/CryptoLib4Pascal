@@ -8,14 +8,13 @@
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
-// After SimdProc2Begin_i386: ebx = state (16 bytes, in/out), esi = keys.
+// After SimdProc2Begin_i386.inc: ebx = state (16 bytes, in/out), esi = keys.
 // Schedule layout: 11 / 13 / 15 consecutive 16-byte round keys
 // (see ClpAesEngineX86 for the allocation / key-expansion site).
 // Uses xmm0 (data) and xmm1 (round-key scratch).
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line one-block AES-NI (@aes_d128), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
   movdqu    xmm0, [ebx]
   movdqa    xmm1, [esi]
   db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -44,7 +43,6 @@
   pop ebx
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line one-block AES-NI (@aes_d192), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
     movdqu    xmm0, [ebx]
     movdqa    xmm1, [esi]
     db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -77,7 +75,6 @@
     pop ebx
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line one-block AES-NI (@aes_d256), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
       movdqu    xmm0, [ebx]
       movdqa    xmm1, [esi]
       db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -110,7 +107,6 @@
       movdqa    xmm1, [esi + 224]
       db $66, $0F, $38, $DF, $C1              // aesdeclast xmm0, xmm1
       movdqu    [ebx], xmm0
-    @aes_ir_done:
       pop esi
       pop ebx
     {$ELSE}
@@ -120,13 +116,8 @@
 {$ENDIF}
 
 {$ELSE}
-// AesNiOneEnc i386 (merged key sizes)
-// Define exactly one of: CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256
-// before including this file (see ClpAesEngineX86).
-// AES-NI instructions are db-encoded for broad assembler compatibility.
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
-// Straight-line one-block AES-NI (@aes_e128), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
   movdqu    xmm0, [ebx]
   movdqa    xmm1, [esi]
   db $66, $0F, $EF, $C1              // pxor xmm0, xmm1
@@ -155,7 +146,6 @@
   pop ebx
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_KEY192}
-  // Straight-line one-block AES-NI (@aes_e192), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
     movdqu    xmm0, [ebx]
     movdqa    xmm1, [esi]
     db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
@@ -188,7 +178,6 @@
     pop ebx
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_KEY256}
-    // Straight-line one-block AES-NI (@aes_e256), i386 register convention. ebx=state, esi=keys (after SimdProc2Begin_i386).
       movdqu    xmm0, [ebx]
       movdqa    xmm1, [esi]
       db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1

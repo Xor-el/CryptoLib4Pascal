@@ -1,7 +1,7 @@
 // SSE2 + PCLMULQDQ Karatsuba-style carryless multiply without reduction (i386).
 // MultiplyExt: Z0, Z1, Z2 only (no Z1 merge / reduction). Operands are 16-byte
 // limbs, LE UInt64 pair each.
-// After SimdProc3Begin_i386: ebx = PX, esi = PY, edi = POut
+// After SimdProc3Begin_i386.inc: ebx = PX, esi = PY, edi = POut
 // (48 bytes: Z0, Z1, Z2).
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //

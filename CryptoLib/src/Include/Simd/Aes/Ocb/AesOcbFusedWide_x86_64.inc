@@ -1,138 +1,47 @@
-// OCB fused 8-wide AES-NI kernel (x86_64) with in-kernel offset ladder,
+// OCB fused 8-wide AES-NI kernel (x86-64) with in-kernel offset ladder,
 // L-table lookup and checksum fold.
 // -------------------------------------------------------------------
 // Processes ABlockCount consecutive 16-byte OCB body blocks in chunks
-// of 8 blocks (128 bytes) per iteration. ABlockCount must be a positive
-// multiple of 8 (caller guarantees via MinimumBlockCount contract).
+// of 8 blocks (128 bytes) per iteration. The kernel owns all per-block
+// OCB bookkeeping across the batch: on entry it seeds xmm_offset from
+// OffsetPtr and xmm_checksum from ChecksumPtr; the loop walks a
+// pre-computed ntz byte array, XORs the L-table entry into xmm_offset
+// to derive each Delta, runs P_i XOR delta XOR K_0 through the AES
+// rounds, XORs delta into the post-aesenclast state to produce C_i,
+// and folds plaintext into xmm_checksum; on exit it writes xmm_offset
+// and xmm_checksum back. The mode layer never touches per-block state.
 //
-// Unlike the earlier 8-wide variant, this kernel owns the OCB bookkeeping
-// across the whole batch. On entry it loads xmm_offset from OffsetPtr
-// and xmm_checksum from ChecksumPtr; inside the loop it walks a
-// pre-computed byte array of ntz values, loads L-table entries, XORs
-// them into xmm_offset to produce each per-block Delta, and folds
-// plaintext into xmm_checksum. On exit it writes xmm_offset and
-// xmm_checksum back to memory. The mode layer therefore never touches
-// any per-block OCB state for the batch.
-//
-// Algorithm identity (AES-256 shape; same for 128/192 with fewer rounds):
-//   // entry-only, once per batch
-//   xmm_offset   <- [OffsetPtr]           // FOffsetMAIN
-//   xmm_checksum <- [ChecksumPtr]         // FChecksum
-//
-//   // per block i in 0..BlockCount-1:
-//   xmm_offset  ^= L[NtzPtr[i]]           // offset ladder step
-//   delta_i      = xmm_offset             // current Delta value
-//   if encrypt: xmm_checksum ^= P_i       // fold plaintext pre-AES
-//   state        = P_i ^ delta_i ^ K_0
-//   state        = aesenc^(N-1)(state)
-//   state        = aesenclast(state, K_N)
-//   C_i          = state ^ delta_i
-//   if decrypt: xmm_checksum ^= P_i       // fold recovered plaintext
-//
-//   // exit-only, once per batch
-//   [OffsetPtr]    <- xmm_offset
-//   [ChecksumPtr]  <- xmm_checksum
+// Variant selection:
+//   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
 // On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
-// Context layout (7 pointers + 1 NativeUInt count = 72 bytes, natural
-// 8-byte alignment). Matches TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
-//   [rcx +  0]  Keys        : AES schedule (encrypt for
-//                             OcbFusedEncWide*; inverse-MixColumns for
-//                             OcbFusedDecWide*). 176/208/240 bytes,
-//                             16-byte aligned.
-//   [rcx +  8]  InPtr       : base of the "main" 16-byte-block stream.
-//                             For encrypt and for the LScratch fallback
-//                             on decrypt this equals Block0Ptr. For the
-//                             fast decrypt path (FMacSize = 16) this is
-//                             AInput - 16, so [InPtr + 16..InPtr + 112]
-//                             addresses blocks 1..7 of iteration 0 and
-//                             [InPtr + 0] (which the kernel never loads
-//                             on iter 0) is the notionally-out-of-
-//                             bounds slot the FMainBlock prefix would
-//                             otherwise occupy.
-//   [rcx + 16]  OutPtr      : base of ABlockCount output blocks
-//                             (may alias InPtr).
-//   [rcx + 24]  OffsetPtr   : 16-byte live FOffsetMAIN value (r/w).
-//   [rcx + 32]  ChecksumPtr : 16-byte live FChecksum value (r/w).
-//   [rcx + 40]  LTablePtr   : flat L[0..LMax] * 16 bytes, read-only.
-//                             Caller guarantees LMax >= max ntz used
-//                             by NtzPtr.
-//   [rcx + 48]  NtzPtr      : ABlockCount bytes, one ntz value per
-//                             block. Read-only, consumed sequentially.
-//   [rcx + 56]  Block0Ptr   : 16-byte source of iteration-0 block 0.
-//                             May alias InPtr (encrypt / small-MAC
-//                             decrypt) or point at an unrelated 16-byte
-//                             buffer such as FMainBlock (full-MAC
-//                             decrypt). For iterations >= 1 the kernel
-//                             transparently derives the block-0 source
-//                             from rbx via `mov rax, rbx` so Block0Ptr
-//                             is only read at function entry.
-//   [rcx + 64]  BlockCount  : NativeUInt; total blocks, multiple of 8.
+// Context layout (8 pointers + 1 NativeUInt = 72 bytes, 8-byte aligned).
+// See TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
+//   [rcx +  0]  Keys        : AES schedule (encrypt or inv-MixColumns; 16-byte aligned)
+//   [rcx +  8]  InPtr       : base of the main 16-byte-block stream
+//   [rcx + 16]  OutPtr      : base of BlockCount output blocks (may alias InPtr)
+//   [rcx + 24]  OffsetPtr   : 16-byte live FOffsetMAIN (r/w)
+//   [rcx + 32]  ChecksumPtr : 16-byte live FChecksum (r/w)
+//   [rcx + 40]  LTablePtr   : flat L[0..LMax] * 16 bytes (read-only)
+//   [rcx + 48]  NtzPtr      : BlockCount bytes of pre-computed ntz values
+//   [rcx + 56]  Block0Ptr   : 16-byte source of iteration-0 block 0 (may alias InPtr)
+//   [rcx + 64]  BlockCount  : NativeUInt; multiple of 8
 //
-// XMM register allocation (12 of 16 registers used):
-//   xmm0..xmm7 : 8 data lanes.
-//   xmm8       : xmm_offset accumulator; seeded at entry from
-//                [OffsetPtr], XOR-updated per block against L-table
-//                entries, stored back at exit.
-//   xmm9       : xmm_checksum accumulator; seeded at entry from
-//                [ChecksumPtr], folded with plaintext per block,
-//                stored back at exit.
-//   xmm10      : AES round-key scratch (movdqa reload per AES round).
-//   xmm11      : L-table load scratch.
-//   xmm12..xmm15 : free.
-//
-// GPR usage:
-//   rax : at loop top holds the block-0 source pointer (seeded from
-//         Block0Ptr at entry, then refreshed to rbx at the bottom of
-//         every iteration so subsequent iterations load block 0 from
-//         the advancing main stream). Inside Phase 1 it is clobbered
-//         as the ntz scratch and L-table index; this is safe because
-//         Phase 2 (input load) now runs BEFORE Phase 1 and consumes
-//         the block-0 pointer while it is still live.
-//   rbx : InPtr (advancing; +128 per iter). Callee-save on both MS x64
-//         and Unix -> pushed at prologue, popped at epilogue.
-//   rcx : PCtx. Kept alive so the epilogue can dereference
-//         OffsetPtr / ChecksumPtr without a second stash.
-//   rdx : Keys base (pinned; rdx + 16*r is the round-key address).
-//   r8  : OutPtr (advancing; +128 per iter).
-//   r9  : LTablePtr (pinned).
-//   r10 : loop counter = BlockCount / 8 at entry; decrements to 0.
-//   r11 : NtzPtr (advancing; +8 per iter).
+// XMM (12/16 used):
+//   xmm0..xmm7   : 8 data lanes
+//   xmm8         : xmm_offset accumulator (seeded/stored once per batch)
+//   xmm9         : xmm_checksum accumulator (seeded/stored once per batch)
+//   xmm10        : AES round-key scratch (movdqa reload per round)
+//   xmm11        : L-table load scratch
+//   xmm12..xmm15 : free
 //
 // Stack scratch (128 bytes, 16-aligned):
-//   [rsp +   0 .. rsp + 127] : 8 per-block stashed offsets used for
-//                              pre-whitening AND post-whitening. Each
-//                              slot is written once by the ladder
-//                              phase and read twice by the whitening
-//                              phases. movdqa-safe.
-//   Alignment: entry rsp is 8 mod 16 (return address pushed). After
-//   `push rbx` rsp is 0 mod 16. After `sub rsp, 128` rsp stays
-//   0 mod 16, so [rsp + 16*i] is 16-aligned for i in 0..7.
+//   [rsp +   0 ..  127]  8 x 16-byte per-block offset stashes (movdqa-safe)
 //
-// Win64 ABI: xmm6..xmm15 are nominally callee-save. This kernel is
-// compiled as a leaf asm procedure (SimdProc1Begin_x86_64.inc emits
-// nostackframe) and is called only from Pascal; the surrounding tree
-// treats xmm6..xmm15 as scratch in identical leaf-asm contexts (see
-// every other fused kernel). No xmm save area is emitted.
-//
-// Direction: define CRYPTOLIB_AESNI_DECRYPT to emit aesdec/aesdeclast,
-//            otherwise aesenc/aesenclast is emitted.
-// Key size : define exactly ONE of CRYPTOLIB_AESNI_KEY128 /
-//            CRYPTOLIB_AESNI_KEY192 / CRYPTOLIB_AESNI_KEY256.
-//
-// Encoding: AES-NI instructions and pxor with xmm8+ r/m operands are
-// db-encoded for broad assembler compatibility (matches the rest of
-// the tree). Plain SSE2 ops (movdqu, movdqa, memory-form pxor with
-// only low xmm regs, xor, shl, movzx, mov) use FPC mnemonics.
-// REX legend:
-//   $41 = REX.B           (r/m in the xmm8..15 / r8..15 half)
-//   $44 = REX.R           (reg in the xmm8..15 half)
-//   $45 = REX.R + REX.B   (both operands in the high half)
-// ModR/M reg-reg with mod=11 and r/m supplied by REX.B:
-//   reg=xmm0..xmm7 -> $C0 $C8 $D0 $D8 $E0 $E8 $F0 $F8 when r/m=xmm8
-//   reg=xmm8       -> $C0             when r/m=xmm8..15 low-3 bits...
-// (Exact bytes are listed inline with every db-emitted instruction.)
+// AES-NI instructions and selected forms touching xmm8..xmm15 (pxor,
+// movdqa) are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
   // --- Prologue: preserve rbx, reserve 128B aligned stack scratch. ---

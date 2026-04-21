@@ -1,36 +1,32 @@
-// SSE2 + PCLMULQDQ fused full N-way GHASH batch kernel (x86-64).
-// One monolithic ASM body that handles either a 4-block (64-byte) or 8-block
-// (128-byte) GHASH batch, selected by the caller via exactly one of the
-// mutually-exclusive defines GCM_GHASH_FULL_BLOCKS_4 / GCM_GHASH_FULL_BLOCKS_8.
+// SSE2 + PCLMULQDQ fused N-way GHASH batch kernel (x86-64).
+// -------------------------------------------------------------------
+// One monolithic body that performs a full GHASH batch fold: for each
+// block loads the (byte-reversed) ciphertext, XORs the running state
+// into block 0, multiplies by the matching H power via four PCLMULQDQ
+// products (Karatsuba), accumulates across blocks into three 128-bit
+// limbs Z0/Z1/Z2, then folds Z1 and reduces (Z0, Z2) modulo the GCM
+// polynomial x^128 + x^7 + x^2 + x + 1 to a single field element,
+// byte-reverses, and stores back to PFS. Replaces the previous chain
+// of 11 Pascal -> ASM calls (one byte-reverse per block, one XOR fold,
+// multiply-accumulate, 3-limb reduction, byte-reverse back) with a
+// single kernel.
 //
-// The 8-way form replaces the previous chain of 11 Pascal->ASM calls (one
-// byte-reverse for the running state, eight byte-reverses for the ciphertext
-// blocks, one Pascal XOR fold, one multiply-accumulate, one 3-limb GHASH
-// reduction, one byte-reverse back) with a single ASM body; the 4-way form
-// is its half-width sibling. The PCLMULQDQ / PSHUFB / SSE2 shapes are
-// identical.
+// Variant selection (set EXACTLY ONE):
+//   GCM_GHASH_FULL_BLOCKS_4  -> 4-block (64-byte) batch, H^4..H^1.
+//   GCM_GHASH_FULL_BLOCKS_8  -> 8-block (128-byte) batch, H^8..H^1.
 //
-// After SimdProc4Begin_x86_64.inc: rcx = PFS (16-byte running GHASH state,
-// canonical/byte-reversed form; in + out), rdx = PC0 (64 or 128 bytes
-// ciphertext, canonical form), r8 = PHPow (H^4..H^1 for 4-way or H^8..H^1 for
-// 8-way as 16-byte limbs, GHASH-field little-endian form), r9 = PMask
-// (16-byte PSHUFB control).
+// On entry (after SimdProc4Begin_x86_64.inc):
+//   rcx = PFS    (16-byte running GHASH state, canonical; in/out)
+//   rdx = PC0    (64 or 128 bytes ciphertext, canonical form)
+//   r8  = PHPow  (H^N..H^1 as 16-byte limbs, field form)
+//   r9  = PMask  (16-byte PSHUFB byte-reverse control)
 //
-// Algorithm:
-//   1) Load PSHUFB mask into xmm8 (held through the whole kernel).
-//   2) Clear Z0/Z1/Z2 accumulators (xmm0/xmm1/xmm2). Each PCLMULQDQ-based
-//      GHASH step produces a 256-bit (2 x 128-bit) Karatsuba product, which
-//      is accumulated across blocks as three 128-bit limbs (Z0 = low,
-//      Z1 = middle/cross, Z2 = high) so all blocks in the batch can fold
-//      before a single final reduction.
-//   3) Block 0: load, byte-reverse, XOR the running state (also byte-reversed)
-//      into block 0, then 4 x PCLMULQDQ + XOR-accumulate into Z0/Z1/Z2.
-//   4) Blocks 1..3 (and, when BLOCKS_8, 4..7): load, byte-reverse,
-//      4 x PCLMULQDQ + XOR-accumulate.
-//   5) Inline 3-limb GHASH reduction: fold Z1 into (Z0, Z2), then reduce the
-//      (Z0, Z2) pair modulo the GCM polynomial x^128 + x^7 + x^2 + x + 1 to
-//      a single 16-byte field element.
-//   6) Pack result into one xmm, byte-reverse (pshufb with xmm8), store to PFS.
+// XMM (9/16 used):
+//   xmm0..xmm2 : Z0 / Z1 / Z2 accumulators (persistent across blocks)
+//   xmm3       : current byte-reversed data block
+//   xmm4       : current H-power limb
+//   xmm5..xmm7 : pclmul product destinations (per-block)
+//   xmm8       : byte-reverse mask (held for the whole kernel)
 //
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //

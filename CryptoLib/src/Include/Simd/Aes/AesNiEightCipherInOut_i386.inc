@@ -1,25 +1,17 @@
 // AES-NI 8-wide cipher aggregator, out-of-place, merged Enc + Dec, merged key sizes (i386).
 // -------------------------------------------------------------------
-// Thin wrapper over AesNiEightRoundsOnly_i386.inc. This file is
-// included from procedures prologue'd by SimdProc3Begin_i386.inc, so
-// on entry (after the prologue has pushed ebx/esi/edi and remapped):
-//   ebx = RIn  (8 consecutive 16-byte input blocks)
+// Thin wrapper over AesNiEightRoundsOnly_i386.inc. Entry (after
+// SimdProc3Begin_i386.inc has pushed ebx/esi/edi and remapped):
+//   ebx = RIn (8 consecutive 16-byte input blocks)
 //   esi = ROut (8 consecutive 16-byte output buffer)
 //   edi = Keys (expanded round-key schedule)
-// edi is already the canonical rounds-only register, so no register
-// move is needed -- the rounds run directly.
-// Direction is selected by CRYPTOLIB_AESNI_DECRYPT; key size by
-// exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256. Both
-// defines are forwarded verbatim to the rounds-only include.
-// Epilogue mirrors the 3-param prologue: pop edi, pop esi, pop ebx
-// before return.
+// edi is already the canonical rounds-only register, so the rounds run
+// directly - no register move needed. Epilogue pops edi, esi, ebx.
 //
-// Nested {$I} path: Delphi resolves nested includes relative to the
-// top-level .pas (ClpAesEngineX86.pas in Crypto\Engines\), not to the
-// enclosing .inc, so a bare 'AesNiEightRoundsOnly_i386.inc' raises
-// F1026 under dcc. Using '..\..\Include\Simd\Aes\' keeps both Delphi
-// and FPC happy (FPC also accepts the path and resolves to the same
-// absolute file).
+// Variant selection:
+//   CRYPTOLIB_AESNI_DECRYPT  -> decrypt; else encrypt.
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
+// Both defines are forwarded verbatim to the rounds-only include.
   movdqu    xmm0, [ebx + 0]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]

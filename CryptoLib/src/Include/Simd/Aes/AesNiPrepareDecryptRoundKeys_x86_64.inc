@@ -3,9 +3,9 @@
 // reverses the order of the N_R + 1 round keys to produce a schedule suitable
 // for aesdec / aesdeclast during decrypt.
 //
-// Entry (MS x64 ABI / FPC remapped Unix): rcx = round keys
-// (16 * (N_R + 1) bytes, in place), edx = FNRounds in {10, 12, 14}.
-// Uses r9..r11 / eax as loop counters and scratch, xmm0..xmm2 for aesimc /
+// Entry (after SimdProc2Begin_x86_64.inc): rcx = round keys
+// (16 * (N_R + 1) bytes, in place), edx = NRounds in {10, 12, 14}.
+// Uses r8..r11 / eax as loop counters and scratch, xmm0 / xmm1 for aesimc /
 // swap.
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 //

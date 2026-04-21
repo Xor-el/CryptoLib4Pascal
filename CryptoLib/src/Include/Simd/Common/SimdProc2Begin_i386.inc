@@ -1,4 +1,4 @@
-// Shared SIMD procedure prologue for 2-parameter assembly functions.
+// Shared SIMD procedure prologue for 2-parameter assembly functions (i386).
 // After inclusion: ebx = param1, esi = param2 (EAX, EDX at entry; callee saves EBX, ESI).
 // FPC: Windows and Unix i386 use the same parameter entry layout.
 // Bodies must end with: pop esi / pop ebx (reverse of pushes) before return.

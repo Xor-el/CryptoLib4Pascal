@@ -1,4 +1,4 @@
-// Shared SIMD procedure prologue for 6-parameter assembly functions.
+// Shared SIMD procedure prologue for 6-parameter assembly functions (i386).
 // After inclusion: ebx = param1, esi = param2, edi = param3, eax = param4,
 //   ecx = param5 low, edx = param5 high (UInt64 split); param6 is not loaded in this prologue.
 // FPC: param4 at [esp+28]; param5 at [esp+20]/[esp+24]; param6 at [esp+16] after push EBX/ESI/EDI (see asm).

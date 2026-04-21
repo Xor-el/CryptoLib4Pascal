@@ -2,131 +2,52 @@
 // L-table lookup and checksum fold.
 // -------------------------------------------------------------------
 // Processes ABlockCount consecutive 16-byte OCB body blocks in chunks
-// of 4 blocks (64 bytes) per iteration. ABlockCount must be a positive
-// multiple of 4 (caller guarantees via MinimumBlockCount contract).
+// of 4 blocks (64 bytes) per iteration. 4 is the widest fused lane
+// count that fits the 8-xmm budget once xmm_offset + xmm_checksum +
+// scratch are reserved; memory-form aesenc / aesdec is therefore
+// used throughout against the 16-byte-aligned round-key schedule.
+// The kernel owns all per-block OCB bookkeeping across the batch:
+// on entry it seeds xmm_offset from OffsetPtr and xmm_checksum from
+// ChecksumPtr; the loop walks a pre-computed ntz byte array, XORs
+// the L-table entry into xmm_offset to derive each Delta, runs
+// P_i XOR delta XOR K_0 through the AES rounds, XORs delta into
+// the post-aesenclast state to produce C_i, and folds plaintext
+// into xmm_checksum; on exit it writes xmm_offset and xmm_checksum
+// back. The mode layer never touches per-block state.
 //
-// 4 is the widest fused lane count reachable on i386 once the OCB
-// bookkeeping (offset accumulator + checksum accumulator) moves into
-// the kernel and lives across the batch. The 8-xmm budget is exhausted
-// by 4 data lanes + xmm_offset + xmm_checksum + scratch; memory-form
-// aesenc / aesdec is therefore used throughout (round keys are aligned
-// so [edi + disp] operands are safe) and no spare xmm can hold a
-// cached round key across the batch.
-//
-// This kernel owns the OCB bookkeeping across the whole batch. On entry
-// it loads xmm_offset from OffsetPtr and xmm_checksum from ChecksumPtr;
-// inside the loop it walks a pre-computed byte array of ntz values,
-// loads L-table entries, XORs them into xmm_offset to produce each
-// per-block Delta, and folds plaintext into xmm_checksum. On exit it
-// writes xmm_offset and xmm_checksum back to memory. The mode layer
-// therefore never touches any per-block OCB state for the batch.
-//
-// Algorithm identity (AES-256 shape; same for 128/192 with fewer rounds):
-//   // entry-only, once per batch
-//   xmm_offset   <- [OffsetPtr]           // FOffsetMAIN
-//   xmm_checksum <- [ChecksumPtr]         // FChecksum
-//
-//   // per block i in 0..BlockCount-1:
-//   xmm_offset  ^= L[NtzPtr[i]]           // offset ladder step
-//   delta_i      = xmm_offset             // current Delta value
-//   if encrypt: xmm_checksum ^= P_i       // fold plaintext pre-AES
-//   state        = P_i ^ delta_i ^ K_0
-//   state        = aesenc^(N-1)(state)
-//   state        = aesenclast(state, K_N)
-//   C_i          = state ^ delta_i
-//   if decrypt: xmm_checksum ^= P_i       // fold recovered plaintext
-//
-//   // exit-only, once per batch
-//   [OffsetPtr]    <- xmm_offset
-//   [ChecksumPtr]  <- xmm_checksum
+// Variant selection:
+//   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
+//   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
 // On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
 //
-// Context layout (7 pointers + 1 NativeUInt count = 36 bytes on i386).
-// Matches TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
-//   [ebx +  0]  Keys        : AES schedule (encrypt for
-//                             OcbFusedEncWide*; inverse-MixColumns for
-//                             OcbFusedDecWide*). 16-byte aligned.
-//   [ebx +  4]  InPtr       : base of the "main" 16-byte-block stream.
-//                             For encrypt and for the LScratch fallback
-//                             on decrypt this equals Block0Ptr. For the
-//                             fast decrypt path (FMacSize = 16) this is
-//                             AInput - 16, so [InPtr + 16..InPtr + 48]
-//                             addresses blocks 1..3 of iteration 0 and
-//                             [InPtr + 0] (which the kernel never loads
-//                             on iter 0) is the notionally-out-of-
-//                             bounds slot the FMainBlock prefix would
-//                             otherwise occupy.
-//   [ebx +  8]  OutPtr      : base of ABlockCount output blocks
-//                             (may alias InPtr).
-//   [ebx + 12]  OffsetPtr   : 16-byte live FOffsetMAIN (r/w).
-//   [ebx + 16]  ChecksumPtr : 16-byte live FChecksum   (r/w).
-//   [ebx + 20]  LTablePtr   : flat L[0..LMax] * 16 bytes, read-only.
-//                             Cached on stack across the loop because
-//                             the GPR budget cannot pin it.
-//   [ebx + 24]  NtzPtr      : ABlockCount bytes of pre-computed ntz.
-//   [ebx + 28]  Block0Ptr   : 16-byte source of iteration-0 block 0.
-//                             May alias InPtr (encrypt / small-MAC
-//                             decrypt) or point at an unrelated 16-byte
-//                             buffer such as FMainBlock (full-MAC
-//                             decrypt). For iterations >= 1 the kernel
-//                             transparently derives the block-0 source
-//                             from edx via `mov eax, edx` so Block0Ptr
-//                             is only read at function entry.
-//   [ebx + 32]  BlockCount  : NativeUInt; multiple of 4.
+// Context layout (8 pointers + 1 NativeUInt = 36 bytes, 4-byte aligned).
+// See TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
+//   [ebx +  0]  Keys        : AES schedule (encrypt or inv-MixColumns; 16-byte aligned)
+//   [ebx +  4]  InPtr       : base of the main 16-byte-block stream
+//   [ebx +  8]  OutPtr      : base of BlockCount output blocks (may alias InPtr)
+//   [ebx + 12]  OffsetPtr   : 16-byte live FOffsetMAIN (r/w)
+//   [ebx + 16]  ChecksumPtr : 16-byte live FChecksum (r/w)
+//   [ebx + 20]  LTablePtr   : flat L[0..LMax] * 16 bytes (read-only; cached on stack)
+//   [ebx + 24]  NtzPtr      : BlockCount bytes of pre-computed ntz values
+//   [ebx + 28]  Block0Ptr   : 16-byte source of iteration-0 block 0 (may alias InPtr)
+//   [ebx + 32]  BlockCount  : NativeUInt; multiple of 4
 //
-// XMM register allocation (uses 7 of 8 xmm registers):
-//   xmm0..xmm3 : 4 data lanes.
-//   xmm4       : xmm_offset accumulator (persistent across the batch).
-//   xmm5       : xmm_checksum accumulator (persistent across the batch).
-//   xmm6       : scratch -- L-table loads during the ladder phase,
-//                stack-offset reloads during pre/post-whitening.
-//   xmm7       : unused.
+// XMM (7/8 used; i386 has only xmm0..xmm7):
+//   xmm0..xmm3 : 4 data lanes
+//   xmm4       : xmm_offset accumulator (seeded/stored once per batch)
+//   xmm5       : xmm_checksum accumulator (seeded/stored once per batch)
+//   xmm6       : scratch (L-table loads; stack-offset reloads during whitening)
+//   xmm7       : free
 //
-// GPR usage:
-//   eax : at the top of each iteration holds the block-0 source
-//         pointer (seeded from Block0Ptr at entry, then refreshed to
-//         edx at the bottom of every iteration so subsequent
-//         iterations load block 0 from the advancing main stream).
-//         Inside Phase 1 it is clobbered as the ntz scratch /
-//         L-table index; this is safe because Phase 2 (input load)
-//         now runs BEFORE Phase 1 and consumes the block-0 pointer
-//         while it is still live.
-//   ebx : PCtx; kept live through the loop so the epilogue can
-//         dereference OffsetPtr / ChecksumPtr. SimdProc1Begin_i386
-//         pushed ebx at entry; the epilogue below pops it.
-//   ecx : loop counter == BlockCount; decrements by 4, exits at 0.
-//   edx : InPtr (advancing; +64 per iter).
-//   esi : OutPtr (advancing; +64 per iter). Callee-save: pushed here.
-//   edi : Keys base (pinned; memory-form aesenc uses [edi + 16*r]).
-//         Callee-save: pushed here.
-//   ebp : NtzPtr (advancing; +4 per iter). Callee-save: pushed here.
+// Stack scratch (68 bytes, base unaligned - movdqu only):
+//   [esp +  0..63]  4 x 16-byte per-block offset stashes
+//   [esp + 64..67]  LTablePtr cache (one dword; GPR budget cannot pin it)
 //
-// Stack scratch (68 bytes, base is NOT 16-aligned -> movdqu only):
-//   [esp +  0 .. 15] : offset_0 stash
-//   [esp + 16 .. 31] : offset_1 stash
-//   [esp + 32 .. 47] : offset_2 stash
-//   [esp + 48 .. 63] : offset_3 stash
-//   [esp + 64 .. 67] : LTablePtr cache (one dword)
-//   Stack is intentionally not realigned to 16; every stack-scratch
-//   access uses movdqu. Round keys are aligned so memory-form
-//   aesenc/aesdec/aesenclast/aesdeclast + memory-form pxor against
-//   K_0 remain safe.
-//
-// Encoding: AES-NI opcodes are db-encoded (older FPC releases lacked
-// the aesenc / aesdec / aesenclast / aesdeclast mnemonics; matches the
-// rest of the tree). Standard SSE1/SSE2 instructions (movdqu, pxor,
-// memory-form pxor against [edi + 0], movzx, shl, ...) use FPC
-// mnemonics.
-// AES-NI opcode reference (66 0F 38 .. /r):
-//   $DC = AESENC     $DD = AESENCLAST
-//   $DE = AESDEC     $DF = AESDECLAST
-// ModR/M byte with rm=7 (edi base), reg in low 4 xmm slots:
-//   disp8  : $47 $4F $57 $5F                     for xmm0..xmm3
-//   disp32 : $87 $8F $97 $9F                     for xmm0..xmm3
+// AES-NI instructions are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
-  // --- Callee-save prologue. SimdProc1Begin_i386 already pushed ebx
+  // --- Callee-save prologue. SimdProc1Begin_i386.inc already pushed ebx
   //     and moved PCtx into ebx, so this block only pushes the other
   //     three callee-saved GPRs and reserves stack scratch. ---
   push      edi
@@ -473,7 +394,7 @@
 
   // --- Epilogue: flush accumulators back to memory, then unwind the
   //     stack scratch and pop the callee-saved GPRs. ebx is popped
-  //     last because SimdProc1Begin_i386 pushed it first. ---
+  //     last because SimdProc1Begin_i386.inc pushed it first. ---
   mov       eax, [ebx + 12]                       // eax = OffsetPtr
   movdqu    [eax], xmm4
   mov       eax, [ebx + 16]                       // eax = ChecksumPtr
