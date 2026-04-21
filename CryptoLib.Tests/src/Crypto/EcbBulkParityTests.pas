@@ -31,7 +31,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpIBulkBlockCipherMode,
   ClpIEcbBlockCipher,
   ClpIKeyParameter,

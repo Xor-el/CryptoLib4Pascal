@@ -45,8 +45,13 @@ type
   /// </summary>
   TBigIntegerEqualityComparer = class(TInterfacedObject, IEqualityComparer<TBigInteger>)
   strict private
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+    function Equals(constref ALeft, ARight: TBigInteger): Boolean; reintroduce;
+    function GetHashCode(constref AValue: TBigInteger): UInt32; reintroduce;
+{$ELSE}
     function Equals(const ALeft, ARight: TBigInteger): Boolean; reintroduce;
     function GetHashCode(const AValue: TBigInteger): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI} reintroduce;
+{$ENDIF}
   end;
 
   /// <summary>
@@ -189,12 +194,20 @@ implementation
 
 { TBigIntegerEqualityComparer }
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TBigIntegerEqualityComparer.Equals(constref ALeft, ARight: TBigInteger): Boolean;
+{$ELSE}
 function TBigIntegerEqualityComparer.Equals(const ALeft, ARight: TBigInteger): Boolean;
+{$ENDIF}
 begin
   Result := ALeft.Equals(ARight);
 end;
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TBigIntegerEqualityComparer.GetHashCode(constref AValue: TBigInteger): UInt32;
+{$ELSE}
 function TBigIntegerEqualityComparer.GetHashCode(const AValue: TBigInteger): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
+{$ENDIF}
 begin
   Result := AValue.GetHashCode();
 end;

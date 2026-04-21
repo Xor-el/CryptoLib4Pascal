@@ -31,8 +31,13 @@ type
   /// </summary>
   TOidEqualityComparer = class(TInterfacedObject, IEqualityComparer<IDerObjectIdentifier>)
   strict private
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+    function Equals(constref ALeft, ARight: IDerObjectIdentifier): Boolean; reintroduce;
+    function GetHashCode(constref AValue: IDerObjectIdentifier): UInt32; reintroduce;
+{$ELSE}
     function Equals(const ALeft, ARight: IDerObjectIdentifier): Boolean; reintroduce;
     function GetHashCode(const AValue: IDerObjectIdentifier): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI} reintroduce;
+{$ENDIF}
   end;
 
   /// <summary>
@@ -42,7 +47,11 @@ type
   /// </summary>
   TOidComparer = class(TInterfacedObject, IComparer<IDerObjectIdentifier>)
   strict private
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+    function Compare(constref ALeft, ARight: IDerObjectIdentifier): Integer;
+{$ELSE}
     function Compare(const ALeft, ARight: IDerObjectIdentifier): Integer;
+{$ENDIF}
   end;
 
   /// <summary>
@@ -70,7 +79,11 @@ implementation
 
 { TOidEqualityComparer }
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TOidEqualityComparer.Equals(constref ALeft, ARight: IDerObjectIdentifier): Boolean;
+{$ELSE}
 function TOidEqualityComparer.Equals(const ALeft, ARight: IDerObjectIdentifier): Boolean;
+{$ENDIF}
 begin
   if ALeft = ARight then
   begin
@@ -87,7 +100,11 @@ begin
   Result := ALeft.Equals(ARight);
 end;
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TOidEqualityComparer.GetHashCode(constref AValue: IDerObjectIdentifier): UInt32;
+{$ELSE}
 function TOidEqualityComparer.GetHashCode(const AValue: IDerObjectIdentifier): {$IFDEF DELPHI}Int32; {$ELSE}UInt32; {$ENDIF DELPHI}
+{$ENDIF}
 begin
   if AValue = nil then
   begin
@@ -100,7 +117,11 @@ end;
 
 { TOidComparer }
 
+{$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
+function TOidComparer.Compare(constref ALeft, ARight: IDerObjectIdentifier): Integer;
+{$ELSE}
 function TOidComparer.Compare(const ALeft, ARight: IDerObjectIdentifier): Integer;
+{$ENDIF}
 begin
   if (ALeft = nil) and (ARight = nil) then
   begin
