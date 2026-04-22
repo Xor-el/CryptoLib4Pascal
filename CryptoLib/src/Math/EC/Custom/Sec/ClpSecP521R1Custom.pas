@@ -227,23 +227,34 @@ end;
 class procedure TSecP521R1Field.ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt32Array);
 var
   LX16, LY16: UInt32;
+  LAcc: UInt32;
+  LExt: UInt64;
 begin
   TNat512.Mul(AX, AY, AZZ);
   LX16 := AX[16];
   LY16 := AY[16];
-  { UInt64 product: 32-bit targets may reduce UInt32*UInt32 to 32 bits before add.
-    Revert with ClpBitOperations Negative* shift note (armv7 hardening). }
-  AZZ[32] := TNat.Mul31BothAdd(16, LX16, AY, LY16, AX, AZZ, 16) + UInt32(UInt64(LX16) * UInt64(LY16));
+  { Top limb: carry from Mul31BothAdd + full 64-bit (LX16*LY16). On FPC 32-bit ARM, an
+    inline UInt32(UInt64*UInt64) in one expression can omit the high half — keep product
+    in a UInt64 local (see CI diff: AZZ[32] missing LExt while lower limbs match). }
+  LAcc := TNat.Mul31BothAdd(16, LX16, AY, LY16, AX, AZZ, 16);
+  LExt := UInt64(LX16) * UInt64(LY16);
+  AZZ[32] := LAcc + UInt32(LExt);
 end;
 
 class procedure TSecP521R1Field.ImplSquare(const AX, AZZ: TCryptoLibUInt32Array);
 var
-  LX16: UInt32;
+  LX16, LX2: UInt32;
+  LAcc: UInt32;
+  LExt: UInt64;
 begin
   TNat512.Square(AX, AZZ);
   LX16 := AX[16];
-  { See UInt64 product comment on ImplMultiply (paired armv7 fix). }
-  AZZ[32] := TNat.MulWordAddTo(16, LX16 shl 1, AX, 0, AZZ, 16) + UInt32(UInt64(LX16) * UInt64(LX16));
+  { 2*LX on top 16 limbs: keep shift in UInt32 (9-bit limb). }
+  LX2 := UInt32(UInt64(LX16) shl 1);
+  { LExt = LX16^2 — must not fold into 32*32; same armv7 note as ImplMultiply. }
+  LAcc := TNat.MulWordAddTo(16, LX2, AX, 0, AZZ, 16);
+  LExt := UInt64(LX16) * UInt64(LX16);
+  AZZ[32] := LAcc + UInt32(LExt);
 end;
 
 class procedure TSecP521R1Field.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
