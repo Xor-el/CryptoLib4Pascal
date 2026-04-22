@@ -18,7 +18,7 @@ const
 
   { When non-empty, CryptoLib console tests run only this fpcunit suite
     (see consoletestrunner --suite=). Set to '' to run the full suite. }
-  CryptoLibFpcUnitSuite: string = 'TTestSecP521FixedRandom';
+  CryptoLibFpcUnitSuite: string = '';
 
   // ANSI color codes
   CSI_Reset   = #27'[0m';
