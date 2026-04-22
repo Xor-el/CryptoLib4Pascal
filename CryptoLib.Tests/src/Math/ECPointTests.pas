@@ -109,10 +109,7 @@ type
     FRandom: ISecureRandom;
     FpInstance: TFp;
     F2mInstance: TF2m;
-    /// <summary>When non-empty, prepended to assertion text (all-curves test).</summary>
-    FPointTestContext: String;
 
-    function Ctx(const msg: String): String;
     procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
     procedure AssertBigIntegersEqual(const a, b: TBigInteger);
     procedure AssertIFiniteFieldsEqual(const a, b: IFiniteField);
@@ -271,27 +268,19 @@ implementation
 
 { TTestECPoint }
 
-function TTestECPoint.Ctx(const msg: String): String;
-begin
-  if FPointTestContext <> '' then
-    Result := '[' + FPointTestContext + '] ' + msg
-  else
-    Result := msg;
-end;
-
 procedure TTestECPoint.AssertECFieldElementsEqual(const a, b: IECFieldElement);
 begin
-  CheckEquals(True, a.Equals(b), Ctx('EC field element compare'));
+  CheckEquals(True, a.Equals(b));
 end;
 
 procedure TTestECPoint.AssertBigIntegersEqual(const a, b: TBigInteger);
 begin
-  CheckEquals(True, a.Equals(b), Ctx('BigInteger compare (curve param)'));
+  CheckEquals(True, a.Equals(b));
 end;
 
 procedure TTestECPoint.AssertIFiniteFieldsEqual(const a, b: IFiniteField);
 begin
-  CheckEquals(True, a.Equals(b), Ctx('IFiniteField compare'));
+  CheckEquals(True, a.Equals(b));
 end;
 
 procedure TTestECPoint.AssertOptionalValuesAgree(const a, b: TBigInteger);
@@ -313,8 +302,8 @@ end;
 procedure TTestECPoint.AssertPointsEqual(const msg: String;
   const a, b: IECPoint);
 begin
-  CheckEquals(True, a.Equals(b), Ctx(msg));
-  CheckEquals(True, b.Equals(a), Ctx(msg));
+  CheckEquals(True, a.Equals(b), msg);
+  CheckEquals(True, b.Equals(a), msg);
 end;
 
 function TTestECPoint.ConfigureBasepoint(const curve: IECCurve;
@@ -368,7 +357,6 @@ var
   c, sc: IECCurve;
   coords: TCryptoLibInt32Array;
   i, coord: Int32;
-  LSave: String;
 begin
   n := x9ECParameters.n;
   g := x9ECParameters.g;
@@ -390,27 +378,15 @@ begin
         sg := sc.ImportPoint(g);
       end;
 
-      LSave := FPointTestContext;
-      FPointTestContext := FPointTestContext + ' | active_cs=' + IntToStr(sc.CoordinateSystem);
-      try
-        try
-          // The generator is multiplied by random b to get random q
-          b := TBigInteger.Create(n.BitLength, FRandom);
+      // The generator is multiplied by random b to get random q
+      b := TBigInteger.Create(n.BitLength, FRandom);
 
-          q := sg.Multiply(b).Normalize();
+      q := sg.Multiply(b).Normalize();
 
-          ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
+      ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
 
-          ImplSqrtTest(sc);
-          ImplValidityTest(sc, sg);
-        except
-          on E: Exception do
-            raise EArgumentCryptoLibException.Create(Format(
-              'AddSubMultTwiceEnc: %s - %s', [FPointTestContext, E.Message]));
-        end;
-      finally
-        FPointTestContext := LSave;
-      end;
+      ImplSqrtTest(sc);
+      ImplValidityTest(sc, sg);
     end;
     System.Inc(i);
   end;
@@ -433,11 +409,11 @@ begin
     begin
       nonSquare := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two,
         pMinusOne, FRandom);
-        if (not nonSquare.ModPow(legendreExponent, p).Equals(TBigInteger.One))
+      if (not nonSquare.ModPow(legendreExponent, p).Equals(TBigInteger.One))
       then
       begin
         root := c.FromBigInteger(nonSquare).Sqrt();
-        CheckTrue(root = nil, Ctx('ImplSqrtTest Fp: expected Sqrt=nil for non-residue'));
+        CheckNull(root);
         System.Inc(count);
       end;
     end
@@ -573,7 +549,7 @@ var
   sqrtB, L, T, x, y: IECFieldElement;
   order2, bad2, good2, order4, bad4_1, bad4_2, bad4_3, good4: IECPoint;
 begin
-  CheckTrue(g.IsValid(), Ctx('ImplValidityTest: generator g must be on-curve (IsValid)'));
+  CheckTrue(g.IsValid());
 
   if (TECAlgorithms.IsF2mCurve(c)) then
   begin
@@ -584,31 +560,31 @@ begin
       begin
         sqrtB := c.b.Sqrt();
         order2 := c.CreatePoint(TBigInteger.Zero, sqrtB.ToBigInteger);
-        CheckTrue(order2.Twice().IsInfinity, Ctx('F2m validity: order2.Twice at infinity'));
-        CheckFalse(order2.IsValid(), Ctx('F2m validity: order2 should not be valid'));
+        CheckTrue(order2.Twice().IsInfinity);
+        CheckFalse(order2.IsValid());
         bad2 := g.Add(order2);
-        CheckFalse(bad2.IsValid(), Ctx('F2m validity: bad2'));
+        CheckFalse(bad2.IsValid());
         good2 := bad2.Add(order2);
-        CheckTrue(good2.IsValid(), Ctx('F2m validity: good2'));
+        CheckTrue(good2.IsValid());
 
         if (not h.TestBit(1)) then
         begin
           L := SolveQuadraticEquation(c, c.a);
-          CheckTrue(L <> nil, Ctx('F2m validity: quadratic L'));
+          CheckNotNull(L);
           T := sqrtB;
           x := T.Sqrt();
           y := T.Add(x.Multiply(L));
           order4 := c.CreatePoint(x.ToBigInteger(), y.ToBigInteger());
-          CheckTrue(order4.Twice().Equals(order2), Ctx('F2m validity: order4 order'));
-          CheckFalse(order4.IsValid(), Ctx('F2m validity: order4 not valid'));
+          CheckTrue(order4.Twice().Equals(order2));
+          CheckFalse(order4.IsValid());
           bad4_1 := g.Add(order4);
-          CheckFalse(bad4_1.IsValid(), Ctx('F2m validity: bad4_1'));
+          CheckFalse(bad4_1.IsValid());
           bad4_2 := bad4_1.Add(order4);
-          CheckFalse(bad4_2.IsValid(), Ctx('F2m validity: bad4_2'));
+          CheckFalse(bad4_2.IsValid());
           bad4_3 := bad4_2.Add(order4);
-          CheckFalse(bad4_3.IsValid(), Ctx('F2m validity: bad4_3'));
+          CheckFalse(bad4_3.IsValid());
           good4 := bad4_3.Add(order4);
-          CheckTrue(good4.IsValid(), Ctx('F2m validity: good4'));
+          CheckTrue(good4.IsValid());
         end;
       end;
     end;
@@ -618,7 +594,6 @@ end;
 procedure TTestECPoint.SetUp;
 begin
   inherited;
-  FPointTestContext := '';
   FRandom := TSecureRandom.Create();
   FpInstance := TFp.Create;
   FpInstance.CreatePoints;
@@ -738,50 +713,39 @@ begin
 
   for name in uniqNames do
   begin
-    FPointTestContext := 'curve=' + name;
-    try
-      try
-        x9A := TECNamedCurveTable.GetByName(name);
-        x9B := TCustomNamedCurves.GetByName(name);
+    x9A := TECNamedCurveTable.GetByName(name);
+    x9B := TCustomNamedCurves.GetByName(name);
 
-        if ((x9A <> Nil) and (x9B <> Nil)) then
-        begin
-          AssertIFiniteFieldsEqual(x9A.curve.Field, x9B.curve.Field);
-          AssertBigIntegersEqual(x9A.curve.a.ToBigInteger(),
-            x9B.curve.a.ToBigInteger());
-          AssertBigIntegersEqual(x9A.curve.b.ToBigInteger(),
-            x9B.curve.b.ToBigInteger());
-          AssertOptionalValuesAgree(x9A.curve.Cofactor, x9B.curve.Cofactor);
-          AssertOptionalValuesAgree(x9A.curve.Order, x9B.curve.Order);
+    if ((x9A <> Nil) and (x9B <> Nil)) then
+    begin
+      AssertIFiniteFieldsEqual(x9A.curve.Field, x9B.curve.Field);
+      AssertBigIntegersEqual(x9A.curve.a.ToBigInteger(),
+        x9B.curve.a.ToBigInteger());
+      AssertBigIntegersEqual(x9A.curve.b.ToBigInteger(),
+        x9B.curve.b.ToBigInteger());
+      AssertOptionalValuesAgree(x9A.curve.Cofactor, x9B.curve.Cofactor);
+      AssertOptionalValuesAgree(x9A.curve.Order, x9B.curve.Order);
 
-          AssertPointsEqual('Custom curve base-point inconsistency', x9A.g, x9B.g);
+      AssertPointsEqual('Custom curve base-point inconsistency', x9A.g, x9B.g);
 
-          AssertBigIntegersEqual(x9A.h, x9B.h);
-          AssertBigIntegersEqual(x9A.n, x9B.n);
-          AssertOptionalValuesAgree(x9A.GetSeed(), x9B.GetSeed());
+      AssertBigIntegersEqual(x9A.h, x9B.h);
+      AssertBigIntegersEqual(x9A.n, x9B.n);
+      AssertOptionalValuesAgree(x9A.GetSeed(), x9B.GetSeed());
 
-          k := TBigInteger.Create(x9A.n.BitLength, FRandom);
-          pA := x9A.g.Multiply(k);
-          pB := x9B.g.Multiply(k);
-          AssertPointsEqual('Custom curve multiplication inconsistency', pA, pB);
-        end;
+      k := TBigInteger.Create(x9A.n.BitLength, FRandom);
+      pA := x9A.g.Multiply(k);
+      pB := x9B.g.Multiply(k);
+      AssertPointsEqual('Custom curve multiplication inconsistency', pA, pB);
+    end;
 
-        if (x9A <> Nil) then
-        begin
-          ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9A);
-        end;
+    if (x9A <> Nil) then
+    begin
+      ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9A);
+    end;
 
-        if (x9B <> Nil) then
-        begin
-          ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
-        end;
-      except
-        on E: Exception do
-          raise EArgumentCryptoLibException.Create(Format(
-            'TestAddSubtractMultiplyTwiceEncoding: %s - %s', [FPointTestContext, E.Message]));
-      end;
-    finally
-      FPointTestContext := '';
+    if (x9B <> Nil) then
+    begin
+      ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
     end;
   end;
 end;

@@ -220,7 +220,6 @@ type
 
 implementation
 
-
 { TECPoint.TValidityCallback }
 
 constructor TECPoint.TValidityCallback.Create(const AOuter: IECPoint; ADecompressed,

@@ -54,7 +54,6 @@ uses
   ClpEnumUtilities,
   ClpIX9ECAsn1Objects,
   ClpConverters,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
@@ -274,21 +273,12 @@ procedure TTestPascalCoinECIES.DoTestPascalCoinECIESDecrypt(const AId: String;
   ExpectedOutput: String);
 var
   DecryptedPayload: String;
-  LKeyName: String;
 begin
-  LKeyName := TEnumUtilities.ToString<TKeyType>(AKeyType);
-  try
-    DecryptedPayload := DoPascalCoinECIESDecrypt(AKeyType, RawPrivateKey,
-      PayloadToDecrypt);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create(Format(
-        'PascalCoinECIESDecrypt id=%s key=%s - %s',
-        [AId, LKeyName, E.Message]));
-  end;
+  DecryptedPayload := DoPascalCoinECIESDecrypt(AKeyType, RawPrivateKey,
+    PayloadToDecrypt);
   CheckEquals(ExpectedOutput, DecryptedPayload,
-    Format('Test %s key=%s Failed, Expected "%s" but got "%s"', [AId + '_Decrypt',
-    TEnumUtilities.ToString<TKeyType>(AKeyType), ExpectedOutput, DecryptedPayload]));
+    Format('Test %s Failed, Expected "%s" but got "%s"', [AId + '_Decrypt',
+    ExpectedOutput, DecryptedPayload]));
 end;
 
 procedure TTestPascalCoinECIES.DoTestPascalCoinECIESEncryptDecrypt
@@ -296,31 +286,14 @@ procedure TTestPascalCoinECIES.DoTestPascalCoinECIESEncryptDecrypt
   RawAffineYCoord, PayloadToEncrypt: String);
 var
   ActualOutput: String;
-  Enc: String;
-  LKeyName: String;
 begin
-  LKeyName := TEnumUtilities.ToString<TKeyType>(AKeyType);
-  try
-    Enc := DoPascalCoinECIESEncrypt(AKeyType, RawAffineXCoord, RawAffineYCoord,
-      PayloadToEncrypt);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create(Format(
-        'PascalCoinECIES id=%s key=%s step=encrypt - %s',
-        [AId, LKeyName, E.Message]));
-  end;
-  try
-    ActualOutput := DoPascalCoinECIESDecrypt(AKeyType, RawPrivateKey, Enc);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create(Format(
-        'PascalCoinECIES id=%s key=%s step=decrypt - %s',
-        [AId, LKeyName, E.Message]));
-  end;
+  ActualOutput := DoPascalCoinECIESDecrypt(AKeyType, RawPrivateKey,
+    DoPascalCoinECIESEncrypt(AKeyType, RawAffineXCoord, RawAffineYCoord,
+    PayloadToEncrypt));
 
   CheckEquals(PayloadToEncrypt, ActualOutput,
-    Format('Test %s key=%s Failed, Expected "%s" but got "%s"',
-    [AId + '_EncryptDecrypt', TEnumUtilities.ToString<TKeyType>(AKeyType), PayloadToEncrypt, ActualOutput]));
+    Format('Test %s Failed, Expected "%s" but got "%s"',
+    [AId + '_EncryptDecrypt', PayloadToEncrypt, ActualOutput]));
 end;
 
 procedure TTestPascalCoinECIES.TestPacalCoinECIESDecrypt;

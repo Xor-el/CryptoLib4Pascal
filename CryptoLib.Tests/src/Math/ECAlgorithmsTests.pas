@@ -46,13 +46,6 @@ uses
 
 type
 
-  TLabelledX9 = record
-    Ctx: String;
-    x9: IX9ECParameters;
-  end;
-
-  TLabelledX9Array = array of TLabelledX9;
-
   TTestECAlgorithms = class(TCryptoLibAlgorithmTestCase)
   private
 
@@ -63,10 +56,8 @@ type
   const
     Scale = Int32(4);
 
-    procedure DoTestSumOfMultiplies(const x9: IX9ECParameters;
-      const AContext: String);
-    procedure DoTestSumOfTwoMultiplies(const x9: IX9ECParameters;
-      const AContext: String);
+    procedure DoTestSumOfMultiplies(const x9: IX9ECParameters);
+    procedure DoTestSumOfTwoMultiplies(const x9: IX9ECParameters);
     procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
     function CopyPoints(const ps: TCryptoLibGenericArray<IECPoint>; len: Int32)
       : TCryptoLibGenericArray<IECPoint>;
@@ -76,10 +67,10 @@ type
     function GetRandomPoint(const x9: IX9ECParameters): IECPoint;
     function GetRandomScalar(const x9: IX9ECParameters): TBigInteger;
 
-    function GetLabeledTestCurves: TLabelledX9Array;
+    function GetTestCurves(): TCryptoLibGenericArray<IX9ECParameters>;
 
-    procedure AddTestCurves(x9s: TList<TLabelledX9>; const AName,
-      ASource: String; const x9: IX9ECParameters);
+    procedure AddTestCurves(x9s: TList<IX9ECParameters>;
+      const x9: IX9ECParameters);
 
   protected
     procedure SetUp; override;
@@ -96,16 +87,14 @@ implementation
 
 { TTestECAlgorithms }
 
-procedure TTestECAlgorithms.AddTestCurves(x9s: TList<TLabelledX9>;
-  const AName, ASource: String; const x9: IX9ECParameters);
+procedure TTestECAlgorithms.AddTestCurves(x9s: TList<IX9ECParameters>;
+  const x9: IX9ECParameters);
 var
   curve, c: IECCurve;
   point: IECPoint;
   params: IX9ECParameters;
   coord, i: Int32;
   coords: TCryptoLibInt32Array;
-  LItem: TLabelledX9;
-  LBaseCtx: String;
 begin
   curve := x9.curve;
 
@@ -114,33 +103,16 @@ begin
 
   begin
     coord := coords[i];
-    LBaseCtx := Format('curve=%s | %s | cs=%d', [AName, ASource, coord]);
     if (curve.CoordinateSystem = coord) then
     begin
-      try
-        LItem.Ctx := LBaseCtx;
-        LItem.x9 := x9;
-        x9s.Add(LItem);
-      except
-        on E: Exception do
-          raise EArgumentCryptoLibException.Create(Format(
-            'AddTestCurves (add native cs): %s - %s', [LBaseCtx, E.Message]));
-      end;
+      x9s.Add(x9);
     end
     else if (curve.SupportsCoordinateSystem(coord)) then
     begin
-      try
-        c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
-        point := c.ImportPoint(x9.G);
-        params := TX9ECParameters.Create(c, TX9ECPoint.Create(point, False) as IX9ECPoint, x9.N, x9.H);
-        LItem.Ctx := LBaseCtx;
-        LItem.x9 := params;
-        x9s.Add(LItem);
-      except
-        on E: Exception do
-          raise EArgumentCryptoLibException.Create(Format(
-            'AddTestCurves (import G to alt cs / build params): %s - %s', [LBaseCtx, E.Message]));
-      end;
+      c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
+      point := c.ImportPoint(x9.G);
+      params := TX9ECParameters.Create(c, TX9ECPoint.Create(point, False) as IX9ECPoint, x9.N, x9.H);
+      x9s.Add(params);
     end;
   end;
 end;
@@ -167,8 +139,7 @@ begin
   Result := System.Copy(ks, 0, len);
 end;
 
-procedure TTestECAlgorithms.DoTestSumOfMultiplies(const x9: IX9ECParameters;
-  const AContext: String);
+procedure TTestECAlgorithms.DoTestSumOfMultiplies(const x9: IX9ECParameters);
 var
   points, results: TCryptoLibGenericArray<IECPoint>;
   scalars: TCryptoLibGenericArray<TBigInteger>;
@@ -179,85 +150,60 @@ begin
   System.SetLength(scalars, Scale);
 
   for i := 0 to System.Pred(Scale) do
+
   begin
-    try
-      points[i] := GetRandomPoint(x9);
-      scalars[i] := GetRandomScalar(x9);
-    except
-      on E: Exception do
-        raise EArgumentCryptoLibException.Create(Format(
-          '%s SumOfMultiplies: init point/scalar at slot i=%d - %s',
-          [AContext, i, E.Message]));
-    end;
+    points[i] := GetRandomPoint(x9);
+    scalars[i] := GetRandomScalar(x9);
   end;
 
   u := x9.curve.Infinity;
 
   for i := 0 to System.Pred(Scale) do
   begin
-    try
-      u := u.Add(points[i].Multiply(scalars[i]));
+    u := u.Add(points[i].Multiply(scalars[i]));
 
-      v := TECAlgorithms.SumOfMultiplies(CopyPoints(points, i + 1),
-        CopyScalars(scalars, i + 1));
+    v := TECAlgorithms.SumOfMultiplies(CopyPoints(points, i + 1),
+      CopyScalars(scalars, i + 1));
 
-      results := TCryptoLibGenericArray<IECPoint>.Create(u, v);
-      x9.curve.NormalizeAll(results);
+    results := TCryptoLibGenericArray<IECPoint>.Create(u, v);
+    x9.curve.NormalizeAll(results);
 
-      AssertPointsEqual(Format('%s: ECAlgorithms.SumOfMultiplies is incorrect (i=%d)', [AContext, i]), results[0],
-        results[1]);
-    except
-      on E: Exception do
-        raise EArgumentCryptoLibException.Create(Format(
-          '%s SumOfMultiplies: aggregate step i=%d - %s', [AContext, i, E.Message]));
-    end;
+    AssertPointsEqual('ECAlgorithms.SumOfMultiplies is incorrect', results[0],
+      results[1]);
   end;
 
 end;
 
-procedure TTestECAlgorithms.DoTestSumOfTwoMultiplies(const x9: IX9ECParameters;
-  const AContext: String);
+procedure TTestECAlgorithms.DoTestSumOfTwoMultiplies(const x9: IX9ECParameters);
 var
   i: Int32;
   p, q, u, v, w: IECPoint;
   a, b: TBigInteger;
   results: TCryptoLibGenericArray<IECPoint>;
 begin
-  try
-    p := GetRandomPoint(x9);
-    a := GetRandomScalar(x9);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create(Format(
-        '%s SumOfTwoMult: initial p,a - %s', [AContext, E.Message]));
-  end;
+  p := GetRandomPoint(x9);
+  a := GetRandomScalar(x9);
 
   i := 0;
   while i < Scale do
   begin
-    try
-      q := GetRandomPoint(x9);
-      b := GetRandomScalar(x9);
+    q := GetRandomPoint(x9);
+    b := GetRandomScalar(x9);
 
-      u := p.Multiply(a).Add(q.Multiply(b));
-      v := TECAlgorithms.ShamirsTrick(p, a, q, b);
-      w := TECAlgorithms.SumOfTwoMultiplies(p, a, q, b);
+    u := p.Multiply(a).Add(q.Multiply(b));
+    v := TECAlgorithms.ShamirsTrick(p, a, q, b);
+    w := TECAlgorithms.SumOfTwoMultiplies(p, a, q, b);
 
-      results := TCryptoLibGenericArray<IECPoint>.Create(u, v, w);
-      x9.curve.NormalizeAll(results);
+    results := TCryptoLibGenericArray<IECPoint>.Create(u, v, w);
+    x9.curve.NormalizeAll(results);
 
-      AssertPointsEqual(Format('%s: TECAlgorithms.ShamirsTrick is incorrect (i=%d)', [AContext, i]), results[0],
-        results[1]);
-      AssertPointsEqual(Format('%s: TECAlgorithms.SumOfTwoMultiplies is incorrect (i=%d)', [AContext, i]),
-        results[0], results[2]);
+    AssertPointsEqual('TECAlgorithms.ShamirsTrick is incorrect', results[0],
+      results[1]);
+    AssertPointsEqual('TECAlgorithms.SumOfTwoMultiplies is incorrect',
+      results[0], results[2]);
 
-      p := q;
-      a := b;
-    except
-      on E: Exception do
-        raise EArgumentCryptoLibException.Create(Format(
-          '%s SumOfTwoMult: round i=%d - %s', [AContext, i, E.Message]));
-    end;
+    p := q;
+    a := b;
     System.Inc(i);
   end;
 end;
@@ -273,17 +219,18 @@ begin
   Result := TBigInteger.Create(x9.N.BitLength, FRandom);
 end;
 
-function TTestECAlgorithms.GetLabeledTestCurves: TLabelledX9Array;
+function TTestECAlgorithms.GetTestCurves
+  : TCryptoLibGenericArray<IX9ECParameters>;
 var
   name: string;
-  x9s: TList<TLabelledX9>;
+  x9s: TList<IX9ECParameters>;
   tempList: TList<String>;
   tempDict: TDictionary<String, String>;
   names: TCryptoLibStringArray;
   x9: IX9ECParameters;
   s: string;
 begin
-  x9s := TList<TLabelledX9>.Create();
+  x9s := TList<IX9ECParameters>.Create();
   try
 
     tempList := TList<String>.Create();
@@ -309,27 +256,13 @@ begin
       x9 := TECNamedCurveTable.GetByName(name);
       if (x9 <> Nil) then
       begin
-        try
-          AddTestCurves(x9s, name, 'TECNamed', x9);
-        except
-          on E: Exception do
-            raise EArgumentCryptoLibException.Create(Format(
-              'GetLabeledTestCurves: name=%s op=AddTestCurves(TECNamed) - %s',
-              [name, E.Message]));
-        end;
+        AddTestCurves(x9s, x9);
       end;
 
       x9 := TCustomNamedCurves.GetByName(name);
       if (x9 <> Nil) then
       begin
-        try
-          AddTestCurves(x9s, name, 'TCustomNamed', x9);
-        except
-          on E: Exception do
-            raise EArgumentCryptoLibException.Create(Format(
-              'GetLabeledTestCurves: name=%s op=AddTestCurves(TCustomNamed) - %s',
-              [name, E.Message]));
-        end;
+        AddTestCurves(x9s, x9);
       end;
     end;
     Result := x9s.ToArray;
@@ -355,33 +288,16 @@ var
 begin
   x9 := TCustomNamedCurves.GetByName('secp256r1');
   CheckNotNull(x9);
-  DoTestSumOfMultiplies(x9, 'single secp256r1');
+  DoTestSumOfMultiplies(x9);
 end;
 
 procedure TTestECAlgorithms.TestSumOfMultipliesComplete;
 var
-  LCurves: TLabelledX9Array;
-  LIdx: Int32;
-  L: TLabelledX9;
+  x9: IX9ECParameters;
 begin
-  { Avoid for-in over a function result: on some FPC targets the test harness can
-    report the inner (library) frame/message; keep the curve list in a local and
-    convert failures to a top-level message that always names L.Ctx. }
-  try
-    LCurves := GetLabeledTestCurves;
-  except
-    on E: Exception do
-      raise Exception.Create('TestSumOfMultipliesComplete: GetLabeledTestCurves failed: ' + E.Message);
-  end;
-  for LIdx := 0 to System.High(LCurves) do
+  for x9 in GetTestCurves() do
   begin
-    L := LCurves[LIdx];
-    try
-      DoTestSumOfMultiplies(L.x9, L.Ctx);
-    except
-      on E: Exception do
-        raise Exception.Create(Format('TestSumOfMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
-    end;
+    DoTestSumOfMultiplies(x9);
   end;
 end;
 
@@ -391,30 +307,16 @@ var
 begin
   x9 := TCustomNamedCurves.GetByName('secp256r1');
   CheckNotNull(x9);
-  DoTestSumOfTwoMultiplies(x9, 'single secp256r1');
+  DoTestSumOfTwoMultiplies(x9);
 end;
 
 procedure TTestECAlgorithms.TestSumOfTwoMultipliesComplete;
 var
-  LCurves: TLabelledX9Array;
-  LIdx: Int32;
-  L: TLabelledX9;
+  x9: IX9ECParameters;
 begin
-  try
-    LCurves := GetLabeledTestCurves;
-  except
-    on E: Exception do
-      raise Exception.Create('TestSumOfTwoMultipliesComplete: GetLabeledTestCurves failed: ' + E.Message);
-  end;
-  for LIdx := 0 to System.High(LCurves) do
+  for x9 in GetTestCurves() do
   begin
-    L := LCurves[LIdx];
-    try
-      DoTestSumOfTwoMultiplies(L.x9, L.Ctx);
-    except
-      on E: Exception do
-        raise Exception.Create(Format('TestSumOfTwoMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
-    end;
+    DoTestSumOfTwoMultiplies(x9);
   end;
 
 end;

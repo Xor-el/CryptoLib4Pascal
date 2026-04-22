@@ -695,9 +695,7 @@ var
 begin
   LP := CreatePoint(AX, AY);
   if not LP.IsValid() then
-  begin
     raise EArgumentCryptoLibException.Create(SInvalidPointCoordinates);
-  end;
   Result := LP;
 end;
 

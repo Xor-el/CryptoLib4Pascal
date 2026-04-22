@@ -611,15 +611,12 @@ begin
 end;
 
 function TSecP521R1FieldElement.Equals(const AOther: IECFieldElement): Boolean;
-var
-  LOther: ISecP521R1FieldElement;
 begin
   if (Self as IECFieldElement) = AOther then
     Exit(True);
   if AOther = nil then
     Exit(False);
-  LOther := AOther as ISecP521R1FieldElement;
-  Result := TNat.Eq(17, FX, LOther.X);
+  Result := TNat.Eq(17, FX, (AOther as ISecP521R1FieldElement).X);
 end;
 
 function TSecP521R1FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
