@@ -280,8 +280,7 @@ implementation
 
 uses
   ClpECPoint,
-  ClpMultipliers,
-  ClpSecP521RuntimeTrace;
+  ClpMultipliers;
 
 { TECCurve.TDefaultLookupTable }
 
@@ -697,12 +696,6 @@ begin
   LP := CreatePoint(AX, AY);
   if not LP.IsValid() then
   begin
-    if TSecP521RuntimeTrace.IsEnabled and (GetFieldSize = 521) then
-    begin
-      TSecP521RuntimeTrace.LineFmt('ValidatePoint: not on curve/order fieldSize=521 coord=%d', [GetCoordinateSystem]);
-      TSecP521RuntimeTrace.Line(' x=' + AX.ToString(16));
-      TSecP521RuntimeTrace.Line(' y=' + AY.ToString(16));
-    end;
     raise EArgumentCryptoLibException.Create(SInvalidPointCoordinates);
   end;
   Result := LP;

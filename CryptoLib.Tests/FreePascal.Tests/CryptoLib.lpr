@@ -8,7 +8,7 @@ uses
   StringTests, TagTests, BigIntegerTests, ECAlgorithmsTests, ECPointTests,
   SecP256R1FieldTests, SecP384R1FieldTests, ECDsa5Tests, ECTests,
   NamedCurveTests, SignerUtilitiesTests, SecureRandomTests,
-  DigestRandomNumberTests, FixedPointTests, SecP521FixedRandomTests, NistSp80038aAesTestData, AESTests,
+  DigestRandomNumberTests, FixedPointTests, NistSp80038aAesTestData, AESTests,
   AesLightTests, FusedExternalRegistrationTests,
   AesX86Tests, AESSICTests, SicBulkParityTests, EcbBulkParityTests,
   CbcBulkParityTests, SpeckCryptoPPTestData, SpeckBlockCipherTestBase,

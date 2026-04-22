@@ -222,7 +222,7 @@ uses
   ClpIFusedOcbKernel, ClpIFusedCcmKernel, ClpIFusedEaxKernel, 
   ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesNiAeadResolver, 
   ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
-  ClpPclmulGcmSivKernel, ClpFusedKernelDefaults, ClpSecP521RuntimeTrace;
+  ClpPclmulGcmSivKernel, ClpFusedKernelDefaults;
 
 implementation
 
