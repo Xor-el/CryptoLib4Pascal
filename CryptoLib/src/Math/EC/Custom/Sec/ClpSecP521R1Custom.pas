@@ -52,6 +52,8 @@ type
   class var
     FP: TCryptoLibUInt32Array;
     GTraceReduceSamples: Int32;
+  class function FieldTraceActive: Boolean; static;
+  class function FieldTracePairId: Int32; static;
   class procedure Boot; static;
   class procedure ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt32Array); static;
   class procedure ImplSquare(const AX, AZZ: TCryptoLibUInt32Array); static;
@@ -212,6 +214,16 @@ begin
   Boot;
 end;
 
+class function TSecP521R1Field.FieldTraceActive: Boolean;
+begin
+  Result := TSecP521RuntimeTrace.IsEnabled and (GTraceReduceSamples < 6);
+end;
+
+class function TSecP521R1Field.FieldTracePairId: Int32;
+begin
+  Result := GTraceReduceSamples + 1;
+end;
+
 class procedure TSecP521R1Field.ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt32Array);
 var
   LX16, LY16: UInt32;
@@ -294,6 +306,12 @@ class procedure TSecP521R1Field.Multiply(const AX, AY, AZ: TCryptoLibUInt32Array
 var
   LTT: TCryptoLibUInt32Array;
 begin
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Field op (pair %d) Multiply', [FieldTracePairId]);
+    TSecP521RuntimeTrace.LimbsHex('  Multiply AX', AX, 17);
+    TSecP521RuntimeTrace.LimbsHex('  Multiply AY', AY, 17);
+  end;
   LTT := TNat.Create(33);
   ImplMultiply(AX, AY, LTT);
   Reduce(LTT, AZ);
@@ -301,6 +319,12 @@ end;
 
 class procedure TSecP521R1Field.Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32Array);
 begin
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Field op (pair %d) Multiply (scratch ATT)', [FieldTracePairId]);
+    TSecP521RuntimeTrace.LimbsHex('  Multiply AX', AX, 17);
+    TSecP521RuntimeTrace.LimbsHex('  Multiply AY', AY, 17);
+  end;
   ImplMultiply(AX, AY, ATT);
   Reduce(ATT, AZ);
 end;
@@ -340,6 +364,12 @@ begin
   {$IFDEF DEBUG}
   Assert(AXX[32] shr 18 = 0);
   {$ENDIF DEBUG}
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Reduce IN (pair %d) AXX[32]=%s', [FieldTracePairId, IntToHex(
+      Int64(AXX[32]) and $FFFFFFFF, 8)]);
+    TSecP521RuntimeTrace.LimbsHex('  AXX 33-limb product (pre-reduce)', AXX, 33);
+  end;
   LXX32 := AXX[32];
   LC := TNat.ShiftDownBits(16, AXX, 16, 9, LXX32, AZ, 0) shr 23;
   LC := LC + (LXX32 shr 9);
@@ -350,7 +380,7 @@ begin
     LC := LC and P16;
   end;
   AZ[16] := LC;
-  if TSecP521RuntimeTrace.IsEnabled and (GTraceReduceSamples < 6) then
+  if FieldTraceActive then
   begin
     Inc(GTraceReduceSamples);
     TSecP521RuntimeTrace.Line(Format('Reduce sample #%d AZ[16]=%s LC=%s', [GTraceReduceSamples, IntToHex(
@@ -378,6 +408,11 @@ class procedure TSecP521R1Field.Square(const AX, AZ: TCryptoLibUInt32Array);
 var
   LTT: TCryptoLibUInt32Array;
 begin
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Field op (pair %d) Square', [FieldTracePairId]);
+    TSecP521RuntimeTrace.LimbsHex('  Square AX', AX, 17);
+  end;
   LTT := TNat.Create(33);
   ImplSquare(AX, LTT);
   Reduce(LTT, AZ);
@@ -385,6 +420,11 @@ end;
 
 class procedure TSecP521R1Field.Square(const AX, AZ, ATT: TCryptoLibUInt32Array);
 begin
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Field op (pair %d) Square (scratch ATT)', [FieldTracePairId]);
+    TSecP521RuntimeTrace.LimbsHex('  Square AX', AX, 17);
+  end;
   ImplSquare(AX, ATT);
   Reduce(ATT, AZ);
 end;
@@ -393,36 +433,77 @@ class procedure TSecP521R1Field.SquareN(const AX: TCryptoLibUInt32Array; AN: Int
   const AZ: TCryptoLibUInt32Array);
 var
   LTT: TCryptoLibUInt32Array;
+  LRem: Int32;
+  LStep: Int32;
+  LTotal: Int32;
 begin
   {$IFDEF DEBUG}
   Assert(AN > 0);
   {$ENDIF DEBUG}
+  LTotal := AN;
+  LRem := AN;
+  LStep := 1;
   LTT := TNat.Create(33);
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Field op (pair %d) SquareN %d/%d (input=AX)', [FieldTracePairId, LStep,
+      LTotal]);
+    TSecP521RuntimeTrace.LimbsHex('  SquareN AX', AX, 17);
+  end;
   ImplSquare(AX, LTT);
   Reduce(LTT, AZ);
-  Dec(AN);
-  while AN > 0 do
+  Dec(LRem);
+  Inc(LStep);
+  while LRem > 0 do
   begin
+    if FieldTraceActive then
+    begin
+      TSecP521RuntimeTrace.LineFmt('Field op (pair %d) SquareN %d/%d (input=prev AZ)', [FieldTracePairId,
+        LStep, LTotal]);
+      TSecP521RuntimeTrace.LimbsHex('  SquareN AZ in', AZ, 17);
+    end;
     ImplSquare(AZ, LTT);
     Reduce(LTT, AZ);
-    Dec(AN);
+    Dec(LRem);
+    Inc(LStep);
   end;
 end;
 
 class procedure TSecP521R1Field.SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
   const AZ, ATT: TCryptoLibUInt32Array);
+var
+  LRem: Int32;
+  LStep: Int32;
+  LTotal: Int32;
 begin
   {$IFDEF DEBUG}
   Assert(AN > 0);
   {$ENDIF DEBUG}
+  LTotal := AN;
+  LRem := AN;
+  LStep := 1;
+  if FieldTraceActive then
+  begin
+    TSecP521RuntimeTrace.LineFmt('Field op (pair %d) SquareN %d/%d (input=AX) ATT', [FieldTracePairId, LStep,
+      LTotal]);
+    TSecP521RuntimeTrace.LimbsHex('  SquareN AX', AX, 17);
+  end;
   ImplSquare(AX, ATT);
   Reduce(ATT, AZ);
-  Dec(AN);
-  while AN > 0 do
+  Dec(LRem);
+  Inc(LStep);
+  while LRem > 0 do
   begin
+    if FieldTraceActive then
+    begin
+      TSecP521RuntimeTrace.LineFmt('Field op (pair %d) SquareN %d/%d (input=prev AZ) ATT', [FieldTracePairId,
+        LStep, LTotal]);
+      TSecP521RuntimeTrace.LimbsHex('  SquareN AZ in', AZ, 17);
+    end;
     ImplSquare(AZ, ATT);
     Reduce(ATT, AZ);
-    Dec(AN);
+    Dec(LRem);
+    Inc(LStep);
   end;
 end;
 
