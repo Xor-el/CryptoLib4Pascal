@@ -291,9 +291,9 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 |---|:---:|:---:|
 | Windows (XP and later) | ✅ | ✅ |
 | Linux | ❓ | ✅ |
-| macOS | ❓ | ❓ |
-| Oracle Solaris | ➖ | ❓ |
-| BSD | ➖ | ❓ |
+| macOS | ❓ | ✅ |
+| Oracle Solaris | ➖ | ✅ |
+| BSD (FreeBSD) | ➖ | ✅ |
 | Android | ❓ | ❓ |
 | iOS 2.0+ | ❓ | ❓ |
 
