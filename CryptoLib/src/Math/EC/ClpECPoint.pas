@@ -220,6 +220,9 @@ type
 
 implementation
 
+uses
+  ClpSecP521RuntimeTrace;
+
 { TECPoint.TValidityCallback }
 
 constructor TECPoint.TValidityCallback.Create(const AOuter: IECPoint; ADecompressed,
@@ -862,6 +865,12 @@ begin
   end;
   Rhs := X.Square().Add(A).Multiply(X).Add(B);
   Result := Lhs.Equals(Rhs);
+  if (not Result) and (LCurve.GetFieldSize = 521) and TSecP521RuntimeTrace.IsEnabled then
+  begin
+    TSecP521RuntimeTrace.LineFmt('SatisfiesCurveEquation P-521 failed coord=%d', [LCoord]);
+    TSecP521RuntimeTrace.Line(' lhs=' + Lhs.ToBigInteger.ToString(16));
+    TSecP521RuntimeTrace.Line(' rhs=' + Rhs.ToBigInteger.ToString(16));
+  end;
 end;
 
 function TAbstractFpPoint.Subtract(const AB: IECPoint): IECPoint;

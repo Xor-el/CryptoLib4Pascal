@@ -360,16 +360,27 @@ end;
 
 procedure TTestECAlgorithms.TestSumOfMultipliesComplete;
 var
+  LCurves: TLabelledX9Array;
+  LIdx: Int32;
   L: TLabelledX9;
 begin
-  for L in GetLabeledTestCurves() do
+  { Avoid for-in over a function result: on some FPC targets the test harness can
+    report the inner (library) frame/message; keep the curve list in a local and
+    convert failures to a top-level message that always names L.Ctx. }
+  try
+    LCurves := GetLabeledTestCurves;
+  except
+    on E: Exception do
+      raise Exception.Create('TestSumOfMultipliesComplete: GetLabeledTestCurves failed: ' + E.Message);
+  end;
+  for LIdx := 0 to System.High(LCurves) do
   begin
+    L := LCurves[LIdx];
     try
       DoTestSumOfMultiplies(L.x9, L.Ctx);
     except
       on E: Exception do
-        raise EArgumentCryptoLibException.Create(Format(
-          'TestSumOfMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
+        raise Exception.Create(Format('TestSumOfMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
     end;
   end;
 end;
@@ -385,16 +396,24 @@ end;
 
 procedure TTestECAlgorithms.TestSumOfTwoMultipliesComplete;
 var
+  LCurves: TLabelledX9Array;
+  LIdx: Int32;
   L: TLabelledX9;
 begin
-  for L in GetLabeledTestCurves() do
+  try
+    LCurves := GetLabeledTestCurves;
+  except
+    on E: Exception do
+      raise Exception.Create('TestSumOfTwoMultipliesComplete: GetLabeledTestCurves failed: ' + E.Message);
+  end;
+  for LIdx := 0 to System.High(LCurves) do
   begin
+    L := LCurves[LIdx];
     try
       DoTestSumOfTwoMultiplies(L.x9, L.Ctx);
     except
       on E: Exception do
-        raise EArgumentCryptoLibException.Create(Format(
-          'TestSumOfTwoMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
+        raise Exception.Create(Format('TestSumOfTwoMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
     end;
   end;
 

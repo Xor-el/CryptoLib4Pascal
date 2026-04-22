@@ -195,4 +195,7 @@
 
 {$ENDIF}
 
+{ P-521 CI: stderr logging (see ClpSecP521RuntimeTrace). Off: comment out TRACE_ALWAYS and set CRYPTOLIB_SECP521_TRACE=0 (or unset). }
+{$DEFINE CRYPTOLIB_SECP521_TRACE_ALWAYS}
+
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)

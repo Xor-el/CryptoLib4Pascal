@@ -51,6 +51,7 @@ type
     P16 = UInt32($1FF);
   class var
     FP: TCryptoLibUInt32Array;
+    GTraceReduceSamples: Int32;
   class procedure Boot; static;
   class procedure ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt32Array); static;
   class procedure ImplSquare(const AX, AZZ: TCryptoLibUInt32Array); static;
@@ -193,6 +194,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpSecP521RuntimeTrace;
 
 { TSecP521R1Field }
 
@@ -343,6 +347,13 @@ begin
     LC := LC and P16;
   end;
   AZ[16] := LC;
+  if TSecP521RuntimeTrace.IsEnabled and (GTraceReduceSamples < 6) then
+  begin
+    Inc(GTraceReduceSamples);
+    TSecP521RuntimeTrace.Line(Format('Reduce sample #%d AZ[16]=%s LC=%s', [GTraceReduceSamples, IntToHex(
+      Int64(AZ[16]) and $FFFFFFFF, 8), IntToHex(Int64(LC) and $FFFFFFFF, 8)]));
+    TSecP521RuntimeTrace.LimbsHex('  AZ', AZ, 17);
+  end;
 end;
 
 class procedure TSecP521R1Field.Reduce23(const AZ: TCryptoLibUInt32Array);
@@ -602,12 +613,21 @@ begin
 end;
 
 function TSecP521R1FieldElement.Equals(const AOther: IECFieldElement): Boolean;
+var
+  LOther: ISecP521R1FieldElement;
 begin
   if (Self as IECFieldElement) = AOther then
     Exit(True);
   if AOther = nil then
     Exit(False);
-  Result := TNat.Eq(17, FX, (AOther as ISecP521R1FieldElement).X);
+  LOther := AOther as ISecP521R1FieldElement;
+  Result := TNat.Eq(17, FX, LOther.X);
+  if (not Result) and TSecP521RuntimeTrace.IsEnabled then
+  begin
+    TSecP521RuntimeTrace.Line('TSecP521R1FieldElement.Equals: limb mismatch');
+    TSecP521RuntimeTrace.LimbsHex('  a', FX, 17);
+    TSecP521RuntimeTrace.LimbsHex('  b', LOther.X, 17);
+  end;
 end;
 
 function TSecP521R1FieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
