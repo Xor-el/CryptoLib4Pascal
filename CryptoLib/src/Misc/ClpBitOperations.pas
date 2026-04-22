@@ -226,36 +226,64 @@ begin
 {$ENDIF FPC}
 end;
 
+{
+  REVERT NOTE (keep when editing):
+  The four Negative*Shift32/64 bodies below were changed from the original
+    Result := AValue shl (32 + AShiftBits);
+    Result := AValue shr (32 + AShiftBits);
+  (and 64-bit analogues) to explicit UInt64 shifts and a local 's', because FPC
+  on Linux armv7 (32-bit ARM) produced wrong SecP521 field reduce / TNat.ShiftDownBits.
+  Related: ClpSecP521R1Custom.ImplMultiply / ImplSquare top limb uses UInt64 products.
+  If you undo this, restore the one-liners and remove the 's' variable; retest armv7.
+}
+
 class function TBitOperations.NegativeLeftShift32(AValue: UInt32; AShiftBits: Int32): UInt32;
+var
+  s: Int32;
 begin
+  s := 32 + AShiftBits;
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
+  System.Assert((s >= 0) and (s < 32));
 {$ENDIF DEBUG}
-  Result := AValue shl (32 + AShiftBits);
+  { UInt64 avoids fragile 32-bit variable-shift codegen on FPC Linux arm (e.g. armv7). }
+  Result := UInt32(UInt64(AValue) shl UInt64(s));
 end;
 
 class function TBitOperations.NegativeRightShift32(AValue: UInt32; AShiftBits: Int32): UInt32;
+var
+  s: Int32;
 begin
+  s := 32 + AShiftBits;
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
+  System.Assert((s >= 0) and (s < 32));
 {$ENDIF DEBUG}
-  Result := AValue shr (32 + AShiftBits);
+  Result := UInt32(UInt64(AValue) shr UInt64(s));
 end;
 
 class function TBitOperations.NegativeLeftShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
+var
+  s: Int32;
 begin
+  s := 64 + AShiftBits;
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
+  System.Assert((s >= 0) and (s < 64));
 {$ENDIF DEBUG}
-  Result := AValue shl (64 + AShiftBits);
+  Result := UInt64(AValue) shl UInt64(s);
 end;
 
 class function TBitOperations.NegativeRightShift64(AValue: UInt64; AShiftBits: Int32): UInt64;
+var
+  s: Int32;
 begin
+  s := 64 + AShiftBits;
 {$IFDEF DEBUG}
   System.Assert(AShiftBits < 0);
+  System.Assert((s >= 0) and (s < 64));
 {$ENDIF DEBUG}
-  Result := AValue shr (64 + AShiftBits);
+  Result := UInt64(AValue) shr UInt64(s);
 end;
 
 class function TBitOperations.RotateLeft8(AValue: Byte; AN: Int32): Byte;

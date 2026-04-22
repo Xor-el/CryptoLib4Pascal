@@ -219,7 +219,9 @@ begin
   TNat512.Mul(AX, AY, AZZ);
   LX16 := AX[16];
   LY16 := AY[16];
-  AZZ[32] := TNat.Mul31BothAdd(16, LX16, AY, LY16, AX, AZZ, 16) + (LX16 * LY16);
+  { UInt64 product: 32-bit targets may reduce UInt32*UInt32 to 32 bits before add.
+    Revert with ClpBitOperations Negative* shift note (armv7 hardening). }
+  AZZ[32] := TNat.Mul31BothAdd(16, LX16, AY, LY16, AX, AZZ, 16) + UInt32(UInt64(LX16) * UInt64(LY16));
 end;
 
 class procedure TSecP521R1Field.ImplSquare(const AX, AZZ: TCryptoLibUInt32Array);
@@ -228,7 +230,8 @@ var
 begin
   TNat512.Square(AX, AZZ);
   LX16 := AX[16];
-  AZZ[32] := TNat.MulWordAddTo(16, LX16 shl 1, AX, 0, AZZ, 16) + (LX16 * LX16);
+  { See UInt64 product comment on ImplMultiply (paired armv7 fix). }
+  AZZ[32] := TNat.MulWordAddTo(16, LX16 shl 1, AX, 0, AZZ, 16) + UInt32(UInt64(LX16) * UInt64(LX16));
 end;
 
 class procedure TSecP521R1Field.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
