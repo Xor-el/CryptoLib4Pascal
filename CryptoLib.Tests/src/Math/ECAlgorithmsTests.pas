@@ -165,26 +165,38 @@ begin
   System.SetLength(scalars, Scale);
 
   for i := 0 to System.Pred(Scale) do
-
   begin
-    points[i] := GetRandomPoint(x9);
-    scalars[i] := GetRandomScalar(x9);
+    try
+      points[i] := GetRandomPoint(x9);
+      scalars[i] := GetRandomScalar(x9);
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.Create(Format(
+          '%s SumOfMultiplies: init point/scalar at slot i=%d — %s',
+          [AContext, i, E.Message]));
+    end;
   end;
 
   u := x9.curve.Infinity;
 
   for i := 0 to System.Pred(Scale) do
   begin
-    u := u.Add(points[i].Multiply(scalars[i]));
+    try
+      u := u.Add(points[i].Multiply(scalars[i]));
 
-    v := TECAlgorithms.SumOfMultiplies(CopyPoints(points, i + 1),
-      CopyScalars(scalars, i + 1));
+      v := TECAlgorithms.SumOfMultiplies(CopyPoints(points, i + 1),
+        CopyScalars(scalars, i + 1));
 
-    results := TCryptoLibGenericArray<IECPoint>.Create(u, v);
-    x9.curve.NormalizeAll(results);
+      results := TCryptoLibGenericArray<IECPoint>.Create(u, v);
+      x9.curve.NormalizeAll(results);
 
-    AssertPointsEqual(Format('%s: ECAlgorithms.SumOfMultiplies is incorrect (i=%d)', [AContext, i]), results[0],
-      results[1]);
+      AssertPointsEqual(Format('%s: ECAlgorithms.SumOfMultiplies is incorrect (i=%d)', [AContext, i]), results[0],
+        results[1]);
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.Create(Format(
+          '%s SumOfMultiplies: aggregate step i=%d — %s', [AContext, i, E.Message]));
+    end;
   end;
 
 end;
@@ -197,29 +209,41 @@ var
   a, b: TBigInteger;
   results: TCryptoLibGenericArray<IECPoint>;
 begin
-  p := GetRandomPoint(x9);
-  a := GetRandomScalar(x9);
+  try
+    p := GetRandomPoint(x9);
+    a := GetRandomScalar(x9);
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create(Format(
+        '%s SumOfTwoMult: initial p,a — %s', [AContext, E.Message]));
+  end;
 
   i := 0;
   while i < Scale do
   begin
-    q := GetRandomPoint(x9);
-    b := GetRandomScalar(x9);
+    try
+      q := GetRandomPoint(x9);
+      b := GetRandomScalar(x9);
 
-    u := p.Multiply(a).Add(q.Multiply(b));
-    v := TECAlgorithms.ShamirsTrick(p, a, q, b);
-    w := TECAlgorithms.SumOfTwoMultiplies(p, a, q, b);
+      u := p.Multiply(a).Add(q.Multiply(b));
+      v := TECAlgorithms.ShamirsTrick(p, a, q, b);
+      w := TECAlgorithms.SumOfTwoMultiplies(p, a, q, b);
 
-    results := TCryptoLibGenericArray<IECPoint>.Create(u, v, w);
-    x9.curve.NormalizeAll(results);
+      results := TCryptoLibGenericArray<IECPoint>.Create(u, v, w);
+      x9.curve.NormalizeAll(results);
 
-    AssertPointsEqual(Format('%s: TECAlgorithms.ShamirsTrick is incorrect (i=%d)', [AContext, i]), results[0],
-      results[1]);
-    AssertPointsEqual(Format('%s: TECAlgorithms.SumOfTwoMultiplies is incorrect (i=%d)', [AContext, i]),
-      results[0], results[2]);
+      AssertPointsEqual(Format('%s: TECAlgorithms.ShamirsTrick is incorrect (i=%d)', [AContext, i]), results[0],
+        results[1]);
+      AssertPointsEqual(Format('%s: TECAlgorithms.SumOfTwoMultiplies is incorrect (i=%d)', [AContext, i]),
+        results[0], results[2]);
 
-    p := q;
-    a := b;
+      p := q;
+      a := b;
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.Create(Format(
+          '%s SumOfTwoMult: round i=%d — %s', [AContext, i, E.Message]));
+    end;
     System.Inc(i);
   end;
 end;

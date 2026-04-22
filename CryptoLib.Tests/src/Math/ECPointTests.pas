@@ -393,15 +393,21 @@ begin
       LSave := FPointTestContext;
       FPointTestContext := FPointTestContext + ' | active_cs=' + IntToStr(sc.CoordinateSystem);
       try
-        // The generator is multiplied by random b to get random q
-        b := TBigInteger.Create(n.BitLength, FRandom);
+        try
+          // The generator is multiplied by random b to get random q
+          b := TBigInteger.Create(n.BitLength, FRandom);
 
-        q := sg.Multiply(b).Normalize();
+          q := sg.Multiply(b).Normalize();
 
-        ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
+          ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
 
-        ImplSqrtTest(sc);
-        ImplValidityTest(sc, sg);
+          ImplSqrtTest(sc);
+          ImplValidityTest(sc, sg);
+        except
+          on E: Exception do
+            raise EArgumentCryptoLibException.Create(Format(
+              'AddSubMultTwiceEnc: %s — %s', [FPointTestContext, E.Message]));
+        end;
       finally
         FPointTestContext := LSave;
       end;
