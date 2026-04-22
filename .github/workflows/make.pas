@@ -283,14 +283,13 @@ end;
 procedure RunTestProject(const APath: string);
 var
   BinaryPath, TestOutput: string;
-  TestArgs: array of string;
 begin
   BinaryPath := BuildProject(APath);
   if BinaryPath = '' then
     Exit;
-  TestArgs := ['--all', '--format=plain', '--progress'];
   try
-    if RunCommand(BinaryPath, TestArgs, TestOutput) then
+    if RunCommand(BinaryPath, ['--all', '--format=plain', '--progress'],
+      TestOutput) then
       WriteLn(stderr, TestOutput)
     else
     begin

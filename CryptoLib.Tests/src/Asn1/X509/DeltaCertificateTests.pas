@@ -180,50 +180,14 @@ end;
 procedure TDeltaCertificateTest.TestDraftDualUseECDsaEndEntity;
 var
   LEcRootCert, LBaseCert, LDeltaCert, LExtCert: IX509Certificate;
-  LOk: Boolean;
 begin
-  try
-    LEcRootCert := ReadCert(FDeltaEcDsaRoot);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create('TestDraftDualUse: step=ReadCert(ec_dsa_root) — ' + E.Message);
-  end;
-  try
-    LBaseCert := ReadCert(FDeltaEcDsaDualXchEe);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create('TestDraftDualUse: step=ReadCert(ec_dsa_dual_xch_ee) — ' + E.Message);
-  end;
-  try
-    LOk := LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create('TestDraftDualUse: step=verifyBaseAgainstRoot — ' + E.Message);
-  end;
-  Check(LOk, 'TestDraftDualUseECDsaEndEntity: base cert signature valid (ec_dsa_root)');
-
-  try
-    LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create('TestDraftDualUse: step=ExtractDeltaCertificate — ' + E.Message);
-  end;
-  try
-    LExtCert := ReadCert(FDeltaEcDsaDualSigEe);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create('TestDraftDualUse: step=ReadCert(ec_dsa_dual_sig_ee) — ' + E.Message);
-  end;
-  Check(AreEqual(LExtCert.GetEncoded, LDeltaCert.GetEncoded),
-    'TestDraftDualUseECDsaEndEntity: extracted delta bytes equal ec_dsa_dual_sig_ee');
-  try
-    LOk := LDeltaCert.IsSignatureValid(LEcRootCert.GetPublicKey);
-  except
-    on E: Exception do
-      raise EArgumentCryptoLibException.Create('TestDraftDualUse: step=verifyDeltaAgainstRoot — ' + E.Message);
-  end;
-  Check(LOk,
-    'TestDraftDualUseECDsaEndEntity: delta cert signature valid (ec_dsa_root) — can fail in EC if invalid point on verify');
+  LEcRootCert := ReadCert(FDeltaEcDsaRoot);
+  LBaseCert := ReadCert(FDeltaEcDsaDualXchEe);
+  Check(LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'base signed by ec_dsa_root');
+  LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
+  LExtCert := ReadCert(FDeltaEcDsaDualSigEe);
+  Check(AreEqual(LExtCert.GetEncoded, LDeltaCert.GetEncoded), 'delta equals ec_dsa_dual_sig_ee');
+  Check(LDeltaCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'delta signed by ec_dsa_root');
 end;
 
 procedure TDeltaCertificateTest.TestSameName;
