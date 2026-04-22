@@ -16,6 +16,10 @@ uses
 const
   Target: string = 'CryptoLib.Tests';
 
+  { When non-empty, CryptoLib console tests run only this fpcunit suite
+    (see consoletestrunner --suite=). Set to '' to run the full suite. }
+  CryptoLibFpcUnitSuite: string = 'TTestSecP521FixedRandom';
+
   // ANSI color codes
   CSI_Reset   = #27'[0m';
   CSI_Red     = #27'[31m';
@@ -283,13 +287,17 @@ end;
 procedure RunTestProject(const APath: string);
 var
   BinaryPath, TestOutput: string;
+  TestArgs: array of string;
 begin
   BinaryPath := BuildProject(APath);
   if BinaryPath = '' then
     Exit;
+  if CryptoLibFpcUnitSuite <> '' then
+    TestArgs := ['--suite=' + CryptoLibFpcUnitSuite, '--format=plain', '--progress']
+  else
+    TestArgs := ['--all', '--format=plain', '--progress'];
   try
-    if RunCommand(BinaryPath, ['--all', '--format=plain', '--progress'],
-      TestOutput) then
+    if RunCommand(BinaryPath, TestArgs, TestOutput) then
       WriteLn(stderr, TestOutput)
     else
     begin

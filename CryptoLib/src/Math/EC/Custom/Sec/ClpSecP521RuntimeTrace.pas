@@ -1,4 +1,4 @@
-{ Optional SecP521 diagnostics: write rate-limited lines to stderr (CI-captured). }
+{ Optional SecP521 diagnostics (console / CI: use Output). }
 unit ClpSecP521RuntimeTrace;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
@@ -26,8 +26,6 @@ type
 
 implementation
 
-{ ErrOutput: FPC System standard error (Console + most CI). }
-
 class function TSecP521RuntimeTrace.IsEnabled: Boolean;
 var
   L: String;
@@ -53,7 +51,8 @@ begin
   Inc(FLineCount);
   try
     {$IFDEF FPC}
-    WriteLn(ErrOutput, '[CryptoLib P-521 #', FLineCount, '/', MaxLines, '] ', AMsg);
+    WriteLn(Output, '[CryptoLib P-521 #', FLineCount, '/', MaxLines, '] ', AMsg);
+    Flush(Output);
     {$ENDIF FPC}
   except
   end;

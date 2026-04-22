@@ -9,7 +9,7 @@ uses
   BigIntegerTests, ECAlgorithmsTests, ECPointTests, SecP256R1FieldTests,
   SecP384R1FieldTests, ECDsa5Tests, ECTests, NamedCurveTests,
   SignerUtilitiesTests, SecureRandomTests, DigestRandomNumberTests,
-  FixedPointTests, NistSp80038aAesTestData, AESTests, AesLightTests,
+  FixedPointTests, SecP521FixedRandomTests, NistSp80038aAesTestData, AESTests, AesLightTests,
   FusedExternalRegistrationTests,
   AesX86Tests, AESSICTests, SicBulkParityTests, EcbBulkParityTests,
   CbcBulkParityTests, SpeckCryptoPPTestData, SpeckBlockCipherTestBase,
