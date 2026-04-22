@@ -183,11 +183,14 @@ var
 begin
   LEcRootCert := ReadCert(FDeltaEcDsaRoot);
   LBaseCert := ReadCert(FDeltaEcDsaDualXchEe);
-  Check(LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'base signed by ec_dsa_root');
+  Check(LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey),
+    'TestDraftDualUseECDsaEndEntity: base cert signature valid (ec_dsa_root)');
   LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
   LExtCert := ReadCert(FDeltaEcDsaDualSigEe);
-  Check(AreEqual(LExtCert.GetEncoded, LDeltaCert.GetEncoded), 'delta equals ec_dsa_dual_sig_ee');
-  Check(LDeltaCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'delta signed by ec_dsa_root');
+  Check(AreEqual(LExtCert.GetEncoded, LDeltaCert.GetEncoded),
+    'TestDraftDualUseECDsaEndEntity: extracted delta bytes equal ec_dsa_dual_sig_ee');
+  Check(LDeltaCert.IsSignatureValid(LEcRootCert.GetPublicKey),
+    'TestDraftDualUseECDsaEndEntity: delta cert signature valid (ec_dsa_root) — can fail in EC if invalid point on verify');
 end;
 
 procedure TDeltaCertificateTest.TestSameName;

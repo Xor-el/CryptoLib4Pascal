@@ -109,7 +109,10 @@ type
     FRandom: ISecureRandom;
     FpInstance: TFp;
     F2mInstance: TF2m;
+    /// <summary>When non-empty, prepended to assertion text (all-curves test).</summary>
+    FPointTestContext: String;
 
+    function Ctx(const msg: String): String;
     procedure AssertPointsEqual(const msg: String; const a, b: IECPoint);
     procedure AssertBigIntegersEqual(const a, b: TBigInteger);
     procedure AssertIFiniteFieldsEqual(const a, b: IFiniteField);
@@ -268,19 +271,27 @@ implementation
 
 { TTestECPoint }
 
+function TTestECPoint.Ctx(const msg: String): String;
+begin
+  if FPointTestContext <> '' then
+    Result := '[' + FPointTestContext + '] ' + msg
+  else
+    Result := msg;
+end;
+
 procedure TTestECPoint.AssertECFieldElementsEqual(const a, b: IECFieldElement);
 begin
-  CheckEquals(True, a.Equals(b));
+  CheckEquals(True, a.Equals(b), Ctx('EC field element compare'));
 end;
 
 procedure TTestECPoint.AssertBigIntegersEqual(const a, b: TBigInteger);
 begin
-  CheckEquals(True, a.Equals(b));
+  CheckEquals(True, a.Equals(b), Ctx('BigInteger compare (curve param)'));
 end;
 
 procedure TTestECPoint.AssertIFiniteFieldsEqual(const a, b: IFiniteField);
 begin
-  CheckEquals(True, a.Equals(b));
+  CheckEquals(True, a.Equals(b), Ctx('IFiniteField compare'));
 end;
 
 procedure TTestECPoint.AssertOptionalValuesAgree(const a, b: TBigInteger);
@@ -302,8 +313,8 @@ end;
 procedure TTestECPoint.AssertPointsEqual(const msg: String;
   const a, b: IECPoint);
 begin
-  CheckEquals(True, a.Equals(b), msg);
-  CheckEquals(True, b.Equals(a), msg);
+  CheckEquals(True, a.Equals(b), Ctx(msg));
+  CheckEquals(True, b.Equals(a), Ctx(msg));
 end;
 
 function TTestECPoint.ConfigureBasepoint(const curve: IECCurve;
@@ -357,6 +368,7 @@ var
   c, sc: IECCurve;
   coords: TCryptoLibInt32Array;
   i, coord: Int32;
+  LSave: String;
 begin
   n := x9ECParameters.n;
   g := x9ECParameters.g;
@@ -378,15 +390,21 @@ begin
         sg := sc.ImportPoint(g);
       end;
 
-      // The generator is multiplied by random b to get random q
-      b := TBigInteger.Create(n.BitLength, FRandom);
+      LSave := FPointTestContext;
+      FPointTestContext := FPointTestContext + ' | active_cs=' + IntToStr(sc.CoordinateSystem);
+      try
+        // The generator is multiplied by random b to get random q
+        b := TBigInteger.Create(n.BitLength, FRandom);
 
-      q := sg.Multiply(b).Normalize();
+        q := sg.Multiply(b).Normalize();
 
-      ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
+        ImplAddSubtractMultiplyTwiceEncodingTest(sc, q, n);
 
-      ImplSqrtTest(sc);
-      ImplValidityTest(sc, sg);
+        ImplSqrtTest(sc);
+        ImplValidityTest(sc, sg);
+      finally
+        FPointTestContext := LSave;
+      end;
     end;
     System.Inc(i);
   end;
@@ -409,11 +427,11 @@ begin
     begin
       nonSquare := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.Two,
         pMinusOne, FRandom);
-      if (not nonSquare.ModPow(legendreExponent, p).Equals(TBigInteger.One))
+        if (not nonSquare.ModPow(legendreExponent, p).Equals(TBigInteger.One))
       then
       begin
         root := c.FromBigInteger(nonSquare).Sqrt();
-        CheckNull(root);
+        CheckTrue(root = nil, Ctx('ImplSqrtTest Fp: expected Sqrt=nil for non-residue'));
         System.Inc(count);
       end;
     end
@@ -549,7 +567,7 @@ var
   sqrtB, L, T, x, y: IECFieldElement;
   order2, bad2, good2, order4, bad4_1, bad4_2, bad4_3, good4: IECPoint;
 begin
-  CheckTrue(g.IsValid());
+  CheckTrue(g.IsValid(), Ctx('ImplValidityTest: generator g must be on-curve (IsValid)'));
 
   if (TECAlgorithms.IsF2mCurve(c)) then
   begin
@@ -560,31 +578,31 @@ begin
       begin
         sqrtB := c.b.Sqrt();
         order2 := c.CreatePoint(TBigInteger.Zero, sqrtB.ToBigInteger);
-        CheckTrue(order2.Twice().IsInfinity);
-        CheckFalse(order2.IsValid());
+        CheckTrue(order2.Twice().IsInfinity, Ctx('F2m validity: order2.Twice at infinity'));
+        CheckFalse(order2.IsValid(), Ctx('F2m validity: order2 should not be valid'));
         bad2 := g.Add(order2);
-        CheckFalse(bad2.IsValid());
+        CheckFalse(bad2.IsValid(), Ctx('F2m validity: bad2'));
         good2 := bad2.Add(order2);
-        CheckTrue(good2.IsValid());
+        CheckTrue(good2.IsValid(), Ctx('F2m validity: good2'));
 
         if (not h.TestBit(1)) then
         begin
           L := SolveQuadraticEquation(c, c.a);
-          CheckNotNull(L);
+          CheckTrue(L <> nil, Ctx('F2m validity: quadratic L'));
           T := sqrtB;
           x := T.Sqrt();
           y := T.Add(x.Multiply(L));
           order4 := c.CreatePoint(x.ToBigInteger(), y.ToBigInteger());
-          CheckTrue(order4.Twice().Equals(order2));
-          CheckFalse(order4.IsValid());
+          CheckTrue(order4.Twice().Equals(order2), Ctx('F2m validity: order4 order'));
+          CheckFalse(order4.IsValid(), Ctx('F2m validity: order4 not valid'));
           bad4_1 := g.Add(order4);
-          CheckFalse(bad4_1.IsValid());
+          CheckFalse(bad4_1.IsValid(), Ctx('F2m validity: bad4_1'));
           bad4_2 := bad4_1.Add(order4);
-          CheckFalse(bad4_2.IsValid());
+          CheckFalse(bad4_2.IsValid(), Ctx('F2m validity: bad4_2'));
           bad4_3 := bad4_2.Add(order4);
-          CheckFalse(bad4_3.IsValid());
+          CheckFalse(bad4_3.IsValid(), Ctx('F2m validity: bad4_3'));
           good4 := bad4_3.Add(order4);
-          CheckTrue(good4.IsValid());
+          CheckTrue(good4.IsValid(), Ctx('F2m validity: good4'));
         end;
       end;
     end;
@@ -594,6 +612,7 @@ end;
 procedure TTestECPoint.SetUp;
 begin
   inherited;
+  FPointTestContext := '';
   FRandom := TSecureRandom.Create();
   FpInstance := TFp.Create;
   FpInstance.CreatePoints;
@@ -713,6 +732,8 @@ begin
 
   for name in uniqNames do
   begin
+    FPointTestContext := 'curve=' + name;
+    try
     x9A := TECNamedCurveTable.GetByName(name);
     x9B := TCustomNamedCurves.GetByName(name);
 
@@ -746,6 +767,9 @@ begin
     if (x9B <> Nil) then
     begin
       ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
+    end;
+    finally
+      FPointTestContext := '';
     end;
   end;
 end;

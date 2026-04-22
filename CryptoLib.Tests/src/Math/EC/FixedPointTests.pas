@@ -23,6 +23,7 @@ interface
 {$ENDIF FPC}
 
 uses
+  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -131,13 +132,17 @@ begin
       if (X9A <> Nil) then
       begin
         pA := M.Multiply(X9A.G, k);
-        AssertPointsEqual('Standard curve fixed-point failure', pRef, pA);
+        AssertPointsEqual(Format(
+          'FixedPoint comb: curve=%s i=%d source=TECNamed; k bitlen=%d; Standard curve fixed-point failure',
+          [name, i, k.BitLength]), pRef, pA);
       end;
 
       if (X9B <> Nil) then
       begin
         pB := M.Multiply(X9B.G, k);
-        AssertPointsEqual('Custom curve fixed-point failure', pRef, pB);
+        AssertPointsEqual(Format(
+          'FixedPoint comb: curve=%s i=%d source=TCustomNamed; k bitlen=%d; Custom curve fixed-point failure',
+          [name, i, k.BitLength]), pRef, pB);
       end;
       System.Inc(i);
     end;
