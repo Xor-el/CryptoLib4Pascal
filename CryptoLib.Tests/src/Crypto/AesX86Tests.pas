@@ -16,11 +16,11 @@
 
 unit AesX86Tests;
 
+{$I ..\..\..\CryptoLib\src\Include\CryptoLib.inc}
+
 interface
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF FPC}
+{$IFDEF CRYPTOLIB_X86_SIMD}
 
 uses
   SysUtils,
@@ -80,7 +80,11 @@ type
     procedure TestProcessEightBlocksMemoryLayouts256;
   end;
 
+{$ENDIF CRYPTOLIB_X86_SIMD}
+
 implementation
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
 
 function CreateAesX86Engine: IBlockCipher;
 begin
@@ -760,5 +764,7 @@ initialization
 {$ELSE}
   RegisterTest(TTestAesX86.Suite);
 {$ENDIF FPC}
+
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 end.

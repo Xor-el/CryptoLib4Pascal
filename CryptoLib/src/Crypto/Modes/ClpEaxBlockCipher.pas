@@ -86,13 +86,12 @@ type
     FCipherInitialized: Boolean;
     FInitialAssociatedText: TCryptoLibByteArray;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Cached once per Init; non-nil when the registry resolved a fused
     // EAX kernel for the underlying cipher and encrypt direction. Decrypt
     // and non-AES ciphers stay on the TCMac / TSicBlockCipher scalar
     // path; set via FUseFusedBody below.
     FEaxKernel: IFusedEaxKernel;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+
     // True iff a fused body kernel is live for this Init cycle. Gates
     // the mode-owned OMAC substrate (FOmac* + FCtrBlock) against the
     // legacy FMac/FCipher substrate. Set exactly once per Init.
@@ -283,6 +282,7 @@ begin
       TFusedModeDirection.Decrypt, FEaxKernel);
   FUseFusedBody := FEaxKernel <> nil;
 {$ELSE}
+  FEaxKernel := nil;
   FUseFusedBody := False;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 

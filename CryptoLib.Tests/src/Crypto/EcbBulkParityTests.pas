@@ -16,11 +16,9 @@
 
 unit EcbBulkParityTests;
 
-interface
+{$I ..\..\..\CryptoLib\src\Include\CryptoLib.inc}
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF FPC}
+interface
 
 uses
   SysUtils,
@@ -38,7 +36,9 @@ uses
   ClpICipherParameters,
   ClpAesEngine,
   ClpBlowfishEngine,
+{$IFDEF CRYPTOLIB_X86_SIMD}
   ClpAesEngineX86,
+{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpEcbBlockCipher,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -63,17 +63,21 @@ type
     procedure RunParityForEngine(AEngineFactory: TEngineFactory;
       AKeyLen, ABlockSize: Int32; const ALabel: String);
   published
+{$IFDEF CRYPTOLIB_X86_SIMD}
     procedure TestAesX86EcbBulkParity;
+{$ENDIF CRYPTOLIB_X86_SIMD}
     procedure TestAesScalarEcbBulkParity;
     procedure TestBlowfishEcbBulkParity;
   end;
 
 implementation
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
 function CreateAesX86Engine: IBlockCipher;
 begin
   Result := TAesEngineX86.Create();
 end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 function CreateAesScalarEngine: IBlockCipher;
 begin
@@ -168,12 +172,14 @@ begin
   end;
 end;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
 procedure TTestEcbBulkParity.TestAesX86EcbBulkParity;
 begin
   if not TAesEngineX86.IsSupported then
     Exit;
   RunParityForEngine(@CreateAesX86Engine, 16, 16, 'AES-NI (TAesEngineX86)');
 end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 procedure TTestEcbBulkParity.TestAesScalarEcbBulkParity;
 begin

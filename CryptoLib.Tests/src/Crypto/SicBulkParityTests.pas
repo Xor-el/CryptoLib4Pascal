@@ -16,11 +16,9 @@
 
 unit SicBulkParityTests;
 
-interface
+{$I ..\..\..\CryptoLib\src\Include\CryptoLib.inc}
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF FPC}
+interface
 
 uses
   SysUtils,
@@ -38,7 +36,9 @@ uses
   ClpIParametersWithIV,
   ClpAesEngine,
   ClpBlowfishEngine,
+{$IFDEF CRYPTOLIB_X86_SIMD}
   ClpAesEngineX86,
+{$ENDIF CRYPTOLIB_X86_SIMD}
   ClpSicBlockCipher,
   ClpISicBlockCipher,
   ClpSecureRandom,
@@ -65,7 +65,9 @@ type
     procedure RunParityForEngine(AEngineFactory: TEngineFactory;
       AKeyLen, AIvLen, ABlockSize: Int32; const ALabel: String);
   published
+{$IFDEF CRYPTOLIB_X86_SIMD}
     procedure TestAesX86SicBulkParity;
+{$ENDIF CRYPTOLIB_X86_SIMD}
     procedure TestAesScalarSicBulkParity;
     procedure TestBlowfishSicBulkParity;
   end;
@@ -76,10 +78,12 @@ implementation
   work unchanged across all three; the Supports(FCipher, IAesEngineX86, ...)
   probe inside Init is what selects the fast path. }
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
 function CreateAesX86Engine: IBlockCipher;
 begin
   Result := TAesEngineX86.Create();
 end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 function CreateAesScalarEngine: IBlockCipher;
 begin
@@ -178,6 +182,7 @@ begin
   end;
 end;
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
 procedure TTestSicBulkParity.TestAesX86SicBulkParity;
 begin
   if not TAesEngineX86.IsSupported then
@@ -185,6 +190,7 @@ begin
   // 16-byte block, 16-byte key, 12-byte IV (leaves a 4-byte counter suffix).
   RunParityForEngine(@CreateAesX86Engine, 16, 12, 16, 'AES-NI (TAesEngineX86)');
 end;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 procedure TTestSicBulkParity.TestAesScalarSicBulkParity;
 begin

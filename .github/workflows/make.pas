@@ -54,8 +54,8 @@ const
   Dependencies: array of TDependency = (
     // Examples:
     // (Kind: TDependencyKind.OPM;    Name: 'HashLib';               Ref: ''),
-     (Kind: TDependencyKind.GitHub; Name: 'Xor-el/SimpleBaseLib4Pascal';  Ref: 'master'),
-     (Kind: TDependencyKind.GitHub; Name: 'Xor-el/HashLib4Pascal';  Ref: 'master')
+    (Kind: TDependencyKind.GitHub; Name: 'Xor-el/SimpleBaseLib4Pascal';  Ref: 'master'),
+    (Kind: TDependencyKind.GitHub; Name: 'Xor-el/HashLib4Pascal';  Ref: 'master')
   );
 
 // ---------------------------------------------------------------------------
@@ -437,6 +437,10 @@ end;
 // Project classification helpers
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Determine whether an .lpi project is GUI
+// ---------------------------------------------------------------------------
+
 // A project is considered GUI if its .lpi lists LCL as a required package.
 // GUI projects cannot run headless in CI, so we skip them entirely.
 function IsGUIProject(const ALpiPath: string): Boolean;
@@ -455,6 +459,10 @@ begin
     Filter.Free;
   end;
 end;
+
+// ---------------------------------------------------------------------------
+// Determine whether an .lpi project is a test runner
+// ---------------------------------------------------------------------------
 
 // A console project is a test runner if its .lpr uses consoletestrunner.
 function IsTestProject(const ALpiPath: string): Boolean;
@@ -529,6 +537,19 @@ begin
   // Install and register dependencies (safe when array is empty)
   if Length(Dependencies) > 0 then
   begin
+    // FPC 3.2.2 hardcodes OpenSSL 1.1 DLL names on Windows, but
+    // modern CI runners ship OpenSSL 3.x. Override so FPC can find
+    // the libraries. This hack can be removed once we move to
+    // FPC 3.2.4+ which natively includes OpenSSL 3.x DLL names.
+    {$IFDEF MSWINDOWS}
+      {$IFDEF WIN64}
+    DLLSSLName  := 'libssl-3-x64.dll';
+    DLLUtilName := 'libcrypto-3-x64.dll';
+      {$ELSE}
+    DLLSSLName  := 'libssl-3.dll';
+    DLLUtilName := 'libcrypto-3.dll';
+      {$ENDIF}
+    {$ENDIF}
     InitSSLInterface;
     for I := 0 to High(Dependencies) do
       RegisterAllPackages(ResolveDependency(Dependencies[I]));
