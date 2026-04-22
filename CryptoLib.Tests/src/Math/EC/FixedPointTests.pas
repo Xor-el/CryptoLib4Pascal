@@ -113,50 +113,56 @@ begin
 
   for name in names do
   begin
-    X9A := TECNamedCurveTable.GetByName(name);
-    X9B := TCustomNamedCurves.GetByName(name);
-    if (X9B <> Nil) then
-    begin
-      x9 := X9B
-    end
-    else
-    begin
-      x9 := X9A;
-    end;
-
-    i := 0;
-    while i < TestsPerCurve do
-    begin
-      LKBits := -1;
-      try
-        k := TBigInteger.Create(x9.N.BitLength, FRandom);
-        LKBits := k.BitLength;
-        pRef := TECAlgorithms.ReferenceMultiply(x9.G, k);
-
-        if (X9A <> Nil) then
-        begin
-          pA := M.Multiply(X9A.G, k);
-          AssertPointsEqual(Format(
-            'FixedPoint comb: curve=%s i=%d source=TECNamed; k bitlen=%d; Standard curve fixed-point failure',
-            [name, i, k.BitLength]), pRef, pA);
-        end;
-
-        if (X9B <> Nil) then
-        begin
-          pB := M.Multiply(X9B.G, k);
-          AssertPointsEqual(Format(
-            'FixedPoint comb: curve=%s i=%d source=TCustomNamed; k bitlen=%d; Custom curve fixed-point failure',
-            [name, i, k.BitLength]), pRef, pB);
-        end;
-      except
-        on E: Exception do
-          raise EArgumentCryptoLibException.Create(Format(
-            'FixedPointMultiplier: curve=%s i=%d kBitLen=%d — %s',
-            [name, i, LKBits, E.Message]));
+    try
+      X9A := TECNamedCurveTable.GetByName(name);
+      X9B := TCustomNamedCurves.GetByName(name);
+      if (X9B <> Nil) then
+      begin
+        x9 := X9B
+      end
+      else
+      begin
+        x9 := X9A;
       end;
-      System.Inc(i);
-    end;
 
+      i := 0;
+      while i < TestsPerCurve do
+      begin
+        LKBits := -1;
+        try
+          k := TBigInteger.Create(x9.N.BitLength, FRandom);
+          LKBits := k.BitLength;
+          pRef := TECAlgorithms.ReferenceMultiply(x9.G, k);
+
+          if (X9A <> Nil) then
+          begin
+            pA := M.Multiply(X9A.G, k);
+            AssertPointsEqual(Format(
+              'FixedPoint comb: curve=%s i=%d source=TECNamed; k bitlen=%d; Standard curve fixed-point failure',
+              [name, i, k.BitLength]), pRef, pA);
+          end;
+
+          if (X9B <> Nil) then
+          begin
+            pB := M.Multiply(X9B.G, k);
+            AssertPointsEqual(Format(
+              'FixedPoint comb: curve=%s i=%d source=TCustomNamed; k bitlen=%d; Custom curve fixed-point failure',
+              [name, i, k.BitLength]), pRef, pB);
+          end;
+        except
+          on E: Exception do
+            raise EArgumentCryptoLibException.Create(Format(
+              'FixedPointMultiplier: curve=%s i=%d kBitLen=%d - %s',
+              [name, i, LKBits, E.Message]));
+        end;
+        System.Inc(i);
+      end;
+
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.Create(Format(
+          'TestFixedPointMultiplier: curve=%s (full iteration) - %s', [name, E.Message]));
+    end;
   end;
 
 end;

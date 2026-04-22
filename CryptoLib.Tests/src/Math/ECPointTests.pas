@@ -406,7 +406,7 @@ begin
         except
           on E: Exception do
             raise EArgumentCryptoLibException.Create(Format(
-              'AddSubMultTwiceEnc: %s — %s', [FPointTestContext, E.Message]));
+              'AddSubMultTwiceEnc: %s - %s', [FPointTestContext, E.Message]));
         end;
       finally
         FPointTestContext := LSave;
@@ -740,40 +740,46 @@ begin
   begin
     FPointTestContext := 'curve=' + name;
     try
-    x9A := TECNamedCurveTable.GetByName(name);
-    x9B := TCustomNamedCurves.GetByName(name);
+      try
+        x9A := TECNamedCurveTable.GetByName(name);
+        x9B := TCustomNamedCurves.GetByName(name);
 
-    if ((x9A <> Nil) and (x9B <> Nil)) then
-    begin
-      AssertIFiniteFieldsEqual(x9A.curve.Field, x9B.curve.Field);
-      AssertBigIntegersEqual(x9A.curve.a.ToBigInteger(),
-        x9B.curve.a.ToBigInteger());
-      AssertBigIntegersEqual(x9A.curve.b.ToBigInteger(),
-        x9B.curve.b.ToBigInteger());
-      AssertOptionalValuesAgree(x9A.curve.Cofactor, x9B.curve.Cofactor);
-      AssertOptionalValuesAgree(x9A.curve.Order, x9B.curve.Order);
+        if ((x9A <> Nil) and (x9B <> Nil)) then
+        begin
+          AssertIFiniteFieldsEqual(x9A.curve.Field, x9B.curve.Field);
+          AssertBigIntegersEqual(x9A.curve.a.ToBigInteger(),
+            x9B.curve.a.ToBigInteger());
+          AssertBigIntegersEqual(x9A.curve.b.ToBigInteger(),
+            x9B.curve.b.ToBigInteger());
+          AssertOptionalValuesAgree(x9A.curve.Cofactor, x9B.curve.Cofactor);
+          AssertOptionalValuesAgree(x9A.curve.Order, x9B.curve.Order);
 
-      AssertPointsEqual('Custom curve base-point inconsistency', x9A.g, x9B.g);
+          AssertPointsEqual('Custom curve base-point inconsistency', x9A.g, x9B.g);
 
-      AssertBigIntegersEqual(x9A.h, x9B.h);
-      AssertBigIntegersEqual(x9A.n, x9B.n);
-      AssertOptionalValuesAgree(x9A.GetSeed(), x9B.GetSeed());
+          AssertBigIntegersEqual(x9A.h, x9B.h);
+          AssertBigIntegersEqual(x9A.n, x9B.n);
+          AssertOptionalValuesAgree(x9A.GetSeed(), x9B.GetSeed());
 
-      k := TBigInteger.Create(x9A.n.BitLength, FRandom);
-      pA := x9A.g.Multiply(k);
-      pB := x9B.g.Multiply(k);
-      AssertPointsEqual('Custom curve multiplication inconsistency', pA, pB);
-    end;
+          k := TBigInteger.Create(x9A.n.BitLength, FRandom);
+          pA := x9A.g.Multiply(k);
+          pB := x9B.g.Multiply(k);
+          AssertPointsEqual('Custom curve multiplication inconsistency', pA, pB);
+        end;
 
-    if (x9A <> Nil) then
-    begin
-      ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9A);
-    end;
+        if (x9A <> Nil) then
+        begin
+          ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9A);
+        end;
 
-    if (x9B <> Nil) then
-    begin
-      ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
-    end;
+        if (x9B <> Nil) then
+        begin
+          ImplAddSubtractMultiplyTwiceEncodingTestAllCoords(x9B);
+        end;
+      except
+        on E: Exception do
+          raise EArgumentCryptoLibException.Create(Format(
+            'TestAddSubtractMultiplyTwiceEncoding: %s - %s', [FPointTestContext, E.Message]));
+      end;
     finally
       FPointTestContext := '';
     end;

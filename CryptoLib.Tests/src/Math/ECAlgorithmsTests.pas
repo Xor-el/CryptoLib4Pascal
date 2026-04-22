@@ -105,6 +105,7 @@ var
   coord, i: Int32;
   coords: TCryptoLibInt32Array;
   LItem: TLabelledX9;
+  LBaseCtx: String;
 begin
   curve := x9.curve;
 
@@ -113,20 +114,33 @@ begin
 
   begin
     coord := coords[i];
+    LBaseCtx := Format('curve=%s | %s | cs=%d', [AName, ASource, coord]);
     if (curve.CoordinateSystem = coord) then
     begin
-      LItem.Ctx := Format('curve=%s | %s | cs=%d', [AName, ASource, coord]);
-      LItem.x9 := x9;
-      x9s.Add(LItem);
+      try
+        LItem.Ctx := LBaseCtx;
+        LItem.x9 := x9;
+        x9s.Add(LItem);
+      except
+        on E: Exception do
+          raise EArgumentCryptoLibException.Create(Format(
+            'AddTestCurves (add native cs): %s - %s', [LBaseCtx, E.Message]));
+      end;
     end
     else if (curve.SupportsCoordinateSystem(coord)) then
     begin
-      c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
-      point := c.ImportPoint(x9.G);
-      params := TX9ECParameters.Create(c, TX9ECPoint.Create(point, False) as IX9ECPoint, x9.N, x9.H);
-      LItem.Ctx := Format('curve=%s | %s | cs=%d', [AName, ASource, coord]);
-      LItem.x9 := params;
-      x9s.Add(LItem);
+      try
+        c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
+        point := c.ImportPoint(x9.G);
+        params := TX9ECParameters.Create(c, TX9ECPoint.Create(point, False) as IX9ECPoint, x9.N, x9.H);
+        LItem.Ctx := LBaseCtx;
+        LItem.x9 := params;
+        x9s.Add(LItem);
+      except
+        on E: Exception do
+          raise EArgumentCryptoLibException.Create(Format(
+            'AddTestCurves (import G to alt cs / build params): %s - %s', [LBaseCtx, E.Message]));
+      end;
     end;
   end;
 end;
@@ -172,7 +186,7 @@ begin
     except
       on E: Exception do
         raise EArgumentCryptoLibException.Create(Format(
-          '%s SumOfMultiplies: init point/scalar at slot i=%d — %s',
+          '%s SumOfMultiplies: init point/scalar at slot i=%d - %s',
           [AContext, i, E.Message]));
     end;
   end;
@@ -195,7 +209,7 @@ begin
     except
       on E: Exception do
         raise EArgumentCryptoLibException.Create(Format(
-          '%s SumOfMultiplies: aggregate step i=%d — %s', [AContext, i, E.Message]));
+          '%s SumOfMultiplies: aggregate step i=%d - %s', [AContext, i, E.Message]));
     end;
   end;
 
@@ -215,7 +229,7 @@ begin
   except
     on E: Exception do
       raise EArgumentCryptoLibException.Create(Format(
-        '%s SumOfTwoMult: initial p,a — %s', [AContext, E.Message]));
+        '%s SumOfTwoMult: initial p,a - %s', [AContext, E.Message]));
   end;
 
   i := 0;
@@ -242,7 +256,7 @@ begin
     except
       on E: Exception do
         raise EArgumentCryptoLibException.Create(Format(
-          '%s SumOfTwoMult: round i=%d — %s', [AContext, i, E.Message]));
+          '%s SumOfTwoMult: round i=%d - %s', [AContext, i, E.Message]));
     end;
     System.Inc(i);
   end;
@@ -295,13 +309,27 @@ begin
       x9 := TECNamedCurveTable.GetByName(name);
       if (x9 <> Nil) then
       begin
-        AddTestCurves(x9s, name, 'TECNamed', x9);
+        try
+          AddTestCurves(x9s, name, 'TECNamed', x9);
+        except
+          on E: Exception do
+            raise EArgumentCryptoLibException.Create(Format(
+              'GetLabeledTestCurves: name=%s op=AddTestCurves(TECNamed) - %s',
+              [name, E.Message]));
+        end;
       end;
 
       x9 := TCustomNamedCurves.GetByName(name);
       if (x9 <> Nil) then
       begin
-        AddTestCurves(x9s, name, 'TCustomNamed', x9);
+        try
+          AddTestCurves(x9s, name, 'TCustomNamed', x9);
+        except
+          on E: Exception do
+            raise EArgumentCryptoLibException.Create(Format(
+              'GetLabeledTestCurves: name=%s op=AddTestCurves(TCustomNamed) - %s',
+              [name, E.Message]));
+        end;
       end;
     end;
     Result := x9s.ToArray;
@@ -336,7 +364,13 @@ var
 begin
   for L in GetLabeledTestCurves() do
   begin
-    DoTestSumOfMultiplies(L.x9, L.Ctx);
+    try
+      DoTestSumOfMultiplies(L.x9, L.Ctx);
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.Create(Format(
+          'TestSumOfMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
+    end;
   end;
 end;
 
@@ -355,7 +389,13 @@ var
 begin
   for L in GetLabeledTestCurves() do
   begin
-    DoTestSumOfTwoMultiplies(L.x9, L.Ctx);
+    try
+      DoTestSumOfTwoMultiplies(L.x9, L.Ctx);
+    except
+      on E: Exception do
+        raise EArgumentCryptoLibException.Create(Format(
+          'TestSumOfTwoMultipliesComplete: %s - %s', [L.Ctx, E.Message]));
+    end;
   end;
 
 end;
