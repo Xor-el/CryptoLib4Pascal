@@ -25,12 +25,9 @@ uses
   ClpIBlockCipher,
   ClpFusedKernelTypes,
   ClpIFusedGcmSivKernel,
-  ClpFusedKernelRegistry
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  , ClpCpuFeatures,
-  ClpIntrinsicsVector
-{$ENDIF CRYPTOLIB_X86_SIMD}
-  ;
+  ClpFusedKernelRegistry,
+  ClpCpuFeatures,
+  ClpIntrinsicsVector;
 
 type
   /// <summary>

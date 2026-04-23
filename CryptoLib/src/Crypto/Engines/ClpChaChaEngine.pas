@@ -26,6 +26,7 @@ uses
   ClpIChaChaEngine,
   ClpSalsa20Engine,
   ClpPack,
+  ClpCpuFeatures,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -67,6 +68,19 @@ type
 
 implementation
 
+{$IFDEF CRYPTOLIB_X86_SIMD}
+procedure ChaCha20BlockSse2(ARounds: Int32; AInput, AOut: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_i386.inc}
+{$ENDIF}
+end;
+{$ENDIF}
+
 { TChaChaEngine }
 
 procedure TChaChaEngine.AdvanceCounter;
@@ -97,6 +111,13 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SRoundsEven);
   end;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TCpuFeatures.X86.HasSSE2() then
+  begin
+    ChaCha20BlockSse2(ARounds, PByte(@AInput[0]), PByte(@AOutput[0]));
+    Exit;
+  end;
+{$ENDIF}
 
   LX00 := AInput[0];
   LX01 := AInput[1];
