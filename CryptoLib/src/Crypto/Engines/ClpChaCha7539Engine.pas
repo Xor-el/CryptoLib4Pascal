@@ -28,7 +28,8 @@ uses
   ClpSalsa20Engine,
   ClpChaChaEngine,
   ClpPack,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCpuFeatures;
 
 resourcestring
   SInvalidKeySize256 = '%s Requires 256 bit key';
@@ -72,6 +73,26 @@ type
   end;
 
 implementation
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+procedure ChaCha7539ProcessBlocks2Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
+{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_x86_64.inc}
+end;
+{$ENDIF}
+
+procedure ChaCha7539BlockSse2(ARounds: Int32; AState, AKeyStream: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_i386.inc}
+{$ENDIF}
+end;
+{$ENDIF}
 
 { TChaCha7539Engine }
 
@@ -203,6 +224,9 @@ end;
 
 procedure TChaCha7539Engine.ProcessBlocks2(const AInBytes: TCryptoLibByteArray;
   AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LIdx: Int32;
+  LK: array[0..63] of Byte;
 begin
   if (not FInitialised) then
   begin
@@ -218,7 +242,33 @@ begin
   begin
     raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
   end;
-
+{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TCpuFeatures.X86.HasAVX2() then
+  begin
+    ChaCha7539ProcessBlocks2Avx2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
+      PByte(@AOutBytes[AOutOff]));
+    Exit;
+  end;
+{$ENDIF}
+  if TCpuFeatures.X86.HasSSE2() then
+  begin
+    ChaCha7539BlockSse2(FRounds, PByte(@FEngineState[0]), @LK[0]);
+    for LIdx := 0 to 63 do
+    begin
+      AOutBytes[AOutOff + LIdx] := Byte(LK[LIdx] xor AInBytes[AInOff + LIdx]);
+    end;
+    AdvanceCounter();
+    ChaCha7539BlockSse2(FRounds, PByte(@FEngineState[0]), @LK[0]);
+    for LIdx := 0 to 63 do
+    begin
+      AOutBytes[AOutOff + 64 + LIdx] := Byte(
+        LK[LIdx] xor AInBytes[AInOff + 64 + LIdx]);
+    end;
+    AdvanceCounter();
+    Exit;
+  end;
+{$ENDIF}
   ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
   ImplProcessBlock(AInBytes, AInOff + 64, AOutBytes, AOutOff + 64);
 end;

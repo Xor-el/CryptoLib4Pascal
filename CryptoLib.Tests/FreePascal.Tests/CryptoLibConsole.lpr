@@ -19,6 +19,7 @@ uses
   HMacTests, Pkcs5Tests, HkdfGeneratorTests, ECIESTests, PascalCoinECIESTests,
   ECNRTests, PrimesTests, ECEncodingTests, PaddingTests, DSATests,
   DeterministicDsaTests, Salsa20Tests, XSalsa20Tests, ChaChaTests,
+  ChaCha7539ProcessBlocks2Tests,
   StreamCipherResetTests, CTSTests, X25519Tests, X448Tests, Ed25519Tests,
   Ed448Tests, X25519HigherLevelTests, Ed25519HigherLevelTests,
   Curve25519KeyUtilitiesTests, ShortenedDigestTests, Kdf1GeneratorTests,

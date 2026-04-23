@@ -788,6 +788,7 @@ uses
   SecP256R1FieldTests in '..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas',
   Salsa20Tests in '..\src\Crypto\Salsa20Tests.pas',
   ChaChaTests in '..\src\Crypto\ChaChaTests.pas',
+  ChaCha7539ProcessBlocks2Tests in '..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas',
   XSalsa20Tests in '..\src\Crypto\XSalsa20Tests.pas',
   StreamCipherResetTests in '..\src\Crypto\StreamCipherResetTests.pas',
   CTSTests in '..\src\Crypto\CTSTests.pas',
