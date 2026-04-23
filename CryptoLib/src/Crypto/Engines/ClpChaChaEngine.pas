@@ -26,8 +26,12 @@ uses
   ClpIChaChaEngine,
   ClpSalsa20Engine,
   ClpPack,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
+
+resourcestring
+  SChaChaStateWords = 'ChaCha state must be at least 16 UInt32 values';
+  SChaChaOut64 = 'ChaCha key stream output must be at least 64 bytes';
+  SRoundsEven = 'Number of Rounds Must be Even';
 
 type
 
@@ -83,15 +87,15 @@ var
 begin
   if (System.Length(AInput) < 16) then
   begin
-    raise EArgumentCryptoLibException.Create('');
+    raise EArgumentCryptoLibException.CreateRes(@SChaChaStateWords);
   end;
   if (System.Length(AOutput) < 64) then
   begin
-    raise EArgumentCryptoLibException.Create('');
+    raise EArgumentCryptoLibException.CreateRes(@SChaChaOut64);
   end;
   if ((ARounds mod 2) <> 0) then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SRoundsMustbeEven);
+    raise EArgumentCryptoLibException.CreateRes(@SRoundsEven);
   end;
 
   LX00 := AInput[0];
@@ -114,70 +118,76 @@ begin
   LIdx := ARounds;
   while LIdx > 0 do
   begin
-
-    LX00 := LX00 + LX04;
+    System.Inc(LX00, LX04);
     LX12 := R(LX12 xor LX00, 16);
-    LX08 := LX08 + LX12;
-    LX04 := R(LX04 xor LX08, 12);
-    LX00 := LX00 + LX04;
-    LX12 := R(LX12 xor LX00, 8);
-    LX08 := LX08 + LX12;
-    LX04 := R(LX04 xor LX08, 7);
-    LX01 := LX01 + LX05;
+    System.Inc(LX01, LX05);
     LX13 := R(LX13 xor LX01, 16);
-    LX09 := LX09 + LX13;
-    LX05 := R(LX05 xor LX09, 12);
-    LX01 := LX01 + LX05;
-    LX13 := R(LX13 xor LX01, 8);
-    LX09 := LX09 + LX13;
-    LX05 := R(LX05 xor LX09, 7);
-    LX02 := LX02 + LX06;
+    System.Inc(LX02, LX06);
     LX14 := R(LX14 xor LX02, 16);
-    LX10 := LX10 + LX14;
-    LX06 := R(LX06 xor LX10, 12);
-    LX02 := LX02 + LX06;
-    LX14 := R(LX14 xor LX02, 8);
-    LX10 := LX10 + LX14;
-    LX06 := R(LX06 xor LX10, 7);
-    LX03 := LX03 + LX07;
+    System.Inc(LX03, LX07);
     LX15 := R(LX15 xor LX03, 16);
-    LX11 := LX11 + LX15;
+
+    System.Inc(LX08, LX12);
+    LX04 := R(LX04 xor LX08, 12);
+    System.Inc(LX09, LX13);
+    LX05 := R(LX05 xor LX09, 12);
+    System.Inc(LX10, LX14);
+    LX06 := R(LX06 xor LX10, 12);
+    System.Inc(LX11, LX15);
     LX07 := R(LX07 xor LX11, 12);
-    LX03 := LX03 + LX07;
+
+    System.Inc(LX00, LX04);
+    LX12 := R(LX12 xor LX00, 8);
+    System.Inc(LX01, LX05);
+    LX13 := R(LX13 xor LX01, 8);
+    System.Inc(LX02, LX06);
+    LX14 := R(LX14 xor LX02, 8);
+    System.Inc(LX03, LX07);
     LX15 := R(LX15 xor LX03, 8);
-    LX11 := LX11 + LX15;
+
+    System.Inc(LX08, LX12);
+    LX04 := R(LX04 xor LX08, 7);
+    System.Inc(LX09, LX13);
+    LX05 := R(LX05 xor LX09, 7);
+    System.Inc(LX10, LX14);
+    LX06 := R(LX06 xor LX10, 7);
+    System.Inc(LX11, LX15);
     LX07 := R(LX07 xor LX11, 7);
-    LX00 := LX00 + LX05;
+
+    System.Inc(LX00, LX05);
     LX15 := R(LX15 xor LX00, 16);
-    LX10 := LX10 + LX15;
-    LX05 := R(LX05 xor LX10, 12);
-    LX00 := LX00 + LX05;
-    LX15 := R(LX15 xor LX00, 8);
-    LX10 := LX10 + LX15;
-    LX05 := R(LX05 xor LX10, 7);
-    LX01 := LX01 + LX06;
+    System.Inc(LX01, LX06);
     LX12 := R(LX12 xor LX01, 16);
-    LX11 := LX11 + LX12;
-    LX06 := R(LX06 xor LX11, 12);
-    LX01 := LX01 + LX06;
-    LX12 := R(LX12 xor LX01, 8);
-    LX11 := LX11 + LX12;
-    LX06 := R(LX06 xor LX11, 7);
-    LX02 := LX02 + LX07;
+    System.Inc(LX02, LX07);
     LX13 := R(LX13 xor LX02, 16);
-    LX08 := LX08 + LX13;
-    LX07 := R(LX07 xor LX08, 12);
-    LX02 := LX02 + LX07;
-    LX13 := R(LX13 xor LX02, 8);
-    LX08 := LX08 + LX13;
-    LX07 := R(LX07 xor LX08, 7);
-    LX03 := LX03 + LX04;
+    System.Inc(LX03, LX04);
     LX14 := R(LX14 xor LX03, 16);
-    LX09 := LX09 + LX14;
+
+    System.Inc(LX10, LX15);
+    LX05 := R(LX05 xor LX10, 12);
+    System.Inc(LX11, LX12);
+    LX06 := R(LX06 xor LX11, 12);
+    System.Inc(LX08, LX13);
+    LX07 := R(LX07 xor LX08, 12);
+    System.Inc(LX09, LX14);
     LX04 := R(LX04 xor LX09, 12);
-    LX03 := LX03 + LX04;
+
+    System.Inc(LX00, LX05);
+    LX15 := R(LX15 xor LX00, 8);
+    System.Inc(LX01, LX06);
+    LX12 := R(LX12 xor LX01, 8);
+    System.Inc(LX02, LX07);
+    LX13 := R(LX13 xor LX02, 8);
+    System.Inc(LX03, LX04);
     LX14 := R(LX14 xor LX03, 8);
-    LX09 := LX09 + LX14;
+
+    System.Inc(LX10, LX15);
+    LX05 := R(LX05 xor LX10, 7);
+    System.Inc(LX11, LX12);
+    LX06 := R(LX06 xor LX11, 7);
+    System.Inc(LX08, LX13);
+    LX07 := R(LX07 xor LX08, 7);
+    System.Inc(LX09, LX14);
     LX04 := R(LX04 xor LX09, 7);
 
     System.Dec(LIdx, 2);
@@ -234,8 +244,6 @@ begin
   begin
     if not(System.Length(AKeyBytes) in [16, 32]) then
     begin
-      TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-      TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
         [AlgorithmName]);
     end;
@@ -249,9 +257,6 @@ begin
 
   // IV
   TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 14, 2);
-
-  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-  TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
 end;
 
 end.
