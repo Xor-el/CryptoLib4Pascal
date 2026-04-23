@@ -53,6 +53,10 @@ type
     procedure SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray); override;
     procedure GenerateKeyStream(const AOutput: TCryptoLibByteArray); override;
 
+  strict private
+    procedure ImplProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32); inline;
+
   public
     constructor Create();
 
@@ -64,9 +68,6 @@ type
 
     procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-
-    procedure ImplProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32); inline;
 
   end;
 
@@ -187,6 +188,11 @@ begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
       [AlgorithmName]);
   end;
+  if (FIndex <> 0) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
+      [AlgorithmName]);
+  end;
   if (LimitExceeded(UInt32(64))) then
   begin
     raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
@@ -201,6 +207,11 @@ begin
   if (not FInitialised) then
   begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
+      [AlgorithmName]);
+  end;
+  if (FIndex <> 0) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
       [AlgorithmName]);
   end;
   if (LimitExceeded(UInt32(128))) then

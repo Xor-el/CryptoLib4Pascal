@@ -30,7 +30,6 @@ uses
   ClpICipherParameters,
   ClpIParametersWithIV,
   ClpPack,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -48,6 +47,8 @@ resourcestring
     '%s Init Parameters must Contain a KeyParameter (or null for Re-Init)';
   SKeyParameterNullForFirstInit =
     'KeyParameter can not be null for First Initialisation';
+  SInputStateMustBe16 = 'Salsa20 input state must be 16 UInt32 values';
+  SOutputStateMustBe16 = 'Salsa20 output buffer must be 16 UInt32 values';
 
 type
 
@@ -67,6 +68,8 @@ type
   var
     // internal counter
     FCW0, FCW1, FCW2: UInt32;
+
+    class procedure QuarterRound(var A, B, C, D: UInt32); static; inline;
 
   strict protected
   var
@@ -208,7 +211,6 @@ begin
   LIv := LIvParams.GetIV();
   if ((LIv = nil) or (System.Length(LIv) <> NonceSize)) then
   begin
-    TArrayUtilities.Fill<Byte>(LIv, 0, System.Length(LIv), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidIV,
       [AlgorithmName, NonceSize]);
   end;
@@ -323,6 +325,14 @@ begin
   Result := TBitOperations.RotateLeft32(AX, AY);
 end;
 
+class procedure TSalsa20Engine.QuarterRound(var A, B, C, D: UInt32);
+begin
+  B := B xor R(A + D, 7);
+  C := C xor R(B + A, 9);
+  D := D xor R(C + B, 13);
+  A := A xor R(D + C, 18);
+end;
+
 procedure TSalsa20Engine.ResetCounter;
 begin
   FEngineState[8] := 0;
@@ -373,11 +383,11 @@ var
 begin
   if (System.Length(AInput) <> 16) then
   begin
-    raise EArgumentCryptoLibException.Create('');
+    raise EArgumentCryptoLibException.CreateRes(@SInputStateMustBe16);
   end;
   if (System.Length(AX) <> 16) then
   begin
-    raise EArgumentCryptoLibException.Create('');
+    raise EArgumentCryptoLibException.CreateRes(@SOutputStateMustBe16);
   end;
   if ((ARounds mod 2) <> 0) then
   begin
@@ -404,40 +414,15 @@ begin
   LIdx := ARounds;
   while LIdx > 0 do
   begin
+    QuarterRound(LX00, LX04, LX08, LX12);
+    QuarterRound(LX05, LX09, LX13, LX01);
+    QuarterRound(LX10, LX14, LX02, LX06);
+    QuarterRound(LX15, LX03, LX07, LX11);
 
-    LX04 := LX04 xor (R((LX00 + LX12), 7));
-    LX08 := LX08 xor (R((LX04 + LX00), 9));
-    LX12 := LX12 xor (R((LX08 + LX04), 13));
-    LX00 := LX00 xor (R((LX12 + LX08), 18));
-    LX09 := LX09 xor (R((LX05 + LX01), 7));
-    LX13 := LX13 xor (R((LX09 + LX05), 9));
-    LX01 := LX01 xor (R((LX13 + LX09), 13));
-    LX05 := LX05 xor (R((LX01 + LX13), 18));
-    LX14 := LX14 xor (R((LX10 + LX06), 7));
-    LX02 := LX02 xor (R((LX14 + LX10), 9));
-    LX06 := LX06 xor (R((LX02 + LX14), 13));
-    LX10 := LX10 xor (R((LX06 + LX02), 18));
-    LX03 := LX03 xor (R((LX15 + LX11), 7));
-    LX07 := LX07 xor (R((LX03 + LX15), 9));
-    LX11 := LX11 xor (R((LX07 + LX03), 13));
-    LX15 := LX15 xor (R((LX11 + LX07), 18));
-
-    LX01 := LX01 xor (R((LX00 + LX03), 7));
-    LX02 := LX02 xor (R((LX01 + LX00), 9));
-    LX03 := LX03 xor (R((LX02 + LX01), 13));
-    LX00 := LX00 xor (R((LX03 + LX02), 18));
-    LX06 := LX06 xor (R((LX05 + LX04), 7));
-    LX07 := LX07 xor (R((LX06 + LX05), 9));
-    LX04 := LX04 xor (R((LX07 + LX06), 13));
-    LX05 := LX05 xor (R((LX04 + LX07), 18));
-    LX11 := LX11 xor (R((LX10 + LX09), 7));
-    LX08 := LX08 xor (R((LX11 + LX10), 9));
-    LX09 := LX09 xor (R((LX08 + LX11), 13));
-    LX10 := LX10 xor (R((LX09 + LX08), 18));
-    LX12 := LX12 xor (R((LX15 + LX14), 7));
-    LX13 := LX13 xor (R((LX12 + LX15), 9));
-    LX14 := LX14 xor (R((LX13 + LX12), 13));
-    LX15 := LX15 xor (R((LX14 + LX13), 18));
+    QuarterRound(LX00, LX01, LX02, LX03);
+    QuarterRound(LX05, LX06, LX07, LX04);
+    QuarterRound(LX10, LX11, LX08, LX09);
+    QuarterRound(LX15, LX12, LX13, LX14);
 
     System.Dec(LIdx, 2);
   end;
@@ -469,8 +454,6 @@ begin
   begin
     if not(System.Length(AKeyBytes) in [16, 32]) then
     begin
-      TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-      TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
         [AlgorithmName]);
     end;
@@ -488,13 +471,6 @@ begin
 
   // IV
   TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 6, 2);
-
-  if (Self.ClassType = TSalsa20Engine) then
-  begin
-    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
-  end;
-
 end;
 
 end.
