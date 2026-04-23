@@ -24,12 +24,9 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
-  ClpIAesEngineX86
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  , ClpCpuFeatures
-  , ClpIntrinsicsVector
-{$ENDIF CRYPTOLIB_X86_SIMD}
-  ;
+  ClpIAesEngineX86,
+  ClpCpuFeatures,
+ ClpIntrinsicsVector;
 
 type
   /// <summary>

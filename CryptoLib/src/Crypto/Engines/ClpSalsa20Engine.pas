@@ -30,6 +30,7 @@ uses
   ClpICipherParameters,
   ClpIParametersWithIV,
   ClpPack,
+  ClpCpuFeatures,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -136,6 +137,19 @@ type
   end;
 
 implementation
+
+{$IFDEF CRYPTOLIB_X86_SIMD}
+procedure Salsa20BlockSse41(ARounds: Int32; AInput, AOut: Pointer);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20BlockSse41_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20BlockSse41_i386.inc}
+{$ENDIF}
+end;
+{$ENDIF}
 
 { TSalsa20Engine }
 
@@ -393,6 +407,13 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateRes(@SRoundsMustbeEven);
   end;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TCpuFeatures.X86.HasSSE41() then
+  begin
+    Salsa20BlockSse41(ARounds, @AInput[0], @AX[0]);
+    Exit;
+  end;
+{$ENDIF}
 
   LX00 := AInput[0];
   LX01 := AInput[1];

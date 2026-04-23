@@ -41,7 +41,10 @@ type
 
   strict private
     class function CPUHasSSE2(): Boolean; static;
+    class function CPUHasSSE3(): Boolean; static;
     class function CPUHasSSSE3(): Boolean; static;
+    class function CPUHasSSE41(): Boolean; static;
+    class function CPUHasSSE42(): Boolean; static;
     class function CPUHasAVX2(): Boolean; static;
     class function CPUHasSHANI(): Boolean; static;
     class function CPUHasPCLMULQDQ(): Boolean; static;
@@ -55,7 +58,10 @@ type
   public
     class function GetActiveSimdLevel(): TX86SimdLevel; static;
     class function HasSSE2(): Boolean; static;
+    class function HasSSE3(): Boolean; static;
     class function HasSSSE3(): Boolean; static;
+    class function HasSSE41(): Boolean; static;
+    class function HasSSE42(): Boolean; static;
     class function HasAVX2(): Boolean; static;
     class function HasSHANI(): Boolean; static;
     class function HasPCLMULQDQ(): Boolean; static;
@@ -103,6 +109,51 @@ begin
   CpuIdQuery(1, 0, @LCpuId);
   // SSSE3: ECX bit 9
   Result := (LCpuId.RegECX and (1 shl 9)) <> 0;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TX86SimdFeatures.CPUHasSSE3(): Boolean;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+var
+  LCpuId: TCpuIdResult;
+{$ENDIF}
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  CpuIdQuery(1, 0, @LCpuId);
+  // SSE3: ECX bit 0
+  Result := (LCpuId.RegECX and (1 shl 0)) <> 0;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TX86SimdFeatures.CPUHasSSE41(): Boolean;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+var
+  LCpuId: TCpuIdResult;
+{$ENDIF}
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  CpuIdQuery(1, 0, @LCpuId);
+  // SSE4.1: ECX bit 19
+  Result := (LCpuId.RegECX and (1 shl 19)) <> 0;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TX86SimdFeatures.CPUHasSSE42(): Boolean;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+var
+  LCpuId: TCpuIdResult;
+{$ENDIF}
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  CpuIdQuery(1, 0, @LCpuId);
+  // SSE4.2: ECX bit 20
+  Result := (LCpuId.RegECX and (1 shl 20)) <> 0;
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -198,30 +249,38 @@ begin
 end;
 
 class procedure TX86SimdFeatures.ProbeHardwareAndCache();
+var
+  LHasSSE2, LHasSSE3, LHasSSSE3, LHasSSE41, LHasSSE42, LHasAVX2: Boolean;
 begin
-  FActiveSimdLevel := TX86SimdLevel.Scalar;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  // Probe once, reason later
+  LHasSSE2  := CPUHasSSE2();
+  LHasSSE3  := CPUHasSSE3()  and LHasSSE2;
+  LHasSSSE3 := CPUHasSSSE3() and LHasSSE3;   // enforce invariant defensively
+  LHasSSE41 := CPUHasSSE41() and LHasSSSE3;
+  LHasSSE42 := CPUHasSSE42() and LHasSSE41;
+  LHasAVX2  := CPUHasAVX2()  and LHasSSE42;  // AVX2 implies full SSE lineage
 
-  if CPUHasSSE2() then
-  begin
-    FActiveSimdLevel := TX86SimdLevel.SSE2;
-    FHasPCLMULQDQ := CPUHasPCLMULQDQ();
-    if CPUHasSSSE3() then
-    begin
-      FActiveSimdLevel := TX86SimdLevel.SSSE3;
-      if CPUHasAVX2() then
-      begin
-        FActiveSimdLevel := TX86SimdLevel.AVX2;
-        FHasVPCLMULQDQ := CPUHasVPCLMULQDQ();
-      end;
-    end;
-  end;
+  // Pick the highest tier the CPU can sustain
+  if LHasAVX2 then
+    FActiveSimdLevel := TX86SimdLevel.AVX2
+  else if LHasSSE42 then
+    FActiveSimdLevel := TX86SimdLevel.SSE42
+  else if LHasSSE41 then
+    FActiveSimdLevel := TX86SimdLevel.SSE41
+  else if LHasSSSE3 then
+    FActiveSimdLevel := TX86SimdLevel.SSSE3
+  else if LHasSSE3 then
+    FActiveSimdLevel := TX86SimdLevel.SSE3
+  else if LHasSSE2 then
+    FActiveSimdLevel := TX86SimdLevel.SSE2
+  else
+    FActiveSimdLevel := TX86SimdLevel.Scalar;
 
-  FHasSHANI := CPUHasSHANI();
-  FHasAESNI := CPUHasAESNI();
+  // Independent feature bits — not tied to the SIMD tier ladder
+  FHasAESNI      := CPUHasAESNI();
+  FHasSHANI      := CPUHasSHANI();
+  FHasPCLMULQDQ  := CPUHasPCLMULQDQ();
+  FHasVPCLMULQDQ := CPUHasVPCLMULQDQ() and LHasAVX2;  // VPCLMULQDQ needs AVX/AVX2 lanes
 end;
 
 class procedure TX86SimdFeatures.ApplyBuildOverrides();
@@ -239,9 +298,30 @@ begin
   FHasPCLMULQDQ := False;
   FHasVPCLMULQDQ := False;
   FHasAESNI := False;
+{$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE3)}
+  if FActiveSimdLevel > TX86SimdLevel.SSE3 then
+    FActiveSimdLevel := TX86SimdLevel.SSE3;
+  FHasSHANI := False;
+  FHasPCLMULQDQ := False;
+  FHasVPCLMULQDQ := False;
+  FHasAESNI := False;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSSE3)}
   if FActiveSimdLevel > TX86SimdLevel.SSSE3 then
     FActiveSimdLevel := TX86SimdLevel.SSSE3;
+  FHasSHANI := False;
+  FHasPCLMULQDQ := False;
+  FHasVPCLMULQDQ := False;
+  FHasAESNI := False;
+{$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE41)}
+  if FActiveSimdLevel > TX86SimdLevel.SSE41 then
+    FActiveSimdLevel := TX86SimdLevel.SSE41;
+  FHasSHANI := False;
+  FHasPCLMULQDQ := False;
+  FHasVPCLMULQDQ := False;
+  FHasAESNI := False;
+{$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE42)}
+  if FActiveSimdLevel > TX86SimdLevel.SSE42 then
+    FActiveSimdLevel := TX86SimdLevel.SSE42;
   FHasSHANI := False;
   FHasPCLMULQDQ := False;
   FHasVPCLMULQDQ := False;
@@ -259,9 +339,24 @@ begin
   Result := FActiveSimdLevel >= TX86SimdLevel.SSE2;
 end;
 
+class function TX86SimdFeatures.HasSSE3(): Boolean;
+begin
+  Result := FActiveSimdLevel >= TX86SimdLevel.SSE3;
+end;
+
 class function TX86SimdFeatures.HasSSSE3(): Boolean;
 begin
   Result := FActiveSimdLevel >= TX86SimdLevel.SSSE3;
+end;
+
+class function TX86SimdFeatures.HasSSE41(): Boolean;
+begin
+  Result := FActiveSimdLevel >= TX86SimdLevel.SSE41;
+end;
+
+class function TX86SimdFeatures.HasSSE42(): Boolean;
+begin
+  Result := FActiveSimdLevel >= TX86SimdLevel.SSE42;
 end;
 
 class function TX86SimdFeatures.HasAVX2(): Boolean;
