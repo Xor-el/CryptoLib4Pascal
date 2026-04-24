@@ -223,6 +223,8 @@ var
   Idx: Int32;
 begin
   // it is hard to validate randomness - we just test the feature set
+  b1 := nil;
+  b2 := nil;
   System.SetLength(b1, 16);
   System.SetLength(b2, 16);
   TAesRandomProvider.Instance.GetBytes(b1);
@@ -239,6 +241,8 @@ begin
 
   for Idx := 1 to 10000 do
   begin
+    b1 := nil;
+    b2 := nil;
     System.SetLength(b1, Idx);
     System.SetLength(b2, Idx);
     a1.GetBytes(b1);
