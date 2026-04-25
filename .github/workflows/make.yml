@@ -290,9 +290,23 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         with:
           envs: LAZARUS_BRANCH LAZARUS_REPO
-          release: "15.0"
+          # Pinned to 14.3 to avoid the broken FreeBSD:15:amd64 pkg
+          # cluster (see https://github.com/freebsd/pkg/issues/2653).
+          # Revisit once 15.x package infrastructure stabilises.
+          release: "14.3"
           usesh: true
           prepare: |
+            # Workaround for periodic FreeBSD pkg cluster breakage:
+            # bootstrap pkg fresh, force-refresh the catalog, and align
+            # pre-installed VM packages with the current repo before
+            # installing new ones — otherwise newly-installed packages
+            # may link against newer libs than the VM image ships.
+            export ASSUME_ALWAYS_YES=yes
+            export IGNORE_OSVERSION=yes
+            pkg bootstrap -f
+            pkg update -f
+            pkg upgrade -y
+
             pkg install -y fpc git wget gmake
 
             LAZARUS_DIR="/tmp/lazarus-src"
