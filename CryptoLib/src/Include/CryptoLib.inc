@@ -171,7 +171,6 @@
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 // Uncomment at most ONE to force a specific X86 SIMD dispatch level:
-// {$DEFINE CRYPTOLIB_FORCE_SCALAR}
 // {$DEFINE CRYPTOLIB_FORCE_SSE2}
 // {$DEFINE CRYPTOLIB_FORCE_SSE3}
 // {$DEFINE CRYPTOLIB_FORCE_SSSE3}
@@ -189,7 +188,7 @@
 {$ENDIF}
 
 {$IFDEF CRYPTOLIB_ARM_SIMD}
-// Uncomment ONE to force a specific Arm SIMD dispatch level:
+// Uncomment at most ONE to force a specific Arm SIMD dispatch level:
 // {$DEFINE CRYPTOLIB_FORCE_NEON}
 // {$DEFINE CRYPTOLIB_FORCE_SVE}
 
