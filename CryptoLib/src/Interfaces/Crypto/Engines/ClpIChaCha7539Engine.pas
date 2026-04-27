@@ -35,9 +35,6 @@ type
     procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
-    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-
   end;
 
 implementation

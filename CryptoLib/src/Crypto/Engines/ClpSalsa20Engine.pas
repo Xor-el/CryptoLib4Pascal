@@ -306,7 +306,8 @@ end;
 procedure TSalsa20Engine.ProcessBytes(const AInBytes: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 var
-  LIdx: Int32;
+  LIdx, LTake: Int32;
+  LInP, LOutP, LKeyP: PByte;
 begin
   if (not FInitialised) then
   begin
@@ -322,15 +323,45 @@ begin
     raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceededTwo);
   end;
 
-  for LIdx := 0 to System.Pred(ALen) do
+  // Bulk path: 64B keystream at a time with 8 x UInt64 xor when block-aligned
+  while ALen > 0 do
   begin
     if (FIndex = 0) then
     begin
+      if (ALen >= 64) then
+      begin
+        GenerateKeyStream(FKeyStream);
+        AdvanceCounter();
+        LInP := @AInBytes[AInOff];
+        LOutP := @AOutBytes[AOutOff];
+        LKeyP := @FKeyStream[0];
+        for LIdx := 0 to 7 do
+        begin
+          PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
+            PUInt64(LKeyP + (LIdx * 8))^;
+        end;
+        AInOff := AInOff + 64;
+        AOutOff := AOutOff + 64;
+        System.Dec(ALen, 64);
+        continue;
+      end;
       GenerateKeyStream(FKeyStream);
       AdvanceCounter();
     end;
-    AOutBytes[LIdx + AOutOff] := Byte(FKeyStream[FIndex] xor AInBytes[LIdx + AInOff]);
-    FIndex := (FIndex + 1) and 63;
+    LTake := ALen;
+    if LTake > (64 - FIndex) then
+    begin
+      LTake := 64 - FIndex;
+    end;
+    for LIdx := 0 to System.Pred(LTake) do
+    begin
+      AOutBytes[AOutOff + LIdx] := Byte(
+        FKeyStream[FIndex + LIdx] xor AInBytes[AInOff + LIdx]);
+    end;
+    FIndex := (FIndex + LTake) and 63;
+    AInOff := AInOff + LTake;
+    AOutOff := AOutOff + LTake;
+    System.Dec(ALen, LTake);
   end;
 end;
 

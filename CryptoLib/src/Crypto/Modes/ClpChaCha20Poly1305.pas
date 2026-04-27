@@ -30,7 +30,6 @@ uses
   ClpIKeyParameter,
   ClpCipherModeParameterUtilities,
   ClpChaCha7539Engine,
-  ClpIChaCha7539Engine,
   ClpPoly1305,
   ClpIMac,
   ClpKeyParameter,
@@ -89,7 +88,7 @@ type
     DataLimit: UInt64 = ((UInt64(1) shl 32) - 1) * 64;
 
   var
-    FChaCha20: IChaCha7539Engine;
+    FChaCha20: TChaCha7539Engine;
     FPoly1305: IMac;
 
     FKey: TCryptoLibByteArray;
@@ -115,6 +114,8 @@ type
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+    procedure ProcessBlocks4(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessData(const AInBytes: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure Reset(AClearMac, AResetCipher: Boolean); overload;
@@ -127,6 +128,7 @@ type
   public
     constructor Create(); overload;
     constructor Create(const APoly1305: IMac); overload;
+    destructor Destroy; override;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
 
@@ -180,6 +182,12 @@ begin
   System.SetLength(FMac, MacSize);
 
   FState := TState.Uninitialized;
+end;
+
+destructor TChaCha20Poly1305.Destroy;
+begin
+  FChaCha20.Free;
+  inherited Destroy;
 end;
 
 function TChaCha20Poly1305.GetAlgorithmName: String;
@@ -418,6 +426,14 @@ begin
       AInOff := AInOff + LAvailable;
       LResultLen := LResultLen + BufSize;
 
+      while (AInOff <= LInLimit2 - (BufSize * 2)) do
+      begin
+        FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 4);
+        ProcessBlocks4(AInput, AInOff, AOutput, AOutOff + LResultLen);
+        AInOff := AInOff + BufSize * 4;
+        LResultLen := LResultLen + BufSize * 4;
+      end;
+
       while (AInOff <= LInLimit2) do
       begin
         FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 2);
@@ -457,6 +473,13 @@ begin
         ProcessBlock(FBuf, 0, AOutput, AOutOff);
         AInOff := AInOff + LAvailable;
         LResultLen := BufSize;
+      end;
+
+      while (AInOff <= LInLimit2 - (BufSize * 2)) do
+      begin
+        ProcessBlocks4(AInput, AInOff, AOutput, AOutOff + LResultLen);
+        AInOff := AInOff + BufSize * 4;
+        LResultLen := LResultLen + BufSize * 4;
       end;
 
       while (AInOff <= LInLimit2) do
@@ -660,6 +683,16 @@ begin
   FChaCha20.ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
 
   FDataCount := IncrementCount(FDataCount, 128, DataLimit);
+end;
+
+procedure TChaCha20Poly1305.ProcessBlocks4(const AInBytes: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+begin
+  TCheck.OutputLength(AOutBytes, AOutOff, 256, SOutputBufferTooShort);
+
+  FChaCha20.ProcessBlocks4(AInBytes, AInOff, AOutBytes, AOutOff);
+
+  FDataCount := IncrementCount(FDataCount, 256, DataLimit);
 end;
 
 procedure TChaCha20Poly1305.ProcessData(const AInBytes: TCryptoLibByteArray;
