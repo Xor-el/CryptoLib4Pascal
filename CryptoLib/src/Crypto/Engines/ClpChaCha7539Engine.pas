@@ -104,7 +104,6 @@ procedure ChaCha7539ProcessBlocks2Avx2(ARounds: Int32; AState, AIn, AOut: PByte)
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_x86_64.inc}
 end;
 
-// 256B = one fused asm: two 128B blocks, one vzeroupper.
 procedure ChaCha7539ProcessBlocks4Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_x86_64.inc}
