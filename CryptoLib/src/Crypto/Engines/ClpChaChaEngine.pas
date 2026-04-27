@@ -60,6 +60,9 @@ type
     /// <param name="ARounds">the number of rounds (must be an even number).</param>
     constructor Create(ARounds: Int32); overload;
 
+    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); override;
+
     class procedure ChaChaCore(ARounds: Int32;
       const AInput: TCryptoLibUInt32Array;
       const AOutput: TCryptoLibByteArray); static;
@@ -82,6 +85,15 @@ end;
 {$ENDIF}
 
 { TChaChaEngine }
+
+procedure TChaChaEngine.ProcessBlocks2(
+  const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+  const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+begin
+  AssertInitialisedAndBlockAligned;
+  ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
+  ImplProcessBlock(AInBytes, AInOff + 64, AOutBytes, AOutOff + 64);
+end;
 
 procedure TChaChaEngine.AdvanceCounter;
 begin

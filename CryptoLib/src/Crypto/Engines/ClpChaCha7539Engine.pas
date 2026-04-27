@@ -72,7 +72,7 @@ type
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
     procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); override;
 
     procedure ProcessBlocks4(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
@@ -82,31 +82,34 @@ type
 implementation
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
+procedure ChaCha7539RaiseCounter7539;
+begin
+  raise EInvalidOperationCryptoLibException.CreateRes(@SCounterExceeded);
+end;
+
+procedure ChaCha7539ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_i386.inc}
+{$ENDIF}
+end;
+
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 procedure ChaCha7539ProcessBlocks2Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_x86_64.inc}
 end;
 
-// 256B = two back-to-back ChaCha7539ProcessBlocks2Avx2; state[12] in memory is
-// updated after each 128B (same as calling ProcessBlocks2 twice).
+// 256B = one fused asm: two 128B blocks, one vzeroupper.
 procedure ChaCha7539ProcessBlocks4Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
-begin
-  ChaCha7539ProcessBlocks2Avx2(ARounds, AState, AIn, AOut);
-  ChaCha7539ProcessBlocks2Avx2(ARounds, AState, AIn + 128, AOut + 128);
+{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_x86_64.inc}
 end;
 {$ENDIF}
-
-procedure ChaCha7539BlockSse2(ARounds: Int32; AState, AKeyStream: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_i386.inc}
-{$ENDIF}
-end;
 {$ENDIF}
 
 { TChaCha7539Engine }
@@ -342,10 +345,6 @@ end;
 
 procedure TChaCha7539Engine.ProcessBlocks2(const AInBytes: TCryptoLibByteArray;
   AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LIdx: Int32;
-  LK: array[0..63] of Byte;
-  LInP, LOutP, LKeyP: PByte;
 begin
   if (not FInitialised) then
   begin
@@ -372,26 +371,8 @@ begin
 {$ENDIF}
   if TCpuFeatures.X86.HasSSE2() then
   begin
-    ChaCha7539BlockSse2(FRounds, PByte(@FEngineState[0]), @LK[0]);
-    LInP := @AInBytes[AInOff];
-    LKeyP := @LK[0];
-    LOutP := @AOutBytes[AOutOff];
-    for LIdx := 0 to 7 do
-    begin
-      PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
-        PUInt64(LKeyP + (LIdx * 8))^;
-    end;
-    AdvanceCounter();
-    ChaCha7539BlockSse2(FRounds, PByte(@FEngineState[0]), @LK[0]);
-    LInP := @AInBytes[AInOff + 64];
-    LKeyP := @LK[0];
-    LOutP := @AOutBytes[AOutOff + 64];
-    for LIdx := 0 to 7 do
-    begin
-      PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
-        PUInt64(LKeyP + (LIdx * 8))^;
-    end;
-    AdvanceCounter();
+    ChaCha7539ProcessBlocks2Sse2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
+      PByte(@AOutBytes[AOutOff]));
     Exit;
   end;
 {$ENDIF}
