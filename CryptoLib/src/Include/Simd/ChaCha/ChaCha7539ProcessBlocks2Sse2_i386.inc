@@ -1,4 +1,4 @@
-// ChaCha7539 (IETF) 128B, SSE2, i386. Two 64B blocks; little-endian state in [esi]. Rounds: ChaChaSse2_DoubleRoundBody_i386.inc.
+// ChaCha7539 (IETF) 128B, SSE2, i386. Two 64B blocks; little-endian state in [esi]. Rounds: ChaChaSse2_DoubleRoundBody.inc.
 // Fused I/O xor: read plaintext at AIn (edi), xor with ChaCha output, write to AOut (eax) — no 64B LK/keystream temp in Pascal.
 // After SimdProc4Begin_i386.inc: ebx=ARounds, esi=AState (R/W), edi=AIn, eax=AOut.
 // ecx: 16B stack realign before each 64B round scratch. edx: copy of ARounds between blocks. Word 12 at [esi+48] +2 per 64B block; wrap 0 -> ChaCha7539RaiseCounter7539.
@@ -18,7 +18,7 @@
   movdqu  [esp+48], xmm3
   mov     ebx, edx
 @@c53ib1r:
-{$I ..\..\Include\Simd\ChaCha\ChaChaSse2_DoubleRoundBody_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaChaSse2_DoubleRoundBody.inc}
   sub     ebx, 2
   jg      @@c53ib1r
   movdqu  xmm4, [esp+0]
@@ -60,7 +60,7 @@
   movdqu  [esp+48], xmm3
   mov     ebx, edx
 @@c53ib2r:
-{$I ..\..\Include\Simd\ChaCha\ChaChaSse2_DoubleRoundBody_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaChaSse2_DoubleRoundBody.inc}
   sub     ebx, 2
   jg      @@c53ib2r
   movdqu  xmm4, [esp+0]

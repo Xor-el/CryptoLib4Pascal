@@ -217,7 +217,7 @@ begin
     LMacSizeBits := LChoice.MacSizeBits;
     if ((MacSize * 8) <> LMacSizeBits) then
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
-    LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce) as IParametersWithIV;
+    LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce);
   end
   else
     LChaCha20Params := AParameters;

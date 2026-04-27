@@ -98,17 +98,27 @@ procedure ChaCha7539ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte)
 {$ENDIF}
 end;
 
-{$IFDEF CRYPTOLIB_X86_64_ASM}
 procedure ChaCha7539ProcessBlocks2Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_i386.inc}
+{$ENDIF}
 end;
 
 procedure ChaCha7539ProcessBlocks4Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_x86_64.inc}
-end;
 {$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_i386.inc}
+{$ENDIF}
+end;
 {$ENDIF}
 
 { TChaCha7539Engine }
@@ -360,14 +370,12 @@ begin
     raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
   if TCpuFeatures.X86.HasAVX2() then
   begin
     ChaCha7539ProcessBlocks2Avx2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
       PByte(@AOutBytes[AOutOff]));
     Exit;
   end;
-{$ENDIF}
   if TCpuFeatures.X86.HasSSE2() then
   begin
     ChaCha7539ProcessBlocks2Sse2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
@@ -393,7 +401,6 @@ begin
       [AlgorithmName]);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
   if TCpuFeatures.X86.HasAVX2() then
   begin
     if (LimitExceeded(UInt32(256))) then
@@ -404,7 +411,6 @@ begin
       PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
     Exit;
   end;
-{$ENDIF}
 {$ENDIF}
   ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
   ProcessBlocks2(AInBytes, AInOff + 128, AOutBytes, AOutOff + 128);

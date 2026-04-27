@@ -1,5 +1,6 @@
-// ChaCha7539 (IETF) AVX2: one "double round" in two 32-lane YMMs (4 quarter-rounds). VEX db-encoded; parent supplies: sub r10,2; jg loop.
-// ARX only — no fused I/O xor here (that is XorStore .inc after the round loop). ChaCha20 in this tree uses SSE2, not this VEX include.
+// ChaCha7539 (IETF) AVX2: one "double round" in two 32-lane YMMs (4 quarter-rounds). VEX db-encoded; ymm-only — same bytes in IA-32 and x86-64.
+// ARX only — no fused I/O xor here (that is XorStore .inc after the round loop). Parent supplies: sub <roundsReg>, 2 / jg <loopLabel>.
+// ChaCha20 in this tree uses SSE2, not this VEX include.
   db $C5, $FD, $FE, $C1                 // vpaddd ymm0, ymm0, ymm1
   db $C5, $E5, $EF, $D8                 // vpxor ymm3, ymm3, ymm0
   db $C5, $FD, $6F, $E3                 // vmovdqa ymm4, ymm3

@@ -5,7 +5,7 @@
   // --- first 128B ---
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_128B_LoadState_x86_64.inc}
   @@c7539_avx2_pb4_b1:
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_DoubleRound_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_DoubleRound.inc}
   sub     r10, 2
   jg      @@c7539_avx2_pb4_b1
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_128B_XorStore_x86_64.inc}
@@ -16,7 +16,7 @@
   // --- second 128B (IETF state at [rdx+48] is already advanced) ---
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_128B_LoadState_x86_64.inc}
   @@c7539_avx2_pb4_b2:
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_DoubleRound_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_DoubleRound.inc}
   sub     r10, 2
   jg      @@c7539_avx2_pb4_b2
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_128B_XorStore_x86_64.inc}

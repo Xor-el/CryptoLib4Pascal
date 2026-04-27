@@ -1,4 +1,4 @@
-// One ChaCha double round (2 column rounds + 3 row shuffles), SSE2, i386. ARX only — no I/O xor here.
+// One ChaCha double round (2 column rounds + 3 row shuffles), SSE2. Shared IA-32 / x86-64: XMM ARX only — no I/O xor here.
 // ChaCha20 parent stores keystream to AOut; ChaCha7539 parent xors in/out (fused I/O) after the round loop.
 // Include after the loop label; parent must emit: sub <roundsReg>, 2 / jg <loopLabel>.
   paddd   xmm0, xmm1
