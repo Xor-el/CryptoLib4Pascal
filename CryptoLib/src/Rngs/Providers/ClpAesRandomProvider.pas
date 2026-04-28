@@ -61,6 +61,7 @@ type
     class function GetInstance: IRandomSourceProvider; static;
     class function CreateProvider: IRandomSourceProvider; static;
 
+    class function OsProviderAvailable: Boolean; static;
     class procedure GetRawEntropy(const AEntropy: TCryptoLibByteArray); inline;
 
     class procedure Boot(); static;
@@ -69,14 +70,26 @@ type
 
     class procedure ValidateAesRngSeedLength(ASeedLength: Int32);
 
-    constructor Create(const AAesRngSeed: TCryptoLibByteArray; AReseedAfterBytes: Int32); overload;
+    constructor Create(const AAesRngSeed: TCryptoLibByteArray;
+      AReseedAfterBytes: Int32); overload;
 
     procedure DoIncrementCounter();
 
-    procedure DoSeed(const AAesRngSeed: TCryptoLibByteArray);
+    /// <summary>
+    /// Re-key the cipher with state blending for forward security.
+    /// Encrypts the current counter under the existing key to produce a
+    /// 16-byte mix block, XORs that into the leading bytes of AAesRngSeed,
+    /// and installs the result as the new key. An attacker who learns the
+    /// new seed cannot reconstruct prior output without the previous key.
+    /// For 192/256-bit keys only the first 16 bytes are mixed; the remainder
+    /// comes directly from AAesRngSeed (fresh OS entropy).
+    /// Must be called with FInternalLock already held by the caller.
+    /// </summary>
+    procedure DoSeedLocked(const AAesRngSeed: TCryptoLibByteArray);
 
   public
-    constructor Create(AAesRngSeedLength: Int32 = 32; AReseedAfterBytes: Int32 = 1024 * 1024); overload;
+    constructor Create(AAesRngSeedLength: Int32 = 32;
+      AReseedAfterBytes: Int32 = 1024 * 1024); overload;
 
     destructor Destroy; override;
 
@@ -115,6 +128,15 @@ begin
   Result := TAesRandomProvider.Create();
 end;
 
+class function TAesRandomProvider.OsProviderAvailable: Boolean;
+begin
+  try
+    Result := TOSRandomProvider.Instance.GetIsAvailable;
+  except
+    Result := False;
+  end;
+end;
+
 class procedure TAesRandomProvider.ValidateAesRngSeedLength(ASeedLength: Int32);
 begin
   if ((ASeedLength < 16) or (ASeedLength > 32) or ((ASeedLength and 7) <> 0))
@@ -124,8 +146,8 @@ begin
   end;
 end;
 
-class procedure TAesRandomProvider.GetRawEntropy(const AEntropy
-  : TCryptoLibByteArray);
+class procedure TAesRandomProvider.GetRawEntropy(
+  const AEntropy: TCryptoLibByteArray);
 begin
   TOSRandomProvider.Instance.GetBytes(AEntropy);
 end;
@@ -136,7 +158,6 @@ begin
   begin
     FLock := TCriticalSection.Create;
   end;
-  // Trigger instance creation
   GetInstance;
 end;
 
@@ -155,53 +176,70 @@ procedure TAesRandomProvider.DoIncrementCounter;
 var
   LI: Int32;
 begin
-  for LI := System.Low(FCounter) to System.High(FCounter) do
+  // Big-endian increment: byte 15 (rightmost) carries leftward.
+  for LI := System.High(FCounter) downto System.Low(FCounter) do
   begin
     System.Inc(FCounter[LI]);
-    // Check whether we need to loop again to carry the one.
     if (FCounter[LI] <> 0) then
-    begin
-      break;
-    end;
+      Break;
   end;
 end;
 
-procedure TAesRandomProvider.DoSeed(const AAesRngSeed: TCryptoLibByteArray);
+procedure TAesRandomProvider.DoSeedLocked(
+  const AAesRngSeed: TCryptoLibByteArray);
 var
-  LKeyParameter: IKeyParameter;
+  LMix, LNewKey: TCryptoLibByteArray;
+  LKeyLen, LMixLen, LI: Int32;
 begin
-  LKeyParameter := TKeyParameter.Create(AAesRngSeed);
-  FInternalLock.Acquire;
+  LMix := FCipher.DoFinal(FCounter);
   try
-    FCipher.Init(True, LKeyParameter);
+    LKeyLen := System.Length(AAesRngSeed);
+    System.SetLength(LNewKey, LKeyLen);
+    System.Move(AAesRngSeed[0], LNewKey[0], LKeyLen * System.SizeOf(Byte));
+
+    // XOR mix into the leading min(16, LKeyLen) bytes of the new key.
+    LMixLen := LKeyLen;
+    if LMixLen > CounterSize then
+      LMixLen := CounterSize;
+    for LI := 0 to LMixLen - 1 do
+      LNewKey[LI] := LNewKey[LI] xor LMix[LI];
+
+    FCipher.Init(True, TKeyParameter.Create(LNewKey) as IKeyParameter);
     FBytesSinceSeed := 0;
   finally
-    FInternalLock.Release;
+    TArrayUtilities.Fill<Byte>(LMix, 0, System.Length(LMix), Byte(0));
+    TArrayUtilities.Fill<Byte>(LNewKey, 0, System.Length(LNewKey), Byte(0));
   end;
 end;
 
-constructor TAesRandomProvider.Create(const AAesRngSeed: TCryptoLibByteArray; AReseedAfterBytes: Int32);
+constructor TAesRandomProvider.Create(const AAesRngSeed: TCryptoLibByteArray;
+  AReseedAfterBytes: Int32);
 var
-  LBlockCipher: IBlockCipher;
   LAesRngSeed: TCryptoLibByteArray;
 begin
   inherited Create();
   LAesRngSeed := System.Copy(AAesRngSeed);
   FInternalLock := TCriticalSection.Create;
-  // Set up engine
+
   FCipher := TBufferedBlockCipher.Create(TAesUtilities.CreateEngine());
-  System.SetLength(FCounter, CounterSize);
   FAesRngSeedLength := System.Length(LAesRngSeed);
   FReseedAfterBytes := AReseedAfterBytes;
   ValidateAesRngSeedLength(FAesRngSeedLength);
-  try
-    DoSeed(LAesRngSeed);
-  finally
-    TArrayUtilities.Fill<Byte>(LAesRngSeed, 0, System.Length(LAesRngSeed), Byte(0)); // clear key from memory
-  end;
+
+  // Randomise the initial counter so two instances seeded at the same
+  // instant still diverge immediately.
+  System.SetLength(FCounter, CounterSize);
+  GetRawEntropy(FCounter);
+
+  // Direct Init on first seed - no prior state to mix.
+  FCipher.Init(True, TKeyParameter.Create(LAesRngSeed) as IKeyParameter);
+  FBytesSinceSeed := 0;
+
+  TArrayUtilities.Fill<Byte>(LAesRngSeed, 0, System.Length(LAesRngSeed), Byte(0));
 end;
 
-constructor TAesRandomProvider.Create(AAesRngSeedLength, AReseedAfterBytes: Int32);
+constructor TAesRandomProvider.Create(AAesRngSeedLength,
+  AReseedAfterBytes: Int32);
 var
   LSeed: TCryptoLibByteArray;
 begin
@@ -210,7 +248,7 @@ begin
     GetRawEntropy(LSeed); // pure entropy from OS
     Create(LSeed, AReseedAfterBytes);
   finally
-    TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
+    TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0));
   end;
 end;
 
@@ -224,28 +262,30 @@ procedure TAesRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
 var
   LDataLength, LOffset, LResultLength: Int32;
   LSeed, LResult: TCryptoLibByteArray;
+  LNeedReseed: Boolean;
 begin
   LDataLength := System.Length(AData);
   if LDataLength <= 0 then
-  begin
     Exit;
-  end;
-
-  if (FBytesSinceSeed > FReseedAfterBytes) then
-  begin
-    System.SetLength(LSeed, FAesRngSeedLength);
-    try
-      GetRawEntropy(LSeed); // pure entropy from OS
-      DoSeed(LSeed);
-    finally
-      TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0)); // clear seed from memory
-    end;
-  end;
-
-  LOffset := 0;
 
   FInternalLock.Acquire;
   try
+    // Reseed check is inside the lock so the check-then-reseed-then-generate
+    // sequence is atomic across threads.
+    LNeedReseed := (FBytesSinceSeed > FReseedAfterBytes);
+    if LNeedReseed then
+    begin
+      System.SetLength(LSeed, FAesRngSeedLength);
+      try
+        GetRawEntropy(LSeed);
+        DoSeedLocked(LSeed);
+      finally
+        TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0));
+      end;
+    end;
+
+    LOffset := 0;
+
     while (LDataLength shr 4) > 0 do
     begin
       DoIncrementCounter;
@@ -260,8 +300,18 @@ begin
     begin
       DoIncrementCounter;
       LResult := FCipher.DoFinal(FCounter);
-      System.Move(LResult[0], AData[LOffset], LDataLength * System.SizeOf(Byte));
-      System.Inc(FBytesSinceSeed, LDataLength);
+      try
+        System.Move(LResult[0], AData[LOffset],
+          LDataLength * System.SizeOf(Byte));
+        System.Inc(FBytesSinceSeed, LDataLength);
+        // Zero the bytes we did NOT consume so they cannot be read from the
+        // heap after LResult is released.
+        TArrayUtilities.Fill<Byte>(LResult, LDataLength,
+          System.Length(LResult) - LDataLength, Byte(0));
+      finally
+        TArrayUtilities.Fill<Byte>(LResult, 0,
+          System.Length(LResult), Byte(0));
+      end;
     end;
 
   finally
@@ -271,7 +321,7 @@ end;
 
 function TAesRandomProvider.GetIsAvailable: Boolean;
 begin
-  Result := True; // AES PRNG is always available
+  Result := OsProviderAvailable;
 end;
 
 function TAesRandomProvider.GetName: String;
