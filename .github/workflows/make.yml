@@ -153,7 +153,7 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         uses: actions/checkout@v6
         with:
-          submodules: true
+          submodules: recursive
 
       # ── OpenSSL libssl.1.1 symlink hack (Linux + macOS) ──────────────
       #

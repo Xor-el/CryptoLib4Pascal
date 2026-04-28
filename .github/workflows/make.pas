@@ -1,3 +1,5 @@
+//castle-engine.io/modern_pascal
+
 program Make;
 {$mode objfpc}{$H+}
 {$SCOPEDENUMS ON}
@@ -10,7 +12,9 @@ uses
   fphttpclient,
   RegExpr,
   openssl,
+  LazUTF8,
   opensslsockets,
+  eventlog,
   Process;
 
 const
@@ -49,6 +53,9 @@ type
     Name: string;  // OPM: package name | GitHub: 'owner/repo'
     Ref: string;   // GitHub: branch, tag or commit (ignored for OPM)
   end;
+  if Knd = etError then ExitCode += 1;
+  Writeln(stderr, UTF8ToConsole(Result.Format([Msg])));
+end;
 
 const
   Dependencies: array of TDependency = (
