@@ -1,4 +1,5 @@
 // Salsa20 128B, SSE4.1 i386. After SimdProc4Begin: ebx=ARounds, esi=AState, edi=AIn, eax=AOut.
+// Rounds: Salsa20Sse41_TwoColumnRoundsBody.inc.
 // edx: saved ARounds. push eax/ pop eax: expand clobbers eax; xor needs AOut in eax.
   mov     edx, ebx
   push    eax
@@ -97,74 +98,7 @@
   movdqu  [esp+96], xmm2
   movdqu  [esp+112], xmm3
 @@s2p2_i386_b1r:
-  movdqa  xmm4, xmm1
-  movdqa  xmm1, xmm3
-  movdqa  xmm3, xmm4
-  movdqa  xmm4, xmm0
-  paddd   xmm4, xmm3
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 7
-  psrld   xmm5, 25
-  por     xmm4, xmm5
-  pxor    xmm1, xmm4
-  movdqa  xmm4, xmm1
-  paddd   xmm4, xmm0
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 9
-  psrld   xmm5, 23
-  por     xmm4, xmm5
-  pxor    xmm2, xmm4
-  movdqa  xmm4, xmm2
-  paddd   xmm4, xmm1
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 13
-  psrld   xmm5, 19
-  por     xmm4, xmm5
-  pxor    xmm3, xmm4
-  movdqa  xmm4, xmm3
-  paddd   xmm4, xmm2
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 18
-  psrld   xmm5, 14
-  por     xmm4, xmm5
-  pxor    xmm0, xmm4
-  pshufd  xmm1, xmm1, $93
-  pshufd  xmm2, xmm2, $4E
-  pshufd  xmm3, xmm3, $39
-  movdqa  xmm4, xmm1
-  movdqa  xmm1, xmm3
-  movdqa  xmm3, xmm4
-  movdqa  xmm4, xmm0
-  paddd   xmm4, xmm3
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 7
-  psrld   xmm5, 25
-  por     xmm4, xmm5
-  pxor    xmm1, xmm4
-  movdqa  xmm4, xmm1
-  paddd   xmm4, xmm0
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 9
-  psrld   xmm5, 23
-  por     xmm4, xmm5
-  pxor    xmm2, xmm4
-  movdqa  xmm4, xmm2
-  paddd   xmm4, xmm1
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 13
-  psrld   xmm5, 19
-  por     xmm4, xmm5
-  pxor    xmm3, xmm4
-  movdqa  xmm4, xmm3
-  paddd   xmm4, xmm2
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 18
-  psrld   xmm5, 14
-  por     xmm4, xmm5
-  pxor    xmm0, xmm4
-  pshufd  xmm1, xmm1, $93
-  pshufd  xmm2, xmm2, $4E
-  pshufd  xmm3, xmm3, $39
+{$I ..\..\Include\Simd\Salsa\Salsa20Sse41_TwoColumnRoundsBody.inc}
   sub     ebx, 2
   jg      @@s2p2_i386_b1r
   movdqu  xmm4, [esp+64]
@@ -370,74 +304,7 @@
   movdqu  [esp+96], xmm2
   movdqu  [esp+112], xmm3
 @@s2p2_i386_b2r:
-  movdqa  xmm4, xmm1
-  movdqa  xmm1, xmm3
-  movdqa  xmm3, xmm4
-  movdqa  xmm4, xmm0
-  paddd   xmm4, xmm3
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 7
-  psrld   xmm5, 25
-  por     xmm4, xmm5
-  pxor    xmm1, xmm4
-  movdqa  xmm4, xmm1
-  paddd   xmm4, xmm0
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 9
-  psrld   xmm5, 23
-  por     xmm4, xmm5
-  pxor    xmm2, xmm4
-  movdqa  xmm4, xmm2
-  paddd   xmm4, xmm1
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 13
-  psrld   xmm5, 19
-  por     xmm4, xmm5
-  pxor    xmm3, xmm4
-  movdqa  xmm4, xmm3
-  paddd   xmm4, xmm2
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 18
-  psrld   xmm5, 14
-  por     xmm4, xmm5
-  pxor    xmm0, xmm4
-  pshufd  xmm1, xmm1, $93
-  pshufd  xmm2, xmm2, $4E
-  pshufd  xmm3, xmm3, $39
-  movdqa  xmm4, xmm1
-  movdqa  xmm1, xmm3
-  movdqa  xmm3, xmm4
-  movdqa  xmm4, xmm0
-  paddd   xmm4, xmm3
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 7
-  psrld   xmm5, 25
-  por     xmm4, xmm5
-  pxor    xmm1, xmm4
-  movdqa  xmm4, xmm1
-  paddd   xmm4, xmm0
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 9
-  psrld   xmm5, 23
-  por     xmm4, xmm5
-  pxor    xmm2, xmm4
-  movdqa  xmm4, xmm2
-  paddd   xmm4, xmm1
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 13
-  psrld   xmm5, 19
-  por     xmm4, xmm5
-  pxor    xmm3, xmm4
-  movdqa  xmm4, xmm3
-  paddd   xmm4, xmm2
-  movdqa  xmm5, xmm4
-  pslld   xmm4, 18
-  psrld   xmm5, 14
-  por     xmm4, xmm5
-  pxor    xmm0, xmm4
-  pshufd  xmm1, xmm1, $93
-  pshufd  xmm2, xmm2, $4E
-  pshufd  xmm3, xmm3, $39
+{$I ..\..\Include\Simd\Salsa\Salsa20Sse41_TwoColumnRoundsBody.inc}
   sub     ebx, 2
   jg      @@s2p2_i386_b2r
   movdqu  xmm4, [esp+64]

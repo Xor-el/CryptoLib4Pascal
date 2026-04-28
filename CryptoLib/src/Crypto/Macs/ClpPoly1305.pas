@@ -112,7 +112,7 @@ type
 
 implementation
 
-{ Scalar primitives -------------------------------------------------------- }
+{ Scalar primitives }
 
 const
   // Bit masks applied to the four little-endian 32-bit words of the first
@@ -239,7 +239,7 @@ begin
   end;
 end;
 
-{ AVX2 helpers ------------------------------------------------------------- }
+{ AVX2 helpers }
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
@@ -407,7 +407,7 @@ end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
-{ TPoly1305 ---------------------------------------------------------------- }
+{ TPoly1305 }
 
 constructor TPoly1305.Create();
 begin
