@@ -31,7 +31,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpChaCha7539Engine,
-  ClpIChaCha7539Engine,
   ClpIKeyParameter,
   ClpKeyParameter,
   ClpParametersWithIV,
@@ -43,6 +42,8 @@ type
   TTestChaCha7539ProcessBlocks2 = class(TCryptoLibAlgorithmTestCase)
   published
     procedure Test128ByteProcessBlocks2VsTwoBlockCalls;
+    procedure Test256ByteProcessBlocks4VsTwoProcessBlocks2;
+    procedure TestProcessBytesVsReturnByte;
   end;
 
 implementation
@@ -53,7 +54,7 @@ procedure TTestChaCha7539ProcessBlocks2.Test128ByteProcessBlocks2VsTwoBlockCalls
 var
   LKey, LNonce, LIn, LOutA, LOutB: TBytes;
   LParams: IParametersWithIV;
-  LA, LB: IChaCha7539Engine;
+  LA, LB: TChaCha7539Engine;
   LIdx: Int32;
 begin
   LKey := DecodeHex('000102030405060708090A0B0C0D0E0F' +
@@ -68,16 +69,108 @@ begin
   end;
   SetLength(LOutA, 128);
   SetLength(LOutB, 128);
-  LA := TChaCha7539Engine.Create();
-  LA.Init(True, LParams);
-  LA.ProcessBlocks2(LIn, 0, LOutA, 0);
-  LB := TChaCha7539Engine.Create();
-  LB.Init(True, LParams);
-  LB.ProcessBlock(LIn, 0, LOutB, 0);
-  LB.ProcessBlock(LIn, 64, LOutB, 64);
+  LA := TChaCha7539Engine.Create;
+  try
+    LA.Init(True, LParams);
+    LA.ProcessBlocks2(LIn, 0, LOutA, 0);
+  finally
+    LA.Free;
+  end;
+  LB := TChaCha7539Engine.Create;
+  try
+    LB.Init(True, LParams);
+    LB.ProcessBlock(LIn, 0, LOutB, 0);
+    LB.ProcessBlock(LIn, 64, LOutB, 64);
+  finally
+    LB.Free;
+  end;
   if not AreEqual(LOutA, LOutB) then
   begin
     Fail('ChaCha7539 128B stream mismatch');
+  end;
+end;
+
+procedure TTestChaCha7539ProcessBlocks2.Test256ByteProcessBlocks4VsTwoProcessBlocks2;
+var
+  LKey, LNonce, LIn, LOutA, LOutB: TBytes;
+  LParams: IParametersWithIV;
+  LA, LB: TChaCha7539Engine;
+  LIdx: Int32;
+begin
+  LKey := DecodeHex('000102030405060708090A0B0C0D0E0F' +
+    '101112131415161718191A1B1C1D1E1F');
+  LNonce := DecodeHex('00000000000000000000000A');
+  LParams := TParametersWithIV.Create(
+    TKeyParameter.Create(LKey) as IKeyParameter, LNonce);
+  SetLength(LIn, 256);
+  for LIdx := 0 to 255 do
+  begin
+    LIn[LIdx] := Byte(LIdx);
+  end;
+  SetLength(LOutA, 256);
+  SetLength(LOutB, 256);
+  LA := TChaCha7539Engine.Create;
+  try
+    LA.Init(True, LParams);
+    LA.ProcessBlocks4(LIn, 0, LOutA, 0);
+  finally
+    LA.Free;
+  end;
+  LB := TChaCha7539Engine.Create;
+  try
+    LB.Init(True, LParams);
+    LB.ProcessBlocks2(LIn, 0, LOutB, 0);
+    LB.ProcessBlocks2(LIn, 128, LOutB, 128);
+  finally
+    LB.Free;
+  end;
+  if not AreEqual(LOutA, LOutB) then
+  begin
+    Fail('ChaCha7539 256B ProcessBlocks4 vs two ProcessBlocks2 mismatch');
+  end;
+end;
+
+procedure TTestChaCha7539ProcessBlocks2.TestProcessBytesVsReturnByte;
+const
+  CLen = 300;
+var
+  LKey, LNonce, LIn, LOutA, LOutB: TBytes;
+  LParams: IParametersWithIV;
+  LA, LB: TChaCha7539Engine;
+  LIdx: Int32;
+begin
+  LKey := DecodeHex('000102030405060708090A0B0C0D0E0F' +
+    '101112131415161718191A1B1C1D1E1F');
+  LNonce := DecodeHex('00000000000000000000000A');
+  LParams := TParametersWithIV.Create(
+    TKeyParameter.Create(LKey) as IKeyParameter, LNonce);
+  SetLength(LIn, CLen);
+  for LIdx := 0 to CLen - 1 do
+  begin
+    LIn[LIdx] := Byte(LIdx * 3 + 17);
+  end;
+  SetLength(LOutA, CLen);
+  SetLength(LOutB, CLen);
+  LA := TChaCha7539Engine.Create;
+  try
+    LA.Init(True, LParams);
+    LA.ProcessBytes(LIn, 0, CLen, LOutA, 0);
+  finally
+    LA.Free;
+  end;
+  LB := TChaCha7539Engine.Create;
+  try
+    LB.Init(True, LParams);
+    for LIdx := 0 to CLen - 1 do
+    begin
+      LOutB[LIdx] := Byte(LB.ReturnByte(LIn[LIdx]));
+    end;
+  finally
+    LB.Free;
+  end;
+  if not AreEqual(LOutA, LOutB) then
+  begin
+    Fail('ChaCha7539 ProcessBytes vs ReturnByte stream mismatch');
   end;
 end;
 

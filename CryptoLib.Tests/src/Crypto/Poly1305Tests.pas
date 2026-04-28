@@ -84,6 +84,8 @@ type
     procedure TestSequential;
     procedure TestResetBehaviour;
     procedure TestRfc7539Vectors;
+    procedure TestBlockUpdateOneShotVsChunked;
+    procedure TestLcgMessageBulkLengths;
 
   end;
 
@@ -517,6 +519,101 @@ begin
   LPoly.BlockUpdate(LM, 0, Length(LM));
   LPoly.DoFinal(LOutput, 0);
   CheckEqual('Poly1305 reset after Init', LCheck, LOutput);
+end;
+
+procedure TTestPoly1305.TestBlockUpdateOneShotVsChunked;
+const
+  CKeyHex =
+    '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f';
+  CChunk: array[0..4] of Int32 = (1, 5, 16, 32, 13);
+  CLen: array[0..12] of Int32 =
+    (0, 1, 15, 16, 17, 31, 32, 33, 255, 256, 257, 512, 2048);
+var
+  LKey, LMsg, T1, T2: TBytes;
+  LM1, LM2: IMac;
+  I, LLen, LPos, LPart, LCi: Int32;
+  LSeed: UInt32;
+begin
+  LKey := THexEncoder.Decode(CKeyHex);
+  for I := 0 to High(CLen) do
+  begin
+    LLen := CLen[I];
+    SetLength(LMsg, LLen);
+    LSeed := UInt32(2463534242 + (UInt32(LLen) * 17));
+    for LPos := 0 to LLen - 1 do
+    begin
+      LSeed := LSeed * 1664525 + 1013904223;
+      LMsg[LPos] := Byte(LSeed shr 17);
+    end;
+    LM1 := TPoly1305.Create();
+    LM1.Init(TKeyParameter.Create(LKey) as IKeyParameter);
+    LM1.BlockUpdate(LMsg, 0, LLen);
+    SetLength(T1, 16);
+    LM1.DoFinal(T1, 0);
+    LM2 := TPoly1305.Create();
+    LM2.Init(TKeyParameter.Create(LKey) as IKeyParameter);
+    LPos := 0;
+    LCi := 0;
+    while LPos < LLen do
+    begin
+      LPart := CChunk[LCi mod (High(CChunk) + 1)];
+      if LPos + LPart > LLen then
+        LPart := LLen - LPos;
+      LM2.BlockUpdate(LMsg, LPos, LPart);
+      LPos := LPos + LPart;
+      System.Inc(LCi);
+    end;
+    SetLength(T2, 16);
+    LM2.DoFinal(T2, 0);
+    CheckEqual(Format('Poly1305 one-shot vs chunked, len %d', [LLen]), T1, T2);
+  end;
+end;
+
+procedure TTestPoly1305.TestLcgMessageBulkLengths;
+const
+  CKeyHex =
+    '0f0e0d0c0b0a09080706050403020100' +
+    '1f1e1d1c1b1a19181716151413121110';
+  CChunk: array[0..4] of Int32 = (1, 5, 16, 32, 100);
+  CSize: array[0..3] of Int32 = (240, 4000, 8000, 17 * 16);
+var
+  LKey, LMsg, T1, T2: TBytes;
+  LM1, LM2: IMac;
+  S, I, P, LPart, LCi: Int32;
+  LSeed: UInt32;
+begin
+  LKey := THexEncoder.Decode(CKeyHex);
+  for S := 0 to High(CSize) do
+  begin
+    SetLength(LMsg, CSize[S]);
+    LSeed := UInt32(2654435761) xor UInt32(CSize[S] * 1315423911);
+    for I := 0 to CSize[S] - 1 do
+    begin
+      LSeed := LSeed * 1103515245 + 12345;
+      LMsg[I] := Byte((LSeed shr 16) xor (LSeed shr 24));
+    end;
+    LM1 := TPoly1305.Create();
+    LM1.Init(TKeyParameter.Create(LKey) as IKeyParameter);
+    LM1.BlockUpdate(LMsg, 0, CSize[S]);
+    SetLength(T1, 16);
+    LM1.DoFinal(T1, 0);
+    LM2 := TPoly1305.Create();
+    LM2.Init(TKeyParameter.Create(LKey) as IKeyParameter);
+    P := 0;
+    LCi := 0;
+    while P < CSize[S] do
+    begin
+      LPart := CChunk[LCi mod (High(CChunk) + 1)];
+      if P + LPart > CSize[S] then
+        LPart := CSize[S] - P;
+      LM2.BlockUpdate(LMsg, P, LPart);
+      P := P + LPart;
+      System.Inc(LCi);
+    end;
+    SetLength(T2, 16);
+    LM2.DoFinal(T2, 0);
+    CheckEqual(Format('Poly1305 bulk LCG one vs chunked, %d B', [CSize[S]]), T1, T2);
+  end;
 end;
 
 procedure TTestPoly1305.TestRfc7539Vectors;

@@ -67,6 +67,7 @@ type
     procedure TestOutputSizes;
     procedure TestRandomised;
     procedure TestExceptionsAndTampering;
+    procedure TestAeadInputChunking;
 
   end;
 
@@ -343,6 +344,49 @@ begin
     LDecTag := LCipher.GetMac;
     CheckEqual('ChaCha20Poly1305 random tag (key reuse)', LEncTag, LDecTag);
   end;
+end;
+
+procedure TTestChaCha20Poly1305.TestAeadInputChunking;
+var
+  LK, LN, LA, LPlain: TBytes;
+  LParams: IAeadParameters;
+  C1, C2: IChaCha20Poly1305;
+  LO1, LO2: TBytes;
+  I, LTot, P: Int32;
+  LSeed: UInt32;
+begin
+  LK := THexEncoder.Decode(
+    '9a0a4bed901cf51f1ec22db74ac7cb70' +
+    'd4ebc12e4d18f69ccd46e0c0d060de45');
+  LN := THexEncoder.Decode('0c0b0a090807060504030201');
+  LA := THexEncoder.Decode('0201000306050407');
+  SetLength(LPlain, 600);
+  LSeed := $C0FEBEEF;
+  for I := 0 to 599 do
+  begin
+    LSeed := LSeed * 1664525 + 1013904223;
+    LPlain[I] := Byte(LSeed shr 9);
+  end;
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    16 * 8, LN, LA);
+  C1 := InitCipher(True, LParams);
+  LTot := C1.GetOutputSize(600);
+  SetLength(LO1, LTot);
+  P := C1.ProcessBytes(LPlain, 0, 600, LO1, 0);
+  P := P + C1.DoFinal(LO1, P);
+  if P <> LTot then
+    Fail('one-shot ChaCha20-Poly1305 output size');
+  C2 := InitCipher(True, LParams);
+  SetLength(LO2, LTot);
+  P := C2.ProcessBytes(LPlain, 0, 1, LO2, 0);
+  P := P + C2.ProcessBytes(LPlain, 1, 255, LO2, P);
+  P := P + C2.ProcessBytes(LPlain, 256, 256, LO2, P);
+  P := P + C2.ProcessBytes(LPlain, 512, 88, LO2, P);
+  P := P + C2.DoFinal(LO2, P);
+  if P <> LTot then
+    Fail('chunked ChaCha20-Poly1305 output size');
+  CheckEqual('ChaCha20Poly1305 ciphertag 600B one vs chunks', LO1, LO2);
+  CheckEqual('ChaCha20Poly1305 tag one vs chunks', C1.GetMac, C2.GetMac);
 end;
 
 procedure TTestChaCha20Poly1305.TestExceptionsAndTampering;
