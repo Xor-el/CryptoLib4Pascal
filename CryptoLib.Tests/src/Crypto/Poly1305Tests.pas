@@ -545,12 +545,12 @@ begin
       LSeed := LSeed * 1664525 + 1013904223;
       LMsg[LPos] := Byte(LSeed shr 17);
     end;
-    LM1 := TPoly1305.Create() as IPoly1305;
+    LM1 := TPoly1305.Create();
     LM1.Init(TKeyParameter.Create(LKey) as IKeyParameter);
     LM1.BlockUpdate(LMsg, 0, LLen);
     SetLength(T1, 16);
     LM1.DoFinal(T1, 0);
-    LM2 := TPoly1305.Create() as IPoly1305;
+    LM2 := TPoly1305.Create();
     LM2.Init(TKeyParameter.Create(LKey) as IKeyParameter);
     LPos := 0;
     LCi := 0;
