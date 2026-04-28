@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -31,49 +30,50 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpAsn1Objects,
-  ClpIAsn1Objects,
+  ClpAsn1Parsers,
+  ClpIAsn1Parsers,
+  ClpEncoders,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
-  TTestParse = class(TCryptoLibAlgorithmTestCase)
-  private
-  var
-    FlongTagged: TBytes;
 
+  TParseTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+    FLongTagged: TCryptoLibByteArray;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
-  published
-    procedure TestParse;
 
+  published
+    procedure TestLongTag;
   end;
 
 implementation
 
-{ TTestParse }
+{ TParseTest }
 
-procedure TTestParse.SetUp;
+procedure TParseTest.SetUp;
 begin
   inherited;
-  FlongTagged := DecodeHex('9f1f023330');
+  FLongTagged := THexEncoder.Decode('9f1f023330');
 end;
 
-procedure TTestParse.TearDown;
+procedure TParseTest.TearDown;
 begin
+  FLongTagged := nil;
   inherited;
-
 end;
 
-procedure TTestParse.TestParse;
+procedure TParseTest.TestLongTag;
 var
-  aIn: IAsn1StreamParser;
-  tagged: IAsn1TaggedObjectParser;
+  LAIn: IAsn1StreamParser;
+  LTagged: IAsn1TaggedObjectParser;
 begin
-  aIn := TAsn1StreamParser.Create(FlongTagged);
-  tagged := aIn.ReadObject() as IAsn1TaggedObjectParser;
+  LAIn := TAsn1StreamParser.Create(FLongTagged);
+  LTagged := LAIn.ReadObject() as IAsn1TaggedObjectParser;
 
-  CheckEquals(31, tagged.TagNo);
+  CheckTrue(LTagged.HasContextTag(31), 'Expected context tag 31');
 end;
 
 initialization
@@ -81,9 +81,9 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
-  RegisterTest(TTestParse);
+  RegisterTest(TParseTest);
 {$ELSE}
-  RegisterTest(TTestParse.Suite);
+  RegisterTest(TParseTest.Suite);
 {$ENDIF FPC}
 
 end.

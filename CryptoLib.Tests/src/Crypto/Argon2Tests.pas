@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -35,6 +34,7 @@ uses
   ClpArgon2ParametersGenerator,
   ClpIArgon2ParametersGenerator,
   ClpConverters,
+  ClpEncoders,
   CryptoLibTestBase;
 
 type
@@ -87,10 +87,10 @@ var
   LAdditional, LSecret, LSalt, LPassword: TBytes;
 begin
 
-  LAdditional := TConverters.ConvertHexStringToBytes(AAdditional);
-  LSecret := TConverters.ConvertHexStringToBytes(ASecret);
-  LSalt := TConverters.ConvertHexStringToBytes(ASalt);
-  LPassword := TConverters.ConvertHexStringToBytes(APassword);
+  LAdditional := THexEncoder.Decode(AAdditional);
+  LSecret := THexEncoder.Decode(ASecret);
+  LSalt := THexEncoder.Decode(ASalt);
+  LPassword := THexEncoder.Decode(APassword);
 
   LArgon2Generator := TArgon2ParametersGenerator.Create();
 
@@ -102,9 +102,9 @@ begin
     LAdditional, AIterations, AMemoryAsKB, AParallelism,
     TCryptoLibArgon2MemoryCostType.MemoryAsKB);
 
-  LActual := TConverters.ConvertBytesToHexString
+  LActual := THexEncoder.Encode
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
-    as IKeyParameter).GetKey(), False);
+    as IKeyParameter).GetKey());
 
   LArgon2Generator.Clear();
 
@@ -136,9 +136,9 @@ begin
     AIterations, AMemory, AParallelism,
     TCryptoLibArgon2MemoryCostType.MemoryPowOfTwo);
 
-  LActual := TConverters.ConvertBytesToHexString
+  LActual := THexEncoder.Encode
     ((LArgon2Generator.GenerateDerivedMacParameters(AOutputLength)
-    as IKeyParameter).GetKey(), False);
+    as IKeyParameter).GetKey());
 
   LArgon2Generator.Clear();
 

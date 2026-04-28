@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -23,13 +22,13 @@ interface
 
 uses
   Classes,
-  ClpIEd25519,
+  SyncObjs,
   ClpEd25519,
   ClpICipherParameters,
+  ClpISigner,
   ClpIEd25519Signer,
-  ClpIEd25519PrivateKeyParameters,
-  ClpIEd25519PublicKeyParameters,
-  ClpEd25519PrivateKeyParameters,
+  ClpIEd25519Parameters,
+  ClpEd25519Parameters,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -39,32 +38,55 @@ resourcestring
     'Ed25519Signer not Initialised for Verification';
 
 type
-  TEd25519Signer = class(TInterfacedObject, IEd25519Signer)
+  TEd25519Signer = class(TInterfacedObject, ISigner, IEd25519Signer)
+
+  strict private
+  type
+    TBuffer = class
+    strict private
+    var
+      FStream: TMemoryStream;
+      FLock: TCriticalSection;
+
+      function GetBufferContent: TCryptoLibByteArray;
+      procedure ResetInternal;
+
+    public
+      constructor Create();
+      destructor Destroy(); override;
+
+      procedure WriteByte(AInput: Byte);
+      procedure Write(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
+      procedure Reset();
+
+      function GenerateSignature(const APrivateKey
+        : IEd25519PrivateKeyParameters): TCryptoLibByteArray;
+      function VerifySignature(const APublicKey: IEd25519PublicKeyParameters;
+        const ASignature: TCryptoLibByteArray): Boolean;
+    end;
 
   strict private
   var
-    FBuffer: TMemoryStream;
-    FforSigning: Boolean;
-    FEd25519Instance: IEd25519;
+    FBuffer: TBuffer;
+    FForSigning: Boolean;
     FPrivateKey: IEd25519PrivateKeyParameters;
     FPublicKey: IEd25519PublicKeyParameters;
-
-    function Aggregate: TCryptoLibByteArray; inline;
 
   strict protected
     function GetAlgorithmName: String; virtual;
 
   public
-    constructor Create(const Ed25519Instance: IEd25519);
+    constructor Create();
     destructor Destroy(); override;
 
-    procedure Init(forSigning: Boolean;
-      const parameters: ICipherParameters); virtual;
-    procedure Update(b: Byte); virtual;
-    procedure BlockUpdate(const buf: TCryptoLibByteArray;
-      off, len: Int32); virtual;
+    procedure Init(AForSigning: Boolean;
+      const AParameters: ICipherParameters); virtual;
+    procedure Update(AInput: Byte); virtual;
+    procedure BlockUpdate(const ABuf: TCryptoLibByteArray;
+      AOff, ALength: Int32); virtual;
+    function GetMaxSignatureSize: Int32; virtual;
     function GenerateSignature(): TCryptoLibByteArray; virtual;
-    function VerifySignature(const signature: TCryptoLibByteArray)
+    function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
     procedure Reset(); virtual;
 
@@ -74,33 +96,127 @@ type
 
 implementation
 
-{ TEd25519Signer }
+{ TEd25519Signer.TBuffer }
 
-function TEd25519Signer.Aggregate: TCryptoLibByteArray;
-begin
-  Result := Nil;
-  if FBuffer.Size > 0 then
-  begin
-    FBuffer.Position := 0;
-    System.SetLength(Result, FBuffer.Size);
-    FBuffer.Read(Result[0], FBuffer.Size);
-  end;
-end;
-
-procedure TEd25519Signer.BlockUpdate(const buf: TCryptoLibByteArray;
-  off, len: Int32);
-begin
-  if buf <> Nil then
-  begin
-    FBuffer.Write(buf[off], len);
-  end;
-end;
-
-constructor TEd25519Signer.Create(const Ed25519Instance: IEd25519);
+constructor TEd25519Signer.TBuffer.Create();
 begin
   Inherited Create();
-  FBuffer := TMemoryStream.Create();
-  FEd25519Instance := Ed25519Instance;
+  FStream := TMemoryStream.Create();
+  FLock := TCriticalSection.Create();
+end;
+
+destructor TEd25519Signer.TBuffer.Destroy;
+begin
+  FLock.Free;
+  FStream.Free;
+  inherited Destroy;
+end;
+
+function TEd25519Signer.TBuffer.GetBufferContent: TCryptoLibByteArray;
+begin
+  Result := nil;
+  if FStream.Size > 0 then
+  begin
+    FStream.Position := 0;
+    System.SetLength(Result, FStream.Size);
+    FStream.Read(Result[0], FStream.Size);
+  end;
+end;
+
+procedure TEd25519Signer.TBuffer.ResetInternal;
+var
+  LCount: Int64;
+begin
+  LCount := FStream.Size;
+  if LCount > 0 then
+  begin
+    FillChar(PByte(FStream.Memory)^, LCount, 0);
+  end;
+  FStream.Clear;
+  FStream.SetSize(Int64(0));
+end;
+
+procedure TEd25519Signer.TBuffer.Reset();
+begin
+  FLock.Enter;
+  try
+    ResetInternal;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+procedure TEd25519Signer.TBuffer.WriteByte(AInput: Byte);
+var
+  LB: TCryptoLibByteArray;
+begin
+  LB := TCryptoLibByteArray.Create(AInput);
+  FStream.Write(LB[0], 1);
+end;
+
+procedure TEd25519Signer.TBuffer.Write(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32);
+begin
+  if (ABuf <> nil) and (ALen > 0) then
+    FStream.Write(ABuf[AOff], ALen);
+end;
+
+function TEd25519Signer.TBuffer.GenerateSignature(const APrivateKey
+  : IEd25519PrivateKeyParameters): TCryptoLibByteArray;
+var
+  LBuf: TCryptoLibByteArray;
+  LCount: Int32;
+begin
+  FLock.Enter;
+  try
+    LBuf := GetBufferContent();
+    LCount := System.Length(LBuf);
+    System.SetLength(Result, TEd25519PrivateKeyParameters.SignatureSize);
+    APrivateKey.Sign(TEd25519.TAlgorithm.Ed25519, nil, LBuf, 0, LCount,
+      Result, 0);
+    ResetInternal;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+function TEd25519Signer.TBuffer.VerifySignature(const APublicKey
+  : IEd25519PublicKeyParameters;
+  const ASignature: TCryptoLibByteArray): Boolean;
+var
+  LBuf: TCryptoLibByteArray;
+  LCount: Int32;
+begin
+  if TEd25519.SignatureSize <> System.Length(ASignature) then
+  begin
+    Reset();
+    Result := False;
+    Exit;
+  end;
+  FLock.Enter;
+  try
+    LBuf := GetBufferContent();
+    LCount := System.Length(LBuf);
+    Result := APublicKey.Verify(TEd25519.TAlgorithm.Ed25519, nil, LBuf, 0,
+      LCount, ASignature, 0);
+    ResetInternal;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+{ TEd25519Signer }
+
+procedure TEd25519Signer.BlockUpdate(const ABuf: TCryptoLibByteArray;
+  AOff, ALength: Int32);
+begin
+  FBuffer.Write(ABuf, AOff, ALength);
+end;
+
+constructor TEd25519Signer.Create();
+begin
+  Inherited Create();
+  FBuffer := TBuffer.Create();
 end;
 
 destructor TEd25519Signer.Destroy;
@@ -114,22 +230,20 @@ begin
   Result := 'Ed25519';
 end;
 
-procedure TEd25519Signer.Init(forSigning: Boolean;
-  const parameters: ICipherParameters);
+procedure TEd25519Signer.Init(AForSigning: Boolean;
+  const AParameters: ICipherParameters);
 begin
-  FforSigning := forSigning;
+  FForSigning := AForSigning;
 
-  if (forSigning) then
+  if (AForSigning) then
   begin
-    // TODO Allow IAsymmetricCipherKeyPair to be an ICipherParameters?
-
-    FPrivateKey := parameters as IEd25519PrivateKeyParameters;
-    FPublicKey := FPrivateKey.GeneratePublicKey();
+    FPrivateKey := AParameters as IEd25519PrivateKeyParameters;
+    FPublicKey := nil;
   end
   else
   begin
-    FPrivateKey := Nil;
-    FPublicKey := parameters as IEd25519PublicKeyParameters;
+    FPrivateKey := nil;
+    FPublicKey := AParameters as IEd25519PublicKeyParameters;
   end;
 
   Reset();
@@ -137,57 +251,38 @@ end;
 
 procedure TEd25519Signer.Reset;
 begin
-  FBuffer.Clear;
-  FBuffer.SetSize(Int64(0));
+  FBuffer.Reset();
 end;
 
-procedure TEd25519Signer.Update(b: Byte);
+procedure TEd25519Signer.Update(AInput: Byte);
 begin
-  FBuffer.Write(TCryptoLibByteArray.Create(b)[0], 1);
+  FBuffer.WriteByte(AInput);
+end;
+
+function TEd25519Signer.GetMaxSignatureSize: Int32;
+begin
+  Result := TEd25519.SignatureSize;
 end;
 
 function TEd25519Signer.GenerateSignature: TCryptoLibByteArray;
-var
-  signature, buf: TCryptoLibByteArray;
-  count: Int32;
 begin
-  if ((not FforSigning) or (FPrivateKey = Nil)) then
+  if ((not FForSigning) or (FPrivateKey = nil)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SNotInitializedForSigning);
   end;
-
-  System.SetLength(signature, TEd25519PrivateKeyParameters.SignatureSize);
-  buf := Aggregate();
-  count := System.Length(buf);
-
-  FPrivateKey.Sign(TEd25519.TEd25519Algorithm.Ed25519, FPublicKey, Nil, buf, 0,
-    count, signature, 0);
-  Reset();
-  Result := signature;
+  Result := FBuffer.GenerateSignature(FPrivateKey);
 end;
 
-function TEd25519Signer.VerifySignature(const signature
+function TEd25519Signer.VerifySignature(const ASignature
   : TCryptoLibByteArray): Boolean;
-var
-  buf, pk: TCryptoLibByteArray;
-  count: Int32;
 begin
-  if ((FforSigning) or (FPublicKey = Nil)) then
+  if ((FForSigning) or (FPublicKey = nil)) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SNotInitializedForVerifying);
   end;
-  if (TEd25519.SignatureSize <> System.Length(signature)) then
-  begin
-    Result := false;
-    Exit;
-  end;
-  pk := FPublicKey.GetEncoded();
-  buf := Aggregate();
-  count := System.Length(buf);
-  Result := FEd25519Instance.Verify(signature, 0, pk, 0, buf, 0, count);
-  Reset();
+  Result := FBuffer.VerifySignature(FPublicKey, ASignature);
 end;
 
 end.

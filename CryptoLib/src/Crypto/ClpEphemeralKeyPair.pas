@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -32,8 +31,8 @@ type
 
   strict private
   var
-    FkeyPair: IAsymmetricCipherKeyPair;
-    FpublicKeyEncoder: IKeyEncoder;
+    FKeyPair: IAsymmetricCipherKeyPair;
+    FPublicKeyEncoder: IKeyEncoder;
 
   public
 
@@ -41,8 +40,8 @@ type
 
     function GetEncodedPublicKey: TCryptoLibByteArray; inline;
 
-    constructor Create(const keyPair: IAsymmetricCipherKeyPair;
-      const publicKeyEncoder: IKeyEncoder);
+    constructor Create(const AKeyPair: IAsymmetricCipherKeyPair;
+      const APublicKeyEncoder: IKeyEncoder);
 
   end;
 
@@ -50,22 +49,22 @@ implementation
 
 { TEphemeralKeyPair }
 
-constructor TEphemeralKeyPair.Create(const keyPair: IAsymmetricCipherKeyPair;
-  const publicKeyEncoder: IKeyEncoder);
+constructor TEphemeralKeyPair.Create(const AKeyPair: IAsymmetricCipherKeyPair;
+  const APublicKeyEncoder: IKeyEncoder);
 begin
   Inherited Create();
-  FkeyPair := keyPair;
-  FpublicKeyEncoder := publicKeyEncoder;
+  FKeyPair := AKeyPair;
+  FPublicKeyEncoder := APublicKeyEncoder;
 end;
 
 function TEphemeralKeyPair.GetEncodedPublicKey: TCryptoLibByteArray;
 begin
-  result := FpublicKeyEncoder.GetEncoded(FkeyPair.Public);
+  Result := FPublicKeyEncoder.GetEncoded(FKeyPair.Public);
 end;
 
 function TEphemeralKeyPair.GetKeyPair: IAsymmetricCipherKeyPair;
 begin
-  result := FkeyPair;
+  Result := FKeyPair;
 end;
 
 end.

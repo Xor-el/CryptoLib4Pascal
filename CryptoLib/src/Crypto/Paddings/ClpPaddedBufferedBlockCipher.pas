@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -23,11 +22,14 @@ interface
 
 uses
   SysUtils,
-  Math,
   ClpCheck,
   ClpIBlockCipher,
-  ClpPaddingModes,
-  ClpIPaddingModes,
+  ClpIBlockCipherMode,
+  ClpIBulkBlockCipherMode,
+  ClpBlockCipherBulkUtilities,
+  ClpEcbBlockCipher,
+  ClpPkcs7Padding,
+  ClpIPkcs7Padding,
   ClpBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpIBlockCipherPadding,
@@ -37,10 +39,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooSmall = 'Output Buffer too Short';
+  SOutputBufferTooSmall = 'Output Buffer Too Short';
   SIncompleteLastBlockInDecryption = 'Last Block Incomplete in Decryption';
-  SNegativeInputLength = 'Can''t Have a Negative Input Length!';
-
 type
 
   /// <summary>
@@ -59,82 +59,93 @@ type
     IPaddedBufferedBlockCipher)
 
   strict private
-    Fpadding: IBlockCipherPadding;
+    FPadding: IBlockCipherPadding;
+
+  strict protected
+    /// <summary>
+    /// Padded cipher must retain the last block in FBuf so DoFinal can
+    /// apply (or strip) padding - never flush on tail-store.
+    /// </summary>
+    function AfterTailStored(const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; override;
 
   public
+
+    constructor Create(const ACipher: IBlockCipher;
+      const APadding: IBlockCipherPadding); overload;
 
     /// <summary>
     /// Create a buffered block cipher with the desired padding.
     /// </summary>
-    /// <param name="cipher">
-    /// the underlying block cipher this buffering object wraps.
+    /// <param name="ACipherMode">
+    /// the underlying block cipher mode this buffering object wraps.
     /// </param>
-    /// <param name="padding">
+    /// <param name="APadding">
     /// the padding type.
     /// </param>
-    constructor Create(const cipher: IBlockCipher;
-      const padding: IBlockCipherPadding); overload;
+    constructor Create(const ACipherMode: IBlockCipherMode;
+      const APadding: IBlockCipherPadding); overload;
 
     /// <summary>
-    /// Create a buffered block cipher Pkcs7 padding
+    /// Create a buffered block cipher with Pkcs7 padding.
     /// </summary>
-    /// <param name="cipher">
-    /// the underlying block cipher this buffering object wraps.
+    /// <param name="ACipherMode">
+    /// the underlying block cipher mode this buffering object wraps.
     /// </param>
-    constructor Create(const cipher: IBlockCipher); overload;
+    constructor Create(const ACipherMode: IBlockCipherMode); overload;
 
     /// <summary>
     /// initialise the cipher.
     /// </summary>
-    /// <param name="forEncryption">
+    /// <param name="AForEncryption">
     /// if true the cipher is initialised for encryption, if false for
     /// decryption.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the key and other data required by the cipher.
     /// </param>
     /// <exception cref="EArgumentCryptoLibException">
     /// if the parameters argument is inappropriate.
     /// </exception>
-    procedure Init(forEncryption: Boolean;
-      const parameters: ICipherParameters); override;
+    procedure Init(AForEncryption: Boolean;
+      const AParameters: ICipherParameters); override;
 
     /// <summary>
     /// return the minimum size of the output buffer required for an update
     /// plus a doFinal with an input of len bytes.
     /// </summary>
-    /// <param name="length">
+    /// <param name="ALength">
     /// the length of the input.
     /// </param>
     /// <returns>
     /// the space required to accommodate a call to update and doFinal with
     /// len bytes of input.
     /// </returns>
-    function GetOutputSize(length: Int32): Int32; override;
+    function GetOutputSize(ALength: Int32): Int32; override;
 
     /// <summary>
     /// return the size of the output buffer required for an update an input
     /// of len bytes.
     /// </summary>
-    /// <param name="length">
+    /// <param name="ALength">
     /// the length of the input.
     /// </param>
     /// <returns>
     /// the space required to accommodate a call to update with length bytes
     /// of input.
     /// </returns>
-    function GetUpdateOutputSize(length: Int32): Int32; override;
+    function GetUpdateOutputSize(ALength: Int32): Int32; override;
 
     /// <summary>
     /// process a single byte, producing an output block if necessary.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the input byte.
     /// </param>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the space for any output that might be produced.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset from which the output will be copied.
     /// </param>
     /// <returns>
@@ -146,25 +157,25 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessByte(input: Byte; const output: TCryptoLibByteArray;
-      outOff: Int32): Int32; override;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; override;
 
     /// <summary>
     /// process an array of bytes, producing output if necessary.
     /// </summary>
-    /// <param name="input">
+    /// <param name="AInput">
     /// the input byte array.
     /// </param>
-    /// <param name="inOff">
+    /// <param name="AInOff">
     /// the offset at which the input data starts.
     /// </param>
-    /// <param name="length">
+    /// <param name="ALength">
     /// the number of bytes to be copied out of the input array.
     /// </param>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the space for any output that might be produced.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset from which the output will be copied.
     /// </param>
     /// <returns>
@@ -176,19 +187,15 @@ type
     /// <exception cref="EInvalidOperationCryptoLibException">
     /// if the cipher isn't initialised.
     /// </exception>
-    function ProcessBytes(const input: TCryptoLibByteArray;
-      inOff, length: Int32; const output: TCryptoLibByteArray; outOff: Int32)
-      : Int32; override;
-
     /// <summary>
     /// Process the last block in the buffer. If the buffer is currently full
     /// and padding needs to be added a call to doFinal will produce 2 *
     /// GetBlockSize() bytes.
     /// </summary>
-    /// <param name="output">
+    /// <param name="AOutput">
     /// the array the block currently being held is copied into.
     /// </param>
-    /// <param name="outOff">
+    /// <param name="AOutOff">
     /// the offset at which the copying starts.
     /// </param>
     /// <returns>
@@ -204,7 +211,7 @@ type
     /// <exception cref="EInvalidCipherTextCryptoLibException">
     /// if padding is expected and not found.
     /// </exception>
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; override;
 
   end;
@@ -213,210 +220,145 @@ implementation
 
 { TPaddedBufferedBlockCipher }
 
-constructor TPaddedBufferedBlockCipher.Create(const cipher: IBlockCipher;
-  const padding: IBlockCipherPadding);
+constructor TPaddedBufferedBlockCipher.Create(const ACipher: IBlockCipher;
+  const APadding: IBlockCipherPadding);
 begin
-  Inherited Create();
-  Fcipher := cipher;
-  Fpadding := padding;
-
-  System.SetLength(Fbuf, cipher.GetBlockSize());
-  FbufOff := 0;
+  Create(TEcbBlockCipher.GetBlockCipherMode(ACipher), APadding);
 end;
 
-constructor TPaddedBufferedBlockCipher.Create(const cipher: IBlockCipher);
+constructor TPaddedBufferedBlockCipher.Create(const ACipherMode: IBlockCipherMode;
+  const APadding: IBlockCipherPadding);
 begin
-  Create(cipher, TPkcs7Padding.Create() as IPkcs7Padding);
+  Inherited Create(ACipherMode);
+  FPadding := APadding;
 end;
 
-function TPaddedBufferedBlockCipher.DoFinal(const output: TCryptoLibByteArray;
-  outOff: Int32): Int32;
+constructor TPaddedBufferedBlockCipher.Create(const ACipherMode: IBlockCipherMode);
+begin
+  Create(ACipherMode, TPkcs7Padding.Create() as IPkcs7Padding);
+end;
+
+function TPaddedBufferedBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
 var
-  blockSize, resultLen, resultTotalLen: Int32;
+  LBlockSize, LResultLen: Int32;
 begin
-  blockSize := Fcipher.GetBlockSize();
-  resultLen := 0;
+  try
+    LResultLen := 0;
+    LBlockSize := System.Length(FBuf);
 
-  if (FforEncryption) then
-  begin
-    if (FbufOff = blockSize) then
+    if (FForEncryption) then
     begin
-      if ((outOff + 2 * blockSize) > System.length(output)) then
+      if (FBufOff = LBlockSize) then
       begin
-        Reset();
+        TCheck.OutputLength(AOutput, AOutOff, LBlockSize * 2,
+          SOutputBufferTooSmall);
 
-        raise EOutputLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
+        LResultLen := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+        FBufOff := 0;
+      end
+      else
+      begin
+        TCheck.OutputLength(AOutput, AOutOff, LBlockSize,
+          SOutputBufferTooSmall);
       end;
 
-      resultLen := Fcipher.ProcessBlock(Fbuf, 0, output, outOff);
-      FbufOff := 0;
-    end;
+      FPadding.AddPadding(FBuf, FBufOff);
 
-    Fpadding.AddPadding(Fbuf, FbufOff);
-
-    resultLen := resultLen + Fcipher.ProcessBlock(Fbuf, 0, output,
-      outOff + resultLen);
-
-    Reset();
-  end
-  else
-  begin
-    if (FbufOff = blockSize) then
-    begin
-      resultLen := Fcipher.ProcessBlock(Fbuf, 0, Fbuf, 0);
-      FbufOff := 0;
+      LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+        AOutOff + LResultLen);
     end
     else
     begin
-      Reset();
+      TCheck.DataLength(FBufOff <> LBlockSize,
+        SIncompleteLastBlockInDecryption);
 
-      raise EDataLengthCryptoLibException.CreateRes
-        (@SIncompleteLastBlockInDecryption);
+      LResultLen := FCipherMode.ProcessBlock(FBuf, 0, FBuf, 0);
+
+      LResultLen := LResultLen - FPadding.PadCount(FBuf);
+
+      TCheck.OutputLength(AOutput, AOutOff, LResultLen,
+        SOutputBufferTooSmall);
+
+      System.Move(FBuf[0], AOutput[AOutOff], LResultLen * System.SizeOf(Byte));
     end;
 
-    try
-      resultLen := resultLen - Fpadding.PadCount(Fbuf);
-      resultTotalLen := resultLen * System.SizeOf(Byte);
-      if resultTotalLen > 0 then
-      begin
-        System.Move(Fbuf[0], output[outOff], resultTotalLen);
-      end;
-
-    finally
-      Reset();
-    end;
-
+    Result := LResultLen;
+  finally
+    Reset();
   end;
-
-  result := resultLen;
 end;
 
-function TPaddedBufferedBlockCipher.GetOutputSize(length: Int32): Int32;
+function TPaddedBufferedBlockCipher.GetOutputSize(ALength: Int32): Int32;
 var
-  total, leftOver: Int32;
+  LTotalSize, LBlockSize: Int32;
 begin
-  total := length + FbufOff;
-  leftOver := total mod System.length(Fbuf);
+  LTotalSize := FBufOff + ALength;
+  LBlockSize := System.Length(FBuf);
 
-  if (leftOver = 0) then
-  begin
-    if (FforEncryption) then
-    begin
-      result := total + System.length(Fbuf);
-      Exit;
-    end;
-
-    result := total;
-    Exit;
-  end;
-
-  result := total - leftOver + System.length(Fbuf);
+  if FForEncryption then
+    Result := GetFullBlocksSize(LTotalSize, LBlockSize) + LBlockSize
+  else
+    Result := GetFullBlocksSize(LTotalSize + LBlockSize - 1, LBlockSize);
 end;
 
-function TPaddedBufferedBlockCipher.GetUpdateOutputSize(length: Int32): Int32;
-var
-  total, leftOver: Int32;
+function TPaddedBufferedBlockCipher.GetUpdateOutputSize(ALength: Int32): Int32;
 begin
-  total := length + FbufOff;
-  leftOver := total mod System.length(Fbuf);
-
-  if (leftOver = 0) then
-  begin
-    result := Max(0, total - System.length(Fbuf));
-    Exit;
-  end;
-
-  result := total - leftOver;
+  Result := GetFullBlocksSize(FBufOff + ALength - 1, System.Length(FBuf));
 end;
 
-procedure TPaddedBufferedBlockCipher.Init(forEncryption: Boolean;
-  const parameters: ICipherParameters);
+procedure TPaddedBufferedBlockCipher.Init(AForEncryption: Boolean;
+  const AParameters: ICipherParameters);
 var
-  initRandom: ISecureRandom;
-  Lparameters: ICipherParameters;
-  p: IParametersWithRandom;
+  LInitRandom: ISecureRandom;
+  LParameters: ICipherParameters;
+  LP: IParametersWithRandom;
 begin
-  FforEncryption := forEncryption;
-  Lparameters := parameters;
-  initRandom := Nil;
+  FForEncryption := AForEncryption;
+  LParameters := AParameters;
+  LInitRandom := nil;
 
-  if Supports(Lparameters, IParametersWithRandom, p) then
+  if Supports(LParameters, IParametersWithRandom, LP) then
   begin
-    initRandom := p.Random;
-    Lparameters := p.parameters;
+    LInitRandom := LP.Random;
+    LParameters := LP.Parameters;
   end;
 
   Reset();
-  Fpadding.Init(initRandom);
-  Fcipher.Init(forEncryption, Lparameters);
+  FPadding.Init(LInitRandom);
+  FCipherMode.Init(AForEncryption, LParameters);
+
+  // Cache the bulk-capable view of FCipherMode (see base-class comment).
+  TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipherMode,
+    FBulkCipherMode);
 end;
 
-function TPaddedBufferedBlockCipher.ProcessByte(input: Byte;
-  const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TPaddedBufferedBlockCipher.ProcessByte(AInput: Byte;
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  resultLen: Int32;
+  LResultLen: Int32;
 begin
-  resultLen := 0;
+  LResultLen := 0;
 
-  if (FbufOff = System.length(Fbuf)) then
+  if (FBufOff = System.Length(FBuf)) then
   begin
-    resultLen := Fcipher.ProcessBlock(Fbuf, 0, output, outOff);
-    FbufOff := 0;
+    TCheck.OutputLength(AOutput, AOutOff, System.Length(FBuf),
+      SOutputBufferTooSmall);
+
+    LResultLen := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    FBufOff := 0;
   end;
 
-  Fbuf[FbufOff] := input;
-  System.Inc(FbufOff);
+  FBuf[FBufOff] := AInput;
+  System.Inc(FBufOff);
 
-  result := resultLen;
+  Result := LResultLen;
 end;
 
-function TPaddedBufferedBlockCipher.ProcessBytes(const input
-  : TCryptoLibByteArray; inOff, length: Int32;
-  const output: TCryptoLibByteArray; outOff: Int32): Int32;
-var
-  blockSize, outLength, resultLen, gapLen: Int32;
+function TPaddedBufferedBlockCipher.AfterTailStored(
+  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if (length < 0) then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SNegativeInputLength);
-  end;
-
-  blockSize := GetBlockSize();
-  outLength := GetUpdateOutputSize(length);
-
-  if (outLength > 0) then
-  begin
-    TCheck.OutputLength(output, outOff, outLength, SOutputBufferTooSmall);
-  end;
-
-  resultLen := 0;
-  gapLen := System.length(Fbuf) - FbufOff;
-
-  if (length > gapLen) then
-  begin
-    System.Move(input[inOff], Fbuf[FbufOff], gapLen * System.SizeOf(Byte));
-
-    resultLen := resultLen + Fcipher.ProcessBlock(Fbuf, 0, output, outOff);
-
-    FbufOff := 0;
-    length := length - gapLen;
-    inOff := inOff + gapLen;
-
-    while (length > System.length(Fbuf)) do
-    begin
-      resultLen := resultLen + Fcipher.ProcessBlock(input, inOff, output,
-        outOff + resultLen);
-
-      length := length - blockSize;
-      inOff := inOff + blockSize;
-    end;
-  end;
-
-  System.Move(input[inOff], Fbuf[FbufOff], length * System.SizeOf(Byte));
-
-  FbufOff := FbufOff + length;
-
-  result := resultLen;
+  Result := 0;
 end;
 
 end.

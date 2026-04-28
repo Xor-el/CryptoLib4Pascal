@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -31,8 +30,8 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpECC,
-  ClpIECC,
+  ClpECCurve,
+  ClpIECCommon,
   ClpIHMac,
   ClpHMac,
   ClpIESEngine,
@@ -45,33 +44,25 @@ uses
   ClpIKDF2BytesGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpAsymmetricCipherKeyPair,
-  ClpECKeyPairGenerator,
-  ClpIECKeyPairGenerator,
-  ClpECKeyGenerationParameters,
-  ClpIECKeyGenerationParameters,
-  ClpECPrivateKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpECPublicKeyParameters,
-  ClpIECPublicKeyParameters,
+  ClpECGenerators,
+  ClpIECGenerators,
+  ClpECParameters,
+  ClpIECParameters,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpIKeyGenerationParameters,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
-  ClpIESParameters,
+  ClpIesParameters,
   ClpIBufferedBlockCipher,
   ClpPaddedBufferedBlockCipher,
-  ClpIESWithCipherParameters,
   ClpEphemeralKeyPairGenerator,
   ClpIEphemeralKeyPairGenerator,
   ClpECIESPublicKeyParser,
   ClpIECIESPublicKeyParser,
-  ClpBlockCipherModes,
-  ClpIBlockCipherModes,
-  ClpKeyEncoder,
+  ClpCbcBlockCipher,
+  ClpICbcBlockCipher,
+  ClpECKeyEncoder,
   ClpIKeyEncoder,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpBigInteger,
   ClpDigestUtilities,
   ClpCryptoLibTypes,
@@ -115,7 +106,7 @@ var
   pubKey: IECPublicKeyParameters;
   p1: IAsymmetricCipherKeyPair;
   p: ICipherParameters;
-  i1, i2: IIESEngine;
+  i1, i2: IIesEngine;
   d, e, &message, out1, out2: TBytes;
   gen: IECKeyPairGenerator;
   ephKeyGen: IEphemeralKeyPairGenerator;
@@ -158,24 +149,24 @@ begin
     as ISecureRandom) as IECKeyGenerationParameters);
 
   ephKeyGen := TEphemeralKeyPairGenerator.Create(gen,
-    TKeyEncoder.Create(usePointCompression) as IKeyEncoder);
+    TECKeyEncoder.Create(usePointCompression) as IKeyEncoder);
 
   //
   // stream test
   //
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESParameters.Create(d, e, 64);
+  p := TIesParameters.Create(d, e, 64);
 
   i1.Init(p1.Public, p, ephKeyGen);
   i2.Init(p1.Private, p, TECIESPublicKeyParser.Create(params)
@@ -196,26 +187,26 @@ begin
   //
 
   c1 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   c2 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac, c1);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac, c2);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESWithCipherParameters.Create(d, e, 64, 128);
+  p := TIesWithCipherParameters.Create(d, e, 64, 128);
 
   if (iv <> Nil) then
   begin
@@ -247,7 +238,7 @@ var
   pubKey: IECPublicKeyParameters;
   p1, p2: IAsymmetricCipherKeyPair;
   p: ICipherParameters;
-  i1, i2: IIESEngine;
+  i1, i2: IIesEngine;
   d, e, &message, out1, out2: TBytes;
   gen: IECKeyPairGenerator;
   ephKeyGen: IEphemeralKeyPairGenerator;
@@ -285,22 +276,22 @@ begin
   //
   // stream test - V 0
   //
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESParameters.Create(d, e, 64);
+  p := TIesParameters.Create(d, e, 64);
 
   i1.Init(true, p1.Private, p2.Public, p);
-  i2.Init(false, p2.getPrivate, p1.getPublic, p);
+  i2.Init(false, p2.Private, p1.Public, p);
 
   &message := Nil;
 
@@ -341,7 +332,7 @@ begin
   gen.Init(TECKeyGenerationParameters.Create(params, TSecureRandom.Create()
     as ISecureRandom) as IECKeyGenerationParameters);
 
-  ephKeyGen := TEphemeralKeyPairGenerator.Create(gen, TKeyEncoder.Create(false)
+  ephKeyGen := TEphemeralKeyPairGenerator.Create(gen, TECKeyEncoder.Create(false)
     as IKeyEncoder);
 
   i1.Init(p2.Public, p, ephKeyGen);
@@ -385,7 +376,7 @@ var
   pubKey: IECPublicKeyParameters;
   p1, p2: IAsymmetricCipherKeyPair;
   p: ICipherParameters;
-  i1, i2: IIESEngine;
+  i1, i2: IIesEngine;
   d, e, &message, out1, out2, compareValue: TBytes;
   c1, c2: IBufferedBlockCipher;
 begin
@@ -422,22 +413,22 @@ begin
   //
   // stream test
   //
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESParameters.Create(d, e, 64);
+  p := TIesParameters.Create(d, e, 64);
 
   i1.Init(true, p1.Private, p2.Public, p);
-  i2.Init(false, p2.getPrivate, p1.getPublic, p);
+  i2.Init(false, p2.Private, p1.Public, p);
 
   &message := DecodeHex('1234567890abcdef');
 
@@ -461,26 +452,26 @@ begin
   //
 
   c1 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   c2 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac, c1);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac, c2);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESWithCipherParameters.Create(d, e, 64, 128);
+  p := TIesWithCipherParameters.Create(d, e, 64, 128);
 
   if (iv <> Nil) then
   begin
@@ -524,29 +515,29 @@ end;
 procedure TTestECIES.DoTest(const p1, p2: IAsymmetricCipherKeyPair);
 var
   p: ICipherParameters;
-  i1, i2: IIESEngine;
+  i1, i2: IIesEngine;
   d, e, &message, out1, out2: TBytes;
   c1, c2: IBufferedBlockCipher;
 begin
   //
   // stream test
   //
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESParameters.Create(d, e, 64);
+  p := TIesParameters.Create(d, e, 64);
 
   i1.Init(true, p1.Private, p2.Public, p);
-  i2.Init(false, p2.getPrivate, p1.getPublic, p);
+  i2.Init(false, p2.Private, p1.Public, p);
 
   &message := DecodeHex('1234567890abcdef');
 
@@ -564,26 +555,26 @@ begin
   //
 
   c1 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
   c2 := TPaddedBufferedBlockCipher.Create
-    (TCBCBlockCipher.Create(TAesEngine.Create() as IAesEngine)
+    (TCbcBlockCipher.Create(TAesUtilities.CreateEngine())
     as ICBCBlockCipher);
 
-  i1 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i1 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac, c1);
 
-  i2 := TIESEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+  i2 := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
     TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
     as IHMac, c2);
 
   d := TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8);
   e := TBytes.Create(8, 7, 6, 5, 4, 3, 2, 1);
-  p := TIESWithCipherParameters.Create(d, e, 64, 128);
+  p := TIesWithCipherParameters.Create(d, e, 64, 128);
 
   i1.Init(true, p1.Private, p2.Public, p);
   i2.Init(false, p2.Private, p1.Public, p);
@@ -648,8 +639,8 @@ begin
 
   eGen.Init(gParam);
 
-  p1 := eGen.generateKeyPair();
-  p2 := eGen.generateKeyPair();
+  p1 := eGen.GenerateKeyPair();
+  p2 := eGen.GenerateKeyPair();
 
   DoTest(p1, p2);
 

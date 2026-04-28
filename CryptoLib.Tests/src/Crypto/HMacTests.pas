@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -305,9 +304,9 @@ begin
   DoTestHMac(TNistObjectIdentifiers.IdHMacWithSha3_512.Id, 512,
     FoutputSha3_512);
 
-  DoTestHMac(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_256.Id,
+  DoTestHMac(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_256.ID,
     256, FoutputGost2012_256);
-  DoTestHMac(TRosstandartObjectIdentifiers.id_tc26_hmac_gost_3411_12_512.Id,
+  DoTestHMac(TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512.ID,
     512, FoutputGost2012_512);
 
   DoTestExceptions();

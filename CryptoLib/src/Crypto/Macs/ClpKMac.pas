@@ -1,5 +1,5 @@
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
 
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
@@ -21,16 +21,19 @@ unit ClpKMac;
 interface
 
 uses
+  SysUtils,
   HlpIHashInfo,
   HlpHashFactory,
   ClpIMac,
   ClpIKMac,
+  ClpMac,
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpCryptoLibTypes;
 
 resourcestring
   SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInvalidParameterKMac = 'KMac requires KeyParameter';
 
 type
 
@@ -43,34 +46,33 @@ type
   /// HashLib4Pascal
   /// </para>
   /// </summary>
-  TKMac = class(TInterfacedObject, IKMac, IMac)
+  TKMac = class(TMac, IKMac, IMac)
 
   strict protected
   var
     FKMAC: HlpIHashInfo.IKMac;
     FOutputLengthInBits: UInt64;
 
-    function GetAlgorithmName: string; inline;
+    function GetAlgorithmName: string; override;
 
   public
 
     destructor Destroy(); override;
 
-    procedure Clear();
+    procedure Clear(); override;
 
-    function GetMacSize: Int32; inline;
+    function GetMacSize: Int32; override;
 
-    procedure Update(input: Byte);
-    procedure BlockUpdate(const input: TCryptoLibByteArray; inOff, len: Int32);
-    procedure Init(const parameters: ICipherParameters);
-    function DoFinal(const output: TCryptoLibByteArray; outOff: Int32)
-      : Int32; overload;
-    function DoFinal: TCryptoLibByteArray; overload;
+    procedure Update(AInput: Byte); override;
+    procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
+    procedure Init(const AParameters: ICipherParameters); override;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      : Int32; overload; override;
 
     /// <summary>
     /// Reset the mac generator.
     /// </summary>
-    procedure Reset();
+    procedure Reset(); override;
 
     property AlgorithmName: String read GetAlgorithmName;
 
@@ -100,13 +102,13 @@ implementation
 
 function TKMac.GetMacSize: Int32;
 begin
-  result := FOutputLengthInBits shr 3;
+  Result := FOutputLengthInBits shr 3;
 end;
 
-procedure TKMac.BlockUpdate(const input: TCryptoLibByteArray;
-  inOff, len: Int32);
+procedure TKMac.BlockUpdate(const AInput: TCryptoLibByteArray;
+  AInOff, ALen: Int32);
 begin
-  FKMAC.TransformBytes(input, inOff, len);
+  FKMAC.TransformBytes(AInput, AInOff, ALen);
 end;
 
 procedure TKMac.Clear();
@@ -120,45 +122,38 @@ begin
   inherited Destroy;
 end;
 
-function TKMac.DoFinal(const output: TCryptoLibByteArray; outOff: Int32): Int32;
+function TKMac.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  buf: TCryptoLibByteArray;
+  LBuf: TCryptoLibByteArray;
 begin
-
-  if (System.Length(output) - outOff) < GetMacSize then
-  begin
+  if (System.Length(AOutput) - AOutOff) < GetMacSize then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
-  end
-  else
-  begin
-    buf := DoFinal();
-    System.Move(buf[0], output[outOff], System.Length(buf) *
-      System.SizeOf(Byte));
-  end;
-  result := System.Length(buf);
-end;
 
-function TKMac.DoFinal: TCryptoLibByteArray;
-begin
-  result := FKMAC.TransformFinal.GetBytes();
+  LBuf := FKMAC.TransformFinal.GetBytes();
+  System.Move(LBuf[0], AOutput[AOutOff], System.Length(LBuf) * System.SizeOf(Byte));
+  Result := System.Length(LBuf);
 end;
 
 function TKMac.GetAlgorithmName: string;
 var
   LName: String;
-  LowPoint, HighPoint: Int32;
+  LLow, LHigh: Int32;
 begin
   LName := Self.ClassName;
 
-  LowPoint := 1;
-  HighPoint := System.Length(LName);
+  LLow := 1;
+  LHigh := System.Length(LName);
 
-  result := Copy(LName, LowPoint + 1, HighPoint - 1);
+  Result := Copy(LName, LLow + 1, LHigh - 1);
 end;
 
-procedure TKMac.Init(const parameters: ICipherParameters);
+procedure TKMac.Init(const AParameters: ICipherParameters);
+var
+  LKeyParam: IKeyParameter;
 begin
-  FKMAC.Key := (parameters as IKeyParameter).GetKey();
+  if not Supports(AParameters, IKeyParameter, LKeyParam) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidParameterKMac);
+  FKMAC.Key := LKeyParam.GetKey();
   FKMAC.Initialize;
 end;
 
@@ -167,9 +162,9 @@ begin
   FKMAC.Initialize;
 end;
 
-procedure TKMac.Update(input: Byte);
+procedure TKMac.Update(AInput: Byte);
 begin
-  FKMAC.TransformUntyped(input, System.SizeOf(Byte));
+  FKMAC.TransformUntyped(AInput, System.SizeOf(Byte));
 end;
 
 { TKMac128 }
@@ -179,7 +174,7 @@ constructor TKMac128.Create(const ACustomization: TCryptoLibByteArray;
 begin
   Inherited Create();
   FOutputLengthInBits := AOutputLengthInBits;
-  FKMAC := THashFactory.TKMac.CreateKMAC128(Nil, ACustomization,
+  FKMAC := THashFactory.TKMac.CreateKMAC128(nil, ACustomization,
     FOutputLengthInBits);
 end;
 
@@ -190,7 +185,7 @@ constructor TKMac256.Create(const ACustomization: TCryptoLibByteArray;
 begin
   Inherited Create();
   FOutputLengthInBits := AOutputLengthInBits;
-  FKMAC := THashFactory.TKMac.CreateKMAC256(Nil, ACustomization,
+  FKMAC := THashFactory.TKMac.CreateKMAC256(nil, ACustomization,
     FOutputLengthInBits);
 end;
 

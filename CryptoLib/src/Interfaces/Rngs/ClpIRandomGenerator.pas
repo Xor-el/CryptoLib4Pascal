@@ -1,0 +1,53 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpIRandomGenerator;
+
+{$I ..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  ClpCryptoLibTypes;
+
+type
+  /// <remarks>Generic interface for objects generating random bytes.</remarks>
+  IRandomGenerator = interface(IInterface)
+    ['{1CC92157-EEC8-4300-8254-655AF791E4CA}']
+
+    /// <summary>Add more seed material to the generator.</summary>
+    /// <param name="ASeed">A byte array to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(const ASeed: TCryptoLibByteArray); overload;
+
+    /// <summary>Add more seed material to the generator.</summary>
+    /// <param name="ASeed">A long value to be mixed into the generator's state.</param>
+    procedure AddSeedMaterial(ASeed: Int64); overload;
+
+    /// <summary>Fill byte array with random values.</summary>
+    /// <param name="ABytes">Array to be filled.</param>
+    procedure NextBytes(const ABytes: TCryptoLibByteArray); overload;
+
+    /// <summary>Fill byte array with random values.</summary>
+    /// <param name="ABytes">Array to receive bytes.</param>
+    /// <param name="AStart">Index to start filling at.</param>
+    /// <param name="ALen">Length of segment to fill.</param>
+    procedure NextBytes(const ABytes: TCryptoLibByteArray;
+      AStart, ALen: Int32); overload;
+  end;
+
+implementation
+
+end.

@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -23,12 +22,12 @@ interface
 
 uses
   Classes,
-  ClpAsn1Objects,
-  ClpIECDomainParameters,
-  ClpECPublicKeyParameters,
+  ClpIECParameters,
+  ClpECParameters,
   ClpIKeyParser,
   ClpIAsymmetricKeyParameter,
   ClpIECIESPublicKeyParser,
+  ClpStreamUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -42,11 +41,11 @@ type
 
   strict private
   var
-    FecParams: IECDomainParameters;
+    FECParams: IECDomainParameters;
 
   public
-    function ReadKey(const Stream: TStream): IAsymmetricKeyParameter;
-    constructor Create(const ecParams: IECDomainParameters);
+    function ReadKey(const AStream: TStream): IAsymmetricKeyParameter;
+    constructor Create(const AECParams: IECDomainParameters);
 
   end;
 
@@ -54,21 +53,21 @@ implementation
 
 { TECIESPublicKeyParser }
 
-constructor TECIESPublicKeyParser.Create(const ecParams: IECDomainParameters);
+constructor TECIESPublicKeyParser.Create(const AECParams: IECDomainParameters);
 begin
   Inherited Create();
-  FecParams := ecParams;
+  FECParams := AECParams;
 end;
 
-function TECIESPublicKeyParser.ReadKey(const Stream: TStream)
+function TECIESPublicKeyParser.ReadKey(const AStream: TStream)
   : IAsymmetricKeyParameter;
 var
-  v: TCryptoLibByteArray;
-  first: Int32;
+  LV: TCryptoLibByteArray;
+  LFirst: Int32;
 begin
-  first := Stream.ReadByte;
+  LFirst := AStream.ReadByte;
   // Decode the public ephemeral key
-  case first of
+  case LFirst of
     $00: // infinity
       begin
         raise EIOCryptoLibException.CreateRes(@SSenderPublicKeyInvalid);
@@ -77,28 +76,28 @@ begin
     $02, // compressed
     $03: // Byte length calculated as in ECPoint.getEncoded();
       begin
-        System.SetLength(v, 1 + (FecParams.Curve.FieldSize + 7) div 8);
+        System.SetLength(LV, 1 + FECParams.Curve.FieldElementEncodingLength);
       end;
 
     $04, // uncompressed or
     $06, // hybrid
     $07: // Byte length calculated as in ECPoint.getEncoded();
       begin
-        System.SetLength(v, 1 + (2 * ((FecParams.Curve.FieldSize + 7) div 8)));
+        System.SetLength(LV, 1 + (2 * FECParams.Curve.FieldElementEncodingLength));
       end
   else
     begin
       raise EIOCryptoLibException.CreateResFmt
-        (@SSenderPublicKeyInvalidPointEncoding, [first]);
+        (@SSenderPublicKeyInvalidPointEncoding, [LFirst]);
     end;
 
   end;
 
-  v[0] := Byte(first);
-  TStreamUtils.ReadFully(Stream, v, 1, System.length(v) - 1);
+  LV[0] := Byte(LFirst);
+  TStreamUtilities.ReadFully(AStream, LV, 1, System.Length(LV) - 1);
 
-  result := TECPublicKeyParameters.Create(FecParams.Curve.DecodePoint(v),
-    FecParams);
+  Result := TECPublicKeyParameters.Create(FECParams.Curve.DecodePoint(LV),
+    FECParams);
 end;
 
 end.

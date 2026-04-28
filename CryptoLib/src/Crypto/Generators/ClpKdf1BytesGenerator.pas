@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -37,17 +36,17 @@ type
   /// This implementation is based on IEEE P1363/ISO 18033.
   /// </para>
   /// </summary>
-  TKdf1BytesGenerator = class(TBaseKdfBytesGenerator, IKdf1BytesGenerator)
+  TKdf1BytesGenerator = class sealed(TBaseKdfBytesGenerator, IKdf1BytesGenerator)
 
   public
 
     /// <summary>
     /// Construct a KDF1 bytes generator.
     /// </summary>
-    /// <param name="digest">
+    /// <param name="ADigest">
     /// the digest to be used as the source of derived keys.
     /// </param>
-    constructor Create(const digest: IDigest);
+    constructor Create(const ADigest: IDigest);
 
   end;
 
@@ -55,9 +54,9 @@ implementation
 
 { TKdf1BytesGenerator }
 
-constructor TKdf1BytesGenerator.Create(const digest: IDigest);
+constructor TKdf1BytesGenerator.Create(const ADigest: IDigest);
 begin
-  Inherited Create(0, digest);
+  inherited Create(0, ADigest);
 end;
 
 end.

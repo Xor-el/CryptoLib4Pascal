@@ -1,100 +1,148 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-{$IFDEF FPC}
 {$IFDEF ENDIAN_BIG}
-   {$MESSAGE FATAL 'This Library does not support "Big Endian" processors yet.'}
+  {$MESSAGE FATAL 'This Library does not support "Big Endian" processors yet.'}
 {$ENDIF}
 
-{$IF FPC_FULLVERSION < 30004}
-   {$MESSAGE ERROR 'This Library requires FreePascal 3.0.4 or higher.'}
+{$IF FPC_FULLVERSION < 30202}
+  {$MESSAGE ERROR 'This Library requires FreePascal 3.2.2 or higher.'}
+{$IFEND}
+
+{============================ FPC Version Features ============================}
+
+(*
+  Generics.Defaults IEqualityComparer<T> / IComparer<T> used constref through
+  FPC 3.2.2; 3.2.3+ switched to const (Delphi compatibility).
+  https://gitlab.com/freepascal.org/fpc/source/-/commit/693491048bf2c6f9122a0d8b044ad0e55382354d
+*)
+{$IF FPC_FULLVERSION < 30203}
+  {$DEFINE CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
 {$IFEND}
 
 {$IF FPC_FULLVERSION >= 30301}
-   {$DEFINE HAS_VOLATILE}
+  {$DEFINE HAS_VOLATILE}
 {$IFEND}
 
+{============================== CPU Architecture ==============================}
+
+{$IFDEF FPC_LITTLE_ENDIAN}
+  {$DEFINE CRYPTOLIB_LITTLE_ENDIAN}
+{$ENDIF}
+
+{$IFDEF FPC_REQUIRES_PROPER_ALIGNMENT}
+  {$DEFINE CRYPTOLIB_REQUIRES_PROPER_ALIGNMENT}
+{$ENDIF}
+
 {$IFDEF CPU386}
-   {$DEFINE CRYPTOLIB_X86}
+  {$DEFINE CRYPTOLIB_I386}
+  {$DEFINE CRYPTOLIB_I386_ASM}
 {$ENDIF}
 
 {$IFDEF CPUX64}
-   {$DEFINE CRYPTOLIB_X86_64}
+  {$DEFINE CRYPTOLIB_X86_64}
+  {$DEFINE CRYPTOLIB_X86_64_ASM}
 {$ENDIF}
 
 {$IFDEF CPUARM}
-   {$DEFINE CRYPTOLIB_ARM}
+  {$DEFINE CRYPTOLIB_ARM32}
+  {$DEFINE CRYPTOLIB_ARM32_ASM}
 {$ENDIF}
 
 {$IFDEF CPUAARCH64}
-   {$DEFINE CRYPTOLIB_AARCH64}
+  {$DEFINE CRYPTOLIB_AARCH64}
+  {$DEFINE CRYPTOLIB_AARCH64_ASM}
 {$ENDIF}
 
-{$IFDEF IPHONESIM}
-   {$DEFINE CRYPTOLIB_IOSSIM}
+{================================= Target OS ==================================}
+
+{$IFDEF MSWINDOWS}
+  {$DEFINE CRYPTOLIB_MSWINDOWS}
 {$ENDIF}
 
-{$IF DEFINED(MSWINDOWS)}
-   {$DEFINE CRYPTOLIB_MSWINDOWS}
-{$ELSEIF DEFINED(UNIX)}
-   {$DEFINE CRYPTOLIB_UNIX}
-   {$IF DEFINED(BSD)}
-      {$IF DEFINED(DARWIN)}
-         {$DEFINE CRYPTOLIB_APPLE}
-         {$IF DEFINED(CRYPTOLIB_ARM) OR DEFINED(CRYPTOLIB_AARCH64)}
-            {$DEFINE CRYPTOLIB_IOS}
-         {$ELSE}
-            {$DEFINE CRYPTOLIB_MACOS}
-         {$IFEND}
-      {$ELSEIF DEFINED(FREEBSD) OR DEFINED(NETBSD) OR DEFINED(OPENBSD) OR DEFINED(DRAGONFLY)}
-         {$DEFINE CRYPTOLIB_GENERIC_BSD}
-      {$IFEND}
-  {$ELSEIF DEFINED(ANDROID)}
-     {$DEFINE CRYPTOLIB_ANDROID}
-  {$ELSEIF DEFINED(LINUX)}
-     {$DEFINE CRYPTOLIB_LINUX}
-  {$ELSEIF DEFINED(SOLARIS)}
-     {$DEFINE CRYPTOLIB_SOLARIS}
-  {$ELSE}
-     {$DEFINE CRYPTOLIB_UNDEFINED_UNIX_VARIANTS}
-  {$IFEND}
-{$ELSE}
-   {$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
+{$IFDEF UNIX}
+  {$DEFINE CRYPTOLIB_UNIX}
+{$ENDIF}
+
+{$IFDEF ANDROID}
+  {$DEFINE CRYPTOLIB_ANDROID}
+  {$UNDEF CRYPTOLIB_UNIX}
+{$ENDIF}
+
+{$IFDEF IOS}
+  {$DEFINE CRYPTOLIB_IOS}
+  {$UNDEF CRYPTOLIB_UNIX}
+{$ENDIF}
+
+{$IF DEFINED(DARWIN) AND NOT DEFINED(CRYPTOLIB_IOS)}
+  {$DEFINE CRYPTOLIB_MACOS}
+  {$UNDEF CRYPTOLIB_UNIX}
 {$IFEND}
 
-{$IFDEF CRYPTOLIB_ANDROID}
-   {$DEFINE CRYPTOLIB_LINUX}
-{$ENDIF}
-
-{$IF DEFINED(CRYPTOLIB_LINUX) OR DEFINED(CRYPTOLIB_SOLARIS)}
-   {$DEFINE CRYPTOLIB_HAS_GETRANDOM}
+{$IF DEFINED(FREEBSD) OR DEFINED(NETBSD) OR DEFINED(OPENBSD) OR DEFINED(DRAGONFLY)}
+  {$DEFINE CRYPTOLIB_BSD}
+  {$UNDEF CRYPTOLIB_UNIX}
 {$IFEND}
 
-  {$MODE DELPHI}
-  {$MACRO ON}
-  {$NOTES OFF}
-
-  {$OPTIMIZATION LEVEL3}
-
-  {$OPTIMIZATION NOREGVAR}
-  {$OPTIMIZATION NOUSELOADMODIFYSTORE}
-  {$OPTIMIZATION ORDERFIELDS}
-  {$OPTIMIZATION DEADVALUES}
-  {$IFDEF CPUI386}  {$OPTIMIZATION USEEBP} {$ENDIF}
-  {$IFDEF CPUX86_64} {$OPTIMIZATION USERBP} {$ENDIF}
+{$IFDEF LINUX}
+  {$DEFINE CRYPTOLIB_LINUX}
+  {$UNDEF CRYPTOLIB_UNIX}
 {$ENDIF}
 
+{$IFDEF SOLARIS}
+  {$DEFINE CRYPTOLIB_SOLARIS}
+  {$UNDEF CRYPTOLIB_UNIX}
+{$ENDIF}
+
+{$IF DEFINED(CRYPTOLIB_ANDROID)
+   OR DEFINED(CRYPTOLIB_LINUX)
+   OR DEFINED(CRYPTOLIB_IOS)
+   OR DEFINED(CRYPTOLIB_MACOS)
+   OR DEFINED(CRYPTOLIB_BSD)
+   OR DEFINED(CRYPTOLIB_SOLARIS)
+   OR DEFINED(CRYPTOLIB_UNIX)}
+  {$DEFINE CRYPTOLIB_UNIXLIKE}
+{$IFEND}
+
+{$IF NOT DEFINED(CRYPTOLIB_MSWINDOWS)
+   AND NOT DEFINED(CRYPTOLIB_ANDROID)
+   AND NOT DEFINED(CRYPTOLIB_IOS)
+   AND NOT DEFINED(CRYPTOLIB_MACOS)
+   AND NOT DEFINED(CRYPTOLIB_BSD)
+   AND NOT DEFINED(CRYPTOLIB_LINUX)
+   AND NOT DEFINED(CRYPTOLIB_SOLARIS)
+   AND NOT DEFINED(CRYPTOLIB_UNIX)}
+  {$MESSAGE ERROR 'UNSUPPORTED TARGET.'}
+{$IFEND}
+
+{======================= Compiler Mode & Optimizations ========================}
+
+{$MODE DELPHI}
+{$IF DEFINED(CPU386) OR DEFINED(CPUX64)}
+  {$ASMMODE INTEL}
+{$IFEND}
+{$MACRO ON}
+{$NOTES OFF}
+
+(*
+{$OPTIMIZATION LEVEL3}
+{$OPTIMIZATION NOREGVAR}
+{$OPTIMIZATION NOUSELOADMODIFYSTORE}
+{$OPTIMIZATION ORDERFIELDS}
+{$OPTIMIZATION DEADVALUES}
+{$IFDEF CPUI386} {$OPTIMIZATION USEEBP} {$ENDIF}
+{$IFDEF CPUX86_64} {$OPTIMIZATION USERBP} {$ENDIF}
+*)

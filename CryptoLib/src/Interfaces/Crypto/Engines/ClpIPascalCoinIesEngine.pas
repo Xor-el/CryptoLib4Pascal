@@ -1,0 +1,35 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpIPascalCoinIesEngine;
+
+{$I ..\..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  ClpIIesEngine;
+
+type
+
+  IPascalCoinIesEngine = interface(IIesEngine)
+    ['{CEB707A3-6000-4771-A0F9-7C146B8DDE7A}']
+
+  end;
+
+implementation
+
+end.

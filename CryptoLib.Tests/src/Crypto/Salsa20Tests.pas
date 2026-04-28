@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -69,6 +68,7 @@ type
     procedure TestSalsa20Test1;
     procedure TestSalsa20Test2;
     procedure TestReInitBug;
+    procedure TestProcessBytesVsReturnByte;
 
   end;
 
@@ -351,6 +351,42 @@ begin
       // expected
     end;
 
+  end;
+end;
+
+procedure TTestSalsa20.TestProcessBytesVsReturnByte;
+const
+  CLen = 400;
+var
+  LKey, LNonce, LIn, LOutA, LOutB: TBytes;
+  LParams: IParametersWithIV;
+  LA, LB: ISalsa20Engine;
+  LIdx: Int32;
+begin
+  LKey := DecodeHex('000102030405060708090A0B0C0D0E0F' +
+    '101112131415161718191A1B1C1D1E1F');
+  LNonce := DecodeHex('0000000000000000');
+  LParams := TParametersWithIV.Create(
+    TKeyParameter.Create(LKey) as IKeyParameter, LNonce);
+  SetLength(LIn, CLen);
+  for LIdx := 0 to CLen - 1 do
+  begin
+    LIn[LIdx] := Byte(LIdx * 5 + 11);
+  end;
+  SetLength(LOutA, CLen);
+  SetLength(LOutB, CLen);
+  LA := TSalsa20Engine.Create();
+  LA.Init(True, LParams);
+  LA.ProcessBytes(LIn, 0, CLen, LOutA, 0);
+  LB := TSalsa20Engine.Create();
+  LB.Init(True, LParams);
+  for LIdx := 0 to CLen - 1 do
+  begin
+    LOutB[LIdx] := Byte(LB.ReturnByte(LIn[LIdx]));
+  end;
+  if not AreEqual(LOutA, LOutB) then
+  begin
+    Fail('Salsa20 ProcessBytes vs ReturnByte stream mismatch');
   end;
 end;
 

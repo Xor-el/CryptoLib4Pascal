@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -44,14 +43,9 @@ uses
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpSecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpISecureRandom,
   CryptoLibTestBase;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
 
 type
 {$SCOPEDENUMS ON}
@@ -61,7 +55,7 @@ type
 type
 
   /// <summary>
-  /// Test whether block ciphers implement reset contract on init,
+  /// Test whether stream ciphers implement reset contract on init,
   /// encrypt/decrypt and reset.
   /// </summary>
   TTestStreamCipherReset = class(TCryptoLibAlgorithmTestCase)
@@ -69,17 +63,17 @@ type
   var
     FSecureRandom: ISecureRandom;
 
-    procedure DoCheckReset(const cipher: IStreamCipher;
-      const cipherParams: ICipherParameters; encrypt: Boolean;
-      const pretext, posttext: TBytes);
+    procedure DoCheckReset(const ACipher: IStreamCipher;
+      const ACipherParams: ICipherParameters; AEncrypt: Boolean;
+      const APretext, APosttext: TBytes);
 
-    function DoMake(CipherEngine: TCipherEngine): IStreamCipher;
+    function DoMake(ACipherEngine: TCipherEngine): IStreamCipher;
 
-    function DoRandom(size: Int32): TBytes;
-    procedure DoTestReset(CipherEngine: TCipherEngine;
-      KeyLen, IVLen: Int32); overload;
-    procedure DoTestReset(const cipher1, cipher2: IStreamCipher;
-      const cipherParams: ICipherParameters); overload;
+    function DoRandom(ASize: Int32): TBytes;
+    procedure DoTestReset(ACipherEngine: TCipherEngine;
+      AKeyLen, AIvLen: Int32); overload;
+    procedure DoTestReset(const ACipher1, ACipher2: IStreamCipher;
+      const ACipherParams: ICipherParameters); overload;
 
   protected
     procedure SetUp; override;
@@ -94,73 +88,57 @@ implementation
 
 { TTestStreamCipherReset }
 
-procedure TTestStreamCipherReset.DoCheckReset(const cipher: IStreamCipher;
-  const cipherParams: ICipherParameters; encrypt: Boolean;
-  const pretext, posttext: TBytes);
+procedure TTestStreamCipherReset.DoCheckReset(const ACipher: IStreamCipher;
+  const ACipherParams: ICipherParameters; AEncrypt: Boolean;
+  const APretext, APosttext: TBytes);
 var
-  output: TBytes;
+  LOutput: TBytes;
 begin
   // Do initial run
-  System.SetLength(output, System.Length(posttext));
-  cipher.ProcessBytes(pretext, 0, System.Length(pretext), output, 0);
+  System.SetLength(LOutput, System.Length(APosttext));
+  ACipher.ProcessBytes(APretext, 0, System.Length(APretext), LOutput, 0);
 
   // Check encrypt resets cipher
-  cipher.Init(encrypt, cipherParams);
+  ACipher.Init(AEncrypt, ACipherParams);
   try
-    cipher.ProcessBytes(pretext, 0, System.Length(pretext), output, 0);
+    ACipher.ProcessBytes(APretext, 0, System.Length(APretext), LOutput, 0);
   except
-    on e: Exception do
+    on E: Exception do
     begin
-      Fail(Format('%s init did not reset: %s', [cipher.AlgorithmName,
-        e.Message]));
+      Fail(Format('%s init did not reset: %s', [ACipher.AlgorithmName,
+        E.Message]));
     end;
-
   end;
 
-  if not(AreEqual(output, posttext)) then
+  if not(AreEqual(LOutput, APosttext)) then
   begin
     Fail(Format('%s init did not reset. Expected %s But Got %s',
-      [cipher.AlgorithmName, EncodeHex(posttext), EncodeHex(output)]));
+      [ACipher.AlgorithmName, EncodeHex(APosttext), EncodeHex(LOutput)]));
   end;
 
   // Check reset resets data
-  cipher.Reset();
+  ACipher.Reset();
 
   try
-    cipher.ProcessBytes(pretext, 0, System.Length(pretext), output, 0);
+    ACipher.ProcessBytes(APretext, 0, System.Length(APretext), LOutput, 0);
   except
-    on e: Exception do
+    on E: Exception do
     begin
-      Fail(Format('%s reset did not reset: ', [cipher.AlgorithmName,
-        e.Message]));
+      Fail(Format('%s reset did not reset: %s', [ACipher.AlgorithmName,
+        E.Message]));
     end;
-
   end;
 
-  if not(AreEqual(output, posttext)) then
+  if not(AreEqual(LOutput, APosttext)) then
   begin
-    Fail(Format('%s init did not reset.', [cipher.AlgorithmName]));
+    Fail(Format('%s reset did not reset.', [ACipher.AlgorithmName]));
   end;
-
-  //
-  // try
-  // {
-  // cipher.ProcessBytes(pretext, 0, pretext.Length, output, 0);
-  // }
-  // catch (Exception e)
-  // {
-  // Fail(cipher.AlgorithmName + " reset did not reset: " + e.Message);
-  // }
-  // if (!Arrays.AreEqual(output, posttext))
-  // {
-  // Fail(cipher.AlgorithmName + " reset did not reset.");
-  // }
 end;
 
-function TTestStreamCipherReset.DoMake(CipherEngine: TCipherEngine)
+function TTestStreamCipherReset.DoMake(ACipherEngine: TCipherEngine)
   : IStreamCipher;
 begin
-  case CipherEngine of
+  case ACipherEngine of
     TCipherEngine.Salsa20Engine:
       Result := TSalsa20Engine.Create() as ISalsa20Engine;
     TCipherEngine.XSalsa20Engine:
@@ -174,49 +152,48 @@ begin
   end;
 end;
 
-function TTestStreamCipherReset.DoRandom(size: Int32): TBytes;
+function TTestStreamCipherReset.DoRandom(ASize: Int32): TBytes;
 begin
-  Result := TSecureRandom.GetNextBytes(FSecureRandom, size);
+  Result := TSecureRandom.GetNextBytes(FSecureRandom, ASize);
 end;
 
-procedure TTestStreamCipherReset.DoTestReset(CipherEngine: TCipherEngine;
-  KeyLen, IVLen: Int32);
+procedure TTestStreamCipherReset.DoTestReset(ACipherEngine: TCipherEngine;
+  AKeyLen, AIvLen: Int32);
 begin
-  DoTestReset(DoMake(CipherEngine), DoMake(CipherEngine),
-    TParametersWithIV.Create(TKeyParameter.Create(DoRandom(KeyLen))
-    as IKeyParameter, DoRandom(IVLen)) as IParametersWithIV);
+  DoTestReset(DoMake(ACipherEngine), DoMake(ACipherEngine),
+    TParametersWithIV.Create(TKeyParameter.Create(DoRandom(AKeyLen))
+    as IKeyParameter, DoRandom(AIvLen)) as IParametersWithIV);
 end;
 
-procedure TTestStreamCipherReset.DoTestReset(const cipher1,
-  cipher2: IStreamCipher; const cipherParams: ICipherParameters);
+procedure TTestStreamCipherReset.DoTestReset(const ACipher1,
+  ACipher2: IStreamCipher; const ACipherParams: ICipherParameters);
 var
-  plaintext, ciphertext: TBytes;
+  LPlaintext, LCiphertext: TBytes;
 begin
-  cipher1.Init(true, cipherParams);
-  System.SetLength(plaintext, 1023);
-  System.SetLength(ciphertext, System.Length(plaintext));
+  ACipher1.Init(true, ACipherParams);
+  System.SetLength(LPlaintext, 1023);
+  System.SetLength(LCiphertext, System.Length(LPlaintext));
 
   // Establish baseline answer
-  cipher1.ProcessBytes(plaintext, 0, System.Length(plaintext), ciphertext, 0);
+  ACipher1.ProcessBytes(LPlaintext, 0, System.Length(LPlaintext), LCiphertext, 0);
 
   // Test encryption resets
-  DoCheckReset(cipher1, cipherParams, true, plaintext, ciphertext);
+  DoCheckReset(ACipher1, ACipherParams, true, LPlaintext, LCiphertext);
 
   // Test decryption resets with fresh instance
-  cipher2.Init(false, cipherParams);
-  DoCheckReset(cipher2, cipherParams, false, ciphertext, plaintext);
+  ACipher2.Init(false, ACipherParams);
+  DoCheckReset(ACipher2, ACipherParams, false, LCiphertext, LPlaintext);
 end;
 
 procedure TTestStreamCipherReset.SetUp;
 begin
   inherited;
-  FSecureRandom := TSecureRandom.Create();
+  FSecureRandom := TCryptoServicesRegistrar.GetSecureRandom();
 end;
 
 procedure TTestStreamCipherReset.TearDown;
 begin
   inherited;
-
 end;
 
 procedure TTestStreamCipherReset.TestReset;

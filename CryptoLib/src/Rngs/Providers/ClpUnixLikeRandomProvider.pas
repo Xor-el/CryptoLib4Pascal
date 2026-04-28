@@ -1,0 +1,106 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpUnixLikeRandomProvider;
+
+{$I ..\..\Include\CryptoLib.inc}
+
+interface
+
+{$IFDEF CRYPTOLIB_UNIXLIKE}
+uses
+  SysUtils,
+  ClpCryptoLibTypes,
+  ClpBaseRandomProvider;
+
+resourcestring
+  SRandomDeviceReadError =
+    'An Error Occurred while reading random data from random device (file)';
+
+type
+  /// <summary>
+  /// Unix-like OS random source provider (fallback for other Unix-like systems).
+  /// Implements /dev/urandom fallback
+  /// </summary>
+  TUnixLikeRandomProvider = class sealed(TBaseRandomProvider)
+
+  strict private
+    function GenRandomBytesUnixLike(ALen: Int32; AData: PByte): Int32;
+
+  public
+    constructor Create();
+
+    procedure GetBytes(const AData: TCryptoLibByteArray); override;
+    function GetIsAvailable: Boolean; override;
+    function GetName: String; override;
+
+  end;
+
+{$ENDIF}
+
+implementation
+
+{$IFDEF CRYPTOLIB_UNIXLIKE}
+uses
+  ClpDevRandomReader;
+
+const
+  // https://man7.org/linux/man-pages/man4/random.4.html
+  DevRandomMaxChunk = 32 * 1024 * 1024;
+
+{ TUnixLikeRandomProvider }
+
+constructor TUnixLikeRandomProvider.Create;
+begin
+  inherited Create();
+end;
+
+function TUnixLikeRandomProvider.GenRandomBytesUnixLike(ALen: Int32;
+  AData: PByte): Int32;
+begin
+  Result := TDevRandomReader.Read(ALen, AData, DevRandomMaxChunk);
+end;
+
+procedure TUnixLikeRandomProvider.GetBytes(const AData: TCryptoLibByteArray);
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(AData);
+
+  if LCount <= 0 then
+  begin
+    Exit;
+  end;
+
+  if GenRandomBytesUnixLike(LCount, PByte(AData)) <> 0 then
+  begin
+    raise EOSRandomCryptoLibException.CreateRes(@SRandomDeviceReadError);
+  end;
+end;
+
+function TUnixLikeRandomProvider.GetIsAvailable: Boolean;
+begin
+  Result := True;
+end;
+
+function TUnixLikeRandomProvider.GetName: String;
+begin
+  Result := 'Unix-Like';
+end;
+
+{$ENDIF}
+
+end.

@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -24,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
 {$IFDEF FPC}
   fpcunit,
@@ -35,7 +33,8 @@ uses
   ClpFixedSecureRandom,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
+  ClpX9ECAsn1Objects,
   ClpECDsaSigner,
   ClpIECDsaSigner,
   ClpIBasicAgreement,
@@ -43,23 +42,29 @@ uses
   ClpECDHCBasicAgreement,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
-  ClpECPublicKeyParameters,
-  ClpIECPublicKeyParameters,
-  ClpECPrivateKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
-  ClpIECKeyPairGenerator,
-  ClpECKeyPairGenerator,
-  ClpIECKeyGenerationParameters,
-  ClpECKeyGenerationParameters,
+  ClpECParameters,
+  ClpIECParameters,
+  ClpIECGenerators,
+  ClpECGenerators,
   ClpIAsymmetricCipherKeyPair,
-  ClpCustomNamedCurves,
-  ClpECC,
-  ClpIECC,
+  ClpECCurve,
+  ClpIECCommon,
+  ClpIECFieldElement,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
+  ClpICipherParameters,
+  ClpIAsymmetricKeyParameter,
+  ClpIAsymmetricCipherKeyPairGenerator,
+  ClpIKeyGenerationParameters,
+  ClpGeneratorUtilities,
+  ClpAgreementUtilities,
+  ClpECNamedCurveTable,
+  ClpSecObjectIdentifiers,
+  ClpPublicKeyFactory,
+  ClpPrivateKeyFactory,
+  ClpSubjectPublicKeyInfoFactory,
+  ClpPrivateKeyInfoFactory,
   CryptoLibTestBase;
 
 type
@@ -69,9 +74,7 @@ type
   /// </summary>
   TTestEC = class(TCryptoLibAlgorithmTestCase)
   private
-
-  var
-
+    procedure DoImplTestECDH(const AAlgorithm: string);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -100,12 +103,12 @@ type
     /// X9.62 - 1998, <br />J.2.1, Page 100, ECDSA over the field F2m <br />
     /// an example with 191 bit binary field
     /// </summary>
-    procedure TestECDsa239bitBinary();
+    procedure TestECDsa239BitBinary();
 
     /// <summary>
     /// General test for long digest.
     /// </summary>
-    procedure TestECDsa239bitBinaryAndLargeDigest();
+    procedure TestECDsa239BitBinaryAndLargeDigest();
 
     /// <summary>
     /// key generation test
@@ -118,6 +121,10 @@ type
     procedure TestECBasicAgreement();
 
     procedure TestECDHBasicAgreementCofactor();
+
+    procedure TestECDHPrime239v1;
+    procedure TestECDHCPrime239v1;
+    procedure TestECDHMismatchedCurves;
 
   end;
 
@@ -199,7 +206,7 @@ begin
   s := TBigInteger.Create
     ('308992691965804947361541664549085895292153777025772063598');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('1542725565216523985789236956265265265235675811949404040041'));
 
@@ -283,7 +290,7 @@ begin
   s := TBigInteger.Create
     ('5735822328888155254683894997897571951568553642892029982342');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('6140507067065001063065065565667405560006161556565665656654'));
 
@@ -348,7 +355,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsa239bitBinary;
+procedure TTestEC.TestECDsa239BitBinary;
 var
   sig: TCryptoLibGenericArray<TBigInteger>;
   k: ISecureRandom;
@@ -367,7 +374,7 @@ begin
   s := TBigInteger.Create
     ('197030374000731686738334997654997227052849804072198819102649413465737174');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('171278725565216523967285789236956265265265235675811949404040041670216363')
     );
@@ -379,10 +386,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint
@@ -436,7 +441,7 @@ begin
   end;
 end;
 
-procedure TTestEC.TestECDsa239bitBinaryAndLargeDigest;
+procedure TTestEC.TestECDsa239BitBinaryAndLargeDigest;
 var
   r, s: TBigInteger;
   kData, &message: TBytes;
@@ -454,7 +459,7 @@ begin
   s := TBigInteger.Create
     ('144940322424411242416373536877786566515839911620497068645600824084578597');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('171278725565216523967285789236956265265265235675811949404040041670216363')
     );
@@ -466,10 +471,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint
@@ -542,7 +545,7 @@ begin
   s := TBigInteger.Create
     ('323813553209797357708078776831250505931891051755007842781978505179448783');
 
-  kData := TBigIntegers.AsUnsignedByteArray
+  kData := TBigIntegerUtilities.AsUnsignedByteArray
     (TBigInteger.Create
     ('700000017569056646655505781757157107570501575775705779575555657156756655')
     );
@@ -748,6 +751,9 @@ end;
 procedure TTestEC.TestECDHBasicAgreementCofactor;
 var
   random: ISecureRandom;
+  q, a, b, n, h: TBigInteger;
+  curve: IFpCurve;
+  G: IX9ECPoint;
   x9: IX9ECParameters;
   ec: IECDomainParameters;
   kpg: IECKeyPairGenerator;
@@ -757,8 +763,17 @@ var
 begin
   random := TSecureRandom.Create();
 
-  x9 := TCustomNamedCurves.GetByName('curve25519');
-  ec := TECDomainParameters.Create(x9.curve, x9.G, x9.n, x9.H, x9.GetSeed());
+  // "curve25519" in short Weierstrass form
+  q := TBigInteger.One.ShiftLeft(255).Subtract(TBigInteger.ValueOf(19));
+  a := TBigInteger.Create(1, DecodeHex('2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA984914A144'));
+  b := TBigInteger.Create(1, DecodeHex('7B425ED097B425ED097B425ED097B425ED097B425ED097B4260B5E9C7710C864'));
+  n := TBigInteger.Create(1, DecodeHex('1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED'));
+  h := TBigInteger.ValueOf(8);
+
+  curve := TFpCurve.Create(q, a, b, n, h);
+  G := TX9ECPoint.Create(curve, DecodeHex('042AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD245A20AE19A1B8A086B4E01EDD2C7748D14C923D4D7E6D7C61B229E9C5A27ECED3D9'));
+  x9 := TX9ECParameters.Create(curve, G, n, h);
+  ec := TECDomainParameters.Create(x9.Curve, x9.G, x9.N, x9.H);
 
   kpg := TECKeyPairGenerator.Create();
   kpg.Init(TECKeyGenerationParameters.Create(ec, random)
@@ -780,6 +795,107 @@ begin
   begin
     Fail('calculated agreement test failed');
   end;
+end;
+
+procedure TTestEC.DoImplTestECDH(const AAlgorithm: string);
+var
+  random: ISecureRandom;
+  x9: IX9ECParameters;
+  ecSpec: IECDomainParameters;
+  g: IAsymmetricCipherKeyPairGenerator;
+  aKeyPair, bKeyPair: IAsymmetricCipherKeyPair;
+  aAgree, bAgree: IBasicAgreement;
+  k1, k2: TBigInteger;
+  pubEnc, privEnc: TBytes;
+  pubKey: IECPublicKeyParameters;
+  privKey: IECPrivateKeyParameters;
+  pq1, pq2: IECPoint;
+begin
+  random := TSecureRandom.Create();
+  x9 := TECNamedCurveTable.GetByName('prime239v1');
+  if x9 = nil then
+    Fail('prime239v1 not found');
+  ecSpec := TECDomainParameters.FromX9ECParameters(x9);
+
+  g := TGeneratorUtilities.GetKeyPairGenerator(AAlgorithm);
+  g.Init(TECKeyGenerationParameters.Create(ecSpec, random) as IKeyGenerationParameters);
+
+  aKeyPair := g.GenerateKeyPair;
+  bKeyPair := g.GenerateKeyPair;
+
+  aAgree := TAgreementUtilities.GetBasicAgreement(AAlgorithm);
+  bAgree := TAgreementUtilities.GetBasicAgreement(AAlgorithm);
+  aAgree.Init(aKeyPair.Private as ICipherParameters);
+  bAgree.Init(bKeyPair.Private as ICipherParameters);
+
+  k1 := aAgree.CalculateAgreement(bKeyPair.Public as ICipherParameters);
+  k2 := bAgree.CalculateAgreement(aKeyPair.Public as ICipherParameters);
+  if not k1.Equals(k2) then
+    Fail(AAlgorithm + ' 2-way test failed');
+
+  pubEnc := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(
+    aKeyPair.Public as IAsymmetricKeyParameter).GetDerEncoded;
+  pubKey := TPublicKeyFactory.CreateKey(pubEnc) as IECPublicKeyParameters;
+
+  pq1 := pubKey.Q.Normalize;
+  pq2 := (aKeyPair.Public as IECPublicKeyParameters).Q.Normalize;
+  if not pq1.Equals(pq2) then
+    Fail(AAlgorithm + ' public key encoding (Q test) failed');
+
+  if not pubKey.Parameters.G.Equals((aKeyPair.Public as IECPublicKeyParameters).Parameters.G) then
+    Fail(AAlgorithm + ' public key encoding (G test) failed');
+
+  privEnc := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(
+    aKeyPair.Private as IAsymmetricKeyParameter).GetDerEncoded;
+  privKey := TPrivateKeyFactory.CreateKey(privEnc) as IECPrivateKeyParameters;
+
+  if not privKey.D.Equals((aKeyPair.Private as IECPrivateKeyParameters).D) then
+    Fail(AAlgorithm + ' private key encoding (D test) failed');
+
+  if not privKey.Parameters.G.Equals((aKeyPair.Private as IECPrivateKeyParameters).Parameters.G) then
+    Fail(AAlgorithm + ' private key encoding (G test) failed');
+end;
+
+procedure TTestEC.TestECDHPrime239v1;
+begin
+  DoImplTestECDH('ECDH');
+end;
+
+procedure TTestEC.TestECDHCPrime239v1;
+begin
+  DoImplTestECDH('ECDHC');
+end;
+
+procedure TTestEC.TestECDHMismatchedCurves;
+var
+  random: ISecureRandom;
+  kpg256, kpg384: IAsymmetricCipherKeyPairGenerator;
+  kp256, kp384: IAsymmetricCipherKeyPair;
+  ka: IBasicAgreement;
+  caught: Boolean;
+begin
+  random := TSecureRandom.Create();
+  kpg256 := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  kpg256.Init(TECKeyGenerationParameters.Create(TSecObjectIdentifiers.SecP256r1, random)
+    as IKeyGenerationParameters);
+  kp256 := kpg256.GenerateKeyPair;
+
+  kpg384 := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  kpg384.Init(TECKeyGenerationParameters.Create(TSecObjectIdentifiers.SecP384r1, random)
+    as IKeyGenerationParameters);
+  kp384 := kpg384.GenerateKeyPair;
+
+  ka := TAgreementUtilities.GetBasicAgreement('ECDH');
+  ka.Init(kp256.Private as ICipherParameters);
+  caught := False;
+  try
+    ka.CalculateAgreement(kp384.Public as ICipherParameters);
+  except
+    on EInvalidOperationCryptoLibException do
+      caught := True;
+  end;
+  if not caught then
+    Fail('Expected EInvalidOperationCryptoLibException for mismatched EC domain parameters');
 end;
 
 initialization

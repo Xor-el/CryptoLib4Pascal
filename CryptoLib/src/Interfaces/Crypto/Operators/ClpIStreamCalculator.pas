@@ -1,0 +1,49 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpIStreamCalculator;
+
+{$I ..\..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  Classes;
+
+type
+  /// <summary>
+  /// Base interface for cryptographic operations such as Hashes, MACs, and Signatures
+  /// which reduce a stream of data to a single value.
+  /// </summary>
+  IStreamCalculator<TResult> = interface
+    ['{6323F6FD-A832-4190-85C7-8B7F26E961C3}']
+
+    /// <summary>
+    /// Return a "sink" stream which only exists to update the implementing object.
+    /// </summary>
+    function GetStream: TStream;
+    /// <summary>
+    /// Return the result of processing the stream. This value is only available once the stream
+    /// has been closed.
+    /// </summary>
+    function GetResult: TResult;
+
+    property Stream: TStream read GetStream;
+  end;
+
+implementation
+
+end.

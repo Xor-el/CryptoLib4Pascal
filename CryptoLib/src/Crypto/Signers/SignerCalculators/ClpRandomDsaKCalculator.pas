@@ -1,0 +1,92 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpRandomDsaKCalculator;
+
+{$I ..\..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  ClpCryptoLibTypes,
+  ClpBigInteger,
+  ClpISecureRandom,
+  ClpIDsaKCalculator,
+  ClpIRandomDsaKCalculator;
+
+resourcestring
+  SUnSupportedOperation = 'Operation not Supported';
+
+type
+  TRandomDsaKCalculator = class(TInterfacedObject, IDsaKCalculator,
+    IRandomDsaKCalculator)
+
+  strict private
+    FQ: TBigInteger;
+    FRandom: ISecureRandom;
+
+    function GetIsDeterministic: Boolean; virtual;
+
+  public
+    property IsDeterministic: Boolean read GetIsDeterministic;
+    procedure Init(const AN: TBigInteger; const ARandom: ISecureRandom);
+      overload; virtual;
+    procedure Init(const AN, AD: TBigInteger;
+      const AMessage: TCryptoLibByteArray); overload; virtual;
+    function NextK(): TBigInteger; virtual;
+  end;
+
+implementation
+
+{ TRandomDsaKCalculator }
+
+function TRandomDsaKCalculator.GetIsDeterministic: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TRandomDsaKCalculator.Init(const AN: TBigInteger;
+  const ARandom: ISecureRandom);
+begin
+  FQ := AN;
+  FRandom := ARandom;
+end;
+
+{$IFNDEF _FIXINSIGHT_}
+
+procedure TRandomDsaKCalculator.Init(const AN, AD: TBigInteger;
+  const AMessage: TCryptoLibByteArray);
+begin
+  raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
+end;
+{$ENDIF}
+
+function TRandomDsaKCalculator.NextK: TBigInteger;
+var
+  LQBitLength: Int32;
+  LK: TBigInteger;
+begin
+  LQBitLength := FQ.BitLength;
+
+  repeat
+    LK := TBigInteger.Create(LQBitLength, FRandom);
+  until (not((LK.SignValue < 1) or (LK.CompareTo(FQ) >= 0)));
+
+  Result := LK;
+
+end;
+
+end.

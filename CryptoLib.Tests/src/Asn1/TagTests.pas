@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -31,152 +30,148 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpAsn1Streams,
+  ClpAsn1Tags,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpBits,
+  ClpBitOperations,
+  ClpEncoders,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
 
-  /// <summary>
-  /// X.690 test example
-  /// </summary>
-  TTestTag = class(TCryptoLibAlgorithmTestCase)
-  private
-
-  var
-    FlongAppSpecificTag, FlongTagged: TBytes;
-
+  TTagTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+    FLongTagged: TCryptoLibByteArray;
+    FLongAppSpecificTag: TCryptoLibByteArray;
+    FTaggedInteger: TCryptoLibByteArray;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+
   published
     procedure TestTag;
-
   end;
 
 implementation
 
-{ TTestTag }
+{ TTagTest }
 
-procedure TTestTag.SetUp;
+procedure TTagTest.SetUp;
 begin
   inherited;
-  FlongAppSpecificTag := DecodeHex('5F610101');
-
-  FlongTagged := DecodeBase64
-    ('ZSRzIp8gEEZFRENCQTk4NzY1NDMyMTCfIQwyMDA2MDQwMTEyMzSUCCAFERVz' +
+  FLongTagged := TBase64Encoder.Decode(
+    'ZSRzIp8gEEZFRENCQTk4NzY1NDMyMTCfIQwyMDA2MDQwMTEyMzSUCCAFERVz' +
     'A4kCAHEXGBkalAggBRcYGRqUCCAFZS6QAkRFkQlURUNITklLRVKSBQECAwQF' +
     'kxAREhMUFRYXGBkalAggBREVcwOJAgBxFxgZGpQIIAUXGBkalAggBWUukAJE' +
     'RZEJVEVDSE5JS0VSkgUBAgMEBZMQERITFBUWFxgZGpQIIAURFXMDiQIAcRcY' +
     'GRqUCCAFFxgZGpQIIAVlLpACREWRCVRFQ0hOSUtFUpIFAQIDBAWTEBESExQV' +
-    'FhcYGRqUCCAFERVzA4kCAHEXGBkalAggBRcYGRqUCCAFFxgZGpQIIAUXGBka' + 'lAg=');
-
+    'FhcYGRqUCCAFERVzA4kCAHEXGBkalAggBRcYGRqUCCAFFxgZGpQIIAUXGBka' +
+    'lAg=');
+  FLongAppSpecificTag := THexEncoder.Decode('5F610101');
+  FTaggedInteger := THexEncoder.Decode('BF2203020101');
 end;
 
-procedure TTestTag.TearDown;
+procedure TTagTest.TearDown;
 begin
+  FLongTagged := nil;
+  FLongAppSpecificTag := nil;
+  FTaggedInteger := nil;
   inherited;
-
 end;
 
-procedure TTestTag.TestTag;
+procedure TTagTest.TestTag;
 var
-  aIn: TAsn1InputStream;
-  app: IDerApplicationSpecific;
-  tagged: IAsn1TaggedObject;
-  sr: ISecureRandom;
+  LAIn: TAsn1InputStream;
+  LApp: IAsn1TaggedObject;
+  LTagged: IAsn1TaggedObject;
+  LSequence: IAsn1Sequence;
+  LSR: ISecureRandom;
   LTestTag, I: Int32;
 begin
-
-  aIn := TAsn1InputStream.Create(FlongTagged);
+  LAIn := TAsn1InputStream.Create(FLongTagged);
   try
-    app := aIn.ReadObject() as IDerApplicationSpecific;
+    LApp := LAIn.ReadObject() as IAsn1TaggedObject;
   finally
-    aIn.Free;
+    LAIn.Free;
   end;
 
-  aIn := TAsn1InputStream.Create(app.GetContents());
-  try
-    app := aIn.ReadObject() as IDerApplicationSpecific;
-  finally
-    aIn.Free;
+  if not LApp.HasTag(TAsn1Tags.Application, 5) then
+  begin
+    Fail('unexpected tag value found - not 5');
   end;
 
-  aIn := TAsn1InputStream.Create(app.GetContents());
-  try
-    tagged := aIn.ReadObject() as IAsn1TaggedObject;
-
-    if (tagged.TagNo <> 32) then
-    begin
-      Fail('unexpected tag value found - not 32');
-    end;
-
-    tagged := TAsn1Object.FromByteArray(tagged.GetEncoded())
-      as IAsn1TaggedObject;
-
-    if (tagged.TagNo <> 32) then
-    begin
-      Fail('unexpected tag value found on recode - not 32');
-    end;
-
-    tagged := aIn.ReadObject() as IAsn1TaggedObject;
-
-  finally
-    aIn.Free;
+  LApp := LApp.GetExplicitBaseTagged();
+  if not LApp.HasTag(TAsn1Tags.Application, 19) then
+  begin
+    Fail('unexpected tag value found - not 19');
   end;
 
-  if (tagged.TagNo <> 33) then
+  LSequence := LApp.GetBaseUniversal(False, TAsn1Tags.Sequence) as IAsn1Sequence;
+
+  LTagged := LSequence[0] as IAsn1TaggedObject;
+  if not LTagged.HasContextTag(32) then
+  begin
+    Fail('unexpected tag value found - not 32');
+  end;
+
+  LTagged := TAsn1TaggedObject.GetInstance(TAsn1Object.FromByteArray(LTagged.GetEncoded())) as IAsn1TaggedObject;
+  if not LTagged.HasContextTag(32) then
+  begin
+    Fail('unexpected tag value found on recode - not 32');
+  end;
+
+  LTagged := LSequence[1] as IAsn1TaggedObject;
+  if not LTagged.HasContextTag(33) then
   begin
     Fail('unexpected tag value found - not 33');
   end;
 
-  tagged := TAsn1Object.FromByteArray(tagged.GetEncoded()) as IAsn1TaggedObject;
-
-  if (tagged.TagNo <> 33) then
+  LTagged := TAsn1TaggedObject.GetInstance(TAsn1Object.FromByteArray(LTagged.GetEncoded())) as IAsn1TaggedObject;
+  if not LTagged.HasContextTag(33) then
   begin
     Fail('unexpected tag value found on recode - not 33');
   end;
 
-  aIn := TAsn1InputStream.Create(FlongAppSpecificTag);
+  LAIn := TAsn1InputStream.Create(FLongAppSpecificTag);
   try
-    app := aIn.ReadObject() as IDerApplicationSpecific;
+    LApp := LAIn.ReadObject() as IAsn1TaggedObject;
   finally
-    aIn.Free;
+    LAIn.Free;
   end;
 
-  if (app.ApplicationTag <> 97) then
+  if not LApp.HasTag(TAsn1Tags.Application, 97) then
   begin
     Fail('incorrect tag number read');
   end;
 
-  app := TAsn1Object.FromByteArray(app.GetEncoded()) as IDerApplicationSpecific;
-
-  if (app.ApplicationTag <> 97) then
+  LApp := TAsn1TaggedObject.GetInstance(TAsn1Object.FromByteArray(LApp.GetEncoded())) as IAsn1TaggedObject;
+  if not LApp.HasTag(TAsn1Tags.Application, 97) then
   begin
     Fail('incorrect tag number read on recode');
   end;
 
-  sr := TSecureRandom.Create();
-
-  I := 0;
-  while I < 100 do
+  LSR := TSecureRandom.Create();
+  for I := 0 to 99 do
   begin
-    LTestTag := TBits.Asr32(sr.NextInt32() and System.High(Int32), sr.Next(26));
-    app := TDerApplicationSpecific.Create(LTestTag, TBytes.Create(1));
-    app := TAsn1Object.FromByteArray(app.GetEncoded())
-      as IDerApplicationSpecific;
+    LTestTag := TBitOperations.Asr32(LSR.NextInt32() and System.High(Int32), LSR.Next(26));
+    LApp := TDerTaggedObject.Create(False, TAsn1Tags.Application, LTestTag, TDerOctetString.Create(TCryptoLibByteArray.Create(1)) as IDerOctetString);
+    LApp := TAsn1TaggedObject.GetInstance(TAsn1Object.FromByteArray(LApp.GetEncoded())) as IAsn1TaggedObject;
 
-    if (app.ApplicationTag <> LTestTag) then
+    if not LApp.HasTag(TAsn1Tags.Application, LTestTag) then
     begin
-      Fail(Format
-        ('incorrect tag number read on recode (random test value: " %d ")',
-        [LTestTag]));
+      Fail(Format('incorrect tag number read on recode (random test value: %d)', [LTestTag]));
     end;
+  end;
 
-    System.Inc(I);
+  LTagged := TDerTaggedObject.Create(False, 34, TDerTaggedObject.Create(True, 1000, TDerInteger.One) as IDerTaggedObject);
+  if not AreEqual(FTaggedInteger, LTagged.GetEncoded()) then
+  begin
+    Fail('incorrect encoding for implicit explicit tagged integer');
   end;
 end;
 
@@ -185,9 +180,9 @@ initialization
 // Register any test cases with the test runner
 
 {$IFDEF FPC}
-  RegisterTest(TTestTag);
+  RegisterTest(TTagTest);
 {$ELSE}
-  RegisterTest(TTestTag.Suite);
+  RegisterTest(TTagTest.Suite);
 {$ENDIF FPC}
 
 end.

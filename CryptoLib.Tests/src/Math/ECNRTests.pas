@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -31,25 +30,20 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpIECC,
-  ClpECC,
+  ClpECCurve,
+  ClpIECCommon,
   ClpIDigest,
   ClpECNRSigner,
   ClpIECNRSigner,
-  ClpECDomainParameters,
-  ClpIECDomainParameters,
-  ClpIECKeyGenerationParameters,
-  ClpECKeyGenerationParameters,
-  ClpECPrivateKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpECPublicKeyParameters,
-  ClpIECPublicKeyParameters,
-  ClpECKeyPairGenerator,
-  ClpIECKeyPairGenerator,
+  ClpECParameters,
+  ClpIECParameters,
+  ClpECGenerators,
+  ClpIECGenerators,
   ClpISigner,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpIAsymmetricCipherKeyPair,
   ClpECNamedCurveTable,
   ClpParametersWithRandom,
@@ -59,7 +53,7 @@ uses
   ClpFixedSecureRandom,
   ClpSignerUtilities,
   ClpBigInteger,
-  ClpBigIntegers,
+  ClpBigIntegerUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
   ClpDigestUtilities,
@@ -535,7 +529,7 @@ begin
   order := (myPair.Public as IECPublicKeyParameters).parameters.n;
 
   signer.Init(true, myPair.Private);
-  msg := TBigIntegers.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
+  msg := TBigIntegerUtilities.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
   sig := signer.GenerateSignature(msg);
 
   signer.Init(false, myPair.getPublic());

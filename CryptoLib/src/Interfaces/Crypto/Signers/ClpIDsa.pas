@@ -1,0 +1,78 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpIDsa;
+
+{$I ..\..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+
+  ClpBigInteger,
+  ClpICipherParameters,
+  ClpCryptoLibTypes;
+
+type
+
+  /// <summary>
+  /// interface for classes implementing the Digital Signature Algorithm
+  /// </summary>
+  IDsa = interface(IInterface)
+
+    ['{FD805337-5A3B-4595-B3A3-35B97F47E9E5}']
+
+    function GetAlgorithmName: String;
+    property AlgorithmName: String read GetAlgorithmName;
+
+    function GetOrder: TBigInteger;
+    /// <summary>The order of the group that the r, s values in signatures belong to.</summary>
+    property Order: TBigInteger read GetOrder;
+
+    // /**
+    // * initialise the signer for signature generation or signature
+    // * verification.
+    // *
+    // * @param forSigning true if we are generating a signature, false
+    // * otherwise.
+    // * @param param key parameters for signature generation.
+    // */
+    procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
+
+    // /**
+    // * sign the passed in message (usually the output of a hash function).
+    // *
+    // * @param message the message to be signed.
+    // * @return two big integers representing the r and s values respectively.
+    // */
+    function GenerateSignature(const AMessage: TCryptoLibByteArray)
+      : TCryptoLibGenericArray<TBigInteger>;
+
+    // /**
+    // * verify the message message against the signature values r and s.
+    // *
+    // * @param message the message that was supposed to have been signed.
+    // * @param r the r signature value.
+    // * @param s the s signature value.
+    // */
+    function VerifySignature(const AMessage: TCryptoLibByteArray;
+      const AR, &AS: TBigInteger): Boolean;
+
+  end;
+
+implementation
+
+end.

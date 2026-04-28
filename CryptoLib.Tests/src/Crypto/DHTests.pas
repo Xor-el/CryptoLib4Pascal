@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -35,23 +34,27 @@ uses
   ClpSecureRandom,
   ClpIParametersWithRandom,
   ClpParametersWithRandom,
+  ClpICipherParameters,
+  ClpIBasicAgreement,
+  ClpIKeyGenerationParameters,
+  ClpIAsymmetricCipherKeyPairGenerator,
+  ClpGeneratorUtilities,
+  ClpAgreementUtilities,
   ClpIDHAgreement,
   ClpDHAgreement,
   ClpIDHBasicAgreement,
   ClpDHBasicAgreement,
   ClpIDHParameters,
   ClpDHParameters,
-  ClpIDHParametersGenerator,
-  ClpDHParametersGenerator,
-  ClpIDHKeyPairGenerator,
-  ClpDHKeyPairGenerator,
-  ClpIDHBasicKeyPairGenerator,
-  ClpDHBasicKeyPairGenerator,
-  ClpIDHPrivateKeyParameters,
-  ClpIDHPublicKeyParameters,
-  ClpIDHKeyGenerationParameters,
-  ClpDHKeyGenerationParameters,
+  ClpIDHGenerators,
+  ClpDHGenerators,
   ClpIAsymmetricCipherKeyPair,
+  ClpPublicKeyFactory,
+  ClpPrivateKeyFactory,
+  ClpSubjectPublicKeyInfoFactory,
+  ClpPrivateKeyInfoFactory,
+  ClpIAsymmetricKeyParameter,
+  ClpPkcsObjectIdentifiers,
   ClpBigInteger,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -84,6 +87,15 @@ type
     // this test can take quiet a while
     procedure DoTestGeneration(size: Int32);
 
+    { SPKI/PKCS#8 round-trip, 3-party. }
+    procedure DoImplTestGP(const AlgName: string; size, privateValueSize: Int32;
+      const g, p: TBigInteger);
+
+    procedure DoImplTestExplicitWrapping(size, privateValueSize: Int32;
+      const g, p: TBigInteger);
+
+    class function Ike2048: IDHParameters; static;
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -103,11 +115,358 @@ type
     // parameter tests
     //
     procedure TestParameters;
+
+    procedure TestDHUtilityPath;
+    procedure TestExplicitWrapping;
+    procedure TestDHEncodingVectors;
+    procedure TestDHExceptions;
+    (**
+     * Tests whether a provider accepts invalid public keys that result in predictable shared secrets.
+     * This test is based on RFC 2785, Section 4 and NIST SP 800-56A,
+     * If an attacker can modify both public keys in an ephemeral-ephemeral key agreement scheme then
+     * it may be possible to coerce both parties into computing the same predictable shared key.
+     * <p/>
+     * Note: the test is quite whimsical. If the prime p is not a safe prime then the provider itself
+     * cannot prevent all small-subgroup attacks because of the missing parameter q in the
+     * Diffie-Hellman parameters. Implementations must add additional countermeasures such as the ones
+     * proposed in RFC 2785.
+     *)
+    procedure TestDHSubgroupConfinement;
   end;
 
 implementation
 
+type
+  { Invalid Y with valid DH parameters }
+  TDHWeakPublicKeyStub = class(TDHPublicKeyParameters, IDHPublicKeyParameters)
+  strict private
+    FWeakY: TBigInteger;
+  strict protected
+  function GetY: TBigInteger; override;
+  public
+    constructor Create(const AWeakY: TBigInteger; const AParams: IDHParameters);
+
+  end;
+
+{ TDHWeakPublicKeyStub }
+
+constructor TDHWeakPublicKeyStub.Create(const AWeakY: TBigInteger;
+  const AParams: IDHParameters);
+begin
+  inherited Create(TBigInteger.Two, AParams);
+  FWeakY := AWeakY;
+end;
+
+function TDHWeakPublicKeyStub.GetY: TBigInteger;
+begin
+  Result := FWeakY;
+end;
+
 { TTestDH }
+
+class function TTestDH.Ike2048: IDHParameters;
+var
+  lp: TBigInteger;
+begin
+  lp := TBigInteger.Create(
+    'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74' +
+    '020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F1437' +
+    '4FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED' +
+    'EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF05' +
+    '98DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB' +
+    '9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B' +
+    'E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF695581718' +
+    '3995497CEA956AE515D2261898FA051015728E5A8AACAA68FFFFFFFFFFFFFFFF',
+    16);
+  Result := TDHParameters.Create(lp, TBigInteger.Two);
+end;
+
+procedure TTestDH.DoImplTestExplicitWrapping(size, privateValueSize: Int32;
+  const g, p: TBigInteger);
+var
+  random: ISecureRandom;
+  dhParams: IDHParameters;
+  keyGen: IAsymmetricCipherKeyPairGenerator;
+  aKeyPair, bKeyPair: IAsymmetricCipherKeyPair;
+  aAgree, bAgree: IBasicAgreement;
+  b1, b2: TBigInteger;
+begin
+  random := TSecureRandom.Create();
+  dhParams := TDHParameters.Create(p, g, TBigInteger.GetDefault, privateValueSize);
+  keyGen := TGeneratorUtilities.GetKeyPairGenerator('DH');
+  keyGen.Init(TDHKeyGenerationParameters.Create(random, dhParams) as IKeyGenerationParameters);
+  aKeyPair := keyGen.GenerateKeyPair;
+  bKeyPair := keyGen.GenerateKeyPair;
+  DoCheckKeySize(privateValueSize, aKeyPair.Private as IDHPrivateKeyParameters);
+  DoCheckKeySize(privateValueSize, bKeyPair.Private as IDHPrivateKeyParameters);
+  aAgree := TAgreementUtilities.GetBasicAgreement('DH');
+  bAgree := TAgreementUtilities.GetBasicAgreement('DH');
+  aAgree.Init(aKeyPair.Private as ICipherParameters);
+  bAgree.Init(bKeyPair.Private as ICipherParameters);
+  b1 := aAgree.CalculateAgreement(bKeyPair.Public as ICipherParameters);
+  b2 := bAgree.CalculateAgreement(aKeyPair.Public as ICipherParameters);
+  if not b1.Equals(b2) then
+    Fail('Explicit wrapping test failed');
+end;
+
+procedure TTestDH.DoImplTestGP(const AlgName: string; size, privateValueSize: Int32;
+  const g, p: TBigInteger);
+var
+  random: ISecureRandom;
+  dhParams: IDHParameters;
+  keyGen, aPairGen, bPairGen, cPairGen: IAsymmetricCipherKeyPairGenerator;
+  aKeyPair, bKeyPair: IAsymmetricCipherKeyPair;
+  aAgreeBasic, bAgreeBasic: IBasicAgreement;
+  k1, k2: TBigInteger;
+  pubEnc, privEnc: TBytes;
+  pubKey: IDHPublicKeyParameters;
+  privKey: IDHPrivateKeyParameters;
+  spec: IDHParameters;
+  aPair, bPair, cPair: IAsymmetricCipherKeyPair;
+  aKeyAgree, bKeyAgree, cKeyAgree: IBasicAgreement;
+  ac, ba, cb: IDHPublicKeyParameters;
+  aShared, bShared, cShared: TBigInteger;
+begin
+  random := TSecureRandom.Create() as ISecureRandom;
+  dhParams := TDHParameters.Create(p, g, TBigInteger.GetDefault, privateValueSize);
+  keyGen := TGeneratorUtilities.GetKeyPairGenerator(AlgName);
+  keyGen.Init(TDHKeyGenerationParameters.Create(random, dhParams) as IKeyGenerationParameters);
+
+  aKeyPair := keyGen.GenerateKeyPair;
+  aAgreeBasic := TAgreementUtilities.GetBasicAgreement(AlgName);
+  DoCheckKeySize(privateValueSize, aKeyPair.Private as IDHPrivateKeyParameters);
+  aAgreeBasic.Init(aKeyPair.Private as ICipherParameters);
+
+  bKeyPair := keyGen.GenerateKeyPair;
+  bAgreeBasic := TAgreementUtilities.GetBasicAgreement(AlgName);
+  DoCheckKeySize(privateValueSize, bKeyPair.Private as IDHPrivateKeyParameters);
+  bAgreeBasic.Init(bKeyPair.Private as ICipherParameters);
+
+  k1 := aAgreeBasic.CalculateAgreement(bKeyPair.Public as ICipherParameters);
+  k2 := bAgreeBasic.CalculateAgreement(aKeyPair.Public as ICipherParameters);
+  if not k1.Equals(k2) then
+    Fail(Format('%d bit 2-way test failed', [size]));
+
+  pubEnc := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(
+    aKeyPair.Public as IAsymmetricKeyParameter).GetDerEncoded;
+  pubKey := TPublicKeyFactory.CreateKey(pubEnc) as IDHPublicKeyParameters;
+  spec := pubKey.Parameters;
+  if (not spec.G.Equals(dhParams.G)) or (not spec.P.Equals(dhParams.P)) then
+    Fail(Format('%d bit public key encoding/decoding test failed on parameters', [size]));
+  if not((aKeyPair.Public as IDHPublicKeyParameters).Y.Equals(pubKey.Y)) then
+    Fail(Format('%d bit public key encoding/decoding test failed on y value', [size]));
+
+  if (not spec.G.Equals(dhParams.G)) or (not spec.P.Equals(dhParams.P)) then
+    Fail(Format('%d bit public key serialisation test failed on parameters', [size]));
+  if not((aKeyPair.Public as IDHPublicKeyParameters).Y.Equals(pubKey.Y)) then
+    Fail(Format('%d bit public key serialisation test failed on y value', [size]));
+
+  privEnc := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(
+    aKeyPair.Private as IAsymmetricKeyParameter).GetDerEncoded;
+  privKey := TPrivateKeyFactory.CreateKey(privEnc) as IDHPrivateKeyParameters;
+  spec := privKey.Parameters;
+  if (not spec.G.Equals(dhParams.G)) or (not spec.P.Equals(dhParams.P)) then
+    Fail(Format('%d bit private key encoding/decoding test failed on parameters', [size]));
+  if not((aKeyPair.Private as IDHPrivateKeyParameters).X.Equals(privKey.X)) then
+    Fail(Format('%d bit private key encoding/decoding test failed on x value', [size]));
+
+  if (not spec.G.Equals(dhParams.G)) or (not spec.P.Equals(dhParams.P)) then
+    Fail(Format('%d bit private key serialisation test failed on parameters', [size]));
+  if not((aKeyPair.Private as IDHPrivateKeyParameters).X.Equals(privKey.X)) then
+    Fail(Format('%d bit private key serialisation test failed on x value', [size]));
+
+  aPairGen := TGeneratorUtilities.GetKeyPairGenerator(AlgName);
+  aPairGen.Init(TDHKeyGenerationParameters.Create(random, spec) as IKeyGenerationParameters);
+  aPair := aPairGen.GenerateKeyPair;
+  bPairGen := TGeneratorUtilities.GetKeyPairGenerator(AlgName);
+  bPairGen.Init(TDHKeyGenerationParameters.Create(random, spec) as IKeyGenerationParameters);
+  bPair := bPairGen.GenerateKeyPair;
+  cPairGen := TGeneratorUtilities.GetKeyPairGenerator(AlgName);
+  cPairGen.Init(TDHKeyGenerationParameters.Create(random, spec) as IKeyGenerationParameters);
+  cPair := cPairGen.GenerateKeyPair;
+
+  aKeyAgree := TAgreementUtilities.GetBasicAgreement(AlgName);
+  aKeyAgree.Init(aPair.Private as ICipherParameters);
+  bKeyAgree := TAgreementUtilities.GetBasicAgreement(AlgName);
+  bKeyAgree.Init(bPair.Private as ICipherParameters);
+  cKeyAgree := TAgreementUtilities.GetBasicAgreement(AlgName);
+  cKeyAgree.Init(cPair.Private as ICipherParameters);
+
+  ac := TDHPublicKeyParameters.Create(
+    aKeyAgree.CalculateAgreement(cPair.Public as ICipherParameters), spec);
+  ba := TDHPublicKeyParameters.Create(
+    bKeyAgree.CalculateAgreement(aPair.Public as ICipherParameters), spec);
+  cb := TDHPublicKeyParameters.Create(
+    cKeyAgree.CalculateAgreement(bPair.Public as ICipherParameters), spec);
+
+  aShared := aKeyAgree.CalculateAgreement(cb as ICipherParameters);
+  bShared := bKeyAgree.CalculateAgreement(ac as ICipherParameters);
+  cShared := cKeyAgree.CalculateAgreement(ba as ICipherParameters);
+
+  if not aShared.Equals(bShared) then
+    Fail(Format('%d bit 3-way test failed (a and b differ)', [size]));
+  if not cShared.Equals(bShared) then
+    Fail(Format('%d bit 3-way test failed (c and b differ)', [size]));
+end;
+
+procedure TTestDH.TestDHUtilityPath;
+begin
+  DoImplTestGP('DH', 512, 0, Fg512, Fp512);
+  DoImplTestGP('DiffieHellman', 768, 0, Fg768, Fp768);
+  DoImplTestGP('DIFFIEHELLMAN', 1024, 0, Fg1024, Fp1024);
+  DoImplTestGP('DH', 512, 64, Fg512, Fp512);
+  DoImplTestGP('DiffieHellman', 768, 128, Fg768, Fp768);
+  DoImplTestGP('DIFFIEHELLMAN', 1024, 256, Fg1024, Fp1024);
+end;
+
+procedure TTestDH.TestExplicitWrapping;
+begin
+  DoImplTestExplicitWrapping(512, 0, Fg512, Fp512);
+end;
+
+procedure TTestDH.TestDHEncodingVectors;
+var
+  k: IAsymmetricKeyParameter;
+  encoded: TBytes;
+  samplePrivEnc, samplePubEnc, oldPubEnc, oldFullParams: TBytes;
+begin
+  samplePrivEnc := DecodeBase64(
+    'MIIBZgIBADCCARsGCSqGSIb3DQEDATCCAQwCgYEA/X9TgR11EilS30qcLuzk5/YR' +
+    't1I870QAwx4/gLZRJmlFXUAiUftZPY1Y+r/F9bow9subVWzXgTuAHTRv8mZgt2uZ' +
+    'UKWkn5/oBHsQIsJPu6nX/rfGG/g7V+fGqKYVDwT7g/bTxR7DAjVUE1oWkTL2dfOu' +
+    'K2HXKu/yIgMZndFIAccCgYEA9+GghdabPd7LvKtcNrhXuXmUr7v6OuqC+VdMCz0H' +
+    'gmdRWVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3zwkyjMim4TwWeotUfI0o4KOuHiuz' +
+    'pnWRbqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImog9/hWuWfBpKLZl6Ae1UlZAFMO/7P' +
+    'SSoCAgIABEICQAZYXnBHazxXUUdFP4NIf2Ipu7du0suJPZQKKff81wymi2zfCfHh' +
+    'uhe9gQ9xdm4GpzeNtrQ8/MzpTy+ZVrtd29Q=');
+  samplePubEnc := DecodeBase64(
+    'MIIBpjCCARsGCSqGSIb3DQEDATCCAQwCgYEA/X9TgR11EilS30qcLuzk5/YRt1I8' +
+    '70QAwx4/gLZRJmlFXUAiUftZPY1Y+r/F9bow9subVWzXgTuAHTRv8mZgt2uZUKWk' +
+    'n5/oBHsQIsJPu6nX/rfGG/g7V+fGqKYVDwT7g/bTxR7DAjVUE1oWkTL2dfOuK2HX' +
+    'Ku/yIgMZndFIAccCgYEA9+GghdabPd7LvKtcNrhXuXmUr7v6OuqC+VdMCz0HgmdR' +
+    'WVeOutRZT+ZxBxCBgLRJFnEj6EwoFhO3zwkyjMim4TwWeotUfI0o4KOuHiuzpnWR' +
+    'bqN/C/ohNWLx+2J6ASQ7zKTxvqhRkImog9/hWuWfBpKLZl6Ae1UlZAFMO/7PSSoC' +
+    'AgIAA4GEAAKBgEIiqxoUW6E6GChoOgcfNbVFclW91ITf5MFSUGQwt2R0RHoOhxvO' +
+    'lZhNs++d0VPATLAyXovjfgENT9SGCbuZttYcqqLdKTbMXBWPek+rfnAl9E4iEMED' +
+    'IDd83FJTKs9hQcPAm7zmp0Xm1bGF9CbUFjP5G02265z7eBmHDaT0SNlB');
+  oldPubEnc := DecodeBase64(
+    'MIIBnzCCARQGByqGSM4+AgEwggEHAoGBAPxSrN417g43VAM9sZRf1dt6AocAf7D6' +
+    'WVCtqEDcBJrMzt63+g+BNJzhXVtbZ9kp9vw8L/0PHgzv0Ot/kOLX7Khn+JalOECW' +
+    'YlkyBhmOVbjR79TY5u2GAlvG6pqpizieQNBCEMlUuYuK1Iwseil6VoRuA13Zm7uw' +
+    'WO1eZmaJtY7LAoGAQaPRCFKM5rEdkMrV9FNzeSsYRs8m3DqPnnJHpuySpyO9wUcX' +
+    'OOJcJY5qvHbDO5SxHXu/+bMgXmVT6dXI5o0UeYqJR7fj6pR4E6T0FwG55RFr5Ok4' +
+    '3C4cpXmaOu176SyWuoDqGs1RDGmYQjwbZUi23DjaaTFUly9LCYXMliKrQfEDgYQA' +
+    'AoGAQUGCBN4TaBw1BpdBXdTvTfCU69XDB3eyU2FOBE3UWhpx9D8XJlx4f5DpA4Y6' +
+    '6sQMuCbhfmjEph8W7/sbMurM/awR+PSR8tTY7jeQV0OkmAYdGK2nzh0ZSifMO1oE' +
+    'NNhN2O62TLs67msxT28S4/S89+LMtc98mevQ2SX+JF3wEVU=');
+  oldFullParams := DecodeBase64(
+    'MIIBIzCCARgGByqGSM4+AgEwggELAoGBAP1/U4EddRIpUt9KnC7s5Of2EbdSPO9E' +
+    'AMMeP4C2USZpRV1AIlH7WT2NWPq/xfW6MPbLm1Vs14E7gB00b/JmYLdrmVClpJ+f' +
+    '6AR7ECLCT7up1/63xhv4O1fnxqimFQ8E+4P208UewwI1VBNaFpEy9nXzrith1yrv' +
+    '8iIDGZ3RSAHHAoGBAPfhoIXWmz3ey7yrXDa4V7l5lK+7+jrqgvlXTAs9B4JnUVlX' +
+    'jrrUWU/mcQcQgYC0SRZxI+hMKBYTt88JMozIpuE8FnqLVHyNKOCjrh4rs6Z1kW6j' +
+    'fwv6ITVi8ftiegEkO8yk8b6oUZCJqIPf4VrlnwaSi2ZegHtVJWQBTDv+z0kqAgFk' +
+    'AwUAAgIH0A==');
+
+  k := TPrivateKeyFactory.CreateKey(samplePrivEnc);
+  encoded := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(k).GetDerEncoded;
+  if not AreEqual(samplePrivEnc, encoded) then
+    Fail('private key re-encode failed');
+
+  k := TPublicKeyFactory.CreateKey(samplePubEnc);
+  encoded := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(k).GetDerEncoded;
+  if not AreEqual(samplePubEnc, encoded) then
+    Fail('public key re-encode failed');
+
+  k := TPublicKeyFactory.CreateKey(oldPubEnc);
+  encoded := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(k).GetDerEncoded;
+  if not AreEqual(oldPubEnc, encoded) then
+    Fail('old public key re-encode failed');
+
+  k := TPublicKeyFactory.CreateKey(oldFullParams);
+  encoded := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(k).GetDerEncoded;
+  if not AreEqual(oldFullParams, encoded) then
+    Fail('old full public key re-encode failed');
+end;
+
+procedure TTestDH.TestDHExceptions;
+var
+  caught: Boolean;
+begin
+  caught := False;
+  try
+    TAgreementUtilities.GetBasicAgreement('DH').CalculateAgreement(nil);
+  except
+    on EInvalidOperationCryptoLibException do
+      caught := True;
+  end;
+  if not caught then
+    Fail('Expected EInvalidOperationCryptoLibException when agreement not initialised');
+end;
+
+procedure TTestDH.TestDHSubgroupConfinement;
+var
+  parameters: IDHParameters;
+  p: TBigInteger;
+  keyGen: IAsymmetricCipherKeyPairGenerator;
+  random: ISecureRandom;
+  kp: IAsymmetricCipherKeyPair;
+  priv: IDHPrivateKeyParameters;
+  ka: IBasicAgreement;
+  weakYs: array[0..5] of TBigInteger;
+  i: Int32;
+  weakKey: TBigInteger;
+  ctorOk, agreeOk: Boolean;
+  badPub: IDHPublicKeyParameters;
+begin
+  parameters := Ike2048;
+  p := parameters.P;
+  random := TSecureRandom.Create();
+  keyGen := TGeneratorUtilities.GetKeyPairGenerator('DH');
+  keyGen.Init(TDHKeyGenerationParameters.Create(random, parameters) as IKeyGenerationParameters);
+  kp := keyGen.GenerateKeyPair;
+  priv := kp.Private as IDHPrivateKeyParameters;
+  ka := TAgreementUtilities.GetBasicAgreement('DH');
+
+  weakYs[0] := TBigInteger.Zero;
+  weakYs[1] := TBigInteger.One;
+  weakYs[2] := p.Subtract(TBigInteger.One);
+  weakYs[3] := p;
+  weakYs[4] := p.Add(TBigInteger.One);
+  weakYs[5] := TBigInteger.One.Negate;
+
+  for i := 0 to High(weakYs) do
+  begin
+    weakKey := weakYs[i];
+    ctorOk := False;
+    badPub := nil;
+    try
+      badPub := TDHPublicKeyParameters.Create(weakKey, parameters);
+      ctorOk := True;
+    except
+      on E: EArgumentCryptoLibException do
+        if Pos('Invalid DH public key', E.Message) = 0 then
+          Fail('wrong constructor exception message: ' + E.Message);
+    end;
+    if ctorOk then
+      Fail(Format('Generated weak public key (Y bit length %d)',
+        [badPub.Y.BitLength]));
+    badPub := nil;
+
+    ka.Init(priv as ICipherParameters);
+    agreeOk := False;
+    try
+      ka.CalculateAgreement(TDHWeakPublicKeyStub.Create(weakKey, parameters) as ICipherParameters);
+      agreeOk := True;
+    except
+      on E: EArgumentCryptoLibException do
+        if Pos('Weak', E.Message) = 0 then
+          Fail('wrong CalculateAgreement exception message: ' + E.Message);
+    end;
+    if agreeOk then
+      Fail('Generated secrets with weak public key');
+  end;
+end;
 
 function TTestDH.GetDHBasicKeyPairGenerator(const g, p: TBigInteger;
   privateValueSize: Int32): IDHBasicKeyPairGenerator;
@@ -116,7 +475,7 @@ var
   dhkgParams: IDHKeyGenerationParameters;
   kpGen: IDHBasicKeyPairGenerator;
 begin
-  dhParams := TDHParameters.Create(p, g, Default (TBigInteger),
+  dhParams := TDHParameters.Create(p, g, TBigInteger.GetDefault,
     privateValueSize);
 
   dhkgParams := TDHKeyGenerationParameters.Create(TSecureRandom.Create()

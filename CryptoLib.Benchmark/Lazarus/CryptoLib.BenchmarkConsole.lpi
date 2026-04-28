@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="CryptoLib.BenchmarkConsole"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default"/>
+      </Modes>
+    </RunParams>
+    <RequiredPackages Count="1">
+      <Item1>
+        <PackageName Value="CryptoLib4PascalPackage"/>
+      </Item1>
+    </RequiredPackages>
+    <Units Count="7">
+      <Unit0>
+        <Filename Value="CryptoLib.BenchmarkConsole.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\src\Core\PerformanceBenchmark.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\src\Core\BenchmarkCommon.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\src\Core\DigestPerformanceBenchmark.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\src\Core\CipherPerformanceBenchmark.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\src\Core\SignerPerformanceBenchmark.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\src\Core\KdfPerformanceBenchmark.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit6>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="CryptoLib.BenchmarkConsole"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\src\Core"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

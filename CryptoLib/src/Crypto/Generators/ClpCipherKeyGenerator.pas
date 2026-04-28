@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -25,8 +24,11 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpICipherKeyGenerator,
+  ClpIKeyParameter,
+  ClpKeyParameter,
   ClpKeyGenerationParameters,
   ClpIKeyGenerationParameters,
+  ClpCryptoServicesRegistrar,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -44,31 +46,33 @@ type
 
   strict private
   var
-    Funinitialised: Boolean;
-    FdefaultStrength: Int32;
-
-    function GetdefaultStrength: Int32; inline;
+    FUninitialised: Boolean;
+    FDefaultStrength: Int32;
 
   strict protected
   var
-    Frandom: ISecureRandom;
-    Fstrength: Int32;
+    FRandom: ISecureRandom;
+    FStrength: Int32;
 
-    procedure EngineInit(const parameters: IKeyGenerationParameters); virtual;
+    function GetDefaultStrength: Int32; inline;
+
+    procedure EngineInit(const AParameters: IKeyGenerationParameters); virtual;
     function EngineGenerateKey: TCryptoLibByteArray; virtual;
+    function EngineGenerateKeyParameter: IKeyParameter; virtual;
+    procedure EnsureInitialized; virtual;
 
   public
 
     constructor Create(); overload;
-    constructor Create(defaultStrength: Int32); overload;
+    constructor Create(ADefaultStrength: Int32); overload;
 
     /// <summary>
     /// initialise the key generator.
     /// </summary>
-    /// <param name="parameters">
+    /// <param name="AParameters">
     /// the parameters to be used for key generation
     /// </param>
-    procedure Init(const parameters: IKeyGenerationParameters);
+    procedure Init(const AParameters: IKeyGenerationParameters);
 
     /// <summary>
     /// Generate a secret key.
@@ -78,7 +82,12 @@ type
     /// </returns>
     function GenerateKey: TCryptoLibByteArray;
 
-    property defaultStrength: Int32 read GetdefaultStrength;
+    /// <summary>
+    /// Generate a secret key as a KeyParameter.
+    /// </summary>
+    function GenerateKeyParameter: IKeyParameter;
+
+    property DefaultStrength: Int32 read GetDefaultStrength;
   end;
 
 implementation
@@ -87,68 +96,79 @@ implementation
 
 constructor TCipherKeyGenerator.Create;
 begin
-  Inherited Create();
-  Funinitialised := true;
+  inherited Create();
+  FUninitialised := True;
 end;
 
-constructor TCipherKeyGenerator.Create(defaultStrength: Int32);
+constructor TCipherKeyGenerator.Create(ADefaultStrength: Int32);
 begin
-  Inherited Create();
-  Funinitialised := true;
-  if (defaultStrength < 1) then
+  inherited Create();
+  FUninitialised := True;
+  if ADefaultStrength < 1 then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidStrengthValue);
   end;
 
-  FdefaultStrength := defaultStrength;
+  FDefaultStrength := ADefaultStrength;
 end;
 
 function TCipherKeyGenerator.EngineGenerateKey: TCryptoLibByteArray;
 begin
-  result := TSecureRandom.GetNextBytes(Frandom, Fstrength);
+  Result := TSecureRandom.GetNextBytes(FRandom, FStrength);
 end;
 
-procedure TCipherKeyGenerator.EngineInit(const parameters
-  : IKeyGenerationParameters);
+procedure TCipherKeyGenerator.EngineInit(const AParameters: IKeyGenerationParameters);
 begin
-  Frandom := parameters.Random;
-  Fstrength := (parameters.Strength + 7) div 8;
+  FRandom := AParameters.Random;
+  FStrength := (AParameters.Strength + 7) div 8;
 end;
 
 function TCipherKeyGenerator.GenerateKey: TCryptoLibByteArray;
 begin
-  if (Funinitialised) then
+  EnsureInitialized();
+  Result := EngineGenerateKey();
+end;
+
+function TCipherKeyGenerator.GenerateKeyParameter: IKeyParameter;
+begin
+  EnsureInitialized();
+  Result := EngineGenerateKeyParameter();
+end;
+
+function TCipherKeyGenerator.EngineGenerateKeyParameter: IKeyParameter;
+begin
+  Result := TKeyParameter.Create(EngineGenerateKey());
+end;
+
+procedure TCipherKeyGenerator.EnsureInitialized;
+begin
+  if FUninitialised then
   begin
-    if (FdefaultStrength < 1) then
-    begin
-      raise EInvalidOperationCryptoLibException.CreateRes
-        (@SGeneratorNotInitialized);
-    end;
+    if FDefaultStrength < 1 then
+      raise EInvalidOperationCryptoLibException.CreateRes(@SGeneratorNotInitialized);
 
-    Funinitialised := false;
-
-    EngineInit(TKeyGenerationParameters.Create(TSecureRandom.Create()
-      as ISecureRandom, FdefaultStrength) as IKeyGenerationParameters);
+    FUninitialised := False;
+    EngineInit(TKeyGenerationParameters.Create(
+      TCryptoServicesRegistrar.GetSecureRandom(),
+      FDefaultStrength) as IKeyGenerationParameters);
   end;
-
-  result := EngineGenerateKey();
 end;
 
-function TCipherKeyGenerator.GetdefaultStrength: Int32;
+function TCipherKeyGenerator.GetDefaultStrength: Int32;
 begin
-  result := FdefaultStrength;
+  Result := FDefaultStrength;
 end;
 
-procedure TCipherKeyGenerator.Init(const parameters: IKeyGenerationParameters);
+procedure TCipherKeyGenerator.Init(const AParameters: IKeyGenerationParameters);
 begin
-  if (parameters = Nil) then
+  if AParameters = nil then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersNil);
   end;
 
-  Funinitialised := false;
+  FUninitialised := False;
 
-  EngineInit(parameters);
+  EngineInit(AParameters);
 end;
 
 end.

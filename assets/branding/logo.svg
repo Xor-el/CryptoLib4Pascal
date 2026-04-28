@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CryptoLib4Pascal project mark (not affiliated with Embarcadero).
+  Metaphor: plaintext panel, arrow, ciphertext block (encryption flow).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">CryptoLib4Pascal</title>
+  <desc id="desc">Badge showing lines of plaintext, an arrow, and a block of ciphertext.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f4d6e"/>
+      <stop offset="100%" stop-color="#082f45"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="26" fill="url(#bg)"/>
+  <rect x="18" y="44" width="38" height="40" rx="8" fill="#3d8fb0" opacity="0.95"/>
+  <line x1="26" y1="56" x2="48" y2="56" stroke="#e8f4fc" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="64" x2="44" y2="64" stroke="#e8f4fc" stroke-width="3" stroke-linecap="round"/>
+  <line x1="26" y1="72" x2="50" y2="72" stroke="#e8f4fc" stroke-width="3" stroke-linecap="round"/>
+  <path fill="#38bdf8" d="M 58 58 L 68 64 L 58 70 L 60 70 L 70 64 L 60 58 Z"/>
+  <rect x="72" y="40" width="38" height="48" rx="8" fill="#062a3c"/>
+  <g fill="#3d8fb0" opacity="0.95">
+    <rect x="80" y="52" width="8" height="8" rx="2"/>
+    <rect x="92" y="48" width="8" height="8" rx="2"/>
+    <rect x="88" y="60" width="8" height="8" rx="2"/>
+    <rect x="80" y="68" width="8" height="8" rx="2"/>
+    <rect x="96" y="68" width="8" height="8" rx="2"/>
+  </g>
+</svg>

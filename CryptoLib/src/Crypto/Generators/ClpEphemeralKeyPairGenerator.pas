@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -35,34 +34,33 @@ type
 
   strict private
   var
-    Fgen: IAsymmetricCipherKeyPairGenerator;
-    FkeyEncoder: IKeyEncoder;
+    FGen: IAsymmetricCipherKeyPairGenerator;
+    FKeyEncoder: IKeyEncoder;
 
   public
     function Generate(): IEphemeralKeyPair; inline;
-    constructor Create(const gen: IAsymmetricCipherKeyPairGenerator;
-      const keyEncoder: IKeyEncoder);
+    constructor Create(const AGen: IAsymmetricCipherKeyPairGenerator;
+      const AKeyEncoder: IKeyEncoder);
   end;
 
 implementation
 
 { TEphemeralKeyPairGenerator }
 
-constructor TEphemeralKeyPairGenerator.Create
-  (const gen: IAsymmetricCipherKeyPairGenerator; const keyEncoder: IKeyEncoder);
+constructor TEphemeralKeyPairGenerator.Create(
+  const AGen: IAsymmetricCipherKeyPairGenerator; const AKeyEncoder: IKeyEncoder);
 begin
-  Inherited Create();
-  Fgen := gen;
-  FkeyEncoder := keyEncoder;
+  inherited Create();
+  FGen := AGen;
+  FKeyEncoder := AKeyEncoder;
 end;
 
 function TEphemeralKeyPairGenerator.Generate: IEphemeralKeyPair;
 var
-  eph: IAsymmetricCipherKeyPair;
+  LEph: IAsymmetricCipherKeyPair;
 begin
-  eph := Fgen.generateKeyPair();
-  // Encode the ephemeral public key
-  result := TEphemeralKeyPair.Create(eph, FkeyEncoder);
+  LEph := FGen.GenerateKeyPair();
+  Result := TEphemeralKeyPair.Create(LEph, FKeyEncoder);
 end;
 
 end.

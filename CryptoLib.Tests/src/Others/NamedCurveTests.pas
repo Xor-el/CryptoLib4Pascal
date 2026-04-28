@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -24,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
 {$IFDEF FPC}
   fpcunit,
@@ -39,18 +37,15 @@ uses
   ClpIBasicAgreement,
   ClpSecNamedCurves,
   ClpTeleTrusTNamedCurves,
-  ClpIX9ECParameters,
-  ClpECDomainParameters,
+  ClpIX9ECAsn1Objects,
+  ClpECParameters,
   ClpECNamedCurveTable,
-  ClpECGost3410NamedCurves,
-  ClpIECDomainParameters,
+  ClpIECParameters,
   ClpSignerUtilities,
-  ClpECKeyPairGenerator,
-  ClpECKeyGenerationParameters,
+  ClpECGenerators,
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
-  ClpIECKeyGenerationParameters,
   ClpGeneratorUtilities,
   ClpAgreementUtilities,
   ClpConverters,
@@ -71,7 +66,13 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure TestPerform;
+    procedure TestSecCurveSect571r1;
+    procedure TestSecCurveSecp224r1;
+    procedure TestNistCurveB409;
+    procedure TestNistCurveP521;
+    procedure TestTeleTrusTCurveBrainpoolp160r1;
+    procedure TestSecNamedCurvesECDsa;
+    procedure TestTeleTrusTNamedCurvesECDsa;
   end;
 
 implementation
@@ -166,17 +167,8 @@ end;
 function TTestNamedCurve.GetCurveParameters(const name: String)
   : IECDomainParameters;
 var
-  ecdp: IECDomainParameters;
   ecP: IX9ECParameters;
 begin
-  ecdp := TECGost3410NamedCurves.GetByName(name);
-
-  if (ecdp <> Nil) then
-  begin
-    result := ecdp;
-    Exit;
-  end;
-
   ecP := TECNamedCurveTable.GetByName(name);
 
   if (ecP = Nil) then
@@ -200,26 +192,49 @@ begin
 
 end;
 
-procedure TTestNamedCurve.TestPerform;
+procedure TTestNamedCurve.TestSecCurveSect571r1;
+begin
+  DoTestCurve('sect571r1');
+end;
+
+procedure TTestNamedCurve.TestSecCurveSecp224r1;
+begin
+  DoTestCurve('secp224r1');
+end;
+
+procedure TTestNamedCurve.TestNistCurveB409;
+begin
+  DoTestCurve('B-409');
+end;
+
+procedure TTestNamedCurve.TestNistCurveP521;
+begin
+  DoTestCurve('P-521');
+end;
+
+procedure TTestNamedCurve.TestTeleTrusTCurveBrainpoolp160r1;
+begin
+  DoTestCurve('brainpoolp160r1');
+end;
+
+procedure TTestNamedCurve.TestSecNamedCurvesECDsa;
 var
   name: string;
 begin
-  DoTestCurve('sect571r1'); // sec
-  DoTestCurve('secp224r1');
-  DoTestCurve('B-409'); // nist
-  DoTestCurve('P-521');
-  DoTestCurve('brainpoolp160r1'); // TeleTrusT
-
   for name in TSecNamedCurves.Names do
   begin
     DoTestECDsa(name);
   end;
+end;
 
+procedure TTestNamedCurve.TestTeleTrusTNamedCurvesECDsa;
+var
+  name: string;
+begin
   for name in TTeleTrusTNamedCurves.Names do
   begin
     DoTestECDsa(name);
   end;
-
 end;
 
 initialization

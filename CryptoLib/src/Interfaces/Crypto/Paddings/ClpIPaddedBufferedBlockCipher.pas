@@ -1,0 +1,36 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpIPaddedBufferedBlockCipher;
+
+{$I ..\..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  ClpIBufferedBlockCipher;
+
+type
+
+  IPaddedBufferedBlockCipher = interface(IBufferedBlockCipher)
+
+    ['{26445506-BDA8-43A0-8184-1D9D8E9AE386}']
+
+  end;
+
+implementation
+
+end.

@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -31,26 +30,23 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
+  ClpAsn1Core,
   ClpBigInteger,
   ClpFixedSecureRandom,
   ClpISecureRandom,
   ClpSecureRandom,
-  ClpECC,
-  ClpIECDomainParameters,
-  ClpIECPrivateKeyParameters,
-  ClpIECPublicKeyParameters,
-  ClpECPrivateKeyParameters,
-  ClpECPublicKeyParameters,
-  ClpECKeyPairGenerator,
-  ClpECKeyGenerationParameters,
+  ClpECCurve,
+  ClpIECCommon,
+  ClpIECFieldElement,
+  ClpIECParameters,
+  ClpECParameters,
+  ClpECGenerators,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
-  ClpIECC,
   ClpSignerUtilities,
-  ClpECDomainParameters,
   ClpIAsn1Objects,
   ClpISigner,
   ClpAsn1Objects,
@@ -180,10 +176,8 @@ begin
     TBigInteger.Create
     ('32010857077C5431123A46B808906756F543423E8D27877578125778AC76', 16), // a
     TBigInteger.Create
-    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16), // b
-    TBigInteger.Create
-    ('2000000000000000000000000000000F4D42FFE1492A4993F1CAD666E447', 16),
-    TBigInteger.Four);
+    ('790408F2EEDAF392B012EDEFB3392F30F4327C0CA3F31FC383C422AA8C16', 16) // b
+    );
 
   parameters := TECDomainParameters.Create(curve,
     curve.DecodePoint

@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -35,6 +34,7 @@ uses
   ClpScryptParametersGenerator,
   ClpIScryptParametersGenerator,
   ClpConverters,
+  ClpEncoders,
   HlpHashLibTypes,
   CryptoLibTestBase;
 
@@ -112,7 +112,7 @@ begin
   OutputBytes := (LScryptGenerator.GenerateDerivedMacParameters(AOutputSize)
     as IKeyParameter).GetKey();
   LScryptGenerator.Clear();
-  Result := TConverters.ConvertBytesToHexString(OutputBytes, False);
+  Result := THexEncoder.Encode(OutputBytes);
 end;
 
 procedure TTestScrypt.DoCheckIllegal(const AMsg: String;

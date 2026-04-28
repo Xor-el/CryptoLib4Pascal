@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -39,7 +38,7 @@ type
 
   strict private
   var
-    FpublicParameter, FprivateParameter: IAsymmetricKeyParameter;
+    FPublicParameter, FPrivateParameter: IAsymmetricKeyParameter;
 
     function GetPrivate: IAsymmetricKeyParameter; inline;
     function GetPublic: IAsymmetricKeyParameter; inline;
@@ -49,13 +48,13 @@ type
     /// <summary>
     /// basic constructor.
     /// </summary>
-    /// <param name="publicParameter">
+    /// <param name="APublicParameter">
     /// publicParam a public key parameters object.
     /// </param>
-    /// <param name="privateParameter">
+    /// <param name="APrivateParameter">
     /// privateParam the corresponding private key parameters.
     /// </param>
-    constructor Create(const publicParameter, privateParameter
+    constructor Create(const APublicParameter, APrivateParameter
       : IAsymmetricKeyParameter);
 
     /// <summary>
@@ -74,30 +73,30 @@ implementation
 
 { TAsymmetricCipherKeyPair }
 
-constructor TAsymmetricCipherKeyPair.Create(const publicParameter,
-  privateParameter: IAsymmetricKeyParameter);
+constructor TAsymmetricCipherKeyPair.Create(const APublicParameter,
+  APrivateParameter: IAsymmetricKeyParameter);
 begin
-  if (publicParameter.IsPrivate) then
+  if (APublicParameter.IsPrivate) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SExpectedPublicKey);
   end;
-  if (not(privateParameter.IsPrivate)) then
+  if (not APrivateParameter.IsPrivate) then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SExpectedPrivateKey);
   end;
 
-  FpublicParameter := publicParameter;
-  FprivateParameter := privateParameter;
+  FPublicParameter := APublicParameter;
+  FPrivateParameter := APrivateParameter;
 end;
 
 function TAsymmetricCipherKeyPair.GetPrivate: IAsymmetricKeyParameter;
 begin
-  Result := FprivateParameter;
+  Result := FPrivateParameter;
 end;
 
 function TAsymmetricCipherKeyPair.GetPublic: IAsymmetricKeyParameter;
 begin
-  Result := FpublicParameter;
+  Result := FPublicParameter;
 end;
 
 end.

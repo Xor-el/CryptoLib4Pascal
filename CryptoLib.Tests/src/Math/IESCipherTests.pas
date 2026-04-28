@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -32,42 +31,35 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIMac,
-  ClpAesEngine,
-  ClpIAesEngine,
+  ClpAesUtilities,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpGeneratorUtilities,
-  ClpIESParameterSpec,
-  ClpIAlgorithmParameterSpec,
-  // ClpKeyParameter,
-  // ClpIKeyParameter,
-  // ClpParametersWithIV,
-  // ClpIParametersWithIV,
+  ClpICipherParameters,
+  ClpParametersWithIV,
+  ClpIParametersWithIV,
   ClpIBufferedBlockCipher,
-  // ClpParameterUtilities,
-  // ClpCipherUtilities,
-  ClpBlockCipherModes,
-  ClpIBlockCipherModes,
+  ClpCbcBlockCipher,
+  ClpICbcBlockCipher,
   ClpPaddedBufferedBlockCipher,
   ClpECDHBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIESEngine,
   ClpIIESEngine,
-  ClpPaddingModes,
-  ClpIPaddingModes,
+  ClpPkcs7Padding,
+  ClpIPkcs7Padding,
   ClpKdf2BytesGenerator,
   ClpIKdf2BytesGenerator,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpSecNamedCurves,
-  ClpIECDomainParameters,
-  ClpECDomainParameters,
-  ClpECKeyGenerationParameters,
+  ClpIECParameters,
+  ClpECParameters,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpIAsymmetricCipherKeyPair,
-  ClpIECPublicKeyParameters,
-  ClpIECPrivateKeyParameters,
-  ClpIIESCipher,
-  ClpIESCipher,
+  ClpIIesParameters,
+  ClpIesParameters,
+  ClpIBufferedCipher,
+  ClpBufferedIesCipher,
   ClpDigestUtilities,
   ClpMacUtilities,
   ClpConverters,
@@ -78,13 +70,13 @@ type
   TTestIESCipher = class(TCryptoLibAlgorithmTestCase)
   private
 
-    function GetECIESAES256CBCEngine: IIESEngine;
+    function GetECIESAES256CBCEngine: IIesEngine;
     function GetECKeyPair: IAsymmetricCipherKeyPair;
-    function GetIESParameterSpec: IAlgorithmParameterSpec;
+    function GetIESParameters: ICipherParameters;
 
     procedure DoIESCipher_Encryption_Decryption_TestWithIV
       (const KeyPair: IAsymmetricCipherKeyPair;
-      const param: IAlgorithmParameterSpec; const Random: ISecureRandom;
+      const AParams: ICipherParameters; const Random: ISecureRandom;
       const PlainText: String);
 
   protected
@@ -102,23 +94,27 @@ implementation
 
 procedure TTestIESCipher.DoIESCipher_Encryption_Decryption_TestWithIV
   (const KeyPair: IAsymmetricCipherKeyPair;
-  const param: IAlgorithmParameterSpec; const Random: ISecureRandom;
+  const AParams: ICipherParameters; const Random: ISecureRandom;
   const PlainText: String);
 var
   PlainTextBytes, CipherTextBytes, DecryptionResultBytes: TBytes;
-  CipherEncrypt, CipherDecrypt: IIESCipher;
+  CipherEncrypt, CipherDecrypt: IBufferedCipher;
+  LParamsWithIV: IParametersWithIV;
+  LIesParams: IIesParameters;
+  LCipherParams: IIesCipherParameters;
 begin
   PlainTextBytes := TConverters.ConvertStringToBytes(PlainText, TEncoding.UTF8);
-  // Encryption
-  CipherEncrypt := TIESCipher.Create(GetECIESAES256CBCEngine);
-  CipherEncrypt.Init(True, KeyPair.Public as IECPublicKeyParameters,
-    param, Random);
+  if not Supports(AParams, IParametersWithIV, LParamsWithIV) or
+     not Supports(LParamsWithIV.Parameters, IIesParameters, LIesParams) then
+    Fail('GetIESParameters must return IParametersWithIV wrapping IIESParameters');
+  LCipherParams := TIesCipherParameters.Create(KeyPair.Private, KeyPair.Public, LIesParams);
+
+  CipherEncrypt := TBufferedIesCipher.Create(GetECIESAES256CBCEngine);
+  CipherEncrypt.Init(True, LCipherParams);
   CipherTextBytes := CipherEncrypt.DoFinal(PlainTextBytes);
 
-  // Decryption
-  CipherDecrypt := TIESCipher.Create(GetECIESAES256CBCEngine);
-  CipherDecrypt.Init(False, KeyPair.Private as IECPrivateKeyParameters,
-    param, Random);
+  CipherDecrypt := TBufferedIesCipher.Create(GetECIESAES256CBCEngine);
+  CipherDecrypt.Init(False, LCipherParams);
   DecryptionResultBytes := CipherDecrypt.DoFinal(CipherTextBytes);
 
   if (not AreEqual(PlainTextBytes, DecryptionResultBytes)) then
@@ -128,10 +124,9 @@ begin
   end;
 end;
 
-function TTestIESCipher.GetECIESAES256CBCEngine: IIESEngine;
+function TTestIESCipher.GetECIESAES256CBCEngine: IIesEngine;
 var
   Cipher: IBufferedBlockCipher;
-  AesEngine: IAesEngine;
   blockCipher: ICbcBlockCipher;
   ECDHBasicAgreementInstance: IECDHBasicAgreement;
   KDFInstance: IKdf2BytesGenerator;
@@ -151,9 +146,7 @@ begin
   // Cipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING') as IBufferedBlockCipher;
 
   // Method 2: Set Up Block Cipher
-  AesEngine := TAesEngine.Create(); // AES Engine
-
-  blockCipher := TCbcBlockCipher.Create(AesEngine); // CBC
+  blockCipher := TCbcBlockCipher.Create(TAesUtilities.CreateEngine()); // CBC
 
   Cipher := TPaddedBufferedBlockCipher.Create(blockCipher,
     TPkcs7Padding.Create() as IPkcs7Padding); // Pkcs7Padding
@@ -161,7 +154,7 @@ begin
   // Cipher := TPaddedBufferedBlockCipher.Create(blockCipher,
   // TZeroBytePadding.Create() as IZeroBytePadding); // ZeroBytePadding
 
-  result := TIESEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
+  result := TIesEngine.Create(ECDHBasicAgreementInstance, KDFInstance,
     DigestMACInstance, Cipher);
 end;
 
@@ -186,35 +179,20 @@ begin
   result := KeyPairGeneratorInstance.GenerateKeyPair();
 end;
 
-function TTestIESCipher.GetIESParameterSpec: IAlgorithmParameterSpec;
+function TTestIESCipher.GetIESParameters: ICipherParameters;
 var
   Derivation, Encoding, IVBytes: TBytes;
   MacKeySizeInBits, CipherKeySizeInBits: Int32;
-  UsePointCompression: Boolean;
+  LIesParams: IIesWithCipherParameters;
 begin
-  // Setup IES With Cipher Parameters
-
-  // The derivation and encoding vectors are used when initialising the KDF and MAC.
-  // They're optional but if used then they need to be known by the other user so that
-  // they can decrypt the ciphertext and verify the MAC correctly. The security is based
-  // on the shared secret coming from the (static-ephemeral) ECDH key agreement.
-  Derivation := Nil;
-
-  Encoding := Nil;
-
-  System.SetLength(IVBytes, 16); // using Zero Initialized IV for ease
-
-  MacKeySizeInBits := 32 * 8; // Since we are using SHA2_256 for MAC
-
-  CipherKeySizeInBits := 32 * 8; // Since we are using AES256 for Cipher
-
-  // whether to use point compression when deriving the octets string
-  // from a point or not in the EphemeralKeyPairGenerator
-  UsePointCompression := False;
-
-  result := TIESParameterSpec.Create(Derivation, Encoding, MacKeySizeInBits,
-    CipherKeySizeInBits, IVBytes, UsePointCompression);
-
+  Derivation := nil;
+  Encoding := nil;
+  System.SetLength(IVBytes, 16); // Zero-initialized IV
+  MacKeySizeInBits := 32 * 8;   // SHA2_256 for MAC
+  CipherKeySizeInBits := 32 * 8; // AES256
+  LIesParams := TIesWithCipherParameters.Create(Derivation, Encoding,
+    MacKeySizeInBits, CipherKeySizeInBits);
+  Result := TParametersWithIV.Create(LIesParams, IVBytes);
 end;
 
 procedure TTestIESCipher.SetUp;
@@ -240,14 +218,14 @@ begin
   I := 0;
   while I <= 10 do
   begin
-    System.SetLength(RandomBytes, Byte(RandomInstance.NextInt32));
+    System.SetLength(RandomBytes, RandomInstance.Next(1, 255));
     RandomInstance.NextBytes(RandomBytes);
     PlainText := EncodeHex(RandomBytes);
 
     // Call IESCipher Encryption and Decryption Method
 
     DoIESCipher_Encryption_Decryption_TestWithIV(GetECKeyPair,
-      GetIESParameterSpec, RandomInstance, PlainText);
+      GetIESParameters, RandomInstance, PlainText);
 
     System.Inc(I);
   end;

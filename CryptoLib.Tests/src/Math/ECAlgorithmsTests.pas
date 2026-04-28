@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -21,13 +20,9 @@ interface
 
 {$IFDEF FPC}
 {$MODE DELPHI}
-{$WARNINGS OFF}
-{$NOTES OFF}
-{$HINTS OFF}
 {$ENDIF FPC}
 
 uses
-  Classes,
   SysUtils,
 {$IFDEF FPC}
   fpcunit,
@@ -38,14 +33,14 @@ uses
   Generics.Collections,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpECC,
-  ClpIECC,
+  ClpECCurve,
+  ClpIECCommon,
   ClpBigInteger,
   ClpECNamedCurveTable,
   ClpCustomNamedCurves,
   ClpECAlgorithms,
-  ClpX9ECParameters,
-  ClpIX9ECParameters,
+  ClpX9ECAsn1Objects,
+  ClpIX9ECAsn1Objects,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -116,7 +111,7 @@ begin
     begin
       c := curve.Configure().SetCoordinateSystem(coord).CreateCurve();
       point := c.ImportPoint(x9.G);
-      params := TX9ECParameters.Create(c, point, x9.N, x9.H);
+      params := TX9ECParameters.Create(c, TX9ECPoint.Create(point, False) as IX9ECPoint, x9.N, x9.H);
       x9s.Add(params);
     end;
   end;

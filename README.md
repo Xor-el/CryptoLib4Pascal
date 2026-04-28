@@ -1,220 +1,341 @@
-CryptoLib4Pascal: Crypto for Modern Object Pascal [![License](http://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Xor-el/CryptoLib4Pascal/blob/master/LICENSE)
-========================================
+<p align="center">
+  <img src="assets/branding/logo.svg" width="160" alt="CryptoLib4Pascal logo" />
+  <h1 align="center">CryptoLib4Pascal</h1>
+  <p align="center">
+    <strong>Comprehensive cryptographic library for modern Object Pascal</strong>
+  </p>
+  <p align="center">
+    <a href="https://github.com/Xor-el/CryptoLib4Pascal/actions/workflows/make.yml"><img src="https://github.com/Xor-el/CryptoLib4Pascal/actions/workflows/make.yml/badge.svg" alt="Build Status"></a>
+    <a href="https://github.com/Xor-el/CryptoLib4Pascal/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+    <a href="https://www.embarcadero.com/products/delphi"><img src="https://img.shields.io/badge/Delphi-Syndey%2B-red.svg" alt="Delphi Syndey+"></a>
+    <a href="https://www.freepascal.org/"><img src="https://img.shields.io/badge/FreePascal-3.2.2%2B-blue.svg" alt="FreePascal 3.2.2+"></a>
+  </p>
+</p>
 
-``CryptoLib4Pascal`` is an Object Pascal cryptographic library released under the permissive [MIT License](https://github.com/Xor-el/CryptoLib4Pascal/blob/master/LICENSE). 
+---
 
-``CryptoLib4Pascal's`` goal is to be the best option for cryptography in Object Pascal by offering cryptographic recipes and primitives to Object Pascal developers.
+**CryptoLib4Pascal** brings production-grade cryptography to Delphi and FreePascal. From AES-GCM and ChaCha20-Poly1305 to ECDSA, EdDSA, RSA, Argon2, and X.509 certificates -- everything you need to build secure applications in Object Pascal, released under the permissive [MIT License](LICENSE).
 
-Development is coordinated on [GitHub](https://github.com/Xor-el/CryptoLib4Pascal) and contributions are welcome. If you need help, please open an issue [here](https://github.com/Xor-el/CryptoLib4Pascal/issues).
+## Table of Contents
 
+- [Features](#features)
+- [Available Algorithms](#available-algorithms)
+- [Getting Started](#getting-started)
+- [Quick Examples](#quick-examples)
+- [Supported Platforms](#supported-platforms)
+- [Running Tests](#running-tests)
+- [Dependencies](#dependencies)
+- [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
+- [Tip Jar](#tip-jar)
+- [License](#license)
+- [Branding](assets/branding/README.md)
 
-<!--**Build Status**
-[![Build Status](https://travis-ci.org/Xor-el/CryptoLib4Pascal.svg?branch=master)](https://travis-ci.org/Xor-el/CryptoLib4Pascal)-->
+## Features
 
-Available Algorithms
-----------------------------------------
+- **Symmetric encryption** -- AES, Rijndael, Blowfish, Speck, ChaCha, (X)Salsa20
+- **Authenticated encryption (AEAD)** -- GCM, GCM-SIV, CCM, EAX, OCB, ChaCha20-Poly1305
+- **Asymmetric cryptography** -- RSA, DSA, ECDSA, EdDSA (Ed25519, Ed448), ECNR, Schnorr (Bip340), MuSig2 (Bip327)
+- **Key exchange** -- DH, ECDH, X25519, X448
+- **Hashing** -- SHA-2, SHA-3, Blake2, Keccak, RIPEMD, and more
+- **Password hashing** -- Argon2 (2i/2d/2id), Scrypt, PBKDF2
+- **MACs** -- HMAC, CMAC, KMAC, GMac, Poly1305, SipHash
+- **X.509 certificates** -- generation and parsing
+- **PEM encoding** -- OpenSSL-compatible import/export
+- **Cross-platform** -- Windows, Linux, macOS, iOS, Android, Solaris, and BSDs
 
- ### Symmetric Encryption
-----------------------------------------
-###### Block Ciphers
-* `AES (128, 192, and 256)` 
+## Available Algorithms
 
-* `Rijndael` 
+<details>
+<summary><strong>Symmetric Encryption</strong></summary>
 
-* `Blowfish`
+#### Block Ciphers
+`AES (128, 192, 256)` | `Rijndael` | `Blowfish` | `Speck`
 
-* `Speck`
+#### Stream Ciphers
+`ChaCha` | `(X)Salsa20`
 
-###### Stream Ciphers
-* `ChaCha`
+</details>
 
-* `(X)Salsa20` 
+<details>
+<summary><strong>AEAD Ciphers</strong></summary>
 
-##### Block Cipher Modes Of Operation 
-----------------------------------------
+`AES-GCM` | `AES-GCM-SIV` | `AES-CCM` | `AES-EAX` | `AES-OCB` | `ChaCha20-Poly1305`
 
-* `ECB` 
+</details>
 
-* `CBC` 
+<details>
+<summary><strong>Block Cipher Modes</strong></summary>
 
-* `CFB` 
+`ECB` | `CBC` | `CFB` | `CTR` | `CTS` | `OFB` | `SIC`
 
-* `CTR` 
+</details>
 
-* `CTS` 
+<details>
+<summary><strong>Block Cipher Padding Schemes</strong></summary>
 
-* `OFB` 
+`PKCS#5` | `PKCS#7` | `ISO 10126-2` | `ISO 7816-4` | `ISO/IEC 9797-1 (Bit)` | `ANSI X9.23` | `TBC` | `Zero`
 
-* `SIC`
+</details>
 
-##### Block Cipher Padding Schemes 
-----------------------------------------
+<details>
+<summary><strong>Asymmetric Cryptography</strong></summary>
 
-* `ISO 10126-2` 
+- **RSA** -- PKCS#1, OAEP, PSS, ISO 9796
+- **DSA** / **Deterministic DSA**
+- **ECDSA** -- NIST, X9.62, SEC2, Brainpool curves
+- **ECNR**
+- **EdDSA** -- Ed25519, Ed448
+- **Schnorr** -- Bip340
+- **MuSig2** -- Bip327
 
-* `ISO 7816-4` 
+</details>
 
-* `Bit (ISO/IEC 9797-1)` 
+<details>
+<summary><strong>Key Agreement / Exchange</strong></summary>
 
-* `PKCS#5` 
+`DH` | `ECDH` | `ECDHC` | `X25519` | `X448`
 
-* `PKCS#7`
- 
-* `TBC (Trailing Bit Complement)` 
+</details>
 
-* `ANSI X9.23` 
+<details>
+<summary><strong>Key Derivation Functions</strong></summary>
 
-* `Zero`
+`HKDF` | `KDF1` | `KDF2`
 
-### Asymmetric Cryptography
-----------------------------------------
+#### Password Hashing
+`Argon2 (2i, 2d, 2id)` | `Scrypt` | `PBKDF2`
 
-* `DSA`
+</details>
 
-* `(DET)ECDSA (supported curves: NIST, X9.62, SEC2, Brainpool)`
+<details>
+<summary><strong>MACs</strong></summary>
 
-* `ECNR`
+`HMAC (all supported hashes)` | `CMAC` | `KMAC (128, 256)` | `GMac` | `Poly1305` | `SipHash`
 
-* `ECSchnorr`
- 
-* `EdDSA (Ed25519, Ed25519Blake2B)`
+</details>
 
-### Key Agreement/Exchange
-----------------------------------------
+<details>
+<summary><strong>Hash Functions</strong></summary>
 
-* `DH`
+| Family | Variants |
+|---|---|
+| MD | MD2, MD4, MD5 |
+| SHA-1 | SHA-1 |
+| SHA-2 | 224, 256, 384, 512, 512-224, 512-256 |
+| SHA-3 | 224, 256, 384, 512 |
+| Keccak | 224, 256, 288, 384, 512 |
+| Blake2B | 160, 256, 384, 512 |
+| Blake2S | 128, 160, 224, 256 |
+| RIPEMD | 128, 160, 256, 320 |
+| GOST | 3411, 3411-2012 (256, 512) |
+| Others | Tiger, WhirlPool |
 
-* `ECDH`
+</details>
 
-* `ECDHC`
- 
-* `X25519` 
+<details>
+<summary><strong>XOF (Extendable Output Functions)</strong></summary>
 
-### Key Derivation Functions
-----------------------------------------
+`Shake-128` | `Shake-256`
 
-* `HKDF` 
- 
-* `KDF1`
+</details>
 
-* `KDF2`
+<details>
+<summary><strong>Utilities</strong></summary>
 
-###### Password Hashing Schemes (Password Based Key Derivation Functions)
-----------------------------------------
+- System RNG wrappers
+- ASN.1 parsing
+- Base encoding/decoding (Hex, Base64, etc.)
+- X.509 certificate generation and parsing
+- OpenSSL-compatible PEM reader/writer
 
-* `PBKDF2`
- 
-* `Argon2 (2i, 2d and 2id variants)`
+</details>
 
-* `Scrypt`
+## Getting Started
 
-### MAC
-----------------------------------------
+### Prerequisites
 
-* `HMAC (all supported hashes)`
+| Compiler | Minimum Version |
+|---|---|
+| Delphi | Sydney (10.4) or later |
+| FreePascal | 3.2.2 or later |
 
-* `KMAC (KMAC128, KMAC256)`
+### Installation
 
-### Hashes
-----------------------------------------
+**1. Clone the repository:**
 
- * `MD2`
+```bash
+git clone https://github.com/Xor-el/CryptoLib4Pascal.git
+```
 
- * `MD4`
+**2a. Delphi**
 
- * `MD5`
+- Open and install the package: `CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk`
+- Also install the required dependency packages: [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) and [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal)
+- Add the `CryptoLib/src` subdirectories to your project's search path
 
- * `SHA-1`
+**2b. FreePascal / Lazarus**
 
- * `SHA-2 (224, 256, 384, 512, 512-224, 512-256)`
+- Open and install the package: `CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk`
+- Also install the required dependency packages: [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) and [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal)
 
- * `Gost3411`
+## Quick Examples
 
- * `Gost3411-2012 (256, 512)`
+### AES-CBC Encrypt / Decrypt
 
- * `RIPEMD (128, 160, 256, 256, 320)`
+```pascal
+uses
+  ClpIBufferedCipher, ClpCipherUtilities, ClpParameterUtilities,
+  ClpParametersWithIV, ClpConverters, ClpSecureRandom, ClpISecureRandom,
+  ClpICipherParameters;
 
- * `Tiger`
+var
+  LCipher: IBufferedCipher;
+  LRandom: ISecureRandom;
+  LKey, LIV, LPlain, LCipherText, LDecrypted: TBytes;
+  LParams: ICipherParameters;
+begin
+  LRandom := TSecureRandom.Create();
+
+  // Generate a random 256-bit key and 128-bit IV
+  SetLength(LKey, 32);
+  SetLength(LIV, 16);
+  LRandom.NextBytes(LKey);
+  LRandom.NextBytes(LIV);
 
- * `WhirlPool`
+  LParams := TParametersWithIV.Create(
+    TParameterUtilities.CreateKeyParameter('AES', LKey), LIV);
 
- * `Blake2B (160, 256, 384, 512)`
- 
- * `Blake2S (128, 160, 224, 256)`
+  LPlain := TConverters.ConvertStringToBytes('Secret message', TEncoding.UTF8);
 
- * `SHA-3 (224, 256, 384, 512)`
- 
- * `Keccak (224, 256, 288, 384, 512)`
+  // Encrypt
+  LCipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING');
+  LCipher.Init(True, LParams);
+  LCipherText := LCipher.DoFinal(LPlain);
 
-### XOF (Extendable Output Function)
-----------------------------------------
+  // Decrypt
+  LCipher.Init(False, LParams);
+  LDecrypted := LCipher.DoFinal(LCipherText);
+end;
+```
 
-* `Shake (Shake-128, Shake-256)`
+### SHA-256 Hashing
 
-### Other Useful Things
-----------------------------------------
+```pascal
+uses
+  ClpIDigest, ClpDigestUtilities, ClpConverters, ClpEncoders;
 
-* `RNG wrappers for system RNG`
+var
+  LDigest: IDigest;
+  LInput, LHash: TBytes;
+begin
+  LInput := TConverters.ConvertStringToBytes('Hello CryptoLib', TEncoding.UTF8);
 
-* `ASN1 Parsing Utilities`
+  LDigest := TDigestUtilities.GetDigest('SHA-256');
+  SetLength(LHash, LDigest.GetDigestSize);
+  LDigest.BlockUpdate(LInput, 0, Length(LInput));
+  LDigest.DoFinal(LHash, 0);
 
-* `Base Encoding and Decoding Utilities`
+  WriteLn('SHA-256: ', THexEncoder.Encode(LHash, False));
+end;
+```
 
-### Compile-Time Dependencies
-----------------------------------------
+### ECDSA Sign / Verify
 
-* [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal)
-* [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal)
+```pascal
+uses
+  ClpECUtilities, ClpIX9ECParametersHolder, ClpECParameters, ClpIECParameters,
+  ClpSignerUtilities, ClpISigner, ClpConverters, ClpGeneratorUtilities,
+  ClpSecureRandom, ClpISecureRandom, ClpECGenerators, ClpIECGenerators,
+  ClpIAsymmetricCipherKeyPair, ClpIAsymmetricCipherKeyPairGenerator;
 
-### Supported Compilers
-----------------------------------------
+var
+  LCurve: IX9ECParameters;
+  LDomain: IECDomainParameters;
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+  LKp: IAsymmetricCipherKeyPair;
+  LSigner: ISigner;
+  LMsg, LSig: TBytes;
+begin
+  // Set up the secp256k1 curve
+  LCurve := TECUtilities.FindECCurveByName('secp256k1');
+  LDomain := TECDomainParameters.Create(LCurve.Curve, LCurve.G,
+    LCurve.N, LCurve.H, LCurve.GetSeed);
 
-* `FreePascal 3.2.0+`
+  // Generate a key pair
+  LKpg := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
+  LKpg.Init(TECKeyGenerationParameters.Create(LDomain,
+    TSecureRandom.Create() as ISecureRandom));
+  LKp := LKpg.GenerateKeyPair();
 
-* `Delphi Tokyo+`
+  LMsg := TConverters.ConvertStringToBytes('Sign me', TEncoding.UTF8);
 
-### Supported / Tested OSes
-----------------------------------------
+  // Sign
+  LSigner := TSignerUtilities.GetSigner('SHA-256withECDSA');
+  LSigner.Init(True, LKp.Private);
+  LSigner.BlockUpdate(LMsg, 0, Length(LMsg));
+  LSig := LSigner.GenerateSignature();
 
-###### Tested OS boxes are checked
-----------------------------------------
+  // Verify
+  LSigner.Init(False, LKp.Public);
+  LSigner.BlockUpdate(LMsg, 0, Length(LMsg));
+  Assert(LSigner.VerifySignature(LSig));
+end;
+```
 
-* - [x] `Windows XP+`
+More examples (RSA, certificates, password hashing, etc.) are available in the [`CryptoLib.Examples`](CryptoLib.Examples/src/Examples/) directory.
 
+## Supported Platforms
 
-* - [x] `Linux (Including Android and Raspberry PI)`
+| OS | Delphi | FreePascal |
+|---|:---:|:---:|
+| Windows (XP and later) | ✅ | ✅ |
+| Linux | ❓ | ✅ |
+| macOS | ❓ | ✅ |
+| Oracle Solaris | ➖ | ✅ |
+| BSD (FreeBSD) | ➖ | ✅ |
+| Android | ❓ | ❓ |
+| iOS 2.0+ | ❓ | ❓ |
 
+> ✅ Tested and passing · ❓ Untested · ➖ Not applicable
 
-* - [x] `Mac OS X`
+**Architectures:** I386, X86_64, ARM32, AArch64
 
+## Running Tests
 
-* - [x] `iOS 2.0+`
+Tests use **DUnit** (Delphi) and **FPCUnit** (FreePascal).
 
+**Delphi:** Open `CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr` in the IDE and run.
 
-* - [x] `(Oracle) Solaris`
+**FreePascal / Lazarus:** Open `CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi` in the IDE and run.
 
+## Dependencies
 
-* - [x] `OpenBSD`
+CryptoLib4Pascal requires two companion libraries that must be installed separately:
 
+| Dependency | Purpose |
+|---|---|
+| [HashLib4Pascal](https://github.com/Xor-el/HashLib4Pascal) | Hash function implementations |
+| [SimpleBaseLib4Pascal](https://github.com/Xor-el/SimpleBaseLib4Pascal) | Base encoding/decoding |
 
-* - [ ] `FreeBSD`
+## Contributing
 
+Contributions are welcome. Please open an [issue](https://github.com/Xor-el/CryptoLib4Pascal/issues) for bug reports or feature requests, and submit pull requests.
 
-* - [ ] `NetBSD`
+## Sponsors
 
+- [Sphere 10 Software](http://www.sphere10.com/)
 
-* - [ ] `DragonFlyBSD`
+## Tip Jar
 
+If you find this library useful and would like to support its continued development, tips are greatly appreciated! 🙏
 
+| Cryptocurrency | Wallet Address |
+|---|---|
+| <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/icon/btc.png" width="20" alt="Bitcoin" /> **Bitcoin (BTC)** | `bc1quqhe342vw4ml909g334w9ygade64szqupqulmu` |
+| <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/icon/eth.png" width="20" alt="Ethereum" /> **Ethereum (ETH)** | `0x53651185b7467c27facab542da5868bfebe2bb69` |
+| <img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/icon/sol.png" width="20" alt="Solana" /> **Solana (SOL)** | `BPZHjY1eYCdQjLecumvrTJRi5TXj3Yz1vAWcmyEB9Miu` |
 
-### Acknowledgements
-----------------------------------------
+## License
 
-* Thanks to [Sphere 10 Software](http://www.sphere10.com/) for sponsoring the development of this library.
-
-### Tip Jar
-----------------------------------------
-
-* :dollar: **Bitcoin**: `1MhFfW7tDuEHQSgie65uJcAfJgCNchGeKf`
-* :euro: **Ethereum**: `0x6c1DC21aeC49A822A4f1E3bf07c623C2C1978a98`
-* :pound: **Pascalcoin**: `345367-40`
+CryptoLib4Pascal is released under the [MIT License](LICENSE).

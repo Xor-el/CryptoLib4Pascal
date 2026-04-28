@@ -1,0 +1,191 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpDigestRandomGenerator;
+
+{$I ..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  SyncObjs,
+  ClpIDigest,
+  ClpPack,
+  ClpCryptoLibTypes,
+  ClpIDigestRandomGenerator,
+  ClpIRandomGenerator;
+
+type
+  /// **
+  // * Random generation based on the digest with counter. Calling AddSeedMaterial will
+  // * always increase the entropy of the hash.
+  // * <p>
+  // * Internal access to the digest is synchronized so a single one of these can be shared.
+  // * </p>
+  // */
+  TDigestRandomGenerator = class sealed(TInterfacedObject, IDigestRandomGenerator, IRandomGenerator)
+
+  strict private
+  const
+    CycleCount = Int64(10);
+
+  var
+    FLock: TCriticalSection;
+    FStateCounter, FSeedCounter: Int64;
+    FDigest: IDigest;
+    FState, FSeed: TCryptoLibByteArray;
+
+    procedure CycleSeed(); inline;
+    procedure GenerateState(); inline;
+    procedure DigestAddCounter(ASeedVal: Int64); inline;
+    procedure DigestUpdate(const ASeed: TCryptoLibByteArray); inline;
+    procedure DigestDoFinal(const AResult: TCryptoLibByteArray); inline;
+
+  public
+
+    constructor Create(const ADigest: IDigest);
+    destructor Destroy; override;
+    procedure AddSeedMaterial(const ASeed: TCryptoLibByteArray);
+      overload; inline;
+    procedure AddSeedMaterial(ASeed: Int64); overload; inline;
+    procedure NextBytes(const ABytes: TCryptoLibByteArray); overload; inline;
+    procedure NextBytes(const ABytes: TCryptoLibByteArray;
+      AStart, ALen: Int32); overload;
+
+  end;
+
+implementation
+
+{ TDigestRandomGenerator }
+
+procedure TDigestRandomGenerator.DigestAddCounter(ASeedVal: Int64);
+var
+  LBytes: TCryptoLibByteArray;
+begin
+  LBytes := TPack.UInt64_To_LE(UInt64(ASeedVal));
+  FDigest.BlockUpdate(LBytes, 0, System.Length(LBytes));
+end;
+
+procedure TDigestRandomGenerator.DigestUpdate(const ASeed
+  : TCryptoLibByteArray);
+begin
+  FDigest.BlockUpdate(ASeed, 0, System.Length(ASeed));
+end;
+
+procedure TDigestRandomGenerator.DigestDoFinal(const AResult
+  : TCryptoLibByteArray);
+begin
+  FDigest.DoFinal(AResult, 0);
+end;
+
+procedure TDigestRandomGenerator.AddSeedMaterial(ASeed: Int64);
+begin
+  FLock.Acquire;
+  try
+    DigestAddCounter(ASeed);
+    DigestUpdate(FSeed);
+    DigestDoFinal(FSeed);
+  finally
+    FLock.Release;
+  end;
+end;
+
+procedure TDigestRandomGenerator.AddSeedMaterial(const ASeed
+  : TCryptoLibByteArray);
+begin
+  FLock.Acquire;
+  try
+    DigestUpdate(ASeed);
+    DigestUpdate(FSeed);
+    DigestDoFinal(FSeed);
+  finally
+    FLock.Release;
+  end;
+end;
+
+constructor TDigestRandomGenerator.Create(const ADigest: IDigest);
+begin
+  inherited Create();
+  FLock := TCriticalSection.Create;
+  FDigest := ADigest;
+  System.SetLength(FSeed, ADigest.GetDigestSize);
+  FSeedCounter := 1;
+  System.SetLength(FState, ADigest.GetDigestSize);
+  FStateCounter := 1;
+end;
+
+procedure TDigestRandomGenerator.CycleSeed;
+begin
+  DigestUpdate(FSeed);
+  DigestAddCounter(FSeedCounter);
+  System.Inc(FSeedCounter);
+  DigestDoFinal(FSeed);
+end;
+
+destructor TDigestRandomGenerator.Destroy;
+begin
+  FLock.Free;
+  inherited Destroy;
+end;
+
+procedure TDigestRandomGenerator.GenerateState;
+begin
+  DigestAddCounter(FStateCounter);
+  System.Inc(FStateCounter);
+  DigestUpdate(FState);
+  DigestUpdate(FSeed);
+  DigestDoFinal(FState);
+
+  if ((FStateCounter mod CycleCount) = 0) then
+  begin
+    CycleSeed();
+  end;
+end;
+
+procedure TDigestRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray);
+begin
+  NextBytes(ABytes, 0, System.Length(ABytes));
+end;
+
+procedure TDigestRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray;
+  AStart, ALen: Int32);
+var
+  LStateOffset, LEnd: Int32;
+  LI: Int32;
+begin
+  FLock.Acquire;
+  try
+    LStateOffset := 0;
+    GenerateState();
+    LEnd := AStart + ALen;
+
+    for LI := AStart to System.Pred(LEnd) do
+    begin
+      if (LStateOffset = System.Length(FState)) then
+      begin
+        GenerateState();
+        LStateOffset := 0;
+      end;
+      ABytes[LI] := FState[LStateOffset];
+      System.Inc(LStateOffset);
+    end;
+
+  finally
+    FLock.Release;
+  end;
+end;
+
+end.

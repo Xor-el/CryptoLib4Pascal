@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -24,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
   Math,
   SysUtils,
 {$IFDEF FPC}
@@ -1317,8 +1315,8 @@ begin
   CheckEquals(s, TBigInteger.Create(s, 10).ToString(10));
   CheckEquals(s, TBigInteger.Create(s, 16).ToString(16));
 
-  CheckEquals('-e4437ed6010e88286f547fa90abfe4c3',
-    TBigInteger.Create('-e4437ed6010e88286f547fa90abfe4c3', 16).ToString(16));
+  CheckEquals('-E4437ED6010E88286F547FA90ABFE4C3',
+    TBigInteger.Create('-E4437ED6010E88286F547FA90ABFE4C3', 16).ToString(16));
 
   for i := 0 to System.Pred(100) do
   begin

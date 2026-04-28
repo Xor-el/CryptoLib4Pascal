@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -35,27 +34,27 @@ type
     IDerivationParameters)
 
   strict private
-    Fseed: TCryptoLibByteArray;
+    FSeed: TCryptoLibByteArray;
 
   public
     function GetSeed(): TCryptoLibByteArray; inline;
 
-    constructor Create(const seed: TCryptoLibByteArray);
+    constructor Create(const ASeed: TCryptoLibByteArray);
   end;
 
 implementation
 
 { TIso18033KdfParameters }
 
-constructor TIso18033KdfParameters.Create(const seed: TCryptoLibByteArray);
+constructor TIso18033KdfParameters.Create(const ASeed: TCryptoLibByteArray);
 begin
-  Inherited Create();
-  Fseed := seed;
+  inherited Create();
+  FSeed := ASeed;
 end;
 
 function TIso18033KdfParameters.GetSeed: TCryptoLibByteArray;
 begin
-  result := Fseed;
+  Result := FSeed;
 end;
 
 end.

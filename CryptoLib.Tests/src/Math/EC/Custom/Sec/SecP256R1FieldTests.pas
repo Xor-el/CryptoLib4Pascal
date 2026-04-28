@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -33,11 +32,12 @@ uses
 {$ENDIF FPC}
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpIX9ECParameters,
+  ClpIX9ECAsn1Objects,
   ClpSecObjectIdentifiers,
-  ClpConverters,
+  ClpPack,
   ClpCustomNamedCurves,
-  ClpIECC,
+  ClpIECCommon,
+  ClpIECFieldElement,
   ClpBigInteger,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -173,7 +173,7 @@ begin
     x_i := x[i];
     if (x_i <> 0) then
     begin
-      temp := TConverters.ReadUInt32AsBytesBE(x_i);
+      temp := TPack.UInt32_To_BE(x_i);
       System.Move(temp[0], bs[(7 - i) shl 2], System.Length(temp) *
         SizeOf(Byte));
 

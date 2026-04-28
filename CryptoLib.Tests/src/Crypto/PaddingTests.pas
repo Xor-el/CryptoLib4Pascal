@@ -1,16 +1,15 @@
 { *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
-{ *                Copyright (c) 2018 - 20XX Ugochukwu Mmaduekwe                    * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
-
+{ *                                                                                 * }
 { *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
 { *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
-
+{ *                                                                                 * }
 { *                              Acknowledgements:                                  * }
 { *                                                                                 * }
 { *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
-{ *                           development of this library                           * }
-
+{ *                         the development of this library                         * }
 { * ******************************************************************************* * }
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
@@ -36,10 +35,19 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpIBlockCipherPadding,
-  ClpAesEngine,
-  ClpIAesEngine,
-  ClpPaddingModes,
-  ClpIPaddingModes,
+  ClpAesUtilities,
+  ClpISO10126d2Padding,
+  ClpISO7816d4Padding,
+  ClpPkcs7Padding,
+  ClpTBCPadding,
+  ClpX923Padding,
+  ClpZeroBytePadding,
+  ClpIISO10126d2Padding,
+  ClpIISO7816d4Padding,
+  ClpIPkcs7Padding,
+  ClpITBCPadding,
+  ClpIX923Padding,
+  ClpIZeroBytePadding,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpCryptoLibTypes,
@@ -133,7 +141,7 @@ var
   key: IKeyParameter;
   i: Int32;
 begin
-  bc := TPaddedBufferedBlockCipher.Create(TAESEngine.Create() as IAESEngine,
+  bc := TPaddedBufferedBlockCipher.Create(TAesUtilities.CreateEngine(),
     TPKCS7Padding.Create() as IPKCS7Padding);
   key := TKeyParameter.Create(DecodeHex('001122334455667788990A0B0C0D0E0F'));
 
@@ -221,8 +229,7 @@ var
   data: TBytes;
   i: Int32;
 begin
-  cipher := TPaddedBufferedBlockCipher.Create(TAESEngine.Create()
-    as IAESEngine, padding);
+  cipher := TPaddedBufferedBlockCipher.Create(TAesUtilities.CreateEngine(), padding);
   key := TKeyParameter.Create(DecodeHex('001122334455667788990A0B0C0D0E0F'));
 
   //
