@@ -61,13 +61,18 @@ implementation
 
 class function TArc4RandomBufReader.TryResolve(out AFn: TArc4RandomBufProc): Boolean;
 var
-  LHandle: Pointer;
+  LHandle: NativeUInt;
   LSymbol: Pointer;
 begin
   AFn := nil;
-  LHandle := dlopen(nil, RTLD_NOW);
 
-  if LHandle = nil then
+{$IFDEF FPC}
+  LHandle := NativeUInt(dlopen(nil, RTLD_NOW));
+{$ELSE}
+  LHandle := dlopen(nil, RTLD_NOW);
+{$ENDIF}
+
+  if LHandle = 0 then
   begin
     Result := False;
     Exit;
