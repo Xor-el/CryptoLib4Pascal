@@ -24,11 +24,9 @@
 
 {============================ FPC Version Features ============================}
 
-(*
-  Generics.Defaults IEqualityComparer<T> / IComparer<T> used constref through
-  FPC 3.2.2; 3.2.3+ switched to const (Delphi compatibility).
-  https://gitlab.com/freepascal.org/fpc/source/-/commit/693491048bf2c6f9122a0d8b044ad0e55382354d
-*)
+// Generics.Defaults IEqualityComparer<T> / IComparer<T> used constref through
+// FPC 3.2.2; 3.2.3+ switched to const (Delphi compatibility).
+// https://gitlab.com/freepascal.org/fpc/source/-/commit/693491048bf2c6f9122a0d8b044ad0e55382354d
 {$IF FPC_FULLVERSION < 30203}
   {$DEFINE CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
 {$IFEND}
