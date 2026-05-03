@@ -294,7 +294,7 @@ More examples (RSA, certificates, password hashing, etc.) are available in the [
 | macOS | ❓ | ✅ |
 | Oracle Solaris | ➖ | ✅ |
 | BSD (FreeBSD) | ➖ | ✅ |
-| Android | ❓ | ❓ |
+| Android | ✅ | ❓ |
 | iOS 2.0+ | ❓ | ❓ |
 
 > ✅ Tested and passing · ❓ Untested · ➖ Not applicable
