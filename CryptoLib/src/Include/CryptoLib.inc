@@ -32,6 +32,7 @@
   {$IFEND}
 
   {$DEFINE DELPHI}
+
   {$DEFINITIONINFO ON} // Enable code browsing (Ctrl+Click)
   {$STRINGCHECKS OFF}
   {$WARN DUPLICATE_CTOR_DTOR OFF}
