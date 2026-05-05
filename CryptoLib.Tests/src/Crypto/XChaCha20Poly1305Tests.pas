@@ -37,9 +37,14 @@ uses
   ClpIAeadParameters,
   ClpKeyParameter,
   ClpIKeyParameter,
+  ClpParametersWithIV,
+  ClpIParametersWithIV,
   ClpEncoders,
   ClpIBufferedCipher,
   ClpCipherUtilities,
+  ClpChaChaEngine,
+  ClpChaCha7539Engine,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -51,6 +56,7 @@ type
       const AParams: IAeadParameters): IXChaCha20Poly1305;
   published
     procedure TestAppendixA1;
+    procedure TestAppendixA1Poly1305OneTimeKey;
     procedure TestGetCipherRegistry;
   end;
 
@@ -128,6 +134,52 @@ begin
   LDecCipher.DoFinal(LPlain, LLen);
   CheckEqual('XChaCha20Poly1305 A.1 roundtrip plaintext', LP,
     CopyOfRange(LPlain, 0, System.Length(LP)));
+end;
+
+procedure TTestXChaCha20Poly1305.TestAppendixA1Poly1305OneTimeKey;
+var
+  LK, LN, LNoncePrefix, LSubKey, LInnerIv, LZero, LFirstBlock, LExpected: TBytes;
+  LE: TChaCha7539Engine;
+  LParams: IParametersWithIV;
+  LIdx: Int32;
+begin
+  { draft-irtf-cfrg-xchacha A.3.1 — 32-byte Poly1305 key from first ChaCha block (RFC 8439). }
+  LK := THexEncoder.Decode(
+    '808182838485868788898a8b8c8d8e8f' +
+    '909192939495969798999a9b9c9d9e9f');
+  LN := THexEncoder.Decode(
+    '404142434445464748494a4b4c4d4e4f5051525354555657');
+  LExpected := THexEncoder.Decode(
+    '7b191f80f361f099094f6f4b8fb97df847cc6873a8f2b190dd73807183f907d5');
+
+  System.SetLength(LNoncePrefix, 16);
+  System.Move(LN[0], LNoncePrefix[0], 16);
+  System.SetLength(LSubKey, 32);
+  TChaChaEngine.HChaCha20(LK, LNoncePrefix, LSubKey, 0);
+  TArrayUtilities.Fill<Byte>(LNoncePrefix, 0, 16, 0);
+
+  System.SetLength(LInnerIv, 12);
+  System.FillChar(LInnerIv[0], 4, 0);
+  System.Move(LN[16], LInnerIv[4], 8);
+
+  LE := TChaCha7539Engine.Create;
+  try
+    LParams := TParametersWithIV.Create(TKeyParameter.Create(LSubKey) as IKeyParameter,
+      LInnerIv);
+    LE.Init(True, LParams);
+    System.SetLength(LZero, 64);
+    for LIdx := 0 to 63 do
+      LZero[LIdx] := 0;
+    System.SetLength(LFirstBlock, 64);
+    LE.ProcessBytes(LZero, 0, 64, LFirstBlock, 0);
+  finally
+    LE.Free;
+    TArrayUtilities.Fill<Byte>(LSubKey, 0, 32, 0);
+    TArrayUtilities.Fill<Byte>(LInnerIv, 0, 12, 0);
+  end;
+
+  CheckEqual('XChaCha20Poly1305 A.3.1 Poly1305 one-time key', LExpected,
+    CopyOfRange(LFirstBlock, 0, 32));
 end;
 
 procedure TTestXChaCha20Poly1305.TestGetCipherRegistry;
