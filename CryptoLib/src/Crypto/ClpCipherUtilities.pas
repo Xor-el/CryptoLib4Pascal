@@ -70,6 +70,8 @@ uses
   ClpBlowfishEngine,
   ClpChaChaEngine,
   ClpChaCha7539Engine,
+  ClpXChaCha20Engine,
+  ClpXChaCha20Poly1305,
   ClpSalsa20Engine,
   ClpRijndaelEngine,
   ClpPkcs1Encoding,
@@ -120,6 +122,8 @@ type
       CHACHA,
       CHACHA20_POLY1305,
       CHACHA7539,
+      XCHACHA20,
+      XCHACHA20_POLY1305,
       SALSA20,
       RIJNDAEL,
       RSA);
@@ -253,6 +257,7 @@ begin
   FAlgorithmOidMap.AddOrSetValue(TMiscObjectIdentifiers.CryptlibAlgorithmBlowfishCbc, 'BLOWFISH/CBC');
 
   FAlgorithmMap.AddOrSetValue('CHACHA20', 'CHACHA7539');
+  FAlgorithmMap.AddOrSetValue('XCHACHA20', 'XCHACHA20');
   FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdAlgAeadChaCha20Poly1305, 'CHACHA20-POLY1305');
 end;
 
@@ -388,6 +393,10 @@ begin
       LAeadCipher := TChaCha20Poly1305.Create();
     TCipherAlgorithm.CHACHA7539:
       LStreamCipher := TChaCha7539Engine.Create();
+    TCipherAlgorithm.XCHACHA20:
+      LStreamCipher := TXChaCha20Engine.Create();
+    TCipherAlgorithm.XCHACHA20_POLY1305:
+      LAeadCipher := TXChaCha20Poly1305.Create();
     TCipherAlgorithm.RIJNDAEL:
       LBlockCipher := TRijndaelEngine.Create();
     TCipherAlgorithm.SALSA20:

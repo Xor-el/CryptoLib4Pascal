@@ -26,7 +26,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="2"/>
-    <Files Count="683">
+    <Files Count="687">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -2760,6 +2760,22 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\Modes\Fused\ClpFusedKernelDefaults.pas"/>
         <UnitName Value="ClpFusedKernelDefaults"/>
       </Item683>
+      <Item684>
+        <Filename Value="..\..\Crypto\Engines\ClpXChaCha20Engine.pas"/>
+        <UnitName Value="ClpXChaCha20Engine"/>
+      </Item684>
+      <Item685>
+        <Filename Value="..\..\Interfaces\Crypto\Engines\ClpIXChaCha20Engine.pas"/>
+        <UnitName Value="ClpIXChaCha20Engine"/>
+      </Item685>
+      <Item686>
+        <Filename Value="..\..\Crypto\Modes\ClpXChaCha20Poly1305.pas"/>
+        <UnitName Value="ClpXChaCha20Poly1305"/>
+      </Item686>
+      <Item687>
+        <Filename Value="..\..\Interfaces\Crypto\Modes\ClpIXChaCha20Poly1305.pas"/>
+        <UnitName Value="ClpIXChaCha20Poly1305"/>
+      </Item687>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

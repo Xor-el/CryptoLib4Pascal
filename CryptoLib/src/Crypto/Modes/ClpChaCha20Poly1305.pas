@@ -60,7 +60,7 @@ resourcestring
 type
   TChaCha20Poly1305 = class(TInterfacedObject, IChaCha20Poly1305, IAeadCipher)
 
-  strict private
+  strict protected
   type
     TState = (
       Uninitialized = 0,
@@ -80,12 +80,18 @@ type
     NonceSize: Int32 = 12;
     MacSize: Int32 = 16;
 
-  class var
-    FZeroes: TCryptoLibByteArray;
+  var
+    FState: TState;
 
+    function GetAlgorithmName: String; virtual;
+
+  strict private
   const
     AadLimit: UInt64 = UInt64($FFFFFFFFFFFFFFFF);
     DataLimit: UInt64 = ((UInt64(1) shl 32) - 1) * 64;
+
+  class var
+    FZeroes: TCryptoLibByteArray;
 
   var
     FChaCha20: TChaCha7539Engine;
@@ -100,7 +106,6 @@ type
 
     FAadCount: UInt64;
     FDataCount: UInt64;
-    FState: TState;
     FBufPos: Int32;
 
     procedure CheckAad();
@@ -121,9 +126,6 @@ type
     procedure Reset(AClearMac, AResetCipher: Boolean); overload;
 
     class constructor Create; overload;
-
-  strict protected
-    function GetAlgorithmName: String; virtual;
 
   public
     constructor Create(); overload;

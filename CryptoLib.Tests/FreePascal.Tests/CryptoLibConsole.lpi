@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="145">
+    <Units Count="148">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -620,6 +620,18 @@
         <Filename Value="..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit144>
+      <Unit145>
+        <Filename Value="..\src\Crypto\HChaCha20Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit145>
+      <Unit146>
+        <Filename Value="..\src\Crypto\XChaCha20Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit146>
+      <Unit147>
+        <Filename Value="..\src\Crypto\XChaCha20Poly1305Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit147>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

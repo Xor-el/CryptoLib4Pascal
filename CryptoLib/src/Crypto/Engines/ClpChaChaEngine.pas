@@ -33,6 +33,12 @@ resourcestring
   SChaChaStateWords = 'ChaCha state must be at least 16 UInt32 values';
   SChaChaOut64 = 'ChaCha key stream output must be at least 64 bytes';
   SRoundsEven = 'Number of Rounds Must be Even';
+  SHChaChaKeyNil = 'HChaCha20 key cannot be nil';
+  SHChaChaKey256 = 'HChaCha20 key must be 256 bits';
+  SHChaChaNonceNil = 'HChaCha20 nonce cannot be nil';
+  SHChaChaNonce128 = 'HChaCha20 nonce must be 128 bits';
+  SHChaChaOutNil = 'HChaCha20 output buffer cannot be nil';
+  SHChaChaOutSpace = 'HChaCha20 output buffer too short';
 
 type
 
@@ -66,6 +72,12 @@ type
     class procedure ChaChaCore(ARounds: Int32;
       const AInput: TCryptoLibUInt32Array;
       const AOutput: TCryptoLibByteArray); static;
+
+    /// <summary>
+    /// HChaCha20 subkey derivation (draft-irtf-cfrg-xchacha). Writes 32 bytes to ASubKeyOut at ASubKeyOutOff.
+    /// </summary>
+    class procedure HChaCha20(const AKey256, ANonce128: TCryptoLibByteArray;
+      const ASubKeyOut: TCryptoLibByteArray; ASubKeyOutOff: Int32); static;
 
   end;
 
@@ -290,6 +302,55 @@ begin
 
   // IV
   TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 14, 2);
+end;
+
+class procedure TChaChaEngine.HChaCha20(const AKey256, ANonce128: TCryptoLibByteArray;
+  const ASubKeyOut: TCryptoLibByteArray; ASubKeyOutOff: Int32);
+var
+  LState: TCryptoLibUInt32Array;
+  LOut: TCryptoLibByteArray;
+begin
+  if (AKey256 = nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SHChaChaKeyNil);
+  end;
+  if (System.Length(AKey256) <> 32) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SHChaChaKey256);
+  end;
+  if (ANonce128 = nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SHChaChaNonceNil);
+  end;
+  if (System.Length(ANonce128) <> 16) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SHChaChaNonce128);
+  end;
+  if (ASubKeyOut = nil) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SHChaChaOutNil);
+  end;
+  if (System.Length(ASubKeyOut) < ASubKeyOutOff + 32) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SHChaChaOutSpace);
+  end;
+
+  System.SetLength(LState, 16);
+  PackTauOrSigma(32, LState, 0);
+  TPack.LE_To_UInt32(AKey256, 0, LState, 4, 8);
+  TPack.LE_To_UInt32(ANonce128, 0, LState, 12, 4);
+
+  System.SetLength(LOut, 64);
+  ChaChaCore(20, LState, LOut);
+
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 0) - LState[0], ASubKeyOut, ASubKeyOutOff);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 4) - LState[1], ASubKeyOut, ASubKeyOutOff + 4);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 8) - LState[2], ASubKeyOut, ASubKeyOutOff + 8);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 12) - LState[3], ASubKeyOut, ASubKeyOutOff + 12);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 48) - LState[12], ASubKeyOut, ASubKeyOutOff + 16);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 52) - LState[13], ASubKeyOut, ASubKeyOutOff + 20);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 56) - LState[14], ASubKeyOut, ASubKeyOutOff + 24);
+  TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 60) - LState[15], ASubKeyOut, ASubKeyOutOff + 28);
 end;
 
 end.
