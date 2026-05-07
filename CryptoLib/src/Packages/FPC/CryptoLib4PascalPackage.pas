@@ -222,7 +222,8 @@ uses
   ClpIFusedOcbKernel, ClpIFusedCcmKernel, ClpIFusedEaxKernel, 
   ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesNiAeadResolver, 
   ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
-  ClpPclmulGcmSivKernel, ClpFusedKernelDefaults;
+  ClpPclmulGcmSivKernel, ClpFusedKernelDefaults, ClpXChaCha20Engine, 
+  ClpIXChaCha20Engine, ClpXChaCha20Poly1305, ClpIXChaCha20Poly1305;
 
 implementation
 

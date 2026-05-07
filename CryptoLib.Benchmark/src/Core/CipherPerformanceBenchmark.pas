@@ -88,7 +88,7 @@ const
     TCipherUtilities, driven through TGcmSivBlockCipher directly), then
     Blowfish at the end so its 64-bit block size does not sit next to the
     AES-128 bulk rows where a side-by-side cell comparison would mislead. }
-  CIPHER_BENCH_ROWS: array [0 .. 12] of TCipherBenchRowSpec = (
+  CIPHER_BENCH_ROWS: array [0 .. 13] of TCipherBenchRowSpec = (
     (Algorithm: 'AES/GCM/NOPADDING'; RowLabel: 'AES-256-GCM';
     KeyByteCount: 32; IvOrNonceByteCount: 12; AeadMacBitLength: 128;
     KeyParameterAlgorithm: ''; Kind: TCipherBenchKind.Buffered),
@@ -118,6 +118,9 @@ const
     KeyParameterAlgorithm: 'AES256'; Kind: TCipherBenchKind.Buffered),
     (Algorithm: 'CHACHA20-POLY1305'; RowLabel: 'ChaCha20-Poly1305';
     KeyByteCount: 32; IvOrNonceByteCount: 12; AeadMacBitLength: 128;
+    KeyParameterAlgorithm: ''; Kind: TCipherBenchKind.Buffered),
+    (Algorithm: 'XCHACHA20-POLY1305'; RowLabel: 'XChaCha20-Poly1305';
+    KeyByteCount: 32; IvOrNonceByteCount: 24; AeadMacBitLength: 128;
     KeyParameterAlgorithm: ''; Kind: TCipherBenchKind.Buffered),
     (Algorithm: 'SALSA20'; RowLabel: 'Salsa20 (256-bit key)';
     KeyByteCount: 32; IvOrNonceByteCount: 8; AeadMacBitLength: 0;

@@ -31,11 +31,9 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpSalsa20Engine,
-  ClpISalsa20Engine,
   ClpXSalsa20Engine,
-  ClpIXSalsa20Engine,
   ClpChaChaEngine,
-  ClpIChaChaEngine,
+  ClpXChaCha20Engine,
   ClpIStreamCipher,
   ClpICipherParameters,
   ClpKeyParameter,
@@ -49,7 +47,7 @@ uses
 
 type
 {$SCOPEDENUMS ON}
-  TCipherEngine = (Salsa20Engine, XSalsa20Engine, ChaChaEngine);
+  TCipherEngine = (Salsa20Engine, XSalsa20Engine, ChaChaEngine, XChaCha20Engine);
 {$SCOPEDENUMS OFF}
 
 type
@@ -140,11 +138,13 @@ function TTestStreamCipherReset.DoMake(ACipherEngine: TCipherEngine)
 begin
   case ACipherEngine of
     TCipherEngine.Salsa20Engine:
-      Result := TSalsa20Engine.Create() as ISalsa20Engine;
+      Result := TSalsa20Engine.Create();
     TCipherEngine.XSalsa20Engine:
-      Result := TXSalsa20Engine.Create() as IXSalsa20Engine;
+      Result := TXSalsa20Engine.Create();
     TCipherEngine.ChaChaEngine:
-      Result := TChaChaEngine.Create() as IChaChaEngine
+      Result := TChaChaEngine.Create();
+    TCipherEngine.XChaCha20Engine:
+      Result := TXChaCha20Engine.Create()
   else
     begin
       raise Exception.Create('Unsupported Cipher Engine');
@@ -203,6 +203,7 @@ begin
   DoTestReset(TCipherEngine.XSalsa20Engine, 32, 24);
   DoTestReset(TCipherEngine.ChaChaEngine, 32, 8);
   DoTestReset(TCipherEngine.ChaChaEngine, 16, 8);
+  DoTestReset(TCipherEngine.XChaCha20Engine, 32, 24);
 end;
 
 initialization
