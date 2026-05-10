@@ -41,6 +41,16 @@ resourcestring
   SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
+  /// <summary>
+  /// Implements cipher block chaining (<c>CBC</c>) over a symmetric block cipher: each plaintext block
+  /// is XORed with the prior ciphertext block before encrypting (<c>C[i] := E(K, P[i] xor C[i-1])</c>),
+  /// with the chaining vector seeded from an IV passed at <c>Init</c>.
+  /// </summary>
+  /// <remarks>
+  /// Pass key and IV together using <see cref="IParametersWithIV" />; the IV byte count must match
+  /// the block size. Each <c>ProcessBlock</c> call consumes and produces one block; padding of the
+  /// last block is a separate concern.
+  /// </remarks>
   TCbcBlockCipher = class sealed(TInterfacedObject, ICbcBlockCipher,
     IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
 
@@ -85,9 +95,17 @@ type
     function GetUnderlyingCipher(): IBlockCipher; inline;
 
   public
+    /// <summary>Construct a CBC wrapper around <paramref name="ACipher" /> (block size taken from it).</summary>
     constructor Create(const ACipher: IBlockCipher);
+    /// <summary>Initialise for encryption or decryption; key and IV from <paramref name="AParameters" />.</summary>
+    /// <param name="AForEncryption"><c>True</c> to encrypt, <c>False</c> to decrypt.</param>
+    /// <param name="AParameters">Typically <see cref="IParametersWithIV" /> over a <see cref="IKeyParameter"/>.</param>
+    /// <exception cref="EArgumentCryptoLibException">If the IV length is wrong or cipher state cannot change without a key.</exception>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    /// <summary>Return the underlying block size in bytes.</summary>
     function GetBlockSize(): Int32; inline;
+    /// <summary>Encrypt or decrypt exactly one block (<c>GetBlockSize</c> bytes).</summary>
+    /// <exception cref="EDataLengthCryptoLibException">If input or output ranges are shorter than one block.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
@@ -105,10 +123,14 @@ type
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32): Int32;
 
+    /// <summary>Reset the chaining vector from the stored IV and clear the next-block buffer used during decrypt.</summary>
     procedure Reset(); inline;
 
+    /// <summary>Underlying block primitive (AES, DES, …).</summary>
     property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
+    /// <summary>Algorithm plus <c>/CBC</c> suffix (e.g. <c>AES/CBC</c>).</summary>
     property AlgorithmName: String read GetAlgorithmName;
+    /// <summary><c>False</c>: CBC consumes full blocks only.</summary>
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;
 

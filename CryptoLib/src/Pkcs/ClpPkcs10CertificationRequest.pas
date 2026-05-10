@@ -260,6 +260,7 @@ begin
   FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_256, True);
   FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_384, True);
   FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_512, True);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha1, True);
   FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha224, True);
   FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha256, True);
   FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha384, True);

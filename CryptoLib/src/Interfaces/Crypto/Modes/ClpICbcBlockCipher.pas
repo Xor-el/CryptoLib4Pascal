@@ -24,6 +24,7 @@ uses
   ClpIBlockCipherMode;
 
 type
+  /// <summary>Cipher block chaining (<c>CBC</c>) wrapper over another <see cref="IBlockCipher"/>.</summary>
   ICbcBlockCipher = interface(IBlockCipherMode)
     ['{A95FD7C2-02FE-4600-B496-B7A757737BFF}']
 

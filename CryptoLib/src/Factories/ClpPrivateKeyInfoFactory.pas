@@ -60,22 +60,56 @@ uses
 
 type
   /// <summary>
-  /// Factory for creating PrivateKeyInfo from asymmetric private key parameters.
+  /// A factory to produce <see cref="IPrivateKeyInfo"/> (PKCS#8) objects from asymmetric private key parameters.
   /// </summary>
   TPrivateKeyInfoFactory = class sealed(TObject)
   public
+    /// <summary>
+    /// Create an <see cref="IPrivateKeyInfo"/> representation of a private key.
+    /// </summary>
+    /// <remarks>
+    /// Example of exporting a private key to PKCS#8 bytes:
+    /// <code>
+    /// pkcs8Bytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(privateKey).GetEncoded();
+    /// </code>
+    /// </remarks>
+    /// <param name="APrivateKey">The private key parameters.</param>
+    /// <returns>The <see cref="IPrivateKeyInfo"/> object.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="APrivateKey"/> is nil.</exception>
+    /// <exception cref="EArgumentCryptoLibException">If a public key is passed instead of a private key.</exception>
+    /// <exception cref="ENotSupportedCryptoLibException">If the class provided is not convertible.</exception>
     class function CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter): IPrivateKeyInfo; overload; static;
+    /// <summary>
+    /// Create an <see cref="IPrivateKeyInfo"/> representation of a private key with attributes.
+    /// </summary>
+    /// <param name="APrivateKey">The key to be encoded into the info object.</param>
+    /// <param name="AAttributes">The set of attributes to be included.</param>
+    /// <returns>The appropriate <see cref="IPrivateKeyInfo"/>.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="APrivateKey"/> is nil.</exception>
+    /// <exception cref="EArgumentCryptoLibException">If a public key is passed instead of a private key.</exception>
+    /// <exception cref="ENotSupportedCryptoLibException">If the class provided is not convertible.</exception>
     class function CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter;
       const AAttributes: IAsn1Set): IPrivateKeyInfo; overload; static;
     /// <summary>
-    /// Decrypt encrypted private key info using the given password (wrongPkcs12Zero = false).
+    /// Create an <see cref="IPrivateKeyInfo"/> from an encrypted representation using a passphrase.
     /// </summary>
+    /// <param name="APassPhrase">The password for decryption.</param>
+    /// <param name="AEncInfo">The encrypted private key information.</param>
+    /// <returns>A <see cref="IPrivateKeyInfo"/> object.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AEncInfo"/> is nil.</exception>
+    /// <exception cref="ECryptoLibException">If the encryption algorithm is unknown or decryption fails.</exception>
     class function CreatePrivateKeyInfo(const APassPhrase: TCryptoLibCharArray;
       const AEncInfo: IEncryptedPrivateKeyInfo): IPrivateKeyInfo; overload; static;
     /// <summary>
-    /// Decrypt encrypted private key info using the given password.
+    /// Create an <see cref="IPrivateKeyInfo"/> from an encrypted representation using a passphrase.
     /// </summary>
-    /// <param name="AWrongPkcs12Zero">If true, use wrong PKCS#12 zero padding for password (for compatibility).</param>
+    /// <param name="APassPhrase">The password for decryption.</param>
+    /// <param name="AWrongPkcs12Zero">If true, uses a specific zero-padding for PKCS#12 PBE (for compatibility).</param>
+    /// <param name="AEncInfo">The encrypted private key information.</param>
+    /// <returns>A <see cref="IPrivateKeyInfo"/> object.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AEncInfo"/> is nil.</exception>
+    /// <exception cref="EArgumentCryptoLibException">If <paramref name="AEncInfo"/> has no encryption algorithm.</exception>
+    /// <exception cref="ECryptoLibException">If the encryption algorithm is unknown or decryption fails.</exception>
     class function CreatePrivateKeyInfo(const APassPhrase: TCryptoLibCharArray;
       AWrongPkcs12Zero: Boolean; const AEncInfo: IEncryptedPrivateKeyInfo): IPrivateKeyInfo; overload; static;
   end;

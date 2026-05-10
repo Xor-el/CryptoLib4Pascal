@@ -603,6 +603,7 @@ type
     /// </summary>
     class function CreatePrimitive(const AContents: TCryptoLibByteArray): IDerBmpString; overload; static;
     class function CreatePrimitive(const AStr: TCryptoLibCharArray): IDerBmpString; overload; static;
+    class function CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IDerBmpString; overload; static;
     /// <summary>
     /// Get instance from object.
     /// </summary>
@@ -1479,33 +1480,6 @@ type
   end;
 
   /// <summary>
-  /// Parser for DER external objects.
-  /// </summary>
-  TDerExternalParser = class sealed(TAsn1Encodable, IDerExternalParser)
-  strict private
-    FParser: IAsn1StreamParser;
-
-  public
-    /// <summary>
-    /// Create a DER external parser.
-    /// </summary>
-    constructor Create(const AParser: IAsn1StreamParser);
-
-    /// <summary>
-    /// Read the next object.
-    /// </summary>
-    function ReadObject(): IAsn1Convertible;
-    /// <summary>
-    /// Convert to ASN.1 object.
-    /// </summary>
-    function ToAsn1Object(): IAsn1Object; override;
-    /// <summary>
-    /// Parse a DER external from a stream parser.
-    /// </summary>
-    class function Parse(const ASp: IAsn1StreamParser): IDerExternal; static;
-  end;
-
-  /// <summary>
   /// Parser for BER tagged objects.
   /// </summary>
   TBerTaggedObjectParser = class(TInterfacedObject, IAsn1Convertible, IAsn1TaggedObjectParser, IBerTaggedObjectParser)
@@ -1645,8 +1619,10 @@ type
         class property Instance: IAsn1UniversalType read GetInstance;
       end;
   public
-    constructor Create(const AVector: IAsn1EncodableVector); overload;
-    constructor Create(const ASequence: IAsn1Sequence); overload;
+    class function FromSequence(const ASeq: IAsn1Sequence): IDerExternal; static;
+    class function FromVector(const AVector: IAsn1EncodableVector): IDerExternal; static;
+    constructor Create(const AVector: IAsn1EncodableVector); overload; deprecated 'Use FromVector instead';
+    constructor Create(const ASequence: IAsn1Sequence); overload; deprecated 'Use FromSequence instead';
     constructor Create(const ADirectReference: IDerObjectIdentifier;
       const AIndirectReference: IDerInteger;
       const ADataValueDescriptor: IAsn1ObjectDescriptor;
@@ -1679,8 +1655,10 @@ type
     function BuildSequence(): IAsn1Sequence; override;
 
   public
-    constructor Create(const AVector: IAsn1EncodableVector); overload;
-    constructor Create(const ASequence: IAsn1Sequence); overload;
+    class function FromSequence(const ASeq: IAsn1Sequence): IDLExternal; static;
+    class function FromVector(const AVector: IAsn1EncodableVector): IDLExternal; static;
+    constructor Create(const AVector: IAsn1EncodableVector); overload; deprecated 'Use FromVector instead';
+    constructor Create(const ASequence: IAsn1Sequence); overload; deprecated 'Use FromSequence instead';
     constructor Create(const ADirectReference: IDerObjectIdentifier;
       const AIndirectReference: IDerInteger;
       const ADataValueDescriptor: IAsn1ObjectDescriptor;
@@ -1699,16 +1677,21 @@ type
   /// </summary>
   TDerBoolean = class(TAsn1Object, IAsn1Object, IDerBoolean)
   strict private
-    FValue: Byte;
+    FContents: Byte;
     class var FFalse: IDerBoolean;
     class var FTrue: IDerBoolean;
     class function GetFalse: IDerBoolean; static;
     class function GetTrue: IDerBoolean; static;
-    constructor Create(AValue: Boolean); overload;
+    class function CreatePrimitive(AB: Byte): IAsn1Object; overload; static;
+    constructor Create(AContents: Byte); overload;
     function GetContents(AEncoding: Int32): TCryptoLibByteArray;
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
+
+    function GetValue(): Byte;
+    function GetIsTrue(): Boolean;
+    function GetIsFalse(): Boolean;
   public
     type
       /// <summary>
@@ -1725,9 +1708,14 @@ type
         class property Instance: IAsn1UniversalType read GetInstance;
       end;
   public
-    constructor Create(const AContents: TCryptoLibByteArray); overload;
+    class constructor Create;
+    class procedure CheckContentsLength(AContentsLength: Int32); static;
+    constructor Create(const AContents: TCryptoLibByteArray); overload; deprecated 'Use FromContents overload with TCryptoLibByteArray instead';
+    class function FromContents(AContents: Byte): IDerBoolean; overload; static;
+    class function FromContents(const AContents: TCryptoLibByteArray): IDerBoolean; overload; static;
     class function FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object; static;
-    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object; overload; static;
+    class function CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object; overload; static;
     class function GetInstance(const AObj: TObject): IDerBoolean; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IDerBoolean; overload; static;
     class function GetInstance(const AObj: IAsn1Convertible): IDerBoolean; overload; static;
@@ -1737,8 +1725,7 @@ type
     class function GetInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBoolean; overload; static;
     class function GetOptional(const AElement: IAsn1Encodable): IDerBoolean; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerBoolean; static;
-    function GetValue(): Byte;
-    function GetIsTrue(): Boolean;
+
     function ToString(): String; override;
 
     function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
@@ -1799,7 +1786,8 @@ type
     class function GetOptional(const AElement: IAsn1Encodable): IDerEnumerated; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerEnumerated; static;
     class function FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object; static;
-    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; overload; static;
+    class function CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object; overload; static;
     function GetBytes(): TCryptoLibByteArray;
     function HasValue(AX: Int32): Boolean; overload;
     function HasValue(const AX: TBigInteger): Boolean; overload;
@@ -1839,7 +1827,8 @@ type
   public
     constructor Create;
     class procedure CheckContentsLength(AContentsLength: Int32); static;
-    class function CreatePrimitive(): IAsn1Object; static;
+    class function CreatePrimitive(): IAsn1Object; overload; static;
+    class function CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object; overload; static;
     class function GetInstance(const AObj: TObject): IAsn1Null; overload; static;
     class function GetInstance(const AObj: IAsn1Object): IAsn1Null; overload; static;
     class function GetInstance(const AObj: IAsn1Convertible): IAsn1Null; overload; static;
@@ -1889,6 +1878,8 @@ type
     class procedure CheckIdentifier(const AIdentifier: String); static;
     constructor Create(const AContents: TCryptoLibByteArray; const AIdentifier: String); overload;
     function GetID(): String;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AContentsLength: Int32;
+      AClone: Boolean): IAsn1Object; overload; static;
     class constructor Create;
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
@@ -1922,7 +1913,9 @@ type
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IDerObjectIdentifier; static;
     class function TryFromID(const AIdentifier: String; out AOid: IDerObjectIdentifier): Boolean; static;
     class procedure CheckContentsLength(AContentsLength: Int32); static;
-    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; overload; static;
+    class function CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream;
+      const ATmp: TCryptoLibByteArray): IAsn1Object; overload; static;
     class function FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object; static;
     function GetContents(): TCryptoLibByteArray;
     function Branch(const ABranchID: String): IDerObjectIdentifier;
@@ -1951,9 +1944,13 @@ type
       FIdentifier: String;
     function GetID(): String;
     constructor Create(const AContents: TCryptoLibByteArray; const AIdentifier: String); overload;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AContentsLength: Int32;
+      AClone: Boolean): IAsn1Object; overload; static;
   protected
     class function IsValidIdentifier(const AIdentifier: String; AFrom: Int32): Boolean; static;
-    class function IsValidContents(const AContents: TCryptoLibByteArray): Boolean; static;
+    class function IsValidContents(const AContents: TCryptoLibByteArray): Boolean; overload; static;
+    class function IsValidContents(const AContents: TCryptoLibByteArray;
+      AContentsLength: Int32): Boolean; overload; static;
     class function ParseContents(const AContents: TCryptoLibByteArray): String; static;
     class function ParseIdentifier(const AIdentifier: String): TCryptoLibByteArray; static;
     class procedure WriteField(const AOutputStream: TStream; AFieldValue: UInt64); overload; static;
@@ -1997,7 +1994,9 @@ type
     class function TryFromID(const AIdentifier: String; out AOid: IAsn1RelativeOid): Boolean; static;
     class procedure WriteEncodedFieldFromDecimal(const AOutputStream: TStream; const AToken: String; AExtra: UInt32); static;
     class procedure CheckContentsLength(AContentsLength: Int32); static;
-    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; static;
+    class function CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object; overload; static;
+    class function CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream;
+      const ATmp: TCryptoLibByteArray): IAsn1Object; overload; static;
     function Branch(const ABranchID: String): IAsn1RelativeOid;
     function GetContents(): TCryptoLibByteArray;
     function ToString(): String; override;
@@ -3214,6 +3213,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpStreamUtilities;
 
 { TAsn1TaggedObject }
 
@@ -4435,7 +4437,7 @@ end;
 
 function TDerSequence.ToAsn1External(): IDerExternal;
 begin
-  Result := TDerExternal.Create(Self);
+  Result := TDerExternal.FromSequence(Self);
 end;
 
 function TDerSequence.ToAsn1OctetString(): IAsn1OctetString;
@@ -4650,7 +4652,7 @@ end;
 
 function TDLSequence.ToAsn1External(): IDerExternal;
 begin
-  Result := TDLExternal.Create(Self);
+  Result := TDLExternal.FromSequence(Self);
 end;
 
 function TDLSequence.ToAsn1BitString(): IDerBitString;
@@ -5570,7 +5572,7 @@ end;
 function TBerSequence.ToAsn1External(): IDerExternal;
 begin
   // TODO[asn1] There is currently no BerExternal (or Asn1External)
-  Result := TDLExternal.Create(Self);
+  Result := TDLExternal.FromSequence(Self);
 end;
 
 function TBerSequence.ToAsn1OctetString(): IAsn1OctetString;
@@ -5838,29 +5840,6 @@ begin
   else
     Result := TBerTaggedObject.Create(ParsedImplicit, ATagClass, ATagNo,
       TBerSequence.FromVector(AContentsElements));
-end;
-
-{ TDerExternalParser }
-
-constructor TDerExternalParser.Create(const AParser: IAsn1StreamParser);
-begin
-  inherited Create;
-  FParser := AParser;
-end;
-
-function TDerExternalParser.ReadObject(): IAsn1Convertible;
-begin
-  Result := FParser.ReadObject();
-end;
-
-function TDerExternalParser.ToAsn1Object(): IAsn1Object;
-begin
-  Result := Parse(FParser);
-end;
-
-class function TDerExternalParser.Parse(const ASp: IAsn1StreamParser): IDerExternal;
-begin
-  Result := TDLExternal.Create(TDLSequence.FromVector(ASp.ReadVector()));
 end;
 
 { TBerTaggedObjectParser }
@@ -7201,6 +7180,16 @@ begin
     raise EArgumentCryptoLibException.Create('incompatible type for data-value-descriptor');
 end;
 
+class function TDerExternal.FromSequence(const ASeq: IAsn1Sequence): IDerExternal;
+begin
+  Result := TDerExternal.Create(ASeq);
+end;
+
+class function TDerExternal.FromVector(const AVector: IAsn1EncodableVector): IDerExternal;
+begin
+  Result := TDerExternal.Create(AVector);
+end;
+
 constructor TDerExternal.Create(const AVector: IAsn1EncodableVector);
 begin
   Create(TBerSequence.Create(AVector));
@@ -7212,6 +7201,8 @@ var
   LAsn1: IAsn1Object;
   LDerObjectIdentifier: IDerObjectIdentifier;
   LDerInteger: IDerInteger;
+  LObjDesc: IAsn1ObjectDescriptor;
+  LGraphicString: IDerGraphicString;
   LObj: IAsn1TaggedObject;
 begin
   inherited Create();
@@ -7234,8 +7225,14 @@ begin
     System.Inc(LOffset);
     LAsn1 := GetObjFromSequence(ASequence, LOffset);
   end;
-  
-  if not Supports(LAsn1, IAsn1TaggedObject) then
+
+  if Supports(LAsn1, IAsn1ObjectDescriptor, LObjDesc) then
+  begin
+    FDataValueDescriptor := LObjDesc;
+    System.Inc(LOffset);
+    LAsn1 := GetObjFromSequence(ASequence, LOffset);
+  end
+  else if Supports(LAsn1, IDerGraphicString, LGraphicString) then
   begin
     FDataValueDescriptor := CheckDataValueDescriptor(LAsn1);
     System.Inc(LOffset);
@@ -7383,6 +7380,16 @@ end;
 
 { TDLExternal }
 
+class function TDLExternal.FromSequence(const ASeq: IAsn1Sequence): IDLExternal;
+begin
+  Result := TDLExternal.Create(ASeq);
+end;
+
+class function TDLExternal.FromVector(const AVector: IAsn1EncodableVector): IDLExternal;
+begin
+  Result := TDLExternal.Create(AVector);
+end;
+
 constructor TDLExternal.Create(const AVector: IAsn1EncodableVector);
 begin
   inherited Create(AVector);
@@ -7521,6 +7528,54 @@ begin
   Result := TDerBmpString.Create(LStr);
 end;
 
+class function TDerBmpString.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IDerBmpString;
+var
+  LRemainingBytes, LLength, LStringPos, LBufPos: Int32;
+  LBuf: TCryptoLibByteArray;
+  LStr: TCryptoLibCharArray;
+begin
+  LRemainingBytes := ADefIn.Remaining;
+  if (LRemainingBytes and 1) <> 0 then
+    raise EIOCryptoLibException.Create('malformed BMPString encoding encountered');
+
+  LLength := LRemainingBytes div 2;
+
+  System.SetLength(LStr, LLength);
+  System.SetLength(LBuf, 8);
+  LStringPos := 0;
+
+  while LRemainingBytes >= 8 do
+  begin
+    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, 8) <> 8 then
+      raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
+
+    LStr[LStringPos    ] := Char((LBuf[0] shl 8) or (LBuf[1] and $FF));
+    LStr[LStringPos + 1] := Char((LBuf[2] shl 8) or (LBuf[3] and $FF));
+    LStr[LStringPos + 2] := Char((LBuf[4] shl 8) or (LBuf[5] and $FF));
+    LStr[LStringPos + 3] := Char((LBuf[6] shl 8) or (LBuf[7] and $FF));
+    LStringPos := LStringPos + 4;
+    LRemainingBytes := LRemainingBytes - 8;
+  end;
+
+  if LRemainingBytes > 0 then
+  begin
+    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, LRemainingBytes) <> LRemainingBytes then
+      raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
+
+    LBufPos := 0;
+    repeat
+      LStr[LStringPos] := Char((LBuf[LBufPos] shl 8) or (LBuf[LBufPos + 1] and $FF));
+      System.Inc(LStringPos);
+      LBufPos := LBufPos + 2;
+    until LBufPos >= LRemainingBytes;
+  end;
+
+  if (ADefIn.Remaining <> 0) or (System.Length(LStr) <> LStringPos) then
+    raise EInvalidOperationCryptoLibException.Create('');
+
+  Result := TDerBmpString.CreatePrimitive(LStr);
+end;
+
 class function TDerBmpString.GetInstance(const AObj: TObject): IDerBmpString;
 var
   LAsn1Obj: IAsn1Object;
@@ -7618,69 +7673,90 @@ end;
 
 { TDerBoolean }
 
-class function TDerBoolean.GetFalse: IDerBoolean;
-var
-  LInstance: TDerBoolean;
+class constructor TDerBoolean.Create;
 begin
-  if FFalse = nil then
-  begin
-    LInstance := TDerBoolean.Create(System.False);
-    if not Supports(LInstance, IDerBoolean, FFalse) then
-      raise EInvalidOperationCryptoLibException.Create('failed to get IDerBoolean interface');
-  end;
-  Result := FFalse;
+  FFalse := TDerBoolean.Create(Byte($00));
+  FTrue := TDerBoolean.Create(Byte($FF));
 end;
 
-class function TDerBoolean.GetTrue: IDerBoolean;
-var
-  LInstance: TDerBoolean;
+class procedure TDerBoolean.CheckContentsLength(AContentsLength: Int32);
 begin
-  if FTrue = nil then
-  begin
-    LInstance := TDerBoolean.Create(System.True);
-    if not Supports(LInstance, IDerBoolean, FTrue) then
-      raise EInvalidOperationCryptoLibException.Create('failed to get IDerBoolean interface');
-  end;
-  Result := FTrue;
+  if AContentsLength <> 1 then
+    raise EArgumentCryptoLibException.Create('BOOLEAN value should have 1 byte in it');
 end;
 
-constructor TDerBoolean.Create(AValue: Boolean);
+class function TDerBoolean.CreatePrimitive(AB: Byte): IAsn1Object;
+begin
+  if AB = $00 then
+    Result := FFalse
+  else if AB = $FF then
+    Result := FTrue
+  else
+  begin
+    Result := TDerBoolean.Create(AB);
+  end;
+end;
+
+constructor TDerBoolean.Create(AContents: Byte);
 begin
   inherited Create();
-  if AValue then
-    FValue := $FF
-  else
-    FValue := 0;
+  FContents := AContents;
 end;
 
 constructor TDerBoolean.Create(const AContents: TCryptoLibByteArray);
 begin
   inherited Create();
-  if System.Length(AContents) <> 1 then
-    raise EArgumentCryptoLibException.Create('byte value should have 1 byte in it');
-  // TODO Are there any constraints on the possible byte values?
-  FValue := AContents[0];
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  CheckContentsLength(System.Length(AContents));
+  FContents := AContents[0];
+end;
+
+class function TDerBoolean.FromContents(AContents: Byte): IDerBoolean;
+begin
+  Result := CreatePrimitive(AContents) as IDerBoolean;
+end;
+
+class function TDerBoolean.FromContents(const AContents: TCryptoLibByteArray): IDerBoolean;
+begin
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  CheckContentsLength(System.Length(AContents));
+  Result := FromContents(AContents[0]);
 end;
 
 class function TDerBoolean.FromOctetString(const AContents: TCryptoLibByteArray): IAsn1Object;
 begin
-  Result := TDerBoolean.Create(AContents);
+  Result := FromContents(AContents);
 end;
 
 class function TDerBoolean.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
-var
-  LB: Byte;
 begin
-  if System.Length(AContents) <> 1 then
-    raise EArgumentCryptoLibException.Create('BOOLEAN value should have 1 byte in it');
-  LB := AContents[0];
+  if AContents = nil then
+    raise EArgumentNilCryptoLibException.Create('contents');
+  CheckContentsLength(System.Length(AContents));
+  Result := CreatePrimitive(AContents[0]);
+end;
 
-  if LB = 0 then
-    Result := TDerBoolean.False
-  else if LB = $FF then
-    Result := TDerBoolean.True
-  else
-    Result := TDerBoolean.Create(AContents);
+class function TDerBoolean.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object;
+var
+  LB: Int32;
+begin
+  CheckContentsLength(ADefIn.Remaining);
+  LB := ADefIn.ReadByte;
+  if LB < 0 then
+    raise EEndOfStreamCryptoLibException.Create('');
+  Result := CreatePrimitive(Byte(LB));
+end;
+
+class function TDerBoolean.GetFalse: IDerBoolean;
+begin
+  Result := FFalse;
+end;
+
+class function TDerBoolean.GetTrue: IDerBoolean;
+begin
+  Result := FTrue;
 end;
 
 class function TDerBoolean.GetInstance(AValue: Boolean): IDerBoolean;
@@ -7815,12 +7891,17 @@ end;
 
 function TDerBoolean.GetValue(): Byte;
 begin
-  Result := FValue;
+  Result := FContents;
 end;
 
 function TDerBoolean.GetIsTrue(): Boolean;
 begin
-  Result := FValue <> 0;
+  Result := FContents <> $00;
+end;
+
+function TDerBoolean.GetIsFalse(): Boolean;
+begin
+  Result := FContents = $00;
 end;
 
 function TDerBoolean.ToString(): String;
@@ -7835,7 +7916,7 @@ function TDerBoolean.GetContents(AEncoding: Int32): TCryptoLibByteArray;
 var
   LContents: Byte;
 begin
-  LContents := FValue;
+  LContents := FContents;
   // if DER encoding and IsTrue, use 0xFF
   if (TAsn1OutputStream.EncodingDer = AEncoding) and GetIsTrue() then
     LContents := $FF;
@@ -7867,7 +7948,7 @@ end;
 
 class constructor TDerEnumerated.Create;
 begin
-  System.SetLength(FCache, 12);
+  System.SetLength(FCache, 16);
 end;
 
 class function TDerEnumerated.GetInstance(const AObj: TObject): IDerEnumerated;
@@ -8142,6 +8223,29 @@ begin
   Result := LPossibleMatch;
 end;
 
+class function TDerEnumerated.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object;
+var
+  LLen: Int32;
+  LB: Int32;
+  LOne: TCryptoLibByteArray;
+begin
+  LLen := ADefIn.Remaining;
+  if LLen = 0 then
+    raise EArgumentCryptoLibException.Create('ENUMERATED has zero length');
+  if LLen > 1 then
+  begin
+    Result := CreatePrimitive(ADefIn.ToArray, False);
+    Exit;
+  end;
+
+  LB := ADefIn.ReadByte;
+  if LB < 0 then
+    raise EEndOfStreamCryptoLibException.Create('');
+  System.SetLength(LOne, 1);
+  LOne[0] := Byte(LB);
+  Result := CreatePrimitive(LOne, False);
+end;
+
 function TDerEnumerated.GetBytes(): TCryptoLibByteArray;
 begin
   Result := FContents;
@@ -8163,6 +8267,12 @@ end;
 class function TAsn1Null.CreatePrimitive(): IAsn1Object;
 begin
   Result := TDerNull.Instance;
+end;
+
+class function TAsn1Null.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object;
+begin
+  CheckContentsLength(ADefIn.Remaining);
+  Result := CreatePrimitive();
 end;
 
 class function TAsn1Null.GetInstance(const AObj: TObject): IAsn1Null;
@@ -8341,15 +8451,20 @@ begin
     raise EArgumentCryptoLibException.Create('exceeded OID contents length limit');
 end;
 
-class function TDerObjectIdentifier.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+class function TDerObjectIdentifier.CreatePrimitive(const AContents: TCryptoLibByteArray;
+  AContentsLength: Int32; AClone: Boolean): IAsn1Object;
 var
   LIndex: UInt32;
   LOriginalEntry, LNewEntry: IDerObjectIdentifier;
   LExchangedEntry: IDerObjectIdentifier;
+  LStorage: TCryptoLibByteArray;
 begin
-  CheckContentsLength(System.Length(AContents));
+  CheckContentsLength(AContentsLength);
 
-  LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents));
+  if (AContentsLength > 0) and ((AContents = nil) or (System.Length(AContents) < AContentsLength)) then
+    raise EArgumentCryptoLibException.Create('invalid OID contents buffer');
+
+  LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents, 0, AContentsLength));
   LIndex := LIndex xor (LIndex shr 20);
   LIndex := LIndex xor (LIndex shr 10);
   LIndex := LIndex and 1023;
@@ -8358,24 +8473,30 @@ begin
     System.SetLength(FCache, 1024);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
+  if (LOriginalEntry <> nil) and (System.Length(LOriginalEntry.Contents) = AContentsLength) and
+    ((AContentsLength = 0) or CompareMem(@LOriginalEntry.Contents[0], @AContents[0],
+    AContentsLength * SizeOf(Byte))) then
   begin
     Result := LOriginalEntry;
     Exit;
   end;
 
-  if not TAsn1RelativeOid.IsValidContents(AContents) then
+  if not TAsn1RelativeOid.IsValidContents(AContents, AContentsLength) then
     raise EArgumentCryptoLibException.Create('invalid OID contents');
 
-  if AClone then
-    LNewEntry := TDerObjectIdentifier.Create(System.Copy(AContents), '')
+  if AClone or (System.Length(AContents) <> AContentsLength) then
+    LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
   else
-    LNewEntry := TDerObjectIdentifier.Create(AContents, '');
+    LStorage := AContents;
+
+  LNewEntry := TDerObjectIdentifier.Create(LStorage, '');
 
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
+    if (LExchangedEntry <> nil) and (System.Length(LExchangedEntry.Contents) = AContentsLength) and
+      ((AContentsLength = 0) or CompareMem(@LExchangedEntry.Contents[0], @AContents[0],
+      AContentsLength * SizeOf(Byte))) then
     begin
       Result := LExchangedEntry;
       Exit;
@@ -8384,6 +8505,39 @@ begin
 
   FCache[LIndex] := LNewEntry;
   Result := LNewEntry;
+end;
+
+class function TDerObjectIdentifier.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+var
+  LBuf: TCryptoLibByteArray;
+  LLen: Int32;
+begin
+  LLen := System.Length(AContents);
+  CheckContentsLength(LLen);
+  if AClone then
+    LBuf := System.Copy(AContents)
+  else
+    LBuf := AContents;
+  Result := CreatePrimitive(LBuf, LLen, False);
+end;
+
+class function TDerObjectIdentifier.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream;
+  const ATmp: TCryptoLibByteArray): IAsn1Object;
+var
+  LLen: Int32;
+  LBytes: TCryptoLibByteArray;
+begin
+  LLen := ADefIn.Remaining;
+  CheckContentsLength(LLen);
+  if LLen > System.Length(ATmp) then
+  begin
+    LBytes := ADefIn.ToArray;
+    Result := CreatePrimitive(LBytes, System.Length(LBytes), False);
+    Exit;
+  end;
+
+  ADefIn.ReadAllIntoByteArray(ATmp);
+  Result := CreatePrimitive(ATmp, LLen, True);
 end;
 
 class constructor TDerObjectIdentifier.Create;
@@ -9096,18 +9250,27 @@ begin
 end;
 
 class function TAsn1RelativeOid.IsValidContents(const AContents: TCryptoLibByteArray): Boolean;
+begin
+  Result := IsValidContents(AContents, System.Length(AContents));
+end;
+
+class function TAsn1RelativeOid.IsValidContents(const AContents: TCryptoLibByteArray;
+  AContentsLength: Int32): Boolean;
 var
   LI: Int32;
   LSubIDStart: Boolean;
 begin
-  if System.Length(AContents) < 1 then
+  if AContentsLength < 1 then
   begin
     Result := False;
     Exit;
   end;
 
+  if (AContents = nil) or (System.Length(AContents) < AContentsLength) then
+    raise EArgumentCryptoLibException.Create('invalid contents segment');
+
   LSubIDStart := True;
-  for LI := 0 to System.Length(AContents) - 1 do
+  for LI := 0 to AContentsLength - 1 do
   begin
     if LSubIDStart and (AContents[LI] = $80) then
     begin
@@ -9286,17 +9449,21 @@ begin
   Result := TPrimitiveDerEncoding.Create(ATagClass, ATagNo, FContents);
 end;
 
-class function TAsn1RelativeOid.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+class function TAsn1RelativeOid.CreatePrimitive(const AContents: TCryptoLibByteArray;
+  AContentsLength: Int32; AClone: Boolean): IAsn1Object;
 var
   LIndex: UInt32;
-  LContents: TCryptoLibByteArray;
+  LStorage: TCryptoLibByteArray;
   LOriginalEntry: IAsn1RelativeOid;
   LNewEntry: IAsn1RelativeOid;
   LExchangedEntry: IAsn1RelativeOid;
 begin
-  CheckContentsLength(System.Length(AContents));
+  CheckContentsLength(AContentsLength);
 
-  LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents));
+  if (AContentsLength > 0) and ((AContents = nil) or (System.Length(AContents) < AContentsLength)) then
+    raise EArgumentCryptoLibException.Create('invalid relative OID contents buffer');
+
+  LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents, 0, AContentsLength));
   LIndex := LIndex xor (LIndex shr 24);
   LIndex := LIndex xor (LIndex shr 12);
   LIndex := LIndex xor (LIndex shr 6);
@@ -9306,20 +9473,23 @@ begin
     System.SetLength(FCache, 64);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
+  if (LOriginalEntry <> nil) and (System.Length(LOriginalEntry.Contents) = AContentsLength) and
+    ((AContentsLength = 0) or CompareMem(@LOriginalEntry.Contents[0], @AContents[0],
+    AContentsLength * SizeOf(Byte))) then
   begin
     Result := LOriginalEntry;
     Exit;
   end;
 
-  if not IsValidContents(AContents) then
+  if not IsValidContents(AContents, AContentsLength) then
     raise EArgumentCryptoLibException.Create('invalid relative OID contents');
 
-  if AClone then
-    LContents := System.Copy(AContents)
+  if AClone or (System.Length(AContents) <> AContentsLength) then
+    LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
   else
-    LContents := AContents;
-  LNewEntry := TAsn1RelativeOid.Create(LContents, '');
+    LStorage := AContents;
+
+  LNewEntry := TAsn1RelativeOid.Create(LStorage, '');
 
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
@@ -9333,6 +9503,39 @@ begin
 
   FCache[LIndex] := LNewEntry;
   Result := LNewEntry;
+end;
+
+class function TAsn1RelativeOid.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
+var
+  LBuf: TCryptoLibByteArray;
+  LLen: Int32;
+begin
+  LLen := System.Length(AContents);
+  CheckContentsLength(LLen);
+  if AClone then
+    LBuf := System.Copy(AContents)
+  else
+    LBuf := AContents;
+  Result := CreatePrimitive(LBuf, LLen, False);
+end;
+
+class function TAsn1RelativeOid.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream;
+  const ATmp: TCryptoLibByteArray): IAsn1Object;
+var
+  LLen: Int32;
+  LBytes: TCryptoLibByteArray;
+begin
+  LLen := ADefIn.Remaining;
+  CheckContentsLength(LLen);
+  if LLen > System.Length(ATmp) then
+  begin
+    LBytes := ADefIn.ToArray;
+    Result := CreatePrimitive(LBytes, System.Length(LBytes), False);
+    Exit;
+  end;
+
+  ADefIn.ReadAllIntoByteArray(ATmp);
+  Result := CreatePrimitive(ATmp, LLen, True);
 end;
 
 { TAsn1GeneralizedTime }

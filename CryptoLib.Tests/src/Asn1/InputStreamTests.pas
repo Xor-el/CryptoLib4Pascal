@@ -24,6 +24,7 @@ interface
 
 uses
   SysUtils,
+  Classes,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -40,11 +41,22 @@ uses
 
 type
 
+  /// <summary>
+  /// Stream type not handled specially by <c>FindLimit</c> (exercises fallback limit).
+  /// </summary>
+  TDummyStreamWithoutKnownLimit = class(TStream)
+  public
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
+  end;
+
   TInputStreamTest = class(TCryptoLibAlgorithmTestCase)
   strict private
     FOutOfBoundsLength: TCryptoLibByteArray;
     FNegativeLength: TCryptoLibByteArray;
     FOutsideLimitLength: TCryptoLibByteArray;
+    FClassCast1: TCryptoLibByteArray;
     FClassCast2: TCryptoLibByteArray;
     FClassCast3: TCryptoLibByteArray;
   protected
@@ -55,9 +67,28 @@ type
 
   published
     procedure TestInputStream;
+    procedure TestConfigureMaxLimit;
+    procedure TestNegativeMaxLimitClampsFindLimit;
   end;
 
 implementation
+
+{ TDummyStreamWithoutKnownLimit }
+
+function TDummyStreamWithoutKnownLimit.Read(var Buffer; Count: LongInt): LongInt;
+begin
+  Result := 0;
+end;
+
+function TDummyStreamWithoutKnownLimit.Write(const Buffer; Count: LongInt): LongInt;
+begin
+  Result := 0;
+end;
+
+function TDummyStreamWithoutKnownLimit.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+begin
+  Result := 0;
+end;
 
 { TInputStreamTest }
 
@@ -67,6 +98,7 @@ begin
   FOutOfBoundsLength := TCryptoLibByteArray.Create($30, $FF, $FF, $FF, $FF, $FF);
   FNegativeLength := TCryptoLibByteArray.Create($30, $84, $FF, $FF, $FF, $FF);
   FOutsideLimitLength := TCryptoLibByteArray.Create($30, $83, $0F, $FF, $FF);
+  FClassCast1 := TBase64Encoder.Decode('p1AkHmYAvfOEIrL4ESfrNg==');
   FClassCast2 := TBase64Encoder.Decode('JICNbaBUTTq7uxj5mg==');
   FClassCast3 := TBase64Encoder.Decode('JAKzADNCxhrrBSVS');
 end;
@@ -76,6 +108,7 @@ begin
   FOutOfBoundsLength := nil;
   FNegativeLength := nil;
   FOutsideLimitLength := nil;
+  FClassCast1 := nil;
   FClassCast2 := nil;
   FClassCast3 := nil;
   inherited;
@@ -166,7 +199,7 @@ begin
     except
       on E: EIOCryptoLibException do
       begin
-        if not E.Message.Equals('corrupted stream - out of bounds length found: 1048575 >= 5') then
+        if not E.Message.Equals('corrupted stream - out of bounds length found: 1048575 > 5') then
         begin
           Fail(Format('wrong exception: %s', [E.Message]));
         end;
@@ -176,8 +209,60 @@ begin
     LAIn.Free;
   end;
 
+  DoTestWithByteArray(FClassCast1,
+    'corrupted stream - out of bounds length found: 80 > 16');
   DoTestWithByteArray(FClassCast2, 'unknown object encountered: TDLTaggedObjectParser');
   DoTestWithByteArray(FClassCast3, 'unknown object encountered in constructed OCTET STRING: TDLTaggedObject');
+end;
+
+procedure TInputStreamTest.TestConfigureMaxLimit;
+var
+  LSaved: Int32;
+  LDummy: TDummyStreamWithoutKnownLimit;
+  LAIn: TAsn1InputStream;
+begin
+  LSaved := TAsn1InputStream.MaxLimitForUnknownStream;
+  try
+    TAsn1InputStream.MaxLimitForUnknownStream := 1024;
+    LDummy := TDummyStreamWithoutKnownLimit.Create;
+    LAIn := TAsn1InputStream.Create(LDummy);
+    try
+      CheckEquals(1024, LAIn.Limit);
+    finally
+      LAIn.Free;
+    end;
+
+    TAsn1InputStream.MaxLimitForUnknownStream := LSaved;
+
+    LDummy := TDummyStreamWithoutKnownLimit.Create;
+    LAIn := TAsn1InputStream.Create(LDummy);
+    try
+      CheckEquals(Int32.MaxValue, LAIn.Limit);
+    finally
+      LAIn.Free;
+    end;
+  finally
+    TAsn1InputStream.MaxLimitForUnknownStream := LSaved;
+  end;
+end;
+
+procedure TInputStreamTest.TestNegativeMaxLimitClampsFindLimit;
+var
+  LSaved: Int32;
+  LMs: TMemoryStream;
+begin
+  LSaved := TAsn1InputStream.MaxLimitForUnknownStream;
+  try
+    TAsn1InputStream.MaxLimitForUnknownStream := -10;
+    LMs := TMemoryStream.Create();
+    try
+      CheckEquals(0, TAsn1InputStream.FindLimit(LMs));
+    finally
+      LMs.Free;
+    end;
+  finally
+    TAsn1InputStream.MaxLimitForUnknownStream := LSaved;
+  end;
 end;
 
 initialization

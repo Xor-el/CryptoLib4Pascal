@@ -24,6 +24,7 @@ uses
   ClpIAeadBlockCipher;
 
 type
+  /// <summary>GCM (<see cref="IAeadBlockCipher"/>): AEAD over a 128-bit <see cref="IBlockCipher"/> (typically AES).</summary>
   IGcmBlockCipher = interface(IAeadBlockCipher)
     ['{EFA22310-0A01-49B5-BCDE-9AFBF996F85C}']
   end;

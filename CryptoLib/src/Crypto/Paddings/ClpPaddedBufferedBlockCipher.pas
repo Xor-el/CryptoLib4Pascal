@@ -25,7 +25,6 @@ uses
   ClpCheck,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
-  ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpEcbBlockCipher,
   ClpPkcs7Padding,
@@ -34,7 +33,7 @@ uses
   ClpIPaddedBufferedBlockCipher,
   ClpIBlockCipherPadding,
   ClpICipherParameters,
-  ClpIParametersWithRandom,
+  ClpParameterUtilities,
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
@@ -312,17 +311,9 @@ procedure TPaddedBufferedBlockCipher.Init(AForEncryption: Boolean;
 var
   LInitRandom: ISecureRandom;
   LParameters: ICipherParameters;
-  LP: IParametersWithRandom;
 begin
   FForEncryption := AForEncryption;
-  LParameters := AParameters;
-  LInitRandom := nil;
-
-  if Supports(LParameters, IParametersWithRandom, LP) then
-  begin
-    LInitRandom := LP.Random;
-    LParameters := LP.Parameters;
-  end;
+  LParameters := TParameterUtilities.GetRandom(AParameters, LInitRandom);
 
   Reset();
   FPadding.Init(LInitRandom);

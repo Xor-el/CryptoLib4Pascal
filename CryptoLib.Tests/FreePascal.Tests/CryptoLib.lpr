@@ -4,7 +4,8 @@ program CryptoLib.Tests;
 
 uses
   Interfaces, Forms, GuiTestRunner, Asn1SequenceParserTests,
-  EqualsAndHashCodeTests, OIDTests, EnumeratedTests, ParsingTests, ParseTests,
+  EqualsAndHashCodeTests, OIDTests, EnumeratedTests, ExternalTests,
+  ParsingTests, ParseTests,
   StringTests, TagTests, BigIntegerTests, ECAlgorithmsTests, ECPointTests,
   SecP256R1FieldTests, SecP384R1FieldTests, ECDsa5Tests, ECTests,
   NamedCurveTests, SignerUtilitiesTests, SecureRandomTests,
@@ -31,6 +32,7 @@ uses
   UtcTimeTests, InputStreamTests, SetTests, X9Tests, PrivateKeyInfoTests,
   DerUtf8StringTests, EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests,
   DeltaCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  AuthorityKeyIdentifierTests,
   X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests,
   KMacTests, RSATests, PssTests, ISO9796Tests, RSABlindedTests,
   RSADigestSignerTests, X931SignerTests, CipherStreamTests, OaepTests,

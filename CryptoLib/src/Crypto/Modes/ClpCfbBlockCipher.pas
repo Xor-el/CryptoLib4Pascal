@@ -38,6 +38,13 @@ resourcestring
   SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
+  /// <summary>
+  /// Implements Cipher-FeedBack (CFB) mode on top of a <see cref="IBlockCipher"/>.
+  /// </summary>
+  /// <remarks>
+  /// <see cref="IsPartialBlockOkay"/> is True: the feedback width may be smaller than the cipher block size
+  /// (e.g. CFB-8).
+  /// </remarks>
   TCfbBlockCipher = class sealed(TInterfacedObject, ICfbBlockCipher,
     IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
 
@@ -68,18 +75,41 @@ type
     function GetUnderlyingCipher(): IBlockCipher; inline;
 
   public
+    /// <summary>
+    /// Basic constructor.
+    /// </summary>
+    /// <param name="ACipher">Block cipher forming the keystream generator inside CFB.</param>
+    /// <param name="ABitBlockSize">CFB segment size in bits (must be a multiple of 8).</param>
     constructor Create(const ACipher: IBlockCipher; ABitBlockSize: Int32);
+    /// <summary>
+    /// Initialise CFB state and optionally the IV via <see cref="IParametersWithIV"/>.
+    /// </summary>
+    /// <param name="AForEncryption">Encrypt or decrypt pathway (selects keystream XOR direction).</param>
+    /// <param name="AParameters">Typically <see cref="IParametersWithIV"/> wrapping a <see cref="IKeyParameter"/>.</param>
+    /// <remarks>
+    /// If an IV is supplied and shorter than the cipher block length, leading bytes are zero-padded FIPS-style
+    /// (short IV right-aligned).
+    /// </remarks>
+    /// <exception cref="EArgumentCryptoLibException">If parameters are incompatible.</exception>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    /// <summary>Return the CFB segment size (feedback width) in bytes, not necessarily the cipher block size.</summary>
     function GetBlockSize(): Int32; inline;
+    /// <summary>Xor one CFB segment of input into output.</summary>
+    /// <exception cref="EDataLengthCryptoLibException">If input/output buffers are too short.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    /// <summary>Process multiple contiguous CFB segments.</summary>
     function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32): Int32;
+    /// <summary>Reset the chaining register to the IV and leave key schedule intact.</summary>
     procedure Reset(); inline;
 
+    /// <summary>The underlying block cipher (<see cref="IBlockCipher"/>).</summary>
     property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
+    /// <summary>Underlying algorithm plus <c>/CFB</c> plus segment size in bits (e.g. <c>AES/CFB128</c>).</summary>
     property AlgorithmName: String read GetAlgorithmName;
+    /// <summary>Returns True (partial final blocks allowed).</summary>
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;
 

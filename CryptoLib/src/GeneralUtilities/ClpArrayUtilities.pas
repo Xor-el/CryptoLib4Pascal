@@ -27,6 +27,8 @@ uses
 
 resourcestring
   SInvalidLength = '%d " > " %d';
+  SBufferCannotBeNil = 'Buffer cannot be nil';
+  SInvalidBufferSegment = 'Invalid offset or length for buffer';
 
 type
   TArrayUtilities = class sealed(TObject)
@@ -48,6 +50,10 @@ type
 
     class function AreAllZeroes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32)
       : Boolean; static;
+
+    class procedure ValidateBuffer(const ABuf: TCryptoLibByteArray); static;
+    class procedure ValidateSegment(const ABuf: TCryptoLibByteArray;
+      AOffset, ALength: Int32); static;
 
     class function GetArrayHashCode(const AData: TCryptoLibByteArray): Int32;
       overload; static;
@@ -203,6 +209,34 @@ begin
   for LI := 0 to System.Pred(ALen) do
     LBits := LBits or UInt32(ABuf[AOff + LI]);
   Result := LBits = 0;
+end;
+
+class procedure TArrayUtilities.ValidateBuffer(const ABuf: TCryptoLibByteArray);
+begin
+  if ABuf = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SBufferCannotBeNil);
+end;
+
+class procedure TArrayUtilities.ValidateSegment(const ABuf: TCryptoLibByteArray;
+  AOffset, ALength: Int32);
+var
+  LLen: Int32;
+  LEnd: Int64;
+begin
+  if (AOffset < 0) or (ALength < 0) then
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidBufferSegment);
+  if ABuf = nil then
+  begin
+    if ALength > 0 then
+      raise EArgumentNilCryptoLibException.CreateRes(@SBufferCannotBeNil);
+    if AOffset <> 0 then
+      raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidBufferSegment);
+    Exit;
+  end;
+  LLen := System.Length(ABuf);
+  LEnd := Int64(AOffset) + Int64(ALength);
+  if LEnd > LLen then
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidBufferSegment);
 end;
 
 class function TArrayUtilities.FixedTimeEquals(const AAr1,

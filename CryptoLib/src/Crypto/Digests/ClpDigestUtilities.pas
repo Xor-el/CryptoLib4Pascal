@@ -53,6 +53,13 @@ resourcestring
   SOidNil = 'OID Cannot be Nil';
 
 type
+  /// <summary>
+  /// Factory for <see cref="IDigest"/> instances and convenience helpers for one-shot hash computation.
+  /// </summary>
+  /// <remarks>
+  /// Digests can be looked up by canonical name (for example <c>SHA-256</c>, <c>SHA3-512</c>) or by ASN.1 OID.
+  /// Names are matched case-insensitively and a number of common aliases are recognised.
+  /// </remarks>
   TDigestUtilities = class sealed(TObject)
 
   strict private
@@ -112,23 +119,64 @@ type
 
   public
     /// <summary>
-    /// Returns a ObjectIdentifier for a given digest mechanism.
+    /// Returns the ASN.1 OID associated with the named digest mechanism, or <c>nil</c> when none is registered.
     /// </summary>
-    /// <param name="AMechanism">A string representation of the digest mechanism.</param>
-    /// <returns>A DerObjectIdentifier, null if the Oid is not available.</returns>
+    /// <param name="AMechanism">A digest name or alias (for example <c>SHA-256</c>), or OID string.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AMechanism"/> is empty.</exception>
     class function GetObjectIdentifier(const AMechanism: String)
       : IDerObjectIdentifier; static;
+
+    /// <summary>
+    /// Resolve and instantiate an <see cref="IDigest"/> for the given ASN.1 algorithm OID.
+    /// </summary>
+    /// <param name="AOid">Digest algorithm OID.</param>
+    /// <returns>A new digest instance.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AOid"/> is <c>nil</c>.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the OID does not map to a known digest.</exception>
     class function GetDigest(const AOid: IDerObjectIdentifier): IDigest; overload; static;
+
+    /// <summary>
+    /// Resolve and instantiate an <see cref="IDigest"/> by name or alias.
+    /// </summary>
+    /// <param name="AAlgorithm">Digest name such as <c>SHA-256</c>, <c>SHA3-512</c>, or <c>BLAKE2B-512</c>.</param>
+    /// <returns>A new digest instance.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the digest name is not recognised.</exception>
     class function GetDigest(const AAlgorithm: String): IDigest; overload; static;
 
+    /// <summary>
+    /// Returns the canonical algorithm name registered for the given ASN.1 OID, or an empty string if the OID is
+    /// not mapped to a known digest.
+    /// </summary>
+    /// <param name="AOid">ASN.1 digest OID.</param>
     class function GetAlgorithmName(const AOid: IDerObjectIdentifier): String; static; inline;
 
+    /// <summary>Finalises <paramref name="ADigest"/> and returns the resulting digest as a new byte array.</summary>
+    /// <param name="ADigest">The digest implementation to finalise.</param>
     class function DoFinal(const ADigest: IDigest): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>
+    /// Feeds <paramref name="AInput"/> into <paramref name="ADigest"/>, finalises it, and returns the hash.
+    /// </summary>
     class function DoFinal(const ADigest: IDigest; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>
+    /// Feeds <paramref name="ALength"/> bytes from <paramref name="AInput"/> at offset <paramref name="AOffset"/>
+    /// into <paramref name="ADigest"/>, finalises it, and returns the hash.
+    /// </summary>
     class function DoFinal(const ADigest: IDigest; const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray; overload; static; inline;
 
+    /// <summary>One-shot digest of <paramref name="AInput"/> using the algorithm identified by <paramref name="AOid"/>.</summary>
     class function CalculateDigest(const AOid: IDerObjectIdentifier; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>
+    /// One-shot digest of <paramref name="AInput"/> using <paramref name="AAlgorithm"/>.
+    /// </summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If <paramref name="AAlgorithm"/> is not recognised.</exception>
     class function CalculateDigest(const AAlgorithm: String; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>One-shot digest of <paramref name="ALength"/> bytes from <paramref name="AInput"/> at <paramref name="AOffset"/>.</summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If <paramref name="AAlgorithm"/> is not recognised.</exception>
     class function CalculateDigest(const AAlgorithm: String; const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray; overload; static; inline;
 
   end;

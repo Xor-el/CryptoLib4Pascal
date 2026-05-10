@@ -49,15 +49,32 @@ uses
 
 type
   /// <summary>
-  /// A factory to produce SubjectPublicKeyInfo objects from public keys.
+  /// A factory to produce <see cref="ISubjectPublicKeyInfo"/> (an X.509 ASN.1 type used for public keys) objects from
+  /// asymmetric public key parameters.
   /// </summary>
+  /// <remarks>
+  /// This class handles the correct encoding of the AlgorithmIdentifier for various algorithms, including mandatory
+  /// parameters like the DER NULL for RSA.
+  /// </remarks>
   TSubjectPublicKeyInfoFactory = class sealed(TObject)
   public
     /// <summary>
-    /// Create a SubjectPublicKeyInfo for a given public key.
-    /// Supports: RsaKeyParameters, DsaPublicKeyParameters, DHPublicKeyParameters,
-    /// ECPublicKeyParameters, Ed25519PublicKeyParameters, X25519PublicKeyParameters.
+    /// Create an <see cref="ISubjectPublicKeyInfo"/> object for a given public key.
     /// </summary>
+    /// <param name="APublicKey">
+    /// The public key parameters (for example RSA, DSA, Diffie-Hellman, elliptic curve, or Edwards / X448 family keys
+    /// exposed through <see cref="IAsymmetricKeyParameter"/>; see implementation for supported types).
+    /// </param>
+    /// <returns>An <see cref="ISubjectPublicKeyInfo"/> object representing the public key.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="APublicKey"/> is nil.</exception>
+    /// <exception cref="EArgumentCryptoLibException">If a private key is passed instead of a public key, required
+    /// parameters are missing, or the class provided is not convertible.</exception>
+    /// <remarks>
+    /// Example of exporting a public key to DER-encoded SubjectPublicKeyInfo bytes:
+    /// <code>
+    /// encoded := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(pub).GetEncoded(TAsn1Encodable.Der);
+    /// </code>
+    /// </remarks>
     class function CreateSubjectPublicKeyInfo(const APublicKey: IAsymmetricKeyParameter): ISubjectPublicKeyInfo; static;
   end;
 

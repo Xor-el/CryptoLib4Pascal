@@ -31,7 +31,7 @@ uses
   ClpEcbBlockCipher,
   ClpIBufferedBlockCipher,
   ClpICipherParameters,
-  ClpIParametersWithRandom,
+  ClpParameterUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -47,35 +47,40 @@ resourcestring
 type
 
   /// <summary>
-  /// <para>
-  /// A wrapper class that allows block ciphers to be used to process
-  /// data in a piecemeal fashion. The BufferedBlockCipher outputs a
-  /// block only when the buffer is full and more data is being added, or
-  /// on a doFinal.
-  /// </para>
-  /// <para>
-  /// Note: in the case where the underlying cipher is either a CFB
-  /// cipher or an OFB one the last block may not be a multiple of the
-  /// block size.
-  /// </para>
+  /// A wrapper class that allows block ciphers to be used to process data in a piecemeal fashion.
   /// </summary>
+  /// <remarks>
+  /// <para>
+  /// The instance outputs a block only when the buffer is full and more data is being added, or on
+  /// <c>DoFinal</c>.
+  /// </para>
+  /// <para>
+  /// In the case where the underlying cipher is a stream-oriented mode (like CFB or OFB), the last
+  /// block may not be a multiple of the block size.
+  /// </para>
+  /// </remarks>
   TBufferedBlockCipher = class(TBufferedCipherBase, IBufferedBlockCipher)
 
   strict protected
   var
+    /// <summary>Buffer holding input until a full block is available or <c>DoFinal</c> flushes it.</summary>
     FBuf: TCryptoLibByteArray;
+    /// <summary>Number of valid bytes currently in <see cref="FBuf"/>.</summary>
     FBufOff: Int32;
+    /// <summary>True if initialised for encryption; False for decryption.</summary>
     FForEncryption: Boolean;
+    /// <summary>Underlying block cipher mode (<see cref="IBlockCipherMode"/>) being buffered.</summary>
     FCipherMode: IBlockCipherMode;
     // Cached on Init when FCipherMode also implements IBulkBlockCipherMode.
     // Non-nil lets ProcessBytes collapse its aligned inner loop into a
     // single ProcessBlocks call, which the mode is free to forward to an
     // accelerated multi-block backend. Modes that only implement
     // IBlockCipherMode leave this nil and keep using the per-block loop.
+    /// <summary>Optional fast path when <see cref="FCipherMode"/> also implements <see cref="IBulkBlockCipherMode"/>.</summary>
     FBulkCipherMode: IBulkBlockCipherMode;
 
     /// <summary>
-    /// constructor for subclasses
+    /// Constructor for subclasses.
     /// </summary>
     constructor Create(); overload;
 
@@ -107,164 +112,125 @@ type
       AOutOff: Int32): Int32; virtual;
 
   public
+    /// <summary>
+    /// Basic constructor: wraps <paramref name="ACipher"/> as ECB mode internally.
+    /// </summary>
+    /// <param name="ACipher">The underlying <see cref="IBlockCipher"/>.</param>
     constructor Create(const ACipher: IBlockCipher); overload;
 
     /// <summary>
     /// Create a buffered block cipher without padding.
     /// </summary>
-    /// <param name="ACipherMode">
-    /// the underlying block cipher mode this buffering object wraps.
-    /// </param>
+    /// <param name="ACipherMode">The underlying block cipher mode this buffering object wraps.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="ACipherMode"/> is nil.</exception>
+    /// <exception cref="EArgumentCryptoLibException">If the mode reports a non-positive block size.</exception>
     constructor Create(const ACipherMode: IBlockCipherMode); overload;
 
     /// <summary>
-    /// initialise the cipher.
+    /// Initialise the cipher.
     /// </summary>
-    /// <param name="AForEncryption">
-    /// forEncryption if true the cipher is initialised for encryption, if
-    /// false for decryption.
-    /// </param>
-    /// <param name="AParameters">
-    /// the key and other data required by the cipher.
-    /// </param>
-    /// <exception cref="EArgumentCryptoLibException">
-    /// if the parameters argument is inappropriate.
-    /// </exception>
-    // Note: This doubles as the Init in the event that this cipher is being used as an IWrapper
+    /// <param name="AForEncryption">True for encryption, False for decryption.</param>
+    /// <param name="AParameters">The key and other data required by the cipher.</param>
+    /// <exception cref="EArgumentCryptoLibException">If the parameters argument is inappropriate.</exception>
+    // Note: This doubles as Init when this cipher is used as an IWrapper.
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters); override;
 
     /// <summary>
-    /// return the blocksize for the underlying cipher.
+    /// Return the block size for the underlying cipher.
     /// </summary>
-    /// <returns>
-    /// return the blocksize for the underlying cipher.
-    /// </returns>
+    /// <returns>The block size in bytes.</returns>
     function GetBlockSize(): Int32; override;
 
     /// <summary>
-    /// return the size of the output buffer required for an update an input
-    /// of len bytes.
+    /// Return the size of the output buffer required for an <c>Update</c>
+    /// (<c>ProcessBytes</c>) with an input of <paramref name="ALength"/> bytes.
     /// </summary>
-    /// <param name="ALength">
-    /// the length of the input.
-    /// </param>
-    /// <returns>
-    /// return the space required to accommodate a call to update with length
-    /// bytes of input.
-    /// </returns>
+    /// <param name="ALength">The length of the input.</param>
+    /// <returns>The space required to accommodate a call to ProcessBytes with that many bytes of input.</returns>
     function GetUpdateOutputSize(ALength: Int32): Int32; override;
 
     /// <summary>
-    /// return the size of the output buffer required for an update plus a
-    /// doFinal with an input of length bytes.
+    /// Return the size of the output buffer required for an update plus a
+    /// <c>DoFinal</c> with an input of <paramref name="ALength"/> bytes.
     /// </summary>
-    /// <param name="ALength">
-    /// the length of the input.
-    /// </param>
-    /// <returns>
-    /// the space required to accommodate a call to update and doFinal with
-    /// length bytes of input.
-    /// </returns>
+    /// <param name="ALength">The length of the input.</param>
+    /// <returns>The space required to accommodate ProcessBytes plus DoFinal.</returns>
+    /// <remarks>When <see cref="IBlockCipherMode.IsPartialBlockOkay"/> is true, this equals <c>FBufOff + ALength</c>.</remarks>
     function GetOutputSize(ALength: Int32): Int32; override;
 
     /// <summary>
-    /// process a single byte, producing an output block if necessary.
+    /// Process a single byte, producing an output block if necessary.
     /// </summary>
-    /// <param name="AInput">
-    /// the input byte.
-    /// </param>
-    /// <param name="AOutput">
-    /// the space for any output that might be produced.
-    /// </param>
-    /// <param name="AOutOff">
-    /// the offset from which the output will be copied.
-    /// </param>
-    /// <returns>
-    /// the number of output bytes copied to output.
-    /// </returns>
-    /// <exception cref="EDataLengthCryptoLibException">
-    /// if there isn't enough space in output.
-    /// </exception>
-    /// <exception cref="EInvalidOperationCryptoLibException">
-    /// if the cipher isn't initialised.
-    /// </exception>
+    /// <param name="AInput">The input byte.</param>
+    /// <param name="AOutput">The buffer for any output that might be produced.</param>
+    /// <param name="AOutOff">The offset at which output is written.</param>
+    /// <returns>The number of output bytes copied to <paramref name="AOutput"/>.</returns>
+    /// <exception cref="EDataLengthCryptoLibException">If there is not enough space in <paramref name="AOutput"/>.</exception>
+    /// <exception cref="EInvalidOperationCryptoLibException">If the cipher is not initialised.</exception>
     function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
       AOutOff: Int32): Int32; overload; override;
 
+    /// <summary>
+    /// Process a single byte, returning the produced output or an empty buffer if none yet.
+    /// </summary>
     function ProcessByte(AInput: Byte): TCryptoLibByteArray; overload; override;
 
     function ProcessBytes(const AInput: TCryptoLibByteArray;
       AInOff, ALength: Int32): TCryptoLibByteArray; overload; override;
 
     /// <summary>
-    /// process an array of bytes, producing output if necessary.
+    /// Process an array of bytes, producing output if necessary.
     /// </summary>
-    /// <param name="AInput">
-    /// the input byte array.
-    /// </param>
-    /// <param name="AInOff">
-    /// the offset at which the input data starts.
-    /// </param>
-    /// <param name="ALength">
-    /// the number of bytes to be copied out of the input array.
-    /// </param>
-    /// <param name="AOutput">
-    /// the space for any output that might be produced.
-    /// </param>
-    /// <param name="AOutOff">
-    /// the offset from which the output will be copied.
-    /// </param>
-    /// <returns>
-    /// the number of output bytes copied to output.
-    /// <exception cref="EDataLengthCryptoLibException">
-    /// if there isn't enough space in output.
-    /// </exception>
-    /// <exception cref="EInvalidOperationCryptoLibException">
-    /// if the cipher isn't initialised.
-    /// </exception>
+    /// <param name="AInput">The input byte array.</param>
+    /// <param name="AInOff">The offset at which the input data starts.</param>
+    /// <param name="ALength">The number of bytes to process.</param>
+    /// <param name="AOutput">The buffer for any output produced.</param>
+    /// <param name="AOutOff">The offset at which output is written.</param>
+    /// <returns>The number of output bytes copied.</returns>
+    /// <exception cref="EDataLengthCryptoLibException">If there is not enough space in <paramref name="AOutput"/>.</exception>
+    /// <exception cref="EInvalidOperationCryptoLibException">If the cipher is not initialised.</exception>
     function ProcessBytes(const AInput: TCryptoLibByteArray;
       AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
       : Int32; overload; override;
 
+    /// <summary>
+    /// Process any remaining bytes in the buffer, returning the produced output.
+    /// </summary>
+    /// <returns>The output bytes, trimmed to actual length.</returns>
+    /// <exception cref="EInvalidCipherTextCryptoLibException">If padding is corrupted (padded buffering subclasses).</exception>
     function DoFinal(): TCryptoLibByteArray; overload; override;
+
+    /// <summary>
+    /// Process an array of bytes plus any remaining buffered data; return concatenated output.
+    /// </summary>
+    /// <param name="AInput">The final input slice (may be empty).</param>
+    /// <param name="AInOff">Start offset in <paramref name="AInput"/>.</param>
+    /// <param name="AInLen">Length of input to process.</param>
+    /// <returns>Combined output bytes.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AInput"/> is nil while <paramref name="AInLen"/> is positive.</exception>
     function DoFinal(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32)
       : TCryptoLibByteArray; overload; override;
 
     /// <summary>
     /// Process the last block in the buffer.
     /// </summary>
-    /// <param name="AOutput">
-    /// the array the block currently being held is copied into.
-    /// </param>
-    /// <param name="AOutOff">
-    /// the offset at which the copying starts.
-    /// </param>
-    /// <returns>
-    /// the number of output bytes copied to output.
-    /// </returns>
-    /// <exception cref="EDataLengthCryptoLibException">
-    /// if there is insufficient space in output for the output, or the input
-    /// is not block size aligned and should be.
-    /// </exception>
-    /// <exception cref="EInvalidOperationCryptoLibException">
-    /// if the underlying cipher is not initialised.
-    /// </exception>
-    /// <exception cref="EInvalidCipherTextCryptoLibException">
-    /// if padding is expected and not found.
-    /// </exception>
-    /// <exception cref="EDataLengthCryptoLibException">
-    /// if the input is not block size aligned.
-    /// </exception>
+    /// <param name="AOutput">The buffer receiving any held ciphertext/plaintext.</param>
+    /// <param name="AOutOff">Offset at which output is written.</param>
+    /// <returns>The number of output bytes written.</returns>
+    /// <exception cref="EDataLengthCryptoLibException">If insufficient space or data not block-aligned when required.</exception>
+    /// <exception cref="EInvalidOperationCryptoLibException">If the cipher is not initialised.</exception>
+    /// <exception cref="EInvalidCipherTextCryptoLibException">If padding is expected and invalid.</exception>
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
       overload; override;
 
     /// <summary>
-    /// Reset the buffer and cipher. After resetting the object is in the
-    /// same state as it was after the last init (if there was one).
+    /// Reset the buffer and cipher.
     /// </summary>
+    /// <remarks>After resetting, the instance matches the post-<c>Init</c> state of the last successful <c>Init</c>.</remarks>
     procedure Reset(); override;
 
+    /// <summary>The algorithm name of the underlying cipher mode.</summary>
     function GetAlgorithmName: String; override;
     property AlgorithmName: String read GetAlgorithmName;
 
@@ -337,7 +303,7 @@ begin
 
   LLength := GetOutputSize(AInLen);
 
-  LOutBytes := EmptyBuffer;
+  LOutBytes := nil;
 
   if (LLength > 0) then
   begin
@@ -374,7 +340,7 @@ var
   LOutBytes, LTmp: TCryptoLibByteArray;
   LLength, LPos: Int32;
 begin
-  LOutBytes := EmptyBuffer;
+  LOutBytes := nil;
 
   LLength := GetOutputSize(0);
   if (LLength > 0) then
@@ -424,21 +390,12 @@ end;
 
 procedure TBufferedBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
-var
-  LPwr: IParametersWithRandom;
-  LParameters: ICipherParameters;
 begin
   FForEncryption := AForEncryption;
-  LParameters := AParameters;
-
-  if Supports(LParameters, IParametersWithRandom, LPwr) then
-  begin
-    LParameters := LPwr.Parameters;
-  end;
 
   Reset();
 
-  FCipherMode.Init(AForEncryption, LParameters);
+  FCipherMode.Init(AForEncryption, TParameterUtilities.IgnoreRandom(AParameters));
 
   // Probe after the inner Init so modes that only decide their fast-path
   // wiring at Init time are observed in their post-Init state. The result

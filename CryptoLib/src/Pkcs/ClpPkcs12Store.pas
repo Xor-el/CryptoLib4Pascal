@@ -184,7 +184,7 @@ type
     /// <summary>When True, ignore useless password.</summary>
     class property IgnoreUselessPassword: Boolean read FIgnoreUselessPassword write FIgnoreUselessPassword;
     /// <summary>Calculate PBE MAC for PKCS#12 (exposed for Pkcs12Utilities).</summary>
-    class function CalculatePbeMac(const AMacDigestAlgorithm: IAlgorithmIdentifier;
+    class function CalculatePbeMac(const AMacAlgID: IAlgorithmIdentifier;
       const ASalt: TCryptoLibByteArray; AIterations: Int32;
       const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
       const AData: TCryptoLibByteArray): TCryptoLibByteArray; static;
@@ -224,6 +224,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpPkcs12Utilities;
 
 type
   TCertIDEqualityComparer = class(TInterfacedObject, IEqualityComparer<TPkcs12Store.TCertID>)
@@ -520,23 +523,25 @@ begin
   Result := TX509ExtensionUtilities.CalculateKeyIdentifier(ACertificate);
 end;
 
-class function TPkcs12Store.CalculatePbeMac(const AMacDigestAlgorithm: IAlgorithmIdentifier;
+class function TPkcs12Store.CalculatePbeMac(const AMacAlgID: IAlgorithmIdentifier;
   const ASalt: TCryptoLibByteArray; AIterations: Int32;
   const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
   const AData: TCryptoLibByteArray): TCryptoLibByteArray;
 var
-  LHmacDigestOid: IDerObjectIdentifier;
+  LMacAlgOid: IDerObjectIdentifier;
   LPbeParameters: IAsn1Encodable;
   LCipherParameters: ICipherParameters;
   LMac: IMac;
   LEngine: TValue;
 begin
-  LHmacDigestOid := AMacDigestAlgorithm.Algorithm;
-  LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(LHmacDigestOid, ASalt, AIterations);
-  LCipherParameters := TPbeUtilities.GenerateCipherParameters(LHmacDigestOid, APassword, AWrongPkcs12Zero, LPbeParameters);
-  LEngine := TPbeUtilities.CreateEngine(LHmacDigestOid);
+  if AMacAlgID = nil then
+    raise EArgumentNilCryptoLibException.Create('macAlgID');
+  LMacAlgOid := AMacAlgID.Algorithm;
+  LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(LMacAlgOid, ASalt, AIterations);
+  LCipherParameters := TPbeUtilities.GenerateCipherParameters(LMacAlgOid, APassword, AWrongPkcs12Zero, LPbeParameters);
+  LEngine := TPbeUtilities.CreateEngine(LMacAlgOid);
   if not (LEngine.TryGetAsType<IMac>(LMac)) or (LMac = nil) then
-    raise ECryptoLibException.Create('PBE engine for MAC not found for ' + LHmacDigestOid.Id);
+    raise ECryptoLibException.Create('PBE engine for MAC not found for ' + LMacAlgOid.Id);
   LMac.Init(LCipherParameters);
   Result := TMacUtilities.DoFinal(LMac, AData);
 end;
@@ -549,7 +554,7 @@ var
 begin
   LMac := AMacData.Mac;
   LMacResult := CalculatePbeMac(LMac.DigestAlgorithm, AMacData.MacSalt.GetOctets(),
-    AMacData.Iterations.IntValueExact, APassword, AWrongPkcs12Zero, AData);
+    TPkcs12Utilities.ValidateIterations(AMacData.Iterations), APassword, AWrongPkcs12Zero, AData);
   Result := TArrayUtilities.FixedTimeEquals(LMacResult, LMac.Digest.GetOctets());
 end;
 
@@ -654,7 +659,6 @@ var
   LBytes: TCryptoLibByteArray;
   LData: TCryptoLibByteArray;
   LCertBags: TList<ISafeBag>;
-  LContent: IAsn1Encodable;
   LOctets: TCryptoLibByteArray;
   LAuthSafe: IAuthenticatedSafe;
   LCis: TCryptoLibGenericArray<IPkcsContentInfo>;
@@ -698,8 +702,7 @@ begin
   begin
     LPasswordNeeded := True;
 
-    LContent := LInfo.Content;
-    LData := TAsn1OctetString.GetInstance(LContent).GetOctets();
+    LData := TPkcs12Utilities.GetContentOctets(LInfo);
     if not VerifyPbeMac(LMacData, APassword, False, LData) then
     begin
       if (System.Length(APassword) = 0) and VerifyPbeMac(LMacData, APassword, True, LData) then
@@ -715,8 +718,7 @@ begin
   try
     if TPkcsObjectIdentifiers.Data.Equals(LInfo.ContentType) then
     begin
-      LContent := LInfo.Content;
-      LOctets := TAsn1OctetString.GetInstance(LContent).GetOctets();
+      LOctets := TPkcs12Utilities.GetContentOctets(LInfo);
       LAuthSafe := TAuthenticatedSafe.GetInstance(LOctets);
       LCis := LAuthSafe.GetContentInfo();
       for LJ := 0 to System.Length(LCis) - 1 do
@@ -725,13 +727,13 @@ begin
         LOid := LCi.ContentType;
         LOctets := nil;
         if TPkcsObjectIdentifiers.Data.Equals(LOid) then
-          LOctets := TAsn1OctetString.GetInstance(LCi.Content).GetOctets()
+          LOctets := TPkcs12Utilities.GetContentOctets(LCi)
         else if TPkcsObjectIdentifiers.EncryptedData.Equals(LOid) then
         begin
           LPasswordNeeded := True;
-          LEncryptedData := TPkcsEncryptedData.GetInstance(LCi.Content);
+          LEncryptedData := TPkcsEncryptedData.GetInstance(TPkcs12Utilities.GetContent(LCi));
           LOctets := CryptPbeData(False, LEncryptedData.EncryptionAlgorithm, APassword, LWrongPkcs12Zero,
-            LEncryptedData.Content.GetOctets());
+            TPkcs12Utilities.GetEncryptedContent(LEncryptedData).GetOctets());
         end;
         if LOctets = nil then
           Continue;
@@ -1457,9 +1459,9 @@ begin
 
       LMacDigestAlgorithm := TDefaultDigestAlgorithmFinder.Instance.Find(LEffectiveMacDigestAlgorithm);
       LSalt := TSecureRandom.GetNextBytes(ARandom, FMacSaltSize);
-      LItCount := FMacIterations;
+      LItCount := TPkcs12Utilities.ValidateIterations(FMacIterations);
       LMacResult := CalculatePbeMac(LMacDigestAlgorithm, LSalt, LItCount, APassword, False, LData);
-      LMac := TDigestInfo.Create(LMacDigestAlgorithm, TDerOctetString.Create(LMacResult) as IDerOctetString);
+      LMac := TDigestInfo.Create(LMacDigestAlgorithm, TDerOctetString.FromContents(LMacResult) as IDerOctetString);
       LMacData := TMacData.Create(LMac, LSalt, LItCount);
     end
     else

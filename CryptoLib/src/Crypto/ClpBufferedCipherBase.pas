@@ -32,17 +32,11 @@ resourcestring
 type
   TBufferedCipherBase = class abstract(TInterfacedObject, IBufferedCipherBase, IBufferedCipher)
 
-  strict private
-
-    class function GetEmptyBuffer: TCryptoLibByteArray; static; inline;
-
   strict protected
 
     function GetAlgorithmName: String; virtual; abstract;
 
     class function GetFullBlocksSize(ATotalSize, ABlockSize: Int32): Int32; static;
-
-    class property EmptyBuffer: TCryptoLibByteArray read GetEmptyBuffer;
 
   public
 
@@ -122,11 +116,6 @@ end;
 function TBufferedCipherBase.DoFinal(const AInput, AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
   Result := DoFinal(AInput, 0, System.Length(AInput), AOutput, AOutOff);
-end;
-
-class function TBufferedCipherBase.GetEmptyBuffer: TCryptoLibByteArray;
-begin
-  Result := nil;
 end;
 
 class function TBufferedCipherBase.GetFullBlocksSize(ATotalSize, ABlockSize: Int32): Int32;

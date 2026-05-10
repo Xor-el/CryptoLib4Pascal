@@ -22,6 +22,7 @@ interface
 
 uses
   Classes,
+  Math,
   SysUtils,
   ClpCryptoLibTypes,
   ClpAsn1Tags,
@@ -38,8 +39,12 @@ type
   TAsn1StreamParser = class sealed(TInterfacedObject, IAsn1StreamParser)
   strict private
     FIn: TStream;
+    FDepth: Int32;
     FLimit: Int32;
-    FTmpBuffers: TCryptoLibMatrixByteArray;
+    FTmp: TCryptoLibByteArray;
+
+    constructor Create(const AInput: TStream; ADepth, ALimit: Int32;
+      const ATmp: TCryptoLibByteArray); overload;
 
     procedure Set00Check(AEnabled: Boolean);
     function ImplParseObject(ATagHdr: Int32): IAsn1Convertible;
@@ -59,13 +64,17 @@ type
     /// Create an ASN.1 stream parser from a stream with a limit.
     /// </summary>
     constructor Create(const AInput: TStream; ALimit: Int32); overload;
-    /// <summary>
-    /// Public constructor with TmpBuffers.
-    /// </summary>
-    constructor Create(const AInput: TStream; ALimit: Int32;
-      const ATmpBuffers: TCryptoLibMatrixByteArray); overload;
+
+    class function CreateSubParser(const AInput: TStream;
+      AParentDepth, ALimit: Int32;
+      const ATmp: TCryptoLibByteArray): IAsn1StreamParser; static;
 
     destructor Destroy; override;
+
+    /// <summary>
+    /// Maximum number of bytes that may be read through this parser.
+    /// </summary>
+    property Limit: Int32 read FLimit;
 
     /// <summary>
     /// Read the next object from the stream.
@@ -390,6 +399,7 @@ type
     class function Parse(const ASp: IAsn1StreamParser): IBerSet; static;
   end;
 
+  // TODO[asn1] Replace with BerExternalParser, DLExternalParser (currently functions as DLExternalParser already)
   /// <summary>
   /// Parser for DER external objects.
   /// </summary>
@@ -540,26 +550,33 @@ begin
 end;
 
 constructor TAsn1StreamParser.Create(const AInput: TStream; ALimit: Int32);
-var
-  LTmpBuffers: TCryptoLibMatrixByteArray;
-  LI: Int32;
 begin
-  System.SetLength(LTmpBuffers, 16);
-  for LI := 0 to System.Length(LTmpBuffers) - 1 do
-    System.SetLength(LTmpBuffers[LI], 0);
-  Create(AInput, ALimit, LTmpBuffers);
+  System.SetLength(FTmp, 16);
+  Create(AInput, TAsn1InputStream.FindDepth(),
+    ALimit, FTmp);
 end;
 
-constructor TAsn1StreamParser.Create(const AInput: TStream; ALimit: Int32;
-  const ATmpBuffers: TCryptoLibMatrixByteArray);
+constructor TAsn1StreamParser.Create(const AInput: TStream;
+  ADepth, ALimit: Int32;
+  const ATmp: TCryptoLibByteArray);
 begin
   inherited Create;
   if not AInput.CanRead then
     raise EArgumentCryptoLibException.Create('Expected stream to be readable');
 
   FIn := AInput;
+  FDepth := ADepth;
   FLimit := ALimit;
-  FTmpBuffers := ATmpBuffers;
+  FTmp := ATmp;
+end;
+
+class function TAsn1StreamParser.CreateSubParser(const AInput: TStream;
+  AParentDepth, ALimit: Int32;
+  const ATmp: TCryptoLibByteArray): IAsn1StreamParser;
+begin
+  Result := TAsn1StreamParser.Create(AInput,
+    TAsn1InputStream.DecrementDepth(AParentDepth), ALimit,
+    ATmp);
 end;
 
 destructor TAsn1StreamParser.Destroy;
@@ -600,7 +617,7 @@ end;
 
 function TAsn1StreamParser.ImplParseObject(ATagHdr: Int32): IAsn1Convertible;
 var
-  LTagNo, LLength, LTagClass: Int32;
+  LTagNo, LLength, LTagClass, LSubLimit: Int32;
   LIndIn: TAsn1IndefiniteLengthInputStream;
   LDefIn: TAsn1DefiniteLengthInputStream;
   LSp: IAsn1StreamParser;
@@ -612,11 +629,7 @@ begin
   // calculate tag number
   LTagNo := TAsn1InputStream.ReadTagNumber(FIn, ATagHdr);
 
-  // calculate length
-  LLength := TAsn1InputStream.ReadLength(FIn, FLimit,
-    (LTagNo = TAsn1Tags.BitString) or (LTagNo = TAsn1Tags.OctetString) or
-    (LTagNo = TAsn1Tags.Sequence) or (LTagNo = TAsn1Tags.&Set) or
-    (LTagNo = TAsn1Tags.External));
+  LLength := TAsn1InputStream.ReadLength(FIn);
 
   if LLength < 0 then // indefinite-length method
   begin
@@ -626,7 +639,8 @@ begin
 
     LIndIn := TAsn1IndefiniteLengthInputStream.Create(FIn, FLimit);
     try
-      LSp := TAsn1StreamParser.Create(LIndIn, FLimit, FTmpBuffers);
+      LSp := TAsn1StreamParser.CreateSubParser(LIndIn, FDepth, FLimit,
+        FTmp);
     except
       LIndIn.Free;
       raise;
@@ -643,7 +657,8 @@ begin
   end
   else
   begin
-    LDefIn := TAsn1DefiniteLengthInputStream.Create(FIn, LLength, FLimit);
+    LSubLimit := Min(FLimit, LLength);
+    LDefIn := TAsn1DefiniteLengthInputStream.Create(FIn, LLength, LSubLimit);
 
     if 0 = (ATagHdr and TAsn1Tags.Flags) then
     begin
@@ -657,7 +672,8 @@ begin
     end;
 
     try
-      LSp := TAsn1StreamParser.Create(LDefIn, LDefIn.Remaining, FTmpBuffers);
+      LSp := TAsn1StreamParser.CreateSubParser(LDefIn, FDepth,
+        LSubLimit, FTmp);
     except
       LDefIn.Free;
       raise;
@@ -752,11 +768,16 @@ begin
         ('sets must use constructed encoding (see X.690 8.11.1/8.12.1)');
   else
     begin
+      TAsn1InputStream.CheckLength(ADefIn.Remaining, ADefIn.Limit);
       try
-        Result := TAsn1InputStream.CreatePrimitiveDerObject(AUnivTagNo, ADefIn, FTmpBuffers);
+        Result := TAsn1InputStream.CreatePrimitiveDerObject(AUnivTagNo, ADefIn, FTmp);
         ADefIn.Free;
       except
         on e: EArgumentCryptoLibException do
+          raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
+        on e: EInvalidOperationCryptoLibException do
+          raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
+        on e: EIndexOutOfRangeCryptoLibException do
           raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
       end;
     end;
@@ -1152,8 +1173,16 @@ begin
 end;
 
 class function TDerExternalParser.Parse(const ASp: IAsn1StreamParser): IDerExternal;
+var
+  LSeq: IDLSequence;
 begin
-  Result := TDLExternal.Create(TDLSequence.FromVector(ASp.ReadVector()));
+  LSeq := TDLSequence.FromVector(ASp.ReadVector());
+  try
+    Result := TDLExternal.FromSequence(LSeq);
+  except
+    on E: EArgumentCryptoLibException do
+      raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+  end;
 end;
 
 { TBerTaggedObjectParser }

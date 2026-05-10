@@ -72,6 +72,16 @@ resourcestring
   SGcmDecryptEightWayBadLimit = 'Invalid limit for GCM eight-block decrypt.';
 
 type
+  /// <summary>
+  /// Galois/Counter Mode (GCM): authenticated encryption combining CTR-mode encryption over a block
+  /// cipher with GHASH (<c>IBlockCipher</c> block size must be 128 bits; typically AES).
+  /// </summary>
+  /// <remarks>
+  /// Treat the IV / nonce as unique for each message under a fixed key. Counter-based GCM fails
+  /// catastrophically if a (key, IV) pair is ever reused; callers must generate IVs with a strong
+  /// RNG or a strictly monotonic counter (the construction enforces several runtime checks, but
+  /// correct protocol design is mandatory).
+  /// </remarks>
   TGcmBlockCipher = class(TInterfacedObject, IGcmBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 

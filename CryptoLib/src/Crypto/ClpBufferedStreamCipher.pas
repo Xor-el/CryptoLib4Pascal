@@ -24,7 +24,7 @@ uses
   SysUtils,
   ClpIStreamCipher,
   ClpICipherParameters,
-  ClpIParametersWithRandom,
+  ClpParameterUtilities,
   ClpIBufferedStreamCipher,
   ClpBufferedCipherBase,
   ClpCryptoLibTypes;
@@ -111,16 +111,8 @@ end;
 
 procedure TBufferedStreamCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
-var
-  LParameters: ICipherParameters;
-  LParamsWithRandom: IParametersWithRandom;
 begin
-  LParameters := AParameters;
-  if Supports(LParameters, IParametersWithRandom, LParamsWithRandom) then
-  begin
-    LParameters := LParamsWithRandom.Parameters;
-  end;
-  FCipher.Init(AForEncryption, LParameters);
+  FCipher.Init(AForEncryption, TParameterUtilities.IgnoreRandom(AParameters));
 end;
 
 function TBufferedStreamCipher.ProcessByte(AInput: Byte;
@@ -172,7 +164,7 @@ end;
 function TBufferedStreamCipher.DoFinal: TCryptoLibByteArray;
 begin
   Reset();
-  Result := EmptyBuffer;
+  Result := nil;
 end;
 
 function TBufferedStreamCipher.DoFinal(const AInput: TCryptoLibByteArray;
@@ -180,7 +172,7 @@ function TBufferedStreamCipher.DoFinal(const AInput: TCryptoLibByteArray;
 begin
   if (ALength < 1) then
   begin
-    Result := EmptyBuffer;
+    Result := nil;
     Exit;
   end;
   Result := ProcessBytes(AInput, AInOff, ALength);

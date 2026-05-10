@@ -30,6 +30,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
+  SCipherNil = 'Cipher instance cannot be nil';
   SOutputBufferTooShort = 'Output buffer too short';
   SDataTooLongForCipher = 'Attempt to process message too long for cipher';
 
@@ -83,6 +84,8 @@ implementation
 constructor TBufferedAsymmetricBlockCipher.Create(const ACipher: IAsymmetricBlockCipher);
 begin
   inherited Create();
+  if ACipher = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCipherNil);
   FCipher := ACipher;
 end;
 

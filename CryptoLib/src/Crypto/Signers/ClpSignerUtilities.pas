@@ -81,8 +81,20 @@ resourcestring
 
 type
   /// <summary>
-  ///  Signer Utility class contains methods that can not be specifically grouped into other classes.
+  /// Factory for <see cref="ISigner"/> instances and helpers for resolving signature algorithm metadata
+  /// (for example X.509 algorithm parameters and OID lookup) from algorithm names or OIDs.
   /// </summary>
+  /// <remarks>
+  /// <para>
+  /// Algorithm names follow the <c>DIGESTwithCIPHER</c> convention (for example
+  /// <c>SHA256withRSA</c>, <c>SHA1withECDSA</c>, <c>SHA256withRSAandMGF1</c>). A number of aliases are
+  /// recognised; matching is case-insensitive.
+  /// </para>
+  /// <para>
+  /// <see cref="GetSigner"/> returns an uninitialised <see cref="ISigner"/>; the caller must invoke
+  /// <see cref="ISigner.Init"/> before processing data, or use <see cref="InitSigner"/> overloads.
+  /// </para>
+  /// </remarks>
   TSignerUtilities = class sealed(TObject)
 
   strict private
@@ -107,73 +119,77 @@ type
 
   public
 
-   /// <summary>
-   /// Returns an ObjectIdentifier for a given signature mechanism.
-   /// </summary>
-   /// <param name="AMechanism">A string representation of the signature mechanism.</param>
-   /// <returns>A DerObjectIdentifier, null if the OID is not available.</returns>
+    /// <summary>
+    /// Returns the ASN.1 OID associated with the named signature mechanism, or <c>nil</c> when none is registered.
+    /// </summary>
+    /// <param name="AMechanism">Signature algorithm name or alias.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AMechanism"/> is empty.</exception>
     class function GetObjectIdentifier(const AMechanism: String): IDerObjectIdentifier;
       static; inline;
 
+    /// <summary>
+    /// Returns the canonical signature algorithm name registered for <paramref name="AOid"/>, or an empty string
+    /// if the OID is not mapped.
+    /// </summary>
     class function GetEncodingName(const AOid: IDerObjectIdentifier): String;
       static; inline;
 
     /// <summary>
-    /// Returns a Signer for a given signature mechanism OID.
+    /// Resolve and instantiate an <see cref="ISigner"/> for the ASN.1 signature algorithm <paramref name="AOid"/>.
     /// </summary>
-    /// <param name="AOid">A DerObjectIdentifier representing the signature mechanism.</param>
-    /// <returns>An ISigner instance.</returns>
+    /// <returns>A new, uninitialised <see cref="ISigner"/>.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AOid"/> is <c>nil</c>.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the OID does not map to a known signer.</exception>
     class function GetSigner(const AOid: IDerObjectIdentifier): ISigner; overload;
       static;
 
     /// <summary>
-    /// Returns a Signer for a given signature mechanism name.
+    /// Resolve and instantiate an <see cref="ISigner"/> by name (for example <c>SHA256withRSA</c>,
+    /// <c>SHA1withECDSA</c>, <c>Ed25519</c>).
     /// </summary>
-    /// <param name="AAlgorithm">A string representation of the signature mechanism.</param>
-    /// <returns>An ISigner instance.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm name is not recognised.</exception>
     class function GetSigner(const AAlgorithm: String): ISigner; overload;
       static;
 
     /// <summary>
-    /// Returns default X.509 parameters for a given signature mechanism OID.
+    /// Returns the default X.509 AlgorithmIdentifier parameters structure for <paramref name="AOid"/>. For RSASSA-PSS
+    /// variants this constructs populated RSASSA-PSS-parameters; for most other algorithms a DER NULL value is returned.
     /// </summary>
-    /// <param name="AOid">A DerObjectIdentifier representing the signature mechanism.</param>
-    /// <returns>An IAsn1Encodable instance (typically DerNull or RsassaPssParameters).</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AOid"/> is <c>nil</c>.</exception>
     class function GetDefaultX509Parameters(const AOid: IDerObjectIdentifier): IAsn1Encodable; overload;
       static;
 
     /// <summary>
-    /// Returns default X.509 parameters for a given signature mechanism name.
+    /// Returns the default X.509 AlgorithmIdentifier parameters for <paramref name="AAlgorithm"/>. See the OID overload.
     /// </summary>
-    /// <param name="AAlgorithm">A string representation of the signature mechanism.</param>
-    /// <returns>An IAsn1Encodable instance (typically DerNull or RsassaPssParameters).</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
     class function GetDefaultX509Parameters(const AAlgorithm: String): IAsn1Encodable; overload;
       static;
 
     /// <summary>
-    /// Initializes a Signer for signing or verification with the given key and random.
+    /// Resolve a signer for <paramref name="AAlgorithmOid"/> and initialise it for signing or verification.
     /// </summary>
-    /// <param name="AAlgorithmOid">A DerObjectIdentifier representing the signature mechanism.</param>
-    /// <param name="AForSigning">True for signing, False for verification.</param>
-    /// <param name="APrivateKey">The key to use (private for signing, public for verification).</param>
-    /// <param name="ARandom">Secure random instance (can be nil for verification or deterministic algorithms).</param>
-    /// <returns>An initialized ISigner instance.</returns>
+    /// <param name="AAlgorithmOid">Signature algorithm OID.</param>
+    /// <param name="AForSigning"><c>True</c> to initialise for signing (private key); <c>False</c> for verification.</param>
+    /// <param name="APrivateKey">Signing or verification key.</param>
+    /// <param name="ARandom">Randomness for signers that require it; ignored otherwise (may be <c>nil</c>).</param>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithmOid"/> is <c>nil</c>.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the OID is not recognised.</exception>
     class function InitSigner(const AAlgorithmOid: IDerObjectIdentifier; AForSigning: Boolean;
       const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; overload;
       static;
 
     /// <summary>
-    /// Initializes a Signer for signing or verification with the given key and random.
+    /// Resolve a signer by name and initialise it for signing or verification. See the OID overload for parameter semantics.
     /// </summary>
-    /// <param name="AAlgorithm">A string representation of the signature mechanism.</param>
-    /// <param name="AForSigning">True for signing, False for verification.</param>
-    /// <param name="APrivateKey">The key to use (private for signing, public for verification).</param>
-    /// <param name="ARandom">Secure random instance (can be nil for verification or deterministic algorithms).</param>
-    /// <returns>An initialized ISigner instance.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the mechanism cannot be resolved.</exception>
     class function InitSigner(const AAlgorithm: String; AForSigning: Boolean;
       const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; overload;
       static;
 
+    /// <summary>The set of canonical signature algorithm names registered in this factory.</summary>
     class property Algorithms: TCryptoLibStringArray read GetAlgorithms;
 
   end;

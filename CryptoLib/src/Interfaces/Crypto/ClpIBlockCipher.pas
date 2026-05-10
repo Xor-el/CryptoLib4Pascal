@@ -25,7 +25,7 @@ uses
   ClpCryptoLibTypes;
 
 type
-  /// <remarks>Base interface for a symmetric key block cipher.</remarks>
+  /// <summary>Base interface for a symmetric block cipher keyed by algorithm-specific parameters.</summary>
   IBlockCipher = interface(IInterface)
     ['{0D2145AA-9D1E-4955-A55E-645CC8DEBE6F}']
 
@@ -38,15 +38,17 @@ type
     /// <param name="AParameters">The key or other data required by the cipher.</param>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
 
+    /// <summary>Return the block size for this cipher, in bytes.</summary>
     /// <returns>The block size for this cipher, in bytes.</returns>
     function GetBlockSize(): Int32;
 
-    /// <summary>Process a block.</summary>
+    /// <summary>Process a single block.</summary>
     /// <param name="AInBuf">The input buffer.</param>
     /// <param name="AInOff">The offset into <paramref name="AInBuf"/> that the input block begins.</param>
     /// <param name="AOutBuf">The output buffer.</param>
     /// <param name="AOutOff">The offset into <paramref name="AOutBuf"/> to write the output block.</param>
-    /// <exception cref="DataLengthException">If input block is wrong size, or outBuf too small.</exception>
+    /// <exception cref="EDataLengthCryptoLibException">If the input slice is shorter than one block or the output buffer is too small.</exception>
+    /// <exception cref="EArgumentCryptoLibException">From some implementations if the cipher is not initialised or parameters are inconsistent.</exception>
     /// <returns>The number of bytes processed and produced.</returns>
     function ProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32): Int32;

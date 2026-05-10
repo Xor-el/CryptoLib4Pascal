@@ -25,6 +25,10 @@ uses
   ClpIAeadCipher;
 
 type
+  /// <summary>
+  /// AEAD built over a block cipher: adds <see cref="GetUnderlyingCipher"/> and <see cref="GetBlockSize"/>
+  /// (<see cref="IAeadCipher"/> remains the AEAD facade for AAD/stream processing).
+  /// </summary>
   IAeadBlockCipher = interface(IAeadCipher)
     ['{E85409BF-5446-4324-86A8-A70BF4067C11}']
 

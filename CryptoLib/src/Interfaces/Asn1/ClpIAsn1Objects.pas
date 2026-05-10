@@ -648,8 +648,13 @@ type
     /// Check if this boolean is true.
     /// </summary>
     function GetIsTrue(): Boolean;
+    /// <summary>
+    /// Check if contents octet is <c>$00</c>.
+    /// </summary>
+    function GetIsFalse(): Boolean;
     property Value: Byte read GetValue;
     property IsTrue: Boolean read GetIsTrue;
+    property IsFalse: Boolean read GetIsFalse;
   end;
 
   /// <summary>

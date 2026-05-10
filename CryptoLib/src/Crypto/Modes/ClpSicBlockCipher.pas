@@ -43,6 +43,14 @@ resourcestring
   SInvalidTooSmallIVLength = 'CTR/SIC mode requires IV of at least: %u bytes';
 
 type
+  /// <summary>
+  /// Segmented Integer Counter (SIC) mode on top of a <see cref="IBlockCipher"/>.
+  /// </summary>
+  /// <remarks>
+  /// This mode is also known as CTR (counter) mode. <see cref="IsPartialBlockOkay"/> is True.
+  /// Initialisation requires <see cref="IParametersWithIV"/> containing the nonce/IV fragment;
+  /// the nonce is fused into an internal counter with bounds validated against the cipher block size.
+  /// </remarks>
   TSicBlockCipher = class(TInterfacedObject, ISicBlockCipher,
     IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
 
@@ -82,9 +90,21 @@ type
     function GetUnderlyingCipher(): IBlockCipher; inline;
 
   public
+    /// <summary>
+    /// Basic constructor.
+    /// </summary>
+    /// <param name="ACipher">Block cipher used to encrypt successive counter blocks into keystream.</param>
     constructor Create(const ACipher: IBlockCipher);
+    /// <summary>
+    /// Initialise counter mode with nonce and cipher key via <see cref="IParametersWithIV"/>.
+    /// </summary>
+    /// <param name="AForEncryption">CTR does not bifurcate encryption/decryption; parameter is retained for uniformity but does not toggle XOR direction logic.</param>
+    /// <param name="AParameters">Must expose <see cref="IParametersWithIV"/> satisfying IV length constraints for this cipher block width.</param>
+    /// <exception cref="EArgumentCryptoLibException">If IV shape is unsupported or nesting is absent.</exception>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
+    /// <summary>Returns the underlying cipher block size in bytes.</summary>
     function GetBlockSize(): Int32; virtual;
+    /// <summary>Encrypt/decrypt exactly one counter block-worth of payload.</summary>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
     /// <summary>
@@ -99,10 +119,12 @@ type
     function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32): Int32; virtual;
+    /// <summary>Reset internal counter seed from the nonce captured during <see cref="Init"/>.</summary>
     procedure Reset(); virtual;
 
     property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
+    /// <summary>Returns True (CTR allows partial finals).</summary>
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;
 

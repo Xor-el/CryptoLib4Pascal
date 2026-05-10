@@ -48,6 +48,11 @@ uses
   ClpConverters,
   ClpEncoders,
   ClpCryptoLibTypes,
+  ClpAsn1Core,
+  ClpIAsn1Objects,
+  ClpPkcsObjectIdentifiers,
+  ClpSubjectPublicKeyInfoFactory,
+  ClpIX509Asn1Objects,
   CryptoLibTestBase;
 
 type
@@ -82,6 +87,8 @@ type
     procedure TestOaepEncoding;
     procedure TestKeyGeneration;
     procedure TestRsaSignature;
+    procedure TestRsaPublicKeyInfoEncodingHasNullParameters;
+    procedure TestSubjectPublicKeyInfoFactoryRsaConsistency;
 
   end;
 
@@ -384,6 +391,56 @@ end;
 procedure TTestRSA.TestRsaSignature;
 begin
   DoTestRsaSignature;
+end;
+
+procedure TTestRSA.TestRsaPublicKeyInfoEncodingHasNullParameters;
+var
+  kpGen: IRsaKeyPairGenerator;
+  kpParams: IRsaKeyGenerationParameters;
+  keyPair: IAsymmetricCipherKeyPair;
+  pubKey: IRsaKeyParameters;
+  info: ISubjectPublicKeyInfo;
+  encoded: TCryptoLibByteArray;
+  hexEncoded: string;
+const
+  ExpectedOidAndNull = '06092a864886f70d0101010500';
+begin
+  kpGen := TRsaKeyPairGenerator.Create();
+  kpParams := TRsaKeyGenerationParameters.Create(
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 1024, 100);
+  kpGen.Init(kpParams);
+  keyPair := kpGen.GenerateKeyPair();
+  pubKey := keyPair.Public as IRsaKeyParameters;
+
+  info := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(pubKey);
+  encoded := info.GetEncoded(TAsn1Encodable.Der);
+  hexEncoded := THexEncoder.Encode(encoded, False);
+
+  CheckTrue(Pos(ExpectedOidAndNull, hexEncoded) > 0,
+    'RSA AlgorithmIdentifier in SubjectPublicKeyInfo missing mandatory NULL parameters (05 00).');
+end;
+
+procedure TTestRSA.TestSubjectPublicKeyInfoFactoryRsaConsistency;
+var
+  kpGen: IRsaKeyPairGenerator;
+  kpParams: IRsaKeyGenerationParameters;
+  keyPair: IAsymmetricCipherKeyPair;
+  info: ISubjectPublicKeyInfo;
+  dn: IDerNull;
+begin
+  kpGen := TRsaKeyPairGenerator.Create();
+  kpParams := TRsaKeyGenerationParameters.Create(
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 1024, 100);
+  kpGen.Init(kpParams);
+  keyPair := kpGen.GenerateKeyPair();
+
+  info := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(
+    keyPair.Public as IAsymmetricKeyParameter);
+
+  CheckTrue(info.Algorithm.Algorithm.Equals(TPkcsObjectIdentifiers.RsaEncryption),
+    'RSA AlgorithmIdentifier OID should be rsaEncryption.');
+  CheckTrue(Supports(info.Algorithm.Parameters, IDerNull, dn),
+    'RSA AlgorithmIdentifier parameters should be DerNull.');
 end;
 
 initialization
