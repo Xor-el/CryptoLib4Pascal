@@ -8473,9 +8473,7 @@ begin
     System.SetLength(FCache, 1024);
 
   LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (System.Length(LOriginalEntry.Contents) = AContentsLength) and
-    ((AContentsLength = 0) or CompareMem(@LOriginalEntry.Contents[0], @AContents[0],
-    AContentsLength * SizeOf(Byte))) then
+  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
   begin
     Result := LOriginalEntry;
     Exit;
@@ -8494,9 +8492,7 @@ begin
   LExchangedEntry := FCache[LIndex];
   if LExchangedEntry <> LOriginalEntry then
   begin
-    if (LExchangedEntry <> nil) and (System.Length(LExchangedEntry.Contents) = AContentsLength) and
-      ((AContentsLength = 0) or CompareMem(@LExchangedEntry.Contents[0], @AContents[0],
-      AContentsLength * SizeOf(Byte))) then
+    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
     begin
       Result := LExchangedEntry;
       Exit;
