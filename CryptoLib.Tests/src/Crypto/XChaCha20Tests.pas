@@ -52,6 +52,9 @@ type
     procedure TestAppendixA3_2_2KeystreamFromBlockCounter1;
     procedure TestAppendixA3_2_2CiphertextCounter1;
     procedure TestGetCipherXChaCha20Aliases;
+    procedure TestRoundTrip1024;
+    procedure TestRejectShortNonce64Bits;
+    procedure TestRejectShortNonce96Bits;
   end;
 
 implementation
@@ -286,6 +289,78 @@ begin
   LCipher := TCipherUtilities.GetCipher('XChaCha20');
   if LCipher = nil then
     Fail('TCipherUtilities.GetCipher(XChaCha20) returned nil');
+end;
+
+procedure TTestXChaCha20.TestRoundTrip1024;
+var
+  LKey, LIv, LPlain, LCipher, LRecovered: TCryptoLibByteArray;
+  LEnc, LDec: IXChaCha20Engine;
+  LIdx: Int32;
+  LParams: IParametersWithIV;
+begin
+  LKey := THexEncoder.Decode(
+    '0001020304050607080910111213141516171819202122232425262728293031');
+  LIv := THexEncoder.Decode('000102030405060708090a0b0c0d0e0f1011121314151617');
+
+  System.SetLength(LPlain, 1024);
+  for LIdx := 0 to 1023 do
+    LPlain[LIdx] := Byte(LIdx and $FF);
+
+  LEnc := TXChaCha20Engine.Create;
+  LParams := TParametersWithIV.Create(TKeyParameter.Create(LKey) as IKeyParameter,
+    LIv);
+  LEnc.Init(True, LParams);
+  System.SetLength(LCipher, 1024);
+  LEnc.ProcessBytes(LPlain, 0, 1024, LCipher, 0);
+
+  LDec := TXChaCha20Engine.Create;
+  LDec.Init(False, LParams);
+  System.SetLength(LRecovered, 1024);
+  LDec.ProcessBytes(LCipher, 0, 1024, LRecovered, 0);
+
+  if AreEqual(LPlain, LCipher) then
+    Fail('XChaCha20 produced no keystream XOR (plain equals cipher)');
+  if not AreEqual(LPlain, LRecovered) then
+    Fail(Format('XChaCha20 round-trip mismatch: recovered %s',
+      [EncodeHex(LRecovered)]));
+end;
+
+procedure TTestXChaCha20.TestRejectShortNonce64Bits;
+var
+  LKey, LIv8: TCryptoLibByteArray;
+  LEngine: IXChaCha20Engine;
+begin
+  System.SetLength(LKey, 32);
+  System.SetLength(LIv8, 8);
+  System.FillChar(LIv8[0], 8, 0);
+  try
+    LEngine := TXChaCha20Engine.Create;
+    LEngine.Init(True, TParametersWithIV.Create(TKeyParameter.Create(LKey)
+      as IKeyParameter, LIv8));
+    Fail('XChaCha20 unexpectedly accepted an 8-byte nonce');
+  except
+    on E: EArgumentCryptoLibException do
+      ; // expected
+  end;
+end;
+
+procedure TTestXChaCha20.TestRejectShortNonce96Bits;
+var
+  LKey: TCryptoLibByteArray;
+  LEngine: IXChaCha20Engine;
+  LNonce12: TCryptoLibByteArray;
+begin
+  System.SetLength(LKey, 32);
+  System.SetLength(LNonce12, 12);
+  try
+    LEngine := TXChaCha20Engine.Create;
+    LEngine.Init(True, TParametersWithIV.Create(TKeyParameter.Create(LKey)
+      as IKeyParameter, LNonce12));
+    Fail('XChaCha20 unexpectedly accepted a 12-byte nonce');
+  except
+    on E: EArgumentCryptoLibException do
+      ; // expected
+  end;
 end;
 
 initialization
