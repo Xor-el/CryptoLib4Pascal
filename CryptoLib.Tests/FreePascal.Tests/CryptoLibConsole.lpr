@@ -5,7 +5,8 @@ program CryptoLibConsole;
 uses
   {$IFDEF UNIX}cwstring,{$ENDIF}
   consoletestrunner, Asn1SequenceParserTests, EqualsAndHashCodeTests, OIDTests,
-  EnumeratedTests, ParsingTests, ParseTests, StringTests, TagTests,
+  EnumeratedTests, ExternalTests, ParsingTests, ParseTests, StringTests,
+  TagTests,
   BigIntegerTests, ECAlgorithmsTests, ECPointTests, SecP256R1FieldTests,
   SecP384R1FieldTests, ECDsa5Tests, ECTests, NamedCurveTests,
   SignerUtilitiesTests, SecureRandomTests, DigestRandomNumberTests,
@@ -33,6 +34,7 @@ uses
   RelativeOidTests, OctetStringTests, SetTests, X9Tests, PrivateKeyInfoTests,
   DerUtf8StringTests, EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests,
   DeltaCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  AuthorityKeyIdentifierTests,
   X509NameTests, SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests,
   KMacTests, PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests,
   RSATests, X931SignerTests, CipherStreamTests, OaepTests, RijndaelTests,

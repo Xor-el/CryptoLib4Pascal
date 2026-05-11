@@ -79,6 +79,8 @@ resourcestring
   SDeltaCertDescSigValNil = 'signatureValue';
   SInvalidDsaParameter = 'Invalid DsaParameter: %s';
   SCertificatePairAtLeastOnePresent = 'At least one of the pair shall be present';
+  SAuthorityKeyIdentifierIssuerSerialMismatch =
+    'AuthorityKeyIdentifier authorityCertIssuer and authorityCertSerialNumber MUST both be present or both be absent';
 
 type
   /// <summary>
@@ -399,9 +401,22 @@ type
 
   end;
 
-  /// <summary>
-  /// The AuthorityKeyIdentifier object.
-  /// </summary>
+  /// <summary>The AuthorityKeyIdentifier object.</summary>
+  /// <remarks>
+  /// <code>
+  /// id-ce-authorityKeyIdentifier OBJECT IDENTIFIER ::=  { id-ce 35 }
+  ///
+  /// AuthorityKeyIdentifier ::= Sequence {
+  ///     keyIdentifier[0] IMPLICIT KeyIdentifier                         OPTIONAL,
+  ///     authorityCertIssuer[1] IMPLICIT GeneralNames                    OPTIONAL,
+  ///     authorityCertSerialNumber[2] IMPLICIT CertificateSerialNumber   OPTIONAL
+  /// }
+  ///
+  /// KeyIdentifier ::= OCTET STRING
+  /// </code>
+  /// Per RFC 5280 sec. 4.2.1.1 the authorityCertIssuer and authorityCertSerialNumber fields MUST both be present or
+  /// both be absent.
+  /// </remarks>
   TAuthorityKeyIdentifier = class(TAsn1Encodable, IAuthorityKeyIdentifier)
 
   strict private
@@ -410,6 +425,7 @@ type
     FAuthorityCertIssuer: IGeneralNames;
     FAuthorityCertSerialNumber: IDerInteger;
 
+    class procedure CheckIssuerAndSerial(const ACertIssuer: IGeneralNames; const ACertSerial: IDerInteger); static;
     class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString; static;
     class function GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames; static;
     class function GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger; static;
@@ -5047,6 +5063,13 @@ end;
 
 { TAuthorityKeyIdentifier }
 
+class procedure TAuthorityKeyIdentifier.CheckIssuerAndSerial(const ACertIssuer: IGeneralNames;
+  const ACertSerial: IDerInteger);
+begin
+  if ((ACertIssuer = nil) and (ACertSerial <> nil)) or ((ACertIssuer <> nil) and (ACertSerial = nil)) then
+    raise EArgumentCryptoLibException.CreateRes(@SAuthorityKeyIdentifierIssuerSerialMismatch);
+end;
+
 class function TAuthorityKeyIdentifier.GetInstance(AObj: TObject): IAuthorityKeyIdentifier;
 var
   LExtension: IX509Extension;
@@ -5108,6 +5131,9 @@ end;
 constructor TAuthorityKeyIdentifier.Create(const ASeq: IAsn1Sequence);
 var
   LCount, LPos: Int32;
+  LKeyIdentifier: IAsn1OctetString;
+  LAuthorityCertIssuer: IGeneralNames;
+  LAuthorityCertSerialNumber: IDerInteger;
 begin
   inherited Create();
   LCount := ASeq.Count;
@@ -5115,17 +5141,22 @@ begin
   if (LCount < 0) or (LCount > 3) then
     raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
-  FKeyIdentifier := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, False,
+  LKeyIdentifier := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, False,
     GetTaggedAsn1OctetString);
 
-  FAuthorityCertIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 1, False,
+  LAuthorityCertIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 1, False,
     GetTaggedGeneralNames);
 
-  FAuthorityCertSerialNumber := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, False,
+  LAuthorityCertSerialNumber := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, False,
     GetTaggedDerInteger);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create('Unexpected elements in sequence');
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+
+  CheckIssuerAndSerial(LAuthorityCertIssuer, LAuthorityCertSerialNumber);
+  FKeyIdentifier := LKeyIdentifier;
+  FAuthorityCertIssuer := LAuthorityCertIssuer;
+  FAuthorityCertSerialNumber := LAuthorityCertSerialNumber;
 end;
 
 class function TAuthorityKeyIdentifier.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString;
@@ -5159,11 +5190,12 @@ begin
     FKeyIdentifier := TDerOctetString.FromContentsOptional(AKeyIdentifier)
   else
     FKeyIdentifier := nil;
-  FAuthorityCertIssuer := AAuthorityCertIssuer;
   if AAuthorityCertSerialNumber.IsInitialized then
     LSerialNumber := TDerInteger.Create(AAuthorityCertSerialNumber)
   else
     LSerialNumber := nil;
+  CheckIssuerAndSerial(AAuthorityCertIssuer, LSerialNumber);
+  FAuthorityCertIssuer := AAuthorityCertIssuer;
   FAuthorityCertSerialNumber := LSerialNumber;
 end;
 
@@ -5177,6 +5209,7 @@ constructor TAuthorityKeyIdentifier.Create(const AKeyIdentifier: IAsn1OctetStrin
   const AAuthorityCertSerialNumber: IDerInteger);
 begin
   inherited Create();
+  CheckIssuerAndSerial(AAuthorityCertIssuer, AAuthorityCertSerialNumber);
   FKeyIdentifier := AKeyIdentifier;
   FAuthorityCertIssuer := AAuthorityCertIssuer;
   FAuthorityCertSerialNumber := AAuthorityCertSerialNumber;

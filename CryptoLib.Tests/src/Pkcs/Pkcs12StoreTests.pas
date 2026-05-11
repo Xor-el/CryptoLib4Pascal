@@ -71,6 +71,7 @@ uses
   TypInfo,
   ClpDateTimeHelper,
   ClpCertTestUtilities,
+  ClpEncoders,
   CryptoLibTestBase;
 
 type
@@ -143,6 +144,8 @@ type
     procedure TestFriendlyName_OverwriteTrue_WritesDefault;
     procedure TestFriendlyName_OverwriteTrue_CustomName_StillWritesDefault;
     procedure TestFriendlyName_OverwriteFalse_AddedFriendlyName_Persisted;
+    procedure TestPkcs12Store_MissingContentInfoContent;
+    procedure TestPkcs12Store_NegativeIterations;
   end;
 
 implementation
@@ -1598,6 +1601,66 @@ begin
   LAlias2 := GetFirst(LStore2.Aliases);
   Check(LAlias2 = 'my_custom_friendly_name',
     'with overwriteFriendlyName=false, added friendlyName should be written to new store');
+end;
+
+procedure TTestPkcs12Store.TestPkcs12Store_NegativeIterations;
+var
+  LPayload: TBytes;
+  LStore: IPkcs12Store;
+  LStream: TMemoryStream;
+  LEmptyPass: TCryptoLibCharArray;
+begin
+  LPayload := THexEncoder.Decode(
+    '3049020103301106092a864879f70d010706a0040402300030313021300906052b0e03021a050004140000010000000000000000000000000000000000040800000000000000000202f300');
+  LStore := BuildPkcs12Store;
+  System.SetLength(LEmptyPass, 0);
+  LStream := TMemoryStream.Create;
+  try
+    if System.Length(LPayload) > 0 then
+      LStream.WriteBuffer(LPayload[0], System.Length(LPayload));
+    LStream.Position := 0;
+    try
+      LStore.Load(LStream, LEmptyPass);
+      Fail('expected EInvalidOperationCryptoLibException');
+    except
+      on E: EInvalidOperationCryptoLibException do
+        ;
+    else
+      raise;
+    end;
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TTestPkcs12Store.TestPkcs12Store_MissingContentInfoContent;
+var
+  LPayload: TBytes;
+  LStore: IPkcs12Store;
+  LStream: TMemoryStream;
+  LEmptyPass: TCryptoLibCharArray;
+begin
+  LPayload := THexEncoder.Decode(
+    '30490201033011060f2a864886f70d010701a0040402300030313021300906052b0e03021a050004140000000003000000000000000000020000000000040c000000000000000002020800');
+  LStore := BuildPkcs12Store;
+  System.SetLength(LEmptyPass, 0);
+  LStream := TMemoryStream.Create;
+  try
+    if System.Length(LPayload) > 0 then
+      LStream.WriteBuffer(LPayload[0], System.Length(LPayload));
+    LStream.Position := 0;
+    try
+      LStore.Load(LStream, LEmptyPass);
+      Fail('expected EAsn1ParsingCryptoLibException');
+    except
+      on E: EAsn1ParsingCryptoLibException do
+        ;
+    else
+      raise;
+    end;
+  finally
+    LStream.Free;
+  end;
 end;
 
 initialization

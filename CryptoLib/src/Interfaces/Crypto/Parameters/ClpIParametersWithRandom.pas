@@ -25,10 +25,14 @@ uses
   ClpICipherParameters;
 
 type
+  /// <summary>
+  /// Random-aware parameter wrapper: pairs existing <see cref="ICipherParameters"/> with <see cref="ISecureRandom"/>.
+  /// </summary>
   IParametersWithRandom = interface(ICipherParameters)
 
     ['{7528E638-E8DD-4B5E-ADF9-9495A9507087}']
 
+    /// <summary>Entropy source consulted by padded or probabilistic constructions.</summary>
     function GetRandom: ISecureRandom;
     function GetParameters: ICipherParameters;
 

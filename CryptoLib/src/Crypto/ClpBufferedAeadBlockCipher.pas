@@ -26,7 +26,7 @@ uses
   ClpIBufferedAeadBlockCipher,
   ClpIAeadBlockCipher,
   ClpICipherParameters,
-  ClpIParametersWithRandom,
+  ClpParameterUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -97,18 +97,8 @@ end;
 
 procedure TBufferedAeadBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
-var
-  LWithRandom: IParametersWithRandom;
-  LParameters: ICipherParameters;
 begin
-  LParameters := AParameters;
-
-  if Supports(LParameters, IParametersWithRandom, LWithRandom) then
-  begin
-    LParameters := LWithRandom.Parameters;
-  end;
-
-  FCipher.Init(AForEncryption, LParameters);
+  FCipher.Init(AForEncryption, TParameterUtilities.IgnoreRandom(AParameters));
 end;
 
 function TBufferedAeadBlockCipher.GetBlockSize: Int32;
@@ -209,7 +199,7 @@ begin
   if LOutSize > 0 then
     System.SetLength(LOutBytes, LOutSize)
   else
-    LOutBytes := EmptyBuffer;
+    LOutBytes := nil;
 
   LPos := FCipher.DoFinal(LOutBytes, 0);
 
@@ -237,7 +227,7 @@ begin
   if LOutSize > 0 then
     System.SetLength(LOutBytes, LOutSize)
   else
-    LOutBytes := EmptyBuffer;
+    LOutBytes := nil;
 
   LPos := 0;
   if AInLen > 0 then

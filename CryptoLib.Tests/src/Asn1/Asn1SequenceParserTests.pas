@@ -38,6 +38,9 @@ uses
   ClpAsn1Parsers,
   ClpIAsn1Generators,
   ClpAsn1Generators,
+  ClpIAsn1Core,
+  ClpAsn1Core,
+  ClpAsn1Streams,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -75,6 +78,8 @@ type
     procedure TestNestedBerReading;
     procedure TestBerExplicitTaggedSequenceWriting;
     procedure TestSequenceWithDerNullReading;
+    procedure TestMaximumConstructedNestingDerExceedsLimit;
+    procedure TestMaximumConstructedNestingBerIndefiniteExceedsLimit;
 
   end;
 
@@ -594,6 +599,83 @@ end;
 procedure TTestAsn1SequenceParser.TestSequenceWithDerNullReading;
 begin
   DoTestParseWithNull(FBerSeqWithDERNullData);
+end;
+
+procedure TTestAsn1SequenceParser.TestMaximumConstructedNestingDerExceedsLimit;
+var
+  LOldMaxDepth: Int32;
+  LI: Int32;
+  LInner: IAsn1Encodable;
+  LVec: IAsn1EncodableVector;
+  LData: TCryptoLibByteArray;
+begin
+  LOldMaxDepth := TAsn1InputStream.MaxConstructedDepth;
+  try
+    TAsn1InputStream.MaxConstructedDepth :=
+      TAsn1InputStream.DefaultMaxConstructedDepth;
+
+    LInner := TDerInteger.Create(TBigInteger.Zero);
+    for LI := 1 to TAsn1InputStream.DefaultMaxConstructedDepth + 1 do
+    begin
+      LVec := TAsn1EncodableVector.Create();
+      LVec.Add(LInner);
+      LInner := TDerSequence.FromVector(LVec);
+    end;
+    LData := LInner.GetDerEncoded();
+
+    try
+      TAsn1Object.FromByteArray(LData);
+      Fail('expected EAsn1ParsingCryptoLibException');
+    except
+      on E: EAsn1ParsingCryptoLibException do
+        CheckEquals('maximum nested construction level reached', E.Message);
+    end;
+  finally
+    TAsn1InputStream.MaxConstructedDepth := LOldMaxDepth;
+  end;
+end;
+
+procedure TTestAsn1SequenceParser.TestMaximumConstructedNestingBerIndefiniteExceedsLimit;
+var
+  LOldMaxDepth: Int32;
+  LI, LJ, LCl, LNewLen: Int32;
+  LCore: TCryptoLibByteArray;
+  LData: TCryptoLibByteArray;
+begin
+  LOldMaxDepth := TAsn1InputStream.MaxConstructedDepth;
+  try
+    TAsn1InputStream.MaxConstructedDepth :=
+      TAsn1InputStream.DefaultMaxConstructedDepth;
+
+    System.SetLength(LCore, 3);
+    LCore[0] := $02;
+    LCore[1] := $01;
+    LCore[2] := $00;
+
+    for LI := 1 to TAsn1InputStream.DefaultMaxConstructedDepth + 1 do
+    begin
+      LCl := System.Length(LCore);
+      LNewLen := 2 + LCl + 2;
+      System.SetLength(LData, LNewLen);
+      LData[0] := $30;
+      LData[1] := $80;
+      for LJ := 0 to LCl - 1 do
+        LData[2 + LJ] := LCore[LJ];
+      LData[2 + LCl] := 0;
+      LData[2 + LCl + 1] := 0;
+      LCore := LData;
+    end;
+
+    try
+      TAsn1Object.FromByteArray(LCore);
+      Fail('expected EAsn1ParsingCryptoLibException');
+    except
+      on E: EAsn1ParsingCryptoLibException do
+        CheckEquals('maximum nested construction level reached', E.Message);
+    end;
+  finally
+    TAsn1InputStream.MaxConstructedDepth := LOldMaxDepth;
+  end;
 end;
 
 initialization

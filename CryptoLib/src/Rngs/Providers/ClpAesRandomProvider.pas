@@ -23,7 +23,6 @@ interface
 uses
   SyncObjs,
   ClpAesUtilities,
-  ClpIBlockCipher,
   ClpIKeyParameter,
   ClpKeyParameter,
   ClpIBufferedCipher,

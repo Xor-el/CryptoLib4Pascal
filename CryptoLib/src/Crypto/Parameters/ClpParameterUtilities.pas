@@ -48,6 +48,15 @@ resourcestring
   SParametersWithContextNotImpl = 'ParametersWithContext not implemented';
 
 type
+  /// <summary>
+  /// Helpers for building <see cref="ICipherParameters"/> values: creating algorithm-appropriate
+  /// <see cref="IKeyParameter"/> instances, decoding ASN.1 algorithm parameters into IV-bearing envelopes, generating
+  /// random IV material, and wrapping or stripping <see cref="IParametersWithRandom"/> envelopes.
+  /// </summary>
+  /// <remarks>
+  /// Algorithm strings are canonicalised via <see cref="GetCanonicalAlgorithmName"/> and matched case-insensitively
+  /// for entries registered in this module.
+  /// </remarks>
   TParameterUtilities = class sealed(TObject)
   strict private
     class var
@@ -66,26 +75,85 @@ type
     class constructor Create;
     class destructor Destroy;
   public
+    /// <summary>
+    /// Returns the canonical algorithm name for <paramref name="AAlgorithm"/> (alias or OID string fragment), or an
+    /// empty string if the algorithm is not recognised.
+    /// </summary>
     class function GetCanonicalAlgorithmName(const AAlgorithm: String): String; static;
+
+    /// <summary>
+    /// Builds an <see cref="IKeyParameter"/> for algorithm OID <paramref name="AAlgOid"/> over all bytes of
+    /// <paramref name="AKeyBytes"/>.
+    /// </summary>
     class function CreateKeyParameter(const AAlgOid: IDerObjectIdentifier;
       const AKeyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
+
+    /// <summary>
+    /// Builds an <see cref="IKeyParameter"/> for named <paramref name="AAlgorithm"/> over all bytes of <paramref name="AKeyBytes"/>.
+    /// </summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is not recognised.</exception>
     class function CreateKeyParameter(const AAlgorithm: String;
       const AKeyBytes: TCryptoLibByteArray): IKeyParameter; overload; static;
+
+    /// <summary>
+    /// Builds an <see cref="IKeyParameter"/> from [<paramref name="AOffset"/>..<paramref name="ALength"/>) of <paramref name="AKeyBytes"/>
+    /// for OID <paramref name="AAlgOid"/>.
+    /// </summary>
     class function CreateKeyParameter(const AAlgOid: IDerObjectIdentifier;
       const AKeyBytes: TCryptoLibByteArray; AOffset, ALength: Int32): IKeyParameter; overload; static;
+
+    /// <summary>
+    /// Builds an <see cref="IKeyParameter"/> from a slice of <paramref name="AKeyBytes"/> for named <paramref name="AAlgorithm"/>.
+    /// </summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is not recognised.</exception>
     class function CreateKeyParameter(const AAlgorithm: String;
       const AKeyBytes: TCryptoLibByteArray; AOffset, ALength: Int32): IKeyParameter; overload; static;
+
+    /// <summary>
+    /// Delegates to <see cref="GetCipherParameters"/> using <paramref name="AAlgOid"/>.ID.
+    /// </summary>
     class function GetCipherParameters(const AAlgOid: IDerObjectIdentifier;
       const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters; overload; static;
+
+    /// <summary>
+    /// Combines key <paramref name="AKey"/> with ASN.1 encoded parameters <paramref name="AAsn1Params"/>. Algorithms with a
+    /// configured IV length (including RIJNDAEL) expect a DER OCTET STRING IV and return <see cref="TParametersWithIV"/> wrapping the key and IV.
+    /// </summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is not recognised.</exception>
+    /// <exception cref="EArgumentCryptoLibException">If <paramref name="AAsn1Params"/> cannot be parsed as OCTET STRING IV data.</exception>
     class function GetCipherParameters(const AAlgorithm: String;
       const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters; overload; static;
+
+    /// <summary>
+    /// Delegates to <see cref="GenerateParameters"/> using <paramref name="AAlgId"/>.ID.
+    /// </summary>
     class function GenerateParameters(const AAlgId: IDerObjectIdentifier;
       const ARandom: ISecureRandom): IAsn1Encodable; overload; static;
+
+    /// <summary>
+    /// Generates a fresh DER OCTET STRING containing a random IV for supported symmetric algorithms configured in this module.
+    /// </summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is not recognised or has no parameter generator.</exception>
     class function GenerateParameters(const AAlgorithm: String;
       const ARandom: ISecureRandom): IAsn1Encodable; overload; static;
+
+    /// <summary>
+    /// If <paramref name="ACipherParameters"/> supports <see cref="IParametersWithRandom"/>, returns the inner parameters and sets
+    /// <paramref name="ARandom"/> to the embedded RNG; otherwise <paramref name="ARandom"/> is <c>nil</c> and the input is returned.
+    /// </summary>
     class function GetRandom(const ACipherParameters: ICipherParameters;
       out ARandom: ISecureRandom): ICipherParameters; static;
+
+    /// <summary>Strips any <see cref="IParametersWithRandom"/> wrapper and returns the inner parameters.</summary>
     class function IgnoreRandom(const ACipherParameters: ICipherParameters): ICipherParameters; static;
+
+    /// <summary>
+    /// Wraps <paramref name="ACp"/> with randomness when <paramref name="ARandom"/> is assigned; otherwise returns <paramref name="ACp"/> unchanged.
+    /// </summary>
     class function WithRandom(const ACp: ICipherParameters;
       const ARandom: ISecureRandom): ICipherParameters; static;
   end;

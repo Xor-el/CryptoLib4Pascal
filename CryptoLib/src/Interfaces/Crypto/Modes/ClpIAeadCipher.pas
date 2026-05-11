@@ -25,6 +25,15 @@ uses
   ClpCryptoLibTypes;
 
 type
+  /// <summary>
+  /// AEAD symmetric cipher interface: initialise with key and nonce/IV parameters, optionally
+  /// authenticate additional authenticated data (AAD), then encrypt or decrypt the payload with an
+  /// authentication tag appended on encryption / verified on decryption.
+  /// </summary>
+  /// <remarks>
+  /// <para>For any fixed key you must supply a distinct nonce per encryption invocation; never
+  /// reuse a nonce–key pair unless you accept catastrophic loss of confidentiality and integrity.</para>
+  /// </remarks>
   IAeadCipher = interface(IInterface)
     ['{0BAD818A-E363-4818-9FF9-75FDE537AE46}']
 

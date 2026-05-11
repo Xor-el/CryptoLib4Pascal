@@ -32,6 +32,9 @@ resourcestring
   SRandom = 'Random';
 
 type
+  /// <summary>
+  /// Wrapper adding an <see cref="ISecureRandom"/> to existing <see cref="ICipherParameters"/> (e.g. to supply entropy to padding or key-generation flows).
+  /// </summary>
   TParametersWithRandom = class(TInterfacedObject, ICipherParameters,
     IParametersWithRandom)
 
@@ -44,8 +47,13 @@ type
 
   public
 
+    /// <summary>Build with cryptographically strong default RNG from <see cref="TCryptoServicesRegistrar"/>.</summary>
     constructor Create(const AParameters: ICipherParameters); overload;
 
+    /// <summary>
+    /// Basic constructor.
+    /// </summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AParameters"/> or <paramref name="ARandom"/> is nil.</exception>
     constructor Create(const AParameters: ICipherParameters;
       const ARandom: ISecureRandom); overload;
 

@@ -34,6 +34,14 @@ resourcestring
   SOutputBufferTooShort = 'Output Buffer Too Short';
 
 type
+  /// <summary>
+  /// Implements Output-FeedBack (OFB) mode on top of a <see cref="IBlockCipher"/>.
+  /// </summary>
+  /// <remarks>
+  /// <see cref="IsPartialBlockOkay"/> is True (stream-style output).
+  /// <c>AForEncryption</c> on <see cref="Init"/> does not change keystream scheduling; encrypt and decrypt XOR the same keystream,
+  /// matching classic OFB semantics.
+  /// </remarks>
   TOfbBlockCipher = class sealed(TInterfacedObject, IOfbBlockCipher,
     IBlockCipherMode, IBlockCipher)
 
@@ -49,15 +57,30 @@ type
     function GetUnderlyingCipher(): IBlockCipher; inline;
 
   public
+    /// <summary>
+    /// Basic constructor.
+    /// </summary>
+    /// <param name="ACipher">Block cipher supplying the keystream.</param>
+    /// <param name="ABlockSize">OFB width in bits (must be a multiple of 8).</param>
     constructor Create(const ACipher: IBlockCipher; ABlockSize: Int32);
+    /// <summary>
+    /// Initialise keystream generator state and optionally the IV.
+    /// </summary>
+    /// <param name="AForEncryption">Ignored by OFB (included for interface uniformity).</param>
+    /// <param name="AParameters">Key wrapped in <see cref="IParametersWithIV"/> for IV extraction; IV is copied into internal state via <see cref="TCipherModeParameterUtilities.TryUnwrapIv"/> (right-aligned / zero padded when shorter than block).</param>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
+    /// <summary>The OFB segment size in bytes.</summary>
     function GetBlockSize(): Int32; inline;
+    /// <summary>Xor one OFB segment with the keystream.</summary>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    /// <summary>Reset keystream pipeline to the captured IV layout.</summary>
     procedure Reset(); inline;
 
+    /// <summary>The underlying <see cref="IBlockCipher"/>.</summary>
     property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
     property AlgorithmName: String read GetAlgorithmName;
+    /// <summary>Returns True (partial blocks allowed).</summary>
     property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
   end;
 

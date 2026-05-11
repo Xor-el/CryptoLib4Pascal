@@ -44,27 +44,23 @@ resourcestring
 type
 
   /// <summary>
-  /// <para>
-  /// an implementation of the AES (Rijndael), from FIPS-197.
-  /// </para>
-  /// <para>
-  /// For further details see: <see href="http://csrc.nist.gov/encryption/aes/" />
-  /// </para>
-  /// <para>
-  /// This implementation is based on optimizations from Dr. Brian
-  /// Gladman's paper and C code at <see href="http://fp.gladman.plus.com/cryptography_technology/rijndael/" />
-  /// </para>
-  /// <para>
-  /// This version uses only one 256 word table for each, for a total of
-  /// 2Kbytes, <br />adding 12 rotate operations per round to compute the
-  /// values contained in the other tables from <br />the contents of the
-  /// first.
-  /// </para>
-  /// <para>
-  /// This file contains the middle performance version with 2Kbytes of
-  /// static tables for round precomputation.
-  /// </para>
+  /// AES (Rijndael) per FIPS-197.
   /// </summary>
+  /// <remarks>
+  /// <para>Further reading: <see href="http://csrc.nist.gov/encryption/aes/">NIST AES</see>.</para>
+  /// <para>
+  /// This implementation follows Dr. Brian Gladman&apos;s Rijndael optimizations:
+  /// <see href="http://fp.gladman.plus.com/cryptography_technology/rijndael/" />
+  /// </para>
+  /// <para>AES code often trades memory for speed:</para>
+  /// <para>- Largest table set (fastest).</para>
+  /// <para>- One 256-word table per direction (middle; this unit, about 2 K static tables).</para>
+  /// <para>- Fully computed rounds with no static tables (slowest).</para>
+  /// <para>
+  /// This file is the middle tier: one 256-word table per direction, 2 KBytes of static tables and
+  /// extra rotates to derive the omitted table entries.
+  /// </para>
+  /// </remarks>
   TAesEngine = class sealed(TInterfacedObject, IAesEngine, IBlockCipher)
 
   strict private
@@ -275,11 +271,24 @@ type
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters); virtual;
 
+    /// <summary>
+    /// Process one 16-byte block (<c>AInput</c> and <c>AOutput</c> must accommodate the block size).
+    /// </summary>
+    /// <param name="AInput">Input ciphertext or plaintext block.</param>
+    /// <param name="AInOff">Start offset in <paramref name="AInput" />.</param>
+    /// <param name="AOutput">Destination buffer for the transformed block.</param>
+    /// <param name="AOutOff">Start offset in <paramref name="AOutput" />.</param>
+    /// <returns>Always 16 (AES block size in bytes).</returns>
+    /// <exception cref="EInvalidOperationCryptoLibException">If <c>Init</c> has not been called.</exception>
+    /// <exception cref="EDataLengthCryptoLibException">If the input or output buffer range is too short.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
 
+    /// <summary>Return the AES block size.</summary>
+    /// <returns>16 (fixed AES block size in bytes).</returns>
     function GetBlockSize(): Int32; virtual;
 
+    /// <summary>The cipher name (<c>AES</c>).</summary>
     property AlgorithmName: String read GetAlgorithmName;
   end;
 

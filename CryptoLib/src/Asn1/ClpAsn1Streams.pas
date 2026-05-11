@@ -396,10 +396,17 @@ type
   /// </summary>
   TAsn1InputStream = class(TFilterStream)
   strict private
-    FLimit: Int32;
-    FLeaveOpen: Boolean;
-    FTmpBuffers: TCryptoLibMatrixByteArray;
-    FStream: TStream;
+    class var
+      FMaxLimitForUnknownStream: Int32;
+      FMaxConstructedDepth: Int32;
+    var
+      FDepth: Int32;
+      FLimit: Int32;
+      FLeaveOpen: Boolean;
+      FTmp: TCryptoLibByteArray;
+      FStream: TStream;
+
+    class constructor Create;
 
     function BuildObject(ATagHdr, ATagNo, ALength: Int32): IAsn1Object;
     function ReadTaggedObjectDL(ATagClass, ATagNo: Int32;
@@ -408,16 +415,12 @@ type
     function ReadVector(): IAsn1EncodableVector; overload;
     function ReadVector(const ADefIn: TAsn1DefiniteLengthInputStream)
       : IAsn1EncodableVector; overload;
+    function CreateSubStream(const ASub: TStream; ALimit: Int32): TAsn1InputStream;
     function BuildConstructedBitString(const AContentsElements
       : IAsn1EncodableVector): IAsn1Object;
 
     class function BuildConstructedOctetString(const AContentsElements
       : IAsn1EncodableVector): IAsn1Object; static;
-    class function CreateDerBmpString(const ADefIn: TAsn1DefiniteLengthInputStream)
-      : IAsn1Object; static;
-
-    class function GetBuffer(const ADefIn: TAsn1DefiniteLengthInputStream;
-    const ATmpBuffers: TCryptoLibMatrixByteArray; out AContents: TCryptoLibByteArray): Boolean;
 
   public
     /// <summary>
@@ -429,6 +432,10 @@ type
     /// </summary>
     constructor Create(const AInput: TStream); overload;
     /// <summary>
+    /// Create from stream with inferred limit (<see cref="FindLimit"/>) and leave-open behaviour.
+    /// </summary>
+    constructor Create(const AInput: TStream; ALeaveOpen: Boolean); overload;
+    /// <summary>
     /// Create an ASN.1 input stream from a stream with a limit.
     /// </summary>
     constructor Create(const AInput: TStream; ALimit: Int32); overload;
@@ -437,17 +444,47 @@ type
     /// </summary>
     constructor Create(const AInput: TStream; ALimit: Int32;
       ALeaveOpen: Boolean); overload;
-    /// <summary>
-    /// Internal constructor with tmpBuffers.
-    /// </summary>
-    constructor Create(const AInput: TStream; ALimit: Int32;
-      ALeaveOpen: Boolean; const ATmpBuffers: TCryptoLibMatrixByteArray);
+    constructor Create(const AInput: TStream; ADepth, ALimit: Int32;
+      ALeaveOpen: Boolean; const ATmp: TCryptoLibByteArray);
       overload;
 
     /// <summary>
     /// Destructor.
     /// </summary>
     destructor Destroy; override;
+
+    /// <summary>
+    /// Maximum number of bytes that may be read through this stream.
+    /// </summary>
+    property Limit: Int32 read FLimit;
+
+    /// <summary>
+    /// Default recursion budget when <see cref="MaxConstructedDepth"/> is <c>-1</c>.
+    /// </summary>
+    const
+      DefaultMaxConstructedDepth = 64;
+
+    /// <summary>
+    /// Effective root recursion budget for nested constructed values (used when creating streams and parsers).
+    /// </summary>
+    class function FindDepth: Int32; static;
+
+    /// <summary>
+    /// Returns the parent's decremented recursion budget or raises <see cref="EAsn1ParsingCryptoLibException"/> when the budget is exhausted.
+    /// </summary>
+    class function DecrementDepth(AParentDepth: Int32): Int32; static;
+
+    /// <summary>
+    /// When <c>FindLimit</c> cannot infer a stream bound, this value applies if set (not <c>-1</c>);
+    /// normalized with <c>Max(0, …)</c>; <c>-1</c> leaves behavior unchanged (<c>MaxInt</c>).
+    /// </summary>
+    class property MaxLimitForUnknownStream: Int32 read FMaxLimitForUnknownStream
+      write FMaxLimitForUnknownStream;
+
+    /// <summary>
+    /// Application override: anything except <c>-1</c> yields <c>Max(0, …)</c> from <see cref="FindDepth"/>; <c>-1</c> selects <see cref="DefaultMaxConstructedDepth"/>.
+    /// </summary>
+    class property MaxConstructedDepth: Int32 read FMaxConstructedDepth write FMaxConstructedDepth;
 
     /// <summary>
     /// Read the next ASN.1 object from the stream.
@@ -472,17 +509,18 @@ type
       static;
 
     /// <summary>
-    /// Read length from stream.
+    /// Validates that <paramref name="ALength"/> is not greater than <paramref name="ALimit"/>.
     /// </summary>
-    class function ReadLength(const AInput: TStream; ALimit: Int32;
-      AIsParsing: Boolean): Int32; static;
+    class procedure CheckLength(ALength, ALimit: Int32); static;
 
     /// <summary>
-    /// Create a primitive DER object.
+    /// Read length from stream (no parent-limit check — use <see cref="CheckLength"/>).
     /// </summary>
+    class function ReadLength(const AInput: TStream): Int32; static;
+
     class function CreatePrimitiveDerObject(ATagNo: Int32;
       const ADefIn: TAsn1DefiniteLengthInputStream;
-      const ATmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object; static;
+      const ATmp: TCryptoLibByteArray): IAsn1Object; static;
   end;
 
 implementation
@@ -491,6 +529,45 @@ uses
   ClpAsn1Objects,
   ClpAsn1Parsers,
   ClpAsn1Core;
+
+{ TAsn1InputStream }
+
+class constructor TAsn1InputStream.Create;
+begin
+  FMaxLimitForUnknownStream := -1;
+  FMaxConstructedDepth := -1;
+end;
+
+class function TAsn1InputStream.FindDepth: Int32;
+begin
+  if FMaxConstructedDepth <> -1 then
+    Result := Max(0, FMaxConstructedDepth)
+  else
+    Result := DefaultMaxConstructedDepth;
+end;
+
+class function TAsn1InputStream.DecrementDepth(AParentDepth: Int32): Int32;
+begin
+  if AParentDepth <= 0 then
+    raise EAsn1ParsingCryptoLibException.Create(
+      'maximum nested construction level reached');
+  Result := AParentDepth - 1;
+end;
+
+class procedure TAsn1InputStream.CheckLength(ALength, ALimit: Int32);
+begin
+  if ALength > ALimit then
+    raise EIOCryptoLibException.CreateFmt(
+      'corrupted stream - out of bounds length found: %d > %d',
+      [ALength, ALimit]);
+end;
+
+function TAsn1InputStream.CreateSubStream(const ASub: TStream;
+  ALimit: Int32): TAsn1InputStream;
+begin
+  Result := TAsn1InputStream.Create(ASub, TAsn1InputStream.DecrementDepth(FDepth),
+    ALimit, True, FTmp);
+end;
 
 { TAsn1LimitedInputStream }
 
@@ -593,23 +670,20 @@ end;
 procedure TAsn1DefiniteLengthInputStream.ReadAllIntoByteArray
   (const ABuf: TCryptoLibByteArray);
 var
-  LLimit: Int32;
+  LToRead: Int32;
 begin
-  if FRemaining <> System.Length(ABuf) then
-    raise EArgumentCryptoLibException.Create('buffer length not right for data');
-
   if FRemaining = 0 then
     Exit;
 
-  // make sure it's safe to do this!
-  LLimit := Limit;
-  if FRemaining >= LLimit then
-    raise EIOCryptoLibException.CreateFmt
-      ('corrupted stream - out of bounds length found: %d >= %d',
-      [FRemaining, LLimit]);
+  LToRead := FRemaining;
+
+  if System.Length(ABuf) < LToRead then
+    raise EArgumentCryptoLibException.Create('buffer length not sufficient for data');
+
+  TAsn1InputStream.CheckLength(LToRead, Limit);
 
   FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, ABuf, 0,
-    System.Length(ABuf));
+    LToRead);
   if FRemaining <> 0 then
     raise EEndOfStreamCryptoLibException.CreateFmt
       ('DEF length %d object truncated by %d', [FOriginalLength, FRemaining]);
@@ -617,8 +691,6 @@ begin
 end;
 
 function TAsn1DefiniteLengthInputStream.ToArray: TCryptoLibByteArray;
-var
-  LLimit: Int32;
 begin
   Result := nil;
   if FRemaining = 0 then
@@ -626,12 +698,7 @@ begin
     Exit;
   end;
 
-  // make sure it's safe to do this!
-  LLimit := Limit;
-  if FRemaining >= LLimit then
-    raise EIOCryptoLibException.CreateFmt
-      ('corrupted stream - out of bounds length found: %d >= %d',
-      [FRemaining, LLimit]);
+  TAsn1InputStream.CheckLength(FRemaining, Limit);
 
   System.SetLength(Result, FRemaining);
   FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, Result, 0,
@@ -1441,6 +1508,11 @@ begin
   Create(AInput, FindLimit(AInput));
 end;
 
+constructor TAsn1InputStream.Create(const AInput: TStream; ALeaveOpen: Boolean);
+begin
+  Create(AInput, FindLimit(AInput), ALeaveOpen);
+end;
+
 constructor TAsn1InputStream.Create(const AInput: TStream; ALimit: Int32);
 begin
   Create(AInput, ALimit, False);
@@ -1448,32 +1520,27 @@ end;
 
 constructor TAsn1InputStream.Create(const AInput: TStream; ALimit: Int32;
   ALeaveOpen: Boolean);
-var
-  LTmpBuffers: TCryptoLibMatrixByteArray;
-  LI: Int32;
 begin
-  System.SetLength(LTmpBuffers, 16);
-  for LI := 0 to System.Length(LTmpBuffers) - 1 do
-    LTmpBuffers[LI] := nil;
-  Create(AInput, ALimit, ALeaveOpen, LTmpBuffers);
+  System.SetLength(FTmp, 16);
+  Create(AInput, TAsn1InputStream.FindDepth(), ALimit, ALeaveOpen, FTmp);
 end;
 
-constructor TAsn1InputStream.Create(const AInput: TStream; ALimit: Int32;
-  ALeaveOpen: Boolean; const ATmpBuffers: TCryptoLibMatrixByteArray);
+constructor TAsn1InputStream.Create(const AInput: TStream; ADepth, ALimit: Int32;
+  ALeaveOpen: Boolean; const ATmp: TCryptoLibByteArray);
 begin
   inherited Create(AInput);
   if not AInput.CanRead then
     raise EArgumentCryptoLibException.Create('Expected stream to be readable');
 
+  FDepth := ADepth;
   FLimit := ALimit;
   FLeaveOpen := ALeaveOpen;
-  FTmpBuffers := ATmpBuffers;
+  FTmp := ATmp;
   FStream := AInput;
 end;
 
 destructor TAsn1InputStream.Destroy;
 begin
-  FTmpBuffers := nil;
   if not FLeaveOpen then
   begin
    if FStream <> nil then
@@ -1499,7 +1566,7 @@ begin
   if AInput is TAsn1InputStream then
   begin
     LAsn1InputStream := AInput as TAsn1InputStream;
-    Result := LAsn1InputStream.FLimit;
+    Result := LAsn1InputStream.Limit;
     Exit;
   end;
 
@@ -1510,7 +1577,10 @@ begin
     Exit;
   end;
 
-  Result := Int32.MaxValue;
+  if FMaxLimitForUnknownStream <> -1 then
+    Result := Max(0, FMaxLimitForUnknownStream)
+  else
+    Result := Int32.MaxValue;
 end;
 
 class function TAsn1InputStream.GetFixedBufferStreamLimit(const AInput
@@ -1567,21 +1637,18 @@ begin
   Result := LTagNo;
 end;
 
-class function TAsn1InputStream.ReadLength(const AInput: TStream; ALimit: Int32;
-  AIsParsing: Boolean): Int32;
+class function TAsn1InputStream.ReadLength(const AInput: TStream): Int32;
 var
   LLength, LOctetsCount, LOctetsPos, LOctet: Int32;
 begin
   LLength := AInput.ReadByte();
   if (UInt32(LLength) shr 7) = 0 then
   begin
-    // definite-length short form
     Result := LLength;
     Exit;
   end;
   if $80 = LLength then
   begin
-    // indefinite-length
     Result := -1;
     Exit;
   end;
@@ -1612,12 +1679,6 @@ begin
     System.Inc(LOctetsPos);
   until LOctetsPos >= LOctetsCount;
 
-  if (LLength >= ALimit) and (not AIsParsing) then
-    // after all we must have read at least 1 byte
-    raise EIOCryptoLibException.CreateFmt
-      ('corrupted stream - out of bounds length found: %d >= %d',
-      [LLength, ALimit]);
-
   Result := LLength;
 end;
 
@@ -1639,7 +1700,7 @@ begin
   end;
 
   LTagNo := ReadTagNumber(FStream, LTagHdr);
-  LLength := ReadLength(FStream, FLimit, False);
+  LLength := ReadLength(FStream);
 
   if LLength >= 0 then
   begin
@@ -1648,6 +1709,10 @@ begin
       Result := BuildObject(LTagHdr, LTagNo, LLength);
     except
       on E: EArgumentCryptoLibException do
+        raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+      on E: EInvalidOperationCryptoLibException do
+        raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+      on E: EIndexOutOfRangeCryptoLibException do
         raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
     end;
   end
@@ -1659,7 +1724,7 @@ begin
         ('indefinite-length primitive encoding encountered');
 
     LIndIn := TAsn1IndefiniteLengthInputStream.Create(FStream, FLimit);
-    LSp := TAsn1StreamParser.Create(LIndIn, FLimit, FTmpBuffers);
+    LSp := TAsn1StreamParser.CreateSubParser(LIndIn, FDepth, FLimit, FTmp);
 
     LTagClass := LTagHdr and TAsn1Tags.Private;
     if 0 <> LTagClass then
@@ -1693,11 +1758,12 @@ var
   LTagClass: Int32;
   LIsConstructed: Boolean;
 begin
-  LDefIn := TAsn1DefiniteLengthInputStream.Create(FStream, ALength, FLimit);
+  CheckLength(ALength, FLimit);
+  LDefIn := TAsn1DefiniteLengthInputStream.Create(FStream, ALength, ALength);
   try
     if 0 = (ATagHdr and TAsn1Tags.Flags) then
     begin
-      Result := CreatePrimitiveDerObject(ATagNo, LDefIn, FTmpBuffers);
+      Result := CreatePrimitiveDerObject(ATagNo, LDefIn, FTmp);
       Exit;
     end;
 
@@ -1789,7 +1855,7 @@ begin
     Exit;
   end;
 
-  LSub := TAsn1InputStream.Create(ADefIn, LRemaining, True, FTmpBuffers);
+  LSub := CreateSubStream(ADefIn, LRemaining);
   try
     Result := LSub.ReadVector();
   finally
@@ -1838,131 +1904,45 @@ begin
   Result := TDerOctetString.WithContents(TBerOctetString.FlattenOctetStrings(LOctetStrings));
 end;
 
-class function TAsn1InputStream.CreateDerBmpString(const ADefIn
-  : TAsn1DefiniteLengthInputStream): IAsn1Object;
-var
-  LRemainingBytes, LLength, LStringPos, LBufPos: Int32;
-  LBuf: TCryptoLibByteArray;
-  LStr: TCryptoLibCharArray;
-begin
-  LRemainingBytes := ADefIn.Remaining;
-  if (LRemainingBytes and 1) <> 0 then
-    raise EIOCryptoLibException.Create('malformed BMPString encoding encountered');
-
-  LLength := LRemainingBytes div 2;
-
-  System.SetLength(LStr, LLength);
-  System.SetLength(LBuf, 8);
-  LStringPos := 0;
-
-  // Read in chunks of 8 bytes
-  while LRemainingBytes >= 8 do
-  begin
-    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, 8) <> 8 then
-      raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
-
-    LStr[LStringPos    ] := Char((LBuf[0] shl 8) or (LBuf[1] and $FF));
-    LStr[LStringPos + 1] := Char((LBuf[2] shl 8) or (LBuf[3] and $FF));
-    LStr[LStringPos + 2] := Char((LBuf[4] shl 8) or (LBuf[5] and $FF));
-    LStr[LStringPos + 3] := Char((LBuf[6] shl 8) or (LBuf[7] and $FF));
-    LStringPos := LStringPos + 4;
-    LRemainingBytes := LRemainingBytes - 8;
-  end;
-
-  // Read remaining bytes
-  if LRemainingBytes > 0 then
-  begin
-    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, LRemainingBytes) <> LRemainingBytes then
-      raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
-
-    LBufPos := 0;
-    repeat
-      LStr[LStringPos] := Char((LBuf[LBufPos] shl 8) or (LBuf[LBufPos + 1] and $FF));
-      System.Inc(LStringPos);
-      LBufPos := LBufPos + 2;
-    until LBufPos >= LRemainingBytes;
-  end;
-
-  if (ADefIn.Remaining <> 0) or (System.Length(LStr) <> LStringPos) then
-    raise EInvalidOperationCryptoLibException.Create('');
-
-  Result := TDerBmpString.CreatePrimitive(LStr);
-end;
-
-class function TAsn1InputStream.GetBuffer(const ADefIn: TAsn1DefiniteLengthInputStream;
-  const ATmpBuffers: TCryptoLibMatrixByteArray; out AContents: TCryptoLibByteArray): Boolean;
-var
-  LLen: Int32;
-  LBuf: TCryptoLibByteArray;
-begin
-  LLen := ADefIn.Remaining;
-  if LLen >= System.Length(ATmpBuffers) then
-  begin
-    AContents := ADefIn.ToArray();
-    Result := False;
-    Exit;
-  end;
-
-  LBuf := ATmpBuffers[LLen];
-  if LBuf = nil then
-  begin
-    System.SetLength(LBuf, LLen);
-    ATmpBuffers[LLen] := LBuf;
-  end;
-
-  ADefIn.ReadAllIntoByteArray(LBuf);
-  AContents := LBuf;
-  Result := True;
-end;
-
 class function TAsn1InputStream.CreatePrimitiveDerObject(ATagNo: Int32;
   const ADefIn: TAsn1DefiniteLengthInputStream;
-  const ATmpBuffers: TCryptoLibMatrixByteArray): IAsn1Object;
+  const ATmp: TCryptoLibByteArray): IAsn1Object;
 var
   LBytes: TCryptoLibByteArray;
-  LUsedBuffer: Boolean;
 begin
   case ATagNo of
     TAsn1Tags.BmpString:
       begin
-        Result := CreateDerBmpString(ADefIn);
+        Result := TDerBmpString.CreatePrimitive(ADefIn);
         Exit;
       end;
     TAsn1Tags.Boolean:
       begin
-        GetBuffer(ADefIn, ATmpBuffers, LBytes);
-        Result := TDerBoolean.CreatePrimitive(LBytes);
+        Result := TDerBoolean.CreatePrimitive(ADefIn);
         Exit;
       end;
     TAsn1Tags.Enumerated:
       begin
-        LUsedBuffer := GetBuffer(ADefIn, ATmpBuffers, LBytes);
-        Result := TDerEnumerated.CreatePrimitive(LBytes, LUsedBuffer);
+        Result := TDerEnumerated.CreatePrimitive(ADefIn);
         Exit;
       end;
     TAsn1Tags.Null:
       begin
-        TAsn1Null.CheckContentsLength(ADefIn.Remaining);
-        Result := TAsn1Null.CreatePrimitive();
+        Result := TAsn1Null.CreatePrimitive(ADefIn);
         Exit;
       end;
     TAsn1Tags.ObjectIdentifier:
       begin
-        TDerObjectIdentifier.CheckContentsLength(ADefIn.Remaining);
-        LUsedBuffer := GetBuffer(ADefIn, ATmpBuffers, LBytes);
-        Result := TDerObjectIdentifier.CreatePrimitive(LBytes, LUsedBuffer);
+        Result := TDerObjectIdentifier.CreatePrimitive(ADefIn, ATmp);
         Exit;
       end;
     TAsn1Tags.RelativeOid:
       begin
-        TAsn1RelativeOid.CheckContentsLength(ADefIn.Remaining);
-        LUsedBuffer := GetBuffer(ADefIn, ATmpBuffers, LBytes);
-        Result := TAsn1RelativeOid.CreatePrimitive(LBytes, LUsedBuffer);
+        Result := TAsn1RelativeOid.CreatePrimitive(ADefIn, ATmp);
         Exit;
       end;
   end;
 
-  // Handle cases that can use ToArray directly
   LBytes := ADefIn.ToArray();
 
   case ATagNo of

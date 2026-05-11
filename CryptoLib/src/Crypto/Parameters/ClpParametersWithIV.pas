@@ -30,6 +30,13 @@ resourcestring
   SIVNil = 'IV Cannot be Nil';
 
 type
+  /// <summary>
+  /// Wrapper parameters object that carries an initialisation vector (<c>IV</c>) together with nested <see cref="ICipherParameters"/> (typically the key).
+  /// </summary>
+  /// <remarks>
+  /// The nested <see cref="Parameters"/> reference may be nil to express "reuse previous key material" in some protocol paths;
+  /// however the IV payload itself must always be supplied non-nil.
+  /// </remarks>
   TParametersWithIV = class sealed(TInterfacedObject, IParametersWithIV,
     ICipherParameters)
 
@@ -41,13 +48,20 @@ type
     function GetParameters: ICipherParameters; inline;
 
   public
+    /// <summary>Copy the entire IV array into internal storage.</summary>
+    /// <param name="AParameters">Underlying parameters (may be nil for key reuse scenarios).</param>
+    /// <param name="AIv">Nonce/IV bytes.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AIv"/> is nil.</exception>
     constructor Create(const AParameters: ICipherParameters;
       const AIv: TCryptoLibByteArray); overload;
+    /// <summary>Copy <paramref name="AIvLen"/> bytes starting at <paramref name="AIvOff"/>.</summary>
     constructor Create(const AParameters: ICipherParameters;
       const AIv: TCryptoLibByteArray; AIvOff, AIvLen: Int32); overload;
     destructor Destroy; override;
+    /// <summary>Returns a defensive copy of the IV.</summary>
     function GetIV(): TCryptoLibByteArray; inline;
     property Parameters: ICipherParameters read GetParameters;
+    /// <summary>Zeroise the cached IV buffer.</summary>
     procedure Clear(); inline;
 
   end;

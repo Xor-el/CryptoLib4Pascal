@@ -24,7 +24,6 @@ uses
   Classes,
   SysUtils,
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpICcmBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,

@@ -163,6 +163,9 @@ type
 
 implementation
 
+uses
+  ClpPkcs12Utilities;
+
 class constructor TPbeUtilities.Create;
 begin
   Boot;
@@ -461,7 +464,7 @@ class function TPbeUtilities.GenerateAlgorithmParameters(const AAlgorithm: Strin
   const ASalt: TCryptoLibByteArray; AIterationCount: Int32): IAsn1Encodable;
 begin
   if IsPkcs12(AAlgorithm) then
-    Result := TPkcs12PbeParams.Create(ASalt, AIterationCount)
+    Result := TPkcs12PbeParams.Create(ASalt, TPkcs12Utilities.ValidateIterations(AIterationCount))
   else if IsPkcs5Scheme2(AAlgorithm) then
     Result := TPbkdf2Params.Create(ASalt, AIterationCount)
   else
@@ -581,7 +584,7 @@ begin
   begin
     LPkcs12PbeParams := TPkcs12PbeParams.GetInstance(APbeParameters);
     LSalt := LPkcs12PbeParams.IV.GetOctets();
-    LIterationCount := LPkcs12PbeParams.IterationsObject.IntValueExact;
+    LIterationCount := TPkcs12Utilities.ValidateIterations(LPkcs12PbeParams.IterationsObject);
     LKeyBytes := TPbeParametersGenerator.Pkcs12PasswordToBytes(APassword, AWrongPkcs12Zero);
   end
   else if IsPkcs5Scheme2(LMechanism) then

@@ -704,11 +704,9 @@ end;
 
 class function TAsn1Object.FromStream(const AInStr: TStream): IAsn1Object;
 var
-  LLimit: Int32;
   LAsn1In: TAsn1InputStream;
 begin
-  LLimit := TAsn1InputStream.FindLimit(AInStr);
-  LAsn1In := TAsn1InputStream.Create(AInStr, LLimit, True);
+  LAsn1In := TAsn1InputStream.Create(AInStr, True);
   try
     Result := LAsn1In.ReadObject();
   finally

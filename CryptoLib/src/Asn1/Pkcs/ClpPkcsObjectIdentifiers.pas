@@ -158,6 +158,7 @@ type
     FIdAlgEsdh, FIdAlgCms3DesWrap, FIdAlgCmsRC2Wrap, FIdAlgZlibCompress, FIdAlgPwriKek, FIdAlgSsdh,
     FId_aa_cmsAlgorithmProtect,
     FIdRsaKem, FIdAlgHssLmsHashsig, FIdAlgAeadChaCha20Poly1305,
+    FDhSinglePassStdDHHkdfSha256Scheme, FDhSinglePassStdDHHkdfSha384Scheme, FDhSinglePassStdDHHkdfSha512Scheme,
     FIdAlgHkdfWithSha256, FIdAlgHkdfWithSha384, FIdAlgHkdfWithSha512,
     FPreferSignedData, FCannotDecryptAny, FSmimeCapabilitiesVersions,
     FId_ct,
@@ -272,6 +273,9 @@ type
     class function GetIdRsaKem: IDerObjectIdentifier; static; inline;
     class function GetIdAlgHssLmsHashsig: IDerObjectIdentifier; static; inline;
     class function GetIdAlgAeadChaCha20Poly1305: IDerObjectIdentifier; static; inline;
+    class function GetDhSinglePassStdDHHkdfSha256Scheme: IDerObjectIdentifier; static; inline;
+    class function GetDhSinglePassStdDHHkdfSha384Scheme: IDerObjectIdentifier; static; inline;
+    class function GetDhSinglePassStdDHHkdfSha512Scheme: IDerObjectIdentifier; static; inline;
     class function GetIdAlgHkdfWithSha256: IDerObjectIdentifier; static; inline;
     class function GetIdAlgHkdfWithSha384: IDerObjectIdentifier; static; inline;
     class function GetIdAlgHkdfWithSha512: IDerObjectIdentifier; static; inline;
@@ -446,6 +450,12 @@ type
     class property IdRsaKem: IDerObjectIdentifier read GetIdRsaKem;
     class property IdAlgHssLmsHashsig: IDerObjectIdentifier read GetIdAlgHssLmsHashsig;
     class property IdAlgAeadChaCha20Poly1305: IDerObjectIdentifier read GetIdAlgAeadChaCha20Poly1305;
+    /// <summary>RFC 8418: dhSinglePass-stdDH-hkdf-sha256-scheme (1.2.840.113549.1.9.16.3.19).</summary>
+    class property DhSinglePassStdDHHkdfSha256Scheme: IDerObjectIdentifier read GetDhSinglePassStdDHHkdfSha256Scheme;
+    /// <summary>RFC 8418: dhSinglePass-stdDH-hkdf-sha384-scheme (1.2.840.113549.1.9.16.3.20).</summary>
+    class property DhSinglePassStdDHHkdfSha384Scheme: IDerObjectIdentifier read GetDhSinglePassStdDHHkdfSha384Scheme;
+    /// <summary>RFC 8418: dhSinglePass-stdDH-hkdf-sha512-scheme (1.2.840.113549.1.9.16.3.21).</summary>
+    class property DhSinglePassStdDHHkdfSha512Scheme: IDerObjectIdentifier read GetDhSinglePassStdDHHkdfSha512Scheme;
     class property IdAlgHkdfWithSha256: IDerObjectIdentifier read GetIdAlgHkdfWithSha256;
     class property IdAlgHkdfWithSha384: IDerObjectIdentifier read GetIdAlgHkdfWithSha384;
     class property IdAlgHkdfWithSha512: IDerObjectIdentifier read GetIdAlgHkdfWithSha512;
@@ -615,6 +625,9 @@ begin
     FIdRsaKem := FSmimeAlg.Branch('14');
     FIdAlgHssLmsHashsig := FSmimeAlg.Branch('17');
     FIdAlgAeadChaCha20Poly1305 := FSmimeAlg.Branch('18');
+    FDhSinglePassStdDHHkdfSha256Scheme := FSmimeAlg.Branch('19');
+    FDhSinglePassStdDHHkdfSha384Scheme := FSmimeAlg.Branch('20');
+    FDhSinglePassStdDHHkdfSha512Scheme := FSmimeAlg.Branch('21');
     FIdAlgHkdfWithSha256 := FSmimeAlg.Branch('28');
     FIdAlgHkdfWithSha384 := FSmimeAlg.Branch('29');
     FIdAlgHkdfWithSha512 := FSmimeAlg.Branch('30');
@@ -1073,6 +1086,21 @@ end;
 class function TPkcsObjectIdentifiers.GetIdAlgAeadChaCha20Poly1305: IDerObjectIdentifier;
 begin
   Result := FIdAlgAeadChaCha20Poly1305;
+end;
+
+class function TPkcsObjectIdentifiers.GetDhSinglePassStdDHHkdfSha256Scheme: IDerObjectIdentifier;
+begin
+  Result := FDhSinglePassStdDHHkdfSha256Scheme;
+end;
+
+class function TPkcsObjectIdentifiers.GetDhSinglePassStdDHHkdfSha384Scheme: IDerObjectIdentifier;
+begin
+  Result := FDhSinglePassStdDHHkdfSha384Scheme;
+end;
+
+class function TPkcsObjectIdentifiers.GetDhSinglePassStdDHHkdfSha512Scheme: IDerObjectIdentifier;
+begin
+  Result := FDhSinglePassStdDHHkdfSha512Scheme;
 end;
 
 class function TPkcsObjectIdentifiers.GetIdAlgHkdfWithSha256: IDerObjectIdentifier;

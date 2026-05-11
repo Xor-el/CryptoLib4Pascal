@@ -25,6 +25,7 @@ uses
 
 type
 
+  /// <summary>AES <see cref="IBlockCipher"/>: 128-bit blocks, 128/192/256-bit keys.</summary>
   IAesEngine = interface(IBlockCipher)
     ['{984D6EC6-DBFC-4CEC-88B6-29B1C0BEA6CD}']
 

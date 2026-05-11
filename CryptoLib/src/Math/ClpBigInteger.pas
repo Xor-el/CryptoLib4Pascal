@@ -32,6 +32,7 @@ uses
 
 resourcestring
   SZeroLengthBigInteger = 'Zero length BigInteger';
+  SSignBytesMismatch = 'sign value incompatible with magnitude (expected all-zero bytes when sign is zero)';
   SInvalidSignValue = 'Invalid sign value';
   SInvalidRadix = 'Only bases 2, 8, 10, or 16 allowed';
   SBigIntegerOutOfIntRange = 'BigInteger out of int range';
@@ -673,6 +674,8 @@ begin
     Result := FOne.FMagnitude;
     Exit;
   end;
+  if ABytes[LIBVal] = 0 then
+    System.Dec(LIBVal);
   LNBytes := LEnd - LIBVal;
   System.SetLength(LInverse, LNBytes);
   LIndex := 0;
@@ -723,6 +726,9 @@ begin
     Result := FOne.FMagnitude;
     Exit;
   end;
+
+  if ABytes[AOffset + LLast] = 0 then
+    System.Inc(LLast);
 
   LNBytes := LLast + 1;
   System.SetLength(LInverse, LNBytes);
@@ -1525,8 +1531,16 @@ procedure TBigInteger.InitFromBytes(const ABytes: TCryptoLibByteArray; const AOf
 var
   LSign: Int32;
 begin
-  if ALength = 0 then
-    raise EFormatCryptoLibException.Create(SZeroLengthBigInteger);
+  TArrayUtilities.ValidateSegment(ABytes, AOffset, ALength);
+  if ALength <= 0 then
+  begin
+    FSign := 0;
+    FMagnitude := nil;
+    FNBits := -1;
+    FNBitLength := -1;
+    FIsInitialized := True;
+    Exit;
+  end;
   if ABigEndian then
     FMagnitude := InitBE(ABytes, AOffset, ALength, LSign)
   else
@@ -1559,10 +1573,13 @@ end;
 
 procedure TBigInteger.InitFromSignedBytes(const ASign: Int32; const ABytes: TCryptoLibByteArray; const AOffset, ALength: Int32; const ABigEndian: Boolean);
 begin
+  TArrayUtilities.ValidateSegment(ABytes, AOffset, ALength);
   if (ASign < -1) or (ASign > 1) then
     raise EFormatCryptoLibException.Create(SInvalidSignValue);
   if ASign = 0 then
   begin
+    if not TArrayUtilities.AreAllZeroes(ABytes, AOffset, ALength) then
+      raise EFormatCryptoLibException.Create(SSignBytesMismatch);
     FSign := 0;
     System.SetLength(FMagnitude, 0);
   end

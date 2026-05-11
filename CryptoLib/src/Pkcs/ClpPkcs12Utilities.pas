@@ -29,12 +29,16 @@ uses
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpIX509Asn1Objects,
-  ClpPkcs12Store,
   ClpX509Asn1Objects,
   ClpCryptoLibTypes;
 
 resourcestring
   SErrorConstructingMac = 'error constructing MAC: %s';
+  SContentInfoContentMissing = 'ContentInfo content missing';
+  SEncryptedContentMissing = 'EncryptedContentInfo content missing';
+  SNegativePkcs12IterationCount = 'negative iteration count found';
+  SPkcs12IterationCountsOutOfRange = 'iteration counts >= 2^31 are not suppported';
+  SPkcs12IterationExceedsMax = 'iteration count %d greater than %d';
 
 type
   /// <summary>
@@ -42,8 +46,21 @@ type
   /// </summary>
   TPkcs12Utilities = class sealed(TObject)
   strict private
+    const
+      DefaultMaxPkcs12Iterations = 5000000;
+    class var
+      FMaxPkcs12Iterations: Int32;
+    class constructor Create;
+
+    class function GetEffectiveMaxPkcs12Iterations: Int32; static;
     class function DLEncode(const AAsn1Encodable: IAsn1Encodable): TCryptoLibByteArray; static;
+
   public
+    class function ValidateIterations(AIterationCount: Int32): Int32; overload; static;
+    class function ValidateIterations(const AIterations: IDerInteger): Int32; overload; static;
+    class function GetContent(const AInfo: IPkcsContentInfo): IAsn1Encodable; static;
+    class function GetContentOctets(const AInfo: IPkcsContentInfo): TCryptoLibByteArray; static;
+    class function GetEncryptedContent(const AEncrypted: IPkcsEncryptedData): IAsn1OctetString; static;
     /// <summary>
     /// Re-encode the outer layer of the PKCS#12 file to definite length encoding.
     /// </summary>
@@ -59,11 +76,71 @@ type
     /// <returns>Byte array representing the DER encoding of the PFX structure.</returns>
     class function ConvertToDefiniteLength(const ABerPkcs12File: TCryptoLibByteArray;
       const APassword: TCryptoLibCharArray): TCryptoLibByteArray; overload; static;
+
+    class property MaxPkcs12Iterations: Int32 read FMaxPkcs12Iterations write FMaxPkcs12Iterations;
   end;
 
 implementation
 
+uses
+  ClpPkcs12Store;
+
 { TPkcs12Utilities }
+
+class constructor TPkcs12Utilities.Create;
+begin
+  FMaxPkcs12Iterations := -1;
+end;
+
+class function TPkcs12Utilities.GetEffectiveMaxPkcs12Iterations: Int32;
+begin
+  if FMaxPkcs12Iterations < 0 then
+    Result := DefaultMaxPkcs12Iterations
+  else
+    Result := FMaxPkcs12Iterations;
+end;
+
+class function TPkcs12Utilities.ValidateIterations(AIterationCount: Int32): Int32;
+var
+  LMax: Int32;
+begin
+  if AIterationCount < 0 then
+    raise EInvalidOperationCryptoLibException.Create(SNegativePkcs12IterationCount);
+  LMax := GetEffectiveMaxPkcs12Iterations;
+  if AIterationCount > LMax then
+    raise EInvalidOperationCryptoLibException.Create(Format(SPkcs12IterationExceedsMax, [AIterationCount, LMax]));
+  Result := AIterationCount;
+end;
+
+class function TPkcs12Utilities.ValidateIterations(const AIterations: IDerInteger): Int32;
+var
+  LInt: Int32;
+begin
+  if AIterations = nil then
+    raise EArgumentNilCryptoLibException.Create('iterations');
+  if not AIterations.TryGetIntValueExact(LInt) then
+    raise EInvalidOperationCryptoLibException.Create(SPkcs12IterationCountsOutOfRange);
+  Result := ValidateIterations(LInt);
+end;
+
+class function TPkcs12Utilities.GetContent(const AInfo: IPkcsContentInfo): IAsn1Encodable;
+begin
+  Result := AInfo.Content;
+  if Result = nil then
+    raise EAsn1ParsingCryptoLibException.Create(SContentInfoContentMissing);
+end;
+
+class function TPkcs12Utilities.GetContentOctets(const AInfo: IPkcsContentInfo): TCryptoLibByteArray;
+begin
+  Result := TAsn1OctetString.GetInstance(GetContent(AInfo)).GetOctets();
+end;
+
+class function TPkcs12Utilities.GetEncryptedContent(const AEncrypted: IPkcsEncryptedData): IAsn1OctetString;
+begin
+  Result := AEncrypted.Content;
+  if Result = nil then
+    raise EAsn1ParsingCryptoLibException.Create(SEncryptedContentMissing);
+end;
 
 class function TPkcs12Utilities.DLEncode(const AAsn1Encodable: IAsn1Encodable): TCryptoLibByteArray;
 begin
@@ -83,36 +160,34 @@ class function TPkcs12Utilities.ConvertToDefiniteLength(const ABerPkcs12File: TC
 var
   LPfx: IPfx;
   LInfo: IPkcsContentInfo;
-  LContent: IAsn1OctetString;
   LContentOctets: TCryptoLibByteArray;
   LObj: IAsn1Object;
   LContentNew: IAsn1OctetString;
   LInfoNew: IPkcsContentInfo;
   LMacData: IMacData;
-  LMacDigestAlgorithm: IAlgorithmIdentifier;
-  LSalt: TCryptoLibByteArray;
+  LMacAlgID: IAlgorithmIdentifier;
   LMacResult: TCryptoLibByteArray;
   LMac: IDigestInfo;
+  LValidatedIt: Int32;
   LPfxNew: IPfx;
 begin
   LPfx := TPfx.GetInstance(ABerPkcs12File);
   LInfo := LPfx.AuthSafe;
-  LContent := TAsn1OctetString.GetInstance(LInfo.Content);
-  LContentOctets := LContent.GetOctets();
+  LContentOctets := TPkcs12Utilities.GetContentOctets(LInfo);
   LObj := TAsn1Object.FromByteArray(LContentOctets);
   LContentOctets := DLEncode(LObj);
-  LContentNew := TDerOctetString.Create(LContentOctets);
+  LContentNew := TDerOctetString.FromContents(LContentOctets);
   LInfoNew := TPkcsContentInfo.Create(LInfo.ContentType, LContentNew);
 
   LMacData := LPfx.MacData;
   if LMacData <> nil then
   begin
     try
-      LMacDigestAlgorithm := LMacData.Mac.DigestAlgorithm;
-      LSalt := LMacData.MacSalt.GetOctets();
-      LMacResult := TPkcs12Store.CalculatePbeMac(LMacDigestAlgorithm, LSalt,
-        LMacData.Iterations.IntValueExact, APassword, False, LContentOctets);
-      LMac := TDigestInfo.Create(LMacDigestAlgorithm, TDerOctetString.Create(LMacResult) as IDerOctetString);
+      LMacAlgID := LMacData.Mac.DigestAlgorithm;
+      LValidatedIt := TPkcs12Utilities.ValidateIterations(LMacData.Iterations);
+      LMacResult := TPkcs12Store.CalculatePbeMac(LMacAlgID, LMacData.MacSalt.GetOctets(),
+        LValidatedIt, APassword, False, LContentOctets);
+      LMac := TDigestInfo.Create(LMacAlgID, TDerOctetString.FromContents(LMacResult));
       LMacData := TMacData.Create(LMac, LMacData.MacSalt, LMacData.Iterations);
     except
       on E: Exception do

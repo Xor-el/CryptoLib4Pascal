@@ -53,8 +53,14 @@ resourcestring
 
 type
   /// <summary>
-  /// Utility class for creating IMac (HMAC) objects from names/OIDs.
+  /// Factory for <see cref="IMac"/> instances (HMAC, CMAC, and related constructions) and convenience helpers for
+  /// one-shot MAC computation.
   /// </summary>
+  /// <remarks>
+  /// MACs can be looked up by canonical name (for example <c>HMAC-SHA256</c>, <c>AESCMAC</c>) or by ASN.1 OID.
+  /// Names are matched case-insensitively. The returned <see cref="IMac"/> is uninitialised; the caller must
+  /// invoke <see cref="IMac.Init"/> with a key before processing data (<see cref="TMacUtilities.CalculateMac"/> is an exception—it initialises internally).
+  /// </remarks>
   TMacUtilities = class sealed(TObject)
   strict private
     class var
@@ -67,12 +73,39 @@ type
     class constructor Create;
     class destructor Destroy;
   public
+    /// <summary>
+    /// Returns the canonical algorithm name registered for the given ASN.1 OID, or an empty string if the OID is
+    /// not mapped to a known MAC.
+    /// </summary>
     class function GetAlgorithmName(const AOid: IDerObjectIdentifier): String; static;
+
+    /// <summary>Resolve and instantiate an <see cref="IMac"/> for the given ASN.1 algorithm OID.</summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AOid"/> is <c>nil</c>.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the OID does not map to a known MAC.</exception>
     class function GetMac(const AOid: IDerObjectIdentifier): IMac; overload; static;
+
+    /// <summary>Resolve and instantiate an <see cref="IMac"/> by name or alias.</summary>
+    /// <param name="AAlgorithm">MAC name such as <c>HMAC-SHA512</c>, <c>AESCMAC</c>.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the MAC name is not recognised.</exception>
     class function GetMac(const AAlgorithm: String): IMac; overload; static;
+
+    /// <summary>
+    /// One-shot MAC of <paramref name="AInput"/> using <paramref name="AAlgorithm"/> and key parameters <paramref name="ACp"/>.
+    /// </summary>
+    /// <param name="AAlgorithm">A MAC name or alias (for example <c>HMAC-SHA256</c>).</param>
+    /// <param name="ACp">Key and other cipher parameters.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">Thrown from <see cref="GetMac"/> if <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">Thrown from <see cref="GetMac"/> when the MAC is unknown.</exception>
     class function CalculateMac(const AAlgorithm: String; const ACp: ICipherParameters;
       const AInput: TCryptoLibByteArray): TCryptoLibByteArray; static;
+
+    /// <summary>Finalises <paramref name="AMac"/> and returns the resulting tag as a new byte array.</summary>
     class function DoFinal(const AMac: IMac): TCryptoLibByteArray; overload; static;
+
+    /// <summary>
+    /// Feeds <paramref name="AInput"/> into <paramref name="AMac"/>, finalises it, and returns the tag.
+    /// </summary>
     class function DoFinal(const AMac: IMac; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static;
   end;
 

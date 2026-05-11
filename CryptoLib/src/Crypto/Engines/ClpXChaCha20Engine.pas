@@ -25,7 +25,6 @@ uses
   ClpChaCha7539Engine,
   ClpIXChaCha20Engine,
   ClpChaChaEngine,
-  ClpPack,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 

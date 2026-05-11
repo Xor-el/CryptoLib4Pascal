@@ -68,6 +68,15 @@ resourcestring
 
 type
 
+  /// <summary>
+  /// Factory for symmetric key generators (<see cref="ICipherKeyGenerator"/>) and asymmetric key pair generators
+  /// (<see cref="IAsymmetricCipherKeyPairGenerator"/>), resolved by algorithm name or ASN.1 OID string.
+  /// </summary>
+  /// <remarks>
+  /// Names are matched case-insensitively. Symmetric key generators are pre-configured with the default key size
+  /// for each registered symmetric algorithm. Asymmetric key pair generators are returned uninitialised; the caller must invoke
+  /// <c>Init</c> with appropriate key generation parameters before generating a key pair.
+  /// </remarks>
   TGeneratorUtilities = class sealed(TObject)
 
   strict private
@@ -87,20 +96,39 @@ type
 
   public
 
+    /// <summary>Returns the canonical symmetric key generator algorithm name for <paramref name="AAlgorithm"/>, or an empty string.</summary>
     class function GetCanonicalKeyGeneratorAlgorithm(const AAlgorithm: String): String; static; inline;
 
+    /// <summary>Returns the canonical key pair generator algorithm name for <paramref name="AAlgorithm"/>, or an empty string.</summary>
     class function GetCanonicalKeyPairGeneratorAlgorithm(const AAlgorithm: String): String; static; inline;
 
+    /// <summary>Resolve an <see cref="IAsymmetricCipherKeyPairGenerator"/> from <paramref name="AOid"/> (<c>AOid.Id</c>).</summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is not recognised or unsupported.</exception>
     class function GetKeyPairGenerator(const AOid: IDerObjectIdentifier): IAsymmetricCipherKeyPairGenerator; overload; static; inline;
 
+    /// <summary>
+    /// Resolve an <see cref="IAsymmetricCipherKeyPairGenerator"/> for the named asymmetric algorithm
+    /// (for example <c>RSA</c>, <c>ECDSA</c>, <c>Ed25519</c>, <c>DH</c>).
+    /// </summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If <paramref name="AAlgorithm"/> is not recognised or unsupported.</exception>
     class function GetKeyPairGenerator(const AAlgorithm: String): IAsymmetricCipherKeyPairGenerator; overload; static;
 
+    /// <summary>Resolve a <see cref="ICipherKeyGenerator"/> from <paramref name="AOid"/> (<c>AOid.Id</c>).</summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is unknown or has no default key size.</exception>
     class function GetKeyGenerator(const AOid: IDerObjectIdentifier): ICipherKeyGenerator; overload; static; inline;
 
+    /// <summary>
+    /// Resolve a <see cref="ICipherKeyGenerator"/> for <paramref name="AAlgorithm"/>, pre-configured with the
+    /// default key size (for example <c>AES</c>).
+    /// </summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is not recognised or has no default key size.</exception>
     class function GetKeyGenerator(const AAlgorithm: String): ICipherKeyGenerator; overload; static;
 
+    /// <summary>Returns the default symmetric key size for <paramref name="AOid"/> (<c>AOid.Id</c>).</summary>
     class function GetDefaultKeySize(const AOid: IDerObjectIdentifier): Int32; overload; static; inline;
 
+    /// <summary>Returns the default symmetric key size for <paramref name="AAlgorithm"/>.</summary>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm is unknown or unsupported for key size lookup.</exception>
     class function GetDefaultKeySize(const AAlgorithm: String): Int32; overload; static;
 
   end;

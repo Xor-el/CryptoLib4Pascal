@@ -53,6 +53,8 @@ type
     function mersenne(e: Int32): TBigInteger;
     procedure CheckEqualsBigInteger(const a, b: TBigInteger;
       const msg: String = '');
+    procedure ImplTestBytesConstructors(const AExpected: Int32;
+      const ABytes: TBytes);
 
   protected
     procedure SetUp; override;
@@ -68,6 +70,7 @@ type
     procedure TestClearBit();
     procedure TestCompareTo();
     procedure TestConstructors();
+    procedure TestBytesConstructorsValidation();
     procedure TestDivide();
     procedure TestDivideAndRemainder();
     procedure TestFlipBit();
@@ -115,6 +118,54 @@ procedure TTestBigInteger.CheckEqualsBigInteger(const a, b: TBigInteger;
   const msg: String = '');
 begin
   CheckEquals(True, a.Equals(b), msg);
+end;
+
+procedure TTestBigInteger.ImplTestBytesConstructors(const AExpected: Int32;
+  const ABytes: TBytes);
+var
+  LCheckBE, LCheckLE, LCheckBESeg, LCheckLESeg: TBigInteger;
+  LRev, LPadded, LRevPadded: TBytes;
+  pad0, pad1, LLen, i, LExpectedSign, LPaddedLen: Int32;
+begin
+  LLen := System.Length(ABytes);
+  LCheckBE := TBigInteger.Create(ABytes, True);
+  CheckEquals(AExpected, LCheckBE.Int32ValueExact);
+
+  if AExpected < 0 then
+    LExpectedSign := -1
+  else if AExpected > 0 then
+    LExpectedSign := 1
+  else
+    LExpectedSign := 0;
+  CheckEquals(LExpectedSign, LCheckBE.SignValue);
+
+  System.SetLength(LRev, LLen);
+  for i := 0 to LLen - 1 do
+    LRev[i] := ABytes[LLen - 1 - i];
+
+  LCheckLE := TBigInteger.Create(LRev, False);
+  CheckEquals(AExpected, LCheckLE.Int32ValueExact);
+  CheckEquals(LExpectedSign, LCheckLE.SignValue);
+
+  pad0 := 1 + FRandom.Next(8);
+  pad1 := 1 + FRandom.Next(8);
+  LPaddedLen := pad0 + LLen + pad1;
+  System.SetLength(LPadded, LPaddedLen);
+  FRandom.NextBytes(LPadded, 0, LPaddedLen);
+  if LLen > 0 then
+    System.Move(ABytes[0], LPadded[pad0], LLen * SizeOf(Byte));
+
+  LCheckBESeg := TBigInteger.Create(LPadded, pad0, LLen, True);
+  CheckEquals(AExpected, LCheckBESeg.Int32ValueExact);
+  CheckEquals(LExpectedSign, LCheckBESeg.SignValue);
+
+  System.SetLength(LRevPadded, LPaddedLen);
+  for i := 0 to LPaddedLen - 1 do
+    LRevPadded[i] := LPadded[LPaddedLen - 1 - i];
+
+  LCheckLESeg := TBigInteger.Create(LRevPadded, pad1, LLen, False);
+  CheckEquals(AExpected, LCheckLESeg.Int32ValueExact);
+  CheckEquals(LExpectedSign, LCheckLESeg.SignValue);
 end;
 
 function TTestBigInteger.IsEvenUsingMod(const n: TBigInteger): Boolean;
@@ -371,17 +422,76 @@ procedure TTestBigInteger.TestConstructors;
 var
   i: Int32;
 begin
-  CheckEqualsBigInteger(TBigInteger.Zero, TBigInteger.Create(TBytes.Create(0)));
-  CheckEqualsBigInteger(TBigInteger.Zero,
-    TBigInteger.Create(TBytes.Create(0, 0)));
+  ImplTestBytesConstructors(0, TBytes.Create($00));
+  ImplTestBytesConstructors(0, TBytes.Create($00, $00));
+  ImplTestBytesConstructors(-1, TBytes.Create($FF));
+  ImplTestBytesConstructors(-1, TBytes.Create($FF, $FF));
+  ImplTestBytesConstructors(-128, TBytes.Create($80));
+  ImplTestBytesConstructors(-128, TBytes.Create($FF, $80));
+  ImplTestBytesConstructors(-256, TBytes.Create($FF, $00));
+  ImplTestBytesConstructors(-256, TBytes.Create($FF, $FF, $00));
+  ImplTestBytesConstructors(-32768, TBytes.Create($80, $00));
+  ImplTestBytesConstructors(-32768, TBytes.Create($FF, $80, $00));
+  ImplTestBytesConstructors(-65536, TBytes.Create($FF, $00, $00));
+  ImplTestBytesConstructors(-65536, TBytes.Create($FF, $FF, $00, $00));
 
   for i := 0 to System.Pred(10) do
-
   begin
     CheckTrue(TBigInteger.Create(i + 3, 0, FRandom).TestBit(0));
   end;
 
   // TODO Other constructors
+end;
+
+procedure TTestBigInteger.TestBytesConstructorsValidation;
+var
+  LBuf, LEmpty: TBytes;
+  LB: TBigInteger;
+begin
+  // Signed: sign 0 requires all-zero magnitude bytes
+  LBuf := TBytes.Create($00, $01);
+  try
+    LB := TBigInteger.Create(0, LBuf, 0, 2, True);
+    Fail('expected EFormatCryptoLibException');
+  except
+    on e: EFormatCryptoLibException do
+      ;
+  else
+    raise;
+  end;
+
+  LBuf := TBytes.Create($00, $00);
+  LB := TBigInteger.Create(0, LBuf, 0, 2, True);
+  CheckEqualsBigInteger(Fzero, LB);
+
+  // Unsigned: invalid segment
+  LBuf := TBytes.Create($01);
+  try
+    LB := TBigInteger.Create(LBuf, 5, 1);
+    Fail('expected EArgumentOutOfRangeCryptoLibException');
+  except
+    on e: EArgumentOutOfRangeCryptoLibException do
+      ;
+  else
+    raise;
+  end;
+
+  try
+    LB := TBigInteger.Create(nil, 0, 1);
+    Fail('expected EArgumentNilCryptoLibException');
+  except
+    on e: EArgumentNilCryptoLibException do
+      ;
+  else
+    raise;
+  end;
+
+  // Zero-length unsigned magnitude -> zero value
+  System.SetLength(LEmpty, 0);
+  LB := TBigInteger.Create(LEmpty, 0, 0);
+  CheckEqualsBigInteger(Fzero, LB);
+  LB := TBigInteger.Create(nil, 0, 0);
+  CheckEqualsBigInteger(Fzero, LB);
 end;
 
 procedure TTestBigInteger.TestDivide;

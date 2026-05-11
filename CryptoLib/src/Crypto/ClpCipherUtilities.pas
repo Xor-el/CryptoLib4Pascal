@@ -108,8 +108,20 @@ resourcestring
 
 type
 
+  /// <summary>
+  /// Factory for <see cref="IBufferedCipher"/> instances resolved from a textual algorithm name (with optional
+  /// mode and padding segments) or from an ASN.1 algorithm OID.
+  /// </summary>
   /// <remarks>
-  /// Cipher Utility class contains methods that can not be specifically grouped into other classes.
+  /// <para>
+  /// Algorithm strings follow the <c>ALGORITHM[/MODE[/PADDING]]</c> convention (for example
+  /// <c>AES/CBC/PKCS7PADDING</c> or <c>DESEDE/ECB/NOPADDING</c>). Aliases for common algorithm names and many
+  /// standard ASN.1 OIDs are recognised. When the input cannot be resolved, an <see cref="ESecurityUtilityCryptoLibException"/> is thrown.
+  /// </para>
+  /// <para>
+  /// The returned <see cref="IBufferedCipher"/> is uninitialised; the caller must invoke
+  /// <see cref="IBufferedCipher.Init"/> before processing data.
+  /// </para>
   /// </remarks>
   TCipherUtilities = class sealed(TObject)
 
@@ -194,8 +206,31 @@ type
     class destructor Destroy;
 
   public
+    /// <summary>
+    /// Returns the canonical algorithm name registered for the given ASN.1 OID, or an empty string if the OID is
+    /// not mapped to a known cipher mechanism.
+    /// </summary>
+    /// <param name="AOid">An ASN.1 algorithm identifier.</param>
+    /// <returns>The canonical mechanism string (for example suitable for resolving through this factory).</returns>
     class function GetAlgorithmName(const AOid: IDerObjectIdentifier): String; static;
+
+    /// <summary>
+    /// Resolve and instantiate an <see cref="IBufferedCipher"/> for the given algorithm specification.
+    /// </summary>
+    /// <param name="AAlgorithm">A cipher name of the form <c>ALGORITHM[/MODE[/PADDING]]</c>
+    /// (for example <c>AES/CBC/PKCS7PADDING</c>). Aliases are also accepted.</param>
+    /// <returns>A new, uninitialised <see cref="IBufferedCipher"/>.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the mechanism is not recognised.</exception>
     class function GetCipher(const AAlgorithm: String): IBufferedCipher; overload; static;
+
+    /// <summary>
+    /// Resolve and instantiate an <see cref="IBufferedCipher"/> for the given ASN.1 algorithm OID.
+    /// </summary>
+    /// <param name="AOid">The algorithm OID to look up.</param>
+    /// <returns>A new, uninitialised <see cref="IBufferedCipher"/>.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AOid"/> is <c>nil</c>.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If the OID does not map to a known cipher.</exception>
     class function GetCipher(const AOid: IDerObjectIdentifier): IBufferedCipher; overload; static;
   end;
 

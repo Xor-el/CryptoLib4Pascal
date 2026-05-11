@@ -26,7 +26,6 @@ uses
   ClpIChaCha20Poly1305,
   ClpIAeadCipher,
   ClpICipherParameters,
-  ClpIParametersWithIV,
   ClpIKeyParameter,
   ClpCipherModeParameterUtilities,
   ClpChaCha7539Engine,
@@ -58,6 +57,14 @@ resourcestring
   SLimitExceeded = 'Limit exceeded';
 
 type
+  /// <summary>
+  /// ChaCha20 stream cipher with Poly1305 one-time authenticator (RFC 8439 style construction).
+  /// </summary>
+  /// <remarks>
+  /// Using the same ChaCha nonce more than once under a fixed key allows an attacker to forge tags and
+  /// recover keystream; assign a fresh random or monotonic nonce for every message and never retry a
+  /// (key, nonce) pair in production.
+  /// </remarks>
   TChaCha20Poly1305 = class(TInterfacedObject, IChaCha20Poly1305, IAeadCipher)
 
   strict protected

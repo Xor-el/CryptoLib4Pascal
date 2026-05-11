@@ -235,6 +235,7 @@ begin
   AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha384);
   AddNoParams(TX9ObjectIdentifiers.ECDsaWithSha512);
 
+  AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha1);
   AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha224);
   AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha256);
   AddNoParams(TBsiObjectIdentifiers.EcdsaPlainSha384);
