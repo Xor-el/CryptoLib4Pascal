@@ -28,6 +28,7 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCipherModeParameterUtilities,
+  ClpIChaCha7539Engine,
   ClpChaCha7539Engine,
   ClpPoly1305,
   ClpIMac,
@@ -41,17 +42,17 @@ uses
 resourcestring
   SPoly1305Nil = 'poly1305';
   SPoly1305MustBe128 = 'must be a 128-bit MAC';
-  SInvalidParameters = 'invalid parameters passed to ChaCha20Poly1305';
+  SInvalidParametersFmt = 'invalid parameters passed to %s';
   SKeyMustBeSpecified = 'Key must be specified in initial init';
   SKeyMustBe256 = 'Key must be 256 bits';
-  SNonceMustBe96 = 'Nonce must be 96 bits';
-  SCannotReuseNonce = 'cannot reuse nonce for ChaCha20Poly1305 encryption';
+  SNonceMustBeBits = 'Nonce must be %d bits';
+  SCannotReuseNonceFmt = 'cannot reuse nonce for %s encryption';
   SInvalidMacSize = 'Invalid value for MAC size: %d';
   SCannotBeNegative = 'cannot be negative';
   SInputBufferTooShort = 'Input Buffer Too Short';
   SOutputBufferTooShort = 'Output Buffer Too Short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in ChaCha20Poly1305 failed';
+  SMacCheckFailedFmt = 'mac check in %s failed';
   SCannotReuseEncryption = ' cannot be reused for encryption';
   SNeedsInit = ' needs to be initialized';
   SLimitExceeded = 'Limit exceeded';
@@ -84,7 +85,6 @@ type
   const
     BufSize: Int32 = 64;
     KeySize: Int32 = 32;
-    NonceSize: Int32 = 12;
     MacSize: Int32 = 16;
 
   var
@@ -101,7 +101,8 @@ type
     FZeroes: TCryptoLibByteArray;
 
   var
-    FChaCha20: TChaCha7539Engine;
+    FChaCha20: IChaCha7539Engine;
+    FNonceBytes: Int32;
     FPoly1305: IMac;
 
     FKey: TCryptoLibByteArray;
@@ -137,7 +138,8 @@ type
   public
     constructor Create(); overload;
     constructor Create(const APoly1305: IMac); overload;
-    destructor Destroy; override;
+    constructor Create(const APoly1305: IMac; const AEngine: IChaCha7539Engine;
+      ANonceBytes: Int32); overload;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
 
@@ -175,28 +177,34 @@ end;
 
 constructor TChaCha20Poly1305.Create(const APoly1305: IMac);
 begin
+  Create(APoly1305, TChaCha7539Engine.Create() as IChaCha7539Engine, 12);
+end;
+
+constructor TChaCha20Poly1305.Create(const APoly1305: IMac;
+  const AEngine: IChaCha7539Engine; ANonceBytes: Int32);
+begin
   inherited Create();
 
   if (APoly1305 = nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SPoly1305Nil);
   if (MacSize <> APoly1305.GetMacSize()) then
     raise EArgumentCryptoLibException.CreateRes(@SPoly1305MustBe128);
+  if (AEngine = nil) then
+    raise EArgumentNilCryptoLibException.Create('cipher engine');
 
-  FChaCha20 := TChaCha7539Engine.Create();
+  if (ANonceBytes < 1) then
+    raise EArgumentCryptoLibException.Create('invalid nonce octet length');
+
   FPoly1305 := APoly1305;
+  FChaCha20 := AEngine;
+  FNonceBytes := ANonceBytes;
 
   System.SetLength(FKey, KeySize);
-  System.SetLength(FNonce, NonceSize);
+  System.SetLength(FNonce, FNonceBytes);
   System.SetLength(FBuf, BufSize + MacSize);
   System.SetLength(FMac, MacSize);
 
   FState := TState.Uninitialized;
-end;
-
-destructor TChaCha20Poly1305.Destroy;
-begin
-  FChaCha20.Free;
-  inherited Destroy;
 end;
 
 function TChaCha20Poly1305.GetAlgorithmName: String;
@@ -215,7 +223,8 @@ var
 begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParameters);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParametersFmt,
+      [AlgorithmName]);
 
   LInitKeyParam := LChoice.KeyParameter;
   LInitNonce := LChoice.Nonce;
@@ -242,14 +251,16 @@ begin
       raise EArgumentCryptoLibException.CreateRes(@SKeyMustBe256);
   end;
 
-  if (NonceSize <> System.Length(LInitNonce)) then
-    raise EArgumentCryptoLibException.CreateRes(@SNonceMustBe96);
+  if (FNonceBytes <> System.Length(LInitNonce)) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SNonceMustBeBits,
+      [UInt32(FNonceBytes) shl 3]);
 
   if (TState.Uninitialized <> FState) and AForEncryption and
     TArrayUtilities.AreEqual(FNonce, LInitNonce) then
   begin
     if (LInitKeyParam = nil) or LInitKeyParam.FixedTimeEquals(FKey) then
-      raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonceFmt,
+        [AlgorithmName]);
   end;
 
   if (LInitKeyParam <> nil) then
@@ -257,7 +268,7 @@ begin
     LInitKeyParam.CopyKeyTo(FKey, 0, KeySize);
   end;
 
-  System.Move(LInitNonce[0], FNonce[0], NonceSize);
+  System.Move(LInitNonce[0], FNonce[0], FNonceBytes);
 
   FChaCha20.Init(True, LChaCha20Params);
 
@@ -550,7 +561,8 @@ begin
       FinishData(TState.DecFinal);
 
       if (not TArrayUtilities.FixedTimeEquals(MacSize, FMac, 0, FBuf, LResultLen)) then
-        raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+        raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailedFmt,
+          [AlgorithmName]);
     end;
     TState.EncData:
     begin

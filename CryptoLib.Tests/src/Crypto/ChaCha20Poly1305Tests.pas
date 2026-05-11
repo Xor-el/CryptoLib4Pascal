@@ -399,7 +399,7 @@ begin
   // incorrect MAC size on construction
   try
     LBadMac := TMacUtilities.GetMac('SIPHASH');
-    LCipher := TChaCha20Poly1305.Create(LBadMac) as IChaCha20Poly1305;
+    LCipher := TChaCha20Poly1305.Create(LBadMac);
     Fail('incorrect mac size not picked up');
   except
     on E: EArgumentCryptoLibException do
@@ -409,7 +409,7 @@ begin
   end;
 
   // illegal parameter: KeyParameter only instead of AeadParameters
-  LCipher := TChaCha20Poly1305.Create() as IChaCha20Poly1305;
+  LCipher := TChaCha20Poly1305.Create();
   try
     LCipher.Init(False,
       TKeyParameter.Create(TBytes.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -434,7 +434,7 @@ begin
   LP := TConverters.ConvertStringToBytes('Hello world!', TEncoding.ANSI);
   SetLength(LBuf, 100);
 
-  LCipher := TChaCha20Poly1305.Create() as IChaCha20Poly1305;
+  LCipher := TChaCha20Poly1305.Create();
   LCipher.Init(True, LParams as ICipherParameters);
   LCipher.ProcessBytes(LP, 0, Length(LP), LBuf, 0);
   LCipher.DoFinal(LBuf, 0);
