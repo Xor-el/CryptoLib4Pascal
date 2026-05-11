@@ -72,18 +72,12 @@ begin
 
   if (System.Length(AKeyBytes) <> 32) then
   begin
-    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    if (AIvBytes <> nil) then
-      TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
       [AlgorithmName]);
   end;
 
   if (AIvBytes = nil) or (System.Length(AIvBytes) <> 24) then
   begin
-    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    if (AIvBytes <> nil) then
-      TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidIvSize,
       [AlgorithmName]);
   end;
@@ -97,7 +91,7 @@ begin
   end;
 
   System.SetLength(LInnerIv, 12);
-  System.FillChar(LInnerIv[0], 4, 0);
+  TArrayUtilities.Fill<Byte>(LInnerIv, 0, 4, Byte(0));
   System.Move(AIvBytes[16], LInnerIv[4], 8);
 
   try
@@ -106,9 +100,6 @@ begin
     TArrayUtilities.Fill<Byte>(LSubKey, 0, 32, Byte(0));
     TArrayUtilities.Fill<Byte>(LInnerIv, 0, 12, Byte(0));
   end;
-
-  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-  TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
 end;
 
 end.
