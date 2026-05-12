@@ -85,9 +85,21 @@ begin
     Exit;
   end;
 
-  // C, SerialNumber, DnQualifier, TelephoneNumber
-  if AOid.Equals(TX509Name.C) or
-    AOid.Equals(TX509Name.SerialNumber) or
+  // RFC 5280 sec. 4.1.2.4 / X.520: countryName is PrintableString (SIZE (2)).
+  // CAB Forum Baseline narrows to ISO 3166-1 alpha-2; reject wrong-length input at build time.
+  if AOid.Equals(TX509Name.C) or AOid.Equals(TX509Name.JurisdictionC) then
+  begin
+    if System.Length(LValue) <> 2 then
+      raise EArgumentCryptoLibException.CreateFmt(
+        'country code attribute %s must be exactly 2 characters per ISO 3166-1 / X.520, got %d: ''%s''',
+        [AOid.Id, System.Length(LValue), LValue]);
+
+    Result := TDerPrintableString.Create(LValue);
+    Exit;
+  end;
+
+  // SerialNumber, DnQualifier, TelephoneNumber
+  if AOid.Equals(TX509Name.SerialNumber) or
     AOid.Equals(TX509Name.DnQualifier) or
     AOid.Equals(TX509Name.TelephoneNumber) then
   begin

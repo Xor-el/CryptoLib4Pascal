@@ -22,6 +22,7 @@ interface
 
 uses
   SysUtils,
+  ClpStringUtilities,
   ClpCryptoLibTypes,
   ClpIX509NameTokenizer;
 
@@ -43,6 +44,7 @@ type
 
     function HasMoreTokens: Boolean;
     function NextToken: String;
+    function Remaining: String;
 
   end;
 
@@ -93,7 +95,7 @@ begin
   LBeginIndex := FIndex + 2;
 
   // increments first, then checks
-  // This means: increment m_index, then check if less than Length, then enter loop
+  // This means: increment FIndex, then check if less than Length, then enter loop
   // Equivalent: increment first, then check in while condition
   System.Inc(FIndex); // Increment first
   while FIndex < System.Length(FValue) do
@@ -118,7 +120,7 @@ begin
     end
     else if LC = FSeparator then
     begin
-      Result := System.Copy(FValue, LBeginIndex, FIndex - (LBeginIndex - 1));
+      Result := TStringUtilities.Substring(FValue, LBeginIndex, FIndex - (LBeginIndex - 1));
       Exit;
     end;
 
@@ -128,7 +130,22 @@ begin
   if LEscaped or LQuoted then
     raise EArgumentCryptoLibException.Create('badly formatted directory string');
 
-  Result := System.Copy(FValue, LBeginIndex, FIndex - (LBeginIndex - 1));
+  Result := TStringUtilities.Substring(FValue, LBeginIndex, FIndex - (LBeginIndex - 1));
+end;
+
+function TX509NameTokenizer.Remaining: String;
+var
+  LLen: Int32;
+begin
+  LLen := System.Length(FValue);
+  if FIndex >= LLen then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  Result := TStringUtilities.Substring(FValue, FIndex + 2, LLen - FIndex - 1);
+  FIndex := LLen;
 end;
 
 end.

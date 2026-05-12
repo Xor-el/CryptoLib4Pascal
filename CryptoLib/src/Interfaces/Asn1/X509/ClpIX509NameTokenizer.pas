@@ -29,6 +29,8 @@ type
 
     function HasMoreTokens: Boolean;
     function NextToken: String;
+    /// <summary>Returns all characters after the current scan position through end-of-string.</summary>
+    function Remaining: String;
   end;
 
 implementation
