@@ -109,6 +109,7 @@ type
     procedure CheckSelfSignedCertificate(AId: Int32; const ACertBytes: TCryptoLibByteArray);
     procedure CheckNameCertificate(AId: Int32; const ACertBytes: TCryptoLibByteArray);
     procedure CheckCrl(AId: Int32; const ACrlBytes: TCryptoLibByteArray);
+    procedure CheckCertificateCriticalExtendedKeyUsage;
     procedure CheckCreation1;
     procedure CheckCreation2;
     procedure CheckCreation3;
@@ -145,6 +146,7 @@ type
     procedure TestSelfSignedProbSelfSignedCert;
     procedure TestCrl1;
     procedure TestEmptyDNCert;
+    procedure TestCertificateCriticalExtendedKeyUsage;
     procedure TestCreation1;
     procedure TestCreation2;
     procedure TestCreation3;
@@ -173,6 +175,38 @@ type
   end;
 
 const
+
+  /// <summary>PEM-less Base64 DER end-entity certificate with critical extendedKeyUsage (RFC 5280 section 4.2.1.12).</summary>
+  CRITICAL_EXTENDED_KEY_USAGE_CERT_B64 =
+    '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';
 
   CERTIFICATE_1_PEM =
     '-----BEGIN X509 CERTIFICATE-----' + #13 +
@@ -915,6 +949,53 @@ begin
     + 'RRsRsjse3i2/KClFVd6YLZ+7K1BE0WxFyY2bbytkwQJSxvv3vLSuweFUbhNxutb68wl/yW4GLy4b'
     + '1QdyswNxrNDXTuu5ILKhRDDuWeocz83aG2KGtr3JlFyr3biWGEyn5WUOE6tbONoQDJ0oPYgI6CAc'
     + 'EHdUp0lioOCt6UOw7Cs='));
+end;
+
+procedure TCertTest.TestCertificateCriticalExtendedKeyUsage;
+begin
+  CheckCertificateCriticalExtendedKeyUsage;
+end;
+
+// RFC 5280 section 4.2.1.12: extendedKeyUsage may be critical; assert OID listing and parsed usages.
+procedure TCertTest.CheckCertificateCriticalExtendedKeyUsage;
+var
+  LParser: IX509CertificateParser;
+  LCert: IX509Certificate;
+  LCritical: TCryptoLibStringArray;
+  LEku: TCryptoLibGenericArray<IDerObjectIdentifier>;
+  I: Int32;
+  LEkuOid: String;
+  LFound: Boolean;
+begin
+  try
+    LParser := TX509CertificateParser.Create;
+    LCert := LParser.ReadCertificate(DecodeBase64(CRITICAL_EXTENDED_KEY_USAGE_CERT_B64));
+    if LCert = nil then
+      Fail('critical extendedKeyUsage cert: null certificate');
+
+    LEkuOid := TX509Extensions.ExtendedKeyUsage.ID;
+    LCritical := LCert.GetCriticalExtensionOids;
+    if LCritical = nil then
+      Fail('EKU not in critical OIDs');
+
+    LFound := False;
+    for I := 0 to System.High(LCritical) do
+      if LCritical[I] = LEkuOid then
+      begin
+        LFound := True;
+        Break;
+      end;
+
+    if not LFound then
+      Fail('EKU not in critical OIDs');
+
+    LEku := LCert.GetExtendedKeyUsage;
+    if (LEku = nil) or (System.Length(LEku) < 1) then
+      Fail('extended key usage empty after parse');
+  except
+    on E: Exception do
+      Fail('critical extendedKeyUsage cert: ' + E.Message);
+  end;
 end;
 
 procedure TCertTest.CheckCreation1;

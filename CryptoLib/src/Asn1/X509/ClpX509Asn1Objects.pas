@@ -671,6 +671,10 @@ type
     FIdKpCmcCa: IDerObjectIdentifier;
     FIdKpCmcRa: IDerObjectIdentifier;
     FIdKpCmKga: IDerObjectIdentifier;
+    FIdKpConfigSigning: IDerObjectIdentifier;
+    FIdKpTrustAnchorConfigSigning: IDerObjectIdentifier;
+    FIdKpUpdatePackageSigning: IDerObjectIdentifier;
+    FIdKpSafetyCommunication: IDerObjectIdentifier;
     FIdKpSmartcardlogon: IDerObjectIdentifier;
     FIdKpMacAddress: IDerObjectIdentifier;
     FIdKpMsSgc: IDerObjectIdentifier;
@@ -705,6 +709,10 @@ type
     class function GetIdKpCmcCa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmcRa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmKga: IDerObjectIdentifier; static; inline;
+    class function GetIdKpConfigSigning: IDerObjectIdentifier; static; inline;
+    class function GetIdKpTrustAnchorConfigSigning: IDerObjectIdentifier; static; inline;
+    class function GetIdKpUpdatePackageSigning: IDerObjectIdentifier; static; inline;
+    class function GetIdKpSafetyCommunication: IDerObjectIdentifier; static; inline;
     class function GetIdKpSmartcardlogon: IDerObjectIdentifier; static; inline;
     class function GetIdKpMacAddress: IDerObjectIdentifier; static; inline;
     class function GetIdKpMsSgc: IDerObjectIdentifier; static; inline;
@@ -743,6 +751,14 @@ type
     class property IdKpCmcCa: IDerObjectIdentifier read GetIdKpCmcCa;
     class property IdKpCmcRa: IDerObjectIdentifier read GetIdKpCmcRa;
     class property IdKpCmKga: IDerObjectIdentifier read GetIdKpCmKga;
+    /// <summary>RFC 9809 sec. 3 — signing general-purpose configuration files (<c>id-kp-configSigning</c>, <c>{ id-kp 41 }</c>).</summary>
+    class property IdKpConfigSigning: IDerObjectIdentifier read GetIdKpConfigSigning;
+    /// <summary>RFC 9809 sec. 3 — signing trust anchor configuration files (<c>id-kp-trustAnchorConfigSigning</c>, <c>{ id-kp 42 }</c>).</summary>
+    class property IdKpTrustAnchorConfigSigning: IDerObjectIdentifier read GetIdKpTrustAnchorConfigSigning;
+    /// <summary>RFC 9809 sec. 3 — signing software or firmware update packages (<c>id-kp-updatePackageSigning</c>, <c>{ id-kp 43 }</c>).</summary>
+    class property IdKpUpdatePackageSigning: IDerObjectIdentifier read GetIdKpUpdatePackageSigning;
+    /// <summary>RFC 9809 sec. 3 — authenticating communication peers for safety-critical communication (<c>id-kp-safetyCommunication</c>, <c>{ id-kp 44 }</c>).</summary>
+    class property IdKpSafetyCommunication: IDerObjectIdentifier read GetIdKpSafetyCommunication;
     class property IdKpSmartcardlogon: IDerObjectIdentifier read GetIdKpSmartcardlogon;
     class property IdKpMacAddress: IDerObjectIdentifier read GetIdKpMacAddress;
     class property IdKpMsSgc: IDerObjectIdentifier read GetIdKpMsSgc;
@@ -940,12 +956,12 @@ type
       const AOidSymbols: TDictionary<IDerObjectIdentifier, String>;
       const AOid: IDerObjectIdentifier; const AVal: String); static;
     class function EquivalentStrings(const AS1, AS2: String): Boolean; static;
-    class function NextToken(const ATokenizer: IX509NameTokenizer): String; overload; static;
-    class function NextToken(const ATokenizer: IX509NameTokenizer; AExpectMoreTokens: Boolean): String; overload; static;
+    class function NextToken(const ATokenizer: IX509NameTokenizer): String; static;
   strict private
     procedure AddAttribute(const ALookup: TDictionary<String, IDerObjectIdentifier>;
       const AToken: String; AAdded: Boolean; const AOidList: TList<IDerObjectIdentifier>;
-      const AValueList: TList<String>; const AAddedList: TList<Boolean>);
+      const AValueList: TList<String>; const AAddedList: TList<Boolean>;
+      const AConverter: IX509NameEntryConverter);
 
   end;
 
@@ -5479,6 +5495,10 @@ begin
   FIdKpCmcCa := TDerObjectIdentifier.Create(LIdKp.ID + '.27');
   FIdKpCmcRa := TDerObjectIdentifier.Create(LIdKp.ID + '.28');
   FIdKpCmKga := TDerObjectIdentifier.Create(LIdKp.ID + '.32');
+  FIdKpConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.41');
+  FIdKpTrustAnchorConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.42');
+  FIdKpUpdatePackageSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.43');
+  FIdKpSafetyCommunication := TDerObjectIdentifier.Create(LIdKp.ID + '.44');
   FIdKpSmartcardlogon := TDerObjectIdentifier.Create('1.3.6.1.4.1.311.20.2.2');
   FIdKpMacAddress := TDerObjectIdentifier.Create('1.3.6.1.1.1.1.22');
   FIdKpMsSgc := TDerObjectIdentifier.Create('1.3.6.1.4.1.311.10.3.3');
@@ -5605,6 +5625,26 @@ end;
 class function TKeyPurposeId.GetIdKpCmKga: IDerObjectIdentifier;
 begin
   Result := FIdKpCmKga;
+end;
+
+class function TKeyPurposeId.GetIdKpConfigSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpConfigSigning;
+end;
+
+class function TKeyPurposeId.GetIdKpTrustAnchorConfigSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpTrustAnchorConfigSigning;
+end;
+
+class function TKeyPurposeId.GetIdKpUpdatePackageSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpUpdatePackageSigning;
+end;
+
+class function TKeyPurposeId.GetIdKpSafetyCommunication: IDerObjectIdentifier;
+begin
+  Result := FIdKpSafetyCommunication;
 end;
 
 class function TKeyPurposeId.GetIdKpSmartcardlogon: IDerObjectIdentifier;
@@ -6250,6 +6290,8 @@ begin
     if not AAttributes.TryGetValue(LOid, LAttribute) then
       raise EArgumentCryptoLibException.CreateFmt('No attribute for object id - %s - passed to distinguished name', [LOid.Id]);
 
+    AConverter.GetConvertedValue(LOid, LAttribute);
+
     FValues[LI] := LAttribute;
     FAdded[LI] := False;
   end;
@@ -6271,6 +6313,9 @@ begin
 
   if AOids.Count <> AValues.Count then
     raise EArgumentCryptoLibException.Create('''oids'' must be same length as ''values''.');
+
+  for LI := 0 to AOids.Count - 1 do
+    AConverter.GetConvertedValue(AOids[LI], AValues[LI]);
 
   FOids := TCollectionUtilities.ToArray<IDerObjectIdentifier>(AOids);
   FValues := TCollectionUtilities.ToArray<String>(AValues);
@@ -6324,11 +6369,11 @@ begin
       LRdn := NextToken(LNameTokenizer);
 
       LRdnTokenizer := TX509NameTokenizer.Create(LRdn, '+');
-      AddAttribute(ALookup, NextToken(LRdnTokenizer), False, LOidList, LValueList, LAddedList);
+      AddAttribute(ALookup, NextToken(LRdnTokenizer), False, LOidList, LValueList, LAddedList, AConverter);
 
       while LRdnTokenizer.HasMoreTokens() do
       begin
-        AddAttribute(ALookup, NextToken(LRdnTokenizer), True, LOidList, LValueList, LAddedList);
+        AddAttribute(ALookup, NextToken(LRdnTokenizer), True, LOidList, LValueList, LAddedList, AConverter);
       end;
     end;
 
@@ -6382,6 +6427,13 @@ var
 begin
   inherited Create();
   FConverter := CreateDefaultConverter();
+
+  if System.Length(AOids) <> System.Length(AValues) then
+    raise EArgumentCryptoLibException.Create('''oids'' must be same length as ''values''.');
+
+  for LI := 0 to System.Length(AOids) - 1 do
+    FConverter.GetConvertedValue(AOids[LI], AValues[LI]);
+
   FOids := TArrayUtilities.Clone<IDerObjectIdentifier>(AOids, IdentityOid);
   FValues := System.Copy(AValues);
   FValueList := System.Copy(AValues);
@@ -6786,17 +6838,6 @@ begin
   Result := LToken;
 end;
 
-class function TX509Name.NextToken(const ATokenizer: IX509NameTokenizer; AExpectMoreTokens: Boolean): String;
-var
-  LToken: String;
-begin
-  LToken := ATokenizer.NextToken();
-  if (LToken = '') or (ATokenizer.HasMoreTokens() <> AExpectMoreTokens) then
-    raise EArgumentCryptoLibException.Create('badly formatted directory string');
-  Result := LToken;
-end;
-
-
 class function TX509Name.EquivalentStrings(const AS1, AS2: String): Boolean;
 var
   LV1, LV2: String;
@@ -6827,7 +6868,8 @@ end;
 
 procedure TX509Name.AddAttribute(const ALookup: TDictionary<String, IDerObjectIdentifier>;
   const AToken: String; AAdded: Boolean; const AOidList: TList<IDerObjectIdentifier>;
-  const AValueList: TList<String>; const AAddedList: TList<Boolean>);
+  const AValueList: TList<String>; const AAddedList: TList<Boolean>;
+  const AConverter: IX509NameEntryConverter);
 var
   LTokenizer: IX509NameTokenizer;
   LTypeToken, LValueToken: String;
@@ -6835,11 +6877,15 @@ var
   LUnescapedValue: String;
 begin
   LTokenizer := TX509NameTokenizer.Create(AToken, '=');
-  LTypeToken := NextToken(LTokenizer, True);
-  LValueToken := NextToken(LTokenizer, False);
+  LTypeToken := LTokenizer.NextToken();
+  if (LTypeToken = '') or not LTokenizer.HasMoreTokens() then
+    raise EArgumentCryptoLibException.Create('badly formatted directory string');
+
+  LValueToken := LTokenizer.Remaining();
 
   LOid := DecodeOid(Trim(LTypeToken), ALookup);
   LUnescapedValue := TIetfUtilities.Unescape(LValueToken);
+  AConverter.GetConvertedValue(LOid, LUnescapedValue);
 
   AOidList.Add(LOid);
   AValueList.Add(LUnescapedValue);
