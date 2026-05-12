@@ -73,24 +73,16 @@ begin
   LBuilder := TStringBuilder.Create;
   try
     repeat
-      while True do
+      LC := AInStream.ReadByte;
+      while (LC >= 0) and (LC <> Ord(#13)) and (LC <> Ord(#10)) do
       begin
-        // ReadByte returns 0..255, or -1 on EOF
-        LC := AInStream.ReadByte;
-
-        // EOF
-        if LC < 0 then
-          Break;
-
-        // Stop on CR or LF - terminate on either one
-        if (LC = Ord(#13)) or (LC = Ord(#10)) then
-          Break;
-
         LBuilder.Append(Char(LC));
+        LC := AInStream.ReadByte;
       end;
     until (LC < 0) or (LBuilder.Length > 0);
 
-    if LC < 0 then
+    // Return whatever we accumulated - only return '' if EOF AND nothing buffered
+    if (LC < 0) and (LBuilder.Length = 0) then
       Result := ''
     else
       Result := LBuilder.ToString;

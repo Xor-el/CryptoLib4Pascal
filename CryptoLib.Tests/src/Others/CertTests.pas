@@ -121,6 +121,7 @@ type
     procedure DoTestNullDerNullCert;
     procedure PemFileTest;
     procedure PemFileTestWithNl;
+    procedure PemNoTrailingNewlineTest;
     procedure InvalidCrls;
     procedure Pkcs7Test;
     procedure CreatePssCert(const AAlgorithm: string);
@@ -156,6 +157,7 @@ type
     procedure TestDoTestNullDerNullCert;
     procedure TestPemFileTest;
     procedure TestPemFileTestWithNl;
+    procedure TestPemNoTrailingNewline;
     procedure TestInvalidCrls;
     procedure TestPkcs7Test;
     procedure TestCreatePssCertSha1;
@@ -217,6 +219,32 @@ const
     'yQf33vOiYQbpv4rTwzU8AmRlBG45WdjyNIigGV+oRc61aKCTnLq7zB8N3z1TF/bF' + #10 +
     '5/8=' + #10 +
     '-----END CERTIFICATE-----' + #10;
+
+  // Same payload as CERTIFICATE_2_PEM but without a trailing newline
+  // after the footer. Exercises the case where the input stream ends
+  // immediately after '-----END CERTIFICATE-----' with no CR or LF.
+  CERTIFICATE_2_PEM_NO_TRAILING_NL =
+    '-----BEGIN CERTIFICATE-----' + #10 +
+    'MIIDXjCCAsegAwIBAgIBBzANBgkqhkiG9w0BAQQFADCBtzELMAkGA1UEBhMCQVUx' + #10 +
+    'ETAPBgNVBAgTCFZpY3RvcmlhMRgwFgYDVQQHEw9Tb3V0aCBNZWxib3VybmUxGjAY' + #10 +
+    'BgNVBAoTEUNvbm5lY3QgNCBQdHkgTHRkMR4wHAYDVQQLExVDZXJ0aWZpY2F0ZSBB' + #10 +
+    'dXRob3JpdHkxFTATBgNVBAMTDENvbm5lY3QgNCBDQTEoMCYGCSqGSIb3DQEJARYZ' + #10 +
+    'd2VibWFzdGVyQGNvbm5lY3Q0LmNvbS5hdTAeFw0wMDA2MDIwNzU2MjFaFw0wMTA2' + #10 +
+    'MDIwNzU2MjFaMIG4MQswCQYDVQQGEwJBVTERMA8GA1UECBMIVmljdG9yaWExGDAW' + #10 +
+    'BgNVBAcTD1NvdXRoIE1lbGJvdXJuZTEaMBgGA1UEChMRQ29ubmVjdCA0IFB0eSBM' + #10 +
+    'dGQxFzAVBgNVBAsTDldlYnNlcnZlciBUZWFtMR0wGwYDVQQDExR3d3cyLmNvbm5l' + #10 +
+    'Y3Q0LmNvbS5hdTEoMCYGCSqGSIb3DQEJARYZd2VibWFzdGVyQGNvbm5lY3Q0LmNv' + #10 +
+    'bS5hdTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEArvDxclKAhyv7Q/Wmr2re' + #10 +
+    'Gw4XL9Cnh9e+6VgWy2AWNy/MVeXdlxzd7QAuc1eOWQkGQEiLPy5XQtTY+sBUJ3AO' + #10 +
+    'Rvd2fEVJIcjf29ey7bYua9J/vz5MG2KYo9/WCHIwqD9mmG9g0xLcfwq/s8ZJBswE' + #10 +
+    '7sb85VU+h94PTvsWOsWuKaECAwEAAaN3MHUwJAYDVR0RBB0wG4EZd2VibWFzdGVy' + #10 +
+    'QGNvbm5lY3Q0LmNvbS5hdTA6BglghkgBhvhCAQ0ELRYrbW9kX3NzbCBnZW5lcmF0' + #10 +
+    'ZWQgY3VzdG9tIHNlcnZlciBjZXJ0aWZpY2F0ZTARBglghkgBhvhCAQEEBAMCBkAw' + #10 +
+    'DQYJKoZIhvcNAQEEBQADgYEAotccfKpwSsIxM1Hae8DR7M/Rw8dg/RqOWx45HNVL' + #10 +
+    'iBS4/3N/TO195yeQKbfmzbAA2jbPVvIvGgTxPgO1MP4ZgvgRhasaa0qCJCkWvpM4' + #10 +
+    'yQf33vOiYQbpv4rTwzU8AmRlBG45WdjyNIigGV+oRc61aKCTnLq7zB8N3z1TF/bF' + #10 +
+    '5/8=' + #10 +
+    '-----END CERTIFICATE-----';
 
   CRL_1_PEM =
     '-----BEGIN X509 CRL-----' + #13#10 +
@@ -1759,6 +1787,33 @@ begin
   end;
 end;
 
+// Regression test: PEM input that ends immediately after the
+// '-----END CERTIFICATE-----' footer, with no trailing CR or LF.
+// Earlier ReadLine logic discarded any buffered characters when EOF
+// was reached, so the footer line was silently dropped and
+// ReadPemObject would fail to detect it, returning nil.
+procedure TCertTest.PemNoTrailingNewlineTest;
+var
+  LParser: IX509CertificateParser;
+  LCert, LCertRef: IX509Certificate;
+begin
+  LParser := TX509CertificateParser.Create;
+
+  LCert := LParser.ReadCertificate(TEncoding.ASCII.GetBytes(CERTIFICATE_2_PEM_NO_TRAILING_NL));
+  if LCert = nil then
+    Fail('PEM cert without trailing newline not read');
+
+  // Cross-check: parsing the same payload with a trailing newline must
+  // produce a byte-identical certificate. This guards against a partial
+  // or truncated decode that happens to return non-nil.
+  LCertRef := LParser.ReadCertificate(TEncoding.ASCII.GetBytes(CERTIFICATE_2_PEM));
+  if LCertRef = nil then
+    Fail('PEM cert reference (with trailing newline) not read');
+
+  if not AreEqual(LCert.GetEncoded(), LCertRef.GetEncoded()) then
+    Fail('PEM cert without trailing newline decoded differently from reference');
+end;
+
 procedure TCertTest.Pkcs7Test;
 var
   LRootCertBin, LRootCrlBin, LAttrCert: TCryptoLibByteArray;
@@ -2375,6 +2430,11 @@ end;
 procedure TCertTest.TestPemFileTestWithNl;
 begin
   PemFileTestWithNl;
+end;
+
+procedure TCertTest.TestPemNoTrailingNewline;
+begin
+  PemNoTrailingNewlineTest;
 end;
 
 procedure TCertTest.TestInvalidCrls;
