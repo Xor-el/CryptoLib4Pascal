@@ -1120,7 +1120,7 @@ begin
     Fail('key entry is not IPkcs12Entry');
   if not LPkcs12Entry.TryGetAttribute(TPkcsObjectIdentifiers.Pkcs9AtFriendlyName, LAttr) then
     Fail('no friendly name found on key')
-  else if not (LAttr as IAsn1Encodable).ToAsn1Object().Equals(TDerBmpString.Create('key').ToAsn1Object()) then
+  else if not LAttr.ToAsn1Object().Equals((TDerBmpString.Create('key') as IDerBmpString).ToAsn1Object()) then
     Fail('friendly name wrong');
 
   if not LPkcs12Entry.TryGetAttribute(TPkcsObjectIdentifiers.Pkcs9AtLocalKeyID, LAttr) then

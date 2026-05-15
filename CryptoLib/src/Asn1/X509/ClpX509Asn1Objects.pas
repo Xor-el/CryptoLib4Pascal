@@ -7893,9 +7893,9 @@ begin
   if FDistributionPointName <> nil then
     LV.AddOptionalTagged(True, 0, FDistributionPointName as IAsn1Encodable);
   if FReasons <> nil then
-    LV.AddOptionalTagged(False, 1, FReasons as IAsn1Encodable);
+    LV.AddOptionalTagged(False, 1, FReasons);
   if FCrlIssuer <> nil then
-    LV.AddOptionalTagged(False, 2, FCrlIssuer as IAsn1Encodable);
+    LV.AddOptionalTagged(False, 2, FCrlIssuer);
   Result := TDerSequence.Create(LV);
 end;
 
@@ -7911,7 +7911,7 @@ begin
     if FDistributionPointName <> nil then
     begin
       LBuf.Append(LIndent).Append('distributionPoint:').AppendLine();
-      LBuf.Append(LIndent).Append(LIndent).Append((FDistributionPointName as TDistributionPointName).ToString()).AppendLine();
+      LBuf.Append(LIndent).Append(LIndent).Append(FDistributionPointName.ToString()).AppendLine();
     end;
     if FReasons <> nil then
     begin
@@ -7921,7 +7921,7 @@ begin
     if FCrlIssuer <> nil then
     begin
       LBuf.Append(LIndent).Append('cRLIssuer:').AppendLine();
-      LBuf.Append(LIndent).Append(LIndent).Append((FCrlIssuer as TGeneralNames).ToString()).AppendLine();
+      LBuf.Append(LIndent).Append(LIndent).Append(FCrlIssuer.ToString()).AppendLine();
     end;
     LBuf.AppendLine(']');
     Result := LBuf.ToString();
@@ -8008,15 +8008,15 @@ begin
   if ADistributionPoint <> nil then
     LV.Add(TDerTaggedObject.Create(True, 0, ADistributionPoint as IAsn1Encodable));
   if AOnlyContainsUserCerts then
-    LV.Add(TDerTaggedObject.Create(False, 1, TDerBoolean.True as IAsn1Encodable));
+    LV.Add(TDerTaggedObject.Create(False, 1, TDerBoolean.True));
   if AOnlyContainsCACerts then
-    LV.Add(TDerTaggedObject.Create(False, 2, TDerBoolean.True as IAsn1Encodable));
+    LV.Add(TDerTaggedObject.Create(False, 2, TDerBoolean.True));
   if AOnlySomeReasons <> nil then
-    LV.Add(TDerTaggedObject.Create(False, 3, AOnlySomeReasons as IAsn1Encodable));
+    LV.Add(TDerTaggedObject.Create(False, 3, AOnlySomeReasons));
   if AIndirectCRL then
-    LV.Add(TDerTaggedObject.Create(False, 4, TDerBoolean.True as IAsn1Encodable));
+    LV.Add(TDerTaggedObject.Create(False, 4, TDerBoolean.True));
   if AOnlyContainsAttributeCerts then
-    LV.Add(TDerTaggedObject.Create(False, 5, TDerBoolean.True as IAsn1Encodable));
+    LV.Add(TDerTaggedObject.Create(False, 5, TDerBoolean.True));
 
   FSeq := TDerSequence.Create(LV);
 end;
@@ -8301,9 +8301,9 @@ var
   LV: IAsn1EncodableVector;
 begin
   LV := TAsn1EncodableVector.Create(3);
-  LV.Add(FTbsCertList as IAsn1Encodable);
-  LV.Add(FSignatureAlgorithm as IAsn1Encodable);
-  LV.Add(FSignatureValue as IAsn1Encodable);
+  LV.Add(FTbsCertList);
+  LV.Add(FSignatureAlgorithm);
+  LV.Add(FSignatureValue);
   Result := TDerSequence.Create(LV);
 end;
 

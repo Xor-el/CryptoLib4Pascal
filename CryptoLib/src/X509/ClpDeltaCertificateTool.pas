@@ -120,7 +120,7 @@ begin
     ADeltaCert.SignatureAlgorithm, ADeltaCert.Issuer, ADeltaCert.Validity,
     ADeltaCert.Subject, ADeltaCert.SubjectPublicKeyInfo, ADeltaCert.Extensions,
     ADeltaCert.Signature);
-  LEnc := (LDescriptor as IAsn1Encodable).GetEncoded(TAsn1Encodable.Der);
+  LEnc := LDescriptor.GetEncoded(TAsn1Encodable.Der);
   LOctet := TDerOctetString.FromContents(LEnc);
   Result := TX509Extension.Create(ACritical, LOctet);
 end;
@@ -232,7 +232,7 @@ begin
         LBaseExt := ATbsExtensions.GetExtension(LOid);
         if (LDeltaExt <> nil) and (LBaseExt <> nil) and
            ((LDeltaExt.IsCritical <> LBaseExt.IsCritical) or
-            (not (LDeltaExt.Value as IAsn1Encodable).Equals(LBaseExt.Value))) then
+            (not LDeltaExt.Value.Equals(LBaseExt.Value))) then
           LGenerator.AddExtension(LOid, LDeltaExt);
       end;
 

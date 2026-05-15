@@ -3941,7 +3941,7 @@ end;
 
 function TDerTaggedObject.RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence;
 begin
-  Result := TDerSequence.Create(AAsn1Object as IAsn1Encodable);
+  Result := TDerSequence.Create(AAsn1Object);
 end;
 
 function TDerTaggedObject.ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject;
@@ -4031,7 +4031,7 @@ end;
 
 function TDLTaggedObject.RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence;
 begin
-  Result := TDLSequence.Create(AAsn1Object as IAsn1Encodable);
+  Result := TDLSequence.Create(AAsn1Object);
 end;
 
 function TDLTaggedObject.ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject;
@@ -4583,12 +4583,12 @@ end;
 
 constructor TDerSequence.Create(const ASequence: IAsn1Sequence);
 begin
-  inherited Create(ASequence as IAsn1Encodable);
+  inherited Create(ASequence);
 end;
 
 constructor TDerSequence.Create(const ASet: IAsn1Set);
 begin
-  inherited Create(ASet as IAsn1Encodable);
+  inherited Create(ASet);
 end;
 
 { TDLSequence }
@@ -5794,7 +5794,7 @@ end;
 
 function TBerTaggedObject.RebuildConstructed(const AAsn1Object: IAsn1Object): IAsn1Sequence;
 begin
-  Result := TBerSequence.Create(AAsn1Object as IAsn1Encodable);
+  Result := TBerSequence.Create(AAsn1Object);
 end;
 
 function TBerTaggedObject.ReplaceTag(ATagClass, ATagNo: Int32): IAsn1TaggedObject;

@@ -2250,10 +2250,10 @@ begin
   LAttrCert := DecodeBase64(AttrCertB64);
 
   LContentInfo := TCmsContentInfo.Create(TCmsObjectIdentifiers.Data, nil);
-  LRootCertObj := TAsn1Object.FromByteArray(LRootCertBin) as IAsn1Encodable;
-  LTaggedAttr := TDerTaggedObject.Create(False, 2, TAsn1Object.FromByteArray(LAttrCert) as IAsn1Encodable);
+  LRootCertObj := TAsn1Object.FromByteArray(LRootCertBin);
+  LTaggedAttr := TDerTaggedObject.Create(False, 2, TAsn1Object.FromByteArray(LAttrCert));
   LCertSet := TDerSet.Create([LRootCertObj, LTaggedAttr]);
-  LRootCrlObj := TAsn1Object.FromByteArray(LRootCrlBin) as IAsn1Encodable;
+  LRootCrlObj := TAsn1Object.FromByteArray(LRootCrlBin);
   LCrlSet := TDerSet.Create(LRootCrlObj);
   LSigData := TCmsSignedData.Create(
     TDerSet.Empty,

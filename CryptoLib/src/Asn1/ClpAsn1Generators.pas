@@ -450,7 +450,7 @@ end;
 
 procedure TDerSequenceGenerator.AddObject(const AObj: IAsn1Object);
 begin
-  (AObj as IAsn1Encodable).EncodeTo(FBOut, TAsn1Encodable.Der);
+  AObj.EncodeTo(FBOut, TAsn1Encodable.Der);
 end;
 
 function TDerSequenceGenerator.GetRawOutputStream(): TStream;

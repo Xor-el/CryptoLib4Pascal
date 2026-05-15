@@ -412,9 +412,9 @@ begin
   end;
   for LI := LStart to LTbsSeq.Count - 2 do
     LV.Add(LTbsSeq[LI]);
-  LTagged := TDerTaggedObject.Create(True, 0, LExtensions.ToAsn1ObjectTrimmed() as IAsn1Encodable);
-  LV.Add(LTagged as IAsn1Encodable);
-  Result := TX509Utilities.VerifySignature(LVerifier, TDerSequence.Create(LV) as IAsn1Encodable, LAltSigValue.Signature);
+  LTagged := TDerTaggedObject.Create(True, 0, LExtensions.ToAsn1ObjectTrimmed());
+  LV.Add(LTagged);
+  Result := TX509Utilities.VerifySignature(LVerifier, TDerSequence.Create(LV) as IDerSequence, LAltSigValue.Signature);
 end;
 
 procedure TX509Crl.Verify(const AKey: IAsymmetricKeyParameter);
