@@ -59,6 +59,7 @@ type
     procedure TestRfc4514UnescapedEqualsInAttributeValue;
     procedure TestInvalidHexDnFailsAtConstruction;
     procedure TestCountryCodeLength;
+    procedure TestDnQualifierAttributeAliases;
 
   end;
 
@@ -309,6 +310,32 @@ begin
           TDerPrintableString.Create('USA') as IDerPrintableString]) as IDerSequence)));
   CheckEquals('USA', LParsed.GetValueList(TX509Name.C)[0],
     'lenient parse of 3-character C failed');
+end;
+
+procedure TX509NameTest.TestDnQualifierAttributeAliases;
+var
+  LAliases: array [0 .. 5] of String;
+  LName: IX509Name;
+  LList: TCryptoLibStringArray;
+  I: Int32;
+begin
+  // PKIX subject strings vary in spelling for oid 2.5.4.46; ensure each maps to dnQualifier via DefaultLookup.
+  LAliases[0] := 'DN';
+  LAliases[1] := 'DNQ';
+  LAliases[2] := 'dnQualifier';
+  LAliases[3] := 'dn';
+  LAliases[4] := 'dnq';
+  LAliases[5] := 'dnqualifier';
+
+  for I := Low(LAliases) to High(LAliases) do
+  begin
+    LName := TX509Name.Create('CN=Foo,' + LAliases[I] + '=ABC123');
+    LList := LName.GetValueList(TX509Name.DnQualifier);
+    CheckEquals(Int32(1), Int32(System.Length(LList)),
+      'unexpected dnQualifier RDN count for attribute label ''' + LAliases[I] + '''');
+    CheckEquals('ABC123', LList[0],
+      'unexpected dnQualifier value for attribute label ''' + LAliases[I] + '''');
+  end;
 end;
 
 initialization

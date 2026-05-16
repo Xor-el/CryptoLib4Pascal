@@ -6778,6 +6778,8 @@ begin
   FDefaultLookup.Add('unstructuredname', FUnstructuredName);
   FDefaultLookup.Add('uniqueidentifier', FUniqueIdentifier);
   FDefaultLookup.Add('dn', FDnQualifier);
+  FDefaultLookup.Add('dnq', FDnQualifier);
+  FDefaultLookup.Add('dnqualifier', FDnQualifier);
   FDefaultLookup.Add('pseudonym', FPseudonym);
   FDefaultLookup.Add('postaladdress', FPostalAddress);
   FDefaultLookup.Add('nameatbirth', FNameAtBirth);
