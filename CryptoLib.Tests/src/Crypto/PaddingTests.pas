@@ -34,8 +34,13 @@ uses
   ClpISecureRandom,
   ClpKeyParameter,
   ClpIKeyParameter,
+  ClpParametersWithIV,
+  ClpIParametersWithIV,
+  ClpICipherParameters,
   ClpIBlockCipherPadding,
   ClpAesUtilities,
+  ClpCbcBlockCipher,
+  ClpIBlockCipherMode,
   ClpISO10126d2Padding,
   ClpISO7816d4Padding,
   ClpPkcs7Padding,
@@ -50,6 +55,7 @@ uses
   ClpIZeroBytePadding,
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
+  ClpIBufferedCipher,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -67,6 +73,8 @@ type
     procedure DoTestPadding(const padding: IBlockCipherPadding;
       const rand: ISecureRandom; const ffVector, ZeroVector: TBytes);
 
+    procedure DoBlockAlignedRoundTrip(ALen: Int32);
+
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -75,6 +83,14 @@ type
 
     procedure TestOutputSizes();
     procedure TestPadding();
+    /// <summary>
+    /// RFC 5652 sec. 6.3: when plaintext length is a multiple of the block size,
+    /// PKCS#7 padding must append a full additional block (16 bytes of value
+    /// 0x10 for AES). Verifies the state-machine path in TPaddedBufferedBlockCipher
+    /// where FBufOff = LBlockSize on entry to DoFinal and is reset to 0
+    /// before AddPadding produces the mandatory full padding block.
+    /// </summary>
+    procedure TestBlockAlignedInputProducesFullPaddingBlock();
 
   end;
 
@@ -268,6 +284,71 @@ begin
     DoBlockCheck(cipher, padding, key, data);
   end;
 
+end;
+
+procedure TTestPadding.DoBlockAlignedRoundTrip(ALen: Int32);
+var
+  cipher: IBufferedCipher;
+  key: IKeyParameter;
+  iv: TBytes;
+  params: IParametersWithIV;
+  plain, enc, dec: TBytes;
+  expectedCt: Int32;
+  i: Int32;
+begin
+  cipher := TPaddedBufferedBlockCipher.Create(
+    TCbcBlockCipher.Create(TAesUtilities.CreateEngine()) as IBlockCipherMode,
+    TPKCS7Padding.Create() as IPKCS7Padding);
+
+  key := TKeyParameter.Create(DecodeHex('001122334455667788990A0B0C0D0E0F'));
+  System.SetLength(iv, 16);
+  for i := 0 to 15 do
+    iv[i] := Byte(i);
+
+  params := TParametersWithIV.Create(key as ICipherParameters, iv);
+
+  System.SetLength(plain, ALen);
+  for i := 0 to ALen - 1 do
+    plain[i] := Byte($41); // 'A' * ALen, block-aligned content
+
+  // Encrypt
+  cipher.Init(true, params as ICipherParameters);
+  enc := cipher.doFinal(plain, 0, ALen);
+
+  expectedCt := ALen + 16; // block-aligned input must append one full padding block
+  if (System.Length(enc) <> expectedCt) then
+  begin
+    Fail(Format('block-aligned PKCS#7 ciphertext length mismatch for %d-byte plaintext: expected %d got %d',
+      [ALen, expectedCt, System.Length(enc)]));
+  end;
+
+  // Decrypt and verify round-trip
+  cipher.Init(false, params as ICipherParameters);
+  dec := cipher.doFinal(enc, 0, System.Length(enc));
+
+  if (System.Length(dec) <> ALen) then
+  begin
+    Fail(Format('block-aligned PKCS#7 round-trip recovered wrong length for %d-byte plaintext: got %d',
+      [ALen, System.Length(dec)]));
+  end;
+  if (not AreEqual(plain, dec)) then
+  begin
+    Fail(Format('block-aligned PKCS#7 round-trip plaintext mismatch for %d-byte plaintext',
+      [ALen]));
+  end;
+end;
+
+procedure TTestPadding.TestBlockAlignedInputProducesFullPaddingBlock;
+begin
+  // One full block - exercises FBufOff = LBlockSize on DoFinal entry,
+  // which the if-branch resets to 0 before AddPadding writes the
+  // mandatory full padding block.
+  DoBlockAlignedRoundTrip(16);
+
+  // Two full blocks - gap-fill flushes the first block, tail-store
+  // completes the second, AfterTailStored is a no-op in TPaddedBufferedBlockCipher,
+  // then DoFinal sees FBufOff = LBlockSize again.
+  DoBlockAlignedRoundTrip(32);
 end;
 
 initialization

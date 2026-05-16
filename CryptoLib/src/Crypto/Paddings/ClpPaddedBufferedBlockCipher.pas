@@ -40,6 +40,7 @@ uses
 resourcestring
   SOutputBufferTooSmall = 'Output Buffer Too Short';
   SIncompleteLastBlockInDecryption = 'Last Block Incomplete in Decryption';
+  SBufOffInvariant = 'BufOff invariant violated: expected [0..blockSize-1] before AddPadding';
 type
 
   /// <summary>
@@ -262,6 +263,14 @@ begin
           SOutputBufferTooSmall);
       end;
 
+      // FBufOff must be in [0..LBlockSize-1] when AddPadding is called.
+      // Block-aligned input is handled by the if-branch above, which flushes
+      // the full block and resets FBufOff to 0 - so AddPadding always sees
+      // a value in the valid range. The guard below is a tripwire for future
+      // refactors of ProcessBytes / AfterTailStored / DoFinal.
+      if (FBufOff < 0) or (FBufOff >= LBlockSize) then
+        raise EInvalidOperationCryptoLibException.CreateRes(@SBufOffInvariant);
+
       FPadding.AddPadding(FBuf, FBufOff);
 
       LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
@@ -319,7 +328,7 @@ begin
   FPadding.Init(LInitRandom);
   FCipherMode.Init(AForEncryption, LParameters);
 
-  // Cache the bulk-capable view of FCipherMode (see base-class comment).
+  // Cache the bulk-capable view of FCipherMode.
   TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipherMode,
     FBulkCipherMode);
 end;
