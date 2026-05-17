@@ -346,8 +346,9 @@ begin
   DoBlockAlignedRoundTrip(16);
 
   // Two full blocks - gap-fill flushes the first block, tail-store
-  // completes the second, AfterTailStored is a no-op in TPaddedBufferedBlockCipher,
-  // then DoFinal sees FBufOff = LBlockSize again.
+  // completes the second; IsFullBufferRetained returns True in
+  // TPaddedBufferedBlockCipher so the second block stays in FBuf until
+  // DoFinal sees FBufOff = LBlockSize again.
   DoBlockAlignedRoundTrip(32);
 end;
 

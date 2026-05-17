@@ -25,7 +25,6 @@ uses
   ClpCheck,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
-  ClpBlockCipherBulkUtilities,
   ClpEcbBlockCipher,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
@@ -64,10 +63,9 @@ type
   strict protected
     /// <summary>
     /// Padded cipher must retain the last block in FBuf so DoFinal can
-    /// apply (or strip) padding - never flush on tail-store.
+    /// apply (encrypting) or strip (decrypting) the padding.
     /// </summary>
-    function AfterTailStored(const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32): Int32; override;
+    function IsFullBufferRetained: Boolean; override;
 
   public
 
@@ -135,30 +133,6 @@ type
     /// of input.
     /// </returns>
     function GetUpdateOutputSize(ALength: Int32): Int32; override;
-
-    /// <summary>
-    /// process a single byte, producing an output block if necessary.
-    /// </summary>
-    /// <param name="AInput">
-    /// the input byte.
-    /// </param>
-    /// <param name="AOutput">
-    /// the space for any output that might be produced.
-    /// </param>
-    /// <param name="AOutOff">
-    /// the offset from which the output will be copied.
-    /// </param>
-    /// <returns>
-    /// the number of output bytes copied to output.
-    /// </returns>
-    /// <exception cref="EDataLengthCryptoLibException">
-    /// if there isn't enough space in output.
-    /// </exception>
-    /// <exception cref="EInvalidOperationCryptoLibException">
-    /// if the cipher isn't initialised.
-    /// </exception>
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32): Int32; override;
 
     /// <summary>
     /// process an array of bytes, producing output if necessary.
@@ -267,7 +241,7 @@ begin
       // Block-aligned input is handled by the if-branch above, which flushes
       // the full block and resets FBufOff to 0 - so AddPadding always sees
       // a value in the valid range. The guard below is a tripwire for future
-      // refactors of ProcessBytes / AfterTailStored / DoFinal.
+      // refactors of ProcessBytes / IsFullBufferRetained / DoFinal.
       if (FBufOff < 0) or (FBufOff >= LBlockSize) then
         raise EInvalidOperationCryptoLibException.CreateRes(@SBufOffInvariant);
 
@@ -319,46 +293,16 @@ procedure TPaddedBufferedBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LInitRandom: ISecureRandom;
-  LParameters: ICipherParameters;
+  LParams: ICipherParameters;
 begin
-  FForEncryption := AForEncryption;
-  LParameters := TParameterUtilities.GetRandom(AParameters, LInitRandom);
-
-  Reset();
+  LParams := TParameterUtilities.GetRandom(AParameters, LInitRandom);
   FPadding.Init(LInitRandom);
-  FCipherMode.Init(AForEncryption, LParameters);
-
-  // Cache the bulk-capable view of FCipherMode.
-  TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipherMode,
-    FBulkCipherMode);
+  inherited Init(AForEncryption, LParams);
 end;
 
-function TPaddedBufferedBlockCipher.ProcessByte(AInput: Byte;
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-var
-  LResultLen: Int32;
+function TPaddedBufferedBlockCipher.IsFullBufferRetained: Boolean;
 begin
-  LResultLen := 0;
-
-  if (FBufOff = System.Length(FBuf)) then
-  begin
-    TCheck.OutputLength(AOutput, AOutOff, System.Length(FBuf),
-      SOutputBufferTooSmall);
-
-    LResultLen := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-    FBufOff := 0;
-  end;
-
-  FBuf[FBufOff] := AInput;
-  System.Inc(FBufOff);
-
-  Result := LResultLen;
-end;
-
-function TPaddedBufferedBlockCipher.AfterTailStored(
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-begin
-  Result := 0;
+  Result := True;
 end;
 
 end.

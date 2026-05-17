@@ -51,8 +51,12 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// The instance outputs a block only when the buffer is full and more data is being added, or on
-  /// <c>DoFinal</c>.
+  /// In this plain (non-padded) base class the instance flushes a block as soon as <see cref="FBuf"/>
+  /// becomes full during <c>ProcessByte</c> / <c>ProcessBytes</c>; any leftover partial block is
+  /// emitted by <c>DoFinal</c> (only legal when the underlying mode reports
+  /// <see cref="IBlockCipherMode.IsPartialBlockOkay"/>). Subclasses that need to hold the last full
+  /// block back for finalisation (padded ciphers, CTS) override <see cref="IsFullBufferRetained"/>
+  /// to change this timing.
   /// </para>
   /// <para>
   /// In the case where the underlying cipher is a stream-oriented mode (like CFB or OFB), the last
@@ -85,31 +89,17 @@ type
     constructor Create(); overload;
 
     /// <summary>
-    /// Processes the aligned middle chunk of a ProcessBytes call, after
-    /// the in-flight FBuf block has been emitted by the gap-fill step.
-    /// Default implementation consumes <c>(ALen - 1) div BlockSize</c>
-    /// blocks from AInput using the cached FBulkCipherMode fast path
-    /// (single ProcessBlocks call) when available, or a per-block
-    /// ProcessBlock loop otherwise. Subclasses override to add semantic
-    /// restrictions such as "hold the last block back for padding /
-    /// DoFinal" (CTS holds the last two). The hook must update AInOff
-    /// and ALen to reflect exactly what it consumed, and return the
-    /// number of output bytes written at AOutput[AOutOff..].
+    /// True when a fully-populated <see cref="FBuf"/> must be retained
+    /// for <c>DoFinal</c> rather than flushed by <c>ProcessBytes</c> or
+    /// <c>ProcessByte</c>. The plain <see cref="TBufferedBlockCipher"/>
+    /// returns False so a just-filled FBuf is flushed eagerly during
+    /// streaming. Padded subclasses return True so DoFinal can apply
+    /// (encrypting) or strip (decrypting) the padding on the held
+    /// block. Subclasses that own their own <c>ProcessBytes</c> (such
+    /// as CTS) do not rely on this decision but should still override
+    /// it for honesty.
     /// </summary>
-    function ProcessBytesBulkMiddle(const AInput: TCryptoLibByteArray;
-      var AInOff: Int32; var ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
-
-    /// <summary>
-    /// Called from ProcessBytes after the tail bytes have been stored
-    /// into FBuf whenever FBuf ends up completely full. Default flushes
-    /// the single in-flight block with one ProcessBlock call and resets
-    /// FBufOff to 0. Subclasses that MUST hold the tail back for
-    /// finalisation (padded ciphers, CTS) override to a no-op so the
-    /// final block(s) remain in FBuf until DoFinal.
-    /// </summary>
-    function AfterTailStored(const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32): Int32; virtual;
+    function IsFullBufferRetained: Boolean; virtual;
 
   public
     /// <summary>
@@ -398,33 +388,45 @@ begin
   FCipherMode.Init(AForEncryption, TParameterUtilities.IgnoreRandom(AParameters));
 
   // Probe after the inner Init so modes that only decide their fast-path
-  // wiring at Init time are observed in their post-Init state. The result
-  // is held for the lifetime of this wrapper to keep ProcessBytes free of
-  // per-call QueryInterface overhead.
+  // wiring at Init time are observed in their post-Init state.
   TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipherMode,
     FBulkCipherMode);
 end;
 
 function TBufferedBlockCipher.ProcessByte(AInput: Byte;
   const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+var
+  LRetain: Boolean;
+  LBlockSize: Int32;
 begin
+  Result := 0;
+  LRetain := IsFullBufferRetained();
+  LBlockSize := System.Length(FBuf);
+
+  // Retained-buffer ciphers (padded) may carry a full FBuf from a
+  // previous call. The arrival of another byte proves more data is
+  // coming, so the held block can now be emitted before we store.
+  if LRetain and (FBufOff = LBlockSize) then
+  begin
+    if ((AOutOff + LBlockSize) > System.Length(AOutput)) then
+      raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
+    Result := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
+    FBufOff := 0;
+  end;
 
   FBuf[FBufOff] := AInput;
   System.Inc(FBufOff);
 
-  if (FBufOff = System.Length(FBuf)) then
+  // Eager-flush ciphers (plain) emit immediately when this byte just
+  // filled FBuf.
+  if (not LRetain) and (FBufOff = LBlockSize) then
   begin
-    if ((AOutOff + System.Length(FBuf)) > System.Length(AOutput)) then
-    begin
+    if ((AOutOff + Result + LBlockSize) > System.Length(AOutput)) then
       raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooSmall);
-    end;
-
+    Result := Result + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+      AOutOff + Result);
     FBufOff := 0;
-    Result := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-    Exit;
   end;
-
-  Result := 0;
 end;
 
 function TBufferedBlockCipher.ProcessByte(AInput: Byte): TCryptoLibByteArray;
@@ -456,53 +458,17 @@ begin
   Result := LOutBytes;
 end;
 
-function TBufferedBlockCipher.ProcessBytesBulkMiddle(
-  const AInput: TCryptoLibByteArray; var AInOff: Int32; var ALen: Int32;
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-var
-  LBlockSize, LBulkBlocks, LBulkBytes: Int32;
+function TBufferedBlockCipher.IsFullBufferRetained: Boolean;
 begin
-  Result := 0;
-  LBlockSize := GetBlockSize();
-
-  // Dispatch every full aligned block that would have been fed to
-  // FCipherMode.ProcessBlock in the original per-block loop. The loop
-  // ran while ALen > LBlockSize, which consumes exactly
-  // floor((ALen - 1) / LBlockSize) blocks before the trailing bytes
-  // accumulate into FBuf again.
-  if (FBulkCipherMode <> nil) and (ALen > LBlockSize) then
-  begin
-    LBulkBlocks := (ALen - 1) div LBlockSize;
-    LBulkBytes := LBulkBlocks * LBlockSize;
-    Result := Result + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
-      LBulkBlocks, AOutput, AOutOff);
-    ALen := ALen - LBulkBytes;
-    AInOff := AInOff + LBulkBytes;
-  end
-  else
-  begin
-    while (ALen > LBlockSize) do
-    begin
-      Result := Result + FCipherMode.ProcessBlock(AInput, AInOff,
-        AOutput, AOutOff + Result);
-      ALen := ALen - LBlockSize;
-      AInOff := AInOff + LBlockSize;
-    end;
-  end;
-end;
-
-function TBufferedBlockCipher.AfterTailStored(
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-begin
-  Result := FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-  FBufOff := 0;
+  Result := False;
 end;
 
 function TBufferedBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LOutLength, LResultLen, LGapLen, LShiftBytes, LBlockSize: Int32;
+  LOutLength, LResultLen, LGapLen, LBlockSize,
+    LBulkBlocks, LBulkBytes: Int32;
 begin
   if (ALength < 1) then
   begin
@@ -523,39 +489,59 @@ begin
   end;
 
   LResultLen := 0;
-  LGapLen := System.Length(FBuf) - FBufOff;
+  LGapLen := LBlockSize - FBufOff;
+
   if (ALength > LGapLen) then
   begin
-    // Gap-fill: complete the in-flight FBuf block, emit it, and shift
-    // any remaining buffered bytes (for multi-block FBuf subclasses such
-    // as CTS) down so FBuf[0..LBlockSize-1] holds the next lookahead
-    // block. For single-block FBuf (the TBuffered and TPadded default)
-    // the shift is a no-op and FBufOff simply resets to 0.
+    // Gap-fill: complete the in-flight FBuf block and emit it. FBuf is
+    // always exactly one block here, so no lookahead shift is needed -
+    // subclasses with a multi-block FBuf (CTS) own their own
+    // ProcessBytes.
     System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
-    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-    LShiftBytes := System.Length(FBuf) - LBlockSize;
-    if (LShiftBytes > 0) then
-      System.Move(FBuf[LBlockSize], FBuf[0], LShiftBytes * System.SizeOf(Byte));
-    FBufOff := LShiftBytes;
+    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+      AOutOff);
+    FBufOff := 0;
     ALength := ALength - LGapLen;
     AInOff := AInOff + LGapLen;
 
-    // Aligned middle: process every full block that the original
-    // sequential code would have emitted before starting to accumulate
-    // into FBuf again. Delegated to the virtual hook so CTS can plug in
-    // its "stage first block through FBuf lookahead, bulk the rest,
-    // refresh lookahead" semantics.
-    LResultLen := LResultLen + ProcessBytesBulkMiddle(AInput, AInOff, ALength,
-      AOutput, AOutOff + LResultLen);
+    // Aligned middle: process (ALength - 1) div LBlockSize full blocks
+    // directly from AInput, leaving at least one byte to seed the tail
+    // store below. The cached bulk fast path collapses the per-block
+    // ProcessBlock loop into a single ProcessBlocks call so accelerated
+    // modes can pipeline / SIMD across many blocks.
+    if (FBulkCipherMode <> nil) and (ALength > LBlockSize) then
+    begin
+      LBulkBlocks := (ALength - 1) div LBlockSize;
+      LBulkBytes := LBulkBlocks * LBlockSize;
+      LResultLen := LResultLen + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
+        LBulkBlocks, AOutput, AOutOff + LResultLen);
+      ALength := ALength - LBulkBytes;
+      AInOff := AInOff + LBulkBytes;
+    end
+    else
+    begin
+      while (ALength > LBlockSize) do
+      begin
+        LResultLen := LResultLen + FCipherMode.ProcessBlock(AInput, AInOff,
+          AOutput, AOutOff + LResultLen);
+        ALength := ALength - LBlockSize;
+        AInOff := AInOff + LBlockSize;
+      end;
+    end;
   end;
+
+  // Tail store + optional eager flush. Retained-buffer subclasses
+  // (padded) leave the now-full FBuf for DoFinal to consume; plain
+  // cipher flushes the block immediately.
   System.Move(AInput[AInOff], FBuf[FBufOff], ALength * System.SizeOf(Byte));
   FBufOff := FBufOff + ALength;
-  if (FBufOff = System.Length(FBuf)) then
+  if (FBufOff = LBlockSize) and (not IsFullBufferRetained()) then
   begin
-    // Let subclasses decide whether a full FBuf should flush (default
-    // TBuffered) or be held back for DoFinal (TPadded, CTS).
-    LResultLen := LResultLen + AfterTailStored(AOutput, AOutOff + LResultLen);
+    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+      AOutOff + LResultLen);
+    FBufOff := 0;
   end;
+
   Result := LResultLen;
 end;
 
