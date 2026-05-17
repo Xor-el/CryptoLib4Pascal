@@ -22,6 +22,7 @@ interface
 
 uses
   SysUtils,
+  ClpCheck,
   ClpIBlockCipher,
   ClpIBlockCipherMode,
   ClpICtsBlockCipher,
@@ -45,27 +46,12 @@ type
 
   strict protected
     /// <summary>
-    /// CTS holds the last two FBuf blocks back for DoFinal, so we walk
-    /// the aligned middle differently from the default: the first post
-    /// gap-fill block always comes from the FBuf lookahead (staging one
-    /// AInput block into FBuf, processing the lookahead, shifting the
-    /// staged block into the lookahead slot), then any remaining N-1
-    /// blocks run through FBulkCipherMode.ProcessBlocks directly on
-    /// AInput. After the bulk call we refresh FBuf[0..LBlockSize-1] with
-    /// the last AInput block the bulk call consumed so DoFinal and any
-    /// follow-up ProcessBytes observe the same lookahead state the
-    /// scalar path would have produced.
+    /// CTS retains both FBuf blocks for DoFinal's ciphertext-stealing
+    /// finalisation. Reported for honesty; CTS owns its own
+    /// ProcessBytes / ProcessByte so the predicate is not consulted
+    /// internally.
     /// </summary>
-    function ProcessBytesBulkMiddle(const AInput: TCryptoLibByteArray;
-      var AInOff: Int32; var ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
-
-    /// <summary>
-    /// CTS never flushes on tail-store: the last two blocks must remain
-    /// in FBuf for DoFinal's ciphertext-stealing finalisation.
-    /// </summary>
-    function AfterTailStored(const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32): Int32; override;
+    function IsFullBufferRetained: Boolean; override;
 
   public
     constructor Create(const ACipher: IBlockCipher); overload;
@@ -74,6 +60,19 @@ type
     function GetUpdateOutputSize(AInputLen: Int32): Int32; override;
     function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray;
       AOutOff: Int32): Int32; override;
+
+    /// <summary>
+    /// CTS-specific ProcessBytes. FBuf is two blocks wide and is used
+    /// as a one-block lookahead, so this override carries its own
+    /// gap-fill (with the shift to refresh the lookahead) and its own
+    /// aligned middle (stage one scalar block, bulk-process the rest,
+    /// refresh the lookahead from the last bulk-consumed block). The
+    /// final two blocks always remain in FBuf for DoFinal.
+    /// </summary>
+    function ProcessBytes(const AInput: TCryptoLibByteArray;
+      AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      : Int32; overload; override;
+
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
       override;
   end;
@@ -217,67 +216,105 @@ begin
   System.Inc(FBufOff);
 end;
 
-function TCtsBlockCipher.ProcessBytesBulkMiddle(
-  const AInput: TCryptoLibByteArray; var AInOff: Int32; var ALen: Int32;
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-var
-  LBlockSize, LN, LBulkBlocks, LBulkBytes: Int32;
+function TCtsBlockCipher.IsFullBufferRetained: Boolean;
 begin
-  Result := 0;
-  LBlockSize := GetBlockSize();
-
-  // FBuf[0..LBlockSize-1] holds the lookahead from gap-fill and FBufOff
-  // equals LBlockSize (single-slot staging area at FBuf[LBlockSize..]).
-  // The scalar loop below stages one AInput block into FBuf[LBlockSize],
-  // processes FBuf[0] (the lookahead), and shifts. The first iteration
-  // MUST stay scalar because its input is the FBuf lookahead, not
-  // AInput; iterations 1..N-1 are pure contiguous-AInput transforms and
-  // can be routed through one ProcessBlocks call. N = (ALen - 1) div BS
-  // is the total iteration count the scalar loop would perform, so we
-  // need N >= 2 (i.e. ALen > 2*BS) to get at least one bulk block.
-  if (FBulkCipherMode <> nil) and (ALen > 2 * LBlockSize) then
-  begin
-    LN := (ALen - 1) div LBlockSize;
-
-    System.Move(AInput[AInOff], FBuf[FBufOff], LBlockSize * System.SizeOf(Byte));
-    Result := Result + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff);
-    System.Move(FBuf[LBlockSize], FBuf[0], LBlockSize * System.SizeOf(Byte));
-    ALen := ALen - LBlockSize;
-    AInOff := AInOff + LBlockSize;
-
-    LBulkBlocks := LN - 1;
-    LBulkBytes := LBulkBlocks * LBlockSize;
-    Result := Result + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
-      LBulkBlocks, AOutput, AOutOff + Result);
-
-    // Refresh FBuf[0..LBlockSize-1] with the last AInput block the bulk
-    // call consumed. That block would have been the post-shift lookahead
-    // after the scalar loop's final iteration, so DoFinal and subsequent
-    // ProcessBytes observe the same FBuf state either way.
-    System.Move(AInput[AInOff + LBulkBytes - LBlockSize], FBuf[0],
-      LBlockSize * System.SizeOf(Byte));
-
-    ALen := ALen - LBulkBytes;
-    AInOff := AInOff + LBulkBytes;
-  end
-  else
-  begin
-    while (ALen > LBlockSize) do
-    begin
-      System.Move(AInput[AInOff], FBuf[FBufOff], LBlockSize * System.SizeOf(Byte));
-      Result := Result + FCipherMode.ProcessBlock(FBuf, 0, AOutput, AOutOff + Result);
-      System.Move(FBuf[LBlockSize], FBuf[0], LBlockSize * System.SizeOf(Byte));
-
-      ALen := ALen - LBlockSize;
-      AInOff := AInOff + LBlockSize;
-    end;
-  end;
+  Result := True;
 end;
 
-function TCtsBlockCipher.AfterTailStored(const AOutput: TCryptoLibByteArray;
+function TCtsBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
+  AInOff, ALength: Int32; const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
+var
+  LOutLength, LResultLen, LGapLen, LN,
+    LBulkBlocks, LBulkBytes: Int32;
 begin
-  Result := 0;
+  if (ALength < 1) then
+  begin
+    if (ALength < 0) then
+      raise EArgumentCryptoLibException.CreateRes(@SInvalidLength);
+    Result := 0;
+    Exit;
+  end;
+
+  LOutLength := GetUpdateOutputSize(ALength);
+  if (LOutLength > 0) then
+    TCheck.OutputLength(AOutput, AOutOff, LOutLength, SOutputBufferTooSmall);
+
+  LResultLen := 0;
+  LGapLen := System.Length(FBuf) - FBufOff;
+
+  if (ALength > LGapLen) then
+  begin
+    // Gap-fill: complete the in-flight FBuf (two blocks wide), emit
+    // FBuf[0..FBlockSize-1], and shift FBuf[FBlockSize..] down so
+    // FBuf[0..FBlockSize-1] now holds the lookahead.
+    System.Move(AInput[AInOff], FBuf[FBufOff], LGapLen * System.SizeOf(Byte));
+    LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+      AOutOff);
+    System.Move(FBuf[FBlockSize], FBuf[0],
+      FBlockSize * System.SizeOf(Byte));
+    FBufOff := FBlockSize;
+    ALength := ALength - LGapLen;
+    AInOff := AInOff + LGapLen;
+
+    // Aligned middle. FBuf[0..FBlockSize-1] holds the lookahead and
+    // FBufOff equals FBlockSize. The scalar loop stages one AInput
+    // block into FBuf[FBlockSize..], processes FBuf[0..FBlockSize-1]
+    // (the lookahead), then shifts. The first iteration MUST stay
+    // scalar because its input is the lookahead, not AInput; the next
+    // N-1 iterations are pure contiguous-AInput transforms and can ride
+    // the bulk fast path. N = (ALength - 1) div FBlockSize is the
+    // scalar iteration count, so we need N >= 2 (i.e.
+    // ALength > 2 * FBlockSize) for the bulk path to amortise.
+    if (FBulkCipherMode <> nil) and (ALength > 2 * FBlockSize) then
+    begin
+      LN := (ALength - 1) div FBlockSize;
+
+      System.Move(AInput[AInOff], FBuf[FBufOff],
+        FBlockSize * System.SizeOf(Byte));
+      LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+        AOutOff + LResultLen);
+      System.Move(FBuf[FBlockSize], FBuf[0],
+        FBlockSize * System.SizeOf(Byte));
+      ALength := ALength - FBlockSize;
+      AInOff := AInOff + FBlockSize;
+
+      LBulkBlocks := LN - 1;
+      LBulkBytes := LBulkBlocks * FBlockSize;
+      LResultLen := LResultLen + FBulkCipherMode.ProcessBlocks(AInput, AInOff,
+        LBulkBlocks, AOutput, AOutOff + LResultLen);
+
+      // Refresh FBuf[0..FBlockSize-1] with the last AInput block the
+      // bulk call consumed - the post-shift lookahead the scalar loop's
+      // final iteration would have left behind. DoFinal and any
+      // follow-up ProcessBytes observe the same FBuf state either way.
+      System.Move(AInput[AInOff + LBulkBytes - FBlockSize], FBuf[0],
+        FBlockSize * System.SizeOf(Byte));
+
+      ALength := ALength - LBulkBytes;
+      AInOff := AInOff + LBulkBytes;
+    end
+    else
+    begin
+      while (ALength > FBlockSize) do
+      begin
+        System.Move(AInput[AInOff], FBuf[FBufOff],
+          FBlockSize * System.SizeOf(Byte));
+        LResultLen := LResultLen + FCipherMode.ProcessBlock(FBuf, 0, AOutput,
+          AOutOff + LResultLen);
+        System.Move(FBuf[FBlockSize], FBuf[0],
+          FBlockSize * System.SizeOf(Byte));
+        ALength := ALength - FBlockSize;
+        AInOff := AInOff + FBlockSize;
+      end;
+    end;
+  end;
+
+  // Tail store. CTS always retains both blocks for DoFinal's
+  // ciphertext-stealing finalisation, so we never flush here.
+  System.Move(AInput[AInOff], FBuf[FBufOff], ALength * System.SizeOf(Byte));
+  FBufOff := FBufOff + ALength;
+  Result := LResultLen;
 end;
 
 end.
