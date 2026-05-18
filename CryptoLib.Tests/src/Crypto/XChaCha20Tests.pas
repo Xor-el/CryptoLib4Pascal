@@ -112,7 +112,7 @@ var
   LEng: IXChaCha20Engine;
   LParams: IParametersWithIV;
 begin
-  { draft-irtf-cfrg-xchacha Appendix A.3.2.1 — full 19 x 16 B keystream (counter 0). }
+  { draft-irtf-cfrg-xchacha Appendix A.3.2.1 - full 19 x 16 B keystream (counter 0). }
   LKey := THexEncoder.Decode(
     '808182838485868788898a8b8c8d8e8f' +
     '909192939495969798999a9b9c9d9e9f');
@@ -196,7 +196,7 @@ var
   LEng: IXChaCha20Engine;
   LParams: IParametersWithIV;
 begin
-  { draft-irtf-cfrg-xchacha A.3.2.2 — keystream with block counter 1 (skip first 64 B). }
+  { draft-irtf-cfrg-xchacha A.3.2.2 - keystream with block counter 1 (skip first 64 B). }
   LKey := THexEncoder.Decode(
     '808182838485868788898a8b8c8d8e8f' +
     '909192939495969798999a9b9c9d9e9f');

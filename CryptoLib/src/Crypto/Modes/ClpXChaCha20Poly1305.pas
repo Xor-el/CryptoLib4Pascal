@@ -31,6 +31,20 @@ uses
   ClpXChaCha20Engine;
 
 type
+  /// <summary>
+  ///   XChaCha20-Poly1305 AEAD construction as described in
+  ///   draft-irtf-cfrg-xchacha-03 section 2.4.
+  /// </summary>
+  /// <remarks>
+  ///   Identical to ChaCha20-Poly1305 except that the underlying stream
+  ///   cipher is XChaCha20 using a 192-bit nonce instead of a 96-bit nonce.
+  ///
+  ///   The extended nonce makes random-nonce strategies safe at scale.
+  ///   With a 192-bit nonce, collisions remain negligibly likely up to
+  ///   2^80 messages per key, removing the per-key counter or
+  ///   deterministic-nonce constraint imposed by standard
+  ///   ChaCha20-Poly1305.
+  /// </remarks>
   TXChaCha20Poly1305 = class(TChaCha20Poly1305, IXChaCha20Poly1305, IAeadCipher)
 
   strict protected

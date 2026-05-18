@@ -624,7 +624,7 @@ begin
       raise;
   end;
 
-  // Case 2: ref sign_verify_vectors sign_error key_indices [1, 0, 3] — key at index 3 is invalid (point not on curve; ref: "Signer 2 provided an invalid public key")
+  // Case 2: ref sign_verify_vectors sign_error key_indices [1, 0, 3] - key at index 3 is invalid (point not on curve; ref: "Signer 2 provided an invalid public key")
   LPks := TCryptoLibGenericArray<TCryptoLibByteArray>.Create(LPubkeys[1], LPubkeys[0], LPubkeys[3]);
   LSessionCtx.PubKeys := LPks;
   LSecnonces[0] := DecodeHex('508B81A611F100A6B2B6B29656590898AF488BCF2E1F55CF22E5CFB84421FE61FA27FD49B1D50085B481285E1CA205D55C82CC1B31FF5CD54A489829355901F703935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9');

@@ -34,7 +34,19 @@ resourcestring
   SInvalidIvSize = '%s Requires a 192 bit IV';
 
 type
-
+  /// <summary>
+  ///   Implementation of the XChaCha20 stream cipher (extended-nonce ChaCha20)
+  ///   as described in draft-irtf-cfrg-xchacha-03.
+  /// </summary>
+  /// <remarks>
+  ///   XChaCha20 takes a 256-bit key and a 192-bit nonce.
+  ///   The first 128 bits of the nonce are used together with the key
+  ///   in HChaCha20 to derive a 256-bit subkey.
+  ///
+  ///   That subkey, together with the remaining 64 bits of the nonce
+  ///   (prefixed by four zero bytes to form a 96-bit IETF nonce),
+  ///   then drives a standard ChaCha20-IETF stream as defined by RFC 7539.
+  /// </remarks>
   TXChaCha20Engine = class(TChaCha7539Engine, IXChaCha20Engine, IStreamCipher)
 
   strict protected

@@ -161,7 +161,7 @@ var
   LParams: IParametersWithIV;
   LIdx: Int32;
 begin
-  { draft-irtf-cfrg-xchacha A.3.1 — 32-byte Poly1305 key from first ChaCha block (RFC 8439). }
+  { draft-irtf-cfrg-xchacha A.3.1 - 32-byte Poly1305 key from first ChaCha block (RFC 8439). }
   LK := THexEncoder.Decode(
     '808182838485868788898a8b8c8d8e8f' +
     '909192939495969798999a9b9c9d9e9f');
