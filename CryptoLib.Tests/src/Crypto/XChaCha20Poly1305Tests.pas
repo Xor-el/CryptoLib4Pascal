@@ -42,8 +42,16 @@ uses
   ClpEncoders,
   ClpIBufferedCipher,
   ClpCipherUtilities,
+  ClpGeneratorUtilities,
+  ClpICipherKeyGenerator,
+  ClpParameterUtilities,
+  ClpIAsn1Core,
+  ClpIAsn1Objects,
   ClpChaChaEngine,
   ClpChaCha7539Engine,
+  ClpIChaCha7539Engine,
+  ClpSecureRandom,
+  ClpISecureRandom,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -64,6 +72,12 @@ type
     procedure TestRejectNonce12Byte;
     procedure TestReuseNonceEncryptionRejected;
     procedure TestGetCipherRegistry;
+    procedure TestRandomRoundTrip;
+    procedure TestRejectInvalidKeySize;
+    procedure TestKeyGenerator256Bit;
+    procedure TestParameterUtilitiesIv24Bytes;
+    procedure TestCipherUtilitiesStreamRoundTrip;
+    procedure TestCipherUtilitiesAeadDraftVector;
   end;
 
 implementation
@@ -95,7 +109,7 @@ function TTestXChaCha20Poly1305.InitCipher(AForEncryption: Boolean;
 var
   LCipher: IXChaCha20Poly1305;
 begin
-  LCipher := TXChaCha20Poly1305.Create;
+  LCipher := TXChaCha20Poly1305.Create() as IXChaCha20Poly1305;
   LCipher.Init(AForEncryption, AParams as ICipherParameters);
   Result := LCipher;
 end;
@@ -157,7 +171,7 @@ end;
 procedure TTestXChaCha20Poly1305.TestAppendixA1Poly1305OneTimeKey;
 var
   LK, LN, LNoncePrefix, LSubKey, LInnerIv, LZero, LFirstBlock, LExpected: TBytes;
-  LE: TChaCha7539Engine;
+  LE: IChaCha7539Engine;
   LParams: IParametersWithIV;
   LIdx: Int32;
 begin
@@ -181,20 +195,16 @@ begin
   System.Move(LN[16], LInnerIv[4], 8);
 
   LE := TChaCha7539Engine.Create;
-  try
-    LParams := TParametersWithIV.Create(TKeyParameter.Create(LSubKey) as IKeyParameter,
-      LInnerIv);
-    LE.Init(True, LParams);
-    System.SetLength(LZero, 64);
-    for LIdx := 0 to 63 do
-      LZero[LIdx] := 0;
-    System.SetLength(LFirstBlock, 64);
-    LE.ProcessBytes(LZero, 0, 64, LFirstBlock, 0);
-  finally
-    LE.Free;
-    TArrayUtilities.Fill<Byte>(LSubKey, 0, 32, 0);
-    TArrayUtilities.Fill<Byte>(LInnerIv, 0, 12, 0);
-  end;
+  LParams := TParametersWithIV.Create(TKeyParameter.Create(LSubKey) as IKeyParameter,
+    LInnerIv);
+  LE.Init(True, LParams);
+  System.SetLength(LZero, 64);
+  for LIdx := 0 to 63 do
+    LZero[LIdx] := 0;
+  System.SetLength(LFirstBlock, 64);
+  LE.ProcessBytes(LZero, 0, 64, LFirstBlock, 0);
+  TArrayUtilities.Fill<Byte>(LSubKey, 0, 32, 0);
+  TArrayUtilities.Fill<Byte>(LInnerIv, 0, 12, 0);
 
   CheckEqual('XChaCha20Poly1305 A.3.1 Poly1305 one-time key', LExpected,
     CopyOfRange(LFirstBlock, 0, 32));
@@ -355,6 +365,193 @@ begin
   LCipher := TCipherUtilities.GetCipher('XChaCha20-Poly1305');
   if LCipher = nil then
     Fail('GetCipher(XChaCha20-Poly1305) nil');
+end;
+
+procedure TTestXChaCha20Poly1305.TestRandomRoundTrip;
+var
+  LRandom: ISecureRandom;
+  LI, LPLen, LALen, LLen, EL, DL, LTamperIdx: Int32;
+  LKey, LNonce, LPlain, LAad, LCt, LPt, LJunk: TCryptoLibByteArray;
+  LParams: IAeadParameters;
+  LEnc, LDec, LBad: IXChaCha20Poly1305;
+begin
+  LRandom := TSecureRandom.Create;
+  for LI := 0 to 49 do
+  begin
+    System.SetLength(LKey, 32);
+    LRandom.NextBytes(LKey);
+    System.SetLength(LNonce, 24);
+    LRandom.NextBytes(LNonce);
+    LPLen := LRandom.Next(4096);
+    System.SetLength(LPlain, LPLen);
+    if LPLen > 0 then
+      LRandom.NextBytes(LPlain);
+    LALen := LRandom.Next(256);
+    System.SetLength(LAad, LALen);
+    if LALen > 0 then
+      LRandom.NextBytes(LAad);
+
+    LParams := TAeadParameters.Create(TKeyParameter.Create(LKey) as IKeyParameter,
+      128, LNonce, LAad);
+
+    LEnc := InitCipher(True, LParams);
+    System.SetLength(LCt, LEnc.GetOutputSize(LPLen));
+    LLen := LEnc.ProcessBytes(LPlain, 0, LPLen, LCt, 0);
+    LLen := LLen + LEnc.DoFinal(LCt, LLen);
+    if System.Length(LCt) <> LLen then
+      Fail('round-trip: encryption length mismatch');
+
+    LDec := InitCipher(False, LParams);
+    System.SetLength(LPt, LDec.GetOutputSize(LLen));
+    DL := LDec.ProcessBytes(LCt, 0, LLen, LPt, 0);
+    DL := DL + LDec.DoFinal(LPt, DL);
+    if DL <> LPLen then
+      Fail('round-trip: decryption length mismatch');
+    CheckEqual('round-trip: plaintext mismatch', LPlain,
+      CopyOfRange(LPt, 0, LPLen));
+
+    if LLen > 0 then
+    begin
+      LTamperIdx := LRandom.Next(LLen);
+      LCt[LTamperIdx] := Byte(LCt[LTamperIdx] xor $01);
+      LBad := InitCipher(False, LParams);
+      System.SetLength(LJunk, LBad.GetOutputSize(LLen));
+      try
+        EL := LBad.ProcessBytes(LCt, 0, LLen, LJunk, 0);
+        LBad.DoFinal(LJunk, EL);
+        Fail('round-trip: tampered ciphertext was accepted');
+      except
+        on E: EInvalidCipherTextCryptoLibException do
+          ; // expected
+      end;
+    end;
+  end;
+end;
+
+procedure TTestXChaCha20Poly1305.TestRejectInvalidKeySize;
+var
+  LKey16, LNonce: TCryptoLibByteArray;
+  LParams: IAeadParameters;
+  LCipher: IXChaCha20Poly1305;
+begin
+  System.SetLength(LKey16, 16);
+  System.SetLength(LNonce, 24);
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LKey16) as IKeyParameter,
+    128, LNonce, nil);
+  LCipher := TXChaCha20Poly1305.Create();
+  try
+    LCipher.Init(True, LParams as ICipherParameters);
+    Fail('XChaCha20Poly1305 unexpectedly accepted a 128-bit key');
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      if E.Message <> 'Key must be 256 bits' then
+        Fail('unexpected key size message: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TTestXChaCha20Poly1305.TestKeyGenerator256Bit;
+var
+  LKg1, LKg2: ICipherKeyGenerator;
+begin
+  LKg1 := TGeneratorUtilities.GetKeyGenerator('XCHACHA20');
+  if LKg1.DefaultStrength <> 256 then
+    Fail('GeneratorUtilities default key size for XCHACHA20 is wrong');
+  LKg2 := TGeneratorUtilities.GetKeyGenerator('XCHACHA20-POLY1305');
+  if LKg2.DefaultStrength <> 256 then
+    Fail('GeneratorUtilities default key size for XCHACHA20-POLY1305 is wrong');
+end;
+
+procedure TTestXChaCha20Poly1305.TestParameterUtilitiesIv24Bytes;
+var
+  LRandom: ISecureRandom;
+  LParams: IAsn1Encodable;
+  LOctet: IAsn1OctetString;
+begin
+  LRandom := TSecureRandom.Create;
+  LParams := TParameterUtilities.GenerateParameters('XCHACHA20', LRandom);
+  if not Supports(LParams, IAsn1OctetString, LOctet) then
+    Fail('ParameterUtilities did not return an octet string for XCHACHA20');
+  if System.Length(LOctet.GetOctets) <> 24 then
+    Fail('ParameterUtilities generated wrong IV length for XCHACHA20');
+end;
+
+procedure TTestXChaCha20Poly1305.TestCipherUtilitiesStreamRoundTrip;
+var
+  LKey, LNonce, LPlain, LCt, LPt: TCryptoLibByteArray;
+  LParams: IParametersWithIV;
+  LEnc, LDec: IBufferedCipher;
+begin
+  LKey := THexEncoder.Decode(
+    '808182838485868788898a8b8c8d8e8f' +
+    '909192939495969798999a9b9c9d9e9f');
+  LNonce := THexEncoder.Decode(
+    '404142434445464748494a4b4c4d4e4f5051525354555657');
+  LPlain := THexEncoder.Decode(
+    '4c616469657320616e642047656e746c' +
+    '656d656e206f662074686520636c6173' +
+    '73206f66202739393a20496620492063' +
+    '6f756c64206f6666657220796f75206f' +
+    '6e6c79206f6e652074697020666f7220' +
+    '746865206675747572652c2073756e73' +
+    '637265656e20776f756c642062652069' +
+    '742e');
+
+  LParams := TParametersWithIV.Create(TKeyParameter.Create(LKey) as IKeyParameter,
+    LNonce);
+  LEnc := TCipherUtilities.GetCipher('XCHACHA20');
+  LEnc.Init(True, LParams);
+  LCt := LEnc.DoFinal(LPlain);
+  LDec := TCipherUtilities.GetCipher('XCHACHA20');
+  LDec.Init(False, LParams);
+  LPt := LDec.DoFinal(LCt);
+  CheckEqual('CipherUtilities XCHACHA20 round-trip', LPlain, LPt);
+end;
+
+procedure TTestXChaCha20Poly1305.TestCipherUtilitiesAeadDraftVector;
+var
+  LKey, LNonce, LAad, LPlain, LExpectedCipher, LExpectedTag, LExpected, LCt: TBytes;
+  LParams: IAeadParameters;
+  LCipher: IBufferedCipher;
+begin
+  LKey := THexEncoder.Decode(
+    '808182838485868788898a8b8c8d8e8f' +
+    '909192939495969798999a9b9c9d9e9f');
+  LNonce := THexEncoder.Decode(
+    '404142434445464748494a4b4c4d4e4f5051525354555657');
+  LAad := THexEncoder.Decode('50515253c0c1c2c3c4c5c6c7');
+  LPlain := THexEncoder.Decode(
+    '4c616469657320616e642047656e746c' +
+    '656d656e206f662074686520636c6173' +
+    '73206f66202739393a20496620492063' +
+    '6f756c64206f6666657220796f75206f' +
+    '6e6c79206f6e652074697020666f7220' +
+    '746865206675747572652c2073756e73' +
+    '637265656e20776f756c642062652069' +
+    '742e');
+  LExpectedCipher := THexEncoder.Decode(
+    'bd6d179d3e83d43b9576579493c0e939' +
+    '572a1700252bfaccbed2902c21396cbb' +
+    '731c7f1b0b4aa6440bf3a82f4eda7e39' +
+    'ae64c6708c54c216cb96b72e1213b452' +
+    '2f8c9ba40db5d945b11b69b982c1bb9e' +
+    '3f3fac2bc369488f76b2383565d3fff9' +
+    '21f9664c97637da9768812f615c68b13' +
+    'b52e');
+  LExpectedTag := THexEncoder.Decode('c0875924c1c7987947deafd8780acf49');
+  System.SetLength(LExpected, System.Length(LExpectedCipher) +
+    System.Length(LExpectedTag));
+  System.Move(LExpectedCipher[0], LExpected[0], System.Length(LExpectedCipher));
+  System.Move(LExpectedTag[0], LExpected[System.Length(LExpectedCipher)],
+    System.Length(LExpectedTag));
+
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LKey) as IKeyParameter,
+    System.Length(LExpectedTag) * 8, LNonce, LAad);
+  LCipher := TCipherUtilities.GetCipher('XCHACHA20-POLY1305');
+  LCipher.Init(True, LParams as ICipherParameters);
+  LCt := LCipher.DoFinal(LPlain);
+  CheckEqual('CipherUtilities XCHACHA20-POLY1305 draft vector', LExpected, LCt);
 end;
 
 initialization

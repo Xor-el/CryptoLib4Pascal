@@ -214,6 +214,11 @@ begin
 
   AddKgAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2']);
 
+  AddKgAlgorithm('CHACHA', []);
+  AddKgAlgorithm('CHACHA7539', ['CHACHA20', 'CHACHA20-POLY1305', TPkcsObjectIdentifiers.IdAlgAeadChaCha20Poly1305.ID]);
+
+  AddKgAlgorithm('XCHACHA20', ['XCHACHA20-POLY1305']);
+
   AddKgAlgorithm('RIJNDAEL', []);
   AddKgAlgorithm('SALSA20', []);
 
@@ -321,7 +326,8 @@ begin
     'HMACSHA3-256',
     'HMACKECCAK256',
     'HMACSHA256',
-    'HMACSHA512/256'
+    'HMACSHA512/256',
+    'XCHACHA20'
     ]);
   AddDefaultKeySizeEntries(288, ['HMACKECCAK288']);
   AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACKECCAK384', 'HMACSHA384']);

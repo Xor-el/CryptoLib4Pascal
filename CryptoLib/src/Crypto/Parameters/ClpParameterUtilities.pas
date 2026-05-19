@@ -36,6 +36,7 @@ uses
   ClpKeyParameter,
   ClpMiscObjectIdentifiers,
   ClpNistObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
   ClpParametersWithRandom,
   ClpParametersWithIV,
   ClpSecureRandom;
@@ -242,11 +243,18 @@ begin
 
   AddAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2', TMiscObjectIdentifiers.CryptlibAlgorithmBlowfishCbc.ID]);
 
+  AddAlgorithm('CHACHA', []);
+  AddAlgorithm('CHACHA7539', ['CHACHA20', 'CHACHA20-POLY1305', TPkcsObjectIdentifiers.IdAlgAeadChaCha20Poly1305.ID]);
+
+  AddAlgorithm('XCHACHA20', ['XCHACHA20-POLY1305']);
+
   AddAlgorithm('RIJNDAEL', []);
   AddAlgorithm('SALSA20', []);
 
   AddBasicIVSizeEntries(8, ['BLOWFISH', 'SALSA20']);
+  AddBasicIVSizeEntries(12, ['CHACHA7539']);
   AddBasicIVSizeEntries(16, ['AES', 'AES128', 'AES192', 'AES256']);
+  AddBasicIVSizeEntries(24, ['XCHACHA20']);
 end;
 
 class constructor TParameterUtilities.Create;
