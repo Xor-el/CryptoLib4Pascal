@@ -109,7 +109,7 @@ function TTestXChaCha20Poly1305.InitCipher(AForEncryption: Boolean;
 var
   LCipher: IXChaCha20Poly1305;
 begin
-  LCipher := TXChaCha20Poly1305.Create() as IXChaCha20Poly1305;
+  LCipher := TXChaCha20Poly1305.Create();
   LCipher.Init(AForEncryption, AParams as ICipherParameters);
   Result := LCipher;
 end;
