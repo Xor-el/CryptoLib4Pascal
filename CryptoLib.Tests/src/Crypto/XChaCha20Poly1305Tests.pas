@@ -382,11 +382,11 @@ begin
     LRandom.NextBytes(LKey);
     System.SetLength(LNonce, 24);
     LRandom.NextBytes(LNonce);
-    LPLen := LRandom.Next(4096);
+    LPLen := LRandom.Next(1, 4096);
     System.SetLength(LPlain, LPLen);
     if LPLen > 0 then
       LRandom.NextBytes(LPlain);
-    LALen := LRandom.Next(256);
+    LALen := LRandom.Next(1, 256);
     System.SetLength(LAad, LALen);
     if LALen > 0 then
       LRandom.NextBytes(LAad);
@@ -412,7 +412,7 @@ begin
 
     if LLen > 0 then
     begin
-      LTamperIdx := LRandom.Next(LLen);
+      LTamperIdx := LRandom.Next(1, LLen);
       LCt[LTamperIdx] := Byte(LCt[LTamperIdx] xor $01);
       LBad := InitCipher(False, LParams);
       System.SetLength(LJunk, LBad.GetOutputSize(LLen));

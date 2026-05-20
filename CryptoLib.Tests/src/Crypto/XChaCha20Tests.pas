@@ -486,7 +486,7 @@ begin
     LRandom.NextBytes(LKey);
     System.SetLength(LNonce, 24);
     LRandom.NextBytes(LNonce);
-    LLen := LRandom.Next(8192);
+    LLen := LRandom.Next(1, 8192);
     System.SetLength(LPlain, LLen);
     if LLen > 0 then
       LRandom.NextBytes(LPlain);
