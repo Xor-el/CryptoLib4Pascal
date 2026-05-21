@@ -26,12 +26,6 @@ uses
 type
   TX86SimdFeatures = class sealed
   strict private
-  type
-    TCpuIdResult = record
-      RegEAX, RegEBX, RegECX, RegEDX: UInt32;
-    end;
-
-  strict private
   class var
     FActiveSimdLevel: TX86SimdLevel;
     FHasSHANI: Boolean;
@@ -50,6 +44,11 @@ type
     class function CPUHasPCLMULQDQ(): Boolean; static;
     class function CPUHasVPCLMULQDQ(): Boolean; static;
     class function CPUHasAESNI(): Boolean; static;
+
+    // Clears all the "extra" CPU feature flags (SHA-NI, PCLMULQDQ,
+    // VPCLMULQDQ, AES-NI). Used by ApplyBuildOverrides to give every
+    // CRYPTOLIB_FORCE_* branch a uniform "no accelerated extras" baseline.
+    class procedure DisableAllExtraFeatures(); static;
 
   private
     class procedure ProbeHardwareAndCache(); static;
@@ -71,13 +70,18 @@ type
 
 implementation
 
+type
+  TCpuIdResult = record
+    RegEAX, RegEBX, RegECX, RegEDX: UInt32;
+  end;
+
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
-procedure CpuIdQuery(ALeaf, ASubLeaf: UInt32; AResult: Pointer);
+procedure CpuIdQuery(ALeaf, ASubLeaf: UInt32; out AResult: TCpuIdResult);
   {$I ..\Include\Simd\CpuFeatures\CpuIdQuery.inc}
 end;
 
-procedure XGetBvQuery(AResult: Pointer);
+procedure XGetBvQuery(out AResult: UInt64);
   {$I ..\Include\Simd\CpuFeatures\XGetBvQuery.inc}
 end;
 
@@ -92,7 +96,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   Result := (LCpuId.RegEDX and (1 shl 26)) <> 0;
 {$ELSE}
   Result := False;
@@ -106,7 +110,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   // SSSE3: ECX bit 9
   Result := (LCpuId.RegECX and (1 shl 9)) <> 0;
 {$ELSE}
@@ -121,7 +125,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   // SSE3: ECX bit 0
   Result := (LCpuId.RegECX and (1 shl 0)) <> 0;
 {$ELSE}
@@ -136,7 +140,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   // SSE4.1: ECX bit 19
   Result := (LCpuId.RegECX and (1 shl 19)) <> 0;
 {$ELSE}
@@ -151,7 +155,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   // SSE4.2: ECX bit 20
   Result := (LCpuId.RegECX and (1 shl 20)) <> 0;
 {$ELSE}
@@ -167,7 +171,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
 
   // OSXSAVE: ECX bit 27 (required for OS AVX state saving)
   if (LCpuId.RegECX and (1 shl 27)) = 0 then
@@ -175,11 +179,11 @@ begin
 
   // XCR0 bits 1 and 2 must be set for AVX state support
   LXcr0 := 0;
-  XGetBvQuery(@LXcr0);
+  XGetBvQuery(LXcr0);
   if (UInt32(LXcr0) and $06) <> $06 then
     Exit(False);
 
-  CpuIdQuery(7, 0, @LCpuId);
+  CpuIdQuery(7, 0, LCpuId);
 
   // AVX2: EBX bit 5
   Result := (LCpuId.RegEBX and (1 shl 5)) <> 0;
@@ -195,7 +199,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(7, 0, @LCpuId);
+  CpuIdQuery(7, 0, LCpuId);
   // SHA-NI: EBX bit 29
   Result := (LCpuId.RegEBX and (1 shl 29)) <> 0;
 {$ELSE}
@@ -210,7 +214,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   // PCLMULQDQ: ECX bit 1
   Result := (LCpuId.RegECX and (1 shl 1)) <> 0;
 {$ELSE}
@@ -225,7 +229,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(7, 0, @LCpuId);
+  CpuIdQuery(7, 0, LCpuId);
   // VPCLMULQDQ: ECX bit 10
   Result := (LCpuId.RegECX and (1 shl 10)) <> 0;
 {$ELSE}
@@ -240,12 +244,20 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  CpuIdQuery(1, 0, @LCpuId);
+  CpuIdQuery(1, 0, LCpuId);
   // AES-NI: ECX bit 25
   Result := (LCpuId.RegECX and (1 shl 25)) <> 0;
 {$ELSE}
   Result := False;
 {$ENDIF}
+end;
+
+class procedure TX86SimdFeatures.DisableAllExtraFeatures();
+begin
+  FHasSHANI := False;
+  FHasPCLMULQDQ := False;
+  FHasVPCLMULQDQ := False;
+  FHasAESNI := False;
 end;
 
 class procedure TX86SimdFeatures.ProbeHardwareAndCache();
@@ -287,45 +299,27 @@ class procedure TX86SimdFeatures.ApplyBuildOverrides();
 begin
 {$IF DEFINED(CRYPTOLIB_FORCE_SCALAR)}
   FActiveSimdLevel := TX86SimdLevel.Scalar;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE2)}
   if FActiveSimdLevel > TX86SimdLevel.SSE2 then
     FActiveSimdLevel := TX86SimdLevel.SSE2;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE3)}
   if FActiveSimdLevel > TX86SimdLevel.SSE3 then
     FActiveSimdLevel := TX86SimdLevel.SSE3;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSSE3)}
   if FActiveSimdLevel > TX86SimdLevel.SSSE3 then
     FActiveSimdLevel := TX86SimdLevel.SSSE3;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE41)}
   if FActiveSimdLevel > TX86SimdLevel.SSE41 then
     FActiveSimdLevel := TX86SimdLevel.SSE41;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SSE42)}
   if FActiveSimdLevel > TX86SimdLevel.SSE42 then
     FActiveSimdLevel := TX86SimdLevel.SSE42;
-  FHasSHANI := False;
-  FHasPCLMULQDQ := False;
-  FHasVPCLMULQDQ := False;
-  FHasAESNI := False;
+  DisableAllExtraFeatures;
 {$IFEND}
 end;
 

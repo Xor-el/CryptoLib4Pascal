@@ -166,6 +166,10 @@
 
 {============================ Common SIMD Settings ============================}
 
+{$IF DEFINED(CRYPTOLIB_X86_64) AND NOT DEFINED(CRYPTOLIB_MSWINDOWS)}
+  {$DEFINE CRYPTOLIB_SYSV_X64_ABI}
+{$IFEND}
+
 // Uncomment to force scalar dispatch (available on all platforms):
 // {$DEFINE CRYPTOLIB_FORCE_SCALAR}
 
