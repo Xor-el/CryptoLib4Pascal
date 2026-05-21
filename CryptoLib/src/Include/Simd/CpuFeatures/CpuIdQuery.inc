@@ -1,15 +1,10 @@
-// CPUID query helper (i386 + x86-64).
-// Issues `cpuid` with the caller-supplied leaf / subleaf and writes the
-// returned eax, ebx, ecx, edx quad into a TCpuIdResult record at the
-// supplied pointer.
-//
-// Entry contract (register convention varies by ABI):
-//   i386:             eax = leaf, edx = subleaf, ecx = @TCpuIdResult.
-//   x86-64 MS ABI:    ecx = leaf, edx = subleaf, r8 = @TCpuIdResult.
-//   x86-64 FPC Unix:  rdi = leaf, rsi = subleaf, rdx = @TCpuIdResult
-//                     (remapped internally to eax, ecx, r8).
-// Preserves ebx / rbx around `cpuid` (required by all supported ABIs); on
-// i386 also preserves esi (used to hold the result pointer during `cpuid`).
+// CPUID query: executes CPUID with leaf=ALeaf, subleaf=ASubLeaf,
+// stores EAX/EBX/ECX/EDX into the TCpuIdResult record at AResult.
+// IA-32 fastcall entry: EAX=ALeaf, EDX=ASubLeaf, ECX=AResult.
+// x86-64 entry (per OS ABI):
+//   Windows (MS ABI):   RCX=ALeaf, RDX=ASubLeaf, R8=AResult.
+//   Unix    (SysV ABI): RDI=ALeaf, RSI=ASubLeaf, RDX=AResult.
+// CPUID clobbers EBX, so RBX is preserved across the call.
 {$IFDEF FPC}
   assembler; nostackframe;
 {$ENDIF}
@@ -17,9 +12,9 @@ asm
 {$IFDEF CRYPTOLIB_I386_ASM}
   push ebx
   push esi
-  mov esi, ecx
-  mov ecx, edx
-  cpuid
+  mov esi, ecx       // save AResult (was in ECX) across cpuid
+  mov ecx, edx       // ECX := ASubLeaf
+  cpuid              // EAX already holds ALeaf
   mov [esi], eax
   mov [esi + 4], ebx
   mov [esi + 8], ecx
@@ -27,35 +22,29 @@ asm
   pop esi
   pop ebx
 {$ELSE}
+  // x86-64: normalize to EAX=ALeaf, ECX=ASubLeaf, R8=AResult, then cpuid.
+  // Preserve RBX (CPUID clobbers it).
   {$IFDEF FPC}
   push rbx
-  {$IFDEF MSWINDOWS}
-  mov eax, ecx
-  mov ecx, edx
-  cpuid
-  mov dword ptr [r8], eax
-  mov dword ptr [r8 + 4], ebx
-  mov dword ptr [r8 + 8], ecx
-  mov dword ptr [r8 + 12], edx
-  {$ELSE}
-  mov eax, edi
-  mov ecx, esi
-  mov r8, rdx
-  cpuid
-  mov dword ptr [r8], eax
-  mov dword ptr [r8 + 4], ebx
-  mov dword ptr [r8 + 8], ecx
-  mov dword ptr [r8 + 12], edx
-  {$ENDIF}
-  pop rbx
   {$ELSE}
   .PUSHNV RBX
-  mov eax, ecx
-  mov ecx, edx
+  {$ENDIF}
+  {$IFDEF CRYPTOLIB_SYSV_X64_ABI}
+  // SysV ABI entry: RDI=ALeaf, RSI=ASubLeaf, RDX=AResult.
+  mov eax, edi       // EAX := ALeaf
+  mov ecx, esi       // ECX := ASubLeaf
+  mov r8, rdx        // R8  := AResult
+  {$ELSE}
+  // MS ABI entry: RCX=ALeaf, RDX=ASubLeaf, R8=AResult.
+  mov eax, ecx       // EAX := ALeaf
+  mov ecx, edx       // ECX := ASubLeaf
+  {$ENDIF}
   cpuid
   mov dword ptr [r8], eax
   mov dword ptr [r8 + 4], ebx
   mov dword ptr [r8 + 8], ecx
   mov dword ptr [r8 + 12], edx
+  {$IFDEF FPC}
+  pop rbx
   {$ENDIF}
 {$ENDIF}

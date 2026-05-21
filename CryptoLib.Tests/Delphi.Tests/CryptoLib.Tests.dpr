@@ -864,6 +864,7 @@ uses
   X509CertificatePairTests in '..\src\X509\X509CertificatePairTests.pas',
   Bip340SchnorrTests in '..\src\Crypto\Bip340SchnorrTests.pas',
   Bip327MuSig2Tests in '..\src\Crypto\Bip327MuSig2Tests.pas',
+  SimdSelectSlotTests in '..\src\Misc\SimdSelectSlotTests.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

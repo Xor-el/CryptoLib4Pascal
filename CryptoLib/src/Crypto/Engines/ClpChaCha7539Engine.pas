@@ -29,7 +29,8 @@ uses
   ClpChaChaEngine,
   ClpPack,
   ClpCryptoLibTypes,
-  ClpCpuFeatures;
+  ClpCpuFeatures,
+  ClpSimdLevels;
 
 resourcestring
   SInvalidKeySize256 = '%s Requires 256 bit key';
@@ -370,17 +371,19 @@ begin
     raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasAVX2() then
-  begin
-    ChaCha7539ProcessBlocks2Avx2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
-      PByte(@AOutBytes[AOutOff]));
-    Exit;
-  end;
-  if TCpuFeatures.X86.HasSSE2() then
-  begin
-    ChaCha7539ProcessBlocks2Sse2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
-      PByte(@AOutBytes[AOutOff]));
-    Exit;
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2, TX86SimdLevel.SSE2]) of
+    TX86SimdLevel.AVX2:
+    begin
+      ChaCha7539ProcessBlocks2Avx2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
+        PByte(@AOutBytes[AOutOff]));
+      Exit;
+    end;
+    TX86SimdLevel.SSE2:
+    begin
+      ChaCha7539ProcessBlocks2Sse2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
+        PByte(@AOutBytes[AOutOff]));
+      Exit;
+    end;
   end;
 {$ENDIF}
   ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
@@ -401,15 +404,17 @@ begin
       [AlgorithmName]);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasAVX2() then
-  begin
-    if (LimitExceeded(UInt32(256))) then
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
+    TX86SimdLevel.AVX2:
     begin
-      raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
+      if (LimitExceeded(UInt32(256))) then
+      begin
+        raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
+      end;
+      ChaCha7539ProcessBlocks4Avx2(FRounds, PByte(@FEngineState[0]),
+        PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
+      Exit;
     end;
-    ChaCha7539ProcessBlocks4Avx2(FRounds, PByte(@FEngineState[0]),
-      PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
-    Exit;
   end;
 {$ENDIF}
   ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);

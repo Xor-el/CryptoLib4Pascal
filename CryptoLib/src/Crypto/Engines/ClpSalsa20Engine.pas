@@ -31,6 +31,7 @@ uses
   ClpIParametersWithIV,
   ClpPack,
   ClpCpuFeatures,
+  ClpSimdLevels,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -350,10 +351,12 @@ procedure TSalsa20Engine.ProcessBlocks2(
 begin
   AssertInitialisedAndBlockAligned;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE41() then
-  begin
-    Salsa20ProcessBlocks2Sse41(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
-    Exit;
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE41]) of
+    TX86SimdLevel.SSE41:
+    begin
+      Salsa20ProcessBlocks2Sse41(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
+      Exit;
+    end;
   end;
 {$ENDIF}
   ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
@@ -527,10 +530,12 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SRoundsMustbeEven);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE41() then
-  begin
-    Salsa20BlockSse41(ARounds, @AInput[0], @AX[0]);
-    Exit;
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE41]) of
+    TX86SimdLevel.SSE41:
+    begin
+      Salsa20BlockSse41(ARounds, @AInput[0], @AX[0]);
+      Exit;
+    end;
   end;
 {$ENDIF}
 
