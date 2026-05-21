@@ -35,6 +35,7 @@ uses
   ClpBitOperations,
   ClpArrayUtilities,
   ClpCpuFeatures,
+  ClpSimdLevels,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -481,13 +482,14 @@ begin
   // Pre-build any SIMD-specific lookup tables for this key, and use the
   // (non-)allocation of FPowTable as the dispatch flag for BlockUpdate.
   // Reset to nil first so the scalar path is the postcondition when no
-  // SIMD branch matches. To add a new SIMD variant: add a parallel
-  // `if Has<Feature>()` branch here that delegates to its initializer
-  // (which owns sizing + layout), ordered most-capable first.
+  // SIMD branch matches. To add a new SIMD variant: declare its tier in
+  // SelectSlot and delegate to its initializer (which owns sizing + layout).
   FPowTable := nil;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasAVX2() then
-    Poly1305Avx2InitPowerTable(FPowTable, FState);
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
+    TX86SimdLevel.AVX2:
+      Poly1305Avx2InitPowerTable(FPowTable, FState);
+  end;
 {$ENDIF}
 end;
 
@@ -548,7 +550,7 @@ begin
   begin
     LBulkBytes := LNb shl 4;
   {$IFDEF CRYPTOLIB_X86_SIMD}
-    if (FPowTable <> nil) and TCpuFeatures.X86.HasAVX2() then
+    if FPowTable <> nil then
       Poly1305ProcessBlocksAvx2(FState, PByte(FPowTable), AInput,
         AInOff + LPos, LNb)
     else

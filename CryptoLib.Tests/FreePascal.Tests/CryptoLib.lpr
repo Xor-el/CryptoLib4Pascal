@@ -39,7 +39,7 @@ uses
   RijndaelTests, BlowfishTests, Poly1305Tests, MacTests, ChaCha20Poly1305Tests,
   OcbTests, CcmTests, EaxTests, CMacTests, AeadTestUtilities, GcmReorderTests,
   GCMTests, GcmSivTests, GMacTests, Pkcs12Tests, Bip327MuSig2Tests,
-  Bip340SchnorrTests, CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests,
+  Bip340SchnorrTests, CryptoLibTestBase, SimdSelectSlotTests, PkcsEncryptedPrivateKeyInfoTests,
   Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, ClpFixedSecureRandom, ClpShortenedDigest,
   ClpCertTestUtilities, ClpFusedKernelToggle, Int32Tests, Int64Tests,

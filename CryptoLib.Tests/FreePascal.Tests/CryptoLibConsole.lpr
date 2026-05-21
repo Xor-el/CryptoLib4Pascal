@@ -41,7 +41,7 @@ uses
   BlowfishTests, CcmTests, ChaCha20Poly1305Tests, CMacTests, EaxTests, OcbTests,
   MacTests, Poly1305Tests, AeadTestUtilities, GcmReorderTests, GCMTests,
   GcmSivTests, GMacTests, Pkcs12Tests, Bip327MuSig2Tests, Bip340SchnorrTests,
-  CryptoLibTestBase, PkcsEncryptedPrivateKeyInfoTests,
+  CryptoLibTestBase, SimdSelectSlotTests, PkcsEncryptedPrivateKeyInfoTests,
   Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, ClpFixedSecureRandom, ClpShortenedDigest,
   ClpCertTestUtilities, ClpFusedKernelToggle, Int32Tests, Int64Tests,

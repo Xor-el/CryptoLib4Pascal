@@ -27,6 +27,7 @@ uses
   ClpSalsa20Engine,
   ClpPack,
   ClpCpuFeatures,
+  ClpSimdLevels,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -136,10 +137,12 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SRoundsEven);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2() then
-  begin
-    ChaCha20BlockSse2(ARounds, PByte(@AInput[0]), PByte(@AOutput[0]));
-    Exit;
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
+    TX86SimdLevel.SSE2:
+    begin
+      ChaCha20BlockSse2(ARounds, PByte(@AInput[0]), PByte(@AOutput[0]));
+      Exit;
+    end;
   end;
 {$ENDIF}
 

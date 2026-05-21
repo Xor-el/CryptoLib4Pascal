@@ -66,6 +66,18 @@ type
     class function HasPCLMULQDQ(): Boolean; static;
     class function HasVPCLMULQDQ(): Boolean; static;
     class function HasAESNI(): Boolean; static;
+
+    // Picks the highest declared tier in ATiers that is <= the cached
+    // FActiveSimdLevel. Falls back to TX86SimdLevel.Scalar when no tier
+    // matches or ATiers is empty. Dispatch units use this overload.
+    class function SelectSlot(const ATiers: array of TX86SimdLevel)
+      : TX86SimdLevel; overload; static;
+
+    // Pure overload: reasons over any caller-supplied active level.
+    // Used by tests to deterministically exercise fallback semantics
+    // without depending on the host CPU.
+    class function SelectSlot(AActiveLevel: TX86SimdLevel;
+      const ATiers: array of TX86SimdLevel): TX86SimdLevel; overload; static;
   end;
 
 implementation
@@ -376,6 +388,39 @@ end;
 class function TX86SimdFeatures.HasAESNI(): Boolean;
 begin
   Result := FHasAESNI;
+end;
+
+class function TX86SimdFeatures.SelectSlot(const ATiers
+  : array of TX86SimdLevel): TX86SimdLevel;
+begin
+  Result := SelectSlot(FActiveSimdLevel, ATiers);
+end;
+
+class function TX86SimdFeatures.SelectSlot(AActiveLevel: TX86SimdLevel;
+  const ATiers: array of TX86SimdLevel): TX86SimdLevel;
+var
+  I: Integer;
+  LTier, LBest: TX86SimdLevel;
+  LFound: Boolean;
+begin
+  // Walk all declared tiers, keep the highest one that is <= AActiveLevel.
+  // Order of ATiers is irrelevant. Empty ATiers or no matching tier yields
+  // TX86SimdLevel.Scalar so dispatch units cleanly fall through to scalar.
+  LBest := TX86SimdLevel.Scalar;
+  LFound := False;
+  for I := 0 to System.Length(ATiers) - 1 do
+  begin
+    LTier := ATiers[I];
+    if (LTier <= AActiveLevel) and ((not LFound) or (LTier > LBest)) then
+    begin
+      LBest := LTier;
+      LFound := True;
+    end;
+  end;
+  if LFound then
+    Result := LBest
+  else
+    Result := TX86SimdLevel.Scalar;
 end;
 
 initialization
