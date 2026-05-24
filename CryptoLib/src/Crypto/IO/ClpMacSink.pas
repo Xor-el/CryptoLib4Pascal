@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpDefaultSignatureCalculator;
+unit ClpMacSink;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -22,56 +22,57 @@ interface
 
 uses
   Classes,
-  ClpIStreamCalculator,
-  ClpIBlockResult,
-  ClpISigner,
-  ClpSignerSink,
-  ClpDefaultSignatureResult;
+  ClpIMac,
+  ClpStreams,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Default implementation of IStreamCalculator for signature operations.
+  /// A stream that writes data to an IMac for MAC calculation.
   /// </summary>
-  TDefaultSignatureCalculator = class sealed(TInterfacedObject, IStreamCalculator<IBlockResult>)
+  TMacSink = class sealed(TBaseOutputStream)
 
   strict private
   var
-    FSignerSink: TSignerSink;
+    FMac: IMac;
 
   public
-    constructor Create(const ASigner: ISigner);
-    destructor Destroy; override;
+    constructor Create(const AMac: IMac);
 
-    function GetStream: TStream;
-    function GetResult: IBlockResult;
+    function Write(const ABuffer; ACount: LongInt): LongInt; override;
+    procedure WriteByte(AValue: Byte); override;
 
-    property Stream: TStream read GetStream;
+    property Mac: IMac read FMac;
   end;
 
 implementation
 
-{ TDefaultSignatureCalculator }
+{ TMacSink }
 
-constructor TDefaultSignatureCalculator.Create(const ASigner: ISigner);
+constructor TMacSink.Create(const AMac: IMac);
 begin
   inherited Create();
-  FSignerSink := TSignerSink.Create(ASigner);
+  if AMac = nil then
+    raise EArgumentNilCryptoLibException.Create('mac');
+  FMac := AMac;
 end;
 
-destructor TDefaultSignatureCalculator.Destroy;
+function TMacSink.Write(const ABuffer; ACount: LongInt): LongInt;
+var
+  LBuffer: TCryptoLibByteArray;
 begin
-  FSignerSink.Free;
-  inherited Destroy;
+  if ACount > 0 then
+  begin
+    System.SetLength(LBuffer, ACount);
+    System.Move(ABuffer, LBuffer[0], ACount);
+    FMac.BlockUpdate(LBuffer, 0, ACount);
+  end;
+  Result := ACount;
 end;
 
-function TDefaultSignatureCalculator.GetStream: TStream;
+procedure TMacSink.WriteByte(AValue: Byte);
 begin
-  Result := FSignerSink;
-end;
-
-function TDefaultSignatureCalculator.GetResult: IBlockResult;
-begin
-  Result := TDefaultSignatureResult.Create(FSignerSink.Signer);
+  FMac.Update(AValue);
 end;
 
 end.

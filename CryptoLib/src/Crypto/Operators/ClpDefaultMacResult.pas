@@ -14,64 +14,59 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpDefaultSignatureCalculator;
+unit ClpDefaultMacResult;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  Classes,
-  ClpIStreamCalculator,
   ClpIBlockResult,
-  ClpISigner,
-  ClpSignerSink,
-  ClpDefaultSignatureResult;
+  ClpIMac,
+  ClpMacUtilities,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Default implementation of IStreamCalculator for signature operations.
+  /// Default implementation of IBlockResult for MAC operations.
   /// </summary>
-  TDefaultSignatureCalculator = class sealed(TInterfacedObject, IStreamCalculator<IBlockResult>)
+  TDefaultMacResult = class sealed(TInterfacedObject, IBlockResult)
 
   strict private
   var
-    FSignerSink: TSignerSink;
+    FMac: IMac;
 
   public
-    constructor Create(const ASigner: ISigner);
-    destructor Destroy; override;
+    constructor Create(const AMac: IMac);
 
-    function GetStream: TStream;
-    function GetResult: IBlockResult;
-
-    property Stream: TStream read GetStream;
+    function Collect: TCryptoLibByteArray; overload;
+    function Collect(const ABuf: TCryptoLibByteArray; AOff: Int32): Int32; overload;
+    function GetMaxResultLength: Int32;
   end;
 
 implementation
 
-{ TDefaultSignatureCalculator }
+{ TDefaultMacResult }
 
-constructor TDefaultSignatureCalculator.Create(const ASigner: ISigner);
+constructor TDefaultMacResult.Create(const AMac: IMac);
 begin
   inherited Create();
-  FSignerSink := TSignerSink.Create(ASigner);
+  FMac := AMac;
 end;
 
-destructor TDefaultSignatureCalculator.Destroy;
+function TDefaultMacResult.Collect: TCryptoLibByteArray;
 begin
-  FSignerSink.Free;
-  inherited Destroy;
+  Result := TMacUtilities.DoFinal(FMac);
 end;
 
-function TDefaultSignatureCalculator.GetStream: TStream;
+function TDefaultMacResult.Collect(const ABuf: TCryptoLibByteArray; AOff: Int32): Int32;
 begin
-  Result := FSignerSink;
+  Result := FMac.DoFinal(ABuf, AOff);
 end;
 
-function TDefaultSignatureCalculator.GetResult: IBlockResult;
+function TDefaultMacResult.GetMaxResultLength: Int32;
 begin
-  Result := TDefaultSignatureResult.Create(FSignerSink.Signer);
+  Result := FMac.GetMacSize();
 end;
 
 end.

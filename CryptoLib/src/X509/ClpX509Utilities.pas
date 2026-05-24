@@ -273,11 +273,7 @@ var
   LStream: TStream;
 begin
   LStream := AStreamCalculator.Stream;
-  try
-    LStream.WriteBuffer(ABuf[AOff], ALen);
-  finally
-    LStream.Free;
-  end;
+  LStream.WriteBuffer(ABuf[AOff], ALen);
   Result := AStreamCalculator.GetResult();
 end;
 

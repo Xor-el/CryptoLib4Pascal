@@ -27,16 +27,9 @@ uses
 
 type
   /// <summary>
-  /// Interface for default signature result operations.
-  /// </summary>
-  IDefaultSignatureResult = interface(IBlockResult)
-    ['{A3964592-CB32-43F7-9857-D3BFD15FCF80}']
-  end;
-
-  /// <summary>
   /// Default implementation of IBlockResult for signature operations.
   /// </summary>
-  TDefaultSignatureResult = class sealed(TInterfacedObject, IBlockResult, IDefaultSignatureResult)
+  TDefaultSignatureResult = class sealed(TInterfacedObject, IBlockResult)
 
   strict private
   var

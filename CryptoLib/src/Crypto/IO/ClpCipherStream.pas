@@ -48,6 +48,7 @@ type
     function ReadAndProcessBlock: TCryptoLibByteArray;
 
   protected
+    function GetSize: Int64; override;
     function GetCanRead: Boolean; override;
     function GetCanSeek: Boolean; override;
     function GetCanWrite: Boolean; override;
@@ -58,6 +59,8 @@ type
 
     function Read(var ABuffer; ACount: LongInt): LongInt; override;
     function Write(const ABuffer; ACount: LongInt): LongInt; override;
+    function Seek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64; override;
+    procedure SetSize(const ANewSize: Int64); override;
 
     function ReadByte: Int32; override;
     procedure WriteByte(AValue: Byte); override;
@@ -66,6 +69,7 @@ type
 
     destructor Destroy; override;
 
+    property Stream: TStream read FStream;
     property ReadCipher: IBufferedCipher read FReadCipher;
     property WriteCipher: IBufferedCipher read FWriteCipher;
   end;
@@ -91,6 +95,11 @@ begin
   begin
     FWriteCipher := AWriteCipher;
   end;
+end;
+
+function TCipherStream.GetSize: Int64;
+begin
+  raise ENotSupportedCryptoLibException.Create('GetSize not supported');
 end;
 
 function TCipherStream.GetCanRead: Boolean;
@@ -220,6 +229,16 @@ end;
 procedure TCipherStream.Flush;
 begin
   FStream.Flush();
+end;
+
+function TCipherStream.Seek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
+begin
+  raise ENotSupportedCryptoLibException.Create('Seek not supported');
+end;
+
+procedure TCipherStream.SetSize(const ANewSize: Int64);
+begin
+  raise ENotSupportedCryptoLibException.Create('SetSize not supported');
 end;
 
 destructor TCipherStream.Destroy;
