@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpDefaultSignatureCalculator;
+unit ClpDefaultMacCalculator;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -24,22 +24,22 @@ uses
   Classes,
   ClpIStreamCalculator,
   ClpIBlockResult,
-  ClpISigner,
-  ClpSignerSink,
-  ClpDefaultSignatureResult;
+  ClpIMac,
+  ClpMacSink,
+  ClpDefaultMacResult;
 
 type
   /// <summary>
-  /// Default implementation of IStreamCalculator for signature operations.
+  /// Default implementation of IStreamCalculator for MAC operations.
   /// </summary>
-  TDefaultSignatureCalculator = class sealed(TInterfacedObject, IStreamCalculator<IBlockResult>)
+  TDefaultMacCalculator = class sealed(TInterfacedObject, IStreamCalculator<IBlockResult>)
 
   strict private
   var
-    FSignerSink: TSignerSink;
+    FMacSink: TMacSink;
 
   public
-    constructor Create(const ASigner: ISigner);
+    constructor Create(const AMac: IMac);
     destructor Destroy; override;
 
     function GetStream: TStream;
@@ -50,28 +50,28 @@ type
 
 implementation
 
-{ TDefaultSignatureCalculator }
+{ TDefaultMacCalculator }
 
-constructor TDefaultSignatureCalculator.Create(const ASigner: ISigner);
+constructor TDefaultMacCalculator.Create(const AMac: IMac);
 begin
   inherited Create();
-  FSignerSink := TSignerSink.Create(ASigner);
+  FMacSink := TMacSink.Create(AMac);
 end;
 
-destructor TDefaultSignatureCalculator.Destroy;
+destructor TDefaultMacCalculator.Destroy;
 begin
-  FSignerSink.Free;
+  FMacSink.Free;
   inherited Destroy;
 end;
 
-function TDefaultSignatureCalculator.GetStream: TStream;
+function TDefaultMacCalculator.GetStream: TStream;
 begin
-  Result := FSignerSink;
+  Result := FMacSink;
 end;
 
-function TDefaultSignatureCalculator.GetResult: IBlockResult;
+function TDefaultMacCalculator.GetResult: IBlockResult;
 begin
-  Result := TDefaultSignatureResult.Create(FSignerSink.Signer);
+  Result := TDefaultMacResult.Create(FMacSink.Mac);
 end;
 
 end.

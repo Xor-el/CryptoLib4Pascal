@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="151">
+    <Units Count="153">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -433,7 +433,7 @@
         <IsPartOfProject Value="True"/>
       </Unit97>
       <Unit98>
-        <Filename Value="..\src\Crypto\CipherStreamTests.pas"/>
+        <Filename Value="..\src\Crypto\CryptoIOStreamTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit98>
       <Unit99>
@@ -644,6 +644,14 @@
         <Filename Value="..\src\Misc\SimdSelectSlotTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit150>
+      <Unit151>
+        <Filename Value="..\src\Crypto\CryptoIOSinkTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit151>
+      <Unit152>
+        <Filename Value="..\src\X509\X509UtilitiesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit152>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

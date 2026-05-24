@@ -223,7 +223,9 @@ uses
   ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesNiAeadResolver, 
   ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
   ClpPclmulGcmSivKernel, ClpFusedKernelDefaults, ClpXChaCha20Engine, 
-  ClpIXChaCha20Engine, ClpXChaCha20Poly1305, ClpIXChaCha20Poly1305;
+  ClpIXChaCha20Engine, ClpXChaCha20Poly1305, ClpIXChaCha20Poly1305, 
+  ClpDigestStream, ClpMacSink, ClpMacStream, ClpSignerStream, 
+  ClpDefaultMacCalculator, ClpDefaultMacResult;
 
 implementation
 
