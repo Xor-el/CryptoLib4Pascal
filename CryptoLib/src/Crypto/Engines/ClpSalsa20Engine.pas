@@ -368,7 +368,7 @@ class procedure TSalsa20Engine.PackTauOrSigma(AKeyLength: Int32;
 var
   LTsOff: Int32;
 begin
-  LTsOff := AKeyLength div 4 - 4;
+  LTsOff := (AKeyLength div 4) - 4;
   AState[0] := TAU_SIGMA[LTsOff];
   AState[1] := TAU_SIGMA[LTsOff + 1];
   AState[2] := TAU_SIGMA[LTsOff + 2];
