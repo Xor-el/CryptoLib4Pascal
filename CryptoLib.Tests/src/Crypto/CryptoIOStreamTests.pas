@@ -78,7 +78,7 @@ type
 
   strict private
   const
-    FData = 'This will be encrypted and then decrypted and checked for correctness';
+    Data = 'This will be encrypted and then decrypted and checked for correctness';
 
   strict private
     procedure DoRunTest(const AName: String; AIvLength: Int32);
@@ -478,11 +478,11 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(FData);
+  LDataBytes := TEncoding.ASCII.GetBytes(Data);
   LEncryptedDataBytes := EncryptOnWrite(LDataBytes);
   LDecryptedDataBytes := DecryptOnRead(LEncryptedDataBytes);
   LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
-  CheckEquals(FData, LDecryptedData);
+  CheckEquals(Data, LDecryptedData);
 end;
 
 procedure TTestCipherStream.TestEncryptDecryptB;
@@ -490,11 +490,11 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(FData);
+  LDataBytes := TEncoding.ASCII.GetBytes(Data);
   LEncryptedDataBytes := EncryptOnRead(LDataBytes);
   LDecryptedDataBytes := DecryptOnWrite(LEncryptedDataBytes);
   LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
-  CheckEquals(FData, LDecryptedData);
+  CheckEquals(Data, LDecryptedData);
 end;
 
 procedure TTestCipherStream.TestEncryptDecryptC;
@@ -502,11 +502,11 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(FData);
+  LDataBytes := TEncoding.ASCII.GetBytes(Data);
   LEncryptedDataBytes := EncryptOnWrite(LDataBytes);
   LDecryptedDataBytes := DecryptOnWrite(LEncryptedDataBytes);
   LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
-  CheckEquals(FData, LDecryptedData);
+  CheckEquals(Data, LDecryptedData);
 end;
 
 procedure TTestCipherStream.TestEncryptDecryptD;
@@ -514,11 +514,11 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(FData);
+  LDataBytes := TEncoding.ASCII.GetBytes(Data);
   LEncryptedDataBytes := EncryptOnRead(LDataBytes);
   LDecryptedDataBytes := DecryptOnRead(LEncryptedDataBytes);
   LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
-  CheckEquals(FData, LDecryptedData);
+  CheckEquals(Data, LDecryptedData);
 end;
 
 { TTestDigestStream }
