@@ -113,7 +113,7 @@ type
     /// </returns>
     class function R(AX: UInt32; AY: Int32): UInt32; static; inline;
     class procedure PackTauOrSigma(AKeyLength: Int32;
-      const AState: TCryptoLibUInt32Array; AStateOffset: Int32); static;
+      const AState: TCryptoLibUInt32Array); static;
     class procedure SalsaCore(ARounds: Int32;
       const AInput, AX: TCryptoLibUInt32Array); static;
 
@@ -364,15 +364,15 @@ begin
 end;
 
 class procedure TSalsa20Engine.PackTauOrSigma(AKeyLength: Int32;
-  const AState: TCryptoLibUInt32Array; AStateOffset: Int32);
+  const AState: TCryptoLibUInt32Array);
 var
   LTsOff: Int32;
 begin
-  LTsOff := (AKeyLength - 16) div 4;
-  AState[AStateOffset] := TAU_SIGMA[LTsOff];
-  AState[AStateOffset + 1] := TAU_SIGMA[LTsOff + 1];
-  AState[AStateOffset + 2] := TAU_SIGMA[LTsOff + 2];
-  AState[AStateOffset + 3] := TAU_SIGMA[LTsOff + 3];
+  LTsOff := (AKeyLength div 4) - 4;
+  AState[0] := TAU_SIGMA[LTsOff];
+  AState[1] := TAU_SIGMA[LTsOff + 1];
+  AState[2] := TAU_SIGMA[LTsOff + 2];
+  AState[3] := TAU_SIGMA[LTsOff + 3];
 end;
 
 procedure TSalsa20Engine.ProcessBytes(const AInBytes: TCryptoLibByteArray;

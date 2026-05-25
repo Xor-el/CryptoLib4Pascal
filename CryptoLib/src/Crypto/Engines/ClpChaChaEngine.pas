@@ -296,7 +296,7 @@ begin
         [AlgorithmName]);
     end;
 
-    PackTauOrSigma(System.Length(AKeyBytes), FEngineState, 0);
+    PackTauOrSigma(System.Length(AKeyBytes), FEngineState);
 
     // Key
     TPack.LE_To_UInt32(AKeyBytes, 0, FEngineState, 4, 4);
@@ -339,7 +339,7 @@ begin
   end;
 
   System.SetLength(LState, 16);
-  PackTauOrSigma(32, LState, 0);
+  PackTauOrSigma(32, LState);
   TPack.LE_To_UInt32(AKey256, 0, LState, 4, 8);
   TPack.LE_To_UInt32(ANonce128, 0, LState, 12, 4);
 
