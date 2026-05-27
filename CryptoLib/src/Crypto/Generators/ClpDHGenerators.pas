@@ -115,10 +115,13 @@ var
   LSafePrimes: TCryptoLibGenericArray<TBigInteger>;
   LP, LQ, LG: TBigInteger;
 begin
-  LSafePrimes := TDHParametersHelper.GenerateSafePrimes(FSize, FCertainty, FRandom);
+  LSafePrimes := TDHParametersHelper.GenerateSafePrimes(FSize, FCertainty, FRandom, True);
   LP := LSafePrimes[0];
   LQ := LSafePrimes[1];
-  LG := TDHParametersHelper.SelectGenerator(LP, LQ, FRandom);
+{$IFDEF DEBUG}
+  Assert((LP.Int32ValueExact and 7) = 7);
+{$ENDIF DEBUG}
+  LG := TBigInteger.Two;
   Result := TDHParameters.Create(LP, LG, LQ, TBigInteger.Two, nil);
 end;
 

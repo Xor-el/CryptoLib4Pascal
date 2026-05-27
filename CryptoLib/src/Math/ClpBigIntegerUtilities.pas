@@ -64,6 +64,7 @@ type
 
     class var
       FBigIntegerEqualityComparer: IEqualityComparer<TBigInteger>;
+      FSmallPrimesProduct: TBigInteger;
 
     class constructor Create;
     class function GetZero: TBigInteger; static;
@@ -112,6 +113,12 @@ type
     class function CreateRandomBigInteger(const ABitLength: Int32; const ASecureRandom: ISecureRandom): TBigInteger; static;
 
     /// <summary>
+    /// Creates a random probable prime BigInteger of a given bit length.
+    /// </summary>
+    class function CreateRandomPrime(ABitLength, ACertainty: Int32;
+      const ARandom: ISecureRandom): TBigInteger; static;
+
+    /// <summary>
     /// Return a random BigInteger not less than 'min' and not greater than 'max'
     /// </summary>
     /// <param name="AMin">the least value that may be generated.</param>
@@ -149,6 +156,11 @@ type
     /// <param name="AN">the BigInteger.</param>
     /// <returns>the unsigned byte length.</returns>
     class function GetUnsignedByteLength(const AN: TBigInteger): Int32; static;
+
+    /// <summary>
+    /// Returns true if the value has any small prime factors (including if even).
+    /// </summary>
+    class function HasAnySmallFactors(const AX: TBigInteger): Boolean; static;
 
     /// <summary>
     /// Write the passed in value as unsigned bytes to the specified stream.
@@ -192,6 +204,13 @@ type
 
 implementation
 
+const
+  SmallPrimesProductHex =
+    '8138e8a0fcf3a4e84a771d40fd305d7f4aa59306d7251de54d98af8fe95729a1f' +
+    '73d893fa424cd2edc8636a6c3285e022b0e3866a565ae8108eed8591cd4fe8d2' +
+    'ce86165a978d719ebf647f362d33fca29cd179fb42401cbaf3df0c614056f9c8' +
+    'f3cfd51e474afb6bc6974f78db8aba8e9e517fded658591ab7502bd41849462f';
+
 { TBigIntegerEqualityComparer }
 
 {$IFDEF CRYPTOLIB_FPC_HAS_CONSTREF_GENERIC_COMPARER}
@@ -217,6 +236,7 @@ end;
 class constructor TBigIntegerUtilities.Create;
 begin
   FBigIntegerEqualityComparer := TBigIntegerEqualityComparer.Create();
+  FSmallPrimesProduct := TBigInteger.Create(SmallPrimesProductHex, 16);
 end;
 
 class function TBigIntegerUtilities.GetZero: TBigInteger;
@@ -280,6 +300,12 @@ begin
   Result := TBigInteger.Create(ABitLength, ASecureRandom);
 end;
 
+class function TBigIntegerUtilities.CreateRandomPrime(ABitLength, ACertainty: Int32;
+  const ARandom: ISecureRandom): TBigInteger;
+begin
+  Result := TBigInteger.Create(ABitLength, ACertainty, ARandom);
+end;
+
 class function TBigIntegerUtilities.CreateRandomInRange(const AMin, AMax: TBigInteger; const ARandom: ISecureRandom): TBigInteger;
 var
   LCmp: Int32;
@@ -334,6 +360,27 @@ end;
 class function TBigIntegerUtilities.GetUnsignedByteLength(const AN: TBigInteger): Int32;
 begin
   Result := AN.GetLengthofByteArrayUnsigned();
+end;
+
+class function TBigIntegerUtilities.HasAnySmallFactors(const AX: TBigInteger): Boolean;
+var
+  LM, LX: TBigInteger;
+begin
+  if not AX.TestBit(0) then
+    Exit(True);
+
+  if AX.BitLength < FSmallPrimesProduct.BitLength then
+  begin
+    LM := FSmallPrimesProduct;
+    LX := AX;
+  end
+  else
+  begin
+    LM := AX;
+    LX := FSmallPrimesProduct;
+  end;
+
+  Result := not ModOddIsCoprimeVar(LM, LX);
 end;
 
 class procedure TBigIntegerUtilities.WriteUnsignedByteArray(const AOutStr: TStream; const AN: TBigInteger);

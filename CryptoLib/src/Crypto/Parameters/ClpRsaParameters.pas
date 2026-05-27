@@ -24,6 +24,8 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
+  ClpPrimes,
+  ClpCryptoServicesRegistrar,
   ClpIRsaParameters,
   ClpAsymmetricKeyParameter,
   ClpKeyGenerationParameters,
@@ -38,6 +40,7 @@ resourcestring
   SRsaModulusIsEven = 'RSA modulus is even';
   SRsaModulusOutOfRange = 'RSA modulus out of range';
   SRsaModulusHasSmallPrimeFactor = 'RSA modulus has a small prime factor';
+  SRsaModulusIsNotComposite = 'RSA modulus is not composite';
   SRsaPublicExponentIsEven = 'RSA publicExponent is even';
   SNotValidRsaPValue = 'Not a valid RSA P value';
   SNotValidRsaQValue = 'Not a valid RSA Q value';
@@ -52,26 +55,50 @@ type
   TRsaKeyParameters = class(TAsymmetricKeyParameter, IRsaKeyParameters)
 
   strict private
-  class var
-    FSmallPrimesProduct: TBigInteger;
-
-    class constructor CreateRsaKeyParameters();
-
-    class function HasAnySmallFactors(const AModulus: TBigInteger): Boolean; static;
-    class function Validate(const AModulus: TBigInteger): TBigInteger; static;
-
-  strict private
-  var
+    /// <summary>
+    /// Default maximum RSA modulus bit length when <see cref="MaxSize"/> is unset (<c>-1</c>).
+    /// </summary>
+    const
+      DefaultMaxBitLength = 16384;
+    class var
+      FMaxSize: Int32;
+      FMaxMRTests: Int32;
+    var
     FModulus: TBigInteger;
     FExponent: TBigInteger;
+
+    class constructor Create;
+
+    class function Validate(const AModulus: TBigInteger; AIsInternal: Boolean): TBigInteger; static;
+    class function GetEffectiveMaxSize: Int32; static;
+    class function GetEffectiveMaxMRTests(ABits: Int32): Int32; static;
+    class function GetMRIterations(ABits: Int32): Int32; static;
 
   strict protected
     function GetModulus: TBigInteger;
     function GetExponent: TBigInteger;
 
   public
+
+    class function ValidateModulus(const AModulus: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// Maximum allowed RSA modulus bit length for externally supplied keys.
+    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxBitLength"/>.
+    /// </summary>
+    class property MaxSize: Int32 read FMaxSize write FMaxSize;
+
+    /// <summary>
+    /// Enhanced Miller-Rabin iteration count for externally supplied moduli.
+    /// Unset (<c>-1</c>) or any negative value selects a bit-length-dependent default;
+    /// <c>0</c> disables composite testing.
+    /// </summary>
+    class property MaxMRTests: Int32 read FMaxMRTests write FMaxMRTests;
+
     constructor Create(AIsPrivate: Boolean;
-      const AModulus, AExponent: TBigInteger);
+      const AModulus, AExponent: TBigInteger); overload;
+    constructor Create(AIsPrivate: Boolean;
+      const AModulus, AExponent: TBigInteger; AIsInternal: Boolean); overload;
 
     function Equals(const AOther: IRsaKeyParameters): Boolean;
       reintroduce; overload;
@@ -107,7 +134,9 @@ type
 
   public
     constructor Create(const AModulus, APublicExponent, APrivateExponent,
-      AP, AQ, ADP, ADQ, AQInv: TBigInteger);
+      AP, AQ, ADP, ADQ, AQInv: TBigInteger); overload;
+    constructor Create(const AModulus, APublicExponent, APrivateExponent,
+      AP, AQ, ADP, ADQ, AQInv: TBigInteger; AIsInternal: Boolean); overload;
 
     function Equals(const AOther: IRsaPrivateCrtKeyParameters): Boolean;
       reintroduce; overload;
@@ -179,53 +208,83 @@ type
 
 implementation
 
-const
-  SmallPrimesProductHex =
-    '8138e8a0fcf3a4e84a771d40fd305d7f4aa59306d7251de54d98af8fe95729a1f' +
-    '73d893fa424cd2edc8636a6c3285e022b0e3866a565ae8108eed8591cd4fe8d2' +
-    'ce86165a978d719ebf647f362d33fca29cd179fb42401cbaf3df0c614056f9c8' +
-    'f3cfd51e474afb6bc6974f78db8aba8e9e517fded658591ab7502bd41849462f';
-  DefaultMaxBitLength = 16384;
-
 { TRsaKeyParameters }
 
-class constructor TRsaKeyParameters.CreateRsaKeyParameters;
+class constructor TRsaKeyParameters.Create;
 begin
-  FSmallPrimesProduct := TBigInteger.Create(SmallPrimesProductHex, 16);
+  FMaxSize := -1;
+  FMaxMRTests := -1;
 end;
 
-class function TRsaKeyParameters.HasAnySmallFactors(
-  const AModulus: TBigInteger): Boolean;
-var
-  LM, LX: TBigInteger;
+class function TRsaKeyParameters.GetEffectiveMaxSize: Int32;
 begin
-  if AModulus.BitLength < FSmallPrimesProduct.BitLength then
-  begin
-    LM := FSmallPrimesProduct;
-    LX := AModulus;
-  end
+  if FMaxSize < 0 then
+    Result := DefaultMaxBitLength
   else
-  begin
-    LM := AModulus;
-    LX := FSmallPrimesProduct;
-  end;
-  Result := not TBigIntegerUtilities.ModOddIsCoprimeVar(LM, LX);
+    Result := FMaxSize;
 end;
 
-class function TRsaKeyParameters.Validate(
+class function TRsaKeyParameters.GetEffectiveMaxMRTests(ABits: Int32): Int32;
+begin
+  if FMaxMRTests < 0 then
+    Result := GetMRIterations(ABits)
+  else
+    Result := FMaxMRTests;
+end;
+
+class function TRsaKeyParameters.GetMRIterations(ABits: Int32): Int32;
+begin
+  if ABits >= 1536 then
+    Result := 3
+  else if ABits >= 1024 then
+    Result := 4
+  else if ABits >= 512 then
+    Result := 7
+  else
+    Result := 50;
+end;
+
+class function TRsaKeyParameters.ValidateModulus(
   const AModulus: TBigInteger): TBigInteger;
 begin
-  if (AModulus.IsEven) then
-    raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsEven);
-  if (AModulus.BitLength > DefaultMaxBitLength) then
-    raise EArgumentCryptoLibException.CreateRes(@SRsaModulusOutOfRange);
-  if HasAnySmallFactors(AModulus) then
-    raise EArgumentCryptoLibException.CreateRes(@SRsaModulusHasSmallPrimeFactor);
+  Result := Validate(AModulus, False);
+end;
+
+class function TRsaKeyParameters.Validate(const AModulus: TBigInteger;
+  AIsInternal: Boolean): TBigInteger;
+var
+  LIterations: Int32;
+  LMR: TPrimes.IMROutput;
+begin
+  if not AIsInternal then
+  begin
+    if not AModulus.TestBit(0) then
+      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsEven);
+    if AModulus.BitLength > GetEffectiveMaxSize then
+      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusOutOfRange);
+    if TBigIntegerUtilities.HasAnySmallFactors(AModulus) then
+      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusHasSmallPrimeFactor);
+
+    LIterations := GetEffectiveMaxMRTests(AModulus.BitLength div 2);
+    if LIterations > 0 then
+    begin
+      LMR := TPrimes.EnhancedMRProbablePrimeTest(AModulus,
+        TCryptoServicesRegistrar.GetSecureRandom(), LIterations);
+      if not LMR.IsProvablyComposite then
+        raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsNotComposite);
+    end;
+  end;
   Result := AModulus;
 end;
 
 constructor TRsaKeyParameters.Create(AIsPrivate: Boolean;
   const AModulus, AExponent: TBigInteger);
+begin
+  Create(AIsPrivate, AModulus, AExponent, False);
+end;
+
+constructor TRsaKeyParameters.Create(AIsPrivate: Boolean;
+  const AModulus, AExponent: TBigInteger; AIsInternal: Boolean);
 begin
   inherited Create(AIsPrivate);
   if not AModulus.IsInitialized then
@@ -238,7 +297,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SNotValidRsaExponent);
   if (not AIsPrivate) and (AExponent.IsEven) then
     raise EArgumentCryptoLibException.CreateRes(@SRsaPublicExponentIsEven);
-  FModulus := Validate(AModulus);
+  FModulus := Validate(AModulus, AIsInternal);
   FExponent := AExponent;
 end;
 
@@ -287,7 +346,13 @@ end;
 constructor TRsaPrivateCrtKeyParameters.Create(const AModulus, APublicExponent,
   APrivateExponent, AP, AQ, ADP, ADQ, AQInv: TBigInteger);
 begin
-  inherited Create(True, AModulus, APrivateExponent);
+  Create(AModulus, APublicExponent, APrivateExponent, AP, AQ, ADP, ADQ, AQInv, False);
+end;
+
+constructor TRsaPrivateCrtKeyParameters.Create(const AModulus, APublicExponent,
+  APrivateExponent, AP, AQ, ADP, ADQ, AQInv: TBigInteger; AIsInternal: Boolean);
+begin
+  inherited Create(True, AModulus, APrivateExponent, AIsInternal);
   ValidateValue(APublicExponent, 'publicExponent', 'exponent');
   ValidateValue(AP, 'p', 'P value');
   ValidateValue(AQ, 'q', 'Q value');

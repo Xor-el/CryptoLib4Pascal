@@ -112,10 +112,8 @@ begin
     (TArrayUtilities.Contains(FSpecialEValues, AE.Int32Value));
   while True do
   begin
-    LP := TBigInteger.Create(ABitLength, 1, FParam.Random);
+    LP := TBigIntegerUtilities.CreateRandomPrime(ABitLength, FParam.Certainty, FParam.Random);
     if LP.&Mod(AE).Equals(TBigInteger.One) then
-      Continue;
-    if not LP.IsProbablePrime(FParam.Certainty, True) then
       Continue;
     if not LEIsKnownOddPrime then
     begin
@@ -183,9 +181,8 @@ begin
     LDP := LD.Remainder(LPSub1);
     LDQ := LD.Remainder(LQSub1);
     LQInv := TBigIntegerUtilities.ModOddInverse(LP, LQ);
-    LPubKey := TRsaKeyParameters.Create(False, LN, LE) as IRsaKeyParameters;
-    LPrivKey := TRsaPrivateCrtKeyParameters.Create(LN, LE, LD, LP, LQ, LDP, LDQ, LQInv)
-      as IRsaPrivateCrtKeyParameters;
+    LPubKey := TRsaKeyParameters.Create(False, LN, LE, True);
+    LPrivKey := TRsaPrivateCrtKeyParameters.Create(LN, LE, LD, LP, LQ, LDP, LDQ, LQInv, True);
     Result := TAsymmetricCipherKeyPair.Create(LPubKey, LPrivKey);
     Exit;
   end;
