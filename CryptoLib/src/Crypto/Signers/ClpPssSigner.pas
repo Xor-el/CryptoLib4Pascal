@@ -25,6 +25,7 @@ uses
   ClpIXof,
   ClpICipherParameters,
   ClpIAsymmetricBlockCipher,
+  ClpPrehash,
   ClpIDigest,
   ClpISigner,
   ClpIPssSigner,
@@ -142,9 +143,6 @@ type
 
 implementation
 
-uses
-  ClpPrehash;
-
 { TPssSigner }
 
 class function TPssSigner.CreateRawSigner(const ACipher: IAsymmetricBlockCipher;
@@ -193,7 +191,6 @@ constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;
   const ADigest: IDigest; const ASalt: TCryptoLibByteArray);
 begin
   Create(ACipher, ADigest, ADigest, ADigest, System.Length(ASalt), ASalt, TrailerImplicit);
-  //Create(ACipher, ADigest.Clone, ADigest.Clone, ADigest.Clone, System.Length(ASalt), ASalt, TrailerImplicit);
 end;
 
 constructor TPssSigner.Create(const ACipher: IAsymmetricBlockCipher;

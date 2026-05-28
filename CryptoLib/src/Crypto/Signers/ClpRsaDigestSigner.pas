@@ -44,6 +44,7 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
   ClpArrayUtilities,
+  ClpCollectionUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -143,16 +144,10 @@ begin
 end;
 
 constructor TRsaDigestSigner.Create(const ADigest: IDigest);
-var
-  LOid: IDerObjectIdentifier;
 begin
-  if FOidMap.TryGetValue(ADigest.AlgorithmName, LOid) then
-    Create(ADigest, LOid)
-  else
-  begin
-    LOid := nil;
-    Create(ADigest, LOid);
-  end;
+  Create(ADigest,
+    TCollectionUtilities.GetValueOrNull<String, IDerObjectIdentifier>(
+      FOidMap, ADigest.AlgorithmName));
 end;
 
 constructor TRsaDigestSigner.Create(const ADigest: IDigest;
@@ -350,7 +345,7 @@ function TRsaDigestSigner.DerEncode(const ADigestAlgID: IAlgorithmIdentifier;
 var
   LDigestInfo: IDigestInfo;
 begin
-  LDigestInfo := TDigestInfo.Create(ADigestAlgID, TDerOctetString.WithContents(AHash) as IAsn1OctetString);
+  LDigestInfo := TDigestInfo.Create(ADigestAlgID, TDerOctetString.WithContents(AHash));
   Result := LDigestInfo.GetDerEncoded();
 end;
 
