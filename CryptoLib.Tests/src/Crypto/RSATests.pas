@@ -89,6 +89,9 @@ type
     procedure TestRsaSignature;
     procedure TestRsaPublicKeyInfoEncodingHasNullParameters;
     procedure TestSubjectPublicKeyInfoFactoryRsaConsistency;
+    procedure TestMaxSizeRejectsOversizedModulus;
+    procedure TestMaxMRTestsZeroSkipsCompositeCheck;
+    procedure TestMaxSizeMaxMRTestsUnsetDefault;
 
   end;
 
@@ -441,6 +444,66 @@ begin
     'RSA AlgorithmIdentifier OID should be rsaEncryption.');
   CheckTrue(Supports(info.Algorithm.Parameters, IDerNull, dn),
     'RSA AlgorithmIdentifier parameters should be DerNull.');
+end;
+
+procedure TTestRSA.TestMaxSizeRejectsOversizedModulus;
+var
+  LOldMaxSize, LOldMaxMRTests: Int32;
+begin
+  LOldMaxSize := TRsaKeyParameters.MaxSize;
+  LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
+  try
+    TRsaKeyParameters.MaxSize := 512;
+    CheckTrue(FModulus.BitLength > 512, 'test modulus must exceed MaxSize cap');
+    try
+      TRsaKeyParameters.Create(False, FModulus, FPubExp);
+      Fail('expected EArgumentCryptoLibException for oversized modulus');
+    except
+      on E: EArgumentCryptoLibException do
+        CheckEquals('RSA modulus out of range', E.Message);
+    end;
+  finally
+    TRsaKeyParameters.MaxSize := LOldMaxSize;
+    TRsaKeyParameters.MaxMRTests := LOldMaxMRTests;
+  end;
+end;
+
+procedure TTestRSA.TestMaxMRTestsZeroSkipsCompositeCheck;
+var
+  LOldMaxSize, LOldMaxMRTests: Int32;
+  LParams: TRsaKeyParameters;
+begin
+  LOldMaxSize := TRsaKeyParameters.MaxSize;
+  LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
+  try
+    TRsaKeyParameters.MaxMRTests := 0;
+    LParams := TRsaKeyParameters.Create(False, FModulus, FPubExp);
+    CheckTrue(LParams.Modulus.Equals(FModulus), 'modulus should be accepted when MR is disabled');
+  finally
+    TRsaKeyParameters.MaxSize := LOldMaxSize;
+    TRsaKeyParameters.MaxMRTests := LOldMaxMRTests;
+  end;
+end;
+
+procedure TTestRSA.TestMaxSizeMaxMRTestsUnsetDefault;
+var
+  LOldMaxSize, LOldMaxMRTests: Int32;
+  LParams: TRsaKeyParameters;
+begin
+  LOldMaxSize := TRsaKeyParameters.MaxSize;
+  LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
+  try
+    TRsaKeyParameters.MaxSize := -1;
+    TRsaKeyParameters.MaxMRTests := -1;
+    CheckEquals(-1, TRsaKeyParameters.MaxSize, 'unset MaxSize should be -1');
+    CheckEquals(-1, TRsaKeyParameters.MaxMRTests, 'unset MaxMRTests should be -1');
+    LParams := TRsaKeyParameters.Create(False, FModulus, FPubExp);
+    CheckTrue(LParams.Modulus.Equals(FModulus),
+      'default limits should accept standard test modulus');
+  finally
+    TRsaKeyParameters.MaxSize := LOldMaxSize;
+    TRsaKeyParameters.MaxMRTests := LOldMaxMRTests;
+  end;
 end;
 
 initialization

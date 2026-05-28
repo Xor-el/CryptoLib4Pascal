@@ -23,10 +23,12 @@ interface
 uses
   ClpISecureRandom,
   ClpBigInteger,
-  ClpBigIntegerUtilities,
   ClpWNafUtilities,
   ClpBitOperations,
   ClpCryptoLibTypes;
+
+resourcestring
+  SSizeTooSmall = 'size < 64';
 
 type
   TDHParametersHelper = class sealed(TObject)
@@ -34,7 +36,9 @@ type
   strict private
   class var
 
-    FSix: TBigInteger;
+    FTwo: TBigInteger;
+    FTwelve: TBigInteger;
+    FTwentyFour: TBigInteger;
     FPrimeProducts: TCryptoLibInt32Array;
     FPrimeLists: TCryptoLibMatrixInt32Array;
     FBigPrimeProducts: TCryptoLibGenericArray<TBigInteger>;
@@ -43,6 +47,8 @@ type
     class function ConstructBigPrimeProducts(const APrimeProducts
       : TCryptoLibInt32Array): TCryptoLibGenericArray<TBigInteger>; static;
 
+    class function HasAnySmallFactorsSafe(const X: TBigInteger): Boolean; static;
+
     class procedure Boot(); static;
 
     class constructor DHParametersHelper();
@@ -50,27 +56,15 @@ type
   public
 
     /// <summary>
-    /// <para>
-    /// Finds a pair of prime BigInteger's {p, q: p = 2q + 1}
-    /// </para>
-    /// <para>
-    /// (see: Handbook of Applied Cryptography 4.86)
-    /// </para>
+    /// Finds a pair of prime BigInteger's {p, q: p = 2q + 1}.
     /// </summary>
-    class function GenerateSafePrimes(ASize, ACertainty: Int32;
-      const ARandom: ISecureRandom): TCryptoLibGenericArray<TBigInteger>; static;
-
-    /// <summary>
-    /// <para>
-    /// Select a high order element of the multiplicative group Zp*
-    /// </para>
-    /// <para>
-    /// p and q must be s.t. p = 2*q + 1, where p and q are prime (see
-    /// generateSafePrimes)
-    /// </para>
-    /// </summary>
-    class function SelectGenerator(const AP, AQ: TBigInteger;
-      const ARandom: ISecureRandom): TBigInteger; static;
+    /// <remarks>
+    /// See: Handbook of Applied Cryptography 4.86. If AForGenerator2 is true, the
+    /// returned p will also have 2 as a quadratic residue (p === 7 mod 8).
+    /// </remarks>
+    class function GenerateSafePrimes(ABitLength, ACertainty: Int32;
+      const ARandom: ISecureRandom; AForGenerator2: Boolean)
+      : TCryptoLibGenericArray<TBigInteger>; static;
   end;
 
 implementation
@@ -81,7 +75,9 @@ class procedure TDHParametersHelper.Boot;
 begin
   if not FIsBooted then
   begin
-    FSix := TBigInteger.ValueOf(6);
+    FTwo := TBigInteger.Two;
+    FTwelve := TBigInteger.ValueOf(12);
+    FTwentyFour := TBigInteger.ValueOf(24);
 
     FPrimeLists := TBigInteger.primeLists;
     FPrimeProducts := TBigInteger.primeProducts;
@@ -112,105 +108,103 @@ begin
   Result := LBpp;
 end;
 
-class function TDHParametersHelper.GenerateSafePrimes(ASize, ACertainty: Int32;
-  const ARandom: ISecureRandom): TCryptoLibGenericArray<TBigInteger>;
+class function TDHParametersHelper.HasAnySmallFactorsSafe(const X: TBigInteger): Boolean;
 var
-  LP, LQ: TBigInteger;
-  LQLength, LMinWeight, LI, LTest, LRem3, LDiff, LJ, LPrime, LQRem: Int32;
-  LRetryFlag: Boolean;
+  LI, LJ, LR, LPrime: Int32;
   LPrimeList: TCryptoLibInt32Array;
 begin
-  LRetryFlag := False;
-  LQLength := ASize - 1;
-  LMinWeight := TBitOperations.Asr32(ASize, 2);
-
-  if ASize <= 32 then
+  for LI := 0 to System.Pred(System.Length(FPrimeLists)) do
   begin
-    while True do
+    LR := X.Remainder(FBigPrimeProducts[LI]).Int32ValueExact;
+
+    LPrimeList := FPrimeLists[LI];
+    for LJ := 0 to System.Pred(System.Length(LPrimeList)) do
     begin
-      LQ := TBigInteger.Create(LQLength, 2, ARandom);
-
-      LP := LQ.ShiftLeft(1).Add(TBigInteger.One);
-
-      if not LP.IsProbablePrime(ACertainty, True) then
-        Continue;
-
-      if (ACertainty > 2) and (not LQ.IsProbablePrime(ACertainty, True)) then
-        Continue;
-
-      Break;
-    end;
-  end
-  else
-  begin
-    while True do
-    begin
-      LQ := TBigInteger.Create(LQLength, 0, ARandom);
-
-      LI := 0;
-      while LI < System.Length(FPrimeLists) do
-      begin
-        LTest := LQ.Remainder(FBigPrimeProducts[LI]).Int32Value;
-
-        if LI = 0 then
-        begin
-          LRem3 := LTest mod 3;
-          if LRem3 <> 2 then
-          begin
-            LDiff := (2 * LRem3) + 2;
-            LQ := LQ.Add(TBigInteger.ValueOf(LDiff));
-            LTest := (LTest + LDiff) mod FPrimeProducts[LI];
-          end;
-        end;
-
-        LPrimeList := FPrimeLists[LI];
-        for LJ := 0 to System.Pred(System.Length(LPrimeList)) do
-        begin
-          LPrime := LPrimeList[LJ];
-          LQRem := LTest mod LPrime;
-          if (LQRem = 0) or (LQRem = TBitOperations.Asr32(LPrime, 1)) then
-          begin
-            LQ := LQ.Add(FSix);
-            LRetryFlag := True;
-            Break;
-          end;
-        end;
-
-        if LRetryFlag then
-        begin
-          LI := 0;
-          LRetryFlag := False;
-        end
-        else
-          System.Inc(LI);
-      end;
-
-      if LQ.BitLength <> LQLength then
-        Continue;
-
-      if not LQ.RabinMillerTest(2, ARandom, True) then
-        Continue;
-
-      LP := LQ.ShiftLeft(1).Add(TBigInteger.One);
-
-      if not LP.RabinMillerTest(ACertainty, ARandom, True) then
-        Continue;
-
-      if (ACertainty > 2) and (not LQ.RabinMillerTest(ACertainty - 2, ARandom, True)) then
-        Continue;
-
-      if TWNafUtilities.GetNafWeight(LP) < LMinWeight then
-        Continue;
-
-      Break;
+      LPrime := LPrimeList[LJ];
+      if (LR mod LPrime) < 2 then
+        Exit(True);
     end;
   end;
 
-  Result := TCryptoLibGenericArray<TBigInteger>.Create(LP, LQ);
+  Result := False;
 end;
 
-{$IFNDEF _FIXINSIGHT_}
+class function TDHParametersHelper.GenerateSafePrimes(ABitLength, ACertainty: Int32;
+  const ARandom: ISecureRandom; AForGenerator2: Boolean)
+  : TCryptoLibGenericArray<TBigInteger>;
+var
+  LP, LQ, LStep: TBigInteger;
+  LLowBitsSet, LInc3, LMinWeight, LByteLength, LExtraBits, LCount, LPMod3: Int32;
+  LBytes: TCryptoLibByteArray;
+begin
+  if ABitLength < 64 then
+    raise EArgumentCryptoLibException.CreateRes(@SSizeTooSmall);
 
+  LLowBitsSet := $03;
+  LInc3 := 4;
+  LStep := FTwelve;
+
+  if AForGenerator2 then
+  begin
+    LLowBitsSet := $07;
+    LInc3 := -8;
+    LStep := FTwentyFour;
+  end;
+
+  LMinWeight := TBitOperations.Asr32(ABitLength, 2);
+  LByteLength := (ABitLength + 7) div 8;
+  LExtraBits := LByteLength * 8 - ABitLength;
+
+  System.SetLength(LBytes, LByteLength);
+
+  while True do
+  begin
+    ARandom.NextBytes(LBytes);
+
+    LBytes[0] := (LBytes[0] and Byte($FF shr LExtraBits)) or Byte($80 shr LExtraBits);
+    LBytes[System.Pred(LByteLength)] := LBytes[System.Pred(LByteLength)] or Byte(LLowBitsSet);
+
+    LP := TBigInteger.Create(1, LBytes);
+
+    LPMod3 := LP.&Mod(TBigInteger.Three).Int32ValueExact;
+    if LPMod3 <> 2 then
+      LP := LP.Add(TBigInteger.ValueOf((2 - LPMod3) * LInc3));
+
+    LCount := 0;
+    while LCount < 256 do
+    begin
+      System.Inc(LCount);
+      if LP.BitLength <> ABitLength then
+        Break;
+
+      if not HasAnySmallFactorsSafe(LP) then
+      begin
+        // NOTE: Pocklington criterion: Fermat test suffices to prove p prime given q is prime
+        if FTwo.ModPow(LP, LP).Equals(FTwo) then
+        begin
+          LQ := LP.ShiftRight(1);
+          if LQ.RabinMillerTest(ACertainty, ARandom, True) then
+          begin
+            if TWNafUtilities.GetNafWeight(LP) >= LMinWeight then
+            begin
+              Result := TCryptoLibGenericArray<TBigInteger>.Create(LP, LQ);
+              Exit;
+            end;
+          end;
+        end;
+
+        Break;
+      end;
+
+      LP := LP.Add(LStep);
+    end;
+  end;
+end;
+
+{
+// Select a high order element of the multiplicative group Zp*
+// (see generateSafePrimes). Superseded by fixed generator g = 2 when
+// GenerateSafePrimes is called with AForGenerator2 = true.
 class function TDHParametersHelper.SelectGenerator(const AP, AQ: TBigInteger;
   const ARandom: ISecureRandom): TBigInteger;
 var
@@ -225,6 +219,6 @@ begin
 
   Result := LG;
 end;
-{$ENDIF}
+}
 
 end.
