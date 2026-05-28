@@ -506,8 +506,12 @@ type
     /// </summary>
     function GetValue(): TBigInteger;
     /// <summary>
-    /// Get the positive BigInteger value.
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
     /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// NB: The BigInteger constructor tolerates any redundant sign bytes (per 'AllowUnsafeInteger').
+    /// </remarks>
     function GetPositiveValue(): TBigInteger;
     /// <summary>
     /// Check if this integer has a specific Int32 value.
@@ -526,31 +530,57 @@ type
     /// </summary>
     function GetIntValueExact(): Int32;
     /// <summary>
-    /// Get positive Int32 value, throwing if out of range.
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
     /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
     function GetIntPositiveValueExact(): Int32;
     /// <summary>
     /// Get Int64 value, throwing if out of range.
     /// </summary>
     function GetLongValueExact(): Int64;
     /// <summary>
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
+    /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
+    function GetLongPositiveValueExact(): Int64;
+    /// <summary>
     /// Try to get Int32 value, returning false if out of range.
     /// </summary>
     function TryGetIntValueExact(out AValue: Int32): Boolean;
     /// <summary>
-    /// Try to get positive Int32 value, returning false if out of range.
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
     /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
     function TryGetIntPositiveValueExact(out AValue: Int32): Boolean;
     /// <summary>
     /// Try to get Int64 value, returning false if out of range.
     /// </summary>
     function TryGetLongValueExact(out AValue: Int64): Boolean;
+    /// <summary>
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
+    /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
+    function TryGetLongPositiveValueExact(out AValue: Int64): Boolean;
+    /// <summary>
+    /// Whether the first significant encoding byte has the sign bit set.
+    /// </summary>
+    function GetIsNegative(): Boolean;
     property Bytes: TCryptoLibByteArray read GetBytes;
     property Value: TBigInteger read GetValue;
     property PositiveValue: TBigInteger read GetPositiveValue;
     property IntValueExact: Int32 read GetIntValueExact;
     property IntPositiveValueExact: Int32 read GetIntPositiveValueExact;
     property LongValueExact: Int64 read GetLongValueExact;
+    property LongPositiveValueExact: Int64 read GetLongPositiveValueExact;
+    property IsNegative: Boolean read GetIsNegative;
   end;
 
   /// <summary>

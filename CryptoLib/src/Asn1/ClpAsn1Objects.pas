@@ -2578,8 +2578,12 @@ type
     /// </summary>
     function GetValue(): TBigInteger;
     /// <summary>
-    /// Get the positive BigInteger value.
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
     /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// NB: The BigInteger constructor tolerates any redundant sign bytes (per 'AllowUnsafeInteger').
+    /// </remarks>
     function GetPositiveValue(): TBigInteger;
     /// <summary>
     /// Check if this integer has a specific Int32 value.
@@ -2598,25 +2602,49 @@ type
     /// </summary>
     function GetIntValueExact(): Int32;
     /// <summary>
-    /// Get positive Int32 value, throwing if out of range.
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
     /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
     function GetIntPositiveValueExact(): Int32;
     /// <summary>
     /// Get Int64 value, throwing if out of range.
     /// </summary>
     function GetLongValueExact(): Int64;
     /// <summary>
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
+    /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
+    function GetLongPositiveValueExact(): Int64;
+    /// <summary>
     /// Try to get Int32 value, returning false if out of range.
     /// </summary>
     function TryGetIntValueExact(out AValue: Int32): Boolean;
     /// <summary>
-    /// Try to get positive Int32 value, returning false if out of range.
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
     /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
     function TryGetIntPositiveValueExact(out AValue: Int32): Boolean;
     /// <summary>
     /// Try to get Int64 value, returning false if out of range.
     /// </summary>
     function TryGetLongValueExact(out AValue: Int64): Boolean;
+    /// <summary>
+    /// Force the ASN.1 INTEGER encoding to be interpreted as unsigned.
+    /// </summary>
+    /// <remarks>
+    /// In some cases positive values get crammed into a space that's not quite big enough...
+    /// </remarks>
+    function TryGetLongPositiveValueExact(out AValue: Int64): Boolean;
+    /// <summary>
+    /// Whether the first significant encoding byte has the sign bit set.
+    /// </summary>
+    function GetIsNegative(): Boolean;
     /// <summary>
     /// Check if bytes are malformed (invalid INTEGER encoding).
     /// </summary>
@@ -2642,6 +2670,8 @@ type
     property IntValueExact: Int32 read GetIntValueExact;
     property IntPositiveValueExact: Int32 read GetIntPositiveValueExact;
     property LongValueExact: Int64 read GetLongValueExact;
+    property LongPositiveValueExact: Int64 read GetLongPositiveValueExact;
+    property IsNegative: Boolean read GetIsNegative;
   end;
 
   /// <summary>
@@ -12659,33 +12689,27 @@ begin
 end;
 
 function TDerInteger.GetIntValueExact(): Int32;
-var
-  LCount: Int32;
 begin
-  LCount := System.Length(FBytes) - FStart;
-  if LCount > 4 then
+  if not TryGetIntValueExact(Result) then
     raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of int range');
-  Result := TDerInteger.IntValue(FBytes, FStart, SignExtSigned);
 end;
 
 function TDerInteger.GetIntPositiveValueExact(): Int32;
-var
-  LCount: Int32;
 begin
-  LCount := System.Length(FBytes) - FStart;
-  if (LCount > 4) or ((LCount = 4) and ((FBytes[FStart] and $80) <> 0)) then
+  if not TryGetIntPositiveValueExact(Result) then
     raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of positive int range');
-  Result := TDerInteger.IntValue(FBytes, FStart, SignExtUnsigned);
 end;
 
 function TDerInteger.GetLongValueExact(): Int64;
-var
-  LCount: Int32;
 begin
-  LCount := System.Length(FBytes) - FStart;
-  if LCount > 8 then
+  if not TryGetLongValueExact(Result) then
     raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of long range');
-  Result := TDerInteger.LongValue(FBytes, FStart, SignExtSigned);
+end;
+
+function TDerInteger.GetLongPositiveValueExact(): Int64;
+begin
+  if not TryGetLongPositiveValueExact(Result) then
+    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of positive long range');
 end;
 
 function TDerInteger.TryGetIntValueExact(out AValue: Int32): Boolean;
@@ -12708,13 +12732,28 @@ var
   LCount: Int32;
 begin
   LCount := System.Length(FBytes) - FStart;
-  if (LCount > 4) or ((LCount = 4) and ((FBytes[FStart] and $80) <> 0)) then
+  if (LCount > 4) or ((LCount = 4) and IsNegative) then
   begin
     AValue := 0;
     Result := False;
     Exit;
   end;
   AValue := TDerInteger.IntValue(FBytes, FStart, SignExtUnsigned);
+  Result := True;
+end;
+
+function TDerInteger.TryGetLongPositiveValueExact(out AValue: Int64): Boolean;
+var
+  LCount: Int32;
+begin
+  LCount := System.Length(FBytes) - FStart;
+  if (LCount > 8) or ((LCount = 8) and IsNegative) then
+  begin
+    AValue := 0;
+    Result := False;
+    Exit;
+  end;
+  AValue := TDerInteger.LongValue(FBytes, FStart, SignExtSigned);
   Result := True;
 end;
 
@@ -12731,6 +12770,11 @@ begin
   end;
   AValue := TDerInteger.LongValue(FBytes, FStart, SignExtSigned);
   Result := True;
+end;
+
+function TDerInteger.GetIsNegative(): Boolean;
+begin
+  Result := (FBytes[FStart] and $80) <> 0;
 end;
 
 function TDerInteger.GetEncoding(AEncoding: Int32): IAsn1Encoding;
