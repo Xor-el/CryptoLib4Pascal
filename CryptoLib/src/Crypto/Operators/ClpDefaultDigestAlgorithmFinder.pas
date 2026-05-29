@@ -170,8 +170,8 @@ begin
 
   FDigestOids.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94, TCryptoProObjectIdentifiers.GostR3411);
   FDigestOids.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001, TCryptoProObjectIdentifiers.GostR3411);
-  FDigestOids.Add(TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256, TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256);
-  FDigestOids.Add(TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512, TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512);
+  FDigestOids.Add(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256, TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256);
+  FDigestOids.Add(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512, TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512);
 
   FDigestOids.Add(TX509ObjectIdentifiers.IdRsassaPssShake128, TNistObjectIdentifiers.IdShake128);
   FDigestOids.Add(TX509ObjectIdentifiers.IdRsassaPssShake256, TNistObjectIdentifiers.IdShake256);

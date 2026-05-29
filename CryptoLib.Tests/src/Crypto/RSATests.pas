@@ -471,7 +471,7 @@ end;
 procedure TTestRSA.TestMaxMRTestsZeroSkipsCompositeCheck;
 var
   LOldMaxSize, LOldMaxMRTests: Int32;
-  LParams: TRsaKeyParameters;
+  LParams: IRsaKeyParameters;
 begin
   LOldMaxSize := TRsaKeyParameters.MaxSize;
   LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
@@ -488,7 +488,7 @@ end;
 procedure TTestRSA.TestMaxSizeMaxMRTestsUnsetDefault;
 var
   LOldMaxSize, LOldMaxMRTests: Int32;
-  LParams: TRsaKeyParameters;
+  LParams: IRsaKeyParameters;
 begin
   LOldMaxSize := TRsaKeyParameters.MaxSize;
   LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
