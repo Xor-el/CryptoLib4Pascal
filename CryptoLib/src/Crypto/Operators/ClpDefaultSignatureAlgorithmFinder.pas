@@ -273,25 +273,25 @@ begin
   AddAlgorithm('GOST3411WITHECGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   AddAlgorithm('GOST3411WITHGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   AddAlgorithm('GOST3411WITHECGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411WITHECGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411WITHGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411WITHGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411-2012-256WITHECGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411-2012-512WITHECGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411-2012-256WITHGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411-2012-512WITHGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411-2012-256WITHECGOST3410',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411-2012-512WITHECGOST3410',
-    TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512);
+    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
 
   AddAlgorithm('SHA1WITHCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha1);
   AddAlgorithm('SHA224WITHCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha224);
@@ -362,8 +362,8 @@ begin
   //
   AddNoParams(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
   AddNoParams(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
-  AddNoParams(TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256);
-  AddNoParams(TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512);
+  AddNoParams(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  AddNoParams(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
 
   AddNoParams(TX509ObjectIdentifiers.IdRsassaPssShake128);
   AddNoParams(TX509ObjectIdentifiers.IdRsassaPssShake256);
@@ -446,9 +446,9 @@ begin
     TCryptoProObjectIdentifiers.GostR3411);
   AddDigestOid(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001,
     TCryptoProObjectIdentifiers.GostR3411);
-  AddDigestOid(TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_256,
+  AddDigestOid(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256,
     TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256);
-  AddDigestOid(TRosstandartObjectIdentifiers.IdTc26SignwithdigestGost3410_12_512,
+  AddDigestOid(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512,
     TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512);
 
   AddDigestOid(TX9ObjectIdentifiers.IdDsaWithSha1, TOiwObjectIdentifiers.IdSha1);

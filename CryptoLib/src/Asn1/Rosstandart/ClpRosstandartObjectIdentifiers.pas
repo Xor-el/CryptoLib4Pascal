@@ -32,7 +32,7 @@ type
       FRosstandart, FIdTc26, FIdTc26Gost3411_12_256, FIdTc26Gost3411_12_512,
       FIdTc26HmacGost3411_12_256, FIdTc26HmacGost3411_12_512,
       FIdTc26Gost3410_12_256, FIdTc26Gost3410_12_512,
-      FIdTc26SignwithdigestGost3410_12_256, FIdTc26SignwithdigestGost3410_12_512,
+      FIdTc26SignWithDigestGost3410_12_256, FIdTc26SignWithDigestGost3410_12_512,
       FIdTc26Agreement, FIdTc26AgreementGost3410_12_256, FIdTc26AgreementGost3410_12_512,
       FIdTc26Gost3410_12_256ParamSet, FIdTc26Gost3410_12_256ParamSetA,
       FIdTc26Gost3410_12_256ParamSetB, FIdTc26Gost3410_12_256ParamSetC,
@@ -48,8 +48,8 @@ type
     class function GetIdTc26HmacGost3411_12_512: IDerObjectIdentifier; static; inline;
     class function GetIdTc26Gost3410_12_256: IDerObjectIdentifier; static; inline;
     class function GetIdTc26Gost3410_12_512: IDerObjectIdentifier; static; inline;
-    class function GetIdTc26SignwithdigestGost3410_12_256: IDerObjectIdentifier; static; inline;
-    class function GetIdTc26SignwithdigestGost3410_12_512: IDerObjectIdentifier; static; inline;
+    class function GetIdTc26SignWithDigestGost3410_12_256: IDerObjectIdentifier; static; inline;
+    class function GetIdTc26SignWithDigestGost3410_12_512: IDerObjectIdentifier; static; inline;
     class function GetIdTc26Agreement: IDerObjectIdentifier; static; inline;
     class function GetIdTc26AgreementGost3410_12_256: IDerObjectIdentifier; static; inline;
     class function GetIdTc26AgreementGost3410_12_512: IDerObjectIdentifier; static; inline;
@@ -74,8 +74,8 @@ type
     class property IdTc26HmacGost3411_12_512: IDerObjectIdentifier read GetIdTc26HmacGost3411_12_512;
     class property IdTc26Gost3410_12_256: IDerObjectIdentifier read GetIdTc26Gost3410_12_256;
     class property IdTc26Gost3410_12_512: IDerObjectIdentifier read GetIdTc26Gost3410_12_512;
-    class property IdTc26SignwithdigestGost3410_12_256: IDerObjectIdentifier read GetIdTc26SignwithdigestGost3410_12_256;
-    class property IdTc26SignwithdigestGost3410_12_512: IDerObjectIdentifier read GetIdTc26SignwithdigestGost3410_12_512;
+    class property IdTc26SignWithDigestGost3410_12_256: IDerObjectIdentifier read GetIdTc26SignWithDigestGost3410_12_256;
+    class property IdTc26SignWithDigestGost3410_12_512: IDerObjectIdentifier read GetIdTc26SignWithDigestGost3410_12_512;
     class property IdTc26Agreement: IDerObjectIdentifier read GetIdTc26Agreement;
     class property IdTc26AgreementGost3410_12_256: IDerObjectIdentifier read GetIdTc26AgreementGost3410_12_256;
     class property IdTc26AgreementGost3410_12_512: IDerObjectIdentifier read GetIdTc26AgreementGost3410_12_512;
@@ -114,8 +114,8 @@ begin
     FIdTc26HmacGost3411_12_512 := FIdTc26.Branch('1.4.2');
     FIdTc26Gost3410_12_256 := FIdTc26.Branch('1.1.1');
     FIdTc26Gost3410_12_512 := FIdTc26.Branch('1.1.2');
-    FIdTc26SignwithdigestGost3410_12_256 := FIdTc26.Branch('1.3.2');
-    FIdTc26SignwithdigestGost3410_12_512 := FIdTc26.Branch('1.3.3');
+    FIdTc26SignWithDigestGost3410_12_256 := FIdTc26.Branch('1.3.2');
+    FIdTc26SignWithDigestGost3410_12_512 := FIdTc26.Branch('1.3.3');
     FIdTc26Agreement := FIdTc26.Branch('1.6');
     FIdTc26AgreementGost3410_12_256 := FIdTc26Agreement.Branch('1');
     FIdTc26AgreementGost3410_12_512 := FIdTc26Agreement.Branch('2');
@@ -234,14 +234,14 @@ begin
   Result := FIdTc26HmacGost3411_12_512;
 end;
 
-class function TRosstandartObjectIdentifiers.GetIdTc26SignwithdigestGost3410_12_256: IDerObjectIdentifier;
+class function TRosstandartObjectIdentifiers.GetIdTc26SignWithDigestGost3410_12_256: IDerObjectIdentifier;
 begin
-  Result := FIdTc26SignwithdigestGost3410_12_256;
+  Result := FIdTc26SignWithDigestGost3410_12_256;
 end;
 
-class function TRosstandartObjectIdentifiers.GetIdTc26SignwithdigestGost3410_12_512: IDerObjectIdentifier;
+class function TRosstandartObjectIdentifiers.GetIdTc26SignWithDigestGost3410_12_512: IDerObjectIdentifier;
 begin
-  Result := FIdTc26SignwithdigestGost3410_12_512;
+  Result := FIdTc26SignWithDigestGost3410_12_512;
 end;
 
 class function TRosstandartObjectIdentifiers.GetRosstandart: IDerObjectIdentifier;
