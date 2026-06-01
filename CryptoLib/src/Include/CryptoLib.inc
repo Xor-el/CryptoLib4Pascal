@@ -19,9 +19,9 @@
 {$IFDEF FPC}
   {$I CryptoLibFPC.inc}
 {$ELSE}
-  // Delphi Tokyo and Above
-  {$IF CompilerVersion < 32.0}
-    {$MESSAGE ERROR 'This Library requires Delphi Tokyo or higher.'}
+  // Delphi Sydney and Above
+  {$IF CompilerVersion < 34.0}
+    {$MESSAGE ERROR 'This Library requires Delphi Sydney or higher.'}
   {$IFEND}
 
   // Silence H2586 (legacy $IFEND) on XE4+ where $ENDIF can also close $IF.
