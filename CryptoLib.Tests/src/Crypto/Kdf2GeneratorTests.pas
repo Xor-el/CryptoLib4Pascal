@@ -31,7 +31,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpDigestUtilities,
-  ClpShortenedDigest,
+  ShortenedDigest,
   ClpIDerivationFunction,
   ClpKdfParameters,
   ClpIKdfParameters,

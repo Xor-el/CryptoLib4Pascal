@@ -119,7 +119,7 @@ begin
   LP := LSafePrimes[0];
   LQ := LSafePrimes[1];
 {$IFDEF DEBUG}
-  Assert((LP.Int32ValueExact and 7) = 7);
+  Assert((LP.Int32Value and 7) = 7);
 {$ENDIF DEBUG}
   LG := TBigInteger.Two;
   Result := TDHParameters.Create(LP, LG, LQ, TBigInteger.Two, nil);

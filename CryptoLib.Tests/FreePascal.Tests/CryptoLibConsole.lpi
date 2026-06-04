@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="154">
+    <Units Count="164">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -93,7 +93,7 @@
         <IsPartOfProject Value="True"/>
       </Unit12>
       <Unit13>
-        <Filename Value="..\src\Utils\ClpFixedSecureRandom.pas"/>
+        <Filename Value="..\src\Utils\FixedSecureRandom.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit13>
       <Unit14>
@@ -249,7 +249,7 @@
         <IsPartOfProject Value="True"/>
       </Unit51>
       <Unit52>
-        <Filename Value="..\src\Utils\ClpShortenedDigest.pas"/>
+        <Filename Value="..\src\Utils\ShortenedDigest.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit52>
       <Unit53>
@@ -549,7 +549,7 @@
         <IsPartOfProject Value="True"/>
       </Unit126>
       <Unit127>
-        <Filename Value="..\src\Utils\ClpCertTestUtilities.pas"/>
+        <Filename Value="..\src\Utils\CertTestUtilities.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit127>
       <Unit128>
@@ -581,81 +581,121 @@
         <IsPartOfProject Value="True"/>
       </Unit134>
       <Unit135>
-        <Filename Value="..\src\Crypto\NistSp80038aAesTestData.pas"/>
+        <Filename Value="..\src\Crypto\SpeckBlockCipherTestBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit135>
       <Unit136>
-        <Filename Value="..\src\Crypto\SpeckBlockCipherTestBase.pas"/>
+        <Filename Value="..\src\Crypto\SpeckLegacyTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit136>
       <Unit137>
-        <Filename Value="..\src\Crypto\SpeckCryptoPPTestData.pas"/>
+        <Filename Value="..\src\Crypto\SicBulkParityTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit137>
       <Unit138>
-        <Filename Value="..\src\Crypto\SpeckLegacyTests.pas"/>
+        <Filename Value="..\src\Crypto\EcbBulkParityTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit138>
       <Unit139>
-        <Filename Value="..\src\Crypto\SicBulkParityTests.pas"/>
+        <Filename Value="..\src\Crypto\CbcBulkParityTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit139>
       <Unit140>
-        <Filename Value="..\src\Crypto\EcbBulkParityTests.pas"/>
+        <Filename Value="..\src\Utils\FusedKernelToggle.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit140>
       <Unit141>
-        <Filename Value="..\src\Crypto\CbcBulkParityTests.pas"/>
+        <Filename Value="..\src\Crypto\FusedExternalRegistrationTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit141>
       <Unit142>
-        <Filename Value="..\src\Utils\ClpFusedKernelToggle.pas"/>
+        <Filename Value="..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit142>
       <Unit143>
-        <Filename Value="..\src\Crypto\FusedExternalRegistrationTests.pas"/>
+        <Filename Value="..\src\Crypto\HChaCha20Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit143>
       <Unit144>
-        <Filename Value="..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas"/>
+        <Filename Value="..\src\Crypto\XChaCha20Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit144>
       <Unit145>
-        <Filename Value="..\src\Crypto\HChaCha20Tests.pas"/>
+        <Filename Value="..\src\Crypto\XChaCha20Poly1305Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit145>
       <Unit146>
-        <Filename Value="..\src\Crypto\XChaCha20Tests.pas"/>
+        <Filename Value="..\src\Asn1\ExternalTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit146>
       <Unit147>
-        <Filename Value="..\src\Crypto\XChaCha20Poly1305Tests.pas"/>
+        <Filename Value="..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit147>
       <Unit148>
-        <Filename Value="..\src\Asn1\ExternalTests.pas"/>
+        <Filename Value="..\src\Misc\SimdSelectSlotTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit148>
       <Unit149>
-        <Filename Value="..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas"/>
+        <Filename Value="..\src\Crypto\CryptoIOSinkTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit149>
       <Unit150>
-        <Filename Value="..\src\Misc\SimdSelectSlotTests.pas"/>
+        <Filename Value="..\src\X509\X509UtilitiesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit150>
       <Unit151>
-        <Filename Value="..\src\Crypto\CryptoIOSinkTests.pas"/>
+        <Filename Value="..\src\Crypto\AlgorithmFinderTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit151>
       <Unit152>
-        <Filename Value="..\src\X509\X509UtilitiesTests.pas"/>
+        <Filename Value="..\src\Utils\CryptoLibTestResourceLoader.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit152>
       <Unit153>
-        <Filename Value="..\src\Crypto\AlgorithmFinderTests.pas"/>
+        <Filename Value="..\src\Utils\Parsers\CsvVectorParser.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit153>
+      <Unit154>
+        <Filename Value="..\src\Utils\Vectors\HmacVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit154>
+      <Unit155>
+        <Filename Value="..\src\Utils\Vectors\Argon2Vectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit155>
+      <Unit156>
+        <Filename Value="..\src\Utils\Parsers\JsonVectorParser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit156>
+      <Unit157>
+        <Filename Value="..\src\Utils\CryptoTestKeys.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit157>
+      <Unit158>
+        <Filename Value="..\src\Utils\Vectors\CertVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit158>
+      <Unit159>
+        <Filename Value="..\src\Utils\Vectors\PemDerCodec.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit159>
+      <Unit160>
+        <Filename Value="..\src\Utils\Vectors\TestKeyBuilders.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit160>
+      <Unit161>
+        <Filename Value="..\src\Utils\Vectors\ChaChaPoly1305Vectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit161>
+      <Unit162>
+        <Filename Value="..\src\Utils\Vectors\AsymmetricTestVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit162>
+      <Unit163>
+        <Filename Value="..\src\Utils\Vectors\PemReaderVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit163>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -666,7 +706,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Other>

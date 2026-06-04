@@ -59,18 +59,19 @@ uses
   ClpIX9ECAsn1Objects,
   ClpIECParameters,
   ClpISignatureFactory,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  CertVectors;
 
 type
 
   TDeltaCertificateTest = class(TCryptoLibAlgorithmTestCase)
   strict private
   var
-    FDeltaEcDsaRoot, FDeltaEcDsaDualXchEe, FDeltaEcDsaDualSigEe: String;
+    FDeltaEcDsaRoot, FDeltaEcDsaDualXchEe, FDeltaEcDsaDualSigEe: string;
     FSecureRandom: ISecureRandom;
 
     procedure SetUpTestData;
-    function ReadCert(const APem: String): IX509Certificate;
+    function ReadCert(const APemData: string): IX509Certificate;
 
   protected
     procedure SetUp; override;
@@ -88,67 +89,10 @@ implementation
 
 procedure TDeltaCertificateTest.SetUpTestData;
 begin
-  // ec_dsa_root.pem
-  FDeltaEcDsaRoot := '-----BEGIN CERTIFICATE-----' + sLineBreak +
-    'MIIDBDCCAmagAwIBAgIUDCQO4j68JeS6tggSujZ2W/+5RMAwCgYIKoZIzj0EAwQw' +
-    'gYsxCzAJBgNVBAYTAlhYMTUwMwYDVQQKDCxSb3lhbCBJbnN0aXR1dGUgb2YgUHVi' +
-    'bGljIEtleSBJbmZyYXN0cnVjdHVyZTErMCkGA1UECwwiUG9zdC1IZWZmYWx1bXAg' +
-    'UmVzZWFyY2ggRGVwYXJ0bWVudDEYMBYGA1UEAwwPRUNEU0EgUm9vdCAtIEcxMB4X' +
-    'DTI0MTAxNzIzMzcyM1oXDTM0MTAxNTIzMzcyM1owgYsxCzAJBgNVBAYTAlhYMTUw' +
-    'MwYDVQQKDCxSb3lhbCBJbnN0aXR1dGUgb2YgUHVibGljIEtleSBJbmZyYXN0cnVj' +
-    'dHVyZTErMCkGA1UECwwiUG9zdC1IZWZmYWx1bXAgUmVzZWFyY2ggRGVwYXJ0bWVu' +
-    'dDEYMBYGA1UEAwwPRUNEU0EgUm9vdCAtIEcxMIGbMBAGByqGSM49AgEGBSuBBAAj' +
-    'A4GGAAQBAFYGp79DhDUnJ+euhbWIqRMPC/YJyMcXp5xEF96cQji2rOckvcqQkhqE' +
-    'K2upXcSLaclIkS16REFZgT0q3vO2m1wAhXxeKePsML2EiCMQIEArXsEwCDGu+qdx' +
-    'mN2lHUQNuiisrkigRdXILHaAXdfTtAvpopsAchnm+vUbHNavcxVRjK2jYzBhMA8G' +
-    'A1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBTro9CLUf4S' +
-    '3MwhZoeFD5jHZ3OINDAfBgNVHSMEGDAWgBTro9CLUf4S3MwhZoeFD5jHZ3OINDAK' +
-    'BggqhkjOPQQDBAOBiwAwgYcCQUnnSxI6X5NPGGetpBUkEh3HIDTrW24dPtx74wmW' +
-    'ANwrejsbS0SvbipnQJPQXjTv8aXDlDAMiPKHado5qCJXMvU3AkIAmDbRmevtaNUQ' +
-    '0k6e97CWc8tTPE7gXo5iqFD0NU9v20HV3z7voEU8fYD65A1Ay3VQ76nC8W8T4T1a' +
-    'fvRCLit6wo0=' + sLineBreak + '-----END CERTIFICATE-----';
-
-  // ec_dsa_dual_xch_ee.pem
-  FDeltaEcDsaDualXchEe := '-----BEGIN CERTIFICATE-----' + sLineBreak +
-    'MIIDzTCCAy6gAwIBAgIUczxcVsNa7M9uSs598vuGatGLDuIwCgYIKoZIzj0EAwQw' +
-    'gYsxCzAJBgNVBAYTAlhYMTUwMwYDVQQKDCxSb3lhbCBJbnN0aXR1dGUgb2YgUHVi' +
-    'bGljIEtleSBJbmZyYXN0cnVjdHVyZTErMCkGA1UECwwiUG9zdC1IZWZmYWx1bXAg' +
-    'UmVzZWFyY2ggRGVwYXJ0bWVudDEYMBYGA1UEAwwPRUNEU0EgUm9vdCAtIEcxMB4X' +
-    'DTI0MTAxNzIzMzcyM1oXDTM0MTAxNTIzMzcyM1owLzELMAkGA1UEBhMCWFgxDzAN' +
-    'BgNVBAoMBkhhbmFrbzEPMA0GA1UECwwGWWFtYWRhMHYwEAYHKoZIzj0CAQYFK4EE' +
-    'ACIDYgAE+qm8IaZ5hVFufLvTuniWWnQoa9d0YCyNiOmQ2OrrcukSy0FgozyJq7hc' +
-    'g8o2pJ5uRRLVysU1gHNfxL+TvwRRr6eWUJE8v0dCUccuCFPAVbxwf7Hjcp5NSsFn' +
-    'J2lIrvzgo4IBrDCCAagwDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCAwgwHQYD' +
-    'VR0OBBYEFAHprr1J3zZ7gG1ksEzN8BHM7tCzMB8GA1UdIwQYMBaAFOuj0ItR/hLc' +
-    'zCFmh4UPmMdnc4g0MIIBRgYKYIZIAYb6a1AGAQSCATYwggEyAhRVxU1+JyiKlGzh' +
-    'zokGIXvfVW0MsDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABG4OZivWg8PvaSAE' +
-    'oMwgDXGEboF0n2lrUx9yoOrYf5vIcmz71x7BRhJ5uGbt2vkv+UT5iMO/FKATKSKk' +
-    'fk356NekMTAvMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQUqMbB+PJ2cSu0HM5U' +
-    'yIvPmU/0mr8DgYsAMIGHAkE7d3yiPS2GlKZIjznEu68D3vD9ApGF0ZfA+3M7tVx4' +
-    'fex4yI5GgIs8o7wZ93WWJEu3OeHPshuZVtLrhZvFB7hBrAJCAV5PVtpsfYwQEtP4' +
-    '0ZcgoDRrOK0/XUsD+vKdigNuKd20/Ty3EhrzD07YyEbXvTqestz7P4+y1CpeBBDm' +
-    'Fr9+f3s8MAoGCCqGSM49BAMEA4GMADCBiAJCAXrIaCetU/F7+TDkYBjEaHRZEujy' +
-    'DL2Ic08Eu+iDBRvzuYjxulQKCJaRFrcbegcW8D8MTkrJW8b0j9PkIXuLB51wAkIB' +
-    '0/4Tx4hhUQ6SCBNx70mG2kOeHpgZB62K3b3PtypOJtUWTZS5XgBhljUUTmdsaQtA' +
-    'wi1V+cwAnegmu168l43lQz0=' + sLineBreak + '-----END CERTIFICATE-----';
-
-  // ec_dsa_dual_sig_ee.pem
-  FDeltaEcDsaDualSigEe := '-----BEGIN CERTIFICATE-----' + sLineBreak +
-    'MIICYTCCAcOgAwIBAgIUVcVNficoipRs4c6JBiF731VtDLAwCgYIKoZIzj0EAwQw' +
-    'gYsxCzAJBgNVBAYTAlhYMTUwMwYDVQQKDCxSb3lhbCBJbnN0aXR1dGUgb2YgUHVi' +
-    'bGljIEtleSBJbmZyYXN0cnVjdHVyZTErMCkGA1UECwwiUG9zdC1IZWZmYWx1bXAg' +
-    'UmVzZWFyY2ggRGVwYXJ0bWVudDEYMBYGA1UEAwwPRUNEU0EgUm9vdCAtIEcxMB4X' +
-    'DTI0MTAxNzIzMzcyM1oXDTM0MTAxNTIzMzcyM1owLzELMAkGA1UEBhMCWFgxDzAN' +
-    'BgNVBAoMBkhhbmFrbzEPMA0GA1UECwwGWWFtYWRhMFkwEwYHKoZIzj0CAQYIKoZI' +
-    'zj0DAQcDQgAEbg5mK9aDw+9pIASgzCANcYRugXSfaWtTH3Kg6th/m8hybPvXHsFG' +
-    'Enm4Zu3a+S/5RPmIw78UoBMpIqR+Tfno16NgMF4wDAYDVR0TAQH/BAIwADAOBgNV' +
-    'HQ8BAf8EBAMCB4AwHQYDVR0OBBYEFKjGwfjydnErtBzOVMiLz5lP9Jq/MB8GA1Ud' +
-    'IwQYMBaAFOuj0ItR/hLczCFmh4UPmMdnc4g0MAoGCCqGSM49BAMEA4GLADCBhwJB' +
-    'O3d8oj0thpSmSI85xLuvA97w/QKRhdGXwPtzO7VceH3seMiORoCLPKO8Gfd1liRL' +
-    'tznhz7IbmVbS64WbxQe4QawCQgFeT1babH2MEBLT+NGXIKA0azitP11LA/rynYoD' +
-    'bindtP08txIa8w9O2MhG1706nrLc+z+PstQqXgQQ5ha/fn97PA==' + sLineBreak + '-----END CERTIFICATE-----';
-
-   FSecureRandom := TSecureRandom.Create();
+  FSecureRandom := TSecureRandom.Create();
+  FDeltaEcDsaRoot := TCertVectors.LoadPemString('DeltaEcDsaRoot');
+  FDeltaEcDsaDualXchEe := TCertVectors.LoadPemString('DeltaEcDsaDualXchEe');
+  FDeltaEcDsaDualSigEe := TCertVectors.LoadPemString('DeltaEcDsaDualSigEe');
 end;
 
 procedure TDeltaCertificateTest.SetUp;
@@ -157,14 +101,14 @@ begin
   SetUpTestData;
 end;
 
-function TDeltaCertificateTest.ReadCert(const APem: String): IX509Certificate;
+function TDeltaCertificateTest.ReadCert(const APemData: string): IX509Certificate;
 var
   LStream: TStringStream;
   LPemReader: IPemReader;
   LPemObj: IPemObject;
   LStruct: IX509CertificateStructure;
 begin
-  LStream := TStringStream.Create(APem, TEncoding.ASCII);
+  LStream := TStringStream.Create(APemData, TEncoding.ASCII);
   try
     LPemReader := TPemReader.Create(LStream);
     LPemObj := LPemReader.ReadPemObject();

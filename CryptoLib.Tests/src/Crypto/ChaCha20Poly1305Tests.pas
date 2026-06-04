@@ -47,7 +47,8 @@ uses
   AeadTestUtilities,
   ClpEncoders,
   ClpConverters,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  ChaChaPoly1305Vectors;
 
 type
 
@@ -127,36 +128,19 @@ end;
 
 procedure TTestChaCha20Poly1305.TestVector1;
 var
+  LRow: TChaChaAeadRow;
   LK, LP, LA, LN, LC, LT, LEnc, LMac, LPlain: TBytes;
   LParams: IAeadParameters;
   LEncCipher, LDecCipher: IChaCha20Poly1305;
   LLen: Int32;
 begin
-  // Test Case 1
-  LK := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LP := THexEncoder.Decode(
-    '4c616469657320616e642047656e746c' +
-    '656d656e206f662074686520636c6173' +
-    '73206f66202739393a20496620492063' +
-    '6f756c64206f6666657220796f75206f' +
-    '6e6c79206f6e652074697020666f7220' +
-    '746865206675747572652c2073756e73' +
-    '637265656e20776f756c642062652069' +
-    '742e');
-  LA := THexEncoder.Decode('50515253c0c1c2c3c4c5c6c7');
-  LN := THexEncoder.Decode('070000004041424344454647');
-  LC := THexEncoder.Decode(
-    'd31a8d34648e60db7b86afbc53ef7ec2' +
-    'a4aded51296e08fea9e2b5a736ee62d6' +
-    '3dbea45e8ca9671282fafb69da92728b' +
-    '1a71de0a9e060b2905d6a5b67ecd3b36' +
-    '92ddbd7f2d778b8c9803aee328091b58' +
-    'fab324e4fad675945585808b4831d7bc' +
-    '3ff4def08e4b7a9de576d26586cec64b' +
-    '6116');
-  LT := THexEncoder.Decode('1ae10b594f09e26a7e902ecbd0600691');
+  LRow := TChaChaVectors.GetRfc7539Poly1305Rows[0];
+  LK := DecodeHex(LRow.Key);
+  LP := DecodeHex(LRow.Plaintext);
+  LA := DecodeHex(LRow.Aad);
+  LN := DecodeHex(LRow.Nonce);
+  LC := DecodeHex(LRow.Ciphertext);
+  LT := DecodeHex(LRow.Tag);
 
   LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
     Length(LT) * 8, LN, LA);

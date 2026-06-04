@@ -303,7 +303,7 @@ begin
     TCipherBenchKind.GcmSiv:
       Result := GcmSivEncryptPlainToBytes(AParams, APlain, APlainLen);
   else
-    System.SetLength(Result, 0);
+    Result := nil;
   end;
 end;
 

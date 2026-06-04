@@ -51,28 +51,12 @@ uses
   ClpIPkcs10CertificationRequest,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  PkcsVectors;
 
 type
 
   TPkcs10CertRequestTest = class(TCryptoLibAlgorithmTestCase)
-  strict private
-    const
-      EmptyExtensionsReqBase64 =
-        'MIICVDCCATwCAQAwADCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKy8' +
-        '4oC/QPFkRBE04LIA5njEulZx/EEh+J2spnThoRwk+oycYEVKp95NSfGTAoNjTwUv' +
-        'TdB9c1PCPE1DmgZIVLEVvouB7sZbMbLSI0d//oMO/Wr/CZmvjPGB8DID7RJs0eqO' +
-        'gLgSuyBVrwbcSKtxH4NrNDsS5IZXCcE3xzkxMDdz72m9jvIrl2ivi+YmJ7cJo3N+' +
-        'DBEqHZW28oytOmVo+8zhxvnHb9w26GJEOxN5zYbiIVW2vU9OfeF9te+Rhnks43Pk' +
-        'YDDP2U4hR7q0BYrdkeWdA1ReleYyn/haeAoIVLZMANIOXobiqASKqSusVq9tLD67' +
-        '7TAywl5AVq8GOBzlXZUCAwEAAaAPMA0GCSqGSIb3DQEJDjEAMA0GCSqGSIb3DQEB' +
-        'CwUAA4IBAQAXck62gJw1deVOLVFAwBNVNXgJarHtDg3pauHTHvN+pSbdOTe1aRzb' +
-        'Tt4/govtuuGZsGWlUqiglLpl6qeS7Pe9m+WJwhH5yXnJ3yvy2Lc/XkeVQ0kt8uFg' +
-        '30UyrgKng6LDgUGFjDSiFr3dK8S/iYpDu/qpl1bWJPWmfmnIXzZWWvBdUTKlfoD9' +
-        '/NLIWINEzHQIBXGy2uLhutYOvDq0WDGOgtdFC8my/QajaJh5lo6mM/PlmcYjK286' +
-        'EdGSIxdME7hoW/ljA5355S820QZDkYx1tI/Y/YaY5KVOntwfDQzQiwWZ2PtpTqSK' +
-        'KYe2Ujb362yaERCE13DJC4Us9j8OOXcW';
-
   strict private
     var
       FReq1: TCryptoLibByteArray;
@@ -102,21 +86,8 @@ implementation
 
 procedure TPkcs10CertRequestTest.SetUpTestData;
 begin
-  FReq1 := DecodeBase64('MIHoMIGTAgEAMC4xDjAMBgNVBAMTBVRlc3QyMQ8wDQYDVQQKEwZBbmFUb20xCzAJBgNVBAYTAlNF' +
-    'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALlEt31Tzt2MlcOljvacJgzQVhmlMoqAOgqJ9Pgd3Gux' +
-    'Z7/WcIlgW4QCB7WZT21O1YoghwBhPDMcNGrHei9kHQkCAwEAAaAAMA0GCSqGSIb3DQEBBQUAA0EA' +
-    'NDEI4ecNtJ3uHwGGlitNFq9WxcoZ0djbQJ5hABMotav6gtqlrwKXY2evaIrsNwkJtNdwwH18aQDU' +
-    'KCjOuBL38Q==');
-
-  FReq2 := DecodeBase64('MIIB6TCCAVICAQAwgagxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMRQwEgYDVQQH' +
-    'EwtTYW50YSBDbGFyYTEMMAoGA1UEChMDQUJCMVEwTwYDVQQLHEhQAAAAAAAAAG8AAAAAAAAAdwAA' +
-    'AAAAAABlAAAAAAAAAHIAAAAAAAAAIAAAAAAAAABUAAAAAAAAABxIAAAAAAAARAAAAAAAAAAxDTAL' +
-    'BgNVBAMTBGJsdWUwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBANETRZ+6occCOrFxNhfKIp4C' +
-    'mMkxwhBNb7TnnahpbM9O0r4hrBPcfYuL7u9YX/jN0YNUP+/CiT39HhSe/bikaBPDEyNsl988I8vX' +
-    'piEdgxYq/+LTgGHbjRsRYCkPtmzwBbuBldNF8bV7pu0v4UScSsExmGqqDlX1TbPU8KkPU1iTAgMB' +
-    'AAGgADANBgkqhkiG9w0BAQQFAAOBgQAFbrs9qUwh93CtETk7DeUD5HcdCnxauo1bck44snSV6MZV' +
-    'OCIGaYu1501kmhEvAtVVRr6SEHwimfQDDIjnrWwYsEr/DT6tkTZAbfRd3qUu3iKjT0H0vlUZp0hJ' +
-    '66mINtBM84uZFBfoXiWY8M3FuAnGmvy6ah/dYtJorTxLKiGkew==');
+  FReq1 := TPkcs10Vectors.LoadRequestBytes('BasicCr');
+  FReq2 := TPkcs10Vectors.LoadRequestBytes('UniversalCr');
 end;
 
 procedure TPkcs10CertRequestTest.SetUp;
@@ -162,7 +133,7 @@ var
   LReq: IPkcs10CertificationRequest;
   LEncoded: TCryptoLibByteArray;
 begin
-  LEncoded := DecodeBase64(EmptyExtensionsReqBase64);
+  LEncoded := TPkcs10Vectors.LoadRequestBytes('EmptyExtensions');
   LReq := TPkcs10CertificationRequest.Create(LEncoded);
   try
     LReq.GetRequestedExtensions();

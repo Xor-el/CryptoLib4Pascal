@@ -546,7 +546,7 @@ begin
   FForEncryption := AForEncryption;
   FPrivParam := APrivParam;
   FPubParam := APubParam;
-  System.SetLength(FV, 0);
+  FV := nil;
   ExtractParams(AParams);
 end;
 

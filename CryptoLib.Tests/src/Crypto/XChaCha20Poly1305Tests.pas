@@ -54,7 +54,8 @@ uses
   ClpISecureRandom,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  ChaChaPoly1305Vectors;
 
 type
   TTestXChaCha20Poly1305 = class(TCryptoLibAlgorithmTestCase)
@@ -116,36 +117,19 @@ end;
 
 procedure TTestXChaCha20Poly1305.TestAppendixA1;
 var
+  LRow: TChaChaAeadRow;
   LK, LP, LA, LN, LC, LT, LEnc, LMac, LPlain: TBytes;
   LParams: IAeadParameters;
   LEncCipher, LDecCipher: IXChaCha20Poly1305;
   LLen: Int32;
 begin
-  LK := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LP := THexEncoder.Decode(
-    '4c616469657320616e642047656e746c' +
-    '656d656e206f662074686520636c6173' +
-    '73206f66202739393a20496620492063' +
-    '6f756c64206f6666657220796f75206f' +
-    '6e6c79206f6e652074697020666f7220' +
-    '746865206675747572652c2073756e73' +
-    '637265656e20776f756c642062652069' +
-    '742e');
-  LA := THexEncoder.Decode('50515253c0c1c2c3c4c5c6c7');
-  LN := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
-  LC := THexEncoder.Decode(
-    'bd6d179d3e83d43b9576579493c0e939' +
-    '572a1700252bfaccbed2902c21396cbb' +
-    '731c7f1b0b4aa6440bf3a82f4eda7e39' +
-    'ae64c6708c54c216cb96b72e1213b452' +
-    '2f8c9ba40db5d945b11b69b982c1bb9e' +
-    '3f3fac2bc369488f76b2383565d3fff9' +
-    '21f9664c97637da9768812f615c68b13' +
-    'b52e');
-  LT := THexEncoder.Decode('c0875924c1c7987947deafd8780acf49');
+  LRow := TChaChaVectors.GetXChaCha20Poly1305Row('AppendixA1');
+  LK := THexEncoder.Decode(LRow.Key);
+  LP := THexEncoder.Decode(LRow.Plaintext);
+  LA := THexEncoder.Decode(LRow.Aad);
+  LN := THexEncoder.Decode(LRow.Nonce);
+  LC := THexEncoder.Decode(LRow.Ciphertext);
+  LT := THexEncoder.Decode(LRow.Tag);
 
   LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
     System.Length(LT) * 8, LN, LA);
@@ -170,19 +154,17 @@ end;
 
 procedure TTestXChaCha20Poly1305.TestAppendixA1Poly1305OneTimeKey;
 var
+  LRow: TChaChaAeadRow;
   LK, LN, LNoncePrefix, LSubKey, LInnerIv, LZero, LFirstBlock, LExpected: TBytes;
   LE: IChaCha7539Engine;
   LParams: IParametersWithIV;
   LIdx: Int32;
 begin
   { draft-irtf-cfrg-xchacha A.3.1 - 32-byte Poly1305 key from first ChaCha block (RFC 8439). }
-  LK := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LN := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
-  LExpected := THexEncoder.Decode(
-    '7b191f80f361f099094f6f4b8fb97df847cc6873a8f2b190dd73807183f907d5');
+  LRow := TChaChaVectors.GetXChaCha20Poly1305Row('AppendixA3_1');
+  LK := THexEncoder.Decode(LRow.Key);
+  LN := THexEncoder.Decode(LRow.Nonce);
+  LExpected := THexEncoder.Decode(LRow.Tag);
 
   System.SetLength(LNoncePrefix, 16);
   System.Move(LN[0], LNoncePrefix[0], 16);
@@ -249,26 +231,17 @@ end;
 
 procedure TTestXChaCha20Poly1305.TestTamperedTagMacFailure;
 var
+  LRow: TChaChaAeadRow;
   LK, LP, LA, LN, LEnc, LDecBuf: TCryptoLibByteArray;
   LParams: IAeadParameters;
   LCipher: IXChaCha20Poly1305;
   LLen: Int32;
 begin
-  LK := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LP := THexEncoder.Decode(
-    '4c616469657320616e642047656e746c' +
-    '656d656e206f662074686520636c6173' +
-    '73206f66202739393a20496620492063' +
-    '6f756c64206f6666657220796f75206f' +
-    '6e6c79206f6e652074697020666f7220' +
-    '746865206675747572652c2073756e73' +
-    '637265656e20776f756c642062652069' +
-    '742e');
-  LA := THexEncoder.Decode('50515253c0c1c2c3c4c5c6c7');
-  LN := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
+  LRow := TChaChaVectors.GetXChaCha20Poly1305Row('AppendixA1');
+  LK := THexEncoder.Decode(LRow.Key);
+  LP := THexEncoder.Decode(LRow.Plaintext);
+  LA := THexEncoder.Decode(LRow.Aad);
+  LN := THexEncoder.Decode(LRow.Nonce);
 
   LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
     128, LN, LA);
@@ -322,15 +295,14 @@ end;
 
 procedure TTestXChaCha20Poly1305.TestReuseNonceEncryptionRejected;
 var
+  LRow: TChaChaAeadRow;
   LK, LN, LOut: TCryptoLibByteArray;
   LParams1, LParams2: IAeadParameters;
   LCipher: IXChaCha20Poly1305;
 begin
-  LK := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LN := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
+  LRow := TChaChaVectors.GetXChaCha20Poly1305Row('AppendixA1');
+  LK := THexEncoder.Decode(LRow.Key);
+  LN := THexEncoder.Decode(LRow.Nonce);
 
   LParams1 := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
     128, LN, nil);
@@ -479,24 +451,15 @@ end;
 
 procedure TTestXChaCha20Poly1305.TestCipherUtilitiesStreamRoundTrip;
 var
+  LRow: TChaChaAeadRow;
   LKey, LNonce, LPlain, LCt, LPt: TCryptoLibByteArray;
   LParams: IParametersWithIV;
   LEnc, LDec: IBufferedCipher;
 begin
-  LKey := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LNonce := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
-  LPlain := THexEncoder.Decode(
-    '4c616469657320616e642047656e746c' +
-    '656d656e206f662074686520636c6173' +
-    '73206f66202739393a20496620492063' +
-    '6f756c64206f6666657220796f75206f' +
-    '6e6c79206f6e652074697020666f7220' +
-    '746865206675747572652c2073756e73' +
-    '637265656e20776f756c642062652069' +
-    '742e');
+  LRow := TChaChaVectors.GetXChaCha20Poly1305Row('AppendixA1');
+  LKey := THexEncoder.Decode(LRow.Key);
+  LNonce := THexEncoder.Decode(LRow.Nonce);
+  LPlain := THexEncoder.Decode(LRow.Plaintext);
 
   LParams := TParametersWithIV.Create(TKeyParameter.Create(LKey) as IKeyParameter,
     LNonce);
@@ -511,35 +474,18 @@ end;
 
 procedure TTestXChaCha20Poly1305.TestCipherUtilitiesAeadDraftVector;
 var
+  LRow: TChaChaAeadRow;
   LKey, LNonce, LAad, LPlain, LExpectedCipher, LExpectedTag, LExpected, LCt: TBytes;
   LParams: IAeadParameters;
   LCipher: IBufferedCipher;
 begin
-  LKey := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LNonce := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
-  LAad := THexEncoder.Decode('50515253c0c1c2c3c4c5c6c7');
-  LPlain := THexEncoder.Decode(
-    '4c616469657320616e642047656e746c' +
-    '656d656e206f662074686520636c6173' +
-    '73206f66202739393a20496620492063' +
-    '6f756c64206f6666657220796f75206f' +
-    '6e6c79206f6e652074697020666f7220' +
-    '746865206675747572652c2073756e73' +
-    '637265656e20776f756c642062652069' +
-    '742e');
-  LExpectedCipher := THexEncoder.Decode(
-    'bd6d179d3e83d43b9576579493c0e939' +
-    '572a1700252bfaccbed2902c21396cbb' +
-    '731c7f1b0b4aa6440bf3a82f4eda7e39' +
-    'ae64c6708c54c216cb96b72e1213b452' +
-    '2f8c9ba40db5d945b11b69b982c1bb9e' +
-    '3f3fac2bc369488f76b2383565d3fff9' +
-    '21f9664c97637da9768812f615c68b13' +
-    'b52e');
-  LExpectedTag := THexEncoder.Decode('c0875924c1c7987947deafd8780acf49');
+  LRow := TChaChaVectors.GetXChaCha20Poly1305Row('AppendixA1');
+  LKey := THexEncoder.Decode(LRow.Key);
+  LNonce := THexEncoder.Decode(LRow.Nonce);
+  LAad := THexEncoder.Decode(LRow.Aad);
+  LPlain := THexEncoder.Decode(LRow.Plaintext);
+  LExpectedCipher := THexEncoder.Decode(LRow.Ciphertext);
+  LExpectedTag := THexEncoder.Decode(LRow.Tag);
   System.SetLength(LExpected, System.Length(LExpectedCipher) +
     System.Length(LExpectedTag));
   System.Move(LExpectedCipher[0], LExpected[0], System.Length(LExpectedCipher));

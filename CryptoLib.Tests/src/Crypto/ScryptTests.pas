@@ -36,9 +36,20 @@ uses
   ClpConverters,
   ClpEncoders,
   HlpHashLibTypes,
-  CryptoLibTestBase;
+  CsvVectorParser,
+  CryptoLibTestBase,
+  ClpCryptoLibTypes;
 
 type
+  TScryptVector = record
+    Password: string;
+    Salt: string;
+    Cost: Int32;
+    BlockSize: Int32;
+    Parallelism: Int32;
+    OutputLenBits: Int32;
+    ExpectedHex: string;
+  end;
 
   /// <summary>
   /// A Test class for Scrypt.
@@ -49,7 +60,6 @@ type
 
     const
     // multiplied by 8 to get it in bits
-    DEFAULT_OUTPUTLEN_IN_BITS = Int32(64 * 8);
     ONE_AS_OUTPUTLEN_IN_BITS = Int32(1 * 8);
 
   var
@@ -196,40 +206,37 @@ begin
 end;
 
 procedure TTestScrypt.TestVectors;
+var
+  LContent: string;
+  LHeader: TCryptoLibStringArray;
+  LRows: TCryptoLibGenericArray<TCsvRow>;
+  LVector: TScryptVector;
+  LI: Integer;
 begin
+  LContent := LoadTestResource('Crypto/Scrypt/TestVectors.csv');
+  LHeader := TCsvVectorParser.GetHeader(LContent);
+  LRows := TCsvVectorParser.Parse(LContent, True);
+  for LI := 0 to High(LRows) do
+  begin
+    if not TCsvVectorParser.ParseBoolField(
+      TCsvVectorParser.GetField(LRows[LI], LHeader, 'Enabled')) then
+      Continue;
 
-  FActualString := DoTestVector('', '', 16, 1, 1, DEFAULT_OUTPUTLEN_IN_BITS);
-  FExpectedString :=
-    '77D6576238657B203B19CA42C18A0497F16B4844E3074AE8DFDFFA3FEDE21442FCD0069DED0948F8326A753A0FC81F17E8D3E0FB2E0D3628CF35E20C38D18906';
+    LVector.Password := TCsvVectorParser.GetField(LRows[LI], LHeader, 'Password');
+    LVector.Salt := TCsvVectorParser.GetField(LRows[LI], LHeader, 'Salt');
+    LVector.Cost := StrToInt(TCsvVectorParser.GetField(LRows[LI], LHeader, 'Cost'));
+    LVector.BlockSize := StrToInt(TCsvVectorParser.GetField(LRows[LI], LHeader, 'BlockSize'));
+    LVector.Parallelism := StrToInt(TCsvVectorParser.GetField(LRows[LI], LHeader, 'Parallelism'));
+    LVector.OutputLenBits := StrToInt(TCsvVectorParser.GetField(LRows[LI], LHeader, 'OutputLenBytes')) * 8;
+    LVector.ExpectedHex := TCsvVectorParser.GetField(LRows[LI], LHeader, 'ExpectedHex');
 
-  CheckEquals(FExpectedString, FActualString, Format('Expected %s but got %s.',
-    [FExpectedString, FActualString]));
-
-  FActualString := DoTestVector('password', 'NaCl', 1024, 8, 16,
-    DEFAULT_OUTPUTLEN_IN_BITS);
-  FExpectedString :=
-    'FDBABE1C9D3472007856E7190D01E9FE7C6AD7CBC8237830E77376634B3731622EAF30D92E22A3886FF109279D9830DAC727AFB94A83EE6D8360CBDFA2CC0640';
-
-  CheckEquals(FExpectedString, FActualString, Format('Expected %s but got %s.',
-    [FExpectedString, FActualString]));
-
-  FActualString := DoTestVector('pleaseletmein', 'SodiumChloride', 16384, 8, 1,
-    DEFAULT_OUTPUTLEN_IN_BITS);
-  FExpectedString :=
-    '7023BDCB3AFD7348461C06CD81FD38EBFDA8FBBA904F8E3EA9B543F6545DA1F2D5432955613F0FCF62D49705242A9AF9E61E85DC0D651E40DFCF017B45575887';
-
-  CheckEquals(FExpectedString, FActualString, Format('Expected %s but got %s.',
-    [FExpectedString, FActualString]));
-
-  // disabled test because it's very expensive
-  // FActualString := DoTestVector('pleaseletmein', 'SodiumChloride', 1048576, 8,
-  // 1, DEFAULT_OUTPUTLEN_IN_BITS);
-  // FExpectedString :=
-  // '2101CB9B6A511AAEADDBBE09CF70F881EC568D574A2FFD4DABE5EE9820ADAA478E56FD8F4BA5D09FFA1C6D927C40F4C337304049E8A952FBCBF45C6FA77A41A4';
-  //
-  // CheckEquals(FExpectedString, FActualString, Format('Expected %s but got %s.',
-  // [FExpectedString, FActualString]));
-
+    FActualString := DoTestVector(LVector.Password, LVector.Salt,
+      LVector.Cost, LVector.BlockSize, LVector.Parallelism,
+      LVector.OutputLenBits);
+    FExpectedString := LVector.ExpectedHex;
+    CheckEquals(FExpectedString, FActualString, Format('Expected %s but got %s.',
+      [FExpectedString, FActualString]));
+  end;
 end;
 
 initialization

@@ -1,0 +1,15 @@
+FixtureId,File,Password,Description
+CertsOnly,Pkcs/Pkcs12Store/Stores/CertsOnly.der,,Certs-only store
+RepeatedLocalKeyId,Pkcs/Pkcs12Store/Stores/RepeatedLocalKeyId.der,,Repeated localKeyId
+HmacSha384,Pkcs/Pkcs12Store/Stores/HmacSha384.der,changeit,HMAC-SHA384
+FriendlyName,Pkcs/Pkcs12Store/Stores/FriendlyName.der,Axw9eE51lKEx0IuqHbzlJ+sx,Friendly name tests
+MainKeyAndChain,Pkcs/Pkcs12Store/Stores/MainKeyAndChain.der,hello world,Primary key+chain
+CertUtf,Pkcs/Pkcs12Store/Stores/CertUtf.der,user,UTF cert
+NoFriendly,Pkcs/Pkcs12Store/Stores/NoFriendly.der,sschette12,No friendly name
+StorageIssue,Pkcs/Pkcs12Store/Stores/StorageIssue.der,pass,Storage issue
+NoPass,Pkcs/Pkcs12Store/Stores/NoPass.der,,Empty password
+SentrixHard,Pkcs/Pkcs12Store/Stores/SentrixHard.der,0000,Sentrix hard
+SentrixSoft,Pkcs/Pkcs12Store/Stores/SentrixSoft.der,0000,Sentrix soft
+Sentrix1,Pkcs/Pkcs12Store/Stores/Sentrix1.der,0000,Sentrix 1
+Sentrix2,Pkcs/Pkcs12Store/Stores/Sentrix2.der,0000,Sentrix 2
+Sentrix3,Pkcs/Pkcs12Store/Stores/Sentrix3.der,0000,Sentrix 3

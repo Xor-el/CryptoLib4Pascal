@@ -1,0 +1,32 @@
+CertId,File,Encoding,Category,SourceName,UsedBy,CanonicalDer
+Connect4Server,Cert/Chains/Connect4Server.pem,PEM,Chains,server.crt,CertTests;CertificateTests;X509CertGenTests,true
+Connect4Ca,Cert/Chains/Connect4Ca.pem,PEM,Chains,ca.crt,CertTests;CertificateTests;X509CertGenTests,true
+Crl1,Cert/Crl/Crl1.pem,PEM,Crl,crl1,CertTests,true
+Connect4ServerX509Armor,Cert/Chains/Certificate1.pem,PEM,Chains,PEMData.CERTIFICATE_1,CertTests,false
+Connect4ServerNoTrailingNl,Cert/Chains/Certificate2NoTrailingNl.pem,PEM,Chains,,CertTests,false
+CertChainCrlf,Cert/Chains/CertChainCrlf.pem,PEM,Chains,,CertTests,false
+CertChainNl,Cert/Chains/CertChainNl.pem,PEM,Chains,,CertTests,false
+Crl2,Cert/Crl/Crl2.pem,PEM,Crl,,CertTests,false
+Pkcs7CrlProblem,Cert/Pkcs7/CrlProblem.der,DER,Pkcs7,,CertTests,false
+LegacyTestX509Ssleay,Cert/Legacy/LegacyTestX509Ssleay.der,DER,Legacy,testx509.pem,CertificateTests,false
+LegacyV3Cert1Nasa,Cert/Legacy/LegacyV3Cert1Nasa.der,DER,Legacy,v3-cert1.pem,CertificateTests,false
+LegacyV3Cert2Entrust,Cert/Legacy/LegacyV3Cert2Entrust.der,DER,Legacy,v3-cert2.pem,CertificateTests,false
+ExtensionSunStoreSunCom,Cert/Extensions/ExtensionSunStoreSunCom.der,DER,Extensions,store.sun.com,CertificateTests,false
+ExtensionPixfirewall,Cert/Extensions/ExtensionPixfirewall.der,DER,Extensions,pixfirewall,CertificateTests,false
+ExtensionDudBadIssuer,Cert/Extensions/ExtensionDudBadIssuer.der,DER,Extensions,dud cert,CertificateTests,false
+ExtensionMalformedBanger,Cert/Extensions/ExtensionMalformedBanger.der,DER,Extensions,malformed,CertificateTests,false
+Pkcs7Cert6,Cert/Pkcs7/Pkcs7Cert6.der,DER,Pkcs7,cert6,CertTests;X509CertGenTests,false
+Pkcs7Cert7,Cert/Pkcs7/Pkcs7Cert7.der,DER,Pkcs7,cert7,CertTests;X509CertGenTests,false
+KeyUsageEntrustClient,Cert/Extensions/KeyUsageEntrustClient.der,DER,Extensions,Entrust Client CA,CertTests,false
+SelfSignedEcUncompressedPt,Cert/Legacy/SelfSignedEcUncompressedPt.der,DER,Legacy,uncompressedPtEC,CertTests,false
+NameCertDatev,Cert/Legacy/NameCertDatev.der,DER,Legacy,nameCert,CertTests,false
+ProbSelfSignedCert,Cert/Legacy/ProbSelfSignedCert.der,DER,Legacy,probSelfSignedCert,CertTests,false
+EmptyDnCert,Cert/Legacy/EmptyDnCert.der,DER,Legacy,emptyDNCert,CertTests,false
+Pkcs7RootCert,Cert/Pkcs7/Pkcs7RootCert.der,DER,Pkcs7,CertPathTest.rootCertBin,CertTests,false
+Pkcs7RootCrl,Cert/Pkcs7/Pkcs7RootCrl.der,DER,Pkcs7,CertPathTest.rootCrlBin,CertTests,false
+Pkcs7AttrCert,Cert/Pkcs7/Pkcs7AttrCert.der,DER,Pkcs7,AttrCertTest.attrCert,CertTests,false
+ForgedRsa512,Cert/Legacy/ForgedRsa512.der,DER,Legacy,forged RSA 512-bit,CertTests,false
+CriticalExtendedKeyUsage,Cert/Extensions/CriticalExtendedKeyUsage.der,DER,Extensions,BorderZone critical EKU,CertTests,false
+DeltaEcDsaRoot,Cert/Delta/DeltaEcDsaRoot.pem,PEM,Delta,ec_dsa_root,DeltaCertificateTests,false
+DeltaEcDsaDualXchEe,Cert/Delta/DeltaEcDsaDualXchEe.pem,PEM,Delta,base_dual_use,DeltaCertificateTests,false
+DeltaEcDsaDualSigEe,Cert/Delta/DeltaEcDsaDualSigEe.pem,PEM,Delta,extracted_delta,DeltaCertificateTests,false

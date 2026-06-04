@@ -30,7 +30,7 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpFixedSecureRandom,
+  FixedSecureRandom,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpIX9ECAsn1Objects,

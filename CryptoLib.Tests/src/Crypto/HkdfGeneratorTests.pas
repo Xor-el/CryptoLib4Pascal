@@ -130,15 +130,13 @@ begin
   // === A.3. Test Case 3 - Test with SHA-256 and zero-length
   // salt/info ===
 
-  // setting salt to an empty byte array means that the salt is set to
-  // HashLen zero valued bytes
-  // setting info to Nil generates an empty byte array as info
-  // structure
+  // nil salt is normalized to HashLen zero-valued bytes (RFC 5869 empty salt)
+  // nil info is an empty info string
 
   hash := TDigestUtilities.GetDigest('SHA-256');
   ikm := DecodeHex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b');
-  System.SetLength(salt, 0);
-  info := Nil;
+  salt := nil;
+  info := nil;
   l := 42;
   System.SetLength(okm, l);
 
@@ -208,8 +206,8 @@ begin
 
   hash := TDigestUtilities.GetDigest('SHA-1');
   ikm := DecodeHex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b');
-  salt := Nil;
-  System.SetLength(info, 0);
+  salt := nil;
+  info := nil;
   l := 42;
   System.SetLength(okm, l);
 
@@ -232,8 +230,8 @@ begin
 
   hash := TDigestUtilities.GetDigest('SHA-1');
   ikm := DecodeHex('0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c');
-  salt := Nil;
-  System.SetLength(info, 0);
+  salt := nil;
+  info := nil;
   l := 42;
   System.SetLength(okm, l);
 
@@ -257,7 +255,7 @@ begin
 
   hash := TDigestUtilities.GetDigest('SHA-1');
   ikm := DecodeHex('2adccada18779e7c2077ad2eb19d3f3e731385dd');
-  System.SetLength(info, 0);
+  info := nil;
   l := 42;
   System.SetLength(okm, l);
 
@@ -277,7 +275,7 @@ begin
 
   hash := TDigestUtilities.GetDigest('SHA-1');
   ikm := DecodeHex('2adccada18779e7c2077ad2eb19d3f3e731385dd');
-  System.SetLength(info, 0);
+  info := nil;
   l := 255 * hash.GetDigestSize();
   System.SetLength(okm, l);
 

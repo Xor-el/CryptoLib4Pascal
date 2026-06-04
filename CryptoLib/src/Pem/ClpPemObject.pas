@@ -60,7 +60,7 @@ constructor TPemObject.Create(const AType: String; const AContent: TCryptoLibByt
 var
   LEmptyHeaders: TCryptoLibGenericArray<IPemHeader>;
 begin
-  System.SetLength(LEmptyHeaders, 0);
+  LEmptyHeaders := nil;
   Create(AType, LEmptyHeaders, AContent);
 end;
 

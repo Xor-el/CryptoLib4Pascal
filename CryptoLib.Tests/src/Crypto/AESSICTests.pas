@@ -38,7 +38,7 @@ uses
   ClpCipherUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
-  NistSp80038aAesTestData;
+  SymmetricBlockVectors;
 
 type
 
@@ -67,36 +67,44 @@ implementation
 { TTestAESSIC }
 
 procedure TTestAESSIC.SetUp;
+var
+  LBaseBand: TCryptoLibGenericArray<TNistAesVectorRow>;
+  LBand128, LBand192, LBand256: TCryptoLibGenericArray<TNistAesVectorRow>;
 begin
   inherited;
 
+  LBaseBand := TNistSp80038aAesVectors.GetRows('Ctr', 128);
+  LBand128 := LBaseBand;
+  LBand192 := TNistSp80038aAesVectors.GetRows('Ctr', 192);
+  LBand256 := TNistSp80038aAesVectors.GetRows('Ctr', 256);
+
   FKeys := TCryptoLibMatrixByteArray.Create(
-    DecodeHex(TNistSp80038aAesTestData.OfficialKeys[0]),
-    DecodeHex(TNistSp80038aAesTestData.OfficialKeys[4]),
-    DecodeHex(TNistSp80038aAesTestData.OfficialKeys[8]));
+    DecodeHex(LBand128[0].Key),
+    DecodeHex(LBand192[0].Key),
+    DecodeHex(LBand256[0].Key));
 
   FPlain := TCryptoLibMatrixByteArray.Create(
-    DecodeHex(TNistSp80038aAesTestData.OfficialPlaintext[0]),
-    DecodeHex(TNistSp80038aAesTestData.OfficialPlaintext[1]),
-    DecodeHex(TNistSp80038aAesTestData.OfficialPlaintext[2]),
-    DecodeHex(TNistSp80038aAesTestData.OfficialPlaintext[3]));
+    DecodeHex(LBaseBand[0].Input),
+    DecodeHex(LBaseBand[1].Input),
+    DecodeHex(LBaseBand[2].Input),
+    DecodeHex(LBaseBand[3].Input));
 
   FCipher := TCryptoLibGenericArray<TCryptoLibMatrixByteArray>.Create(
     TCryptoLibMatrixByteArray.Create(
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[0]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[1]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[2]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[3])),
+      DecodeHex(LBand128[0].Output),
+      DecodeHex(LBand128[1].Output),
+      DecodeHex(LBand128[2].Output),
+      DecodeHex(LBand128[3].Output)),
     TCryptoLibMatrixByteArray.Create(
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[4]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[5]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[6]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[7])),
+      DecodeHex(LBand192[0].Output),
+      DecodeHex(LBand192[1].Output),
+      DecodeHex(LBand192[2].Output),
+      DecodeHex(LBand192[3].Output)),
     TCryptoLibMatrixByteArray.Create(
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[8]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[9]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[10]),
-      DecodeHex(TNistSp80038aAesTestData.OfficialCT_CTR[11])));
+      DecodeHex(LBand256[0].Output),
+      DecodeHex(LBand256[1].Output),
+      DecodeHex(LBand256[2].Output),
+      DecodeHex(LBand256[3].Output)));
 end;
 
 procedure TTestAESSIC.TearDown;
@@ -110,17 +118,22 @@ var
   LI, LJ: Int32;
   LSKey, LSk: IKeyParameter;
   LEnc, LCrypt: TBytes;
+  LKeySizes: array [0 .. 2] of Int32;
+  LBand: TCryptoLibGenericArray<TNistAesVectorRow>;
 begin
+  LKeySizes[0] := 128;
+  LKeySizes[1] := 192;
+  LKeySizes[2] := 256;
 
   LC := TCipherUtilities.GetCipher('AES/SIC/NoPadding');
 
   LI := 0;
   while LI <> System.Length(FKeys) do
   begin
+    LBand := TNistSp80038aAesVectors.GetRows('Ctr', LKeySizes[LI]);
     LSKey := TParameterUtilities.CreateKeyParameter('AES', FKeys[LI]);
     LC.Init(True, TParametersWithIV.Create(LSKey,
-      DecodeHex(TNistSp80038aAesTestData.OfficialIV_CTR[LI * 4]))
-      as IParametersWithIV);
+      DecodeHex(LBand[0].IV)) as IParametersWithIV);
 
     LJ := 0;
     while LJ <> System.Length(FPlain) do
@@ -135,8 +148,7 @@ begin
     end;
 
     LC.Init(False, TParametersWithIV.Create(LSKey,
-      DecodeHex(TNistSp80038aAesTestData.OfficialIV_CTR[LI * 4]))
-      as IParametersWithIV);
+      DecodeHex(LBand[0].IV)) as IParametersWithIV);
 
     LJ := 0;
     while LJ <> System.Length(FPlain) do
@@ -155,7 +167,7 @@ begin
   LC := TCipherUtilities.GetCipher('AES/CTR/NoPadding');
 
   LSk := TParameterUtilities.CreateKeyParameter('AES',
-    DecodeHex(TNistSp80038aAesTestData.OfficialKeys[0]));
+    DecodeHex(TNistSp80038aAesVectors.GetRows('Ctr', 128)[0].Key));
 
   LC.Init(True, TParametersWithIV.Create(LSk,
     DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFD0001')) as IParametersWithIV);
@@ -170,7 +182,7 @@ begin
   LC := TCipherUtilities.GetCipher('AES/CTR/NoPadding');
 
   LSk := TParameterUtilities.CreateKeyParameter('AES',
-    DecodeHex(TNistSp80038aAesTestData.OfficialKeys[0]));
+    DecodeHex(TNistSp80038aAesVectors.GetRows('Ctr', 128)[0].Key));
 
   LC.Init(True, TParametersWithIV.Create(LSk,
     DecodeHex('F0F1F2F3F4F5F6F7F8F9FAFBFCFD0001')) as IParametersWithIV);

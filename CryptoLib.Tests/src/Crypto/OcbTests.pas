@@ -43,7 +43,7 @@ uses
   ClpCryptoLibTypes,
   ClpAesUtilities,
   ClpOcbBlockCipher,
-  ClpFusedKernelToggle,
+  FusedKernelToggle,
   CryptoLibTestBase,
   AeadTestUtilities;
 

@@ -32,7 +32,7 @@ uses
 {$ENDIF FPC}
   ClpAsn1Core,
   ClpBigInteger,
-  ClpFixedSecureRandom,
+  FixedSecureRandom,
   ClpISecureRandom,
   ClpSecureRandom,
   ClpECCurve,

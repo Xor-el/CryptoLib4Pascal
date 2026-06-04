@@ -127,7 +127,7 @@ var
   LResult: TX86SimdLevel;
   LEmpty: array of TX86SimdLevel;
 begin
-  System.SetLength(LEmpty, 0);
+  LEmpty := nil;
   LResult := TX86SimdFeatures.SelectSlot(TX86SimdLevel.AVX2, LEmpty);
   CheckTrue(LResult = TX86SimdLevel.Scalar,
     Format('Expected Scalar but got %s.', [X86LevelName(LResult)]));
@@ -205,7 +205,7 @@ var
   LResult: TArmSimdLevel;
   LEmpty: array of TArmSimdLevel;
 begin
-  System.SetLength(LEmpty, 0);
+  LEmpty := nil;
   LResult := TArmSimdFeatures.SelectSlot(TArmSimdLevel.SVE2, LEmpty);
   CheckTrue(LResult = TArmSimdLevel.Scalar,
     Format('Expected Scalar but got %s.', [ArmLevelName(LResult)]));
