@@ -37,7 +37,8 @@ uses
   ClpStringUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  HmacVectors;
 
 type
 
@@ -45,9 +46,6 @@ type
   /// RIPEMD128 HMac Test, test vectors from RFC 2202
   /// </summary>
   TTestRIPEMD128HMac = class(TCryptoLibAlgorithmTestCase)
-  private
-  var
-    Fkeys, Fdigests, Fmessages: TCryptoLibStringArray;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -64,82 +62,55 @@ implementation
 procedure TTestRIPEMD128HMac.SetUp;
 begin
   inherited;
-  Fkeys := TCryptoLibStringArray.Create('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
-    '4a656665', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    '0102030405060708090a0b0c0d0e0f10111213141516171819',
-    '0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c',
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-
-  Fdigests := TCryptoLibStringArray.Create('fbf61f9492aa4bbf81c172e84e0734db',
-    '875f828862b6b334b427c55f9f7ff09b', '09f0b2846d2f543da363cbec8d62a38d',
-    'bdbbd7cf03e44b5aa60af815be4d2294', 'e79808f24b25fd031c155f0d551d9a3a',
-    'dc732928de98104a1f59d373c150acbb', '5c6bec96793e16d40690c237635f30c5');
-
-  Fmessages := TCryptoLibStringArray.Create('Hi There',
-    'what do ya want for nothing?',
-    '0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-    '0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd',
-    'Test With Truncation',
-    'Test Using Larger Than Block-Size Key - Hash Key First',
-    'Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data');
 end;
 
 procedure TTestRIPEMD128HMac.TearDown;
 begin
   inherited;
-
 end;
 
 procedure TTestRIPEMD128HMac.TestRIPEMD128HMac;
 var
-  hmac: IMac;
-  resBuf, m, m2: TBytes;
-  i, vector: Int32;
+  LRows: TCryptoLibGenericArray<THmacRfc2202Row>;
+  LRow: THmacRfc2202Row;
+  LHmac: IMac;
+  LResBuf, LM, LM2: TBytes;
+  LI, LVector: Int32;
 begin
-  hmac := THMac.Create(TDigestUtilities.GetDigest('RIPEMD128'));
-  System.SetLength(resBuf, hmac.GetMacSize());
+  LRows := THmacVectors.GetRfc2202Rows('RIPEMD128');
+  LHmac := THMac.Create(TDigestUtilities.GetDigest('RIPEMD128'));
+  SetLength(LResBuf, LHmac.GetMacSize());
 
-  for i := 0 to System.Pred(System.Length(Fmessages)) do
+  for LI := 0 to High(LRows) do
   begin
-    m := TConverters.ConvertStringToBytes(Fmessages[i], TEncoding.ASCII);
-    if (TStringUtilities.StartsWith(Fmessages[i], '0x', True)) then
-    begin
-      m := DecodeHex(System.Copy(Fmessages[i], 3,
-        System.Length(Fmessages[i]) - 2));
-    end;
-    hmac.Init(TKeyParameter.Create(DecodeHex(Fkeys[i])));
-    hmac.BlockUpdate(m, 0, System.Length(m));
-    hmac.DoFinal(resBuf, 0);
+    LRow := LRows[LI];
+    LM := TConverters.ConvertStringToBytes(LRow.Message, TEncoding.ASCII);
+    if TStringUtilities.StartsWith(LRow.Message, '0x', True) then
+      LM := DecodeHex(Copy(LRow.Message, 3, Length(LRow.Message) - 2));
 
-    if (not AreEqual(resBuf, DecodeHex(Fdigests[i]))) then
-    begin
-      Fail('Vector ' + IntToStr(i) + ' failed');
-    end;
+    LHmac.Init(TKeyParameter.Create(DecodeHex(LRow.Key)));
+    LHmac.BlockUpdate(LM, 0, Length(LM));
+    LHmac.DoFinal(LResBuf, 0);
+
+    if not AreEqual(LResBuf, DecodeHex(LRow.ExpectedHex)) then
+      Fail('Vector ' + IntToStr(LRow.CaseIndex) + ' failed');
   end;
 
-  // test reset
-  vector := 0; // vector used for test
-  m2 := TConverters.ConvertStringToBytes(Fmessages[vector], TEncoding.ASCII);
+  LVector := 0;
+  LRow := LRows[LVector];
+  LM2 := TConverters.ConvertStringToBytes(LRow.Message, TEncoding.ASCII);
+  if TStringUtilities.StartsWith(LRow.Message, '0x', True) then
+    LM2 := DecodeHex(Copy(LRow.Message, 3, Length(LRow.Message) - 2));
 
-  if (TStringUtilities.StartsWith(Fmessages[vector], '0x', True)) then
-  begin
-    m2 := DecodeHex(System.Copy(Fmessages[vector], 3,
-      System.Length(Fmessages[vector]) - 2));
-  end;
+  LHmac.Init(TKeyParameter.Create(DecodeHex(LRow.Key)));
+  LHmac.BlockUpdate(LM2, 0, Length(LM2));
+  LHmac.DoFinal(LResBuf, 0);
+  LHmac.Reset();
+  LHmac.BlockUpdate(LM2, 0, Length(LM2));
+  LHmac.DoFinal(LResBuf, 0);
 
-  hmac.Init(TKeyParameter.Create(DecodeHex(Fkeys[vector])));
-  hmac.BlockUpdate(m2, 0, System.Length(m2));
-  hmac.DoFinal(resBuf, 0);
-  hmac.Reset();
-  hmac.BlockUpdate(m2, 0, System.Length(m2));
-  hmac.DoFinal(resBuf, 0);
-
-  if (not AreEqual(resBuf, DecodeHex(Fdigests[vector]))) then
-  begin
-    Fail('Reset with vector ' + IntToStr(vector) + ' failed');
-  end;
-
+  if not AreEqual(LResBuf, DecodeHex(LRow.ExpectedHex)) then
+    Fail('Reset with vector ' + IntToStr(LVector) + ' failed');
 end;
 
 initialization

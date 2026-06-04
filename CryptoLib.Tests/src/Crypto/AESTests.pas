@@ -54,11 +54,11 @@ uses
   ClpISicBlockCipher,
   ClpWrapperUtilities,
   ClpIWrapper,
-  ClpFixedSecureRandom,
+  FixedSecureRandom,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
   AesBlockCipherTestBase,
-  NistSp80038aAesTestData;
+  SymmetricBlockVectors;
 
 type
 
@@ -78,8 +78,8 @@ type
       AVectorIndex: Int32 = -1);
 
     procedure RunNist80038A_Vectors(const ACipher: IBufferedCipher;
-      const AIVs, ACiphertexts: TCryptoLibStringArray;
-      AWithIV, AWithPadding: Boolean; const AModeContext: String);
+      const AMode: string; AWithIV, AWithPadding: Boolean;
+      const AModeContext: String);
 
     procedure DoCipherUtilitiesAeadRoundTrip(const ATransformation: String;
       const AKey, ANonce, APlain, ACiphertext: TBytes;
@@ -204,33 +204,31 @@ begin
 end;
 
 procedure TTestAES.RunNist80038A_Vectors(const ACipher: IBufferedCipher;
-  const AIVs, ACiphertexts: TCryptoLibStringArray;
-  AWithIV, AWithPadding: Boolean; const AModeContext: String);
+  const AMode: string; AWithIV, AWithPadding: Boolean; const AModeContext: String);
 var
+  LRows: TCryptoLibGenericArray<TNistAesVectorRow>;
   LI: Int32;
   LKeyBytes, LIVBytes: TBytes;
   LKeyParametersWithIV: IParametersWithIV;
   LKeyParameter: IKeyParameter;
 begin
-  for LI := System.Low(TNistSp80038aAesTestData.OfficialKeys)
-    to System.High(TNistSp80038aAesTestData.OfficialKeys) do
+  LRows := TNistSp80038aAesVectors.GetRows(AMode);
+  for LI := System.Low(LRows) to System.High(LRows) do
   begin
-    LKeyBytes := DecodeHex(TNistSp80038aAesTestData.OfficialKeys[LI]);
+    LKeyBytes := DecodeHex(LRows[LI].Key);
     if AWithIV then
     begin
-      LIVBytes := DecodeHex(AIVs[LI]);
+      LIVBytes := DecodeHex(LRows[LI].IV);
       LKeyParametersWithIV := TParametersWithIV.Create
         (TParameterUtilities.CreateKeyParameter('AES', LKeyBytes), LIVBytes);
       DoAESTest(ACipher, LKeyParametersWithIV as ICipherParameters,
-        TNistSp80038aAesTestData.OfficialPlaintext[LI], ACiphertexts[LI],
-        AWithPadding, AModeContext, LI);
+        LRows[LI].Input, LRows[LI].Output, AWithPadding, AModeContext, LI);
     end
     else
     begin
       LKeyParameter := TParameterUtilities.CreateKeyParameter('AES', LKeyBytes);
       DoAESTest(ACipher, LKeyParameter as ICipherParameters,
-        TNistSp80038aAesTestData.OfficialPlaintext[LI], ACiphertexts[LI],
-        AWithPadding, AModeContext, LI);
+        LRows[LI].Input, LRows[LI].Output, AWithPadding, AModeContext, LI);
     end;
   end;
 end;
@@ -520,8 +518,7 @@ begin
   LBlockCipher := TCbcBlockCipher.Create(LEngine);
   LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
-  RunNist80038A_Vectors(LCipher, TNistSp80038aAesTestData.OfficialIV_CBC,
-    TNistSp80038aAesTestData.OfficialCT_CBC, True, False,
+  RunNist80038A_Vectors(LCipher, 'Cbc', True, False,
     'NIST SP 800-38A AES/CBC NoPadding');
 end;
 
@@ -531,8 +528,7 @@ var
 begin
   LCipher := TCipherUtilities.GetCipher('AES/CBC/PKCS7PADDING');
 
-  RunNist80038A_Vectors(LCipher, TNistSp80038aAesTestData.OfficialIV_CBC,
-    TNistSp80038aAesTestData.OfficialCT_CBC, True, True,
+  RunNist80038A_Vectors(LCipher, 'Cbc', True, True,
     'NIST SP 800-38A AES/CBC PKCS7Padding');
 end;
 
@@ -546,8 +542,7 @@ begin
   LBlockCipher := TCfbBlockCipher.Create(LEngine, LEngine.GetBlockSize * 8);
   LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
-  RunNist80038A_Vectors(LCipher, TNistSp80038aAesTestData.OfficialIV_CFB,
-    TNistSp80038aAesTestData.OfficialCT_CFB, True, False,
+  RunNist80038A_Vectors(LCipher, 'Cfb', True, False,
     'NIST SP 800-38A AES/CFB NoPadding');
 end;
 
@@ -561,8 +556,7 @@ begin
   LBlockCipher := TSicBlockCipher.Create(LEngine);
   LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
-  RunNist80038A_Vectors(LCipher, TNistSp80038aAesTestData.OfficialIV_CTR,
-    TNistSp80038aAesTestData.OfficialCT_CTR, True, False,
+  RunNist80038A_Vectors(LCipher, 'Ctr', True, False,
     'NIST SP 800-38A AES/CTR NoPadding');
 end;
 
@@ -576,8 +570,8 @@ begin
   LBlockCipher := LEngine;
   LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
-  RunNist80038A_Vectors(LCipher, nil, TNistSp80038aAesTestData.OfficialCT_ECB,
-    False, False, 'NIST SP 800-38A AES/ECB NoPadding');
+  RunNist80038A_Vectors(LCipher, 'Ecb', False, False,
+    'NIST SP 800-38A AES/ECB NoPadding');
 end;
 
 procedure TTestAES.TestAES_OFB_NOPADDING_WITH_IV;
@@ -590,8 +584,7 @@ begin
   LBlockCipher := TOfbBlockCipher.Create(LEngine, LEngine.GetBlockSize * 8);
   LCipher := TBufferedBlockCipher.Create(LBlockCipher);
 
-  RunNist80038A_Vectors(LCipher, TNistSp80038aAesTestData.OfficialIV_OFB,
-    TNistSp80038aAesTestData.OfficialCT_OFB, True, False,
+  RunNist80038A_Vectors(LCipher, 'Ofb', True, False,
     'NIST SP 800-38A AES/OFB NoPadding');
 end;
 

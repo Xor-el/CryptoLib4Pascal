@@ -46,7 +46,7 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes,
   ClpConverters,
-  ClpFusedKernelToggle,
+  FusedKernelToggle,
   CryptoLibTestBase;
 
 type

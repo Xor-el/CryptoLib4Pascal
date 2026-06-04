@@ -50,7 +50,7 @@ uses
   ClpIParametersWithRandom,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpFixedSecureRandom,
+  FixedSecureRandom,
   ClpSignerUtilities,
   ClpBigInteger,
   ClpBigIntegerUtilities,

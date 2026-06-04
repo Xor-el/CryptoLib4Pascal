@@ -1,0 +1,16 @@
+VectorId,File,Password,AlgorithmLabel
+Pbes2Aes128Cbc,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes128Cbc.der,12345678a,pbes2.aes-128-cbc
+Pbes2Aes192Cbc,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes192Cbc.der,12345678a,pbes2.aes-192-cbc
+Pbes2Aes256Cbc,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256Cbc.der,12345678a,pbes2.aes-256-cbc
+Pbes2Aes128Cfb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes128Cfb.der,12345678a,pbes2.aes-128-cfb
+Pbes2Aes192Cfb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes192Cfb.der,12345678a,pbes2.aes-192-cfb
+Pbes2Aes256Cfb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256Cfb.der,12345678a,pbes2.aes-256-cfb
+Pbes2Aes128Ecb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes128Ecb.der,12345678a,pbes2.aes-128-ecb
+Pbes2Aes192Ecb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes192Ecb.der,12345678a,pbes2.aes-192-ecb
+Pbes2Aes256Ecb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256Ecb.der,12345678a,pbes2.aes-256-ecb
+Pbes2Aes128Ofb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes128Ofb.der,12345678a,pbes2.aes-128-ofb
+Pbes2Aes192Ofb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes192Ofb.der,12345678a,pbes2.aes-192-ofb
+Pbes2Aes256Ofb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256Ofb.der,12345678a,pbes2.aes-256-ofb
+Pbes2Aes128,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes128.der,12345678a,pbes2.aes128
+Pbes2Aes192,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes192.der,12345678a,pbes2.aes192
+Pbes2Aes256,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256.der,12345678a,pbes2.aes256

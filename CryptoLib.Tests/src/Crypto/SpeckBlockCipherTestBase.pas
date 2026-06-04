@@ -42,7 +42,7 @@ uses
   ClpISpeckLegacyEngine,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
-  SpeckCryptoPPTestData;
+  SymmetricBlockVectors;
 
 type
 
@@ -65,6 +65,9 @@ type
       : TCryptoLibFunc<ISpeckLegacyEngine>; const AEngineLabel: String;
       const AKeys, AInputs, AOutputs: TCryptoLibStringArray);
 
+    procedure RunCryptoPPSpeckModeTests(const AMode: string; AWithIV: Boolean;
+      ACreateEngine: TCryptoLibFunc<ISpeckEngine>);
+
     procedure RunCryptoPPSpeck64EcbTests;
     procedure RunCryptoPPSpeck128EcbTests;
     procedure RunCryptoPPSpeck64CbcTests;
@@ -74,6 +77,16 @@ type
   end;
 
 implementation
+
+function CreateSpeck64EngineForCryptoPP: ISpeckEngine;
+begin
+  Result := TSpeck64Engine.Create();
+end;
+
+function CreateSpeck128EngineForCryptoPP: ISpeckEngine;
+begin
+  Result := TSpeck128Engine.Create();
+end;
 
 { TSpeckBlockCipherTestBase }
 
@@ -190,180 +203,92 @@ begin
   end;
 end;
 
-procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64EcbTests;
+procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeckModeTests(const AMode: string;
+  AWithIV: Boolean; ACreateEngine: TCryptoLibFunc<ISpeckEngine>);
 var
+  LRows: TCryptoLibGenericArray<TSpeckVectorRow>;
+  LKeyParametersWithIV: IParametersWithIV;
   LKeyParameter: IKeyParameter;
-  LKeyBytes: TBytes;
+  LKeyBytes, LIVBytes: TBytes;
   LCipher: IBufferedCipher;
-  LInput, LOutput: String;
   LI: Int32;
   LEngine: ISpeckEngine;
   LBlockCipher: IBlockCipher;
+  LCbcBlockCipher: ICbcBlockCipher;
+  LSicBlockCipher: ISicBlockCipher;
 begin
-  LEngine := TSpeck64Engine.Create();
-  LBlockCipher := LEngine;
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
+  LRows := TSpeckVectors.GetRows(AMode);
+  if Length(LRows) = 0 then
+    raise Exception.CreateFmt('No Speck vectors for mode: %s', [AMode]);
 
-  for LI := System.Low(TSpeckCryptoPPTestData.Keys64Ecb)
-    to System.High(TSpeckCryptoPPTestData.Keys64Ecb) do
+  LEngine := ACreateEngine();
+  if AWithIV then
   begin
-    LKeyBytes := DecodeHex(TSpeckCryptoPPTestData.Keys64Ecb[LI]);
-    LInput := TSpeckCryptoPPTestData.Inputs64Ecb[LI];
-    LOutput := TSpeckCryptoPPTestData.Outputs64Ecb[LI];
-
-    LKeyParameter := TKeyParameter.Create(LKeyBytes);
-
-    DoSPECKTest(LCipher, LKeyParameter as ICipherParameters,
-      LInput, LOutput);
+    if SameText(Copy(AMode, 1, 3), 'Cbc') then
+    begin
+      LCbcBlockCipher := TCbcBlockCipher.Create(LEngine);
+      LCipher := TBufferedBlockCipher.Create(LCbcBlockCipher);
+    end
+    else
+    begin
+      LSicBlockCipher := TSicBlockCipher.Create(LEngine);
+      LCipher := TBufferedBlockCipher.Create(LSicBlockCipher);
+    end;
+  end
+  else
+  begin
+    LBlockCipher := LEngine;
+    LCipher := TBufferedBlockCipher.Create(LBlockCipher);
   end;
+
+  for LI := System.Low(LRows) to System.High(LRows) do
+  begin
+    LKeyBytes := DecodeHex(LRows[LI].Key);
+    if AWithIV then
+    begin
+      LIVBytes := DecodeHex(LRows[LI].IV);
+      LKeyParametersWithIV := TParametersWithIV.Create
+        (TKeyParameter.Create(LKeyBytes) as IKeyParameter, LIVBytes);
+      DoSPECKTest(LCipher, LKeyParametersWithIV as ICipherParameters,
+        LRows[LI].Input, LRows[LI].Output);
+    end
+    else
+    begin
+      LKeyParameter := TKeyParameter.Create(LKeyBytes);
+      DoSPECKTest(LCipher, LKeyParameter as ICipherParameters,
+        LRows[LI].Input, LRows[LI].Output);
+    end;
+  end;
+end;
+
+procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64EcbTests;
+begin
+  RunCryptoPPSpeckModeTests('Ecb64', False, @CreateSpeck64EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck128EcbTests;
-var
-  LKeyParameter: IKeyParameter;
-  LKeyBytes: TBytes;
-  LCipher: IBufferedCipher;
-  LInput, LOutput: String;
-  LI: Int32;
-  LEngine: ISpeckEngine;
-  LBlockCipher: IBlockCipher;
 begin
-  LEngine := TSpeck128Engine.Create();
-  LBlockCipher := LEngine;
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
-
-  for LI := System.Low(TSpeckCryptoPPTestData.Keys128Ecb)
-    to System.High(TSpeckCryptoPPTestData.Keys128Ecb) do
-  begin
-    LKeyBytes := DecodeHex(TSpeckCryptoPPTestData.Keys128Ecb[LI]);
-    LInput := TSpeckCryptoPPTestData.Inputs128Ecb[LI];
-    LOutput := TSpeckCryptoPPTestData.Outputs128Ecb[LI];
-
-    LKeyParameter := TKeyParameter.Create(LKeyBytes);
-
-    DoSPECKTest(LCipher, LKeyParameter as ICipherParameters,
-      LInput, LOutput);
-  end;
+  RunCryptoPPSpeckModeTests('Ecb128', False, @CreateSpeck128EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64CbcTests;
-var
-  LKeyParametersWithIV: IParametersWithIV;
-  LKeyBytes, LIVBytes: TBytes;
-  LCipher: IBufferedCipher;
-  LInput, LOutput: String;
-  LI: Int32;
-  LEngine: ISpeckEngine;
-  LBlockCipher: ICbcBlockCipher;
 begin
-  LEngine := TSpeck64Engine.Create();
-  LBlockCipher := TCbcBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
-
-  for LI := System.Low(TSpeckCryptoPPTestData.Keys64Cbc)
-    to System.High(TSpeckCryptoPPTestData.Keys64Cbc) do
-  begin
-    LKeyBytes := DecodeHex(TSpeckCryptoPPTestData.Keys64Cbc[LI]);
-    LIVBytes := DecodeHex(TSpeckCryptoPPTestData.Ivs64Cbc[LI]);
-    LInput := TSpeckCryptoPPTestData.Inputs64Cbc[LI];
-    LOutput := TSpeckCryptoPPTestData.Outputs64Cbc[LI];
-
-    LKeyParametersWithIV := TParametersWithIV.Create
-      (TKeyParameter.Create(LKeyBytes) as IKeyParameter, LIVBytes);
-
-    DoSPECKTest(LCipher, LKeyParametersWithIV as ICipherParameters,
-      LInput, LOutput);
-  end;
+  RunCryptoPPSpeckModeTests('Cbc64', True, @CreateSpeck64EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck128CbcTests;
-var
-  LKeyParametersWithIV: IParametersWithIV;
-  LKeyBytes, LIVBytes: TBytes;
-  LCipher: IBufferedCipher;
-  LInput, LOutput: String;
-  LI: Int32;
-  LEngine: ISpeckEngine;
-  LBlockCipher: ICbcBlockCipher;
 begin
-  LEngine := TSpeck128Engine.Create();
-  LBlockCipher := TCbcBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
-
-  for LI := System.Low(TSpeckCryptoPPTestData.Keys128Cbc)
-    to System.High(TSpeckCryptoPPTestData.Keys128Cbc) do
-  begin
-    LKeyBytes := DecodeHex(TSpeckCryptoPPTestData.Keys128Cbc[LI]);
-    LIVBytes := DecodeHex(TSpeckCryptoPPTestData.Ivs128Cbc[LI]);
-    LInput := TSpeckCryptoPPTestData.Inputs128Cbc[LI];
-    LOutput := TSpeckCryptoPPTestData.Outputs128Cbc[LI];
-
-    LKeyParametersWithIV := TParametersWithIV.Create
-      (TKeyParameter.Create(LKeyBytes) as IKeyParameter, LIVBytes);
-
-    DoSPECKTest(LCipher, LKeyParametersWithIV as ICipherParameters,
-      LInput, LOutput);
-  end;
+  RunCryptoPPSpeckModeTests('Cbc128', True, @CreateSpeck128EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64CtrTests;
-var
-  LKeyParametersWithIV: IParametersWithIV;
-  LKeyBytes, LIVBytes: TBytes;
-  LCipher: IBufferedCipher;
-  LInput, LOutput: String;
-  LI: Int32;
-  LEngine: ISpeckEngine;
-  LBlockCipher: ISicBlockCipher;
 begin
-  LEngine := TSpeck64Engine.Create();
-  LBlockCipher := TSicBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
-
-  for LI := System.Low(TSpeckCryptoPPTestData.Keys64Ctr)
-    to System.High(TSpeckCryptoPPTestData.Keys64Ctr) do
-  begin
-    LKeyBytes := DecodeHex(TSpeckCryptoPPTestData.Keys64Ctr[LI]);
-    LIVBytes := DecodeHex(TSpeckCryptoPPTestData.Ivs64Ctr[LI]);
-    LInput := TSpeckCryptoPPTestData.Inputs64Ctr[LI];
-    LOutput := TSpeckCryptoPPTestData.Outputs64Ctr[LI];
-
-    LKeyParametersWithIV := TParametersWithIV.Create
-      (TKeyParameter.Create(LKeyBytes) as IKeyParameter, LIVBytes);
-
-    DoSPECKTest(LCipher, LKeyParametersWithIV as ICipherParameters,
-      LInput, LOutput);
-  end;
+  RunCryptoPPSpeckModeTests('Ctr64', True, @CreateSpeck64EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck128CtrTests;
-var
-  LKeyParametersWithIV: IParametersWithIV;
-  LKeyBytes, LIVBytes: TBytes;
-  LCipher: IBufferedCipher;
-  LInput, LOutput: String;
-  LI: Int32;
-  LEngine: ISpeckEngine;
-  LBlockCipher: ISicBlockCipher;
 begin
-  LEngine := TSpeck128Engine.Create();
-  LBlockCipher := TSicBlockCipher.Create(LEngine);
-  LCipher := TBufferedBlockCipher.Create(LBlockCipher);
-
-  for LI := System.Low(TSpeckCryptoPPTestData.Keys128Ctr)
-    to System.High(TSpeckCryptoPPTestData.Keys128Ctr) do
-  begin
-    LKeyBytes := DecodeHex(TSpeckCryptoPPTestData.Keys128Ctr[LI]);
-    LIVBytes := DecodeHex(TSpeckCryptoPPTestData.Ivs128Ctr[LI]);
-    LInput := TSpeckCryptoPPTestData.Inputs128Ctr[LI];
-    LOutput := TSpeckCryptoPPTestData.Outputs128Ctr[LI];
-
-    LKeyParametersWithIV := TParametersWithIV.Create
-      (TKeyParameter.Create(LKeyBytes) as IKeyParameter, LIVBytes);
-
-    DoSPECKTest(LCipher, LKeyParametersWithIV as ICipherParameters,
-      LInput, LOutput);
-  end;
+  RunCryptoPPSpeckModeTests('Ctr128', True, @CreateSpeck128EngineForCryptoPP);
 end;
 
 end.

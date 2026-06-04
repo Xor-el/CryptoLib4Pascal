@@ -64,7 +64,8 @@ uses
   ClpAsn1Objects,
   ClpECParameters,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  CryptoTestKeys;
 
 type
 
@@ -78,12 +79,6 @@ type
 
   TOpenSslWriterTest = class(TCryptoLibAlgorithmTestCase)
   strict private
-    const
-      TestEcDsaKeyBytesBase64 =
-        'MIG/AgEAMBAGByqGSM49AgEGBSuBBAAiBIGnMIGkAgEBBDCSBU3vo7ieeKs0ABQamy/ynxlde7Ylr8HmyfLaNnMr' +
-        'jAwPp9R+KMUEhB7zxSAXv9KgBwYFK4EEACKhZANiAQQyyolMpg+TyB4o9kPWqafHIOe8o9K1glus+w2sY8OIPQQWGb5i5LdAyi' +
-        '/SscwU24rZM0yiL3BHodp9ccwyhLrFYgXJUOQcCN2dno1GMols5497in5gL5+zn0yMsRtyv5o=';
-
     const
       EncryptedAlgorithms: array[0..15] of string = (
         'AES-128-CBC', 'AES-128-CFB', 'AES-128-ECB', 'AES-128-OFB',
@@ -126,28 +121,13 @@ end;
 { TOpenSslWriterTest }
 
 class function TOpenSslWriterTest.GetTestRsaKey: IRsaPrivateCrtKeyParameters;
-var
-  LModulus, LPubExp, LPrivExp, LP, LQ, LDP, LDQ, LQInv: TBigInteger;
 begin
-  LModulus := TBigInteger.Create('b4a7e46170574f16a97082b22be58b6a2a629798419be12872a4bdba626cfae9900f76abfb12139dce5de56564fab2b6543165a040c606887420e33d91ed7ed7', 16);
-  LPubExp := TBigInteger.Create('11', 16);
-  LPrivExp := TBigInteger.Create('9f66f6b05410cd503b2709e88115d55daced94d1a34d4e32bf824d0dde6028ae79c5f07b580f5dce240d7111f7ddb130a7945cd7d957d1920994da389f490c89', 16);
-  LP := TBigInteger.Create('c0a0758cdf14256f78d4708c86becdead1b50ad4ad6c5c703e2168fbf37884cb', 16);
-  LQ := TBigInteger.Create('f01734d7960ea60070f1b06f2bb81bfac48ff192ae18451d5e56c734a5aab8a5', 16);
-  LDP := TBigInteger.Create('b54bb9edff22051d9ee60f9351a48591b6500a319429c069a3e335a1d6171391', 16);
-  LDQ := TBigInteger.Create('d3d83daf2a0cecd3367ae6f8ae1aeb82e9ac2f816c6fc483533d8297dd7884cd', 16);
-  LQInv := TBigInteger.Create('b8f52fc6f38593dabb661d3f50f8897f8106eee68b1bce78a95b132b4e5b5d19', 16);
-  Result := TRsaPrivateCrtKeyParameters.Create(LModulus, LPubExp, LPrivExp, LP, LQ, LDP, LDQ, LQInv);
+  Result := TCryptoTestKeys.GetWriterRsaCrtPrivate;
 end;
 
 class function TOpenSslWriterTest.GetTestDsaParams: IDsaParameters;
-var
-  LP, LQ, LG: TBigInteger;
 begin
-  LP := TBigInteger.Create('7434410770759874867539421675728577177024889699586189000788950934679315164676852047058354758883833299702695428196962057871264685291775577130504050839126673');
-  LQ := TBigInteger.Create('1138656671590261728308283492178581223478058193247');
-  LG := TBigInteger.Create('4182906737723181805517018315469082619513954319976782448649747742951189003482834321192692620856488639629011570381138542789803819092529658402611668375788410');
-  Result := TDsaParameters.Create(LP, LQ, LG);
+  Result := TCryptoTestKeys.GetWriterDsaParameters;
 end;
 
 procedure TOpenSslWriterTest.DoWriteReadTest(const APrivateKey: IAsymmetricKeyParameter);
@@ -257,7 +237,7 @@ begin
   DoWriteReadTests(LRsaKey, EncryptedAlgorithms);
 
   // EC (from bytes)
-  LEcKeyBytes := DecodeBase64(TestEcDsaKeyBytesBase64);
+  LEcKeyBytes := TCryptoTestKeys.GetWriterEcDsaPkcs8Bytes;
   LEcPrivInfo := TPrivateKeyInfo.GetInstance(LEcKeyBytes);
   LEcPrivFromBytes := TPrivateKeyFactory.CreateKey(LEcPrivInfo);
   DoWriteReadTests(LEcPrivFromBytes, EncryptedAlgorithms);
@@ -297,7 +277,7 @@ var
   LPrivKey: IAsymmetricKeyParameter;
   LPrivInfo: IPrivateKeyInfo;
 begin
-  LKeyBytes := DecodeBase64(TestEcDsaKeyBytesBase64);
+  LKeyBytes := TCryptoTestKeys.GetWriterEcDsaPkcs8Bytes;
   LPrivInfo := TPrivateKeyInfo.GetInstance(LKeyBytes);
   LPrivKey := TPrivateKeyFactory.CreateKey(LPrivInfo);
   DoWriteReadTest(LPrivKey);

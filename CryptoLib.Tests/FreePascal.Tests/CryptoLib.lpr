@@ -8,10 +8,9 @@ uses
   ParsingTests, ParseTests, StringTests, TagTests, BigIntegerTests,
   ECAlgorithmsTests, ECPointTests, SecP256R1FieldTests, SecP384R1FieldTests,
   ECDsa5Tests, ECTests, NamedCurveTests, SignerUtilitiesTests,
-  SecureRandomTests, DigestRandomNumberTests, FixedPointTests,
-  NistSp80038aAesTestData, AESTests, AesLightTests,
-  FusedExternalRegistrationTests, AesX86Tests, AESSICTests, SicBulkParityTests,
-  EcbBulkParityTests, CbcBulkParityTests, SpeckCryptoPPTestData,
+  SecureRandomTests, DigestRandomNumberTests, FixedPointTests, AESTests,
+  AesLightTests, FusedExternalRegistrationTests, AesX86Tests, AESSICTests,
+  SicBulkParityTests, EcbBulkParityTests, CbcBulkParityTests,
   SpeckBlockCipherTestBase, SpeckLegacyTests, SpeckTests, IESCipherTests,
   MD5HMacTests, SHA1HMacTests, SHA224HMacTests, SHA256HMacTests,
   SHA384HMacTests, SHA512HMacTests, RIPEMD128HMacTests, RIPEMD160HMacTests,
@@ -39,9 +38,13 @@ uses
   Pkcs12Tests, Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests,
   CryptoLibTestBase, SimdSelectSlotTests, PkcsEncryptedPrivateKeyInfoTests,
   Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
-  X509CertificatePairTests, X509UtilitiesTests, ClpFixedSecureRandom,
-  ClpShortenedDigest, ClpCertTestUtilities, ClpFusedKernelToggle, Int32Tests,
-  Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
+  X509CertificatePairTests, X509UtilitiesTests, FixedSecureRandom,
+  ShortenedDigest, CertTestUtilities, FusedKernelToggle,
+  CryptoLibTestResourceLoader, CryptoTestKeys, CsvVectorParser,
+  JsonVectorParser, Bip327Vectors, Bip340Vectors, HmacVectors, Argon2Vectors,
+  AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
+  OpenSslVectors, PemReaderVectors, PkcsVectors, CertVectors, TestKeyBuilders, PemDerCodec,
+  Int32Tests, Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

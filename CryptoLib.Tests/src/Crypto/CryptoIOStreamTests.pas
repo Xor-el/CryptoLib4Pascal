@@ -66,6 +66,7 @@ uses
   ClpCipherUtilities,
   ClpStreamUtilities,
   ClpStringUtilities,
+  ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -197,7 +198,7 @@ begin
   LInCipher.Init(True, LCipherParams);
   LOutCipher.Init(False, LCipherParams);
 
-  LBIn := TBytesStream.Create(TEncoding.ASCII.GetBytes(LCode));
+  LBIn := TBytesStream.Create(TConverters.ConvertStringToBytes(LCode, TEncoding.ASCII));
   LBOut := TMemoryStream.Create;
   try
     LCIn := TCipherStream.Create(LBIn, LInCipher, nil, True);
@@ -218,7 +219,7 @@ begin
     end;
 
     LBs := StreamToBytes(LBOut);
-    LRes := TEncoding.ASCII.GetString(LBs);
+    LRes := TConverters.ConvertBytesToString(LBs, TEncoding.ASCII);
 
     if LRes <> LCode then
       Fail('Failed - decrypted data doesn''t match.');
@@ -478,10 +479,10 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(Data);
+  LDataBytes := TConverters.ConvertStringToBytes(Data, TEncoding.ASCII);
   LEncryptedDataBytes := EncryptOnWrite(LDataBytes);
   LDecryptedDataBytes := DecryptOnRead(LEncryptedDataBytes);
-  LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
+  LDecryptedData := TConverters.ConvertBytesToString(LDecryptedDataBytes, TEncoding.ASCII);
   CheckEquals(Data, LDecryptedData);
 end;
 
@@ -490,10 +491,10 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(Data);
+  LDataBytes := TConverters.ConvertStringToBytes(Data, TEncoding.ASCII);
   LEncryptedDataBytes := EncryptOnRead(LDataBytes);
   LDecryptedDataBytes := DecryptOnWrite(LEncryptedDataBytes);
-  LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
+  LDecryptedData := TConverters.ConvertBytesToString(LDecryptedDataBytes, TEncoding.ASCII);
   CheckEquals(Data, LDecryptedData);
 end;
 
@@ -502,10 +503,10 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(Data);
+  LDataBytes := TConverters.ConvertStringToBytes(Data, TEncoding.ASCII);
   LEncryptedDataBytes := EncryptOnWrite(LDataBytes);
   LDecryptedDataBytes := DecryptOnWrite(LEncryptedDataBytes);
-  LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
+  LDecryptedData := TConverters.ConvertBytesToString(LDecryptedDataBytes, TEncoding.ASCII);
   CheckEquals(Data, LDecryptedData);
 end;
 
@@ -514,10 +515,10 @@ var
   LDataBytes, LEncryptedDataBytes, LDecryptedDataBytes: TCryptoLibByteArray;
   LDecryptedData: String;
 begin
-  LDataBytes := TEncoding.ASCII.GetBytes(Data);
+  LDataBytes := TConverters.ConvertStringToBytes(Data, TEncoding.ASCII);
   LEncryptedDataBytes := EncryptOnRead(LDataBytes);
   LDecryptedDataBytes := DecryptOnRead(LEncryptedDataBytes);
-  LDecryptedData := TEncoding.ASCII.GetString(LDecryptedDataBytes);
+  LDecryptedData := TConverters.ConvertBytesToString(LDecryptedDataBytes, TEncoding.ASCII);
   CheckEquals(Data, LDecryptedData);
 end;
 
@@ -539,7 +540,7 @@ var
   LWriteDigest: IDigest;
   LDigestStream: TDigestStream;
 begin
-  LDataBytes := TEncoding.UTF8.GetBytes('digest stream write');
+  LDataBytes := TConverters.ConvertStringToBytes('digest stream write', TEncoding.UTF8);
   LExpected := DigestReference(LDataBytes);
 
   LMem := TMemoryStream.Create;
@@ -567,7 +568,7 @@ var
   LDigestStream: TDigestStream;
   LRead: Int32;
 begin
-  LDataBytes := TEncoding.UTF8.GetBytes('digest stream read');
+  LDataBytes := TConverters.ConvertStringToBytes('digest stream read', TEncoding.UTF8);
   LExpected := DigestReference(LDataBytes);
 
   LMem := TBytesStream.Create(LDataBytes);
@@ -596,7 +597,7 @@ var
   LDigestStream: TDigestStream;
   LI, LCh: Int32;
 begin
-  LDataBytes := TEncoding.UTF8.GetBytes('xy');
+  LDataBytes := TConverters.ConvertStringToBytes('xy', TEncoding.UTF8);
   LExpected := DigestReference(LDataBytes);
 
   LMem := TMemoryStream.Create;
@@ -636,7 +637,7 @@ var
   LDigestStream: TDigestStream;
   LData: TCryptoLibByteArray;
 begin
-  LData := TEncoding.UTF8.GetBytes('leave open');
+  LData := TConverters.ConvertStringToBytes('leave open', TEncoding.UTF8);
   LMem := TMemoryStream.Create;
   LWriteDigest := TDigestUtilities.GetDigest('SHA-256');
   LDigestStream := TDigestStream.Create(LMem, nil, LWriteDigest, True);
@@ -669,8 +670,8 @@ var
   LWriteMac: IMac;
   LMacStream: TMacStream;
 begin
-  LKey := TEncoding.ASCII.GetBytes('0123456789ABCDEF');
-  LDataBytes := TEncoding.UTF8.GetBytes('mac stream write');
+  LKey := TConverters.ConvertStringToBytes('0123456789ABCDEF', TEncoding.ASCII);
+  LDataBytes := TConverters.ConvertStringToBytes('mac stream write', TEncoding.UTF8);
   LExpected := MacReference(LKey, LDataBytes);
 
   LMem := TMemoryStream.Create;
@@ -698,8 +699,8 @@ var
   LMacStream: TMacStream;
   LRead: Int32;
 begin
-  LKey := TEncoding.ASCII.GetBytes('0123456789ABCDEF');
-  LDataBytes := TEncoding.UTF8.GetBytes('mac stream read');
+  LKey := TConverters.ConvertStringToBytes('0123456789ABCDEF', TEncoding.ASCII);
+  LDataBytes := TConverters.ConvertStringToBytes('mac stream read', TEncoding.UTF8);
   LExpected := MacReference(LKey, LDataBytes);
 
   LMem := TBytesStream.Create(LDataBytes);
@@ -729,8 +730,8 @@ var
   LMacStream: TMacStream;
   LI, LCh: Int32;
 begin
-  LKey := TEncoding.ASCII.GetBytes('0123456789ABCDEF');
-  LDataBytes := TEncoding.UTF8.GetBytes('z');
+  LKey := TConverters.ConvertStringToBytes('0123456789ABCDEF', TEncoding.ASCII);
+  LDataBytes := TConverters.ConvertStringToBytes('z', TEncoding.UTF8);
   LExpected := MacReference(LKey, LDataBytes);
 
   LMem := TMemoryStream.Create;
@@ -771,8 +772,8 @@ var
   LMacStream: TMacStream;
   LKey, LData: TCryptoLibByteArray;
 begin
-  LKey := TEncoding.ASCII.GetBytes('0123456789ABCDEF');
-  LData := TEncoding.UTF8.GetBytes('open');
+  LKey := TConverters.ConvertStringToBytes('0123456789ABCDEF', TEncoding.ASCII);
+  LData := TConverters.ConvertStringToBytes('open', TEncoding.UTF8);
   LMem := TMemoryStream.Create;
   LWriteMac := TMacUtilities.GetMac('HMAC/SHA-256');
   LWriteMac.Init(TKeyParameter.Create(LKey) as IKeyParameter);
@@ -799,7 +800,7 @@ var
   LWriteSigner: ISigner;
   LSignerStream: TSignerStream;
 begin
-  LDataBytes := TEncoding.UTF8.GetBytes('signer stream write');
+  LDataBytes := TConverters.ConvertStringToBytes('signer stream write', TEncoding.UTF8);
 
   LKpGen := TRsaKeyPairGenerator.Create();
   LKpParams := TRsaKeyGenerationParameters.Create(
@@ -841,7 +842,7 @@ var
   LSignerStream: TSignerStream;
   LRead: Int32;
 begin
-  LDataBytes := TEncoding.UTF8.GetBytes('signer stream read');
+  LDataBytes := TConverters.ConvertStringToBytes('signer stream read', TEncoding.UTF8);
 
   LKpGen := TRsaKeyPairGenerator.Create();
   LKpParams := TRsaKeyGenerationParameters.Create(
@@ -885,7 +886,7 @@ var
   LSignerStream: TSignerStream;
   LCh: Int32;
 begin
-  LDataBytes := TEncoding.UTF8.GetBytes('a');
+  LDataBytes := TConverters.ConvertStringToBytes('a', TEncoding.UTF8);
 
   LKpGen := TRsaKeyPairGenerator.Create();
   LKpParams := TRsaKeyGenerationParameters.Create(
@@ -940,7 +941,7 @@ var
   LKeyPair: IAsymmetricCipherKeyPair;
   LData: TCryptoLibByteArray;
 begin
-  LData := TEncoding.UTF8.GetBytes('open');
+  LData := TConverters.ConvertStringToBytes('open', TEncoding.UTF8);
 
   LKpGen := TRsaKeyPairGenerator.Create();
   LKpParams := TRsaKeyGenerationParameters.Create(

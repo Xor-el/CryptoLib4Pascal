@@ -1,0 +1,8 @@
+CertId,ExpectedSubject
+Connect4Server,"C=AU,ST=Victoria,L=South Melbourne,O=Connect 4 Pty Ltd,OU=Webserver Team,CN=www2.connect4.com.au,E=webmaster@connect4.com.au"
+Connect4Ca,"C=AU,ST=Victoria,L=South Melbourne,O=Connect 4 Pty Ltd,OU=Certificate Authority,CN=Connect 4 CA,E=webmaster@connect4.com.au"
+LegacyTestX509Ssleay,"C=AU,ST=QLD,CN=SSLeay/rsa test cert"
+LegacyV3Cert1Nasa,"C=US,O=National Aeronautics and Space Administration,SERIALNUMBER=16+CN=Steve Schoch"
+LegacyV3Cert2Entrust,"E=cooke@issl.atl.hp.com,C=US,OU=Hewlett Packard Company (ISSL),CN=Paul A. Cooke"
+ExtensionSunStoreSunCom,"O=Sun Microsystems Inc,CN=store.sun.com"
+ExtensionPixfirewall,"unstructuredAddress=192.168.1.33,unstructuredName=pixfirewall.ciscopix.com,CN=pixfirewall.ciscopix.com"

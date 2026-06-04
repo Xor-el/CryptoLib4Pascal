@@ -17,7 +17,8 @@ uses
   ClpEncoders,
   ClpArrayUtilities,
   ClpConverters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  CryptoLibTestResourceLoader;
 
 type
 
@@ -38,6 +39,9 @@ type
     function AreEqual(const AA, AB: TBytes): Boolean;
     function CopyOfRange(const AData: TBytes; AFrom, ATo: Int32): TBytes;
     function StringToCharArray(const AInput: String): TCryptoLibCharArray;
+    function LoadTestResource(const ARelativePath: string): string;
+    function LoadTestResourceBytes(const ARelativePath: string): TBytes;
+    function TestResourcePath(const ACategory, AFileName: string): string;
 
   end;
 
@@ -84,6 +88,21 @@ end;
 function TCryptoLibAlgorithmTestCase.StringToCharArray(const AInput: String): TCryptoLibCharArray;
 begin
   Result := TConverters.ConvertStringToCharArray(AInput);
+end;
+
+function TCryptoLibAlgorithmTestCase.LoadTestResource(const ARelativePath: string): string;
+begin
+  Result := TCryptoLibTestResourceLoader.Instance.LoadAsString(ARelativePath);
+end;
+
+function TCryptoLibAlgorithmTestCase.LoadTestResourceBytes(const ARelativePath: string): TBytes;
+begin
+  Result := TCryptoLibTestResourceLoader.Instance.LoadAsBytes(ARelativePath);
+end;
+
+function TCryptoLibAlgorithmTestCase.TestResourcePath(const ACategory, AFileName: string): string;
+begin
+  Result := ACategory + '/' + AFileName;
 end;
 
 end.
