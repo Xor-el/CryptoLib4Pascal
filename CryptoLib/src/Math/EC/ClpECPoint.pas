@@ -274,7 +274,7 @@ begin
 
   case LCoord of
     TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
-      SetLength(Result, 0);
+      Result := nil;
   else
     begin
       LOne := ACurve.FromBigInteger(TBigInteger.One);

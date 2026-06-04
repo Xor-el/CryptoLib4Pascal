@@ -487,7 +487,7 @@ begin
   end;
 
   // Zero-length unsigned magnitude -> zero value
-  System.SetLength(LEmpty, 0);
+  LEmpty := nil;
   LB := TBigInteger.Create(LEmpty, 0, 0);
   CheckEqualsBigInteger(Fzero, LB);
   LB := TBigInteger.Create(nil, 0, 0);
@@ -1393,7 +1393,7 @@ var
   x, y: TBigInteger;
 begin
   z := TBigInteger.Zero.ToByteArrayUnsigned();
-  System.SetLength(temp, 0);
+  temp := nil;
   CheckTrue(AreEqual(temp, z));
   for i := 16 to 48 do
   begin

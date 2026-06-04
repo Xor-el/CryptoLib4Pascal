@@ -160,7 +160,7 @@ var
 begin
   LModeRows := GetRows(AMode);
   LCount := 0;
-  SetLength(Result, 0);
+  Result := nil;
   for LI := 0 to High(LModeRows) do
   begin
     if KeySizeBits(LModeRows[LI].Key) = AKeySizeBits then

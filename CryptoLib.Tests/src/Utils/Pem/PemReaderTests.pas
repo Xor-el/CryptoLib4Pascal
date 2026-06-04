@@ -225,7 +225,7 @@ var
   LHeaders: TCryptoLibGenericArray<IPemHeader>;
   LData: TCryptoLibByteArray;
 begin
-  SetLength(LEmptyHeaders, 0);
+  LEmptyHeaders := nil;
   for I := 1 to 59 do
   begin
     SetLength(LData, I);

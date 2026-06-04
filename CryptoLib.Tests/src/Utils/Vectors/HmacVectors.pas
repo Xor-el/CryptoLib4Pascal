@@ -150,7 +150,7 @@ var
   LI, LCount: Integer;
 begin
   LCount := 0;
-  SetLength(Result, 0);
+  Result := nil;
   for LI := 0 to High(FRfc2202Rows) do
   begin
     if SameText(FRfc2202Rows[LI].Algorithm, AAlgorithm) then

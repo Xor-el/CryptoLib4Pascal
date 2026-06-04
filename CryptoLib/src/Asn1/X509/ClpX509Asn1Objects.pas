@@ -4668,7 +4668,7 @@ var
   LToken: String;
 begin
   // Split by '.' and '/'
-  System.SetLength(LTokens, 0);
+  LTokens := nil;
   LToken := '';
   for LI := 1 to System.Length(AIp) do
   begin
@@ -4743,7 +4743,7 @@ begin
   LDoubleColon := -1;
 
   // Split by ':'
-  System.SetLength(LSegments, 0);
+  LSegments := nil;
   LSegment := '';
   for LI := 1 to System.Length(LProcessedIp) do
   begin
@@ -4784,7 +4784,7 @@ begin
       else
       begin
         // IPv4 embedded in IPv6 - split by '.'
-        System.SetLength(LTokens, 0);
+        LTokens := nil;
         for LJ := 1 to System.Length(LSegment) do
         begin
           if LSegment[LJ] = '.' then
@@ -8618,7 +8618,7 @@ var
 begin
   if FRevokedCertificates = nil then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
   LElements := FRevokedCertificates.GetElements();

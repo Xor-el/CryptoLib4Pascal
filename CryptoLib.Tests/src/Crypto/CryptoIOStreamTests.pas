@@ -286,7 +286,7 @@ begin
   LECipher := TCipherUtilities.GetCipher(AName);
   LECipher.Init(True, LCipherParams);
 
-  System.SetLength(LCipherText, 0);
+  LCipherText := nil;
   try
     LECipher.ProcessBytes(TCryptoLibByteArray.Create(
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),

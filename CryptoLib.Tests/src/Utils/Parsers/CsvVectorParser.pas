@@ -205,7 +205,7 @@ begin
         Exit;
       end;
     end;
-    SetLength(Result, 0);
+    Result := nil;
   finally
     LLines.Free;
   end;
@@ -259,7 +259,7 @@ var
   LI, LCount: Integer;
 begin
   LCount := 0;
-  SetLength(Result, 0);
+  Result := nil;
   for LI := 0 to High(ATable.Rows) do
   begin
     if SameText(GetField(ATable.Rows[LI], ATable.Header, AField), AValue) then

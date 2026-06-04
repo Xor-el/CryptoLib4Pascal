@@ -6021,7 +6021,7 @@ constructor TAsn1OctetString.Create(const AContents: TCryptoLibByteArray);
 begin
   inherited Create;
   if AContents = nil then
-    SetLength(FContents, 0)
+    FContents := nil
   else
     FContents := AContents;
 end;

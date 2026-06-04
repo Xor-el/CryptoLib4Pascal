@@ -204,7 +204,7 @@ var
   LI, LCount: Integer;
 begin
   LCount := 0;
-  SetLength(Result.Checkpoints, 0);
+  Result.Checkpoints := nil;
   for LI := 0 to High(FKeystreamRows) do
   begin
     if SameText(FKeystreamRows[LI].SetId, ASetId) then

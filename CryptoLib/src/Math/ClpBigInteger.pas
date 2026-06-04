@@ -301,7 +301,7 @@ var
 begin
   TSecureRandom.Boot;
 
-  System.SetLength(LZeroMagnitude, 0);
+  LZeroMagnitude := nil;
   FZero := TBigInteger.Create(0, LZeroMagnitude, False);
   FZero.FNBits := 0;
   FZero.FNBitLength := 0;
@@ -601,7 +601,7 @@ begin
   LNBytes := LEnd - LStart;
   if LNBytes <= 0 then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
   LNInts := (LNBytes + BytesPerInt - 1) div BytesPerInt;
@@ -627,7 +627,7 @@ begin
   end;
   if LLast < 0 then
   begin
-    System.SetLength(Result, 0);
+    Result := nil;
     Exit;
   end;
   LNInts := (LLast + BytesPerInt) div BytesPerInt;
@@ -1581,7 +1581,7 @@ begin
     if not TArrayUtilities.AreAllZeroes(ABytes, AOffset, ALength) then
       raise EFormatCryptoLibException.Create(SSignBytesMismatch);
     FSign := 0;
-    System.SetLength(FMagnitude, 0);
+    FMagnitude := nil;
   end
   else
   begin
@@ -1612,7 +1612,7 @@ begin
   begin
     FSign := 0;
     FIsInitialized := True;
-    System.SetLength(FMagnitude, 0);
+    FMagnitude := nil;
     Exit;
   end;
   LNBytes := GetBytesLength(ASizeInBits);
@@ -1709,7 +1709,7 @@ begin
   if LI = System.Length(AMag) then
   begin
     FSign := 0;
-    System.SetLength(LZeroMagnitude, 0);
+    LZeroMagnitude := nil;
     FMagnitude := LZeroMagnitude;
   end
   else
@@ -3169,7 +3169,7 @@ begin
   if FSign = 0 then
   begin
     if AUnsigned then
-      System.SetLength(Result, 0)
+      Result := nil
     else
     begin
       System.SetLength(Result, 1);
@@ -3304,7 +3304,7 @@ begin
       // Process in chunks of 30 bits (10 octal digits per chunk)
       // mask = (1 << 30) - 1 = 0x3FFFFFFF
       LQ := LU;
-      System.SetLength(LOctStrings, 0);
+      LOctStrings := nil;
       while LBits > 30 do
       begin
         // Extract lower 30 bits and convert to octal
@@ -3343,7 +3343,7 @@ begin
         Exit;
       end;
       // For large numbers, use recursive division
-      System.SetLength(LModuli, 0);
+      LModuli := nil;
       LR := ValueOf(ARadix);
       while LR.CompareTo(LQ) <= 0 do
       begin
