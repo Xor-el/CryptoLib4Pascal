@@ -7,7 +7,7 @@ uses
   System.IOUtils,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.StdCtrls,
   FMX.Controls.Presentation, FMX.Edit, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  CryptoLibTestResourceLoader, CryptoLibTestMobileRunner;
+  CryptoLibTestResourceLoader, MobileTestRunner;
 
 type
   TMobileTestHostForm = class(TForm)

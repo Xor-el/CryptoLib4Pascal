@@ -1,4 +1,4 @@
-unit CryptoLibTestMobileRunner;
+unit MobileTestRunner;
 
 interface
 

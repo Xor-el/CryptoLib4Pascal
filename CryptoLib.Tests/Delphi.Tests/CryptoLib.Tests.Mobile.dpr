@@ -6,8 +6,8 @@ program CryptoLib.Tests.Mobile;
 uses
   System.StartUpCopy,
   FMX.Forms,
-  MobileTestHostFormUnit in 'MobileTestHostFormUnit.pas' {MobileTestHostForm},
-  CryptoLibTestMobileRunner in 'CryptoLibTestMobileRunner.pas',
+  MobileTestHostFormUnit in 'Mobile\MobileTestHostFormUnit.pas' {MobileTestHostForm},
+  MobileTestRunner in 'Mobile\MobileTestRunner.pas',
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
   ClpIAesEngineX86 in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas',
   ClpAesEngineX86 in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas',
