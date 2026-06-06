@@ -86,7 +86,7 @@ end;
 function TTestArgon2.ParseArgon2Version(const AValue: string)
   : TCryptoLibArgon2Version;
 begin
-  if AValue = '19' then
+  if AValue = '13' then
     Result := TCryptoLibArgon2Version.Argon2Version13
   else if AValue = '10' then
     Result := TCryptoLibArgon2Version.Argon2Version10
