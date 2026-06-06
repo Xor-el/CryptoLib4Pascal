@@ -1,0 +1,2472 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{28E22AD7-CDB1-41DD-878A-D81A204C0B05}</ProjectGuid>
+        <ProjectVersion>20.4</ProjectVersion>
+        <FrameworkType>FMX</FrameworkType>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Android64</Platform>
+        <TargetedPlatforms>2790419</TargetedPlatforms>
+        <AppType>Application</AppType>
+        <MainSource>CryptoLib.Tests.Mobile.dpr</MainSource>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
+        <Base_Android>true</Base_Android>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Base)'=='true') or '$(Base_Android64)'!=''">
+        <Base_Android64>true</Base_Android64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Base)'=='true') or '$(Base_iOSDevice64)'!=''">
+        <Base_iOSDevice64>true</Base_iOSDevice64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSSimARM64' and '$(Base)'=='true') or '$(Base_iOSSimARM64)'!=''">
+        <Base_iOSSimARM64>true</Base_iOSSimARM64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Base)'=='true') or '$(Base_OSX64)'!=''">
+        <Base_OSX64>true</Base_OSX64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Base)'=='true') or '$(Base_OSXARM64)'!=''">
+        <Base_OSXARM64>true</Base_OSXARM64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='WinARM64EC' and '$(Base)'=='true') or '$(Base_WinARM64EC)'!=''">
+        <Base_WinARM64EC>true</Base_WinARM64EC>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Cfg_1_Win64>true</Cfg_1_Win64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='WinARM64EC' and '$(Cfg_1)'=='true') or '$(Cfg_1_WinARM64EC)'!=''">
+        <Cfg_1_WinARM64EC>true</Cfg_1_WinARM64EC>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Android64)'!=''">
+        <Cfg_2_Android64>true</Cfg_2_Android64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
+        <Cfg_2_Win64>true</Cfg_2_Win64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='WinARM64EC' and '$(Cfg_2)'=='true') or '$(Cfg_2_WinARM64EC)'!=''">
+        <Cfg_2_WinARM64EC>true</Cfg_2_WinARM64EC>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_E>false</DCC_E>
+        <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;DUnitX;$(DCC_Namespace)</DCC_Namespace>
+        <AUP_ACCESS_COARSE_LOCATION>true</AUP_ACCESS_COARSE_LOCATION>
+        <AUP_ACCESS_FINE_LOCATION>true</AUP_ACCESS_FINE_LOCATION>
+        <AUP_CALL_PHONE>true</AUP_CALL_PHONE>
+        <AUP_CAMERA>true</AUP_CAMERA>
+        <AUP_INTERNET>true</AUP_INTERNET>
+        <AUP_READ_PHONE_STATE>true</AUP_READ_PHONE_STATE>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
+        <DCC_UnitSearchPath>$(PROJECTDIR)..\..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <AUP_NEARBY_WIFI_DEVICES>true</AUP_NEARBY_WIFI_DEVICES>
+        <SanitizedProjectName>CryptoLib_Tests_Mobile</SanitizedProjectName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Android)'!=''">
+        <DCC_UsePackage>fmx;emshosting;DbxCommonDriver;bindengine;IndyIPCommon;emsclient;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;emsedge;bindcompfmx;ibmonitor;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxFireDAC;dbexpress;inet;DataSnapCommon;fmxase;dbrtl;FireDACDBXDriver;CustomIPTransport;DBXInterBaseDriver;IndySystem;ibxbindings;bindcomp;FireDACCommon;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;DataSnapClient;DataSnapProviderClient;DataSnapFireDAC;emsclientfiredac;FireDAC;FireDACDSDriver;xmlrtl;tethering;ibxpress;dsnap;CloudService;DataSnapNativeClient;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <Android_LauncherIcon36>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png</Android_LauncherIcon36>
+        <Android_LauncherIcon48>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png</Android_LauncherIcon48>
+        <Android_LauncherIcon72>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png</Android_LauncherIcon72>
+        <Android_LauncherIcon96>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png</Android_LauncherIcon96>
+        <Android_LauncherIcon144>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png</Android_LauncherIcon144>
+        <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
+        <Android_SplashImage426>$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png</Android_SplashImage426>
+        <Android_SplashImage470>$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png</Android_SplashImage470>
+        <Android_SplashImage640>$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png</Android_SplashImage640>
+        <Android_SplashImage960>$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png</Android_SplashImage960>
+        <IncludeAndroid_AdaptiveIcon>true</IncludeAndroid_AdaptiveIcon>
+        <IncludeAndroid_VectorizedSplash>true</IncludeAndroid_VectorizedSplash>
+        <Android_AdaptiveIconMonochrome>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Monochrome.xml</Android_AdaptiveIconMonochrome>
+        <Android_AdaptiveIconForeground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Foreground.xml</Android_AdaptiveIconForeground>
+        <Android_AdaptiveIconBackground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Background.xml</Android_AdaptiveIconBackground>
+        <Android_VectorizedSplash>$(BDS)\bin\Artwork\Android\FM_VectorizedSplash.xml</Android_VectorizedSplash>
+        <Android_VectorizedSplashDark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashDark.xml</Android_VectorizedSplashDark>
+        <Android_VectorizedSplashV31>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31.xml</Android_VectorizedSplashV31>
+        <Android_VectorizedSplashV31Dark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31Dark.xml</Android_VectorizedSplashV31Dark>
+        <Android_NotificationIcon24>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png</Android_NotificationIcon24>
+        <Android_NotificationIcon36>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png</Android_NotificationIcon36>
+        <Android_NotificationIcon48>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png</Android_NotificationIcon48>
+        <Android_NotificationIcon72>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png</Android_NotificationIcon72>
+        <Android_NotificationIcon96>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png</Android_NotificationIcon96>
+        <IncludeAndroid_NotificationAccentColor>false</IncludeAndroid_NotificationAccentColor>
+        <IncludeAndroid_VectorizedNotificationIcon>true</IncludeAndroid_VectorizedNotificationIcon>
+        <Android_VectorizedNotificationIcon>$(BDS)\bin\Artwork\Android\FM_VectorizedNotificationIcon.xml</Android_VectorizedNotificationIcon>
+        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.4.1.dex.jar;annotation-jvm-1.8.1.dex.jar;annotations-23.0.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-7.1.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-jvm-1.4.2.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.17.0.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.17.0.dex.jar;core-runtime-2.2.0.dex.jar;core-viewtree-1.0.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;jspecify-1.0.0.dex.jar;kotlin-stdlib-2.1.21.dex.jar;kotlinx-coroutines-android-1.8.1.dex.jar;kotlinx-coroutines-core-jvm-1.8.1.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.2.dex.jar;lifecycle-livedata-2.6.2.dex.jar;lifecycle-livedata-core-2.6.2.dex.jar;lifecycle-runtime-2.6.2.dex.jar;lifecycle-service-2.6.2.dex.jar;lifecycle-viewmodel-2.6.2.dex.jar;lifecycle-viewmodel-savedstate-2.6.2.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.5.0.dex.jar;play-services-basement-18.4.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.2.0.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.2.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Android64)'!=''">
+        <DCC_UsePackage>fmx;emshosting;DbxCommonDriver;bindengine;IndyIPCommon;emsclient;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;emsedge;bindcompfmx;ibmonitor;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxFireDAC;dbexpress;inet;DataSnapCommon;dbrtl;FireDACDBXDriver;CustomIPTransport;DBXInterBaseDriver;IndySystem;ibxbindings;bindcomp;FireDACCommon;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;DataSnapClient;DataSnapProviderClient;DataSnapFireDAC;emsclientfiredac;FireDAC;FireDACDSDriver;xmlrtl;tethering;ibxpress;dsnap;CloudService;DataSnapNativeClient;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <Android_LauncherIcon36>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png</Android_LauncherIcon36>
+        <Android_LauncherIcon48>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png</Android_LauncherIcon48>
+        <Android_LauncherIcon72>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png</Android_LauncherIcon72>
+        <Android_LauncherIcon96>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png</Android_LauncherIcon96>
+        <Android_LauncherIcon144>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png</Android_LauncherIcon144>
+        <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
+        <Android_SplashImage426>$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png</Android_SplashImage426>
+        <Android_SplashImage470>$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png</Android_SplashImage470>
+        <Android_SplashImage640>$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png</Android_SplashImage640>
+        <Android_SplashImage960>$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png</Android_SplashImage960>
+        <IncludeAndroid_AdaptiveIcon>true</IncludeAndroid_AdaptiveIcon>
+        <IncludeAndroid_VectorizedSplash>true</IncludeAndroid_VectorizedSplash>
+        <Android_AdaptiveIconMonochrome>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Monochrome.xml</Android_AdaptiveIconMonochrome>
+        <Android_AdaptiveIconForeground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Foreground.xml</Android_AdaptiveIconForeground>
+        <Android_AdaptiveIconBackground>$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Background.xml</Android_AdaptiveIconBackground>
+        <Android_VectorizedSplash>$(BDS)\bin\Artwork\Android\FM_VectorizedSplash.xml</Android_VectorizedSplash>
+        <Android_VectorizedSplashDark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashDark.xml</Android_VectorizedSplashDark>
+        <Android_VectorizedSplashV31>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31.xml</Android_VectorizedSplashV31>
+        <Android_VectorizedSplashV31Dark>$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31Dark.xml</Android_VectorizedSplashV31Dark>
+        <Android_NotificationIcon24>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png</Android_NotificationIcon24>
+        <Android_NotificationIcon36>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png</Android_NotificationIcon36>
+        <Android_NotificationIcon48>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png</Android_NotificationIcon48>
+        <Android_NotificationIcon72>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png</Android_NotificationIcon72>
+        <Android_NotificationIcon96>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png</Android_NotificationIcon96>
+        <IncludeAndroid_NotificationAccentColor>false</IncludeAndroid_NotificationAccentColor>
+        <IncludeAndroid_VectorizedNotificationIcon>true</IncludeAndroid_VectorizedNotificationIcon>
+        <Android_VectorizedNotificationIcon>$(BDS)\bin\Artwork\Android\FM_VectorizedNotificationIcon.xml</Android_VectorizedNotificationIcon>
+        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.4.1.dex.jar;annotation-jvm-1.8.1.dex.jar;annotations-23.0.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-7.1.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-jvm-1.4.2.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.17.0.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.17.0.dex.jar;core-runtime-2.2.0.dex.jar;core-viewtree-1.0.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;jspecify-1.0.0.dex.jar;kotlin-stdlib-2.1.21.dex.jar;kotlinx-coroutines-android-1.8.1.dex.jar;kotlinx-coroutines-core-jvm-1.8.1.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.2.dex.jar;lifecycle-livedata-2.6.2.dex.jar;lifecycle-livedata-core-2.6.2.dex.jar;lifecycle-runtime-2.6.2.dex.jar;lifecycle-service-2.6.2.dex.jar;lifecycle-viewmodel-2.6.2.dex.jar;lifecycle-viewmodel-savedstate-2.6.2.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.5.0.dex.jar;play-services-basement-18.4.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.2.0.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.2.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
+        <DCC_UsePackage>fmx;emshosting;DbxCommonDriver;bindengine;IndyIPCommon;emsclient;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;emsedge;bindcompfmx;ibmonitor;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxFireDAC;dbexpress;inet;DataSnapCommon;fmxase;dbrtl;FireDACDBXDriver;CustomIPTransport;DBXInterBaseDriver;IndySystem;ibxbindings;bindcomp;FireDACCommon;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;DataSnapClient;DataSnapProviderClient;DataSnapFireDAC;emsclientfiredac;FireDAC;FireDACDSDriver;xmlrtl;tethering;ibxpress;dsnap;CloudService;DataSnapNativeClient;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDevelopmentRegion=en;CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleInfoDictionaryVersion=7.1;CFBundleVersion=1.0.0;CFBundleShortVersionString=1.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;LSRequiresIPhoneOS=true;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName);UIDeviceFamily=iPhone &amp; iPad;NSLocationAlwaysUsageDescription=The reason for accessing the location information of the user;NSLocationWhenInUseUsageDescription=The reason for accessing the location information of the user;NSLocationAlwaysAndWhenInUseUsageDescription=The reason for accessing the location information of the user;UIBackgroundModes=;NSContactsUsageDescription=The reason for accessing the contacts;NSPhotoLibraryUsageDescription=The reason for accessing the photo library;NSPhotoLibraryAddUsageDescription=The reason for adding to the photo library;NSCameraUsageDescription=The reason for accessing the camera;NSFaceIDUsageDescription=The reason for accessing the face id;NSMicrophoneUsageDescription=The reason for accessing the microphone;NSSiriUsageDescription=The reason for accessing Siri;ITSAppUsesNonExemptEncryption=false;NSBluetoothAlwaysUsageDescription=The reason for accessing bluetooth;NSBluetoothPeripheralUsageDescription=The reason for accessing bluetooth peripherals;NSCalendarsUsageDescription=The reason for accessing the calendar data;NSRemindersUsageDescription=The reason for accessing the reminders;NSMotionUsageDescription=The reason for accessing the accelerometer;NSSpeechRecognitionUsageDescription=The reason for requesting to send user data to Apple&apos;s speech recognition servers</VerInfo_Keys>
+        <VerInfo_UIDeviceFamily>iPhoneAndiPad</VerInfo_UIDeviceFamily>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_BundleId>$(MSBuildProjectName)</VerInfo_BundleId>
+        <iOS_AppStore1024>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_1024x1024.png</iOS_AppStore1024>
+        <iPhone_AppIcon120>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_120x120.png</iPhone_AppIcon120>
+        <iPhone_AppIcon180>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_180x180.png</iPhone_AppIcon180>
+        <iPhone_Launch2x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImage_2x.png</iPhone_Launch2x>
+        <iPhone_LaunchDark2x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImageDark_2x.png</iPhone_LaunchDark2x>
+        <iPhone_Launch3x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImage_3x.png</iPhone_Launch3x>
+        <iPhone_LaunchDark3x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImageDark_3x.png</iPhone_LaunchDark3x>
+        <iPhone_Spotlight80>$(BDS)\bin\Artwork\iOS\iPhone\FM_SpotlightSearchIcon_80x80.png</iPhone_Spotlight80>
+        <iPhone_Spotlight120>$(BDS)\bin\Artwork\iOS\iPhone\FM_SpotlightSearchIcon_120x120.png</iPhone_Spotlight120>
+        <iPhone_Setting58>$(BDS)\bin\Artwork\iOS\iPhone\FM_SettingIcon_58x58.png</iPhone_Setting58>
+        <iPhone_Setting87>$(BDS)\bin\Artwork\iOS\iPhone\FM_SettingIcon_87x87.png</iPhone_Setting87>
+        <iPhone_Notification40>$(BDS)\bin\Artwork\iOS\iPhone\FM_NotificationIcon_40x40.png</iPhone_Notification40>
+        <iPhone_Notification60>$(BDS)\bin\Artwork\iOS\iPhone\FM_NotificationIcon_60x60.png</iPhone_Notification60>
+        <iPad_AppIcon152>$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_152x152.png</iPad_AppIcon152>
+        <iPad_AppIcon167>$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_167x167.png</iPad_AppIcon167>
+        <iPad_Launch2x>$(BDS)\bin\Artwork\iOS\iPad\FM_LaunchImage_2x.png</iPad_Launch2x>
+        <iPad_LaunchDark2x>$(BDS)\bin\Artwork\iOS\iPad\FM_LaunchImageDark_2x.png</iPad_LaunchDark2x>
+        <iPad_SpotLight80>$(BDS)\bin\Artwork\iOS\iPad\FM_SpotlightSearchIcon_80x80.png</iPad_SpotLight80>
+        <iPad_Setting58>$(BDS)\bin\Artwork\iOS\iPad\FM_SettingIcon_58x58.png</iPad_Setting58>
+        <iPad_Notification40>$(BDS)\bin\Artwork\iOS\iPad\FM_NotificationIcon_40x40.png</iPad_Notification40>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_iOSSimARM64)'!=''">
+        <DCC_UsePackage>fmx;emshosting;DbxCommonDriver;bindengine;IndyIPCommon;emsclient;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;emsedge;bindcompfmx;ibmonitor;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxFireDAC;dbexpress;inet;DataSnapCommon;fmxase;dbrtl;FireDACDBXDriver;CustomIPTransport;DBXInterBaseDriver;IndySystem;ibxbindings;bindcomp;FireDACCommon;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;DataSnapClient;DataSnapProviderClient;DataSnapFireDAC;emsclientfiredac;FireDAC;FireDACDSDriver;xmlrtl;tethering;ibxpress;dsnap;CloudService;DataSnapNativeClient;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDevelopmentRegion=en;CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleInfoDictionaryVersion=7.1;CFBundleVersion=1.0.0;CFBundleShortVersionString=1.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;LSRequiresIPhoneOS=true;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName);UIDeviceFamily=iPhone &amp; iPad;NSLocationAlwaysUsageDescription=The reason for accessing the location information of the user;NSLocationWhenInUseUsageDescription=The reason for accessing the location information of the user;NSLocationAlwaysAndWhenInUseUsageDescription=The reason for accessing the location information of the user;UIBackgroundModes=;NSContactsUsageDescription=The reason for accessing the contacts;NSPhotoLibraryUsageDescription=The reason for accessing the photo library;NSPhotoLibraryAddUsageDescription=The reason for adding to the photo library;NSCameraUsageDescription=The reason for accessing the camera;NSFaceIDUsageDescription=The reason for accessing the face id;NSMicrophoneUsageDescription=The reason for accessing the microphone;NSSiriUsageDescription=The reason for accessing Siri;ITSAppUsesNonExemptEncryption=false;NSBluetoothAlwaysUsageDescription=The reason for accessing bluetooth;NSBluetoothPeripheralUsageDescription=The reason for accessing bluetooth peripherals;NSCalendarsUsageDescription=The reason for accessing the calendar data;NSRemindersUsageDescription=The reason for accessing the reminders;NSMotionUsageDescription=The reason for accessing the accelerometer;NSSpeechRecognitionUsageDescription=The reason for requesting to send user data to Apple&apos;s speech recognition servers</VerInfo_Keys>
+        <VerInfo_UIDeviceFamily>iPhoneAndiPad</VerInfo_UIDeviceFamily>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <iOS_AppStore1024>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_1024x1024.png</iOS_AppStore1024>
+        <iPhone_AppIcon120>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_120x120.png</iPhone_AppIcon120>
+        <iPhone_AppIcon180>$(BDS)\bin\Artwork\iOS\iPhone\FM_ApplicationIcon_180x180.png</iPhone_AppIcon180>
+        <iPhone_Launch2x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImage_2x.png</iPhone_Launch2x>
+        <iPhone_LaunchDark2x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImageDark_2x.png</iPhone_LaunchDark2x>
+        <iPhone_Launch3x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImage_3x.png</iPhone_Launch3x>
+        <iPhone_LaunchDark3x>$(BDS)\bin\Artwork\iOS\iPhone\FM_LaunchImageDark_3x.png</iPhone_LaunchDark3x>
+        <iPhone_Spotlight80>$(BDS)\bin\Artwork\iOS\iPhone\FM_SpotlightSearchIcon_80x80.png</iPhone_Spotlight80>
+        <iPhone_Spotlight120>$(BDS)\bin\Artwork\iOS\iPhone\FM_SpotlightSearchIcon_120x120.png</iPhone_Spotlight120>
+        <iPhone_Setting58>$(BDS)\bin\Artwork\iOS\iPhone\FM_SettingIcon_58x58.png</iPhone_Setting58>
+        <iPhone_Setting87>$(BDS)\bin\Artwork\iOS\iPhone\FM_SettingIcon_87x87.png</iPhone_Setting87>
+        <iPhone_Notification40>$(BDS)\bin\Artwork\iOS\iPhone\FM_NotificationIcon_40x40.png</iPhone_Notification40>
+        <iPhone_Notification60>$(BDS)\bin\Artwork\iOS\iPhone\FM_NotificationIcon_60x60.png</iPhone_Notification60>
+        <iPad_AppIcon152>$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_152x152.png</iPad_AppIcon152>
+        <iPad_AppIcon167>$(BDS)\bin\Artwork\iOS\iPad\FM_ApplicationIcon_167x167.png</iPad_AppIcon167>
+        <iPad_Launch2x>$(BDS)\bin\Artwork\iOS\iPad\FM_LaunchImage_2x.png</iPad_Launch2x>
+        <iPad_LaunchDark2x>$(BDS)\bin\Artwork\iOS\iPad\FM_LaunchImageDark_2x.png</iPad_LaunchDark2x>
+        <iPad_SpotLight80>$(BDS)\bin\Artwork\iOS\iPad\FM_SpotlightSearchIcon_80x80.png</iPad_SpotLight80>
+        <iPad_Setting58>$(BDS)\bin\Artwork\iOS\iPad\FM_SettingIcon_58x58.png</iPad_Setting58>
+        <iPad_Notification40>$(BDS)\bin\Artwork\iOS\iPad\FM_NotificationIcon_40x40.png</iPad_Notification40>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_OSX64)'!=''">
+        <DCC_UsePackage>DataSnapServer;fmx;emshosting;DbxCommonDriver;bindengine;IndyIPCommon;FireDACCommonODBC;emsclient;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;ibmonitor;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;soapmidas;fmxFireDAC;dbexpress;DBXMySQLDriver;inet;DataSnapCommon;fmxase;dbrtl;FireDACDBXDriver;FireDACOracleDriver;fmxdae;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;ibxbindings;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;DataSnapClient;DataSnapProviderClient;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;ibxpress;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;DBXInformixDriver;fmxobj;DataSnapNativeClient;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0;CFBundleShortVersionString=1.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName);NSHighResolutionCapable=true;LSApplicationCategoryType=public.app-category.utilities;NSLocationUsageDescription=The reason for accessing the location information of the user;NSContactsUsageDescription=The reason for accessing the contacts;NSCalendarsUsageDescription=The reason for accessing the calendar data;NSRemindersUsageDescription=The reason for accessing the reminders;NSCameraUsageDescription=The reason for accessing the camera;NSMicrophoneUsageDescription=The reason for accessing the microphone;NSMotionUsageDescription=The reason for accessing the accelerometer;NSDesktopFolderUsageDescription=The reason for accessing the Desktop folder;NSDocumentsFolderUsageDescription=The reason for accessing the Documents folder;NSDownloadsFolderUsageDescription=The reason for accessing the Downloads folder;NSNetworkVolumesUsageDescription=The reason for accessing files on a network volume;NSRemovableVolumesUsageDescription=The reason for accessing files on a removable volume;NSSpeechRecognitionUsageDescription=The reason for requesting to send user data to Apple&apos;s speech recognition servers;ITSAppUsesNonExemptEncryption=false;NSBluetoothAlwaysUsageDescription=The reason for accessing the Bluetooth interface</VerInfo_Keys>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_OSXARM64)'!=''">
+        <DCC_UsePackage>DataSnapServer;fmx;emshosting;DbxCommonDriver;bindengine;IndyIPCommon;FireDACCommonODBC;emsclient;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;ibmonitor;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;soapmidas;fmxFireDAC;dbexpress;DBXMySQLDriver;inet;DataSnapCommon;fmxase;dbrtl;FireDACDBXDriver;FireDACOracleDriver;fmxdae;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;ibxbindings;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;DataSnapClient;DataSnapProviderClient;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;ibxpress;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;DBXInformixDriver;fmxobj;DataSnapNativeClient;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <VerInfo_Keys>CFBundleName=$(MSBuildProjectName);CFBundleDisplayName=$(MSBuildProjectName);CFBundleIdentifier=$(MSBuildProjectName);CFBundleVersion=1.0.0;CFBundleShortVersionString=1.0.0;CFBundlePackageType=APPL;CFBundleSignature=????;CFBundleAllowMixedLocalizations=YES;CFBundleExecutable=$(MSBuildProjectName);NSHighResolutionCapable=true;LSApplicationCategoryType=public.app-category.utilities;NSLocationUsageDescription=The reason for accessing the location information of the user;NSContactsUsageDescription=The reason for accessing the contacts;NSCalendarsUsageDescription=The reason for accessing the calendar data;NSRemindersUsageDescription=The reason for accessing the reminders;NSCameraUsageDescription=The reason for accessing the camera;NSMicrophoneUsageDescription=The reason for accessing the microphone;NSMotionUsageDescription=The reason for accessing the accelerometer;NSDesktopFolderUsageDescription=The reason for accessing the Desktop folder;NSDocumentsFolderUsageDescription=The reason for accessing the Documents folder;NSDownloadsFolderUsageDescription=The reason for accessing the Downloads folder;NSNetworkVolumesUsageDescription=The reason for accessing files on a network volume;NSRemovableVolumesUsageDescription=The reason for accessing files on a removable volume;NSSpeechRecognitionUsageDescription=The reason for requesting to send user data to Apple&apos;s speech recognition servers;ITSAppUsesNonExemptEncryption=false;NSBluetoothAlwaysUsageDescription=The reason for accessing the Bluetooth interface</VerInfo_Keys>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <DCC_UsePackage>vclwinx;DataSnapServer;fmx;emshosting;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;DBXMSSQLDriver;FireDACCommonODBC;emsclient;FireDACCommonDriver;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;FmxTeeUI;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;ibmonitor;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;Tee;soapmidas;vclactnband;TeeUI;fmxFireDAC;dbexpress;FireDACInfxDriver;DBXMySQLDriver;VclSmp;inet;DataSnapCommon;fmxase;vcltouch;DBXOdbcDriver;dbrtl;FireDACDBXDriver;Skia.Package.FMX;FireDACOracleDriver;fmxdae;TeeDB;FireDACMSAccDriver;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DataSnapConnectors;vcldsnap;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;Skia.Package.VCL;vcldb;ibxbindings;vclFireDAC;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;DataSnapClient;DataSnapProviderClient;adortl;DBXSybaseASEDriver;DBXDb2Driver;vclimg;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;ibxpress;bindcompvcl;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;FireDACDb2Driver;DBXInformixDriver;vclib;fmxobj;bindcompvclsmp;DataSnapNativeClient;FMXTee;DatasnapConnectorsFreePascal;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <DCC_UsePackage>vclwinx;DataSnapServer;fmx;emshosting;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;DBXMSSQLDriver;FireDACCommonODBC;emsclient;FireDACCommonDriver;IndyProtocols;vclx;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;FmxTeeUI;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;ibmonitor;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;Tee;soapmidas;vclactnband;TeeUI;fmxFireDAC;dbexpress;FireDACInfxDriver;DBXMySQLDriver;VclSmp;inet;DataSnapCommon;fmxase;vcltouch;DBXOdbcDriver;dbrtl;FireDACDBXDriver;FireDACOracleDriver;fmxdae;TeeDB;FireDACMSAccDriver;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DataSnapConnectors;vcldsnap;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;Skia.Package.VCL;vcldb;ibxbindings;vclFireDAC;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;DataSnapClient;DataSnapProviderClient;adortl;DBXSybaseASEDriver;DBXDb2Driver;vclimg;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;ibxpress;bindcompvcl;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;FireDACDb2Driver;DBXInformixDriver;vclib;fmxobj;bindcompvclsmp;DataSnapNativeClient;FMXTee;DatasnapConnectorsFreePascal;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_WinARM64EC)'!=''">
+        <DCC_UsePackage>vclwinx;DataSnapServer;fmx;emshosting;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;DBXMSSQLDriver;FireDACCommonODBC;emsclient;FireDACCommonDriver;IndyProtocols;vclx;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;FmxTeeUI;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;ibmonitor;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;Tee;soapmidas;vclactnband;TeeUI;fmxFireDAC;dbexpress;FireDACInfxDriver;DBXMySQLDriver;VclSmp;inet;DataSnapCommon;fmxase;vcltouch;DBXOdbcDriver;dbrtl;FireDACDBXDriver;FireDACOracleDriver;fmxdae;TeeDB;FireDACMSAccDriver;CustomIPTransport;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DataSnapConnectors;vcldsnap;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;Skia.Package.VCL;vcldb;ibxbindings;vclFireDAC;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;DataSnapClient;DataSnapProviderClient;adortl;DBXSybaseASEDriver;DBXDb2Driver;vclimg;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;ibxpress;bindcompvcl;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;FireDACDb2Driver;DBXInformixDriver;vclib;fmxobj;bindcompvclsmp;DataSnapNativeClient;FMXTee;DatasnapConnectorsFreePascal;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_Define>DEBUG;MOBILE_TEST_HOST;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_WinARM64EC)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;MOBILE_TEST_HOST;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Android64)'!=''">
+        <VerInfo_Build>1</VerInfo_Build>
+        <IncludeAndroid_AdaptiveIcon>true</IncludeAndroid_AdaptiveIcon>
+        <IncludeAndroid_VectorizedSplash>true</IncludeAndroid_VectorizedSplash>
+        <Android_BackgroundColor>#FFFFFF</Android_BackgroundColor>
+        <Android_DarkBackgroundColor>#000000</Android_DarkBackgroundColor>
+        <IncludeAndroid_NotificationAccentColor>false</IncludeAndroid_NotificationAccentColor>
+        <Android_NotificationAccentColor>#000000</Android_NotificationAccentColor>
+        <IncludeAndroid_VectorizedNotificationIcon>true</IncludeAndroid_VectorizedNotificationIcon>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_WinARM64EC)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="Mobile\MobileTestHostFormUnit.pas">
+            <Form>MobileTestHostForm</Form>
+        </DCCReference>
+        <DCCReference Include="Mobile\MobileTestRunner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpAesUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpArrayUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpAsn1DigestFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Dumper.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Comparers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpAsn1SignatureFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Streams.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpAsn1VerifierFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpAsn1VerifierFactoryProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpAsymmetricCipherKeyPair.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpAsymmetricKeyParameter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpBaseKdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\ClpBigInteger.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\ClpBigIntegerUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\ClpPrimes.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCbcBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCfbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCtsBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpOfbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpSicBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpBlockCipherBulkUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCipherModeParameterUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpBlowfishEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Bip340\ClpBip340SchnorrUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Bip327\ClpBip327MuSig2Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Bip327\ClpBip327MuSig2KeyAggregation.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Bip327\ClpBip327MuSig2.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Bsi\ClpBsiObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedAsymmetricBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedCipherBase.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedStreamCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedIesCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpChaChaEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpCheck.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpCodec.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpCipherKeyGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpCipherUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpCollectionUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpConverters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\CryptLib\ClpCryptLibObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\ClpCryptoApiRandomGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCryptoLibComparers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCryptoLibTypes.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpDateTimeUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestResult.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultMacCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultMacResult.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultSignatureCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultSignatureResult.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultVerifierCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultVerifierResult.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpDHAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpDHBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpDHGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpDHKeyGeneratorHelper.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpDHParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpDHParametersHelper.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Digests\ClpDigest.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\ClpDigestRandomGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpDigestSink.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpDigestStream.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Digests\ClpDigestUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpDsaDigestSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpDsaGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpDsaParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Eac\ClpEacObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECAlgorithms.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECCurve.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECCurveConstants.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHCBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpECParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpECDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\CryptoPro\ClpECGost3410NamedCurves.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parsers\ClpECIESPublicKeyParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpECGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X9\ClpECNamedCurveTable.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpECNRSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpEd25519.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpEd25519CtxSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpEd25519Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpBip340SchnorrParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpEd25519Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpBip340SchnorrGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpEd25519PhSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpEd25519Signer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpBip340SchnorrSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Bip340\ClpBip340SchnorrBatchVerifier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Edec\ClpEdECObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Encoders\ClpEncoders.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpEndoPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpEnumUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpEphemeralKeyPair.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpEphemeralKeyPairGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Field\ClpFiniteFields.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedPointUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpGeneratorUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Field\ClpGenericPolynomialExtensionField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpGenericSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Field\ClpGF2Polynomial.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpGlvTypeBEndomorphism.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpGlvTypeBParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpHkdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpHkdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpHMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SignerCalculators\ClpHMacDsaKCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesLightEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Iana\ClpIanaObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIArgon2ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIAsymmetricBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIAsymmetricCipherKeyPair.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIAsymmetricCipherKeyPairGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIAsymmetricKeyParameter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIBaseKdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICbcBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICfbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICtsBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIOfbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpISicBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIBlockCipherPadding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIBlockResult.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIBlowfishEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedAsymmetricBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedCipherBase.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedStreamCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIChaChaEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpICipherKeyGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpICipherParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\ClpICryptoApiRandomGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIDerivationFunction.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDerivationParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIDHAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIDHBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDHGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIDigest.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIDigestFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\ClpIDigestRandomGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsa.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaDigestSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaKCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDsaGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDsaParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECCommon.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECFieldElement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIECParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIECDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parsers\ClpIECIESPublicKeyParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIECGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIECNRSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd25519CtxSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIEd25519Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIBip340SchnorrParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIEd25519Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIBip340SchnorrGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd25519PhSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd25519Signer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIBip340SchnorrSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Endo\ClpIEndoPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIEphemeralKeyPair.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIEphemeralKeyPairGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpIesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpIesParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X500\Style\ClpIetfUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIExtensionField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIFiniteField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIFixedPointPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIGenericPolynomialExtensionField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIGenericSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIGF2Polynomial.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Endo\ClpIGlvTypeBEndomorphism.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Endo\ClpIGlvTypeBParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIHkdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIHkdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpIHMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SignerCalculators\ClpIHMacDsaKCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIIesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIIesParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIIso18033KdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Encodings\ClpIISO9796d1Encoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIKdf1BytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIKdf2BytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIKdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIKeyEncoder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIKeyGenerationParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIKeyParameter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\ClpIKeyParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpIKMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpIMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIMacFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Encodings\ClpIOaepEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\ClpIOidTokenizer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIPaddedBufferedBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIISO10126d2Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIISO7816d4Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIPkcs7Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpITBCPadding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIX923Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Paddings\ClpIZeroBytePadding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Net\ClpIPAddressUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIParametersWithIV.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIParametersWithRandom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPascalCoinECIESKdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIPascalCoinIesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPbeParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemHeader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemObject.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Encodings\ClpIPkcs1Encoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPkcs5S2ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Pkcs\ClpIPkcsAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIPolynomial.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIPolynomialExtensionField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIPreCompCallback.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIPrehash.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIPrimeField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIPssSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Randoms\ClpIRandom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SignerCalculators\ClpIRandomDsaKCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\ClpIRandomGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIRawAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRijndaelEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIRsa.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRsaBlindedEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRsaBlindingEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIRsaGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRsaCoreEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIRsaDigestSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRsaEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIRsaParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpISalsa20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Endo\ClpIScalarSplitParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIScryptParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Sec\ClpISecECAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP256K1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP256R1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP384R1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecP521R1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Custom\Sec\ClpISecT283K1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Randoms\ClpISecureRandom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpISignatureFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpISigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SignerEncodings\ClpIDsaEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SignerEncodings\ClpIStandardDsaEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SignerEncodings\ClpIPlainDsaEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpIso18033KdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Encodings\ClpISO9796d1Encoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpIsoTrailers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpISpeckEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpISpeckLegacyEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIStreamCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIStreamCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIValidityPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIVerifier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIVerifierFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIVerifierFactoryProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIWNafPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIWTauNafPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIX25519Agreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIX25519Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIX25519Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509Asn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509Asn1Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509NameEntryConverter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509NameTokenizer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X9\ClpIX9DHAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X9\ClpIX9ECAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIXSalsa20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Abc\ClpIZTauElement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpKdf1BytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpKdf2BytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpKdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpECKeyEncoder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpKeyGenerationParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpKeyParameter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpLongArray.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpMacUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Misc\ClpMiscObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Nist\ClpNistObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Digests\ClpNoOpDigest.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Encodings\ClpOaepEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpOidTokenizer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Oiw\ClpOiwObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpPaddedBufferedBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpISO10126d2Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpISO7816d4Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpPkcs7Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpTBCPadding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpX923Padding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Paddings\ClpZeroBytePadding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpParametersWithIV.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpParametersWithRandom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpParameterUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpPascalCoinECIESKdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpPascalCoinIesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpPbeParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pem\ClpPemHeader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pem\ClpPemObject.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Encodings\ClpPkcs1Encoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpPkcs5S2ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcsAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcsObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpPlatformUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Digests\ClpPrehash.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Field\ClpPrimeField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Factories\ClpPrivateKeyFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpPssSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Factories\ClpPublicKeyFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Randoms\ClpRandom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SignerCalculators\ClpRandomDsaKCalculator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpRfc5280Asn1Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRijndaelEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Rosstandart\ClpRosstandartObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRsaBlindedEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRsaBlindingEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpRsaGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRsaCoreEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpRsaDigestSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRsaEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpRsaParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSalsa20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpScalarSplitParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECPointMaps.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpScryptParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Sec\ClpSecECAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Sec\ClpSecNamedCurves.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Sec\ClpSecObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256K1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP256R1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP384R1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecP521R1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Custom\Sec\ClpSecT283K1Custom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Randoms\ClpSecureRandom.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpWeakRef.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SignerEncodings\ClpStandardDsaEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SignerEncodings\ClpPlainDsaEncoding.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpSignerSink.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpSignerStream.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar25519.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalarUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpSignerUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Abc\ClpSimpleBigDecimal.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSpeckEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSpeckLegacyEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\IO\ClpStreams.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\IO\ClpStreamUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpStringUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Factories\ClpSubjectPublicKeyInfoFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTNamedCurves.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\TeleTrust\ClpTeleTrusTObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Abc\ClpTnaf.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpValidityPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpWTauNafPreCompInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpWnaf.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX25519.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpX25519Agreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX25519Field.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpX25519Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpX25519Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509Asn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509DefaultEntryConverter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509Extension.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509Asn1Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509NameEntryConverter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509NameTokenizer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509ObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509SignatureUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\Extension\ClpX509ExtensionUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpAttributeCertificateHolder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpAttributeCertificateIssuer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpDeltaCertificateTool.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509AttrCertParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509Attribute.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509Certificate.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509CertificateParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509Crl.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509CrlEntry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509CrlParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509ExtensionBase.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509V2AttributeCertificate.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIAttributeCertificateHolder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIAttributeCertificateIssuer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509Attribute.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509V2AttributeCertificate.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIX931Signer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpX931Signer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X9\ClpX9DHAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X9\ClpX9ECAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X9\ClpX9ObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpXSalsa20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Abc\ClpZTauElement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpIOSRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpMacOSRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpBsdRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpLinuxRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpSolarisRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpUnixLikeRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpWindowsRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\ClpRandomNumberGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpAndroidRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\Providers\ClpIRandomSourceProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpOSRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\ClpIRandomNumberGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpAesRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpUnixLikeRngCommon.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpDevRandomReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpGetRandomReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpArc4RandomBufReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpSecRandomCopyBytesReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Rngs\Providers\ClpBaseRandomProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Parsers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Core.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Parsers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Core.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Tags.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Encodings.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Encodings.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\ClpAsn1Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\ClpIAsn1Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs10CertificationRequest.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs10CertificationRequestBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs10CertificationRequestBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509Certificate.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificateParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509CrlEntry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509Crl.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509CrlParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509AttrCertParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509Extension.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs10CertificationRequest.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X9\ClpX9IntegerConverter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcsRsaAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Pkcs\ClpIPkcsRsaAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509DsaAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509RsaAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509DsaAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509RsaAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpBinaryPrimitives.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpBitOperations.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCpuFeatures.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpArmSimdFeatures.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpSimdLevels.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpX86SimdFeatures.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpArmHwCapProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpDarwinSysCtl.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpIntrinsicsVector.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpPack.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpBits.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpMod.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpInterleave.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat128.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat160.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat192.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat224.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat256.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat320.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat384.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat448.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat512.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat576.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpNullable.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECPoint.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECFieldElement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECLookupTables.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpEndoUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpWNafUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\EC\ClpCustomNamedCurves.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\EC\ClpECUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X9\ClpX962NamedCurves.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509NameBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509NameBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Cms\ClpCmsAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Cms\ClpCmsECAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Cms\ClpCmsObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Cms\ClpCmsParsers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Cms\ClpICmsAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Cms\ClpICmsECAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Cms\ClpICmsParsers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpCurve25519KeyUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslMiscPemGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPkcs8Generator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslPkcs8Generator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Factories\ClpPrivateKeyInfoFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Pkcs\ClpPkcsDHAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Pkcs\ClpIPkcsDHAsn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslPemWriter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPemWriter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslPemReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPemReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemWriter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pem\ClpPemParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pem\ClpPemReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pem\ClpPemWriter.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPasswordFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslPemUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIOpenSslPbeParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpOpenSslPbeParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs8EncryptedPrivateKeyInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs8EncryptedPrivateKeyInfo.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs8EncryptedPrivateKeyInfoBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpPbeUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpPkcs12ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpPkcs5S1ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPkcs12ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPkcs5S1ParametersGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Bc\ClpBcObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpCipherStream.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpMacSink.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\IO\ClpMacStream.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Factories\ClpAlgorithmIdentifierFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Factories\ClpCipherFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Factories\ClpCipherKeyGeneratorFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpAsn1CipherBuilderWithKey.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpCryptoServicesRegistrar.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Factories\ClpEncryptedPrivateKeyInfoFactory.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIDecryptorBuilderProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpICipherBuilderWithKey.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpICipherBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpICipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBlockCipherMode.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBulkBlockCipherMode.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIEcbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpEcbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIWrapper.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc5649WrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesWrapPadEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc3211WrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesWrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRfc3394WrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpWrapperUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesWrapPadEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRfc3211WrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesWrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRfc5649WrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRfc3394WrapEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpChaCha7539Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpXChaCha20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpCMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpCbcBlockCipherMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpOpenPgpCfbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCcmBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpChaCha20Poly1305.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpXChaCha20Poly1305.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpEaxBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpOcbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmSivUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpFusedKernelTypes.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedOcbKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedEaxKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmSivKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelRegistry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesNiAeadResolver.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiOcbKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiGcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelDefaults.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpAeadParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedAeadCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpBufferedAeadBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIChaCha7539Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIXChaCha20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICbcBlockCipherMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpIPoly1305.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIAeadBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIAeadCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICcmBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIChaCha20Poly1305.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIXChaCha20Poly1305.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIEaxBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIOcbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIOpenPgpCfbBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIAeadParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedAeadBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBufferedAeadCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpPoly1305KeyGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIPoly1305KeyGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpSipHashMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpISipHashMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpCfbBlockCipherMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpGMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpIGMac.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpGcmSivBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpGcmBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpBasicGcmExponentiator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpBasicGcmMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables1kGcmExponentiator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables4kGcmMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables8kGcmMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables64kGcmMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIGcmSivBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIGcmBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmExponentiator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Gcm\ClpIGcmMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpDHStandardGroups.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHCWithKdfBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHWithKdfBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpBasicAgreementWithKdf.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpConcatenationKdfGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpDHKekGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpECDHKekGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpDHKdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDHKekGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIConcatenationKdfGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIECDHKekGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCWithKdfBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHWithKdfBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHKdfParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Digests\ClpXof.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIXof.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpX448Agreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpEd448Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpX448Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpEd448Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpX448Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpEd448PhSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpEd448Signer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd448PhSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIEd448Signer.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIX448Agreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIEd448Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIX448Generators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIEd448Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIX448Parameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc7748\ClpX448Field.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpEd448.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Rfc8032\ClpScalar448.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpCurve448KeyUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs12Entry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpX509CertificateEntry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Entry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIX509CertificateEntry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpAsymmetricKeyEntry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIAsymmetricKeyEntry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestAlgorithmFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIDigestAlgorithmFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultMacAlgorithmFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIMacAlgorithmFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultSignatureAlgorithmFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpISignatureAlgorithmFinder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs12Utilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs12StoreBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12StoreBuilder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkcs\ClpPkcs12Store.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pkcs\ClpIPkcs12Store.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509CertificatePairParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\X509\ClpX509CertificatePair.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePairParser.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\X509\ClpIX509CertificatePair.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Helpers\ClpFormatSettingsHelper.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Helpers\ClpDateTimeHelper.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Helpers\ClpValueHelper.pas"/>
+        <DCCReference Include="..\src\Utils\FixedSecureRandom.pas"/>
+        <DCCReference Include="..\src\Utils\ShortenedDigest.pas"/>
+        <DCCReference Include="..\src\Crypto\AeadTestUtilities.pas"/>
+        <DCCReference Include="..\src\Utils\CertTestUtilities.pas"/>
+        <DCCReference Include="..\src\Utils\CryptoTestKeys.pas"/>
+        <DCCReference Include="..\src\Utils\FusedKernelToggle.pas"/>
+        <DCCReference Include="..\src\Crypto\BlowfishTests.pas"/>
+        <DCCReference Include="..\src\Crypto\RijndaelTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Asn1IntegerTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Asn1SequenceParserTests.pas"/>
+        <DCCReference Include="..\src\Asn1\BitStringTests.pas"/>
+        <DCCReference Include="..\src\Asn1\DerUtf8StringTests.pas"/>
+        <DCCReference Include="..\src\Asn1\EnumeratedTests.pas"/>
+        <DCCReference Include="..\src\Asn1\EqualsAndHashCodeTests.pas"/>
+        <DCCReference Include="..\src\Asn1\ExternalTests.pas"/>
+        <DCCReference Include="..\src\Asn1\GeneralizedTimeTests.pas"/>
+        <DCCReference Include="..\src\Asn1\InputStreamTests.pas"/>
+        <DCCReference Include="..\src\Asn1\OctetStringTests.pas"/>
+        <DCCReference Include="..\src\Asn1\OIDTests.pas"/>
+        <DCCReference Include="..\src\Asn1\ParseTests.pas"/>
+        <DCCReference Include="..\src\Asn1\ParsingTests.pas"/>
+        <DCCReference Include="..\src\Asn1\RelativeOidTests.pas"/>
+        <DCCReference Include="..\src\Asn1\SetTests.pas"/>
+        <DCCReference Include="..\src\Asn1\UtcTimeTests.pas"/>
+        <DCCReference Include="..\src\Asn1\StringTests.pas"/>
+        <DCCReference Include="..\src\Asn1\TagTests.pas"/>
+        <DCCReference Include="..\src\Math\BigIntegerTests.pas"/>
+        <DCCReference Include="..\src\Math\PrimesTests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP384R1FieldTests.pas"/>
+        <DCCReference Include="..\src\Others\DigestTests.pas"/>
+        <DCCReference Include="..\src\Others\ECDsa5Tests.pas"/>
+        <DCCReference Include="..\src\Others\ECTests.pas"/>
+        <DCCReference Include="..\src\Others\NamedCurveTests.pas"/>
+        <DCCReference Include="..\src\Others\ShortenedDigestTests.pas"/>
+        <DCCReference Include="..\src\Others\SignerUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Others\X25519HigherLevelTests.pas"/>
+        <DCCReference Include="..\src\Others\Ed25519HigherLevelTests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Rfc7748\X25519Tests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\DigestRandomNumberTests.pas"/>
+        <DCCReference Include="..\src\Crypto\AESTests.pas"/>
+        <DCCReference Include="..\src\Crypto\AesBlockCipherTestBase.pas"/>
+        <DCCReference Include="..\src\Crypto\AesLightTests.pas"/>
+        <DCCReference Include="..\src\Crypto\FusedExternalRegistrationTests.pas"/>
+        <DCCReference Include="..\src\Crypto\AesX86Tests.pas"/>
+        <DCCReference Include="..\src\Math\IESCipherTests.pas"/>
+        <DCCReference Include="..\src\Crypto\AESSICTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SicBulkParityTests.pas"/>
+        <DCCReference Include="..\src\Crypto\EcbBulkParityTests.pas"/>
+        <DCCReference Include="..\src\Crypto\CbcBulkParityTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SpeckBlockCipherTestBase.pas"/>
+        <DCCReference Include="..\src\Crypto\SpeckLegacyTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SpeckTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Pkcs5Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\HkdfGeneratorTests.pas"/>
+        <DCCReference Include="..\src\Math\ECIESTests.pas"/>
+        <DCCReference Include="..\src\Math\ECNRTests.pas"/>
+        <DCCReference Include="..\src\Crypto\PaddingTests.pas"/>
+        <DCCReference Include="..\src\Crypto\DeterministicDsaTests.pas"/>
+        <DCCReference Include="..\src\Crypto\HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\MD5HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SHA1HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SHA224HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SHA256HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SHA384HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SHA512HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\RIPEMD128HMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\RIPEMD160HMacTests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Salsa20Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\ChaChaTests.pas"/>
+        <DCCReference Include="..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\HChaCha20Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\XChaCha20Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\XChaCha20Poly1305Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\XSalsa20Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\StreamCipherResetTests.pas"/>
+        <DCCReference Include="..\src\Crypto\CTSTests.pas"/>
+        <DCCReference Include="..\src\Math\PascalCoinECIESTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Kdf1GeneratorTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Kdf2GeneratorTests.pas"/>
+        <DCCReference Include="..\src\Crypto\DHKekGeneratorTests.pas"/>
+        <DCCReference Include="..\src\Crypto\ECDHKekGeneratorTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Argon2Tests.pas"/>
+        <DCCReference Include="..\src\Security\DigestUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Crypto\ScryptTests.pas"/>
+        <DCCReference Include="..\src\Crypto\DHTests.pas"/>
+        <DCCReference Include="..\src\Crypto\KMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\RSATests.pas"/>
+        <DCCReference Include="..\src\Crypto\RSABlindedTests.pas"/>
+        <DCCReference Include="..\src\Crypto\RSADigestSignerTests.pas"/>
+        <DCCReference Include="..\src\Crypto\AlgorithmFinderTests.pas"/>
+        <DCCReference Include="..\src\Crypto\ISO9796Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\PssTests.pas"/>
+        <DCCReference Include="..\src\Asn1\PrivateKeyInfoTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X9Tests.pas"/>
+        <DCCReference Include="..\src\Utils\Net\IPAddressUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Utils\Pem\PemReaderTests.pas"/>
+        <DCCReference Include="..\src\Crypto\X931SignerTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\CertificateTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\GeneralNameTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\KeyUsageTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\SubjectKeyIdentifierTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\X509AltTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\X509ExtensionsTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\X509NameTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\DeltaCertificateTests.pas"/>
+        <DCCReference Include="..\src\X509\X509CertGenTests.pas"/>
+        <DCCReference Include="..\src\X509\X509UtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Others\CertTests.pas"/>
+        <DCCReference Include="..\src\Others\Curve25519KeyUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\OpenSsl\OpenSslReaderTests.pas"/>
+        <DCCReference Include="..\src\OpenSsl\OpenSslWriterTests.pas"/>
+        <DCCReference Include="..\src\Asn1\EncryptedPrivateKeyInfoTests.pas"/>
+        <DCCReference Include="..\src\Pkcs\PkcsEncryptedPrivateKeyInfoTests.pas"/>
+        <DCCReference Include="..\src\Crypto\CryptoIOStreamTests.pas"/>
+        <DCCReference Include="..\src\Crypto\CryptoIOSinkTests.pas"/>
+        <DCCReference Include="..\src\Security\ParameterUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Crypto\OaepTests.pas"/>
+        <DCCReference Include="..\src\Crypto\EaxTests.pas"/>
+        <DCCReference Include="..\src\Crypto\CcmTests.pas"/>
+        <DCCReference Include="..\src\Crypto\OcbTests.pas"/>
+        <DCCReference Include="..\src\Crypto\CMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\MacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\ChaCha20Poly1305Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\Poly1305Tests.pas"/>
+        <DCCReference Include="..\src\Utils\NumberUtilities\Int32Tests.pas"/>
+        <DCCReference Include="..\src\Utils\NumberUtilities\Int64Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\GcmSivTests.pas"/>
+        <DCCReference Include="..\src\Crypto\GMacTests.pas"/>
+        <DCCReference Include="..\src\Crypto\GcmReorderTests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Rfc7748\X448Tests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Rfc8032\Ed448Tests.pas"/>
+        <DCCReference Include="..\src\Others\X448HigherLevelTests.pas"/>
+        <DCCReference Include="..\src\Others\Ed448HigherLevelTests.pas"/>
+        <DCCReference Include="..\src\Others\Curve448KeyUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Math\ECEncodingTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Pkcs12Tests.pas"/>
+        <DCCReference Include="..\src\Pkcs\Pkcs12StoreTests.pas"/>
+        <DCCReference Include="..\src\X509\X509CertificatePairTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Bip340SchnorrTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Bip327MuSig2Tests.pas"/>
+        <DCCReference Include="..\src\Misc\SimdSelectSlotTests.pas"/>
+        <DCCReference Include="..\src\Utils\CryptoLibTestResourceLoader.pas"/>
+        <DCCReference Include="..\src\Utils\Parsers\CsvVectorParser.pas"/>
+        <DCCReference Include="..\src\Utils\Parsers\JsonVectorParser.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\Bip327Vectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\Bip340Vectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\HmacVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\Argon2Vectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\AsymmetricTestVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\SymmetricBlockVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\ChaChaPoly1305Vectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\OpenSslVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\PemReaderVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\PkcsVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\CsvVectorLoaderBase.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\TestKeyBuilders.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\PemDerCodec.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\CertVectors.pas"/>
+        <DCCReference Include="..\src\CryptoLibTestBase.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Application</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+                <Source>
+                    <Source Name="MainSource">CryptoLib.Tests.Mobile.dpr</Source>
+                </Source>
+            </Delphi.Personality>
+            <Deployment Version="5">
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libpcre.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Background.xml" Configuration="Release" Class="Android_AdaptiveIconBackground">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher_background.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Foreground.xml" Configuration="Release" Class="Android_AdaptiveIconForeground">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher_foreground.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Monochrome.xml" Configuration="Release" Class="Android_AdaptiveIconMonochrome">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher_monochrome.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_144x144.png" Configuration="Release" Class="Android_LauncherIcon144">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png" Configuration="Release" Class="Android_LauncherIcon192">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Configuration="Release" Class="Android_LauncherIcon36">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_48x48.png" Configuration="Release" Class="Android_LauncherIcon48">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_72x72.png" Configuration="Release" Class="Android_LauncherIcon72">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_96x96.png" Configuration="Release" Class="Android_LauncherIcon96">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Configuration="Release" Class="Android_NotificationIcon24">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_36x36.png" Configuration="Release" Class="Android_NotificationIcon36">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Configuration="Release" Class="Android_NotificationIcon48">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_72x72.png" Configuration="Release" Class="Android_NotificationIcon72">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Configuration="Release" Class="Android_NotificationIcon96">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_426x320.png" Configuration="Release" Class="Android_SplashImage426">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_470x320.png" Configuration="Release" Class="Android_SplashImage470">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_640x480.png" Configuration="Release" Class="Android_SplashImage640">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_SplashImage_960x720.png" Configuration="Release" Class="Android_SplashImage960">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_VectorizedNotificationIcon.xml" Configuration="Release" Class="Android_VectorizedNotificationIcon">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_notification.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_VectorizedSplash.xml" Configuration="Release" Class="Android_VectorizedSplash">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_vector.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_VectorizedSplashDark.xml" Configuration="Release" Class="Android_VectorizedSplashDark">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_vector.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31.xml" Configuration="Release" Class="Android_VectorizedSplashV31">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_vector.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_VectorizedSplashV31Dark.xml" Configuration="Release" Class="Android_VectorizedSplashV31Dark">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_vector.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Configuration="Release" Class="AndroidLibnativeArmeabiv7aFile">
+                    <Platform Name="Android64">
+                        <RemoteName>libCryptoLib.Tests.Mobile.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Configuration="Release" Class="AndroidLibnativeArmeabiFile">
+                    <Platform Name="Android64">
+                        <RemoteName>libCryptoLib.Tests.Mobile.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Release" Class="AndroidLibnativeMipsFile">
+                    <Platform Name="Android64">
+                        <RemoteName>libCryptoLib.Tests.Mobile.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\AndroidManifest.xml" Configuration="Release" Class="ProjectAndroidManifest">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\colors-night-v21.xml" Configuration="Release" Class="Android_ColorsDark">
+                    <Platform Name="Android64">
+                        <RemoteName>colors.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\colors.xml" Configuration="Release" Class="Android_Colors">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\ic_launcher-v33.xml" Configuration="Release" Class="Android_AdaptiveIconV33">
+                    <Platform Name="Android64">
+                        <RemoteName>ic_launcher.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\ic_launcher.xml" Configuration="Release" Class="Android_AdaptiveIcon">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\libCryptoLib.Tests.Mobile.so" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Android64">
+                        <RemoteName>libCryptoLib_Tests_Mobile.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\splash_image_def-v21.xml" Configuration="Release" Class="AndroidSplashImageDefV21">
+                    <Platform Name="Android64">
+                        <RemoteName>splash_image_def.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\splash_image_def.xml" Configuration="Release" Class="AndroidSplashImageDef">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\strings.xml" Configuration="Release" Class="Android_Strings">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\styles-v21.xml" Configuration="Release" Class="AndroidSplashStylesV21">
+                    <Platform Name="Android64">
+                        <RemoteName>styles.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\styles-v31.xml" Configuration="Release" Class="AndroidSplashStylesV31">
+                    <Platform Name="Android64">
+                        <RemoteName>styles.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\styles-v35.xml" Configuration="Release" Class="AndroidSplashStylesV35">
+                    <Platform Name="Android64">
+                        <RemoteName>styles.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android64\Release\styles.xml" Configuration="Release" Class="AndroidSplashStyles">
+                    <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\CryptoLib.Tests.Mobile.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>CryptoLib.Tests.Mobile.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployClass Name="AdditionalDebugSymbols">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidFileProvider">
+                    <Platform Name="Android">
+                        <RemoteDir>res\xml</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\xml</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeArmeabiFile">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeArmeabiv7aFile">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeMipsFile">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\mips</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\mips</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidServiceOutput">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidServiceOutput_Android32">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashImageDef">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashImageDefV21">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-anydpi-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-anydpi-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStyles">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV21">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV31">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV35">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_AdaptiveIcon">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-anydpi-v26</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-anydpi-v26</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_AdaptiveIconBackground">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_AdaptiveIconForeground">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_AdaptiveIconMonochrome">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_AdaptiveIconV33">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-anydpi-v33</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-anydpi-v33</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_Colors">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_ColorsDark">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-night-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-night-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_DefaultAppIcon">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon144">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon192">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon36">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-ldpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-ldpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon48">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon72">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon96">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon24">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon36">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon48">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon72">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon96">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage426">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-small</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-small</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage470">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-normal</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-normal</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage640">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-large</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-large</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage960">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xlarge</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xlarge</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_Strings">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_VectorizedNotificationIcon">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-anydpi-v24</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-anydpi-v24</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_VectorizedSplash">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_VectorizedSplashDark">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-night-anydpi-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-night-anydpi-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_VectorizedSplashV31">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-anydpi-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-anydpi-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_VectorizedSplashV31Dark">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-night-anydpi-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-night-anydpi-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DebugSymbols">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DependencyFramework">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.framework</Extensions>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.framework</Extensions>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.framework</Extensions>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Required="true" Name="DependencyPackage">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.bpl</Extensions>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="File">
+                    <Platform Name="Android">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectAndroidManifest">
+                    <Platform Name="Android">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXDebug">
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXEntitlements">
+                    <Platform Name="OSX32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXInfoPList">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXResource">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\Resources</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Required="true" Name="ProjectOutput">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Linux64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSXARM64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOutput_Android32">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectUWPManifest">
+                    <Platform Name="Win32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64x">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="WinARM64EC">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceDebug">
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSEntitlements">
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSInfoPList">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSLaunchScreen">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen</RemoteDir>
+                        <Operation>64</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSResource">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="UWP_DelphiLogo150">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="WinARM64EC">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="UWP_DelphiLogo44">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win64">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="WinARM64EC">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iOS_AppStore1024">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_AppIcon152">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_AppIcon167">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch2x">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_LaunchDark2x">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Notification40">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Setting58">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_SpotLight80">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_AppIcon120">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_AppIcon180">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch2x">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch3x">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_LaunchDark2x">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_LaunchDark3x">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\LaunchScreenImage.imageset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Notification40">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Notification60">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Setting58">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Setting87">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Spotlight120">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Spotlight80">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimARM64">
+                        <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSSimARM64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win64x" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="WinARM64EC" Name="$(PROJECTNAME)"/>
+            </Deployment>
+            <Platforms>
+                <Platform value="Android">True</Platform>
+                <Platform value="Android64">True</Platform>
+                <Platform value="iOSDevice64">True</Platform>
+                <Platform value="iOSSimARM64">True</Platform>
+                <Platform value="OSX64">True</Platform>
+                <Platform value="OSXARM64">True</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+                <Platform value="WinARM64EC">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <Import Project="$(MSBuildProjectName).TestData.deployproj" Condition="Exists('$(MSBuildProjectName).TestData.deployproj')"/>
+</Project>
