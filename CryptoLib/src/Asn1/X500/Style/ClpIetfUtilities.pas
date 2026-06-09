@@ -47,6 +47,7 @@ type
     class function DecodeObject(const AOValue: String): IAsn1Object; static;
     class procedure FlushHexBytes(ABuf: TStringBuilder; AHexBytes: TMemoryStream;
       var ALastEscaped: Int32); static;
+    class procedure CheckCompleteHexPair(AHex1: Int32); static;
 
   public
     /// <summary>
@@ -91,6 +92,12 @@ begin
     ABuf.Append(TConverters.ConvertBytesToString(LHexSlice, TEncoding.UTF8));
     ALastEscaped := ABuf.Length - 1;
   end;
+end;
+
+class procedure TIetfUtilities.CheckCompleteHexPair(AHex1: Int32);
+begin
+  if AHex1 >= 0 then
+    raise EArgumentCryptoLibException.Create('invalid hex escape in directory string');
 end;
 
 class function TIetfUtilities.IsHexDigit(AC: Char): Boolean;
@@ -176,6 +183,7 @@ begin
           LQuoted := not LQuoted
         else
         begin
+          CheckCompleteHexPair(LHex1);
           FlushHexBytes(LSb, LHexBytes, LLastEscaped);
           LSb.Append(LC);
           LEscaped := False;
@@ -204,12 +212,17 @@ begin
       end
       else
       begin
+        // A '\' followed by a single hex digit and then a non-hex char is an
+        // incomplete hexpair (RFC 4514 sec. 2.4 requires two), not a literal.
+        CheckCompleteHexPair(LHex1);
         FlushHexBytes(LSb, LHexBytes, LLastEscaped);
         LSb.Append(LC);
         LEscaped := False;
       end;
     end;
 
+    // A '\' followed by a single hex digit at end of input is likewise incomplete.
+    CheckCompleteHexPair(LHex1);
     FlushHexBytes(LSb, LHexBytes, LLastEscaped);
 
     if LSb.Length > 0 then
