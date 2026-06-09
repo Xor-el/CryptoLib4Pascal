@@ -2493,11 +2493,11 @@ type
     /// <summary>
     /// Create from Int32 value.
     /// </summary>
-    constructor Create(AValue: Int32); overload;
+    constructor Create(AValue: Int32); overload; deprecated 'Use ValueOf instead.';
     /// <summary>
     /// Create from Int64 value.
     /// </summary>
-    constructor Create(AValue: Int64); overload;
+    constructor Create(AValue: Int64); overload; deprecated 'Use ValueOf instead.';
     /// <summary>
     /// Create from BigInteger value.
     /// </summary>
@@ -12330,7 +12330,7 @@ begin
   System.SetLength(FSmallConstants, 17);
   for LI := 0 to System.Length(FSmallConstants) - 1 do
   begin
-    FSmallConstants[LI] := TDerInteger.Create(LI);
+    FSmallConstants[LI] := TDerInteger.Create(TCryptoLibByteArray.Create(Byte(LI)), False);
   end;
   
   FZero := FSmallConstants[0];
@@ -12530,7 +12530,7 @@ begin
   if (AValue >= 0) and (AValue < System.Length(FSmallConstants)) then
     Result := FSmallConstants[AValue]
   else
-    Result := TDerInteger.Create(AValue);
+    Result := TDerInteger.Create(TBigInteger.ValueOf(AValue));
 end;
 
 class function TDerInteger.ValueOf(AValue: Int64): IDerInteger;
@@ -12538,7 +12538,7 @@ begin
   if (AValue >= 0) and (AValue < Int64(System.Length(FSmallConstants))) then
     Result := FSmallConstants[Int32(AValue)]
   else
-    Result := TDerInteger.Create(AValue);
+    Result := TDerInteger.Create(TBigInteger.ValueOf(AValue));
 end;
 
 class function TDerInteger.GetInstance(const AObj: TObject): IDerInteger;

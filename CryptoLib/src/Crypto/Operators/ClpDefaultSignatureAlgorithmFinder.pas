@@ -164,7 +164,7 @@ var
 begin
   LHashAlgId := ADigAlgID;
   LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, LHashAlgId);
-  LSaltLength := TDerInteger.Create(ASaltSize);
+  LSaltLength := TDerInteger.ValueOf(ASaltSize);
   Result := TRsassaPssParameters.Create(LHashAlgId, LMgfAlgId, LSaltLength,
     TRsassaPssParameters.DefaultTrailerField);
 end;

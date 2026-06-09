@@ -113,7 +113,7 @@ begin
   LHashAlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, TDerNull.Instance);
   LPssParams := TRsassaPssParameters.Create(LHashAlgId,
     TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, LHashAlgId) as IAlgorithmIdentifier,
-    TDerInteger.Create(32) as IDerInteger, TRsassaPssParameters.DefaultTrailerField);
+    TDerInteger.ValueOf(32), TRsassaPssParameters.DefaultTrailerField);
   LSignatureAlg := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdRsassaPss, LPssParams);
   LDigestAlg := TDefaultDigestAlgorithmFinder.Instance.Find(LSignatureAlg);
   CheckNotNull(LDigestAlg, 'PSS digest algorithm should not be nil');
