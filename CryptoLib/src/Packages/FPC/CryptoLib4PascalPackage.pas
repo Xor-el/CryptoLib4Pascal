@@ -13,7 +13,7 @@ uses
   ClpSecNamedCurves, ClpSecObjectIdentifiers, ClpTeleTrusTObjectIdentifiers, 
   ClpECNamedCurveTable, ClpX9ObjectIdentifiers, ClpAsymmetricCipherKeyPair, 
   ClpParametersWithRandom, ClpDsaDigestSigner, ClpECDsaSigner, 
-  ClpECAlgorithms, ClpLongArray, ClpSimpleBigDecimal, ClpTnaf, ClpZTauElement, 
+  ClpECAlgorithms, ClpSimpleBigDecimal, ClpTnaf, ClpZTauElement, 
   ClpGlvTypeBEndomorphism, ClpGlvTypeBParameters, ClpFixedPointPreCompInfo, 
   ClpWNafPreCompInfo, ClpWTauNafPreCompInfo, ClpFiniteFields, 
   ClpGenericPolynomialExtensionField, ClpGF2Polynomial, ClpPrimeField, ClpMod, 
@@ -227,7 +227,11 @@ uses
   ClpDigestStream, ClpMacSink, ClpMacStream, ClpSignerStream, 
   ClpDefaultMacCalculator, ClpDefaultMacResult, ClpIMacAlgorithmFinder, 
   ClpDefaultMacAlgorithmFinder, ClpISignatureAlgorithmFinder, 
-  ClpDefaultSignatureAlgorithmFinder;
+  ClpDefaultSignatureAlgorithmFinder, ClpIBinPolyMul, ClpIF2mFieldData, 
+  ClpBinPolyBinomialReduce, ClpBinPolyMulBase, ClpBinPolyPentanomialReduce, 
+  ClpBinPolys, ClpBinPolyScalarBackend, ClpBinPolyScalarKernels, 
+  ClpBinPolyScalarLarge, ClpBinPolyScalarMedium, ClpBinPolyTrinomialReduce, 
+  ClpItohTsujiiInv, ClpF2mFieldData;
 
 implementation
 

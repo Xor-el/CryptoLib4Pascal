@@ -279,7 +279,7 @@ begin
       xor (AU[Int32(LJ shr 3) and 7] shl 3)
       xor (AU[Int32(LJ shr 6) and 7] shl 6);
     LL := LL xor (LG shl LK);
-    LH := LH xor (UInt64(Int64(LG) shr (64 - LK)));
+    LH := LH xor TBitOperations.NegativeRightShift64(LG, -LK);
     Dec(LK, 9);
   until LK <= 0;
 

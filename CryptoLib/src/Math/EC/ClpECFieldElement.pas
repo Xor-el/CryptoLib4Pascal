@@ -25,7 +25,10 @@ uses
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpIECFieldElement,
-  ClpLongArray,
+  ClpIF2mFieldData,
+  ClpF2mFieldData,
+  ClpBinPolys,
+  ClpNat,
   ClpBitOperations,
   ClpInt32Utilities,
   ClpArrayUtilities,
@@ -33,7 +36,6 @@ uses
 
 resourcestring
   SF2mFieldElementsNotBothInstances = 'Field elements are not both instances of F2mFieldElement';
-  SF2mFieldElementIncorrectRepresentation = 'One of the F2m field elements has incorrect representation';
   SF2mFieldElementsNotSameField = 'Field elements are not elements of the same field F2m';
   SHalfTraceOnlyDefinedForOddM = 'Half-trace only defined for odd m';
   SInternalErrorInTraceCalculation = 'Internal error in trace calculation';
@@ -139,14 +141,12 @@ type
       Tpb = 2;
       Ppb = 3;
   strict private
-    FRepresentation: Int32;
-    FM: Int32;
-    FKs: TCryptoLibInt32Array;
-    FX: TLongArray;
+    FF2mFieldData: IF2mFieldData;
+    FX: TCryptoLibUInt64Array;
   public
     class procedure CheckFieldElements(const AA, AB: IECFieldElement); static;
 
-    constructor Create(AM: Int32; const AKs: TCryptoLibInt32Array; const AX: TLongArray);
+    constructor Create(const AF2mFieldData: IF2mFieldData; const AX: TCryptoLibUInt64Array);
 
     function GetBitLength: Int32; override;
     function GetIsOne: Boolean; override;
@@ -161,12 +161,10 @@ type
     function Subtract(const AB: IECFieldElement): IECFieldElement; override;
     function Multiply(const AB: IECFieldElement): IECFieldElement; override;
     function MultiplyMinusProduct(const AB, AX, AY: IECFieldElement): IECFieldElement; override;
-    function MultiplyPlusProduct(const AB, AX, AY: IECFieldElement): IECFieldElement; override;
     function Divide(const AB: IECFieldElement): IECFieldElement; override;
     function Negate: IECFieldElement; override;
     function Square: IECFieldElement; override;
     function SquareMinusProduct(const AX, AY: IECFieldElement): IECFieldElement; override;
-    function SquarePlusProduct(const AX, AY: IECFieldElement): IECFieldElement; override;
     function SquarePow(APow: Int32): IECFieldElement; override;
     function Invert: IECFieldElement; override;
     function Sqrt: IECFieldElement; override;
@@ -179,14 +177,16 @@ type
     function GetK1: Int32;
     function GetK2: Int32;
     function GetK3: Int32;
-    function GetX: TLongArray;
+    function GetX: TCryptoLibUInt64Array;
+    function GetF2mFieldData: IF2mFieldData;
 
     property Representation: Int32 read GetRepresentation;
     property M: Int32 read GetM;
     property K1: Int32 read GetK1;
     property K2: Int32 read GetK2;
     property K3: Int32 read GetK3;
-    property X: TLongArray read GetX;
+    property X: TCryptoLibUInt64Array read GetX;
+    property F2mFieldData: IF2mFieldData read GetF2mFieldData;
   end;
 
 implementation
@@ -740,47 +740,49 @@ var
 begin
   if not Supports(AA, IF2mFieldElement, LAIntf) or not Supports(AB, IF2mFieldElement, LBIntf) then
     raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
-  if LAIntf.Representation <> LBIntf.Representation then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementIncorrectRepresentation);
-  if (LAIntf.M <> LBIntf.M) or (LAIntf.K1 <> LBIntf.K1) or (LAIntf.K2 <> LBIntf.K2) or (LAIntf.K3 <> LBIntf.K3) then
+  if not TF2mFieldData.Equals(LAIntf.F2mFieldData, LBIntf.F2mFieldData) then
     raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotSameField);
 end;
 
-constructor TF2mFieldElement.Create(AM: Int32; const AKs: TCryptoLibInt32Array; const AX: TLongArray);
+constructor TF2mFieldElement.Create(const AF2mFieldData: IF2mFieldData; const AX: TCryptoLibUInt64Array);
 begin
-  Inherited Create;
-  FM := AM;
-  if System.Length(AKs) = 1 then
-    FRepresentation := Tpb
-  else
-    FRepresentation := Ppb;
-  FKs := AKs;
+  inherited Create;
+  if AF2mFieldData = nil then
+    raise EArgumentNilCryptoLibException.Create('f2mFieldData');
+  if AX = nil then
+    raise EArgumentNilCryptoLibException.Create('x');
+  FF2mFieldData := AF2mFieldData;
   FX := AX;
 end;
 
-function TF2mFieldElement.GetX: TLongArray;
+function TF2mFieldElement.GetF2mFieldData: IF2mFieldData;
+begin
+  Result := FF2mFieldData;
+end;
+
+function TF2mFieldElement.GetX: TCryptoLibUInt64Array;
 begin
   Result := FX;
 end;
 
 function TF2mFieldElement.GetBitLength: Int32;
 begin
-  Result := FX.Degree();
+  Result := TBinPolys.BitLengthVar(System.Length(FX), FX, 0);
 end;
 
 function TF2mFieldElement.GetIsOne: Boolean;
 begin
-  Result := FX.IsOne();
+  Result := TBinPolys.EqualToOne(System.Length(FX), FX, 0) <> 0;
 end;
 
 function TF2mFieldElement.GetIsZero: Boolean;
 begin
-  Result := FX.IsZero();
+  Result := TBinPolys.EqualToZero(System.Length(FX), FX, 0) <> 0;
 end;
 
 function TF2mFieldElement.TestBitZero: Boolean;
 begin
-  Result := FX.TestBitZero();
+  Result := (FX[0] and 1) <> 0;
 end;
 
 function TF2mFieldElement.GetFieldName: String;
@@ -790,29 +792,40 @@ end;
 
 function TF2mFieldElement.GetFieldSize: Int32;
 begin
-  Result := FM;
+  Result := FF2mFieldData.M;
 end;
 
 function TF2mFieldElement.ToBigInteger: TBigInteger;
 begin
-  Result := FX.ToBigInteger();
+  Result := TNat.ToBigInteger64(System.Length(FX), FX);
 end;
 
 function TF2mFieldElement.Add(const AB: IECFieldElement): IECFieldElement;
 var
-  LIarrClone: TLongArray;
   LBIntf: IF2mFieldElement;
+  LSize: Int32;
+  LBx: TCryptoLibUInt64Array;
+  LZ: TCryptoLibUInt64Array;
 begin
   if not Supports(AB, IF2mFieldElement, LBIntf) then
     raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
-  LIarrClone := FX.Copy();
-  LIarrClone.AddShiftedByWords(LBIntf.X, 0);
-  Result := TF2mFieldElement.Create(FM, FKs, LIarrClone);
+  LSize := System.Length(FX);
+  LBx := LBIntf.X;
+  LZ := TBinPolys.Create(LSize);
+  TBinPolys.Add(LSize, FX, 0, LBx, 0, LZ, 0);
+  Result := TF2mFieldElement.Create(FF2mFieldData, LZ);
 end;
 
 function TF2mFieldElement.AddOne: IECFieldElement;
+var
+  LSize: Int32;
+  LZ: TCryptoLibUInt64Array;
 begin
-  Result := TF2mFieldElement.Create(FM, FKs, FX.AddOne());
+  LSize := System.Length(FX);
+  LZ := TBinPolys.Create(LSize);
+  TBinPolys.Copy(LSize, FX, 0, LZ, 0);
+  LZ[0] := LZ[0] xor 1;
+  Result := TF2mFieldElement.Create(FF2mFieldData, LZ);
 end;
 
 function TF2mFieldElement.Subtract(const AB: IECFieldElement): IECFieldElement;
@@ -823,36 +836,22 @@ end;
 function TF2mFieldElement.Multiply(const AB: IECFieldElement): IECFieldElement;
 var
   LBIntf: IF2mFieldElement;
+  LSize: Int32;
+  LBx: TCryptoLibUInt64Array;
+  LZ: TCryptoLibUInt64Array;
 begin
   if not Supports(AB, IF2mFieldElement, LBIntf) then
     raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
-  Result := TF2mFieldElement.Create(FM, FKs, FX.ModMultiply(LBIntf.X, FM, FKs));
+  LSize := System.Length(FX);
+  LBx := LBIntf.X;
+  LZ := TBinPolys.Create(LSize);
+  FF2mFieldData.Mul.Multiply(FX, 0, LBx, 0, LZ, 0);
+  Result := TF2mFieldElement.Create(FF2mFieldData, LZ);
 end;
 
 function TF2mFieldElement.MultiplyMinusProduct(const AB, AX, AY: IECFieldElement): IECFieldElement;
 begin
   Result := MultiplyPlusProduct(AB, AX, AY);
-end;
-
-function TF2mFieldElement.MultiplyPlusProduct(const AB, AX, AY: IECFieldElement): IECFieldElement;
-var
-  LAx, LBx, LXx, LYx: TLongArray;
-  LAb, LXy: TLongArray;
-  LBIntf, LXIntf, LYIntf: IF2mFieldElement;
-begin
-  if not Supports(AB, IF2mFieldElement, LBIntf) or not Supports(AX, IF2mFieldElement, LXIntf) or not Supports(AY, IF2mFieldElement, LYIntf) then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
-  LAx := FX;
-  LBx := LBIntf.X;
-  LXx := LXIntf.X;
-  LYx := LYIntf.X;
-  LAb := LAx.Multiply(LBx, FM, FKs);
-  LXy := LXx.Multiply(LYx, FM, FKs);
-  if TLongArray.AreAliased(LAb, LAx) or TLongArray.AreAliased(LAb, LBx) then
-    LAb := LAb.Copy();
-  LAb.AddShiftedByWords(LXy, 0);
-  LAb.Reduce(FM, FKs);
-  Result := TF2mFieldElement.Create(FM, FKs, LAb);
 end;
 
 function TF2mFieldElement.Divide(const AB: IECFieldElement): IECFieldElement;
@@ -869,8 +868,14 @@ begin
 end;
 
 function TF2mFieldElement.Square: IECFieldElement;
+var
+  LSize: Int32;
+  LZ: TCryptoLibUInt64Array;
 begin
-  Result := TF2mFieldElement.Create(FM, FKs, FX.ModSquare(FM, FKs));
+  LSize := System.Length(FX);
+  LZ := TBinPolys.Create(LSize);
+  FF2mFieldData.Mul.Square(FX, 0, LZ, 0);
+  Result := TF2mFieldElement.Create(FF2mFieldData, LZ);
 end;
 
 function TF2mFieldElement.SquareMinusProduct(const AX, AY: IECFieldElement): IECFieldElement;
@@ -878,50 +883,50 @@ begin
   Result := SquarePlusProduct(AX, AY);
 end;
 
-function TF2mFieldElement.SquarePlusProduct(const AX, AY: IECFieldElement): IECFieldElement;
-var
-  LAx, LXx, LYx: TLongArray;
-  LAA, LXy: TLongArray;
-  LXIntf, LYIntf: IF2mFieldElement;
-begin
-  if not Supports(AX, IF2mFieldElement, LXIntf) or not Supports(AY, IF2mFieldElement, LYIntf) then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
-  LAx := FX;
-  LXx := LXIntf.X;
-  LYx := LYIntf.X;
-  LAA := LAx.Square(FM, FKs);
-  LXy := LXx.Multiply(LYx, FM, FKs);
-  if TLongArray.AreAliased(LAA, LAx) then
-    LAA := LAA.Copy();
-  LAA.AddShiftedByWords(LXy, 0);
-  LAA.Reduce(FM, FKs);
-  Result := TF2mFieldElement.Create(FM, FKs, LAA);
-end;
-
 function TF2mFieldElement.SquarePow(APow: Int32): IECFieldElement;
+var
+  LSize: Int32;
+  LZ: TCryptoLibUInt64Array;
 begin
   if APow < 1 then
     Result := Self as IECFieldElement
   else
-    Result := TF2mFieldElement.Create(FM, FKs, FX.ModSquareN(APow, FM, FKs));
+  begin
+    LSize := System.Length(FX);
+    LZ := TBinPolys.Create(LSize);
+    FF2mFieldData.Mul.SquareN(FX, 0, APow, LZ, 0);
+    Result := TF2mFieldElement.Create(FF2mFieldData, LZ);
+  end;
 end;
 
 function TF2mFieldElement.Invert: IECFieldElement;
+var
+  LSize: Int32;
+  LZ: TCryptoLibUInt64Array;
 begin
-  Result := TF2mFieldElement.Create(FM, FKs, FX.ModInverse(FM, FKs));
+  if GetBitLength() <= 1 then
+    Result := Self as IECFieldElement
+  else
+  begin
+    LSize := System.Length(FX);
+    LZ := TBinPolys.Create(LSize);
+    FF2mFieldData.Inv.Invert(FX, 0, LZ, 0);
+    Result := TF2mFieldElement.Create(FF2mFieldData, LZ);
+  end;
 end;
 
 function TF2mFieldElement.Sqrt: IECFieldElement;
 begin
-  if FX.IsZero() or FX.IsOne() then
+  if GetIsZero or GetIsOne then
     Result := Self as IECFieldElement
   else
-    Result := SquarePow(FM - 1);
+    Result := SquarePow(FF2mFieldData.M - 1);
 end;
 
 function TF2mFieldElement.Equals(const AOther: IECFieldElement): Boolean;
 var
   LOtherF2m: IF2mFieldElement;
+  LOtherX: TCryptoLibUInt64Array;
 begin
   if AOther = nil then
     Exit(False);
@@ -929,45 +934,43 @@ begin
     Exit(True);
   if not Supports(AOther, IF2mFieldElement, LOtherF2m) then
     Exit(False);
-  Result := (FM = LOtherF2m.M) and (FRepresentation = LOtherF2m.Representation)
-    and (GetK1 = LOtherF2m.K1) and (GetK2 = LOtherF2m.K2) and (GetK3 = LOtherF2m.K3)
-    and FX.Equals(LOtherF2m.X);
+  LOtherX := LOtherF2m.X;
+  Result := TF2mFieldData.Equals(FF2mFieldData, LOtherF2m.F2mFieldData)
+    and (System.Length(FX) = System.Length(LOtherX))
+    and (TBinPolys.EqualTo(System.Length(FX), FX, 0, LOtherX, 0) <> 0);
 end;
 
 function TF2mFieldElement.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 begin
-  Result := FX.GetHashCode() xor FM xor TArrayUtilities.GetArrayHashCode(FKs);
+  Result := TArrayUtilities.GetArrayHashCode(FX, 0, System.Length(FX)) xor TF2mFieldData.GetHashCode(FF2mFieldData);
 end;
 
 function TF2mFieldElement.GetRepresentation: Int32;
 begin
-  Result := FRepresentation;
+  if System.Length(FF2mFieldData.Ks) = 1 then
+    Result := Tpb
+  else
+    Result := Ppb;
 end;
 
 function TF2mFieldElement.GetM: Int32;
 begin
-  Result := FM;
+  Result := FF2mFieldData.M;
 end;
 
 function TF2mFieldElement.GetK1: Int32;
 begin
-  Result := FKs[0];
+  Result := FF2mFieldData.K1;
 end;
 
 function TF2mFieldElement.GetK2: Int32;
 begin
-  if System.Length(FKs) >= 2 then
-    Result := FKs[1]
-  else
-    Result := 0;
+  Result := FF2mFieldData.K2;
 end;
 
 function TF2mFieldElement.GetK3: Int32;
 begin
-  if System.Length(FKs) >= 3 then
-    Result := FKs[2]
-  else
-    Result := 0;
+  Result := FF2mFieldData.K3;
 end;
 
 end.

@@ -144,6 +144,10 @@ type
     class function ShiftUpBits64(ALen: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32; ABits: Int32; AC: UInt64): UInt64; overload; static;
     class function ShiftUpBits64(ALen: Int32; const AX: TCryptoLibUInt64Array; ABits: Int32; AC: UInt64; AZ: TCryptoLibUInt64Array): UInt64; overload; static;
     class function ShiftUpBits64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32; ABits: Int32; AC: UInt64; AZ: TCryptoLibUInt64Array; AZOff: Int32): UInt64; overload; static;
+    class function ShiftUpBitsXor64(ALen: Int32; const AX: TCryptoLibUInt64Array; ABits: Int32; AC: UInt64;
+      const AY: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array): UInt64; overload; static;
+    class function ShiftUpBitsXor64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32; ABits: Int32; AC: UInt64;
+      const AY: TCryptoLibUInt64Array; AYOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32): UInt64; overload; static;
     class procedure Square(ALen: Int32; const AX: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array); overload; static;
     class procedure Square(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; AZz: TCryptoLibUInt32Array; AZzOff: Int32); overload; static;
     class function SquareWordAddTo(const AX: TCryptoLibUInt32Array; AXPos: Int32; AZ: TCryptoLibUInt32Array): UInt32; overload; static;
@@ -167,6 +171,8 @@ type
     class function SubWordFrom(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array): Int32; overload; static;
     class function SubWordFrom(ALen: Int32; AX: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32): Int32; overload; static;
     class function ToBigInteger(ALen: Int32; const AX: TCryptoLibUInt32Array): TBigInteger; static;
+    class function ToBigInteger64(ALen: Int32; const AX: TCryptoLibUInt64Array): TBigInteger; overload; static;
+    class function ToBigInteger64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32): TBigInteger; overload; static;
     class procedure &Xor(ALen: Int32; const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array); overload; static;
     class procedure &Xor(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32); overload; static;
     class procedure &Xor(ALen: Int32; const AX: TCryptoLibUInt32Array; AY: UInt32; AZ: TCryptoLibUInt32Array); overload; static;
@@ -2139,6 +2145,59 @@ begin
   Result := TBitOperations.NegativeRightShift64(AC, -ABits);
 end;
 
+class function TNat.ShiftUpBitsXor64(ALen: Int32; const AX: TCryptoLibUInt64Array; ABits: Int32; AC: UInt64;
+  const AY: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array): UInt64;
+begin
+  Result := ShiftUpBitsXor64(ALen, AX, 0, ABits, AC, AY, 0, AZ, 0);
+end;
+
+class function TNat.ShiftUpBitsXor64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32; ABits: Int32; AC: UInt64;
+  const AY: TCryptoLibUInt64Array; AYOff: Int32; AZ: TCryptoLibUInt64Array; AZOff: Int32): UInt64;
+var
+  LI: Int32;
+  LX0: UInt64;
+  LX1: UInt64;
+  LX2: UInt64;
+  LX3: UInt64;
+  LXi: UInt64;
+  LY0: UInt64;
+  LY1: UInt64;
+  LY2: UInt64;
+  LY3: UInt64;
+  LYi: UInt64;
+begin
+  LI := 0;
+  {$IFDEF DEBUG}
+  System.Assert((ABits > 0) and (ABits < 64));
+  {$ENDIF}
+  while LI <= ALen - 4 do
+  begin
+    LX0 := AX[AXOff + LI + 0];
+    LX1 := AX[AXOff + LI + 1];
+    LX2 := AX[AXOff + LI + 2];
+    LX3 := AX[AXOff + LI + 3];
+    LY0 := AY[AYOff + LI + 0];
+    LY1 := AY[AYOff + LI + 1];
+    LY2 := AY[AYOff + LI + 2];
+    LY3 := AY[AYOff + LI + 3];
+    AZ[AZOff + LI + 0] := ((LX0 shl ABits) or TBitOperations.NegativeRightShift64(AC, -ABits)) xor LY0;
+    AZ[AZOff + LI + 1] := ((LX1 shl ABits) or TBitOperations.NegativeRightShift64(LX0, -ABits)) xor LY1;
+    AZ[AZOff + LI + 2] := ((LX2 shl ABits) or TBitOperations.NegativeRightShift64(LX1, -ABits)) xor LY2;
+    AZ[AZOff + LI + 3] := ((LX3 shl ABits) or TBitOperations.NegativeRightShift64(LX2, -ABits)) xor LY3;
+    AC := LX3;
+    LI := LI + 4;
+  end;
+  while LI < ALen do
+  begin
+    LXi := AX[AXOff + LI];
+    LYi := AY[AYOff + LI];
+    AZ[AZOff + LI] := ((LXi shl ABits) or TBitOperations.NegativeRightShift64(AC, -ABits)) xor LYi;
+    AC := LXi;
+    System.Inc(LI);
+  end;
+  Result := TBitOperations.NegativeRightShift64(AC, -ABits);
+end;
+
 class procedure TNat.Square(ALen: Int32; const AX: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array);
 var
   LExtLen: Int32;
@@ -2641,6 +2700,29 @@ begin
   begin
     TPack.UInt32_To_BE(AX[LXPos], LBs, LBsPos);
     LBsPos := LBsPos + 4;
+    System.Dec(LXPos);
+  end;
+  Result := TBigInteger.Create(1, LBs);
+end;
+
+class function TNat.ToBigInteger64(ALen: Int32; const AX: TCryptoLibUInt64Array): TBigInteger;
+begin
+  Result := ToBigInteger64(ALen, AX, 0);
+end;
+
+class function TNat.ToBigInteger64(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32): TBigInteger;
+var
+  LBs: TCryptoLibByteArray;
+  LXPos: Int32;
+  LBsPos: Int32;
+begin
+  SetLength(LBs, ALen shl 3);
+  LXPos := ALen - 1;
+  LBsPos := 0;
+  while LXPos >= 0 do
+  begin
+    TPack.UInt64_To_BE(AX[AXOff + LXPos], LBs, LBsPos);
+    LBsPos := LBsPos + 8;
     System.Dec(LXPos);
   end;
   Result := TBigInteger.Create(1, LBs);

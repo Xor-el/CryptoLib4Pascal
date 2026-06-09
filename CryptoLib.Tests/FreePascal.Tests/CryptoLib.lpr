@@ -6,7 +6,7 @@ uses
   Interfaces, Forms, GuiTestRunner, Asn1SequenceParserTests,
   EqualsAndHashCodeTests, OIDTests, EnumeratedTests, ExternalTests,
   ParsingTests, ParseTests, StringTests, TagTests, BigIntegerTests,
-  ECAlgorithmsTests, ECPointTests, SecP256R1FieldTests, SecP384R1FieldTests,
+  ECAlgorithmsTests, ECPointTests, BinPolyTests, SecP256R1FieldTests, SecP384R1FieldTests,
   ECDsa5Tests, ECTests, NamedCurveTests, SignerUtilitiesTests,
   SecureRandomTests, DigestRandomNumberTests, FixedPointTests, AESTests,
   AesLightTests, FusedExternalRegistrationTests, AesX86Tests, AESSICTests,
