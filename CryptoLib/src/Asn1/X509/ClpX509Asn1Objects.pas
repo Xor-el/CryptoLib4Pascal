@@ -6792,6 +6792,8 @@ begin
   FDefaultLookup.Add('cn', FCN);
   FDefaultLookup.Add('l', FL);
   FDefaultLookup.Add('st', FST);
+  // Microsoft CertNameToStr emits S= for stateOrProvinceName (2.5.4.8); accept as parse alias.
+  FDefaultLookup.Add('s', FST);
   FDefaultLookup.Add('sn', FSurname);
   FDefaultLookup.Add('serialnumber', FSerialNumber);
   FDefaultLookup.Add('street', FStreet);

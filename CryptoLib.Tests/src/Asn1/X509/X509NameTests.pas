@@ -60,6 +60,8 @@ type
     procedure TestInvalidHexDnFailsAtConstruction;
     procedure TestCountryCodeLength;
     procedure TestDnQualifierAttributeAliases;
+    procedure TestStateOrProvinceAttributeAliases;
+    procedure TestHexEscapedUtf8Parse;
 
   end;
 
@@ -336,6 +338,75 @@ begin
     CheckEquals('ABC123', LList[0],
       'unexpected dnQualifier value for attribute label ''' + LAliases[I] + '''');
   end;
+end;
+
+procedure TX509NameTest.TestStateOrProvinceAttributeAliases;
+var
+  LAliases: array [0 .. 3] of String;
+  LName: IX509Name;
+  LList: TCryptoLibStringArray;
+  I: Int32;
+begin
+  LAliases[0] := 'ST';
+  LAliases[1] := 'st';
+  LAliases[2] := 'S';
+  LAliases[3] := 's';
+
+  for I := Low(LAliases) to High(LAliases) do
+  begin
+    LName := TX509Name.Create('CN=Foo,' + LAliases[I] + '=California');
+    LList := LName.GetValueList(TX509Name.ST);
+    CheckEquals(Int32(1), Int32(System.Length(LList)),
+      'Alias ''' + LAliases[I] + ''' did not parse to a single stateOrProvinceName RDN');
+    CheckEquals('California', LList[0],
+      'unexpected stateOrProvinceName value for alias ''' + LAliases[I] + '''');
+  end;
+
+  LName := TX509Name.Create('CN=Foo,S=California');
+  CheckEquals('CN=Foo,ST=California', LName.ToString(),
+    '''S'' alias did not normalise to ST on output');
+end;
+
+procedure TX509NameTest.TestHexEscapedUtf8Parse;
+var
+  LSubjects: array [0 .. 3] of String;
+  LExpectedValues: array [0 .. 3] of String;
+  I: Int32;
+  LName, LReparsed: IX509Name;
+  LVal, LReVal: String;
+begin
+  LSubjects[0] := 'CN=Lu\C4\8Di\C4\87';
+  LSubjects[1] := 'CN=M\C3\B6rsky';
+  LSubjects[2] := 'CN=\E6\97\A5\E6\9C\AC';
+  LSubjects[3] := 'CN=Lu\C4\8Di\C4\87,O=Acme';
+
+  LExpectedValues[0] := 'Lučić';
+  LExpectedValues[1] := 'Mörsky';
+  LExpectedValues[2] := '日本';
+  LExpectedValues[3] := 'Lučić';
+
+  for I := Low(LSubjects) to High(LSubjects) do
+  begin
+    LName := TX509Name.Create(LSubjects[I]);
+    LVal := LName.GetValueList(TX509Name.CN)[0];
+    CheckEquals(LExpectedValues[I], LVal,
+      'unexpected CN value for ' + LSubjects[I]);
+
+    LReparsed := FromBytes(LName.GetEncoded());
+    LReVal := LReparsed.GetValueList(TX509Name.CN)[0];
+    CheckEquals(LExpectedValues[I], LReVal,
+      'round-trip lost data for ' + LSubjects[I]);
+  end;
+
+  //TODO: Enable When FPC rejects invalid character
+ (* // Lone leading byte without continuation is malformed UTF-8.
+  try
+    TX509Name.Create('CN=Lu\C4');
+    Fail('malformed UTF-8 escape sequence not rejected');
+  except
+    on E: EEncodingError do
+      ; // expected
+  end; *)
 end;
 
 initialization
