@@ -671,6 +671,7 @@ type
     FIdKpCmcCa: IDerObjectIdentifier;
     FIdKpCmcRa: IDerObjectIdentifier;
     FIdKpCmKga: IDerObjectIdentifier;
+    FIdKpDocumentSigning: IDerObjectIdentifier;
     FIdKpConfigSigning: IDerObjectIdentifier;
     FIdKpTrustAnchorConfigSigning: IDerObjectIdentifier;
     FIdKpUpdatePackageSigning: IDerObjectIdentifier;
@@ -709,6 +710,7 @@ type
     class function GetIdKpCmcCa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmcRa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmKga: IDerObjectIdentifier; static; inline;
+    class function GetIdKpDocumentSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpConfigSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpTrustAnchorConfigSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpUpdatePackageSigning: IDerObjectIdentifier; static; inline;
@@ -751,6 +753,8 @@ type
     class property IdKpCmcCa: IDerObjectIdentifier read GetIdKpCmcCa;
     class property IdKpCmcRa: IDerObjectIdentifier read GetIdKpCmcRa;
     class property IdKpCmKga: IDerObjectIdentifier read GetIdKpCmKga;
+    /// <summary>RFC 9336 sec. 3.1 — signing documents (e.g. PDF, XML, JSON) for human consumption (<c>id-kp-documentSigning</c>, <c>{ id-kp 36 }</c>).</summary>
+    class property IdKpDocumentSigning: IDerObjectIdentifier read GetIdKpDocumentSigning;
     /// <summary>RFC 9809 sec. 3 — signing general-purpose configuration files (<c>id-kp-configSigning</c>, <c>{ id-kp 41 }</c>).</summary>
     class property IdKpConfigSigning: IDerObjectIdentifier read GetIdKpConfigSigning;
     /// <summary>RFC 9809 sec. 3 — signing trust anchor configuration files (<c>id-kp-trustAnchorConfigSigning</c>, <c>{ id-kp 42 }</c>).</summary>
@@ -5526,6 +5530,7 @@ begin
   FIdKpCmcCa := TDerObjectIdentifier.Create(LIdKp.ID + '.27');
   FIdKpCmcRa := TDerObjectIdentifier.Create(LIdKp.ID + '.28');
   FIdKpCmKga := TDerObjectIdentifier.Create(LIdKp.ID + '.32');
+  FIdKpDocumentSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.36');
   FIdKpConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.41');
   FIdKpTrustAnchorConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.42');
   FIdKpUpdatePackageSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.43');
@@ -5656,6 +5661,11 @@ end;
 class function TKeyPurposeId.GetIdKpCmKga: IDerObjectIdentifier;
 begin
   Result := FIdKpCmKga;
+end;
+
+class function TKeyPurposeId.GetIdKpDocumentSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpDocumentSigning;
 end;
 
 class function TKeyPurposeId.GetIdKpConfigSigning: IDerObjectIdentifier;
