@@ -1751,9 +1751,23 @@ type
 
   end;
 
-  /// <summary>
-  /// The DistributionPointName object.
-  /// </summary>
+  /// <summary>The DistributionPointName ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// DistributionPointName ::= CHOICE {
+  ///   fullName[0] GeneralNames,
+  ///   nameRelativeToCRLIssuer[1] RelativeDistinguishedName
+  /// }
+  /// RelativeDistinguishedName ::= SET SIZE(1..MAX) OF AttributeTypeAndValue
+  /// </code>
+  /// Per RFC 5280 sec. 4.2.1.13, nameRelativeToCRLIssuer is a single RelativeDistinguishedName
+  /// (a SET of one or more attribute-type-and-value pairs) - never a sequence of RDNs.
+  /// When two attributes need to be carried here they share one multi-valued RDN
+  /// (e.g. O=ExampleOrg + OU=Test), not two adjacent RDNs (e.g. O=ExampleOrg, OU=Test);
+  /// the CHOICE branch is decoded as a TAsn1Set and a sequence-shaped input is rejected.
+  /// The full DN of the distribution point is formed by appending this single RDN to the CRL
+  /// issuer's RDNSequence (RFC 5280 sec. 5.2.5).
+  /// </remarks>
   TDistributionPointName = class(TAsn1Encodable, IDistributionPointName, IAsn1Choice)
 
   strict private
@@ -1964,15 +1978,16 @@ type
 
   end;
 
+  /// <summary>The IssuingDistributionPoint ASN.1 type.</summary>
   /// <remarks>
   /// <code>
   /// IssuingDistributionPoint ::= SEQUENCE {
-  ///   distributionPoint          [0] DistributionPointName OPTIONAL,
-  ///   onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
-  ///   onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-  ///   onlySomeReasons            [3] ReasonFlags OPTIONAL,
-  ///   indirectCRL                [4] BOOLEAN DEFAULT FALSE,
-  ///   onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+  ///   distributionPoint[0] DistributionPointName OPTIONAL,
+  ///   onlyContainsUserCerts[1] BOOLEAN DEFAULT FALSE,
+  ///   onlyContainsCACerts[2] BOOLEAN DEFAULT FALSE,
+  ///   onlySomeReasons[3] ReasonFlags OPTIONAL,
+  ///   indirectCRL[4] BOOLEAN DEFAULT FALSE,
+  ///   onlyContainsAttributeCerts[5] BOOLEAN DEFAULT FALSE
   /// }
   /// </code>
   /// </remarks>
@@ -2009,9 +2024,25 @@ type
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): IIssuingDistributionPoint; static;
 
+    /// <summary>Constructor from given details.</summary>
+    /// <param name="ADistributionPoint">May contain a URI as pointer to most current CRL.</param>
+    /// <param name="AOnlyContainsUserCerts">Covers revocation information for end certificates.</param>
+    /// <param name="AOnlyContainsCACerts">Covers revocation information for CA certificates.</param>
+    /// <param name="AOnlySomeReasons">Which revocation reasons this point covers.</param>
+    /// <param name="AIndirectCRL">If True then the CRL contains revocation information about certificates issued by other CAs.</param>
+    /// <param name="AOnlyContainsAttributeCerts">Covers revocation information for attribute certificates.</param>
+    /// <exception cref="EArgumentCryptoLibException">Raised when more than one of the onlyContains* flags is True.</exception>
     constructor Create(const ADistributionPoint: IDistributionPointName;
       AOnlyContainsUserCerts, AOnlyContainsCACerts: Boolean;
       const AOnlySomeReasons: IReasonFlags; AIndirectCRL, AOnlyContainsAttributeCerts: Boolean); overload;
+    /// <summary>Shorthand constructor from given details.</summary>
+    /// <param name="ADistributionPoint">May contain a URI as pointer to most current CRL.</param>
+    /// <param name="AIndirectCRL">If True then the CRL contains revocation information about certificates issued by other CAs.</param>
+    /// <param name="AOnlyContainsAttributeCerts">Covers revocation information for attribute certificates.</param>
+    /// <exception cref="EArgumentCryptoLibException">Raised when more than one of the onlyContains* flags is True.</exception>
+    constructor Create(const ADistributionPoint: IDistributionPointName;
+      AIndirectCRL, AOnlyContainsAttributeCerts: Boolean); overload;
+    /// <summary>Constructor from Asn1Sequence.</summary>
     constructor Create(const ASeq: IAsn1Sequence); overload;
 
     function ToAsn1Object: IAsn1Object; override;
@@ -8021,6 +8052,12 @@ begin
     LV.Add(TDerTaggedObject.Create(False, 5, TDerBoolean.True));
 
   FSeq := TDerSequence.Create(LV);
+end;
+
+constructor TIssuingDistributionPoint.Create(const ADistributionPoint: IDistributionPointName;
+  AIndirectCRL, AOnlyContainsAttributeCerts: Boolean);
+begin
+  Create(ADistributionPoint, False, False, nil, AIndirectCRL, AOnlyContainsAttributeCerts);
 end;
 
 constructor TIssuingDistributionPoint.Create(const ASeq: IAsn1Sequence);

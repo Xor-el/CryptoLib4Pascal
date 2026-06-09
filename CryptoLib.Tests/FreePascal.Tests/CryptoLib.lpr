@@ -29,7 +29,7 @@ uses
   UtcTimeTests, InputStreamTests, SetTests, X9Tests, PrivateKeyInfoTests,
   DerUtf8StringTests, EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests,
   DeltaCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
-  AuthorityKeyIdentifierTests, X509NameTests, SubjectKeyIdentifierTests,
+  AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests, SubjectKeyIdentifierTests,
   KeyUsageTests, GeneralNameTests, KMacTests, RSATests, PssTests, ISO9796Tests,
   RSABlindedTests, RSADigestSignerTests, X931SignerTests, CryptoIOStreamTests,
   CryptoIOSinkTests, OaepTests, RijndaelTests, BlowfishTests, Poly1305Tests,

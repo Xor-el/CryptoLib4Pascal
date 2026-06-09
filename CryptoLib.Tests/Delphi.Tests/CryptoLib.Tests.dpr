@@ -845,6 +845,7 @@ uses
   X931SignerTests in '..\src\Crypto\X931SignerTests.pas',
   CertificateTests in '..\src\Asn1\X509\CertificateTests.pas',
   AuthorityKeyIdentifierTests in '..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas',
+  IdpRelativeNameTests in '..\src\Asn1\X509\IdpRelativeNameTests.pas',
   GeneralNameTests in '..\src\Asn1\X509\GeneralNameTests.pas',
   KeyUsageTests in '..\src\Asn1\X509\KeyUsageTests.pas',
   SubjectKeyIdentifierTests in '..\src\Asn1\X509\SubjectKeyIdentifierTests.pas',
