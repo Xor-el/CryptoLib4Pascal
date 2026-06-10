@@ -62,9 +62,11 @@ implementation
 { TAsn1TimeFormatTest }
 
 class function TAsn1TimeFormatTest.IsValidGeneralizedTime(const S: String): Boolean;
+var
+  LTime: IAsn1GeneralizedTime;
 begin
   try
-    TAsn1GeneralizedTime.Create(S);
+    LTime := TAsn1GeneralizedTime.Create(S);
     Result := True;
   except
     on E: Exception do
@@ -73,9 +75,11 @@ begin
 end;
 
 class function TAsn1TimeFormatTest.IsValidUtcTime(const S: String): Boolean;
+var
+  LTime: IAsn1UtcTime;
 begin
   try
-    TAsn1UtcTime.Create(S);
+    LTime := TAsn1UtcTime.Create(S);
     Result := True;
   except
     on E: Exception do
