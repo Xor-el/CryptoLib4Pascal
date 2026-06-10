@@ -267,7 +267,7 @@ var
   LCInfos: TCryptoLibGenericArray<IPkcsContentInfo>;
 begin
   LDataInfo := TPkcsContentInfo.Create(TPkcsObjectIdentifiers.Data,
-    TDerOctetString.Create(TDerSequence.Create(ASafeBag as IAsn1Encodable).GetEncoded()) as IDerOctetString);
+    TDerOctetString.Create((TDerSequence.Create(ASafeBag) as IDerSequence).GetEncoded()) as IDerOctetString);
   SetLength(LCInfos, 1);
   LCInfos[0] := LDataInfo;
   LAuthSafe := TAuthenticatedSafe.Create(LCInfos);
