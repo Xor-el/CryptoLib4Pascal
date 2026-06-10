@@ -28,7 +28,6 @@ uses
   ClpAsn1Tags,
   ClpAsn1Core,
   ClpAsn1Streams,
-  ClpBitOperations,
   ClpStreamUtilities;
 
 type
@@ -67,7 +66,8 @@ type
     constructor Create(AOutStream: TStream); overload;
     constructor Create(AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
 
-    procedure WriteHdr(ATag: Int32);
+    procedure WriteHdr(ATag: Int32); overload;
+    procedure WriteHdr(AFlags, ATagNo: Int32); overload;
     procedure WriteBerHeader(ATag: Int32);
     procedure WriteBerBody(AContentStream: TStream);
     procedure WriteBerEnd();
@@ -107,14 +107,14 @@ type
   strict private
     FTagged, FIsExplicit: Boolean;
     FTagNo: Int32;
-    class procedure WriteLength(const AOutStr: TStream; ALength: Int32); static;
+    procedure WriteDerEncoded(const AOutStream: TStream; AFlags, ATagNo: Int32;
+      const ABytes: TCryptoLibByteArray); overload;
   strict protected
     constructor Create(const AOutStream: TStream); overload;
     constructor Create(const AOutStream: TStream; ATagNo: Int32; AIsExplicit: Boolean); overload;
   public
     procedure WriteDerEncoded(ATag: Int32; const ABytes: TCryptoLibByteArray); overload;
     class procedure WriteDerEncoded(const AOutStream: TStream; ATag: Int32; const ABytes: TCryptoLibByteArray); overload; static;
-    class procedure WriteDerEncoded(const AOutStr: TStream; ATag: Int32; const AInStr: TStream); overload; static;
   end;
 
   /// <summary>
@@ -256,7 +256,7 @@ begin
      * X.690-0207 8.14.2. If implicit tagging [..] was not used [..], the encoding shall be constructed
      * and the contents octets shall be the complete base encoding.
      }
-    WriteHdr(FTagNo or TAsn1Tags.ContextSpecific or TAsn1Tags.Constructed);
+    WriteHdr(TAsn1Tags.ContextSpecific or TAsn1Tags.Constructed, FTagNo);
     WriteHdr(ATag);
   end
   else
@@ -266,13 +266,19 @@ begin
      * if the base encoding is constructed, and shall be primitive otherwise; and b) the contents octets
      * shall be [..] the contents octets of the base encoding.
      }
-    WriteHdr(InheritConstructedFlag(FTagNo or TAsn1Tags.ContextSpecific, ATag));
+    WriteHdr(InheritConstructedFlag(TAsn1Tags.ContextSpecific, ATag), FTagNo);
   end;
 end;
 
 procedure TBerGenerator.WriteHdr(ATag: Int32);
 begin
   &Out.WriteByte(Byte(ATag));
+  &Out.WriteByte($80);
+end;
+
+procedure TBerGenerator.WriteHdr(AFlags, ATagNo: Int32);
+begin
+  TAsn1OutputStream.WriteIdentifier(&Out, AFlags, ATagNo);
   &Out.WriteByte($80);
 end;
 
@@ -348,42 +354,18 @@ end;
 class procedure TDerGenerator.WriteDerEncoded(const AOutStream: TStream; ATag: Int32; const ABytes: TCryptoLibByteArray);
 begin
   AOutStream.WriteByte(Byte(ATag));
-  WriteLength(AOutStream, System.Length(ABytes));
+  TAsn1OutputStream.WriteDL(AOutStream, System.Length(ABytes));
   if System.Length(ABytes) > 0 then
     AOutStream.Write(ABytes[0], System.Length(ABytes));
 end;
 
-class procedure TDerGenerator.WriteDerEncoded(const AOutStr: TStream; ATag: Int32; const AInStr: TStream);
+procedure TDerGenerator.WriteDerEncoded(const AOutStream: TStream; AFlags, ATagNo: Int32;
+  const ABytes: TCryptoLibByteArray);
 begin
-  WriteDerEncoded(AOutStr, ATag, TStreamUtilities.ReadAll(AInStr));
-end;
-
-class procedure TDerGenerator.WriteLength(const AOutStr: TStream; ALength: Int32);
-var
-  LSize, LVal, LI: Int32;
-begin
-  if ALength > 127 then
-  begin
-    LSize := 1;
-    LVal := ALength;
-    LVal := TBitOperations.Asr32(LVal, 8);
-    while LVal <> 0 do
-    begin
-      System.Inc(LSize);
-      LVal := TBitOperations.Asr32(LVal, 8);
-    end;
-    AOutStr.WriteByte(Byte(LSize or $80));
-    LI := (LSize - 1) * 8;
-    while LI >= 0 do
-    begin
-      AOutStr.WriteByte(Byte(TBitOperations.Asr32(ALength, LI)));
-      System.Dec(LI, 8);
-    end;
-  end
-  else
-  begin
-    AOutStr.WriteByte(Byte(ALength));
-  end;
+  TAsn1OutputStream.WriteIdentifier(AOutStream, AFlags, ATagNo);
+  TAsn1OutputStream.WriteDL(AOutStream, System.Length(ABytes));
+  if System.Length(ABytes) > 0 then
+    AOutStream.Write(ABytes[0], System.Length(ABytes));
 end;
 
 procedure TDerGenerator.WriteDerEncoded(ATag: Int32; const ABytes: TCryptoLibByteArray);
@@ -407,7 +389,7 @@ begin
       LBOut.Position := 0;
       System.SetLength(LTemp, LBOut.Size);
       LBOut.Read(LTemp[0], LBOut.Size);
-      WriteDerEncoded(&Out, FTagNo or TAsn1Tags.ContextSpecific or TAsn1Tags.Constructed, LTemp);
+      WriteDerEncoded(&Out, TAsn1Tags.ContextSpecific or TAsn1Tags.Constructed, FTagNo, LTemp);
     finally
       LBOut.Free;
     end;
@@ -419,7 +401,7 @@ begin
      * if the base encoding is constructed, and shall be primitive otherwise; and b) the contents octets
      * shall be [..] the contents octets of the base encoding.
      }
-    WriteDerEncoded(&Out, InheritConstructedFlag(FTagNo or TAsn1Tags.ContextSpecific, ATag), ABytes);
+    WriteDerEncoded(&Out, InheritConstructedFlag(TAsn1Tags.ContextSpecific, ATag), FTagNo, ABytes);
   end;
 end;
 

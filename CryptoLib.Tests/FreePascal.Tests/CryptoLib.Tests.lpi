@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="166">
+    <Units Count="168">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -745,6 +745,14 @@
         <Filename Value="..\src\Asn1\X509\IdpRelativeNameTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit165>
+      <Unit166>
+        <Filename Value="..\src\Asn1\Asn1TimeFormatTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit166>
+      <Unit167>
+        <Filename Value="..\src\Asn1\Asn1GeneratorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit167>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

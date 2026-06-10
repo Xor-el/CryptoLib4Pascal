@@ -127,6 +127,7 @@ type
         constructor Create;
       strict protected
         function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
       public
         class property Instance: IAsn1UniversalType read GetInstance;
       end;
@@ -13101,7 +13102,12 @@ end;
 
 function TAsn1OctetString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
 begin
-  Result := AOctetString as IAsn1Object;
+  Result := AOctetString;
+end;
+
+function TAsn1OctetString.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+begin
+  Result := ASequence.ToAsn1OctetString();
 end;
 
 { TAsn1Sequence.Meta }
@@ -13120,7 +13126,7 @@ end;
 
 function TAsn1Sequence.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
 begin
-  Result := ASequence as IAsn1Object;
+  Result := ASequence;
 end;
 
 { TAsn1Set.Meta }
@@ -13267,7 +13273,7 @@ var
   LBitString: IDerBitString;
 begin
   LBitString := ASequence.ToAsn1BitString();
-  Result := LBitString as IAsn1Object;
+  Result := LBitString;
 end;
 
 { TAsn1GeneralizedTime.Meta }
@@ -13354,7 +13360,7 @@ var
   LExternal: IDerExternal;
 begin
   LExternal := ASequence.ToAsn1External();
-  Result := LExternal as IAsn1Object;
+  Result := LExternal;
 end;
 
 { TDerUtf8String.Meta }

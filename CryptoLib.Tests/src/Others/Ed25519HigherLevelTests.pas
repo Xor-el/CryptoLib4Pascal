@@ -43,7 +43,6 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpICipherParameters,
-  ClpStringUtilities,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
   AsymmetricTestVectors;

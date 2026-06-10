@@ -651,6 +651,10 @@ type
     /// </summary>
     function ToAsn1External(): IDerExternal;
     /// <summary>
+    /// Convert to ASN.1 octet string.
+    /// </summary>
+    function ToAsn1OctetString(): IAsn1OctetString;
+    /// <summary>
     /// Convert to ASN.1 set.
     /// </summary>
     function ToAsn1Set(): IAsn1Set;

@@ -3,7 +3,8 @@ program CryptoLib.Tests;
 {$mode objfpc}{$H+}
 
 uses
-  Interfaces, Forms, GuiTestRunner, Asn1SequenceParserTests,
+  Interfaces, Forms, GuiTestRunner, Asn1GeneratorTests, Asn1SequenceParserTests,
+  Asn1TimeFormatTests,
   EqualsAndHashCodeTests, OIDTests, EnumeratedTests, ExternalTests,
   ParsingTests, ParseTests, StringTests, TagTests, BigIntegerTests,
   ECAlgorithmsTests, ECPointTests, BinPolyTests, SecP256R1FieldTests, SecP384R1FieldTests,
