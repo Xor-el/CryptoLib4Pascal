@@ -43,6 +43,11 @@ resourcestring
   SMsgLen = 'MsgLen must be Equal to PreHashSize for Ed25519ph Algorithm';
 
 type
+  /// <summary>
+  /// Ed25519 public key (RFC 8032). Wraps a decoded curve point obtained from a 32-byte encoded
+  /// representation; the point is validated at construction so that subsequent verifications work
+  /// against a known-good key.
+  /// </summary>
   TEd25519PublicKeyParameters = class sealed(TAsymmetricKeyParameter,
     IEd25519PublicKeyParameters)
 
@@ -51,17 +56,60 @@ type
     FPublicPoint: TEd25519.IPublicPoint;
 
   public
+    /// <summary>Length in bytes of an Ed25519 public key encoding (32).</summary>
     const
     KeySize = Int32(TEd25519.PublicKeySize);
 
+    /// <summary>
+    /// Construct from a 32-byte buffer holding the encoded public point.
+    /// </summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If <paramref name="ABuf"/> length differs from <see cref="KeySize"/>, or the encoding does
+    /// not decode to a valid curve point.
+    /// </exception>
     constructor Create(const ABuf: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Construct from <paramref name="ABuf"/> starting at <paramref name="AOff"/>; reads
+    /// <see cref="KeySize"/> bytes.
+    /// </summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If the encoded bytes do not decode to a valid curve point.
+    /// </exception>
     constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    /// <summary>Read encoded bytes from <paramref name="AInput"/> and decode them.</summary>
+    /// <exception cref="EEndOfStreamCryptoLibException">
+    /// If the stream ends before <see cref="KeySize"/> bytes have been read.
+    /// </exception>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If the encoded bytes do not decode to a valid curve point.
+    /// </exception>
     constructor Create(AInput: TStream); overload;
+    /// <summary>
+    /// Construct from an already-decoded curve point. No further validation is performed.
+    /// </summary>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="APublicPoint"/> is nil.
+    /// </exception>
     constructor Create(const APublicPoint: TEd25519.IPublicPoint); overload;
 
+    /// <summary>
+    /// Write the 32-byte encoded public point into <paramref name="ABuf"/> at <paramref name="AOff"/>.
+    /// </summary>
     procedure Encode(const ABuf: TCryptoLibByteArray; AOff: Int32); inline;
+    /// <summary>Return a fresh copy of the 32-byte encoded public point.</summary>
     function GetEncoded(): TCryptoLibByteArray; inline;
 
+    /// <summary>
+    /// Verify an Ed25519 signature. Selects between pure Ed25519, Ed25519ctx and Ed25519ph based on
+    /// <paramref name="AAlgorithm"/>. The pure variant rejects a non-nil context; the context and
+    /// prehash variants require a context up to 255 bytes long, and Ed25519ph additionally requires
+    /// <paramref name="AMsgLen"/> to equal <see cref="ClpEd25519|TEd25519.PrehashSize"/>.
+    /// </summary>
+    /// <returns>true if the signature is valid for this key; otherwise false.</returns>
+    /// <exception cref="EArgumentOutOfRangeCryptoLibException">
+    /// If <paramref name="ACtx"/> exceeds 255 bytes, is supplied for pure Ed25519,
+    /// <paramref name="AMsgLen"/> is wrong for Ed25519ph, or <paramref name="AAlgorithm"/> is
+    /// unrecognised.
+    /// </exception>
     function Verify(AAlgorithm: TEd25519.TAlgorithm;
       const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASig: TCryptoLibByteArray; ASigOff: Int32): Boolean;
@@ -72,6 +120,10 @@ type
 {$ENDIF DELPHI}override;
   end;
 
+  /// <summary>
+  /// Ed25519 private key (RFC 8032). Holds the 32-byte secret seed; the corresponding public key is
+  /// derived lazily on first use and cached.
+  /// </summary>
   TEd25519PrivateKeyParameters = class sealed(TAsymmetricKeyParameter,
     IEd25519PrivateKeyParameters)
 
@@ -81,19 +133,51 @@ type
     FCachedPublicKey: IEd25519PublicKeyParameters;
 
   public
+    /// <summary>Length in bytes of an Ed25519 private-key seed (32).</summary>
     const
     KeySize = Int32(TEd25519.SecretKeySize);
+    /// <summary>Length in bytes of an Ed25519 signature (64).</summary>
     SignatureSize = Int32(TEd25519.SignatureSize);
 
+    /// <summary>Generate a fresh random Ed25519 private key using <paramref name="ARandom"/>.
+    /// </summary>
     constructor Create(const ARandom: ISecureRandom); overload;
+    /// <summary>Construct from a 32-byte seed buffer.</summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If <paramref name="ABuf"/> length differs from <see cref="KeySize"/>.
+    /// </exception>
     constructor Create(const ABuf: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Construct from <paramref name="ABuf"/> at <paramref name="AOff"/>; reads
+    /// <see cref="KeySize"/> bytes.
+    /// </summary>
     constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    /// <summary>Read the 32-byte seed from <paramref name="AInput"/>.</summary>
+    /// <exception cref="EEndOfStreamCryptoLibException">
+    /// If the stream ends before <see cref="KeySize"/> bytes have been read.
+    /// </exception>
     constructor Create(AInput: TStream); overload;
 
+    /// <summary>
+    /// Write the 32-byte seed into <paramref name="ABuf"/> at <paramref name="AOff"/>.
+    /// </summary>
     procedure Encode(const ABuf: TCryptoLibByteArray; AOff: Int32); inline;
+    /// <summary>Return a fresh copy of the 32-byte seed.</summary>
     function GetEncoded(): TCryptoLibByteArray; inline;
+    /// <summary>Derive (and cache) the public key corresponding to this private key.</summary>
     function GeneratePublicKey(): IEd25519PublicKeyParameters;
 
+    /// <summary>
+    /// Compute an Ed25519 signature. Selects between pure Ed25519, Ed25519ctx and Ed25519ph based on
+    /// <paramref name="AAlgorithm"/>. The pure variant rejects a non-nil context; the context and
+    /// prehash variants require a context up to 255 bytes long, and Ed25519ph additionally requires
+    /// <paramref name="AMsgLen"/> to equal <see cref="ClpEd25519|TEd25519.PrehashSize"/>.
+    /// </summary>
+    /// <exception cref="EArgumentOutOfRangeCryptoLibException">
+    /// If <paramref name="ACtx"/> exceeds 255 bytes, is supplied for pure Ed25519,
+    /// <paramref name="AMsgLen"/> is wrong for Ed25519ph, or <paramref name="AAlgorithm"/> is
+    /// unrecognised.
+    /// </exception>
     procedure Sign(AAlgorithm: TEd25519.TAlgorithm;
       const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASig: TCryptoLibByteArray; ASigOff: Int32);
@@ -104,10 +188,17 @@ type
 {$ENDIF DELPHI}override;
   end;
 
+  /// <summary>
+  /// Key generation parameters for Ed25519 (RFC 8032). Carries the <see cref="ISecureRandom"/> used for
+  /// seed generation; the strength is fixed at 256 bits.
+  /// </summary>
   TEd25519KeyGenerationParameters = class sealed(TKeyGenerationParameters,
     IEd25519KeyGenerationParameters)
 
   public
+    /// <summary>
+    /// Construct using <paramref name="ARandom"/> as the entropy source for the 32-byte seed.
+    /// </summary>
     constructor Create(const ARandom: ISecureRandom);
   end;
 

@@ -38,6 +38,10 @@ resourcestring
     'Ed448Signer not Initialised for Verification';
 
 type
+  /// <summary>
+  /// Ed448 (RFC 8032) signature primitive: pure Ed448 with a mandatory domain-separation context of
+  /// up to 255 bytes captured at construction.
+  /// </summary>
   TEd448Signer = class(TInterfacedObject, ISigner, IEd448Signer)
 
   strict private
@@ -79,18 +83,44 @@ type
     function GetAlgorithmName: String; virtual;
 
   public
+    /// <summary>
+    /// Construct an Ed448 signer bound to the supplied <paramref name="AContext"/>. The context bytes
+    /// are cloned so the caller may mutate the array afterwards; nil is treated as empty.
+    /// </summary>
     constructor Create(const AContext: TCryptoLibByteArray);
     destructor Destroy(); override;
 
+    /// <summary>Initialise for signing (private key) or verification (public key).</summary>
+    /// <exception cref="EInvalidCastCryptoLibException">
+    /// If <paramref name="AParameters"/> is not an
+    /// <see cref="IEd448PrivateKeyParameters"/> (signing) or
+    /// <see cref="IEd448PublicKeyParameters"/> (verification).
+    /// </exception>
     procedure Init(AForSigning: Boolean;
       const AParameters: ICipherParameters); virtual;
     procedure Update(AInput: Byte); virtual;
     procedure BlockUpdate(const ABuf: TCryptoLibByteArray;
       AOff, ALength: Int32); virtual;
+    /// <summary>Length in bytes of an Ed448 signature (114).</summary>
     function GetMaxSignatureSize: Int32; virtual;
+    /// <summary>Finalise the buffered message and produce the signature. Buffer is reset on return.
+    /// </summary>
+    /// <exception cref="EInvalidOperationCryptoLibException">
+    /// If the signer was initialised for verification, not signing.
+    /// </exception>
     function GenerateSignature(): TCryptoLibByteArray; virtual;
+    /// <summary>
+    /// Finalise the buffered message and verify <paramref name="ASignature"/>. Buffer is reset on
+    /// return.
+    /// </summary>
+    /// <returns>true if the signature is valid for the accumulated message, bound public key and
+    /// captured context; otherwise false.</returns>
+    /// <exception cref="EInvalidOperationCryptoLibException">
+    /// If the signer was initialised for signing, not verification.
+    /// </exception>
     function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
+    /// <summary>Clear and rewind the buffered message; the captured context survives.</summary>
     procedure Reset(); virtual;
 
     property AlgorithmName: String read GetAlgorithmName;

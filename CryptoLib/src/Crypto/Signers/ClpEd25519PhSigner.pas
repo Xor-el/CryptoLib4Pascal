@@ -38,6 +38,10 @@ resourcestring
   SPreHashDigestFailed = 'PreHash Digest Failed';
 
 type
+  /// <summary>
+  /// Ed25519ph (RFC 8032 section 5.1) signature primitive: pre-hashes the message with SHA-512 before
+  /// running pure Ed25519, parameterised by a fixed context captured at construction.
+  /// </summary>
   TEd25519PhSigner = class(TInterfacedObject, ISigner, IEd25519PhSigner)
 
   strict private
@@ -52,18 +56,42 @@ type
     function GetAlgorithmName: String; virtual;
 
   public
+    /// <summary>
+    /// Construct an Ed25519ph signer bound to the supplied <paramref name="AContext"/>. The context
+    /// bytes are cloned so the caller may mutate the array afterwards; nil is treated as empty.
+    /// </summary>
     constructor Create(const AContext: TCryptoLibByteArray);
     destructor Destroy(); override;
 
+    /// <summary>Initialise for signing (private key) or verification (public key).</summary>
+    /// <exception cref="EInvalidCastCryptoLibException">
+    /// If <paramref name="AParameters"/> is not an
+    /// <see cref="IEd25519PrivateKeyParameters"/> (signing) or
+    /// <see cref="IEd25519PublicKeyParameters"/> (verification).
+    /// </exception>
     procedure Init(AForSigning: Boolean;
       const AParameters: ICipherParameters); virtual;
     procedure Update(AInput: Byte); virtual;
     procedure BlockUpdate(const ABuf: TCryptoLibByteArray;
       AOff, ALength: Int32); virtual;
+    /// <summary>Length in bytes of an Ed25519ph signature (64).</summary>
     function GetMaxSignatureSize: Int32; virtual;
+    /// <summary>Finalise the pre-hash and produce the signature.</summary>
+    /// <exception cref="EInvalidOperationCryptoLibException">
+    /// If the signer was initialised for verification, not signing, or the pre-hash finalisation
+    /// produces an unexpected length.
+    /// </exception>
     function GenerateSignature(): TCryptoLibByteArray; virtual;
+    /// <summary>Finalise the pre-hash and verify <paramref name="ASignature"/>.</summary>
+    /// <returns>true if the signature is valid for the accumulated message, bound public key and
+    /// captured context; otherwise false.</returns>
+    /// <exception cref="EInvalidOperationCryptoLibException">
+    /// If the signer was initialised for signing, not verification, or the pre-hash finalisation
+    /// produces an unexpected length.
+    /// </exception>
     function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
+    /// <summary>Reset the pre-hash digest; the captured context survives.</summary>
     procedure Reset(); virtual;
 
     property AlgorithmName: String read GetAlgorithmName;

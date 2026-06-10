@@ -31,12 +31,18 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator;
 
 type
+  /// <summary>
+  /// Key-pair generator for Ed448 (RFC 8032). Only the <see cref="ISecureRandom"/> from the supplied
+  /// key-generation parameters is used; the 57-byte seed is drawn directly from it.
+  /// </summary>
   TEd448KeyPairGenerator = class sealed(TInterfacedObject,
     IEd448KeyPairGenerator, IAsymmetricCipherKeyPairGenerator)
   strict private
     FRandom: ISecureRandom;
   public
+    /// <summary>Capture the <see cref="ISecureRandom"/> that will source the seed.</summary>
     procedure Init(const AParameters: IKeyGenerationParameters);
+    /// <summary>Generate a fresh Ed448 key pair.</summary>
     function GenerateKeyPair(): IAsymmetricCipherKeyPair;
   end;
 

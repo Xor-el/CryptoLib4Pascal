@@ -38,6 +38,11 @@ resourcestring
     'Ed25519Signer not Initialised for Verification';
 
 type
+  /// <summary>
+  /// Pure Ed25519 (RFC 8032) signature primitive. Buffers the message via the streaming
+  /// <see cref="ISigner"/> surface and dispatches it to the curve routines on finalisation; no
+  /// context is permitted.
+  /// </summary>
   TEd25519Signer = class(TInterfacedObject, ISigner, IEd25519Signer)
 
   strict private
@@ -76,18 +81,41 @@ type
     function GetAlgorithmName: String; virtual;
 
   public
+    /// <summary>Construct an uninitialised pure-Ed25519 signer; call Init before use.</summary>
     constructor Create();
     destructor Destroy(); override;
 
+    /// <summary>Initialise for signing (private key) or verification (public key).</summary>
+    /// <exception cref="EInvalidCastCryptoLibException">
+    /// If <paramref name="AParameters"/> is not an
+    /// <see cref="IEd25519PrivateKeyParameters"/> (signing) or
+    /// <see cref="IEd25519PublicKeyParameters"/> (verification).
+    /// </exception>
     procedure Init(AForSigning: Boolean;
       const AParameters: ICipherParameters); virtual;
     procedure Update(AInput: Byte); virtual;
     procedure BlockUpdate(const ABuf: TCryptoLibByteArray;
       AOff, ALength: Int32); virtual;
+    /// <summary>Length in bytes of an Ed25519 signature (64).</summary>
     function GetMaxSignatureSize: Int32; virtual;
+    /// <summary>Finalise the buffered message and produce the signature. Buffer is reset on return.
+    /// </summary>
+    /// <exception cref="EInvalidOperationCryptoLibException">
+    /// If the signer was initialised for verification, not signing.
+    /// </exception>
     function GenerateSignature(): TCryptoLibByteArray; virtual;
+    /// <summary>
+    /// Finalise the buffered message and verify <paramref name="ASignature"/>. Buffer is reset on
+    /// return.
+    /// </summary>
+    /// <returns>true if the signature is valid for the accumulated message and bound public key;
+    /// otherwise false.</returns>
+    /// <exception cref="EInvalidOperationCryptoLibException">
+    /// If the signer was initialised for signing, not verification.
+    /// </exception>
     function VerifySignature(const ASignature: TCryptoLibByteArray)
       : Boolean; virtual;
+    /// <summary>Clear and rewind the buffered message.</summary>
     procedure Reset(); virtual;
 
     property AlgorithmName: String read GetAlgorithmName;
