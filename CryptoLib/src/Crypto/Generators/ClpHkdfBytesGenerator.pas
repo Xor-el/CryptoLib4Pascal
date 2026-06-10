@@ -140,6 +140,9 @@ function THkdfBytesGenerator.Extract(const ASalt, AIkm: TCryptoLibByteArray): IK
 var
   LTemp, LPrk: TCryptoLibByteArray;
 begin
+  // RFC 5869 sec. 2.2: when no salt is provided it defaults to HashLen zero octets,
+  // where HashLen is the hash output length. FHashLen is exactly that length
+  // (AHash.GetDigestSize() in Create), which for an HMac also equals its GetMacSize().
   if ASalt = nil then
   begin
     System.SetLength(LTemp, FHashLen);
