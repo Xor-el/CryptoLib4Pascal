@@ -1598,7 +1598,7 @@ type
     FDataValueDescriptor: IAsn1ObjectDescriptor;
     FEncoding: Int32;
     FExternalContent: IAsn1Object;
-    
+
     function BuildSequence(): IAsn1Sequence; virtual;
 
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
@@ -7239,17 +7239,17 @@ begin
   inherited Create();
   if ASequence = nil then
     raise EArgumentNilCryptoLibException.Create('sequence');
-  
+
   LOffset := 0;
   LAsn1 := GetObjFromSequence(ASequence, LOffset);
-  
+
   if Supports(LAsn1, IDerObjectIdentifier, LDerObjectIdentifier) then
   begin
     FDirectReference := LDerObjectIdentifier;
     System.Inc(LOffset);
     LAsn1 := GetObjFromSequence(ASequence, LOffset);
   end;
-  
+
   if Supports(LAsn1, IDerInteger, LDerInteger) then
   begin
     FIndirectReference := LDerInteger;
@@ -7269,13 +7269,13 @@ begin
     System.Inc(LOffset);
     LAsn1 := GetObjFromSequence(ASequence, LOffset);
   end;
-  
+
   if ASequence.Count <> LOffset + 1 then
     raise EArgumentCryptoLibException.Create('input sequence too large');
-  
+
   if not Supports(LAsn1, IAsn1TaggedObject, LObj) then
     raise EArgumentCryptoLibException.Create('No tagged object found in sequence. Structure doesn''t seem to be of type External');
-  
+
   FEncoding := CheckEncoding(LObj.TagNo);
   FExternalContent := GetExternalContent(LObj);
 end;
@@ -10167,7 +10167,7 @@ end;
 
 constructor TDerUtcTime.Create(const ADateTime: TDateTime);
 begin
-  inherited Create(ADateTime);
+  inherited Create(ADateTime, TDateTimeUtilities.TwoDigitYearMax);
 end;
 
 constructor TDerUtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
@@ -10260,7 +10260,7 @@ end;
 
 function TAsn1UtcTime.ToAdjustedDateTime: TDateTime;
 begin
-  Result := ToDateTime(2049);
+  Result := ToDateTime(TDateTimeUtilities.TwoDigitYearMax);
 end;
 
 class function TAsn1UtcTime.InRange(const ADateTime: TDateTime; ATwoDigitYearMax: Int32): Boolean;
