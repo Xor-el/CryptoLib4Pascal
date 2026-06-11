@@ -38,6 +38,7 @@ resourcestring
   SDigestSize = 'Digest must produce 64 bytes';
   SInvalidOp = 'Invalid point';
   SInvalidCtx = 'ctx';
+  SInvalidBufferLength = 'Invalid buffer length';
 
 type
   /// <summary>
@@ -54,6 +55,8 @@ type
   /// </remarks>
   TEd25519 = class(TObject)
   strict private
+  const
+    DigestSize = 64;
   type
     TPointAccum = record
     private
@@ -131,6 +134,38 @@ type
       property Data: TCryptoLibInt32Array read GetData;
     end;
 
+    /// <summary>
+    ///   Low-level helpers for the expanded private key format (xk =
+    ///   Digest(seed), 64 bytes). Bound to a <see cref="TEd25519"/>
+    ///   owner so <see cref="CreateDigest"/> overrides apply.
+    /// </summary>
+    TExpandedKey = class sealed(TObject)
+    strict private
+      FOwner: TEd25519;
+      procedure CheckExpandedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+      procedure CheckSeedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+    private
+      constructor Create(AOwner: TEd25519);
+    public
+      const
+        ExpandedKeySize = DigestSize;
+      procedure ExpandPrivateKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+        var AXk: TCryptoLibByteArray; AXkOff: Int32);
+      procedure GeneratePrivateKey(const ARandom: ISecureRandom;
+        var AXk: TCryptoLibByteArray; AXkOff: Int32);
+      procedure GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+        var APk: TCryptoLibByteArray; APkOff: Int32); overload;
+      function GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32): IPublicPoint; overload;
+      procedure Prune(var AXk: TCryptoLibByteArray; AXkOff: Int32);
+      procedure Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+        const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+        var ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+      procedure Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+        const APk: TCryptoLibByteArray; APkOff: Int32;
+        const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+        var ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+    end;
+
   strict private
   const
     CoordUints = 8;
@@ -195,7 +230,11 @@ type
   class function PointPrecomputeZ(const AP: TPointAffine; ACount: Int32; var AT: TPointTemp): TCryptoLibInt32Array; overload; static;
   class procedure PointPrecomputeZ(const AP: TPointAffine; var APoints: TCryptoLibGenericArray<TPointPrecompZ>; ACount: Int32; var AT: TPointTemp); overload; static;
   class procedure PointSetNeutral(var AP: TPointAccum); static;
-  class procedure PruneScalar(const AN: TCryptoLibByteArray; ANOff: Int32; AR: TCryptoLibByteArray); static;
+  class procedure ExpandPrivateKey(const AD: IDigest; const ASk: TCryptoLibByteArray; ASkOff: Int32;
+    const AH: TCryptoLibByteArray; AHOff: Int32); static;
+  class function GeneratePublicPoint(const AH: TCryptoLibByteArray; AHOff: Int32): IPublicPoint; static;
+  class procedure PruneScalar(var AScalar: TCryptoLibByteArray; AScalarOff: Int32); overload; static;
+  class procedure PruneScalar(const AN: TCryptoLibByteArray; ANOff: Int32; AR: TCryptoLibByteArray); overload; static;
   class procedure ScalarMult(const AK: TCryptoLibByteArray; const AP: TPointAffine; var AR: TPointAccum); static;
   class procedure ScalarMultBase(const AK: TCryptoLibByteArray; var AR: TPointAccum); static;
   class procedure ScalarMultBaseEncoded(const AK: TCryptoLibByteArray; AR: TCryptoLibByteArray; AROff: Int32); static;
@@ -221,7 +260,7 @@ type
     function CreateDigest(): IDigest; virtual;
   public
     const
-    PrehashSize = 64;
+    PrehashSize = DigestSize;
     PublicKeySize = PointBytes;
     SecretKeySize = 32;
     SignatureSize = PointBytes + ScalarBytes;
@@ -236,6 +275,7 @@ type
     class function ValidatePublicKeyPartialExport(const APk: TCryptoLibByteArray; APkOff: Int32): IPublicPoint; static;
 
     function CreatePreHash(): IDigest;
+    function CreateExpandedKey: TExpandedKey;
     function GeneratePublicKey(const &AS: TCryptoLibByteArray; ASOff: Int32): IPublicPoint; overload;
     procedure GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
     procedure GeneratePublicKey(const &AS: TCryptoLibByteArray; ASOff: Int32; APk: TCryptoLibByteArray; APkOff: Int32); overload;
@@ -454,7 +494,7 @@ var
   LD: IDigest;
 begin
   LD := CreateDigest();
-  if LD.GetDigestSize() <> 64 then
+  if LD.GetDigestSize() <> DigestSize then
     raise EInvalidOperationCryptoLibException.CreateRes(@SDigestSize);
   Result := LD;
 end;
@@ -977,12 +1017,40 @@ begin
   TX25519Field.One(AP.V);
 end;
 
+class procedure TEd25519.PruneScalar(var AScalar: TCryptoLibByteArray; AScalarOff: Int32);
+begin
+  AScalar[AScalarOff] := AScalar[AScalarOff] and $F8;
+  AScalar[AScalarOff + ScalarBytes - 1] := (AScalar[AScalarOff + ScalarBytes - 1] and $7F) or $40;
+end;
+
 class procedure TEd25519.PruneScalar(const AN: TCryptoLibByteArray; ANOff: Int32; AR: TCryptoLibByteArray);
 begin
   System.Move(AN[ANOff], AR[0], ScalarBytes);
-  AR[0] := AR[0] and $F8;
-  AR[ScalarBytes - 1] := AR[ScalarBytes - 1] and $7F;
-  AR[ScalarBytes - 1] := AR[ScalarBytes - 1] or $40;
+  PruneScalar(AR, 0);
+end;
+
+class procedure TEd25519.ExpandPrivateKey(const AD: IDigest; const ASk: TCryptoLibByteArray; ASkOff: Int32;
+  const AH: TCryptoLibByteArray; AHOff: Int32);
+begin
+  AD.BlockUpdate(ASk, ASkOff, SecretKeySize);
+  AD.DoFinal(AH, AHOff);
+end;
+
+class function TEd25519.GeneratePublicPoint(const AH: TCryptoLibByteArray; AHOff: Int32): IPublicPoint;
+var
+  LS: TCryptoLibByteArray;
+  LP: TPointAccum;
+  LQ: TPointAffine;
+begin
+  System.SetLength(LS, ScalarBytes);
+  PruneScalar(AH, AHOff, LS);
+  InitPointAccum(LP);
+  ScalarMultBase(LS, LP);
+  InitPointAffine(LQ);
+  NormalizeToAffine(LP, LQ);
+  if CheckPoint(LQ) = 0 then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+  Result := ExportPoint(LQ);
 end;
 
 class procedure TEd25519.ScalarMult(const AK: TCryptoLibByteArray; const AP: TPointAffine; var AR: TPointAccum);
@@ -1149,23 +1217,12 @@ end;
 function TEd25519.GeneratePublicKey(const &AS: TCryptoLibByteArray; ASOff: Int32): IPublicPoint;
 var
   LD: IDigest;
-  LH, LS: TCryptoLibByteArray;
-  LP: TPointAccum;
-  LQ: TPointAffine;
+  LH: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
-  System.SetLength(LS, ScalarBytes);
-  PruneScalar(LH, 0, LS);
-  InitPointAccum(LP);
-  ScalarMultBase(LS, LP);
-  InitPointAffine(LQ);
-  NormalizeToAffine(LP, LQ);
-  if CheckPoint(LQ) = 0 then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
-  Result := ExportPoint(LQ);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
+  Result := GeneratePublicPoint(LH, 0);
 end;
 
 class function TEd25519.ValidatePublicKeyFull(const APk: TCryptoLibByteArray; APkOff: Int32): Boolean;
@@ -1454,9 +1511,8 @@ var
   LS: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
   ScalarMultBaseEncoded(LS, APk, APkOff);
@@ -1666,7 +1722,7 @@ begin
   TX25519Field.Negate(LData, LPA.X);
   TX25519Field.Copy(LData, TX25519Field.Size, LPA.Y, 0);
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
+  System.SetLength(LH, DigestSize);
   if (ACtx <> nil) or (APhflag = $01) then
     Dom2(LD, APhflag, ACtx);
   LD.BlockUpdate(LR, 0, PointBytes);
@@ -1726,7 +1782,7 @@ begin
     Exit(False);
   end;
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
+  System.SetLength(LH, DigestSize);
   if (ACtx <> nil) or (APhflag = $01) then
     Dom2(LD, APhflag, ACtx);
   LD.BlockUpdate(LR, 0, PointBytes);
@@ -1753,9 +1809,8 @@ var
   LH, LS, LPk: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
   System.SetLength(LPk, PointBytes);
@@ -1771,12 +1826,120 @@ var
   LH, LS: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
   ImplSign(LD, LH, LS, APk, APkOff, ACtx, APhflag, AM, AMOff, AMLen, ASig, ASigOff);
+end;
+
+function TEd25519.CreateExpandedKey: TExpandedKey;
+begin
+  Result := TExpandedKey.Create(Self);
+end;
+
+{ TEd25519.TExpandedKey }
+
+constructor TEd25519.TExpandedKey.Create(AOwner: TEd25519);
+begin
+  Inherited Create;
+  if AOwner = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  FOwner := AOwner;
+end;
+
+procedure TEd25519.TExpandedKey.CheckExpandedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+begin
+  if (ABuf = nil) or (System.Length(ABuf) - AOff < ExpandedKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+end;
+
+procedure TEd25519.TExpandedKey.CheckSeedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+begin
+  if (ABuf = nil) or (System.Length(ABuf) - AOff < SecretKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+end;
+
+procedure TEd25519.TExpandedKey.ExpandPrivateKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+  var AXk: TCryptoLibByteArray; AXkOff: Int32);
+var
+  LD: IDigest;
+begin
+  CheckSeedBuffer(ASk, ASkOff);
+  CheckExpandedBuffer(AXk, AXkOff);
+  LD := FOwner.CreateAndValidateDigest();
+  TEd25519.ExpandPrivateKey(LD, ASk, ASkOff, AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.GeneratePrivateKey(const ARandom: ISecureRandom;
+  var AXk: TCryptoLibByteArray; AXkOff: Int32);
+var
+  LSk: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  System.SetLength(LSk, SecretKeySize);
+  FOwner.GeneratePrivateKey(ARandom, LSk);
+  ExpandPrivateKey(LSk, 0, AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+  var APk: TCryptoLibByteArray; APkOff: Int32);
+var
+  LS: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  if (APk = nil) or (System.Length(APk) - APkOff < PublicKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  System.SetLength(LS, ScalarBytes);
+  PruneScalar(AXk, AXkOff, LS);
+  ScalarMultBaseEncoded(LS, APk, APkOff);
+end;
+
+function TEd25519.TExpandedKey.GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32): IPublicPoint;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  Result := GeneratePublicPoint(AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.Prune(var AXk: TCryptoLibByteArray; AXkOff: Int32);
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  PruneScalar(AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+  const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+  var ASig: TCryptoLibByteArray; ASigOff: Int32);
+var
+  LPk: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  System.SetLength(LPk, PublicKeySize);
+  GeneratePublicKey(AXk, AXkOff, LPk, 0);
+  Sign(AXk, AXkOff, LPk, 0, AM, AMOff, AMLen, ASig, ASigOff);
+end;
+
+procedure TEd25519.TExpandedKey.Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+  const APk: TCryptoLibByteArray; APkOff: Int32;
+  const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+  var ASig: TCryptoLibByteArray; ASigOff: Int32);
+var
+  LD: IDigest;
+  LH, LS: TCryptoLibByteArray;
+  LNullCtx: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  if (APk = nil) or (System.Length(APk) - APkOff < PublicKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  if (ASig = nil) or (System.Length(ASig) - ASigOff < SignatureSize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  LD := FOwner.CreateAndValidateDigest();
+  System.SetLength(LH, DigestSize);
+  System.Move(AXk[AXkOff], LH[0], DigestSize);
+  System.SetLength(LS, ScalarBytes);
+  PruneScalar(LH, 0, LS);
+  LNullCtx := nil;
+  FOwner.ImplSign(LD, LH, LS, APk, APkOff, LNullCtx, Byte($00), AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
 end.

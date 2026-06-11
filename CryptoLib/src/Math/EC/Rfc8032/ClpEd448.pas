@@ -98,6 +98,7 @@ type
     PointBytes = Int32(CoordUints * 4 + 1);
     ScalarUints = Int32(14);
     ScalarBytes = Int32(ScalarUints * 4 + 1);
+    XofSize = ScalarBytes * 2;
     C_d = UInt32(39081);
     WnafWidth225 = Int32(5);
     WnafWidthBase = Int32(7);
@@ -313,7 +314,7 @@ begin
 
   TNat.MulAddTo(ScalarUints, LU, LV, LT);
 
-  System.SetLength(LResult, ScalarBytes * 2);
+  System.SetLength(LResult, XofSize);
   TCodec.Encode32(LT, 0, System.Length(LT), LResult, 0);
   Result := TScalar448.Reduce912(LResult);
 end;
@@ -1326,7 +1327,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
 
   LD := CreateAndValidateXof();
-  System.SetLength(LH, ScalarBytes * 2);
+  System.SetLength(LH, XofSize);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
 
@@ -1350,7 +1351,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
 
   LD := CreateAndValidateXof();
-  System.SetLength(LH, ScalarBytes * 2);
+  System.SetLength(LH, XofSize);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
 
@@ -1413,7 +1414,7 @@ begin
   end;
 
   LD := CreateAndValidateXof();
-  System.SetLength(LH, ScalarBytes * 2);
+  System.SetLength(LH, XofSize);
 
   Dom4(LD, APhflag, ACtx);
   LD.BlockUpdate(LR, 0, PointBytes);
@@ -1485,7 +1486,7 @@ begin
   EncodePublicPoint(APublicPoint, LA, 0);
 
   LD := CreateAndValidateXof();
-  System.SetLength(LH, ScalarBytes * 2);
+  System.SetLength(LH, XofSize);
 
   Dom4(LD, APhflag, ACtx);
   LD.BlockUpdate(LR, 0, PointBytes);
@@ -1525,7 +1526,7 @@ var
   LH, LS: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateXof();
-  System.SetLength(LH, ScalarBytes * 2);
+  System.SetLength(LH, XofSize);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
 
@@ -1542,7 +1543,7 @@ var
   LQ: TPointAffine;
 begin
   LD := CreateAndValidateXof();
-  System.SetLength(LH, ScalarBytes * 2);
+  System.SetLength(LH, XofSize);
   LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
   LD.OutputFinal(LH, 0, System.Length(LH));
 
