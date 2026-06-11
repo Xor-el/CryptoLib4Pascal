@@ -566,37 +566,37 @@ end;
 class procedure TBinaryPrimitives.WriteUInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt16);
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt16));
-  WriteUInt16LEAt(@AData[AOffset], 0, AValue);
+  WriteUInt16LEAt(PByte(AData), AOffset, AValue);
 end;
 
 class procedure TBinaryPrimitives.WriteUInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt32);
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt32));
-  WriteUInt32LEAt(@AData[AOffset], 0, AValue);
+  WriteUInt32LEAt(PByte(AData), AOffset, AValue);
 end;
 
 class procedure TBinaryPrimitives.WriteUInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt64);
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt64));
-  WriteUInt64LEAt(@AData[AOffset], 0, AValue);
+  WriteUInt64LEAt(PByte(AData), AOffset, AValue);
 end;
 
 class procedure TBinaryPrimitives.WriteInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int16);
 begin
   CheckBounds(AData, AOffset, SizeOf(Int16));
-  WriteUInt16LEAt(@AData[AOffset], 0, UInt16(AValue));
+  WriteUInt16LEAt(PByte(AData), AOffset, UInt16(AValue));
 end;
 
 class procedure TBinaryPrimitives.WriteInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int32);
 begin
   CheckBounds(AData, AOffset, SizeOf(Int32));
-  WriteUInt32LEAt(@AData[AOffset], 0, UInt32(AValue));
+  WriteUInt32LEAt(PByte(AData), AOffset, UInt32(AValue));
 end;
 
 class procedure TBinaryPrimitives.WriteInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int64);
 begin
   CheckBounds(AData, AOffset, SizeOf(Int64));
-  WriteUInt64LEAt(@AData[AOffset], 0, UInt64(AValue));
+  WriteUInt64LEAt(PByte(AData), AOffset, UInt64(AValue));
 end;
 
 class procedure TBinaryPrimitives.WriteSingleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Single);
@@ -605,7 +605,7 @@ var
 begin
   CheckBounds(AData, AOffset, SizeOf(Single));
   Move(AValue, LBits, SizeOf(Single));
-  WriteUInt32LEAt(@AData[AOffset], 0, LBits);
+  WriteUInt32LEAt(PByte(AData), AOffset, LBits);
 end;
 
 class procedure TBinaryPrimitives.WriteDoubleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Double);
@@ -614,7 +614,7 @@ var
 begin
   CheckBounds(AData, AOffset, SizeOf(Double));
   Move(AValue, LBits, SizeOf(Double));
-  WriteUInt64LEAt(@AData[AOffset], 0, LBits);
+  WriteUInt64LEAt(PByte(AData), AOffset, LBits);
 end;
 
 // ============================================================================
@@ -624,37 +624,37 @@ end;
 class procedure TBinaryPrimitives.WriteUInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt16);
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt16));
-  WriteUInt16BEAt(@AData[AOffset], 0, AValue);
+  WriteUInt16BEAt(PByte(AData), AOffset, AValue);
 end;
 
 class procedure TBinaryPrimitives.WriteUInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt32);
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt32));
-  WriteUInt32BEAt(@AData[AOffset], 0, AValue);
+  WriteUInt32BEAt(PByte(AData), AOffset, AValue);
 end;
 
 class procedure TBinaryPrimitives.WriteUInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: UInt64);
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt64));
-  WriteUInt64BEAt(@AData[AOffset], 0, AValue);
+  WriteUInt64BEAt(PByte(AData), AOffset, AValue);
 end;
 
 class procedure TBinaryPrimitives.WriteInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int16);
 begin
   CheckBounds(AData, AOffset, SizeOf(Int16));
-  WriteUInt16BEAt(@AData[AOffset], 0, UInt16(AValue));
+  WriteUInt16BEAt(PByte(AData), AOffset, UInt16(AValue));
 end;
 
 class procedure TBinaryPrimitives.WriteInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int32);
 begin
   CheckBounds(AData, AOffset, SizeOf(Int32));
-  WriteUInt32BEAt(@AData[AOffset], 0, UInt32(AValue));
+  WriteUInt32BEAt(PByte(AData), AOffset, UInt32(AValue));
 end;
 
 class procedure TBinaryPrimitives.WriteInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Int64);
 begin
   CheckBounds(AData, AOffset, SizeOf(Int64));
-  WriteUInt64BEAt(@AData[AOffset], 0, UInt64(AValue));
+  WriteUInt64BEAt(PByte(AData), AOffset, UInt64(AValue));
 end;
 
 class procedure TBinaryPrimitives.WriteSingleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Single);
@@ -663,7 +663,7 @@ var
 begin
   CheckBounds(AData, AOffset, SizeOf(Single));
   Move(AValue, LBits, SizeOf(Single));
-  WriteUInt32BEAt(@AData[AOffset], 0, LBits);
+  WriteUInt32BEAt(PByte(AData), AOffset, LBits);
 end;
 
 class procedure TBinaryPrimitives.WriteDoubleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer; AValue: Double);
@@ -672,7 +672,7 @@ var
 begin
   CheckBounds(AData, AOffset, SizeOf(Double));
   Move(AValue, LBits, SizeOf(Double));
-  WriteUInt64BEAt(@AData[AOffset], 0, LBits);
+  WriteUInt64BEAt(PByte(AData), AOffset, LBits);
 end;
 
 // ============================================================================
@@ -682,37 +682,37 @@ end;
 class function TBinaryPrimitives.ReadUInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16;
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt16));
-  Result := ReadUInt16LEAt(@AData[AOffset], 0);
+  Result := ReadUInt16LEAt(PByte(AData), AOffset);
 end;
 
 class function TBinaryPrimitives.ReadUInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32;
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt32));
-  Result := ReadUInt32LEAt(@AData[AOffset], 0);
+  Result := ReadUInt32LEAt(PByte(AData), AOffset);
 end;
 
 class function TBinaryPrimitives.ReadUInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64;
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt64));
-  Result := ReadUInt64LEAt(@AData[AOffset], 0);
+  Result := ReadUInt64LEAt(PByte(AData), AOffset);
 end;
 
 class function TBinaryPrimitives.ReadInt16LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int16;
 begin
   CheckBounds(AData, AOffset, SizeOf(Int16));
-  Result := Int16(ReadUInt16LEAt(@AData[AOffset], 0));
+  Result := Int16(ReadUInt16LEAt(PByte(AData), AOffset));
 end;
 
 class function TBinaryPrimitives.ReadInt32LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int32;
 begin
   CheckBounds(AData, AOffset, SizeOf(Int32));
-  Result := Int32(ReadUInt32LEAt(@AData[AOffset], 0));
+  Result := Int32(ReadUInt32LEAt(PByte(AData), AOffset));
 end;
 
 class function TBinaryPrimitives.ReadInt64LittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int64;
 begin
   CheckBounds(AData, AOffset, SizeOf(Int64));
-  Result := Int64(ReadUInt64LEAt(@AData[AOffset], 0));
+  Result := Int64(ReadUInt64LEAt(PByte(AData), AOffset));
 end;
 
 class function TBinaryPrimitives.ReadSingleLittleEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Single;
@@ -720,7 +720,7 @@ var
   LBits: UInt32;
 begin
   CheckBounds(AData, AOffset, SizeOf(Single));
-  LBits := ReadUInt32LEAt(@AData[AOffset], 0);
+  LBits := ReadUInt32LEAt(PByte(AData), AOffset);
   Move(LBits, Result, SizeOf(Single));
 end;
 
@@ -729,7 +729,7 @@ var
   LBits: UInt64;
 begin
   CheckBounds(AData, AOffset, SizeOf(Double));
-  LBits := ReadUInt64LEAt(@AData[AOffset], 0);
+  LBits := ReadUInt64LEAt(PByte(AData), AOffset);
   Move(LBits, Result, SizeOf(Double));
 end;
 
@@ -740,37 +740,37 @@ end;
 class function TBinaryPrimitives.ReadUInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt16;
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt16));
-  Result := ReadUInt16BEAt(@AData[AOffset], 0);
+  Result := ReadUInt16BEAt(PByte(AData), AOffset);
 end;
 
 class function TBinaryPrimitives.ReadUInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt32;
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt32));
-  Result := ReadUInt32BEAt(@AData[AOffset], 0);
+  Result := ReadUInt32BEAt(PByte(AData), AOffset);
 end;
 
 class function TBinaryPrimitives.ReadUInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): UInt64;
 begin
   CheckBounds(AData, AOffset, SizeOf(UInt64));
-  Result := ReadUInt64BEAt(@AData[AOffset], 0);
+  Result := ReadUInt64BEAt(PByte(AData), AOffset);
 end;
 
 class function TBinaryPrimitives.ReadInt16BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int16;
 begin
   CheckBounds(AData, AOffset, SizeOf(Int16));
-  Result := Int16(ReadUInt16BEAt(@AData[AOffset], 0));
+  Result := Int16(ReadUInt16BEAt(PByte(AData), AOffset));
 end;
 
 class function TBinaryPrimitives.ReadInt32BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int32;
 begin
   CheckBounds(AData, AOffset, SizeOf(Int32));
-  Result := Int32(ReadUInt32BEAt(@AData[AOffset], 0));
+  Result := Int32(ReadUInt32BEAt(PByte(AData), AOffset));
 end;
 
 class function TBinaryPrimitives.ReadInt64BigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Int64;
 begin
   CheckBounds(AData, AOffset, SizeOf(Int64));
-  Result := Int64(ReadUInt64BEAt(@AData[AOffset], 0));
+  Result := Int64(ReadUInt64BEAt(PByte(AData), AOffset));
 end;
 
 class function TBinaryPrimitives.ReadSingleBigEndian(const AData: TCryptoLibByteArray; AOffset: Integer): Single;
@@ -778,7 +778,7 @@ var
   LBits: UInt32;
 begin
   CheckBounds(AData, AOffset, SizeOf(Single));
-  LBits := ReadUInt32BEAt(@AData[AOffset], 0);
+  LBits := ReadUInt32BEAt(PByte(AData), AOffset);
   Move(LBits, Result, SizeOf(Single));
 end;
 
@@ -787,7 +787,7 @@ var
   LBits: UInt64;
 begin
   CheckBounds(AData, AOffset, SizeOf(Double));
-  LBits := ReadUInt64BEAt(@AData[AOffset], 0);
+  LBits := ReadUInt64BEAt(PByte(AData), AOffset);
   Move(LBits, Result, SizeOf(Double));
 end;
 

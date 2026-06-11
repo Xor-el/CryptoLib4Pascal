@@ -21,123 +21,190 @@ unit ClpBitOperations;
 interface
 
 type
+  /// <summary>
+  /// Portable bit operations code.
+  /// </summary>
   TBitOperations = class sealed(TObject)
-
   public
-
+    /// <summary>
+    /// Reverses byte order of a 32-bit signed value (endian swap).
+    /// </summary>
     class function ReverseBytesInt32(AValue: Int32): Int32; static; inline;
+
+    /// <summary>
+    /// Reverses bit order within a byte (MSB becomes LSB).
+    /// Does not swap or reorder bytes.
+    /// </summary>
     class function ReverseBitsUInt8(AValue: UInt8): UInt8; static; inline;
+
+    /// <summary>
+    /// Reverses byte order of a 16-bit value (endian swap).
+    /// </summary>
     class function ReverseBytesUInt16(AValue: UInt16): UInt16; static; inline;
+
+    /// <summary>
+    /// Reverses byte order of a 32-bit unsigned value (endian swap).
+    /// </summary>
     class function ReverseBytesUInt32(AValue: UInt32): UInt32; static; inline;
+
+    /// <summary>
+    /// Reverses byte order of a 64-bit unsigned value (endian swap).
+    /// </summary>
     class function ReverseBytesUInt64(AValue: UInt64): UInt64; static; inline;
 
     /// <summary>
-    /// Calculates Arithmetic shift right.
+    /// Arithmetic right shift of a signed 32-bit value.
+    /// Vacated high bits replicate the sign bit.
     /// </summary>
-    /// <param name="AValue">Int32 value to compute 'Asr' on.</param>
-    /// <param name="AShiftBits">Byte, number of bits to shift value to.</param>
-    /// <returns>Shifted value.</returns>
+    /// <param name="AShiftBits">
+    /// Shift count; masked to 31.
+    /// </param>
     /// <remarks>
-    /// Emulated Implementation was gotten from FreePascal sources
+    /// Delphi uses an emulated Sar; FPC uses SarLongInt.
     /// </remarks>
-
     class function Asr32(AValue: Int32; AShiftBits: Byte): Int32; static; inline;
 
     /// <summary>
-    /// Calculates Arithmetic shift right.
+    /// Arithmetic right shift of a signed 64-bit value.
+    /// Vacated high bits replicate the sign bit.
     /// </summary>
-    /// <param name="AValue">Int64 value to compute 'Asr' on.</param>
-    /// <param name="AShiftBits">Byte, number of bits to shift value to.</param>
-    /// <returns>Shifted value.</returns>
+    /// <param name="AShiftBits">
+    /// Shift count; masked to 63.
+    /// </param>
     /// <remarks>
-    /// Emulated Implementation was gotten from FreePascal sources
+    /// Delphi uses an emulated Sar; FPC uses SarInt64.
     /// </remarks>
-
     class function Asr64(AValue: Int64; AShiftBits: Byte): Int64; static; inline;
 
     /// <summary>
-    /// Calculates Negative Left Shift. This was implemented to circumvent a
-    /// bug in FPC ARM when performing Shift Left on certain values with a
-    /// Negative Shift Bits. For example UInt32(1948415963) shl Int32(-2)
-    /// should give "3221225472" but in FPC ARM, It gives "0". In some C
-    /// Compilers, this is "Undefined"
+    /// Logical left shift by (32 + AShiftBits).
+    /// With negative AShiftBits, combines cross-limb carry when shifting multi-word integers.
     /// </summary>
-    /// <param name="AValue">
-    /// Value to Perform Shift On
-    /// </param>
     /// <param name="AShiftBits">
-    /// Integer, number of bits to shift value to. This Number <b>Must be
-    /// Negative</b>
+    /// Must be negative; callers pass -n for a positive shift distance n.
     /// </param>
-    /// <returns>
-    /// Shifted value.
-    /// </returns>
-
+    /// <remarks>
+    /// Raw shl/shr with a negative count is undefined in C/C++ and FPC.
+    /// For S in (-32, 0) this matches x86 masked shift distance (S and 31).
+    /// </remarks>
     class function NegativeLeftShift32(AValue: UInt32; AShiftBits: Int32): UInt32; static; inline;
 
     /// <summary>
-    /// Calculates Negative Left Shift for 64-bit (same semantics as NegativeLeftShift32).
+    /// 64-bit counterpart of NegativeLeftShift32.
+    /// Effective shift distance is (64 + AShiftBits).
     /// </summary>
     class function NegativeLeftShift64(AValue: UInt64; AShiftBits: Int32): UInt64; static; inline;
 
     /// <summary>
-    /// Calculates Negative Right Shift. This was implemented to circumvent a
-    /// compiler issue when performing Shift Right on certain values with a
-    /// Negative Shift Bits. In some C Compilers, this is "Undefined"
+    /// Logical right shift by (32 + AShiftBits).
+    /// With negative AShiftBits, extracts upper spill bits when a limb is shifted right by n.
     /// </summary>
-    /// <param name="AValue">
-    /// Value to Perform Shift On
-    /// </param>
     /// <param name="AShiftBits">
-    /// Integer, number of bits to shift value to. This Number <b>Must be
-    /// Negative</b>
+    /// Must be negative; callers pass -n for a positive shift distance n.
     /// </param>
-    /// <returns>
-    /// Shifted value.
-    /// </returns>
-
+    /// <remarks>
+    /// Raw shl/shr with a negative count is undefined in C/C++ and FPC.
+    /// For S in (-32, 0) this matches x86 masked shift distance (S and 31).
+    /// </remarks>
     class function NegativeRightShift32(AValue: UInt32; AShiftBits: Int32): UInt32; static; inline;
 
     /// <summary>
-    /// Calculates Negative Right Shift. This was implemented to circumvent a
-    /// compiler issue when performing Shift Right on certain values with a
-    /// Negative Shift Bits. In some C Compilers, this is "Undefined"
+    /// 64-bit counterpart of NegativeRightShift32.
+    /// Effective shift distance is (64 + AShiftBits).
     /// </summary>
-    /// <param name="AValue">
-    /// Value to Perform Shift On
-    /// </param>
-    /// <param name="AShiftBits">
-    /// Integer, number of bits to shift value to. This Number <b>Must be
-    /// Negative</b>
-    /// </param>
-    /// <returns>
-    /// Shifted value.
-    /// </returns>
-
     class function NegativeRightShift64(AValue: UInt64; AShiftBits: Int32): UInt64; static; inline;
 
+    /// <summary>
+    /// Rotates an 8-bit value left by AN positions.
+    /// Bits shifted out re-enter at the low-order end.
+    /// </summary>
     class function RotateLeft8(AValue: Byte; AN: Int32): Byte; static; inline;
+
+    /// <summary>
+    /// Rotates a 16-bit value left by AN positions.
+    /// Bits shifted out re-enter at the low-order end.
+    /// </summary>
     class function RotateLeft16(AValue: UInt16; AN: Int32): UInt16; static; inline;
+
+    /// <summary>
+    /// Rotates a 32-bit value left by AN positions.
+    /// Bits shifted out re-enter at the low-order end.
+    /// </summary>
+    /// <param name="AN">
+    /// Non-negative rotation distance.
+    /// </param>
     class function RotateLeft32(AValue: UInt32; AN: Int32): UInt32; static; inline;
+
+    /// <summary>
+    /// Rotates a 64-bit value left by AN positions.
+    /// Bits shifted out re-enter at the low-order end.
+    /// </summary>
     class function RotateLeft64(AValue: UInt64; AN: Int32): UInt64; static; inline;
+
+    /// <summary>
+    /// Rotates an 8-bit value right by AN positions.
+    /// Bits shifted out re-enter at the high-order end.
+    /// </summary>
     class function RotateRight8(AValue: Byte; AN: Int32): Byte; static; inline;
+
+    /// <summary>
+    /// Rotates a 16-bit value right by AN positions.
+    /// Bits shifted out re-enter at the high-order end.
+    /// </summary>
     class function RotateRight16(AValue: UInt16; AN: Int32): UInt16; static; inline;
+
+    /// <summary>
+    /// Rotates a 32-bit value right by AN positions.
+    /// Bits shifted out re-enter at the high-order end.
+    /// </summary>
     class function RotateRight32(AValue: UInt32; AN: Int32): UInt32; static; inline;
+
+    /// <summary>
+    /// Rotates a 64-bit value right by AN positions.
+    /// Bits shifted out re-enter at the high-order end.
+    /// </summary>
     class function RotateRight64(AValue: UInt64; AN: Int32): UInt64; static; inline;
 
+    /// <summary>
+    /// Counts leading zero bits from the MSB down to the highest set bit.
+    /// Returns 32 when AValue is zero.
+    /// </summary>
     class function NumberOfLeadingZeros32(AValue: UInt32): Int32; static;
+
+    /// <summary>
+    /// Counts leading zero bits from the MSB down to the highest set bit.
+    /// Returns 64 when AValue is zero.
+    /// </summary>
     class function NumberOfLeadingZeros64(AValue: UInt64): Int32; static;
 
+    /// <summary>
+    /// Counts trailing zero bits from the LSB up to the lowest set bit.
+    /// Returns 32 when AValue is zero.
+    /// </summary>
     class function NumberOfTrailingZeros32(AValue: UInt32): Int32; static;
+
+    /// <summary>
+    /// Counts trailing zero bits from the LSB up to the lowest set bit.
+    /// Returns 64 when AValue is zero.
+    /// </summary>
     class function NumberOfTrailingZeros64(AValue: UInt64): Int32; static;
 
+    /// <summary>
+    /// Population count (Hamming weight) of a 32-bit value.
+    /// Returns the number of bits set to 1.
+    /// </summary>
     class function PopCount32(AValue: UInt32): Int32; static;
+
+    /// <summary>
+    /// Population count (Hamming weight) of a 64-bit value.
+    /// Returns the number of bits set to 1.
+    /// </summary>
     class function PopCount64(AValue: UInt64): Int32; static;
   end;
 
 implementation
 
-{ TBitUtilities }
+{ TBitOperations }
 
 class function TBitOperations.ReverseBytesInt32(AValue: Int32): Int32;
 {$IFNDEF FPC}
