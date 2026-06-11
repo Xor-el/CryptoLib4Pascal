@@ -880,6 +880,7 @@ uses
   Bip340SchnorrTests in '..\src\Crypto\Bip340SchnorrTests.pas',
   Bip327MuSig2Tests in '..\src\Crypto\Bip327MuSig2Tests.pas',
   SimdSelectSlotTests in '..\src\Misc\SimdSelectSlotTests.pas',
+  BinaryPrimitivesTests in '..\src\Misc\BinaryPrimitivesTests.pas',
   CryptoLibTestResourceLoader in '..\src\Utils\CryptoLibTestResourceLoader.pas',
   CsvVectorParser in '..\src\Utils\Parsers\CsvVectorParser.pas',
   JsonVectorParser in '..\src\Utils\Parsers\JsonVectorParser.pas',

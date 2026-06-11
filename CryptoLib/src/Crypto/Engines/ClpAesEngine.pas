@@ -311,7 +311,7 @@ end;
 procedure TAesEngine.DecryptBlock(const AKw: TCryptoLibUInt32Array;
   var AC0, AC1, AC2, AC3: UInt32);
 var
-  LKw: PUInt32;
+  LKw: PCardinal;
   LState: PByte;
   LT0, LT1, LT2, LR0, LR1, LR2, LR3: UInt32;
   LR, LRounds: Int32;
@@ -393,7 +393,7 @@ end;
 procedure TAesEngine.EncryptBlock(const AKw: TCryptoLibUInt32Array;
   var AC0, AC1, AC2, AC3: UInt32);
 var
-  LKw: PUInt32;
+  LKw: PCardinal;
   LState: PByte;
   LT0, LT1, LT2, LR0, LR1, LR2, LR3: UInt32;
   LR, LRounds: Int32;
