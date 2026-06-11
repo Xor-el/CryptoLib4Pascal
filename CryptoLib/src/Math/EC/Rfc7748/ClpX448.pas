@@ -57,8 +57,6 @@ type
     class procedure GeneratePublicKey(const AK: TCryptoLibByteArray; AKOff: Int32;
       AR: TCryptoLibByteArray; AROff: Int32); static;
 
-    class procedure Precompute; static;
-
     class procedure ScalarMult(const AK: TCryptoLibByteArray; AKOff: Int32;
       const AU: TCryptoLibByteArray; AUOff: Int32; AR: TCryptoLibByteArray;
       AROff: Int32); static;
@@ -131,11 +129,6 @@ begin
   TX448Field.Mul(LA, C_A24, AZ);
   TX448Field.Add(AZ, LB, AZ);
   TX448Field.Mul(AZ, LA, AZ);
-end;
-
-class procedure TX448.Precompute;
-begin
-  TEd448.Precompute;
 end;
 
 class procedure TX448.ScalarMult(const AK: TCryptoLibByteArray; AKOff: Int32;

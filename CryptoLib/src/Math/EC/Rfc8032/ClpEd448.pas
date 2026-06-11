@@ -21,7 +21,6 @@ unit ClpEd448;
 interface
 
 uses
-  SyncObjs,
   ClpDigestUtilities,
   ClpCodec,
   ClpBitOperations,
@@ -112,12 +111,11 @@ type
     FDom4Prefix: TCryptoLibByteArray;
     FP: TCryptoLibUInt32Array;
     FB_x, FB_y, FB225_x, FB225_y: TCryptoLibUInt32Array;
-    FPrecompLock: TCriticalSection;
     FPrecompBaseWnaf: TCryptoLibGenericArray<TPointAffine>;
     FPrecompBase225Wnaf: TCryptoLibGenericArray<TPointAffine>;
     FPrecompBaseComb: TCryptoLibUInt32Array;
   class constructor Create;
-  class destructor Destroy;
+  class procedure Precompute; static;
   class function CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray; static;
   class function CheckContextVar(const ACtx: TCryptoLibByteArray): Boolean; static;
   class function CheckPoint(var AP: TPointAffine): Int32; overload; static;
@@ -195,8 +193,6 @@ type
 
     function GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint; overload;
 
-    class procedure Precompute; static;
-
     class procedure ScalarMultBaseXY(const AK: TCryptoLibByteArray; AKOff: Int32;
       const AX, AY: TCryptoLibUInt32Array); static;
 
@@ -267,7 +263,6 @@ end;
 
 class constructor TEd448.Create;
 begin
-  FPrecompLock := TCriticalSection.Create;
   PrehashSize := 64;
   PublicKeySize := PointBytes;
   SecretKeySize := 57;
@@ -292,11 +287,7 @@ begin
   FB225_y := TCryptoLibUInt32Array.Create($0D3A9FE4, $030696B9, $07E7E326, $068308C7,
   $0CE0B8C8, $03AC222B, $0304DB8E, $083EE319, $05E5DB0B, $0ECA503B, $0B1C6539,
   $078A8DCE, $02D256BC, $04A8B05E, $0BD9FD57, $0A1C3CB8);
-end;
-
-class destructor TEd448.Destroy;
-begin
-  FPrecompLock.Free;
+  Precompute;
 end;
 
 class function TEd448.CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray;
@@ -940,116 +931,108 @@ var
   LToothPowers: TCryptoLibGenericArray<TPointProjective>;
   LBlock, LTooth, LSpacing, LSize, LJ, LI, LOff: Int32;
 begin
-  FPrecompLock.Acquire;
-  try
-    if FPrecompBaseComb <> nil then
-      Exit;
+  LWnafPoints := 1 shl (WnafWidthBase - 2);
+  LCombPoints := PrecompBlocks * PrecompPoints;
+  LTotalPoints := LWnafPoints * 2 + LCombPoints;
 
-    LWnafPoints := 1 shl (WnafWidthBase - 2);
-    LCombPoints := PrecompBlocks * PrecompPoints;
-    LTotalPoints := LWnafPoints * 2 + LCombPoints;
+  System.SetLength(LPoints, LTotalPoints);
+  InitPointTemp(LT);
 
-    System.SetLength(LPoints, LTotalPoints);
-    InitPointTemp(LT);
+  InitPointAffine(LB);
+  TX448Field.Copy(FB_x, 0, LB.X, 0);
+  TX448Field.Copy(FB_y, 0, LB.Y, 0);
 
-    InitPointAffine(LB);
-    TX448Field.Copy(FB_x, 0, LB.X, 0);
-    TX448Field.Copy(FB_y, 0, LB.Y, 0);
+  PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
 
-    PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
+  InitPointAffine(LB225);
+  TX448Field.Copy(FB225_x, 0, LB225.X, 0);
+  TX448Field.Copy(FB225_y, 0, LB225.Y, 0);
 
-    InitPointAffine(LB225);
-    TX448Field.Copy(FB225_x, 0, LB225.X, 0);
-    TX448Field.Copy(FB225_y, 0, LB225.Y, 0);
+  PointPrecompute(LB225, LPoints, LWnafPoints, LWnafPoints, LT);
 
-    PointPrecompute(LB225, LPoints, LWnafPoints, LWnafPoints, LT);
+  InitPointProjective(LP);
+  PointCopy(LB, LP);
 
-    InitPointProjective(LP);
-    PointCopy(LB, LP);
+  LPointsIndex := LWnafPoints * 2;
+  System.SetLength(LToothPowers, PrecompTeeth);
+  for LTooth := 0 to PrecompTeeth - 1 do
+  begin
+    InitPointProjective(LToothPowers[LTooth]);
+  end;
 
-    LPointsIndex := LWnafPoints * 2;
-    System.SetLength(LToothPowers, PrecompTeeth);
+  for LBlock := 0 to PrecompBlocks - 1 do
+  begin
+    InitPointProjective(LPoints[LPointsIndex]);
+
     for LTooth := 0 to PrecompTeeth - 1 do
     begin
-      InitPointProjective(LToothPowers[LTooth]);
-    end;
+      if LTooth = 0 then
+        PointCopy(LP, LPoints[LPointsIndex])
+      else
+        PointAdd(LP, LPoints[LPointsIndex], LT);
 
-    for LBlock := 0 to PrecompBlocks - 1 do
-    begin
-      InitPointProjective(LPoints[LPointsIndex]);
+      PointDouble(LP, LT);
+      PointCopy(LP, LToothPowers[LTooth]);
 
-      for LTooth := 0 to PrecompTeeth - 1 do
+      if LBlock + LTooth <> PrecompBlocks + PrecompTeeth - 2 then
       begin
-        if LTooth = 0 then
-          PointCopy(LP, LPoints[LPointsIndex])
-        else
-          PointAdd(LP, LPoints[LPointsIndex], LT);
-
-        PointDouble(LP, LT);
-        PointCopy(LP, LToothPowers[LTooth]);
-
-        if LBlock + LTooth <> PrecompBlocks + PrecompTeeth - 2 then
+        for LSpacing := 1 to PrecompSpacing - 1 do
         begin
-          for LSpacing := 1 to PrecompSpacing - 1 do
-          begin
-            PointDouble(LP, LT);
-          end;
-        end;
-      end;
-
-      Inc(LPointsIndex);
-
-      TX448Field.Negate(LPoints[LPointsIndex - 1].X, LPoints[LPointsIndex - 1].X);
-
-      for LTooth := 0 to PrecompTeeth - 2 do
-      begin
-        LSize := 1 shl LTooth;
-        for LJ := 0 to LSize - 1 do
-        begin
-          InitPointProjective(LPoints[LPointsIndex]);
-          PointCopy(LPoints[LPointsIndex - LSize], LPoints[LPointsIndex]);
-          PointAdd(LToothPowers[LTooth], LPoints[LPointsIndex], LT);
-          Inc(LPointsIndex);
+          PointDouble(LP, LT);
         end;
       end;
     end;
 
-    InvertZs(LPoints);
+    Inc(LPointsIndex);
 
-    System.SetLength(FPrecompBaseWnaf, LWnafPoints);
-    for LI := 0 to LWnafPoints - 1 do
+    TX448Field.Negate(LPoints[LPointsIndex - 1].X, LPoints[LPointsIndex - 1].X);
+
+    for LTooth := 0 to PrecompTeeth - 2 do
     begin
-      InitPointAffine(FPrecompBaseWnaf[LI]);
-      TX448Field.Mul(LPoints[LI].X, LPoints[LI].Z, FPrecompBaseWnaf[LI].X);
-      TX448Field.Normalize(FPrecompBaseWnaf[LI].X);
-      TX448Field.Mul(LPoints[LI].Y, LPoints[LI].Z, FPrecompBaseWnaf[LI].Y);
-      TX448Field.Normalize(FPrecompBaseWnaf[LI].Y);
+      LSize := 1 shl LTooth;
+      for LJ := 0 to LSize - 1 do
+      begin
+        InitPointProjective(LPoints[LPointsIndex]);
+        PointCopy(LPoints[LPointsIndex - LSize], LPoints[LPointsIndex]);
+        PointAdd(LToothPowers[LTooth], LPoints[LPointsIndex], LT);
+        Inc(LPointsIndex);
+      end;
     end;
+  end;
 
-    System.SetLength(FPrecompBase225Wnaf, LWnafPoints);
-    for LI := 0 to LWnafPoints - 1 do
-    begin
-      InitPointAffine(FPrecompBase225Wnaf[LI]);
-      TX448Field.Mul(LPoints[LWnafPoints + LI].X, LPoints[LWnafPoints + LI].Z, FPrecompBase225Wnaf[LI].X);
-      TX448Field.Normalize(FPrecompBase225Wnaf[LI].X);
-      TX448Field.Mul(LPoints[LWnafPoints + LI].Y, LPoints[LWnafPoints + LI].Z, FPrecompBase225Wnaf[LI].Y);
-      TX448Field.Normalize(FPrecompBase225Wnaf[LI].Y);
-    end;
+  InvertZs(LPoints);
 
-    FPrecompBaseComb := TX448Field.CreateTable(LCombPoints * 2);
-    LOff := 0;
-    for LI := LWnafPoints * 2 to LTotalPoints - 1 do
-    begin
-      TX448Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
-      TX448Field.Normalize(LPoints[LI].X);
-      TX448Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
-      TX448Field.Normalize(LPoints[LI].Y);
+  System.SetLength(FPrecompBaseWnaf, LWnafPoints);
+  for LI := 0 to LWnafPoints - 1 do
+  begin
+    InitPointAffine(FPrecompBaseWnaf[LI]);
+    TX448Field.Mul(LPoints[LI].X, LPoints[LI].Z, FPrecompBaseWnaf[LI].X);
+    TX448Field.Normalize(FPrecompBaseWnaf[LI].X);
+    TX448Field.Mul(LPoints[LI].Y, LPoints[LI].Z, FPrecompBaseWnaf[LI].Y);
+    TX448Field.Normalize(FPrecompBaseWnaf[LI].Y);
+  end;
 
-      TX448Field.Copy(LPoints[LI].X, 0, FPrecompBaseComb, LOff); Inc(LOff, TX448Field.Size);
-      TX448Field.Copy(LPoints[LI].Y, 0, FPrecompBaseComb, LOff); Inc(LOff, TX448Field.Size);
-    end;
-  finally
-    FPrecompLock.Release;
+  System.SetLength(FPrecompBase225Wnaf, LWnafPoints);
+  for LI := 0 to LWnafPoints - 1 do
+  begin
+    InitPointAffine(FPrecompBase225Wnaf[LI]);
+    TX448Field.Mul(LPoints[LWnafPoints + LI].X, LPoints[LWnafPoints + LI].Z, FPrecompBase225Wnaf[LI].X);
+    TX448Field.Normalize(FPrecompBase225Wnaf[LI].X);
+    TX448Field.Mul(LPoints[LWnafPoints + LI].Y, LPoints[LWnafPoints + LI].Z, FPrecompBase225Wnaf[LI].Y);
+    TX448Field.Normalize(FPrecompBase225Wnaf[LI].Y);
+  end;
+
+  FPrecompBaseComb := TX448Field.CreateTable(LCombPoints * 2);
+  LOff := 0;
+  for LI := LWnafPoints * 2 to LTotalPoints - 1 do
+  begin
+    TX448Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
+    TX448Field.Normalize(LPoints[LI].X);
+    TX448Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
+    TX448Field.Normalize(LPoints[LI].Y);
+
+    TX448Field.Copy(LPoints[LI].X, 0, FPrecompBaseComb, LOff); Inc(LOff, TX448Field.Size);
+    TX448Field.Copy(LPoints[LI].Y, 0, FPrecompBaseComb, LOff); Inc(LOff, TX448Field.Size);
   end;
 end;
 
@@ -1106,8 +1089,6 @@ var
   LW, LTBit: UInt32;
   LSign, LAbs: Int32;
 begin
-  Precompute;
-
   System.SetLength(LN, ScalarUints + 1);
   TScalar448.Decode(AK, LN);
   TScalar448.ToSignedDigits(PrecompRange, LN, LN);
@@ -1224,8 +1205,6 @@ var
   LTp, LTq: TCryptoLibGenericArray<TPointProjective>;
   LT: TPointTemp;
 begin
-  Precompute;
-
   System.SetLength(LWs_b, 450);
   System.SetLength(LWs_p, 225);
   System.SetLength(LWs_q, 225);

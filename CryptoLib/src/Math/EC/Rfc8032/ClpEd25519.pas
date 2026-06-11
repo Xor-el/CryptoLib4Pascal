@@ -21,7 +21,6 @@ unit ClpEd25519;
 interface
 
 uses
-  SyncObjs,
   ClpCodec,
   ClpDigestUtilities,
   ClpBitOperations,
@@ -186,12 +185,11 @@ type
     FOrder8_y1, FOrder8_y2: TCryptoLibUInt32Array;
     FB_x, FB_y, FB128_x, FB128_y: TCryptoLibInt32Array;
     FC_d, FC_d2, FC_d4: TCryptoLibInt32Array;
-    FPrecompLock: TCriticalSection;
     FPrecompBaseWnaf: TCryptoLibGenericArray<TPointPrecomp>;
     FPrecompBase128Wnaf: TCryptoLibGenericArray<TPointPrecomp>;
     FPrecompBaseComb: TCryptoLibInt32Array;
   class constructor Create;
-  class destructor Destroy;
+  class procedure Precompute; static;
   class function CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray; static;
   class function CheckContextVar(ACtx: TCryptoLibByteArray; APhflag: Byte): Boolean; static;
   class function CheckPoint(const AP: TPointAccum): Int32; overload; static;
@@ -265,7 +263,6 @@ type
     SecretKeySize = 32;
     SignatureSize = PointBytes + ScalarBytes;
 
-    class procedure Precompute; static;
     class procedure ScalarMultBaseYZ(const AK: TCryptoLibByteArray; AKOff: Int32; AY, AZ: TCryptoLibInt32Array); static;
 
     class procedure EncodePublicPoint(const APublicPoint: IPublicPoint; APk: TCryptoLibByteArray; APkOff: Int32); static;
@@ -355,13 +352,7 @@ begin
   $03A03CBB, $01CE7198, $02E2B6FF, $00480DB3);
   FC_d4 := TCryptoLibInt32Array.Create($0165E2B2, $034DCA13, $002ADD7A, $01A8283B, $00038052, $01E7A260,
   $03407977, $019CE331, $01C56DFF, $00901B67);
-  FPrecompLock := TCriticalSection.Create;
-end;
-
-class destructor TEd25519.Destroy;
-begin
-  FPrecompLock.Free;
-  FPrecompLock := nil;
+  Precompute;
 end;
 
 class function TEd25519.CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray;
@@ -1094,7 +1085,6 @@ var
   LW: UInt32;
   LSign, LAbs, LResultSign: Int32;
 begin
-  Precompute;
   System.SetLength(LN, ScalarUints);
   TScalar25519.Decode(AK, LN);
   TScalar25519.ToSignedDigits(PrecompRange, LN);
@@ -1303,7 +1293,6 @@ begin
   System.Assert(System.Length(ANp) = 4);
   System.Assert(System.Length(ANq) = 4);
   {$ENDIF}
-  Precompute();
   System.SetLength(LWsB, 256);
   System.SetLength(LWsP, 128);
   System.SetLength(LWsQ, 128);
@@ -1373,125 +1362,118 @@ var
   LOff: Int32;
   LI: Int32;
 begin
-  FPrecompLock.Enter;
-  try
-    if FPrecompBaseComb <> nil then
-      Exit;
-    LWnafPoints := 1 shl (WnafWidthBase - 2);
-    LCombPoints := PrecompBlocks * PrecompPoints;
-    LTotalPoints := LWnafPoints * 2 + LCombPoints;
-    System.SetLength(LPoints, LTotalPoints);
-    InitPointTemp(LT);
-    InitPointAffine(LB);
-    TX25519Field.Copy(FB_x, 0, LB.X, 0);
-    TX25519Field.Copy(FB_y, 0, LB.Y, 0);
-    PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
-    InitPointAffine(LB128);
-    TX25519Field.Copy(FB128_x, 0, LB128.X, 0);
-    TX25519Field.Copy(FB128_y, 0, LB128.Y, 0);
-    PointPrecompute(LB128, LPoints, LWnafPoints, LWnafPoints, LT);
-    InitPointAccum(LP);
-    TX25519Field.Copy(FB_x, 0, LP.X, 0);
-    TX25519Field.Copy(FB_y, 0, LP.Y, 0);
-    TX25519Field.One(LP.Z);
-    TX25519Field.Copy(FB_x, 0, LP.U, 0);
-    TX25519Field.Copy(FB_y, 0, LP.V, 0);
-    LPointsIndex := LWnafPoints * 2;
-    System.SetLength(LToothPowers, PrecompTeeth);
+  LWnafPoints := 1 shl (WnafWidthBase - 2);
+  LCombPoints := PrecompBlocks * PrecompPoints;
+  LTotalPoints := LWnafPoints * 2 + LCombPoints;
+  System.SetLength(LPoints, LTotalPoints);
+  InitPointTemp(LT);
+  InitPointAffine(LB);
+  TX25519Field.Copy(FB_x, 0, LB.X, 0);
+  TX25519Field.Copy(FB_y, 0, LB.Y, 0);
+  PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
+  InitPointAffine(LB128);
+  TX25519Field.Copy(FB128_x, 0, LB128.X, 0);
+  TX25519Field.Copy(FB128_y, 0, LB128.Y, 0);
+  PointPrecompute(LB128, LPoints, LWnafPoints, LWnafPoints, LT);
+  InitPointAccum(LP);
+  TX25519Field.Copy(FB_x, 0, LP.X, 0);
+  TX25519Field.Copy(FB_y, 0, LP.Y, 0);
+  TX25519Field.One(LP.Z);
+  TX25519Field.Copy(FB_x, 0, LP.U, 0);
+  TX25519Field.Copy(FB_y, 0, LP.V, 0);
+  LPointsIndex := LWnafPoints * 2;
+  System.SetLength(LToothPowers, PrecompTeeth);
+  for LTooth := 0 to PrecompTeeth - 1 do
+    InitPointExtended(LToothPowers[LTooth]);
+  InitPointExtended(LU);
+  for LBlock := 0 to PrecompBlocks - 1 do
+  begin
+    InitPointExtended(LPoints[LPointsIndex]);
     for LTooth := 0 to PrecompTeeth - 1 do
-      InitPointExtended(LToothPowers[LTooth]);
-    InitPointExtended(LU);
-    for LBlock := 0 to PrecompBlocks - 1 do
     begin
-      InitPointExtended(LPoints[LPointsIndex]);
-      for LTooth := 0 to PrecompTeeth - 1 do
+      if LTooth = 0 then
+        PointCopy(LP, LPoints[LPointsIndex])
+      else
       begin
-        if LTooth = 0 then
-          PointCopy(LP, LPoints[LPointsIndex])
-        else
-        begin
-          PointCopy(LP, LU);
-          PointAdd(LPoints[LPointsIndex], LU, LPoints[LPointsIndex], LT);
-        end;
-        PointDouble(LP);
-        PointCopy(LP, LToothPowers[LTooth]);
-        if LBlock + LTooth <> PrecompBlocks + PrecompTeeth - 2 then
-        begin
-          for LSpacing := 1 to PrecompSpacing - 1 do
-            PointDouble(LP);
-        end;
+        PointCopy(LP, LU);
+        PointAdd(LPoints[LPointsIndex], LU, LPoints[LPointsIndex], LT);
       end;
-      TX25519Field.Negate(LPoints[LPointsIndex].X, LPoints[LPointsIndex].X);
-      TX25519Field.Negate(LPoints[LPointsIndex].T, LPoints[LPointsIndex].T);
-      System.Inc(LPointsIndex);
-      for LTooth := 0 to PrecompTeeth - 2 do
+      PointDouble(LP);
+      PointCopy(LP, LToothPowers[LTooth]);
+      if LBlock + LTooth <> PrecompBlocks + PrecompTeeth - 2 then
       begin
-        LSize := 1 shl LTooth;
-        for LJ := 0 to LSize - 1 do
-        begin
-          InitPointExtended(LPoints[LPointsIndex]);
-          PointAdd(LPoints[LPointsIndex - LSize], LToothPowers[LTooth], LPoints[LPointsIndex], LT);
-          System.Inc(LPointsIndex);
-        end;
+        for LSpacing := 1 to PrecompSpacing - 1 do
+          PointDouble(LP);
       end;
     end;
-    {$IFDEF DEBUG}
-    System.Assert(LPointsIndex = LTotalPoints);
-    {$ENDIF}
-    InvertDoubleZs(LPoints);
-    System.SetLength(FPrecompBaseWnaf, LWnafPoints);
-    for LI := 0 to LWnafPoints - 1 do
+    TX25519Field.Negate(LPoints[LPointsIndex].X, LPoints[LPointsIndex].X);
+    TX25519Field.Negate(LPoints[LPointsIndex].T, LPoints[LPointsIndex].T);
+    System.Inc(LPointsIndex);
+    for LTooth := 0 to PrecompTeeth - 2 do
     begin
-      InitPointPrecomp(FPrecompBaseWnaf[LI]);
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
-      TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
-      TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, FPrecompBaseWnaf[LI].YpxH, FPrecompBaseWnaf[LI].YmxH);
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, FPrecompBaseWnaf[LI].Xyd);
-      TX25519Field.Mul(FPrecompBaseWnaf[LI].Xyd, FC_d4, FPrecompBaseWnaf[LI].Xyd);
-      TX25519Field.Normalize(FPrecompBaseWnaf[LI].YmxH);
-      TX25519Field.Normalize(FPrecompBaseWnaf[LI].YpxH);
-      TX25519Field.Normalize(FPrecompBaseWnaf[LI].Xyd);
+      LSize := 1 shl LTooth;
+      for LJ := 0 to LSize - 1 do
+      begin
+        InitPointExtended(LPoints[LPointsIndex]);
+        PointAdd(LPoints[LPointsIndex - LSize], LToothPowers[LTooth], LPoints[LPointsIndex], LT);
+        System.Inc(LPointsIndex);
+      end;
     end;
-    System.SetLength(FPrecompBase128Wnaf, LWnafPoints);
-    for LI := 0 to LWnafPoints - 1 do
-    begin
-      InitPointPrecomp(FPrecompBase128Wnaf[LI]);
-      LPointsIndex2 := LWnafPoints + LI;
-      TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].X);
-      TX25519Field.Mul(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].Y);
-      TX25519Field.Apm(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].X, FPrecompBase128Wnaf[LI].YpxH, FPrecompBase128Wnaf[LI].YmxH);
-      TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Y, FPrecompBase128Wnaf[LI].Xyd);
-      TX25519Field.Mul(FPrecompBase128Wnaf[LI].Xyd, FC_d4, FPrecompBase128Wnaf[LI].Xyd);
-      TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YmxH);
-      TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YpxH);
-      TX25519Field.Normalize(FPrecompBase128Wnaf[LI].Xyd);
-    end;
-    FPrecompBaseComb := TX25519Field.CreateTable(LCombPoints * 3);
-    InitPointPrecomp(LS);
-    LOff := 0;
-    for LI := LWnafPoints * 2 to LTotalPoints - 1 do
-    begin
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
-      TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
-      TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, LS.YpxH, LS.YmxH);
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, LS.Xyd);
-      TX25519Field.Mul(LS.Xyd, FC_d4, LS.Xyd);
-      TX25519Field.Normalize(LS.YmxH);
-      TX25519Field.Normalize(LS.YpxH);
-      TX25519Field.Normalize(LS.Xyd);
-      TX25519Field.Copy(LS.YmxH, 0, FPrecompBaseComb, LOff);
-      LOff := LOff + TX25519Field.Size;
-      TX25519Field.Copy(LS.YpxH, 0, FPrecompBaseComb, LOff);
-      LOff := LOff + TX25519Field.Size;
-      TX25519Field.Copy(LS.Xyd, 0, FPrecompBaseComb, LOff);
-      LOff := LOff + TX25519Field.Size;
-    end;
-    {$IFDEF DEBUG}
-    System.Assert(LOff = System.Length(FPrecompBaseComb));
-    {$ENDIF}
-  finally
-    FPrecompLock.Leave;
   end;
+  {$IFDEF DEBUG}
+  System.Assert(LPointsIndex = LTotalPoints);
+  {$ENDIF}
+  InvertDoubleZs(LPoints);
+  System.SetLength(FPrecompBaseWnaf, LWnafPoints);
+  for LI := 0 to LWnafPoints - 1 do
+  begin
+    InitPointPrecomp(FPrecompBaseWnaf[LI]);
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
+    TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
+    TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, FPrecompBaseWnaf[LI].YpxH, FPrecompBaseWnaf[LI].YmxH);
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, FPrecompBaseWnaf[LI].Xyd);
+    TX25519Field.Mul(FPrecompBaseWnaf[LI].Xyd, FC_d4, FPrecompBaseWnaf[LI].Xyd);
+    TX25519Field.Normalize(FPrecompBaseWnaf[LI].YmxH);
+    TX25519Field.Normalize(FPrecompBaseWnaf[LI].YpxH);
+    TX25519Field.Normalize(FPrecompBaseWnaf[LI].Xyd);
+  end;
+  System.SetLength(FPrecompBase128Wnaf, LWnafPoints);
+  for LI := 0 to LWnafPoints - 1 do
+  begin
+    InitPointPrecomp(FPrecompBase128Wnaf[LI]);
+    LPointsIndex2 := LWnafPoints + LI;
+    TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].X);
+    TX25519Field.Mul(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].Y);
+    TX25519Field.Apm(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].X, FPrecompBase128Wnaf[LI].YpxH, FPrecompBase128Wnaf[LI].YmxH);
+    TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Y, FPrecompBase128Wnaf[LI].Xyd);
+    TX25519Field.Mul(FPrecompBase128Wnaf[LI].Xyd, FC_d4, FPrecompBase128Wnaf[LI].Xyd);
+    TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YmxH);
+    TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YpxH);
+    TX25519Field.Normalize(FPrecompBase128Wnaf[LI].Xyd);
+  end;
+  FPrecompBaseComb := TX25519Field.CreateTable(LCombPoints * 3);
+  InitPointPrecomp(LS);
+  LOff := 0;
+  for LI := LWnafPoints * 2 to LTotalPoints - 1 do
+  begin
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
+    TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
+    TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, LS.YpxH, LS.YmxH);
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, LS.Xyd);
+    TX25519Field.Mul(LS.Xyd, FC_d4, LS.Xyd);
+    TX25519Field.Normalize(LS.YmxH);
+    TX25519Field.Normalize(LS.YpxH);
+    TX25519Field.Normalize(LS.Xyd);
+    TX25519Field.Copy(LS.YmxH, 0, FPrecompBaseComb, LOff);
+    LOff := LOff + TX25519Field.Size;
+    TX25519Field.Copy(LS.YpxH, 0, FPrecompBaseComb, LOff);
+    LOff := LOff + TX25519Field.Size;
+    TX25519Field.Copy(LS.Xyd, 0, FPrecompBaseComb, LOff);
+    LOff := LOff + TX25519Field.Size;
+  end;
+  {$IFDEF DEBUG}
+  System.Assert(LOff = System.Length(FPrecompBaseComb));
+  {$ENDIF}
 end;
 
 function TEd25519.CreatePreHash(): IDigest;

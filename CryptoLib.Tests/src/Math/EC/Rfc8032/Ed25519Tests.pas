@@ -310,7 +310,6 @@ end;
 procedure TTestEd25519.SetUp;
 begin
   inherited;
-  TEd25519.Precompute();
   FRandom := TSecureRandom.Create();
   FEd25519 := TEd25519.Create();
   FEd25519Blake2b := TEd25519Blake2b.Create();
