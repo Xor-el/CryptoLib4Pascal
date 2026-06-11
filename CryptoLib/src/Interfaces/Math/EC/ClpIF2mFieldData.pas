@@ -22,7 +22,8 @@ interface
 
 uses
   ClpCryptoLibTypes,
-  ClpIBinPolyMul;
+  ClpIBinPolyMul,
+  ClpIBinPolyInv;
 
 type
   /// <summary>

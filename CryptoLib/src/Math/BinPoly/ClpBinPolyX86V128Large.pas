@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyScalarLarge;
+unit ClpBinPolyX86V128Large;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -25,20 +25,16 @@ uses
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
   ClpArrayUtilities,
-  ClpBinPolyScalarKernels;
+  ClpBinPolyX86V128Kernels;
 
 type
   /// <summary>
-  /// Scalar <c>IBinPolyMul</c> implementation for sizes at or above
-  /// <c>KaratsubaCutoff</c>. Implements multiplication via in-class Karatsuba recursion whose
-  /// leaf is the scalar 16-entry-table multiply. The class name reflects the dispatch criterion
-  /// (large operand size); the algorithm inside is Karatsuba.
+  /// x86/V128 <c>IBinPolyMul</c> for sizes at or above <c>KaratsubaCutoff</c> (32 limbs).
   /// </summary>
-  /// <remarks>
-  /// The recursion's scratch buffer is allocated per call and threaded through as a parameter,
-  /// so instances are safe to use concurrently.
-  /// </remarks>
-  TBinPolyScalarLarge = class sealed(TBinPolyMulBase)
+  TBinPolyX86V128Large = class sealed(TBinPolyMulBase)
+  public
+    const
+      KaratsubaCutoff = 32;
   strict private
     class function KaratsubaScratchSize(ALen: Int32): Int32; static;
     class procedure ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -49,14 +45,6 @@ type
       const AZz: TCryptoLibUInt64Array; AZzOff: Int32;
       const AScratch: TCryptoLibUInt64Array; AScratchOff: Int32); static;
   public
-    /// <summary>
-    /// Karatsuba cutoff (in machine words). Below this, the table-based
-    /// <c>TBinPolyScalarKernels.ImplMul</c> leaf is called directly; above it,
-    /// <c>ImplKaratsuba</c> recurses by halving. Must be &gt;= 2 for recursion termination.
-    /// </summary>
-    const
-      KaratsubaCutoff = 8;
-
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
       const AY: TCryptoLibUInt64Array; AYOff: Int32;
@@ -65,14 +53,14 @@ type
 
 implementation
 
-{ TBinPolyScalarLarge }
+{ TBinPolyX86V128Large }
 
-constructor TBinPolyScalarLarge.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolyX86V128Large.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyScalarLarge.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolyX86V128Large.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
   Ltt: TCryptoLibUInt64Array;
@@ -91,7 +79,7 @@ begin
   end;
 end;
 
-class function TBinPolyScalarLarge.KaratsubaScratchSize(ALen: Int32): Int32;
+class function TBinPolyX86V128Large.KaratsubaScratchSize(ALen: Int32): Int32;
 var
   LTotal: Int32;
   LLen: Int32;
@@ -109,13 +97,16 @@ begin
   Result := LTotal shl 1;
 end;
 
-class procedure TBinPolyScalarLarge.ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+class procedure TBinPolyX86V128Large.ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
-  TBinPolyScalarKernels.ImplMul(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+  if (ALen and 1) = 0 then
+    TBinPolyX86V128Kernels.ImplMulEven(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff)
+  else
+    TBinPolyX86V128Kernels.ImplMulOdd(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
 end;
 
-class procedure TBinPolyScalarLarge.ImplKaratsuba(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+class procedure TBinPolyX86V128Large.ImplKaratsuba(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32;
   const AScratch: TCryptoLibUInt64Array; AScratchOff: Int32);
 var

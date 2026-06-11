@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyTrinomialReduce;
+unit ClpBinPolyMulBaseTrinomialReduce;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -47,7 +47,7 @@ type
   /// word-aligned edge cases).
   /// </para>
   /// </remarks>
-  TBinPolyTrinomialReduce = class
+  TBinPolyMulBaseTrinomialReduce = class
   public
     type
     TA = class sealed(TInterfacedObject, IBinPolyReduce)
@@ -192,55 +192,55 @@ type
 
 implementation
 
-{ TBinPolyTrinomialReduce }
+{ TBinPolyMulBaseTrinomialReduce }
 
-class function TBinPolyTrinomialReduce.Create(AN: Int32; AK: Int32): IBinPolyReduce;
+class function TBinPolyMulBaseTrinomialReduce.Create(AN: Int32; AK: Int32): IBinPolyReduce;
 begin
   if (AN and 63) = 0 then
   begin
     if (AN - AK >= 64) and ((AK and 63) <> 0) then
-      Result := TBinPolyTrinomialReduce.TE.Create(AN, AK)
+      Result := TBinPolyMulBaseTrinomialReduce.TE.Create(AN, AK)
     else
-      Result := TBinPolyTrinomialReduce.TD.Create(AN, AK);
+      Result := TBinPolyMulBaseTrinomialReduce.TD.Create(AN, AK);
     Exit;
   end;
   if AN - AK < 64 then
   begin
-    Result := TBinPolyTrinomialReduce.TD.Create(AN, AK);
+    Result := TBinPolyMulBaseTrinomialReduce.TD.Create(AN, AK);
     Exit;
   end;
   if AK < 64 then
   begin
     case AN div 32 of
-      2: Result := TBinPolyTrinomialReduce.TA3.Create(AN, AK);
-      3: Result := TBinPolyTrinomialReduce.TA4.Create(AN, AK);
-      4: Result := TBinPolyTrinomialReduce.TA5.Create(AN, AK);
-      5: Result := TBinPolyTrinomialReduce.TA6.Create(AN, AK);
-      6: Result := TBinPolyTrinomialReduce.TA7.Create(AN, AK);
-      7: Result := TBinPolyTrinomialReduce.TA8.Create(AN, AK);
+      2: Result := TBinPolyMulBaseTrinomialReduce.TA3.Create(AN, AK);
+      3: Result := TBinPolyMulBaseTrinomialReduce.TA4.Create(AN, AK);
+      4: Result := TBinPolyMulBaseTrinomialReduce.TA5.Create(AN, AK);
+      5: Result := TBinPolyMulBaseTrinomialReduce.TA6.Create(AN, AK);
+      6: Result := TBinPolyMulBaseTrinomialReduce.TA7.Create(AN, AK);
+      7: Result := TBinPolyMulBaseTrinomialReduce.TA8.Create(AN, AK);
     else
-      Result := TBinPolyTrinomialReduce.TA.Create(AN, AK);
+      Result := TBinPolyMulBaseTrinomialReduce.TA.Create(AN, AK);
     end;
     Exit;
   end;
   if (AK and 63) = 0 then
   begin
-    Result := TBinPolyTrinomialReduce.TB.Create(AN, AK);
+    Result := TBinPolyMulBaseTrinomialReduce.TB.Create(AN, AK);
     Exit;
   end;
   case AN div 32 of
-    4: Result := TBinPolyTrinomialReduce.TC5.Create(AN, AK);
-    5: Result := TBinPolyTrinomialReduce.TC6.Create(AN, AK);
-    6: Result := TBinPolyTrinomialReduce.TC7.Create(AN, AK);
-    7: Result := TBinPolyTrinomialReduce.TC8.Create(AN, AK);
+    4: Result := TBinPolyMulBaseTrinomialReduce.TC5.Create(AN, AK);
+    5: Result := TBinPolyMulBaseTrinomialReduce.TC6.Create(AN, AK);
+    6: Result := TBinPolyMulBaseTrinomialReduce.TC7.Create(AN, AK);
+    7: Result := TBinPolyMulBaseTrinomialReduce.TC8.Create(AN, AK);
   else
-    Result := TBinPolyTrinomialReduce.TC.Create(AN, AK);
+    Result := TBinPolyMulBaseTrinomialReduce.TC.Create(AN, AK);
   end;
 end;
 
-{ TBinPolyTrinomialReduce.TA }
+{ TBinPolyMulBaseTrinomialReduce.TA }
 
-constructor TBinPolyTrinomialReduce.TA.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -250,7 +250,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -300,9 +300,9 @@ begin
   Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyTrinomialReduce.TA3 }
+{ TBinPolyMulBaseTrinomialReduce.TA3 }
 
-constructor TBinPolyTrinomialReduce.TA3.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA3.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -312,7 +312,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA3.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA3.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -349,9 +349,9 @@ begin
   Az[AzOff + 1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyTrinomialReduce.TA4 }
+{ TBinPolyMulBaseTrinomialReduce.TA4 }
 
-constructor TBinPolyTrinomialReduce.TA4.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA4.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -361,7 +361,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA4.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA4.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -397,9 +397,9 @@ begin
   Az[AzOff + 1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyTrinomialReduce.TA5 }
+{ TBinPolyMulBaseTrinomialReduce.TA5 }
 
-constructor TBinPolyTrinomialReduce.TA5.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA5.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -409,7 +409,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -459,9 +459,9 @@ begin
   Az[AzOff + 2] := Lt2;
 end;
 
-{ TBinPolyTrinomialReduce.TA6 }
+{ TBinPolyMulBaseTrinomialReduce.TA6 }
 
-constructor TBinPolyTrinomialReduce.TA6.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA6.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -471,7 +471,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -522,9 +522,9 @@ begin
   Az[AzOff + 2] := Lt2;
 end;
 
-{ TBinPolyTrinomialReduce.TA7 }
+{ TBinPolyMulBaseTrinomialReduce.TA7 }
 
-constructor TBinPolyTrinomialReduce.TA7.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA7.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -534,7 +534,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -592,9 +592,9 @@ begin
   Az[AzOff + 3] := Lt3;
 end;
 
-{ TBinPolyTrinomialReduce.TA8 }
+{ TBinPolyMulBaseTrinomialReduce.TA8 }
 
-constructor TBinPolyTrinomialReduce.TA8.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TA8.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -604,7 +604,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TA8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TA8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -663,9 +663,9 @@ begin
   Az[AzOff + 3] := Lt3;
 end;
 
-{ TBinPolyTrinomialReduce.TB }
+{ TBinPolyMulBaseTrinomialReduce.TB }
 
-constructor TBinPolyTrinomialReduce.TB.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TB.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -675,7 +675,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TB.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TB.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -705,9 +705,9 @@ begin
   Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyTrinomialReduce.TC }
+{ TBinPolyMulBaseTrinomialReduce.TC }
 
-constructor TBinPolyTrinomialReduce.TC.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TC.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -717,7 +717,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TC.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TC.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -752,9 +752,9 @@ begin
   Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyTrinomialReduce.TC5 }
+{ TBinPolyMulBaseTrinomialReduce.TC5 }
 
-constructor TBinPolyTrinomialReduce.TC5.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TC5.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -764,7 +764,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TC5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TC5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -822,9 +822,9 @@ begin
   Az[AzOff + 2] := Lt2;
 end;
 
-{ TBinPolyTrinomialReduce.TC6 }
+{ TBinPolyMulBaseTrinomialReduce.TC6 }
 
-constructor TBinPolyTrinomialReduce.TC6.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TC6.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -834,7 +834,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TC6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TC6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -893,9 +893,9 @@ begin
   Az[AzOff + 2] := Lt2;
 end;
 
-{ TBinPolyTrinomialReduce.TC7 }
+{ TBinPolyMulBaseTrinomialReduce.TC7 }
 
-constructor TBinPolyTrinomialReduce.TC7.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TC7.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -905,7 +905,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TC7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TC7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -995,9 +995,9 @@ begin
   Az[AzOff + 3] := Lt3;
 end;
 
-{ TBinPolyTrinomialReduce.TC8 }
+{ TBinPolyMulBaseTrinomialReduce.TC8 }
 
-constructor TBinPolyTrinomialReduce.TC8.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TC8.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -1007,7 +1007,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TC8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TC8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -1102,9 +1102,9 @@ begin
   Az[AzOff + 3] := Lt3;
 end;
 
-{ TBinPolyTrinomialReduce.TD }
+{ TBinPolyMulBaseTrinomialReduce.TD }
 
-constructor TBinPolyTrinomialReduce.TD.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TD.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -1114,7 +1114,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TD.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TD.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;
@@ -1154,9 +1154,9 @@ begin
   Az[AzOff + Lw_top] := Att[AttOff + Lw_top] and not (UInt64.MaxValue shl Ls_top);
 end;
 
-{ TBinPolyTrinomialReduce.TE }
+{ TBinPolyMulBaseTrinomialReduce.TE }
 
-constructor TBinPolyTrinomialReduce.TE.Create(AN: Int32; AK: Int32);
+constructor TBinPolyMulBaseTrinomialReduce.TE.Create(AN: Int32; AK: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -1166,7 +1166,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyTrinomialReduce.TE.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseTrinomialReduce.TE.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk: Int32;

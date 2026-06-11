@@ -27,10 +27,12 @@ uses
   ClpInt64Utilities,
   ClpNat,
   ClpIBinPolyMul,
-  ClpBinPolyBinomialReduce,
-  ClpBinPolyTrinomialReduce,
-  ClpBinPolyPentanomialReduce,
+  ClpIBinPolyInv,
+  ClpBinPolyMulBaseBinomialReduce,
+  ClpBinPolyMulBaseTrinomialReduce,
+  ClpBinPolyMulBasePentanomialReduce,
   ClpBinPolyScalarBackend,
+  ClpBinPolyX86V128Backend,
   ClpItohTsujiiInv;
 
 type
@@ -257,6 +259,10 @@ end;
 
 class function TBinPolys.TBinPolysMul.CreateBinPolyMul(AN: Int32; const AReduce: IBinPolyReduce): IBinPolyMul;
 begin
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if TBinPolyX86V128Backend.IsEnabled then
+    Exit(TBinPolyX86V128Backend.CreateBinPolyMul(AN, AReduce));
+  {$ENDIF}
   Result := TBinPolyScalarBackend.CreateBinPolyMul(AN, AReduce);
 end;
 
@@ -266,7 +272,7 @@ begin
     raise EArgumentOutOfRangeException.Create('n must be positive');
   if AN > MaxN then
     raise EArgumentOutOfRangeException.Create('n must be at most 2^20');
-  Result := CreateBinPolyMul(AN, TBinPolyBinomialReduce.Create(AN));
+  Result := CreateBinPolyMul(AN, TBinPolyMulBaseBinomialReduce.Create(AN));
 end;
 
 class function TBinPolys.TBinPolysMul.Trinomial(AN, AK: Int32): IBinPolyMul;
@@ -277,7 +283,7 @@ begin
     raise EArgumentOutOfRangeException.Create('n must be at most 2^20');
   if (AK < 1) or (AK >= AN) then
     raise EArgumentOutOfRangeException.Create('k must satisfy 0 < k < n');
-  Result := CreateBinPolyMul(AN, TBinPolyTrinomialReduce.Create(AN, AK));
+  Result := CreateBinPolyMul(AN, TBinPolyMulBaseTrinomialReduce.Create(AN, AK));
 end;
 
 class function TBinPolys.TBinPolysMul.Pentanomial(AN, AK1, AK2, AK3: Int32): IBinPolyMul;
@@ -288,7 +294,7 @@ begin
     raise EArgumentOutOfRangeException.Create('n must be at most 2^20');
   if (AK1 < 1) or (AK2 <= AK1) or (AK3 <= AK2) or (AK3 >= AN) then
     raise EArgumentException.Create('must satisfy 0 < k1 < k2 < k3 < n');
-  Result := CreateBinPolyMul(AN, TBinPolyPentanomialReduce.Create(AN, AK1, AK2, AK3));
+  Result := CreateBinPolyMul(AN, TBinPolyMulBasePentanomialReduce.Create(AN, AK1, AK2, AK3));
 end;
 
 { TBinPolys.TBinPolysInv }

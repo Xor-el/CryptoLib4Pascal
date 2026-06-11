@@ -228,10 +228,12 @@ uses
   ClpDefaultMacCalculator, ClpDefaultMacResult, ClpIMacAlgorithmFinder, 
   ClpDefaultMacAlgorithmFinder, ClpISignatureAlgorithmFinder, 
   ClpDefaultSignatureAlgorithmFinder, ClpIBinPolyMul, ClpIF2mFieldData, 
-  ClpBinPolyBinomialReduce, ClpBinPolyMulBase, ClpBinPolyPentanomialReduce, 
-  ClpBinPolys, ClpBinPolyScalarBackend, ClpBinPolyScalarKernels, 
-  ClpBinPolyScalarLarge, ClpBinPolyScalarMedium, ClpBinPolyTrinomialReduce, 
-  ClpItohTsujiiInv, ClpF2mFieldData;
+  ClpBinPolyMulBase, ClpBinPolys, ClpItohTsujiiInv, ClpF2mFieldData, 
+  ClpIBinPolyInv, ClpBinPolyX86V128Backend, ClpBinPolyX86V128Kernels, 
+  ClpBinPolyX86V128Large, ClpBinPolyX86V128Medium, ClpBinPolyX86V128Sizes, 
+  ClpBinPolyScalarBackend, ClpBinPolyScalarKernels, ClpBinPolyScalarLarge, 
+  ClpBinPolyScalarMedium, ClpBinPolyMulBaseBinomialReduce, 
+  ClpBinPolyMulBasePentanomialReduce, ClpBinPolyMulBaseTrinomialReduce;
 
 implementation
 

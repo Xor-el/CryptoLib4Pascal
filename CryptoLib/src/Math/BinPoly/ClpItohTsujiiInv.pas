@@ -24,7 +24,8 @@ uses
   SysUtils,
   ClpInt32Utilities,
   ClpCryptoLibTypes,
-  ClpIBinPolyMul;
+  ClpIBinPolyMul,
+  ClpIBinPolyInv;
 
 type
   /// <summary>

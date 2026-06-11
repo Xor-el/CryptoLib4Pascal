@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyPentanomialReduce;
+unit ClpBinPolyMulBasePentanomialReduce;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -38,7 +38,7 @@ type
   /// Factory dispatch branch order is critical — see the implementation comments in
   /// <c>Create</c>.
   /// </remarks>
-  TBinPolyPentanomialReduce = class
+  TBinPolyMulBasePentanomialReduce = class
   public
     type
     TA = class sealed(TInterfacedObject, IBinPolyReduce)
@@ -172,53 +172,53 @@ type
 
 implementation
 
-{ TBinPolyPentanomialReduce }
+{ TBinPolyMulBasePentanomialReduce }
 
-class function TBinPolyPentanomialReduce.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32): IBinPolyReduce;
+class function TBinPolyMulBasePentanomialReduce.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32): IBinPolyReduce;
 begin
   if (AN and 63) = 0 then
   begin
     if (AN - AK3 >= 64) and ((AK1 and 63) <> 0) and ((AK2 and 63) <> 0) and ((AK3 and 63) <> 0) then
-      Result := TBinPolyPentanomialReduce.TE.Create(AN, AK1, AK2, AK3)
+      Result := TBinPolyMulBasePentanomialReduce.TE.Create(AN, AK1, AK2, AK3)
     else
-      Result := TBinPolyPentanomialReduce.TC.Create(AN, AK1, AK2, AK3);
+      Result := TBinPolyMulBasePentanomialReduce.TC.Create(AN, AK1, AK2, AK3);
     Exit;
   end;
   if AN - AK3 < 64 then
   begin
-    Result := TBinPolyPentanomialReduce.TC.Create(AN, AK1, AK2, AK3);
+    Result := TBinPolyMulBasePentanomialReduce.TC.Create(AN, AK1, AK2, AK3);
     Exit;
   end;
   if AK3 < 64 then
   begin
     case AN div 32 of
-      2: Result := TBinPolyPentanomialReduce.TA3.Create(AN, AK1, AK2, AK3);
-      3: Result := TBinPolyPentanomialReduce.TA4.Create(AN, AK1, AK2, AK3);
-      4: Result := TBinPolyPentanomialReduce.TA5.Create(AN, AK1, AK2, AK3);
-      5: Result := TBinPolyPentanomialReduce.TA6.Create(AN, AK1, AK2, AK3);
-      6: Result := TBinPolyPentanomialReduce.TA7.Create(AN, AK1, AK2, AK3);
-      7: Result := TBinPolyPentanomialReduce.TA8.Create(AN, AK1, AK2, AK3);
+      2: Result := TBinPolyMulBasePentanomialReduce.TA3.Create(AN, AK1, AK2, AK3);
+      3: Result := TBinPolyMulBasePentanomialReduce.TA4.Create(AN, AK1, AK2, AK3);
+      4: Result := TBinPolyMulBasePentanomialReduce.TA5.Create(AN, AK1, AK2, AK3);
+      5: Result := TBinPolyMulBasePentanomialReduce.TA6.Create(AN, AK1, AK2, AK3);
+      6: Result := TBinPolyMulBasePentanomialReduce.TA7.Create(AN, AK1, AK2, AK3);
+      7: Result := TBinPolyMulBasePentanomialReduce.TA8.Create(AN, AK1, AK2, AK3);
     else
-      Result := TBinPolyPentanomialReduce.TA.Create(AN, AK1, AK2, AK3);
+      Result := TBinPolyMulBasePentanomialReduce.TA.Create(AN, AK1, AK2, AK3);
     end;
     Exit;
   end;
   if (AK2 < 64) and ((AK3 and 63) <> 0) then
   begin
-    Result := TBinPolyPentanomialReduce.TD.Create(AN, AK1, AK2, AK3);
+    Result := TBinPolyMulBasePentanomialReduce.TD.Create(AN, AK1, AK2, AK3);
     Exit;
   end;
   if ((AK1 and 63) <> 0) and ((AK2 and 63) <> 0) and ((AK3 and 63) <> 0) then
   begin
-    Result := TBinPolyPentanomialReduce.TB.Create(AN, AK1, AK2, AK3);
+    Result := TBinPolyMulBasePentanomialReduce.TB.Create(AN, AK1, AK2, AK3);
     Exit;
   end;
-  Result := TBinPolyPentanomialReduce.TC.Create(AN, AK1, AK2, AK3);
+  Result := TBinPolyMulBasePentanomialReduce.TC.Create(AN, AK1, AK2, AK3);
 end;
 
-{ TBinPolyPentanomialReduce.TA }
+{ TBinPolyMulBasePentanomialReduce.TA }
 
-constructor TBinPolyPentanomialReduce.TA.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -230,7 +230,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -279,9 +279,9 @@ begin
   Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyPentanomialReduce.TA3 }
+{ TBinPolyMulBasePentanomialReduce.TA3 }
 
-constructor TBinPolyPentanomialReduce.TA3.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA3.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -293,7 +293,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA3.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA3.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -334,9 +334,9 @@ begin
   Az[AzOff + 1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyPentanomialReduce.TA4 }
+{ TBinPolyMulBasePentanomialReduce.TA4 }
 
-constructor TBinPolyPentanomialReduce.TA4.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA4.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -348,7 +348,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA4.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA4.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -390,9 +390,9 @@ begin
   Az[AzOff + 1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyPentanomialReduce.TA5 }
+{ TBinPolyMulBasePentanomialReduce.TA5 }
 
-constructor TBinPolyPentanomialReduce.TA5.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA5.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -404,7 +404,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -455,9 +455,9 @@ begin
   Az[AzOff + 2] := Lt2;
 end;
 
-{ TBinPolyPentanomialReduce.TA6 }
+{ TBinPolyMulBasePentanomialReduce.TA6 }
 
-constructor TBinPolyPentanomialReduce.TA6.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA6.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -469,7 +469,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -521,9 +521,9 @@ begin
   Az[AzOff + 2] := Lt2;
 end;
 
-{ TBinPolyPentanomialReduce.TA7 }
+{ TBinPolyMulBasePentanomialReduce.TA7 }
 
-constructor TBinPolyPentanomialReduce.TA7.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA7.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -535,7 +535,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -594,9 +594,9 @@ begin
   Az[AzOff + 3] := Lt3;
 end;
 
-{ TBinPolyPentanomialReduce.TA8 }
+{ TBinPolyMulBasePentanomialReduce.TA8 }
 
-constructor TBinPolyPentanomialReduce.TA8.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TA8.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -608,7 +608,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TA8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TA8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -668,9 +668,9 @@ begin
   Az[AzOff + 3] := Lt3;
 end;
 
-{ TBinPolyPentanomialReduce.TB }
+{ TBinPolyMulBasePentanomialReduce.TB }
 
-constructor TBinPolyPentanomialReduce.TB.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TB.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -682,7 +682,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TB.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TB.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -728,9 +728,9 @@ begin
   Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyPentanomialReduce.TD }
+{ TBinPolyMulBasePentanomialReduce.TD }
 
-constructor TBinPolyPentanomialReduce.TD.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TD.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -742,7 +742,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TD.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TD.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -783,9 +783,9 @@ begin
   Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
-{ TBinPolyPentanomialReduce.TC }
+{ TBinPolyMulBasePentanomialReduce.TC }
 
-constructor TBinPolyPentanomialReduce.TC.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TC.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -797,7 +797,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TC.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TC.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;
@@ -849,9 +849,9 @@ begin
   Az[AzOff + Lw_top] := Att[AttOff + Lw_top] and not (UInt64.MaxValue shl Ls_top);
 end;
 
-{ TBinPolyPentanomialReduce.TE }
+{ TBinPolyMulBasePentanomialReduce.TE }
 
-constructor TBinPolyPentanomialReduce.TE.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
+constructor TBinPolyMulBasePentanomialReduce.TE.Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -863,7 +863,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyPentanomialReduce.TE.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBasePentanomialReduce.TE.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   Lk1: Int32;

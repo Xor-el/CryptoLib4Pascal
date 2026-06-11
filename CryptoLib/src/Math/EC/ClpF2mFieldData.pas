@@ -24,6 +24,7 @@ uses
   ClpCryptoLibTypes,
   ClpArrayUtilities,
   ClpIBinPolyMul,
+  ClpIBinPolyInv,
   ClpIF2mFieldData;
 
 type

@@ -32,6 +32,15 @@ type
   /// Scalar leaf multiply: arbitrary-degree Karatsuba with a 16-entry-table 1x1 multiply.
   /// </summary>
   TBinPolyScalarKernels = class sealed
+  private
+    class procedure ImplMulPostprocess(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+      const AY: TCryptoLibUInt64Array; AYOff: Int32;
+      const AZz: TCryptoLibUInt64Array; AZzOff: Int32;
+      const AU: TCryptoLibUInt64Array); static;
+    class procedure ImplMulwAccTable(const AU: TCryptoLibUInt64Array; AX, AY: UInt64;
+      const AZ: TCryptoLibUInt64Array; AZOff: Int32); static;
+    class procedure ImplMulwAcc(const AU: TCryptoLibUInt64Array; AX, AY: UInt64;
+      const AZ: TCryptoLibUInt64Array; AZOff: Int32); static;
   public
     /// <summary>
     /// Leaf multiply: write <c>AX[AxOff..AxOff + ALen - 1] * AY[AyOff..AyOff + ALen - 1]</c>
@@ -40,15 +49,6 @@ type
     class procedure ImplMul(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
       const AY: TCryptoLibUInt64Array; AYOff: Int32;
       const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
-  private
-    class procedure ImplMulPostprocess(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32;
-      const AU: TCryptoLibUInt64Array); static;
-    class procedure ImplMulw(const AU: TCryptoLibUInt64Array; AX, AY: UInt64;
-      const AZ: TCryptoLibUInt64Array; AZOff: Int32); static;
-    class procedure ImplMulwAcc(const AU: TCryptoLibUInt64Array; AX, AY: UInt64;
-      const AZ: TCryptoLibUInt64Array; AZOff: Int32); static;
   end;
 
 implementation
@@ -70,7 +70,7 @@ begin
   SetLength(LU, 16);
 
   for LI := 0 to ALen - 1 do
-    ImplMulw(LU, AX[AXOff + LI], AY[AYOff + LI], AZz, AZzOff + (LI shl 1));
+    ImplMulwAccTable(LU, AX[AXOff + LI], AY[AYOff + LI], AZz, AZzOff + (LI shl 1));
 
   ImplMulPostprocess(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff, LU);
 end;
@@ -116,7 +116,7 @@ begin
   end;
 end;
 
-class procedure TBinPolyScalarKernels.ImplMulw(const AU: TCryptoLibUInt64Array; AX, AY: UInt64;
+class procedure TBinPolyScalarKernels.ImplMulwAccTable(const AU: TCryptoLibUInt64Array; AX, AY: UInt64;
   const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
   LH: UInt64;

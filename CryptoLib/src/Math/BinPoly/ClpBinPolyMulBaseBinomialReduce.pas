@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyBinomialReduce;
+unit ClpBinPolyMulBaseBinomialReduce;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -25,7 +25,8 @@ uses
   ClpCryptoLibTypes,
   ClpNat,
   ClpBitOperations,
-  ClpIBinPolyMul;
+  ClpIBinPolyMul,
+  ClpBinPolyMulBase;
 
 type
   /// <summary>
@@ -33,7 +34,7 @@ type
   /// (<c>(n and 63) &lt;&gt; 0</c>, partial top limb) or <c>TAligned</c> for n a multiple of 64
   /// (full top limb, word-aligned fold).
   /// </summary>
-  TBinPolyBinomialReduce = class
+  TBinPolyMulBaseBinomialReduce = class
   public
     type
     /// <summary>
@@ -69,19 +70,19 @@ type
 
 implementation
 
-{ TBinPolyBinomialReduce }
+{ TBinPolyMulBaseBinomialReduce }
 
-class function TBinPolyBinomialReduce.Create(AN: Int32): IBinPolyReduce;
+class function TBinPolyMulBaseBinomialReduce.Create(AN: Int32): IBinPolyReduce;
 begin
   if (AN and 63) = 0 then
-    Result := TBinPolyBinomialReduce.TAligned.Create(AN)
+    Result := TBinPolyMulBaseBinomialReduce.TAligned.Create(AN)
   else
-    Result := TBinPolyBinomialReduce.TUnaligned.Create(AN);
+    Result := TBinPolyMulBaseBinomialReduce.TUnaligned.Create(AN);
 end;
 
-{ TBinPolyBinomialReduce.TUnaligned }
+{ TBinPolyMulBaseBinomialReduce.TUnaligned }
 
-constructor TBinPolyBinomialReduce.TUnaligned.Create(AN: Int32);
+constructor TBinPolyMulBaseBinomialReduce.TUnaligned.Create(AN: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -90,7 +91,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyBinomialReduce.TUnaligned.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseBinomialReduce.TUnaligned.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   LN: Int32;
@@ -116,9 +117,9 @@ begin
   Az[AzOff + LLast] := Az[AzOff + LLast] and (UInt64.MaxValue shr LExcessBits);
 end;
 
-{ TBinPolyBinomialReduce.TAligned }
+{ TBinPolyMulBaseBinomialReduce.TAligned }
 
-constructor TBinPolyBinomialReduce.TAligned.Create(AN: Int32);
+constructor TBinPolyMulBaseBinomialReduce.TAligned.Create(AN: Int32);
 begin
   inherited Create;
   FN := AN;
@@ -127,7 +128,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyBinomialReduce.TAligned.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
+procedure TBinPolyMulBaseBinomialReduce.TAligned.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
   const Az: TCryptoLibUInt64Array; AzOff: Int32);
 var
   LN: Int32;

@@ -32,10 +32,14 @@ uses
 {$ENDIF FPC}
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
+  ClpIBinPolyInv,
   ClpBinPolys,
   ClpNat,
   ClpIRandom,
   ClpRandom,
+  ClpBinPolyScalarBackend,
+  ClpBinPolyX86V128Backend,
+  ClpBinPolyMulBaseBinomialReduce,
   CryptoLibTestBase;
 
 type
@@ -96,6 +100,10 @@ type
       const ARandom: IRandom; const ALabel: string);
     procedure RunInvertChecks(const AMul: IBinPolyMul; const AInv: IBinPolyInv;
       AN: Int32; const ARandom: IRandom; const ALabel: string);
+    procedure RunX86V128VsScalar(AN: Int32; const ARandom: IRandom;
+      const AContext: string);
+    procedure AssertX86V128MultiplyEquals(AN: Int32;
+      const AX, AY: TCryptoLibUInt64Array; const AContext: string);
   published
     procedure TestBinomial_Add_AgainstXor_BikeR1;
     procedure TestBinomial_AddTo_AgainstXor_BikeR1;
@@ -126,6 +134,12 @@ type
     procedure TestPentanomial_Invert_RoundTrip;
     procedure TestInv_Factory_RejectsNullAndDegenerate;
     procedure TestBitLengthVar_AgainstReference;
+    procedure TestX86V128_Multiply_MatchesScalar;
+    procedure TestX86V128_SizeSweep;
+    procedure TestX86V128_LSize10_MidWindow;
+    procedure TestX86V128_SmallSizes_AllOps;
+    procedure TestX86V128_MultiplyByZeroAndOne;
+    procedure TestX86V128_EdgeVectors;
   end;
 
 implementation
@@ -1376,6 +1390,290 @@ begin
   except
     on E: Exception do
       Check(True, 'ItohTsujii(Binomial(1))');
+  end;
+end;
+
+// Cross-backend check: the x86/V128 backend must agree with the scalar backend
+// for Multiply, Square and SquareN, even when operands and outputs live at
+// non-zero offsets inside guard-padded buffers (verifies offset handling, that
+// inputs are never clobbered, and that nothing is written outside the result
+// slice).
+procedure TTestBinPoly.RunX86V128VsScalar(AN: Int32; const ARandom: IRandom;
+  const AContext: string);
+const
+  SquareNCount = 5;
+var
+  LReduce: IBinPolyReduce;
+  LScalar, LX86: IBinPolyMul;
+  LSize: Int32;
+  LX, LY, LRef, LXBuf, LYBuf, LZBuf, LXBefore, LYBefore, LZBefore: TCryptoLibUInt64Array;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  LReduce := TBinPolyMulBaseBinomialReduce.Create(AN);
+  LScalar := TBinPolyScalarBackend.CreateBinPolyMul(AN, LReduce);
+  LX86 := TBinPolyX86V128Backend.CreateBinPolyMul(AN, LReduce);
+  LSize := LX86.Size;
+
+  // Multiply
+  LX := RandomReduced(ARandom, AN);
+  LY := RandomReduced(ARandom, AN);
+  LRef := TBinPolys.Create(LSize);
+  LScalar.Multiply(LX, 0, LY, 0, LRef, 0);
+  LXBuf := PadBuffer(LSize, OffX, OffPadTail, ARandom);
+  LYBuf := PadBuffer(LSize, OffY, OffPadTail, ARandom);
+  LZBuf := PadBuffer(LSize, OffZ, OffPadTail, ARandom);
+  TNat.Copy64(LSize, LX, 0, LXBuf, OffX);
+  TNat.Copy64(LSize, LY, 0, LYBuf, OffY);
+  LXBefore := System.Copy(LXBuf);
+  LYBefore := System.Copy(LYBuf);
+  LZBefore := System.Copy(LZBuf);
+  LX86.Multiply(LXBuf, OffX, LYBuf, OffY, LZBuf, OffZ);
+  AssertSliceEquals(LRef, LZBuf, OffZ, LSize, AContext + ' Multiply');
+  AssertUInt64ArraysEqual(System.Length(LXBuf), LXBefore, LXBuf, AContext + ' Multiply xBuf clobbered');
+  AssertUInt64ArraysEqual(System.Length(LYBuf), LYBefore, LYBuf, AContext + ' Multiply yBuf clobbered');
+  AssertGuardZonesEqual(LZBefore, LZBuf, OffZ, LSize, AContext + ' Multiply zBuf');
+
+  // Square
+  LX := RandomReduced(ARandom, AN);
+  LRef := TBinPolys.Create(LSize);
+  LScalar.Square(LX, 0, LRef, 0);
+  LXBuf := PadBuffer(LSize, OffX, OffPadTail, ARandom);
+  LZBuf := PadBuffer(LSize, OffZ, OffPadTail, ARandom);
+  TNat.Copy64(LSize, LX, 0, LXBuf, OffX);
+  LXBefore := System.Copy(LXBuf);
+  LZBefore := System.Copy(LZBuf);
+  LX86.Square(LXBuf, OffX, LZBuf, OffZ);
+  AssertSliceEquals(LRef, LZBuf, OffZ, LSize, AContext + ' Square');
+  AssertUInt64ArraysEqual(System.Length(LXBuf), LXBefore, LXBuf, AContext + ' Square xBuf clobbered');
+  AssertGuardZonesEqual(LZBefore, LZBuf, OffZ, LSize, AContext + ' Square zBuf');
+
+  // SquareN
+  LX := RandomReduced(ARandom, AN);
+  LRef := TBinPolys.Create(LSize);
+  LScalar.SquareN(LX, 0, SquareNCount, LRef, 0);
+  LXBuf := PadBuffer(LSize, OffX, OffPadTail, ARandom);
+  LZBuf := PadBuffer(LSize, OffZ, OffPadTail, ARandom);
+  TNat.Copy64(LSize, LX, 0, LXBuf, OffX);
+  LXBefore := System.Copy(LXBuf);
+  LZBefore := System.Copy(LZBuf);
+  LX86.SquareN(LXBuf, OffX, SquareNCount, LZBuf, OffZ);
+  AssertSliceEquals(LRef, LZBuf, OffZ, LSize, AContext + ' SquareN');
+  AssertUInt64ArraysEqual(System.Length(LXBuf), LXBefore, LXBuf, AContext + ' SquareN xBuf clobbered');
+  AssertGuardZonesEqual(LZBefore, LZBuf, OffZ, LSize, AContext + ' SquareN zBuf');
+end;
+
+procedure TTestBinPoly.AssertX86V128MultiplyEquals(AN: Int32;
+  const AX, AY: TCryptoLibUInt64Array; const AContext: string);
+var
+  LReduce: IBinPolyReduce;
+  LScalar, LX86: IBinPolyMul;
+  LScalarZ, LX86Z: TCryptoLibUInt64Array;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  LReduce := TBinPolyMulBaseBinomialReduce.Create(AN);
+  LScalar := TBinPolyScalarBackend.CreateBinPolyMul(AN, LReduce);
+  LX86 := TBinPolyX86V128Backend.CreateBinPolyMul(AN, LReduce);
+  LScalarZ := TBinPolys.Create(LScalar.Size);
+  LX86Z := TBinPolys.Create(LX86.Size);
+  LScalar.Multiply(AX, 0, AY, 0, LScalarZ, 0);
+  LX86.Multiply(AX, 0, AY, 0, LX86Z, 0);
+  AssertUInt64ArraysEqual(LScalar.Size, LScalarZ, LX86Z, AContext);
+end;
+
+procedure TTestBinPoly.TestX86V128_Multiply_MatchesScalar;
+var
+  LRandom: IRandom;
+  LT: Int32;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  LRandom := TRandom.Create(FixedSeed + 2000);
+  try
+    for LT := 0 to RandomTrials - 1 do
+      RunX86V128VsScalar(BikeR1, LRandom,
+        'BikeR1 equivalence trial ' + IntToStr(LT));
+  finally
+    LRandom := nil;
+  end;
+end;
+
+procedure TTestBinPoly.TestX86V128_SizeSweep;
+const
+  SweepCases: array [0 .. 17] of TBinCase = (
+    (CaseName: 'lsize1'; N: 32),
+    (CaseName: 'lsize2'; N: 96),
+    (CaseName: 'lsize3'; N: 160),
+    (CaseName: 'lsize4'; N: 224),
+    (CaseName: 'lsize5'; N: 288),
+    (CaseName: 'lsize6'; N: 352),
+    (CaseName: 'lsize7'; N: 416),
+    (CaseName: 'lsize8'; N: 480),
+    (CaseName: 'lsize9'; N: 544),
+    (CaseName: 'lsize10'; N: 608),
+    (CaseName: 'lsize11'; N: 672),
+    (CaseName: 'lsize12'; N: 736),
+    (CaseName: 'lsize17'; N: 1056),
+    (CaseName: 'lsize20'; N: 1248),
+    (CaseName: 'lsize31'; N: 1952),
+    (CaseName: 'lsize32'; N: 2016),
+    (CaseName: 'lsize48'; N: 3040),
+    (CaseName: 'lsize48b'; N: 3071));
+var
+  LRandom: IRandom;
+  LC, LT: Int32;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  for LC := Low(SweepCases) to High(SweepCases) do
+  begin
+    LRandom := TRandom.Create(FixedSeed + SweepCases[LC].N);
+    try
+      for LT := 0 to RandomTrials - 1 do
+        RunX86V128VsScalar(SweepCases[LC].N, LRandom,
+          SweepCases[LC].CaseName + ' trial ' + IntToStr(LT));
+    finally
+      LRandom := nil;
+    end;
+  end;
+end;
+
+procedure TTestBinPoly.TestX86V128_LSize10_MidWindow;
+var
+  LRandom: IRandom;
+  LT: Int32;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  LRandom := TRandom.Create(FixedSeed + 610);
+  try
+    for LT := 0 to RandomTrials * 2 - 1 do
+      RunX86V128VsScalar(610, LRandom,
+        'LSize10 mid-window trial ' + IntToStr(LT));
+  finally
+    LRandom := nil;
+  end;
+end;
+
+// Exhaustively exercise every generated small fixed-size kernel (lsize 1..10)
+// through all three operations at non-zero offsets.
+procedure TTestBinPoly.TestX86V128_SmallSizes_AllOps;
+var
+  LRandom: IRandom;
+  LLSize, LT, LN: Int32;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  for LLSize := 1 to 10 do
+  begin
+    LN := LLSize * 64;
+    LRandom := TRandom.Create(FixedSeed + 4000 + LLSize);
+    try
+      for LT := 0 to RandomTrials - 1 do
+        RunX86V128VsScalar(LN, LRandom,
+          'small lsize' + IntToStr(LLSize) + ' trial ' + IntToStr(LT));
+    finally
+      LRandom := nil;
+    end;
+  end;
+end;
+
+// Multiplying by zero must yield zero and multiplying by one must be the
+// identity, matching the scalar backend, across small, medium and large sizes.
+procedure TTestBinPoly.TestX86V128_MultiplyByZeroAndOne;
+const
+  Sizes: array [0 .. 5] of Int32 = (64, 320, 608, 672, 1248, BikeR1);
+var
+  LRandom: IRandom;
+  LC, LSize: Int32;
+  LX, LZero, LOne: TCryptoLibUInt64Array;
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  LRandom := TRandom.Create(FixedSeed + 5000);
+  try
+    for LC := Low(Sizes) to High(Sizes) do
+    begin
+      LSize := (Sizes[LC] + 63) shr 6;
+      LX := RandomReduced(LRandom, Sizes[LC]);
+      LZero := TBinPolys.Create(LSize);
+      LOne := TBinPolys.Create(LSize);
+      LOne[0] := 1;
+      AssertX86V128MultiplyEquals(Sizes[LC], LX, LZero,
+        'mul-by-zero n=' + IntToStr(Sizes[LC]));
+      AssertX86V128MultiplyEquals(Sizes[LC], LX, LOne,
+        'mul-by-one n=' + IntToStr(Sizes[LC]));
+    end;
+  finally
+    LRandom := nil;
+  end;
+end;
+
+// Adversarial bit patterns (all-ones, single high bit, alternating) maximise
+// carryless lane interaction and catch lane-splice / shift errors that random
+// inputs may miss.
+procedure TTestBinPoly.TestX86V128_EdgeVectors;
+const
+  Sizes: array [0 .. 6] of Int32 = (64, 192, 608, 672, 736, 1248, BikeR1);
+var
+  LC, LSize, LTop, LBit: Int32;
+  LAllOnes, LAlt, LHighBit, LLowBit: TCryptoLibUInt64Array;
+
+  function MaskedTop(const AVec: TCryptoLibUInt64Array; AN: Int32)
+    : TCryptoLibUInt64Array;
+  var
+    LPartial: Int32;
+  begin
+    Result := AVec;
+    LPartial := AN and 63;
+    if LPartial <> 0 then
+      Result[System.Length(Result) - 1] := Result[System.Length(Result) - 1]
+        and ((UInt64(1) shl LPartial) - 1);
+  end;
+
+begin
+  if not TBinPolyX86V128Backend.IsEnabled then
+    Exit;
+
+  for LC := Low(Sizes) to High(Sizes) do
+  begin
+    LSize := (Sizes[LC] + 63) shr 6;
+
+    LAllOnes := TBinPolys.Create(LSize);
+    LAlt := TBinPolys.Create(LSize);
+    for LTop := 0 to LSize - 1 do
+    begin
+      LAllOnes[LTop] := UInt64($FFFFFFFFFFFFFFFF);
+      LAlt[LTop] := UInt64($AAAAAAAAAAAAAAAA);
+    end;
+    LAllOnes := MaskedTop(LAllOnes, Sizes[LC]);
+    LAlt := MaskedTop(LAlt, Sizes[LC]);
+
+    LHighBit := TBinPolys.Create(LSize);
+    LBit := Sizes[LC] - 1;
+    LHighBit[LBit shr 6] := UInt64(1) shl (LBit and 63);
+
+    LLowBit := TBinPolys.Create(LSize);
+    LLowBit[0] := 1;
+
+    AssertX86V128MultiplyEquals(Sizes[LC], LAllOnes, LAllOnes,
+      'edge allones^2 n=' + IntToStr(Sizes[LC]));
+    AssertX86V128MultiplyEquals(Sizes[LC], LAllOnes, LAlt,
+      'edge allones*alt n=' + IntToStr(Sizes[LC]));
+    AssertX86V128MultiplyEquals(Sizes[LC], LHighBit, LHighBit,
+      'edge highbit^2 n=' + IntToStr(Sizes[LC]));
+    AssertX86V128MultiplyEquals(Sizes[LC], LHighBit, LAllOnes,
+      'edge highbit*allones n=' + IntToStr(Sizes[LC]));
+    AssertX86V128MultiplyEquals(Sizes[LC], LAlt, LLowBit,
+      'edge alt*lowbit n=' + IntToStr(Sizes[LC]));
   end;
 end;
 
