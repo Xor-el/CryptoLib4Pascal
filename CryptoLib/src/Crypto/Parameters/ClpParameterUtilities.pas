@@ -72,7 +72,6 @@ type
     class function CreateIV(const ARandom: ISecureRandom; AIVLength: Int32): TCryptoLibByteArray; static;
     class function CreateIVOctetString(const ARandom: ISecureRandom;
       AIVLength: Int32): IAsn1Encodable; static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
   public
@@ -204,42 +203,39 @@ begin
   Result := TDerOctetString.Create(CreateIV(ARandom, AIVLength));
 end;
 
-class procedure TParameterUtilities.Boot;
+class constructor TParameterUtilities.Create;
 begin
-  TNistObjectIdentifiers.Boot;
-
   FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FBasicIVSizes := TDictionary<String, Int32>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
   AddAlgorithm('AES', ['AESWRAP']);
 
   AddAlgorithm('AES128', [
-    TNistObjectIdentifiers.IdAes128Cbc.ID,
-    TNistObjectIdentifiers.IdAes128Cfb.ID,
-    TNistObjectIdentifiers.IdAes128Ecb.ID,
-    TNistObjectIdentifiers.IdAes128Ofb.ID,
-    TNistObjectIdentifiers.IdAes128Wrap.ID,
-    TNistObjectIdentifiers.IdAes128WrapPad.ID
-    ]);
+  TNistObjectIdentifiers.IdAes128Cbc.ID,
+  TNistObjectIdentifiers.IdAes128Cfb.ID,
+  TNistObjectIdentifiers.IdAes128Ecb.ID,
+  TNistObjectIdentifiers.IdAes128Ofb.ID,
+  TNistObjectIdentifiers.IdAes128Wrap.ID,
+  TNistObjectIdentifiers.IdAes128WrapPad.ID
+  ]);
 
   AddAlgorithm('AES192', [
-    TNistObjectIdentifiers.IdAes192Cbc.ID,
-    TNistObjectIdentifiers.IdAes192Cfb.ID,
-    TNistObjectIdentifiers.IdAes192Ecb.ID,
-    TNistObjectIdentifiers.IdAes192Ofb.ID,
-    TNistObjectIdentifiers.IdAes192Wrap.ID,
-    TNistObjectIdentifiers.IdAes192WrapPad.ID
-    ]);
+  TNistObjectIdentifiers.IdAes192Cbc.ID,
+  TNistObjectIdentifiers.IdAes192Cfb.ID,
+  TNistObjectIdentifiers.IdAes192Ecb.ID,
+  TNistObjectIdentifiers.IdAes192Ofb.ID,
+  TNistObjectIdentifiers.IdAes192Wrap.ID,
+  TNistObjectIdentifiers.IdAes192WrapPad.ID
+  ]);
 
   AddAlgorithm('AES256', [
-    TNistObjectIdentifiers.IdAes256Cbc.ID,
-    TNistObjectIdentifiers.IdAes256Cfb.ID,
-    TNistObjectIdentifiers.IdAes256Ecb.ID,
-    TNistObjectIdentifiers.IdAes256Ofb.ID,
-    TNistObjectIdentifiers.IdAes256Wrap.ID,
-    TNistObjectIdentifiers.IdAes256WrapPad.ID
-    ]);
-
+  TNistObjectIdentifiers.IdAes256Cbc.ID,
+  TNistObjectIdentifiers.IdAes256Cfb.ID,
+  TNistObjectIdentifiers.IdAes256Ecb.ID,
+  TNistObjectIdentifiers.IdAes256Ofb.ID,
+  TNistObjectIdentifiers.IdAes256Wrap.ID,
+  TNistObjectIdentifiers.IdAes256WrapPad.ID
+  ]);
 
   AddAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2', TMiscObjectIdentifiers.CryptlibAlgorithmBlowfishCbc.ID]);
 
@@ -255,11 +251,6 @@ begin
   AddBasicIVSizeEntries(12, ['CHACHA7539']);
   AddBasicIVSizeEntries(16, ['AES', 'AES128', 'AES192', 'AES256']);
   AddBasicIVSizeEntries(24, ['XCHACHA20']);
-end;
-
-class constructor TParameterUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TParameterUtilities.Destroy;

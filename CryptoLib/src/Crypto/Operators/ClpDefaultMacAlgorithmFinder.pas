@@ -42,7 +42,6 @@ type
     class var
       FInstance: IMacAlgorithmFinder;
       FMacNameToAlgIDs: TDictionary<String, IAlgorithmIdentifier>;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
   public
@@ -56,50 +55,45 @@ implementation
 
 class constructor TDefaultMacAlgorithmFinder.Create;
 begin
-  Boot;
+  FMacNameToAlgIDs := TDictionary<String, IAlgorithmIdentifier>.Create(
+  TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+
+  FMacNameToAlgIDs.Add('HMACSHA1',
+  TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1) as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA224',
+  TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha224, TDerNull.Instance)
+      as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA256',
+  TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha256, TDerNull.Instance)
+      as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA384',
+  TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha384, TDerNull.Instance)
+      as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA512',
+  TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha512, TDerNull.Instance)
+      as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA512-224',
+  TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha512_224, TDerNull.Instance)
+      as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA512-256',
+  TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha512_256, TDerNull.Instance)
+      as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA3-224',
+  TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_224) as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA3-256',
+  TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_256) as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA3-384',
+  TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_384) as IAlgorithmIdentifier);
+  FMacNameToAlgIDs.Add('HMACSHA3-512',
+  TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_512) as IAlgorithmIdentifier);
+
+  FInstance := TDefaultMacAlgorithmFinder.Create;
 end;
 
 class destructor TDefaultMacAlgorithmFinder.Destroy;
 begin
   FInstance := nil;
   FMacNameToAlgIDs.Free;
-end;
-
-class procedure TDefaultMacAlgorithmFinder.Boot;
-begin
-  FMacNameToAlgIDs := TDictionary<String, IAlgorithmIdentifier>.Create(
-    TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-
-  FMacNameToAlgIDs.Add('HMACSHA1',
-    TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1) as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA224',
-    TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha224, TDerNull.Instance)
-      as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA256',
-    TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha256, TDerNull.Instance)
-      as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA384',
-    TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha384, TDerNull.Instance)
-      as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA512',
-    TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha512, TDerNull.Instance)
-      as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA512-224',
-    TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha512_224, TDerNull.Instance)
-      as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA512-256',
-    TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdHmacWithSha512_256, TDerNull.Instance)
-      as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA3-224',
-    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_224) as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA3-256',
-    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_256) as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA3-384',
-    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_384) as IAlgorithmIdentifier);
-  FMacNameToAlgIDs.Add('HMACSHA3-512',
-    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdHMacWithSha3_512) as IAlgorithmIdentifier);
-
-  FInstance := TDefaultMacAlgorithmFinder.Create;
 end;
 
 function TDefaultMacAlgorithmFinder.Find(const AMacName: String): IAlgorithmIdentifier;

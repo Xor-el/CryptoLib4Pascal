@@ -70,9 +70,8 @@ type
       const AP: IGlvTypeBParameters): IECCurve; static; inline;
     class function ConfigureBasepoint(const ACurve: IECCurve;
       const AEncoding: String): IX9ECPoint; static;
-    class procedure Boot; static;
-    class constructor CreateCustomNamedCurves;
-    class destructor DestroyCustomNamedCurves;
+    class constructor Create;
+    class destructor Destroy;
 
   public
     class function GetByName(const AName: String): IX9ECParameters; static; inline;
@@ -214,7 +213,7 @@ begin
   Result := TCollectionUtilities.Keys<String, IDerObjectIdentifier>(FObjIds);
 end;
 
-class procedure TCustomNamedCurves.Boot;
+class constructor TCustomNamedCurves.Create;
 begin
   FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FCurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -232,12 +231,7 @@ begin
   DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
 end;
 
-class constructor TCustomNamedCurves.CreateCustomNamedCurves;
-begin
-  Boot;
-end;
-
-class destructor TCustomNamedCurves.DestroyCustomNamedCurves;
+class destructor TCustomNamedCurves.Destroy;
 begin
   FObjIds.Free;
   FCurves.Free;

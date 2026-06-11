@@ -60,16 +60,12 @@ type
   class var
     FInstance: IRandomSourceProvider;
     FLock: TCriticalSection;
-    FIsBooted: Boolean;
 
     class function GetInstance: IRandomSourceProvider; static;
     class function CreateProvider: IRandomSourceProvider; static;
 
   public
     class property Instance: IRandomSourceProvider read GetInstance;
-
-    class procedure Boot(); static;
-
     class constructor Create();
 
     class destructor Destroy();
@@ -82,7 +78,13 @@ implementation
 
 class constructor TOSRandomProvider.Create();
 begin
-  Boot();
+  FLock := TCriticalSection.Create;
+  FLock.Enter;
+  try
+    FInstance := CreateProvider();
+  finally
+    FLock.Leave;
+  end;
 end;
 
 class destructor TOSRandomProvider.Destroy();
@@ -118,21 +120,6 @@ end;
 class function TOSRandomProvider.GetInstance: IRandomSourceProvider;
 begin
   Result := FInstance;
-end;
-
-class procedure TOSRandomProvider.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FLock := TCriticalSection.Create;
-    FLock.Enter;
-    try
-      FInstance := CreateProvider();
-    finally
-      FLock.Leave;
-    end;
-    FIsBooted := True;
-  end;
 end;
 
 end.

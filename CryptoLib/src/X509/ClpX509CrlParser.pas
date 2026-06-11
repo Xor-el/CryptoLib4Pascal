@@ -54,7 +54,6 @@ type
     FCurrentCrlStream: TStream;
 
   class constructor Create();
-  class procedure Boot();
   class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
 
   function ReadDerCrl(const ADIn: TAsn1InputStream): IX509Crl;
@@ -77,11 +76,6 @@ implementation
 { TX509CrlParser }
 
 class constructor TX509CrlParser.Create();
-begin
-  Boot();
-end;
-
-class procedure TX509CrlParser.Boot();
 begin
   FPemCrlParser := TPemParser.Create('CRL');
 end;

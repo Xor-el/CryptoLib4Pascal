@@ -113,7 +113,6 @@ type
 
     class function GetMechanism(const AAlgorithm: String): String; static;
     class function GetDigestForMechanism(const AMechanism: String): IDigest; static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -327,18 +326,61 @@ begin
   end;
 end;
 
-class procedure TDigestUtilities.Boot;
+class function TDigestUtilities.DoFinal(const ADigest: IDigest)
+  : TCryptoLibByteArray;
+begin
+  System.SetLength(Result, ADigest.GetDigestSize());
+  ADigest.DoFinal(Result, 0);
+end;
+
+class function TDigestUtilities.DoFinal(const ADigest: IDigest;
+  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
+begin
+  ADigest.BlockUpdate(AInput, 0, System.Length(AInput));
+  Result := DoFinal(ADigest);
+end;
+
+class function TDigestUtilities.DoFinal(const ADigest: IDigest;
+  const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray;
+begin
+  ADigest.BlockUpdate(AInput, AOffset, ALength);
+  Result := DoFinal(ADigest);
+end;
+
+class function TDigestUtilities.CalculateDigest(const AOid: IDerObjectIdentifier;
+  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
+var
+  LDigest: IDigest;
+begin
+  LDigest := GetDigest(AOid);
+  Result := DoFinal(LDigest, AInput);
+end;
+
+class function TDigestUtilities.CalculateDigest(const AAlgorithm: String;
+  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
+var
+  LDigest: IDigest;
+begin
+  LDigest := GetDigest(AAlgorithm);
+  LDigest.BlockUpdate(AInput, 0, System.Length(AInput));
+  Result := DoFinal(LDigest);
+end;
+
+class function TDigestUtilities.CalculateDigest(const AAlgorithm: String;
+  const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray;
+var
+  LDigest: IDigest;
+begin
+  LDigest := GetDigest(AAlgorithm);
+  LDigest.BlockUpdate(AInput, AOffset, ALength);
+  Result := DoFinal(LDigest);
+end;
+
+class constructor TDigestUtilities.Create;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-
-  TPkcsObjectIdentifiers.Boot;
-  TOiwObjectIdentifiers.Boot;
-  TMiscObjectIdentifiers.Boot;
-  TTeleTrusTObjectIdentifiers.Boot;
-  TCryptoProObjectIdentifiers.Boot;
-  TRosstandartObjectIdentifiers.Boot;
 
   // MD
   FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.MD2, 'MD2');
@@ -440,12 +482,12 @@ begin
 
   // GOST 2012
   FAlgorithmOidMap.AddOrSetValue(
-    TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256,
-    'GOST3411-2012-256'
+  TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256,
+  'GOST3411-2012-256'
   );
   FAlgorithmOidMap.AddOrSetValue(
-    TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512,
-    'GOST3411-2012-512'
+  TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512,
+  'GOST3411-2012-512'
   );
 
   // Reverse OID lookup
@@ -481,61 +523,6 @@ begin
   FOids.AddOrSetValue('GOST3411-2012-256', TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256);
   FOids.AddOrSetValue('GOST3411-2012-512', TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512);
 
-end;
-
-class function TDigestUtilities.DoFinal(const ADigest: IDigest)
-  : TCryptoLibByteArray;
-begin
-  System.SetLength(Result, ADigest.GetDigestSize());
-  ADigest.DoFinal(Result, 0);
-end;
-
-class function TDigestUtilities.DoFinal(const ADigest: IDigest;
-  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
-begin
-  ADigest.BlockUpdate(AInput, 0, System.Length(AInput));
-  Result := DoFinal(ADigest);
-end;
-
-class function TDigestUtilities.DoFinal(const ADigest: IDigest;
-  const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray;
-begin
-  ADigest.BlockUpdate(AInput, AOffset, ALength);
-  Result := DoFinal(ADigest);
-end;
-
-class function TDigestUtilities.CalculateDigest(const AOid: IDerObjectIdentifier;
-  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
-var
-  LDigest: IDigest;
-begin
-  LDigest := GetDigest(AOid);
-  Result := DoFinal(LDigest, AInput);
-end;
-
-class function TDigestUtilities.CalculateDigest(const AAlgorithm: String;
-  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
-var
-  LDigest: IDigest;
-begin
-  LDigest := GetDigest(AAlgorithm);
-  LDigest.BlockUpdate(AInput, 0, System.Length(AInput));
-  Result := DoFinal(LDigest);
-end;
-
-class function TDigestUtilities.CalculateDigest(const AAlgorithm: String;
-  const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray;
-var
-  LDigest: IDigest;
-begin
-  LDigest := GetDigest(AAlgorithm);
-  LDigest.BlockUpdate(AInput, AOffset, ALength);
-  Result := DoFinal(LDigest);
-end;
-
-class constructor TDigestUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TDigestUtilities.Destroy;

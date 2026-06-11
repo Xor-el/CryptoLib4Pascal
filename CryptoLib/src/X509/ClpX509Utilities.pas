@@ -61,8 +61,6 @@ type
   strict private
     class var
       FAlgorithms: TDictionary<String, IDerObjectIdentifier>;
-
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -107,16 +105,6 @@ implementation
 { TX509Utilities }
 
 class constructor TX509Utilities.Create;
-begin
-  Boot;
-end;
-
-class destructor TX509Utilities.Destroy;
-begin
-  FAlgorithms.Free;
-end;
-
-class procedure TX509Utilities.Boot;
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
@@ -207,6 +195,11 @@ begin
   FAlgorithms.Add('GOST3411WITHECGOST3410', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   FAlgorithms.Add('GOST3411WITHECGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   FAlgorithms.Add('GOST3411WITHGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+end;
+
+class destructor TX509Utilities.Destroy;
+begin
+  FAlgorithms.Free;
 end;
 
 class function TX509Utilities.AreEquivalentAlgorithms(const AId1, AId2: IAlgorithmIdentifier): Boolean;

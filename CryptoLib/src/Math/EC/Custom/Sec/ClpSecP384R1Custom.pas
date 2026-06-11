@@ -52,7 +52,6 @@ type
     PExt23 = UInt32($FFFFFFFF);
   class var
     FP, FPExt, FPExtInv: TCryptoLibUInt32Array;
-  class procedure Boot; static;
   class procedure AddPInvTo(const AZ: TCryptoLibUInt32Array); static;
   class procedure SubPInvFrom(const AZ: TCryptoLibUInt32Array); static;
   class constructor Create;
@@ -90,7 +89,6 @@ type
   strict private
   class var
     FQ: TBigInteger;
-  class procedure Boot; static;
   class constructor Create;
   strict protected
     FX: TCryptoLibUInt32Array;
@@ -168,7 +166,6 @@ type
   class var
     FQ: TBigInteger;
     FSecP384R1AffineZs: TCryptoLibGenericArray<IECFieldElement>;
-  class procedure Boot; static;
   class constructor Create;
   var
     FInfinity: ISecP384R1Point;
@@ -199,22 +196,17 @@ implementation
 
 { TSecP384R1Field }
 
-class procedure TSecP384R1Field.Boot;
-begin
-  FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000000, $00000000, $FFFFFFFF,
-    $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
-  FPExt := TCryptoLibUInt32Array.Create($00000001, $FFFFFFFE, $00000000, $00000002,
-    $00000000, $FFFFFFFE, $00000000, $00000002, $00000001, $00000000, $00000000, $00000000,
-    $FFFFFFFE, $00000001, $00000000, $FFFFFFFE, $FFFFFFFD, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
-  FPExtInv := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD,
-    $FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $00000001, $FFFFFFFE, $FFFFFFFF, $00000001, $00000002);
-end;
-
 class constructor TSecP384R1Field.Create;
 begin
-  Boot;
+  FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000000, $00000000, $FFFFFFFF,
+  $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
+  FPExt := TCryptoLibUInt32Array.Create($00000001, $FFFFFFFE, $00000000, $00000002,
+  $00000000, $FFFFFFFE, $00000000, $00000002, $00000001, $00000000, $00000000, $00000000,
+  $FFFFFFFE, $00000001, $00000000, $FFFFFFFE, $FFFFFFFD, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
+  FPExtInv := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD,
+  $FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+  $00000001, $FFFFFFFE, $FFFFFFFF, $00000001, $00000002);
 end;
 
 class procedure TSecP384R1Field.AddPInvTo(const AZ: TCryptoLibUInt32Array);
@@ -565,14 +557,9 @@ end;
 
 { TSecP384R1FieldElement }
 
-class procedure TSecP384R1FieldElement.Boot;
-begin
-  FQ := TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF'));
-end;
-
 class constructor TSecP384R1FieldElement.Create;
 begin
-  Boot;
+  FQ := TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF'));
 end;
 
 class function TSecP384R1FieldElement.GetQ: TBigInteger;
@@ -1091,16 +1078,11 @@ end;
 
 { TSecP384R1Curve }
 
-class procedure TSecP384R1Curve.Boot;
+class constructor TSecP384R1Curve.Create;
 begin
   FQ := TSecP384R1FieldElement.Q;
   FSecP384R1AffineZs := TCryptoLibGenericArray<IECFieldElement>.Create(
-    TSecP384R1FieldElement.Create(TBigInteger.One) as IECFieldElement);
-end;
-
-class constructor TSecP384R1Curve.Create;
-begin
-  Boot;
+  TSecP384R1FieldElement.Create(TBigInteger.One) as IECFieldElement);
 end;
 
 constructor TSecP384R1Curve.Create;

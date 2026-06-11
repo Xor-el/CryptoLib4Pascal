@@ -155,7 +155,6 @@ type
     FPrecompBaseWnaf: TCryptoLibGenericArray<TPointPrecomp>;
     FPrecompBase128Wnaf: TCryptoLibGenericArray<TPointPrecomp>;
     FPrecompBaseComb: TCryptoLibInt32Array;
-  class procedure Boot; static;
   class constructor Create;
   class destructor Destroy;
   class function CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray; static;
@@ -293,34 +292,29 @@ end;
 
 class constructor TEd25519.Create;
 begin
-  Boot;
-end;
-
-class procedure TEd25519.Boot;
-begin
   FDom2Prefix := TCryptoLibByteArray.Create($53, $69, $67, $45, $64, $32, $35, $35, $31, $39, $20,
-    $6E, $6F, $20, $45, $64, $32, $35, $35, $31, $39, $20, $63, $6F, $6C, $6C, $69, $73, $69,
-    $6F, $6E, $73);
+  $6E, $6F, $20, $45, $64, $32, $35, $35, $31, $39, $20, $63, $6F, $6C, $6C, $69, $73, $69,
+  $6F, $6E, $73);
   FP := TCryptoLibUInt32Array.Create($FFFFFFED, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
+  $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
   FOrder8_y1 := TCryptoLibUInt32Array.Create($706A17C7, $4FD84D3D, $760B3CBA, $0F67100D, $FA53202A,
-    $C6CC392C, $77FDC74E, $7A03AC92);
+  $C6CC392C, $77FDC74E, $7A03AC92);
   FOrder8_y2 := TCryptoLibUInt32Array.Create($8F95E826, $B027B2C2, $89F4C345, $F098EFF2, $05ACDFD5,
-    $3933C6D3, $880238B1, $05FC536D);
+  $3933C6D3, $880238B1, $05FC536D);
   FB_x := TCryptoLibInt32Array.Create($0325D51A, $018B5823, $007B2C95, $0304A92D, $00D2598E, $01D6DC5C,
-    $01388C7F, $013FEC0A, $029E6B72, $0042D26D);
+  $01388C7F, $013FEC0A, $029E6B72, $0042D26D);
   FB_y := TCryptoLibInt32Array.Create($02666658, $01999999, $00666666, $03333333, $00CCCCCC, $02666666,
-    $01999999, $00666666, $03333333, $00CCCCCC);
+  $01999999, $00666666, $03333333, $00CCCCCC);
   FB128_x := TCryptoLibInt32Array.Create($00B7E824, $0011EB98, $003E5FC8, $024E1739, $0131CD0B, $014E29A0,
-    $034E6138, $0132C952, $03F9E22F, $00984F5F);
+  $034E6138, $0132C952, $03F9E22F, $00984F5F);
   FB128_y := TCryptoLibInt32Array.Create($03F5A66B, $02AF4452, $0049E5BB, $00F28D26, $0121A17C, $02C29C3A,
-    $0047AD89, $0087D95F, $0332936E, $00BE5933);
+  $0047AD89, $0087D95F, $0332936E, $00BE5933);
   FC_d := TCryptoLibInt32Array.Create($035978A3, $02D37284, $018AB75E, $026A0A0E, $0000E014, $0379E898,
-    $01D01E5D, $01E738CC, $03715B7F, $00A406D9);
+  $01D01E5D, $01E738CC, $03715B7F, $00A406D9);
   FC_d2 := TCryptoLibInt32Array.Create($02B2F159, $01A6E509, $01156EBD, $00D4141D, $0001C029, $02F3D130,
-    $03A03CBB, $01CE7198, $02E2B6FF, $00480DB3);
+  $03A03CBB, $01CE7198, $02E2B6FF, $00480DB3);
   FC_d4 := TCryptoLibInt32Array.Create($0165E2B2, $034DCA13, $002ADD7A, $01A8283B, $00038052, $01E7A260,
-    $03407977, $019CE331, $01C56DFF, $00901B67);
+  $03407977, $019CE331, $01C56DFF, $00901B67);
   FPrecompLock := TCriticalSection.Create;
 end;
 

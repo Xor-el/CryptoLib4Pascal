@@ -110,8 +110,6 @@ type
     class var
       FDefaultHashAlgorithm, FDefaultMaskGenAlgorithm: IAlgorithmIdentifier;
       FDefaultSaltLength, FDefaultTrailerField: IDerInteger;
-
-    class procedure Boot; static;
     class constructor Create;
     class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
     class function GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger; static;
@@ -172,8 +170,6 @@ type
     class var
       FDefaultHashAlgorithm, FDefaultMaskGenAlgorithm,
         FDefaultPSourceAlgorithm: IAlgorithmIdentifier;
-
-    class procedure Boot; static;
     class constructor Create;
     class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
 
@@ -391,11 +387,6 @@ end;
 
 class constructor TRsassaPssParameters.Create;
 begin
-  Boot;
-end;
-
-class procedure TRsassaPssParameters.Boot;
-begin
   FDefaultHashAlgorithm := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
   FDefaultMaskGenAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, DefaultHashAlgorithm);
   FDefaultSaltLength := TDerInteger.ValueOf(20);
@@ -583,11 +574,6 @@ end;
 { TRsaesOaepParameters }
 
 class constructor TRsaesOaepParameters.Create;
-begin
-  Boot;
-end;
-
-class procedure TRsaesOaepParameters.Boot;
 begin
   FDefaultHashAlgorithm := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);
   FDefaultMaskGenAlgorithm := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, DefaultHashAlgorithm);

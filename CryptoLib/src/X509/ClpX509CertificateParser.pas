@@ -60,7 +60,6 @@ type
     FCurrentStream: TStream;
 
     class constructor Create();
-    class procedure Boot();
     class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
 
     function ReadDerCertificate(const ADIn: TAsn1InputStream): IX509Certificate;
@@ -83,11 +82,6 @@ implementation
 { TX509CertificateParser }
 
 class constructor TX509CertificateParser.Create();
-begin
-  Boot();
-end;
-
-class procedure TX509CertificateParser.Boot();
 begin
   FPemCertParser := TPemParser.Create('CERTIFICATE');
 end;

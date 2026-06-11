@@ -113,7 +113,6 @@ type
     class function InitSignerForMechanism(const AMechanism: String; AForSigning: Boolean;
       const AKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; static;
     class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier; AIsNoRandom: Boolean); static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -215,21 +214,12 @@ begin
     FNoRandom.Add(AName, 0);
 end;
 
-class procedure TSignerUtilities.Boot;
+class constructor TSignerUtilities.Create;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FNoRandom := TDictionary<String, Byte>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-
-  TPkcsObjectIdentifiers.Boot;
-  TX9ObjectIdentifiers.Boot;
-  TOiwObjectIdentifiers.Boot;
-  TNistObjectIdentifiers.Boot;
-  TTeleTrusTObjectIdentifiers.Boot;
-  TCryptoProObjectIdentifiers.Boot;
-  TBsiObjectIdentifiers.Boot;
-  TEdECObjectIdentifiers.Boot;
 
   FAlgorithmMap.AddOrSetValue('MD2WITHRSA', 'MD2withRSA');
   FAlgorithmMap.AddOrSetValue('MD2WITHRSAENCRYPTION', 'MD2withRSA');
@@ -697,11 +687,6 @@ begin
   AddAlgorithm('Ed448ph', nil, True);
 
   AddAlgorithm('BIP340Schnorr', nil, True);
-end;
-
-class constructor TSignerUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TSignerUtilities.Destroy;

@@ -28,7 +28,6 @@ type
   TEacObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FBsiDe, FIdPK, FIdPKDH, FIdPKECDH, FIdCA, FIdCADH, FIdCADH3DesCbcCbc,
       FIdCAECDH, FIdCAECDH3DesCbcCbc, FIdTA, FIdTARsa, FIdTARsaV1_5Sha1,
       FIdTARsaV1_5Sha256, FIdTARsaPssSha1, FIdTARsaPssSha256, FIdTAEcdsa,
@@ -84,8 +83,6 @@ type
     class property IdTAEcdsaSha256: IDerObjectIdentifier read GetIdTAEcdsaSha256;
     class property IdTAEcdsaSha384: IDerObjectIdentifier read GetIdTAEcdsaSha384;
     class property IdTAEcdsaSha512: IDerObjectIdentifier read GetIdTAEcdsaSha512;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -94,38 +91,27 @@ implementation
 
 class constructor TEacObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TEacObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    TBsiObjectIdentifiers.Boot;
-    FBsiDe := TBsiObjectIdentifiers.BsiDe;
-    FIdPK := FBsiDe.Branch('2.2.1');
-    FIdPKDH := FIdPK.Branch('1');
-    FIdPKECDH := FIdPK.Branch('2');
-    FIdCA := FBsiDe.Branch('2.2.3');
-    FIdCADH := FIdCA.Branch('1');
-    FIdCADH3DesCbcCbc := FIdCADH.Branch('1');
-    FIdCAECDH := FIdCA.Branch('2');
-    FIdCAECDH3DesCbcCbc := FIdCAECDH.Branch('1');
-    FIdTA := FBsiDe.Branch('2.2.2');
-    FIdTARsa := FIdTA.Branch('1');
-    FIdTARsaV1_5Sha1 := FIdTARsa.Branch('1');
-    FIdTARsaV1_5Sha256 := FIdTARsa.Branch('2');
-    FIdTARsaPssSha1 := FIdTARsa.Branch('3');
-    FIdTARsaPssSha256 := FIdTARsa.Branch('4');
-    FIdTAEcdsa := FIdTA.Branch('2');
-    FIdTAEcdsaSha1 := FIdTAEcdsa.Branch('1');
-    FIdTAEcdsaSha224 := FIdTAEcdsa.Branch('2');
-    FIdTAEcdsaSha256 := FIdTAEcdsa.Branch('3');
-    FIdTAEcdsaSha384 := FIdTAEcdsa.Branch('4');
-    FIdTAEcdsaSha512 := FIdTAEcdsa.Branch('5');
-
-    FIsBooted := True;
-  end;
+  FBsiDe := TBsiObjectIdentifiers.BsiDe;
+  FIdPK := FBsiDe.Branch('2.2.1');
+  FIdPKDH := FIdPK.Branch('1');
+  FIdPKECDH := FIdPK.Branch('2');
+  FIdCA := FBsiDe.Branch('2.2.3');
+  FIdCADH := FIdCA.Branch('1');
+  FIdCADH3DesCbcCbc := FIdCADH.Branch('1');
+  FIdCAECDH := FIdCA.Branch('2');
+  FIdCAECDH3DesCbcCbc := FIdCAECDH.Branch('1');
+  FIdTA := FBsiDe.Branch('2.2.2');
+  FIdTARsa := FIdTA.Branch('1');
+  FIdTARsaV1_5Sha1 := FIdTARsa.Branch('1');
+  FIdTARsaV1_5Sha256 := FIdTARsa.Branch('2');
+  FIdTARsaPssSha1 := FIdTARsa.Branch('3');
+  FIdTARsaPssSha256 := FIdTARsa.Branch('4');
+  FIdTAEcdsa := FIdTA.Branch('2');
+  FIdTAEcdsaSha1 := FIdTAEcdsa.Branch('1');
+  FIdTAEcdsaSha224 := FIdTAEcdsa.Branch('2');
+  FIdTAEcdsaSha256 := FIdTAEcdsa.Branch('3');
+  FIdTAEcdsaSha384 := FIdTAEcdsa.Branch('4');
+  FIdTAEcdsaSha512 := FIdTAEcdsa.Branch('5');
 end;
 
 class function TEacObjectIdentifiers.GetBsiDe: IDerObjectIdentifier;

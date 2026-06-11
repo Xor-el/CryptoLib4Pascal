@@ -73,7 +73,6 @@ type
       const AParameters: IAsn1Encodable); static;
     class function CreatePssParams(const ADigAlgID: IAlgorithmIdentifier;
       ASaltSize: Int32): IRsassaPssParameters; static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
   public
@@ -86,104 +85,20 @@ implementation
 { TDefaultSignatureAlgorithmFinder }
 
 class constructor TDefaultSignatureAlgorithmFinder.Create;
-begin
-  Boot;
-end;
-
-class destructor TDefaultSignatureAlgorithmFinder.Destroy;
-begin
-  FInstance := nil;
-  FAlgorithms.Free;
-  FNoParams.Free;
-  FParameters.Free;
-  FPkcs15RsaEncryption.Free;
-  FDigestOids.Free;
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: String;
-  const AOid: IDerObjectIdentifier);
-begin
-  FAlgorithms.Add(AName, AOid);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: String;
-  const AOid: IDerObjectIdentifier; AIsNoParams: Boolean);
-begin
-  AddAlgorithm(AName, AOid, nil, AIsNoParams);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: String;
-  const AOid: IDerObjectIdentifier; const ADigestOid: IDerObjectIdentifier; AIsNoParams: Boolean);
-begin
-  if AName = '' then
-    raise EArgumentNilCryptoLibException.Create('name');
-  if AOid = nil then
-    raise EArgumentNilCryptoLibException.Create('oid');
-
-  AddAlgorithm(AName, AOid);
-
-  if ADigestOid <> nil then
-    AddDigestOid(AOid, ADigestOid);
-  if AIsNoParams then
-    AddNoParams(AOid);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddDigestOid(const ASignatureOid,
-  ADigestOid: IDerObjectIdentifier);
-begin
-  FDigestOids.Add(ASignatureOid, ADigestOid);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddPkcs15RsaEncryption(
-  const AOid: IDerObjectIdentifier);
-begin
-  if not FPkcs15RsaEncryption.ContainsKey(AOid) then
-    FPkcs15RsaEncryption.Add(AOid, 0);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddNoParams(const AOid: IDerObjectIdentifier);
-begin
-  if not FNoParams.ContainsKey(AOid) then
-    FNoParams.Add(AOid, TAlgorithmIdentifier.Create(AOid) as IAlgorithmIdentifier);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.AddParameters(const AAlgorithmName: String;
-  const AParameters: IAsn1Encodable);
-begin
-  if AParameters = nil then
-    raise EArgumentCryptoLibException.Create('use ''NoParams'' instead for absent parameters');
-  FParameters.Add(AAlgorithmName, AParameters);
-end;
-
-class function TDefaultSignatureAlgorithmFinder.CreatePssParams(
-  const ADigAlgID: IAlgorithmIdentifier; ASaltSize: Int32): IRsassaPssParameters;
-var
-  LHashAlgId: IAlgorithmIdentifier;
-  LMgfAlgId: IAlgorithmIdentifier;
-  LSaltLength: IDerInteger;
-begin
-  LHashAlgId := ADigAlgID;
-  LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, LHashAlgId);
-  LSaltLength := TDerInteger.ValueOf(ASaltSize);
-  Result := TRsassaPssParameters.Create(LHashAlgId, LMgfAlgId, LSaltLength,
-    TRsassaPssParameters.DefaultTrailerField);
-end;
-
-class procedure TDefaultSignatureAlgorithmFinder.Boot;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
   LSha3_224AlgId, LSha3_256AlgId, LSha3_384AlgId, LSha3_512AlgId: IAlgorithmIdentifier;
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(
-    TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FNoParams := TDictionary<IDerObjectIdentifier, IAlgorithmIdentifier>.Create(
-    TAsn1Comparers.OidEqualityComparer);
+  TAsn1Comparers.OidEqualityComparer);
   FParameters := TDictionary<String, IAsn1Encodable>.Create(
-    TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FPkcs15RsaEncryption := TDictionary<IDerObjectIdentifier, Byte>.Create(
-    TAsn1Comparers.OidEqualityComparer);
+  TAsn1Comparers.OidEqualityComparer);
   FDigestOids := TDictionary<IDerObjectIdentifier, IDerObjectIdentifier>.Create(
-    TAsn1Comparers.OidEqualityComparer);
+  TAsn1Comparers.OidEqualityComparer);
 
   AddAlgorithm('MD2WITHRSAENCRYPTION', TPkcsObjectIdentifiers.MD2WithRsaEncryption);
   AddAlgorithm('MD2WITHRSA', TPkcsObjectIdentifiers.MD2WithRsaEncryption);
@@ -273,25 +188,25 @@ begin
   AddAlgorithm('GOST3411WITHECGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   AddAlgorithm('GOST3411WITHGOST3410-2001', TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
   AddAlgorithm('GOST3411WITHECGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411WITHECGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411WITHGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411WITHGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411-2012-256WITHECGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411-2012-512WITHECGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411-2012-256WITHGOST3410-2012-256',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411-2012-512WITHGOST3410-2012-512',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
   AddAlgorithm('GOST3411-2012-256WITHECGOST3410',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256);
   AddAlgorithm('GOST3411-2012-512WITHECGOST3410',
-    TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
+  TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512);
 
   AddAlgorithm('SHA1WITHCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha1);
   AddAlgorithm('SHA224WITHCVC-ECDSA', TEacObjectIdentifiers.IdTAEcdsaSha224);
@@ -437,19 +352,19 @@ begin
   AddDigestOid(TPkcsObjectIdentifiers.MD5WithRsaEncryption, TPkcsObjectIdentifiers.MD5);
   AddDigestOid(TPkcsObjectIdentifiers.Sha1WithRsaEncryption, TOiwObjectIdentifiers.IdSha1);
   AddDigestOid(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128,
-    TTeleTrusTObjectIdentifiers.RipeMD128);
+  TTeleTrusTObjectIdentifiers.RipeMD128);
   AddDigestOid(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160,
-    TTeleTrusTObjectIdentifiers.RipeMD160);
+  TTeleTrusTObjectIdentifiers.RipeMD160);
   AddDigestOid(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD256,
-    TTeleTrusTObjectIdentifiers.RipeMD256);
+  TTeleTrusTObjectIdentifiers.RipeMD256);
   AddDigestOid(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94,
-    TCryptoProObjectIdentifiers.GostR3411);
+  TCryptoProObjectIdentifiers.GostR3411);
   AddDigestOid(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001,
-    TCryptoProObjectIdentifiers.GostR3411);
+  TCryptoProObjectIdentifiers.GostR3411);
   AddDigestOid(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_256,
-    TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256);
+  TRosstandartObjectIdentifiers.IdTc26Gost3411_12_256);
   AddDigestOid(TRosstandartObjectIdentifiers.IdTc26SignWithDigestGost3410_12_512,
-    TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512);
+  TRosstandartObjectIdentifiers.IdTc26Gost3411_12_512);
 
   AddDigestOid(TX9ObjectIdentifiers.IdDsaWithSha1, TOiwObjectIdentifiers.IdSha1);
   AddDigestOid(TOiwObjectIdentifiers.DsaWithSha1, TOiwObjectIdentifiers.IdSha1);
@@ -486,6 +401,85 @@ begin
   AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, nil, True);
 
   FInstance := TDefaultSignatureAlgorithmFinder.Create;
+end;
+
+class destructor TDefaultSignatureAlgorithmFinder.Destroy;
+begin
+  FInstance := nil;
+  FAlgorithms.Free;
+  FNoParams.Free;
+  FParameters.Free;
+  FPkcs15RsaEncryption.Free;
+  FDigestOids.Free;
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: String;
+  const AOid: IDerObjectIdentifier);
+begin
+  FAlgorithms.Add(AName, AOid);
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: String;
+  const AOid: IDerObjectIdentifier; AIsNoParams: Boolean);
+begin
+  AddAlgorithm(AName, AOid, nil, AIsNoParams);
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: String;
+  const AOid: IDerObjectIdentifier; const ADigestOid: IDerObjectIdentifier; AIsNoParams: Boolean);
+begin
+  if AName = '' then
+    raise EArgumentNilCryptoLibException.Create('name');
+  if AOid = nil then
+    raise EArgumentNilCryptoLibException.Create('oid');
+
+  AddAlgorithm(AName, AOid);
+
+  if ADigestOid <> nil then
+    AddDigestOid(AOid, ADigestOid);
+  if AIsNoParams then
+    AddNoParams(AOid);
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddDigestOid(const ASignatureOid,
+  ADigestOid: IDerObjectIdentifier);
+begin
+  FDigestOids.Add(ASignatureOid, ADigestOid);
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddPkcs15RsaEncryption(
+  const AOid: IDerObjectIdentifier);
+begin
+  if not FPkcs15RsaEncryption.ContainsKey(AOid) then
+    FPkcs15RsaEncryption.Add(AOid, 0);
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddNoParams(const AOid: IDerObjectIdentifier);
+begin
+  if not FNoParams.ContainsKey(AOid) then
+    FNoParams.Add(AOid, TAlgorithmIdentifier.Create(AOid) as IAlgorithmIdentifier);
+end;
+
+class procedure TDefaultSignatureAlgorithmFinder.AddParameters(const AAlgorithmName: String;
+  const AParameters: IAsn1Encodable);
+begin
+  if AParameters = nil then
+    raise EArgumentCryptoLibException.Create('use ''NoParams'' instead for absent parameters');
+  FParameters.Add(AAlgorithmName, AParameters);
+end;
+
+class function TDefaultSignatureAlgorithmFinder.CreatePssParams(
+  const ADigAlgID: IAlgorithmIdentifier; ASaltSize: Int32): IRsassaPssParameters;
+var
+  LHashAlgId: IAlgorithmIdentifier;
+  LMgfAlgId: IAlgorithmIdentifier;
+  LSaltLength: IDerInteger;
+begin
+  LHashAlgId := ADigAlgID;
+  LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, LHashAlgId);
+  LSaltLength := TDerInteger.ValueOf(ASaltSize);
+  Result := TRsassaPssParameters.Create(LHashAlgId, LMgfAlgId, LSaltLength,
+    TRsassaPssParameters.DefaultTrailerField);
 end;
 
 function TDefaultSignatureAlgorithmFinder.Find(const ASignatureName: String): IAlgorithmIdentifier;

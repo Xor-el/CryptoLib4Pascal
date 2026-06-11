@@ -29,7 +29,6 @@ type
   TX9ObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FAnsiX9_62, FIdFieldType, FPrimeField, FCharacteristicTwoField, FGNBasis,
       FTPBasis, FPPBasis, FIdEcSigType, FECDsaWithSha1, FIdPublicKeyType,
       FIdECPublicKey, FECDsaWithSha2, FECDsaWithSha224, FECDsaWithSha256,
@@ -172,8 +171,6 @@ type
     class property DHHybridOneFlow: IDerObjectIdentifier read GetDHHybridOneFlow;
     class property Mqv2: IDerObjectIdentifier read GetMqv2;
     class property Mqv1: IDerObjectIdentifier read GetMqv1;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -182,80 +179,70 @@ implementation
 
 class constructor TX9ObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TX9ObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FAnsiX9_62 := TDerObjectIdentifier.Create('1.2.840.10045');
-    FIdFieldType := FAnsiX9_62.Branch('1');
-    FPrimeField := FIdFieldType.Branch('1');
-    FCharacteristicTwoField := FIdFieldType.Branch('2');
-    FGNBasis := FCharacteristicTwoField.Branch('3.1');
-    FTPBasis := FCharacteristicTwoField.Branch('3.2');
-    FPPBasis := FCharacteristicTwoField.Branch('3.3');
-    FIdEcSigType := FAnsiX9_62.Branch('4');
-    FECDsaWithSha1 := FIdEcSigType.Branch('1');
-    FIdPublicKeyType := FAnsiX9_62.Branch('2');
-    FIdECPublicKey := FIdPublicKeyType.Branch('1');
-    FECDsaWithSha2 := FIdEcSigType.Branch('3');
-    FECDsaWithSha224 := FECDsaWithSha2.Branch('1');
-    FECDsaWithSha256 := FECDsaWithSha2.Branch('2');
-    FECDsaWithSha384 := FECDsaWithSha2.Branch('3');
-    FECDsaWithSha512 := FECDsaWithSha2.Branch('4');
-    FEllipticCurve := FAnsiX9_62.Branch('3');
-    FCTwoCurve := FEllipticCurve.Branch('0');
-    FC2Pnb163v1 := FCTwoCurve.Branch('1');
-    FC2Pnb163v2 := FCTwoCurve.Branch('2');
-    FC2Pnb163v3 := FCTwoCurve.Branch('3');
-    FC2Pnb176w1 := FCTwoCurve.Branch('4');
-    FC2Tnb191v1 := FCTwoCurve.Branch('5');
-    FC2Tnb191v2 := FCTwoCurve.Branch('6');
-    FC2Tnb191v3 := FCTwoCurve.Branch('7');
-    FC2Onb191v4 := FCTwoCurve.Branch('8');
-    FC2Onb191v5 := FCTwoCurve.Branch('9');
-    FC2Pnb208w1 := FCTwoCurve.Branch('10');
-    FC2Tnb239v1 := FCTwoCurve.Branch('11');
-    FC2Tnb239v2 := FCTwoCurve.Branch('12');
-    FC2Tnb239v3 := FCTwoCurve.Branch('13');
-    FC2Onb239v4 := FCTwoCurve.Branch('14');
-    FC2Onb239v5 := FCTwoCurve.Branch('15');
-    FC2Pnb272w1 := FCTwoCurve.Branch('16');
-    FC2Pnb304w1 := FCTwoCurve.Branch('17');
-    FC2Tnb359v1 := FCTwoCurve.Branch('18');
-    FC2Pnb368w1 := FCTwoCurve.Branch('19');
-    FC2Tnb431r1 := FCTwoCurve.Branch('20');
-    FPrimeCurve := FEllipticCurve.Branch('1');
-    FPrime192v1 := FPrimeCurve.Branch('1');
-    FPrime192v2 := FPrimeCurve.Branch('2');
-    FPrime192v3 := FPrimeCurve.Branch('3');
-    FPrime239v1 := FPrimeCurve.Branch('4');
-    FPrime239v2 := FPrimeCurve.Branch('5');
-    FPrime239v3 := FPrimeCurve.Branch('6');
-    FPrime256v1 := FPrimeCurve.Branch('7');
-    FIdDsa := TDerObjectIdentifier.Create('1.2.840.10040.4.1');
-    FIdDsaWithSha1 := TDerObjectIdentifier.Create('1.2.840.10040.4.3');
-    // TODO Seems this ought to be 1.3.133.16.840.9.63.0, but may be in common use
-    FX9x63Scheme := TDerObjectIdentifier.Create('1.3.133.16.840.63.0');
-    FDHSinglePassStdDHSha1KdfScheme := FX9x63Scheme.Branch('2');
-    FDHSinglePassCofactorDHSha1KdfScheme := FX9x63Scheme.Branch('3');
-    FMqvSinglePassSha1KdfScheme := FX9x63Scheme.Branch('16');
-    FAnsiX9_42 := TDerObjectIdentifier.Create('1.2.840.10046');
-    FDHPublicNumber := FAnsiX9_42.Branch('2.1');
-    FX9x42Schemes := FAnsiX9_42.Branch('2.3');
-    FDHStatic := FX9x42Schemes.Branch('1');
-    FDHEphem := FX9x42Schemes.Branch('2');
-    FDHOneFlow := FX9x42Schemes.Branch('3');
-    FDHHybrid1 := FX9x42Schemes.Branch('4');
-    FDHHybrid2 := FX9x42Schemes.Branch('5');
-    FDHHybridOneFlow := FX9x42Schemes.Branch('6');
-    FMqv2 := FX9x42Schemes.Branch('7');
-    FMqv1 := FX9x42Schemes.Branch('8');
-
-    FIsBooted := True;
-  end;
+  FAnsiX9_62 := TDerObjectIdentifier.Create('1.2.840.10045');
+  FIdFieldType := FAnsiX9_62.Branch('1');
+  FPrimeField := FIdFieldType.Branch('1');
+  FCharacteristicTwoField := FIdFieldType.Branch('2');
+  FGNBasis := FCharacteristicTwoField.Branch('3.1');
+  FTPBasis := FCharacteristicTwoField.Branch('3.2');
+  FPPBasis := FCharacteristicTwoField.Branch('3.3');
+  FIdEcSigType := FAnsiX9_62.Branch('4');
+  FECDsaWithSha1 := FIdEcSigType.Branch('1');
+  FIdPublicKeyType := FAnsiX9_62.Branch('2');
+  FIdECPublicKey := FIdPublicKeyType.Branch('1');
+  FECDsaWithSha2 := FIdEcSigType.Branch('3');
+  FECDsaWithSha224 := FECDsaWithSha2.Branch('1');
+  FECDsaWithSha256 := FECDsaWithSha2.Branch('2');
+  FECDsaWithSha384 := FECDsaWithSha2.Branch('3');
+  FECDsaWithSha512 := FECDsaWithSha2.Branch('4');
+  FEllipticCurve := FAnsiX9_62.Branch('3');
+  FCTwoCurve := FEllipticCurve.Branch('0');
+  FC2Pnb163v1 := FCTwoCurve.Branch('1');
+  FC2Pnb163v2 := FCTwoCurve.Branch('2');
+  FC2Pnb163v3 := FCTwoCurve.Branch('3');
+  FC2Pnb176w1 := FCTwoCurve.Branch('4');
+  FC2Tnb191v1 := FCTwoCurve.Branch('5');
+  FC2Tnb191v2 := FCTwoCurve.Branch('6');
+  FC2Tnb191v3 := FCTwoCurve.Branch('7');
+  FC2Onb191v4 := FCTwoCurve.Branch('8');
+  FC2Onb191v5 := FCTwoCurve.Branch('9');
+  FC2Pnb208w1 := FCTwoCurve.Branch('10');
+  FC2Tnb239v1 := FCTwoCurve.Branch('11');
+  FC2Tnb239v2 := FCTwoCurve.Branch('12');
+  FC2Tnb239v3 := FCTwoCurve.Branch('13');
+  FC2Onb239v4 := FCTwoCurve.Branch('14');
+  FC2Onb239v5 := FCTwoCurve.Branch('15');
+  FC2Pnb272w1 := FCTwoCurve.Branch('16');
+  FC2Pnb304w1 := FCTwoCurve.Branch('17');
+  FC2Tnb359v1 := FCTwoCurve.Branch('18');
+  FC2Pnb368w1 := FCTwoCurve.Branch('19');
+  FC2Tnb431r1 := FCTwoCurve.Branch('20');
+  FPrimeCurve := FEllipticCurve.Branch('1');
+  FPrime192v1 := FPrimeCurve.Branch('1');
+  FPrime192v2 := FPrimeCurve.Branch('2');
+  FPrime192v3 := FPrimeCurve.Branch('3');
+  FPrime239v1 := FPrimeCurve.Branch('4');
+  FPrime239v2 := FPrimeCurve.Branch('5');
+  FPrime239v3 := FPrimeCurve.Branch('6');
+  FPrime256v1 := FPrimeCurve.Branch('7');
+  FIdDsa := TDerObjectIdentifier.Create('1.2.840.10040.4.1');
+  FIdDsaWithSha1 := TDerObjectIdentifier.Create('1.2.840.10040.4.3');
+  // TODO Seems this ought to be 1.3.133.16.840.9.63.0, but may be in common use
+  FX9x63Scheme := TDerObjectIdentifier.Create('1.3.133.16.840.63.0');
+  FDHSinglePassStdDHSha1KdfScheme := FX9x63Scheme.Branch('2');
+  FDHSinglePassCofactorDHSha1KdfScheme := FX9x63Scheme.Branch('3');
+  FMqvSinglePassSha1KdfScheme := FX9x63Scheme.Branch('16');
+  FAnsiX9_42 := TDerObjectIdentifier.Create('1.2.840.10046');
+  FDHPublicNumber := FAnsiX9_42.Branch('2.1');
+  FX9x42Schemes := FAnsiX9_42.Branch('2.3');
+  FDHStatic := FX9x42Schemes.Branch('1');
+  FDHEphem := FX9x42Schemes.Branch('2');
+  FDHOneFlow := FX9x42Schemes.Branch('3');
+  FDHHybrid1 := FX9x42Schemes.Branch('4');
+  FDHHybrid2 := FX9x42Schemes.Branch('5');
+  FDHHybridOneFlow := FX9x42Schemes.Branch('6');
+  FMqv2 := FX9x42Schemes.Branch('7');
+  FMqv1 := FX9x42Schemes.Branch('8');
 end;
 
 class function TX9ObjectIdentifiers.GetAnsiX9_42: IDerObjectIdentifier;

@@ -54,7 +54,6 @@ type
     FMasterRandom: ISecureRandom;
     FDoubleScale: Double;
     FLock: TCriticalSection;
-    FIsBooted: Boolean;
 
     class function GetMasterRandom: ISecureRandom; static; inline;
 
@@ -112,9 +111,6 @@ type
     /// <param name="AAlgorithm">e.g. "SHA256PRNG"</param>
     /// <param name="AAutoSeed">If true, the instance will be auto-seeded.</param>
     class function GetInstance(const AAlgorithm: String; AAutoSeed: Boolean): ISecureRandom; overload; static;
-
-    class procedure Boot(); static;
-
     class property MasterRandom: ISecureRandom read GetMasterRandom;
 
   end;
@@ -262,7 +258,12 @@ end;
 
 class constructor TSecureRandom.Create;
 begin
-  TSecureRandom.Boot;
+  FLock := TCriticalSection.Create;
+  FCounter := TDateTimeUtilities.DateTimeToTicks(Now.ToUniversalTime());
+  FMasterRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
+      as ICryptoApiRandomGenerator);
+  FDoubleScale := Power(2.0, 64.0);
+  TOSRandomProvider.Instance;
 end;
 
 class destructor TSecureRandom.Destroy;
@@ -302,20 +303,6 @@ begin
     LPrng.AddSeedMaterial(GetNextBytes(MasterRandom, LSeedLength));
   end;
   Result := LPrng;
-end;
-
-class procedure TSecureRandom.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FLock := TCriticalSection.Create;
-    FCounter := TDateTimeUtilities.DateTimeToTicks(Now.ToUniversalTime());
-    FMasterRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
-      as ICryptoApiRandomGenerator);
-    FDoubleScale := Power(2.0, 64.0);
-    TOSRandomProvider.Boot;
-    FIsBooted := True;
-  end;
 end;
 
 constructor TSecureRandom.Create;

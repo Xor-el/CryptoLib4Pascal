@@ -77,7 +77,6 @@ type
       FExParams: TDictionary<String, IAsn1Encodable>;
       FNoParams: TDictionary<IDerObjectIdentifier, Boolean>;
       FKeyAlgorithms: TDictionary<IDerObjectIdentifier, String>;
-    class procedure Boot; static;
     class function CreatePssParams(const AHashAlgId: IAlgorithmIdentifier;
       ASaltSize: Int32): IRsassaPssParameters; static;
     class constructor Create;
@@ -117,29 +116,6 @@ implementation
 { TPkcs10CertificationRequest }
 
 class constructor TPkcs10CertificationRequest.Create;
-begin
-  Boot;
-end;
-
-class destructor TPkcs10CertificationRequest.Destroy;
-begin
-  FAlgorithms.Free;
-  FExParams.Free;
-  FNoParams.Free;
-  FKeyAlgorithms.Free;
-end;
-
-class function TPkcs10CertificationRequest.CreatePssParams(const AHashAlgId: IAlgorithmIdentifier;
-  ASaltSize: Int32): IRsassaPssParameters;
-var
-  LMgfAlgId: IAlgorithmIdentifier;
-begin
-  LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, AHashAlgId);
-  Result := TRsassaPssParameters.Create(AHashAlgId, LMgfAlgId,
-    TDerInteger.ValueOf(ASaltSize), TRsassaPssParameters.DefaultTrailerField);
-end;
-
-class procedure TPkcs10CertificationRequest.Boot;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
 begin
@@ -285,6 +261,24 @@ begin
   FExParams.Add('SHA384WITHRSAANDMGF1', CreatePssParams(LSha384AlgId, 48));
   LSha512AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha512, TDerNull.Instance);
   FExParams.Add('SHA512WITHRSAANDMGF1', CreatePssParams(LSha512AlgId, 64));
+end;
+
+class destructor TPkcs10CertificationRequest.Destroy;
+begin
+  FAlgorithms.Free;
+  FExParams.Free;
+  FNoParams.Free;
+  FKeyAlgorithms.Free;
+end;
+
+class function TPkcs10CertificationRequest.CreatePssParams(const AHashAlgId: IAlgorithmIdentifier;
+  ASaltSize: Int32): IRsassaPssParameters;
+var
+  LMgfAlgId: IAlgorithmIdentifier;
+begin
+  LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, AHashAlgId);
+  Result := TRsassaPssParameters.Create(AHashAlgId, LMgfAlgId,
+    TDerInteger.ValueOf(ASaltSize), TRsassaPssParameters.DefaultTrailerField);
 end;
 
 constructor TPkcs10CertificationRequest.Create(const AEncoded: TCryptoLibByteArray);

@@ -73,14 +73,12 @@ type
     Pkcs12 = 'Pkcs12';
     OpenSsl = 'OpenSsl';
   class var
-    FIsBooted: Boolean;
     FAlgorithms: TDictionary<String, String>;
     FAlgorithmType: TDictionary<String, String>;
     FOids: TDictionary<String, IDerObjectIdentifier>;
   class constructor Create;
   class destructor Destroy;
   strict private
-    class procedure Boot; static;
     class function MakePbeGenerator(const AType: String; const ADigest: IDigest;
       const AKey: TCryptoLibByteArray; const ASalt: TCryptoLibByteArray;
       AIterationCount: Int32): IPbeParametersGenerator; static;
@@ -168,15 +166,7 @@ uses
 
 class constructor TPbeUtilities.Create;
 begin
-  Boot;
-end;
-
-class procedure TPbeUtilities.Boot;
-begin
-  if FIsBooted then
-    Exit;
-
-  FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmType := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
@@ -267,8 +257,6 @@ begin
   FOids.AddOrSetValue('PBEwithHmacRipeMD160', TTeleTrusTObjectIdentifiers.RipeMD160);
   FOids.AddOrSetValue('PBEwithHmacRipeMD256', TTeleTrusTObjectIdentifiers.RipeMD256);
   FOids.AddOrSetValue('Pkcs5scheme2', TPkcsObjectIdentifiers.IdPbeS2);
-
-  FIsBooted := True;
 end;
 
 class destructor TPbeUtilities.Destroy;

@@ -56,10 +56,8 @@ type
     class procedure DefineCurve(const AName: String;
       const AOid: IDerObjectIdentifier;
       const AHolder: IX9ECParametersHolder); static;
-
-    class procedure Boot; static;
-    class constructor CreateTeleTrusTNamedCurves;
-    class destructor DestroyTeleTrusTNamedCurves;
+    class constructor Create;
+    class destructor Destroy;
 
   public
     class function GetByName(const AName: String): IX9ECParameters;
@@ -211,7 +209,7 @@ begin
   FObjIds.Add(LName, AOid);
 end;
 
-class procedure TTeleTrusTNamedCurves.Boot;
+class constructor TTeleTrusTNamedCurves.Create;
 begin
   FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FCurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -233,12 +231,7 @@ begin
   DefineCurve('brainpoolP512t1', TTeleTrusTObjectIdentifiers.BrainpoolP512T1, TBrainpoolP512t1Holder.Instance);
 end;
 
-class constructor TTeleTrusTNamedCurves.CreateTeleTrusTNamedCurves;
-begin
-  Boot;
-end;
-
-class destructor TTeleTrusTNamedCurves.DestroyTeleTrusTNamedCurves;
+class destructor TTeleTrusTNamedCurves.Destroy;
 begin
   FObjIds.Free;
   FCurves.Free;

@@ -51,7 +51,6 @@ type
     P16 = UInt32($1FF);
   class var
     FP: TCryptoLibUInt32Array;
-  class procedure Boot; static;
   class procedure ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt32Array); static;
   class procedure ImplSquare(const AX, AZZ: TCryptoLibUInt32Array); static;
   class constructor Create;
@@ -87,7 +86,6 @@ type
   strict private
   class var
     FQ: TBigInteger;
-  class procedure Boot; static;
   class constructor Create;
   strict protected
     FX: TCryptoLibUInt32Array;
@@ -165,7 +163,6 @@ type
   class var
     FQ: TBigInteger;
     FSecP521R1AffineZs: TCryptoLibGenericArray<IECFieldElement>;
-  class procedure Boot; static;
   class constructor Create;
   var
     FInfinity: ISecP521R1Point;
@@ -196,16 +193,11 @@ implementation
 
 { TSecP521R1Field }
 
-class procedure TSecP521R1Field.Boot;
-begin
-  FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $1FF);
-end;
-
 class constructor TSecP521R1Field.Create;
 begin
-  Boot;
+  FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $1FF);
 end;
 
 class procedure TSecP521R1Field.ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt32Array);
@@ -446,14 +438,9 @@ end;
 
 { TSecP521R1FieldElement }
 
-class procedure TSecP521R1FieldElement.Boot;
-begin
-  FQ := TBigInteger.Create(1, THexEncoder.Decode('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'));
-end;
-
 class constructor TSecP521R1FieldElement.Create;
 begin
-  Boot;
+  FQ := TBigInteger.Create(1, THexEncoder.Decode('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'));
 end;
 
 class function TSecP521R1FieldElement.GetQ: TBigInteger;
@@ -923,16 +910,11 @@ end;
 
 { TSecP521R1Curve }
 
-class procedure TSecP521R1Curve.Boot;
+class constructor TSecP521R1Curve.Create;
 begin
   FQ := TSecP521R1FieldElement.Q;
   FSecP521R1AffineZs := TCryptoLibGenericArray<IECFieldElement>.Create(
-    TSecP521R1FieldElement.Create(TBigInteger.One) as IECFieldElement);
-end;
-
-class constructor TSecP521R1Curve.Create;
-begin
-  Boot;
+  TSecP521R1FieldElement.Create(TBigInteger.One) as IECFieldElement);
 end;
 
 constructor TSecP521R1Curve.Create;

@@ -29,7 +29,6 @@ type
   TIanaObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FInternet, FDirectory, FMgmt, FExperimental, FClsPrivate, FSecurity,
       FSNMPv2, FMail, FSecurityMechanisms, FSecurityNametypes, FPkix, FIpsec,
       FIsakmpOakley, FHmacMD5, FHmacSha1, FHmacTiger, FHmacRipeMD160: IDerObjectIdentifier;
@@ -71,8 +70,6 @@ type
     class property HmacSha1: IDerObjectIdentifier read GetHmacSha1;
     class property HmacTiger: IDerObjectIdentifier read GetHmacTiger;
     class property HmacRipeMD160: IDerObjectIdentifier read GetHmacRipeMD160;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -81,33 +78,23 @@ implementation
 
 class constructor TIanaObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TIanaObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FInternet := TDerObjectIdentifier.Create('1.3.6.1');
-    FDirectory := FInternet.Branch('1');
-    FMgmt := FInternet.Branch('2');
-    FExperimental := FInternet.Branch('3');
-    FClsPrivate := FInternet.Branch('4');
-    FSecurity := FInternet.Branch('5');
-    FSNMPv2 := FInternet.Branch('6');
-    FMail := FInternet.Branch('7');
-    FSecurityMechanisms := FSecurity.Branch('5');
-    FSecurityNametypes := FSecurity.Branch('6');
-    FPkix := FSecurityMechanisms.Branch('7');
-    FIpsec := FSecurityMechanisms.Branch('8');
-    FIsakmpOakley := FIpsec.Branch('1');
-    FHmacMD5 := FIsakmpOakley.Branch('1');
-    FHmacSha1 := FIsakmpOakley.Branch('2');
-    FHmacTiger := FIsakmpOakley.Branch('3');
-    FHmacRipeMD160 := FIsakmpOakley.Branch('4');
-
-    FIsBooted := True;
-  end;
+  FInternet := TDerObjectIdentifier.Create('1.3.6.1');
+  FDirectory := FInternet.Branch('1');
+  FMgmt := FInternet.Branch('2');
+  FExperimental := FInternet.Branch('3');
+  FClsPrivate := FInternet.Branch('4');
+  FSecurity := FInternet.Branch('5');
+  FSNMPv2 := FInternet.Branch('6');
+  FMail := FInternet.Branch('7');
+  FSecurityMechanisms := FSecurity.Branch('5');
+  FSecurityNametypes := FSecurity.Branch('6');
+  FPkix := FSecurityMechanisms.Branch('7');
+  FIpsec := FSecurityMechanisms.Branch('8');
+  FIsakmpOakley := FIpsec.Branch('1');
+  FHmacMD5 := FIsakmpOakley.Branch('1');
+  FHmacSha1 := FIsakmpOakley.Branch('2');
+  FHmacTiger := FIsakmpOakley.Branch('3');
+  FHmacRipeMD160 := FIsakmpOakley.Branch('4');
 end;
 
 class function TIanaObjectIdentifiers.GetClsPrivate: IDerObjectIdentifier;

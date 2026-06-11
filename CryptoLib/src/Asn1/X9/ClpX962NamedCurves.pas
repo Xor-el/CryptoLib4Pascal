@@ -56,10 +56,8 @@ type
     class procedure DefineCurve(const AName: String;
       const AOid: IDerObjectIdentifier;
       const AHolder: IX9ECParametersHolder); static;
-
-    class procedure Boot; static;
-    class constructor CreateX962NamedCurves;
-    class destructor DestroyX962NamedCurves;
+    class constructor Create;
+    class destructor Destroy;
 
   public
     class function GetByName(const AName: String): IX9ECParameters;
@@ -273,7 +271,7 @@ begin
   FObjIds.Add(LName, AOid);
 end;
 
-class procedure TX962NamedCurves.Boot;
+class constructor TX962NamedCurves.Create;
 begin
   FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FCurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -304,12 +302,7 @@ begin
   DefineCurve('c2tnb431r1', TX9ObjectIdentifiers.C2Tnb431r1, TC2tnb431r1Holder.Instance);
 end;
 
-class constructor TX962NamedCurves.CreateX962NamedCurves;
-begin
-  Boot;
-end;
-
-class destructor TX962NamedCurves.DestroyX962NamedCurves;
+class destructor TX962NamedCurves.Destroy;
 begin
   FObjIds.Free;
   FCurves.Free;

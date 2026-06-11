@@ -57,9 +57,7 @@ type
     class procedure DefineCurve(const AName: String;
       const AOid: IDerObjectIdentifier;
       const AHolder: IX9ECParametersHolder); static;
-
-    class procedure Boot; static;
-    class constructor CreateECGost3410NamedCurves;
+    class constructor Create;
     class destructor DestroyECGost3410NamedCurves;
 
   public
@@ -166,7 +164,7 @@ begin
   FObjIds.Add(LName, AOid);
 end;
 
-class procedure TECGost3410NamedCurves.Boot;
+class constructor TECGost3410NamedCurves.Create;
 begin
   FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FCurves := TDictionary<IDerObjectIdentifier, IX9ECParametersHolder>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -184,11 +182,6 @@ begin
   DefineCurve('Tc26-Gost-3410-12-512-paramSetA', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetA, THolderIdTc26Gost341012512ParamSetA.Instance);
   DefineCurve('Tc26-Gost-3410-12-512-paramSetB', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetB, THolderIdTc26Gost341012512ParamSetB.Instance);
   DefineCurve('Tc26-Gost-3410-12-512-paramSetC', TRosstandartObjectIdentifiers.IdTc26Gost3410_12_512ParamSetC, THolderIdTc26Gost341012512ParamSetC.Instance);
-end;
-
-class constructor TECGost3410NamedCurves.CreateECGost3410NamedCurves;
-begin
-  Boot;
 end;
 
 class destructor TECGost3410NamedCurves.DestroyECGost3410NamedCurves;

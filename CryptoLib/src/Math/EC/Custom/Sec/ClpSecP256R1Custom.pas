@@ -52,7 +52,6 @@ type
     PExt15 = UInt32($FFFFFFFE);
   class var
     FP, FPExt: TCryptoLibUInt32Array;
-  class procedure Boot; static;
   class procedure AddPInvTo(const AZ: TCryptoLibUInt32Array); static;
   class procedure SubPInvFrom(const AZ: TCryptoLibUInt32Array); static;
   class constructor Create;
@@ -91,7 +90,6 @@ type
   strict private
   class var
     FQ: TBigInteger;
-  class procedure Boot; static;
   class constructor Create;
   strict protected
     FX: TCryptoLibUInt32Array;
@@ -169,7 +167,6 @@ type
   class var
     FQ: TBigInteger;
     FSecP256R1AffineZs: TCryptoLibGenericArray<IECFieldElement>;
-  class procedure Boot; static;
   class constructor Create;
   var
     FInfinity: ISecP256R1Point;
@@ -200,18 +197,13 @@ implementation
 
 { TSecP256R1Field }
 
-class procedure TSecP256R1Field.Boot;
-begin
-  FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $00000000,
-    $00000000, $00000000, $00000001, $FFFFFFFF);
-  FPExt := TCryptoLibUInt32Array.Create($00000001, $00000000, $00000000, $FFFFFFFE,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $00000001, $FFFFFFFE, $00000001, $FFFFFFFE,
-    $00000001, $00000001, $FFFFFFFE, $00000002, $FFFFFFFE);
-end;
-
 class constructor TSecP256R1Field.Create;
 begin
-  Boot;
+  FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $00000000,
+  $00000000, $00000000, $00000001, $FFFFFFFF);
+  FPExt := TCryptoLibUInt32Array.Create($00000001, $00000000, $00000000, $FFFFFFFE,
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $00000001, $FFFFFFFE, $00000001, $FFFFFFFE,
+  $00000001, $00000001, $FFFFFFFE, $00000002, $FFFFFFFE);
 end;
 
 class procedure TSecP256R1Field.AddPInvTo(const AZ: TCryptoLibUInt32Array);
@@ -586,14 +578,9 @@ end;
 
 { TSecP256R1FieldElement }
 
-class procedure TSecP256R1FieldElement.Boot;
-begin
-  FQ := TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF'));
-end;
-
 class constructor TSecP256R1FieldElement.Create;
 begin
-  Boot;
+  FQ := TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF'));
 end;
 
 class function TSecP256R1FieldElement.GetQ: TBigInteger;
@@ -1088,16 +1075,11 @@ end;
 
 { TSecP256R1Curve }
 
-class procedure TSecP256R1Curve.Boot;
+class constructor TSecP256R1Curve.Create;
 begin
   FQ := TSecP256R1FieldElement.Q;
   FSecP256R1AffineZs := TCryptoLibGenericArray<IECFieldElement>.Create(
-    TSecP256R1FieldElement.Create(TBigInteger.One) as IECFieldElement);
-end;
-
-class constructor TSecP256R1Curve.Create;
-begin
-  Boot;
+  TSecP256R1FieldElement.Create(TBigInteger.One) as IECFieldElement);
 end;
 
 constructor TSecP256R1Curve.Create;

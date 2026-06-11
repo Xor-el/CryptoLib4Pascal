@@ -1,4 +1,4 @@
-{ *********************************************************************************** }
+﻿{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -555,10 +555,7 @@ type
       FAltSignatureAlgorithm: IDerObjectIdentifier;
       FAltSignatureValue: IDerObjectIdentifier;
       FDraftDeltaCertificateDescriptor: IDerObjectIdentifier;
-
-    class procedure Boot; static;
     class constructor Create;
-    class destructor Destroy;
 
   strict protected
     function GetCount: Int32;
@@ -725,8 +722,6 @@ type
     class function GetKeyPurposeClientAuth: IDerObjectIdentifier; static; inline;
     class function GetKeyPurposeKdc: IDerObjectIdentifier; static; inline;
     class function GetIdKpNsSgc: IDerObjectIdentifier; static; inline;
-
-    class procedure Boot; static;
     class constructor Create;
 
   public
@@ -838,8 +833,6 @@ type
       FJurisdictionC: IDerObjectIdentifier;
       FJurisdictionST: IDerObjectIdentifier;
       FJurisdictionL: IDerObjectIdentifier;
-
-    class procedure Boot; static;
     class function GetDefaultReverse: Boolean; static;
     class procedure SetDefaultReverse(const AValue: Boolean); static;
     class constructor Create;
@@ -1354,7 +1347,7 @@ type
 
   public
     class constructor Create;
-    
+
     class function GetInstance(AObj: TObject): ITbsCertificateStructure; overload; static;
     /// <summary>
     /// Get instance from ASN.1 convertible.
@@ -1365,10 +1358,10 @@ type
       AExplicitly: Boolean): ITbsCertificateStructure; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): ITbsCertificateStructure; static;
-    
+
     class function GetAllowNonDERTbsCertificate: Boolean; static;
     class procedure SetAllowNonDERTbsCertificate(AValue: Boolean); static;
-    
+
     class property AllowNonDERTbsCertificate: Boolean read GetAllowNonDERTbsCertificate write SetAllowNonDERTbsCertificate;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
@@ -3025,7 +3018,6 @@ class function TValidity.GetInstance(const AEncoded: TCryptoLibByteArray): IVali
 begin
   Result := TValidity.Create(TAsn1Sequence.GetInstance(AEncoded));
 end;
-
 
 class function TValidity.GetInstance(const AObj: IAsn1TaggedObject;
   AExplicitly: Boolean): IValidity;
@@ -4929,7 +4921,6 @@ begin
   Result := TGeneralNames.Create(TAsn1Sequence.GetInstance(AEncoded));
 end;
 
-
 class function TGeneralNames.GetInstance(const AObj: IAsn1TaggedObject;
   AExplicitly: Boolean): IGeneralNames;
 begin
@@ -5446,16 +5437,6 @@ end;
 
 class constructor TX509Extensions.Create;
 begin
-  Boot;
-end;
-
-class destructor TX509Extensions.Destroy;
-begin
-  // Class vars are interface references, no cleanup needed
-end;
-
-class procedure TX509Extensions.Boot;
-begin
   FSubjectDirectoryAttributes := TDerObjectIdentifier.Create('2.5.29.9');
   FSubjectKeyIdentifier := TDerObjectIdentifier.Create('2.5.29.14');
   FKeyUsage := TDerObjectIdentifier.Create('2.5.29.15');
@@ -5497,11 +5478,6 @@ end;
 { TKeyPurposeId }
 
 class constructor TKeyPurposeId.Create;
-begin
-  Boot;
-end;
-
-class procedure TKeyPurposeId.Boot;
 var
   LIdKp: IDerObjectIdentifier;
   LIdPkinit: String;
@@ -6652,40 +6628,6 @@ end;
 class constructor TX509Name.Create;
 begin
   FDefaultReverseLock := TCriticalSection.Create();
-  Boot;
-end;
-
-class destructor TX509Name.Destroy;
-begin
-  FDefaultSymbols.Free;
-  FRFC2253Symbols.Free;
-  FRFC1779Symbols.Free;
-  FDefaultLookup.Free;
-  FDefaultReverseLock.Free;
-end;
-
-class function TX509Name.GetDefaultReverse: Boolean;
-begin
-  FDefaultReverseLock.Acquire;
-  try
-    Result := FDefaultReverse;
-  finally
-    FDefaultReverseLock.Release;
-  end;
-end;
-
-class procedure TX509Name.SetDefaultReverse(const AValue: Boolean);
-begin
-  FDefaultReverseLock.Acquire;
-  try
-    FDefaultReverse := AValue;
-  finally
-    FDefaultReverseLock.Release;
-  end;
-end;
-
-class procedure TX509Name.Boot;
-begin
   FDefaultReverse := False;
   FDefaultSymbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FRFC2253Symbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -6839,6 +6781,35 @@ begin
   FDefaultLookup.Add('jurisdictioncountry', FJurisdictionC);
   FDefaultLookup.Add('jurisdictionstate', FJurisdictionST);
   FDefaultLookup.Add('jurisdictionlocality', FJurisdictionL);
+end;
+
+class destructor TX509Name.Destroy;
+begin
+  FDefaultSymbols.Free;
+  FRFC2253Symbols.Free;
+  FRFC1779Symbols.Free;
+  FDefaultLookup.Free;
+  FDefaultReverseLock.Free;
+end;
+
+class function TX509Name.GetDefaultReverse: Boolean;
+begin
+  FDefaultReverseLock.Acquire;
+  try
+    Result := FDefaultReverse;
+  finally
+    FDefaultReverseLock.Release;
+  end;
+end;
+
+class procedure TX509Name.SetDefaultReverse(const AValue: Boolean);
+begin
+  FDefaultReverseLock.Acquire;
+  try
+    FDefaultReverse := AValue;
+  finally
+    FDefaultReverseLock.Release;
+  end;
 end;
 
 class function TX509Name.CreateDefaultConverter: IX509NameEntryConverter;

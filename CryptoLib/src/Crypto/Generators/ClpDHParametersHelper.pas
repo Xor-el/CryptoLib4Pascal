@@ -42,15 +42,10 @@ type
     FPrimeProducts: TCryptoLibInt32Array;
     FPrimeLists: TCryptoLibMatrixInt32Array;
     FBigPrimeProducts: TCryptoLibGenericArray<TBigInteger>;
-    FIsBooted: Boolean;
-
     class function ConstructBigPrimeProducts(const APrimeProducts
       : TCryptoLibInt32Array): TCryptoLibGenericArray<TBigInteger>; static;
 
     class function HasAnySmallFactorsSafe(const X: TBigInteger): Boolean; static;
-
-    class procedure Boot(); static;
-
     class constructor DHParametersHelper();
 
   public
@@ -71,25 +66,15 @@ implementation
 
 { TDHParametersHelper }
 
-class procedure TDHParametersHelper.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FTwo := TBigInteger.Two;
-    FTwelve := TBigInteger.ValueOf(12);
-    FTwentyFour := TBigInteger.ValueOf(24);
-
-    FPrimeLists := TBigInteger.primeLists;
-    FPrimeProducts := TBigInteger.primeProducts;
-    FBigPrimeProducts := ConstructBigPrimeProducts(FPrimeProducts);
-
-    FIsBooted := True;
-  end;
-end;
-
 class constructor TDHParametersHelper.DHParametersHelper;
 begin
-  TDHParametersHelper.Boot;
+  FTwo := TBigInteger.Two;
+  FTwelve := TBigInteger.ValueOf(12);
+  FTwentyFour := TBigInteger.ValueOf(24);
+
+  FPrimeLists := TBigInteger.primeLists;
+  FPrimeProducts := TBigInteger.primeProducts;
+  FBigPrimeProducts := ConstructBigPrimeProducts(FPrimeProducts);
 end;
 
 class function TDHParametersHelper.ConstructBigPrimeProducts(const APrimeProducts

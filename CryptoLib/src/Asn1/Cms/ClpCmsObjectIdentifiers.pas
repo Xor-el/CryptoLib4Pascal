@@ -78,9 +78,7 @@ type
     class function GetIdOri: IDerObjectIdentifier; static; inline;
     class function GetIdOriKem: IDerObjectIdentifier; static; inline;
     class function GetIdAlgCekHkdfSha256: IDerObjectIdentifier; static; inline;
-
-    class procedure Boot(); static;
-    class constructor CmsObjectIdentifiers();
+    class constructor Create();
 
   public
     class property Data: IDerObjectIdentifier read GetData;
@@ -115,7 +113,7 @@ type
 
 implementation
 
-class procedure TCmsObjectIdentifiers.Boot;
+class constructor TCmsObjectIdentifiers.Create;
 begin
   FData := TPkcsObjectIdentifiers.Data;
   FSignedData := TPkcsObjectIdentifiers.SignedData;
@@ -143,11 +141,6 @@ begin
   FIdOriKem := FIdOri.Branch('3');
 
   FIdAlgCekHkdfSha256 := TPkcsObjectIdentifiers.SmimeAlg.Branch('31');
-end;
-
-class constructor TCmsObjectIdentifiers.CmsObjectIdentifiers;
-begin
-  TCmsObjectIdentifiers.Boot();
 end;
 
 class function TCmsObjectIdentifiers.GetData: IDerObjectIdentifier;

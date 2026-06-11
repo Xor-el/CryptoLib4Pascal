@@ -115,7 +115,6 @@ type
     FPrecompBaseWnaf: TCryptoLibGenericArray<TPointAffine>;
     FPrecompBase225Wnaf: TCryptoLibGenericArray<TPointAffine>;
     FPrecompBaseComb: TCryptoLibUInt32Array;
-  class procedure Boot; static;
   class constructor Create;
   class destructor Destroy;
   class function CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray; static;
@@ -268,16 +267,6 @@ end;
 class constructor TEd448.Create;
 begin
   FPrecompLock := TCriticalSection.Create;
-  Boot;
-end;
-
-class destructor TEd448.Destroy;
-begin
-  FPrecompLock.Free;
-end;
-
-class procedure TEd448.Boot;
-begin
   PrehashSize := 64;
   PublicKeySize := PointBytes;
   SecretKeySize := 57;
@@ -286,22 +275,27 @@ begin
   FDom4Prefix := TCryptoLibByteArray.Create($53, $69, $67, $45, $64, $34, $34, $38);
 
   FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
 
   FB_x := TCryptoLibUInt32Array.Create($070CC05E, $026A82BC, $00938E26, $080E18B0,
-    $0511433B, $0F72AB66, $0412AE1A, $0A3D3A46, $0A6DE324, $00F1767E, $04657047,
-    $036DA9E1, $05A622BF, $0ED221D1, $066BED0D, $04F1970C);
+  $0511433B, $0F72AB66, $0412AE1A, $0A3D3A46, $0A6DE324, $00F1767E, $04657047,
+  $036DA9E1, $05A622BF, $0ED221D1, $066BED0D, $04F1970C);
   FB_y := TCryptoLibUInt32Array.Create($0230FA14, $008795BF, $07C8AD98, $0132C4ED,
-    $09C4FDBD, $01CE67C3, $073AD3FF, $005A0C2D, $07789C1E, $0A398408, $0A73736C,
-    $0C7624BE, $003756C9, $02488762, $016EB6BC, $0693F467);
+  $09C4FDBD, $01CE67C3, $073AD3FF, $005A0C2D, $07789C1E, $0A398408, $0A73736C,
+  $0C7624BE, $003756C9, $02488762, $016EB6BC, $0693F467);
 
   FB225_x := TCryptoLibUInt32Array.Create($06909EE2, $01D7605C, $0995EC8A, $0FC4D970,
-    $0CF2B361, $02D82E9D, $01225F55, $007F0EF6, $0AEE9C55, $0A240C13, $05627B54,
-    $0D449D1E, $03A44575, $007164A7, $0BD4BD71, $061A15FD);
+  $0CF2B361, $02D82E9D, $01225F55, $007F0EF6, $0AEE9C55, $0A240C13, $05627B54,
+  $0D449D1E, $03A44575, $007164A7, $0BD4BD71, $061A15FD);
   FB225_y := TCryptoLibUInt32Array.Create($0D3A9FE4, $030696B9, $07E7E326, $068308C7,
-    $0CE0B8C8, $03AC222B, $0304DB8E, $083EE319, $05E5DB0B, $0ECA503B, $0B1C6539,
-    $078A8DCE, $02D256BC, $04A8B05E, $0BD9FD57, $0A1C3CB8);
+  $0CE0B8C8, $03AC222B, $0304DB8E, $083EE319, $05E5DB0B, $0ECA503B, $0B1C6539,
+  $078A8DCE, $02D256BC, $04A8B05E, $0BD9FD57, $0A1C3CB8);
+end;
+
+class destructor TEd448.Destroy;
+begin
+  FPrecompLock.Free;
 end;
 
 class function TEd448.CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray;

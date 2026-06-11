@@ -29,7 +29,6 @@ type
   TBsiObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FBsiDe, FIdEcc, FAlgorithm, FEcdsaPlainSignatures,
       FEcdsaPlainSha1, FEcdsaPlainSha224, FEcdsaPlainSha256, FEcdsaPlainSha384,
       FEcdsaPlainSha512, FEcdsaPlainRipeMD160, FEcdsaPlainSha3_224,
@@ -96,8 +95,6 @@ type
     class property EckaEgSessionKdfAes128: IDerObjectIdentifier read GetEckaEgSessionKdfAes128;
     class property EckaEgSessionKdfAes192: IDerObjectIdentifier read GetEckaEgSessionKdfAes192;
     class property EckaEgSessionKdfAes256: IDerObjectIdentifier read GetEckaEgSessionKdfAes256;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -106,46 +103,36 @@ implementation
 
 class constructor TBsiObjectIdentifiers.Create;
 begin
-  Boot;
-end;
+  FBsiDe := TDerObjectIdentifier.Create('0.4.0.127.0.7');
+  FIdEcc := FBsiDe.Branch('1.1');
+  FAlgorithm := FBsiDe.Branch('1');
 
-class procedure TBsiObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FBsiDe := TDerObjectIdentifier.Create('0.4.0.127.0.7');
-    FIdEcc := FBsiDe.Branch('1.1');
-    FAlgorithm := FBsiDe.Branch('1');
+  FEcdsaPlainSignatures := FIdEcc.Branch('4.1');
+  FEcdsaPlainSha1 := FEcdsaPlainSignatures.Branch('1');
+  FEcdsaPlainSha224 := FEcdsaPlainSignatures.Branch('2');
+  FEcdsaPlainSha256 := FEcdsaPlainSignatures.Branch('3');
+  FEcdsaPlainSha384 := FEcdsaPlainSignatures.Branch('4');
+  FEcdsaPlainSha512 := FEcdsaPlainSignatures.Branch('5');
+  FEcdsaPlainRipeMD160 := FEcdsaPlainSignatures.Branch('6');
+  FEcdsaPlainSha3_224 := FEcdsaPlainSignatures.Branch('8');
+  FEcdsaPlainSha3_256 := FEcdsaPlainSignatures.Branch('9');
+  FEcdsaPlainSha3_384 := FEcdsaPlainSignatures.Branch('10');
+  FEcdsaPlainSha3_512 := FEcdsaPlainSignatures.Branch('11');
 
-    FEcdsaPlainSignatures := FIdEcc.Branch('4.1');
-    FEcdsaPlainSha1 := FEcdsaPlainSignatures.Branch('1');
-    FEcdsaPlainSha224 := FEcdsaPlainSignatures.Branch('2');
-    FEcdsaPlainSha256 := FEcdsaPlainSignatures.Branch('3');
-    FEcdsaPlainSha384 := FEcdsaPlainSignatures.Branch('4');
-    FEcdsaPlainSha512 := FEcdsaPlainSignatures.Branch('5');
-    FEcdsaPlainRipeMD160 := FEcdsaPlainSignatures.Branch('6');
-    FEcdsaPlainSha3_224 := FEcdsaPlainSignatures.Branch('8');
-    FEcdsaPlainSha3_256 := FEcdsaPlainSignatures.Branch('9');
-    FEcdsaPlainSha3_384 := FEcdsaPlainSignatures.Branch('10');
-    FEcdsaPlainSha3_512 := FEcdsaPlainSignatures.Branch('11');
+  FEckaEg := FIdEcc.Branch('5.1');
+  FEckaEgX963Kdf := FEckaEg.Branch('1');
+  FEckaEgX963KdfSha1 := FEckaEgX963Kdf.Branch('1');
+  FEckaEgX963KdfSha224 := FEckaEgX963Kdf.Branch('2');
+  FEckaEgX963KdfSha256 := FEckaEgX963Kdf.Branch('3');
+  FEckaEgX963KdfSha384 := FEckaEgX963Kdf.Branch('4');
+  FEckaEgX963KdfSha512 := FEckaEgX963Kdf.Branch('5');
+  FEckaEgX963KdfRipeMD160 := FEckaEgX963Kdf.Branch('6');
 
-    FEckaEg := FIdEcc.Branch('5.1');
-    FEckaEgX963Kdf := FEckaEg.Branch('1');
-    FEckaEgX963KdfSha1 := FEckaEgX963Kdf.Branch('1');
-    FEckaEgX963KdfSha224 := FEckaEgX963Kdf.Branch('2');
-    FEckaEgX963KdfSha256 := FEckaEgX963Kdf.Branch('3');
-    FEckaEgX963KdfSha384 := FEckaEgX963Kdf.Branch('4');
-    FEckaEgX963KdfSha512 := FEckaEgX963Kdf.Branch('5');
-    FEckaEgX963KdfRipeMD160 := FEckaEgX963Kdf.Branch('6');
-
-    FEckaEgSessionKdf := FEckaEg.Branch('2');
-    FEckaEgSessionKdf3Des := FEckaEgSessionKdf.Branch('1');
-    FEckaEgSessionKdfAes128 := FEckaEgSessionKdf.Branch('2');
-    FEckaEgSessionKdfAes192 := FEckaEgSessionKdf.Branch('3');
-    FEckaEgSessionKdfAes256 := FEckaEgSessionKdf.Branch('4');
-
-    FIsBooted := True;
-  end;
+  FEckaEgSessionKdf := FEckaEg.Branch('2');
+  FEckaEgSessionKdf3Des := FEckaEgSessionKdf.Branch('1');
+  FEckaEgSessionKdfAes128 := FEckaEgSessionKdf.Branch('2');
+  FEckaEgSessionKdfAes192 := FEckaEgSessionKdf.Branch('3');
+  FEckaEgSessionKdfAes256 := FEckaEgSessionKdf.Branch('4');
 end;
 
 class function TBsiObjectIdentifiers.GetAlgorithm: IDerObjectIdentifier;

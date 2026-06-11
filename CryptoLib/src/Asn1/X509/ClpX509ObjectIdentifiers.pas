@@ -89,9 +89,7 @@ type
     class function GetIdADOcsp: IDerObjectIdentifier; static; inline;
     class function GetIdADCAIssuers: IDerObjectIdentifier; static; inline;
     class function GetIdCe: IDerObjectIdentifier; static; inline;
-
-    class procedure Boot(); static;
-    class constructor X509ObjectIdentifiers();
+    class constructor Create();
 
   public
     // Attribute types
@@ -140,7 +138,7 @@ implementation
 
 { TX509ObjectIdentifiers }
 
-class procedure TX509ObjectIdentifiers.Boot;
+class constructor TX509ObjectIdentifiers.Create;
 begin
   // Base attribute type
   FAttributeType := TDerObjectIdentifier.Create(AttributeType);
@@ -185,11 +183,6 @@ begin
 
   // Certificate Extensions: 2.5.29
   FIdCe := TDerObjectIdentifier.Create('2.5.29');
-end;
-
-class constructor TX509ObjectIdentifiers.X509ObjectIdentifiers;
-begin
-  TX509ObjectIdentifiers.Boot();
 end;
 
 class function TX509ObjectIdentifiers.GetAttributeType: IDerObjectIdentifier;

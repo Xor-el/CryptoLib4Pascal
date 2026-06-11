@@ -51,7 +51,6 @@ type
     M57: UInt64 = UInt64.MaxValue shr 7;
   class var
     FRootZ: TCryptoLibUInt64Array;
-  class procedure Boot; static;
   class procedure ImplCompactExt(const AZz: TCryptoLibUInt64Array); static;
   class procedure ImplExpand(const AX: TCryptoLibUInt64Array;
     const AZ: TCryptoLibUInt64Array); static;
@@ -175,7 +174,6 @@ type
     end;
   class var
     FSecT283K1AffineZs: TCryptoLibGenericArray<IECFieldElement>;
-  class procedure Boot; static;
   class constructor Create;
   var
     FInfinity: ISecT283K1Point;
@@ -208,15 +206,10 @@ implementation
 
 { TSecT283Field }
 
-class procedure TSecT283Field.Boot;
-begin
-  FRootZ := TCryptoLibUInt64Array.Create($0C30C30C30C30808, $30C30C30C30C30C3,
-    UInt64($820820820820830C), $0820820820820820, $2082082);
-end;
-
 class constructor TSecT283Field.Create;
 begin
-  Boot;
+  FRootZ := TCryptoLibUInt64Array.Create($0C30C30C30C30808, $30C30C30C30C30C3,
+  UInt64($820820820820830C), $0820820820820820, $2082082);
 end;
 
 class procedure TSecT283Field.ImplCompactExt(const AZz: TCryptoLibUInt64Array);
@@ -1208,15 +1201,10 @@ end;
 
 { TSecT283K1Curve }
 
-class procedure TSecT283K1Curve.Boot;
-begin
-  FSecT283K1AffineZs := TCryptoLibGenericArray<IECFieldElement>.Create(
-    TSecT283FieldElement.Create(TBigInteger.One) as IECFieldElement);
-end;
-
 class constructor TSecT283K1Curve.Create;
 begin
-  Boot;
+  FSecT283K1AffineZs := TCryptoLibGenericArray<IECFieldElement>.Create(
+  TSecT283FieldElement.Create(TBigInteger.One) as IECFieldElement);
 end;
 
 constructor TSecT283K1Curve.Create;

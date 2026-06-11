@@ -30,8 +30,6 @@ type
   strict private
 
   class var
-
-    FIsBooted: Boolean;
     FNistAlgorithm, FHashAlgs, FSigAlgs, FIdSha256, FIdSha384, FIdSha512,
       FIdSha224, FIdSha512_224, FIdSha512_256, FIdSha3_224, FIdSha3_256,
       FIdSha3_384, FIdSha3_512, FIdShake128, FIdShake256, FIdShake128Len, FIdShake256Len, FIdHMacWithSha3_224,
@@ -119,7 +117,7 @@ type
     class function GetIdRsassaPkcs1V15WithSha3_384: IDerObjectIdentifier; static; inline;
     class function GetIdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier; static; inline;
 
-    class constructor NistObjectIdentifiers();
+    class constructor Create();
 
   public
 
@@ -215,9 +213,6 @@ type
       read GetIdRsassaPkcs1V15WithSha3_384;
     class property IdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier
       read GetIdRsassaPkcs1V15WithSha3_512;
-
-    class procedure Boot(); static;
-
   end;
 
 implementation
@@ -540,94 +535,83 @@ begin
   Result := FSigAlgs;
 end;
 
-class constructor TNistObjectIdentifiers.NistObjectIdentifiers;
+class constructor TNistObjectIdentifiers.Create;
 begin
-  TNistObjectIdentifiers.Boot;
-end;
+  FNistAlgorithm := TDerObjectIdentifier.Create('2.16.840.1.101.3.4');
+  FHashAlgs := NistAlgorithm.Branch('2');
 
-class procedure TNistObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FNistAlgorithm := TDerObjectIdentifier.Create('2.16.840.1.101.3.4');
-    FHashAlgs := NistAlgorithm.Branch('2');
+  FIdSha256 := HashAlgs.Branch('1');
+  FIdSha384 := HashAlgs.Branch('2');
+  FIdSha512 := HashAlgs.Branch('3');
+  FIdSha224 := HashAlgs.Branch('4');
+  FIdSha512_224 := HashAlgs.Branch('5');
+  FIdSha512_256 := HashAlgs.Branch('6');
+  FIdSha3_224 := HashAlgs.Branch('7');
+  FIdSha3_256 := HashAlgs.Branch('8');
+  FIdSha3_384 := HashAlgs.Branch('9');
+  FIdSha3_512 := HashAlgs.Branch('10');
+  FIdShake128 := HashAlgs.Branch('11');
+  FIdShake256 := HashAlgs.Branch('12');
+  FIdShake128Len := HashAlgs.Branch('17');
+  FIdShake256Len := HashAlgs.Branch('18');
+  FIdHMacWithSha3_224 := HashAlgs.Branch('13');
+  FIdHMacWithSha3_256 := HashAlgs.Branch('14');
+  FIdHMacWithSha3_384 := HashAlgs.Branch('15');
+  FIdHMacWithSha3_512 := HashAlgs.Branch('16');
 
-    FIdSha256 := HashAlgs.Branch('1');
-    FIdSha384 := HashAlgs.Branch('2');
-    FIdSha512 := HashAlgs.Branch('3');
-    FIdSha224 := HashAlgs.Branch('4');
-    FIdSha512_224 := HashAlgs.Branch('5');
-    FIdSha512_256 := HashAlgs.Branch('6');
-    FIdSha3_224 := HashAlgs.Branch('7');
-    FIdSha3_256 := HashAlgs.Branch('8');
-    FIdSha3_384 := HashAlgs.Branch('9');
-    FIdSha3_512 := HashAlgs.Branch('10');
-    FIdShake128 := HashAlgs.Branch('11');
-    FIdShake256 := HashAlgs.Branch('12');
-    FIdShake128Len := HashAlgs.Branch('17');
-    FIdShake256Len := HashAlgs.Branch('18');
-    FIdHMacWithSha3_224 := HashAlgs.Branch('13');
-    FIdHMacWithSha3_256 := HashAlgs.Branch('14');
-    FIdHMacWithSha3_384 := HashAlgs.Branch('15');
-    FIdHMacWithSha3_512 := HashAlgs.Branch('16');
+  FAES := TDerObjectIdentifier.Create(NistAlgorithm.ID + '.1');
 
-    FAES := TDerObjectIdentifier.Create(NistAlgorithm.ID + '.1');
+  FIdAES128Ecb := TDerObjectIdentifier.Create(AES.ID + '.1');
+  FIdAes128Cbc := TDerObjectIdentifier.Create(AES.ID + '.2');
+  FIdAes128Ofb := TDerObjectIdentifier.Create(AES.ID + '.3');
+  FIdAes128Cfb := TDerObjectIdentifier.Create(AES.ID + '.4');
+  FIdAes192Ecb := TDerObjectIdentifier.Create(AES.ID + '.21');
+  FIdAes192Cbc := TDerObjectIdentifier.Create(AES.ID + '.22');
+  FIdAes192Ofb := TDerObjectIdentifier.Create(AES.ID + '.23');
+  FIdAes192Cfb := TDerObjectIdentifier.Create(AES.ID + '.24');
+  FIdAes256Ecb := TDerObjectIdentifier.Create(AES.ID + '.41');
+  FIdAes256Cbc := TDerObjectIdentifier.Create(AES.ID + '.42');
+  FIdAes256Ofb := TDerObjectIdentifier.Create(AES.ID + '.43');
+  FIdAes256Cfb := TDerObjectIdentifier.Create(AES.ID + '.44');
 
-    FIdAES128Ecb := TDerObjectIdentifier.Create(AES.ID + '.1');
-    FIdAes128Cbc := TDerObjectIdentifier.Create(AES.ID + '.2');
-    FIdAes128Ofb := TDerObjectIdentifier.Create(AES.ID + '.3');
-    FIdAes128Cfb := TDerObjectIdentifier.Create(AES.ID + '.4');
-    FIdAes192Ecb := TDerObjectIdentifier.Create(AES.ID + '.21');
-    FIdAes192Cbc := TDerObjectIdentifier.Create(AES.ID + '.22');
-    FIdAes192Ofb := TDerObjectIdentifier.Create(AES.ID + '.23');
-    FIdAes192Cfb := TDerObjectIdentifier.Create(AES.ID + '.24');
-    FIdAes256Ecb := TDerObjectIdentifier.Create(AES.ID + '.41');
-    FIdAes256Cbc := TDerObjectIdentifier.Create(AES.ID + '.42');
-    FIdAes256Ofb := TDerObjectIdentifier.Create(AES.ID + '.43');
-    FIdAes256Cfb := TDerObjectIdentifier.Create(AES.ID + '.44');
+  FIdAes128Gcm := TDerObjectIdentifier.Create(AES.ID + '.6');
+  FIdAes192Gcm := TDerObjectIdentifier.Create(AES.ID + '.26');
+  FIdAes256Gcm := TDerObjectIdentifier.Create(AES.ID + '.46');
 
-    FIdAes128Gcm := TDerObjectIdentifier.Create(AES.ID + '.6');
-    FIdAes192Gcm := TDerObjectIdentifier.Create(AES.ID + '.26');
-    FIdAes256Gcm := TDerObjectIdentifier.Create(AES.ID + '.46');
+  FIdAes128Wrap := TDerObjectIdentifier.Create(AES.ID + '.5');
+  FIdAes128WrapPad := TDerObjectIdentifier.Create(AES.ID + '.8');
+  FIdAes192Wrap := TDerObjectIdentifier.Create(AES.ID + '.25');
+  FIdAes192WrapPad := TDerObjectIdentifier.Create(AES.ID + '.28');
+  FIdAes256Wrap := TDerObjectIdentifier.Create(AES.ID + '.45');
+  FIdAes256WrapPad := TDerObjectIdentifier.Create(AES.ID + '.48');
 
-    FIdAes128Wrap := TDerObjectIdentifier.Create(AES.ID + '.5');
-    FIdAes128WrapPad := TDerObjectIdentifier.Create(AES.ID + '.8');
-    FIdAes192Wrap := TDerObjectIdentifier.Create(AES.ID + '.25');
-    FIdAes192WrapPad := TDerObjectIdentifier.Create(AES.ID + '.28');
-    FIdAes256Wrap := TDerObjectIdentifier.Create(AES.ID + '.45');
-    FIdAes256WrapPad := TDerObjectIdentifier.Create(AES.ID + '.48');
+  //
+  // signatures
+  //
+  FSigAlgs := NistAlgorithm.Branch('3');
+  FIdDsaWithSha2 := SigAlgs;
 
-    //
-    // signatures
-    //
-    FSigAlgs := NistAlgorithm.Branch('3');
-    FIdDsaWithSha2 := SigAlgs;
+  FDsaWithSha224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.1');
+  FDsaWithSha256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.2');
+  FDsaWithSha384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.3');
+  FDsaWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.4');
 
-    FDsaWithSha224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.1');
-    FDsaWithSha256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.2');
-    FDsaWithSha384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.3');
-    FDsaWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.4');
+  FIdDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.5');
+  FIdDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.6');
+  FIdDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.7');
+  FIdDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.8');
 
-    FIdDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.5');
-    FIdDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.6');
-    FIdDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.7');
-    FIdDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.8');
+  // ECDSA with SHA-3
+  FIdECDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.9');
+  FIdECDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.10');
+  FIdECDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.11');
+  FIdECDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.12');
 
-    // ECDSA with SHA-3
-    FIdECDsaWithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.9');
-    FIdECDsaWithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.10');
-    FIdECDsaWithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.11');
-    FIdECDsaWithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.12');
-
-    // RSA PKCS #1 v1.5 Signature with SHA-3 family
-    FIdRsassaPkcs1V15WithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.13');
-    FIdRsassaPkcs1V15WithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.14');
-    FIdRsassaPkcs1V15WithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.15');
-    FIdRsassaPkcs1V15WithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.16');
-
-    FIsBooted := True;
-  end;
-
+  // RSA PKCS #1 v1.5 Signature with SHA-3 family
+  FIdRsassaPkcs1V15WithSha3_224 := TDerObjectIdentifier.Create(SigAlgs.ID + '.13');
+  FIdRsassaPkcs1V15WithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.14');
+  FIdRsassaPkcs1V15WithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.15');
+  FIdRsassaPkcs1V15WithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.16');
 end;
 
 end.

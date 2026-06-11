@@ -200,8 +200,6 @@ type
     class function GetMechanism(const AAlgorithm: String): String; static;
     class function GetCipherForMechanism(const AMechanism: String): IBufferedCipher; static;
     class function CreateBlockCipher(ACipherAlgorithm: TCipherAlgorithm): IBlockCipher; static;
-
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -238,13 +236,10 @@ implementation
 
 { TCipherUtilities }
 
-class procedure TCipherUtilities.Boot;
+class constructor TCipherUtilities.Create;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
-
-  TNistObjectIdentifiers.Boot;
-  TPkcsObjectIdentifiers.Boot;
 
   FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes128Cbc, 'AES/CBC/PKCS7PADDING');
   FAlgorithmOidMap.AddOrSetValue(TNistObjectIdentifiers.IdAes192Cbc, 'AES/CBC/PKCS7PADDING');
@@ -294,11 +289,6 @@ begin
   FAlgorithmMap.AddOrSetValue('CHACHA20', 'CHACHA7539');
   FAlgorithmMap.AddOrSetValue('XCHACHA20', 'XCHACHA20');
   FAlgorithmOidMap.AddOrSetValue(TPkcsObjectIdentifiers.IdAlgAeadChaCha20Poly1305, 'CHACHA20-POLY1305');
-end;
-
-class constructor TCipherUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TCipherUtilities.Destroy;

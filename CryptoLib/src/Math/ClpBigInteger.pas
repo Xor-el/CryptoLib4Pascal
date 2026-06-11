@@ -281,7 +281,6 @@ type
     /// Computes the Jacobi symbol (a/n) for odd positive n.
     /// </summary>
     class function Jacobi(const AA, AN: TBigInteger): Int32; static;
-    class procedure Boot; static;
   end;
 
 implementation
@@ -292,15 +291,13 @@ uses
 
 { TBigInteger }
 
-class procedure TBigInteger.Boot;
+class constructor TBigInteger.Create;
 var
   LI, LJ, LProduct: Int32;
   LPrimeList: TCryptoLibInt32Array;
   LSmallConstant: TBigInteger;
   LZeroMagnitude: TCryptoLibUInt32Array;
 begin
-  TSecureRandom.Boot;
-
   LZeroMagnitude := nil;
   FZero := TBigInteger.Create(0, LZeroMagnitude, False);
   FZero.FNBits := 0;
@@ -420,11 +417,6 @@ begin
     end;
     FPrimeProducts[LI] := LProduct;
   end;
-end;
-
-class constructor TBigInteger.Create;
-begin
-  Boot;
 end;
 
 class function TBigInteger.PopCount(const AValue: UInt32): Int32;

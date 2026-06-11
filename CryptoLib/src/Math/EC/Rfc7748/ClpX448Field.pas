@@ -37,7 +37,6 @@ type
     M28 = UInt32($0FFFFFFF);
   class var
     FP32: TCryptoLibUInt32Array;
-  class procedure Boot; static;
   class constructor Create;
   class procedure Decode224(const AX: TCryptoLibUInt32Array; AXOff: Int32;
     const AZ: TCryptoLibUInt32Array; AZOff: Int32); static;
@@ -119,14 +118,9 @@ implementation
 
 class constructor TX448Field.Create;
 begin
-  Boot;
-end;
-
-class procedure TX448Field.Boot;
-begin
   FP32 := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
 end;
 
 class procedure TX448Field.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
