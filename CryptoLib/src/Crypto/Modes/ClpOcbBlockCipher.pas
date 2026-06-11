@@ -677,13 +677,12 @@ begin
   // Evolve the per-block offset ladder the exact same way ProcessMainBlock
   // would: FOffsetMAIN_{k+1} = FOffsetMAIN_k XOR L[ntz(count+1)]. Materialise
   // all 8 offsets consecutively in LOffsets[0..127] so the downstream XORs
-  // run as a single 128-byte sweep via Xor128Bytes.
+  // run as a single 128-byte sweep via TByteUtilities.Xor.
   for LI := 0 to 7 do
   begin
     System.Inc(FMainBlockCount);
     LLSub := GetLSub(OCB_ntz(FMainBlockCount));
-    TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
-      @LLSub[0]);
+    TByteUtilities.&Xor(16, PByte(FOffsetMAIN), PByte(LLSub), PByte(FOffsetMAIN));
     System.Move(FOffsetMAIN[0], LOffsets[LI * BLOCK_SIZE], BLOCK_SIZE);
   end;
 
@@ -696,15 +695,13 @@ begin
         FChecksum, 0);
 
     // LScratch := AInput XOR LOffsets (one 128-byte XOR)
-    TBlockCipherBulkUtilities.Xor128Bytes(@LScratch[0], @AInput[AInOff],
-      @LOffsets[0]);
+    TByteUtilities.&Xor(128, PByte(AInput) + AInOff, PByte(@LOffsets[0]), PByte(@LScratch[0]));
 
     // In-place bulk encrypt (aliasing-safe per IBulkBlockCipher contract).
     FMainBulk.ProcessBlocks(@LScratch[0], @LScratch[0], 8);
 
     // AOutput := LScratch XOR LOffsets (one 128-byte XOR)
-    TBlockCipherBulkUtilities.Xor128Bytes(@AOutput[AOutOff], @LScratch[0],
-      @LOffsets[0]);
+    TByteUtilities.&Xor(128, PByte(@LScratch[0]), PByte(@LOffsets[0]), PByte(AOutput) + AOutOff);
   end
   else
   begin
@@ -716,13 +713,11 @@ begin
     System.Move(FMainBlock[0], LScratch[0], FMacSize);
     System.Move(AInput[AInOff], LScratch[FMacSize], 128 - FMacSize);
 
-    TBlockCipherBulkUtilities.Xor128Bytes(@LScratch[0], @LScratch[0],
-      @LOffsets[0]);
+    TByteUtilities.&Xor(128, PByte(@LScratch[0]), PByte(@LOffsets[0]), PByte(@LScratch[0]));
 
     FMainBulk.ProcessBlocks(@LScratch[0], @LScratch[0], 8);
 
-    TBlockCipherBulkUtilities.Xor128Bytes(@LScratch[0], @LScratch[0],
-      @LOffsets[0]);
+    TByteUtilities.&Xor(128, PByte(@LScratch[0]), PByte(@LOffsets[0]), PByte(@LScratch[0]));
 
     System.Move(LScratch[0], AOutput[AOutOff], 128);
 
@@ -768,18 +763,15 @@ begin
     if FForEncryption then
     begin
       OCB_extend(FMainBlock, FMainBlockPos);
-      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-        @FMainBlock[0]);
+      TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FMainBlock), PByte(FChecksum));
     end;
 
-    TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
-      @FL_Asterisk[0]);
+    TByteUtilities.&Xor(16, PByte(FOffsetMAIN), PByte(FL_Asterisk), PByte(FOffsetMAIN));
 
     System.SetLength(LPad, 16);
     FHashCipher.ProcessBlock(FOffsetMAIN, 0, LPad, 0);
 
-    TBlockCipherBulkUtilities.Xor16Bytes(@FMainBlock[0], @FMainBlock[0],
-      @LPad[0]);
+    TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(LPad), PByte(FMainBlock));
 
     TCheck.OutputLength(AOutput, AOutOff, FMainBlockPos, SOutputBufferTooShort);
     System.Move(FMainBlock[0], AOutput[AOutOff], FMainBlockPos);
@@ -787,18 +779,14 @@ begin
     if (not FForEncryption) then
     begin
       OCB_extend(FMainBlock, FMainBlockPos);
-      TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-        @FMainBlock[0]);
+      TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FMainBlock), PByte(FChecksum));
     end;
   end;
 
-  TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-    @FOffsetMAIN[0]);
-  TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-    @FL_Dollar[0]);
+  TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FOffsetMAIN), PByte(FChecksum));
+  TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FL_Dollar), PByte(FChecksum));
   FHashCipher.ProcessBlock(FChecksum, 0, FChecksum, 0);
-  TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-    @FSum[0]);
+  TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FSum), PByte(FChecksum));
 
   System.SetLength(FMacBlock, FMacSize);
   System.Move(FChecksum[0], FMacBlock[0], FMacSize);
@@ -861,28 +849,23 @@ begin
 
   if FForEncryption then
   begin
-    TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-      @FMainBlock[0]);
+    TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FMainBlock), PByte(FChecksum));
     FMainBlockPos := 0;
   end;
 
   System.Inc(FMainBlockCount);
   LLSub := GetLSub(OCB_ntz(FMainBlockCount));
-  TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetMAIN[0], @FOffsetMAIN[0],
-    @LLSub[0]);
+  TByteUtilities.&Xor(16, PByte(FOffsetMAIN), PByte(LLSub), PByte(FOffsetMAIN));
 
-  TBlockCipherBulkUtilities.Xor16Bytes(@FMainBlock[0], @FMainBlock[0],
-    @FOffsetMAIN[0]);
+  TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FOffsetMAIN), PByte(FMainBlock));
   FMainCipher.ProcessBlock(FMainBlock, 0, FMainBlock, 0);
-  TBlockCipherBulkUtilities.Xor16Bytes(@FMainBlock[0], @FMainBlock[0],
-    @FOffsetMAIN[0]);
+  TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FOffsetMAIN), PByte(FMainBlock));
 
   System.Move(FMainBlock[0], AOutput[AOutOff], 16);
 
   if (not FForEncryption) then
   begin
-    TBlockCipherBulkUtilities.Xor16Bytes(@FChecksum[0], @FChecksum[0],
-      @FMainBlock[0]);
+    TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FMainBlock), PByte(FChecksum));
     System.Move(FMainBlock[BLOCK_SIZE], FMainBlock[0], FMacSize);
     FMainBlockPos := FMacSize;
   end;
@@ -918,12 +901,10 @@ end;
 
 procedure TOcbBlockCipher.UpdateHASH(const ALSub: TCryptoLibByteArray);
 begin
-  TBlockCipherBulkUtilities.Xor16Bytes(@FOffsetHASH[0], @FOffsetHASH[0],
-    @ALSub[0]);
-  TBlockCipherBulkUtilities.Xor16Bytes(@FHashBlock[0], @FHashBlock[0],
-    @FOffsetHASH[0]);
+  TByteUtilities.&Xor(16, PByte(FOffsetHASH), PByte(ALSub), PByte(FOffsetHASH));
+  TByteUtilities.&Xor(16, PByte(FHashBlock), PByte(FOffsetHASH), PByte(FHashBlock));
   FHashCipher.ProcessBlock(FHashBlock, 0, FHashBlock, 0);
-  TBlockCipherBulkUtilities.Xor16Bytes(@FSum[0], @FSum[0], @FHashBlock[0]);
+  TByteUtilities.&Xor(16, PByte(FSum), PByte(FHashBlock), PByte(FSum));
 end;
 
 class function TOcbBlockCipher.OCB_double(

@@ -30,7 +30,8 @@ uses
   ClpPack,
   ClpCryptoLibTypes,
   ClpCpuFeatures,
-  ClpSimdLevels;
+  ClpSimdLevels,
+  ClpByteUtilities;
 
 resourcestring
   SInvalidKeySize256 = '%s Requires 256 bit key';
@@ -229,12 +230,8 @@ begin
     AdvanceCounter();
 
     LQ := AInLen shr 3;
-    for LIdx := 0 to System.Pred(LQ) do
-    begin
-      PUInt64(PByte(@AOutBuf[AOutOff]) + (LIdx * 8))^ := PUInt64(
-        PByte(@AInBuf[AInOff]) + (LIdx * 8))^ xor PUInt64(
-        PByte(@FKeyStream[0]) + (LIdx * 8))^;
-    end;
+    if LQ > 0 then
+      TByteUtilities.&Xor(LQ * 8, AInBuf, AInOff, FKeyStream, 0, AOutBuf, AOutOff);
     for LIdx := (LQ * 8) to System.Pred(AInLen) do
     begin
       AOutBuf[AOutOff + LIdx] := Byte(
@@ -311,15 +308,12 @@ begin
       GenerateKeyStream(FKeyStream);
       AdvanceCounter();
       LTake := ALen;
-      LInP := @AInBytes[AInOff];
-      LOutP := @AOutBytes[AOutOff];
-      LKeyP := @FKeyStream[0];
+      LInP := PByte(AInBytes) + AInOff;
+      LOutP := PByte(AOutBytes) + AOutOff;
+      LKeyP := PByte(FKeyStream);
       LQ := LTake shr 3;
-      for LIdx := 0 to System.Pred(LQ) do
-      begin
-        PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
-          PUInt64(LKeyP + (LIdx * 8))^;
-      end;
+      if LQ > 0 then
+        TByteUtilities.&Xor(LQ * 8, LInP, LKeyP, LOutP);
       for LIdx := (LQ * 8) to System.Pred(LTake) do
       begin
         LOutP[LIdx] := LInP[LIdx] xor LKeyP[LIdx];
@@ -425,20 +419,15 @@ procedure TChaCha7539Engine.ImplProcessBlock(
   const AInBuf: TCryptoLibByteArray; AInOff: Int32;
   const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 var
-  LIdx: Int32;
   LInP, LOutP, LKeyP: PByte;
 begin
   TChaChaEngine.ChaChaCore(FRounds, FEngineState, FKeyStream);
   AdvanceCounter();
 
-  LInP := @AInBuf[AInOff];
-  LKeyP := @FKeyStream[0];
-  LOutP := @AOutBuf[AOutOff];
-  for LIdx := 0 to 7 do
-  begin
-    PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
-      PUInt64(LKeyP + (LIdx * 8))^;
-  end;
+  LInP := PByte(AInBuf) + AInOff;
+  LKeyP := PByte(FKeyStream);
+  LOutP := PByte(AOutBuf) + AOutOff;
+  TByteUtilities.&Xor(64, LInP, LKeyP, LOutP);
 end;
 
 end.

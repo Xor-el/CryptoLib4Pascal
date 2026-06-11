@@ -27,7 +27,8 @@ uses
   ClpInterleave,
   ClpCpuFeatures,
   ClpCryptoLibTypes,
-  ClpIntrinsicsVector;
+  ClpIntrinsicsVector,
+  ClpByteUtilities;
 
 type
   TFieldElement = record
@@ -65,10 +66,10 @@ type
     class procedure Reduce3(PZ0, PZ1, PZ2, PSVector16: PByte); static;
     /// <summary>Xor three 16-byte limbs with three 16-byte slices from a 48-byte MultiplyExt output.</summary>
     class procedure XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte); static;
+{$IFDEF CRYPTOLIB_X86_SIMD}
     /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8). Four-way fused GHASH uses offsets 64..112 (H^4..H^1).</summary>
     class procedure InitEightWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow128: TCryptoLibByteArray); static;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     /// <summary>Fused GHASH for four 16-byte ciphertext blocks. PFS 16-byte in/out (canonical); PC0 points to 64 contiguous ciphertext bytes; PHPow64 = H^4..H^1 (64 bytes); PMask = 16-byte SSSE3 PSHUFB control.</summary>
     class procedure FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte); static;
     /// <summary>Fused GHASH for eight 16-byte ciphertext blocks. PHPow128 = H^8..H^1 (128 bytes at FHPow[0]).</summary>
@@ -431,9 +432,9 @@ begin
 {$ENDIF CRYPTOLIB_X86_SIMD}
   for LK := 0 to 1 do
   begin
-    PUInt64(PA0 + LK * 8)^ := PUInt64(PA0 + LK * 8)^ xor PUInt64(PSrc48 + LK * 8)^;
-    PUInt64(PA1 + LK * 8)^ := PUInt64(PA1 + LK * 8)^ xor PUInt64(PSrc48 + 16 + LK * 8)^;
-    PUInt64(PA2 + LK * 8)^ := PUInt64(PA2 + LK * 8)^ xor PUInt64(PSrc48 + 32 + LK * 8)^;
+    TByteUtilities.XorTo(8, PSrc48 + LK * 8, PA0 + LK * 8);
+    TByteUtilities.XorTo(8, PSrc48 + 16 + LK * 8, PA1 + LK * 8);
+    TByteUtilities.XorTo(8, PSrc48 + 32 + LK * 8, PA2 + LK * 8);
   end;
 end;
 
@@ -502,8 +503,6 @@ begin
   GcmGhashEightFull(PFS, PC0, PHPow128, PMask);
 end;
 
-{$ENDIF CRYPTOLIB_X86_SIMD}
-
 class procedure TGcmUtilities.InitEightWayHPowFromH(const AH: TCryptoLibByteArray;
   const AHPow128: TCryptoLibByteArray);
 var
@@ -553,5 +552,7 @@ begin
   PUInt64(@AHPow128[112])^ := LF1.N1;
   PUInt64(@AHPow128[120])^ := LF1.N0;
 end;
+
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 end.

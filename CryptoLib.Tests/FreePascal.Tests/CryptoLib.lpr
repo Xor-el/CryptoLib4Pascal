@@ -45,7 +45,8 @@ uses
   JsonVectorParser, Bip327Vectors, Bip340Vectors, HmacVectors, Argon2Vectors,
   AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
   OpenSslVectors, PemReaderVectors, PkcsVectors, CertVectors, TestKeyBuilders,
-  PemDerCodec, Int32Tests, Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
+  PemDerCodec, Int32Tests, Int64Tests, ByteUtilitiesTests,
+  IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

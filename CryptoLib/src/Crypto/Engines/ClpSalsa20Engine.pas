@@ -32,6 +32,7 @@ uses
   ClpPack,
   ClpCpuFeatures,
   ClpSimdLevels,
+  ClpByteUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -329,20 +330,15 @@ procedure TSalsa20Engine.ImplProcessBlock(
   const AInBytes: TCryptoLibByteArray; AInOff: Int32;
   const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 var
-  LIdx: Int32;
   LInP, LOutP, LKeyP: PByte;
 begin
   AssertInitialisedAndBlockAligned;
   GenerateKeyStream(FKeyStream);
   AdvanceCounter();
-  LInP := @AInBytes[AInOff];
-  LOutP := @AOutBytes[AOutOff];
-  LKeyP := @FKeyStream[0];
-  for LIdx := 0 to 7 do
-  begin
-    PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
-      PUInt64(LKeyP + (LIdx * 8))^;
-  end;
+  LInP := PByte(AInBytes) + AInOff;
+  LOutP := PByte(AOutBytes) + AOutOff;
+  LKeyP := PByte(FKeyStream);
+  TByteUtilities.&Xor(64, LInP, LKeyP, LOutP);
 end;
 
 procedure TSalsa20Engine.ProcessBlocks2(
@@ -439,11 +435,8 @@ begin
       LOutP := @AOutBytes[AOutOff];
       LKeyP := @FKeyStream[0];
       LQ := LTake shr 3;
-      for LIdx := 0 to System.Pred(LQ) do
-      begin
-        PUInt64(LOutP + (LIdx * 8))^ := PUInt64(LInP + (LIdx * 8))^ xor
-          PUInt64(LKeyP + (LIdx * 8))^;
-      end;
+      if LQ > 0 then
+        TByteUtilities.&Xor(LQ * 8, LInP, LKeyP, LOutP);
       for LIdx := (LQ * 8) to System.Pred(LTake) do
       begin
         LOutP[LIdx] := LInP[LIdx] xor LKeyP[LIdx];

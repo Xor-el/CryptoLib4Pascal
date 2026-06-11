@@ -28,6 +28,7 @@ uses
   ClpIBulkBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
+  ClpByteUtilities,
   ClpISicBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
@@ -318,8 +319,7 @@ begin
   // IBulkBlockCipher aliasing contract) turns LKs from raw counter
   // blocks into keystream.
   FBulkCipher.ProcessBlocks(@LKs[0], @LKs[0], 8);
-  TBlockCipherBulkUtilities.Xor128Bytes(@AOutBuf[AOutOff], @AInBuf[AInOff],
-    @LKs[0]);
+  TByteUtilities.&Xor(128, PByte(AInBuf) + AInOff, @LKs[0], PByte(AOutBuf) + AOutOff);
 end;
 
 end.

@@ -900,6 +900,7 @@ uses
   Bip327MuSig2Tests in '..\src\Crypto\Bip327MuSig2Tests.pas',
   SimdSelectSlotTests in '..\src\Misc\SimdSelectSlotTests.pas',
   BinaryPrimitivesTests in '..\src\Misc\BinaryPrimitivesTests.pas',
+  ByteUtilitiesTests in '..\src\Utils\NumberUtilities\ByteUtilitiesTests.pas',
   CryptoLibTestResourceLoader in '..\src\Utils\CryptoLibTestResourceLoader.pas',
   CsvVectorParser in '..\src\Utils\Parsers\CsvVectorParser.pas',
   JsonVectorParser in '..\src\Utils\Parsers\JsonVectorParser.pas',

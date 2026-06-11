@@ -38,14 +38,6 @@ type
     class function BeToNativeUInt32(AValue: UInt32): UInt32; static; inline;
     class function BeToNativeUInt64(AValue: UInt64): UInt64; static; inline;
 
-    // Load/store via aligned PWord/PCardinal/PUInt64
-    class function LoadUInt16(AInput: PWord): UInt16; static; inline;
-    class function LoadUInt32(AInput: PCardinal): UInt32; static; inline;
-    class function LoadUInt64(AInput: PUInt64): UInt64; static; inline;
-    class procedure StoreUInt16(AOutput: PWord; AValue: UInt16); static; inline;
-    class procedure StoreUInt32(AOutput: PCardinal; AValue: UInt32); static; inline;
-    class procedure StoreUInt64(AOutput: PUInt64; AValue: UInt64); static; inline;
-
     // Copy with byte-reversal within each 32/64-bit lane
     class procedure SwapCopyUInt32(ASource: Pointer; ASourceIndex: Integer;
       ADestination: Pointer; ADestinationIndex: Integer; ASize: Integer); static;
@@ -68,6 +60,19 @@ type
     class procedure WriteUInt64BEAt(AOutput: PByte; AOffset: Integer; AValue: UInt64); static; inline;
 
   public
+    /// <summary>Alignment-safe native-order word load (not a wire-endian read).</summary>
+    class function LoadUInt16(AInput: PWord): UInt16; static; inline;
+    /// <summary>Alignment-safe native-order dword load (not a wire-endian read).</summary>
+    class function LoadUInt32(AInput: PCardinal): UInt32; static; inline;
+    /// <summary>Alignment-safe native-order qword load (not a wire-endian read).</summary>
+    class function LoadUInt64(AInput: PUInt64): UInt64; static; inline;
+    /// <summary>Alignment-safe native-order word store (not a wire-endian write).</summary>
+    class procedure StoreUInt16(AOutput: PWord; AValue: UInt16); static; inline;
+    /// <summary>Alignment-safe native-order dword store (not a wire-endian write).</summary>
+    class procedure StoreUInt32(AOutput: PCardinal; AValue: UInt32); static; inline;
+    /// <summary>Alignment-safe native-order qword store (not a wire-endian write).</summary>
+    class procedure StoreUInt64(AOutput: PUInt64; AValue: UInt64); static; inline;
+
     // Copy block; preserve LE or BE wire layout
     class procedure CopyUInt32LittleEndian(ASource: Pointer; ASourceIndex: Integer;
       ADestination: Pointer; ADestinationIndex: Integer; ASize: Integer); static; inline;

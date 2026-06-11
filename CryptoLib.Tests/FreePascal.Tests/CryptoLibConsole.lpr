@@ -47,7 +47,7 @@ uses
   AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
   OpenSslVectors, PkcsVectors, CertVectors, CsvVectorLoaderBase,
   TestKeyBuilders, PemDerCodec, PemReaderVectors, Argon2Vectors, Int32Tests,
-  Int64Tests, IPAddressUtilitiesTests, PemReaderTests;
+  Int64Tests, ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests;
 
 type
 
