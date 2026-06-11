@@ -246,7 +246,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 >= 8);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 >= 8));
 {$ENDIF}
 end;
 
@@ -308,7 +308,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 = 2);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 = 2));
 {$ENDIF}
 end;
 
@@ -357,7 +357,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 = 3);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 = 3));
 {$ENDIF}
 end;
 
@@ -405,7 +405,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 = 4);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 = 4));
 {$ENDIF}
 end;
 
@@ -467,7 +467,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 = 5);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 = 5));
 {$ENDIF}
 end;
 
@@ -530,7 +530,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 = 6);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 = 6));
 {$ENDIF}
 end;
 
@@ -600,7 +600,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak < 64 and An - Ak >= 64 and An / 32 = 7);
+  System.Assert(((AN and 63) <> 0) and (AK < 64) and (AN - AK >= 64) and (AN div 32 = 7));
 {$ENDIF}
 end;
 
@@ -671,7 +671,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak >= 64 and ((k and 63)) = 0 and An - Ak >= 64);
+  System.Assert(((AN and 63) <> 0) and (AK >= 64) and ((AK and 63) = 0) and (AN - AK >= 64));
 {$ENDIF}
 end;
 
@@ -713,7 +713,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak >= 64 and ((k and 63)) <> 0 and An - Ak >= 64 and An / 32 >= 8);
+  System.Assert(((AN and 63) <> 0) and (AK >= 64) and ((AK and 63) <> 0) and (AN - AK >= 64) and (AN div 32 >= 8));
 {$ENDIF}
 end;
 
@@ -760,7 +760,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak >= 64 and ((k and 63)) <> 0 and An - Ak >= 64 and An / 32 = 4);
+  System.Assert(((AN and 63) <> 0) and (AK >= 64) and ((AK and 63) <> 0) and (AN - AK >= 64) and (AN div 32 = 4));
 {$ENDIF}
 end;
 
@@ -830,7 +830,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak >= 64 and ((k and 63)) <> 0 and An - Ak >= 64 and An / 32 = 5);
+  System.Assert(((AN and 63) <> 0) and (AK >= 64) and ((AK and 63) <> 0) and (AN - AK >= 64) and (AN div 32 = 5));
 {$ENDIF}
 end;
 
@@ -901,7 +901,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak >= 64 and ((k and 63)) <> 0 and An - Ak >= 64 and An / 32 = 6);
+  System.Assert(((AN and 63) <> 0) and (AK >= 64) and ((AK and 63) <> 0) and (AN - AK >= 64) and (AN div 32 = 6));
 {$ENDIF}
 end;
 
@@ -934,7 +934,7 @@ begin
   System.Assert(Lw_n = 3);
 {$ENDIF}
 {$IFDEF DEBUG}
-  System.Assert(Lw_k = 1  or  Lw_k = 2);
+  System.Assert((Lw_k = 1) or (Lw_k = 2));
 {$ENDIF}
   {Load tt[0..6] into locals; tt[7] is slack (= 0 by contract) and elided.}
   Lt0 := Att[AttOff];
@@ -1003,7 +1003,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0  and Ak >= 64 and ((k and 63)) <> 0 and An - Ak >= 64 and An / 32 = 7);
+  System.Assert(((AN and 63) <> 0) and (AK >= 64) and ((AK and 63) <> 0) and (AN - AK >= 64) and (AN div 32 = 7));
 {$ENDIF}
 end;
 
@@ -1037,9 +1037,9 @@ begin
   System.Assert(Lw_n = 3);
 {$ENDIF}
 {$IFDEF DEBUG}
-  System.Assert(Lw_k = 1  or  Lw_k = 2);
+  System.Assert((Lw_k = 1) or (Lw_k = 2));
 {$ENDIF}
-  {Load tt[0..7] into locals so the JIT can keep the fold state in registers.}
+  //Load tt[0..7] into locals
   Lt0 := Att[AttOff];
   Lt1 := Att[AttOff + 1];
   Lt2 := Att[AttOff + 2];
@@ -1110,7 +1110,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(n - Ak < 64  or  (((n and 63)) = 0 and ((k and 63)) = 0));
+  System.Assert((AN - AK < 64) or (((AN and 63) = 0) and ((AK and 63) = 0)));
 {$ENDIF}
 end;
 
@@ -1162,7 +1162,7 @@ begin
   FN := AN;
   FK := AK;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) = 0 and ((k and 63)) <> 0 and An - Ak >= 64);
+  System.Assert(((AN and 63) = 0) and ((AK and 63) <> 0) and (AN - AK >= 64));
 {$ENDIF}
 end;
 
@@ -1185,7 +1185,7 @@ begin
   LW := (Ln shr 6);
   TBinPolyMulBase.BitPos(Lk, Lw_k, Ls_k);
 {$IFDEF DEBUG}
-  System.Assert(Ls_k <> 0 and Lw_k <= LW - 2);
+  System.Assert((Ls_k <> 0) and (Lw_k <= LW - 2));
 {$ENDIF}
   Lpos := LW - 1;
   repeat

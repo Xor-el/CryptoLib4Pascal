@@ -226,7 +226,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 >= 8);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 >= 8));
 {$ENDIF}
 end;
 
@@ -289,7 +289,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 = 2);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 = 2));
 {$ENDIF}
 end;
 
@@ -344,7 +344,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 = 3);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 = 3));
 {$ENDIF}
 end;
 
@@ -400,7 +400,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 = 4);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 = 4));
 {$ENDIF}
 end;
 
@@ -465,7 +465,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 = 5);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 = 5));
 {$ENDIF}
 end;
 
@@ -531,7 +531,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 = 6);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 = 6));
 {$ENDIF}
 end;
 
@@ -604,7 +604,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak3 < 64 and An - Ak3 >= 64 and An / 32 = 7);
+  System.Assert(((AN and 63) <> 0) and (AK3 < 64) and (AN - AK3 >= 64) and (AN div 32 = 7));
 {$ENDIF}
 end;
 
@@ -678,7 +678,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and k2 >= 64 and An - Ak3 >= 64 and ((k1 and 63)) <> 0 and ((k2 and 63)) <> 0 and ((k3 and 63)) <> 0);
+  System.Assert(((AN and 63) <> 0) and (AK2 >= 64) and (AN - AK3 >= 64) and ((AK1 and 63) <> 0) and ((AK2 and 63) <> 0) and ((AK3 and 63) <> 0));
 {$ENDIF}
 end;
 
@@ -738,7 +738,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) <> 0 and Ak2 < 64 and k3 >= 64 and ((k3 and 63)) <> 0 and An - Ak3 >= 64);
+  System.Assert(((AN and 63) <> 0) and (AK2 < 64) and (AK3 >= 64) and ((AK3 and 63) <> 0) and (AN - AK3 >= 64));
 {$ENDIF}
 end;
 
@@ -793,7 +793,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(An - AAk3 < 64  or  ((k1 and 63)) = 0  or  ((k2 and 63)) = 0  or  ((k3 and 63)) = 0);
+  System.Assert((AN - AK3 < 64) or ((AK1 and 63) = 0) or ((AK2 and 63) = 0) or ((AK3 and 63) = 0));
 {$ENDIF}
 end;
 
@@ -859,7 +859,7 @@ begin
   FK2 := AK2;
   FK3 := AK3;
 {$IFDEF DEBUG}
-  System.Assert(((An and 63)) = 0 and ((k1 and 63)) <> 0 and ((k2 and 63)) <> 0 and ((k3 and 63)) <> 0 and An - Ak3 >= 64);
+  System.Assert(((AN and 63) = 0) and ((AK1 and 63) <> 0) and ((AK2 and 63) <> 0) and ((AK3 and 63) <> 0) and (AN - AK3 >= 64));
 {$ENDIF}
 end;
 
