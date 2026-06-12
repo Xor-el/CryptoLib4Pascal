@@ -24,6 +24,7 @@ uses
   ClpBitOperations,
   ClpInt64Utilities,
   ClpPack,
+  ClpBinaryPrimitives,
   ClpInterleave,
   ClpCpuFeatures,
   ClpCryptoLibTypes,
@@ -463,10 +464,10 @@ begin
   System.Move(B1[8], SR[0], 8);
   for LI := 0 to 15 do
     B2[LI] := B2[LI] xor SR[LI];
-  LT3 := PUInt64(@B0[0])^;
-  LT2 := PUInt64(@B0[8])^;
-  LT1 := PUInt64(@B2[0])^;
-  LT0 := PUInt64(@B2[8])^;
+  LT3 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B0[0]), 0);
+  LT2 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B0[0]), 8);
+  LT1 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B2[0]), 0);
+  LT0 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B2[0]), 8);
   LT1 := LT1 xor LT3 xor (LT3 shr 1) xor (LT3 shr 2) xor (LT3 shr 7);
   LT2 := LT2 xor (LT3 shl 63) xor (LT3 shl 62) xor (LT3 shl 57);
   LZ0 := (LT0 shl 1) or (LT1 shr 63);
@@ -474,8 +475,8 @@ begin
   LZ2 := LT2 shl 1;
   LZ0 := LZ0 xor LZ2 xor (LZ2 shr 1) xor (LZ2 shr 2) xor (LZ2 shr 7);
   LZ1 := LZ1 xor (LT2 shl 63) xor (LT2 shl 58);
-  PUInt64(PSVector16)^ := LZ1;
-  PUInt64(PSVector16 + 8)^ := LZ0;
+  TBinaryPrimitives.WriteUInt64LittleEndian(PSVector16, 0, LZ1);
+  TBinaryPrimitives.WriteUInt64LittleEndian(PSVector16, 8, LZ0);
 end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -535,22 +536,22 @@ begin
   LY := LF4;
   Multiply(LAcc, LY);
   LF8 := LAcc;
-  PUInt64(@AHPow128[0])^ := LF8.N1;
-  PUInt64(@AHPow128[8])^ := LF8.N0;
-  PUInt64(@AHPow128[16])^ := LF7.N1;
-  PUInt64(@AHPow128[24])^ := LF7.N0;
-  PUInt64(@AHPow128[32])^ := LF6.N1;
-  PUInt64(@AHPow128[40])^ := LF6.N0;
-  PUInt64(@AHPow128[48])^ := LF5.N1;
-  PUInt64(@AHPow128[56])^ := LF5.N0;
-  PUInt64(@AHPow128[64])^ := LF4.N1;
-  PUInt64(@AHPow128[72])^ := LF4.N0;
-  PUInt64(@AHPow128[80])^ := LF3.N1;
-  PUInt64(@AHPow128[88])^ := LF3.N0;
-  PUInt64(@AHPow128[96])^ := LF2.N1;
-  PUInt64(@AHPow128[104])^ := LF2.N0;
-  PUInt64(@AHPow128[112])^ := LF1.N1;
-  PUInt64(@AHPow128[120])^ := LF1.N0;
+  TPack.UInt64_To_LE(LF8.N1, AHPow128, 0);
+  TPack.UInt64_To_LE(LF8.N0, AHPow128, 8);
+  TPack.UInt64_To_LE(LF7.N1, AHPow128, 16);
+  TPack.UInt64_To_LE(LF7.N0, AHPow128, 24);
+  TPack.UInt64_To_LE(LF6.N1, AHPow128, 32);
+  TPack.UInt64_To_LE(LF6.N0, AHPow128, 40);
+  TPack.UInt64_To_LE(LF5.N1, AHPow128, 48);
+  TPack.UInt64_To_LE(LF5.N0, AHPow128, 56);
+  TPack.UInt64_To_LE(LF4.N1, AHPow128, 64);
+  TPack.UInt64_To_LE(LF4.N0, AHPow128, 72);
+  TPack.UInt64_To_LE(LF3.N1, AHPow128, 80);
+  TPack.UInt64_To_LE(LF3.N0, AHPow128, 88);
+  TPack.UInt64_To_LE(LF2.N1, AHPow128, 96);
+  TPack.UInt64_To_LE(LF2.N0, AHPow128, 104);
+  TPack.UInt64_To_LE(LF1.N1, AHPow128, 112);
+  TPack.UInt64_To_LE(LF1.N0, AHPow128, 120);
 end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
