@@ -61,7 +61,7 @@ begin
   SetLength(LBuf, 4);
   TBinaryPrimitives.WriteUInt16LittleEndian(LBuf, 1, TEST_UINT16);
   LFromArray := TBinaryPrimitives.ReadUInt16LittleEndian(LBuf, 1);
-  LFromPointer := TBinaryPrimitives.ReadUInt16LittleEndian(PByte(@LBuf[1]), 0);
+  LFromPointer := TBinaryPrimitives.ReadUInt16LittleEndian(PByte(LBuf), 1);
   CheckEquals(TEST_UINT16, LFromArray);
   CheckEquals(LFromArray, LFromPointer);
   CheckEquals(Byte(TEST_UINT16), LBuf[1]);
@@ -76,7 +76,7 @@ begin
   SetLength(LBuf, 4);
   TBinaryPrimitives.WriteUInt16BigEndian(LBuf, 1, TEST_UINT16);
   LFromArray := TBinaryPrimitives.ReadUInt16BigEndian(LBuf, 1);
-  LFromPointer := TBinaryPrimitives.ReadUInt16BigEndian(PByte(@LBuf[1]), 0);
+  LFromPointer := TBinaryPrimitives.ReadUInt16BigEndian(PByte(LBuf), 1);
   CheckEquals(TEST_UINT16, LFromArray);
   CheckEquals(LFromArray, LFromPointer);
   CheckEquals(Byte(TEST_UINT16 shr 8), LBuf[1]);
@@ -91,7 +91,7 @@ begin
   SetLength(LBuf, 8);
   TBinaryPrimitives.WriteUInt32LittleEndian(LBuf, 2, TEST_UINT32);
   LFromArray := TBinaryPrimitives.ReadUInt32LittleEndian(LBuf, 2);
-  LFromPointer := TBinaryPrimitives.ReadUInt32LittleEndian(PByte(@LBuf[2]), 0);
+  LFromPointer := TBinaryPrimitives.ReadUInt32LittleEndian(PByte(LBuf), 2);
   CheckEquals(TEST_UINT32, LFromArray);
   CheckEquals(LFromArray, LFromPointer);
 end;
@@ -104,7 +104,7 @@ begin
   SetLength(LBuf, 8);
   TBinaryPrimitives.WriteUInt32BigEndian(LBuf, 2, TEST_UINT32);
   LFromArray := TBinaryPrimitives.ReadUInt32BigEndian(LBuf, 2);
-  LFromPointer := TBinaryPrimitives.ReadUInt32BigEndian(PByte(@LBuf[2]), 0);
+  LFromPointer := TBinaryPrimitives.ReadUInt32BigEndian(PByte(LBuf), 2);
   CheckEquals(TEST_UINT32, LFromArray);
   CheckEquals(LFromArray, LFromPointer);
 end;
@@ -117,7 +117,7 @@ begin
   SetLength(LBuf, 16);
   TBinaryPrimitives.WriteUInt64LittleEndian(LBuf, 4, TEST_UINT64);
   LFromArray := TBinaryPrimitives.ReadUInt64LittleEndian(LBuf, 4);
-  LFromPointer := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@LBuf[4]), 0);
+  LFromPointer := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(LBuf), 4);
   CheckEquals(TEST_UINT64, LFromArray);
   CheckEquals(LFromArray, LFromPointer);
 end;
@@ -130,7 +130,7 @@ begin
   SetLength(LBuf, 16);
   TBinaryPrimitives.WriteUInt64BigEndian(LBuf, 4, TEST_UINT64);
   LFromArray := TBinaryPrimitives.ReadUInt64BigEndian(LBuf, 4);
-  LFromPointer := TBinaryPrimitives.ReadUInt64BigEndian(PByte(@LBuf[4]), 0);
+  LFromPointer := TBinaryPrimitives.ReadUInt64BigEndian(PByte(LBuf), 4);
   CheckEquals(TEST_UINT64, LFromArray);
   CheckEquals(LFromArray, LFromPointer);
 end;
@@ -143,75 +143,83 @@ begin
   SetLength(LBuf, 9);
   LBuf[0] := $AA;
   TBinaryPrimitives.WriteUInt32LittleEndian(LBuf, 1, TEST_UINT32);
-  LValue := TBinaryPrimitives.ReadUInt32LittleEndian(PByte(@LBuf[0]), 1);
+  LValue := TBinaryPrimitives.ReadUInt32LittleEndian(PByte(LBuf), 1);
   CheckEquals(TEST_UINT32, LValue);
 
   FillChar(LBuf[0], Length(LBuf), 0);
   LBuf[0] := $AA;
   TBinaryPrimitives.WriteUInt32BigEndian(LBuf, 1, TEST_UINT32);
-  LValue := TBinaryPrimitives.ReadUInt32BigEndian(PByte(@LBuf[0]), 1);
+  LValue := TBinaryPrimitives.ReadUInt32BigEndian(PByte(LBuf), 1);
   CheckEquals(TEST_UINT32, LValue);
 end;
 
 procedure TTestBinaryPrimitives.TestCopyUInt32LittleEndianAligned;
+const
+  V0 = UInt32($11223344);
+  V1 = UInt32($55667788);
+  V2 = UInt32($99AABBCC);
 var
   LSource, LDest: TBytes;
-  LI: Integer;
 begin
   SetLength(LSource, 12);
   SetLength(LDest, 12);
-  for LI := 0 to 11 do
-    LSource[LI] := Byte(LI + 1);
+  TBinaryPrimitives.StoreUInt32(PCardinal(PByte(LSource)), V0);
+  TBinaryPrimitives.StoreUInt32(PCardinal(@LSource[4]), V1);
+  TBinaryPrimitives.StoreUInt32(PCardinal(@LSource[8]), V2);
   FillChar(LDest[0], Length(LDest), 0);
-  TBinaryPrimitives.CopyUInt32LittleEndian(@LSource[0], 0, @LDest[0], 0, 12);
-  for LI := 0 to 11 do
-    CheckEquals(LSource[LI], LDest[LI], Format('byte %d', [LI]));
+  TBinaryPrimitives.CopyUInt32LittleEndian(PByte(LSource), 0, PByte(LDest), 0, 12);
+  CheckEquals(V0, TBinaryPrimitives.ReadUInt32LittleEndian(LDest, 0));
+  CheckEquals(V1, TBinaryPrimitives.ReadUInt32LittleEndian(LDest, 4));
+  CheckEquals(V2, TBinaryPrimitives.ReadUInt32LittleEndian(LDest, 8));
 end;
 
 procedure TTestBinaryPrimitives.TestCopyUInt32LittleEndianMisaligned;
+const
+  V0 = UInt32($11223344);
+  V1 = UInt32($55667788);
 var
   LSource, LDest: TBytes;
-  LI: Integer;
 begin
   SetLength(LSource, 14);
   SetLength(LDest, 14);
-  for LI := 0 to 13 do
-    LSource[LI] := Byte(LI + $10);
+  FillChar(LSource[0], Length(LSource), 0);
+  TBinaryPrimitives.StoreUInt32(PCardinal(@LSource[1]), V0);
+  TBinaryPrimitives.StoreUInt32(PCardinal(@LSource[5]), V1);
   FillChar(LDest[0], Length(LDest), 0);
-  TBinaryPrimitives.CopyUInt32LittleEndian(@LSource[0], 1, @LDest[0], 2, 8);
-  for LI := 0 to 7 do
-    CheckEquals(LSource[1 + LI], LDest[2 + LI], Format('byte %d', [LI]));
+  TBinaryPrimitives.CopyUInt32LittleEndian(PByte(LSource), 1, PByte(LDest), 2, 8);
+  CheckEquals(V0, TBinaryPrimitives.ReadUInt32LittleEndian(LDest, 2));
+  CheckEquals(V1, TBinaryPrimitives.ReadUInt32LittleEndian(LDest, 6));
 end;
 
 procedure TTestBinaryPrimitives.TestCopyUInt32BigEndianWireFormat;
+const
+  V0 = UInt32($11223344);
 var
   LSource, LDest: TBytes;
-  LWireValue, LNativeValue: UInt32;
 begin
   SetLength(LSource, 4);
   SetLength(LDest, 4);
-  LWireValue := UInt32($11223344);
-  TBinaryPrimitives.WriteUInt32BigEndian(LSource, 0, LWireValue);
+  TBinaryPrimitives.StoreUInt32(PCardinal(PByte(LSource)), V0);
   FillChar(LDest[0], 4, 0);
-  TBinaryPrimitives.CopyUInt32BigEndian(@LSource[0], 0, @LDest[0], 0, 4);
-  // On LE hosts, CopyUInt32BigEndian byte-reverses into dest; LE read recovers the wire value
-  LNativeValue := TBinaryPrimitives.ReadUInt32LittleEndian(LDest, 0);
-  CheckEquals(LWireValue, LNativeValue);
+  TBinaryPrimitives.CopyUInt32BigEndian(PByte(LSource), 0, PByte(LDest), 0, 4);
+  CheckEquals(V0, TBinaryPrimitives.ReadUInt32BigEndian(LDest, 0));
 end;
 
 procedure TTestBinaryPrimitives.TestCopyUInt64LittleEndianAligned;
+const
+  V0 = UInt64($1122334455667788);
+  V1 = UInt64($99AABBCCDDEEFF00);
 var
   LSource, LDest: TBytes;
-  LI: Integer;
 begin
   SetLength(LSource, 16);
   SetLength(LDest, 16);
-  for LI := 0 to 15 do
-    LSource[LI] := Byte(LI + $20);
+  TBinaryPrimitives.StoreUInt64(PUInt64(PByte(LSource)), V0);
+  TBinaryPrimitives.StoreUInt64(PUInt64(@LSource[8]), V1);
   FillChar(LDest[0], Length(LDest), 0);
-  TBinaryPrimitives.CopyUInt64LittleEndian(@LSource[0], 0, @LDest[0], 0, 16);
-  for LI := 0 to 15 do
-    CheckEquals(LSource[LI], LDest[LI], Format('byte %d', [LI]));
+  TBinaryPrimitives.CopyUInt64LittleEndian(PByte(LSource), 0, PByte(LDest), 0, 16);
+  CheckEquals(V0, TBinaryPrimitives.ReadUInt64LittleEndian(LDest, 0));
+  CheckEquals(V1, TBinaryPrimitives.ReadUInt64LittleEndian(LDest, 8));
 end;
 
 initialization
