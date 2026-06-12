@@ -15,7 +15,7 @@ on:
       enabled_targets:
         description: >-
           Comma-separated list of targets to run (leave empty for the default
-          set). Opt-in only: netbsd, dragonflybsd — pass explicitly here.
+          set). Opt-in only: linux-arm32, netbsd, dragonflybsd — pass explicitly here.
           Valid IDs: linux-x64, linux-arm64, windows-x64, macos-arm64,
           macos-x64, linux-arm32, linux-powerpc64-be, freebsd, solaris,
           netbsd, dragonflybsd
@@ -34,7 +34,7 @@ env:
   FPC_VERSION: 3.2.2
   LAZARUS_BRANCH: lazarus_4_4
   LAZARUS_REPO: https://github.com/fpc/Lazarus.git
-  MAKE_BUILD_BACKEND: fpc
+  MAKE_BUILD_BACKEND: lazbuild
   # make.pas package build scope: 'all' compiles every discovered package (catches
   # a package that fails on the target even if unused); 'required' only compiles
   # the projects' dependency closure. Override per job below, like MAKE_BUILD_BACKEND.
