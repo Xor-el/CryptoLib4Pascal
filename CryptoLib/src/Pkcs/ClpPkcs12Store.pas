@@ -140,7 +140,6 @@ type
     FKeySaltSize: Int32;
     FCertSaltSize: Int32;
     FMacSaltSize: Int32;
-    FUnmarkedKeyEntry: IAsymmetricKeyEntry;
   strict private
     procedure ClearKeys;
     procedure ClearCerts;
@@ -174,9 +173,11 @@ type
     function GetCount: Int32;
     function GetAliases: TCryptoLibStringArray;
 
-    procedure LoadKeyBag(const APrivKeyInfo: IPrivateKeyInfo; const ABagAttributes: IAsn1Set); virtual;
+    procedure LoadKeyBag(const APrivKeyInfo: IPrivateKeyInfo; const ABagAttributes: IAsn1Set;
+      var AUnmarkedKeyEntry: IAsymmetricKeyEntry); virtual;
     procedure LoadPkcs8ShroudedKeyBag(const AEncPrivKeyInfo: IEncryptedPrivateKeyInfo;
-      const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean); virtual;
+      const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
+      var AUnmarkedKeyEntry: IAsymmetricKeyEntry); virtual;
   public
     const
       DefaultIterations = 1024;
@@ -582,7 +583,8 @@ begin
   Result := LCipher.DoFinal(AData);
 end;
 
-procedure TPkcs12Store.LoadKeyBag(const APrivKeyInfo: IPrivateKeyInfo; const ABagAttributes: IAsn1Set);
+procedure TPkcs12Store.LoadKeyBag(const APrivKeyInfo: IPrivateKeyInfo; const ABagAttributes: IAsn1Set;
+  var AUnmarkedKeyEntry: IAsymmetricKeyEntry);
 var
   LKey: IAsymmetricKeyParameter;
   LAttributes: TDictionary<IDerObjectIdentifier, IAsn1Encodable>;
@@ -637,16 +639,17 @@ begin
       FLocalIDs.AddOrSetValue(LAlias, LName);
   end
   else
-    FUnmarkedKeyEntry := LKeyEntry;
+    AUnmarkedKeyEntry := LKeyEntry;
 end;
 
 procedure TPkcs12Store.LoadPkcs8ShroudedKeyBag(const AEncPrivKeyInfo: IEncryptedPrivateKeyInfo;
-  const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean);
+  const ABagAttributes: IAsn1Set; const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
+  var AUnmarkedKeyEntry: IAsymmetricKeyEntry);
 var
   LPrivateKeyInfo: IPrivateKeyInfo;
 begin
   LPrivateKeyInfo := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(APassword, AWrongPkcs12Zero, AEncPrivKeyInfo);
-  LoadKeyBag(LPrivateKeyInfo, ABagAttributes);
+  LoadKeyBag(LPrivateKeyInfo, ABagAttributes, AUnmarkedKeyEntry);
 end;
 
 procedure TPkcs12Store.Load(const AInput: TStream; const APassword: TCryptoLibCharArray);
@@ -686,6 +689,7 @@ var
   LCertEntry: IX509CertificateEntry;
   LName: String;
   LIgnore: Boolean;
+  LUnmarkedKeyEntry: IAsymmetricKeyEntry;
 begin
   if AInput = nil then
     raise EArgumentNilCryptoLibException.Create(SInputNil);
@@ -713,7 +717,7 @@ begin
   end;
   ClearKeys;
   FLocalIDs.Clear;
-  FUnmarkedKeyEntry := nil;
+  LUnmarkedKeyEntry := nil;
   LCertBags := TList<ISafeBag>.Create;
   try
     if TPkcsObjectIdentifiers.Data.Equals(LInfo.ContentType) then
@@ -745,12 +749,13 @@ begin
           if TPkcsObjectIdentifiers.CertBag.Equals(LSafeBagID) then
             LCertBags.Add(LSafeBag)
           else if TPkcsObjectIdentifiers.KeyBag.Equals(LSafeBagID) then
-            LoadKeyBag(TPrivateKeyInfo.GetInstance(LSafeBag.BagValueEncodable), LSafeBag.BagAttributes)
+            LoadKeyBag(TPrivateKeyInfo.GetInstance(LSafeBag.BagValueEncodable), LSafeBag.BagAttributes,
+              LUnmarkedKeyEntry)
           else if TPkcsObjectIdentifiers.Pkcs8ShroudedKeyBag.Equals(LSafeBagID) then
           begin
             LPasswordNeeded := True;
             LoadPkcs8ShroudedKeyBag(TEncryptedPrivateKeyInfo.GetInstance(LSafeBag.BagValueEncodable),
-              LSafeBag.BagAttributes, APassword, LWrongPkcs12Zero);
+              LSafeBag.BagAttributes, APassword, LWrongPkcs12Zero, LUnmarkedKeyEntry);
           end;
         end;
       end;
@@ -799,16 +804,15 @@ begin
       LCertID := TCertID.Create(LCert);
       LCertEntry := TX509CertificateEntry.Create(LCert, LAttributes);
       MapChainCert(LCertID, LCertEntry);
-      if FUnmarkedKeyEntry <> nil then
+      if LUnmarkedKeyEntry <> nil then
       begin
         if FKeyCerts.Count = 0 then
         begin
           LName := THexEncoder.Encode(LCertID.Id);
           FKeyCerts.Add(LName, LCertEntry);
-          MapKey(LName, FUnmarkedKeyEntry);
-        end
-        else
-          MapKey('unmarked', FUnmarkedKeyEntry);
+          MapKey(LName, LUnmarkedKeyEntry);
+        end;
+        LUnmarkedKeyEntry := nil;
       end
       else
       begin
@@ -821,6 +825,8 @@ begin
           MapCert(LAlias, LCertEntry);
       end;
     end;
+    if LUnmarkedKeyEntry <> nil then
+      MapKey('unmarked', LUnmarkedKeyEntry);
     if not LPasswordNeeded and (APassword <> nil) then
     begin
       LIgnore := FIgnoreUselessPassword;

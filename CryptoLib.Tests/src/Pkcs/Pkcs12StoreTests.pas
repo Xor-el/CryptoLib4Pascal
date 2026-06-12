@@ -61,6 +61,7 @@ uses
   ClpIX509Generators,
   ClpAsn1SignatureFactory,
   ClpGeneratorUtilities,
+  ClpPrivateKeyInfoFactory,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
@@ -99,6 +100,7 @@ type
     FSentrix1: TBytes;
     FSentrix2: TBytes;
     FSentrix3: TBytes;
+    FRawKeyBagStore: TBytes;
 
     function CreateCert(const APubKey, APrivKey: IAsymmetricKeyParameter;
       const AIssuerEmail, ASubjectEmail: String; const ALocalKeyId: TBytes): IX509CertificateEntry;
@@ -118,6 +120,7 @@ type
     procedure LoadStoreFromBytes(const AStore: IPkcs12Store; const AData: TBytes;
       const APassword: TCryptoLibCharArray);
     function SaveStoreToBytes(const AStore: IPkcs12Store; const APassword: TCryptoLibCharArray): TBytes;
+    function CreateKeyBagPfx(const ASafeBag: ISafeBag): TBytes;
     procedure LoadSentrixStoreAndCheck(const AData: TBytes; const APassword: TCryptoLibCharArray);
     function GetExpectedPkcs12Modulus: TBigInteger;
     function GetExpectedPkcs12ChainSerial(AIndex: Int32): TBigInteger;
@@ -148,6 +151,9 @@ type
     procedure TestFriendlyName_OverwriteFalse_AddedFriendlyName_Persisted;
     procedure TestPkcs12Store_MissingContentInfoContent;
     procedure TestPkcs12Store_NegativeIterations;
+    procedure TestRawKeyBagNoAttributes;
+    procedure TestRawKeyBagStore;
+    procedure TestWrongPassword;
   end;
 
 implementation
@@ -178,6 +184,7 @@ begin
   FSentrix1 := TPkcs12StoreVectors.LoadStoreBytes('Sentrix1');
   FSentrix2 := TPkcs12StoreVectors.LoadStoreBytes('Sentrix2');
   FSentrix3 := TPkcs12StoreVectors.LoadStoreBytes('Sentrix3');
+  FRawKeyBagStore := TPkcs12StoreVectors.LoadStoreBytes('RawKeyBagStore');
 end;
 
 function TTestPkcs12Store.GetFirst(const AAliases: TCryptoLibStringArray): String;
@@ -251,6 +258,22 @@ begin
   finally
     LOut.Free;
   end;
+end;
+
+function TTestPkcs12Store.CreateKeyBagPfx(const ASafeBag: ISafeBag): TBytes;
+var
+  LDataInfo, LMainInfo: IPkcsContentInfo;
+  LAuthSafe: IAuthenticatedSafe;
+  LCInfos: TCryptoLibGenericArray<IPkcsContentInfo>;
+begin
+  LDataInfo := TPkcsContentInfo.Create(TPkcsObjectIdentifiers.Data,
+    TDerOctetString.Create((TDerSequence.Create(ASafeBag) as IDerSequence).GetEncoded()) as IDerOctetString);
+  SetLength(LCInfos, 1);
+  LCInfos[0] := LDataInfo;
+  LAuthSafe := TAuthenticatedSafe.Create(LCInfos);
+  LMainInfo := TPkcsContentInfo.Create(TPkcsObjectIdentifiers.Data,
+    TDerOctetString.Create(LAuthSafe.GetEncoded()) as IDerOctetString);
+  Result := (TPfx.Create(LMainInfo, nil) as IPfx).GetEncoded();
 end;
 
 procedure TTestPkcs12Store.LoadSentrixStoreAndCheck(const AData: TBytes; const APassword: TCryptoLibCharArray);
@@ -1050,6 +1073,77 @@ begin
     end;
   finally
     LStream.Free;
+  end;
+end;
+
+procedure TTestPkcs12Store.TestRawKeyBagNoAttributes;
+var
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+  LKeyPair: IAsymmetricCipherKeyPair;
+  LPrivateKeyInfo: IPrivateKeyInfo;
+  LNoAttrBag, LFriendlyBag: ISafeBag;
+  LKeyBagPfxA, LKeyBagPfxB: TBytes;
+  LStoreA, LStoreB: IPkcs12Store;
+  LEmptyPass: TCryptoLibCharArray;
+  LAlias: String;
+  LFriendlyName: IAsn1Encodable;
+begin
+  // RFC 7292 sec. 4.2.1 keyBag (unencrypted PrivateKeyInfo) may carry no bagAttributes, and the localKeyId
+  // attribute is optional even when bagAttributes are present. Ensure correct handling.
+  LKpg := TGeneratorUtilities.GetKeyPairGenerator('RSA');
+  LKpg.Init(TRsaKeyGenerationParameters.Create(TBigInteger.ValueOf(Int64($10001)), FRandom, 1024, 25) as IRsaKeyGenerationParameters);
+  LKeyPair := LKpg.GenerateKeyPair;
+  LPrivateKeyInfo := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKeyPair.Private);
+
+  // Case A: keyBag with no bagAttributes at all.
+  LNoAttrBag := TSafeBag.Create(TPkcsObjectIdentifiers.KeyBag, LPrivateKeyInfo.ToAsn1Object());
+  LKeyBagPfxA := CreateKeyBagPfx(LNoAttrBag);
+
+  LStoreA := BuildPkcs12Store;
+  LEmptyPass := nil;
+  LoadStoreFromBytes(LStoreA, LKeyBagPfxA, LEmptyPass);
+
+  LAlias := GetFirst(LStoreA.Aliases);
+  Check(LStoreA.IsKeyEntry(LAlias), 'no-attributes keyBag entry not a key');
+  Check(LStoreA.GetKey(LAlias) <> nil, 'no-attributes keyBag key not recoverable');
+
+  // Case B: keyBag carrying a friendlyName but no localKeyId attribute.
+  LFriendlyName := TDerSequence.Create(TPkcsObjectIdentifiers.Pkcs9AtFriendlyName,
+    TDerSet.Create(TDerBmpString.Create('rawKeyBag') as IDerBmpString) as IDerSet);
+  LFriendlyBag := TSafeBag.Create(TPkcsObjectIdentifiers.KeyBag, LPrivateKeyInfo.ToAsn1Object(),
+    TDerSet.Create(LFriendlyName) as IDerSet);
+  LKeyBagPfxB := CreateKeyBagPfx(LFriendlyBag);
+
+  LStoreB := BuildPkcs12Store;
+  LoadStoreFromBytes(LStoreB, LKeyBagPfxB, LEmptyPass);
+  Check(LStoreB.IsKeyEntry('rawKeyBag'), 'friendlyName keyBag not stored under its alias');
+  Check(LStoreB.GetKey('rawKeyBag') <> nil, 'friendlyName keyBag key not recoverable');
+end;
+
+procedure TTestPkcs12Store.TestRawKeyBagStore;
+var
+  LStore: IPkcs12Store;
+  LEmptyPass: TCryptoLibCharArray;
+begin
+  LStore := BuildPkcs12Store;
+  LEmptyPass := nil;
+  LoadStoreFromBytes(LStore, FRawKeyBagStore, LEmptyPass);
+  Check(LStore.IsKeyEntry('ONVIF_Test_Alias'), 'expected ONVIF_Test_Alias key entry');
+end;
+
+procedure TTestPkcs12Store.TestWrongPassword;
+var
+  LStore: IPkcs12Store;
+begin
+  LStore := BuildPkcs12Store;
+  try
+    LoadStoreFromBytes(LStore, FPkcs12, StringToCharArray('Goodbye World!'));
+    Fail('expected EIOCryptoLibException');
+  except
+    on E: EIOCryptoLibException do
+      ;
+  else
+    raise;
   end;
 end;
 

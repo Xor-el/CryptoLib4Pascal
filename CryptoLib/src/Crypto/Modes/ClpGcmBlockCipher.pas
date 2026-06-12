@@ -38,6 +38,7 @@ uses
   ClpTables4kGcmMultiplier,
   ClpIBulkBlockCipher,
   ClpBlockCipherBulkUtilities,
+  ClpByteUtilities,
   ClpFusedKernelTypes,
   ClpIFusedGcmKernel,
   ClpFusedKernelRegistry,
@@ -1190,12 +1191,9 @@ begin
   end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
   GcmReverse16(@FS[0], @LSRev[0]);
-  PUInt64(@LU0[0])^ := 0;
-  PUInt64(@LU0[8])^ := 0;
-  PUInt64(@LU1[0])^ := 0;
-  PUInt64(@LU1[8])^ := 0;
-  PUInt64(@LU2[0])^ := 0;
-  PUInt64(@LU2[8])^ := 0;
+  FillChar(LU0, 16, 0);
+  FillChar(LU1, 16, 0);
+  FillChar(LU2, 16, 0);
   for LB := 0 to 3 do
   begin
     case LB of
@@ -1241,22 +1239,14 @@ procedure TGcmBlockCipher.ProcessBlocks4Fused(const AInBuf: TCryptoLibByteArray;
   AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
   AForEncrypt: Boolean);
 var
-  LI, LBase: Int32;
   LPHash: PByte;
 begin
   GetNextCtrBlocks4(FWorkCtr);
-  for LBase := 0 to 3 do
-  begin
-    LI := LBase * 16;
-    PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
-      PUInt64(@FWorkCtr[LI])^;
-    PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
-      PUInt64(@FWorkCtr[LI + 8])^;
-  end;
+  TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FWorkCtr), PByte(AOutBuf) + AOutOff);
   if AForEncrypt then
-    LPHash := @AOutBuf[AOutOff]
+    LPHash := PByte(AOutBuf) + AOutOff
   else
-    LPHash := @AInBuf[AInOff];
+    LPHash := PByte(AInBuf) + AInOff;
   GhashFourShuffledBlocks(LPHash, LPHash + 16, LPHash + 32, LPHash + 48);
 end;
 
@@ -1277,12 +1267,9 @@ begin
   end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
   GcmReverse16(@FS[0], @LSRev[0]);
-  PUInt64(@LU0[0])^ := 0;
-  PUInt64(@LU0[8])^ := 0;
-  PUInt64(@LU1[0])^ := 0;
-  PUInt64(@LU1[8])^ := 0;
-  PUInt64(@LU2[0])^ := 0;
-  PUInt64(@LU2[8])^ := 0;
+  FillChar(LU0, 16, 0);
+  FillChar(LU1, 16, 0);
+  FillChar(LU2, 16, 0);
   for LB := 0 to 7 do
   begin
     LPCiph := PBase + (LB * 16);
@@ -1302,22 +1289,14 @@ procedure TGcmBlockCipher.ProcessBlocks8Fused(const AInBuf: TCryptoLibByteArray;
   AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
   AForEncrypt: Boolean);
 var
-  LI, LBase: Int32;
   LPHash: PByte;
 begin
   GetNextCtrBlocks8(FWorkCtr);
-  for LBase := 0 to 7 do
-  begin
-    LI := LBase * 16;
-    PUInt64(@AOutBuf[AOutOff + LI])^ := PUInt64(@AInBuf[AInOff + LI])^ xor
-      PUInt64(@FWorkCtr[LI])^;
-    PUInt64(@AOutBuf[AOutOff + LI + 8])^ := PUInt64(@AInBuf[AInOff + LI + 8])^ xor
-      PUInt64(@FWorkCtr[LI + 8])^;
-  end;
+  TByteUtilities.&Xor(128, PByte(AInBuf) + AInOff, PByte(FWorkCtr), PByte(AOutBuf) + AOutOff);
   if AForEncrypt then
-    LPHash := @AOutBuf[AOutOff]
+    LPHash := PByte(AOutBuf) + AOutOff
   else
-    LPHash := @AInBuf[AInOff];
+    LPHash := PByte(AInBuf) + AInOff;
   GhashEightShuffledBlocks(LPHash);
 end;
 
@@ -1347,21 +1326,21 @@ begin
 
   while ALen >= ALimit + (BlockSize * 4) * 2 do
   begin
-    LPIn := @AInBuf[AInOff];
-    LPOut := @AOutBuf[AOutOff];
-    LPKey := @LCurr[0];
+    LPIn := PByte(AInBuf) + AInOff;
+    LPOut := PByte(AOutBuf) + AOutOff;
+    LPKey := PByte(LCurr);
 
     GetNextCtrBlocks4(LNext);
 
     if AForEncrypt then
     begin
-      TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
+      TByteUtilities.&Xor(64, LPIn, LPKey, LPOut);
       GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
     end
     else
     begin
       GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
-      TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
+      TByteUtilities.&Xor(64, LPIn, LPKey, LPOut);
     end;
 
     LTmp := LCurr; LCurr := LNext; LNext := LTmp;
@@ -1370,18 +1349,18 @@ begin
     ALen := ALen - (BlockSize * 4);
   end;
 
-  LPIn := @AInBuf[AInOff];
-  LPOut := @AOutBuf[AOutOff];
-  LPKey := @LCurr[0];
+  LPIn := PByte(AInBuf) + AInOff;
+  LPOut := PByte(AOutBuf) + AOutOff;
+  LPKey := PByte(LCurr);
   if AForEncrypt then
   begin
-    TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
+    TByteUtilities.&Xor(64, LPIn, LPKey, LPOut);
     GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
   end
   else
   begin
     GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
-    TBlockCipherBulkUtilities.Xor64Bytes(LPOut, LPIn, LPKey);
+    TByteUtilities.&Xor(64, LPIn, LPKey, LPOut);
   end;
 
   AInOff := AInOff + (BlockSize * 4);
@@ -1409,21 +1388,21 @@ begin
 
   while ALen >= ALimit + (BlockSize * 8) * 2 do
   begin
-    LPIn := @AInBuf[AInOff];
-    LPOut := @AOutBuf[AOutOff];
-    LPKey := @LCurr[0];
+    LPIn := PByte(AInBuf) + AInOff;
+    LPOut := PByte(AOutBuf) + AOutOff;
+    LPKey := PByte(LCurr);
 
     GetNextCtrBlocks8(LNext);
 
     if AForEncrypt then
     begin
-      TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
+      TByteUtilities.&Xor(128, LPIn, LPKey, LPOut);
       GhashEightShuffledBlocks(LPOut);
     end
     else
     begin
       GhashEightShuffledBlocks(LPIn);
-      TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
+      TByteUtilities.&Xor(128, LPIn, LPKey, LPOut);
     end;
 
     LTmp := LCurr; LCurr := LNext; LNext := LTmp;
@@ -1432,18 +1411,18 @@ begin
     ALen := ALen - (BlockSize * 8);
   end;
 
-  LPIn := @AInBuf[AInOff];
-  LPOut := @AOutBuf[AOutOff];
-  LPKey := @LCurr[0];
+  LPIn := PByte(AInBuf) + AInOff;
+  LPOut := PByte(AOutBuf) + AOutOff;
+  LPKey := PByte(LCurr);
   if AForEncrypt then
   begin
-    TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
+    TByteUtilities.&Xor(128, LPIn, LPKey, LPOut);
     GhashEightShuffledBlocks(LPOut);
   end
   else
   begin
     GhashEightShuffledBlocks(LPIn);
-    TBlockCipherBulkUtilities.Xor128Bytes(LPOut, LPIn, LPKey);
+    TByteUtilities.&Xor(128, LPIn, LPKey, LPOut);
   end;
 
   AInOff := AInOff + (BlockSize * 8);
@@ -1528,7 +1507,6 @@ procedure TGcmBlockCipher.ProcessBlocks8FusedILP(const AInBuf: TCryptoLibByteArr
 var
   LCurrCtrs, LNextCtrs: TCryptoLibByteArray;
   LPrevCipher, LPOut, LPIn: PByte;
-  LI: Int32;
 begin
   if FGcmKernel = nil then
     Exit;
@@ -1541,10 +1519,9 @@ begin
   // Prime batch 0: regular 8-wide AES-NI into LCurrCtrs (now holds keystream),
   // XOR with plaintext/ciphertext at LPOut, defer GHASH of batch 0.
   GetNextCtrBlocks8(LCurrCtrs);
-  LPIn := @AInBuf[AInOff];
-  LPOut := @AOutBuf[AOutOff];
-  for LI := 0 to 15 do
-    PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+  LPIn := PByte(AInBuf) + AInOff;
+  LPOut := PByte(AOutBuf) + AOutOff;
+  TByteUtilities.&Xor(128, LPIn, PByte(LCurrCtrs), LPOut);
 
   if AForEncrypt then
     LPrevCipher := LPOut
@@ -1559,8 +1536,8 @@ begin
     // Fill raw (pre-AES) counter blocks; the kernel AES-encrypts them in-place.
     FillNextCtrBlocks8Raw(LNextCtrs);
 
-    LPIn := @AInBuf[AInOff];
-    LPOut := @AOutBuf[AOutOff];
+    LPIn := PByte(AInBuf) + AInOff;
+    LPOut := PByte(AOutBuf) + AOutOff;
 
     FGcmKernel.ProcessCtrGhashBatch(LPIn, LPOut, @LNextCtrs[0], LPrevCipher,
       @FS[0], FGcmKernelMinBlocks);
@@ -1578,19 +1555,17 @@ begin
   GhashEightShuffledBlocks(LPrevCipher);
 
   GetNextCtrBlocks8(LCurrCtrs);
-  LPIn := @AInBuf[AInOff];
-  LPOut := @AOutBuf[AOutOff];
+  LPIn := PByte(AInBuf) + AInOff;
+  LPOut := PByte(AOutBuf) + AOutOff;
   if AForEncrypt then
   begin
-    for LI := 0 to 15 do
-      PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+    TByteUtilities.&Xor(128, LPIn, PByte(LCurrCtrs), LPOut);
     GhashEightShuffledBlocks(LPOut);
   end
   else
   begin
     GhashEightShuffledBlocks(LPIn);
-    for LI := 0 to 15 do
-      PUInt64(LPOut + LI * 8)^ := PUInt64(LPIn + LI * 8)^ xor PUInt64(@LCurrCtrs[LI * 8])^;
+    TByteUtilities.&Xor(128, LPIn, PByte(LCurrCtrs), LPOut);
   end;
 
   AInOff := AInOff + (BlockSize * 8);

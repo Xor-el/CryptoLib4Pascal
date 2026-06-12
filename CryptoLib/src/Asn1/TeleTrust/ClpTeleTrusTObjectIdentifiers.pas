@@ -30,8 +30,6 @@ type
   strict private
 
   class var
-
-    FIsBooted: Boolean;
     FTeleTrusT, FAlgorithm, FEncryptionAlgorithm, FHashAlgorithm,
       FSignatureAlgorithm, FSignatureScheme,
       FRipeMD160, FRipeMD128, FRipeMD256,
@@ -136,9 +134,6 @@ type
       read GetBrainpoolP512R1;
     class property BrainpoolP512T1: IDerObjectIdentifier
       read GetBrainpoolP512T1;
-
-    class procedure Boot(); static;
-
   end;
 
 implementation
@@ -325,65 +320,55 @@ begin
   Result := FBrainpoolP512T1;
 end;
 
-class procedure TTeleTrusTObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    // Base OID: 1.3.36
-    FTeleTrusT := TDerObjectIdentifier.Create('1.3.36');
-    FAlgorithm := FTeleTrusT.Branch('3');
-
-    // Algorithm sub-branches
-    FEncryptionAlgorithm := FAlgorithm.Branch('1');
-    FHashAlgorithm := FAlgorithm.Branch('2');
-    FSignatureAlgorithm := FAlgorithm.Branch('3');
-    FSignatureScheme := FAlgorithm.Branch('4');
-
-    // Hash algorithms
-    FRipeMD160 := FHashAlgorithm.Branch('1');
-    FRipeMD128 := FHashAlgorithm.Branch('2');
-    FRipeMD256 := FHashAlgorithm.Branch('3');
-
-    // RSA Signatures
-    FRsaSignature := FSignatureAlgorithm.Branch('1');
-    FRsaSignatureWithRipeMD160 := FRsaSignature.Branch('2');
-    FRsaSignatureWithRipeMD128 := FRsaSignature.Branch('3');
-    FRsaSignatureWithRipeMD256 := FRsaSignature.Branch('4');
-
-    // EC Signatures
-    FECSign := FSignatureAlgorithm.Branch('2');
-    FECSignWithSha1 := FECSign.Branch('1');
-    FECSignWithRipeMD160 := FECSign.Branch('2');
-    FECSignWithMD2 := FECSign.Branch('3');
-    FECSignWithMD5 := FECSign.Branch('4');
-    FTttEcg := FECSign.Branch('5');
-    FEcStdCurvesAndGeneration := FECSign.Branch('8');
-
-    FEllipticCurve := FEcStdCurvesAndGeneration.Branch('1');
-    FVersionOne := FEllipticCurve.Branch('1');
-
-    FBrainpoolP160R1 := FVersionOne.Branch('1');
-    FBrainpoolP160T1 := FVersionOne.Branch('2');
-    FBrainpoolP192R1 := FVersionOne.Branch('3');
-    FBrainpoolP192T1 := FVersionOne.Branch('4');
-    FBrainpoolP224R1 := FVersionOne.Branch('5');
-    FBrainpoolP224T1 := FVersionOne.Branch('6');
-    FBrainpoolP256R1 := FVersionOne.Branch('7');
-    FBrainpoolP256T1 := FVersionOne.Branch('8');
-    FBrainpoolP320R1 := FVersionOne.Branch('9');
-    FBrainpoolP320T1 := FVersionOne.Branch('10');
-    FBrainpoolP384R1 := FVersionOne.Branch('11');
-    FBrainpoolP384T1 := FVersionOne.Branch('12');
-    FBrainpoolP512R1 := FVersionOne.Branch('13');
-    FBrainpoolP512T1 := FVersionOne.Branch('14');
-
-    FIsBooted := True;
-  end;
-end;
-
 class constructor TTeleTrusTObjectIdentifiers.Create;
 begin
-  Boot;
+  // Base OID: 1.3.36
+  FTeleTrusT := TDerObjectIdentifier.Create('1.3.36');
+  FAlgorithm := FTeleTrusT.Branch('3');
+
+  // Algorithm sub-branches
+  FEncryptionAlgorithm := FAlgorithm.Branch('1');
+  FHashAlgorithm := FAlgorithm.Branch('2');
+  FSignatureAlgorithm := FAlgorithm.Branch('3');
+  FSignatureScheme := FAlgorithm.Branch('4');
+
+  // Hash algorithms
+  FRipeMD160 := FHashAlgorithm.Branch('1');
+  FRipeMD128 := FHashAlgorithm.Branch('2');
+  FRipeMD256 := FHashAlgorithm.Branch('3');
+
+  // RSA Signatures
+  FRsaSignature := FSignatureAlgorithm.Branch('1');
+  FRsaSignatureWithRipeMD160 := FRsaSignature.Branch('2');
+  FRsaSignatureWithRipeMD128 := FRsaSignature.Branch('3');
+  FRsaSignatureWithRipeMD256 := FRsaSignature.Branch('4');
+
+  // EC Signatures
+  FECSign := FSignatureAlgorithm.Branch('2');
+  FECSignWithSha1 := FECSign.Branch('1');
+  FECSignWithRipeMD160 := FECSign.Branch('2');
+  FECSignWithMD2 := FECSign.Branch('3');
+  FECSignWithMD5 := FECSign.Branch('4');
+  FTttEcg := FECSign.Branch('5');
+  FEcStdCurvesAndGeneration := FECSign.Branch('8');
+
+  FEllipticCurve := FEcStdCurvesAndGeneration.Branch('1');
+  FVersionOne := FEllipticCurve.Branch('1');
+
+  FBrainpoolP160R1 := FVersionOne.Branch('1');
+  FBrainpoolP160T1 := FVersionOne.Branch('2');
+  FBrainpoolP192R1 := FVersionOne.Branch('3');
+  FBrainpoolP192T1 := FVersionOne.Branch('4');
+  FBrainpoolP224R1 := FVersionOne.Branch('5');
+  FBrainpoolP224T1 := FVersionOne.Branch('6');
+  FBrainpoolP256R1 := FVersionOne.Branch('7');
+  FBrainpoolP256T1 := FVersionOne.Branch('8');
+  FBrainpoolP320R1 := FVersionOne.Branch('9');
+  FBrainpoolP320T1 := FVersionOne.Branch('10');
+  FBrainpoolP384R1 := FVersionOne.Branch('11');
+  FBrainpoolP384T1 := FVersionOne.Branch('12');
+  FBrainpoolP512R1 := FVersionOne.Branch('13');
+  FBrainpoolP512T1 := FVersionOne.Branch('14');
 end;
 
 end.

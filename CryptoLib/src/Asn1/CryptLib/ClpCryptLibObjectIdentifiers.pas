@@ -28,7 +28,6 @@ type
   TCryptLibObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FCryptlib, FEcc, FCurvey25519: IDerObjectIdentifier;
 
     class function GetCryptlib: IDerObjectIdentifier; static; inline;
@@ -40,8 +39,6 @@ type
     class property Cryptlib: IDerObjectIdentifier read GetCryptlib;
     class property Ecc: IDerObjectIdentifier read GetEcc;
     class property Curvey25519: IDerObjectIdentifier read GetCurvey25519;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -50,19 +47,9 @@ implementation
 
 class constructor TCryptLibObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TCryptLibObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FCryptlib := TDerObjectIdentifier.Create('1.3.6.1.4.1.3029');
-    FEcc := FCryptlib.Branch('1.5');
-    FCurvey25519 := FEcc.Branch('1');
-
-    FIsBooted := True;
-  end;
+  FCryptlib := TDerObjectIdentifier.Create('1.3.6.1.4.1.3029');
+  FEcc := FCryptlib.Branch('1.5');
+  FCurvey25519 := FEcc.Branch('1');
 end;
 
 class function TCryptLibObjectIdentifiers.GetCryptlib: IDerObjectIdentifier;

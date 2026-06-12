@@ -29,7 +29,6 @@ type
   TGnuObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FGnu, FGnuPG, FNotation, FPkaAddress, FGnuRadar,
       FDigestAlgorithm, FTiger192,
       FEncryptionAlgorithm, FSerpent,
@@ -117,8 +116,6 @@ type
     class property EllipticCurve: IDerObjectIdentifier read GetEllipticCurve;
     /// <summary>1.3.6.1.4.1.11591.15.1 - Ed25519</summary>
     class property Ed25519: IDerObjectIdentifier read GetEd25519;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -127,41 +124,31 @@ implementation
 
 class constructor TGnuObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TGnuObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FGnu := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.1');
-    FGnuPG := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.2');
-    FNotation := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.2.1');
-    FPkaAddress := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.2.1.1');
-    FGnuRadar := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.3');
-    FDigestAlgorithm := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.12');
-    FTiger192 := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.12.2');
-    FEncryptionAlgorithm := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13');
-    FSerpent := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2');
-    FSerpent128Ecb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.1');
-    FSerpent128Cbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.2');
-    FSerpent128Ofb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.3');
-    FSerpent128Cfb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.4');
-    FSerpent192Ecb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.21');
-    FSerpent192Cbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.22');
-    FSerpent192Ofb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.23');
-    FSerpent192Cfb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.24');
-    FSerpent256Ecb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.41');
-    FSerpent256Cbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.42');
-    FSerpent256Ofb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.43');
-    FSerpent256Cfb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.44');
-    FCrc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.14');
-    FCrc32 := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.14.1');
-    FEllipticCurve := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.15');
-    FEd25519 := FEllipticCurve.Branch('1');
-
-    FIsBooted := True;
-  end;
+  FGnu := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.1');
+  FGnuPG := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.2');
+  FNotation := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.2.1');
+  FPkaAddress := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.2.1.1');
+  FGnuRadar := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.3');
+  FDigestAlgorithm := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.12');
+  FTiger192 := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.12.2');
+  FEncryptionAlgorithm := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13');
+  FSerpent := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2');
+  FSerpent128Ecb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.1');
+  FSerpent128Cbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.2');
+  FSerpent128Ofb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.3');
+  FSerpent128Cfb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.4');
+  FSerpent192Ecb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.21');
+  FSerpent192Cbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.22');
+  FSerpent192Ofb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.23');
+  FSerpent192Cfb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.24');
+  FSerpent256Ecb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.41');
+  FSerpent256Cbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.42');
+  FSerpent256Ofb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.43');
+  FSerpent256Cfb := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.13.2.44');
+  FCrc := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.14');
+  FCrc32 := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.14.1');
+  FEllipticCurve := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.15');
+  FEd25519 := FEllipticCurve.Branch('1');
 end;
 
 class function TGnuObjectIdentifiers.GetGnu: IDerObjectIdentifier;

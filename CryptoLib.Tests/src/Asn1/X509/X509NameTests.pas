@@ -34,6 +34,9 @@ uses
   ClpIAsn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
+  ClpAsn1Objects,
+  ClpIetfUtilities,
+  ClpX509DefaultEntryConverter,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -60,14 +63,14 @@ type
     procedure TestInvalidHexDnFailsAtConstruction;
     procedure TestCountryCodeLength;
     procedure TestDnQualifierAttributeAliases;
+    procedure TestStateOrProvinceAttributeAliases;
+    procedure TestHexEscapedUtf8Parse;
+    procedure TestEscapeRoundTrip;
+    procedure TestInvariantCaseFolding;
 
   end;
 
 implementation
-
-uses
-  ClpAsn1Objects,
-  ClpX509DefaultEntryConverter;
 
 { TX509NameTest }
 
@@ -336,6 +339,191 @@ begin
     CheckEquals('ABC123', LList[0],
       'unexpected dnQualifier value for attribute label ''' + LAliases[I] + '''');
   end;
+end;
+
+procedure TX509NameTest.TestStateOrProvinceAttributeAliases;
+var
+  LAliases: array [0 .. 3] of String;
+  LName: IX509Name;
+  LList: TCryptoLibStringArray;
+  I: Int32;
+begin
+  LAliases[0] := 'ST';
+  LAliases[1] := 'st';
+  LAliases[2] := 'S';
+  LAliases[3] := 's';
+
+  for I := Low(LAliases) to High(LAliases) do
+  begin
+    LName := TX509Name.Create('CN=Foo,' + LAliases[I] + '=California');
+    LList := LName.GetValueList(TX509Name.ST);
+    CheckEquals(Int32(1), Int32(System.Length(LList)),
+      'Alias ''' + LAliases[I] + ''' did not parse to a single stateOrProvinceName RDN');
+    CheckEquals('California', LList[0],
+      'unexpected stateOrProvinceName value for alias ''' + LAliases[I] + '''');
+  end;
+
+  LName := TX509Name.Create('CN=Foo,S=California');
+  CheckEquals('CN=Foo,ST=California', LName.ToString(),
+    '''S'' alias did not normalise to ST on output');
+end;
+
+procedure TX509NameTest.TestHexEscapedUtf8Parse;
+var
+  LSubjects: array [0 .. 3] of String;
+  LExpectedValues: array [0 .. 3] of String;
+  I: Int32;
+  LName, LReparsed: IX509Name;
+  LVal, LReVal: String;
+begin
+  LSubjects[0] := 'CN=Lu\C4\8Di\C4\87';
+  LSubjects[1] := 'CN=M\C3\B6rsky';
+  LSubjects[2] := 'CN=\E6\97\A5\E6\9C\AC';
+  LSubjects[3] := 'CN=Lu\C4\8Di\C4\87,O=Acme';
+
+  LExpectedValues[0] := 'Lučić';
+  LExpectedValues[1] := 'Mörsky';
+  LExpectedValues[2] := '日本';
+  LExpectedValues[3] := 'Lučić';
+
+  for I := Low(LSubjects) to High(LSubjects) do
+  begin
+    LName := TX509Name.Create(LSubjects[I]);
+    LVal := LName.GetValueList(TX509Name.CN)[0];
+    CheckEquals(LExpectedValues[I], LVal,
+      'unexpected CN value for ' + LSubjects[I]);
+
+    LReparsed := FromBytes(LName.GetEncoded());
+    LReVal := LReparsed.GetValueList(TX509Name.CN)[0];
+    CheckEquals(LExpectedValues[I], LReVal,
+      'round-trip lost data for ' + LSubjects[I]);
+  end;
+
+  // Lone leading byte without continuation is malformed UTF-8.
+  // TODO: Enable on FPC when TEncoding.UTF8 rejects invalid sequences (currently lenient;
+  // lone $C4 decodes as '?' instead of throwing). Delphi: expect EEncodingError.
+{$IFNDEF FPC}
+  try
+    TX509Name.Create('CN=Lu\C4');
+    Fail('malformed UTF-8 escape sequence not rejected');
+  except
+    on E: EEncodingError do
+      ; // expected
+  end;
+{$ENDIF FPC}
+end;
+
+procedure TX509NameTest.TestEscapeRoundTrip;
+const
+  CASE_COUNT = 15;
+var
+  LInputs: array [0 .. CASE_COUNT - 1] of String;
+  LValues: array [0 .. CASE_COUNT - 1] of String;
+  LStrings: array [0 .. CASE_COUNT - 1] of String;
+  LMalformed: array [0 .. 10] of String;
+  I: Int32;
+  LName, LReparsed: IX509Name;
+  LEmpty: IX509Name;
+begin
+  LInputs[0] := 'CN=a\,b';
+  LInputs[1] := 'CN=a\;b';
+  LInputs[2] := 'CN=a\<b';
+  LInputs[3] := 'CN=a\>b';
+  LInputs[4] := 'CN=a\\b';
+  LInputs[5] := 'CN=a\+b';
+  LInputs[6] := 'CN=a\=b';
+  LInputs[7] := 'CN=a\"b';
+  LInputs[8] := 'CN=a\ b';
+  LInputs[9] := 'CN="a,b"';
+  LInputs[10] := 'CN="a;b"';
+  LInputs[11] := 'CN="a+b"';
+  LInputs[12] := 'CN="a\b"';
+  LInputs[13] := 'CN=   a\+b';
+  LInputs[14] := 'CN=\C3\A9\+';
+
+  LValues[0] := 'a,b';
+  LValues[1] := 'a;b';
+  LValues[2] := 'a<b';
+  LValues[3] := 'a>b';
+  LValues[4] := 'a\b';
+  LValues[5] := 'a+b';
+  LValues[6] := 'a=b';
+  LValues[7] := 'a"b';
+  LValues[8] := 'a b';
+  LValues[9] := 'a,b';
+  LValues[10] := 'a;b';
+  LValues[11] := 'a+b';
+  LValues[12] := 'a\b';
+  LValues[13] := 'a+b';
+  LValues[14] := 'é+';
+
+  LStrings[0] := 'CN=a\,b';
+  LStrings[1] := 'CN=a\;b';
+  LStrings[2] := 'CN=a\<b';
+  LStrings[3] := 'CN=a\>b';
+  LStrings[4] := 'CN=a\\b';
+  LStrings[5] := 'CN=a\+b';
+  LStrings[6] := 'CN=a\=b';
+  LStrings[7] := 'CN=a\"b';
+  LStrings[8] := 'CN=a b';
+  LStrings[9] := 'CN=a\,b';
+  LStrings[10] := 'CN=a\;b';
+  LStrings[11] := 'CN=a\+b';
+  LStrings[12] := 'CN=a\\b';
+  LStrings[13] := 'CN=a\+b';
+  LStrings[14] := 'CN=é\+';
+
+  for I := 0 to CASE_COUNT - 1 do
+  begin
+    LName := TX509Name.Create(LInputs[I]);
+    CheckEquals(LValues[I], LName.GetValueList(TX509Name.CN)[0],
+      'unescape value for [' + LInputs[I] + ']');
+    CheckEquals(LStrings[I], LName.ToString(),
+      'ToString for [' + LInputs[I] + ']');
+
+    LReparsed := TX509Name.Create(LName.ToString());
+    CheckEquals(LValues[I], LReparsed.GetValueList(TX509Name.CN)[0],
+      'round-trip value for [' + LInputs[I] + ']');
+  end;
+
+  LEmpty := TX509Name.Create('CN=');
+  CheckEquals('', LEmpty.GetValueList(TX509Name.CN)[0], 'empty value');
+
+  LMalformed[0] := 'CN=a\Cz';
+  LMalformed[1] := 'CN=a\C,O=x';
+  LMalformed[2] := 'CN=a\C b';
+  LMalformed[3] := 'CN=ab\C';
+  LMalformed[4] := 'CN=a\C"b"';
+  LMalformed[5] := 'CN=\Cz\AB';
+  LMalformed[6] := 'CN=abc\';
+  LMalformed[7] := 'O=x,CN=abc\';
+  LMalformed[8] := 'CN="abc';
+  LMalformed[9] := 'CN="abc,O=x';
+  LMalformed[10] := 'CN="';
+
+  for I := Low(LMalformed) to High(LMalformed) do
+  begin
+    try
+      TX509Name.Create(LMalformed[I]);
+      Fail('malformed hex escape not rejected: ' + LMalformed[I]);
+    except
+      on E: EArgumentCryptoLibException do
+        ; // expected
+    end;
+  end;
+end;
+
+procedure TX509NameTest.TestInvariantCaseFolding;
+var
+  LUpper, LLower: IX509Name;
+begin
+  CheckEquals('it', TIetfUtilities.Canonicalize('IT'),
+    'Canonicalize must use invariant case folding');
+
+  LUpper := TX509Name.Create('CN=ITALY,C=IT');
+  LLower := TX509Name.Create('CN=italy,C=it');
+  CheckTrue(LUpper.Equivalent(LLower),
+    'Equivalent must use invariant case folding');
 end;
 
 initialization

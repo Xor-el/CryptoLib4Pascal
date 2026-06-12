@@ -57,7 +57,6 @@ type
       FDigestOids: TDictionary<IDerObjectIdentifier, IDerObjectIdentifier>;
       FDigestNameToOids: TDictionary<String, IDerObjectIdentifier>;
       FDigestOidToAlgIDs: TDictionary<IDerObjectIdentifier, IAlgorithmIdentifier>;
-    class procedure Boot; static;
     class procedure AddDigestAlgID(const AOid: IDerObjectIdentifier;
       AWithNullParams: Boolean); static;
     class constructor Create;
@@ -83,19 +82,6 @@ begin
 end;
 
 class constructor TDefaultDigestAlgorithmFinder.Create;
-begin
-  Boot;
-end;
-
-class destructor TDefaultDigestAlgorithmFinder.Destroy;
-begin
-  FInstance := nil;
-  FDigestOids.Free;
-  FDigestNameToOids.Free;
-  FDigestOidToAlgIDs.Free;
-end;
-
-class procedure TDefaultDigestAlgorithmFinder.Boot;
 begin
   FDigestOids := TDictionary<IDerObjectIdentifier, IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
   FDigestNameToOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
@@ -259,6 +245,14 @@ begin
   AddDigestAlgID(TTeleTrusTObjectIdentifiers.RipeMD256, True);
 
   FInstance := TDefaultDigestAlgorithmFinder.Create;
+end;
+
+class destructor TDefaultDigestAlgorithmFinder.Destroy;
+begin
+  FInstance := nil;
+  FDigestOids.Free;
+  FDigestNameToOids.Free;
+  FDigestOidToAlgIDs.Free;
 end;
 
 function TDefaultDigestAlgorithmFinder.Find(const ASignatureAlgorithm: IAlgorithmIdentifier): IAlgorithmIdentifier;

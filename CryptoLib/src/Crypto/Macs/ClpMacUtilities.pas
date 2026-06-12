@@ -69,7 +69,6 @@ type
 
     class function GetMechanism(const AAlgorithm: String): String; static;
     class function GetMacForMechanism(const AMechanism: String): IMac; static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
   public
@@ -113,17 +112,10 @@ implementation
 
 { TMacUtilities }
 
-class procedure TMacUtilities.Boot;
+class constructor TMacUtilities.Create;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
-
-  TIanaObjectIdentifiers.Boot;
-  TPkcsObjectIdentifiers.Boot;
-  TMiscObjectIdentifiers.Boot;
-  TNistObjectIdentifiers.Boot;
-  TRosstandartObjectIdentifiers.Boot;
-  TOiwObjectIdentifiers.Boot;
 
   FAlgorithmOidMap.AddOrSetValue(TIanaObjectIdentifiers.HmacMD5, 'HMAC-MD5');
   FAlgorithmOidMap.AddOrSetValue(TIanaObjectIdentifiers.HmacRipeMD160, 'HMAC-RIPEMD160');
@@ -150,11 +142,6 @@ begin
   FAlgorithmMap.AddOrSetValue('PBEWITHHMACSHA', 'PBEWITHHMACSHA1');
   FAlgorithmMap.AddOrSetValue('SIPHASH', 'SIPHASH-2-4');
   FAlgorithmOidMap.AddOrSetValue(TOiwObjectIdentifiers.IdSha1, 'PBEWITHHMACSHA1');
-end;
-
-class constructor TMacUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TMacUtilities.Destroy;

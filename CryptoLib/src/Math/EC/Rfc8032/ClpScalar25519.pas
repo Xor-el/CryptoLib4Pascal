@@ -44,7 +44,6 @@ type
     L4 = $000014DF;
   class var
     FL, FLsq: TCryptoLibUInt32Array;
-  class procedure Boot; static;
   class constructor Create;
   public
     class function CheckVar(const &AS: TCryptoLibByteArray; AN: TCryptoLibUInt32Array): Boolean; static;
@@ -65,16 +64,11 @@ implementation
 
 class constructor TScalar25519.Create;
 begin
-  Boot;
-end;
-
-class procedure TScalar25519.Boot;
-begin
   FL := TCryptoLibUInt32Array.Create($5CF5D3ED, $5812631A, $A2F79CD6, $14DEF9DE,
-    $00000000, $00000000, $00000000, $10000000);
+  $00000000, $00000000, $00000000, $10000000);
   FLsq := TCryptoLibUInt32Array.Create($AB128969, $E2EDF685, $2298A31D, $68039276,
-    $D217F5BE, $3DCEEC73, $1B7C309A, $A1B39941, $4B9EBA7D, $CB024C63, $D45EF39A,
-    $029BDF3B, $00000000, $00000000, $00000000, $01000000);
+  $D217F5BE, $3DCEEC73, $1B7C309A, $A1B39941, $4B9EBA7D, $CB024C63, $D45EF39A,
+  $029BDF3B, $00000000, $00000000, $00000000, $01000000);
 end;
 
 class function TScalar25519.CheckVar(const &AS: TCryptoLibByteArray; AN: TCryptoLibUInt32Array): Boolean;

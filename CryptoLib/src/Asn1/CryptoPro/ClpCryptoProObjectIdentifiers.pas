@@ -29,7 +29,6 @@ type
   TCryptoProObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FGostId, FGostR3411, FGostR3411Hmac, FIdGost28147_89NoneKeyWrap,
       FIdGost28147_89CryptoProKeyWrap, FGostR28147Gcfb,
       FIdGost28147_89CryptoProTestParamSet, FIdGost28147_89CryptoProAParamSet,
@@ -107,8 +106,6 @@ type
     class property GostR3410x2001CryptoProXchB: IDerObjectIdentifier read GetGostR3410x2001CryptoProXchB;
     class property GostR3410x2001CryptoProESDH: IDerObjectIdentifier read GetGostR3410x2001CryptoProESDH;
     class property GostR3410x2001DH: IDerObjectIdentifier read GetGostR3410x2001DH;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -117,46 +114,36 @@ implementation
 
 class constructor TCryptoProObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TCryptoProObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FGostId := TDerObjectIdentifier.Create('1.2.643.2.2');
-    FGostR3411 := FGostId.Branch('9');
-    FGostR3411Hmac := FGostId.Branch('10');
-    FIdGost28147_89NoneKeyWrap := FGostId.Branch('13.0');
-    FIdGost28147_89CryptoProKeyWrap := FGostId.Branch('13.1');
-    FGostR28147Gcfb := FGostId.Branch('21');
-    FIdGost28147_89CryptoProTestParamSet := FGostId.Branch('31.0');
-    FIdGost28147_89CryptoProAParamSet := FGostId.Branch('31.1');
-    FIdGost28147_89CryptoProBParamSet := FGostId.Branch('31.2');
-    FIdGost28147_89CryptoProCParamSet := FGostId.Branch('31.3');
-    FIdGost28147_89CryptoProDParamSet := FGostId.Branch('31.4');
-    FGostR3410x94 := FGostId.Branch('20');
-    FGostR3410x2001 := FGostId.Branch('19');
-    FGostR3411x94WithGostR3410x94 := FGostId.Branch('4');
-    FGostR3411x94WithGostR3410x2001 := FGostId.Branch('3');
-    FGostR3411x94CryptoProParamSet := FGostId.Branch('30.1');
-    FGostR3410x94CryptoProA := FGostId.Branch('32.2');
-    FGostR3410x94CryptoProB := FGostId.Branch('32.3');
-    FGostR3410x94CryptoProC := FGostId.Branch('32.4');
-    FGostR3410x94CryptoProD := FGostId.Branch('32.5');
-    FGostR3410x94CryptoProXchA := FGostId.Branch('33.1');
-    FGostR3410x94CryptoProXchB := FGostId.Branch('33.2');
-    FGostR3410x94CryptoProXchC := FGostId.Branch('33.3');
-    FGostR3410x2001CryptoProA := FGostId.Branch('35.1');
-    FGostR3410x2001CryptoProB := FGostId.Branch('35.2');
-    FGostR3410x2001CryptoProC := FGostId.Branch('35.3');
-    FGostR3410x2001CryptoProXchA := FGostId.Branch('36.0');
-    FGostR3410x2001CryptoProXchB := FGostId.Branch('36.1');
-    FGostR3410x2001CryptoProESDH := FGostId.Branch('96');
-    FGostR3410x2001DH := FGostId.Branch('98');
-
-    FIsBooted := True;
-  end;
+  FGostId := TDerObjectIdentifier.Create('1.2.643.2.2');
+  FGostR3411 := FGostId.Branch('9');
+  FGostR3411Hmac := FGostId.Branch('10');
+  FIdGost28147_89NoneKeyWrap := FGostId.Branch('13.0');
+  FIdGost28147_89CryptoProKeyWrap := FGostId.Branch('13.1');
+  FGostR28147Gcfb := FGostId.Branch('21');
+  FIdGost28147_89CryptoProTestParamSet := FGostId.Branch('31.0');
+  FIdGost28147_89CryptoProAParamSet := FGostId.Branch('31.1');
+  FIdGost28147_89CryptoProBParamSet := FGostId.Branch('31.2');
+  FIdGost28147_89CryptoProCParamSet := FGostId.Branch('31.3');
+  FIdGost28147_89CryptoProDParamSet := FGostId.Branch('31.4');
+  FGostR3410x94 := FGostId.Branch('20');
+  FGostR3410x2001 := FGostId.Branch('19');
+  FGostR3411x94WithGostR3410x94 := FGostId.Branch('4');
+  FGostR3411x94WithGostR3410x2001 := FGostId.Branch('3');
+  FGostR3411x94CryptoProParamSet := FGostId.Branch('30.1');
+  FGostR3410x94CryptoProA := FGostId.Branch('32.2');
+  FGostR3410x94CryptoProB := FGostId.Branch('32.3');
+  FGostR3410x94CryptoProC := FGostId.Branch('32.4');
+  FGostR3410x94CryptoProD := FGostId.Branch('32.5');
+  FGostR3410x94CryptoProXchA := FGostId.Branch('33.1');
+  FGostR3410x94CryptoProXchB := FGostId.Branch('33.2');
+  FGostR3410x94CryptoProXchC := FGostId.Branch('33.3');
+  FGostR3410x2001CryptoProA := FGostId.Branch('35.1');
+  FGostR3410x2001CryptoProB := FGostId.Branch('35.2');
+  FGostR3410x2001CryptoProC := FGostId.Branch('35.3');
+  FGostR3410x2001CryptoProXchA := FGostId.Branch('36.0');
+  FGostR3410x2001CryptoProXchB := FGostId.Branch('36.1');
+  FGostR3410x2001CryptoProESDH := FGostId.Branch('96');
+  FGostR3410x2001DH := FGostId.Branch('98');
 end;
 
 class function TCryptoProObjectIdentifiers.GetGostId: IDerObjectIdentifier;

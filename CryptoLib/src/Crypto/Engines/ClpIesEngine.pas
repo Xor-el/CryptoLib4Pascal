@@ -209,7 +209,7 @@ begin
   System.SetLength(Result, 8);
   if (AP2 <> nil) then
   begin
-    TPack.UInt64_To_BE(UInt64(System.Length(AP2) * 8), Result, 0);
+    TPack.UInt64_To_BE(UInt64(System.Length(AP2)) * UInt64(8), Result, 0);
   end;
 end;
 

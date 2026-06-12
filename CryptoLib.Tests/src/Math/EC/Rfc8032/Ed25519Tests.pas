@@ -54,11 +54,15 @@ type
     procedure CheckEd25519phVector(const ASK, APK, AM, ACTX, ASig, AText: String);
     procedure ImplTamingVector(ANumber: Int32; AExpected: Boolean; const AMsgHex, APubHex, ASigHex: String); overload;
     function ImplTamingVector(const AMsgHex, APubHex, ASigHex: String): Boolean; overload;
+    procedure ImplTestEd25519ConsistencyExpandedKey(AEd25519: TEd25519);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     procedure TestEd25519Consistency();
+    procedure TestEd25519ConsistencyExpandedKey();
+    procedure TestEd25519ConsistencyExpandedKeyBlake2b();
+    procedure TestEd25519ExpandedKeyBlake2bPinnedVector();
     procedure TestEd25519ConsistencyDefaultMatchesSHA512Digest();
     procedure TestEd25519ctxConsistency();
     procedure TestEd25519phConsistency();
@@ -306,7 +310,6 @@ end;
 procedure TTestEd25519.SetUp;
 begin
   inherited;
-  TEd25519.Precompute();
   FRandom := TSecureRandom.Create();
   FEd25519 := TEd25519.Create();
   FEd25519Blake2b := TEd25519Blake2b.Create();
@@ -369,6 +372,121 @@ begin
     LShouldNotVerify := FEd25519.Verify(LSig1, 0, LPublicPoint, LM, 0, LMLen);
     CheckFalse(LShouldNotVerify,
       Format('Ed25519 consistent verification failure #%d', [I]));
+  end;
+end;
+
+procedure TTestEd25519.ImplTestEd25519ConsistencyExpandedKey(AEd25519: TEd25519);
+var
+  LExp: TEd25519.TExpandedKey;
+  LXk, LPk, LPk2, LM, LSig1, LSig2: TBytes;
+  LPublicPoint: TEd25519.IPublicPoint;
+  I, LMLen: Int32;
+  LShouldVerify, LShouldNotVerify: Boolean;
+begin
+  System.SetLength(LXk, TEd25519.TExpandedKey.ExpandedKeySize);
+  System.SetLength(LPk, TEd25519.PublicKeySize);
+  System.SetLength(LPk2, TEd25519.PublicKeySize);
+  System.SetLength(LM, 255);
+  System.SetLength(LSig1, TEd25519.SignatureSize);
+  System.SetLength(LSig2, TEd25519.SignatureSize);
+
+  FRandom.NextBytes(LM);
+
+  LExp := AEd25519.CreateExpandedKey;
+  try
+    for I := 0 to 9 do
+    begin
+      LExp.GeneratePrivateKey(FRandom, LXk, 0);
+      LPublicPoint := LExp.GeneratePublicKey(LXk, 0);
+      TEd25519.EncodePublicPoint(LPublicPoint, LPk, 0);
+
+      LExp.GeneratePublicKey(LXk, 0, LPk2, 0);
+      CheckTrue(AreEqual(LPk, LPk2),
+        Format('Ed25519.ExpandedKey consistent generation #%d', [I]));
+
+      LMLen := FRandom.NextInt32() and 255;
+
+      LExp.Sign(LXk, 0, LM, 0, LMLen, LSig1, 0);
+      LExp.Sign(LXk, 0, LPk, 0, LM, 0, LMLen, LSig2, 0);
+
+      CheckTrue(AreEqual(LSig1, LSig2),
+        Format('Ed25519.ExpandedKey consistent signatures #%d', [I]));
+
+      LShouldVerify := AEd25519.Verify(LSig1, 0, LPk, 0, LM, 0, LMLen);
+      CheckTrue(LShouldVerify,
+        Format('Ed25519.ExpandedKey consistent sign/verify #%d', [I]));
+
+      LShouldVerify := AEd25519.Verify(LSig1, 0, LPublicPoint, LM, 0, LMLen);
+      CheckTrue(LShouldVerify,
+        Format('Ed25519.ExpandedKey consistent sign/verify #%d', [I]));
+
+      LSig1[TEd25519.PublicKeySize - 1] := Byte(LSig1[TEd25519.PublicKeySize - 1]
+        xor $80);
+
+      LShouldNotVerify := AEd25519.Verify(LSig1, 0, LPk, 0, LM, 0, LMLen);
+      CheckFalse(LShouldNotVerify,
+        Format('Ed25519.ExpandedKey consistent verification failure #%d', [I]));
+
+      LShouldNotVerify := AEd25519.Verify(LSig1, 0, LPublicPoint, LM, 0, LMLen);
+      CheckFalse(LShouldNotVerify,
+        Format('Ed25519.ExpandedKey consistent verification failure #%d', [I]));
+    end;
+  finally
+    LExp.Free;
+  end;
+end;
+
+procedure TTestEd25519.TestEd25519ConsistencyExpandedKey;
+begin
+  ImplTestEd25519ConsistencyExpandedKey(FEd25519);
+end;
+
+procedure TTestEd25519.TestEd25519ConsistencyExpandedKeyBlake2b;
+begin
+  ImplTestEd25519ConsistencyExpandedKey(FEd25519Blake2b);
+end;
+
+procedure TTestEd25519.TestEd25519ExpandedKeyBlake2bPinnedVector;
+const
+  SkHex =
+    '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60';
+  XkHex =
+    '677103fd64eff7f3ba7f5f94eae42201cb36e62f40a6757157b1fb9c36dfb6fd' +
+    '181df9c90a9d265dba1b664f77644954ae8fe8bbd8d91a2da1f6ee3b23b0f41f';
+  PkHex =
+    '78e65bf30f893d32fc57ef051c341bdede242544fc2a2112f0fa2c7afdebc02f';
+  SigHex =
+    '99a523bd4616c8161144d6a99d3c32400cb4a326f4d79e307340f6afa11750a' +
+    '0085d7d84626bc9e4b153fc0e396d15ce44c39bae4533804db1fe5b52f2b1b805';
+var
+  LExp: TEd25519.TExpandedKey;
+  LSk, LXk, LXk2, LPk, LM, LSigExpanded, LSigSeed: TBytes;
+begin
+  LSk := DecodeHex(SkHex);
+  LXk := DecodeHex(XkHex);
+  LPk := DecodeHex(PkHex);
+  LM := DecodeHex('');
+  LSigSeed := DecodeHex(SigHex);
+
+  LExp := FEd25519Blake2b.CreateExpandedKey;
+  try
+    System.SetLength(LXk2, TEd25519.TExpandedKey.ExpandedKeySize);
+    LExp.ExpandPrivateKey(LSk, 0, LXk2, 0);
+    CheckTrue(AreEqual(LXk, LXk2), 'Blake2b ExpandedKey expand must match BLAKE2b-512(seed)');
+
+    System.SetLength(LSigExpanded, TEd25519.SignatureSize);
+    LExp.Sign(LXk, 0, LM, 0, System.Length(LM), LSigExpanded, 0);
+    CheckTrue(AreEqual(LSigSeed, LSigExpanded),
+      'Blake2b ExpandedKey sign must match seed-path signature');
+
+    FEd25519Blake2b.Sign(LSk, 0, LM, 0, System.Length(LM), LSigSeed, 0);
+    CheckTrue(AreEqual(LSigSeed, LSigExpanded),
+      'Blake2b seed-path sign must match ExpandedKey signature');
+
+    CheckTrue(FEd25519Blake2b.Verify(LSigExpanded, 0, LPk, 0, LM, 0, System.Length(LM)),
+      'Blake2b ExpandedKey signature must verify');
+  finally
+    LExp.Free;
   end;
 end;
 

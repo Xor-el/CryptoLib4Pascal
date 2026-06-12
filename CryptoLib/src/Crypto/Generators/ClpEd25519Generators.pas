@@ -31,13 +31,20 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator;
 
 type
+  /// <summary>
+  /// Key-pair generator for Ed25519 (RFC 8032). Only the <see cref="ISecureRandom"/> from the supplied
+  /// key-generation parameters is used; the 32-byte seed is drawn directly from it.
+  /// </summary>
   TEd25519KeyPairGenerator = class(TInterfacedObject, IEd25519KeyPairGenerator,
     IAsymmetricCipherKeyPairGenerator)
   strict private
     FRandom: ISecureRandom;
   public
+    /// <summary>Construct an uninitialised generator; call <see cref="Init"/> before use.</summary>
     constructor Create();
+    /// <summary>Capture the <see cref="ISecureRandom"/> that will source the seed.</summary>
     procedure Init(const AParameters: IKeyGenerationParameters);
+    /// <summary>Generate a fresh Ed25519 key pair.</summary>
     function GenerateKeyPair(): IAsymmetricCipherKeyPair;
   end;
 

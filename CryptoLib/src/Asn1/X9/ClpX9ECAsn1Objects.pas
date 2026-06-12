@@ -316,6 +316,7 @@ type
     /// Get tagged X9ECParameters.
     /// </summary>
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IX9ECParameters; static;
+    class function FromSequence(const ASeq: IAsn1Sequence): IX9ECParameters; static;
 
     constructor Create(const ACurve: IECCurve; const AG: IX9ECPoint;
       const AN: TBigInteger); overload;
@@ -720,7 +721,7 @@ begin
   if Supports(AObj, IX9ECParameters, Result) then
     Exit;
 
-  Result := TX9ECParameters.Create(TAsn1Sequence.GetInstance(AObj));
+  Result := FromSequence(TAsn1Sequence.GetInstance(AObj));
 end;
 
 class function TX9ECParameters.GetInstance(const AObj: IAsn1Convertible): IX9ECParameters;
@@ -734,18 +735,18 @@ begin
   if Supports(AObj, IX9ECParameters, Result) then
     Exit;
 
-  Result := TX9ECParameters.Create(TAsn1Sequence.GetInstance(AObj));
+  Result := FromSequence(TAsn1Sequence.GetInstance(AObj));
 end;
 
 class function TX9ECParameters.GetInstance(const AEncoded: TCryptoLibByteArray): IX9ECParameters;
 begin
-  Result := TX9ECParameters.Create(TAsn1Sequence.GetInstance(AEncoded));
+  Result := FromSequence(TAsn1Sequence.GetInstance(AEncoded));
 end;
 
 class function TX9ECParameters.GetInstance(const AObj: IAsn1TaggedObject;
   AExplicitly: Boolean): IX9ECParameters;
 begin
-  Result := TX9ECParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+  Result := FromSequence(TAsn1Sequence.GetInstance(AObj, AExplicitly));
 end;
 
 class function TX9ECParameters.GetOptional(const AElement: IAsn1Encodable): IX9ECParameters;
@@ -760,7 +761,7 @@ begin
 
   LSequence := TAsn1Sequence.GetOptional(AElement);
   if LSequence <> nil then
-    Result := TX9ECParameters.Create(LSequence)
+    Result := FromSequence(LSequence)
   else
     Result := nil;
 end;
@@ -768,7 +769,7 @@ end;
 class function TX9ECParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): IX9ECParameters;
 begin
-  Result := TX9ECParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+  Result := FromSequence(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
 class function TX9ECParameters.ReadOptionalCofactor(AElement: IAsn1Encodable): TBigInteger;
@@ -780,6 +781,11 @@ begin
     Result := LDerInt.Value
   else
     Result := TBigInteger.GetDefault;
+end;
+
+class function TX9ECParameters.FromSequence(const ASeq: IAsn1Sequence): IX9ECParameters;
+begin
+  Result := TX9ECParameters.Create(ASeq);
 end;
 
 constructor TX9ECParameters.Create(const ASeq: IAsn1Sequence);

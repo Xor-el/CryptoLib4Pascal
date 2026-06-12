@@ -30,7 +30,6 @@ type
   TSecObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FCerticom, FEllipticCurve, FSecT163k1, FSecT163r1, FSecT239k1, FSecT113r1, FSecT113r2,
       FSecP112r1, FSecP112r2, FSecP160r1, FSecP160k1, FSecP256k1, FSecT163r2,
       FSecT283k1, FSecT283r1, FSecT131r1, FSecT131r2, FSecT193r1, FSecT193r2,
@@ -198,8 +197,6 @@ type
     class property MqvFullSha256KdfScheme: IDerObjectIdentifier read GetMqvFullSha256KdfScheme;
     class property MqvFullSha384KdfScheme: IDerObjectIdentifier read GetMqvFullSha384KdfScheme;
     class property MqvFullSha512KdfScheme: IDerObjectIdentifier read GetMqvFullSha512KdfScheme;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -208,98 +205,86 @@ implementation
 
 class constructor TSecObjectIdentifiers.Create;
 begin
-  Boot;
-end;
+  FCerticom := TDerObjectIdentifier.Create('1.3.132');
+  FEllipticCurve := FCerticom.Branch('0');
+  FSecT163k1 := FEllipticCurve.Branch('1');
+  FSecT163r1 := FEllipticCurve.Branch('2');
+  FSecT239k1 := FEllipticCurve.Branch('3');
+  FSecT113r1 := FEllipticCurve.Branch('4');
+  FSecT113r2 := FEllipticCurve.Branch('5');
+  FSecP112r1 := FEllipticCurve.Branch('6');
+  FSecP112r2 := FEllipticCurve.Branch('7');
+  FSecP160r1 := FEllipticCurve.Branch('8');
+  FSecP160k1 := FEllipticCurve.Branch('9');
+  FSecP256k1 := FEllipticCurve.Branch('10');
+  FSecT163r2 := FEllipticCurve.Branch('15');
+  FSecT283k1 := FEllipticCurve.Branch('16');
+  FSecT283r1 := FEllipticCurve.Branch('17');
+  FSecT131r1 := FEllipticCurve.Branch('22');
+  FSecT131r2 := FEllipticCurve.Branch('23');
+  FSecT193r1 := FEllipticCurve.Branch('24');
+  FSecT193r2 := FEllipticCurve.Branch('25');
+  FSecT233k1 := FEllipticCurve.Branch('26');
+  FSecT233r1 := FEllipticCurve.Branch('27');
+  FSecP128r1 := FEllipticCurve.Branch('28');
+  FSecP128r2 := FEllipticCurve.Branch('29');
+  FSecP160r2 := FEllipticCurve.Branch('30');
+  FSecP192k1 := FEllipticCurve.Branch('31');
+  FSecP224k1 := FEllipticCurve.Branch('32');
+  FSecP224r1 := FEllipticCurve.Branch('33');
+  FSecP384r1 := FEllipticCurve.Branch('34');
+  FSecP521r1 := FEllipticCurve.Branch('35');
+  FSecT409k1 := FEllipticCurve.Branch('36');
+  FSecT409r1 := FEllipticCurve.Branch('37');
+  FSecT571k1 := FEllipticCurve.Branch('38');
+  FSecT571r1 := FEllipticCurve.Branch('39');
 
-class procedure TSecObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    TX9ObjectIdentifiers.Boot;
+  FSecP192r1 := TX9ObjectIdentifiers.Prime192v1;
+  FSecP256r1 := TX9ObjectIdentifiers.Prime256v1;
 
-    FCerticom := TDerObjectIdentifier.Create('1.3.132');
-    FEllipticCurve := FCerticom.Branch('0');
-    FSecT163k1 := FEllipticCurve.Branch('1');
-    FSecT163r1 := FEllipticCurve.Branch('2');
-    FSecT239k1 := FEllipticCurve.Branch('3');
-    FSecT113r1 := FEllipticCurve.Branch('4');
-    FSecT113r2 := FEllipticCurve.Branch('5');
-    FSecP112r1 := FEllipticCurve.Branch('6');
-    FSecP112r2 := FEllipticCurve.Branch('7');
-    FSecP160r1 := FEllipticCurve.Branch('8');
-    FSecP160k1 := FEllipticCurve.Branch('9');
-    FSecP256k1 := FEllipticCurve.Branch('10');
-    FSecT163r2 := FEllipticCurve.Branch('15');
-    FSecT283k1 := FEllipticCurve.Branch('16');
-    FSecT283r1 := FEllipticCurve.Branch('17');
-    FSecT131r1 := FEllipticCurve.Branch('22');
-    FSecT131r2 := FEllipticCurve.Branch('23');
-    FSecT193r1 := FEllipticCurve.Branch('24');
-    FSecT193r2 := FEllipticCurve.Branch('25');
-    FSecT233k1 := FEllipticCurve.Branch('26');
-    FSecT233r1 := FEllipticCurve.Branch('27');
-    FSecP128r1 := FEllipticCurve.Branch('28');
-    FSecP128r2 := FEllipticCurve.Branch('29');
-    FSecP160r2 := FEllipticCurve.Branch('30');
-    FSecP192k1 := FEllipticCurve.Branch('31');
-    FSecP224k1 := FEllipticCurve.Branch('32');
-    FSecP224r1 := FEllipticCurve.Branch('33');
-    FSecP384r1 := FEllipticCurve.Branch('34');
-    FSecP521r1 := FEllipticCurve.Branch('35');
-    FSecT409k1 := FEllipticCurve.Branch('36');
-    FSecT409r1 := FEllipticCurve.Branch('37');
-    FSecT571k1 := FEllipticCurve.Branch('38');
-    FSecT571r1 := FEllipticCurve.Branch('39');
+  FSecgScheme := FCerticom.Branch('1');
 
-    FSecP192r1 := TX9ObjectIdentifiers.Prime192v1;
-    FSecP256r1 := TX9ObjectIdentifiers.Prime256v1;
+  FDhSinglePassCofactorDHRecommendedKdf := FSecgScheme.Branch('1');
+  FDhSinglePassCofactorDHSpecifiedKdf := FSecgScheme.Branch('2');
+  FMqvSinglePassRecommendedKdf := FSecgScheme.Branch('3');
+  FMqvSinglePassSpecifiedKdf := FSecgScheme.Branch('4');
+  FMqvFullRecommendedKdf := FSecgScheme.Branch('5');
+  FMqvFullSpecifiedKdf := FSecgScheme.Branch('6');
+  FEciesRecommendedParameters := FSecgScheme.Branch('7');
+  FEciesSpecifiedParameters := FSecgScheme.Branch('8');
 
-    FSecgScheme := FCerticom.Branch('1');
+  FDhSinglePassStdDHKdfSchemes := FSecgScheme.Branch('11');
+  FDhSinglePassStdDHSha224KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('0');
+  FDhSinglePassStdDHSha256KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('1');
+  FDhSinglePassStdDHSha384KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('2');
+  FDhSinglePassStdDHSha512KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('3');
 
-    FDhSinglePassCofactorDHRecommendedKdf := FSecgScheme.Branch('1');
-    FDhSinglePassCofactorDHSpecifiedKdf := FSecgScheme.Branch('2');
-    FMqvSinglePassRecommendedKdf := FSecgScheme.Branch('3');
-    FMqvSinglePassSpecifiedKdf := FSecgScheme.Branch('4');
-    FMqvFullRecommendedKdf := FSecgScheme.Branch('5');
-    FMqvFullSpecifiedKdf := FSecgScheme.Branch('6');
-    FEciesRecommendedParameters := FSecgScheme.Branch('7');
-    FEciesSpecifiedParameters := FSecgScheme.Branch('8');
+  FEcdh := FSecgScheme.Branch('12');
+  FEcmqv := FSecgScheme.Branch('13');
 
-    FDhSinglePassStdDHKdfSchemes := FSecgScheme.Branch('11');
-    FDhSinglePassStdDHSha224KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('0');
-    FDhSinglePassStdDHSha256KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('1');
-    FDhSinglePassStdDHSha384KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('2');
-    FDhSinglePassStdDHSha512KdfScheme := FDhSinglePassStdDHKdfSchemes.Branch('3');
+  FDhSinglePassCofactorDHKdfSchemes := FSecgScheme.Branch('14');
+  FDhSinglePassCofactorDHSha224KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('0');
+  FDhSinglePassCofactorDHSha256KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('1');
+  FDhSinglePassCofactorDHSha384KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('2');
+  FDhSinglePassCofactorDHSha512KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('3');
 
-    FEcdh := FSecgScheme.Branch('12');
-    FEcmqv := FSecgScheme.Branch('13');
+  FMqvSinglePassKdfSchemes := FSecgScheme.Branch('15');
+  FMqvSinglePassSha224KdfScheme := FMqvSinglePassKdfSchemes.Branch('0');
+  FMqvSinglePassSha256KdfScheme := FMqvSinglePassKdfSchemes.Branch('1');
+  FMqvSinglePassSha384KdfScheme := FMqvSinglePassKdfSchemes.Branch('2');
+  FMqvSinglePassSha512KdfScheme := FMqvSinglePassKdfSchemes.Branch('3');
 
-    FDhSinglePassCofactorDHKdfSchemes := FSecgScheme.Branch('14');
-    FDhSinglePassCofactorDHSha224KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('0');
-    FDhSinglePassCofactorDHSha256KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('1');
-    FDhSinglePassCofactorDHSha384KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('2');
-    FDhSinglePassCofactorDHSha512KdfScheme := FDhSinglePassCofactorDHKdfSchemes.Branch('3');
+  FMqvFullKdfSchemes := FSecgScheme.Branch('16');
+  FMqvFullSha224KdfScheme := FMqvFullKdfSchemes.Branch('0');
+  FMqvFullSha256KdfScheme := FMqvFullKdfSchemes.Branch('1');
+  FMqvFullSha384KdfScheme := FMqvFullKdfSchemes.Branch('2');
+  FMqvFullSha512KdfScheme := FMqvFullKdfSchemes.Branch('3');
 
-    FMqvSinglePassKdfSchemes := FSecgScheme.Branch('15');
-    FMqvSinglePassSha224KdfScheme := FMqvSinglePassKdfSchemes.Branch('0');
-    FMqvSinglePassSha256KdfScheme := FMqvSinglePassKdfSchemes.Branch('1');
-    FMqvSinglePassSha384KdfScheme := FMqvSinglePassKdfSchemes.Branch('2');
-    FMqvSinglePassSha512KdfScheme := FMqvSinglePassKdfSchemes.Branch('3');
-
-    FMqvFullKdfSchemes := FSecgScheme.Branch('16');
-    FMqvFullSha224KdfScheme := FMqvFullKdfSchemes.Branch('0');
-    FMqvFullSha256KdfScheme := FMqvFullKdfSchemes.Branch('1');
-    FMqvFullSha384KdfScheme := FMqvFullKdfSchemes.Branch('2');
-    FMqvFullSha512KdfScheme := FMqvFullKdfSchemes.Branch('3');
-
-    FKdfAlgorithms := FSecgScheme.Branch('17');
-    FX963Kdf := FKdfAlgorithms.Branch('0');
-    FNistConcatenationKdf := FKdfAlgorithms.Branch('1');
-    FTlsKdf := FKdfAlgorithms.Branch('2');
-    FIkev2Kdf := FKdfAlgorithms.Branch('3');
-
-    FIsBooted := True;
-  end;
+  FKdfAlgorithms := FSecgScheme.Branch('17');
+  FX963Kdf := FKdfAlgorithms.Branch('0');
+  FNistConcatenationKdf := FKdfAlgorithms.Branch('1');
+  FTlsKdf := FKdfAlgorithms.Branch('2');
+  FIkev2Kdf := FKdfAlgorithms.Branch('3');
 end;
 
 class function TSecObjectIdentifiers.GetCerticom: IDerObjectIdentifier;

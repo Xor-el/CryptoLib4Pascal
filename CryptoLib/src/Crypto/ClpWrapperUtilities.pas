@@ -69,8 +69,6 @@ type
 
   class var
     FAlgorithms: TDictionary<String, String>;
-
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -87,19 +85,7 @@ implementation
 
 class constructor TWrapperUtilities.Create;
 begin
-  Boot;
-end;
-
-class destructor TWrapperUtilities.Destroy;
-begin
-  FAlgorithms.Free;
-end;
-
-class procedure TWrapperUtilities.Boot;
-begin
   FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-
-  TNistObjectIdentifiers.Boot;
 
   FAlgorithms.AddOrSetValue('AESKW', 'AESWRAP');
   FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdAes128Wrap.Id, 'AESWRAP');
@@ -111,6 +97,11 @@ begin
   FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdAes192WrapPad.Id, 'AESWRAPPAD');
   FAlgorithms.AddOrSetValue(TNistObjectIdentifiers.IdAes256WrapPad.Id, 'AESWRAPPAD');
   FAlgorithms.AddOrSetValue('AESRFC5649WRAP', 'AESWRAPPAD');
+end;
+
+class destructor TWrapperUtilities.Destroy;
+begin
+  FAlgorithms.Free;
 end;
 
 class function TWrapperUtilities.GetWrapper(

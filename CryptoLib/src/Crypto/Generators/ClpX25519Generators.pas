@@ -31,12 +31,18 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator;
 
 type
+  /// <summary>
+  /// Key-pair generator for X25519 (RFC 7748). Only the <see cref="ISecureRandom"/> from the supplied
+  /// key-generation parameters is used; the 32-byte clamped scalar is drawn directly from it.
+  /// </summary>
   TX25519KeyPairGenerator = class sealed(TInterfacedObject,
     IX25519KeyPairGenerator, IAsymmetricCipherKeyPairGenerator)
   strict private
     FRandom: ISecureRandom;
   public
+    /// <summary>Capture the <see cref="ISecureRandom"/> that will source the scalar.</summary>
     procedure Init(const AParameters: IKeyGenerationParameters);
+    /// <summary>Generate a fresh X25519 key pair.</summary>
     function GenerateKeyPair(): IAsymmetricCipherKeyPair;
   end;
 

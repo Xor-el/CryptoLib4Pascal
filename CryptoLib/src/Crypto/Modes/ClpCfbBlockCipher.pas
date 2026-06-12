@@ -31,6 +31,7 @@ uses
   ClpIParametersWithIV,
   ClpArrayUtilities,
   ClpBlockCipherBulkUtilities,
+  ClpByteUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -304,18 +305,14 @@ begin
   LK := 0;
   while LK + 128 <= LTotalBytes do
   begin
-    TBlockCipherBulkUtilities.Xor128Bytes(
-      PByte(@AOutBuf[AOutOff + LK]),
-      PByte(@LScratch[LK]),
-      PByte(@AInBuf[AInOff + LK]));
+    TByteUtilities.&Xor(128, PByte(LScratch) + LK, PByte(AInBuf) + AInOff + LK,
+      PByte(AOutBuf) + AOutOff + LK);
     LK := LK + 128;
   end;
   while LK + 64 <= LTotalBytes do
   begin
-    TBlockCipherBulkUtilities.Xor64Bytes(
-      PByte(@AOutBuf[AOutOff + LK]),
-      PByte(@LScratch[LK]),
-      PByte(@AInBuf[AInOff + LK]));
+    TByteUtilities.&Xor(64, PByte(LScratch) + LK, PByte(AInBuf) + AInOff + LK,
+      PByte(AOutBuf) + AOutOff + LK);
     LK := LK + 64;
   end;
   for LI := LK to LTotalBytes - 1 do

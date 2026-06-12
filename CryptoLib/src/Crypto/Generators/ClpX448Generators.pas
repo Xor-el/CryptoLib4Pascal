@@ -31,12 +31,18 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator;
 
 type
+  /// <summary>
+  /// Key-pair generator for X448 (RFC 7748). Only the <see cref="ISecureRandom"/> from the supplied
+  /// key-generation parameters is used; the 56-byte clamped scalar is drawn directly from it.
+  /// </summary>
   TX448KeyPairGenerator = class sealed(TInterfacedObject,
     IX448KeyPairGenerator, IAsymmetricCipherKeyPairGenerator)
   strict private
     FRandom: ISecureRandom;
   public
+    /// <summary>Capture the <see cref="ISecureRandom"/> that will source the scalar.</summary>
     procedure Init(const AParameters: IKeyGenerationParameters);
+    /// <summary>Generate a fresh X448 key pair.</summary>
     function GenerateKeyPair(): IAsymmetricCipherKeyPair;
   end;
 

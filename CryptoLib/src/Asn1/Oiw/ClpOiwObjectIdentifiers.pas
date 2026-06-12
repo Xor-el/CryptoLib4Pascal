@@ -28,7 +28,6 @@ type
   TOiwObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FMd4WithRsa, FMd5WithRsa, FMd4WithRsaEncryption, FDesEcb, FDesCbc, FDesOfb,
       FDesCfb, FDesEde, FIdSha1, FDsaWithSha1, FSha1WithRsa: IDerObjectIdentifier;
 
@@ -58,8 +57,6 @@ type
     class property IdSha1: IDerObjectIdentifier read GetIdSha1;
     class property DsaWithSha1: IDerObjectIdentifier read GetDsaWithSha1;
     class property Sha1WithRsa: IDerObjectIdentifier read GetSha1WithRsa;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -68,27 +65,17 @@ implementation
 
 class constructor TOiwObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TOiwObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FMd4WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.2');
-    FMd5WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.3');
-    FMd4WithRsaEncryption := TDerObjectIdentifier.Create('1.3.14.3.2.4');
-    FDesEcb := TDerObjectIdentifier.Create('1.3.14.3.2.6');
-    FDesCbc := TDerObjectIdentifier.Create('1.3.14.3.2.7');
-    FDesOfb := TDerObjectIdentifier.Create('1.3.14.3.2.8');
-    FDesCfb := TDerObjectIdentifier.Create('1.3.14.3.2.9');
-    FDesEde := TDerObjectIdentifier.Create('1.3.14.3.2.17');
-    FIdSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.26');
-    FDsaWithSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.27');
-    FSha1WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.29');
-
-    FIsBooted := True;
-  end;
+  FMd4WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.2');
+  FMd5WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.3');
+  FMd4WithRsaEncryption := TDerObjectIdentifier.Create('1.3.14.3.2.4');
+  FDesEcb := TDerObjectIdentifier.Create('1.3.14.3.2.6');
+  FDesCbc := TDerObjectIdentifier.Create('1.3.14.3.2.7');
+  FDesOfb := TDerObjectIdentifier.Create('1.3.14.3.2.8');
+  FDesCfb := TDerObjectIdentifier.Create('1.3.14.3.2.9');
+  FDesEde := TDerObjectIdentifier.Create('1.3.14.3.2.17');
+  FIdSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.26');
+  FDsaWithSha1 := TDerObjectIdentifier.Create('1.3.14.3.2.27');
+  FSha1WithRsa := TDerObjectIdentifier.Create('1.3.14.3.2.29');
 end;
 
 class function TOiwObjectIdentifiers.GetDesCbc: IDerObjectIdentifier;

@@ -28,7 +28,6 @@ type
   TBcObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FBc, FBcPbe,
       FBcPbeSha1, FBcPbeSha256, FBcPbeSha384, FBcPbeSha512, FBcPbeSha224,
       FBcPbeSha1Pkcs5, FBcPbeSha1Pkcs12,
@@ -91,8 +90,6 @@ type
     class property BcPbeSha256Pkcs12Aes192Cbc: IDerObjectIdentifier read GetBcPbeSha256Pkcs12Aes192Cbc;
     /// <summary>1.3.6.1.4.1.22554.1.1.2.2.42</summary>
     class property BcPbeSha256Pkcs12Aes256Cbc: IDerObjectIdentifier read GetBcPbeSha256Pkcs12Aes256Cbc;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -101,33 +98,23 @@ implementation
 
 class constructor TBcObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TBcObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FBc := TDerObjectIdentifier.Create('1.3.6.1.4.1.22554');
-    FBcPbe := FBc.Branch('1');
-    FBcPbeSha1 := FBcPbe.Branch('1');
-    FBcPbeSha256 := FBcPbe.Branch('2.1');
-    FBcPbeSha384 := FBcPbe.Branch('2.2');
-    FBcPbeSha512 := FBcPbe.Branch('2.3');
-    FBcPbeSha224 := FBcPbe.Branch('2.4');
-    FBcPbeSha1Pkcs5 := FBcPbeSha1.Branch('1');
-    FBcPbeSha1Pkcs12 := FBcPbeSha1.Branch('2');
-    FBcPbeSha256Pkcs5 := FBcPbeSha256.Branch('1');
-    FBcPbeSha256Pkcs12 := FBcPbeSha256.Branch('2');
-    FBcPbeSha1Pkcs12Aes128Cbc := FBcPbeSha1Pkcs12.Branch('1.2');
-    FBcPbeSha1Pkcs12Aes192Cbc := FBcPbeSha1Pkcs12.Branch('1.22');
-    FBcPbeSha1Pkcs12Aes256Cbc := FBcPbeSha1Pkcs12.Branch('1.42');
-    FBcPbeSha256Pkcs12Aes128Cbc := FBcPbeSha256Pkcs12.Branch('1.2');
-    FBcPbeSha256Pkcs12Aes192Cbc := FBcPbeSha256Pkcs12.Branch('1.22');
-    FBcPbeSha256Pkcs12Aes256Cbc := FBcPbeSha256Pkcs12.Branch('1.42');
-
-    FIsBooted := True;
-  end;
+  FBc := TDerObjectIdentifier.Create('1.3.6.1.4.1.22554');
+  FBcPbe := FBc.Branch('1');
+  FBcPbeSha1 := FBcPbe.Branch('1');
+  FBcPbeSha256 := FBcPbe.Branch('2.1');
+  FBcPbeSha384 := FBcPbe.Branch('2.2');
+  FBcPbeSha512 := FBcPbe.Branch('2.3');
+  FBcPbeSha224 := FBcPbe.Branch('2.4');
+  FBcPbeSha1Pkcs5 := FBcPbeSha1.Branch('1');
+  FBcPbeSha1Pkcs12 := FBcPbeSha1.Branch('2');
+  FBcPbeSha256Pkcs5 := FBcPbeSha256.Branch('1');
+  FBcPbeSha256Pkcs12 := FBcPbeSha256.Branch('2');
+  FBcPbeSha1Pkcs12Aes128Cbc := FBcPbeSha1Pkcs12.Branch('1.2');
+  FBcPbeSha1Pkcs12Aes192Cbc := FBcPbeSha1Pkcs12.Branch('1.22');
+  FBcPbeSha1Pkcs12Aes256Cbc := FBcPbeSha1Pkcs12.Branch('1.42');
+  FBcPbeSha256Pkcs12Aes128Cbc := FBcPbeSha256Pkcs12.Branch('1.2');
+  FBcPbeSha256Pkcs12Aes192Cbc := FBcPbeSha256Pkcs12.Branch('1.22');
+  FBcPbeSha256Pkcs12Aes256Cbc := FBcPbeSha256Pkcs12.Branch('1.42');
 end;
 
 class function TBcObjectIdentifiers.GetBc: IDerObjectIdentifier;

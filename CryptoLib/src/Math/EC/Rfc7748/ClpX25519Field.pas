@@ -40,7 +40,6 @@ type
   class var
     FP32: TCryptoLibUInt32Array;
     FRootNegOne: TCryptoLibInt32Array;
-  class procedure Boot; static;
   class constructor Create;
   class procedure Decode128(const AX: TCryptoLibUInt32Array; AXOff: Int32;
     const AZ: TCryptoLibInt32Array; AZOff: Int32); overload; static;
@@ -117,15 +116,10 @@ implementation
 
 class constructor TX25519Field.Create;
 begin
-  Boot;
-end;
-
-class procedure TX25519Field.Boot;
-begin
   FP32 := TCryptoLibUInt32Array.Create($FFFFFFED, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
+  $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
   FRootNegOne := TCryptoLibInt32Array.Create(-$01F15F50, -$0079362D, $00478C4F, $0035697F,
-    $005E8630, $01FBD7A7, -$00BFD9B1, -$000F4D4B, $00027E0F, $00570649);
+  $005E8630, $01FBD7A7, -$00BFD9B1, -$000F4D4B, $00027E0F, $00570649);
 end;
 
 class procedure TX25519Field.Add(const AX, AY, AZ: TCryptoLibInt32Array);

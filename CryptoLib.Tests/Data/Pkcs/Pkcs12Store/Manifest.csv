@@ -13,3 +13,4 @@ SentrixSoft,Pkcs/Pkcs12Store/Stores/SentrixSoft.der,0000,Sentrix soft
 Sentrix1,Pkcs/Pkcs12Store/Stores/Sentrix1.der,0000,Sentrix 1
 Sentrix2,Pkcs/Pkcs12Store/Stores/Sentrix2.der,0000,Sentrix 2
 Sentrix3,Pkcs/Pkcs12Store/Stores/Sentrix3.der,0000,Sentrix 3
+RawKeyBagStore,Pkcs/Pkcs12Store/Stores/RawKeyBagStore.der,,ONVIF raw keyBag store

@@ -76,7 +76,6 @@ type
     class function GetBasicAgreementWithKdfForMechanism(const AMechanism, AWrapAlgorithm: String): IBasicAgreement; static;
     class function GetRawAgreementForMechanism(const AMechanism: String): IRawAgreement; static;
     class function CreateECDHKekGenerator(const ADigestName: String): IDerivationFunction; static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
   public
@@ -94,7 +93,7 @@ implementation
 
 { TAgreementUtilities }
 
-class procedure TAgreementUtilities.Boot;
+class constructor TAgreementUtilities.Create;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmMap.Add('DIFFIEHELLMAN', 'DH');
@@ -120,11 +119,6 @@ begin
 
   FAlgorithmOidMap.AddOrSetValue(TEdECObjectIdentifiers.IdX25519, 'X25519');
   FAlgorithmOidMap.AddOrSetValue(TEdECObjectIdentifiers.IdX448, 'X448');
-end;
-
-class constructor TAgreementUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TAgreementUtilities.Destroy;

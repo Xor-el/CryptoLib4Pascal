@@ -29,7 +29,6 @@ type
   TEdECObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FIdEdwardsCurveAlgs, FIdX25519, FIdX448, FIdEd25519, FIdEd448: IDerObjectIdentifier;
 
     class function GetIdEdwardsCurveAlgs: IDerObjectIdentifier; static; inline;
@@ -45,8 +44,6 @@ type
     class property IdX448: IDerObjectIdentifier read GetIdX448;
     class property IdEd25519: IDerObjectIdentifier read GetIdEd25519;
     class property IdEd448: IDerObjectIdentifier read GetIdEd448;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -55,21 +52,11 @@ implementation
 
 class constructor TEdECObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TEdECObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FIdEdwardsCurveAlgs := TDerObjectIdentifier.Create('1.3.101');
-    FIdX25519 := FIdEdwardsCurveAlgs.Branch('110');
-    FIdX448 := FIdEdwardsCurveAlgs.Branch('111');
-    FIdEd25519 := FIdEdwardsCurveAlgs.Branch('112');
-    FIdEd448 := FIdEdwardsCurveAlgs.Branch('113');
-
-    FIsBooted := True;
-  end;
+  FIdEdwardsCurveAlgs := TDerObjectIdentifier.Create('1.3.101');
+  FIdX25519 := FIdEdwardsCurveAlgs.Branch('110');
+  FIdX448 := FIdEdwardsCurveAlgs.Branch('111');
+  FIdEd25519 := FIdEdwardsCurveAlgs.Branch('112');
+  FIdEd448 := FIdEdwardsCurveAlgs.Branch('113');
 end;
 
 class function TEdECObjectIdentifiers.GetIdEd448: IDerObjectIdentifier;

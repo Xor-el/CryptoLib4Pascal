@@ -90,7 +90,6 @@ type
     class procedure AddKgAlgorithm(const ACanonicalName: String; const AAliases: array of String); static;
     class procedure AddKpgAlgorithm(const ACanonicalName: String; const AAliases: array of String); static;
     class procedure AddHMacKeyGenerator(const AAlgorithm: String; const AAliases: array of String); static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -179,38 +178,35 @@ begin
     FKgAlgorithms.AddOrSetValue(LAlias, LMainName);
 end;
 
-class procedure TGeneratorUtilities.Boot;
+class constructor TGeneratorUtilities.Create;
 begin
   FKgAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FKpgAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FDefaultKeySizes := TDictionary<String, Int32>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
-  TNistObjectIdentifiers.Boot;
-  TIanaObjectIdentifiers.Boot;
-
   // key generators
   AddKgAlgorithm('AES', ['AESWRAP']);
   AddKgAlgorithm('AES128',
-    [TNistObjectIdentifiers.IdAes128Cbc.ID,
-    TNistObjectIdentifiers.IdAes128Cfb.ID,
-    TNistObjectIdentifiers.IdAes128Ecb.ID,
-    TNistObjectIdentifiers.IdAes128Ofb.ID,
-    TNistObjectIdentifiers.IdAes128Wrap.ID,
-    TNistObjectIdentifiers.IdAes128WrapPad.ID]);
+  [TNistObjectIdentifiers.IdAes128Cbc.ID,
+  TNistObjectIdentifiers.IdAes128Cfb.ID,
+  TNistObjectIdentifiers.IdAes128Ecb.ID,
+  TNistObjectIdentifiers.IdAes128Ofb.ID,
+  TNistObjectIdentifiers.IdAes128Wrap.ID,
+  TNistObjectIdentifiers.IdAes128WrapPad.ID]);
   AddKgAlgorithm('AES192',
-    [TNistObjectIdentifiers.IdAes192Cbc.ID,
-    TNistObjectIdentifiers.IdAes192Cfb.ID,
-    TNistObjectIdentifiers.IdAes192Ecb.ID,
-    TNistObjectIdentifiers.IdAes192Ofb.ID,
-    TNistObjectIdentifiers.IdAes192Wrap.ID,
-    TNistObjectIdentifiers.IdAes192WrapPad.ID]);
+  [TNistObjectIdentifiers.IdAes192Cbc.ID,
+  TNistObjectIdentifiers.IdAes192Cfb.ID,
+  TNistObjectIdentifiers.IdAes192Ecb.ID,
+  TNistObjectIdentifiers.IdAes192Ofb.ID,
+  TNistObjectIdentifiers.IdAes192Wrap.ID,
+  TNistObjectIdentifiers.IdAes192WrapPad.ID]);
   AddKgAlgorithm('AES256',
-    [TNistObjectIdentifiers.IdAes256Cbc.ID,
-    TNistObjectIdentifiers.IdAes256Cfb.ID,
-    TNistObjectIdentifiers.IdAes256Ecb.ID,
-    TNistObjectIdentifiers.IdAes256Ofb.ID,
-    TNistObjectIdentifiers.IdAes256Wrap.ID,
-    TNistObjectIdentifiers.IdAes256WrapPad.ID]);
+  [TNistObjectIdentifiers.IdAes256Cbc.ID,
+  TNistObjectIdentifiers.IdAes256Cfb.ID,
+  TNistObjectIdentifiers.IdAes256Ecb.ID,
+  TNistObjectIdentifiers.IdAes256Ofb.ID,
+  TNistObjectIdentifiers.IdAes256Wrap.ID,
+  TNistObjectIdentifiers.IdAes256WrapPad.ID]);
 
   AddKgAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2']);
 
@@ -230,11 +226,9 @@ begin
   AddHMacKeyGenerator('MD4', []);
   AddHMacKeyGenerator('MD5', [TIanaObjectIdentifiers.HmacMD5.ID]);
 
-  TPkcsObjectIdentifiers.Boot;
-
   AddHMacKeyGenerator('SHA1',
-    [TPkcsObjectIdentifiers.IdHmacWithSha1.ID,
-    TIanaObjectIdentifiers.HmacSha1.ID]);
+  [TPkcsObjectIdentifiers.IdHmacWithSha1.ID,
+  TIanaObjectIdentifiers.HmacSha1.ID]);
   AddHMacKeyGenerator('SHA224', [TPkcsObjectIdentifiers.IdHmacWithSha224.ID]);
   AddHMacKeyGenerator('SHA256', [TPkcsObjectIdentifiers.IdHmacWithSha256.ID]);
   AddHMacKeyGenerator('SHA384', [TPkcsObjectIdentifiers.IdHmacWithSha384.ID]);
@@ -249,52 +243,45 @@ begin
   AddHMacKeyGenerator('KECCAK512', []);
 
   AddHMacKeyGenerator('SHA3-224',
-    [TNistObjectIdentifiers.IdHMacWithSha3_224.ID]);
+  [TNistObjectIdentifiers.IdHMacWithSha3_224.ID]);
   AddHMacKeyGenerator('SHA3-256',
-    [TNistObjectIdentifiers.IdHMacWithSha3_256.ID]);
+  [TNistObjectIdentifiers.IdHMacWithSha3_256.ID]);
   AddHMacKeyGenerator('SHA3-384',
-    [TNistObjectIdentifiers.IdHMacWithSha3_384.ID]);
+  [TNistObjectIdentifiers.IdHMacWithSha3_384.ID]);
   AddHMacKeyGenerator('SHA3-512',
-    [TNistObjectIdentifiers.IdHMacWithSha3_512.ID]);
+  [TNistObjectIdentifiers.IdHMacWithSha3_512.ID]);
   AddHMacKeyGenerator('RIPEMD128', []);
   AddHMacKeyGenerator('RIPEMD160', [TIanaObjectIdentifiers.HmacRipeMD160.ID]);
   AddHMacKeyGenerator('TIGER', [TIanaObjectIdentifiers.HmacTiger.ID]);
 
-  TRosstandartObjectIdentifiers.Boot;
-
   AddHMacKeyGenerator('GOST3411-2012-256',
-    [TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_256.ID]);
+  [TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_256.ID]);
   AddHMacKeyGenerator('GOST3411-2012-512',
-    [TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512.ID]);
+  [TRosstandartObjectIdentifiers.IdTc26HmacGost3411_12_512.ID]);
 
   //
   // key pair generators.
   //
-
-  TX9ObjectIdentifiers.Boot;
-  TSecObjectIdentifiers.Boot;
 
   AddKpgAlgorithm('DH', ['DIFFIEHELLMAN']);
   AddKpgAlgorithm('DSA', []);
   AddKpgAlgorithm('RSA', [TPkcsObjectIdentifiers.RsaEncryption.ID]);
   AddKpgAlgorithm('RSASSA-PSS', []);
   AddKpgAlgorithm('EC', [
-    TX9ObjectIdentifiers.DHSinglePassStdDHSha1KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassStdDHSha224KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassStdDHSha256KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassStdDHSha384KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassStdDHSha512KdfScheme.ID,
-    TX9ObjectIdentifiers.DHSinglePassCofactorDHSha1KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassCofactorDHSha224KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassCofactorDHSha256KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassCofactorDHSha384KdfScheme.ID,
-    TSecObjectIdentifiers.DhSinglePassCofactorDHSha512KdfScheme.ID
-    ]);
+  TX9ObjectIdentifiers.DHSinglePassStdDHSha1KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassStdDHSha224KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassStdDHSha256KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassStdDHSha384KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassStdDHSha512KdfScheme.ID,
+  TX9ObjectIdentifiers.DHSinglePassCofactorDHSha1KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassCofactorDHSha224KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassCofactorDHSha256KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassCofactorDHSha384KdfScheme.ID,
+  TSecObjectIdentifiers.DhSinglePassCofactorDHSha512KdfScheme.ID
+  ]);
   AddKpgAlgorithm('ECDH', ['ECIES']);
   AddKpgAlgorithm('ECDHC', []);
   AddKpgAlgorithm('ECDSA', []);
-
-  TEdECObjectIdentifiers.Boot;
 
   AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph', TEdECObjectIdentifiers.IdEd25519.ID]);
   AddKpgAlgorithm('Ed448', ['Ed448ph', TEdECObjectIdentifiers.IdEd448.ID]);
@@ -304,39 +291,35 @@ begin
   AddKpgAlgorithm('X448', [TEdECObjectIdentifiers.IdX448.ID]);
 
   AddDefaultKeySizeEntries(128, [
-    'AES128',
-    'BLOWFISH',
-    'CHACHA',
-    'HMACMD2',
-    'HMACMD4',
-    'HMACMD5',
-    'HMACRIPEMD128',
-    'SALSA20'
-    ]);
+  'AES128',
+  'BLOWFISH',
+  'CHACHA',
+  'HMACMD2',
+  'HMACMD4',
+  'HMACMD5',
+  'HMACRIPEMD128',
+  'SALSA20'
+  ]);
   AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
   AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER', 'RIJNDAEL']);
-  AddDefaultKeySizeEntries(224,
-    ['HMACSHA3-224',
-    'HMACKECCAK224',
-    'HMACSHA224',
-    'HMACSHA512/224']);
+  AddDefaultKeySizeEntries(224, [
+  'HMACSHA3-224',
+  'HMACKECCAK224',
+  'HMACSHA224',
+  'HMACSHA512/224'
+  ]);
   AddDefaultKeySizeEntries(256, [
-    'AES256',
-    'HMACGOST3411-2012-256',
-    'HMACSHA3-256',
-    'HMACKECCAK256',
-    'HMACSHA256',
-    'HMACSHA512/256',
-    'XCHACHA20'
-    ]);
+  'AES256',
+  'HMACGOST3411-2012-256',
+  'HMACSHA3-256',
+  'HMACKECCAK256',
+  'HMACSHA256',
+  'HMACSHA512/256',
+  'XCHACHA20'
+  ]);
   AddDefaultKeySizeEntries(288, ['HMACKECCAK288']);
   AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACKECCAK384', 'HMACSHA384']);
   AddDefaultKeySizeEntries(512, ['HMACGOST3411-2012-512', 'HMACSHA3-512', 'HMACKECCAK512', 'HMACSHA512']);
-end;
-
-class constructor TGeneratorUtilities.Create;
-begin
-  Boot;
 end;
 
 class destructor TGeneratorUtilities.Destroy;

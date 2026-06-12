@@ -28,7 +28,6 @@ type
   TMiscObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FNetscape, FNetscapeCertType, FNetscapeBaseUrl, FNetscapeRevocationUrl,
       FNetscapeCARevocationUrl, FNetscapeRenewalUrl, FNetscapeCAPolicyUrl,
       FNetscapeSslServerName, FNetscapeCertComment, FVerisign,
@@ -133,8 +132,6 @@ type
     class property IdAlgComposite: IDerObjectIdentifier read GetIdAlgComposite;
     class property IdCompositeKey: IDerObjectIdentifier read GetIdCompositeKey;
     class property IdOraclePkcs12TrustedKeyUsage: IDerObjectIdentifier read GetIdOraclePkcs12TrustedKeyUsage;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -143,67 +140,57 @@ implementation
 
 class constructor TMiscObjectIdentifiers.Create;
 begin
-  Boot;
-end;
+  FNetscape := TDerObjectIdentifier.Create('2.16.840.1.113730.1');
+  FNetscapeCertType := FNetscape.Branch('1');
+  FNetscapeBaseUrl := FNetscape.Branch('2');
+  FNetscapeRevocationUrl := FNetscape.Branch('3');
+  FNetscapeCARevocationUrl := FNetscape.Branch('4');
+  FNetscapeRenewalUrl := FNetscape.Branch('7');
+  FNetscapeCAPolicyUrl := FNetscape.Branch('8');
+  FNetscapeSslServerName := FNetscape.Branch('12');
+  FNetscapeCertComment := FNetscape.Branch('13');
 
-class procedure TMiscObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FNetscape := TDerObjectIdentifier.Create('2.16.840.1.113730.1');
-    FNetscapeCertType := FNetscape.Branch('1');
-    FNetscapeBaseUrl := FNetscape.Branch('2');
-    FNetscapeRevocationUrl := FNetscape.Branch('3');
-    FNetscapeCARevocationUrl := FNetscape.Branch('4');
-    FNetscapeRenewalUrl := FNetscape.Branch('7');
-    FNetscapeCAPolicyUrl := FNetscape.Branch('8');
-    FNetscapeSslServerName := FNetscape.Branch('12');
-    FNetscapeCertComment := FNetscape.Branch('13');
+  FVerisign := TDerObjectIdentifier.Create('2.16.840.1.113733.1');
+  FVerisignCzagExtension := FVerisign.Branch('6.3');
+  FVerisignPrivate_6_9 := FVerisign.Branch('6.9');
+  FVerisignOnSiteJurisdictionHash := FVerisign.Branch('6.11');
+  FVerisignBitString_6_13 := FVerisign.Branch('6.13');
+  FVerisignDnbDunsNumber := FVerisign.Branch('6.15');
+  FVerisignIssStrongCrypto := FVerisign.Branch('8.1');
 
-    FVerisign := TDerObjectIdentifier.Create('2.16.840.1.113733.1');
-    FVerisignCzagExtension := FVerisign.Branch('6.3');
-    FVerisignPrivate_6_9 := FVerisign.Branch('6.9');
-    FVerisignOnSiteJurisdictionHash := FVerisign.Branch('6.11');
-    FVerisignBitString_6_13 := FVerisign.Branch('6.13');
-    FVerisignDnbDunsNumber := FVerisign.Branch('6.15');
-    FVerisignIssStrongCrypto := FVerisign.Branch('8.1');
+  FNovell := TDerObjectIdentifier.Create('2.16.840.1.113719');
+  FNovellSecurityAttribs := FNovell.Branch('1.9.4.1');
 
-    FNovell := TDerObjectIdentifier.Create('2.16.840.1.113719');
-    FNovellSecurityAttribs := FNovell.Branch('1.9.4.1');
+  FEntrust := TDerObjectIdentifier.Create('1.2.840.113533.7');
+  FEntrustVersionExtension := FEntrust.Branch('65.0');
+  FCast5Cbc := FEntrust.Branch('66.10');
 
-    FEntrust := TDerObjectIdentifier.Create('1.2.840.113533.7');
-    FEntrustVersionExtension := FEntrust.Branch('65.0');
-    FCast5Cbc := FEntrust.Branch('66.10');
+  FHmacSha1 := TDerObjectIdentifier.Create('1.3.6.1.5.5.8.1.2');
+  FAsSysSecAlgIdeaCbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.188.7.1.1.2');
 
-    FHmacSha1 := TDerObjectIdentifier.Create('1.3.6.1.5.5.8.1.2');
-    FAsSysSecAlgIdeaCbc := TDerObjectIdentifier.Create('1.3.6.1.4.1.188.7.1.1.2');
+  FCryptlib := TDerObjectIdentifier.Create('1.3.6.1.4.1.3029');
+  FCryptlibAlgorithm := FCryptlib.Branch('1');
+  FCryptlibAlgorithmBlowfishEcb := FCryptlibAlgorithm.Branch('1.1');
+  FCryptlibAlgorithmBlowfishCbc := FCryptlibAlgorithm.Branch('1.2');
+  FCryptlibAlgorithmBlowfishCfb := FCryptlibAlgorithm.Branch('1.3');
+  FCryptlibAlgorithmBlowfishOfb := FCryptlibAlgorithm.Branch('1.4');
 
-    FCryptlib := TDerObjectIdentifier.Create('1.3.6.1.4.1.3029');
-    FCryptlibAlgorithm := FCryptlib.Branch('1');
-    FCryptlibAlgorithmBlowfishEcb := FCryptlibAlgorithm.Branch('1.1');
-    FCryptlibAlgorithmBlowfishCbc := FCryptlibAlgorithm.Branch('1.2');
-    FCryptlibAlgorithmBlowfishCfb := FCryptlibAlgorithm.Branch('1.3');
-    FCryptlibAlgorithmBlowfishOfb := FCryptlibAlgorithm.Branch('1.4');
+  FBlake2 := TDerObjectIdentifier.Create('1.3.6.1.4.1.1722.12.2');
+  FIdBlake2b160 := FBlake2.Branch('1.5');
+  FIdBlake2b256 := FBlake2.Branch('1.8');
+  FIdBlake2b384 := FBlake2.Branch('1.12');
+  FIdBlake2b512 := FBlake2.Branch('1.16');
+  FIdBlake2s128 := FBlake2.Branch('2.4');
+  FIdBlake2s160 := FBlake2.Branch('2.5');
+  FIdBlake2s224 := FBlake2.Branch('2.7');
+  FIdBlake2s256 := FBlake2.Branch('2.8');
+  FBlake3 := FBlake2.Branch('3');
+  FBlake3_256 := FBlake3.Branch('8');
 
-    FBlake2 := TDerObjectIdentifier.Create('1.3.6.1.4.1.1722.12.2');
-    FIdBlake2b160 := FBlake2.Branch('1.5');
-    FIdBlake2b256 := FBlake2.Branch('1.8');
-    FIdBlake2b384 := FBlake2.Branch('1.12');
-    FIdBlake2b512 := FBlake2.Branch('1.16');
-    FIdBlake2s128 := FBlake2.Branch('2.4');
-    FIdBlake2s160 := FBlake2.Branch('2.5');
-    FIdBlake2s224 := FBlake2.Branch('2.7');
-    FIdBlake2s256 := FBlake2.Branch('2.8');
-    FBlake3 := FBlake2.Branch('3');
-    FBlake3_256 := FBlake3.Branch('8');
-
-    FIdScrypt := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.4.11');
-    FIdAlgComposite := TDerObjectIdentifier.Create('1.3.6.1.4.1.18227.2.1');
-    FIdCompositeKey := TDerObjectIdentifier.Create('2.16.840.1.114027.80.4.1');
-    FIdOraclePkcs12TrustedKeyUsage := TDerObjectIdentifier.Create('2.16.840.1.113894.746875.1.1');
-
-    FIsBooted := True;
-  end;
+  FIdScrypt := TDerObjectIdentifier.Create('1.3.6.1.4.1.11591.4.11');
+  FIdAlgComposite := TDerObjectIdentifier.Create('1.3.6.1.4.1.18227.2.1');
+  FIdCompositeKey := TDerObjectIdentifier.Create('2.16.840.1.114027.80.4.1');
+  FIdOraclePkcs12TrustedKeyUsage := TDerObjectIdentifier.Create('2.16.840.1.113894.746875.1.1');
 end;
 
 class function TMiscObjectIdentifiers.GetAsSysSecAlgIdeaCbc: IDerObjectIdentifier;

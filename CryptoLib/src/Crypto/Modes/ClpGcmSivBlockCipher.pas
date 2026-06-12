@@ -650,10 +650,8 @@ begin
     while LMyRemaining >= 128 do
     begin
       ProcessEightBlocksSivCtr(LMyCounter, LMyCounters);
-      TBlockCipherBulkUtilities.Xor128Bytes(
-        PByte(@ATarget[AOffset + LMyOff]),
-        PByte(@LMyCounters[0]),
-        PByte(@LMySrc[LMyOff]));
+      TByteUtilities.&Xor(128, PByte(LMyCounters), PByte(LMySrc) + LMyOff,
+        PByte(ATarget) + AOffset + LMyOff);
       LMyRemaining := LMyRemaining - 128;
       LMyOff := LMyOff + 128;
     end;
@@ -715,10 +713,8 @@ begin
     while LMyRemaining >= 128 do
     begin
       ProcessEightBlocksSivCtr(LMyCounter, LMyCounters);
-      TBlockCipherBulkUtilities.Xor128Bytes(
-        PByte(@LMyScratch128[0]),
-        PByte(@LMyCounters[0]),
-        PByte(@LMySrc[LMyOff]));
+      TByteUtilities.&Xor(128, PByte(LMyCounters), PByte(LMySrc) + LMyOff,
+        PByte(LMyScratch128));
       FThePlain.Write(LMyScratch128[0], 128);
       FTheDataHasher.UpdateHash(LMyScratch128, 0, 128);
       LMyRemaining := LMyRemaining - 128;

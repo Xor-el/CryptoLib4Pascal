@@ -202,12 +202,22 @@ type
     /// <summary>
     /// Write a definite length value.
     /// </summary>
-    procedure WriteDL(ADl: Int32);
+    procedure WriteDL(ADl: Int32); overload;
 
     /// <summary>
     /// Write an identifier with flags and tag number.
     /// </summary>
-    procedure WriteIdentifier(AFlags, ATagNo: Int32);
+    procedure WriteIdentifier(AFlags, ATagNo: Int32); overload;
+
+    /// <summary>
+    /// Write a definite length value to a stream.
+    /// </summary>
+    class procedure WriteDL(const AOutput: TStream; ADl: Int32); overload; static;
+
+    /// <summary>
+    /// Write an identifier with flags and tag number to a stream.
+    /// </summary>
+    class procedure WriteIdentifier(const AOutput: TStream; AFlags, ATagNo: Int32); overload; static;
 
     /// <summary>
     /// Get encoding type from string.
@@ -895,13 +905,23 @@ begin
 end;
 
 procedure TAsn1OutputStream.WriteDL(ADl: Int32);
+begin
+  WriteDL(Self, ADl);
+end;
+
+procedure TAsn1OutputStream.WriteIdentifier(AFlags, ATagNo: Int32);
+begin
+  WriteIdentifier(Self, AFlags, ATagNo);
+end;
+
+class procedure TAsn1OutputStream.WriteDL(const AOutput: TStream; ADl: Int32);
 var
   LStack: TCryptoLibByteArray;
   LPos, LCount: Int32;
 begin
   if ADl < 128 then
   begin
-    WriteByte(Byte(ADl));
+    AOutput.WriteByte(Byte(ADl));
     Exit;
   end;
 
@@ -918,17 +938,17 @@ begin
   System.Dec(LPos);
   LStack[LPos] := Byte($80 or LCount);
 
-  Write(LStack[LPos], LCount + 1);
+  AOutput.Write(LStack[LPos], LCount + 1);
 end;
 
-procedure TAsn1OutputStream.WriteIdentifier(AFlags, ATagNo: Int32);
+class procedure TAsn1OutputStream.WriteIdentifier(const AOutput: TStream; AFlags, ATagNo: Int32);
 var
   LStack: TCryptoLibByteArray;
   LPos: Int32;
 begin
   if ATagNo < 31 then
   begin
-    WriteByte(Byte(AFlags or ATagNo));
+    AOutput.WriteByte(Byte(AFlags or ATagNo));
     Exit;
   end;
 
@@ -947,7 +967,7 @@ begin
   System.Dec(LPos);
   LStack[LPos] := Byte(AFlags or $1F);
 
-  Write(LStack[LPos], System.Length(LStack) - LPos);
+  AOutput.Write(LStack[LPos], System.Length(LStack) - LPos);
 end;
 
 class function TAsn1OutputStream.GetEncodingType(const AEncoding: String): Int32;

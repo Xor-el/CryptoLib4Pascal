@@ -1,4 +1,4 @@
-{ *********************************************************************************** }
+﻿{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -555,10 +555,7 @@ type
       FAltSignatureAlgorithm: IDerObjectIdentifier;
       FAltSignatureValue: IDerObjectIdentifier;
       FDraftDeltaCertificateDescriptor: IDerObjectIdentifier;
-
-    class procedure Boot; static;
     class constructor Create;
-    class destructor Destroy;
 
   strict protected
     function GetCount: Int32;
@@ -671,6 +668,7 @@ type
     FIdKpCmcCa: IDerObjectIdentifier;
     FIdKpCmcRa: IDerObjectIdentifier;
     FIdKpCmKga: IDerObjectIdentifier;
+    FIdKpDocumentSigning: IDerObjectIdentifier;
     FIdKpConfigSigning: IDerObjectIdentifier;
     FIdKpTrustAnchorConfigSigning: IDerObjectIdentifier;
     FIdKpUpdatePackageSigning: IDerObjectIdentifier;
@@ -709,6 +707,7 @@ type
     class function GetIdKpCmcCa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmcRa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmKga: IDerObjectIdentifier; static; inline;
+    class function GetIdKpDocumentSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpConfigSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpTrustAnchorConfigSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpUpdatePackageSigning: IDerObjectIdentifier; static; inline;
@@ -723,8 +722,6 @@ type
     class function GetKeyPurposeClientAuth: IDerObjectIdentifier; static; inline;
     class function GetKeyPurposeKdc: IDerObjectIdentifier; static; inline;
     class function GetIdKpNsSgc: IDerObjectIdentifier; static; inline;
-
-    class procedure Boot; static;
     class constructor Create;
 
   public
@@ -751,6 +748,8 @@ type
     class property IdKpCmcCa: IDerObjectIdentifier read GetIdKpCmcCa;
     class property IdKpCmcRa: IDerObjectIdentifier read GetIdKpCmcRa;
     class property IdKpCmKga: IDerObjectIdentifier read GetIdKpCmKga;
+    /// <summary>RFC 9336 sec. 3.1 — signing documents (e.g. PDF, XML, JSON) for human consumption (<c>id-kp-documentSigning</c>, <c>{ id-kp 36 }</c>).</summary>
+    class property IdKpDocumentSigning: IDerObjectIdentifier read GetIdKpDocumentSigning;
     /// <summary>RFC 9809 sec. 3 — signing general-purpose configuration files (<c>id-kp-configSigning</c>, <c>{ id-kp 41 }</c>).</summary>
     class property IdKpConfigSigning: IDerObjectIdentifier read GetIdKpConfigSigning;
     /// <summary>RFC 9809 sec. 3 — signing trust anchor configuration files (<c>id-kp-trustAnchorConfigSigning</c>, <c>{ id-kp 42 }</c>).</summary>
@@ -834,8 +833,6 @@ type
       FJurisdictionC: IDerObjectIdentifier;
       FJurisdictionST: IDerObjectIdentifier;
       FJurisdictionL: IDerObjectIdentifier;
-
-    class procedure Boot; static;
     class function GetDefaultReverse: Boolean; static;
     class procedure SetDefaultReverse(const AValue: Boolean); static;
     class constructor Create;
@@ -1350,7 +1347,7 @@ type
 
   public
     class constructor Create;
-    
+
     class function GetInstance(AObj: TObject): ITbsCertificateStructure; overload; static;
     /// <summary>
     /// Get instance from ASN.1 convertible.
@@ -1361,10 +1358,10 @@ type
       AExplicitly: Boolean): ITbsCertificateStructure; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): ITbsCertificateStructure; static;
-    
+
     class function GetAllowNonDERTbsCertificate: Boolean; static;
     class procedure SetAllowNonDERTbsCertificate(AValue: Boolean); static;
-    
+
     class property AllowNonDERTbsCertificate: Boolean read GetAllowNonDERTbsCertificate write SetAllowNonDERTbsCertificate;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
@@ -1751,9 +1748,23 @@ type
 
   end;
 
-  /// <summary>
-  /// The DistributionPointName object.
-  /// </summary>
+  /// <summary>The DistributionPointName ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// DistributionPointName ::= CHOICE {
+  ///   fullName[0] GeneralNames,
+  ///   nameRelativeToCRLIssuer[1] RelativeDistinguishedName
+  /// }
+  /// RelativeDistinguishedName ::= SET SIZE(1..MAX) OF AttributeTypeAndValue
+  /// </code>
+  /// Per RFC 5280 sec. 4.2.1.13, nameRelativeToCRLIssuer is a single RelativeDistinguishedName
+  /// (a SET of one or more attribute-type-and-value pairs) - never a sequence of RDNs.
+  /// When two attributes need to be carried here they share one multi-valued RDN
+  /// (e.g. O=ExampleOrg + OU=Test), not two adjacent RDNs (e.g. O=ExampleOrg, OU=Test);
+  /// the CHOICE branch is decoded as a TAsn1Set and a sequence-shaped input is rejected.
+  /// The full DN of the distribution point is formed by appending this single RDN to the CRL
+  /// issuer's RDNSequence (RFC 5280 sec. 5.2.5).
+  /// </remarks>
   TDistributionPointName = class(TAsn1Encodable, IDistributionPointName, IAsn1Choice)
 
   strict private
@@ -1964,15 +1975,16 @@ type
 
   end;
 
+  /// <summary>The IssuingDistributionPoint ASN.1 type.</summary>
   /// <remarks>
   /// <code>
   /// IssuingDistributionPoint ::= SEQUENCE {
-  ///   distributionPoint          [0] DistributionPointName OPTIONAL,
-  ///   onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
-  ///   onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
-  ///   onlySomeReasons            [3] ReasonFlags OPTIONAL,
-  ///   indirectCRL                [4] BOOLEAN DEFAULT FALSE,
-  ///   onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE
+  ///   distributionPoint[0] DistributionPointName OPTIONAL,
+  ///   onlyContainsUserCerts[1] BOOLEAN DEFAULT FALSE,
+  ///   onlyContainsCACerts[2] BOOLEAN DEFAULT FALSE,
+  ///   onlySomeReasons[3] ReasonFlags OPTIONAL,
+  ///   indirectCRL[4] BOOLEAN DEFAULT FALSE,
+  ///   onlyContainsAttributeCerts[5] BOOLEAN DEFAULT FALSE
   /// }
   /// </code>
   /// </remarks>
@@ -2009,9 +2021,25 @@ type
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): IIssuingDistributionPoint; static;
 
+    /// <summary>Constructor from given details.</summary>
+    /// <param name="ADistributionPoint">May contain a URI as pointer to most current CRL.</param>
+    /// <param name="AOnlyContainsUserCerts">Covers revocation information for end certificates.</param>
+    /// <param name="AOnlyContainsCACerts">Covers revocation information for CA certificates.</param>
+    /// <param name="AOnlySomeReasons">Which revocation reasons this point covers.</param>
+    /// <param name="AIndirectCRL">If True then the CRL contains revocation information about certificates issued by other CAs.</param>
+    /// <param name="AOnlyContainsAttributeCerts">Covers revocation information for attribute certificates.</param>
+    /// <exception cref="EArgumentCryptoLibException">Raised when more than one of the onlyContains* flags is True.</exception>
     constructor Create(const ADistributionPoint: IDistributionPointName;
       AOnlyContainsUserCerts, AOnlyContainsCACerts: Boolean;
       const AOnlySomeReasons: IReasonFlags; AIndirectCRL, AOnlyContainsAttributeCerts: Boolean); overload;
+    /// <summary>Shorthand constructor from given details.</summary>
+    /// <param name="ADistributionPoint">May contain a URI as pointer to most current CRL.</param>
+    /// <param name="AIndirectCRL">If True then the CRL contains revocation information about certificates issued by other CAs.</param>
+    /// <param name="AOnlyContainsAttributeCerts">Covers revocation information for attribute certificates.</param>
+    /// <exception cref="EArgumentCryptoLibException">Raised when more than one of the onlyContains* flags is True.</exception>
+    constructor Create(const ADistributionPoint: IDistributionPointName;
+      AIndirectCRL, AOnlyContainsAttributeCerts: Boolean); overload;
+    /// <summary>Constructor from Asn1Sequence.</summary>
     constructor Create(const ASeq: IAsn1Sequence); overload;
 
     function ToAsn1Object: IAsn1Object; override;
@@ -2990,7 +3018,6 @@ class function TValidity.GetInstance(const AEncoded: TCryptoLibByteArray): IVali
 begin
   Result := TValidity.Create(TAsn1Sequence.GetInstance(AEncoded));
 end;
-
 
 class function TValidity.GetInstance(const AObj: IAsn1TaggedObject;
   AExplicitly: Boolean): IValidity;
@@ -4894,7 +4921,6 @@ begin
   Result := TGeneralNames.Create(TAsn1Sequence.GetInstance(AEncoded));
 end;
 
-
 class function TGeneralNames.GetInstance(const AObj: IAsn1TaggedObject;
   AExplicitly: Boolean): IGeneralNames;
 begin
@@ -5411,16 +5437,6 @@ end;
 
 class constructor TX509Extensions.Create;
 begin
-  Boot;
-end;
-
-class destructor TX509Extensions.Destroy;
-begin
-  // Class vars are interface references, no cleanup needed
-end;
-
-class procedure TX509Extensions.Boot;
-begin
   FSubjectDirectoryAttributes := TDerObjectIdentifier.Create('2.5.29.9');
   FSubjectKeyIdentifier := TDerObjectIdentifier.Create('2.5.29.14');
   FKeyUsage := TDerObjectIdentifier.Create('2.5.29.15');
@@ -5462,11 +5478,6 @@ end;
 { TKeyPurposeId }
 
 class constructor TKeyPurposeId.Create;
-begin
-  Boot;
-end;
-
-class procedure TKeyPurposeId.Boot;
 var
   LIdKp: IDerObjectIdentifier;
   LIdPkinit: String;
@@ -5495,6 +5506,7 @@ begin
   FIdKpCmcCa := TDerObjectIdentifier.Create(LIdKp.ID + '.27');
   FIdKpCmcRa := TDerObjectIdentifier.Create(LIdKp.ID + '.28');
   FIdKpCmKga := TDerObjectIdentifier.Create(LIdKp.ID + '.32');
+  FIdKpDocumentSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.36');
   FIdKpConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.41');
   FIdKpTrustAnchorConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.42');
   FIdKpUpdatePackageSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.43');
@@ -5625,6 +5637,11 @@ end;
 class function TKeyPurposeId.GetIdKpCmKga: IDerObjectIdentifier;
 begin
   Result := FIdKpCmKga;
+end;
+
+class function TKeyPurposeId.GetIdKpDocumentSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpDocumentSigning;
 end;
 
 class function TKeyPurposeId.GetIdKpConfigSigning: IDerObjectIdentifier;
@@ -6611,40 +6628,6 @@ end;
 class constructor TX509Name.Create;
 begin
   FDefaultReverseLock := TCriticalSection.Create();
-  Boot;
-end;
-
-class destructor TX509Name.Destroy;
-begin
-  FDefaultSymbols.Free;
-  FRFC2253Symbols.Free;
-  FRFC1779Symbols.Free;
-  FDefaultLookup.Free;
-  FDefaultReverseLock.Free;
-end;
-
-class function TX509Name.GetDefaultReverse: Boolean;
-begin
-  FDefaultReverseLock.Acquire;
-  try
-    Result := FDefaultReverse;
-  finally
-    FDefaultReverseLock.Release;
-  end;
-end;
-
-class procedure TX509Name.SetDefaultReverse(const AValue: Boolean);
-begin
-  FDefaultReverseLock.Acquire;
-  try
-    FDefaultReverse := AValue;
-  finally
-    FDefaultReverseLock.Release;
-  end;
-end;
-
-class procedure TX509Name.Boot;
-begin
   FDefaultReverse := False;
   FDefaultSymbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
   FRFC2253Symbols := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -6761,6 +6744,8 @@ begin
   FDefaultLookup.Add('cn', FCN);
   FDefaultLookup.Add('l', FL);
   FDefaultLookup.Add('st', FST);
+  // Microsoft CertNameToStr emits S= for stateOrProvinceName (2.5.4.8); accept as parse alias.
+  FDefaultLookup.Add('s', FST);
   FDefaultLookup.Add('sn', FSurname);
   FDefaultLookup.Add('serialnumber', FSerialNumber);
   FDefaultLookup.Add('street', FStreet);
@@ -6796,6 +6781,35 @@ begin
   FDefaultLookup.Add('jurisdictioncountry', FJurisdictionC);
   FDefaultLookup.Add('jurisdictionstate', FJurisdictionST);
   FDefaultLookup.Add('jurisdictionlocality', FJurisdictionL);
+end;
+
+class destructor TX509Name.Destroy;
+begin
+  FDefaultSymbols.Free;
+  FRFC2253Symbols.Free;
+  FRFC1779Symbols.Free;
+  FDefaultLookup.Free;
+  FDefaultReverseLock.Free;
+end;
+
+class function TX509Name.GetDefaultReverse: Boolean;
+begin
+  FDefaultReverseLock.Acquire;
+  try
+    Result := FDefaultReverse;
+  finally
+    FDefaultReverseLock.Release;
+  end;
+end;
+
+class procedure TX509Name.SetDefaultReverse(const AValue: Boolean);
+begin
+  FDefaultReverseLock.Acquire;
+  try
+    FDefaultReverse := AValue;
+  finally
+    FDefaultReverseLock.Release;
+  end;
 end;
 
 class function TX509Name.CreateDefaultConverter: IX509NameEntryConverter;
@@ -8021,6 +8035,12 @@ begin
     LV.Add(TDerTaggedObject.Create(False, 5, TDerBoolean.True));
 
   FSeq := TDerSequence.Create(LV);
+end;
+
+constructor TIssuingDistributionPoint.Create(const ADistributionPoint: IDistributionPointName;
+  AIndirectCRL, AOnlyContainsAttributeCerts: Boolean);
+begin
+  Create(ADistributionPoint, False, False, nil, AIndirectCRL, AOnlyContainsAttributeCerts);
 end;
 
 constructor TIssuingDistributionPoint.Create(const ASeq: IAsn1Sequence);

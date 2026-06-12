@@ -100,9 +100,6 @@ type
     CrlTypes: String = '1.2.840.113549.1.9.23';
 
   class var
-
-    FIsBooted: Boolean;
-
     // PKCS#1 RSA OIDs
     FRsaEncryption,
     FMD2WithRsaEncryption,
@@ -343,7 +340,7 @@ type
     class function GetPbeWithShaAnd128BitRC2Cbc: IDerObjectIdentifier; static; inline;
     class function GetPbewithShaAnd40BitRC2Cbc: IDerObjectIdentifier; static; inline;
 
-    class constructor PkcsObjectIdentifiers();
+    class constructor Create();
 
   public
 
@@ -524,180 +521,11 @@ type
     class property PbeWithShaAnd2KeyTripleDesCbc: IDerObjectIdentifier read GetPbeWithShaAnd2KeyTripleDesCbc;
     class property PbeWithShaAnd128BitRC2Cbc: IDerObjectIdentifier read GetPbeWithShaAnd128BitRC2Cbc;
     class property PbewithShaAnd40BitRC2Cbc: IDerObjectIdentifier read GetPbewithShaAnd40BitRC2Cbc;
-
-    class procedure Boot(); static;
-
   end;
 
 implementation
 
 { TPkcsObjectIdentifiers }
-
-class procedure TPkcsObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    // PKCS#1 RSA
-    FRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.1');
-    FMD2WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.2');
-    FMD4WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.3');
-    FMD5WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.4');
-    FSha1WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.5');
-    FSrsaOaepEncryptionSet := TDerObjectIdentifier.Create(Pkcs1 + '.6');
-    FIdRsaesOaep := TDerObjectIdentifier.Create(Pkcs1 + '.7');
-    FIdMgf1 := TDerObjectIdentifier.Create(Pkcs1 + '.8');
-    FIdPSpecified := TDerObjectIdentifier.Create(Pkcs1 + '.9');
-    FIdRsassaPss := TDerObjectIdentifier.Create(Pkcs1 + '.10');
-    FSha256WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.11');
-    FSha384WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.12');
-    FSha512WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.13');
-    FSha224WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.14');
-    FSha512_224WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.15');
-    FSha512_256WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.16');
-
-    // PKCS#3
-    FDhKeyAgreement := TDerObjectIdentifier.Create(Pkcs3 + '.1');
-
-    // PKCS#5
-    FIdPbkdf2 := TDerObjectIdentifier.Create(Pkcs5 + '.12');
-    FPbeWithMD2AndDesCbc := TDerObjectIdentifier.Create(Pkcs5 + '.1');
-    FPbeWithMD2AndRC2Cbc := TDerObjectIdentifier.Create(Pkcs5 + '.4');
-    FPbeWithMD5AndDesCbc := TDerObjectIdentifier.Create(Pkcs5 + '.3');
-    FPbeWithMD5AndRC2Cbc := TDerObjectIdentifier.Create(Pkcs5 + '.6');
-    FPbeWithSha1AndDesCbc := TDerObjectIdentifier.Create(Pkcs5 + '.10');
-    FPbeWithSha1AndRC2Cbc := TDerObjectIdentifier.Create(Pkcs5 + '.11');
-    FIdPbeS2 := TDerObjectIdentifier.Create(Pkcs5 + '.13');
-    FIdPbmac1 := TDerObjectIdentifier.Create(Pkcs5 + '.14');
-
-    // EncryptionAlgorithm
-    FDesEde3Cbc := TDerObjectIdentifier.Create(EncryptionAlgorithm + '.7');
-    FRC2Cbc := TDerObjectIdentifier.Create(EncryptionAlgorithm + '.2');
-    Frc4 := TDerObjectIdentifier.Create(EncryptionAlgorithm + '.4');
-
-    // PKCS#7
-    FData := TDerObjectIdentifier.Create(Pkcs7 + '.1');
-    FSignedData := TDerObjectIdentifier.Create(Pkcs7 + '.2');
-    FEnvelopedData := TDerObjectIdentifier.Create(Pkcs7 + '.3');
-    FSignedAndEnvelopedData := TDerObjectIdentifier.Create(Pkcs7 + '.4');
-    FDigestedData := TDerObjectIdentifier.Create(Pkcs7 + '.5');
-    FEncryptedData := TDerObjectIdentifier.Create(Pkcs7 + '.6');
-
-    // Digest algorithms
-    FMD2 := TDerObjectIdentifier.Create(DigestAlgorithm + '.2');
-    FMD4 := TDerObjectIdentifier.Create(DigestAlgorithm + '.4');
-    FMD5 := TDerObjectIdentifier.Create(DigestAlgorithm + '.5');
-    FIdHmacWithSha1 := TDerObjectIdentifier.Create(DigestAlgorithm + '.7');
-    FIdHmacWithSha224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.8');
-    FIdHmacWithSha256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.9');
-    FIdHmacWithSha384 := TDerObjectIdentifier.Create(DigestAlgorithm + '.10');
-    FIdHmacWithSha512 := TDerObjectIdentifier.Create(DigestAlgorithm + '.11');
-    FIdHmacWithSha512_224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.12');
-    FIdHmacWithSha512_256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.13');
-
-    // PKCS#9
-    FPkcs9AtEmailAddress := TDerObjectIdentifier.Create(Pkcs9 + '.1');
-    FPkcs9AtUnstructuredName := TDerObjectIdentifier.Create(Pkcs9 + '.2');
-    FPkcs9AtContentType := TDerObjectIdentifier.Create(Pkcs9 + '.3');
-    FPkcs9AtMessageDigest := TDerObjectIdentifier.Create(Pkcs9 + '.4');
-    FPkcs9AtSigningTime := TDerObjectIdentifier.Create(Pkcs9 + '.5');
-    FPkcs9AtCounterSignature := TDerObjectIdentifier.Create(Pkcs9 + '.6');
-    FPkcs9AtChallengePassword := TDerObjectIdentifier.Create(Pkcs9 + '.7');
-    FPkcs9AtUnstructuredAddress := TDerObjectIdentifier.Create(Pkcs9 + '.8');
-    FPkcs9AtExtendedCertificateAttributes := TDerObjectIdentifier.Create(Pkcs9 + '.9');
-    FPkcs9AtSigningDescription := TDerObjectIdentifier.Create(Pkcs9 + '.13');
-    FPkcs9AtExtensionRequest := TDerObjectIdentifier.Create(Pkcs9 + '.14');
-    FPkcs9AtSmimeCapabilities := TDerObjectIdentifier.Create(Pkcs9 + '.15');
-    FIdSmime := TDerObjectIdentifier.Create(Pkcs9 + '.16');
-    FPkcs9AtFriendlyName := TDerObjectIdentifier.Create(Pkcs9 + '.20');
-    FPkcs9AtLocalKeyID := TDerObjectIdentifier.Create(Pkcs9 + '.21');
-    FX509Certificate := TDerObjectIdentifier.Create(CertTypes + '.1');
-    FSdsiCertificate := TDerObjectIdentifier.Create(CertTypes + '.2');
-    FX509Crl := TDerObjectIdentifier.Create(CrlTypes + '.1');
-    FSmimeAlg := FIdSmime.Branch('3');
-    FIdAlg := FSmimeAlg;
-    FIdAlgEsdh := FSmimeAlg.Branch('5');
-    FIdAlgCms3DesWrap := FSmimeAlg.Branch('6');
-    FIdAlgCmsRC2Wrap := FSmimeAlg.Branch('7');
-    FIdAlgZlibCompress := FSmimeAlg.Branch('8');
-    FIdAlgPwriKek := FSmimeAlg.Branch('9');
-    FIdAlgSsdh := FSmimeAlg.Branch('10');
-    FId_aa_cmsAlgorithmProtect := TDerObjectIdentifier.Create(Pkcs9 + '.52');
-    FIdRsaKem := FSmimeAlg.Branch('14');
-    FIdAlgHssLmsHashsig := FSmimeAlg.Branch('17');
-    FIdAlgAeadChaCha20Poly1305 := FSmimeAlg.Branch('18');
-    FDhSinglePassStdDHHkdfSha256Scheme := FSmimeAlg.Branch('19');
-    FDhSinglePassStdDHHkdfSha384Scheme := FSmimeAlg.Branch('20');
-    FDhSinglePassStdDHHkdfSha512Scheme := FSmimeAlg.Branch('21');
-    FIdAlgHkdfWithSha256 := FSmimeAlg.Branch('28');
-    FIdAlgHkdfWithSha384 := FSmimeAlg.Branch('29');
-    FIdAlgHkdfWithSha512 := FSmimeAlg.Branch('30');
-    FPreferSignedData := FPkcs9AtSmimeCapabilities.Branch('1');
-    FCannotDecryptAny := FPkcs9AtSmimeCapabilities.Branch('2');
-    FSmimeCapabilitiesVersions := FPkcs9AtSmimeCapabilities.Branch('3');
-    FId_ct := FIdSmime.Branch('1');
-    FIdCTAuthData := FId_ct.Branch('2');
-    FIdCTTstInfo := FId_ct.Branch('4');
-    FIdCTCompressedData := FId_ct.Branch('9');
-    FIdCTAuthEnvelopedData := FId_ct.Branch('23');
-    FIdCTTimestampedData := FId_ct.Branch('31');
-    FId_cti := FIdSmime.Branch('6');
-    FIdCtiEtsProofOfOrigin := FId_cti.Branch('1');
-    FIdCtiEtsProofOfReceipt := FId_cti.Branch('2');
-    FIdCtiEtsProofOfDelivery := FId_cti.Branch('3');
-    FIdCtiEtsProofOfSender := FId_cti.Branch('4');
-    FIdCtiEtsProofOfApproval := FId_cti.Branch('5');
-    FIdCtiEtsProofOfCreation := FId_cti.Branch('6');
-    FId_aa := FIdSmime.Branch('2');
-    FIdAAOid := FId_aa;
-    FPkcs9AtBinarySigningTime := FId_aa.Branch('46');
-    FIdAAReceiptRequest := FId_aa.Branch('1');
-    FIdAAContentHint := FId_aa.Branch('4');
-    FIdAAMsgSigDigest := FId_aa.Branch('5');
-    FIdAAContentReference := FId_aa.Branch('10');
-    FIdAAEncrypKeyPref := FId_aa.Branch('11');
-    FIdAASigningCertificate := FId_aa.Branch('12');
-    FIdAAContentIdentifier := FId_aa.Branch('7');
-    FIdAASignatureTimeStampToken := FId_aa.Branch('14');
-    FIdAAEtsSigPolicyID := FId_aa.Branch('15');
-    FIdAAEtsCommitmentType := FId_aa.Branch('16');
-    FIdAAEtsSignerLocation := FId_aa.Branch('17');
-    FIdAAEtsSignerAttr := FId_aa.Branch('18');
-    FIdAAEtsOtherSigCert := FId_aa.Branch('19');
-    FIdAAEtsContentTimestamp := FId_aa.Branch('20');
-    FIdAAEtsCertificateRefs := FId_aa.Branch('21');
-    FIdAAEtsRevocationRefs := FId_aa.Branch('22');
-    FIdAAEtsCertValues := FId_aa.Branch('23');
-    FIdAAEtsRevocationValues := FId_aa.Branch('24');
-    FIdAAEtsEscTimeStamp := FId_aa.Branch('25');
-    FIdAAEtsCertCrlTimestamp := FId_aa.Branch('26');
-    FIdAAEtsArchiveTimestamp := FId_aa.Branch('27');
-    FIdAADecryptKeyID := FId_aa.Branch('37');
-    FIdAAImplCryptoAlgs := FId_aa.Branch('38');
-    FIdAAAsymmDecryptKeyID := FId_aa.Branch('54');
-    FIdAAImplCompressAlgs := FId_aa.Branch('43');
-    FIdAACommunityIdentifiers := FId_aa.Branch('40');
-    FIdAASigningCertificateV2 := FId_aa.Branch('47');
-    FIdAAEtsArchiveTimestampV2 := FId_aa.Branch('48');
-    FId_spq := FIdSmime.Branch('5');
-    FIdSpqEtsUri := FId_spq.Branch('1');
-    FIdSpqEtsUNotice := FId_spq.Branch('2');
-    // PKCS#12
-    FKeyBag := TDerObjectIdentifier.Create(BagTypes + '.1');
-    FPkcs8ShroudedKeyBag := TDerObjectIdentifier.Create(BagTypes + '.2');
-    FCertBag := TDerObjectIdentifier.Create(BagTypes + '.3');
-    FCrlBag := TDerObjectIdentifier.Create(BagTypes + '.4');
-    FSecretBag := TDerObjectIdentifier.Create(BagTypes + '.5');
-    FSafeContentsBag := TDerObjectIdentifier.Create(BagTypes + '.6');
-    FPbeWithShaAnd128BitRC4 := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.1');
-    FPbeWithShaAnd40BitRC4 := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.2');
-    FPbeWithShaAnd3KeyTripleDesCbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.3');
-    FPbeWithShaAnd2KeyTripleDesCbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.4');
-    FPbeWithShaAnd128BitRC2Cbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.5');
-    FPbewithShaAnd40BitRC2Cbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.6');
-
-    FIsBooted := True;
-  end;
-end;
 
 // PKCS#1 RSA getters
 
@@ -1428,9 +1256,165 @@ begin
   Result := FPbewithShaAnd40BitRC2Cbc;
 end;
 
-class constructor TPkcsObjectIdentifiers.PkcsObjectIdentifiers;
+class constructor TPkcsObjectIdentifiers.Create;
 begin
-  TPkcsObjectIdentifiers.Boot;
+  // PKCS#1 RSA
+  FRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.1');
+  FMD2WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.2');
+  FMD4WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.3');
+  FMD5WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.4');
+  FSha1WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.5');
+  FSrsaOaepEncryptionSet := TDerObjectIdentifier.Create(Pkcs1 + '.6');
+  FIdRsaesOaep := TDerObjectIdentifier.Create(Pkcs1 + '.7');
+  FIdMgf1 := TDerObjectIdentifier.Create(Pkcs1 + '.8');
+  FIdPSpecified := TDerObjectIdentifier.Create(Pkcs1 + '.9');
+  FIdRsassaPss := TDerObjectIdentifier.Create(Pkcs1 + '.10');
+  FSha256WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.11');
+  FSha384WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.12');
+  FSha512WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.13');
+  FSha224WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.14');
+  FSha512_224WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.15');
+  FSha512_256WithRsaEncryption := TDerObjectIdentifier.Create(Pkcs1 + '.16');
+
+  // PKCS#3
+  FDhKeyAgreement := TDerObjectIdentifier.Create(Pkcs3 + '.1');
+
+  // PKCS#5
+  FIdPbkdf2 := TDerObjectIdentifier.Create(Pkcs5 + '.12');
+  FPbeWithMD2AndDesCbc := TDerObjectIdentifier.Create(Pkcs5 + '.1');
+  FPbeWithMD2AndRC2Cbc := TDerObjectIdentifier.Create(Pkcs5 + '.4');
+  FPbeWithMD5AndDesCbc := TDerObjectIdentifier.Create(Pkcs5 + '.3');
+  FPbeWithMD5AndRC2Cbc := TDerObjectIdentifier.Create(Pkcs5 + '.6');
+  FPbeWithSha1AndDesCbc := TDerObjectIdentifier.Create(Pkcs5 + '.10');
+  FPbeWithSha1AndRC2Cbc := TDerObjectIdentifier.Create(Pkcs5 + '.11');
+  FIdPbeS2 := TDerObjectIdentifier.Create(Pkcs5 + '.13');
+  FIdPbmac1 := TDerObjectIdentifier.Create(Pkcs5 + '.14');
+
+  // EncryptionAlgorithm
+  FDesEde3Cbc := TDerObjectIdentifier.Create(EncryptionAlgorithm + '.7');
+  FRC2Cbc := TDerObjectIdentifier.Create(EncryptionAlgorithm + '.2');
+  Frc4 := TDerObjectIdentifier.Create(EncryptionAlgorithm + '.4');
+
+  // PKCS#7
+  FData := TDerObjectIdentifier.Create(Pkcs7 + '.1');
+  FSignedData := TDerObjectIdentifier.Create(Pkcs7 + '.2');
+  FEnvelopedData := TDerObjectIdentifier.Create(Pkcs7 + '.3');
+  FSignedAndEnvelopedData := TDerObjectIdentifier.Create(Pkcs7 + '.4');
+  FDigestedData := TDerObjectIdentifier.Create(Pkcs7 + '.5');
+  FEncryptedData := TDerObjectIdentifier.Create(Pkcs7 + '.6');
+
+  // Digest algorithms
+  FMD2 := TDerObjectIdentifier.Create(DigestAlgorithm + '.2');
+  FMD4 := TDerObjectIdentifier.Create(DigestAlgorithm + '.4');
+  FMD5 := TDerObjectIdentifier.Create(DigestAlgorithm + '.5');
+  FIdHmacWithSha1 := TDerObjectIdentifier.Create(DigestAlgorithm + '.7');
+  FIdHmacWithSha224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.8');
+  FIdHmacWithSha256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.9');
+  FIdHmacWithSha384 := TDerObjectIdentifier.Create(DigestAlgorithm + '.10');
+  FIdHmacWithSha512 := TDerObjectIdentifier.Create(DigestAlgorithm + '.11');
+  FIdHmacWithSha512_224 := TDerObjectIdentifier.Create(DigestAlgorithm + '.12');
+  FIdHmacWithSha512_256 := TDerObjectIdentifier.Create(DigestAlgorithm + '.13');
+
+  // PKCS#9
+  FPkcs9AtEmailAddress := TDerObjectIdentifier.Create(Pkcs9 + '.1');
+  FPkcs9AtUnstructuredName := TDerObjectIdentifier.Create(Pkcs9 + '.2');
+  FPkcs9AtContentType := TDerObjectIdentifier.Create(Pkcs9 + '.3');
+  FPkcs9AtMessageDigest := TDerObjectIdentifier.Create(Pkcs9 + '.4');
+  FPkcs9AtSigningTime := TDerObjectIdentifier.Create(Pkcs9 + '.5');
+  FPkcs9AtCounterSignature := TDerObjectIdentifier.Create(Pkcs9 + '.6');
+  FPkcs9AtChallengePassword := TDerObjectIdentifier.Create(Pkcs9 + '.7');
+  FPkcs9AtUnstructuredAddress := TDerObjectIdentifier.Create(Pkcs9 + '.8');
+  FPkcs9AtExtendedCertificateAttributes := TDerObjectIdentifier.Create(Pkcs9 + '.9');
+  FPkcs9AtSigningDescription := TDerObjectIdentifier.Create(Pkcs9 + '.13');
+  FPkcs9AtExtensionRequest := TDerObjectIdentifier.Create(Pkcs9 + '.14');
+  FPkcs9AtSmimeCapabilities := TDerObjectIdentifier.Create(Pkcs9 + '.15');
+  FIdSmime := TDerObjectIdentifier.Create(Pkcs9 + '.16');
+  FPkcs9AtFriendlyName := TDerObjectIdentifier.Create(Pkcs9 + '.20');
+  FPkcs9AtLocalKeyID := TDerObjectIdentifier.Create(Pkcs9 + '.21');
+  FX509Certificate := TDerObjectIdentifier.Create(CertTypes + '.1');
+  FSdsiCertificate := TDerObjectIdentifier.Create(CertTypes + '.2');
+  FX509Crl := TDerObjectIdentifier.Create(CrlTypes + '.1');
+  FSmimeAlg := FIdSmime.Branch('3');
+  FIdAlg := FSmimeAlg;
+  FIdAlgEsdh := FSmimeAlg.Branch('5');
+  FIdAlgCms3DesWrap := FSmimeAlg.Branch('6');
+  FIdAlgCmsRC2Wrap := FSmimeAlg.Branch('7');
+  FIdAlgZlibCompress := FSmimeAlg.Branch('8');
+  FIdAlgPwriKek := FSmimeAlg.Branch('9');
+  FIdAlgSsdh := FSmimeAlg.Branch('10');
+  FId_aa_cmsAlgorithmProtect := TDerObjectIdentifier.Create(Pkcs9 + '.52');
+  FIdRsaKem := FSmimeAlg.Branch('14');
+  FIdAlgHssLmsHashsig := FSmimeAlg.Branch('17');
+  FIdAlgAeadChaCha20Poly1305 := FSmimeAlg.Branch('18');
+  FDhSinglePassStdDHHkdfSha256Scheme := FSmimeAlg.Branch('19');
+  FDhSinglePassStdDHHkdfSha384Scheme := FSmimeAlg.Branch('20');
+  FDhSinglePassStdDHHkdfSha512Scheme := FSmimeAlg.Branch('21');
+  FIdAlgHkdfWithSha256 := FSmimeAlg.Branch('28');
+  FIdAlgHkdfWithSha384 := FSmimeAlg.Branch('29');
+  FIdAlgHkdfWithSha512 := FSmimeAlg.Branch('30');
+  FPreferSignedData := FPkcs9AtSmimeCapabilities.Branch('1');
+  FCannotDecryptAny := FPkcs9AtSmimeCapabilities.Branch('2');
+  FSmimeCapabilitiesVersions := FPkcs9AtSmimeCapabilities.Branch('3');
+  FId_ct := FIdSmime.Branch('1');
+  FIdCTAuthData := FId_ct.Branch('2');
+  FIdCTTstInfo := FId_ct.Branch('4');
+  FIdCTCompressedData := FId_ct.Branch('9');
+  FIdCTAuthEnvelopedData := FId_ct.Branch('23');
+  FIdCTTimestampedData := FId_ct.Branch('31');
+  FId_cti := FIdSmime.Branch('6');
+  FIdCtiEtsProofOfOrigin := FId_cti.Branch('1');
+  FIdCtiEtsProofOfReceipt := FId_cti.Branch('2');
+  FIdCtiEtsProofOfDelivery := FId_cti.Branch('3');
+  FIdCtiEtsProofOfSender := FId_cti.Branch('4');
+  FIdCtiEtsProofOfApproval := FId_cti.Branch('5');
+  FIdCtiEtsProofOfCreation := FId_cti.Branch('6');
+  FId_aa := FIdSmime.Branch('2');
+  FIdAAOid := FId_aa;
+  FPkcs9AtBinarySigningTime := FId_aa.Branch('46');
+  FIdAAReceiptRequest := FId_aa.Branch('1');
+  FIdAAContentHint := FId_aa.Branch('4');
+  FIdAAMsgSigDigest := FId_aa.Branch('5');
+  FIdAAContentReference := FId_aa.Branch('10');
+  FIdAAEncrypKeyPref := FId_aa.Branch('11');
+  FIdAASigningCertificate := FId_aa.Branch('12');
+  FIdAAContentIdentifier := FId_aa.Branch('7');
+  FIdAASignatureTimeStampToken := FId_aa.Branch('14');
+  FIdAAEtsSigPolicyID := FId_aa.Branch('15');
+  FIdAAEtsCommitmentType := FId_aa.Branch('16');
+  FIdAAEtsSignerLocation := FId_aa.Branch('17');
+  FIdAAEtsSignerAttr := FId_aa.Branch('18');
+  FIdAAEtsOtherSigCert := FId_aa.Branch('19');
+  FIdAAEtsContentTimestamp := FId_aa.Branch('20');
+  FIdAAEtsCertificateRefs := FId_aa.Branch('21');
+  FIdAAEtsRevocationRefs := FId_aa.Branch('22');
+  FIdAAEtsCertValues := FId_aa.Branch('23');
+  FIdAAEtsRevocationValues := FId_aa.Branch('24');
+  FIdAAEtsEscTimeStamp := FId_aa.Branch('25');
+  FIdAAEtsCertCrlTimestamp := FId_aa.Branch('26');
+  FIdAAEtsArchiveTimestamp := FId_aa.Branch('27');
+  FIdAADecryptKeyID := FId_aa.Branch('37');
+  FIdAAImplCryptoAlgs := FId_aa.Branch('38');
+  FIdAAAsymmDecryptKeyID := FId_aa.Branch('54');
+  FIdAAImplCompressAlgs := FId_aa.Branch('43');
+  FIdAACommunityIdentifiers := FId_aa.Branch('40');
+  FIdAASigningCertificateV2 := FId_aa.Branch('47');
+  FIdAAEtsArchiveTimestampV2 := FId_aa.Branch('48');
+  FId_spq := FIdSmime.Branch('5');
+  FIdSpqEtsUri := FId_spq.Branch('1');
+  FIdSpqEtsUNotice := FId_spq.Branch('2');
+  // PKCS#12
+  FKeyBag := TDerObjectIdentifier.Create(BagTypes + '.1');
+  FPkcs8ShroudedKeyBag := TDerObjectIdentifier.Create(BagTypes + '.2');
+  FCertBag := TDerObjectIdentifier.Create(BagTypes + '.3');
+  FCrlBag := TDerObjectIdentifier.Create(BagTypes + '.4');
+  FSecretBag := TDerObjectIdentifier.Create(BagTypes + '.5');
+  FSafeContentsBag := TDerObjectIdentifier.Create(BagTypes + '.6');
+  FPbeWithShaAnd128BitRC4 := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.1');
+  FPbeWithShaAnd40BitRC4 := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.2');
+  FPbeWithShaAnd3KeyTripleDesCbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.3');
+  FPbeWithShaAnd2KeyTripleDesCbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.4');
+  FPbeWithShaAnd128BitRC2Cbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.5');
+  FPbewithShaAnd40BitRC2Cbc := TDerObjectIdentifier.Create(Pkcs12PbeIds + '.6');
 end;
 
 end.

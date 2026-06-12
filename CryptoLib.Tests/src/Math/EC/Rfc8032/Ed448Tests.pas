@@ -181,7 +181,6 @@ end;
 procedure TTestEd448.SetUp;
 begin
   inherited;
-  TEd448.Precompute();
   FRandom := TSecureRandom.Create();
   FEd448 := TEd448.Create();
   FEd448Xof := TEd448Shake256.Create();

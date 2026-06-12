@@ -22,8 +22,8 @@ interface
 
 uses
   ClpBigInteger,
-  ClpLongArray,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpIF2mFieldData;
 
 type
   IECFieldElement = interface(IInterface)
@@ -94,14 +94,16 @@ type
     function GetK1: Int32;
     function GetK2: Int32;
     function GetK3: Int32;
-    function GetX: TLongArray;
+    function GetX: TCryptoLibUInt64Array;
+    function GetF2mFieldData: IF2mFieldData;
 
     property Representation: Int32 read GetRepresentation;
     property M: Int32 read GetM;
     property K1: Int32 read GetK1;
     property K2: Int32 read GetK2;
     property K3: Int32 read GetK3;
-    property X: TLongArray read GetX;
+    property X: TCryptoLibUInt64Array read GetX;
+    property F2mFieldData: IF2mFieldData read GetF2mFieldData;
   end;
 
 implementation

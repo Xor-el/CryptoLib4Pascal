@@ -43,10 +43,8 @@ type
     class function GetNames: TCryptoLibStringArray; static; inline;
     class procedure DefineCurveAlias(const AName: String;
       const AOid: IDerObjectIdentifier); static;
-
-    class procedure Boot; static;
-    class constructor CreateNistNamedCurves;
-    class destructor DestroyNistNamedCurves;
+    class constructor Create;
+    class destructor Destroy;
 
   public
     class function GetByName(const AName: String): IX9ECParameters;
@@ -81,7 +79,7 @@ begin
   FObjIds.Add(LName, AOid);
 end;
 
-class procedure TNistNamedCurves.Boot;
+class constructor TNistNamedCurves.Create;
 begin
   FObjIds := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FNames := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -105,12 +103,7 @@ begin
   DefineCurveAlias('P-521', TSecObjectIdentifiers.SecP521r1);
 end;
 
-class constructor TNistNamedCurves.CreateNistNamedCurves;
-begin
-  Boot;
-end;
-
-class destructor TNistNamedCurves.DestroyNistNamedCurves;
+class destructor TNistNamedCurves.Destroy;
 begin
   FObjIds.Free;
   FNames.Free;

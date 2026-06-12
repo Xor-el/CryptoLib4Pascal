@@ -21,11 +21,14 @@ unit ClpIetfUtilities;
 interface
 
 uses
+  Classes,
   SysUtils,
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpCryptoLibTypes,
+  ClpConverters,
+  ClpStreamUtilities,
   ClpStringUtilities,
 
   ClpEncoders;
@@ -42,6 +45,9 @@ type
     /// </summary>
     class function ConvertHex(AC: Char): Int32; static;
     class function DecodeObject(const AOValue: String): IAsn1Object; static;
+    class procedure FlushHexBytes(ABuf: TStringBuilder; AHexBytes: TMemoryStream;
+      var ALastEscaped: Int32); static;
+    class procedure CheckCompleteHexPair(AHex1: Int32); static;
 
   public
     /// <summary>
@@ -69,6 +75,30 @@ type
 implementation
 
 { TIetfUtilities }
+
+class procedure TIetfUtilities.FlushHexBytes(ABuf: TStringBuilder;
+  AHexBytes: TMemoryStream; var ALastEscaped: Int32);
+var
+  LHexSlice: TCryptoLibByteArray;
+  LLength: Int32;
+begin
+  LLength := AHexBytes.Position;
+  if LLength > 0 then
+  begin
+    SetLength(LHexSlice, LLength);
+    AHexBytes.Position := 0;
+    AHexBytes.Read(LHexSlice[0], LLength);
+    AHexBytes.Position := 0;
+    ABuf.Append(TConverters.ConvertBytesToString(LHexSlice, TEncoding.UTF8));
+    ALastEscaped := ABuf.Length - 1;
+  end;
+end;
+
+class procedure TIetfUtilities.CheckCompleteHexPair(AHex1: Int32);
+begin
+  if AHex1 >= 0 then
+    raise EArgumentCryptoLibException.Create('invalid hex escape in directory string');
+end;
 
 class function TIetfUtilities.IsHexDigit(AC: Char): Boolean;
 begin
@@ -104,10 +134,10 @@ end;
 class function TIetfUtilities.Unescape(const AElt: String): String;
 var
   LSb: TStringBuilder;
-  LStart, LI, LLastEscaped: Int32;
+  LHexBytes: TMemoryStream;
+  LStart, LI, LLastEscaped, LHex1, LHexDigit: Int32;
   LEscaped, LQuoted, LNonWhiteSpaceEncountered: Boolean;
   LC: Char;
-  LHex1: Int32;
 begin
   if System.Length(AElt) < 1 then
   begin
@@ -124,38 +154,37 @@ begin
   LEscaped := False;
   LQuoted := False;
   LSb := TStringBuilder.Create(System.Length(AElt));
+  LHexBytes := TMemoryStream.Create;
   try
-
     LStart := 1;
     if (System.Length(AElt) > 0) and (AElt[1] = '\') then
     begin
       if (System.Length(AElt) > 1) and (AElt[2] = '#') then
       begin
-        LStart := 3; // Skip '\#' (positions 1 and 2)
+        LStart := 3;
         LSb.Append('\#');
       end;
     end;
 
     LNonWhiteSpaceEncountered := False;
-    LLastEscaped := 0;
-    LHex1 := 0; // Store as Int32 (0 = no hex digit waiting)
+    LLastEscaped := -1;
+    LHex1 := -1;
 
     for LI := LStart to System.Length(AElt) do
     begin
       LC := AElt[LI];
 
-      // nonWhiteSpaceEncountered = true;
       if LC <> ' ' then
         LNonWhiteSpaceEncountered := True;
 
       if LC = '"' then
       begin
         if not LEscaped then
-        begin
-          LQuoted := not LQuoted;
-        end
+          LQuoted := not LQuoted
         else
         begin
+          CheckCompleteHexPair(LHex1);
+          FlushHexBytes(LSb, LHexBytes, LLastEscaped);
           LSb.Append(LC);
           LEscaped := False;
         end;
@@ -165,34 +194,41 @@ begin
         LEscaped := True;
         LLastEscaped := LSb.Length;
       end
+      else if (LC = ' ') and (not LEscaped) and (not LNonWhiteSpaceEncountered) then
+      begin
+        Continue;
+      end
+      else if LEscaped and IsHexDigit(LC) then
+      begin
+        LHexDigit := ConvertHex(LC);
+        if LHex1 < 0 then
+          LHex1 := LHexDigit
+        else
+        begin
+          LHexBytes.WriteByte(Byte(LHex1 * 16 + LHexDigit));
+          LEscaped := False;
+          LHex1 := -1;
+        end;
+      end
       else
       begin
-        if (LC = ' ') and (not LEscaped) and (not LNonWhiteSpaceEncountered) then
-        begin
-          Continue;
-        end;
-        if LEscaped and IsHexDigit(LC) then
-        begin
-          if LHex1 <> 0 then
-          begin
-            LSb.Append(Chr(ConvertHex(Chr(LHex1)) * 16 + ConvertHex(LC)));
-            LEscaped := False;
-            LHex1 := 0;
-            Continue;
-          end;
-          LHex1 := Ord(LC);
-          Continue;
-        end;
+        // A '\' followed by a single hex digit and then a non-hex char is an
+        // incomplete hexpair (RFC 4514 sec. 2.4 requires two), not a literal.
+        CheckCompleteHexPair(LHex1);
+        FlushHexBytes(LSb, LHexBytes, LLastEscaped);
         LSb.Append(LC);
         LEscaped := False;
       end;
     end;
 
+    // A '\' followed by a single hex digit at end of input is likewise incomplete.
+    CheckCompleteHexPair(LHex1);
+    FlushHexBytes(LSb, LHexBytes, LLastEscaped);
+
     if LSb.Length > 0 then
     begin
-      while (LSb.Length > 0) and 
-            (LSb.Chars[LSb.Length - 1] = ' ') and 
-            (LLastEscaped <> LSb.Length - 1) do
+      while (LSb.Length > 0) and (LSb.Chars[LSb.Length - 1] = ' ') and
+        (LLastEscaped < LSb.Length - 1) do
       begin
         LSb.Length := LSb.Length - 1;
       end;
@@ -201,6 +237,7 @@ begin
     else
       Result := '';
   finally
+    LHexBytes.Free;
     LSb.Free;
   end;
 end;

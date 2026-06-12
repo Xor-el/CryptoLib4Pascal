@@ -61,7 +61,6 @@ type
     FCurrentStream: TStream;
 
     class constructor Create();
-    class procedure Boot();
     class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
     class function GetTaggedAttributeCertificate(ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate; static;
 
@@ -85,11 +84,6 @@ implementation
 { TX509AttrCertParser }
 
 class constructor TX509AttrCertParser.Create();
-begin
-  Boot();
-end;
-
-class procedure TX509AttrCertParser.Boot();
 begin
   FPemAttrCertParser := TPemParser.Create('ATTRIBUTE CERTIFICATE');
 end;

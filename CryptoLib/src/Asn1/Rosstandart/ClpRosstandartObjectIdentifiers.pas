@@ -28,7 +28,6 @@ type
   TRosstandartObjectIdentifiers = class abstract(TObject)
   strict private
     class var
-      FIsBooted: Boolean;
       FRosstandart, FIdTc26, FIdTc26Gost3411_12_256, FIdTc26Gost3411_12_512,
       FIdTc26HmacGost3411_12_256, FIdTc26HmacGost3411_12_512,
       FIdTc26Gost3410_12_256, FIdTc26Gost3410_12_512,
@@ -89,8 +88,6 @@ type
     class property IdTc26Gost3410_12_512ParamSetB: IDerObjectIdentifier read GetIdTc26Gost3410_12_512ParamSetB;
     class property IdTc26Gost3410_12_512ParamSetC: IDerObjectIdentifier read GetIdTc26Gost3410_12_512ParamSetC;
     class property IdTc26Gost28147ParamZ: IDerObjectIdentifier read GetIdTc26Gost28147ParamZ;
-
-    class procedure Boot; static;
   end;
 
 implementation
@@ -99,39 +96,29 @@ implementation
 
 class constructor TRosstandartObjectIdentifiers.Create;
 begin
-  Boot;
-end;
-
-class procedure TRosstandartObjectIdentifiers.Boot;
-begin
-  if not FIsBooted then
-  begin
-    FRosstandart := TDerObjectIdentifier.Create('1.2.643.7');
-    FIdTc26 := FRosstandart.Branch('1');
-    FIdTc26Gost3411_12_256 := FIdTc26.Branch('1.2.2');
-    FIdTc26Gost3411_12_512 := FIdTc26.Branch('1.2.3');
-    FIdTc26HmacGost3411_12_256 := FIdTc26.Branch('1.4.1');
-    FIdTc26HmacGost3411_12_512 := FIdTc26.Branch('1.4.2');
-    FIdTc26Gost3410_12_256 := FIdTc26.Branch('1.1.1');
-    FIdTc26Gost3410_12_512 := FIdTc26.Branch('1.1.2');
-    FIdTc26SignWithDigestGost3410_12_256 := FIdTc26.Branch('1.3.2');
-    FIdTc26SignWithDigestGost3410_12_512 := FIdTc26.Branch('1.3.3');
-    FIdTc26Agreement := FIdTc26.Branch('1.6');
-    FIdTc26AgreementGost3410_12_256 := FIdTc26Agreement.Branch('1');
-    FIdTc26AgreementGost3410_12_512 := FIdTc26Agreement.Branch('2');
-    FIdTc26Gost3410_12_256ParamSet := FIdTc26.Branch('2.1.1');
-    FIdTc26Gost3410_12_256ParamSetA := FIdTc26Gost3410_12_256ParamSet.Branch('1');
-    FIdTc26Gost3410_12_256ParamSetB := FIdTc26Gost3410_12_256ParamSet.Branch('2');
-    FIdTc26Gost3410_12_256ParamSetC := FIdTc26Gost3410_12_256ParamSet.Branch('3');
-    FIdTc26Gost3410_12_256ParamSetD := FIdTc26Gost3410_12_256ParamSet.Branch('4');
-    FIdTc26Gost3410_12_512ParamSet := FIdTc26.Branch('2.1.2');
-    FIdTc26Gost3410_12_512ParamSetA := FIdTc26Gost3410_12_512ParamSet.Branch('1');
-    FIdTc26Gost3410_12_512ParamSetB := FIdTc26Gost3410_12_512ParamSet.Branch('2');
-    FIdTc26Gost3410_12_512ParamSetC := FIdTc26Gost3410_12_512ParamSet.Branch('3');
-    FIdTc26Gost28147ParamZ := FIdTc26.Branch('2.5.1.1');
-
-    FIsBooted := True;
-  end;
+  FRosstandart := TDerObjectIdentifier.Create('1.2.643.7');
+  FIdTc26 := FRosstandart.Branch('1');
+  FIdTc26Gost3411_12_256 := FIdTc26.Branch('1.2.2');
+  FIdTc26Gost3411_12_512 := FIdTc26.Branch('1.2.3');
+  FIdTc26HmacGost3411_12_256 := FIdTc26.Branch('1.4.1');
+  FIdTc26HmacGost3411_12_512 := FIdTc26.Branch('1.4.2');
+  FIdTc26Gost3410_12_256 := FIdTc26.Branch('1.1.1');
+  FIdTc26Gost3410_12_512 := FIdTc26.Branch('1.1.2');
+  FIdTc26SignWithDigestGost3410_12_256 := FIdTc26.Branch('1.3.2');
+  FIdTc26SignWithDigestGost3410_12_512 := FIdTc26.Branch('1.3.3');
+  FIdTc26Agreement := FIdTc26.Branch('1.6');
+  FIdTc26AgreementGost3410_12_256 := FIdTc26Agreement.Branch('1');
+  FIdTc26AgreementGost3410_12_512 := FIdTc26Agreement.Branch('2');
+  FIdTc26Gost3410_12_256ParamSet := FIdTc26.Branch('2.1.1');
+  FIdTc26Gost3410_12_256ParamSetA := FIdTc26Gost3410_12_256ParamSet.Branch('1');
+  FIdTc26Gost3410_12_256ParamSetB := FIdTc26Gost3410_12_256ParamSet.Branch('2');
+  FIdTc26Gost3410_12_256ParamSetC := FIdTc26Gost3410_12_256ParamSet.Branch('3');
+  FIdTc26Gost3410_12_256ParamSetD := FIdTc26Gost3410_12_256ParamSet.Branch('4');
+  FIdTc26Gost3410_12_512ParamSet := FIdTc26.Branch('2.1.2');
+  FIdTc26Gost3410_12_512ParamSetA := FIdTc26Gost3410_12_512ParamSet.Branch('1');
+  FIdTc26Gost3410_12_512ParamSetB := FIdTc26Gost3410_12_512ParamSet.Branch('2');
+  FIdTc26Gost3410_12_512ParamSetC := FIdTc26Gost3410_12_512ParamSet.Branch('3');
+  FIdTc26Gost28147ParamZ := FIdTc26.Branch('2.5.1.1');
 end;
 
 class function TRosstandartObjectIdentifiers.GetIdTc26: IDerObjectIdentifier;

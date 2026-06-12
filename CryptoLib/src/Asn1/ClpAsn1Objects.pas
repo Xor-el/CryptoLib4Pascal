@@ -127,6 +127,7 @@ type
         constructor Create;
       strict protected
         function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; override;
+        function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; override;
       public
         class property Instance: IAsn1UniversalType read GetInstance;
       end;
@@ -1597,7 +1598,7 @@ type
     FDataValueDescriptor: IAsn1ObjectDescriptor;
     FEncoding: Int32;
     FExternalContent: IAsn1Object;
-    
+
     function BuildSequence(): IAsn1Sequence; virtual;
 
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
@@ -2493,11 +2494,11 @@ type
     /// <summary>
     /// Create from Int32 value.
     /// </summary>
-    constructor Create(AValue: Int32); overload;
+    constructor Create(AValue: Int32); overload; deprecated 'Use ValueOf instead.';
     /// <summary>
     /// Create from Int64 value.
     /// </summary>
-    constructor Create(AValue: Int64); overload;
+    constructor Create(AValue: Int64); overload; deprecated 'Use ValueOf instead.';
     /// <summary>
     /// Create from BigInteger value.
     /// </summary>
@@ -7238,17 +7239,17 @@ begin
   inherited Create();
   if ASequence = nil then
     raise EArgumentNilCryptoLibException.Create('sequence');
-  
+
   LOffset := 0;
   LAsn1 := GetObjFromSequence(ASequence, LOffset);
-  
+
   if Supports(LAsn1, IDerObjectIdentifier, LDerObjectIdentifier) then
   begin
     FDirectReference := LDerObjectIdentifier;
     System.Inc(LOffset);
     LAsn1 := GetObjFromSequence(ASequence, LOffset);
   end;
-  
+
   if Supports(LAsn1, IDerInteger, LDerInteger) then
   begin
     FIndirectReference := LDerInteger;
@@ -7268,13 +7269,13 @@ begin
     System.Inc(LOffset);
     LAsn1 := GetObjFromSequence(ASequence, LOffset);
   end;
-  
+
   if ASequence.Count <> LOffset + 1 then
     raise EArgumentCryptoLibException.Create('input sequence too large');
-  
+
   if not Supports(LAsn1, IAsn1TaggedObject, LObj) then
     raise EArgumentCryptoLibException.Create('No tagged object found in sequence. Structure doesn''t seem to be of type External');
-  
+
   FEncoding := CheckEncoding(LObj.TagNo);
   FExternalContent := GetExternalContent(LObj);
 end;
@@ -10166,7 +10167,7 @@ end;
 
 constructor TDerUtcTime.Create(const ADateTime: TDateTime);
 begin
-  inherited Create(ADateTime);
+  inherited Create(ADateTime, TDateTimeUtilities.TwoDigitYearMax);
 end;
 
 constructor TDerUtcTime.Create(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
@@ -10259,7 +10260,7 @@ end;
 
 function TAsn1UtcTime.ToAdjustedDateTime: TDateTime;
 begin
-  Result := ToDateTime(2049);
+  Result := ToDateTime(TDateTimeUtilities.TwoDigitYearMax);
 end;
 
 class function TAsn1UtcTime.InRange(const ADateTime: TDateTime; ATwoDigitYearMax: Int32): Boolean;
@@ -12330,7 +12331,7 @@ begin
   System.SetLength(FSmallConstants, 17);
   for LI := 0 to System.Length(FSmallConstants) - 1 do
   begin
-    FSmallConstants[LI] := TDerInteger.Create(LI);
+    FSmallConstants[LI] := TDerInteger.Create(TCryptoLibByteArray.Create(Byte(LI)), False);
   end;
   
   FZero := FSmallConstants[0];
@@ -12530,7 +12531,7 @@ begin
   if (AValue >= 0) and (AValue < System.Length(FSmallConstants)) then
     Result := FSmallConstants[AValue]
   else
-    Result := TDerInteger.Create(AValue);
+    Result := TDerInteger.Create(TBigInteger.ValueOf(AValue));
 end;
 
 class function TDerInteger.ValueOf(AValue: Int64): IDerInteger;
@@ -12538,7 +12539,7 @@ begin
   if (AValue >= 0) and (AValue < Int64(System.Length(FSmallConstants))) then
     Result := FSmallConstants[Int32(AValue)]
   else
-    Result := TDerInteger.Create(AValue);
+    Result := TDerInteger.Create(TBigInteger.ValueOf(AValue));
 end;
 
 class function TDerInteger.GetInstance(const AObj: TObject): IDerInteger;
@@ -13101,7 +13102,12 @@ end;
 
 function TAsn1OctetString.Meta.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
 begin
-  Result := AOctetString as IAsn1Object;
+  Result := AOctetString;
+end;
+
+function TAsn1OctetString.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
+begin
+  Result := ASequence.ToAsn1OctetString();
 end;
 
 { TAsn1Sequence.Meta }
@@ -13120,7 +13126,7 @@ end;
 
 function TAsn1Sequence.Meta.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
 begin
-  Result := ASequence as IAsn1Object;
+  Result := ASequence;
 end;
 
 { TAsn1Set.Meta }
@@ -13267,7 +13273,7 @@ var
   LBitString: IDerBitString;
 begin
   LBitString := ASequence.ToAsn1BitString();
-  Result := LBitString as IAsn1Object;
+  Result := LBitString;
 end;
 
 { TAsn1GeneralizedTime.Meta }
@@ -13354,7 +13360,7 @@ var
   LExternal: IDerExternal;
 begin
   LExternal := ASequence.ToAsn1External();
-  Result := LExternal as IAsn1Object;
+  Result := LExternal;
 end;
 
 { TDerUtf8String.Meta }

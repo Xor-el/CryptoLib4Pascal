@@ -21,7 +21,6 @@ unit ClpEd25519;
 interface
 
 uses
-  SyncObjs,
   ClpCodec,
   ClpDigestUtilities,
   ClpBitOperations,
@@ -38,6 +37,7 @@ resourcestring
   SDigestSize = 'Digest must produce 64 bytes';
   SInvalidOp = 'Invalid point';
   SInvalidCtx = 'ctx';
+  SInvalidBufferLength = 'Invalid buffer length';
 
 type
   /// <summary>
@@ -54,6 +54,8 @@ type
   /// </remarks>
   TEd25519 = class(TObject)
   strict private
+  const
+    DigestSize = 64;
   type
     TPointAccum = record
     private
@@ -131,6 +133,38 @@ type
       property Data: TCryptoLibInt32Array read GetData;
     end;
 
+    /// <summary>
+    ///   Low-level helpers for the expanded private key format (xk =
+    ///   Digest(seed), 64 bytes). Bound to a <see cref="TEd25519"/>
+    ///   owner so <see cref="CreateDigest"/> overrides apply.
+    /// </summary>
+    TExpandedKey = class sealed(TObject)
+    strict private
+      FOwner: TEd25519;
+      procedure CheckExpandedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+      procedure CheckSeedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+    private
+      constructor Create(AOwner: TEd25519);
+    public
+      const
+        ExpandedKeySize = DigestSize;
+      procedure ExpandPrivateKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+        var AXk: TCryptoLibByteArray; AXkOff: Int32);
+      procedure GeneratePrivateKey(const ARandom: ISecureRandom;
+        var AXk: TCryptoLibByteArray; AXkOff: Int32);
+      procedure GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+        var APk: TCryptoLibByteArray; APkOff: Int32); overload;
+      function GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32): IPublicPoint; overload;
+      procedure Prune(var AXk: TCryptoLibByteArray; AXkOff: Int32);
+      procedure Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+        const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+        var ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+      procedure Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+        const APk: TCryptoLibByteArray; APkOff: Int32;
+        const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+        var ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
+    end;
+
   strict private
   const
     CoordUints = 8;
@@ -151,13 +185,11 @@ type
     FOrder8_y1, FOrder8_y2: TCryptoLibUInt32Array;
     FB_x, FB_y, FB128_x, FB128_y: TCryptoLibInt32Array;
     FC_d, FC_d2, FC_d4: TCryptoLibInt32Array;
-    FPrecompLock: TCriticalSection;
     FPrecompBaseWnaf: TCryptoLibGenericArray<TPointPrecomp>;
     FPrecompBase128Wnaf: TCryptoLibGenericArray<TPointPrecomp>;
     FPrecompBaseComb: TCryptoLibInt32Array;
-  class procedure Boot; static;
   class constructor Create;
-  class destructor Destroy;
+  class procedure Precompute; static;
   class function CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray; static;
   class function CheckContextVar(ACtx: TCryptoLibByteArray; APhflag: Byte): Boolean; static;
   class function CheckPoint(const AP: TPointAccum): Int32; overload; static;
@@ -196,7 +228,11 @@ type
   class function PointPrecomputeZ(const AP: TPointAffine; ACount: Int32; var AT: TPointTemp): TCryptoLibInt32Array; overload; static;
   class procedure PointPrecomputeZ(const AP: TPointAffine; var APoints: TCryptoLibGenericArray<TPointPrecompZ>; ACount: Int32; var AT: TPointTemp); overload; static;
   class procedure PointSetNeutral(var AP: TPointAccum); static;
-  class procedure PruneScalar(const AN: TCryptoLibByteArray; ANOff: Int32; AR: TCryptoLibByteArray); static;
+  class procedure ExpandPrivateKey(const AD: IDigest; const ASk: TCryptoLibByteArray; ASkOff: Int32;
+    const AH: TCryptoLibByteArray; AHOff: Int32); static;
+  class function GeneratePublicPoint(const AH: TCryptoLibByteArray; AHOff: Int32): IPublicPoint; static;
+  class procedure PruneScalar(var AScalar: TCryptoLibByteArray; AScalarOff: Int32); overload; static;
+  class procedure PruneScalar(const AN: TCryptoLibByteArray; ANOff: Int32; AR: TCryptoLibByteArray); overload; static;
   class procedure ScalarMult(const AK: TCryptoLibByteArray; const AP: TPointAffine; var AR: TPointAccum); static;
   class procedure ScalarMultBase(const AK: TCryptoLibByteArray; var AR: TPointAccum); static;
   class procedure ScalarMultBaseEncoded(const AK: TCryptoLibByteArray; AR: TCryptoLibByteArray; AROff: Int32); static;
@@ -222,12 +258,11 @@ type
     function CreateDigest(): IDigest; virtual;
   public
     const
-    PrehashSize = 64;
+    PrehashSize = DigestSize;
     PublicKeySize = PointBytes;
     SecretKeySize = 32;
     SignatureSize = PointBytes + ScalarBytes;
 
-    class procedure Precompute; static;
     class procedure ScalarMultBaseYZ(const AK: TCryptoLibByteArray; AKOff: Int32; AY, AZ: TCryptoLibInt32Array); static;
 
     class procedure EncodePublicPoint(const APublicPoint: IPublicPoint; APk: TCryptoLibByteArray; APkOff: Int32); static;
@@ -237,6 +272,7 @@ type
     class function ValidatePublicKeyPartialExport(const APk: TCryptoLibByteArray; APkOff: Int32): IPublicPoint; static;
 
     function CreatePreHash(): IDigest;
+    function CreateExpandedKey: TExpandedKey;
     function GeneratePublicKey(const &AS: TCryptoLibByteArray; ASOff: Int32): IPublicPoint; overload;
     procedure GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
     procedure GeneratePublicKey(const &AS: TCryptoLibByteArray; ASOff: Int32; APk: TCryptoLibByteArray; APkOff: Int32); overload;
@@ -293,41 +329,30 @@ end;
 
 class constructor TEd25519.Create;
 begin
-  Boot;
-end;
-
-class procedure TEd25519.Boot;
-begin
   FDom2Prefix := TCryptoLibByteArray.Create($53, $69, $67, $45, $64, $32, $35, $35, $31, $39, $20,
-    $6E, $6F, $20, $45, $64, $32, $35, $35, $31, $39, $20, $63, $6F, $6C, $6C, $69, $73, $69,
-    $6F, $6E, $73);
+  $6E, $6F, $20, $45, $64, $32, $35, $35, $31, $39, $20, $63, $6F, $6C, $6C, $69, $73, $69,
+  $6F, $6E, $73);
   FP := TCryptoLibUInt32Array.Create($FFFFFFED, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
-    $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
+  $FFFFFFFF, $FFFFFFFF, $7FFFFFFF);
   FOrder8_y1 := TCryptoLibUInt32Array.Create($706A17C7, $4FD84D3D, $760B3CBA, $0F67100D, $FA53202A,
-    $C6CC392C, $77FDC74E, $7A03AC92);
+  $C6CC392C, $77FDC74E, $7A03AC92);
   FOrder8_y2 := TCryptoLibUInt32Array.Create($8F95E826, $B027B2C2, $89F4C345, $F098EFF2, $05ACDFD5,
-    $3933C6D3, $880238B1, $05FC536D);
+  $3933C6D3, $880238B1, $05FC536D);
   FB_x := TCryptoLibInt32Array.Create($0325D51A, $018B5823, $007B2C95, $0304A92D, $00D2598E, $01D6DC5C,
-    $01388C7F, $013FEC0A, $029E6B72, $0042D26D);
+  $01388C7F, $013FEC0A, $029E6B72, $0042D26D);
   FB_y := TCryptoLibInt32Array.Create($02666658, $01999999, $00666666, $03333333, $00CCCCCC, $02666666,
-    $01999999, $00666666, $03333333, $00CCCCCC);
+  $01999999, $00666666, $03333333, $00CCCCCC);
   FB128_x := TCryptoLibInt32Array.Create($00B7E824, $0011EB98, $003E5FC8, $024E1739, $0131CD0B, $014E29A0,
-    $034E6138, $0132C952, $03F9E22F, $00984F5F);
+  $034E6138, $0132C952, $03F9E22F, $00984F5F);
   FB128_y := TCryptoLibInt32Array.Create($03F5A66B, $02AF4452, $0049E5BB, $00F28D26, $0121A17C, $02C29C3A,
-    $0047AD89, $0087D95F, $0332936E, $00BE5933);
+  $0047AD89, $0087D95F, $0332936E, $00BE5933);
   FC_d := TCryptoLibInt32Array.Create($035978A3, $02D37284, $018AB75E, $026A0A0E, $0000E014, $0379E898,
-    $01D01E5D, $01E738CC, $03715B7F, $00A406D9);
+  $01D01E5D, $01E738CC, $03715B7F, $00A406D9);
   FC_d2 := TCryptoLibInt32Array.Create($02B2F159, $01A6E509, $01156EBD, $00D4141D, $0001C029, $02F3D130,
-    $03A03CBB, $01CE7198, $02E2B6FF, $00480DB3);
+  $03A03CBB, $01CE7198, $02E2B6FF, $00480DB3);
   FC_d4 := TCryptoLibInt32Array.Create($0165E2B2, $034DCA13, $002ADD7A, $01A8283B, $00038052, $01E7A260,
-    $03407977, $019CE331, $01C56DFF, $00901B67);
-  FPrecompLock := TCriticalSection.Create;
-end;
-
-class destructor TEd25519.Destroy;
-begin
-  FPrecompLock.Free;
-  FPrecompLock := nil;
+  $03407977, $019CE331, $01C56DFF, $00901B67);
+  Precompute;
 end;
 
 class function TEd25519.CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray;
@@ -460,7 +485,7 @@ var
   LD: IDigest;
 begin
   LD := CreateDigest();
-  if LD.GetDigestSize() <> 64 then
+  if LD.GetDigestSize() <> DigestSize then
     raise EInvalidOperationCryptoLibException.CreateRes(@SDigestSize);
   Result := LD;
 end;
@@ -983,12 +1008,40 @@ begin
   TX25519Field.One(AP.V);
 end;
 
+class procedure TEd25519.PruneScalar(var AScalar: TCryptoLibByteArray; AScalarOff: Int32);
+begin
+  AScalar[AScalarOff] := AScalar[AScalarOff] and $F8;
+  AScalar[AScalarOff + ScalarBytes - 1] := (AScalar[AScalarOff + ScalarBytes - 1] and $7F) or $40;
+end;
+
 class procedure TEd25519.PruneScalar(const AN: TCryptoLibByteArray; ANOff: Int32; AR: TCryptoLibByteArray);
 begin
   System.Move(AN[ANOff], AR[0], ScalarBytes);
-  AR[0] := AR[0] and $F8;
-  AR[ScalarBytes - 1] := AR[ScalarBytes - 1] and $7F;
-  AR[ScalarBytes - 1] := AR[ScalarBytes - 1] or $40;
+  PruneScalar(AR, 0);
+end;
+
+class procedure TEd25519.ExpandPrivateKey(const AD: IDigest; const ASk: TCryptoLibByteArray; ASkOff: Int32;
+  const AH: TCryptoLibByteArray; AHOff: Int32);
+begin
+  AD.BlockUpdate(ASk, ASkOff, SecretKeySize);
+  AD.DoFinal(AH, AHOff);
+end;
+
+class function TEd25519.GeneratePublicPoint(const AH: TCryptoLibByteArray; AHOff: Int32): IPublicPoint;
+var
+  LS: TCryptoLibByteArray;
+  LP: TPointAccum;
+  LQ: TPointAffine;
+begin
+  System.SetLength(LS, ScalarBytes);
+  PruneScalar(AH, AHOff, LS);
+  InitPointAccum(LP);
+  ScalarMultBase(LS, LP);
+  InitPointAffine(LQ);
+  NormalizeToAffine(LP, LQ);
+  if CheckPoint(LQ) = 0 then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+  Result := ExportPoint(LQ);
 end;
 
 class procedure TEd25519.ScalarMult(const AK: TCryptoLibByteArray; const AP: TPointAffine; var AR: TPointAccum);
@@ -1032,7 +1085,6 @@ var
   LW: UInt32;
   LSign, LAbs, LResultSign: Int32;
 begin
-  Precompute;
   System.SetLength(LN, ScalarUints);
   TScalar25519.Decode(AK, LN);
   TScalar25519.ToSignedDigits(PrecompRange, LN);
@@ -1155,23 +1207,12 @@ end;
 function TEd25519.GeneratePublicKey(const &AS: TCryptoLibByteArray; ASOff: Int32): IPublicPoint;
 var
   LD: IDigest;
-  LH, LS: TCryptoLibByteArray;
-  LP: TPointAccum;
-  LQ: TPointAffine;
+  LH: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
-  System.SetLength(LS, ScalarBytes);
-  PruneScalar(LH, 0, LS);
-  InitPointAccum(LP);
-  ScalarMultBase(LS, LP);
-  InitPointAffine(LQ);
-  NormalizeToAffine(LP, LQ);
-  if CheckPoint(LQ) = 0 then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
-  Result := ExportPoint(LQ);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
+  Result := GeneratePublicPoint(LH, 0);
 end;
 
 class function TEd25519.ValidatePublicKeyFull(const APk: TCryptoLibByteArray; APkOff: Int32): Boolean;
@@ -1252,7 +1293,6 @@ begin
   System.Assert(System.Length(ANp) = 4);
   System.Assert(System.Length(ANq) = 4);
   {$ENDIF}
-  Precompute();
   System.SetLength(LWsB, 256);
   System.SetLength(LWsP, 128);
   System.SetLength(LWsQ, 128);
@@ -1322,125 +1362,118 @@ var
   LOff: Int32;
   LI: Int32;
 begin
-  FPrecompLock.Enter;
-  try
-    if FPrecompBaseComb <> nil then
-      Exit;
-    LWnafPoints := 1 shl (WnafWidthBase - 2);
-    LCombPoints := PrecompBlocks * PrecompPoints;
-    LTotalPoints := LWnafPoints * 2 + LCombPoints;
-    System.SetLength(LPoints, LTotalPoints);
-    InitPointTemp(LT);
-    InitPointAffine(LB);
-    TX25519Field.Copy(FB_x, 0, LB.X, 0);
-    TX25519Field.Copy(FB_y, 0, LB.Y, 0);
-    PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
-    InitPointAffine(LB128);
-    TX25519Field.Copy(FB128_x, 0, LB128.X, 0);
-    TX25519Field.Copy(FB128_y, 0, LB128.Y, 0);
-    PointPrecompute(LB128, LPoints, LWnafPoints, LWnafPoints, LT);
-    InitPointAccum(LP);
-    TX25519Field.Copy(FB_x, 0, LP.X, 0);
-    TX25519Field.Copy(FB_y, 0, LP.Y, 0);
-    TX25519Field.One(LP.Z);
-    TX25519Field.Copy(FB_x, 0, LP.U, 0);
-    TX25519Field.Copy(FB_y, 0, LP.V, 0);
-    LPointsIndex := LWnafPoints * 2;
-    System.SetLength(LToothPowers, PrecompTeeth);
+  LWnafPoints := 1 shl (WnafWidthBase - 2);
+  LCombPoints := PrecompBlocks * PrecompPoints;
+  LTotalPoints := LWnafPoints * 2 + LCombPoints;
+  System.SetLength(LPoints, LTotalPoints);
+  InitPointTemp(LT);
+  InitPointAffine(LB);
+  TX25519Field.Copy(FB_x, 0, LB.X, 0);
+  TX25519Field.Copy(FB_y, 0, LB.Y, 0);
+  PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
+  InitPointAffine(LB128);
+  TX25519Field.Copy(FB128_x, 0, LB128.X, 0);
+  TX25519Field.Copy(FB128_y, 0, LB128.Y, 0);
+  PointPrecompute(LB128, LPoints, LWnafPoints, LWnafPoints, LT);
+  InitPointAccum(LP);
+  TX25519Field.Copy(FB_x, 0, LP.X, 0);
+  TX25519Field.Copy(FB_y, 0, LP.Y, 0);
+  TX25519Field.One(LP.Z);
+  TX25519Field.Copy(FB_x, 0, LP.U, 0);
+  TX25519Field.Copy(FB_y, 0, LP.V, 0);
+  LPointsIndex := LWnafPoints * 2;
+  System.SetLength(LToothPowers, PrecompTeeth);
+  for LTooth := 0 to PrecompTeeth - 1 do
+    InitPointExtended(LToothPowers[LTooth]);
+  InitPointExtended(LU);
+  for LBlock := 0 to PrecompBlocks - 1 do
+  begin
+    InitPointExtended(LPoints[LPointsIndex]);
     for LTooth := 0 to PrecompTeeth - 1 do
-      InitPointExtended(LToothPowers[LTooth]);
-    InitPointExtended(LU);
-    for LBlock := 0 to PrecompBlocks - 1 do
     begin
-      InitPointExtended(LPoints[LPointsIndex]);
-      for LTooth := 0 to PrecompTeeth - 1 do
+      if LTooth = 0 then
+        PointCopy(LP, LPoints[LPointsIndex])
+      else
       begin
-        if LTooth = 0 then
-          PointCopy(LP, LPoints[LPointsIndex])
-        else
-        begin
-          PointCopy(LP, LU);
-          PointAdd(LPoints[LPointsIndex], LU, LPoints[LPointsIndex], LT);
-        end;
-        PointDouble(LP);
-        PointCopy(LP, LToothPowers[LTooth]);
-        if LBlock + LTooth <> PrecompBlocks + PrecompTeeth - 2 then
-        begin
-          for LSpacing := 1 to PrecompSpacing - 1 do
-            PointDouble(LP);
-        end;
+        PointCopy(LP, LU);
+        PointAdd(LPoints[LPointsIndex], LU, LPoints[LPointsIndex], LT);
       end;
-      TX25519Field.Negate(LPoints[LPointsIndex].X, LPoints[LPointsIndex].X);
-      TX25519Field.Negate(LPoints[LPointsIndex].T, LPoints[LPointsIndex].T);
-      System.Inc(LPointsIndex);
-      for LTooth := 0 to PrecompTeeth - 2 do
+      PointDouble(LP);
+      PointCopy(LP, LToothPowers[LTooth]);
+      if LBlock + LTooth <> PrecompBlocks + PrecompTeeth - 2 then
       begin
-        LSize := 1 shl LTooth;
-        for LJ := 0 to LSize - 1 do
-        begin
-          InitPointExtended(LPoints[LPointsIndex]);
-          PointAdd(LPoints[LPointsIndex - LSize], LToothPowers[LTooth], LPoints[LPointsIndex], LT);
-          System.Inc(LPointsIndex);
-        end;
+        for LSpacing := 1 to PrecompSpacing - 1 do
+          PointDouble(LP);
       end;
     end;
-    {$IFDEF DEBUG}
-    System.Assert(LPointsIndex = LTotalPoints);
-    {$ENDIF}
-    InvertDoubleZs(LPoints);
-    System.SetLength(FPrecompBaseWnaf, LWnafPoints);
-    for LI := 0 to LWnafPoints - 1 do
+    TX25519Field.Negate(LPoints[LPointsIndex].X, LPoints[LPointsIndex].X);
+    TX25519Field.Negate(LPoints[LPointsIndex].T, LPoints[LPointsIndex].T);
+    System.Inc(LPointsIndex);
+    for LTooth := 0 to PrecompTeeth - 2 do
     begin
-      InitPointPrecomp(FPrecompBaseWnaf[LI]);
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
-      TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
-      TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, FPrecompBaseWnaf[LI].YpxH, FPrecompBaseWnaf[LI].YmxH);
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, FPrecompBaseWnaf[LI].Xyd);
-      TX25519Field.Mul(FPrecompBaseWnaf[LI].Xyd, FC_d4, FPrecompBaseWnaf[LI].Xyd);
-      TX25519Field.Normalize(FPrecompBaseWnaf[LI].YmxH);
-      TX25519Field.Normalize(FPrecompBaseWnaf[LI].YpxH);
-      TX25519Field.Normalize(FPrecompBaseWnaf[LI].Xyd);
+      LSize := 1 shl LTooth;
+      for LJ := 0 to LSize - 1 do
+      begin
+        InitPointExtended(LPoints[LPointsIndex]);
+        PointAdd(LPoints[LPointsIndex - LSize], LToothPowers[LTooth], LPoints[LPointsIndex], LT);
+        System.Inc(LPointsIndex);
+      end;
     end;
-    System.SetLength(FPrecompBase128Wnaf, LWnafPoints);
-    for LI := 0 to LWnafPoints - 1 do
-    begin
-      InitPointPrecomp(FPrecompBase128Wnaf[LI]);
-      LPointsIndex2 := LWnafPoints + LI;
-      TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].X);
-      TX25519Field.Mul(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].Y);
-      TX25519Field.Apm(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].X, FPrecompBase128Wnaf[LI].YpxH, FPrecompBase128Wnaf[LI].YmxH);
-      TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Y, FPrecompBase128Wnaf[LI].Xyd);
-      TX25519Field.Mul(FPrecompBase128Wnaf[LI].Xyd, FC_d4, FPrecompBase128Wnaf[LI].Xyd);
-      TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YmxH);
-      TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YpxH);
-      TX25519Field.Normalize(FPrecompBase128Wnaf[LI].Xyd);
-    end;
-    FPrecompBaseComb := TX25519Field.CreateTable(LCombPoints * 3);
-    InitPointPrecomp(LS);
-    LOff := 0;
-    for LI := LWnafPoints * 2 to LTotalPoints - 1 do
-    begin
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
-      TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
-      TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, LS.YpxH, LS.YmxH);
-      TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, LS.Xyd);
-      TX25519Field.Mul(LS.Xyd, FC_d4, LS.Xyd);
-      TX25519Field.Normalize(LS.YmxH);
-      TX25519Field.Normalize(LS.YpxH);
-      TX25519Field.Normalize(LS.Xyd);
-      TX25519Field.Copy(LS.YmxH, 0, FPrecompBaseComb, LOff);
-      LOff := LOff + TX25519Field.Size;
-      TX25519Field.Copy(LS.YpxH, 0, FPrecompBaseComb, LOff);
-      LOff := LOff + TX25519Field.Size;
-      TX25519Field.Copy(LS.Xyd, 0, FPrecompBaseComb, LOff);
-      LOff := LOff + TX25519Field.Size;
-    end;
-    {$IFDEF DEBUG}
-    System.Assert(LOff = System.Length(FPrecompBaseComb));
-    {$ENDIF}
-  finally
-    FPrecompLock.Leave;
   end;
+  {$IFDEF DEBUG}
+  System.Assert(LPointsIndex = LTotalPoints);
+  {$ENDIF}
+  InvertDoubleZs(LPoints);
+  System.SetLength(FPrecompBaseWnaf, LWnafPoints);
+  for LI := 0 to LWnafPoints - 1 do
+  begin
+    InitPointPrecomp(FPrecompBaseWnaf[LI]);
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
+    TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
+    TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, FPrecompBaseWnaf[LI].YpxH, FPrecompBaseWnaf[LI].YmxH);
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, FPrecompBaseWnaf[LI].Xyd);
+    TX25519Field.Mul(FPrecompBaseWnaf[LI].Xyd, FC_d4, FPrecompBaseWnaf[LI].Xyd);
+    TX25519Field.Normalize(FPrecompBaseWnaf[LI].YmxH);
+    TX25519Field.Normalize(FPrecompBaseWnaf[LI].YpxH);
+    TX25519Field.Normalize(FPrecompBaseWnaf[LI].Xyd);
+  end;
+  System.SetLength(FPrecompBase128Wnaf, LWnafPoints);
+  for LI := 0 to LWnafPoints - 1 do
+  begin
+    InitPointPrecomp(FPrecompBase128Wnaf[LI]);
+    LPointsIndex2 := LWnafPoints + LI;
+    TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].X);
+    TX25519Field.Mul(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].Z, LPoints[LPointsIndex2].Y);
+    TX25519Field.Apm(LPoints[LPointsIndex2].Y, LPoints[LPointsIndex2].X, FPrecompBase128Wnaf[LI].YpxH, FPrecompBase128Wnaf[LI].YmxH);
+    TX25519Field.Mul(LPoints[LPointsIndex2].X, LPoints[LPointsIndex2].Y, FPrecompBase128Wnaf[LI].Xyd);
+    TX25519Field.Mul(FPrecompBase128Wnaf[LI].Xyd, FC_d4, FPrecompBase128Wnaf[LI].Xyd);
+    TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YmxH);
+    TX25519Field.Normalize(FPrecompBase128Wnaf[LI].YpxH);
+    TX25519Field.Normalize(FPrecompBase128Wnaf[LI].Xyd);
+  end;
+  FPrecompBaseComb := TX25519Field.CreateTable(LCombPoints * 3);
+  InitPointPrecomp(LS);
+  LOff := 0;
+  for LI := LWnafPoints * 2 to LTotalPoints - 1 do
+  begin
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Z, LPoints[LI].X);
+    TX25519Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
+    TX25519Field.Apm(LPoints[LI].Y, LPoints[LI].X, LS.YpxH, LS.YmxH);
+    TX25519Field.Mul(LPoints[LI].X, LPoints[LI].Y, LS.Xyd);
+    TX25519Field.Mul(LS.Xyd, FC_d4, LS.Xyd);
+    TX25519Field.Normalize(LS.YmxH);
+    TX25519Field.Normalize(LS.YpxH);
+    TX25519Field.Normalize(LS.Xyd);
+    TX25519Field.Copy(LS.YmxH, 0, FPrecompBaseComb, LOff);
+    LOff := LOff + TX25519Field.Size;
+    TX25519Field.Copy(LS.YpxH, 0, FPrecompBaseComb, LOff);
+    LOff := LOff + TX25519Field.Size;
+    TX25519Field.Copy(LS.Xyd, 0, FPrecompBaseComb, LOff);
+    LOff := LOff + TX25519Field.Size;
+  end;
+  {$IFDEF DEBUG}
+  System.Assert(LOff = System.Length(FPrecompBaseComb));
+  {$ENDIF}
 end;
 
 function TEd25519.CreatePreHash(): IDigest;
@@ -1460,9 +1493,8 @@ var
   LS: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
   ScalarMultBaseEncoded(LS, APk, APkOff);
@@ -1672,7 +1704,7 @@ begin
   TX25519Field.Negate(LData, LPA.X);
   TX25519Field.Copy(LData, TX25519Field.Size, LPA.Y, 0);
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
+  System.SetLength(LH, DigestSize);
   if (ACtx <> nil) or (APhflag = $01) then
     Dom2(LD, APhflag, ACtx);
   LD.BlockUpdate(LR, 0, PointBytes);
@@ -1732,7 +1764,7 @@ begin
     Exit(False);
   end;
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
+  System.SetLength(LH, DigestSize);
   if (ACtx <> nil) or (APhflag = $01) then
     Dom2(LD, APhflag, ACtx);
   LD.BlockUpdate(LR, 0, PointBytes);
@@ -1759,9 +1791,8 @@ var
   LH, LS, LPk: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
   System.SetLength(LPk, PointBytes);
@@ -1777,12 +1808,120 @@ var
   LH, LS: TCryptoLibByteArray;
 begin
   LD := CreateAndValidateDigest();
-  System.SetLength(LH, 64);
-  LD.BlockUpdate(&AS, ASOff, SecretKeySize);
-  LD.DoFinal(LH, 0);
+  System.SetLength(LH, DigestSize);
+  ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
   ImplSign(LD, LH, LS, APk, APkOff, ACtx, APhflag, AM, AMOff, AMLen, ASig, ASigOff);
+end;
+
+function TEd25519.CreateExpandedKey: TExpandedKey;
+begin
+  Result := TExpandedKey.Create(Self);
+end;
+
+{ TEd25519.TExpandedKey }
+
+constructor TEd25519.TExpandedKey.Create(AOwner: TEd25519);
+begin
+  Inherited Create;
+  if AOwner = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  FOwner := AOwner;
+end;
+
+procedure TEd25519.TExpandedKey.CheckExpandedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+begin
+  if (ABuf = nil) or (System.Length(ABuf) - AOff < ExpandedKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+end;
+
+procedure TEd25519.TExpandedKey.CheckSeedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
+begin
+  if (ABuf = nil) or (System.Length(ABuf) - AOff < SecretKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+end;
+
+procedure TEd25519.TExpandedKey.ExpandPrivateKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
+  var AXk: TCryptoLibByteArray; AXkOff: Int32);
+var
+  LD: IDigest;
+begin
+  CheckSeedBuffer(ASk, ASkOff);
+  CheckExpandedBuffer(AXk, AXkOff);
+  LD := FOwner.CreateAndValidateDigest();
+  TEd25519.ExpandPrivateKey(LD, ASk, ASkOff, AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.GeneratePrivateKey(const ARandom: ISecureRandom;
+  var AXk: TCryptoLibByteArray; AXkOff: Int32);
+var
+  LSk: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  System.SetLength(LSk, SecretKeySize);
+  FOwner.GeneratePrivateKey(ARandom, LSk);
+  ExpandPrivateKey(LSk, 0, AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+  var APk: TCryptoLibByteArray; APkOff: Int32);
+var
+  LS: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  if (APk = nil) or (System.Length(APk) - APkOff < PublicKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  System.SetLength(LS, ScalarBytes);
+  PruneScalar(AXk, AXkOff, LS);
+  ScalarMultBaseEncoded(LS, APk, APkOff);
+end;
+
+function TEd25519.TExpandedKey.GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32): IPublicPoint;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  Result := GeneratePublicPoint(AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.Prune(var AXk: TCryptoLibByteArray; AXkOff: Int32);
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  PruneScalar(AXk, AXkOff);
+end;
+
+procedure TEd25519.TExpandedKey.Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+  const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+  var ASig: TCryptoLibByteArray; ASigOff: Int32);
+var
+  LPk: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  System.SetLength(LPk, PublicKeySize);
+  GeneratePublicKey(AXk, AXkOff, LPk, 0);
+  Sign(AXk, AXkOff, LPk, 0, AM, AMOff, AMLen, ASig, ASigOff);
+end;
+
+procedure TEd25519.TExpandedKey.Sign(const AXk: TCryptoLibByteArray; AXkOff: Int32;
+  const APk: TCryptoLibByteArray; APkOff: Int32;
+  const AM: TCryptoLibByteArray; AMOff, AMLen: Int32;
+  var ASig: TCryptoLibByteArray; ASigOff: Int32);
+var
+  LD: IDigest;
+  LH, LS: TCryptoLibByteArray;
+  LNullCtx: TCryptoLibByteArray;
+begin
+  CheckExpandedBuffer(AXk, AXkOff);
+  if (APk = nil) or (System.Length(APk) - APkOff < PublicKeySize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  if (ASig = nil) or (System.Length(ASig) - ASigOff < SignatureSize) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  LD := FOwner.CreateAndValidateDigest();
+  System.SetLength(LH, DigestSize);
+  System.Move(AXk[AXkOff], LH[0], DigestSize);
+  System.SetLength(LS, ScalarBytes);
+  PruneScalar(LH, 0, LS);
+  LNullCtx := nil;
+  FOwner.ImplSign(LD, LH, LS, APk, APkOff, LNullCtx, Byte($00), AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
 end.

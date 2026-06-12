@@ -175,8 +175,6 @@ type
   strict private
     class var
       FDupsAllowed: TDictionary<IDerObjectIdentifier, Boolean>;
-
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -678,22 +676,17 @@ end;
 
 class constructor TX509ExtensionsGenerator.Create;
 begin
-  Boot;
-end;
-
-class destructor TX509ExtensionsGenerator.Destroy;
-begin
-  FDupsAllowed.Free;
-end;
-
-class procedure TX509ExtensionsGenerator.Boot;
-begin
   FDupsAllowed := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
   // OIDs that allow duplicate extensions
   FDupsAllowed.Add(TX509Extensions.SubjectAlternativeName, True);
   FDupsAllowed.Add(TX509Extensions.IssuerAlternativeName, True);
   FDupsAllowed.Add(TX509Extensions.SubjectDirectoryAttributes, True);
   FDupsAllowed.Add(TX509Extensions.CertificateIssuer, True);
+end;
+
+class destructor TX509ExtensionsGenerator.Destroy;
+begin
+  FDupsAllowed.Free;
 end;
 
 constructor TX509ExtensionsGenerator.Create;

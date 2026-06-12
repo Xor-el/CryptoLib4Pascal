@@ -75,8 +75,7 @@ type
 
     FisAndroidStyle, FisClasspathStyle, FisRegularStyle: Boolean;
 
-    class procedure Boot(); static;
-    class constructor FixedSecureRandom();
+    class constructor Create();
 
   type
     TRandomChecker = class(TSecureRandom, IRandomChecker)
@@ -176,7 +175,7 @@ begin
   F_data := data;
 end;
 
-class procedure TFixedSecureRandom.Boot;
+class constructor TFixedSecureRandom.Create;
 var
   Fcheck1, Fcheck2: TBigInteger;
 begin
@@ -374,11 +373,6 @@ begin
   end;
 
   result := lv;
-end;
-
-class constructor TFixedSecureRandom.FixedSecureRandom;
-begin
-  TFixedSecureRandom.Boot;
 end;
 
 class function TFixedSecureRandom.From(const values: TCryptoLibMatrixByteArray)

@@ -156,7 +156,6 @@ procedure TTestX25519.SetUp;
 begin
   inherited SetUp();
   FRandom := TSecureRandom.Create();
-  TX25519.Precompute();
 end;
 
 procedure TTestX25519.TearDown;

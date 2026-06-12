@@ -13,7 +13,7 @@ uses
   ClpSecNamedCurves, ClpSecObjectIdentifiers, ClpTeleTrusTObjectIdentifiers, 
   ClpECNamedCurveTable, ClpX9ObjectIdentifiers, ClpAsymmetricCipherKeyPair, 
   ClpParametersWithRandom, ClpDsaDigestSigner, ClpECDsaSigner, 
-  ClpECAlgorithms, ClpLongArray, ClpSimpleBigDecimal, ClpTnaf, ClpZTauElement, 
+  ClpECAlgorithms, ClpSimpleBigDecimal, ClpTnaf, ClpZTauElement, 
   ClpGlvTypeBEndomorphism, ClpGlvTypeBParameters, ClpFixedPointPreCompInfo, 
   ClpWNafPreCompInfo, ClpWTauNafPreCompInfo, ClpFiniteFields, 
   ClpGenericPolynomialExtensionField, ClpGF2Polynomial, ClpPrimeField, ClpMod, 
@@ -227,7 +227,13 @@ uses
   ClpDigestStream, ClpMacSink, ClpMacStream, ClpSignerStream, 
   ClpDefaultMacCalculator, ClpDefaultMacResult, ClpIMacAlgorithmFinder, 
   ClpDefaultMacAlgorithmFinder, ClpISignatureAlgorithmFinder, 
-  ClpDefaultSignatureAlgorithmFinder;
+  ClpDefaultSignatureAlgorithmFinder, ClpIBinPolyMul, ClpIF2mFieldData, 
+  ClpBinPolyMulBase, ClpBinPolys, ClpItohTsujiiInv, ClpF2mFieldData, 
+  ClpIBinPolyInv, ClpBinPolyX86V128Backend, ClpBinPolyX86V128Kernels, 
+  ClpBinPolyX86V128Large, ClpBinPolyX86V128Medium, ClpBinPolyX86V128Sizes, 
+  ClpBinPolyScalarBackend, ClpBinPolyScalarKernels, ClpBinPolyScalarLarge, 
+  ClpBinPolyScalarMedium, ClpBinPolyMulBaseBinomialReduce, 
+  ClpBinPolyMulBasePentanomialReduce, ClpBinPolyMulBaseTrinomialReduce;
 
 implementation
 

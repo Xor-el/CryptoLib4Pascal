@@ -269,7 +269,13 @@ var
 begin
   Result := ReadInt(S, AIndex, ACount, LI);
   if Result then
+  begin
+    // Reject negatives (e.g. "-1" parses as Int32 but is nonsense in a fixed-width field)
+    // and values that would overflow Word silently.
+    if (LI < 0) or (LI > 65535) then
+      Exit(False);
     AValue := Word(LI);
+  end;
 end;
 
 class function TDateTimeParseHelper.CountFracDigits(const AFormat: String): Int32;
@@ -370,13 +376,13 @@ var
 begin
   // Epoch: January 1, 0001 12:00am
   LEpoch := EncodeDateTime(1, 1, 1, 0, 0, 0, 0);
-  
+
   // Calculate milliseconds since epoch (preserving sign)
   if ADateTime >= LEpoch then
     LMsSinceEpoch := MilliSecondsBetween(ADateTime, LEpoch)
   else
     LMsSinceEpoch := -MilliSecondsBetween(ADateTime, LEpoch);
-  
+
   // Convert milliseconds to ticks (1 millisecond = 10,000 ticks)
   Result := LMsSinceEpoch * Int64(10000);
 end;
@@ -388,10 +394,10 @@ var
 begin
   // Epoch: January 1, 0001 12:00am
   LEpoch := EncodeDateTime(1, 1, 1, 0, 0, 0, 0);
-  
+
   // Convert ticks to milliseconds (1 millisecond = 10,000 ticks)
   LMsSinceEpoch := ATicks div Int64(10000);
-  
+
   // Add milliseconds to epoch to get the DateTime
   Result := IncMilliSecond(LEpoch, LMsSinceEpoch);
 end;
@@ -591,17 +597,33 @@ begin
       raise EFormatCryptoLibException.Create('Invalid hour');
   end;
 
+  // --- Calendar field range checks (mirrors .NET / X.680 validation) ---
+  if (LMonth < 1) or (LMonth > 12) then
+    raise EFormatCryptoLibException.Create('Month out of range (1-12)');
+  if (LDay < 1) or (LDay > 31) then
+    raise EFormatCryptoLibException.Create('Day out of range (1-31)');
+  if LHour > 23 then
+    raise EFormatCryptoLibException.Create('Hour out of range (0-23)');
+
   LMinute := 0;
   LSecond := 0;
   LMillisecond := 0;
 
   if LHasMinutes then
+  begin
     if not TDateTimeParseHelper.ReadWord(AStr, 7 + LYearWidth, 2, LMinute) then
       raise EFormatCryptoLibException.Create('Invalid minute');
+    if LMinute > 59 then
+      raise EFormatCryptoLibException.Create('Minute out of range (0-59)');
+  end;
 
   if LHasSeconds then
+  begin
     if not TDateTimeParseHelper.ReadWord(AStr, 9 + LYearWidth, 2, LSecond) then
       raise EFormatCryptoLibException.Create('Invalid second');
+    if LSecond > 59 then
+      raise EFormatCryptoLibException.Create('Second out of range (0-59)');
+  end;
 
   // --- Fraction must be exactly where expected ---
   if LHasFrac then
@@ -613,8 +635,10 @@ begin
     else
       LDotExpectedPos := 7 + LYearWidth;
 
-    if (LDotExpectedPos > LLen) or (AStr[LDotExpectedPos] <> '.') then
-      raise EFormatCryptoLibException.Create('Missing fractional dot');
+    // X.680 section 46.3: both '.' and ',' are valid decimal marks
+    if (LDotExpectedPos > LLen) or
+       ((AStr[LDotExpectedPos] <> '.') and (AStr[LDotExpectedPos] <> ',')) then
+      raise EFormatCryptoLibException.Create('Missing fractional separator (. or ,)');
 
     LFracStr := System.Copy(AStr, LDotExpectedPos + 1, LFracDigits);
     if not TryStrToInt(LFracStr, LTmp) then
@@ -636,7 +660,14 @@ begin
   end;
 
   // --- Base datetime value ---
-  Result := EncodeDateTime(LYearW, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond);
+  // Belt-and-suspenders: EncodeDateTime validates the combination (e.g. day 31 in
+  // a 30-day month) after our individual field range checks above.
+  try
+    Result := EncodeDateTime(LYearW, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond);
+  except
+    on E: EConvertError do
+      raise EFormatCryptoLibException.Create('Invalid date/time components: ' + E.Message);
+  end;
 
   // --- Timezone parsing if format includes zz/zzz ---
   if LHasTZ3 or LHasTZ2 then
@@ -651,14 +682,14 @@ begin
       raise EFormatCryptoLibException.Create('Invalid timezone sign');
 
     LOffsetHours := StrToIntDef(System.Copy(AStr, LSignPos + 1, 2), -1);
-    if LOffsetHours < 0 then
-      raise EFormatCryptoLibException.Create('Invalid timezone hours');
+    if (LOffsetHours < 0) or (LOffsetHours > 23) then
+      raise EFormatCryptoLibException.Create('Timezone hours out of range (0-23)');
 
     if LHasTZ3 then
     begin
       LOffsetMinutes := StrToIntDef(System.Copy(AStr, LSignPos + 3, 2), -1);
-      if LOffsetMinutes < 0 then
-        raise EFormatCryptoLibException.Create('Invalid timezone minutes');
+      if (LOffsetMinutes < 0) or (LOffsetMinutes > 59) then
+        raise EFormatCryptoLibException.Create('Timezone minutes out of range (0-59)');
     end
     else
       LOffsetMinutes := 0;

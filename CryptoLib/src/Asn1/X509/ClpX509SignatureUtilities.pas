@@ -63,7 +63,6 @@ type
     class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier; AIsNoParams: Boolean); static;
     class procedure AddNoParams(const AOid: IDerObjectIdentifier); static;
     class function CreatePssParams(const ADigAlgID: IAlgorithmIdentifier; ASaltSize: Int32): IRsassaPssParameters; static;
-    class procedure Boot; static;
     class constructor Create;
     class destructor Destroy;
 
@@ -80,18 +79,6 @@ implementation
 { TX509SignatureUtilities }
 
 class constructor TX509SignatureUtilities.Create;
-begin
-  Boot;
-end;
-
-class destructor TX509SignatureUtilities.Destroy;
-begin
-  FAlgorithms.Free;
-  FExParams.Free;
-  FNoParams.Free;
-end;
-
-class procedure TX509SignatureUtilities.Boot;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
 begin
@@ -303,6 +290,13 @@ begin
   AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, True);
 end;
 
+class destructor TX509SignatureUtilities.Destroy;
+begin
+  FAlgorithms.Free;
+  FExParams.Free;
+  FNoParams.Free;
+end;
+
 class function TX509SignatureUtilities.GetDigestName(const ADigestAlgOid: IDerObjectIdentifier): String;
 begin
   if TPkcsObjectIdentifiers.MD5.Equals(ADigestAlgOid) then
@@ -452,7 +446,7 @@ var
 begin
   LHashAlgId := ADigAlgID;
   LMgfAlgId := TAlgorithmIdentifier.Create(TPkcsObjectIdentifiers.IdMgf1, LHashAlgId);
-  LSaltLength := TDerInteger.Create(ASaltSize);
+  LSaltLength := TDerInteger.ValueOf(ASaltSize);
   Result := TRsassaPssParameters.Create(LHashAlgId, LMgfAlgId, LSaltLength, TRsassaPssParameters.DefaultTrailerField);
 end;
 

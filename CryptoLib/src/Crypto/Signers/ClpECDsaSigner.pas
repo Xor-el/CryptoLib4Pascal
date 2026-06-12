@@ -55,8 +55,6 @@ type
     class var
 
       FEight: TBigInteger;
-
-    class procedure Boot(); static;
     class constructor ECDsaSigner();
 
     class function GetEight: TBigInteger; static; inline;
@@ -136,11 +134,6 @@ begin
   FKCalculator := TRandomDsaKCalculator.Create();
 end;
 
-class procedure TECDsaSigner.Boot;
-begin
-  FEight := TBigInteger.ValueOf(8);
-end;
-
 function TECDsaSigner.CalculateE(const AN: TBigInteger;
   const AMessage: TCryptoLibByteArray): TBigInteger;
 var
@@ -171,7 +164,7 @@ end;
 
 class constructor TECDsaSigner.ECDsaSigner;
 begin
-  TECDsaSigner.Boot;
+  FEight := TBigInteger.ValueOf(8);
 end;
 
 function TECDsaSigner.GenerateSignature(const AMessage: TCryptoLibByteArray)

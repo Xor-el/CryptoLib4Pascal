@@ -156,7 +156,6 @@ procedure TTestX448.SetUp;
 begin
   inherited SetUp();
   FRandom := TSecureRandom.Create();
-  TX448.Precompute();
 end;
 
 procedure TTestX448.TearDown;

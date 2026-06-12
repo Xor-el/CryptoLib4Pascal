@@ -313,7 +313,7 @@ class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibByteArray
 begin
   if AData = nil then
     Exit(0);
-  Result := HashCore(@AData[0], System.Length(AData));
+  Result := HashCore(PByte(AData), System.Length(AData));
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibByteArray;
@@ -321,21 +321,21 @@ class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibByteArray
 begin
   if AData = nil then
     Exit(0);
-  Result := HashCore(@AData[AOff], ALen);
+  Result := HashCore(PByte(AData) + AOff, ALen);
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibInt32Array): Int32;
 begin
   if AData = nil then
     Exit(0);
-  Result := HashCore(PByte(@AData[0]), System.Length(AData) * System.SizeOf(Int32));
+  Result := HashCore(PByte(PInteger(AData)), System.Length(AData) * System.SizeOf(Int32));
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibUInt32Array): Int32;
 begin
   if AData = nil then
     Exit(0);
-  Result := HashCore(PByte(@AData[0]), System.Length(AData) * System.SizeOf(UInt32));
+  Result := HashCore(PByte(PCardinal(AData)), System.Length(AData) * System.SizeOf(UInt32));
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibUInt32Array;
@@ -343,7 +343,7 @@ class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibUInt32Arr
 begin
   if AData = nil then
     Exit(0);
-  Result := HashCore(PByte(@AData[AOff]), ALen * System.SizeOf(UInt32));
+  Result := HashCore(PByte(PCardinal(AData) + AOff), ALen * System.SizeOf(UInt32));
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibUInt64Array;
@@ -351,7 +351,7 @@ class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibUInt64Arr
 begin
   if AData = nil then
     Exit(0);
-  Result := HashCore(PByte(@AData[AOff]), ALen * System.SizeOf(UInt64));
+  Result := HashCore(PByte(PUInt64(AData) + AOff), ALen * System.SizeOf(UInt64));
 end;
 
 class function TArrayUtilities.NoZeroes(const AData: TCryptoLibByteArray): Boolean;

@@ -62,8 +62,6 @@ type
 
     class function OsProviderAvailable: Boolean; static;
     class procedure GetRawEntropy(const AEntropy: TCryptoLibByteArray); inline;
-
-    class procedure Boot(); static;
     class constructor Create();
     class destructor Destroy();
 
@@ -151,18 +149,9 @@ begin
   TOSRandomProvider.Instance.GetBytes(AEntropy);
 end;
 
-class procedure TAesRandomProvider.Boot;
-begin
-  if FLock = nil then
-  begin
-    FLock := TCriticalSection.Create;
-  end;
-  GetInstance;
-end;
-
 class constructor TAesRandomProvider.Create();
 begin
-  Boot();
+  FLock := TCriticalSection.Create;
 end;
 
 class destructor TAesRandomProvider.Destroy();

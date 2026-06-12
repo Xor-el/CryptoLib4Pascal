@@ -42,6 +42,10 @@ resourcestring
   SMsgLen = 'MsgLen must be Equal to PreHashSize for Ed448ph Algorithm';
 
 type
+  /// <summary>
+  /// Ed448 public key (RFC 8032). Wraps a decoded curve point obtained from a 57-byte encoded
+  /// representation; the point is validated at construction.
+  /// </summary>
   TEd448PublicKeyParameters = class sealed(TAsymmetricKeyParameter,
     IEd448PublicKeyParameters)
 
@@ -50,17 +54,56 @@ type
     FPublicPoint: TEd448.IPublicPoint;
 
   public
+    /// <summary>Length in bytes of an Ed448 public key encoding (57).</summary>
     const
     KeySize = Int32(57);
 
+    /// <summary>Construct from a 57-byte buffer holding the encoded public point.</summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If <paramref name="ABuf"/> length differs from <see cref="KeySize"/>, or the encoding does
+    /// not decode to a valid curve point.
+    /// </exception>
     constructor Create(const ABuf: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Construct from <paramref name="ABuf"/> at <paramref name="AOff"/>; reads
+    /// <see cref="KeySize"/> bytes.
+    /// </summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If the encoded bytes do not decode to a valid curve point.
+    /// </exception>
     constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    /// <summary>Read encoded bytes from <paramref name="AInput"/> and decode them.</summary>
+    /// <exception cref="EEndOfStreamCryptoLibException">
+    /// If the stream ends before <see cref="KeySize"/> bytes have been read.
+    /// </exception>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If the encoded bytes do not decode to a valid curve point.
+    /// </exception>
     constructor Create(AInput: TStream); overload;
+    /// <summary>
+    /// Construct from an already-decoded curve point. No further validation is performed.
+    /// </summary>
+    /// <exception cref="EArgumentCryptoLibException">If <paramref name="APublicPoint"/> is nil.
+    /// </exception>
     constructor Create(const APublicPoint: TEd448.IPublicPoint); overload;
 
+    /// <summary>
+    /// Write the 57-byte encoded public point into <paramref name="ABuf"/> at <paramref name="AOff"/>.
+    /// </summary>
     procedure Encode(const ABuf: TCryptoLibByteArray; AOff: Int32); inline;
+    /// <summary>Return a fresh copy of the 57-byte encoded public point.</summary>
     function GetEncoded(): TCryptoLibByteArray; inline;
 
+    /// <summary>
+    /// Verify an Ed448 signature. Both Ed448 and Ed448ph require a context up to 255 bytes;
+    /// Ed448ph additionally requires <paramref name="AMsgLen"/> to equal
+    /// <see cref="ClpEd448|TEd448.PrehashSize"/>.
+    /// </summary>
+    /// <returns>true if the signature is valid for this key; otherwise false.</returns>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If <paramref name="ACtx"/> exceeds 255 bytes, <paramref name="AMsgLen"/> is wrong for Ed448ph,
+    /// or <paramref name="AAlgorithm"/> is unrecognised.
+    /// </exception>
     function Verify(AAlgorithm: TEd448.TAlgorithm;
       const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASig: TCryptoLibByteArray; ASigOff: Int32): Boolean;
@@ -71,6 +114,10 @@ type
 {$ENDIF DELPHI}override;
   end;
 
+  /// <summary>
+  /// Ed448 private key (RFC 8032). Holds the 57-byte secret seed; the corresponding public key is
+  /// derived lazily on first use and cached.
+  /// </summary>
   TEd448PrivateKeyParameters = class sealed(TAsymmetricKeyParameter,
     IEd448PrivateKeyParameters)
 
@@ -80,19 +127,49 @@ type
     FCachedPublicKey: IEd448PublicKeyParameters;
 
   public
+    /// <summary>Length in bytes of an Ed448 private-key seed (57).</summary>
     const
     KeySize = Int32(57);
+    /// <summary>Length in bytes of an Ed448 signature (114).</summary>
     SignatureSize = Int32(57 + 57);
 
+    /// <summary>Generate a fresh random Ed448 private key using <paramref name="ARandom"/>.
+    /// </summary>
     constructor Create(const ARandom: ISecureRandom); overload;
+    /// <summary>Construct from a 57-byte seed buffer.</summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If <paramref name="ABuf"/> length differs from <see cref="KeySize"/>.
+    /// </exception>
     constructor Create(const ABuf: TCryptoLibByteArray); overload;
+    /// <summary>
+    /// Construct from <paramref name="ABuf"/> at <paramref name="AOff"/>; reads
+    /// <see cref="KeySize"/> bytes.
+    /// </summary>
     constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    /// <summary>Read the 57-byte seed from <paramref name="AInput"/>.</summary>
+    /// <exception cref="EEndOfStreamCryptoLibException">
+    /// If the stream ends before <see cref="KeySize"/> bytes have been read.
+    /// </exception>
     constructor Create(AInput: TStream); overload;
 
+    /// <summary>
+    /// Write the 57-byte seed into <paramref name="ABuf"/> at <paramref name="AOff"/>.
+    /// </summary>
     procedure Encode(const ABuf: TCryptoLibByteArray; AOff: Int32); inline;
+    /// <summary>Return a fresh copy of the 57-byte seed.</summary>
     function GetEncoded(): TCryptoLibByteArray; inline;
+    /// <summary>Derive (and cache) the public key corresponding to this private key.</summary>
     function GeneratePublicKey(): IEd448PublicKeyParameters;
 
+    /// <summary>
+    /// Compute an Ed448 signature. Both Ed448 and Ed448ph require a context up to 255 bytes;
+    /// Ed448ph additionally requires <paramref name="AMsgLen"/> to equal
+    /// <see cref="ClpEd448|TEd448.PrehashSize"/>.
+    /// </summary>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// If <paramref name="ACtx"/> exceeds 255 bytes, <paramref name="AMsgLen"/> is wrong for Ed448ph,
+    /// or <paramref name="AAlgorithm"/> is unrecognised.
+    /// </exception>
     procedure Sign(AAlgorithm: TEd448.TAlgorithm;
       const ACtx, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASig: TCryptoLibByteArray; ASigOff: Int32);
@@ -103,10 +180,17 @@ type
 {$ENDIF DELPHI}override;
   end;
 
+  /// <summary>
+  /// Key generation parameters for Ed448 (RFC 8032). Carries the <see cref="ISecureRandom"/> used for
+  /// seed generation; the strength is fixed at 448 bits.
+  /// </summary>
   TEd448KeyGenerationParameters = class sealed(TKeyGenerationParameters,
     IEd448KeyGenerationParameters)
 
   public
+    /// <summary>
+    /// Construct using <paramref name="ARandom"/> as the entropy source for the 57-byte seed.
+    /// </summary>
     constructor Create(const ARandom: ISecureRandom);
   end;
 
